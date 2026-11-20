@@ -2298,6 +2298,52 @@
       "test_ok": "O destino respondeu {status}.",
       "test_failed": "O destino não respondeu bem (status {status})."
     },
+    "generate": {
+      "open": {
+        "visual": "Gerar uma imagem",
+        "video": "Gerar uma locução"
+      },
+      "title": {
+        "image": "Gerar uma imagem",
+        "voice": "Gerar uma locução"
+      },
+      "intro": {
+        "image": "O preço aparece antes de qualquer pedido ao provedor. A imagem vai para a biblioteca, com o modelo e o prompt de onde veio.",
+        "voice": "O preço aparece antes de qualquer pedido ao provedor. A narração vai para a biblioteca, com o modelo e o texto de onde veio."
+      },
+      "no_provider": {
+        "image": "Nenhum provedor conectado faz imagens ainda.",
+        "voice": "Nenhum provedor conectado faz voz ainda."
+      },
+      "open_connections": "Conecte um na página Conexões",
+      "project": "Projeto",
+      "connection": "Conexão",
+      "model": "Modelo",
+      "no_price": "sem preço ainda",
+      "voice": "Voz",
+      "prompt": {
+        "image": "O que desenhar",
+        "voice": "O que ler em voz alta"
+      },
+      "size": "Tamanho",
+      "count": "Quantas",
+      "format": "Formato",
+      "language": "Idioma",
+      "disclosure": "Avise que esta voz é gerada por IA a quem a ouvir: o provedor pede isso.",
+      "estimate": "Mostrar a estimativa",
+      "estimated": "Custo estimado: {amount}",
+      "submit": "Gerar",
+      "state": {
+        "queued": "Esperando para começar.",
+        "waiting_approval": "Esperando a sua aprovação.",
+        "running": "Gerando.",
+        "succeeded": "Pronto.",
+        "failed": "Não deu certo.",
+        "cancelled": "Cancelado."
+      },
+      "open_approvals": "Abrir a página Aprovações",
+      "done": "{delivered} de {requested} feitas, custou {amount}."
+    },
     "social": {
       "title": "Redes sociais",
       "intro": "Conecte o seu próprio canal com o seu próprio projeto de desenvolvedor. Nada é publicado até você aprovar em Aprovações.",
@@ -2415,6 +2461,14 @@
       "limits": "Até {context} tokens, {output} deles na resposta",
       "price": "Por milhão de tokens: {input} de entrada, {output} de saída ({source})",
       "price_none": "Ainda sem preço: nada pode ser gerado com este modelo até você definir um.",
+      "price_unit": {
+        "image": "Por imagem: {amount} ({source})",
+        "mchar": "Por milhão de caracteres: {amount} ({source})"
+      },
+      "price_per": {
+        "image": "Preço de uma imagem",
+        "mchar": "Preço de um milhão de caracteres"
+      },
       "source": {
         "user": "preço seu",
         "catalogue": "publicado pelo provedor",
@@ -2479,6 +2533,33 @@
         "note": "Uma regra sem limite por item nunca aprova algo que custa dinheiro.",
         "bad_amount": "Um valor é um número com no máximo seis casas decimais, por exemplo 2,50."
       }
+    },
+    "google": {
+      "nav": "Entrar com Google",
+      "sign_in": "Entrar com o Google",
+      "title": "Entrar com o Google",
+      "off": "Entrar com o Google está desligado neste servidor. Um administrador pode ligar aqui.",
+      "account": "Sua conta Google",
+      "linked": "Conta Google vinculada:",
+      "not_linked": "Nenhuma conta Google vinculada. Vincule a sua para entrar com ela; a senha continua funcionando.",
+      "unlink_note": "Desvincular não muda sua senha nem encerra suas sessões.",
+      "password": "Sua senha",
+      "link": "Vincular minha conta Google",
+      "unlink": "Desvincular",
+      "owner": "Para o dono deste servidor",
+      "owner_intro": "Os usuários entram com um projeto Google que você mesmo criou. Crie a conexão desse projeto na página Conexões (uma conexão do YouTube com o client id e o segredo; não precisa entrar no YouTube).",
+      "redirect": "Adicione este endereço aos URIs de redirecionamento autorizados do seu projeto Google:",
+      "enabled": "Permitir que usuários entrem com o Google",
+      "connection": "Conexão do seu projeto Google",
+      "connection_none": "Escolha uma conexão",
+      "allowed": "Somente estes e-mails do Google (opcional)",
+      "allowed_hint": "Um por linha. Deixe vazio para permitir todo usuário vinculado. O usuário precisa estar vinculado antes: não há cadastro pelo Google.",
+      "save": "Salvar",
+      "saved": "Salvo.",
+      "callback_title": "Entrando com o Google",
+      "callback_working": "Concluindo a entrada…",
+      "callback_failed": "A entrada com o Google não funcionou.",
+      "back_to_login": "Voltar ao login"
     },
     "chat": {
       "open": "Conversar com o seu agente",

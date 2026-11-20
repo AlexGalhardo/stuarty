@@ -1,6 +1,6 @@
 {
  "name": "media_import",
- "description": "Import files into a project. paths: absolute paths of media files, or sha256:... library hashes (no copy). Waits up to wait_ms; use assets once ready. origin={kind,source,provider,model,prompt,rights_note}: generated needs provider,model; fetched_by_agent source,rights_note; rendered_externally source. info={tags,reusable,description}. hash, no paths: info edits that entry.",
+ "description": "Import files into a project. paths: absolute media paths, or library hashes sha256:... (no copy). Waits up to wait_ms; use assets once ready. origin={kind,source,provider,model,prompt,rights_note}: generated needs provider,model; fetched_by_agent source,rights_note; rendered_externally source. info={tags,reusable,description}; hash without paths edits that entry.",
  "inputSchema": {
   "type": "object",
   "properties": {

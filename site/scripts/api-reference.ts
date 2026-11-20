@@ -76,6 +76,8 @@ export function tagOf(route: string): Tag {
 		connections: "Connections",
 		providers: "AI providers",
 		text: "AI providers",
+		image: "AI providers",
+		voice: "AI providers",
 		images: "Images",
 		approvals: "Approvals",
 		"approval-rules": "Approvals",

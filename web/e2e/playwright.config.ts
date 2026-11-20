@@ -10,7 +10,12 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "@playwright/test";
 import { CHROMIUM_ONLY, NOT_IN_MATRIX } from "./support/browsers";
 import { LAUNCHER_SECRET } from "./support/launcher";
-import { NETWORK_ADMIN, NETWORK_PORT, NETWORK_URL } from "./support/network";
+import {
+	GOOGLE_PORT,
+	NETWORK_ADMIN,
+	NETWORK_PORT,
+	NETWORK_URL,
+} from "./support/network";
 
 // The server serves resources/public/build, which is not the sources: a build
 // older than them runs the specs against an old editor (a stale one once drew
@@ -248,6 +253,10 @@ export default defineConfig({
 				STUARTY_ADMIN_PASSWORD: NETWORK_ADMIN.password,
 				// Only for a container running as root; harmless elsewhere.
 				STUARTY_INSECURE_ALLOW_ROOT: "true",
+				// The vault key of the connection of the Google sign-in spec, next to the workspace and never in it.
+				STUARTY_MASTER_KEY_FILE: `${networkHome}.master.key`,
+				// The fake Google of the google-sign-in spec, on loopback (SDD-014 section 12.1).
+				STUARTY_TEST_GOOGLE_URL: `http://127.0.0.1:${GOOGLE_PORT}`,
 				...ffmpegEnv(),
 			},
 		},
