@@ -294,7 +294,19 @@ type compositionExpandArgs struct {
 	ItemID string `json:"item_id" desc:"A composition item." pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
 }
 
-// expandable checks precondition 2 of C.80: the composition only places its timeline.
+// hiddenComposition names why a composition item draws nothing: "disabled" or "hidden_track"; "" when it is drawn.
+func hiddenComposition(doc *timeline.Document, it *timeline.Item) string {
+	switch {
+	case it.Disabled:
+		return "disabled"
+	case doc.Tracks[it.Track].Hidden:
+		return "hidden_track"
+	}
+
+	return ""
+}
+
+// expandable checks precondition 2 of C.86: the composition only places its timeline.
 func (c *Context) expandable(it *timeline.Item, nested *timeline.Document) *Error {
 	state := func(reason, format string, args ...any) *Error {
 		return Errorf(CodeInvalidState, format, args...).WithDetail("reason", reason).WithPath("args.item_id")
@@ -319,6 +331,17 @@ func (c *Context) expandable(it *timeline.Item, nested *timeline.Document) *Erro
 		).
 			WithDetail("feature", f).
 			WithHint("Reset it with item.set_audio first, or keep the composition.")
+	}
+	// A disabled composition, or one on a hidden track, draws nothing: its items, put on new tracks, would show.
+	if f := hiddenComposition(c.Doc, it); f != "" {
+		return state(
+			"composition_group_feature",
+			"Item %s is not drawn (%s), and its items would be.",
+			it.ID,
+			f,
+		).
+			WithDetail("feature", f).
+			WithHint("Enable it with item.set_enabled or show its track first, or keep the composition.")
 	}
 
 	total := compositionLength(nested, c.Doc.Settings.FPS)
