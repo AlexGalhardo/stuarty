@@ -61,4 +61,23 @@ describe("the choices of the Generate dialog", () => {
 		]);
 		expect(orderedModels(models, "voice")[0]?.id).toBe("tts-test");
 	});
+
+	test("offers the video tab only the connections of a provider that makes video, and puts its models first (epic 11)", () => {
+		const providers = [
+			provider("openai", ["text", "image", "voice"], ["con_o1"]),
+			provider("clips", ["video"], ["con_c1"]),
+		];
+		expect(choicesOf(providers, "video").map((c) => c.connectionId)).toEqual([
+			"con_c1",
+		]);
+		expect(
+			choicesOf([provider("openai", ["text", "image"], ["con_o1"])], "video"),
+		).toEqual([]);
+
+		const models = [model("gpt-test", "text"), model("clip-1", "video")];
+		expect(orderedModels(models, "video").map((m) => m.id)).toEqual([
+			"clip-1",
+			"gpt-test",
+		]);
+	});
 });
