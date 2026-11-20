@@ -172,6 +172,51 @@ func TestImageLUT(t *testing.T) {
 	})
 }
 
+// TestSecurity_T67_HostileLookupTableIsRefusedByTheExport: a .cube file that is hostile (a size past the limit, a
+// value that is not a finite number, a line of a megabyte, another keyword, a 1D table, a file past 16 MiB) is
+// refused by the export through engine/lut, whatever the ingest did, never draws the layer without its table, and
+// its content is not echoed in the error.
+func TestSecurity_T67_HostileLookupTableIsRefusedByTheExport(t *testing.T) {
+	hash, path := lutFile(t, lutFixture("teal"))
+	base := lookBase()
+	d := withLUT(t, base, hash, firstLayerOfKind(base, coreimage.KindImage), ``)
+
+	const secret = "SECRET-CONTENT-OF-THE-FILE"
+
+	hostile := map[string]string{
+		"size 100000":          "LUT_3D_SIZE 100000\n0 0 0\n",
+		"size 66":              "LUT_3D_SIZE 66\n0 0 0\n",
+		"nan":                  "LUT_3D_SIZE 2\n" + strings.Repeat("nan 0 0\n", 8),
+		"infinity":             "LUT_3D_SIZE 2\n" + strings.Repeat("+Inf 0 0\n", 8),
+		"hexadecimal float":    "LUT_3D_SIZE 2\n" + strings.Repeat("0x1p-1 0 0\n", 8),
+		"a line of a megabyte": "LUT_3D_SIZE 2\n# " + strings.Repeat("x", 1<<20) + "\n",
+		"another keyword":      "LUT_3D_SIZE 2\nLUT_3D_INPUT_RANGE 0 2\n" + strings.Repeat("0 0 0\n", 8),
+		"a domain":             "LUT_3D_SIZE 2\nDOMAIN_MAX 2 2 2\n" + strings.Repeat("0 0 0\n", 8),
+		"a 1D table":           "LUT_1D_SIZE 2\n0 0 0\n1 1 1\n",
+		"too few entries":      "LUT_3D_SIZE 3\n0 0 0\n",
+		"the secret":           "TITLE " + secret + "\nLUT_1D_SIZE 2\n" + secret + "\n",
+	}
+
+	for name, text := range hostile {
+		t.Run(name, func(t *testing.T) {
+			_, bad := lutFile(t, text)
+
+			_, err := renderWithLUT(t, d, bad)
+			if err == nil {
+				t.Fatal("the export drew the layer with a hostile table")
+			}
+
+			if strings.Contains(err.Error(), secret) {
+				t.Errorf("the error echoes the file: %v", err)
+			}
+		})
+	}
+
+	if _, err := renderWithLUT(t, d, path); err != nil {
+		t.Fatalf("the valid table is refused: %v", err)
+	}
+}
+
 // TestImageLUTRefusals: a table that cannot be had or read fails the export; the layer is never drawn without it.
 func TestImageLUTRefusals(t *testing.T) {
 	hash, path := lutFile(t, lutFixture("teal"))
