@@ -2,6 +2,7 @@ package publish
 
 import (
 	"context"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -479,5 +480,93 @@ func TestSchedulerNextWake(t *testing.T) {
 
 	if d, _ := s.Next(context.Background()); d != time.Second {
 		t.Errorf("a due post: %v", d)
+	}
+}
+
+// A claimed post that waits for a free slot keeps its lease: left unrenewed in the queue, the lease would run
+// out and the next pass, of this process or of another, would take the post and send it a second time.
+func TestSchedulerQueuedClaimKeepsItsLease(t *testing.T) {
+	t.Parallel()
+
+	r := newSchedRig(t)
+	r.gw.block = make(chan struct{})
+
+	p, first := r.plan(time.Minute, nil)
+	q, second := r.plan(time.Minute, nil)
+	s := NewScheduler(r.m, SchedulerOptions{Clock: r.clock, Owner: "a", Parallel: 1})
+	other := r.scheduler("b")
+
+	r.clock.advance(time.Minute)
+
+	if n, err := s.Tick(context.Background()); err != nil || n != 2 {
+		t.Fatalf("Tick = %d, %v", n, err)
+	}
+
+	<-r.gw.started
+
+	// The send in the one slot takes longer than a lease, and the other post waits behind it.
+	for range 4 {
+		waitFor(t, "both heartbeats to wait on the clock", func() bool { return r.clock.pending() >= 2 })
+		r.clock.advance(core.Lease / 3)
+
+		now := r.clock.Now()
+		waitFor(t, "both leases to be renewed", func() bool {
+			return r.target(p, first).LeaseUntil.After(now) && r.target(q, second).LeaseUntil.After(now)
+		})
+	}
+
+	for name, sc := range map[string]*Scheduler{"the same": s, "another": other} {
+		if n, err := sc.Tick(context.Background()); err != nil || n != 0 {
+			t.Fatalf("%s scheduler took a post that is queued: %d, %v", name, n, err)
+		}
+	}
+
+	close(r.gw.block)
+	s.Wait()
+	other.Wait()
+
+	if n := r.tick(s); n != 0 {
+		t.Fatalf("started %d sends after both went out", n)
+	}
+
+	for _, id := range []string{first, second} {
+		if got := r.gw.sent(id); got != 1 {
+			t.Errorf("target %s was sent %d times", id, got)
+		}
+	}
+
+	if r.target(p, first).State != core.TargetPublished || r.target(q, second).State != core.TargetPublished {
+		t.Errorf("states %s and %s", r.target(p, first).State, r.target(q, second).State)
+	}
+}
+
+// What is sent is the post the target holds when it is claimed, not the one a pass read before: an edit that
+// was approved again between the read and the claim sends the new post, never the former one.
+func TestSchedulerSendsThePostApprovedAtTheClaim(t *testing.T) {
+	t.Parallel()
+
+	r := newSchedRig(t)
+	p, id := r.plan(time.Minute, nil)
+	s := r.scheduler("a")
+
+	r.clock.advance(time.Minute)
+
+	edited := "the edited title"
+	r.env.store.beforeClaim = func() {
+		if _, err := r.m.Update(context.Background(), UpdateInput{ID: p.ID, Title: &edited}); err != nil {
+			t.Error(err)
+		}
+	}
+
+	if n := r.tick(s); n != 1 {
+		t.Fatalf("started %d", n)
+	}
+
+	if got := r.gw.posts[id]; !strings.Contains(got, edited) {
+		t.Fatalf("sent %s, not the post approved after the edit", got)
+	}
+
+	if got := r.target(p, id); got.State != core.TargetPublished {
+		t.Errorf("state = %s", got.State)
 	}
 }

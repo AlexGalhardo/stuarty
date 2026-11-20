@@ -19,6 +19,9 @@ import (
 type memStore struct {
 	mu   sync.Mutex
 	pubs map[string]Publication
+	// beforeClaim, when set, runs once at the start of the next Claim: what another caller changed between the
+	// read of a pass and its claim.
+	beforeClaim func()
 }
 
 func cloneOf(p Publication) Publication {
@@ -138,6 +141,15 @@ func (s *memStore) Open(_ context.Context) ([]Target, error) {
 
 func (s *memStore) Claim(_ context.Context, id, owner string, now, until time.Time) (bool, error) {
 	defer activity.ring()
+
+	s.mu.Lock()
+	hook := s.beforeClaim
+	s.beforeClaim = nil
+	s.mu.Unlock()
+
+	if hook != nil {
+		hook()
+	}
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -340,6 +352,8 @@ type fakeGateway struct {
 	issues []core.Issue
 	cost   int64
 	sends  map[string]int
+	// posts is the snapshot of the last send of each target.
+	posts map[string]string
 	// fail, when set, fails the next failN sends with it.
 	fail  *SendError
 	failN int
@@ -349,7 +363,7 @@ type fakeGateway struct {
 }
 
 func newFakeGateway() *fakeGateway {
-	return &fakeGateway{sends: map[string]int{}, started: make(chan string, 64)}
+	return &fakeGateway{sends: map[string]int{}, posts: map[string]string{}, started: make(chan string, 64)}
 }
 
 func (g *fakeGateway) Resolve(_ context.Context, p Post) (*Resolved, error) {
@@ -399,6 +413,7 @@ func (g *fakeGateway) Send(ctx context.Context, t Target, _ func(float64, string
 	defer g.mu.Unlock()
 
 	g.sends[t.ID]++
+	g.posts[t.ID] = string(t.Snapshot)
 
 	if g.fail != nil && g.failN != 0 {
 		g.failN--
