@@ -341,6 +341,7 @@
         "open_connections": "Connect one on the Connections page",
         "project": "Project",
         "project_hint": "The project that keeps the new file and its cost. The image itself belongs to no project.",
+        "no_project": "Make a project first: it keeps the new file and its cost.",
         "connection": "Connection",
         "model": "Model",
         "no_price": "no price yet",
