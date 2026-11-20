@@ -39,7 +39,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [17](17-writing.md) | Writing: scripts, copy and captions | M | 06, 09 | DONE (2026-11-20, `ef219641c`..`5fb9bbf52` replayed, merge `6989137a2`; a real draft with a provider key not verified) |
 | [18](18-social-connectors-and-youtube.md) | Social connectors and YouTube | L | 04, 05 | DONE (2026-11-20, `4cfc130a`..`375f681d`, merge `f4c35c228`; task 10 real upload waits for the author) |
 | [19](19-instagram-and-facebook.md) | Instagram and Facebook | L | 18 | DONE (2026-11-20, `c86c2f10b`..`8428bc2d3`, merge `ada3c608f`; task 9, a real post with the author's Meta app, not verified) |
-| [20](20-publishing-calendar-and-scheduler.md) | Publishing: calendar, approval and scheduler | L | 06, 07, 18 | IN PROGRESS (senior-b, 2026-11-20) |
+| [20](20-publishing-calendar-and-scheduler.md) | Publishing: calendar, approval and scheduler | L | 06, 07, 18 | DONE (2026-11-20, `0e4e0dbe2`..`77d7bc3b7`, merge `e0453f55f`; the scheduler runs while the app runs until epic 21; a real post not verified) |
 | [21](21-desktop-background-service.md) | Desktop background service for scheduled posts | M | 20 | TODO |
 | [22](22-x-and-tiktok-drafts.md) | X and TikTok drafts | M | 20 | TODO |
 | [23](23-blog-and-its-destinations.md) | Blog posts and their four destinations | L | 17, 20 | TODO |
@@ -54,7 +54,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [27](27-image-document-core.md) | Image documents: core, catalogue, templates and export | L | 03 | DONE (2026-11-19, 97d5c560..7758cdda replayed and merged; WebP export waits for an ffargs builder) |
 | [28](28-image-editor-ui.md) | Image editor in the UI | L | 07, 27 | DONE (2026-11-19, `95ed640f`..`28a3e533`, merge `fac66975`) |
 | [29](29-image-adjustments-filters-and-masks.md) | Image adjustments, filters, masks and blend modes | L | 27 | DONE (2026-11-19, `5d7680de`..`525c359b`, merge `1ee6a61d`; image LUT waits for the author) |
-| [30](30-image-operations-with-a-model.md) | Image operations with a model | S | 10, 28 | TODO |
+| [30](30-image-operations-with-a-model.md) | Image operations with a model | S | 10, 28 | IN PROGRESS (senior-e, 2026-11-20) |
 | [31](31-motion-easing-crop-and-mask.md) | Motion: easing curves, animated crop and mask, presets | L | 03 | DONE (2026-11-19, `e914c99b`..`a88f8e63`, merge `4c2c5c85`) |
 | [32](32-nested-compositions.md) | Nested compositions | M | 06, 31 | IN PROGRESS (senior-a, 2026-11-20) |
 | [33](33-external-motion-engine-hand-off.md) | Hand-off from an external motion engine | M | 08 | DONE (2026-11-20, `4f4022cc`..`bb19aa733` replayed, merge `3d693ba1d`; real HyperFrames round and no-egress on Linux not verified) |

@@ -65,6 +65,11 @@ var OperationDomains = map[string]string{
 	"SocialAccountSelect": command.DomainPublish,
 	"PublishValidate":     command.DomainPublish, "PublishNow": command.DomainPublish,
 	"PublishStatus": command.DomainPublish,
+	// The calendar of publications (SDD-020 section 28).
+	"PublicationCreate": command.DomainPublish, "PublicationGet": command.DomainPublish,
+	"PublicationList": command.DomainPublish, "PublicationUpdate": command.DomainPublish,
+	"PublicationSchedule": command.DomainPublish, "PublicationSendNow": command.DomainPublish,
+	"PublicationRetry": command.DomainPublish, "PublicationCancel": command.DomainPublish,
 
 	"CostSummary": command.DomainProvider, "CostCeilingSet": command.DomainProvider,
 	"ProviderList": command.DomainProvider, "ProviderModels": command.DomainProvider,
