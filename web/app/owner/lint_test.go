@@ -28,7 +28,9 @@ func op(name, args string) command.Operation {
 // the box of a text (L_SAFE_AREA, L_OFF_FRAME) fire in the real app, and the
 // document rule L_OCCLUDED still does.
 func TestServiceLintUsesTheRasterizerMeasurer(t *testing.T) {
-	getenv := envOf(map[string]string{workspace.EnvHome: filepath.Join(t.TempDir(), "ws")})
+	getenv := envOf(
+		map[string]string{workspace.EnvHome: filepath.Join(t.TempDir(), "ws"), "STUARTY_MIN_FREE_BYTES": "1"},
+	)
 	ctx := service.WithCaller(context.Background(), service.Caller{Actor: "local:cli", Scopes: service.AllScopes})
 
 	o, err := Open(ctx, Config{Getenv: getenv, Inline: true})

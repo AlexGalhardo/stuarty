@@ -133,6 +133,8 @@ func TestProjectCreateAndIngestWhenFFprobeIsAbsent(t *testing.T) {
 	getenv := envOf(map[string]string{
 		workspace.EnvHome: home,
 		"STUARTY_FFMPEG":  ff,
+		// Not a test of the disk guard: it must not depend on the free space of the machine.
+		"STUARTY_MIN_FREE_BYTES": "1",
 	})
 
 	ow, err := Open(context.Background(), Config{

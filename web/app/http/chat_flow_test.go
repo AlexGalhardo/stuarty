@@ -132,7 +132,14 @@ func newChatHarness(t *testing.T) *chatHarness {
 	// The host stops before the store closes.
 	t.Cleanup(c.host.Shutdown)
 
-	svc, err := service.New(service.Options{Store: st, Publish: hub.Publish, Workspace: string(dir), Agents: c.host})
+	// MinFreeBytes -1: not a test of the disk guard, so no dependence on the free space of the machine.
+	svc, err := service.New(service.Options{
+		Store:     st,
+		Publish:   hub.Publish,
+		Workspace: string(dir),
+		Agents:    c.host,
+		Limits:    service.Limits{MinFreeBytes: -1},
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -98,8 +98,12 @@ func newEnvWith(tb testing.TB, with func(e *env, o *service.Options)) *env {
 
 	debugOnce.Do(func() { command.Default().Debug = true })
 
+	// MinFreeBytes -1 turns the disk guard off, so no test here depends on the free space of
+	// the machine. The media environment mocks the volume instead and tests the guard
+	// (TestSecurity_T17_DiskLowRefusesWrites).
 	opts := service.Options{
 		Store: st, Registry: command.Default(), Now: e.clock.now, NewIDs: e.newID,
+		Limits: service.Limits{MinFreeBytes: -1},
 		Publish: func(ev service.Event) {
 			e.mu.Lock()
 			e.events = append(e.events, ev)
