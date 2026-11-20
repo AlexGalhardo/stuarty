@@ -110,6 +110,7 @@ type Service interface {
 	TextGenerate(ctx context.Context, req TextGenerateRequest) (*Job, error)
 	ImageGenerate(ctx context.Context, req ImageGenerateRequest) (*Job, error)
 	VoiceGenerate(ctx context.Context, req VoiceGenerateRequest) (*Job, error)
+	VideoGenerate(ctx context.Context, req VideoGenerateRequest) (*Job, error)
 	VoiceList(ctx context.Context, req VoiceListRequest) (*VoiceListResult, error)
 	// The sign-in to an AI provider in the browser (SDD-016 section 12): only a person begins and completes one.
 	ProviderSignInBegin(ctx context.Context, req ProviderSignInBeginRequest) (*ProviderSignInBeginResult, error)
@@ -454,7 +455,8 @@ func New(o Options) (Service, error) {
 	s.providers = o.Providers
 
 	kinds, err := registerKinds(append(slices.Clone(o.JobKinds),
-		s.textGenerateKind(), s.imageGenerateKind(), s.voiceGenerateKind(), s.textDraftKind()))
+		s.textGenerateKind(), s.imageGenerateKind(), s.voiceGenerateKind(), s.textDraftKind(),
+		s.videoGenerateKind()))
 	if err != nil {
 		return nil, err
 	}

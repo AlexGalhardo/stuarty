@@ -136,6 +136,7 @@ command tools:install
 command transcribe
 command undo
 command version
+command video:generate
 command view
 command voice:generate
 command voice:list
@@ -309,6 +310,7 @@ route POST /templates/{}/instantiate
 route POST /text/generate
 route POST /trash/empty
 route POST /users
+route POST /video/generate
 route POST /voice/generate
 route PUT /agents/profiles/{}
 route PUT /assets/{}

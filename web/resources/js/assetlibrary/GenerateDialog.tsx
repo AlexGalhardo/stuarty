@@ -27,21 +27,25 @@ import { createClient } from "../editor/api/client";
 import { HttpTransport } from "../editor/api/http";
 import type {
 	Job,
+	MediaEntry,
 	ModelView,
 	ProviderView,
 	VoiceView,
 } from "../editor/api/types";
 import type { ProjectSummary } from "../types";
 
-// The "Generate" dialog of the two sections of the asset library (SDD-016 section 10, epic 10): an image in
-// Visual Assets, a narration in Video Assets. The dialog asks for the project, the connection, the model and
+// The "Generate" dialog of the two sections of the asset library (SDD-016 section 10, epics 10 and 11): an image
+// in Visual Assets, a narration or a video clip in Video Assets. The dialog asks for the project, the connection, the model and
 // what to make, shows the estimate the service made (a dry run) before anything is submitted, then follows the
 // job until it ends and tells the grid to reload. It computes nothing: the estimate, the limits, the waiting
 // for a person and the stored files are the service's.
 
-export type Kind = "image" | "voice";
+export type Kind = "image" | "voice" | "video";
 
 const VOICE_FORMATS = ["mp3", "wav", "flac", "opus", "aac"] as const;
+// The aspect ratios the service accepts for a clip (SDD-016 section 5.4); the model may make only some, and the
+// service says which when it refuses one.
+const VIDEO_ASPECTS = ["16:9", "9:16", "1:1", "4:3", "3:4"] as const;
 const POLL_MS = 1500;
 
 function api() {
@@ -71,6 +75,12 @@ export function choicesOf(providers: ProviderView[], kind: Kind): Choice[] {
 		}
 	}
 	return out;
+}
+
+// Whether a provider of the product has the capability at all, connected or not: with none (no provider makes
+// video yet, SDD-016 section 2.3) there is nothing to connect, so the dialog does not send the person to look.
+export function anyMaker(providers: ProviderView[], kind: Kind): boolean {
+	return providers.some((provider) => provider.capabilities.includes(kind));
 }
 
 // The models the picker offers: the ones whose hint is the capability first, then the others, since the hint
@@ -107,6 +117,10 @@ export function GenerateDialog({
 	const [count, setCount] = useState("1");
 	const [format, setFormat] = useState<string>("mp3");
 	const [language, setLanguage] = useState("");
+	const [seconds, setSeconds] = useState("5");
+	const [aspect, setAspect] = useState<string>("16:9");
+	const [firstFrame, setFirstFrame] = useState("");
+	const [frames, setFrames] = useState<MediaEntry[]>([]);
 	const [estimate, setEstimate] = useState<Job | null>(null);
 	const [job, setJob] = useState<Job | null>(null);
 	const [failure, setFailure] = useState<Failure | null>(null);
@@ -149,6 +163,30 @@ export function GenerateDialog({
 			setConnection(choices[0].connectionId);
 		}
 	}, [connection, choices]);
+
+	// The images of the project a clip may start from: the ones the library has ready and not in the trash.
+	useEffect(() => {
+		if (!open || kind !== "video" || project === "") return;
+		let alive = true;
+		setFirstFrame("");
+		void (async () => {
+			try {
+				const list = await api().listMedia(project);
+				if (!alive) return;
+				setFrames(
+					list.assets.filter(
+						(a) => a.kind === "image" && a.state === "ready" && !a.trashed,
+					),
+				);
+			} catch {
+				// The first frame is optional: a list that cannot be read leaves the clip without one.
+				if (alive) setFrames([]);
+			}
+		})();
+		return () => {
+			alive = false;
+		};
+	}, [open, kind, project]);
 
 	// The models, and the voices, of the connection that is chosen.
 	useEffect(() => {
@@ -206,27 +244,38 @@ export function GenerateDialog({
 	}, [job, onGenerated]);
 
 	const request = useCallback(
-		(dryRun: boolean) =>
-			kind === "image"
-				? api().generateImage({
-						project_id: project,
-						connection_id: connection,
-						model,
-						prompt,
-						...(size.trim() === "" ? {} : { size: size.trim() }),
-						...(count.trim() === "" ? {} : { count: Number(count) }),
-						...(dryRun ? { dry_run: true } : {}),
-					})
-				: api().generateVoice({
-						project_id: project,
-						connection_id: connection,
-						model,
-						text: prompt,
-						voice,
-						format,
-						...(language.trim() === "" ? {} : { language: language.trim() }),
-						...(dryRun ? { dry_run: true } : {}),
-					}),
+		(dryRun: boolean) => {
+			const base = {
+				project_id: project,
+				connection_id: connection,
+				model,
+				...(dryRun ? { dry_run: true } : {}),
+			};
+			if (kind === "image") {
+				return api().generateImage({
+					...base,
+					prompt,
+					...(size.trim() === "" ? {} : { size: size.trim() }),
+					...(count.trim() === "" ? {} : { count: Number(count) }),
+				});
+			}
+			if (kind === "video") {
+				return api().generateVideo({
+					...base,
+					prompt,
+					...(seconds.trim() === "" ? {} : { seconds: Number(seconds) }),
+					aspect,
+					...(firstFrame === "" ? {} : { first_frame: firstFrame }),
+				});
+			}
+			return api().generateVoice({
+				...base,
+				text: prompt,
+				voice,
+				format,
+				...(language.trim() === "" ? {} : { language: language.trim() }),
+			});
+		},
 		[
 			kind,
 			project,
@@ -235,6 +284,9 @@ export function GenerateDialog({
 			prompt,
 			size,
 			count,
+			seconds,
+			aspect,
+			firstFrame,
 			voice,
 			format,
 			language,
@@ -272,8 +324,9 @@ export function GenerateDialog({
 		connection !== "" &&
 		model !== "" &&
 		prompt.trim() !== "" &&
-		(kind === "image" || voice !== "");
+		(kind !== "voice" || voice !== "");
 	const noProvider = providers !== null && choices.length === 0;
+	const noMaker = providers !== null && !anyMaker(providers, kind);
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
@@ -286,10 +339,16 @@ export function GenerateDialog({
 				</DialogHeader>
 				{noProvider && (
 					<p className="text-sm" data-testid="generate-no-provider">
-						{t(`ui.generate.no_provider.${kind}`)}{" "}
-						<Link href="/connections" className="underline">
-							{t("ui.generate.open_connections")}
-						</Link>
+						{noMaker ? (
+							t(`ui.generate.no_maker.${kind}`)
+						) : (
+							<>
+								{t(`ui.generate.no_provider.${kind}`)}{" "}
+								<Link href="/connections" className="underline">
+									{t("ui.generate.open_connections")}
+								</Link>
+							</>
+						)}
 					</p>
 				)}
 				{!noProvider && (
@@ -414,6 +473,65 @@ export function GenerateDialog({
 									/>
 								</div>
 							</div>
+						) : kind === "video" ? (
+							<div className="flex flex-wrap gap-3">
+								<div className="flex flex-col gap-1">
+									<Label htmlFor="generate-seconds">
+										{t("ui.generate.seconds")}
+									</Label>
+									<Input
+										id="generate-seconds"
+										className="w-24"
+										inputMode="numeric"
+										value={seconds}
+										onChange={(event) => {
+											setSeconds(event.target.value);
+											setEstimate(null);
+										}}
+									/>
+								</div>
+								<div className="flex flex-col gap-1">
+									<Label htmlFor="generate-aspect">
+										{t("ui.generate.aspect")}
+									</Label>
+									<select
+										id="generate-aspect"
+										value={aspect}
+										onChange={(event) => {
+											setAspect(event.target.value);
+											setEstimate(null);
+										}}
+										className="h-8 rounded-lg border border-input bg-background px-2 text-sm"
+									>
+										{VIDEO_ASPECTS.map((a) => (
+											<option key={a} value={a}>
+												{a}
+											</option>
+										))}
+									</select>
+								</div>
+								<div className="flex flex-col gap-1">
+									<Label htmlFor="generate-first-frame">
+										{t("ui.generate.first_frame")}
+									</Label>
+									<select
+										id="generate-first-frame"
+										value={firstFrame}
+										onChange={(event) => {
+											setFirstFrame(event.target.value);
+											setEstimate(null);
+										}}
+										className="h-8 max-w-56 rounded-lg border border-input bg-background px-2 text-sm"
+									>
+										<option value="">{t("ui.generate.no_first_frame")}</option>
+										{frames.map((f) => (
+											<option key={f.asset_id} value={f.asset_id}>
+												{f.asset_id}
+											</option>
+										))}
+									</select>
+								</div>
+							</div>
 						) : (
 							<div className="flex flex-wrap gap-3">
 								<div className="flex flex-col gap-1">
@@ -449,6 +567,14 @@ export function GenerateDialog({
 						{kind === "voice" && (
 							<p className="text-xs text-muted-foreground">
 								{t("ui.generate.disclosure")}
+							</p>
+						)}
+						{kind === "video" && (
+							<p
+								className="text-xs text-muted-foreground"
+								data-testid="generate-always-asks"
+							>
+								{t("ui.generate.always_asks")}
 							</p>
 						)}
 						<div className="flex flex-wrap items-center gap-3">

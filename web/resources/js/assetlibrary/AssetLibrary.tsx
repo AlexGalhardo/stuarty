@@ -25,7 +25,7 @@ import type {
 	OriginKind,
 } from "../editor/api/types";
 import { thumbnailUrl } from "../editor/api/urls";
-import { GenerateDialog } from "./GenerateDialog";
+import { GenerateDialog, type Kind as GenerateKind } from "./GenerateDialog";
 
 // The two sections of the asset library (SDD-011 section 14.6, RF-320 to RF-323): Visual Assets and Video
 // Assets are one library seen through a filter on the kind. The page draws what the service answers and sends
@@ -517,7 +517,11 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 	const [open, setOpen] = useState<string | null>(null);
 	// The dialog stays mounted so that it closes the way a dialog does; each opening is a new one (a new key),
 	// so a second generation starts from an empty form.
-	const [generating, setGenerating] = useState({ open: false, count: 0 });
+	const [generating, setGenerating] = useState<{
+		open: boolean;
+		count: number;
+		kind: GenerateKind;
+	}>({ open: false, count: 0, kind: "image" });
 
 	const load = useCallback(
 		async (query: AssetQuery, cursor?: string): Promise<void> => {
@@ -580,19 +584,40 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 							{t(`ui.assets.intro.${section}`)}
 						</p>
 					</div>
-					<Button
-						type="button"
-						onClick={() =>
-							setGenerating((was) => ({ open: true, count: was.count + 1 }))
-						}
-					>
-						{t(`ui.generate.open.${section}`)}
-					</Button>
+					<div className="flex flex-wrap gap-2">
+						<Button
+							type="button"
+							onClick={() =>
+								setGenerating((was) => ({
+									open: true,
+									count: was.count + 1,
+									kind: section === "visual" ? "image" : "voice",
+								}))
+							}
+						>
+							{t(`ui.generate.open.${section}`)}
+						</Button>
+						{section === "video" && (
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() =>
+									setGenerating((was) => ({
+										open: true,
+										count: was.count + 1,
+										kind: "video",
+									}))
+								}
+							>
+								{t("ui.generate.open.clip")}
+							</Button>
+						)}
+					</div>
 				</div>
 				{generating.count > 0 && (
 					<GenerateDialog
 						key={generating.count}
-						kind={section === "visual" ? "image" : "voice"}
+						kind={generating.kind}
 						open={generating.open}
 						onOpenChange={(next) =>
 							setGenerating((was) => ({ ...was, open: next }))
