@@ -36,7 +36,7 @@ Each step says what to do and what you must hear. "Hear" is a paraphrase: the wo
 | 6 | In the library, `Tab` to "Path of a file to import", type the path of a video, `Enter` on "Import". Then "Add to timeline". | The asset card is read with its name, kind and duration; after adding, "Moved, 1 item" is not said, but the clip appears as a cell of the timeline |
 | 7 | `F6` to the timeline. Arrow to the clip. Press `Enter`. | "Selected the name, Clip, 00:00.000 to 00:05.000, track Video 1" |
 | 8 | Press `Alt+Right`. | "Moved, 1 item" |
-| 9 | `Tab` to the button "List" of the timeline toolbar, `Enter`. | A dialog "Timeline as a table"; the table is read by row and column ("Name, Type, Track, Start, End, Duration, State"); `Esc` closes it and the focus returns to the button |
+| 9 | `Tab` to the button "List view" of the timeline toolbar, `Enter`. | A dialog "Timeline as a table"; the table is read by row and column ("Name, Type, Track, Start, End, Duration, State"); `Esc` closes it and the focus returns to the button |
 | 10 | In the inspector, find the field "Opacity" (tab "Video"), type a value outside the range, `Enter`. | The error is spoken as an alert, and the field is "invalid", with the message as its description |
 | 11 | Press `Control+K`. Type "export". | A dialog "Command palette"; the results are read as options; `Esc` returns to where you were |
 | 12 | Choose "Export", start it, and leave the focus in the dialog. | The progress said in steps of 10 percent, and "Export finished" at the end |
