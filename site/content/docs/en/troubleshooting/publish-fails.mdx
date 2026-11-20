@@ -1,0 +1,47 @@
+---
+title: "A post is refused or fails"
+description: "What to do when the check refuses a post, when a network refuses it, when a request waits for approval, or when a post is missed."
+---
+
+## You will learn
+
+- how to read why a post was refused before anything was sent;
+- what each kind of failure from a network means and what to do about it;
+- why a post waits, and how to move it on.
+
+## The idea
+
+A post can stop in four places: the **check** against the limits of the network (nothing is sent), the **approval queue** (nothing is sent until you decide), the **network** (it refused or could not take the file), and the **time** (the post was due while Stuarty was not running). Each one says what to do.
+
+## Quick start
+
+1. Find where it stopped. `stuarty publication:show <id>` shows the state of each target and its reason, and the Publish page shows the same.
+2. Match the state:
+
+   | You see | It means | Do this |
+   | --- | --- | --- |
+   | the check names a limit | the post breaks a limit of the network (a title too long, a video too long, the wrong format) | fix that one thing, run `stuarty publish:validate` again; the limits are on the [page of the network](/docs/reference/network-limits) |
+   | `waiting_approval` | a request waits for you | open **Approvals** and decide; an agent cannot |
+   | `missed` | its time passed while nothing was running | open the post and choose to send it now or give it a new time; both ask again |
+   | `failed` with `quota` | you reached the daily limit of the network | wait; publishing the same post again does not send the file twice if it went up |
+   | `failed` with `auth` | the network refused your sign-in (a changed password, a revoked app, a token that expired) | sign in again from **Connections** and accept every permission |
+   | `failed` with `not_eligible` | the account cannot publish this (for Instagram: not a professional account linked to a Page) | fix the account as the page of the network says |
+   | `failed` with `invalid` or `rejected` | the network did not accept the video | export again with the preset of that network and publish again |
+   | `failed` with `unavailable` | the network is down or still processing | try again in a few minutes |
+   | `sent_as_draft` | TikTok took the file as a draft | finish and publish it in the TikTok app: it is not published yet |
+
+3. Retry from the post: `stuarty publication:retry <id>`.
+
+A short outage is retried by itself a few times. Every other failure waits for you, so a post never loops against a network.
+
+## Common mistakes
+
+- Looking for the post on TikTok's feed. What Stuarty sends there is a draft in your inbox.
+- Raising a ceiling to "unstick" a post that waits for approval: a ceiling and an approval are different things, see [Approvals](/docs/guide/approvals).
+- Sending a post with a thumbnail to a network that takes none: the check refuses it so it is not dropped silently.
+
+## Next steps
+
+- [The publishing calendar](/docs/guide/publishing-calendar)
+- [Limits of the networks](/docs/reference/network-limits)
+- [Common problems](/docs/troubleshooting/common-problems)

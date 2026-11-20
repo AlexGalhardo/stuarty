@@ -1,0 +1,51 @@
+---
+title: "Security"
+description: "How Stuarty keeps your credentials, your files and your accounts safe when an AI agent works with them: the vault, the master key, the approval queue and what an agent cannot do."
+---
+
+## You will learn
+
+- where your credentials are kept and what protects them;
+- what an agent can and cannot do with your accounts;
+- how to report a vulnerability, and how to check a download.
+
+## The idea
+
+Stuarty handles your footage, holds the credentials of your social accounts and AI providers, and is driven by agents. The design assumes that text an agent reads can be hostile: a transcript, a file name, a note or the answer of a provider can carry an instruction. So the rules do not depend on the agent behaving.
+
+- **Credentials live only in the vault.** A token, a key or a client secret is written once into `vault.json` in your workspace, encrypted with AES-256-GCM under a key derived from your master key. No page, command, API, tool or log returns one; the secret is shown once when you paste it and never again. Only the code that opens a connection reads it, and a build check fails when any other package tries.
+- **The master key never enters the workspace.** It comes from an environment variable, a file (a Docker secret) or the keychain of your operating system, and it is held in memory only. Without it the vault cannot be opened: your projects and media are not encrypted by the vault and are not lost, and you connect the accounts again.
+- **Outbound only to what you connected.** Every outbound connection goes through a [connection](/docs/what-leaves-your-machine) you created. No operation sends data to an address its caller chose.
+- **A person approves what is irreversible or costs money.** Publishing and costly generation wait in the [approval queue](/docs/guide/approvals). An agent cannot approve, write a rule or raise a ceiling: those need a signed-in browser session.
+- **Everything is undoable and nothing is deleted for good** by an agent: deletes go to a trash, and an edit is one undo step for the person and for the agent.
+- **Untrusted text is marked.** What comes from a transcript, a provider, a network or a note is delimited and truncated before an agent reads it.
+- **Files are confined.** An import reads only the paths you allow, an export writes only into the workspace, and FFmpeg is given only the files Stuarty chose, never a network address.
+- **No telemetry,** and no central Stuarty service.
+
+## Quick start
+
+1. Keep the master key somewhere safe. On a server it is `deploy/secrets/master_key`; on a computer it is in the keychain, or in the file named by `STUARTY_MASTER_KEY_FILE`. Back it up apart from the workspace: a backup never holds it.
+2. Check the state of the vault:
+
+   ```bash
+   stuarty doctor --full
+   ```
+
+   The `vault` check says whether the key opens the vault, and what to do when it does not.
+3. In network mode, give an agent an [API key](/docs/self-hosting/api-keys) with only the scopes it needs, and rotate it when you stop using it.
+
+## Report a vulnerability
+
+Do not open a public issue. Use GitHub: Security, Report a vulnerability, at the [repository](https://github.com/AlexGalhardo/stuarty/security/advisories/new). Say the version, the system, the mode and the steps. To check that a download is genuine before you run it, see [Verify a release](/docs/self-hosting/verify-a-release).
+
+## Common mistakes
+
+- Putting a key in a note, a prompt or a project file. They are plain files an agent can read; the vault is for secrets.
+- Losing the master key and the backup together.
+- Giving an agent a key with every scope. Give it the least it needs.
+
+## Next steps
+
+- [What leaves your machine](/docs/what-leaves-your-machine)
+- [Privacy: the full list of connections](/docs/self-hosting/privacy)
+- [API keys and scopes](/docs/self-hosting/api-keys)
