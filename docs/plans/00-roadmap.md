@@ -42,7 +42,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [20](20-publishing-calendar-and-scheduler.md) | Publishing: calendar, approval and scheduler | L | 06, 07, 18 | DONE (2026-11-20, `0e4e0dbe2`..`77d7bc3b7`, merge `e0453f55f`; the scheduler runs while the app runs until epic 21; a real post not verified) |
 | [21](21-desktop-background-service.md) | Desktop background service for scheduled posts | M | 20 | DONE (2026-11-20, `d7d8dc810`..`38dc447d9` replayed, merge `7eb3945ee`; the tray, the real sign-in registration and the installer are a manual check of the author, D-096) |
 | [22](22-x-and-tiktok-drafts.md) | X and TikTok drafts | M | 20 | IN PROGRESS (senior-d, 2026-11-20) |
-| [23](23-blog-and-its-destinations.md) | Blog posts and their four destinations | L | 17, 20 | TODO |
+| [23](23-blog-and-its-destinations.md) | Blog posts and their four destinations | L | 17, 20 | IN PROGRESS (senior-d, 2026-11-20) |
 | [24](24-google-account-and-server-login.md) | Optional Google account and login on a server | M | 04, 18 | DONE (2026-11-20, `46c44b677`..`cde96fa60`, merge `105a2cf8a`; a real Google login and `scripts/no-egress.sh`, which needs Linux, not verified) |
 | [25](25-vps-package.md) | VPS package: Caddy, install, update and backup | M | 24 | DONE (2026-11-20, `7da749ed7`..`6293c2d78`, merge `2722becab`; a real VPS, the built image and `caddy validate` not verified) |
 
@@ -54,7 +54,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [27](27-image-document-core.md) | Image documents: core, catalogue, templates and export | L | 03 | DONE (2026-11-19, 97d5c560..7758cdda replayed and merged; WebP export waits for an ffargs builder) |
 | [28](28-image-editor-ui.md) | Image editor in the UI | L | 07, 27 | DONE (2026-11-19, `95ed640f`..`28a3e533`, merge `fac66975`) |
 | [29](29-image-adjustments-filters-and-masks.md) | Image adjustments, filters, masks and blend modes | L | 27 | DONE (2026-11-19, `5d7680de`..`525c359b`, merge `1ee6a61d`; image LUT waits for the author) |
-| [30](30-image-operations-with-a-model.md) | Image operations with a model | S | 10, 28 | IN PROGRESS (senior-e, 2026-11-20; in review) |
+| [30](30-image-operations-with-a-model.md) | Image operations with a model | S | 10, 28 | DONE (2026-11-20, 7563309a0..0f833f39f, merge eaf08b5db; threats T-96 to T-98) |
 | [31](31-motion-easing-crop-and-mask.md) | Motion: easing curves, animated crop and mask, presets | L | 03 | DONE (2026-11-19, `e914c99b`..`a88f8e63`, merge `4c2c5c85`) |
 | [32](32-nested-compositions.md) | Nested compositions | M | 06, 31 | DONE (2026-11-20, `07fe073da`..`8264cd564`, merge `320ce36d2`; the live group in the browser moved to epic 52 and constant speed to epic 53 by D-094) |
 | [33](33-external-motion-engine-hand-off.md) | Hand-off from an external motion engine | M | 08 | DONE (2026-11-20, `4f4022cc`..`bb19aa733` replayed, merge `3d693ba1d`; real HyperFrames round and no-egress on Linux not verified) |
@@ -73,7 +73,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 
 | Epic | Title | Size | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| [38](38-first-complete-flow-pilot.md) | Pilot of the first complete flow | M | 16, 19, 20, 28, 35 | TODO |
+| [38](38-first-complete-flow-pilot.md) | Pilot of the first complete flow | M | 16, 19, 20, 28, 35 | IN PROGRESS (senior-b, 2026-11-20) |
 | [39](39-recipes-for-commercials-and-long-videos.md) | Recipes for commercials and long videos | M | 33, 38 | TODO |
 | [40](40-documentation-site.md) | Documentation site for Stuarty | L | 02, and each section it documents | TODO |
 | [41](41-accessibility.md) | Accessibility of every section | M | 07, 28, 37 | TODO |

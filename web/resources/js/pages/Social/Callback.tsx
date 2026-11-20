@@ -1,4 +1,4 @@
-import { Head, Link } from "@inertiajs/react";
+import { Head, Link, router } from "@inertiajs/react";
 import { type ReactNode, useEffect, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
@@ -24,6 +24,14 @@ export default function SocialCallback(): ReactNode {
 		const state = query.get("state") ?? "";
 		const code = query.get("code") ?? undefined;
 		const error = query.get("error") ?? undefined;
+		// The state and the code leave the address before the exchange starts, not after it ends (SDD-007
+		// T-76). Inertia keeps the address of the page in its own history entry and writes it after the first
+		// render, so the address is replaced through Inertia, which also drops the code from that entry.
+		router.replace({
+			url: window.location.pathname,
+			preserveState: true,
+			preserveScroll: true,
+		});
 		createClient(new HttpTransport("/api/v1"))
 			.completeSocial({
 				state,
@@ -37,14 +45,6 @@ export default function SocialCallback(): ReactNode {
 			.catch((e) => {
 				setFailure(failureOf(e));
 				setPhase("failed");
-			})
-			.finally(() => {
-				// The address held a state and a code, both spent now: do not leave them in the history.
-				window.history.replaceState(
-					window.history.state,
-					"",
-					window.location.pathname,
-				);
 			});
 	}, []);
 

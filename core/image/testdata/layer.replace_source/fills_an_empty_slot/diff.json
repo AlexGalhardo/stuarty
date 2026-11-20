@@ -1,0 +1,30 @@
+[
+  {
+    "changes": {
+      "asset": [
+        null,
+        "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ],
+      "w": [
+        1280,
+        720
+      ],
+      "x": [
+        0,
+        280
+      ]
+    },
+    "id": "lyr_bbbbbbbbbb",
+    "kind": "layer.updated"
+  },
+  {
+    "id": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "kind": "asset.added",
+    "object": {
+      "hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "height": 400,
+      "name": "logo.png",
+      "width": 400
+    }
+  }
+]

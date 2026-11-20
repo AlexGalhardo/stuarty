@@ -1755,6 +1755,33 @@ Example:
 stuarty voice:list con_0123456789
 ```
 
+## `image:model-edit`
+
+Remove the background of a layer, or generate an image into a document, with the provider of a connection; the job says that the picture is sent, shows its estimate, waits for approval and puts the result in the document as one undoable step
+
+```text
+stuarty image:model-edit --project <id> --image <id> --operation remove_background|generate --connection <id> --model <id> [--layer <id>] [--prompt <text> | --prompt-file <file>] [--size <width>x<height>] [--dry-run]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--image` | string |  | the image document (required) |
+| `--operation` | string |  | remove_background or generate (required) |
+| `--connection` | string |  | the connection to the provider (required) |
+| `--model` | string |  | the model id, as provider:models lists it (required) |
+| `--layer` | string |  | remove_background: the image layer (required); generate: a layer whose box the picture must cover |
+| `--prompt` | string |  | generate only: what to draw; without it and without --prompt-file a generation reads it from standard input |
+| `--prompt-file` | string |  | generate only: a file that holds the prompt |
+| `--size` | string |  | generate only: width and height in pixels joined by x |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty image:model-edit --project prj_7k2m9x4q1b --image img_7k2m9x4q1b --operation remove_background --connection con_0123456789 --model a-model --layer lyr_7k2m9x4q1b
+```
+
 ## `image:create`
 
 Create an image document, blank or from a template

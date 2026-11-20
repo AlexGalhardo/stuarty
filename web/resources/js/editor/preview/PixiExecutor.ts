@@ -21,11 +21,10 @@ import type { PlanLayer, PlanMediaLayer, PlanWindow } from "../api/types";
 import { chunksUrl, proxyUrl, thumbnailUrl } from "../api/urls";
 import { setProcessedAudioStates } from "../state/processedAudioStore";
 import { AssetOwners } from "./assetOwners";
-import "pixi.js/advanced-blend-modes";
-
 import { AudioGraph } from "./audioGraph";
 import { uncoveredPixel } from "./background";
-import { pixiBlendMode } from "./blend";
+import { pixiBlendMode, readsBackdrop } from "./blend";
+import { registerOverAlphaBlends } from "./blendOverAlpha";
 import { ChromaKeyFilter } from "./chromaKey";
 import { DecodeClient, decoderPreference } from "./decode/client";
 import { createDecodeWorker } from "./decode/createWorker";
@@ -150,6 +149,19 @@ const browserTimers: PoolTimers = {
 	clearTimeout: (handle) => clearTimeout(handle as number),
 };
 
+// Whether a layer of `nodes`, or of a group among them, is drawn by a filter that reads the pixels drawn
+// so far. The layers of a group are drawn on its transparent surface, so `clear` holds for them.
+function nodesReadBackdrop(
+	nodes: readonly DrawNode[],
+	clear: boolean,
+): boolean {
+	return nodes.some(
+		(node) =>
+			readsBackdrop(node.layer.blend, clear) ||
+			(node.kind === "group" && nodesReadBackdrop(node.children, true)),
+	);
+}
+
 // PixiJS v8 on a WebGPU or WebGL2 canvas drawing exactly what a plan window
 // says: the background, then each layer at its centre, size, rotation, opacity
 // and colour matrix, with its shadow and outline, in plan order, and nothing
@@ -158,6 +170,9 @@ export class PixiExecutor implements PreviewExecutor {
 	private app: Application | null = null;
 	private readonly stage = new Container();
 	private info: ProjectInfo | null = null;
+	// The background of the frame on the canvas is not opaque, so a blend mode reads a partly covered
+	// backdrop (VV-268).
+	private clearsToAlpha = false;
 	// The last size asked for: the first resize arrives before the renderer has
 	// finished its async init, and is applied when it has.
 	private buffer: { width: number; height: number } | null = null;
@@ -284,6 +299,7 @@ export class PixiExecutor implements PreviewExecutor {
 		this.canvas = canvas;
 		try {
 			const preference = await detectRenderer();
+			registerOverAlphaBlends();
 			const app = new Application();
 			await app.init({
 				canvas,
@@ -298,6 +314,9 @@ export class PixiExecutor implements PreviewExecutor {
 				// later, so a transparent project can clear to alpha 0; an opaque
 				// colour still sets alpha to 1 on each draw.
 				backgroundAlpha: 0,
+				// A blend filter reads the pixels drawn so far, which WebGL has only through the back buffer;
+				// it is turned on only for a frame that has such a layer (setBackdrop).
+				useBackBuffer: false,
 				// The end-to-end build reads the buffer pixels back (preview-vs-export),
 				// which a WebGL canvas that clears after each composite cannot give.
 				preserveDrawingBuffer: import.meta.env.VITE_E2E === "1",
@@ -560,6 +579,7 @@ export class PixiExecutor implements PreviewExecutor {
 		const info = this.info;
 		if (app === null || info === null) return;
 		const [red, green, blue, alpha] = uncoveredPixel(plan);
+		this.clearsToAlpha = alpha < 255;
 		app.renderer.background.color = [
 			red / 255,
 			green / 255,
@@ -587,6 +607,9 @@ export class PixiExecutor implements PreviewExecutor {
 		const usedVideos = new Set<string>();
 		const used = new Set<string>();
 		this.complete = true;
+		// Before drawLevel, which draws the groups on their textures: a blend filter inside a group needs
+		// the back buffer turned on as well.
+		this.setBackdrop(app, nodesReadBackdrop(nodes, this.clearsToAlpha));
 
 		this.drawLevel(
 			this.stage,
@@ -740,11 +763,15 @@ export class PixiExecutor implements PreviewExecutor {
 		}
 		surface.container.scale.set(k);
 		const outer = this.scene;
+		const outerClear = this.clearsToAlpha;
 		this.scene = {
 			scale: k,
 			width: node.layer.group.width,
 			height: node.layer.group.height,
 		};
+		// The surface of a group starts transparent, so a blend inside it reads a backdrop that is not
+		// opaque whatever the project background (VV-268).
+		this.clearsToAlpha = true;
 		let drawn: number;
 		try {
 			drawn = this.drawLevel(
@@ -759,6 +786,7 @@ export class PixiExecutor implements PreviewExecutor {
 			);
 		} finally {
 			this.scene = outer;
+			this.clearsToAlpha = outerClear;
 		}
 		if (drawn === 0) {
 			// Nothing of it is drawn: the entry and the texture are dropped at the
@@ -786,6 +814,24 @@ export class PixiExecutor implements PreviewExecutor {
 		console.info(
 			"preview: a composition drawn as one unit is drawn approximately by the PixiJS executor; the renderer executor draws it as the export does",
 		);
+	}
+
+	// A frame with a layer whose blend reads the pixels drawn so far needs the back buffer on WebGL (VV-268);
+	// the others skip its extra full-frame copy. WebGPU reads them without it.
+	private setBackdrop(app: Application, on: boolean): void {
+		const renderer = app.renderer;
+		if (!("backBuffer" in renderer)) return;
+		renderer.backBuffer.useBackBuffer = on;
+		// PixiJS copies the back buffer onto the canvas with its source-over blend and does not clear the
+		// canvas first: over a clear background, a canvas that keeps its pixels (the end-to-end build, or two
+		// renders before the browser composites) would show the frame before under this one.
+		if (on && this.clearsToAlpha) {
+			renderer.renderTarget.bind({
+				target: renderer.view.renderTarget,
+				clear: true,
+				clearColor: [0, 0, 0, 0],
+			});
+		}
 	}
 
 	// What the page shows about the decode path, for the end-to-end specs: the
@@ -844,7 +890,7 @@ export class PixiExecutor implements PreviewExecutor {
 		sprite.scale.y = mirror.y * Math.abs(sprite.scale.y);
 		sprite.angle = g.rotation;
 		entry.holder.alpha = valueAt(layer.opacity, frame, layer.first);
-		entry.holder.blendMode = pixiBlendMode(layer.blend);
+		entry.holder.blendMode = pixiBlendMode(layer.blend, this.clearsToAlpha);
 		this.applyFilters(entry, layer, g, frame, info);
 		// Under the picture, on the holder, so the mask cuts all three together.
 		this.applyShadowOutline(entry, layer, g);

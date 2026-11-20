@@ -100,6 +100,10 @@ func testSocialBase(getenv func(string) string, mode string) (string, error) {
 		return "", nil
 	}
 
+	if err := requireTestEnv(getenv, EnvTestSocialURL, ErrTestSocial); err != nil {
+		return "", err
+	}
+
 	if mode == config.ModeNetwork {
 		return "", fmt.Errorf("%w: %s works only in local mode; unset it", ErrTestSocial, EnvTestSocialURL)
 	}
