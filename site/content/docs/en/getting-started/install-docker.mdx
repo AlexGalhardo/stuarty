@@ -1,0 +1,56 @@
+---
+title: "Install with Docker"
+description: "Run the published image on your computer or on a machine you own, with a volume for the workspace."
+---
+
+## You will learn
+
+- the one command that starts Stuarty in a container;
+- why the port is published on `127.0.0.1`;
+- how to check that it runs, and how to keep your data.
+
+## The idea
+
+Every stable release publishes one image for `linux/amd64` and `linux/arm64`, with Stuarty and a pinned LGPL FFmpeg inside, on two registries with the same digest: `ghcr.io/alexgalhardo/stuarty` and `alexgalhardo/stuarty` on Docker Hub. The tags are `X.Y.Z`, `X.Y` and `latest`. Use `latest` to try it and pin `X.Y.Z` for anything you keep.
+
+A container always runs in [network mode](/docs/self-hosting/network-mode), where signing in is required, so you give it an application key and the first administrator. Your workspace is the `/data` volume.
+
+## Quick start
+
+```bash
+docker run -d --name stuarty \
+  -p 127.0.0.1:7878:7878 \
+  -v stuarty:/data \
+  -e APP_KEY="$(openssl rand -base64 32)" \
+  -e STUARTY_ADMIN_EMAIL=admin@example.com \
+  -e STUARTY_ADMIN_PASSWORD="choose-a-long-password" \
+  ghcr.io/alexgalhardo/stuarty:X.Y.Z
+```
+
+Then check it:
+
+```bash
+curl -fsS http://127.0.0.1:7878/up
+docker exec stuarty stuarty version
+```
+
+Open `http://127.0.0.1:7878` in a browser and sign in with the email and password above.
+
+- `-p 127.0.0.1:7878:7878` publishes the port on your own computer only. Over plain HTTP nothing is encrypted, so any other interface needs TLS in front.
+- `-v stuarty:/data` keeps your projects and media when the container is replaced. A new container with the same volume finds them again.
+- `APP_KEY` is required and is not in the image. Keep the value: give the same one on every start.
+- The two `STUARTY_ADMIN_*` variables create the first administrator once, when no user exists.
+
+To stop it, run `docker rm -f stuarty`. The volume keeps your projects.
+
+## Common mistakes
+
+- Publishing the port without `127.0.0.1:`. Plain HTTP on another interface sends your password in the clear.
+- Losing the `APP_KEY`. Sessions stop working; the data in the volume is not affected.
+- Importing from a path: in network mode an import is confined to `STUARTY_IMPORT_ROOTS`. Mount a folder and name it, as [Run the Docker image](/docs/self-hosting/docker) shows.
+
+## Next steps
+
+- [Run the Docker image](/docs/self-hosting/docker): every option, the CLI inside the container and a first export
+- [Install on a server](/docs/install-server)
+- [What leaves your machine](/docs/what-leaves-your-machine)

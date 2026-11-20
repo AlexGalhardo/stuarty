@@ -4,11 +4,18 @@
 #
 #   bash scripts/docs-commands-smoke.sh [page.mdx ...]
 #
-# With no argument it takes the tutorials of site/content/docs/en/guide/ (tutorial-vertical-short first: it
-# creates the project that the next tutorial reads). It extracts every fenced bash block, starts
+# With no argument it takes the install pages of site/content/docs/en/getting-started/ and the tutorials of
+# site/content/docs/en/guide/ (the first short video, then tutorial-vertical-short: it creates the project that
+# the next tutorial reads). It extracts every fenced bash block, starts
 # `stuarty serve` with a private workspace on a loopback port, runs the blocks one after the other in a
 # folder that holds the sample media (made with ffmpeg) and stops at the first non-zero exit. The server and
 # the work folder are removed at the end.
+#
+# A block that needs what this machine does not have (Docker, root, a server of its own, a git clone from
+# the network) is not run: it is checked instead, and reported as "check". bash -n must accept it, every
+# STUARTY_* and APP_* variable it names must be in the configuration reference, and a deploy/ script it calls
+# must exist and know the flags the block passes. A block that starts the server (`stuarty serve`) is skipped:
+# this script already runs that server. SMOKE_DOCKER=1 runs the Docker blocks too.
 #
 # A block is skipped, and reported, when it cannot run offline: it installs a tool or a model (needs the
 # network, D-016) or it starts another agent client (`claude`). SMOKE_NETWORK=1 runs the model blocks too.
@@ -27,8 +34,11 @@ command -v ffmpeg >/dev/null 2>&1 || die "ffmpeg is required to make the sample 
 if [ "$#" -gt 0 ]; then
 	pages=("$@")
 else
+	start="$root/site/content/docs/en/getting-started"
 	guide="$root/site/content/docs/en/guide"
-	pages=("$guide/tutorial-vertical-short.mdx" "$guide/tutorial-agent-edit.mdx")
+	pages=("$start/install-windows.mdx" "$start/install-docker.mdx" "$start/install-server.mdx")
+	[ ! -f "$guide/first-short-video.mdx" ] || pages+=("$guide/first-short-video.mdx")
+	pages+=("$guide/tutorial-vertical-short.mdx" "$guide/tutorial-agent-edit.mdx")
 fi
 for p in "${pages[@]}"; do [ -f "$p" ] || die "no such page: $p"; done
 
@@ -87,6 +97,23 @@ fi
 
 ran=0
 skipped=0
+checked=0
+config="$root/site/content/generated/reference/configuration.mdx"
+
+# check_block verifies a block that cannot run here: its syntax, its variables and the deploy scripts it calls.
+check_block() {
+	local b="$1" label="$2" v flag script
+	bash -n "$b" || die "the block $label is not valid bash"
+	for v in $(grep -oE '(STUARTY|APP)_[A-Z_]+' "$b" | sort -u); do
+		grep -q "\`$v\`" "$config" || die "the block $label names $v, which the configuration reference does not list"
+	done
+	for script in $(grep -oE 'deploy/[a-z]+\.sh' "$b" | sort -u); do
+		[ -f "$root/$script" ] || die "the block $label calls $script, which does not exist"
+		for flag in $(grep -E "bash $script" "$b" | grep -oE ' --[a-z-]+' | sort -u); do
+			grep -q -- "$flag" "$root/$script" || die "the block $label passes$flag to $script, which does not know it"
+		done
+	done
+}
 for page in "${pages[@]}"; do
 	name="$(basename "$page" .mdx)"
 	rm -f "$work"/blocks/"$name"-*.sh
@@ -104,6 +131,14 @@ for page in "${pages[@]}"; do
 		if grep -qE '^[[:space:]]*claude[[:space:]]' "$b"; then
 			log "skip $label (starts another client)"; skipped=$((skipped + 1)); continue
 		fi
+		if grep -qE '^[[:space:]]*stuarty serve' "$b"; then
+			log "skip $label (starts the server: this script already runs one)"; skipped=$((skipped + 1)); continue
+		fi
+		if [ "${SMOKE_DOCKER:-}" != 1 ] && grep -qE '^[[:space:]]*(docker|sudo|git clone|bash deploy/)' "$b"; then
+			check_block "$b" "$label"
+			log "check $label (needs Docker or a server: syntax, variables and flags only; SMOKE_DOCKER=1 runs it)"
+			checked=$((checked + 1)); continue
+		fi
 		if [ "${SMOKE_NETWORK:-}" != 1 ] && grep -qE 'tools:install|--language|transcribe' "$b"; then
 			log "skip $label (installs or runs a model, needs the network; SMOKE_NETWORK=1 runs it)"; skipped=$((skipped + 1)); continue
 		fi
@@ -117,5 +152,5 @@ for page in "${pages[@]}"; do
 	done
 done
 
-[ "$ran" -gt 0 ] || die "no block ran"
-log "ok: $ran block(s) ran, $skipped skipped"
+[ "$((ran + checked))" -gt 0 ] || die "no block ran"
+log "ok: $ran block(s) ran, $checked checked without running, $skipped skipped"

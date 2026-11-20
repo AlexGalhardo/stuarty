@@ -71,7 +71,17 @@ export const navigation: NavCategory[] = [
 		dir: "getting-started",
 		prefix: "",
 		title: "Getting started",
-		pages: ["introduction", "installation", "quick-start", "workspace", "projects"],
+		pages: [
+			"introduction",
+			"what-leaves-your-machine",
+			"installation",
+			"install-windows",
+			"install-docker",
+			"install-server",
+			"quick-start",
+			"workspace",
+			"projects",
+		],
 	},
 	{
 		dir: "guide",
