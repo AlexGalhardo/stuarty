@@ -333,25 +333,57 @@
         "image_hint": "Choose an image of your workspace.",
         "image_none": "There are no images in the workspace yet. Import one into a project first."
       },
-      "import": {
-        "open_new": "Import image",
-        "open_layer": "Put a file in this image",
-        "title_new": "Import an image",
-        "title_layer": "Put a file in this image",
-        "description_new": "Make a new image from a photo or a picture you have.",
-        "description_layer": "Add a photo or a picture as one more layer of this image.",
-        "file": "Choose a file",
-        "file_help": "A picture of up to 64 MB. For a larger one, give its path on the server.",
-        "path": "Or the path of a file on the server",
-        "path_placeholder": "/home/ana/pictures/photo.jpg",
-        "name": "Name",
-        "name_placeholder": "The name of the file",
-        "size": "Size of the new image",
-        "size_file": "The size of the file",
-        "submit": "Import",
-        "working": "Importing…",
-        "cancel": "Cancel",
-        "need_source": "Choose a file or give a path."
+      "model": {
+        "remove": "Remove background",
+        "remove_needs_layer": "Remove background (select an image layer first)",
+        "generate": "Generate image",
+        "title": {
+          "remove_background": "Remove the background",
+          "generate": "Generate an image into this one"
+        },
+        "intro": {
+          "remove_background": "The background of the layer is removed by the model of a provider you connected. The result is the same layer with its new picture, and one Undo brings the original back.",
+          "generate": "A new layer is made from your prompt by the model of a provider you connected. One Undo takes it away. The price is shown before anything is asked of the provider."
+        },
+        "sent": {
+          "remove_background": "The picture of the layer {layer} will be sent to {provider}. Nothing is sent until you approve the cost.",
+          "generate": "Only the text you write below will be sent to {provider}. Nothing is sent until you approve the cost."
+        },
+        "no_provider": {
+          "remove_background": "No connected provider removes backgrounds yet. The connection must accept pictures.",
+          "generate": "No connected provider makes images yet."
+        },
+        "open_connections": "Connect one on the Connections page",
+        "project": "Project",
+        "project_hint": "The project that keeps the new file and its cost. The image itself belongs to no project.",
+        "connection": "Connection",
+        "model": "Model",
+        "no_price": "no price yet",
+        "prompt": "What to draw",
+        "cover_layer": "Cover the layer",
+        "estimate": "Show the estimate",
+        "estimated": "Estimated cost: {amount}",
+        "submit": "Start",
+        "working": {
+          "remove_background": "Removing the background of",
+          "generate": "Generating an image"
+        },
+        "layer_working": "working on it",
+        "state": {
+          "queued": "Waiting to start.",
+          "waiting_approval": "Waiting for your approval.",
+          "running": "Working.",
+          "succeeded": "Done.",
+          "failed": "It did not work.",
+          "cancelled": "Cancelled."
+        },
+        "progress": "{percent}% done",
+        "open_approvals": "Open the Approvals page",
+        "done": {
+          "applied": "The layer is in the image and it cost {amount}.",
+          "kept": "The image was not changed. The file is in your library and it cost {amount}."
+        },
+        "dismiss": "Close this message"
       },
       "brand": {
         "place_logo": "Place logo",
