@@ -49,12 +49,10 @@ func TestSharedImageTemplatesInNetworkMode(t *testing.T) {
 		t.Fatalf("a user reads a shared template: %v", err)
 	}
 
-	if _, err := e.svc.ImageCreate(
-		bob,
-		service.ImageCreateRequest{TemplateID: images[0].ID},
-	); code(
-		err,
-	) == "E_NOT_FOUND" {
+	// With no picture the template itself names what is missing, so it was read: one the caller may not see is
+	// E_NOT_FOUND, and an assertion on anything but E_SLOT would also pass for a refusal of another kind.
+	_, err = e.svc.ImageCreate(bob, service.ImageCreateRequest{TemplateID: images[0].ID})
+	if code(err) != "E_SLOT" {
 		t.Fatalf("a user cannot make a document from a shared template: %v", err)
 	}
 
