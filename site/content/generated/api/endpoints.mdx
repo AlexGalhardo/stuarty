@@ -184,6 +184,7 @@ Every operation has its own page with the parameters, the body, the responses an
 | `POST` | `/api/v1/providers/signin` | [`providers.signin.begin`](/docs/api/providers.signin.begin) | Start the sign-in to an AI provider; answers the address of the consent screen (a person in the browser only) |
 | `POST` | `/api/v1/providers/signin/complete` | [`providers.signin.complete`](/docs/api/providers.signin.complete) | Finish the sign-in with what the provider sent to the redirect address (a person in the browser only) |
 | `POST` | `/api/v1/text/generate` | [`text.generate`](/docs/api/text.generate) | Start a text generation with the provider of a connection; the job waits for approval and shows its estimate |
+| `POST` | `/api/v1/video/generate` | [`video.generate`](/docs/api/video.generate) | Start a video generation with the provider of a connection; the job waits for a person unless a rule the user wrote covers it, shows its estimate and stores the clip as an asset with its origin |
 | `POST` | `/api/v1/voice/generate` | [`voice.generate`](/docs/api/voice.generate) | Start a speech generation with the provider of a connection; the job waits for approval, shows its estimate and stores the audio as an asset with its origin |
 
 ## Images
