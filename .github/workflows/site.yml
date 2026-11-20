@@ -61,28 +61,30 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.5
+      # Node only for scripts/api-reference.test.ts, whose syntax check needs node --check (Bun has none).
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
-          cache: npm
-          cache-dependency-path: site/package-lock.json
-      - run: npm ci
+      - run: bun install --frozen-lockfile
       # Tests that import the site's own modules need its dependencies;
       # test:scripts stays dependency-free for the Last updated job.
-      - run: npm run test:site
-      - run: npm run lint
-      - run: npm run check:mdx
+      - run: bun run test:site
+      - run: bun run lint
+      - run: bun run check:mdx
       # The reference is generated from the registry, the schemas and the CLI of the binary:
       # a change that is not regenerated fails here (SDD-010 section 8).
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
-      - run: npm run reference:check
-      - run: npm run build
+      - run: bun run reference:check
+      - run: bun run build
         env:
           # site/lib/releases.ts reads the latest release; the token only raises the API rate limit.
           GITHUB_TOKEN: ${{ github.token }}
-      - run: npm run check:built
+      - run: bun run check:built
       - name: Add the desktop update feed and its installers
         if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         working-directory: .
@@ -109,11 +111,11 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          node-version: 24
-      - run: npm run test:scripts
-      - run: npm run check:last-updated
+          bun-version: 1.4.5
+      - run: bun run test:scripts
+      - run: bun run check:last-updated
 
   deploy:
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
