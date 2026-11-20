@@ -20,6 +20,7 @@ import type {
 	Connection,
 	ConnectionTestResult,
 	CostSummary,
+	ProviderSignIn,
 	ProviderView,
 } from "../../editor/api/types";
 import ProviderCards from "./ProviderCards";
@@ -130,6 +131,7 @@ export default function Connections(): ReactNode {
 	const t = useT();
 	const [items, setItems] = useState<Connection[] | null>(null);
 	const [providers, setProviders] = useState<ProviderView[]>([]);
+	const [signIns, setSignIns] = useState<ProviderSignIn[]>([]);
 	const [cost, setCost] = useState<CostSummary | null>(null);
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [results, setResults] = useState<Record<string, ConnectionTestResult>>(
@@ -146,6 +148,13 @@ export default function Connections(): ReactNode {
 		try {
 			setItems((await api().listConnections()).connections);
 			setProviders((await api().listProviders()).providers);
+			// A build with no sign-in answers an empty list; a failure to read it leaves the cards without states.
+			setSignIns(
+				await api()
+					.listProviderSignIns()
+					.then((r) => r.sign_ins)
+					.catch(() => []),
+			);
 			// The spend of a card is a number the service computed; a failure to read it leaves the cards without it.
 			setCost(
 				await api()
@@ -257,6 +266,7 @@ export default function Connections(): ReactNode {
 					<ProviderCards
 						providers={providers}
 						connections={items ?? []}
+						signIns={signIns}
 						cost={cost}
 						onChanged={() => void load()}
 					/>
