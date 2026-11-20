@@ -27,6 +27,19 @@ func CompositionTimelines(d *Document) []string {
 	return slices.Sorted(maps.Keys(seen))
 }
 
+// RenameCompositions points every composition item of d that names a timeline in ids at the id it maps to, for
+// a copy of a production whose timelines get new ids (a duplicate, an import as new): the copy must use the
+// copies of its timelines and not the timelines of the original. An id not in ids is left as it is.
+func RenameCompositions(d *Document, ids map[string]string) {
+	for id := range d.Items {
+		it := d.Items[id]
+		if to, ok := ids[it.Timeline]; ok && it.Type == ItemComposition && to != it.Timeline {
+			it.Timeline = to
+			d.Items[id] = it
+		}
+	}
+}
+
 // NestingKind says which rule a placement breaks.
 type NestingKind string
 
