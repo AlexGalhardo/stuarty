@@ -76,7 +76,8 @@ test.describe("preview-vs-export", () => {
 
 	// Epic 52: the PixiJS executor draws a composition group on a render texture,
 	// which is an approximation of the export's group (SDD-013 section 4.7.1): the
-	// same gate of SSIM and mean colour, with the dimmed markers left unmeasured.
+	// same gate of SSIM and mean colour; the displacement of these smooth clips is
+	// not measured (GROUP_CASE in support/golden.ts).
 	for (const levels of [1, 2] as const) {
 		test(`nested ${levels === 1 ? "one level" : "two levels"}: the group is close to the export's`, async ({
 			page,
