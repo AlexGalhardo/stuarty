@@ -74,9 +74,48 @@ type knownPreview struct {
 	doc          *timeline.Document
 	item         string
 	start, count int
+	// nested is set for an item inside a composition: doc then holds the composition item, and the document of the
+	// item's own timeline is found with the lookup when a target is resolved (SDD-004 section 7.1).
+	nested *nestedPreview
+}
+
+// nestedPreview is what resolving the file of an item inside a composition needs besides the composition's document:
+// where to find the timelines that the composition uses, and the whole source that the key was made from.
+type nestedPreview struct {
+	opts  plan.Options
+	whole plan.AudioSource
+	owner *timeline.Document // the document of the item's timeline, with that item only (plan.PreviewSubject)
 }
 
 func (p *audioPreviews) remember(project, key, item string, doc *timeline.Document, start, count int) {
+	p.store(project, key, knownPreview{
+		key: key, doc: plan.PreviewSubject(doc, item), item: item, start: start, count: count,
+	})
+}
+
+// rememberNested is remember for an entry of the plan that comes from a composition.
+func (p *audioPreviews) rememberNested(
+	project, key, item string, doc *timeline.Document, opts plan.Options, start, count int,
+) {
+	top, _, _ := strings.Cut(item, "/")
+	comp := doc.Items[top]
+	k := knownPreview{
+		key: key, doc: plan.CompositionSubject(doc, top), item: item, start: start, count: count,
+		nested: &nestedPreview{opts: plan.Options{Nested: opts.Nested}},
+	}
+
+	// The key was made from the sound of the whole composition item, not from the frames of one window.
+	whole, owner, ok := plan.NestedPreviewSource(k.doc, k.nested.opts, item, comp.Start, comp.Start+comp.Duration)
+	if !ok {
+		return
+	}
+
+	// The item's own id: a nested item of a nested composition has more than one slash.
+	k.nested.whole, k.nested.owner = whole, plan.PreviewSubject(owner, item[strings.LastIndex(item, "/")+1:])
+	p.store(project, key, k)
+}
+
+func (p *audioPreviews) store(project, key string, k knownPreview) {
 	id := bitmapID{project, key}
 
 	p.mu.Lock()
@@ -95,9 +134,7 @@ func (p *audioPreviews) remember(project, key, item string, doc *timeline.Docume
 		p.order = p.order[1:]
 	}
 
-	p.known[id] = knownPreview{
-		key: key, doc: plan.PreviewSubject(doc, item), item: item, start: start, count: count,
-	}
+	p.known[id] = k
 	p.order = append(p.order, id)
 }
 
@@ -111,11 +148,20 @@ func (p *audioPreviews) lookup(project, key string) (knownPreview, bool) {
 }
 
 // registerAudioPreviews makes the processed sound of the items of a plan window askable by key.
-func (s *svc) registerAudioPreviews(project string, doc *timeline.Document, w *plan.WindowPlan) {
+func (s *svc) registerAudioPreviews(project string, doc *timeline.Document, opts plan.Options, w *plan.WindowPlan) {
 	for i := range w.Audio {
-		if pa := w.Audio[i].Processed; pa != nil {
-			s.previews.remember(project, pa.Key, w.Audio[i].Item, doc, pa.Start, pa.Frames)
+		pa := w.Audio[i].Processed
+		if pa == nil {
+			continue
 		}
+
+		if w.Audio[i].Timeline != "" {
+			s.previews.rememberNested(project, pa.Key, w.Audio[i].Item, doc, opts, pa.Start, pa.Frames)
+
+			continue
+		}
+
+		s.previews.remember(project, pa.Key, w.Audio[i].Item, doc, pa.Start, pa.Frames)
 	}
 }
 
@@ -125,7 +171,8 @@ type previewTarget struct {
 	key         string // the key of the file: the one of the request, or the one of the window
 	first, last int    // the frames of the whole file that this one covers, counted from its first, the last inclusive
 	window      bool
-	job         string // the id of the work folder of the render
+	job         string             // the id of the work folder of the render
+	doc         *timeline.Document // the document that holds the asset of the source
 }
 
 // target resolves a request: the whole item, or the window of PreviewWindowSeconds that starts at the frame from of
@@ -136,12 +183,18 @@ func (k *knownPreview) target(key, from string) (*previewTarget, error) {
 	doc := k.doc
 
 	if from == "" {
-		src, ok := plan.PreviewSource(doc, k.item, k.start, k.start+k.count)
+		if k.nested != nil {
+			return &previewTarget{
+				src: k.nested.whole, key: key, first: 0, last: k.count - 1, doc: k.nested.owner,
+			}, nil
+		}
+
+		src, owner, ok := k.source(k.start, k.start+k.count)
 		if !ok {
 			return nil, newError(command.CodeNotFound, "there is no processed sound with that key.")
 		}
 
-		return &previewTarget{src: src, key: key, first: 0, last: k.count - 1}, nil
+		return &previewTarget{src: src, key: key, first: 0, last: k.count - 1, doc: owner}, nil
 	}
 
 	n, err := strconv.Atoi(from)
@@ -155,12 +208,32 @@ func (k *knownPreview) target(key, from string) (*previewTarget, error) {
 	window := (PreviewWindowSeconds*fps.Num + fps.Den - 1) / fps.Den
 	to := min(n+window, k.count)
 
-	src, ok := plan.PreviewSource(doc, k.item, k.start+n, k.start+to)
+	src, owner, ok := k.source(k.start+n, k.start+to)
 	if !ok {
 		return nil, newError(command.CodeNotFound, "there is no processed sound with that key.")
 	}
 
-	return &previewTarget{src: src, key: plan.PreviewKey(doc, &src), first: n, last: to - 1, window: true}, nil
+	return &previewTarget{src: src, key: plan.PreviewKey(owner, &src), first: n, last: to - 1, window: true, doc: owner}, nil
+}
+
+// source is the source of the file over the timeline frames [from, to) and the document that holds its asset: the
+// item's own, or for an item inside a composition the one of the timeline it sits in.
+func (k *knownPreview) source(from, to int) (plan.AudioSource, *timeline.Document, bool) {
+	if k.nested != nil {
+		src, owner, ok := plan.NestedPreviewSource(k.doc, k.nested.opts, k.item, from, to)
+		if !ok {
+			return plan.AudioSource{}, nil, false
+		}
+
+		return src, plan.PreviewSubject(owner, k.item[strings.LastIndex(k.item, "/")+1:]), true
+	}
+
+	src, ok := plan.PreviewSource(k.doc, k.item, from, to)
+	if !ok {
+		return plan.AudioSource{}, nil, false
+	}
+
+	return src, k.doc, true
 }
 
 // openAudioPreview serves the processed sound of an item by key (SDD-003 section 6.5): the file when it is stored,
@@ -345,7 +418,7 @@ func (s *svc) renderPreviewFile(
 	defer cancel()
 
 	if err := renderer.RenderAudioPreview(ctx, AudioPreviewInput{
-		Doc: known.doc, Source: t.src, JobID: t.job, OutPath: part,
+		Doc: t.doc, Source: t.src, JobID: t.job, OutPath: part,
 	}); err != nil {
 		_ = os.Remove(part)
 
