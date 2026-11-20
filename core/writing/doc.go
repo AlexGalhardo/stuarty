@@ -4,7 +4,10 @@
 // text and its revisions and calls these functions, and no surface computes a count of its own.
 package writing
 
-import "fmt"
+import (
+	"fmt"
+	"slices"
+)
 
 // Kind is the kind of a text item (SDD-019 section 2).
 type Kind string
@@ -14,13 +17,14 @@ const (
 	KindScript  Kind = "script"
 	KindCopy    Kind = "copy"
 	KindCaption Kind = "caption"
+	KindPost    Kind = "post"
 )
 
 // Kinds lists the kinds in the order a list shows them.
-func Kinds() []Kind { return []Kind{KindScript, KindCopy, KindCaption} }
+func Kinds() []Kind { return []Kind{KindScript, KindCopy, KindCaption, KindPost} }
 
 // Valid reports whether k is a kind of text.
-func (k Kind) Valid() bool { return k == KindScript || k == KindCopy || k == KindCaption }
+func (k Kind) Valid() bool { return slices.Contains(Kinds(), k) }
 
 // DefaultKind is the kind of a text made without one.
 const DefaultKind = KindCopy
@@ -58,5 +62,5 @@ func CheckKind(kind string) (Kind, *RuleError) {
 		return k, nil
 	}
 
-	return "", validation("text_kind", "use script, copy or caption", "the text kind %q is not known", kind)
+	return "", validation("text_kind", "use script, copy, caption or post", "the text kind %q is not known", kind)
 }
