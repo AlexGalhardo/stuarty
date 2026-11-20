@@ -186,12 +186,15 @@
         "images.create",
         "images.get",
         "images.edit",
+        "images.events",
         "images.export",
         "images.file",
         "images.frame",
         "images.history",
         "images.redo",
-        "images.undo"
+        "images.undo",
+        "images.import",
+        "images.import_file"
       ]
     },
     {
