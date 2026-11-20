@@ -398,21 +398,8 @@ func (s *svc) setItemState(
 				return ch, nil
 			}
 
-			if to == ProjectTrashed && it.Kind == string(project.Timeline) {
-				if users := s.compositionUsers(ctx, tx, it.Ref); len(users) > 0 {
-					return nil, newError(
-						command.CodeInUse,
-						"the timeline is used as a composition by %d other timeline(s).",
-						len(users),
-					).
-						withPath("item_id").
-						withHint("remove those compositions or expand them with composition.expand, then trash it").
-						withDetail("used_by", users)
-				}
-			}
-
-			if to == ProjectActive && it.Kind == string(project.Timeline) {
-				if nerr := s.checkRestoredNesting(ctx, tx, it.Ref); nerr != nil {
+			if it.Kind == string(project.Timeline) {
+				if nerr := s.checkTimelineState(ctx, tx, it.Ref, to); nerr != nil {
 					return nil, nerr
 				}
 			}
