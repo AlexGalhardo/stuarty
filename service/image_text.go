@@ -70,5 +70,13 @@ func ImageStepText(r *ImageStepResult) string {
 	return withNote(head + text)
 }
 
-// ImageExportText is the text of an image export.
-func ImageExportText(r *ImageExportResult) string { return r.Text + "\n" + r.Path }
+// ImageExportText is the text of an image export: the file, and the export job a publication takes as its
+// thumbnail (D-111), so a reader of the text alone has the id as well.
+func ImageExportText(r *ImageExportResult) string {
+	text := r.Text + "\n" + r.Path
+	if r.JobID != "" {
+		text += "\njob " + r.JobID + ": a publication takes it as its thumbnail"
+	}
+
+	return text
+}

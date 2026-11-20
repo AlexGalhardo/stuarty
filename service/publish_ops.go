@@ -412,7 +412,8 @@ func (s *svc) publishImageFile(ctx context.Context, c Caller, path string, row *
 	}
 
 	ext, ok := imageExtensions[img.Format]
-	if !ok || len(img.SHA256) < 12 || strings.ContainsAny(img.ImageID, "/\\") {
+	if !ok || !isHex64(img.SHA256) || img.Revision < 0 || img.ImageID == "." || img.ImageID == ".." ||
+		strings.ContainsAny(img.ImageID, "/\\:") {
 		return nil, internalError()
 	}
 
@@ -421,12 +422,17 @@ func (s *svc) publishImageFile(ctx context.Context, c Caller, path string, row *
 	))
 	full := filepath.Join(s.workspace, filepath.FromSlash(rel))
 
+	if inside, rerr := filepath.Rel(filepath.Join(s.workspace, "exports", "images"), full); rerr != nil ||
+		strings.HasPrefix(inside, "..") {
+		return nil, internalError()
+	}
+
 	st, err := os.Stat(full)
 	if err != nil || !st.Mode().IsRegular() {
 		return nil, validationAt(path, "the file of that export is gone.").withHint("export it again")
 	}
 
-	if img.Bytes > 0 && img.Bytes != st.Size() {
+	if img.Bytes != st.Size() {
 		return nil, validationAt(path, "the file of that export changed after it was made.").withHint("export it again")
 	}
 

@@ -247,7 +247,7 @@ A project-limited key may use the operations that name its project and is refuse
 
 ## 10. The job `publish.upload` and its approval
 
-`publish.upload` is registered with `ApprovableKind` (SDD-015 section 5) by the service when a registry of connectors is given. Its arguments: `connection_id`, `export` (the id of a succeeded export job of the project, the video), `thumbnail` (the id of a succeeded still export of the project, or of an `image.export` job of an image the caller may see, SDD-021 section 6; optional), `title`, `description`, `tags`, `visibility`, `made_for_kids`, `ai_disclosure`.
+`publish.upload` is registered with `ApprovableKind` (SDD-015 section 5) by the service when a registry of connectors is given. Its arguments: `connection_id`, `export` (the id of a succeeded export job of the project, the video), `thumbnail` (the id of a succeeded still export of the project, or of an `image.export` job the caller made of an image it may still see, SDD-021 section 6; never as the `export`; optional), `title`, `description`, `tags`, `visibility`, `made_for_kids`, `ai_disclosure`.
 
 `Prepare` resolves the files (the export must belong to the project and be `succeeded`, inside the workspace), validates the post with the connector (`E_VALIDATION`), checks that the connection exists and is of a social kind, and describes the action: the **summary** (one line: network, channel, title, visibility, file name and size; the title is the person's text, so control and invisible characters are refused as SDD-015 section 3 says), the connection, the estimate (no cost). It makes no request.
 
