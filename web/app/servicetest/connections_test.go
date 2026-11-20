@@ -639,7 +639,10 @@ func TestConnectionTestEnvelopeIsForAgentsOnly(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	agent := service.WithCaller(context.Background(), service.Caller{Actor: "key:key_aaaaaaaaaa", Scopes: service.AllScopes})
+	agent := service.WithCaller(
+		context.Background(),
+		service.Caller{Actor: "key:key_aaaaaaaaaa", Scopes: service.AllScopes},
+	)
 
 	asData, err := e.svc.ConnectionTest(agent, service.ConnectionRef{ID: created.ID})
 	if err != nil || !strings.HasPrefix(asData.Message, "<untrusted_media_text ") {
@@ -647,7 +650,8 @@ func TestConnectionTestEnvelopeIsForAgentsOnly(t *testing.T) {
 	}
 
 	asText, err := e.svc.ConnectionTest(e.as(ui), service.ConnectionRef{ID: created.ID})
-	if err != nil || strings.Contains(asText.Message, "untrusted_media_text") || !strings.Contains(asText.Message, "pong") {
+	if err != nil || strings.Contains(asText.Message, "untrusted_media_text") ||
+		!strings.Contains(asText.Message, "pong") {
 		t.Errorf("the UI must get the text only: %+v, %v", asText, err)
 	}
 }
