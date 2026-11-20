@@ -131,7 +131,18 @@ func (s *svc) editConnection(
 	}
 
 	p, ok := s.providers.Provider(conn.Kind)
-	if !ok || !slices.Contains(p.Descriptor().Capabilities, capability) || !slices.Contains(conn.Accepts, accept) {
+	capable := ok && slices.Contains(p.Descriptor().Capabilities, capability)
+
+	// A sign-in grants text only (SDD-016 section 12.2): its token never carries a picture to the provider,
+	// whatever the connection accepts. It is judged first so the hint names the way that works.
+	if capable && s.isSignIn(ctx, conn.ID) {
+		return conn, newError(command.CodeValidation,
+			"a connection made by a sign-in generates text only, not %s.", capability).
+			withPath("args.connection_id").
+			withHint("connect the provider with an API key for an image")
+	}
+
+	if !capable || !slices.Contains(conn.Accepts, accept) {
 		return conn, newError(
 			command.CodeValidation,
 			"the connection is not a connection to a provider with the capability %s that accepts %s.",
