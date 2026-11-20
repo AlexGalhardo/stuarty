@@ -175,5 +175,21 @@ func Catalog() []Rule {
 			"render it with alpha",
 			true,
 		},
+		{
+			CodeAudioLimiterNotLast,
+			SeverityWarning,
+			"doc",
+			"a limiter in a processor chain is followed by another enabled processor",
+			"move it last with audio.processor_move",
+			true,
+		},
+		{
+			CodeAudioNoiseReductionRepeats,
+			SeverityWarning,
+			"doc",
+			"a processor chain has more than one enabled noise reduction",
+			"remove one",
+			true,
+		},
 	}
 }

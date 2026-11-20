@@ -584,10 +584,10 @@
     {
       "name": "view",
       "domain": "video",
-      "summary": "render a frame or a contact sheet of a project",
+      "summary": "render a frame or a contact sheet of a project, or measure its sound",
       "usage": [
-        "stuarty view --project <id> [--mode frame|sheet] [--at t] [--times t1,t2,...]",
-        "    [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px]"
+        "stuarty view --project <id> [--mode frame|sheet|audio] [--at t] [--times t1,t2,...]",
+        "    [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px] [--item id]"
       ],
       "example": "stuarty view --project prj_7k2m9x4q1b --at 1s --json",
       "flags": [
@@ -595,7 +595,12 @@
           "name": "mode",
           "type": "string",
           "default": "frame",
-          "usage": "frame (one image at --at) or sheet (a grid)"
+          "usage": "frame (one image at --at), sheet (a grid) or audio (the loudness, true peak and noise floor with and without the audio processors)"
+        },
+        {
+          "name": "item",
+          "type": "string",
+          "usage": "audio: measure this clip or audio item alone"
         },
         {
           "name": "at",
@@ -610,12 +615,12 @@
         {
           "name": "from",
           "type": "string",
-          "usage": "sheet: first time (default 0s)"
+          "usage": "sheet: first time (default 0s); audio: start of the range"
         },
         {
           "name": "until",
           "type": "string",
-          "usage": "sheet: last time, included (default the last frame)"
+          "usage": "sheet: last time, included (default the last frame); audio: end of the range, excluded"
         },
         {
           "name": "count",

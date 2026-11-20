@@ -21,7 +21,7 @@ CLI: `stuarty video` lists the commands of the domain and `stuarty video <verb>`
 - `undo`: undo the last step of the caller
 - `redo`: redo the last undone step of the caller
 - `lint`: check a project against every lint rule (an edit result runs only the fast rules, lint_scope fast)
-- `view`: render a frame or a contact sheet of a project
+- `view`: render a frame or a contact sheet of a project, or measure its sound
 - `export`: export a project to a file
 - `export:presets`: list the export presets of the platforms
 - `export:check`: check that a project fits an export preset, before any encoding
@@ -43,11 +43,11 @@ CLI: `stuarty video` lists the commands of the domain and `stuarty video <verb>`
 
 ## Operations
 
-These 77 operations go in the `operations` of `edit` with `domain=video`, grouped by namespace; `command_help domain=video` lists them with their summaries and `command_help name=<operation> domain=video` gives the arguments of one.
+These 82 operations go in the `operations` of `edit` with `domain=video`, grouped by namespace; `command_help domain=video` lists them with their summaries and `command_help name=<operation> domain=video` gives the arguments of one.
 
 - `animation`: apply_preset, list_presets
 - `asset`: remove
-- `audio`: add, duck, mark_beats
+- `audio`: add, apply_preset, duck, mark_beats, processor_add, processor_move, processor_remove, processor_set
 - `caption`: add, edit_word, from_transcript, import_subtitles, merge, retime_from_clip, set_breaks, set_style, set_words, split
 - `clip`: add, remove_silences, replace_media, set_blend, set_blur, set_chroma_key, set_color, set_effects, set_filter, set_flip, set_framing, set_mask, set_outline, set_shadow, set_speed
 - `font`: add, remove

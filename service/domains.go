@@ -28,6 +28,7 @@ var OperationDomains = map[string]string{
 	"TemplateImport": command.DomainVideo, "SnapPoints": command.DomainVideo, "PlanWindow": command.DomainVideo,
 	"OpenFile": command.DomainVideo, "ProjectOtioExport": command.DomainVideo, "ProjectOtioImport": command.DomainVideo,
 	"ExportPresetList": command.DomainVideo, "ExportCheck": command.DomainVideo, "ExportBatch": command.DomainVideo,
+	"AudioMeasure": command.DomainVideo,
 
 	"ImageCreate": command.DomainImage, "ImageList": command.DomainImage, "ImageDescribe": command.DomainImage,
 	"ImageEdit": command.DomainImage, "ImageUndo": command.DomainImage, "ImageRedo": command.DomainImage,
