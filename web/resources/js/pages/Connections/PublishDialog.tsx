@@ -1,7 +1,12 @@
 import { Link } from "@inertiajs/react";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 
-import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import {
+	type Failure,
+	FailureNote,
+	failureIsAbout,
+	failureOf,
+} from "@/components/Failure";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import {
@@ -84,6 +89,15 @@ export function PublishDialog({
 	const [waiting, setWaiting] = useState<Job | null>(null);
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [busy, setBusy] = useState(false);
+	// The core named the kids question as the wrong field: it is marked, and the focus goes to it.
+	const kidsMissing = failureIsAbout(failure, "made_for_kids") && kids === "";
+	useEffect(() => {
+		if (kidsMissing) {
+			document
+				.querySelector<HTMLInputElement>("[data-kids-missing] input")
+				?.focus();
+		}
+	}, [kidsMissing, failure]);
 
 	useEffect(() => {
 		api()
@@ -282,7 +296,13 @@ export function PublishDialog({
 							</select>
 						</div>
 						{asksKids && (
-							<fieldset className="flex flex-col gap-2">
+							<fieldset
+								className={`flex flex-col gap-2 ${
+									kidsMissing ? "rounded-lg border border-destructive p-2" : ""
+								}`}
+								data-kids-missing={kidsMissing ? "" : undefined}
+								aria-describedby={kidsMissing ? "publish-failure" : undefined}
+							>
 								<legend className="text-sm font-medium">
 									{t("ui.social.kids")}
 								</legend>
@@ -300,6 +320,11 @@ export function PublishDialog({
 										</label>
 									))}
 								</div>
+								{kidsMissing && (
+									<p className="text-sm text-destructive">
+										{t("ui.social.kids_required")}
+									</p>
+								)}
 							</fieldset>
 						)}
 						<label className="flex items-center gap-2 text-sm">
@@ -311,7 +336,7 @@ export function PublishDialog({
 							/>
 							{t("ui.social.synthetic")}
 						</label>
-						<FailureNote failure={failure} />
+						<FailureNote failure={failure} id="publish-failure" />
 						{checked !== null && (
 							<div
 								role="status"
