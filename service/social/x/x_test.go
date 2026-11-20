@@ -68,14 +68,31 @@ func cred(srv *socialtest.Server, rotated *[][]byte) connections.Credential {
 	}
 
 	if rotated != nil {
-		c.Rotate = func(s []byte) error {
-			*rotated = append(*rotated, bytes.Clone(s))
-
-			return nil
-		}
+		c.Rotate = vault([]byte(signedIn), func(s []byte) { *rotated = append(*rotated, bytes.Clone(s)) })
 	}
 
 	return c
+}
+
+// vault is a Rotate over a vault that holds held: it gives the update the secret held now and records what is
+// written.
+func vault(held []byte, wrote func([]byte)) func(func([]byte) ([]byte, error)) error {
+	var mu sync.Mutex
+
+	return func(update func([]byte) ([]byte, error)) error {
+		mu.Lock()
+		defer mu.Unlock()
+
+		next, err := update(bytes.Clone(held))
+		if err != nil || next == nil {
+			return err
+		}
+
+		held = bytes.Clone(next)
+		wrote(next)
+
+		return nil
+	}
 }
 
 func newUpload(t *testing.T) social.Upload {
@@ -759,10 +776,60 @@ func TestWhenTheNewTokenCannotBeKeptTheSendStops(t *testing.T) {
 	srv := server(t, "token refresh")
 	c, _ := connector(srv)
 	cr := cred(srv, nil)
-	cr.Rotate = func([]byte) error { return errors.New("the vault is locked") }
+	cr.Rotate = func(func([]byte) ([]byte, error)) error { return errors.New("the vault is locked") }
 
 	_, err := c.accessToken(context.Background(), cr)
 	asKind(t, err, social.KindUnavailable, "vault_write_failed")
+}
+
+// A price a person edited while a send was refreshing is kept: the new refresh token is written into the
+// secret the vault holds then, not over it with the secret the send read before the edit.
+func TestANewRefreshTokenKeepsAPriceEditedMeanwhile(t *testing.T) {
+	t.Parallel()
+
+	srv := server(t, "token refresh")
+	c, _ := connector(srv)
+	cr := cred(srv, nil)
+
+	edited, err := c.SetPrice([]byte(signedIn), publish.Price{PostMicros: 20_000, LinkMicros: 250_000})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var kept []byte
+
+	cr.Rotate = vault(edited, func(s []byte) { kept = bytes.Clone(s) })
+
+	if _, err := c.accessToken(context.Background(), cr); err != nil {
+		t.Fatal(err)
+	}
+
+	var s secret
+	if json.Unmarshal(kept, &s) != nil || s.RefreshToken != refreshTwo || s.Price == nil ||
+		s.Price.PostMicros != 20_000 {
+		t.Fatalf("the secret kept = %s: the price edited meanwhile was lost", kept)
+	}
+}
+
+// A sign-in done again while a send was refreshing is newer than the token of that send, and is kept.
+func TestANewRefreshTokenDoesNotOverwriteANewSignIn(t *testing.T) {
+	t.Parallel()
+
+	srv := server(t, "token refresh")
+	c, _ := connector(srv)
+	cr := cred(srv, nil)
+	again := strings.Replace(signedIn, refreshOne, "REFRESH-TOKEN-of-a-new-sign-in", 1)
+	wrote := 0
+
+	cr.Rotate = vault([]byte(again), func([]byte) { wrote++ })
+
+	if _, err := c.accessToken(context.Background(), cr); err != nil {
+		t.Fatal(err)
+	}
+
+	if wrote != 0 {
+		t.Fatalf("the token of the earlier sign-in was written over the new one %d times", wrote)
+	}
 }
 
 // Two sends to one connection at once each read the same secret. The second must present the token the first
@@ -774,20 +841,16 @@ func TestTwoSendsAtOnceRefreshOneAfterTheOther(t *testing.T) {
 	c, _ := connector(srv)
 
 	var (
-		wg      sync.WaitGroup
-		mu      sync.Mutex
-		rotated [][]byte
+		wg   sync.WaitGroup
+		last []byte
 	)
+
+	// One vault for both sends: the second writes over what the first wrote.
+	shared := vault([]byte(signedIn), func(s []byte) { last = bytes.Clone(s) })
 
 	for range 2 {
 		cr := cred(srv, nil)
-		cr.Rotate = func(s []byte) error {
-			mu.Lock()
-			rotated = append(rotated, bytes.Clone(s))
-			mu.Unlock()
-
-			return nil
-		}
+		cr.Rotate = shared
 
 		wg.Go(func() {
 			if _, err := c.accessToken(context.Background(), cr); err != nil {
@@ -801,6 +864,12 @@ func TestTwoSendsAtOnceRefreshOneAfterTheOther(t *testing.T) {
 	presented := []string{srv.Seen()[0].Form.Get("refresh_token"), srv.Seen()[1].Form.Get("refresh_token")}
 	if presented[0] != refreshOne || presented[1] != refreshTwo {
 		t.Fatalf("the refresh tokens presented = %v, want the second to present the token the first got", presented)
+	}
+
+	// The vault ends with the newest token, the one the second refresh got.
+	var s secret
+	if json.Unmarshal(last, &s) != nil || s.RefreshToken != "REFRESH-TOKEN-three-canary" {
+		t.Fatalf("the vault ends with %s", last)
 	}
 }
 
