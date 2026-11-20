@@ -20,7 +20,7 @@ main() {
 	case "$new" in -h | --help) sed -n '2,10p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; return 0 ;; esac
 	new="${new#v}"
 	[ -n "$new" ] || die "usage: bash deploy/update.sh <version>"
-	printf '%s' "$new" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || die "'$new' is not a version such as 0.31.0"
+	[[ "$new" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "'$new' is not a version such as 0.31.0"
 
 	local repo="$DEPLOY_DIR/.."
 	check_docker
