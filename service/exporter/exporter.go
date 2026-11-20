@@ -174,6 +174,7 @@ func (a *adapter) job(in service.ExportInput, runner *ffmpeg.Runner, caps *ffmpe
 		Runner:        runner,
 		Caps:          caps,
 		Doc:           in.Doc,
+		Nested:        in.Nested,
 		Start:         int(in.Start),
 		End:           int(in.End),
 		JobID:         in.JobID,
@@ -185,7 +186,7 @@ func (a *adapter) job(in service.ExportInput, runner *ffmpeg.Runner, caps *ffmpe
 		Lint:          a.cfg.Lint,
 		PixelRenderer: a.cfg.PixelRenderer,
 		GPUHost:       a.cfg.GPUHost,
-		Fonts:         service.FontSetFor(a.cfg.Workspace, in.Doc),
+		Fonts:         service.FontSetForNested(a.cfg.Workspace, in.Doc, in.Nested),
 		OnProgress: func(p export.Progress) {
 			if in.OnProgress != nil {
 				in.OnProgress(p.Frame, p.Total)

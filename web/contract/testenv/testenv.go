@@ -36,6 +36,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/pathguard"
 	"github.com/AlexGalhardo/stuarty/service/providers"
+	"github.com/AlexGalhardo/stuarty/service/social"
 	"github.com/AlexGalhardo/stuarty/service/vault"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 	"github.com/AlexGalhardo/stuarty/web/app/jobs"
@@ -81,6 +82,9 @@ type Options struct {
 	// Providers are the AI providers to register (SDD-016); they need MasterKey, since a provider is reached
 	// through a connection.
 	Providers []providers.Provider
+	// Social is the registry of the social network connectors (SDD-020); it needs MasterKey, since an account
+	// is reached through a connection.
+	Social *social.Registry
 }
 
 // Env is a service with a worker running behind it.
@@ -186,7 +190,7 @@ func New(tb testing.TB, o Options) *Env {
 	}
 
 	svc, err := service.New(service.Options{
-		Connections: conns, Providers: reg,
+		Connections: conns, Providers: reg, Social: o.Social,
 		Store: st, Registry: command.Default(), Now: o.Clock, NewIDs: e.newID,
 		Workspace:   string(dir),
 		Limits:      o.Limits,

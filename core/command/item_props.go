@@ -324,6 +324,32 @@ type itemAudioArgs struct {
 	Voice      *string  `json:"voice,omitempty"       desc:"Voice preset: none (default), clear, warm, deep, bright or radio."                                                                        enum:"none,clear,warm,deep,bright,radio"`
 }
 
+// audioTarget checks that the item has the audio settings asked for: a clip, an audio item or a composition (whose
+// sound is the mix of its nested timeline, so it has no denoise or voice of its own).
+func (c *Context) audioTarget(a *itemAudioArgs, it *timeline.Item) *Error {
+	if it.Type != timeline.ItemClip && it.Type != timeline.ItemAudio && it.Type != timeline.ItemComposition {
+		return Errorf(CodeTypeMismatch, "Item %s is a %s item and has no audio.", a.ItemID, it.Type).
+			WithHint("Use item.set_transform for visual properties.").WithPath("args.item_id")
+	}
+	if it.Type == timeline.ItemComposition && (a.Denoise != nil || a.Voice != nil) {
+		return Errorf(
+			CodeTypeMismatch,
+			"Item %s is a composition: its sound has a volume, fades and a mute only.",
+			a.ItemID,
+		).
+			WithHint("Set denoise or voice on the items of the nested timeline.").
+			WithPath("args.item_id")
+	}
+	if err := c.stillImageNoAudio(it, "has no audio to set"); err != nil {
+		return err
+	}
+	if a.AudioMuted != nil && it.Type == timeline.ItemAudio {
+		return Errorf(CodeTypeMismatch, "Item %s is an audio item; audio_muted applies to clip items.", a.ItemID).
+			WithHint("Use volume 0 to silence an audio item.").WithPath("args.audio_muted")
+	}
+	return nil
+}
+
 func applyItemSetAudio(c *Context, a *itemAudioArgs) error {
 	if err := atLeastOne([]string{"volume", "fade_in", "fade_out", "audio_muted", "denoise", "voice"},
 		a.Volume != nil, a.FadeIn != nil, a.FadeOut != nil, a.AudioMuted != nil, a.Denoise != nil,
@@ -353,16 +379,8 @@ func applyItemSetAudio(c *Context, a *itemAudioArgs) error {
 	if err != nil {
 		return err
 	}
-	if it.Type != timeline.ItemClip && it.Type != timeline.ItemAudio {
-		return Errorf(CodeTypeMismatch, "Item %s is a %s item and has no audio.", a.ItemID, it.Type).
-			WithHint("Use item.set_transform for visual properties.").WithPath("args.item_id")
-	}
-	if err := c.stillImageNoAudio(&it, "has no audio to set"); err != nil {
+	if err := c.audioTarget(a, &it); err != nil {
 		return err
-	}
-	if a.AudioMuted != nil && it.Type != timeline.ItemClip {
-		return Errorf(CodeTypeMismatch, "Item %s is an audio item; audio_muted applies to clip items.", a.ItemID).
-			WithHint("Use volume 0 to silence an audio item.").WithPath("args.audio_muted")
 	}
 	if a.Volume != nil && len(it.Keyframes["volume"]) > 0 {
 		return Errorf(CodeInvalidState, "Property volume of %s has %d keyframes, which define its value.",

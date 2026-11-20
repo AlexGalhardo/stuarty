@@ -36,6 +36,52 @@ func FontSetFor(workspace string, doc *timeline.Document) *rasterize.FontSet {
 	return rasterize.NewFontSet(doc.Fonts, enginestore.NewFonts(workspace).Source())
 }
 
+// FontSetForNested is FontSetFor for a document whose compositions use the nested timelines: the fonts those
+// timelines name are added for the families the document does not name itself (withNestedFonts).
+func FontSetForNested(
+	workspace string, doc *timeline.Document, nested map[string]*timeline.Document,
+) *rasterize.FontSet {
+	return FontSetFor(workspace, withNestedFonts(doc, nested))
+}
+
+// withNestedFonts is doc with the user fonts of the timelines its compositions use, for the families doc does not
+// name itself, so a text of a nested timeline is drawn with its own font in the parent too (SDD-004 §3.16). On a
+// family that both name, the parent's wins. With nothing to add it is doc itself; otherwise a copy that differs
+// in Fonts only, which the planner does not read.
+func withNestedFonts(doc *timeline.Document, nested map[string]*timeline.Document) *timeline.Document {
+	var fonts map[string]timeline.ProjectFont
+
+	for _, id := range slices.Sorted(maps.Keys(nested)) {
+		for _, family := range slices.Sorted(maps.Keys(nested[id].Fonts)) {
+			if _, ok := doc.Fonts[family]; ok {
+				continue
+			}
+
+			if _, ok := fonts[family]; ok {
+				continue
+			}
+
+			if fonts == nil {
+				fonts = maps.Clone(doc.Fonts)
+				if fonts == nil {
+					fonts = map[string]timeline.ProjectFont{}
+				}
+			}
+
+			fonts[family] = nested[id].Fonts[family]
+		}
+	}
+
+	if fonts == nil {
+		return doc
+	}
+
+	merged := *doc
+	merged.Fonts = fonts
+
+	return &merged
+}
+
 // fontSet is FontSetFor for the workspace of the service.
 func (s *svc) fontSet(doc *timeline.Document) *rasterize.FontSet {
 	return FontSetFor(s.workspace, doc)
@@ -276,10 +322,12 @@ func fontFingerprint(doc *timeline.Document) string {
 
 // framesFor is the frame maker of the workspace with the font set of doc: the user fonts of a
 // document are read by hash from the workspace, so the maker is made for each document.
-func (s *svc) framesFor(doc *timeline.Document) *frame.Frames {
+func (s *svc) framesFor(doc *timeline.Document, nested map[string]*timeline.Document) *frame.Frames {
 	f := *s.media.Frames
+	f.Nested = nested
+
 	if f.Fonts == nil {
-		f.Fonts = s.fontSet(doc)
+		f.Fonts = s.fontSet(withNestedFonts(doc, nested))
 	}
 
 	return &f

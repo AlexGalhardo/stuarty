@@ -15,6 +15,16 @@ export function frameUrl(
 	return `${project(projectId)}/frame?at=${frame}f&width=${width}&rev=${revision}&timeline_id=${encodeURIComponent(projectId)}`;
 }
 
+// The current frame of a timeline, asked for without a revision, so the answer
+// follows the edits of that timeline (the picture of a composition item).
+export function currentFrameUrl(
+	timelineId: string,
+	frame: number,
+	width: number,
+): string {
+	return `${project(timelineId)}/frame?at=${frame}f&width=${width}&timeline_id=${encodeURIComponent(timelineId)}`;
+}
+
 export function thumbnailUrl(
 	projectId: string,
 	assetId: string,

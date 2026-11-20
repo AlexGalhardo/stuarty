@@ -226,6 +226,11 @@ func (s *svc) step(ctx context.Context, method string, req UndoRequest, redo boo
 			return err
 		}
 
+		graph := newProductionGraph(ctx, tx, row.ID)
+		if nerr := checkNesting(graph, out.Doc); nerr != nil {
+			return nerr
+		}
+
 		crashpoint.Hit("commit.after_apply")
 
 		res = s.undoResult(c.Actor, &row, &cand, doc, &out, skipped, redo)
@@ -259,11 +264,8 @@ func (s *svc) step(ctx context.Context, method string, req UndoRequest, redo boo
 			Type: "batch.committed", ProjectID: row.ID, Revision: rev, Kind: string(kind), Actor: c.Actor,
 			Description: cutRunes(res.Description, eventDescription), At: s.now().UTC(),
 		}
-		tx.AfterCommit(func() {
-			crashpoint.Hit("commit.after_commit")
-			s.emit(ev)
-			crashpoint.Hit("commit.after_publish")
-		})
+
+		s.publishAfterCommit(tx, graph, &ev)
 
 		return nil
 	})

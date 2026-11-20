@@ -151,7 +151,7 @@ type docPick struct {
 	rng                                *rand.Rand
 	items, tracks, visual, audio, asts []string
 	captions, slots, clips, audios     []string
-	fonts                              []string
+	fonts, comps                       []string
 	keys                               []keyAt
 }
 
@@ -177,6 +177,10 @@ func newDocPick(rng *rand.Rand, doc *timeline.Document) *docPick {
 
 		if it := doc.Items[id]; it.Type == timeline.ItemAudio {
 			p.audios = append(p.audios, id)
+		}
+
+		if it := doc.Items[id]; it.Type == timeline.ItemComposition {
+			p.comps = append(p.comps, id)
 		}
 
 		for prop, ks := range doc.Items[id].Keyframes {
@@ -207,7 +211,9 @@ func newDocPick(rng *rand.Rand, doc *timeline.Document) *docPick {
 		p.fonts = append(p.fonts, family)
 	}
 
-	for _, l := range [][]string{p.items, p.tracks, p.visual, p.audio, p.asts, p.captions, p.slots, p.clips, p.audios, p.fonts} {
+	for _, l := range [][]string{
+		p.items, p.tracks, p.visual, p.audio, p.asts, p.captions, p.slots, p.clips, p.audios, p.fonts, p.comps,
+	} {
 		slices.Sort(l)
 	}
 
@@ -327,6 +333,19 @@ var alphaOps = map[string]func(p *docPick) string{
 	},
 	"audio.add": func(p *docPick) string {
 		return fmt.Sprintf(`{"track_id":%q,"asset_id":%q,"start":%q}`, p.atrack(), p.asset(), p.frames(2000))
+	},
+	"clip.add_composition": func(p *docPick) string {
+		if p.n(2) == 0 {
+			return fmt.Sprintf(`{"track_id":%q,"timeline_id":%q,"start":%q}`, p.vtrack(), tlB, p.frames(2500))
+		}
+		return fmt.Sprintf(`{"track_id":%q,"timeline_id":%q,"start":%q,"duration":"%df"}`,
+			p.vtrack(), tlB, p.frames(2500), 1+p.n(120))
+	},
+	"composition.create_from_selection": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_ids":[%q],"name":"Part %d"}`, p.item(), p.n(100))
+	},
+	"composition.expand": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q}`, p.of(p.comps, "itm_zzzzzzzzzz"))
 	},
 	"clip.set_framing": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"fit":%q,"crop":{"left":%.2f,"top":%.2f}}`, p.clip(),
@@ -731,7 +750,7 @@ func checkStepEchoing(
 ) (next *timeline.Document, err error) {
 	before := timeline.Canonical(doc)
 
-	res, applyErr := fullRegistry().Apply(doc, o, Env{NewIDs: ids.next})
+	res, applyErr := fullRegistry().Apply(doc, o, Env{NewIDs: ids.next, Timelines: propGraph(doc)})
 	if !bytes.Equal(timeline.Canonical(doc), before) {
 		return nil, fmt.Errorf("%s changed its input", o.Op)
 	}

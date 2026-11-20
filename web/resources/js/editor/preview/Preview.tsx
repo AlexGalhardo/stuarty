@@ -250,6 +250,24 @@ export default function Preview({
 		executor.current?.setRevision(revision);
 	}, [revision]);
 
+	// A timeline this one uses as a composition changed: the revision is the same,
+	// so the windows and the paused frame are asked for again (SDD-004 section 3.16).
+	useEffect(
+		() =>
+			runtime.onNestedUpdated(() => {
+				paused.current?.cancel();
+				executor.current?.refresh();
+				if (!playingRef.current) {
+					paused.current?.request(
+						committed.current,
+						truthWidth(bufferWidth.current),
+						revisionRef.current,
+					);
+				}
+			}),
+		[runtime],
+	);
+
 	// A seek from the ruler or the buttons; the committed values that the
 	// executor itself wrote while playing are not seeks.
 	useEffect(() => {
