@@ -19,6 +19,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 	coreimage "github.com/AlexGalhardo/stuarty/core/image"
 	"github.com/AlexGalhardo/stuarty/engine/ingest"
+	assetlib "github.com/AlexGalhardo/stuarty/service/assets"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/library"
 	"github.com/AlexGalhardo/stuarty/service/textview"
@@ -122,6 +123,15 @@ func (m *memImages) OpsSince(_ context.Context, id string, revision int64) ([]Im
 	return out, nil
 }
 
+func (m *memImages) OpsPage(ctx context.Context, id string, revision int64, limit int) ([]ImageOpRow, error) {
+	out, err := m.OpsSince(ctx, id, revision)
+	if limit >= 0 && len(out) > limit {
+		out = out[:limit]
+	}
+
+	return out, err
+}
+
 func (m *memImages) LastOpen(_ context.Context, id, actor string, kinds []OperationKind) (ImageOpRow, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -222,14 +232,41 @@ func (t memTx) Images() ImageRepo  { return t.st.images }
 func (t memTx) Assets() AssetRepo  { return t.st.assets }
 func (t memTx) AfterCommit(func()) {}
 
+// memLibrary is the library side of the files, by owner and hash: the rows an import writes.
+type memLibrary struct {
+	assetlib.Store
+	rows map[string]assetlib.Row
+}
+
+func (m memLibrary) Get(_ context.Context, owner, hash string) (assetlib.Row, error) {
+	r, ok := m.rows[owner+"|"+hash]
+	if !ok {
+		return assetlib.Row{}, assetlib.ErrNotFound
+	}
+
+	return r, nil
+}
+
+// noJobs holds no job: the image tests never queue an ingest.
+type noJobs struct{ JobRepo }
+
+func (noJobs) ActiveIngestForHash(context.Context, string) (JobRow, error) {
+	return JobRow{}, ErrNotFound
+}
+
 type memStore struct {
 	Store
 	images   *memImages
 	assets   memAssets
 	projects memProjects
+	library  memLibrary
 }
 
 func (m *memStore) Images() ImageRepo { return m.images }
+
+func (m *memStore) AssetLibrary() assetlib.Store { return m.library }
+
+func (m *memStore) Jobs() JobRepo { return noJobs{} }
 
 // No test here reads a connection; the manager the service builds only needs a store to hold.
 func (m *memStore) Connections() connections.Store { return nil }
@@ -253,7 +290,8 @@ func newImageService(t *testing.T) (*svc, string) {
 	w, h := 64, 48
 
 	st := &memStore{
-		images: &memImages{rows: map[string]*ImageRow{}, ops: map[string][]ImageOpRow{}},
+		library: memLibrary{rows: map[string]assetlib.Row{}},
+		images:  &memImages{rows: map[string]*ImageRow{}, ops: map[string][]ImageOpRow{}},
 		assets: memAssets{projects: map[string][]ProjectAssetRow{}, rows: map[string]AssetRow{imgHash: {
 			Hash: imgHash, Kind: "image", OriginalName: "/home/me/face.png", IngestState: IngestReady,
 			Facts: AssetFacts{Width: &w, Height: &h},

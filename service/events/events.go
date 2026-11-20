@@ -32,6 +32,8 @@ const (
 	AssetUpdated   = "asset.updated"
 	JobUpdated     = "job.updated"
 	ResyncRequired = "resync.required"
+	// ImageUpdated is the event of the stream of an image document (SDD-006 section 12).
+	ImageUpdated = "image.updated"
 )
 
 // Reasons of resync.required.
