@@ -304,9 +304,9 @@ func TestSecurity_T61_ARefusedSignInLeavesNoTokenBehind(t *testing.T) {
 		t.Errorf("a refused sign-in made requests: %v", m.graph.seen())
 	}
 
+	// The connection this sign-in made is removed with it (VV-323): no account, no token, nothing to choose.
 	list, err := m.ops.SocialAccountList(person, service.SocialAccountListRequest{})
-	if err != nil || len(list.Accounts) != 1 || list.Accounts[0].State != service.AccountNeedsSignIn ||
-		len(list.Accounts[0].Choices) != 0 {
+	if err != nil || len(list.Accounts) != 0 {
 		t.Fatalf("accounts = %+v, %v", list, err)
 	}
 
