@@ -398,6 +398,9 @@ type svc struct {
 	flows       *oauth.Flows
 	signInSet   *oauth.SignIns
 	signFlows   *oauth.Flows
+	// imageFrames keeps the pictures of the lower layers of an image document between two frames of the editor,
+	// so an edit of the layer on top redraws only that layer (SDD-021 section 6.1).
+	imageFrames *export.ImageCache
 	providers   *providers.Registry
 	lib         *library.Manager // the files of memory, skills and prompts; nil without a workspace
 	heavy       RateLimiter
@@ -467,6 +470,7 @@ func New(o Options) (Service, error) {
 		heavy:       o.Heavy,
 		heavyLimitN: o.HeavyPerMinute,
 		log:         o.Log,
+		imageFrames: export.NewImageCache(0),
 		jobWait:     o.JobWait,
 		agents:      o.Agents,
 		webp:        o.WebP,
