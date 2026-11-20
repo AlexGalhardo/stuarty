@@ -1119,7 +1119,7 @@ CREATE TABLE text_revisions (                      -- SDD-019 section 3: one row
 );
 ```
 
-- **Kinds.** `brief`, `text`, `timeline`, `output`. `image` (epic 27) is reserved: the migration that adds it rebuilds the table with a longer check, as section 5.5 does for artifact kinds. A `publication` (epic 20) is an item of its project too, but it is kept in tables of its own (section 5.15) and the surfaces read its item from them, so it is never a row of `project_items`.
+- **Kinds.** `brief`, `text`, `timeline`, `output`. `image` (epic 27) is reserved: the migration that adds it rebuilds the table with a longer check, as section 5.5 does for artifact kinds. A `publication` (epic 20) is an item of its project too, but it is kept in tables of its own (section 5.15) and the surfaces read its item from them, so it is never a row of `project_items`. The text kind `post` (epic 23, SDD-019 section 13) is a value of `project_items.text_kind`, added by the migration `text_kind_post`, which rebuilds the table with the longer check and keeps every row, index and revision.
 - **A timeline item** has `ref` = the id of its row in `timelines`. The first timeline of a project has the id of the project (`timelines.id = projects.id`); a later one has a new `prj_` id (the document keeps the `prj_` prefix, SDD-001). The operation log, the revisions, the undo chain and the assets of a timeline stay keyed by the timeline id, so nothing of the timeline document or of `operations` changes. The item title is a label of the production and is independent of the document name.
 - **Name and time.** A commit of a timeline sets `projects.updated_ms`, and sets `projects.name` when the timeline has the same id as the project, in the same transaction as the commit (the store does it; the service writes no second row). The list of projects orders by `projects.updated_ms`, so a project rises in it when any of its timelines changes.
 - **Trash.** Trashing a project writes `projects.state` and mirrors it on every row of `timelines` of its active timeline items, so that the rules of section 13.1 (a trashed timeline rejects edits) stay one check on the row the commit loads. Trashing a timeline item mirrors the same on its row; the last active timeline of a project cannot be trashed (`E_INVALID_STATE`). Emptying (section 13.3) deletes the project, which cascades its items, and deletes the `timelines` rows its items referenced.
@@ -1274,6 +1274,45 @@ CREATE INDEX publication_targets_approval_id_index ON publication_targets (appro
 ```
 
 `Repos` gains `Publications() publish.Store` (the package `service/publish`): `Insert`, `Get`, `Target`, `Save` (the publication and all its targets, in the transaction that read them), `List`, `Open` (the targets the scheduler looks at), `Next`, `Claim` and `Renew` (the lease, one conditional `UPDATE` each, so that a second scheduler changes no row) and `OfProject`. The writer is the one write transaction of `Store.Write`. Down drops both tables.
+
+#### 5.15.1 The blog tables (epic 23, SDD-020 sections 43 and 47)
+
+Migration `20261120110100_create_blog_tables`; the migration `20261120110000_text_kind_post` before it adds `post` to the check of `project_items.text_kind`.
+
+```sql
+ALTER TABLE publications ADD COLUMN post_item_id TEXT NOT NULL DEFAULT '';   -- the post, empty for a video
+CREATE TABLE published_posts (
+  slug          TEXT    NOT NULL,                 -- [a-z0-9-], the key
+  post_item_id  TEXT    NOT NULL,
+  project_id    TEXT    NOT NULL,
+  connection_id TEXT    NOT NULL,                 -- the blog_api destination that published it
+  owner_user_id TEXT,                             -- network mode only
+  title         TEXT    NOT NULL,
+  summary       TEXT    NOT NULL DEFAULT '',
+  tags          TEXT    NOT NULL DEFAULT '[]',    -- JSON list
+  language      TEXT    NOT NULL DEFAULT '',
+  canonical     TEXT    NOT NULL DEFAULT '',
+  status        TEXT    NOT NULL CHECK (status IN ('draft','published')),
+  markdown      TEXT    NOT NULL,
+  html          TEXT    NOT NULL,
+  images        TEXT    NOT NULL DEFAULT '[]',    -- JSON: name, role, asset hash, bytes, sha256, content type
+  published_ms  INTEGER NOT NULL,
+  updated_ms    INTEGER NOT NULL,
+  PRIMARY KEY (slug)
+);
+CREATE UNIQUE INDEX published_posts_post_item_id_unique ON published_posts (post_item_id, connection_id);
+CREATE INDEX published_posts_published_ms_index ON published_posts (status, published_ms);
+CREATE TABLE blog_remote_posts (
+  connection_id TEXT    NOT NULL,                 -- no foreign key, as publication_targets
+  post_item_id  TEXT    NOT NULL,
+  remote_id     TEXT    NOT NULL,
+  url           TEXT    NOT NULL DEFAULT '',
+  updated_ms    INTEGER NOT NULL,
+  PRIMARY KEY (connection_id, post_item_id)
+);
+```
+
+`Repos` gains `Blog() blog.Store` (the package `service/publish/destinations`): `Remote`, `PutRemote`, `PutPublished`, `Published`, `ListPublished` and `DeleteRemote`. Down drops both tables and the column.
 
 ## 6. Workspace ownership
 
