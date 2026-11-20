@@ -58,8 +58,36 @@ describe("AssetOwners", () => {
 	});
 });
 
+describe("AssetOwners with groups", () => {
+	it("reads the timeline of a layer inside a group, at any depth", () => {
+		const owners = new AssetOwners();
+		const deep = {
+			...base,
+			item: "m",
+			kind: "media",
+			asset: "ast_deep",
+			timeline: "prj_deep",
+		};
+		const inner = {
+			...base,
+			item: "h",
+			kind: "group",
+			group: { width: 4, height: 4, layers: [deep] },
+		};
+		const outer = {
+			...base,
+			item: "g",
+			kind: "group",
+			group: { width: 4, height: 4, layers: [inner] },
+		};
+		owners.note(window({ layers: [outer] } as unknown as Partial<PlanWindow>));
+
+		expect(owners.of("ast_deep", "prj_open")).toBe("prj_deep");
+	});
+});
+
 describe("layersAt", () => {
-	it("leaves a group layer to the server", () => {
+	it("leaves a group layer to the executors surfaces, not a layer of its own", () => {
 		const plan = window({
 			layers: [
 				{ ...base, item: "k", kind: "group" },

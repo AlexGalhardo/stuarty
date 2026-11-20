@@ -16,12 +16,14 @@ export function isActive(
 	return frame >= layer.first && frame <= layer.last;
 }
 
-// The layers drawn at a frame, in plan order (bottom to top).
+// The layers with pixels of their own drawn at a frame, in plan order (bottom
+// to top). A group layer (a composition drawn as one unit) is not one of them:
+// the executors draw it through a surface (render/groups.ts, SDD-013 section
+// 3.12), and its geometry is not a layer's for the selection box.
 export function layersAt(plan: PlanWindow, frame: number): PlanLayer[] {
-	// A group layer (a composition drawn as one unit) is drawn by the server: the picture of a paused frame
-	// comes from it (SDD-004 section 3.16), and the executors draw what they can compose themselves.
 	return plan.layers.filter(
-		(layer) => (layer.kind as string) !== "group" && isActive(layer, frame),
+		(layer): layer is PlanLayer =>
+			layer.kind !== "group" && isActive(layer, frame),
 	);
 }
 
