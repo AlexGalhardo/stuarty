@@ -76,6 +76,8 @@ export default function Login(): ReactNode {
 							type="email"
 							required
 							autoComplete="username"
+							aria-invalid={failure === null ? undefined : true}
+							aria-describedby={failure === null ? undefined : "login-error"}
 							value={email}
 							onChange={(event) => setEmail(event.target.value)}
 						/>
@@ -87,11 +89,13 @@ export default function Login(): ReactNode {
 							type="password"
 							required
 							autoComplete="current-password"
+							aria-invalid={failure === null ? undefined : true}
+							aria-describedby={failure === null ? undefined : "login-error"}
 							value={password}
 							onChange={(event) => setPassword(event.target.value)}
 						/>
 					</div>
-					<FailureNote failure={failure} />
+					<FailureNote id="login-error" failure={failure} />
 					<div>
 						<Button type="submit" disabled={busy}>
 							{t("ui.login.submit")}

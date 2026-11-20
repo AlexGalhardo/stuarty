@@ -41,7 +41,7 @@ A creator who uses only the keyboard, or a screen reader, or needs more contrast
 - [x] 3. Fix keyboard access, focus order and focus return on the dashboard pages, dialogs, calendar, approval queue and chat panel. Verify: `web/e2e/specs/a11y-keyboard-dashboard.spec.ts` (new) passes.
 - [x] 4. Implement the timeline keyboard model, announcements and list view. Verify: `web/e2e/specs/a11y-keyboard-timeline.spec.ts` (new) passes.
 - [x] 5. Implement the image editor keyboard model, announcements and layer tree semantics. Verify: `web/e2e/specs/a11y-keyboard-image-editor.spec.ts` (new) passes.
-- [ ] 6. Add live regions for jobs and for agent edits; tie errors to fields. Verify: tree snapshot specs pass.
+- [x] 6. Add live regions for jobs and for agent edits; tie errors to fields. Verify: tree snapshot specs pass.
 - [ ] 7. Check reflow, text spacing, target size and reduced motion. Verify: `web/e2e/specs/a11y-reflow-motion.spec.ts` (new) and `bun run check:contrast` pass.
 - [ ] 8. Write the keyboard-only first flow. Verify: `web/e2e/specs/a11y-first-flow-keyboard.spec.ts` (new) passes.
 - [ ] 9. Write the screen reader script for the author and record the outcome. Verify: the script is in `docs/` next to SDD-012's checklist, and the hand-off says verified or not verified.
