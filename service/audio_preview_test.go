@@ -298,6 +298,39 @@ func TestAudioPreviewWindowIsAFrameOfTheFile(t *testing.T) {
 	}
 }
 
+// A file that the cache could never hold is refused before its render, and its windows are still rendered: otherwise
+// a long item under a small cap would be rendered in full, refused by the cache, and rendered again every 30 seconds.
+func TestAudioPreviewFileOverTheCapIsNotRendered(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePreviewer{}
+	env := previewEnv(t, fake)
+	a := previewKeys(t, env)[previewItemA]
+
+	// The item is 240000 samples, 960044 bytes as a 16-bit stereo WAV; a window is 384044.
+	small, err := cache.Open(t.TempDir(), 500000)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	env.s.media.Frames = &frame.Frames{Cache: small}
+
+	_, err = openPreview(env, batchProject, a.Key, "")
+	if se, ok := errors.AsType[*Error](err); !ok || se.Code != command.CodeLimit {
+		t.Fatalf("the whole file over the cap: %v", err)
+	}
+
+	if n := len(fake.renders()); n != 0 {
+		t.Fatalf("a file over the cap was rendered: %d renders", n)
+	}
+
+	waitReady(t, env, a.Key, "0")
+
+	if got := fake.renders(); len(got) != 1 || got[0] != 2*48000 {
+		t.Errorf("renders (samples) = %v, want only the window of 96000", got)
+	}
+}
+
 // A render that fails is an error, is not tried again at once, and leaves no file.
 func TestAudioPreviewCacheFailure(t *testing.T) {
 	t.Parallel()
