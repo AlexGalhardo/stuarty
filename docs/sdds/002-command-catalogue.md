@@ -2508,6 +2508,12 @@ Changes the speed of a clip or audio item, constant or along a curve (TASK-0275)
 - `err_type_mismatch_reverse_on_image_clip`
 - `err_out_of_source_reverse_speed_no_frame_fits`
 - `err_type_mismatch_freeze_frame`
+- `ok_composition_double_speed_halves_the_duration`
+- `ok_composition_half_speed_doubles_the_duration`
+- `ok_composition_speed_rescales_fades_and_keyframes`
+- `ok_composition_speed_back_to_one`
+- `err_validation_composition_curve`
+- `err_validation_composition_reverse`
 
 ### C.26 `clip.set_color`
 
