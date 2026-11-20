@@ -2,6 +2,7 @@ package servicetest
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 
@@ -390,12 +391,22 @@ func TestApprovalVisibilityInNetworkMode(t *testing.T) {
 func TestApprovalRulesLifecycle(t *testing.T) {
 	t.Parallel()
 
-	e := newEnv(t)
+	e := newEnvWith(t, func(_ *env, o *service.Options) {
+		o.JobKinds = []service.ApprovableKind{{
+			Name: "publish.upload",
+			Prepare: func(context.Context, service.JobStartRequest) (service.Prepared, error) {
+				return service.Prepared{}, nil
+			},
+			Run: func(context.Context, service.JobRun) (service.JobOutcome, error) {
+				return service.JobOutcome{}, nil
+			},
+		}}
+	})
 	ctx := e.asPerson()
 	e.addConnection("con_0000000001")
 
 	made, err := e.svc.ApprovalRuleSet(ctx, service.ApprovalRuleSetRequest{
-		Kind: "publish.post", ConnectionID: "con_0000000001",
+		Kind: "publish.scheduled", ConnectionID: "con_0000000001",
 	})
 	if err != nil || made.ID == "" || !made.Enabled || made.ConnectionID == nil || made.CreatedBy != ui {
 		t.Fatalf("create = %+v, %v", made, err)
@@ -405,27 +416,29 @@ func TestApprovalRulesLifecycle(t *testing.T) {
 
 	replaced, err := e.svc.ApprovalRuleSet(
 		ctx,
-		service.ApprovalRuleSetRequest{ID: made.ID, Kind: "publish.story", Enabled: &off},
+		service.ApprovalRuleSetRequest{ID: made.ID, Kind: "publish.upload", Enabled: &off},
 	)
-	if err != nil || replaced.ID != made.ID || replaced.Enabled || replaced.Kind != "publish.story" ||
+	if err != nil || replaced.ID != made.ID || replaced.Enabled || replaced.Kind != "publish.upload" ||
 		replaced.ConnectionID != nil ||
 		!replaced.CreatedAt.Equal(made.CreatedAt) {
 		t.Fatalf("replace = %+v, %v", replaced, err)
 	}
 
 	list, err := e.svc.ApprovalRuleList(e.as(token), service.ApprovalRuleListRequest{})
-	if err != nil || len(list.Rules) != 1 || list.Rules[0].Kind != "publish.story" {
+	if err != nil || len(list.Rules) != 1 || list.Rules[0].Kind != "publish.upload" {
 		t.Fatalf("list = %+v, %v", list, err)
 	}
 
 	micros := int64(500_000)
 	bad := map[string]service.ApprovalRuleSetRequest{
 		"no kind":                     {},
+		"a kind no action has":        {Kind: "publish.post"},
+		"a kind that is a typo":       {Kind: "text.generat"},
 		"a kind with a space":         {Kind: "a b"},
-		"a limit, no currency":        {Kind: "k", PerItemMicros: &micros},
-		"a connection id that is not": {Kind: "k", ConnectionID: "x"},
-		"a connection that is gone":   {Kind: "k", ConnectionID: "con_0000000099"},
-		"a rule that does not exist":  {ID: "rul_9999999999", Kind: "k"},
+		"a limit, no currency":        {Kind: "publish.scheduled", PerItemMicros: &micros},
+		"a connection id that is not": {Kind: "publish.scheduled", ConnectionID: "x"},
+		"a connection that is gone":   {Kind: "publish.scheduled", ConnectionID: "con_0000000099"},
+		"a rule that does not exist":  {ID: "rul_9999999999", Kind: "publish.scheduled"},
 	}
 
 	for name, req := range bad {
@@ -455,7 +468,7 @@ func TestApprovalRulesLifecycle(t *testing.T) {
 	// SDD-015 section 9: the row of a removal says what the rule covered, as the row of a write does.
 	removed := e.audits("approval.rule.remove")
 	if len(removed) != 1 || removed[0].SubjectID != made.ID || removed[0].Actor != ui ||
-		!strings.Contains(string(removed[0].Details), `"kind":"publish.story"`) {
+		!strings.Contains(string(removed[0].Details), `"kind":"publish.upload"`) {
 		t.Errorf("the removal audit row = %+v, want the rule id, the person and the kind it covered", removed)
 	}
 }
@@ -472,12 +485,21 @@ func TestApprovalRulesAreLimited(t *testing.T) {
 	e := newEnv(t)
 
 	for range core.MaxRules {
-		if _, err := e.svc.ApprovalRuleSet(e.asPerson(), service.ApprovalRuleSetRequest{Kind: "k"}); err != nil {
+		if _, err := e.svc.ApprovalRuleSet(
+			e.asPerson(),
+			service.ApprovalRuleSetRequest{Kind: "publish.scheduled"},
+		); err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	if err := callRuleSet(e.asPerson(), e, service.ApprovalRuleSetRequest{Kind: "k"}); code(err) != "E_LIMIT_EXCEEDED" {
+	if err := callRuleSet(
+		e.asPerson(),
+		e,
+		service.ApprovalRuleSetRequest{Kind: "publish.scheduled"},
+	); code(
+		err,
+	) != "E_LIMIT_EXCEEDED" {
 		t.Errorf("the 101st rule = %v, want E_LIMIT_EXCEEDED", err)
 	}
 }
@@ -578,4 +600,18 @@ func (e *env) audits(actions ...string) []service.AuditEntry {
 	}
 
 	return out
+}
+
+// VV-307: a rule for a kind no action carries would never match; it is refused with the kinds there are.
+func TestApprovalRuleRefusesAKindNoActionHas(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+
+	_, err := e.svc.ApprovalRuleSet(e.asPerson(), service.ApprovalRuleSetRequest{Kind: "publish.post"})
+
+	se, ok := errors.AsType[*service.Error](err)
+	if !ok || se.Code != "E_VALIDATION" || se.Path != "kind" || !strings.Contains(se.Hint, "publish.scheduled") {
+		t.Fatalf("a rule for publish.post = %v, want E_VALIDATION on kind naming the kinds there are", err)
+	}
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"slices"
 	"strings"
 	"time"
@@ -588,6 +589,22 @@ func limitedToProject() *Error {
 		withHint("use a key without a project limit")
 }
 
+// ruleKindKnown refuses a rule for a kind no action carries: it would never match and the person would believe
+// an action was authorized (VV-307). The kinds are those of the jobs that wait for approval and the request of a
+// scheduled post.
+func (s *svc) ruleKindKnown(kind string) error {
+	if kind == KindPublishScheduled || s.kinds[kind] != nil {
+		return nil
+	}
+
+	known := append(slices.Sorted(maps.Keys(s.kinds)), KindPublishScheduled)
+	slices.Sort(known)
+
+	return newError(command.CodeValidation, "no action has the kind %q, so the rule would never apply.", kind).
+		withPath("kind").
+		withHint("use one of: %s", strings.Join(known, ", "))
+}
+
 // ApprovalRuleSet creates or replaces a rule (SDD-015 section 3). Only a person in the app writes one.
 func (s *svc) ApprovalRuleSet(ctx context.Context, req ApprovalRuleSetRequest) (*approval.RuleView, error) {
 	c, err := s.person(ctx, "ApprovalRuleSet")
@@ -603,6 +620,10 @@ func (s *svc) ApprovalRuleSet(ctx context.Context, req ApprovalRuleSetRequest) (
 	})
 	if ferr != nil {
 		return nil, newError(command.CodeValidation, "%s", ferr.Message).withPath(ferr.Path)
+	}
+
+	if kerr := s.ruleKindKnown(rule.Kind); kerr != nil {
+		return nil, kerr
 	}
 
 	var view approval.RuleView

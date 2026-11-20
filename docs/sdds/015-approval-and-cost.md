@@ -41,7 +41,7 @@ type Money struct {
 }
 
 type Action struct {
-	Kind       string // the job kind, for example "publish.post" or "generate.image"
+	Kind       string // the job kind, for example "publish.upload", "publish.scheduled" or "text.generate" (a rule for any other kind is `E_VALIDATION` with the path `kind`, because it would never match: VV-307)
 	Connection string // the destination connection id; empty when the action has none
 	Project    string // the project id; empty when the action belongs to none
 	Cost       Money  // the estimate
