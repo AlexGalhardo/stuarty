@@ -50,7 +50,16 @@ function assertBuildIsFresh(): void {
 	}
 }
 
-if (process.env.STUARTY_DETECT_ONLY !== "1") assertBuildIsFresh();
+// STUARTY_E2E_BIN is a server binary built beforehand (the Go security test
+// builds one with an end-to-end front end of its own, so the run never rewrites
+// the folder that the Go packages embed). The servers then run it instead of
+// `go run`, and the freshness of resources/public/build does not matter.
+const appBin = process.env.STUARTY_E2E_BIN;
+const serveCommand = appBin
+	? `"${appBin}" serve`
+	: "go run ./web/cmd/app serve";
+
+if (process.env.STUARTY_DETECT_ONLY !== "1" && !appBin) assertBuildIsFresh();
 
 const port = Number(process.env.STUARTY_E2E_PORT ?? 3101);
 // The pinned FFmpeg of the tests (scripts/install-ffmpeg.sh prints its folder):
@@ -231,7 +240,7 @@ export default defineConfig({
 	],
 	webServer: [
 		{
-			command: "go run ./web/cmd/app serve",
+			command: serveCommand,
 			cwd: "../..",
 			url: `http://127.0.0.1:${port}/up`,
 			reuseExistingServer: !process.env.CI,
@@ -262,7 +271,7 @@ export default defineConfig({
 			},
 		},
 		{
-			command: "go run ./web/cmd/app serve",
+			command: serveCommand,
 			cwd: "../..",
 			url: `http://127.0.0.1:${failPort}/up`,
 			reuseExistingServer: !process.env.CI,
@@ -281,7 +290,7 @@ export default defineConfig({
 			},
 		},
 		{
-			command: "go run ./web/cmd/app serve",
+			command: serveCommand,
 			cwd: "../..",
 			url: `${NETWORK_URL}/up`,
 			reuseExistingServer: !process.env.CI,

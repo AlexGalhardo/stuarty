@@ -32,7 +32,7 @@ export default function vukem({ input, publicDir = "resources/public", buildDir 
         publicDir: false,
         build: {
           manifest: true,
-          outDir: path.join(publicDir, buildDir),
+          outDir: process.env.STUARTY_BUILD_OUT_DIR || path.join(publicDir, buildDir),
           emptyOutDir: true,
           rollupOptions: { input },
         },

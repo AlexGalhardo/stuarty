@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"io"
 	"io/fs"
 	"net"
@@ -286,9 +287,21 @@ func TestSecurity_T22_UIRendersTextNotHTML(t *testing.T) {
 	ctx, cancel := context.WithTimeout(t.Context(), 8*time.Minute)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, bun, "run", "e2e", "--", "security-ui")
+	// `bun run e2e` would rebuild the front end into web/resources/public/build, which
+	// the Go packages of the module embed: a package compiled at that moment fails with
+	// "embed public/build/...: cannot find the path" (VV-232). The front end is built
+	// into a private folder and a server binary is compiled with it in place of that
+	// folder (go build -overlay), so no test writes inside the embedded tree.
+	bin := e2eServerBinary(ctx, t, bun, dir)
+
+	cmd := exec.CommandContext(
+		ctx, bun, "x", "playwright", "test", "-c", "e2e/playwright.config.ts", "security-ui", "--project=chromium",
+	)
 	cmd.Dir = dir
-	cmd.Env = append(os.Environ(), "STUARTY_MIN_FREE_BYTES=1")
+	// A workspace of its own: the default one is shared by every run on the machine, and
+	// a binary older than the last run refuses to open it.
+	home := filepath.Join(t.TempDir(), "e2e-home")
+	cmd.Env = append(os.Environ(), "STUARTY_MIN_FREE_BYTES=1", "STUARTY_E2E_BIN="+bin, "STUARTY_E2E_HOME="+home)
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -299,4 +312,73 @@ func TestSecurity_T22_UIRendersTextNotHTML(t *testing.T) {
 
 		t.Fatalf("security-ui.spec.ts failed: %v\n%s", err, out)
 	}
+}
+
+// e2eServerBinary builds the end-to-end front end (vite build --mode e2e) into a
+// private folder and compiles the server with that folder standing in for
+// web/resources/public/build. Nothing is written inside the module.
+func e2eServerBinary(ctx context.Context, t *testing.T, bun, webRoot string) string {
+	t.Helper()
+
+	work := t.TempDir()
+	built := filepath.Join(work, "build")
+
+	vite := exec.CommandContext(ctx, bun, "run", "build:e2e")
+	vite.Dir = webRoot
+	vite.Env = append(os.Environ(), "STUARTY_BUILD_OUT_DIR="+built)
+
+	if out, err := vite.CombinedOutput(); err != nil {
+		t.Fatalf("vite build --mode e2e: %v\n%s", err, out)
+	}
+
+	embedded := filepath.Join(webRoot, "resources", "public", "build")
+	replace := map[string]string{}
+
+	err := filepath.WalkDir(built, func(path string, entry fs.DirEntry, err error) error {
+		if err != nil || entry.IsDir() {
+			return err
+		}
+
+		rel, relErr := filepath.Rel(built, path)
+		if relErr != nil {
+			return relErr
+		}
+
+		replace[filepath.Join(embedded, rel)] = path
+
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(replace) == 0 {
+		t.Fatalf("the end-to-end build in %s has no files", built)
+	}
+
+	overlay, err := json.Marshal(map[string]map[string]string{"Replace": replace})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	overlayFile := filepath.Join(work, "overlay.json")
+	if err := os.WriteFile(overlayFile, overlay, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	bin := filepath.Join(work, "app")
+	if runtime.GOOS == "windows" {
+		bin += ".exe"
+	}
+
+	build := exec.CommandContext(
+		ctx, "go", "build", "-overlay", overlayFile, "-o", bin, "github.com/AlexGalhardo/stuarty/web/cmd/app",
+	)
+	build.Dir = webRoot
+
+	if out, err := build.CombinedOutput(); err != nil {
+		t.Fatalf("go build with the end-to-end front end: %v\n%s", err, out)
+	}
+
+	return bin
 }
