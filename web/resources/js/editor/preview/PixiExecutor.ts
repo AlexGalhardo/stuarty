@@ -21,11 +21,9 @@ import type { PlanLayer, PlanMediaLayer, PlanWindow } from "../api/types";
 import { chunksUrl, proxyUrl, thumbnailUrl } from "../api/urls";
 import { setProcessedAudioStates } from "../state/processedAudioStore";
 import { AssetOwners } from "./assetOwners";
-import "pixi.js/advanced-blend-modes";
-
 import { AudioGraph } from "./audioGraph";
 import { uncoveredPixel } from "./background";
-import { pixiBlendMode } from "./blend";
+import { pixiBlendMode, readsBackdrop } from "./blend";
 import { registerOverAlphaBlends } from "./blendOverAlpha";
 import { ChromaKeyFilter } from "./chromaKey";
 import { DecodeClient, decoderPreference } from "./decode/client";
@@ -304,9 +302,8 @@ export class PixiExecutor implements PreviewExecutor {
 				// colour still sets alpha to 1 on each draw.
 				backgroundAlpha: 0,
 				// A blend filter reads the pixels drawn so far, which WebGL has only through the back buffer;
-				// without it PixiJS skips the filter and draws the layer as `normal` (overlay and, over a
-				// clear canvas, the four modes of blendOverAlpha.ts). WebGPU needs nothing.
-				useBackBuffer: true,
+				// it is turned on only for a frame that has such a layer (setBackdrop).
+				useBackBuffer: false,
 				// The end-to-end build reads the buffer pixels back (preview-vs-export),
 				// which a WebGL canvas that clears after each composite cannot give.
 				preserveDrawingBuffer: import.meta.env.VITE_E2E === "1",
@@ -748,54 +745,36 @@ export class PixiExecutor implements PreviewExecutor {
 			surface.width = width;
 			surface.height = height;
 		}
-		surface.container.scale.set(k);
-		const outer = this.scene;
-		this.scene = {
-			scale: k,
-			width: node.layer.group.width,
-			height: node.layer.group.height,
-		};
-		let drawn: number;
-		try {
-			drawn = this.drawLevel(
-				surface.container,
-				node.children,
-				frame,
-				decoding,
-				usedVideos,
-				used,
-				mode,
-				info,
-			);
-		} finally {
-			this.scene = outer;
-		}
-		if (drawn === 0) {
-			// Nothing of it is drawn: the entry and the texture are dropped at the
-			// end of the frame, as for a layer that left.
-			return null;
-		}
-		used.add(node.id);
-		app.renderer.render({
-			container: surface.container,
-			target: surface.target,
-			clear: true,
-			clearColor: [0, 0, 0, 0],
-		});
-		this.noteApproximateGroup();
-		return surface.target;
+		this.videos.idle(usedVideos);
+		this.syncAudio(plan, frame, mode.playing);
+		this.setBackdrop(
+			app,
+			layers.some((layer) => readsBackdrop(layer.blend, this.clearsToAlpha)),
+		);
+		app.render();
+		// A frame evicted from the decode cache is closed only after the render
+		// that may have read it.
+		this.decoder.sweep();
+		this.publishDecode();
+		this.markDrawn(frame);
 	}
 
-	// The diagnostic line of this executor (SDD-013 section 4.7.1): a group is
-	// drawn, but not as the renderer of the export draws it.
-	private noteApproximateGroup(): void {
-		if (this.canvas?.getAttribute("data-groups") === "approximate") return;
-		this.canvas?.setAttribute("data-groups", "approximate");
-		if (this.groupsNoted) return;
-		this.groupsNoted = true;
-		console.info(
-			"preview: a composition drawn as one unit is drawn approximately by the PixiJS executor; the renderer executor draws it as the export does",
-		);
+	// A frame with a layer whose blend reads the pixels drawn so far needs the back buffer on WebGL (VV-268);
+	// the others skip its extra full-frame copy. WebGPU reads them without it.
+	private setBackdrop(app: Application, on: boolean): void {
+		const renderer = app.renderer;
+		if (!("backBuffer" in renderer)) return;
+		renderer.backBuffer.useBackBuffer = on;
+		// PixiJS copies the back buffer onto the canvas with its source-over blend and does not clear the
+		// canvas first: over a clear background, a canvas that keeps its pixels (the end-to-end build, or two
+		// renders before the browser composites) would show the frame before under this one.
+		if (on && this.clearsToAlpha) {
+			renderer.renderTarget.bind({
+				target: renderer.view.renderTarget,
+				clear: true,
+				clearColor: [0, 0, 0, 0],
+			});
+		}
 	}
 
 	// What the page shows about the decode path, for the end-to-end specs: the
