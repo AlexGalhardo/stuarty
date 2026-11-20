@@ -53,18 +53,21 @@ func runIn(t *testing.T, bin, home string, extra []string, args ...string) (stdo
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, bin, args...)
+	var env []string
 
 	for _, kv := range os.Environ() {
 		if strings.HasPrefix(kv, "STUARTY_") || strings.HasPrefix(kv, "VUKEM_VIDEO_") {
 			continue
 		}
 
-		cmd.Env = append(cmd.Env, kv)
+		env = append(env, kv)
 	}
 
-	cmd.Env = append(cmd.Env, "HOME="+home, "USERPROFILE="+home, "APP_KEY=", "APP_ENV=")
-	cmd.Env = append(cmd.Env, extra...)
+	env = append(env, "HOME="+home, "USERPROFILE="+home, "APP_KEY=", "APP_ENV=")
+	env = append(env, addrEnv(t)...)
+	env = append(env, extra...)
+
+	cmd := stuartyCmdEnv(ctx, t, bin, env, args...)
 
 	var out, errOut bytes.Buffer
 

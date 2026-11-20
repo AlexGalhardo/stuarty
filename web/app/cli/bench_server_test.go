@@ -51,7 +51,8 @@ func BenchmarkCLIReadViaServer(b *testing.B) {
 	var out bytes.Buffer
 
 	srv := exec.CommandContext(ctx, bin, "serve")
-	srv.Env = slices.Concat(env, []string{"HOST=127.0.0.1", "PORT=" + port})
+	// STUARTY_ADDR beats HOST and PORT, so one inherited from the caller would move the server (VV-295).
+	srv.Env = slices.Concat(env, []string{"STUARTY_ADDR=127.0.0.1:" + port, "HOST=127.0.0.1", "PORT=" + port})
 	srv.Stdout, srv.Stderr = &out, &out
 
 	if err := srv.Start(); err != nil {
