@@ -14,6 +14,10 @@ func (s stub) VoiceGenerate(context.Context, service.VoiceGenerateRequest) (*ser
 	return reply[service.Job](s.err)
 }
 
+func (s stub) VideoGenerate(context.Context, service.VideoGenerateRequest) (*service.Job, error) {
+	return reply[service.Job](s.err)
+}
+
 func (s stub) VoiceList(context.Context, service.VoiceListRequest) (*service.VoiceListResult, error) {
 	return reply[service.VoiceListResult](s.err)
 }

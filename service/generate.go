@@ -81,9 +81,13 @@ type generateInput struct {
 	Provider     string                 `json:"provider"`
 	Image        *provider.ImageRequest `json:"image,omitempty"`
 	Voice        *provider.VoiceRequest `json:"voice,omitempty"`
-	Price        provider.Price         `json:"price"`
-	PriceSource  string                 `json:"price_source"`
-	Estimate     core.Money             `json:"estimate"`
+	Video        *provider.VideoRequest `json:"video,omitempty"`
+	// TaskID is the task the provider started for a video: saved before the first poll, so that a run that is
+	// queued again after a restart resumes it and does not submit (and charge) twice (SDD-016 section 6.4).
+	TaskID      string         `json:"task_id,omitempty"`
+	Price       provider.Price `json:"price"`
+	PriceSource string         `json:"price_source"`
+	Estimate    core.Money     `json:"estimate"`
 }
 
 func (s *svc) imageGenerateKind() ApprovableKind {
@@ -150,7 +154,9 @@ func (s *svc) generationPrice(conn *connections.Connection, model, unit string) 
 	}
 
 	if source == provider.SourceNone || price.Unit != unit {
-		what := map[string]string{provider.UnitImage: "image", provider.UnitMChar: "million characters"}[unit]
+		what := map[string]string{
+			provider.UnitImage: "image", provider.UnitMChar: "million characters", provider.UnitSecond: "second of video",
+		}[unit]
 
 		return price, source, newError(
 			CodePriceUnknown,
@@ -509,7 +515,7 @@ func (s *svc) storeGenerated(
 // image.generate and voice.generate.
 func viewGeneration(j *Job, r *JobRow) {
 	switch r.Kind {
-	case JobTextGenerate, JobTextDraft, JobImageGenerate, JobVoiceGenerate:
+	case JobTextGenerate, JobImageGenerate, JobVoiceGenerate, JobVideoGenerate:
 	default:
 		return
 	}

@@ -49,6 +49,11 @@ func (c *Client) ImageGenerate(ctx context.Context, req service.ImageGenerateReq
 	return jobText(post[service.Job](ctx, c, "/image/generate", req))
 }
 
+// VideoGenerate implements service.Service.
+func (c *Client) VideoGenerate(ctx context.Context, req service.VideoGenerateRequest) (*service.Job, error) {
+	return jobText(post[service.Job](ctx, c, "/video/generate", req))
+}
+
 // VoiceGenerate implements service.Service.
 func (c *Client) VoiceGenerate(ctx context.Context, req service.VoiceGenerateRequest) (*service.Job, error) {
 	return jobText(post[service.Job](ctx, c, "/voice/generate", req))
