@@ -345,15 +345,17 @@ Both: the token is the Page token of the chosen account, taken from the secret f
 | `4` / `2207051` | `not_eligible` | `spam` |
 | `368` | `not_eligible` | `blocked` |
 | `352` / `2207026`, `1363040`, `1363127`, `1363128`, `1363129`, `36004` / `2207010`, `100` | `invalid` | `unsupported_format`, `aspect_ratio`, `resolution`, `duration`, `frame_rate`, `caption_too_long`, `invalid_parameter` |
-| container `ERROR` or `EXPIRED`, `6000`, `2207053`, `2207020` | `rejected` | `processing_failed`, `upload_failed`, `media_expired` |
-| `1`, `2`, `-1`, `-2` (`2207001`, `2207003`, `2207032`), `5xx`, no answer | `unavailable` | `""`, `still_processing` |
+| container `ERROR` or `EXPIRED`, a Reel `error`, `upload_failed` or `expired`, `6000`, `2207052`, the upload host's `ProcessingFailedError` | `rejected` | `processing_failed`, `media_expired`, `upload_failed` (the session is dropped) |
+| `2207032`, `2207053`, the upload host's other errors | `unavailable` | `upload_failed` (the file is sent again) |
+| `24` (`2207006`, `2207008`), `2207020` | `unavailable` | `media_expired` (the session is dropped and the next attempt makes a new container) |
+| `1`, `2`, `-1`, `-2` (`2207001`, `2207003`), `5xx`, no answer | `unavailable` | `""`, `still_processing` |
 | `9007` / `2207027` | `unavailable` | `not_ready` |
 
 An error code not in the table is `unavailable` for a `5xx` and `invalid` with the reason `code_<code>` otherwise. The hint a person reads is written by each connector in its `Description.Hints` (section 22), so a Meta error names Meta and the Instagram or Facebook screen to look at, not YouTube.
 
 ## 20. AI disclosure
 
-RF-407. The flag exists on both networks: `is_ai_generated` on the Instagram container and on the `finish` step of a Facebook Reel; on YouTube it is `containsSyntheticMedia`. The service sets `ai_disclosure` of the post when the person or the agent said so **or** when any asset the project holds has the origin `generated` (SDD-000 section 16): the product carries the metadata from the generation to the publication, and never lowers a flag the person set. The rule is conservative (every active asset of the project, not only those a clip uses), because a missing disclosure is the worse mistake; the person can read it in the approval request and turn it off by removing the asset. `Description.AIDisclosure` says whether a network takes the flag; the summary the person approves ends with `AI disclosure: set (a generated asset is used)`, `AI disclosure: set` or `AI disclosure: not set`, and with `AI disclosure: this network takes no flag` for a network that cannot carry one.
+RF-407. The flag exists on both networks: `is_ai_generated` on the Instagram container and on the `finish` step of a Facebook Reel; on YouTube it is `containsSyntheticMedia`. The service sets `ai_disclosure` of the post when the person or the agent said so **or** when any asset the project holds has the origin `generated` (SDD-000 section 16): the product carries the metadata from the generation to the publication, and never lowers a flag the person set. The rule is conservative (every active asset of the project, not only those a clip uses), because a missing disclosure is the worse mistake; the person can read it in the approval request and turn it off by removing the asset. `Description.AIDisclosure` says whether a network takes the flag; the summary the person approves ends with `AI disclosure: set (a generated asset is used)`, `AI disclosure: set` or `AI disclosure: not set`, and with `AI disclosure: wanted, but <network> takes no such flag` for a network that cannot carry one.
 
 ## 21. The setup guide and the picker
 
