@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/web/app/auth"
 	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
 	"github.com/AlexGalhardo/stuarty/web/resources"
 
@@ -79,6 +80,12 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 			return inertia.Render(c, "Social/Callback", inertia.Props{})
 		}).Name("social.callback")
 
+		// The publishing calendar (epic 20, SDD-020 sections 23 to 31): the page reads and changes the
+		// publications through /api/v1/publications and follows them on /api/v1/publications/events.
+		r.Get("/publish", func(c *web.Ctx) error {
+			return inertia.Render(c, "Publish/Index", inertia.Props{})
+		}).Name("dashboard.publish")
+
 		// The approval queue, the rules and the cost ceilings (epic 05, SDD-015): the page reads and
 		// changes them through /api/v1/approvals, /approval-rules and /cost, and follows the queue on
 		// /api/v1/approvals/events.
@@ -118,6 +125,25 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 
 			return inertia.Render(c, "Settings/Keys", inertia.Props{})
 		}).Name("settings.keys")
+
+		// The optional Google sign-in (epic 24, SDD-007 section 4.7, SDD-014 section 12): the page where
+		// Google sends the browser back (it needs no session and hands the state and the code to
+		// POST /auth/google/complete), and the settings page. Network mode only; 404 in local mode.
+		r.Get(auth.GoogleCallbackPath, func(c *web.Ctx) error {
+			if d.Network == nil || d.Google == nil {
+				return errs.ErrNotFound
+			}
+
+			return inertia.Render(c, "Auth/GoogleCallback", inertia.Props{})
+		}).Name("login.google.callback")
+
+		r.Get("/settings/google", func(c *web.Ctx) error {
+			if d.Network == nil || d.Google == nil {
+				return errs.ErrNotFound
+			}
+
+			return inertia.Render(c, "Settings/Google", inertia.Props{})
+		}).Name("settings.google")
 
 		return nil
 	}

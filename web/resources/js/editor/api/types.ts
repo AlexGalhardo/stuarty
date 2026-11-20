@@ -168,6 +168,15 @@ export type ProjectEvent =
 			project_id: string;
 			revision: number;
 			reason: string;
+	  }
+	| {
+			// A timeline this one uses as a composition changed (SDD-006 section
+			// 3.3.1): `timeline_id` and `revision` are those of that timeline.
+			name: "nested.updated";
+			project_id: string;
+			timeline_id: string;
+			revision: number;
+			at: string;
 	  };
 
 export const EVENT_NAMES = [
@@ -176,6 +185,7 @@ export const EVENT_NAMES = [
 	"asset.updated",
 	"job.updated",
 	"resync.required",
+	"nested.updated",
 ] as const;
 
 // The event of GET /images/{id}/events (SDD-006 section 12); `resync.required` is the one above.
@@ -195,6 +205,9 @@ export interface PlanWindowHead {
 export type PerFrame = number | number[];
 
 interface PlanLayerBase {
+	// The timeline whose assets table names this layer's asset, for a layer that comes from a composition
+	// (SDD-004 section 3.16); absent for a layer of the timeline being edited.
+	timeline?: string;
 	item: string;
 	first: number;
 	last: number;
@@ -370,6 +383,8 @@ export interface PlanBitmapLayer extends PlanLayerBase {
 export type PlanLayer = PlanMediaLayer | PlanBitmapLayer;
 
 export interface PlanAudio {
+	// As on a layer: the timeline that holds `asset` when the sound comes from a composition.
+	timeline?: string;
 	item: string;
 	asset: string;
 	first: number;
@@ -472,6 +487,7 @@ export interface MediaImportResult {
 export type JobState =
 	| "waiting_approval"
 	| "queued"
+	| "waiting_approval"
 	| "running"
 	| "succeeded"
 	| "failed"
@@ -528,13 +544,75 @@ export interface Job {
 		export?: ExportResult;
 		batch?: BatchResult;
 		transcribe?: { asset_id: string; language: string; words: number };
+		generated?: GeneratedResult;
 		publish?: PublishResult;
 	};
 	error?: ApiErrorBody;
 	lint?: { errors: number; warnings: number };
+	// A job of a kind that needs approval carries its approval request and, from the moment it exists, the
+	// estimate the service made (SDD-016 section 6).
+	approval_id?: string;
+	estimate?: Money;
 	actor: string;
 	created_at: string;
 	text: string;
+}
+
+// The files an image.generate or voice.generate job stored as assets (SDD-016 section 6.1).
+export interface GeneratedItem {
+	asset_id: string;
+	hash: string;
+	kind: string;
+	bytes: number;
+	state: string;
+	revised_prompt?: string;
+}
+
+export interface GeneratedResult {
+	provider: string;
+	model: string;
+	items: GeneratedItem[];
+	requested: number;
+	delivered: number;
+	notes?: string[];
+	cost: Money;
+}
+
+// The bodies of POST /image/generate and POST /voice/generate.
+export interface ImageGenerateRequest {
+	project_id: string;
+	connection_id: string;
+	model: string;
+	prompt: string;
+	size?: string;
+	count?: number;
+	wait_ms?: number;
+	dry_run?: boolean;
+}
+
+export interface VoiceGenerateRequest {
+	project_id: string;
+	connection_id: string;
+	model: string;
+	text: string;
+	voice: string;
+	language?: string;
+	format?: string;
+	wait_ms?: number;
+	dry_run?: boolean;
+}
+
+export interface VoiceView {
+	id: string;
+	name: string;
+	language?: string;
+	source: "provider" | "documented";
+}
+
+export interface VoiceListResult {
+	connection_id: string;
+	provider: string;
+	voices: VoiceView[];
 }
 
 export interface JobListResult {
@@ -542,6 +620,19 @@ export interface JobListResult {
 	jobs: Job[];
 	next_cursor: string | null;
 	text: string;
+}
+
+// GET /projects/{id}/describe (SDD-003): the items of a production; the editor reads the timelines of it, to name
+// the timeline a composition uses (SDD-001 section 3.5.1).
+export interface ProjectDescribeResult {
+	project_id: string;
+	items: {
+		id: string;
+		kind: string;
+		title: string;
+		timeline_id?: string;
+		state: string;
+	}[];
 }
 
 export interface LintResult {
@@ -953,6 +1044,9 @@ export interface ProviderPrice {
 	currency: string;
 	input_micros_per_mtok: number;
 	output_micros_per_mtok: number;
+	// image or mchar for the price of one image or of a million characters of speech; absent for tokens.
+	unit?: "image" | "mchar";
+	unit_micros?: number;
 }
 
 export interface PriceEntry extends ProviderPrice {
@@ -984,6 +1078,8 @@ export interface ModelView {
 	output_tokens: number;
 	price: ProviderPrice | null;
 	price_source: PriceSource;
+	// A hint of the adapter, never a rule: it orders what a picker shows.
+	capability?: "text" | "image" | "voice";
 }
 
 export interface ProviderModelsResult {
@@ -1000,6 +1096,8 @@ export interface ProviderPriceSetRequest {
 	currency?: string;
 	input_micros_per_mtok?: number;
 	output_micros_per_mtok?: number;
+	unit?: "image" | "mchar";
+	unit_micros?: number;
 }
 
 export interface ProviderPricesResult {
@@ -1114,6 +1212,9 @@ export const APPROVAL_EVENT_NAMES = [
 	"approval.decided",
 ] as const;
 
+// The event of GET /publications/events: the data is a publication with its targets (SDD-020 section 29).
+export const PUBLICATION_EVENT_NAMES = ["publication.updated"] as const;
+
 // GET /users: an administrator session only (SDD-007 section 4.1 item 2). The
 // editor reads it once, to show the name of the actors `user:<id>`.
 export interface UserSummary {
@@ -1211,6 +1312,8 @@ export interface ProjectItem {
 	job_id?: string;
 	format?: string;
 	text?: string;
+	// A text item: script, copy or caption (SDD-019).
+	text_kind?: "script" | "copy" | "caption";
 	updated_at: string;
 }
 
@@ -1272,6 +1375,39 @@ export interface SessionResult {
 	email: string;
 	role: string;
 	scopes: string[];
+}
+
+// The optional Google sign-in of network mode (SDD-007 section 4.7, SDD-014 section 12.4).
+export interface GoogleLinked {
+	email: string;
+	linked_ms: number;
+}
+
+export interface GoogleStatus {
+	enabled: boolean;
+	linked: GoogleLinked | null;
+}
+
+export interface GoogleStart {
+	authorize_url: string;
+}
+
+export interface GoogleComplete {
+	user?: SessionResult;
+	linked?: GoogleLinked;
+}
+
+export interface GoogleSettingsRequest {
+	enabled: boolean;
+	connection_id?: string;
+	allowed_emails?: string[];
+}
+
+export interface GoogleSettings {
+	enabled: boolean;
+	connection_id: string;
+	allowed_emails: string[];
+	redirect_url: string;
 }
 
 // The brand kit and the font import (SDD-005 section 5.11, SDD-007 section 7.7).

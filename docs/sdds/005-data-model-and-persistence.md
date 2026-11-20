@@ -1092,6 +1092,7 @@ CREATE TABLE project_items (
   ref        TEXT,                                 -- timeline: the timelines.id; output: the id of the export job; otherwise NULL
   body       TEXT    NOT NULL DEFAULT '',          -- brief and text: Markdown
   format     TEXT,                                 -- output: the destination format of the file (mp4, gif, wav, aac, png)
+  text_kind  TEXT CHECK (text_kind IN ('script','copy','caption')), -- text: its kind (SDD-019); NULL for any other kind of item
   created_ms INTEGER NOT NULL,
   updated_ms INTEGER NOT NULL,
   created_by TEXT    NOT NULL,
@@ -1101,13 +1102,28 @@ CREATE TABLE project_items (
 CREATE INDEX project_items_project_id_position_index ON project_items (project_id, position);
 CREATE UNIQUE INDEX project_items_timeline_ref_unique ON project_items (ref) WHERE kind = 'timeline';
 CREATE UNIQUE INDEX project_items_brief_unique ON project_items (project_id) WHERE kind = 'brief' AND state = 'active';
+CREATE TABLE text_revisions (                      -- SDD-019 section 3: one row per save of a text item
+  item_id     TEXT    NOT NULL REFERENCES project_items (id) ON DELETE CASCADE,
+  revision    INTEGER NOT NULL,                    -- 1, 2, 3 ...; never reused
+  body        TEXT    NOT NULL,
+  actor       TEXT    NOT NULL,
+  source      TEXT    NOT NULL CHECK (source IN ('created','write','generated','revert')),
+  reverted_to INTEGER,                             -- revert: the revision whose body it brought back
+  provider    TEXT,                                -- generated: the provider, the model, the real cost and the job
+  model       TEXT,
+  cost_micros INTEGER,
+  currency    TEXT,
+  job_id      TEXT,
+  created_ms  INTEGER NOT NULL,
+  PRIMARY KEY (item_id, revision)
+);
 ```
 
-- **Kinds.** `brief`, `text`, `timeline`, `output`. `image` (epic 27) and `publication` (epic 20) are reserved: the migration that adds them rebuilds the table with a longer check, as section 5.5 does for artifact kinds.
+- **Kinds.** `brief`, `text`, `timeline`, `output`. `image` (epic 27) is reserved: the migration that adds it rebuilds the table with a longer check, as section 5.5 does for artifact kinds. A `publication` (epic 20) is an item of its project too, but it is kept in tables of its own (section 5.15) and the surfaces read its item from them, so it is never a row of `project_items`.
 - **A timeline item** has `ref` = the id of its row in `timelines`. The first timeline of a project has the id of the project (`timelines.id = projects.id`); a later one has a new `prj_` id (the document keeps the `prj_` prefix, SDD-001). The operation log, the revisions, the undo chain and the assets of a timeline stay keyed by the timeline id, so nothing of the timeline document or of `operations` changes. The item title is a label of the production and is independent of the document name.
 - **Name and time.** A commit of a timeline sets `projects.updated_ms`, and sets `projects.name` when the timeline has the same id as the project, in the same transaction as the commit (the store does it; the service writes no second row). The list of projects orders by `projects.updated_ms`, so a project rises in it when any of its timelines changes.
 - **Trash.** Trashing a project writes `projects.state` and mirrors it on every row of `timelines` of its active timeline items, so that the rules of section 13.1 (a trashed timeline rejects edits) stay one check on the row the commit loads. Trashing a timeline item mirrors the same on its row; the last active timeline of a project cannot be trashed (`E_INVALID_STATE`). Emptying (section 13.3) deletes the project, which cascades its items, and deletes the `timelines` rows its items referenced.
-- **Brief and texts.** `BriefSet` writes the `body` of the one active `brief` item, creating it at position 0 when the project has none; the text is at most 256 KiB (`E_LIMIT_EXCEEDED` above). A `text` item holds a script or any other Markdown, same limit. They have no revision history here: writing tools and their history belong to epic 17. The brief is cleared, never trashed. A project holds at most 256 active items and 64 active timelines (`core/project`), the most a bundle of the whole project carries (section 16.1.1), so that every project can be exported and imported again.
+- **Brief and texts.** `BriefSet` writes the `body` of the one active `brief` item, creating it at position 0 when the project has none; the text is at most 256 KiB (`E_LIMIT_EXCEEDED` above). A `text` item holds a script or any other Markdown, same limit. A text has a `text_kind` and a history of revisions in `text_revisions` (SDD-019): `body` always holds the body of the latest revision, creating a text item (`CreateItem`) writes its revision 1 in the same call, and the migration of epic 17 gives every existing text a revision 1 with `source` `created`. A revision is deleted with its item. The brief is cleared, never trashed. A project holds at most 256 active items and 64 active timelines (`core/project`), the most a bundle of the whole project carries (section 16.1.1), so that every project can be exported and imported again.
 - **Outputs.** An `output` item is added with the id of a succeeded export job of the same project and records its destination format; the file is read through the job, so an item never holds a path.
 - **Migration.** Backup first: `Open` copies the database with `VACUUM INTO` before a migration runs (section 7 step 3). Then, in one transaction: `ALTER TABLE projects RENAME TO timelines` (SQLite rewrites the foreign keys that name it), rename the index, create the two tables, and for every row of `timelines` insert one `projects` row with the same `id`, `name`, `state`, times, actor, owner and trash columns, and one `project_items` row (kind `timeline`, title = name, position 0, `ref` = the id, the `pit_` id with the characters of the project id, state `active`: the trash of a former project is that of the project, and its restore brings the timeline back through the mirror of the trash rule of this section). Every id a surface exposed is kept. **Down** deletes the items and productions, drops them, and renames `timelines` back to `projects`; a timeline that is not the first of its project (its id differs from its project's) is deleted with its log, which is why the backup comes first. Tests run both directions over fixtures of the workspaces of releases 0.2.0, 0.17.0 and 0.29.0.
 - **Document backups.** `document_backups.owner_kind` stays `project`; `owner_id` is a timeline id.
@@ -1203,6 +1219,61 @@ CREATE INDEX checkpoints_revision_index ON checkpoints (project_id, revision DES
 The name is unique inside a timeline (`ErrExists` becomes `E_ID_EXISTS`), 1 to 60 characters after `untrusted.Clean` and trimming, with no `/`; the note is cut at 300 characters. A checkpoint is removed with its project (the cascade of `Delete`, section 13.3) and never otherwise except by `CheckpointRemove` and by the ceiling of the automatic ones below; it holds no foreign key to `operations`, which is append-only. `Repos` gains `Checkpoints() CheckpointRepo` (section 3.2).
 
 **Automatic checkpoint.** In the transaction of `Edit` (and of `HistoryRevert`, which commits a batch the same way), after the checks that can refuse the batch and before the commit, when the batch is not a dry run and changes the document (not a no-op), and the actor is an agent (SDD-003 §2.5.1), the service makes the checkpoint `auto <actor> <YYYY-MM-DD>` (UTC date of the service clock) at the revision the batch started from, unless that name exists in the timeline. The name is the whole "once a day per actor" rule: the first edit of the day creates it, the later ones find it. At most 30 automatic checkpoints are kept per timeline: after creating one, `TrimAuto(project, 30)` removes the oldest automatic ones. A checkpoint made by a person or an agent by name is never removed by the ceiling, and neither is an automatic one that a person or an agent renamed: the rename makes it a named one (`auto` 0).
+
+### 5.15 `publications` and `publication_targets` (SDD-020 sections 23 to 29)
+
+Migration `20261119250000_create_publications_tables`. A publication is an item of its project (ADR-0039) and is kept in tables of its own: the item the surfaces show is read from them (SDD-020 section 23), and `project_items` is not rebuilt for it.
+
+```sql
+CREATE TABLE publications (
+  id            TEXT    NOT NULL,                 -- pub_...
+  project_id    TEXT    NOT NULL REFERENCES projects (id) ON DELETE CASCADE,
+  title         TEXT    NOT NULL,
+  text          TEXT    NOT NULL DEFAULT '',      -- the default caption
+  export_job    TEXT    NOT NULL,                 -- the succeeded export job of the video
+  thumbnail_job TEXT    NOT NULL DEFAULT '',
+  created_ms    INTEGER NOT NULL,
+  updated_ms    INTEGER NOT NULL,
+  created_by    TEXT    NOT NULL,                 -- actor
+  owner_user_id TEXT,                             -- network mode only
+  PRIMARY KEY (id)
+);
+CREATE INDEX publications_project_id_index ON publications (project_id, updated_ms);
+CREATE TABLE publication_targets (
+  id              TEXT    NOT NULL,               -- tgt_...
+  publication_id  TEXT    NOT NULL REFERENCES publications (id) ON DELETE CASCADE,
+  position        INTEGER NOT NULL,
+  connection_id   TEXT    NOT NULL,               -- no foreign key: removing a connection fails the send, not the plan
+  network         TEXT    NOT NULL,
+  fields          TEXT    NOT NULL,               -- JSON: title, description, tags, visibility, made_for_kids, ai_disclosure
+  state           TEXT    NOT NULL CHECK (state IN ('draft','waiting_approval','approved','scheduled','publishing',
+                                                    'published','failed','missed','cancelled')),
+  scheduled_ms    INTEGER,                        -- the instant, UTC
+  zone            TEXT    NOT NULL DEFAULT '',    -- IANA zone the person chose
+  late_minutes    INTEGER NOT NULL DEFAULT 0 CHECK (late_minutes BETWEEN 0 AND 1440),
+  send_now        INTEGER NOT NULL DEFAULT 0 CHECK (send_now IN (0,1)),   -- asked to send as soon as approved
+  approval_id     TEXT,
+  snapshot        TEXT,                           -- JSON: the post as the person was shown it, with the digest of each file
+  payload_sha256  TEXT,                           -- SHA-256 of snapshot
+  attempts        INTEGER NOT NULL DEFAULT 0,
+  next_attempt_ms INTEGER,
+  lease_owner     TEXT,
+  lease_until_ms  INTEGER,
+  remote_id       TEXT,
+  url             TEXT,
+  remote_state    TEXT,
+  error           TEXT,                           -- JSON: code, kind, message, hint, retryable
+  published_ms    INTEGER,
+  created_ms      INTEGER NOT NULL,
+  updated_ms      INTEGER NOT NULL,
+  PRIMARY KEY (id)
+);
+CREATE INDEX publication_targets_publication_id_index ON publication_targets (publication_id, position);
+CREATE INDEX publication_targets_state_scheduled_ms_index ON publication_targets (state, scheduled_ms);
+CREATE INDEX publication_targets_approval_id_index ON publication_targets (approval_id);
+```
+
+`Repos` gains `Publications() publish.Store` (the package `service/publish`): `Insert`, `Get`, `Target`, `Save` (the publication and all its targets, in the transaction that read them), `List`, `Open` (the targets the scheduler looks at), `Next`, `Claim` and `Renew` (the lease, one conditional `UPDATE` each, so that a second scheduler changes no row) and `OfProject`. The writer is the one write transaction of `Store.Write`. Down drops both tables.
 
 ## 6. Workspace ownership
 
@@ -1794,9 +1865,9 @@ A line of `operations.ndjson` is the `operations` row as JSON with the parsed co
 
 ### 16.1.1 Bundles with a production (`bundle_version` 2)
 
-A bundle exports the whole project. The format of 16.1 stays and gains: `manifest.json` has `"bundle_version": 2` and a member `production`: `{"name", "items": [{"kind", "title", "position", "text", "format", "timeline"}]}`, the active items of the project in order; `timeline` names the timeline of an item by a key. The Markdown of a brief or a text that is not empty is the entry `item.<n>.md`, `<n>` the index of the item in `items`, and `text` is `{"sha256", "bytes"}` of that entry: the texts stay out of the manifest, whose cap (1 MiB, 16.3) is far below what 256 items of 256 KiB hold. The first active timeline is `document.json` and `operations.ndjson` as before (key `main`); every other active timeline is `timeline.<key>.json` and `timeline.<key>.ndjson` with the key `t1`, `t2`... in item order, listed in the manifest member `timelines` (`key`, `id`, `name`, `schema_version`, `revision`, `document`, `operations`, the last two as in 16.1). Media and fonts are the union over every timeline, each once. Trashed items are not exported. An `output` item is exported with its format and no job (the file is not part of the bundle); an import keeps it as a record with no job. A bundle of one timeline (`ProjectBundleExport` with `timeline_id`) is exactly the format of 16.1 with `bundle_version` 1.
+A bundle exports the whole project. The format of 16.1 stays and gains: `manifest.json` has `"bundle_version": 2` and a member `production`: `{"name", "items": [{"kind", "title", "position", "text_kind", "text", "format", "timeline"}]}`, the active items of the project in order; `timeline` names the timeline of an item by a key; `text_kind` (SDD-019) is on a text only, and a text without it, as in a bundle made before epic 17, is imported as a `copy` (the history of revisions does not travel: an imported text starts at revision 1). The Markdown of a brief or a text that is not empty is the entry `item.<n>.md`, `<n>` the index of the item in `items`, and `text` is `{"sha256", "bytes"}` of that entry: the texts stay out of the manifest, whose cap (1 MiB, 16.3) is far below what 256 items of 256 KiB hold. The first active timeline is `document.json` and `operations.ndjson` as before (key `main`); every other active timeline is `timeline.<key>.json` and `timeline.<key>.ndjson` with the key `t1`, `t2`... in item order, listed in the manifest member `timelines` (`key`, `id`, `name`, `schema_version`, `revision`, `document`, `operations`, the last two as in 16.1). Media and fonts are the union over every timeline, each once. Trashed items are not exported. An `output` item is exported with its format and no job (the file is not part of the bundle); an import keeps it as a record with no job. A bundle of one timeline (`ProjectBundleExport` with `timeline_id`) is exactly the format of 16.1 with `bundle_version` 1.
 
-**Import.** A bundle of version 1, as every release up to 0.29.0 wrote it, imports as a project with one timeline and no other item. A bundle of version 2 is checked before anything is written, by the checks of 16.3 applied to every document and log, and by these: at most 63 timelines after the first and 256 items; keys `t<1 to 3 digits>` and timeline ids unique and different from the project's; every timeline is named by exactly one item and every item that is not a timeline names none; at most one brief; the kinds are those of `core/project`, and titles and texts obey its rules; only a brief or a text declares a text, of 1 byte to 256 KiB, and its entry matches the declared hash and size; an entry named `timeline.*` or `item.*` that the manifest does not list is refused. With `as_new` every timeline gets a new id and no log; without it the ids are kept and any that exists is `E_ID_EXISTS`. A binary that knows only version 1 refuses a version 2 bundle with the instruction to update.
+**Import.** A bundle of version 1, as every release up to 0.29.0 wrote it, imports as a project with one timeline and no other item. A bundle of version 2 is checked before anything is written, by the checks of 16.3 applied to every document and log, and by these: at most 63 timelines after the first and 256 items; keys `t<1 to 3 digits>` and timeline ids unique and different from the project's; every timeline is named by exactly one item and every item that is not a timeline names none; at most one brief; the kinds are those of `core/project`, and titles and texts obey its rules; only a brief or a text declares a text, of 1 byte to 256 KiB, and its entry matches the declared hash and size; an entry named `timeline.*` or `item.*` that the manifest does not list is refused. With `as_new` every timeline gets a new id and no log, and a composition (SDD-001 §3.5.1) that names a timeline of the bundle is rewritten to name its new id; without it the ids are kept and any that exists is `E_ID_EXISTS`. A binary that knows only version 1 refuses a version 2 bundle with the instruction to update.
 
 ### 16.2 Export
 

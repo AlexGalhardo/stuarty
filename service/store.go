@@ -10,6 +10,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/assets"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/library"
+	"github.com/AlexGalhardo/stuarty/service/publish"
 )
 
 // Sentinel errors returned by the store (SDD-005 section 2 item 8). The
@@ -75,6 +76,7 @@ type Repos interface {
 	Approvals() approval.Store
 	Library() library.Index
 	AssetLibrary() assets.Store
+	Publications() publish.Store
 	Chat() agenthost.Store
 }
 
@@ -209,6 +211,7 @@ type ItemRow struct {
 	Ref       string // timeline: the timeline id; output: the export job id
 	Body      string // brief and text
 	Format    string // output
+	TextKind  string // text: script, copy or caption (SDD-019); empty for any other kind
 	CreatedMs int64
 	UpdatedMs int64
 	CreatedBy string
@@ -250,6 +253,58 @@ type ProductionRepo interface {
 	ProjectOfTimeline(ctx context.Context, timelineID string) (string, error)
 	// ActiveTimelines lists the active timeline items of a project by position.
 	ActiveTimelines(ctx context.Context, projectID string) ([]TimelineRef, error)
+
+	// The texts of a production and their revisions (SDD-019). CreateItem of a text item writes its revision 1
+	// ('created') in the same call, so a text item never exists without a revision.
+	//
+	// TextItems lists text items with the facts of their latest revision, newest first, with the body of each.
+	TextItems(ctx context.Context, q TextQuery) (items []TextHead, next string, err error)
+	// TextRevisions lists the revisions of a text, newest first, without bodies; before is a revision number to
+	// start under (0 for the latest); the answer has at most limit rows.
+	TextRevisions(ctx context.Context, itemID string, before, limit int) ([]TextRevisionRow, error)
+	// TextRevision reads one revision with its body; ErrNotFound when there is none.
+	TextRevision(ctx context.Context, itemID string, revision int) (TextRevisionRow, error)
+	// TextLatest is the latest revision of a text, with its body; ErrNotFound when the item has none.
+	TextLatest(ctx context.Context, itemID string) (TextRevisionRow, error)
+	// AddTextRevision appends a revision and drops those below pruneBefore, and sets the body and the
+	// updated_ms of the item to those of the revision.
+	AddTextRevision(ctx context.Context, rev TextRevisionRow, pruneBefore int) error
+}
+
+// TextRevisionRow is a row of text_revisions.
+type TextRevisionRow struct {
+	ItemID     string
+	Revision   int
+	Body       string // empty in a list
+	Actor      string
+	Source     string // created, write, generated or revert
+	RevertedTo *int
+	Provider   string
+	Model      string
+	CostMicros *int64
+	Currency   string
+	JobID      string
+	CreatedMs  int64
+}
+
+// TextQuery selects a page of text items.
+type TextQuery struct {
+	ProjectID   string // one project; empty for every project the caller may see
+	OwnerUserID string // network mode: only this user's projects
+	TextKind    string // empty for every kind
+	State       ProjectState
+	After       string // opaque cursor from the previous page
+	Limit       int    // 1 to 100; 0 means 50
+}
+
+// TextHead is a text item with the project it is in and the facts of its latest revision.
+type TextHead struct {
+	Item         ItemRow
+	ProjectName  string
+	Revision     int
+	RevisionBy   string
+	RevisionSrc  string
+	ProjectOwner *string
 }
 
 // Operations

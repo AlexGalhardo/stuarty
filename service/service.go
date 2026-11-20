@@ -27,6 +27,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/connections/oauth"
 	"github.com/AlexGalhardo/stuarty/service/library"
 	"github.com/AlexGalhardo/stuarty/service/providers"
+	pub "github.com/AlexGalhardo/stuarty/service/publish"
 	"github.com/AlexGalhardo/stuarty/service/social"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
@@ -38,6 +39,7 @@ import (
 // failure and never a partial result with a non-nil error.
 type Service interface {
 	ProductionService
+	WritingService
 	BriefingService
 	AssetLibraryService
 	ChatService
@@ -106,6 +108,9 @@ type Service interface {
 	ProviderModels(ctx context.Context, req ProviderModelsRequest) (*ProviderModelsResult, error)
 	ProviderPriceSet(ctx context.Context, req ProviderPriceSetRequest) (*ProviderPricesResult, error)
 	TextGenerate(ctx context.Context, req TextGenerateRequest) (*Job, error)
+	ImageGenerate(ctx context.Context, req ImageGenerateRequest) (*Job, error)
+	VoiceGenerate(ctx context.Context, req VoiceGenerateRequest) (*Job, error)
+	VoiceList(ctx context.Context, req VoiceListRequest) (*VoiceListResult, error)
 
 	JobGet(ctx context.Context, req JobGetRequest) (*Job, error)
 	JobList(ctx context.Context, req JobListRequest) (*JobListResult, error)
@@ -212,13 +217,25 @@ type Service interface {
 	PublishValidate(ctx context.Context, req PublishValidateRequest) (*PublishValidateResult, error)
 	PublishNow(ctx context.Context, req PublishNowRequest) (*Job, error)
 	PublishStatus(ctx context.Context, req PublishStatusRequest) (*PublishStatusResult, error)
+
+	// The calendar of publications (SDD-020 sections 23 to 31): a publication with one target per account, each
+	// with its time. PublicationSchedule, PublicationSendNow and PublicationRetry only ask for approval: a
+	// target is sent by the scheduler, after a person or a rule the person wrote approved it.
+	PublicationCreate(ctx context.Context, req PublicationCreateRequest) (*Publication, error)
+	PublicationGet(ctx context.Context, req PublicationGetRequest) (*Publication, error)
+	PublicationList(ctx context.Context, req PublicationListRequest) (*PublicationListResult, error)
+	PublicationUpdate(ctx context.Context, req PublicationUpdateRequest) (*Publication, error)
+	PublicationSchedule(ctx context.Context, req PublicationScheduleRequest) (*Publication, error)
+	PublicationSendNow(ctx context.Context, req PublicationSendNowRequest) (*Publication, error)
+	PublicationRetry(ctx context.Context, req PublicationRetryRequest) (*Publication, error)
+	PublicationCancel(ctx context.Context, req PublicationCancelRequest) (*Publication, error)
 }
 
 // Event is what the service publishes after the change is durable (SDD-006
 // section 3). The hub that carries it is the business of the events task; the
 // service only calls Options.Publish.
 type Event struct {
-	// Type is "batch.committed", "project.updated", "job.updated" or
+	// Type is "batch.committed", "project.updated", "nested.updated", "job.updated" or
 	// "asset.updated".
 	Type        string
 	ProjectID   string
@@ -230,17 +247,21 @@ type Event struct {
 
 	// The members below are set by job.updated and asset.updated, which are
 	// not replayable and carry no revision.
-	JobID    string
-	AssetID  string // the asset id of this project, for asset.updated
-	State    string
-	Progress float64
-	Message  string
-	Error    *Error
-	Result   *JobResult
+	JobID   string
+	AssetID string // the asset id of this project, for asset.updated
+	// TimelineID is the timeline that changed, for nested.updated: ProjectID is then a timeline that holds it.
+	TimelineID string
+	State      string
+	Progress   float64
+	Message    string
+	Error      *Error
+	Result     *JobResult
 	// Approval is the request of approval.requested and approval.decided (SDD-015 section 7), and
 	// Owner the user it belongs to in network mode, so that a member's stream carries their own only.
 	Approval *approval.Request
 	Owner    string
+	// Publication is the publication of publication.updated (SDD-020 section 29).
+	Publication *pub.Publication
 
 	// The members below are set by image.updated (SDD-006 section 12): ImageID names the document, and
 	// Revision, Kind, Actor and At are those of the committed batch.
@@ -319,6 +340,9 @@ type Options struct {
 	WebP export.WebPEncoder
 	// JobWait is how long TrashEmpty waits for the jobs of a trashed project to stop; zero is 15 s.
 	JobWait time.Duration
+	// SchedulerClock is the clock the publication scheduler sleeps on; tests move it. Default: the service
+	// clock to read and the system timer to wait.
+	SchedulerClock pub.Clock
 	// Agents hosts the agent a user installed, for the chat (SDD-017). Nil in a process that only runs a
 	// command: the chat operations that need a process then answer E_AGENT_UNAVAILABLE, and the reads work.
 	Agents *agenthost.Host
@@ -356,6 +380,11 @@ type svc struct {
 	webp        export.WebPEncoder
 	doctorMu    sync.Mutex
 	doctorCaps  *ffmpeg.Capabilities
+
+	// pubs is the calendar of publications and sched the loop that sends the approved ones at their time
+	// (SDD-020 sections 23 to 29).
+	pubs  *pub.Manager
+	sched *pub.Scheduler
 
 	storeMu sync.RWMutex
 
@@ -414,7 +443,8 @@ func New(o Options) (Service, error) {
 
 	s.providers = o.Providers
 
-	kinds, err := registerKinds(append(slices.Clone(o.JobKinds), s.textGenerateKind()))
+	kinds, err := registerKinds(append(slices.Clone(o.JobKinds),
+		s.textGenerateKind(), s.imageGenerateKind(), s.voiceGenerateKind(), s.textDraftKind()))
 	if err != nil {
 		return nil, err
 	}
@@ -494,6 +524,15 @@ func New(o Options) (Service, error) {
 			return int(r.X), int(r.Y), int(r.W), int(r.H)
 		}
 	}
+
+	s.pubs = pub.NewManager(pubEnv{s}, pubGateway{s})
+
+	clock := o.SchedulerClock
+	if clock == nil {
+		clock = svcClock{now: s.now}
+	}
+
+	s.sched = pub.NewScheduler(s.pubs, pub.SchedulerOptions{Clock: clock, Log: s.log, Housekeeping: s.expireDue})
 
 	return s, nil
 }

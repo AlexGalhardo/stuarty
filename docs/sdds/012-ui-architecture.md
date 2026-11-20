@@ -103,6 +103,8 @@ The script has its own unit tests (a fixture per rule that must fail and one tha
 | `GET /settings` | `pages/Settings/Index.tsx` | language, theme, default time unit, version and workspace path (`Doctor`, `GET /system`) | both |
 | `GET /settings/keys` | `pages/Settings/Keys.tsx` | create and revoke API keys with scopes (SDD-007) | network only; 404 in local mode |
 | `GET /login` | `pages/Auth/Login.tsx` | login (vukem sessions); the form posts JSON to `POST /auth/login` and the logout button to `POST /auth/logout` (SDD-007 §4.1 item 5 names those routes, so there is no `POST /logout` page route); the page gets the prop `next`, already a safe path of this server (default `/projects`); the only page that needs no session; 404 in local mode | network only |
+| `GET /login/google/callback` | `pages/Auth/GoogleCallback.tsx` | where Google sends the browser back (SDD-007 §4.7): reads `state` and `code` from the address and posts them to `POST /auth/google/complete`, then goes to the page the person asked for, or shows the refusal with a way back to the login; it holds no data; with `/social/callback` the only page that a cross-site navigation may open; 404 in local mode | network only |
+| `GET /settings/google` | `pages/Settings/Google.tsx` | the optional Google sign-in (SDD-014 §12): the person links or unlinks their Google account (the password is asked), and an administrator turns it on or off, picks the connection and the allowed e-mails (`/auth/google` and `/auth/google/settings`); the login page shows "Sign in with Google" when `GET /auth/google` says it is on; 404 in local mode | network only |
 | any error | `pages/Error.tsx` | error page of Inertia visits | both |
 
 In network mode a browser that opens any other page with no session gets `303` to `/login?next=<path and query>` (a call of the API still gets 401); this is not counted as a failed authentication.
@@ -468,7 +470,8 @@ export type ProjectEvent =                         // mirrors SDD-000 §5 and SD
   | { name: "project.updated"; project_id: string; state: string }
   | { name: "asset.updated"; asset_id: string; state: AssetState; progress: number }
   | { name: "job.updated"; job_id: string; kind: JobKind; state: JobState; progress: number; message: string }
-  | { name: "resync.required"; revision: number; reason: string };
+  | { name: "resync.required"; revision: number; reason: string }
+  | { name: "nested.updated"; project_id: string; timeline_id: string; revision: number; at: string };
 ```
 
 Boot and reconciliation algorithm (the same code serves boot and resync). It is the algorithm of SDD-006 §6, which is authoritative:
@@ -480,7 +483,7 @@ Boot and reconciliation algorithm (the same code serves boot and resync). It is 
    - `revision === current + 1`: `applyRevisionDiff`.
    - `revision > current + 1`: hold it in a buffer and start a 2 s timer; when the missing revision arrives the buffer drains in order.
 4. Resync (set status `resyncing`, close the stream, go to step 1) on: `resync.required`, a `batch.committed` with `diff_truncated`, `applyDiff` returning `"unpatchable"`, or the 2 s gap timer. At most 3 consecutive resyncs without progress; then status `failed` with a banner and a Reload button.
-5. `asset.updated`, `job.updated`, `project.updated` update `mediaStore`, `jobsStore` and the trash flag. They do not carry revisions and need no ordering.
+5. `asset.updated`, `job.updated`, `project.updated` update `mediaStore`, `jobsStore` and the trash flag. They do not carry revisions and need no ordering. `nested.updated` (a timeline this one uses as a composition changed, SDD-006 §3.3.1) leaves the read model alone: the preview drops its plan windows (`PreviewExecutor.refresh`), draws the frame again and, when paused, asks for the paused frame again, because the revision of this timeline did not change.
 6. `EventSource` reconnects by itself and sends `Last-Event-ID` (ADR-0017 item 5); the server replays or sends `resync.required`. When `readyState` becomes `CLOSED` (an HTTP error response such as 401 ends the automatic retry), `events.ts` probes `GET /projects/{id}`: a 401 follows the `E_UNAUTHORIZED` policy, any other failure schedules a manual reopen with delays 1, 2, 4, 8, 15 s (15 s thereafter) and state `offline`; success runs the algorithm from step 1.
 7. Staleness: the server sends an unnamed empty event every 15 s as a heartbeat that JavaScript can see (SDD-006 §3.1). `events.ts` listens to `message` only to record the time; 40 s without any event closes the `EventSource` and opens a new one with `since=<current revision>`. The same check runs on `visibilitychange` to visible and on `online`.
 
@@ -806,6 +809,7 @@ Every item is a `div.tl-item` with a type class (`tl-clip`, `tl-audio`, `tl-text
 | `text` | the first line of `text` | none |
 | `caption` | one segment per word when the item is wider than 120 px and `ppf >= 0.5`, else one block with the word count; the selected word is outlined | `words[i].start` and `.duration` relative to the item, turned into segments by `captionWordSegments(item, ppf)` of `units.ts` (rule R5); `CaptionItem` does no arithmetic of its own |
 | `shape` | fill colour swatch and shape icon | none |
+| `composition` | a small picture of the first frame of the timeline it uses and that timeline's name (the item `name` wins); a dashed outline; "Timeline not found" when the production no longer lists it | the frame endpoint of the nested timeline, asked for without `rev` so it answers with the current frame; the names come from `describe` (read again when the page gets the focus) |
 
 The label and the caption words are rendered with `UntrustedText` (§1.2, untrusted text). Colours come from tokens (§17). A selected item has a 2 px selection ring (token `--ed-selection`). A locked or hidden track dims its row. An item whose asset is missing (`ast_placeholder` or unknown) shows a warning icon.
 
@@ -907,6 +911,9 @@ A gesture that touches several items (a multi-selection move) sends one batch co
 | `Delete` | `item.delete {item_ids}` | none |
 | `Shift+Delete`, context menu "Ripple delete" | `item.delete {item_ids, ripple: "track"}`; menu "Ripple delete all tracks": `ripple: "all"` | none |
 | `Ctrl+D` | `item.duplicate {item_id, start: "<item end>f"}` with the same track (the end frame is read from the item) | none |
+| Context menu "Create composition from selection" | `composition.create_from_selection {item_ids}`: the selected items move into a new timeline of the project and one composition takes their place, in one batch | none |
+| Context menu "Expand composition" on a composition | `composition.expand {item_id}` (the core refuses when the composition has an effect or a trim of its own) | none |
+| Double click on a composition, context menu "Open composition" | none: the editor opens the nested timeline at `/editor/<timeline id>?from=<this timeline id>`; the top bar then shows a link "Back to" and the name of the timeline `from` (only an id of the form `prj_` and 10 characters is linked) | none |
 | Right-click an empty gap, "Close gap" | `timeline.close_gap {track_id, at: "<frame under pointer>f"}` | none |
 | Toolbar "Add text" (`T`) | `text.add {track_id, start: "<playhead>f", duration: "3s", text: t("ui.editor.defaults.text")}` on the first visual track (created as above if none) | none |
 | Toolbar "Add caption" (`C`) | dialog with text, start (playhead), duration; sends `caption.add {track_id, start, text, duration}` on the first visual track named by the user or created, `track.add` first when none | none |
@@ -1959,7 +1966,9 @@ Implements RF-310, RF-311 and RF-312 (PRD-004), author decision D-075 and epic 0
 | `GET /` | `pages/Dashboard/Home.tsx` | the home: a short welcome and one card for each section, with what it will hold |
 | `GET /projects` | `pages/Projects/Index.tsx` | Projects (epic 06 owns the content) |
 | `GET /edit-image` and `/edit-image/{image_id}` | `pages/EditImage/Index.tsx`, `pages/EditImage/Show.tsx` | the image editor (epic 28, section 24) |
-| `GET /edit-video`, `/write`, `/publish`, `/skills`, `/prompts`, `/memory` | `pages/Dashboard/Section.tsx` | an honest empty state, until the epic of the section replaces the route's page |
+| `GET /edit-video`, `/skills`, `/prompts`, `/memory` | `pages/Dashboard/Section.tsx` | an honest empty state, until the epic of the section replaces the route's page |
+| `GET /publish` | `pages/Publish/Index.tsx` | the publishing calendar (epic 20, SDD-020 sections 23 to 31): a month, a week and a list of the targets of the publications, a drag or the keyboard to move one (Space takes it, the arrows move it by a day or an hour, Enter drops it), the editor of a publication with a panel and a preview per account, and the state, the approval, the address or the error of each target. It reads and writes through `/api/v1/publications` and follows `/api/v1/publications/events`; it sends the instant and the zone and draws what the service answers, and computes no state and no time rule |
+| `GET /write` | `pages/Write/Index.tsx` | Write (epic 17, SDD-019 section 11): the texts of every project in one list, filtered by project and kind; a plain Markdown editor with a preview that is drawn from text nodes only (`Preview.tsx`, never HTML), the panels of the kind (the duration of a script from `ScriptEstimate`, the counters of a caption from `CaptionValidate`), the revisions with their difference and the way back, and the draft with a model, which waits in the approval queue. The page reads and writes through `/api/v1/texts` and `/api/v1/projects/{id}/texts` and computes nothing; no rich-text library |
 | `GET /visual-assets`, `/video-assets` | `pages/VisualAssets/Index.tsx`, `pages/VideoAssets/Index.tsx` | the two sections of the asset library (epic 08, SDD-011 §14.6): filters, a grid of posters, a detail panel with the origin, the rights note, the tags and the projects that use the file, and "use in a project" (no copy); both are `assetlibrary/AssetLibrary.tsx` with a section |
 | `GET /connections` | `pages/Connections/Index.tsx` | the connections (epic 04, SDD-014) and, under them, one card per AI provider (epic 09, SDD-016, `pages/Connections/ProviderCards.tsx`): connect with a key, test it, read the models with their price and where it comes from, set a price, and the spend of the day of each connection. The names of the models and the labels are untrusted text; amounts are formatted and never summed |
 | `GET /approvals` | `pages/Approvals/Index.tsx` | the approval queue, the rules and the cost ceilings (epic 05, SDD-015), built from `dashboard/approval/`; not a section of the sidebar: it is linked from the Connections page, and the Publish section (epic 20) will link it too. The queue follows `GET /api/v1/approvals/events` and shows what the service answers (the summary and the actor as untrusted text, the amounts formatted and never summed) |
@@ -2051,7 +2060,7 @@ The brand kit (RF-342) is read from `GET /api/v1/brand-kit`: its colours are swa
 
 ### 24.8 Export
 
-The dialog asks for the format (PNG, JPEG, WebP), the preset size or "original", and the quality for JPEG. Before it sends `ImageExport` it shows the findings of the read model (SDD-021 section 8), each with a link that selects its layer, and a finding that blocks disables the button with the reason (the core still refuses it with `E_LINT_BLOCKING`). WebP shows the service's answer while it is `webp_unavailable`. A finished export offers the file for download through `ImageFile`, with its size, digest and pixel size; the bytes are those the CLI export of the same revision writes.
+The dialog asks for the format (PNG, JPEG, WebP), the preset size or "original", and the quality for JPEG and for lossy WebP (WebP has a "lossless" box, on by default, that sends no quality). Before it sends `ImageExport` it shows the findings of the read model (SDD-021 section 8), each with a link that selects its layer, and a finding that blocks disables the button with the reason (the core still refuses it with `E_LINT_BLOCKING`). A WebP export on a machine with no `libwebp` shows the service's answer, `webp_unavailable`. A finished export offers the file for download through `ImageFile`, with its size, digest and pixel size; the bytes are those the CLI export of the same revision writes.
 
 ### 24.9 History and the other actors
 

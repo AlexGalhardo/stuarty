@@ -46,6 +46,8 @@ var Provenance = map[string]string{
 	"approval.Request.Reason":              SourceProjectText,
 	"service.TextResult.Text":              SourceNetworkText,
 	"service.ModelView.Name":               SourceNetworkText,
+	"service.VoiceView.Name":               SourceNetworkText,
+	"service.GeneratedItem.RevisedPrompt":  SourceNetworkText,
 	"service.LibraryEntry.Description":     SourceLibraryText,
 	"service.LibraryEntry.Tags":            SourceLibraryText,
 	"service.LibraryEntry.Error":           SourceLibraryText,
@@ -70,12 +72,30 @@ var Provenance = map[string]string{
 	"service.SocialChoice.Title":            SourceNetworkText,
 	"service.PublishValidateResult.Summary": SourceProjectText,
 
+	// the calendar of publications (SDD-020 section 23): the text of a post and what the network named
+	"publish.Publication.Title":  SourceProjectText,
+	"publish.Publication.Text":   SourceProjectText,
+	"publish.Fields.Title":       SourceProjectText,
+	"publish.Fields.Description": SourceProjectText,
+	"publish.Fields.Tags":        SourceProjectText,
+	"publish.Target.RemoteID":    SourceNetworkText,
+	"publish.Target.URL":         SourceNetworkText,
+
 	// the asset library (SDD-011 section 14): the text a person or an agent wrote about a file
 	"assets.LibraryAsset.Description": SourceMetadata,
 	"assets.Use.Name":                 SourceProjectText,
 	"asset.Origin.Source":             SourceMetadata,
 	"asset.Origin.Prompt":             SourceMetadata,
 	"asset.Origin.RightsNote":         SourceMetadata,
+
+	// the texts of a production (SDD-019): their titles and bodies, the model of a generated revision, and the
+	// parts of a body that a difference or an estimate repeats
+	"service.TextItem.ProjectName": SourceProjectText,
+	"service.TextItem.Title":       SourceProjectText,
+	"service.TextRevision.Model":   SourceNetworkText,
+	"service.TextGetResult.Body":   SourceProjectText,
+	"writing.TextHunk.Text":        SourceProjectText,
+	"writing.SceneEstimate.Title":  SourceProjectText,
 
 	// the hand-off from an external motion engine (SDD-011 section 15): the words of the captions in the range
 	"service.MotionCaption.Text":          SourceProjectText,

@@ -1,9 +1,9 @@
 # SDD-020: Publishing: the connector frame, YouTube, Instagram and Facebook
 
-- Status: Draft (2026-11-19). Written by epic 18; the code follows in the same epic. Part 2 (sections 15 to 22, Instagram and Facebook) was written by epic 19 on 2026-11-19. Epics 20, 22, 44 and 45 add their own parts below.
-- Depends on: ADR-0032 (publishing waits for a person), ADR-0033 (the vault), ADR-0035 (the user's own developer apps), SDD-000 (names), SDD-003 (agent interfaces), SDD-007 (threat model), SDD-014 (connections), SDD-015 (approval and cost)
-- Implements: PRD-004 RF-400, RF-401 (YouTube, Instagram, Facebook), RF-407 (AI disclosure), NFR-063, NFR-064
-- Owner area: `core/publish/`, `service/social/`, `service/social/youtube/`, `service/social/meta/`, `service/social/instagram/`, `service/social/facebook/`, `service/connections/oauth/`, the publishing operations in `service/`, the controllers, commands and the callback route in `web/app/`, the setup guide and the publish dialog of the Connections page
+- Status: Draft (2026-11-19). Written by epic 18 (sections 1 to 14: the connector frame and YouTube); the code follows in the same epic. Part 2 (sections 15 to 22, Instagram and Facebook) was written by epic 19 on 2026-11-19. Part 3 (sections 23 to 31: the publication, the calendar, the approval of a scheduled post and the scheduler) was written by epic 20. Epics 22, 44 and 45 add their own parts below.
+- Depends on: ADR-0032 (publishing waits for a person), ADR-0033 (the vault), ADR-0035 (the user's own developer apps), ADR-0039 (a publication belongs to a project), ADR-0046 (the publishing scheduler), SDD-000 (names), SDD-003 (agent interfaces), SDD-005 (tables), SDD-007 (threat model), SDD-014 (connections), SDD-015 (approval and cost)
+- Implements: PRD-004 RF-400, RF-401 (YouTube, Instagram, Facebook), RF-402 to RF-406, RF-407 (AI disclosure), RF-408, NFR-063, NFR-064
+- Owner area: `core/publish/`, `service/publish/`, `service/social/`, `service/social/youtube/`, `service/social/meta/`, `service/social/instagram/`, `service/social/facebook/`, `service/connections/oauth/`, the publishing operations in `service/`, the controllers, commands and the callback route in `web/app/`, the setup guide and the publish dialog of the Connections page, the Publish pages in `web/resources/js/pages/Publish/`
 
 ## Contents
 
@@ -32,6 +32,18 @@ Part 2, Instagram and Facebook (epic 19):
 20. AI disclosure
 21. The setup guide and the picker
 22. Operations, variables and tests of part 2
+
+Part 3, the calendar and the scheduler (epic 20):
+
+23. The publication and its targets
+24. The state of a target
+25. Time: the zone, daylight saving and a missed time
+26. Approval and cost of a scheduled post
+27. The scheduler
+28. Service operations of the publication
+29. Tables, events and surfaces of the publication
+30. The calendar and the editor
+31. Tests of the publication
 
 ## 1. Overview
 
@@ -369,3 +381,118 @@ The guide of section 8 is written per network from the `Description` (steps, sco
 - **Variable:** none new. With `STUARTY_TEST_SOCIAL_URL` set (SDD-000, the table of variables), the connectors `instagram` and `facebook` of the build send everything, Graph and upload and sign-in, to that loopback server, so `meta-connect.spec.ts` runs a whole flow with no Meta account.
 - **Tests:** `go test ./core/publish/...` (limits at their boundaries, the caption); `go test ./service/social/meta/... ./service/social/instagram/... ./service/social/facebook/...` (recorded request and response pairs in `testdata/`, the two-step state machine, polling with a ceiling, every error of section 19, no token in any error, log or result); `go test ./service/... -run TestDisclosure`; `go test -run TestSecurity_ ./...` (rows T-60 and T-61 of SDD-007); `web/e2e/specs/meta-connect.spec.ts` and `task test:web`.
 - **Not verified by the product's tests, only by the author's own app** (task 9 of the epic): the points of section 15 marked as not stated; that Meta accepts the `POST` of the token exchange; that a real Reel reaches a real account. The steps are in the hand-off of epic 19.
+
+## Part 3: The calendar and the scheduler (epic 20)
+
+## 23. The publication and its targets
+
+Section 10 sends one post now, as a job. A creator plans: which piece goes to which network, and when. That plan is a **publication** (epic 20).
+
+A publication belongs to one project (ADR-0039) and holds what the networks share: a `title`, a `text` (the default caption; the caption of epic 17 is copied into it when that epic is merged, otherwise the person types it), the `export` (the id of a succeeded export job of the project: the video, checked as `PublishNow` checks it) and an optional `thumbnail` (a succeeded still export). It holds one or more **targets**, one per account it goes to. A target is where the plan meets a network:
+
+| Field | Meaning |
+| --- | --- |
+| `id` | `tgt_` and 10 characters (SDD-000 section 2) |
+| `connection_id`, `network` | the account; the network is the kind of the connection, read when the target is made |
+| `fields` | the per-network post: `title` and `description` (each empty means the publication's), `tags`, `visibility`, `made_for_kids`, `ai_disclosure`, the members of `PublishArgs` (section 10) |
+| `scheduled_at`, `zone` | the instant, in UTC, and the IANA zone the person thought it in (section 25) |
+| `late_window_minutes` | 0 (the default) to 1440: how long after its time a post may still be sent without anyone asking (section 25) |
+| `send_now` | true for a target the person asked to send as soon as it is approved: its window is a day (section 25); a new time clears it |
+| `state` | section 24 |
+| `approval_id` | the pending or last request (section 26) |
+| `attempts`, `next_attempt_at` | the automatic retries (section 27) |
+| `remote_id`, `url`, `remote_state` | the result of a send; `remote_state` is `processing` or `published` for a network that processes a video |
+| `error` | the last failure: `code`, `kind`, `message`, `hint`, `retryable`; the text of the network is never in it (T-58) |
+
+A publication is an item of its project (ADR-0039): it is listed in `ProjectDescribe` and in the overview of the project with kind `publication`. It is kept in its own tables (section 29) and not in `project_items`, because its rows have a state machine, leases and a schedule that no other item has, and because the table of items is rebuilt, with a longer `CHECK`, by every epic that adds a kind; the item the surfaces show is read from the publication.
+
+## 24. The state of a target
+
+`draft`, `waiting_approval`, `approved`, `scheduled`, `publishing`, `published`, `failed`, `missed`, `cancelled`. `core/publish.CanTarget(from, to)` says whether a move is allowed; no other move exists.
+
+```text
+draft            -> waiting_approval | cancelled
+waiting_approval -> approved | scheduled | missed | draft | cancelled     (approved, or approved too late; rejected or expired; cancelled)
+waiting_approval -> waiting_approval                              (rescheduled or edited: a new request replaces the old one)
+approved         -> publishing | missed | waiting_approval | cancelled
+scheduled        -> publishing | missed | waiting_approval | cancelled
+publishing       -> published | failed | scheduled                (a transient error goes back to scheduled with a later attempt)
+failed           -> waiting_approval | cancelled
+missed           -> waiting_approval | cancelled
+published, cancelled: final
+```
+
+- `draft`: the person is still planning. Nothing was asked, nothing is reserved.
+- `waiting_approval`: the target has a time and an approval request is pending. A rejected or an expired request returns the target to `draft` with an `error` that says why.
+- `approved`: a person (or a rule the person wrote) said yes and the time has come; the scheduler takes it. `scheduled`: said yes, and the time is in the future. Approving a request moves a target to `scheduled` when its time is after the moment of the decision and to `approved` otherwise; a time that is already past its late window (section 25) goes to `missed`.
+- `publishing`: a scheduler holds the lease of the target and the connector is sending. `published`: the network accepted it; `url` and `remote_id` are set.
+- `failed`: the connector refused, or a transient error used its attempts, or the send was interrupted too many times; the `error` is actionable and the person can retry (section 28).
+- `missed`: the time passed with nothing running, or the approval came too late (section 25). It waits for a person.
+- Editing a target that is `waiting_approval`, `approved` or `scheduled` returns it to `waiting_approval` with a new request: what a person approved is exactly what is sent, and an edit makes it another post. A target that is `publishing` or `published` is not edited.
+
+## 25. Time: the zone, daylight saving and a missed time
+
+- **Instants are stored in UTC** (`scheduled_ms`) with the zone name (`zone`) the person chose. A time given with an offset or `Z` is an instant; a time given as a local date and time (`2026-03-29T02:30`) is read in `zone` by `core/publish.LocalInstant`, which returns the instant and what it had to do: `exact`, `gap` (the wall time does not exist because the clock jumped forward: the instant is the first one after the gap, 03:30 for 02:30 in Lisbon on 2026-03-29) or `ambiguous` (the wall time happens twice because the clock went back: the first of the two). The result of an operation names the zone, the local time of the instant and the adjustment, so a person is told, and a surface shows both the local time and the UTC time. An unknown zone is `E_VALIDATION`. A post scheduled for a wall time in the zone keeps that instant when the zone's rules change later: the instant, not the wall time, is the record.
+- **On time.** The scheduler sends a target whose time has come. A target is on time while `now - scheduled_at` is at most `Grace` (60 seconds, for the wake-up of the loop) plus its `late_window_minutes`.
+- **Missed (RF-406).** A target in `scheduled` or `approved` whose time is further past than that becomes `missed` the next time anything looks at it (the scheduler at start-up and at every wake; the approval of a late request). It is never sent on its own. The person chooses to send it now (`PublicationSendNow`) or to give it a new time (`PublicationSchedule`); both ask for approval again, since what was approved was a time. A person who turned on `late_window_minutes` accepted a late send of up to that many minutes, and a target inside that window is sent; the scheduler never sends beyond it. A target the person asked to send now (`send_now`) has a window of a day, since a request is answered later than the instant it names; giving the target a time clears `send_now`.
+- **A target that is already being retried** (section 27) is not judged by its first time: its attempts are bounded by the retry ceiling.
+
+## 26. Approval and cost of a scheduled post
+
+**Scheduling creates an approval request** of the kind `publish.scheduled` (SDD-015), with no job: `payload_ref` is `publication:<pub_id>/<tgt_id>`, the connection is the account and the project is the project. A rule the person wrote for that kind (and, optionally, the connection and the project) approves it at once, as it does a job; with none, it waits for a person. The summary is what the person reads, at most 500 characters: network, account, title, visibility, the file name and size, the time in the zone of the person with the UTC time (`at 2026-11-20 09:00 America/Sao_Paulo (2026-11-20T12:00:00Z)`), whether the post carries the AI disclosure flag in the words of section 20, and the start of the text in what is left.
+
+- The approval is of **exactly that post**: when the request is made the service resolves the files and stores the post as the person was shown it (`snapshot`: the `publishInput` of section 10, with the size and the digest of each file and the `account` of section 17) and a SHA-256 of it (`payload_sha256`). The scheduler sends the snapshot, checks the digest of the snapshot and `approvedFile` checks the files again; a mismatch is `E_INVALID_STATE` and the target is `failed`, never sent. A connection that, at the time of the send, signs in as another account than the one approved, or has none chosen, sends nothing either: the target is `failed` with `E_INVALID_STATE` (section 17). An edit makes a new snapshot and a new request (section 24).
+- Approving, rejecting or letting the request expire moves the target in the same transaction (section 24); the request is rejected with the reason `rescheduled`, `edited` or `cancelled by <actor>` when the person or an agent changes the target while it waits, so an old request can never approve a newer plan.
+- **Cost (RF-408).** `social.Description.PostCostMicros` and `PostCostCurrency` are what a network charges for one post (none for YouTube, Instagram and Facebook). It is the estimate of the request, so the approval shows it, the ceilings of SDD-015 section 6 apply to it when the request is made and again when it is approved, and approving reserves it in the ledger, keyed by the id of the target. A target that reaches `published` settles it; one that ends `failed`, `missed` or `cancelled` releases it, and so does an edit, which makes a new request.
+- **No agent approves.** `ApprovalDecide` is unchanged: a privileged browser session only. An agent can create, edit, schedule and cancel a publication and read its state; the request waits for a person, or for a rule.
+
+## 27. The scheduler
+
+`service/publish.Scheduler` runs in the server process (the desktop background service that keeps it alive with the window closed is epic 21). The owner starts it next to the queue workers and stops it with them.
+
+- **One loop.** It sleeps until the next time something is due (the earliest `scheduled_at` or `next_attempt_at` of an open target, or the expiry of a lease), at most 30 seconds, and wakes early when an operation or an approval changes a target. At every wake it asks the store for the open targets and applies `core/publish.Decide(target, now)`: send, wait or miss. A clock is injected (`Clock`), so tests move time.
+- **A lease claims a target.** `Claim` is one conditional write: the state is `scheduled` or `approved` and its time has come, or the state is `publishing` and its lease expired, and nothing else holds the lease. It sets `publishing`, the owner (a random id of the scheduler) and `lease_until` (now plus 2 minutes). Two schedulers, in two processes on one workspace or in one, claim a target once: the second write changes no row. After the claim the scheduler reads the target again and sends the snapshot it holds then, never the one the pass read before the claim (an edit approved again in between changed it). The sender renews the lease every 40 seconds from the claim on, also while the target waits for one of the scheduler's send slots (3 at once), writes its result only if it still holds the lease, and stops a send whose lease it lost or could not renew before it ran out. A scheduler never claims again a target it is still sending.
+- **A restart mid-publish.** A target left `publishing` whose lease ran out is taken again as an interrupted attempt: it counts one attempt and the connector is called with the same upload key (section 7.4), so a network that resumes continues the upload instead of starting a second one. When the attempts are used, the target is `failed` with the code `interrupted` and a hint to look at the account before retrying.
+- **Retries.** Only an error the connector marks as transient (`core/publish.Transient`: the kind `unavailable`) is retried by the scheduler: at most 5 attempts in all, with the delays 1, 2, 4 and 8 minutes. The target goes back to `scheduled` with `next_attempt_at`. Every other kind (`quota`, `auth`, `not_eligible`, `invalid`, `rejected`) and an exhausted ceiling end the target `failed` with an actionable error; the person retries it.
+- **The outcome is one transaction**: the state, the result or the error, the settlement of the cost and the event are written together.
+- **Nothing runs without a connection.** The sender reaches the network only through `connections.Manager.With`, with the credential of the connection of the target. A trashed project is not sent.
+
+## 28. Service operations of the publication
+
+Added to SDD-000 section 1 (domain `publish`) and to the scope matrix of SDD-007:
+
+| Operation | Scope | Result |
+| --- | --- | --- |
+| `PublicationCreate` | edit | a publication with its targets, every target `draft`; the files and the connections are checked, the posts are validated with `Validate` of the network and the issues come back as `E_VALIDATION` |
+| `PublicationGet` | read | one publication with its targets |
+| `PublicationList` | read | the publications of a project, a state or a time range (`from`, `to`: the targets whose time falls in it, in the order of the time), with a page cursor |
+| `PublicationUpdate` | edit | changes the shared fields (a field left out stays), a target's fields (the `fields` given replace the target's own as a whole; none given leaves them) or its time, adds or removes a target; a target that was waiting or approved goes back to `waiting_approval` (section 24) |
+| `PublicationSchedule` | render | gives a target its time (`at`, with `zone`, or as an instant) and asks for approval; a target already waiting or scheduled is rescheduled with a new request |
+| `PublicationSendNow` | render | the same with the time of now, for a `draft`, `missed` or `failed` target |
+| `PublicationRetry` | render | the same for a `failed` target, with its error cleared |
+| `PublicationCancel` | edit | cancels one target (or every open target); its request is rejected and its cost released; `E_INVALID_STATE` while it is `publishing` |
+
+A project-limited key is held to the project of the publication. A caller who may not see the project gets `E_NOT_FOUND`. A change on a target that is `publishing` or `published` is `E_INVALID_STATE`. `PublicationSchedule`, `PublicationSendNow` and `PublicationRetry` always ask for approval: an agent that calls them gets a target in `waiting_approval`, and nothing is sent until a person or a rule approves.
+
+## 29. Tables, events and surfaces of the publication
+
+- **Tables** (SDD-005 section 5.15): `publications` and `publication_targets`, from the migration `create_publications_tables`. Identifiers `pub_` and `tgt_` (SDD-000 section 2).
+- **Event.** `publication.updated` on the stream `GET /publications/events` (the frames, heartbeat and limits of SDD-015 section 7, with no replay: a client that connects reads the list first). Its data is the publication with its targets. It is sent after every change of a publication, by an operation, an approval or the scheduler.
+- **HTTP**: `POST /publications`, `GET /publications`, `GET /publications/{id}`, `PUT /publications/{id}`, `POST /publications/{id}/schedule`, `POST /publications/{id}/send-now`, `POST /publications/{id}/retry`, `POST /publications/{id}/cancel`, and the stream.
+- **CLI**: `publication:create`, `publication:list`, `publication:show`, `publication:update`, `publication:schedule`, `publication:send-now`, `publication:retry`, `publication:cancel`.
+- **MCP**: no tool runs them (author decision D-094). The `kind` of `job_start` does not fit a plan of several targets, and the budget of NFR-020 is the author's to spend. The eight operations are in the domain `publish`, so `command_help` with `domain` `publish` and the agent guide name them; an agent plans through the CLI or HTTP, as section 13 says for `PublishNow`. What is left, for the epic that gives MCP room: a `publication` tool with an `action`, as `image` has.
+
+## 30. The calendar and the editor
+
+The page `/publish` of the app (`web/resources/js/pages/Publish/`): a month view and a week view of the targets by their time in the zone of the browser, a list view with filters (state, network, project), the editor of a publication (shared fields, one panel per target with its fields, a preview of the title and the text as the network allows them, the time with its zone, the late window), and for each target its state, its approval (a link to the request), the URL when `published` and the error with its hint when `failed`, with the buttons that the state allows (schedule, send now, retry, cancel). A target is dragged to another day or hour to reschedule it, and the keyboard does the same: the target takes focus, and the arrow keys move it by a day or an hour and Enter confirms. The UI computes no state and no time rule: it sends the instant and the zone, and draws what the service answers. Every string is in English and Portuguese.
+
+## 31. Tests of the publication
+
+| What | Test |
+| --- | --- |
+| The states and their moves; the zone, the gap and the ambiguous hour; missed time with and without the late window; the retry delays | `go test ./core/publish/...` |
+| The operations, the edit after approval, the snapshot | `go test ./service/publish/... -run TestPublication` and `TestPublication*` in `web/app/servicetest` |
+| Two schedulers claim once; restart mid-publish; a missed time; a retry; the loop with a clock | `go test -race ./service/publish/... -run TestScheduler` and `TestScheduler*` in `web/app/servicetest` |
+| The approval request of a target, a rule that approves, a ceiling, the cost; a scheduled post sends only to the account that was approved | `go test ./service/publish/... -run TestApproval` and `-run TestCost`; `TestPublication*` in `web/app/servicetest` |
+| The surfaces agree | `go test ./web/contract/...` |
+| The calendar, the list and the editor, in both languages, by keyboard, with the fake connector | `web/e2e/specs/publish-calendar.spec.ts` |

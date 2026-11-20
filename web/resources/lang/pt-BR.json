@@ -185,6 +185,7 @@
         "item_title": "Título",
         "item_text": "Texto",
         "rename_title": "Renomear item",
+        "write": "Escrever",
         "move_up": "Mover para cima",
         "move_down": "Mover para baixo",
         "kind": {
@@ -493,6 +494,7 @@
         "size": "Tamanho",
         "original": "Original ({w} × {h})",
         "quality": "Qualidade",
+        "lossless": "Sem perdas",
         "findings": "Problemas encontrados",
         "no_findings": "Nenhum problema encontrado. A imagem está pronta para exportar.",
         "error": "Erro",
@@ -693,6 +695,10 @@
         "text": "Texto",
         "caption": "Legenda",
         "shape": "Forma",
+        "composition": "Composição",
+        "composition_open": "Abrir composição",
+        "composition_missing": "Timeline não encontrada",
+        "from_breadcrumb": "Voltar para {name}",
         "speed_badge": "Velocidade {speed}",
         "slot_badge": "Espaço do modelo: {name}",
         "asset_missing": "A mídia original deste item não está no projeto",
@@ -894,6 +900,8 @@
         "link": "Vincular itens",
         "unlink": "Desvincular itens",
         "extract_audio": "Extrair o áudio",
+        "create_composition": "Criar composição da seleção",
+        "expand_composition": "Expandir composição",
         "freeze_frame": "Congelar quadro",
         "copy_attributes": "Copiar atributos",
         "paste_attributes": "Colar atributos",
@@ -1106,6 +1114,9 @@
           "add": {
             "title": "Adicionar clipe"
           },
+          "add_composition": {
+            "title": "Adicionar uma linha do tempo como clipe"
+          },
           "set_blur": {
             "title": "Definir desfoque do clipe"
           },
@@ -1147,6 +1158,14 @@
           },
           "set_speed": {
             "title": "Definir velocidade do clipe"
+          }
+        },
+        "composition": {
+          "create_from_selection": {
+            "title": "Criar uma composição a partir da seleção"
+          },
+          "expand": {
+            "title": "Expandir a composição em seus itens"
           }
         },
         "font": {
@@ -2301,6 +2320,52 @@
       "test_ok": "O destino respondeu {status}.",
       "test_failed": "O destino não respondeu bem (status {status})."
     },
+    "generate": {
+      "open": {
+        "visual": "Gerar uma imagem",
+        "video": "Gerar uma locução"
+      },
+      "title": {
+        "image": "Gerar uma imagem",
+        "voice": "Gerar uma locução"
+      },
+      "intro": {
+        "image": "O preço aparece antes de qualquer pedido ao provedor. A imagem vai para a biblioteca, com o modelo e o prompt de onde veio.",
+        "voice": "O preço aparece antes de qualquer pedido ao provedor. A narração vai para a biblioteca, com o modelo e o texto de onde veio."
+      },
+      "no_provider": {
+        "image": "Nenhum provedor conectado faz imagens ainda.",
+        "voice": "Nenhum provedor conectado faz voz ainda."
+      },
+      "open_connections": "Conecte um na página Conexões",
+      "project": "Projeto",
+      "connection": "Conexão",
+      "model": "Modelo",
+      "no_price": "sem preço ainda",
+      "voice": "Voz",
+      "prompt": {
+        "image": "O que desenhar",
+        "voice": "O que ler em voz alta"
+      },
+      "size": "Tamanho",
+      "count": "Quantas",
+      "format": "Formato",
+      "language": "Idioma",
+      "disclosure": "Avise que esta voz é gerada por IA a quem a ouvir: o provedor pede isso.",
+      "estimate": "Mostrar a estimativa",
+      "estimated": "Custo estimado: {amount}",
+      "submit": "Gerar",
+      "state": {
+        "queued": "Esperando para começar.",
+        "waiting_approval": "Esperando a sua aprovação.",
+        "running": "Gerando.",
+        "succeeded": "Pronto.",
+        "failed": "Não deu certo.",
+        "cancelled": "Cancelado."
+      },
+      "open_approvals": "Abrir a página Aprovações",
+      "done": "{delivered} de {requested} feitas, custou {amount}."
+    },
     "social": {
       "title": "Redes sociais",
       "intro": "Conecte o seu próprio canal com o seu próprio projeto de desenvolvedor. Nada é publicado até você aprovar em Aprovações.",
@@ -2418,6 +2483,14 @@
       "limits": "Até {context} tokens, {output} deles na resposta",
       "price": "Por milhão de tokens: {input} de entrada, {output} de saída ({source})",
       "price_none": "Ainda sem preço: nada pode ser gerado com este modelo até você definir um.",
+      "price_unit": {
+        "image": "Por imagem: {amount} ({source})",
+        "mchar": "Por milhão de caracteres: {amount} ({source})"
+      },
+      "price_per": {
+        "image": "Preço de uma imagem",
+        "mchar": "Preço de um milhão de caracteres"
+      },
       "source": {
         "user": "preço seu",
         "catalogue": "publicado pelo provedor",
@@ -2430,6 +2503,77 @@
       "price_save": "Guardar o preço",
       "spend": "Gasto hoje: {amount}",
       "spend_none": "Nada gasto hoje."
+    },
+    "publish": {
+      "title": "Publicar",
+      "intro": "Planeje qual peça vai para qual conta e quando. Cada post espera o seu sim em Aprovações antes de ser enviado.",
+      "new": "Nova publicação",
+      "view": "Visão",
+      "view_month": "Mês",
+      "view_week": "Semana",
+      "view_list": "Lista",
+      "previous": "Anterior",
+      "next": "Próximo",
+      "today": "Hoje",
+      "live": "Ao vivo",
+      "moving": "Movendo para {time}. Use as setas: esquerda e direita movem um dia, para cima e para baixo uma hora. Enter solta, Escape desiste.",
+      "empty": "Nada planejado aqui ainda.",
+      "list_caption": "Publicações planejadas, uma linha para cada conta",
+      "no_time": "Sem horário ainda",
+      "open": "Abrir",
+      "error": "Erro",
+      "preview": "Prévia",
+      "title_count": "{count} de {max} caracteres",
+      "description_count": "{count} de {max} bytes",
+      "filter": {
+        "state": "Estado",
+        "network": "Rede",
+        "all": "Todos"
+      },
+      "col": {
+        "when": "Quando",
+        "title": "Título",
+        "account": "Conta",
+        "state": "Estado",
+        "result": "Resultado",
+        "actions": "Ações"
+      },
+      "state": {
+        "draft": "Rascunho",
+        "waiting_approval": "Aguardando aprovação",
+        "approved": "Aprovado",
+        "scheduled": "Agendado",
+        "publishing": "Publicando",
+        "published": "Publicado",
+        "failed": "Falhou",
+        "missed": "Perdido",
+        "cancelled": "Cancelado"
+      },
+      "editor": {
+        "new": "Nova publicação",
+        "edit": "Publicação",
+        "intro": "O título e a legenda valem para todas as contas; cada conta pode ter os seus. Nada é enviado antes de você aprovar em Aprovações.",
+        "caption": "Legenda",
+        "targets": "Contas",
+        "no_targets": "Nenhuma conta ainda. Adicione uma para planejar para onde isto vai.",
+        "target": "Conta {number}",
+        "account": "Conta",
+        "at": "Data e hora",
+        "zone": "Fuso horário",
+        "late": "Enviar com atraso até (minutos)",
+        "late_help": "0 significa que um post cujo horário passou nunca é enviado sozinho; você escolhe enviar agora ou dar um novo horário.",
+        "target_title": "Título para esta conta",
+        "target_description": "Descrição para esta conta",
+        "waits": "Este post espera a sua aprovação.",
+        "remove": "Remover",
+        "add_target": "Adicionar uma conta",
+        "save": "Salvar",
+        "save_first": "Salve as alterações primeiro",
+        "schedule": "Agendar e pedir aprovação",
+        "send_now": "Enviar agora (pede aprovação)",
+        "retry": "Tentar de novo (pede aprovação)",
+        "cancel": "Cancelar este post"
+      }
     },
     "approvals": {
       "title": "Aprovações",
@@ -2482,6 +2626,33 @@
         "note": "Uma regra sem limite por item nunca aprova algo que custa dinheiro.",
         "bad_amount": "Um valor é um número com no máximo seis casas decimais, por exemplo 2,50."
       }
+    },
+    "google": {
+      "nav": "Entrar com Google",
+      "sign_in": "Entrar com o Google",
+      "title": "Entrar com o Google",
+      "off": "Entrar com o Google está desligado neste servidor. Um administrador pode ligar aqui.",
+      "account": "Sua conta Google",
+      "linked": "Conta Google vinculada:",
+      "not_linked": "Nenhuma conta Google vinculada. Vincule a sua para entrar com ela; a senha continua funcionando.",
+      "unlink_note": "Desvincular não muda sua senha nem encerra suas sessões.",
+      "password": "Sua senha",
+      "link": "Vincular minha conta Google",
+      "unlink": "Desvincular",
+      "owner": "Para o dono deste servidor",
+      "owner_intro": "Os usuários entram com um projeto Google que você mesmo criou. Crie a conexão desse projeto na página Conexões (uma conexão do YouTube com o client id e o segredo; não precisa entrar no YouTube).",
+      "redirect": "Adicione este endereço aos URIs de redirecionamento autorizados do seu projeto Google:",
+      "enabled": "Permitir que usuários entrem com o Google",
+      "connection": "Conexão do seu projeto Google",
+      "connection_none": "Escolha uma conexão",
+      "allowed": "Somente estes e-mails do Google (opcional)",
+      "allowed_hint": "Um por linha. Deixe vazio para permitir todo usuário vinculado. O usuário precisa estar vinculado antes: não há cadastro pelo Google.",
+      "save": "Salvar",
+      "saved": "Salvo.",
+      "callback_title": "Entrando com o Google",
+      "callback_working": "Concluindo a entrada…",
+      "callback_failed": "A entrada com o Google não funcionou.",
+      "back_to_login": "Voltar ao login"
     },
     "chat": {
       "open": "Conversar com o seu agente",
@@ -2651,6 +2822,128 @@
         "use_in": "Usar em um projeto",
         "use": "Usar",
         "used": "Adicionado ao projeto. Nenhuma cópia foi feita."
+      }
+    },
+    "write": {
+      "title": "Escrever",
+      "intro": "Roteiros, textos e legendas das suas produções, escritos por você ou com um modelo. Cada salvamento é uma revisão à qual você pode voltar.",
+      "filter": {
+        "project": "Projeto",
+        "kind": "Tipo",
+        "all_projects": "Todos os projetos",
+        "all_kinds": "Todos os tipos"
+      },
+      "kind": {
+        "script": "Roteiro",
+        "copy": "Texto",
+        "caption": "Legenda"
+      },
+      "new": "Novo texto",
+      "new_form": {
+        "title": "Novo texto",
+        "project": "Projeto",
+        "name": "Título",
+        "kind": "Tipo",
+        "create": "Criar",
+        "cancel": "Cancelar",
+        "no_projects": "Crie um projeto primeiro."
+      },
+      "list": {
+        "label": "Textos",
+        "loading": "Carregando.",
+        "failed": "Não foi possível carregar os textos.",
+        "empty": "Nenhum texto ainda.",
+        "row": "Revisão {revision}, {words} palavras",
+        "more": "Mais",
+        "in_project": "em {project}"
+      },
+      "pick": "Escolha um texto ou crie um novo.",
+      "editor": {
+        "title": "Título",
+        "body": "Texto (Markdown)",
+        "tab_edit": "Escrever",
+        "tab_preview": "Pré-visualização",
+        "preview_label": "Pré-visualização do texto",
+        "preview_empty": "Ainda não há nada para mostrar.",
+        "save": "Salvar",
+        "saving": "Salvando.",
+        "saved": "Salvo como revisão {revision}.",
+        "unchanged": "Nada mudou: continua na revisão {revision}.",
+        "unsaved": "Alterações não salvas",
+        "loading": "Carregando o texto.",
+        "conflict": "Alguém salvou a revisão {revision} depois que você abriu este texto. Suas alterações continuam aqui.",
+        "reload": "Ler a revisão mais recente"
+      },
+      "script": {
+        "heading": "Duração",
+        "pace": "Palavras por minuto",
+        "result": "Cerca de {duration} lido em voz alta a {pace} palavras por minuto.",
+        "words": "{words} palavras faladas, {screen} na tela.",
+        "scenes": "Cenas",
+        "scene_line": "{title}: {words} palavras, {duration}",
+        "untitled": "Antes do primeiro título",
+        "plain": "Nenhuma linha VO: foi encontrada, então todo parágrafo conta como narração.",
+        "empty": "Escreva a narração para ver quanto tempo ela leva."
+      },
+      "caption": {
+        "heading": "Redes",
+        "common": "Texto comum",
+        "count": "{length} de {max} {unit}",
+        "count_free": "{length} {unit}, sem limite publicado",
+        "hashtags": "{count} hashtags",
+        "mentions": "{count} menções",
+        "links": "{count} links",
+        "links_dead": "Os links não são clicáveis nesta rede.",
+        "ok": "Dentro dos limites",
+        "hint": "Comece a parte de uma rede com uma linha como ## instagram. As redes são youtube, instagram, facebook, x e tiktok.",
+        "empty": "Escreva a legenda para ver os contadores.",
+        "unit": {
+          "bytes": "bytes UTF-8",
+          "characters": "caracteres",
+          "utf16_units": "unidades UTF-16",
+          "weighted": "caracteres ponderados"
+        }
+      },
+      "revisions": {
+        "heading": "Revisões",
+        "loading": "Carregando as revisões.",
+        "source": {
+          "created": "criada",
+          "write": "salva",
+          "generated": "rascunhada por um modelo",
+          "revert": "voltou"
+        },
+        "line": "Revisão {revision}, {source} por {actor}",
+        "reverted_to": "de volta à revisão {revision}",
+        "model_line": "{provider}, {model}, custo {cost}",
+        "read": "Ler",
+        "compare": "Comparar com a anterior",
+        "back": "Voltar para esta revisão",
+        "went_back": "Voltou para a revisão {from}: agora é a revisão {revision}.",
+        "diff_heading": "Mudanças da revisão {from} para a {to}",
+        "diff_added": "Adicionado",
+        "diff_removed": "Removido",
+        "diff_none": "Nenhum parágrafo mudou.",
+        "diff_coarse": "Os textos são longos demais para comparar parágrafo a parágrafo; um aparece inteiro contra o outro inteiro."
+      },
+      "draft": {
+        "heading": "Rascunho com um modelo",
+        "intro": "Um modelo escreve um rascunho como uma nova revisão. Você vê o custo estimado antes, e o rascunho espera a sua aprovação.",
+        "connection": "Conexão",
+        "model": "Modelo",
+        "instruction": "O que escrever",
+        "network": "Rede",
+        "whole": "A legenda inteira",
+        "estimate": "Estimar o custo",
+        "start": "Pedir o rascunho",
+        "estimated": "Custo estimado: {cost}.",
+        "waiting": "Esperando a sua aprovação.",
+        "open_approvals": "Abrir a fila de aprovações",
+        "running": "O modelo está escrevendo.",
+        "done": "O rascunho é a revisão {revision}. Custou {cost}.",
+        "failed": "O rascunho falhou.",
+        "no_connection": "Conecte primeiro um provedor de IA que escreva texto.",
+        "open_connections": "Abrir Conexões"
       }
     },
     "library": {

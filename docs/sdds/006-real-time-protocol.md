@@ -164,6 +164,23 @@ data: {"project_id":"prj_7k2m9x4q1b","state":"trashed","at":"2026-11-14T12:10:00
 
 On `trashed` the UI stops editing and shows the project as read only.
 
+#### 3.3.1 `nested.updated`
+
+A timeline that another timeline holds as a composition (SDD-001 §3.5.1) changed. After the commit of a batch on timeline C, the service publishes one `nested.updated` on the stream of every timeline that uses C, directly or through others, so a preview that holds the plan of a parent asks for it again without any edit of the parent (RF-083). It is published only when C has users; it is not stored in the replay buffer's gap rules any differently from `project.updated`.
+
+| Field | Meaning |
+| --- | --- |
+| `project_id` | the timeline whose stream carries the event: the user, not the one that changed |
+| `timeline_id` | the timeline that changed (C) |
+| `revision` | the revision of C after the commit |
+| `at` | when |
+
+```text
+event: nested.updated
+data: {"project_id":"prj_7k2m9x4q1b","timeline_id":"prj_a1b2c3d4e5","revision":12,"at":"2026-11-14T12:10:00.000Z"}
+
+```
+
 ### 3.4 `asset.updated`
 
 The ingest state or progress of an asset used by this project changed (SDD-005 §14.3). `asset_id` is the project's identifier (`ast_...`), not the hash. An ingest job belongs to the file, so the event is published on the stream of every project that references the file.

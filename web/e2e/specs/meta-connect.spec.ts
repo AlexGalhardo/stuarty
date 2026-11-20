@@ -11,6 +11,7 @@ import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import type { Page } from "@playwright/test";
 import { LAUNCHER_SECRET } from "../support/launcher";
+import { listenWhenFree, SOCIAL_PORT } from "../support/social";
 import { caller, expect, home, test } from "./helpers";
 
 // ADR-0035, ADR-0032, epic 19 (SDD-020 part 2): a creator connects Instagram and Facebook with their own Meta
@@ -20,7 +21,6 @@ import { caller, expect, home, test } from "./helpers";
 // what it receives, so the spec proves that nothing was sent before the approval.
 test.describe.configure({ mode: "serial" });
 
-const SOCIAL_PORT = Number(process.env.STUARTY_E2E_PORT ?? 3101) + 3;
 const APP_SECRET = "meta-e2e-app-secret-CANARY";
 const PAGE_TOKEN = "meta-e2e-page-token-CANARY";
 
@@ -37,18 +37,6 @@ function readBody(request: IncomingMessage): Promise<string> {
 		});
 		request.on("end", () => resolve(data));
 	});
-}
-
-// The youtube-connect spec listens on the same port: two specs of the suite never hold it at once.
-async function listenWhenFree(server: Server): Promise<void> {
-	const tryListen = (): Promise<boolean> =>
-		new Promise((resolve) => {
-			server.once("error", () => resolve(false));
-			server.listen(SOCIAL_PORT, "127.0.0.1", () => resolve(true));
-		});
-	await expect
-		.poll(tryListen, { timeout: 120_000, intervals: [500] })
-		.toBe(true);
 }
 
 // The Graph API as far as the flow needs it: the consent screen redirects straight back with a code, the

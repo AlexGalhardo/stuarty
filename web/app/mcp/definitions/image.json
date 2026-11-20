@@ -64,6 +64,9 @@
    "format": {
     "type": "string"
    },
+   "quality": {
+    "type": "integer"
+   },
    "from_template": {
     "type": "string"
    },

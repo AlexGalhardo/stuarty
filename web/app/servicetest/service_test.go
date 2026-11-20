@@ -441,6 +441,38 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.PublishStatus(ctx, service.PublishStatusRequest{JobID: "job_0000000001"})
 			return err
 		},
+		"PublicationCreate": func() error {
+			_, err := e.svc.PublicationCreate(ctx, service.PublicationCreateRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"PublicationGet": func() error {
+			_, err := e.svc.PublicationGet(ctx, service.PublicationGetRequest{ID: "pub_0000000001"})
+			return err
+		},
+		"PublicationList": func() error {
+			_, err := e.svc.PublicationList(ctx, service.PublicationListRequest{})
+			return err
+		},
+		"PublicationUpdate": func() error {
+			_, err := e.svc.PublicationUpdate(ctx, service.PublicationUpdateRequest{ID: "pub_0000000001"})
+			return err
+		},
+		"PublicationSchedule": func() error {
+			_, err := e.svc.PublicationSchedule(ctx, service.PublicationScheduleRequest{ID: "pub_0000000001"})
+			return err
+		},
+		"PublicationSendNow": func() error {
+			_, err := e.svc.PublicationSendNow(ctx, service.PublicationSendNowRequest{ID: "pub_0000000001"})
+			return err
+		},
+		"PublicationRetry": func() error {
+			_, err := e.svc.PublicationRetry(ctx, service.PublicationRetryRequest{ID: "pub_0000000001"})
+			return err
+		},
+		"PublicationCancel": func() error {
+			_, err := e.svc.PublicationCancel(ctx, service.PublicationCancelRequest{ID: "pub_0000000001"})
+			return err
+		},
 		"ProviderList": func() error {
 			_, err := e.svc.ProviderList(ctx, service.ProviderListRequest{})
 			return err
@@ -455,6 +487,18 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 		},
 		"TextGenerate": func() error {
 			_, err := e.svc.TextGenerate(ctx, service.TextGenerateRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ImageGenerate": func() error {
+			_, err := e.svc.ImageGenerate(ctx, service.ImageGenerateRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"VoiceGenerate": func() error {
+			_, err := e.svc.VoiceGenerate(ctx, service.VoiceGenerateRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"VoiceList": func() error {
+			_, err := e.svc.VoiceList(ctx, service.VoiceListRequest{ConnectionID: "con_0000000001"})
 			return err
 		},
 		"MemoryList": func() error {
@@ -523,6 +567,44 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 		},
 		"LibraryReindex": func() error {
 			_, err := e.svc.LibraryReindex(ctx, service.LibraryReindexRequest{})
+			return err
+		},
+		"TextList": func() error {
+			_, err := e.svc.TextList(ctx, service.TextListRequest{})
+			return err
+		},
+		"TextGet": func() error {
+			_, err := e.svc.TextGet(ctx, service.TextGetRequest{ProjectID: "prj_0000000001", ItemID: "pit_0000000001"})
+			return err
+		},
+		"TextWrite": func() error {
+			_, err := e.svc.TextWrite(ctx, service.TextWriteRequest{ProjectID: "prj_0000000001", Title: "t"})
+			return err
+		},
+		"TextRevisions": func() error {
+			_, err := e.svc.TextRevisions(
+				ctx,
+				service.TextRevisionsRequest{ProjectID: "prj_0000000001", ItemID: "pit_0000000001"},
+			)
+			return err
+		},
+		"TextRevert": func() error {
+			_, err := e.svc.TextRevert(
+				ctx,
+				service.TextRevertRequest{ProjectID: "prj_0000000001", ItemID: "pit_0000000001", Revision: 1},
+			)
+			return err
+		},
+		"TextDraft": func() error {
+			_, err := e.svc.TextDraft(ctx, service.TextDraftRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"CaptionValidate": func() error {
+			_, err := e.svc.CaptionValidate(ctx, service.CaptionValidateRequest{Text: "a", Network: "x"})
+			return err
+		},
+		"ScriptEstimate": func() error {
+			_, err := e.svc.ScriptEstimate(ctx, service.ScriptEstimateRequest{Text: "a"})
 			return err
 		},
 		"AgentProfileList": func() error {

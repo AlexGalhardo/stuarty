@@ -18,10 +18,12 @@ import { frameInItem } from "../geometry";
 import { consumeDragClick } from "../gestures/lifecycle";
 import { beginMove } from "../gestures/move";
 import { clickSelection, gridLayout } from "../keyboard";
+import { openComposition } from "../openComposition";
 import AudioItem from "./AudioItem";
 import Badges from "./Badges";
 import CaptionItem from "./CaptionItem";
 import ClipItem from "./ClipItem";
+import CompositionItem from "./CompositionItem";
 import KeyframeDiamonds from "./KeyframeDiamonds";
 import ShapeItem from "./ShapeItem";
 import TransitionMarks from "./TransitionMarks";
@@ -33,6 +35,8 @@ const TYPE_CLASS: Record<string, string> = {
 	text: "bg-ed-item-text text-ed-item-text-fg",
 	caption: "bg-ed-item-caption text-ed-item-caption-fg",
 	shape: "bg-ed-item-shape text-ed-item-shape-fg",
+	composition:
+		"bg-ed-item-clip text-ed-item-clip-fg border-dashed border-ed-selection",
 };
 
 // The inline editor of F2 and the menu entry "Rename": Enter or leaving the
@@ -180,6 +184,10 @@ export const TimelineItem = memo(function TimelineItem({
 					runtime.uiWriter.startWordEdit({ item: id, index: Number(word) });
 					return;
 				}
+				if (item.type === "composition" && item.timeline !== undefined) {
+					openComposition(runtime.projectId, item.timeline);
+					return;
+				}
 				if (item.type !== "text") return;
 				runtime.uiWriter.select([id], id);
 				runtime.uiWriter.startTextEdit(id);
@@ -204,6 +212,8 @@ export const TimelineItem = memo(function TimelineItem({
 			{item.type === "shape" && <ShapeItem id={id} />}
 			{renaming ? (
 				<RenameField itemId={id} initial={item.name ?? ""} />
+			) : item.type === "composition" ? (
+				<CompositionItem id={id} />
 			) : item.type === "caption" ? (
 				<CaptionItem id={id} />
 			) : (

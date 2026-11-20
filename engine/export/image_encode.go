@@ -30,9 +30,9 @@ const ReasonWebPUnavailable = "webp_unavailable"
 // DefaultJPEGQuality is the quality of a JPEG when none is asked.
 const DefaultJPEGQuality = 90
 
-// WebPEncoder encodes a picture as WebP. It is a seam: the encoder is FFmpeg with libwebp, started through the
-// argument grammar of engine/ffmpeg, which has no builder for it yet (see the question of epic 27); until one
-// is given the WebP export answers E_EXPORT_FAILED with reason webp_unavailable.
+// WebPEncoder encodes a picture as WebP. It is a seam: the encoder is [FFmpegWebP], FFmpeg with libwebp started
+// through the argument grammar of engine/ffmpeg; with none given the WebP export answers E_EXPORT_FAILED with
+// reason webp_unavailable.
 type WebPEncoder interface {
 	EncodeWebP(ctx context.Context, png []byte, quality int) ([]byte, error)
 }
@@ -112,15 +112,7 @@ func checkImageSize(img *image.RGBA, w, h int) error {
 	}
 
 	b := img.Bounds()
-	tw, th := w, h
-
-	if tw == 0 && th != 0 {
-		tw = max(round(float64(b.Dx())*float64(th)/float64(b.Dy())), 1)
-	}
-
-	if th == 0 && tw != 0 {
-		th = max(round(float64(b.Dy())*float64(tw)/float64(b.Dx())), 1)
-	}
+	tw, th := ImageOutputSize(b.Dx(), b.Dy(), w, h)
 
 	if tw > coreimage.MaxExportSide || th > coreimage.MaxExportSide || tw*th > coreimage.MaxExportPixels {
 		return exportErr(ReasonBadFormat, "The export would have more pixels than the limit of 33177600.",
@@ -130,19 +122,28 @@ func checkImageSize(img *image.RGBA, w, h int) error {
 	return nil
 }
 
+// ImageOutputSize is the pixel size of an export of a srcW x srcH picture asked at w x h: 0 on both sides keeps
+// the size, and 0 on one side keeps the aspect.
+func ImageOutputSize(srcW, srcH, w, h int) (int, int) {
+	switch {
+	case w == 0 && h == 0:
+		return srcW, srcH
+	case w == 0:
+		return max(round(float64(srcW)*float64(h)/float64(srcH)), 1), h
+	case h == 0:
+		return w, max(round(float64(srcH)*float64(w)/float64(srcW)), 1)
+	}
+
+	return w, h
+}
+
 func resample(img *image.RGBA, w, h int) (*image.RGBA, error) {
 	b := img.Bounds()
 	if (w == 0 && h == 0) || (w == b.Dx() && h == b.Dy()) {
 		return img, nil
 	}
 
-	if w == 0 {
-		w = max(round(float64(b.Dx())*float64(h)/float64(b.Dy())), 1)
-	}
-
-	if h == 0 {
-		h = max(round(float64(b.Dy())*float64(w)/float64(b.Dx())), 1)
-	}
+	w, h = ImageOutputSize(b.Dx(), b.Dy(), w, h)
 
 	out := compositor.Resize(compositor.Image{Pix: img.Pix, W: b.Dx(), H: b.Dy()}, w, h)
 	if out.W != w || out.H != h || len(out.Pix) < w*h*4 {

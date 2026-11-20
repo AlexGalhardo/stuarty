@@ -62,8 +62,10 @@ type batchItem struct {
 type batchInput struct {
 	Revision int64           `json:"revision"`
 	Document json.RawMessage `json:"document"`
-	Lint     *LintTotals     `json:"lint,omitempty"`
-	Items    []batchItem     `json:"items"`
+	// Nested is exportInput.Nested for every item of the batch.
+	Nested map[string]json.RawMessage `json:"nested,omitempty"`
+	Lint   *LintTotals                `json:"lint,omitempty"`
+	Items  []batchItem                `json:"items"`
 }
 
 // BatchItem is one export of a batch as it stands now, read from its child job.
@@ -159,10 +161,13 @@ func (s *svc) ExportBatch(ctx context.Context, req ExportBatchRequest) (*Job, er
 		return nil, ierr
 	}
 
+	nested, _ := s.nestedFor(ctx, s.store, doc)
 	projectID := row.ID
 	job := JobRow{
 		ID: s.newIDs("job"), Kind: JobExportBatch, ProjectID: &projectID, Actor: c.Actor, State: JobQueued,
-		Input: marshalOrNull(batchInput{Revision: row.Revision, Document: row.Document, Lint: &totals, Items: items}),
+		Input: marshalOrNull(batchInput{
+			Revision: row.Revision, Document: row.Document, Nested: nestedSnapshot(nested), Lint: &totals, Items: items,
+		}),
 	}
 
 	lim := &JobLimit{
@@ -439,7 +444,7 @@ func (s *svc) createBatchChild(ctx context.Context, parent *JobRow, in *batchInp
 		ID: id, Kind: JobExport, ProjectID: parent.ProjectID, Actor: parent.Actor, State: JobQueued,
 		Input: marshalOrNull(exportInput{
 			Revision: in.Revision, Start: it.StartFrame, End: it.EndFrame, Lint: in.Lint, Document: in.Document,
-			Format: it.Format, Warnings: it.Warnings, Preset: it.Preset, Codec: it.Codec,
+			Nested: in.Nested, Format: it.Format, Warnings: it.Warnings, Preset: it.Preset, Codec: it.Codec,
 		}),
 	}
 

@@ -1703,7 +1703,7 @@
       "summary": "add a text, a timeline or an output to a project",
       "usage": [
         "stuarty item:add --project <id> --kind text|timeline|output --title <t>",
-        "stuarty item:add --project <id> --kind text --title <t> --text <file|->",
+        "stuarty item:add --project <id> --kind text --title <t> --text <file|-> [--text-kind script|copy|caption]",
         "stuarty item:add --project <id> --kind output --title <t> --job <export job id>"
       ],
       "example": "stuarty item:add --project prj_7k2m9x4q1b --kind timeline --title \"Wide cut\" --preset 16:9",
@@ -1727,6 +1727,11 @@
           "name": "text",
           "type": "string",
           "usage": "a text item: a file with its Markdown, or - for standard input"
+        },
+        {
+          "name": "text-kind",
+          "type": "string",
+          "usage": "a text item: script, copy (default) or caption"
         },
         {
           "name": "preset",
@@ -2335,7 +2340,17 @@
         {
           "name": "price-out",
           "type": "string",
-          "usage": "the price of a million output tokens; leave both prices out to remove the entry"
+          "usage": "the price of a million output tokens; leave all prices out to remove the entry"
+        },
+        {
+          "name": "unit",
+          "type": "string",
+          "usage": "image for the price of one image, mchar for the price of a million characters of speech; leave out for tokens"
+        },
+        {
+          "name": "unit-micros",
+          "type": "string",
+          "usage": "with --unit: the price of one image or of a million characters, in millionths of the currency unit"
         }
       ],
       "globals": [
@@ -2397,6 +2412,124 @@
         "key-file",
         "project",
         "dry-run"
+      ]
+    },
+    {
+      "name": "image:generate",
+      "domain": "provider",
+      "summary": "generate images with the provider of a connection; the job shows its estimate, waits for approval and stores the images as assets",
+      "usage": [
+        "stuarty image:generate --project <id> --connection <id> --model <id> [--prompt <text> | --prompt-file <file>] [--size <width>x<height>] [--count <n>] [--dry-run]"
+      ],
+      "example": "stuarty image:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --prompt \"A red fox\" --count 2",
+      "flags": [
+        {
+          "name": "connection",
+          "type": "string",
+          "usage": "the connection to the provider (required)"
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "usage": "the model id, as provider:models lists it (required)"
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "usage": "what to draw; without it and without --prompt-file the prompt is read from standard input"
+        },
+        {
+          "name": "prompt-file",
+          "type": "string",
+          "usage": "a file that holds the prompt"
+        },
+        {
+          "name": "size",
+          "type": "string",
+          "usage": "width and height in pixels joined by x (default 1024x1024)"
+        },
+        {
+          "name": "count",
+          "type": "integer",
+          "usage": "how many images, 1 to 10 (default 1); the estimate counts all of them"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "voice:generate",
+      "domain": "provider",
+      "summary": "generate speech with the provider of a connection; the job shows its estimate, waits for approval and stores the audio as an asset",
+      "usage": [
+        "stuarty voice:generate --project <id> --connection <id> --model <id> --voice <id> [--text <text> | --text-file <file>] [--language <tag>] [--format mp3|wav|flac|opus|aac] [--dry-run]"
+      ],
+      "example": "stuarty voice:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --voice alloy --text \"Welcome\"",
+      "flags": [
+        {
+          "name": "connection",
+          "type": "string",
+          "usage": "the connection to the provider (required)"
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "usage": "the model id, as provider:models lists it (required)"
+        },
+        {
+          "name": "voice",
+          "type": "string",
+          "usage": "the voice id, as voice:list names it (required)"
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "usage": "what to read out; without it and without --text-file the text is read from standard input"
+        },
+        {
+          "name": "text-file",
+          "type": "string",
+          "usage": "a file that holds the text"
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "usage": "a language tag such as pt-BR"
+        },
+        {
+          "name": "format",
+          "type": "string",
+          "usage": "mp3 (default), wav, flac, opus or aac"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "voice:list",
+      "domain": "provider",
+      "summary": "list the voices of the provider of a connection",
+      "usage": [
+        "stuarty voice:list <connection id>"
+      ],
+      "example": "stuarty voice:list con_0123456789",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
       ]
     },
     {
@@ -3681,6 +3814,602 @@
         "stuarty publish:status <job id>"
       ],
       "example": "stuarty publish:status job_0123456789",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "publication:create",
+      "domain": "publish",
+      "summary": "plan a publication: a video for one or more accounts, each with its own time; nothing is asked or sent until you schedule it",
+      "usage": [
+        "stuarty publication:create --project <id> --title <t> --export <job> --connection <id> --at <time> --zone <zone> --made-for-kids yes|no",
+        "stuarty publication:create --project <id> --title <t> --export <job> --targets <json>"
+      ],
+      "example": "stuarty publication:create --project prj_7k2m9x4q1b --title \"Week one\" --export job_0123456789 --connection con_0123456789 --at 2026-11-20T09:00 --zone America/Sao_Paulo --made-for-kids no",
+      "flags": [
+        {
+          "name": "title",
+          "type": "string",
+          "usage": "the title (required)"
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "usage": "the caption the accounts use unless they have their own"
+        },
+        {
+          "name": "export",
+          "type": "string",
+          "usage": "the id of a succeeded export job of the project: the video (required)"
+        },
+        {
+          "name": "thumbnail",
+          "type": "string",
+          "usage": "the id of a succeeded export job of a still: the cover"
+        },
+        {
+          "name": "connection",
+          "type": "string",
+          "usage": "the connection of the account the post goes to"
+        },
+        {
+          "name": "at",
+          "type": "string",
+          "usage": "the time: 2026-11-20T09:00 read in --zone, or an instant such as 2026-11-20T12:00:00Z"
+        },
+        {
+          "name": "zone",
+          "type": "string",
+          "usage": "the IANA zone the time is read in, for example America/Sao_Paulo (default UTC)"
+        },
+        {
+          "name": "late-window",
+          "type": "string",
+          "usage": "minutes, 0 to 1440, a late post may still be sent without asking (default 0)"
+        },
+        {
+          "name": "target-title",
+          "type": "string",
+          "usage": "a title for this account instead of the publication's"
+        },
+        {
+          "name": "target-description",
+          "type": "string",
+          "usage": "a description for this account instead of the caption"
+        },
+        {
+          "name": "tags",
+          "type": "string",
+          "usage": "the tags, a comma list"
+        },
+        {
+          "name": "visibility",
+          "type": "string",
+          "usage": "private (the default), unlisted or public"
+        },
+        {
+          "name": "made-for-kids",
+          "type": "string",
+          "usage": "yes or no: whether the video is made for kids"
+        },
+        {
+          "name": "ai-disclosure",
+          "type": "boolean",
+          "default": "false",
+          "usage": "the video has realistic altered or synthetic content"
+        },
+        {
+          "name": "targets",
+          "type": "string",
+          "usage": "a JSON list of targets, for several accounts at once"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "publication:list",
+      "domain": "publish",
+      "summary": "list the publications of the calendar, by project, state, network or time range",
+      "usage": [
+        "stuarty publication:list [--project <id>] [--state <state>] [--from <time>] [--until <time>]"
+      ],
+      "example": "stuarty publication:list --from 2026-11-16T00:00:00Z --until 2026-11-23T00:00:00Z --json",
+      "flags": [
+        {
+          "name": "project",
+          "type": "string",
+          "usage": "only the publications of this project"
+        },
+        {
+          "name": "state",
+          "type": "string",
+          "usage": "only those with a target in this state, for example waiting_approval or failed"
+        },
+        {
+          "name": "network",
+          "type": "string",
+          "usage": "only those with a target on this network"
+        },
+        {
+          "name": "from",
+          "type": "string",
+          "usage": "only those with a target at or after this time (RFC 3339)"
+        },
+        {
+          "name": "until",
+          "type": "string",
+          "usage": "only those with a target before this time (RFC 3339)"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "usage": "the page size, 1 to 500 (default 100)"
+        },
+        {
+          "name": "offset",
+          "type": "integer",
+          "usage": "how many to skip"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "publication:show",
+      "domain": "publish",
+      "summary": "show one publication with each target: its time, its state, its approval, its address or its error",
+      "usage": [
+        "stuarty publication:show <publication id>"
+      ],
+      "example": "stuarty publication:show pub_0123456789",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "publication:update",
+      "domain": "publish",
+      "summary": "change a publication or its targets; a post that waited for approval or was approved goes back to waiting for approval",
+      "usage": [
+        "stuarty publication:update <publication id> [--title <t>] [--text <t>] [--export <job>] [--targets <json>]"
+      ],
+      "example": "stuarty publication:update pub_0123456789 --title \"A better title\"",
+      "flags": [
+        {
+          "name": "title",
+          "type": "string",
+          "usage": "the new title"
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "usage": "the new caption"
+        },
+        {
+          "name": "export",
+          "type": "string",
+          "usage": "the new video: a succeeded export job of the project"
+        },
+        {
+          "name": "thumbnail",
+          "type": "string",
+          "usage": "the new cover; an empty text removes it"
+        },
+        {
+          "name": "targets",
+          "type": "string",
+          "usage": "a JSON list of targets to change (with an id), add (without) or remove (\"remove\":true)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "publication:schedule",
+      "domain": "publish",
+      "summary": "give a target its time and ask for approval: it is sent at that time only after a person approves it in the app; you cannot approve it",
+      "usage": [
+        "stuarty publication:schedule <publication id> [--target <id>] [--at <time>] [--zone <zone>] [--late-window <min>]"
+      ],
+      "example": "stuarty publication:schedule pub_0123456789 --target tgt_0123456789 --at 2026-11-20T09:00 --zone America/Sao_Paulo",
+      "flags": [
+        {
+          "name": "target",
+          "type": "string",
+          "usage": "the target; leave out for every draft target that has a time"
+        },
+        {
+          "name": "at",
+          "type": "string",
+          "usage": "the time: 2026-11-20T09:00 read in --zone, or an instant such as 2026-11-20T12:00:00Z"
+        },
+        {
+          "name": "zone",
+          "type": "string",
+          "usage": "the IANA zone the time is read in (default UTC)"
+        },
+        {
+          "name": "late-window",
+          "type": "string",
+          "usage": "minutes, 0 to 1440, a late post may still be sent without asking (default 0)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "publication:send-now",
+      "domain": "publish",
+      "summary": "ask for approval to send a target as soon as it is approved; use it for a missed target too",
+      "usage": [
+        "stuarty publication:send-now <publication id> --target <id>"
+      ],
+      "example": "stuarty publication:send-now pub_0123456789 --target tgt_0123456789",
+      "flags": [
+        {
+          "name": "target",
+          "type": "string",
+          "usage": "the target, tgt_ and 10 characters"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "publication:retry",
+      "domain": "publish",
+      "summary": "ask for approval to send a failed target again; read why it failed with publication:show",
+      "usage": [
+        "stuarty publication:retry <publication id> --target <id>"
+      ],
+      "example": "stuarty publication:retry pub_0123456789 --target tgt_0123456789",
+      "flags": [
+        {
+          "name": "target",
+          "type": "string",
+          "usage": "the target, tgt_ and 10 characters"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "publication:cancel",
+      "domain": "publish",
+      "summary": "cancel a target, or every target that has not gone out when --target is left out",
+      "usage": [
+        "stuarty publication:cancel <publication id> --target <id>"
+      ],
+      "example": "stuarty publication:cancel pub_0123456789 --target tgt_0123456789",
+      "flags": [
+        {
+          "name": "target",
+          "type": "string",
+          "usage": "the target, tgt_ and 10 characters"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "text:list",
+      "domain": "writing",
+      "summary": "list the scripts, copy and captions of a project, or of every project",
+      "usage": [
+        "stuarty text:list [--project <id>] [--kind script|copy|caption] [--state active|trashed]"
+      ],
+      "example": "stuarty text:list --kind caption --json",
+      "flags": [
+        {
+          "name": "project",
+          "type": "string",
+          "usage": "only the texts of this project"
+        },
+        {
+          "name": "kind",
+          "type": "string",
+          "usage": "script, copy or caption"
+        },
+        {
+          "name": "state",
+          "type": "string",
+          "usage": "active (default) or trashed"
+        },
+        {
+          "name": "cursor",
+          "type": "string",
+          "usage": "continue a list from this cursor"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "default": "50",
+          "usage": "items per page"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "text:show",
+      "domain": "writing",
+      "summary": "show a text, or one of its revisions",
+      "usage": [
+        "stuarty text:show <item> --project <id> [--revision n]"
+      ],
+      "example": "stuarty text:show pit_3c5v8n2w6d --project prj_7k2m9x4q1b",
+      "flags": [
+        {
+          "name": "revision",
+          "type": "integer",
+          "usage": "a revision number from 1; default the latest"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "text:write",
+      "domain": "writing",
+      "summary": "make a text, or save a new revision of one, from a Markdown file",
+      "usage": [
+        "stuarty text:write --project <id> --title <t> [--kind script|copy|caption] --text <file|->",
+        "stuarty text:write <item> --project <id> --text <file|-> [--title <t>] [--base <revision>]"
+      ],
+      "example": "stuarty text:write --project prj_7k2m9x4q1b --title Hook --kind script --text hook.md",
+      "flags": [
+        {
+          "name": "text",
+          "type": "string",
+          "usage": "the Markdown: a file, or - for standard input (required)"
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "usage": "the title: needed to make a text, a new title when saving one"
+        },
+        {
+          "name": "kind",
+          "type": "string",
+          "usage": "making a text: script, copy (default) or caption"
+        },
+        {
+          "name": "base",
+          "type": "integer",
+          "usage": "the revision you read: a newer one is refused"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "text:revisions",
+      "domain": "writing",
+      "summary": "list the revisions of a text, and compare two by paragraph",
+      "usage": [
+        "stuarty text:revisions <item> --project <id> [--from n [--until n]]"
+      ],
+      "example": "stuarty text:revisions pit_3c5v8n2w6d --project prj_7k2m9x4q1b --from 1",
+      "flags": [
+        {
+          "name": "before",
+          "type": "integer",
+          "usage": "start under this revision (the next_before of the last page)"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "usage": "revisions per page, 1 to 100 (default 50)"
+        },
+        {
+          "name": "from",
+          "type": "integer",
+          "usage": "compare this revision with --until"
+        },
+        {
+          "name": "until",
+          "type": "integer",
+          "usage": "the revision to compare with (default the latest)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "text:revert",
+      "domain": "writing",
+      "summary": "bring an older revision of a text back as a new revision",
+      "usage": [
+        "stuarty text:revert <item> --project <id> --revision n"
+      ],
+      "example": "stuarty text:revert pit_3c5v8n2w6d --project prj_7k2m9x4q1b --revision 2",
+      "flags": [
+        {
+          "name": "revision",
+          "type": "integer",
+          "usage": "the revision whose text comes back (required)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "text:draft",
+      "domain": "writing",
+      "summary": "ask a model for a draft of a text; the job shows its estimate and waits for approval",
+      "usage": [
+        "stuarty text:draft <item> --project <id> --connection <id> --model <id> --instruction <text> [--network <n>] [--max-tokens <n>] [--temperature <t>] [--dry-run]"
+      ],
+      "example": "stuarty text:draft pit_3c5v8n2w6d --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --instruction \"A hook in 20 seconds\"",
+      "flags": [
+        {
+          "name": "connection",
+          "type": "string",
+          "usage": "the connection to the provider (required)"
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "usage": "the model id, as provider:models lists it (required)"
+        },
+        {
+          "name": "instruction",
+          "type": "string",
+          "usage": "what to write, 1 to 4000 characters (required)"
+        },
+        {
+          "name": "network",
+          "type": "string",
+          "usage": "a caption: draft the variant of this network only"
+        },
+        {
+          "name": "max-tokens",
+          "type": "integer",
+          "usage": "the most tokens the model may write; the estimate counts all of them"
+        },
+        {
+          "name": "temperature",
+          "type": "string",
+          "usage": "0 to 2"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "caption:validate",
+      "domain": "writing",
+      "summary": "measure a caption against the limits of each network",
+      "usage": [
+        "stuarty caption:validate <item> --project <id> [--network <n>]",
+        "stuarty caption:validate --body <file|->",
+        "stuarty caption:validate --text <file|-> --network <n>"
+      ],
+      "example": "stuarty caption:validate pit_3c5v8n2w6d --project prj_7k2m9x4q1b",
+      "flags": [
+        {
+          "name": "project",
+          "type": "string",
+          "usage": "the project of the text (default $STUARTY_PROJECT)"
+        },
+        {
+          "name": "body",
+          "type": "string",
+          "usage": "a whole caption, saved or not: a file, or - for standard input"
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "usage": "one variant: a file, or - for standard input (needs --network)"
+        },
+        {
+          "name": "network",
+          "type": "string",
+          "usage": "youtube, instagram, facebook, x or tiktok"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "script:estimate",
+      "domain": "writing",
+      "summary": "estimate how long a script takes when read aloud",
+      "usage": [
+        "stuarty script:estimate <item> --project <id> [--wpm n]",
+        "stuarty script:estimate --text <file|-> [--wpm n]"
+      ],
+      "example": "stuarty script:estimate pit_3c5v8n2w6d --project prj_7k2m9x4q1b --wpm 130",
+      "flags": [
+        {
+          "name": "project",
+          "type": "string",
+          "usage": "the project of the text (default $STUARTY_PROJECT)"
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "usage": "a script that is not saved: a file, or - for standard input"
+        },
+        {
+          "name": "wpm",
+          "type": "integer",
+          "usage": "words per minute, 60 to 300 (default 150)"
+        }
+      ],
       "globals": [
         "json",
         "workspace",

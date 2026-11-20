@@ -76,7 +76,12 @@ func (s *svc) runStillExport(ctx context.Context, job *JobRow, pw *progress, in 
 
 	pw.report(ctx, 0.05, "Rendering the frame")
 
-	body, err := s.framesFor(doc).Still(ctx, doc, int(in.Start))
+	nested, nerr := decodeNested(in.Nested)
+	if nerr != nil {
+		return nil, nerr
+	}
+
+	body, err := s.framesFor(doc, nested).Still(ctx, doc, int(in.Start))
 	if err != nil {
 		return nil, viewError(err)
 	}

@@ -127,6 +127,8 @@ type JobResult struct {
 	// Batch is the state of the children of an export_batch job, read from them whenever the job is read.
 	Batch *BatchResult `json:"batch,omitempty"`
 	Text  *TextResult  `json:"text,omitempty"`
+	// Generated is the files an image.generate or voice.generate job stored as assets (SDD-016 section 6.1).
+	Generated *GeneratedResult `json:"generated,omitempty"`
 }
 
 // Job is the job object of SDD-003 section 2.8.
@@ -166,6 +168,9 @@ type exportInput struct {
 	// that the export renders what was asked for even when edits land while
 	// the job waits (SDD-003 section 2.8 rule 9).
 	Document json.RawMessage `json:"document,omitempty"`
+	// Nested are the canonical documents of the timelines the compositions of Document use, by id, taken at
+	// the same moment (SDD-004 section 3.16).
+	Nested map[string]json.RawMessage `json:"nested,omitempty"`
 	// Format is "bundle" for the export of a .vvbundle (SDD-005 section 16); empty is a video.
 	Format string `json:"format,omitempty"`
 	// IncludeLog false leaves the operation log out of a bundle; nil means true.

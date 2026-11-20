@@ -1,6 +1,6 @@
 {
  "name": "command_help",
- "description": "Discover operations. No arguments: the video operations, one line each, then every domain. domain=<name>: the operations of that domain; domain=export: presets and codecs. name (for example item.split): description, args JSON Schema, example and error codes; read it before using an operation you have not used.",
+ "description": "Discover operations. No arguments: video operations, a line each, then the domains. domain=<name>: its operations; domain=export: presets, codecs. name (e.g. item.split): description, args JSON Schema, example, error codes; read before using a new operation.",
  "inputSchema": {
   "type": "object",
   "properties": {

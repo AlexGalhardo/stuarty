@@ -177,9 +177,9 @@ func TestImageUploadRefusals(t *testing.T) {
 	}
 }
 
-// TestSecurity_T86_UploadOverTheLimitIsRefusedAndStoresNothing: a file over the limit, declared or streamed
+// TestSecurity_T92_UploadOverTheLimitIsRefusedAndStoresNothing: a file over the limit, declared or streamed
 // without a length, is E_LIMIT_EXCEEDED, and nothing of it is left in the content store.
-func TestSecurity_T86_UploadOverTheLimitIsRefusedAndStoresNothing(t *testing.T) {
+func TestSecurity_T92_UploadOverTheLimitIsRefusedAndStoresNothing(t *testing.T) {
 	t.Parallel()
 
 	h := fileHarness(t, 100)
@@ -227,10 +227,10 @@ func TestSecurity_T86_UploadOverTheLimitIsRefusedAndStoresNothing(t *testing.T) 
 	}
 }
 
-// TestSecurity_T88_UploadFromAnotherOriginIsRefused: a page of another origin cannot post a file with the
+// TestSecurity_T94_UploadFromAnotherOriginIsRefused: a page of another origin cannot post a file with the
 // session of the person (SDD-007 section 3.6), and a cookie session that sends a type a page can send without a
 // preflight is refused as well.
-func TestSecurity_T88_UploadFromAnotherOriginIsRefused(t *testing.T) {
+func TestSecurity_T94_UploadFromAnotherOriginIsRefused(t *testing.T) {
 	t.Parallel()
 
 	h := fileHarness(t, 1<<20)
@@ -281,10 +281,10 @@ func TestSecurity_T88_UploadFromAnotherOriginIsRefused(t *testing.T) {
 	}
 }
 
-// TestSecurity_T89_UploadFileNameIsALabelNeverAPath: a name that is a path, or that carries control and
+// TestSecurity_T95_UploadFileNameIsALabelNeverAPath: a name that is a path, or that carries control and
 // bidirectional characters, markup or a very long text, is cut to a base name with those characters replaced; the
 // file is stored under its hash and nowhere else.
-func TestSecurity_T89_UploadFileNameIsALabelNeverAPath(t *testing.T) {
+func TestSecurity_T95_UploadFileNameIsALabelNeverAPath(t *testing.T) {
 	t.Parallel()
 
 	h := fileHarness(t, 1<<20)
