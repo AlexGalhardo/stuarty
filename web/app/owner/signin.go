@@ -34,7 +34,10 @@ func (o *Owner) signIns(getenv func(string) string, now func() time.Time) (*oaut
 		return nil, err
 	}
 
-	chatgpt := openai.SignInConfig{HostID: hostID, Now: now}
+	// A server shared on a network refuses Sign in with ChatGPT (SDD-016 section 12.3): OpenAI documents the
+	// sign-in for a client on the person's machine, and a plan credential on a shared server has no host
+	// attribution.
+	chatgpt := openai.SignInConfig{HostID: hostID, Now: now, Network: o.mode == config.ModeNetwork}
 	router := openrouter.SignInConfig{}
 
 	if raw := strings.TrimSpace(getenv(EnvTestSignInURL)); raw != "" {

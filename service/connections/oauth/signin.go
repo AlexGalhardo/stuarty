@@ -15,6 +15,10 @@ import (
 // AI provider (SDD-016 section 12, SDD-007 section 3.6 item 4).
 const CallbackPath = "/auth/callback"
 
+// ErrLocalOnly is the refusal of a sign-in that the build offers on the desktop and on a local server only,
+// returned by SignIn.ValidateRedirect on a server in network mode (Sign in with ChatGPT, SDD-016 section 12.3).
+var ErrLocalOnly = errors.New("oauth: this sign-in is offered on the desktop and on a local server only")
+
 // RefreshMargin is how long before its expiry an access token is renewed.
 const RefreshMargin = 60 * time.Second
 
