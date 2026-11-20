@@ -9,6 +9,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -96,8 +98,8 @@ func TestUnsafeAddrRefusesWhatWouldTakeTheDefaultPort(t *testing.T) {
 	}
 }
 
-// Every process these tests start goes through stuartyCmd: exec.Command is called only there and
-// to build the binary with go (VV-295).
+// Every process these tests start goes through stuartyCmd, in this file: elsewhere the only
+// process allowed is go build (VV-295).
 func TestNoTestStartsTheBinaryWithoutAnAddress(t *testing.T) {
 	files, err := filepath.Glob("*_test.go")
 	if err != nil || len(files) == 0 {
@@ -105,41 +107,172 @@ func TestNoTestStartsTheBinaryWithoutAnAddress(t *testing.T) {
 	}
 
 	for _, name := range files {
-		f, err := parser.ParseFile(token.NewFileSet(), name, nil, 0)
+		if name == "isolation_test.go" {
+			continue
+		}
+
+		bad, err := processStarts(name, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		ast.Inspect(f, func(n ast.Node) bool {
-			call, ok := n.(*ast.CallExpr)
-			if !ok {
-				return true
+		for _, b := range bad {
+			t.Errorf("%s: use stuartyCmd, which requires an address of its own", b)
+		}
+	}
+}
+
+// processStarts lists what in a test file could start a process past stuartyCmd: exec.Command
+// or exec.CommandContext used for anything but a call of go build (a call of the binary, a
+// function value, go run), an exec.Cmd made by hand, os.StartProcess, a dot import of os/exec or
+// os, and a command whose Env, Path or Args is assigned after it was made, which could drop the
+// address stuartyCmd checked. The import names are resolved, so an alias is no way around it.
+func processStarts(name string, src any) ([]string, error) {
+	fset := token.NewFileSet()
+
+	f, err := parser.ParseFile(fset, name, src, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var bad []string
+
+	report := func(n ast.Node, what string) {
+		bad = append(bad, fset.Position(n.Pos()).String()+": "+what)
+	}
+
+	execName, osName := "", ""
+
+	for _, imp := range f.Imports {
+		path, _ := strconv.Unquote(imp.Path.Value)
+		local := path[strings.LastIndex(path, "/")+1:]
+
+		if imp.Name != nil {
+			local = imp.Name.Name
+		}
+
+		if (path == "os/exec" || path == "os") && local == "." {
+			report(imp, "dot import of "+path)
+		}
+
+		switch path {
+		case "os/exec":
+			execName = local
+		case "os":
+			osName = local
+		}
+	}
+
+	is := func(e ast.Expr, pkg string, names ...string) bool {
+		sel, ok := e.(*ast.SelectorExpr)
+		if !ok {
+			return false
+		}
+
+		id, ok := sel.X.(*ast.Ident)
+
+		return ok && pkg != "" && id.Name == pkg && slices.Contains(names, sel.Sel.Name)
+	}
+
+	goBuild := map[ast.Node]bool{}
+
+	ast.Inspect(f, func(n ast.Node) bool {
+		switch n := n.(type) {
+		case *ast.CallExpr:
+			if is(n.Fun, execName, "Command", "CommandContext") && isGoBuild(n) {
+				goBuild[n.Fun] = true
 			}
 
-			sel, ok := call.Fun.(*ast.SelectorExpr)
-			if !ok || (sel.Sel.Name != "Command" && sel.Sel.Name != "CommandContext") {
-				return true
+			if id, ok := n.Fun.(*ast.Ident); ok && id.Name == "new" && len(n.Args) == 1 && is(n.Args[0], execName, "Cmd") {
+				report(n, "an exec.Cmd made by hand")
+			}
+		case *ast.SelectorExpr:
+			if is(n, execName, "Command", "CommandContext") && !goBuild[n] {
+				report(n, "exec."+n.Sel.Name+" of something other than go build")
 			}
 
-			if pkg, ok := sel.X.(*ast.Ident); !ok || pkg.Name != "exec" {
-				return true
+			if is(n, osName, "StartProcess") {
+				report(n, "os.StartProcess")
 			}
-
-			first := 0
-			if sel.Sel.Name == "CommandContext" {
-				first = 1
+		case *ast.CompositeLit:
+			if is(n.Type, execName, "Cmd") {
+				report(n, "an exec.Cmd made by hand")
 			}
-
-			if lit, ok := call.Args[first].(*ast.BasicLit); ok && lit.Value == `"go"` {
-				return true
+		case *ast.AssignStmt:
+			for _, lhs := range n.Lhs {
+				if sel, ok := lhs.(*ast.SelectorExpr); ok && slices.Contains([]string{"Env", "Path", "Args"}, sel.Sel.Name) {
+					report(lhs, sel.Sel.Name+" assigned after the command was made")
+				}
 			}
+		}
 
-			if name != "isolation_test.go" {
-				t.Errorf("%s: exec.%s of the binary: use stuartyCmd, which requires an address of its own",
-					name, sel.Sel.Name)
-			}
+		return true
+	})
 
-			return true
-		})
+	return bad, nil
+}
+
+// isGoBuild says whether a call of exec.Command or exec.CommandContext runs go build.
+func isGoBuild(call *ast.CallExpr) bool {
+	first := 0
+	if sel, ok := call.Fun.(*ast.SelectorExpr); ok && sel.Sel.Name == "CommandContext" {
+		first = 1
+	}
+
+	if len(call.Args) < first+2 {
+		return false
+	}
+
+	for i, want := range []string{"go", "build"} {
+		lit, ok := call.Args[first+i].(*ast.BasicLit)
+		if !ok || lit.Kind != token.STRING {
+			return false
+		}
+
+		if v, err := strconv.Unquote(lit.Value); err != nil || v != want {
+			return false
+		}
+	}
+
+	return true
+}
+
+func TestProcessStartsFindsEveryWayAround(t *testing.T) {
+	const head = "package main\n\nimport (\n\t\"context\"\n\tx \"os/exec\"\n\t\"os\"\n)\n\n" +
+		"var _ = context.Background\nvar _ = os.Getenv\n\n"
+
+	for _, c := range []struct {
+		name string
+		body string
+		bad  bool
+	}{
+		{"go build", `func f() { _ = x.Command("go", "build", "-o", "b", ".") }`, false},
+		{"go build with a context", `func f(ctx context.Context) { _ = x.CommandContext(ctx, "go", "build", ".") }`, false},
+		{"the type of a field", `type p struct{ cmd *x.Cmd }; var _ *x.ExitError`, false},
+		{"the binary under an alias", `func f(bin string) { _ = x.Command(bin, "serve") }`, true},
+		{"with a context", `func f(ctx context.Context, bin string) { _ = x.CommandContext(ctx, bin) }`, true},
+		{"go run", `func f() { _ = x.Command("go", "run", ".") }`, true},
+		{"a go held in a variable", `func f() { g := "go"; _ = x.Command(g, "build") }`, true},
+		{"a function value", `var run = x.Command`, true},
+		{"a Cmd by hand", `func f(bin string) { _ = &x.Cmd{Path: bin} }`, true},
+		{"new Cmd", `func f() { c := new(x.Cmd); _ = c }`, true},
+		{"os.StartProcess", `func f(bin string) { _, _ = os.StartProcess(bin, nil, nil) }`, true},
+		{"Env reassigned", `func f(c *x.Cmd) { c.Env = os.Environ() }`, true},
+		{"Env appended", `func f(c *x.Cmd) { c.Env = append(c.Env, "STUARTY_ADDR=") }`, true},
+		{"Path reassigned", `func f(c *x.Cmd, bin string) { c.Path = bin }`, true},
+	} {
+		bad, err := processStarts(c.name+".go", head+c.body+"\n")
+		if err != nil {
+			t.Fatalf("%s: %v", c.name, err)
+		}
+
+		if got := len(bad) > 0; got != c.bad {
+			t.Errorf("%s: found %v, want a finding = %v", c.name, bad, c.bad)
+		}
+	}
+
+	bad, err := processStarts("dot.go", "package main\n\nimport . \"os/exec\"\n\nvar _ = Command\n")
+	if err != nil || len(bad) == 0 {
+		t.Errorf("a dot import of os/exec: %v, %v", bad, err)
 	}
 }
