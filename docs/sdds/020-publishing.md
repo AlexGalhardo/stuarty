@@ -570,7 +570,7 @@ type Destination interface {
 
 `Remote` is what an earlier send of the same post to the same connection left (`blog_remote_posts`: the connection, the post item, the remote id, the URL), and `Result` is the remote id, the URL and the state. A destination returns `*destinations.Error` with the kinds of `social.Error` (`auth`, `invalid`, `unavailable`, `rejected`) so the scheduler retries only `unavailable` (section 27) and the text of a remote system is never in the message of the target (T-58): a reason is a short code that passed `[A-Za-z0-9_.-]{1,60}`.
 
-**A second send updates.** `blog_remote_posts` is keyed by `(connection_id, post_item_id)`. A destination that has a remote id for the pair updates the remote post; one that has none creates it and records the id in the same transaction as the end of the target (the result of the send and the remote id are written together; a crash between the call and the write is the case of an interrupted attempt of section 27, where WordPress finds its post again by slug, section 45).
+**A second send updates.** `blog_remote_posts` is keyed by `(connection_id, post_item_id)`. A destination that has a remote id for the pair updates the remote post; one that has none creates it, and the service records the id as soon as the send returns, before the target is finished. A crash between the call and that record leaves a post at the destination that nothing remembers: the next send makes a second one (section 45 says why Stuarty does not look for it by slug), which is rare and visible to the person, who deletes one.
 
 ## 44. Files
 
@@ -591,7 +591,7 @@ type Destination interface {
 
 `blog_wordpress` reaches `<endpoint>/wp-json/wp/v2/` through the gate of the connection, with the header `Authorization: Basic base64(user:application_password)` built inside the closure of `Manager.With`; no redirect is followed. The send:
 
-1. **Find or know the post.** With a remote id in `blog_remote_posts`, update it. Without one, look for a post with the slug (`GET /wp/v2/posts?slug=<slug>&status=any&_fields=id,link`) so that an interrupted send, or one that lost its record, does not create a second post; with none found, create it.
+1. **Know the post.** With a remote id in `blog_remote_posts`, update it (`POST /wp/v2/posts/<id>`); without one, create it (`POST /wp/v2/posts`). Stuarty does not look a post up by slug: a post that is not Stuarty's own, with the same slug, would be overwritten. When the site answers `404` to an update, the post was deleted there: the record is dropped and the post is created again.
 2. **Images.** Each image is uploaded to `POST /wp/v2/media` (section 41), and its `id` and `source_url` are read. The cover becomes `featured_media`. In the HTML of the post, `images/<file>` becomes the `source_url`. A media item is uploaded once per send; an update uploads the images again (the media library keeps the older ones: Stuarty never deletes anything at WordPress).
 3. **Tags.** Each tag is looked up (`GET /wp/v2/tags?search=<name>`, an exact match of the name, case-insensitive) or created; the ids go in `tags`.
 4. **The post.** `POST /wp/v2/posts` (or `/posts/<id>`) with `title`, `slug`, `content` (the sanitised HTML of the package), `excerpt` (the summary), `status` (`draft` or `publish` from the visibility), `featured_media` and `tags`. The canonical URL and the language have no field in the core API: they are not sent (the setup guide says so).

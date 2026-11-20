@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/AlexGalhardo/stuarty/core/writing"
+	"github.com/AlexGalhardo/stuarty/internal/outbound"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 )
 
@@ -58,7 +59,7 @@ func testPost(t *testing.T) (Package, map[string][]byte) {
 
 	return Package{
 		Slug: "how-i-cut-a-video", Status: StatusPublished, Meta: post.Meta, Markdown: md,
-		HTML:   writing.RenderHTML(md, func(id string) (string, bool) { return to(id) }),
+		HTML:   writing.RenderHTML(post.Markdown, func(id string) (string, bool) { return to(id) }),
 		Images: []Image{cover, one, two},
 	}, map[string][]byte{
 		cover.Name: coverData, one.Name: oneData, two.Name: twoData,
@@ -77,6 +78,9 @@ func cred(endpoint string, secret string, client connections.Doer) connections.C
 		Secret:     []byte(secret), Client: client,
 	}
 }
+
+// gateLike is a client that follows no redirect, as the client of a connection does, and reaches loopback only.
+func gateLike() connections.Doer { return outbound.LocalServer(5 * time.Second) }
 
 func noSleep(context.Context, time.Duration) error { return nil }
 
