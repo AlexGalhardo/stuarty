@@ -250,6 +250,7 @@
         "handshake.get",
         "system.get",
         "system.launch",
+        "system.scheduler",
         "system.tools",
         "system.tools.install"
       ]
