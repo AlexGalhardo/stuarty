@@ -231,7 +231,7 @@ func NormalizePrice(p Price) (Price, *FieldError) {
 		if p.UnitMicros != 0 {
 			return p, bad("unit_micros", "must be empty for a price of tokens")
 		}
-	case UnitImage, UnitMChar:
+	case UnitImage, UnitMChar, UnitSecond:
 		switch {
 		case p.InputMicrosPerMTok != 0 || p.OutputMicrosPerMTok != 0:
 			return p, bad("input_micros_per_mtok", "must be 0 for a price per %s", p.Unit)
@@ -239,7 +239,7 @@ func NormalizePrice(p Price) (Price, *FieldError) {
 			return p, bad("unit_micros", "must be 0 to %d", int64(MaxPriceMicros))
 		}
 	default:
-		return p, bad("unit", "must be empty, %s or %s", UnitImage, UnitMChar)
+		return p, bad("unit", "must be empty, %s, %s or %s", UnitImage, UnitMChar, UnitSecond)
 	}
 
 	return p, nil
