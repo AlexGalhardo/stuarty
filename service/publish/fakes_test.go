@@ -351,7 +351,10 @@ type fakeGateway struct {
 	mu     sync.Mutex
 	issues []core.Issue
 	cost   int64
-	sends  map[string]int
+	// disclosure and account are what Resolve says of the AI flag and of the account; account defaults.
+	disclosure string
+	account    string
+	sends      map[string]int
 	// posts is the snapshot of the last send of each target.
 	posts map[string]string
 	// fail, when set, fails the next failN sends with it.
@@ -373,7 +376,10 @@ func (g *fakeGateway) Resolve(_ context.Context, p Post) (*Resolved, error) {
 
 	r := &Resolved{
 		Network: "fake", NetworkName: "Fake network", Account: "My channel", FileName: "video.mp4", FileBytes: 1234,
-		CostMicros: g.cost,
+		CostMicros: g.cost, Disclosure: g.disclosure,
+	}
+	if g.account != "" {
+		r.Account = g.account
 	}
 	if g.cost > 0 {
 		r.Currency = "USD"
