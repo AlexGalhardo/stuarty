@@ -2,6 +2,7 @@ import { type ReactNode, useState } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
 import { useT } from "@/lib/i18n";
+import { currentFrameUrl } from "../../api/urls";
 import { useDocumentState } from "../../state/EditorContext";
 import { selectItem } from "../../state/selectors";
 import { useProductionTimelines } from "../../state/timelines";
@@ -23,7 +24,6 @@ export default function CompositionItem({ id }: { id: string }): ReactNode {
 		(names.size > 0
 			? t("ui.editor.item.composition_missing")
 			: t("ui.editor.item.composition"));
-	const target = encodeURIComponent(item.timeline);
 	return (
 		<>
 			{!pictureFailed && title !== undefined && (
@@ -32,7 +32,7 @@ export default function CompositionItem({ id }: { id: string }): ReactNode {
 					alt=""
 					loading="lazy"
 					className="relative z-10 mr-1 h-full w-auto rounded-sm object-cover"
-					src={`/projects/${target}/frame?at=0f&width=96&timeline_id=${target}`}
+					src={currentFrameUrl(item.timeline, 0, 96)}
 					onError={() => setPictureFailed(true)}
 				/>
 			)}
