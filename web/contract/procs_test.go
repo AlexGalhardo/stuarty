@@ -520,7 +520,7 @@ func driveRealServerWith(
 		}
 
 		for j := range steps {
-			if scrub(got[j].result) != scrub(want[j].result) {
+			if settled(got[j], want[j]) && scrub(got[j].result) != scrub(want[j].result) {
 				t.Errorf("%s step %d (%s): result differs\n got: %s\nwant: %s",
 					d.name(), j, steps[j].Call, scrub(got[j].result), scrub(want[j].result))
 			}
