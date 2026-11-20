@@ -307,6 +307,12 @@ func TestUnlinkEndsTheOtherSessionsAndKeepsTheCurrentOne(t *testing.T) {
 		}
 	}
 
+	// An API key of the user is not a browser session: unlinking leaves it working (SDD-007 section 4.7 item 1).
+	key := s.makeKey(t, other, `{"name":"agent","scopes":["read"],"expires_in_days":30}`)
+	if res := s.asKey(t, key.Secret, http.MethodGet, "/api/v1/projects", ""); res.status != http.StatusOK {
+		t.Fatalf("the key before unlinking = %d %s", res.status, res.body)
+	}
+
 	res = s.send(t, http.MethodPost, "/auth/google/unlink", `{"password":"`+goodPass+`"}`, current, nil)
 	if res.status != http.StatusOK {
 		t.Fatalf("unlink = %d %s", res.status, res.body)
@@ -322,6 +328,14 @@ func TestUnlinkEndsTheOtherSessionsAndKeepsTheCurrentOne(t *testing.T) {
 
 	if res := s.send(t, http.MethodGet, "/projects", "", bia, nil); res.status != http.StatusOK {
 		t.Errorf("another user's session after unlinking = %d %s, want 200", res.status, res.body)
+	}
+
+	if res := s.asKey(t, key.Secret, http.MethodGet, "/api/v1/projects", ""); res.status != http.StatusOK {
+		t.Errorf("the API key of the user after unlinking = %d %s, want 200", res.status, res.body)
+	}
+
+	if res := s.login(t, "ana@example.com", goodPass); res.status != http.StatusOK {
+		t.Errorf("the password login after unlinking = %d %s", res.status, res.body)
 	}
 }
 
