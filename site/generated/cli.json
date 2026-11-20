@@ -2587,6 +2587,65 @@
       ]
     },
     {
+      "name": "image:model-edit",
+      "domain": "provider",
+      "summary": "remove the background of a layer, or generate an image into a document, with the provider of a connection; the job says that the picture is sent, shows its estimate, waits for approval and puts the result in the document as one undoable step",
+      "usage": [
+        "stuarty image:model-edit --project <id> --image <id> --operation remove_background|generate --connection <id> --model <id> [--layer <id>] [--prompt <text> | --prompt-file <file>] [--size <width>x<height>] [--dry-run]"
+      ],
+      "example": "stuarty image:model-edit --project prj_7k2m9x4q1b --image img_7k2m9x4q1b --operation remove_background --connection con_0123456789 --model a-model --layer lyr_7k2m9x4q1b",
+      "flags": [
+        {
+          "name": "image",
+          "type": "string",
+          "usage": "the image document (required)"
+        },
+        {
+          "name": "operation",
+          "type": "string",
+          "usage": "remove_background or generate (required)"
+        },
+        {
+          "name": "connection",
+          "type": "string",
+          "usage": "the connection to the provider (required)"
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "usage": "the model id, as provider:models lists it (required)"
+        },
+        {
+          "name": "layer",
+          "type": "string",
+          "usage": "remove_background: the image layer (required); generate: a layer whose box the picture must cover"
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "usage": "generate only: what to draw; without it and without --prompt-file a generation reads it from standard input"
+        },
+        {
+          "name": "prompt-file",
+          "type": "string",
+          "usage": "generate only: a file that holds the prompt"
+        },
+        {
+          "name": "size",
+          "type": "string",
+          "usage": "generate only: width and height in pixels joined by x"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
       "name": "image:create",
       "domain": "image",
       "summary": "create an image document, blank or from a template",
@@ -3863,7 +3922,7 @@
     {
       "name": "publish:status",
       "domain": "publish",
-      "summary": "show the state of a publication: waiting_approval, uploading, processing, published or failed",
+      "summary": "show the state of a publication: waiting_approval, uploading, processing, published, sent_as_draft or failed",
       "usage": [
         "stuarty publish:status <job id>"
       ],

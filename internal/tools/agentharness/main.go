@@ -122,7 +122,8 @@ func parseOptions(argv []string, getenv func(string) string, stderr io.Writer) (
 		return o, 2
 	}
 
-	if o.scenario == firstFlow.Name &&
+	// The estimate is shown to the author before anything is started, so it needs none of the services.
+	if o.scenario == firstFlow.Name && !o.estimateOnly &&
 		(o.flowBase == "" || o.flowHome == "" || o.flowSecret == "" || o.flowSocial == "") {
 		fmt.Fprintln(
 			stderr,

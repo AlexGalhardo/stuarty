@@ -45,8 +45,15 @@ func TestScopedTokenSecretIsNotStoredAndHasTheShapeOfAToken(t *testing.T) {
 		t.Errorf("tokens %q and %q", a, b)
 	}
 
+	// The last character of the near miss is always changed: a fixed replacement would give back b itself,
+	// a valid token, whenever b already ends with it.
+	swapped := byte('A')
+	if b[len(b)-1] == swapped {
+		swapped = 'B'
+	}
+
 	// Near misses, other shapes and the empty string are not found.
-	for _, bad := range []string{"", a[:len(a)-1], a + "x", "vvk_" + a[4:], "Bearer " + a, a[:4] + b[4:len(b)-1] + "A"} {
+	for _, bad := range []string{"", a[:len(a)-1], a + "x", "vvk_" + a[4:], "Bearer " + a, a[:4] + b[4:len(b)-1] + string(swapped)} {
 		if _, ok := tokens.Lookup(bad); ok {
 			t.Errorf("%q was accepted", bad)
 		}

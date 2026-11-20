@@ -301,7 +301,7 @@ Scope is `edit` unless stated. "Time" marks arguments parsed by A.4. Optional ar
 | `composition.create_from_selection` | `item_ids` (1 to 100), `name?`, `timeline_id?`, `id?` | Moves the selected items into a new timeline of the production and puts one composition clip in their place, in one batch. See C.85 |
 | `composition.expand` | `item_id` | The inverse: puts the items of the nested timeline back on the timeline in place of a composition that uses no group feature. See C.86 |
 | `clip.set_framing` | `item_id`, `fit?`, `crop?` | Sets fit and crop |
-| `clip.set_speed` | `item_id`, `speed` (`"1.5x"`, `"0.5x"` or a rational object) or `curve` (2 to 8 `{t, speed}` points), `ripple?` (`"none"` default, `"track"`) | Changes speed keeping the same source range: the new duration is `ceil(duration × old / new)`, reduced by the rounding excess if that would read past the end of the asset. Keyframe times and transition and fade lengths are scaled by the same ratio and rounded. With `ripple: "track"`, later items on the track shift by the change in length; otherwise a resulting overlap is `E_OVERLAP`. Captions linked to the clip are not changed; the lint reports them as out of sync until `caption.retime_from_clip` runs |
+| `clip.set_speed` | `item_id`, `speed` (`"1.5x"`, `"0.5x"` or a rational object) or `curve` (2 to 8 `{t, speed}` points), `ripple?` (`"none"` default, `"track"`) | Changes speed keeping the same source range: the new duration is `ceil(duration × old / new)`, reduced by the rounding excess if that would read past the end of the asset. Keyframe times and transition and fade lengths are scaled by the same ratio and rounded. With `ripple: "track"`, later items on the track shift by the change in length; otherwise a resulting overlap is `E_OVERLAP`. Captions linked to the clip are not changed; the lint reports them as out of sync until `caption.retime_from_clip` runs. A `composition` item takes a constant `speed` by the same rule (epic 53, C.25); a `curve` or a `reverse` on it is `E_VALIDATION` |
 | `clip.set_color` | `item_id`, `brightness?`, `contrast?`, `saturation?`, `temperature?`, `tint?`, `hue?` | Sets colour adjustment; also white balance and hue rotation (TASK-0233). See C.26 |
 | `clip.set_filter` | `item_id`, `filter?`, `amount?` | Sets the colour filter of a clip and how much of it is mixed in |
 | `clip.set_blur` | `item_id`, `radius` | Sets the blur radius of a clip in pixels; 0 removes it |
@@ -2372,13 +2372,13 @@ At least one of `fit` and `crop` is required.
 
 ### C.25 `clip.set_speed`
 
-Changes the speed of a clip or audio item, constant or along a curve (TASK-0275), while keeping the same source range.
+Changes the speed of a clip or audio item, constant or along a curve (TASK-0275), while keeping the same source range. A `composition` item (SDD-001 section 3.5.1) takes a constant speed only (epic 53): the nested timeline plays the part of the asset, the rules below hold with the frames of the nested timeline as the source range, and a curve or a reverse is refused.
 
 **Arguments**
 
 | Name | Type | Required | Default | Rule |
 | --- | --- | --- | --- | --- |
-| `item_id` | item id | yes | none | a `clip` of a video asset, or an `audio` item |
+| `item_id` | item id | yes | none | a `clip` of a video asset, an `audio` item, or a `composition` item |
 | `speed` | string or rational object | one of `speed`, `curve`, `reverse` | none | `"<decimal>x"` with at most 3 decimals (`"1.5x"` is 3/2, `"0.5x"` is 1/2, `"0.333x"` is 333/1000), or `{"num","den"}`; stored reduced to lowest terms; from 1/4 to 4 inclusive. Clears the curve |
 | `reverse` | boolean | one of `speed`, `curve`, `reverse` | none | `true` plays the same source range backwards, `false` plays it forwards (the field is then absent). Alone it changes nothing else: the duration, the speed and the curve stay |
 | `curve` | array of `{"t", "speed"}` | one of `speed`, `curve` | none | 2 to 8 points; `t` is the position inside the item as a fraction of its duration, a multiple of 0.001, strictly increasing, the first 0 and the last 1; `speed` is a string `"<decimal>x"` of at most 3 decimals (or a `{"num","den"}` whose `den` divides 1000), from 1/4 to 4 inclusive. The speed ramps linearly between points |
@@ -2388,8 +2388,8 @@ Changes the speed of a clip or audio item, constant or along a curve (TASK-0275)
 
 1. Arguments match the schema; at least one of `speed`, `curve` and `reverse` is given and not both `speed` and `curve`; `speed` parses and is within 1/4 to 4; `curve` has 2 to 8 points that meet the rules above (`E_VALIDATION`).
 2. The item exists (`E_NOT_FOUND`).
-3. The item is a `clip` whose asset is a video, or an `audio` item, and is not a freeze frame (`E_TYPE_MISMATCH`; a freeze frame has no speed, TASK-0254).
-4. At least one frame fits in the source range at the new speed: `maxdur(source_in)` at the new speed is at least 1 (`E_OUT_OF_SOURCE`). A new duration that fails R9 only because of rounding is not an error: it is reduced (postcondition 1).
+3. The item is a `clip` whose asset is a video, an `audio` item or a `composition` item, and is not a freeze frame (`E_TYPE_MISMATCH`; a freeze frame has no speed, TASK-0254). On a `composition` item, `curve` and `reverse` are refused with `E_VALIDATION` (`details.reason` `composition_speed_constant`) and the hint to use a constant speed (`speed`): a speed curve and a reverse of a nested timeline are out of scope, and a curve is refused, never approximated by its mean.
+4. At least one frame fits in the source range at the new speed: `maxdur(source_in)` at the new speed is at least 1 (`E_OUT_OF_SOURCE`). A composition has no asset facts (the nested timeline is another document), so no source range is checked for it here and postcondition 1 applies with no reduction; the lint reports a source range past the end of the nested timeline (`L_SOURCE_RANGE`, SDD-003 section 3.6). A new duration that fails R9 only because of rounding is not an error: it is reduced (postcondition 1).
 5. Every item ends at or before 108,000 after the change (`E_INVALID_TIME`).
 6. Without ripple, a longer item does not overlap its neighbour (`E_OVERLAP`, R8).
 
@@ -2410,6 +2410,7 @@ Changes the speed of a clip or audio item, constant or along a curve (TASK-0275)
 | --- | --- | --- | --- |
 | `E_VALIDATION` | unparsable speed, or outside 1/4 to 4; both or neither of `speed` and `curve`; a curve that is not valid | `args.speed "5x" is above the maximum 4x.` | `Use a speed from "0.25x" to "4x".` |
 | `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_VALIDATION` | a `curve` or a `reverse` on a composition item (`details.reason` `composition_speed_constant`) | `Item itm_k1k1k1k1k1 is a composition, which has a constant speed only.` | `Use speed, for example "0.5x"; a composition has no curve and no reverse.` |
 | `E_TYPE_MISMATCH` | text, shape, caption or image clip | `Item itm_s6t7v8w9x0 is a text item and has no speed.` | `Change the duration with item.trim instead.` |
 | `E_OUT_OF_SOURCE` | not even one frame fits at the asset end | `At speed 4x the clip needs 4 source frames from frame 898; asset ast_3c5v8n2w6d has 900.` | `Use item.trim to move source_in earlier, or choose a lower speed.` |
 | `E_INVALID_TIME` | an item would end after 108,000 | `Item itm_s6t7v8w9x0 would end at frame 108040; the limit is 108000.` | `Use a higher speed, or shorten the clip first.` |
@@ -2507,6 +2508,12 @@ Changes the speed of a clip or audio item, constant or along a curve (TASK-0275)
 - `err_type_mismatch_reverse_on_image_clip`
 - `err_out_of_source_reverse_speed_no_frame_fits`
 - `err_type_mismatch_freeze_frame`
+- `ok_composition_double_speed_halves_the_duration`
+- `ok_composition_half_speed_doubles_the_duration`
+- `ok_composition_speed_rescales_fades_and_keyframes`
+- `ok_composition_speed_back_to_one`
+- `err_validation_composition_curve`
+- `err_validation_composition_reverse`
 
 ### C.26 `clip.set_color`
 
@@ -6712,7 +6719,7 @@ Puts the items of a nested timeline on this timeline in place of a composition i
 **Preconditions.**
 
 1. The item exists and is a composition (`E_NOT_FOUND`, `E_TYPE_MISMATCH`); its timeline is in the production (`E_NOT_FOUND`); its track is not locked (`E_INVALID_STATE`, A.3 rule 5).
-2. The item only places its timeline (`E_INVALID_STATE`, `details.reason` and `details.feature`): no `opacity`, `scale`, `rotation`, position, keyframe, transition, mask, effect, shadow, outline, blur, filter, blend or flip of its own, and no volume, fade or mute; and it is drawn: not disabled and not on a hidden track, `details.feature` `disabled` or `hidden_track`, since its items would be drawn on their new tracks (`composition_group_feature`); `source_in` 0 and a duration that shows the whole nested timeline (`composition_window`); and the nested timeline has this timeline's `width`, `height` and `fps` (`composition_geometry`).
+2. The item only places its timeline (`E_INVALID_STATE`, `details.reason` and `details.feature`): no `opacity`, `scale`, `rotation`, position, keyframe, transition, mask, effect, shadow, outline, blur, filter, blend or flip of its own, and no volume, fade or mute, and no speed other than 1/1 (`details.feature` `speed`, epic 53: the items would play at their own speed); and it is drawn: not disabled and not on a hidden track, `details.feature` `disabled` or `hidden_track`, since its items would be drawn on their new tracks (`composition_group_feature`); `source_in` 0 and a duration that shows the whole nested timeline (`composition_window`); and the nested timeline has this timeline's `width`, `height` and `fps` (`composition_geometry`).
 3. No item id of the nested timeline is used here (`E_ID_EXISTS`); an asset of the nested timeline that has the id of one here has the same file (`E_INVALID_STATE`, `details.reason` `composition_asset_clash`); the document stays within 50 tracks, 500 items and 200 assets (`E_LIMIT`).
 
 **Postconditions.**

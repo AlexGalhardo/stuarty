@@ -72,6 +72,8 @@ type GeneratedResult struct {
 	// Notes say, in words the product wrote, what did not arrive.
 	Notes []string   `json:"notes,omitempty"`
 	Cost  core.Money `json:"cost"`
+	// Image is what an image.edit job did to the document (SDD-016 section 6.5); other kinds leave it out.
+	Image *ImageApplied `json:"image,omitempty"`
 }
 
 // generateInput is the input column of an image.generate or voice.generate job: what was asked, and the price
@@ -515,7 +517,7 @@ func (s *svc) storeGenerated(
 // image.generate, voice.generate and video.generate.
 func viewGeneration(j *Job, r *JobRow) {
 	switch r.Kind {
-	case JobTextGenerate, JobTextDraft, JobImageGenerate, JobVoiceGenerate, JobVideoGenerate:
+	case JobTextGenerate, JobTextDraft, JobImageGenerate, JobVoiceGenerate, JobVideoGenerate, JobImageEdit:
 	default:
 		return
 	}

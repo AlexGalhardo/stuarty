@@ -474,6 +474,13 @@ func TestItemFlagsDetailsAndAssetKinds(t *testing.T) {
 		t.Errorf("composition detail = %s", got)
 	}
 
+	// A composition at a constant speed shows it as a clip does (epic 53).
+	cmp.Speed = timeline.Rational{Num: 1, Den: 2}
+
+	if got := itemDetail(&cmp); got != "prj_a1b2c3d4e5 x0.5" {
+		t.Errorf("composition detail at a speed = %s", got)
+	}
+
 	doc.Assets["ast_aaaaaaaaaa"] = timeline.Asset{ID: "ast_aaaaaaaaaa", Kind: timeline.AssetAudio, SampleCount: 96000}
 	doc.Assets["ast_bbbbbbbbbb"] = timeline.Asset{
 		ID:     "ast_bbbbbbbbbb",

@@ -26,6 +26,12 @@ type socialSelectIn struct {
 	AccountID    string `json:"account_id"    validate:"required" doc:"The id of one of the choices the connection lists after the sign-in."`
 }
 
+type socialPriceIn struct {
+	ConnectionID string `json:"connection_id" validate:"required"          doc:"The connection of the network whose price is corrected."`
+	PostMicros   int64  `json:"post_micros"   validate:"required,positive" doc:"The price of a post, in millionths of the currency: 15000 is $0.015."`
+	LinkMicros   int64  `json:"link_micros"   validate:"required,positive" doc:"The price of a post with a link, in millionths of the currency: 200000 is $0.20."`
+}
+
 type publishValidateIn struct {
 	ProjectID    string   `json:"project_id"              validate:"required" doc:"The project the video was exported from."`
 	ConnectionID string   `json:"connection_id"           validate:"required" doc:"The connection of the network and the account the video goes to."`
@@ -103,6 +109,12 @@ func (h *apiHandler) socialAccounts(c *web.Ctx, _ noIn) (service.SocialAccountLi
 
 func (h *apiHandler) socialSelect(c *web.Ctx, in socialSelectIn) (service.SocialAccount, error) {
 	res, err := h.Service.SocialAccountSelect(c.Context(), service.SocialAccountSelectRequest(in))
+
+	return deref(res), err
+}
+
+func (h *apiHandler) socialPrice(c *web.Ctx, in socialPriceIn) (service.SocialAccount, error) {
+	res, err := h.Service.SocialPriceSet(c.Context(), service.SocialPriceSetRequest(in))
 
 	return deref(res), err
 }

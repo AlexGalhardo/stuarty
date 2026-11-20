@@ -41,6 +41,10 @@ func (o *Owner) signIns(getenv func(string) string, now func() time.Time) (*oaut
 	router := openrouter.SignInConfig{}
 
 	if raw := strings.TrimSpace(getenv(EnvTestSignInURL)); raw != "" {
+		if err := requireTestEnv(getenv, EnvTestSignInURL, ErrTestSignIn); err != nil {
+			return nil, err
+		}
+
 		if o.mode == config.ModeNetwork {
 			return nil, fmt.Errorf("%w: %s works only in local mode; unset it", ErrTestSignIn, EnvTestSignInURL)
 		}

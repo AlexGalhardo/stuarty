@@ -599,10 +599,13 @@ func (g pubGateway) Resolve(ctx context.Context, p pub.Post) (*pub.Resolved, err
 		return nil, err
 	}
 
+	cost := t.cost()
+
 	out := &pub.Resolved{
 		Network: t.desc.Network, NetworkName: t.desc.Name, Account: t.account.Title,
 		FileName: path.Base(t.input.Output.Rel), FileBytes: t.input.Output.Bytes,
-		CostMicros: t.desc.PostCostMicros, Currency: t.desc.PostCostCurrency, Disclosure: disclosureText(t),
+		CostMicros: cost.Micros, Currency: cost.Currency, CostNote: t.costNote(), Disclosure: disclosureText(t),
+		Draft: t.desc.Draft,
 	}
 
 	if !p.Strict {

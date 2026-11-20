@@ -70,7 +70,8 @@ func TestSignInsTakeTheFakeServerOnlyOnLoopbackInLocalMode(t *testing.T) {
 
 	o := &Owner{Dir: workspace.Dir(t.TempDir()), mode: config.ModeLocal}
 
-	set, err := o.signIns(env(map[string]string{EnvTestSignInURL: "http://127.0.0.1:3105"}), nil)
+	vars := map[string]string{EnvTestSignInURL: "http://127.0.0.1:3105", "APP_ENV": "test"}
+	set, err := o.signIns(env(vars), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,7 +93,9 @@ func TestSignInsTakeTheFakeServerOnlyOnLoopbackInLocalMode(t *testing.T) {
 	} {
 		o := &Owner{Dir: workspace.Dir(t.TempDir()), mode: tc.mode}
 
-		if _, err := o.signIns(env(map[string]string{EnvTestSignInURL: tc.url}), nil); !errors.Is(err, ErrTestSignIn) {
+		vars := map[string]string{EnvTestSignInURL: tc.url, "APP_ENV": "test"}
+
+		if _, err := o.signIns(env(vars), nil); !errors.Is(err, ErrTestSignIn) {
 			t.Errorf("%s: %v, want ErrTestSignIn", name, err)
 		}
 	}

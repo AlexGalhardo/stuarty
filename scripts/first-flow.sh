@@ -143,6 +143,11 @@ need() {
 	printf '%s' "$2"
 }
 
+# utc SECONDS: the UTC instant SECONDS after the epoch, as RFC 3339; GNU date (Linux, Git Bash) or BSD date (macOS).
+utc() {
+	date -u -d "@$1" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -r "$1" +%Y-%m-%dT%H:%M:%SZ
+}
+
 # mcp TOOL ARGS: one call of an MCP tool of `stuarty mcp`, the answer line of the call.
 mcp() {
 	local out
@@ -282,28 +287,40 @@ stuarty social:account:list --json | grep -q '"state":"ready"' || die "the accou
 # ---- 8. the publication: create, schedule, approve ---------------------------------------------------------
 
 step "8. create the publication, schedule it, and approve it as a person"
-AT="$(date -u -d '+30 seconds' +%Y-%m-%dT%H:%M:%SZ)"
+# The time is a few seconds ahead, so the post is due while its request still waits: it must not go out, even
+# past its time, until a person approves (ADR-0032). The approval comes inside the grace of a minute
+# (core/publish), so the post then goes out at once.
+AT="$(utc $(($(date -u +%s) + 5)))"
 pub="$(stuarty publication:create --project "$P" --title "Sourdough short" \
 	--text "From starter to slice in four seconds #sourdough" --export "$EXPORT_JOB" --thumbnail "$STILL_JOB" \
 	--connection "$SOCIAL_CONN" --at "$AT" --made-for-kids no --visibility public --json)"
 PUB="$(need publication "$(printf '%s' "$pub" | field id)" "$pub")"
 [ "$(upload_count)" = 0 ] || die "something was sent before the post was scheduled"
 sched="$(stuarty publication:schedule "$PUB" --json)"
+SCHEDULED="$(date -u +%s)"
 case "$sched" in *'"state":"waiting_approval"'*) ;; *) die "the scheduled post is not waiting for approval: $sched" ;; esac
 PUB_APPROVAL="$(need approval_id "$(printf '%s' "$sched" | field approval_id)" "$sched")"
 if stuarty approval:decide "$PUB_APPROVAL" --approve >/dev/null 2>&1; then
 	die "the local token approved a publication: only a person may"
 fi
-# Nothing goes out while the request waits: look three times, two seconds apart.
-for _ in 1 2 3; do
-	sleep 2
+# Nothing goes out while the request waits. The scheduler of the server looks at the calendar when it changes
+# and at least every 30 seconds (service/publish), so watching for 32 seconds after the schedule spans one of
+# its passes made after the time of the post: a scheduler that skipped the approval would have sent it.
+while [ "$(date -u +%s)" -lt $((SCHEDULED + 32)) ]; do
 	[ "$(upload_count)" = 0 ] || die "a post went out before a person approved it"
+	sleep 2
 done
+[ "$(upload_count)" = 0 ] || die "a post went out before a person approved it"
+waiting="$(stuarty publication:show "$PUB" --json)"
+case "$waiting" in
+*'"state":"waiting_approval"'*) ;;
+*) die "past its time, the post no longer waits for a person: $waiting" ;;
+esac
 person POST "/approvals/$PUB_APPROVAL/decide" '{"decision":"approve"}' >/dev/null
 
-# ---- 9. published, once, at its time ------------------------------------------------------------------------
+# ---- 9. published, once, after the approval ----------------------------------------------------------------
 
-step "9. wait for the post to go out at its time"
+step "9. wait for the post to go out"
 shown=""
 for _ in $(seq 1 60); do
 	shown="$(stuarty publication:show "$PUB" --json)"
@@ -311,6 +328,7 @@ for _ in $(seq 1 60); do
 	sleep 2
 done
 case "$shown" in *'"state":"published"'*) ;; *) die "the post was not published in time: $shown" ;; esac
+case "$shown" in *"\"approval_id\":\"$PUB_APPROVAL\""*) ;; *) die "the published post does not carry the approval of the person: $shown" ;; esac
 POST_URL="$(need url "$(printf '%s' "$shown" | field url)" "$shown")"
 [ "$(upload_count)" = 1 ] || die "the network received $(upload_count) uploads, want 1"
 [ "$(uploads | number bytes)" = "$VIDEO_BYTES" ] || die "the file that went out is not the exported video"
@@ -318,8 +336,9 @@ POST_URL="$(need url "$(printf '%s' "$shown" | field url)" "$shown")"
 # ---- 10. the calendar -----------------------------------------------------------------------------------------
 
 step "10. the post is on the calendar"
-from="$(date -u -d '-1 day' +%Y-%m-%dT%H:%M:%SZ)"
-until_="$(date -u -d '+1 day' +%Y-%m-%dT%H:%M:%SZ)"
+now="$(date -u +%s)"
+from="$(utc $((now - 86400)))"
+until_="$(utc $((now + 86400)))"
 cal="$(stuarty publication:list --from "$from" --until "$until_" --json)"
 case "$cal" in *"$PUB"*'"state":"published"'*) ;; *) die "the post is not on the calendar as published: $cal" ;; esac
 

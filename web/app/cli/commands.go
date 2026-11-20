@@ -30,7 +30,7 @@ func registry() []*spec {
 		approvalListCmd, approvalShowCmd, approvalDecideCmd, approvalRuleListCmd, approvalRuleSetCmd,
 		approvalRuleRemoveCmd, costShowCmd, costCeilingCmd,
 		providerListCmd, providerModelsCmd, providerPriceCmd, textGenerateCmd,
-		imageGenerateCmd, voiceGenerateCmd, videoGenerateCmd, voiceListCmd,
+		imageGenerateCmd, voiceGenerateCmd, videoGenerateCmd, voiceListCmd, imageModelEditCmd,
 		imageCreate, imageList, imageShow, imageEdit, imageUndo, imageRedo, imageExport, imageImport,
 		assetListCmd, assetShowCmd, assetUsesCmd, assetSetCmd, assetTagCmd,
 		motionBriefCmd, motionCheckCmd, motionReplaceCmd,
