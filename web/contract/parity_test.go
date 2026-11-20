@@ -178,9 +178,9 @@ var parity = []row{
 	{method: "ImageFrame", route: "GET /images/{}/frame", httpOnly: true},
 	{method: "ImageHistory", route: "GET /images/{}/history", httpOnly: true},
 	{method: "ImageFile", route: "GET /images/{}/exports/{}", httpOnly: true},
-	// The approval queue (SDD-015 section 10): no MCP tool, the budget of the tool list leaves no room
-	// for one; deciding, writing a rule and setting a ceiling are for a person, and their commands
-	// always fail for an agent.
+	// The approval queue (SDD-015 section 10): no MCP tool of its own, the read is job_get (approvals,
+	// approval_id; D-093); deciding, writing a rule and setting a ceiling are for a person, have no tool,
+	// and their commands always fail for an agent.
 	{method: "ApprovalList", tool: "job_get", command: "approval:list", route: "GET /approvals"},
 	{method: "ApprovalGet", tool: "job_get", command: "approval:show", route: "GET /approvals/{}"},
 	{method: "ApprovalDecide", command: "approval:decide", route: "POST /approvals/{}/decide"},
