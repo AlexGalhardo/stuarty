@@ -5838,7 +5838,7 @@ Holds one frame of a clip (TASK-0254): the "freeze frame" of an editor. The clip
 
 ### C.71 `caption.import_subtitles`
 
-Creates one caption item for each cue of an SRT or WebVTT text (TASK-0254, NEW-32a). The command is pure: the caller or the service reads the file and sends its text, and the parser is `core/subtitle`. Writing the captions of a document back as SRT or WebVTT is `subtitle.Format` over the cues a caller builds from the captions (the service does the file); the core has no command for it, because it changes nothing.
+Creates one caption item for each cue of an SRT or WebVTT text (TASK-0254, NEW-32a). The command is pure: the caller reads the file and sends its text (no surface takes a path: the editor reads the file in the browser, an agent reads it and passes the content), and the parser is `core/subtitle`. Writing the captions of a document back as SRT or WebVTT is `subtitle.Format` over the cues a caller builds from the captions (the service does the file); the core has no command for it, because it changes nothing.
 
 **Arguments**
 
@@ -5868,7 +5868,7 @@ Creates one caption item for each cue of an SRT or WebVTT text (TASK-0254, NEW-3
 
 | Code | When | Example message | Example hint |
 | --- | --- | --- | --- |
-| `E_VALIDATION` | a bad id, a text that is not valid SRT or WebVTT, or no cue with text | `args.text is not valid srt: cue 1: "00:00:01" is not a time (hh:mm:ss,mmm).` | `Send SubRip or WebVTT text with a time line (00:00:01,000 --> 00:00:02,500) for each cue.` |
+| `E_VALIDATION` | a bad id, a text that is not valid SRT or WebVTT, or no cue with text | `args.text is not valid srt: cue 1: "00:00:01" is not a time (hh:mm:ss,mmm).` | `Send the content of the SubRip or WebVTT file, not its path, with a time line (00:00:01,000 --> 00:00:02,500) for each cue.` |
 | `E_INVALID_TIME` | a cue ends past frame 108,000 | `The item would occupy frames 108000-108044, past the limit 108000.` | `Use a start of at most "107955f" for this 45-frame item.` |
 | `E_NOT_FOUND` | unknown track | `Track trk_zzzzzzzzzz does not exist.` | `Use the id of a track listed by project_get.` |
 | `E_TYPE_MISMATCH` | an audio track | `Track trk_m1n2p3q4r5 is an audio track; captions need a visual track.` | `Use a visual track.` |
@@ -5894,6 +5894,7 @@ Creates one caption item for each cue of an SRT or WebVTT text (TASK-0254, NEW-3
 - `ok_format_given`
 - `ok_start_moves_every_cue`
 - `err_validation_bad_time_line`
+- `err_validation_text_is_a_path`
 - `err_validation_no_cue_with_text`
 - `err_validation_bad_new_id`
 - `err_not_found_track`

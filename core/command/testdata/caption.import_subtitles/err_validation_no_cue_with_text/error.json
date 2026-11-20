@@ -1,7 +1,7 @@
 {
   "code": "E_VALIDATION",
   "message": "args.text has no cue with text.",
-  "hint": "Send SubRip or WebVTT text with at least one cue.",
+  "hint": "Send the content of the SubRip or WebVTT file, not its path, with at least one cue.",
   "retryable": false,
   "path": "args.text"
 }

@@ -1,7 +1,7 @@
 {
   "code": "E_VALIDATION",
   "message": "args.text is not valid srt: cue 1: \"00:00:01\" is not a time (hh:mm:ss,mmm).",
-  "hint": "Send SubRip or WebVTT text with a time line (00:00:01,000 --\u003e 00:00:02,500) for each cue.",
+  "hint": "Send the content of the SubRip or WebVTT file, not its path, with a time line (00:00:01,000 --\u003e 00:00:02,500) for each cue.",
   "retryable": false,
   "path": "args.text"
 }
