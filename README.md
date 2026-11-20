@@ -1,7 +1,7 @@
 <div align="center">
 
 <a href="https://github.com/AlexGalhardo/stuarty" target="_blank" rel="noopener noreferrer">
-  <img src="site/public/logo.svg" alt="Stuarty" width="96" height="96">
+  <img src="site/public/logo.png" alt="Stuarty" width="96" height="96">
 </a>
 
 <br/>
@@ -17,10 +17,6 @@
 </div>
 
 <br/>
-
-Stuarty is an open source (MIT), self-hosted studio for people who make content for the Internet, built so that AI agents are first-class users: everything a person does in the UI can be done through the HTTP API, the CLI and MCP. Files, tokens and credentials stay on your machine or on your own server.
-
-It grew out of a video editor called Vukem Video. The editor is what works today; the rest is being built, epic by epic, from [`docs/plans/`](docs/plans/00-roadmap.md).
 
 ## What works today: the video editor
 
