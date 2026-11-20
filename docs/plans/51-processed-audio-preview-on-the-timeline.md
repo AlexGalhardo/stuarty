@@ -48,7 +48,7 @@ Not in progress together with 53 (both change `engine/audio` and SDD-004 section
 - [x] 4. The route, with `Range` and the project check. Verify: `go test ./web/app/http/... -run TestAudioPreviewRoute` passes (206 for a range, 404 for a key the project did not hand out).
 - [x] 5. The preview switches the item's audio element; the inspector shows "processing" and "ready". Verify: `task test:web` and `bun run check:thin-client` pass, and `web/e2e/specs/audio-processed-preview.spec.ts` (new, `bun run e2e`) passes.
 - [x] 6. Parity: the export of the whole timeline equals the preview of the same revision within the audio tolerance. Verify: `go test ./engine/export/... -run TestAudioChainExportEqualsPreview` passes.
-- [ ] 7. Both languages, and the measurement. Verify: `bun run check:i18n` passes; the measured time is in the hand-off.
+- [x] 7. Both languages, and the measurement. Verify: `bun run check:i18n` passes; the measured time is in the hand-off.
 
 ## Test strategy
 
