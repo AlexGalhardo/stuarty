@@ -39,7 +39,7 @@ A creator schedules a post for tomorrow morning, closes the Stuarty window, and 
 
 - [x] 1. Amend SDD-012 and SDD-020 with the lifecycle, the options and the limits. Verify: `task lint:md` exits 0.
 - [x] 2. Implement hide-to-tray, the tray menu and Quit with its warning. Verify: `go test ./desktop/shell/...` passes for the lifecycle logic (extracted from the framework calls).
-- [ ] 3. Implement single instance. Verify: `go test ./desktop/shell/... -run TestSingleInstance` passes.
+- [x] 3. Implement single instance. Verify: `go test ./desktop/shell/... -run TestSingleInstance` passes.
 - [ ] 4. Implement start at sign-in with its removal. Verify: `go test ./desktop/service/...` passes on Windows; the registration is checked and cleaned by the test.
 - [ ] 5. Add the first-time dialog and the settings, in both languages. Verify: `task test:web` and `bun run check:i18n` pass.
 - [ ] 6. Update the Windows installer and uninstaller. Verify: `bash scripts/desktop-verify.sh` passes.
