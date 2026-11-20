@@ -505,19 +505,19 @@ func (s *svc) SocialPriceSet(ctx context.Context, req SocialPriceSetRequest) (*S
 		if serr != nil {
 			refused = serr
 
-			return nil, nil
+			return nil, serr
 		}
 
 		newSecret = bytes.Clone(next)
 
 		return next, nil
 	})
-	if werr != nil {
-		return nil, connectionError(werr)
-	}
-
 	if refused != nil {
 		return nil, validationAt("connection_id", "the connection holds no client of your app: sign in first.")
+	}
+
+	if werr != nil {
+		return nil, connectionError(werr)
 	}
 
 	defer clear(newSecret)

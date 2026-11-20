@@ -684,7 +684,8 @@ func TestRotateUpdatesTheSecretTheVaultHoldsNow(t *testing.T) {
 	}
 
 	// An update that returns nothing writes nothing.
-	if err := m.UpdateSecret(context.Background(), "con_a", func([]byte) ([]byte, error) { return nil, nil }); err != nil {
+	nothing := func([]byte) ([]byte, error) { return nil, nil }
+	if err := m.UpdateSecret(context.Background(), "con_a", nothing); err != nil {
 		t.Fatal(err)
 	}
 
