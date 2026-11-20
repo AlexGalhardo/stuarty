@@ -1,8 +1,11 @@
 import { fromResponse, networkError } from "../../editor/api/errors";
 import { type Transport, TransportError } from "../../editor/api/transport";
+import type { Checkpoint } from "../../editor/api/types";
 import type {
+	ImageCheckpointListResult,
 	ImageCreateRequest,
 	ImageCreateResult,
+	ImageDiffResult,
 	ImageDocument,
 	ImageEditResult,
 	ImageExportOptions,
@@ -12,6 +15,8 @@ import type {
 	ImageImportResult,
 	ImageListResult,
 	ImageOperation,
+	ImageRevertRequest,
+	ImageRevertResult,
 } from "./types";
 
 // Timeouts of SDD-012 section 4.3 item 4. An export renders, so it gets the longest.
@@ -41,6 +46,13 @@ export interface ImageApi {
 		options: ImageExportOptions,
 	): Promise<ImageExportResult>;
 	history(id: string, limit?: number): Promise<ImageHistoryResult>;
+	// Revert, the diff and the named versions (epic 50): the core says what changes, in words; a revert with
+	// `dry_run` returns the diff it would make and writes nothing.
+	checkpoints(id: string): Promise<ImageCheckpointListResult>;
+	createCheckpoint(id: string, name: string): Promise<Checkpoint>;
+	removeCheckpoint(id: string, name: string): Promise<Checkpoint>;
+	diff(id: string, from: number, until?: number): Promise<ImageDiffResult>;
+	revert(id: string, request: ImageRevertRequest): Promise<ImageRevertResult>;
 	importImage(request: ImageImportRequest): Promise<ImageImportResult>;
 	// A file chosen in the browser, sent as the body of POST /images/import/file (SDD-021 section 10.2); `file.name`
 	// is the label it travels under, and the members of the request are the query.
@@ -54,7 +66,7 @@ export interface ImageApi {
 
 export function createImageApi(transport: Transport): ImageApi {
 	async function call<T>(
-		method: "GET" | "POST",
+		method: "GET" | "POST" | "DELETE",
 		path: string,
 		timeoutMs: number,
 		body?: unknown,
@@ -108,6 +120,24 @@ export function createImageApi(transport: Transport): ImageApi {
 				`${image(id)}/history${limit === undefined ? "" : `?limit=${limit}`}`,
 				READ_TIMEOUT_MS,
 			),
+		checkpoints: (id) =>
+			call("GET", `${image(id)}/checkpoints`, READ_TIMEOUT_MS),
+		createCheckpoint: (id, name) =>
+			call("POST", `${image(id)}/checkpoints`, EDIT_TIMEOUT_MS, { name }),
+		removeCheckpoint: (id, name) =>
+			call(
+				"DELETE",
+				`${image(id)}/checkpoints/${encodeURIComponent(name)}`,
+				EDIT_TIMEOUT_MS,
+			),
+		diff: (id, from, until) =>
+			call(
+				"GET",
+				`${image(id)}/diff?from=${from}${until === undefined ? "" : `&until=${until}`}`,
+				READ_TIMEOUT_MS,
+			),
+		revert: (id, request) =>
+			call("POST", `${image(id)}/revert`, EDIT_TIMEOUT_MS, request),
 		importImage: (request) =>
 			call("POST", "/images/import", IMPORT_TIMEOUT_MS, request),
 		importFile: (file, request) => {
