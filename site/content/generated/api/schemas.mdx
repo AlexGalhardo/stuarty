@@ -2016,6 +2016,14 @@ The types named in the tables of the operations. The arguments of each editing c
 | `title` | `string` | no |  |
 | `type` | `string` | no |  |
 
+### ProcessedAudio
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `frames` | `integer` | no |  |
+| `key` | `string` | no |  |
+| `start` | `integer` | no |  |
+
 ### Processor
 
 | Name | Type | Required | Description |
@@ -3150,6 +3158,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `gain` | `any` | no |  |
 | `item` | `string` | no |  |
 | `last` | `integer` | no |  |
+| `processed` | [`ProcessedAudio`](/docs/api/schemas#processedaudio) or `any` or `null` or `null` | no |  |
 | `reverse` | `boolean` | no |  |
 | `source_seconds` | `number (double)` | no |  |
 | `speed` | `number (double)` | no |  |

@@ -858,6 +858,11 @@ var Endpoints = []Endpoint{
 		ID: "bitmaps.get", Method: http.MethodGet, Path: "/projects/{id}/bitmaps/{key}", Scope: service.ScopeRead,
 		Uncounted: true, Status: 200, Summary: "Download a rasterized text or shape",
 	},
+	{
+		ID: "audio_previews.get", Method: http.MethodGet, Path: "/projects/{id}/audio-previews/{key}",
+		Scope: service.ScopeRead, Uncounted: true, Status: 200,
+		Summary: "Download the processed sound of an item, or start rendering it",
+	},
 
 	{
 		ID: "handshake.get", Method: http.MethodGet, Path: "/handshake", Status: 200,

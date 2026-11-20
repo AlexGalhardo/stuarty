@@ -5923,6 +5923,20 @@
         },
         "type": "object"
       },
+      "ProcessedAudio": {
+        "properties": {
+          "frames": {
+            "type": "integer"
+          },
+          "key": {
+            "type": "string"
+          },
+          "start": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "Processor": {
         "properties": {
           "disabled": {
@@ -8698,6 +8712,16 @@
           },
           "last": {
             "type": "integer"
+          },
+          "processed": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProcessedAudio"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "reverse": {
             "type": "boolean"
@@ -19535,6 +19559,65 @@
           }
         ],
         "summary": "Measure the sound with and without the audio processors"
+      }
+    },
+    "/api/v1/projects/{id}/audio-previews/{key}": {
+      "get": {
+        "operationId": "audio_previews.get",
+        "parameters": [
+          {
+            "description": "A frame of the item: the 2 seconds from it are rendered first, as a window.",
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Download the processed sound of an item, or start rendering it"
       }
     },
     "/api/v1/projects/{id}/bitmaps/{key}": {
