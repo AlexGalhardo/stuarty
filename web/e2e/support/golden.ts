@@ -925,9 +925,13 @@ export async function compareFrame(
 	expect
 		.soft(ssim, `${name} frame ${frame}: SSIM(luma)`)
 		.toBeGreaterThanOrEqual(MIN_SSIM);
-	// A group at an opacity dims the red and blue markers below what the marker
-	// search tells from the rest, so its displacement is not measured: the SSIM
-	// and the mean colour hold the picture.
+	// The nested projects are made of the smooth gradient clips: they have too
+	// little edge for the global shift (a texture of 0.002 to 0.01, under
+	// MIN_TEXTURE) and no red or blue marker, so the chroma centroids of the
+	// fallback move with the blend and the opacity and say nothing of where the
+	// group is. Their displacement is not measured: the SSIM and the mean colour
+	// hold the picture, and the group-picture case (support/nested.ts), a picture
+	// with edges in a group, measures the displacement of a group.
 	const moved = GROUP_CASE.test(name) ? 0 : shift.distance;
 	expect
 		.soft(moved, `${name} frame ${frame}: picture displacement`)
