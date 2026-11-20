@@ -332,7 +332,7 @@ func (s *svc) documentAt(
 	path string,
 ) (*timeline.Document, error) {
 	log := &revisionLog[*timeline.Document]{
-		noun:      "timeline",
+		noun:      timelineNoun,
 		idKey:     "project_id",
 		id:        project,
 		current:   current,
