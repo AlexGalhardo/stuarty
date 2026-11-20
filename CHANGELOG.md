@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.0] - 2026-11-20
+
+### Added
+
+- **command:** Revert a document to an earlier revision as a batch ([5812333](https://github.com/AlexGalhardo/stuarty/commit/581233395ffa7d4069ef76f2ad4a4a396961eba9))
+- **service:** Checkpoints on revisions and the automatic one before an agent's first edit ([fac6697](https://github.com/AlexGalhardo/stuarty/commit/fac669756e868f503e8c90e1581a26ecbc5f5a23))
+- **export:** Add the export presets and the fit check to the core ([b44dd8e](https://github.com/AlexGalhardo/stuarty/commit/b44dd8e1fc36e5b28f283e96e4951da38b7a429c))
+- **api:** Revert, diff and checkpoints on the CLI, HTTP and MCP surfaces ([9a9b40e](https://github.com/AlexGalhardo/stuarty/commit/9a9b40e641e5c5df513cbcce1e2bbbdd70d5fc4a))
+- **export:** Write HEVC and AV1 and check the preset on the file ([0c44e9f](https://github.com/AlexGalhardo/stuarty/commit/0c44e9f676a09d3bfb923d25b65530845863d33a))
+- **ui:** Revert to here, compare two steps and checkpoints in the history panel ([3c917b9](https://github.com/AlexGalhardo/stuarty/commit/3c917b9a2a15f36cda6fff0ffda07bcecfa4ed1e))
+- **ui:** Choose platforms, codec and batches in the export dialog ([edae700](https://github.com/AlexGalhardo/stuarty/commit/edae70059e89f837b0e62c021682023469c9701e))
+- **ui:** Ask the guided briefing on the overview of a project ([355b49e](https://github.com/AlexGalhardo/stuarty/commit/355b49e674ba68eedaaad03e7b5d4814d821a76e))
+- **library:** Write the router, briefing, recall, retro and fetch-clip skills ([f7d7078](https://github.com/AlexGalhardo/stuarty/commit/f7d7078979bafc4319b5891aac2dc5fe65b25b96))
+- **library:** Adapt the writing skills with attribution and keep the licences ([b90d41d](https://github.com/AlexGalhardo/stuarty/commit/b90d41d4b0676941a21e24adf5e2fc2126771dc0))
+- **core:** Add the pure rules of the asset library ([0aea240](https://github.com/AlexGalhardo/stuarty/commit/0aea2409d0818ed7bb14145b501520b07d3e8ca5))
+- **web:** Add the asset library tables and the migration of existing workspaces ([f6c4fe9](https://github.com/AlexGalhardo/stuarty/commit/f6c4fe94dae8aa19403814a01d9b41b9fc2f4320))
+- **service:** Add the asset library operations, origin on import and reuse by hash ([c12cef2](https://github.com/AlexGalhardo/stuarty/commit/c12cef21354dadbb2f93e993fefbab6e87a363fd))
+- **api:** Expose the asset library on HTTP, the CLI and the media tools ([511ad3f](https://github.com/AlexGalhardo/stuarty/commit/511ad3fec19a5960f4b62f9e26cc6a89eced6706))
+- **service:** Add the Meta sign-in, the account picker and the Graph client ([8b3f586](https://github.com/AlexGalhardo/stuarty/commit/8b3f586f7bda5bb5a4b2d2eb2ed13c2ccff0c88b))
+- **core:** Add the Reel limits, the caption and the media facts to publish ([1879755](https://github.com/AlexGalhardo/stuarty/commit/18797554864dc191a84cfee307cd515877f0caed))
+- **service:** Publish a Reel to a Facebook Page in three steps ([a10d088](https://github.com/AlexGalhardo/stuarty/commit/a10d088cba2b5236fd3ff54893e8925563d81bfa))
+- **mcp:** Route edit and history by domain and drop the operation enum ([7ab60e4](https://github.com/AlexGalhardo/stuarty/commit/7ab60e4e1794cabcc79216438a93525764e115c2))
+- **cli:** Group the commands by domain and keep the former names as aliases ([9ff15b1](https://github.com/AlexGalhardo/stuarty/commit/9ff15b174bfdb7dd618a99661959d0ada1f4b728))
+- **command:** Check the agent surface budget and wire it into lint ([7a20538](https://github.com/AlexGalhardo/stuarty/commit/7a205386c9f18223196348eb30f70b66938ba252))
+- **service:** Add image and speech generation to the OpenAI adapter ([2a65279](https://github.com/AlexGalhardo/stuarty/commit/2a652798e5d7b2afabfb04716eb81ae7c71f5ba2))
+- **service:** Add the image and voice generation jobs with estimate, ledger and assets ([f322692](https://github.com/AlexGalhardo/stuarty/commit/f322692b333fa21a8bca5f2f6f761eb87a266265))
+
+### Fixed
+
+- **ui:** Take the required slots of a template from the core lint ([e7386f0](https://github.com/AlexGalhardo/stuarty/commit/e7386f0e1643eb4436795a64512473e87d1ed336))
+- **ui:** Render the asset names of the image picker as untrusted text ([28a3e53](https://github.com/AlexGalhardo/stuarty/commit/28a3e5330bb2d9de26137291e9514efba3001276))
+- **ffmpeg:** Never take an HEVC or AV1 encoder as the H.264 one ([7e99997](https://github.com/AlexGalhardo/stuarty/commit/7e99997d960c886b3db1e1822f249527322af9f3))
+- **mcp:** Let lint check a range against an export preset ([55eb9af](https://github.com/AlexGalhardo/stuarty/commit/55eb9afb4a406de12eb90a89fe1ebe860e2a3ac9))
+- **service:** Give the preset limits in the list text as the sources state them ([7f35f7e](https://github.com/AlexGalhardo/stuarty/commit/7f35f7ea17e9c7c1a77cecbadfaf48ea474f01fe))
+- **service:** Let a project-limited key reach the history of every timeline of its project ([40fada3](https://github.com/AlexGalhardo/stuarty/commit/40fada33bfb7955dffd51bd1f548f960e93de35c))
+- **store:** Leave a jobs table that has no closed list of kinds alone ([16868cc](https://github.com/AlexGalhardo/stuarty/commit/16868cc0621f526b0a1511adc7174a6ec4a4749e))
+- **store:** Keep the export batches when the approval rebuild of jobs goes down ([ee713e6](https://github.com/AlexGalhardo/stuarty/commit/ee713e6fc046bd07609cfb5fea76cb86ce09daa5))
+- **ui:** Hold the revert of the history panel to the revision of its preview ([25bd2c5](https://github.com/AlexGalhardo/stuarty/commit/25bd2c51e9e3813003bb638df5ae1df8550c440f))
+- **service:** Keep a brief written by hand with the briefing headings ([4dcbc3a](https://github.com/AlexGalhardo/stuarty/commit/4dcbc3a634d64ed0ed0dcaf1adb28978549658f6))
+- **library:** Correct the commands and arguments the built-in skills give ([05d3981](https://github.com/AlexGalhardo/stuarty/commit/05d3981fd634aa387785ba6852388e98932d0d39))
+- **mcp:** Fit tools/list in its budget with the asset library ([c859da1](https://github.com/AlexGalhardo/stuarty/commit/c859da1da29489c35cd82d949527995fa58bed0a))
+- **cli:** Hold the workspace lock in the fake owner of the client-mode tests ([92c839e](https://github.com/AlexGalhardo/stuarty/commit/92c839ee783827b19fd1bb2df678dd6983df2406))
+- **command:** Stop telling agents the publish and provider domains have no operations ([e47f77f](https://github.com/AlexGalhardo/stuarty/commit/e47f77f81488db61820d7152f3b99209c00afd7d))
 ## [0.32.0] - 2026-11-20
 
 ### Added
@@ -1501,7 +1544,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.32.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.33.0...HEAD
+[0.33.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.32.0...v0.33.0
 [0.32.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.31.0...v0.32.0
 [0.31.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.30.0...v0.31.0
 [0.30.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.29.0...v0.30.0
