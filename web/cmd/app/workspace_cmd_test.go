@@ -244,6 +244,47 @@ func TestWorkspaceBackupCommandsRestoreRefusesAWorkspaceWithData(t *testing.T) {
 	}
 }
 
+// With STUARTY_URL set, workspace.Open returns a remote session with no folder and no lock: the restore
+// must refuse instead of writing the backup into the current directory.
+func TestWorkspaceBackupCommandsRestoreRefusesARemoteSession(t *testing.T) {
+	key := newKeyFile(t)
+	home := seedWorkspace(t, key)
+	backup := filepath.Join(t.TempDir(), "backup")
+
+	var r wsRun
+	if code := r.run(t, home, key, "workspace:backup", backup); code != 0 {
+		t.Fatalf("backup exit %d: %s", code, r.err.String())
+	}
+
+	cwd := t.TempDir()
+	t.Chdir(cwd)
+
+	var out, errOut bytes.Buffer
+
+	code := runWorkspace(t.Context(), "workspace:restore", []string{backup}, workspaceIO{
+		Out: &out, Err: &errOut,
+		Getenv: func(k string) string {
+			switch k {
+			case workspace.EnvURL:
+				return "https://stuarty.example.invalid"
+			case workspace.EnvKey:
+				return "a-key"
+			case vault.EnvMasterKeyFile:
+				return key
+			}
+
+			return ""
+		},
+	})
+	if code == 0 || !strings.Contains(errOut.String(), workspace.EnvURL) {
+		t.Errorf("restore with %s set: exit %d, %q", workspace.EnvURL, code, errOut.String())
+	}
+
+	if left, _ := os.ReadDir(cwd); len(left) != 0 {
+		t.Errorf("the refused restore wrote into the current directory: %v", left)
+	}
+}
+
 func TestWorkspaceBackupCommandsArguments(t *testing.T) {
 	t.Parallel()
 
