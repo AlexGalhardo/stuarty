@@ -12,6 +12,7 @@ The product was a video editor called Vukem Video until 2026-11-18, when it beca
 - **The SDDs specify the video editor as built, up to release 0.29.0.** Each one that the turn affects starts with an "Amended" line that names the ADRs to read with it. A new domain (image, publishing, providers and the others) gets its specification from the epic that builds it, before code.
 - **The former name** is in SDD-000 section 13, with the old variables, folder and identifiers that are still read (ADR-0044). Four SDDs (SDD-000, SDD-002, SDD-003, SDD-007) are read by tests and by the site generator.
 - **`security-review-1.0.md` and `agent-benchmark.md` are records** of a review and of benchmark rounds of the editor; they are not rewritten.
+- **`security-review-stuarty.md` and `quality/` belong to the quality campaigns** of epic 42 (SDD-008 section 13): the security review of Stuarty, kept open until its findings are closed, and the dated reports of the fuzz, soak and other campaigns.
 
 ## Reading map
 
