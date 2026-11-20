@@ -39,7 +39,7 @@ A creator who also posts on X and TikTok handles them from the same calendar, wi
 - [x] 3. Implement the X adapter with contract fixtures. Verify: `go test ./service/social/x/...` passes with no network.
 - [x] 4. Implement the TikTok adapter with contract fixtures. Verify: `go test ./service/social/tiktok/...` passes with no network.
 - [x] 5. Show cost and the draft state in the approval, the calendar and the publication editor; write the two guides; both languages. Verify: `task test:web` and `web/e2e/specs/x-tiktok.spec.ts` pass with fake servers.
-- [ ] 6. One real post on X and one real draft on TikTok by the author, or marked as not verified. Verify: the result or the note is in the hand-off.
+- [x] 6. One real post on X and one real draft on TikTok by the author, or marked as not verified. Verify: the result or the note is in the hand-off. Marked as not verified: it needs the author's own apps, real accounts and money; the list of what only they can verify is in SDD-020 section 40.
 
 ## Test strategy
 
