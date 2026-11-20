@@ -81,9 +81,16 @@ type previewKeyed struct {
 // JSON with the content hash of its asset. The same input gives the same key (a map is written in key order).
 func PreviewKey(doc *timeline.Document, src *AudioSource) string {
 	b, err := json.Marshal(previewKeyed{
-		Version: PreviewVersion, Asset: doc.Assets[src.AssetID].Hash, FPS: doc.Settings.FPS,
-		SourceStart: src.SourceStart, Samples: src.Samples, Speed: src.Speed, Curve: src.Curve, Reverse: src.Reverse, Denoise: src.Denoise,
-		Chain: src.Chain,
+		Version:     PreviewVersion,
+		Asset:       doc.Assets[src.AssetID].Hash,
+		FPS:         doc.Settings.FPS,
+		SourceStart: src.SourceStart,
+		Samples:     src.Samples,
+		Speed:       src.Speed,
+		Curve:       src.Curve,
+		Reverse:     src.Reverse,
+		Denoise:     src.Denoise,
+		Chain:       src.Chain,
 	})
 	if err != nil {
 		// The input is numbers and strings: it cannot fail.
