@@ -148,6 +148,7 @@ func run() error {
 	// A dialog shown before the loop runs is dropped (VV-006), so the launcher starts with the loop.
 	app.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(*application.ApplicationEvent) {
 		go confirmStart()
+		go bg.Reconcile()
 		if hidden {
 			bg.ensureTray()
 		}

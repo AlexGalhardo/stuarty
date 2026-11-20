@@ -32,6 +32,8 @@ type background struct {
 	srv *shell.Server
 	// dir is the folder of background.json.
 	dir string
+	// reg is the registration of the start at sign-in.
+	reg service.Registrar
 
 	// quitting is set before every quit of the application, so closing a window then never hides it.
 	quitting atomic.Bool
@@ -46,7 +48,35 @@ type background struct {
 }
 
 func newBackground(app *application.App, srv *shell.Server, dir string, s service.Settings) *background {
-	return &background{app: app, srv: srv, dir: dir, settings: s}
+	return &background{app: app, srv: srv, dir: dir, settings: s, reg: newRegistrar(app)}
+}
+
+// Reconcile makes the settings agree with the registration of the system at the start: a person who removed
+// the entry by hand has start at sign-in off here too.
+func (b *background) Reconcile() {
+	b.mu.Lock()
+	b.settings = service.Reconcile(b.settings, b.reg)
+	s := b.settings
+	b.mu.Unlock()
+
+	_ = service.Save(b.dir, s)
+}
+
+// SetSettings carries out the choice of the person: it registers or removes the start at sign-in, stores
+// the settings, and returns what holds now. When the system refuses the registration the option is off and
+// the error says why.
+func (b *background) SetSettings(s service.Settings) (service.Settings, error) {
+	applied, err := service.Apply(s, b.reg)
+
+	b.mu.Lock()
+	b.settings = applied
+	b.mu.Unlock()
+
+	if saveErr := service.Save(b.dir, applied); saveErr != nil && err == nil {
+		err = saveErr
+	}
+
+	return applied, err
 }
 
 // Settings is the current choice of the person.
