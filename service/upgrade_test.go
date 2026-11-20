@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -217,6 +218,64 @@ func done(steps map[string]string, name string) bool {
 	return ok && reason == ""
 }
 
+// upgradeEnv is what a binary under test needs on top of the process environment: the workspace and a
+// loopback port of its own. A release before v0.30.0 (named vukem-video, ADR-0044) reads only the former
+// names (SDD-000 section 13): given STUARTY_HOME alone it would open the person's own workspace, and its
+// serve, should the refusal of a newer workspace regress, would take the default port 7878 (VV-295).
+// HOST and PORT are read by every release.
+func upgradeEnv(t *testing.T, exe, ws string) []string {
+	t.Helper()
+
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	addr := l.Addr().String()
+	_ = l.Close()
+
+	_, port, _ := net.SplitHostPort(addr)
+	env := []string{workspace.EnvHome + "=" + ws, "STUARTY_ADDR=" + addr, "HOST=127.0.0.1", "PORT=" + port}
+
+	if strings.HasPrefix(filepath.Base(exe), "vukem-video") {
+		env = append(env, "VUKEM_VIDEO_HOME="+ws, "VUKEM_VIDEO_ADDR="+addr)
+	}
+
+	return env
+}
+
+func TestUpgradeEnvGivesEveryReleaseItsOwnWorkspaceAndPort(t *testing.T) {
+	ws := t.TempDir()
+
+	for _, exe := range []string{"stuarty", "stuarty.exe", "vukem-video", "vukem-video.exe"} {
+		env := upgradeEnv(t, filepath.Join(t.TempDir(), "v0.29.0", exe), ws)
+		former := strings.HasPrefix(exe, "vukem-video")
+
+		want := []string{workspace.EnvHome, "STUARTY_ADDR", "HOST", "PORT"}
+		if former {
+			want = append(want, "VUKEM_VIDEO_HOME", "VUKEM_VIDEO_ADDR")
+		}
+
+		got := map[string]string{}
+
+		for _, kv := range env {
+			k, v, _ := strings.Cut(kv, "=")
+			got[k] = v
+		}
+
+		for _, k := range want {
+			v := got[k]
+			if v == "" || strings.HasSuffix(v, ":7878") || v == "7878" {
+				t.Errorf("%s: %s=%q, want a value of its own", exe, k, v)
+			}
+		}
+
+		if got[workspace.EnvHome] != ws || former && got["VUKEM_VIDEO_HOME"] != ws {
+			t.Errorf("%s: the workspace is not the one under test: %v", exe, env)
+		}
+	}
+}
+
 // run runs a command line of a binary on a workspace and returns its output and exit code.
 func run(t *testing.T, exe, ws string, args ...string) (string, int) {
 	t.Helper()
@@ -225,7 +284,7 @@ func run(t *testing.T, exe, ws string, args ...string) (string, int) {
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, exe, args...)
-	cmd.Env = append(os.Environ(), workspace.EnvHome+"="+ws)
+	cmd.Env = append(os.Environ(), upgradeEnv(t, exe, ws)...)
 
 	var buf bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &buf, &buf
