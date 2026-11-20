@@ -170,7 +170,7 @@ func TestPublishAndApprovalsAreTheSameOnEverySurface(t *testing.T) {
 // D-093: reading the queue and starting a publication on MCP cannot decide. No member of job_get or job_start
 // approves, rejects or publishes: the input schema refuses it, the request stays pending and the job stays
 // waiting_approval.
-func TestSecurity_T50_MCPCannotApproveRejectOrPublish(t *testing.T) {
+func TestSecurity_T48_MCPCannotApproveRejectOrPublish(t *testing.T) {
 	d := newMCP(t).(*mcpDriver)
 	svc := d.service()
 
