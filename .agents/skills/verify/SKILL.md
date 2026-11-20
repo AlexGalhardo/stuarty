@@ -24,6 +24,7 @@ Run it from the repository or worktree root, with `STUARTY_TEST_FFMPEG_DIR` set 
   - the commit headers (`skills/ci-preflight/scripts/check-commits.sh`);
   - the flaky-pattern check (`scripts/check-flaky-patterns.sh`, section 5).
 - **Go files changed:** `gofmt`, `go build ./...`, then `go vet`, `go test -count=1` and `golangci-lint` on the touched packages.
+- **Only `go.mod` or `go.sum` changed** (a module added, edited or deleted): `go build ./...` of the root module and of each changed module that still exists.
 - **`web/app`, `core/schema` or agent docs changed:** `go run ./web/cmd/gen-agent-docs -check`.
 - **`web/` UI changed:** `bun run lint`, `typecheck`, `check:thin-client`, `check:i18n`, `bunx vitest run`.
 - **`site/` or the reference changed:** `check:last-updated` and `reference:check`.
