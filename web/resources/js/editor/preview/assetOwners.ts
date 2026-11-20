@@ -1,4 +1,4 @@
-import type { PlanWindow } from "../api/types";
+import type { PlanWindow, PlanWindowLayer } from "../api/types";
 
 // A layer or a sound that comes from a composition names its asset by the id
 // it has in the nested timeline, and says which timeline that is (SDD-004
@@ -8,17 +8,23 @@ import type { PlanWindow } from "../api/types";
 export class AssetOwners {
 	private readonly owners = new Map<string, string>();
 
-	// Remembers the owners named by a plan window. A timeline that is not
-	// named in the window keeps what it had: the decoders ask for an asset
-	// after the window that named it may have been replaced.
+	// Remembers the owners named by a plan window, the layers of a group
+	// included. A timeline that is not named in the window keeps what it had:
+	// the decoders ask for an asset after the window that named it may have
+	// been replaced.
 	note(plan: PlanWindow): void {
-		for (const layer of plan.layers) {
-			if (layer.kind === "media" && layer.timeline !== undefined)
-				this.owners.set(layer.asset, layer.timeline);
-		}
+		this.noteLayers(plan.layers);
 		for (const audio of plan.audio) {
 			if (audio.timeline !== undefined)
 				this.owners.set(audio.asset, audio.timeline);
+		}
+	}
+
+	private noteLayers(layers: readonly PlanWindowLayer[]): void {
+		for (const layer of layers) {
+			if (layer.kind === "group") this.noteLayers(layer.group.layers);
+			else if (layer.kind === "media" && layer.timeline !== undefined)
+				this.owners.set(layer.asset, layer.timeline);
 		}
 	}
 
