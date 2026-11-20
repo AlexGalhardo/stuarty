@@ -24,7 +24,10 @@ func briefingTool(
 		return &toolOutput{value: res, text: res.Text}, nil
 	}
 
-	res, err := svc.BriefingAnswer(ctx, service.BriefingAnswerRequest{ProjectID: projectID, Kind: kind, Answers: answers})
+	res, err := svc.BriefingAnswer(
+		ctx,
+		service.BriefingAnswerRequest{ProjectID: projectID, Kind: kind, Answers: answers},
+	)
 	if err != nil {
 		return nil, err
 	}

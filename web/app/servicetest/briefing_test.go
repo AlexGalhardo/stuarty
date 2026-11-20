@@ -215,7 +215,10 @@ func TestBriefingServesTheKindOfProduction(t *testing.T) {
 		t.Fatalf("commercial questions: %+v %v", q, err)
 	}
 
-	if _, err := e.svc.BriefingAnswer(ctx, service.BriefingAnswerRequest{ProjectID: id, Answers: briefingAnswers()}); err != nil {
+	if _, err := e.svc.BriefingAnswer(
+		ctx,
+		service.BriefingAnswerRequest{ProjectID: id, Answers: briefingAnswers()},
+	); err != nil {
 		t.Fatalf("the default kind is short: %v", err)
 	}
 
@@ -244,7 +247,10 @@ func TestBriefingServesTheKindOfProduction(t *testing.T) {
 		}
 	}
 
-	if _, err := e.svc.BriefingAnswer(ctx, service.BriefingAnswerRequest{ProjectID: id, Kind: "podcast", Answers: ad}); err == nil {
+	if _, err := e.svc.BriefingAnswer(
+		ctx,
+		service.BriefingAnswerRequest{ProjectID: id, Kind: "podcast", Answers: ad},
+	); err == nil {
 		t.Error("an unknown kind was answered")
 	}
 }

@@ -23,7 +23,10 @@ type briefingAnswerIn struct {
 }
 
 func (h *apiHandler) briefingQuestions(c *web.Ctx, in briefingQuestionsIn) (service.BriefingQuestionsResult, error) {
-	res, err := h.Service.BriefingQuestions(c.Context(), service.BriefingQuestionsRequest{ProjectID: in.ProjectID, Kind: in.Kind})
+	res, err := h.Service.BriefingQuestions(
+		c.Context(),
+		service.BriefingQuestionsRequest{ProjectID: in.ProjectID, Kind: in.Kind},
+	)
 
 	return deref(res), err
 }

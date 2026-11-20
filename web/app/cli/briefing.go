@@ -21,7 +21,10 @@ var briefingQuestionsCmd = &spec{
 		{Name: "kind", Kind: kindString, Usage: "the kind of production: short (the default), commercial or long"},
 	},
 	run: func(ctx context.Context, c *call) (*output, error) {
-		res, err := c.svc.BriefingQuestions(ctx, service.BriefingQuestionsRequest{ProjectID: c.args.str("project"), Kind: c.args.str("kind")})
+		res, err := c.svc.BriefingQuestions(
+			ctx,
+			service.BriefingQuestionsRequest{ProjectID: c.args.str("project"), Kind: c.args.str("kind")},
+		)
 		if err != nil {
 			return nil, err
 		}
