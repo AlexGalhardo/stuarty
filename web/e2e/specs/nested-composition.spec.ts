@@ -21,6 +21,7 @@ test.describe("nested composition", () => {
 		await expect(page.locator("[data-item-id]")).toHaveCount(2);
 
 		const first = page.locator("[data-item-id]").first();
+		const moved = await first.getAttribute("data-item-id");
 		await first.click();
 		await first.click({ button: "right" });
 		await page
@@ -65,6 +66,17 @@ test.describe("nested composition", () => {
 		})) as { revision: number; created: string[] };
 		const track = added.created[0];
 		if (track === undefined) throw new Error("no track was created");
+		// The open editor of the parent hears nested.updated and asks for its plan
+		// again, which now holds the text of the child (SDD-006 section 3.3.1).
+		const replanned = page.waitForResponse(async (response) => {
+			if (!response.url().includes(`/projects/${seeded.id}/plan`)) return false;
+			const body = (await response.json()) as { layers: { item: string }[] };
+			return body.layers.some(
+				(layer) =>
+					layer.item.startsWith(`${made.id}/`) &&
+					layer.item !== `${made.id}/${moved}`,
+			);
+		});
 		await call("POST", `/projects/${made.timeline}/edit`, {
 			timeline_id: made.timeline,
 			base_revision: added.revision,
@@ -79,6 +91,7 @@ test.describe("nested composition", () => {
 		const after = await planOf();
 		expect(after.revision).toBe(before.revision);
 		expect(after.layers).toBe(before.layers + 1);
+		await replanned;
 
 		// Double click opens the nested timeline; the breadcrumb comes back.
 		await page.locator(`[data-item-id="${made.id}"]`).dblclick();

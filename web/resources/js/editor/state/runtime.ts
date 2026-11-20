@@ -89,6 +89,9 @@ export interface EditorRuntime {
 	historyControls: HistoryController;
 	notices: ReadStore<NoticeState>;
 	noticeWriter: NoticeWriter;
+	// Calls back when a timeline this one uses as a composition changed
+	// (nested.updated, SDD-006 section 3.3.1); returns the unsubscribe.
+	onNestedUpdated(listener: () => void): () => void;
 	// Loads the document and opens the stream, then the media list and the jobs.
 	start(): Promise<void>;
 	// Imports each path with one request and refreshes the list (SDD-012 13.1).
@@ -151,9 +154,15 @@ export function createRuntime(options: RuntimeOptions): EditorRuntime {
 		}
 	}
 
-	// asset.updated and job.updated carry no revision (SDD-006 section 3).
+	// The preview asks for its windows again on nested.updated (SDD-006 section 3.3.1).
+	const nestedListeners = new Set<() => void>();
+
+	// asset.updated, job.updated and nested.updated carry no revision of this
+	// timeline (SDD-006 section 3).
 	function onSideEvent(event: ProjectEvent): void {
-		if (event.name === "asset.updated") {
+		if (event.name === "nested.updated") {
+			for (const listener of [...nestedListeners]) listener();
+		} else if (event.name === "asset.updated") {
 			libraryWriter.patch(event.asset_id, {
 				state: event.state,
 				progress: event.progress,
@@ -291,6 +300,12 @@ export function createRuntime(options: RuntimeOptions): EditorRuntime {
 		historyControls,
 		notices,
 		noticeWriter,
+		onNestedUpdated(listener) {
+			nestedListeners.add(listener);
+			return () => {
+				nestedListeners.delete(listener);
+			};
+		},
 		async start() {
 			await sync.start();
 			await Promise.all([loadLibrary(), loadJobs(), historyControls.refresh()]);

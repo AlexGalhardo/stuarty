@@ -185,6 +185,7 @@ An actor string is one of `user:<id>`, `key:<key id>`, `local:<label>`. `<label>
 | --- | --- | --- |
 | `batch.committed` | a batch was committed | `revision`, `actor`, `diff`, `at` |
 | `project.updated` | project metadata outside the document changed (trash, restore) | `project_id`, `state` |
+| `nested.updated` | a timeline that this one uses as a composition, directly or through others, committed a batch (SDD-006 §3.3.1) | `project_id`, `timeline_id`, `revision`, `at` |
 | `asset.updated` | an asset's ingest state or progress changed | `asset_id`, `state`, `progress` |
 | `job.updated` | a job's state or progress changed | `job_id`, `kind`, `state`, `progress`, `message` |
 | `resync.required` | the client is too far behind to replay | `revision` |
