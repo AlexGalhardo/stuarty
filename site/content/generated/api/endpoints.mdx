@@ -265,6 +265,7 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/handshake` | [`handshake.get`](/docs/api/handshake.get) | Prove that the server knows the local token |
 | `GET` | `/api/v1/system` | [`system.get`](/docs/api/system.get) | Read the diagnostic report |
 | `POST` | `/api/v1/system/launch` | [`system.launch`](/docs/api/system.launch) | Issue a one-time browser launch code |
+| `POST` | `/api/v1/system/scheduler` | [`system.scheduler`](/docs/api/system.scheduler) | Read, pause or resume the publication scheduler (pause and resume only for the desktop shell) |
 | `GET` | `/api/v1/system/tools` | [`system.tools`](/docs/api/system.tools) | List the installed helpers and the install progress |
 | `POST` | `/api/v1/system/tools/install` | [`system.tools.install`](/docs/api/system.tools.install) | Install the transcription helper (a browser session or an admin key only; the local token gets 403) |
 
