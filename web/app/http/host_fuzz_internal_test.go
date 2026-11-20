@@ -56,3 +56,32 @@ func FuzzHostCheck(f *testing.F) {
 		}
 	})
 }
+
+// FuzzSignInRedirect (SDD-007 section 3.6 item 4): of every request, only a top-level navigation by GET to
+// exactly one of the two callback paths is the return of a consent screen; no other method, path (a prefix, a
+// suffix, a different case, a dot segment) or fetch metadata is.
+func FuzzSignInRedirect(f *testing.F) {
+	f.Add("GET", "/social/callback", "navigate", "document")
+	f.Add("GET", "/auth/callback", "navigate", "document")
+	f.Add("POST", "/auth/callback", "navigate", "document")
+	f.Add("GET", "/auth/callback/", "navigate", "document")
+	f.Add("GET", "/auth/../social/callback", "cors", "empty")
+
+	f.Fuzz(func(t *testing.T, method, path, mode, dest string) {
+		if strings.ContainsAny(method, " \r\n\t") || method == "" {
+			return
+		}
+
+		r := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", http.NoBody)
+		r.Method = method
+		r.URL.Path = path
+		r.Header.Set("Sec-Fetch-Mode", mode)
+		r.Header.Set("Sec-Fetch-Dest", dest)
+
+		want := method == http.MethodGet && (path == "/social/callback" || path == "/auth/callback") &&
+			mode == "navigate" && dest == "document"
+		if got := signInRedirect(r); got != want {
+			t.Fatalf("signInRedirect(%s %q, %q, %q) = %v, want %v", method, path, mode, dest, got, want)
+		}
+	})
+}
