@@ -54,6 +54,9 @@ type Pending struct {
 	// Actor is who began the flow and Browser whether it was a browser session.
 	Actor   string
 	Browser bool
+	// Created is true when the connection was made by this very flow, so a sign-in that fails does not leave it
+	// behind with no account (VV-323).
+	Created bool
 	Expires time.Time
 }
 

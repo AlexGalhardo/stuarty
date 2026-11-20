@@ -880,7 +880,7 @@
         "E_CHAT_NOT_FOUND": "No such conversation",
         "E_AGENT_UNAVAILABLE": "The agent could not be started",
         "E_COST_CEILING": "Over a cost ceiling",
-        "E_PUBLISH": "The network refused or failed the publication",
+        "E_PUBLISH": "The network refused or failed the request",
         "E_PROVIDER": "The AI provider refused or failed",
         "E_PRICE_UNKNOWN": "No price for that model",
         "E_APPROVAL_NOT_FOUND": "No such request or rule",

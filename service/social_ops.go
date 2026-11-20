@@ -196,6 +196,7 @@ func (s *svc) SocialConnectBegin(
 
 	desc := conn.Describe()
 	connID, clientID := req.ConnectionID, strings.TrimSpace(req.ClientID)
+	madeHere := false
 
 	if connID == "" {
 		secret, berr := conn.Begin(req.ClientID, req.ClientSecret)
@@ -225,7 +226,7 @@ func (s *svc) SocialConnectBegin(
 			return nil, ierr
 		}
 
-		connID = created.ID
+		connID, madeHere = created.ID, true
 	} else {
 		existing, gerr := s.conns.Get(ctx, connID)
 		if gerr != nil {
@@ -253,6 +254,7 @@ func (s *svc) SocialConnectBegin(
 
 	state, challenge := s.flows.Begin(oauth.Pending{
 		ConnectionID: connID, Network: desc.Network, RedirectURI: req.RedirectURI, Actor: c.Actor, Browser: c.Browser,
+		Created: madeHere,
 	})
 
 	// A network whose consent address is not the generic one (TikTok's, SDD-020 section 34) builds its own.
@@ -304,6 +306,8 @@ func (s *svc) SocialConnectComplete(ctx context.Context, req SocialConnectComple
 	}
 
 	if req.Error != "" || req.Code == "" {
+		s.dropUnfinished(ctx, c, p)
+
 		return nil, validationAt("code", "the network did not give a code: the sign-in was refused or cancelled.").
 			withHint("start the sign-in again and accept the permissions")
 	}
@@ -323,6 +327,8 @@ func (s *svc) SocialConnectComplete(ctx context.Context, req SocialConnectComple
 		return xerr
 	})
 	if werr != nil {
+		s.dropUnfinished(ctx, c, p)
+
 		return nil, s.socialError(werr)
 	}
 
@@ -349,6 +355,33 @@ func (s *svc) SocialConnectComplete(ctx context.Context, req SocialConnectComple
 	describeAccount(conn, newSecret, &out)
 
 	return &out, nil
+}
+
+// dropUnfinished removes the connection a failed sign-in made, so a person who tries again does not meet a
+// "Fake network" with no account for every attempt (VV-323). A connection that was there before the sign-in
+// began, and so may hold an account, is never touched. The failure the person reads is the sign-in's, so an
+// error here is not added to it.
+func (s *svc) dropUnfinished(ctx context.Context, c Caller, p oauth.Pending) {
+	if !p.Created {
+		return
+	}
+
+	row, err := s.store.Connections().Get(ctx, p.ConnectionID)
+	if err != nil {
+		return
+	}
+
+	if s.conns.DeleteSecret(row.SecretRef) != nil {
+		return
+	}
+
+	_ = s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
+		if err := tx.Connections().Delete(ctx, row.ID); err != nil {
+			return err
+		}
+
+		return appendAudit(ctx, tx, s.nowMs(), c.Actor, "connection.remove", "", row.ID)
+	})
 }
 
 // describeAccount fills the account and the state of a connection from its secret: ready with the account it

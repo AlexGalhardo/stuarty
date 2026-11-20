@@ -393,6 +393,77 @@ func TestSocialSignInRefusedByTheNetwork(t *testing.T) {
 	}
 }
 
+// VV-323: a sign-in that fails does not leave a connection with no account behind, whether the person
+// cancelled or the network refused the code; signing in again from a connection that was there stays possible.
+func TestSocialFailedSignInLeavesNoConnection(t *testing.T) {
+	e := newSocialEnv(t)
+	person := e.browser(ui)
+
+	count := func() int {
+		list, err := e.svc.ConnectionList(person, service.ConnectionListRequest{})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		return len(list.Connections)
+	}
+
+	begun := e.begin(person)
+	if count() != 1 {
+		t.Fatalf("begin made %d connections, want 1", count())
+	}
+
+	if _, err := e.ops.SocialConnectComplete(
+		person, service.SocialConnectCompleteRequest{State: stateOf(t, begun.AuthorizeURL), Error: "access_denied"},
+	); err == nil {
+		t.Fatal("a cancelled consent was accepted")
+	}
+
+	if count() != 0 {
+		t.Errorf("a cancelled sign-in left %d connections", count())
+	}
+
+	e.net.badCode = true
+	begun = e.begin(person)
+
+	if _, err := e.ops.SocialConnectComplete(
+		person, service.SocialConnectCompleteRequest{State: stateOf(t, begun.AuthorizeURL), Code: "stale"},
+	); err == nil {
+		t.Fatal("a refused code was accepted")
+	}
+
+	if count() != 0 {
+		t.Errorf("a refused code left %d connections", count())
+	}
+
+	// A connection that was signed in before keeps standing when a later sign-in fails.
+	e.net.badCode = false
+	begun = e.begin(person)
+
+	if _, err := e.ops.SocialConnectComplete(
+		person, service.SocialConnectCompleteRequest{State: stateOf(t, begun.AuthorizeURL), Code: "c"},
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	again, err := e.ops.SocialConnectBegin(person, service.SocialConnectBeginRequest{
+		Network: fake.Network, ConnectionID: begun.ConnectionID, RedirectURI: redirect,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := e.ops.SocialConnectComplete(
+		person, service.SocialConnectCompleteRequest{State: stateOf(t, again.AuthorizeURL), Error: "access_denied"},
+	); err == nil {
+		t.Fatal("a cancelled consent was accepted")
+	}
+
+	if count() != 1 {
+		t.Errorf("a failed sign-in again removed the connection that was there: %d", count())
+	}
+}
+
 func TestSocialBeginValidatesTheRequest(t *testing.T) {
 	e := newSocialEnv(t)
 	person := e.browser(ui)
