@@ -473,6 +473,7 @@
         "size": "Tamanho",
         "original": "Original ({w} × {h})",
         "quality": "Qualidade",
+        "lossless": "Sem perdas",
         "findings": "Problemas encontrados",
         "no_findings": "Nenhum problema encontrado. A imagem está pronta para exportar.",
         "error": "Erro",
