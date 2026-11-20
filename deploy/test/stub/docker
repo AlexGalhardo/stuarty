@@ -7,6 +7,7 @@
 #   STUB_BIN              the real stuarty binary that `compose run ... stuarty <args>` runs
 #   STUB_FAIL_VERSIONS    space separated versions whose container never becomes healthy
 #   STUB_BUILD_FAIL       a version whose build fails
+#   STUB_WRITE_VERSIONS   versions that write to the data when they start (a migration)
 set -uo pipefail
 : "${STUB_STATE:?}"
 mkdir -p "$STUB_STATE"
@@ -84,6 +85,14 @@ case "${1:-}" in
 					exit 1
 				}
 				echo "$v" >"$STUB_STATE/running"
+				# A version that migrates the data on start: it adds a file and damages the database for older versions.
+				for w in ${STUB_WRITE_VERSIONS:-}; do
+					if [ "$w" = "$v" ] && [ -n "${STUB_DATA:-}" ]; then
+						mkdir -p "$STUB_DATA/store/zz"
+						echo "written by $v" >"$STUB_DATA/store/zz/written-by-$v"
+						echo "migrated to $v" >>"$STUB_DATA/db.sqlite"
+					fi
+				done
 				exit 0
 				;;
 			down | stop)
