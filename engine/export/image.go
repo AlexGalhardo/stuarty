@@ -58,7 +58,8 @@ func RenderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig) 
 	start, base := 0, (*image.RGBA)(nil)
 	if chain != nil {
 		start, base = cfg.Cache.nearest(cfg.CacheScope, chain)
-		if start == len(live) {
+		// with no layer to draw there is nothing cached (nearest starts at one layer): the canvas is drawn below
+		if base != nil && start == len(live) {
 			return cloneRGBA(base), nil
 		}
 	}
