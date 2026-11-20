@@ -62,9 +62,12 @@ func PreviewSource(doc *timeline.Document, itemID string, from, to int) (AudioSo
 }
 
 // previewKeyed is the canonical form that PreviewKey hashes: the fields of a source that change the bytes of its file.
+// The frame rate is one: the mixer reads a reversed source from the end of a source frame and a speed curve at frame
+// boundaries, so the same samples at another frame rate are another sound.
 type previewKeyed struct {
 	Version     int               `json:"v"`
 	Asset       string            `json:"asset"`
+	FPS         timeline.Rational `json:"fps"`
 	SourceStart int64             `json:"source_start"`
 	Samples     int64             `json:"samples"`
 	Speed       timeline.Rational `json:"speed"`
@@ -78,8 +81,8 @@ type previewKeyed struct {
 // JSON with the content hash of its asset. The same input gives the same key (a map is written in key order).
 func PreviewKey(doc *timeline.Document, src *AudioSource) string {
 	b, err := json.Marshal(previewKeyed{
-		Version: PreviewVersion, Asset: doc.Assets[src.AssetID].Hash, SourceStart: src.SourceStart,
-		Samples: src.Samples, Speed: src.Speed, Curve: src.Curve, Reverse: src.Reverse, Denoise: src.Denoise,
+		Version: PreviewVersion, Asset: doc.Assets[src.AssetID].Hash, FPS: doc.Settings.FPS,
+		SourceStart: src.SourceStart, Samples: src.Samples, Speed: src.Speed, Curve: src.Curve, Reverse: src.Reverse, Denoise: src.Denoise,
 		Chain: src.Chain,
 	})
 	if err != nil {

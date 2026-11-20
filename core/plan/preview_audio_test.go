@@ -105,3 +105,37 @@ func TestPreviewSubjectGivesTheSameSource(t *testing.T) {
 		t.Errorf("the subject renders another source: %+v and %+v", got, want)
 	}
 }
+
+// The mixer reads a reversed item from the end of a source frame and a speed curve at frame boundaries, so the frame
+// rate changes the samples: two projects whose sources are equal in samples at 30 and at 25 fps have two keys, and
+// one never plays the file of the other.
+func TestPreviewKeyHoldsTheFrameRate(t *testing.T) {
+	t.Parallel()
+
+	// 6 frames at 30 fps and 5 at 25 are 9600 samples; read backwards from source frame 1, both start at sample 9600.
+	sourceAt := func(fps timeline.Rational, frames int) (*timeline.Document, AudioSource) {
+		d := previewDoc()
+		d.Settings.FPS = fps
+		it := soundItem("itm_a", 0, hp)
+		it.Duration, it.SourceIn, it.Reverse = frames, 1, true
+		put(d, it)
+
+		src, ok := PreviewSource(d, "itm_a", 0, frames)
+		if !ok {
+			t.Fatal("no source")
+		}
+
+		return d, src
+	}
+
+	d30, s30 := sourceAt(timeline.Rational{Num: 30, Den: 1}, 6)
+	d25, s25 := sourceAt(timeline.Rational{Num: 25, Den: 1}, 5)
+
+	if s30.SourceStart != s25.SourceStart || s30.Samples != s25.Samples {
+		t.Fatalf("the sources differ in samples: %+v and %+v", s30, s25)
+	}
+
+	if PreviewKey(d30, &s30) == PreviewKey(d25, &s25) {
+		t.Error("a reversed source at 30 and at 25 fps has one key")
+	}
+}
