@@ -66,8 +66,17 @@ func (h *harness) fatCommit(project, track string, rev int64) (int64, time.Durat
 func (h *harness) checkpoint() {
 	h.t.Helper()
 
-	if _, err := h.store.DB().ExecContext(h.t.Context(), "PRAGMA wal_checkpoint(TRUNCATE)"); err != nil {
+	// SQLite reports a checkpoint it could not finish as busy, not as an error, and the WAL is then not
+	// emptied: the windows would start at different phases again without anything saying so.
+	var busy, log, done int
+
+	err := h.store.DB().SQL().QueryRowContext(h.t.Context(), "PRAGMA wal_checkpoint(TRUNCATE)").Scan(&busy, &log, &done)
+	if err != nil {
 		h.t.Fatal(err)
+	}
+
+	if busy != 0 || log != 0 {
+		h.t.Fatalf("the WAL was not emptied: busy %d, %d frames in the log, %d checkpointed", busy, log, done)
 	}
 }
 
