@@ -585,6 +585,7 @@ export async function capture(
 	page: Page,
 	id: string,
 	frame: number,
+	timelineId?: string,
 ): Promise<Capture> {
 	const canvas = page.getByRole("main", { name: "Preview" }).locator("canvas");
 	let previous: Buffer | null = null;
@@ -630,9 +631,9 @@ export async function capture(
 		.poll(
 			async () => {
 				const answer = await page.evaluate(
-					async ({ projectId, at, w }) => {
+					async ({ projectId, at, w, timeline }) => {
 						const response = await fetch(
-							`/api/v1/projects/${projectId}/frame?at=${at}f&width=${w}`,
+							`/api/v1/projects/${projectId}/frame?at=${at}f&width=${w}${timeline ? `&timeline_id=${timeline}` : ""}`,
 							{ headers: { Accept: "application/json" } },
 						);
 						if (response.status === 429) return { status: 429, image: "" };
@@ -644,7 +645,7 @@ export async function capture(
 						const body = (await response.json()) as { image_base64: string };
 						return { status: 200, image: body.image_base64 };
 					},
-					{ projectId: id, at: frame, w: width },
+					{ projectId: id, at: frame, w: width, timeline: timelineId },
 				);
 				if (answer.status === 200) exportedBase64 = answer.image;
 				return answer.status;
@@ -802,13 +803,14 @@ export async function compareFrame(
 	id: string,
 	frame: number,
 	label: string,
+	timelineId?: string,
 ): Promise<void> {
 	const {
 		canvas,
 		frame: exported,
 		canvasPng,
 		frameJpeg,
-	} = await capture(page, id, frame);
+	} = await capture(page, id, frame, timelineId);
 	const ssim = lumaSsim(canvas, exported);
 	if (ssim < MIN_SSIM) {
 		const videos = await page.evaluate(() =>
