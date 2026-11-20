@@ -127,7 +127,7 @@ if [ "$stable" -eq 1 ] && [ "$desktop" -eq 1 ]; then
 	gh release download "$version" -R "$repo" -p feed.json
 	bash "$script_dir/update-feed.sh" verify "$public_key" checksums.txt feed.json
 	if [ "$check_pages" -eq 1 ]; then
-		site="${SITE_URL:-https://video.vukem.dev}"
+		site="${SITE_URL:-https://stuarty.com}"
 		curl -fsSL "${site%/}/updates/feed.json" -o pages-feed.json
 		cmp feed.json pages-feed.json || {
 			echo "release-verify: GitHub Pages serves another feed than the release (deploy not finished? use --no-pages to skip)" >&2

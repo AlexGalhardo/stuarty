@@ -11,7 +11,7 @@ const root = path.dirname(fileURLToPath(import.meta.url));
 // SITE_URL is the public address. The default is the custom domain on GitHub Pages, so the base is "/".
 // An address with a path (a project site, https://<user>.github.io/<repo>) sets that path as the base
 // (SDD-010 section 12.4).
-const siteUrl = new URL(process.env.SITE_URL || "https://video.vukem.dev");
+const siteUrl = new URL(process.env.SITE_URL || "https://stuarty.com");
 const prefix = siteUrl.pathname.replace(/\/$/, "");
 const base = prefix || "/";
 

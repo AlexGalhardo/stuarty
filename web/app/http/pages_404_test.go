@@ -56,7 +56,7 @@ func TestUnauthenticatedPageSaysHowToSignIn(t *testing.T) {
 	body := string(page.body)
 
 	if page.status != http.StatusUnauthorized || !strings.Contains(page.header.Get("Content-Type"), "text/html") ||
-		!strings.Contains(body, "stuarty open") || !strings.Contains(body, "https://video.vukem.dev/docs/") {
+		!strings.Contains(body, "stuarty open") || !strings.Contains(body, "https://stuarty.com/docs/") {
 		t.Errorf("/projects as a browser = %d %s\n%.600s", page.status, page.header.Get("Content-Type"), body)
 	}
 

@@ -232,7 +232,7 @@ function main(): number {
 		console.error("out/ does not exist: run `npm run build` first");
 		return 1;
 	}
-	const siteUrl = new URL(process.env.SITE_URL || "https://video.vukem.dev");
+	const siteUrl = new URL(process.env.SITE_URL || "https://stuarty.com");
 	const base = siteUrl.pathname.replace(/\/$/, "");
 	const problems: string[] = [];
 	const files = walk(outDir);

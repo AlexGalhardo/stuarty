@@ -24,7 +24,7 @@ test("a twin is plain Markdown", { skip: !built && "run npm run build first" }, 
 	const text = fs.readFileSync(path.join(docsOut, "introduction.md"), "utf8");
 
 	assert.ok(text.startsWith("# Introduction\n"), text.slice(0, 60));
-	assert.ok(text.includes("Source: https://video.vukem.dev/docs/introduction/"));
+	assert.ok(text.includes("Source: https://stuarty.com/docs/introduction/"));
 	assert.ok(!/^import /m.test(text), "import lines must be dropped");
 	assert.ok(!/<Steps>|<Card /.test(text), "JSX tags must be dropped");
 });
