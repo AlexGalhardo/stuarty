@@ -1,0 +1,26 @@
+[
+  {
+    "changes": {
+      "adjust": [
+        null,
+        {
+          "lut": {
+            "asset": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "intensity": 100
+          }
+        }
+      ]
+    },
+    "id": "lyr_bbbbbbbbbb",
+    "kind": "layer.updated"
+  },
+  {
+    "id": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "kind": "asset.added",
+    "object": {
+      "hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "kind": "lut",
+      "name": "warm.cube"
+    }
+  }
+]

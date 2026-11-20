@@ -74,6 +74,24 @@
       "required": [],
       "type": "object"
     },
+    "lut": {
+      "additionalProperties": false,
+      "properties": {
+        "asset": {
+          "description": "The content hash of a lut file of the workspace.",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "intensity": {
+          "description": "Per cent, 1 to 100; 0 removes the table. Default 100.",
+          "maximum": 100,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [],
+      "type": "object"
+    },
     "reset": {
       "description": "Remove every adjustment; no other argument.",
       "type": "boolean"

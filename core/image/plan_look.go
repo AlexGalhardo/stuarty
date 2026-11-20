@@ -16,6 +16,10 @@ func (p *planner) look(l *Layer, out *plan.Layer) {
 		if t, ok := ToneTable(a); ok {
 			out.Tone = &t
 		}
+
+		if a.LUT != nil {
+			out.Lut = &plan.LutSpec{Asset: a.LUT.Asset, Intensity: percent(a.LUT.Intensity)}
+		}
 	}
 
 	for i := range l.Filters {

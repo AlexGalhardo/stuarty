@@ -44,7 +44,7 @@ Not in progress together with 48 and 50: all three change `core/image` and SDD-0
 ## Tasks
 
 - [x] 1. Amend SDD-021 (the `assets` kind, the `layer.adjust` key `lut`, the plan, the refusals; section 14 decision 9 is resolved), SDD-013 (section 2.2 for an image layer, section 3.11 for the place of the table) and SDD-004 section 3.6 (images use the same table). Verify: `task lint:md` exits 0.
-- [ ] 2. Implement the key in `core/image` with its validation and a golden case for each refusal. Verify: `go test ./core/image/... -run TestAdjustLUT` passes; then `task codegen` and `task generate:check` exit 0.
+- [x] 2. Implement the key in `core/image` with its validation and a golden case for each refusal. Verify: `go test ./core/image/... -run TestAdjustLUT` passes; then `task codegen` and `task generate:check` exit 0.
 - [ ] 3. Plan and export: the plan field, the upload to the module, the draw. Verify: `go test ./engine/export/... -run TestImageLUT` passes against its golden PNG files.
 - [ ] 4. Service: resolve the asset by its hash and check its kind for the document. Verify: `go test ./service/... -run TestImageLUT` passes.
 - [ ] 5. Parity with the video: the same table gives the same bytes on an image layer and on a clip. Verify: `go test ./engine/export/... -run TestImageLUTMatchesVideoLUT` passes.
