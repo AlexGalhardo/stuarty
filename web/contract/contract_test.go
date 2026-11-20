@@ -209,7 +209,14 @@ func errorLine(doc *service.ErrorDocument) string {
 
 type outcome struct {
 	result, text, fail string
+	// unsettled marks a step whose answer said how far a job had got on this run, not what the surface does
+	// (an import that returned before its jobs ended, VV-277): its result and text are compared with no other run.
+	unsettled bool
 }
+
+// settled says whether the result and the text of a step can be compared between two runs: neither of them
+// answered before the work it reports on had ended.
+func settled(a, b outcome) bool { return !a.unsettled && !b.unsettled }
 
 // runAs sends a step of another actor straight to the Service of the workspace.
 func runAs(t *testing.T, d driver, s step) {
@@ -316,9 +323,9 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 		// loaded machine the wait may end first: the next step would then read a project that has not
 		// received the assets yet (VV-277). The step waits for the event of each job instead of a deadline,
 		// and when it had to, what it returned says how far the work was, not what the surface does, so it
-		// is not compared.
+		// is compared with no other run (settled), while every later step and the final document still are.
 		if s.Call == "MediaImport" && waitForImportJobs(t, d, raw) {
-			o.result, o.text = "", ""
+			o.result, o.text, o.unsettled = "", "", true
 		}
 
 		if s.Settles {
@@ -480,7 +487,7 @@ func sameThroughEverySurfaceWith(
 		got := run(t, d, steps, fixtures)
 
 		for i := range steps {
-			if got[i].result != want[i].result {
+			if settled(got[i], want[i]) && got[i].result != want[i].result {
 				t.Errorf("%s step %d (%s): result differs\n got: %s\nwant: %s",
 					d.name(), i, steps[i].Call, got[i].result, want[i].result)
 			}
@@ -492,7 +499,7 @@ func sameThroughEverySurfaceWith(
 
 			// The text of an edit, an undo and a redo is rendered by the adapter from
 			// the result; every other text is the one of the Service.
-			if !renderedByAdapter[steps[i].Call] && got[i].text != want[i].text {
+			if !renderedByAdapter[steps[i].Call] && settled(got[i], want[i]) && got[i].text != want[i].text {
 				t.Errorf("%s step %d (%s): text differs\n got: %q\nwant: %q",
 					d.name(), i, steps[i].Call, got[i].text, want[i].text)
 			}
@@ -613,7 +620,7 @@ func runEverywhere(
 					d.name(), i, steps[i].Call, got[i].fail, outcomes[i].fail)
 			}
 
-			if got[i].result != outcomes[i].result {
+			if settled(got[i], outcomes[i]) && got[i].result != outcomes[i].result {
 				t.Errorf("%s step %d (%s): result differs\n got: %s\nwant: %s",
 					d.name(), i, steps[i].Call, got[i].result, outcomes[i].result)
 			}
@@ -1037,4 +1044,21 @@ func waitForImportJobs(t *testing.T, d driver, raw json.RawMessage) bool {
 	}
 
 	return waited
+}
+
+// An import that one run answered before its jobs ended is compared with no other run, whichever side lagged;
+// two settled runs are compared as before (VV-277).
+func TestAnUnsettledStepIsComparedWithNoOtherRun(t *testing.T) {
+	t.Parallel()
+
+	done := outcome{result: `{"assets":[{"state":"ready"}]}`}
+	lagged := outcome{unsettled: true}
+
+	if !settled(done, done) {
+		t.Error("two settled runs are not compared")
+	}
+
+	if settled(done, lagged) || settled(lagged, done) || settled(lagged, lagged) {
+		t.Error("a run that answered before its jobs ended is compared")
+	}
 }

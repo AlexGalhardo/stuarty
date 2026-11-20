@@ -169,7 +169,7 @@ func sixRuns(t *testing.T, scenario string, projects ...string) {
 		}
 
 		for i := range steps {
-			if scrub(got[i].result) != scrub((*r.oracle)[i].result) {
+			if settled(got[i], (*r.oracle)[i]) && scrub(got[i].result) != scrub((*r.oracle)[i].result) {
 				t.Errorf("%s step %d (%s): result differs\n got: %s\nwant: %s",
 					d.name(), i, steps[i].Call, scrub(got[i].result), scrub((*r.oracle)[i].result))
 			}
