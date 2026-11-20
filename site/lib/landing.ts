@@ -12,7 +12,7 @@ export type Feature = {
 };
 
 export const landing = {
-	title: "Stuarty: create, edit, manage and publish your content in one place",
+	title: "Stuarty - Create, Edit, Manage and Publish Audiovisual & Text Content",
 	description:
 		"An open source (MIT), self-hosted studio for creators: video, images and writing, with AI agents as first-class users. Your files and credentials stay on your machine, and nothing is published until you approve it.",
 	hero: {
