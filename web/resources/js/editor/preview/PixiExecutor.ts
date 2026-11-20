@@ -150,7 +150,7 @@ const browserTimers: PoolTimers = {
 };
 
 // Whether a layer of `nodes`, or of a group among them, is drawn by a filter that reads the pixels drawn
-// so far.
+// so far. The layers of a group are drawn on its transparent surface, so `clear` holds for them.
 function nodesReadBackdrop(
 	nodes: readonly DrawNode[],
 	clear: boolean,
@@ -158,7 +158,7 @@ function nodesReadBackdrop(
 	return nodes.some(
 		(node) =>
 			readsBackdrop(node.layer.blend, clear) ||
-			(node.kind === "group" && nodesReadBackdrop(node.children, clear)),
+			(node.kind === "group" && nodesReadBackdrop(node.children, true)),
 	);
 }
 
@@ -763,11 +763,15 @@ export class PixiExecutor implements PreviewExecutor {
 		}
 		surface.container.scale.set(k);
 		const outer = this.scene;
+		const outerClear = this.clearsToAlpha;
 		this.scene = {
 			scale: k,
 			width: node.layer.group.width,
 			height: node.layer.group.height,
 		};
+		// The surface of a group starts transparent, so a blend inside it reads a backdrop that is not
+		// opaque whatever the project background (VV-268).
+		this.clearsToAlpha = true;
 		let drawn: number;
 		try {
 			drawn = this.drawLevel(
@@ -782,6 +786,7 @@ export class PixiExecutor implements PreviewExecutor {
 			);
 		} finally {
 			this.scene = outer;
+			this.clearsToAlpha = outerClear;
 		}
 		if (drawn === 0) {
 			// Nothing of it is drawn: the entry and the texture are dropped at the

@@ -159,16 +159,19 @@ test.describe("preview-vs-export", () => {
 	// `0 < da < 255`, and three points are read as premultiplied colours (what the export's JPEG holds, the
 	// frame over black): the overlap, a corner of the ellipse's box where the blended layer has `a == 0`, and
 	// a point outside it. The frame is drawn three times, so a canvas that keeps the pixels of the frame
-	// before under a clear one is seen too (VV-268 review).
-	const halfAlpha: [string, string][] = [
-		["multiply", "transparent"],
-		["screen", "transparent"],
-		["overlay", "transparent"],
-		["add", "transparent"],
-		["overlay", "#204060"],
+	// before under a clear one is seen too (VV-268 review). In the grouped case the two layers are moved into
+	// a composition drawn as one unit (a blend of its own, SDD-013 section 3.12) on an opaque canvas: the
+	// group's surface starts transparent, so the blend inside it reads a backdrop that is not opaque.
+	const halfAlpha: [string, string, boolean][] = [
+		["multiply", "transparent", false],
+		["screen", "transparent", false],
+		["overlay", "transparent", false],
+		["add", "transparent", false],
+		["overlay", "#204060", false],
+		["multiply", "#204060", true],
 	];
-	for (const [mode, background] of halfAlpha) {
-		test(`${mode} at opacity 0.5 over a layer at opacity 0.5 on a ${background} canvas matches the export at three points`, async ({
+	for (const [mode, background, grouped] of halfAlpha) {
+		test(`${mode} at opacity 0.5 over a layer at opacity 0.5 on a ${background} canvas${grouped ? ", in a group," : ""} matches the export at three points`, async ({
 			page,
 			request,
 		}) => {
@@ -236,7 +239,48 @@ test.describe("preview-vs-export", () => {
 					{ op: "clip.set_blend", args: { item_id: "itm_h000000002", mode } },
 				],
 			});
+			if (grouped) {
+				const before = (await call("GET", `/projects/${id}`)) as {
+					revision: number;
+				};
+				await call("POST", `/projects/${id}/edit`, {
+					base_revision: before.revision,
+					operations: [
+						{
+							op: "composition.create_from_selection",
+							args: { item_ids: ["itm_h000000001", "itm_h000000002"] },
+						},
+					],
+				});
+				const doc = (await call(
+					"GET",
+					`/projects/${id}?detail=document&timeline_id=${id}`,
+				)) as {
+					revision: number;
+					document: { items: Record<string, { type: string }> };
+				};
+				const composition = Object.entries(doc.document.items).find(
+					([, item]) => item.type === "composition",
+				)?.[0];
+				expect(composition, "the composition of the two layers").toBeDefined();
+				// A blend of its own makes the composition a group (SDD-004 section 3.16).
+				await call("POST", `/projects/${id}/edit`, {
+					timeline_id: id,
+					base_revision: doc.revision,
+					operations: [
+						{
+							op: "clip.set_blend",
+							args: { item_id: composition, mode: "screen" },
+						},
+					],
+				});
+			}
 			await openCase(page, id);
+			if (grouped) {
+				await expect(
+					page.getByRole("main", { name: "Preview" }).locator("canvas"),
+				).toHaveAttribute("data-groups", "approximate");
+			}
 			// Project points: the centre, a corner of the ellipse's box (outside the ellipse), the top.
 			const points: [string, number, number][] = [
 				["overlap", 90, 160],
@@ -244,7 +288,7 @@ test.describe("preview-vs-export", () => {
 				["outside", 90, 20],
 			];
 			await stepThrough(page, [0, 1, 2], async (frame) => {
-				const shot = await capture(page, id, frame);
+				const shot = await capture(page, id, frame, grouped);
 				const { width, height } = shot.canvas;
 				for (const [where, px, py] of points) {
 					const x = Math.round((px * width) / 180);
