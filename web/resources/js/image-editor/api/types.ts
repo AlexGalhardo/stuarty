@@ -42,6 +42,8 @@ export interface Adjust {
 	exposure?: number;
 	levels?: { black: number; white: number; gamma: number };
 	curve?: CurvePoint[];
+	// The colour lookup table of the layer: the content hash of a lut file and the per cent of it mixed in.
+	lut?: { asset: string; intensity: number };
 }
 
 export type FilterKind =
