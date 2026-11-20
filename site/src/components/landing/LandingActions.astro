@@ -32,7 +32,7 @@ const icons: Record<Os, string> = {
 	<div class="landing-downloads" role="group" aria-labelledby={`${idPrefix}-downloads`}>
 		<p id={`${idPrefix}-downloads`} class="landing-beta">
 			<span class="landing-beta-badge">Beta</span>
-			<span>Stuarty is in beta: expect rough edges. Latest release {version}.</span>
+			<span>Stuarty is in beta: expect rough edges.</span>
 		</p>
 		<ul class="landing-download-list">
 			{release.downloads.map((d) => (
@@ -41,7 +41,7 @@ const icons: Record<Os, string> = {
 						<svg viewBox="0 0 24 24" class="size-5 shrink-0" fill="currentColor" aria-hidden="true"><path d={icons[d.os]}></path></svg>
 						<span class="flex flex-col items-start leading-tight">
 							<span>{d.label}</span>
-							<span class="text-xs font-normal text-muted">{version}{d.direct ? "" : " · release page"}</span>
+							<span class="text-xs font-normal text-muted">BETA Release {version}</span>
 						</span>
 					</a>
 				</li>
