@@ -332,6 +332,15 @@ func (c *Context) expandable(it *timeline.Item, nested *timeline.Document) *Erro
 			WithDetail("feature", f).
 			WithHint("Reset it with item.set_audio first, or keep the composition.")
 	}
+	if it.Speed != (timeline.Rational{Num: 1, Den: 1}) {
+		return state(
+			"composition_group_feature",
+			"Item %s plays at its own speed, which the items of a timeline cannot keep.",
+			it.ID,
+		).
+			WithDetail("feature", "speed").
+			WithHint(`Set it back to "1x" with clip.set_speed first, or keep the composition.`)
+	}
 	// A disabled composition, or one on a hidden track, draws nothing: its items, put on new tracks, would show.
 	if f := hiddenComposition(c.Doc, it); f != "" {
 		return state(

@@ -1,0 +1,60 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "duration": [
+        90,
+        60
+      ],
+      "fade_in": [
+        10,
+        7
+      ],
+      "fade_out": [
+        8,
+        5
+      ],
+      "keyframes": [
+        {
+          "scale": [
+            {
+              "easing": "linear",
+              "t": 0,
+              "value": 1
+            },
+            {
+              "easing": "linear",
+              "t": 60,
+              "value": 1.2
+            }
+          ]
+        },
+        {
+          "scale": [
+            {
+              "easing": "linear",
+              "t": 0,
+              "value": 1
+            },
+            {
+              "easing": "linear",
+              "t": 40,
+              "value": 1.2
+            }
+          ]
+        }
+      ],
+      "speed": [
+        {
+          "den": 1,
+          "num": 1
+        },
+        {
+          "den": 2,
+          "num": 3
+        }
+      ]
+    }
+  }
+]
