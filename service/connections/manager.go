@@ -38,37 +38,10 @@ type Credential struct {
 	Connection Connection
 	Secret     []byte
 	Client     Doer
-	// SignedIn is true when the connection was made by a sign-in in the browser (SDD-014 section 13):
-	// Secret is then the access token, or the key the provider issued, and nothing else.
-	SignedIn bool
-}
-
-// Errors of a sign-in credential (SDD-014 section 13).
-var (
-	// ErrNeedsSignIn is a connection whose sign-in is no longer good: the person must sign in again.
-	ErrNeedsSignIn = errors.New("connections: the sign-in of the connection must be done again")
-	// ErrSignInUnavailable is a sign-in that could not be renewed now, for a reason that says nothing
-	// about the grant (no network, a server error): it is kept as it is and may work later.
-	ErrSignInUnavailable = errors.New("connections: the sign-in could not be renewed now")
-)
-
-// Prepared is what a Refresher decided about a stored secret.
-type Prepared struct {
-	// Store is the new stored secret, written to the vault before use; nil leaves it as it is.
-	Store []byte
-	// Use is the secret the closure receives; nil means the stored secret is used as it is.
-	Use []byte
-	// SignedIn says that the secret is the credential of a sign-in.
-	SignedIn bool
-}
-
-// Refresher turns the stored secret of a sign-in into what a closure needs, renewing it when it is
-// about to expire (SDD-014 section 13). It runs under the lock of the connection, with the gated
-// client of that connection. A secret that is not a sign-in is none of its business: it returns the
-// zero Prepared and no error. When it returns an error, a non-nil Store is still written (a refused
-// grant is remembered), and the error ends the call.
-type Refresher interface {
-	Prepare(ctx context.Context, c Credential) (Prepared, error)
+	// Rotate writes a new secret over the one of the connection, in the vault. A network that replaces
+	// the refresh token at every refresh (TikTok) needs it: a token that was not kept is a sign-in lost
+	// (SDD-020 section 34). The secret goes straight into the vault and nowhere else.
+	Rotate func(secret []byte) error
 }
 
 // TestResult is the outcome of a test request.
@@ -296,65 +269,10 @@ func (m *Manager) use(
 
 	defer clear(secret)
 
-	return fn(Credential{Connection: View(r, true), Secret: secret, Client: client, SignedIn: signedIn})
-}
-
-func (m *Manager) readSecret(r Row) ([]byte, error) {
-	secret, err := m.vault.Get(r.SecretRef)
-	if errors.Is(err, vault.ErrNotFound) {
-		return nil, ErrNoSecret
-	}
-
-	return secret, err
-}
-
-// secretFor reads the secret of a connection and, for a sign-in, renews it and takes out the token. The
-// lock of the connection is held from before the read to after the write, so a concurrent use sees the
-// renewed tokens instead of spending a rotating refresh token twice (SDD-014 section 13).
-func (m *Manager) secretFor(ctx context.Context, r Row, client Doer, renew bool) ([]byte, bool, error) {
-	m.mu.RLock()
-	ref := m.refresher
-	m.mu.RUnlock()
-
-	if !renew || ref == nil {
-		secret, err := m.readSecret(r)
-
-		return secret, false, err
-	}
-
-	l := m.lockOf(r.ID)
-	l.Lock()
-	defer l.Unlock()
-
-	stored, err := m.readSecret(r)
-	if err != nil {
-		return nil, false, err
-	}
-
-	prep, perr := ref.Prepare(ctx, Credential{Connection: View(r, true), Secret: stored, Client: client})
-
-	if prep.Store != nil {
-		if werr := m.vault.Put(r.SecretRef, prep.Store); werr != nil && perr == nil {
-			perr = werr
-		}
-
-		clear(prep.Store)
-	}
-
-	if perr != nil {
-		clear(stored)
-		clear(prep.Use)
-
-		return nil, false, perr
-	}
-
-	if prep.Use == nil {
-		return stored, false, nil
-	}
-
-	clear(stored)
-
-	return prep.Use, prep.SignedIn, nil
+	return fn(Credential{
+		Connection: View(r, true), Secret: secret, Client: outbound.Connection(m, r.ID, timeout, m.trust),
+		Rotate: func(next []byte) error { return m.vault.Put(r.SecretRef, next) },
+	})
 }
 
 // Test makes the test request of the kind of the connection.

@@ -3,6 +3,7 @@ package social_test
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/AlexGalhardo/stuarty/service/social"
 	"github.com/AlexGalhardo/stuarty/service/social/fake"
@@ -99,4 +100,64 @@ func TestFileSessionsRoundTrip(t *testing.T) {
 	if err := s.Clear(key); err != nil {
 		t.Errorf("clearing a missing session: %v", err)
 	}
+}
+
+func TestRotationSerialisesAndRemembersTheNewestToken(t *testing.T) {
+	t.Parallel()
+
+	r := social.NewRotation()
+
+	if got := r.Current("c1", "t0"); got != "t0" {
+		t.Fatalf("nothing was traded: %q", got)
+	}
+
+	unlock := r.Lock("c1")
+	r.Remember("c1", "t0", "t1")
+	unlock()
+
+	// A send that read the secret before the trade presents the newer token.
+	if got := r.Current("c1", "t0"); got != "t1" {
+		t.Fatalf("Current(t0) = %q, want t1", got)
+	}
+
+	// A send that read the secret after the vault was written has the newer token already.
+	if got := r.Current("c1", "t1"); got != "t1" {
+		t.Fatalf("Current(t1) = %q", got)
+	}
+
+	// Another connection is not affected.
+	if got := r.Current("c2", "t0"); got != "t0" {
+		t.Fatalf("Current(c2) = %q", got)
+	}
+
+	// A token that did not change is not remembered.
+	r.Remember("c3", "a", "a")
+	r.Remember("c3", "", "b")
+
+	if got := r.Current("c3", "a"); got != "a" {
+		t.Fatalf("Current(c3) = %q", got)
+	}
+}
+
+func TestRotationLockIsPerConnection(t *testing.T) {
+	t.Parallel()
+
+	r := social.NewRotation()
+	unlockA := r.Lock("a")
+
+	done := make(chan struct{})
+
+	go func() {
+		defer close(done)
+
+		r.Lock("b")()
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("the lock of one connection holds another")
+	}
+
+	unlockA()
 }
