@@ -39,3 +39,39 @@ func (s stub) ImageExport(context.Context, service.ImageExportRequest) (*service
 func (s stub) ImageImport(context.Context, service.ImageImportRequest) (*service.ImageImportResult, error) {
 	return reply[service.ImageImportResult](s.err)
 }
+
+func (s stub) ImageRevert(context.Context, service.ImageRevertRequest) (*service.ImageRevertResult, error) {
+	return reply[service.ImageRevertResult](s.err)
+}
+
+func (s stub) ImageDiff(context.Context, service.ImageDiffRequest) (*service.ImageDiffResult, error) {
+	return reply[service.ImageDiffResult](s.err)
+}
+
+func (s stub) ImageCheckpointCreate(
+	context.Context,
+	service.ImageCheckpointCreateRequest,
+) (*service.Checkpoint, error) {
+	return reply[service.Checkpoint](s.err)
+}
+
+func (s stub) ImageCheckpointList(
+	context.Context,
+	service.ImageCheckpointListRequest,
+) (*service.ImageCheckpointListResult, error) {
+	return reply[service.ImageCheckpointListResult](s.err)
+}
+
+func (s stub) ImageCheckpointRename(
+	context.Context,
+	service.ImageCheckpointRenameRequest,
+) (*service.Checkpoint, error) {
+	return reply[service.Checkpoint](s.err)
+}
+
+func (s stub) ImageCheckpointRemove(
+	context.Context,
+	service.ImageCheckpointRemoveRequest,
+) (*service.Checkpoint, error) {
+	return reply[service.Checkpoint](s.err)
+}

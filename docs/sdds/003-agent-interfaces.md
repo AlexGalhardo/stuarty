@@ -4295,7 +4295,7 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `ImageDescribe` | `image` (`action` show) | `image:show` | `GET /images/{id}` |
 | `ImageEdit` | `image` (`action` edit) | `image:edit` | `POST /images/{id}/edit` |
 | `ImageUndo`, `ImageRedo` | `image` (`action` undo, redo) | `image:undo`, `image:redo` | `POST /images/{id}/undo`, `POST /images/{id}/redo` |
-| `ImageRevert`, `ImageDiff`, `ImageCheckpointCreate`, `ImageCheckpointList`, `ImageCheckpointRename`, `ImageCheckpointRemove` | `history` (`domain` `image`; `action` revert, diff, checkpoint, checkpoints, rename_checkpoint, remove_checkpoint) | `revert`, `diff`, `checkpoint:create`, `checkpoint:list`, `checkpoint:rename`, `checkpoint:remove` (`--image`) | `POST /images/{id}/revert`, `GET /images/{id}/diff`, `GET`/`POST /images/{id}/checkpoints`, `PATCH`/`DELETE /images/{id}/checkpoints/{name}` |
+| `ImageRevert`, `ImageDiff`, `ImageCheckpointCreate`, `ImageCheckpointList`, `ImageCheckpointRename`, `ImageCheckpointRemove` | `history` (`domain` `image`; `action` revert, diff, checkpoint, checkpoints, rename_checkpoint, remove_checkpoint) | `image:revert`, `image:diff`, `image:checkpoint:create`, `image:checkpoint:list`, `image:checkpoint:rename`, `image:checkpoint:remove` | `POST /images/{id}/revert`, `GET /images/{id}/diff`, `GET`/`POST /images/{id}/checkpoints`, `PATCH`/`DELETE /images/{id}/checkpoints/{name}` |
 | `ImageExport` | `image` (`action` export) | `image:export` | `POST /images/{id}/export` |
 | `ImageImport` | `image` (`action` import) | `image:import` | `POST /images/import` |
 | `AgentProfileList` | none (exception E-7) | `agent:profiles` | `GET /agents/profiles` |

@@ -1,0 +1,33 @@
+{
+	"name": "image-history",
+	"actor": "contract",
+	"fixtures": {},
+	"steps": [
+		{"call": "ImageCreate", "args": {"preset": "video_thumbnail", "name": "Thumb"}},
+		{"call": "ImageEdit", "args": {"image_id": "img_0000000001", "base_revision": 1, "operations": [
+			{"op": "layer.add_text", "args": {"text": "HOW IT WORKS", "id": "lyr_aaaaaaaaaa"}}]}},
+		{"call": "ImageEdit", "args": {"image_id": "img_0000000001", "base_revision": 2, "operations": [
+			{"op": "layer.add_shape", "args": {"shape": "rect", "w": 300, "h": 60, "fill": "#E63946", "id": "lyr_bbbbbbbbbb"}}]}},
+		{"call": "ImageCheckpointCreate", "args": {"image_id": "img_0000000001", "name": "two layers", "note": "the thumbnail so far"}},
+		{"call": "ImageEdit", "args": {"image_id": "img_0000000001", "base_revision": 3, "operations": [
+			{"op": "layer.set", "args": {"layer_id": "lyr_aaaaaaaaaa", "opacity": 60, "name": "Headline"}}]}},
+		{"call": "ImageEdit", "args": {"image_id": "img_0000000001", "base_revision": 4, "operations": [
+			{"op": "layer.remove", "args": {"layer_id": "lyr_bbbbbbbbbb"}}]}},
+		{"call": "ImageCheckpointCreate", "args": {"image_id": "img_0000000001", "name": "two layers"}, "expect_error": {"code": "E_ID_EXISTS"}},
+		{"call": "ImageCheckpointList", "args": {"image_id": "img_0000000001"}},
+		{"call": "ImageDiff", "args": {"image_id": "img_0000000001", "from": 2}},
+		{"call": "ImageDiff", "args": {"image_id": "img_0000000001", "from_checkpoint": "two layers", "until": 4}},
+		{"call": "ImageDiff", "args": {"image_id": "img_0000000001"}, "expect_error": {"code": "E_VALIDATION"}},
+		{"call": "ImageRevert", "args": {"image_id": "img_0000000001", "checkpoint": "two layers", "dry_run": true}},
+		{"call": "ImageRevert", "args": {"image_id": "img_0000000001", "checkpoint": "two layers"}},
+		{"call": "ImageRevert", "args": {"image_id": "img_0000000001", "checkpoint": "two layers"}},
+		{"call": "ImageUndo", "args": {"image_id": "img_0000000001"}},
+		{"call": "ImageRevert", "args": {"image_id": "img_0000000001", "revision": 3}},
+		{"call": "ImageRevert", "args": {"image_id": "img_0000000001", "revision": 99}, "expect_error": {"code": "E_VALIDATION"}},
+		{"call": "ImageRevert", "args": {"image_id": "img_0000000001", "checkpoint": "missing"}, "expect_error": {"code": "E_NOT_FOUND"}},
+		{"call": "ImageCheckpointRename", "args": {"image_id": "img_0000000001", "name": "two layers", "new_name": "keeper", "note": "kept"}},
+		{"call": "ImageCheckpointRemove", "args": {"image_id": "img_0000000001", "name": "keeper"}},
+		{"call": "ImageCheckpointRemove", "args": {"image_id": "img_0000000001", "name": "keeper"}, "expect_error": {"code": "E_NOT_FOUND"}},
+		{"call": "ImageDescribe", "args": {"image_id": "img_0000000001"}}
+	]
+}

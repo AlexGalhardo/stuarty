@@ -48,7 +48,7 @@ Not in progress together with 48 and 49: all three change `core/image`, `service
 - [x] 2. Rebuild a document at a revision, and the structured diff of two images, with the property test. Verify: `go test ./core/image/... -run "TestImageRevert|TestImageDiff"` passes.
 - [x] 3. The migration, the checkpoints, the automatic checkpoint, the ceiling, and the revert through the service. Verify: `go test ./service/... -run "TestImageCheckpoint|TestImageRevertThroughTheService"` passes, and `go test ./web/database/migrations/...` passes with the new migration.
 - [x] 4. The diff text within the budget. Verify: `go test ./service/textview/... -run TestImageDiffText` passes.
-- [ ] 5. Expose on the three surfaces and regenerate the schemas. Verify: `go test ./web/contract/...` passes; `task generate:check` exits 0; `go run ./internal/tools/surfacebudget` exits 0.
+- [x] 5. Expose on the three surfaces and regenerate the schemas. Verify: `go test ./web/contract/...` passes; `task generate:check` exits 0; `go run ./internal/tools/surfacebudget` exits 0.
 - [ ] 6. The panel, in both languages. Verify: `bun run check:i18n` and `task test:web` pass, and `web/e2e/specs/image-revert.spec.ts` (new, `bun run e2e`) passes.
 
 ## Test strategy

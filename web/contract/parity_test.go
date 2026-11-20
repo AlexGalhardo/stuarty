@@ -167,6 +167,25 @@ var parity = []row{
 	{method: "ImageRedo", tool: "image", command: "image:redo", route: "POST /images/{}/redo"},
 	{method: "ImageExport", tool: "image", command: "image:export", route: "POST /images/{}/export"},
 	{method: "ImageImport", tool: "image", command: "image:import", route: "POST /images/import"},
+	// Revert, the diff and the checkpoints of an image (epic 50): the tool is history with domain image.
+	{method: "ImageRevert", tool: "history", command: "image:revert", route: "POST /images/{}/revert"},
+	{method: "ImageDiff", tool: "history", command: "image:diff", route: "GET /images/{}/diff"},
+	{
+		method: "ImageCheckpointCreate", tool: "history", command: "image:checkpoint:create",
+		route: "POST /images/{}/checkpoints",
+	},
+	{
+		method: "ImageCheckpointList", tool: "history", command: "image:checkpoint:list",
+		route: "GET /images/{}/checkpoints",
+	},
+	{
+		method: "ImageCheckpointRename", tool: "history", command: "image:checkpoint:rename",
+		route: "PATCH /images/{}/checkpoints/{}",
+	},
+	{
+		method: "ImageCheckpointRemove", tool: "history", command: "image:checkpoint:remove",
+		route: "DELETE /images/{}/checkpoints/{}",
+	},
 	// The export presets, the check against one and the batch (SDD-004 sections 8.2 to 8.4). The MCP tools are the
 	// ones that already exist (NFR-020 leaves no room for three more): command_help with domain export, lint with a
 	// preset, and job_start with kind export_batch.
