@@ -61,6 +61,25 @@ func (h *harness) fatCommit(project, track string, rev int64) (int64, time.Durat
 	return res.Revision, took
 }
 
+// checkpoint empties the WAL of the harness database, so that the next commits start at the same phase of
+// the automatic checkpoint.
+func (h *harness) checkpoint() {
+	h.t.Helper()
+
+	// SQLite reports a checkpoint it could not finish as busy, not as an error, and the WAL is then not
+	// emptied: the windows would start at different phases again without anything saying so.
+	var busy, log, done int
+
+	err := h.store.DB().SQL().QueryRowContext(h.t.Context(), "PRAGMA wal_checkpoint(TRUNCATE)").Scan(&busy, &log, &done)
+	if err != nil {
+		h.t.Fatal(err)
+	}
+
+	if busy != 0 || log != 0 {
+		h.t.Fatalf("the WAL was not emptied: busy %d, %d frames in the log, %d checkpointed", busy, log, done)
+	}
+}
+
 func p95(d []time.Duration) time.Duration {
 	slices.Sort(d)
 
@@ -104,16 +123,24 @@ func TestEventsSlowReaderIsDropped(t *testing.T) {
 	other := h.newProject("baseline")
 	orev := h.commits(other, 0, 1)
 	otrack := h.track
-	base := make([]time.Duration, 0, 50)
+	base := make([]time.Duration, 0, 60)
 
-	for range 50 {
+	// Both windows start from an empty WAL: SQLite checkpoints on its own every 1,000 pages, which for these
+	// commits is a spike of about 20 ms every 14 commits, and where the first one falls depends on how many
+	// pages the migrations left in the WAL. Without this the p95 compares the phase of the checkpoints, not the
+	// cost of the stalled client (VV-233).
+	h.checkpoint()
+
+	for range 60 {
 		var d time.Duration
 
 		orev, d = h.fatCommit(other, otrack, orev)
 		base = append(base, d)
 	}
 
-	rev, during := head, make([]time.Duration, 0, 100)
+	rev, during := head, make([]time.Duration, 0, 60)
+
+	h.checkpoint()
 
 	for range 60 {
 		var d time.Duration
