@@ -31,6 +31,11 @@ const (
 // by the media id, which is no credential.
 const mediaMarker = "x-media"
 
+// postingMarker is the address kept in the session while the request that creates the post is out. A send
+// that finds it was stopped during that request (the app quit, the lease was lost) and cannot know whether X
+// posted: it posts nothing and says so, since a post is paid and cannot be undone (SDD-020 section 36).
+const postingMarker = "x-posting"
+
 type processing struct {
 	State          string `json:"state"`
 	CheckAfterSecs int    `json:"check_after_secs"`
@@ -55,6 +60,15 @@ type postAnswer struct {
 func (c *Connector) Publish(
 	ctx context.Context, cred connections.Credential, u social.Upload,
 ) (social.Published, error) {
+	// An earlier send of this post stopped while its post was out: X may have posted it. Nothing is sent, and
+	// the session goes back to the media alone, so a retry the person asks for after looking at the timeline
+	// posts with the media already uploaded.
+	if sess, have, lerr := u.Sessions.Load(u.Key); lerr == nil && have && sess.URI == postingMarker {
+		_ = u.Sessions.Save(u.Key, social.Session{URI: mediaMarker, ID: sess.ID, Uploaded: true, Size: sess.Size})
+
+		return social.Published{}, social.NewError(social.KindRejected, publish.NetworkX, ReasonOutcomeUnknown, 0, nil)
+	}
+
 	token, err := c.accessToken(ctx, cred)
 	if err != nil {
 		return social.Published{}, err
@@ -81,8 +95,24 @@ func (c *Connector) Publish(
 		u.Report(0.9, "posting")
 	}
 
+	// The session says the post is out before it is: a restart in the middle of the request must not send it
+	// again. A session that cannot be written sends nothing.
+	media := social.Session{URI: mediaMarker, ID: mediaID, Uploaded: true, Size: st.Size()}
+	posting := media
+	posting.URI = postingMarker
+
+	if serr := u.Sessions.Save(u.Key, posting); serr != nil {
+		return social.Published{}, serr
+	}
+
 	id, err := c.post(ctx, cred.Client, token, mediaID, &u.Post)
 	if err != nil {
+		// A send that was stopped keeps the mark, since its result may never be recorded and the post may be
+		// resumed. A send whose error reaches the person drops it: a retry is the person's decision.
+		if ctx.Err() == nil {
+			_ = u.Sessions.Save(u.Key, media)
+		}
+
 		return social.Published{}, err
 	}
 
