@@ -19,6 +19,7 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/events"
 
+	"github.com/AlexGalhardo/stuarty/desktop/service"
 	"github.com/AlexGalhardo/stuarty/desktop/shell"
 	"github.com/AlexGalhardo/stuarty/desktop/shell/webviewenv"
 	"github.com/AlexGalhardo/stuarty/service/config"
@@ -52,6 +53,9 @@ func run() error {
 	binary := flag.String("binary", defaultBinary(), "path of the stuarty server binary")
 	devtools := flag.Bool("devtools", false, "bind F12 to the developer tools (debugging and QA builds)")
 	watch := flag.String(shell.WatchFlag[2:], "", "internal: run the watchdog of an update (marker file)")
+	flag.Bool(
+		strings.TrimPrefix(service.BackgroundFlag, "--"), false, "start with the window hidden (the start at sign-in)",
+	)
 	flag.Parse()
 
 	// The watchdog is the previous version started by the new one's installer; it has no window.
@@ -70,6 +74,8 @@ func run() error {
 	var notices strings.Builder
 	workspace.Notice = io.MultiWriter(os.Stderr, &notices)
 	ws, wsErr := workspace.Resolve(os.Getenv)
+	settingsDir, _ := service.Dir()
+	settings := service.Load(settingsDir)
 	app := application.New(application.Options{
 		Name:              "Stuarty",
 		Description:       "Stuarty desktop",
@@ -99,6 +105,7 @@ func run() error {
 	if err != nil {
 		return failStartup(app, err)
 	}
+	hidden := shell.StartHidden(os.Args[1:], settings.KeepRunning)
 	win := app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Title:            "Stuarty",
 		Width:            defaultWidth,
@@ -109,7 +116,10 @@ func run() error {
 		EnableFileDrop:   true,
 		KeyBindings:      windowKeyBindings(*devtools),
 		URL:              launch,
+		Hidden:           hidden,
 	})
+	bg := newBackground(app, srv, settingsDir, settings)
+	bg.install(win)
 	guardNavigation(win, srv.Port, home)
 	br.app = app
 	br.port.Store(int64(srv.Port))
@@ -119,12 +129,15 @@ func run() error {
 	// and without win.SetMenu the window has no menu bar.
 	up := newUpdater(app)
 	app.OnShutdown(up.launcher.Close)
-	menu := buildMenu(app, win, ws, up)
+	menu := buildMenu(app, win, ws, up, bg.quit)
 	app.Menu.SetApplicationMenu(menu)
 	win.SetMenu(menu)
 	// A dialog shown before the loop runs is dropped (VV-006), so the launcher starts with the loop.
 	app.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(*application.ApplicationEvent) {
 		go confirmStart()
+		if hidden {
+			bg.ensureTray()
+		}
 		if msg := shell.AdoptionMessage(shell.SystemLanguage(), notices.String()); msg != "" {
 			go application.InvokeSync(func() { app.Dialog.Info().SetTitle("Stuarty").SetMessage(msg).Show() })
 		}
@@ -136,7 +149,7 @@ func run() error {
 		<-srv.Done()
 		application.InvokeSync(func() {
 			app.Dialog.Error().SetTitle("Stuarty").SetMessage(tr(shell.TextServerStopped)).Show()
-			app.Quit()
+			bg.quit()
 		})
 	}()
 
