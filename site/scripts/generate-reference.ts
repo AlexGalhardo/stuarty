@@ -264,8 +264,9 @@ function migrationPage(): string {
 	const pairs = sddTable("docs/sdds/000-shared-definitions.md", /^### 13\.1 /m).map(([was, now]) => [esc(was ?? ""), esc(now ?? "")]);
 	const prose = fs.readFileSync(path.join(siteDir, "content", "fragments", "migration.md"), "utf8");
 	return page(
-		"Migrating from Vukem Video",
-		"Stuarty was called Vukem Video until v0.29.0: what is adopted, what is still read, and what to rename.",
+		// The title and the description show on every page (the sidebar, the search, llms.txt): only the body says the name.
+		"Migrating from the former name",
+		"Stuarty had another name until v0.29.0: what is adopted, what is still read, and what to rename.",
 		[prose.trim(), table(["Former variable", "Variable"], pairs)].join("\n\n"),
 	);
 }
