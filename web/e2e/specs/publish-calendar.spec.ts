@@ -316,6 +316,70 @@ test.describe("publishing calendar @chromium-only", () => {
 		}
 	});
 
+	// D-111, VV-280: the export of an image, a cover made from a template for instance, is the thumbnail of a post.
+	// The person pastes the job the image editor named; the service checks it, so an unknown one is refused.
+	test("the export of an image is the thumbnail of a publication", async ({
+		page,
+		request,
+	}) => {
+		const network = await fakeNetwork();
+		try {
+			await signInAsPerson(page);
+			await connectAccount(page);
+
+			const api = await caller(request);
+			const made = (await api("POST", "/projects", {
+				name: "Calendar cover",
+				preset: "9:16",
+			})) as { project_id: string };
+			seedExport(made.project_id);
+			const image = (await api("POST", "/images", {
+				name: "Calendar cover",
+				preset: "video_thumbnail",
+			})) as { image_id: string };
+			const cover = (await api("POST", `/images/${image.image_id}/export`, {
+				format: "png",
+			})) as { job_id: string };
+			expect(cover.job_id).toMatch(/^job_/);
+
+			await page.goto("/publish");
+			await page.getByTestId("publish-new").click();
+			const dialog = page.getByTestId("publication-editor");
+			await dialog.getByLabel("Project").selectOption(made.project_id);
+			await dialog.getByLabel("Exported video").selectOption({ index: 1 });
+			await dialog.getByLabel("Title", { exact: true }).fill("Cover post");
+			const field = dialog.getByLabel(/^Or the export of an image/);
+			await field.fill("job_0000000000");
+			await dialog.getByRole("button", { name: "Add an account" }).click();
+			const panel = dialog.getByTestId("target-panel");
+			await panel.getByLabel("Account", { exact: true }).selectOption({
+				index: 1,
+			});
+			const at = new Date(Date.now() + 2 * 86_400_000);
+			at.setHours(9, 0, 0, 0);
+			await panel.getByLabel("Date and time").fill(localField(at));
+			await panel.getByLabel("No", { exact: true }).check();
+			await dialog.getByRole("button", { name: "Save", exact: true }).click();
+			await expect(dialog.getByRole("alert")).toContainText(
+				"not a job of this project",
+			);
+
+			await field.fill(cover.job_id);
+			await dialog.getByRole("button", { name: "Save", exact: true }).click();
+			await expect(panel.getByTestId("target-state")).toHaveText("Draft");
+			await expect(dialog.getByRole("alert")).toHaveCount(0);
+
+			const publications = (await api(
+				"GET",
+				`/publications?project_id=${made.project_id}`,
+			)) as { publications: (Publication & { thumbnail?: string })[] };
+			expect(publications.publications[0]?.thumbnail).toBe(cover.job_id);
+			expect(network.uploads()).toBe(0);
+		} finally {
+			await cleanUp(request, network);
+		}
+	});
+
 	test("the keyboard moves a post: Space takes it, arrows move it, Enter drops it", async ({
 		page,
 		request,
