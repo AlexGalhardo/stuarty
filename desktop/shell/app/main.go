@@ -82,6 +82,8 @@ func run() error {
 	var bgp atomic.Pointer[background]
 	app := application.New(application.Options{
 		Name:              "Stuarty",
+		// The window and the taskbar show this icon: the binary carries no icon resource.
+		Icon:              trayPNG,
 		Description:       "Stuarty desktop",
 		RawMessageHandler: br.handle,
 		SingleInstance: &application.SingleInstanceOptions{
