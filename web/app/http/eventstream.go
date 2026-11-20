@@ -47,6 +47,35 @@ func (h *apiHandler) eventsStream(c *web.Ctx, in eventsIn) (noIn, error) {
 	return noIn{}, h.Events.Serve(c, in.ID, since, func() bool { return check() == nil })
 }
 
+// imagesStream is GET /images/{id}/events (SDD-006 section 12): the stream of one image document. The Service
+// decides who may see the image (an unknown one, one of another user and a project-limited key are refused
+// before the response becomes a stream), and again at every revalidation.
+func (h *apiHandler) imagesStream(c *web.Ctx, in eventsIn) (noIn, error) {
+	if h.Events == nil {
+		return noIn{}, &service.Error{
+			Code:    command.CodeInternal,
+			Message: "the event stream is not available in this build.",
+		}
+	}
+
+	since, err := events.ParseSince(c.Request().Header.Get("Last-Event-ID"), in.Since)
+	if err != nil {
+		return noIn{}, err
+	}
+
+	check := func() error {
+		_, err := h.Service.ImageDescribe(c.Context(), service.ImageDescribeRequest{ImageID: in.ID})
+
+		return err
+	}
+
+	if err := check(); err != nil {
+		return noIn{}, err
+	}
+
+	return noIn{}, h.Events.ServeImage(c, in.ID, since, func() bool { return check() == nil })
+}
+
 // approvalsStream is GET /approvals/events (SDD-015 section 7): the pending requests, then the events
 // of the queue. It needs the read scope; a key limited to one project has no use for a stream of the
 // whole queue and is refused. The Service decides what the caller may see: the snapshot is its answer.

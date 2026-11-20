@@ -79,8 +79,11 @@ func AgentDocsInputs() agentdocs.Inputs {
 	// Revert, the diff and the checkpoints (epic 36) are in the guide of the video domain: the skill was at its cap
 	// and has no room for six lines, so it points at the guide with one sentence. That sentence is also where the skill
 	// names agent:docs, so its own line is left out too.
+	// Importing a file into an image (epic 48) is in the guide of the image domain for the same reason: the skill is
+	// at its cap (12,400 characters, D-094) and the image tool of MCP carries the import action.
 	for _, s := range []*spec{
 		revertCmd, diffCmd, checkpointCreateCmd, checkpointListCmd, checkpointRenameCmd, checkpointRemoveCmd, agentDocs,
+		imageImport,
 	} {
 		inLibrary[s.name] = true
 	}
