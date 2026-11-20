@@ -38,6 +38,7 @@ func TestTargetStateMachine(t *testing.T) {
 		{TargetScheduled, TargetWaitingApproval}:       true,
 		{TargetScheduled, TargetCancelled}:             true,
 		{TargetPublishing, TargetPublished}:            true,
+		{TargetPublishing, TargetSentAsDraft}:          true,
 		{TargetPublishing, TargetFailed}:               true,
 		{TargetPublishing, TargetScheduled}:            true,
 		{TargetFailed, TargetWaitingApproval}:          true,
@@ -54,7 +55,7 @@ func TestTargetStateMachine(t *testing.T) {
 		}
 	}
 
-	for _, s := range []TargetState{TargetPublished, TargetCancelled} {
+	for _, s := range []TargetState{TargetPublished, TargetSentAsDraft, TargetCancelled} {
 		if !s.Final() {
 			t.Errorf("%s is final", s)
 		}
@@ -66,7 +67,8 @@ func TestTargetStateMachine(t *testing.T) {
 		}
 	}
 
-	if TargetPublishing.Editable() || TargetPublished.Editable() || !TargetFailed.Editable() {
+	if TargetPublishing.Editable() || TargetPublished.Editable() || TargetSentAsDraft.Editable() ||
+		!TargetFailed.Editable() {
 		t.Error("Editable is wrong")
 	}
 }
@@ -331,6 +333,8 @@ func TestItemStatus(t *testing.T) {
 		{"only cancelled ones", []TargetState{TargetCancelled}, ""},
 		{"one still scheduled", []TargetState{TargetPublished, TargetScheduled}, ""},
 		{"one failed", []TargetState{TargetPublished, TargetFailed}, ""},
+		{"a draft is not published", []TargetState{TargetSentAsDraft}, ""},
+		{"a draft among published ones", []TargetState{TargetPublished, TargetSentAsDraft}, ""},
 	} {
 		if got := ItemStatus(tc.states); got != tc.want {
 			t.Errorf("%s: ItemStatus = %q, want %q", tc.name, got, tc.want)

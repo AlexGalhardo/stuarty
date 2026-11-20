@@ -1468,6 +1468,9 @@
           "ai_disclosure": {
             "type": "boolean"
           },
+          "draft": {
+            "type": "boolean"
+          },
           "endpoint": {
             "type": "string"
           },
@@ -1504,6 +1507,16 @@
           "post_cost_micros": {
             "format": "int64",
             "type": "integer"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Price"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "publishes": {
             "items": {
@@ -4344,6 +4357,9 @@
           "caption_max": {
             "type": "integer"
           },
+          "caption_network": {
+            "type": "string"
+          },
           "daily_posts": {
             "type": "integer"
           },
@@ -4367,6 +4383,9 @@
             "type": "integer"
           },
           "needs_kids_declaration": {
+            "type": "boolean"
+          },
+          "no_caption": {
             "type": "boolean"
           },
           "preset": {
@@ -4908,7 +4927,7 @@
           "price": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/Price"
+                "$ref": "#/components/schemas/provider.Price"
               },
               {
                 "type": "null"
@@ -5751,20 +5770,22 @@
           "currency": {
             "type": "string"
           },
-          "input_micros_per_mtok": {
-            "format": "int64",
-            "type": "integer"
-          },
-          "output_micros_per_mtok": {
-            "format": "int64",
-            "type": "integer"
-          },
-          "unit": {
+          "edited": {
             "type": "string"
           },
-          "unit_micros": {
+          "link_micros": {
             "format": "int64",
             "type": "integer"
+          },
+          "post_micros": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "read": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -7487,6 +7508,16 @@
           },
           "network": {
             "type": "string"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Price"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "state": {
             "type": "string"
@@ -13996,6 +14027,29 @@
           "url": {
             "description": "The address that exchanges the code for a browser session.",
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "provider.Price": {
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "input_micros_per_mtok": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "output_micros_per_mtok": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "unit_micros": {
+            "format": "int64",
+            "type": "integer"
           }
         },
         "type": "object"
@@ -24823,7 +24877,7 @@
             }
           },
           {
-            "description": "Only publications with a target in this state: draft, waiting_approval, approved, scheduled, publishing, published, failed, missed or cancelled.",
+            "description": "Only publications with a target in this state: draft, waiting_approval, approved, scheduled, publishing, published, sent_as_draft, failed, missed or cancelled.",
             "in": "query",
             "name": "state",
             "schema": {
@@ -26068,6 +26122,84 @@
           }
         ],
         "summary": "List the social networks of this build and their limits"
+      }
+    },
+    "/api/v1/social/price": {
+      "post": {
+        "operationId": "social.price",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "connection_id": {
+                    "description": "The connection of the network whose price is corrected.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "link_micros": {
+                    "description": "The price of a post with a link, in millionths of the currency: 200000 is $0.20.",
+                    "exclusiveMinimum": 0,
+                    "format": "int64",
+                    "type": "integer"
+                  },
+                  "post_micros": {
+                    "description": "The price of a post, in millionths of the currency: 15000 is $0.015.",
+                    "exclusiveMinimum": 0,
+                    "format": "int64",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "connection_id",
+                  "post_micros",
+                  "link_micros"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialAccount"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Correct the price of a post on a network that charges for one (a person in the browser only)"
       }
     },
     "/api/v1/social/select": {

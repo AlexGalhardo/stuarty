@@ -38,6 +38,12 @@ type Credential struct {
 	Connection Connection
 	Secret     []byte
 	Client     Doer
+	// Rotate changes the secret of the connection in the vault. A network that replaces the refresh token
+	// at every refresh (TikTok) needs it: a token that was not kept is a sign-in lost (SDD-020 section 34).
+	// Under the lock of the connection, update is given the secret as the vault holds it now (Secret above
+	// may be older: a price edited, a sign-in done again since the closure began) and returns the secret
+	// to write, or nil to write nothing. The secret goes straight into the vault and nowhere else.
+	Rotate func(update func(current []byte) ([]byte, error)) error
 	// SignedIn is true when the connection was made by a sign-in in the browser (SDD-014 section 13):
 	// Secret is then the access token, or the key the provider issued, and nothing else.
 	SignedIn bool
@@ -296,7 +302,46 @@ func (m *Manager) use(
 
 	defer clear(secret)
 
-	return fn(Credential{Connection: View(r, true), Secret: secret, Client: client, SignedIn: signedIn})
+	return fn(Credential{
+		Connection: View(r, true), Secret: secret, Client: client, SignedIn: signedIn,
+		Rotate: func(update func([]byte) ([]byte, error)) error { return m.update(r, update) },
+	})
+}
+
+// UpdateSecret changes the secret of a connection by a read and a write under the lock of the connection,
+// so that two changes of one secret (a refresh token a network replaced, a price a person edited) never
+// lose each other (SDD-020 sections 34 and 39). update is given the secret the vault holds and returns the
+// one to write, or nil to write nothing.
+func (m *Manager) UpdateSecret(ctx context.Context, id string, update func(current []byte) ([]byte, error)) error {
+	r, err := m.store.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	return m.update(r, update)
+}
+
+// update is the read and the write of UpdateSecret, under the lock a sign-in renewal holds too.
+func (m *Manager) update(r Row, update func(current []byte) ([]byte, error)) error {
+	l := m.lockOf(r.ID)
+	l.Lock()
+	defer l.Unlock()
+
+	current, err := m.readSecret(r)
+	if err != nil {
+		return err
+	}
+
+	defer clear(current)
+
+	next, err := update(current)
+	if err != nil || next == nil {
+		return err
+	}
+
+	defer clear(next)
+
+	return m.vault.Put(r.SecretRef, next)
 }
 
 func (m *Manager) readSecret(r Row) ([]byte, error) {

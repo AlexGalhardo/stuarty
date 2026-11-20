@@ -40,6 +40,7 @@ Content type `application/json`. Schema: [`SocialAccount`](/docs/api/schemas#soc
 | `connection_id` | `string` | no |  |
 | `label` | `string` | no |  |
 | `network` | `string` | no |  |
+| `price` | [`Price`](/docs/api/schemas#price) or `any` or `null` or `null` | no |  |
 | `state` | `string` | no |  |
 
 ### 400
@@ -282,6 +283,14 @@ puts "#{response.code} #{response.body}"
   "connection_id": "string",
   "label": "string",
   "network": "string",
+  "price": {
+    "currency": "string",
+    "edited": "string",
+    "link_micros": 0,
+    "post_micros": 0,
+    "read": "string",
+    "source": "string"
+  },
   "state": "string"
 }
 ```

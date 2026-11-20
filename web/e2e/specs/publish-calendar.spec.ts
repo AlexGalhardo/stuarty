@@ -257,7 +257,11 @@ test.describe("publishing calendar @chromium-only", () => {
 			await expect(dialog).toHaveCount(0);
 
 			// The post is on today's cell of the calendar, in words as well as in colour.
-			const chip = page.getByTestId("target-chip");
+			// Only the chip of this post: other specs (x-tiktok) plan publications in the same workspace at the
+			// same time.
+			const chip = page
+				.getByTestId("target-chip")
+				.filter({ hasText: "Calendar post" });
 			await expect(chip).toHaveCount(1);
 			await expect(chip).toContainText("Calendar post");
 			await expect(chip).toContainText("Waiting for approval");
@@ -283,7 +287,7 @@ test.describe("publishing calendar @chromium-only", () => {
 			expect(network.uploads()).toBe(0);
 
 			await page.goto("/publish");
-			await expect(page.getByTestId("target-chip")).toContainText("Scheduled");
+			await expect(chip).toContainText("Scheduled");
 
 			// At its time the scheduler sends it, once.
 			await expect
@@ -293,11 +297,13 @@ test.describe("publishing calendar @chromium-only", () => {
 				.toBe("published");
 			expect(network.uploads()).toBe(1);
 
-			await expect(page.getByTestId("target-chip")).toContainText("Published", {
+			await expect(chip).toContainText("Published", {
 				timeout: 30_000,
 			});
 			await page.getByTestId("publish-mode-list").click();
-			const row = page.getByTestId("publish-row");
+			const row = page.locator(
+				`[data-testid="publish-row"][data-target-id="${pub?.targets[0]?.id}"]`,
+			);
 			await expect(row).toHaveCount(1);
 			await expect(row.getByTestId("target-url")).toHaveAttribute(
 				"href",

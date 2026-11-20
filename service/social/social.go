@@ -35,6 +35,12 @@ type Description struct {
 	// it against the ceilings (SDD-020 section 26, RF-408).
 	PostCostMicros   int64  `json:"post_cost_micros,omitempty"`
 	PostCostCurrency string `json:"post_cost_currency,omitempty"`
+	// Price is the price of a network that charges one price for a post and another for a post with a link
+	// (X), with its source and the date it was read (SDD-020 section 35). It takes the place of PostCostMicros.
+	Price *publish.Price `json:"price,omitempty"`
+	// Draft is true when the network takes the file as a draft in the person's own app, to be finished and
+	// published there (TikTok, SDD-020 section 38): the post ends sent_as_draft, not published.
+	Draft bool `json:"draft,omitempty"`
 	// Endpoint and Hosts are what a connection of the network is created with.
 	Endpoint string   `json:"endpoint"`
 	Hosts    []string `json:"hosts"`

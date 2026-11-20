@@ -3,7 +3,14 @@ import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
-import { useT } from "@/lib/i18n";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useLocale, useT } from "@/lib/i18n";
+import {
+	formatMoney,
+	microsToInput,
+	parseMicros,
+} from "../../dashboard/approval/money";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
 import type {
@@ -76,12 +83,96 @@ export function AccountPicker({
 	);
 }
 
+// The price of a post on a network that charges for one (X): the amounts the approval will show, with the date
+// they were read or edited, and a form to correct them when the network changes them (SDD-020 section 39). The
+// page sends what is typed; the service checks it and keeps it.
+export function PriceEditor({
+	account,
+	busy,
+	onSave,
+}: {
+	account: SocialAccount;
+	busy: boolean;
+	onSave(postMicros: number, linkMicros: number): void;
+}): ReactNode {
+	const t = useT();
+	const locale = useLocale();
+	const price = account.price;
+	const [post, setPost] = useState(microsToInput(price?.post_micros ?? 0));
+	const [link, setLink] = useState(microsToInput(price?.link_micros ?? 0));
+	if (price === undefined) return null;
+	const postMicros = parseMicros(post);
+	const linkMicros = parseMicros(link);
+	return (
+		<fieldset
+			className="mt-3 flex flex-col gap-2"
+			data-price-editor={account.connection_id}
+		>
+			<legend className="text-sm font-medium">
+				{t("ui.social.price_title")}
+			</legend>
+			<p className="text-xs text-muted-foreground" data-testid="account-price">
+				{t("ui.social.price_now", {
+					post: formatMoney(
+						{ micros: price.post_micros, currency: price.currency },
+						locale,
+					),
+					link: formatMoney(
+						{ micros: price.link_micros, currency: price.currency },
+						locale,
+					),
+					date: price.edited ?? price.read,
+				})}
+			</p>
+			<div className="flex flex-wrap items-end gap-2">
+				<div className="flex flex-col gap-1">
+					<Label htmlFor={`price-post-${account.connection_id}`}>
+						{t("ui.social.price_post", { currency: price.currency })}
+					</Label>
+					<Input
+						id={`price-post-${account.connection_id}`}
+						inputMode="decimal"
+						className="w-28"
+						value={post}
+						onChange={(event) => setPost(event.target.value)}
+					/>
+				</div>
+				<div className="flex flex-col gap-1">
+					<Label htmlFor={`price-link-${account.connection_id}`}>
+						{t("ui.social.price_link", { currency: price.currency })}
+					</Label>
+					<Input
+						id={`price-link-${account.connection_id}`}
+						inputMode="decimal"
+						className="w-28"
+						value={link}
+						onChange={(event) => setLink(event.target.value)}
+					/>
+				</div>
+				<Button
+					type="button"
+					variant="outline"
+					disabled={busy || postMicros === null || linkMicros === null}
+					onClick={() =>
+						postMicros !== null &&
+						linkMicros !== null &&
+						onSave(postMicros, linkMicros)
+					}
+				>
+					{t("ui.social.price_save")}
+				</Button>
+			</div>
+		</fieldset>
+	);
+}
+
 export function AccountRow({
 	account,
 	networkName,
 	onSignInAgain,
 	onPublish,
 	onSelect,
+	onPrice,
 	busy = false,
 }: {
 	account: SocialAccount;
@@ -89,6 +180,7 @@ export function AccountRow({
 	onSignInAgain(): void;
 	onPublish(): void;
 	onSelect?(accountId: string): void;
+	onPrice?(postMicros: number, linkMicros: number): void;
 	busy?: boolean;
 }): ReactNode {
 	const t = useT();
@@ -118,6 +210,9 @@ export function AccountRow({
 						t("ui.social.needs_sign_in")
 					)}
 				</p>
+				{ready && onPrice !== undefined && account.price !== undefined && (
+					<PriceEditor account={account} busy={busy} onSave={onPrice} />
+				)}
 				{choosing && (
 					<AccountPicker
 						connectionId={account.connection_id}
@@ -194,6 +289,27 @@ export default function SocialSection(): ReactNode {
 		}
 	}
 
+	async function setPrice(
+		account: SocialAccount,
+		postMicros: number,
+		linkMicros: number,
+	): Promise<void> {
+		setChoosing(true);
+		setFailure(null);
+		try {
+			await api().setSocialPrice({
+				connection_id: account.connection_id,
+				post_micros: postMicros,
+				link_micros: linkMicros,
+			});
+			await load();
+		} catch (error) {
+			setFailure(failureOf(error));
+		} finally {
+			setChoosing(false);
+		}
+	}
+
 	if (networks === null || networks.length === 0) {
 		return failure === null ? null : <FailureNote failure={failure} />;
 	}
@@ -249,6 +365,7 @@ export default function SocialSection(): ReactNode {
 							}}
 							onPublish={() => setPublishFor(account)}
 							onSelect={(id) => void choose(account, id)}
+							onPrice={(post, link) => void setPrice(account, post, link)}
 							busy={choosing}
 						/>
 					))}
