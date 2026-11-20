@@ -11,7 +11,7 @@ This document is the successor of [the review of the editor](security-review-1.0
 | Every threat has a test that exists, every operation a scope | `go run ./internal/tools/threatcheck` | exits 0 with 101 threats (T-100 and T-101 added by this epic) |
 | The security tests | `go test -run TestSecurity_ ./...` | to be run by the orchestrator with the machine idle; see the hand-off of the epic |
 | No egress with no connection | `bash scripts/no-egress.sh` | Linux only (`strace`); to be run on Linux or in Docker by the orchestrator |
-| Fuzzing of the parsers of untrusted input | `bash scripts/fuzz.sh 30s` | [the fuzz report](quality/2026-11-20-fuzz.md): 24 targets, one real defect found and fixed |
+| Fuzzing of the parsers of untrusted input | `bash scripts/fuzz.sh 30s` | [the fuzz report](quality/2026-11-20-fuzz.md): 25 targets, two real defects found and fixed |
 | Kill points | `bash scripts/crash.sh` | the vault kill points and the coverage check pass; the server kill points are run by `scripts/crash.sh` as a whole |
 
 ## 2. Findings
@@ -19,7 +19,8 @@ This document is the successor of [the review of the editor](security-review-1.0
 | Id | Severity | Surface | Finding | Fix | Regression test |
 | --- | --- | --- | --- | --- | --- |
 | F-1 | Low | Publishing, webhook destination | A `Retry-After` larger than a `time.Duration` holds (9227000000 seconds) became a negative wait, so the scheduler's own back-off was skipped. Found by `FuzzRetryAfter`. The receiver is chosen by the user, and the wait is capped at 30 s once it is a duration, so the effect was a skipped delay, not a long hold | the cap is applied to the number of seconds before the multiplication (`service/publish/destinations/webhook.go`) | `TestSecurity_T100_ReceiverRetryAfterNeverMakesAnOverflowedOrLongWait` and the fuzz corpus `testdata/fuzz/FuzzRetryAfter` |
-| F-2 | Informational | Vault | A kill between the writing of the temporary file and the rename leaves a `.vault-*.tmp` file in the folder of the vault. It holds only sealed data (the same ciphertext as the vault) and the next write ignores it. It is not removed | none needed; recorded so that a backup of the folder is understood to contain it | `TestSecurity_T101_VaultKilledMidWriteKeepsEveryAcknowledgedSecret` |
+| F-2 | Low | Sign-in flows, token answer | An `expires_in` that does not fit a duration overflowed: 18446744074 seconds became a lifetime of 290 ms, so every use of the connection refreshed its token at the provider, and 9227000000 became a negative lifetime. The token host is a host of the connection, so the effect was a burst of refreshes, not a leak. Found by `FuzzTokenResponse` in the review of epic 42 | `expires_in` is checked as a number of seconds before it becomes a duration; anything else is no lifetime and the caller's default of one hour applies (`service/connections/oauth/oauth.go`, SDD-020 section 6) | `TestTokenLifetimeThatOverflowsIsUnknown` and `FuzzTokenResponse` |
+| F-3 | Informational | Vault | A kill between the writing of the temporary file and the rename leaves a `.vault-*.tmp` file in the folder of the vault. It holds only sealed data (the same ciphertext as the vault) and the next write ignores it. It is not removed | none needed; recorded so that a backup of the folder is understood to contain it | `TestSecurity_T101_VaultKilledMidWriteKeepsEveryAcknowledgedSecret` |
 
 ## 3. For the specialist review
 
