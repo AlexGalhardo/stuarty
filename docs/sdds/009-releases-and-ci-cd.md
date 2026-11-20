@@ -2383,8 +2383,9 @@ Implements RF-218, RF-203, RF-204 and NFR-060 (ADR-0034, ADR-0033, ADR-0019). It
 | `compose.yml` | two services, `stuarty` and `caddy`, on one internal network; named volumes `stuarty-data` (the workspace, `/data`), `caddy-data` and `caddy-config`; three Docker secrets |
 | `Caddyfile` | TLS for `STUARTY_DOMAIN`, `reverse_proxy` to `stuarty:7878` with no response buffering (the SSE stream), a request body limit equal to `STUARTY_MAX_IMPORT_BYTES` |
 | `.env.example` | every variable the compose file reads; `install.sh` writes the real `.env` (mode 0600) |
-| `install.sh`, `update.sh`, `backup.sh`, `restore.sh` | the four scripts of 21.3 to 21.5; plain `bash`, `docker` and `docker compose` only |
-| `test/` | `install-test.sh`, `backup-restore-test.sh`, `update-test.sh` and the `docker` stub they share |
+| `install.sh`, `update.sh`, `backup.sh`, `restore.sh` | the four scripts of 21.3 to 21.5; plain `bash`, `docker` and `docker compose` only; `lib.sh` holds what they share |
+| `README.md`, `README.pt-BR.md` | the short English summary and the Portuguese guide; the full English guide is the page `self-hosting/vps` of the site |
+| `test/` | `install-test.sh`, `backup-restore-test.sh`, `update-test.sh`, `common.sh` and the stand-ins of `docker` and `curl` in `stub/` (no daemon, no pull, no network) |
 
 Image tags: Stuarty is built on the server from the tagged source (`build:` in `compose.yml`, the Dockerfile of section 11) and tagged `stuarty:<version>`, never `latest`; Caddy is `caddy:2.11.9-alpine` pinned by the digest of its index (read from Docker Hub on 2026-11-19). Publishing the image to a registry returns with the releases (ADR-0045), so nothing here pulls a Stuarty image. The Caddy line (`2.11`) changes only by a reviewed edit of `compose.yml`.
 
