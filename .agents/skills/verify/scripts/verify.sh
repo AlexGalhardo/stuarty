@@ -145,8 +145,8 @@ if echo "$changed" | grep -qE '^web/(resources|scripts|e2e|package\.json|biome\.
 	step web-unit bash -c "cd web && bunx vitest run"
 fi
 if echo "$changed" | grep -qE '^(site/|web/app/|core/schema/)'; then
-	step site-last-updated bash -c "cd site && npm run -s check:last-updated"
-	step site-reference bash -c "cd site && npm run -s reference:check"
+	step site-last-updated bash -c "cd site && bun run --silent check:last-updated"
+	step site-reference bash -c "cd site && bun run --silent reference:check"
 fi
 if [ "$mode" = full ]; then
 	step gate bash "$(script scripts/gate.sh)" verify
