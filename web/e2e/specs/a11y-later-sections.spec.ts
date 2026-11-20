@@ -190,3 +190,33 @@ test("the palette combobox points at its list only while the list is shown", asy
 		[],
 	);
 });
+
+// The timeline while the project loads (SDD-012 section 7.1): the grid says it is busy, and its loading skeleton is
+// no child of the grid that is not a row (axe aria-required-children), a state the editor scan met only by chance.
+test("the timeline grid is busy while the project loads and holds only rows", async ({
+	page,
+	request,
+}) => {
+	const seeded = await seedProject(request, { tracks: 0, perTrack: 0 });
+	let release: () => void = () => undefined;
+	const held = new Promise<void>((resolve) => {
+		release = resolve;
+	});
+	await page.route(
+		new RegExp(String.raw`/api/v1/projects/${seeded.id}(\?.*)?$`),
+		async (route) => {
+			if (route.request().method() === "GET") await held;
+			await route.fallback();
+		},
+	);
+	await page.goto(`/editor/${seeded.id}`);
+	const grid = page.locator("#timeline");
+	await expect(grid).toHaveAttribute("aria-busy", "true");
+	const { violations } = await new AxeBuilder({ page })
+		.include("#timeline")
+		.withRules(["aria-required-children"])
+		.analyze();
+	expect(violations.map((v) => v.id)).toEqual([]);
+	release();
+	await expect(grid).not.toHaveAttribute("aria-busy", /.*/);
+});

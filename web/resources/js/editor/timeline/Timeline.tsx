@@ -374,6 +374,7 @@ export default function Timeline({
 				role="grid"
 				aria-label={t("ui.editor.timeline.tracks")}
 				aria-rowcount={trackIds.length * 2 + 1}
+				aria-busy={trackIds.length === 0 && loading ? true : undefined}
 				tabIndex={-1}
 				onKeyDown={onGridKeyDown}
 				onFocus={(event) => {
@@ -447,8 +448,10 @@ export default function Timeline({
 							{trackIds.map((id) => (
 								<TrackRow key={id} id={id} />
 							))}
+							{/* The grid itself is busy: a busy div here would be a child that is no row (axe
+							    aria-required-children), so the skeleton stays out of the tree. */}
 							{trackIds.length === 0 && loading && (
-								<div aria-busy="true" className="flex flex-col gap-2 p-3">
+								<div aria-hidden="true" className="flex flex-col gap-2 p-3">
 									<Skeleton className="h-10" />
 									<Skeleton className="h-10" />
 								</div>
