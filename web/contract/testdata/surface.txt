@@ -52,6 +52,7 @@ command image:edit
 command image:export
 command image:generate
 command image:list
+command image:model-edit
 command image:redo
 command image:show
 command image:undo
@@ -234,6 +235,7 @@ route POST /image/generate
 route POST /images
 route POST /images/{}/edit
 route POST /images/{}/export
+route POST /images/{}/model-edit
 route POST /images/{}/redo
 route POST /images/{}/undo
 route POST /jobs/{}/cancel
