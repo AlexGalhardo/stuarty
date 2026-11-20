@@ -68,7 +68,8 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [51](51-processed-audio-preview-on-the-timeline.md) | Processed audio preview on the timeline | M | 34 | DONE (2026-11-20, `e1729a0bf`..`8778074ef`, merge `74a429def`; the latency budget on an idle machine not measured) |
 | [52](52-live-composition-groups-in-the-browser.md) | Live composition groups in the browser preview | M | 32, 26 | DONE (2026-11-20, `43b11f50e`..`5332706c1`, merge `7cb81c176`; Firefox and WebKit not run) |
 | [53](53-constant-speed-for-compositions.md) | Constant speed for compositions | M | 32 | DONE (2026-11-20, 38369a110..6dc199452, merge 425c9bf14; the audio keeps the pitch through atempo, no nested bus) |
-| [54](54-image-pipeline-performance.md) | Image pipeline performance (NFR-061) | L | 27, 29, 36, 49, 50 | TODO |
+| [54](54-image-pipeline-performance.md) | Image pipeline performance (NFR-061) | L | 27, 29, 36, 49, 50 | IN REVIEW (the rest of NFR-061 moved to epic 55 by D-118) |
+| [55](55-image-renderer-performance.md) | Image renderer performance (NFR-061, the renderer half) | L | 54 | TODO |
 
 ### 1.4 Closing (after the tracks)
 
@@ -78,7 +79,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [39](39-recipes-for-commercials-and-long-videos.md) | Recipes for commercials and long videos | M | 33, 38 | DONE (2026-11-21, c9e92558c..34f52a00c, merge 96f77dc1e; the Portuguese guides are in docs/guides/pt-BR) |
 | [40](40-documentation-site.md) | Documentation site for Stuarty | L | 02, and each section it documents | DONE (2026-11-21, 3228d086c..59aadcdd9 (replayed from c5f344a07 to reword one subject), merge b97638650; English site with Portuguese guides in docs/guides/pt-BR (D-103); the site domain and an idle-machine timing wait for the author) |
 | [41](41-accessibility.md) | Accessibility of every section | M | 07, 28, 37 | DONE (2026-11-20, released in v0.42.0; criterion 7, the pass with a real screen reader, is the author's and stays not verified) |
-| [42](42-quality-campaigns.md) | Quality campaigns: budgets, fuzz, crash, soak, security | L | every epic above | IN PROGRESS (tasks 1, 2, 5, 6, 7 merged in v0.43.0; idle budgets measured 2026-11-20, `docs/perf/2026-11-20-windows.md`: every NFR passes but NFR-061, which epic 54 owns; soak of 20 minutes passed, `docs/quality/2026-11-20-soak.md`, the 4-hour run is still owed; no-egress on Linux and the security review session wait) |
+| [42](42-quality-campaigns.md) | Quality campaigns: budgets, fuzz, crash, soak, security | L | every epic above | IN PROGRESS (tasks 1, 2, 5, 6, 7 merged in v0.43.0; idle budgets measured 2026-11-20, `docs/perf/2026-11-20-windows.md`: every NFR passes but NFR-061, which epics 54 and 55 own; soak of 20 minutes passed, `docs/quality/2026-11-20-soak.md`, the 4-hour run is still owed; no-egress on Linux and the security review session wait) |
 
 ### 1.5 Waiting for something outside the team
 
@@ -249,7 +250,7 @@ New specifications have their numbers reserved here, so that epics running side 
 | RF-407 (AI disclosure) | 19, 22 |
 | RF-420 to RF-423 (blog destinations) | 23 |
 | NFR-060 (everything local) | 04, 25 |
-| NFR-061, NFR-062 (image performance and determinism) | 27, 29, 42 |
+| NFR-061, NFR-062 (image performance and determinism) | 27, 29, 42, 54, 55 |
 | NFR-063, NFR-064 (one adapter per network or provider; contract tests) | 09, 18 |
 | NFR-065 (accessibility of every section) | 41 |
 | NFR-066 (a small-model agent completes the flow) | 38 |

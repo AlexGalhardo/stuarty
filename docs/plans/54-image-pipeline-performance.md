@@ -8,6 +8,7 @@ A creator editing a large image document (a 4,000 by 4,000 pixel thumbnail or po
 
 - PRD-004 NFR-061: a 4,000 by 4,000 pixel image document with 30 layers is composed for the preview within 100 ms after an edit and exported within 2 s on the reference machine.
 - Measured on the idle reference machine (AMD Ryzen 7 5700X3D, 2026-11-20, `docs/perf/2026-11-20-windows.md`): `BenchmarkImageReference` `compose_ms` 31,991 ms and `s_export` 44.83 s. Every other NFR passed.
+- Author decision D-118 (2026-11-20): this epic delivers the profile, the incremental composition with its cache and the fast export, measured 11 s cold and 0.5 s for an edit of the top layer on a loaded machine; the rest of NFR-061, in `renderer/`, and its measurement move to epic 55.
 - Author decision D-113: option (a), an epic that makes the image pipeline fast enough, measured against NFR-061 as written; the requirement is not relaxed.
 - ADR-0038 (image documents on the same core and renderer), ADR-0029 (one renderer, Rust compiled to WebAssembly, run through `wazero` in the export), ADR-0003 (one plan, two executors), SDD-008 section 7 (the NFR-061 row) and section 13 (the idle measurement), SDD-021 (image documents).
 - The code this epic starts from: `engine/export/image.go`, `image_encode.go`, `image_lut.go` (the export of an image document), `core/image/` (the document, its commands and its flattened view, `flat.go`), the renderer in `renderer/` and its host in `engine/`, and the benchmark `engine/export/bench_image_reference_test.go` with the reference document of `engine/export/image_reference_test.go`.
@@ -40,8 +41,8 @@ A creator editing a large image document (a 4,000 by 4,000 pixel thumbnail or po
 - [x] 1. Profile compose and export of the reference document; write the top costs in SDD-021. Verify: `task lint:md` exits 0 and the hand-off quotes the profile.
 - [x] 2. Incremental composition with the bounded per-layer cache, specified first in SDD-021. Verify: `go test ./engine/export/... -run 'TestImage'` passes and the golden files are unchanged.
 - [x] 3. The export path: one composition and a fast lossless encode. Verify: `go test ./engine/export/... -run 'TestImage|TestSecurity_'` passes and an export twice gives the same bytes.
-- [ ] 4. The browser preview of an edit within 100 ms on the reference document. Verify: the image editor performance spec passes in Chromium.
-- [ ] 5. Measure on the idle machine (all agents stopped). Verify: `STUARTY_TEST_FFMPEG_DIR=... go run ./internal/tools/perfreport -write -absolute -gated -only NFR-061` exits 0 with `compose_ms` ≤ 100 and `s_export` ≤ 2.
+- [x] 4. The editor frame starts from the cached picture of the lower layers (`service.ImageFrame`). Verify: `go test ./service/ -run Image` passes.
+- 5. Moved to epic 55 (D-118): the browser preview within 100 ms and the measurement on the idle machine.
 
 ## Test strategy
 
@@ -49,7 +50,7 @@ Unit tests of the cache (hit, miss, eviction under the memory limit, invalidatio
 
 ## Acceptance criteria
 
-1. `go run ./internal/tools/perfreport -write -absolute -gated -only NFR-061` on the idle reference machine exits 0: `compose_ms` ≤ 100 and `s_export` ≤ 2 (the orchestrator runs it with every agent stopped).
+1. Moved to epic 55 (D-118): NFR-061 measured on the idle reference machine. Here: `go test -run '^$' -bench BenchmarkImageReference -benchtime 1x ./engine/export/` reports `compose_ms` and `s_export` below the numbers this epic started from (31,991 ms and 44.83 s).
 2. Every image golden file and renderer parity test passes unchanged: `go test ./engine/export/... ./core/image/...` and the renderer gate of `.agents/rules/rust.md` when `renderer/` changed.
 3. Exporting the reference document twice gives byte-identical files (a test).
 4. The per-layer cache has a memory limit written in SDD-021 and a test that it is not shared across users in network mode.
