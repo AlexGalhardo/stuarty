@@ -9,6 +9,7 @@ import DriveTabs from "../../components/landing/DriveTabs.astro";
 import LandingFooter from "../../components/landing/LandingFooter.astro";
 import Placeholder from "../../components/landing/Placeholder.astro";
 import Shot from "../../components/landing/Shot.astro";
+import SplitTitle from "../../components/landing/SplitTitle.astro";
 import StageCanvas from "../../components/landing/StageCanvas.astro";
 import { cta, features, shots, trust, type Shot as ShotData } from "@/lib/landing-pages";
 import { dockerRunCommand } from "@/lib/latest-release";
@@ -53,9 +54,9 @@ const install = dockerRunCommand();
 		</div>
 
 		<!-- Intro -->
-		<section aria-labelledby="creative-title" class="relative mx-auto flex min-h-[88svh] max-w-6xl flex-col justify-center px-(--gutter) pt-[calc(var(--header-h)+2rem)] pb-12">
+		<section aria-labelledby="creative-title" class="site-container relative flex min-h-[88svh] flex-col justify-center pt-[calc(var(--header-h)+2rem)] pb-12">
 			<p class="eyebrow" data-hero-item>Stuarty &middot; a creative cut</p>
-			<h1 id="creative-title" class="display-hero mt-5 max-w-4xl text-fg" data-split>This page is a timeline.</h1>
+			<SplitTitle text="This page is a timeline." id="creative-title" class="display-hero mt-5 max-w-4xl text-fg" />
 			<p class="lead mt-6 max-w-2xl" data-hero-item>Scroll to move the playhead. Each clip is one part of the studio: create, edit, manage and publish your content in one place, with an agent editing beside you.</p>
 			<div class="mt-9 flex flex-wrap items-center gap-3" data-hero-item>
 				<a class="btn btn-brand" href="#timeline">Play the timeline <span aria-hidden="true">&darr;</span></a>
@@ -66,7 +67,7 @@ const install = dockerRunCommand();
 		<!-- The editor: preview, log, tracks -->
 		<section id="timeline" aria-label="The studio, clip by clip" class="relative" data-editor>
 			<div class="editor-frame" data-editor-pin>
-				<div class="editor-top">
+				<div class="editor-top site-container">
 					<div class="editor-preview" data-preview>
 						{clips.map((c, i) => (
 							<article class="preview-item" data-preview-item={i} aria-labelledby={`clip-${c.id}`}>
@@ -98,7 +99,7 @@ const install = dockerRunCommand();
 				</div>
 
 				<div class="editor-bottom" aria-hidden="true">
-					<div class="editor-toolbar">
+					<div class="editor-toolbar site-container">
 						<span class="font-mono text-sm text-fg" data-timecode>00:00:00</span>
 						<span class="text-xs text-muted">Launch teaser &middot; 1080&times;1920 &middot; 30 fps</span>
 						<span class="ml-auto rounded-md bg-brand px-2.5 py-1 text-xs font-semibold text-brand-foreground" data-export>Export</span>
@@ -138,7 +139,7 @@ const install = dockerRunCommand();
 		</section>
 
 		<!-- After the cut -->
-		<section aria-labelledby="drive-title" class="relative mx-auto max-w-6xl px-(--gutter) py-20 lg:py-32">
+		<section aria-labelledby="drive-title" class="site-container relative py-20 lg:py-32">
 			<div data-reveal>
 				<p class="eyebrow" data-reveal-item>The same commands, four doors</p>
 				<h2 id="drive-title" class="display-title mt-4 max-w-3xl text-fg" data-reveal-item>What the agent just did, you can do too.</h2>
@@ -146,7 +147,7 @@ const install = dockerRunCommand();
 			<DriveTabs idPrefix="creative" class="mt-10" />
 		</section>
 
-		<section aria-labelledby="yours-title" class="relative mx-auto max-w-6xl px-(--gutter) py-16 lg:py-24">
+		<section aria-labelledby="yours-title" class="site-container relative py-16 lg:py-24">
 			<div data-reveal>
 				<p class="eyebrow" data-reveal-item>{trust.eyebrow}</p>
 				<h2 id="yours-title" class="display-title mt-4 max-w-3xl text-fg" data-reveal-item>{trust.title}</h2>
@@ -162,7 +163,8 @@ const install = dockerRunCommand();
 		</section>
 
 		<!-- The command line easter egg -->
-		<section aria-labelledby="cli-title" class="relative mx-auto max-w-3xl px-(--gutter) py-16 lg:py-24">
+		<section aria-labelledby="cli-title" class="site-container relative py-16 lg:py-24">
+			<div class="mx-auto max-w-3xl">
 			<h2 id="cli-title" class="display-title text-center text-fg">{cta.title}</h2>
 			<div class="mt-10 flex flex-wrap justify-center gap-3">
 				<a class="btn btn-brand" href={withBase(cta.primary.href)}>{cta.primary.label} <span aria-hidden="true">&rarr;</span></a>
@@ -177,6 +179,7 @@ const install = dockerRunCommand();
 					<button type="submit" class="rounded-md border border-white/15 px-3 py-1.5 font-sans text-xs font-medium text-white/80 hover:bg-white/10">Run</button>
 				</div>
 			</form>
+			</div>
 		</section>
 	</main>
 	<LandingFooter />
@@ -192,9 +195,7 @@ const install = dockerRunCommand();
 	.editor-preview {
 		display: grid;
 		gap: 4rem;
-		padding: 2rem var(--gutter);
-		max-width: 72rem;
-		margin-inline: auto;
+		padding-block: 2rem;
 	}
 	.preview-item {
 		display: grid;
@@ -224,10 +225,7 @@ const install = dockerRunCommand();
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) 17rem;
 		gap: 1.5rem;
-		max-width: 80rem;
-		width: 100%;
-		margin-inline: auto;
-		padding: 1.5rem var(--gutter) 1rem;
+		padding-block: 1.5rem 1rem;
 	}
 	html.timeline-on .editor-preview {
 		position: relative;
@@ -291,7 +289,6 @@ const install = dockerRunCommand();
 		align-items: center;
 		gap: 1rem;
 		height: 2.75rem;
-		padding-inline: var(--gutter);
 		border-bottom: 1px solid color-mix(in oklab, var(--fg) 8%, transparent);
 	}
 	.editor-lanes {

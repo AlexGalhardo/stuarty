@@ -8,6 +8,7 @@ import DriveTabs from "../../components/landing/DriveTabs.astro";
 import LandingFooter from "../../components/landing/LandingFooter.astro";
 import Placeholder from "../../components/landing/Placeholder.astro";
 import Shot from "../../components/landing/Shot.astro";
+import SplitTitle from "../../components/landing/SplitTitle.astro";
 import StageCanvas from "../../components/landing/StageCanvas.astro";
 import { credits, cta, hero, shots, takes, trust } from "@/lib/landing-pages";
 import { site, withBase } from "@/lib/site";
@@ -48,10 +49,10 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 
 		<!-- Take 1: one place -->
 		<section id="studio" class="take" aria-labelledby="studio-title" data-take>
-			<div class="mx-auto grid w-full max-w-6xl items-center gap-10 px-(--gutter) lg:grid-cols-12">
+			<div class="site-container grid items-center gap-10 lg:grid-cols-12 lg:pr-20">
 				<div class="lg:col-span-7">
 					<p class="eyebrow" data-hero-item>Take {number("studio")} &middot; {hero.eyebrow}</p>
-					<h1 id="studio-title" tabindex="-1" class="display-hero mt-5 text-fg" data-split>{hero.title}</h1>
+					<SplitTitle text={hero.title} id="studio-title" tabindex="-1" class="display-hero mt-5 text-fg" />
 					<p class="lead mt-6 max-w-xl" data-hero-item>{hero.lead}</p>
 					<div class="mt-9 flex flex-wrap gap-3" data-hero-item>
 						<a class="btn btn-brand" href={withBase(hero.primary.href)}>{hero.primary.label} <span aria-hidden="true">&rarr;</span></a>
@@ -63,7 +64,7 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 
 		<!-- Take 2: edit video -->
 		<section id="video" class="take" aria-labelledby="video-title" data-take>
-			<div class="mx-auto grid w-full max-w-6xl items-center gap-10 px-(--gutter) lg:grid-cols-12">
+			<div class="site-container grid items-center gap-10 lg:grid-cols-12 lg:pr-20">
 				<div class="lg:col-span-4">
 					<p class="eyebrow" data-in>Take {number("video")} &middot; Edit video</p>
 					<h2 id="video-title" tabindex="-1" class="display-title mt-4 text-fg" data-in>A real editor, in your browser.</h2>
@@ -84,7 +85,7 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 
 		<!-- Take 3: images and writing -->
 		<section id="images" class="take" aria-labelledby="images-title" data-take>
-			<div class="mx-auto grid w-full max-w-6xl items-center gap-10 px-(--gutter) lg:grid-cols-12">
+			<div class="site-container grid items-center gap-10 lg:grid-cols-12 lg:pr-20">
 				<div class="relative lg:col-span-7 lg:order-1 [perspective:1800px]">
 					<div class="showcase relative z-10 lg:w-[88%]" data-in-3d>
 						<Shot shot={shots.imageEditor} sizes="(min-width: 64rem) 40rem, 100vw" />
@@ -103,7 +104,7 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 
 		<!-- Take 4: publish with a person in the loop -->
 		<section id="publish" class="take" aria-labelledby="publish-title" data-take>
-			<div class="mx-auto grid w-full max-w-6xl items-center gap-10 px-(--gutter) lg:grid-cols-12">
+			<div class="site-container grid items-center gap-10 lg:grid-cols-12 lg:pr-20">
 				<div class="lg:col-span-5">
 					<p class="eyebrow" data-in>Take {number("publish")} &middot; Publish</p>
 					<h2 id="publish-title" tabindex="-1" class="display-title mt-4 text-fg" data-in>Nothing goes out until you say so.</h2>
@@ -128,7 +129,7 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 
 		<!-- Take 5: agents drive it too -->
 		<section id="agents" class="take" aria-labelledby="agents-title" data-take>
-			<div class="mx-auto w-full max-w-6xl px-(--gutter)">
+			<div class="site-container lg:pr-20">
 				<p class="eyebrow" data-in>Take {number("agents")} &middot; Agents</p>
 				<h2 id="agents-title" tabindex="-1" class="display-title mt-4 max-w-3xl text-fg" data-in>Agents drive it too.</h2>
 				<p class="lead mt-4 max-w-2xl" data-in>The editor, the CLI, the HTTP API and MCP are thin doors to one command core, tested for parity.</p>
@@ -140,7 +141,7 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 
 		<!-- Take 6: open source, on your machine -->
 		<section id="yours" class="take" aria-labelledby="yours-title" data-take>
-			<div class="mx-auto w-full max-w-6xl px-(--gutter) text-center">
+			<div class="site-container text-center lg:pr-20">
 				<p class="eyebrow mt-[18vh] lg:mt-[22vh]" data-in>Take {number("yours")} &middot; {trust.eyebrow}</p>
 				<h2 id="yours-title" tabindex="-1" class="display-title mx-auto mt-4 max-w-3xl text-fg" data-in>{trust.title}</h2>
 				<ul class="mx-auto mt-8 flex max-w-4xl flex-wrap justify-center gap-2" data-in>
@@ -181,11 +182,6 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 		align-items: center;
 		visibility: hidden;
 		opacity: 0;
-	}
-	@media (min-width: 64rem) {
-		html.takes-on .take {
-			padding-right: 5rem;
-		}
 	}
 	html.takes-on .take[data-active] {
 		visibility: visible;
