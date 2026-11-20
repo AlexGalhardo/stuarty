@@ -63,8 +63,11 @@ To move a post, drag it to another day, or focus it and press Space, then the ar
 stuarty publication:create --project prj_7k2m9x4q1b --title "Week one" --export job_0123456789 --connection con_0123456789 --at 2026-11-20T09:00 --zone America/Sao_Paulo --made-for-kids no
 stuarty publication:schedule pub_0123456789 --target tgt_0123456789
 stuarty publication:list --state waiting_approval
+stuarty publication:list --from 2026-11-16 --until 2026-11-23 --zone America/Sao_Paulo
 stuarty publication:show pub_0123456789
 ```
+
+A date in `--from` and `--until` is the start of that day in `--zone` (UTC when you leave it out), so the second list is the week from Monday 16 to Sunday 22 in São Paulo.
 
 `publication:schedule` only asks for approval. An agent that runs it gets a post that waits for you.
 
