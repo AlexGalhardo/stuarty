@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/internal/perfgate"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/web/app/events"
 )
@@ -90,6 +91,23 @@ func p95(d []time.Duration) time.Duration {
 // commits go on at their usual latency, and the client then reconnects with its
 // last id and receives every revision it missed.
 func TestEventsSlowReaderIsDropped(t *testing.T) {
+	slowReaderRun(t, false)
+}
+
+// The writes of a project stay within 20% of the baseline while one client of it has stopped reading. It
+// compares two commit latencies on the wall clock, so it is an absolute time budget: it runs only on the
+// idle machine with STUARTY_PERF=1 (SDD-008 section 10), and the test above holds the behaviour always.
+func TestEventsSlowReaderDoesNotSlowCommits(t *testing.T) {
+	perfgate.Require(t)
+
+	slowReaderRun(t, true)
+}
+
+// slowReaderRun is the scenario of SDD-006 check 6. With timed it also measures the latency of the commits
+// and judges it; without it, the commits only feed the stalled client.
+func slowReaderRun(t *testing.T, timed bool) {
+	t.Helper()
+
 	h := newHarness(t)
 	id := h.newProject("slow")
 	head := h.commits(id, 0, 1)
@@ -120,27 +138,30 @@ func TestEventsSlowReaderIsDropped(t *testing.T) {
 	waitFor(t, 5*time.Second, func() bool { return h.events.Subscribers(id) == 1 })
 
 	// The baseline is measured on a project nobody streams.
-	other := h.newProject("baseline")
-	orev := h.commits(other, 0, 1)
-	otrack := h.track
 	base := make([]time.Duration, 0, 60)
 
-	// Both windows start from an empty WAL: SQLite checkpoints on its own every 1,000 pages, which for these
-	// commits is a spike of about 20 ms every 14 commits, and where the first one falls depends on how many
-	// pages the migrations left in the WAL. Without this the p95 compares the phase of the checkpoints, not the
-	// cost of the stalled client (VV-233).
-	h.checkpoint()
+	if timed {
+		other := h.newProject("baseline")
+		orev := h.commits(other, 0, 1)
+		otrack := h.track
 
-	for range 60 {
-		var d time.Duration
+		// Both windows start from an empty WAL: SQLite checkpoints on its own every 1,000 pages, which for these
+		// commits is a spike of about 20 ms every 14 commits, and where the first one falls depends on how many
+		// pages the migrations left in the WAL. Without this the p95 compares the phase of the checkpoints, not the
+		// cost of the stalled client (VV-233).
+		h.checkpoint()
 
-		orev, d = h.fatCommit(other, otrack, orev)
-		base = append(base, d)
+		for range 60 {
+			var d time.Duration
+
+			orev, d = h.fatCommit(other, otrack, orev)
+			base = append(base, d)
+		}
+
+		h.checkpoint()
 	}
 
 	rev, during := head, make([]time.Duration, 0, 60)
-
-	h.checkpoint()
 
 	for range 60 {
 		var d time.Duration
@@ -155,11 +176,13 @@ func TestEventsSlowReaderIsDropped(t *testing.T) {
 
 	t.Logf("subscriber removed %v after the last commit", time.Since(dropped))
 
-	// Writes stay within 20% of the baseline (plus 5 ms of timer noise). The
-	// race detector and coverage instrumentation distort both runs unevenly, so the
-	// timing holds only for a normal build, which CI also runs; the drop itself is asserted above.
-	if b, d := p95(base), p95(during); !raceEnabled && testing.CoverMode() == "" && d > b+b/5+5*time.Millisecond {
-		t.Errorf("commit p95 during the stall = %v, baseline %v", d, b)
+	// Writes stay within 20% of the baseline (plus 5 ms of timer noise). The race detector and coverage
+	// instrumentation distort both runs unevenly, so the timing holds only for a normal build; the drop
+	// itself is asserted above.
+	if timed && !raceEnabled && testing.CoverMode() == "" {
+		if b, d := p95(base), p95(during); d > b+b/5+5*time.Millisecond {
+			t.Errorf("commit p95 during the stall = %v, baseline %v", d, b)
+		}
 	}
 
 	// The client reconnects with the last id it holds (the head it joined at).
