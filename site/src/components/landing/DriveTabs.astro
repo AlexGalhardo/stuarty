@@ -10,6 +10,9 @@ interface Props {
 }
 
 const { idPrefix, class: className } = Astro.props;
+
+// What Claude Code prints before each kind of line: the shell prompt, its own prompt, a tool call and its result.
+const SYMBOLS: Record<string, string> = { cmd: "$ ", prompt: "> ", tool: "● ", out: "  ⎿  ", more: "     " };
 ---
 
 <div data-tabs data-drive class={className}>
@@ -47,13 +50,13 @@ const { idPrefix, class: className } = Astro.props;
 			</div>
 			<div class="terminal relative overflow-hidden" data-terminal>
 				<div class="flex items-center justify-between border-b border-white/10 px-4 py-2">
-					<span aria-hidden="true" class="flex gap-1.5"><i class="size-2.5 rounded-full bg-white/20"></i><i class="size-2.5 rounded-full bg-white/20"></i><i class="size-2.5 rounded-full bg-white/20"></i></span>
+					<span aria-hidden="true" class="flex gap-1.5"><i class="size-3 rounded-full bg-[#FF5F57]"></i><i class="size-3 rounded-full bg-[#FEBC2E]"></i><i class="size-3 rounded-full bg-[#28C840]"></i></span>
 					<button type="button" data-copy={tab.copy} class="rounded-md border border-white/15 px-2.5 py-1 font-sans text-xs font-medium text-white/80 hover:bg-white/10 hover:text-white" aria-label={`Copy the ${tab.label} example`}>
 						Copy
 					</button>
 				</div>
-				<pre tabindex="0" aria-label={`${tab.label} example`} class="m-0 px-4 py-3"><code>{tab.lines.map((line) => (
-					<span class="block">{line.kind === "cmd" ? <span class="t-prompt" aria-hidden="true">$ </span> : null}<span class:list={[line.kind === "out" && "t-out", line.kind === "note" && "t-note"]} data-line={line.kind}>{line.text}</span></span>
+				<pre tabindex="0" aria-label={`${tab.label} example: ${tab.lines.map((l) => l.text).join(" ")}`} class="m-0 min-h-[24rem] px-4 py-3"><code aria-hidden="true">{tab.lines.map((line) => (
+					<span class="block" data-row={line.kind}>{SYMBOLS[line.kind] ? <span class:list={["select-none", line.kind === "out" || line.kind === "more" ? "t-out" : "t-prompt"]}>{SYMBOLS[line.kind]}</span> : null}<span class:list={[(line.kind === "out" || line.kind === "more") && "t-out", line.kind === "note" && "t-note", line.kind === "tool" && "t-tool"]} data-type>{line.text}</span></span>
 				))}</code></pre>
 			</div>
 		</div>

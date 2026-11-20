@@ -3,7 +3,7 @@
 // agent cursor, the MCP log, the collapse at the end) is drawn from that one number, so scrolling back plays it in
 // reverse. Timeline mode is off on small screens and under reduced motion: the clips are a plain list.
 import { afterPaint, reducedMotion } from "./boot";
-import { gsap, hideStillAfter, revealOnScroll, ScrollTrigger, typeLines } from "./motion";
+import { gsap, hideStillAfter, revealOnScroll, ScrollTrigger, prepareTerminals, typeLines } from "./motion";
 import type { Stage } from "./stage";
 import { enhanceTabs } from "./tabs";
 import { mountTimeline } from "./timeline";
@@ -22,6 +22,7 @@ export function start(): void {
 		typed.add(terminal);
 		typeLines(terminal).play();
 	};
+	prepareTerminals(root);
 	enhanceTabs(root, typePanel);
 	const firstPanel = root.querySelector("[data-drive] [role='tabpanel']:not([hidden])");
 	if (firstPanel) ScrollTrigger.create({ trigger: firstPanel, start: "top 75%", once: true, onEnter: () => typePanel(firstPanel) });
