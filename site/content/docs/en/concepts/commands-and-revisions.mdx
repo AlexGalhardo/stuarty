@@ -18,6 +18,14 @@ Every batch names the `base_revision` it was planned against. If the project mov
 
 The operations are in the [operations of the edit tool](/docs/mcp/tools/edit).
 
+## Going back: revert, checkpoints and the diff
+
+The history is never rewritten, so going back is one more revision.
+
+- **Checkpoints** name a revision ("before the intro"): in the History tab, with `stuarty checkpoint:create`, or with `history` `action=checkpoint`. Removing a checkpoint never removes a revision. Before an agent's first edit of the day the service makes one by itself, so there is always a point to come back to.
+- **The diff** says in words what changed between two revisions, most significant first: `stuarty diff --project <id> --from 12`, or `history` `action=diff`. It is computed from the two documents, so it is right after undo and redo too.
+- **Revert** takes the project back to the document at a revision or a checkpoint, as a new revision of whoever asked: `stuarty revert --project <id> --checkpoint "before the intro" --dry-run` shows what it would change and writes nothing. Without `--dry-run` it is a step like any other, and `undo` takes it back. A revert goes over what other actors did since, on purpose; with an older `--base` it answers `E_REVISION_CONFLICT` instead when they changed an object it would change.
+
 ## Common mistakes
 
 - Sending a `base_revision` ahead of the project: `E_VALIDATION`.

@@ -378,6 +378,178 @@
       ]
     },
     {
+      "name": "revert",
+      "domain": "video",
+      "summary": "go back to the document of an earlier revision, as a new step that undo takes back",
+      "usage": [
+        "stuarty revert --project <id> (--revision n | --checkpoint name) [--base n] [--dry-run]"
+      ],
+      "example": "stuarty revert --project prj_7k2m9x4q1b --checkpoint \"before the intro\" --dry-run",
+      "flags": [
+        {
+          "name": "revision",
+          "type": "integer",
+          "usage": "the revision to go back to"
+        },
+        {
+          "name": "checkpoint",
+          "type": "string",
+          "usage": "the name of a checkpoint to go back to"
+        },
+        {
+          "name": "base",
+          "type": "integer",
+          "usage": "the revision you read (default the current one); an older one conflicts with other actors' changes"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "diff",
+      "domain": "video",
+      "summary": "list what changed between two revisions, most significant first",
+      "usage": [
+        "stuarty diff --project <id> (--from n | --from-checkpoint name) [--until n]"
+      ],
+      "example": "stuarty diff --project prj_7k2m9x4q1b --from 12",
+      "flags": [
+        {
+          "name": "from",
+          "type": "integer",
+          "usage": "the revision the diff starts from"
+        },
+        {
+          "name": "from-checkpoint",
+          "type": "string",
+          "usage": "the name of a checkpoint the diff starts from"
+        },
+        {
+          "name": "until",
+          "type": "integer",
+          "usage": "the revision the diff ends at (default the current one)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "checkpoint:create",
+      "domain": "video",
+      "summary": "name a revision so that it can be gone back to",
+      "usage": [
+        "stuarty checkpoint:create --project <id> --name <name> [--note t] [--revision n]"
+      ],
+      "example": "stuarty checkpoint:create --project prj_7k2m9x4q1b --name \"before the intro\"",
+      "flags": [
+        {
+          "name": "name",
+          "type": "string",
+          "usage": "1 to 60 characters, no slash"
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "usage": "up to 300 characters"
+        },
+        {
+          "name": "revision",
+          "type": "integer",
+          "usage": "the revision to name (default the current one)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "checkpoint:list",
+      "domain": "video",
+      "summary": "list the checkpoints of a project, newest revision first",
+      "usage": [
+        "stuarty checkpoint:list --project <id>"
+      ],
+      "example": "stuarty checkpoint:list --project prj_7k2m9x4q1b --json",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "checkpoint:rename",
+      "domain": "video",
+      "summary": "rename a checkpoint, and change its note",
+      "usage": [
+        "stuarty checkpoint:rename --project <id> --name <name> --new-name <name> [--note t]"
+      ],
+      "example": "stuarty checkpoint:rename --project prj_7k2m9x4q1b --name draft --new-name \"first cut\"",
+      "flags": [
+        {
+          "name": "name",
+          "type": "string",
+          "usage": "the checkpoint to rename"
+        },
+        {
+          "name": "new-name",
+          "type": "string",
+          "usage": "the new name"
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "usage": "replaces the note when given"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "checkpoint:remove",
+      "domain": "video",
+      "summary": "remove a checkpoint; no revision is removed",
+      "usage": [
+        "stuarty checkpoint:remove --project <id> --name <name>"
+      ],
+      "example": "stuarty checkpoint:remove --project prj_7k2m9x4q1b --name draft",
+      "flags": [
+        {
+          "name": "name",
+          "type": "string",
+          "usage": "the checkpoint to remove"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
       "name": "media:import",
       "domain": "asset",
       "summary": "import media files into a project",

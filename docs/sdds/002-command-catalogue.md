@@ -92,6 +92,8 @@ For `settings.updated` and `project.updated` the `id` is the project identifier.
 
 `core/command.DescribeDiff(doc, diff)` renders the diff as text, one line per change, with times in seconds and frames, for agents and for the history view. Its exact format is in SDD-003.
 
+**Diff of two documents (RF-121, epic 36).** `core/command.Diff(a, b)` returns the changes that turn document `a` into document `b`, in the form above (the form of a fetched document, whole objects for `added` and `removed`, `[before, after]` for a changed field), in the order of a batch diff. It is computed from the two documents and never from the log, so it is the same after any sequence of edits, undos and redos that led to them. `core/command.DiffEntries(a, b)` classifies each change and sorts them most significant first: a track added or removed, then an item added or removed, then `settings.updated` and `project.updated`, then an item **trimmed** (`duration` or `source_in` changed), then an item **moved** (`start` or `track` changed, and neither of those two), then any other change of an item or a track, then assets and fonts; ties by kind and identifier. An entry has the change, its `verb` (`added`, `removed`, `moved`, `trimmed`, `changed`), its `noun` (`track`, the type of an item: `clip`, `audio`, `text`, `caption` or `shape`, then `asset`, `font`, `settings`, `project`) and the `DescribeDiff` line of the change. Equal documents give no entry.
+
 ### A.6 Undo
 
 The inverse of an operation is not another catalogue command. It is a list of three **primitives** computed from the before-state of the objects the operation touched:
@@ -108,6 +110,8 @@ Undo and redo are service operations (SDD-003). The rule from ADR-0006 that they
 
 The primitives of one undo are applied together to a working copy, with no validation between them, and the result is validated once at the end. Intermediate states may therefore break an invariant (two items overlapping while a ripple is being reversed); only the final document must be valid. Their order matters in one way only: an object must exist before it is patched and must not exist before it is put. If the final document is invalid, the primitives that touch an object named in a violation are dropped and the application starts again from the document before the undo; this ends because each round drops at least one primitive (SDD-005 §12.2).
 
+**Revert (RF-120, epic 36).** `history.revert` is a service operation, not a catalogue command, because it needs a document the batch itself cannot carry: the document at an earlier revision. The service rebuilds that document (SDD-005 §12.4) and the core computes the change: `core/command.Revert(current, target)` returns a `BatchResult` whose `Doc` is `target`, whose `Diff` is `Diff(current, target)` and whose `Inverse` is the primitives that turn `target` back into `current`. Reverting is therefore an ordinary batch: it is one revision with an inverse, so it is undone by `Undo` of the actor who asked and redone by `Redo`; it is validated as any batch (the target was a valid document); and it changes the locked tracks like undo does (it is not an edit of an item, it restores a state). The document equals the target in canonical bytes, which `TestRevertProperty` checks over a random sequence of edits for every earlier revision. `core/command.RebuildAt(current, inverses)` is the other half: it applies the stored inverses of the revisions after the target, newest first and each in reverse order, all together on a working copy with no guard, and returns the document at the target, or an error when any primitive is skipped (the log does not fit the document). The service compares its hash with the `doc_sha256` of the target row before it trusts it.
+
 ### A.7 Concurrency and idempotency
 
 A batch request carries `base_revision`. The service decides:
@@ -123,6 +127,8 @@ A batch whose `base_revision` is more than 1,000 revisions behind is rejected wi
 A batch may carry an `idempotency_key` (8 to 64 characters from `[A-Za-z0-9._~-]`). The service stores the result of a committed batch under `(project, actor, key)` for 24 hours. A second request with the same key returns the stored result with `"replayed": true` and changes nothing; if the second request's operations differ from the first's, the answer is `E_IDEMPOTENCY_MISMATCH`.
 
 `dry_run: true` runs steps 1 and 2 and returns the result that would be committed, with `"applied": false`, without writing.
+
+A revert (A.6) carries `base_revision` too, the revision the caller read when it chose the target; absent, it is the current revision. When it is older, a revert conflicts when another actor's change in between added, updated or removed an object that the revert changes (the objects of `Diff(current, target)`, and the project or the settings when those differ). The error is the same `E_REVISION_CONFLICT` with the text diff, so a person reads what the other actor did before going back over it.
 
 ### A.8 Errors
 
