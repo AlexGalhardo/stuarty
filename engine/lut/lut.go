@@ -67,7 +67,9 @@ type parser struct {
 func Parse(r io.Reader) (*Table, error) {
 	lr := &io.LimitedReader{R: r, N: MaxBytes + 1}
 	sc := bufio.NewScanner(lr)
-	sc.Buffer(make([]byte, 0, 4096), maxLine)
+	// The buffer holds a line of maxLine bytes with its CR LF; a longer line is refused below. A larger initial
+	// buffer would raise the limit, because the scanner never caps below its capacity (VV-293).
+	sc.Buffer(make([]byte, 0, maxLine+2), maxLine+2)
 
 	var (
 		p  parser
@@ -76,6 +78,10 @@ func Parse(r io.Reader) (*Table, error) {
 
 	for sc.Scan() {
 		ln++
+
+		if len(sc.Bytes()) > maxLine {
+			return nil, invalid(0, "a line is too long or the file cannot be read")
+		}
 
 		line := sc.Text()
 		if i := strings.IndexByte(line, '#'); i >= 0 {
