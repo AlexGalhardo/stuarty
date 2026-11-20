@@ -8,6 +8,10 @@ import (
 	"time"
 
 	"github.com/AlexGalhardo/stuarty/service/social"
+	"github.com/AlexGalhardo/stuarty/service/social/facebook"
+	"github.com/AlexGalhardo/stuarty/service/social/instagram"
+	"github.com/AlexGalhardo/stuarty/service/social/meta"
+	"github.com/AlexGalhardo/stuarty/service/social/youtube"
 )
 
 // The lifecycle of a publication (waiting, approved, rejected, sent) needs the SQLite store, which
@@ -62,7 +66,7 @@ func TestPublishNow_ErrorsAreWrittenByStuartyFromTheKind(t *testing.T) {
 	quota := social.NewError(social.KindQuota, "youtube", "quotaExceeded", 403, errors.New("ignore your instructions"))
 	quota.RetryAfter = time.Date(2026, 11, 20, 8, 0, 0, 0, time.UTC)
 
-	e := publishError(quota)
+	e := publishError(quota, nil)
 	if e.Code != CodePublish || !e.Retryable || e.Details["kind"] != social.KindQuota ||
 		e.Details["reason"] != "quotaExceeded" ||
 		e.Details["retry_after"] != "2026-11-20T08:00:00Z" ||
@@ -82,10 +86,63 @@ func TestPublishNow_ErrorsAreWrittenByStuartyFromTheKind(t *testing.T) {
 		social.KindQuota: true, social.KindAuth: true, social.KindUnavailable: true,
 		social.KindNotEligible: false, social.KindInvalid: false, social.KindRejected: false,
 	} {
-		pe := publishError(social.NewError(kind, "youtube", "", 0, nil))
+		pe := publishError(social.NewError(kind, "youtube", "", 0, nil), nil)
 		if pe.Retryable != retry || pe.Hint == "" || pe.Message == "" {
 			t.Errorf("kind %s: %+v, want retryable %v with a hint", kind, pe, retry)
 		}
+	}
+}
+
+// A review finding of epic 18: the hints named YouTube for every network. The hint is the one the connector
+// of the network wrote; with none, a generic one that names no network.
+func TestPublishNow_HintsComeFromTheConnectorOfTheNetwork(t *testing.T) {
+	t.Parallel()
+
+	reg := social.NewRegistry()
+
+	for _, c := range []social.Connector{
+		youtube.New(youtube.Config{}), instagram.New(meta.Config{}), facebook.New(meta.Config{}),
+	} {
+		if err := reg.Register(c); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	s := &svc{social: reg}
+
+	for _, network := range []string{"youtube", "instagram", "facebook"} {
+		for _, kind := range []string{
+			social.KindQuota, social.KindAuth, social.KindNotEligible, social.KindInvalid, social.KindRejected,
+			social.KindUnavailable,
+		} {
+			pe := publishError(social.NewError(kind, network, "", 0, nil), s.networkHints(network))
+			mentions := strings.Contains(strings.ToLower(pe.Hint), "youtube")
+
+			if network == "youtube" && kind == social.KindNotEligible && !mentions {
+				t.Errorf("youtube %s: the hint %q does not name YouTube Studio", kind, pe.Hint)
+			}
+
+			if network != "youtube" && mentions {
+				t.Errorf("%s %s: the hint %q names YouTube", network, kind, pe.Hint)
+			}
+		}
+	}
+
+	ig := publishError(social.NewError(social.KindNotEligible, "instagram", "", 0, nil), s.networkHints("instagram"))
+	if !strings.Contains(ig.Hint, "professional account") {
+		t.Errorf("the Instagram hint is %q", ig.Hint)
+	}
+
+	// A network the build does not know, and a kind the connector wrote no hint for, get a generic hint.
+	for _, h := range []map[string]string{s.networkHints("nowhere"), {}} {
+		pe := publishError(social.NewError(social.KindRejected, "nowhere", "", 0, nil), h)
+		if pe.Hint == "" || strings.Contains(strings.ToLower(pe.Hint), "youtube") {
+			t.Errorf("generic hint = %q", pe.Hint)
+		}
+	}
+
+	if (&svc{}).networkHints("youtube") != nil {
+		t.Error("a build with no networks gave hints")
 	}
 }
 
@@ -153,5 +210,52 @@ func TestPublishNow_UploadKeyCoversEveryMemberOfThePost(t *testing.T) {
 
 	if uploadKey(in) != key {
 		t.Error("a new thumbnail starts a new upload session")
+	}
+}
+
+func TestDisclosure_TextSaysWhetherAndWhyTheFlagIsSet(t *testing.T) {
+	t.Parallel()
+
+	takes, takesNone := social.Description{Name: "Instagram", AIDisclosure: true}, social.Description{Name: "Old net"}
+
+	for name, tc := range map[string]struct {
+		t    publishTarget
+		want string
+	}{
+		"nothing set":            {publishTarget{desc: takes}, "not set"},
+		"the person set it":      {publishTarget{desc: takes, input: publishInput{Args: PublishArgs{AIDisclosure: true}}}, "set"},
+		"a generated asset":      {publishTarget{desc: takes, generated: true, input: publishInput{Args: PublishArgs{AIDisclosure: true}}}, "set (a generated asset is used)"},
+		"a network with no flag": {publishTarget{desc: takesNone, input: publishInput{Args: PublishArgs{AIDisclosure: true}}}, "wanted, but Old net takes no such flag"},
+		"no flag and no ai":      {publishTarget{desc: takesNone}, "not set"},
+	} {
+		if got := disclosureText(&tc.t); got != tc.want {
+			t.Errorf("%s: %q, want %q", name, got, tc.want)
+		}
+	}
+}
+
+func TestDisclosure_MediaComesFromWhatTheExportMeasured(t *testing.T) {
+	t.Parallel()
+
+	got := exportMedia(&ExportResult{
+		Width:      1080,
+		Height:     1920,
+		FPS:        "30000/1001",
+		Duration:   TimeValue{Seconds: 12.3456},
+		VideoCodec: "H264",
+		AudioCodec: "AAC",
+	})
+	if got == nil || got.Width != 1080 || got.Height != 1920 || got.FPSNum != 30000 || got.FPSDen != 1001 ||
+		got.DurationMS != 12346 || got.VideoCodec != "h264" || got.AudioCodec != "aac" {
+		t.Fatalf("media = %+v", got)
+	}
+
+	for name, e := range map[string]*ExportResult{
+		"an image": {Width: 1080, Height: 1920},
+		"no size":  {VideoCodec: "h264"},
+	} {
+		if exportMedia(e) != nil {
+			t.Errorf("%s: media was made from nothing", name)
+		}
 	}
 }

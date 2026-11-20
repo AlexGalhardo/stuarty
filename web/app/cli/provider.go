@@ -15,7 +15,10 @@ import (
 
 // providerCommands are the commands of the AI provider layer.
 func providerCommands() []*spec {
-	return []*spec{providerListCmd, providerModelsCmd, providerPriceCmd, textGenerateCmd}
+	return []*spec{
+		providerListCmd, providerModelsCmd, providerPriceCmd, textGenerateCmd, imageGenerateCmd, voiceGenerateCmd,
+		voiceListCmd,
+	}
 }
 
 var providerListCmd = &spec{
@@ -49,8 +52,7 @@ func providerListText(r *service.ProviderListResult) string {
 
 	for i := range r.Prices {
 		e := &r.Prices[i]
-		lines = append(lines, fmt.Sprintf("price %s %s: in %s, out %s per million tokens, %s",
-			e.Provider, e.Model, micros(e.InputMicrosPerMTok), micros(e.OutputMicrosPerMTok), e.Currency))
+		lines = append(lines, fmt.Sprintf("price %s %s: %s", e.Provider, e.Model, priceText(&e.Price)))
 	}
 
 	return strings.Join(lines, "\n")
@@ -58,6 +60,19 @@ func providerListText(r *service.ProviderListResult) string {
 
 // micros writes an amount in millionths of the currency unit as a decimal.
 func micros(v int64) string { return fmt.Sprintf("%d.%06d", v/1_000_000, v%1_000_000) }
+
+// priceText says a price in words, in the unit it has: tokens, an image or a million characters.
+func priceText(p *provider.Price) string {
+	switch p.Unit {
+	case provider.UnitImage:
+		return fmt.Sprintf("%s per image, %s", micros(p.UnitMicros), p.Currency)
+	case provider.UnitMChar:
+		return fmt.Sprintf("%s per million characters, %s", micros(p.UnitMicros), p.Currency)
+	}
+
+	return fmt.Sprintf("in %s, out %s per million tokens, %s",
+		micros(p.InputMicrosPerMTok), micros(p.OutputMicrosPerMTok), p.Currency)
+}
 
 var providerModelsCmd = &spec{
 	name:       "provider:models",
@@ -93,15 +108,11 @@ func providerModelsText(r *service.ProviderModelsResult) string {
 
 		price := "no price: set one with provider:price before generating with it"
 		if m.Price != nil {
-			price = fmt.Sprintf(
-				"in %s, out %s per million tokens, %s (%s)",
-				micros(
-					m.Price.InputMicrosPerMTok,
-				),
-				micros(m.Price.OutputMicrosPerMTok),
-				m.Price.Currency,
-				m.PriceSource,
-			)
+			price = fmt.Sprintf("%s (%s)", priceText(m.Price), m.PriceSource)
+		}
+
+		if m.Capability != "" {
+			price = m.Capability + "  " + price
 		}
 
 		// The display name is text the provider wrote: delimited, never bare.
@@ -137,7 +148,17 @@ var providerPriceCmd = &spec{
 		{
 			Name:  "price-out",
 			Kind:  kindString,
-			Usage: "the price of a million output tokens; leave both prices out to remove the entry",
+			Usage: "the price of a million output tokens; leave all prices out to remove the entry",
+		},
+		{
+			Name:  "unit",
+			Kind:  kindString,
+			Usage: "image for the price of one image, mchar for the price of a million characters of speech; leave out for tokens",
+		},
+		{
+			Name:  "unit-micros",
+			Kind:  kindString,
+			Usage: "with --unit: the price of one image or of a million characters, in millionths of the currency unit",
 		},
 	},
 	run: func(ctx context.Context, c *call) (*output, error) {
@@ -157,9 +178,14 @@ var providerPriceCmd = &spec{
 			return nil, err
 		}
 
+		unitMicros, err := microsFlag(c, "unit-micros")
+		if err != nil {
+			return nil, err
+		}
+
 		res, err := c.svc.ProviderPriceSet(ctx, service.ProviderPriceSetRequest{
 			Provider: c.args.str("provider"), Model: c.args.str("model"), Currency: c.args.str("currency"),
-			InputMicrosPerMTok: in, OutputMicrosPerMTok: out,
+			InputMicrosPerMTok: in, OutputMicrosPerMTok: out, Unit: c.args.str("unit"), UnitMicros: unitMicros,
 		})
 		if err != nil {
 			return nil, err

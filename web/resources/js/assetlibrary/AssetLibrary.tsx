@@ -25,6 +25,7 @@ import type {
 	OriginKind,
 } from "../editor/api/types";
 import { thumbnailUrl } from "../editor/api/urls";
+import { GenerateDialog } from "./GenerateDialog";
 
 // The two sections of the asset library (SDD-011 section 14.6, RF-320 to RF-323): Visual Assets and Video
 // Assets are one library seen through a filter on the kind. The page draws what the service answers and sends
@@ -514,6 +515,9 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 	const [reusable, setReusable] = useState(false);
 	const [applied, setApplied] = useState<AssetQuery>({});
 	const [open, setOpen] = useState<string | null>(null);
+	// The dialog stays mounted so that it closes the way a dialog does; each opening is a new one (a new key),
+	// so a second generation starts from an empty form.
+	const [generating, setGenerating] = useState({ open: false, count: 0 });
 
 	const load = useCallback(
 		async (query: AssetQuery, cursor?: string): Promise<void> => {
@@ -567,14 +571,35 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 		<>
 			<Head title={t(`ui.nav.section.${key}`)} />
 			<div className="mx-auto flex max-w-6xl flex-col gap-6">
-				<div>
-					<h1 className="text-2xl font-semibold tracking-tight">
-						{t(`ui.nav.section.${key}`)}
-					</h1>
-					<p className="mt-1 text-sm text-muted-foreground">
-						{t(`ui.assets.intro.${section}`)}
-					</p>
+				<div className="flex flex-wrap items-start justify-between gap-3">
+					<div>
+						<h1 className="text-2xl font-semibold tracking-tight">
+							{t(`ui.nav.section.${key}`)}
+						</h1>
+						<p className="mt-1 text-sm text-muted-foreground">
+							{t(`ui.assets.intro.${section}`)}
+						</p>
+					</div>
+					<Button
+						type="button"
+						onClick={() =>
+							setGenerating((was) => ({ open: true, count: was.count + 1 }))
+						}
+					>
+						{t(`ui.generate.open.${section}`)}
+					</Button>
 				</div>
+				{generating.count > 0 && (
+					<GenerateDialog
+						key={generating.count}
+						kind={section === "visual" ? "image" : "voice"}
+						open={generating.open}
+						onOpenChange={(next) =>
+							setGenerating((was) => ({ ...was, open: next }))
+						}
+						onGenerated={() => void load(applied)}
+					/>
+				)}
 				<search>
 					<form
 						onSubmit={search}

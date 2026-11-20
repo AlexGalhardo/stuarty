@@ -56,6 +56,9 @@ type Model struct {
 	OutputTokens  int    `json:"output_tokens"`
 	// Price is set only when the catalogue publishes one.
 	Price *provider.Price `json:"price,omitempty"`
+	// Capability is a hint from the adapter (provider.Capability*), or empty: it orders what a picker shows
+	// and is never a rule (SDD-016 section 2.2).
+	Capability string `json:"capability,omitempty"`
 }
 
 // Provider is the part every adapter implements.
@@ -94,14 +97,74 @@ type TextGenerator interface {
 	GenerateText(ctx context.Context, c connections.Credential, req provider.TextRequest) (TextResult, error)
 }
 
-// ImageGenerator is the seam of epic 10: declared with no method and no adapter, so that the epic adds the
+// GeneratedFile is one file a provider made: the bytes, already read (a result delivered as a URL is
+// fetched through the gated client by the adapter).
+type GeneratedFile struct {
+	Data []byte
+	// RevisedPrompt is the prompt as the provider rewrote it, when it does: untrusted text.
+	RevisedPrompt string `untrusted:"true"`
+}
+
+// ImageResult is the answer to one request for images.
+type ImageResult struct {
+	// Model is the model that answered, as the provider names it; empty when it does not say.
+	Model string
+	Files []GeneratedFile
+	// Failed is how many of the images asked for did not arrive, and Err is why the first did not: a partial
+	// batch keeps what arrived (SDD-016 section 6.2).
+	Failed int
+	Err    error
+}
+
+// ImageGenerator is a provider that makes images (SDD-016 section 2.2).
+type ImageGenerator interface {
+	Provider
+	// ImageLimits are the sizes and the count the provider documents for a model. It needs no network.
+	ImageLimits(model string) provider.ImageLimits
+	// GenerateImages makes one request and returns the files. No file is larger than maxBytes.
+	GenerateImages(
+		ctx context.Context, c connections.Credential, req provider.ImageRequest, maxBytes int64,
+	) (ImageResult, error)
+}
+
+// Voice is one voice of a provider.
+type Voice struct {
+	ID string `json:"id"`
+	// Name is a display name: untrusted text, cleaned and cut like the name of a model.
+	Name     string `json:"name"               untrusted:"true"`
+	Language string `json:"language,omitempty"`
+	// Source is SourceProvider for a list the provider answered, SourceDocumented for one its documentation
+	// gives because it has no endpoint for it.
+	Source string `json:"source"`
+}
+
+// Where a list of voices came from.
+const (
+	SourceProvider   = "provider"
+	SourceDocumented = "documented"
+)
+
+// VoiceResult is the answer to one request for speech.
+type VoiceResult struct {
+	Model string
+	File  GeneratedFile
+}
+
+// VoiceGenerator is a provider that reads a text out (SDD-016 section 2.2).
+type VoiceGenerator interface {
+	Provider
+	// VoiceLimits are what the provider documents for a model. It needs no network.
+	VoiceLimits(model string) provider.VoiceLimits
+	// Voices lists the voices of the provider.
+	Voices(ctx context.Context, c connections.Credential) ([]Voice, error)
+	// GenerateVoice makes one request and returns the audio. The file is no larger than maxBytes.
+	GenerateVoice(
+		ctx context.Context, c connections.Credential, req provider.VoiceRequest, maxBytes int64,
+	) (VoiceResult, error)
+}
+
+// VideoGenerator is the seam of epic 11: declared with no method and no adapter, so that the epic adds the
 // methods and the adapters and nothing else.
-type ImageGenerator interface{ Provider }
-
-// VoiceGenerator is the seam of epic 11 for voice, as ImageGenerator is for images.
-type VoiceGenerator interface{ Provider }
-
-// VideoGenerator is the seam of epic 11 for video, as ImageGenerator is for images.
 type VideoGenerator interface{ Provider }
 
 // The kinds of a provider failure (SDD-016 section 8).
@@ -111,6 +174,8 @@ const (
 	KindBadRequest  = "bad_request"
 	KindUnavailable = "unavailable"
 	KindUnreadable  = "unreadable"
+	KindRefused     = "refused"
+	KindTimeout     = "timeout"
 )
 
 // Error is a failure of a provider. It is built from the status and a short code, never from the body

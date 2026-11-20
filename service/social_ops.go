@@ -14,8 +14,11 @@ import (
 
 // The account states of SDD-020 section 7.6.
 const (
-	AccountReady        = "ready"
-	AccountNeedsSignIn  = "needs_sign_in"
+	AccountReady       = "ready"
+	AccountNeedsSignIn = "needs_sign_in"
+	// AccountNeedsAccount is a sign-in that reached several accounts and none is chosen yet (SDD-020
+	// section 17).
+	AccountNeedsAccount = "needs_account"
 	maxClientFieldBytes = 2048
 )
 
@@ -68,8 +71,24 @@ type SocialAccount struct {
 	Label        string `json:"label"                   untrusted:"true"`
 	AccountID    string `json:"account_id,omitempty"`
 	AccountTitle string `json:"account_title,omitempty" untrusted:"true"`
-	// State is ready, or needs_sign_in when no refresh token is kept.
+	// State is ready, needs_sign_in when no refresh token is kept, or needs_account when the sign-in reached
+	// several accounts and a person has not chosen one.
 	State string `json:"state"`
+	// Choices are the accounts a person chooses from when State is needs_account; never a token.
+	Choices []SocialChoice `json:"choices,omitempty"`
+}
+
+// SocialChoice is an account a sign-in reached.
+type SocialChoice struct {
+	ID    string `json:"id"`
+	Title string `json:"title" untrusted:"true"`
+}
+
+// SocialAccountSelectRequest chooses the account of a connection whose sign-in reached several.
+type SocialAccountSelectRequest struct {
+	ConnectionID string `json:"connection_id"`
+	// AccountID is the id of one of the choices of the connection.
+	AccountID string `json:"account_id"`
 }
 
 // SocialAccountListRequest has no member.
@@ -290,8 +309,6 @@ func (s *svc) SocialConnectComplete(ctx context.Context, req SocialConnectComple
 		return nil, connectionError(perr)
 	}
 
-	acc, _ := conn.SignedIn(newSecret)
-
 	now := s.nowMs()
 
 	if aerr := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
@@ -305,10 +322,105 @@ func (s *svc) SocialConnectComplete(ctx context.Context, req SocialConnectComple
 		return nil, connectionError(gerr)
 	}
 
-	return &SocialAccount{
-		ConnectionID: row.ID, Network: p.Network, Label: row.Label, AccountID: acc.ID, AccountTitle: acc.Title,
-		State: AccountReady,
-	}, nil
+	out := SocialAccount{ConnectionID: row.ID, Network: p.Network, Label: row.Label}
+	describeAccount(conn, newSecret, &out)
+
+	return &out, nil
+}
+
+// describeAccount fills the account and the state of a connection from its secret: ready with the account it
+// signs in as, needs_account with the choices when the sign-in reached several and none is chosen, and
+// needs_sign_in otherwise. It reads no token out.
+func describeAccount(conn social.Connector, secret []byte, out *SocialAccount) {
+	if a, ok := conn.SignedIn(secret); ok {
+		out.AccountID, out.AccountTitle, out.State, out.Choices = a.ID, a.Title, AccountReady, nil
+
+		return
+	}
+
+	out.State = AccountNeedsSignIn
+
+	if ch, ok := conn.(social.Chooser); ok {
+		for _, c := range ch.Choices(secret) {
+			out.Choices = append(out.Choices, SocialChoice{ID: c.ID, Title: c.Title})
+		}
+
+		if len(out.Choices) > 0 {
+			out.State = AccountNeedsAccount
+		}
+	}
+}
+
+// SocialAccountSelect chooses which of the accounts a sign-in reached the connection publishes to. It is for
+// a person in the browser: where a post goes is not an agent's to change (SDD-020 section 17, T-56). The
+// secret is written again with the chosen account's token alone.
+func (s *svc) SocialAccountSelect(ctx context.Context, req SocialAccountSelectRequest) (*SocialAccount, error) {
+	c, err := s.connectionCaller(ctx, "SocialAccountSelect")
+	if err != nil {
+		return nil, err
+	}
+
+	if !c.Browser {
+		return nil, privilegedError()
+	}
+
+	reg, err := s.socialRegistry()
+	if err != nil {
+		return nil, err
+	}
+
+	row, gerr := s.conns.Get(ctx, req.ConnectionID)
+	if gerr != nil {
+		return nil, connectionError(gerr)
+	}
+
+	conn, cerr := reg.Get(row.Kind)
+	if cerr != nil {
+		return nil, validationAt("connection_id", "the connection is not one of a social network.")
+	}
+
+	chooser, ok := conn.(social.Chooser)
+	if !ok {
+		return nil, validationAt("connection_id", "the connection signs in as one account: there is none to choose.")
+	}
+
+	var (
+		newSecret []byte
+		refused   error
+	)
+
+	werr := s.conns.With(ctx, row.ID, func(cred connections.Credential) error {
+		newSecret, refused = chooser.Choose(cred.Secret, req.AccountID)
+
+		return nil
+	})
+	if werr != nil {
+		return nil, connectionError(werr)
+	}
+
+	if refused != nil {
+		return nil, validationAt("account_id", "that account is not one the sign-in reached.").
+			withHint("choose one of the accounts listed for the connection, or sign in again")
+	}
+
+	defer clear(newSecret)
+
+	if perr := s.conns.PutSecret(row.ID, newSecret); perr != nil {
+		return nil, connectionError(perr)
+	}
+
+	now := s.nowMs()
+
+	if aerr := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
+		return appendAudit(ctx, tx, now, c.Actor, "social.select", "", row.ID)
+	}); aerr != nil {
+		return nil, asError(aerr)
+	}
+
+	out := SocialAccount{ConnectionID: row.ID, Network: row.Kind, Label: row.Label}
+	describeAccount(conn, newSecret, &out)
+
+	return &out, nil
 }
 
 // SocialAccountList lists the connections of the social networks with who each signs in as.
@@ -344,9 +456,7 @@ func (s *svc) SocialAccountList(ctx context.Context, _ SocialAccountListRequest)
 		}
 
 		werr := s.conns.With(ctx, list[i].ID, func(cred connections.Credential) error {
-			if a, ok := conn.SignedIn(cred.Secret); ok {
-				acc.AccountID, acc.AccountTitle, acc.State = a.ID, a.Title, AccountReady
-			}
+			describeAccount(conn, cred.Secret, &acc)
 
 			return nil
 		})
