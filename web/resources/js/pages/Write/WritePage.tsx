@@ -127,13 +127,13 @@ export default function WritePage(): ReactNode {
 				<p className="text-sm text-muted-foreground">{t("ui.write.intro")}</p>
 			</header>
 			<div className="flex flex-wrap items-end gap-3">
-				<div className="flex flex-col gap-1">
+				<div className="flex min-w-0 max-w-full flex-col gap-1">
 					<Label htmlFor="write-project">{t("ui.write.filter.project")}</Label>
 					<select
 						id="write-project"
 						value={project}
 						onChange={(event) => setProject(event.target.value)}
-						className="h-8 rounded-lg border border-input bg-background px-2 text-sm"
+						className="h-8 max-w-full rounded-lg border border-input bg-background px-2 text-sm"
 					>
 						<option value="">{t("ui.write.filter.all_projects")}</option>
 						{projects.map((p) => (
@@ -143,13 +143,13 @@ export default function WritePage(): ReactNode {
 						))}
 					</select>
 				</div>
-				<div className="flex flex-col gap-1">
+				<div className="flex min-w-0 max-w-full flex-col gap-1">
 					<Label htmlFor="write-kind">{t("ui.write.filter.kind")}</Label>
 					<select
 						id="write-kind"
 						value={kind}
 						onChange={(event) => setKind(event.target.value as "" | TextKind)}
-						className="h-8 rounded-lg border border-input bg-background px-2 text-sm"
+						className="h-8 max-w-full rounded-lg border border-input bg-background px-2 text-sm"
 					>
 						<option value="">{t("ui.write.filter.all_kinds")}</option>
 						{KINDS.map((k) => (
@@ -321,13 +321,13 @@ function NewText({
 			aria-label={t("ui.write.new_form.title")}
 		>
 			<div className="grid gap-3 sm:grid-cols-3">
-				<div className="flex flex-col gap-1">
+				<div className="flex min-w-0 max-w-full flex-col gap-1">
 					<Label htmlFor="new-project">{t("ui.write.new_form.project")}</Label>
 					<select
 						id="new-project"
 						value={project}
 						onChange={(event) => setProject(event.target.value)}
-						className="h-8 rounded-lg border border-input bg-background px-2 text-sm"
+						className="h-8 max-w-full rounded-lg border border-input bg-background px-2 text-sm"
 					>
 						{projects.map((p) => (
 							<option key={p.id} value={p.id}>
@@ -336,7 +336,7 @@ function NewText({
 						))}
 					</select>
 				</div>
-				<div className="flex flex-col gap-1">
+				<div className="flex min-w-0 max-w-full flex-col gap-1">
 					<Label htmlFor="new-title">{t("ui.write.new_form.name")}</Label>
 					<Input
 						id="new-title"
@@ -346,13 +346,13 @@ function NewText({
 						onChange={(event) => setTitle(event.target.value)}
 					/>
 				</div>
-				<div className="flex flex-col gap-1">
+				<div className="flex min-w-0 max-w-full flex-col gap-1">
 					<Label htmlFor="new-kind">{t("ui.write.new_form.kind")}</Label>
 					<select
 						id="new-kind"
 						value={kind}
 						onChange={(event) => setKind(event.target.value as TextKind)}
-						className="h-8 rounded-lg border border-input bg-background px-2 text-sm"
+						className="h-8 max-w-full rounded-lg border border-input bg-background px-2 text-sm"
 					>
 						{KINDS.map((k) => (
 							<option key={k} value={k}>
