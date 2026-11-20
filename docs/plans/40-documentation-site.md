@@ -41,7 +41,7 @@ Someone who has never heard of Stuarty lands on the site, understands in a minut
 - [x] 1. Amend SDD-010 with the structure; produce the keep, rewrite, remove table for the existing pages. Verify: `task lint:md` exits 0; the table is in the hand-off.
 - [x] 2. Extend the generators to every merged domain and wire `task generate:check`. Verify: `task codegen && task generate:check` exits 0.
 - [x] 3. Write Start and the three install pages. Verify: `bash scripts/docs-commands-smoke.sh` passes for them.
-- [ ] 4. Write the first-short tutorial from `scripts/first-flow.sh`. Verify: the smoke script runs the tutorial's commands end to end.
+- [x] 4. Write the first-short tutorial from `scripts/first-flow.sh`. Verify: the smoke script runs the tutorial's commands end to end.
 - [ ] 5. Write the guides for the merged sections, including one page per network's developer app. Verify: `task lint:site` exits 0.
 - [ ] 6. Write Agents, Security and privacy, Troubleshooting and the Glossary. Verify: `task lint:site` exits 0.
 - [ ] 7. Remove or redirect the old pages; search for the former name and for milestone wording. Verify: a grep for the former product name outside the migration page, and for "MVP", "beta" and "1.0" as product stages, returns nothing in `site/src`.

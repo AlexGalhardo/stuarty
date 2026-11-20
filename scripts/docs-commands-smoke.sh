@@ -18,7 +18,7 @@
 # this script already runs that server. SMOKE_DOCKER=1 runs the Docker blocks too.
 #
 # A block is skipped, and reported, when it cannot run offline: it installs a tool or a model (needs the
-# network, D-016) or it starts another agent client (`claude`). SMOKE_NETWORK=1 runs the model blocks too.
+# network, D-016; a transcription runs with the stub of the test condition) or it starts another agent client (`claude`). SMOKE_NETWORK=1 runs the model blocks too.
 # Needs: ffmpeg on PATH, go (only when STUARTY_BIN is not set). Environment:
 #   STUARTY_BIN   the binary to test (default: built from this checkout)
 #   SMOKE_PORT        loopback port of the server (default a random one in 20000 to 39999)
@@ -77,7 +77,9 @@ export PATH="$work/bin:$PATH"
 unset STUARTY_URL APP_KEY APP_ENV
 export STUARTY_HOME="$work/home"
 port="${SMOKE_PORT:-$((20000 + RANDOM % 20000))}"
-STUARTY_ADDR="127.0.0.1:$port" "$work/bin/$exe" serve >"$work/serve.log" 2>&1 &
+# APP_ENV=test with the stub transcriber (four fixed words) lets the pages run a transcription with no model
+# and no network; nothing else of the test condition is used.
+APP_ENV=test STUARTY_TEST_TRANSCRIBER=stub STUARTY_ADDR="127.0.0.1:$port" "$work/bin/$exe" serve >"$work/serve.log" 2>&1 &
 server_pid=$!
 for _ in $(seq 1 120); do
 	[ -s "$work/home/runtime.json" ] && break
@@ -139,8 +141,8 @@ for page in "${pages[@]}"; do
 			log "check $label (needs Docker or a server: syntax, variables and flags only; SMOKE_DOCKER=1 runs it)"
 			checked=$((checked + 1)); continue
 		fi
-		if [ "${SMOKE_NETWORK:-}" != 1 ] && grep -qE 'tools:install|--language|transcribe' "$b"; then
-			log "skip $label (installs or runs a model, needs the network; SMOKE_NETWORK=1 runs it)"; skipped=$((skipped + 1)); continue
+		if [ "${SMOKE_NETWORK:-}" != 1 ] && grep -qE 'tools:install' "$b"; then
+			log "skip $label (installs a model, needs the network; SMOKE_NETWORK=1 runs it)"; skipped=$((skipped + 1)); continue
 		fi
 		log "run  $label"
 		if ! bash -eo pipefail "$b"; then
@@ -150,6 +152,26 @@ for page in "${pages[@]}"; do
 		fi
 		ran=$((ran + 1))
 	done
+done
+
+# The steps that need an account of the reader (an AI provider, a social network, a person's approval) are
+# written as console blocks, which are not run. Every command they show must be a command of the CLI, and
+# the whole flow, with those very steps, is run against the fake services by scripts/first-flow.sh.
+cli_names="$(grep -oE '"name": "[a-z:-]+"' "$root/site/generated/cli.json" | cut -d'"' -f4)"
+for page in "${pages[@]}"; do
+	name="$(basename "$page" .mdx)"
+	awk '{ sub(/$/, "") } /^[ ]*```console[ ]*$/ { inb = 1; next } inb && /^[ ]*```[ ]*$/ { inb = 0; next } inb { print }' "$page" |
+		{ grep -oE '(^|[|;] *)[ ]*stuarty [a-z][a-z:-]*' || true; } | sed -E 's/.*stuarty //' | sort -u |
+		while read -r cmd; do
+			echo "$cli_names" | grep -qx "$cmd" || die "$name: a console block runs stuarty $cmd, which is not a command of the CLI"
+		done
+	if [ "$name" = first-short-video ]; then
+		log "running scripts/first-flow.sh (the fake provider, the fake network and a person approval)"
+		STUARTY_BIN="$work/bin/$exe" bash "$root/scripts/first-flow.sh" >"$work/first-flow.out" 2>&1 ||
+			{ tail -n 20 "$work/first-flow.out" >&2; die "scripts/first-flow.sh failed"; }
+		log "first-flow: $(tail -n 1 "$work/first-flow.out")"
+		ran=$((ran + 1))
+	fi
 done
 
 [ "$((ran + checked))" -gt 0 ] || die "no block ran"
