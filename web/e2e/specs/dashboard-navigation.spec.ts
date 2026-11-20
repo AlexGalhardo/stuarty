@@ -98,10 +98,11 @@ test.describe("dashboard-navigation", () => {
 					const url = message.location().url;
 					// WebKit reports a violation of style-src-attr every time a native
 					// <select> is created (its own user-agent shadow tree, not our markup;
-					// Chromium and Firefox stay silent). The console text does not name the
-					// directive, so WebKit's console line is dropped and the violations are
-					// read from the page instead: only style-src-attr is let through, so a
-					// <style> or a script without the nonce still fails (VV-263).
+					// Chromium and Firefox stay silent), and its console line does not name
+					// the directive, so that line is dropped here. The violations themselves
+					// are checked by the page fixture of helpers.ts, across navigations, with
+					// only style-src-attr let through in WebKit (cspViolations): a <style> or
+					// a script without the nonce still fails (VV-263).
 					if (
 						browserName === "webkit" &&
 						message.text().startsWith("Refused to apply a stylesheet")
@@ -112,13 +113,6 @@ test.describe("dashboard-navigation", () => {
 					problems.push(`${message.text()} ${url}`);
 				});
 				page.on("pageerror", (error) => problems.push(error.message));
-				await page.addInitScript(() => {
-					const seen: string[] = [];
-					(window as unknown as { cspSeen: string[] }).cspSeen = seen;
-					document.addEventListener("securitypolicyviolation", (event) => {
-						seen.push(`${event.effectiveDirective} ${event.blockedURI}`);
-					});
-				});
 				await page.addInitScript(
 					([l, th]) => {
 						localStorage.setItem("vv.lang", l);
@@ -151,14 +145,6 @@ test.describe("dashboard-navigation", () => {
 							page.getByRole("heading", { name: LABELS[lang][i], level: 1 }),
 						).toBeVisible();
 					}
-				}
-				const violations = await page.evaluate(
-					() => (window as unknown as { cspSeen: string[] }).cspSeen,
-				);
-				if (browserName === "webkit") {
-					problems.push(
-						...violations.filter((v) => !v.startsWith("style-src-attr ")),
-					);
 				}
 				expect(problems).toEqual([]);
 			});
