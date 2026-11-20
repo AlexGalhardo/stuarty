@@ -60,6 +60,9 @@ type Scheduler struct {
 	wake chan struct{}
 	sem  chan struct{}
 	wg   sync.WaitGroup
+
+	mu      sync.Mutex
+	sending map[string]struct{}
 }
 
 // NewScheduler makes a scheduler over a manager and registers its wake-up with the manager.
@@ -93,7 +96,7 @@ func NewScheduler(m *Manager, o SchedulerOptions) *Scheduler {
 
 	s := &Scheduler{
 		m: m, clock: o.Clock, lease: o.Lease, poll: o.Poll, owner: o.Owner, log: o.Log, house: o.Housekeeping,
-		wake: make(chan struct{}, 1), sem: make(chan struct{}, o.Parallel),
+		wake: make(chan struct{}, 1), sem: make(chan struct{}, o.Parallel), sending: map[string]struct{}{},
 	}
 
 	m.OnChange(s.Wake)
@@ -149,6 +152,11 @@ func (s *Scheduler) Tick(ctx context.Context) (int, error) {
 	for _, c := range core.Due(cands, now) {
 		t := byID[c.ID]
 
+		// This scheduler never takes again what it is still sending, even when a renewal failed.
+		if s.busy(t.ID) {
+			continue
+		}
+
 		// An attempt that was interrupted counts, so a post that keeps killing the process stops.
 		if core.Decide(c, now) == core.ActionResume && t.Attempts >= core.MaxAttempts {
 			if _, err := s.m.Interrupt(ctx, t.ID); err != nil {
@@ -158,22 +166,35 @@ func (s *Scheduler) Tick(ctx context.Context) (int, error) {
 			continue
 		}
 
+		if !s.track(t.ID) {
+			continue
+		}
+
 		ok, err := s.m.Claim(ctx, t.ID, s.owner, now, now.Add(s.lease))
+		if err != nil || !ok {
+			if err != nil {
+				s.log.WarnContext(ctx, "a post could not be claimed", "target", t.ID, "error", err.Error())
+			}
+
+			s.untrack(t.ID)
+
+			continue
+		}
+
+		// The post sent is the one the target holds now that it is claimed: an edit approved again since the
+		// read of this pass changed the snapshot, and the former one must never go out.
+		claimed, err := s.m.claimed(ctx, t.ID, s.owner)
 		if err != nil {
-			s.log.WarnContext(ctx, "a post could not be claimed", "target", t.ID, "error", err.Error())
+			// The claim stays: its lease runs out and the target is resumed, read afresh, by a later pass.
+			s.log.WarnContext(ctx, "a claimed post could not be read", "target", t.ID, "error", err.Error())
+			s.untrack(t.ID)
 
 			continue
 		}
 
-		if !ok {
-			continue
-		}
-
-		t.Attempts++
-		t.State, t.LeaseOwner = core.TargetPublishing, s.owner
 		s.wg.Add(1)
 
-		go s.send(ctx, *t)
+		go s.send(ctx, claimed)
 
 		started++
 	}
@@ -181,16 +202,43 @@ func (s *Scheduler) Tick(ctx context.Context) (int, error) {
 	return started, nil
 }
 
-// send sends one claimed target, renewing its lease meanwhile, and records how it ended.
+// busy says whether this scheduler is sending a target.
+func (s *Scheduler) busy(id string) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	_, ok := s.sending[id]
+
+	return ok
+}
+
+// track records a target as being sent by this scheduler; false when it already is.
+func (s *Scheduler) track(id string) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if _, ok := s.sending[id]; ok {
+		return false
+	}
+
+	s.sending[id] = struct{}{}
+
+	return true
+}
+
+func (s *Scheduler) untrack(id string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	delete(s.sending, id)
+}
+
+// send sends one claimed target, renewing its lease meanwhile, and records how it ended. The lease is
+// renewed from the claim on, also while the target waits for a free slot: a claim left unrenewed in the
+// queue would run out, and the next pass, here or in another process, would send the post a second time.
 func (s *Scheduler) send(ctx context.Context, t Target) {
 	defer s.wg.Done()
-
-	select {
-	case s.sem <- struct{}{}:
-		defer func() { <-s.sem }()
-	case <-ctx.Done():
-		return
-	}
+	defer s.untrack(t.ID)
 
 	sendCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -198,6 +246,14 @@ func (s *Scheduler) send(ctx context.Context, t Target) {
 	done := make(chan struct{})
 
 	go s.heartbeat(sendCtx, cancel, t.ID, done)
+
+	select {
+	case s.sem <- struct{}{}:
+		defer func() { <-s.sem }()
+	case <-sendCtx.Done():
+		// A shutdown, or a lease another scheduler now holds: nothing was sent and nothing is recorded.
+		return
+	}
 
 	sent, err := s.m.Send(sendCtx, t, nil)
 
@@ -231,6 +287,9 @@ func (s *Scheduler) send(ctx context.Context, t Target) {
 // heartbeat renews the lease while the send runs. A lease that cannot be renewed cancels the send: another
 // scheduler may hold the target by now.
 func (s *Scheduler) heartbeat(ctx context.Context, cancel context.CancelFunc, id string, done <-chan struct{}) {
+	// held is the end of the lease as this scheduler last wrote it (the claim was made just before).
+	held := s.clock.Now().Add(s.lease)
+
 	for {
 		select {
 		case <-done:
@@ -238,9 +297,20 @@ func (s *Scheduler) heartbeat(ctx context.Context, cancel context.CancelFunc, id
 		case <-ctx.Done():
 			return
 		case <-s.clock.After(s.lease / 3):
-			ok, err := s.m.Renew(ctx, id, s.owner, s.clock.Now().Add(s.lease))
-			if err == nil && !ok {
+			until := s.clock.Now().Add(s.lease)
+			ok, err := s.m.Renew(ctx, id, s.owner, until)
+
+			switch {
+			case err == nil && ok:
+				held = until
+			case err == nil:
 				s.log.WarnContext(ctx, "the lease of a post was lost", "target", id)
+				cancel()
+
+				return
+			case !s.clock.Now().Before(held):
+				// Renewals failed until the lease ran out: another scheduler may take the target now.
+				s.log.WarnContext(ctx, "the lease of a post ran out unrenewed", "target", id, "error", err.Error())
 				cancel()
 
 				return
