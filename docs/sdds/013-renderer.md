@@ -267,7 +267,7 @@ out_c = div255(c x (255 - da)) + div255(dc x (255 - a)) + div255(t x B)
 out_a = a + da - t
 ```
 
-`out_c` and `out_a` are clamped to 255. With `da == 255` this is `div255(dc x (255 - a)) + div255(a x B)`. The general form also draws `multiply`, `screen`, `overlay` and `add` on a transparent canvas, with `B` of the table; on an opaque one those four keep SDD-004 section 3.8, and `multiply`, `screen` and `overlay` agree with the general form within two levels (a property test); `add` differs by design, SDD-004 adding the premultiplied source without the clamp of `B`. `mul(x, y) = div255(x x y)` and `scr(x, y) = x + y - mul(x, y)`:
+`out_c` and `out_a` are clamped to 255. With `da == 255` this is `div255(dc x (255 - a)) + div255(a x B)`. The general form also draws `multiply`, `screen`, `overlay` and `add` on a transparent canvas, with `B` of the table; on an opaque one those four keep SDD-004 section 3.8, and `multiply`, `screen` and `overlay` agree with the general form within two levels (a property test); `add` differs by design, SDD-004 adding the premultiplied source without the clamp of `B`. The Go compositor (`engine/compositor/blend.go`) draws the same general form for these four modes when `da < 255`, `add` included (VV-257): the goldens `blend-multiply-transparent`, `blend-screen-transparent`, `blend-overlay-transparent` and `blend-add-transparent` hold it, and the parity gate of the renderer-parity skill compares them byte for byte. The seven new modes are drawn only by the Rust renderer. `mul(x, y) = div255(x x y)` and `scr(x, y) = x + y - mul(x, y)`:
 
 | Mode | `B(s, b)` |
 | --- | --- |
