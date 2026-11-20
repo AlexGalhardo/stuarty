@@ -3310,7 +3310,7 @@ The `image` tool is the image documents of SDD-021 behind one tool, as `template
 ```json
 {
   "name": "project_item",
-  "description": "Project items. add: timeline (id is timeline_id), text or output (export job_id); move, rename, trash, restore: item_id; brief: read, or write text (empty clears); briefing: questions, or answers {id: text} write the brief. Texts: text lists, reads (item_id) or writes (text; title, text_kind make one); revisions (revision, until: compare); revert (revision); check: caption (network), script (wpm) or post.",
+  "description": "Project items. add: timeline (id is timeline_id), text or output (export job_id); move, rename, trash, restore: item_id; brief: read, or write text (empty clears); briefing: questions, or answers {id: text} write the brief; production_kind short (default), commercial, long. Texts: text lists, reads (item_id) or writes (text; title, text_kind make one); revisions (revision, until: compare); revert (revision); check: caption (network), script (wpm) or post.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -3380,6 +3380,13 @@ The `image` tool is the image documents of SDD-021 behind one tool, as `template
       },
       "until": {
         "type": "integer"
+      },
+      "production_kind": {
+        "enum": [
+          "short",
+          "commercial",
+          "long"
+        ]
       }
     },
     "required": [
@@ -4284,8 +4291,8 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `ProjectItemRestore` | `project_item` (`action` `restore`) | `item:restore` | `POST /projects/{id}/items/{item_id}/restore` |
 | `BriefGet` | `project_item` (`action` `brief`, without `text`) | `brief:show` | `GET /projects/{id}/brief` |
 | `BriefSet` | `project_item` (`action` `brief`, with `text`) | `brief:set` | `PUT /projects/{id}/brief` |
-| `BriefingQuestions` | `project_item` (`action` `briefing`, without `answers`; optional `kind`) | `briefing:questions` | `GET /briefing/questions` |
-| `BriefingAnswer` | `project_item` (`action` `briefing`, with `answers`; optional `kind`) | `briefing:answer` | `PUT /projects/{id}/briefing` |
+| `BriefingQuestions` | `project_item` (`action` `briefing`, without `answers`; optional `production_kind`) | `briefing:questions` | `GET /briefing/questions` |
+| `BriefingAnswer` | `project_item` (`action` `briefing`, with `answers`; optional `production_kind`) | `briefing:answer` | `PUT /projects/{id}/briefing` |
 | `TextList`, `TextGet` | `project_item` (`action` `text`) | `text:list`, `text:show` | `GET /texts`, `GET /projects/{id}/texts/{item_id}` |
 | `TextWrite` | `project_item` (`action` `text`, with `text`) | `text:write` | `POST /projects/{id}/texts`, `PUT /projects/{id}/texts/{item_id}` |
 | `TextRevisions`, `TextRevert` | `project_item` (`action` `revisions`, `revert`) | `text:revisions`, `text:revert` | `GET /projects/{id}/texts/{item_id}/revisions`, `POST /projects/{id}/texts/{item_id}/revert` |
