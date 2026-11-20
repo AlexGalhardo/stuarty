@@ -113,7 +113,8 @@ for (const lang of ["en", "pt-BR"] as const) {
 				page,
 				request,
 			}) => {
-				test.setTimeout(180_000);
+				// Eleven states and a whole export: headless Firefox takes over 3 minutes on a loaded machine.
+				test.setTimeout(300_000);
 				await page.addInitScript((value) => {
 					if (value === "light") localStorage.setItem("theme", "light");
 				}, theme);
