@@ -48,6 +48,11 @@ type JobRun struct {
 	Input     json.RawMessage
 	// Report records the progress of the job, 0 to 1, and a short message.
 	Report func(ctx context.Context, progress float64, message string)
+	// SaveInput replaces the input the job is given, durably: a run that is interrupted and queued again starts
+	// with the saved input, so a job that submits work to a provider saves its task id here before it waits.
+	SaveInput func(ctx context.Context, input json.RawMessage) error
+	// CancelRequested reports whether a person asked for this job to be cancelled (a shutdown is not that).
+	CancelRequested func(ctx context.Context) bool
 }
 
 // JobOutcome is what a finished job reports.
@@ -328,6 +333,19 @@ func (s *svc) runApprovable(
 	out, err := k.Run(ctx, JobRun{
 		ID: job.ID, Kind: job.Kind, Actor: job.Actor, ProjectID: project, Input: job.Input,
 		Report: func(ctx context.Context, p float64, msg string) { pw.report(ctx, p, msg) },
+		SaveInput: func(ctx context.Context, input json.RawMessage) error {
+			ok, err := s.store.Jobs().SaveInput(ctx, job.ID, input, s.nowMs())
+			if err == nil && !ok {
+				err = newError(command.CodeInvalidState, "the job is no longer running.")
+			}
+
+			return err
+		},
+		CancelRequested: func(ctx context.Context) bool {
+			row, err := s.store.Jobs().Get(ctx, job.ID)
+
+			return err == nil && row.CancelRequested
+		},
 	})
 
 	return out.Result, out.Cost, err

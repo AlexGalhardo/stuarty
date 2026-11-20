@@ -547,6 +547,9 @@ type JobRepo interface {
 	Progress(ctx context.Context, id string, progress float64, message string, nowMs int64) (updated bool, err error)
 	// Finish moves a running job to a terminal state; false when it was not running.
 	Finish(ctx context.Context, id, state string, result, errJSON json.RawMessage, nowMs int64) (bool, error)
+	// SaveInput replaces the input of a running job; false when it was not running. A job that must resume
+	// after a restart (video.generate) stores there what it needs, such as the task id of a provider.
+	SaveInput(ctx context.Context, id string, input json.RawMessage, nowMs int64) (bool, error)
 	// Requeue moves a running job back to queued (shutdown interruption or recovery).
 	Requeue(ctx context.Context, id, message string, nowMs int64) (bool, error)
 	// RequestCancel sets cancel_requested; a queued job becomes cancelled at once.

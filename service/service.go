@@ -107,6 +107,7 @@ type Service interface {
 	TextGenerate(ctx context.Context, req TextGenerateRequest) (*Job, error)
 	ImageGenerate(ctx context.Context, req ImageGenerateRequest) (*Job, error)
 	VoiceGenerate(ctx context.Context, req VoiceGenerateRequest) (*Job, error)
+	VideoGenerate(ctx context.Context, req VideoGenerateRequest) (*Job, error)
 	VoiceList(ctx context.Context, req VoiceListRequest) (*VoiceListResult, error)
 
 	JobGet(ctx context.Context, req JobGetRequest) (*Job, error)
@@ -404,7 +405,8 @@ func New(o Options) (Service, error) {
 	s.providers = o.Providers
 
 	kinds, err := registerKinds(append(slices.Clone(o.JobKinds),
-		s.textGenerateKind(), s.imageGenerateKind(), s.voiceGenerateKind()))
+		s.textGenerateKind(), s.imageGenerateKind(), s.voiceGenerateKind(),
+		s.videoGenerateKind()))
 	if err != nil {
 		return nil, err
 	}

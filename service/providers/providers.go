@@ -16,6 +16,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/AlexGalhardo/stuarty/core/provider"
@@ -182,6 +183,8 @@ type VideoStatus struct {
 	State string
 	// Progress is 0 to 1 when the provider says one, else 0.
 	Progress float64
+	// PollAfter is how long the provider asks to wait before the next poll; zero leaves it to the caller's backoff.
+	PollAfter time.Duration
 	// Err explains a failed task: a *Error, such as a refusal of the prompt.
 	Err error
 }

@@ -66,7 +66,7 @@ var OperationDomains = map[string]string{
 	"ProviderList": command.DomainProvider, "ProviderModels": command.DomainProvider,
 	"ProviderPriceSet": command.DomainProvider, "TextGenerate": command.DomainProvider,
 	"ImageGenerate": command.DomainProvider, "VoiceGenerate": command.DomainProvider,
-	"VoiceList": command.DomainProvider,
+	"VoiceList": command.DomainProvider, "VideoGenerate": command.DomainProvider,
 
 	"CommandHelp": command.DomainWorkspace, "ConnectionList": command.DomainWorkspace,
 	"ConnectionGet": command.DomainWorkspace, "ConnectionCreate": command.DomainWorkspace,

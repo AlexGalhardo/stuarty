@@ -196,6 +196,7 @@ var Scopes = map[string]string{
 	"TextGenerate":     ScopeEdit,
 	"ImageGenerate":    ScopeEdit,
 	"VoiceGenerate":    ScopeEdit,
+	"VideoGenerate":    ScopeEdit,
 	"VoiceList":        ScopeRead,
 
 	"MotionBrief":   ScopeRead,
