@@ -7,6 +7,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.34.0] - 2026-11-20
+
+### Added
+
+- **core:** Add the pure rules of the hosted agent chat ([d8a05e8](https://github.com/AlexGalhardo/stuarty/commit/d8a05e87067355052518b282da7a9516031f3e2d))
+- **service:** Add the Agent Client Protocol client and the fake agent ([cb82a10](https://github.com/AlexGalhardo/stuarty/commit/cb82a10cc97f5e6ea1ee27d5c934e395246e51df))
+- **service:** Supervise the hosted agent process, its sessions and its transcript events ([b23c6d1](https://github.com/AlexGalhardo/stuarty/commit/b23c6d14bcd736cffb468d65e1ca06d21549f297))
+- **service:** Issue the project-scoped session token and hand the MCP address to the agent ([af13921](https://github.com/AlexGalhardo/stuarty/commit/af13921992f582379a7eb7c6b554849212d27de7))
+- **service:** Store transcripts and expose the chat operations and the SSE stream ([1bc60c7](https://github.com/AlexGalhardo/stuarty/commit/1bc60c72546aeb1b221369500ff8ca87a10afb05))
+- **web:** Add the agent chat panel to the dashboard ([cd85c28](https://github.com/AlexGalhardo/stuarty/commit/cd85c28adc435cfc75669900792dfd8a68c919b1))
+- **ui:** One shortcut registry with two presets, remapping and a searchable dialog ([773a769](https://github.com/AlexGalhardo/stuarty/commit/773a76932a625eb76f53c9a3dd8edaf354b7901a))
+- **ui:** Add the first-run tour, skippable and replayable from the Help menu ([c1e85a1](https://github.com/AlexGalhardo/stuarty/commit/c1e85a1c0c38e461696fd0e7db717b6e8f03b06d))
+- **core:** Add the pure rules of a publication ([f6ce317](https://github.com/AlexGalhardo/stuarty/commit/f6ce317e835916042f4fa8b8e9fdfae8a29a2b57))
+- **service:** Add the connector interface, its registry and a fake connector ([fc19bfe](https://github.com/AlexGalhardo/stuarty/commit/fc19bfe35f9fd3f8f6dfad349cc856e5a3e97a3a))
+- **service:** Sign in to a social network with the user's own app ([d33da1a](https://github.com/AlexGalhardo/stuarty/commit/d33da1a283668cbe51241b62518c10b3ffc4d37b))
+- **service:** Upload to YouTube with a resumable session, a thumbnail and the status ([26306c0](https://github.com/AlexGalhardo/stuarty/commit/26306c0fa330cb2622dc1ebbb397af2c3d1cacda))
+- **service:** Add the publish.upload job that waits for approval ([60c7b94](https://github.com/AlexGalhardo/stuarty/commit/60c7b94f2d5812506125bb59a46d181117d36ae1))
+- **web:** Expose the social networks and publishing on HTTP and the CLI ([161752e](https://github.com/AlexGalhardo/stuarty/commit/161752e0c52acf78649d94ee4685df05e4607e16))
+- **web:** Add the social setup guide and the publish dialog ([989cea7](https://github.com/AlexGalhardo/stuarty/commit/989cea727a3881bb306f8d6c2cd0e031a6ba5138))
+- **service:** Give an external motion render what it must fit ([135af25](https://github.com/AlexGalhardo/stuarty/commit/135af2521ed6c0f1afcc2cfbef8bd2a476d8b569))
+- **ingest:** Report a file that declares alpha and has none ([f113973](https://github.com/AlexGalhardo/stuarty/commit/f11397365d77bd0dad7d20ad31eb97ac7a33e521))
+- **service:** Check a rendered file against the brief ([647e009](https://github.com/AlexGalhardo/stuarty/commit/647e0093292534817bca5d1edd2f2215bcb0d74e))
+- **command:** Replace the media of a clip when an animation is rendered again ([80b0ab5](https://github.com/AlexGalhardo/stuarty/commit/80b0ab520e2d7eb80ed9fa6ae73941572d51a903))
+- **library:** Add the skill for an animation rendered by an external engine ([185a759](https://github.com/AlexGalhardo/stuarty/commit/185a75997b3e4e3d4a6da637852aa6566a6e49be))
+
+### Fixed
+
+- **ui:** Give the select popup the nonce of the page and a layer above the dialog ([cdf7d2e](https://github.com/AlexGalhardo/stuarty/commit/cdf7d2ef721f42ff81f966c5f0b34f9e102280b1))
+- **ui:** Select a tab when an arrow key focuses it ([ef896a6](https://github.com/AlexGalhardo/stuarty/commit/ef896a60e9c4c90bcb597ea21e020e8bf3a13709))
+- **e2e:** Expect the ripple of the Q trim in keyboard-only-edit ([204df06](https://github.com/AlexGalhardo/stuarty/commit/204df06c209c3225b94234ee47500619027411ce))
+- **e2e:** Follow the Base UI dialog and the icon-only toolbar in wcag22 ([4d27165](https://github.com/AlexGalhardo/stuarty/commit/4d27165861a02191cedab64ff5a4ba3f605c9ddc))
+- **ui:** Put the label of the track chooser in a menu group ([bbf278c](https://github.com/AlexGalhardo/stuarty/commit/bbf278c8d415e0ed6492b3917881a8869f0e8213))
+- **ui:** Give a command with no arguments an empty form in the palette ([f9f7d5d](https://github.com/AlexGalhardo/stuarty/commit/f9f7d5d7a141a8b6fed342594b81910c3ff59501))
+- **ui:** Show skeletons, not empty sentences, while the project loads ([caac7c8](https://github.com/AlexGalhardo/stuarty/commit/caac7c8f10db859b62c6afadf14ada24cf6a3826))
+- **e2e:** Follow the Base UI redesign in four editor specs ([54003b1](https://github.com/AlexGalhardo/stuarty/commit/54003b16864209282b73211d70c34a4c40097225))
+- **e2e:** Search the shortcuts dialog with the modifier the platform shows ([7855b9a](https://github.com/AlexGalhardo/stuarty/commit/7855b9a70e9456b384f94921bb434f97cbac24f6))
+- **e2e:** Load an empty project in loading-states ([4b4b6bb](https://github.com/AlexGalhardo/stuarty/commit/4b4b6bb13db705970f1b9346f5b816646c6ae3f1))
+- **ui:** Refuse a key a player row and a timeline row would share ([5731306](https://github.com/AlexGalhardo/stuarty/commit/5731306bdccd2e3f0642b19169ba3774b474ebe3))
+- **ui:** Name the shortcut button by its prompt while it waits for a key ([3979c92](https://github.com/AlexGalhardo/stuarty/commit/3979c92ef6c7438b6baa081775741fb6131c25a3))
+- **ui:** Keep the contrast of a hovered primary button in the light theme ([2715dcc](https://github.com/AlexGalhardo/stuarty/commit/2715dcc04e8ab060d3736c7b4e2bd797710a4228))
+- **library:** Compose asset tags in the service, not in core ([3b3051e](https://github.com/AlexGalhardo/stuarty/commit/3b3051e58144a65a82ce8515ab0f77c8f0fc790d))
+- **library:** Index a file for the owner of a copy or a template fill ([bd545a5](https://github.com/AlexGalhardo/stuarty/commit/bd545a55196f969a0db5644c0d50c2713ca471ce))
+- **service:** Resolve the timeline to its project before holding a limited key to it (VV-250) ([276fe5f](https://github.com/AlexGalhardo/stuarty/commit/276fe5fddd4444dbe0fb90baea636fa5c56fe988))
+- **service:** Close token leaks, start races and request floods of the hosted agent ([d2d8a7a](https://github.com/AlexGalhardo/stuarty/commit/d2d8a7a97a6e3623064d251bd21bdd603c323ca4))
+- **service:** Send only the approved file and key the session on the whole post ([2fe2c27](https://github.com/AlexGalhardo/stuarty/commit/2fe2c27ab216c5783f2461dfca74c22e7e98bc86))
+- **service:** Sweep the upload sessions older than seven days ([5c0bc88](https://github.com/AlexGalhardo/stuarty/commit/5c0bc8846ff5440a7cac7db7fac5e0d9e3ebe49c))
+- **web:** Draw the social sign-in page without the session cookie ([2dafb4a](https://github.com/AlexGalhardo/stuarty/commit/2dafb4a2df8a4d6da7e055f71e38cd5694f41dad))
+- **service:** Build the upload key without an unchecked marshal ([d1a6d1d](https://github.com/AlexGalhardo/stuarty/commit/d1a6d1d0f1f530ccb338ca4880679a8308f29599))
+- **web:** Name the new clip command in the catalogue and the coverage table ([7bdd848](https://github.com/AlexGalhardo/stuarty/commit/7bdd848b44edb52b24501040fa6cc4a595cf2b20))
+- **ingest:** Report missing alpha only for a file that declares it ([95a41cb](https://github.com/AlexGalhardo/stuarty/commit/95a41cbb3bb83684953e2de6228784bd8cc632bc))
+
+### Security
+
+- **security:** Cover the chat threats T-70 to T-74 ([302e9ea](https://github.com/AlexGalhardo/stuarty/commit/302e9eac18c9cf9d0923a31cbdaa5b9b6e3c5677))
+- **security:** Key the asset library side by owner and hash ([1adc215](https://github.com/AlexGalhardo/stuarty/commit/1adc215b1f093a667b6cbc3b7dc3c8b2f764229c))
+- **security:** Name a reuse by hash with the caller's own name ([b377357](https://github.com/AlexGalhardo/stuarty/commit/b377357cf9c2e225baac7cb4e1c3f149fd3476fa))
+- **security:** Resolve a timeline id to its project for every key check ([b0a543e](https://github.com/AlexGalhardo/stuarty/commit/b0a543e6016934a6c5a409dc1cc36661332968ed))
+- **security:** Reach every timeline of a key project in library and approvals ([d34b77c](https://github.com/AlexGalhardo/stuarty/commit/d34b77cb912a84195ccaaec9a65f8fa6411a5d2b))
+- **security:** Cover the publishing threats T-56 to T-59 ([a039d04](https://github.com/AlexGalhardo/stuarty/commit/a039d04a31b64f6d245a63a513d9b850a8ea9057))
+- **security:** Count the publishing threats in the model ([740207f](https://github.com/AlexGalhardo/stuarty/commit/740207f614733f19f8eb508ab0798f869995b966))
+- **security:** Count the hosted agent threats in the model ([868637f](https://github.com/AlexGalhardo/stuarty/commit/868637f00652d2a54881b1ca977d9b03c1db5866))
+- **security:** Reach the second timeline of a limited key in the motion hand-off ([627393e](https://github.com/AlexGalhardo/stuarty/commit/627393ef03aff3390189b3ce617013c5ed060c63))
 ## [0.33.0] - 2026-11-20
 
 ### Added
@@ -1590,7 +1652,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.33.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.34.0...HEAD
+[0.34.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.33.0...v0.34.0
 [0.33.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.32.0...v0.33.0
 [0.32.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.31.0...v0.32.0
 [0.31.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.30.0...v0.31.0
