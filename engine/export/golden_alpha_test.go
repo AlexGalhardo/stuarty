@@ -81,6 +81,10 @@ var requiredCases = []string{
 	"blend-screen",
 	"blend-overlay",
 	"blend-add",
+	"blend-multiply-transparent",
+	"blend-screen-transparent",
+	"blend-overlay-transparent",
+	"blend-add-transparent",
 	"mask-rect",
 	"mask-animated",
 	"mask-ellipse-feather",
@@ -351,6 +355,24 @@ func blendCase(mode string) alphaCase {
 	return b.build(0, 15, 29)
 }
 
+// blendTransparentCase draws, on a transparent background, a normal clip and a clip with a blend mode
+// that overlaps it only in part: the blended clip lands on transparent pixels (SDD-013 section 3.11.2,
+// a destination with alpha 0) and on opaque ones. Both clips are opaque, so the PNG round trip keeps
+// every byte of the reference.
+func blendTransparentCase(mode string) alphaCase {
+	b := newCase("blend "+mode+" on a transparent frame", rate(30, 1))
+	b.doc.Settings.Background = timeline.BackgroundTransparent
+	b.clip(b.track(), b.video(landscape), 0, 30, func(it *timeline.Item) {
+		it.Fit, it.Scale = "contain", 0.6
+		it.X, it.Y = new(60.0), new(110.0)
+	})
+	b.clip(b.track(), b.video(landscape), 0, 30, func(it *timeline.Item) {
+		it.Fit, it.Scale, it.Blend = "contain", 0.6, mode
+		it.X, it.Y = new(130.0), new(190.0)
+	})
+	return b.build(0, 15, 29)
+}
+
 // maskCase draws a clip through a mask over the portrait clip; edit sets what else the item has.
 func maskCase(name string, m timeline.Mask, edit func(it *timeline.Item)) alphaCase {
 	b := newCase("mask "+name, rate(30, 1))
@@ -591,10 +613,14 @@ var alphaCases = map[string]func() alphaCase{
 		})
 		return b.build(0, 15, 29)
 	},
-	"blend-multiply": func() alphaCase { return blendCase("multiply") },
-	"blend-screen":   func() alphaCase { return blendCase("screen") },
-	"blend-overlay":  func() alphaCase { return blendCase("overlay") },
-	"blend-add":      func() alphaCase { return blendCase("add") },
+	"blend-multiply":             func() alphaCase { return blendCase("multiply") },
+	"blend-screen":               func() alphaCase { return blendCase("screen") },
+	"blend-overlay":              func() alphaCase { return blendCase("overlay") },
+	"blend-add":                  func() alphaCase { return blendCase("add") },
+	"blend-multiply-transparent": func() alphaCase { return blendTransparentCase("multiply") },
+	"blend-screen-transparent":   func() alphaCase { return blendTransparentCase("screen") },
+	"blend-overlay-transparent":  func() alphaCase { return blendTransparentCase("overlay") },
+	"blend-add-transparent":      func() alphaCase { return blendTransparentCase("add") },
 	"mask-rect": func() alphaCase {
 		return maskCase("rect", timeline.Mask{Shape: "rect", X: 0.2, Y: 0.1, Width: 0.6, Height: 0.7}, nil)
 	},
