@@ -2095,6 +2095,12 @@ Every action has a keyboard path (section 24.10 and the toolbar of design system
 6. A command planned from a key that repeats (an arrow, `Alt` with an arrow) is given to the store as a function of the document, evaluated when its turn comes, so each press is planned against the document the one before it made.
 7. The picture is asked for again twice after a failure or a 429 (the route allows two renders at once per caller) before the canvas says it could not be drawn.
 
+### 24.14 Operations with a model (epic 30)
+
+Two buttons in the toolbar, in `image-editor/modeledit/`: "Remove background" (enabled when one image layer with a file is selected; its label says to select one otherwise) and "Generate image". Each opens a dialog with the project that keeps the new file and its cost (SDD-016 section 6.4), the connection (only those of providers with the capability the operation needs), the model, the prompt of a generation and, for a generation with a layer selected, a box to cover that layer. A note, always visible, says in plain words what leaves the machine and to which provider ("The picture of the layer ... will be sent to ..."; "Only the text you write below will be sent to ..."). "Show the estimate" sends the request with `dry_run` and shows the estimate the service answers; "Start" sends it, closes the dialog and hands the job to the strip under the toolbar.
+
+The strip (`role="status"`, polite) follows the job by `GET /jobs/{id}` every 1.5 seconds: what it does and to which layer, the state in words, the progress, a link to Approvals while it waits, the notes of the service when it ends, and the cost. The row of the layer in the layer panel says "working on it" in its accessible name while the job runs. When the job succeeds the screen reads the document again and, if the batch was applied, selects the layer in `result.generated.image.layer_id`. One job is followed at a time: both buttons are disabled meanwhile. The screen computes nothing: the estimate, the limits, the proportions of the result and the batch are the service's and the core's. The calls are in `api/modelEdit.ts` (rule R6). Strings are in `ui.image.model.*` in both languages. Test: `web/e2e/specs/image-model-ops.spec.ts`.
+
 ## Appendix A: Decisions of this SDD
 
 | # | Decision | Section |

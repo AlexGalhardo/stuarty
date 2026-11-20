@@ -38,7 +38,7 @@ A creator removes the background of a photo, or asks for a generated background 
 - [x] 3. Implement the capability and the adapter method with contract fixtures. Verify: `go test ./service/providers/...` passes with no network.
 - [x] 4. Implement `image.edit` and `layer.replace_source` with golden cases. Verify: `go test ./core/image/... ./service/... -run "TestReplaceSource|TestImageEdit"` passes.
 - [x] 5. Expose on the three surfaces. Verify: `go test ./web/contract/...` passes.
-- [ ] 6. Add the two toolbar actions in both languages. Verify: `task test:web` and `web/e2e/specs/image-model-ops.spec.ts` pass with a fake provider.
+- [x] 6. Add the two toolbar actions in both languages. Verify: `task test:web` and `web/e2e/specs/image-model-ops.spec.ts` pass with a fake provider.
 
 ## Test strategy
 

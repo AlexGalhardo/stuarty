@@ -15,6 +15,8 @@ import HistoryPanel from "./history/HistoryPanel";
 import Inspector from "./inspector/Inspector";
 import { useEditorKeys } from "./keys";
 import LayerPanel from "./layers/LayerPanel";
+import { ModelEditTools } from "./modeledit/ModelEditTools";
+import { ModelJobStrip } from "./modeledit/ModelJobStrip";
 import { ImageEditorProvider, useImage } from "./state/context";
 import { LibraryProvider } from "./state/library";
 import { createImageStore } from "./state/store";
@@ -120,10 +122,12 @@ function Shell(): ReactNode {
 				<HistoryTools />
 				<AddTools />
 				<ArrangeTools />
+				<ModelEditTools />
 				<ViewTools />
 				<ExportTool />
 			</Toolbar>
 			<AgentNotice />
+			<ModelJobStrip />
 			<ErrorBar />
 			<div className="flex min-h-0 flex-1">
 				<aside
