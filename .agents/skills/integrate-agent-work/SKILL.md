@@ -12,7 +12,7 @@ An approved branch is integrated by cherry-picking its own commits, in order, on
 ## Steps
 
 1. List what is new: `git log --oneline <line>..epic/NN-<slug>`. The specialist's fix commits are part of the epic. An epic based on an old tip of the line is first updated by merging the line into it, in its worktree, and its checks are run again.
-2. Integrate it: `release-train.sh integrate epic/NN-<slug>` on the release branch. It picks the epic's commits that are not on `main`, on a release branch or already on the line by patch, skips merge commits, pushes, and cuts the release by itself when the line reaches 95 commits. Shared files (`rules/plans.md` section 4) are integrated one epic at a time.
+2. Integrate it: `release-train.sh integrate epic/NN-<slug>` on the release branch. It picks the epic's commits that are not on `main`, on a release branch or already on the line by patch, skips merge commits, pushes, and cuts the release by itself when the line reaches 94 commits. Shared files (`rules/plans.md` section 4) are integrated one epic at a time.
 3. Conflicts:
    - In generated files, take either side and regenerate.
    - An empty cherry-pick ("The previous cherry-pick is now empty") means the change is already there: `git cherry-pick --skip`.
