@@ -26,6 +26,7 @@ import "pixi.js/advanced-blend-modes";
 import { AudioGraph } from "./audioGraph";
 import { uncoveredPixel } from "./background";
 import { pixiBlendMode } from "./blend";
+import { registerOverAlphaBlends } from "./blendOverAlpha";
 import { ChromaKeyFilter } from "./chromaKey";
 import { DecodeClient, decoderPreference } from "./decode/client";
 import { createDecodeWorker } from "./decode/createWorker";
@@ -158,6 +159,9 @@ export class PixiExecutor implements PreviewExecutor {
 	private app: Application | null = null;
 	private readonly stage = new Container();
 	private info: ProjectInfo | null = null;
+	// The background of the frame on the canvas is not opaque, so a blend mode reads a partly covered
+	// backdrop (VV-268).
+	private clearsToAlpha = false;
 	// The last size asked for: the first resize arrives before the renderer has
 	// finished its async init, and is applied when it has.
 	private buffer: { width: number; height: number } | null = null;
@@ -284,6 +288,7 @@ export class PixiExecutor implements PreviewExecutor {
 		this.canvas = canvas;
 		try {
 			const preference = await detectRenderer();
+			registerOverAlphaBlends();
 			const app = new Application();
 			await app.init({
 				canvas,
@@ -298,6 +303,10 @@ export class PixiExecutor implements PreviewExecutor {
 				// later, so a transparent project can clear to alpha 0; an opaque
 				// colour still sets alpha to 1 on each draw.
 				backgroundAlpha: 0,
+				// A blend filter reads the pixels drawn so far, which WebGL has only through the back buffer;
+				// without it PixiJS skips the filter and draws the layer as `normal` (overlay and, over a
+				// clear canvas, the four modes of blendOverAlpha.ts). WebGPU needs nothing.
+				useBackBuffer: true,
 				// The end-to-end build reads the buffer pixels back (preview-vs-export),
 				// which a WebGL canvas that clears after each composite cannot give.
 				preserveDrawingBuffer: import.meta.env.VITE_E2E === "1",
@@ -560,6 +569,7 @@ export class PixiExecutor implements PreviewExecutor {
 		const info = this.info;
 		if (app === null || info === null) return;
 		const [red, green, blue, alpha] = uncoveredPixel(plan);
+		this.clearsToAlpha = alpha < 255;
 		app.renderer.background.color = [
 			red / 255,
 			green / 255,
@@ -844,7 +854,7 @@ export class PixiExecutor implements PreviewExecutor {
 		sprite.scale.y = mirror.y * Math.abs(sprite.scale.y);
 		sprite.angle = g.rotation;
 		entry.holder.alpha = valueAt(layer.opacity, frame, layer.first);
-		entry.holder.blendMode = pixiBlendMode(layer.blend);
+		entry.holder.blendMode = pixiBlendMode(layer.blend, this.clearsToAlpha);
 		this.applyFilters(entry, layer, g, frame, info);
 		// Under the picture, on the holder, so the mask cuts all three together.
 		this.applyShadowOutline(entry, layer, g);

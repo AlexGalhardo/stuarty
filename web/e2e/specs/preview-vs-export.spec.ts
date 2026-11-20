@@ -136,6 +136,25 @@ test.describe("preview-vs-export", () => {
 			});
 		});
 	}
+
+	// The blend modes over a transparent canvas (VV-268): the cases above are sent without their
+	// blend, so these are loaded with all their edits. PixiJS blends `multiply` as `src x dst +
+	// dst x (1 - sa)`, which is black where nothing is drawn yet, and the export draws the general
+	// form of SDD-013 section 3.11.2, which is the source itself there.
+	for (const name of goldenCases().filter((n) =>
+		/^blend-.*-transparent$/.test(n),
+	)) {
+		test(`golden ${name} with its blend: SSIM of at least ${MIN_SSIM} on luma and no layer displaced by more than ${MAX_DISPLACEMENT} px`, async ({
+			page,
+			request,
+		}) => {
+			const loaded = await loadCase(request, name, true);
+			await openCase(page, loaded.id);
+			await stepThrough(page, loaded.frames, async (frame) => {
+				await compareFrame(page, name, loaded.id, frame, "preview-vs-export");
+			});
+		});
+	}
 });
 
 // The three Prototype cases of SDD-012 section 20.3 on a clip with markers: cover
