@@ -264,6 +264,8 @@ type Event struct {
 	// Owner the user it belongs to in network mode, so that a member's stream carries their own only.
 	Approval *approval.Request
 	Owner    string
+	// Publication is the publication of publication.updated (SDD-020 section 29).
+	Publication *pub.Publication
 
 	// The members below are set by image.updated (SDD-006 section 12): ImageID names the document, and
 	// Revision, Kind, Actor and At are those of the committed batch.

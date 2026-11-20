@@ -161,6 +161,10 @@ func (e *Events) Publish(ev service.Event) {
 		e.publishApproval(&ev)
 
 		return
+	case wire.PublicationUpdated:
+		e.publishPublication(&ev)
+
+		return
 	case wire.ImageUpdated:
 		e.publishImage(&ev)
 

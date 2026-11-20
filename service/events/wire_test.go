@@ -130,8 +130,8 @@ func TestSDDExamplesMatchTheSchemas(t *testing.T) {
 	c := jsonschema.NewCompiler()
 
 	for _, name := range []string{
-		events.BatchCommitted, events.ProjectUpdated, events.AssetUpdated, events.JobUpdated, events.ResyncRequired,
-		events.ImageUpdated,
+		events.BatchCommitted, events.ProjectUpdated, events.NestedUpdated, events.AssetUpdated, events.JobUpdated,
+		events.ResyncRequired, events.ImageUpdated,
 	} {
 		f, err := os.Open(filepath.Join("testdata", "schema", name+".json"))
 		if err != nil {
