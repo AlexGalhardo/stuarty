@@ -496,6 +496,8 @@ These are read only by tests, scripts and developer tools. They are renamed with
 | `VUKEM_VIDEO_TRANSCRIBE_TOKEN` | `STUARTY_TRANSCRIBE_TOKEN` |
 | `VUKEM_VIDEO_WORKSPACE_TEST_HELPER` | `STUARTY_WORKSPACE_TEST_HELPER` |
 
+Added after the rename, with no former name: `STUARTY_E2E_BIN`, a server binary built beforehand that the Playwright servers run instead of `go run ./web/cmd/app` (the browser security test builds one with an end-to-end front end of its own, SDD-007 §8 item 7).
+
 ### 13.3 Other names
 
 | Former name | Name | Note |
