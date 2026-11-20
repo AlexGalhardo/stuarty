@@ -406,17 +406,17 @@
         "first": 5,
         "last": 49,
         "source_seconds": 0,
-        "speed": 1,
+        "speed": 2,
         "gain": 1,
         "timeline": "prj_c1c1c1c1c1"
       },
       {
         "item": "itm_comp0000001/itm_c2",
         "asset": "ast_video000001",
-        "first": 15,
-        "last": 49,
+        "first": 10,
+        "last": 39,
         "source_seconds": 0,
-        "speed": 1,
+        "speed": 2,
         "gain": 1,
         "timeline": "prj_c1c1c1c1c1"
       }

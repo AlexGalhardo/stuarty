@@ -45,7 +45,7 @@ Not in progress together with 51 (both change `engine/audio` and SDD-004 section
 - [x] 1. Decide and specify the audio rule of a sped-up bus (pitch kept or not) and the child frame mapping, in SDD-004 sections 3.3, 3.11 and 7; amend SDD-002 (section B.5 and C.25), SDD-001 (section 3.5) and SDD-012 (the Speed section). Verify: `task lint:md` exits 0. **STOP** if the decision is not given.
 - [x] 2. The command: accept a constant speed on a composition clip; refuse a curve and a reverse with stable errors; golden cases. Verify: `go test ./core/command/... -run TestCompositionSpeed` passes.
 - [x] 3. The plan: the child frame mapping, with golden plans. Verify: `go test ./core/plan/... -run TestCompositionSpeed` passes.
-- [ ] 4. Audio: the nested bus under the rule of task 1, with a golden WAV. Verify: `go test ./engine/audio/... -run TestCompositionSpeedMix` passes.
+- [x] 4. Audio: the nested bus under the rule of task 1, with a golden WAV. Verify: `go test ./engine/audio/... -run TestCompositionSpeedMix` passes.
 - [ ] 5. Export and preview: golden frames at 0.5 and at 2, and the parity spec. Verify: `go test ./engine/export/... -run TestCompositionSpeed` passes, and `web/e2e/specs/preview-export-parity.spec.ts` passes with a composition at speed.
 - [ ] 6. The Speed section of the inspector for a composition clip, in both languages. Verify: `bun run check:i18n` and `task test:web` pass, and `web/e2e/specs/composition-speed.spec.ts` (new, `bun run e2e`) passes.
 - [ ] 7. Surfaces and generated documents. Verify: `go test ./web/contract/...` passes and `task generate:check` exits 0.
