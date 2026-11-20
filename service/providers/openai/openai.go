@@ -30,8 +30,8 @@ func New() *Adapter { return &Adapter{} }
 func (*Adapter) Descriptor() providers.Descriptor {
 	return providers.Descriptor{
 		ID: ID, Name: "OpenAI",
-		Capabilities:    []string{provider.CapabilityText, provider.CapabilityImage, provider.CapabilityVoice},
-		CredentialKinds: []string{provider.CredentialAPIKey},
+		Capabilities:    []string{provider.CapabilityText},
+		CredentialKinds: []string{provider.CredentialAPIKey, provider.CredentialOAuth},
 		DefaultEndpoint: "https://api.openai.com/v1",
 		DocsURL:         "https://platform.openai.com/api-keys",
 	}
@@ -53,6 +53,10 @@ type modelsAnswer struct {
 // Models implements providers.Provider: GET /models. The catalogue of OpenAI names models and nothing
 // else: no limits and no price, so the limits are unknown and the price comes from the table of the person.
 func (*Adapter) Models(ctx context.Context, c connections.Credential) ([]providers.Model, error) {
+	if c.SignedIn {
+		return planModels(ctx, c)
+	}
+
 	var ans modelsAnswer
 
 	err := wire.JSON(ctx, c, wire.Call{Method: http.MethodGet, Path: "/models", Header: headers(c)}, &ans)
@@ -100,6 +104,10 @@ func (*Adapter) GenerateText(
 	c connections.Credential,
 	req provider.TextRequest,
 ) (providers.TextResult, error) {
+	if c.SignedIn {
+		return planGenerate(ctx, c, req)
+	}
+
 	body := chatRequest{Model: req.Model, MaxCompletionTokens: req.MaxTokens, Temperature: req.Temperature}
 
 	if req.System != "" {
