@@ -780,13 +780,15 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		args["action"] = "brief"
 
 		return "project_item", args, nil
-	case "BriefingQuestions":
-		args["action"] = "briefing"
-
-		return "project_item", args, nil
-	case "BriefingAnswer":
+	case "BriefingQuestions", "BriefingAnswer":
 		delete(args, "dry_run")
 		delete(args, "replace")
+
+		// In project_item, kind is the kind of an item; the briefing names the kind of production apart (VV-289).
+		if k, ok := args["kind"]; ok {
+			delete(args, "kind")
+			args["production_kind"] = k
+		}
 
 		args["action"] = "briefing"
 
@@ -1431,7 +1433,7 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 	case "BriefSet":
 		return "brief:set", append(slices.Clone(proj), "--text", "-"), a.Text, nil
 	case "BriefingQuestions":
-		return "briefing:questions", flag("project", a.ProjectID), "", nil
+		return "briefing:questions", append(flag("project", a.ProjectID), flag("kind", a.Kind)...), "", nil
 	case "BriefingAnswer":
 		raw, err := json.Marshal(a.Answers)
 		if err != nil {
@@ -1439,6 +1441,8 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		}
 
 		argv = append(slices.Clone(proj), "--answers", "-")
+		argv = append(argv, flag("kind", a.Kind)...)
+
 		if a.Replace {
 			argv = append(argv, "--replace")
 		}

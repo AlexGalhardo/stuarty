@@ -50,7 +50,7 @@ func (s *svc) ImageExport(ctx context.Context, req ImageExportRequest) (*ImageEx
 		return nil, forCaller(c, derr)
 	}
 
-	row, doc, lerr := s.loadImage(ctx, s.store.Images(), c, req.ImageID)
+	row, doc, lerr := s.loadImageRead(ctx, s.store.Images(), c, req.ImageID)
 	if lerr != nil {
 		return nil, lerr
 	}

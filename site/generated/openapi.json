@@ -15515,6 +15515,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "The kind of production: short (the default), commercial or long.",
+            "in": "query",
+            "name": "kind",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -20891,6 +20899,10 @@
                   },
                   "dry_run": {
                     "type": "boolean"
+                  },
+                  "kind": {
+                    "description": "The kind of production of the answers: short (the default), commercial or long.",
+                    "type": "string"
                   },
                   "replace": {
                     "description": "Replace a brief that was written by hand.",

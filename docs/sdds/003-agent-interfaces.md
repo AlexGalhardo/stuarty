@@ -439,6 +439,7 @@ type BriefResult struct {
 // The guided briefing (SDD-005 §5.12.1).
 type BriefingQuestionsRequest struct {
 	ProjectID string `json:"project_id,omitempty"` // with a project, the result also holds what its brief answers
+	Kind      string `json:"kind,omitempty"`       // short (the default), commercial or long: the set of questions (SDD-018 section 17)
 }
 type BriefingQuestion struct {
 	ID       string   `json:"id"`
@@ -466,6 +467,7 @@ type BriefingQuestionsResult struct {
 }
 type BriefingAnswerRequest struct {
 	ProjectID string            `json:"project_id"`
+	Kind      string            `json:"kind,omitempty"`    // short (the default), commercial or long
 	Answers   map[string]string `json:"answers"` // question id to answer; they replace the brief
 	Replace   bool              `json:"replace,omitempty"` // allow replacing a brief written by hand
 	DryRun    bool              `json:"dry_run,omitempty"`
@@ -3308,7 +3310,7 @@ The `image` tool is the image documents of SDD-021 behind one tool, as `template
 ```json
 {
   "name": "project_item",
-  "description": "Project items. add: timeline (id is timeline_id), text or output (export job_id); move, rename, trash, restore: item_id; brief: read, or write text (empty clears); briefing: questions, or answers {id: text} write the brief. Texts: text lists, reads (item_id) or writes (text; title, text_kind make one); revisions (revision, until: compare); revert (revision); check: caption (network), script (wpm) or post.",
+  "description": "Project items. add: timeline (id is timeline_id), text or output (export job_id); move, rename, trash, restore: item_id; brief: read, or write text (empty clears); briefing: questions, or answers {id: text} write the brief; production_kind short (default), commercial, long. Texts: text lists, reads (item_id) or writes (text; title, text_kind make one); revisions (revision, until: compare); revert (revision); check: caption (network), script (wpm) or post.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -3378,6 +3380,13 @@ The `image` tool is the image documents of SDD-021 behind one tool, as `template
       },
       "until": {
         "type": "integer"
+      },
+      "production_kind": {
+        "enum": [
+          "short",
+          "commercial",
+          "long"
+        ]
       }
     },
     "required": [
@@ -3540,7 +3549,7 @@ Rules:
 
 1. **Statelessness.** The server keeps nothing per connection. Every call carries its ids (`project_id`, `asset_id`, `job_id`). The ids are handles, not credentials: every call re-checks scope and project ownership for the caller (MCP `2026-07-28` Tools, "Stateful Tools").
 2. **Standard output** of `stuarty mcp` carries only protocol messages; logs go to standard error.
-3. **Process model of the stdio server (Decision of this SDD, per the architect).** A workspace has one owner process (ADR-0008): the process that runs the HTTP listener on loopback, the queue worker and the event hub, and writes `runtime.json`. `stuarty serve` is an owner. `stuarty mcp` is **also an owner when none exists**: it starts everything `serve` starts (listener, worker, hub, `runtime.json`) and adds the stdio adapter, and it holds the workspace lock for its whole life. The UI and the CLI then reach it over HTTP like any server (`stuarty open` opens the browser against it). The listener binds `STUARTY_ADDR`; if that address is taken by another program it binds a free loopback port and records it in `runtime.json` (field `addr`). An owner started by `mcp` is always in local mode: with `STUARTY_MODE=network` it exits with `E_VALIDATION`, hint "start stuarty serve". When standard input closes it shuts down gracefully: running jobs follow SDD-005 §14.5 (requeued with the message "interrupted by shutdown" and resumed by the next owner), `runtime.json` is removed and the lock is released. When an owner already exists, `stuarty mcp` is an HTTP client of it, chosen once at start; if that owner disappears mid-session, the next call tries to become the owner by the same rule as at start (a failed attempt is `E_WORKSPACE_LOCKED`, retryable). There is no per-call lock, no cancel on session end and no separate short wait: contention at start waits up to 10 s, the one number of SDD-005 §6.4.
+3. **Process model of the stdio server (Decision of this SDD, per the architect).** A workspace has one owner process (ADR-0008): the process that runs the HTTP listener on loopback, the queue worker and the event hub, and writes `runtime.json`. `stuarty serve` is an owner. `stuarty mcp` is **also an owner when none exists**: it starts everything `serve` starts (listener, worker, hub, `runtime.json`) and adds the stdio adapter, and it holds the workspace lock for its whole life. The UI and the CLI then reach it over HTTP like any server (`stuarty open` opens the browser against it). The listener binds the address `serve` binds (`STUARTY_ADDR`, else `HOST` and `PORT`, else `127.0.0.1:7878`). Only when none of the three variables is set and the default port is taken by another program does it bind a free loopback port; an address the person chose is never replaced, and the default port is then never probed (VV-294). The address is recorded in `runtime.json` (field `addr`). An owner started by `mcp` is always in local mode: with `STUARTY_MODE=network` it exits with `E_VALIDATION`, hint "start stuarty serve". When standard input closes it shuts down gracefully: running jobs follow SDD-005 §14.5 (requeued with the message "interrupted by shutdown" and resumed by the next owner), `runtime.json` is removed and the lock is released. When an owner already exists, `stuarty mcp` is an HTTP client of it, chosen once at start; if that owner disappears mid-session, the next call tries to become the owner by the same rule as at start (a failed attempt is `E_WORKSPACE_LOCKED`, retryable). There is no per-call lock, no cancel on session end and no separate short wait: contention at start waits up to 10 s, the one number of SDD-005 §6.4.
 4. **The request context** carries the `Caller` into the tool handler. **Verified by** `TestMCPCallerPropagation`: two HTTP calls with two keys must be attributed to two different actors in the log. If the SDK does not hand the request context to the handler, an adapter shim is required before this SDD is implemented (see §10, issue I-9).
 5. A protocol revision older than `2026-07-28` is served as the SDK allows; the tool contract is the same.
 6. **Which workspace answers (VV-114).** `stuarty mcp` without `STUARTY_HOME` or `STUARTY_ADDR` opens the default workspace of the user, so the `initialize` answer says where: `serverInfo.description` is `Stuarty MCP server for the workspace <dir>, server <url>` (the server part is the owner of the workspace, this process or the one it talks to). It is fixed for the life of the process.
@@ -3753,7 +3762,7 @@ Every command that reads or edits a timeline (those whose result is about one do
 | `item:restore` | `item:restore <item id> --project <id>` | none | none | `ProjectItemResult` |
 | `brief:show` | `brief:show --project <id>` | none | none | `BriefResult` |
 | `brief:set` | `brief:set --project <id> --text <file\|->` | `--text` required: the Markdown, from a file or standard input | the text with `--text -` | `BriefResult` |
-| `briefing:questions` | `briefing:questions [--project <id>]` | `--project` string, optional: also the answers its brief holds | none | `BriefingQuestionsResult` |
+| `briefing:questions` | `briefing:questions [--project <id>] [--kind short\|commercial\|long]` | `--project` string, optional: also the answers its brief holds; `--kind` string, default `short`: the set of questions | none | `BriefingQuestionsResult` |
 | `text:list` | `text:list [--project <id>] [--kind script\|copy\|caption] [--state active\|trashed] [--cursor c] [--limit n]` | none required | none | `TextListResult` |
 | `text:show` | `text:show <item> --project <id> [--revision n]` | none | none | `TextGetResult` |
 | `text:write` | `text:write [<item>] --project <id> --text <file\|-> [--title t] [--kind script\|copy\|caption] [--base n] [--dry-run]` | `--text` required; `--title` needed to make a text | the Markdown with `--text -` | `TextWriteResult` |
@@ -3762,7 +3771,7 @@ Every command that reads or edits a timeline (those whose result is about one do
 | `text:draft` | `text:draft <item> --project <id> --connection <id> --model <id> --instruction <text> [--network n] [--max-tokens n] [--temperature t] [--dry-run]` | `--connection`, `--model`, `--instruction` required; the job waits for approval | none | `Job` |
 | `caption:validate` | `caption:validate [<item>] [--project <id>] [--network n] [--body <file\|->] [--text <file\|->]` | one of `<item>`, `--body`, `--text` (with `--network`) | the text with `-` | `CaptionValidateResult` |
 | `script:estimate` | `script:estimate [<item>] [--project <id>] [--text <file\|->] [--wpm n]` | one of `<item>`, `--text` | the text with `--text -` | `ScriptEstimateResult` |
-| `briefing:answer` | `briefing:answer --project <id> (--answer <id>=<text>)... [--answers <file\|->] [--replace] [--dry-run]` | `--answer` string, repeatable; `--answers` string, a JSON object of question id to answer; `--replace` bool false, replaces a brief written by hand | the JSON with `--answers -` | `BriefResult` |
+| `briefing:answer` | `briefing:answer --project <id> [--kind short\|commercial\|long] (--answer <id>=<text>)... [--answers <file\|->] [--replace] [--dry-run]` | `--kind` string, default `short`; `--answer` string, repeatable; `--answers` string, a JSON object of question id to answer; `--replace` bool false, replaces a brief written by hand | the JSON with `--answers -` | `BriefResult` |
 | `agent:docs` | `agent:docs [--print skill\|agents\|instructions] [--write <dir>]` | `--print` string `skill`; `--write` string | none | `{"files": [...]}` with `--write`; the text itself with `--print` |
 
 Notes on the table:
@@ -4047,8 +4056,8 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `projects.items.restore` | `POST /projects/{id}/items/{item_id}/restore` | `dry_run` | none | 200 `ProjectItemResult` | edit | none |
 | `projects.brief.get` | `GET /projects/{id}/brief` | none | none | 200 `BriefResult` | read | none |
 | `projects.brief.set` | `PUT /projects/{id}/brief` | none | `{text, dry_run?}` | 200 `BriefResult` | edit | 413 `E_LIMIT_EXCEEDED` |
-| `briefing.questions` | `GET /briefing/questions` | `project_id` (optional) | none | 200 `BriefingQuestionsResult` | read | 404 `E_NOT_FOUND` for an unknown project |
-| `projects.briefing.answer` | `PUT /projects/{id}/briefing` | `dry_run` | `{answers, replace?, dry_run?}` | 200 `BriefResult` | edit | 400 `E_VALIDATION` (`path` `answers.<id>`); 409 `E_INVALID_STATE` for a brief written by hand without `replace` |
+| `briefing.questions` | `GET /briefing/questions` | `project_id` (optional), `kind` (optional: `short`, `commercial`, `long`) | none | 200 `BriefingQuestionsResult` | read | 404 `E_NOT_FOUND` for an unknown project |
+| `projects.briefing.answer` | `PUT /projects/{id}/briefing` | `dry_run` | `{kind?, answers, replace?, dry_run?}` | 200 `BriefResult` | edit | 400 `E_VALIDATION` (`path` `answers.<id>`, or `kind` for an unknown kind); 409 `E_INVALID_STATE` for a brief written by hand without `replace` |
 | `fonts.import` | `POST /fonts` | none | `{path}`, an absolute path to a TrueType or OpenType file on the machine of the server (SDD-007 §7.7) | 201 `FontImportResult` `{hash, bytes, deduplicated}` | media | 403 `E_PATH_NOT_ALLOWED`; 404 `E_FILE_NOT_FOUND`; 422 `E_VALIDATION` (a refused font) |
 | `brand.get`, `brand.set` | `GET /brand-kit`, `PUT /brand-kit` | none | `{logo?, colors?, fonts?}` for set (replaces the kit, SDD-005 §5.11; at least one member, an empty one clears the kit) | 200 `BrandKit` | read; edit | 422 `E_VALIDATION`; 404 `E_NOT_FOUND` |
 | `users.list`, `users.create`, `users.update` | `GET /users`, `POST /users`, `PATCH /users/{user_id}` | none | `{email, password, role?}` for create; `{role?, disabled?}` for update | 200 `{users: [UserView]}`, 201 `UserView`, 200 `UserView` | an administrator's browser session; a key cannot call them (network mode only, SDD-007 §4.1) | 403 `E_FORBIDDEN`; 404 `E_NOT_FOUND`; 409 `E_INVALID_STATE` (last administrator) |
@@ -4282,8 +4291,8 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `ProjectItemRestore` | `project_item` (`action` `restore`) | `item:restore` | `POST /projects/{id}/items/{item_id}/restore` |
 | `BriefGet` | `project_item` (`action` `brief`, without `text`) | `brief:show` | `GET /projects/{id}/brief` |
 | `BriefSet` | `project_item` (`action` `brief`, with `text`) | `brief:set` | `PUT /projects/{id}/brief` |
-| `BriefingQuestions` | `project_item` (`action` `briefing`, without `answers`) | `briefing:questions` | `GET /briefing/questions` |
-| `BriefingAnswer` | `project_item` (`action` `briefing`, with `answers`) | `briefing:answer` | `PUT /projects/{id}/briefing` |
+| `BriefingQuestions` | `project_item` (`action` `briefing`, without `answers`; optional `production_kind`) | `briefing:questions` | `GET /briefing/questions` |
+| `BriefingAnswer` | `project_item` (`action` `briefing`, with `answers`; optional `production_kind`) | `briefing:answer` | `PUT /projects/{id}/briefing` |
 | `TextList`, `TextGet` | `project_item` (`action` `text`) | `text:list`, `text:show` | `GET /texts`, `GET /projects/{id}/texts/{item_id}` |
 | `TextWrite` | `project_item` (`action` `text`, with `text`) | `text:write` | `POST /projects/{id}/texts`, `PUT /projects/{id}/texts/{item_id}` |
 | `TextRevisions`, `TextRevert` | `project_item` (`action` `revisions`, `revert`) | `text:revisions`, `text:revert` | `GET /projects/{id}/texts/{item_id}/revisions`, `POST /projects/{id}/texts/{item_id}/revert` |

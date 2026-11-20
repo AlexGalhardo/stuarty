@@ -30,6 +30,16 @@ func ProductionKinds() []ProductionKind {
 	return []ProductionKind{ProductionShort, ProductionCommercial, ProductionLong}
 }
 
+// KindOrShort is the kind a surface sends as text: an empty one is the short video, the default of the briefing.
+// The text is not checked here; BriefingQuestionsFor and CheckAnswersFor refuse an unknown kind.
+func KindOrShort(s string) ProductionKind {
+	if s == "" {
+		return ProductionShort
+	}
+
+	return ProductionKind(s)
+}
+
 // Known reports whether k is a kind of production.
 func (k ProductionKind) Known() bool {
 	return slices.Contains(ProductionKinds(), k)

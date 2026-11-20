@@ -18,9 +18,9 @@ func (o *Owner) seedTemplates(ctx context.Context, st service.Store) error {
 }
 
 // seedRecipeTemplates installs the templates of the recipes for a commercial and a long video (SDD-018 section
-// 17): the timeline templates in every mode, the image templates in local mode only, because an image belongs to
-// one user in network mode (SDD-021) and a shared image template is not part of that model. A workspace that
-// holds one is left as it is.
+// 17), in every mode. In network mode an image belongs to one user (SDD-021), and an image template of the
+// product is the one exception: it has no owner, every user reads it and makes a document from it, and none
+// changes it (service.SharedImageTemplate). A workspace that holds one is left as it is.
 func (o *Owner) seedRecipeTemplates(ctx context.Context, st service.Store) error {
 	now := o.now().UnixMilli()
 
@@ -31,10 +31,6 @@ func (o *Owner) seedRecipeTemplates(ctx context.Context, st service.Store) error
 
 	if _, err := service.SeedBuiltInTemplates(ctx, st, now, builtIn(timelines)); err != nil {
 		return err
-	}
-
-	if o.network != nil {
-		return nil
 	}
 
 	images, err := templates.Images()

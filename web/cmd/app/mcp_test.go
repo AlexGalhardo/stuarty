@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"errors"
 	"net"
 	"net/http"
 	"path/filepath"
@@ -118,7 +119,7 @@ func TestFreePortIfBusyMovesOnlyWhenTheDefaultIsTakenAndUnset(t *testing.T) {
 	busy := taken.Addr().String()
 	none := func(string) string { return "" }
 
-	if got := freePortIfBusy(t.Context(), none, busy); got != "127.0.0.1:0" {
+	if got := freePortIfBusy(t.Context(), none, busy, listenProbe); got != "127.0.0.1:0" {
 		t.Errorf("a busy default = %q, want any free port", got)
 	}
 
@@ -129,7 +130,7 @@ func TestFreePortIfBusyMovesOnlyWhenTheDefaultIsTakenAndUnset(t *testing.T) {
 
 		return ""
 	}
-	if got := freePortIfBusy(t.Context(), chosen, busy); got != "" {
+	if got := freePortIfBusy(t.Context(), chosen, busy, listenProbe); got != "" {
 		t.Errorf("an address the person chose = %q, want it kept", got)
 	}
 
@@ -141,8 +142,37 @@ func TestFreePortIfBusyMovesOnlyWhenTheDefaultIsTakenAndUnset(t *testing.T) {
 	addr := free.Addr().String()
 	_ = free.Close()
 
-	if got := freePortIfBusy(t.Context(), none, addr); got != "" {
+	if got := freePortIfBusy(t.Context(), none, addr, listenProbe); got != "" {
 		t.Errorf("a free default = %q, want it kept", got)
+	}
+}
+
+// VV-294: HOST and PORT choose the address as STUARTY_ADDR does, and then the default port is never probed.
+func TestFreePortIfBusyKeepsAnAddressChosenByHostOrPort(t *testing.T) {
+	t.Parallel()
+
+	for _, key := range []string{envAddr, "HOST", "PORT"} {
+		probed := false
+		probe := func(context.Context, string) (net.Listener, error) {
+			probed = true
+
+			return nil, errors.New("taken")
+		}
+		chosen := func(k string) string {
+			if k == key {
+				return "9000"
+			}
+
+			return ""
+		}
+
+		if got := freePortIfBusy(t.Context(), chosen, "127.0.0.1:7878", probe); got != "" {
+			t.Errorf("%s set: got %q, want the configured address kept", key, got)
+		}
+
+		if probed {
+			t.Errorf("%s set: the default port was probed", key)
+		}
 	}
 }
 

@@ -1885,7 +1885,7 @@
       "domain": "project",
       "summary": "list the questions of the guided briefing; with --project, also what its brief already answers",
       "usage": [
-        "stuarty briefing:questions [--project <id>]"
+        "stuarty briefing:questions [--project <id>] [--kind short|commercial|long]"
       ],
       "example": "stuarty briefing:questions --project prj_7k2m9x4q1b",
       "flags": [
@@ -1893,6 +1893,11 @@
           "name": "project",
           "type": "string",
           "usage": "a project: also the answers its brief holds"
+        },
+        {
+          "name": "kind",
+          "type": "string",
+          "usage": "the kind of production: short (the default), commercial or long"
         }
       ],
       "globals": [
@@ -1907,8 +1912,8 @@
       "domain": "project",
       "summary": "answer the guided briefing: the answers become the brief of a project",
       "usage": [
-        "stuarty briefing:answer --project <id> --answer <question>=<text> [--answer ...] [--replace]",
-        "stuarty briefing:answer --project <id> --answers <file|-> [--replace]"
+        "stuarty briefing:answer --project <id> [--kind short|commercial|long] --answer <question>=<text> [--answer ...] [--replace]",
+        "stuarty briefing:answer --project <id> [--kind short|commercial|long] --answers <file|-> [--replace]"
       ],
       "example": "stuarty briefing:answer --project prj_7k2m9x4q1b --answer audience=\"indie developers\" --answer goal=\"get sign-ups\" --answer platform=youtube-shorts --answer format=vertical-9x16 --answer duration=30",
       "flags": [
@@ -1922,6 +1927,11 @@
           "name": "answers",
           "type": "string",
           "usage": "a JSON object of question id to answer: a file, or - for standard input"
+        },
+        {
+          "name": "kind",
+          "type": "string",
+          "usage": "the kind of production: short (the default), commercial or long"
         },
         {
           "name": "replace",

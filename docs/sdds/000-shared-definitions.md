@@ -55,7 +55,7 @@
 | `ProjectDuplicate` | `project_create` called with `from` | `project:duplicate` | `POST /projects/{id}/duplicate` (a copy of the production; its timelines get new ids, SDD-003 §2.3) | edit |
 | `ProjectItemAdd`, `ProjectItemMove`, `ProjectItemRename`, `ProjectItemTrash`, `ProjectItemRestore` | `project_item` (argument `action`) | `item:add`, `item:move`, `item:rename`, `item:trash`, `item:restore` | `POST /projects/{id}/items`, `POST /projects/{id}/items/{item_id}/move`, `.../rename`, `.../trash`, `.../restore` | edit |
 | `BriefGet`, `BriefSet` | `project_item` (`action` `brief`; given `text`, it sets) | `brief:show`, `brief:set` | `GET /projects/{id}/brief`, `PUT /projects/{id}/brief` | read, edit |
-| `BriefingQuestions`, `BriefingAnswer` | `project_item` (`action` `briefing`; given `answers`, it answers) | `briefing:questions`, `briefing:answer` | `GET /briefing/questions`, `PUT /projects/{id}/briefing` | read, edit (SDD-005 §5.12.1) |
+| `BriefingQuestions`, `BriefingAnswer` | `project_item` (`action` `briefing`, with `production_kind`; given `answers`, it answers) | `briefing:questions`, `briefing:answer` | `GET /briefing/questions`, `PUT /projects/{id}/briefing` | read, edit (SDD-005 §5.12.1) |
 | `ConnectionList`, `ConnectionGet` | `connection` (list, or one by id) | `connection:list`, `connection:show` | `GET /connections`, `GET /connections/{id}` | read |
 | `ConnectionCreate`, `ConnectionRemove`, `ConnectionTest` | none | `connection:add`, `connection:remove`, `connection:test` | `POST /connections`, `DELETE /connections/{id}`, `POST /connections/{id}/test` | admin (SDD-014) |
 | `ImageCreate` | `image` (`action` create) | `image:create` | `POST /images` | edit |
