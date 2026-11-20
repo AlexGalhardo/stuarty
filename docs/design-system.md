@@ -160,7 +160,9 @@ Method: OKLCH to linear sRGB (Björn Ottosson's matrices), gamut clamp, sRGB enc
 | `agent` on `background` | 4.5 | 6.33 | 10.44 |
 | `agent` on `ed-panel` | 4.5 | 6.97 | 9.55 |
 | each state on its tint (`/10` light, `/20` dark over the panel) | 4.5 | 4.66 to 5.98 | 5.28 to 6.22 |
-| `brand-foreground` on `brand` | 4.5 | 5.35 | 11.21 |
+| `brand-foreground` on `brand` | 4.5 | 8.28 | 5.66 |
+| `brand-text` on `background` | 4.5 | 7.66 | 9.65 |
+| `brand-text` on `brand-subtle` over `background` (the active sidebar item) | 4.5 | 7.67 | 8.95 |
 | `ring` on `background` | 3 | 4.86 | 10.44 |
 | `ring` on `ed-timeline` | 3 | 4.37 | 10.44 |
 | `input` on `background` | 3 | 6.87 | 6.69 |

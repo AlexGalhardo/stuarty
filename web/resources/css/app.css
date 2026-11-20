@@ -119,6 +119,9 @@
 	--color-agent: var(--agent);
 	--color-brand: var(--brand);
 	--color-brand-foreground: var(--brand-foreground);
+	--color-brand-accent: var(--brand-accent);
+	--color-brand-subtle: var(--brand-subtle);
+	--color-brand-text: var(--brand-text);
 
 	/* editor (design-system.md section 2.5): used under web/resources/js/editor only */
 	--color-ed-bg: var(--ed-bg);
@@ -196,8 +199,12 @@
 	--warning: oklch(0.480 0.150 38.4);
 	--info: oklch(0.520 0.094 223.1);
 	--agent: oklch(0.496 0.237 301.9);
-	--brand: oklch(0.520 0.094 223.1);
-	--brand-foreground: oklch(1 0 0);
+	/* brand: the indigo of the official icon in the light theme (design-system section 11.3) */
+	--brand: oklch(0.442 0.222 272.9);
+	--brand-foreground: oklch(0.994 0 0);
+	--brand-accent: oklch(0.645 0.189 282.5);
+	--brand-subtle: oklch(0.97 0.025 280);
+	--brand-text: oklch(0.442 0.222 272.9);
 
 	/* editor (section 2.5), light palette */
 	--ed-bg: oklch(0.967 0.003 264.5);
@@ -272,8 +279,12 @@
 	--warning: oklch(0.769 0.165 70.1);
 	--info: oklch(0.797 0.134 211.5);
 	--agent: oklch(0.797 0.134 211.5);
-	--brand: oklch(0.797 0.134 211.5);
-	--brand-foreground: oklch(0.122 0.006 261.6);
+	/* brand: the lilac of the official icon in the dark theme (design-system section 11.3) */
+	--brand: oklch(0.645 0.189 282.5);
+	--brand-foreground: oklch(0.145 0 0);
+	--brand-accent: oklch(0.72 0.17 282);
+	--brand-subtle: oklch(0.29 0.13 272 / 40%);
+	--brand-text: oklch(0.8 0.13 281);
 
 	--ed-bg: oklch(0.178 0.006 271.0);
 	--ed-panel: oklch(0.221 0.011 260.7);

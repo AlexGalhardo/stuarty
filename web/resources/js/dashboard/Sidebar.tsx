@@ -34,7 +34,7 @@ import {
 } from "./sidebarState";
 
 const ITEM =
-	"flex h-9 items-center gap-2 rounded-md px-3 text-sm text-muted-foreground outline-offset-[-2px] hover:bg-muted hover:text-foreground aria-[current=page]:bg-muted aria-[current=page]:font-medium aria-[current=page]:text-foreground";
+	"flex h-9 items-center gap-2 rounded-md px-3 text-sm text-muted-foreground outline-offset-[-2px] hover:bg-muted hover:text-foreground aria-[current=page]:bg-brand-subtle aria-[current=page]:font-medium aria-[current=page]:text-brand-text";
 
 // The chosen state of the sidebar, and whether the window is narrow. The first
 // render is the expanded one on the server and in the browser alike; the choice

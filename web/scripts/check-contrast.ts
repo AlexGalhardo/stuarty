@@ -149,6 +149,21 @@ function tint(fg: string, base: string, need: number, light: number, dark: numbe
 	};
 }
 
+// layered measures a colour on a translucent surface painted over the page background, as the
+// active item of the sidebar (brand text on the brand tint) is drawn.
+function layered(fg: string, bg: string, need: number, light: number, dark: number): Pair {
+	return {
+		name: `${fg} on ${bg} over background`,
+		need,
+		light,
+		dark,
+		measure: (t) => {
+			const back = over(colour(t, bg), 1, surface(t, "background"));
+			return ratio(over(colour(t, fg), 1, back), back);
+		},
+	};
+}
+
 // tintRange is the lowest or highest ratio of the four states on their own tint
 // over the editor panel: the document gives the range, not each state.
 function tintRange(label: string, pick: (...n: number[]) => number, light: number, dark: number): Pair {
@@ -184,7 +199,9 @@ const pairs: Pair[] = [
 	plain("agent", "ed-panel", 4.5, 6.97, 9.55),
 	tintRange("lowest", Math.min, 4.66, 5.28),
 	tintRange("highest", Math.max, 5.98, 6.22),
-	plain("brand-foreground", "brand", 4.5, 5.35, 11.21),
+	plain("brand-foreground", "brand", 4.5, 8.28, 5.66),
+	plain("brand-text", "background", 4.5, 7.66, 9.65),
+	layered("brand-text", "brand-subtle", 4.5, 7.67, 8.95),
 	plain("ring", "background", 3, 4.86, 10.44),
 	plain("ring", T, 3, 4.37, 10.44),
 	plain("input", "background", 3, 6.87, 6.69),
