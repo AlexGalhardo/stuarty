@@ -473,8 +473,8 @@ type BriefingAnswerRequest struct {
 ```
 
 - **`ProjectDescribe`** is the text view of a production for an agent that has never seen it, inside the token budget of §3.10 (`max_tokens`, default 1,500): the name and state, one line of production state, the brief (cut at the budget with the note `brief cut; read it with brief`), then every item as `<id> <kind> "<title>" [trashed]` and, for a timeline, its id, size, duration and revision. The text of a `text` item is never inlined.
-- **`ProjectItemAdd`** of a `timeline` creates the document as `ProjectCreate` does and returns its `timeline_id` in `item.timeline_id`. A project has at most one active `brief` item (`BriefSet` creates and updates it); `ProjectItemAdd` of kind `brief` is `E_VALIDATION` with the hint "use brief:set". `ProjectItemMove` moves the item to the index `position` of the whole list and renumbers the others. `ProjectItemRename` changes the item title only (the timeline document is not touched). `ProjectItemTrash` of the last active timeline is `E_INVALID_STATE`; of a timeline it also rejects edits to it until restored (§2.3). All five are idempotent where the state already holds, and refuse a trashed project with `E_INVALID_STATE`. A brief is not deleted: `BriefSet` with an empty text clears it, and `ProjectItemTrash` of the brief is `E_INVALID_STATE`. A project holds at most 256 active items and 64 active timelines, what a bundle of the whole project may carry (SDD-005 §16.1.1): `ProjectItemAdd`, `ProjectItemRestore` and the `BriefSet` that creates the brief answer `E_LIMIT_EXCEEDED` beyond them.
-- **`ProjectDuplicate`** copies the brief, the texts and every active timeline (each with a new `prj_` id, its document at revision 0 and no log, as an import with `as_new`, SDD-005 §16.3) and the use of the same assets; outputs are not copied (a file belongs to the job that made it). The copy is a new project, owned by the caller.
+- **`ProjectItemAdd`** of a `timeline` creates the document as `ProjectCreate` does and returns its `timeline_id` in `item.timeline_id`. A project has at most one active `brief` item (`BriefSet` creates and updates it); `ProjectItemAdd` of kind `brief` is `E_VALIDATION` with the hint "use brief:set". `ProjectItemMove` moves the item to the index `position` of the whole list and renumbers the others. `ProjectItemRename` changes the item title only (the timeline document is not touched). `ProjectItemTrash` of the last active timeline is `E_INVALID_STATE`; of a timeline that another active timeline of the project holds as a composition (SDD-001 §3.5.1) it is `E_IN_USE` with `details.used_by` the ids and titles of those timelines; of a timeline it also rejects edits to it until restored (§2.3). A trashed timeline that is still named by a composition draws nothing there (the lint says so). `ProjectItemRestore` of a timeline that would break a nesting rule of SDD-001 §3.5.1 once back (the timelines it holds grew deeper while it was in the trash) answers the error of that rule. All five are idempotent where the state already holds, and refuse a trashed project with `E_INVALID_STATE`. A brief is not deleted: `BriefSet` with an empty text clears it, and `ProjectItemTrash` of the brief is `E_INVALID_STATE`. A project holds at most 256 active items and 64 active timelines, what a bundle of the whole project may carry (SDD-005 §16.1.1): `ProjectItemAdd`, `ProjectItemRestore` and the `BriefSet` that creates the brief answer `E_LIMIT_EXCEEDED` beyond them.
+- **`ProjectDuplicate`** copies the brief, the texts and every active timeline (each with a new `prj_` id, its document at revision 0 and no log, as an import with `as_new`, SDD-005 §16.3; a composition of a copied timeline names the copy of its timeline, SDD-001 §3.5.1) and the use of the same assets; outputs are not copied (a file belongs to the job that made it). The copy is a new project, owned by the caller.
 - Scopes: `ProjectDescribe`, `BriefGet` and `BriefingQuestions` read; the others edit. Every operation takes `project_id` of the production and checks ownership as `ProjectGet` does.
 - Audit actions (SDD-005 §5.9): `project.item.add`, `project.item.move`, `project.item.rename`, `project.item.trash`, `project.item.restore`, `project.brief.set`, `project.duplicate`.
 
@@ -922,8 +922,8 @@ type Range struct {
 ```go
 type JobStartRequest struct {
 	ProjectID  string          `json:"project_id"`
-	Kind       string          `json:"kind"` // "export" | "transcribe" | "text.generate" | "image.generate" | "voice.generate" (ingest and frame jobs are internal)
-	Args       json.RawMessage `json:"args,omitempty"` // one object, validated by Kind: ExportArgs, TranscribeArgs or the arguments of text.generate, image.generate and voice.generate (SDD-016 sections 6 and 6.1); an unknown member is E_VALIDATION with path args.<name>
+	Kind       string          `json:"kind"` // "export" | "transcribe" | "text.generate" | "image.generate" | "voice.generate" | "video.generate" (ingest and frame jobs are internal)
+	Args       json.RawMessage `json:"args,omitempty"` // one object, validated by Kind: ExportArgs, TranscribeArgs or the arguments of text.generate, image.generate, voice.generate and video.generate (SDD-016 sections 6, 6.1 and 6.4); an unknown member is E_VALIDATION with path args.<name>
 	WaitMS     int             `json:"wait_ms,omitempty"` // default 0; 0 to 25000
 	DryRun     bool            `json:"dry_run,omitempty"` // runs the lint gate and limits, queues nothing
 }
@@ -965,10 +965,10 @@ type Job struct {
 	ProjectID  *string    `json:"project_id"` // null for an ingest job: it belongs to the file, which projects may share
 	State      string     `json:"state"` // queued | waiting_approval | running | succeeded | failed | cancelled; waiting_approval: a kind that needs approval waits for a person or a rule (SDD-015 §5)
 	ApprovalID string     `json:"approval_id,omitempty"` // the approval request of a job of a kind that needs approval (SDD-015 §5)
-	Estimate   *Money     `json:"estimate,omitempty"` // text.generate, image.generate and voice.generate: the cost estimated before it runs, on the job from the moment it exists (SDD-016 §6, §6.1)
+	Estimate   *Money     `json:"estimate,omitempty"` // text.generate, image.generate, voice.generate and video.generate: the cost estimated before it runs, on the job from the moment it exists (SDD-016 §6, §6.1)
 	Progress   float64    `json:"progress"` // 0 to 1
 	Message    string     `json:"message,omitempty"`
-	Result     *JobResult `json:"result,omitempty"` // export, transcribe, text.generate, image.generate and voice.generate only; an ingest job has no result member (its outcome is the asset state, MediaList)
+	Result     *JobResult `json:"result,omitempty"` // export, transcribe, text.generate, image.generate, voice.generate and video.generate only; an ingest job has no result member (its outcome is the asset state, MediaList)
 	Error      *Error     `json:"error,omitempty"` // set when State is "failed" and when it is "cancelled" (E_CANCELLED); E_INGEST_FAILED, E_EXPORT_FAILED, E_VERIFY_FAILED, E_TRANSCRIBE_FAILED and E_CANCELLED travel here with HTTP status 200
 	Lint       *LintTotals `json:"lint,omitempty"` // export: totals at the pinned revision (warnings only: errors refuse the start)
 	Warnings   []string    `json:"warnings,omitempty"` // export: notes about an accepted start, not a reason to refuse it; a GIF whose typical size is over 25 MB says its estimated size (VV-056)
@@ -982,7 +982,7 @@ type JobResult struct { // exactly one member is set
 	Export     *ExportResult     `json:"export,omitempty"`
 	Transcribe *TranscribeResult `json:"transcribe,omitempty"`
 	Text       *TextResult       `json:"text,omitempty"` // text.generate: the text (untrusted), the model, the tokens and the real cost (SDD-016 section 6)
-	Generated  *GeneratedResult  `json:"generated,omitempty"` // image.generate and voice.generate: the assets stored (asset id, hash, kind, bytes, state, the revised prompt as untrusted text), requested and delivered, notes, the real cost (SDD-016 section 6.1)
+	Generated  *GeneratedResult  `json:"generated,omitempty"` // image.generate, voice.generate and video.generate: the assets stored (asset id, hash, kind, bytes, state, the revised prompt as untrusted text), requested and delivered, notes, the real cost (SDD-016 section 6.1)
 }
 type ExportResult struct {
 	Revision    int64        `json:"revision"`
@@ -1365,9 +1365,9 @@ warning L_SAFE_AREA itm_s6t7v8w9x0 0.4s/12f-2s/60f
 | `L_EMPTY_TIMELINE` | error | doc | the document has no item | import media and place it with clip.add |
 | `L_GAP` | warning | doc | a range of at least 3 frames inside `[0, end)`, where `end` is the end of the last item on any track, in which no visible `clip` or `shape` item is active but a visible `text` or `caption` item is; that is a gap in the video layers with only the background colour and text showing (a gap of the lowest visual track that no upper track fills). A hidden track counts as absent | fill the range, or close it with timeline.close_gap |
 | `L_BLACK_FRAMES` | warning | doc | a range of at least 1 frame inside `[0, end)` in which no visible visual item of any kind (`clip`, `shape`, `text`, `caption`) is active, so the frames show only the background colour (black by default). It is distinct from `L_GAP`, which is about the video layers while text still shows (RF-108). A hidden track counts as absent. A project with no visual track (audio only) has none | fill the range with a clip or a shape, close it with timeline.close_gap, or shorten the timeline |
-| `L_MEDIA_MISSING` | error | doc, full | an item's asset is not in `assets` (and is not the template placeholder) (`doc`); or the original file is missing from the store (`full`, a file check). A trashed asset cannot be in use: `asset.remove` of a used asset is `E_IN_USE` (SDD-005 §13.2) | import the file again, then replace the item's asset |
+| `L_MEDIA_MISSING` | error | doc, full | an item's asset is not in `assets` (and is not the template placeholder) (`doc`); or the original file is missing from the store (`full`, a file check). A trashed asset cannot be in use: `asset.remove` of a used asset is `E_IN_USE` (SDD-005 §13.2); or a composition item names a timeline that is not in the production, or is in the trash (`doc`, with `Env.Nested`) | import the file again, then replace the item's asset; or restore the timeline, or delete the composition |
 | `L_MEDIA_UNREADY` | error | doc | the asset's normalized media is not available: the artifact state is not `ready` (being rebuilt after a cache clean or a profile change) | wait for the asset to be ready and run lint again |
-| `L_SOURCE_RANGE` | error | full | the item reads past the end of the asset's actual normalized media (its artifact frame count is lower than the recorded `frame_count`). An invalid document cannot cause it (SDD-001 `V_SOURCE_RANGE`); it detects an inconsistent store | re-import the file |
+| `L_SOURCE_RANGE` | error | full | the item reads past the end of the asset's actual normalized media (its artifact frame count is lower than the recorded `frame_count`). An invalid document cannot cause it (SDD-001 `V_SOURCE_RANGE`); it detects an inconsistent store; or a composition item shows frames past the end of its timeline (the end of its last item, in the frames of the host), or its timeline is empty (`Env.Nested`) | re-import the file; or shorten the composition, or lengthen that timeline |
 | `L_ODD_DIMENSIONS` | error | doc | `settings.width` or `height` is odd or outside 16 to 4096. Unreachable through commands (SDD-001 §3.1); a safety net for a document that skipped validation | use settings.set with even values |
 | `L_SILENT_EXPORT` | warning | doc | no source would be audible: no `audio` item, and every `clip` with `has_audio` is muted (`audio_muted`, `volume` 0, or a muted track), or no such clip exists | add an audio item or unmute a clip |
 | `L_SLIVER` | warning | doc | a `clip`, `audio` or `caption` item lasts 1 or 2 frames (typical result of a trim or split at the wrong time) | delete it or trim the neighbour |
@@ -1391,7 +1391,7 @@ Blocking set, stated once: `L_EMPTY_TIMELINE`, `L_MEDIA_MISSING`, `L_MEDIA_UNREA
 
 **Overlap.** A same-track overlap cannot exist: SDD-001 `V_OVERLAP` forbids it and every command refuses it with `E_OVERLAP` at write time. The lint rules about overlap are therefore the cross-track ones above (`L_OCCLUDED`, `L_AUDIO_OVERLAP`). **Decision of this SDD**; see §10.
 
-**How `core/lint` implements this section (P1-ENG-004).** `Lint(doc, env, mode)` returns the findings in the report order; `Fast` runs the rules marked `doc` or `item`, `Full` adds `L_SOURCE_RANGE`. `core/` reads no file and measures no font, so what the document cannot tell is an input in `Env`: `Unready` (for `L_MEDIA_UNREADY`), `SafeArea` (`plan.SafeArea` of SDD-004 §4.1, the only place the margins exist) with `TextSize` (the natural size of a text or caption item from the rasterizer, before scale and rotation) for `L_SAFE_AREA`, and `MediaFrames` (the frame count of the normalized media in the store) for `L_SOURCE_RANGE`. A rule whose input is nil is skipped, never guessed. The file check of `L_MEDIA_MISSING` (`full`) belongs to the service. `L_SAFE_AREA` is the rule of the first-rules assert (RF-107) and `L_SLOT_UNFILLED` belongs to the blocking set. `L_SAFE_AREA` judges the static `x` and `y` (keyframes are not followed). `New(before, after)` is the `Findings` of §2.7 rule 2, and `Report(header, findings, from)` renders the text above up to the 9,600-character cap, returning the index of the first finding left out so the caller writes the `next_cursor:` line. `Catalog()` is the table of this section as data; `task codegen` writes it to `core/schema/lint-rules.json` (code, severity, depth, blocking and the key of the title) and to `web/resources/js/generated/lint-rules.ts`, and `TestLintRulesSnapshot` fails when the file and the table differ.
+**How `core/lint` implements this section (P1-ENG-004).** `Lint(doc, env, mode)` returns the findings in the report order; `Fast` runs the rules marked `doc` or `item`, `Full` adds `L_SOURCE_RANGE`. `core/` reads no file and measures no font, so what the document cannot tell is an input in `Env`: `Unready` (for `L_MEDIA_UNREADY`), `SafeArea` (`plan.SafeArea` of SDD-004 §4.1, the only place the margins exist) with `TextSize` (the natural size of a text or caption item from the rasterizer, before scale and rotation) for `L_SAFE_AREA`, `MediaFrames` (the frame count of the normalized media in the store) for `L_SOURCE_RANGE`, and `Nested` (the timeline a composition item uses, from the same production) for the composition cases of `L_MEDIA_MISSING` and `L_SOURCE_RANGE` (SDD-001 §3.5.1). A rule whose input is nil is skipped, never guessed. The file check of `L_MEDIA_MISSING` (`full`) belongs to the service. `L_SAFE_AREA` is the rule of the first-rules assert (RF-107) and `L_SLOT_UNFILLED` belongs to the blocking set. `L_SAFE_AREA` judges the static `x` and `y` (keyframes are not followed). `New(before, after)` is the `Findings` of §2.7 rule 2, and `Report(header, findings, from)` renders the text above up to the 9,600-character cap, returning the index of the first finding left out so the caller writes the `next_cursor:` line. `Catalog()` is the table of this section as data; `task codegen` writes it to `core/schema/lint-rules.json` (code, severity, depth, blocking and the key of the title) and to `web/resources/js/generated/lint-rules.ts`, and `TestLintRulesSnapshot` fails when the file and the table differ.
 
 ### 3.7 The history list
 
@@ -1603,7 +1603,7 @@ Tool and Service mapping, scope and annotations (annotations are hints and clien
 | `template` | `TemplateList`, `TemplateSave`, `TemplateInstantiate`, `TemplateExport`, `TemplateImport` | read (list, export), edit (the others) | false | false | false | false |
 | `font_import` | `FontImport` | media | false | false | true | false |
 | `connection` | `ConnectionList` (without `id`), `ConnectionGet` (with `id`) | read | true | n/a | true | false |
-| `image` | `ImageCreate`, `ImageList`, `ImageDescribe`, `ImageEdit`, `ImageUndo`, `ImageRedo`, `ImageExport` (SDD-021) | read (list, show), edit (the others) | false | false | false | false |
+| `image` | `ImageCreate`, `ImageList`, `ImageDescribe`, `ImageEdit`, `ImageUndo`, `ImageRedo`, `ImageExport`, `ImageImport` (SDD-021) | read (list, show), edit (the others) | false | false | false | false |
 | `project_item` | `ProjectItemAdd`, `ProjectItemMove`, `ProjectItemRename`, `ProjectItemTrash`, `ProjectItemRestore`, `BriefGet`, `BriefSet`, `BriefingQuestions`, `BriefingAnswer`, and the texts of SDD-019: `TextList`, `TextGet`, `TextWrite`, `TextRevisions`, `TextRevert`, `CaptionValidate`, `ScriptEstimate` (argument `action`: `text`, `revisions`, `revert`, `check`) | edit (read for `brief` without `text`, for `briefing` without `answers`, and for the actions `revisions` and `check` and the action `text` without `text`) | false | false | false | false |
 | `library` | `LibrarySearch`, `MemoryList`, `SkillList`, `PromptList`, `MemoryGet`, `SkillGet`, `PromptGet`, `MemoryWrite`, `SkillWrite`, `PromptWrite`, `PromptRender`, `SkillLint` | read (search, list, get, render, lint), edit (write) | false | false | false | false |
 
@@ -2779,7 +2779,7 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
 ```json
 {
   "name": "job_start",
-  "description": "Start long work; args by kind. export renders a workspace file: {start?, end?, format?, at? (the png frame), preset?, codec?}; export_batch: items (export args) in turn; transcribe: {asset_id, language?, model?}; text.generate: {connection_id, model, prompt}; image.generate: {connection_id, model, prompt, size?, count?}; voice.generate: {connection_id, model, text, voice, format?}; text.draft: {item_id, connection_id, model, instruction}; a person approves. Poll job_get.",
+  "description": "Start long work; args by kind. export renders a workspace file: {start?, end?, format?, at? (the png frame), preset?, codec?}; export_batch: items (export args) in turn; transcribe: {asset_id, language?, model?}; text.generate: {connection_id, model, prompt}; image.generate: {connection_id, model, prompt, size?, count?}; voice.generate: {connection_id, model, text, voice, format?}; text.draft: {item_id, connection_id, model, instruction}; video.generate: {connection_id, model, prompt, seconds?, aspect?, first_frame?}; a person approves. Poll job_get.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -2799,7 +2799,8 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
           "text.generate",
           "image.generate",
           "voice.generate",
-          "text.draft"
+          "text.draft",
+          "video.generate"
         ]
       },
       "args": {
@@ -3179,7 +3180,7 @@ The only tool of the connections domain (ADR-0043 item 3: an intent no other too
 ```json
 {
   "name": "image",
-  "description": "Images. action=create (preset or width+height; or from_template+values), list, show, edit (operations: command_help domain=image), undo, redo, export.",
+  "description": "Images. action=create (preset or width+height; or from_template+values), list, show, edit (operations: command_help domain=image), undo, redo, export, import (path or hash of an image file; image_id adds a layer).",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -3191,7 +3192,8 @@ The only tool of the connections domain (ADR-0043 item 3: an intent no other too
           "edit",
           "undo",
           "redo",
-          "export"
+          "export",
+          "import"
         ]
       },
       "image_id": {
@@ -3247,6 +3249,12 @@ The only tool of the connections domain (ADR-0043 item 3: an intent no other too
       },
       "from_template": {
         "type": "string"
+      },
+      "path": {
+        "type": "string"
+      },
+      "hash": {
+        "type": "string"
       }
     },
     "required": [
@@ -3274,6 +3282,8 @@ The only tool of the connections domain (ADR-0043 item 3: an intent no other too
 ```
 
 The `image` tool is the image documents of SDD-021 behind one tool, as `template` is the templates: `action` picks the Service operation (`create` is `ImageCreate`, `list` `ImageList`, `show` `ImageDescribe`, `edit` `ImageEdit`, `undo` and `redo` `ImageUndo` and `ImageRedo`, `export` `ImageExport`) and a member the action does not use is refused. `operations` of `edit` are the operations of the image registry, which `command_help` serves with `domain` `image` (the video `edit` enum does not list them). The definition is as small as the budget of §4.1 allows, so some members are CLI and HTTP only: the background, the id, the paging and the template filter of the list, and the output schema names only `text`. The template to start from is `from_template` (an image id, not an `_id` member, to save the pattern). An agent sets a background with `layer.add_fill`.
+
+`import` is `ImageImport` (epic 48): `path` (an absolute path on the machine of the server, read with the path rules of `MediaImport`, §2.6) or `hash` (an image already in the workspace, as `media_import` accepts) makes a new image document, sized as the file when both sides are at most 4,096 pixels, otherwise by `width` and `height` or a `preset`; with `image_id` the file is one more layer of that document (`base_revision`, `idempotency_key` and `dry_run` as in `edit`). It is one more action and two members (`path`, `hash`) of the same tool, not a tool of its own, and the wait for the ingest (`wait_ms`) is CLI and HTTP only, so the budget of §4.1 is held. The result is `ImageImportResult`.
 
 #### `project_item`
 
@@ -3709,6 +3719,8 @@ Every command that reads or edits a timeline (those whose result is about one do
 | `open` | `open` | none | none | none: opens the browser at the UI of the running owner with a fresh launch code (SDD-007 §3.4). The workspace lock decides whether an owner lives, not the `/up` probe: with the lock held `open` never starts a second `serve`; it waits up to 10 s (SDD-005 §6.4) for the owner's `/up` and, if none answers, fails with `E_WORKSPACE_LOCKED` (retryable, exit 2, "another Stuarty is running and not answering ..."); when the lock is released during that wait (the owner died), it starts the server as with no owner |
 | `token:rotate` | `token:rotate` | none | none | none; takes the workspace lock, so no owner may be running (SDD-007 §5.3) |
 | `user:create`, `user:passwd` | `user:create <email> [--admin]`, `user:passwd <email>` | `--admin` bool false; the password is read from the terminal or standard input, never from an argument | none | none; network mode; takes the workspace lock (SDD-007 §5.3) |
+| `workspace:backup` | `workspace:backup <folder>` | none; the folder must not exist or be empty | none | none; writes a consistent copy of the database, the originals, the library, the fonts, the provider prices and the vault, with `manifest.json` and `SHA256SUMS`; never the master key; takes no lock, so a server may run (SDD-009 §21.4). Not an operation of the agent surfaces: no tool, no route |
+| `workspace:restore` | `workspace:restore <folder> [--replace] [--without-vault]` | `--replace` bool false, moves the data of the workspace to `replaced-<time>/` first; `--without-vault` bool false, leaves the vault out | none | none; takes the workspace lock; verifies the manifest and the master key at hand before writing (SDD-009 §21.4). Not an operation of the agent surfaces |
 | `tools:install` | `tools:install <name> [--model <model>] [--force] [--yes] [--timeout d]` | `--model` string `small`, the model to download for a transcription helper; `--force` bool false, downloads again what is already installed and verified (without it, an install whose files are all recorded and still match their digests downloads nothing and answers state `installed`); `--yes` bool false, skips the confirmation (without a terminal, or with `--json`, `--yes` is required); `--timeout` the longest wait for the download, exit 2 when it runs out | none | none; downloads a helper such as whisper.cpp after stating its size (SDD-007 §6.8) |
 | `bundle:export` | `bundle:export --project <id> [--no-log] [--out f] [--force]` | `--no-log` (flag `--log`, bool true; false leaves `operations.ndjson` out), `--wait`, `--timeout`; `--out`, `--force` (see "The file of `--out`" below) | none | `Job` (SDD-005 §16) |
 | `bundle:import` | `bundle:import <path> [--as-new]` | `--as-new` bool false, a new id and no log (required with accounts, SDD-005 §16.3); `--dry-run` | none | `ProjectCreateResult` (SDD-005 §16); the path is made absolute and read on the machine of the server |
@@ -3980,6 +3992,7 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `media.lut` | `GET /projects/{id}/media/{asset_id}/lut` | none | none | 200 `application/octet-stream` (the parsed table, SDD-004 §3.6) | read | 409 `E_ASSET_NOT_READY`; 404 `E_NOT_FOUND` for an asset that is not a `lut` |
 | `media.chunks` | `GET /projects/{id}/media/{asset_id}/chunks` | none | none | 200 `application/json` (the chunk index of SDD-011 §4.4.1) | read | 409 `E_ASSET_NOT_READY`; 404 `E_NOT_FOUND` for an asset that has no video proxy, or whose proxy was written before the index existed (import the file again) |
 | `bitmaps.get` | `GET /projects/{id}/bitmaps/{key}` | none | none | 200 `image/png` (rasterized text or shape, by content key) | read | none |
+| `audio_previews.get` | `GET /projects/{id}/audio-previews/{key}` | `from` (a frame of the file, counted from its first: the 2 seconds from it are rendered first) | none | 200 or 206 `audio/wav` (the processed sound of an item before its envelope, SDD-004 §7.1); 202 `{"state":"processing"}` with `Retry-After: 1` while it is rendered | read | 404 `E_NOT_FOUND` for a key the project's plan did not hand out; 400 `E_VALIDATION` for a `from` outside the file; 422 `E_LIMIT` for a file larger than the cache cap, which is never rendered (its windows are); 429 `E_QUEUE_FULL` when too many renders wait |
 | `templates.list` | `GET /templates` | `cursor`, `limit` | none | 200 `TemplateListResult` | read | none |
 | `templates.save` | `POST /templates` | none | `TemplateSaveRequest` | 201 `TemplateResult` | edit | none |
 | `templates.instantiate` | `POST /templates/{id}/instantiate` | none | `{name, fill?, id?, dry_run?}` | 201 `TemplateInstantiateResult` | edit | 422 `E_SLOT` |
@@ -3991,6 +4004,9 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `assets.get`, `assets.uses` | `GET /assets/{hash}`, `GET /assets/{hash}/uses` | `cursor`, `limit` (uses) | none | 200 `AssetResult`, 200 `AssetUsesResult` | read | 400 `E_VALIDATION` for a bad hash; 404 `E_NOT_FOUND` |
 | `assets.set`, `assets.tag` | `PUT /assets/{hash}`, `POST /assets/{hash}/tags` | none | `{description?, rights_note?, reusable?}`, `{add?, remove?}` | 200 `AssetResult` | media | 400 `E_VALIDATION` with `details.reason` (SDD-011 §14.2) |
 | `audit.list` | `GET /audit` | `cursor`, `limit` | none | 200 `AuditListResult` (the audit record of RF-134: actions outside a document batch, with their actor, SDD-005 §5.9) | admin | none |
+| `images.import` | `POST /images/import` | none | `{path or hash, image_id?, name?, width?, height?, preset?, wait_ms?, base_revision?, idempotency_key?, dry_run?}`, `path` an absolute path to an image file on the machine of the server, read with the path rules of `MediaImport` (§2.6), `hash` an image already in the workspace | 200 `ImageImportResult` (the id and revision of the document, the layer, the asset hash and `state` `ready`; `state` `pending` and no document when the ingest of the file outlived `wait_ms`, with the `hash` to import again) | edit | 403 `E_PATH_NOT_ALLOWED`; 404 `E_FILE_NOT_FOUND`; 422 `E_LIMIT_EXCEEDED` (`import_bytes`, `import_pixels`); 422 `E_LIMIT` (`details.limit` `canvas`: a source over 4,096 pixels a side with no `width`, `height` or `preset`); 422 `E_UNSUPPORTED_MEDIA` (not an image); 400 `E_VALIDATION` (`path` or `hash` wrong, an unknown `hash`); a refused import creates no document (SDD-021 §10.1) |
+| `images.import_file` | `POST /images/import/file` | `file_name`, `image_id`, `name`, `width`, `height`, `preset`, `wait_ms`, `base_revision`, `idempotency_key`, `dry_run` | the bytes of an image file, at most 64 MiB (or `STUARTY_MAX_IMPORT_BYTES` when smaller); the content type is ignored and the screen sends `application/json` so that a cookie session passes SDD-007 §3.6 step 6 | 200 `ImageImportResult`, as `images.import` | edit | 422 `E_LIMIT_EXCEEDED` (a declared or a streamed size over the limit); 422 `E_UNSUPPORTED_MEDIA`; as `images.import` (SDD-021 §10.2) |
+| `images.events` | `GET /images/{id}/events` | `since` (a revision, SDD-006 §2); header `Last-Event-ID` | none | 200 `text/event-stream` with `image.updated` (SDD-006 §12) | read | 400 `E_VALIDATION` for a non-integer or negative `since`; 404 `E_NOT_FOUND` |
 | `events.stream` | `GET /projects/{id}/events` | `since` (a revision, SDD-006 §2); header `Last-Event-ID` | none | 200 `text/event-stream` (SDD-006) | read | 400 `E_VALIDATION` for a non-integer or negative `since` |
 | `trash.empty` | `POST /trash/empty` | none | `{project_id?, older_than_days?}` (SDD-005 §13.3) | 200 `TrashEmptyResult` | admin, and only from a browser session (local mode) or an `admin` key (network mode); the local token is refused | 403 `E_FORBIDDEN` |
 | `keys.create`, `keys.list`, `keys.revoke` | `POST /keys`, `GET /keys`, `DELETE /keys/{key_id}` | none | `KeyCreateRequest` for create | 201 `KeyCreateResult`, 200 `KeyListResult`, 200 `KeyRevokeResult` | a logged-in browser session; a key cannot call them (network mode only, SDD-007 §5.3) | 403 `E_FORBIDDEN` |
@@ -4028,7 +4044,7 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 
 ### 6.5 Binary endpoints
 
-The ten byte-serving routes (`frame`, `sheet`, the export file, `proxy`, `chunks`, `thumbnail`, `strip`, `peaks`, `lut`, `bitmaps`; the template file of §6.3 is served the same way) are served from `OpenFile` (§2.9), all with scope `read` and checked against the project, and written with vukem's `c.File` (`web/response.go` lines 289 to 343), which uses `http.ServeContent`: `Range` requests answer 206, an unsatisfiable range 416, `If-Range` and `If-None-Match` work, and `Accept-Ranges: bytes` is sent. The handler sets `ETag` before the call (stdlib `ServeContent` honours an existing `ETag` header) and `X-Vukem-Revision` where relevant. `OpenFile` returns paths inside the workspace; the filesystem passed to `c.File` is `os.DirFS(<workspace>)`, so a path cannot leave it.
+The eleven byte-serving routes (`frame`, `sheet`, the export file, `proxy`, `chunks`, `thumbnail`, `strip`, `peaks`, `lut`, `bitmaps`, `audio-previews`; the template file of §6.3 is served the same way) are served from `OpenFile` (§2.9), all with scope `read` and checked against the project, and written with vukem's `c.File` (`web/response.go` lines 289 to 343), which uses `http.ServeContent`: `Range` requests answer 206, an unsatisfiable range 416, `If-Range` and `If-None-Match` work, and `Accept-Ranges: bytes` is sent. The handler sets `ETag` before the call (stdlib `ServeContent` honours an existing `ETag` header) and `X-Vukem-Revision` where relevant. `OpenFile` returns paths inside the workspace; the filesystem passed to `c.File` is `os.DirFS(<workspace>)`, so a path cannot leave it.
 
 | Endpoint | Content type | `ETag` | `Cache-Control` | Notes |
 | --- | --- | --- | --- | --- |
@@ -4042,6 +4058,7 @@ The ten byte-serving routes (`frame`, `sheet`, the export file, `proxy`, `chunks
 | `GET /projects/{id}/media/{asset_id}/peaks` | `application/octet-stream` | `"peaks-<asset hash first 16>-<profile version>"` | `private, max-age=86400, immutable` | the peaks file of SDD-011, read whole by the browser; `Range` works |
 | `GET /projects/{id}/media/{asset_id}/lut` | `application/octet-stream` | `"lut-<asset hash first 16>"` | `private, max-age=86400, immutable` | the table of a `lut` asset parsed by `engine/lut` and sent as binary for the preview (SDD-004 §3.6), so the browser parses no text; `OpenFile` builds the body, `Range` and `If-None-Match` work |
 | `GET /projects/{id}/bitmaps/{key}` | `image/png` | `"bmp-<key>"` | `private, max-age=31536000, immutable` (the key is the content hash) | rasterized text or shape (SDD-004); the project in the path is the access check, and the key must come from a plan window of that project (else 404) |
+| `GET /projects/{id}/audio-previews/{key}` | `audio/wav` | `"ap-<file key>"` (the key of the window file for a `from`) | `private, max-age=31536000, immutable` (the key is the content hash) | the processed sound of an item (SDD-004 §7.1, epic 51); the project in the path is the access check, and the key must come from a plan window of that project (else 404). The one route that can answer before the bytes exist: 202 `{"state":"processing"}` with `Retry-After: 1` and no `ETag` (not cached) while the render runs, and 500 `E_INTERNAL` when it failed. With `from`, a window of 2 seconds is rendered first and the header `X-Stuarty-Window: <first>-<last>` says which frames of the file it covers; `Range` works on both |
 
 A frame or sheet is written to the cache (`frames/<project id>/<revision>/`) by the first request and served from it afterwards. In network mode a cached file is served only to a caller allowed to read that project.
 
@@ -4254,6 +4271,7 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `ImageEdit` | `image` (`action` edit) | `image:edit` | `POST /images/{id}/edit` |
 | `ImageUndo`, `ImageRedo` | `image` (`action` undo, redo) | `image:undo`, `image:redo` | `POST /images/{id}/undo`, `POST /images/{id}/redo` |
 | `ImageExport` | `image` (`action` export) | `image:export` | `POST /images/{id}/export` |
+| `ImageImport` | `image` (`action` import) | `image:import` | `POST /images/import` |
 | `AgentProfileList` | none (exception E-7) | `agent:profiles` | `GET /agents/profiles` |
 | `AgentProfileSet`, `AgentProfileRemove` | none (exception E-7) | none | `PUT /agents/profiles/{name}`, `DELETE /agents/profiles/{name}` |
 | `ChatSessionStart`, `ChatSend`, `ChatCancel`, `ChatAnswerPermission`, `ChatSessionDelete` | none (exception E-7) | none | `POST /projects/{id}/chat/sessions`, `POST /chat/sessions/{id}/messages`, `POST /chat/sessions/{id}/cancel`, `POST /chat/sessions/{id}/permissions/{request_id}`, `DELETE /chat/sessions/{id}` |

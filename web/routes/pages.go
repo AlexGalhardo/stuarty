@@ -80,6 +80,13 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 			return inertia.Render(c, "Social/Callback", inertia.Props{})
 		}).Name("social.callback")
 
+		// The redirect address of the sign-in to an AI provider (epic 12, SDD-016 section 12): the page hands
+		// the state, the code and the issued client id to POST /api/v1/providers/signin/complete with the
+		// session of the browser.
+		r.Get("/auth/callback", func(c *web.Ctx) error {
+			return inertia.Render(c, "Providers/SignInCallback", inertia.Props{})
+		}).Name("providers.signin.callback")
+
 		// The publishing calendar (epic 20, SDD-020 sections 23 to 31): the page reads and changes the
 		// publications through /api/v1/publications and follows them on /api/v1/publications/events.
 		r.Get("/publish", func(c *web.Ctx) error {

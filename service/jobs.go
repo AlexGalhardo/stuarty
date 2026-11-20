@@ -149,9 +149,12 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		return nil, perr
 	}
 
+	nested, _ := s.nestedFor(ctx, s.store, doc)
+
 	input := marshalOrNull(
 		exportInput{
 			Revision: row.Revision, Start: start, End: end, Lint: &totals, Document: row.Document, Format: format,
+			Nested:   nestedSnapshot(nested),
 			Warnings: exportWarnings(doc, format, end-start), Preset: args.Preset, Codec: args.Codec,
 		},
 	)
@@ -886,8 +889,9 @@ func (s *svc) afterQueuedCancel(ctx context.Context, j *JobRow) {
 
 	// An approved job cancelled before it ran spent nothing, and RunJob never reaches finishCost for
 	// it: its reservation goes back here, or it would hold the ceiling of the day (SDD-015 section 6).
-	if s.kindOf(j.Kind) != nil {
-		s.releaseUnrun(ctx, j)
+	// One queued again after a shutdown may have left work at a provider, which its kind abandons.
+	if k := s.kindOf(j.Kind); k != nil {
+		s.settleQueuedCancel(ctx, k, j)
 	}
 
 	s.emitJob(ctx, j)

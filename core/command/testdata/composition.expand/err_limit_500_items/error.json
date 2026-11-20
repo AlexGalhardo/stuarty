@@ -1,0 +1,6 @@
+{
+  "code": "E_LIMIT",
+  "message": "Expanding would give the document 501 items; the limit is 500.",
+  "hint": "Delete unused items first.",
+  "retryable": false
+}

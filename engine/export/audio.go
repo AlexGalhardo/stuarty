@@ -53,7 +53,7 @@ func (s *state) mixAudio(ctx context.Context) (string, Loudness, error) {
 	if err != nil {
 		return "", loud, err
 	}
-	srcs := plan.Audio(doc, s.offset, s.offset+s.frames)
+	srcs := plan.AudioWith(doc, s.offset, s.offset+s.frames, s.opts)
 	for i := range srcs {
 		srcs[i].StartSample -= from
 	}
@@ -196,7 +196,7 @@ func (o *audioOpener) Open(ctx context.Context, src plan.AudioSource) (io.ReadCl
 	}
 
 	s := o.s
-	a, ok := s.job.Doc.Assets[src.AssetID]
+	a, ok := s.asset(src.AssetID)
 	if !ok {
 		return nil, fmt.Errorf("the asset %s is not in the document", src.AssetID)
 	}

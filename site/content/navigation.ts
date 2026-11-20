@@ -165,7 +165,9 @@ export const navigation: NavCategory[] = [
 		pages: [
 			"binary",
 			"docker",
+			"vps",
 			"network-mode",
+			"google-sign-in",
 			"api-keys",
 			"caddy",
 			"backups-and-upgrades",

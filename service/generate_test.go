@@ -407,7 +407,7 @@ func TestVoiceGenerate_PriceRequestsNeedTheMembersOfTheirUnit(t *testing.T) {
 		"tokens with a unit amount":    {InputMicrosPerMTok: &one, OutputMicrosPerMTok: &two, UnitMicros: &one},
 		"an image with no amount":      {Unit: "image"},
 		"an image with a token amount": {Unit: "image", UnitMicros: &one, InputMicrosPerMTok: &one},
-		"an unknown unit":              {Unit: "second", UnitMicros: &one},
+		"an unknown unit":              {Unit: "minute", UnitMicros: &one},
 	} {
 		if _, err := priceOfRequest(req); codeOf(err) != "E_VALIDATION" {
 			t.Errorf("%s: got %v", name, err)

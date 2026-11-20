@@ -184,6 +184,13 @@ func (r jobRepo) Finish(
 	return n == 1, err
 }
 
+func (r jobRepo) SaveInput(ctx context.Context, id string, input json.RawMessage, nowMs int64) (bool, error) {
+	n, err := rowsAffected(r.ex.ExecContext(
+		ctx, "UPDATE jobs SET input = ?, updated_ms = ? WHERE id = ? AND state = 'running'", string(input), nowMs, id,
+	))
+	return n == 1, err
+}
+
 func (r jobRepo) Requeue(ctx context.Context, id, message string, nowMs int64) (bool, error) {
 	n, err := rowsAffected(r.ex.ExecContext(ctx, `UPDATE jobs SET state = 'queued', message = ?, progress = 0,
  started_ms = NULL, updated_ms = ? WHERE id = ? AND state = 'running'`, message, nowMs, id))

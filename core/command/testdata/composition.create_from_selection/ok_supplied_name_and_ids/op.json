@@ -1,0 +1,11 @@
+{
+  "op": "composition.create_from_selection",
+  "args": {
+    "item_ids": [
+      "itm_m1n2p3q4r5"
+    ],
+    "name": "Intro",
+    "timeline_id": "prj_n1n1n1n1n1",
+    "id": "itm_k1k1k1k1k1"
+  }
+}

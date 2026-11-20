@@ -202,8 +202,16 @@ func (s *svc) PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindo
 		return nil, derr
 	}
 
+	nested, _ := s.nestedFor(ctx, s.store, doc)
+	// The texts of the nested timelines are measured and drawn with their own user fonts (SDD-004 §3.16); the
+	// document differs from doc in its fonts only, which the planner does not read.
+	doc = withNestedFonts(doc, nested)
 	fonts := s.fontSet(doc)
 	opts := plan.Options{Measure: rasterize.Measure(fonts)}
+
+	if nested != nil {
+		opts.Nested = nestedLookup(nested)
+	}
 
 	scale, werr := planOutputScale(req.Width, doc.Settings.Width)
 	if werr != nil {
@@ -218,6 +226,8 @@ func (s *svc) PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindo
 	if err := s.registerBitmaps(ctx, &row, doc, fonts, opts, &w, req.From, req.Until); err != nil {
 		return nil, err
 	}
+
+	s.registerAudioPreviews(row.ID, doc, &w)
 
 	return &w, nil
 }
@@ -244,38 +254,58 @@ func (s *svc) registerBitmaps(
 			}
 		}
 
-		layers := plan.FrameWith(doc, t, opts).Layers
-		for i := range layers {
-			if layers[i].Bitmap == nil {
-				continue
-			}
-
-			spec := *layers[i].Bitmap
-			key := spec.Key()
-
-			if salt := userFontKey(doc, &spec); salt != "" {
-				sum := sha256.Sum256([]byte(key + ":" + salt))
-				key = hex.EncodeToString(sum[:])
-				renamed[spec.Key()] = key
-			}
-
-			s.bitmaps.remember(row.ID, key, spec, doc, fonts)
-		}
+		s.rememberBitmaps(row.ID, plan.FrameWith(doc, t, opts).Layers, doc, fonts, renamed)
 	}
 
-	for i := range w.Layers {
-		if w.Layers[i].Bitmaps == nil {
+	renameBitmapKeys(w.Layers, renamed)
+
+	return nil
+}
+
+// rememberBitmaps registers the bitmaps of layers, those inside a group too. A bitmap of a nested timeline is
+// drawn with the fonts of the parent: a user font of the nested timeline alone is not found there.
+func (s *svc) rememberBitmaps(
+	project string, layers []plan.Layer, doc *timeline.Document, fonts *rasterize.FontSet, renamed map[string]string,
+) {
+	for i := range layers {
+		if layers[i].Group != nil {
+			s.rememberBitmaps(project, layers[i].Group.Layers, doc, fonts, renamed)
+		}
+
+		if layers[i].Bitmap == nil {
 			continue
 		}
 
-		for j, k := range w.Layers[i].Bitmaps.Keys {
+		spec := *layers[i].Bitmap
+		key := spec.Key()
+
+		if salt := userFontKey(doc, &spec); salt != "" {
+			sum := sha256.Sum256([]byte(key + ":" + salt))
+			key = hex.EncodeToString(sum[:])
+			renamed[spec.Key()] = key
+		}
+
+		s.bitmaps.remember(project, key, spec, doc, fonts)
+	}
+}
+
+// renameBitmapKeys rewrites the keys of a window to the ones registered, in the groups too.
+func renameBitmapKeys(layers []plan.WindowLayer, renamed map[string]string) {
+	for i := range layers {
+		if g := layers[i].Group; g != nil {
+			renameBitmapKeys(g.Layers, renamed)
+		}
+
+		if layers[i].Bitmaps == nil {
+			continue
+		}
+
+		for j, k := range layers[i].Bitmaps.Keys {
 			if r, ok := renamed[k]; ok {
-				w.Layers[i].Bitmaps.Keys[j] = r
+				layers[i].Bitmaps.Keys[j] = r
 			}
 		}
 	}
-
-	return nil
 }
 
 // openBitmap serves a rasterized text or shape by its content key: the PNG is

@@ -19,13 +19,32 @@ import type {
 	CostSummary,
 	ModelView,
 	ProviderModelsResult,
+	ProviderSignIn,
 	ProviderView,
 } from "../../editor/api/types";
 
 const LABEL_MAX = 60;
 
+// The providers that have a sign-in of their own text on the button and in the hint; any other with the
+// sign-in credential kind has the generic one.
+const SIGN_IN_TEXTS = ["openai", "openrouter"];
+
 function api() {
 	return createClient(new HttpTransport("/api/v1"));
+}
+
+// Begin the sign-in of a provider and go to its consent screen. The service builds the address and
+// checks the redirect; the page only sends the person there.
+async function beginSignIn(
+	provider: string,
+	connectionId?: string,
+): Promise<void> {
+	const result = await api().beginProviderSignIn({
+		provider,
+		redirect_uri: `${window.location.origin}/auth/callback`,
+		...(connectionId === undefined ? {} : { connection_id: connectionId }),
+	});
+	window.location.assign(result.authorize_url);
 }
 
 // One model of the catalogue of a provider, with the price that would be used and where it comes
@@ -41,19 +60,21 @@ export function ModelRow({
 		currency: string,
 		input: number,
 		output: number,
-		unit?: "image" | "mchar",
+		unit?: "image" | "mchar" | "second",
 	): Promise<void>;
 }): ReactNode {
 	const t = useT();
 	const locale = useLocale();
-	// A model an adapter hints as an image or a voice model is priced per image or per million characters
-	// (SDD-016 section 4.5); the rest, per million tokens. The price shown is the one in that unit.
+	// A model an adapter hints as an image, a voice or a video model is priced per image, per million characters
+	// or per second (SDD-016 section 4.5); the rest, per million tokens. The price shown is the one in that unit.
 	const unit =
 		model.capability === "image"
 			? "image"
 			: model.capability === "voice"
 				? "mchar"
-				: undefined;
+				: model.capability === "video"
+					? "second"
+					: undefined;
 	const shown =
 		model.price !== null && model.price.unit === unit ? model.price : null;
 	const [unitInput, setUnitInput] = useState(
@@ -231,10 +252,12 @@ export function ModelRow({
 // day, which is a number the service computed.
 function ProviderConnection({
 	connection,
+	signIn,
 	cost,
 	onChanged,
 }: {
 	connection: Connection;
+	signIn: ProviderSignIn | undefined;
 	cost: CostSummary | null;
 	onChanged(): void;
 }): ReactNode {
@@ -243,6 +266,15 @@ function ProviderConnection({
 	const [models, setModels] = useState<ProviderModelsResult | null>(null);
 	const [status, setStatus] = useState<string | null>(null);
 	const [failure, setFailure] = useState<Failure | null>(null);
+
+	async function signInAgain(): Promise<void> {
+		setFailure(null);
+		try {
+			await beginSignIn(connection.kind, connection.id);
+		} catch (error) {
+			setFailure(failureOf(error));
+		}
+	}
 
 	async function readModels(refresh: boolean): Promise<void> {
 		setFailure(null);
@@ -273,7 +305,7 @@ function ProviderConnection({
 		currency: string,
 		input: number,
 		output: number,
-		unit?: "image" | "mchar",
+		unit?: "image" | "mchar" | "second",
 	): Promise<void> {
 		setFailure(null);
 		try {
@@ -314,8 +346,45 @@ function ProviderConnection({
 										.join(", "),
 								})}
 					</p>
+					{signIn !== undefined && (
+						<p
+							className="text-xs"
+							data-signin-state={signIn.state}
+							role={signIn.state === "needs_sign_in" ? "alert" : undefined}
+						>
+							{signIn.state === "ready" ? (
+								<>
+									{t("ui.providers.signin_ready")}
+									{signIn.account !== undefined && signIn.account !== "" && (
+										<>
+											{" "}
+											<UntrustedText>{signIn.account}</UntrustedText>
+										</>
+									)}
+								</>
+							) : (
+								<>
+									<strong>{t("ui.providers.signin_needs")}</strong>{" "}
+									{t("ui.providers.signin_needs_help")}
+								</>
+							)}
+						</p>
+					)}
 				</div>
 				<div className="flex shrink-0 gap-2">
+					{signIn !== undefined && (
+						<Button
+							type="button"
+							variant={signIn.state === "ready" ? "outline" : "default"}
+							onClick={() => void signInAgain()}
+						>
+							{t("ui.providers.signin_again")}
+							<span className="sr-only">
+								{" "}
+								<UntrustedText>{connection.label}</UntrustedText>
+							</span>
+						</Button>
+					)}
 					<Button type="button" variant="outline" onClick={() => void check()}>
 						{t("ui.providers.check")}
 						<span className="sr-only">
@@ -371,15 +440,31 @@ function ProviderConnection({
 export function ProviderCard({
 	provider,
 	connections,
+	signIns,
 	cost,
 	onChanged,
 }: {
 	provider: ProviderView;
 	connections: Connection[];
+	signIns: ProviderSignIn[];
 	cost: CostSummary | null;
 	onChanged(): void;
 }): ReactNode {
 	const t = useT();
+	const canSignIn = provider.credential_kinds.includes("oauth");
+	const signInText = SIGN_IN_TEXTS.includes(provider.id)
+		? provider.id
+		: "generic";
+	const [signInFailure, setSignInFailure] = useState<Failure | null>(null);
+
+	async function startSignIn(): Promise<void> {
+		setSignInFailure(null);
+		try {
+			await beginSignIn(provider.id);
+		} catch (error) {
+			setSignInFailure(failureOf(error));
+		}
+	}
 	const [label, setLabel] = useState(provider.name);
 	const [endpoint, setEndpoint] = useState(provider.default_endpoint);
 	const [secret, setSecret] = useState("");
@@ -434,10 +519,33 @@ export function ProviderCard({
 						<ProviderConnection
 							key={connection.id}
 							connection={connection}
+							signIn={signIns.find((s) => s.connection_id === connection.id)}
 							cost={cost}
 							onChanged={onChanged}
 						/>
 					))}
+				</div>
+			)}
+			{canSignIn && (
+				<div className="flex flex-col gap-2 border-t p-4">
+					<p className="text-sm font-medium">
+						{t("ui.providers.signin_title")}
+					</p>
+					<p className="text-xs text-muted-foreground">
+						{t(`ui.providers.signin_hint.${signInText}`)}
+					</p>
+					<FailureNote failure={signInFailure} />
+					<div>
+						<Button
+							type="button"
+							data-provider-signin={provider.id}
+							onClick={() => void startSignIn()}
+						>
+							{t(`ui.providers.signin.${signInText}`, {
+								provider: provider.name,
+							})}
+						</Button>
+					</div>
 				</div>
 			)}
 			<form
@@ -513,11 +621,13 @@ export function ProviderCard({
 export default function ProviderCards({
 	providers,
 	connections,
+	signIns = [],
 	cost,
 	onChanged,
 }: {
 	providers: ProviderView[];
 	connections: Connection[];
+	signIns?: ProviderSignIn[];
 	cost: CostSummary | null;
 	onChanged(): void;
 }): ReactNode {
@@ -537,6 +647,7 @@ export default function ProviderCards({
 						key={provider.id}
 						provider={provider}
 						connections={connections}
+						signIns={signIns}
 						cost={cost}
 						onChanged={onChanged}
 					/>

@@ -12,6 +12,43 @@ func TestImageScenarioIsTheSameThroughEverySurface(t *testing.T) {
 	sameThroughEverySurface(t, "image")
 }
 
+// TestImageImportScenarioIsTheSameThroughEverySurface (SDD-021 section 10.1, epic 48): an image file imported from
+// a path and from a hash, into a new document and into an existing one, a replay by key, a dry run and the
+// refusals (a source over the canvas, a file that is not an image, nothing to import, an unknown hash and an
+// unknown image) give the same results, errors and texts through the Service, HTTP, the CLI and the MCP tool.
+func TestImageImportScenarioIsTheSameThroughEverySurface(t *testing.T) {
+	sameThroughEverySurface(t, "image-import")
+}
+
+// The scenario above would pass if every surface answered nothing: this reads what each step must hold.
+func TestImageImportScenarioSaysWhatItShould(t *testing.T) {
+	steps, fixtures := loadScenario(t, "image-import")
+	got := run(t, newDirect(t), steps, fixtures)
+
+	for i, want := range map[int][]string{
+		0:  {`"created":true`, `"width":640`, `"height":360`, `"image_id":"img_0000000002"`},
+		1:  {`"width":1080`, `"height":1080`},
+		2:  {`"asset":"sha256:63c0b55ce26237dfbd4c411ab124bba6377524fc879c96b61418b559cfdfec92"`, `"name":"photo"`},
+		3:  {`"revision":2`, `"layer_id"`},
+		4:  {`"replayed":true`, `"revision":2`},
+		5:  {`"dry_run":true`, `"applied":false`},
+		7:  {`"width":2000`, `"height":1200`, `"image_id":"img_0000000009"`},
+		12: {`img_0000000002`, `img_0000000004`, `img_0000000009`},
+	} {
+		for _, frag := range want {
+			if !strings.Contains(got[i].result, frag) {
+				t.Errorf("step %d (%s) lacks %s: %s", i, steps[i].Call, frag, got[i].result)
+			}
+		}
+	}
+
+	for _, i := range []int{6, 8, 9, 10, 11} {
+		if got[i].fail == "" {
+			t.Errorf("step %d (%s) was accepted", i, steps[i].Call)
+		}
+	}
+}
+
 // TestAssetLibraryScenarioIsTheSameThroughEverySurface (SDD-011 section 14, epic 08): an import with an origin,
 // the filters of the library, the reuse by hash, the tags and the rights note give the same results, errors and
 // texts through the Service, HTTP, the CLI and the media tools.

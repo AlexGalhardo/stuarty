@@ -2,6 +2,7 @@ package remote
 
 import (
 	"context"
+	"net/http"
 	"net/url"
 	"strconv"
 
@@ -57,6 +58,58 @@ func (c *Client) ImageRedo(ctx context.Context, req service.ImageStepRequest) (*
 // ImageExport implements service.Service.
 func (c *Client) ImageExport(ctx context.Context, req service.ImageExportRequest) (*service.ImageExportResult, error) {
 	return post[service.ImageExportResult](ctx, c, imagePath(req.ImageID, "/export"), req)
+}
+
+// ImageImport implements service.Service.
+func (c *Client) ImageImport(ctx context.Context, req service.ImageImportRequest) (*service.ImageImportResult, error) {
+	return post[service.ImageImportResult](ctx, c, "/images/import", req)
+}
+
+// ImageImportFile implements service.Service: the bytes of the file are the body, the other members the query.
+func (c *Client) ImageImportFile(
+	ctx context.Context,
+	req service.ImageImportFileRequest,
+) (*service.ImageImportResult, error) {
+	q := url.Values{}
+	setIf(q, "file_name", req.FileName)
+	setIf(q, "image_id", req.ImageID)
+	setIf(q, "name", req.Name)
+	setIf(q, "preset", req.Preset)
+	setIf(q, "idempotency_key", req.IdempotencyKey)
+
+	if req.Width > 0 {
+		q.Set("width", strconv.Itoa(req.Width))
+	}
+
+	if req.Height > 0 {
+		q.Set("height", strconv.Itoa(req.Height))
+	}
+
+	if req.WaitMS > 0 {
+		q.Set("wait_ms", strconv.Itoa(req.WaitMS))
+	}
+
+	if req.BaseRevision > 0 {
+		q.Set("base_revision", strconv.FormatInt(req.BaseRevision, 10))
+	}
+
+	if req.DryRun {
+		q.Set("dry_run", "true")
+	}
+
+	out := new(service.ImageImportResult)
+	if err := c.do(
+		ctx,
+		http.MethodPost,
+		"/images/import/file",
+		q,
+		fileBody{r: req.Body, size: req.Size},
+		out,
+	); err != nil {
+		return nil, err
+	}
+
+	return out, nil
 }
 
 // ImageFrame implements service.Service. The picture is binary and the screen reads it from its URL.

@@ -1,0 +1,134 @@
+#!/usr/bin/env bash
+# A stand-in for `docker` used by deploy/test/*.sh, so the scripts of deploy/ run without a daemon, an
+# image pull or a network. It keeps its state in $STUB_STATE and records every call in $STUB_STATE/calls.log.
+#
+#   STUB_STATE            folder of the state (required)
+#   STUB_DATA             the folder that plays the volume /data (backup and restore tests)
+#   STUB_BIN              the real stuarty binary that `compose run ... stuarty <args>` runs
+#   STUB_FAIL_VERSIONS    space separated versions whose container never becomes healthy
+#   STUB_BUILD_FAIL       a version whose build fails
+#   STUB_WRITE_VERSIONS   versions that write to the data when they start (a migration)
+set -uo pipefail
+: "${STUB_STATE:?}"
+mkdir -p "$STUB_STATE"
+printf '%s\n' "docker $*" >>"$STUB_STATE/calls.log"
+
+version_of() { # the STUARTY_VERSION of the .env of a project directory
+	local line
+	line="$(grep -E '^STUARTY_VERSION=' "$1/.env" 2>/dev/null | tail -n 1 || true)"
+	printf '%s' "${line#*=}"
+}
+
+# map /data to the folder that plays the volume
+map() {
+	local a="$1"
+	printf '%s' "${a//\/data/${STUB_DATA:-/nonexistent}}"
+}
+
+case "${1:-}" in
+	version)
+		echo "27.3.1"
+		exit 0
+		;;
+	image)
+		if [ "${2:-}" = inspect ]; then
+			grep -qx "$3" "$STUB_STATE/images" 2>/dev/null && exit 0
+			exit 1
+		fi
+		;;
+	inspect)
+		running="$(cat "$STUB_STATE/running" 2>/dev/null || true)"
+		for v in ${STUB_FAIL_VERSIONS:-}; do
+			if [ "$v" = "$running" ]; then
+				echo unhealthy
+				exit 0
+			fi
+		done
+		echo healthy
+		exit 0
+		;;
+	compose)
+		shift
+		if [ "${1:-}" = version ]; then
+			echo "2.29.7"
+			exit 0
+		fi
+		dir=""
+		while [ $# -gt 0 ]; do
+			case "$1" in
+				--project-directory) dir="$2"; shift 2 ;;
+				-f) shift 2 ;;
+				*) break ;;
+			esac
+		done
+		sub="${1:-}"
+		shift || true
+		case "$sub" in
+			config) exit 0 ;;
+			ps)
+				[ -s "$STUB_STATE/running" ] && echo "stub-container"
+				exit 0
+				;;
+			build)
+				v="$(version_of "$dir")"
+				if [ "$v" = "${STUB_BUILD_FAIL:-}" ]; then
+					echo "stub: build of $v failed" >&2
+					exit 1
+				fi
+				echo "stuarty:$v" >>"$STUB_STATE/images"
+				exit 0
+				;;
+			up)
+				v="$(version_of "$dir")"
+				grep -qx "stuarty:$v" "$STUB_STATE/images" 2>/dev/null || {
+					echo "stub: no image stuarty:$v" >&2
+					exit 1
+				}
+				echo "$v" >"$STUB_STATE/running"
+				# A version that migrates the data on start: it adds a file and damages the database for older versions.
+				for w in ${STUB_WRITE_VERSIONS:-}; do
+					if [ "$w" = "$v" ] && [ -n "${STUB_DATA:-}" ]; then
+						mkdir -p "$STUB_DATA/store/zz"
+						echo "written by $v" >"$STUB_DATA/store/zz/written-by-$v"
+						echo "migrated to $v" >>"$STUB_DATA/db.sqlite"
+					fi
+				done
+				# Caddy depends on `condition: service_healthy`, so the real `up -d` waits for the health of
+				# stuarty and fails when it turns unhealthy, leaving the unhealthy container running.
+				for f in ${STUB_FAIL_VERSIONS:-}; do
+					if [ "$f" = "$v" ]; then
+						echo "dependency failed to start: container stuarty-stuarty-1 is unhealthy" >&2
+						exit 1
+					fi
+				done
+				exit 0
+				;;
+			down | stop)
+				: >"$STUB_STATE/running"
+				exit 0
+				;;
+			logs) exit 0 ;;
+			run)
+				entry=""
+				while [ $# -gt 0 ]; do
+					case "$1" in
+						--rm | --no-deps | -T) shift ;;
+						--entrypoint) entry="$2"; shift 2 ;;
+						*) break ;;
+					esac
+				done
+				shift # the service name
+				args=()
+				for a in "$@"; do args+=("$(map "$a")"); done
+				if [ -n "$entry" ]; then
+					exec "$entry" "${args[@]}"
+				fi
+				: "${STUB_BIN:?}"
+				STUARTY_HOME="$STUB_DATA" STUARTY_MASTER_KEY_FILE="${STUB_KEY_FILE:-$dir/secrets/master_key}" \
+					exec "$STUB_BIN" "${args[@]}"
+				;;
+		esac
+		;;
+esac
+echo "stub docker: unsupported call: $*" >&2
+exit 99

@@ -1,0 +1,24 @@
+{
+	"name": "image-import",
+	"actor": "contract",
+	"fixtures": {
+		"photo": "fake-image width=640 height=360\n",
+		"huge": "fake-image width=5000 height=3000\n",
+		"clip": "fake-media seconds=2 width=320 height=240\n"
+	},
+	"steps": [
+		{"call": "ImageImport", "args": {"path": "$photo"}},
+		{"call": "ImageImport", "args": {"path": "$photo", "preset": "square_post", "name": "Square"}},
+		{"call": "ImageDescribe", "args": {"image_id": "img_0000000002"}},
+		{"call": "ImageImport", "args": {"hash": "sha256:63c0b55ce26237dfbd4c411ab124bba6377524fc879c96b61418b559cfdfec92", "image_id": "img_0000000002", "base_revision": 1, "name": "Again", "idempotency_key": "import-key-0001"}},
+		{"call": "ImageImport", "args": {"hash": "sha256:63c0b55ce26237dfbd4c411ab124bba6377524fc879c96b61418b559cfdfec92", "image_id": "img_0000000002", "base_revision": 1, "name": "Again", "idempotency_key": "import-key-0001"}},
+		{"call": "ImageImport", "args": {"hash": "sha256:63c0b55ce26237dfbd4c411ab124bba6377524fc879c96b61418b559cfdfec92", "image_id": "img_0000000002", "base_revision": 2, "dry_run": true}},
+		{"call": "ImageImport", "args": {"path": "$huge"}, "expect_error": {"code": "E_LIMIT"}},
+		{"call": "ImageImport", "args": {"path": "$huge", "width": 2000, "height": 1200}},
+		{"call": "ImageImport", "args": {"path": "$clip"}, "expect_error": {"code": "E_UNSUPPORTED_MEDIA"}},
+		{"call": "ImageImport", "args": {}, "expect_error": {"code": "E_VALIDATION"}},
+		{"call": "ImageImport", "args": {"hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}, "expect_error": {"code": "E_VALIDATION"}},
+		{"call": "ImageImport", "args": {"hash": "sha256:63c0b55ce26237dfbd4c411ab124bba6377524fc879c96b61418b559cfdfec92", "image_id": "img_zzzzzzzzzz", "base_revision": 1}, "expect_error": {"code": "E_NOT_FOUND"}},
+		{"call": "ImageList", "args": {}}
+	]
+}

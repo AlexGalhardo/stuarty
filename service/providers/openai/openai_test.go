@@ -46,9 +46,9 @@ func TestDescriptor(t *testing.T) {
 		d.Capabilities,
 		[]string{provider.CapabilityText, provider.CapabilityImage, provider.CapabilityVoice},
 	) ||
-		len(d.CredentialKinds) != 1 ||
-		d.CredentialKinds[0] != provider.CredentialAPIKey {
-		t.Fatalf("text, image and voice with an API key: %+v", d)
+		!slices.Equal(d.CredentialKinds, []string{provider.CredentialAPIKey, provider.CredentialOAuth}) ||
+		d.DefaultEndpoint != openai.DefaultEndpoint {
+		t.Fatalf("text, image and voice with an API key, or a sign-in: %+v", d)
 	}
 }
 

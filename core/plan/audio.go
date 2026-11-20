@@ -59,6 +59,8 @@ type AudioSource struct {
 	Gain        []GainPoint       `json:"gain"`              // volume or its keyframes, times the fades
 	Denoise     float64           `json:"denoise,omitempty"` // noise reduction strength 0 to 1 (SDD-004 §7); absent means off
 	Voice       string            `json:"voice,omitempty"`   // voice preset (SDD-004 §7); absent means none
+	// Timeline is the timeline whose assets table names AssetID, for a source that comes from a composition.
+	Timeline string `json:"timeline,omitempty"`
 	// Chain is the enabled processors of the item and, when its track has a chain too, Track names the track and
 	// BusChain is that chain (the same on every source of the track): SDD-004 §7.1. Absent means none.
 	Chain    []ProcessorSpec `json:"chain,omitempty"`

@@ -1,6 +1,6 @@
 # SDD-016: The AI provider layer (API key, text generation, cost)
 
-- Status: Draft (2026-11-19). Written by epic 09, extended by epic 10 (image and voice, sections 2.2, 4.5, 5.1, 5.2, 6.1 to 6.3 and the lines marked epic 10); the code follows in the same epics.
+- Status: Draft (2026-11-19). Written by epic 09, extended by epic 10 (image and voice, sections 2.2, 4.5, 5.1, 5.2, 6.1 to 6.3 and the lines marked epic 10) and by epic 11 (video, sections 2.3, 4.5, 5.4, 6.4 and the lines marked epic 11); the code follows in the same epics.
 - Depends on: ADR-0036 (one provider layer), ADR-0032 (outbound only to connected destinations; costly generation waits for a person), ADR-0033 (the vault), ADR-0018 (jobs), SDD-000 (names), SDD-007 (threat model, untrusted text), SDD-014 (connections and vault), SDD-015 (approval and cost)
 - Implements: PRD-004 RF-360, RF-361, RF-362, RF-363, RF-364, RF-365; PRD-002 RF-133; NFR-063, NFR-064
 - Owner area: `core/provider/`, `service/providers/` and `service/providers/<name>/`, the provider operations and the job kinds in `service/`, the controllers, commands and the job arguments in `web/app/`, the provider cards of the Connections page
@@ -18,10 +18,11 @@
 9. Safety
 10. Surfaces
 11. Tests
+12. Sign-in connections (epic 12)
 
 ## 1. Overview
 
-A creator connects the AI services they already pay for with an API key, once, and every part of Stuarty can use them. This document specifies the provider layer, its first capability, text, and (epic 10) image and voice generation. Video (epic 11), the sign-ins (epic 12) and the local agent (epic 14) add adapters and credential kinds to the same layer; none of them changes what is written here.
+A creator connects the AI services they already pay for with an API key, once, and every part of Stuarty can use them. This document specifies the provider layer, its first capability, text, and (epic 10) image and voice generation, and (epic 11) video generation. The sign-ins (epic 12) and the local agent (epic 14) add adapters and credential kinds to the same layer; none of them changes what is written here.
 
 Four rules carry the design:
 
@@ -30,7 +31,7 @@ Four rules carry the design:
 3. **Nothing about a model is fixed in code.** The list of models is read from the provider at run time. A price is read from the catalogue of the provider when it publishes one, or from a table the person edits; a model with no price is refused, never estimated at zero.
 4. **A provider answers with untrusted text.** The text a model wrote is untrusted (SDD-007 section 8); the error body of a provider is never shown.
 
-What this document does not specify: no chat and no agent loop (one request, one answer, ADR-0037); no streaming (an adapter may offer it later behind the same interface); no video; no sign-in; no editing of an image with a model and no cloning of a voice from a recording of a person (epic 10 leaves both out). Transcription (`engine/transcribe`, SDD-011 section 10) keeps working as it is, with its own provider settings; moving it onto this layer is left for the epic that adds the transcription capability.
+What this document does not specify: no chat and no agent loop (one request, one answer, ADR-0037); no streaming (an adapter may offer it later behind the same interface, and the sign-in path of section 12 reads a stream only to join it into one answer); no editing of a video with a model, no extending or restyling of a clip, no avatar and no talking head (epic 11 leaves them out); no editing of an image with a model and no cloning of a voice from a recording of a person (epic 10 leaves both out). Transcription (`engine/transcribe`, SDD-011 section 10) keeps working as it is, with its own provider settings; moving it onto this layer is left for the epic that adds the transcription capability. The sign-in to a provider is section 12 (epic 12).
 
 ## 2. Providers and connections
 
@@ -40,8 +41,8 @@ What this document does not specify: no chat and no agent loop (one request, one
 type Descriptor struct {
 	ID              string   // the connection kind: lower-case letters, digits and dash, 2 to 32 characters
 	Name            string   // shown to a person
-	Capabilities    []string // "text", "image" and "voice" (epic 10); "video" later
-	CredentialKinds []string // "api_key" here
+	Capabilities    []string // "text", "image" and "voice" (epic 10) and "video" (epic 11)
+	CredentialKinds []string // "api_key"; "oauth" for a provider with a sign-in (section 12)
 	DefaultEndpoint string   // the base URL a new connection starts from
 	DocsURL         string   // where the person finds the key; shown, never called
 }
@@ -78,7 +79,21 @@ type VoiceGenerator interface { // epic 10
 	GenerateVoice(ctx context.Context, c connections.Credential, req provider.VoiceRequest, maxBytes int64) (VoiceResult, error)
 }
 
-// VideoGenerator is declared with no method and no adapter: epic 11 adds the methods and the adapters.
+type VideoGenerator interface { // epic 11
+	Provider
+	// VideoLimits are the durations, the aspect ratios and the first frame the provider documents for a model; needs no network.
+	VideoLimits(model string) provider.VideoLimits
+	// Submit starts one generation and returns the task id of the provider. It is the only call that spends:
+	// the caller stores the id before it polls. frame is the first frame, or nil.
+	Submit(ctx context.Context, c connections.Credential, req provider.VideoRequest, frame *VideoFrame) (taskID string, err error)
+	// Poll reads the state of a task: pending (with a progress when the provider says one), done, or failed
+	// (with the error that explains it, such as a refusal). It costs nothing and may be repeated.
+	Poll(ctx context.Context, c connections.Credential, taskID string) (VideoStatus, error)
+	// Fetch downloads the clip of a done task through the gated client. The file is no larger than maxBytes.
+	Fetch(ctx context.Context, c connections.Credential, taskID string, maxBytes int64) (GeneratedFile, error)
+	// Cancel asks the provider to stop a task and reports whether it confirmed that nothing will be charged.
+	Cancel(ctx context.Context, c connections.Credential, taskID string) (confirmed bool, err error)
+}
 ```
 
 - **The registry** (`providers.Registry`) is built at start-up from the adapters: each adapter is registered by one line in the owner (`web/app/owner`). `Register` also registers the provider as the connector of its kind in `connections.Manager`, so a connection of kind `openai` can be created, listed and tested through the five operations of SDD-014. The connector's `Test` reads the model list (a harmless request) and reports the number of models in text the product wrote, or the kind of failure in a fixed sentence (section 8); it never forwards a body.
@@ -114,6 +129,10 @@ Chosen with D-093 (the pair of providers is OpenAI and Anthropic) and the ones t
 - **Models by capability.** The catalogue of OpenAI names models and nothing else, so the adapter gives each model a `capability` hint from its documented naming (`dall-e-*` and `gpt-image-*` for image, `tts-*` and `*-tts` for voice, the `gpt-*` and `o*` families for text; anything else has no hint). The hint only orders what a picker shows: a request names the model it wants and the provider is the judge.
 - **A reference image** (an optional asset the model starts from) is not offered: the endpoint takes none, and an edit of an image with a model is epic 30.
 
+### 2.3 The provider of video (epic 11)
+
+**The provider is not chosen yet.** Neither provider of D-093 can serve: Anthropic has no video API, and the Videos API of OpenAI (the Sora 2 models) was shut down on 24 September 2026 with no replacement. ADR-0036 asks for the author's approval of the provider, and the proposal is waiting for it (Google Veo through the Gemini API with the user's own key is the recommended option). Until then the layer is complete and tested with a fake adapter, and no real adapter is registered, so no provider says it makes video and the Generate dialog offers no video connection. A provider is added as in section 2: one package `service/providers/<name>/`, one registration line, the descriptor capability `video`, and the five methods of `VideoGenerator`. What every adapter must do is in the rest of this document; what the chosen one documents (endpoints, models, limits, price, terms of use of the outputs) is written here when it is approved.
+
 ## 3. The model catalogue
 
 ```go
@@ -123,7 +142,7 @@ type Model struct {
 	ContextTokens int             // the largest input plus output, 0 when the provider does not say
 	OutputTokens  int             // the largest output, 0 when the provider does not say
 	Price         *provider.Price // set when the catalogue publishes a price
-	Capability    string          // epic 10: "text", "image", "voice" or empty; a hint from the adapter, never a rule
+	Capability    string          // epic 10: "text", "image", "voice", "video" or empty; a hint from the adapter, never a rule
 }
 ```
 
@@ -175,18 +194,19 @@ The estimate goes to `core/approval` `Decide` as the `Cost` of the action (kind 
 
 ### 4.5 Prices of an image and of speech (epic 10)
 
-A price has a `unit`. The default (empty) is the price of tokens of sections 4.1 and 4.3, and an old table has no other. Two units are added; an entry of either has `input_micros_per_mtok` and `output_micros_per_mtok` at zero and sets `unit_micros`:
+A price has a `unit`. The default (empty) is the price of tokens of sections 4.1 and 4.3, and an old table has no other. Three units are added (the third by epic 11); an entry of any has `input_micros_per_mtok` and `output_micros_per_mtok` at zero and sets `unit_micros`:
 
 | `unit` | `unit_micros` is | Used by |
 | --- | --- | --- |
 | `image` | the cost of one image | `image.generate` |
 | `mchar` | the cost of a million characters of the text of a speech | `voice.generate` |
+| `second` | the cost of one second of video | `video.generate` |
 
 ```json
 { "provider": "openai", "model": "an-image-model", "currency": "USD", "unit": "image", "unit_micros": 40000 }
 ```
 
-- `ImageCost(count, price)` is `count * unit_micros`; `VoiceCost(characters, price)` is `ceil(characters * unit_micros / 10^6)`, in 128-bit arithmetic as `TextCost` is, so a speech of one character at a nonzero price is never rounded to nothing (`ImageCost` saturates at the largest int64). A price whose unit does not fit the capability of the job (a token price for an image) is the same as none: the request is refused with `E_PRICE_UNKNOWN`, whose hint says which unit is wanted.
+- `ImageCost(count, price)` is `count * unit_micros`; `VoiceCost(characters, price)` is `ceil(characters * unit_micros / 10^6)`, in 128-bit arithmetic as `TextCost` is, so a speech of one character at a nonzero price is never rounded to nothing (`ImageCost` saturates at the largest int64). `VideoCost(seconds, price)` is `seconds * unit_micros`, saturating the same way. A price whose unit does not fit the capability of the job (a token price for an image) is the same as none: the request is refused with `E_PRICE_UNKNOWN`, whose hint says which unit is wanted.
 - The rules of sections 4.2 to 4.4 apply unchanged: the table of the person wins over a catalogue, a missing price is never zero, only a privileged browser session sets a price, and the estimate goes to `Decide` as the `Cost` of the action.
 - An estimate of an image is exact for the images the provider returns, and an upper bound when the provider returns fewer (a partial batch costs what arrived, section 6.2). The estimate of speech counts the characters of the text, so it is exact for a provider that bills by character; a provider that bills by the second of audio is priced by the person in the table at the rate the person finds fair, since the real cost is recorded from the price the person saw (section 6.1).
 
@@ -246,6 +266,22 @@ type VoiceRequest struct {
 
 A file a provider returns is checked before it becomes an asset, by `provider.CheckImage` and `provider.CheckAudio` (pure, over the first bytes): an image is a PNG, a JPEG or a WebP by its signature, not empty and not above the import limit of the workspace; audio has the signature of the format that was asked for (an MP3 with an ID3 tag or a frame sync, `RIFF`/`WAVE`, `fLaC`, an Ogg page, an ADTS header), under the same limit. A file that is neither is `E_PROVIDER` with `details.kind` `unreadable`, and nothing is stored. The ingest of SDD-011 then probes the file as it does any other, so a file that passes the signature and is not decodable still ends as a failed asset with its reason, and no more than the bytes already counted were written.
 
+### 5.4 The video request (epic 11)
+
+```go
+type VideoRequest struct {
+	Model      string // required
+	Prompt     string // required
+	Seconds    int    // the length of the clip; default 5
+	Aspect     string // "16:9" (the default), "9:16", "1:1", "4:3" or "3:4"
+	FirstFrame string // optional: the id of an image asset of the project, the first frame of the clip
+}
+```
+
+`ValidateVideo(req, limits)` checks, with `E_VALIDATION` and the path of the member: `model` (the pattern of section 3); `prompt` (1 to 4,000 characters of valid UTF-8, no NUL); `seconds` (1 to 60, and within `limits.MinSeconds` and `limits.MaxSeconds` when the provider documents them); `aspect` (one of the five, and one of `limits.Aspects` when documented); `first_frame` (empty, or an asset id of the pattern of SDD-011, and refused when the model documents that it takes no image, `limits.NoFirstFrame`). `VideoLimits` is what the adapter documents for the model; zero means not documented. The asset is checked by the service, not by `core`: it must exist in the project of the job, be an image the caller can read, be ready and be at most 20 MB (`E_NOT_FOUND`, `E_TYPE_MISMATCH`, `E_ASSET_NOT_READY`, `E_VALIDATION`), all checked before a person is asked.
+
+`provider.CheckVideo` (pure, over the first bytes) accepts an MP4 or a QuickTime file (`ftyp` at byte 4) and a WebM file (the EBML signature), and nothing else.
+
 ## 6. The job `text.generate`
 
 Epic 17 registers a second kind of the same shape, `text.draft` (SDD-019 section 6): it is `text.generate` with a prompt that `core/writing` builds from the brief, the current text and an instruction, and with a text to put the answer in as a new revision. It has the estimate, the summary, the ceilings, the approval and the ledger described here, and its result is the result of this section with `item_id` and `revision`.
@@ -287,9 +323,20 @@ A refusal of the prompt by the provider (a content policy) is `E_PROVIDER` with 
 
 `VoiceList` reads the voices of a connection (`id`, `name`, `language`, `source` of `provider` or `documented`) through the connection, and costs nothing. The voice names are untrusted text, cleaned and cut like the names of models (section 3), and a name that echoes the key is dropped (section 9).
 
+### 6.4 The job `video.generate` (epic 11)
+
+An approvable kind of scope `edit`, registered like the others (section 6.1) and passing through the same estimate, ceiling and approval. Arguments: `connection_id` (capability `video`, `accepts` has `text`; a first frame is sent through the same connection, so a connection that lists no host for it is refused at the gate), and the members of section 5.4 (`project_id` as in section 6.1).
+
+- **Approval by default.** A video costs far more per unit than the other kinds, so a `video.generate` job waits for a person whatever its estimate is (a ceiling only refuses, and under it nothing approves by itself), unless a rule the person wrote covers it (a rule needs a per-item limit, SDD-015 section 4). This is the decision of `core/approval` as it is: the kind adds nothing to it and no rule of its own, and a test pins it (`TestVideoGenerate_WaitsForApprovalByDefault`). A request above a ceiling is refused with `E_COST_CEILING` at the start.
+- **Prepare** validates the arguments with the limits of the adapter, checks the first frame asset, finds the price in the unit `second` (section 4.5) and computes `VideoCost(seconds, price)`. It makes no outbound call and reads no file. The summary names the provider, the model, the length and the aspect, says whether a first frame is sent, and gives the excerpt of the prompt cleaned as in section 6.
+- **Run** is asynchronous because every provider is. It (1) checks the disk for the largest result and, with a first frame, reads that asset; (2) calls `Submit` once and **stores the task id in the input of the job before anything else**, so that a crash after the charge leaves the id behind; (3) calls `Poll` with a backoff (2 seconds, doubling to 30; a wait the provider asks for is kept between 1 and 60 seconds, so a provider never makes it poll in a tight loop) until the task is done or failed, reporting progress; (4) calls `Fetch` at the end and checks the file (section 5.4, then the probe of the ingest). The whole run is bounded by 30 minutes.
+- **Restart.** A job a shutdown interrupted is queued again (SDD-015 section 6) and runs again from the start with its stored input. A run that finds a task id in its input does not call `Submit`: it resumes at `Poll`. So a restart during the polling costs one submission. The one window left is a crash between the answer of `Submit` and the write of the id; it is as short as one local write and is said in the user guide.
+- **Cancel.** `JobCancel` stops the polling and calls `Cancel` of the adapter when a task exists (a fresh context, since the job's own is cancelled). A provider that confirms the cancel costs nothing: the reservation is released. One that does not confirm, or fails, leaves the cost already incurred, which is the estimate (the provider may have charged), settled in the ledger. A job a shutdown queued again with a task id in its input is cancelled the same way while it waits in the queue (the `Abandon` of SDD-015 section 5): the task goes on at the provider, so its reservation is not simply released (`TestVideoGenerate_ACancelAfterARestartAbandonsTheTaskAndRecordsWhatIsOwed`).
+- **The result** is `result.generated` as in section 6.1: one item of kind `video`, `requested` and `delivered` 1 or 0, and the cost `VideoCost(seconds, price)`. The asset has the origin `generated` (`provider`, `model`, `prompt`, `cost_micros`) and the ingest probes the file, builds its proxy and thumbnail, as for an import; a file the probe refuses is stored, paid for and said in a note. A failed task (a refusal is `E_PROVIDER`, `details.kind` `refused`) fails the job and records no cost when the provider says it charged none.
+
 ## 7. Service operations and who may call them
 
-Four operations on `service.Service`, in `service/provider_ops.go`, and three of epic 10 in `service/generate_ops.go`:
+Four operations on `service.Service`, in `service/provider_ops.go`, and three of epic 10 in `service/generate_ops.go` (and `VideoGenerate` of epic 11):
 
 | Operation | Scope | Result |
 | --- | --- | --- |
@@ -300,8 +347,9 @@ Four operations on `service.Service`, in `service/provider_ops.go`, and three of
 | `ImageGenerate` | edit | the job (`JobStart` of `image.generate`); `dry_run` as `TextGenerate` |
 | `VoiceGenerate` | edit | the job (`JobStart` of `voice.generate`) |
 | `VoiceList` | read | the voices of one connection |
+| `VideoGenerate` | edit | the job (`JobStart` of `video.generate`); `dry_run` as `TextGenerate` |
 
-- `ProviderPriceSet` takes `unit` (empty, `image` or `mchar`) and `unit_micros` besides the members of section 4.3 (epic 10).
+- `ProviderPriceSet` takes `unit` (empty, `image`, `mchar` or, from epic 11, `second`) and `unit_micros` besides the members of section 4.3 (epic 10).
 - `ProviderPriceSet` is checked like `CostCeilingSet`: a caller that is not a privileged browser session gets `E_PRIVILEGED_SESSION` whatever scope it holds; then the scope. It is audited (`provider.price.set`, with the provider, the model and the amounts).
 - A project-limited key is refused `ProviderList`, `ProviderModels` and `ProviderPriceSet` (they name no project) and may call `TextGenerate` for its project only.
 - No operation returns a key, and none takes one: the key is given once, to `ConnectionCreate` (SDD-014).
@@ -334,8 +382,9 @@ A result URL on a host outside the destinations of the connection is `E_CONNECTI
 - CLI: `provider:list`, `provider:models <connection id>`, `provider:price` and `text:generate`. The API key is added with `connection:add --kind <provider id>` (SDD-014), which reads it from standard input or a file. `text:generate` takes the prompt from `--prompt`, `--prompt-file` or standard input, and answers the job with its estimate, without waiting for it: a generation waits for a person, so there is no `--wait`. `provider:price` needs a privileged session, so with the local token it always fails with `E_PRIVILEGED_SESSION`, which gives an agent the stable error and its hint. The four commands are in the `provider` domain (SDD-000 section 1.1): the guide of that domain (`agent:docs --print guide:provider`) lists the three an agent may run, and `stuarty provider <verb>` runs them. They are not in the generated skill for agents, whose 12,400 characters have no room left.
 - MCP: no new tool. A new domain adds no tool (SDD-003 section 3.11, as revised by epic 13). An agent starts a generation with `job_start` (kind `text.generate`, arguments `connection_id`, `model`, `prompt` and optionally `system`, `max_tokens`, `temperature`) and reads it with `job_get`. The description of `job_start` names the three required arguments, and a start with no `connection_id` is refused with a hint that names every argument. To fit the budget, the `kind` enum of `job_start` gains `text.generate` and the `state` of the `outputSchema` of `job_start` and `job_get` becomes a plain string (it lists `waiting_approval`, which the five-value enum did not; SDD-003 section 4.2, SDD-015 section 10). `provider:list` and `provider:models` have no tool: a provider is a connection (`connection`), and the models are read with the CLI or HTTP.
 - Epic 10 adds, on HTTP: `POST /image/generate` and `POST /voice/generate` (status 202, the job is the answer) and `GET /connections/{id}/voices`; on the CLI: `image:generate`, `voice:generate` (the text from `--text`, `--text-file` or standard input) and `voice:list <connection id>`, in the `provider` domain, with the same rules as `text:generate` (no `--wait`); on MCP: no new tool, the `kind` enum of `job_start` gains `image.generate` and `voice.generate`, and `voice:list` has no tool, like the models. The `format` member of `args` is shared with the export formats and its `enum` is exactly those (`TestJobStartFormatsMatchTheService`), so over MCP a narration is asked in `wav` or `aac`, or in the default `mp3` by leaving `format` out; `flac` and `opus` are asked over HTTP or the CLI.
-- The Generate dialog (epic 10) is in the two sections of the asset library (`VisualAssets` for an image, `VideoAssets` for speech). It asks for the connection, the model (the models whose capability hint matches come first), the prompt or the text, the options, and shows the estimate from a `dry_run` before anything is submitted; then the job (it may wait for approval) and, when done, the files in the grid. For a voice it shows the disclosure line of section 2.2. The dialog computes nothing.
-- The Connections page shows one card per provider: connect with a key (the key goes to `ConnectionCreate`), test it, the models with their price and its source, a form to set a price for a model, and the spend of the day of each connection from `CostSummary`. The page computes nothing: amounts are formatted, not summed (SDD-012 section 1).
+- Epic 11 adds `POST /video/generate` (status 202, the job is the answer) and `video:generate` in the `provider` domain (the prompt from `--prompt` or `--prompt-file`, `--seconds`, `--aspect`, `--first-frame <asset id>`; no `--wait`); on MCP the `kind` enum of `job_start` gains `video.generate` and its description names `{connection_id, model, prompt, seconds?, aspect?, first_frame?}`; `first_frame` is not a new argument of the tool but a member of `args`, which is one object validated by `kind`.
+- The Generate dialog (epic 10) is in the two sections of the asset library (`VisualAssets` for an image, `VideoAssets` for speech). It asks for the connection, the model (the models whose capability hint matches come first), the prompt or the text, the options, and shows the estimate from a `dry_run` before anything is submitted; then the job (it may wait for approval) and, when done, the files in the grid. For a voice it shows the disclosure line of section 2.2. The dialog computes nothing. Epic 11 adds a video tab to the dialog of `VideoAssets` (prompt, length, aspect, an optional first frame picked from the image assets of the project): the estimate is shown from a `dry_run`, and the dialog says in words that this kind always waits for a person.
+- The Connections page shows one card per provider: connect with a key (the key goes to `ConnectionCreate`), test it, the models with their price and its source, a form to set a price for a model, and the spend of the day of each connection from `CostSummary`. The page computes nothing: amounts are formatted, not summed (SDD-012 section 1). A provider whose `credential_kinds` has `oauth` also has a sign-in button on its card, and a connection made by a sign-in shows its state and the account from `ProviderSignInList`, with **Sign in again** (section 12); the page where the provider sends the browser is `/auth/callback`.
 
 ## 11. Tests
 
@@ -358,5 +407,81 @@ A result URL on a host outside the destinations of the connection is `E_CONNECTI
 | A generated narration is placed on a timeline and exported | `TestGeneratedVoiceOnTimeline` |
 | The surfaces agree on the three operations | `web/contract` parity (epic 10) |
 | The Generate dialog against a fake provider server | `web/e2e/specs/generate-assets.spec.ts` |
+| Video: limits, estimates, the signature of a clip | `core/provider` table tests (epic 11) |
+| A video job: approval by default and no outbound call before it, a rule that lifts it, the task id stored before the first poll, a restart that makes one submission, a cancel (also of a job queued again after a restart), a refused prompt, a clip with a complete origin, a first frame of another project refused, a real clip probed, placed on a timeline and exported on the pinned FFmpeg | `TestVideoGenerate_*` over the Service (epic 11) |
+| The adapter of the approved provider: submit, pending, done, failed and refused against recorded answers | `service/providers/<name>` contract tests (epic 11, waits for the choice of section 2.3) |
 
 No test calls a real provider. The recorded responses are written by hand from the public documentation of each API and kept in `testdata/` next to the adapter; the manual check with a real key of the author (task 8) is not part of the suite.
+
+## 12. Sign-in connections (epic 12)
+
+Two providers can be connected with a sign-in in the browser instead of an API key: **Sign in with ChatGPT** (provider `openai`, credential kind `oauth`) and **OpenRouter** (provider `openrouter`, credential kinds `api_key` and `oauth`). The credential of a sign-in lives only in the vault, like a key (SDD-014 section 13). A person who has no such account, or who prefers a key, keeps the API key path of section 2. There is **no** sign-in with a Claude.ai subscription, or with any login a provider forbids third-party applications to use (RF-365).
+
+### 12.1 What the providers document (read on 2026-11-19)
+
+| Page | Used for |
+| --- | --- |
+| <https://developers.openai.com/siwc/quickstart> | the open-source clients flow, the scopes, no client secret |
+| <https://developers.openai.com/siwc/token-sharing-open-source/sign-in> | endpoints, parameters, registration, refresh |
+| <https://developers.openai.com/siwc/token-sharing-open-source/models-and-inference> | model list and inference with the plan token |
+| <https://developers.openai.com/siwc/token-sharing-open-source/self-hosted-vms> | host identifier, credential transfer, the loopback limit |
+| <https://openrouter.ai/docs/guides/overview/auth/oauth> | the PKCE flow, the key, the callback rules |
+
+**OpenAI (Sign in with ChatGPT, the flow for open-source and locally hosted clients).** It is an OpenID Connect authorization code flow with PKCE (`S256`), for a public client: no client secret and no partner key.
+
+- Authorization: `https://auth.openai.com/api/accounts/authorize`, opened in the system browser. Token: `https://auth.openai.com/api/accounts/oauth/token`, a form-encoded `authorization_code` grant.
+- **Registration.** The first sign-in on a host uses `client_id=dynamic_agent_client` with `ext_agent_host_id` (a stable identifier of the host, distinct for each host, kept and reused) and `agent_name_hint` (the name of the application). After the person names and authorises the agent, the callback carries the **issued** client id (`oaiapp_...`) in the `client_id` query parameter. It is kept with the sign-in and used for every later request of that account; `dynamic_agent_client` is never kept, a callback with no issued id is an incomplete registration, and a different id on a later sign-in is refused.
+- **Parameters** of the authorization request: `client_id`, `agent_name_hint`, `ext_agent_host_id`, `response_type=code`, `redirect_uri`, `scope`, `resource=https://api.openai.com/v1`, `state`, `nonce`, `code_challenge_method=S256`, `code_challenge`. Scopes: `openid profile email offline_access resource.invoke chatgpt.tokens.use.direct`. The plan can be used only when `chatgpt.tokens.use.direct` is granted. The code exchange repeats `redirect_uri` and `resource`.
+- **Redirect.** An HTTP loopback address on `127.0.0.1`, `http://127.0.0.1:<port>/auth/callback`; only the port may change between sign-ins, `localhost` is not accepted, and the same address is sent in both requests. HTTPS and custom schemes are not documented.
+- **Tokens.** The answer carries the access token, a rotating refresh token (requested with `offline_access`), `expires_in` and an ID token. After a refresh the access token, the expiry, the scopes and the refresh token are replaced together. The ID token is checked for issuer, audience (the issued client id), expiry and nonce.
+- **Use.** `GET https://api.openai.com/v1/models` with `Authorization: Bearer <access token>` answers `{"models": [...]}`; an entry is shown when `visibility` is `list`, its `slug` is the model id and `display_name` the name. `POST https://api.openai.com/v1/responses` (the public Responses API, never the `backend-api` of ChatGPT) with `store: false` and `stream: true`; the request counts as successful only after the event `response.completed`; `response.failed` may carry `subscription_sharing_usage_limit_exceeded` or `subscription_sharing_usage_unavailable`. The model list is read again when the account changes.
+- **Terms.** The plan is available to "all open-source partners and selected private clients"; Stuarty is open source (MIT) and a local application, so the use is inside what the pages document. The terms and eligibility page was not reachable on the date (a 404), and the pages do not say whether a server shared by several people is covered: see section 12.3.
+- **Not documented on the pages read:** the refresh request (the standard `refresh_token` grant on the token endpoint is used, with the issued client id), the issuer and the JWKS address of the identity token (the claims are checked, the issuer by the host of the token endpoint; the signature is not, since the token comes straight from the token endpoint over TLS, OpenID Connect Core section 3.1.3.7), whether `max_output_tokens` and `temperature` are accepted with a plan token, rate limits and the models a plan grants. A real account of the author confirms them (the manual check in section 12.5).
+
+**OpenRouter (OAuth PKCE).**
+
+- Authorization address: `https://openrouter.ai/auth?callback_url=<address>&code_challenge=<challenge>&code_challenge_method=S256&state=<state>`. `code_challenge_method` must be `S256`. The `state` is echoed on the callback, and is not returned when the person denies.
+- Callback: `https://` for a hosted application, or `http://localhost:<port>/...` on any port. The page does not say whether `127.0.0.1` is accepted; the address of the page the person is at is used as it is.
+- Exchange: `POST https://openrouter.ai/api/v1/auth/keys` with a JSON body `{"code", "code_verifier", "code_challenge_method": "S256"}`; the answer has `key`, a key of the person bound to their account, which spends their credits until they revoke it. The code lives 10 minutes and is single-use. Errors: 400 (method), 403 (invalid or expired code or verifier), 405.
+- Use: `Authorization: Bearer <key>` on `https://openrouter.ai/api/v1/chat/completions`; the catalogue is `GET /api/v1/models`, whose `pricing.prompt` and `pricing.completion` are USD per token, as decimal text. No terms of third-party applications are on the page.
+
+Neither provider changed in a way that forbids this use: task 1 of the epic does not stop.
+
+### 12.2 The adapters and the credential
+
+- **`openrouter`** (`service/providers/openrouter`). The Chat Completions wire of OpenRouter: `POST {endpoint}/chat/completions` with `model`, `messages`, `max_tokens`, optional `temperature`; the answer has the shape of section 2.1 (the model the answer names, the text, the finish reason and `usage`). `Models` reads `GET {endpoint}/models`: `id`, `name`, `context_length`, `top_provider.max_completion_tokens` and the price, which the catalogue publishes: a price of `-1` (a router with a variable price) or one that is not a non-negative decimal gives no price, so that model is refused as in section 4.2. The price in micros per million tokens is the decimal price per token times 10^12, rounded up. The key is the secret of the connection, whether the person typed it or the sign-in made it; the adapter does not tell them apart.
+- **`openai` with a sign-in.** The same adapter, with the credential kind `oauth`: the connection manager says it (`Credential.SignedIn`, set from the secret in the vault) and hands the adapter the access token as the secret. The adapter uses it as the bearer and speaks the Responses API of section 12.1. `GenerateText` sends `model`, `input` (the prompt), `instructions` (the system text, when there is one), `max_output_tokens`, optional `temperature`, `store: false` and `stream: true`, reads the events, joins `response.output_text.delta` into the text and takes the usage from `response.completed`. A stream that ends before `response.completed`, a `response.failed` and any other end are errors of kind `unreadable`, `rate_limited` (the two usage codes) or `unavailable`, built from the event type and the safe code, never from a body. A `response.incomplete` that says `max_output_tokens` is a finish `length`. `Models` reads `GET {endpoint}/models` as above. The plan grants text and nothing else on the pages read: `ImageGenerate` and `VoiceGenerate` (section 6.1), and `VideoGenerate` (section 6.4, through the same check of the connection), refuse a connection made by a sign-in with `E_VALIDATION` at `args.connection_id` and the hint to use an API key, before a job or an approval exists, and the token of a plan never reaches the image, the speech or the video endpoint.
+- **The price of a plan model.** The plan has no price per token: its use counts against the limits of the plan, not against a bill. The catalogue of a sign-in connection therefore publishes a price of zero for every model (`price_source` `catalogue`), so a generation through a plan is estimated at zero and is not refused for a missing price, and the ceilings of epic 05 never refuse it. The person can still enter a price in the table, which wins (section 4.2). A zero price is set only by the sign-in adapter, never by a missing entry.
+- **Hosts.** A sign-in connection of `openai` has the hosts `api.openai.com` and `auth.openai.com`, so that the refresh passes through the gate of the connection like any request; one of `openrouter` has `openrouter.ai`.
+
+### 12.3 Where a sign-in can be made
+
+The redirect address is a page of this server, `/auth/callback` (SDD-007 section 3.6 item 4), at the address the person opens the application with.
+
+- **OpenRouter** accepts an https address, or `http://localhost:<port>`, so it works on the desktop, on a local server and on a deployment with a public https address.
+- **OpenAI** accepts only `http://127.0.0.1:<port>/auth/callback`. A sign-in therefore needs the application opened at `127.0.0.1` on the machine of the person: the desktop application and a local server do; a server on another machine does not, and the begin operation refuses the address with a hint. A server in network mode (SDD-007 section 4) refuses Sign in with ChatGPT whatever the address the browser is at, `127.0.0.1` through a tunnel included: the begin operation answers `E_VALIDATION` at `provider`, with the hint to connect OpenAI with an API key, and makes no connection (author decision D-094). Copying a plan credential to a server is a transfer the provider documents as lacking host attribution and revocation, and Stuarty does not offer it.
+
+### 12.4 The operations
+
+Three operations on `service.Service`, in `service/provider_signin_ops.go`, all HTTP only (a person's browser makes a sign-in; there is no command and no tool, SDD-003 section 7.1 exception E-4):
+
+| Operation | Scope | Result |
+| --- | --- | --- |
+| `ProviderSignInBegin` | admin, and only from a privileged browser session | `connection_id` and `authorize_url`. The request carries `provider`, `label` (optional), `connection_id` (to sign in again an existing connection) and `redirect_uri`. A new connection is made first, with a placeholder credential that holds no token, so the exchange can pass through the gate of that connection; it lists as needing a sign-in until the sign-in ends |
+| `ProviderSignInComplete` | admin, and only from a privileged browser session | the sign-in: `connection_id`, `provider`, `label`, `account` (untrusted text) and `state`. The request carries `state`, `code`, `error` and, for OpenAI, `client_id` (the issued id, from the callback) |
+| `ProviderSignInList` | read | one entry per connection made by a sign-in: `connection_id`, `provider`, `label`, `account`, `state` (`ready` or `needs_sign_in`); never a token |
+
+`ConnectionRemove` of a connection made by a sign-in is also for a privileged browser session only (an agent cannot remove a sign-in), and `ConnectionCreate` refuses a secret that is the stored form of a sign-in. Begin and complete are audited (`provider.signin.begin`, `provider.signin`), with no token. `E_PROVIDER` gains the code `needs_sign_in` (`details.kind` `auth`): the refresh failed for good, or the provider refused a token or a key of a sign-in that the person revoked before it expired, and the person must sign in again from the Connections page (the hint never asks for a key). A refusal of a use does not change the stored entry: the card turns to needing a sign-in at the next refresh, and a key of OpenRouter, which is never refreshed, stays listed as `ready` while each use answers this code.
+
+### 12.5 Tests
+
+| What | Test |
+| --- | --- |
+| The generic flow, the single-use and bound state, the wrong verifier, the expiry, the refresh and its lock | `service/connections/oauth` tests (`TestRefresh*`) |
+| The two sign-ins and the adapters over a fake authorization server and recorded responses | `service/providers/openai`, `service/providers/openrouter` tests |
+| A sign-in ends with the tokens only in the vault; a replayed or foreign state creates nothing; an agent cannot begin, complete or remove one | `TestSignIn*` in `web/app/servicetest`, `TestSecurity_T75` to `T78` |
+| The Connections page with a fake authorization server | `web/e2e/specs/provider-sign-in.spec.ts` |
+
+A real sign-in needs an account of the author: it is the manual check below, and not part of the suite.
+
+**Manual check (the author).** Run `stuarty serve` and open `http://127.0.0.1:7878`. On the Connections page, choose "Sign in with ChatGPT" (a Plus or Pro plan), name the agent on the page of OpenAI, accept, and expect to land on the sign-in page of Stuarty with "signed in". Open the models of the connection and run `stuarty text:generate` with one of them. For OpenRouter choose "Sign in with OpenRouter" and expect a connection whose models list shows prices. Then revoke access in the provider account and expect the next use (the models with a refresh, or a generation) to answer `needs_sign_in`, and the ChatGPT card to show "needs sign-in" once its token is renewed.

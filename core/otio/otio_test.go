@@ -1554,3 +1554,33 @@ func TestRoundTripKeepsTrackLockSoloVolumeAndReportsTheRest(t *testing.T) {
 		t.Errorf("round trip differs:\n%s\n---\n%s", second, first)
 	}
 }
+
+// A composition item is another timeline: the file keeps its time as a gap and the loss is reported (SDD-001
+// section 3.5.1), never dropped silently.
+func TestExportReportsACompositionAsLost(t *testing.T) {
+	d := sampleDoc()
+	comp := timeline.NewItem("itm_c000000009", timeline.ItemComposition, trkTop, 60, 30)
+	comp.Timeline = "prj_a1b2c3d4e5"
+	d.Items[comp.ID] = comp
+
+	data, lost, err := Export(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	found := false
+
+	for _, l := range lost {
+		if l.ID == comp.ID && strings.Contains(l.Feature, "composition") {
+			found = true
+		}
+	}
+
+	if !found {
+		t.Errorf("the composition is not in the losses: %+v", lost)
+	}
+
+	if bytes.Contains(data, []byte(comp.Timeline)) {
+		t.Error("the file names the nested timeline, which another document holds")
+	}
+}

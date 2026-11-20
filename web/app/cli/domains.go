@@ -41,7 +41,7 @@ var commandDomains = map[string]string{
 
 	"image:create": command.DomainImage, "image:list": command.DomainImage, "image:show": command.DomainImage,
 	"image:edit": command.DomainImage, "image:undo": command.DomainImage, "image:redo": command.DomainImage,
-	"image:export": command.DomainImage,
+	"image:export": command.DomainImage, "image:import": command.DomainImage,
 
 	"media:import": command.DomainAsset, "media:inspect": command.DomainAsset, "media:list": command.DomainAsset,
 	"media:trash": command.DomainAsset, "media:restore": command.DomainAsset, "font:import": command.DomainAsset,
@@ -71,7 +71,7 @@ var commandDomains = map[string]string{
 	"provider:list": command.DomainProvider, "provider:models": command.DomainProvider,
 	"provider:price": command.DomainProvider, "text:generate": command.DomainProvider,
 	"image:generate": command.DomainProvider, "voice:generate": command.DomainProvider,
-	"voice:list": command.DomainProvider,
+	"voice:list": command.DomainProvider, "video:generate": command.DomainProvider,
 
 	"text:list": command.DomainWriting, "text:show": command.DomainWriting, "text:write": command.DomainWriting,
 	"text:revisions": command.DomainWriting, "text:revert": command.DomainWriting, "text:draft": command.DomainWriting,

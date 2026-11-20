@@ -824,6 +824,8 @@ A bump is a new constant and a new file name; old files are not touched (ADR-001
 
 Removing an asset from a project, and trashing it, deletes no file (ADR-0020 item 2: trash is a database state); the files of an asset go only with its last reference, as item 4 says. GC never runs while the asset has an active job.
 
+The processed sound of the timeline preview (`audio-previews/<key>.wav`, SDD-004 §7.1) is not an artifact of an asset and has no row: it is a cache of `engine/cache`, like `frames/` and `bitmaps/`. It is written as `<key>.wav.part` and renamed (6.2), so a file is never half written; the least recently used file is removed when the cache passes its byte cap (`STUARTY_CACHE_MAX_BYTES`), and a leftover `.part` of a crash is indexed at the next start and goes the same way. GC removes nothing from it.
+
 ### 6.5 Serving artifacts
 
 The editor reads artifacts through four byte-serving routes (SDD-000 §1), all under the project so that access is checked against it, all scope `read`, all with HTTP Range and immutable caching (the content of a profile version never changes). `{asset_id}` is the project's `ast_` identifier; the service resolves it to the hash through `project_assets`. An asset that is not `ready` answers `E_ASSET_NOT_READY`. The service side is `OpenFile` with the kinds `proxy`, `thumbnail`, `strip` and `peaks` (SDD-003 §2.9); this SDD says which stored file each kind returns, and SDD-003 §6.5 holds the headers (`ETag`, `Cache-Control`).

@@ -42,6 +42,8 @@ type Ingester func(ctx context.Context, in ingest.Input) (*ingest.Result, error)
 type ExportInput struct {
 	JobID string
 	Doc   *timeline.Document
+	// Nested are the timelines the compositions of Doc use, by id, as they were when the export started.
+	Nested map[string]*timeline.Document
 	// OutPath is the final file. The exporter writes it only after the file
 	// passed its verification, and leaves nothing there otherwise.
 	OutPath    string

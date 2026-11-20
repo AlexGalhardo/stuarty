@@ -52,6 +52,10 @@ func (*Adapter) GenerateVoice(
 	req provider.VoiceRequest,
 	maxBytes int64,
 ) (providers.VoiceResult, error) {
+	if c.SignedIn {
+		return providers.VoiceResult{}, errSignInTextOnly
+	}
+
 	header := headers(c)
 	header["Accept"] = "*/*"
 

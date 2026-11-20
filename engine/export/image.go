@@ -74,6 +74,9 @@ func RenderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig) 
 			if err := host.PutBitmap(ctx, l.Bitmap.Key(), bm); err != nil {
 				return nil, rendererError(err)
 			}
+		case plan.Group:
+			// An image document has layers of its own kinds; a group is the plan of nested timelines (SDD-004 §3.16).
+			return nil, fmt.Errorf("layer %s: %w: an image has no group", l.ItemID, compositor.ErrSource)
 		}
 
 		kept = append(kept, l)

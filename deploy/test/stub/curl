@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# A stand-in for `curl` used by deploy/test/*.sh: every address answers, except while
+# $STUB_STATE/running holds a version listed in $STUB_FAIL_VERSIONS.
+set -uo pipefail
+: "${STUB_STATE:?}"
+printf '%s\n' "curl $*" >>"$STUB_STATE/calls.log"
+running="$(cat "$STUB_STATE/running" 2>/dev/null || true)"
+for v in ${STUB_FAIL_VERSIONS:-}; do
+	[ "$v" = "$running" ] && exit 22
+done
+[ -s "$STUB_STATE/running" ] || exit 7
+exit 0

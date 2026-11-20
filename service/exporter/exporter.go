@@ -174,6 +174,7 @@ func (a *adapter) job(in service.ExportInput, runner *ffmpeg.Runner, caps *ffmpe
 		Runner:        runner,
 		Caps:          caps,
 		Doc:           in.Doc,
+		Nested:        in.Nested,
 		Start:         int(in.Start),
 		End:           int(in.End),
 		JobID:         in.JobID,
@@ -185,7 +186,7 @@ func (a *adapter) job(in service.ExportInput, runner *ffmpeg.Runner, caps *ffmpe
 		Lint:          a.cfg.Lint,
 		PixelRenderer: a.cfg.PixelRenderer,
 		GPUHost:       a.cfg.GPUHost,
-		Fonts:         service.FontSetFor(a.cfg.Workspace, in.Doc),
+		Fonts:         service.FontSetForNested(a.cfg.Workspace, in.Doc, in.Nested),
 		OnProgress: func(p export.Progress) {
 			if in.OnProgress != nil {
 				in.OnProgress(p.Frame, p.Total)
@@ -315,6 +316,29 @@ func (a *adapter) MeasureAudio(ctx context.Context, in service.AudioMeasureInput
 }
 
 var _ service.AudioMeter = (*adapter)(nil)
+
+// RenderAudioPreview implements service.AudioPreviewRenderer: one source of the timeline preview through the mixer of
+// the export, before the envelope and the loudness gain (SDD-004 section 7.1). It decodes with FFmpeg and runs no
+// encoder.
+func (a *adapter) RenderAudioPreview(ctx context.Context, in service.AudioPreviewInput) error {
+	if a.cfg.Runner == nil {
+		return internal("no FFmpeg runner is configured")
+	}
+
+	if in.Doc == nil {
+		return internal("no document to render")
+	}
+
+	caps, err := a.capabilities(ctx)
+	if err != nil {
+		return err
+	}
+
+	return export.RenderAudioPreview(ctx, a.job(service.ExportInput{Doc: in.Doc, JobID: in.JobID}, a.cfg.Runner, caps),
+		in.Source, in.OutPath)
+}
+
+var _ service.AudioPreviewRenderer = (*adapter)(nil)
 
 // runnerFor picks the runner by the encoder detection finds for the codec: a software encoder (or none) runs
 // under the address space limit, a hardware encoder does not. A detection error leaves the stricter runner to
