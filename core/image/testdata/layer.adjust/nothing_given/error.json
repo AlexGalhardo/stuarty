@@ -1,7 +1,7 @@
 {
   "code": "E_VALIDATION",
-  "hint": "Add one of brightness, contrast, saturation, temperature, tint, hue, exposure, levels, curve, reset to the arguments.",
-  "message": "Give at least one of: brightness, contrast, saturation, temperature, tint, hue, exposure, levels, curve, reset.",
+  "hint": "Add one of brightness, contrast, saturation, temperature, tint, hue, exposure, levels, curve, lut, reset to the arguments.",
+  "message": "Give at least one of: brightness, contrast, saturation, temperature, tint, hue, exposure, levels, curve, lut, reset.",
   "op_index": 0,
   "path": "args",
   "retryable": false
