@@ -226,6 +226,7 @@ func TestRegistryIsComplete(t *testing.T) {
 		"layer.mask_set",
 		"layer.move",
 		"layer.remove",
+		"layer.replace_source",
 		"layer.set",
 		"layer.set_shape",
 		"layer.set_text",

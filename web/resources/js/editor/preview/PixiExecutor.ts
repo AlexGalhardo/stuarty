@@ -8,6 +8,7 @@ import {
 	ImageSource,
 	MaskFilter,
 	Rectangle,
+	RenderTexture,
 	Sprite,
 	Texture,
 	VideoSource,
@@ -18,12 +19,12 @@ import type { ApiClient } from "../api/client";
 import { fetchLut, type LutTable } from "../api/lut";
 import type { PlanLayer, PlanMediaLayer, PlanWindow } from "../api/types";
 import { chunksUrl, proxyUrl, thumbnailUrl } from "../api/urls";
+import { setProcessedAudioStates } from "../state/processedAudioStore";
 import { AssetOwners } from "./assetOwners";
-import "pixi.js/advanced-blend-modes";
-
 import { AudioGraph } from "./audioGraph";
 import { uncoveredPixel } from "./background";
-import { pixiBlendMode } from "./blend";
+import { pixiBlendMode, readsBackdrop } from "./blend";
+import { registerOverAlphaBlends } from "./blendOverAlpha";
 import { ChromaKeyFilter } from "./chromaKey";
 import { DecodeClient, decoderPreference } from "./decode/client";
 import { createDecodeWorker } from "./decode/createWorker";
@@ -41,6 +42,7 @@ import {
 	MAX_VIDEO_LAYERS,
 	needsCorrection,
 	PlaybackClock,
+	processedDrive,
 	rankVideoLayers,
 	videoDrive,
 } from "./mediaSync";
@@ -55,12 +57,22 @@ import {
 	valueAt,
 } from "./planValue";
 import { PlanWindows } from "./planWindows";
+import { ProcessedAudio } from "./processedAudio";
+import {
+	type DrawNode,
+	expandGroups,
+	GroupIds,
+	type GroupNode,
+	groupAsMedia,
+	leavesOf,
+} from "./render/groups";
 import { detectRenderer } from "./rendererChoice";
 import {
 	type PlacedPixels,
 	type ShadowOutlineImage,
 	shadowOutline,
 } from "./shadowOutline";
+import { inspectSourceSize, type SourceSize, SourceSizes } from "./sourceSizes";
 import { STILL_POSTER_WIDTH, stillFrameRect } from "./stillFrame";
 import type {
 	LayerGeometry,
@@ -102,6 +114,15 @@ interface Drawn {
 	shadowSrcH: number;
 }
 
+// What a group is drawn on: its layers in `container`, at the scale of the
+// surface, drawn on `target`, which is then the texture of the group's layer.
+interface GroupSurface {
+	container: Container;
+	target: RenderTexture;
+	width: number;
+	height: number;
+}
+
 interface PaintBox {
 	x: number;
 	y: number;
@@ -128,6 +149,19 @@ const browserTimers: PoolTimers = {
 	clearTimeout: (handle) => clearTimeout(handle as number),
 };
 
+// Whether a layer of `nodes`, or of a group among them, is drawn by a filter that reads the pixels drawn
+// so far. The layers of a group are drawn on its transparent surface, so `clear` holds for them.
+function nodesReadBackdrop(
+	nodes: readonly DrawNode[],
+	clear: boolean,
+): boolean {
+	return nodes.some(
+		(node) =>
+			readsBackdrop(node.layer.blend, clear) ||
+			(node.kind === "group" && nodesReadBackdrop(node.children, true)),
+	);
+}
+
 // PixiJS v8 on a WebGPU or WebGL2 canvas drawing exactly what a plan window
 // says: the background, then each layer at its centre, size, rotation, opacity
 // and colour matrix, with its shadow and outline, in plan order, and nothing
@@ -136,6 +170,9 @@ export class PixiExecutor implements PreviewExecutor {
 	private app: Application | null = null;
 	private readonly stage = new Container();
 	private info: ProjectInfo | null = null;
+	// The background of the frame on the canvas is not opaque, so a blend mode reads a partly covered
+	// backdrop (VV-268).
+	private clearsToAlpha = false;
 	// The last size asked for: the first resize arrives before the renderer has
 	// finished its async init, and is applied when it has.
 	private buffer: { width: number; height: number } | null = null;
@@ -162,12 +199,21 @@ export class PixiExecutor implements PreviewExecutor {
 	// Where the assets of compositions live (see AssetOwners).
 	private readonly owners = new AssetOwners();
 	private readonly sounds: MediaPool;
+	private readonly processedAudio: ProcessedAudio;
 	// Decodes the proxies with WebCodecs in a worker; an asset it cannot decode
 	// is drawn from a pooled <video> (SDD-013 section 5.3).
 	private readonly decoder: DecodeClient<VideoFrame>;
 	// The timestamp, in microseconds, of the last decoded frame drawn exactly.
 	private decodedUs = -1;
 	private readonly drawn = new Map<string, Drawn>();
+	// The render texture and the container of each group drawn (SDD-013 section
+	// 3.12), by the short id of render/groups.ts.
+	private readonly groups = new Map<string, GroupSurface>();
+	private readonly groupIds = new GroupIds();
+	private groupsNoted = false;
+	// The frame being drawn: the stage (the project, at the output scale) or the
+	// nested frame of a group (at the scale of its surface).
+	private scene = { scale: 1, width: 0, height: 0 };
 	private readonly bitmaps = new Lru<string, Texture>(BITMAP_CACHE, (_k, t) =>
 		t.destroy(true),
 	);
@@ -175,6 +221,8 @@ export class PixiExecutor implements PreviewExecutor {
 	private readonly stills = new Map<string, Texture>();
 	// The poster of a still asset, shared by every crop of that asset.
 	private readonly stillImages = new Map<string, HTMLImageElement>();
+	// The source size of each asset, which the crop of a still is measured in.
+	private readonly sizes: SourceSizes;
 	// Pixels of a layer, read once per source, to paint its shadow and outline.
 	private shadowScratch: HTMLCanvasElement | null = null;
 	private readonly shadowStamps = new WeakMap<object, number>();
@@ -190,15 +238,19 @@ export class PixiExecutor implements PreviewExecutor {
 		timers?: PoolTimers,
 		// Asset pixel size, the space the plan's crop is measured in. Absent
 		// means the poster is the source (a still at most STILL_POSTER_WIDTH wide).
-		private readonly sources: (
-			asset: string,
-		) => { width: number; height: number } | null = () => null,
+		sources: (asset: string) => { width: number; height: number } | null = () =>
+			null,
 	) {
 		const poolTimers = timers ?? browserTimers;
 		this.windows = new PlanWindows(() =>
 			Promise.reject(new Error("no project")),
 		);
 		const redraw = (): void => this.redraw();
+		this.sizes = new SourceSizes(
+			sources,
+			(timeline, asset) => inspectSourceSize(client, timeline, asset),
+			redraw,
+		);
 		this.decoder = new DecodeClient<VideoFrame>({
 			preference: decoderPreference(window.location.search),
 			createWorker: createDecodeWorker,
@@ -223,6 +275,12 @@ export class PixiExecutor implements PreviewExecutor {
 			poolTimers,
 			redraw,
 		);
+		this.processedAudio = new ProcessedAudio({
+			projectId: () => this.info?.projectId ?? "",
+			timers: poolTimers,
+			now: () => performance.now(),
+			onChange: redraw,
+		});
 	}
 
 	get stats(): PreviewExecutor["stats"] {
@@ -241,6 +299,7 @@ export class PixiExecutor implements PreviewExecutor {
 		this.canvas = canvas;
 		try {
 			const preference = await detectRenderer();
+			registerOverAlphaBlends();
 			const app = new Application();
 			await app.init({
 				canvas,
@@ -255,6 +314,9 @@ export class PixiExecutor implements PreviewExecutor {
 				// later, so a transparent project can clear to alpha 0; an opaque
 				// colour still sets alpha to 1 on each draw.
 				backgroundAlpha: 0,
+				// A blend filter reads the pixels drawn so far, which WebGL has only through the back buffer;
+				// it is turned on only for a frame that has such a layer (setBackdrop).
+				useBackBuffer: false,
 				// The end-to-end build reads the buffer pixels back (preview-vs-export),
 				// which a WebGL canvas that clears after each composite cannot give.
 				preserveDrawingBuffer: import.meta.env.VITE_E2E === "1",
@@ -294,6 +356,8 @@ export class PixiExecutor implements PreviewExecutor {
 		cancelAnimationFrame(this.raf);
 		this.videos.dispose();
 		this.sounds.dispose();
+		this.processedAudio.dispose();
+		setProcessedAudioStates({});
 		this.decoder.dispose();
 		this.bitmaps.clear();
 		for (const texture of this.stills.values()) texture.destroy(true);
@@ -305,6 +369,11 @@ export class PixiExecutor implements PreviewExecutor {
 			this.sizeFx(entry, 0);
 			entry.grade?.destroy();
 		}
+		for (const surface of this.groups.values()) {
+			surface.container.destroy();
+			surface.target.destroy(true);
+		}
+		this.groups.clear();
 		this.app?.destroy({ removeView: true }, { children: true });
 		this.app = null;
 		this.audioGraph.detach();
@@ -510,6 +579,7 @@ export class PixiExecutor implements PreviewExecutor {
 		const info = this.info;
 		if (app === null || info === null) return;
 		const [red, green, blue, alpha] = uncoveredPixel(plan);
+		this.clearsToAlpha = alpha < 255;
 		app.renderer.background.color = [
 			red / 255,
 			green / 255,
@@ -517,25 +587,113 @@ export class PixiExecutor implements PreviewExecutor {
 			alpha / 255,
 		];
 
-		const layers = layersAt(plan, frame);
-		const decoding = rankVideoLayers(layers, MAX_VIDEO_LAYERS);
+		// A composition drawn as a group is drawn on a render texture of its own
+		// and that texture is placed as a picture, with the group's opacity, blend,
+		// mask and effects (SDD-013 section 3.12). PixiJS composes it with its own
+		// filters, so it is an approximation of the export's group, which the
+		// renderer of the export draws exactly (SDD-013 section 4.7.1).
+		this.scene = {
+			scale: this.stage.scale.x,
+			width: info.width,
+			height: info.height,
+		};
+		const nodes = expandGroups(
+			plan.layers,
+			frame,
+			this.scene.scale,
+			this.groupIds,
+		);
+		const decoding = rankVideoLayers(leavesOf(nodes), MAX_VIDEO_LAYERS);
 		const usedVideos = new Set<string>();
 		const used = new Set<string>();
 		this.complete = true;
+		// Before drawLevel, which draws the groups on their textures: a blend filter inside a group needs
+		// the back buffer turned on as well.
+		this.setBackdrop(app, nodesReadBackdrop(nodes, this.clearsToAlpha));
 
+		this.drawLevel(
+			this.stage,
+			nodes,
+			frame,
+			decoding,
+			usedVideos,
+			used,
+			mode,
+			info,
+		);
+
+		for (const [item, entry] of this.drawn) {
+			if (used.has(item)) continue;
+			entry.holder.removeFromParent();
+			this.dropMask(entry);
+			this.dropShadowOutline(entry);
+			this.sizeFx(entry, 0);
+			entry.grade?.destroy();
+			entry.lut?.destroy();
+			entry.holder.destroy({ children: true });
+			this.drawn.delete(item);
+		}
+		for (const [id, surface] of this.groups) {
+			if (used.has(id)) continue;
+			surface.container.destroy();
+			surface.target.destroy(true);
+			this.groups.delete(id);
+		}
+		this.videos.idle(usedVideos);
+		this.syncAudio(plan, frame, mode.playing);
+		app.render();
+		// A frame evicted from the decode cache is closed only after the render
+		// that may have read it.
+		this.decoder.sweep();
+		this.publishDecode();
+		this.markDrawn(frame);
+	}
+
+	// Puts the layers of one frame (the stage, or the frame of a group) in `root`,
+	// bottom first, each in a holder that carries its look. Returns how many it
+	// drew: a layer whose pixels are not there yet is left out and the frame is
+	// not complete.
+	private drawLevel(
+		root: Container,
+		nodes: readonly DrawNode[],
+		frame: number,
+		decoding: ReadonlySet<string>,
+		usedVideos: Set<string>,
+		used: Set<string>,
+		mode: DrawMode,
+		info: ProjectInfo,
+	): number {
 		let index = 0;
-		for (const layer of layers) {
-			const texture = this.textureFor(
-				layer,
-				frame,
-				decoding,
-				usedVideos,
-				mode,
-				info,
-			);
-			if (texture === null) {
-				this.complete = false;
-				continue;
+		for (const node of nodes) {
+			let layer: PlanLayer;
+			let texture: Texture | null;
+			if (node.kind === "layer") {
+				layer = node.layer;
+				texture = this.textureFor(
+					layer,
+					frame,
+					decoding,
+					usedVideos,
+					mode,
+					info,
+				);
+				if (texture === null) {
+					this.complete = false;
+					continue;
+				}
+			} else {
+				layer = groupAsMedia(node);
+				texture = this.groupTexture(
+					node,
+					frame,
+					decoding,
+					usedVideos,
+					used,
+					mode,
+					info,
+				);
+				// A group none of whose layers is ready draws nothing, as in the export.
+				if (texture === null) continue;
 			}
 			used.add(layer.item);
 			let entry = this.drawn.get(layer.item);
@@ -566,34 +724,114 @@ export class PixiExecutor implements PreviewExecutor {
 			}
 			if (entry.sprite.texture !== texture) entry.sprite.texture = texture;
 			this.place(entry, layer, frame, info);
-			if (this.stage.children[index] !== entry.holder) {
-				this.stage.addChildAt(
-					entry.holder,
-					Math.min(index, this.stage.children.length),
-				);
+			if (root.children[index] !== entry.holder) {
+				root.addChildAt(entry.holder, Math.min(index, root.children.length));
 			}
 			index++;
 		}
+		return index;
+	}
 
-		for (const [item, entry] of this.drawn) {
-			if (used.has(item)) continue;
-			entry.holder.removeFromParent();
-			this.dropMask(entry);
-			this.dropShadowOutline(entry);
-			this.sizeFx(entry, 0);
-			entry.grade?.destroy();
-			entry.lut?.destroy();
-			entry.holder.destroy({ children: true });
-			this.drawn.delete(item);
+	// The picture of a group: its layers drawn at the scale of the surface on a
+	// render texture the size of the surface (SDD-013 section 3.12 steps 1 to 3),
+	// transparent where nothing is drawn. Null when none of its layers is ready.
+	private groupTexture(
+		node: GroupNode,
+		frame: number,
+		decoding: ReadonlySet<string>,
+		usedVideos: Set<string>,
+		used: Set<string>,
+		mode: DrawMode,
+		info: ProjectInfo,
+	): Texture | null {
+		const app = this.app;
+		if (app === null) return null;
+		const { k, width, height } = node.geometry;
+		let surface = this.groups.get(node.id);
+		if (surface === undefined) {
+			surface = {
+				container: new Container(),
+				target: RenderTexture.create({ width, height, resolution: 1 }),
+				width,
+				height,
+			};
+			this.groups.set(node.id, surface);
+		} else if (surface.width !== width || surface.height !== height) {
+			surface.target.resize(width, height);
+			surface.width = width;
+			surface.height = height;
 		}
-		this.videos.idle(usedVideos);
-		this.syncAudio(plan, frame, mode.playing);
-		app.render();
-		// A frame evicted from the decode cache is closed only after the render
-		// that may have read it.
-		this.decoder.sweep();
-		this.publishDecode();
-		this.markDrawn(frame);
+		surface.container.scale.set(k);
+		const outer = this.scene;
+		const outerClear = this.clearsToAlpha;
+		this.scene = {
+			scale: k,
+			width: node.layer.group.width,
+			height: node.layer.group.height,
+		};
+		// The surface of a group starts transparent, so a blend inside it reads a backdrop that is not
+		// opaque whatever the project background (VV-268).
+		this.clearsToAlpha = true;
+		let drawn: number;
+		try {
+			drawn = this.drawLevel(
+				surface.container,
+				node.children,
+				frame,
+				decoding,
+				usedVideos,
+				used,
+				mode,
+				info,
+			);
+		} finally {
+			this.scene = outer;
+			this.clearsToAlpha = outerClear;
+		}
+		if (drawn === 0) {
+			// Nothing of it is drawn: the entry and the texture are dropped at the
+			// end of the frame, as for a layer that left.
+			return null;
+		}
+		used.add(node.id);
+		app.renderer.render({
+			container: surface.container,
+			target: surface.target,
+			clear: true,
+			clearColor: [0, 0, 0, 0],
+		});
+		this.noteApproximateGroup();
+		return surface.target;
+	}
+
+	// The diagnostic line of this executor (SDD-013 section 4.7.1): a group is
+	// drawn, but not as the renderer of the export draws it.
+	private noteApproximateGroup(): void {
+		if (this.canvas?.getAttribute("data-groups") === "approximate") return;
+		this.canvas?.setAttribute("data-groups", "approximate");
+		if (this.groupsNoted) return;
+		this.groupsNoted = true;
+		console.info(
+			"preview: a composition drawn as one unit is drawn approximately by the PixiJS executor; the renderer executor draws it as the export does",
+		);
+	}
+
+	// A frame with a layer whose blend reads the pixels drawn so far needs the back buffer on WebGL (VV-268);
+	// the others skip its extra full-frame copy. WebGPU reads them without it.
+	private setBackdrop(app: Application, on: boolean): void {
+		const renderer = app.renderer;
+		if (!("backBuffer" in renderer)) return;
+		renderer.backBuffer.useBackBuffer = on;
+		// PixiJS copies the back buffer onto the canvas with its source-over blend and does not clear the
+		// canvas first: over a clear background, a canvas that keeps its pixels (the end-to-end build, or two
+		// renders before the browser composites) would show the frame before under this one.
+		if (on && this.clearsToAlpha) {
+			renderer.renderTarget.bind({
+				target: renderer.view.renderTarget,
+				clear: true,
+				clearColor: [0, 0, 0, 0],
+			});
+		}
 	}
 
 	// What the page shows about the decode path, for the end-to-end specs: the
@@ -652,7 +890,7 @@ export class PixiExecutor implements PreviewExecutor {
 		sprite.scale.y = mirror.y * Math.abs(sprite.scale.y);
 		sprite.angle = g.rotation;
 		entry.holder.alpha = valueAt(layer.opacity, frame, layer.first);
-		entry.holder.blendMode = pixiBlendMode(layer.blend);
+		entry.holder.blendMode = pixiBlendMode(layer.blend, this.clearsToAlpha);
 		this.applyFilters(entry, layer, g, frame, info);
 		// Under the picture, on the holder, so the mask cuts all three together.
 		this.applyShadowOutline(entry, layer, g);
@@ -676,8 +914,8 @@ export class PixiExecutor implements PreviewExecutor {
 		const gradeOn = this.gradeFilter(entry, media?.grade);
 		const lutOn = this.lutFilter(entry, media?.lut, info);
 		entry.look = this.matrixFilter(entry.look, media?.filter ?? null);
-		// The blur is in project pixels; the stage scale is the output scale.
-		const sigma = (media?.blur ?? 0) * this.stage.scale.x;
+		// The blur is in project pixels; the scale of the scene is the output scale.
+		const sigma = (media?.blur ?? 0) * this.scene.scale;
 		if (sigma > 0) {
 			entry.blur ??= new BlurFilter();
 			entry.blur.strength = sigma;
@@ -688,10 +926,10 @@ export class PixiExecutor implements PreviewExecutor {
 		// and the opacity and the blend of the sprite come after it (SDD-004 3.9).
 		this.applyMask(entry, layer, g, frame);
 		const passes = effectPasses(layer, frame, {
-			scale: this.stage.scale.x,
+			scale: this.scene.scale,
 			rotation: g.rotation,
-			frameWidth: info.width,
-			frameHeight: info.height,
+			frameWidth: this.scene.width,
+			frameHeight: this.scene.height,
 		});
 		const used = [...passes.before, ...passes.after];
 		this.sizeFx(entry, used.length);
@@ -736,7 +974,7 @@ export class PixiExecutor implements PreviewExecutor {
 			holder.filterArea = undefined;
 			return;
 		}
-		const scale = this.stage.scale.x;
+		const scale = this.scene.scale;
 		const grow = passes.reduce((sum, pass) => sum + pass.padding, 0);
 		const halfW = (g.w * scale) / 2;
 		const halfH = (g.h * scale) / 2;
@@ -785,7 +1023,7 @@ export class PixiExecutor implements PreviewExecutor {
 			this.dropMask(entry);
 			return;
 		}
-		const scale = this.stage.scale.x;
+		const scale = this.scene.scale;
 		const w = Math.max(1, Math.round(g.w * scale));
 		const h = Math.max(1, Math.round(g.h * scale));
 		const key = `${JSON.stringify(mask)}|${w}|${h}|${scale}`;
@@ -849,7 +1087,7 @@ export class PixiExecutor implements PreviewExecutor {
 			this.dropShadowOutline(entry);
 			return;
 		}
-		const scale = this.stage.scale.x;
+		const scale = this.scene.scale;
 		const key = this.shadowCacheKey(
 			entry.sprite.texture,
 			layer,
@@ -1148,7 +1386,11 @@ export class PixiExecutor implements PreviewExecutor {
 			return null;
 		}
 		if (layer.asset_kind === "image" || !decoding.has(layer.item)) {
-			return this.still(info.projectId, layer, frame);
+			return this.still(
+				this.owners.of(layer.asset, info.projectId),
+				layer,
+				frame,
+			);
 		}
 		const decoded = this.decodedTexture(layer, frame, mode, info);
 		if (decoded !== "fallback") return decoded;
@@ -1302,7 +1544,13 @@ export class PixiExecutor implements PreviewExecutor {
 		if (cached !== undefined) return cached;
 		const image = this.stillImages.get(layer.asset);
 		if (image !== undefined) {
-			const texture = this.textureOfStill(image, layer.asset, crop);
+			const source = this.sizes.of(
+				layer.asset,
+				projectId,
+				this.info?.projectId ?? projectId,
+			);
+			if (source === undefined) return null;
+			const texture = this.textureOfStill(image, source, crop);
 			this.stills.set(key, texture);
 			return texture;
 		}
@@ -1323,10 +1571,9 @@ export class PixiExecutor implements PreviewExecutor {
 
 	private textureOfStill(
 		image: HTMLImageElement,
-		asset: string,
+		source: SourceSize | null,
 		crop: [number, number, number, number],
 	): Texture {
-		const source = this.sources(asset);
 		const rect = stillFrameRect(
 			crop,
 			image.naturalWidth,
@@ -1365,15 +1612,22 @@ export class PixiExecutor implements PreviewExecutor {
 		for (const audio of plan.audio) {
 			if (frame < audio.first || frame > audio.last) continue;
 			inUse.add(audio.item);
+			// An item with a processed sound plays its file once there is one for
+			// the playhead, and the proxy until then (SDD-004 section 7.1).
+			const processed = this.processedAudio.resolve(audio, frame);
 			const entry = this.sounds.acquire(
 				audio.item,
-				proxyUrl(this.owners.of(audio.asset, info.projectId), audio.asset),
+				processed?.url ??
+					proxyUrl(this.owners.of(audio.asset, info.projectId), audio.asset),
 			);
 			if (entry.gain !== null) {
 				entry.gain.gain.value = valueAt(audio.gain, frame, audio.first);
 			}
 			const element = entry.element;
-			const drive = audioDrive(audio, frame, info.fps);
+			const drive =
+				processed === null
+					? audioDrive(audio, frame, info.fps)
+					: processedDrive(frame, processed.zero, info.fps);
 			element.playbackRate = drive.rate;
 			if (!playing || drive.silent) {
 				element.pause();
@@ -1385,6 +1639,7 @@ export class PixiExecutor implements PreviewExecutor {
 			if (element.paused) void element.play().catch(() => undefined);
 		}
 		this.sounds.idle(inUse);
+		setProcessedAudioStates(this.processedAudio.states());
 	}
 }
 

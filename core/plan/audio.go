@@ -75,6 +75,9 @@ type SpeedRamp struct {
 	Points     []timeline.SpeedPoint `json:"points"`
 	ItemFrames int                   `json:"item_frames"`
 	FirstFrame int                   `json:"first_frame"`
+	// TimeScale is the speed of the composition items the source sits in (SDD-004 §7, epic 53): the frames of the
+	// item that carries the curve pass at TimeScale times the rate of the output. Absent means 1.
+	TimeScale *timeline.Rational `json:"time_scale,omitempty"`
 }
 
 // curveOf is the ramp of an item whose window starts at timeline frame cs, or nil when its speed is constant.

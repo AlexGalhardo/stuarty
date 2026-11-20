@@ -207,7 +207,7 @@ func TestImageLUTExportFailsWithoutTheTable(t *testing.T) {
 }
 
 // In network mode a table can only be used by a user who holds it, as an image can only be used by one who holds it.
-func TestSecurity_T68_LookupTableOfAnotherUserIsNotUsable(t *testing.T) {
+func TestSecurity_T93_LookupTableOfAnotherUserIsNotUsable(t *testing.T) {
 	s, ws := newImageService(t)
 	holdLUT(t, s, ws)
 	holdAsset(s, "carol")
@@ -265,10 +265,10 @@ func TestSecurity_T68_LookupTableOfAnotherUserIsNotUsable(t *testing.T) {
 	}
 }
 
-// TestSecurity_T69_LookupTableIsNamedByHashNeverByPath: a table is named by a content hash only. A path, or a hash
+// TestSecurity_T94_LookupTableIsNamedByHashNeverByPath: a table is named by a content hash only. A path, or a hash
 // with a separator, is refused when the key is set and again when the path of the artifact is built, and the name
 // of the file (a label) never reaches the path.
-func TestSecurity_T69_LookupTableIsNamedByHashNeverByPath(t *testing.T) {
+func TestSecurity_T94_LookupTableIsNamedByHashNeverByPath(t *testing.T) {
 	s, ws := newImageService(t)
 	holdLUT(t, s, ws)
 

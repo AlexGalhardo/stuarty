@@ -90,13 +90,7 @@ test.describe("dashboard-navigation", () => {
 				const problems: string[] = [];
 				page.on("console", (message) => {
 					if (message.type() !== "error") return;
-					// The thumbnails of the projects page ask the frame endpoint for every
-					// project, and the workspace of the suite holds hundreds, so the
-					// heavy limit answers 429. That is the content of the projects page
-					// (epic 06), not of the dashboard: only that URL is let through.
-					const url = message.location().url;
-					if (/\/api\/v1\/projects\/prj_\w+\/frame\?/.test(url)) return;
-					problems.push(`${message.text()} ${url}`);
+					problems.push(`${message.text()} ${message.location().url}`);
 				});
 				page.on("pageerror", (error) => problems.push(error.message));
 				await page.addInitScript(

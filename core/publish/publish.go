@@ -12,6 +12,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/AlexGalhardo/stuarty/core/export"
+	"github.com/AlexGalhardo/stuarty/core/writing"
 )
 
 // Visibility is who may watch a published video.
@@ -30,6 +31,8 @@ const (
 	NetworkYouTube   = "youtube"
 	NetworkInstagram = "instagram"
 	NetworkFacebook  = "facebook"
+	NetworkX         = "x"
+	NetworkTikTok    = "tiktok"
 )
 
 // Invisible says whether r is a character that shows nothing or changes the direction of the text around
@@ -130,6 +133,12 @@ type Limits struct {
 	HashtagsMax int `json:"hashtags_max,omitempty"`
 	// DailyPosts is how many posts the network lets the API publish in a moving 24 hours; zero is not stated.
 	DailyPosts int `json:"daily_posts,omitempty"`
+	// CaptionNetwork is the id of the network in the table of limits of SDD-019 whose count (the weighted
+	// length of X, a link weighing 23) decides the length of the caption; empty for the plain counts above.
+	CaptionNetwork string `json:"caption_network,omitempty"`
+	// NoCaption is true when the network takes no text with the file (the draft of TikTok): the title is only
+	// the name the post has in Stuarty, and its description and tags are not sent, so no limit is checked on them.
+	NoCaption bool `json:"no_caption,omitempty"`
 	// Source is the official page the limits come from and Read the date it was read.
 	Source string `json:"source"`
 	Read   string `json:"read"`
@@ -204,21 +213,8 @@ func Validate(p Post, l Limits) []Issue {
 		textIssues("title", title, l.Forbidden, add)
 	}
 
-	if len(p.Description) > l.DescriptionMaxBytes {
-		add("description", CodeTooLong, "the description has more than %d bytes.", l.DescriptionMaxBytes)
-	} else {
-		textIssues("description", p.Description, l.Forbidden, add)
-	}
-
-	if TagChars(p.Tags) > l.TagsMaxChars {
-		add("tags", CodeTooLong, "the tags take more than %d characters, commas included.", l.TagsMaxChars)
-	}
-
-	for i, t := range p.Tags {
-		if strings.TrimSpace(t) == "" || strings.ContainsFunc(t, unicode.IsControl) ||
-			strings.ContainsFunc(t, Invisible) {
-			add(fmt.Sprintf("tags[%d]", i), CodeInvalid, "a tag is empty or has a control character.")
-		}
+	if !l.NoCaption {
+		textFieldIssues(&p, &l, add)
 	}
 
 	if v := p.EffectiveVisibility(); !slices.Contains(l.Visibilities, v) {
@@ -252,6 +248,26 @@ func Validate(p Post, l Limits) []Issue {
 	}
 
 	return out
+}
+
+// textFieldIssues checks the description and the tags, the text a network sends with the video.
+func textFieldIssues(p *Post, l *Limits, add adder) {
+	if len(p.Description) > l.DescriptionMaxBytes {
+		add("description", CodeTooLong, "the description has more than %d bytes.", l.DescriptionMaxBytes)
+	} else {
+		textIssues("description", p.Description, l.Forbidden, add)
+	}
+
+	if TagChars(p.Tags) > l.TagsMaxChars {
+		add("tags", CodeTooLong, "the tags take more than %d characters, commas included.", l.TagsMaxChars)
+	}
+
+	for i, t := range p.Tags {
+		if strings.TrimSpace(t) == "" || strings.ContainsFunc(t, unicode.IsControl) ||
+			strings.ContainsFunc(t, Invisible) {
+			add(fmt.Sprintf("tags[%d]", i), CodeInvalid, "a tag is empty or has a control character.")
+		}
+	}
 }
 
 // Caption is the text a network that has no title shows with a video: the title, the description and the
@@ -297,6 +313,19 @@ func Hashtags(text string) int {
 }
 
 func captionIssues(p *Post, l *Limits, add adder) {
+	if l.CaptionNetwork != "" && !l.NoCaption {
+		for _, pr := range writing.ValidateCaption(Caption(p), l.CaptionNetwork).Problems {
+			if pr.Code == writing.ProblemTooLong {
+				add(
+					"description",
+					CodeTooLong,
+					"the caption (the title, the description and the tags as hashtags): %s.",
+					pr.Message,
+				)
+			}
+		}
+	}
+
 	if l.CaptionMax == 0 && l.HashtagsMax == 0 {
 		return
 	}
@@ -440,17 +469,20 @@ const (
 	StateProcessing      State = "processing"
 	StatePublished       State = "published"
 	StateFailed          State = "failed"
+	// StateSentAsDraft is a file the network took as a draft in the person's own app, to be finished and
+	// published there (TikTok, SDD-020 section 38). It is not published.
+	StateSentAsDraft State = "sent_as_draft"
 )
 
 var moves = map[State][]State{
 	StatePrepared:        {StateWaitingApproval},
 	StateWaitingApproval: {StateUploading, StateFailed},
-	StateUploading:       {StateProcessing, StatePublished, StateFailed},
-	StateProcessing:      {StatePublished, StateFailed},
+	StateUploading:       {StateProcessing, StatePublished, StateSentAsDraft, StateFailed},
+	StateProcessing:      {StatePublished, StateSentAsDraft, StateFailed},
 }
 
 // Can says whether a publication may move from one state to another. A final state moves nowhere.
 func Can(from, to State) bool { return slices.Contains(moves[from], to) }
 
 // Final says whether a state is the end of a publication.
-func (s State) Final() bool { return s == StatePublished || s == StateFailed }
+func (s State) Final() bool { return s == StatePublished || s == StateSentAsDraft || s == StateFailed }

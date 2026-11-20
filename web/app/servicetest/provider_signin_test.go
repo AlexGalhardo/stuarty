@@ -678,10 +678,15 @@ func TestSignInChatGPTConnectionGeneratesNoImageAndNoVoice(t *testing.T) {
 		ProjectID: se.prj, ConnectionID: done.ConnectionID, VoiceRequest: voiceRequest("Hello.", "mp3"),
 	})
 
-	for name, err := range map[string]error{"an image": ierr, "a voice": verr} {
+	for capability, err := range map[string]error{"image": ierr, "voice": verr} {
 		se2, ok := errors.AsType[*service.Error](err)
 		if !ok || se2.Code != "E_VALIDATION" || se2.Path != "args.connection_id" {
-			t.Errorf("%s through a sign-in = %v, want E_VALIDATION at args.connection_id", name, err)
+			t.Errorf("%s through a sign-in = %v, want E_VALIDATION at args.connection_id", capability, err)
+		}
+
+		// The hint names what was asked for (the same check refuses video, SDD-016 section 12.2).
+		if ok && se2.Hint != "connect the provider with an API key to generate "+capability {
+			t.Errorf("%s through a sign-in: hint %q", capability, se2.Hint)
 		}
 	}
 

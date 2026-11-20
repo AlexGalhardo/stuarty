@@ -95,6 +95,7 @@ import type {
 	SocialConnectRequest,
 	SocialConnectResult,
 	SocialNetworkListResult,
+	SocialPriceRequest,
 	SocialSelectRequest,
 	SystemQuery,
 	SystemResult,
@@ -105,6 +106,7 @@ import type {
 	TemplateSaveRequest,
 	ToolsStatusResult,
 	UserListResult,
+	VideoGenerateRequest,
 	VoiceGenerateRequest,
 	VoiceListResult,
 } from "./types";
@@ -254,6 +256,7 @@ export interface ApiClient {
 	completeSocial(request: SocialCompleteRequest): Promise<SocialAccount>;
 	listSocialAccounts(): Promise<SocialAccountListResult>;
 	selectSocialAccount(request: SocialSelectRequest): Promise<SocialAccount>;
+	setSocialPrice(request: SocialPriceRequest): Promise<SocialAccount>;
 	validatePublish(request: PublishRequest): Promise<PublishValidateResult>;
 	publishNow(request: PublishRequest): Promise<Job>;
 	listActiveProjects(): Promise<ProjectListResult>;
@@ -274,6 +277,7 @@ export interface ApiClient {
 	// for a person; dry_run answers the estimate and writes nothing.
 	generateImage(request: ImageGenerateRequest): Promise<Job>;
 	generateVoice(request: VoiceGenerateRequest): Promise<Job>;
+	generateVideo(request: VideoGenerateRequest): Promise<Job>;
 	listVoices(connectionId: string): Promise<VoiceListResult>;
 	// The sign-in to an AI provider (SDD-016 section 12): beginning and completing one are for a person in a
 	// browser session; the list is for anyone who may read connections.
@@ -650,6 +654,8 @@ export function createClient(
 		listSocialAccounts: () => call("GET", "/social/accounts", READ_TIMEOUT_MS),
 		selectSocialAccount: (request) =>
 			call("POST", "/social/select", EDIT_TIMEOUT_MS, request),
+		setSocialPrice: (request) =>
+			call("POST", "/social/price", EDIT_TIMEOUT_MS, request),
 		validatePublish: (request) =>
 			call("POST", "/publish/validate", EDIT_TIMEOUT_MS, request),
 		publishNow: (request) => call("POST", "/publish", EDIT_TIMEOUT_MS, request),
@@ -734,6 +740,8 @@ export function createClient(
 			call("POST", "/image/generate", EDIT_TIMEOUT_MS, request),
 		generateVoice: (request) =>
 			call("POST", "/voice/generate", EDIT_TIMEOUT_MS, request),
+		generateVideo: (request) =>
+			call("POST", "/video/generate", EDIT_TIMEOUT_MS, request),
 		listVoices: (connectionId) =>
 			call(
 				"GET",

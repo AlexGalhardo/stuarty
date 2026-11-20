@@ -922,8 +922,8 @@ type Range struct {
 ```go
 type JobStartRequest struct {
 	ProjectID  string          `json:"project_id"`
-	Kind       string          `json:"kind"` // "export" | "transcribe" | "text.generate" | "image.generate" | "voice.generate" (ingest and frame jobs are internal)
-	Args       json.RawMessage `json:"args,omitempty"` // one object, validated by Kind: ExportArgs, TranscribeArgs or the arguments of text.generate, image.generate and voice.generate (SDD-016 sections 6 and 6.1); an unknown member is E_VALIDATION with path args.<name>
+	Kind       string          `json:"kind"` // "export" | "transcribe" | "text.generate" | "image.generate" | "voice.generate" | "video.generate" | "image.edit" (ingest and frame jobs are internal)
+	Args       json.RawMessage `json:"args,omitempty"` // one object, validated by Kind: ExportArgs, TranscribeArgs or the arguments of text.generate, image.generate, voice.generate, video.generate and image.edit (SDD-016 sections 6, 6.1, 6.4 and 6.5); an unknown member is E_VALIDATION with path args.<name>
 	WaitMS     int             `json:"wait_ms,omitempty"` // default 0; 0 to 25000
 	DryRun     bool            `json:"dry_run,omitempty"` // runs the lint gate and limits, queues nothing
 }
@@ -965,10 +965,10 @@ type Job struct {
 	ProjectID  *string    `json:"project_id"` // null for an ingest job: it belongs to the file, which projects may share
 	State      string     `json:"state"` // queued | waiting_approval | running | succeeded | failed | cancelled; waiting_approval: a kind that needs approval waits for a person or a rule (SDD-015 §5)
 	ApprovalID string     `json:"approval_id,omitempty"` // the approval request of a job of a kind that needs approval (SDD-015 §5)
-	Estimate   *Money     `json:"estimate,omitempty"` // text.generate, image.generate and voice.generate: the cost estimated before it runs, on the job from the moment it exists (SDD-016 §6, §6.1)
+	Estimate   *Money     `json:"estimate,omitempty"` // text.generate, image.generate, voice.generate and video.generate: the cost estimated before it runs, on the job from the moment it exists (SDD-016 §6, §6.1)
 	Progress   float64    `json:"progress"` // 0 to 1
 	Message    string     `json:"message,omitempty"`
-	Result     *JobResult `json:"result,omitempty"` // export, transcribe, text.generate, image.generate and voice.generate only; an ingest job has no result member (its outcome is the asset state, MediaList)
+	Result     *JobResult `json:"result,omitempty"` // export, transcribe, text.generate, image.generate, voice.generate and video.generate only; an ingest job has no result member (its outcome is the asset state, MediaList)
 	Error      *Error     `json:"error,omitempty"` // set when State is "failed" and when it is "cancelled" (E_CANCELLED); E_INGEST_FAILED, E_EXPORT_FAILED, E_VERIFY_FAILED, E_TRANSCRIBE_FAILED and E_CANCELLED travel here with HTTP status 200
 	Lint       *LintTotals `json:"lint,omitempty"` // export: totals at the pinned revision (warnings only: errors refuse the start)
 	Warnings   []string    `json:"warnings,omitempty"` // export: notes about an accepted start, not a reason to refuse it; a GIF whose typical size is over 25 MB says its estimated size (VV-056)
@@ -982,7 +982,7 @@ type JobResult struct { // exactly one member is set
 	Export     *ExportResult     `json:"export,omitempty"`
 	Transcribe *TranscribeResult `json:"transcribe,omitempty"`
 	Text       *TextResult       `json:"text,omitempty"` // text.generate: the text (untrusted), the model, the tokens and the real cost (SDD-016 section 6)
-	Generated  *GeneratedResult  `json:"generated,omitempty"` // image.generate and voice.generate: the assets stored (asset id, hash, kind, bytes, state, the revised prompt as untrusted text), requested and delivered, notes, the real cost (SDD-016 section 6.1)
+	Generated  *GeneratedResult  `json:"generated,omitempty"` // image.generate, voice.generate and video.generate: the assets stored (asset id, hash, kind, bytes, state, the revised prompt as untrusted text), requested and delivered, notes, the real cost (SDD-016 section 6.1)
 }
 type ExportResult struct {
 	Revision    int64        `json:"revision"`
@@ -1211,6 +1211,7 @@ Fields:
 | text detail | `"<first 10 characters>"` in compact form (§3.1), `…` inside the quotes when truncated |
 | caption detail | `<n>w`, the number of words. No text: the full view has the words |
 | shape detail | `<shape> <width>x<height>` |
+| composition detail | `<prj id>` of the nested timeline, then ` x<speed>` when speed is not 1, as for a clip (epic 53) |
 | flags | space separated, in this order: `tin:<kind>`, `tout:<kind>`, `kf:<n>` (number of animated properties), `vol:<volume>` when not 1, `muted` (`audio_muted`), on a clip `grade:<adjustment><value>,...` (the adjustments among bri, con, sat, temp, tint and hue that are not neutral), `hsl:<bands>`, `wheels`, `curves` and `lut:<asset>[@<intensity>]` (intensity when not 1), `slot:<name>`, `unfilled` (required slot not filled) |
 | asset line | `<ast id> <kind> <duration cell without +> <width>x<height>` for video, `<ast id> audio <duration cell>` for audio, `<ast id> image <width>x<height>` for an image, then ` audio` when a video has audio. The name is not printed (the full view prints it) |
 
@@ -1597,8 +1598,8 @@ Tool and Service mapping, scope and annotations (annotations are hints and clien
 | `media_inspect` | `MediaInspect` (with `asset_id`), `MediaList` (without) | read | true | n/a | true | false |
 | `view` | `ViewFrame`, `ViewSheet`, `AudioMeasure` (`mode` audio) | read | true | n/a | true | false |
 | `lint` | `Lint`, `ExportCheck` (with `preset`) | read | true | n/a | true | false |
-| `job_start` | `JobStart`, `ExportBatch` (`kind` `export_batch`) | render (export, export_batch), media (transcribe) | false | false | false | false |
-| `job_get` | `JobGet` (with `job_id`), `JobList` (with `project_id` and no `job_id`) | read | true | n/a | true | false |
+| `job_start` | `JobStart`, `ExportBatch` (`kind` `export_batch`), `PublishNow` (`kind` `publish.upload`, D-093) | render (export, export_batch, publish.upload), media (transcribe) | false | false | false | false |
+| `job_get` | `JobGet` (with `job_id`; also `PublishStatus`), `JobList` (with `project_id` and no `job_id`), `ApprovalGet` (with `approval_id`), `ApprovalList` (with `approvals`; D-093) | read | true | n/a | true | false |
 | `job_cancel` | `JobCancel` | render, or media for the caller's own `transcribe` or `ingest` job | false | false | true | false |
 | `template` | `TemplateList`, `TemplateSave`, `TemplateInstantiate`, `TemplateExport`, `TemplateImport` | read (list, export), edit (the others) | false | false | false | false |
 | `font_import` | `FontImport` | media | false | false | true | false |
@@ -2779,7 +2780,7 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
 ```json
 {
   "name": "job_start",
-  "description": "Start long work; args by kind. export renders a workspace file: {start?, end?, format?, at? (the png frame), preset?, codec?}; export_batch: items (export args) in turn; transcribe: {asset_id, language?, model?}; text.generate: {connection_id, model, prompt}; image.generate: {connection_id, model, prompt, size?, count?}; voice.generate: {connection_id, model, text, voice, format?}; text.draft: {item_id, connection_id, model, instruction}; a person approves. Poll job_get.",
+  "description": "Start long work; args by kind. export: args properties (at: png frame); export_batch: items (export args); transcribe {asset_id, language?, model?}; publish.upload {connection_id, export (job_id), title, made_for_kids, thumbnail?, description?, tags?, visibility?, ai_disclosure?}; with connection_id, model: text.generate {prompt}; image.generate {prompt, size?, count?}; voice.generate {text, voice, format?}; image.edit {image_id, operation, layer_id?, prompt?}; text.draft {item_id, instruction}; video.generate {prompt, seconds?, aspect?, first_frame?}. A person approves; poll job_get.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -2799,7 +2800,10 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
           "text.generate",
           "image.generate",
           "voice.generate",
-          "text.draft"
+          "text.draft",
+          "image.edit",
+          "video.generate",
+          "publish.upload"
         ]
       },
       "args": {
@@ -2916,12 +2920,14 @@ job_4h8k2m6p9t export succeeded 100% file=/home/ana/.stuarty/exports/prj_7k2m9x4
 ```json
 {
   "name":"job_get",
-  "description":"A job's state, progress, result (job_id). wait_ms: wait up to that many ms for succeeded, failed or cancelled. A succeeded export is verified; its result has the file path. project_id instead of job_id lists its queued, running and recent jobs.",
+  "description":"A job's state, progress, result (job_id). wait_ms: wait up to that many ms for succeeded, failed or cancelled. A succeeded export is verified; its result has the file path. project_id instead of job_id lists its queued, running and recent jobs. approval_id reads a request (job.approval_id), approvals (state) lists them; read only, a person decides.",
   "inputSchema":{
     "type":"object",
     "properties":{
       "job_id":{"type":"string","pattern":"^job_[0-9a-hjkmnp-tv-z]{10}$"},
       "project_id":{"type":"string","pattern":"^prj_[0-9a-hjkmnp-tv-z]{10}$"},
+      "approval_id":{"type":"string","pattern":"^apr_[0-9a-hjkmnp-tv-z]{10}$"},
+      "approvals":{"enum":["pending","approved","rejected","expired","all"]},
       "state":{"enum":["queued","running","succeeded","failed","cancelled","active","all"]},
       "wait_ms":{"type":"integer","minimum":0,"maximum":25000,"default":0}
     },
@@ -3582,7 +3588,7 @@ The tool list stays short while the product grows because a new domain adds **op
 
 **The writing domain (epic 17, SDD-019) adds no tool.** `project_item` serves it with four more values of `action`: `text` (no `item_id`: list the texts of the project, or with `text` make one from `title` and `text_kind`; with `item_id`: read it, or with `text` save a new revision, `revision` being the revision the writer read), `revisions` (`item_id`; `revision` and `until` compare two by paragraph), `revert` (`item_id`, `revision`) and `check` (`network` measures a caption, otherwise `wpm` estimates a script; an `item_id` alone is read as what its kind says). The draft is `job_start` with kind `text.draft` (args `item_id`, `connection_id`, `model`, `instruction`, and optionally `network`, `max_tokens`, `temperature`; a person approves; the project needs no `timeline_id`). To pay for the arguments (`text_kind`, `revision`, `until`, `network`, `wpm`) the tool list gave up no capability: the description of `job_get` lost two words and the budget measured 22,389 of 22,400 bytes. Merged with epics 33, 34, 36 and 10 the list measures 22,685 bytes and the first discovery call 7,565 characters, within the limits raised by the author (D-094: 23,400 bytes, 8,500 characters). `project_item` and `job_start` list `writing` among their domains (`mcp.ToolDomains`). `until` and not `to`: `TestNoOutboundTools` refuses an argument named `to`.
 
-A tool gets `domain` in the epic that registers the first non-video operation behind it, never earlier: every argument costs bytes of every `tools/list` (NFR-020). `lint`, `view`, `job_get` and `job_cancel` wait for such an operation. `job_start` belongs to the `provider` domain too, with no `domain` argument: its `kind` already names the operation, and `text.generate` (epic 09, SDD-016) is a generation of that domain, as are `image.generate` and `voice.generate` (epic 10). The `image` tool of §4.2 stays (the surface is frozen, §9.1); `edit` with `domain` `image` reaches the same `ImageEdit`, so an agent that learned one tool for timelines learns the same call for images.
+A tool gets `domain` in the epic that registers the first non-video operation behind it, never earlier: every argument costs bytes of every `tools/list` (NFR-020). `lint`, `view` and `job_cancel` wait for such an operation. `job_start` belongs to the `provider` domain too, with no `domain` argument: its `kind` already names the operation, and `text.generate` (epic 09, SDD-016) is a generation of that domain, as are `image.generate` and `voice.generate` (epic 10); it belongs to the `publish` domain for `publish.upload` the same way (D-093). `job_get` belongs to the `publish` domain with no `domain` argument either: `approval_id` and `approvals` name the read of the queue, and `PublishStatus` is the job itself (E-6). Its `cursor` and `limit` are CLI and HTTP only, as for `JobList` (S-10): `approvals` answers the first page, 50 requests, the most one submitter can have pending (SDD-015 section 5). The `image` tool of §4.2 stays (the surface is frozen, §9.1); `edit` with `domain` `image` reaches the same `ImageEdit`, so an agent that learned one tool for timelines learns the same call for images.
 
 **No new tool.** The catalogue is still the 20 tools of §4.1: no existing intent fits a new tool better than a `domain` on an existing one, so none is added. A later epic adds a tool only when no intent fits, and writes the reason in this section.
 
@@ -3649,7 +3655,7 @@ A command that needs a project and finds neither `--project` nor the environment
 
 On start the CLI and the stdio MCP server obtain a `Service` with `workspace.Open` of SDD-005 §6.4 (ADR-0008 item 5), in this order:
 
-1. **A remote server.** When `STUARTY_URL` is set, the service is `service/remote` for `<url>/api/v1` with `Authorization: Bearer <key>`, the key coming from `STUARTY_KEY` or `--key-file`. No local file (`runtime.json`, `token`) is read. A missing key, or a key the server refuses, is `E_UNAUTHORIZED` with the hint "set STUARTY_KEY or pass --key-file".
+1. **A remote server.** When `STUARTY_URL` is set, the service is `service/remote` for `<url>/api/v1` with `Authorization: Bearer <key>`, the key coming from `STUARTY_KEY` or `--key-file`. No local file (`runtime.json`, `token`) is read. A missing key, or a key the server refuses, is `E_UNAUTHORIZED` with the hint "set STUARTY_KEY or pass --key-file". The commands that write the local workspace (`token:rotate`, `user:create`, `user:passwd`, `workspace:restore`) refuse instead, with `E_INVALID_STATE` naming `STUARTY_URL` (SDD-005 §6.4, `InProcess`).
 2. **The local owner.** Else read `<workspace>/runtime.json` (`schema`, `pid`, `addr`, `mode`, `started_at`, `version`). When it exists, `addr` is a loopback address and `pid` is alive: `GET /up` (500 ms timeout), then the handshake of SDD-007 §3.8, and only then the local token from `<workspace>/token` is sent, as `Authorization: Bearer <token>`, with the actor label in the header `Stuarty-Client: <label>` (honoured only in local mode, ADR-0019 item 5). A non-loopback `addr` is never sent a token. When `mode` is `network` there is no local token: the command needs `STUARTY_KEY` and fails with `E_UNAUTHORIZED`, hint "set STUARTY_KEY: the owner of this workspace is in network mode". An owner that is alive but does not answer within 10 s (SDD-005 §6.4) is `E_WORKSPACE_LOCKED` (retryable, exit 2, hint "the owner at `<addr>` is not answering; retry in a few seconds").
 3. **No owner.** The process runs the service itself. For a one-shot CLI command: build the full application, take the workspace lock for the duration of the command, run jobs inline (the command returns when the job is final) and release the lock. If another process holds the lock, wait up to 10 s, the one number of SDD-005 §6.4, then `E_WORKSPACE_LOCKED`. For `stuarty mcp`: become the owner (§4.5 rule 3).
 
@@ -3991,6 +3997,7 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `media.lut` | `GET /projects/{id}/media/{asset_id}/lut` | none | none | 200 `application/octet-stream` (the parsed table, SDD-004 §3.6) | read | 409 `E_ASSET_NOT_READY`; 404 `E_NOT_FOUND` for an asset that is not a `lut` |
 | `media.chunks` | `GET /projects/{id}/media/{asset_id}/chunks` | none | none | 200 `application/json` (the chunk index of SDD-011 §4.4.1) | read | 409 `E_ASSET_NOT_READY`; 404 `E_NOT_FOUND` for an asset that has no video proxy, or whose proxy was written before the index existed (import the file again) |
 | `bitmaps.get` | `GET /projects/{id}/bitmaps/{key}` | none | none | 200 `image/png` (rasterized text or shape, by content key) | read | none |
+| `audio_previews.get` | `GET /projects/{id}/audio-previews/{key}` | `from` (a frame of the file, counted from its first: the 2 seconds from it are rendered first) | none | 200 or 206 `audio/wav` (the processed sound of an item before its envelope, SDD-004 §7.1); 202 `{"state":"processing"}` with `Retry-After: 1` while it is rendered | read | 404 `E_NOT_FOUND` for a key the project's plan did not hand out; 400 `E_VALIDATION` for a `from` outside the file; 422 `E_LIMIT` for a file larger than the cache cap, which is never rendered (its windows are); 429 `E_QUEUE_FULL` when too many renders wait |
 | `templates.list` | `GET /templates` | `cursor`, `limit` | none | 200 `TemplateListResult` | read | none |
 | `templates.save` | `POST /templates` | none | `TemplateSaveRequest` | 201 `TemplateResult` | edit | none |
 | `templates.instantiate` | `POST /templates/{id}/instantiate` | none | `{name, fill?, id?, dry_run?}` | 201 `TemplateInstantiateResult` | edit | 422 `E_SLOT` |
@@ -4042,7 +4049,7 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 
 ### 6.5 Binary endpoints
 
-The ten byte-serving routes (`frame`, `sheet`, the export file, `proxy`, `chunks`, `thumbnail`, `strip`, `peaks`, `lut`, `bitmaps`; the template file of §6.3 is served the same way) are served from `OpenFile` (§2.9), all with scope `read` and checked against the project, and written with vukem's `c.File` (`web/response.go` lines 289 to 343), which uses `http.ServeContent`: `Range` requests answer 206, an unsatisfiable range 416, `If-Range` and `If-None-Match` work, and `Accept-Ranges: bytes` is sent. The handler sets `ETag` before the call (stdlib `ServeContent` honours an existing `ETag` header) and `X-Vukem-Revision` where relevant. `OpenFile` returns paths inside the workspace; the filesystem passed to `c.File` is `os.DirFS(<workspace>)`, so a path cannot leave it.
+The eleven byte-serving routes (`frame`, `sheet`, the export file, `proxy`, `chunks`, `thumbnail`, `strip`, `peaks`, `lut`, `bitmaps`, `audio-previews`; the template file of §6.3 is served the same way) are served from `OpenFile` (§2.9), all with scope `read` and checked against the project, and written with vukem's `c.File` (`web/response.go` lines 289 to 343), which uses `http.ServeContent`: `Range` requests answer 206, an unsatisfiable range 416, `If-Range` and `If-None-Match` work, and `Accept-Ranges: bytes` is sent. The handler sets `ETag` before the call (stdlib `ServeContent` honours an existing `ETag` header) and `X-Vukem-Revision` where relevant. `OpenFile` returns paths inside the workspace; the filesystem passed to `c.File` is `os.DirFS(<workspace>)`, so a path cannot leave it.
 
 | Endpoint | Content type | `ETag` | `Cache-Control` | Notes |
 | --- | --- | --- | --- | --- |
@@ -4056,6 +4063,7 @@ The ten byte-serving routes (`frame`, `sheet`, the export file, `proxy`, `chunks
 | `GET /projects/{id}/media/{asset_id}/peaks` | `application/octet-stream` | `"peaks-<asset hash first 16>-<profile version>"` | `private, max-age=86400, immutable` | the peaks file of SDD-011, read whole by the browser; `Range` works |
 | `GET /projects/{id}/media/{asset_id}/lut` | `application/octet-stream` | `"lut-<asset hash first 16>"` | `private, max-age=86400, immutable` | the table of a `lut` asset parsed by `engine/lut` and sent as binary for the preview (SDD-004 §3.6), so the browser parses no text; `OpenFile` builds the body, `Range` and `If-None-Match` work |
 | `GET /projects/{id}/bitmaps/{key}` | `image/png` | `"bmp-<key>"` | `private, max-age=31536000, immutable` (the key is the content hash) | rasterized text or shape (SDD-004); the project in the path is the access check, and the key must come from a plan window of that project (else 404) |
+| `GET /projects/{id}/audio-previews/{key}` | `audio/wav` | `"ap-<file key>"` (the key of the window file for a `from`) | `private, max-age=31536000, immutable` (the key is the content hash) | the processed sound of an item (SDD-004 §7.1, epic 51); the project in the path is the access check, and the key must come from a plan window of that project (else 404). The one route that can answer before the bytes exist: 202 `{"state":"processing"}` with `Retry-After: 1` and no `ETag` (not cached) while the render runs, and 500 `E_INTERNAL` when it failed. With `from`, a window of 2 seconds is rendered first and the header `X-Stuarty-Window: <first>-<last>` says which frames of the file it covers; `Range` works on both |
 
 A frame or sheet is written to the cache (`frames/<project id>/<revision>/`) by the first request and served from it afterwards. In network mode a cached file is served only to a caller allowed to read that project.
 
@@ -4234,8 +4242,8 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `ConnectionCreate` | none (exception E-5: it carries a credential) | `connection:add` | `POST /connections` |
 | `ConnectionRemove` | none (exception E-5) | `connection:remove` | `DELETE /connections/{id}` |
 | `ConnectionTest` | none (exception E-5: it reaches the network) | `connection:test` | `POST /connections/{id}/test` |
-| `ApprovalList` | none (E-6: no tool) | `approval:list` | `GET /approvals` |
-| `ApprovalGet` | none (E-6: no tool) | `approval:show` | `GET /approvals/{id}` |
+| `ApprovalList` | `job_get` (`approvals`, optional `project_id`) | `approval:list` | `GET /approvals` |
+| `ApprovalGet` | `job_get` (`approval_id`) | `approval:show` | `GET /approvals/{id}` |
 | `ApprovalDecide` | none (exception E-6: a person decides) | `approval:decide` | `POST /approvals/{id}/decide` |
 | `ApprovalRuleList` | none | `approval:rule:list` | `GET /approval-rules` |
 | `ApprovalRuleSet` | none (exception E-6) | `approval:rule:set` | `POST /approval-rules` |
@@ -4281,7 +4289,7 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 - **E-3.** `ImageFrame`, `ImageHistory` and `ImageFile` (the reads of the image editor screen, SDD-012 §24.3) are in the same case. `PlanWindow`, `SnapPoints`, `FontList`, `AuditList`, `ProjectBundleExport`, `ProjectBundleImport`, `ProjectOtioExport` and `ProjectOtioImport` serve the UI, the administrator or a file workflow, not an agent editing a project: HTTP, and the CLI command where the table names one, but no MCP tool (SDD-000 §1). An agent that needs the `format` of an export uses the `format` member of `job_start` `args`.
 - **E-4.** `TrashEmpty`, `KeyCreate`, `KeyList` and `KeyRevoke` are HTTP only, with the callers SDD-007 §5.3 allows. `TrashEmpty` is not an MCP tool and not a CLI command (RF-131, ADR-0020 item 2): no agent surface can reach the one operation that deletes data for good.
 - **E-5.** `ConnectionCreate`, `ConnectionRemove` and `ConnectionTest` have a CLI command and a route and no MCP tool: creating takes a credential, which an agent must not handle (RF-137), and testing makes a request to a destination. The tool `connection` lists and reads only (SDD-014 section 10, ADR-0043 item 3).
-- **E-6.** `ApprovalDecide`, `ApprovalRuleSet`, `ApprovalRuleRemove` and `CostCeilingSet` have a CLI command and a route and no MCP tool: a person decides (RF-136, ADR-0032 item 4). The commands exist so that an agent that tries gets `E_PRIVILEGED_SESSION` and its hint; with the local token or a key they always fail, on HTTP, in the CLI and in process, and no tool exists to call. `ApprovalList`, `ApprovalGet`, `ApprovalRuleList` and `CostSummary` are read operations with a command and a route and no tool, because the 18 definitions already use 19,320 of the 19,500 bytes of NFR-020 and a tool of the queue needs about 540: an agent learns the state of its own request from `job_get` (`waiting_approval`, `approval_id`) and reads the queue with `approval:list` or `GET /approvals` (SDD-015 section 10). Epic 09 registered the first kind that needs approval, `text.generate` (SDD-016): it is in the `kind` enum of `job_start`, and the `state` of the `outputSchema` of `job_start` and `job_get` is a plain string (the five-value enum did not list `waiting_approval`, and a list that grows with every state costs bytes of the budget of NFR-020; the states are in SDD-000 section 6).
+- **E-6.** `ApprovalDecide`, `ApprovalRuleSet`, `ApprovalRuleRemove` and `CostCeilingSet` have a CLI command and a route and no MCP tool: a person decides (RF-136, ADR-0032 item 4). The commands exist so that an agent that tries gets `E_PRIVILEGED_SESSION` and its hint; with the local token or a key they always fail, on HTTP, in the CLI and in process, and no tool exists to call. `ApprovalRuleList` and `CostSummary` are read operations with a command and a route and no tool. The queue itself is read through `job_get` (author decision D-093, which brought the read back without a 21st tool, the cap of 20 being full): `approval_id` reads one request (a job in `waiting_approval` carries it) and `approvals` (`pending`, `approved`, `rejected`, `expired`, `all`) lists them, with an optional `project_id`; the service scopes both to the caller's projects, and the summary of a request is untrusted text. `job_get` has no argument that decides: any member other than the ones in its schema is refused, and the decision stays with a person in the browser (SDD-015 section 10). Epic 09 registered the first kind that needs approval, `text.generate` (SDD-016): it is in the `kind` enum of `job_start`, and the `state` of the `outputSchema` of `job_start` and `job_get` is a plain string (the five-value enum did not list `waiting_approval`, and a list that grows with every state costs bytes of the budget of NFR-020; the states are in SDD-000 section 6).
 - **E-7.** The hosted agent chat (SDD-017) has no MCP tool: a hosted agent has no use for the chat of another agent, and a tool that reads a transcript would hand one agent's text to another as instructions. `AgentProfileList`, `ChatSessionList`, `ChatSessionGet` and `ChatTranscriptGet` are reads with a route and a CLI command (`agent:profiles`, `chat:sessions`, `chat:session`, `chat:transcript`). `AgentProfileSet`, `AgentProfileRemove` and the five operations that drive a session are HTTP only, for a person in a browser session (SDD-007 §5.2): they have no CLI command because the person who drives a chat is in the panel, and a command would only exist to answer `E_PRIVILEGED_SESSION`. The event stream `GET /chat/sessions/{id}/events` is not a service operation (SDD-017 §8).
 
 The CLI commands of SDD-000 §1 that are not service operations (`serve`, `mcp`, `open`, `token:rotate`, `user:create`, `user:passwd`, `tools:install`, `agent:docs`) are in §5.4 and have no row here. `MediaList` and `JobList` close the gap SDD-012 §13.2 and Appendix B (B2, B3) left: they are the operations behind the library list and the job list of the UI.
@@ -4462,7 +4470,7 @@ Numbers measured on the reference machine (AMD Ryzen 7 5700X3D, Windows 11, FFmp
 
 | Budget | Measured | Limit |
 | --- | --- | --- |
-| `tools/list` as a client receives it, 20 tools | 21,830 bytes, about 6,821 tokens by the 3.2 characters per token estimate; first discovery call 7,201 characters (`surfacebudget`, epic 13) | at most 23,400 bytes, 8,500 characters (check 2) |
+| `tools/list` as a client receives it, 20 tools | 23,249 bytes, about 7,265 tokens by the 3.2 characters per token estimate; largest definition `job_start` 1,699 bytes, with `image.edit` (epic 30) and `publish.upload` (D-093), the arguments of `export` being the `args` properties of its schema; first discovery call 7,915 characters (`surfacebudget`, D-093) | at most 23,400 bytes, 8,500 characters (check 2) |
 | `tools/list` by the vendor token count | not measured: needs `ANTHROPIC_API_KEY` (`TestToolListVendorTokens`, release only) | at most 7,300 tokens |
 | Concise view of the reference project | 1 page, 11,785 characters | at most 2 pages, cap 12,800 characters (check 7) |
 | Frame and sheet image tokens | `TestViewImageSizeTable` passes for the four presets | frame at most 800, sheet at most 1,500 (check 8) |

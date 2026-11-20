@@ -65,7 +65,7 @@ Epic 29 adds adjustments, filters, masks and blend modes to a layer (sections 2,
 
 ## 3. The catalogue
 
-Twenty-six operations in the registry of domain `image`. The names are in SDD-000 section 1. `text.set` and `shape.set` exist for video with another schema and other code (they take an `item_id`), so the image operations that edit a text or a shape are `layer.set_text` and `layer.set_shape`; the other names did not exist before. Every argument that names a layer is a `lyr_` id; an id that is not in the document is `E_NOT_FOUND`. A locked layer (or one inside a locked group) accepts only `layer.set` (to unlock it, rename it or change its slot) and the commands that read it as a target (`layer.align` to it); any other change is `E_INVALID_STATE`. Every command that adds a layer takes an optional `id` (the caller's id, `E_ID_EXISTS` when taken), an optional `parent` (a group; absent means the top level) and an optional `index` (the position among its siblings, 0 is the bottom; absent means on top) and returns `effective.layer_id`.
+Twenty-seven operations in the registry of domain `image`. The names are in SDD-000 section 1. `text.set` and `shape.set` exist for video with another schema and other code (they take an `item_id`), so the image operations that edit a text or a shape are `layer.set_text` and `layer.set_shape`; the other names did not exist before. Every argument that names a layer is a `lyr_` id; an id that is not in the document is `E_NOT_FOUND`. A locked layer (or one inside a locked group) accepts only `layer.set` (to unlock it, rename it or change its slot) and the commands that read it as a target (`layer.align` to it); any other change is `E_INVALID_STATE`. Every command that adds a layer takes an optional `id` (the caller's id, `E_ID_EXISTS` when taken), an optional `parent` (a group; absent means the top level) and an optional `index` (the position among its siblings, 0 is the bottom; absent means on top) and returns `effective.layer_id`.
 
 | Operation | Arguments (`?` optional) | What it does | Errors |
 | --- | --- | --- | --- |
@@ -81,6 +81,7 @@ Twenty-six operations in the registry of domain `image`. The names are in SDD-00
 | `layer.transform` | `layer_id`, any of `x`, `y`, `w`, `h`, `rotation` | Sets the box and the rotation; a group takes only `x` and `y` | `E_VALIDATION`, `E_NOT_FOUND`, `E_TYPE_MISMATCH`, `E_INVALID_STATE` |
 | `layer.set` | `layer_id`, any of `name`, `opacity`, `visible`, `locked`, `slot` (an empty string removes it) | Sets the common properties; a slot goes only on a text or image layer, and its name is unique | `E_VALIDATION`, `E_NOT_FOUND`, `E_TYPE_MISMATCH`, `E_ID_EXISTS` |
 | `layer.crop` | `layer_id`, `x`, `y`, `w`, `h` or `reset` | Sets the source rectangle of an image layer; the box keeps its size | `E_VALIDATION`, `E_NOT_FOUND`, `E_TYPE_MISMATCH`, `E_OUT_OF_SOURCE`, `E_INVALID_STATE` |
+| `layer.replace_source` | `layer_id`, `asset` | Gives an image layer another file (epic 30, section 3.2), keeping the layer: its id, name, slot, visibility, opacity, rotation, adjustments, filters, mask and blend, and its place | `E_VALIDATION`, `E_NOT_FOUND`, `E_TYPE_MISMATCH`, `E_INVALID_STATE`, `E_LIMIT` |
 | `layer.duplicate` | `layer_id`, `id?`, `name?`, `dx?`, `dy?` | Copies a layer with its whole subtree and new ids, just above the original, offset by `dx` and `dy` (default 0) | `E_NOT_FOUND`, `E_ID_EXISTS`, `E_LIMIT` |
 | `layer.remove` | `layer_id` | Removes a layer and its subtree; undo puts it back | `E_NOT_FOUND`, `E_INVALID_STATE` |
 | `layer.set_text` | `layer_id`, `text?`, `style?` (merged key by key, `null` removes a key), `reset_style?` | Changes the content or the style of a text layer and re-measures its height | `E_VALIDATION`, `E_NOT_FOUND`, `E_TYPE_MISMATCH`, `E_INVALID_STATE`, `E_FONT_UNKNOWN` |
@@ -138,6 +139,16 @@ The filters act on the pixels of the layer in list order (a `shadow` before a `b
 **Masks** (`layer.mask_set` replaces, `layer.mask_clear` removes). A shape mask (`rect`, `rounded_rect`, `ellipse`) is in thousandths of the box of the layer: `x`, `y`, `w`, `h` (0 to 1000, `w` and `h` at least 1, `x + w` and `y + h` at most 1000; the defaults are the whole box: 0, 0, 1000, 1000), `radius` (`rounded_rect` only, 0 to 16384 pixels, default 16, held to half the smaller side when drawn), `feather` (0 to 200 pixels, the soft edge of SDD-004 section 3.9, default 0) and `invert` (default false). A mask of kind `layer` takes `source`, the id of another layer, and `invert`: the layer is drawn only where the source layer has pixels, scaled by the alpha of the source. The source must be an existing layer other than the layer itself, not a group, and without a mask of kind `layer` of its own (so there is no chain and no cycle); it may be hidden, in which case it is not drawn and still gives its shape. `x`, `y`, `w`, `h`, `radius` and `feather` are not valid for kind `layer`, and `source` is valid for it only.
 
 **Blend modes** (`layer.blend`): `normal`, `multiply`, `screen`, `overlay`, `soft_light`, `hard_light`, `darken`, `lighten`, `color_dodge`, `color_burn`, `difference`. The formulas are SDD-013 section 3.11.2.
+
+### 3.2 Replacing the file of a layer (epic 30)
+
+`layer.replace_source` puts the result of an operation with a model (SDD-016 section 6.5) into the layer it was made from, and is useful on its own to swap a photo and keep everything around it. The caller gives the layer and the content hash of a ready image of the workspace (`E_NOT_FOUND`, as `layer.add_image`, when it is not); the layer must be an image layer (`E_TYPE_MISMATCH`) and not locked (`E_INVALID_STATE`); a layer that has no file yet, an empty slot, is filled. The rules are all in `core/image`:
+
+- The layer keeps every property it has except its file and its crop. Its slot stays, so a template slot filled this way is still the slot.
+- **A file of the size of the old one** (the usual answer of an edit) leaves the box and the crop exactly as they were.
+- **Any other size** removes the crop, since its rectangle was in pixels of another file, and decides the box: when the new file has the proportions of the box (whole-number comparison of `w * new_height` with `h * new_width`) the box is as it was; when it has others the box is the largest that fits inside the old box with the proportions of the new file, centred on the centre of the old box, rounded as `layer.fit` `contain` rounds. The layer is never stretched, so a photo whose background was removed, which the provider may return in a shape of its own, stays where the photo was. A layer with no file yet, an empty slot, has no old size and takes this rule.
+- **The table of images** gets the new file, and the old file leaves it when no other layer uses it. The limit of 64 distinct images is judged on the table the document is left with (`E_LIMIT`).
+- `effective` names `layer_id`, the new `box` and `asset`.
 
 ## 4. The batch machinery
 
@@ -255,6 +266,8 @@ Seven operations are added to `service.Service`, each with exactly one MCP actio
 | `ImageUndo`, `ImageRedo` | the actor's last step undone or done again, with the skipped primitives |
 | `ImageExport` | renders and writes a file (section 6), after the lint; returns the path, bytes, digest and size |
 | `ImageImport` | an image file (a `path` on the server, or a library `hash`) becomes a new document with one image layer, or one more layer of `image_id` (section 10.1); returns the id, the revision, the layer and the text view |
+
+`ImageModelEdit` (epic 30) is a ninth operation of another kind: it starts the job `image.edit` that removes the background of a layer, or generates an image into the document, with the provider of a connection, and, when the job is done, commits one batch of section 3 as the actor that asked (SDD-016 section 6.5). It is specified there because it spends money and sends a picture out; the document and its undo are as for any batch of this section.
 
 `CommandHelp` takes an optional `domain` (`video` default, or `image`), so an agent learns the catalogue, the schemas and the examples of the image operations through the same call, and the same flag exists in the CLI (`command:help --domain image`) and the same parameter in the MCP tool and the HTTP query.
 

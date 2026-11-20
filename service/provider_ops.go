@@ -272,7 +272,7 @@ func priceOfRequest(req *ProviderPriceSetRequest) (provider.Price, error) {
 		}
 
 		p.InputMicrosPerMTok, p.OutputMicrosPerMTok = *req.InputMicrosPerMTok, *req.OutputMicrosPerMTok
-	case provider.UnitImage, provider.UnitMChar:
+	case provider.UnitImage, provider.UnitMChar, provider.UnitSecond:
 		if req.UnitMicros == nil || req.InputMicrosPerMTok != nil || req.OutputMicrosPerMTok != nil {
 			return p, newError(command.CodeValidation, "a price per %s gives unit_micros and no token amount.", p.Unit).
 				withPath("unit_micros")
@@ -282,9 +282,10 @@ func priceOfRequest(req *ProviderPriceSetRequest) (provider.Price, error) {
 	default:
 		return p, newError(
 			command.CodeValidation,
-			"the unit must be empty, %s or %s.",
+			"the unit must be empty, %s, %s or %s.",
 			provider.UnitImage,
 			provider.UnitMChar,
+			provider.UnitSecond,
 		).
 			withPath("unit")
 	}

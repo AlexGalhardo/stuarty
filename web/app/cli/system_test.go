@@ -389,6 +389,20 @@ func TestCLIToolsInstall(t *testing.T) {
 		}
 	})
 
+	t.Run("--yes with an unknown helper is refused before any download", func(t *testing.T) {
+		t.Parallel()
+
+		h, s := newSysHarness(t)
+
+		if code := h.run("tools:install", "no-such-helper", "--yes", "--json"); code != ExitFailure || s.installs != 0 {
+			t.Fatalf("exit %d, installs %d", code, s.installs)
+		}
+
+		if doc := decodeOut(t, h); doc["code"] != command.CodeValidation || doc["path"] != "name" {
+			t.Fatalf("document %v", doc)
+		}
+	})
+
 	t.Run("an unknown model lists the ones this build can install", func(t *testing.T) {
 		t.Parallel()
 

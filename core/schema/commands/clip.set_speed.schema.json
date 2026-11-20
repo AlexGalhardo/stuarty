@@ -53,7 +53,7 @@
       "type": "array"
     },
     "item_id": {
-      "description": "A clip of a video asset, or an audio item.",
+      "description": "A clip of a video asset, an audio item, or a composition item.",
       "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
       "type": "string"
     },

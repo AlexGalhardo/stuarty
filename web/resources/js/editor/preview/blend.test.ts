@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { blendChannel, div255, pixiBlendMode } from "./blend";
+import {
+	blendChannel,
+	div255,
+	overAlphaName,
+	pixiBlendMode,
+	readsBackdrop,
+} from "./blend";
 
 // The formulas of SDD-004 section 3.8, opaque source (a = 255) and a source
 // at opacity 128 (premultiplied c = div255(c0 * 128), a = 128).
@@ -43,6 +49,31 @@ describe("blend reference", () => {
 
 	it("maps an absent blend to normal", () => {
 		expect(pixiBlendMode(undefined)).toBe("normal");
-		expect(pixiBlendMode("overlay")).toBe("overlay");
+	});
+
+	it("keeps the fixed-function blend of PixiJS over an opaque canvas", () => {
+		for (const m of ["multiply", "screen", "add"] as const) {
+			expect(pixiBlendMode(m, false)).toBe(m);
+			expect(readsBackdrop(m, false)).toBe(false);
+		}
+		expect(readsBackdrop(undefined, false)).toBe(false);
+	});
+
+	// The overlay of pixi.js/advanced-blend-modes reads the premultiplied source as the straight one, so
+	// at opacity 128 it is not the closed form of SDD-004 section 3.8 (VV-268 review).
+	it("draws overlay with its own filter, which reads the backdrop, on any canvas", () => {
+		expect(pixiBlendMode("overlay")).toBe(overAlphaName("overlay"));
+		expect(pixiBlendMode("overlay", true)).toBe(overAlphaName("overlay"));
+		expect(readsBackdrop("overlay", false)).toBe(true);
+	});
+
+	it("draws the four modes with the general form over a clear canvas (VV-268)", () => {
+		for (const m of ["multiply", "screen", "overlay", "add"] as const) {
+			expect(pixiBlendMode(m, true)).toBe(overAlphaName(m));
+			expect(readsBackdrop(m, true)).toBe(true);
+		}
+		expect(pixiBlendMode(undefined, true)).toBe("normal");
+		expect(pixiBlendMode("normal", true)).toBe("normal");
+		expect(readsBackdrop("normal", true)).toBe(false);
 	});
 });

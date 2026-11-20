@@ -110,7 +110,11 @@ type Service interface {
 	TextGenerate(ctx context.Context, req TextGenerateRequest) (*Job, error)
 	ImageGenerate(ctx context.Context, req ImageGenerateRequest) (*Job, error)
 	VoiceGenerate(ctx context.Context, req VoiceGenerateRequest) (*Job, error)
+	VideoGenerate(ctx context.Context, req VideoGenerateRequest) (*Job, error)
 	VoiceList(ctx context.Context, req VoiceListRequest) (*VoiceListResult, error)
+	// ImageModelEdit removes the background of a layer, or generates an image into a document, with a provider
+	// (SDD-016 section 6.5); a job of a kind that needs approval.
+	ImageModelEdit(ctx context.Context, req ImageModelEditRequest) (*Job, error)
 	// The sign-in to an AI provider in the browser (SDD-016 section 12): only a person begins and completes one.
 	ProviderSignInBegin(ctx context.Context, req ProviderSignInBeginRequest) (*ProviderSignInBeginResult, error)
 	ProviderSignInComplete(ctx context.Context, req ProviderSignInCompleteRequest) (*ProviderSignIn, error)
@@ -218,6 +222,7 @@ type Service interface {
 	SocialConnectComplete(ctx context.Context, req SocialConnectCompleteRequest) (*SocialAccount, error)
 	SocialAccountList(ctx context.Context, req SocialAccountListRequest) (*SocialAccountListResult, error)
 	SocialAccountSelect(ctx context.Context, req SocialAccountSelectRequest) (*SocialAccount, error)
+	SocialPriceSet(ctx context.Context, req SocialPriceSetRequest) (*SocialAccount, error)
 	PublishValidate(ctx context.Context, req PublishValidateRequest) (*PublishValidateResult, error)
 	PublishNow(ctx context.Context, req PublishNowRequest) (*Job, error)
 	PublishStatus(ctx context.Context, req PublishStatusRequest) (*PublishStatusResult, error)
@@ -403,9 +408,11 @@ type svc struct {
 
 	running registry
 	bitmaps bitmaps
-	fonts   *enginestore.Fonts // user fonts of the workspace; nil without one
-	snaps   snapCache
-	sems    map[string]chan struct{}
+	// previews are the processed sounds of the timeline preview that a plan window handed out (SDD-004 section 7.1).
+	previews audioPreviews
+	fonts    *enginestore.Fonts // user fonts of the workspace; nil without one
+	snaps    snapCache
+	sems     map[string]chan struct{}
 
 	// defaultIngest is true when New installed ingest.Run. A substitute ingester
 	// does not touch the runner, so a nil runner is not a missing tool.
@@ -454,13 +461,15 @@ func New(o Options) (Service, error) {
 	s.providers = o.Providers
 
 	kinds, err := registerKinds(append(slices.Clone(o.JobKinds),
-		s.textGenerateKind(), s.imageGenerateKind(), s.voiceGenerateKind(), s.textDraftKind()))
+		s.textGenerateKind(), s.imageGenerateKind(), s.voiceGenerateKind(), s.textDraftKind(),
+		s.videoGenerateKind()))
 	if err != nil {
 		return nil, err
 	}
 
 	s.kinds = kinds
 	s.registerPublishKind()
+	s.registerImageEditKind()
 
 	if s.workspace != "" {
 		s.fonts = enginestore.NewFonts(s.workspace)

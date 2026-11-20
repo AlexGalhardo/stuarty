@@ -306,6 +306,9 @@ func (h *apiHandler) registerAll() {
 	register(h, "bitmaps.get", func(c *web.Ctx, in bitmapIn) (noIn, error) {
 		return h.serveAsset(c, "bitmap", in.ID, in.Key, "")
 	})
+	register(h, "audio_previews.get", func(c *web.Ctx, in audioPreviewIn) (noIn, error) {
+		return h.serveAsset(c, "audio_preview", in.ID, in.Key, in.From)
+	})
 	register(h, "projects.frame", h.projectsFrame)
 	register(h, "projects.sheet", h.projectsSheet)
 	register(h, "projects.motion.brief", h.motionBrief)
@@ -432,6 +435,7 @@ func (h *apiHandler) registerAll() {
 	register(h, "social.complete", h.socialComplete)
 	register(h, "social.accounts", h.socialAccounts)
 	register(h, "social.select", h.socialSelect)
+	register(h, "social.price", h.socialPrice)
 	register(h, "publish.validate", h.publishValidate)
 	register(h, "publish.now", h.publishNow)
 	register(h, "publish.status", h.publishStatus)
@@ -462,6 +466,8 @@ func (h *apiHandler) registerAll() {
 	register(h, "scripts.estimate", h.scriptEstimate)
 	register(h, "image.generate", h.imageGenerate)
 	register(h, "voice.generate", h.voiceGenerate)
+	register(h, "images.model_edit", h.imageModelEdit)
+	register(h, "video.generate", h.videoGenerate)
 	register(h, "voice.list", h.voiceList)
 	register(h, "library.memory.list", h.memoryList)
 	register(h, "library.memory.get", h.memoryGet)
@@ -495,6 +501,7 @@ func (h *apiHandler) registerAll() {
 	register(h, "system.get", h.systemGet)
 	register(h, "audit.list", h.auditList)
 	register(h, "system.launch", h.systemLaunch)
+	register(h, "system.scheduler", h.systemScheduler)
 	register(h, "handshake.get", func(_ *web.Ctx, in handshakeIn) (handshakeOut, error) {
 		if !auth.ValidNonce(in.Nonce) {
 			return handshakeOut{}, &service.Error{
