@@ -2,6 +2,8 @@
 # QA campaigns, test media, results and scripts) live in development/ and stay
 # out of git, by decision of the author (D-036).
 development/
+# A local overview of the state of the project, written for the author.
+/OVERVIEW.md
 # The prompts the author pastes to open a session: the work-session prompt and the
 # prompts for the product icon. Local, in Portuguese, never committed.
 /prompt-workers.md
