@@ -34,7 +34,7 @@ func optFlag(name, value string) []string {
 }
 
 // publicationCommand maps an operation of the calendar to the command that runs it and its arguments (SDD-020
-// section 21).
+// section 29).
 func publicationCommand(s step) (name string, argv []string, stdin string, err error) {
 	switch s.Call {
 	case "PublicationCreate":

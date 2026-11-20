@@ -37,6 +37,7 @@ func (r repos) Images() service.ImageRepo            { return imageRepo(r) }
 func (r repos) Library() library.Index               { return libraryRepo(r) }
 func (r repos) AssetLibrary() assets.Store           { return assetLibraryRepo(r) }
 func (r repos) Publications() publish.Store          { return publicationRepo(r) }
+func (r repos) Chat() agenthost.Store                { return chatRepo(r) }
 
 // nullJSON stores an empty raw message as NULL.
 func nullJSON(m json.RawMessage) any {

@@ -584,6 +584,12 @@ func (s *svc) sendPost(
 		return social.Published{}, s.socialError(werr)
 	}
 
+	if moved {
+		return social.Published{}, newError(
+			command.CodeInvalidState, "the connection no longer publishes to the account that was approved.",
+		).withHint("publish again, and approve the account the connection now names")
+	}
+
 	return pub, nil
 }
 

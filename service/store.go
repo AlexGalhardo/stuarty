@@ -77,6 +77,7 @@ type Repos interface {
 	Library() library.Index
 	AssetLibrary() assets.Store
 	Publications() publish.Store
+	Chat() agenthost.Store
 }
 
 // Tx is a write transaction.

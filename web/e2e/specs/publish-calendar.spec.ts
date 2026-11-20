@@ -14,7 +14,7 @@ import { LAUNCHER_SECRET } from "../support/launcher";
 import { listenWhenFree, SOCIAL_PORT } from "../support/social";
 import { caller, expect, home, test } from "./helpers";
 
-// ADR-0046, ADR-0032, epic 20 (SDD-020 sections 15 to 23): a creator plans a post on the calendar, a person
+// ADR-0046, ADR-0032, epic 20 (SDD-020 sections 23 to 31): a creator plans a post on the calendar, a person
 // approves it, and it goes out at its time. The network is the fake of this spec on loopback, which the server of
 // the suite is told about with STUARTY_TEST_SOCIAL_URL; it records what it receives, so the spec can prove that
 // nothing was sent before the approval and that a post was sent once.

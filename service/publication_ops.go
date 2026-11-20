@@ -16,17 +16,17 @@ import (
 	pub "github.com/AlexGalhardo/stuarty/service/publish"
 )
 
-// KindPublishScheduled is the kind of the approval request of a scheduled post (SDD-020 section 18). A rule
+// KindPublishScheduled is the kind of the approval request of a scheduled post (SDD-020 section 26). A rule
 // the person wrote for this kind approves it without asking.
 const KindPublishScheduled = "publish.scheduled"
 
-// EventPublicationUpdated is the event of a publication that changed (SDD-020 section 21).
+// EventPublicationUpdated is the event of a publication that changed (SDD-020 section 29).
 const EventPublicationUpdated = "publication.updated"
 
 // publicationRefPrefix starts the payload_ref of the request of a target.
 const publicationRefPrefix = "publication:"
 
-// Publication is a publication with its targets (SDD-020 section 15).
+// Publication is a publication with its targets (SDD-020 section 23).
 type Publication = pub.Publication
 
 // PublicationCreateRequest plans a publication; every target starts as a draft.
@@ -305,7 +305,7 @@ func (s *svc) PublicationCancel(ctx context.Context, req PublicationCancelReques
 }
 
 // SchedulerOf returns the publication scheduler of a Service made by New. The server runs it next to the
-// queue workers (SDD-020 section 19); a command that is not a server never does.
+// queue workers (SDD-020 section 27); a command that is not a server never does.
 func SchedulerOf(s Service) (*pub.Scheduler, bool) {
 	v, ok := s.(*svc)
 	if !ok || v.sched == nil {
@@ -550,7 +550,7 @@ func (t *pubTx) Settle(ctx context.Context, targetID string) error {
 	return err
 }
 
-// targetApproved is what approving the request of a target does to the target (SDD-020 section 18).
+// targetApproved is what approving the request of a target does to the target (SDD-020 section 26).
 func (s *svc) targetApproved(ctx context.Context, tx Tx, row *approval.Row) error {
 	if row.JobID != "" {
 		return nil
