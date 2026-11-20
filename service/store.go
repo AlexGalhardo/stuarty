@@ -67,6 +67,7 @@ type Repos interface {
 	Templates() TemplateRepo
 	Backups() BackupRepo
 	Audit() AuditRepo
+	Checkpoints() CheckpointRepo
 	Fonts() FontRepo
 	BrandKit() BrandKitRepo
 	Images() ImageRepo
@@ -317,6 +318,31 @@ type OperationRepo interface {
 	CloseOpenRedo(ctx context.Context, projectID, actor string, by int64) error
 	// CloseAllOpen closes every open row of the project (a migration or import ends all undo chains).
 	CloseAllOpen(ctx context.Context, projectID string, by int64) error
+}
+
+// CheckpointRow is a name and a note on a revision of a timeline (SDD-005 section 5.14).
+type CheckpointRow struct {
+	ProjectID string
+	Name      string
+	Note      string
+	Revision  int64
+	Actor     string
+	Auto      bool
+	AtMs      int64
+}
+
+// CheckpointRepo stores the checkpoints of a timeline. No method touches the log.
+type CheckpointRepo interface {
+	Create(ctx context.Context, row CheckpointRow) error // ErrExists on a duplicate name
+	Get(ctx context.Context, projectID, name string) (CheckpointRow, error)
+	// List returns the checkpoints of the project, newest revision first, then by name.
+	List(ctx context.Context, projectID string) ([]CheckpointRow, error)
+	// Rename changes the name, and the note when note is not nil, and makes the checkpoint a named one (Auto
+	// false). ErrNotFound; ErrExists on a taken name.
+	Rename(ctx context.Context, projectID, name, newName string, note *string) error
+	Remove(ctx context.Context, projectID, name string) error // ErrNotFound
+	// TrimAuto removes the oldest automatic checkpoints until at most keep remain.
+	TrimAuto(ctx context.Context, projectID string, keep int) error
 }
 
 // Idempotency

@@ -1028,11 +1028,26 @@
           "add": {
             "title": "Adicionar áudio"
           },
+          "apply_preset": {
+            "title": "Aplicar um preset de áudio"
+          },
           "duck": {
             "title": "Baixar a música sob a fala"
           },
           "mark_beats": {
             "title": "Marcar batidas"
+          },
+          "processor_add": {
+            "title": "Adicionar um processador de áudio"
+          },
+          "processor_move": {
+            "title": "Mover um processador de áudio"
+          },
+          "processor_remove": {
+            "title": "Remover um processador de áudio"
+          },
+          "processor_set": {
+            "title": "Alterar um processador de áudio"
           }
         },
         "caption": {
@@ -1297,7 +1312,9 @@
         "L_AUDIO_CLIP": "Áudio saturado",
         "L_LOUDNESS": "Volume fora do alvo",
         "L_DURATION_LIMIT": "Acima do limite de duração",
-        "L_ALPHA_MISSING": "Transparência declarada, mas ausente"
+        "L_ALPHA_MISSING": "Transparência declarada, mas ausente",
+        "L_AUDIO_LIMITER_NOT_LAST": "O limitador não é o último da cadeia",
+        "L_AUDIO_NOISE_REDUCTION_REPEATED": "Mais de uma redução de ruído"
       },
       "shortcuts": {
         "title": "Atalhos de teclado",
@@ -1509,6 +1526,69 @@
           "other": "{count} marcadores"
         },
         "beats_apply": "Marcar batidas"
+      },
+      "processors": {
+        "title": "Processadores de áudio",
+        "empty": "Nenhum processador ainda. Adicione um ou aplique um preset.",
+        "preset_label": "Predefinição",
+        "preset_apply": "Aplicar predefinição",
+        "presets": {
+          "voice": "Voz",
+          "voice_with_music": "Voz com música",
+          "podcast": "Podcast de voz",
+          "clean_noisy_room": "Limpar um ambiente com ruído"
+        },
+        "add_kind": "Processador",
+        "add": "Adicionar processador",
+        "kind": {
+          "eq": "Equalizador",
+          "compressor": "Compressor de dinâmica",
+          "limiter": "Limitador",
+          "gate": "Gate de ruído",
+          "deesser": "Redutor de sibilância",
+          "noise_reduction": "Redução de ruído"
+        },
+        "enabled": "Ligado",
+        "move_up": "Subir",
+        "move_down": "Descer",
+        "remove": "Remover",
+        "params": "Parâmetros",
+        "param": {
+          "hp_hz": "Frequência do passa-altas (0 desliga)",
+          "lp_hz": "Frequência do passa-baixas (0 desliga)",
+          "threshold_db": "Limiar",
+          "ratio": "Razão",
+          "attack_ms": "Ataque",
+          "release_ms": "Liberação",
+          "knee_db": "Joelho",
+          "makeup_db": "Ganho de compensação",
+          "ceiling_db": "Teto",
+          "range_db": "Faixa",
+          "hold_ms": "Espera",
+          "frequency_hz": "Frequência",
+          "strength": "Intensidade",
+          "profile_start_ms": "Início do perfil de ruído (0 é automático)",
+          "profile_end_ms": "Fim do perfil de ruído"
+        },
+        "band": {
+          "hz": "Frequência da banda {n}",
+          "gain_db": "Ganho da banda {n}",
+          "q": "Largura da banda {n} (Q)"
+        },
+        "measure": "Medir o som",
+        "measuring": "Medindo...",
+        "measure_failed": "Não foi possível medir o som.",
+        "before": "Antes",
+        "after": "Depois",
+        "loudness": "Volume",
+        "true_peak": "Pico real",
+        "noise_floor": "Nível de ruído",
+        "speech_to_noise": "Fala sobre ruído",
+        "no_level": "nenhum",
+        "listen": "Ouvir o som processado",
+        "rendering": "Gerando o som...",
+        "listen_failed": "Não foi possível gerar o som.",
+        "player": "Som processado"
       },
       "markers": {
         "title": {
@@ -1777,7 +1857,29 @@
           "one": "{count} alteração",
           "other": "{count} alterações",
           "zero": "Nenhuma alteração"
-        }
+        },
+        "compare": "Comparar rev {revision}",
+        "revert_here": "Voltar até aqui",
+        "revert_row": "Voltar para a rev {revision}",
+        "diff_title": "Alterações entre a rev {from} e a rev {to}",
+        "diff_hint": "Marque dois passos para ver em palavras o que mudou entre eles.",
+        "diff_empty": "Os dois estados são iguais.",
+        "diff_failed": "Não foi possível ler as alterações.",
+        "checkpoints_title": "Pontos de retorno",
+        "checkpoints_empty": "Nenhum ponto de retorno ainda. Dê um nome a um estado para voltar a ele.",
+        "checkpoint_label": "Nome deste estado",
+        "checkpoint_add": "Adicionar ponto de retorno",
+        "checkpoint_auto": "Automático",
+        "checkpoint_remove": "Remover {name}",
+        "checkpoint_revert": "Voltar para {name}",
+        "revert_title": "Voltar para a rev {revision}?",
+        "revert_title_named": "Voltar para {name}?",
+        "revert_body": "Isso adiciona um passo novo que leva o projeto de volta. Os passos do meio continuam no histórico e você pode desfazer.",
+        "revert_changes": "O que mudaria",
+        "revert_same": "O projeto já está assim. Nada mudaria.",
+        "revert_cancel": "Cancelar",
+        "revert_confirm": "Voltar",
+        "revert_loading": "Lendo o que mudaria"
       },
       "shape": {
         "title": "Forma",
@@ -2179,6 +2281,52 @@
       "test_ok": "O destino respondeu {status}.",
       "test_failed": "O destino não respondeu bem (status {status})."
     },
+    "generate": {
+      "open": {
+        "visual": "Gerar uma imagem",
+        "video": "Gerar uma locução"
+      },
+      "title": {
+        "image": "Gerar uma imagem",
+        "voice": "Gerar uma locução"
+      },
+      "intro": {
+        "image": "O preço aparece antes de qualquer pedido ao provedor. A imagem vai para a biblioteca, com o modelo e o prompt de onde veio.",
+        "voice": "O preço aparece antes de qualquer pedido ao provedor. A narração vai para a biblioteca, com o modelo e o texto de onde veio."
+      },
+      "no_provider": {
+        "image": "Nenhum provedor conectado faz imagens ainda.",
+        "voice": "Nenhum provedor conectado faz voz ainda."
+      },
+      "open_connections": "Conecte um na página Conexões",
+      "project": "Projeto",
+      "connection": "Conexão",
+      "model": "Modelo",
+      "no_price": "sem preço ainda",
+      "voice": "Voz",
+      "prompt": {
+        "image": "O que desenhar",
+        "voice": "O que ler em voz alta"
+      },
+      "size": "Tamanho",
+      "count": "Quantas",
+      "format": "Formato",
+      "language": "Idioma",
+      "disclosure": "Avise que esta voz é gerada por IA a quem a ouvir: o provedor pede isso.",
+      "estimate": "Mostrar a estimativa",
+      "estimated": "Custo estimado: {amount}",
+      "submit": "Gerar",
+      "state": {
+        "queued": "Esperando para começar.",
+        "waiting_approval": "Esperando a sua aprovação.",
+        "running": "Gerando.",
+        "succeeded": "Pronto.",
+        "failed": "Não deu certo.",
+        "cancelled": "Cancelado."
+      },
+      "open_approvals": "Abrir a página Aprovações",
+      "done": "{delivered} de {requested} feitas, custou {amount}."
+    },
     "social": {
       "title": "Redes sociais",
       "intro": "Conecte o seu próprio canal com o seu próprio projeto de desenvolvedor. Nada é publicado até você aprovar em Aprovações.",
@@ -2227,6 +2375,33 @@
       "callback_done": "Conectado como",
       "callback_failed": "Não foi possível concluir o login. Comece de novo pela página Conexões.",
       "back": "Voltar para Conexões",
+      "needs_account": "Login feito. Escolha a conta em que esta conexão publica.",
+      "pick_title": "Escolha a conta",
+      "pick_hint": "O seu login alcançou estas contas. O Stuarty publica só na que você escolher, e só depois que você aprovar cada publicação.",
+      "pick_use": "Usar esta conta",
+      "callback_choose": "Login feito. Volte para Conexões e escolha a conta em que publicar.",
+      "instagram": {
+        "step": {
+          "project": "Em developers.facebook.com crie um app do tipo \"Business\" na sua própria conta. Ele é seu; o Stuarty nunca o vê. Deixe-o em modo de desenvolvimento, com você como administrador: isso é Acesso Padrão, e a Meta não pede revisão para um app usado só nas suas próprias contas.",
+          "api": "Adicione ao app o produto \"Facebook Login for Business\" (ou \"Facebook Login\"). Um Reel chega ao Instagram pela Página do Facebook à qual a sua conta do Instagram está ligada.",
+          "consent": "Confirme que a sua conta do Instagram é profissional (Business ou Creator) e está ligada a uma Página do Facebook que você administra: no Instagram, Configurações, Tipo de conta e ferramentas, depois o vínculo com a Página. Não dá para publicar numa conta pessoal do Instagram.",
+          "client": "No app, em Configurações, Básico, copie o ID do app e a Chave secreta do app.",
+          "redirect": "Em Facebook Login, Configurações, adicione exatamente este endereço em \"URIs de redirecionamento do OAuth válidos\": {redirect}",
+          "paste": "Cole o id e o segredo do app no formulário abaixo. O Stuarty pede estas permissões: {scopes}. Depois do login, você escolhe em qual conta do Instagram esta conexão publica."
+        },
+        "research": "O que a Meta disse em {read}: um app usado só para um negócio que você possui ou administra não precisa de App Review no Acesso Padrão. O Instagram publica só em contas profissionais. O arquivo vai do seu computador para a Meta pelo envio retomável, então nenhum endereço público do seu vídeo é preciso, e nenhum é criado. Um Reel tem de 3 segundos a 15 minutos, até 300 MB, com legenda de até 2.200 caracteres e 30 hashtags; a imagem de capa não é oferecida, porque a Meta só a aceita a partir de um endereço público. Um Reel não tem modo privado, então toda publicação sai como pública. Um app pode publicar 100 posts em 24 horas corridas."
+      },
+      "facebook": {
+        "step": {
+          "project": "Em developers.facebook.com crie um app do tipo \"Business\" na sua própria conta. Ele é seu; o Stuarty nunca o vê. Deixe-o em modo de desenvolvimento, com você como administrador: isso é Acesso Padrão, e a Meta não pede revisão para um app usado só nas suas próprias Páginas.",
+          "api": "Adicione ao app o produto \"Facebook Login for Business\" (ou \"Facebook Login\"). Reels são publicados em uma Página do Facebook; a Meta não publica em perfil pessoal.",
+          "consent": "Você precisa de uma função na Página que possa criar conteúdo (Administrador ou Editor, por exemplo). O login lista as suas Páginas e você escolhe uma.",
+          "client": "No app, em Configurações, Básico, copie o ID do app e a Chave secreta do app.",
+          "redirect": "Em Facebook Login, Configurações, adicione exatamente este endereço em \"URIs de redirecionamento do OAuth válidos\": {redirect}",
+          "paste": "Cole o id e o segredo do app no formulário abaixo. O Stuarty pede estas permissões: {scopes}. Depois do login, você escolhe em qual Página esta conexão publica."
+        },
+        "research": "O que a Meta disse em {read}: um app usado só para um negócio que você possui ou administra não precisa de App Review no Acesso Padrão. O arquivo vai do seu computador para a Meta pelo envio retomável, então nenhum endereço público do seu vídeo é preciso, e nenhum é criado. Um Reel de Página tem de 3 a 90 segundos, 9:16, ao menos 540 por 960, de 24 a 60 quadros por segundo; um app pode publicar 30 em 24 horas corridas. A Meta não informa um arquivo máximo nem uma descrição máxima, então o Stuarty aplica 1 GiB e 2.200 caracteres. Só Reels são oferecidos: um vídeo mais longo ou mais largo é recusado com o limite que ele quebra. Não há campo de capa nem modo privado, então toda publicação sai como pública."
+      },
       "youtube": {
         "step": {
           "project": "No console do Google Cloud, crie um projeto (ou escolha um que você já tenha). Ele é seu; o Stuarty nunca o vê.",
@@ -2269,6 +2444,14 @@
       "limits": "Até {context} tokens, {output} deles na resposta",
       "price": "Por milhão de tokens: {input} de entrada, {output} de saída ({source})",
       "price_none": "Ainda sem preço: nada pode ser gerado com este modelo até você definir um.",
+      "price_unit": {
+        "image": "Por imagem: {amount} ({source})",
+        "mchar": "Por milhão de caracteres: {amount} ({source})"
+      },
+      "price_per": {
+        "image": "Preço de uma imagem",
+        "mchar": "Preço de um milhão de caracteres"
+      },
       "source": {
         "user": "preço seu",
         "catalogue": "publicado pelo provedor",
@@ -2333,6 +2516,33 @@
         "note": "Uma regra sem limite por item nunca aprova algo que custa dinheiro.",
         "bad_amount": "Um valor é um número com no máximo seis casas decimais, por exemplo 2,50."
       }
+    },
+    "google": {
+      "nav": "Entrar com Google",
+      "sign_in": "Entrar com o Google",
+      "title": "Entrar com o Google",
+      "off": "Entrar com o Google está desligado neste servidor. Um administrador pode ligar aqui.",
+      "account": "Sua conta Google",
+      "linked": "Conta Google vinculada:",
+      "not_linked": "Nenhuma conta Google vinculada. Vincule a sua para entrar com ela; a senha continua funcionando.",
+      "unlink_note": "Desvincular não muda sua senha nem encerra suas sessões.",
+      "password": "Sua senha",
+      "link": "Vincular minha conta Google",
+      "unlink": "Desvincular",
+      "owner": "Para o dono deste servidor",
+      "owner_intro": "Os usuários entram com um projeto Google que você mesmo criou. Crie a conexão desse projeto na página Conexões (uma conexão do YouTube com o client id e o segredo; não precisa entrar no YouTube).",
+      "redirect": "Adicione este endereço aos URIs de redirecionamento autorizados do seu projeto Google:",
+      "enabled": "Permitir que usuários entrem com o Google",
+      "connection": "Conexão do seu projeto Google",
+      "connection_none": "Escolha uma conexão",
+      "allowed": "Somente estes e-mails do Google (opcional)",
+      "allowed_hint": "Um por linha. Deixe vazio para permitir todo usuário vinculado. O usuário precisa estar vinculado antes: não há cadastro pelo Google.",
+      "save": "Salvar",
+      "saved": "Salvo.",
+      "callback_title": "Entrando com o Google",
+      "callback_working": "Concluindo a entrada…",
+      "callback_failed": "A entrada com o Google não funcionou.",
+      "back_to_login": "Voltar ao login"
     },
     "chat": {
       "open": "Conversar com o seu agente",

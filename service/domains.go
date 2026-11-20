@@ -16,6 +16,9 @@ var OperationDomains = map[string]string{
 	"ProjectBundleExport": command.DomainProject, "ProjectBundleImport": command.DomainProject,
 
 	"Edit": command.DomainVideo, "HistoryList": command.DomainVideo, "Undo": command.DomainVideo,
+	"HistoryRevert": command.DomainVideo, "HistoryDiff": command.DomainVideo,
+	"CheckpointCreate": command.DomainVideo, "CheckpointList": command.DomainVideo,
+	"CheckpointRename": command.DomainVideo, "CheckpointRemove": command.DomainVideo,
 	"Redo": command.DomainVideo, "Lint": command.DomainVideo, "ViewFrame": command.DomainVideo,
 	"ViewSheet": command.DomainVideo, "JobStart": command.DomainVideo, "JobGet": command.DomainVideo,
 	"JobList": command.DomainVideo, "JobCancel": command.DomainVideo, "ExportFile": command.DomainVideo,
@@ -24,6 +27,7 @@ var OperationDomains = map[string]string{
 	"TemplateImport": command.DomainVideo, "SnapPoints": command.DomainVideo, "PlanWindow": command.DomainVideo,
 	"OpenFile": command.DomainVideo, "ProjectOtioExport": command.DomainVideo, "ProjectOtioImport": command.DomainVideo,
 	"ExportPresetList": command.DomainVideo, "ExportCheck": command.DomainVideo, "ExportBatch": command.DomainVideo,
+	"AudioMeasure": command.DomainVideo,
 
 	"ImageCreate": command.DomainImage, "ImageList": command.DomainImage, "ImageDescribe": command.DomainImage,
 	"ImageEdit": command.DomainImage, "ImageUndo": command.DomainImage, "ImageRedo": command.DomainImage,
@@ -54,12 +58,15 @@ var OperationDomains = map[string]string{
 	// The social networks a publication goes to, and the publication itself (SDD-020 section 9).
 	"SocialNetworkList": command.DomainPublish, "SocialConnectBegin": command.DomainPublish,
 	"SocialConnectComplete": command.DomainPublish, "SocialAccountList": command.DomainPublish,
-	"PublishValidate": command.DomainPublish, "PublishNow": command.DomainPublish,
+	"SocialAccountSelect": command.DomainPublish,
+	"PublishValidate":     command.DomainPublish, "PublishNow": command.DomainPublish,
 	"PublishStatus": command.DomainPublish,
 
 	"CostSummary": command.DomainProvider, "CostCeilingSet": command.DomainProvider,
 	"ProviderList": command.DomainProvider, "ProviderModels": command.DomainProvider,
 	"ProviderPriceSet": command.DomainProvider, "TextGenerate": command.DomainProvider,
+	"ImageGenerate": command.DomainProvider, "VoiceGenerate": command.DomainProvider,
+	"VoiceList": command.DomainProvider,
 
 	"CommandHelp": command.DomainWorkspace, "ConnectionList": command.DomainWorkspace,
 	"ConnectionGet": command.DomainWorkspace, "ConnectionCreate": command.DomainWorkspace,

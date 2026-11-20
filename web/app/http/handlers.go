@@ -210,6 +210,13 @@ func pending(h *apiHandler, id string) {
 func (h *apiHandler) registerAll() {
 	register(h, "auth.login", h.login).Use(h.loginThrottle.middleware)
 	register(h, "auth.logout", h.logout)
+	register(h, "google.status", h.googleStatus)
+	register(h, "google.start", h.googleStart)
+	register(h, "google.complete", h.googleComplete)
+	register(h, "google.link", h.googleLink)
+	register(h, "google.unlink", h.googleUnlink)
+	register(h, "google.settings.get", h.googleSettingsGet)
+	register(h, "google.settings.put", h.googleSettingsPut)
 	register(h, "keys.create", h.keysCreate)
 	register(h, "keys.list", func(c *web.Ctx, _ noIn) (service.KeyListResult, error) {
 		res, err := h.Service.KeyList(c.Context(), service.KeyListRequest{})
@@ -276,6 +283,7 @@ func (h *apiHandler) registerAll() {
 	register(h, "projects.redo", func(c *web.Ctx, in stepIn) (service.UndoResult, error) {
 		return h.step(c, in, h.Service.Redo)
 	})
+	h.registerHistoryOps()
 	register(h, "projects.lint", func(c *web.Ctx, in lintIn) (service.LintResult, error) {
 		res, err := h.Service.Lint(
 			c.Context(),
@@ -345,6 +353,7 @@ func (h *apiHandler) registerAll() {
 	register(h, "jobs.cancel", h.jobCancel)
 	register(h, "export.presets", h.exportPresetList)
 	register(h, "export.check", h.exportCheck)
+	register(h, "audio.measure", h.audioMeasure)
 	register(h, "export.batch", h.exportBatch)
 	register(h, "templates.list", h.templateList)
 	register(h, "templates.save", h.templateSave)
@@ -422,6 +431,7 @@ func (h *apiHandler) registerAll() {
 	register(h, "social.connect", h.socialConnect)
 	register(h, "social.complete", h.socialComplete)
 	register(h, "social.accounts", h.socialAccounts)
+	register(h, "social.select", h.socialSelect)
 	register(h, "publish.validate", h.publishValidate)
 	register(h, "publish.now", h.publishNow)
 	register(h, "publish.status", h.publishStatus)
@@ -429,6 +439,9 @@ func (h *apiHandler) registerAll() {
 	register(h, "providers.models", h.providersModels)
 	register(h, "providers.prices.set", h.providersPriceSet)
 	register(h, "text.generate", h.textGenerate)
+	register(h, "image.generate", h.imageGenerate)
+	register(h, "voice.generate", h.voiceGenerate)
+	register(h, "voice.list", h.voiceList)
 	register(h, "library.memory.list", h.memoryList)
 	register(h, "library.memory.get", h.memoryGet)
 	register(h, "library.memory.write", h.memoryWrite)

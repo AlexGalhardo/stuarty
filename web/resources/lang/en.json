@@ -1028,11 +1028,26 @@
           "add": {
             "title": "Add audio"
           },
+          "apply_preset": {
+            "title": "Apply an audio preset"
+          },
           "duck": {
             "title": "Duck music under speech"
           },
           "mark_beats": {
             "title": "Mark beats"
+          },
+          "processor_add": {
+            "title": "Add an audio processor"
+          },
+          "processor_move": {
+            "title": "Move an audio processor"
+          },
+          "processor_remove": {
+            "title": "Remove an audio processor"
+          },
+          "processor_set": {
+            "title": "Change an audio processor"
           }
         },
         "caption": {
@@ -1297,7 +1312,9 @@
         "L_AUDIO_CLIP": "Audio clipping",
         "L_LOUDNESS": "Loudness off target",
         "L_DURATION_LIMIT": "Over the duration limit",
-        "L_ALPHA_MISSING": "Transparency declared but missing"
+        "L_ALPHA_MISSING": "Transparency declared but missing",
+        "L_AUDIO_LIMITER_NOT_LAST": "Limiter is not last in the chain",
+        "L_AUDIO_NOISE_REDUCTION_REPEATED": "More than one noise reduction"
       },
       "shortcuts": {
         "title": "Keyboard shortcuts",
@@ -1509,6 +1526,69 @@
           "other": "{count} markers"
         },
         "beats_apply": "Mark beats"
+      },
+      "processors": {
+        "title": "Audio processors",
+        "empty": "No processors yet. Add one or apply a preset.",
+        "preset_label": "Preset",
+        "preset_apply": "Apply preset",
+        "presets": {
+          "voice": "Voice",
+          "voice_with_music": "Voice with music",
+          "podcast": "Podcast",
+          "clean_noisy_room": "Clean up a noisy room"
+        },
+        "add_kind": "Processor",
+        "add": "Add processor",
+        "kind": {
+          "eq": "Equaliser",
+          "compressor": "Compressor",
+          "limiter": "Limiter",
+          "gate": "Noise gate",
+          "deesser": "De-esser",
+          "noise_reduction": "Noise reduction"
+        },
+        "enabled": "On",
+        "move_up": "Move up",
+        "move_down": "Move down",
+        "remove": "Remove",
+        "params": "Parameters",
+        "param": {
+          "hp_hz": "High-pass frequency (0 is off)",
+          "lp_hz": "Low-pass frequency (0 is off)",
+          "threshold_db": "Threshold",
+          "ratio": "Ratio",
+          "attack_ms": "Attack",
+          "release_ms": "Release",
+          "knee_db": "Knee",
+          "makeup_db": "Make-up gain",
+          "ceiling_db": "Ceiling",
+          "range_db": "Range",
+          "hold_ms": "Hold",
+          "frequency_hz": "Frequency",
+          "strength": "Strength",
+          "profile_start_ms": "Noise profile starts (0 is automatic)",
+          "profile_end_ms": "Noise profile ends"
+        },
+        "band": {
+          "hz": "Band {n} frequency",
+          "gain_db": "Band {n} gain",
+          "q": "Band {n} width (Q)"
+        },
+        "measure": "Measure the sound",
+        "measuring": "Measuring...",
+        "measure_failed": "The sound could not be measured.",
+        "before": "Before",
+        "after": "After",
+        "loudness": "Loudness",
+        "true_peak": "True peak",
+        "noise_floor": "Noise floor",
+        "speech_to_noise": "Speech to noise",
+        "no_level": "none",
+        "listen": "Listen to the processed sound",
+        "rendering": "Rendering the sound...",
+        "listen_failed": "The sound could not be rendered.",
+        "player": "Processed sound"
       },
       "markers": {
         "title": {
@@ -1777,7 +1857,29 @@
           "one": "{count} change",
           "other": "{count} changes",
           "zero": "No changes"
-        }
+        },
+        "compare": "Compare r{revision}",
+        "revert_here": "Revert to here",
+        "revert_row": "Revert to r{revision}",
+        "diff_title": "Changes between r{from} and r{to}",
+        "diff_hint": "Tick two steps to see in words what changed between them.",
+        "diff_empty": "The two states are the same.",
+        "diff_failed": "The changes could not be read.",
+        "checkpoints_title": "Checkpoints",
+        "checkpoints_empty": "No checkpoints yet. Name a state to come back to it.",
+        "checkpoint_label": "Name this state",
+        "checkpoint_add": "Add checkpoint",
+        "checkpoint_auto": "Automatic",
+        "checkpoint_remove": "Remove {name}",
+        "checkpoint_revert": "Revert to {name}",
+        "revert_title": "Go back to r{revision}?",
+        "revert_title_named": "Go back to {name}?",
+        "revert_body": "This adds a new step that takes the project back. The steps in between stay in the history, and you can undo it.",
+        "revert_changes": "What would change",
+        "revert_same": "The project already looks like this. Nothing would change.",
+        "revert_cancel": "Cancel",
+        "revert_confirm": "Revert",
+        "revert_loading": "Reading what would change"
       },
       "shape": {
         "title": "Shape",
@@ -2179,6 +2281,52 @@
       "test_ok": "The destination answered {status}.",
       "test_failed": "The destination did not answer well (status {status})."
     },
+    "generate": {
+      "open": {
+        "visual": "Generate an image",
+        "video": "Generate a voice-over"
+      },
+      "title": {
+        "image": "Generate an image",
+        "voice": "Generate a voice-over"
+      },
+      "intro": {
+        "image": "The price is shown before anything is asked of the provider. The image lands in the library, with the model and the prompt it came from.",
+        "voice": "The price is shown before anything is asked of the provider. The narration lands in the library, with the model and the text it came from."
+      },
+      "no_provider": {
+        "image": "No connected provider makes images yet.",
+        "voice": "No connected provider makes speech yet."
+      },
+      "open_connections": "Connect one on the Connections page",
+      "project": "Project",
+      "connection": "Connection",
+      "model": "Model",
+      "no_price": "no price yet",
+      "voice": "Voice",
+      "prompt": {
+        "image": "What to draw",
+        "voice": "What to read out"
+      },
+      "size": "Size",
+      "count": "How many",
+      "format": "Format",
+      "language": "Language",
+      "disclosure": "Say that this voice is AI-generated to the people who hear it: the provider asks for it.",
+      "estimate": "Show the estimate",
+      "estimated": "Estimated cost: {amount}",
+      "submit": "Generate",
+      "state": {
+        "queued": "Waiting to start.",
+        "waiting_approval": "Waiting for your approval.",
+        "running": "Generating.",
+        "succeeded": "Done.",
+        "failed": "It did not work.",
+        "cancelled": "Cancelled."
+      },
+      "open_approvals": "Open the Approvals page",
+      "done": "{delivered} of {requested} made, it cost {amount}."
+    },
     "social": {
       "title": "Social networks",
       "intro": "Connect your own channel with your own developer project. Nothing is published until you approve it in Approvals.",
@@ -2227,6 +2375,33 @@
       "callback_done": "Signed in as",
       "callback_failed": "The sign-in could not be finished. Start it again from the Connections page.",
       "back": "Back to Connections",
+      "needs_account": "Signed in. Choose the account this connection publishes to.",
+      "pick_title": "Choose the account",
+      "pick_hint": "Your sign-in reached these accounts. Stuarty publishes only to the one you choose, and only after you approve each post.",
+      "pick_use": "Use this account",
+      "callback_choose": "Signed in. Now go back to Connections and choose the account to publish to.",
+      "instagram": {
+        "step": {
+          "project": "At developers.facebook.com create an app of the type \"Business\" in your own account. It is yours; Stuarty never sees it. Keep it in development mode with yourself as administrator: that is Standard Access, and Meta asks for no review of an app used only for your own accounts.",
+          "api": "Add the product \"Facebook Login for Business\" (or \"Facebook Login\") to the app. A Reel reaches Instagram through the Facebook Page that your Instagram account is linked to.",
+          "consent": "Make sure your Instagram account is a professional account (Business or Creator) linked to a Facebook Page you administer: in Instagram, Settings, Account type and tools, then the Page link. A personal Instagram account cannot be published to.",
+          "client": "In the app, under Settings, Basic, copy the App ID and the App Secret.",
+          "redirect": "Under Facebook Login, Settings, add exactly this address to \"Valid OAuth Redirect URIs\": {redirect}",
+          "paste": "Paste the app id and the app secret into the form below. Stuarty asks for these permissions: {scopes}. After you sign in you choose which Instagram account this connection publishes to."
+        },
+        "research": "What Meta said on {read}: an app used only for a business you own or manage needs no App Review at Standard Access. Instagram publishes only to professional accounts. The file goes from your computer to Meta with the resumable upload, so no public address of your video is needed, and none is created. A Reel is 3 seconds to 15 minutes, up to 300 MB, with a caption of up to 2,200 characters and 30 hashtags; a cover image is not offered, because Meta takes it only from a public address. A Reel has no private mode, so every post goes out as public. An app may publish 100 posts in a moving 24 hours."
+      },
+      "facebook": {
+        "step": {
+          "project": "At developers.facebook.com create an app of the type \"Business\" in your own account. It is yours; Stuarty never sees it. Keep it in development mode with yourself as administrator: that is Standard Access, and Meta asks for no review of an app used only for your own Pages.",
+          "api": "Add the product \"Facebook Login for Business\" (or \"Facebook Login\") to the app. Reels are published to a Facebook Page; Meta does not publish to a personal profile.",
+          "consent": "You need a role on the Page that can create content (Admin or Editor, for example). The sign-in lists your Pages and you choose one.",
+          "client": "In the app, under Settings, Basic, copy the App ID and the App Secret.",
+          "redirect": "Under Facebook Login, Settings, add exactly this address to \"Valid OAuth Redirect URIs\": {redirect}",
+          "paste": "Paste the app id and the app secret into the form below. Stuarty asks for these permissions: {scopes}. After you sign in you choose which Page this connection publishes to."
+        },
+        "research": "What Meta said on {read}: an app used only for a business you own or manage needs no App Review at Standard Access. The file goes from your computer to Meta with the resumable upload, so no public address of your video is needed, and none is created. A Page Reel is 3 to 90 seconds, 9:16, at least 540 by 960, 24 to 60 frames a second; an app may publish 30 in a moving 24 hours. Meta states no largest file and no longest description, so Stuarty applies 1 GiB and 2,200 characters. Only Reels are offered: a longer or wider video is refused with the limit it breaks. There is no cover image field and no private mode, so every post goes out as public."
+      },
       "youtube": {
         "step": {
           "project": "In the Google Cloud console, create a project (or choose one you already have). It is yours; Stuarty never sees it.",
@@ -2269,6 +2444,14 @@
       "limits": "Up to {context} tokens, {output} of them in the answer",
       "price": "Per million tokens: {input} in, {output} out ({source})",
       "price_none": "No price yet: nothing can be generated with this model until you set one.",
+      "price_unit": {
+        "image": "Per image: {amount} ({source})",
+        "mchar": "Per million characters: {amount} ({source})"
+      },
+      "price_per": {
+        "image": "Price of one image",
+        "mchar": "Price of a million characters"
+      },
       "source": {
         "user": "your price",
         "catalogue": "published by the provider",
@@ -2333,6 +2516,33 @@
         "note": "A rule with no limit per item never approves something that costs money.",
         "bad_amount": "An amount is a number with at most six decimals, for example 2.50."
       }
+    },
+    "google": {
+      "nav": "Google sign-in",
+      "sign_in": "Sign in with Google",
+      "title": "Google sign-in",
+      "off": "Google sign-in is off on this server. An administrator can turn it on here.",
+      "account": "Your Google account",
+      "linked": "Linked Google account:",
+      "not_linked": "No Google account is linked. Link yours to sign in with it; your password keeps working.",
+      "unlink_note": "Unlinking does not change your password or end your sessions.",
+      "password": "Your password",
+      "link": "Link my Google account",
+      "unlink": "Unlink",
+      "owner": "For the owner of this server",
+      "owner_intro": "Users sign in with a Google project that you own. Make the connection of that project on the Connections page (a YouTube connection with the client id and the secret; you do not need to sign in to YouTube).",
+      "redirect": "Add this address to the authorised redirect URIs of your Google project:",
+      "enabled": "Let users sign in with Google",
+      "connection": "Connection of your Google project",
+      "connection_none": "Choose a connection",
+      "allowed": "Only these Google e-mail addresses (optional)",
+      "allowed_hint": "One per line. Leave empty to allow every linked user. A user must be linked first: there is no registration with Google.",
+      "save": "Save",
+      "saved": "Saved.",
+      "callback_title": "Signing in with Google",
+      "callback_working": "Finishing the sign-in…",
+      "callback_failed": "The sign-in with Google did not work.",
+      "back_to_login": "Back to the login"
     },
     "chat": {
       "open": "Chat with your agent",

@@ -469,6 +469,7 @@ export interface MediaImportResult {
 export type JobState =
 	| "waiting_approval"
 	| "queued"
+	| "waiting_approval"
 	| "running"
 	| "succeeded"
 	| "failed"
@@ -525,13 +526,75 @@ export interface Job {
 		export?: ExportResult;
 		batch?: BatchResult;
 		transcribe?: { asset_id: string; language: string; words: number };
+		generated?: GeneratedResult;
 		publish?: PublishResult;
 	};
 	error?: ApiErrorBody;
 	lint?: { errors: number; warnings: number };
+	// A job of a kind that needs approval carries its approval request and, from the moment it exists, the
+	// estimate the service made (SDD-016 section 6).
+	approval_id?: string;
+	estimate?: Money;
 	actor: string;
 	created_at: string;
 	text: string;
+}
+
+// The files an image.generate or voice.generate job stored as assets (SDD-016 section 6.1).
+export interface GeneratedItem {
+	asset_id: string;
+	hash: string;
+	kind: string;
+	bytes: number;
+	state: string;
+	revised_prompt?: string;
+}
+
+export interface GeneratedResult {
+	provider: string;
+	model: string;
+	items: GeneratedItem[];
+	requested: number;
+	delivered: number;
+	notes?: string[];
+	cost: Money;
+}
+
+// The bodies of POST /image/generate and POST /voice/generate.
+export interface ImageGenerateRequest {
+	project_id: string;
+	connection_id: string;
+	model: string;
+	prompt: string;
+	size?: string;
+	count?: number;
+	wait_ms?: number;
+	dry_run?: boolean;
+}
+
+export interface VoiceGenerateRequest {
+	project_id: string;
+	connection_id: string;
+	model: string;
+	text: string;
+	voice: string;
+	language?: string;
+	format?: string;
+	wait_ms?: number;
+	dry_run?: boolean;
+}
+
+export interface VoiceView {
+	id: string;
+	name: string;
+	language?: string;
+	source: "provider" | "documented";
+}
+
+export interface VoiceListResult {
+	connection_id: string;
+	provider: string;
+	voices: VoiceView[];
 }
 
 export interface JobListResult {
@@ -599,6 +662,56 @@ export interface HistoryQuery {
 	actor?: string;
 	cursor?: string;
 	limit?: number;
+}
+
+// Revert, the diff of two revisions and checkpoints (SDD-003 section 2.5.1). The
+// core classifies and words every change: `line` is shown as it comes.
+export interface Checkpoint {
+	name: string;
+	note: string;
+	revision: number;
+	actor: string;
+	at: string;
+	auto: boolean;
+}
+
+export interface CheckpointListResult {
+	project_id: string;
+	revision: number;
+	checkpoints: Checkpoint[];
+	text: string;
+}
+
+export interface DiffEntry {
+	verb: "added" | "removed" | "moved" | "trimmed" | "changed";
+	noun: string;
+	line: string;
+}
+
+export interface HistoryDiffResult {
+	project_id: string;
+	revision: number;
+	from: number;
+	to: number;
+	count: number;
+	entries: DiffEntry[];
+	text: string;
+}
+
+export interface HistoryRevertResult extends Omit<EditResult, "kind"> {
+	kind: "revert";
+	target: number;
+	same: boolean;
+	text: string;
+}
+
+export interface RevertRequest {
+	revision?: number;
+	checkpoint?: string;
+	// The revision the caller read; a change by another actor since then to what
+	// the revert changes is E_REVISION_CONFLICT (SDD-002 A.7).
+	base_revision?: number;
+	dry_run?: boolean;
 }
 
 // GET /projects/{id}/media/{asset_id}: the facts and the text of one asset.
@@ -900,6 +1013,9 @@ export interface ProviderPrice {
 	currency: string;
 	input_micros_per_mtok: number;
 	output_micros_per_mtok: number;
+	// image or mchar for the price of one image or of a million characters of speech; absent for tokens.
+	unit?: "image" | "mchar";
+	unit_micros?: number;
 }
 
 export interface PriceEntry extends ProviderPrice {
@@ -931,6 +1047,8 @@ export interface ModelView {
 	output_tokens: number;
 	price: ProviderPrice | null;
 	price_source: PriceSource;
+	// A hint of the adapter, never a rule: it orders what a picker shows.
+	capability?: "text" | "image" | "voice";
 }
 
 export interface ProviderModelsResult {
@@ -947,6 +1065,8 @@ export interface ProviderPriceSetRequest {
 	currency?: string;
 	input_micros_per_mtok?: number;
 	output_micros_per_mtok?: number;
+	unit?: "image" | "mchar";
+	unit_micros?: number;
 }
 
 export interface ProviderPricesResult {
@@ -1221,6 +1341,39 @@ export interface SessionResult {
 	scopes: string[];
 }
 
+// The optional Google sign-in of network mode (SDD-007 section 4.7, SDD-014 section 12.4).
+export interface GoogleLinked {
+	email: string;
+	linked_ms: number;
+}
+
+export interface GoogleStatus {
+	enabled: boolean;
+	linked: GoogleLinked | null;
+}
+
+export interface GoogleStart {
+	authorize_url: string;
+}
+
+export interface GoogleComplete {
+	user?: SessionResult;
+	linked?: GoogleLinked;
+}
+
+export interface GoogleSettingsRequest {
+	enabled: boolean;
+	connection_id?: string;
+	allowed_emails?: string[];
+}
+
+export interface GoogleSettings {
+	enabled: boolean;
+	connection_id: string;
+	allowed_emails: string[];
+	redirect_url: string;
+}
+
 // The brand kit and the font import (SDD-005 section 5.11, SDD-007 section 7.7).
 export interface BrandFontFile {
 	weight: number;
@@ -1312,6 +1465,33 @@ export interface ExportFinding {
 	message: string;
 	limit: string;
 	got: string;
+}
+
+// GET /projects/{id}/audio-measure: the sound of an item or a range, before and after its audio processors
+// (SDD-004 section 7.1). A level is null when the audio has none (silence, or under 0.4 s).
+export interface AudioLevels {
+	integrated_lufs: number | null;
+	true_peak_dbtp: number | null;
+	noise_floor_dbfs: number;
+	speech_to_noise_db: number | null;
+}
+
+export interface AudioMeasureResult {
+	project_id: string;
+	revision: number;
+	item_id?: string;
+	start_frame: number;
+	end_frame: number;
+	seconds: number;
+	before: AudioLevels;
+	after: AudioLevels;
+	text: string;
+}
+
+export interface AudioMeasureQuery {
+	itemId?: string;
+	start?: string;
+	end?: string;
 }
 
 // GET /projects/{id}/export-check: what does not fit a preset, with the exact limit.
@@ -1466,6 +1646,10 @@ export interface SocialLimits {
 	tags_max_chars: number;
 	file_max_bytes: number;
 	formats: string[];
+	// What the network takes besides the video; the dialog asks only for these (SDD-020 section 18).
+	thumbnail_formats?: string[];
+	visibilities?: string[];
+	needs_kids_declaration?: boolean;
 	source: string;
 	read: string;
 }
@@ -1475,6 +1659,8 @@ export interface SocialNetwork {
 	name: string;
 	publishes: string[];
 	limits: SocialLimits;
+	// The network takes a flag that says the video has synthetic content.
+	ai_disclosure?: boolean;
 	endpoint: string;
 	hosts: string[];
 	scopes: string[];
@@ -1513,7 +1699,19 @@ export interface SocialAccount {
 	label: string;
 	account_id?: string;
 	account_title?: string;
-	state: "ready" | "needs_sign_in";
+	// needs_account: the sign-in reached several accounts and a person has not chosen one (SDD-020 section 17).
+	state: "ready" | "needs_sign_in" | "needs_account";
+	choices?: SocialChoice[];
+}
+
+export interface SocialChoice {
+	id: string;
+	title: string;
+}
+
+export interface SocialSelectRequest {
+	connection_id: string;
+	account_id: string;
 }
 
 export interface SocialAccountListResult {

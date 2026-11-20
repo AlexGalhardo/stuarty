@@ -190,6 +190,35 @@ var Endpoints = []Endpoint{
 		Service: "Redo", Status: 200, Summary: "Redo the caller's latest undone step",
 	},
 	{
+		ID: "projects.revert", Method: http.MethodPost, Path: "/projects/{id}/revert", Scope: service.ScopeEdit,
+		Service: "HistoryRevert", Status: 200, Summary: "Go back to an earlier revision as a new step",
+	},
+	{
+		ID: "projects.diff", Method: http.MethodGet, Path: "/projects/{id}/diff", Scope: service.ScopeRead,
+		Service: "HistoryDiff", Status: 200, Summary: "List what changed between two revisions",
+	},
+	{
+		ID: "projects.checkpoints.list", Method: http.MethodGet, Path: "/projects/{id}/checkpoints",
+		Scope: service.ScopeRead, Service: "CheckpointList", Status: 200, Summary: "List the checkpoints of a project",
+	},
+	{
+		ID: "projects.checkpoints.create", Method: http.MethodPost, Path: "/projects/{id}/checkpoints",
+		Scope: service.ScopeEdit, Service: "CheckpointCreate", Status: 201, Summary: "Name a revision",
+	},
+	{
+		ID: "projects.checkpoints.rename", Method: http.MethodPatch, Path: "/projects/{id}/checkpoints/{name}",
+		Scope: service.ScopeEdit, Service: "CheckpointRename", Status: 200, Summary: "Rename a checkpoint",
+	},
+	{
+		ID:      "projects.checkpoints.remove",
+		Method:  http.MethodDelete,
+		Path:    "/projects/{id}/checkpoints/{name}",
+		Scope:   service.ScopeEdit,
+		Service: "CheckpointRemove",
+		Status:  200,
+		Summary: "Remove a checkpoint, never a revision",
+	},
+	{
 		ID: "projects.lint", Method: http.MethodGet, Path: "/projects/{id}/lint", Scope: service.ScopeRead,
 		Service: "Lint", Status: 200, Summary: "Lint a project with every rule",
 	},
@@ -237,6 +266,10 @@ var Endpoints = []Endpoint{
 	{
 		ID: "export.check", Method: http.MethodGet, Path: "/projects/{id}/export-check", Scope: service.ScopeRead,
 		Service: "ExportCheck", Status: 200, Summary: "Check a project against an export preset",
+	},
+	{
+		ID: "audio.measure", Method: http.MethodGet, Path: "/projects/{id}/audio-measure", Scope: service.ScopeRead,
+		Service: "AudioMeasure", Status: 200, Summary: "Measure the sound with and without the audio processors",
 	},
 	{
 		ID:      "export.batch",
@@ -472,6 +505,11 @@ var Endpoints = []Endpoint{
 		Service: "SocialAccountList", Status: 200, Summary: "List the connected social accounts and their state",
 	},
 	{
+		ID: "social.select", Method: http.MethodPost, Path: "/social/select", Scope: service.ScopeAdmin,
+		Service: "SocialAccountSelect", Status: 200,
+		Summary: "Choose the Page or Instagram account a sign-in reached (a person in the browser only)",
+	},
+	{
 		ID:      "publish.validate",
 		Method:  http.MethodPost,
 		Path:    "/publish/validate",
@@ -515,6 +553,28 @@ var Endpoints = []Endpoint{
 		Service: "TextGenerate",
 		Status:  202,
 		Summary: "Start a text generation with the provider of a connection; the job waits for approval and shows its estimate",
+	},
+	{
+		ID:      "image.generate",
+		Method:  http.MethodPost,
+		Path:    "/image/generate",
+		Scope:   service.ScopeEdit,
+		Service: "ImageGenerate",
+		Status:  202,
+		Summary: "Start an image generation with the provider of a connection; the job waits for approval, shows its estimate and stores the images as assets with their origin",
+	},
+	{
+		ID:      "voice.generate",
+		Method:  http.MethodPost,
+		Path:    "/voice/generate",
+		Scope:   service.ScopeEdit,
+		Service: "VoiceGenerate",
+		Status:  202,
+		Summary: "Start a speech generation with the provider of a connection; the job waits for approval, shows its estimate and stores the audio as an asset with its origin",
+	},
+	{
+		ID: "voice.list", Method: http.MethodGet, Path: "/connections/{id}/voices", Scope: service.ScopeRead,
+		Service: "VoiceList", Status: 200, Summary: "List the voices of the provider of a connection",
 	},
 	{
 		ID: "library.memory.list", Method: http.MethodGet, Path: "/library/memory", Scope: service.ScopeRead,
@@ -750,6 +810,42 @@ var Endpoints = []Endpoint{
 	{
 		ID: "auth.logout", Method: http.MethodPost, Path: "/auth/logout", Root: true, Status: 200,
 		Summary: "End the browser session (network mode)",
+	},
+	// The optional Google sign-in of network mode (SDD-007 section 4.7, SDD-014 section 12).
+	{
+		ID: "google.status", Method: http.MethodGet, Path: "/auth/google", Root: true, Status: 200,
+		Summary: "Whether Google sign-in is on, and the Google account the session has linked (network mode)",
+	},
+	{
+		ID: "google.start", Method: http.MethodPost, Path: "/auth/google/start", Root: true, Status: 200,
+		Summary: "Begin a sign-in with Google (network mode)",
+	},
+	{
+		ID: "google.complete", Method: http.MethodPost, Path: "/auth/google/complete", Root: true, Status: 200,
+		Summary: "Finish a sign-in with Google or the linking of a Google account (network mode)",
+	},
+	{
+		ID:      "google.link",
+		Method:  http.MethodPost,
+		Path:    "/auth/google/link",
+		Root:    true,
+		Scope:   service.ScopeRead,
+		Status:  200,
+		Summary: "Begin linking your Google account, with your password (a logged-in session only; network mode)",
+	},
+	{
+		ID: "google.unlink", Method: http.MethodPost, Path: "/auth/google/unlink", Root: true, Scope: service.ScopeRead,
+		Status: 200, Summary: "Unlink your Google account, with your password (a logged-in session only; network mode)",
+	},
+	{
+		ID: "google.settings.get", Method: http.MethodGet, Path: "/auth/google/settings", Root: true,
+		Scope: service.ScopeAdmin, Status: 200,
+		Summary: "Read the Google sign-in settings (an administrator session only; network mode)",
+	},
+	{
+		ID: "google.settings.put", Method: http.MethodPut, Path: "/auth/google/settings", Root: true,
+		Scope: service.ScopeAdmin, Status: 200,
+		Summary: "Turn Google sign-in on or off and set who may use it (an administrator session only; network mode)",
 	},
 	// The image documents of SDD-021.
 	{

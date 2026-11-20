@@ -378,6 +378,178 @@
       ]
     },
     {
+      "name": "revert",
+      "domain": "video",
+      "summary": "go back to the document of an earlier revision, as a new step that undo takes back",
+      "usage": [
+        "stuarty revert --project <id> (--revision n | --checkpoint name) [--base n] [--dry-run]"
+      ],
+      "example": "stuarty revert --project prj_7k2m9x4q1b --checkpoint \"before the intro\" --dry-run",
+      "flags": [
+        {
+          "name": "revision",
+          "type": "integer",
+          "usage": "the revision to go back to"
+        },
+        {
+          "name": "checkpoint",
+          "type": "string",
+          "usage": "the name of a checkpoint to go back to"
+        },
+        {
+          "name": "base",
+          "type": "integer",
+          "usage": "the revision you read (default the current one); an older one conflicts with other actors' changes"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "diff",
+      "domain": "video",
+      "summary": "list what changed between two revisions, most significant first",
+      "usage": [
+        "stuarty diff --project <id> (--from n | --from-checkpoint name) [--until n]"
+      ],
+      "example": "stuarty diff --project prj_7k2m9x4q1b --from 12",
+      "flags": [
+        {
+          "name": "from",
+          "type": "integer",
+          "usage": "the revision the diff starts from"
+        },
+        {
+          "name": "from-checkpoint",
+          "type": "string",
+          "usage": "the name of a checkpoint the diff starts from"
+        },
+        {
+          "name": "until",
+          "type": "integer",
+          "usage": "the revision the diff ends at (default the current one)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "checkpoint:create",
+      "domain": "video",
+      "summary": "name a revision so that it can be gone back to",
+      "usage": [
+        "stuarty checkpoint:create --project <id> --name <name> [--note t] [--revision n]"
+      ],
+      "example": "stuarty checkpoint:create --project prj_7k2m9x4q1b --name \"before the intro\"",
+      "flags": [
+        {
+          "name": "name",
+          "type": "string",
+          "usage": "1 to 60 characters, no slash"
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "usage": "up to 300 characters"
+        },
+        {
+          "name": "revision",
+          "type": "integer",
+          "usage": "the revision to name (default the current one)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "checkpoint:list",
+      "domain": "video",
+      "summary": "list the checkpoints of a project, newest revision first",
+      "usage": [
+        "stuarty checkpoint:list --project <id>"
+      ],
+      "example": "stuarty checkpoint:list --project prj_7k2m9x4q1b --json",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "checkpoint:rename",
+      "domain": "video",
+      "summary": "rename a checkpoint, and change its note",
+      "usage": [
+        "stuarty checkpoint:rename --project <id> --name <name> --new-name <name> [--note t]"
+      ],
+      "example": "stuarty checkpoint:rename --project prj_7k2m9x4q1b --name draft --new-name \"first cut\"",
+      "flags": [
+        {
+          "name": "name",
+          "type": "string",
+          "usage": "the checkpoint to rename"
+        },
+        {
+          "name": "new-name",
+          "type": "string",
+          "usage": "the new name"
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "usage": "replaces the note when given"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "checkpoint:remove",
+      "domain": "video",
+      "summary": "remove a checkpoint; no revision is removed",
+      "usage": [
+        "stuarty checkpoint:remove --project <id> --name <name>"
+      ],
+      "example": "stuarty checkpoint:remove --project prj_7k2m9x4q1b --name draft",
+      "flags": [
+        {
+          "name": "name",
+          "type": "string",
+          "usage": "the checkpoint to remove"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
       "name": "media:import",
       "domain": "asset",
       "summary": "import media files into a project",
@@ -584,10 +756,10 @@
     {
       "name": "view",
       "domain": "video",
-      "summary": "render a frame or a contact sheet of a project",
+      "summary": "render a frame or a contact sheet of a project, or measure its sound",
       "usage": [
-        "stuarty view --project <id> [--mode frame|sheet] [--at t] [--times t1,t2,...]",
-        "    [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px]"
+        "stuarty view --project <id> [--mode frame|sheet|audio] [--at t] [--times t1,t2,...]",
+        "    [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px] [--item id]"
       ],
       "example": "stuarty view --project prj_7k2m9x4q1b --at 1s --json",
       "flags": [
@@ -595,7 +767,12 @@
           "name": "mode",
           "type": "string",
           "default": "frame",
-          "usage": "frame (one image at --at) or sheet (a grid)"
+          "usage": "frame (one image at --at), sheet (a grid) or audio (the loudness, true peak and noise floor with and without the audio processors)"
+        },
+        {
+          "name": "item",
+          "type": "string",
+          "usage": "audio: measure this clip or audio item alone"
         },
         {
           "name": "at",
@@ -610,12 +787,12 @@
         {
           "name": "from",
           "type": "string",
-          "usage": "sheet: first time (default 0s)"
+          "usage": "sheet: first time (default 0s); audio: start of the range"
         },
         {
           "name": "until",
           "type": "string",
-          "usage": "sheet: last time, included (default the last frame)"
+          "usage": "sheet: last time, included (default the last frame); audio: end of the range, excluded"
         },
         {
           "name": "count",
@@ -2158,7 +2335,17 @@
         {
           "name": "price-out",
           "type": "string",
-          "usage": "the price of a million output tokens; leave both prices out to remove the entry"
+          "usage": "the price of a million output tokens; leave all prices out to remove the entry"
+        },
+        {
+          "name": "unit",
+          "type": "string",
+          "usage": "image for the price of one image, mchar for the price of a million characters of speech; leave out for tokens"
+        },
+        {
+          "name": "unit-micros",
+          "type": "string",
+          "usage": "with --unit: the price of one image or of a million characters, in millionths of the currency unit"
         }
       ],
       "globals": [
@@ -2220,6 +2407,124 @@
         "key-file",
         "project",
         "dry-run"
+      ]
+    },
+    {
+      "name": "image:generate",
+      "domain": "provider",
+      "summary": "generate images with the provider of a connection; the job shows its estimate, waits for approval and stores the images as assets",
+      "usage": [
+        "stuarty image:generate --project <id> --connection <id> --model <id> [--prompt <text> | --prompt-file <file>] [--size <width>x<height>] [--count <n>] [--dry-run]"
+      ],
+      "example": "stuarty image:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --prompt \"A red fox\" --count 2",
+      "flags": [
+        {
+          "name": "connection",
+          "type": "string",
+          "usage": "the connection to the provider (required)"
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "usage": "the model id, as provider:models lists it (required)"
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "usage": "what to draw; without it and without --prompt-file the prompt is read from standard input"
+        },
+        {
+          "name": "prompt-file",
+          "type": "string",
+          "usage": "a file that holds the prompt"
+        },
+        {
+          "name": "size",
+          "type": "string",
+          "usage": "width and height in pixels joined by x (default 1024x1024)"
+        },
+        {
+          "name": "count",
+          "type": "integer",
+          "usage": "how many images, 1 to 10 (default 1); the estimate counts all of them"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "voice:generate",
+      "domain": "provider",
+      "summary": "generate speech with the provider of a connection; the job shows its estimate, waits for approval and stores the audio as an asset",
+      "usage": [
+        "stuarty voice:generate --project <id> --connection <id> --model <id> --voice <id> [--text <text> | --text-file <file>] [--language <tag>] [--format mp3|wav|flac|opus|aac] [--dry-run]"
+      ],
+      "example": "stuarty voice:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --voice alloy --text \"Welcome\"",
+      "flags": [
+        {
+          "name": "connection",
+          "type": "string",
+          "usage": "the connection to the provider (required)"
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "usage": "the model id, as provider:models lists it (required)"
+        },
+        {
+          "name": "voice",
+          "type": "string",
+          "usage": "the voice id, as voice:list names it (required)"
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "usage": "what to read out; without it and without --text-file the text is read from standard input"
+        },
+        {
+          "name": "text-file",
+          "type": "string",
+          "usage": "a file that holds the text"
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "usage": "a language tag such as pt-BR"
+        },
+        {
+          "name": "format",
+          "type": "string",
+          "usage": "mp3 (default), wav, flac, opus or aac"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "voice:list",
+      "domain": "provider",
+      "summary": "list the voices of the provider of a connection",
+      "usage": [
+        "stuarty voice:list <connection id>"
+      ],
+      "example": "stuarty voice:list con_0123456789",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
       ]
     },
     {

@@ -85,7 +85,12 @@ func checkMembers(tool, domain string, raw json.RawMessage, required, refused []
 func imageHistory(
 	ctx context.Context, svc service.Service, raw json.RawMessage, action, imageID string,
 ) (*toolOutput, error) {
-	refused := []string{"project_id", "timeline_id", "actor", "cursor", "limit"}
+	// The members of revert, diff and checkpoints are of timelines only; an image undo has no dry run, so a
+	// dry_run that were ignored here would undo for real.
+	refused := []string{
+		"project_id", "timeline_id", "actor", "cursor", "limit", "revision", "until", "name", "new_name", "note",
+		"dry_run",
+	}
 	if err := checkMembers("history", command.DomainImage, raw, []string{"image_id"}, refused); err != nil {
 		return nil, err
 	}
@@ -127,7 +132,8 @@ var toolDomains = map[string][]string{
 	"project_item": {command.DomainProject},
 	"edit":         {command.DomainVideo, command.DomainImage}, "history": {command.DomainVideo, command.DomainImage},
 	"view": {command.DomainVideo}, "lint": {command.DomainVideo},
-	// job_start also starts text.generate, the generation of the provider domain (SDD-016 section 10).
+	// job_start also starts text.generate, image.generate and voice.generate, the generations of the provider
+	// domain (SDD-016 sections 10 and 6.1).
 	"job_start": {command.DomainVideo, command.DomainProvider},
 	"job_get":   {command.DomainVideo}, "job_cancel": {command.DomainVideo}, "template": {command.DomainVideo},
 	"media_import": {command.DomainAsset}, "media_inspect": {command.DomainAsset}, "font_import": {command.DomainAsset},

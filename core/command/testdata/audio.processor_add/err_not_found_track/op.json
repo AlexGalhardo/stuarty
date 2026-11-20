@@ -1,0 +1,7 @@
+{
+  "op": "audio.processor_add",
+  "args": {
+    "track_id": "trk_zzzzzzzzzz",
+    "kind": "limiter"
+  }
+}

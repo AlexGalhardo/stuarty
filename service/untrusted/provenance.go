@@ -44,6 +44,8 @@ var Provenance = map[string]string{
 	"approval.Request.Reason":              SourceProjectText,
 	"service.TextResult.Text":              SourceNetworkText,
 	"service.ModelView.Name":               SourceNetworkText,
+	"service.VoiceView.Name":               SourceNetworkText,
+	"service.GeneratedItem.RevisedPrompt":  SourceNetworkText,
 	"service.LibraryEntry.Description":     SourceLibraryText,
 	"service.LibraryEntry.Tags":            SourceLibraryText,
 	"service.LibraryEntry.Error":           SourceLibraryText,
@@ -65,6 +67,7 @@ var Provenance = map[string]string{
 	"service.PublishResult.URL":             SourceNetworkText,
 	"service.SocialAccount.Label":           SourceProjectText,
 	"service.SocialAccount.AccountTitle":    SourceNetworkText,
+	"service.SocialChoice.Title":            SourceNetworkText,
 	"service.PublishValidateResult.Summary": SourceProjectText,
 
 	// the asset library (SDD-011 section 14): the text a person or an agent wrote about a file

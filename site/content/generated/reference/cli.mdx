@@ -259,6 +259,130 @@ Example:
 claude mcp add stuarty -- stuarty mcp
 ```
 
+## `revert`
+
+Go back to the document of an earlier revision, as a new step that undo takes back
+
+```text
+stuarty revert --project <id> (--revision n | --checkpoint name) [--base n] [--dry-run]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--revision` | integer |  | the revision to go back to |
+| `--checkpoint` | string |  | the name of a checkpoint to go back to |
+| `--base` | integer |  | the revision you read (default the current one); an older one conflicts with other actors' changes |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty revert --project prj_7k2m9x4q1b --checkpoint "before the intro" --dry-run
+```
+
+## `diff`
+
+List what changed between two revisions, most significant first
+
+```text
+stuarty diff --project <id> (--from n | --from-checkpoint name) [--until n]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--from` | integer |  | the revision the diff starts from |
+| `--from-checkpoint` | string |  | the name of a checkpoint the diff starts from |
+| `--until` | integer |  | the revision the diff ends at (default the current one) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty diff --project prj_7k2m9x4q1b --from 12
+```
+
+## `checkpoint:create`
+
+Name a revision so that it can be gone back to
+
+```text
+stuarty checkpoint:create --project <id> --name <name> [--note t] [--revision n]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--name` | string |  | 1 to 60 characters, no slash |
+| `--note` | string |  | up to 300 characters |
+| `--revision` | integer |  | the revision to name (default the current one) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty checkpoint:create --project prj_7k2m9x4q1b --name "before the intro"
+```
+
+## `checkpoint:list`
+
+List the checkpoints of a project, newest revision first
+
+```text
+stuarty checkpoint:list --project <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty checkpoint:list --project prj_7k2m9x4q1b --json
+```
+
+## `checkpoint:rename`
+
+Rename a checkpoint, and change its note
+
+```text
+stuarty checkpoint:rename --project <id> --name <name> --new-name <name> [--note t]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--name` | string |  | the checkpoint to rename |
+| `--new-name` | string |  | the new name |
+| `--note` | string |  | replaces the note when given |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty checkpoint:rename --project prj_7k2m9x4q1b --name draft --new-name "first cut"
+```
+
+## `checkpoint:remove`
+
+Remove a checkpoint; no revision is removed
+
+```text
+stuarty checkpoint:remove --project <id> --name <name>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--name` | string |  | the checkpoint to remove |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty checkpoint:remove --project prj_7k2m9x4q1b --name draft
+```
+
 ## `media:import`
 
 Import media files into a project
@@ -374,20 +498,21 @@ stuarty media:restore ast_3c5v8n2w6d --project prj_7k2m9x4q1b
 
 ## `view`
 
-Render a frame or a contact sheet of a project
+Render a frame or a contact sheet of a project, or measure its sound
 
 ```text
-stuarty view --project <id> [--mode frame|sheet] [--at t] [--times t1,t2,...]
-    [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px]
+stuarty view --project <id> [--mode frame|sheet|audio] [--at t] [--times t1,t2,...]
+    [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px] [--item id]
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `--mode` | string | `frame` | frame (one image at --at) or sheet (a grid) |
+| `--mode` | string | `frame` | frame (one image at --at), sheet (a grid) or audio (the loudness, true peak and noise floor with and without the audio processors) |
+| `--item` | string |  | audio: measure this clip or audio item alone |
 | `--at` | string |  | frame: the time to show |
 | `--times` | string |  | sheet: 2 to 16 times, comma separated |
-| `--from` | string |  | sheet: first time (default 0s) |
-| `--until` | string |  | sheet: last time, included (default the last frame) |
+| `--from` | string |  | sheet: first time (default 0s); audio: start of the range |
+| `--until` | string |  | sheet: last time, included (default the last frame); audio: end of the range, excluded |
 | `--count` | integer | `9` | sheet: frames evenly spaced from --from to --until |
 | `--cols` | integer |  | sheet: columns (default ceil(sqrt(count))) |
 | `--max-tokens` | integer |  | image token budget (default 800, a sheet 1,500; at most 1,568) |
@@ -1498,7 +1623,9 @@ stuarty provider:price --provider <id> --model <id> --currency USD --price-in <m
 | `--model` | string |  | the model id (required) |
 | `--currency` | string |  | three letters, such as USD; needed to set a price |
 | `--price-in` | string |  | the price of a million input tokens, in millionths of the currency unit |
-| `--price-out` | string |  | the price of a million output tokens; leave both prices out to remove the entry |
+| `--price-out` | string |  | the price of a million output tokens; leave all prices out to remove the entry |
+| `--unit` | string |  | image for the price of one image, mchar for the price of a million characters of speech; leave out for tokens |
+| `--unit-micros` | string |  | with --unit: the price of one image or of a million characters, in millionths of the currency unit |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 
@@ -1532,6 +1659,73 @@ Example:
 
 ```bash
 stuarty text:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --prompt "Write a caption"
+```
+
+## `image:generate`
+
+Generate images with the provider of a connection; the job shows its estimate, waits for approval and stores the images as assets
+
+```text
+stuarty image:generate --project <id> --connection <id> --model <id> [--prompt <text> | --prompt-file <file>] [--size <width>x<height>] [--count <n>] [--dry-run]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--connection` | string |  | the connection to the provider (required) |
+| `--model` | string |  | the model id, as provider:models lists it (required) |
+| `--prompt` | string |  | what to draw; without it and without --prompt-file the prompt is read from standard input |
+| `--prompt-file` | string |  | a file that holds the prompt |
+| `--size` | string |  | width and height in pixels joined by x (default 1024x1024) |
+| `--count` | integer |  | how many images, 1 to 10 (default 1); the estimate counts all of them |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty image:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --prompt "A red fox" --count 2
+```
+
+## `voice:generate`
+
+Generate speech with the provider of a connection; the job shows its estimate, waits for approval and stores the audio as an asset
+
+```text
+stuarty voice:generate --project <id> --connection <id> --model <id> --voice <id> [--text <text> | --text-file <file>] [--language <tag>] [--format mp3|wav|flac|opus|aac] [--dry-run]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--connection` | string |  | the connection to the provider (required) |
+| `--model` | string |  | the model id, as provider:models lists it (required) |
+| `--voice` | string |  | the voice id, as voice:list names it (required) |
+| `--text` | string |  | what to read out; without it and without --text-file the text is read from standard input |
+| `--text-file` | string |  | a file that holds the text |
+| `--language` | string |  | a language tag such as pt-BR |
+| `--format` | string |  | mp3 (default), wav, flac, opus or aac |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty voice:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --voice alloy --text "Welcome"
+```
+
+## `voice:list`
+
+List the voices of the provider of a connection
+
+```text
+stuarty voice:list <connection id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty voice:list con_0123456789
 ```
 
 ## `image:create`

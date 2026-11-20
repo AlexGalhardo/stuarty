@@ -126,6 +126,29 @@ The types named in the tables of the operations. The arguments of each editing c
 | `untrusted_notice` | `string` | no |  |
 | `uses` | array of [`Use`](/docs/api/schemas#use) | no |  |
 
+### AudioLevels
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `integrated_lufs` | `number (double)` or `null` | no |  |
+| `noise_floor_dbfs` | `number (double)` | no |  |
+| `speech_to_noise_db` | `number (double)` or `null` | no |  |
+| `true_peak_dbtp` | `number (double)` or `null` | no |  |
+
+### AudioMeasureResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `after` | [`AudioLevels`](/docs/api/schemas#audiolevels) | no |  |
+| `before` | [`AudioLevels`](/docs/api/schemas#audiolevels) | no |  |
+| `end_frame` | `integer (int64)` | no |  |
+| `item_id` | `string` | no |  |
+| `project_id` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `seconds` | `number (double)` | no |  |
+| `start_frame` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+
 ### AuditEntry
 
 | Name | Type | Required | Description |
@@ -322,6 +345,28 @@ The types named in the tables of the operations. The arguments of each editing c
 | `next_after` | `integer (int64)` or `null` | no |  |
 | `session` | [`ChatSession`](/docs/api/schemas#chatsession) | no |  |
 
+### Checkpoint
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actor` | `string` | no |  |
+| `at` | `string (date-time)` | no |  |
+| `auto` | `boolean` | no |  |
+| `name` | `string` | no |  |
+| `note` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
+### CheckpointListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `checkpoints` | array of [`Checkpoint`](/docs/api/schemas#checkpoint) | no |  |
+| `project_id` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
 ### ChromaKey
 
 | Name | Type | Required | Description |
@@ -454,15 +499,26 @@ The types named in the tables of the operations. The arguments of each editing c
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
+| `ai_disclosure` | `boolean` | no |  |
 | `endpoint` | `string` | no |  |
 | `guide` | `string` | no |  |
 | `guide_read` | `string` | no |  |
+| `hints` | map of `string` | no |  |
 | `hosts` | array of `string` | no |  |
 | `limits` | [`Limits`](/docs/api/schemas#limits) | no |  |
 | `name` | `string` | no |  |
 | `network` | `string` | no |  |
 | `publishes` | array of `string` | no |  |
 | `scopes` | array of `string` | no |  |
+
+### DiffEntry
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `change` | [`Change`](/docs/api/schemas#change) | no |  |
+| `line` | `string` | no |  |
+| `noun` | `string` | no |  |
+| `verb` | `string` | no |  |
 
 ### DoctorCheck
 
@@ -753,6 +809,29 @@ The types named in the tables of the operations. The arguments of each editing c
 | `fonts` | array of [`FontFamily`](/docs/api/schemas#fontfamily) | no |  |
 | `imported` | array of [`ImportedFont`](/docs/api/schemas#importedfont) | no |  |
 
+### GeneratedItem
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `asset_id` | `string` | no |  |
+| `bytes` | `integer (int64)` | no |  |
+| `hash` | `string` | no |  |
+| `kind` | `string` | no |  |
+| `revised_prompt` | `string` | no |  |
+| `state` | `string` | no |  |
+
+### GeneratedResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `cost` | [`Money`](/docs/api/schemas#money) | no |  |
+| `delivered` | `integer` | no |  |
+| `items` | array of [`GeneratedItem`](/docs/api/schemas#generateditem) | no |  |
+| `model` | `string` | no |  |
+| `notes` | array of `string` | no |  |
+| `provider` | `string` | no |  |
+| `requested` | `integer` | no |  |
+
 ### GradeSpec
 
 | Name | Type | Required | Description |
@@ -766,6 +845,19 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `proof` | `string` | no | HMAC-SHA256 keyed by the token over the nonce (SDD-007 section 3.8). |
+
+### HistoryDiffResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `count` | `integer` | no |  |
+| `entries` | array of [`DiffEntry`](/docs/api/schemas#diffentry) | no |  |
+| `from` | `integer (int64)` | no |  |
+| `project_id` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+| `to` | `integer (int64)` | no |  |
+| `untrusted_notice` | `string` | no |  |
 
 ### HistoryEntry
 
@@ -801,6 +893,29 @@ The types named in the tables of the operations. The arguments of each editing c
 | `at` | `string (date-time)` | no |  |
 | `kind` | `string` | no |  |
 | `revision` | `integer (int64)` | no |  |
+
+### HistoryRevertResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actor` | `string` | no |  |
+| `applied` | `boolean` | no |  |
+| `base_revision` | `integer (int64)` | no |  |
+| `created` | array of `string` | no |  |
+| `description` | `string` | no |  |
+| `diff` | array of [`Change`](/docs/api/schemas#change) | no |  |
+| `dry_run` | `boolean` | no |  |
+| `effective` | array of [`OpEffect`](/docs/api/schemas#opeffect) | no |  |
+| `findings` | array of [`Finding`](/docs/api/schemas#finding) | no |  |
+| `kind` | `string` | no |  |
+| `lint` | [`LintTotals`](/docs/api/schemas#linttotals) | no |  |
+| `project_id` | `string` | no |  |
+| `replayed` | `boolean` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `same` | `boolean` | no |  |
+| `target` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
 
 ### HslBand
 
@@ -1073,6 +1188,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `name` | `string` | no |  |
 | `opacity` | `number (double)` | no |  |
 | `outline` | [`Outline`](/docs/api/schemas#outline) or `any` or `null` or `null` | no |  |
+| `processors` | array of [`Processor`](/docs/api/schemas#processor) | no |  |
 | `radius` | `number (double)` | no |  |
 | `reverse` | `boolean` | no |  |
 | `rotation` | `number (double)` | no |  |
@@ -1140,6 +1256,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `batch` | [`BatchResult`](/docs/api/schemas#batchresult) or `any` or `null` or `null` | no |  |
 | `export` | [`ExportResult`](/docs/api/schemas#exportresult) or `any` or `null` or `null` | no |  |
+| `generated` | [`GeneratedResult`](/docs/api/schemas#generatedresult) or `any` or `null` or `null` | no |  |
 | `publish` | [`PublishResult`](/docs/api/schemas#publishresult) or `any` or `null` or `null` | no |  |
 | `text` | [`TextResult`](/docs/api/schemas#textresult) or `any` or `null` or `null` | no |  |
 | `transcribe` | [`TranscribeResult`](/docs/api/schemas#transcriberesult) or `any` or `null` or `null` | no |  |
@@ -1343,17 +1460,23 @@ The types named in the tables of the operations. The arguments of each editing c
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
+| `audio_codecs` | array of `string` | no |  |
+| `caption_max` | `integer` | no |  |
+| `daily_posts` | `integer` | no |  |
 | `description_max_bytes` | `integer` | no |  |
 | `file_max_bytes` | `integer (int64)` | no |  |
 | `forbidden` | `string` | no |  |
 | `formats` | array of `string` | no |  |
+| `hashtags_max` | `integer` | no |  |
 | `needs_kids_declaration` | `boolean` | no |  |
+| `preset` | `string` | no |  |
 | `read` | `string` | no |  |
 | `source` | `string` | no |  |
 | `tags_max_chars` | `integer` | no |  |
 | `thumbnail_formats` | array of `string` | no |  |
 | `thumbnail_max_bytes` | `integer (int64)` | no |  |
 | `title_max` | `integer` | no |  |
+| `video_codecs` | array of `string` | no |  |
 | `visibilities` | array of `string` | no |  |
 
 ### LintResult
@@ -1537,6 +1660,7 @@ The types named in the tables of the operations. The arguments of each editing c
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
+| `capability` | `string` | no |  |
 | `context_tokens` | `integer` | no |  |
 | `id` | `string` | no |  |
 | `name` | `string` | no |  |
@@ -1659,7 +1783,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `args` | map of `any` | no | The arguments of the command. |
-| `op` | `string`, one of 77 values | yes | A command name, as listed by GET /commands.. min length 1 |
+| `op` | `string`, one of 82 values | yes | A command name, as listed by GET /commands.. min length 1 |
 
 ### Option
 
@@ -1747,6 +1871,8 @@ The types named in the tables of the operations. The arguments of each editing c
 | `currency` | `string` | no |  |
 | `input_micros_per_mtok` | `integer (int64)` | no |  |
 | `output_micros_per_mtok` | `integer (int64)` | no |  |
+| `unit` | `string` | no |  |
+| `unit_micros` | `integer (int64)` | no |  |
 
 ### PriceEntry
 
@@ -1757,6 +1883,8 @@ The types named in the tables of the operations. The arguments of each editing c
 | `model` | `string` | no |  |
 | `output_micros_per_mtok` | `integer (int64)` | no |  |
 | `provider` | `string` | no |  |
+| `unit` | `string` | no |  |
+| `unit_micros` | `integer (int64)` | no |  |
 
 ### Primitive
 
@@ -1808,6 +1936,14 @@ The types named in the tables of the operations. The arguments of each editing c
 | `status` | `integer` | no |  |
 | `title` | `string` | no |  |
 | `type` | `string` | no |  |
+
+### Processor
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | no |  |
+| `kind` | `eq`, `compressor`, `limiter`, `gate`, `deesser`, `noise_reduction` | no |  |
+| `params` | map of `number (double)` | no |  |
 
 ### Production
 
@@ -2335,6 +2471,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `account_id` | `string` | no |  |
 | `account_title` | `string` | no |  |
+| `choices` | array of [`SocialChoice`](/docs/api/schemas#socialchoice) | no |  |
 | `connection_id` | `string` | no |  |
 | `label` | `string` | no |  |
 | `network` | `string` | no |  |
@@ -2345,6 +2482,13 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `accounts` | array of [`SocialAccount`](/docs/api/schemas#socialaccount) | no |  |
+
+### SocialChoice
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | `string` | no |  |
+| `title` | `string` | no |  |
 
 ### SocialConnectBeginResult
 
@@ -2546,6 +2690,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `muted` | `boolean` | no |  |
 | `name` | `string` | no |  |
 | `order` | `string` | no |  |
+| `processors` | array of [`Processor`](/docs/api/schemas#processor) | no |  |
 | `solo` | `boolean` | no |  |
 | `volume` | `number (double)` or `null` | no |  |
 
@@ -2665,6 +2810,23 @@ The types named in the tables of the operations. The arguments of each editing c
 | `detail` | `string` | no |  |
 | `name` | `string` | no |  |
 | `ok` | `boolean` | no |  |
+
+### VoiceListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `connection_id` | `string` | no |  |
+| `provider` | `string` | no |  |
+| `voices` | array of [`VoiceView`](/docs/api/schemas#voiceview) | no |  |
+
+### VoiceView
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | `string` | no |  |
+| `language` | `string` | no |  |
+| `name` | `string` | no |  |
+| `source` | `string` | no |  |
 
 ### Wheel
 

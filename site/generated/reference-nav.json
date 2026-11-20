@@ -7,12 +7,18 @@
         "projects.list",
         "projects.create",
         "projects.get",
+        "audio.measure",
         "bitmaps.get",
         "projects.brief.get",
         "projects.brief.set",
         "projects.briefing.answer",
         "projects.bundle.export",
+        "projects.checkpoints.list",
+        "projects.checkpoints.create",
+        "projects.checkpoints.rename",
+        "projects.checkpoints.remove",
         "projects.describe",
+        "projects.diff",
         "projects.duplicate",
         "projects.edit",
         "projects.frame",
@@ -31,6 +37,7 @@
         "projects.plan",
         "projects.redo",
         "projects.restore",
+        "projects.revert",
         "projects.sheet",
         "projects.snap_points",
         "projects.trash",
@@ -141,15 +148,18 @@
         "connections.get",
         "connections.remove",
         "providers.models",
-        "connections.test"
+        "connections.test",
+        "voice.list"
       ]
     },
     {
       "tag": "AI providers",
       "pages": [
+        "image.generate",
         "providers.list",
         "providers.prices.set",
-        "text.generate"
+        "text.generate",
+        "voice.generate"
       ]
     },
     {
@@ -190,7 +200,8 @@
         "social.accounts",
         "social.complete",
         "social.connect",
-        "social.networks"
+        "social.networks",
+        "social.select"
       ]
     },
     {
@@ -271,8 +282,13 @@
       "animation.list_presets",
       "asset.remove",
       "audio.add",
+      "audio.apply_preset",
       "audio.duck",
       "audio.mark_beats",
+      "audio.processor_add",
+      "audio.processor_move",
+      "audio.processor_remove",
+      "audio.processor_set",
       "caption.add",
       "caption.edit_word",
       "caption.from_transcript",

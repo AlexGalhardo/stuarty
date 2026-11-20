@@ -41,10 +41,25 @@ export function ModelRow({
 		currency: string,
 		input: number,
 		output: number,
+		unit?: "image" | "mchar",
 	): Promise<void>;
 }): ReactNode {
 	const t = useT();
 	const locale = useLocale();
+	// A model an adapter hints as an image or a voice model is priced per image or per million characters
+	// (SDD-016 section 4.5); the rest, per million tokens. The price shown is the one in that unit.
+	const unit =
+		model.capability === "image"
+			? "image"
+			: model.capability === "voice"
+				? "mchar"
+				: undefined;
+	const shown =
+		model.price !== null && model.price.unit === unit ? model.price : null;
+	const [unitInput, setUnitInput] = useState(
+		shown?.unit_micros === undefined ? "" : microsToInput(shown.unit_micros),
+	);
+	const unitMicros = parseMicros(unitInput);
 	const [open, setOpen] = useState(false);
 	const [currency, setCurrency] = useState(model.price?.currency ?? "USD");
 	const [input, setInput] = useState(
@@ -79,25 +94,33 @@ export function ModelRow({
 						</p>
 					)}
 					<p className="text-xs">
-						{model.price === null
+						{shown === null
 							? t("ui.providers.price_none")
-							: t("ui.providers.price", {
-									input: formatMoney(
-										{
-											micros: model.price.input_micros_per_mtok,
-											currency: model.price.currency,
-										},
-										locale,
-									),
-									output: formatMoney(
-										{
-											micros: model.price.output_micros_per_mtok,
-											currency: model.price.currency,
-										},
-										locale,
-									),
-									source: t(`ui.providers.source.${model.price_source}`),
-								})}
+							: unit !== undefined && shown.unit_micros !== undefined
+								? t(`ui.providers.price_unit.${unit}`, {
+										amount: formatMoney(
+											{ micros: shown.unit_micros, currency: shown.currency },
+											locale,
+										),
+										source: t(`ui.providers.source.${model.price_source}`),
+									})
+								: t("ui.providers.price", {
+										input: formatMoney(
+											{
+												micros: shown.input_micros_per_mtok,
+												currency: shown.currency,
+											},
+											locale,
+										),
+										output: formatMoney(
+											{
+												micros: shown.output_micros_per_mtok,
+												currency: shown.currency,
+											},
+											locale,
+										),
+										source: t(`ui.providers.source.${model.price_source}`),
+									})}
 					</p>
 				</div>
 				<Button
@@ -115,6 +138,17 @@ export function ModelRow({
 					className="flex flex-wrap items-end gap-3 rounded-lg border bg-muted p-3"
 					onSubmit={(event) => {
 						event.preventDefault();
+						if (unit !== undefined) {
+							if (unitMicros === null) return;
+							void onPrice(
+								model,
+								currency.trim().toUpperCase(),
+								unitMicros,
+								0,
+								unit,
+							);
+							return;
+						}
 						if (inputMicros === null || outputMicros === null) return;
 						void onPrice(
 							model,
@@ -136,36 +170,53 @@ export function ModelRow({
 							onChange={(event) => setCurrency(event.target.value)}
 						/>
 					</div>
-					<div className="flex flex-col gap-1">
-						<Label htmlFor={`price-in-${model.id}`}>
-							{t("ui.providers.price_input")}
-						</Label>
-						<Input
-							id={`price-in-${model.id}`}
-							className="w-36"
-							inputMode="decimal"
-							value={input}
-							onChange={(event) => setInput(event.target.value)}
-						/>
-					</div>
-					<div className="flex flex-col gap-1">
-						<Label htmlFor={`price-out-${model.id}`}>
-							{t("ui.providers.price_output")}
-						</Label>
-						<Input
-							id={`price-out-${model.id}`}
-							className="w-36"
-							inputMode="decimal"
-							value={output}
-							onChange={(event) => setOutput(event.target.value)}
-						/>
-					</div>
+					{unit === undefined ? (
+						<>
+							<div className="flex flex-col gap-1">
+								<Label htmlFor={`price-in-${model.id}`}>
+									{t("ui.providers.price_input")}
+								</Label>
+								<Input
+									id={`price-in-${model.id}`}
+									className="w-36"
+									inputMode="decimal"
+									value={input}
+									onChange={(event) => setInput(event.target.value)}
+								/>
+							</div>
+							<div className="flex flex-col gap-1">
+								<Label htmlFor={`price-out-${model.id}`}>
+									{t("ui.providers.price_output")}
+								</Label>
+								<Input
+									id={`price-out-${model.id}`}
+									className="w-36"
+									inputMode="decimal"
+									value={output}
+									onChange={(event) => setOutput(event.target.value)}
+								/>
+							</div>
+						</>
+					) : (
+						<div className="flex flex-col gap-1">
+							<Label htmlFor={`price-unit-${model.id}`}>
+								{t(`ui.providers.price_per.${unit}`)}
+							</Label>
+							<Input
+								id={`price-unit-${model.id}`}
+								className="w-36"
+								inputMode="decimal"
+								value={unitInput}
+								onChange={(event) => setUnitInput(event.target.value)}
+							/>
+						</div>
+					)}
 					<Button
 						type="submit"
 						disabled={
-							inputMicros === null ||
-							outputMicros === null ||
-							currency.trim().length !== 3
+							(unit === undefined
+								? inputMicros === null || outputMicros === null
+								: unitMicros === null) || currency.trim().length !== 3
 						}
 					>
 						{t("ui.providers.price_save")}
@@ -222,6 +273,7 @@ function ProviderConnection({
 		currency: string,
 		input: number,
 		output: number,
+		unit?: "image" | "mchar",
 	): Promise<void> {
 		setFailure(null);
 		try {
@@ -229,8 +281,9 @@ function ProviderConnection({
 				provider: models?.provider ?? connection.kind,
 				model: model.id,
 				currency,
-				input_micros_per_mtok: input,
-				output_micros_per_mtok: output,
+				...(unit === undefined
+					? { input_micros_per_mtok: input, output_micros_per_mtok: output }
+					: { unit, unit_micros: input }),
 			});
 			await readModels(false);
 		} catch (error) {

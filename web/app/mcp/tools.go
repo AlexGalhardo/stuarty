@@ -273,18 +273,10 @@ func commandHelp(ctx context.Context, svc service.Service, raw json.RawMessage) 
 	return &toolOutput{value: res, text: res.Text}, nil
 }
 
-// history is three operations behind one tool (SDD-003 section 4.1): list, undo
-// and redo.
+// history is the change log of a timeline behind one tool (SDD-003 section 4.1): list, undo and redo, and since
+// epic 36 revert, diff and the checkpoints.
 func history(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
-	in, err := decode[struct {
-		Domain     string `json:"domain"`
-		ImageID    string `json:"image_id"`
-		ProjectID  string `json:"project_id"`
-		TimelineID string `json:"timeline_id"`
-		Action     string `json:"action"`
-		Actor      string `json:"actor"`
-		pageArgs
-	}](raw)
+	in, err := decode[historyArgs](raw)
 	if err != nil {
 		return nil, err
 	}
@@ -302,39 +294,7 @@ func history(ctx context.Context, svc service.Service, raw json.RawMessage) (*to
 		return nil, err
 	}
 
-	switch in.Action {
-	case "undo", "redo":
-		req := service.UndoRequest{ProjectID: in.ProjectID, TimelineID: in.TimelineID}
-
-		var res *service.UndoResult
-
-		if in.Action == "undo" {
-			res, err = svc.Undo(ctx, req)
-		} else {
-			res, err = svc.Redo(ctx, req)
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		return &toolOutput{value: res, text: service.UndoText(res)}, nil
-	default:
-		res, err := svc.HistoryList(
-			ctx,
-			service.HistoryListRequest{
-				ProjectID:  in.ProjectID,
-				TimelineID: in.TimelineID,
-				Actor:      in.Actor,
-				Page:       in.page(),
-			},
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		return &toolOutput{value: res, text: res.Text}, nil
-	}
+	return videoHistory(ctx, svc, raw, &in)
 }
 
 func lintTool(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
@@ -626,8 +586,9 @@ func jobGet(ctx context.Context, svc service.Service, raw json.RawMessage) (*too
 	}
 }
 
-// view is two operations behind one tool (SDD-003 section 4.2): a frame at "at"
-// or a contact sheet. It is the only tool that returns an image block.
+// view is four operations behind one tool (SDD-003 section 4.2): a frame at "at", a contact sheet, in mode motion the
+// brief of an external render, and in mode audio the measurement of the sound (epic 34). It is the only tool that
+// returns an image block.
 func view(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
 		ProjectID  string   `json:"project_id"`
@@ -639,9 +600,36 @@ func view(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolO
 		Until      string   `json:"until"`
 		Count      int      `json:"count"`
 		MaxTokens  int      `json:"max_tokens"`
+		ItemID     string   `json:"item_id"`
 	}](raw)
 	if err != nil {
 		return nil, err
+	}
+
+	if in.Mode == "audio" {
+		if in.At != "" || len(in.Times) > 0 || in.Count != 0 || in.MaxTokens != 0 {
+			return nil, &service.Error{
+				Code: command.CodeValidation, Path: "mode", Message: "mode audio takes item_id, from and until only.",
+				Hint: "from and until are the range; leave them out for the item, or for the timeline",
+			}
+		}
+
+		measure, merr := svc.AudioMeasure(ctx, service.AudioMeasureRequest{
+			ProjectID: in.ProjectID, TimelineID: in.TimelineID, ItemID: in.ItemID, Start: in.From, End: in.Until,
+		})
+		if merr != nil {
+			return nil, merr
+		}
+
+		return &toolOutput{value: measure, text: measure.Text}, nil
+	}
+
+	// As the CLI refuses --item outside --mode audio: a frame, a sheet and a motion brief are of the timeline.
+	if in.ItemID != "" {
+		return nil, &service.Error{
+			Code: command.CodeValidation, Path: "item_id", Message: "item_id is for mode audio.",
+			Hint: "use mode audio to measure one item",
+		}
 	}
 
 	if in.Mode == "motion" {

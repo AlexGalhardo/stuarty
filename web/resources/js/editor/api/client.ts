@@ -13,6 +13,8 @@ import type {
 	AssetListResult,
 	AssetQuery,
 	AssetResult,
+	AudioMeasureQuery,
+	AudioMeasureResult,
 	AuditListResult,
 	AuditQuery,
 	BrandKit,
@@ -22,6 +24,8 @@ import type {
 	ChatSession,
 	ChatSessionListResult,
 	ChatTranscriptResult,
+	Checkpoint,
+	CheckpointListResult,
 	CommandHelpResult,
 	Connection,
 	ConnectionCreateRequest,
@@ -37,8 +41,16 @@ import type {
 	ExportPresetListResult,
 	FontImportResult,
 	FontListResult,
+	GoogleComplete,
+	GoogleSettings,
+	GoogleSettingsRequest,
+	GoogleStart,
+	GoogleStatus,
+	HistoryDiffResult,
 	HistoryListResult,
 	HistoryQuery,
+	HistoryRevertResult,
+	ImageGenerateRequest,
 	InstallToolRequest,
 	InstallToolResult,
 	Job,
@@ -67,6 +79,7 @@ import type {
 	ProviderPricesResult,
 	PublishRequest,
 	PublishValidateResult,
+	RevertRequest,
 	SessionResult,
 	SnapPointsQuery,
 	SnapPointsResult,
@@ -76,6 +89,7 @@ import type {
 	SocialConnectRequest,
 	SocialConnectResult,
 	SocialNetworkListResult,
+	SocialSelectRequest,
 	SystemQuery,
 	SystemResult,
 	TemplateInstantiateRequest,
@@ -85,6 +99,8 @@ import type {
 	TemplateSaveRequest,
 	ToolsStatusResult,
 	UserListResult,
+	VoiceGenerateRequest,
+	VoiceListResult,
 } from "./types";
 
 // Timeouts of SDD-012 section 4.3 item 4.
@@ -95,6 +111,8 @@ const CHAT_START_TIMEOUT_MS = 45_000;
 // A bundle call may hold for up to 25 s (wait_ms) before the job is returned.
 const BUNDLE_WAIT_MS = 20_000;
 const BUNDLE_TIMEOUT_MS = 60_000;
+// The sound of up to 600 s is decoded and mixed twice.
+const MEASURE_TIMEOUT_MS = 120_000;
 
 const defaultDeps: RetryDeps = {
 	sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
@@ -133,6 +151,11 @@ export interface ApiClient {
 		projectId: string,
 		items: readonly ExportBatchItem[],
 	): Promise<Job>;
+	// The level of the sound before and after the audio processors (SDD-004 section 7.1).
+	measureAudio(
+		projectId: string,
+		query?: AudioMeasureQuery,
+	): Promise<AudioMeasureResult>;
 	getJob(jobId: string): Promise<Job>;
 	cancelJob(jobId: string): Promise<Job>;
 	listJobs(projectId: string): Promise<JobListResult>;
@@ -156,6 +179,22 @@ export interface ApiClient {
 		projectId: string,
 		query?: HistoryQuery,
 	): Promise<HistoryListResult>;
+	// Revert, the diff of two revisions and checkpoints (epic 36). The core words
+	// every change; a revert with `dry_run` returns the diff it would make.
+	getCheckpoints(projectId: string): Promise<CheckpointListResult>;
+	createCheckpoint(
+		projectId: string,
+		body: { name: string; note?: string; revision?: number },
+	): Promise<Checkpoint>;
+	removeCheckpoint(projectId: string, name: string): Promise<Checkpoint>;
+	getHistoryDiff(
+		projectId: string,
+		range: { from: number; until?: number },
+	): Promise<HistoryDiffResult>;
+	revertTo(
+		projectId: string,
+		request: RevertRequest,
+	): Promise<HistoryRevertResult>;
 	inspectMedia(
 		projectId: string,
 		assetId: string,
@@ -204,6 +243,7 @@ export interface ApiClient {
 	connectSocial(request: SocialConnectRequest): Promise<SocialConnectResult>;
 	completeSocial(request: SocialCompleteRequest): Promise<SocialAccount>;
 	listSocialAccounts(): Promise<SocialAccountListResult>;
+	selectSocialAccount(request: SocialSelectRequest): Promise<SocialAccount>;
 	validatePublish(request: PublishRequest): Promise<PublishValidateResult>;
 	publishNow(request: PublishRequest): Promise<Job>;
 	listActiveProjects(): Promise<ProjectListResult>;
@@ -220,6 +260,11 @@ export interface ApiClient {
 	setProviderPrice(
 		request: ProviderPriceSetRequest,
 	): Promise<ProviderPricesResult>;
+	// Image and voice generation (SDD-016 section 6.1): each answers the job with its estimate, which waits
+	// for a person; dry_run answers the estimate and writes nothing.
+	generateImage(request: ImageGenerateRequest): Promise<Job>;
+	generateVoice(request: VoiceGenerateRequest): Promise<Job>;
+	listVoices(connectionId: string): Promise<VoiceListResult>;
 	// The approval queue (SDD-015). Deciding, the rules and the ceilings are for a person in a
 	// browser session; any other caller gets E_PRIVILEGED_SESSION.
 	listApprovals(state?: string): Promise<ApprovalListResult>;
@@ -299,6 +344,18 @@ export interface ApiClient {
 	// for them is built on a transport with an empty base.
 	login(email: string, password: string): Promise<SessionResult>;
 	logout(): Promise<void>;
+	// The optional Google sign-in of network mode (SDD-007 section 4.7): root routes too.
+	googleStatus(): Promise<GoogleStatus>;
+	googleStart(): Promise<GoogleStart>;
+	googleLink(password: string): Promise<GoogleStart>;
+	googleUnlink(password: string): Promise<GoogleStatus>;
+	googleComplete(request: {
+		state: string;
+		code?: string;
+		error?: string;
+	}): Promise<GoogleComplete>;
+	googleSettings(): Promise<GoogleSettings>;
+	setGoogleSettings(request: GoogleSettingsRequest): Promise<GoogleSettings>;
 	listTemplates(): Promise<TemplateListResult>;
 	instantiateTemplate(
 		templateId: string,
@@ -404,6 +461,18 @@ export function createClient(
 				READ_TIMEOUT_MS,
 			);
 		},
+		measureAudio: (id, q = {}) => {
+			const params = new URLSearchParams();
+			if (q.itemId !== undefined) params.set("item_id", q.itemId);
+			if (q.start !== undefined) params.set("start", q.start);
+			if (q.end !== undefined) params.set("end", q.end);
+			const suffix = params.size === 0 ? "" : `?${params.toString()}`;
+			return call(
+				"GET",
+				`${project(id)}/audio-measure${suffix}`,
+				MEASURE_TIMEOUT_MS,
+			);
+		},
 		startExportBatch: (id, items) =>
 			call("POST", `${project(id)}/export-batches`, READ_TIMEOUT_MS, {
 				items: items.map((item) =>
@@ -447,6 +516,24 @@ export function createClient(
 				`${project(id)}/history${query({ actor: q.actor, cursor: q.cursor, limit: q.limit })}`,
 				READ_TIMEOUT_MS,
 			),
+		getCheckpoints: (id) =>
+			call("GET", `${project(id)}/checkpoints`, READ_TIMEOUT_MS),
+		createCheckpoint: (id, body) =>
+			call("POST", `${project(id)}/checkpoints`, EDIT_TIMEOUT_MS, body),
+		removeCheckpoint: (id, name) =>
+			call(
+				"DELETE",
+				`${project(id)}/checkpoints/${encodeURIComponent(name)}`,
+				EDIT_TIMEOUT_MS,
+			),
+		getHistoryDiff: (id, range) =>
+			call(
+				"GET",
+				`${project(id)}/diff${query({ from: range.from, until: range.until })}`,
+				READ_TIMEOUT_MS,
+			),
+		revertTo: (id, request) =>
+			call("POST", `${project(id)}/revert`, EDIT_TIMEOUT_MS, request),
 		inspectMedia: (id, asset, q = {}) =>
 			call(
 				"GET",
@@ -540,6 +627,8 @@ export function createClient(
 		completeSocial: (request) =>
 			call("POST", "/social/complete", EDIT_TIMEOUT_MS, request),
 		listSocialAccounts: () => call("GET", "/social/accounts", READ_TIMEOUT_MS),
+		selectSocialAccount: (request) =>
+			call("POST", "/social/select", EDIT_TIMEOUT_MS, request),
 		validatePublish: (request) =>
 			call("POST", "/publish/validate", EDIT_TIMEOUT_MS, request),
 		publishNow: (request) => call("POST", "/publish", EDIT_TIMEOUT_MS, request),
@@ -620,6 +709,16 @@ export function createClient(
 			),
 		setProviderPrice: (request) =>
 			call("PUT", "/providers/prices", EDIT_TIMEOUT_MS, request),
+		generateImage: (request) =>
+			call("POST", "/image/generate", EDIT_TIMEOUT_MS, request),
+		generateVoice: (request) =>
+			call("POST", "/voice/generate", EDIT_TIMEOUT_MS, request),
+		listVoices: (connectionId) =>
+			call(
+				"GET",
+				`/connections/${encodeURIComponent(connectionId)}/voices`,
+				READ_TIMEOUT_MS,
+			),
 		listApprovals: (state) =>
 			call(
 				"GET",
@@ -707,6 +806,17 @@ export function createClient(
 		logout: async () => {
 			await call("POST", "/auth/logout", EDIT_TIMEOUT_MS, {});
 		},
+		googleStatus: () => call("GET", "/auth/google", READ_TIMEOUT_MS),
+		googleStart: () => call("POST", "/auth/google/start", EDIT_TIMEOUT_MS, {}),
+		googleLink: (password) =>
+			call("POST", "/auth/google/link", EDIT_TIMEOUT_MS, { password }),
+		googleUnlink: (password) =>
+			call("POST", "/auth/google/unlink", EDIT_TIMEOUT_MS, { password }),
+		googleComplete: (request) =>
+			call("POST", "/auth/google/complete", EDIT_TIMEOUT_MS, request),
+		googleSettings: () => call("GET", "/auth/google/settings", READ_TIMEOUT_MS),
+		setGoogleSettings: (request) =>
+			call("PUT", "/auth/google/settings", EDIT_TIMEOUT_MS, request),
 		listTemplates: () => call("GET", "/templates", READ_TIMEOUT_MS),
 		instantiateTemplate: (templateId, request) =>
 			call(
