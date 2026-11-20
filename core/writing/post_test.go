@@ -216,8 +216,19 @@ func TestPostRenderHTML(t *testing.T) {
 			"![the \"desk\"](asset:" + goodAsset + ")",
 			`<p><img src="images/` + goodAsset + `.png" alt="the &#34;desk&#34;"></p>` + "\n",
 		},
-		"image gone": {"![alt](asset:ast_abcdefghjk)", "<p>alt</p>\n"},
-		"escape":     {`\*not em\* \<b\>`, "<p>*not em* &lt;b&gt;</p>\n"},
+		"image gone":          {"![alt](asset:ast_abcdefghjk)", "<p>alt</p>\n"},
+		"escape":              {`\*not em\* \<b\>`, "<p>*not em* &lt;b&gt;</p>\n"},
+		"escaped closer":      {`*a\*b*`, "<p><em>a*b</em></p>\n"},
+		"space before closer": {"*a *b*", "<p><em>a *b</em></p>\n"},
+		"unclosed marks":      {"[a *b [c](x", "<p>[a *b [c](x</p>\n"},
+		"nested link": {
+			"[[a](https://a.example)](https://b.example)",
+			`<p><a href="https://b.example" rel="noopener noreferrer"><a href="https://a.example" rel="noopener noreferrer">a</a></a></p>` + "\n",
+		},
+		"links past the depth stay text": {
+			"[[[[[a](/1)](/2)](/3)](/4)](/5)",
+			`<p><a href="/5" rel="noopener noreferrer"><a href="/4" rel="noopener noreferrer"><a href="/3" rel="noopener noreferrer"><a href="/2" rel="noopener noreferrer">[a](/1)</a></a></a></a></p>` + "\n",
+		},
 	}
 
 	for name, c := range cases {
@@ -257,6 +268,9 @@ func TestSecurity_T88_HostilePostRendersAsText(t *testing.T) {
 		"# <svg onload=1>",
 		"&lt;script&gt; &#60;script&#62;",
 		"<!-- --><style>*{}</style>",
+		`[x](/\evil.example)`,
+		`[x](javascript&#58;alert(1))`,
+		`[x](&#106;avascript:alert(1))`,
 	}
 
 	for _, in := range hostile {
@@ -301,6 +315,35 @@ func TestSecurity_T88_HostilePostRendersAsText(t *testing.T) {
 	}
 }
 
+// A body of the largest size made of marks that never close renders in linear time: before the scan tables, each [ or
+// * searched to the end of the block, and 200 KiB of them took from 3 to 34 seconds of the server's CPU.
+func TestPostRenderIsLinearOnUnclosedMarks(t *testing.T) {
+	t.Parallel()
+
+	nested := strings.Repeat("[", MaxPostBytes/8) + "a" + strings.Repeat("](/x)", MaxPostBytes/8)
+
+	for name, unit := range map[string]string{
+		"brackets": "[", "bracket text": "[a", "images": "![", "stars": "*a ", "double stars": "**a ",
+		"parens": "[a](", "nested": nested,
+	} {
+		body := unit
+		if name != "nested" {
+			body = strings.Repeat(unit, MaxPostBytes/len(unit))
+		}
+
+		start := time.Now()
+		out := RenderHTML(body, nil)
+
+		if took := time.Since(start); took > 5*time.Second {
+			t.Errorf("%s: %d bytes rendered in %v", name, len(body), took)
+		}
+
+		if strings.Count(out, "<a ") > 2*maxInlineDepth {
+			t.Errorf("%s: links nested past the depth limit", name)
+		}
+	}
+}
+
 func htmlUnescape(s string) string {
 	return strings.NewReplacer("&amp;", "&", "&#34;", `"`, "&#39;", "'", "&lt;", "<", "&gt;", ">").Replace(s)
 }
@@ -314,7 +357,7 @@ func TestPostSafeHref(t *testing.T) {
 		}
 	}
 
-	for _, bad := range []string{"", "javascript:1", "//a.example", "ftp://a", "data:x", "a b", "https://a\x00", "relative/path", "https://a" + bidi + ".example"} {
+	for _, bad := range []string{"", "javascript:1", "//a.example", `/\a.example`, `https://a.example\@b.example`, "ftp://a", "data:x", "a b", "https://a\x00", "relative/path", "https://a" + bidi + ".example"} {
 		if SafeHref(bad) {
 			t.Errorf("%q is allowed", bad)
 		}
