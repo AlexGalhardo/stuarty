@@ -46,21 +46,38 @@ type Cost struct {
 	Micros   int64
 	Currency string
 	Link     bool
+	// Date is the date the price was read on the network's page, or edited by a person; empty for a network
+	// with a fixed cost.
+	Date string
+}
+
+// CostFor is the cost of a post to a network: the price, when the network has one (it answers by the text of the
+// post), and the fixed cost of its description otherwise.
+func CostFor(d Description, price *publish.Price, p *publish.Post) Cost {
+	if price != nil {
+		micros, link := price.For(publish.Caption(p))
+		date := price.Read
+
+		if price.Edited != "" {
+			date = price.Edited
+		}
+
+		return Cost{Micros: micros, Currency: price.Currency, Link: link, Date: date}
+	}
+
+	return Cost{Micros: d.PostCostMicros, Currency: d.PostCostCurrency}
 }
 
 // CostOf is the cost of a post to the network the connector serves, given the secret of the connection (for a
-// price a person edited). A network with a price answers it by the text of the post; one with a fixed
-// PostCostMicros answers that.
+// price a person edited).
 func CostOf(c Connector, secret []byte, p *publish.Post) Cost {
-	if price, ok := EffectivePrice(c, secret); ok {
-		micros, link := price.For(publish.Caption(p))
+	var price *publish.Price
 
-		return Cost{Micros: micros, Currency: price.Currency, Link: link}
+	if pr, ok := EffectivePrice(c, secret); ok {
+		price = &pr
 	}
 
-	d := c.Describe()
-
-	return Cost{Micros: d.PostCostMicros, Currency: d.PostCostCurrency}
+	return CostFor(c.Describe(), price, p)
 }
 
 // Rotation keeps a refresh token that the network replaces at every refresh (SDD-020 section 34). Two sends

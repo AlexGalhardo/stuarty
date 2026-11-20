@@ -222,6 +222,7 @@ type Service interface {
 	SocialConnectComplete(ctx context.Context, req SocialConnectCompleteRequest) (*SocialAccount, error)
 	SocialAccountList(ctx context.Context, req SocialAccountListRequest) (*SocialAccountListResult, error)
 	SocialAccountSelect(ctx context.Context, req SocialAccountSelectRequest) (*SocialAccount, error)
+	SocialPriceSet(ctx context.Context, req SocialPriceSetRequest) (*SocialAccount, error)
 	PublishValidate(ctx context.Context, req PublishValidateRequest) (*PublishValidateResult, error)
 	PublishNow(ctx context.Context, req PublishNowRequest) (*Job, error)
 	PublishStatus(ctx context.Context, req PublishStatusRequest) (*PublishStatusResult, error)

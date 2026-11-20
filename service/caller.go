@@ -181,6 +181,7 @@ var Scopes = map[string]string{
 	"SocialConnectComplete": ScopeAdmin,
 	"SocialAccountList":     ScopeRead,
 	"SocialAccountSelect":   ScopeAdmin,
+	"SocialPriceSet":        ScopeAdmin,
 	"PublishValidate":       ScopeRead,
 	"PublishNow":            ScopeRender,
 	"PublishStatus":         ScopeRead,

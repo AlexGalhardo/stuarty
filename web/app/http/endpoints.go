@@ -510,6 +510,11 @@ var Endpoints = []Endpoint{
 		Summary: "Choose the Page or Instagram account a sign-in reached (a person in the browser only)",
 	},
 	{
+		ID: "social.price", Method: http.MethodPost, Path: "/social/price", Scope: service.ScopeAdmin,
+		Service: "SocialPriceSet", Status: 200,
+		Summary: "Correct the price of a post on a network that charges for one (a person in the browser only)",
+	},
+	{
 		ID:      "publish.validate",
 		Method:  http.MethodPost,
 		Path:    "/publish/validate",

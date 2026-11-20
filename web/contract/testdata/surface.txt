@@ -303,6 +303,7 @@ route POST /publish/validate
 route POST /scripts/estimate
 route POST /social/complete
 route POST /social/connect
+route POST /social/price
 route POST /social/select
 route POST /system/launch
 route POST /system/scheduler
