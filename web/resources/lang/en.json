@@ -1642,7 +1642,10 @@
         "listen": "Listen to the processed sound",
         "rendering": "Rendering the sound...",
         "listen_failed": "The sound could not be rendered.",
-        "player": "Processed sound"
+        "player": "Processed sound",
+        "preview_processing": "Processing the sound for the preview. The timeline plays it unprocessed until then.",
+        "preview_ready": "The timeline plays the processed sound.",
+        "track_not_previewed": "The timeline does not play the processors of a track. The export does."
       },
       "markers": {
         "title": {

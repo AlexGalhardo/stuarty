@@ -397,6 +397,9 @@ export interface PlanAudio {
 	// The item reads its source backwards (SDD-004 section 3.12).
 	reverse?: boolean;
 	gain: PerFrame;
+	// The file of the item's processed sound (SDD-004 section 7.1): its key, the
+	// timeline frame of its first sample and its length in frames.
+	processed?: { key: string; start: number; frames: number };
 }
 
 // The ramp of a speed curve as the plan carries it: the points (`t` a fraction

@@ -1642,7 +1642,10 @@
         "listen": "Ouvir o som processado",
         "rendering": "Gerando o som...",
         "listen_failed": "Não foi possível gerar o som.",
-        "player": "Som processado"
+        "player": "Som processado",
+        "preview_processing": "Processando o som para a prévia. A linha do tempo o toca sem processar até lá.",
+        "preview_ready": "A linha do tempo toca o som processado.",
+        "track_not_previewed": "A linha do tempo não toca os processadores de uma trilha. A exportação toca."
       },
       "markers": {
         "title": {
