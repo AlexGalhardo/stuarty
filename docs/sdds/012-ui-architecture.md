@@ -1405,6 +1405,8 @@ The mechanism is kept: server catalogs, `{name}` placeholders, plural objects, `
 
 Dates and numbers use `Intl` with the active locale; timecodes are not localized. Core text shown as received (T9) is English in both locales; the headline and labels around it are localized.
 
+The name of a network or a placement (YouTube Shorts, Instagram Reels, Facebook Reels, TikTok) is a brand name and is not translated: every catalogue spells it as the `Label` of the platform preset of the core (`core/export/preset.go`), so the briefing and the export dialog give one network one name; its keys are in `SAME_IN_PORTUGUESE` of `check-i18n.ts` (VV-260).
+
 ## 17. Theme
 
 D-024: dark by default, light on a toggle.
