@@ -65,6 +65,8 @@ export const shots = {
 } satisfies Record<string, Shot>;
 
 export const hero = {
+	/** The title of the home page (the author's wording); the backup versions keep `title`. */
+	homeTitle: "Create, edit, manage and publish your audiovisual and text content in one place",
 	eyebrow: "Open source studio for creators",
 	title: "Create, edit, manage and publish in one place.",
 	lead: "Script, cut, caption, thumbnail and post from one studio on your own machine. Your AI agent works beside you, through the same commands you use.",
