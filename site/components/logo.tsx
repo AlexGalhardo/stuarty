@@ -7,7 +7,9 @@ export function LogoMark({ className = "size-6" }: { className?: string }) {
 	return <img src={withBase("/logo.png")} alt="" width={24} height={24} className={className} />;
 }
 
-export function Logo() {
+/** `lg` is the larger lockup of the expressive register (the landing pages). */
+export function Logo({ size = "md" }: { size?: "md" | "lg" }) {
+	const height = size === "lg" ? "h-7" : "h-6";
 	return (
 		<Link href="/" className="flex items-center rounded-md" aria-label={t.logoLabel}>
 			<img
@@ -15,14 +17,14 @@ export function Logo() {
 				alt=""
 				width={112}
 				height={24}
-				className="h-6 w-auto dark:hidden"
+				className={`${height} w-auto dark:hidden`}
 			/>
 			<img
 				src={withBase("/logo-wordmark-dark.png")}
 				alt=""
 				width={112}
 				height={24}
-				className="hidden h-6 w-auto dark:block"
+				className={`hidden ${height} w-auto dark:block`}
 			/>
 		</Link>
 	);

@@ -23,8 +23,8 @@ interface Props {
 	twin?: string;
 	/** The sidebar the mobile drawer shows. */
 	section?: NavSection;
-	/** Sends the visitor to this path at once (meta refresh, and a script that keeps it out of the history). */
-	redirectTo?: string;
+	/** The landing pages draw the header translucent over their scene. */
+	headerVariant?: "docs" | "landing";
 }
 
 const {
@@ -35,7 +35,7 @@ const {
 	noindex = false,
 	twin,
 	section = "docs",
-	redirectTo,
+	headerVariant = "docs",
 } = Astro.props;
 const t = ui;
 const fullTitle = title.includes(site.name) ? title : `${title} — ${site.name}`;
@@ -93,7 +93,7 @@ const groups = getNavGroups(section);
 				<div id="read-progress" class="h-full origin-left bg-brand" style="transform: scaleX(0)"></div>
 			</div>
 		) : null}
-		<Header client:load groups={groups} />
+		<Header client:load groups={groups} variant={headerVariant} />
 		<slot />
 		<div id="toast" class="pointer-events-none fixed right-4 bottom-4 z-[100] hidden w-[min(20rem,calc(100vw-2rem))] items-center gap-2.5 rounded-xl border border-border bg-bg px-4 py-3 text-sm font-medium text-fg shadow-lg" role="status"></div>
 		<script>
