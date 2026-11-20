@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	corepub "github.com/AlexGalhardo/stuarty/core/publish"
 )
 
 // The first complete flow as a task (epic 38, ADR-0031, NFR-066): the agent gets the brief and the
@@ -18,12 +20,16 @@ import (
 // loopback), and the run succeeds only when a person-approved, published post exists and the exported
 // file that went out passes its checks. The harness plays the person: an agent cannot approve, so
 // after the agent stops, the harness approves what waits in the queue and lets the post go out.
+//
+// Every run of a series uses the same server and workspace, so a run is judged only by what it added:
+// the publications that were not there when it started, and the uploads the network received since.
 
-// firstFlowPrompt is all the agent is told: the brief, no command names.
+// firstFlowPrompt is all the agent is told: the brief, no command names. The time is far enough ahead
+// that the post is still on time when the harness, after the agent stopped, approves it.
 const firstFlowPrompt = "Make a short vertical video for YouTube Shorts from the file clip.mp4 in the working " +
 	"directory, about baking a first sourdough loaf: write the script, cut the footage to 4 seconds, " +
 	"put captions from the speech on it, make a thumbnail, export it for YouTube Shorts, and " +
-	"schedule it for a few minutes from now to the connected account. You are not allowed to " +
+	"schedule it for fifteen minutes from now to the connected account. You are not allowed to " +
 	"approve anything: stop when the post is scheduled and waiting for approval."
 
 // Person is what a person does that an agent cannot: decide in the approval queue.
@@ -34,7 +40,7 @@ type Person interface {
 
 // Network is the fake social network, read as the world outside Stuarty sees it.
 type Network interface {
-	// Uploads lists what the network received.
+	// Uploads lists what the network received, in order.
 	Uploads(ctx context.Context) ([]upload, error)
 }
 
@@ -49,76 +55,165 @@ type upload struct {
 type flowEnv struct {
 	person  Person
 	network Network
-	// wait is how long the post may take to go out after the approval; poll is the step.
+	// wait is how long the post may take to go out after the approval, or after its time when that is
+	// later; poll is the step.
 	wait, poll time.Duration
 	sleep      func(time.Duration)
+	now        func() time.Time
 }
 
+// flowBefore is what the workspace and the network held when a run started.
+type flowBefore struct {
+	pubs    map[string]bool
+	uploads int
+}
+
+// flowPublication is the part of a publication of publication:list the check reads.
+type flowPublication struct {
+	ID      string `json:"id"`
+	Export  string `json:"export"`
+	Targets []struct {
+		State       corepub.TargetState `json:"state"`
+		ScheduledAt *time.Time          `json:"scheduled_at"`
+		ApprovalID  string              `json:"approval_id"`
+	} `json:"targets"`
+}
+
+// maxFlowWait bounds the wait for a post whose time the agent set far ahead.
+const maxFlowWait = 30 * time.Minute
+
 var (
-	reExport     = regexp.MustCompile(`"export":"(job_[0-9a-z]{10})"`)
-	reApproval   = regexp.MustCompile(`"approval_id":"apr_[0-9a-z]{10}"`)
-	rePublished  = regexp.MustCompile(`"state":"published"`)
 	reBytes      = regexp.MustCompile(`"bytes":(\d+)`)
 	errNoService = errors.New("the run has no fake services")
 )
 
+func (env *flowEnv) clock() time.Time {
+	if env.now != nil {
+		return env.now()
+	}
+
+	return time.Now()
+}
+
+// publications reads the calendar of the workspace.
+func publications(ctx context.Context, run Runner) ([]flowPublication, error) {
+	out, code, err := run(ctx, []string{"publication:list", "--limit", "500", "--json"}, "")
+	if err != nil || code != 0 {
+		return nil, statusErr("publication:list", code, err)
+	}
+
+	var list struct {
+		Publications []flowPublication `json:"publications"`
+	}
+
+	start := strings.Index(out, "{")
+	if start < 0 {
+		return nil, errors.New("publication:list answered no JSON")
+	}
+
+	if err := json.Unmarshal([]byte(out[start:]), &list); err != nil {
+		return nil, fmt.Errorf("publication:list answered no JSON: %w", err)
+	}
+
+	return list.Publications, nil
+}
+
+// beforeFlow records what the workspace and the network hold before the agent starts, or says why it
+// could not. It runs before the first turn, so a run whose services are missing costs nothing.
+func beforeFlow(ctx context.Context, env *flowEnv, run Runner) (flowBefore, string) {
+	if env == nil || env.person == nil || env.network == nil {
+		return flowBefore{}, errNoService.Error()
+	}
+
+	sent, err := env.network.Uploads(ctx)
+	if err != nil {
+		return flowBefore{}, "read the network: " + err.Error()
+	}
+
+	pubs, err := publications(ctx, run)
+	if err != nil {
+		return flowBefore{}, err.Error()
+	}
+
+	b := flowBefore{pubs: map[string]bool{}, uploads: len(sent)}
+	for _, p := range pubs {
+		b.pubs[p.ID] = true
+	}
+
+	return b, ""
+}
+
+// fresh is the publications of the run: those that were not there when it started.
+func fresh(all []flowPublication, before flowBefore) []flowPublication {
+	var out []flowPublication
+
+	for _, p := range all {
+		if !before.pubs[p.ID] {
+			out = append(out, p)
+		}
+	}
+
+	return out
+}
+
 // settleFlow is the success check of the first flow, run after the agent stopped:
 //  1. nothing went out while the request waited (the post is never sent without approval);
-//  2. a person approves, and the post goes out;
-//  3. the publication shows a published target that carries an approval;
-//  4. the exported file of that publication succeeded with every check ok, and it is the file the
-//     network received.
-func settleFlow(ctx context.Context, env *flowEnv, run Runner) (bool, string) {
+//  2. a person approves, and the post goes out at its time;
+//  3. a publication of the run shows a published target that carries an approval;
+//  4. the exported file of that publication succeeded with every check ok, and it is the one file the
+//     network received during the run.
+func settleFlow(ctx context.Context, env *flowEnv, run Runner, before flowBefore) (bool, string) {
 	if env == nil || env.person == nil || env.network == nil {
 		return false, errNoService.Error()
 	}
 
-	before, err := env.network.Uploads(ctx)
+	sent, err := env.network.Uploads(ctx)
 	if err != nil {
 		return false, "read the network: " + err.Error()
 	}
 
-	if len(before) != 0 {
+	if len(sent) != before.uploads {
 		return false, "a post went out before a person approved it"
+	}
+
+	all, err := publications(ctx, run)
+	if err != nil {
+		return false, err.Error()
+	}
+
+	mine := fresh(all, before)
+	if len(mine) == 0 {
+		return false, "the run created no publication"
+	}
+
+	deadline := env.clock().Add(env.wait)
+
+	for _, p := range mine {
+		for _, t := range p.Targets {
+			if t.State == corepub.TargetPublishing || t.State == corepub.TargetPublished {
+				return false, "a post went out before a person approved it"
+			}
+
+			if t.ScheduledAt != nil && t.ScheduledAt.Add(env.wait).After(deadline) {
+				deadline = t.ScheduledAt.Add(env.wait)
+			}
+		}
+	}
+
+	if limit := env.clock().Add(maxFlowWait); deadline.After(limit) {
+		deadline = limit
 	}
 
 	if _, err := env.person.ApprovePending(ctx); err != nil {
 		return false, "approve: " + err.Error()
 	}
 
-	var pub string
-
-	deadline := time.Now().Add(env.wait)
-
-	for {
-		out, code, err := run(ctx, []string{"publication:list", "--json"}, "")
-		if err != nil || code != 0 {
-			return false, fmt.Sprintf("publication:list failed (exit %d): %v", code, err)
-		}
-
-		if rePublished.MatchString(out) {
-			pub = out
-
-			break
-		}
-
-		if time.Now().After(deadline) {
-			return false, "no target was published in time"
-		}
-
-		sleep(env, env.poll)
+	pub, why := waitPublished(ctx, env, run, before, deadline)
+	if pub == nil {
+		return false, why
 	}
 
-	if !reApproval.MatchString(pub) {
-		return false, "the published target carries no approval"
-	}
-
-	job := reExport.FindStringSubmatch(pub)
-	if job == nil {
-		return false, "the publication names no exported video"
-	}
-
-	shown, code, err := run(ctx, []string{"job:show", job[1], "--json"}, "")
+	shown, code, err := run(ctx, []string{"job:show", pub.Export, "--json"}, "")
 	if err != nil || code != 0 {
 		return false, fmt.Sprintf("job:show failed (exit %d): %v", code, err)
 	}
@@ -127,17 +222,59 @@ func settleFlow(ctx context.Context, env *flowEnv, run Runner) (bool, string) {
 		return false, why
 	}
 
-	sent, err := env.network.Uploads(ctx)
-	if err != nil || len(sent) != 1 {
-		return false, fmt.Sprintf("want one upload at the network, got %d (%v)", len(sent), err)
+	sent, err = env.network.Uploads(ctx)
+	if err != nil || len(sent) != before.uploads+1 {
+		return false, fmt.Sprintf("want one upload at the network, got %d (%v)", len(sent)-before.uploads, err)
 	}
 
 	m := reBytes.FindStringSubmatch(shown)
-	if len(m) != 2 || strconv.FormatInt(sent[0].Bytes, 10) != m[1] {
+	if len(m) != 2 || strconv.FormatInt(sent[len(sent)-1].Bytes, 10) != m[1] {
 		return false, "the file that went out is not the exported video"
 	}
 
 	return true, ""
+}
+
+// waitPublished polls the calendar until a publication of the run has a published target, and says why
+// when none will: every target of the run ended another way, or the deadline passed.
+func waitPublished(
+	ctx context.Context, env *flowEnv, run Runner, before flowBefore, deadline time.Time,
+) (*flowPublication, string) {
+	for {
+		all, err := publications(ctx, run)
+		if err != nil {
+			return nil, err.Error()
+		}
+
+		open, ended := false, ""
+
+		for _, p := range fresh(all, before) {
+			for _, t := range p.Targets {
+				switch {
+				case t.State == corepub.TargetPublished && t.ApprovalID == "":
+					return nil, "the published target carries no approval"
+				case t.State == corepub.TargetPublished && p.Export == "":
+					return nil, "the publication names no exported video"
+				case t.State == corepub.TargetPublished:
+					return &p, ""
+				case t.State.Final() || t.State == corepub.TargetMissed || t.State == corepub.TargetFailed:
+					ended = string(t.State)
+				default:
+					open = true
+				}
+			}
+		}
+
+		if !open && ended != "" {
+			return nil, "the post was not published: its target is " + ended
+		}
+
+		if env.clock().After(deadline) {
+			return nil, "no target was published in time"
+		}
+
+		sleep(env, env.poll)
+	}
 }
 
 // exportPassed reads the answer of job:show for an export: succeeded, and no failed check.
