@@ -24,9 +24,10 @@ const (
 const invertCube = "TITLE \"invert\"\nLUT_3D_SIZE 2\n1 1 1\n0 1 1\n1 0 1\n0 0 1\n1 1 0\n0 1 0\n1 0 0\n0 0 0\n"
 
 // holdLUT adds a ready lookup table to the store and its normalized file to the workspace.
-func holdLUT(t *testing.T, s *svc, ws, hash, body string) {
+func holdLUT(t *testing.T, s *svc, ws string) {
 	t.Helper()
 
+	hash, body := lutHash, invertCube
 	st := s.store.(*memStore)
 	st.assets.rows[hash] = AssetRow{
 		Hash:         hash,
@@ -47,7 +48,7 @@ func holdLUT(t *testing.T, s *svc, ws, hash, body string) {
 }
 
 // photoImage is an image with one photo that fills the canvas.
-func photoImage(t *testing.T, s *svc, ctx context.Context) string {
+func photoImage(ctx context.Context, t *testing.T, s *svc) string {
 	t.Helper()
 
 	c, err := s.ImageCreate(ctx, ImageCreateRequest{Width: 64, Height: 48, Background: "#101820"})
@@ -66,10 +67,10 @@ func photoImage(t *testing.T, s *svc, ctx context.Context) string {
 
 func TestImageLUT(t *testing.T) {
 	s, ws := newImageService(t)
-	holdLUT(t, s, ws, lutHash, invertCube)
+	holdLUT(t, s, ws)
 
 	ctx := asActor("local:agent")
-	id := photoImage(t, s, ctx)
+	id := photoImage(ctx, t, s)
 
 	plain, err := s.ImageExport(ctx, ImageExportRequest{ImageID: id})
 	if err != nil {
@@ -136,7 +137,7 @@ func TestImageLUT(t *testing.T) {
 
 func TestImageLUTRefusals(t *testing.T) {
 	s, ws := newImageService(t)
-	holdLUT(t, s, ws, lutHash, invertCube)
+	holdLUT(t, s, ws)
 
 	st := s.store.(*memStore)
 	st.assets.rows[clipHash] = AssetRow{Hash: clipHash, Kind: "video", OriginalName: "a.mp4", IngestState: IngestReady}
@@ -145,7 +146,7 @@ func TestImageLUTRefusals(t *testing.T) {
 	st.assets.rows[pending] = AssetRow{Hash: pending, Kind: "lut", OriginalName: "b.cube", IngestState: IngestPending}
 
 	ctx := asActor("local:agent")
-	id := photoImage(t, s, ctx)
+	id := photoImage(ctx, t, s)
 
 	for name, c := range map[string]struct{ hash, code string }{
 		"an image":              {imgHash, command.CodeTypeMismatch},
@@ -172,10 +173,10 @@ func TestImageLUTRefusals(t *testing.T) {
 // fails the export, and the layer is not drawn without it.
 func TestImageLUTExportFailsWithoutTheTable(t *testing.T) {
 	s, ws := newImageService(t)
-	holdLUT(t, s, ws, lutHash, invertCube)
+	holdLUT(t, s, ws)
 
 	ctx := asActor("local:agent")
-	id := photoImage(t, s, ctx)
+	id := photoImage(ctx, t, s)
 
 	if _, err := s.ImageEdit(ctx, ImageEditRequest{ImageID: id, BaseRevision: 2, Operations: ops(
 		"layer.adjust", `{"layer_id": "lyr_aaaaaaaaaa", "lut": {"asset": "`+lutHash+`"}}`,
@@ -208,7 +209,7 @@ func TestImageLUTExportFailsWithoutTheTable(t *testing.T) {
 // In network mode a table can only be used by a user who holds it, as an image can only be used by one who holds it.
 func TestSecurity_T68_LookupTableOfAnotherUserIsNotUsable(t *testing.T) {
 	s, ws := newImageService(t)
-	holdLUT(t, s, ws, lutHash, invertCube)
+	holdLUT(t, s, ws)
 	holdAsset(s, "alice")
 
 	st := s.store.(*memStore)
@@ -269,10 +270,10 @@ func TestSecurity_T68_LookupTableOfAnotherUserIsNotUsable(t *testing.T) {
 // of the file (a label) never reaches the path.
 func TestSecurity_T69_LookupTableIsNamedByHashNeverByPath(t *testing.T) {
 	s, ws := newImageService(t)
-	holdLUT(t, s, ws, lutHash, invertCube)
+	holdLUT(t, s, ws)
 
 	ctx := asActor("local:agent")
-	id := photoImage(t, s, ctx)
+	id := photoImage(ctx, t, s)
 
 	for _, name := range []string{
 		"../../etc/passwd", `C:\x.cube`, "sha256:../../../x", "sha256:" + strings.Repeat("9", 63) + "/",
