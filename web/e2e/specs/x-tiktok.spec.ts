@@ -388,7 +388,12 @@ test.describe("x and tiktok @chromium-only", () => {
 			// The calendar tells a draft from a publication, in words.
 			await page.goto("/publish");
 			await page.getByTestId("publish-mode-list").click();
-			const rows = page.getByTestId("publish-row");
+			// Only the rows of this publication: the other specs share the workspace and run at the same time.
+			const rows = page.locator(
+				created.targets
+					.map((t) => `[data-testid="publish-row"][data-target-id="${t.id}"]`)
+					.join(", "),
+			);
 			await expect(rows).toHaveCount(2);
 			const draft = rows.filter({ hasText: "Sent as a draft" });
 			await expect(draft).toHaveCount(1);
@@ -405,11 +410,14 @@ test.describe("x and tiktok @chromium-only", () => {
 
 			// The ledger recorded the price after the post went out.
 			const cost = (await api("GET", "/cost")) as {
-				today: { scope: string; micros: number }[];
+				today: { scope: string; project_id?: string; micros: number }[];
 			};
+			// The line of this project: other specs spend in the same workspace at the same time.
 			expect(
 				cost.today
-					.filter((l) => l.scope === "workspace")
+					.filter(
+						(l) => l.scope === "project" && l.project_id === made.project_id,
+					)
 					.reduce((sum, l) => sum + l.micros, 0),
 			).toBe(200_000);
 		} finally {
