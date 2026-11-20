@@ -99,9 +99,17 @@ step flaky bash "$(script .agents/skills/verify/scripts/check-flaky-patterns.sh)
 export STUARTY_MIN_FREE_BYTES=1
 go_files="$(echo "$changed" | grep -E '\.go$' | while read -r f; do [ -f "$f" ] && echo "$f"; done)"
 if [ -z "$go_files" ] && echo "$changed" | grep -qE '(^|/)go\.(mod|sum)$'; then
-	# Only module files changed (a go.mod added, edited or deleted): there is no package to vet or test, but the
-	# root module must still build (VV-230). A module directory that no longer exists is never entered.
-	step go-build go build ./...
+	# Only module files changed (a go.mod or go.sum added, edited or deleted): there is no package to vet or
+	# test, but the root module and every changed module that still exists must build (VV-230). A module whose
+	# go.mod was deleted is never entered; whatever is left of it now builds with the root module.
+	gomods="$( (echo .; echo "$changed" | grep -E '(^|/)go\.(mod|sum)$' | while read -r f; do
+		if [ -f "$(dirname "$f")/go.mod" ]; then dirname "$f"; fi
+	done) | sort -u)"
+	for m in $gomods; do
+		tag=""
+		[ "$m" = . ] || tag="-$(echo "$m" | tr '/' '-')"
+		step "go-build$tag" go -C "$m" build ./...
+	done
 elif [ -n "$go_files" ]; then
 	step gofmt bash -c "out=\$(gofmt -l $(echo "$go_files" | tr '\n' ' ')); [ -z \"\$out\" ] || { echo \"\$out\"; exit 1; }"
 	# A nested module (desktop/shell/app has its own go.mod) is built, vetted, tested and linted inside it.
