@@ -912,7 +912,7 @@ A gesture that touches several items (a multi-selection move) sends one batch co
 | `Ctrl+D` | `item.duplicate {item_id, start: "<item end>f"}` with the same track (the end frame is read from the item) | none |
 | Context menu "Create composition from selection" | `composition.create_from_selection {item_ids}`: the selected items move into a new timeline of the project and one composition takes their place, in one batch | none |
 | Context menu "Expand composition" on a composition | `composition.expand {item_id}` (the core refuses when the composition has an effect or a trim of its own) | none |
-| Double click on a composition, context menu "Open composition" | none: the editor opens the nested timeline at `/editor/<timeline id>?from=<this timeline id>`; the top bar then shows a link "Back to <name>" to `from` (only an id of the form `prj_` and 10 characters is linked) | none |
+| Double click on a composition, context menu "Open composition" | none: the editor opens the nested timeline at `/editor/<timeline id>?from=<this timeline id>`; the top bar then shows a link "Back to" and the name of the timeline `from` (only an id of the form `prj_` and 10 characters is linked) | none |
 | Right-click an empty gap, "Close gap" | `timeline.close_gap {track_id, at: "<frame under pointer>f"}` | none |
 | Toolbar "Add text" (`T`) | `text.add {track_id, start: "<playhead>f", duration: "3s", text: t("ui.editor.defaults.text")}` on the first visual track (created as above if none) | none |
 | Toolbar "Add caption" (`C`) | dialog with text, start (playhead), duration; sends `caption.add {track_id, start, text, duration}` on the first visual track named by the user or created, `track.add` first when none | none |
