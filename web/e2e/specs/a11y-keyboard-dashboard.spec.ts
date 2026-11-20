@@ -69,10 +69,15 @@ test.describe("a11y-keyboard-dashboard", () => {
 	test("the chat panel opens with the keyboard, takes the focus in and gives it back on Escape", async ({
 		page,
 	}) => {
+		// The wait for the conversation below is 30 s by itself.
+		test.setTimeout(60_000);
 		await countPointerEvents(page);
 		await page.goto("/projects");
+		await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+		// The chat button is the last control of the page: Shift+Tab reaches it in a few presses, where Tab
+		// walks every project card first (too many for Firefox and WebKit in time on a workspace of hundreds).
 		const toggle = page.getByTestId("chat-toggle");
-		await tabTo(page, toggle);
+		await tabTo(page, toggle, 40, "Shift+Tab");
 		await page.keyboard.press("Enter");
 		const panel = page.getByTestId("chat-panel");
 		await expect(panel).toBeVisible();

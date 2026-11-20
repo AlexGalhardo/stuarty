@@ -54,13 +54,15 @@ export function unnamedControls(snapshot: string): string[] {
 		.map((line) => line.trim());
 }
 
-// Presses Tab (or Shift+Tab after the first pass) until the element is
-// focused, so a spec proves the keyboard reaches it and not only that it can be
-// focused by script. The element must be focusable.
+// Presses Tab (Shift+Tab with `key`) until the element is focused, so a spec
+// proves the keyboard reaches it and not only that it can be focused by script.
+// The element must be focusable. Shift+Tab reaches the last controls of a page
+// (the chat button) in a few presses however long the page is.
 export async function tabTo(
 	page: Page,
 	target: ReturnType<Page["locator"]>,
 	limit = 120,
+	key: "Tab" | "Shift+Tab" = "Tab",
 ): Promise<void> {
 	for (let i = 0; i < limit; i++) {
 		const focused = await target
@@ -71,9 +73,9 @@ export async function tabTo(
 			)
 			.catch(() => false);
 		if (focused) return;
-		await page.keyboard.press("Tab");
+		await page.keyboard.press(key);
 	}
-	throw new Error(`Tab did not reach the element in ${limit} presses`);
+	throw new Error(`${key} did not reach the element in ${limit} presses`);
 }
 
 // Reaches a link with the keyboard. WebKit leaves links out of the Tab order
