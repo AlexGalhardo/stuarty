@@ -103,6 +103,7 @@
 | `TextGenerate` | `job_start` (kind `text.generate`) | `text:generate` | `POST /text/generate` | edit |
 | `ImageGenerate` | `job_start` (kind `image.generate`) | `image:generate` | `POST /image/generate` | edit (SDD-016 §6.1) |
 | `VoiceGenerate` | `job_start` (kind `voice.generate`) | `voice:generate` | `POST /voice/generate` | edit |
+| `ImageModelEdit` | `job_start` (kind `image.edit`) | `image:model-edit` | `POST /images/{id}/model-edit` | edit (SDD-016 §6.4: remove the background of a layer, or generate an image into the document, with a provider) |
 | `VoiceList` | none | `voice:list` | `GET /connections/{id}/voices` | read |
 | `VideoGenerate` | `job_start` (kind `video.generate`) | `video:generate` | `POST /video/generate` | edit (SDD-016 §6.4); the job always waits for a person unless a rule lifts it |
 | `MemoryList`, `MemoryGet`, `MemoryWrite` | `library` (kind `memory`; actions `list`, `get`, `write`) | `memory:list`, `memory:show`, `memory:write` | `GET /library/memory`, `GET /library/memory/{name}`, `POST /library/memory`, `DELETE /library/memory/{name}` | read, edit (SDD-018) |
@@ -144,8 +145,8 @@ Every operation belongs to one **domain**. The domain names are fixed here; a ne
 | `image` | image documents (SDD-021) | `Image*` and the commands of the image registry |
 | `writing` | written documents: scripts, copy and captions, with their revisions (SDD-019) | `Text*`, `CaptionValidate`, `ScriptEstimate` |
 | `asset` | files of the workspace: media, the asset library, fonts | `Media*`, `Asset*` (the library of epic 08: list, get, uses, set info, tag), `FontImport`, `FontList` |
-| `publish` | publications and their approval | `Approval*` (the queue that gates a publication and a costly generation, SDD-015), `Social*` (the networks and the accounts a publication goes to), `Publish*` (validate, publish now, status; SDD-020), `Publication*` (the calendar: create, list, edit, schedule, send now, retry, cancel; SDD-020 §23 to §31) |
-| `provider` | AI providers and generation | `Provider*` (the providers, their models and the price table, SDD-016), `TextGenerate`, `ImageGenerate`, `VoiceGenerate`, `VoiceList`, `VideoGenerate`, `Cost*` (the spend on providers and its ceilings) |
+| `publish` | publications and their approval | `Approval*` (the queue that gates a publication and a costly generation, SDD-015), `Social*` (the networks and the accounts a publication goes to), `Publish*` (validate, publish now, status; SDD-020) |
+| `provider` | AI providers and generation | `Provider*` (the providers, their models and the price table, SDD-016), `TextGenerate`, `ImageGenerate`, `VoiceGenerate`, `VoiceList`, `ImageModelEdit`, `Cost*` (the spend on providers and its ceilings) |
 | `memory` | the library: notes, skills, prompts, search | `Memory*`, `Skill*`, `Prompt*`, `Library*` |
 | `workspace` | the installation: help, connections, brand kit, health, keys, audit, trash, helpers, the hosted agent chat | `CommandHelp`, `Connection*`, `BrandKit*`, `Doctor`, `AuditList`, `TrashEmpty`, `Tools*`, `Key*`, `AgentProfile*`, `Chat*` (SDD-017) |
 
@@ -204,7 +205,7 @@ An image document has a stream of its own, `GET /images/{id}/events` (SDD-006 §
 
 ## 6. Jobs
 
-Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, `text.generate` (SDD-016 §6), `image.generate` and `voice.generate` (SDD-016 §6.1), `text.draft` (SDD-019 §6), `video.generate` (SDD-016 §6.4; the job stores the task id of the provider and resumes it after a restart), and the kinds a feature epic registers as needing approval (SDD-015 §5). States: `queued`, `running`, `succeeded`, `failed`, `cancelled`, and `waiting_approval` (a job of a kind that needs approval, until a person or a rule approves it; it is not running and counts as active; at most 50 per submitter and 1000 in the workspace, `E_LIMIT_EXCEEDED` past either, SDD-015 §5). Asset ingest states: `pending`, `ingesting`, `ready`, `failed`.
+Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, `text.generate` (SDD-016 §6), `image.generate` and `voice.generate` (SDD-016 §6.1), `image.edit` (SDD-016 §6.4), `text.draft` (SDD-019 §6), and the kinds a feature epic registers as needing approval (SDD-015 §5). States: `queued`, `running`, `succeeded`, `failed`, `cancelled`, and `waiting_approval` (a job of a kind that needs approval, until a person or a rule approves it; it is not running and counts as active; at most 50 per submitter and 1000 in the workspace, `E_LIMIT_EXCEEDED` past either, SDD-015 §5). Asset ingest states: `pending`, `ingesting`, `ready`, `failed`.
 
 ## 7. Database tables
 
@@ -529,6 +530,8 @@ The operations of the registry of domain `image` (`core/command` registry built 
 | `layer.add_image`, `layer.add_text`, `layer.add_shape`, `layer.add_fill` | operation | add a layer of that kind |
 | `layer.group`, `layer.ungroup`, `layer.move` | operation | structure: group, ungroup, change order and parent |
 | `layer.transform`, `layer.set`, `layer.crop`, `layer.duplicate`, `layer.remove` | operation | geometry, common properties, crop of an image layer, copy, removal |
+| `layer.replace_source` | operation | give an image layer another file and keep the layer (SDD-021 section 3.2) |
+| `image_edit` | provider capability | a provider that edits a picture it is sent (SDD-016 section 2.3), with the operation `remove_background` of the job `image.edit`; the other operation of that job, `generate`, uses the capability `image` |
 | `layer.set_text`, `layer.set_shape` | operation | change the content or style of a text layer, the look of a shape |
 | `layer.align`, `layer.fit` | operation | align to the canvas or to a layer, fit (cover, contain) |
 | `layer.adjust`, `layer.blend` | operation | the adjustments of a layer (brightness, contrast, saturation, temperature, tint, hue, exposure, levels, tone curve) and its blend mode (SDD-021 section 3, epic 29) |
