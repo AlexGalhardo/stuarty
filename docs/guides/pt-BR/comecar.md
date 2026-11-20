@@ -12,10 +12,14 @@ Seus arquivos, seus projetos, seus tokens e suas credenciais. Uma credencial fic
 
 Só o que você conecta de propósito:
 
-- **Um provedor de IA** (chave de API, entrar com o ChatGPT, OpenRouter ou o seu agente local): recebe o texto e as imagens que você escolher enviar, com a sua chave.
+- **Um provedor de IA** (chave de API, entrar com o ChatGPT ou OpenRouter): recebe o texto e as imagens que você escolher enviar, com a sua chave.
 - **Uma rede social** (YouTube, Instagram, Facebook, X, TikTok), pelo seu próprio app de desenvolvedor: recebe o vídeo, o texto e a miniatura **depois que você aprova** a publicação.
+- **Um destino de blog** (WordPress ou webhook): recebe o post e as imagens dele **depois que você aprova**. Um destino de arquivos e a API de leitura não abrem conexão nenhuma.
 - **O login com o Google**, num servidor, se o dono ligar.
 - Verificação de atualização do aplicativo de mesa, só se você disser que sim.
+- O que você configura como operador: uma API de transcrição (`STUARTY_TRANSCRIBE_URL`), a instalação de uma ferramenta auxiliar (`stuarty tools:install`) e o OpenTelemetry (`OTEL_EXPORTER_OTLP_ENDPOINT`).
+
+O seu agente local, no painel de chat, é um programa da sua máquina: o Stuarty não abre conexão por ele, e ele fala com o provedor dele com o login que você deu, como faz fora do Stuarty.
 
 Publicar e gerar algo que custa dinheiro esperam por você na fila de aprovações. Um agente prepara, mas não aprova.
 
@@ -29,4 +33,4 @@ O Stuarty usa o FFmpeg como processo separado. Se `stuarty doctor --full` disser
 
 ## Próximo passo
 
-[Seu primeiro short](primeiro-short.md).
+[Seu primeiro short](primeiro-short.md). Depois, as receitas de [um comercial de produto](recipe-product-commercial.md) e de [um vídeo longo](recipe-long-talking-video.md).
