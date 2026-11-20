@@ -159,10 +159,10 @@
         },
         "option": {
           "platform": {
-            "youtube-shorts": "Shorts do YouTube",
-            "tiktok": "TikTok (vídeo curto)",
-            "instagram-reels": "Reels do Instagram",
-            "facebook-reels": "Reels do Facebook",
+            "youtube-shorts": "YouTube Shorts",
+            "tiktok": "TikTok",
+            "instagram-reels": "Instagram Reels",
+            "facebook-reels": "Facebook Reels",
             "other": "Outro lugar"
           },
           "format": {
