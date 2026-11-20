@@ -121,9 +121,11 @@ func (s *svc) edit(ctx context.Context, req EditRequest, allowInternal bool) (*E
 
 		req.Operations = resolvedOps
 
-		out, aerr := s.reg.ApplyBatch(doc, req.Operations, command.Env{NewIDs: ids.next})
+		graph := newProductionGraph(ctx, tx, row.ID)
+
+		out, aerr := s.applyChecked(graph, doc, req.Operations, &ids)
 		if aerr != nil {
-			return fromCommand(aerr)
+			return aerr
 		}
 
 		crashpoint.Hit("commit.after_apply")
@@ -154,6 +156,7 @@ func (s *svc) edit(ctx context.Context, req EditRequest, allowInternal bool) (*E
 			key:           req.IdempotencyKey,
 			requestHash:   hash,
 			closeOpenRedo: true,
+			spawned:       out.Spawned,
 			checkpoint:    true,
 			result: func(rev int64) ([]byte, error) {
 				stored := *res
@@ -175,11 +178,8 @@ func (s *svc) edit(ctx context.Context, req EditRequest, allowInternal bool) (*E
 			Type: "batch.committed", ProjectID: row.ID, Revision: rev, Kind: string(OpEdit), Actor: c.Actor,
 			Description: cutRunes(res.Description, eventDescription), At: s.now().UTC(),
 		}
-		tx.AfterCommit(func() {
-			crashpoint.Hit("commit.after_commit")
-			s.emit(ev)
-			crashpoint.Hit("commit.after_publish")
-		})
+
+		s.publishAfterCommit(tx, graph, &ev)
 
 		return nil
 	})

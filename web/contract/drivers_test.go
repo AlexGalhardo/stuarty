@@ -212,6 +212,22 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.PublishNow)
 	case "PublishStatus":
 		return invoke(ctx, s, svc.PublishStatus)
+	case "PublicationCreate":
+		return invoke(ctx, s, svc.PublicationCreate)
+	case "PublicationGet":
+		return invoke(ctx, s, svc.PublicationGet)
+	case "PublicationList":
+		return invoke(ctx, s, svc.PublicationList)
+	case "PublicationUpdate":
+		return invoke(ctx, s, svc.PublicationUpdate)
+	case "PublicationSchedule":
+		return invoke(ctx, s, svc.PublicationSchedule)
+	case "PublicationSendNow":
+		return invoke(ctx, s, svc.PublicationSendNow)
+	case "PublicationRetry":
+		return invoke(ctx, s, svc.PublicationRetry)
+	case "PublicationCancel":
+		return invoke(ctx, s, svc.PublicationCancel)
 	case "ApprovalList":
 		return invoke(ctx, s, svc.ApprovalList)
 	case "ApprovalGet":
@@ -1156,6 +1172,9 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		return name, argv, "", nil
 	case "PublishStatus":
 		return "publish:status", []string{a.JobID}, "", nil
+	case "PublicationCreate", "PublicationGet", "PublicationList", "PublicationUpdate", "PublicationSchedule",
+		"PublicationSendNow", "PublicationRetry", "PublicationCancel":
+		return publicationCommand(s)
 	case "ApprovalList":
 		return "approval:list", slices.Concat(flag("state", a.State), flag("project", a.ProjectID)), "", nil
 	case "ApprovalGet":

@@ -158,6 +158,16 @@ func (s *svc) ProjectBundleImport(ctx context.Context, req ProjectBundleImportRe
 		return nil, err
 	}
 
+	// A copy gives the timelines new ids: its compositions use the copies (SDD-001 §3.5.1).
+	renamed := map[string]string{}
+	for _, t := range parts.timelines() {
+		renamed[t.id] = t.doc.ID
+	}
+
+	for _, t := range parts.timelines() {
+		timeline.RenameCompositions(t.doc, renamed)
+	}
+
 	revision := parts.main.newRevision(req.AsNew)
 
 	res := &ProjectCreateResult{

@@ -474,6 +474,7 @@
         "size": "Tamanho",
         "original": "Original ({w} × {h})",
         "quality": "Qualidade",
+        "lossless": "Sem perdas",
         "findings": "Problemas encontrados",
         "no_findings": "Nenhum problema encontrado. A imagem está pronta para exportar.",
         "error": "Erro",
@@ -674,6 +675,10 @@
         "text": "Texto",
         "caption": "Legenda",
         "shape": "Forma",
+        "composition": "Composição",
+        "composition_open": "Abrir composição",
+        "composition_missing": "Timeline não encontrada",
+        "from_breadcrumb": "Voltar para {name}",
         "speed_badge": "Velocidade {speed}",
         "slot_badge": "Espaço do modelo: {name}",
         "asset_missing": "A mídia original deste item não está no projeto",
@@ -875,6 +880,8 @@
         "link": "Vincular itens",
         "unlink": "Desvincular itens",
         "extract_audio": "Extrair o áudio",
+        "create_composition": "Criar composição da seleção",
+        "expand_composition": "Expandir composição",
         "freeze_frame": "Congelar quadro",
         "copy_attributes": "Copiar atributos",
         "paste_attributes": "Colar atributos",
@@ -1087,6 +1094,9 @@
           "add": {
             "title": "Adicionar clipe"
           },
+          "add_composition": {
+            "title": "Adicionar uma linha do tempo como clipe"
+          },
           "set_blur": {
             "title": "Definir desfoque do clipe"
           },
@@ -1128,6 +1138,14 @@
           },
           "set_speed": {
             "title": "Definir velocidade do clipe"
+          }
+        },
+        "composition": {
+          "create_from_selection": {
+            "title": "Criar uma composição a partir da seleção"
+          },
+          "expand": {
+            "title": "Expandir a composição em seus itens"
           }
         },
         "font": {
@@ -2486,6 +2504,77 @@
       "callback_done": "Conectado:",
       "callback_failed": "A entrada não foi concluída.",
       "back": "Voltar às conexões"
+    },
+    "publish": {
+      "title": "Publicar",
+      "intro": "Planeje qual peça vai para qual conta e quando. Cada post espera o seu sim em Aprovações antes de ser enviado.",
+      "new": "Nova publicação",
+      "view": "Visão",
+      "view_month": "Mês",
+      "view_week": "Semana",
+      "view_list": "Lista",
+      "previous": "Anterior",
+      "next": "Próximo",
+      "today": "Hoje",
+      "live": "Ao vivo",
+      "moving": "Movendo para {time}. Use as setas: esquerda e direita movem um dia, para cima e para baixo uma hora. Enter solta, Escape desiste.",
+      "empty": "Nada planejado aqui ainda.",
+      "list_caption": "Publicações planejadas, uma linha para cada conta",
+      "no_time": "Sem horário ainda",
+      "open": "Abrir",
+      "error": "Erro",
+      "preview": "Prévia",
+      "title_count": "{count} de {max} caracteres",
+      "description_count": "{count} de {max} bytes",
+      "filter": {
+        "state": "Estado",
+        "network": "Rede",
+        "all": "Todos"
+      },
+      "col": {
+        "when": "Quando",
+        "title": "Título",
+        "account": "Conta",
+        "state": "Estado",
+        "result": "Resultado",
+        "actions": "Ações"
+      },
+      "state": {
+        "draft": "Rascunho",
+        "waiting_approval": "Aguardando aprovação",
+        "approved": "Aprovado",
+        "scheduled": "Agendado",
+        "publishing": "Publicando",
+        "published": "Publicado",
+        "failed": "Falhou",
+        "missed": "Perdido",
+        "cancelled": "Cancelado"
+      },
+      "editor": {
+        "new": "Nova publicação",
+        "edit": "Publicação",
+        "intro": "O título e a legenda valem para todas as contas; cada conta pode ter os seus. Nada é enviado antes de você aprovar em Aprovações.",
+        "caption": "Legenda",
+        "targets": "Contas",
+        "no_targets": "Nenhuma conta ainda. Adicione uma para planejar para onde isto vai.",
+        "target": "Conta {number}",
+        "account": "Conta",
+        "at": "Data e hora",
+        "zone": "Fuso horário",
+        "late": "Enviar com atraso até (minutos)",
+        "late_help": "0 significa que um post cujo horário passou nunca é enviado sozinho; você escolhe enviar agora ou dar um novo horário.",
+        "target_title": "Título para esta conta",
+        "target_description": "Descrição para esta conta",
+        "waits": "Este post espera a sua aprovação.",
+        "remove": "Remover",
+        "add_target": "Adicionar uma conta",
+        "save": "Salvar",
+        "save_first": "Salve as alterações primeiro",
+        "schedule": "Agendar e pedir aprovação",
+        "send_now": "Enviar agora (pede aprovação)",
+        "retry": "Tentar de novo (pede aprovação)",
+        "cancel": "Cancelar este post"
+      }
     },
     "approvals": {
       "title": "Aprovações",

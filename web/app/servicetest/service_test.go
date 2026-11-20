@@ -433,6 +433,38 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.PublishStatus(ctx, service.PublishStatusRequest{JobID: "job_0000000001"})
 			return err
 		},
+		"PublicationCreate": func() error {
+			_, err := e.svc.PublicationCreate(ctx, service.PublicationCreateRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"PublicationGet": func() error {
+			_, err := e.svc.PublicationGet(ctx, service.PublicationGetRequest{ID: "pub_0000000001"})
+			return err
+		},
+		"PublicationList": func() error {
+			_, err := e.svc.PublicationList(ctx, service.PublicationListRequest{})
+			return err
+		},
+		"PublicationUpdate": func() error {
+			_, err := e.svc.PublicationUpdate(ctx, service.PublicationUpdateRequest{ID: "pub_0000000001"})
+			return err
+		},
+		"PublicationSchedule": func() error {
+			_, err := e.svc.PublicationSchedule(ctx, service.PublicationScheduleRequest{ID: "pub_0000000001"})
+			return err
+		},
+		"PublicationSendNow": func() error {
+			_, err := e.svc.PublicationSendNow(ctx, service.PublicationSendNowRequest{ID: "pub_0000000001"})
+			return err
+		},
+		"PublicationRetry": func() error {
+			_, err := e.svc.PublicationRetry(ctx, service.PublicationRetryRequest{ID: "pub_0000000001"})
+			return err
+		},
+		"PublicationCancel": func() error {
+			_, err := e.svc.PublicationCancel(ctx, service.PublicationCancelRequest{ID: "pub_0000000001"})
+			return err
+		},
 		"ProviderList": func() error {
 			_, err := e.svc.ProviderList(ctx, service.ProviderListRequest{})
 			return err

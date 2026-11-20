@@ -18,7 +18,11 @@ export function isActive(
 
 // The layers drawn at a frame, in plan order (bottom to top).
 export function layersAt(plan: PlanWindow, frame: number): PlanLayer[] {
-	return plan.layers.filter((layer) => isActive(layer, frame));
+	// A group layer (a composition drawn as one unit) is drawn by the server: the picture of a paused frame
+	// comes from it (SDD-004 section 3.16), and the executors draw what they can compose themselves.
+	return plan.layers.filter(
+		(layer) => (layer.kind as string) !== "group" && isActive(layer, frame),
+	);
 }
 
 export function geometryOf(layer: PlanLayer, frame: number): LayerGeometry {

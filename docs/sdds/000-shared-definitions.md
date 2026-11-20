@@ -86,6 +86,12 @@
 | `PublishValidate` | none | `publish:validate` | `POST /publish/validate` | read |
 | `PublishNow` | none yet (later `job_start` with kind `publish.upload`, SDD-020 §13) | `publish:now` | `POST /publish` | render; the job waits for approval |
 | `PublishStatus` | none | `publish:status` | `GET /publish/{job_id}` | read |
+| `PublicationCreate` | none (SDD-020 §29) | `publication:create` | `POST /publications` | edit (SDD-020) |
+| `PublicationGet`, `PublicationList` | none | `publication:show`, `publication:list` | `GET /publications/{id}`, `GET /publications` | read |
+| `PublicationUpdate` | none | `publication:update` | `PUT /publications/{id}` | edit |
+| `PublicationSchedule`, `PublicationSendNow`, `PublicationRetry` | none | `publication:schedule`, `publication:send-now`, `publication:retry` | `POST /publications/{id}/schedule`, `POST /publications/{id}/send-now`, `POST /publications/{id}/retry` | render; the target waits for approval |
+| `PublicationCancel` | none | `publication:cancel` | `POST /publications/{id}/cancel` | edit |
+| publication stream | none | none | `GET /publications/events` (SDD-020 §29) | read |
 | `ProviderList` | none | `provider:list` | `GET /providers` | read (SDD-016) |
 | `ProviderModels` | none | `provider:models` | `GET /connections/{id}/models` | read |
 | `ProviderPriceSet` | none | `provider:price` | `PUT /providers/prices` | admin, and only from a privileged browser session (SDD-016 §7) |
@@ -134,7 +140,7 @@ Every operation belongs to one **domain**. The domain names are fixed here; a ne
 | `image` | image documents (SDD-021) | `Image*` and the commands of the image registry |
 | `writing` | written documents: scripts, copy and captions, with their revisions (SDD-019) | `Text*`, `CaptionValidate`, `ScriptEstimate` |
 | `asset` | files of the workspace: media, the asset library, fonts | `Media*`, `Asset*` (the library of epic 08: list, get, uses, set info, tag), `FontImport`, `FontList` |
-| `publish` | publications and their approval | `Approval*` (the queue that gates a publication and a costly generation, SDD-015), `Social*` (the networks and the accounts a publication goes to), `Publish*` (validate, publish now, status; SDD-020) |
+| `publish` | publications and their approval | `Approval*` (the queue that gates a publication and a costly generation, SDD-015), `Social*` (the networks and the accounts a publication goes to), `Publish*` (validate, publish now, status; SDD-020), `Publication*` (the calendar: create, list, edit, schedule, send now, retry, cancel; SDD-020 §23 to §31) |
 | `provider` | AI providers and generation | `Provider*` (the providers, their models and the price table, SDD-016), `TextGenerate`, `ImageGenerate`, `VoiceGenerate`, `VoiceList`, `Cost*` (the spend on providers and its ceilings) |
 | `memory` | the library: notes, skills, prompts, search | `Memory*`, `Skill*`, `Prompt*`, `Library*` |
 | `workspace` | the installation: help, connections, brand kit, health, keys, audit, trash, helpers, the hosted agent chat | `CommandHelp`, `Connection*`, `BrandKit*`, `Doctor`, `AuditList`, `TrashEmpty`, `Tools*`, `Key*`, `AgentProfile*`, `Chat*` (SDD-017) |
@@ -160,6 +166,8 @@ Rules: a command (an operation of a registry in `core/command`) takes its domain
 | `apr_` | approval request (SDD-015) | SDD-015 |
 | `rul_` | approval rule (SDD-015) | SDD-015 |
 | `led_` | cost ledger entry (SDD-015) | SDD-015 |
+| `pub_` | publication (SDD-020 §23) | SDD-020 |
+| `tgt_` | target of a publication: one account, one time (SDD-020 §23) | SDD-020 |
 | `cht_` | hosted agent chat session (SDD-017) | SDD-017 |
 | `cpr_` | permission request of a hosted agent (SDD-017 §7) | SDD-017 |
 
@@ -179,11 +187,12 @@ An actor string is one of `user:<id>`, `key:<key id>`, `local:<label>`. `<label>
 | --- | --- | --- |
 | `batch.committed` | a batch was committed | `revision`, `actor`, `diff`, `at` |
 | `project.updated` | project metadata outside the document changed (trash, restore) | `project_id`, `state` |
+| `nested.updated` | a timeline that this one uses as a composition, directly or through others, committed a batch (SDD-006 §3.3.1) | `project_id`, `timeline_id`, `revision`, `at` |
 | `asset.updated` | an asset's ingest state or progress changed | `asset_id`, `state`, `progress` |
 | `job.updated` | a job's state or progress changed | `job_id`, `kind`, `state`, `progress`, `message` |
 | `resync.required` | the client is too far behind to replay | `revision` |
 
-Two events are not on a project stream but on the approval queue stream `GET /approvals/events` (SDD-015 §7): `approval.requested` (a request was made, or is pending when the stream opens) and `approval.decided` (a request was approved, rejected or expired); both carry the request.
+Two events are not on a project stream but on the approval queue stream `GET /approvals/events` (SDD-015 §7): `approval.requested` (a request was made, or is pending when the stream opens) and `approval.decided` (a request was approved, rejected or expired); both carry the request. A third, `publication.updated`, is on the stream `GET /publications/events` (SDD-020 §29) and carries the publication with its targets.
 
 The event `id` of `batch.committed` is the revision. Details in SDD-006.
 
@@ -218,6 +227,7 @@ Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, `text.generate
 | `connections` | the destinations the user connected: kind, label, hosts, what each may receive, last use and the id of its secret in the vault; no secret | SDD-014 |
 | `image_documents`, `image_operations` | image documents, and their append-only log of batches | SDD-005 §5.12, SDD-021 |
 | `approval_requests`, `approval_rules`, `cost_ceilings`, `cost_ledger` | the approval queue, the rules that approve without asking, the cost ceilings and the record of every estimate and real cost; no secret | SDD-015 |
+| `publications`, `publication_targets` | the calendar: what is published, to which account, at what time, in which state, with its lease and its result; no secret | SDD-005 §5.15, SDD-020 §23 |
 | `image_documents`, `image_operations` | image documents, and their append-only log of batches | SDD-005 §5.13, SDD-021 |
 | `library_entries`, `library_fts` | the index of memory, skills and prompts for search and lists; rebuilt from the files, holds no content that the files lack | SDD-018 §9 |
 | `asset_info`, `asset_tags`, `asset_search` | the library side of an asset by hash: origin, rights note, description, the reuse mark, the tags and the full-text index over them | SDD-005 §5.5.1, SDD-011 §14 |
@@ -524,7 +534,7 @@ The operations of the registry of domain `image` (`core/command` registry built 
 | `L_IMAGE_EMPTY_SLOT`, `L_IMAGE_TEXT_OUTSIDE`, `L_IMAGE_TEXT_SMALL`, `L_IMAGE_LOW_CONTRAST`, `L_IMAGE_UPSCALED` | lint code | the rules of SDD-021 section 8; the first blocks an export |
 | `png`, `jpeg`, `webp` | image export format | the formats of `ImageExport` |
 | `E_SLOT` `details.reason` `unknown_slot`, `wrong_kind`, `invalid_value`, `missing` | error detail | a template filled badly (SDD-021 section 7) |
-| `E_EXPORT_FAILED` `details.reason` `webp_unavailable` | error detail | no WebP encoder is wired (SDD-021 §6) |
+| `E_EXPORT_FAILED` `details.reason` `webp_unavailable` | error detail | the FFmpeg in use has no `libwebp` encoder, or there is no FFmpeg (SDD-021 §6) |
 
 ## 15. Export presets, codecs and batches (SDD-004 sections 8.2 to 8.4)
 
