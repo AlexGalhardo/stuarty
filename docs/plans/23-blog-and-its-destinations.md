@@ -44,7 +44,7 @@ A creator writes a blog post in Stuarty, with its images, and sends it where the
 - [x] 6. Implement the read API and its token scope. Verify: `go test ./web/app/... -run TestPostsAPI` passes (only published posts; the token is refused elsewhere).
 - [x] 7. Expose post operations on HTTP, CLI and MCP with parity. Verify: `go test ./web/contract/...` passes.
 - [x] 8. Build the post editor with preview and the destination forms, in both languages. Verify: `task test:web` and `web/e2e/specs/blog.spec.ts` pass.
-- [ ] 9. Security tests of the new rows. Verify: `go test -run TestSecurity_ ./...` and `go run ./internal/tools/threatcheck` exit 0.
+- [x] 9. Security tests of the new rows. Verify: `go test -run TestSecurity_ ./...` and `go run ./internal/tools/threatcheck` exit 0.
 - [ ] 10. Publish to a real WordPress in a local container, if the author approves pulling the image; otherwise marked as not verified. Verify: the result or the note is in the hand-off.
 
 ## Test strategy
