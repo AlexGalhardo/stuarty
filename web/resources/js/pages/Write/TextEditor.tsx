@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
+import { useUnsavedGuard } from "@/lib/unsaved";
 import CaptionPanel from "./CaptionPanel";
 import type { TextGetResult, WritingClient } from "./client";
 import DraftPanel from "./DraftPanel";
@@ -65,6 +66,8 @@ export default function TextEditor({
 
 	const dirty =
 		loaded !== null && (body !== loaded.body || title !== loaded.item.title);
+
+	useUnsavedGuard(dirty, t("ui.unsaved.leave"));
 
 	async function save(event: FormEvent<HTMLFormElement>): Promise<void> {
 		event.preventDefault();

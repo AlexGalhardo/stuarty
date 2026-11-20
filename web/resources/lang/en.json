@@ -1,5 +1,8 @@
 {
   "ui": {
+    "unsaved": {
+      "leave": "You have text that is not saved yet. If you leave, it is lost. Leave anyway?"
+    },
     "nav": {
       "label": "Main navigation",
       "skip": "Skip to the main content",

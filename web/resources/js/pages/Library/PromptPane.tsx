@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
+import { useUnsavedGuard } from "@/lib/unsaved";
 import type { LibraryClient, LibraryEntry } from "./client";
 import { FileText } from "./parts";
 
@@ -33,6 +34,10 @@ export default function PromptPane({
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [saved, setSaved] = useState(false);
 	const [busy, setBusy] = useState(false);
+	// The fields as last read or saved: what differs from it is unsaved text.
+	const [baseline, setBaseline] = useState(JSON.stringify(["", "", "", ""]));
+	const current = JSON.stringify([newName, description, tags, body]);
+	useUnsavedGuard(current !== baseline, t("ui.unsaved.leave"));
 
 	useEffect(() => {
 		let live = true;
@@ -46,6 +51,7 @@ export default function PromptPane({
 			setTags("");
 			setBody("");
 			setVariables([]);
+			setBaseline(JSON.stringify(["", "", "", ""]));
 			return () => {
 				live = false;
 			};
@@ -58,6 +64,14 @@ export default function PromptPane({
 				setDescription(result.entry.description);
 				setTags((result.entry.tags ?? []).join(", "));
 				setBody(result.body);
+				setBaseline(
+					JSON.stringify([
+						"",
+						result.entry.description,
+						(result.entry.tags ?? []).join(", "),
+						result.body,
+					]),
+				);
 				setVariables(result.variables ?? []);
 				setValues(result.defaults ?? {});
 			})
@@ -85,6 +99,7 @@ export default function PromptPane({
 				body,
 			});
 			setVariables(written.variables ?? []);
+			setBaseline(current);
 			setSaved(true);
 			onChanged(written.entry.name);
 		} catch (error) {

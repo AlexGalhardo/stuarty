@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
+import { useUnsavedGuard } from "@/lib/unsaved";
 import { SIZE_PRESETS } from "@/types";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
@@ -337,6 +338,7 @@ export default function ProjectShow() {
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [draft, setDraft] = useState(brief.text);
 	const [saving, setSaving] = useState(false);
+	useUnsavedGuard(draft !== brief.text, t("ui.unsaved.leave"));
 
 	const active = items
 		.filter((i) => i.state === "active" && i.kind !== "brief")

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
+import { useUnsavedGuard } from "@/lib/unsaved";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
 import type {
@@ -140,6 +141,10 @@ export function Briefing({
 	const [saved, setSaved] = useState(false);
 	const [busy, setBusy] = useState(false);
 
+	const typed = JSON.stringify(answers);
+	const [baseline, setBaseline] = useState(typed);
+	useUnsavedGuard(typed !== baseline, t("ui.unsaved.leave"));
+
 	const handWritten = briefing.has_brief && !briefing.guided;
 
 	const submit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
@@ -150,6 +155,7 @@ export function Briefing({
 		try {
 			const client = createClient(new HttpTransport("/api/v1"));
 			const res = await client.answerBriefing(projectId, answers, replace);
+			setBaseline(typed);
 			setSaved(true);
 			onSaved(res.text);
 		} catch (error) {
