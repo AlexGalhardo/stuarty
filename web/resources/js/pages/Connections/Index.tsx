@@ -23,6 +23,7 @@ import type {
 	ProviderSignIn,
 	ProviderView,
 } from "../../editor/api/types";
+import BlogSection from "./BlogSection";
 import ProviderCards from "./ProviderCards";
 import SocialSection from "./SocialSection";
 
@@ -272,6 +273,7 @@ export default function Connections(): ReactNode {
 					/>
 				)}
 				<SocialSection />
+				<BlogSection onChanged={() => void load()} />
 				<section aria-labelledby="connections-new">
 					<h2 id="connections-new" className="text-lg font-semibold">
 						{t("ui.connections.new")}

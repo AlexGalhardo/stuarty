@@ -16,7 +16,7 @@ import (
 // publicationRepo is publish.Store over the tables of SDD-005 section 5.15.
 type publicationRepo struct{ ex database.Executor }
 
-const publicationColumns = `id, project_id, title, text, export_job, thumbnail_job, created_ms, updated_ms, created_by, owner_user_id`
+const publicationColumns = `id, project_id, title, text, export_job, thumbnail_job, created_ms, updated_ms, created_by, owner_user_id, post_item_id`
 
 const targetColumns = `id, publication_id, position, connection_id, network, fields, state, scheduled_ms, zone, late_minutes,
  send_now, approval_id, snapshot, payload_sha256, attempts, next_attempt_ms, lease_owner, lease_until_ms, remote_id, url,
@@ -59,6 +59,7 @@ func scanPublication(sc scanner) (pub.Publication, error) {
 		&upd,
 		&p.CreatedBy,
 		&owner,
+		&p.Post,
 	); err != nil {
 		return p, err
 	}
@@ -183,9 +184,9 @@ func (r publicationRepo) insertTarget(ctx context.Context, t *pub.Target) error 
 
 func (r publicationRepo) Insert(ctx context.Context, p *pub.Publication) error {
 	if _, err := r.ex.ExecContext(ctx, `INSERT INTO publications (`+publicationColumns+`)
- VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		p.ID, p.ProjectID, p.Title, p.Text, p.Export, p.Thumbnail, p.CreatedAt.UnixMilli(), p.UpdatedAt.UnixMilli(),
-		p.CreatedBy, nullString(p.OwnerUserID)); err != nil {
+		p.CreatedBy, nullString(p.OwnerUserID), p.Post); err != nil {
 		return err
 	}
 
@@ -274,7 +275,8 @@ func (r publicationRepo) targetsOf(ctx context.Context, ids []string) (map[strin
 
 func (r publicationRepo) Save(ctx context.Context, p *pub.Publication) error {
 	n, err := rowsAffected(r.ex.ExecContext(ctx, `UPDATE publications SET title = ?, text = ?, export_job = ?,
- thumbnail_job = ?, updated_ms = ? WHERE id = ?`, p.Title, p.Text, p.Export, p.Thumbnail, p.UpdatedAt.UnixMilli(), p.ID))
+ thumbnail_job = ?, post_item_id = ?, updated_ms = ? WHERE id = ?`, p.Title, p.Text, p.Export, p.Thumbnail, p.Post,
+		p.UpdatedAt.UnixMilli(), p.ID))
 	if err != nil {
 		return err
 	}

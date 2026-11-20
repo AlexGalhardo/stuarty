@@ -8,7 +8,11 @@ import { useLocale, useT } from "@/lib/i18n";
 import type { ProjectSummary } from "@/types";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
-import type { SocialAccount, SocialNetwork } from "../../editor/api/types";
+import type {
+	Connection,
+	SocialAccount,
+	SocialNetwork,
+} from "../../editor/api/types";
 import { CalendarView } from "./CalendarView";
 import {
 	addDays,
@@ -45,6 +49,7 @@ export default function Publish(): ReactNode {
 	const [projects, setProjects] = useState<ProjectSummary[]>([]);
 	const [accounts, setAccounts] = useState<SocialAccount[]>([]);
 	const [networks, setNetworks] = useState<SocialNetwork[]>([]);
+	const [blogs, setBlogs] = useState<Connection[]>([]);
 	const [editing, setEditing] = useState<{
 		id: string | null;
 		target?: string;
@@ -79,6 +84,14 @@ export default function Publish(): ReactNode {
 			.listSocialNetworks()
 			.then((res) => setNetworks(res.networks))
 			.catch((error: unknown) => setFailure(failureOf(error)));
+		// The blog destinations are connections of their own kinds (SDD-020 part 5); a build or a key that may not
+		// read connections leaves the list empty and a post has nowhere to go.
+		client
+			.listConnections()
+			.then((res) =>
+				setBlogs(res.connections.filter((c) => c.kind.startsWith("blog_"))),
+			)
+			.catch(() => setBlogs([]));
 	}, []);
 
 	const publications = feed.publications ?? [];
@@ -245,6 +258,7 @@ export default function Publish(): ReactNode {
 					projects={projects}
 					accounts={accounts}
 					networks={networks}
+					blogs={blogs}
 					api={feed.api}
 					onClose={() => setEditing(null)}
 					onChanged={() => void feed.reload()}

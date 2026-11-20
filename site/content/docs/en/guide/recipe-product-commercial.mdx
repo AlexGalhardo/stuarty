@@ -1,0 +1,77 @@
+---
+title: "Recipe: a product commercial"
+description: "A 15 or 30 second commercial from one brief, built from a template, with one exported file for 9:16, 1:1 and 16:9."
+---
+
+## You will learn
+
+- how to write the brief of a commercial and what its questions are;
+- how to build the timeline from a built-in template;
+- how to export the same commercial in three aspect ratios.
+
+## What you need
+
+Three short clips of the product (the hook, the problem and the product in use) and, if you have one, a music file you own. A commercial of 30 seconds needs four clips. The identifiers below are examples: use the ones the commands print.
+
+If you work with an agent, you do not type these commands. Ask it for "a 15 second commercial for my product": the built-in skills `product-commercial` and `commercial-copy` lead it through the same steps, and it asks you the questions of the brief one at a time. This page is the same recipe, done by hand.
+
+## The brief
+
+A commercial has its own questions, apart from the ones of a short video. The required ones are the product, the audience, the problem it solves, the offer, the call to action, the platform, the format and the duration (5 to 90 seconds; 15 and 30 are the usual). The optional ones are the product shots you have, the proof (reviews, numbers, a demonstration), the tone, references, what must and must not appear, and a deadline.
+
+Write the answers in a Markdown file whose first line is `# Brief`, with one `## <question>` heading for each answer, and store it:
+
+```bash
+stuarty project:create --name "Keep mug" --preset 9:16
+stuarty brief:set --project prj_7k2m9x4q1b --text brief.md
+```
+
+`commercial-copy` turns the brief into five lines: a hook, the problem, what the product is, the offer and the call to action. A claim comes from the brief: a number or a review that the brief does not hold is never written.
+
+## The timeline, from a template
+
+1. Import the shots and note their asset ids.
+
+   ```bash
+   stuarty media:import hook.mp4 problem.mp4 product.mp4 --project prj_7k2m9x4q1b --wait
+   ```
+
+2. List the templates. **Commercial 15 seconds** and **Commercial 30 seconds** are built in, with their slots.
+
+   ```bash
+   stuarty template:list
+   ```
+
+3. Fill the slots in a file: each slot name maps to `{"asset_id": "..."}` for a shot or `{"text": "..."}` for a line. The 15 second template has the shots `hook_shot`, `problem_shot` and `product_shot`, the lines `hook`, `problem`, `product_line`, `offer` and `call_to_action`, and an optional `music`. The 30 second one has two product shots (`product_shot_1`, `product_shot_2`) and a `proof` line.
+
+   ```bash
+   stuarty template:new tpl_r3c1p30001 --name "Keep mug 9x16" --fill fill.json
+   ```
+
+   Pass `--brand-color brand` to take the colour of your brand kit, when the workspace has one. The brief of the first project belongs to it: store it again in the new project with `brief:set`.
+
+4. Check it. An error blocks the export; `L_SAFE_AREA` matters, because the platforms draw over the edges of a vertical frame.
+
+   ```bash
+   stuarty lint --project prj_5d8f2k9m3q
+   stuarty view --project prj_5d8f2k9m3q --mode sheet --count 9
+   ```
+
+## One version for each aspect ratio
+
+Export the master, then copy it so it stays as it is, refit the copy and export again:
+
+```bash
+stuarty export --project prj_5d8f2k9m3q --wait
+stuarty project:duplicate prj_5d8f2k9m3q --name "Keep mug 1x1"
+stuarty edit --project prj_2n4p6r8t1v settings.reframe aspect=1:1
+stuarty export --project prj_2n4p6r8t1v --wait
+```
+
+Do the same with `aspect=16:9` in a second copy. `settings.reframe` refits the items to the new frame; a shot that fills the frame is cropped, so look at each copy and adjust the framing with `clip.set_framing`. Read the checks of each export: a failed check is a failed export.
+
+## After the export
+
+Write the text of each network with the skill `caption-per-network`. A publication goes to the approval queue and waits for you; an agent cannot approve it. A paid campaign is yours to run: Stuarty prepares the files and the words.
+
+The whole recipe is run end to end, with fake footage and no network, by `bash scripts/recipe-commercial.sh`.

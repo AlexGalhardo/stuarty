@@ -11,6 +11,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/library"
 	"github.com/AlexGalhardo/stuarty/service/publish"
+	"github.com/AlexGalhardo/stuarty/service/publish/destinations"
 )
 
 // Sentinel errors returned by the store (SDD-005 section 2 item 8). The
@@ -80,6 +81,7 @@ type Repos interface {
 	Library() library.Index
 	AssetLibrary() assets.Store
 	Publications() publish.Store
+	Blog() destinations.Store
 	Chat() agenthost.Store
 }
 

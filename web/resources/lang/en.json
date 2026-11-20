@@ -2406,6 +2406,48 @@
       },
       "secret": "Credential",
       "secret_hint": "Stored encrypted on this machine. It is never shown again and no agent can read it.",
+      "blog": {
+        "title": "Blog destinations",
+        "intro": "Where a blog post goes after you approve it: files for your static site, WordPress, a webhook of your own automation, or this server's read API. The settings are kept encrypted on this machine and nothing is sent before you approve a publication.",
+        "form": "New blog destination",
+        "kind": "Destination",
+        "kinds": {
+          "blog_files": "Files for a static site",
+          "blog_wordpress": "WordPress",
+          "blog_webhook": "Webhook (public address)",
+          "blog_webhook_local": "Webhook on this machine or network",
+          "blog_api": "Read API of this server"
+        },
+        "about": {
+          "blog_files": "Writes a folder per post with index.md and images/, or a zip, into a folder you choose. Nothing leaves this machine.",
+          "blog_wordpress": "Uploads the images to the media library and creates the post as a draft or published; a second publication updates the same post.",
+          "blog_webhook": "Sends the post, signed, to a URL of yours. Addresses on this machine or a private network are refused.",
+          "blog_webhook_local": "Sends the post, signed, to a URL on this machine or your own network. Use it only for a service you run.",
+          "blog_api": "Publishes the approved post on this server so your own system can read it with a key of the scope posts:read. Nothing leaves this machine."
+        },
+        "folder": "Folder",
+        "folder_hint": "An absolute path of a folder that exists, such as the content folder of your site.",
+        "template": "Front matter of the files",
+        "templates": {
+          "astro": "Astro",
+          "hugo": "Hugo",
+          "jekyll": "Jekyll",
+          "custom": "My own template"
+        },
+        "front_matter": "Template",
+        "front_matter_hint": "Write each placeholder between double curly braces: title, slug, summary, tags, cover, canonical, language, date, draft or published. Each value is written as a quoted text.",
+        "zip": "Write a zip instead of a folder",
+        "site": "Address of the site",
+        "user": "User name",
+        "application_password": "Application password",
+        "wordpress_hint": "Make an application password in your profile in wp-admin (WordPress 5.6 or later). Use an https address; plain http works only on this machine.",
+        "hook": "URL that receives the post",
+        "signing_secret": "Signing secret",
+        "media_base": "Address of this server for the images (optional)",
+        "signing_hint": "Your receiver checks the signature header with this secret and refuses a timestamp more than 5 minutes old. The images are fetched from the read API with a key of the scope posts:read.",
+        "add": "Add destination",
+        "created": "The destination was added to the list above."
+      },
       "add": "Connect",
       "test": "Test",
       "remove": "Remove",
@@ -2734,6 +2776,13 @@
         "waits": "This post waits for your approval.",
         "remove": "Remove",
         "add_target": "Add an account",
+        "content": "What you publish",
+        "content_video": "A video",
+        "content_post": "A blog post",
+        "post": "Blog post",
+        "post_status": "Status at the destination",
+        "post_visibility_private": "Draft",
+        "post_visibility_public": "Published",
         "save": "Save",
         "save_first": "Save your changes first",
         "schedule": "Schedule and ask for approval",
@@ -2993,7 +3042,7 @@
     },
     "write": {
       "title": "Write",
-      "intro": "Scripts, copy and captions of your productions, written by you or with a model. Every save is a revision you can go back to.",
+      "intro": "Scripts, copy, captions and blog posts of your productions, written by you or with a model. Every save is a revision you can go back to.",
       "filter": {
         "project": "Project",
         "kind": "Kind",
@@ -3003,7 +3052,8 @@
       "kind": {
         "script": "Script",
         "copy": "Copy",
-        "caption": "Caption"
+        "caption": "Caption",
+        "post": "Blog post"
       },
       "new": "New text",
       "new_form": {
@@ -3051,6 +3101,27 @@
         "untitled": "Before the first heading",
         "plain": "No VO: line was found, so every paragraph is counted as narration.",
         "empty": "Write some narration to see how long it takes."
+      },
+      "post": {
+        "heading": "Blog post",
+        "hint": "A front matter (title, slug, summary, tags, cover, canonical, language) between two lines of ---, then the body in Markdown. Images are ![alt](asset:id) of this project's images. Save to check the saved text.",
+        "unsaved": "You have unsaved changes: this is the check of the last saved text.",
+        "ok": "Ready to publish",
+        "issues": "{count} to fix",
+        "slug": "Slug: {slug}",
+        "words": "{words} words",
+        "issues_heading": "What to fix",
+        "images_heading": "Images",
+        "images_none": "This post uses no images.",
+        "image_row": "{name} ({role}), {bytes} bytes",
+        "image_missing": "{id} is not an image of this project",
+        "role_cover": "cover",
+        "role_body": "in the text",
+        "preview_heading": "How it reads",
+        "preview_label": "Preview of the post",
+        "preview_empty": "The post has no text yet.",
+        "publish_hint": "To send it to a blog, make a destination in Connections and plan the publication in Publish: nothing is sent until you approve it.",
+        "empty": "Save the post to see its check."
       },
       "caption": {
         "heading": "Networks",

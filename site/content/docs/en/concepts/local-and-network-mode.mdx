@@ -21,7 +21,7 @@ The server is bound to `127.0.0.1` or `::1`, so only your computer can reach it.
 The server is bound to any other address, to share it with other people or run it on a server. A bind to a non-loopback address without network-mode configuration is a start-up error, never a silent exposure.
 
 - Login is mandatory. There is no open registration: the operator creates users from the command line, and each project belongs to the user who created it.
-- Programmatic access uses API keys that a signed-in user creates. A key has scopes (`read`, `edit`, `media`, `render`, `admin`) and can be limited to one project.
+- Programmatic access uses API keys that a signed-in user creates. A key has scopes (`read`, `edit`, `media`, `render`, `admin`, and `posts:read` for the read API of the blog, which reaches nothing else) and can be limited to one project.
 - TLS is required, directly or through a reverse proxy. The one exception is a container on your own machine with the port published to loopback.
 - Import by path is confined to the import roots the operator configures.
 

@@ -174,7 +174,7 @@ func TestMCPOverStdioThroughTheBinary(t *testing.T) {
 	home := filepath.Join(t.TempDir(), "ws")
 
 	cmd := exec.CommandContext(t.Context(), bin, "mcp")
-	cmd.Env = append(os.Environ(), "STUARTY_HOME="+home, "STUARTY_URL=", "APP_KEY=", "APP_ENV=")
+	cmd.Env = append(os.Environ(), mcpTestEnv(t, home)...)
 
 	client := sdk.NewClient(&sdk.Implementation{Name: "Claude Code", Version: "1"}, nil)
 

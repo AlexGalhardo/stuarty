@@ -272,7 +272,7 @@ Epic 50 adds six operations of the same kind, one MCP action (of `history`, with
 
 `ImageModelEdit` (epic 30) is a ninth operation of another kind: it starts the job `image.edit` that removes the background of a layer, or generates an image into the document, with the provider of a connection, and, when the job is done, commits one batch of section 3 as the actor that asked (SDD-016 section 6.5). It is specified there because it spends money and sends a picture out; the document and its undo are as for any batch of this section.
 
-`CommandHelp` takes an optional `domain` (`video` default, or `image`), so an agent learns the catalogue, the schemas and the examples of the image operations through the same call, and the same flag exists in the CLI (`command:help --domain image`) and the same parameter in the MCP tool and the HTTP query.
+`CommandHelp` takes an optional `domain` (`video` default, or `image`), so an agent learns the catalogue, the schemas and the examples of the image operations through the same call, and the same flag exists in the CLI (`command:help --domain image`) and the same parameter in the MCP tool and the HTTP query. An image operation asked by name with no `domain` is found too, since no other domain has its name (SDD-003 section 4.3).
 
 ## 12. Errors and limits
 

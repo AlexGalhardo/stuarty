@@ -2406,6 +2406,48 @@
       },
       "secret": "Credencial",
       "secret_hint": "Guardada criptografada nesta máquina. Nunca é mostrada de novo e nenhum agente consegue lê-la.",
+      "blog": {
+        "title": "Destinos do blog",
+        "intro": "Para onde vai um post depois que você aprova: arquivos para o seu site estático, WordPress, um webhook da sua própria automação ou a API de leitura deste servidor. As configurações ficam criptografadas nesta máquina e nada é enviado antes de você aprovar uma publicação.",
+        "form": "Novo destino do blog",
+        "kind": "Destino",
+        "kinds": {
+          "blog_files": "Arquivos para um site estático",
+          "blog_wordpress": "WordPress do seu site",
+          "blog_webhook": "Webhook (endereço público)",
+          "blog_webhook_local": "Webhook nesta máquina ou rede",
+          "blog_api": "API de leitura deste servidor"
+        },
+        "about": {
+          "blog_files": "Escreve uma pasta por post com index.md e images/, ou um zip, numa pasta que você escolhe. Nada sai desta máquina.",
+          "blog_wordpress": "Envia as imagens para a biblioteca de mídia e cria o post como rascunho ou publicado; uma segunda publicação atualiza o mesmo post.",
+          "blog_webhook": "Envia o post, assinado, para uma URL sua. Endereços desta máquina ou de uma rede privada são recusados.",
+          "blog_webhook_local": "Envia o post, assinado, para uma URL desta máquina ou da sua própria rede. Use só para um serviço que você mesmo roda.",
+          "blog_api": "Publica o post aprovado neste servidor para o seu sistema lê-lo com uma chave do escopo posts:read. Nada sai desta máquina."
+        },
+        "folder": "Pasta",
+        "folder_hint": "Um caminho absoluto de uma pasta que existe, como a pasta de conteúdo do seu site.",
+        "template": "Cabeçalho dos arquivos",
+        "templates": {
+          "astro": "Modelo do Astro",
+          "hugo": "Modelo do Hugo",
+          "jekyll": "Modelo do Jekyll",
+          "custom": "Meu próprio modelo"
+        },
+        "front_matter": "Modelo",
+        "front_matter_hint": "Escreva cada marcador entre chaves duplas: title, slug, summary, tags, cover, canonical, language, date, draft ou published. Cada valor é escrito como um texto entre aspas.",
+        "zip": "Escrever um zip em vez de uma pasta",
+        "site": "Endereço do site",
+        "user": "Nome de usuário",
+        "application_password": "Senha de aplicativo",
+        "wordpress_hint": "Crie uma senha de aplicativo no seu perfil no wp-admin (WordPress 5.6 ou mais novo). Use um endereço https; http simples só funciona nesta máquina.",
+        "hook": "URL que recebe o post",
+        "signing_secret": "Segredo de assinatura",
+        "media_base": "Endereço deste servidor para as imagens (opcional)",
+        "signing_hint": "Seu receptor confere o cabeçalho de assinatura com este segredo e recusa um horário com mais de 5 minutos. As imagens são buscadas na API de leitura com uma chave do escopo posts:read.",
+        "add": "Adicionar destino",
+        "created": "O destino foi adicionado à lista acima."
+      },
       "add": "Conectar",
       "test": "Testar",
       "remove": "Remover",
@@ -2734,6 +2776,13 @@
         "waits": "Este post espera a sua aprovação.",
         "remove": "Remover",
         "add_target": "Adicionar uma conta",
+        "content": "O que você publica",
+        "content_video": "Um vídeo",
+        "content_post": "Um post de blog",
+        "post": "Post de blog",
+        "post_status": "Estado no destino",
+        "post_visibility_private": "Rascunho",
+        "post_visibility_public": "Publicado",
         "save": "Salvar",
         "save_first": "Salve as alterações primeiro",
         "schedule": "Agendar e pedir aprovação",
@@ -2993,7 +3042,7 @@
     },
     "write": {
       "title": "Escrever",
-      "intro": "Roteiros, textos e legendas das suas produções, escritos por você ou com um modelo. Cada salvamento é uma revisão à qual você pode voltar.",
+      "intro": "Roteiros, textos, legendas e posts de blog das suas produções, escritos por você ou com um modelo. Cada salvamento é uma revisão à qual você pode voltar.",
       "filter": {
         "project": "Projeto",
         "kind": "Tipo",
@@ -3003,7 +3052,8 @@
       "kind": {
         "script": "Roteiro",
         "copy": "Texto",
-        "caption": "Legenda"
+        "caption": "Legenda",
+        "post": "Post de blog"
       },
       "new": "Novo texto",
       "new_form": {
@@ -3051,6 +3101,27 @@
         "untitled": "Antes do primeiro título",
         "plain": "Nenhuma linha VO: foi encontrada, então todo parágrafo conta como narração.",
         "empty": "Escreva a narração para ver quanto tempo ela leva."
+      },
+      "post": {
+        "heading": "Post de blog",
+        "hint": "Um cabeçalho (title, slug, summary, tags, cover, canonical, language) entre duas linhas de ---, depois o corpo em Markdown. As imagens são ![alt](asset:id) de imagens deste projeto. Salve para verificar o texto salvo.",
+        "unsaved": "Há alterações não salvas: esta é a verificação do último texto salvo.",
+        "ok": "Pronto para publicar",
+        "issues": "{count} a corrigir",
+        "slug": "Identificador (slug): {slug}",
+        "words": "{words} palavras",
+        "issues_heading": "O que corrigir",
+        "images_heading": "Imagens",
+        "images_none": "Este post não usa imagens.",
+        "image_row": "{name} ({role}): {bytes} bytes",
+        "image_missing": "{id} não é uma imagem deste projeto",
+        "role_cover": "capa",
+        "role_body": "no texto",
+        "preview_heading": "Como fica",
+        "preview_label": "Prévia do post",
+        "preview_empty": "O post ainda não tem texto.",
+        "publish_hint": "Para enviar a um blog, crie um destino em Conexões e planeje a publicação em Publicar: nada é enviado até você aprovar.",
+        "empty": "Salve o post para ver a verificação."
       },
       "caption": {
         "heading": "Redes",

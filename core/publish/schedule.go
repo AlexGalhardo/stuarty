@@ -244,7 +244,8 @@ func ParseSlot(at, zone, defaultZone string) (Slot, error) {
 	}
 
 	if t, perr := time.Parse(time.RFC3339, at); perr == nil {
-		return Slot{At: t.UTC(), Zone: zone}, nil
+		// The store keeps milliseconds: a finer instant would be answered once and read back as another.
+		return Slot{At: t.UTC().Truncate(time.Millisecond), Zone: zone}, nil
 	}
 
 	inst, adj, err := LocalInstant(at, loc)
@@ -253,6 +254,23 @@ func ParseSlot(at, zone, defaultZone string) (Slot, error) {
 	}
 
 	return Slot{At: inst, Zone: zone, Adjustment: adj}, nil
+}
+
+// ParseBound reads one end of a time range a calendar is asked for: whatever ParseSlot reads, or a date with no
+// time, which is the start of that day in zone (the calendar of the UI asks for whole days). An empty zone is UTC.
+func ParseBound(raw, zone string) (time.Time, error) {
+	raw = strings.TrimSpace(raw)
+
+	if _, err := time.Parse(time.DateOnly, raw); err == nil {
+		raw += "T00:00"
+	}
+
+	slot, err := ParseSlot(raw, zone, "")
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return slot.At, nil
 }
 
 // Local is the instant as the wall clock of its zone shows it, for a person to read.
