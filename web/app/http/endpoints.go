@@ -664,6 +664,22 @@ var Endpoints = []Endpoint{
 		Service: "ScriptEstimate", Status: 200, Summary: "Estimate how long a script takes when read aloud",
 	},
 	{
+		ID: "texts.post", Method: http.MethodGet, Path: "/projects/{id}/texts/{item_id}/post", Scope: service.ScopeRead,
+		Service: "PostCheck", Status: 200, Summary: "Check a blog post and render its sanitised HTML",
+	},
+	{
+		ID: "posts.list", Method: http.MethodGet, Path: "/posts", Scope: service.ScopePostsRead,
+		Service: "PublishedPostList", Status: 200, Summary: "List the posts published to the read API",
+	},
+	{
+		ID: "posts.get", Method: http.MethodGet, Path: "/posts/{slug}", Scope: service.ScopePostsRead,
+		Service: "PublishedPostGet", Status: 200, Summary: "Read a post published to the read API",
+	},
+	{
+		ID: "posts.media", Method: http.MethodGet, Path: "/posts/{slug}/media/{name}", Scope: service.ScopePostsRead,
+		Service: "PublishedPostMedia", Status: 200, Uncounted: true, Summary: "Download an image of a published post",
+	},
+	{
 		ID:      "image.generate",
 		Method:  http.MethodPost,
 		Path:    "/image/generate",

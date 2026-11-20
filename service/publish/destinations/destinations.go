@@ -183,6 +183,11 @@ type Destination interface {
 	connections.Connector
 }
 
+// EndpointError is a refusal of the endpoint of a connection, as opposed to its settings.
+type EndpointError struct{ Message string }
+
+func (e *EndpointError) Error() string { return e.Message }
+
 // Config is what the destinations take from the build: the tests set the clock and the waits.
 type Config struct {
 	Now   func() time.Time
@@ -225,7 +230,7 @@ func NewRegistry(cfg Config) *Registry {
 	r := &Registry{byKind: map[string]Destination{}}
 
 	for _, d := range []Destination{
-		newFiles(cfg), newWordPress(cfg), newWebhook(cfg, KindWebhook), newWebhook(cfg, KindWebhookLocal),
+		newFiles(cfg), newWordPress(cfg), newWebhook(cfg, KindWebhook), newWebhook(cfg, KindWebhookLocal), newAPI(cfg),
 	} {
 		k := d.Describe().Kind
 		r.byKind[k] = d

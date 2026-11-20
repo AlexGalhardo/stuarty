@@ -230,6 +230,13 @@ var parity = []row{
 	{method: "TextDraft", tool: "job_start", command: "text:draft", route: "POST /projects/{}/texts/{}/draft"},
 	{method: "CaptionValidate", tool: "project_item", command: "caption:validate", route: "POST /captions/validate"},
 	{method: "ScriptEstimate", tool: "project_item", command: "script:estimate", route: "POST /scripts/estimate"},
+	// The blog (SDD-019 section 13, SDD-020 sections 47 and 48): the check of a post is on every surface; the three
+	// routes of the published posts are for the system of the creator, with a key of the scope posts:read, so they
+	// are HTTP only.
+	{method: "PostCheck", tool: "project_item", command: "post:check", route: "GET /projects/{}/texts/{}/post"},
+	{method: "PublishedPostList", route: "GET /posts", httpOnly: true},
+	{method: "PublishedPostGet", route: "GET /posts/{}", httpOnly: true},
+	{method: "PublishedPostMedia", route: "GET /posts/{}/media/{}", httpOnly: true},
 	// Image and voice generation (SDD-016 section 6.1, epic 10): job_start again, with the kinds image.generate
 	// and voice.generate; the voices of a connection are read with the CLI or HTTP, as its models are.
 	{method: "ImageGenerate", tool: "job_start", command: "image:generate", route: "POST /image/generate"},

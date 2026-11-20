@@ -82,6 +82,7 @@ command motion:check
 command motion:replace
 command otio:export
 command otio:import
+command post:check
 command project:create
 command project:describe
 command project:duplicate
@@ -188,6 +189,9 @@ route GET /library/search
 route GET /library/skills
 route GET /library/skills/{}
 route GET /library/skills/{}/lint
+route GET /posts
+route GET /posts/{}
+route GET /posts/{}/media/{}
 route GET /projects
 route GET /projects/{}
 route GET /projects/{}/audio-measure
@@ -219,6 +223,7 @@ route GET /projects/{}/plan
 route GET /projects/{}/sheet
 route GET /projects/{}/snap-points
 route GET /projects/{}/texts/{}
+route GET /projects/{}/texts/{}/post
 route GET /projects/{}/texts/{}/revisions
 route GET /providers
 route GET /providers/sign-ins

@@ -623,6 +623,25 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.ScriptEstimate(ctx, service.ScriptEstimateRequest{Text: "a"})
 			return err
 		},
+		"PostCheck": func() error {
+			_, err := e.svc.PostCheck(
+				ctx,
+				service.PostCheckRequest{ProjectID: "prj_0000000001", ItemID: "pit_0000000001"},
+			)
+			return err
+		},
+		"PublishedPostList": func() error {
+			_, err := e.svc.PublishedPostList(ctx, service.PublishedPostListRequest{})
+			return err
+		},
+		"PublishedPostGet": func() error {
+			_, err := e.svc.PublishedPostGet(ctx, service.PublishedPostGetRequest{Slug: "a"})
+			return err
+		},
+		"PublishedPostMedia": func() error {
+			_, err := e.svc.PublishedPostMedia(ctx, service.PublishedPostMediaRequest{Slug: "a", Name: "cover.png"})
+			return err
+		},
 		"AgentProfileList": func() error {
 			_, err := e.svc.AgentProfileList(ctx, service.AgentProfileListRequest{})
 			return err

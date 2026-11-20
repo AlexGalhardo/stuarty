@@ -179,9 +179,10 @@ var publicationCreateCmd = &spec{
 		{
 			Name:  "export",
 			Kind:  kindString,
-			Usage: "the id of a succeeded export job of the project: the video (required)",
+			Usage: "the id of a succeeded export job of the project: the video (this or --post)",
 		},
 		{Name: "thumbnail", Kind: kindString, Usage: "the id of a succeeded export job of a still: the cover"},
+		{Name: "post", Kind: kindString, Usage: "the id of a text of the kind post: a blog post (this or --export)"},
 	}, targetFlags()...),
 	run: func(ctx context.Context, c *call) (*output, error) {
 		targets, err := targetsOf(c)
@@ -191,7 +192,7 @@ var publicationCreateCmd = &spec{
 
 		res, err := c.svc.PublicationCreate(ctx, service.PublicationCreateRequest{
 			ProjectID: c.projectID, Title: c.args.str("title"), Text: c.args.str("text"), Export: c.args.str("export"),
-			Thumbnail: c.args.str("thumbnail"), Targets: targets,
+			Thumbnail: c.args.str("thumbnail"), Post: c.args.str("post"), Targets: targets,
 		})
 		if err != nil {
 			return nil, err

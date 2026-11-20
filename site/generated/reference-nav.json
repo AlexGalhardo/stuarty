@@ -149,6 +149,7 @@
         "texts.get",
         "texts.write",
         "texts.draft",
+        "texts.post",
         "texts.revert",
         "texts.revisions",
         "scripts.estimate",
@@ -216,6 +217,9 @@
     {
       "tag": "Publishing",
       "pages": [
+        "posts.list",
+        "posts.get",
+        "posts.media",
         "publications.list",
         "publications.create",
         "publications.get",

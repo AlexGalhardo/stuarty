@@ -90,7 +90,9 @@ type Post struct {
 	ConnectionID string
 	Export       string
 	Thumbnail    string
-	Fields       Fields
+	// PostItem is the text item of a blog post, for a destination of SDD-020 part 5.
+	PostItem string
+	Fields   Fields
 	// Strict asks for the full check and the snapshot; otherwise the connection and the files are only
 	// checked to exist, so a person can save a draft that is not finished.
 	Strict bool
@@ -214,12 +216,14 @@ type TargetInput struct {
 
 // CreateInput is a new publication.
 type CreateInput struct {
-	ProjectID string        `json:"project_id"`
-	Title     string        `json:"title"`
-	Text      string        `json:"text,omitempty"`
-	Export    string        `json:"export"`
-	Thumbnail string        `json:"thumbnail,omitempty"`
-	Targets   []TargetInput `json:"targets,omitempty"`
+	ProjectID string `json:"project_id"`
+	Title     string `json:"title"`
+	Text      string `json:"text,omitempty"`
+	Export    string `json:"export"`
+	Thumbnail string `json:"thumbnail,omitempty"`
+	// Post is the id of a text item of the kind post, instead of the export of a video.
+	Post    string        `json:"post,omitempty"`
+	Targets []TargetInput `json:"targets,omitempty"`
 }
 
 // UpdateInput changes a publication; a nil field is left as it is.
@@ -229,6 +233,7 @@ type UpdateInput struct {
 	Text      *string       `json:"text,omitempty"`
 	Export    *string       `json:"export,omitempty"`
 	Thumbnail *string       `json:"thumbnail,omitempty"`
+	Post      *string       `json:"post,omitempty"`
 	Targets   []TargetInput `json:"targets,omitempty"`
 }
 
@@ -332,7 +337,7 @@ func (m *Manager) post(p *Publication, t *Target, strict bool) Post {
 
 	return Post{
 		ProjectID: p.ProjectID, ConnectionID: t.ConnectionID, Export: p.Export, Thumbnail: p.Thumbnail,
-		Fields: f, Strict: strict,
+		PostItem: p.Post, Fields: f, Strict: strict,
 	}
 }
 
@@ -396,10 +401,13 @@ func (m *Manager) Create(ctx context.Context, in CreateInput) (*Publication, err
 		return nil, err
 	}
 
-	if in.Export == "" {
+	switch {
+	case in.Export != "" && in.Post != "":
+		return nil, invalid("post", "a publication is a video or a post, not both.")
+	case in.Export == "" && in.Post == "":
 		return nil, invalid(
 			"export",
-			"name the export job of the video.",
+			"name the export job of the video, or the post (a text of the kind post).",
 		).hint("export first, then plan its publication")
 	}
 
@@ -410,7 +418,8 @@ func (m *Manager) Create(ctx context.Context, in CreateInput) (*Publication, err
 	now, actor := m.env.Now(), m.env.Actor(ctx)
 	p := &Publication{
 		ID: m.env.NewID("pub"), ProjectID: in.ProjectID, Title: in.Title, Text: in.Text, Export: in.Export,
-		Thumbnail: in.Thumbnail, CreatedAt: now, UpdatedAt: now, CreatedBy: actor.ID, OwnerUserID: actor.OwnerUserID,
+		Thumbnail: in.Thumbnail, Post: in.Post, CreatedAt: now, UpdatedAt: now, CreatedBy: actor.ID,
+		OwnerUserID: actor.OwnerUserID,
 	}
 
 	for i := range in.Targets {
@@ -963,16 +972,19 @@ func (m *Manager) applyShared(p *Publication, in *UpdateInput) (bool, error) {
 	for _, f := range []struct {
 		dst, src *string
 		path     string
-	}{{&p.Export, in.Export, "export"}, {&p.Thumbnail, in.Thumbnail, "thumbnail"}} {
+	}{{&p.Export, in.Export, "export"}, {&p.Thumbnail, in.Thumbnail, "thumbnail"}, {&p.Post, in.Post, "post"}} {
 		if f.src == nil || *f.src == *f.dst {
 			continue
 		}
 
-		if f.path == "export" && *f.src == "" {
-			return false, invalid("export", "a publication needs its video.")
-		}
-
 		*f.dst, changed = *f.src, true
+	}
+
+	switch {
+	case p.Export != "" && p.Post != "":
+		return false, invalid("post", "a publication is a video or a post, not both.")
+	case p.Export == "" && p.Post == "":
+		return false, invalid("export", "a publication needs its video or its post.")
 	}
 
 	return changed, nil
