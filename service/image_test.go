@@ -419,6 +419,21 @@ func TestImageFlow(t *testing.T) {
 		t.Fatalf("%+v", se)
 	}
 
+	// with an encoder wired, the same request writes a .webp file and the quality reaches the encoder
+	enc := &recordingWebP{}
+	s.webp = enc
+
+	webp, err := s.ImageExport(ctx, ImageExportRequest{ImageID: id, Format: "webp", Quality: 55, Preset: "square_post"})
+	if err != nil || !strings.HasSuffix(webp.Path, ".webp") || enc.quality != 55 || webp.Width != 1080 {
+		t.Fatalf("%v %+v quality %d", err, webp, enc.quality)
+	}
+
+	if body, rerr := os.ReadFile(webp.Path); rerr != nil || string(body) != "RIFFxxxxWEBP" {
+		t.Fatalf("%v %q", rerr, body)
+	}
+
+	s.webp = nil
+
 	_, err = s.ImageExport(ctx, ImageExportRequest{ImageID: id, Width: -1})
 	mustCode(t, err, command.CodeValidation)
 
@@ -952,4 +967,12 @@ func TestImageEmptyScopedNameDoesNotFallBackToTheGlobalOne(t *testing.T) {
 	if len(d.Layers) != 1 || strings.Contains(d.Layers[0].Name, "private") || d.Layers[0].Name != "Image" {
 		t.Fatalf("the name is neutral: %+v", d.Layers)
 	}
+}
+
+type recordingWebP struct{ quality int }
+
+func (r *recordingWebP) EncodeWebP(_ context.Context, _ []byte, quality int) ([]byte, error) {
+	r.quality = quality
+
+	return []byte("RIFFxxxxWEBP"), nil
 }
