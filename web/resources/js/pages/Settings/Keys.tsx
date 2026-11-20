@@ -19,7 +19,16 @@ import { ApiError } from "../../editor/api/errors";
 import { HttpTransport } from "../../editor/api/http";
 import type { ApiKey } from "../../editor/api/types";
 
-const SCOPES = ["read", "edit", "media", "render", "admin"] as const;
+// posts:read is the scope of the read API of the blog (SDD-020 section 47): a key that holds only it reads the published
+// posts and nothing else, for the build of a static site.
+const SCOPES = [
+	"read",
+	"edit",
+	"media",
+	"render",
+	"admin",
+	"posts:read",
+] as const;
 const NAME_MAX = 120;
 
 // A session that ended goes to the login, which comes back here (SDD-012
