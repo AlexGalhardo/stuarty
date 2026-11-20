@@ -259,10 +259,44 @@ func (s *svc) storeSpawned(ctx context.Context, tx ProjectTx, actor string, spaw
 			return err
 		}
 
+		if err := spawnedAssets(ctx, tx, sp, c.Actor, now); err != nil {
+			return err
+		}
+
 		rows, ids = append(rows, it), append(ids, it.ID)
 	}
 
 	return tx.Productions().SetPositions(ctx, owner, ids)
+}
+
+// spawnedAssets gives a spawned timeline the asset rows of the assets its document names, copied from the
+// timeline it came from: the files of an asset are served, inspected and kept from the trash through the rows of
+// the timeline that holds it, so a timeline without them could not preview its clips, and emptying the trash
+// after the parent let the asset go could delete a file it still uses.
+func spawnedAssets(ctx context.Context, tx ProjectTx, sp *timeline.Document, actor string, now int64) error {
+	from := tx.Project().ID
+
+	for _, id := range slices.Sorted(maps.Keys(sp.Assets)) {
+		a := sp.Assets[id]
+
+		row, err := tx.Assets().GetProjectAsset(ctx, from, id)
+		if err != nil && !isNotFound(err) {
+			return err
+		}
+
+		if err != nil {
+			row = ProjectAssetRow{AssetID: id, AssetHash: a.Hash, Name: a.Name, Snapshot: marshalOrNull(a)}
+		}
+
+		row.ProjectID, row.State, row.ImportedBy, row.ImportedMs = sp.ID, ProjectAssetActive, actor, now
+		row.TrashedBy, row.TrashedMs = nil, nil
+
+		if err := tx.Assets().PutProjectAsset(ctx, row); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // publishAfterCommit publishes, once the transaction has committed, the batch.committed event of ev and then
