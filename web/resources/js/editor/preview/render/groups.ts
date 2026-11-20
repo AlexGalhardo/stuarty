@@ -197,19 +197,20 @@ export interface Drawable {
 }
 
 // The render input of a tree for the layers whose pixels are ready. `ready`
-// answers for a layer with pixels of its own: the layer to draw (it may lose a
-// lookup table that is not there yet) or null when the worker holds nothing of
-// it. A group none of whose layers is ready draws nothing, so it is left out.
+// answers for a layer with pixels of its own and the output scale of its frame
+// (what its pixels are delivered at): the layer to draw (it may lose a lookup
+// table that is not there yet) or null when the worker holds nothing of it. A
+// group none of whose layers is ready draws nothing, so it is left out.
 export function drawable(
 	nodes: readonly DrawNode[],
 	frame: number,
-	ready: (layer: PlanLayer) => PlanLayer | null,
+	ready: (layer: PlanLayer, scale: number) => PlanLayer | null,
 ): Drawable {
 	const layers: PlanLayer[] = [];
 	const surfaces: RenderSurface[] = [];
 	for (const node of nodes) {
 		if (node.kind === "layer") {
-			const drawn = ready(node.layer);
+			const drawn = ready(node.layer, node.scale);
 			if (drawn !== null) layers.push(drawn);
 			continue;
 		}
