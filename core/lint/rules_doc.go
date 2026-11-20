@@ -81,8 +81,8 @@ func (c *check) durationLimit() {
 }
 
 // covers says whether an item fills the whole frame, opaque, unrotated and in its
-// default position, with no mask, in the normal blend and nothing that animates or fades it: what it takes to hide the
-// items below.
+// default position, with no mask, no chroma key, no blur, in the normal blend and nothing that animates or fades it:
+// what it takes to hide the items below.
 func (c *check) covers(it *timeline.Item) bool {
 	if it.Opacity != 1 || it.Mask != nil || it.X != nil || it.Y != nil || it.Scale < 1 || it.Rotation != 0 ||
 		it.TransitionIn != nil || it.TransitionOut != nil {
@@ -92,6 +92,12 @@ func (c *check) covers(it *timeline.Item) bool {
 	// Every blend other than normal mixes the item with what lies beneath it (SDD-004 section 3.8), so the
 	// item below still shows (VV-218).
 	if it.Blend != "" && it.Blend != "normal" {
+		return false
+	}
+
+	// A chroma key turns the pixels near its colour transparent (SDD-004 section 3.7) and a blur softens the
+	// edge of the layer into transparent pixels (section 3.6), so the item below shows through (VV-296).
+	if it.ChromaKey != nil || it.Blur > 0 {
 		return false
 	}
 
