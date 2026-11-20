@@ -65,7 +65,9 @@ func (s *svc) ImageFrame(ctx context.Context, req ImageFrameRequest) (*ImageFram
 		return nil, lerr
 	}
 
-	pix, rerr := export.RenderImage(ctx, doc, s.imageRenderConfig(ctx, c))
+	cfg := s.imageRenderConfig(ctx, c)
+	cfg.Cache, cfg.CacheScope = s.imageFrames, c.OwnerUserID
+	pix, rerr := export.RenderImage(ctx, doc, cfg)
 	if rerr != nil {
 		return nil, imageExportError(rerr)
 	}
