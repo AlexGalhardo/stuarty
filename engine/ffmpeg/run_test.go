@@ -445,12 +445,15 @@ func TestOverlappingRunsDoNotStallWhileAPeerIsAlive(t *testing.T) {
 	}
 }
 
+// The stall window starts when the process does, so it has to outlast the start of the helper (a copy of
+// the test binary) on a loaded machine: with 400 ms the watchdog ended runs that had not printed their first
+// block yet (VV-234). What the test asserts is the order, the block first and then the end by the watchdog.
 func TestStallWatchdogCancelsWhenProgressStops(t *testing.T) {
 	r, dir, tool := helperRunner(t)
 	var last Progress
 	_, err := r.exec(context.Background(), execSpec{
 		tool: tool, dir: dir.Dir(), argv: []string{helperFlag + "stall"}, deadline: time.Minute,
-		stall: 400 * time.Millisecond, onProgress: func(p Progress) { last = p },
+		stall: 4 * time.Second, onProgress: func(p Progress) { last = p },
 	})
 	if !errors.Is(err, ErrStalled) {
 		t.Fatalf("error = %v, want ErrStalled", err)
