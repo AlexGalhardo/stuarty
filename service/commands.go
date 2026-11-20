@@ -77,8 +77,15 @@ func (s *svc) CommandHelp(ctx context.Context, req CommandHelpRequest) (*Command
 	}
 
 	cmd, ok := reg.Get(req.Name)
+	if (!ok || cmd.Internal) && req.Domain == "" {
+		// No domain asked: a name that exists in exactly one other domain is that domain's command.
+		if other, c, found := uniqueInOtherDomain(s.reg, req.Name); found {
+			reg, cmd, ok = other, c, true
+		}
+	}
+
 	if !ok || cmd.Internal {
-		return nil, unknownCommand(reg, req.Name)
+		return nil, unknownCommand(reg, req.Domain, req.Name)
 	}
 
 	text, err := reg.Help(req.Name)
@@ -132,8 +139,36 @@ func summaryOf(c *command.Command) CommandSummary {
 	return CommandSummary{Name: c.Name, Summary: c.Summary, Scope: string(c.Scope)}
 }
 
+// uniqueInOtherDomain finds a public command named name in the domains other than the timeline one, only when exactly
+// one of them has it; an ambiguous name stays unknown, and the hint points at the domain parameter.
+func uniqueInOtherDomain(video *command.Registry, name string) (*command.Registry, *command.Command, bool) {
+	var (
+		reg   *command.Registry
+		found *command.Command
+		n     int
+	)
+
+	for _, d := range command.Domains() {
+		if d.Name == command.DomainVideo {
+			continue
+		}
+
+		r, err := registryFor(video, d.Name)
+		if err != nil {
+			continue
+		}
+
+		if c, ok := r.Get(name); ok && !c.Internal {
+			reg, found = r, c
+			n++
+		}
+	}
+
+	return reg, found, n == 1
+}
+
 // unknownCommand is E_UNKNOWN_COMMAND listing the public names only.
-func unknownCommand(reg *command.Registry, name string) *Error {
+func unknownCommand(reg *command.Registry, domain, name string) *Error {
 	known := make([]string, 0)
 
 	for _, c := range reg.List() {
@@ -148,8 +183,13 @@ func unknownCommand(reg *command.Registry, name string) *Error {
 			withDetail("known", known)
 	}
 
+	hint := "use one of the known commands: " + strings.Join(known, ", ")
+	if domain == "" {
+		hint += "; the operations of another domain are listed with the domain parameter (for example domain=image)"
+	}
+
 	return newError(command.CodeUnknownCommand, "there is no command named %q.", name).
-		withHint("use one of the known commands: %s", strings.Join(known, ", ")).withDetail("known", known)
+		withHint("%s", hint).withDetail("known", known)
 }
 
 // Discovery is the first discovery call: command_help with no name and no domain. It lists the operations of the
