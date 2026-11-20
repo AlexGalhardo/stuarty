@@ -20,15 +20,24 @@ func withLUT() *Document {
 	return d
 }
 
-// withFullAssets holds the 64 files a document may list: the photo and 63 images no layer shows (the validator is
-// not run on the input of a case, only on its result).
+// withFullAssets holds the 64 files a document may list: the photo and 63 images, each shown by a layer of its own
+// (a file no layer uses would leave the table with the batch, and would not hold the ceiling).
 func withFullAssets() *Document {
-	d := baseDoc()
+	return fillAssets(baseDoc())
+}
 
-	for i := range MaxAssets - len(d.Assets) {
+// fillAssets adds image layers, each with a file of its own, until the document lists the 64 files it may.
+func fillAssets(d *Document) *Document {
+	for i := 0; len(d.Assets) < MaxAssets; i++ {
 		h := fmt.Sprintf("sha256:%064x", i+1)
 		d.Assets[h] = AssetRef{Hash: h, Name: "x.png", Width: 1, Height: 1}
+		d.Layers = append(d.Layers, Layer{
+			ID: fmt.Sprintf("lyr_%010d", i), Kind: KindImage, Name: "x", Visible: true, Opacity: 100, W: 1, H: 1,
+			Asset: h,
+		})
 	}
+
+	ReorderAll(d)
 
 	return d
 }
