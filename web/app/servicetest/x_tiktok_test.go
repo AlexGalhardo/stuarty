@@ -594,11 +594,10 @@ func TestXPost_PublishNowCarriesThePriceAndSettlesIt(t *testing.T) {
 	e := newXTEnv(t)
 	xConn, _ := e.connect("x", xClientSecret)
 
-	job, err := e.pub.PublishNow(e.as(token), service.PublishNowRequest{
-		ProjectID: e.project, PublishArgs: service.PublishArgs{
-			ConnectionID: xConn, Export: e.exp, Title: "Now", Visibility: "public",
-		},
-	})
+	now := service.PublishNowRequest{ProjectID: e.project}
+	now.ConnectionID, now.Export, now.Title, now.Visibility = xConn, e.exp, "Now", "public"
+
+	job, err := e.pub.PublishNow(e.as(token), now)
 	if err != nil || job.State != service.JobWaitingApproval {
 		t.Fatalf("job = %+v, %v", job, err)
 	}
@@ -1153,7 +1152,8 @@ func TestTikTokSignIn_TheConsentAddressIsTheOneOfTheDesktopKit(t *testing.T) {
 	u, _ := url.Parse(begun.AuthorizeURL)
 	q := u.Query()
 
-	if !strings.HasPrefix(begun.AuthorizeURL, e.net.srv.URL+"/tiktok/authorize?") || q.Get("client_key") != "the-client-key" ||
+	if !strings.HasPrefix(begun.AuthorizeURL, e.net.srv.URL+"/tiktok/authorize?") ||
+		q.Get("client_key") != "the-client-key" ||
 		q.Has("client_id") ||
 		q.Get("scope") != "user.info.basic,video.upload" ||
 		q.Get("redirect_uri") != redirect ||
