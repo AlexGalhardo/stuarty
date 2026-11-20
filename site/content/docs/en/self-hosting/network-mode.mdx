@@ -88,6 +88,7 @@ The process exits with status 1 and a message that names the variable.
 
 - Setting `APP_URL` to one name and browsing by another: the host and the origin must match `APP_URL` exactly.
 - Running `user:create` while the server runs: `E_WORKSPACE_LOCKED`. Stop the server, or use the first-administrator variables.
+- Running `user:create`, `user:passwd` or `token:rotate` with `STUARTY_URL` set: `E_INVALID_STATE`. They write the workspace on the machine where they run, so unset `STUARTY_URL` and run them on the server's machine.
 - Forgetting that every project belongs to its creator: an agent key sees only its owner's projects.
 
 ## Next steps
