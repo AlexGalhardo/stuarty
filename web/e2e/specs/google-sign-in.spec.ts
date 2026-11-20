@@ -5,7 +5,13 @@ import {
 	type KeyObject,
 } from "node:crypto";
 import { createServer, type Server } from "node:http";
-import { type APIRequestContext, expect, test } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
+import {
+	type APIRequestContext,
+	type BrowserContextOptions,
+	expect,
+	test,
+} from "@playwright/test";
 import { GOOGLE_PORT, NETWORK_ADMIN, NETWORK_URL } from "../support/network";
 import { test as local } from "./helpers";
 
@@ -136,6 +142,10 @@ async function adminSession(
 const PASSWORD = "e2e-member-password-1";
 const email = `google-${Date.now()}@example.test`;
 const googleEmail = `person-${Date.now()}@gmail.test`;
+// The cookies of the administrator of beforeAll, so the axe test sees the owner's settings without another
+// login (the login of that address is rate limited across the specs).
+let adminState: BrowserContextOptions["storageState"];
+const A11Y_TAGS = ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"];
 
 test.describe("google-sign-in", () => {
 	test.use({ baseURL: NETWORK_URL });
@@ -173,6 +183,7 @@ test.describe("google-sign-in", () => {
 			headers: origin,
 		});
 		expect(settings.ok(), await settings.text()).toBe(true);
+		adminState = await admin.storageState();
 	});
 
 	test.afterAll(async () => {
@@ -252,6 +263,68 @@ test.describe("google-sign-in", () => {
 		await page.getByLabel("Password").fill(PASSWORD);
 		await page.getByRole("button", { name: "Log in" }).click();
 		await expect(page).toHaveURL(`${NETWORK_URL}/projects`);
+	});
+
+	// The two pages of the epic and the login with its new button, in both languages and both themes: the
+	// settings as the owner sees them (both sections), and the callback page showing a refusal.
+	test("axe finds nothing on the Google sign-in pages @chromium-only", async ({
+		browser,
+	}) => {
+		test.setTimeout(120_000);
+		const found: string[] = [];
+		for (const lang of ["en", "pt-BR"] as const) {
+			for (const theme of ["light", "dark"] as const) {
+				for (const owner of [false, true]) {
+					const context = await browser.newContext({
+						baseURL: NETWORK_URL,
+						...(owner ? { storageState: adminState } : {}),
+					});
+					await context.addInitScript(
+						([l, th]) => {
+							localStorage.setItem("vv.lang", l);
+							localStorage.setItem("theme", th);
+						},
+						[lang, theme],
+					);
+					const page = await context.newPage();
+					// The callback posts to a route counted against the login limit of the address, shared with
+					// the other specs of the network server: one language is enough for it.
+					const visits = owner
+						? [
+								{
+									path: "/settings/google",
+									ready: page.locator("[data-google-redirect]"),
+								},
+								...(lang === "en"
+									? [
+											{
+												path: "/login/google/callback?state=l.a11y&code=a11y",
+												ready: page.locator("[data-google-phase='failed']"),
+											},
+										]
+									: []),
+							]
+						: [
+								{
+									path: "/login",
+									ready: page.locator("[data-google-sign-in]"),
+								},
+							];
+					for (const { path, ready } of visits) {
+						await page.goto(path);
+						await expect(ready).toBeVisible();
+						const { violations } = await new AxeBuilder({ page })
+							.withTags(A11Y_TAGS)
+							.analyze();
+						for (const v of violations) {
+							found.push(`${path} ${lang} ${theme}: ${v.id}`);
+						}
+					}
+					await context.close();
+				}
+			}
+		}
+		expect(found).toEqual([]);
 	});
 });
 
