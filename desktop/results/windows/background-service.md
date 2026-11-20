@@ -1,5 +1,11 @@
 # Epic 21 on Windows 11: the background mode, run for real (2026-11-20)
 
+This is the record of one run, kept as it happened. It is not a procedure for agents: the desktop shell opens a
+window and a tray icon, so the steps below (and the sign-in round trip and the installer, listed at the end) are
+manual checks for a person on a machine set aside for them. Agents verify the background mode with the unit tests
+and fakes of `desktop/shell`, `desktop/service`, `service/publish` and `web/app/http`, and with
+`web/e2e/specs/desktop-background.spec.ts` (headless, with a faked shell).
+
 Build: `stuarty-desktop.exe` with `-H windowsgui -X main.version=0.0.0-epic21` (from `desktop/shell/app`) and
 `stuarty.exe` from `./web/cmd/app`, both from the branch `epic/21-desktop-background-service`. WebView2 157.0.4341.60.
 
@@ -28,9 +34,10 @@ Setup, all in private folders and nothing of the machine touched:
 Not run, and why:
 
 - **Sign out and in with start at sign-in on.** The registration is the Run key of the user; the author asked that no
-  registration be made on this machine. The code path is tested on a scratch registry key (`go test ./desktop/service/`)
-  and by a check that the installer script removes the same key and value; the real round trip is a manual step for a
-  disposable machine (the question "Epic 21: start at sign-in" in the questions file lists it).
+  registration be made on this machine. The code path is tested on an in-memory key (`go test ./desktop/service/`; the
+  real registry, on a scratch key, only with `STUARTY_TEST_REGISTRY=1` on a disposable machine) and by a check that the
+  installer script removes the same key and value; the real round trip is a manual step of the author on a disposable
+  machine.
 - **The tray icon and its menu** (Open, Pause publishing, Quit with the warning): a tray menu cannot be driven without
   screen automation, which is not used here. The decisions behind them are unit tests (`DecideClose`, `QuitPrompt`,
   `QuitWaitingMessage`), and the server side of Pause is tested on the route and on the scheduler. The icon was not looked at.
