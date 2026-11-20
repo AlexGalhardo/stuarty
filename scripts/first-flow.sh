@@ -294,6 +294,7 @@ pub="$(stuarty publication:create --project "$P" --title "Sourdough short" \
 	--text "From starter to slice in four seconds #sourdough" --export "$EXPORT_JOB" --thumbnail "$COVER_JOB" \
 	--connection "$SOCIAL_CONN" --at "$AT" --made-for-kids no --visibility public --json)"
 PUB="$(need publication "$(printf '%s' "$pub" | field id)" "$pub")"
+[ "$(printf '%s' "$pub" | field thumbnail)" = "$COVER_JOB" ] || die "the cover is not the thumbnail of the post: $pub"
 [ "$(upload_count)" = 0 ] || die "something was sent before the post was scheduled"
 sched="$(stuarty publication:schedule "$PUB" --json)"
 SCHEDULED="$(date -u +%s)"
