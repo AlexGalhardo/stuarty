@@ -142,7 +142,16 @@ func (c *Client) ImageCheckpointRemove(
 
 // ImageExport implements service.Service.
 func (c *Client) ImageExport(ctx context.Context, req service.ImageExportRequest) (*service.ImageExportResult, error) {
-	return post[service.ImageExportResult](ctx, c, imagePath(req.ImageID, "/export"), req)
+	// The document is in the path: the route refuses a body that names it as an unknown member.
+	body := struct {
+		Format  string `json:"format,omitempty"`
+		Quality int    `json:"quality,omitempty"`
+		Preset  string `json:"preset,omitempty"`
+		Width   int    `json:"width,omitempty"`
+		Height  int    `json:"height,omitempty"`
+	}{req.Format, req.Quality, req.Preset, req.Width, req.Height}
+
+	return post[service.ImageExportResult](ctx, c, imagePath(req.ImageID, "/export"), body)
 }
 
 // ImageImport implements service.Service.
