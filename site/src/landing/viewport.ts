@@ -102,6 +102,8 @@ export function start(): void {
 			else t.removeAttribute("aria-hidden");
 		}
 		setRail(i);
+		// The still mascot of the WebGL fallback belongs to the first take.
+		document.querySelector("[data-stage-still]")?.toggleAttribute("hidden", i !== 0);
 		history.replaceState(null, "", `#${next.id}`);
 		if (hint) hint.style.opacity = i === 0 ? "1" : "0";
 		// Focus after two frames: the take has just become visible, and the global reduced-motion rule gives

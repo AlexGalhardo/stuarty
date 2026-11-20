@@ -3,7 +3,7 @@
 // agent cursor, the MCP log, the collapse at the end) is drawn from that one number, so scrolling back plays it in
 // reverse. Timeline mode is off on small screens and under reduced motion: the clips are a plain list.
 import { afterPaint, reducedMotion } from "./boot";
-import { gsap, letters, revealOnScroll, rise, ScrollTrigger, typeLines } from "./motion";
+import { gsap, hideStillAfter, letters, revealOnScroll, rise, ScrollTrigger, typeLines } from "./motion";
 import type { Stage } from "./stage";
 import { enhanceTabs } from "./tabs";
 
@@ -51,7 +51,10 @@ export function start(): void {
 			const canvas = document.getElementById("creative-stage") as HTMLCanvasElement | null;
 			if (!canvas) return;
 			stage = createStage(canvas);
-			if (!stage) return;
+			if (!stage) {
+				hideStillAfter("#timeline");
+				return;
+			}
 			// The mascot waits off stage until the export; in the plain layout it greets the reader in the intro.
 			// The mascot greets the reader beside the intro, then steps off stage while the timeline plays and comes
 			// back at the export.

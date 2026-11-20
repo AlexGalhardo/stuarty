@@ -120,3 +120,15 @@ export function typeLines(terminal: Element, options: { speed?: number } = {}): 
 	}
 	return tl;
 }
+
+/** WebGL fallback: the still mascot belongs to the first screen and goes once the reader scrolls past it. */
+export function hideStillAfter(trigger: string): void {
+	const still = document.querySelector("[data-stage-still]");
+	if (!still) return;
+	ScrollTrigger.create({
+		trigger,
+		start: "top 60%",
+		onEnter: () => still.toggleAttribute("hidden", true),
+		onLeaveBack: () => still.toggleAttribute("hidden", false),
+	});
+}
