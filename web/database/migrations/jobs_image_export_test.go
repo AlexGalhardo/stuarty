@@ -4,6 +4,8 @@ import (
 	"context"
 	"slices"
 	"testing"
+
+	"github.com/AlexGalhardo/vukem/schema"
 )
 
 const imageExportKindID = "20261120130000_jobs_image_export_kind"
@@ -49,5 +51,86 @@ func TestJobsImageExportKindKeepsEveryJobAndTakesAProjectlessImageExport(t *test
 
 	if n := count(t, db, `SELECT count(*) FROM pragma_table_info('jobs') WHERE name = 'approval_id'`); n != 1 {
 		t.Error("the rebuild lost approval_id")
+	}
+}
+
+// TestJobsImageExportKindKeepsTheApprovalAndGoesBack: a job that waits on an approval keeps its approval_id
+// through the rebuild; Down drops only the image.export rows, keeps every other row with its approval_id, and the
+// table it leaves refuses a job with no project again; Up runs once more on it.
+func TestJobsImageExportKindKeepsTheApprovalAndGoesBack(t *testing.T) {
+	db := openWith(t, before(imageExportKindID))
+	ctx := context.Background()
+
+	insertTimeline(t, db, "prj_a")
+	insertEveryJob(t, db)
+	execAll(t, db, `INSERT INTO jobs (id, kind, project_id, actor, state, input, created_ms, updated_ms, approval_id)
+ VALUES ('job_6', 'publish.upload', 'prj_a', 'key:k', 'waiting_approval', '{}', 60, 60, 'apr_6')`)
+
+	approvals := func() []string {
+		t.Helper()
+
+		rows, err := db.QueryContext(ctx, `SELECT id || '|' || coalesce(approval_id, '-') FROM jobs ORDER BY id`)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer rows.Close()
+
+		var out []string
+
+		for rows.Next() {
+			var s string
+			if err := rows.Scan(&s); err != nil {
+				t.Fatal(err)
+			}
+
+			out = append(out, s)
+		}
+
+		if err := rows.Err(); err != nil {
+			t.Fatal(err)
+		}
+
+		return out
+	}
+
+	want, wantApprovals := jobRows(t, db), approvals()
+
+	upTo(t, db, through(imageExportKindID))
+
+	if got := approvals(); !slices.Equal(got, wantApprovals) {
+		t.Fatalf("approval ids after the rebuild = %q, want %q", got, wantApprovals)
+	}
+
+	execAll(t, db, `INSERT INTO jobs (id, kind, actor, state, input, created_ms, updated_ms)
+ VALUES ('job_img', 'image.export', 'local:ui', 'succeeded', '{"image_id":"img_a"}', 70, 70)`)
+
+	if err := m20261120130000JobsImageExportKind().Down(schema.New(ctx, db)); err != nil {
+		t.Fatal(err)
+	}
+
+	if got := jobRows(t, db); !slices.Equal(got, want) {
+		t.Errorf("rows after Down:\n%q\nwant\n%q", got, want)
+	}
+
+	if got := approvals(); !slices.Equal(got, wantApprovals) {
+		t.Errorf("approval ids after Down = %q, want %q", got, wantApprovals)
+	}
+
+	if _, err := db.ExecContext(ctx, `INSERT INTO jobs (id, kind, actor, state, input, created_ms, updated_ms)
+ VALUES ('job_img2', 'image.export', 'local:ui', 'succeeded', '{}', 80, 80)`); err == nil {
+		t.Error("the table Down left accepts a job with no project")
+	}
+
+	if n := count(t, db, `SELECT count(*) FROM sqlite_master WHERE type = 'index' AND name IN
+ ('jobs_project_id_created_ms_index','jobs_kind_state_index','jobs_active_ingest_unique')`); n != 3 {
+		t.Errorf("%d of the 3 indexes of jobs survived Down", n)
+	}
+
+	if err := m20261120130000JobsImageExportKind().Up(schema.New(ctx, db)); err != nil {
+		t.Fatalf("Up after Down: %v", err)
+	}
+
+	if got := approvals(); !slices.Equal(got, wantApprovals) {
+		t.Errorf("approval ids after Up again = %q, want %q", got, wantApprovals)
 	}
 }
