@@ -45,6 +45,8 @@ var commandDomains = map[string]string{
 	"fonts": command.DomainAsset, "asset:list": command.DomainAsset, "asset:show": command.DomainAsset,
 	"asset:uses": command.DomainAsset, "asset:set": command.DomainAsset, "asset:tag": command.DomainAsset,
 
+	"motion:brief": command.DomainVideo, "motion:check": command.DomainVideo, "motion:replace": command.DomainVideo,
+
 	"memory:list": command.DomainMemory, "memory:show": command.DomainMemory, "memory:write": command.DomainMemory,
 	"memory:remove": command.DomainMemory, "skill:list": command.DomainMemory, "skill:show": command.DomainMemory,
 	"skill:write": command.DomainMemory, "skill:import": command.DomainMemory, "skill:export": command.DomainMemory,
@@ -68,6 +70,9 @@ var commandDomains = map[string]string{
 	"brand:show": command.DomainWorkspace, "brand:set": command.DomainWorkspace, "doctor": command.DomainWorkspace,
 	"audit": command.DomainWorkspace, "tools:install": command.DomainWorkspace, "version": command.DomainWorkspace,
 	"mcp": command.DomainWorkspace, "agent:docs": command.DomainWorkspace, "token:rotate": command.DomainWorkspace,
+
+	"agent:profiles": command.DomainWorkspace, "chat:sessions": command.DomainWorkspace,
+	"chat:session": command.DomainWorkspace, "chat:transcript": command.DomainWorkspace,
 }
 
 // domainOf is the domain of a command of the table, empty for a name that is not in it.

@@ -2,6 +2,8 @@ import { fromResponse, networkError } from "./errors";
 import { type RetryDeps, withRetry } from "./retry";
 import { type Transport, TransportError } from "./transport";
 import type {
+	AgentProfile,
+	AgentProfileListResult,
 	ApprovalListResult,
 	ApprovalRequest,
 	ApprovalRule,
@@ -11,12 +13,17 @@ import type {
 	AssetListResult,
 	AssetQuery,
 	AssetResult,
+	AudioMeasureQuery,
+	AudioMeasureResult,
 	AuditListResult,
 	AuditQuery,
 	BrandKit,
 	BrandKitBody,
 	BriefResult,
 	BundleImportResult,
+	ChatSession,
+	ChatSessionListResult,
+	ChatTranscriptResult,
 	CommandHelpResult,
 	Connection,
 	ConnectionCreateRequest,
@@ -90,9 +97,13 @@ import type {
 // Timeouts of SDD-012 section 4.3 item 4.
 const READ_TIMEOUT_MS = 10_000;
 const EDIT_TIMEOUT_MS = 30_000;
+// Starting an agent waits for its process to start and open the protocol (SDD-017 section 4).
+const CHAT_START_TIMEOUT_MS = 45_000;
 // A bundle call may hold for up to 25 s (wait_ms) before the job is returned.
 const BUNDLE_WAIT_MS = 20_000;
 const BUNDLE_TIMEOUT_MS = 60_000;
+// The sound of up to 600 s is decoded and mixed twice.
+const MEASURE_TIMEOUT_MS = 120_000;
 
 const defaultDeps: RetryDeps = {
 	sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
@@ -131,6 +142,11 @@ export interface ApiClient {
 		projectId: string,
 		items: readonly ExportBatchItem[],
 	): Promise<Job>;
+	// The level of the sound before and after the audio processors (SDD-004 section 7.1).
+	measureAudio(
+		projectId: string,
+		query?: AudioMeasureQuery,
+	): Promise<AudioMeasureResult>;
 	getJob(jobId: string): Promise<Job>;
 	cancelJob(jobId: string): Promise<Job>;
 	listJobs(projectId: string): Promise<JobListResult>;
@@ -231,6 +247,29 @@ export interface ApiClient {
 	removeApprovalRule(id: string): Promise<ApprovalRule>;
 	getCostSummary(): Promise<CostSummary>;
 	setCostCeiling(request: CostCeilingSetRequest): Promise<CostSummary>;
+	// The hosted agent chat (SDD-017). Everything that drives a session, and the profiles, are for
+	// a person in a browser session; any other caller gets E_PRIVILEGED_SESSION.
+	listAgentProfiles(): Promise<AgentProfileListResult>;
+	setAgentProfile(
+		name: string,
+		command: string,
+		args: string[],
+	): Promise<AgentProfile>;
+	removeAgentProfile(name: string): Promise<AgentProfile>;
+	startChatSession(projectId: string, profile: string): Promise<ChatSession>;
+	sendChatMessage(sessionId: string, text: string): Promise<ChatSession>;
+	cancelChat(sessionId: string, end: boolean): Promise<ChatSession>;
+	answerChatPermission(
+		sessionId: string,
+		requestId: string,
+		answer: "allow" | "reject" | "cancel",
+	): Promise<ChatSession>;
+	listChatSessions(projectId: string): Promise<ChatSessionListResult>;
+	getChatTranscript(
+		sessionId: string,
+		options?: { after?: number; format?: "json" | "markdown" },
+	): Promise<ChatTranscriptResult>;
+	deleteChatSession(sessionId: string): Promise<ChatSession>;
 	// An administrator session; any other caller gets E_FORBIDDEN.
 	listUsers(): Promise<UserListResult>;
 	listTrashedProjects(): Promise<ProjectListResult>;
@@ -391,6 +430,18 @@ export function createClient(
 				READ_TIMEOUT_MS,
 			);
 		},
+		measureAudio: (id, q = {}) => {
+			const params = new URLSearchParams();
+			if (q.itemId !== undefined) params.set("item_id", q.itemId);
+			if (q.start !== undefined) params.set("start", q.start);
+			if (q.end !== undefined) params.set("end", q.end);
+			const suffix = params.size === 0 ? "" : `?${params.toString()}`;
+			return call(
+				"GET",
+				`${project(id)}/audio-measure${suffix}`,
+				MEASURE_TIMEOUT_MS,
+			);
+		},
 		startExportBatch: (id, items) =>
 			call("POST", `${project(id)}/export-batches`, READ_TIMEOUT_MS, {
 				items: items.map((item) =>
@@ -541,6 +592,62 @@ export function createClient(
 				`/connections/${encodeURIComponent(id)}/test`,
 				EDIT_TIMEOUT_MS,
 				{},
+			),
+		listAgentProfiles: () => call("GET", "/agents/profiles", READ_TIMEOUT_MS),
+		setAgentProfile: (name, command, args) =>
+			call(
+				"PUT",
+				`/agents/profiles/${encodeURIComponent(name)}`,
+				EDIT_TIMEOUT_MS,
+				{ command, args },
+			),
+		removeAgentProfile: (name) =>
+			call(
+				"DELETE",
+				`/agents/profiles/${encodeURIComponent(name)}`,
+				EDIT_TIMEOUT_MS,
+			),
+		startChatSession: (projectId, profile) =>
+			call(
+				"POST",
+				`${project(projectId)}/chat/sessions`,
+				CHAT_START_TIMEOUT_MS,
+				{ profile },
+			),
+		sendChatMessage: (sessionId, text) =>
+			call(
+				"POST",
+				`/chat/sessions/${encodeURIComponent(sessionId)}/messages`,
+				EDIT_TIMEOUT_MS,
+				{ text },
+			),
+		cancelChat: (sessionId, end) =>
+			call(
+				"POST",
+				`/chat/sessions/${encodeURIComponent(sessionId)}/cancel`,
+				EDIT_TIMEOUT_MS,
+				{ end },
+			),
+		answerChatPermission: (sessionId, requestId, answer) =>
+			call(
+				"POST",
+				`/chat/sessions/${encodeURIComponent(sessionId)}/permissions/${encodeURIComponent(requestId)}`,
+				EDIT_TIMEOUT_MS,
+				{ answer },
+			),
+		listChatSessions: (projectId) =>
+			call("GET", `${project(projectId)}/chat/sessions`, READ_TIMEOUT_MS),
+		getChatTranscript: (sessionId, options) =>
+			call(
+				"GET",
+				`/chat/sessions/${encodeURIComponent(sessionId)}/transcript?format=${options?.format ?? "json"}&after=${options?.after ?? 0}`,
+				READ_TIMEOUT_MS,
+			),
+		deleteChatSession: (sessionId) =>
+			call(
+				"DELETE",
+				`/chat/sessions/${encodeURIComponent(sessionId)}`,
+				EDIT_TIMEOUT_MS,
 			),
 		listProviders: () => call("GET", "/providers", READ_TIMEOUT_MS),
 		listProviderModels: (connectionId, refresh) =>

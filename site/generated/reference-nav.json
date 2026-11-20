@@ -7,6 +7,7 @@
         "projects.list",
         "projects.create",
         "projects.get",
+        "audio.measure",
         "bitmaps.get",
         "projects.brief.get",
         "projects.brief.set",
@@ -23,6 +24,9 @@
         "projects.items.restore",
         "projects.items.trash",
         "projects.lint",
+        "projects.motion.brief",
+        "projects.motion.check",
+        "projects.motion.replace",
         "projects.otio.export",
         "projects.otio.import",
         "projects.plan",
@@ -191,6 +195,23 @@
       ]
     },
     {
+      "tag": "Agent chat",
+      "pages": [
+        "agents.profiles.list",
+        "agents.profiles.set",
+        "agents.profiles.remove",
+        "chat.sessions.get",
+        "chat.sessions.delete",
+        "chat.sessions.cancel",
+        "chat.sessions.events",
+        "chat.sessions.send",
+        "chat.sessions.answer",
+        "chat.sessions.transcript",
+        "chat.sessions.list",
+        "chat.sessions.start"
+      ]
+    },
+    {
       "tag": "System",
       "pages": [
         "handshake.get",
@@ -251,8 +272,13 @@
       "animation.list_presets",
       "asset.remove",
       "audio.add",
+      "audio.apply_preset",
       "audio.duck",
       "audio.mark_beats",
+      "audio.processor_add",
+      "audio.processor_move",
+      "audio.processor_remove",
+      "audio.processor_set",
       "caption.add",
       "caption.edit_word",
       "caption.from_transcript",
@@ -265,6 +291,7 @@
       "caption.split",
       "clip.add",
       "clip.remove_silences",
+      "clip.replace_media",
       "clip.set_blend",
       "clip.set_blur",
       "clip.set_chroma_key",

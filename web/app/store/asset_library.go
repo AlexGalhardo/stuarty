@@ -22,7 +22,7 @@ const maxSearchHits = 5000
 const manyChunk = 400
 
 const infoColumns = `owner_user_id, asset_hash, origin_kind, source, provider, model, prompt, cost_micros, rights_note, description,
- reusable, created_by, created_ms, updated_ms`
+ reusable, created_by, created_ms, updated_ms, engine, engine_version, render_key`
 
 func scanInfo(sc interface{ Scan(...any) error }) (assets.Row, error) {
 	var (
@@ -35,6 +35,7 @@ func scanInfo(sc interface{ Scan(...any) error }) (assets.Row, error) {
 	if err := sc.Scan(
 		&r.Owner, &r.Hash, &kind, &r.Origin.Source, &r.Origin.Provider, &r.Origin.Model, &r.Origin.Prompt, &cost,
 		&r.Origin.RightsNote, &r.Description, &re, &r.CreatedBy, &r.CreatedMs, &r.UpdatedMs,
+		&r.Origin.Engine, &r.Origin.EngineVersion, &r.Origin.RenderKey,
 	); err != nil {
 		return r, err
 	}
@@ -162,13 +163,15 @@ func (r assetLibraryRepo) Put(ctx context.Context, row assets.Row) error {
 	}
 
 	if _, err := r.ex.ExecContext(ctx,
-		`INSERT INTO asset_info (`+infoColumns+`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		`INSERT INTO asset_info (`+infoColumns+`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
  ON CONFLICT (owner_user_id, asset_hash) DO UPDATE SET origin_kind = excluded.origin_kind, source = excluded.source,
  provider = excluded.provider, model = excluded.model, prompt = excluded.prompt, cost_micros = excluded.cost_micros,
  rights_note = excluded.rights_note, description = excluded.description, reusable = excluded.reusable,
- updated_ms = excluded.updated_ms`,
+ updated_ms = excluded.updated_ms, engine = excluded.engine, engine_version = excluded.engine_version,
+ render_key = excluded.render_key`,
 		row.Owner, row.Hash, string(o.Kind), o.Source, o.Provider, o.Model, o.Prompt, o.CostMicros, o.RightsNote,
 		row.Description, boolInt(row.Reusable), row.CreatedBy, row.CreatedMs, row.UpdatedMs,
+		o.Engine, o.EngineVersion, o.RenderKey,
 	); err != nil {
 		return err
 	}
@@ -212,7 +215,7 @@ func (r assetLibraryRepo) Reindex(ctx context.Context, owner, hash string) error
                   WHERE t.asset_hash = a.id AND t.owner_user_id = ?), ''),
         COALESCE(i.description, ''),
         TRIM(COALESCE(i.source, '') || ' ' || COALESCE(i.provider, '') || ' ' || COALESCE(i.model, '') || ' ' ||
-             COALESCE(i.prompt, ''))
+             COALESCE(i.prompt, '') || ' ' || COALESCE(i.engine, '') || ' ' || COALESCE(i.engine_version, ''))
  FROM assets a LEFT JOIN asset_info i ON i.asset_hash = a.id AND i.owner_user_id = ?
  WHERE a.id = ?`, owner, owner, owner, owner, hash)
 

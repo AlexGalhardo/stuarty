@@ -20,6 +20,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/engine/rasterize"
 	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
 	"github.com/AlexGalhardo/stuarty/engine/transcribe"
+	"github.com/AlexGalhardo/stuarty/service/agenthost"
 	"github.com/AlexGalhardo/stuarty/service/approval"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/connections/oauth"
@@ -38,6 +39,8 @@ type Service interface {
 	ProductionService
 	BriefingService
 	AssetLibraryService
+	ChatService
+	MotionService
 
 	ProjectList(ctx context.Context, req ProjectListRequest) (*ProjectListResult, error)
 	ProjectCreate(ctx context.Context, req ProjectCreateRequest) (*ProjectCreateResult, error)
@@ -119,6 +122,9 @@ type Service interface {
 	ExportPresetList(ctx context.Context, req ExportPresetListRequest) (*ExportPresetListResult, error)
 	ExportCheck(ctx context.Context, req ExportCheckRequest) (*ExportCheckResult, error)
 	ExportBatch(ctx context.Context, req ExportBatchRequest) (*Job, error)
+	// AudioMeasure is the loudness, true peak and noise floor of a range or an item with and without its audio
+	// processors (SDD-004 section 7.1, epic 34).
+	AudioMeasure(ctx context.Context, req AudioMeasureRequest) (*AudioMeasureResult, error)
 	AuditList(ctx context.Context, req AuditListRequest) (*AuditListResult, error)
 
 	// Doctor is the diagnostic report (SDD-003 section 2, SDD-011 section 8.6).
@@ -292,6 +298,9 @@ type Options struct {
 	WebP export.WebPEncoder
 	// JobWait is how long TrashEmpty waits for the jobs of a trashed project to stop; zero is 15 s.
 	JobWait time.Duration
+	// Agents hosts the agent a user installed, for the chat (SDD-017). Nil in a process that only runs a
+	// command: the chat operations that need a process then answer E_AGENT_UNAVAILABLE, and the reads work.
+	Agents *agenthost.Host
 }
 
 type svc struct {
@@ -322,6 +331,7 @@ type svc struct {
 	heavyLimitN int
 	log         *slog.Logger
 	jobWait     time.Duration
+	agents      *agenthost.Host // the hosted agent chat; nil without a host (SDD-017)
 	webp        export.WebPEncoder
 	doctorMu    sync.Mutex
 	doctorCaps  *ffmpeg.Capabilities
@@ -376,6 +386,7 @@ func New(o Options) (Service, error) {
 		heavyLimitN: o.HeavyPerMinute,
 		log:         o.Log,
 		jobWait:     o.JobWait,
+		agents:      o.Agents,
 		webp:        o.WebP,
 		startedAt:   time.Now(),
 	}

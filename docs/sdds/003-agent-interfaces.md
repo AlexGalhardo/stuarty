@@ -1290,6 +1290,9 @@ warning L_SAFE_AREA itm_s6t7v8w9x0 0.4s/12f-2s/60f
 | `L_AUDIO_CLIP` | warning | full | the estimated mix peak exceeds 0 dBFS: at some 20 ms window the sum of each audible source's peak (from the `peaks` artifact) times its volume, fade and keyframe gain exceeds 1.0. The message gives the first range and the count of ranges | lower volume with item.set_audio |
 | `L_LOUDNESS` | warning | full | the estimated integrated loudness of the mix (from the assets' loudness artifacts) differs from `settings.loudness_target` by more than 6 LU, so the export normalization would need a large gain. The message states the gain | adjust volumes or accept the normalization |
 | `L_DURATION_LIMIT` | warning | doc | a portrait or square timeline is longer than 180 s (the YouTube Shorts limit, not checked in a landscape project; research note `features-20-80` §5) | trim the timeline or accept it |
+| `L_ALPHA_MISSING` | warning | full | a clip reads an asset that has an alpha channel (`has_alpha`) whose pictures are all opaque in what the ingest sampled (the `alpha_opaque` fact of its normalized artifact, SDD-011 §4.3.6): the file declares transparency and has none, so the animation covers what is below it. Reported once per clip | render it with alpha |
+| `L_AUDIO_LIMITER_NOT_LAST` | warning | doc | an enabled `limiter` of a processor chain (SDD-001 section 3.5) of an item or a track is followed by another enabled processor, which can lift the peaks again | move it last with audio.processor_move |
+| `L_AUDIO_NOISE_REDUCTION_REPEATED` | warning | doc | a processor chain has more than one enabled `noise_reduction` (the second one only adds artefacts) | remove one |
 
 Blocking set, stated once: `L_EMPTY_TIMELINE`, `L_MEDIA_MISSING`, `L_MEDIA_UNREADY`, `L_SOURCE_RANGE`, `L_ODD_DIMENSIONS`, `L_SLOT_UNFILLED`. Everything else is a warning. A template draft (a document with a `template` member whose `instance` is not true) is exempt from `L_SLOT_UNFILLED`; an instance (`template.instance: true`, written by `TemplateInstantiate`) is not, so export of an instance with open required slots is `E_LINT_BLOCKING`. Any document with a `template` member is exempt from `L_MEDIA_MISSING` for the placeholder, which `L_SLOT_UNFILLED` covers.
 
@@ -1472,7 +1475,7 @@ Tool and Service mapping, scope and annotations (annotations are hints and clien
 | `history` | `HistoryList`, `Undo`, `Redo` | read (list), edit (undo, redo) | false | false | false | false |
 | `media_import` | `MediaImport` | media | false | false | true | false |
 | `media_inspect` | `MediaInspect` (with `asset_id`), `MediaList` (without) | read | true | n/a | true | false |
-| `view` | `ViewFrame`, `ViewSheet` | read | true | n/a | true | false |
+| `view` | `ViewFrame`, `ViewSheet`, `AudioMeasure` (`mode` audio) | read | true | n/a | true | false |
 | `lint` | `Lint`, `ExportCheck` (with `preset`) | read | true | n/a | true | false |
 | `job_start` | `JobStart`, `ExportBatch` (`kind` `export_batch`) | render (export, export_batch), media (transcribe) | false | false | false | false |
 | `job_get` | `JobGet` (with `job_id`), `JobList` (with `project_id` and no `job_id`) | read | true | n/a | true | false |
@@ -2397,7 +2400,7 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
 ```json
 {
   "name": "view",
-  "description": "See the result. mode=frame returns one image of the timeline at time at; mode=sheet returns a grid of frames, each with its time printed (count evenly spaced between from and until, or explicit times). Costs image tokens: read project_get and lint first. frame needs at; sheet takes times, or from, to and count (not both).",
+  "description": "See the result. mode=frame: one image at time at; sheet: a grid of frames with their times (count frames from..until, or times); motion: what an external render of from..until must fit (size, rate, safe area, brand kit, captions, frames); audio: loudness, true peak and noise floor before and after the audio processors, of item_id or from..until. Images cost tokens: read project_get and lint first.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -2412,13 +2415,19 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
       "mode": {
         "enum": [
           "frame",
-          "sheet"
+          "sheet",
+          "motion",
+          "audio"
         ],
         "default": "frame"
       },
+      "item_id": {
+        "type": "string",
+        "pattern": "^itm_[0-9a-hjkmnp-tv-z]{10}$"
+      },
       "at": {
         "type": "string",
-        "description": "Time: 12.5s, 375f or 00:00:12.500. Required in mode frame (the default)."
+        "description": "Time: 12.5s or 375f. Required in mode frame."
       },
       "times": {
         "type": "array",
@@ -2477,14 +2486,11 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
       }
     },
     "required": [
-      "revision",
-      "width",
-      "height",
-      "image_tokens"
+      "revision"
     ]
   },
   "annotations": {
-    "title": "View frame or sheet",
+    "title": "View frame, sheet or sound",
     "readOnlyHint": true,
     "destructiveHint": false,
     "idempotentHint": true,
@@ -2497,7 +2503,7 @@ Example (the text of §3.8; `structuredContent` has `asset_id`, `kind`, `availab
 
 | Parameter | Meaning |
 | --- | --- |
-| `mode` | `frame` (default): one image at `at` (required; `E_VALIDATION` with `path: "at"` when missing). `sheet`: a grid; `at` is not accepted |
+| `mode` | `frame` (default): one image at `at` (required; `E_VALIDATION` with `path: "at"` when missing). `sheet`: a grid; `at` is not accepted. `audio` (epic 34): `AudioMeasure` of `item_id`, or of `from` to `until`, with no image; `at`, `times`, `count` and `max_tokens` are `E_VALIDATION`, and so is `item_id` in any other mode |
 | `at` | time of the frame; a time beyond the timeline is `E_INVALID_TIME` |
 | `times` | sheet: 2 to 16 explicit times; exclusive with `from`, `until`, `count` (`E_VALIDATION` with the `path` of the second member) |
 | `from`, `until`, `count` | sheet: `count` (default 9) frames evenly spaced from `from` (default `0s`) to `until` (default the last frame), both ends included |
@@ -3485,7 +3491,7 @@ Every command that reads or edits a timeline (those whose result is about one do
 | `media:list` | `media:list --project <id> [--cursor c] [--limit n]` | `--cursor`; `--limit` int 50 | none | `MediaListResult` |
 | `media:trash` | `media:trash <asset id> --project <id>` | none | none | `MediaStateResult` |
 | `media:restore` | `media:restore <asset id> --project <id>` | none | none | `MediaStateResult` |
-| `view` | `view --project <id> [--mode frame\|sheet] [--at t] [--times t1,t2,...] [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px]` | `--mode` string `frame`; `--at`; `--times`; `--from`; `--until`; `--count` int 9; `--cols` int; `--max-tokens` int 800 (sheet 1,500); `--width` int | none | `ViewResult` without `image_base64` (the image is the file in `path`; with a remote server the CLI downloads the image from the byte-serving route to a temporary file on the client and prints that path) |
+| `view` | `view --project <id> [--mode frame\|sheet\|audio] [--at t] [--times t1,t2,...] [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px] [--item id]` | `--mode` string `frame`; `--at`; `--times`; `--from`; `--until`; `--count` int 9; `--cols` int; `--max-tokens` int 800 (sheet 1,500); `--width` int; `--item` string, mode audio only | none | `ViewResult` without `image_base64` (the image is the file in `path`; with a remote server the CLI downloads the image from the byte-serving route to a temporary file on the client and prints that path); with `--mode audio`, `AudioMeasureResult` (the sound of the item or the range before and after its audio processors: `--item` one clip or audio item, `--from` and `--until` the range, the item's own or the whole timeline by default) |
 | `lint` | `lint --project <id> [--severity error\|warning] [--cursor c] [--limit n] [--strict]` | `--severity` string `warning`; `--cursor`; `--limit` int 25; `--strict` bool false | none | `LintResult` |
 | `export:presets` | `export:presets [--codecs]` | `--codecs` bool false: also tell which codecs this machine writes | none | `ExportPresetListResult` |
 | `export:check` | `export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]` | `--preset` string, required; `--start`; `--end`; `--codec` | none | `ExportCheckResult`; exit 1 when the project does not fit |
@@ -3746,6 +3752,9 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `media.inspect` | `GET /projects/{id}/media/{asset_id}` | `sections`, `min_silence`, `cursor`, `limit` | none | 200 `MediaInspectResult` | read | 409 `E_ASSET_NOT_READY` |
 | `media.trash` | `POST /projects/{id}/media/{asset_id}/trash` | `dry_run` | none | 200 `MediaStateResult` | media | none |
 | `media.restore` | `POST /projects/{id}/media/{asset_id}/restore` | `dry_run` | none | 200 `MediaStateResult` | media | none |
+| `projects.motion.brief` | `GET /projects/{id}/motion/brief` | `timeline_id`, `from`, `until`, `track_id` | none | 200 `MotionBrief` (SDD-011 §15.1) | read | 400 `E_INVALID_TIME`; 422 `E_LIMIT_EXCEEDED` |
+| `projects.motion.check` | `GET /projects/{id}/motion/check` | `asset_id`, `timeline_id`, `from`, `until`, `track_id` | none | 200 `MotionCheckResult` (SDD-011 §15.3) | read | 404 `E_NOT_FOUND` for the asset; 400 `E_INVALID_TIME` |
+| `projects.motion.replace` | `POST /projects/{id}/motion/replace` | `dry_run` | `asset_id`, `timeline_id?`, `render_key?` | 200 `MotionReplaceResult`: the `EditResult` of the batch and `replaced` (SDD-011 §15.4) | edit | 404 `E_NOT_FOUND`; 422 `E_OUT_OF_SOURCE` naming the clip |
 | `projects.frame` | `GET /projects/{id}/frame` | `at`, `rev`, `max_tokens`, `width` | none | 200 `image/jpeg` (§6.5) | read | 400 `E_INVALID_TIME`; 409 `E_INVALID_STATE` when `rev` is given and is not the current revision (`details.current_revision`); 422 `E_LIMIT_EXCEEDED` |
 | `projects.sheet` | `GET /projects/{id}/sheet` | `times`, `from`, `until` (`to` is a deprecated alias until 1.0), `count`, `cols`, `rev`, `max_tokens` | none | 200 `image/jpeg` | read | as frame |
 | `projects.plan` | `GET /projects/{id}/plan` | `from`, `until` (`to` is a deprecated alias until 1.0), `rev`, `width` (SDD-004 §10) | none | 200 `PlanWindowResult` | read | 409 `E_INVALID_STATE` as frame |
@@ -3754,6 +3763,7 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `jobs.start` | `POST /projects/{id}/jobs` | none | `{kind, args?, wait_ms?, dry_run?}` | 202 `Job` | render (export), media (transcribe) | 422 `E_LINT_BLOCKING`; 429 `E_QUEUE_FULL`; 503 `E_TRANSCRIBE_UNAVAILABLE`, `E_FFMPEG_MISSING`, `E_NO_ENCODER` |
 | `export.presets` | `GET /export-presets` | `codecs` | none | 200 `ExportPresetListResult` | read | none |
 | `export.check` | `GET /projects/{id}/export-check` | `preset` (required), `start`, `end`, `codec` | none | 200 `ExportCheckResult` | read | 400 `E_VALIDATION` for an unknown preset or codec |
+| `audio.measure` | `GET /projects/{id}/audio-measure` | `item_id`, `start`, `end`, `timeline_id` | none | 200 `AudioMeasureResult` | read | 404 `E_NOT_FOUND` for an unknown item; 422 `E_TYPE_MISMATCH` for an item with no audio and `E_LIMIT` for a range over 600 s |
 | `export.batch` | `POST /projects/{id}/export-batches` | none | `{items, wait_ms?}` | 202 `Job` (200 when final) | render | 400 `E_VALIDATION` with `items[i]` paths; 429 `E_QUEUE_FULL` |
 | `jobs.list` | `GET /projects/{id}/jobs` | `state`, `cursor`, `limit` | none | 200 `JobListResult` | read | 400 `E_VALIDATION` for an unknown `state` |
 | `jobs.get` | `GET /jobs/{job_id}` | `wait_ms` | none | 200 `Job` (an ingest job has a null `project_id`; allowed to a caller who can read a project that uses the asset, §2.8) | read | none |
@@ -3963,6 +3973,7 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `JobStart` (`transcribe`) | `job_start` (`kind` `transcribe`) | `transcribe` | `POST /projects/{id}/jobs` |
 | `ExportPresetList` | `command_help` (`domain` `export`: the presets and the codecs of this machine) | `export:presets [--codecs]` | `GET /export-presets` |
 | `ExportCheck` | `lint` (with `preset`, and `start` and `end` for a range: the fit check instead of the lint) | `export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]` | `GET /projects/{id}/export-check` |
+| `AudioMeasure` | `view` (`mode` `audio`, with `item_id`, and `from` and `until` for a range: the measurement of the sound, no image; `item_id` in mode frame or sheet is `E_VALIDATION`, as `--item` is in the CLI) | `view --project <id> --mode audio [--item id] [--from t] [--until t]` | `GET /projects/{id}/audio-measure` |
 | `ExportBatch` | `job_start` (`kind` `export_batch`) | `export:batch --project <id> --preset <id> [--preset <id> ...] \| --items <json>` | `POST /projects/{id}/export-batches` |
 | `JobGet` | `job_get` (with `job_id`) | `job:show` | `GET /jobs/{job_id}` |
 | `JobList` | `job_get` (with `project_id`, no `job_id`) | `job:list` | `GET /projects/{id}/jobs` |
@@ -4028,6 +4039,10 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `ImageEdit` | `image` (`action` edit) | `image:edit` | `POST /images/{id}/edit` |
 | `ImageUndo`, `ImageRedo` | `image` (`action` undo, redo) | `image:undo`, `image:redo` | `POST /images/{id}/undo`, `POST /images/{id}/redo` |
 | `ImageExport` | `image` (`action` export) | `image:export` | `POST /images/{id}/export` |
+| `AgentProfileList` | none (exception E-7) | `agent:profiles` | `GET /agents/profiles` |
+| `AgentProfileSet`, `AgentProfileRemove` | none (exception E-7) | none | `PUT /agents/profiles/{name}`, `DELETE /agents/profiles/{name}` |
+| `ChatSessionStart`, `ChatSend`, `ChatCancel`, `ChatAnswerPermission`, `ChatSessionDelete` | none (exception E-7) | none | `POST /projects/{id}/chat/sessions`, `POST /chat/sessions/{id}/messages`, `POST /chat/sessions/{id}/cancel`, `POST /chat/sessions/{id}/permissions/{request_id}`, `DELETE /chat/sessions/{id}` |
+| `ChatSessionList`, `ChatSessionGet`, `ChatTranscriptGet` | none (exception E-7) | `chat:sessions`, `chat:session`, `chat:transcript` | `GET /projects/{id}/chat/sessions`, `GET /chat/sessions/{id}`, `GET /chat/sessions/{id}/transcript` |
 
 **Exceptions**, each fixed by an authoritative document:
 
@@ -4037,6 +4052,7 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 - **E-4.** `TrashEmpty`, `KeyCreate`, `KeyList` and `KeyRevoke` are HTTP only, with the callers SDD-007 §5.3 allows. `TrashEmpty` is not an MCP tool and not a CLI command (RF-131, ADR-0020 item 2): no agent surface can reach the one operation that deletes data for good.
 - **E-5.** `ConnectionCreate`, `ConnectionRemove` and `ConnectionTest` have a CLI command and a route and no MCP tool: creating takes a credential, which an agent must not handle (RF-137), and testing makes a request to a destination. The tool `connection` lists and reads only (SDD-014 section 10, ADR-0043 item 3).
 - **E-6.** `ApprovalDecide`, `ApprovalRuleSet`, `ApprovalRuleRemove` and `CostCeilingSet` have a CLI command and a route and no MCP tool: a person decides (RF-136, ADR-0032 item 4). The commands exist so that an agent that tries gets `E_PRIVILEGED_SESSION` and its hint; with the local token or a key they always fail, on HTTP, in the CLI and in process, and no tool exists to call. `ApprovalList`, `ApprovalGet`, `ApprovalRuleList` and `CostSummary` are read operations with a command and a route and no tool, because the 18 definitions already use 19,320 of the 19,500 bytes of NFR-020 and a tool of the queue needs about 540: an agent learns the state of its own request from `job_get` (`waiting_approval`, `approval_id`) and reads the queue with `approval:list` or `GET /approvals` (SDD-015 section 10). Epic 09 registered the first kind that needs approval, `text.generate` (SDD-016): it is in the `kind` enum of `job_start`, and the `state` of the `outputSchema` of `job_start` and `job_get` is a plain string (the five-value enum did not list `waiting_approval`, and a list that grows with every state costs bytes of the budget of NFR-020; the states are in SDD-000 section 6).
+- **E-7.** The hosted agent chat (SDD-017) has no MCP tool: a hosted agent has no use for the chat of another agent, and a tool that reads a transcript would hand one agent's text to another as instructions. `AgentProfileList`, `ChatSessionList`, `ChatSessionGet` and `ChatTranscriptGet` are reads with a route and a CLI command (`agent:profiles`, `chat:sessions`, `chat:session`, `chat:transcript`). `AgentProfileSet`, `AgentProfileRemove` and the five operations that drive a session are HTTP only, for a person in a browser session (SDD-007 §5.2): they have no CLI command because the person who drives a chat is in the panel, and a command would only exist to answer `E_PRIVILEGED_SESSION`. The event stream `GET /chat/sessions/{id}/events` is not a service operation (SDD-017 §8).
 
 The CLI commands of SDD-000 §1 that are not service operations (`serve`, `mcp`, `open`, `token:rotate`, `user:create`, `user:passwd`, `tools:install`, `agent:docs`) are in §5.4 and have no row here. `MediaList` and `JobList` close the gap SDD-012 §13.2 and Appendix B (B2, B3) left: they are the operations behind the library list and the job list of the UI.
 

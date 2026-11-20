@@ -24,11 +24,15 @@ var OperationDomains = map[string]string{
 	"TemplateImport": command.DomainVideo, "SnapPoints": command.DomainVideo, "PlanWindow": command.DomainVideo,
 	"OpenFile": command.DomainVideo, "ProjectOtioExport": command.DomainVideo, "ProjectOtioImport": command.DomainVideo,
 	"ExportPresetList": command.DomainVideo, "ExportCheck": command.DomainVideo, "ExportBatch": command.DomainVideo,
+	"AudioMeasure": command.DomainVideo,
 
 	"ImageCreate": command.DomainImage, "ImageList": command.DomainImage, "ImageDescribe": command.DomainImage,
 	"ImageEdit": command.DomainImage, "ImageUndo": command.DomainImage, "ImageRedo": command.DomainImage,
 	"ImageExport": command.DomainImage, "ImageFrame": command.DomainImage, "ImageHistory": command.DomainImage,
 	"ImageFile": command.DomainImage,
+
+	// The hand-off from an external motion engine (epic 33) works on the clips of a timeline.
+	"MotionBrief": command.DomainVideo, "MotionCheck": command.DomainVideo, "MotionReplace": command.DomainVideo,
 
 	"MediaImport": command.DomainAsset, "MediaInspect": command.DomainAsset, "MediaList": command.DomainAsset,
 	"MediaTrash": command.DomainAsset, "MediaRestore": command.DomainAsset, "AssetList": command.DomainAsset,
@@ -65,6 +69,14 @@ var OperationDomains = map[string]string{
 	"Doctor": command.DomainWorkspace, "AuditList": command.DomainWorkspace, "TrashEmpty": command.DomainWorkspace,
 	"ToolsInstall": command.DomainWorkspace, "ToolsStatus": command.DomainWorkspace,
 	"KeyCreate": command.DomainWorkspace, "KeyList": command.DomainWorkspace, "KeyRevoke": command.DomainWorkspace,
+
+	// The agent the user hosted in the chat panel (SDD-017).
+	"AgentProfileList": command.DomainWorkspace, "AgentProfileSet": command.DomainWorkspace,
+	"AgentProfileRemove": command.DomainWorkspace, "ChatSessionStart": command.DomainWorkspace,
+	"ChatSend": command.DomainWorkspace, "ChatCancel": command.DomainWorkspace,
+	"ChatAnswerPermission": command.DomainWorkspace, "ChatSessionDelete": command.DomainWorkspace,
+	"ChatSessionList": command.DomainWorkspace, "ChatSessionGet": command.DomainWorkspace,
+	"ChatTranscriptGet": command.DomainWorkspace,
 }
 
 // OperationDomain is the domain of a Service method.

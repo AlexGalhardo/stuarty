@@ -35,6 +35,20 @@ func libraryWorkspace(t *testing.T, r release) *database.DB {
 	return db
 }
 
+// downTo is what a rollback to id, inclusive, takes off: the ids from the newest migration down to id. A test of a
+// down names its own migration and keeps passing when later ones are added.
+func downTo(id string) []string {
+	all := All()
+	at := slices.IndexFunc(all, func(mig schema.Migration) bool { return mig.ID == id })
+
+	var want []string
+	for i := len(all) - 1; i >= at && at >= 0; i-- {
+		want = append(want, all[i].ID)
+	}
+
+	return want
+}
+
 func newMigrator(db *database.DB) (*schema.Migrator, error) {
 	return schema.NewMigrator(db, allMigrations())
 }
@@ -171,19 +185,12 @@ func TestWorkspaceAssetsMigrationDown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// The library is not the last migration for ever: undo what came after it, then the library itself.
-	var want []string
-
-	for _, mig := range slices.Backward(All()) {
-		want = append(want, mig.ID)
-
-		if mig.ID == assetLibraryID {
-			break
-		}
-	}
+	// The migrations that came after this one (the render origin of epic 33, the chat tables of epic 14) are rolled
+	// back first, newest first.
+	want := downTo(assetLibraryID)
 
 	rolled, err := m.Rollback(ctx, len(want))
-	if err != nil || !slices.Equal(rolled, want) {
+	if err != nil || !slices.Equal(rolled, want) || !slices.Contains(want, renderOriginID) {
 		t.Fatalf("Rollback = %v, %v; want %v", rolled, err, want)
 	}
 

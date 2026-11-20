@@ -1347,6 +1347,33 @@ export interface ExportFinding {
 	got: string;
 }
 
+// GET /projects/{id}/audio-measure: the sound of an item or a range, before and after its audio processors
+// (SDD-004 section 7.1). A level is null when the audio has none (silence, or under 0.4 s).
+export interface AudioLevels {
+	integrated_lufs: number | null;
+	true_peak_dbtp: number | null;
+	noise_floor_dbfs: number;
+	speech_to_noise_db: number | null;
+}
+
+export interface AudioMeasureResult {
+	project_id: string;
+	revision: number;
+	item_id?: string;
+	start_frame: number;
+	end_frame: number;
+	seconds: number;
+	before: AudioLevels;
+	after: AudioLevels;
+	text: string;
+}
+
+export interface AudioMeasureQuery {
+	itemId?: string;
+	start?: string;
+	end?: string;
+}
+
 // GET /projects/{id}/export-check: what does not fit a preset, with the exact limit.
 export interface ExportCheckResult {
 	project_id: string;
@@ -1381,6 +1408,116 @@ export interface BundleImportResult {
 	revision: number;
 	text: string;
 }
+
+// The hosted agent chat (SDD-017). Every text in these types was written by an agent or by a
+// person and is shown as text, never as markup.
+export type ChatState =
+	| "starting"
+	| "idle"
+	| "running"
+	| "awaiting_permission"
+	| "ended";
+
+export interface ChatSession {
+	id: string;
+	project_id: string;
+	profile: string;
+	state: ChatState;
+	end_reason?: string;
+	title: string;
+	created_at: string;
+	updated_at: string;
+	ended_at?: string;
+	event_count: number;
+	live: boolean;
+}
+
+export interface ChatToolCall {
+	tool_call_id: string;
+	title: string;
+	tool_kind?: string;
+	status: "pending" | "in_progress" | "completed" | "failed";
+	output?: string;
+}
+
+export interface ChatPermissionOption {
+	option_id: string;
+	name: string;
+	kind: "allow_once" | "allow_always" | "reject_once" | "reject_always";
+}
+
+export interface ChatPermission {
+	request_id: string;
+	tool_call_id?: string;
+	title?: string;
+	tool_kind?: string;
+	options?: ChatPermissionOption[];
+	answer?: "allow" | "reject" | "cancel";
+}
+
+export type ChatEventKind =
+	| "user_message"
+	| "agent_message"
+	| "agent_thought"
+	| "tool_call"
+	| "permission_request"
+	| "permission_answer"
+	| "plan"
+	| "notice"
+	| "state";
+
+// One entry of a transcript and one frame of GET /chat/sessions/{id}/events. A frame with
+// `append` continues the text of the event with the same `seq`.
+export interface ChatEvent {
+	seq: number;
+	kind: ChatEventKind;
+	at: string;
+	text?: string;
+	append?: boolean;
+	tool?: ChatToolCall;
+	permission?: ChatPermission;
+	state?: { state: ChatState; end_reason?: string };
+}
+
+export interface ChatTranscriptResult {
+	session: ChatSession;
+	events?: ChatEvent[];
+	next_after?: number;
+	markdown?: string;
+}
+
+export interface ChatSessionListResult {
+	sessions: ChatSession[];
+}
+
+export interface AgentProfile {
+	name: string;
+	command: string;
+	args: string[];
+	created_by: string;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface AgentSuggestion {
+	name: string;
+	title: string;
+	executables: string[];
+	args: string[];
+	install: string;
+	found: boolean;
+	found_path?: string;
+}
+
+export interface AgentProfileListResult {
+	profiles: AgentProfile[];
+	suggestions: AgentSuggestion[];
+	can_write: boolean;
+	available: boolean;
+}
+
+// The event of GET /chat/sessions/{id}/events: the data is a ChatEvent.
+export const CHAT_EVENT_NAMES = ["chat.event"] as const;
 
 // The social networks and publishing (SDD-020). No result carries a credential.
 export interface SocialLimits {

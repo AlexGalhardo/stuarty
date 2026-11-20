@@ -379,6 +379,9 @@ func TestResetDropsEveryEditorTableAndUpRunsAgain(t *testing.T) {
 		"cost_ledger",
 		"library_entries",
 		"library_fts",
+		"agent_profiles",
+		"chat_sessions",
+		"chat_events",
 	}
 	for _, table := range tables {
 		if len(columns(t, db, table)) == 0 {
