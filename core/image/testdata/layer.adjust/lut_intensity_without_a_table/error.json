@@ -1,0 +1,8 @@
+{
+  "code": "E_VALIDATION",
+  "hint": "Name the table: the hash of a lut file of the workspace.",
+  "message": "The layer has no lookup table to change the intensity of.",
+  "op_index": 0,
+  "path": "args.lut.asset",
+  "retryable": false
+}

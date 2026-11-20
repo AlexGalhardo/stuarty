@@ -1,0 +1,8 @@
+{
+  "code": "E_VALIDATION",
+  "hint": "A content hash is sha256: and 64 lower case hexadecimal digits.",
+  "message": "args.lut.asset \"sha256:abc\" is not a content hash.",
+  "op_index": 0,
+  "path": "args.lut.asset",
+  "retryable": false
+}
