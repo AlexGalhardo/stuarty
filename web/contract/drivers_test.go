@@ -776,13 +776,15 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		args["action"] = "brief"
 
 		return "project_item", args, nil
-	case "BriefingQuestions":
-		args["action"] = "briefing"
-
-		return "project_item", args, nil
-	case "BriefingAnswer":
+	case "BriefingQuestions", "BriefingAnswer":
 		delete(args, "dry_run")
 		delete(args, "replace")
+
+		// In project_item, kind is the kind of an item; the briefing names the kind of production apart (VV-289).
+		if k, ok := args["kind"]; ok {
+			delete(args, "kind")
+			args["production_kind"] = k
+		}
 
 		args["action"] = "briefing"
 
