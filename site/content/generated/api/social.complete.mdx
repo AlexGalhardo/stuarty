@@ -37,6 +37,7 @@ Content type `application/json`. Schema: [`SocialAccount`](/docs/api/schemas#soc
 | --- | --- | --- | --- |
 | `account_id` | `string` | no |  |
 | `account_title` | `string` | no |  |
+| `choices` | array of [`SocialChoice`](/docs/api/schemas#socialchoice) | no |  |
 | `connection_id` | `string` | no |  |
 | `label` | `string` | no |  |
 | `network` | `string` | no |  |
@@ -265,6 +266,12 @@ puts "#{response.code} #{response.body}"
 {
   "account_id": "string",
   "account_title": "string",
+  "choices": [
+    {
+      "id": "string",
+      "title": "string"
+    }
+  ],
   "connection_id": "string",
   "label": "string",
   "network": "string",
