@@ -971,18 +971,7 @@ func (s *svc) jobView(c Caller, r JobRow, waited bool) *Job {
 		}
 	}
 
-	if r.Kind == JobTextGenerate || r.Kind == JobTextDraft {
-		var in textInput
-		if json.Unmarshal(r.Input, &in) == nil {
-			estimate := in.Estimate
-			j.Estimate = &estimate
-		}
-
-		var res JobResult
-		if len(r.Result) > 0 && json.Unmarshal(r.Result, &res) == nil && res.Text != nil {
-			j.Result = &res
-		}
-	}
+	viewGeneration(j, &r)
 
 	j.Text = jobText(j, waited)
 
