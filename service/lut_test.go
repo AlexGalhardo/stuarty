@@ -3,6 +3,8 @@ package service
 import (
 	"strings"
 	"testing"
+
+	"github.com/AlexGalhardo/stuarty/engine/lut"
 )
 
 func TestSniffCube(t *testing.T) {
@@ -29,21 +31,30 @@ func TestSniffCube(t *testing.T) {
 	}
 }
 
-func TestCheckCubeRefusesAFilePastTheCap(t *testing.T) {
+// The ingest and the export read a table with one parser, so they hold it to one set of limits (VV-287).
+func TestCheckCubeHoldsTheLimitsOfTheExportParser(t *testing.T) {
 	t.Parallel()
 
-	body := "LUT_3D_SIZE 2\n" + strings.Repeat(
-		"# padding padding padding padding padding padding\n",
-		cubeMaxBytes/48+10,
-	)
-	if _, err := checkCube(strings.NewReader(body)); err == nil || !strings.Contains(err.Error(), "larger than") {
-		t.Errorf("err = %v, want the size refusal", err)
+	eight := strings.Repeat("0 0.5 1\n", 8)
+	cases := []struct {
+		name, body, want string
+	}{
+		{
+			"past the size the export reads",
+			"LUT_3D_SIZE 2\n" + strings.Repeat("# padding padding padding padding\n", lut.MaxBytes/34+10),
+			"too large",
+		},
+		{"a line the export refuses", "LUT_3D_SIZE 2\n# " + strings.Repeat("x", 5000) + "\n" + eight, "too long"},
+		{"a domain that is not 0 to 1", "LUT_3D_SIZE 2\nDOMAIN_MAX 2 2 2\n" + eight, "domain"},
 	}
 
-	if n, err := checkCube(
-		strings.NewReader("LUT_3D_SIZE 2\n" + strings.Repeat("0 0.5 1\n", 8)),
-	); err != nil ||
-		n != 2 {
+	for _, c := range cases {
+		if _, err := checkCube(strings.NewReader(c.body)); err == nil || !strings.Contains(err.Error(), c.want) {
+			t.Errorf("%s: err = %v, want a refusal that says %q", c.name, err, c.want)
+		}
+	}
+
+	if n, err := checkCube(strings.NewReader("LUT_3D_SIZE 2\n" + eight)); err != nil || n != 2 {
 		t.Errorf("valid table = %d, %v", n, err)
 	}
 }
