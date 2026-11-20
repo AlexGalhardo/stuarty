@@ -243,7 +243,7 @@ func TestPostRenderHTML(t *testing.T) {
 }
 
 // A hostile post never becomes markup: every character is escaped and the only tags are the renderer's own.
-func TestSecurity_T94_HostilePostRendersAsText(t *testing.T) {
+func TestSecurity_T88_HostilePostRendersAsText(t *testing.T) {
 	t.Parallel()
 
 	hostile := []string{

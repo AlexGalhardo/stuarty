@@ -15,9 +15,9 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/social"
 )
 
-// T-92: a webhook that is not explicitly local reaches nothing inside, whatever its name says or later resolves to,
+// T-86: a webhook that is not explicitly local reaches nothing inside, whatever its name says or later resolves to,
 // and no redirect carries the post to another host.
-func TestSecurity_T92_WebhookRefusesInternalAddresses(t *testing.T) {
+func TestSecurity_T86_WebhookRefusesInternalAddresses(t *testing.T) {
 	t.Parallel()
 
 	var hits atomic.Int32

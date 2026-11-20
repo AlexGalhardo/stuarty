@@ -224,8 +224,8 @@ func TestWebhookUpdateEventAndNoMediaBase(t *testing.T) {
 	}
 }
 
-// A signature binds the body, the timestamp and the delivery id; an old delivery is refused (T-93).
-func TestSecurity_T93_WebhookSignatureBindsTimeAndDelivery(t *testing.T) {
+// A signature binds the body, the timestamp and the delivery id; an old delivery is refused (T-87).
+func TestSecurity_T87_WebhookSignatureBindsTimeAndDelivery(t *testing.T) {
 	t.Parallel()
 
 	body := []byte(`{"post":"x"}`)
