@@ -2,7 +2,7 @@
 
 This folder is for the people and agents who work on this repository. It holds what earlier sessions learned the hard way, so that the same mistakes are not made twice. The team itself (five seniors, an intern and a specialist) is defined in `.claude/agents/` and described in `AGENTS.md` section 4.
 
-- `rules/`: workflow rules that always apply. Read them before you start: `orchestration.md` (how the orchestrator, the seniors, the intern and the specialist work together), `plans.md` (the epics of `docs/plans/`, the unit of work, and their completion protocol), `git-and-branches.md` (one integration branch, one branch per epic), `commits.md`, `ci.md`, `naming.md` (folders, files and ids), `development-folder.md` (the git-ignored local work folder), `rust.md` (the renderer).
+- `rules/`: workflow rules that always apply. Read them before you start: `orchestration.md` (how the orchestrator, the seniors, the intern and the specialist work together), `plans.md` (the epics of `docs/plans/`, the unit of work, and their completion protocol), `git-and-branches.md` (the release train, one branch per epic), `commits.md`, `ci.md`, `naming.md` (folders, files and ids), `development-folder.md` (the git-ignored local work folder), `rust.md` (the renderer).
 - `skills/`: step-by-step procedures, one per folder, each with a `SKILL.md`. Load the one that matches the task.
 
 | Skill | Use it when |
@@ -16,7 +16,7 @@ This folder is for the people and agents who work on this repository. It holds w
 | `skills/cross-platform-go/` | Go code or tests that touch paths, file systems, processes or timing |
 | `skills/renderer-parity/` | any change of the renderer's output |
 | `skills/ci-preflight/` | the checks that CI runs and that a Windows machine does not show by itself; run its cross-target lint for code that depends on the operating system. The rest waits for CI to be a gate again |
-| `skills/release-pr/` | suspended by ADR-0045: no release is cut while the epics are implemented. It is the starting point when the integration pull request is split into releases |
+| `skills/release-pr/` | the release train (ADR-0048): integrating approved work as linear commits on the open release pull request, cutting it at about 90 commits, rebase-merging it into `main` and opening the next one (`scripts/release-train.sh`) |
 
 Review rules are in `REVIEW.md` at the root; they are owned by the author (`.github/CODEOWNERS`).
 

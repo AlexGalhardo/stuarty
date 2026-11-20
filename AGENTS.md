@@ -49,7 +49,7 @@ the repository (remote AlexGalhardo/stuarty)
 8. **Everything in the repository is in English**; the git-ignored `development/` is in Portuguese. The conversation with the author is in Brazilian Portuguese.
 9. **No new dependency without the author's approval.** JavaScript uses Bun in `web/`; the documentation site keeps npm. Exact versions, never `latest`, `next`, `rc`, `beta`, `alpha`. Docker images use fixed tags; any HTTP server in an image is Caddy. Rust: the stable toolchain pinned in `rust-toolchain.toml`, `Cargo.lock` committed, approved crates listed in `.agents/rules/rust.md`.
 10. **vukem stays, and its frictions are recorded when found** (ADR-0047). Every friction with the framework and every idea to improve it goes to `development/feedbacks/vukem.md`, format `VF-NNN`, checked against the vukem source. Never work around the framework silently.
-11. **`main` is never touched without the author** (ADR-0045): no push or merge to it, no marking the pull request ready, no release and no tag. Only the orchestrator pushes, only the integration branch, only approved epics, and only when the session prompt carries the author's authorization.
+11. **`main` changes only through the release train** (ADR-0048): approved work joins the open release pull request as linear commits, and the orchestrator rebase-merges each release when it holds about 90 commits, then opens the next one. Never a direct push or commit to `main`, never a force push, no tag pushed until CI is back. Only the orchestrator pushes, only the open release branch, only approved work.
 
 ## 4. Roles
 
@@ -95,18 +95,18 @@ The protocol is `.agents/rules/plans.md` section 3, and its step-by-step procedu
 1. **The senior works the epic in a loop**: read the epic; do task 1; run the command that verifies task 1; if it fails, fix and run it again; only when it passes, commit and move to task 2. When every task is done and every acceptance criterion passes, write the hand-off.
 2. The orchestrator opens a **new** specialist session with only the epic, its acceptance criteria and the diff of the epic branch against the integration branch.
 3. The specialist runs every acceptance criterion and the checks again, reads the diff against `REVIEW.md`, fixes what it finds in new commits, and approves or sends back what is too large to fix in review.
-4. Only then the orchestrator merges the epic branch into the integration branch, pushes the integration branch so the draft pull request shows the finished epic, ticks the epic in the roadmap with the date and the commits, and stops the agents.
+4. Only then the orchestrator integrates the epic branch into the open release branch (`release-train.sh integrate`, linear commits), pushes it so the release pull request shows the finished epic, ticks the epic in the roadmap with the date and the commits, and stops the agents. At about 90 commits it cuts the release: changelog, `chore(release)`, rebase-merge into `main`, next release branch (`skills/release-pr/`).
 5. A delivery that fails review twice stops: the orchestrator marks the epic blocked, records why, and moves to the next unblocked epic; the author decides.
 
 **When every epic is done, the QA campaign runs in a loop** (ADR-0045 item 8): the five seniors test the whole product in parallel, end to end, each on its own surface (every CLI command, the HTTP API, the MCP tools, every control of the UI, the desktop application, the installation); each problem becomes a `VV` entry, is fixed with a reproducing test and reviewed by the specialist; then a new round starts. The campaign ends when a full round finds no problem.
 
 A report is a claim, not evidence. The Definition of Done of every epic: its tests pass, `task lint` and the type checks are clean, the documents it changes are updated (the SDD of its domain, the roadmap, the user documentation when behaviour changes), and every acceptance criterion was verified by the specialist. CI is not a gate while the epics are implemented (ADR-0045): the evidence is the local checks.
 
-The author confirms before: a push or a merge to `main`, marking the pull request ready, a release or a tag, repository settings, secrets, anything paid, a new dependency, a decision that contradicts an ADR, a change of the scope of an epic. In an unattended session these are STOP conditions: record the question with the options and a recommendation, leave that epic blocked, and continue with work that does not depend on the answer.
+The author confirms before: a push or a merge to `main` outside the release train, a pushed tag, repository settings, secrets, anything paid, a new dependency, a decision that contradicts an ADR, a change of the scope of an epic. In an unattended session these are STOP conditions: record the question with the options and a recommendation, leave that epic blocked, and continue with work that does not depend on the answer.
 
 ## 8. Git and shell
 
-- One integration branch, `release/0.30.0`, carries the single draft pull request (#106, codename "release 0.30.0"), where every commit of the work is saved; each epic is a branch from it, in its own worktree outside the repository folder (`.agents/rules/git-and-branches.md`). The orchestrator pushes the integration branch after each approved epic; nobody else pushes, and nothing else is pushed.
+- The integration branch is the open release branch, `release/vX.Y.Z`, with its pull request against `main` (`bash .agents/skills/release-pr/scripts/release-train.sh status`); it is linear and every approved commit is saved there. Each epic is a branch from it, in its own worktree outside the repository folder (`.agents/rules/git-and-branches.md`). The orchestrator integrates and pushes after each approved epic and cuts the release at about 90 commits; nobody else pushes, and nothing else is pushed. The former integration branch `release/0.30.0` (draft pull request #106) is a frozen backup.
 - Conventional Commits, one small self-contained commit per task of the epic, with `Refs: epic NN task N`.
 - Never `git stash`, `git checkout -- .`, `git reset --hard`, or a force push.
 - Chain with `&&`; never `;` before a push.

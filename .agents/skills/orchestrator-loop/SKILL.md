@@ -63,12 +63,13 @@ Use the **intern** for mechanical, checkable work that does not need the epic's 
 ## 4. A verdict arrived
 
 - **APPROVED or APPROVED AFTER FIXES:**
-  1. Merge with `skills/integrate-agent-work/`: `git merge --no-ff epic/NN-<slug>` on the integration branch, shared files one epic at a time.
+  1. Integrate with `skills/integrate-agent-work/`: `bash .agents/skills/release-pr/scripts/release-train.sh integrate epic/NN-<slug>` on the open release branch (linear commits, no merge), shared files one epic at a time.
   2. Check the merged tip, writing the output to a file and testing the exit code (never through a pipe): `go build ./...`, the tests of what the epic changed, and `bash .agents/skills/verify/scripts/verify.sh --quick --base origin/<integration branch>`.
   3. Mark the roadmap `DONE (<date>, <first>..<last>)` and commit it on the integration branch (`docs(repo): mark epic NN done`).
-  4. Push the integration branch, and only it: `git push origin <integration branch>`. A failed check means no push: fix it first.
-  5. Remove the worktree and the local branch (`git worktree remove`, `git branch -d`), stop the agents and any process they left.
-  6. Close in `development/feedbacks/vukem-video.md` the `VV` blocks the epic fixed (the block leaves the file), and rewrite `development/STATE.md`.
+  4. Push the release branch, and only it: `git push origin <release branch>` (`integrate` pushes it too). A failed check means no push: fix it first.
+  5. When the release branch holds 88 commits or more, cut it: `release-train.sh cut` writes the changelog, commits `chore(release)`, rebase-merges the pull request into `main` and starts the next release branch (ADR-0048, `skills/release-pr/`). It does not wait for the author. Worktrees of epics in progress keep working; their commits are integrated into the next release the same way.
+  6. Remove the worktree and the local branch (`git worktree remove`, `git branch -d`), stop the agents and any process they left.
+  7. Close in `development/feedbacks/vukem-video.md` the `VV` blocks the epic fixed (the block leaves the file), and rewrite `development/STATE.md`.
 - **CHANGES REQUIRED:** send the findings back to a senior on the same branch (a new session with the epic, the findings and the hand-off format), then a new specialist session. **A delivery that fails review twice stops:** mark the epic `BLOCKED (<reason>)`, record the question for the author with the options and a recommendation, keep the branch and the worktree for the author, and dispatch the next unblocked epic.
 - Every security finding is fixed before the merge, or its reason for not applying is written down.
 
@@ -84,8 +85,8 @@ Record a decision as the next `D-NNN` in `development/brainstorming.md`; fix the
 
 ## 7. What never happens
 
-- No push, merge or commit to `main`; no marking the pull request ready; no release, no tag; no repository setting, no secret; no force push; no `git stash`, `git reset --hard`, `git checkout -- .`.
-- No push of an epic or fix branch. No push of the integration branch with a failed check.
+- No direct push or commit to `main`: it changes only through a release cut by the train; no pushed tag while CI is off; no repository setting, no secret; no force push; no `git stash`, `git reset --hard`, `git checkout -- .`.
+- No push of an epic or fix branch. No push of the release branch with a failed check. No merge commit on the release branch.
 - No new dependency, no paid call, no real account without the author.
 - No epic marked done from a report. No specialist that saw the senior's report.
 - No check edited in the same change as the code it judges.
