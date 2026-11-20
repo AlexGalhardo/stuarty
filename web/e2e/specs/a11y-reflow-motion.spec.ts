@@ -134,6 +134,24 @@ const longest = (page: import("@playwright/test").Page): Promise<number> =>
 		),
 	);
 
+// The duration the style sheet gives the opening of the dialog, in ms: it does not depend on whether the
+// animation is still running when the page is sampled (WebKit has often finished it).
+const dialogAnimationMs = (
+	page: import("@playwright/test").Page,
+): Promise<number> =>
+	page.evaluate(() => {
+		const dialog = document.querySelector("[role=alertdialog]") as Element;
+		return Math.max(
+			...getComputedStyle(dialog)
+				.animationDuration.split(",")
+				.map((value) =>
+					value.trim().endsWith("ms")
+						? Number.parseFloat(value)
+						: Number.parseFloat(value) * 1000,
+				),
+		);
+	});
+
 test.describe("a11y-reflow-motion no preference", () => {
 	test.use({ reducedMotion: "no-preference" });
 	// The control: without it the next tests could pass because nothing ever animates.
@@ -144,7 +162,7 @@ test.describe("a11y-reflow-motion no preference", () => {
 		const label = `Motion ${Date.now()}`;
 		await seedProject(request, { name: label, tracks: 0 });
 		await openDelete(page, label);
-		expect(await longest(page)).toBeGreaterThan(1);
+		expect(await dialogAnimationMs(page)).toBeGreaterThan(1);
 	});
 });
 
@@ -158,6 +176,7 @@ test.describe("a11y-reflow-motion reduced motion", () => {
 		const label = `Motion ${Date.now()}`;
 		await seedProject(request, { name: label, tracks: 0 });
 		await openDelete(page, label);
+		expect(await dialogAnimationMs(page)).toBeLessThanOrEqual(1);
 		expect(await longest(page)).toBeLessThanOrEqual(1);
 		expect(
 			await page.evaluate(
