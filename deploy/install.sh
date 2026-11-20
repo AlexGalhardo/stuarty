@@ -108,10 +108,10 @@ if ! docker image inspect "stuarty:$version" >/dev/null 2>&1; then
 	dc build stuarty
 fi
 
-dc up -d
-
-say "waiting for Stuarty to be healthy..."
-wait_healthy "${STUARTY_HEALTH_TIMEOUT:-180}" || {
+say "starting the stack and waiting for Stuarty to be healthy..."
+# `up -d` already waits for the health of stuarty (Caddy depends on `service_healthy`) and fails when it
+# turns unhealthy: both failures show the log.
+{ dc up -d && wait_healthy "${STUARTY_HEALTH_TIMEOUT:-180}"; } || {
 	dc logs --tail 40 stuarty >&2 || true
 	die "the stuarty container did not become healthy: see the log above"
 }
