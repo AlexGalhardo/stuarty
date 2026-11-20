@@ -241,7 +241,7 @@ func (s *svc) runText(ctx context.Context, run JobRun) (JobOutcome, error) {
 			res.Text, res.Model = connections.EchoedAnswer, in.Request.Model
 		}
 
-		return gerr
+		return providers.SignInAware(gerr, c)
 	})
 	if err != nil {
 		return JobOutcome{}, providerError(err)
