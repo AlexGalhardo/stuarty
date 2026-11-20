@@ -43,6 +43,17 @@ export function bitmapUrl(projectId: string, key: string): string {
 	return `${project(projectId)}/bitmaps/${encodeURIComponent(key)}`;
 }
 
+// The processed sound of an item; `from` asks for the window that starts at
+// that frame (SDD-004 section 7.1).
+export function audioPreviewUrl(
+	projectId: string,
+	key: string,
+	from?: number,
+): string {
+	const url = `${project(projectId)}/audio-previews/${encodeURIComponent(key)}`;
+	return from === undefined ? url : `${url}?from=${from}`;
+}
+
 export function stripUrl(projectId: string, assetId: string): string {
 	return `${project(projectId)}/media/${encodeURIComponent(assetId)}/strip`;
 }
