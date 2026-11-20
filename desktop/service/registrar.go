@@ -5,6 +5,14 @@ import (
 	"fmt"
 )
 
+// RunSubKey is the key, under HKEY_CURRENT_USER, whose values Windows starts at sign-in for the signed-in
+// user alone, with no administrator rights. RunValueName is the value of Stuarty in it; the Windows
+// uninstaller deletes the same value (desktop/packaging/windows/stuarty-desktop.iss, which a test reads).
+const (
+	RunSubKey    = `Software\Microsoft\Windows\CurrentVersion\Run`
+	RunValueName = "StuartyDesktop"
+)
+
 // Registrar is the registration of the shell with the operating system for the start at sign-in, for
 // the signed-in user only and with no administrator rights. The shell implements it with the autostart
 // of its framework; tests use MemoryRegistrar.
