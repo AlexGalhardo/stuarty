@@ -148,8 +148,14 @@ type ApprovableKind struct {
 	// Run is the job once approved. It reaches the network only through connections.Manager.With
 	// and reports the real cost, also when it fails after spending.
 	Run func(ctx context.Context, job JobRun) (JobOutcome, error)
+	// Abandon is optional (epic 11): called when a job of the kind is cancelled while queued again
+	// after a shutdown interrupted a run that started work at a provider; it asks the provider to stop
+	// that work and returns the cost owed for it, or nil when nothing is owed.
+	Abandon func(ctx context.Context, job *JobRow) *core.Money
 }
 ```
+
+`JobRun` gives `Run` the job (id, kind, actor, project, input) and three functions: `Report` (the progress), `SaveInput` (epic 11: replaces the stored input of the job while it is `running`, so a run queued again after a shutdown starts from it; a job that submits work to a provider saves the task id there before it waits) and `CancelRequested` (whether a person asked for the cancel, which a shutdown is not).
 
 The product registers none in this epic; the tests register a test kind. `JobStart` with a registered kind:
 
@@ -170,7 +176,7 @@ When an approved job ends, the ledger is settled from the state the job reached 
 ## 6. The cost ledger and the ceilings
 
 - **Before.** An approved request reserves its estimate in the ledger (`reserved`, with `estimate_micros`).
-- **After**, once the outcome of the run is final and never before: a job that succeeded is `settled` at the cost it reports, or at its estimate when it reports none; one that failed or was cancelled is `settled` at the cost it reports and is `released` only when it spent nothing, and one cancelled while still `queued` never ran and is `released`; one that was **requeued** (a shutdown interrupted it) keeps its reservation, since it will run again and must stay counted against the ceilings, and what the interrupted run reports as already spent is recorded as a `settled` entry of its own. The real cost is always recorded, and it may be above the estimate. When no reserved entry is left at the end, a `settled` entry is recorded, so what was spent is never lost.
+- **After**, once the outcome of the run is final and never before: a job that succeeded is `settled` at the cost it reports, or at its estimate when it reports none; one that failed or was cancelled is `settled` at the cost it reports and is `released` only when it spent nothing, and one cancelled while still `queued` never ran and is `released`, unless its kind has `Abandon` and it returns a cost (a run before a shutdown left work at a provider), which is then `settled` at that cost; one that was **requeued** (a shutdown interrupted it) keeps its reservation, since it will run again and must stay counted against the ceilings, and what the interrupted run reports as already spent is recorded as a `settled` entry of its own. The real cost is always recorded, and it may be above the estimate. When no reserved entry is left at the end, a `settled` entry is recorded, so what was spent is never lost.
 - **Before it spends.** A job that starts running with no reserved entry (released by an earlier end, or lost) has the ceilings checked again and its cost reserved again before `Run` is called; a job that no longer fits fails with `E_COST_CEILING` and does not run (`TestSecurity_T50_*`).
 - **Spent today** is, for the UTC day of the reservation, the sum of `actual_micros` of settled entries and of `estimate_micros` of reserved ones, in the currency asked. The workspace figure sums every entry; the project figure the entries of the project; the figure of a rule the entries of the kind, the connection and the project the rule covers. Released entries count for nothing.
 - **Enforcement** is `Decide` (section 2), called when an action is submitted and again when a person approves it, since the spent amount changes while a request waits. A ceiling that is hit gives `E_COST_CEILING`, whose `details` hold `scope`, `reason` (`per_item` or `per_day`), `limit_micros`, `spent_micros`, `estimate_micros` and `currency`, and whose hint says what to do: shorten the work, wait for the next UTC day, or ask the person to raise the ceiling in the app. Nothing is written when a ceiling refuses: no job, no request, no ledger entry.

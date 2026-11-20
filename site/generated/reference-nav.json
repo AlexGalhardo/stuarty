@@ -8,6 +8,7 @@
         "projects.create",
         "projects.get",
         "audio.measure",
+        "audio_previews.get",
         "bitmaps.get",
         "projects.brief.get",
         "projects.brief.set",
@@ -176,6 +177,7 @@
         "providers.signin.begin",
         "providers.signin.complete",
         "text.generate",
+        "video.generate",
         "voice.generate"
       ]
     },
@@ -256,6 +258,7 @@
         "handshake.get",
         "system.get",
         "system.launch",
+        "system.scheduler",
         "system.tools",
         "system.tools.install"
       ]

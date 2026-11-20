@@ -17,7 +17,7 @@ import (
 func providerCommands() []*spec {
 	return []*spec{
 		providerListCmd, providerModelsCmd, providerPriceCmd, textGenerateCmd, imageGenerateCmd, voiceGenerateCmd,
-		voiceListCmd,
+		videoGenerateCmd, voiceListCmd,
 	}
 }
 
@@ -68,6 +68,8 @@ func priceText(p *provider.Price) string {
 		return fmt.Sprintf("%s per image, %s", micros(p.UnitMicros), p.Currency)
 	case provider.UnitMChar:
 		return fmt.Sprintf("%s per million characters, %s", micros(p.UnitMicros), p.Currency)
+	case provider.UnitSecond:
+		return fmt.Sprintf("%s per second of video, %s", micros(p.UnitMicros), p.Currency)
 	}
 
 	return fmt.Sprintf("in %s, out %s per million tokens, %s",
@@ -153,12 +155,12 @@ var providerPriceCmd = &spec{
 		{
 			Name:  "unit",
 			Kind:  kindString,
-			Usage: "image for the price of one image, mchar for the price of a million characters of speech; leave out for tokens",
+			Usage: "image for the price of one image, mchar for the price of a million characters of speech, second for one second of video; leave out for tokens",
 		},
 		{
 			Name:  "unit-micros",
 			Kind:  kindString,
-			Usage: "with --unit: the price of one image or of a million characters, in millionths of the currency unit",
+			Usage: "with --unit: the price of one image, of a million characters or of one second, in millionths of the currency unit",
 		},
 	},
 	run: func(ctx context.Context, c *call) (*output, error) {

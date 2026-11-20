@@ -5923,6 +5923,20 @@
         },
         "type": "object"
       },
+      "ProcessedAudio": {
+        "properties": {
+          "frames": {
+            "type": "integer"
+          },
+          "key": {
+            "type": "string"
+          },
+          "start": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "Processor": {
         "properties": {
           "disabled": {
@@ -8698,6 +8712,16 @@
           },
           "last": {
             "type": "integer"
+          },
+          "processed": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProcessedAudio"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "reverse": {
             "type": "boolean"
@@ -13944,6 +13968,19 @@
           "url": {
             "description": "The address that exchanges the code for a browser session.",
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "schedulerOut": {
+        "properties": {
+          "paused": {
+            "description": "Whether publishing is paused.",
+            "type": "boolean"
+          },
+          "scheduled": {
+            "description": "The targets that still have to go out: approved, scheduled and publishing.",
+            "type": "integer"
           }
         },
         "type": "object"
@@ -19524,6 +19561,65 @@
         "summary": "Measure the sound with and without the audio processors"
       }
     },
+    "/api/v1/projects/{id}/audio-previews/{key}": {
+      "get": {
+        "operationId": "audio_previews.get",
+        "parameters": [
+          {
+            "description": "A frame of the file, counted from its first: the 2 seconds from it are rendered first, as a window.",
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Download the processed sound of an item, or start rendering it"
+      }
+    },
     "/api/v1/projects/{id}/bitmaps/{key}": {
       "get": {
         "operationId": "bitmaps.get",
@@ -24323,11 +24419,11 @@
                     "type": "string"
                   },
                   "unit": {
-                    "description": "Empty for a price of tokens, image for the price of one image, mchar for the price of a million characters of speech.",
+                    "description": "Empty for a price of tokens, image for the price of one image, mchar for the price of a million characters of speech, second for the price of one second of video.",
                     "type": "string"
                   },
                   "unit_micros": {
-                    "description": "With a unit of image or mchar: the price of one image or of a million characters, in millionths of the currency unit; the token prices stay out.",
+                    "description": "With a unit of image, mchar or second: the price of one image, of a million characters or of one second of video, in millionths of the currency unit; the token prices stay out.",
                     "format": "int64",
                     "type": [
                       "integer",
@@ -25990,6 +26086,75 @@
         "summary": "Issue a one-time browser launch code"
       }
     },
+    "/api/v1/system/scheduler": {
+      "post": {
+        "operationId": "system.scheduler",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "action": {
+                    "description": "status, pause or resume.",
+                    "enum": [
+                      "status",
+                      "pause",
+                      "resume"
+                    ],
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "action"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/schedulerOut"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read, pause or resume the publication scheduler (pause and resume only for the desktop shell)"
+      }
+    },
     "/api/v1/system/tools": {
       "get": {
         "operationId": "system.tools",
@@ -26964,6 +27129,108 @@
           }
         ],
         "summary": "Change the role of a user or disable or enable them (an administrator session only; network mode)"
+      }
+    },
+    "/api/v1/video/generate": {
+      "post": {
+        "operationId": "video.generate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "aspect": {
+                    "description": "16:9 (the default), 9:16, 1:1, 4:3 or 3:4. The model may make only some.",
+                    "type": "string"
+                  },
+                  "connection_id": {
+                    "description": "The connection to the provider that makes the clip.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "dry_run": {
+                    "description": "true answers the job it would create, with its estimate, and writes and sends nothing.",
+                    "type": "boolean"
+                  },
+                  "first_frame": {
+                    "description": "The id of an image asset of the project the clip starts from; it is sent to the provider after approval.",
+                    "type": "string"
+                  },
+                  "model": {
+                    "description": "The model id, as provider:models lists it.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "project_id": {
+                    "description": "The project the clip belongs to, prj_ and 10 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "prompt": {
+                    "description": "What the clip shows, 1 to 4000 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "seconds": {
+                    "description": "The length of the clip in seconds, 1 to 60; the default is 5. The model may make only some lengths.",
+                    "type": "integer"
+                  },
+                  "wait_ms": {
+                    "description": "Wait up to this many milliseconds for the job to finish.",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "project_id",
+                  "connection_id",
+                  "model",
+                  "prompt"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start a video generation with the provider of a connection; the job waits for a person unless a rule the user wrote covers it, shows its estimate and stores the clip as an asset with its origin"
       }
     },
     "/api/v1/voice/generate": {

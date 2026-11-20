@@ -382,6 +382,24 @@ export interface PlanBitmapLayer extends PlanLayerBase {
 
 export type PlanLayer = PlanMediaLayer | PlanBitmapLayer;
 
+// A composition drawn as one unit (SDD-004 section 3.16, SDD-013 section 3.12):
+// the placement and look of a media layer of a picture of `group.width` by
+// `group.height`, whose `crop` is the whole nested frame, and the layers of
+// that frame, bottom first, with the series of the frames of the window.
+export interface PlanGroupLayer extends PlanLayerBase {
+	kind: "group";
+	crop: [number, number, number, number];
+	group: {
+		width: number;
+		height: number;
+		layers: (PlanLayer | PlanGroupLayer)[];
+	};
+}
+
+// What a window's `layers` holds: the layers an executor draws itself and the
+// groups it draws through a surface of their own.
+export type PlanWindowLayer = PlanLayer | PlanGroupLayer;
+
 export interface PlanAudio {
 	// As on a layer: the timeline that holds `asset` when the sound comes from a composition.
 	timeline?: string;
@@ -397,6 +415,9 @@ export interface PlanAudio {
 	// The item reads its source backwards (SDD-004 section 3.12).
 	reverse?: boolean;
 	gain: PerFrame;
+	// The file of the item's processed sound (SDD-004 section 7.1): its key, the
+	// timeline frame of its first sample and its length in frames.
+	processed?: { key: string; start: number; frames: number };
 }
 
 // The ramp of a speed curve as the plan carries it: the points (`t` a fraction
@@ -417,7 +438,7 @@ export interface PlanWindow extends PlanWindowHead {
 	// #000000 and uncovered pixels stay clear (SDD-001).
 	transparent?: boolean;
 	safe_area: [number, number, number, number];
-	layers: PlanLayer[];
+	layers: PlanWindowLayer[];
 	audio: PlanAudio[];
 }
 
@@ -598,6 +619,19 @@ export interface VoiceGenerateRequest {
 	voice: string;
 	language?: string;
 	format?: string;
+	wait_ms?: number;
+	dry_run?: boolean;
+}
+
+// The body of POST /video/generate (SDD-016 section 6.4).
+export interface VideoGenerateRequest {
+	project_id: string;
+	connection_id: string;
+	model: string;
+	prompt: string;
+	seconds?: number;
+	aspect?: string;
+	first_frame?: string;
 	wait_ms?: number;
 	dry_run?: boolean;
 }
@@ -1044,8 +1078,9 @@ export interface ProviderPrice {
 	currency: string;
 	input_micros_per_mtok: number;
 	output_micros_per_mtok: number;
-	// image or mchar for the price of one image or of a million characters of speech; absent for tokens.
-	unit?: "image" | "mchar";
+	// image, mchar or second for the price of one image, of a million characters of speech or of one second
+	// of video; absent for tokens.
+	unit?: "image" | "mchar" | "second";
 	unit_micros?: number;
 }
 
@@ -1079,7 +1114,7 @@ export interface ModelView {
 	price: ProviderPrice | null;
 	price_source: PriceSource;
 	// A hint of the adapter, never a rule: it orders what a picker shows.
-	capability?: "text" | "image" | "voice";
+	capability?: "text" | "image" | "voice" | "video";
 }
 
 export interface ProviderModelsResult {
@@ -1096,7 +1131,7 @@ export interface ProviderPriceSetRequest {
 	currency?: string;
 	input_micros_per_mtok?: number;
 	output_micros_per_mtok?: number;
-	unit?: "image" | "mchar";
+	unit?: "image" | "mchar" | "second";
 	unit_micros?: number;
 }
 
