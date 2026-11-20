@@ -7,6 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.0] - 2026-11-20
+
+### Added
+
+- **core:** Add the pure rules of writing: kinds, scripts, captions, limits and diff ([9c10568](https://github.com/AlexGalhardo/stuarty/commit/9c10568a10121d770f33e4bdbb52f3cf0634b74b))
+- **service:** Store texts with revisions and add the writing operations ([f1f3af8](https://github.com/AlexGalhardo/stuarty/commit/f1f3af84579a0854727720defc69a58ba5784fb6))
+- **service:** Draft a text with a model as a new revision under approval ([da269c1](https://github.com/AlexGalhardo/stuarty/commit/da269c183dbb0cb145270801f59764cf9fa4d5f4))
+- **api:** Expose the writing domain on HTTP, the CLI and MCP ([2a44eec](https://github.com/AlexGalhardo/stuarty/commit/2a44eec5b4ca34e9d30c8a974be89564cba7b0b4))
+- **ui:** Add the Write section with the editor, revisions and drafts ([cab24ce](https://github.com/AlexGalhardo/stuarty/commit/cab24ce64cbf9cacf0ce36288573c3f8603ab3f1))
+- **ffmpeg:** Add a libwebp still builder to the argument grammar ([884ea1f](https://github.com/AlexGalhardo/stuarty/commit/884ea1f660e956beeb5f65639e7cbf9251fb2df5))
+- **export:** Encode image documents to WebP with FFmpeg ([bf51d3a](https://github.com/AlexGalhardo/stuarty/commit/bf51d3aee102a9499115c1d4794e3bbc88430826))
+- **owner:** Wire the FFmpeg WebP encoder into the service ([d296954](https://github.com/AlexGalhardo/stuarty/commit/d296954acf488047aada5c7852978994b0d8ea2e))
+- **ui:** Offer lossless and quality for WebP in the image export ([333b662](https://github.com/AlexGalhardo/stuarty/commit/333b6624407466542a77e85af3fb7c9064cc5459))
+- **core:** Add the target states, due times and zones ([bc1de6a](https://github.com/AlexGalhardo/stuarty/commit/bc1de6ab9d69ae88633febdb1efd2b9327e2fd28))
+- **service:** Add the publication tables and operations ([d14763e](https://github.com/AlexGalhardo/stuarty/commit/d14763e889ffc3769fe5b8025899a6e51f7bb88b))
+- **service:** Add the publication scheduler with leases ([76d65fc](https://github.com/AlexGalhardo/stuarty/commit/76d65fc8e69557d51264036e3b49e1cdb38670eb))
+- **web:** Expose publications on HTTP, CLI and the event stream ([7d4832f](https://github.com/AlexGalhardo/stuarty/commit/7d4832ff08e185214e3d2dca8732f78746504a86))
+- **web:** Add the publishing calendar, list and editor ([9c09e19](https://github.com/AlexGalhardo/stuarty/commit/9c09e1907a03a389c5ab684d0dc05a91ceab288b))
+- **service:** Show publications in the project overview ([e3e0957](https://github.com/AlexGalhardo/stuarty/commit/e3e0957779e98f4ded6efd6421c2ff90ce42aca6))
+- **command:** Add the composition item and clip.add_composition with its nesting rules ([9c66b7c](https://github.com/AlexGalhardo/stuarty/commit/9c66b7c6cedf97aeb663107f8aa3753d25676154))
+- **plan:** Resolve nested compositions into flat layers or one group layer ([3d9a35c](https://github.com/AlexGalhardo/stuarty/commit/3d9a35ce9047e218e2a82e2c5ae2916b9e6efcd3))
+- **engine:** Draw the group layer on the Go compositor and the Rust renderer host ([453044a](https://github.com/AlexGalhardo/stuarty/commit/453044a037244a6ba3f427cd01447555943b7845))
+- **command:** Add composition.create_from_selection and composition.expand ([65c9f47](https://github.com/AlexGalhardo/stuarty/commit/65c9f474b6f0cb01046e4775ce188eab1efc5576))
+- **plan:** Mix the sound of a nested timeline as the sound of the composition ([4533d39](https://github.com/AlexGalhardo/stuarty/commit/4533d390b2e4746c8de119a21a3e218faf8a56d7))
+- **service:** Read nested timelines and key caches by child revision ([077d355](https://github.com/AlexGalhardo/stuarty/commit/077d355ee8c24fce2946be2dcf797aef7e2c28d0))
+- **plan:** Name the timeline that owns the asset of a nested layer ([9f3d506](https://github.com/AlexGalhardo/stuarty/commit/9f3d506659cc56895609d43de07c266449867ecd))
+- **web:** Show, create, open and expand compositions in the editor ([70221be](https://github.com/AlexGalhardo/stuarty/commit/70221be450a90c9aa6216568fcfd82ee83791743))
+
+### Fixed
+
+- **engine:** Blend over a transparent frame as the renderer does ([35897d9](https://github.com/AlexGalhardo/stuarty/commit/35897d9fb9e08bfb8bb4fc1732aba915c907b035))
+- **service:** Let a project key reach texts through a timeline of its project ([a550b38](https://github.com/AlexGalhardo/stuarty/commit/a550b384cc4f401222bee2ada5c9cdb41b6bc2c3))
+- **core:** Count an emoji sequence once in the weighted length of X ([bad90ac](https://github.com/AlexGalhardo/stuarty/commit/bad90ac5ccb456fe056a86932614ce733efdf42b))
+- **api:** Carry text_kind when a text item is added on every surface ([753b367](https://github.com/AlexGalhardo/stuarty/commit/753b367824096cd99473a1b96f28f05e3dc08ccf))
+- **core:** Take the NFC of X from the caller so core/writing imports no x/text ([2936b45](https://github.com/AlexGalhardo/stuarty/commit/2936b45c5e5b3ae66fc5a202d030a2c2987dffee))
+- **cli:** Open waits for a lock owner instead of a second serve ([447e660](https://github.com/AlexGalhardo/stuarty/commit/447e660b1c317cf6fe5f7805ea49a1aa1e90dfee))
+- **export:** Refuse a WebP past the export limit before reading ([bcc65b9](https://github.com/AlexGalhardo/stuarty/commit/bcc65b9d67518091232e28a4b31c9c528515c284))
+- **ffmpeg:** Report WebP option refusals under FF-15 ([8ad1352](https://github.com/AlexGalhardo/stuarty/commit/8ad135296b0b62805cd97315e0459458c42d5cf1))
+- **mcp:** Accept the quality of an image export ([3e0742d](https://github.com/AlexGalhardo/stuarty/commit/3e0742d447ac757ba9b687cc8c1ec41f512ea0de))
+- **service:** Report the real size of an image resized on one side ([093063b](https://github.com/AlexGalhardo/stuarty/commit/093063be3ada16d277d00e64324387bf899ccbd9))
+- **service:** Expire due approvals from the scheduler tick ([46942e8](https://github.com/AlexGalhardo/stuarty/commit/46942e8469e267b7defc0af01cdbcf9a0bf9e80a))
+- **web:** Rename the publication list range flag and cover the stream ([48438a9](https://github.com/AlexGalhardo/stuarty/commit/48438a9a8ca0c11a8126969e69df23aae926b900))
+- **service:** Never send a queued or stale claim twice ([da944f8](https://github.com/AlexGalhardo/stuarty/commit/da944f83ae5c3a858e17631eda7a8a43c2993764))
+- **service:** Say the AI flag in a scheduled post approval ([88c8403](https://github.com/AlexGalhardo/stuarty/commit/88c8403e25dc05fb18923b6445cb70568efb4761))
+- **command:** Shorten the summaries of the composition commands to fit the discovery budget ([563fca9](https://github.com/AlexGalhardo/stuarty/commit/563fca93e7930671887cafa8a653304a5f2e9f27))
+- **service:** Show the timeline a composition uses in the project text ([afc4352](https://github.com/AlexGalhardo/stuarty/commit/afc435228f7b63da550127e8692554937df2b74c))
+- **service:** Make copies of a production use their own timelines ([809b022](https://github.com/AlexGalhardo/stuarty/commit/809b0228d34f852e02de9d7349a5155c8bbfba90))
+- **service:** Hold revert and restore to the nesting rules ([d7e0a33](https://github.com/AlexGalhardo/stuarty/commit/d7e0a3321c2fd178868550a9a0879219769a1350))
+- **service:** Give a spawned timeline the rows of its assets ([53c2022](https://github.com/AlexGalhardo/stuarty/commit/53c2022f5827a4c8147a89748dd0b457b0c015f1))
+- **ui:** Ask for the plan again when a nested timeline changes ([bdedb19](https://github.com/AlexGalhardo/stuarty/commit/bdedb19567f284781c8b3c207306c58c9859e211))
+- **command:** Restore the full summaries of the commands ([6ea845b](https://github.com/AlexGalhardo/stuarty/commit/6ea845bb6b1f2fbe265b618728f470433ac28991))
+- **service:** Draw nested texts with their own user fonts ([2535895](https://github.com/AlexGalhardo/stuarty/commit/25358953a17b67af9ae8de91db1e042c1468958d))
+- **ui:** Show the picture of a composition from the API ([30ce296](https://github.com/AlexGalhardo/stuarty/commit/30ce296d9cedbad52840e1da8148538a5b313af7))
+- **command:** Refuse to expand a composition that is not drawn ([46c210f](https://github.com/AlexGalhardo/stuarty/commit/46c210f97e3e48bc212f04ad6e04bee84b9e79f8))
+
+### Security
+
+- **security:** Count the threats of epics 19 and 24 ([18ecb9c](https://github.com/AlexGalhardo/stuarty/commit/18ecb9c2ab2943d5d3a08eac65e9a251f3d2f8a4))
 ## [0.35.0] - 2026-11-20
 
 ### Added
@@ -1704,7 +1762,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.35.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.36.0...HEAD
+[0.36.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.35.0...v0.36.0
 [0.35.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.34.0...v0.35.0
 [0.34.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.33.0...v0.34.0
 [0.33.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.32.0...v0.33.0
