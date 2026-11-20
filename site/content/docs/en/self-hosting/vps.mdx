@@ -1,0 +1,103 @@
+---
+title: "Install on a server"
+description: "One script puts Stuarty on a small Linux server behind Caddy with HTTPS. Update it, back it up and restore it."
+---
+
+## You will learn
+
+- how to run Stuarty on a rented Linux server, on your own domain, with HTTPS;
+- how to update it, and what happens when the new version does not start;
+- how to back it up and restore it on a new server, and why you keep the master key apart.
+
+## The idea
+
+The package is the `deploy/` folder of the repository: a Docker Compose file with two containers, Stuarty and [Caddy](https://caddyserver.com/), and four scripts. Caddy owns the ports 80 and 443, gets the certificate for your domain and forwards to Stuarty. Stuarty listens only on the internal network, runs as a non-root user with a read-only root file system and no extra capability, and keeps everything in one volume.
+
+Three secrets live in `deploy/secrets/`, as files: the **master key** (it seals the credentials of your connected accounts), the application key and the password of the first administrator. They are made once and never replaced. None of them is inside the image, in `deploy/.env` or in a backup.
+
+The image is built on your server from the source of the release you checked out. Nothing is pulled from a Stuarty registry.
+
+What the package connects to:
+
+- Caddy asks a certificate authority for the certificate of your domain, and renews it. This is the one outbound connection the package itself needs.
+- Building the image downloads the base images, the Go and JavaScript packages and the pinned FFmpeg. It happens when you install and when you update, on the server.
+- `update.sh` asks the git remote you cloned from for new tags.
+- Stuarty itself opens no outbound connection until you connect an account or a provider.
+
+## Quick start
+
+You need a Linux server with Docker 24 or later and the Compose plugin 2.20 or later, a domain whose DNS record points to the server, and ports 80 and 443 open.
+
+Pick the tag of a release and install it:
+
+```console
+git clone --branch vX.Y.Z https://github.com/AlexGalhardo/stuarty.git
+cd stuarty
+bash deploy/install.sh --domain stuarty.example.com --email you@example.com
+```
+
+The script checks Docker, creates the keys, writes `deploy/.env` (mode 0600), builds the image, starts the stack, waits until it is healthy and until `https://stuarty.example.com/up` answers, and prints the address, the e-mail and the first password. The first build takes several minutes. Sign in, and change the password.
+
+Run it again whenever you like: it changes no file, keeps every key and prints where the password is, not the password.
+
+### Update
+
+```console
+bash deploy/update.sh X.Y.Z
+```
+
+It makes a backup first, checks out the tag `vX.Y.Z`, builds the image, starts it (the migrations run when it starts) and waits for it to be healthy. When it is not healthy within two minutes, it stops it, checks the previous tag out again, restores the backup and starts the previous image. The data the failed version wrote is kept in `replaced-<time>/` of the volume. The exit code is 0 for a finished update, 1 for a rolled back one, and 2 when even the rollback failed: the message then names the backup to restore by hand.
+
+Read the [changelog](/changelog) first. A workspace migrated by a newer version does not open in an older one, which is why the backup comes first.
+
+### Back up
+
+```console
+bash deploy/backup.sh
+```
+
+It writes `deploy/backups/stuarty-backup-<time>.tar` and its `.sha256`. The server keeps running: the database is copied through the online backup of SQLite, never as a raw file of a database that is being written. The backup holds the database, your original files, the library (memory, prompts and skills), your fonts, the provider prices and the vault. It leaves out what is rebuilt or is not data: exports, proxies and frames, logs, helpers and the working folders.
+
+The command underneath is `stuarty workspace:backup <folder>`. You can run it on any workspace, with a server running or not:
+
+```bash
+stuarty workspace:backup "$PWD/my-backup"
+ls my-backup/manifest.json my-backup/SHA256SUMS
+```
+
+`manifest.json` lists every file with its size and SHA-256, and says `"master_key_included": false`. `SHA256SUMS` is the same list for `sha256sum -c`.
+
+### Restore on a new server
+
+1. Put your master key at `deploy/secrets/master_key`. A backup does not hold it.
+2. Run `bash deploy/install.sh --domain <domain> --email <email> --no-start`. It writes the configuration and keeps your key.
+3. Copy the backup file (and its `.sha256`) to the server and run `bash deploy/restore.sh stuarty-backup-<time>.tar`.
+4. Run `bash deploy/install.sh` to start it.
+
+```console
+mkdir -p deploy/secrets && cp /safe/place/master_key deploy/secrets/master_key
+bash deploy/install.sh --domain stuarty.example.com --email you@example.com --no-start
+bash deploy/restore.sh stuarty-backup-20261119T120000Z.tar
+bash deploy/install.sh
+```
+
+The restore checks the archive against its checksum, every file against the manifest, and the master key against the vault, and only then writes. A key that does not open the vault stops it with a plain message and writes nothing: put the right key back, or add `--without-vault` to restore everything else and connect the accounts again. It refuses a workspace that already has data; `--replace` moves that data to `replaced-<time>/` first and deletes nothing. The stack must be stopped.
+
+### Keep the master key
+
+The master key is the one file you cannot get back. Without it a restored vault cannot be opened: your projects, media and library are fine, and you connect the accounts again. Copy `deploy/secrets/master_key` to a password manager or another safe place, away from the server and from the backups.
+
+## Common mistakes
+
+- Keeping the backups next to the key. A backup holds the sealed vault; the key opens it. Keep them apart.
+- A domain whose DNS record does not point to the server yet. Caddy cannot get a certificate, and `install.sh` ends with a message that says so. Fix the record and run it again.
+- Ports 80 and 443 closed in the firewall of the provider. Caddy needs them to prove that you own the domain.
+- Updating from a checkout with local changes. The script refuses; commit or discard them.
+- Deleting the image of the running version. The rollback needs it.
+- Running two servers on one volume. The second fails with `E_WORKSPACE_LOCKED`.
+
+## Next steps
+
+- [Network mode and login](/docs/self-hosting/network-mode)
+- [Backups and upgrades](/docs/self-hosting/backups-and-upgrades)
+- [Put Caddy in front](/docs/self-hosting/caddy)
