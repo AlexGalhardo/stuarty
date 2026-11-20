@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"net"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -144,5 +146,33 @@ func TestFreePortIfBusyMovesOnlyWhenTheDefaultIsTakenAndUnset(t *testing.T) {
 
 	if got := freePortIfBusy(t.Context(), none, addr); got != "" {
 		t.Errorf("a free default = %q, want it kept", got)
+	}
+}
+
+// VV-205: a client that writes its requests and closes the pipe at once (a script, a one-line test)
+// still gets every response before the process exits, through the real binary.
+func TestMCPAnswersTheRequestsReadBeforeStdinCloses(t *testing.T) {
+	bin := buildBinary(t)
+	home := filepath.Join(t.TempDir(), "ws")
+
+	const reqs = `{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"t","version":"1"}}}` + "\n" +
+		`{"jsonrpc":"2.0","method":"notifications/initialized"}` + "\n" +
+		`{"jsonrpc":"2.0","id":2,"method":"tools/list"}` + "\n"
+
+	cmd := exec.CommandContext(t.Context(), bin, "mcp")
+	cmd.Env = append(os.Environ(), "STUARTY_HOME="+home, "STUARTY_URL=", "APP_KEY=", "APP_ENV=",
+		"HOST=127.0.0.1", "PORT="+freePort(t), "STUARTY_MIN_FREE_BYTES=1")
+	cmd.Stdin = strings.NewReader(reqs)
+
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &stdout, &stderr
+
+	if err := cmd.Run(); err != nil {
+		t.Fatalf("mcp: %v\n%s", err, stderr.String())
+	}
+
+	out := stdout.String()
+	if !strings.Contains(out, `"id":1`) || !strings.Contains(out, `"id":2`) || !strings.Contains(out, `"tools"`) {
+		t.Errorf("responses missing from stdout: %q\nstderr: %s", out, stderr.String())
 	}
 }
