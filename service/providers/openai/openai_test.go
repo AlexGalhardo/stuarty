@@ -42,8 +42,9 @@ func TestDescriptor(t *testing.T) {
 	}
 
 	if len(d.Capabilities) != 1 || d.Capabilities[0] != provider.CapabilityText ||
-		len(d.CredentialKinds) != 1 || d.CredentialKinds[0] != provider.CredentialAPIKey {
-		t.Fatalf("epic 09 is the text capability with an API key: %+v", d)
+		len(d.CredentialKinds) != 2 || d.CredentialKinds[0] != provider.CredentialAPIKey ||
+		d.CredentialKinds[1] != provider.CredentialOAuth || d.DefaultEndpoint != openai.DefaultEndpoint {
+		t.Fatalf("the text capability with an API key or a sign-in: %+v", d)
 	}
 }
 

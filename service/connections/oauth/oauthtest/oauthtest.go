@@ -41,6 +41,8 @@ type Server struct {
 
 	issuedClient string
 	lifetime     int
+	scope        string
+	exchangeFail string
 	failStatus   int
 	failCode     string
 	refreshes    int
@@ -55,12 +57,13 @@ type grant struct {
 }
 
 // New starts the fake. The sign-in registers a client with the id issued, such as "oaiapp_test".
-func New(t *testing.T) *Server {
-	t.Helper()
+func New(tb testing.TB) *Server {
+	tb.Helper()
 
 	s := &Server{
 		codes: map[string]grant{}, refresh: map[string]string{}, access: map[string]bool{}, keys: map[string]bool{},
 		issuedClient: "oaiapp_test0123456789", lifetime: 3600,
+		scope: "openid profile email offline_access resource.invoke chatgpt.tokens.use.direct",
 	}
 
 	mux := http.NewServeMux()
@@ -74,7 +77,7 @@ func New(t *testing.T) *Server {
 	mux.HandleFunc("/auth", s.authorize)
 
 	s.Server = httptest.NewServer(mux)
-	t.Cleanup(s.Server.Close)
+	tb.Cleanup(s.Server.Close)
 
 	return s
 }
@@ -91,6 +94,23 @@ func (s *Server) SetLifetime(seconds int) {
 	defer s.mu.Unlock()
 
 	s.lifetime = seconds
+}
+
+// FailExchange makes every code exchange of the plan sign-in answer a refusal whose description is the
+// text given (a hostile one, to show it is never forwarded); the empty text stops it.
+func (s *Server) FailExchange(description string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.exchangeFail = description
+}
+
+// SetScope is the scope the next tokens are granted.
+func (s *Server) SetScope(scope string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.scope = scope
 }
 
 // FailRefresh makes every refresh answer the status and the OAuth error code; status 0 stops it.
@@ -140,17 +160,17 @@ func (s *Server) Tokens() []string {
 // Consent plays the person who accepts on the consent screen: it reads the authorization address and
 // returns the address the provider sends the browser back to, with a code, the state and (for the plan
 // sign-in) the issued client id.
-func (s *Server) Consent(t *testing.T, authorizeURL string) string {
-	t.Helper()
+func (s *Server) Consent(tb testing.TB, authorizeURL string) string {
+	tb.Helper()
 
 	u, err := url.Parse(authorizeURL)
 	if err != nil {
-		t.Fatal(err)
+		tb.Fatal(err)
 	}
 
 	back, err := s.consent(u.Query())
 	if err != nil {
-		t.Fatal(err)
+		tb.Fatal(err)
 	}
 
 	return back
@@ -283,6 +303,16 @@ func (s *Server) token(w http.ResponseWriter, r *http.Request) {
 func (s *Server) codeGrant(w http.ResponseWriter, f url.Values) {
 	s.exchanges++
 
+	if s.exchangeFail != "" {
+		write(
+			w,
+			http.StatusBadRequest,
+			map[string]string{"error": "invalid_grant", "error_description": s.exchangeFail},
+		)
+
+		return
+	}
+
 	g, ok := s.codes[f.Get("code")]
 	if !ok || g.used || challenge(f.Get("code_verifier")) != g.challenge || f.Get("redirect_uri") != g.redirect ||
 		f.Get("client_id") != g.client || (g.resource && f.Get("resource") != Resource) ||
@@ -301,7 +331,7 @@ func (s *Server) codeGrant(w http.ResponseWriter, f url.Values) {
 
 	write(w, http.StatusOK, map[string]any{
 		"access_token": access, "refresh_token": refresh, "expires_in": s.lifetime, "token_type": "Bearer",
-		"scope":    "openid profile email offline_access resource.invoke chatgpt.tokens.use.direct",
+		"scope":    s.scope,
 		"id_token": s.idToken(g.client, g.nonce),
 	})
 }
@@ -338,7 +368,7 @@ func (s *Server) refreshGrant(w http.ResponseWriter, f url.Values) {
 
 	write(w, http.StatusOK, map[string]any{
 		"access_token": access, "refresh_token": refresh, "expires_in": s.lifetime, "token_type": "Bearer",
-		"scope": "openid profile email offline_access resource.invoke chatgpt.tokens.use.direct",
+		"scope": s.scope,
 	})
 }
 
