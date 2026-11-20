@@ -30,6 +30,7 @@ import { PlanWindows } from "./planWindows";
 import { RenderClient } from "./render/client";
 import { createRenderWorker } from "./render/createRenderWorker";
 import { frameInput } from "./render/frameInput";
+import { drawable, expandGroups, GroupIds, leavesOf } from "./render/groups";
 import { RENDERER_DIGEST, RENDERER_MODULE_URL } from "./render/module";
 import type { PixelSource } from "./render/protocol";
 import { STILL_POSTER_WIDTH, stillFrameRect } from "./stillFrame";
@@ -102,6 +103,12 @@ export class RustExecutor implements PreviewExecutor {
 	private decodedUs = -1;
 	// What the worker holds for each item: the tag of the pixels uploaded.
 	private readonly uploaded = new Map<string, string>();
+	// The short ids of what a group puts in the worker (render/groups.ts), the
+	// surfaces the worker holds, and the output scale of the frame of the layer
+	// being prepared (a group draws its layers at its own scale).
+	private readonly groupIds = new GroupIds();
+	private surfaceIds = new Set<string>();
+	private leafScale = 1;
 	// Uploads being made (a bitmap decoded off the main thread, a still cut).
 	private readonly making = new Set<string>();
 	private readonly bitmaps = new Lru<string, true>(BITMAP_CACHE, (key) =>
@@ -438,46 +445,60 @@ export class RustExecutor implements PreviewExecutor {
 		const buffer = this.buffer;
 		if (render === null || info === null || buffer === null) return;
 
-		const layers = layersAt(plan, frame);
-		const decoding = rankVideoLayers(layers, MAX_VIDEO_LAYERS);
+		// A composition drawn as a group is expanded into the layers of its own
+		// frame and its surface (SDD-013 section 3.12): the pixels each layer needs
+		// are uploaded as for any other, at the scale of the frame that holds it,
+		// and the worker draws the surfaces before the frame.
+		const scale = buffer.width / info.width;
+		const nodes = expandGroups(plan.layers, frame, scale, this.groupIds);
+		const decoding = rankVideoLayers(leavesOf(nodes), MAX_VIDEO_LAYERS);
 		const usedVideos = new Set<string>();
 		const used = new Set<string>();
-		const ready: PlanLayer[] = [];
 		this.complete = true;
 
-		for (const layer of layers) {
-			const drawn = this.prepare(
-				layer,
-				frame,
-				decoding,
-				usedVideos,
-				mode,
-				info,
-			);
-			if (drawn === null) {
-				this.complete = false;
-				continue;
-			}
-			used.add(layer.item);
-			ready.push(drawn);
-		}
+		const { layers: ready, surfaces } = drawable(
+			nodes,
+			frame,
+			(layer, layerScale) => {
+				this.leafScale = layerScale;
+				const drawn = this.prepare(
+					layer,
+					frame,
+					decoding,
+					usedVideos,
+					mode,
+					info,
+				);
+				if (drawn === null) {
+					this.complete = false;
+					return null;
+				}
+				used.add(layer.item);
+				return drawn;
+			},
+		);
 
 		// What left the frame is forgotten by the module; it is uploaded again
-		// if the layer comes back.
-		const gone = [...this.uploaded.keys()].filter((id) => !used.has(id));
+		// if the layer comes back. A surface is drawn again for every frame, so
+		// only the ones of groups that left are released.
+		const kept = new Set(surfaces.map((surface) => surface.id));
+		const gone = [
+			...[...this.uploaded.keys()].filter((id) => !used.has(id)),
+			...[...this.surfaceIds].filter((id) => !kept.has(id)),
+		];
 		for (const id of gone) this.uploaded.delete(id);
+		this.surfaceIds = kept;
 		render.release(gone);
 
 		this.videos.idle(usedVideos);
 		this.syncAudio(plan, frame, mode.playing);
 
-		const scale = buffer.width / info.width;
 		const input = frameInput(plan, frame, ready, {
 			width: buffer.width,
 			height: buffer.height,
 			scale,
 		});
-		const seq = render.render(input);
+		const seq = render.render(input, surfaces);
 		this.drawnWhole = this.complete ? this.drawKey(frame) : null;
 		this.presented.set(seq, {
 			frame,
@@ -594,7 +615,11 @@ export class RustExecutor implements PreviewExecutor {
 		info: ProjectInfo,
 	): boolean {
 		if (layer.asset_kind === "image" || !decoding.has(layer.item)) {
-			return this.still(info.projectId, layer, frame);
+			return this.still(
+				this.owners.of(layer.asset, info.projectId),
+				layer,
+				frame,
+			);
 		}
 		const decoded = this.decodedTexture(layer, frame, mode, info);
 		if (decoded !== "fallback") return decoded;
@@ -785,11 +810,9 @@ export class RustExecutor implements PreviewExecutor {
 		layer: PlanMediaLayer,
 		frame: number,
 	): [number, number] | undefined {
-		const info = this.info;
-		const buffer = this.buffer;
-		if (info === null || buffer === null) return undefined;
+		if (this.info === null || this.buffer === null) return undefined;
 		if (valueAt(layer.rotation, frame, layer.first) !== 0) return undefined;
-		const scale = buffer.width / info.width;
+		const scale = this.leafScale;
 		const pixels = (length: number): number =>
 			Math.max(Math.floor(length * scale + 0.5), 1);
 		return [
