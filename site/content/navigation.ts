@@ -81,6 +81,7 @@ export const navigation: NavCategory[] = [
 			"quick-start",
 			"workspace",
 			"projects",
+			"migration",
 		],
 	},
 	{
