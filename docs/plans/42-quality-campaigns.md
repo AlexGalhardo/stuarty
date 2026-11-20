@@ -40,11 +40,11 @@ Every epic above it in the roadmap that is not blocked.
 ## Tasks
 
 - [x] 1. Amend SDD-008 with the campaigns, their harnesses and their pass rules. Verify: `task lint:md` exits 0.
-- [ ] 2. Extend `perfreport` to the image document and the new sections; prepare the reference projects. Verify: `go test ./internal/tools/perfreport/...` passes.
+- [x] 2. Extend `perfreport` to the image document and the new sections; prepare the reference projects. Verify: `go test ./internal/tools/perfreport/...` passes.
 - [ ] 3. Orchestrator, machine idle: measure every budget. Verify: the report with each NFR, its number and pass or fail is committed under `docs/`.
 - [ ] 4. Fix or escalate each failed budget. Verify: a second idle measurement, in the same report.
-- [ ] 5. Add the fuzz targets and run each for its time budget. Verify: `go test -fuzz` runs recorded with duration and result; new regression cases pass in `task test`.
-- [ ] 6. Build the crash harness and run every kill point. Verify: `go test ./internal/tools/crashharness/...` (new) passes.
+- [x] 5. Add the fuzz targets and run each for its time budget. Verify: `go test -fuzz` runs recorded with duration and result; new regression cases pass in `task test`.
+- [x] 6. Build the crash harness and run every kill point. Verify: `go test ./internal/tools/crashharness/...` (new) passes.
 - [ ] 7. Build and run the soak. Verify: the soak report with memory, handles and database size over time is committed; its assertions pass.
 - [ ] 8. Run the security acceptance and the specialist review; fix the findings. Verify: `go test -run TestSecurity_ ./...`, `go run ./internal/tools/threatcheck` and `bash scripts/no-egress.sh` exit 0; `docs/security-review-stuarty.md` is written.
 - [ ] 9. Measure the agent surface again. Verify: `go run ./internal/tools/surfacebudget` and `go test ./web/contract/...` exit 0.
