@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
+import { confirmDiscard } from "@/lib/unsaved";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
 import type { ProjectListResult } from "../../editor/api/types";
@@ -206,12 +207,14 @@ export default function WritePage(): ReactNode {
 											type="button"
 											data-text-id={text.id}
 											aria-current={current ? "true" : undefined}
-											onClick={() =>
+											onClick={() => {
+												if (current) return;
+												if (!confirmDiscard(t("ui.unsaved.leave"))) return;
 												setSelected({
 													projectId: text.project_id,
 													itemId: text.id,
-												})
-											}
+												});
+											}}
 											className={`flex w-full flex-col gap-1 rounded-lg border p-2 text-left text-sm hover:bg-muted ${current ? "bg-muted" : ""}`}
 										>
 											<span className="flex flex-wrap items-center gap-2">
@@ -298,6 +301,7 @@ function NewText({
 		setBusy(true);
 		setFailure(null);
 		try {
+			if (!confirmDiscard(t("ui.unsaved.leave"))) return;
 			const made = await client.create(project, {
 				title,
 				text_kind: kind,

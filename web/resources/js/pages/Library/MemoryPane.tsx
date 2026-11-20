@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
+import { useUnsavedGuard } from "@/lib/unsaved";
 import type { LibraryClient, LibraryEntry } from "./client";
 import { EntryBadges, FileText } from "./parts";
 
@@ -31,6 +32,12 @@ export default function MemoryPane({
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [saved, setSaved] = useState(false);
 	const [busy, setBusy] = useState(false);
+	// The fields as last read or saved: what differs from it is unsaved text.
+	const [baseline, setBaseline] = useState(
+		JSON.stringify(["", "", "", "", ""]),
+	);
+	const current = JSON.stringify([newName, description, scope, tags, body]);
+	useUnsavedGuard(current !== baseline, t("ui.unsaved.leave"));
 
 	useEffect(() => {
 		let live = true;
@@ -42,6 +49,7 @@ export default function MemoryPane({
 			setScope("");
 			setTags("");
 			setBody("");
+			setBaseline(JSON.stringify(["", "", "", "", ""]));
 			return () => {
 				live = false;
 			};
@@ -55,6 +63,15 @@ export default function MemoryPane({
 				setScope(result.entry.scope ?? "");
 				setTags((result.entry.tags ?? []).join(", "));
 				setBody(result.body);
+				setBaseline(
+					JSON.stringify([
+						"",
+						result.entry.description,
+						result.entry.scope ?? "",
+						(result.entry.tags ?? []).join(", "),
+						result.body,
+					]),
+				);
 			})
 			.catch((error: unknown) => {
 				if (live) setFailure(failureOf(error));
@@ -82,6 +99,7 @@ export default function MemoryPane({
 				// Only the button that keeps a pending note asks for it; a person who saves is kept by the service.
 				keep: entry !== null && !entry.kept ? true : undefined,
 			});
+			setBaseline(current);
 			setSaved(true);
 			onChanged(written.entry.name);
 		} catch (error) {

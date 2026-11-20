@@ -15,6 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
+import { confirmDiscard } from "@/lib/unsaved";
 import { HttpTransport } from "../../editor/api/http";
 import {
 	type LibraryClient,
@@ -161,6 +162,7 @@ export default function LibraryPage({
 					<Button
 						type="button"
 						onClick={() => {
+							if (!confirmDiscard(t("ui.unsaved.leave"))) return;
 							setCreating(true);
 							setSelected(null);
 							setPaneKey((k) => k + 1);
@@ -219,6 +221,8 @@ export default function LibraryPage({
 										}
 										className="flex w-full flex-col gap-1 rounded-lg border px-3 py-2 text-left hover:bg-muted aria-[current=true]:border-ring aria-[current=true]:bg-muted"
 										onClick={() => {
+											if (!creating && selected === entry.name) return;
+											if (!confirmDiscard(t("ui.unsaved.leave"))) return;
 											setCreating(false);
 											setSelected(entry.name);
 											setPaneKey((k) => k + 1);
