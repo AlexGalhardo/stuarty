@@ -6263,7 +6263,6 @@ Describes what `animation.apply_preset` and `keyframe.set_easing` accept, for an
 - `ok_lists_the_presets`
 - `err_validation_takes_no_arguments`
 
-
 ### C.78 `clip.replace_media`
 
 Swaps the asset of a clip for another asset of the same kind and changes nothing else: the animation that an external engine rendered again takes the place of the one it replaces (epic 33, SDD-011 section 15). Position, duration, trim (`source_in`), speed, transform, keyframes, effects, transitions and the links to captions stay as they are. Nothing is stretched or trimmed to make the new media fit.
@@ -6758,4 +6757,3 @@ Puts the items of a nested timeline on this timeline in place of a composition i
 - `err_invalid_state_track_locked`
 - `err_id_exists`
 - `err_limit_500_items`
-
