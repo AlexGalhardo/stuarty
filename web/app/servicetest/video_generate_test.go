@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -18,6 +19,7 @@ import (
 	core "github.com/AlexGalhardo/stuarty/core/approval"
 	"github.com/AlexGalhardo/stuarty/core/provider"
 	"github.com/AlexGalhardo/stuarty/engine/ingest"
+	"github.com/AlexGalhardo/stuarty/engine/ingest/mediagen"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/providers"
@@ -167,9 +169,17 @@ type videoEnv struct {
 func newVideoEnv(tb testing.TB) *videoEnv {
 	tb.Helper()
 
+	return newVideoEnvWith(tb, false)
+}
+
+// newVideoEnvWith is newVideoEnv; real runs the ingest of engine/ingest and the export on the pinned FFmpeg, and
+// skips the test without it.
+func newVideoEnvWith(tb testing.TB, real bool) *videoEnv {
+	tb.Helper()
+
 	v := &videoEnv{maker: newClipMaker()}
 
-	cfg := mediaCfg{}
+	cfg := mediaCfg{realIngest: real, realExport: real}
 	cfg.ingest = func(_ context.Context, in ingest.Input) (*ingest.Result, error) {
 		res, err := fakeResult(v.ws, in)
 		if err != nil {
@@ -801,6 +811,122 @@ func TestVideoGenerate_AnImageAssetIsTheFirstFrame(t *testing.T) {
 
 	if _, err := v.svc.VideoGenerate(v.as(token), r); code(err) != "E_TYPE_MISMATCH" {
 		t.Fatalf("a video as the first frame: %v", err)
+	}
+}
+
+// The first frame is read from the project of the job only: an image of another project of the same person, and
+// a project a key is not limited to, are refused before anything is asked of the provider (SDD-016 section 6.4).
+func TestVideoGenerate_AFirstFrameOfAnotherProjectIsRefused(t *testing.T) {
+	t.Parallel()
+
+	v := newVideoEnv(t)
+
+	png := pngOf(3)
+	sum := sha256.Sum256(png)
+	v.images.Store(hex.EncodeToString(sum[:]), true)
+
+	other := v.newProject("other")
+	frame := v.importOne(other, v.write("frame.png", string(png))).Assets[0]
+	v.ingested(frame.JobID)
+
+	r := v.req(5, "the fox wakes")
+	r.FirstFrame = frame.AssetID
+
+	if _, err := v.svc.VideoGenerate(v.as(token), r); code(err) != "E_NOT_FOUND" {
+		t.Errorf("an image of another project as the first frame = %v, want E_NOT_FOUND", err)
+	}
+
+	limited := service.WithCaller(context.Background(), service.Caller{
+		Actor: "key:limited", Scopes: service.AllScopes, ProjectID: v.prj,
+	})
+
+	r.ProjectID = other
+	if _, err := v.svc.VideoGenerate(limited, r); code(err) != service.CodeForbidden {
+		t.Errorf("a key limited to another project = %v, want E_FORBIDDEN", err)
+	}
+
+	if list, err := v.svc.ApprovalList(v.as(token), service.ApprovalListRequest{State: "all"}); err != nil ||
+		list.Total != 0 {
+		t.Errorf("a refused generation left requests: %+v, %v", list, err)
+	}
+
+	if n := v.maker.submits.Load(); n != 0 || len(v.maker.frames) != 0 {
+		t.Errorf("the provider was asked %d times", n)
+	}
+}
+
+// Acceptance criterion 2 of epic 11 with a real file: the clip the provider returns goes through the probe of the
+// ingest on the pinned FFmpeg, ends as a ready video asset, goes on a timeline, and the project exports with it.
+func TestVideoGenerate_AGeneratedClipIsPlayableOnATimeline(t *testing.T) {
+	v := newVideoEnvWith(t, true)
+	inst := pinnedFFmpeg(t)
+
+	gen := mediagen.Gen{
+		Dir: v.files,
+		Run: func(ctx context.Context, dir string, args ...string) (string, error) {
+			res, err := inst.FFmpeg.Run(ctx, dir, args...)
+
+			return res.Stderr, err
+		},
+	}
+
+	path, err := gen.Clip(context.Background(), "generated.mp4", 320, 240, 25, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	v.maker.set(func(c *clipMaker) { c.clip = data })
+
+	project, track := v.withTrack()
+	v.mustEdit(ui, project, v.head(project).Revision, op("settings.set", `{"width":320,"height":240}`))
+
+	r := v.req(5, "A red fox in the snow")
+	r.ProjectID = project
+
+	job, err := v.svc.VideoGenerate(v.as(token), r)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if aerr := v.approve(job.ApprovalID); aerr != nil {
+		t.Fatal(aerr)
+	}
+
+	done := v.run(job.JobID)
+	if done.State != service.JobSucceeded || done.Result == nil || done.Result.Generated == nil {
+		t.Fatalf("job = %+v (%+v)", done, done.Error)
+	}
+
+	item := done.Result.Generated.Items[0]
+	if item.State != "ready" || item.Kind != "video" || len(done.Result.Generated.Notes) != 0 {
+		t.Fatalf("the ingest of the clip: %+v, notes %v", item, done.Result.Generated.Notes)
+	}
+
+	v.mustEdit(ui, project, v.head(project).Revision, op("clip.add", fmt.Sprintf(
+		`{"track_id":%q,"asset_id":%q,"start":"0s","duration":"1s"}`, track, item.AssetID,
+	)))
+
+	exp, err := v.startFormat(project, "mp4")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if exp = v.run(exp.JobID); exp.State != service.JobSucceeded || exp.Result == nil || exp.Result.Export == nil {
+		t.Fatalf("export = %s", jobSummary(exp))
+	}
+
+	if e := exp.Result.Export; e.Bytes < 1000 || len(e.SHA256) != 64 {
+		t.Errorf("export = %+v", e)
+	}
+
+	a, err := v.svc.AssetGet(v.as(token), service.AssetRef{Hash: item.Hash})
+	if err != nil || a.Origin.Kind != "generated" || a.Origin.Model != clipModel || a.Projects != 1 {
+		t.Errorf("the library entry = %+v, %v", a, err)
 	}
 }
 
