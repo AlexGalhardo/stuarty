@@ -10,7 +10,7 @@ import {
 	openCase,
 	stepThrough,
 } from "../support/golden";
-import { nestedProject } from "../support/nested";
+import { nestedProject, pictureGroupProject } from "../support/nested";
 import {
 	centroid,
 	chromaCentroid,
@@ -96,6 +96,26 @@ test.describe("preview-vs-export", () => {
 			});
 		});
 	}
+
+	// The PixiJS executor cuts the poster of a picture of a nested timeline with
+	// the size of the picture too (preview/sourceSizes.ts).
+	test("group of a wide picture of another timeline: close to the export's", async ({
+		page,
+		request,
+	}) => {
+		const project = await pictureGroupProject(request);
+		await openCase(page, project.id);
+		await stepThrough(page, project.frames, async (frame) => {
+			await compareFrame(
+				page,
+				"group-picture",
+				project.id,
+				frame,
+				"preview-vs-export",
+				true,
+			);
+		});
+	});
 
 	// A frame that fails is reported by case and frame.
 	for (const name of goldenCases()) {

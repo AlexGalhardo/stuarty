@@ -33,6 +33,7 @@ import { frameInput } from "./render/frameInput";
 import { drawable, expandGroups, GroupIds, leavesOf } from "./render/groups";
 import { RENDERER_DIGEST, RENDERER_MODULE_URL } from "./render/module";
 import type { PixelSource } from "./render/protocol";
+import { inspectSourceSize, SourceSizes } from "./sourceSizes";
 import { STILL_POSTER_WIDTH, stillFrameRect } from "./stillFrame";
 import type {
 	LayerGeometry,
@@ -116,6 +117,8 @@ export class RustExecutor implements PreviewExecutor {
 	);
 	private readonly luts = new Map<string, "loading" | "ready" | "refused">();
 	private readonly stillImages = new Map<string, HTMLImageElement>();
+	// The source size of each asset, which the crop of a still is measured in.
+	private readonly sizes: SourceSizes;
 	private readonly presented = new Map<number, Presented>();
 	private resyncs = 0;
 	// Frames the worker drew that reached the canvas, for the playback specs.
@@ -126,15 +129,19 @@ export class RustExecutor implements PreviewExecutor {
 	constructor(
 		private readonly client: ApiClient,
 		timers?: PoolTimers,
-		private readonly sources: (
-			asset: string,
-		) => { width: number; height: number } | null = () => null,
+		sources: (asset: string) => { width: number; height: number } | null = () =>
+			null,
 	) {
 		const poolTimers = timers ?? browserTimers;
 		this.windows = new PlanWindows(() =>
 			Promise.reject(new Error("no project")),
 		);
 		const redraw = (): void => this.redraw();
+		this.sizes = new SourceSizes(
+			sources,
+			(timeline, asset) => inspectSourceSize(client, timeline, asset),
+			redraw,
+		);
 		this.decoder = new DecodeClient<VideoFrame>({
 			preference: decoderPreference(window.location.search),
 			createWorker: createDecodeWorker,
@@ -746,7 +753,15 @@ export class RustExecutor implements PreviewExecutor {
 			this.complete = false;
 			return false;
 		}
-		const source = this.sources(layer.asset);
+		const source = this.sizes.of(
+			layer.asset,
+			projectId,
+			this.info?.projectId ?? projectId,
+		);
+		if (source === undefined) {
+			this.complete = false;
+			return this.uploaded.has(layer.item);
+		}
 		const rect = stillFrameRect(
 			crop,
 			image.naturalWidth,
