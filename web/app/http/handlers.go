@@ -173,7 +173,7 @@ func register[In, Out any](h *apiHandler, id string, fn func(*web.Ctx, In) (Out,
 		}
 
 		return fn(c, in)
-	})
+	}).Use(strictBody[In](func() bool { return h.Network == nil && networkOnly(id) }))
 }
 
 // explicitSize refuses a limit or a count that the request names and that is below 1: the Service cannot
