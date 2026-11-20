@@ -36,7 +36,7 @@ A creator with a small rented server runs one command and has their own Stuarty 
 
 ## Tasks
 
-- [ ] 1. Amend SDD-009 with the deployment layout, what a backup contains and the update procedure. Verify: `task lint:md` exits 0.
+- [x] 1. Amend SDD-009 with the deployment layout, what a backup contains and the update procedure. Verify: `task lint:md` exits 0.
 - [ ] 2. Write `compose.yml`, the `Caddyfile` and `.env.example` with fixed tags. Verify: `docker compose -f deploy/compose.yml config` exits 0 and `task image:build && task image:smoke` pass.
 - [ ] 3. Write `install.sh` and test it in a clean container that has Docker available, or with a local domain and Caddy's internal certificates. Verify: `bash deploy/test/install-test.sh` (new) exits 0.
 - [ ] 4. Implement the consistent workspace backup command if missing, and `backup.sh` and `restore.sh`. Verify: `go test ./service/... -run TestWorkspaceBackup` passes and `bash deploy/test/backup-restore-test.sh` (new) exits 0 with matching checksums.
