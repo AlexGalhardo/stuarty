@@ -101,7 +101,7 @@ func writeView(c *web.Ctx, res *service.ViewResult, pinned bool, kind string, ha
 	c.SetHeader("X-Vukem-Image-Height", strconv.Itoa(res.Height))
 	c.SetHeader("X-Vukem-Image-Tokens", strconv.Itoa(res.ImageTokens))
 
-	if pinned {
+	if pinned && !res.Composite {
 		c.SetHeader("Cache-Control", "private, max-age=31536000, immutable")
 	} else {
 		c.SetHeader("Cache-Control", "private, no-cache")

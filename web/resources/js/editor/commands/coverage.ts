@@ -33,6 +33,8 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"timeline.delete": ["item.delete"],
 	"timeline.ripple_delete": ["item.delete"],
 	"timeline.duplicate": ["item.duplicate"],
+	"timeline.create_composition": ["composition.create_from_selection"],
+	"timeline.expand_composition": ["composition.expand"],
 	"timeline.repeat": ["item.repeat"],
 	"inspector.shadow": ["clip.set_shadow"],
 	"inspector.outline": ["clip.set_outline"],
@@ -213,8 +215,14 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		palette,
 	],
 	"clip.add_composition": [palette],
-	"composition.create_from_selection": [palette],
-	"composition.expand": [palette],
+	"composition.create_from_selection": [
+		{ kind: "menu", action: "timeline.create_composition" },
+		palette,
+	],
+	"composition.expand": [
+		{ kind: "menu", action: "timeline.expand_composition" },
+		palette,
+	],
 	"clip.remove_silences": [
 		{ kind: "inspector", action: "inspector.silences" },
 		palette,
