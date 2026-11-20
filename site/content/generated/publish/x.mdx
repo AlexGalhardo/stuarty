@@ -7,6 +7,22 @@ description: "Create your X developer app, connect it, and publish within the li
 
 Stuarty publishes to X through a developer app that you create and own (ADR-0035): no Stuarty account stands between you and X, and the secret stays in your vault.
 
+## Set up the developer app
+
+X charges for use of its API, by the post, and Stuarty shows the price before it asks you to approve.
+
+1. Open the X developer console, and create a project and an app.
+2. Set the type of the app to a **web app** (a confidential client).
+3. Add `<your Stuarty address>/social/callback` as a callback address. The Connections page of Stuarty shows the exact value.
+4. Copy the client id and the client secret.
+5. Buy credits in the console: the API is pay per use.
+6. In Stuarty, open **Connections**, choose **Connect**, pick X, and paste the client id and the client secret. The secret goes into the vault.
+7. Sign in and accept the permissions.
+
+The price of a post, and of a post with a link, is in the section The price of a post under Limits, with its source and date. X changes its prices: you can correct the price on the Connections page, and a change edits the estimate of the next approval, never one you have already seen.
+
+A post to X has no thumbnail in Stuarty: a thumbnail on a post to X is refused rather than dropped. The video is sent in chunks from your machine.
+
 ## Permissions and hosts
 
 The sign-in asks for these permissions and no others:
@@ -46,5 +62,9 @@ These are the limits Stuarty checks a post to X against before anything is sent 
 - [X: the page for the post](https://docs.x.com/x-api/media/quickstart/best-practices.md), read on 2026-11-20.
 - [The page for the video](https://docs.x.com/x-api/media/quickstart/best-practices.md), read on 2026-11-19: H.264 High, 4:2:0, AAC-LC, at most 60 fps, aspect 1:3 to 3:1, 5,000 kbit/s video and 128 kbit/s audio; its 1280x1024 limit contradicts the sizes it recommends and is not enforced.
 - [The page for the video](https://docs.x.com/x-api/media/quickstart/media-upload-chunked), read on 2026-11-19: a post video lasts up to 20 minutes and 8 GB by default.
+
+### The price of a post
+
+X charges for use of its API: 0.015 USD for a post and 0.2 USD for a post with a link, on 2026-11-20 ([source](https://docs.x.com/x-api/getting-started/pricing)). The approval of a post shows the price Stuarty has; you can correct it on the Connections page when X changes it.
 
 X publishes only after you approve the post.

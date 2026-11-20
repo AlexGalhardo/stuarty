@@ -1,0 +1,53 @@
+---
+title: "Approvals, rules and cost ceilings"
+description: "Publishing and costly generation wait for you. How the approval queue works, how to write a rule, and how to cap what is spent."
+---
+
+## You will learn
+
+- what waits in the approval queue, and what you see before you decide;
+- how to approve, reject, and write a rule that approves for you;
+- how a cost ceiling stops spending, and why an agent can never raise one.
+
+## The idea
+
+An agent, a schedule or you can **prepare** a publication or a request that costs money. It does not run. It becomes an item of the queue, with what will be sent, to which destination, and the estimated cost. You approve or reject it, or a rule you wrote approves it without asking. A job that needs approval is created in the state `waiting_approval`, makes no outbound call and spends nothing until then.
+
+Three rules hold everywhere:
+
+1. **A person decides, an agent never does.** Approving, rejecting, writing a rule and setting a ceiling need a signed-in browser session. The local token of the CLI, an API key and every agent surface are refused with `E_PRIVILEGED_SESSION`.
+2. **A ceiling is a hard stop.** A request whose estimate is over a ceiling is refused with a message that says what to do. Approving a request does not lift a ceiling: you raise the ceiling first, on purpose.
+3. **Every use of a rule is recorded** in the audit log, with the rule, the request and the time.
+
+## Quick start
+
+1. Open **Approvals**. Each request shows what it is, the project, the destination, the estimated cost and, for a publication, the post that will be sent. Choose **Approve** or reject it with a reason.
+2. Or from a terminal, to see what waits (the decision itself is for the browser):
+
+   ```bash
+   stuarty approval:list
+   stuarty cost:show
+   ```
+
+   `approval:list` shows the pending requests; `--state all` adds the decided and the expired ones. `cost:show` shows the ceilings and what was spent today and over the last 30 days.
+
+### Rules that approve for you
+
+A rule lets a kind of action through without asking. It can be narrow (one destination, one project) and it can carry a limit per action and per day. Open **Approvals**, then **Rules that approve for you**, then **Add rule**: pick the kind (for example the publications of one project to one account, or the generations under a small cost), the limits, and save. A rule can be switched off without deleting it. A rule is created only from the browser; an agent that tries gets `E_PRIVILEGED_SESSION`.
+
+### Cost ceilings
+
+A ceiling is the most one action may cost and the most that may be spent in a day, for the whole workspace or for one project. Set it under **Approvals**, **Cost**. Before a call to a provider there is an estimate, and after it the real cost is recorded; when either would pass a ceiling the call stops. The numbers are in millionths of the currency, the way providers price them.
+
+## Common mistakes
+
+- Expecting an approval to override a ceiling. It does not. Raise the ceiling, then approve.
+- Writing a rule broader than you mean. A rule with no project and no destination covers every project and every destination of that kind; give it a limit.
+- Waiting for an agent to approve its own request. It cannot, by design: a prompt injected into a transcript can prepare a post and can never publish it.
+
+## Next steps
+
+- [Your first short video](/docs/guide/first-short-video)
+- [The publishing calendar](/docs/guide/publishing-calendar)
+- [Approvals from an agent's point of view](/docs/agents/approvals)
+- [What leaves your machine](/docs/what-leaves-your-machine)

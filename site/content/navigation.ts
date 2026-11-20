@@ -96,7 +96,7 @@ export const navigation: NavCategory[] = [
 	{
 		dir: "guide",
 		title: "Core editing",
-		pages: ["media-library", "timeline", "preview", "editing-tools", "clip-properties", "undo-and-history"],
+		pages: ["media-library", "asset-library", "timeline", "preview", "editing-tools", "clip-properties", "undo-and-history"],
 	},
 	{
 		dir: "guide",
@@ -131,13 +131,18 @@ export const navigation: NavCategory[] = [
 	},
 	{
 		dir: "guide",
+		title: "Images",
+		pages: ["image-editor"],
+	},
+	{
+		dir: "guide",
 		title: "AI providers",
-		pages: ["ai-providers", "agent-chat"],
+		pages: ["ai-providers", "agent-chat", "memory-skills-prompts"],
 	},
 	{
 		dir: "guide",
 		title: "Publishing",
-		pages: ["publishing-calendar", "blog-posts"],
+		pages: ["approvals", "publishing-calendar"],
 	},
 	{
 		dir: "publish",
@@ -148,12 +153,12 @@ export const navigation: NavCategory[] = [
 	{
 		dir: "guide",
 		title: "The editor",
-		pages: ["keyboard-shortcuts", "keyboard-shortcuts-list", "coming-from-capcut", "settings", "accessibility", "desktop"],
+		pages: ["dashboard", "keyboard-shortcuts", "keyboard-shortcuts-list", "coming-from-capcut", "settings", "accessibility", "desktop"],
 	},
 	{
 		dir: "agents",
 		title: "Agents",
-		pages: ["overview", "connect", "mcp", "cli", "verify", "batches", "skill", "safety", "recipes", "drive-the-editor"],
+		pages: ["overview", "connect", "mcp", "cli", "verify", "batches", "skill", "safety", "approvals", "recipes", "drive-the-editor"],
 	},
 	{
 		dir: "agents",
