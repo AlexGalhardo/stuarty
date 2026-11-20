@@ -49,8 +49,8 @@ A creator drags a photo from their computer into a new thumbnail in one step, an
 - [x] 2. Check whether `project_items` already holds an image (SDD-005 section 5.12 says the kind is reserved), then implement `ImageImport` in `service/` with the atomic creation and the path rules, and a table test for each refusal. Verify: `go test ./service/... -run TestImageImport` passes.
 - [x] 3. Publish `image.updated` after every committed image batch, and serve `GET /images/{id}/events` with replay. Verify: `go test ./web/app/http/... -run TestImageEvents` passes, including the replay after `Last-Event-ID`.
 - [x] 4. Expose on MCP, CLI and HTTP. Verify: `go test ./web/contract/...` passes; `go run ./internal/tools/surfacebudget` exits 0; `task generate:check` exits 0.
-- [ ] 5. Replace the polling by the stream in the editor; add the import actions in both languages. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n` and `task test:web` pass.
-- [ ] 6. End to end: two windows on one image, an edit by the CLI appears in the second window without a reload; a file is imported from the screen. Verify: `web/e2e/specs/image-live.spec.ts` (new) and `web/e2e/specs/image-import.spec.ts` (new) pass with `bun run e2e`, and `web/e2e/specs/a11y-image-editor.spec.ts` still passes.
+- [x] 5. Replace the polling by the stream in the editor; add the import actions in both languages. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n` and `task test:web` pass.
+- [x] 6. End to end: two windows on one image, an edit by the CLI appears in the second window without a reload; a file is imported from the screen. Verify: `web/e2e/specs/image-live.spec.ts` (new) and `web/e2e/specs/image-import.spec.ts` (new) pass with `bun run e2e`, and `web/e2e/specs/a11y-image-editor.spec.ts` still passes.
 - [x] 7. The browser upload route, only when the author has decided it (see the risks). Verify: `go test ./web/app/http/... -run TestImageUpload` passes, including a file over the limit refused with `E_LIMIT`.
 
 ## Test strategy
