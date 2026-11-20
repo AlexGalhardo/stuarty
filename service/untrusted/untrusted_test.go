@@ -173,3 +173,18 @@ func FuzzUntrustedClean(f *testing.F) {
 		}
 	})
 }
+
+// VV-322: a page draws the text of a block as text, with no envelope.
+func TestPlainIsTheTextOfABlock(t *testing.T) {
+	t.Parallel()
+
+	block := untrusted.Block(untrusted.SourceNetworkText, untrusted.Attrs{"connection": "con_1"}, "a <b> & c", 0)
+
+	if got := untrusted.Plain(block); got != "a <b> & c" {
+		t.Errorf("Plain = %q, want the text without the envelope", got)
+	}
+
+	if got := untrusted.Plain("not a block"); got != "not a block" {
+		t.Errorf("Plain of plain text = %q", got)
+	}
+}
