@@ -24,6 +24,7 @@ import (
 //	enum:"a,b"             the value is one of these strings
 //	min:"1" max:"200"      bounds of a number, or of the length of a string or array
 //	desc:"text"            one sentence for the help text
+//	internal:"true"        the service fills the field; the published schema leaves it out
 //	schema:"name"          a field of type any, or a map of any, takes the named schema of
 //	                       namedSchemas (the shape the apply function checks)
 //
@@ -407,6 +408,9 @@ func schemaOf(t reflect.Type) map[string]any {
 	props := map[string]any{}
 	required := []string{}
 	for _, f := range argFields(t) {
+		if t.Field(f.index).Tag.Get("internal") == "true" {
+			continue
+		}
 		p := schemaOf(f.fieldType)
 		if name := f.schema; name != "" {
 			build, ok := namedSchemas[name]

@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Reads the subtitle text (the service or the caller reads the file) and adds one caption for each cue on a visual track: the cue time is the caption time, rounded to frames, and its words share the duration in proportion to their character counts. Markup tags and line breaks are dropped. start moves every cue later by that length. The cues must not overlap each other or the items of the track.
+Reads the subtitle text, never a file path (the caller reads the file and sends its content), and adds one caption for each cue on a visual track: the cue time is the caption time, rounded to frames, and its words share the duration in proportion to their character counts. Markup tags and line breaks are dropped. start moves every cue later by that length. The cues must not overlap each other or the items of the track.
 
 ## Arguments
 
@@ -19,7 +19,7 @@ Reads the subtitle text (the service or the caller reads the file) and adds one 
 | `format` | `srt`, `vtt` | no | Srt or vtt; default: vtt when the text starts with WEBVTT. |
 | `new_ids` | array of `string` | no | Ids for the created captions, in cue order. |
 | `start` | `string` | no | A length added to every cue; default 0. |
-| `text` | `string` | yes | The SRT or WebVTT text. |
+| `text` | `string` | yes | The SRT or WebVTT text itself, not a file path: read the file and pass its content. |
 | `track_id` | `string` | yes | A visual track that receives the captions.; pattern `^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 
 ## Errors
