@@ -67,6 +67,13 @@ func withTimeline(ctx context.Context, id string) context.Context {
 	return context.WithValue(ctx, timelineKey{}, id)
 }
 
+// fileBody is a body that is sent as it is: the bytes of a file (ImageImportFile). size is its length, or -1. The
+// server reads the bytes whatever the declared content type is (SDD-021 section 10.2).
+type fileBody struct {
+	r    io.Reader
+	size int64
+}
+
 // do sends one request and decodes a 2xx body into out, or the error envelope.
 func (c *Client) do(ctx context.Context, method, path string, query url.Values, body, out any) error {
 	if id, ok := ctx.Value(timelineKey{}).(string); ok && id != "" {
@@ -76,13 +83,18 @@ func (c *Client) do(ctx context.Context, method, path string, query url.Values, 
 
 	var reader io.Reader = http.NoBody
 
-	if body != nil {
-		raw, err := json.Marshal(body)
+	file, isFile := body.(fileBody)
+
+	switch {
+	case isFile:
+		reader = file.r
+	case body != nil:
+		encoded, err := json.Marshal(body)
 		if err != nil {
 			return internal("encode the request: %v", err)
 		}
 
-		reader = bytes.NewReader(raw)
+		reader = bytes.NewReader(encoded)
 	}
 
 	u := c.base + apiBase + path
@@ -97,6 +109,10 @@ func (c *Client) do(ctx context.Context, method, path string, query url.Values, 
 
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Authorization", "Bearer "+c.token)
+
+	if isFile {
+		req.ContentLength = file.size
+	}
 
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
