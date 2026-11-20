@@ -28,6 +28,7 @@ const apiDir = path.join(siteDir, "content", "generated", "api");
 const mcpDir = path.join(siteDir, "content", "generated", "mcp");
 const guideDir = path.join(siteDir, "content", "generated", "guide");
 const publishDir = path.join(siteDir, "content", "generated", "publish");
+const startDir = path.join(siteDir, "content", "generated", "getting-started");
 
 type Json = Record<string, unknown>;
 
@@ -258,15 +259,22 @@ function proseVariables(): { framework: string[]; deploy: string[] } {
 	};
 }
 
+/** The page for people who used the product under its former name (SDD-000 section 13): the only page that says it. */
+function migrationPage(): string {
+	const pairs = sddTable("docs/sdds/000-shared-definitions.md", /^### 13\.1 /m).map(([was, now]) => [esc(was ?? ""), esc(now ?? "")]);
+	const prose = fs.readFileSync(path.join(siteDir, "content", "fragments", "migration.md"), "utf8");
+	return page(
+		"Migrating from Vukem Video",
+		"Stuarty was called Vukem Video until v0.29.0: what is adopted, what is still read, and what to rename.",
+		[prose.trim(), table(["Former variable", "Variable"], pairs)].join("\n\n"),
+	);
+}
+
 function configuration(): string {
 	const rows = sddTable("docs/sdds/000-shared-definitions.md", /^## 10\. /m).map(([name, def, meaning]) => [
 		(name ?? "").replace(/\\/g, "\\\\").replace(/\|/g, "\\|"),
 		esc(def ?? ""),
 		esc(meaning ?? ""),
-	]);
-	const former = sddTable("docs/sdds/000-shared-definitions.md", /^### 13\.1 /m).map(([was, now]) => [
-		esc(was ?? ""),
-		esc(now ?? ""),
 	]);
 	return page(
 		"Configuration variables",
@@ -282,8 +290,7 @@ function configuration(): string {
 				.deploy.map((v) => code(v))
 				.join(", ")}.`,
 			"## Names before the rename",
-			"The product was called Vukem Video until `v0.29.0`. A variable below is still read, until `1.0.0`, when its new name is not set; each use prints one warning. The new name wins when both are set.",
-			table(["Former variable", "Variable"], former),
+			"The product has had another name. The variables of that name are still read for a while: see [Migrating from the former name](/docs/migration).",
 		].join("\n\n"),
 	);
 }
@@ -394,6 +401,7 @@ async function main() {
 	write("error-codes.mdx", errorCodes(), written);
 	write("configuration.mdx", configuration(), written);
 	write("glossary.mdx", glossary(), written);
+	write("migration.mdx", migrationPage(), written, startDir);
 	const networks = readNetworks(siteDir);
 	write("network-limits.mdx", networksOverview(networks), written);
 	for (const n of networks) write(`${n.network}.mdx`, networkPage(n, readSetup(siteDir, n.network)), written, publishDir);
@@ -417,7 +425,7 @@ async function main() {
 		fs.existsSync(dir)
 			? fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]))
 			: [];
-	for (const dir of [outDir, agentsDir, glossaryDir, apiDir, mcpDir, guideDir, publishDir]) for (const file of walk(dir)) if (!written.has(path.resolve(file))) fs.rmSync(file);
+	for (const dir of [outDir, agentsDir, glossaryDir, apiDir, mcpDir, guideDir, publishDir, startDir]) for (const file of walk(dir)) if (!written.has(path.resolve(file))) fs.rmSync(file);
 
 	console.log(`reference: ${written.size} pages`);
 }
