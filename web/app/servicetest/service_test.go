@@ -1257,7 +1257,10 @@ func TestCommandHelp(t *testing.T) {
 		t.Fatalf("layer.add_text with no domain = %+v, %v", img, err)
 	}
 
-	_, err = e.svc.CommandHelp(e.as(ui), service.CommandHelpRequest{Name: "layer.add_text", Domain: command.DomainVideo})
+	_, err = e.svc.CommandHelp(
+		e.as(ui),
+		service.CommandHelpRequest{Name: "layer.add_text", Domain: command.DomainVideo},
+	)
 	if se := serviceError(t, err); se.Code != command.CodeUnknownCommand {
 		t.Errorf("layer.add_text in the video domain = %+v, want E_UNKNOWN_COMMAND", se)
 	}
