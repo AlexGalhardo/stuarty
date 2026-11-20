@@ -165,6 +165,12 @@ func TestParseSlot(t *testing.T) {
 		t.Errorf("slot = %+v, %v", s, err)
 	}
 
+	// An instant keeps the millisecond the store keeps, so the answer of a schedule is the later read (VV-285).
+	s, err = ParseSlot("2026-11-20T09:00:00.1234567-03:00", "", "UTC")
+	if err != nil || !s.At.Equal(at(t, "2026-11-20T12:00:00.123Z")) || s.At.Location() != time.UTC {
+		t.Errorf("slot = %+v, %v", s, err)
+	}
+
 	// The default zone reads a local time.
 	s, err = ParseSlot("2026-03-08T02:30", "", "America/New_York")
 	if err != nil || s.Adjustment != AdjustGap || s.Zone != "America/New_York" {
