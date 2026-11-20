@@ -41,7 +41,7 @@ A creator with a small rented server runs one command and has their own Stuarty 
 - [x] 3. Write `install.sh` and test it in a clean container that has Docker available, or with a local domain and Caddy's internal certificates. Verify: `bash deploy/test/install-test.sh` (new) exits 0.
 - [x] 4. Implement the consistent workspace backup command if missing, and `backup.sh` and `restore.sh`. Verify: `go test ./service/... -run TestWorkspaceBackup` passes and `bash deploy/test/backup-restore-test.sh` (new) exits 0 with matching checksums.
 - [x] 5. Write `update.sh` with rollback. Verify: `bash deploy/test/update-test.sh` (new) exits 0, including a forced health failure that rolls back.
-- [ ] 6. Check hardening. Verify: `bash scripts/image-smoke.sh stuarty:local` passes with the non-root and read-only checks.
+- [x] 6. Check hardening. Verify: `bash scripts/image-smoke.sh stuarty:local` passes with the non-root and read-only checks.
 - [ ] 7. Write the installation, update, backup and restore guide in English and in Portuguese. Verify: `task lint:md` exits 0 and `bash scripts/docs-commands-smoke.sh` passes for the guide's commands.
 - [ ] 8. One real installation on a rented server by the author, or marked as not verified. Verify: the result or the note is in the hand-off.
 
