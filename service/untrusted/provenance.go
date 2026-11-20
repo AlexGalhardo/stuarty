@@ -70,14 +70,10 @@ var Provenance = map[string]string{
 	"service.SocialChoice.Title":            SourceNetworkText,
 	"service.PublishValidateResult.Summary": SourceProjectText,
 
-	// the calendar of publications (SDD-020 section 23): the text of a post and what the network named
-	"publish.Publication.Title":  SourceProjectText,
-	"publish.Publication.Text":   SourceProjectText,
-	"publish.Fields.Title":       SourceProjectText,
-	"publish.Fields.Description": SourceProjectText,
-	"publish.Fields.Tags":        SourceProjectText,
-	"publish.Target.RemoteID":    SourceNetworkText,
-	"publish.Target.URL":         SourceNetworkText,
+	// the sign-in to an AI provider (SDD-016 section 12): the name a person gave the connection, and who the
+	// provider says the account is
+	"service.ProviderSignIn.Label":   SourceProjectText,
+	"service.ProviderSignIn.Account": SourceNetworkText,
 
 	// the asset library (SDD-011 section 14): the text a person or an agent wrote about a file
 	"assets.LibraryAsset.Description": SourceMetadata,
