@@ -223,7 +223,7 @@ func (s *svc) assetBatch(
 	}
 
 	_, err = s.edit(WithCaller(ctx, c), EditRequest{
-		ProjectID: project.ID, BaseRevision: head.Revision, DryRun: dryRun,
+		ProjectID: project.ID, TimelineID: project.ID, BaseRevision: head.Revision, DryRun: dryRun,
 		Operations: []command.Operation{{Op: op, Args: args}},
 	}, true)
 

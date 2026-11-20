@@ -594,7 +594,7 @@ func (s *svc) addAsset(ctx context.Context, project *ProjectRow, pa ProjectAsset
 	}
 
 	_, err = s.edit(WithCaller(ctx, caller), EditRequest{
-		ProjectID: project.ID, BaseRevision: head.Revision, IdempotencyKey: key,
+		ProjectID: project.ID, TimelineID: project.ID, BaseRevision: head.Revision, IdempotencyKey: key,
 		Operations: []command.Operation{{Op: "asset.add", Args: args}},
 	}, true)
 	if err != nil {
