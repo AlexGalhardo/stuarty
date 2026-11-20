@@ -1,6 +1,6 @@
 ---
 title: "lint"
-description: "Lint project. Check a project for problems and get them as text: code, severity (error or warning), item, message, hint."
+description: "Lint project. Check a project for problems and get them as text: code, severity, item, message, hint."
 wide: true
 ---
 
@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Check a project for problems and get them as text: code, severity (error or warning), item, message, hint. Errors block export; warnings do not. Run it after edits and before export. Runs every rule, unlike the lint block of an edit result (lint_scope fast). Rules include gaps, missing media, text outside the safe area, audio clipping and unfilled template slots.
+Check a project for problems and get them as text: code, severity, item, message, hint. Errors block export. Run it after edits, before export. Runs every rule, unlike the lint block of an edit result (lint_scope fast). Rules include gaps, missing media, text outside the safe area, audio clipping, unfilled slots.
 
 ## Behaviour
 
@@ -28,6 +28,7 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `project_id` | `string` | yes | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
+| `timeline_id` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
 | `severity` | `error`, `warning` | no | default `"warning"` |
 | `cursor` | `string` | no |  |
 | `limit` | `integer` | no | min 1; max 100; default `25` |

@@ -1,0 +1,8 @@
+{
+  "code": "E_VALIDATION",
+  "hint": "Remove max_width and set w.",
+  "message": "max_width is not a key of a text layer: its width is w.",
+  "op_index": 0,
+  "path": "args.style.max_width",
+  "retryable": false
+}

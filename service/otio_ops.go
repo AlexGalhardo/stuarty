@@ -20,7 +20,8 @@ const otioFileMax = 16 << 20
 
 // ProjectOtioExportRequest asks for the OpenTimelineIO file of the head revision (SDD-001 section 9).
 type ProjectOtioExportRequest struct {
-	ProjectID string `json:"project_id"`
+	ProjectID  string `json:"project_id"`
+	TimelineID string `json:"timeline_id,omitempty"` // SDD-003 section 1.7
 }
 
 // OtioLost is an item an OpenTimelineIO conversion could not carry. Its name and feature come from
@@ -87,6 +88,7 @@ type ProjectOtioExportResult struct {
 // project as one batch.
 type ProjectOtioImportRequest struct {
 	ProjectID    string `json:"project_id"`
+	TimelineID   string `json:"timeline_id,omitempty"` // SDD-003 section 1.7
 	BaseRevision int64  `json:"base_revision"`
 	Path         string `json:"path"` // absolute
 	DryRun       bool   `json:"dry_run,omitempty"`
@@ -118,6 +120,10 @@ type ProjectOtioImportResult struct {
 func (s *svc) ProjectOtioExport(ctx context.Context, req ProjectOtioExportRequest) (*ProjectOtioExportResult, error) {
 	c, err := authorize(ctx, "ProjectOtioExport", req.ProjectID)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
 		return nil, err
 	}
 
@@ -155,6 +161,10 @@ func (s *svc) ProjectOtioImport(ctx context.Context, req ProjectOtioImportReques
 	}
 
 	if err := s.heavyLimit(ctx, c); err != nil {
+		return nil, err
+	}
+
+	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
 		return nil, err
 	}
 

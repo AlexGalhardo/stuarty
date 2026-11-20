@@ -1,0 +1,24 @@
+[
+  {
+    "changes": {
+      "h": [
+        144,
+        87
+      ],
+      "style": [
+        {
+          "color": "#FFE600",
+          "font_family": "Anton",
+          "size": 120
+        },
+        null
+      ],
+      "text": [
+        "HOW IT WORKS",
+        "Plain"
+      ]
+    },
+    "id": "lyr_cccccccccc",
+    "kind": "layer.updated"
+  }
+]

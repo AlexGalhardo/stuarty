@@ -1,0 +1,8 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "hint": "Use a group, or add the layer at the top level.",
+  "message": "Layer lyr_cccccccccc is a text; only a group has children.",
+  "op_index": 0,
+  "path": "args.parent",
+  "retryable": false
+}

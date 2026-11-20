@@ -346,7 +346,8 @@ export class FixtureServer implements Transport {
 	async send(request: TransportRequest): Promise<TransportResponse> {
 		this.requests.push(request);
 		if (this.dropNetwork) throw new TransportError("network", "offline");
-		const key = `${request.method} ${request.path}`;
+		// The editor says the timeline in every call (SDD-003 section 1.7); the routes below are about the path.
+		const key = `${request.method} ${request.path.replace(/[?&]timeline_id=[^&]*/, "")}`;
 		const failure = this.failures.findIndex((f) => key.startsWith(f.match));
 		if (failure >= 0) {
 			const [scripted] = this.failures.splice(failure, 1);

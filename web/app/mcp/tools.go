@@ -10,6 +10,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/textview"
+	"github.com/AlexGalhardo/stuarty/service/untrusted"
 )
 
 // handlers are the tools whose Service methods exist; a tool without one is in
@@ -33,6 +34,9 @@ func (a *adapter) handlers() map[string]callFunc {
 		"view":           view,
 		"font_import":    fontImport,
 		"connection":     connection,
+		"image":          imageTool,
+		"project_item":   projectItem,
+		"library":        libraryTool,
 	}
 }
 
@@ -99,9 +103,19 @@ func projectCreate(ctx context.Context, svc service.Service, raw json.RawMessage
 		Preset string `json:"preset"`
 		FPS    fpsArg `json:"fps"`
 		ID     string `json:"id"`
+		From   string `json:"from"`
 	}](raw)
 	if err != nil {
 		return nil, err
+	}
+
+	if in.From != "" {
+		dup, derr := svc.ProjectDuplicate(ctx, service.ProjectDuplicateRequest{ProjectID: in.From, Name: in.Name})
+		if derr != nil {
+			return nil, derr
+		}
+
+		return &toolOutput{value: dup, text: dup.Text}, nil
 	}
 
 	res, err := svc.ProjectCreate(
@@ -117,17 +131,27 @@ func projectCreate(ctx context.Context, svc service.Service, raw json.RawMessage
 
 func projectGet(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
-		ProjectID string `json:"project_id"`
-		Detail    string `json:"detail"`
+		ProjectID  string `json:"project_id"`
+		TimelineID string `json:"timeline_id"`
+		Detail     string `json:"detail"`
 		pageArgs
 	}](raw)
 	if err != nil {
 		return nil, err
 	}
 
+	if in.Detail == "overview" {
+		return projectDescribe(ctx, svc, in.ProjectID, 0)
+	}
+
 	res, err := svc.ProjectGet(
 		ctx,
-		service.ProjectGetRequest{ProjectID: in.ProjectID, Detail: in.Detail, Page: in.page()},
+		service.ProjectGetRequest{
+			ProjectID:  in.ProjectID,
+			TimelineID: in.TimelineID,
+			Detail:     in.Detail,
+			Page:       in.page(),
+		},
 	)
 	if err != nil {
 		return nil, err
@@ -172,6 +196,7 @@ func projectTrash(ctx context.Context, svc service.Service, raw json.RawMessage)
 func edit(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
 		ProjectID      string              `json:"project_id"`
+		TimelineID     string              `json:"timeline_id"`
 		BaseRevision   int64               `json:"base_revision"`
 		Operations     []command.Operation `json:"operations"`
 		IdempotencyKey string              `json:"idempotency_key"`
@@ -182,7 +207,7 @@ func edit(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolO
 	}
 
 	res, err := svc.Edit(ctx, service.EditRequest{
-		ProjectID: in.ProjectID, BaseRevision: in.BaseRevision, Operations: in.Operations,
+		ProjectID: in.ProjectID, TimelineID: in.TimelineID, BaseRevision: in.BaseRevision, Operations: in.Operations,
 		IdempotencyKey: in.IdempotencyKey, DryRun: in.DryRun,
 	})
 	if err != nil {
@@ -194,13 +219,14 @@ func edit(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolO
 
 func commandHelp(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
-		Name string `json:"name"`
+		Name   string `json:"name"`
+		Domain string `json:"domain"`
 	}](raw)
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := svc.CommandHelp(ctx, service.CommandHelpRequest{Name: in.Name})
+	res, err := svc.CommandHelp(ctx, service.CommandHelpRequest{Name: in.Name, Domain: in.Domain})
 	if err != nil {
 		return nil, err
 	}
@@ -212,9 +238,10 @@ func commandHelp(ctx context.Context, svc service.Service, raw json.RawMessage) 
 // and redo.
 func history(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
-		ProjectID string `json:"project_id"`
-		Action    string `json:"action"`
-		Actor     string `json:"actor"`
+		ProjectID  string `json:"project_id"`
+		TimelineID string `json:"timeline_id"`
+		Action     string `json:"action"`
+		Actor      string `json:"actor"`
 		pageArgs
 	}](raw)
 	if err != nil {
@@ -223,7 +250,7 @@ func history(ctx context.Context, svc service.Service, raw json.RawMessage) (*to
 
 	switch in.Action {
 	case "undo", "redo":
-		req := service.UndoRequest{ProjectID: in.ProjectID}
+		req := service.UndoRequest{ProjectID: in.ProjectID, TimelineID: in.TimelineID}
 
 		var res *service.UndoResult
 
@@ -241,7 +268,12 @@ func history(ctx context.Context, svc service.Service, raw json.RawMessage) (*to
 	default:
 		res, err := svc.HistoryList(
 			ctx,
-			service.HistoryListRequest{ProjectID: in.ProjectID, Actor: in.Actor, Page: in.page()},
+			service.HistoryListRequest{
+				ProjectID:  in.ProjectID,
+				TimelineID: in.TimelineID,
+				Actor:      in.Actor,
+				Page:       in.page(),
+			},
 		)
 		if err != nil {
 			return nil, err
@@ -253,15 +285,19 @@ func history(ctx context.Context, svc service.Service, raw json.RawMessage) (*to
 
 func lintTool(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
-		ProjectID string `json:"project_id"`
-		Severity  string `json:"severity"`
+		ProjectID  string `json:"project_id"`
+		TimelineID string `json:"timeline_id"`
+		Severity   string `json:"severity"`
 		pageArgs
 	}](raw)
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := svc.Lint(ctx, service.LintRequest{ProjectID: in.ProjectID, Severity: in.Severity, Page: in.page()})
+	res, err := svc.Lint(
+		ctx,
+		service.LintRequest{ProjectID: in.ProjectID, TimelineID: in.TimelineID, Severity: in.Severity, Page: in.page()},
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -271,10 +307,11 @@ func lintTool(ctx context.Context, svc service.Service, raw json.RawMessage) (*t
 
 func mediaImport(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
-		ProjectID string   `json:"project_id"`
-		Paths     []string `json:"paths"`
-		AssetIDs  []string `json:"asset_ids"`
-		WaitMS    *int     `json:"wait_ms"`
+		ProjectID  string   `json:"project_id"`
+		TimelineID string   `json:"timeline_id"`
+		Paths      []string `json:"paths"`
+		AssetIDs   []string `json:"asset_ids"`
+		WaitMS     *int     `json:"wait_ms"`
 	}](raw)
 	if err != nil {
 		return nil, err
@@ -301,7 +338,10 @@ func mediaImport(ctx context.Context, svc service.Service, raw json.RawMessage) 
 		wait = *in.WaitMS
 	}
 
-	res, err := svc.MediaImport(ctx, service.MediaImportRequest{ProjectID: in.ProjectID, Files: files, WaitMS: wait})
+	res, err := svc.MediaImport(
+		ctx,
+		service.MediaImportRequest{ProjectID: in.ProjectID, TimelineID: in.TimelineID, Files: files, WaitMS: wait},
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -317,6 +357,7 @@ const defaultImportWaitMS = 10000
 func mediaInspect(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
 		ProjectID  string   `json:"project_id"`
+		TimelineID string   `json:"timeline_id"`
 		AssetID    string   `json:"asset_id"`
 		Sections   []string `json:"sections"`
 		MinSilence string   `json:"min_silence"`
@@ -327,7 +368,10 @@ func mediaInspect(ctx context.Context, svc service.Service, raw json.RawMessage)
 	}
 
 	if in.AssetID == "" {
-		res, lerr := svc.MediaList(ctx, service.MediaListRequest{ProjectID: in.ProjectID, Page: in.page()})
+		res, lerr := svc.MediaList(
+			ctx,
+			service.MediaListRequest{ProjectID: in.ProjectID, TimelineID: in.TimelineID, Page: in.page()},
+		)
 		if lerr != nil {
 			return nil, lerr
 		}
@@ -336,7 +380,12 @@ func mediaInspect(ctx context.Context, svc service.Service, raw json.RawMessage)
 	}
 
 	res, err := svc.MediaInspect(ctx, service.MediaInspectRequest{
-		ProjectID: in.ProjectID, AssetID: in.AssetID, Sections: in.Sections, MinSilence: in.MinSilence, Page: in.page(),
+		ProjectID:  in.ProjectID,
+		TimelineID: in.TimelineID,
+		AssetID:    in.AssetID,
+		Sections:   in.Sections,
+		MinSilence: in.MinSilence,
+		Page:       in.page(),
 	})
 	if err != nil {
 		return nil, err
@@ -347,17 +396,18 @@ func mediaInspect(ctx context.Context, svc service.Service, raw json.RawMessage)
 
 func jobStart(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
-		ProjectID string          `json:"project_id"`
-		Kind      string          `json:"kind"`
-		Args      json.RawMessage `json:"args"`
-		WaitMS    int             `json:"wait_ms"`
+		ProjectID  string          `json:"project_id"`
+		TimelineID string          `json:"timeline_id"`
+		Kind       string          `json:"kind"`
+		Args       json.RawMessage `json:"args"`
+		WaitMS     int             `json:"wait_ms"`
 	}](raw)
 	if err != nil {
 		return nil, err
 	}
 
 	res, err := svc.JobStart(ctx, service.JobStartRequest{
-		ProjectID: in.ProjectID, Kind: in.Kind, Args: in.Args, WaitMS: in.WaitMS,
+		ProjectID: in.ProjectID, TimelineID: in.TimelineID, Kind: in.Kind, Args: in.Args, WaitMS: in.WaitMS,
 	})
 	if err != nil {
 		return nil, err
@@ -385,10 +435,11 @@ func jobCancel(ctx context.Context, svc service.Service, raw json.RawMessage) (*
 
 func jobGet(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
-		JobID     string `json:"job_id"`
-		ProjectID string `json:"project_id"`
-		State     string `json:"state"`
-		WaitMS    int    `json:"wait_ms"`
+		JobID      string `json:"job_id"`
+		ProjectID  string `json:"project_id"`
+		TimelineID string `json:"timeline_id"`
+		State      string `json:"state"`
+		WaitMS     int    `json:"wait_ms"`
 	}](raw)
 	if err != nil {
 		return nil, err
@@ -403,7 +454,10 @@ func jobGet(ctx context.Context, svc service.Service, raw json.RawMessage) (*too
 
 		return &toolOutput{value: res, text: res.Text}, nil
 	case in.ProjectID != "":
-		res, lerr := svc.JobList(ctx, service.JobListRequest{ProjectID: in.ProjectID, State: in.State})
+		res, lerr := svc.JobList(
+			ctx,
+			service.JobListRequest{ProjectID: in.ProjectID, TimelineID: in.TimelineID, State: in.State},
+		)
 		if lerr != nil {
 			return nil, lerr
 		}
@@ -421,14 +475,15 @@ func jobGet(ctx context.Context, svc service.Service, raw json.RawMessage) (*too
 // or a contact sheet. It is the only tool that returns an image block.
 func view(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
-		ProjectID string   `json:"project_id"`
-		Mode      string   `json:"mode"`
-		At        string   `json:"at"`
-		Times     []string `json:"times"`
-		From      string   `json:"from"`
-		Until     string   `json:"until"`
-		Count     int      `json:"count"`
-		MaxTokens int      `json:"max_tokens"`
+		ProjectID  string   `json:"project_id"`
+		TimelineID string   `json:"timeline_id"`
+		Mode       string   `json:"mode"`
+		At         string   `json:"at"`
+		Times      []string `json:"times"`
+		From       string   `json:"from"`
+		Until      string   `json:"until"`
+		Count      int      `json:"count"`
+		MaxTokens  int      `json:"max_tokens"`
 	}](raw)
 	if err != nil {
 		return nil, err
@@ -445,12 +500,17 @@ func view(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolO
 		}
 
 		res, err = svc.ViewSheet(ctx, service.ViewSheetRequest{
-			ProjectID: in.ProjectID, Times: in.Times, From: in.From, Until: in.Until, Count: in.Count,
-			MaxTokens: in.MaxTokens,
+			ProjectID:  in.ProjectID,
+			TimelineID: in.TimelineID,
+			Times:      in.Times,
+			From:       in.From,
+			Until:      in.Until,
+			Count:      in.Count,
+			MaxTokens:  in.MaxTokens,
 		})
 	} else {
 		res, err = svc.ViewFrame(ctx, service.ViewFrameRequest{
-			ProjectID: in.ProjectID, At: in.At, MaxTokens: in.MaxTokens,
+			ProjectID: in.ProjectID, TimelineID: in.TimelineID, At: in.At, MaxTokens: in.MaxTokens,
 		})
 	}
 
@@ -514,6 +574,7 @@ func template(ctx context.Context, svc service.Service, raw json.RawMessage) (*t
 		Action      string                       `json:"action"`
 		TemplateID  string                       `json:"template_id"`
 		ProjectID   string                       `json:"project_id"`
+		TimelineID  string                       `json:"timeline_id"`
 		ID          string                       `json:"id"`
 		Name        string                       `json:"name"`
 		Description string                       `json:"description"`
@@ -539,7 +600,7 @@ func template(ctx context.Context, svc service.Service, raw json.RawMessage) (*t
 		return &toolOutput{value: res, text: res.Text}, nil
 	case "save":
 		res, err := svc.TemplateSave(ctx, service.TemplateSaveRequest{
-			ProjectID: in.ProjectID, Name: in.Name, Description: in.Description,
+			ProjectID: in.ProjectID, TimelineID: in.TimelineID, Name: in.Name, Description: in.Description,
 		})
 		if err != nil {
 			return nil, err
@@ -617,4 +678,129 @@ func connection(ctx context.Context, svc service.Service, raw json.RawMessage) (
 	}
 
 	return &toolOutput{value: res, text: strings.Join(lines, "\n")}, nil
+}
+
+// projectDescribe is project_get with detail overview: the description of the whole production (SDD-003 section
+// 2.3.1), which has the project id, the name, the items and the text, and not the head of a timeline.
+func projectDescribe(
+	ctx context.Context, svc service.Service, projectID string, maxTokens int,
+) (*toolOutput, error) {
+	res, err := svc.ProjectDescribe(ctx, service.ProjectDescribeRequest{ProjectID: projectID, MaxTokens: maxTokens})
+	if err != nil {
+		return nil, err
+	}
+
+	return &toolOutput{value: res, text: res.Text}, nil
+}
+
+// projectItem is five operations behind one tool (SDD-003 section 4.1): add, move, rename, trash and restore.
+func projectItem(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
+	in, err := decode[struct {
+		Action    string  `json:"action"`
+		ProjectID string  `json:"project_id"`
+		ItemID    string  `json:"item_id"`
+		Kind      string  `json:"kind"`
+		Title     string  `json:"title"`
+		Text      *string `json:"text"`
+		Preset    string  `json:"preset"`
+		FPS       fpsArg  `json:"fps"`
+		JobID     string  `json:"job_id"`
+		Position  *int    `json:"position"`
+	}](raw)
+	if err != nil {
+		return nil, err
+	}
+
+	if in.Action == "brief" {
+		return briefTool(ctx, svc, in.ProjectID, in.Text)
+	}
+
+	var res *service.ProjectItemResult
+
+	switch in.Action {
+	case "add":
+		res, err = svc.ProjectItemAdd(ctx, service.ProjectItemAddRequest{
+			ProjectID: in.ProjectID, Kind: in.Kind, Title: in.Title, Position: in.Position, Text: deref(in.Text),
+			Preset: in.Preset, FPS: string(in.FPS), JobID: in.JobID,
+		})
+	case "move":
+		if in.Position == nil {
+			return nil, missingArg("position", in.Action)
+		}
+
+		res, err = svc.ProjectItemMove(ctx, service.ProjectItemMoveRequest{
+			ProjectID: in.ProjectID, ItemID: in.ItemID, Position: *in.Position,
+		})
+	case "rename":
+		res, err = svc.ProjectItemRename(ctx, service.ProjectItemRenameRequest{
+			ProjectID: in.ProjectID, ItemID: in.ItemID, Title: in.Title,
+		})
+	case "trash":
+		res, err = svc.ProjectItemTrash(
+			ctx,
+			service.ProjectItemTrashRequest{ProjectID: in.ProjectID, ItemID: in.ItemID},
+		)
+	case "restore":
+		res, err = svc.ProjectItemRestore(
+			ctx,
+			service.ProjectItemTrashRequest{ProjectID: in.ProjectID, ItemID: in.ItemID},
+		)
+	default:
+		return nil, missingArg("action", "project_item")
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &toolOutput{value: res, text: res.Text}, nil
+}
+
+func missingArg(name, action string) error {
+	return &service.Error{
+		Code: command.CodeValidation, Path: name, Message: name + " is required for " + action + ".",
+	}
+}
+
+func deref(s *string) string {
+	if s == nil {
+		return ""
+	}
+
+	return *s
+}
+
+// briefTool is project_item with action brief: with text it writes the brief, without it reads it.
+func briefTool(ctx context.Context, svc service.Service, projectID string, text *string) (*toolOutput, error) {
+	var (
+		res *service.BriefResult
+		err error
+	)
+
+	if text == nil {
+		res, err = svc.BriefGet(ctx, service.BriefGetRequest{ProjectID: projectID})
+	} else {
+		res, err = svc.BriefSet(ctx, service.BriefSetRequest{ProjectID: projectID, Text: *text})
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &toolOutput{value: res, text: briefTextOf(res)}, nil
+}
+
+// briefTextOf is the text of a brief result: the Markdown in a block that says it is data, or the note that
+// there is none.
+func briefTextOf(res *service.BriefResult) string {
+	if res.ItemID == "" {
+		return "the project has no brief; write one with project_item action brief and text"
+	}
+
+	return textview.Note + "\n" + untrusted.Block(
+		untrusted.SourceProjectText,
+		untrusted.Attrs{"project": res.ProjectID},
+		res.Text,
+		0,
+	)
 }

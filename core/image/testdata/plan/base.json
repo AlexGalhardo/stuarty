@@ -1,0 +1,269 @@
+{
+  "background": "#101820",
+  "frame": 0,
+  "height": 720,
+  "layers": [
+    {
+      "bitmap": {
+        "active_word": -1,
+        "kind": "shape",
+        "pixel_scale": 1,
+        "shape": {
+          "fill": "#101820",
+          "height": 720,
+          "radius": 0,
+          "shape": "rect",
+          "stroke_color": "#000000",
+          "stroke_width": 0,
+          "width": 1280
+        },
+        "style": {
+          "align": "",
+          "background_padding": 0,
+          "background_radius": 0,
+          "color": "",
+          "font_family": "",
+          "font_weight": 0,
+          "line_height": 0,
+          "max_width": 0,
+          "shadow_blur": 0,
+          "shadow_color": "",
+          "shadow_dx": 0,
+          "shadow_dy": 0,
+          "size": 0,
+          "stroke_color": "",
+          "stroke_width": 0,
+          "uppercase": false
+        }
+      },
+      "cx": 640,
+      "cy": 360,
+      "h": 720,
+      "item": "lyr_aaaaaaaaaa",
+      "kind": "bitmap",
+      "opacity": 1,
+      "rotation": 0,
+      "scale": 1,
+      "w": 1280
+    },
+    {
+      "asset": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "asset_kind": "image",
+      "crop": {
+        "h": 900,
+        "w": 1600,
+        "x": 0,
+        "y": 0
+      },
+      "cx": 640,
+      "cy": 360,
+      "h": 720,
+      "item": "lyr_bbbbbbbbbb",
+      "kind": "media",
+      "opacity": 1,
+      "rotation": 0,
+      "scale": 1,
+      "w": 1280
+    },
+    {
+      "bitmap": {
+        "active_word": -1,
+        "kind": "text",
+        "pixel_scale": 1,
+        "style": {
+          "align": "center",
+          "background_padding": 16,
+          "background_radius": 0,
+          "color": "#FFE600",
+          "font_family": "Anton",
+          "font_weight": 400,
+          "line_height": 1.2,
+          "max_width": 1000,
+          "shadow_blur": 0,
+          "shadow_color": "#00000080",
+          "shadow_dx": 0,
+          "shadow_dy": 0,
+          "size": 120,
+          "stroke_color": "#000000",
+          "stroke_width": 0,
+          "uppercase": false
+        },
+        "text": "HOW IT WORKS"
+      },
+      "cx": 620,
+      "cy": 372,
+      "h": 144,
+      "item": "lyr_cccccccccc",
+      "kind": "bitmap",
+      "opacity": 1,
+      "rotation": 0,
+      "scale": 1,
+      "w": 720
+    },
+    {
+      "bitmap": {
+        "active_word": -1,
+        "kind": "shape",
+        "pixel_scale": 1,
+        "shape": {
+          "fill": "#E63946",
+          "height": 40,
+          "radius": 0,
+          "shape": "rect",
+          "stroke_color": "#000000",
+          "stroke_width": 0,
+          "width": 600
+        },
+        "style": {
+          "align": "",
+          "background_padding": 0,
+          "background_radius": 0,
+          "color": "",
+          "font_family": "",
+          "font_weight": 0,
+          "line_height": 0,
+          "max_width": 0,
+          "shadow_blur": 0,
+          "shadow_color": "",
+          "shadow_dx": 0,
+          "shadow_dy": 0,
+          "size": 0,
+          "stroke_color": "",
+          "stroke_width": 0,
+          "uppercase": false
+        }
+      },
+      "cx": 400,
+      "cy": 520,
+      "h": 40,
+      "item": "lyr_dddddddddd",
+      "kind": "bitmap",
+      "opacity": 1,
+      "rotation": 0,
+      "scale": 1,
+      "w": 600
+    },
+    {
+      "bitmap": {
+        "active_word": -1,
+        "kind": "shape",
+        "pixel_scale": 1,
+        "shape": {
+          "fill": "#FFFFFF",
+          "height": 100,
+          "radius": 0,
+          "shape": "ellipse",
+          "stroke_color": "#000000",
+          "stroke_width": 0,
+          "width": 100
+        },
+        "style": {
+          "align": "",
+          "background_padding": 0,
+          "background_radius": 0,
+          "color": "",
+          "font_family": "",
+          "font_weight": 0,
+          "line_height": 0,
+          "max_width": 0,
+          "shadow_blur": 0,
+          "shadow_color": "",
+          "shadow_dx": 0,
+          "shadow_dy": 0,
+          "size": 0,
+          "stroke_color": "",
+          "stroke_width": 0,
+          "uppercase": false
+        }
+      },
+      "cx": 100,
+      "cy": 90,
+      "h": 100,
+      "item": "lyr_ffffffffff",
+      "kind": "bitmap",
+      "opacity": 0.8,
+      "rotation": 0,
+      "scale": 1,
+      "w": 100
+    },
+    {
+      "bitmap": {
+        "active_word": -1,
+        "kind": "text",
+        "pixel_scale": 1,
+        "style": {
+          "align": "center",
+          "background_padding": 16,
+          "background_radius": 0,
+          "color": "#FFFFFF",
+          "font_family": "Inter",
+          "font_weight": 700,
+          "line_height": 1.2,
+          "max_width": 80,
+          "shadow_blur": 0,
+          "shadow_color": "#00000080",
+          "shadow_dx": 0,
+          "shadow_dy": 0,
+          "size": 72,
+          "stroke_color": "#000000",
+          "stroke_width": 0,
+          "uppercase": false
+        },
+        "text": "NEW"
+      },
+      "cx": 100,
+      "cy": 113.2,
+      "h": 86.4,
+      "item": "lyr_gggggggggg",
+      "kind": "bitmap",
+      "opacity": 0.8,
+      "rotation": 0,
+      "scale": 1,
+      "w": 108
+    },
+    {
+      "bitmap": {
+        "active_word": -1,
+        "kind": "shape",
+        "pixel_scale": 1,
+        "shape": {
+          "fill": "#00FF00",
+          "height": 50,
+          "radius": 0,
+          "shape": "rect",
+          "stroke_color": "#000000",
+          "stroke_width": 0,
+          "width": 50
+        },
+        "style": {
+          "align": "",
+          "background_padding": 0,
+          "background_radius": 0,
+          "color": "",
+          "font_family": "",
+          "font_weight": 0,
+          "line_height": 0,
+          "max_width": 0,
+          "shadow_blur": 0,
+          "shadow_color": "",
+          "shadow_dx": 0,
+          "shadow_dy": 0,
+          "size": 0,
+          "stroke_color": "",
+          "stroke_width": 0,
+          "uppercase": false
+        }
+      },
+      "cx": 35,
+      "cy": 35,
+      "h": 50,
+      "item": "lyr_hhhhhhhhhh",
+      "kind": "bitmap",
+      "opacity": 1,
+      "rotation": 0,
+      "scale": 1,
+      "w": 50
+    }
+  ],
+  "width": 1280
+}

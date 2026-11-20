@@ -6,6 +6,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/connections"
+	"github.com/AlexGalhardo/stuarty/service/library"
 
 	"github.com/AlexGalhardo/vukem/database"
 )
@@ -15,6 +16,7 @@ import (
 type repos struct{ ex database.Executor }
 
 func (r repos) Projects() service.ProjectRepo        { return projectRepo(r) }
+func (r repos) Productions() service.ProductionRepo  { return productionRepo(r) }
 func (r repos) Operations() service.OperationRepo    { return operationRepo(r) }
 func (r repos) Idempotency() service.IdempotencyRepo { return idempotencyRepo(r) }
 func (r repos) Assets() service.AssetRepo            { return assetRepo(r) }
@@ -25,6 +27,8 @@ func (r repos) Audit() service.AuditRepo             { return auditRepo(r) }
 func (r repos) Fonts() service.FontRepo              { return fontRepo(r) }
 func (r repos) BrandKit() service.BrandKitRepo       { return brandKitRepo(r) }
 func (r repos) Connections() connections.Store       { return connectionRepo(r) }
+func (r repos) Images() service.ImageRepo            { return imageRepo(r) }
+func (r repos) Library() library.Index               { return libraryRepo(r) }
 
 // nullJSON stores an empty raw message as NULL.
 func nullJSON(m json.RawMessage) any {

@@ -207,6 +207,31 @@
         },
         "type": "object"
       },
+      "BriefResult": {
+        "properties": {
+          "item_id": {
+            "type": "string"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
       "CaptionStyle": {
         "properties": {
           "align": {
@@ -1240,6 +1265,326 @@
         },
         "type": "object"
       },
+      "ImageCreateResult": {
+        "properties": {
+          "height": {
+            "type": "integer"
+          },
+          "image_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "text": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ImageDescribeResult": {
+        "properties": {
+          "background": {
+            "type": "string"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "type": "array"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "image_id": {
+            "type": "string"
+          },
+          "layers": {
+            "items": {
+              "$ref": "#/components/schemas/Layer"
+            },
+            "type": "array",
+            "x-untrusted": true
+          },
+          "lint": {
+            "$ref": "#/components/schemas/LintTotals"
+          },
+          "name": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "template": {
+            "type": "boolean"
+          },
+          "text": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ImageEditResult": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "applied": {
+            "type": "boolean"
+          },
+          "base_revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "created": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "description": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "diff": {
+            "items": {
+              "$ref": "#/components/schemas/Change"
+            },
+            "type": "array"
+          },
+          "dry_run": {
+            "type": "boolean"
+          },
+          "effective": {
+            "items": {
+              "$ref": "#/components/schemas/OpEffect"
+            },
+            "type": "array"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "type": "array"
+          },
+          "image_id": {
+            "type": "string"
+          },
+          "lint": {
+            "$ref": "#/components/schemas/LintTotals"
+          },
+          "replayed": {
+            "type": "boolean"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ImageExportResult": {
+        "properties": {
+          "bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "format": {
+            "type": "string"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "image_id": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ImageListResult": {
+        "properties": {
+          "images": {
+            "items": {
+              "$ref": "#/components/schemas/ImageSummary"
+            },
+            "type": "array"
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ImageOperation": {
+        "properties": {
+          "args": {
+            "additionalProperties": {},
+            "description": "The arguments of the command.",
+            "type": "object"
+          },
+          "op": {
+            "description": "A command name, as listed by GET /commands?domain=image.",
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "op"
+        ],
+        "type": "object"
+      },
+      "ImageStepResult": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "applied": {
+            "type": "boolean"
+          },
+          "base_revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "created": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "description": {
+            "type": "string"
+          },
+          "diff": {
+            "items": {
+              "$ref": "#/components/schemas/Change"
+            },
+            "type": "array"
+          },
+          "dry_run": {
+            "type": "boolean"
+          },
+          "effective": {
+            "items": {
+              "$ref": "#/components/schemas/OpEffect"
+            },
+            "type": "array"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "type": "array"
+          },
+          "image_id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "lint": {
+            "$ref": "#/components/schemas/LintTotals"
+          },
+          "replayed": {
+            "type": "boolean"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "skipped": {
+            "items": {
+              "$ref": "#/components/schemas/Skipped"
+            },
+            "type": "array"
+          },
+          "step": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ImageSummary": {
+        "properties": {
+          "height": {
+            "type": "integer"
+          },
+          "image_id": {
+            "type": "string"
+          },
+          "layers": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "template": {
+            "type": "boolean"
+          },
+          "updated_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "ImportedAsset": {
         "properties": {
           "asset_id": {
@@ -1949,6 +2294,97 @@
         },
         "type": "object"
       },
+      "Layer": {
+        "properties": {
+          "asset": {
+            "type": "string"
+          },
+          "children": {
+            "items": {
+              "$ref": "#/components/schemas/Layer"
+            },
+            "type": "array"
+          },
+          "crop": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/image.Crop"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fill": {
+            "type": "string"
+          },
+          "h": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "locked": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "opacity": {
+            "type": "integer"
+          },
+          "order": {
+            "type": "string"
+          },
+          "radius": {
+            "type": "integer"
+          },
+          "rotation": {
+            "type": "integer"
+          },
+          "shape": {
+            "type": "string"
+          },
+          "slot": {
+            "type": "string"
+          },
+          "stroke_color": {
+            "type": "string"
+          },
+          "stroke_width": {
+            "type": "integer"
+          },
+          "style": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CaptionStyle"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "visible": {
+            "type": "boolean"
+          },
+          "w": {
+            "type": "integer"
+          },
+          "x": {
+            "type": "integer"
+          },
+          "y": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "LibraryAsset": {
         "properties": {
           "bytes": {
@@ -1973,6 +2409,234 @@
           },
           "width": {
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "LibraryEntry": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "error": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "has_scripts": {
+            "type": "boolean"
+          },
+          "kept": {
+            "type": "boolean"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "lint_errors": {
+            "type": "integer"
+          },
+          "lint_warnings": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "string"
+          },
+          "reviewed": {
+            "type": "boolean"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "x-untrusted": true
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "warning": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "LibraryFinding": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "line": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "LibraryHit": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "has_scripts": {
+            "type": "boolean"
+          },
+          "kept": {
+            "type": "boolean"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "lint_errors": {
+            "type": "integer"
+          },
+          "lint_warnings": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "string"
+          },
+          "reviewed": {
+            "type": "boolean"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "snippet": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "state": {
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "warning": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "LibraryListResult": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryEntry"
+            },
+            "type": "array"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "LibraryReindexResult": {
+        "properties": {
+          "ignored": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "x-untrusted": true
+          },
+          "invalid": {
+            "type": "integer"
+          },
+          "memory": {
+            "type": "integer"
+          },
+          "prompts": {
+            "type": "integer"
+          },
+          "skills": {
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "LibraryRemoveResult": {
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "LibrarySearchResult": {
+        "properties": {
+          "hits": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryHit"
+            },
+            "type": "array"
+          },
+          "text": {
+            "type": "string"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "truncated": {
+            "type": "boolean"
+          },
+          "untrusted_notice": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -2386,6 +3050,38 @@
         },
         "type": "object"
       },
+      "MemoryGetResult": {
+        "properties": {
+          "body": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "entry": {
+            "$ref": "#/components/schemas/LibraryEntry"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "MemoryWriteResult": {
+        "properties": {
+          "entry": {
+            "$ref": "#/components/schemas/LibraryEntry"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "OpEffect": {
         "properties": {
           "created": {
@@ -2792,6 +3488,34 @@
         },
         "type": "object"
       },
+      "Primitive": {
+        "properties": {
+          "collection": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "object": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "set": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "type": {
+            "type": "string"
+          },
+          "unset": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "ProbeSummary": {
         "properties": {
           "animated": {
@@ -2917,6 +3641,29 @@
         },
         "type": "object"
       },
+      "Production": {
+        "properties": {
+          "has_brief": {
+            "type": "boolean"
+          },
+          "has_script": {
+            "type": "boolean"
+          },
+          "outputs": {
+            "type": "integer"
+          },
+          "pending_approvals": {
+            "type": "integer"
+          },
+          "published": {
+            "type": "integer"
+          },
+          "timelines": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "ProjectCounts": {
         "properties": {
           "assets": {
@@ -2968,6 +3715,36 @@
         },
         "type": "object"
       },
+      "ProjectDescribeResult": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectItem"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "production": {
+            "$ref": "#/components/schemas/Production"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "ProjectFont": {
         "properties": {
           "files": {
@@ -3007,6 +3784,12 @@
           "height": {
             "type": "integer"
           },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectItem"
+            },
+            "type": "array"
+          },
           "name": {
             "type": "string",
             "x-untrusted": true
@@ -3016,6 +3799,9 @@
               "string",
               "null"
             ]
+          },
+          "production": {
+            "$ref": "#/components/schemas/Production"
           },
           "project_id": {
             "type": "string"
@@ -3030,11 +3816,72 @@
           "text": {
             "type": "string"
           },
+          "timeline_id": {
+            "type": "string"
+          },
           "untrusted_notice": {
             "type": "string"
           },
           "width": {
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ProjectItem": {
+        "properties": {
+          "format": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "job_id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "position": {
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "timeline_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ProjectItemResult": {
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/ProjectItem"
+          },
+          "production": {
+            "$ref": "#/components/schemas/Production"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -3196,6 +4043,12 @@
           "state": {
             "type": "string"
           },
+          "timeline_id": {
+            "type": "string"
+          },
+          "timelines": {
+            "type": "integer"
+          },
           "tracks": {
             "type": "integer"
           },
@@ -3205,6 +4058,75 @@
           },
           "width": {
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "PromptGetResult": {
+        "properties": {
+          "body": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "defaults": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "x-untrusted": true
+          },
+          "entry": {
+            "$ref": "#/components/schemas/LibraryEntry"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "variables": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "PromptRenderResult": {
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "rendered": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PromptWriteResult": {
+        "properties": {
+          "entry": {
+            "$ref": "#/components/schemas/LibraryEntry"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "variables": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "type": "object"
@@ -3298,6 +4220,218 @@
           "opacity": {
             "format": "double",
             "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "SkillExportResult": {
+        "properties": {
+          "names": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "path": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "SkillFileInput": {
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "SkillFileView": {
+        "properties": {
+          "binary": {
+            "type": "boolean"
+          },
+          "bytes": {
+            "type": "integer"
+          },
+          "path": {
+            "type": "string"
+          },
+          "script": {
+            "type": "boolean"
+          },
+          "text": {
+            "type": "string",
+            "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
+      "SkillGetResult": {
+        "properties": {
+          "allowed_tools": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "body": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "compatibility": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "content_hash": {
+            "type": "string"
+          },
+          "entry": {
+            "$ref": "#/components/schemas/LibraryEntry"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/SkillFileView"
+            },
+            "type": "array"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryFinding"
+            },
+            "type": "array"
+          },
+          "license": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "source": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "SkillImportResult": {
+        "properties": {
+          "entry": {
+            "$ref": "#/components/schemas/LibraryEntry"
+          },
+          "files": {
+            "type": "integer"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryFinding"
+            },
+            "type": "array"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "SkillLintResult": {
+        "properties": {
+          "errors": {
+            "type": "integer"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryFinding"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "warnings": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "SkillReviewResult": {
+        "properties": {
+          "entry": {
+            "$ref": "#/components/schemas/LibraryEntry"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "SkillWriteResult": {
+        "properties": {
+          "entry": {
+            "$ref": "#/components/schemas/LibraryEntry"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryFinding"
+            },
+            "type": "array"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Skipped": {
+        "properties": {
+          "by_actor": {
+            "type": "string"
+          },
+          "by_revision": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "details": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "primitive": {
+            "$ref": "#/components/schemas/Primitive"
+          },
+          "primitive_index": {
+            "type": "integer"
+          },
+          "reason": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -8120,6 +9254,37 @@
         },
         "type": "object"
       },
+      "image.Crop": {
+        "properties": {
+          "h": {
+            "type": "integer"
+          },
+          "w": {
+            "type": "integer"
+          },
+          "x": {
+            "type": "integer"
+          },
+          "y": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "image.SlotValue": {
+        "properties": {
+          "asset": {
+            "type": "string"
+          },
+          "text": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
       "importFileIn": {
         "properties": {
           "asset_id": {
@@ -8401,6 +9566,16 @@
     "/api/v1/commands": {
       "get": {
         "operationId": "commands.list",
+        "parameters": [
+          {
+            "description": "video (default) or image.",
+            "in": "query",
+            "name": "domain",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -8411,6 +9586,9 @@
               }
             },
             "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
           },
           "401": {
             "$ref": "#/components/responses/Problem"
@@ -8437,6 +9615,14 @@
       "get": {
         "operationId": "commands.get",
         "parameters": [
+          {
+            "description": "video (default) or image.",
+            "in": "query",
+            "name": "domain",
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "in": "path",
             "name": "name",
@@ -8938,6 +10124,553 @@
         "summary": "Prove that the server knows the local token"
       }
     },
+    "/api/v1/images": {
+      "get": {
+        "operationId": "images.list",
+        "parameters": [
+          {
+            "description": "only for the templates, none for the documents that are not; default both.",
+            "in": "query",
+            "name": "templates",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The next_cursor of the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page size; the default depends on the operation.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the image documents and templates"
+      },
+      "post": {
+        "operationId": "images.create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "background": {
+                    "description": "#RRGGBB, #RRGGBBAA or transparent; default #FFFFFF.",
+                    "type": "string"
+                  },
+                  "height": {
+                    "description": "Pixels, 1 to 4096, with width.",
+                    "type": "integer"
+                  },
+                  "id": {
+                    "description": "An id of your own; E_ID_EXISTS when taken.",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "1 to 120 characters; default Untitled.",
+                    "type": "string"
+                  },
+                  "preset": {
+                    "description": "video_thumbnail, square_post or vertical_cover.",
+                    "type": "string"
+                  },
+                  "template": {
+                    "description": "Make a template whose text and image layers may be slots.",
+                    "type": "boolean"
+                  },
+                  "template_id": {
+                    "description": "Make the image from this template.",
+                    "type": "string"
+                  },
+                  "values": {
+                    "additionalProperties": {
+                      "$ref": "#/components/schemas/image.SlotValue"
+                    },
+                    "description": "Slot name to {text} or {asset}, with template_id.",
+                    "type": "object"
+                  },
+                  "width": {
+                    "description": "Pixels, 1 to 4096, with height.",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageCreateResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create an image document, blank or from a template"
+      }
+    },
+    "/api/v1/images/{id}": {
+      "get": {
+        "operationId": "images.get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageDescribeResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Describe an image document: layers, findings and text view"
+      }
+    },
+    "/api/v1/images/{id}/edit": {
+      "post": {
+        "operationId": "images.edit",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "base_revision": {
+                    "description": "The revision the batch was planned against.",
+                    "format": "int64",
+                    "type": "integer"
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "idempotency_key": {
+                    "description": "8 to 64 characters; the Idempotency-Key header is the same.",
+                    "type": "string"
+                  },
+                  "operations": {
+                    "items": {
+                      "$ref": "#/components/schemas/ImageOperation"
+                    },
+                    "maxItems": 200,
+                    "minItems": 1,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "base_revision",
+                  "operations"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageEditResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Apply a batch of image operations"
+      }
+    },
+    "/api/v1/images/{id}/export": {
+      "post": {
+        "operationId": "images.export",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "format": {
+                    "description": "png (default), jpeg or webp.",
+                    "type": "string"
+                  },
+                  "height": {
+                    "description": "Resample to this height; 0 keeps the aspect.",
+                    "type": "integer"
+                  },
+                  "preset": {
+                    "description": "Resample to a named size.",
+                    "type": "string"
+                  },
+                  "quality": {
+                    "description": "1 to 100, for jpeg and lossy webp.",
+                    "type": "integer"
+                  },
+                  "width": {
+                    "description": "Resample to this width; 0 keeps the aspect.",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageExportResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export an image document to a PNG, JPEG or WebP file"
+      }
+    },
+    "/api/v1/images/{id}/redo": {
+      "post": {
+        "operationId": "images.redo",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "timeline_id": {
+                    "description": "The timeline of the project; required when the project has several.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageStepResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Redo the latest undone step of the caller on an image"
+      }
+    },
+    "/api/v1/images/{id}/undo": {
+      "post": {
+        "operationId": "images.undo",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "timeline_id": {
+                    "description": "The timeline of the project; required when the project has several.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageStepResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Undo the latest step of the caller on an image"
+      }
+    },
     "/api/v1/jobs/{job_id}": {
       "get": {
         "operationId": "jobs.get",
@@ -9286,6 +11019,1202 @@
         "summary": "Revoke an API key (a logged-in session only; network mode)"
       }
     },
+    "/api/v1/library/memory": {
+      "get": {
+        "operationId": "library.memory.list",
+        "parameters": [
+          {
+            "description": "workspace or a project id.",
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma separated; every tag must be on the note.",
+            "in": "query",
+            "name": "tags",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Also the notes no person has kept yet.",
+            "in": "query",
+            "name": "include_unreviewed",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "agent_view",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the memory notes"
+      },
+      "post": {
+        "operationId": "library.memory.write",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "body": {
+                    "description": "At most 8 KiB.",
+                    "type": "string"
+                  },
+                  "description": {
+                    "description": "One line, at most 200 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "keep": {
+                    "description": "A person may keep or release a note; a note a person writes is kept.",
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "name": {
+                    "description": "Empty: made from the description.",
+                    "type": "string"
+                  },
+                  "scope": {
+                    "description": "workspace (default) or a project id.",
+                    "type": "string"
+                  },
+                  "tags": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "description"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryWriteResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create or replace a memory note"
+      }
+    },
+    "/api/v1/library/memory/{name}": {
+      "delete": {
+        "operationId": "library.memory.remove",
+        "parameters": [
+          {
+            "description": "Set by an agent: only what is reviewed or kept is returned.",
+            "in": "query",
+            "name": "agent_view",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryRemoveResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a memory note"
+      },
+      "get": {
+        "operationId": "library.memory.get",
+        "parameters": [
+          {
+            "description": "Set by an agent: only what is reviewed or kept is returned.",
+            "in": "query",
+            "name": "agent_view",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryGetResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read a memory note"
+      }
+    },
+    "/api/v1/library/prompts": {
+      "get": {
+        "operationId": "library.prompts.list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "tags",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "agent_view",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the prompts"
+      }
+    },
+    "/api/v1/library/prompts/{name}": {
+      "get": {
+        "operationId": "library.prompts.get",
+        "parameters": [
+          {
+            "description": "Set by an agent: only what is reviewed or kept is returned.",
+            "in": "query",
+            "name": "agent_view",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptGetResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read a prompt"
+      },
+      "put": {
+        "operationId": "library.prompts.write",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "body": {
+                    "description": "Text with {{variable}} placeholders; at most 32 KiB.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "defaults": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Variable to its default value.",
+                    "type": "object"
+                  },
+                  "description": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "tags": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "description",
+                  "body"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptWriteResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create or replace a prompt"
+      }
+    },
+    "/api/v1/library/prompts/{name}/render": {
+      "post": {
+        "operationId": "library.prompts.render",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "agent_view": {
+                    "type": "boolean"
+                  },
+                  "values": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Variable to its value.",
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptRenderResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Replace the variables of a prompt"
+      }
+    },
+    "/api/v1/library/reindex": {
+      "post": {
+        "operationId": "library.reindex",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryReindexResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Rebuild the index of the library from its files"
+      }
+    },
+    "/api/v1/library/search": {
+      "get": {
+        "operationId": "library.search",
+        "parameters": [
+          {
+            "description": "Words; every one must start a word of the entry.",
+            "in": "query",
+            "name": "query",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma separated: memory, skill, prompt.",
+            "in": "query",
+            "name": "kinds",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma separated.",
+            "in": "query",
+            "name": "tags",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "origin",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_unreviewed",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "At most 50; default 20.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Characters of the answer; at most 16000, default 4000.",
+            "in": "query",
+            "name": "budget",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "agent_view",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibrarySearchResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Search memory, skills and prompts"
+      }
+    },
+    "/api/v1/library/skills": {
+      "get": {
+        "operationId": "library.skills.list",
+        "parameters": [
+          {
+            "description": "built-in, user or imported.",
+            "in": "query",
+            "name": "origin",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Also the skills no person has reviewed.",
+            "in": "query",
+            "name": "include_unreviewed",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "agent_view",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the skills"
+      }
+    },
+    "/api/v1/library/skills/export": {
+      "post": {
+        "operationId": "library.skills.export",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "names": {
+                    "description": "Empty: every reviewed skill.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillExportResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export skills as folders in the Agent Skills layout"
+      }
+    },
+    "/api/v1/library/skills/import": {
+      "post": {
+        "operationId": "library.skills.import",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "path": {
+                    "description": "An absolute path on the machine of the server: a folder, a .zip or a .tar.gz.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "replace": {
+                    "type": "boolean"
+                  },
+                  "source": {
+                    "description": "Where the skill came from; the base name of the path when empty.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillImportResult"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Import a skill from a folder or an archive; it starts unreviewed"
+      }
+    },
+    "/api/v1/library/skills/{name}": {
+      "get": {
+        "operationId": "library.skills.get",
+        "parameters": [
+          {
+            "description": "Set by an agent: only what is reviewed or kept is returned.",
+            "in": "query",
+            "name": "agent_view",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillGetResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read a skill"
+      },
+      "put": {
+        "operationId": "library.skills.write",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "allowed_tools": {
+                    "type": "string"
+                  },
+                  "body": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "compatibility": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "description": "At most 1024 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "files": {
+                    "description": "The other files of the folder; null keeps those it has, [] removes them.",
+                    "items": {
+                      "$ref": "#/components/schemas/SkillFileInput"
+                    },
+                    "type": "array"
+                  },
+                  "license": {
+                    "type": "string"
+                  },
+                  "metadata": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Keys that start with stuarty- are the product's and are dropped.",
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "description",
+                  "body"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillWriteResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create or replace a skill"
+      }
+    },
+    "/api/v1/library/skills/{name}/lint": {
+      "get": {
+        "operationId": "library.skills.lint",
+        "parameters": [
+          {
+            "description": "Set by an agent: only what is reviewed or kept is returned.",
+            "in": "query",
+            "name": "agent_view",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillLintResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Run the lint on a skill"
+      }
+    },
+    "/api/v1/library/skills/{name}/review": {
+      "post": {
+        "operationId": "library.skills.review",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "content_hash": {
+                    "description": "The content_hash of the skill as it was read (GET /library/skills/{name}); a skill that changed since is not marked.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "content_hash"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillReviewResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark a skill as read (a browser session only)"
+      }
+    },
     "/api/v1/projects": {
       "get": {
         "operationId": "projects.list",
@@ -9532,6 +12461,14 @@
         "operationId": "projects.get",
         "parameters": [
           {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "description": "concise (default), full or document.",
             "in": "query",
             "name": "detail",
@@ -9654,6 +12591,127 @@
         "summary": "Download a rasterized text or shape"
       }
     },
+    "/api/v1/projects/{id}/brief": {
+      "get": {
+        "operationId": "projects.brief.get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BriefResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read the brief of a project"
+      },
+      "put": {
+        "operationId": "projects.brief.set",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "text": {
+                    "description": "Markdown, at most 256 KiB; empty clears the brief.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BriefResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Write the brief of a project"
+      }
+    },
     "/api/v1/projects/{id}/bundle": {
       "post": {
         "description": "Heavy call: shares the limit of 10 a minute per credential (E_RATE_LIMITED with Retry-After).",
@@ -9680,6 +12738,10 @@
                       "boolean",
                       "null"
                     ]
+                  },
+                  "timeline_id": {
+                    "description": "One timeline only (the format of releases up to 0.29.0); without it, the whole project.",
+                    "type": "string"
                   },
                   "wait_ms": {
                     "description": "0 to 25000: hold the call until the job is final.",
@@ -9746,6 +12808,143 @@
         "summary": "Export a project as a .vvbundle"
       }
     },
+    "/api/v1/projects/{id}/describe": {
+      "get": {
+        "operationId": "projects.describe",
+        "parameters": [
+          {
+            "description": "The budget of the text in tokens, 200 to 6000; default 1500.",
+            "in": "query",
+            "name": "max_tokens",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDescribeResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Describe a project as text: brief, items and state"
+      }
+    },
+    "/api/v1/projects/{id}/duplicate": {
+      "post": {
+        "operationId": "projects.duplicate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "name": {
+                    "description": "The name of the copy; default: the name and the word copy.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectCreateResult"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Duplicate a project"
+      }
+    },
     "/api/v1/projects/{id}/edit": {
       "post": {
         "operationId": "projects.edit",
@@ -9784,6 +12983,10 @@
                     "maxItems": 200,
                     "minItems": 1,
                     "type": "array"
+                  },
+                  "timeline_id": {
+                    "description": "The timeline of the project; required when the project has several.",
+                    "type": "string"
                   }
                 },
                 "required": [
@@ -9895,6 +13098,14 @@
         "operationId": "projects.frame",
         "parameters": [
           {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "description": "The time to render; required.",
             "in": "query",
             "name": "at",
@@ -9971,6 +13182,14 @@
         "operationId": "projects.history",
         "parameters": [
           {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "description": "Only the steps of this actor.",
             "in": "query",
             "name": "actor",
@@ -10042,10 +13261,468 @@
         "summary": "List the history of a project"
       }
     },
+    "/api/v1/projects/{id}/items": {
+      "post": {
+        "operationId": "projects.items.add",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "fps": {
+                    "description": "A timeline: 30 (default); n or n/1001.",
+                    "type": "string"
+                  },
+                  "job_id": {
+                    "description": "An output: a succeeded export job of this project.",
+                    "type": "string"
+                  },
+                  "kind": {
+                    "description": "text, timeline or output; the brief is written with PUT /brief.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "position": {
+                    "description": "Where in the order of the items, from 0; default the end.",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "preset": {
+                    "description": "A timeline: 9:16 (default), 1:1, 16:9 or 4:5.",
+                    "type": "string"
+                  },
+                  "text": {
+                    "description": "Markdown of a text item, at most 256 KiB.",
+                    "type": "string"
+                  },
+                  "title": {
+                    "description": "1 to 120 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "title"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectItemResult"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add an item (text, timeline or output) to a project"
+      }
+    },
+    "/api/v1/projects/{id}/items/{item_id}/move": {
+      "post": {
+        "operationId": "projects.items.move",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "position": {
+                    "description": "Where in the order of the items, from 0; past the end is the end.",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectItemResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Move an item of a project"
+      }
+    },
+    "/api/v1/projects/{id}/items/{item_id}/rename": {
+      "post": {
+        "operationId": "projects.items.rename",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "title": {
+                    "description": "1 to 120 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "title"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectItemResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Rename an item of a project"
+      }
+    },
+    "/api/v1/projects/{id}/items/{item_id}/restore": {
+      "post": {
+        "operationId": "projects.items.restore",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dry_run": {
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectItemResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Restore an item from the trash"
+      }
+    },
+    "/api/v1/projects/{id}/items/{item_id}/trash": {
+      "post": {
+        "operationId": "projects.items.trash",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dry_run": {
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectItemResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Move an item to the trash"
+      }
+    },
     "/api/v1/projects/{id}/jobs": {
       "get": {
         "operationId": "jobs.list",
         "parameters": [
+          {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "description": "queued, running, succeeded, failed, cancelled, active or all.",
             "in": "query",
@@ -10193,6 +13870,10 @@
                     "minLength": 1,
                     "type": "string"
                   },
+                  "timeline_id": {
+                    "description": "The timeline of the project; required when the project has several.",
+                    "type": "string"
+                  },
                   "wait_ms": {
                     "description": "0 to 25000: hold the call until the job is final.",
                     "type": "integer"
@@ -10265,6 +13946,14 @@
       "get": {
         "operationId": "projects.lint",
         "parameters": [
+          {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "description": "warning (default, everything) or error.",
             "in": "query",
@@ -10341,6 +14030,14 @@
       "get": {
         "operationId": "media.list",
         "parameters": [
+          {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "description": "The next_cursor of the previous page.",
             "in": "query",
@@ -10435,6 +14132,10 @@
                     "minItems": 1,
                     "type": "array"
                   },
+                  "timeline_id": {
+                    "description": "The timeline of the project; required when the project has several.",
+                    "type": "string"
+                  },
                   "wait_ms": {
                     "description": "0 to 25000: hold the call until the assets are ready.",
                     "type": "integer"
@@ -10507,6 +14208,14 @@
       "get": {
         "operationId": "media.inspect",
         "parameters": [
+          {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "description": "Comma separated: probe (default), transcript, silences, loudness, beats.",
             "in": "query",
@@ -10830,6 +14539,10 @@
                 "properties": {
                   "dry_run": {
                     "type": "boolean"
+                  },
+                  "timeline_id": {
+                    "description": "The timeline of the project; required when the project has several.",
+                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -11022,6 +14735,10 @@
                 "properties": {
                   "dry_run": {
                     "type": "boolean"
+                  },
+                  "timeline_id": {
+                    "description": "The timeline of the project; required when the project has several.",
+                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -11078,6 +14795,14 @@
       "get": {
         "operationId": "projects.otio.export",
         "parameters": [
+          {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "in": "path",
             "name": "id",
@@ -11160,6 +14885,10 @@
                     "description": "An absolute path to an .otio file on the machine that runs the server.",
                     "minLength": 1,
                     "type": "string"
+                  },
+                  "timeline_id": {
+                    "description": "The timeline of the project; required when the project has several.",
+                    "type": "string"
                   }
                 },
                 "required": [
@@ -11219,6 +14948,14 @@
       "get": {
         "operationId": "projects.plan",
         "parameters": [
+          {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "description": "The first frame of the window, as a whole number of frames (not a time such as 1s); default 0.",
             "in": "query",
@@ -11329,6 +15066,10 @@
                 "properties": {
                   "dry_run": {
                     "type": "boolean"
+                  },
+                  "timeline_id": {
+                    "description": "The timeline of the project; required when the project has several.",
+                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -11459,6 +15200,14 @@
         "operationId": "projects.sheet",
         "parameters": [
           {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "description": "Comma-separated times, 2 to 16.",
             "in": "query",
             "name": "times",
@@ -11566,6 +15315,14 @@
       "get": {
         "operationId": "projects.snap_points",
         "parameters": [
+          {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "description": "The revision the caller holds; 409 when the project has moved on.",
             "in": "query",
@@ -11728,6 +15485,10 @@
                 "properties": {
                   "dry_run": {
                     "type": "boolean"
+                  },
+                  "timeline_id": {
+                    "description": "The timeline of the project; required when the project has several.",
+                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -12052,6 +15813,10 @@
                   },
                   "project_id": {
                     "minLength": 1,
+                    "type": "string"
+                  },
+                  "timeline_id": {
+                    "description": "The timeline of the project; required when the project has several.",
                     "type": "string"
                   }
                 },

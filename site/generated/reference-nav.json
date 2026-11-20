@@ -7,10 +7,19 @@
         "projects.create",
         "projects.get",
         "bitmaps.get",
+        "projects.brief.get",
+        "projects.brief.set",
         "projects.bundle.export",
+        "projects.describe",
+        "projects.duplicate",
         "projects.edit",
         "projects.frame",
         "projects.history",
+        "projects.items.add",
+        "projects.items.move",
+        "projects.items.rename",
+        "projects.items.restore",
+        "projects.items.trash",
         "projects.lint",
         "projects.otio.export",
         "projects.otio.import",
@@ -91,6 +100,28 @@
       ]
     },
     {
+      "tag": "Library",
+      "pages": [
+        "library.memory.list",
+        "library.memory.write",
+        "library.memory.get",
+        "library.memory.remove",
+        "library.prompts.list",
+        "library.prompts.get",
+        "library.prompts.write",
+        "library.prompts.render",
+        "library.reindex",
+        "library.search",
+        "library.skills.list",
+        "library.skills.get",
+        "library.skills.write",
+        "library.skills.lint",
+        "library.skills.review",
+        "library.skills.export",
+        "library.skills.import"
+      ]
+    },
+    {
       "tag": "Connections",
       "pages": [
         "connections.list",
@@ -98,6 +129,18 @@
         "connections.get",
         "connections.remove",
         "connections.test"
+      ]
+    },
+    {
+      "tag": "Images",
+      "pages": [
+        "images.list",
+        "images.create",
+        "images.get",
+        "images.edit",
+        "images.export",
+        "images.redo",
+        "images.undo"
       ]
     },
     {
@@ -151,7 +194,10 @@
       "job_cancel",
       "template",
       "font_import",
-      "connection"
+      "connection",
+      "image",
+      "project_item",
+      "library"
     ],
     "operations": [
       "asset.remove",

@@ -1,6 +1,6 @@
 ---
 title: "history"
-description: "History, undo and redo. Read the change log of a project (action=list, newest first, with actor; actor, cursor, limit are for list only), or undo or redo your own latest step (action=undo or redo, one step per call)."
+description: "History, undo and redo. Read the change log (action=list, newest first, with actor; actor, cursor, limit only for list), or undo or redo your own latest step (action=undo or redo, one step per call)."
 wide: true
 ---
 
@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Read the change log of a project (action=list, newest first, with actor; actor, cursor, limit are for list only), or undo or redo your own latest step (action=undo or redo, one step per call). Undo skips a change another actor made after yours and reports it. Undo is itself a step and can be redone.
+Read the change log (action=list, newest first, with actor; actor, cursor, limit only for list), or undo or redo your own latest step (action=undo or redo, one step per call). Undo skips a later change by another actor and reports it; an undo is itself a step.
 
 ## Behaviour
 
@@ -28,6 +28,7 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `project_id` | `string` | yes | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
+| `timeline_id` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
 | `action` | `list`, `undo`, `redo` | no | default `"list"` |
 | `actor` | `string` | no |  |
 | `cursor` | `string` | no |  |

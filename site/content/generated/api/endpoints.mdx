@@ -15,10 +15,19 @@ Every operation has its own page with the parameters, the body, the responses an
 | `POST` | `/api/v1/projects` | [`projects.create`](/docs/api/projects.create) | Create a project |
 | `GET` | `/api/v1/projects/{id}` | [`projects.get`](/docs/api/projects.get) | Read a project |
 | `GET` | `/api/v1/projects/{id}/bitmaps/{key}` | [`bitmaps.get`](/docs/api/bitmaps.get) | Download a rasterized text or shape |
+| `GET` | `/api/v1/projects/{id}/brief` | [`projects.brief.get`](/docs/api/projects.brief.get) | Read the brief of a project |
+| `PUT` | `/api/v1/projects/{id}/brief` | [`projects.brief.set`](/docs/api/projects.brief.set) | Write the brief of a project |
 | `POST` | `/api/v1/projects/{id}/bundle` | [`projects.bundle.export`](/docs/api/projects.bundle.export) | Export a project as a .vvbundle |
+| `GET` | `/api/v1/projects/{id}/describe` | [`projects.describe`](/docs/api/projects.describe) | Describe a project as text: brief, items and state |
+| `POST` | `/api/v1/projects/{id}/duplicate` | [`projects.duplicate`](/docs/api/projects.duplicate) | Duplicate a project |
 | `POST` | `/api/v1/projects/{id}/edit` | [`projects.edit`](/docs/api/projects.edit) | Apply a batch of operations (lint_scope fast) |
 | `GET` | `/api/v1/projects/{id}/frame` | [`projects.frame`](/docs/api/projects.frame) | Render one frame |
 | `GET` | `/api/v1/projects/{id}/history` | [`projects.history`](/docs/api/projects.history) | List the history of a project |
+| `POST` | `/api/v1/projects/{id}/items` | [`projects.items.add`](/docs/api/projects.items.add) | Add an item (text, timeline or output) to a project |
+| `POST` | `/api/v1/projects/{id}/items/{item_id}/move` | [`projects.items.move`](/docs/api/projects.items.move) | Move an item of a project |
+| `POST` | `/api/v1/projects/{id}/items/{item_id}/rename` | [`projects.items.rename`](/docs/api/projects.items.rename) | Rename an item of a project |
+| `POST` | `/api/v1/projects/{id}/items/{item_id}/restore` | [`projects.items.restore`](/docs/api/projects.items.restore) | Restore an item from the trash |
+| `POST` | `/api/v1/projects/{id}/items/{item_id}/trash` | [`projects.items.trash`](/docs/api/projects.items.trash) | Move an item to the trash |
 | `GET` | `/api/v1/projects/{id}/lint` | [`projects.lint`](/docs/api/projects.lint) | Lint a project with every rule |
 | `GET` | `/api/v1/projects/{id}/otio` | [`projects.otio.export`](/docs/api/projects.otio.export) | Export a project as OpenTimelineIO |
 | `POST` | `/api/v1/projects/{id}/otio` | [`projects.otio.import`](/docs/api/projects.otio.import) | Import an OpenTimelineIO file into a project |
@@ -97,6 +106,28 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/brand-kit` | [`brand.get`](/docs/api/brand.get) | Read the brand kit |
 | `PUT` | `/api/v1/brand-kit` | [`brand.set`](/docs/api/brand.set) | Replace the brand kit |
 
+## Library
+
+| Method | Path | Operation | Summary |
+| --- | --- | --- | --- |
+| `GET` | `/api/v1/library/memory` | [`library.memory.list`](/docs/api/library.memory.list) | List the memory notes |
+| `POST` | `/api/v1/library/memory` | [`library.memory.write`](/docs/api/library.memory.write) | Create or replace a memory note |
+| `GET` | `/api/v1/library/memory/{name}` | [`library.memory.get`](/docs/api/library.memory.get) | Read a memory note |
+| `DELETE` | `/api/v1/library/memory/{name}` | [`library.memory.remove`](/docs/api/library.memory.remove) | Remove a memory note |
+| `GET` | `/api/v1/library/prompts` | [`library.prompts.list`](/docs/api/library.prompts.list) | List the prompts |
+| `GET` | `/api/v1/library/prompts/{name}` | [`library.prompts.get`](/docs/api/library.prompts.get) | Read a prompt |
+| `PUT` | `/api/v1/library/prompts/{name}` | [`library.prompts.write`](/docs/api/library.prompts.write) | Create or replace a prompt |
+| `POST` | `/api/v1/library/prompts/{name}/render` | [`library.prompts.render`](/docs/api/library.prompts.render) | Replace the variables of a prompt |
+| `POST` | `/api/v1/library/reindex` | [`library.reindex`](/docs/api/library.reindex) | Rebuild the index of the library from its files |
+| `GET` | `/api/v1/library/search` | [`library.search`](/docs/api/library.search) | Search memory, skills and prompts |
+| `GET` | `/api/v1/library/skills` | [`library.skills.list`](/docs/api/library.skills.list) | List the skills |
+| `GET` | `/api/v1/library/skills/{name}` | [`library.skills.get`](/docs/api/library.skills.get) | Read a skill |
+| `PUT` | `/api/v1/library/skills/{name}` | [`library.skills.write`](/docs/api/library.skills.write) | Create or replace a skill |
+| `GET` | `/api/v1/library/skills/{name}/lint` | [`library.skills.lint`](/docs/api/library.skills.lint) | Run the lint on a skill |
+| `POST` | `/api/v1/library/skills/{name}/review` | [`library.skills.review`](/docs/api/library.skills.review) | Mark a skill as read (a browser session only) |
+| `POST` | `/api/v1/library/skills/export` | [`library.skills.export`](/docs/api/library.skills.export) | Export skills as folders in the Agent Skills layout |
+| `POST` | `/api/v1/library/skills/import` | [`library.skills.import`](/docs/api/library.skills.import) | Import a skill from a folder or an archive; it starts unreviewed |
+
 ## Connections
 
 | Method | Path | Operation | Summary |
@@ -106,6 +137,18 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/connections/{id}` | [`connections.get`](/docs/api/connections.get) | Read one connection (never a secret) |
 | `DELETE` | `/api/v1/connections/{id}` | [`connections.remove`](/docs/api/connections.remove) | Remove a connection and its credential |
 | `POST` | `/api/v1/connections/{id}/test` | [`connections.test`](/docs/api/connections.test) | Make one request through a connection |
+
+## Images
+
+| Method | Path | Operation | Summary |
+| --- | --- | --- | --- |
+| `GET` | `/api/v1/images` | [`images.list`](/docs/api/images.list) | List the image documents and templates |
+| `POST` | `/api/v1/images` | [`images.create`](/docs/api/images.create) | Create an image document, blank or from a template |
+| `GET` | `/api/v1/images/{id}` | [`images.get`](/docs/api/images.get) | Describe an image document: layers, findings and text view |
+| `POST` | `/api/v1/images/{id}/edit` | [`images.edit`](/docs/api/images.edit) | Apply a batch of image operations |
+| `POST` | `/api/v1/images/{id}/export` | [`images.export`](/docs/api/images.export) | Export an image document to a PNG, JPEG or WebP file |
+| `POST` | `/api/v1/images/{id}/redo` | [`images.redo`](/docs/api/images.redo) | Redo the latest undone step of the caller on an image |
+| `POST` | `/api/v1/images/{id}/undo` | [`images.undo`](/docs/api/images.undo) | Undo the latest step of the caller on an image |
 
 ## System
 

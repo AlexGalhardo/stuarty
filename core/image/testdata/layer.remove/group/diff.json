@@ -1,0 +1,56 @@
+[
+  {
+    "id": "lyr_eeeeeeeeee",
+    "kind": "layer.removed",
+    "object": {
+      "h": 0,
+      "id": "lyr_eeeeeeeeee",
+      "kind": "group",
+      "name": "Badge",
+      "opacity": 80,
+      "order": "y",
+      "parent": "",
+      "visible": true,
+      "w": 0,
+      "x": 50,
+      "y": 40
+    }
+  },
+  {
+    "id": "lyr_ffffffffff",
+    "kind": "layer.removed",
+    "object": {
+      "fill": "#FFFFFF",
+      "h": 100,
+      "id": "lyr_ffffffffff",
+      "kind": "shape",
+      "name": "Dot",
+      "opacity": 100,
+      "order": "i",
+      "parent": "lyr_eeeeeeeeee",
+      "shape": "ellipse",
+      "visible": true,
+      "w": 100,
+      "x": 0,
+      "y": 0
+    }
+  },
+  {
+    "id": "lyr_gggggggggg",
+    "kind": "layer.removed",
+    "object": {
+      "h": 36,
+      "id": "lyr_gggggggggg",
+      "kind": "text",
+      "name": "New",
+      "opacity": 100,
+      "order": "r",
+      "parent": "lyr_eeeeeeeeee",
+      "text": "NEW",
+      "visible": true,
+      "w": 80,
+      "x": 10,
+      "y": 30
+    }
+  }
+]

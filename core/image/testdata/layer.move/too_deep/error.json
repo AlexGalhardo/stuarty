@@ -1,0 +1,12 @@
+{
+  "code": "E_LIMIT",
+  "details": {
+    "ceiling": 8,
+    "limit": "levels of groups",
+    "value": 8
+  },
+  "hint": "Remove levels of groups that you no longer need, or put the work in another image.",
+  "message": "The document already has 8 levels of groups; the limit is 8.",
+  "op_index": 0,
+  "retryable": false
+}

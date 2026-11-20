@@ -21,8 +21,19 @@ func AgentDocsInputs() agentdocs.Inputs {
 
 	commands := Reference().Commands
 
+	// The commands of the library are for the skills of the library (SDD-018), not for the editor skill, whose
+	// size is limited (SDD-003 section 8.1); the MCP tool library and command:help name them.
+	inLibrary := map[string]bool{}
+	for _, s := range libraryCommands() {
+		inLibrary[s.name] = true
+	}
+
 	for i := range commands {
 		c := &commands[i]
+		if inLibrary[c.Name] {
+			continue
+		}
+
 		usage := ""
 		if len(c.Usage) > 0 {
 			usage = strings.TrimPrefix(c.Usage[0], "stuarty ")

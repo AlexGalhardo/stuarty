@@ -1,0 +1,12 @@
+[
+  {
+    "collection": "layers",
+    "id": "lyr_kkkkkkkkkk",
+    "type": "remove"
+  },
+  {
+    "collection": "assets",
+    "id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "type": "remove"
+  }
+]

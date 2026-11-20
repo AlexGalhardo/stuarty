@@ -1,10 +1,14 @@
 {
  "name": "job_start",
- "description": "Start long work. kind=export renders to a workspace file: args {start?, end?, format?, at?}, format mp4 (default), gif, wav, aac or png (the frame at `at`). kind=transcribe makes a transcript: args {asset_id, language?, model?}. Lint errors block export. Returns the job after wait_ms at most; poll job_get.",
+ "description": "Start long work. kind=export renders to a workspace file: args {start?, end?, format?, at?}, format mp4 (default), gif, wav, aac or png (the frame at `at`). kind=transcribe makes a transcript: args {asset_id, language?, model?}. Lint errors block export. Returns after wait_ms at most; poll job_get.",
  "inputSchema": {
   "type": "object",
   "properties": {
    "project_id": {
+    "type": "string",
+    "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
+   },
+   "timeline_id": {
     "type": "string",
     "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
    },

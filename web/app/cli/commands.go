@@ -14,7 +14,7 @@ import (
 
 // registry lists the commands in the order the short list prints them.
 func registry() []*spec {
-	return []*spec{
+	return append([]*spec{
 		projectList, projectCreate, projectShow, projectTrash, projectRestore,
 		edit, history, undo, redo, lintCmd, version, mcpCmd,
 		mediaImport, mediaInspect, mediaList, mediaTrash, mediaRestore, view, export,
@@ -22,8 +22,11 @@ func registry() []*spec {
 		templateList, templateSave, templateNew, templateExport, templateImport, bundleExport, bundleImport,
 		agentDocs, transcribeCmd, doctorCmd, fontsCmd, auditCmd, toolsInstallCmd, tokenRotate,
 		fontImportCmd, brandShowCmd, brandSetCmd, otioExport, otioImport,
+		projectDescribeCmd, projectDuplicateCmd, itemAddCmd, itemMoveCmd, itemRenameCmd, itemTrashCmd, itemRestoreCmd,
+		briefShowCmd, briefSetCmd,
 		connectionListCmd, connectionShowCmd, connectionAddCmd, connectionRemoveCmd, connectionTestCmd,
-	}
+		imageCreate, imageList, imageShow, imageEdit, imageUndo, imageRedo, imageExport,
+	}, libraryCommands()...)
 }
 
 // CommandNames lists the commands the binary knows, and those among them that
@@ -115,8 +118,9 @@ var projectCreate = &spec{
 }
 
 var projectShow = &spec{
-	name:    "project:show",
-	summary: "show a project",
+	name:     "project:show",
+	timeline: true,
+	summary:  "show a project",
 	usage: []string{
 		"stuarty project:show [<project id>] [--detail concise|full|document] [--cursor c] [--limit n]",
 	},
@@ -127,7 +131,7 @@ var projectShow = &spec{
 		pageFlags("")...),
 	run: func(ctx context.Context, c *call) (*output, error) {
 		res, err := c.svc.ProjectGet(ctx, service.ProjectGetRequest{
-			ProjectID: c.projectID, Detail: c.args.str("detail"), Page: page(c.args),
+			ProjectID: c.projectID, TimelineID: c.timelineID, Detail: c.args.str("detail"), Page: page(c.args),
 		})
 		if err != nil {
 			return nil, err
@@ -187,16 +191,17 @@ var projectRestore = projectStateCommand("project:restore", "restore a trashed p
 	})
 
 var history = &spec{
-	name:    "history",
-	summary: "list the steps of a project history",
-	usage:   []string{"stuarty history --project <id> [--by a] [--cursor c] [--limit n]"},
-	example: "stuarty history --project prj_7k2m9x4q1b --json",
-	project: true,
+	name:     "history",
+	timeline: true,
+	summary:  "list the steps of a project history",
+	usage:    []string{"stuarty history --project <id> [--by a] [--cursor c] [--limit n]"},
+	example:  "stuarty history --project prj_7k2m9x4q1b --json",
+	project:  true,
 	flags: append([]flagDef{{Name: "by", Kind: kindString, Usage: "only the steps of this actor"}},
 		pageFlags("20")...),
 	run: func(ctx context.Context, c *call) (*output, error) {
 		res, err := c.svc.HistoryList(ctx, service.HistoryListRequest{
-			ProjectID: c.projectID, Actor: c.args.str("by"), Page: page(c.args),
+			ProjectID: c.projectID, TimelineID: c.timelineID, Actor: c.args.str("by"), Page: page(c.args),
 		})
 		if err != nil {
 			return nil, err
@@ -208,15 +213,20 @@ var history = &spec{
 
 func undoCommand(name, summary string, redo bool) *spec {
 	return &spec{
-		name:    name,
-		summary: summary,
-		usage:   []string{"stuarty " + name + " --project <id>"},
-		example: "stuarty " + name + " --project prj_7k2m9x4q1b",
-		project: true,
-		globals: []string{"dry-run"},
-		write:   true,
+		name:     name,
+		timeline: true,
+		summary:  summary,
+		usage:    []string{"stuarty " + name + " --project <id>"},
+		example:  "stuarty " + name + " --project prj_7k2m9x4q1b",
+		project:  true,
+		globals:  []string{"dry-run"},
+		write:    true,
 		run: func(ctx context.Context, c *call) (*output, error) {
-			req := service.UndoRequest{ProjectID: c.projectID, DryRun: c.args.boolean("dry-run")}
+			req := service.UndoRequest{
+				ProjectID:  c.projectID,
+				TimelineID: c.timelineID,
+				DryRun:     c.args.boolean("dry-run"),
+			}
 
 			var (
 				res *service.UndoResult
@@ -244,11 +254,12 @@ var (
 )
 
 var lintCmd = &spec{
-	name:    "lint",
-	summary: "check a project against every lint rule (an edit result runs only the fast rules, lint_scope fast)",
-	usage:   []string{"stuarty lint --project <id> [--severity error|warning] [--cursor c] [--limit n] [--strict]"},
-	example: "stuarty lint --project prj_7k2m9x4q1b --json",
-	project: true,
+	name:     "lint",
+	timeline: true,
+	summary:  "check a project against every lint rule (an edit result runs only the fast rules, lint_scope fast)",
+	usage:    []string{"stuarty lint --project <id> [--severity error|warning] [--cursor c] [--limit n] [--strict]"},
+	example:  "stuarty lint --project prj_7k2m9x4q1b --json",
+	project:  true,
 	flags: append([]flagDef{
 		{
 			Name:    "severity",
@@ -260,7 +271,7 @@ var lintCmd = &spec{
 	}, pageFlags("25")...),
 	run: func(ctx context.Context, c *call) (*output, error) {
 		res, err := c.svc.Lint(ctx, service.LintRequest{
-			ProjectID: c.projectID, Severity: c.args.str("severity"), Page: page(c.args),
+			ProjectID: c.projectID, TimelineID: c.timelineID, Severity: c.args.str("severity"), Page: page(c.args),
 		})
 		if err != nil {
 			return nil, err
@@ -281,12 +292,20 @@ var commandHelp = &spec{
 	usage:      []string{"stuarty command:help [<name>]"},
 	example:    "stuarty command:help item.move",
 	positional: true,
+	flags: []flagDef{
+		{
+			Name:    "domain",
+			Kind:    kindString,
+			Default: "video",
+			Usage:   "video, or image for the commands of image documents",
+		},
+	},
 	run: func(ctx context.Context, c *call) (*output, error) {
 		if len(c.args.Positional) > 1 {
 			return nil, validation("", "command:help takes one command name, got %d.", len(c.args.Positional))
 		}
 
-		req := service.CommandHelpRequest{}
+		req := service.CommandHelpRequest{Domain: c.args.str("domain")}
 		if len(c.args.Positional) == 1 {
 			req.Name = c.args.Positional[0]
 		}

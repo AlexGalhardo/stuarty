@@ -13,8 +13,9 @@ import (
 )
 
 var view = &spec{
-	name:    "view",
-	summary: "render a frame or a contact sheet of a project",
+	name:     "view",
+	timeline: true,
+	summary:  "render a frame or a contact sheet of a project",
 	usage: []string{
 		"stuarty view --project <id> [--mode frame|sheet] [--at t] [--times t1,t2,...]",
 		"    [--from t --until t --count n] [--cols n] [--max-tokens n] [--width px]",
@@ -52,7 +53,7 @@ func runView(ctx context.Context, c *call) (*output, error) {
 		}
 
 		res, err = c.svc.ViewFrame(ctx, service.ViewFrameRequest{
-			ProjectID: c.projectID, At: p.str("at"),
+			ProjectID: c.projectID, TimelineID: c.timelineID, At: p.str("at"),
 			MaxTokens: p.integer("max-tokens"), Width: p.integer("width"),
 		})
 	case "sheet":
@@ -64,8 +65,12 @@ func runView(ctx context.Context, c *call) (*output, error) {
 		}
 
 		req := service.ViewSheetRequest{
-			ProjectID: c.projectID, From: p.str("from"), Until: p.str("until"), Cols: p.integer("cols"),
-			MaxTokens: p.integer("max-tokens"),
+			ProjectID:  c.projectID,
+			TimelineID: c.timelineID,
+			From:       p.str("from"),
+			Until:      p.str("until"),
+			Cols:       p.integer("cols"),
+			MaxTokens:  p.integer("max-tokens"),
 		}
 		if p.has("times") {
 			req.Times = strings.Split(p.str("times"), ",")

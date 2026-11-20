@@ -27,6 +27,7 @@ Send the secret in the header `Authorization: Bearer <secret>`: the local token 
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
+| `timeline_id` | `string` | no | The timeline of the project; required when the project has several. |
 | `from` | `integer` | no | The first frame of the window, as a whole number of frames (not a time such as 1s); default 0. |
 | `until` | `integer` | no | The end of the window in whole frames (not a time such as 1s), not included; at most 300 frames after from. Required. |
 | `to` | `integer` | no | Deprecated alias of until (whole frames), removed at 1.0. |

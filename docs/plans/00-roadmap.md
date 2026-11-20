@@ -23,11 +23,11 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 
 | Epic | Title | Size | Depends on | Status |
 | --- | --- | --- | --- | --- |
-| [04](04-secret-vault-and-connections.md) | Secret vault and connections | L | 03 | IN PROGRESS (senior-a, 2026-11-19) |
-| [05](05-approval-queue-and-cost-ceilings.md) | Approval queue, rules and cost ceilings | M | 04 | TODO |
-| [06](06-project-as-production.md) | The project as the container of a production | L | 03 | IN PROGRESS (senior-b, 2026-11-19) |
+| [04](04-secret-vault-and-connections.md) | Secret vault and connections | L | 03 | DONE (2026-11-19, 8e43a1a2..7410dcd3 replayed onto the integration branch) |
+| [05](05-approval-queue-and-cost-ceilings.md) | Approval queue, rules and cost ceilings | M | 04 | IN PROGRESS (senior-a, 2026-11-19) |
+| [06](06-project-as-production.md) | The project as the container of a production | L | 03 | DONE (2026-11-19, 08a630f5..77cf52b7; closes VV-225, VV-237, VV-241) |
 | [07](07-dashboard-shell.md) | Dashboard: sidebar, navigation, profile, theme | M | 03 | DONE (2026-11-19, 70387363..171fb786) |
-| [08](08-asset-library.md) | Asset library with origin, rights and reuse | M | 06, 07 | TODO |
+| [08](08-asset-library.md) | Asset library with origin, rights and reuse | M | 06, 07 | IN PROGRESS (senior-b, 2026-11-19) |
 | [09](09-ai-provider-layer.md) | AI provider layer with API keys, text generation and cost | L | 04, 05 | TODO |
 | [10](10-image-and-voice-generation.md) | Image and voice generation | M | 08, 09 | TODO |
 | [11](11-video-generation.md) | Video generation | M | 10 | TODO |
@@ -51,15 +51,15 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | Epic | Title | Size | Depends on | Status |
 | --- | --- | --- | --- | --- |
 | [26](26-browser-preview-on-the-rust-renderer.md) | The browser preview on the Rust renderer | L | 03 | DONE (2026-11-19, e21f512f..9c750319; task 8, the idle-machine playback measurement, waits for an idle window) |
-| [27](27-image-document-core.md) | Image documents: core, catalogue, templates and export | L | 03 | IN PROGRESS (senior-e, 2026-11-19) |
+| [27](27-image-document-core.md) | Image documents: core, catalogue, templates and export | L | 03 | DONE (2026-11-19, 97d5c560..7758cdda replayed and merged; WebP export waits for an ffargs builder) |
 | [28](28-image-editor-ui.md) | Image editor in the UI | L | 07, 27 | TODO |
 | [29](29-image-adjustments-filters-and-masks.md) | Image adjustments, filters, masks and blend modes | L | 27 | TODO |
 | [30](30-image-operations-with-a-model.md) | Image operations with a model | S | 10, 28 | TODO |
-| [31](31-motion-easing-crop-and-mask.md) | Motion: easing curves, animated crop and mask, presets | L | 03 | TODO |
+| [31](31-motion-easing-crop-and-mask.md) | Motion: easing curves, animated crop and mask, presets | L | 03 | IN PROGRESS (senior-d, 2026-11-19) |
 | [32](32-nested-compositions.md) | Nested compositions | M | 06, 31 | TODO |
 | [33](33-external-motion-engine-hand-off.md) | Hand-off from an external motion engine | M | 08 | TODO |
 | [34](34-audio-processors-and-noise-reduction.md) | Audio processors and noise reduction | L | 03 | TODO |
-| [35](35-export-presets-batch-and-codecs.md) | Export presets, batch queue, H.265 and AV1 | M | 03 | TODO |
+| [35](35-export-presets-batch-and-codecs.md) | Export presets, batch queue, H.265 and AV1 | M | 03 | IN PROGRESS (senior-e, 2026-11-19) |
 | [36](36-revert-checkpoints-and-diff.md) | Revert to a revision, checkpoints and a diff | M | 03 | TODO |
 | [37](37-editor-ui-and-shortcuts.md) | Final editor UI, shortcuts and open fixes | L | 07 | TODO |
 

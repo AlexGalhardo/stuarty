@@ -21,6 +21,10 @@ type Env struct {
 	// NewIDs returns a fresh identifier for a prefix; deterministic in tests,
 	// random in production. A command uses it only when the caller supplied no id.
 	NewIDs func(prefix string) string
+
+	// Extra is what the commands of another document type need besides identifiers: the lookup of a file and
+	// the text measurer of an image (SDD-021 section 4). The timeline commands ignore it.
+	Extra any
 }
 
 // Result is the outcome of one operation.
@@ -48,6 +52,9 @@ func (b BatchResult) NoOp() bool { return len(b.Diff) == 0 && len(b.Inverse) == 
 type Context struct {
 	Doc *timeline.Document
 	Env Env
+
+	// Custom is the document of a command defined with DefineIn, a type other than the timeline.
+	Custom any
 
 	effective map[string]any
 }

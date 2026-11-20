@@ -112,6 +112,8 @@ Which epic delivers each requirement is in the traceability table of `plans/00-r
 | 012 | editor UI architecture: thin-client rules, state, timeline, preview, command coverage, the desktop shell | ADR-0041 |
 | 013 | the renderer: the plan as input, the pixel contract, the module and its hosts | ADR-0038 |
 | 014 | connections and the secret vault: the record, the encrypted file, the master key, the outbound gate | ADR-0032, ADR-0033 |
+| 021 | image documents: the document, the catalogue of layer operations, the plan, export, templates, lint, storage | ADR-0038 |
+| 018 | memory, skills and prompts: the files, front matter, review, the skill lint, import and export, the index and search | ADR-0040 |
 
 ## Rules for changing these documents
 

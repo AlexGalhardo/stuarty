@@ -1,0 +1,14 @@
+[
+  {
+    "collection": "layers",
+    "id": "lyr_cccccccccc",
+    "set": {
+      "style": {
+        "color": "#FFE600",
+        "font_family": "Anton",
+        "size": 120
+      }
+    },
+    "type": "patch"
+  }
+]

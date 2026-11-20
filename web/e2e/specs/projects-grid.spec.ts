@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, listProjects, seedProject, test } from "./helpers";
 
 // TASK-0293 (SDD-012 sections 2.1 and 6.4): the projects page is a grid of
-// cards, each with a menu of Rename and Delete.
+// cards, each with a menu of Rename, Duplicate and Delete.
 test.describe("projects grid", () => {
 	test("a card shows the name, the size and the way into the editor", async ({
 		page,
@@ -22,7 +22,11 @@ test.describe("projects grid", () => {
 			card.getByRole("link", { name: new RegExp(`Open.*${label}`) }),
 		).toHaveAttribute("href", `/editor/${seeded.id}`);
 		await card.getByRole("button", { name: /Actions for project/ }).click();
-		await expect(page.getByRole("menuitem")).toHaveText(["Rename", "Delete"]);
+		await expect(page.getByRole("menuitem")).toHaveText([
+			"Rename",
+			"Duplicate",
+			"Delete",
+		]);
 	});
 
 	test("Rename sends project.rename and the card shows the new name", async ({

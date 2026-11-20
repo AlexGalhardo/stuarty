@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Templates are projects with named slots. action=list; save (project_id, name) makes a template from a project; new (template_id, name, fill, id?) creates a project, fill maps slot name to \{asset_id\}, \{text\} or \{words\}; export returns a template file path; import (path) reads one. Unfilled required slots are lint errors.
+Templates are projects with named slots. action=list; save (project_id, name); new (template_id, name, fill, id?) creates a project, fill maps slot name to \{asset_id\}, \{text\} or \{words\}; export returns a template file path; import (path) reads one.
 
 ## Behaviour
 
@@ -30,6 +30,7 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | `action` | `list`, `save`, `new`, `export`, `import` | yes |  |
 | `template_id` | `string` | no | pattern `^tpl_[0-9a-hjkmnp-tv-z]{10}$` |
 | `project_id` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
+| `timeline_id` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
 | `id` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
 | `name` | `string` | no |  |
 | `description` | `string` | no |  |

@@ -56,6 +56,10 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		return nil, err
 	}
 
+	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
+		return nil, err
+	}
+
 	if req.WaitMS < 0 || req.WaitMS > maxWaitMS {
 		return nil, newError(command.CodeValidation, "wait_ms is %d; it must be 0 to %d.", req.WaitMS, maxWaitMS).
 			withPath("wait_ms")
@@ -483,6 +487,10 @@ func (s *svc) waitJob(ctx context.Context, id string, d time.Duration) {
 func (s *svc) JobList(ctx context.Context, req JobListRequest) (*JobListResult, error) {
 	c, err := authorize(ctx, "JobList", req.ProjectID)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
 		return nil, err
 	}
 

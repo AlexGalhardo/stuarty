@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/AlexGalhardo/stuarty/service/connections"
+	"github.com/AlexGalhardo/stuarty/service/library"
 )
 
 // Sentinel errors returned by the store (SDD-005 section 2 item 8). The
@@ -55,6 +56,7 @@ type Store interface {
 // Repos groups the repositories. On a Tx they are bound to the transaction.
 type Repos interface {
 	Projects() ProjectRepo
+	Productions() ProductionRepo
 	Operations() OperationRepo
 	Idempotency() IdempotencyRepo
 	Assets() AssetRepo
@@ -64,7 +66,9 @@ type Repos interface {
 	Audit() AuditRepo
 	Fonts() FontRepo
 	BrandKit() BrandKitRepo
+	Images() ImageRepo
 	Connections() connections.Store
+	Library() library.Index
 }
 
 // Tx is a write transaction.
@@ -162,6 +166,83 @@ type ProjectRepo interface {
 	// Delete is a hard delete; it cascades, and also removes the
 	// document_backups of the project. Only TrashEmpty calls it.
 	Delete(ctx context.Context, id string) error
+}
+
+// Productions (SDD-005 section 5.12)
+
+// ProductionHead is a project in the sense of ADR-0039: the production row, the number of its active timelines
+// and the head of the first of them, which is what the list shows.
+type ProductionHead struct {
+	ID          string
+	Name        string
+	State       ProjectState
+	CreatedMs   int64
+	UpdatedMs   int64
+	CreatedBy   string
+	OwnerUserID *string // network mode only (SDD-007 4.1)
+	TrashedMs   *int64
+	TrashedBy   *string
+	// Timelines counts the active timeline items.
+	Timelines int
+	// Timeline is the head of the first active timeline by position; its ID is empty when there is none.
+	Timeline ProjectHead
+}
+
+// ProductionQuery selects a page of the list of projects; the members are those of ProjectQuery.
+type ProductionQuery = ProjectQuery
+
+// ItemRow is a row of project_items.
+type ItemRow struct {
+	ID        string
+	ProjectID string
+	Kind      string
+	Title     string
+	Position  int
+	State     ProjectState
+	Ref       string // timeline: the timeline id; output: the export job id
+	Body      string // brief and text
+	Format    string // output
+	CreatedMs int64
+	UpdatedMs int64
+	CreatedBy string
+	TrashedMs *int64
+}
+
+// TimelineRef is an active timeline item of a project.
+type TimelineRef struct {
+	ItemID     string
+	TimelineID string
+	Title      string
+}
+
+// ProductionRepo stores projects as productions and their items.
+type ProductionRepo interface {
+	List(ctx context.Context, q ProductionQuery) (items []ProductionHead, next string, err error)
+	Count(ctx context.Context, q ProductionQuery) (int, error)
+	Get(ctx context.Context, id string) (ProductionHead, error) // ErrNotFound
+	Create(ctx context.Context, h ProductionHead) error         // ErrExists
+	// SetState writes the state of the project and mirrors it on the rows of the timelines of its active timeline
+	// items. ErrNotFound when there is no such project.
+	SetState(ctx context.Context, id string, st ProjectState, by string, atMs int64) error
+	// Touch sets updated_ms.
+	Touch(ctx context.Context, id string, atMs int64) error
+	// Delete is a hard delete that cascades the items; the timeline rows are the business of the caller. Only
+	// TrashEmpty calls it.
+	Delete(ctx context.Context, id string) error
+
+	Items(ctx context.Context, projectID string) ([]ItemRow, error) // by position, then id
+	Item(ctx context.Context, itemID string) (ItemRow, error)       // ErrNotFound
+	CreateItem(
+		ctx context.Context,
+		it ItemRow,
+	) error // ErrExists for a second brief or a timeline already in an item
+	UpdateItem(ctx context.Context, it ItemRow) error // title, body, state, trashed_ms, updated_ms
+	// SetPositions numbers the items 0 to n-1 in the order of ids.
+	SetPositions(ctx context.Context, projectID string, ids []string) error
+	// ProjectOfTimeline is the project whose timeline item has ref timelineID; ErrNotFound when none.
+	ProjectOfTimeline(ctx context.Context, timelineID string) (string, error)
+	// ActiveTimelines lists the active timeline items of a project by position.
+	ActiveTimelines(ctx context.Context, projectID string) ([]TimelineRef, error)
 }
 
 // Operations

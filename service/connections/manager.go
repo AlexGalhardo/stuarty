@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/AlexGalhardo/stuarty/internal/outbound"
-	"github.com/AlexGalhardo/stuarty/service/untrusted"
 	"github.com/AlexGalhardo/stuarty/service/vault"
 )
 
@@ -53,7 +52,8 @@ type TestResult struct {
 // Connector is the code of a kind of connection. The kinds of the real
 // providers are added by later epics; this epic has the test kind.
 type Connector interface {
-	// Test makes one harmless request to the destination.
+	// Test makes one harmless request to the destination. The Message of its result is built
+	// with SafeMessage from the raw body, so an echoed credential is found before any cut.
 	Test(ctx context.Context, c Credential) (TestResult, error)
 }
 
@@ -277,14 +277,9 @@ func (testConnector) Test(ctx context.Context, c Credential) (TestResult, error)
 	body, _ := io.ReadAll(io.LimitReader(res.Body, maxTestBody))
 
 	return TestResult{
-		OK:     res.StatusCode >= 200 && res.StatusCode < 300,
-		Status: res.StatusCode,
-		Message: untrusted.Block(
-			untrusted.SourceNetworkText,
-			untrusted.Attrs{"connection": c.Connection.ID},
-			string(body),
-			testMessageBudget,
-		),
+		OK:      res.StatusCode >= 200 && res.StatusCode < 300,
+		Status:  res.StatusCode,
+		Message: SafeMessage(c, body),
 	}, nil
 }
 

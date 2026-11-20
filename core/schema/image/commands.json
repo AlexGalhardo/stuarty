@@ -1,0 +1,1282 @@
+[
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "height": {
+          "description": "Pixels, 1 to 4096.",
+          "maximum": 4096,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "mode": {
+          "description": "keep (default) or scale.",
+          "enum": [
+            "keep",
+            "scale"
+          ],
+          "type": "string"
+        },
+        "width": {
+          "description": "Pixels, 1 to 4096.",
+          "maximum": 4096,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "width",
+        "height"
+      ],
+      "type": "object"
+    },
+    "description": "mode keep (default) leaves every layer where it is. mode scale multiplies the x, y, w and h of every layer by the ratio of the new size to the old, rounded half up; text sizes and stroke widths are not scaled. The size is 1 to 4096 on each side.",
+    "errors": [
+      "E_VALIDATION"
+    ],
+    "example": {
+      "height": 1080,
+      "mode": "keep",
+      "width": 1080
+    },
+    "internal": false,
+    "name": "canvas.resize",
+    "scope": "edit",
+    "summary": "Changes the size of the canvas."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "background": {
+          "description": "A colour (#RRGGBB or #RRGGBBAA) or transparent; default #FFFFFF.",
+          "type": "string"
+        },
+        "height": {
+          "description": "Pixels, 1 to 4096.",
+          "maximum": 4096,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "name": {
+          "description": "At most 120 characters; default Untitled.",
+          "maxLength": 120,
+          "type": "string"
+        },
+        "preset": {
+          "description": "A named size; give it or width and height.",
+          "enum": [
+            "video_thumbnail",
+            "square_post",
+            "vertical_cover"
+          ],
+          "type": "string"
+        },
+        "template": {
+          "description": "Make a template: its text and image layers may be slots.",
+          "type": "boolean"
+        },
+        "width": {
+          "description": "Pixels, 1 to 4096.",
+          "maximum": 4096,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [],
+      "type": "object"
+    },
+    "description": "Gives a new document its size, from a preset (video_thumbnail 1280x720, square_post 1080x1080, vertical_cover 1080x1920) or from width and height (1 to 4096 each), its name and its background (a colour, default #FFFFFF, or transparent). template true makes a template whose text and image layers may be slots. Refused on a document that already has a canvas.",
+    "errors": [
+      "E_VALIDATION",
+      "E_INVALID_STATE"
+    ],
+    "example": {
+      "background": "#101820",
+      "name": "Episode 12",
+      "preset": "video_thumbnail"
+    },
+    "internal": false,
+    "name": "image.create",
+    "scope": "edit",
+    "summary": "Sets the canvas, name and background of a new image document."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "color": {
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "index": {
+          "description": "Position among the siblings, 0 is the bottom; absent means on top.",
+          "maximum": 500,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "name": {
+          "maxLength": 120,
+          "type": "string"
+        },
+        "parent": {
+          "description": "A group; absent means the top level.",
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "color"
+      ],
+      "type": "object"
+    },
+    "description": "A fill is a rectangle the size of the canvas that can be moved and resized like any layer.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_ID_EXISTS",
+      "E_LIMIT",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE"
+    ],
+    "example": {
+      "color": "#101820",
+      "index": 0,
+      "name": "Backdrop"
+    },
+    "internal": false,
+    "name": "layer.add_fill",
+    "scope": "edit",
+    "summary": "Adds a solid colour over the whole canvas."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "asset": {
+          "description": "The sha256 content hash of an image in the workspace.",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "fit": {
+          "description": "contain (default) or cover, when no box is given.",
+          "enum": [
+            "cover",
+            "contain"
+          ],
+          "type": "string"
+        },
+        "h": {
+          "maximum": 16384,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "id": {
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "index": {
+          "description": "Position among the siblings, 0 is the bottom; absent means on top.",
+          "maximum": 500,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "name": {
+          "maxLength": 120,
+          "type": "string"
+        },
+        "parent": {
+          "description": "A group; absent means the top level.",
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "slot": {
+          "description": "Make the layer an image slot of a template.",
+          "type": "string"
+        },
+        "w": {
+          "maximum": 16384,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "x": {
+          "maximum": 16384,
+          "minimum": -16384,
+          "type": "integer"
+        },
+        "y": {
+          "maximum": 16384,
+          "minimum": -16384,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "asset"
+      ],
+      "type": "object"
+    },
+    "description": "asset is the content hash of an image file already imported (media:import gives it). Without x, y, w and h the layer is the fit (contain by default, or cover) of the whole source on the canvas, centred. effective.layer_id names the layer.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_ID_EXISTS",
+      "E_LIMIT",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE"
+    ],
+    "example": {
+      "asset": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+      "fit": "cover",
+      "name": "Photo"
+    },
+    "internal": false,
+    "name": "layer.add_image",
+    "scope": "edit",
+    "summary": "Adds an image layer from a file of the workspace."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "fill": {
+          "description": "A colour; default #FFFFFF.",
+          "type": "string"
+        },
+        "h": {
+          "description": "Pixels, 1 to 16384.",
+          "maximum": 16384,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "id": {
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "index": {
+          "description": "Position among the siblings, 0 is the bottom; absent means on top.",
+          "maximum": 500,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "name": {
+          "maxLength": 120,
+          "type": "string"
+        },
+        "parent": {
+          "description": "A group; absent means the top level.",
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "radius": {
+          "description": "Pixels; rounded_rect only.",
+          "maximum": 16384,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "shape": {
+          "enum": [
+            "rect",
+            "rounded_rect",
+            "ellipse"
+          ],
+          "type": "string"
+        },
+        "stroke_color": {
+          "description": "A colour; default none.",
+          "type": "string"
+        },
+        "stroke_width": {
+          "description": "Pixels, 0 or more.",
+          "maximum": 1000,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "w": {
+          "description": "Pixels, 1 to 16384.",
+          "maximum": 16384,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "x": {
+          "maximum": 16384,
+          "minimum": -16384,
+          "type": "integer"
+        },
+        "y": {
+          "maximum": 16384,
+          "minimum": -16384,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "shape",
+        "w",
+        "h"
+      ],
+      "type": "object"
+    },
+    "description": "w and h are pixels. x and y default to centre the shape on the canvas, fill to #FFFFFF. radius is for rounded_rect only.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_ID_EXISTS",
+      "E_LIMIT",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE"
+    ],
+    "example": {
+      "fill": "#E63946",
+      "h": 200,
+      "radius": 24,
+      "shape": "rounded_rect",
+      "w": 600
+    },
+    "internal": false,
+    "name": "layer.add_shape",
+    "scope": "edit",
+    "summary": "Adds a rectangle, a rounded rectangle or an ellipse."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "index": {
+          "description": "Position among the siblings, 0 is the bottom; absent means on top.",
+          "maximum": 500,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "name": {
+          "maxLength": 120,
+          "type": "string"
+        },
+        "parent": {
+          "description": "A group; absent means the top level.",
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "slot": {
+          "description": "Make the layer a text slot of a template.",
+          "type": "string"
+        },
+        "style": {
+          "additionalProperties": false,
+          "description": "A partial TextStyle.",
+          "properties": {
+            "align": {
+              "enum": [
+                "left",
+                "center",
+                "right",
+                null
+              ],
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "background_color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "background_padding": {
+              "minimum": 0,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "background_radius": {
+              "minimum": 0,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "font_family": {
+              "minLength": 1,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "font_weight": {
+              "maximum": 900,
+              "minimum": 100,
+              "multipleOf": 100,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "line_height": {
+              "maximum": 3,
+              "minimum": 0.8,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "max_width": {
+              "exclusiveMinimum": 0,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "shadow_blur": {
+              "maximum": 100,
+              "minimum": 0,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "shadow_color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "shadow_dx": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "shadow_dy": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "size": {
+              "maximum": 1000,
+              "minimum": 8,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "stroke_color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "stroke_width": {
+              "maximum": 40,
+              "minimum": 0,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "uppercase": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          },
+          "required": [],
+          "type": "object"
+        },
+        "text": {
+          "description": "Up to 2000 characters; an empty text is an empty slot.",
+          "maxLength": 2000,
+          "type": "string"
+        },
+        "w": {
+          "description": "The width the text wraps at; default 86% of the canvas.",
+          "maximum": 16384,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "x": {
+          "maximum": 16384,
+          "minimum": -16384,
+          "type": "integer"
+        },
+        "y": {
+          "maximum": 16384,
+          "minimum": -16384,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "type": "object"
+    },
+    "description": "The text wraps at w (default 86% of the canvas) and its box is measured, so h is the height of the text. x defaults to centre the box on the canvas and y to centre it vertically. style is a partial text style (font_family, font_weight, size, color, stroke_color, stroke_width, shadow_*, background_*, align, line_height, uppercase); max_width is not a text-layer key, w is.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_ID_EXISTS",
+      "E_LIMIT",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE",
+      "E_FONT_UNKNOWN"
+    ],
+    "example": {
+      "slot": "title",
+      "style": {
+        "color": "#FFE600",
+        "font_family": "Anton",
+        "size": 120
+      },
+      "text": "HOW IT WORKS"
+    },
+    "internal": false,
+    "name": "layer.add_text",
+    "scope": "edit",
+    "summary": "Adds a text layer."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "horizontal": {
+          "enum": [
+            "left",
+            "center",
+            "right"
+          ],
+          "type": "string"
+        },
+        "layer_ids": {
+          "items": {
+            "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "maxItems": 100,
+          "minItems": 1,
+          "type": "array"
+        },
+        "to": {
+          "description": "canvas, or a layer id.",
+          "type": "string"
+        },
+        "vertical": {
+          "enum": [
+            "top",
+            "middle",
+            "bottom"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "layer_ids",
+        "to"
+      ],
+      "type": "object"
+    },
+    "description": "to is canvas or a layer id. horizontal puts the left edge, the centre or the right edge of each layer on that of the target; vertical the top, the middle or the bottom. The box of a group is the union of its children; rotation is ignored. At least one axis.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_INVALID_STATE"
+    ],
+    "example": {
+      "horizontal": "center",
+      "layer_ids": [
+        "lyr_a1b2c3d4e5"
+      ],
+      "to": "canvas",
+      "vertical": "middle"
+    },
+    "internal": false,
+    "name": "layer.align",
+    "scope": "edit",
+    "summary": "Aligns layers to the canvas or to another layer."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "h": {
+          "description": "Pixels of the source.",
+          "maximum": 65536,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "layer_id": {
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "reset": {
+          "description": "Show the whole source again; no other argument.",
+          "type": "boolean"
+        },
+        "w": {
+          "description": "Pixels of the source.",
+          "maximum": 65536,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "x": {
+          "description": "Pixels of the source.",
+          "maximum": 65536,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "y": {
+          "description": "Pixels of the source.",
+          "maximum": 65536,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "layer_id"
+      ],
+      "type": "object"
+    },
+    "description": "x, y, w and h are pixels of the source and must lie inside it. The box of the layer keeps its size, so use layer.fit afterwards to keep the aspect. reset true shows the whole source again.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_OUT_OF_SOURCE",
+      "E_INVALID_STATE"
+    ],
+    "example": {
+      "h": 900,
+      "layer_id": "lyr_a1b2c3d4e5",
+      "w": 900,
+      "x": 200,
+      "y": 0
+    },
+    "internal": false,
+    "name": "layer.crop",
+    "scope": "edit",
+    "summary": "Sets the part of the source an image layer shows."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "dx": {
+          "maximum": 16384,
+          "minimum": -16384,
+          "type": "integer"
+        },
+        "dy": {
+          "maximum": 16384,
+          "minimum": -16384,
+          "type": "integer"
+        },
+        "id": {
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "layer_id": {
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 120,
+          "type": "string"
+        }
+      },
+      "required": [
+        "layer_id"
+      ],
+      "type": "object"
+    },
+    "description": "The copy sits just above the original, moved by dx and dy (default 0). A slot is not copied: a slot name is unique in a document. effective.layer_id names the copy.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_ID_EXISTS",
+      "E_LIMIT"
+    ],
+    "example": {
+      "dx": 40,
+      "dy": 40,
+      "layer_id": "lyr_a1b2c3d4e5"
+    },
+    "internal": false,
+    "name": "layer.duplicate",
+    "scope": "edit",
+    "summary": "Copies a layer with its whole subtree and new ids."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "layer_id": {
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "cover",
+            "contain"
+          ],
+          "type": "string"
+        },
+        "to": {
+          "description": "canvas (default), or a layer id.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "layer_id",
+        "mode"
+      ],
+      "type": "object"
+    },
+    "description": "The aspect of an image layer is that of its crop (or of the source), of a shape or a fill that of its box. The result is centred on the target. A text layer and a group are sized with layer.transform.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE"
+    ],
+    "example": {
+      "layer_id": "lyr_a1b2c3d4e5",
+      "mode": "cover"
+    },
+    "internal": false,
+    "name": "layer.fit",
+    "scope": "edit",
+    "summary": "Scales a layer to cover or to be contained in the canvas or another layer."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "layer_ids": {
+          "description": "1 to 100 layers that share one parent.",
+          "items": {
+            "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "maxItems": 100,
+          "minItems": 1,
+          "type": "array"
+        },
+        "name": {
+          "maxLength": 120,
+          "type": "string"
+        }
+      },
+      "required": [
+        "layer_ids"
+      ],
+      "type": "object"
+    },
+    "description": "The group takes the place of the topmost of the layers and they keep their relative order inside it. The group has an offset (x, y, 0 at first) added to its children and its opacity multiplies theirs.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_INVALID_STATE",
+      "E_ID_EXISTS",
+      "E_LIMIT"
+    ],
+    "example": {
+      "layer_ids": [
+        "lyr_a1b2c3d4e5",
+        "lyr_f6g7h8j9k0"
+      ],
+      "name": "Title block"
+    },
+    "internal": false,
+    "name": "layer.group",
+    "scope": "edit",
+    "summary": "Wraps layers that share one parent in a new group."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "index": {
+          "description": "Final position among the siblings, 0 is the bottom; absent means on top.",
+          "maximum": 500,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "layer_id": {
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "parent": {
+          "description": "A group id, or root for the top level.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "layer_id"
+      ],
+      "type": "object"
+    },
+    "description": "parent is a group id, or root for the top level; index is the final position among the new siblings, 0 is the bottom, and absent means on top. Without parent the layer stays in its group. A layer cannot be moved into itself or into its own descendants.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE",
+      "E_LIMIT"
+    ],
+    "example": {
+      "index": 0,
+      "layer_id": "lyr_a1b2c3d4e5"
+    },
+    "internal": false,
+    "name": "layer.move",
+    "scope": "edit",
+    "summary": "Changes the order or the group of a layer."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "layer_id": {
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "layer_id"
+      ],
+      "type": "object"
+    },
+    "description": "Undo puts the layer back. A group that holds a locked layer cannot be removed.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_INVALID_STATE"
+    ],
+    "example": {
+      "layer_id": "lyr_a1b2c3d4e5"
+    },
+    "internal": false,
+    "name": "layer.remove",
+    "scope": "edit",
+    "summary": "Removes a layer and everything inside it."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "layer_id": {
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "name": {
+          "maxLength": 120,
+          "type": "string"
+        },
+        "opacity": {
+          "description": "A whole percent, 0 to 100.",
+          "maximum": 100,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "slot": {
+          "description": "A template slot name; an empty string removes it.",
+          "type": "string"
+        },
+        "visible": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "layer_id"
+      ],
+      "type": "object"
+    },
+    "description": "opacity is a whole percent. A locked layer accepts this command, to unlock it. slot names a template slot (a text or an image layer; the name is unique in the document) and an empty slot removes it.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_ID_EXISTS"
+    ],
+    "example": {
+      "layer_id": "lyr_a1b2c3d4e5",
+      "name": "Headline",
+      "opacity": 80
+    },
+    "internal": false,
+    "name": "layer.set",
+    "scope": "edit",
+    "summary": "Sets the name, opacity, visibility, lock or slot of a layer."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "fill": {
+          "type": "string"
+        },
+        "layer_id": {
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "radius": {
+          "maximum": 16384,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "shape": {
+          "enum": [
+            "rect",
+            "rounded_rect",
+            "ellipse"
+          ],
+          "type": "string"
+        },
+        "stroke_color": {
+          "description": "A colour; an empty string removes it.",
+          "type": "string"
+        },
+        "stroke_width": {
+          "maximum": 1000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "layer_id"
+      ],
+      "type": "object"
+    },
+    "description": "A fill layer takes only fill. A radius is valid with rounded_rect only, and changing the shape to another one removes a stored radius. An empty stroke_color removes the stroke colour.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE"
+    ],
+    "example": {
+      "fill": "#E63946",
+      "layer_id": "lyr_a1b2c3d4e5",
+      "radius": 24,
+      "shape": "rounded_rect"
+    },
+    "internal": false,
+    "name": "layer.set_shape",
+    "scope": "edit",
+    "summary": "Changes the shape, colours, stroke or radius of a shape layer, or the colour of a fill."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "layer_id": {
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "reset_style": {
+          "description": "Empty the stored style before applying style.",
+          "type": "boolean"
+        },
+        "style": {
+          "additionalProperties": false,
+          "description": "A partial TextStyle, merged; null removes a key.",
+          "properties": {
+            "align": {
+              "enum": [
+                "left",
+                "center",
+                "right",
+                null
+              ],
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "background_color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "background_padding": {
+              "minimum": 0,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "background_radius": {
+              "minimum": 0,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "font_family": {
+              "minLength": 1,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "font_weight": {
+              "maximum": 900,
+              "minimum": 100,
+              "multipleOf": 100,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "line_height": {
+              "maximum": 3,
+              "minimum": 0.8,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "max_width": {
+              "exclusiveMinimum": 0,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "shadow_blur": {
+              "maximum": 100,
+              "minimum": 0,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "shadow_color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "shadow_dx": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "shadow_dy": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "size": {
+              "maximum": 1000,
+              "minimum": 8,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "stroke_color": {
+              "description": "\"#RRGGBB\", \"#RRGGBBAA\" or \"$name\" of a template colour",
+              "pattern": "(^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$)|(^\\$[a-z][a-z0-9_]{0,39}$)",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "stroke_width": {
+              "maximum": 40,
+              "minimum": 0,
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "uppercase": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          },
+          "required": [],
+          "type": "object"
+        },
+        "text": {
+          "maxLength": 2000,
+          "type": "string"
+        }
+      },
+      "required": [
+        "layer_id"
+      ],
+      "type": "object"
+    },
+    "description": "style is a partial text style merged key by key; a null value removes a key and reset_style empties the stored style first. The height of the box is measured again.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE",
+      "E_FONT_UNKNOWN"
+    ],
+    "example": {
+      "layer_id": "lyr_a1b2c3d4e5",
+      "style": {
+        "color": "#FFE600"
+      },
+      "text": "Hello world"
+    },
+    "internal": false,
+    "name": "layer.set_text",
+    "scope": "edit",
+    "summary": "Changes the text or the style of a text layer."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "h": {
+          "maximum": 16384,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "layer_id": {
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "rotation": {
+          "maximum": 360,
+          "minimum": -360,
+          "type": "integer"
+        },
+        "w": {
+          "maximum": 16384,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "x": {
+          "maximum": 16384,
+          "minimum": -16384,
+          "type": "integer"
+        },
+        "y": {
+          "maximum": 16384,
+          "minimum": -16384,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "layer_id"
+      ],
+      "type": "object"
+    },
+    "description": "x and y are the top left corner in pixels of the parent (the canvas, or the origin of the group); w and h the size; rotation whole degrees clockwise around the centre, -360 to 360. A group takes only x and y, which move all its children. Changing w of a text layer measures its height again unless h is given.",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE"
+    ],
+    "example": {
+      "layer_id": "lyr_a1b2c3d4e5",
+      "rotation": -5,
+      "w": 800,
+      "x": 80,
+      "y": 440
+    },
+    "internal": false,
+    "name": "layer.transform",
+    "scope": "edit",
+    "summary": "Sets the position, size or rotation of a layer."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "layer_id": {
+          "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "layer_id"
+      ],
+      "type": "object"
+    },
+    "description": "The children take the place of the group, their x and y gain the offset of the group and their opacity is multiplied by the group's (rounded half up).",
+    "errors": [
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE",
+      "E_VALIDATION"
+    ],
+    "example": {
+      "layer_id": "lyr_a1b2c3d4e5"
+    },
+    "internal": false,
+    "name": "layer.ungroup",
+    "scope": "edit",
+    "summary": "Replaces a group by its children."
+  }
+]
