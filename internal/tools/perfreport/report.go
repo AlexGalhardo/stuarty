@@ -34,6 +34,9 @@ var Specs = []Spec{
 	{"NFR-007", "./engine/export", "BenchmarkExport60s", "peak_MB", 1, 500, "MB", true, "1x"},
 	{"NFR-023", "./engine/frame", "BenchmarkViewFrame", "ns/op", 1e6, 1000, "ms", true, "5x"},
 	{"NFR-023", "./engine/frame", "BenchmarkViewSheet9", "ns/op", 1e6, 2000, "ms", true, "5x"},
+	{"NFR-024", "./web/app/cli", "BenchmarkCLIReadViaServer", "median-ms", 1, 300, "ms", true, "9x"},
+	{"NFR-061", "./engine/export", "BenchmarkImageReference", "compose_ms", 1, 100, "ms", true, "1x"},
+	{"NFR-061", "./engine/export", "BenchmarkImageReference", "s_export", 1, 2, "s", true, "1x"},
 }
 
 // Result is a benchmark line: the metrics it printed, by unit.

@@ -5,6 +5,7 @@
 //	go run ./internal/tools/perfreport -write          # measure, write docs/perf/<today>.md
 //	go run ./internal/tools/perfreport -compare        # measure, compare with the last table, write nothing
 //	go run ./internal/tools/perfreport -absolute       # also fail when a limit is missed (the reference runner)
+//	go run ./internal/tools/perfreport -gated          # also run the budgets that live in tests, on the idle machine
 package main
 
 import (
@@ -59,6 +60,11 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer, runner Ru
 	)
 	absolute := fs.Bool("absolute", false, "fail when a limit is missed (on the reference runner)")
 	only := fs.String("only", "", "measure only the requirement with this id, for example NFR-005")
+	gated := fs.Bool(
+		"gated",
+		false,
+		"also run the absolute budgets that live in tests (STUARTY_PERF=1); one that is skipped fails",
+	)
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -85,6 +91,13 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer, runner Ru
 		fmt.Fprintf(stderr, "perfreport: %v\n", err)
 		return 1
 	}
+
+	var gateRows []GateRow
+	if *gated {
+		gateRows = runGates(ctx, *only)
+		md += gatesMarkdown(gateRows)
+	}
+
 	fmt.Fprint(stdout, md)
 
 	failed := false
@@ -123,6 +136,12 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer, runner Ru
 					row.Spec.Metric,
 				)
 			}
+		}
+	}
+	for _, g := range gateRows {
+		if !g.Pass() {
+			failed = true
+			fmt.Fprintf(stderr, "perfreport: %s %s: %s\n", g.Gate.NFR, g.Test, g.Result)
 		}
 	}
 	if failed {

@@ -26,8 +26,8 @@ import (
 const referenceSide = 4000
 
 // referenceSource writes a picture of 2,000 by 2,000 pixels to a file and gives its path.
-func referenceSource(t *testing.T) string {
-	t.Helper()
+func referenceSource(tb testing.TB) string {
+	tb.Helper()
 
 	img := image.NewNRGBA(image.Rect(0, 0, 2000, 2000))
 	for y := range 2000 {
@@ -38,19 +38,19 @@ func referenceSource(t *testing.T) string {
 
 	var buf bytes.Buffer
 	if err := png.Encode(&buf, img); err != nil {
-		t.Fatal(err)
+		tb.Fatal(err)
 	}
 
-	p := filepath.Join(t.TempDir(), "reference.png")
+	p := filepath.Join(tb.TempDir(), "reference.png")
 	if err := os.WriteFile(p, buf.Bytes(), 0o600); err != nil {
-		t.Fatal(err)
+		tb.Fatal(err)
 	}
 
 	return p
 }
 
-func referenceDocument(t *testing.T) *coreimage.Document {
-	t.Helper()
+func referenceDocument(tb testing.TB) *coreimage.Document {
+	tb.Helper()
 
 	d := &coreimage.Document{
 		SchemaVersion: coreimage.SchemaVersion, ID: "img_aaaaaaaaaa", Name: "reference", Width: referenceSide,
@@ -122,7 +122,7 @@ func referenceDocument(t *testing.T) *coreimage.Document {
 
 	res, err := coreimage.ApplyBatch(d, ops, coreimage.Env{})
 	if err != nil {
-		t.Fatal(err)
+		tb.Fatal(err)
 	}
 
 	return res.Doc
