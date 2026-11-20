@@ -20,10 +20,13 @@ import (
 	"github.com/AlexGalhardo/stuarty/engine/rasterize"
 	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
 	"github.com/AlexGalhardo/stuarty/engine/transcribe"
+	"github.com/AlexGalhardo/stuarty/service/agenthost"
 	"github.com/AlexGalhardo/stuarty/service/approval"
 	"github.com/AlexGalhardo/stuarty/service/connections"
+	"github.com/AlexGalhardo/stuarty/service/connections/oauth"
 	"github.com/AlexGalhardo/stuarty/service/library"
 	"github.com/AlexGalhardo/stuarty/service/providers"
+	"github.com/AlexGalhardo/stuarty/service/social"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
@@ -36,6 +39,8 @@ type Service interface {
 	ProductionService
 	BriefingService
 	AssetLibraryService
+	ChatService
+	MotionService
 
 	ProjectList(ctx context.Context, req ProjectListRequest) (*ProjectListResult, error)
 	ProjectCreate(ctx context.Context, req ProjectCreateRequest) (*ProjectCreateResult, error)
@@ -49,6 +54,12 @@ type Service interface {
 	HistoryList(ctx context.Context, req HistoryListRequest) (*HistoryListResult, error)
 	Undo(ctx context.Context, req UndoRequest) (*UndoResult, error)
 	Redo(ctx context.Context, req UndoRequest) (*UndoResult, error)
+	HistoryRevert(ctx context.Context, req HistoryRevertRequest) (*HistoryRevertResult, error)
+	HistoryDiff(ctx context.Context, req HistoryDiffRequest) (*HistoryDiffResult, error)
+	CheckpointCreate(ctx context.Context, req CheckpointCreateRequest) (*Checkpoint, error)
+	CheckpointList(ctx context.Context, req CheckpointListRequest) (*CheckpointListResult, error)
+	CheckpointRename(ctx context.Context, req CheckpointRenameRequest) (*Checkpoint, error)
+	CheckpointRemove(ctx context.Context, req CheckpointRemoveRequest) (*Checkpoint, error)
 
 	Lint(ctx context.Context, req LintRequest) (*LintResult, error)
 
@@ -117,6 +128,9 @@ type Service interface {
 	ExportPresetList(ctx context.Context, req ExportPresetListRequest) (*ExportPresetListResult, error)
 	ExportCheck(ctx context.Context, req ExportCheckRequest) (*ExportCheckResult, error)
 	ExportBatch(ctx context.Context, req ExportBatchRequest) (*Job, error)
+	// AudioMeasure is the loudness, true peak and noise floor of a range or an item with and without its audio
+	// processors (SDD-004 section 7.1, epic 34).
+	AudioMeasure(ctx context.Context, req AudioMeasureRequest) (*AudioMeasureResult, error)
 	AuditList(ctx context.Context, req AuditListRequest) (*AuditListResult, error)
 
 	// Doctor is the diagnostic report (SDD-003 section 2, SDD-011 section 8.6).
@@ -182,6 +196,16 @@ type Service interface {
 	ApprovalRuleRemove(ctx context.Context, req ApprovalRef) (*approval.RuleView, error)
 	CostSummary(ctx context.Context, req CostSummaryRequest) (*CostSummaryResult, error)
 	CostCeilingSet(ctx context.Context, req CostCeilingSetRequest) (*CostSummaryResult, error)
+
+	// The social networks and publishing (SDD-020). A publication is a job of a kind that needs approval:
+	// PublishNow answers a job in waiting_approval, and nothing leaves the machine before a person approves.
+	SocialNetworkList(ctx context.Context, req SocialNetworkListRequest) (*SocialNetworkListResult, error)
+	SocialConnectBegin(ctx context.Context, req SocialConnectBeginRequest) (*SocialConnectBeginResult, error)
+	SocialConnectComplete(ctx context.Context, req SocialConnectCompleteRequest) (*SocialAccount, error)
+	SocialAccountList(ctx context.Context, req SocialAccountListRequest) (*SocialAccountListResult, error)
+	PublishValidate(ctx context.Context, req PublishValidateRequest) (*PublishValidateResult, error)
+	PublishNow(ctx context.Context, req PublishNowRequest) (*Job, error)
+	PublishStatus(ctx context.Context, req PublishStatusRequest) (*PublishStatusResult, error)
 }
 
 // Event is what the service publishes after the change is durable (SDD-006
@@ -263,6 +287,9 @@ type Options struct {
 	// credentials; without one the service builds a registry over the store with a vault in the
 	// workspace that has no master key source, so a connection cannot be created (SDD-014).
 	Connections *connections.Manager
+	// Social is the registry of the social network connectors (SDD-020); without one the build publishes
+	// to no network and the social operations answer empty lists.
+	Social *social.Registry
 	// Providers is the registry of the AI providers, with their adapters registered (SDD-016); without one
 	// the service has a registry with no provider, so no generation can start.
 	Providers *providers.Registry
@@ -279,6 +306,9 @@ type Options struct {
 	WebP export.WebPEncoder
 	// JobWait is how long TrashEmpty waits for the jobs of a trashed project to stop; zero is 15 s.
 	JobWait time.Duration
+	// Agents hosts the agent a user installed, for the chat (SDD-017). Nil in a process that only runs a
+	// command: the chat operations that need a process then answer E_AGENT_UNAVAILABLE, and the reads work.
+	Agents *agenthost.Host
 }
 
 type svc struct {
@@ -301,12 +331,15 @@ type svc struct {
 	keys        KeyStore
 	conns       *connections.Manager
 	kinds       map[string]*ApprovableKind
+	social      *social.Registry
+	flows       *oauth.Flows
 	providers   *providers.Registry
 	lib         *library.Manager // the files of memory, skills and prompts; nil without a workspace
 	heavy       RateLimiter
 	heavyLimitN int
 	log         *slog.Logger
 	jobWait     time.Duration
+	agents      *agenthost.Host // the hosted agent chat; nil without a host (SDD-017)
 	webp        export.WebPEncoder
 	doctorMu    sync.Mutex
 	doctorCaps  *ffmpeg.Capabilities
@@ -356,10 +389,12 @@ func New(o Options) (Service, error) {
 		doctor:      o.Doctor,
 		keys:        o.Keys,
 		conns:       o.Connections,
+		social:      o.Social,
 		heavy:       o.Heavy,
 		heavyLimitN: o.HeavyPerMinute,
 		log:         o.Log,
 		jobWait:     o.JobWait,
+		agents:      o.Agents,
 		webp:        o.WebP,
 		startedAt:   time.Now(),
 	}
@@ -372,6 +407,7 @@ func New(o Options) (Service, error) {
 	}
 
 	s.kinds = kinds
+	s.registerPublishKind()
 
 	if s.workspace != "" {
 		s.fonts = enginestore.NewFonts(s.workspace)
@@ -380,6 +416,10 @@ func New(o Options) (Service, error) {
 
 	if s.conns == nil {
 		s.conns = connections.NewDefault(o.Store.Connections(), s.workspace, s.now)
+	}
+
+	if s.social != nil {
+		s.social.Bind(s.conns)
 	}
 
 	if s.providers == nil {
@@ -413,6 +453,8 @@ func New(o Options) (Service, error) {
 	if s.now == nil {
 		s.now = time.Now
 	}
+
+	s.flows = oauth.NewFlows(s.now)
 
 	if s.jobWait <= 0 {
 		s.jobWait = jobWait

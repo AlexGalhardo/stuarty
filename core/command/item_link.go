@@ -34,7 +34,7 @@ func init() {
 
 	Register(Define(Spec{
 		Name:    "item.extract_audio",
-		Summary: "Creates an audio item from the audio of a video clip, linked to it, and mutes the clip.",
+		Summary: "Makes a linked audio item from a video clip's audio and mutes the clip.",
 		Description: "Adds an audio item on an audio track with the same asset, start, duration, source range, speed, " +
 			"curve, reverse, volume, fades, noise reduction and volume keyframes as the clip, links the two, and sets " +
 			"audio_muted on the clip so the sound is not heard twice.",
@@ -241,6 +241,7 @@ func applyItemExtractAudio(c *Context, a *itemExtractAudioArgs) error {
 	au.Asset, au.SourceIn, au.Speed, au.Reverse = it.Asset, it.SourceIn, it.Speed, it.Reverse
 	au.SpeedCurve = slices.Clone(it.SpeedCurve)
 	au.Volume, au.FadeIn, au.FadeOut, au.Denoise, au.Voice = it.Volume, it.FadeIn, it.FadeOut, it.Denoise, it.Voice
+	au.Processors, it.Processors = it.Processors, nil
 	if kfs, ok := it.Keyframes["volume"]; ok {
 		au.Keyframes = timeline.Keyframes{"volume": slices.Clone(kfs)}
 	}

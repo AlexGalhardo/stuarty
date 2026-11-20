@@ -472,6 +472,7 @@ export interface MediaImportResult {
 }
 
 export type JobState =
+	| "waiting_approval"
 	| "queued"
 	| "running"
 	| "succeeded"
@@ -480,6 +481,7 @@ export type JobState =
 
 export interface ExportResult {
 	revision: number;
+	format?: string;
 	path?: string;
 	download_url: string;
 	bytes: number;
@@ -528,6 +530,7 @@ export interface Job {
 		export?: ExportResult;
 		batch?: BatchResult;
 		transcribe?: { asset_id: string; language: string; words: number };
+		publish?: PublishResult;
 	};
 	error?: ApiErrorBody;
 	lint?: { errors: number; warnings: number };
@@ -614,6 +617,56 @@ export interface HistoryQuery {
 	actor?: string;
 	cursor?: string;
 	limit?: number;
+}
+
+// Revert, the diff of two revisions and checkpoints (SDD-003 section 2.5.1). The
+// core classifies and words every change: `line` is shown as it comes.
+export interface Checkpoint {
+	name: string;
+	note: string;
+	revision: number;
+	actor: string;
+	at: string;
+	auto: boolean;
+}
+
+export interface CheckpointListResult {
+	project_id: string;
+	revision: number;
+	checkpoints: Checkpoint[];
+	text: string;
+}
+
+export interface DiffEntry {
+	verb: "added" | "removed" | "moved" | "trimmed" | "changed";
+	noun: string;
+	line: string;
+}
+
+export interface HistoryDiffResult {
+	project_id: string;
+	revision: number;
+	from: number;
+	to: number;
+	count: number;
+	entries: DiffEntry[];
+	text: string;
+}
+
+export interface HistoryRevertResult extends Omit<EditResult, "kind"> {
+	kind: "revert";
+	target: number;
+	same: boolean;
+	text: string;
+}
+
+export interface RevertRequest {
+	revision?: number;
+	checkpoint?: string;
+	// The revision the caller read; a change by another actor since then to what
+	// the revert changes is E_REVISION_CONFLICT (SDD-002 A.7).
+	base_revision?: number;
+	dry_run?: boolean;
 }
 
 // GET /projects/{id}/media/{asset_id}: the facts and the text of one asset.
@@ -1329,6 +1382,33 @@ export interface ExportFinding {
 	got: string;
 }
 
+// GET /projects/{id}/audio-measure: the sound of an item or a range, before and after its audio processors
+// (SDD-004 section 7.1). A level is null when the audio has none (silence, or under 0.4 s).
+export interface AudioLevels {
+	integrated_lufs: number | null;
+	true_peak_dbtp: number | null;
+	noise_floor_dbfs: number;
+	speech_to_noise_db: number | null;
+}
+
+export interface AudioMeasureResult {
+	project_id: string;
+	revision: number;
+	item_id?: string;
+	start_frame: number;
+	end_frame: number;
+	seconds: number;
+	before: AudioLevels;
+	after: AudioLevels;
+	text: string;
+}
+
+export interface AudioMeasureQuery {
+	itemId?: string;
+	start?: string;
+	end?: string;
+}
+
 // GET /projects/{id}/export-check: what does not fit a preset, with the exact limit.
 export interface ExportCheckResult {
 	project_id: string;
@@ -1362,4 +1442,210 @@ export interface BundleImportResult {
 	name: string;
 	revision: number;
 	text: string;
+}
+
+// The hosted agent chat (SDD-017). Every text in these types was written by an agent or by a
+// person and is shown as text, never as markup.
+export type ChatState =
+	| "starting"
+	| "idle"
+	| "running"
+	| "awaiting_permission"
+	| "ended";
+
+export interface ChatSession {
+	id: string;
+	project_id: string;
+	profile: string;
+	state: ChatState;
+	end_reason?: string;
+	title: string;
+	created_at: string;
+	updated_at: string;
+	ended_at?: string;
+	event_count: number;
+	live: boolean;
+}
+
+export interface ChatToolCall {
+	tool_call_id: string;
+	title: string;
+	tool_kind?: string;
+	status: "pending" | "in_progress" | "completed" | "failed";
+	output?: string;
+}
+
+export interface ChatPermissionOption {
+	option_id: string;
+	name: string;
+	kind: "allow_once" | "allow_always" | "reject_once" | "reject_always";
+}
+
+export interface ChatPermission {
+	request_id: string;
+	tool_call_id?: string;
+	title?: string;
+	tool_kind?: string;
+	options?: ChatPermissionOption[];
+	answer?: "allow" | "reject" | "cancel";
+}
+
+export type ChatEventKind =
+	| "user_message"
+	| "agent_message"
+	| "agent_thought"
+	| "tool_call"
+	| "permission_request"
+	| "permission_answer"
+	| "plan"
+	| "notice"
+	| "state";
+
+// One entry of a transcript and one frame of GET /chat/sessions/{id}/events. A frame with
+// `append` continues the text of the event with the same `seq`.
+export interface ChatEvent {
+	seq: number;
+	kind: ChatEventKind;
+	at: string;
+	text?: string;
+	append?: boolean;
+	tool?: ChatToolCall;
+	permission?: ChatPermission;
+	state?: { state: ChatState; end_reason?: string };
+}
+
+export interface ChatTranscriptResult {
+	session: ChatSession;
+	events?: ChatEvent[];
+	next_after?: number;
+	markdown?: string;
+}
+
+export interface ChatSessionListResult {
+	sessions: ChatSession[];
+}
+
+export interface AgentProfile {
+	name: string;
+	command: string;
+	args: string[];
+	created_by: string;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface AgentSuggestion {
+	name: string;
+	title: string;
+	executables: string[];
+	args: string[];
+	install: string;
+	found: boolean;
+	found_path?: string;
+}
+
+export interface AgentProfileListResult {
+	profiles: AgentProfile[];
+	suggestions: AgentSuggestion[];
+	can_write: boolean;
+	available: boolean;
+}
+
+// The event of GET /chat/sessions/{id}/events: the data is a ChatEvent.
+export const CHAT_EVENT_NAMES = ["chat.event"] as const;
+
+// The social networks and publishing (SDD-020). No result carries a credential.
+export interface SocialLimits {
+	title_max: number;
+	description_max_bytes: number;
+	tags_max_chars: number;
+	file_max_bytes: number;
+	formats: string[];
+	source: string;
+	read: string;
+}
+
+export interface SocialNetwork {
+	network: string;
+	name: string;
+	publishes: string[];
+	limits: SocialLimits;
+	endpoint: string;
+	hosts: string[];
+	scopes: string[];
+	guide: string;
+	guide_read: string;
+}
+
+export interface SocialNetworkListResult {
+	networks: SocialNetwork[];
+	redirect_path: string;
+}
+
+export interface SocialConnectRequest {
+	network: string;
+	label?: string;
+	client_id?: string;
+	client_secret?: string;
+	connection_id?: string;
+	redirect_uri: string;
+}
+
+export interface SocialConnectResult {
+	connection_id: string;
+	authorize_url: string;
+}
+
+export interface SocialCompleteRequest {
+	state: string;
+	code?: string;
+	error?: string;
+}
+
+export interface SocialAccount {
+	connection_id: string;
+	network: string;
+	label: string;
+	account_id?: string;
+	account_title?: string;
+	state: "ready" | "needs_sign_in";
+}
+
+export interface SocialAccountListResult {
+	accounts: SocialAccount[];
+}
+
+export interface PublishRequest {
+	project_id: string;
+	connection_id: string;
+	export: string;
+	thumbnail?: string;
+	title: string;
+	description?: string;
+	tags?: string[];
+	visibility?: string;
+	made_for_kids?: boolean;
+	ai_disclosure?: boolean;
+}
+
+export interface PublishIssue {
+	path: string;
+	code: string;
+	message: string;
+}
+
+export interface PublishValidateResult {
+	network: string;
+	state: "prepared" | "invalid";
+	issues: PublishIssue[];
+	summary?: string;
+}
+
+export interface PublishResult {
+	network: string;
+	connection_id: string;
+	remote_id: string;
+	url: string;
+	state: "processing" | "published";
+	thumbnail_error?: string;
 }

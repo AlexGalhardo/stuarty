@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
@@ -26,6 +27,7 @@ import (
 	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
 	"github.com/AlexGalhardo/stuarty/internal/ffmpegpins"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/agenthost"
 	"github.com/AlexGalhardo/stuarty/service/config"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/exporter"
@@ -89,11 +91,19 @@ type Owner struct {
 	// runtimeSecret is the per-run secret of network mode, the key of its handshake.
 	runtimeSecret string
 	Events        *events.Events
-
-	deps   *httpapi.Deps
-	lock   *workspace.Lock
-	limits service.Limits
-	child  service.ChildPolicy
+	// Agents hosts the agent a user installed, for the chat panel (SDD-017); nil in a process that only
+	// runs a command.
+	Agents *agenthost.Host
+	// mcpURL is the address of this server's own MCP endpoint, as the hosted agent reaches it; empty until the
+	// listener is bound.
+	mcpURL atomic.Value
+	appURL string
+	// agentTokens is the registry of the session tokens of the hosted agent.
+	agentTokens *agenthost.Tokens
+	deps        *httpapi.Deps
+	lock        *workspace.Lock
+	limits      service.Limits
+	child       service.ChildPolicy
 	// gpuRenderer is the GPU renderer request and the stuarty-render found for it.
 	gpuRenderer service.GPURenderer
 	version     string
@@ -264,6 +274,15 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 	if !cfg.Inline {
 		o.Events = events.New(st, events.Options{Log: cfg.Log, RedactPaths: o.mode == config.ModeNetwork})
 		publish = o.Events.Publish
+
+		// The agent a user installed, hosted in the chat panel (SDD-017). A command has no panel and
+		// hosts none.
+		o.appURL = cfg.Resolved.AppURL
+		o.agentTokens = agenthost.NewTokens(cfg.Now)
+		o.Agents = agenthost.New(agenthost.Options{
+			Store: st.Chat(), Tokens: o.agentTokens, MCPURL: o.MCPURL, Workspace: string(o.Dir), Now: cfg.Now,
+			Version: o.version, Log: cfg.Log,
+		})
 	}
 
 	rates, err := rateLimitsFromEnv(cfg.Getenv, o.mode == config.ModeNetwork)
@@ -271,7 +290,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		return err
 	}
 
-	conns, provs, err := o.destinations(cfg.Getenv, st, cfg.Now)
+	out, err := o.outbound(cfg.Getenv, st, cfg.Now)
 	if err != nil {
 		return err
 	}
@@ -282,9 +301,10 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 	}
 
 	o.Service, err = service.New(service.Options{
-		Keys: o.keyStore(), Connections: conns, Providers: provs, HeavyPerMinute: heavy,
-		Heavy: middleware.ServiceLimiter{L: ratelimit.NewMemory(heavy, time.Minute)},
-		Store: st, Registry: command.Default(), Now: cfg.Now, Workspace: string(o.Dir), Media: media,
+		Keys: o.keyStore(), Connections: out.conns, Providers: out.provs, Social: out.socials, HeavyPerMinute: heavy,
+		Agents: o.Agents,
+		Heavy:  middleware.ServiceLimiter{L: ratelimit.NewMemory(heavy, time.Minute)},
+		Store:  st, Registry: command.Default(), Now: cfg.Now, Workspace: string(o.Dir), Media: media,
 		Exporter: exp, Enqueue: jobs.Dispatcher{Queue: o.Queue}, Limits: limits, Publish: publish, Version: o.version,
 		BuiltInSkills: skills.FS(), Transcriber: transcriber, Tools: tools, Log: cfg.Log,
 		Lint: lint.Env{Measurer: lintMeasurer{workspace: string(o.Dir)}},
@@ -322,6 +342,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		RuntimeSecret: o.runtimeSecret, LauncherSecret: launcherSecret,
 		Sessions: auth.NewSessions(cfg.Now), Launch: auth.NewLaunch(cfg.Now), Now: cfg.Now,
 		Events: o.Events, Version: o.version, Network: o.network, Auth: o.netAuth, RateLimits: rates,
+		Chat: o.chatStreams(), AgentTokens: o.agentLookup(),
 	}
 
 	if o.deps.MCP, err = mcp.Handler(o.Service, mcp.Options{Version: o.version}); err != nil {
@@ -481,6 +502,7 @@ func (o *Owner) Deps() *httpapi.Deps { return o.deps }
 // 6.3 step 5): from then on a command finds this process and talks to it.
 func (o *Owner) Announce(addr string) error {
 	o.announce = true
+	o.mcpURL.Store(mcpURLFor(addr))
 
 	return o.Dir.WriteRuntime(workspace.Runtime{
 		Schema: 1, PID: os.Getpid(), Addr: addr, Mode: o.mode, StartedAt: o.now().UTC(),
@@ -513,6 +535,11 @@ func (o *Owner) Close() error {
 
 	if o.Events != nil {
 		o.Events.Close() // ends the open streams at once
+	}
+
+	// No agent process is left behind: every tree is killed before the store closes (SDD-017 section 4).
+	if o.Agents != nil {
+		o.Agents.Shutdown()
 	}
 
 	if o.announce || o.runtimeSecret != "" {

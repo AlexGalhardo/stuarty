@@ -20,6 +20,7 @@ import (
 	exportcore "github.com/AlexGalhardo/stuarty/core/export"
 	"github.com/AlexGalhardo/stuarty/core/lint"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
+	engineaudio "github.com/AlexGalhardo/stuarty/engine/audio"
 	"github.com/AlexGalhardo/stuarty/engine/export"
 	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 	"github.com/AlexGalhardo/stuarty/service"
@@ -276,6 +277,45 @@ func unavailableReason(det *ffmpeg.EncoderDetection, err error) string {
 
 	return strings.Join(parts, ", ")
 }
+
+// MeasureAudio implements service.AudioMeter: the audio of the range through the mixer of the export, with and
+// without the processors (SDD-004 section 7.1). It decodes with FFmpeg and runs no encoder.
+func (a *adapter) MeasureAudio(ctx context.Context, in service.AudioMeasureInput) (*service.AudioMeasureOutput, error) {
+	if a.cfg.Runner == nil {
+		return nil, internal("no FFmpeg runner is configured")
+	}
+
+	if in.Doc == nil {
+		return nil, internal("no document to measure")
+	}
+
+	caps, err := a.capabilities(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := export.MeasureAudio(ctx, a.job(service.ExportInput{
+		Doc: in.Doc, JobID: in.JobID,
+	}, a.cfg.Runner, caps), in.ItemID, int(in.Start), int(in.End))
+	if errors.Is(err, export.ErrMeasureTooLong) {
+		return nil, service.ErrAudioRangeTooLong
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	levels := func(m engineaudio.Measurement) service.AudioLevels {
+		return service.AudioLevels{
+			IntegratedLUFS: m.IntegratedLUFS, TruePeakDBTP: m.TruePeakDBTP, NoiseFloorDBFS: m.NoiseFloorDBFS,
+			SpeechToNoiseDB: m.SpeechToNoiseDB,
+		}
+	}
+
+	return &service.AudioMeasureOutput{Before: levels(res.Before), After: levels(res.After), Seconds: res.Seconds}, nil
+}
+
+var _ service.AudioMeter = (*adapter)(nil)
 
 // runnerFor picks the runner by the encoder detection finds for the codec: a software encoder (or none) runs
 // under the address space limit, a hardware encoder does not. A detection error leaves the stricter runner to

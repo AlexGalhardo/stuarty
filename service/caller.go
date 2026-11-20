@@ -59,6 +59,12 @@ var Scopes = map[string]string{
 	"HistoryList":         ScopeRead,
 	"Undo":                ScopeEdit,
 	"Redo":                ScopeEdit,
+	"HistoryRevert":       ScopeEdit,
+	"HistoryDiff":         ScopeRead,
+	"CheckpointCreate":    ScopeEdit,
+	"CheckpointList":      ScopeRead,
+	"CheckpointRename":    ScopeEdit,
+	"CheckpointRemove":    ScopeEdit,
 	"Lint":                ScopeRead,
 	"MediaImport":         ScopeMedia,
 	"MediaInspect":        ScopeRead,
@@ -68,6 +74,7 @@ var Scopes = map[string]string{
 	"JobStart":            ScopeRender,
 	"ExportPresetList":    ScopeRead,
 	"ExportCheck":         ScopeRead,
+	"AudioMeasure":        ScopeRead,
 	"ExportBatch":         ScopeRender,
 	"ProjectBundleExport": ScopeRender,
 	"ProjectBundleImport": ScopeEdit,
@@ -119,6 +126,20 @@ var Scopes = map[string]string{
 	"KeyList":             ScopeRead,
 	"KeyRevoke":           ScopeRead,
 
+	// The hosted agent chat (SDD-017 section 10). The operations that act are also for a person only: that is
+	// checked before the scope.
+	"AgentProfileList":     ScopeRead,
+	"AgentProfileSet":      ScopeAdmin,
+	"AgentProfileRemove":   ScopeAdmin,
+	"ChatSessionStart":     ScopeEdit,
+	"ChatSend":             ScopeEdit,
+	"ChatCancel":           ScopeEdit,
+	"ChatAnswerPermission": ScopeEdit,
+	"ChatSessionDelete":    ScopeEdit,
+	"ChatSessionList":      ScopeRead,
+	"ChatSessionGet":       ScopeRead,
+	"ChatTranscriptGet":    ScopeRead,
+
 	"ProjectDescribe":    ScopeRead,
 	"ProjectDuplicate":   ScopeEdit,
 	"ProjectItemAdd":     ScopeEdit,
@@ -152,8 +173,16 @@ var Scopes = map[string]string{
 	"ApprovalRuleList":   ScopeRead,
 	"ApprovalRuleSet":    ScopeAdmin,
 	"ApprovalRuleRemove": ScopeAdmin,
-	"CostSummary":        ScopeRead,
-	"CostCeilingSet":     ScopeAdmin,
+	// The social networks and publishing (SDD-020 section 9).
+	"SocialNetworkList":     ScopeRead,
+	"SocialConnectBegin":    ScopeAdmin,
+	"SocialConnectComplete": ScopeAdmin,
+	"SocialAccountList":     ScopeRead,
+	"PublishValidate":       ScopeRead,
+	"PublishNow":            ScopeRender,
+	"PublishStatus":         ScopeRead,
+	"CostSummary":           ScopeRead,
+	"CostCeilingSet":        ScopeAdmin,
 
 	"AssetGet":     ScopeRead,
 	"AssetUses":    ScopeRead,
@@ -164,6 +193,10 @@ var Scopes = map[string]string{
 	"ProviderModels":   ScopeRead,
 	"ProviderPriceSet": ScopeAdmin,
 	"TextGenerate":     ScopeEdit,
+
+	"MotionBrief":   ScopeRead,
+	"MotionCheck":   ScopeRead,
+	"MotionReplace": ScopeEdit,
 }
 
 // authorize checks the caller first, as every method does: a missing caller

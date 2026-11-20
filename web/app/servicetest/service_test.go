@@ -42,9 +42,33 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			return err
 		},
 		"CommandHelp": func() error { _, err := e.svc.CommandHelp(ctx, service.CommandHelpRequest{}); return err },
-		"Undo":        func() error { _, err := e.svc.Undo(ctx, service.UndoRequest{ProjectID: "prj_0000000001"}); return err },
-		"Redo":        func() error { _, err := e.svc.Redo(ctx, service.UndoRequest{ProjectID: "prj_0000000001"}); return err },
-		"Lint":        func() error { _, err := e.svc.Lint(ctx, service.LintRequest{ProjectID: "prj_0000000001"}); return err },
+		"HistoryRevert": func() error {
+			_, err := e.svc.HistoryRevert(ctx, service.HistoryRevertRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"HistoryDiff": func() error {
+			_, err := e.svc.HistoryDiff(ctx, service.HistoryDiffRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"CheckpointCreate": func() error {
+			_, err := e.svc.CheckpointCreate(ctx, service.CheckpointCreateRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"CheckpointList": func() error {
+			_, err := e.svc.CheckpointList(ctx, service.CheckpointListRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"CheckpointRename": func() error {
+			_, err := e.svc.CheckpointRename(ctx, service.CheckpointRenameRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"CheckpointRemove": func() error {
+			_, err := e.svc.CheckpointRemove(ctx, service.CheckpointRemoveRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"Undo": func() error { _, err := e.svc.Undo(ctx, service.UndoRequest{ProjectID: "prj_0000000001"}); return err },
+		"Redo": func() error { _, err := e.svc.Redo(ctx, service.UndoRequest{ProjectID: "prj_0000000001"}); return err },
+		"Lint": func() error { _, err := e.svc.Lint(ctx, service.LintRequest{ProjectID: "prj_0000000001"}); return err },
 		"MediaImport": func() error {
 			_, err := e.svc.MediaImport(ctx, service.MediaImportRequest{ProjectID: "prj_0000000001"})
 			return err
@@ -75,6 +99,10 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 		},
 		"ExportCheck": func() error {
 			_, err := e.svc.ExportCheck(ctx, service.ExportCheckRequest{ProjectID: "prj_0000000001", Preset: "tiktok"})
+			return err
+		},
+		"AudioMeasure": func() error {
+			_, err := e.svc.AudioMeasure(ctx, service.AudioMeasureRequest{ProjectID: "prj_0000000001"})
 			return err
 		},
 		"ExportBatch": func() error {
@@ -306,6 +334,18 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.BriefingAnswer(ctx, service.BriefingAnswerRequest{ProjectID: "prj_0000000001"})
 			return err
 		},
+		"MotionBrief": func() error {
+			_, err := e.svc.MotionBrief(ctx, service.MotionBriefRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"MotionCheck": func() error {
+			_, err := e.svc.MotionCheck(ctx, service.MotionCheckRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"MotionReplace": func() error {
+			_, err := e.svc.MotionReplace(ctx, service.MotionReplaceRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
 		"ConnectionList": func() error {
 			_, err := e.svc.ConnectionList(ctx, service.ConnectionListRequest{})
 			return err
@@ -359,6 +399,34 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 		},
 		"CostCeilingSet": func() error {
 			_, err := e.svc.CostCeilingSet(ctx, service.CostCeilingSetRequest{Currency: "USD"})
+			return err
+		},
+		"SocialNetworkList": func() error {
+			_, err := e.svc.SocialNetworkList(ctx, service.SocialNetworkListRequest{})
+			return err
+		},
+		"SocialConnectBegin": func() error {
+			_, err := e.svc.SocialConnectBegin(ctx, service.SocialConnectBeginRequest{})
+			return err
+		},
+		"SocialConnectComplete": func() error {
+			_, err := e.svc.SocialConnectComplete(ctx, service.SocialConnectCompleteRequest{})
+			return err
+		},
+		"SocialAccountList": func() error {
+			_, err := e.svc.SocialAccountList(ctx, service.SocialAccountListRequest{})
+			return err
+		},
+		"PublishValidate": func() error {
+			_, err := e.svc.PublishValidate(ctx, service.PublishValidateRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"PublishNow": func() error {
+			_, err := e.svc.PublishNow(ctx, service.PublishNowRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"PublishStatus": func() error {
+			_, err := e.svc.PublishStatus(ctx, service.PublishStatusRequest{JobID: "job_0000000001"})
 			return err
 		},
 		"ProviderList": func() error {
@@ -443,6 +511,55 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 		},
 		"LibraryReindex": func() error {
 			_, err := e.svc.LibraryReindex(ctx, service.LibraryReindexRequest{})
+			return err
+		},
+		"AgentProfileList": func() error {
+			_, err := e.svc.AgentProfileList(ctx, service.AgentProfileListRequest{})
+			return err
+		},
+		"AgentProfileSet": func() error {
+			_, err := e.svc.AgentProfileSet(ctx, service.AgentProfileSetRequest{Name: "a", Command: "a"})
+			return err
+		},
+		"AgentProfileRemove": func() error {
+			_, err := e.svc.AgentProfileRemove(ctx, service.AgentProfileRemoveRequest{Name: "a"})
+			return err
+		},
+		"ChatSessionStart": func() error {
+			_, err := e.svc.ChatSessionStart(
+				ctx, service.ChatSessionStartRequest{ProjectID: "prj_0000000001", Profile: "a"},
+			)
+			return err
+		},
+		"ChatSend": func() error {
+			_, err := e.svc.ChatSend(ctx, service.ChatSendRequest{SessionID: "cht_0000000001", Text: "a"})
+			return err
+		},
+		"ChatCancel": func() error {
+			_, err := e.svc.ChatCancel(ctx, service.ChatCancelRequest{SessionID: "cht_0000000001"})
+			return err
+		},
+		"ChatAnswerPermission": func() error {
+			_, err := e.svc.ChatAnswerPermission(
+				ctx,
+				service.ChatAnswerRequest{SessionID: "cht_0000000001", RequestID: "cpr_0000000001", Answer: "allow"},
+			)
+			return err
+		},
+		"ChatSessionList": func() error {
+			_, err := e.svc.ChatSessionList(ctx, service.ChatSessionListRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ChatSessionGet": func() error {
+			_, err := e.svc.ChatSessionGet(ctx, service.ChatRef{SessionID: "cht_0000000001"})
+			return err
+		},
+		"ChatTranscriptGet": func() error {
+			_, err := e.svc.ChatTranscriptGet(ctx, service.ChatTranscriptRequest{SessionID: "cht_0000000001"})
+			return err
+		},
+		"ChatSessionDelete": func() error {
+			_, err := e.svc.ChatSessionDelete(ctx, service.ChatRef{SessionID: "cht_0000000001"})
 			return err
 		},
 		"OpenFile": func() error {

@@ -960,6 +960,13 @@ func (s *svc) jobView(c Caller, r JobRow, waited bool) *Job {
 		}
 	}
 
+	if r.Kind == JobPublishUpload && len(r.Result) > 0 {
+		var res JobResult
+		if json.Unmarshal(r.Result, &res) == nil && res.Publish != nil {
+			j.Result = &res
+		}
+	}
+
 	if r.Kind == JobTranscribe && len(r.Result) > 0 {
 		var res JobResult
 		if json.Unmarshal(r.Result, &res) == nil && res.Transcribe != nil {
@@ -1014,6 +1021,12 @@ func jobText(j *Job, waited bool) string {
 
 	for _, w := range j.Warnings {
 		v.Warnings = append(v.Warnings, "warning: "+w)
+	}
+
+	if j.Result != nil && j.Result.Publish != nil {
+		p := j.Result.Publish
+		v.Warnings = append(v.Warnings, fmt.Sprintf("publication %s: %s",
+			p.State, untrusted.Inline(untrusted.SourceNetworkText, nil, p.URL, 200)))
 	}
 
 	if j.Error != nil && j.State == JobFailed {

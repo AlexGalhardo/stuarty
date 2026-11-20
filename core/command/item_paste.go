@@ -75,6 +75,7 @@ var pasteGroups = []pasteGroup{
 		[]string{"volume"},
 		func(d, s *timeline.Item) {
 			d.Volume, d.Denoise, d.Voice = s.Volume, s.Denoise, s.Voice
+			d.Processors = timeline.CloneProcessors(s.Processors)
 		},
 	},
 }

@@ -109,6 +109,7 @@ type Repos interface {
 	Templates() TemplateRepo
 	Backups() BackupRepo
 	Audit() AuditRepo // section 5.9
+	Checkpoints() CheckpointRepo // section 5.14
 }
 
 type Tx interface {
@@ -278,6 +279,29 @@ type OperationRepo interface {
 	CloseOpenRedo(ctx context.Context, projectID, actor string, by int64) error
 	// CloseAllOpen closes every open row of the project (a migration or import ends all undo chains).
 	CloseAllOpen(ctx context.Context, projectID string, by int64) error
+}
+
+// CheckpointRepo is the checkpoints of a timeline (section 5.14; epic 36). Repos.Checkpoints() returns it.
+type CheckpointRow struct {
+	ProjectID string
+	Name      string
+	Note      string
+	Revision  int64
+	Actor     string
+	Auto      bool
+	AtMs      int64
+}
+
+type CheckpointRepo interface {
+	Create(ctx context.Context, row CheckpointRow) error // ErrExists on a duplicate name
+	Get(ctx context.Context, projectID, name string) (CheckpointRow, error)
+	List(ctx context.Context, projectID string) ([]CheckpointRow, error) // newest revision first, then name
+	// Rename changes the name, and the note when note is not nil, and makes the checkpoint a named one (auto 0);
+	// ErrNotFound, ErrExists on a taken name.
+	Rename(ctx context.Context, projectID, name, newName string, note *string) error
+	Remove(ctx context.Context, projectID, name string) error // ErrNotFound; no revision is touched
+	// TrimAuto removes the oldest automatic checkpoints until at most keep remain.
+	TrimAuto(ctx context.Context, projectID string, keep int) error
 }
 ```
 
@@ -870,6 +894,7 @@ CREATE VIRTUAL TABLE asset_search USING fts5(
 - **Origin is written once.** The row of an owner and hash keeps the origin of its first import. `rights_note`, `description`, `reusable` and the tags are the user's and change through `AssetSetInfo` and `AssetTag`. A later import of the same bytes with an origin block is validated and does not replace the origin.
 - **`asset_search`** has one row per owner and hash, written by the service in the same transaction as every change of `asset_info`, `asset_tags`, `assets.original_name` or a `project_assets.name`: `name` is the names the file is known by in the projects of that owner (the first name of the asset when no project of the owner holds it), `tags` the tags joined by spaces, `origin` the source, provider, model and prompt. A file that reaches a project with no import (an `asset.add` of a template fill, the copy of a project) gets the search row of the project's owner in the same transaction, so it is found by the name that project gives it even when that owner has no `asset_info` row. A virtual table holds no foreign key, so `Assets().Delete` (the emptying of the trash) deletes the rows of every owner too. Every query of the three tables filters by `owner_user_id`. A query is built by `core/asset` (every term quoted, a prefix match on the last) and never concatenated from the caller's text.
 - **Migration.** For every owner whose projects hold an asset (the owner of the project, the empty string when it has none) and for the empty owner of an asset no project holds: an `asset_info` row with `origin_kind = 'imported'`, `created_by` the importer of that owner's oldest `project_assets` row (`migration` when there is none) and `created_ms` of the asset, and its `asset_search` row (the names that owner's projects give it). `Down` drops the three tables. No `project_assets` row and no file changes: a clip still resolves its media by the hash.
+- **The render origin (epic 33), migration `20261119210000_asset_render_origin`.** Three columns of `asset_info`, all `TEXT NOT NULL DEFAULT ''`: `engine`, `engine_version` and `render_key`, written with the origin of kind `rendered_externally` (SDD-011 section 15.2) and empty for every other row. No index: a project holds at most 200 assets, so the earlier renders of a key are found by reading the caller's rows of the project's hashes (`GetMany` of the owner). `engine` and `engine_version` join the `origin` text of `asset_search`. `Down` drops the three columns. Existing rows keep the empty values.
 - **Uses.** The projects that use an asset are computed, never stored: the `project_assets` rows of the hash in state `active` (`pending` is an import not yet added; `trashed` is removed), each timeline mapped to its production by `project_items` (section 5.12). The same hash held by two timelines of one project is one use.
 
 ### 5.6 `jobs`
@@ -1156,6 +1181,28 @@ CREATE UNIQUE INDEX image_operations_key_index ON image_operations (image_id, ac
 ```
 
 The log is append-only except `closed_by`, which moves from `NULL` to a revision, as in section 5.3; undo and redo follow section 12 with the rules of SDD-021 section 4. `Repos` gains `Images() ImageRepo` with `Create`, `Get`, `List`, `Commit` (a compare-and-set on the revision, `ErrStale` otherwise), `AppendOperation`, `Operation`, `LastOpen` (the actor's last step open to undo or redo), `Close`, `CloseOpenRedo` and `ByKey`. The writer is the one write transaction of `Store.Write`.
+
+### 5.14 `checkpoints` (RF-121, epic 36)
+
+A name and a note on a revision of a timeline, so that a person or an agent can say "this is the state to come back to" and go back by that name. A checkpoint is not a copy of the document: it points at a revision, whose document the log rebuilds (section 12.4).
+
+```sql
+CREATE TABLE checkpoints (
+  project_id TEXT    NOT NULL REFERENCES timelines (id) ON DELETE CASCADE, -- the id of the timeline document (section 5.12): a second timeline is not a row of `projects`
+  name       TEXT    NOT NULL CHECK (length(name) BETWEEN 1 AND 240),
+  note       TEXT    NOT NULL DEFAULT '',
+  revision   INTEGER NOT NULL CHECK (revision >= 1),
+  actor      TEXT    NOT NULL,
+  auto       INTEGER NOT NULL DEFAULT 0 CHECK (auto IN (0,1)),
+  at_ms      INTEGER NOT NULL,
+  PRIMARY KEY (project_id, name)
+);
+CREATE INDEX checkpoints_revision_index ON checkpoints (project_id, revision DESC);
+```
+
+The name is unique inside a timeline (`ErrExists` becomes `E_ID_EXISTS`), 1 to 60 characters after `untrusted.Clean` and trimming, with no `/`; the note is cut at 300 characters. A checkpoint is removed with its project (the cascade of `Delete`, section 13.3) and never otherwise except by `CheckpointRemove` and by the ceiling of the automatic ones below; it holds no foreign key to `operations`, which is append-only. `Repos` gains `Checkpoints() CheckpointRepo` (section 3.2).
+
+**Automatic checkpoint.** In the transaction of `Edit` (and of `HistoryRevert`, which commits a batch the same way), after the checks that can refuse the batch and before the commit, when the batch is not a dry run and changes the document (not a no-op), and the actor is an agent (SDD-003 §2.5.1), the service makes the checkpoint `auto <actor> <YYYY-MM-DD>` (UTC date of the service clock) at the revision the batch started from, unless that name exists in the timeline. The name is the whole "once a day per actor" rule: the first edit of the day creates it, the later ones find it. At most 30 automatic checkpoints are kept per timeline: after creating one, `TrimAuto(project, 30)` removes the oldest automatic ones. A checkpoint made by a person or an agent by name is never removed by the ceiling, and neither is an automatic one that a person or an agent renamed: the rename makes it a named one (`auto` 0).
 
 ## 6. Workspace ownership
 
@@ -1461,6 +1508,10 @@ SELECT revision, kind, actor, at_ms, base_revision, target_revision, closed_by, 
 
 A row is shown as undone when it is an `edit` or `redo` with `closed_by` set.
 
+### 11.3 Retention (epic 36)
+
+The log has no retention policy: no row is ever deleted, except by the cascade of emptying the trash (section 13.3), and every row keeps its `inverse`, which is what lets any revision be rebuilt (section 12.4). The rule that goes with checkpoints is therefore a constraint on the future more than a job of today: **a revision that a checkpoint names is kept, and so is every revision after it**, because the document at the checkpoint is rebuilt by walking back from the current one through each later row. Any later policy that compacts old rows may drop only rows older than the oldest checkpoint, and must keep a rebuildable form of that revision (its `doc_sha256` row and the document). The ceiling on automatic checkpoints (section 5.14) keeps the number of pinned revisions bounded.
+
 ## 12. Undo and redo
 
 SDD-002 §A.6; ADR-0006 item 6. Undo and redo are service operations (`Undo`, `Redo`) that are themselves committed batches: they go through the same steps as section 9, with the differences below.
@@ -1555,6 +1606,19 @@ Fields beyond the common edit result of SDD-003 (`revision`, `diff`, `descriptio
 
 `undone` is `redone` for a redo. `primitive_index` counts in the order the primitives were attempted (reversed). `by_revision` and `by_actor` are present for the two `*_other_actor` reasons. `E_NOTHING_TO_UNDO` and `E_NOTHING_TO_REDO` have no `details`.
 
+### 12.4 Revert and the diff of two revisions (RF-120, RF-121)
+
+`HistoryRevert` and `HistoryDiff` (SDD-003 §2.5.1) need the document at a revision. There is no stored copy of it, so the service rebuilds it from the log:
+
+1. Read the project row and its current document (inside `WriteProject` for a revert; a plain read for a diff). The target `T` must satisfy `1 <= T <= current`; a checkpoint name is resolved to its revision first (`E_NOT_FOUND` when it does not exist).
+2. Walk the rows `T+1 .. current` through `Operations.Get`. A row of kind `migrate` or `import` among them refuses the operation with `E_INVALID_STATE` (the schema of the document changed there, so its `inverse` does not describe a step back). A walk of more than 5,000 rows is `E_LIMIT` with the hint to go back in steps through a nearer checkpoint.
+3. Give the `inverse` of each row, newest first, to `command.RebuildAt(current, inverses)` (SDD-002 A.6): the lists are applied one after the other, each in reverse order, on one working copy with no guard and no validation in between, and the result is validated once.
+4. Compare `SHA-256(timeline.Canonical(rebuilt))` with the `doc_sha256` of the row `T`. A difference is `E_INTERNAL` with the revisions in `details`: the log and the document disagree, which is a defect, never something to continue from.
+
+`HistoryRevert` then calls `command.Revert(current, rebuilt)` and commits the batch like an edit (section 9) as a row of kind `edit`, `ops` `[{"op":"history.revert","args":{"revision":T}}]`, with the `inverse` and `diff` of that call, `base_revision` the revision the caller read, and `closeOpenRedo` as any new edit of the actor. Because it is an `edit` row, the actor's `Undo` (section 12.2) applies its `inverse`, and the guard protects what other actors changed after it, as for any step. It writes nothing when the diff is empty. An idempotency key is not part of the request.
+
+The two properties the tests hold (`TestRevertProperty`, `TestRevertThroughTheService`): revert to `R` leaves a document equal in canonical bytes to the document at `R`, so an export of it equals an export at `R`; and revert followed by undo leaves the document the revert started from.
+
 ## 13. Trash
 
 ADR-0020 items 2 and 3; RF-005, RF-131.
@@ -1591,7 +1655,7 @@ ADR-0020 items 2 and 3; RF-005, RF-131.
 ### 13.4 Store lock and orphan sweep
 
 - `storeMu sync.RWMutex` in the service: import (`MediaImport`, bundle import) holds the read lock from "copy the file into `store/` or find it already there" through the insert of its `assets` row; `TrashEmpty` holds the write lock from its transaction through the file removal. This closes the race where an import finds a file that a concurrent empty is about to delete.
-- **Orphan sweep** (start-up step 8 and `doctor`): a file under `store/` whose hash has no `assets` row and whose modification time is more than 24 hours old; a directory under `artifacts/` with no `assets` row; a directory under `exports/` or `frames/` whose project does not exist. They are removed. The 24-hour age protects a file that an import copied before its row existed. It also removes, one level deep in `exports/<project id>/`, the files named `bundle-r*.vvbundle.tmp` that a killed bundle export left (section 16.2), but only those whose modification time is older than the start of the running service: an export that runs now writes a newer file. They are counted with `incoming_files`. Nothing else in `exports/` is touched. Crash test: `TestCrashBundleExport` kills the child at `bundle_export.after_write`, then the next start's sweep removes the temp file.
+- **Orphan sweep** (start-up step 8 and `doctor`): a file under `store/` whose hash has no `assets` row and whose modification time is more than 24 hours old; a directory under `artifacts/` with no `assets` row; a directory under `exports/` or `frames/` whose project does not exist. They are removed. The 24-hour age protects a file that an import copied before its row existed. It also removes, one level deep in `exports/<project id>/`, the files named `bundle-r*.vvbundle.tmp` that a killed bundle export left (section 16.2), but only those whose modification time is older than the start of the running service: an export that runs now writes a newer file. They are counted with `incoming_files`. Nothing else in `exports/` is touched. It also removes the files of `publish/uploads/` (the addresses of upload sessions, SDD-020 §7.4) whose modification time is more than 7 days old, counted with `incoming_files` too. Crash test: `TestCrashBundleExport` kills the child at `bundle_export.after_write`, then the next start's sweep removes the temp file.
 
 ## 14. Jobs
 

@@ -10,7 +10,7 @@ const defaultFreezeDuration = "3s"
 func init() {
 	Register(Define(Spec{
 		Name:    "item.freeze_frame",
-		Summary: "Holds one frame of a clip: splits the clip at a frame and inserts a still of that frame.",
+		Summary: "Holds one frame of a clip as a still inserted at that frame.",
 		Description: "Splits the clip at a timeline frame and puts between the two parts a new clip that shows the " +
 			"source frame at that point for duration (default 3s), with no sound. The right part and the later " +
 			"items of the track move later by duration; other tracks are untouched. The freeze frame has no " +

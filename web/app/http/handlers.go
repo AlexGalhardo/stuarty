@@ -276,6 +276,7 @@ func (h *apiHandler) registerAll() {
 	register(h, "projects.redo", func(c *web.Ctx, in stepIn) (service.UndoResult, error) {
 		return h.step(c, in, h.Service.Redo)
 	})
+	h.registerHistoryOps()
 	register(h, "projects.lint", func(c *web.Ctx, in lintIn) (service.LintResult, error) {
 		res, err := h.Service.Lint(
 			c.Context(),
@@ -300,6 +301,9 @@ func (h *apiHandler) registerAll() {
 	})
 	register(h, "projects.frame", h.projectsFrame)
 	register(h, "projects.sheet", h.projectsSheet)
+	register(h, "projects.motion.brief", h.motionBrief)
+	register(h, "projects.motion.check", h.motionCheck)
+	register(h, "projects.motion.replace", h.motionReplace)
 
 	for i := range Endpoints {
 		if Endpoints[i].Pending != "" {
@@ -342,6 +346,7 @@ func (h *apiHandler) registerAll() {
 	register(h, "jobs.cancel", h.jobCancel)
 	register(h, "export.presets", h.exportPresetList)
 	register(h, "export.check", h.exportCheck)
+	register(h, "audio.measure", h.audioMeasure)
 	register(h, "export.batch", h.exportBatch)
 	register(h, "templates.list", h.templateList)
 	register(h, "templates.save", h.templateSave)
@@ -415,6 +420,13 @@ func (h *apiHandler) registerAll() {
 	register(h, "approval-rules.remove", h.approvalRulesRemove)
 	register(h, "cost.get", h.costGet)
 	register(h, "cost.ceilings.set", h.costCeilingSet)
+	register(h, "social.networks", h.socialNetworks)
+	register(h, "social.connect", h.socialConnect)
+	register(h, "social.complete", h.socialComplete)
+	register(h, "social.accounts", h.socialAccounts)
+	register(h, "publish.validate", h.publishValidate)
+	register(h, "publish.now", h.publishNow)
+	register(h, "publish.status", h.publishStatus)
 	register(h, "providers.list", h.providersList)
 	register(h, "providers.models", h.providersModels)
 	register(h, "providers.prices.set", h.providersPriceSet)
@@ -436,6 +448,18 @@ func (h *apiHandler) registerAll() {
 	register(h, "library.prompts.render", h.promptRender)
 	register(h, "library.search", h.librarySearch)
 	register(h, "library.reindex", h.libraryReindex)
+	register(h, "agents.profiles.list", h.agentProfilesList)
+	register(h, "agents.profiles.set", h.agentProfilesSet)
+	register(h, "agents.profiles.remove", h.agentProfilesRemove)
+	register(h, "chat.sessions.start", h.chatStart)
+	register(h, "chat.sessions.list", h.chatList)
+	register(h, "chat.sessions.get", h.chatGet)
+	register(h, "chat.sessions.events", h.chatStream)
+	register(h, "chat.sessions.transcript", h.chatTranscript)
+	register(h, "chat.sessions.send", h.chatSend)
+	register(h, "chat.sessions.cancel", h.chatCancel)
+	register(h, "chat.sessions.answer", h.chatAnswer)
+	register(h, "chat.sessions.delete", h.chatDelete)
 	register(h, "system.get", h.systemGet)
 	register(h, "audit.list", h.auditList)
 	register(h, "system.launch", h.systemLaunch)

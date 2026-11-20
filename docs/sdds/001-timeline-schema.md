@@ -104,6 +104,7 @@ An asset appears in the document only after its ingest produced the normalized m
 | `volume` | number, 0 to 4 | absent (1) | Added by VV-036. A factor on the volume of the items of the track |
 | `magnet` | boolean | false | Added by TASK-0254. The items of the track are kept packed from frame 0 with no gap: after every command the items are laid end to end in the order of their `start`, so deleting, moving or trimming an item closes the gap. A locked track is not repacked; the command that turns the magnet on packs the track at once. The shift moves only the items of this track (a linked item on another track does not follow) |
 | `caption_style` | CaptionStyle | none | style of the caption items on this track, section 3.7 |
+| `processors` | list of Processor, up to 12 | absent | Added by epic 34. The processor chain of the track, run on the sum of the track's items after their own chains and the track volume (SDD-004 section 7.1). See "Processor" in section 3.5 |
 
 #### 3.3.1 Track order
 
@@ -169,6 +170,7 @@ A `clip` shows a video or image asset. An `audio` item plays an audio asset, or 
 | `denoise` | number, 0 to 1 | 0 | both | Added by TASK-0233. Noise reduction strength of the item's audio; 0 is off and the commands store 0 as absent. Not keyframeable. The plan carries it (SDD-004 §7) |
 | `voice` | `"clear"`, `"warm"`, `"deep"`, `"bright"`, `"radio"` | absent | both | Added by TASK-0254. The voice preset of the item's audio; absent is no preset and the commands store `none` as absent. Not keyframeable. The plan carries it (SDD-004 §7) |
 | `fade_in`, `fade_out` | integer | 0 | both | audio fade lengths in frames; their sum is at most `duration` |
+| `processors` | list of Processor, up to 12 | absent | both | Added by epic 34. The audio processor chain of the item, in the order the user chose (SDD-004 section 7.1). Not keyframeable. Edited by `audio.processor_add`, `audio.processor_set`, `audio.processor_move`, `audio.processor_remove` and `audio.apply_preset`; an empty chain is stored as absent. See "Processor" below |
 | `fit` | `"cover"`, `"contain"`, `"none"` | `"cover"` | clip | how the asset is sized into the frame before `scale` is applied |
 | `crop` | `{"left","top","right","bottom"}` numbers 0 to 1 | all 0 | clip | fraction removed from each side of the asset; `left + right < 1`, `top + bottom < 1`. Keyframeable since VV-120: `crop_left`, `crop_top`, `crop_right` and `crop_bottom` are keys of `keyframes` (section 3.8); the planner keeps each pair of opposite sides below 1 |
 | `brightness` | number, -1 to 1 | 0 | clip | Keyframeable since TASK-0254 (NEW-15), like `contrast`, `saturation`, `temperature`, `tint` and `hue`: the property name is a key of `keyframes` and the range is that of the static value |
@@ -203,9 +205,18 @@ A composition also takes every visual field of section 3.4 (`x`, `y`, `scale`, `
 
 1. A timeline never contains itself, directly or at any depth: placing a composition that would close a loop is refused with `E_INVALID_STATE` and `details.reason` `composition_cycle`.
 2. The depth of nesting is at most 4: a timeline with no composition has depth 0, one that holds compositions has `1 + the largest depth of the timelines they name`, and no timeline of the production may exceed 4. A command that would make one exceed it is refused with `E_LIMIT` and `details.reason` `composition_depth`.
-3. A timeline that others use is not trashed (`E_IN_USE`, listing the timelines that use it, SDD-003 section 1.7); and one that is missing from the production makes the lint report `composition_missing`, the plan draws nothing for the item, and the export is refused with `E_LINT_BLOCKING`.
+3. A timeline that others use is not trashed (`E_IN_USE`, listing the timelines that use it, SDD-003 section 1.7); and one that is missing from the production makes the lint report `L_MEDIA_MISSING` for the item (and `L_SOURCE_RANGE` when it shows frames past the end of its timeline or the timeline is empty, SDD-003 section 3.6), the plan draws nothing for the item, and the export is refused with `E_LINT_BLOCKING`.
 
 A nested timeline is in the production and nowhere else: compositions shared between productions are out of scope (a template covers that case).
+**Processor** (epic 34, SDD-004 section 7.1). One entry of a `processors` list:
+
+| Field | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `kind` | `"eq"`, `"compressor"`, `"limiter"`, `"gate"`, `"deesser"`, `"noise_reduction"` | required | |
+| `disabled` | boolean | false | the processor stays in the chain and is skipped by the plan |
+| `params` | object from parameter name to number | `{}` | only the parameters that differ from their default; the names, units, ranges and defaults of each kind are the table of SDD-004 section 7.1, and a value outside its range, or an unknown name, is invalid. `eq` parameters `hp_hz` and `lp_hz` are 0 (off) or inside their range; `noise_reduction` has `profile_start_ms` below `profile_end_ms` or both 0, and a marked profile only on an item chain |
+
+A chain has at most 12 processors. The lint warns when a `limiter` is not the last enabled processor of its chain (`audio_limiter_not_last`) and when a chain has more than one enabled `noise_reduction` (`audio_noise_reduction_repeated`). A processor on a text, caption or shape item is invalid. The field is additive (`schema_version` stays 1): a document without it is read and written as before.
 
 ### 3.6 Text and shape items
 

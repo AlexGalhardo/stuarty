@@ -47,9 +47,34 @@ func AgentDocsInputs() agentdocs.Inputs {
 		inLibrary[s.name] = true
 	}
 
+	// And for the hand-off from an external motion engine: the skill motion-with-an-external-engine carries it.
+	for _, s := range []*spec{motionBriefCmd, motionCheckCmd, motionReplaceCmd} {
+		inLibrary[s.name] = true
+	}
+
+	// The chat commands read a transcript and the profiles for a person (SDD-017 section 10): an agent has no use
+	// for the chat of another one, so the editor skill leaves them out; the guide of the workspace domain lists them.
+	for _, s := range []*spec{agentProfilesCmd, chatSessionsCmd, chatSessionCmd, chatTranscriptCmd} {
+		inLibrary[s.name] = true
+	}
+
+	// The commands of publishing (SDD-020 section 13) wait for the skills of publishing for the same reason.
+	for _, s := range publishingCommands() {
+		inLibrary[s.name] = true
+	}
+
 	// The commands of the AI provider layer (SDD-016 section 10) are in the guide of the provider domain, not in the
 	// editor skill, which has no room for them. An agent starts a generation with job_start (kind text.generate).
 	for _, s := range providerCommands() {
+		inLibrary[s.name] = true
+	}
+
+	// Revert, the diff and the checkpoints (epic 36) are in the guide of the video domain: the skill was at its cap
+	// and has no room for six lines, so it points at the guide with one sentence. That sentence is also where the skill
+	// names agent:docs, so its own line is left out too.
+	for _, s := range []*spec{
+		revertCmd, diffCmd, checkpointCreateCmd, checkpointListCmd, checkpointRenameCmd, checkpointRemoveCmd, agentDocs,
+	} {
 		inLibrary[s.name] = true
 	}
 

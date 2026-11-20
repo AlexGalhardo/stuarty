@@ -23,6 +23,28 @@ type GainPoint struct {
 	Gain   float64 `json:"gain"`
 }
 
+// ProcessorSpec is one enabled processor of a chain as the plan carries it (SDD-004 §7.1): the kind and every
+// parameter with its value, the defaults filled in.
+type ProcessorSpec struct {
+	Kind   string             `json:"kind"`
+	Params map[string]float64 `json:"params"`
+}
+
+// processorSpecs is the plan form of a chain: the enabled processors, in order, or nil when there is none.
+func processorSpecs(chain []timeline.Processor) []ProcessorSpec {
+	var out []ProcessorSpec
+
+	for _, p := range chain {
+		if p.Disabled {
+			continue
+		}
+
+		out = append(out, ProcessorSpec{Kind: p.Kind, Params: p.FullParams()})
+	}
+
+	return out
+}
+
 // AudioSource is one source of the mix (SDD-004 §7): a clip with audio or an
 // audio item, clipped to the requested frames.
 type AudioSource struct {
@@ -39,6 +61,11 @@ type AudioSource struct {
 	Voice       string            `json:"voice,omitempty"`   // voice preset (SDD-004 §7); absent means none
 	// Timeline is the timeline whose assets table names AssetID, for a source that comes from a composition.
 	Timeline string `json:"timeline,omitempty"`
+	// Chain is the enabled processors of the item and, when its track has a chain too, Track names the track and
+	// BusChain is that chain (the same on every source of the track): SDD-004 §7.1. Absent means none.
+	Chain    []ProcessorSpec `json:"chain,omitempty"`
+	Track    string          `json:"track,omitempty"`
+	BusChain []ProcessorSpec `json:"bus_chain,omitempty"`
 }
 
 // SpeedRamp is the speed curve of an item as the plan carries it (SDD-004 §3.11): the points,
@@ -152,7 +179,7 @@ func audioSource(doc *timeline.Document, it *timeline.Item, cs, ce int) AudioSou
 		}
 	}
 
-	return AudioSource{
+	src := AudioSource{
 		ItemID:      it.ID,
 		AssetID:     it.Asset,
 		StartSample: start,
@@ -164,7 +191,14 @@ func audioSource(doc *timeline.Document, it *timeline.Item, cs, ce int) AudioSou
 		Gain:        gain,
 		Denoise:     round3(it.Denoise),
 		Voice:       it.Voice,
+		Chain:       processorSpecs(it.Processors),
 	}
+
+	if bus := processorSpecs(doc.Tracks[it.Track].Processors); len(bus) > 0 {
+		src.Track, src.BusChain = it.Track, bus
+	}
+
+	return src
 }
 
 // envelope is the gain of the item over frames [rs, re) inside it as points in

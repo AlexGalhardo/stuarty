@@ -1,0 +1,50 @@
+{
+	"name": "audio-processors",
+	"actor": "contract",
+	"fixtures": {"voice": "not really a video, only bytes the fake ingest accepts"},
+	"steps": [
+		{"call": "ProjectCreate", "args": {"id": "prj_7k2m9x4q1b", "name": "Audio processors"}},
+		{"call": "MediaImport", "args": {"project_id": "prj_7k2m9x4q1b", "files": [{"path": "$voice", "asset_id": "ast_3c5v8n2w6d"}], "wait_ms": 20000}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 1, "operations": [
+			{"op": "track.add", "args": {"kind": "visual", "name": "Video", "id": "trk_f6g7h8j9k0"}},
+			{"op": "track.add", "args": {"kind": "audio", "name": "Voice", "id": "trk_m1n2p3q4r5"}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 2, "operations": [
+			{"op": "clip.add", "args": {"track_id": "trk_f6g7h8j9k0", "asset_id": "ast_3c5v8n2w6d", "start": "0s", "source_in": "0s", "duration": "2s", "id": "itm_m1n2p3q4r5"}},
+			{"op": "audio.add", "args": {"track_id": "trk_m1n2p3q4r5", "asset_id": "ast_3c5v8n2w6d", "start": "0s", "duration": "2s", "id": "itm_c3d4e5f6g7"}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 3, "operations": [
+			{"op": "audio.processor_add", "args": {"item_id": "itm_m1n2p3q4r5", "kind": "compressor", "params": {"threshold_db": -24, "ratio": 4}}},
+			{"op": "audio.processor_add", "args": {"item_id": "itm_m1n2p3q4r5", "kind": "limiter"}},
+			{"op": "audio.processor_add", "args": {"item_id": "itm_c3d4e5f6g7", "kind": "eq", "params": {"hp_hz": 80}}},
+			{"op": "audio.processor_add", "args": {"item_id": "itm_c3d4e5f6g7", "kind": "noise_reduction", "params": {"strength": 0.6, "profile_start_ms": 100, "profile_end_ms": 600}}},
+			{"op": "audio.processor_add", "args": {"track_id": "trk_m1n2p3q4r5", "kind": "gate", "params": {"threshold_db": -45}}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 4, "operations": [
+			{"op": "audio.processor_set", "args": {"item_id": "itm_m1n2p3q4r5", "index": 0, "params": {"ratio": 6}}},
+			{"op": "audio.processor_set", "args": {"track_id": "trk_m1n2p3q4r5", "index": 0, "enabled": false}},
+			{"op": "audio.processor_move", "args": {"item_id": "itm_m1n2p3q4r5", "index": 1, "to": 0}},
+			{"op": "audio.processor_move", "args": {"item_id": "itm_c3d4e5f6g7", "index": 0, "to": 1}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 5, "operations": [
+			{"op": "audio.processor_remove", "args": {"item_id": "itm_c3d4e5f6g7", "index": 0}},
+			{"op": "audio.apply_preset", "args": {"track_id": "trk_m1n2p3q4r5", "preset": "voice_with_music"}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 6, "operations": [
+			{"op": "audio.apply_preset", "args": {"item_id": "itm_m1n2p3q4r5", "preset": "voice"}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 7, "operations": [
+			{"op": "audio.processor_set", "args": {"item_id": "itm_m1n2p3q4r5", "index": 0, "params": {"strength": 2}}}]},
+			"expect_error": {"code": "E_VALIDATION"}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 7, "operations": [
+			{"op": "audio.processor_add", "args": {"track_id": "trk_m1n2p3q4r5", "kind": "noise_reduction", "params": {"profile_start_ms": 100, "profile_end_ms": 600}}}]},
+			"expect_error": {"code": "E_VALIDATION"}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 7, "operations": [
+			{"op": "audio.processor_add", "args": {"item_id": "itm_m1n2p3q4r5", "kind": "gate"}},
+			{"op": "audio.processor_add", "args": {"track_id": "trk_m1n2p3q4r5", "kind": "noise_reduction", "index": 0}},
+			{"op": "audio.processor_add", "args": {"track_id": "trk_m1n2p3q4r5", "kind": "gate", "params": {"threshold_db": -48}}},
+			{"op": "audio.processor_move", "args": {"track_id": "trk_m1n2p3q4r5", "index": 5, "to": 1}},
+			{"op": "audio.processor_remove", "args": {"track_id": "trk_m1n2p3q4r5", "index": 0}},
+			{"op": "audio.processor_remove", "args": {"item_id": "itm_m1n2p3q4r5", "index": 5}}]}},
+		{"call": "AudioMeasure", "args": {"project_id": "prj_7k2m9x4q1b", "item_id": "itm_0000000000"},
+			"expect_error": {"code": "E_NOT_FOUND"}},
+		{"call": "AudioMeasure", "args": {"project_id": "prj_7k2m9x4q1b", "item_id": "itm_m1n2p3q4r5", "start": "1.5s", "end": "0.5s"},
+			"expect_error": {"code": "E_VALIDATION"}},
+		{"call": "Lint", "args": {"project_id": "prj_7k2m9x4q1b"}},
+		{"call": "CommandHelp", "args": {"name": "audio.processor_add"}}
+	]
+}

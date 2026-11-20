@@ -122,6 +122,7 @@ type ExportResult struct {
 // JobResult has exactly one member set.
 type JobResult struct {
 	Export     *ExportResult     `json:"export,omitempty"`
+	Publish    *PublishResult    `json:"publish,omitempty"`
 	Transcribe *TranscribeResult `json:"transcribe,omitempty"`
 	// Batch is the state of the children of an export_batch job, read from them whenever the job is read.
 	Batch *BatchResult `json:"batch,omitempty"`

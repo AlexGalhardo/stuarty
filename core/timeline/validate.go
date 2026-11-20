@@ -249,6 +249,7 @@ func (v *validator) tracks() {
 		if t.CaptionStyle != nil {
 			v.style(path+".caption_style", k, t.CaptionStyle, true)
 		}
+		v.processors(path, k, t.Processors, false)
 	}
 }
 
@@ -454,7 +455,7 @@ func mediaFieldsForType(bad func(string), it *Item) {
 	comp := it.Type == ItemComposition
 	if !media && !comp &&
 		(it.Asset != "" || it.SourceIn != 0 || it.FadeIn != 0 || it.FadeOut != 0 || it.Denoise != 0 || it.Voice != "" ||
-			len(it.SpeedCurve) > 0 || it.Reverse) {
+			len(it.SpeedCurve) > 0 || it.Reverse || len(it.Processors) > 0) {
 		bad("asset")
 	}
 	// A composition plays its nested timeline: it keeps source_in and the fades, and has no asset of its own.
@@ -531,6 +532,7 @@ func (v *validator) media(path, key string, it Item) {
 		v.add(VShape, path+".denoise", key, "denoise must be between 0 and 1")
 	}
 	v.voice(path, key, it)
+	v.processors(path, key, it.Processors, true)
 	if it.SourceIn < 0 {
 		v.add(VShape, path+".source_in", key, "source_in cannot be negative")
 	}

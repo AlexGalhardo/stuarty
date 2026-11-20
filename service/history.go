@@ -586,6 +586,10 @@ func (s *svc) stepDescription(row *OperationRow, ops []string) string {
 	case OpEdit:
 	}
 
+	if len(ops) == 1 && ops[0] == revertOp {
+		return "Reverted to r" + strconv.FormatInt(revertTargetOf(row.Ops), 10) + "."
+	}
+
 	var parts []string
 
 	for _, name := range ops {

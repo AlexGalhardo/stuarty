@@ -60,10 +60,22 @@ var Provenance = map[string]string{
 	"service.SkillFileView.Text":           SourceLibraryText,
 	"service.LibraryReindexResult.Ignored": SourceLibraryText,
 
+	// publishing (SDD-020): the channel, the video the network named and what a person would approve
+	"service.PublishResult.RemoteID":        SourceNetworkText,
+	"service.PublishResult.URL":             SourceNetworkText,
+	"service.SocialAccount.Label":           SourceProjectText,
+	"service.SocialAccount.AccountTitle":    SourceNetworkText,
+	"service.PublishValidateResult.Summary": SourceProjectText,
+
 	// the asset library (SDD-011 section 14): the text a person or an agent wrote about a file
 	"assets.LibraryAsset.Description": SourceMetadata,
 	"assets.Use.Name":                 SourceProjectText,
 	"asset.Origin.Source":             SourceMetadata,
 	"asset.Origin.Prompt":             SourceMetadata,
 	"asset.Origin.RightsNote":         SourceMetadata,
+
+	// the hand-off from an external motion engine (SDD-011 section 15): the words of the captions in the range
+	"service.MotionCaption.Text":          SourceProjectText,
+	"service.MotionCheckResult.AssetName": SourceAssetName,
+	"service.RenderOffer.Name":            SourceAssetName,
 }

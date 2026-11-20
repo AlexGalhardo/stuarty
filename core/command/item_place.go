@@ -25,7 +25,7 @@ func init() {
 
 	Register(Define(Spec{
 		Name:    "item.crossfade",
-		Summary: "Sets a matching fade-out and fade-in on two overlapping visual items of different tracks.",
+		Summary: "Sets a fade-out and fade-in on two overlapping visual items.",
 		Description: "The item that leaves gets a fade transition out and the item that arrives a fade transition in, " +
 			"both of the given length, plus the matching audio fades for clips. The two items must overlap by at " +
 			"least that length, and the arriving item must start after the leaving one. For two neighbours that " +

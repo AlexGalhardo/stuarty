@@ -84,6 +84,21 @@ export interface AudioAddArgs {
   track_id: string;
 }
 
+export interface AudioApplyPresetArgs {
+  /**
+   * A clip or audio item; give this or track_id.
+   */
+  item_id?: string;
+  /**
+   * voice, voice_with_music, podcast or clean_noisy_room.
+   */
+  preset: "voice" | "voice_with_music" | "podcast" | "clean_noisy_room";
+  /**
+   * A track; give this or item_id.
+   */
+  track_id?: string;
+}
+
 export interface AudioDuckArgs {
   /**
    * A length, may be 0; the ramp down before speech. Default "0.2s".
@@ -296,6 +311,94 @@ export interface AudioMarkBeatsArgs {
      */
     beats: number[];
   };
+}
+
+export interface AudioProcessorAddArgs {
+  /**
+   * false adds it switched off; default true.
+   */
+  enabled?: boolean;
+  /**
+   * Where to insert, 0 to the length of the chain; default the end.
+   */
+  index?: number;
+  /**
+   * A clip or audio item; give this or track_id.
+   */
+  item_id?: string;
+  /**
+   * eq, compressor, limiter, gate, deesser or noise_reduction.
+   */
+  kind: "eq" | "compressor" | "limiter" | "gate" | "deesser" | "noise_reduction";
+  /**
+   * Parameter values by name; the rest keep their default.
+   */
+  params?: {
+    [k: string]: number;
+  };
+  /**
+   * A track; give this or item_id.
+   */
+  track_id?: string;
+}
+
+export interface AudioProcessorMoveArgs {
+  /**
+   * The processor to move, 0-based.
+   */
+  index: number;
+  /**
+   * A clip or audio item; give this or track_id.
+   */
+  item_id?: string;
+  /**
+   * Its new place, 0 to the length minus one.
+   */
+  to: number;
+  /**
+   * A track; give this or item_id.
+   */
+  track_id?: string;
+}
+
+export interface AudioProcessorRemoveArgs {
+  /**
+   * The processor to remove, 0-based.
+   */
+  index: number;
+  /**
+   * A clip or audio item; give this or track_id.
+   */
+  item_id?: string;
+  /**
+   * A track; give this or item_id.
+   */
+  track_id?: string;
+}
+
+export interface AudioProcessorSetArgs {
+  /**
+   * true switches it on, false off.
+   */
+  enabled?: boolean;
+  /**
+   * The processor to change, 0-based.
+   */
+  index: number;
+  /**
+   * A clip or audio item; give this or track_id.
+   */
+  item_id?: string;
+  /**
+   * Values to change; the others stay.
+   */
+  params?: {
+    [k: string]: number;
+  };
+  /**
+   * A track; give this or item_id.
+   */
+  track_id?: string;
 }
 
 export interface CaptionAddArgs {
@@ -644,6 +747,17 @@ export interface ClipRemoveSilencesArgs {
    * Noise level of silence: -30, -35 (default), -40 or -45.
    */
   threshold_db?: number;
+}
+
+export interface ClipReplaceMediaArgs {
+  /**
+   * A video or image asset of the document, of the same kind as the clip's asset.
+   */
+  asset_id: string;
+  /**
+   * A clip.
+   */
+  item_id: string;
 }
 
 export interface ClipSetBlendArgs {
@@ -2591,7 +2705,7 @@ export interface TrackUpdateArgs {
   volume?: number;
 }
 
-export type CommandName = "animation.apply_preset" | "animation.list_presets" | "asset.add" | "asset.remove" | "audio.add" | "audio.duck" | "audio.mark_beats" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.import_subtitles" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.add_composition" | "clip.remove_silences" | "clip.set_blend" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_effects" | "clip.set_filter" | "clip.set_flip" | "clip.set_framing" | "clip.set_mask" | "clip.set_outline" | "clip.set_shadow" | "clip.set_speed" | "composition.create_from_selection" | "composition.expand" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.extract_audio" | "item.freeze_frame" | "item.link" | "item.move" | "item.paste_attributes" | "item.rename" | "item.repeat" | "item.set_audio" | "item.set_enabled" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "item.unlink" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "keyframe.set_easing" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.reframe" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
+export type CommandName = "animation.apply_preset" | "animation.list_presets" | "asset.add" | "asset.remove" | "audio.add" | "audio.apply_preset" | "audio.duck" | "audio.mark_beats" | "audio.processor_add" | "audio.processor_move" | "audio.processor_remove" | "audio.processor_set" | "caption.add" | "caption.edit_word" | "caption.from_transcript" | "caption.import_subtitles" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.add_composition" | "clip.remove_silences" | "clip.replace_media" | "clip.set_blend" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_effects" | "clip.set_filter" | "clip.set_flip" | "clip.set_framing" | "clip.set_mask" | "clip.set_outline" | "clip.set_shadow" | "clip.set_speed" | "composition.create_from_selection" | "composition.expand" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.extract_audio" | "item.freeze_frame" | "item.link" | "item.move" | "item.paste_attributes" | "item.rename" | "item.repeat" | "item.set_audio" | "item.set_enabled" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "item.unlink" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "keyframe.set_easing" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.reframe" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update";
 
 export interface CommandArgsMap {
 	"animation.apply_preset": AnimationApplyPresetArgs;
@@ -2599,8 +2713,13 @@ export interface CommandArgsMap {
 	"asset.add": AssetAddArgs;
 	"asset.remove": AssetRemoveArgs;
 	"audio.add": AudioAddArgs;
+	"audio.apply_preset": AudioApplyPresetArgs;
 	"audio.duck": AudioDuckArgs;
 	"audio.mark_beats": AudioMarkBeatsArgs;
+	"audio.processor_add": AudioProcessorAddArgs;
+	"audio.processor_move": AudioProcessorMoveArgs;
+	"audio.processor_remove": AudioProcessorRemoveArgs;
+	"audio.processor_set": AudioProcessorSetArgs;
 	"caption.add": CaptionAddArgs;
 	"caption.edit_word": CaptionEditWordArgs;
 	"caption.from_transcript": CaptionFromTranscriptArgs;
@@ -2614,6 +2733,7 @@ export interface CommandArgsMap {
 	"clip.add": ClipAddArgs;
 	"clip.add_composition": ClipAddCompositionArgs;
 	"clip.remove_silences": ClipRemoveSilencesArgs;
+	"clip.replace_media": ClipReplaceMediaArgs;
 	"clip.set_blend": ClipSetBlendArgs;
 	"clip.set_blur": ClipSetBlurArgs;
 	"clip.set_chroma_key": ClipSetChromaKeyArgs;
@@ -2679,13 +2799,18 @@ export interface CommandArgsMap {
 export type Operation = { [K in CommandName]: { op: K; args: CommandArgsMap[K] } }[CommandName];
 
 export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "media"; internal: boolean; errors: ErrorCode[] }> = {
-	"animation.apply_preset": { summary: "Animates the start or the end of a visual item with a preset: fade, slide, scale, pop, push in or pull out.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_LIMIT"] },
+	"animation.apply_preset": { summary: "Animates the start or end of a visual item with a preset.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_LIMIT"] },
 	"animation.list_presets": { summary: "Describes the animation presets and the named Bezier curves.", scope: "edit", internal: false, errors: ["E_VALIDATION"] },
 	"asset.add": { summary: "Adds an asset that the import flow has already ingested.", scope: "media", internal: true, errors: ["E_VALIDATION","E_ID_EXISTS","E_LIMIT"] },
 	"asset.remove": { summary: "Removes an asset that no item uses.", scope: "media", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_IN_USE"] },
 	"audio.add": { summary: "Places an audio asset, or the audio of a video asset, on an audio track.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_OUT_OF_SOURCE","E_OVERLAP"] },
+	"audio.apply_preset": { summary: "Preset", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"audio.duck": { summary: "Lowers a music item while speech sounds, with a ramp down before and a ramp up after.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_LIMIT"] },
 	"audio.mark_beats": { summary: "Writes markers on a music item at the beats of its audio.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_LIMIT"] },
+	"audio.processor_add": { summary: "Add", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_LIMIT"] },
+	"audio.processor_move": { summary: "Move", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
+	"audio.processor_remove": { summary: "Remove", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
+	"audio.processor_set": { summary: "Set", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"caption.add": { summary: "Adds a caption item with timed words.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_ID_EXISTS","E_LIMIT","E_OVERLAP"] },
 	"caption.edit_word": { summary: "Changes the text of one word of a caption, or removes the word.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"caption.from_transcript": { summary: "Creates captions for the speech of a clip from its transcript.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_ID_EXISTS","E_LIMIT","E_OVERLAP"] },
@@ -2698,34 +2823,35 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"caption.split": { summary: "Splits a caption into two at a word boundary.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT"] },
 	"clip.add": { summary: "Places a video or image asset on a visual track.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_OUT_OF_SOURCE","E_OVERLAP"] },
 	"clip.add_composition": { summary: "Uses a timeline as a clip.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_LIMIT","E_ID_EXISTS","E_OUT_OF_SOURCE","E_OVERLAP"] },
-	"clip.remove_silences": { summary: "Cuts the silent stretches out of a clip or an audio item, leaving one item per stretch of speech.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_INVALID_STATE","E_LIMIT"] },
+	"clip.remove_silences": { summary: "Cuts the silences out of a clip or audio item, one item per stretch of speech.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_INVALID_STATE","E_LIMIT"] },
+	"clip.replace_media": { summary: "Swaps the asset of a clip for another of the same kind and keeps everything else.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_OUT_OF_SOURCE"] },
 	"clip.set_blend": { summary: "Sets how a visual item is mixed with what is below it.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_blur": { summary: "Sets the blur radius of a visual item.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_chroma_key": { summary: "Keys out one colour of a clip, such as a green screen.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
-	"clip.set_color": { summary: "Sets the brightness, contrast, saturation, temperature, tint, hue, lookup table, HSL bands, wheels and curves of a clip.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
-	"clip.set_effects": { summary: "Sets the visual effects of a clip: motion blur, glow, vignette, grain, RGB split and shake.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
+	"clip.set_color": { summary: "Sets colour adjustments, LUT, HSL bands, wheels and curves of a clip.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
+	"clip.set_effects": { summary: "Sets the effects of a clip: motion blur, glow, vignette, grain, RGB split and shake.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_filter": { summary: "Sets the colour filter of a visual item and how much of it is mixed in.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_flip": { summary: "Mirrors a visual item horizontally, vertically or both.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
-	"clip.set_framing": { summary: "Sets how the asset of a clip is fitted into the frame and how much of each side is cropped.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
+	"clip.set_framing": { summary: "Sets how a clip fits the frame and how much of each side is cropped.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"clip.set_mask": { summary: "Limits where a visual item is drawn to a rectangle or an ellipse.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_outline": { summary: "Gives a clip an outline that follows its visible shape.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"clip.set_shadow": { summary: "Gives a clip a drop shadow that follows its visible shape.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
-	"clip.set_speed": { summary: "Changes the speed of a clip or audio item, constant or along a curve, or plays it backwards.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_OUT_OF_SOURCE","E_INVALID_TIME","E_OVERLAP"] },
+	"clip.set_speed": { summary: "Sets the speed of a clip or audio item: constant, curve or reverse.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_OUT_OF_SOURCE","E_INVALID_TIME","E_OVERLAP"] },
 	"composition.create_from_selection": { summary: "Moves items into a new timeline.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_INVALID_STATE","E_ID_EXISTS","E_OVERLAP","E_LIMIT"] },
 	"composition.expand": { summary: "Puts a composition's items back.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_ID_EXISTS","E_LIMIT"] },
 	"font.add": { summary: "Adds a user font family to the project, or more weights to one it already has.", scope: "media", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND"] },
 	"font.remove": { summary: "Removes a user font family from the project.", scope: "media", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_IN_USE"] },
-	"item.crossfade": { summary: "Sets a matching fade-out and fade-in on two overlapping visual items of different tracks.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_OUT_OF_SOURCE","E_OVERLAP"] },
+	"item.crossfade": { summary: "Sets a fade-out and fade-in on two overlapping visual items.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_OUT_OF_SOURCE","E_OVERLAP"] },
 	"item.delete": { summary: "Removes items, and optionally closes the freed space.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_INVALID_STATE","E_OVERLAP"] },
 	"item.duplicate": { summary: "Copies an item to another position, optionally on another track.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_OVERLAP"] },
-	"item.extract_audio": { summary: "Creates an audio item from the audio of a video clip, linked to it, and mutes the clip.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_OVERLAP","E_ID_EXISTS","E_LIMIT"] },
-	"item.freeze_frame": { summary: "Holds one frame of a clip: splits the clip at a frame and inserts a still of that frame.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_ID_EXISTS","E_LIMIT"] },
+	"item.extract_audio": { summary: "Makes a linked audio item from a video clip's audio and mutes the clip.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_OVERLAP","E_ID_EXISTS","E_LIMIT"] },
+	"item.freeze_frame": { summary: "Holds one frame of a clip as a still inserted at that frame.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_ID_EXISTS","E_LIMIT"] },
 	"item.link": { summary: "Links items so that they move, trim and split together.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_ID_EXISTS"] },
 	"item.move": { summary: "Moves an item in time, to another track of the same kind, or both.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_OUT_OF_SOURCE","E_OVERLAP"] },
 	"item.paste_attributes": { summary: "Copies the look of one item to other items.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"item.rename": { summary: "Sets the label of an item.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND"] },
-	"item.repeat": { summary: "Repeats an item back to back, a number of times or until a time, such as a looping background.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_INVALID_STATE","E_ID_EXISTS","E_LIMIT","E_OVERLAP"] },
-	"item.set_audio": { summary: "Sets the volume, the fades, the mute flag, the noise reduction or the voice of a clip or audio item.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
+	"item.repeat": { summary: "Repeats an item back to back, a number of times or until a time.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_INVALID_STATE","E_ID_EXISTS","E_LIMIT","E_OVERLAP"] },
+	"item.set_audio": { summary: "Sets the volume, fades, mute, noise reduction or voice of a clip or audio item.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"item.set_enabled": { summary: "Turns an item off or on without removing it from the timeline.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND"] },
 	"item.set_transform": { summary: "Sets the position, scale, rotation or opacity of a visual item.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"item.set_transition": { summary: "Sets or removes the transition on one edge of a visual item.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
