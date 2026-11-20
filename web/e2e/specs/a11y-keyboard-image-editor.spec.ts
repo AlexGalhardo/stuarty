@@ -60,6 +60,7 @@ test.describe("a11y-keyboard-image-editor", () => {
 	}) => {
 		const { id } = await seed(request);
 		await page.goto(`/edit-image/${id}`);
+		await expect(page.getByRole("treeitem")).toHaveCount(3);
 		const stage = page.getByTestId("image-stage");
 		await stage.focus();
 		await page.keyboard.press("PageUp");
