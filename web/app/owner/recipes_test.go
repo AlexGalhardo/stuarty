@@ -7,12 +7,70 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	coreimage "github.com/AlexGalhardo/stuarty/core/image"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
+	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
+	"github.com/AlexGalhardo/stuarty/web/app/store"
 	"github.com/AlexGalhardo/stuarty/web/resources/templates"
 )
+
+// SDD-018 section 17: in network mode an image belongs to one user (SDD-021), so the recipes install their
+// timeline templates and no image template; in local mode they install both.
+func TestNetworkModeInstallsNoRecipeImageTemplate(t *testing.T) {
+	t.Parallel()
+
+	timelines, err := templates.Timelines()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	images, err := templates.Images()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for name, network := range map[string]*httpapi.Network{"local": nil, "network": {}} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+			dir := workspace.Dir(t.TempDir())
+
+			st, err := store.Open(ctx, dir, store.Options{SchemaVersion: timeline.CurrentSchemaVersion})
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			t.Cleanup(func() { _ = st.Close() })
+
+			o := &Owner{Dir: dir, now: time.Now, network: network}
+			if err := o.seedRecipeTemplates(ctx, st); err != nil {
+				t.Fatal(err)
+			}
+
+			for _, want := range timelines {
+				if _, err := st.Templates().Get(ctx, want.ID); err != nil {
+					t.Errorf("%s mode: no timeline template %s: %v", name, want.Name, err)
+				}
+			}
+
+			for _, want := range images {
+				_, gerr := st.Images().Get(ctx, want.ID)
+
+				switch {
+				case network == nil && gerr != nil:
+					t.Errorf("local mode: no image template %s: %v", want.Name, gerr)
+				case network != nil && !errors.Is(gerr, service.ErrNotFound):
+					t.Errorf("network mode installed the image template %s (%v)", want.Name, gerr)
+				}
+			}
+		})
+	}
+}
 
 // SDD-018 section 17: a fresh workspace lists the templates of the recipes, the timeline ones in the library of
 // templates and the covers in the library of images, and starting it again adds nothing and changes nothing.
