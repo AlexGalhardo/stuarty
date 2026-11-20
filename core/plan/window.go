@@ -143,6 +143,9 @@ type WindowAudio struct {
 	Voice         string     `json:"voice,omitempty"`
 	// Processed names the file of the item's processed sound, when it has a chain or a denoise (SDD-004 section 7.1).
 	Processed *ProcessedAudio `json:"processed,omitempty"`
+	// Timeline is the timeline whose assets table names Asset when the source comes from a composition; empty for
+	// the timeline of the plan (SDD-004 section 3.16).
+	Timeline string `json:"timeline,omitempty"`
 }
 
 // Window returns the plans of frames [from, to) in the compact form of
