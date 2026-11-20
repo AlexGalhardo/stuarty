@@ -11,16 +11,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **image:** Add a lookup table to the adjustments of a layer ([f56cc57](https://github.com/AlexGalhardo/stuarty/commit/f56cc573356331d2783fe1e48d55e7b64ddb115c))
-- **ui:** Use the official icon everywhere ([8bb86d8](https://github.com/AlexGalhardo/stuarty/commit/8bb86d8ecea84a93b5d3ac024274db7ed82c1d44))
+- **image:** Add a lookup table to the adjustments of a layer ([a80a394](https://github.com/AlexGalhardo/stuarty/commit/a80a394618b1d0d99233606b065177359ff1384c))
+- **ui:** Use the official icon everywhere ([3cce10d](https://github.com/AlexGalhardo/stuarty/commit/3cce10db84ffc3d4683c8658abdf60ced610b4b8))
+- **ui:** Add a list view and a selection announcement to the timeline ([9229099](https://github.com/AlexGalhardo/stuarty/commit/92290995c99e419cf823bcfb8a4c1ea91d5ac61f))
+- **export:** Write labelled markers as chapters of the mp4 and m4a ([6355335](https://github.com/AlexGalhardo/stuarty/commit/635533527f82268f5653dde519753330657acbf9))
+- **repo:** Publish the GitHub release of each cut with its notes ([e3ddd86](https://github.com/AlexGalhardo/stuarty/commit/e3ddd86c85ae30b8ad8709f7e423a5c0c4b14d06))
 
 ### Fixed
 
-- **contract:** Record the OpenAPI document without the internal resolved field ([d5249dc](https://github.com/AlexGalhardo/stuarty/commit/d5249dc3471a6f82b006182ad04f34f2ec64b72e))
-- **site:** Run the binary timing on a free port by default ([138ce10](https://github.com/AlexGalhardo/stuarty/commit/138ce10ab61a9584dd88fa8a50ff15731903ca4e))
-- **site:** Keep the former name out of the sidebar title of the migration page ([bd24020](https://github.com/AlexGalhardo/stuarty/commit/bd24020aa1ae0021cc6162d3b37919db062512bd))
-- **service:** Check the digits of a hash before they become a folder ([d62b533](https://github.com/AlexGalhardo/stuarty/commit/d62b5332c9f4e0ee4fb65b0e421fd378e8fd32ca))
-- **tools:** Scope the first flow fake uploads to a media root ([eb6bd2c](https://github.com/AlexGalhardo/stuarty/commit/eb6bd2cacde816858cce9956b5d1efe1b21923d8))
+- **contract:** Record the OpenAPI document without the internal resolved field ([e33860a](https://github.com/AlexGalhardo/stuarty/commit/e33860a71519f97ffd8f6314d471ebe7d6fb4d97))
+- **site:** Run the binary timing on a free port by default ([d5c7b85](https://github.com/AlexGalhardo/stuarty/commit/d5c7b8516f8d30cef1fa786adb288ab7a13019bf))
+- **site:** Keep the former name out of the sidebar title of the migration page ([92ba57b](https://github.com/AlexGalhardo/stuarty/commit/92ba57b106d427b5e59e86484e107ca3f9ed87af))
+- **service:** Check the digits of a hash before they become a folder ([39a9198](https://github.com/AlexGalhardo/stuarty/commit/39a91984b52bb6ca28ed7e15bb8e642226a3c20a))
+- **tools:** Scope the first flow fake uploads to a media root ([c7e2263](https://github.com/AlexGalhardo/stuarty/commit/c7e2263f78b9c652799ebbec16cdb97322fe5617))
+- **repo:** Let the release train run beside unstaged local edits ([adacf00](https://github.com/AlexGalhardo/stuarty/commit/adacf00053622bcf79c7e632e2d4c0506a2674c7))
+- **ui:** Run axe on every route and give native checkboxes a 24 px target ([fbcca4c](https://github.com/AlexGalhardo/stuarty/commit/fbcca4cbd7f4404952144931c70f7ea2246cb584))
+- **ui:** Add a skip link, move focus on page change and keep it in the queue and the chat ([f09a776](https://github.com/AlexGalhardo/stuarty/commit/f09a7765cb5a48bebbd5a8b71683fc61ece92180))
+- **ui:** Announce export progress in steps of 10 and tie form errors to their fields ([3ec25d7](https://github.com/AlexGalhardo/stuarty/commit/3ec25d703550ef651848f474f3a6faac9627aab3))
+- **ui:** Reflow the write filters, grow the badge with its text and give the checkbox a 24 px target ([2505c31](https://github.com/AlexGalhardo/stuarty/commit/2505c311889b1a0d31c36b1a516b087f7f4ac827))
+- **repo:** Skip a commit the release train already picked ([bfbd19e](https://github.com/AlexGalhardo/stuarty/commit/bfbd19e31f7acc46bfa112b633851e3baaafc8e7))
+- **e2e:** Find unnamed controls at any depth of the accessibility tree ([6686613](https://github.com/AlexGalhardo/stuarty/commit/6686613edf709a61a7dbb55ec7119254318e59d3))
+- **ui:** Point the palette combobox at its list only while the list is shown ([9a74784](https://github.com/AlexGalhardo/stuarty/commit/9a74784dab5ae48760c735ff22a7e7328d77f8f8))
+- **ui:** Keep one main landmark on write and say only the post check summary ([02cea0f](https://github.com/AlexGalhardo/stuarty/commit/02cea0f81063634f7c2e69bea28dd7643a6437d1))
+- **ui:** Describe the blog destination fields with their hints ([b703e90](https://github.com/AlexGalhardo/stuarty/commit/b703e90654a214257c3b245fdcd2d1d5d6bae992))
+- **ui:** Raise the contrast of the destructive tint on popovers and of inactive tabs ([5a613c7](https://github.com/AlexGalhardo/stuarty/commit/5a613c7482790b2e10be4dadcecbcd0d8d6739f0))
+- **ui:** Keep an agent edit announced when it removes the selected item ([78d9468](https://github.com/AlexGalhardo/stuarty/commit/78d94688af19557a19b0242655d8ea3f7cac0846))
+- **ui:** Mark the timeline grid busy while the project loads ([69bbe49](https://github.com/AlexGalhardo/stuarty/commit/69bbe496e08ad783aceb5c020ecdb59fa6cca5c0))
+- **service:** Describe each step of the image history in words ([856e8fc](https://github.com/AlexGalhardo/stuarty/commit/856e8fcf66d4bea8f905a42f335adf7d4353c8a8))
+- **ui:** Show the description of the core in the image history ([f70567b](https://github.com/AlexGalhardo/stuarty/commit/f70567ba915867fb7c965cd2c290e1653f67846f))
+- **contract:** Add the description to the image history in the openapi snapshot ([0a93f47](https://github.com/AlexGalhardo/stuarty/commit/0a93f47ca6afe20545bafc3e88e408d7d97fa519))
+- **site:** Add the description of the image history to the api reference ([d1d3bbf](https://github.com/AlexGalhardo/stuarty/commit/d1d3bbf0d1429968b1a4ee1d353262356b84d8a7))
+- **ui:** Compose no sentence for a step of the image history ([a1dd618](https://github.com/AlexGalhardo/stuarty/commit/a1dd6185f6618fb73b413bb199d34e7463328179))
+- **web:** Compile the chroma key shader as GLSL ES 1.00 so the keyed layer draws ([4cf79a8](https://github.com/AlexGalhardo/stuarty/commit/4cf79a8ece4b77f368cc3598e641b9ca81189fdd))
+- **ffmpeg:** Accept an ffmetadata input only from the run directory ([46d69d1](https://github.com/AlexGalhardo/stuarty/commit/46d69d1b8324b12424e6ec0b876138fef5403477))
+- **export:** Write chapters ffmpeg reads back for any marker and label ([682ed6e](https://github.com/AlexGalhardo/stuarty/commit/682ed6e0d86a170b7aa4027f9882e348751287fb))
+- **preview:** Match the spill limit of the chroma key reference ([fab6486](https://github.com/AlexGalhardo/stuarty/commit/fab6486d8f6e1db280ff4e650b79361297fb147f))
+- **repo:** End a release section with a blank line ([1974733](https://github.com/AlexGalhardo/stuarty/commit/1974733a8d9302b005207d17672856bd3d25efdf))
+- **web:** Read the chosen e2e projects as Playwright reads them ([6418b25](https://github.com/AlexGalhardo/stuarty/commit/6418b25e7c72a39afa86ec1934ce7468b9d8999d))
+- **web:** Build the security test front end with vite --outDir ([04fe811](https://github.com/AlexGalhardo/stuarty/commit/04fe811a710ba7db84a96951217334f10292a49b))
 
 ## [0.41.0] - 2026-11-20
 
