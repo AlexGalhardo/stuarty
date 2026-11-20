@@ -254,3 +254,19 @@ func TestBriefingKindsAnUnknownKindWritesNothing(t *testing.T) {
 		t.Error("an unknown kind was accepted")
 	}
 }
+
+func TestKindOrShortDefaultsToTheFirstFlow(t *testing.T) {
+	t.Parallel()
+
+	if got := project.KindOrShort(""); got != project.ProductionShort {
+		t.Errorf("empty = %q, want short", got)
+	}
+
+	if got := project.KindOrShort("commercial"); got != project.ProductionCommercial {
+		t.Errorf("commercial = %q", got)
+	}
+
+	if got := project.KindOrShort("podcast"); got.Known() {
+		t.Error("an unknown kind became a known one")
+	}
+}

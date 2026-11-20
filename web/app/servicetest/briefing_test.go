@@ -200,3 +200,51 @@ func TestBriefingKeepsAHandWrittenBriefWithTheSameHeadings(t *testing.T) {
 		t.Fatalf("the brief changed: %q", got.Text)
 	}
 }
+
+// VV-289: the briefing asks and validates the questions of the kind of production the caller names (SDD-018
+// section 17); with no kind it is the short video, and an unknown kind is E_VALIDATION on the path kind.
+func TestBriefingServesTheKindOfProduction(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+	id := e.newProject("Ad")
+	ctx := e.as(agent)
+
+	q, err := e.svc.BriefingQuestions(ctx, service.BriefingQuestionsRequest{ProjectID: id, Kind: "commercial"})
+	if err != nil || len(q.Questions) == 0 || q.Questions[0].ID != "product" {
+		t.Fatalf("commercial questions: %+v %v", q, err)
+	}
+
+	if _, err := e.svc.BriefingAnswer(ctx, service.BriefingAnswerRequest{ProjectID: id, Answers: briefingAnswers()}); err != nil {
+		t.Fatalf("the default kind is short: %v", err)
+	}
+
+	ad := map[string]string{
+		"product": "a pen", "audience": "writers", "problem": "smudges", "offer": "10% off", "call_to_action": "buy",
+		"platform": "tiktok", "format": "vertical-9x16", "duration": "30",
+	}
+
+	if _, err := e.svc.BriefingAnswer(ctx, service.BriefingAnswerRequest{ProjectID: id, Answers: ad}); err == nil {
+		t.Fatal("commercial answers were taken for a short")
+	}
+
+	res, err := e.svc.BriefingAnswer(ctx, service.BriefingAnswerRequest{ProjectID: id, Kind: "commercial", Answers: ad})
+	if err != nil || !strings.Contains(res.Text, "## Product\n\na pen") {
+		t.Fatalf("commercial answer: %+v %v", res, err)
+	}
+
+	q, err = e.svc.BriefingQuestions(ctx, service.BriefingQuestionsRequest{ProjectID: id, Kind: "commercial"})
+	if err != nil || !q.Guided || len(q.Answers) != len(ad) {
+		t.Fatalf("the commercial brief is not read back: %+v %v", q, err)
+	}
+
+	for _, bad := range []service.BriefingQuestionsRequest{{Kind: "podcast"}} {
+		if _, err := e.svc.BriefingQuestions(ctx, bad); err == nil {
+			t.Error("an unknown kind was served")
+		}
+	}
+
+	if _, err := e.svc.BriefingAnswer(ctx, service.BriefingAnswerRequest{ProjectID: id, Kind: "podcast", Answers: ad}); err == nil {
+		t.Error("an unknown kind was answered")
+	}
+}

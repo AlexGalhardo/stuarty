@@ -23,6 +23,9 @@ var _ BriefingService = (*svc)(nil)
 // that project already answers.
 type BriefingQuestionsRequest struct {
 	ProjectID string `json:"project_id,omitempty"`
+	// Kind is the kind of production whose questions to ask: short (the default), commercial or long. The kind
+	// is not stored with the project (SDD-018 section 17): the caller says which set it means.
+	Kind string `json:"kind,omitempty"`
 }
 
 // BriefingQuestion is one question of the briefing.
@@ -61,6 +64,7 @@ type BriefingQuestionsResult struct {
 // BriefingAnswerRequest answers the briefing of a project: the answers replace the brief.
 type BriefingAnswerRequest struct {
 	ProjectID string            `json:"project_id"`
+	Kind      string            `json:"kind,omitempty"`    // the kind of production of the answers: short (the default), commercial or long
 	Answers   map[string]string `json:"answers"`           // question id to answer; see BriefingQuestions
 	Replace   bool              `json:"replace,omitempty"` // allow replacing a brief written by hand
 	DryRun    bool              `json:"dry_run,omitempty"`
@@ -73,9 +77,16 @@ func (s *svc) BriefingQuestions(ctx context.Context, req BriefingQuestionsReques
 		return nil, err
 	}
 
+	kind := project.KindOrShort(req.Kind)
+
+	set, v := project.BriefingQuestionsFor(kind)
+	if v != nil {
+		return nil, violation(v)
+	}
+
 	res := &BriefingQuestionsResult{UntrustedNotice: UntrustedNotice, ProjectID: req.ProjectID}
 
-	for _, q := range project.BriefingQuestions() {
+	for _, q := range set {
 		res.Questions = append(res.Questions, BriefingQuestion{
 			ID: q.ID, Heading: q.Heading, Text: q.Text, Kind: string(q.Kind), Required: q.Required,
 			Options: q.Options, MaxChars: q.MaxChars, Min: q.Min, Max: q.Max,
@@ -104,10 +115,10 @@ func (s *svc) BriefingQuestions(ctx context.Context, req BriefingQuestionsReques
 		if b := briefOf(rows); b != nil && strings.TrimSpace(b.Body) != "" {
 			res.HasBrief = true
 
-			if answers, ok := project.ParseBriefing(b.Body); ok {
+			if answers, ok := project.ParseBriefingFor(kind, b.Body); ok {
 				res.Guided = true
 
-				for _, q := range project.BriefingQuestions() {
+				for _, q := range set {
 					if v, found := answers[q.ID]; found {
 						res.Answers = append(res.Answers, BriefingAnswer{ID: q.ID, Value: v})
 					}
@@ -151,7 +162,9 @@ func (s *svc) BriefingAnswer(ctx context.Context, req BriefingAnswerRequest) (*B
 		return nil, err
 	}
 
-	answers, v := project.CheckAnswers(req.Answers)
+	kind := project.KindOrShort(req.Kind)
+
+	answers, v := project.CheckAnswersFor(kind, req.Answers)
 	if v != nil {
 		return nil, violation(v)
 	}
@@ -159,6 +172,6 @@ func (s *svc) BriefingAnswer(ctx context.Context, req BriefingAnswerRequest) (*B
 	keep := func(current string) *project.RuleError { return project.CheckBriefingReplace(current, req.Replace) }
 
 	return s.writeBrief(ctx, c, BriefSetRequest{
-		ProjectID: req.ProjectID, Text: project.BriefingMarkdown(answers), DryRun: req.DryRun,
+		ProjectID: req.ProjectID, Text: project.BriefingMarkdownFor(kind, answers), DryRun: req.DryRun,
 	}, keep)
 }

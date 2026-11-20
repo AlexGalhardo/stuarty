@@ -439,6 +439,7 @@ type BriefResult struct {
 // The guided briefing (SDD-005 §5.12.1).
 type BriefingQuestionsRequest struct {
 	ProjectID string `json:"project_id,omitempty"` // with a project, the result also holds what its brief answers
+	Kind      string `json:"kind,omitempty"`       // short (the default), commercial or long: the set of questions (SDD-018 section 17)
 }
 type BriefingQuestion struct {
 	ID       string   `json:"id"`
@@ -466,6 +467,7 @@ type BriefingQuestionsResult struct {
 }
 type BriefingAnswerRequest struct {
 	ProjectID string            `json:"project_id"`
+	Kind      string            `json:"kind,omitempty"`    // short (the default), commercial or long
 	Answers   map[string]string `json:"answers"` // question id to answer; they replace the brief
 	Replace   bool              `json:"replace,omitempty"` // allow replacing a brief written by hand
 	DryRun    bool              `json:"dry_run,omitempty"`
@@ -3753,7 +3755,7 @@ Every command that reads or edits a timeline (those whose result is about one do
 | `item:restore` | `item:restore <item id> --project <id>` | none | none | `ProjectItemResult` |
 | `brief:show` | `brief:show --project <id>` | none | none | `BriefResult` |
 | `brief:set` | `brief:set --project <id> --text <file\|->` | `--text` required: the Markdown, from a file or standard input | the text with `--text -` | `BriefResult` |
-| `briefing:questions` | `briefing:questions [--project <id>]` | `--project` string, optional: also the answers its brief holds | none | `BriefingQuestionsResult` |
+| `briefing:questions` | `briefing:questions [--project <id>] [--kind short\|commercial\|long]` | `--project` string, optional: also the answers its brief holds; `--kind` string, default `short`: the set of questions | none | `BriefingQuestionsResult` |
 | `text:list` | `text:list [--project <id>] [--kind script\|copy\|caption] [--state active\|trashed] [--cursor c] [--limit n]` | none required | none | `TextListResult` |
 | `text:show` | `text:show <item> --project <id> [--revision n]` | none | none | `TextGetResult` |
 | `text:write` | `text:write [<item>] --project <id> --text <file\|-> [--title t] [--kind script\|copy\|caption] [--base n] [--dry-run]` | `--text` required; `--title` needed to make a text | the Markdown with `--text -` | `TextWriteResult` |
@@ -3762,7 +3764,7 @@ Every command that reads or edits a timeline (those whose result is about one do
 | `text:draft` | `text:draft <item> --project <id> --connection <id> --model <id> --instruction <text> [--network n] [--max-tokens n] [--temperature t] [--dry-run]` | `--connection`, `--model`, `--instruction` required; the job waits for approval | none | `Job` |
 | `caption:validate` | `caption:validate [<item>] [--project <id>] [--network n] [--body <file\|->] [--text <file\|->]` | one of `<item>`, `--body`, `--text` (with `--network`) | the text with `-` | `CaptionValidateResult` |
 | `script:estimate` | `script:estimate [<item>] [--project <id>] [--text <file\|->] [--wpm n]` | one of `<item>`, `--text` | the text with `--text -` | `ScriptEstimateResult` |
-| `briefing:answer` | `briefing:answer --project <id> (--answer <id>=<text>)... [--answers <file\|->] [--replace] [--dry-run]` | `--answer` string, repeatable; `--answers` string, a JSON object of question id to answer; `--replace` bool false, replaces a brief written by hand | the JSON with `--answers -` | `BriefResult` |
+| `briefing:answer` | `briefing:answer --project <id> [--kind short\|commercial\|long] (--answer <id>=<text>)... [--answers <file\|->] [--replace] [--dry-run]` | `--kind` string, default `short`; `--answer` string, repeatable; `--answers` string, a JSON object of question id to answer; `--replace` bool false, replaces a brief written by hand | the JSON with `--answers -` | `BriefResult` |
 | `agent:docs` | `agent:docs [--print skill\|agents\|instructions] [--write <dir>]` | `--print` string `skill`; `--write` string | none | `{"files": [...]}` with `--write`; the text itself with `--print` |
 
 Notes on the table:
@@ -4047,8 +4049,8 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `projects.items.restore` | `POST /projects/{id}/items/{item_id}/restore` | `dry_run` | none | 200 `ProjectItemResult` | edit | none |
 | `projects.brief.get` | `GET /projects/{id}/brief` | none | none | 200 `BriefResult` | read | none |
 | `projects.brief.set` | `PUT /projects/{id}/brief` | none | `{text, dry_run?}` | 200 `BriefResult` | edit | 413 `E_LIMIT_EXCEEDED` |
-| `briefing.questions` | `GET /briefing/questions` | `project_id` (optional) | none | 200 `BriefingQuestionsResult` | read | 404 `E_NOT_FOUND` for an unknown project |
-| `projects.briefing.answer` | `PUT /projects/{id}/briefing` | `dry_run` | `{answers, replace?, dry_run?}` | 200 `BriefResult` | edit | 400 `E_VALIDATION` (`path` `answers.<id>`); 409 `E_INVALID_STATE` for a brief written by hand without `replace` |
+| `briefing.questions` | `GET /briefing/questions` | `project_id` (optional), `kind` (optional: `short`, `commercial`, `long`) | none | 200 `BriefingQuestionsResult` | read | 404 `E_NOT_FOUND` for an unknown project |
+| `projects.briefing.answer` | `PUT /projects/{id}/briefing` | `dry_run` | `{kind?, answers, replace?, dry_run?}` | 200 `BriefResult` | edit | 400 `E_VALIDATION` (`path` `answers.<id>`, or `kind` for an unknown kind); 409 `E_INVALID_STATE` for a brief written by hand without `replace` |
 | `fonts.import` | `POST /fonts` | none | `{path}`, an absolute path to a TrueType or OpenType file on the machine of the server (SDD-007 §7.7) | 201 `FontImportResult` `{hash, bytes, deduplicated}` | media | 403 `E_PATH_NOT_ALLOWED`; 404 `E_FILE_NOT_FOUND`; 422 `E_VALIDATION` (a refused font) |
 | `brand.get`, `brand.set` | `GET /brand-kit`, `PUT /brand-kit` | none | `{logo?, colors?, fonts?}` for set (replaces the kit, SDD-005 §5.11; at least one member, an empty one clears the kit) | 200 `BrandKit` | read; edit | 422 `E_VALIDATION`; 404 `E_NOT_FOUND` |
 | `users.list`, `users.create`, `users.update` | `GET /users`, `POST /users`, `PATCH /users/{user_id}` | none | `{email, password, role?}` for create; `{role?, disabled?}` for update | 200 `{users: [UserView]}`, 201 `UserView`, 200 `UserView` | an administrator's browser session; a key cannot call them (network mode only, SDD-007 §4.1) | 403 `E_FORBIDDEN`; 404 `E_NOT_FOUND`; 409 `E_INVALID_STATE` (last administrator) |
@@ -4282,8 +4284,8 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `ProjectItemRestore` | `project_item` (`action` `restore`) | `item:restore` | `POST /projects/{id}/items/{item_id}/restore` |
 | `BriefGet` | `project_item` (`action` `brief`, without `text`) | `brief:show` | `GET /projects/{id}/brief` |
 | `BriefSet` | `project_item` (`action` `brief`, with `text`) | `brief:set` | `PUT /projects/{id}/brief` |
-| `BriefingQuestions` | `project_item` (`action` `briefing`, without `answers`) | `briefing:questions` | `GET /briefing/questions` |
-| `BriefingAnswer` | `project_item` (`action` `briefing`, with `answers`) | `briefing:answer` | `PUT /projects/{id}/briefing` |
+| `BriefingQuestions` | `project_item` (`action` `briefing`, without `answers`; optional `kind`) | `briefing:questions` | `GET /briefing/questions` |
+| `BriefingAnswer` | `project_item` (`action` `briefing`, with `answers`; optional `kind`) | `briefing:answer` | `PUT /projects/{id}/briefing` |
 | `TextList`, `TextGet` | `project_item` (`action` `text`) | `text:list`, `text:show` | `GET /texts`, `GET /projects/{id}/texts/{item_id}` |
 | `TextWrite` | `project_item` (`action` `text`, with `text`) | `text:write` | `POST /projects/{id}/texts`, `PUT /projects/{id}/texts/{item_id}` |
 | `TextRevisions`, `TextRevert` | `project_item` (`action` `revisions`, `revert`) | `text:revisions`, `text:revert` | `GET /projects/{id}/texts/{item_id}/revisions`, `POST /projects/{id}/texts/{item_id}/revert` |
