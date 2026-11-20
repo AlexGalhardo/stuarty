@@ -119,14 +119,6 @@ func runRestore(ctx context.Context, folder string, replace, withoutVault bool, 
 
 	defer func() { _ = sess.Close() }()
 
-	// With STUARTY_URL set, Open answers with a remote session that has no folder and no lock: a restore
-	// would then write into the current directory. A restore only ever writes the local workspace.
-	if sess.Mode != workspace.ModeInProcess || sess.Dir == "" {
-		return workspaceFail(w, fmt.Errorf(
-			"workspace:restore writes the local workspace and %s names a server: unset it and run the "+
-				"command on the machine of the workspace, with no server running", workspace.EnvURL))
-	}
-
 	from, err := filepath.Abs(folder)
 	if err != nil {
 		return workspaceFail(w, err)

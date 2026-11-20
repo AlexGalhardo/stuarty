@@ -24,7 +24,7 @@
       "x-vv-kind": "time"
     },
     "text": {
-      "description": "The SRT or WebVTT text.",
+      "description": "The SRT or WebVTT text itself, not a file path: read the file and pass its content.",
       "type": "string"
     },
     "track_id": {

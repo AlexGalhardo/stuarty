@@ -53,6 +53,16 @@
               }
             ]
           },
+          "lut": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LUTRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "saturation": {
             "type": "integer"
           },
@@ -3914,6 +3924,17 @@
         },
         "type": "object"
       },
+      "LUTRef": {
+        "properties": {
+          "asset": {
+            "type": "string"
+          },
+          "intensity": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "Layer": {
         "properties": {
           "adjust": {
@@ -7612,6 +7633,16 @@
               "$ref": "#/components/schemas/SpeedPoint"
             },
             "type": "array"
+          },
+          "time_scale": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Rational"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object"
@@ -9305,55 +9336,6 @@
             "type": "string",
             "x-vv-kind": "time"
           },
-          "resolved": {
-            "additionalProperties": false,
-            "description": "Filled by the service from the speech of the items; never sent by a caller.",
-            "properties": {
-              "speech": {
-                "description": "One entry per speech item, in any order.",
-                "items": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "item_id": {
-                      "description": "One of the speech items.",
-                      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
-                      "type": "string"
-                    },
-                    "ranges": {
-                      "description": "Sorted, non-overlapping ranges of speech in asset frames, half-open.",
-                      "items": {
-                        "additionalProperties": false,
-                        "properties": {
-                          "end": {
-                            "type": "integer"
-                          },
-                          "start": {
-                            "type": "integer"
-                          }
-                        },
-                        "required": [
-                          "start",
-                          "end"
-                        ],
-                        "type": "object"
-                      },
-                      "type": "array"
-                    }
-                  },
-                  "required": [
-                    "item_id",
-                    "ranges"
-                  ],
-                  "type": "object"
-                },
-                "type": "array"
-              }
-            },
-            "required": [
-              "speech"
-            ],
-            "type": "object"
-          },
           "speech_item_ids": {
             "description": "Clips or audio items that carry the speech.",
             "items": {
@@ -9404,23 +9386,6 @@
           "replace": {
             "description": "true (default) replaces the item's markers; false keeps them and adds the beats.",
             "type": "boolean"
-          },
-          "resolved": {
-            "additionalProperties": false,
-            "description": "Filled by the service from the beat grid of the asset; never sent by a caller.",
-            "properties": {
-              "beats": {
-                "description": "Strictly increasing beat positions in asset frames, from 0.",
-                "items": {
-                  "type": "integer"
-                },
-                "type": "array"
-              }
-            },
-            "required": [
-              "beats"
-            ],
-            "type": "object"
           }
         },
         "required": [
@@ -10318,40 +10283,6 @@
             "description": "Remove the captions linked to this clip on this track first. Default true.",
             "type": "boolean"
           },
-          "resolved": {
-            "additionalProperties": false,
-            "description": "Filled by the service from the transcript of the asset; never sent by a caller.",
-            "properties": {
-              "words": {
-                "description": "Words in order, not overlapping, in asset frames, half-open.",
-                "items": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "end": {
-                      "type": "integer"
-                    },
-                    "start": {
-                      "type": "integer"
-                    },
-                    "text": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "text",
-                    "start",
-                    "end"
-                  ],
-                  "type": "object"
-                },
-                "type": "array"
-              }
-            },
-            "required": [
-              "words"
-            ],
-            "type": "object"
-          },
           "track_id": {
             "description": "A visual track that receives the captions.",
             "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
@@ -10389,7 +10320,7 @@
             "x-vv-kind": "time"
           },
           "text": {
-            "description": "The SRT or WebVTT text.",
+            "description": "The SRT or WebVTT text itself, not a file path: read the file and pass its content.",
             "type": "string"
           },
           "track_id": {
@@ -10428,40 +10359,6 @@
             "description": "A clip of a video asset with audio, or an audio item.",
             "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
             "type": "string"
-          },
-          "resolved": {
-            "additionalProperties": false,
-            "description": "Filled by the service from the transcript of the asset; never sent by a caller.",
-            "properties": {
-              "words": {
-                "description": "Words in order, not overlapping, in asset frames, half-open.",
-                "items": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "end": {
-                      "type": "integer"
-                    },
-                    "start": {
-                      "type": "integer"
-                    },
-                    "text": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "text",
-                    "start",
-                    "end"
-                  ],
-                  "type": "object"
-                },
-                "type": "array"
-              }
-            },
-            "required": [
-              "words"
-            ],
-            "type": "object"
           }
         },
         "required": [
@@ -10887,36 +10784,6 @@
             "description": "A length, may be 0; speech kept around each cut. Default \"0.1s\".",
             "type": "string",
             "x-vv-kind": "time"
-          },
-          "resolved": {
-            "additionalProperties": false,
-            "description": "Filled by the service from the silence analysis of the asset; never sent by a caller.",
-            "properties": {
-              "silences": {
-                "description": "Sorted, non-overlapping ranges in asset frames, half-open.",
-                "items": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "end": {
-                      "type": "integer"
-                    },
-                    "start": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "start",
-                    "end"
-                  ],
-                  "type": "object"
-                },
-                "type": "array"
-              }
-            },
-            "required": [
-              "silences"
-            ],
-            "type": "object"
           },
           "ripple": {
             "description": "track (default) or none.",
@@ -11759,7 +11626,7 @@
             "type": "array"
           },
           "item_id": {
-            "description": "A clip of a video asset, or an audio item.",
+            "description": "A clip of a video asset, an audio item, or a composition item.",
             "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
             "type": "string"
           },

@@ -17,6 +17,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `exposure` | `integer` | no |  |
 | `hue` | `integer` | no |  |
 | `levels` | [`Levels`](/docs/api/schemas#levels) or `any` or `null` or `null` | no |  |
+| `lut` | [`LUTRef`](/docs/api/schemas#lutref) or `any` or `null` or `null` | no |  |
 | `saturation` | `integer` | no |  |
 | `temperature` | `integer` | no |  |
 | `tint` | `integer` | no |  |
@@ -1607,6 +1608,13 @@ The types named in the tables of the operations. The arguments of each editing c
 | `asset` | `string` | no |  |
 | `intensity` | `number (double)` | no |  |
 
+### LUTRef
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `asset` | `string` | no |  |
+| `intensity` | `integer` | no |  |
+
 ### LutSpec
 
 | Name | Type | Required | Description |
@@ -2717,6 +2725,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `first_frame` | `integer` | no |  |
 | `item_frames` | `integer` | no |  |
 | `points` | array of [`SpeedPoint`](/docs/api/schemas#speedpoint) | no |  |
+| `time_scale` | [`Rational`](/docs/api/schemas#rational) or `any` or `null` or `null` | no |  |
 
 ### StateInfo
 

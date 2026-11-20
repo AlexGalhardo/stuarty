@@ -74,7 +74,7 @@
 | `ImageHistory` | none | none | `GET /images/{id}/history` (SDD-012 §24.3) | read |
 | `ImageFile` | none | none | `GET /images/{id}/exports/{name}` (SDD-012 §24.3) | read |
 | image document stream | none | none | `GET /images/{id}/events` (SDD-006 §12; the event `image.updated`) | read |
-| `ApprovalList`, `ApprovalGet` | none | `approval:list`, `approval:show` | `GET /approvals`, `GET /approvals/{id}` | read (SDD-015) |
+| `ApprovalList`, `ApprovalGet` | `job_get` (`approvals`, `approval_id`) | `approval:list`, `approval:show` | `GET /approvals`, `GET /approvals/{id}` | read (SDD-015) |
 | `ApprovalDecide` | none | `approval:decide` | `POST /approvals/{id}/decide` | read, and only from a privileged browser session; the local token and keys get `E_PRIVILEGED_SESSION` (SDD-015 §4) |
 | `ApprovalRuleList` | none | `approval:rule:list` | `GET /approval-rules` | read |
 | `ApprovalRuleSet`, `ApprovalRuleRemove` | none | `approval:rule:set`, `approval:rule:remove` | `POST /approval-rules`, `DELETE /approval-rules/{id}` | admin, and only from a privileged browser session |
@@ -88,8 +88,8 @@
 | `SocialAccountSelect` | none | none | `POST /social/select` | admin, and only from a browser session (SDD-020 §17) |
 | `SocialPriceSet` | none | none | `POST /social/price` | admin, and only from a browser session (SDD-020 §39) |
 | `PublishValidate` | none | `publish:validate` | `POST /publish/validate` | read |
-| `PublishNow` | none yet (later `job_start` with kind `publish.upload`, SDD-020 §13) | `publish:now` | `POST /publish` | render; the job waits for approval |
-| `PublishStatus` | none | `publish:status` | `GET /publish/{job_id}` | read |
+| `PublishNow` | `job_start` with kind `publish.upload` (SDD-020 §13) | `publish:now` | `POST /publish` | render; the job waits for approval |
+| `PublishStatus` | `job_get` (`job_id`) | `publish:status` | `GET /publish/{job_id}` | read |
 | `PublicationCreate` | none (SDD-020 §29) | `publication:create` | `POST /publications` | edit (SDD-020) |
 | `PublicationGet`, `PublicationList` | none | `publication:show`, `publication:list` | `GET /publications/{id}`, `GET /publications` | read |
 | `PublicationUpdate` | none | `publication:update` | `PUT /publications/{id}` | edit |
@@ -257,7 +257,7 @@ The core's codes are in SDD-002 §A.8. The service adds:
 | `E_FILE_NOT_FOUND` | the path does not exist or cannot be read | no |
 | `E_UNSUPPORTED_MEDIA` | the file is not media FFmpeg can decode, or has no usable stream | no |
 | `E_INGEST_FAILED` | ingest failed; `details.reason` | no |
-| `E_ASSET_NOT_READY` | the asset is still ingesting | yes |
+| `E_ASSET_NOT_READY` | the asset is still ingesting; `details` has `asset_id`, `state` and `progress` (0 to 1) when an edit names it | yes |
 | `E_FFMPEG_MISSING` | no usable FFmpeg was found | no |
 | `E_NO_ENCODER` | no encoder works on this machine for the codec the export needs (H.264, or the `details.codec` that was asked for: `hevc` or `av1`, SDD-004 section 8.3); `details.reason` `codec_unavailable` and `details.candidates` | no |
 | `E_EXPORT_FAILED` | the export process failed; `details.reason` | no |

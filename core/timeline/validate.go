@@ -652,8 +652,12 @@ func (v *validator) composition(path, key string, it Item) {
 	case it.Timeline == v.doc.ID:
 		v.add(VComposition, path+".timeline", key, "a timeline cannot contain itself")
 	}
-	if it.Speed != (Rational{Num: 1, Den: 1}) {
-		v.add(VComposition, path+".speed", key, "a composition plays at speed 1/1")
+	// A composition has a constant speed, with the range of a clip (SDD-001 §3.5.1, epic 53).
+	switch sp := it.Speed; {
+	case sp.Num < 1 || sp.Den < 1:
+		v.add(VShape, path+".speed", key, "speed num and den must be positive")
+	case sp.Num*4 < sp.Den || sp.Num > 4*sp.Den:
+		v.add(VSpeed, path+".speed", key, "speed %d/%d is outside 1/4 to 4", sp.Num, sp.Den)
 	}
 	if it.Freeze {
 		v.add(VComposition, path+".freeze", key, "a composition cannot be a freeze frame")

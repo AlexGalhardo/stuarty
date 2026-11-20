@@ -12,7 +12,8 @@
 #   3. the CLI, the BETA scenario (TASK-0149): every export format (mp4, gif, wav, aac, png), OTIO export and
 #      import, bundle export and import, source import (media and a font file), a template saved, written
 #      and imported, the brand kit (colours, a font and a logo) and the helper install, which must stop at
-#      its question or be refused, so it connects to nothing;
+#      its question or be refused, so it connects to nothing; then the install route of the HTTP API, which
+#      must refuse the local token (the credential of the agents) with 403 E_FORBIDDEN;
 #   4. `mcp` on stdio: initialize and tools/list;
 #   5. the connections (ADR-0032, SDD-014): with none configured, `connection:list` is empty and a test of a
 #      connection that does not exist is refused by the gate before any socket, so the product still opens
@@ -23,8 +24,10 @@
 # Linux only. The desktop binary has no headless mode, so it is not covered here (SDD-007 section 14).
 # The helper download itself (`tools:install`) is the one outbound path the product has (SDD-007 section
 # 6.8: HTTPS to the hosts of the embedded manifest), so it is not run here: the check is that it stops at its
-# question and that `--yes` from a session that is not a person is refused, both without a connection.
-# Needs: go (or STUARTY_BIN), ffmpeg on PATH, strace. Environment:
+# question, that `--yes` with an unknown helper is refused, and that the server refuses the local token on
+# the install route, all without a connection. `--yes` with a real helper downloads (the CLI is the person
+# at the terminal, VV-077), so it is never run here (VV-240).
+# Needs: go (or STUARTY_BIN), ffmpeg on PATH, strace, curl. Environment:
 #   STUARTY_BIN   the binary to test (default: built from this checkout)
 #   NOEGRESS_PORT     loopback port of the server (default a random one in 20000 to 39999)
 #   NOEGRESS_KEEP     set to 1 to keep the work folder and the traces
@@ -180,10 +183,22 @@ log "CLI session: the helper install stops at its question and connects to nothi
 vv cli-tools-install tools:install whisper </dev/null
 grep -q "nothing was downloaded" "$work/cli-tools-install.out" || { cat "$work/cli-tools-install.out" >&2; die "tools:install did not stop at the question"; }
 
-# With --yes a session that is not a person at the editor is refused before any download (E_FORBIDDEN,
-# SDD-007 section 6.8): the helper download itself is the one allowed outbound path (HTTPS to the hosts of
-# the embedded manifest) and is not run here, so the trace stays free of non-loopback addresses.
-vv_refused cli-tools-install-yes tools:install whisper --yes </dev/null
+# With --yes the CLI is the person at the terminal and downloads (SDD-007 section 6.8, VV-077), which is
+# the one allowed outbound path (HTTPS to the hosts of the embedded manifest) and is not run here. What is
+# checked is that --yes with a helper that does not exist is refused by the manifest lookup before any
+# download, so the trace stays free of non-loopback addresses.
+vv_refused cli-tools-install-yes tools:install no-such-helper --yes </dev/null
+
+log "HTTP session: the install route refuses the local token, so an agent cannot start a download"
+# The local token is the credential of every agent surface on this machine; the install route takes only a
+# person's browser session or an admin key and answers 403 E_FORBIDDEN before any download (SDD-007
+# section 6.8). The name is a real helper, so a regression would download and fail the scan as well.
+printf 'Authorization: Bearer %s\n' "$(cat "$STUARTY_HOME/token")" >"$work/auth.header"
+code="$(curl --silent --show-error --output "$work/http-tools-install.out" --write-out '%{http_code}' \
+	--header @"$work/auth.header" --header 'Content-Type: application/json' \
+	--data '{"name":"whisper","model":"tiny"}' "http://127.0.0.1:$port/api/v1/system/tools/install")" || true
+[ "$code" = 403 ] && grep -q '"E_FORBIDDEN"' "$work/http-tools-install.out" \
+	|| { [ ! -f "$work/http-tools-install.out" ] || cat "$work/http-tools-install.out" >&2; die "the install route answered $code to the local token, want 403 E_FORBIDDEN"; }
 
 log "CLI session: no connection configured, so nothing can leave"
 vv cli-connection-list connection:list --json

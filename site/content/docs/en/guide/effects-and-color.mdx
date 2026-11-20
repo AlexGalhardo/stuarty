@@ -43,6 +43,8 @@ stuarty media:import grade.cube --project prj_7k2m9x4q1b
 stuarty edit --project prj_7k2m9x4q1b clip.set_color item_id=itm_m1n2p3q4r5   lut_asset=ast_k4m6p8r0t2 lut_intensity:=0.8
 ```
 
+A layer of an image document takes the same `.cube` file. Its `layer.adjust` has `lut`, with `asset` the content hash of the table (the `sha256:` hash that `asset:list --kind lut` shows) and `intensity` a whole percent from 1 to 100 (default 100; 0 removes the table). In the image editor it is the table and its strength under the adjustments of the layer. The table is drawn after the other adjustments and before the filters, with the same arithmetic as on a clip, so the same table gives the same colours in a video and in an image. A document holds at most 32 tables, and a file that no longer reads as a table fails the export instead of drawing the layer without it.
+
 ## Blend a layer with the ones below
 
 `clip.set_blend` chooses how a visual item mixes with what is under it: `normal` (the default), `multiply`, `screen`, `overlay` or `add`. It works on clips, text, captions and shapes. `normal` clears the stored mode.

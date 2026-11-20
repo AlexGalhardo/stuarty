@@ -13,6 +13,7 @@ import type {
 	MaskKind,
 } from "../api/types";
 import { useImage } from "../state/context";
+import { useLibrary } from "../state/library";
 import {
 	ColorField,
 	NumberField,
@@ -151,6 +152,68 @@ export function curveText(points: readonly CurvePoint[] | undefined): string {
 	return (points ?? []).map((p) => `${p.x}:${p.y}`).join(", ");
 }
 
+// The tables the select offers: none, the lookup tables of the library, and the one the layer already names when
+// the library does not list it (a file the workspace no longer shows), so the select never shows a wrong choice.
+export function lutOptions(
+	luts: readonly { hash: string; name: string }[],
+	current: string | undefined,
+	none: string,
+): { value: string; label: string }[] {
+	const options = [{ value: "", label: none }];
+	for (const lut of luts) options.push({ value: lut.hash, label: lut.name });
+	if (current !== undefined && !luts.some((l) => l.hash === current)) {
+		options.push({ value: current, label: current });
+	}
+	return options;
+}
+
+function LutFields({
+	layer,
+	run,
+}: {
+	layer: Layer;
+	run: (args: { [key: string]: unknown }) => undefined | Promise<unknown>;
+}): ReactNode {
+	const t = useT();
+	const library = useLibrary();
+	const locked = layer.locked === true;
+	const lut = layer.adjust?.lut;
+
+	return (
+		<>
+			<p className="text-xs font-medium">{t("ui.image.look.lut")}</p>
+			<div className="grid grid-cols-2 gap-2">
+				<SelectField
+					label={t("ui.image.look.lut_file")}
+					value={lut?.asset ?? ""}
+					options={lutOptions(
+						library.luts,
+						lut?.asset,
+						t("ui.image.look.lut_none"),
+					)}
+					disabled={locked}
+					testId="image-adjust-lut"
+					// The server decides the strength the new table keeps; an empty choice removes the key.
+					onCommit={(asset) =>
+						run({ lut: asset === "" ? { intensity: 0 } : { asset } })
+					}
+				/>
+				<NumberField
+					label={t("ui.image.look.lut_intensity")}
+					value={lut?.intensity ?? 100}
+					unit="%"
+					disabled={locked || lut === undefined}
+					testId="image-adjust-lut-intensity"
+					onCommit={(intensity) => run({ lut: { intensity } })}
+				/>
+			</div>
+			<p className="text-xs text-muted-foreground">
+				{t("ui.image.look.lut_hint")}
+			</p>
+		</>
+	);
+}
+
 function AdjustFields({ layer }: { layer: Layer }): ReactNode {
 	const t = useT();
 	const send = useImage((s) => s.send);
@@ -213,6 +276,7 @@ function AdjustFields({ layer }: { layer: Layer }): ReactNode {
 			<p className="text-xs text-muted-foreground">
 				{t("ui.image.look.curve_hint")}
 			</p>
+			<LutFields layer={layer} run={run} />
 			<div>
 				<Button
 					type="button"

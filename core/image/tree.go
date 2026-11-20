@@ -161,24 +161,28 @@ func removeAt(at loc) Layer {
 	return out
 }
 
-// usedAssets lists the hashes the image layers use.
-func usedAssets(d *Document) map[string]bool {
-	used := map[string]bool{}
+// usedAssets lists the hashes the image layers use, and the hashes of the lookup tables the adjustments use.
+func usedAssets(d *Document) (images, luts map[string]bool) {
+	images, luts = map[string]bool{}, map[string]bool{}
 
 	Walk(d, func(l, _ *Layer, _ int) {
 		if l.Kind == KindImage && l.Asset != "" {
-			used[l.Asset] = true
+			images[l.Asset] = true
+		}
+
+		if l.Adjust != nil && l.Adjust.LUT != nil {
+			luts[l.Adjust.LUT.Asset] = true
 		}
 	})
 
-	return used
+	return images, luts
 }
 
-// pruneAssets drops from the table the images no layer uses.
+// pruneAssets drops from the table the files no layer uses.
 func pruneAssets(d *Document) {
-	used := usedAssets(d)
-	for h := range d.Assets {
-		if !used[h] {
+	images, luts := usedAssets(d)
+	for h, a := range d.Assets {
+		if (a.isLUT() && !luts[h]) || (!a.isLUT() && !images[h]) {
 			delete(d.Assets, h)
 		}
 	}

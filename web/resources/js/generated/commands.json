@@ -382,55 +382,6 @@
 					"type": "string",
 					"x-vv-kind": "time"
 				},
-				"resolved": {
-					"additionalProperties": false,
-					"description": "Filled by the service from the speech of the items; never sent by a caller.",
-					"properties": {
-						"speech": {
-							"description": "One entry per speech item, in any order.",
-							"items": {
-								"additionalProperties": false,
-								"properties": {
-									"item_id": {
-										"description": "One of the speech items.",
-										"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
-										"type": "string"
-									},
-									"ranges": {
-										"description": "Sorted, non-overlapping ranges of speech in asset frames, half-open.",
-										"items": {
-											"additionalProperties": false,
-											"properties": {
-												"end": {
-													"type": "integer"
-												},
-												"start": {
-													"type": "integer"
-												}
-											},
-											"required": [
-												"start",
-												"end"
-											],
-											"type": "object"
-										},
-										"type": "array"
-									}
-								},
-								"required": [
-									"item_id",
-									"ranges"
-								],
-								"type": "object"
-							},
-							"type": "array"
-						}
-					},
-					"required": [
-						"speech"
-					],
-					"type": "object"
-				},
 				"speech_item_ids": {
 					"description": "Clips or audio items that carry the speech.",
 					"items": {
@@ -505,23 +456,6 @@
 				"replace": {
 					"description": "true (default) replaces the item's markers; false keeps them and adds the beats.",
 					"type": "boolean"
-				},
-				"resolved": {
-					"additionalProperties": false,
-					"description": "Filled by the service from the beat grid of the asset; never sent by a caller.",
-					"properties": {
-						"beats": {
-							"description": "Strictly increasing beat positions in asset frames, from 0.",
-							"items": {
-								"type": "integer"
-							},
-							"type": "array"
-						}
-					},
-					"required": [
-						"beats"
-					],
-					"type": "object"
 				}
 			},
 			"required": [
@@ -1566,40 +1500,6 @@
 					"description": "Remove the captions linked to this clip on this track first. Default true.",
 					"type": "boolean"
 				},
-				"resolved": {
-					"additionalProperties": false,
-					"description": "Filled by the service from the transcript of the asset; never sent by a caller.",
-					"properties": {
-						"words": {
-							"description": "Words in order, not overlapping, in asset frames, half-open.",
-							"items": {
-								"additionalProperties": false,
-								"properties": {
-									"end": {
-										"type": "integer"
-									},
-									"start": {
-										"type": "integer"
-									},
-									"text": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"text",
-									"start",
-									"end"
-								],
-								"type": "object"
-							},
-							"type": "array"
-						}
-					},
-					"required": [
-						"words"
-					],
-					"type": "object"
-				},
 				"track_id": {
 					"description": "A visual track that receives the captions.",
 					"pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
@@ -1661,7 +1561,7 @@
 					"x-vv-kind": "time"
 				},
 				"text": {
-					"description": "The SRT or WebVTT text.",
+					"description": "The SRT or WebVTT text itself, not a file path: read the file and pass its content.",
 					"type": "string"
 				},
 				"track_id": {
@@ -1676,7 +1576,7 @@
 			],
 			"type": "object"
 		},
-		"description": "Reads the subtitle text (the service or the caller reads the file) and adds one caption for each cue on a visual track: the cue time is the caption time, rounded to frames, and its words share the duration in proportion to their character counts. Markup tags and line breaks are dropped. start moves every cue later by that length. The cues must not overlap each other or the items of the track.",
+		"description": "Reads the subtitle text, never a file path (the caller reads the file and sends its content), and adds one caption for each cue on a visual track: the cue time is the caption time, rounded to frames, and its words share the duration in proportion to their character counts. Markup tags and line breaks are dropped. start moves every cue later by that length. The cues must not overlap each other or the items of the track.",
 		"domain": "video",
 		"errors": [
 			"E_VALIDATION",
@@ -1746,40 +1646,6 @@
 					"description": "A clip of a video asset with audio, or an audio item.",
 					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
-				},
-				"resolved": {
-					"additionalProperties": false,
-					"description": "Filled by the service from the transcript of the asset; never sent by a caller.",
-					"properties": {
-						"words": {
-							"description": "Words in order, not overlapping, in asset frames, half-open.",
-							"items": {
-								"additionalProperties": false,
-								"properties": {
-									"end": {
-										"type": "integer"
-									},
-									"start": {
-										"type": "integer"
-									},
-									"text": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"text",
-									"start",
-									"end"
-								],
-								"type": "object"
-							},
-							"type": "array"
-						}
-					},
-					"required": [
-						"words"
-					],
-					"type": "object"
 				}
 			},
 			"required": [
@@ -2373,36 +2239,6 @@
 					"description": "A length, may be 0; speech kept around each cut. Default \"0.1s\".",
 					"type": "string",
 					"x-vv-kind": "time"
-				},
-				"resolved": {
-					"additionalProperties": false,
-					"description": "Filled by the service from the silence analysis of the asset; never sent by a caller.",
-					"properties": {
-						"silences": {
-							"description": "Sorted, non-overlapping ranges in asset frames, half-open.",
-							"items": {
-								"additionalProperties": false,
-								"properties": {
-									"end": {
-										"type": "integer"
-									},
-									"start": {
-										"type": "integer"
-									}
-								},
-								"required": [
-									"start",
-									"end"
-								],
-								"type": "object"
-							},
-							"type": "array"
-						}
-					},
-					"required": [
-						"silences"
-					],
-					"type": "object"
 				},
 				"ripple": {
 					"description": "track (default) or none.",
@@ -3522,7 +3358,7 @@
 					"type": "array"
 				},
 				"item_id": {
-					"description": "A clip of a video asset, or an audio item.",
+					"description": "A clip of a video asset, an audio item, or a composition item.",
 					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
 					"type": "string"
 				},
@@ -3574,7 +3410,7 @@
 			],
 			"type": "object"
 		},
-		"description": "Sets either speed, from 0.25x to 4x, or curve, 2 to 8 points {t, speed} (speed is text like \"0.5x\") with t the fraction of the item from 0 to 1 (first 0, last 1) and a linear ramp between points; a speed clears the curve. Rescales the duration, the fades, the transitions and the keyframes by the ratio of the old to the new mean speed. With ripple track the later items of the track follow the change in length. Captions linked to the clip are listed, not changed. reverse true plays the same source range backwards (false restores it), alone or with a speed or a curve.",
+		"description": "Sets either speed, from 0.25x to 4x, or curve, 2 to 8 points {t, speed} (speed is text like \"0.5x\") with t the fraction of the item from 0 to 1 (first 0, last 1) and a linear ramp between points; a speed clears the curve. Rescales the duration, the fades, the transitions and the keyframes by the ratio of the old to the new mean speed. With ripple track the later items of the track follow the change in length. Captions linked to the clip are listed, not changed. reverse true plays the same source range backwards (false restores it), alone or with a speed or a curve. A composition item takes a constant speed only: a curve or a reverse on it is refused.",
 		"domain": "video",
 		"errors": [
 			"E_VALIDATION",

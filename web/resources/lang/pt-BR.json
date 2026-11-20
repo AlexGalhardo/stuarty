@@ -159,10 +159,10 @@
         },
         "option": {
           "platform": {
-            "youtube-shorts": "Shorts do YouTube",
-            "tiktok": "TikTok (vídeo curto)",
-            "instagram-reels": "Reels do Instagram",
-            "facebook-reels": "Reels do Facebook",
+            "youtube-shorts": "YouTube Shorts",
+            "tiktok": "TikTok",
+            "instagram-reels": "Instagram Reels",
+            "facebook-reels": "Facebook Reels",
             "other": "Outro lugar"
           },
           "format": {
@@ -492,6 +492,11 @@
         "curve": "Curva de tons",
         "curve_hint": "Pontos de x e y de 0 a 255, como 64:48, 192:208. Vazio remove a curva.",
         "adjust_reset": "Zerar os ajustes",
+        "lut": "Tabela de cores (.cube)",
+        "lut_file": "Tabela",
+        "lut_none": "Sem tabela",
+        "lut_intensity": "Intensidade",
+        "lut_hint": "Os mesmos arquivos .cube de um vídeo. Importe um em um projeto antes; a imagem é a renderização do servidor.",
         "filters": "Filtros",
         "filters_none": "Nenhum filtro. Eles agem na ordem da lista.",
         "filter_add_kind": "Filtro a adicionar",
@@ -972,7 +977,7 @@
         "expand_composition": "Expandir composição",
         "freeze_frame": "Congelar quadro",
         "copy_attributes": "Copiar atributos",
-        "paste_attributes": "Colar atributos",
+        "paste_attributes": "Colar atributos (sem espelhamento)",
         "enable": "Ativar",
         "disable": "Desativar",
         "repeat": "Repetir…"
@@ -1501,7 +1506,7 @@
           "extract_audio": "Extrair o áudio dos clipes selecionados",
           "toggle_magnet": "Ativar ou desativar o ímã da faixa",
           "copy_attributes": "Copiar o visual do item selecionado",
-          "paste_attributes": "Colar o visual copiado nos itens selecionados",
+          "paste_attributes": "Colar o visual copiado, exceto o espelhamento, nos itens selecionados",
           "toggle_snap": "Ativar ou desativar o encaixe",
           "keyframe_panel": "Mostrar ou ocultar os keyframes do item selecionado",
           "speed_curve": "Abrir a curva de velocidade do clipe selecionado",

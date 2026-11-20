@@ -458,3 +458,26 @@ func TestFilesAreReadableByTheOwnerOnly(t *testing.T) {
 		}
 	}
 }
+
+// VV-269: with no vault file yet, a key that is there and is not a key is still reported, since the first
+// credential would fail on it; an absent key is not.
+func TestVerifyReportsABadKeyBeforeTheVaultExists(t *testing.T) {
+	dir := t.TempDir()
+	keyFile := filepath.Join(dir, "wrong.key")
+
+	if err := os.WriteFile(keyFile, []byte("no-such-key\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	err := Open(filepath.Join(dir, "vault.json"), FileProvider{Path: keyFile}).Verify()
+	if !errors.Is(err, ErrBadKey) {
+		t.Errorf("Verify = %v, want ErrBadKey", err)
+	}
+
+	if err := Open(
+		filepath.Join(dir, "vault.json"),
+		FileProvider{Path: filepath.Join(dir, "none")},
+	).Verify(); err != nil {
+		t.Errorf("an absent key = %v, want nil", err)
+	}
+}

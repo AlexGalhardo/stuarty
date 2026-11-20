@@ -34,7 +34,7 @@ The words under a video are not the captions on it. Each network shows a differe
 5. Let the core measure it: `caption:validate <item id> --project <project id>`. In MCP: `project_item` with `action` `check` and the `item_id`. The answer gives, for each network, the length in the unit that network counts, the hashtags, the mentions and the links, and says which limit a text breaks and by how much. Fix every problem it names; the limits are in the table of the core, with the date each was read, and LinkedIn is not in it yet, so check that one by hand. Then check each text against the list in `write-a-hook` of machine-sounding phrases.
 6. Give the person the texts, one block per network, with the count of each from the core, and say which are ready to paste.
 
-Not available yet: placing these texts in a publication that waits in the approval queue is added by the publishing epics. Until then the person copies them.
+The text of a network goes in the publication: `publication:create --text "<caption>"` for the common one, `--target-description` for one account, and `publication:schedule` puts it in the approval queue (the end of `short-vertical-video` has the steps).
 
 ## Rules
 

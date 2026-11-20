@@ -43,7 +43,7 @@ type markBeatsArgs struct {
 	BPM      *float64       `json:"bpm,omitempty"      desc:"Manual tempo in beats per minute, 20 to 400, for music whose pulse the analysis cannot find; replaces the detected grid."                                                        min:"20" max:"400"`
 	Offset   Time           `json:"offset,omitempty"   desc:"With bpm: the time of the first beat on the asset's time axis, from its start; default \"0s\"."`
 	Replace  *bool          `json:"replace,omitempty"  desc:"true (default) replaces the item's markers; false keeps them and adds the beats."`
-	Resolved *ResolvedBeats `json:"resolved,omitempty" desc:"Filled by the service from the beat grid of the asset; never sent by a caller."`
+	Resolved *ResolvedBeats `json:"resolved,omitempty" desc:"Filled by the service from the beat grid of the asset; never sent by a caller."                                                                                                                     internal:"true"`
 }
 
 func checkBeats(r *ResolvedBeats) *Error {

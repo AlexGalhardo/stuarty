@@ -73,6 +73,35 @@ type Levels struct {
 	Gamma int `json:"gamma"`
 }
 
+// LUTRef is the colour lookup table of a layer (epic 49): the content hash of a lut asset and how much of it is
+// mixed in, a whole percent.
+type LUTRef struct {
+	Asset     string `json:"asset"`
+	Intensity int    `json:"intensity"`
+}
+
+// Limits of the lookup table of a layer: its intensity in per cent, and the distinct tables of a document, which
+// are the tables the renderer holds at once (render_luts, SDD-013 section 7.2): the whole image is one frame, so
+// a document with more could be edited and never exported.
+const (
+	MinLUTIntensity = 1
+	MaxLUTIntensity = 100
+	MaxLUTs         = 32
+)
+
+// lutCount is the number of lookup tables the document lists in assets.
+func lutCount(d *Document) int {
+	n := 0
+
+	for _, a := range d.Assets {
+		if a.isLUT() {
+			n++
+		}
+	}
+
+	return n
+}
+
 // Adjust holds the adjustments of a layer that differ from neutral.
 type Adjust struct {
 	Brightness  int          `json:"brightness,omitempty"`
@@ -84,6 +113,7 @@ type Adjust struct {
 	Exposure    int          `json:"exposure,omitempty"`
 	Levels      *Levels      `json:"levels,omitempty"`
 	Curve       []CurvePoint `json:"curve,omitempty"`
+	LUT         *LUTRef      `json:"lut,omitempty"`
 }
 
 // Filter is one filter of a layer: its kind and every parameter of the kind, all filled in.
@@ -224,6 +254,12 @@ func cloneLook(out, l *Layer) {
 		}
 
 		a.Curve = slices.Clone(a.Curve)
+
+		if a.LUT != nil {
+			lut := *a.LUT
+			a.LUT = &lut
+		}
+
 		out.Adjust = &a
 	}
 
@@ -243,7 +279,7 @@ func cloneLook(out, l *Layer) {
 // neutral reports whether an adjustment changes nothing.
 func (a *Adjust) neutral() bool {
 	return a.Brightness == 0 && a.Contrast == 0 && a.Saturation == 0 && a.Temperature == 0 && a.Tint == 0 &&
-		a.Hue == 0 && a.Exposure == 0 && a.Levels == nil && len(a.Curve) == 0
+		a.Hue == 0 && a.Exposure == 0 && a.Levels == nil && len(a.Curve) == 0 && a.LUT == nil
 }
 
 // normalize drops what is neutral, so that the stored form is canonical.
@@ -303,6 +339,14 @@ func validateAdjust(a *Adjust, prefix string, add func(path, format string, a ..
 		if i > 0 && p.X <= a.Curve[i-1].X {
 			add(prefix+fmt.Sprintf(".curve[%d].x", i), "the points of the curve must have x strictly increasing")
 		}
+	}
+
+	if a.LUT != nil {
+		if !hashPattern.MatchString(a.LUT.Asset) {
+			add(prefix+".lut.asset", "the lookup table %q is not a content hash", a.LUT.Asset)
+		}
+
+		rng("lut.intensity", a.LUT.Intensity, MinLUTIntensity, MaxLUTIntensity)
 	}
 }
 
@@ -477,6 +521,17 @@ func dropMasksFrom(d *Document, gone map[string]bool) {
 	})
 }
 
+// shortHash is a content hash as the text view names it: the algorithm and the first 12 digits.
+func shortHash(h string) string {
+	const keep = len("sha256:") + 12
+
+	if len(h) > keep {
+		return h[:keep]
+	}
+
+	return h
+}
+
 // describeLook is the part of the text line of a layer that names its look: " blend multiply adjust
 // brightness=10 filters blur,shadow mask ellipse". It is empty for a layer with none.
 func describeLook(l *Layer) string {
@@ -509,6 +564,10 @@ func describeLook(l *Layer) string {
 
 		if len(a.Curve) > 0 {
 			keys = append(keys, fmt.Sprintf("curve=%dpoints", len(a.Curve)))
+		}
+
+		if a.LUT != nil {
+			keys = append(keys, fmt.Sprintf("lut=%s@%d", shortHash(a.LUT.Asset), a.LUT.Intensity))
 		}
 
 		b.WriteString(" adjust " + strings.Join(keys, ","))

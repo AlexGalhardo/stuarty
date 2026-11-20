@@ -38,7 +38,8 @@ func (c *check) compositions(full bool) {
 			end = max(end, n.Start+n.Duration)
 		}
 
-		last := int64(it.SourceIn) + int64(it.Duration) - 1
+		// The last nested position the item shows, by the rule of SDD-004 §3.3: its speed moves it faster or slower.
+		last := int64(it.SourceIn) + int64(it.Duration-1)*int64(it.Speed.Num)/int64(max(it.Speed.Den, 1))
 		last = rateFrames(last, c.doc.Settings.FPS, nested.Settings.FPS)
 
 		if end == 0 {
