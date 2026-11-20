@@ -43,7 +43,7 @@ A creator schedules a post for tomorrow morning, closes the Stuarty window, and 
 - [x] 4. Implement start at sign-in with its removal. Verify: `go test ./desktop/service/...` passes on Windows; the registration is checked and cleaned by the test.
 - [x] 5. Add the first-time dialog and the settings, in both languages. Verify: `task test:web` and `bun run check:i18n` pass.
 - [x] 6. Update the Windows installer and uninstaller. Verify: `bash scripts/desktop-verify.sh` passes.
-- [ ] 7. Run the real thing on Windows: schedule a target two minutes ahead with the fake connector, close the window, watch it publish; sign out and in with start at sign-in on. Verify: the steps and the result are recorded in `desktop/results/` and in the hand-off.
+- [x] 7. Run the real thing on Windows: schedule a target two minutes ahead with the fake connector, close the window, watch it publish; sign out and in with start at sign-in on. Verify: the steps and the result are recorded in `desktop/results/` and in the hand-off.
 
 ## Test strategy
 
