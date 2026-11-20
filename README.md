@@ -13,7 +13,7 @@
 <a href="go.mod"><img src="https://img.shields.io/badge/go-1.27.4-00ADD8?logo=go&logoColor=white" alt="Go 1.27.4"></a>
 <a href="LICENSE.md"><img src="https://img.shields.io/github/license/AlexGalhardo/stuarty" alt="License"></a>
 
-## Create, edit, manage and publish your content in one place
+## Create, edit, manage and publish your audiovisual and text content in one place
 
 <br/>
 
@@ -21,72 +21,44 @@
 
 <br/>
 
-## What works today: the video editor
+## Introduction
 
-| Area | What you get |
-| --- | --- |
-| **Interfaces** | Editor in the browser<br>MCP server (`stuarty mcp`)<br>CLI with `--json`<br>HTTP API (`stuarty serve`)<br>Desktop application (a native window over the same web UI) |
-| **Editing** | Captions from a transcript, with editable words and styles<br>Cuts, trims, splits, ripple, roll, slide and slip, and silence removal<br>Chroma key, blend modes, masks, filters, effects, colour and blur per clip<br>Framing, speed curves, transitions and keyframes<br>Re-target a project to 16:9, 9:16, 1:1 or 4:5 in one command<br>Text, shapes and markers<br>Audio ducking and beat marks<br>Templates and brand kit |
-| **Export** | MP4, GIF, WAV and AAC<br>A full-resolution PNG of one frame<br>A range of the timeline<br>OpenTimelineIO export and import |
-| **For agents** | Agent docs generated from the code: `SKILL.md`, an `AGENTS.md` snippet and the MCP instructions<br>`command_help` lists every operation with arguments and an example<br>`lint` finds problems before export<br>Batches of operations are applied as one revision |
-| **Local and private** | No telemetry<br>The server listens on `127.0.0.1`<br>FFmpeg only as a separate LGPL process |
+Why use so many tools to create your content, when you can focus on one tool and connect to other tools and services when needed? This is why Stuarty exists.
 
-## What is being built
+Stuarty is an open source (MIT), self-hosted studio for independent creators, on the web and on the desktop. It is built around the problems that eat a creator's week:
 
-| Area | Plan |
-| --- | --- |
-| **Projects** | A project holds a whole production: briefing, scripts, assets, timelines, images, exports and publications |
-| **Dashboard** | One home with a sidebar: Projects, Edit Video, Edit Image, Write, Visual Assets, Video Assets, Publish, Skills, Prompts, Memory, Connections |
-| **Image editor** | Layers, text, shapes, adjustments, masks and templates on the same core and the same renderer as the video editor; thumbnails first |
-| **Writing** | Video scripts, commercial copy and blog posts, with your briefing, your brand and your memory as context |
-| **AI** | Bring your own: an API key, Sign in with ChatGPT, OpenRouter, or the agent you already have installed. Image, voice and video generation with the cost shown first |
-| **Agent chat** | Your own agent (Claude Code, Codex, OpenCode) hosted in a chat panel, working on the open project |
-| **Publishing** | Schedule and publish to YouTube, Instagram and Facebook first, then X and TikTok drafts; blog posts to files, WordPress, a webhook or the API. Nothing is published before you approve it |
-| **Memory, skills, prompts** | Markdown files in your workspace that you and any agent can read |
-| **Self-hosting** | A desktop application and a Docker installation for a VPS, with every credential in an encrypted vault |
+- **Your work is scattered across five apps and five subscriptions.** The script lives in one app, the cut in another, the thumbnail in a third and the schedule in a fourth. In Stuarty, one project holds everything:
+  - [Dashboard and projects](site/content/docs/en/guide/dashboard.mdx): every production in one place, from the briefing to the published post.
+  - [Video editor](site/content/docs/en/guide/timeline.mdx): a multi-track timeline with [text and captions](site/content/docs/en/guide/text-and-captions.mdx), [transitions](site/content/docs/en/guide/transitions.mdx), [keyframes](site/content/docs/en/guide/keyframes.mdx), [effects and colour](site/content/docs/en/guide/effects-and-color.mdx), [audio](site/content/docs/en/guide/audio.mdx) and a [verified export](site/content/docs/en/guide/exporting.mdx).
+  - [Image editor](site/content/docs/en/guide/image-editor.mdx): layers, adjustments, looks and lookup tables for thumbnails, covers and posters.
+  - [Writing](site/content/docs/en/guide/writing.mdx) and [blog posts](site/content/docs/en/guide/blog-posts.mdx): scripts, descriptions and articles, published to your own blog.
+  - [Media library](site/content/docs/en/guide/media-library.mdx) and [asset library](site/content/docs/en/guide/asset-library.mdx): your footage, images and audio, found again in seconds.
+- **Turning a long recording into short vertical videos takes hours of manual work.** Stuarty does the repetitive part for you:
+  - [Transcription](site/content/docs/en/guide/transcription.mdx) and automatic captions, word by word.
+  - [Silence removal](site/content/docs/en/guide/silence-removal.mdx) for talking-head recordings.
+  - The [vertical cut template](site/content/docs/en/guide/template-vertical-cut.mdx), the [safe area](site/content/docs/en/guide/safe-area.mdx) of each network, and the recipe for a [long talking video](site/content/docs/en/guide/recipe-long-talking-video.mdx).
+  - A step-by-step tutorial: [your first vertical short](site/content/docs/en/guide/tutorial-vertical-short.mdx).
+- **Every video, thumbnail and post looks a little different.** Keep a consistent look without starting from zero:
+  - The [brand kit](site/content/docs/en/guide/brand-kit.mdx): your colours, fonts and logos in every project.
+  - [Templates](site/content/docs/en/guide/templates.mdx) such as the [quote card](site/content/docs/en/guide/template-quote-card.mdx) and the [product teaser](site/content/docs/en/guide/template-product-teaser.mdx), and the recipe for a [product commercial](site/content/docs/en/guide/recipe-product-commercial.mdx).
+- **Publishing to every network by hand, at the right time, is a job of its own.** Plan once, publish everywhere:
+  - The [publishing calendar](site/content/docs/en/guide/publishing-calendar.mdx): schedule posts to YouTube, Instagram, Facebook, X and TikTok, through your own developer apps.
+  - An [approval queue](site/content/docs/en/guide/approvals.mdx): nothing is published, and nothing costly is generated, until a person approves it.
+- **AI tools lock you into their cloud and charge you per seat.** Bring your own access instead:
+  - [AI providers](site/content/docs/en/guide/ai-providers.mdx): your own API key, Sign in with ChatGPT, OpenRouter or the agent you already run locally.
+  - The [agent chat](site/content/docs/en/guide/agent-chat.mdx) inside the dashboard, with [memory, skills and prompts](site/content/docs/en/guide/memory-skills-prompts.mdx) that stay as plain files you own.
+- **Your AI agent cannot drive the tools you use.** In Stuarty, agents are first-class users: everything you do in the UI they can do too, with tested parity across three surfaces, and every change they make is attributed to them:
+  - [Agents overview](site/content/docs/en/agents/overview.mdx) and a tutorial: [edit a video with an agent](site/content/docs/en/guide/tutorial-agent-edit.mdx).
+  - The [CLI](site/content/docs/en/agents/cli.mdx), the [HTTP API](site/content/docs/en/api/overview.mdx) and the [MCP server](site/content/docs/en/mcp/overview.mdx).
+  - [Safety](site/content/docs/en/agents/safety.mdx): agents prepare, people approve.
+- **Your files, tokens and credentials live in someone else's cloud.** Stuarty runs on your machine or on your own server:
+  - [Installation](site/content/docs/en/getting-started/installation.mdx) as a [desktop app](site/content/docs/en/guide/desktop.mdx), a [single binary](site/content/docs/en/self-hosting/binary.mdx) or with [Docker](site/content/docs/en/self-hosting/docker.mdx) on a [VPS](site/content/docs/en/self-hosting/vps.mdx).
+  - [What leaves your machine](site/content/docs/en/getting-started/what-leaves-your-machine.mdx): nothing, until you connect a service; no telemetry.
+  - Credentials in a local encrypted vault ([security](site/content/docs/en/self-hosting/security.mdx), [privacy](site/content/docs/en/self-hosting/privacy.mdx)), and [backups and upgrades](site/content/docs/en/self-hosting/backups-and-upgrades.mdx) you control.
+- **One wrong click and an hour of editing is gone.** Every change is a revision:
+  - [Undo and history](site/content/docs/en/guide/undo-and-history.mdx): step back, revert to any revision, see who changed what, you or an agent.
 
-The requirements are in [`docs/prds/`](docs/prds), the decisions in [`docs/adrs/`](docs/adrs) and the order of the work in [`docs/plans/00-roadmap.md`](docs/plans/00-roadmap.md).
-
-## How it is built
-
-- One command core (`core/`, Go, pure, no I/O) holds every rule of every domain.
-- The UI, the MCP server, the CLI and the HTTP API are thin adapters over one service, so a person and an agent see the same result.
-- The UI never computes the result of an edit: it draws what the core says and sends commands.
-- One renderer (`renderer/`, Rust compiled to WebAssembly) draws the pixels in the browser and in the exported file.
-- Data leaves the machine only towards a destination you connected, and publishing waits for your approval ([ADR-0032](docs/adrs/0032-controlled-outbound-and-human-approval.md)).
-- The layout is `core/`, `engine/`, `renderer/`, `service/`, `web/`, `site/` and `desktop/` ([ADR-0001](docs/adrs/0001-repository-layout-and-go-module.md)).
-
-## Quick start
-
-Run the container image of the latest release. The port is published on your computer only:
-
-```bash
-docker run --rm -p 127.0.0.1:7878:7878 -v stuarty:/data \
-  -e APP_KEY="$(openssl rand -base64 32)" \
-  -e STUARTY_ADMIN_EMAIL=admin@example.com \
-  -e STUARTY_ADMIN_PASSWORD=choose-a-long-password \
-  ghcr.io/alexgalhardo/stuarty:latest
-```
-
-Then open `http://127.0.0.1:7878` in a browser and sign in with that email and password. The two variables create the first administrator on the first start only; later starts ignore them.
-
-Installers for Windows, Linux and macOS and the desktop application are on the [releases page](https://github.com/AlexGalhardo/stuarty/releases). The documentation site is <https://video.vukem.dev>; it moves with the rename.
-
-## Working with an agent
-
-Add the stdio MCP server to your client:
-
-```sh
-stuarty mcp
-```
-
-Or use the CLI with `--json`:
-
-```sh
-stuarty project:create --name "Launch teaser" --json
-```
-
-Or call the HTTP API of `stuarty serve` (default `127.0.0.1:7878`, `POST /mcp` for Streamable HTTP MCP). The workspace is `~/.stuarty`, or `$STUARTY_HOME`.
+New here? Start with the [introduction](site/content/docs/en/getting-started/introduction.mdx) and the [quick start](site/content/docs/en/getting-started/quick-start.mdx).
 
 ## Stability
 
