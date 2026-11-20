@@ -287,7 +287,7 @@ func history(ctx context.Context, svc service.Service, raw json.RawMessage) (*to
 	}
 
 	if domain == command.DomainImage {
-		return imageHistory(ctx, svc, raw, in.Action, in.ImageID)
+		return imageHistory(ctx, svc, raw, &in)
 	}
 
 	if err := checkMembers("history", domain, raw, []string{"project_id"}, []string{"image_id"}); err != nil {

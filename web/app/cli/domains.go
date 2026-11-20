@@ -42,6 +42,9 @@ var commandDomains = map[string]string{
 	"image:create": command.DomainImage, "image:list": command.DomainImage, "image:show": command.DomainImage,
 	"image:edit": command.DomainImage, "image:undo": command.DomainImage, "image:redo": command.DomainImage,
 	"image:export": command.DomainImage, "image:import": command.DomainImage,
+	"image:revert": command.DomainImage, "image:diff": command.DomainImage,
+	"image:checkpoint:create": command.DomainImage, "image:checkpoint:list": command.DomainImage,
+	"image:checkpoint:rename": command.DomainImage, "image:checkpoint:remove": command.DomainImage,
 
 	"media:import": command.DomainAsset, "media:inspect": command.DomainAsset, "media:list": command.DomainAsset,
 	"media:trash": command.DomainAsset, "media:restore": command.DomainAsset, "font:import": command.DomainAsset,
