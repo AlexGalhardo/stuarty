@@ -81,15 +81,12 @@ func (s *state) verify(ctx context.Context, partial string, frames int, codec ex
 	fail := func(name, expected, got string) { failed = append(failed, Check{name, expected, got}) }
 
 	var video, audio []probedStream
-	data := 0
 	for _, x := range pf.Streams {
 		switch x.CodecType {
 		case "video":
 			video = append(video, x)
 		case "audio":
 			audio = append(audio, x)
-		case "data":
-			data++
 		}
 	}
 	name := string(codec.Normal())
@@ -99,8 +96,8 @@ func (s *state) verify(ctx context.Context, partial string, frames int, codec ex
 	if len(audio) != 1 || audio[0].CodecName != "aac" {
 		fail("audio_stream", "one aac stream", describe(audio))
 	}
-	if len(pf.Streams) != len(video)+len(audio)+data || data != s.chapterTracks() {
-		fail("streams", "a video and an audio stream"+s.chapterTrackNote(), strconv.Itoa(len(pf.Streams))+" streams")
+	if c, bad := s.streamsCheck(pf.Streams, len(video)+len(audio)); bad {
+		failed = append(failed, c)
 	}
 	if len(video) == 1 {
 		v := video[0]
@@ -135,13 +132,6 @@ func (s *state) verify(ctx context.Context, partial string, frames int, codec ex
 	case b.moov < 0 || b.mdat < 0 || b.moov > b.mdat:
 		fail("faststart", "moov before mdat", fmt.Sprintf("moov at %d, mdat at %d", b.moov, b.mdat))
 	}
-
-	checks, err := s.verifyChapters(ctx, partial)
-	if err != nil {
-		return Verified{}, err
-	}
-
-	failed = append(failed, checks...)
 
 	for _, f := range s.presetFindings(partial, want, codec) {
 		fail(f.CheckName(), f.Limit, f.Got)

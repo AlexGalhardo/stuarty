@@ -550,6 +550,16 @@ func (s *state) buildMP4(ctx context.Context) (built, error) {
 		return built{}, err
 	}
 
+	if checks, err := s.verifyChapters(ctx, partial); err != nil || len(checks) > 0 {
+		_ = os.Remove(partial)
+
+		if err == nil {
+			err = verifyError(checks)
+		}
+
+		return built{}, err
+	}
+
 	return built{
 		partial: partial, encoder: cand.Name, codec: cp.Codec, codecWanted: cp.Wanted, notes: cp.Notes,
 		loud: loud, ver: ver,
