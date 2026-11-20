@@ -16,7 +16,7 @@ function fakeTimers(): Timers & { advance(ms: number): void } {
 	let next = 1;
 	return {
 		now: () => now,
-		setTimeout(callback, ms) {
+		setTimeout: (callback, ms) => {
 			const id = next++;
 			pending.set(id, { at: now + ms, callback });
 			return id;
