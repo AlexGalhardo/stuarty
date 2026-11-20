@@ -81,8 +81,8 @@ func (c *check) durationLimit() {
 }
 
 // covers says whether an item fills the whole frame, opaque, unrotated and in its
-// default position, with no mask, no chroma key, no blur, in the normal blend and nothing that animates or fades it:
-// what it takes to hide the items below.
+// default position, with no mask, no chroma key, no blur, no shake or motion blur, in the normal blend and nothing
+// that animates or fades it: what it takes to hide the items below.
 func (c *check) covers(it *timeline.Item) bool {
 	if it.Opacity != 1 || it.Mask != nil || it.X != nil || it.Y != nil || it.Scale < 1 || it.Rotation != 0 ||
 		it.TransitionIn != nil || it.TransitionOut != nil {
@@ -99,6 +99,15 @@ func (c *check) covers(it *timeline.Item) bool {
 	// edge of the layer into transparent pixels (section 3.6), so the item below shows through (VV-296).
 	if it.ChromaKey != nil || it.Blur > 0 {
 		return false
+	}
+
+	// A shake moves the layer every frame (SDD-004 section 3.13), which uncovers the edge of the frame, and a motion
+	// blur averages the alpha with the transparent padding along its angle, as the blur does. The other effects keep
+	// the alpha of an opaque layer (VV-296).
+	for _, e := range it.Effects {
+		if (e.Kind == timeline.EffectShake || e.Kind == timeline.EffectMotionBlur) && e.Amount != nil && *e.Amount > 0 {
+			return false
+		}
 	}
 
 	for _, p := range []string{"opacity", "x", "y", "scale", "rotation"} {
