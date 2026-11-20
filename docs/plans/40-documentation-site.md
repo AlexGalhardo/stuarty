@@ -46,7 +46,7 @@ Someone who has never heard of Stuarty lands on the site, understands in a minut
 - [x] 6. Write Agents, Security and privacy, Troubleshooting and the Glossary. Verify: `task lint:site` exits 0.
 - [x] 7. Remove or redirect the old pages; search for the former name and for milestone wording. Verify: a grep for the former product name outside the migration page, and for "MVP", "beta" and "1.0" as product stages, returns nothing in `site/src`.
 - [x] 8. Translate everything to Brazilian Portuguese and add the missing-translation check. Verify: `task site:build` exits 0 and the check passes.
-- [ ] 9. Measure the first export time on a clean profile with the machine idle. Verify: the number, the date and the machine are on the page and in the hand-off.
+- [x] 9. Measure the first export time on a clean profile with the machine idle. Verify: the number, the date and the machine are on the page and in the hand-off.
 
 ## Test strategy
 
