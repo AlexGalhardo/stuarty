@@ -57,3 +57,42 @@ export function createSlotQueue(limit: number): SlotQueue {
 		},
 	};
 }
+
+export interface NearTicket {
+	// near reports whether the element is near the viewport.
+	near(isNear: boolean): void;
+	// stop withdraws the request, or frees its slot if it started.
+	stop(): void;
+}
+
+// whileNear asks `queue` for a slot while an element is near the viewport and
+// withdraws the request if the element leaves before its turn, so scrolling
+// past a hundred cards does not line up a hundred pictures ahead of the ones on
+// screen (VV-238). Once `start` has run, leaving the viewport changes nothing:
+// the request is in flight and keeps its slot until it is released.
+export function whileNear(
+	queue: SlotQueue,
+	start: (release: Release) => void,
+): NearTicket {
+	let withdraw: (() => void) | null = null;
+	let started = false;
+
+	return {
+		near(isNear) {
+			if (started) return;
+			if (isNear && !withdraw) {
+				withdraw = queue.acquire((release) => {
+					started = true;
+					start(release);
+				});
+			} else if (!isNear && withdraw) {
+				withdraw();
+				withdraw = null;
+			}
+		},
+		stop() {
+			withdraw?.();
+			withdraw = null;
+		},
+	};
+}
