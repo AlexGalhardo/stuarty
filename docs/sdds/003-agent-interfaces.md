@@ -2779,7 +2779,7 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
 ```json
 {
   "name": "job_start",
-  "description": "Start long work. export renders a workspace file: args {start?, end?, format?, at? (the png frame), preset?, codec?}. export_batch runs args.items (export args) in turn. transcribe: args {asset_id, language?, model?}. text.generate: args {connection_id, model, prompt}; text.draft: args {item_id, connection_id, model, instruction}; a person approves. Poll job_get.",
+  "description": "Start long work; args by kind. export renders a workspace file: {start?, end?, format?, at? (the png frame), preset?, codec?}; export_batch: items (export args) in turn; transcribe: {asset_id, language?, model?}; text.generate: {connection_id, model, prompt}; image.generate: {connection_id, model, prompt, size?, count?}; voice.generate: {connection_id, model, text, voice, format?}; text.draft: {item_id, connection_id, model, instruction}; a person approves. Poll job_get.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -2797,6 +2797,8 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
           "export_batch",
           "transcribe",
           "text.generate",
+          "image.generate",
+          "voice.generate",
           "text.draft"
         ]
       },
@@ -2913,36 +2915,15 @@ job_4h8k2m6p9t export succeeded 100% file=/home/ana/.stuarty/exports/prj_7k2m9x4
 
 ```json
 {
-  "name": "job_get",
-  "description": "Get a job's state, progress and result (job_id). wait_ms waits for a final state (succeeded, failed, cancelled). A succeeded export is verified; its result has the file path. Give project_id instead of job_id to list its queued, running and recent jobs.",
-  "inputSchema": {
-    "type": "object",
-    "properties": {
-      "job_id": {
-        "type": "string",
-        "pattern": "^job_[0-9a-hjkmnp-tv-z]{10}$"
-      },
-      "project_id": {
-        "type": "string",
-        "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
-      },
-      "state": {
-        "enum": [
-          "queued",
-          "running",
-          "succeeded",
-          "failed",
-          "cancelled",
-          "active",
-          "all"
-        ]
-      },
-      "wait_ms": {
-        "type": "integer",
-        "minimum": 0,
-        "maximum": 25000,
-        "default": 0
-      }
+  "name":"job_get",
+  "description":"A job's state, progress, result (job_id). wait_ms: wait up to that many ms for succeeded, failed or cancelled. A succeeded export is verified; its result has the file path. project_id instead of job_id lists its queued, running and recent jobs.",
+  "inputSchema":{
+    "type":"object",
+    "properties":{
+      "job_id":{"type":"string","pattern":"^job_[0-9a-hjkmnp-tv-z]{10}$"},
+      "project_id":{"type":"string","pattern":"^prj_[0-9a-hjkmnp-tv-z]{10}$"},
+      "state":{"enum":["queued","running","succeeded","failed","cancelled","active","all"]},
+      "wait_ms":{"type":"integer","minimum":0,"maximum":25000,"default":0}
     },
     "additionalProperties": false
   },
@@ -3296,7 +3277,7 @@ The `image` tool is the image documents of SDD-021 behind one tool, as `template
 ```json
 {
   "name": "project_item",
-  "description": "Project items. add: timeline (its id is timeline_id), text or output (export job_id); move, rename, trash, restore: item_id; brief: read, or write text (empty clears); briefing: questions, or answers {id: text} to write the brief. Texts: text lists, reads (item_id) or writes (text; title, text_kind make one); revisions (revision, until: compare); revert (revision); check: caption (network) or script (wpm).",
+  "description": "Project items. add: timeline (id is timeline_id), text or output (export job_id); move, rename, trash, restore: item_id; brief: read, or write text (empty clears); briefing: questions, or answers {id: text} write the brief. Texts: text lists, reads (item_id) or writes (text; title, text_kind make one); revisions (revision, until: compare); revert (revision); check: caption (network) or script (wpm).",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -3587,9 +3568,9 @@ The tool list stays short while the product grows because a new domain adds **op
 
 `command_help` also takes the topic `export` (epic 35), which is not a domain: it answers with the export presets and codecs of this machine (`ExportPresetList`, a video operation), and takes no `name`. `export_batch` of `job_start` and the `preset` of `lint` are reached the same way, through the tools that already exist.
 
-**The writing domain (epic 17, SDD-019) adds no tool.** `project_item` serves it with four more values of `action`: `text` (no `item_id`: list the texts of the project, or with `text` make one from `title` and `text_kind`; with `item_id`: read it, or with `text` save a new revision, `revision` being the revision the writer read), `revisions` (`item_id`; `revision` and `until` compare two by paragraph), `revert` (`item_id`, `revision`) and `check` (`network` measures a caption, otherwise `wpm` estimates a script; an `item_id` alone is read as what its kind says). The draft is `job_start` with kind `text.draft` (args `item_id`, `connection_id`, `model`, `instruction`, and optionally `network`, `max_tokens`, `temperature`; a person approves; the project needs no `timeline_id`). To pay for the arguments (`text_kind`, `revision`, `until`, `network`, `wpm`) the tool list gave up no capability: the description of `job_get` lost two words and the budget measured 22,389 of 22,400 bytes. Merged with epics 33, 34 and 36 the list measures 22,896 bytes and the first discovery call 7,565 characters, within the limits raised by the author (D-094: 23,400 bytes, 8,500 characters). `project_item` and `job_start` list `writing` among their domains (`mcp.ToolDomains`). `until` and not `to`: `TestNoOutboundTools` refuses an argument named `to`.
+**The writing domain (epic 17, SDD-019) adds no tool.** `project_item` serves it with four more values of `action`: `text` (no `item_id`: list the texts of the project, or with `text` make one from `title` and `text_kind`; with `item_id`: read it, or with `text` save a new revision, `revision` being the revision the writer read), `revisions` (`item_id`; `revision` and `until` compare two by paragraph), `revert` (`item_id`, `revision`) and `check` (`network` measures a caption, otherwise `wpm` estimates a script; an `item_id` alone is read as what its kind says). The draft is `job_start` with kind `text.draft` (args `item_id`, `connection_id`, `model`, `instruction`, and optionally `network`, `max_tokens`, `temperature`; a person approves; the project needs no `timeline_id`). To pay for the arguments (`text_kind`, `revision`, `until`, `network`, `wpm`) the tool list gave up no capability: the description of `job_get` lost two words and the budget measured 22,389 of 22,400 bytes. Merged with epics 33, 34, 36 and 10 the list measures 22,685 bytes and the first discovery call 7,565 characters, within the limits raised by the author (D-094: 23,400 bytes, 8,500 characters). `project_item` and `job_start` list `writing` among their domains (`mcp.ToolDomains`). `until` and not `to`: `TestNoOutboundTools` refuses an argument named `to`.
 
-A tool gets `domain` in the epic that registers the first non-video operation behind it, never earlier: every argument costs bytes of every `tools/list` (NFR-020). `lint`, `view`, `job_get` and `job_cancel` wait for such an operation. `job_start` belongs to the `provider` domain too, with no `domain` argument: its `kind` already names the operation, and `text.generate` (epic 09, SDD-016) is a generation of that domain. The `image` tool of §4.2 stays (the surface is frozen, §9.1); `edit` with `domain` `image` reaches the same `ImageEdit`, so an agent that learned one tool for timelines learns the same call for images.
+A tool gets `domain` in the epic that registers the first non-video operation behind it, never earlier: every argument costs bytes of every `tools/list` (NFR-020). `lint`, `view`, `job_get` and `job_cancel` wait for such an operation. `job_start` belongs to the `provider` domain too, with no `domain` argument: its `kind` already names the operation, and `text.generate` (epic 09, SDD-016) is a generation of that domain, as are `image.generate` and `voice.generate` (epic 10). The `image` tool of §4.2 stays (the surface is frozen, §9.1); `edit` with `domain` `image` reaches the same `ImageEdit`, so an agent that learned one tool for timelines learns the same call for images.
 
 **No new tool.** The catalogue is still the 20 tools of §4.1: no existing intent fits a new tool better than a `domain` on an existing one, so none is added. A later epic adds a tool only when no intent fits, and writes the reason in this section.
 

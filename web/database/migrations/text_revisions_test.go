@@ -6,10 +6,9 @@ import (
 	"testing"
 
 	"github.com/AlexGalhardo/vukem/database"
-	"github.com/AlexGalhardo/vukem/schema"
 )
 
-const textRevisionsID = "20261119160000_text_revisions"
+const textRevisionsID = "20261119240000_text_revisions"
 
 // textWorkspace is the workspace of a release, taken to the project items, with a brief and two texts in its first
 // project: the texts epic 06 wrote, which had no kind and no history.
@@ -108,12 +107,11 @@ func TestTextRevisionsMigrationDown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	all := All()
-	at := slices.IndexFunc(all, func(m schema.Migration) bool { return m.ID == textRevisionsID })
+	want := downTo(textRevisionsID)
 
-	rolled, err := m.Rollback(ctx, len(all)-at)
-	if err != nil || len(rolled) != len(all)-at || rolled[len(rolled)-1] != textRevisionsID {
-		t.Fatalf("Rollback = %v, %v", rolled, err)
+	rolled, err := m.Rollback(ctx, len(want))
+	if err != nil || !slices.Equal(rolled, want) {
+		t.Fatalf("Rollback = %v, %v; want %v", rolled, err, want)
 	}
 
 	if got := columns(t, db, "text_revisions"); len(got) != 0 {
