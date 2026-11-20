@@ -4,7 +4,7 @@ import path from "node:path";
 import { test } from "node:test";
 
 const root = path.join(import.meta.dirname, "..", "..");
-const guides = ["comecar.md", "primeiro-short.md"];
+const guides = ["comecar.md", "primeiro-short.md", "recipe-product-commercial.md", "recipe-long-talking-video.md"];
 
 // The site is English only (SDD-010 section 15.1); the Portuguese guides live in docs/guides/pt-BR/ and the
 // introduction links to them. A guide that is deleted or unlinked would leave the introduction with a dead link.
