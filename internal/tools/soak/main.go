@@ -2,8 +2,8 @@
 // (SDD-008 section 13.4): the heap in use, the goroutines, the handles and the size of the database do not grow
 // after a warm-up, and no job is left unfinished.
 //
-//	go run ./internal/tools/soak -duration 4h -report docs/perf/<date>-soak.md   # the run of the orchestrator
-//	go run ./internal/tools/soak -duration 2m                                    # the smoke test
+//	go run ./internal/tools/soak -duration 4h -report docs/quality/<date>-soak.md   # the run of the orchestrator
+//	go run ./internal/tools/soak -duration 2m                                       # the smoke test
 //
 // It exits 1 when a bound is broken.
 package main
