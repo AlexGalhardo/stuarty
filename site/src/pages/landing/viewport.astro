@@ -165,6 +165,11 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 </Base>
 
 <style is:global>
+	/* This version compares a container 20% narrower than the rest of the site (the navbar and the content). */
+	html:has(main[data-page="viewport"]) {
+		--site-container: calc(90rem * 0.8);
+	}
+
 	/* Takes mode: one take fills the viewport, the others wait off stage (no scrollbar). */
 	html.takes-on,
 	html.takes-on body {

@@ -13,7 +13,7 @@ export async function ChangelogPage(): Promise<React.ReactElement> {
 		.map((h) => ({ ...h, text: h.text.replace(/^\[([^\]]+)\]\s+-\s+/, "$1 — ") }));
 	return (
 		// Same frame as the docs (DocsFrame): the release index sits where the docs sidebar does.
-		<div className="mx-auto flex max-w-[90rem] px-4 sm:px-6">
+		<div className="site-container flex">
 			<aside className="sticky top-(--header-h) hidden h-[calc(100dvh-var(--header-h))] w-64 shrink-0 overflow-y-auto py-8 pr-6 scroll-slim lg:block">
 				<Toc headings={releases} label={t.releases} />
 			</aside>

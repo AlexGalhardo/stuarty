@@ -50,6 +50,8 @@
   --duration-reveal: 500ms;
   --duration-hover: 150ms;
   --header-h: 3.5rem;
+  /* The width of .site-container: change this one line to narrow or widen the whole site. */
+  --site-container: 90rem;
   color-scheme: light;
 }
 
@@ -76,7 +78,7 @@
 /* The one horizontal container of the header and of the landing sections: the content lines up with the navbar. */
 .site-container {
   width: 100%;
-  max-width: 90rem;
+  max-width: var(--site-container);
   margin-inline: auto;
   padding-inline: 1rem;
 }
