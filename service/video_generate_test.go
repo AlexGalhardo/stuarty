@@ -6,6 +6,7 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
 	core "github.com/AlexGalhardo/stuarty/core/approval"
 	"github.com/AlexGalhardo/stuarty/core/provider"
@@ -203,5 +204,25 @@ func TestVideoGenerate_ThePollingWaitsWhatTheProviderAsksWithinBounds(t *testing
 	if pollMayPass(&providers.Error{Kind: providers.KindAuth}) ||
 		pollMayPass(&providers.Error{Kind: providers.KindBadRequest}) {
 		t.Error("a refused key or a refused request will not pass")
+	}
+
+	for _, tc := range []struct {
+		asked, backoff, next, after time.Duration
+	}{
+		// A provider that asks for a tiny wait is not polled in a tight loop.
+		{time.Millisecond, videoPollFirst, time.Second, videoPollFirst},
+		{10 * time.Millisecond, videoPollFirst, time.Second, videoPollFirst},
+		{5 * time.Second, videoPollFirst, 5 * time.Second, videoPollFirst},
+		{time.Hour, videoPollFirst, videoPollCeiling, videoPollFirst},
+		// With no wait asked, the backoff doubles up to its largest.
+		{0, videoPollFirst, 2 * time.Second, 4 * time.Second},
+		{0, 16 * time.Second, 16 * time.Second, videoPollMax},
+		{0, videoPollMax, videoPollMax, videoPollMax},
+		{-time.Second, videoPollFirst, videoPollFirst, 4 * time.Second},
+	} {
+		next, after := nextPoll(tc.asked, tc.backoff)
+		if next != tc.next || after != tc.after {
+			t.Errorf("nextPoll(%v, %v) = %v, %v; want %v, %v", tc.asked, tc.backoff, next, after, tc.next, tc.after)
+		}
 	}
 }
