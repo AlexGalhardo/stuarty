@@ -363,6 +363,46 @@ func TestAudioPreviewCacheFailure(t *testing.T) {
 	}
 }
 
+// A failure that may be tried again is forgotten when the next one is recorded: windows asked one after another of a
+// source that cannot be decoded do not grow the memory of the service without end.
+func TestAudioPreviewCacheForgetsOldFailures(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePreviewer{fail: true}
+	env := previewEnv(t, fake)
+	a := previewKeys(t, env)[previewItemA]
+
+	p := &env.s.previews
+	p.setup()
+	p.mu.Lock()
+	p.failed["stale"] = time.Now().Add(-time.Second)
+	p.mu.Unlock()
+
+	deadline := time.Now().Add(20 * time.Second)
+
+	for {
+		_, err := openPreview(env, batchProject, a.Key, "")
+		if se, ok := errors.AsType[*Error](err); ok && se.Code == command.CodeInternal {
+			break
+		}
+
+		if time.Now().After(deadline) {
+			t.Fatalf("the failed render was not reported: %v", err)
+		}
+
+		runtime.Gosched()
+	}
+
+	p.mu.Lock()
+	_, stale := p.failed["stale"]
+	_, fresh := p.failed[a.Key]
+	p.mu.Unlock()
+
+	if stale || !fresh {
+		t.Errorf("failures: stale kept %v, new recorded %v", stale, fresh)
+	}
+}
+
 // Two items with one chain over one range share one file; an edit of another item, of a volume or of a position
 // makes none; a changed parameter makes another (acceptance criterion 2).
 func TestAudioPreviewKeyIsPerClip(t *testing.T) {
