@@ -760,6 +760,11 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 }
 
 func commandOf(s step) (name string, argv []string, stdin string, err error) {
+	// The writing steps first: their from is a revision number, which the time of a motion range below refuses.
+	if name, argv, stdin, ok, err := writingCommand(s); ok {
+		return name, argv, stdin, err
+	}
+
 	var a struct {
 		ProjectID string               `json:"project_id"`
 		AssetID   string               `json:"asset_id"`
@@ -1223,10 +1228,6 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 	}
 
 	if name, argv, stdin, ok, err := libraryCommand(s); ok {
-		return name, argv, stdin, err
-	}
-
-	if name, argv, stdin, ok, err := writingCommand(s); ok {
 		return name, argv, stdin, err
 	}
 
