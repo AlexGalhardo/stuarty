@@ -26,7 +26,9 @@ func TestBriefingTakesTheKindOfProductionApartFromTheKindOfAnItem(t *testing.T) 
 		return id
 	}
 
-	short := structured(t, ok(t, call(t, cs, "project_item", map[string]any{"action": "briefing", "project_id": project})))
+	short := structured(t, ok(t, call(t, cs, "project_item", map[string]any{
+		"action": "briefing", "project_id": project,
+	})))
 	if got := questions(short); got == "product" {
 		t.Errorf("with no production_kind the briefing is the short video, got the first question %q", got)
 	}
