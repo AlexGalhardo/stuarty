@@ -318,6 +318,12 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {
+		/* The global reduced-motion rule gives every element a tiny transition; on a take switching from hidden to
+		   visible it would delay the visibility its heading needs to take the focus. */
+		html.takes-on .take,
+		html.takes-on .take * {
+			transition: none !important;
+		}
 		.take-rail-progress span,
 		.take-rail-name {
 			transition: none;

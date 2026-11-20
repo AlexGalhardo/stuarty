@@ -12,6 +12,13 @@ export function start(): void {
 	if (!root) return;
 	document.documentElement.classList.add("motion-live");
 
+	const tilt = root.querySelector<HTMLElement>("[data-tilt]");
+	// The tilt is set by GSAP from here on (its inline CSS is for the page without script).
+	if (tilt && !reduced) {
+		tilt.style.transform = "";
+		gsap.set(tilt, { rotateY: -14, rotateX: 6, transformPerspective: 1600 });
+	}
+
 	// Hero: the title letter by letter, then the lead and the actions.
 	const title = root.querySelector("[data-split]");
 	if (!reduced && title) {
@@ -22,8 +29,6 @@ export function start(): void {
 	}
 
 	// Tilted product window follows the pointer a little.
-	const tilt = root.querySelector<HTMLElement>("[data-tilt]");
-	if (tilt && !reduced) gsap.set(tilt, { clearProps: "transform", rotateY: -14, rotateX: 6, transformPerspective: 1600 });
 	if (tilt && !reduced && window.matchMedia("(pointer: fine)").matches) {
 		const rx = gsap.quickTo(tilt, "rotateX", { duration: 0.8, ease: "power3.out" });
 		const ry = gsap.quickTo(tilt, "rotateY", { duration: 0.8, ease: "power3.out" });
@@ -96,7 +101,7 @@ export function start(): void {
 /** The mascot's path down the page: beside the hero, centre stage while the tools merge into it, then aside. */
 function choreograph(stage: Stage, root: HTMLElement, reduced: boolean, mm: gsap.MatchMedia): void {
 	const wide = window.matchMedia("(min-width: 64rem)").matches;
-	Object.assign(stage.pose, wide ? { x: 0.72, y: 0.62, scale: 0.42, turn: -0.5, opacity: 1 } : { x: 0.62, y: 0.7, scale: 0.36, turn: -0.4, opacity: 1 });
+	Object.assign(stage.pose, wide ? { x: 0.72, y: 0.62, scale: 0.42, turn: -0.5, opacity: 1 } : { x: 0.66, y: 0.84, scale: 0.26, turn: -0.4, opacity: 1 });
 	if (reduced) {
 		stage.renderOnce();
 		return;
