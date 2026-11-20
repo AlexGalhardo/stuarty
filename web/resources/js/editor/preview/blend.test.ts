@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { blendChannel, div255, pixiBlendMode } from "./blend";
+import { blendChannel, div255, overAlphaName, pixiBlendMode } from "./blend";
 
 // The formulas of SDD-004 section 3.8, opaque source (a = 255) and a source
 // at opacity 128 (premultiplied c = div255(c0 * 128), a = 128).
@@ -44,5 +44,19 @@ describe("blend reference", () => {
 	it("maps an absent blend to normal", () => {
 		expect(pixiBlendMode(undefined)).toBe("normal");
 		expect(pixiBlendMode("overlay")).toBe("overlay");
+	});
+
+	it("keeps the blend of PixiJS over an opaque canvas", () => {
+		for (const m of ["multiply", "screen", "overlay", "add"] as const) {
+			expect(pixiBlendMode(m, false)).toBe(m);
+		}
+	});
+
+	it("draws the four modes with the general form over a clear canvas (VV-268)", () => {
+		for (const m of ["multiply", "screen", "overlay", "add"] as const) {
+			expect(pixiBlendMode(m, true)).toBe(overAlphaName(m));
+		}
+		expect(pixiBlendMode(undefined, true)).toBe("normal");
+		expect(pixiBlendMode("normal", true)).toBe("normal");
 	});
 });
