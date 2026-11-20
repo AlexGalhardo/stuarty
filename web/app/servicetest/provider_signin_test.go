@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/AlexGalhardo/stuarty/core/provider"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/connections/oauth"
 	"github.com/AlexGalhardo/stuarty/service/connections/oauth/oauthtest"
@@ -615,6 +616,46 @@ func TestSignInOtherCases(t *testing.T) {
 	// A connection that does not exist.
 	if _, err := se.begin(person, "openai", "con_0000000000"); !isCode(err, service.CodeConnectionNotFound) {
 		t.Errorf("an unknown connection = %v, want E_CONNECTION_NOT_FOUND", err)
+	}
+}
+
+// SDD-016 section 12.2: a sign-in grants text only. An image or a voice asked of a ChatGPT connection is
+// refused before a job or an approval exists, even when a person has set a price for the model, and the
+// token of the plan never reaches the image or the speech endpoint.
+func TestSignInChatGPTConnectionGeneratesNoImageAndNoVoice(t *testing.T) {
+	t.Parallel()
+
+	se := newSignInEnv(t)
+	done := se.signIn("openai", "")
+
+	for unit, model := range map[string]string{"image": "gpt-image-1", "mchar": "gpt-4o-mini-tts"} {
+		micros := int64(40_000)
+		if _, err := se.svc.ProviderPriceSet(se.asPerson(), service.ProviderPriceSetRequest{
+			Provider: "openai", Model: model, Currency: "USD", Unit: unit, UnitMicros: &micros,
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	_, ierr := se.svc.ImageGenerate(se.as(token), service.ImageGenerateRequest{
+		ProjectID: se.prj, ConnectionID: done.ConnectionID,
+		ImageRequest: provider.ImageRequest{Model: "gpt-image-1", Prompt: "a loaf", Count: 1, Size: "1024x1024"},
+	})
+	_, verr := se.svc.VoiceGenerate(se.as(token), service.VoiceGenerateRequest{
+		ProjectID: se.prj, ConnectionID: done.ConnectionID,
+		VoiceRequest: provider.VoiceRequest{Model: "gpt-4o-mini-tts", Text: "Hello.", Voice: "alloy", Format: "mp3"},
+	})
+
+	for name, err := range map[string]error{"an image": ierr, "a voice": verr} {
+		se2, ok := errors.AsType[*service.Error](err)
+		if !ok || se2.Code != "E_VALIDATION" || se2.Path != "args.connection_id" {
+			t.Errorf("%s through a sign-in = %v, want E_VALIDATION at args.connection_id", name, err)
+		}
+	}
+
+	approvals, _ := se.svc.ApprovalList(se.as(token), service.ApprovalListRequest{State: "all"})
+	if len(approvals.Requests) != 0 {
+		t.Errorf("a refused generation left %d approval requests", len(approvals.Requests))
 	}
 }
 
