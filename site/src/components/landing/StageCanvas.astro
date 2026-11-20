@@ -1,0 +1,21 @@
+---
+// The 3D stage of a landing page: the canvas a client island draws on, over a static brand gradient and a still
+// image of the mascot that stay when WebGL fails (design-system section 11.9). Decorative: hidden from assistive tech.
+import { withBase } from "@/lib/site";
+
+interface Props {
+	id: string;
+	class?: string;
+	/** Where the still mascot of the fallback sits, as CSS (left/top/width). */
+	still?: string;
+}
+
+const { id, class: className, still = "left: 62%; top: 30%; width: min(22vw, 16rem);" } = Astro.props;
+---
+
+<div class:list={["stage", className]} aria-hidden="true">
+	<div class="stage-fallback">
+		<img src={withBase("/logo.png")} alt="" width="256" height="256" class="absolute -translate-x-1/2 opacity-90" style={still} data-stage-still />
+	</div>
+	<canvas id={id}></canvas>
+</div>

@@ -1,0 +1,61 @@
+---
+// "Four ways to drive it": Agent, CLI, HTTP API and MCP, each with real commands copied from the build.
+// The tab switching is the shared [data-tabs] handler of Base.astro; arrow keys are added by src/landing/tabs.ts.
+import { drive } from "@/lib/landing-pages";
+import { withBase } from "@/lib/site";
+
+interface Props {
+	idPrefix: string;
+	class?: string;
+}
+
+const { idPrefix, class: className } = Astro.props;
+---
+
+<div data-tabs data-drive class={className}>
+	<div role="tablist" aria-label="Four ways to drive Stuarty" class="inline-flex flex-wrap gap-1 rounded-full border border-fg/10 bg-bg/60 p-1 backdrop-blur">
+		{drive.map((tab, i) => (
+			<button
+				type="button"
+				role="tab"
+				class="tab"
+				id={`${idPrefix}-tab-${tab.id}`}
+				data-tab={tab.id}
+				aria-controls={`${idPrefix}-panel-${tab.id}`}
+				aria-selected={i === 0 ? "true" : "false"}
+				tabindex={i === 0 ? 0 : -1}
+			>
+				{tab.label}
+			</button>
+		))}
+	</div>
+	{drive.map((tab, i) => (
+		<div
+			role="tabpanel"
+			id={`${idPrefix}-panel-${tab.id}`}
+			data-panel={tab.id}
+			aria-labelledby={`${idPrefix}-tab-${tab.id}`}
+			hidden={i !== 0}
+			class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start"
+		>
+			<div>
+				<h3 class="text-xl font-semibold tracking-tight text-fg">{tab.title}</h3>
+				<p class="mt-2 text-base leading-relaxed text-(--lead)">{tab.text}</p>
+				<a href={withBase(tab.doc.href)} class="mt-4 inline-flex items-center gap-1 text-sm font-medium text-brand-text underline-offset-4 hover:underline">
+					{tab.doc.label} <span aria-hidden="true">&rarr;</span>
+				</a>
+			</div>
+			<div class="terminal relative overflow-hidden" data-terminal>
+				<div class="flex items-center justify-between border-b border-white/10 px-4 py-2">
+					<span aria-hidden="true" class="flex gap-1.5"><i class="size-2.5 rounded-full bg-white/20"></i><i class="size-2.5 rounded-full bg-white/20"></i><i class="size-2.5 rounded-full bg-white/20"></i></span>
+					<button type="button" data-copy={tab.copy} class="rounded-md border border-white/15 px-2.5 py-1 font-sans text-xs font-medium text-white/80 hover:bg-white/10 hover:text-white" aria-label={`Copy the ${tab.label} example`}>
+						Copy
+					</button>
+				</div>
+				<pre tabindex="0" aria-label={`${tab.label} example`} class="m-0 px-4 py-3"><code>{tab.lines.map((line) => (
+					<span class="block">{line.kind === "cmd" ? <span class="t-prompt" aria-hidden="true">$ </span> : null}<span class:list={[line.kind === "out" && "t-out", line.kind === "note" && "t-note"]} data-line={line.kind}>{line.text}</span></span>
+				))}</code></pre>
+			</div>
+		</div>
+	))}
+</div>

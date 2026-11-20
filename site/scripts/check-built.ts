@@ -43,6 +43,8 @@ const INERT_HOSTS = new Set([
 	"taskfile.dev",
 	// The OIDC issuer that the cosign commands of the verification page pin; it is text, never loaded.
 	"token.actions.githubusercontent.com",
+	// A console warning inside the GSAP bundle of the landing pages names its home page; text, never loaded.
+	"gsap.com",
 ]);
 
 
