@@ -77,46 +77,53 @@ export function drawPaths(paths: SVGPathElement[] | NodeListOf<SVGGeometryElemen
 	return gsap.to(list, { strokeDashoffset: 0, duration, ease: "power2.inOut", stagger: 0.12 });
 }
 
+/** Hides the rows of every terminal under `root` until it is typed (never under reduced motion). */
+export function prepareTerminals(root: ParentNode): void {
+	if (reducedMotion()) return;
+	for (const row of root.querySelectorAll<HTMLElement>("[data-terminal] [data-row]")) row.classList.add("t-pending");
+}
+
 /**
- * Types the lines of a terminal. Each line is an element with `data-line` holding its full text already (so the
- * text is in the HTML); the animation hides it and types it back. Returns a timeline.
+ * Types a terminal out line by line, like a typewriter. Each row is an element with `data-row` (its kind) holding a
+ * `[data-type]` element with the full text already in the HTML; rows wait hidden and each one is typed after the
+ * previous, commands and prompts slower than the answers. Returns a paused timeline; under reduced motion it shows
+ * every row at once.
+ *
+ * The rows are hidden with a class, not with GSAP: a tween "from" a hidden state onto a row GSAP had hidden itself
+ * ends hidden, which is how the answers (and the whole MCP tab) once stayed invisible.
  */
-export function typeLines(terminal: Element, options: { speed?: number } = {}): gsap.core.Timeline {
+export function typeLines(terminal: Element): gsap.core.Timeline {
 	const tl = gsap.timeline({ paused: true });
-	const lines = [...terminal.querySelectorAll<HTMLElement>("[data-line]")];
+	const rows = [...terminal.querySelectorAll<HTMLElement>("[data-row]")];
 	if (reducedMotion()) {
-		tl.set(lines, { autoAlpha: 1 });
+		tl.call(() => rows.forEach((r) => r.classList.remove("t-pending")));
 		return tl;
 	}
-	const speed = options.speed ?? 0.018;
-	gsap.set(lines, { autoAlpha: 0 });
-	for (const line of lines) {
-		const text = line.textContent ?? "";
-		const isCommand = line.dataset.line === "cmd";
+	for (const row of rows) {
+		const target = row.querySelector<HTMLElement>("[data-type]");
+		const text = target?.textContent ?? "";
+		const slow = row.dataset.row === "cmd" || row.dataset.row === "prompt";
+		const perChar = slow ? 0.028 : 0.006;
+		const duration = Math.min(slow ? 1.4 : 0.7, Math.max(0.12, text.length * perChar));
 		const counter = { n: 0 };
-		tl.set(line, { autoAlpha: 1 });
-		if (isCommand) {
-			line.setAttribute("aria-label", text);
-			tl.fromTo(
-				counter,
-				{ n: 0 },
-				{
-					n: text.length,
-					duration: Math.min(1.6, text.length * speed),
-					ease: "none",
-					onUpdate: () => {
-						line.textContent = text.slice(0, Math.round(counter.n));
-					},
-					onComplete: () => {
-						line.textContent = text;
-					},
+		tl.call(() => {
+			row.classList.remove("t-pending");
+			if (target) target.textContent = "";
+		});
+		if (target) {
+			tl.to(counter, {
+				n: text.length,
+				duration,
+				ease: "none",
+				onUpdate: () => {
+					target.textContent = text.slice(0, Math.round(counter.n));
 				},
-			);
-			tl.to({}, { duration: 0.25 });
-		} else {
-			tl.from(line, { autoAlpha: 0, y: 4, duration: 0.25 }, "<");
-			tl.to({}, { duration: 0.08 });
+				onComplete: () => {
+					target.textContent = text;
+				},
+			});
 		}
+		tl.to({}, { duration: slow ? 0.35 : 0.08 });
 	}
 	return tl;
 }

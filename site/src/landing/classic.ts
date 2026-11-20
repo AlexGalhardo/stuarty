@@ -2,7 +2,7 @@
 // first paint, when the browser is idle. Under reduced motion every scroll-linked effect is off and the page is a
 // plain document with the stage frozen on its first frame.
 import { afterPaint, reducedMotion } from "./boot";
-import { drawPaths, gsap, hideStillAfter, letters, revealOnScroll, ScrollTrigger, typeLines } from "./motion";
+import { drawPaths, gsap, hideStillAfter, letters, revealOnScroll, ScrollTrigger, prepareTerminals, typeLines } from "./motion";
 import type { Stage } from "./stage";
 import { enhanceTabs } from "./tabs";
 
@@ -55,6 +55,7 @@ export function start(): void {
 		typed.add(terminal);
 		typeLines(terminal).play();
 	};
+	prepareTerminals(root);
 	enhanceTabs(root, typePanel);
 	const firstPanel = root.querySelector("[data-drive] [role='tabpanel']:not([hidden])");
 	if (firstPanel) ScrollTrigger.create({ trigger: firstPanel, start: "top 75%", once: true, onEnter: () => typePanel(firstPanel) });

@@ -241,6 +241,22 @@ main[data-expressive] :focus-visible {
 .terminal .t-note {
   color: oklch(0.8 0.13 281);
 }
+/* A wrapped line continues under its text, not under its prompt. */
+.terminal [data-row] {
+  padding-left: 2ch;
+  text-indent: -2ch;
+}
+.terminal [data-row="out"],
+.terminal [data-row="more"] {
+  padding-left: 7ch;
+  text-indent: -7ch;
+}
+.terminal .t-pending {
+  visibility: hidden;
+}
+.terminal .t-tool {
+  color: oklch(0.8 0.13 281);
+}
 .terminal pre {
   white-space: pre-wrap;
   overflow-wrap: anywhere;

@@ -4,7 +4,7 @@
 // the takes crossfade, the playhead jumps and the background stays on its first frame. Without takes mode (a small
 // screen) the page is a normal scroll with reveals and the timeline is a plain list.
 import { afterPaint, reducedMotion } from "./boot";
-import { gsap, letters, revealOnScroll, typeLines } from "./motion";
+import { gsap, letters, revealOnScroll, prepareTerminals, typeLines } from "./motion";
 import type { Stage } from "./stage";
 import { enhanceTabs } from "./tabs";
 import { mountTimeline } from "./timeline";
@@ -22,6 +22,7 @@ export function start(): void {
 		typed.add(terminal);
 		typeLines(terminal).play();
 	};
+	prepareTerminals(root);
 	enhanceTabs(root, typePanel);
 
 	let stage: Stage | null = null;
