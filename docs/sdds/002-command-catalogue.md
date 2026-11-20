@@ -6712,7 +6712,7 @@ Puts the items of a nested timeline on this timeline in place of a composition i
 **Preconditions.**
 
 1. The item exists and is a composition (`E_NOT_FOUND`, `E_TYPE_MISMATCH`); its timeline is in the production (`E_NOT_FOUND`); its track is not locked (`E_INVALID_STATE`, A.3 rule 5).
-2. The item only places its timeline (`E_INVALID_STATE`, `details.reason` and `details.feature`): no `opacity`, `scale`, `rotation`, position, keyframe, transition, mask, effect, shadow, outline, blur, filter, blend or flip of its own, and no volume, fade or mute (`composition_group_feature`); `source_in` 0 and a duration that shows the whole nested timeline (`composition_window`); and the nested timeline has this timeline's `width`, `height` and `fps` (`composition_geometry`).
+2. The item only places its timeline (`E_INVALID_STATE`, `details.reason` and `details.feature`): no `opacity`, `scale`, `rotation`, position, keyframe, transition, mask, effect, shadow, outline, blur, filter, blend or flip of its own, and no volume, fade or mute; and it is drawn: not disabled and not on a hidden track, `details.feature` `disabled` or `hidden_track`, since its items would be drawn on their new tracks (`composition_group_feature`); `source_in` 0 and a duration that shows the whole nested timeline (`composition_window`); and the nested timeline has this timeline's `width`, `height` and `fps` (`composition_geometry`).
 3. No item id of the nested timeline is used here (`E_ID_EXISTS`); an asset of the nested timeline that has the id of one here has the same file (`E_INVALID_STATE`, `details.reason` `composition_asset_clash`); the document stays within 50 tracks, 500 items and 200 assets (`E_LIMIT`).
 
 **Postconditions.**

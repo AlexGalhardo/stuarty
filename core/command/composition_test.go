@@ -210,6 +210,33 @@ func TestCompositionExpandTwiceIsNotFound(t *testing.T) {
 	}
 }
 
+// A composition that draws nothing (disabled, or on a hidden track) is not expanded: its items, on new tracks,
+// would start to show.
+func TestCompositionExpandRefusesWhatIsNotDrawn(t *testing.T) {
+	t.Parallel()
+
+	for feature, mod := range map[string]func(*timeline.Document){
+		"disabled": func(d *timeline.Document) {
+			it := d.Items[itemA]
+			it.Disabled = true
+			d.Items[itemA] = it
+		},
+		"hidden_track": func(d *timeline.Document) {
+			tr := d.Tracks[vidTr]
+			tr.Hidden = true
+			d.Tracks[vidTr] = tr
+		},
+	} {
+		doc := base().with(compItem(tlB, 0, 300)).with(mod).d
+		env := Env{NewIDs: (&seqIDs{}).next, Timelines: production(doc, nestedTL(tlB, 300))}
+
+		_, err := fullRegistry().ApplyBatch(doc, []Operation{opJSON("composition.expand", `{"item_id":"`+itemA+`"}`)}, env)
+		if e := AsError(err); err == nil || e.Code != CodeInvalidState || e.Details["feature"] != feature {
+			t.Errorf("%s: expand answered %v, want E_INVALID_STATE with feature %s", feature, err, feature)
+		}
+	}
+}
+
 // CompositionFeature and the planner agree on what a plain composition is: every property that the planner
 // groups is named, so expand refuses what flattening could not have drawn alike.
 func TestCompositionFeatureNamesWhatMakesAGroup(t *testing.T) {
