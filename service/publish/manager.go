@@ -1169,6 +1169,21 @@ func (m *Manager) Claim(ctx context.Context, id, owner string, now, until time.T
 	return m.env.Store().Claim(ctx, id, owner, now, until)
 }
 
+// claimed reads a target this owner just claimed, as the store holds it after the claim.
+func (m *Manager) claimed(ctx context.Context, id, owner string) (Target, error) {
+	p, err := m.env.Store().OfTarget(ctx, id)
+	if err != nil {
+		return Target{}, err
+	}
+
+	t := p.Target(id)
+	if t == nil || t.State != core.TargetPublishing || t.LeaseOwner != owner {
+		return Target{}, ErrLeaseLost
+	}
+
+	return *t, nil
+}
+
 // Renew extends a lease.
 func (m *Manager) Renew(ctx context.Context, id, owner string, until time.Time) (bool, error) {
 	return m.env.Store().Renew(ctx, id, owner, until)
