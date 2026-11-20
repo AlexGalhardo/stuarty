@@ -26,7 +26,7 @@ const icons: Record<Os, string> = {
 ---
 
 <div class:list={["landing-actions", align === "center" && "landing-actions-center", className]}>
-	<a class="btn btn-cta" href={withBase("/docs/introduction/")}>
+	<a class="btn btn-glow" href={withBase("/docs/introduction/")}>
 		Getting Started <span aria-hidden="true">&rarr;</span>
 	</a>
 	<div class="landing-downloads" role="group" aria-labelledby={`${idPrefix}-downloads`}>
@@ -37,11 +37,11 @@ const icons: Record<Os, string> = {
 		<ul class="landing-download-list">
 			{release.downloads.map((d) => (
 				<li>
-					<a class="btn btn-outline btn-download" href={d.href} rel="noreferrer">
+					<a class="btn btn-glow btn-download" data-os={d.os} href={d.href} rel="noreferrer">
 						<svg viewBox="0 0 24 24" class="size-5 shrink-0" fill="currentColor" aria-hidden="true"><path d={icons[d.os]}></path></svg>
 						<span class="flex flex-col items-start leading-tight">
 							<span>{d.label}</span>
-							<span class="text-xs font-normal text-muted">BETA Release {version}</span>
+							<span class="btn-sub text-xs font-normal text-muted">BETA Release {version}</span>
 						</span>
 					</a>
 				</li>

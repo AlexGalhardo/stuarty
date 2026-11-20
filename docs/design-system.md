@@ -1167,6 +1167,17 @@ At most one `brand` button per view. Focus is the 2 px `--ring` outline of secti
 
 Contrast (WCAG 2.x): `--cta-foreground` on `--cta` 6.91:1, on the light hover 5.45:1, on the dark hover 8.52:1, all above 4.5:1. The button fill against the page is 2.86:1 on white and 6.91:1 on the dark background; the label, not the fill, identifies the control, so WCAG 1.4.11 does not apply to the fill.
 
+**The four landing actions (glow buttons).** Getting Started and the three downloads share one style (`.btn-glow` in `site/src/landing/landing.css`): a neutral face (`--bg`) with the label in `--fg`, a 1.5 px border in the colour of the button, a small light that travels along the border (a conic gradient whose angle is animated, still under reduced motion), depth from a tinted shadow, the colour filling the face on hover, a 2 px press on `:active` and a 2 px focus outline in the border colour. Each button has its own colour:
+
+| Button | Fill on hover (`--c`) | Border light / dark (`--c-edge`) | Label on the fill (`--c-on`) | Label on the fill |
+| --- | --- | --- | --- | --- |
+| Getting Started | `--cta` `oklch(0.7 0.2 48)` `#FC6D00` | `--cta` / `--cta` | `oklch(0.145 0 0)` | 6.91:1 |
+| Windows | `oklch(0.5 0.17 252)` `#0062BF` | `oklch(0.5 0.17 252)` / `oklch(0.65 0.15 250)` | white | 5.97:1 |
+| macOS | `oklch(0.82 0.01 260)` `#C0C4CB` | `oklch(0.62 0.01 260)` / `oklch(0.82 0.01 260)` | `oklch(0.145 0 0)` | 11.34:1 |
+| Linux | `oklch(0.84 0.15 85)` `#F7C243` | `oklch(0.72 0.15 75)` / `oklch(0.84 0.15 85)` | `oklch(0.145 0 0)` | 12.01:1 |
+
+At rest the label is `--fg` on `--bg` (above 15:1 in both themes) and the version line `--muted` on `--bg` (7.8:1 light, 7.4:1 dark); on hover the version line takes the label colour. The border is decorative: the label identifies the control.
+
 ### 11.7 Radii, borders and shadows
 
 - Radii: `--radius` (10 px) and its scale (section 2.9) stay. The expressive register adds `rounded-3xl` (24 px) for large showcase frames (the product window of the hero) and `rounded-full` for pills.

@@ -112,16 +112,116 @@ main[data-expressive] {
   border-color: var(--fg);
 }
 
-.btn-cta {
-  background: var(--cta);
-  color: var(--cta-foreground);
-  box-shadow: 0 10px 30px -12px oklch(0.7 0.2 48 / 70%);
+/* The four actions (design-system section 11.6): a neutral face with a coloured border, a small light that travels
+   along the border, the colour filling the face on hover, depth, and a press. --c is the colour of the button,
+   --c-edge its border on the current theme, --c-on the text on the filled face. */
+@property --glow-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
 }
-.btn-cta:hover {
-  background: var(--cta-hover);
+.btn-glow {
+  --c: var(--cta);
+  --c-edge: var(--cta);
+  --c-on: var(--cta-foreground);
+  border: 1.5px solid transparent;
+  background:
+    linear-gradient(var(--bg), var(--bg)) padding-box,
+    conic-gradient(
+        from var(--glow-angle),
+        color-mix(in oklab, var(--c-edge) 70%, transparent) 0deg 300deg,
+        oklch(0.98 0.02 90) 336deg,
+        var(--c-edge) 348deg,
+        color-mix(in oklab, var(--c-edge) 70%, transparent) 360deg
+      )
+      border-box;
+  color: var(--fg);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 8%),
+    0 2px 4px -1px oklch(0 0 0 / 25%),
+    0 10px 24px -10px color-mix(in oklab, var(--c) 55%, transparent);
+  animation: glow-run 3.2s linear infinite;
+  transition:
+    background-color var(--duration-hover),
+    color var(--duration-hover),
+    box-shadow var(--duration-hover),
+    transform var(--duration-hover);
 }
-.btn-cta:focus-visible {
-  outline-color: var(--cta);
+.btn-glow:hover {
+  background:
+    linear-gradient(var(--c), var(--c)) padding-box,
+    linear-gradient(var(--c-edge), var(--c-edge)) border-box;
+  color: var(--c-on);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 18%),
+    0 3px 6px -2px oklch(0 0 0 / 30%),
+    0 14px 30px -10px color-mix(in oklab, var(--c) 70%, transparent);
+}
+.btn-glow:hover .btn-sub {
+  color: inherit;
+}
+.btn-glow:active {
+  transform: translateY(2px);
+  box-shadow:
+    inset 0 1px 2px oklch(0 0 0 / 20%),
+    0 1px 2px oklch(0 0 0 / 25%);
+}
+.btn-glow:focus-visible,
+main[data-expressive] .btn-glow:focus-visible {
+  outline: 2px solid var(--c-edge);
+  outline-offset: 3px;
+}
+.btn-glow[data-os="windows"] {
+  --c: oklch(0.5 0.17 252);
+  --c-edge: oklch(0.5 0.17 252);
+  --c-on: oklch(1 0 0);
+}
+.dark .btn-glow[data-os="windows"] {
+  --c-edge: oklch(0.65 0.15 250);
+}
+.btn-glow[data-os="macos"] {
+  --c: oklch(0.82 0.01 260);
+  --c-edge: oklch(0.62 0.01 260);
+  --c-on: oklch(0.145 0 0);
+}
+.dark .btn-glow[data-os="macos"] {
+  --c-edge: oklch(0.82 0.01 260);
+}
+.btn-glow[data-os="linux"] {
+  --c: oklch(0.84 0.15 85);
+  --c-edge: oklch(0.72 0.15 75);
+  --c-on: oklch(0.145 0 0);
+}
+.dark .btn-glow[data-os="linux"] {
+  --c-edge: oklch(0.84 0.15 85);
+}
+/* Each light starts at its own place, so the four do not run in step. */
+.landing-download-list li:nth-child(1) .btn-glow {
+  animation-delay: -0.8s;
+}
+.landing-download-list li:nth-child(2) .btn-glow {
+  animation-delay: -1.6s;
+}
+.landing-download-list li:nth-child(3) .btn-glow {
+  animation-delay: -2.4s;
+}
+@keyframes glow-run {
+  to {
+    --glow-angle: 360deg;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-glow {
+    animation: none !important;
+    --glow-angle: 45deg;
+  }
+}
+@media (forced-colors: active) {
+  .btn-glow {
+    border-color: ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+  }
 }
 
 /* The four actions of the hero and the footer. */
