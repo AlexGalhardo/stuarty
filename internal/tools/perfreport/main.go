@@ -70,13 +70,8 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer, runner Ru
 		return 2
 	}
 
-	var specs []Spec
-	for i := range Specs {
-		if *only == "" || Specs[i].NFR == *only {
-			specs = append(specs, Specs[i])
-		}
-	}
-	if len(specs) == 0 && (!*gated || !hasGate(*only)) {
+	specs, known := selectSpecs(*only, *gated)
+	if !known {
 		fmt.Fprintf(stderr, "perfreport: no requirement %q\n", *only)
 		return 2
 	}
@@ -152,6 +147,19 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer, runner Ru
 		return 1
 	}
 	return 0
+}
+
+// selectSpecs is the benchmarks of the requirement (every one when only is empty), and whether the requirement
+// is known: it has a benchmark, or, with gated, a budget in tests.
+func selectSpecs(only string, gated bool) ([]Spec, bool) {
+	var specs []Spec
+	for i := range Specs {
+		if only == "" || Specs[i].NFR == only {
+			specs = append(specs, Specs[i])
+		}
+	}
+
+	return specs, len(specs) > 0 || gated && hasGate(only)
 }
 
 // measure runs each distinct benchmark once and parses everything it printed.

@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -96,8 +97,9 @@ func TestGatedRunTakesARequirementWithOnlyBudgetsInTests(t *testing.T) {
 		t.Fatalf("the gate of NFR-002 alone: %d %s", code, errb.String())
 	}
 
-	if len(ran) != 1 || ran[0] != "TestEventsSlowReaderDoesNotSlowCommits" || !strings.Contains(out.String(), "NFR-002") {
-		t.Errorf("ran %v, report:\n%s", ran, out.String())
+	want := []string{"TestEventsSlowReaderDoesNotSlowCommits"}
+	if !slices.Equal(ran, want) || !strings.Contains(out.String(), "NFR-002") {
+		t.Errorf("ran %v, want %v; report:\n%s", ran, want, out.String())
 	}
 
 	if code := run(context.Background(), []string{"-only", "NFR-002"}, &out, &errb, noBench, day); code != 2 {
