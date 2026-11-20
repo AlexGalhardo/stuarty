@@ -252,12 +252,6 @@ func applyAdjust(c *command.Context, d *Document, a *adjustArgs) error {
 	}
 
 	if table != nil {
-		if _, known := d.Assets[table.Hash]; !known {
-			if err := limit("files", len(d.Assets), MaxAssets); err != nil {
-				return err
-			}
-		}
-
 		if d.Assets == nil {
 			d.Assets = map[string]AssetRef{}
 		}
@@ -267,7 +261,17 @@ func applyAdjust(c *command.Context, d *Document, a *adjustArgs) error {
 
 	l.Adjust = &next
 	normalizeAdjust(l)
+
+	// The table a layer had leaves assets when no other layer uses it; the ceiling is judged after that, on the
+	// files the document is left with (as layer.replace_source does), and a refusal changes nothing because the
+	// batch is applied to a private copy.
 	pruneAssets(d)
+
+	if table != nil {
+		if err := limit("files", len(d.Assets)-1, MaxAssets); err != nil {
+			return err
+		}
+	}
 
 	c.SetEffective("layer_id", l.ID)
 	c.SetEffective("adjust", adjustOrEmpty(l))
