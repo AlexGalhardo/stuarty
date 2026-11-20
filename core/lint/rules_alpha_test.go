@@ -319,9 +319,7 @@ func TestTransitionEmptyLintTimeBudget(t *testing.T) {
 	requirePerf(t)
 
 	if raceEnabled {
-		t.Skip(
-			"the race detector slows this loop about tenfold",
-		) // verify:env-skip a race build changes the cost of the loop
+		t.Skip("the race detector slows this loop about tenfold") // verify:env-skip a race build
 	}
 
 	if took := fastestLint(transitionLengthDoc(216000)); took > 100*time.Millisecond {
