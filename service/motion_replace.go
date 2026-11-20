@@ -228,7 +228,7 @@ func (s *svc) MotionReplace(ctx context.Context, req MotionReplaceRequest) (*Mot
 	}
 
 	res, eerr := s.Edit(ctx, EditRequest{
-		ProjectID: row.ID, BaseRevision: row.Revision, Operations: ops, DryRun: req.DryRun,
+		ProjectID: row.ID, TimelineID: row.ID, BaseRevision: row.Revision, Operations: ops, DryRun: req.DryRun,
 	})
 	if eerr != nil {
 		return nil, eerr

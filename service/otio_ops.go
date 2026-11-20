@@ -228,7 +228,8 @@ func (s *svc) ProjectOtioImport(ctx context.Context, req ProjectOtioImportReques
 	}
 
 	edit, eerr := s.edit(ctx, EditRequest{
-		ProjectID: req.ProjectID, BaseRevision: req.BaseRevision, Operations: ops, DryRun: req.DryRun,
+		ProjectID: req.ProjectID, TimelineID: req.ProjectID, BaseRevision: req.BaseRevision, Operations: ops,
+		DryRun: req.DryRun,
 	}, false)
 	if eerr != nil {
 		return nil, eerr
