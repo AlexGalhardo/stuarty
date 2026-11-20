@@ -296,7 +296,16 @@ func (s *svc) renderPreview(
 	delete(p.inflight, t.key)
 
 	if err != nil {
-		p.failed[t.key] = s.now().Add(previewRetryAfter)
+		// The failures that may be tried again are forgotten, so that a caller who asks for one window after another
+		// of a source that cannot be decoded does not grow the map without end.
+		now := s.now()
+		for key, until := range p.failed {
+			if !now.Before(until) {
+				delete(p.failed, key)
+			}
+		}
+
+		p.failed[t.key] = now.Add(previewRetryAfter)
 	} else {
 		delete(p.failed, t.key)
 	}
