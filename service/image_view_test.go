@@ -236,11 +236,53 @@ func TestImageHistoryDescribesEachStep(t *testing.T) {
 		"Redid r3.",
 		"Undid r2.",
 		"Adds a solid colour over the whole canvas. Adds a rectangle, a rounded rectangle or an ellipse.",
+		"Sets the canvas, name and background of a new image document.",
 	}
 
 	for i, w := range want {
 		if got := h.Entries[i].Description; got != w {
 			t.Errorf("entry %d description = %q, want %q", i, got, w)
 		}
+	}
+}
+
+// VV-279: the words of a row hold no text of the user: the text and the name of a layer stay out, and a command run
+// twice in one step is said once.
+func TestImageHistoryDescriptionHoldsNoLayerText(t *testing.T) {
+	s, _ := newImageService(t)
+	person := asActor("local:person")
+
+	c, err := s.ImageCreate(person, ImageCreateRequest{Width: 100, Height: 100, Name: "Private cover"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := s.ImageEdit(person, ImageEditRequest{
+		ImageID: c.ImageID, BaseRevision: 1,
+		Operations: ops(
+			"layer.add_text", `{"text": "SECRET WORDS", "id": "lyr_aaaaaaaaaa"}`,
+			"layer.set", `{"layer_id": "lyr_aaaaaaaaaa", "name": "Hidden name"}`,
+			"layer.set", `{"layer_id": "lyr_aaaaaaaaaa", "opacity": 50}`,
+		),
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	h, err := s.ImageHistory(person, ImageHistoryRequest{ImageID: c.ImageID})
+	if err != nil || len(h.Entries) != 2 {
+		t.Fatalf("%v %+v", err, h)
+	}
+
+	for _, e := range h.Entries {
+		for _, private := range []string{"SECRET", "Hidden", "Private", "lyr_"} {
+			if strings.Contains(e.Description, private) {
+				t.Errorf("r%d description %q holds %q", e.Revision, e.Description, private)
+			}
+		}
+	}
+
+	if got, want := h.Entries[0].Description, "Adds a text layer. "+
+		"Sets the name, opacity, visibility, lock or slot of a layer."; got != want {
+		t.Errorf("description = %q, want %q", got, want)
 	}
 }
