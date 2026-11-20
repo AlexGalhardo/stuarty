@@ -1,5 +1,5 @@
 /**
- * Copy of the three candidate landing pages (/landing/viewport, /landing/classic, /landing/creative), English only.
+ * Copy of the landing page (/) and of its two backup versions (/landing/classic, /landing/creative), English only.
  * The commands and calls of `drive` are copied from the build: `stuarty --help`, web/contract/testdata/surface.txt,
  * the agent docs in web/app/agentdocs/out/ and the generated MCP reference; the outputs are the real answers of a
  * demo workspace. Never write one from memory.

@@ -19,6 +19,8 @@ interface Props {
 	progress?: boolean;
 	/** Keeps the page out of search indexes and omits the canonical link. */
 	noindex?: boolean;
+	/** With noindex: asks search engines not to follow the links of the page either (the backup landings). */
+	nofollow?: boolean;
 	/** The path of the Markdown twin, when the page has one. */
 	twin?: string;
 	/** The sidebar the mobile drawer shows. */
@@ -33,6 +35,7 @@ const {
 	canonical,
 	progress = false,
 	noindex = false,
+	nofollow = false,
 	twin,
 	section = "docs",
 	headerVariant = "docs",
@@ -54,7 +57,7 @@ const groups = getNavGroups(section);
 		{redirectTo ? <script is:inline define:vars={{ to: withBase(redirectTo) }}>location.replace(to);</script> : null}
 		<link rel="icon" href={withBase("/icon.png")} type="image/png" />
 		<link rel="apple-touch-icon" href={withBase("/logo.png")} />
-		{noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={new URL(canonical ? withBase(withTrailingSlash(canonical)) : Astro.url.pathname, site.origin).href} />}
+		{noindex ? <meta name="robots" content={nofollow ? "noindex, nofollow" : "noindex"} /> : <link rel="canonical" href={new URL(canonical ? withBase(withTrailingSlash(canonical)) : Astro.url.pathname, site.origin).href} />}
 		{twin ? <link rel="alternate" type="text/markdown" href={new URL(withBase(twin), site.origin).href} /> : null}
 		<meta property="og:site_name" content={site.name} />
 		<meta property="og:type" content="website" />
