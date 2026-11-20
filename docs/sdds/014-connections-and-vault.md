@@ -106,7 +106,7 @@ The providers, in the order the owner tries them (the first that is configured i
 | 3 | the operating system keychain | nothing; used on a desktop when the platform has a store | yes |
 | 4 | none | - | no |
 
-A key in the environment or a file is 32 bytes written as base64 or as 64 hex digits, with surrounding white space ignored. Setting both variables is a start-up error (SDD-007 section 4.5). The keychain item is named `stuarty`, with the account `vault:` and 16 hex digits of the SHA-256 of the absolute workspace path, so two workspaces do not share a key. This build reads the Windows Credential Manager; the other platforms have no keychain client yet and use provider 1 or 2 (the macOS Keychain and the Linux Secret Service need a client that is not chosen yet; that choice is the author's).
+A key in the environment or a file is 32 bytes written as base64 or as 64 hex digits, with surrounding white space ignored. Setting both variables is a start-up error (SDD-007 section 4.5). A value that is not such a key is not: the start goes on so `doctor` can say what is wrong, the check `vault` is `ok: false` with the hint of `bad_key` (also before the vault file exists), and every use of a credential answers `E_VAULT_LOCKED` with `details.reason` `bad_key`; the bytes of the value are in no message. The keychain item is named `stuarty`, with the account `vault:` and 16 hex digits of the SHA-256 of the absolute workspace path, so two workspaces do not share a key. This build reads the Windows Credential Manager; the other platforms have no keychain client yet and use provider 1 or 2 (the macOS Keychain and the Linux Secret Service need a client that is not chosen yet; that choice is the author's).
 
 Opening rules:
 
