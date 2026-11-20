@@ -149,6 +149,7 @@
         "texts.get",
         "texts.write",
         "texts.draft",
+        "texts.post",
         "texts.revert",
         "texts.revisions",
         "scripts.estimate",
@@ -187,6 +188,11 @@
         "images.list",
         "images.create",
         "images.get",
+        "images.checkpoints.list",
+        "images.checkpoints.create",
+        "images.checkpoints.rename",
+        "images.checkpoints.remove",
+        "images.diff",
         "images.edit",
         "images.events",
         "images.export",
@@ -195,6 +201,7 @@
         "images.history",
         "images.model_edit",
         "images.redo",
+        "images.revert",
         "images.undo",
         "images.import",
         "images.import_file"
@@ -217,6 +224,9 @@
     {
       "tag": "Publishing",
       "pages": [
+        "posts.list",
+        "posts.get",
+        "posts.media",
         "publications.list",
         "publications.create",
         "publications.get",

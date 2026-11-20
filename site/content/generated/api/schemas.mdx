@@ -1032,6 +1032,16 @@ The types named in the tables of the operations. The arguments of each editing c
 | `layer_id` | `string` | no |  |
 | `revision` | `integer (int64)` | no |  |
 
+### ImageCheckpointListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `checkpoints` | array of [`Checkpoint`](/docs/api/schemas#checkpoint) | no |  |
+| `image_id` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
 ### ImageCreateResult
 
 | Name | Type | Required | Description |
@@ -1059,6 +1069,19 @@ The types named in the tables of the operations. The arguments of each editing c
 | `text` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
 | `width` | `integer` | no |  |
+
+### ImageDiffResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `count` | `integer` | no |  |
+| `entries` | array of [`DiffEntry`](/docs/api/schemas#diffentry) | no |  |
+| `from` | `integer (int64)` | no |  |
+| `image_id` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+| `to` | `integer (int64)` | no |  |
+| `untrusted_notice` | `string` | no |  |
 
 ### ImageEditResult
 
@@ -1153,6 +1176,29 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `args` | map of `any` | no | The arguments of the command. |
 | `op` | `string` | yes | A command name, as listed by GET /commands?domain=image.. min length 1 |
+
+### ImageRevertResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actor` | `string` | no |  |
+| `applied` | `boolean` | no |  |
+| `base_revision` | `integer (int64)` | no |  |
+| `created` | array of `string` | no |  |
+| `description` | `string` | no |  |
+| `diff` | array of [`Change`](/docs/api/schemas#change) | no |  |
+| `dry_run` | `boolean` | no |  |
+| `effective` | array of [`OpEffect`](/docs/api/schemas#opeffect) | no |  |
+| `findings` | array of [`Finding`](/docs/api/schemas#finding) | no |  |
+| `image_id` | `string` | no |  |
+| `kind` | `string` | no |  |
+| `lint` | [`LintTotals`](/docs/api/schemas#linttotals) | no |  |
+| `replayed` | `boolean` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `same` | `boolean` | no |  |
+| `target` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
 
 ### ImageStepResult
 
@@ -1958,12 +2004,60 @@ The types named in the tables of the operations. The arguments of each editing c
 | `tool_call_id` | `string` | no |  |
 | `tool_kind` | `string` | no |  |
 
+### PostCheckResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `html` | `string` | no |  |
+| `images` | array of [`PostImageReport`](/docs/api/schemas#postimagereport) | no |  |
+| `issues` | array of [`PostIssue`](/docs/api/schemas#postissue) | no |  |
+| `item_id` | `string` | no |  |
+| `markdown` | `string` | no |  |
+| `meta` | [`PostMeta`](/docs/api/schemas#postmeta) | no |  |
+| `ok` | `boolean` | no |  |
+| `project_id` | `string` | no |  |
+| `slug` | `string` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+| `words` | `integer` | no |  |
+
 ### Poster
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `asset_id` | `string` | no |  |
 | `timeline_id` | `string` | no |  |
+
+### PostImageReport
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `asset_id` | `string` | no |  |
+| `bytes` | `integer (int64)` | no |  |
+| `content_type` | `string` | no |  |
+| `found` | `boolean` | no |  |
+| `name` | `string` | no |  |
+| `role` | `string` | no |  |
+
+### PostIssue
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `code` | `string` | no |  |
+| `message` | `string` | no |  |
+| `path` | `string` | no |  |
+
+### PostMeta
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `canonical` | `string` | no |  |
+| `cover` | `string` | no |  |
+| `language` | `string` | no |  |
+| `slug` | `string` | no |  |
+| `summary` | `string` | no |  |
+| `tags` | array of `string` | no |  |
+| `title` | `string` | no |  |
 
 ### Price
 
@@ -2337,6 +2431,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `export` | `string` | no |  |
 | `id` | `string` | no |  |
 | `notes` | array of `string` | no |  |
+| `post` | `string` | no |  |
 | `project_id` | `string` | no |  |
 | `targets` | array of [`Target`](/docs/api/schemas#target) | no |  |
 | `text` | `string` | no |  |
@@ -2350,6 +2445,57 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `publications` | array of [`Publication`](/docs/api/schemas#publication) | no |  |
 | `total` | `integer` | no |  |
+
+### PublishedPostImage
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `bytes` | `integer (int64)` | no |  |
+| `content_type` | `string` | no |  |
+| `name` | `string` | no |  |
+| `role` | `string` | no |  |
+| `sha256` | `string` | no |  |
+| `url` | `string` | no |  |
+
+### PublishedPostListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `next_cursor` | `string` | no |  |
+| `posts` | array of [`PublishedPostSummary`](/docs/api/schemas#publishedpostsummary) | no |  |
+| `untrusted_notice` | `string` | no |  |
+
+### PublishedPostResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `canonical_url` | `string` | no |  |
+| `cover` | `string` | no |  |
+| `html` | `string` | no |  |
+| `images` | array of [`PublishedPostImage`](/docs/api/schemas#publishedpostimage) | no |  |
+| `language` | `string` | no |  |
+| `markdown` | `string` | no |  |
+| `published_at` | `string (date-time)` | no |  |
+| `slug` | `string` | no |  |
+| `summary` | `string` | no |  |
+| `tags` | array of `string` | no |  |
+| `title` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+| `updated_at` | `string (date-time)` | no |  |
+
+### PublishedPostSummary
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `canonical_url` | `string` | no |  |
+| `cover` | `string` | no |  |
+| `language` | `string` | no |  |
+| `published_at` | `string (date-time)` | no |  |
+| `slug` | `string` | no |  |
+| `summary` | `string` | no |  |
+| `tags` | array of `string` | no |  |
+| `title` | `string` | no |  |
+| `updated_at` | `string (date-time)` | no |  |
 
 ### PublishResult
 

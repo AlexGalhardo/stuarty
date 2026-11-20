@@ -119,6 +119,42 @@ func TestAlphaInputsKeepAStraightSoftEdge(t *testing.T) {
 	}
 }
 
+// The poster of an image with alpha keeps the alpha (VV-242): the preview draws a still from its poster, and a poster
+// without alpha shows the transparent area as a black box over the layers below.
+func TestAlphaImagePostersKeepTheAlpha(t *testing.T) {
+	for _, in := range mediagen.AlphaInputs() {
+		if in.Video() {
+			continue
+		}
+
+		t.Run(string(in), func(t *testing.T) {
+			e := newEnv(t)
+			hash, res := e.mustIngest(alphaFixture(t, e, in, false))
+
+			for _, variant := range []string{"w160", "w320", "w640"} {
+				art := res.find("thumbnails", variant)
+				if art.Ext != "png" {
+					t.Fatalf("poster %s is a .%s file, want .png", variant, art.Ext)
+				}
+
+				img := readPNG(t, e.publishedPath(hash, art))
+				_, _, _, left := straight(img, 0.12, 0.5)
+				r, _, _, right := straight(img, 0.88, 0.5)
+
+				if left > 24 || right < 255-24 || r < 255-24 {
+					t.Errorf(
+						"poster %s: alpha left %d (want transparent), right %d (want opaque), red %d",
+						variant,
+						left,
+						right,
+						r,
+					)
+				}
+			}
+		})
+	}
+}
+
 // The animated GIF has the alpha of a transparent index: on or off, no soft edge (SDD-011 section 4.3.6).
 func TestAlphaAnimatedGIFKeepsItsTransparentIndex(t *testing.T) {
 	e := newEnv(t)

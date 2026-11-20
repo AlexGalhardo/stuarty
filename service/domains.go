@@ -18,6 +18,10 @@ var OperationDomains = map[string]string{
 	"TextList": command.DomainWriting, "TextGet": command.DomainWriting, "TextWrite": command.DomainWriting,
 	"TextRevisions": command.DomainWriting, "TextRevert": command.DomainWriting, "TextDraft": command.DomainWriting,
 	"CaptionValidate": command.DomainWriting, "ScriptEstimate": command.DomainWriting,
+	"PostCheck": command.DomainWriting,
+
+	"PublishedPostList": command.DomainPublish, "PublishedPostGet": command.DomainPublish,
+	"PublishedPostMedia": command.DomainPublish,
 
 	"Edit": command.DomainVideo, "HistoryList": command.DomainVideo, "Undo": command.DomainVideo,
 	"HistoryRevert": command.DomainVideo, "HistoryDiff": command.DomainVideo,
@@ -37,7 +41,9 @@ var OperationDomains = map[string]string{
 	"ImageEdit": command.DomainImage, "ImageUndo": command.DomainImage, "ImageRedo": command.DomainImage,
 	"ImageExport": command.DomainImage, "ImageFrame": command.DomainImage, "ImageHistory": command.DomainImage,
 	"ImageFile": command.DomainImage, "ImageImport": command.DomainImage,
-	"ImageImportFile": command.DomainImage,
+	"ImageImportFile": command.DomainImage, "ImageRevert": command.DomainImage, "ImageDiff": command.DomainImage,
+	"ImageCheckpointCreate": command.DomainImage, "ImageCheckpointList": command.DomainImage,
+	"ImageCheckpointRename": command.DomainImage, "ImageCheckpointRemove": command.DomainImage,
 
 	// The hand-off from an external motion engine (epic 33) works on the clips of a timeline.
 	"MotionBrief": command.DomainVideo, "MotionCheck": command.DomainVideo, "MotionReplace": command.DomainVideo,

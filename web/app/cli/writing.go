@@ -15,8 +15,30 @@ import (
 func writingCommands() []*spec {
 	return []*spec{
 		textListCmd, textShowCmd, textWriteCmd, textRevisionsCmd, textRevertCmd, textDraftCmd,
-		captionValidateCmd, scriptEstimateCmd,
+		captionValidateCmd, scriptEstimateCmd, postCheckCmd,
 	}
+}
+
+var postCheckCmd = &spec{
+	name:       "post:check",
+	summary:    "check a blog post (SDD-019 section 13): its front matter, its images and its sanitised HTML",
+	usage:      []string{"stuarty post:check <item> --project <id>"},
+	example:    "stuarty post:check pit_3c5v8n2w6d --project prj_7k2m9x4q1b",
+	positional: true,
+	flags:      []flagDef{optionalProjectFlag},
+	run: func(ctx context.Context, c *call) (*output, error) {
+		item, err := onePositional(c, "post:check", true)
+		if err != nil {
+			return nil, err
+		}
+
+		res, err := c.svc.PostCheck(ctx, service.PostCheckRequest{ProjectID: projectOf(c), ItemID: item})
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: res.Text}, nil
+	},
 }
 
 // onePositional is the item id a writing command takes, or an error when there are several.
@@ -51,11 +73,11 @@ func projectOf(c *call) string {
 var textListCmd = &spec{
 	name:    "text:list",
 	summary: "list the scripts, copy and captions of a project, or of every project",
-	usage:   []string{"stuarty text:list [--project <id>] [--kind script|copy|caption] [--state active|trashed]"},
+	usage:   []string{"stuarty text:list [--project <id>] [--kind script|copy|caption|post] [--state active|trashed]"},
 	example: "stuarty text:list --kind caption --json",
 	flags: append([]flagDef{
 		{Name: "project", Kind: kindString, Usage: "only the texts of this project"},
-		{Name: "kind", Kind: kindString, Usage: "script, copy or caption"},
+		{Name: "kind", Kind: kindString, Usage: "script, copy, caption or post"},
 		{Name: "state", Kind: kindString, Usage: "active (default) or trashed"},
 	}, pageFlags("50")...),
 	run: func(ctx context.Context, c *call) (*output, error) {
@@ -100,7 +122,7 @@ var textWriteCmd = &spec{
 	name:    "text:write",
 	summary: "make a text, or save a new revision of one, from a Markdown file",
 	usage: []string{
-		"stuarty text:write --project <id> --title <t> [--kind script|copy|caption] --text <file|->",
+		"stuarty text:write --project <id> --title <t> [--kind script|copy|caption|post] --text <file|->",
 		"stuarty text:write <item> --project <id> --text <file|-> [--title <t>] [--base <revision>]",
 	},
 	example:    "stuarty text:write --project prj_7k2m9x4q1b --title Hook --kind script --text hook.md",
@@ -111,7 +133,7 @@ var textWriteCmd = &spec{
 	flags: []flagDef{
 		{Name: "text", Kind: kindString, Usage: "the Markdown: a file, or - for standard input (required)"},
 		{Name: "title", Kind: kindString, Usage: "the title: needed to make a text, a new title when saving one"},
-		{Name: "kind", Kind: kindString, Usage: "making a text: script, copy (default) or caption"},
+		{Name: "kind", Kind: kindString, Usage: "making a text: script, copy (default), caption or post"},
 		{Name: "base", Kind: kindInt, Usage: "the revision you read: a newer one is refused"},
 	},
 	run: func(ctx context.Context, c *call) (*output, error) {

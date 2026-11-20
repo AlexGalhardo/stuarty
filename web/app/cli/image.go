@@ -307,3 +307,187 @@ var imageImport = &spec{
 		return &output{value: res, text: res.Text}, nil
 	},
 }
+
+// Revert, the diff and the checkpoints of an image (epic 50) are those of a timeline (revert.go), with the id of
+// the image as the first argument, as image:undo has it.
+
+var imageRevert = &spec{
+	name:       "image:revert",
+	summary:    "go back to the document of an earlier revision of an image, as a new step that image:undo takes back",
+	usage:      []string{"stuarty image:revert <id> (--revision n | --checkpoint name) [--base n] [--dry-run]"},
+	example:    `stuarty image:revert img_7k2m9x4q1b --checkpoint "before the agent" --dry-run`,
+	positional: true,
+	globals:    []string{"dry-run"},
+	write:      true,
+	flags: []flagDef{
+		{Name: "revision", Kind: kindInt, Usage: "the revision to go back to"},
+		{Name: "checkpoint", Kind: kindString, Usage: "the name of a checkpoint to go back to"},
+		{
+			Name:  "base",
+			Kind:  kindInt,
+			Usage: "the revision you read (default the current one); an older one conflicts with other actors' changes",
+		},
+	},
+	run: func(ctx context.Context, c *call) (*output, error) {
+		id, err := imageID(c)
+		if err != nil {
+			return nil, err
+		}
+
+		res, err := c.svc.ImageRevert(ctx, service.ImageRevertRequest{
+			ImageID: id, Revision: int64(c.args.integer("revision")), Checkpoint: c.args.str("checkpoint"),
+			BaseRevision: int64(c.args.integer("base")), DryRun: c.args.boolean("dry-run"),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: res.Text}, nil
+	},
+}
+
+var imageDiff = &spec{
+	name:       "image:diff",
+	summary:    "list what changed between two revisions of an image, most significant first",
+	usage:      []string{"stuarty image:diff <id> (--from n | --from-checkpoint name) [--until n]"},
+	example:    "stuarty image:diff img_7k2m9x4q1b --from 12",
+	positional: true,
+	flags: []flagDef{
+		{Name: "from", Kind: kindInt, Usage: "the revision the diff starts from"},
+		{Name: "from-checkpoint", Kind: kindString, Usage: "the name of a checkpoint the diff starts from"},
+		{Name: "until", Kind: kindInt, Usage: "the revision the diff ends at (default the current one)"},
+	},
+	run: func(ctx context.Context, c *call) (*output, error) {
+		id, err := imageID(c)
+		if err != nil {
+			return nil, err
+		}
+
+		res, err := c.svc.ImageDiff(ctx, service.ImageDiffRequest{
+			ImageID: id, From: int64(c.args.integer("from")), FromCheckpoint: c.args.str("from-checkpoint"),
+			Until: int64(c.args.integer("until")),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: res.Text}, nil
+	},
+}
+
+var imageCheckpointCreate = &spec{
+	name:       "image:checkpoint:create",
+	summary:    "name a revision of an image so that it can be gone back to",
+	usage:      []string{"stuarty image:checkpoint:create <id> --name <name> [--note t] [--revision n]"},
+	example:    `stuarty image:checkpoint:create img_7k2m9x4q1b --name "before the agent"`,
+	positional: true,
+	write:      true,
+	flags: []flagDef{
+		{Name: "name", Kind: kindString, Usage: "1 to 60 characters, no slash"},
+		{Name: "note", Kind: kindString, Usage: "up to 300 characters"},
+		{Name: "revision", Kind: kindInt, Usage: "the revision to name (default the current one)"},
+	},
+	run: func(ctx context.Context, c *call) (*output, error) {
+		id, err := imageID(c)
+		if err != nil {
+			return nil, err
+		}
+
+		res, err := c.svc.ImageCheckpointCreate(ctx, service.ImageCheckpointCreateRequest{
+			ImageID:  id,
+			Name:     c.args.str("name"),
+			Note:     c.args.str("note"),
+			Revision: int64(c.args.integer("revision")),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: service.CheckpointText("created", res)}, nil
+	},
+}
+
+var imageCheckpointList = &spec{
+	name:       "image:checkpoint:list",
+	summary:    "list the checkpoints of an image, newest revision first",
+	usage:      []string{"stuarty image:checkpoint:list <id>"},
+	example:    "stuarty image:checkpoint:list img_7k2m9x4q1b --json",
+	positional: true,
+	run: func(ctx context.Context, c *call) (*output, error) {
+		id, err := imageID(c)
+		if err != nil {
+			return nil, err
+		}
+
+		res, err := c.svc.ImageCheckpointList(ctx, service.ImageCheckpointListRequest{ImageID: id})
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: res.Text}, nil
+	},
+}
+
+var imageCheckpointRename = &spec{
+	name:       "image:checkpoint:rename",
+	summary:    "rename a checkpoint of an image, and change its note",
+	usage:      []string{"stuarty image:checkpoint:rename <id> --name <name> --new-name <name> [--note t]"},
+	example:    `stuarty image:checkpoint:rename img_7k2m9x4q1b --name draft --new-name "first cut"`,
+	positional: true,
+	write:      true,
+	flags: []flagDef{
+		{Name: "name", Kind: kindString, Usage: "the checkpoint to rename"},
+		{Name: "new-name", Kind: kindString, Usage: "the new name"},
+		{Name: "note", Kind: kindString, Usage: "replaces the note when given"},
+	},
+	run: func(ctx context.Context, c *call) (*output, error) {
+		id, err := imageID(c)
+		if err != nil {
+			return nil, err
+		}
+
+		req := service.ImageCheckpointRenameRequest{
+			ImageID: id,
+			Name:    c.args.str("name"),
+			NewName: c.args.str("new-name"),
+		}
+
+		if c.args.has("note") {
+			note := c.args.str("note")
+			req.Note = &note
+		}
+
+		res, err := c.svc.ImageCheckpointRename(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: service.CheckpointText("renamed", res)}, nil
+	},
+}
+
+var imageCheckpointRemove = &spec{
+	name:       "image:checkpoint:remove",
+	summary:    "remove a checkpoint of an image; no revision is removed",
+	usage:      []string{"stuarty image:checkpoint:remove <id> --name <name>"},
+	example:    "stuarty image:checkpoint:remove img_7k2m9x4q1b --name draft",
+	positional: true,
+	write:      true,
+	flags:      []flagDef{{Name: "name", Kind: kindString, Usage: "the checkpoint to remove"}},
+	run: func(ctx context.Context, c *call) (*output, error) {
+		id, err := imageID(c)
+		if err != nil {
+			return nil, err
+		}
+
+		res, err := c.svc.ImageCheckpointRemove(
+			ctx,
+			service.ImageCheckpointRemoveRequest{ImageID: id, Name: c.args.str("name")},
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: service.CheckpointText("removed", res)}, nil
+	},
+}

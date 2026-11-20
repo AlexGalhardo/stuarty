@@ -28,6 +28,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/library"
 	"github.com/AlexGalhardo/stuarty/service/providers"
 	pub "github.com/AlexGalhardo/stuarty/service/publish"
+	"github.com/AlexGalhardo/stuarty/service/publish/destinations"
 	"github.com/AlexGalhardo/stuarty/service/social"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
@@ -40,6 +41,7 @@ import (
 type Service interface {
 	ProductionService
 	WritingService
+	BlogService
 	BriefingService
 	AssetLibraryService
 	ChatService
@@ -185,6 +187,14 @@ type Service interface {
 	ImageEdit(ctx context.Context, req ImageEditRequest) (*ImageEditResult, error)
 	ImageUndo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
 	ImageRedo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
+	// ImageRevert and the checkpoints of an image are those of a timeline (SDD-003 section 2.5.1) for an image
+	// document (SDD-021 section 4).
+	ImageRevert(ctx context.Context, req ImageRevertRequest) (*ImageRevertResult, error)
+	ImageDiff(ctx context.Context, req ImageDiffRequest) (*ImageDiffResult, error)
+	ImageCheckpointCreate(ctx context.Context, req ImageCheckpointCreateRequest) (*Checkpoint, error)
+	ImageCheckpointList(ctx context.Context, req ImageCheckpointListRequest) (*ImageCheckpointListResult, error)
+	ImageCheckpointRename(ctx context.Context, req ImageCheckpointRenameRequest) (*Checkpoint, error)
+	ImageCheckpointRemove(ctx context.Context, req ImageCheckpointRemoveRequest) (*Checkpoint, error)
 	ImageExport(ctx context.Context, req ImageExportRequest) (*ImageExportResult, error)
 	// ImageImport brings an image file into an image document: a new one, or a layer of ImageID (SDD-021 section 10.1).
 	ImageImport(ctx context.Context, req ImageImportRequest) (*ImageImportResult, error)
@@ -333,6 +343,9 @@ type Options struct {
 	// Social is the registry of the social network connectors (SDD-020); without one the build publishes
 	// to no network and the social operations answer empty lists.
 	Social *social.Registry
+	// Blog is the registry of the blog destinations (SDD-020 part 5); without one the service has the five of the
+	// build.
+	Blog *destinations.Registry
 	// Providers is the registry of the AI providers, with their adapters registered (SDD-016); without one
 	// the service has a registry with no provider, so no generation can start.
 	Providers *providers.Registry
@@ -381,6 +394,7 @@ type svc struct {
 	conns       *connections.Manager
 	kinds       map[string]*ApprovableKind
 	social      *social.Registry
+	blog        *destinations.Registry
 	flows       *oauth.Flows
 	signInSet   *oauth.SignIns
 	signFlows   *oauth.Flows
@@ -448,6 +462,7 @@ func New(o Options) (Service, error) {
 		keys:        o.Keys,
 		conns:       o.Connections,
 		social:      o.Social,
+		blog:        o.Blog,
 		signInSet:   o.SignIns,
 		heavy:       o.Heavy,
 		heavyLimitN: o.HeavyPerMinute,
@@ -483,6 +498,12 @@ func New(o Options) (Service, error) {
 	if s.social != nil {
 		s.social.Bind(s.conns)
 	}
+
+	if s.blog == nil {
+		s.blog = destinations.NewRegistry(destinations.Config{})
+	}
+
+	s.blog.Bind(s.conns)
 
 	if s.providers == nil {
 		prices := ""

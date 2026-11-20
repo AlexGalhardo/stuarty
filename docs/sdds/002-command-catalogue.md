@@ -860,7 +860,7 @@ Adds an empty track at a place in the track order.
 1. A track `{id, kind, name, order}` is added; `hidden`, `muted` and `caption_style` are absent. The order is one global sequence for both kinds (SDD-001 §3.3.1).
 2. `tracks` is a map by id, so a listing of it has no stacking: the stack is the `order` field, ascending, and the smallest is the top layer, whatever the batch or the kind of the tracks added before. `order` is computed from the sorted list of existing orders: `top` is `OrderBetween("", first)`; `bottom` is `OrderBetween(last, "")`; `above X` is `OrderBetween(prev, X.order)` where `prev` is the order of the track just before `X` (or `""`); `below X` is `OrderBetween(X.order, next)` where `next` is the order of the track just after `X` (or `""`). With no tracks, `OrderBetween("", "")`. The `order` strings in this section are illustrative: the exact strings are fixed by the algorithm of SDD-001 section 3.3.1 and by the golden files.
 3. No other track is changed.
-4. `diff` has one `track.added`. `effective` is `{"track_id": "<id>", "order": "<order>"}`.
+4. `diff` has one `track.added`. `effective` is `{"track_id": "<id>", "order": "<order>"}`, and for a visual track also `"stacking"`, a sentence with its layer counted from the top (VV-203): the track added last is layer 1 and covers the others unless placed below.
 
 **Errors.**
 

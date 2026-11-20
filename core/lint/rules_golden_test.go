@@ -160,6 +160,29 @@ func init() {
 		return d
 	}())
 	rc(CodeOccluded, "quiet_opacity_below_1", occlusion(func(up *timeline.Item) { up.Opacity = 0.9 }))
+	rc(
+		CodeOccluded,
+		"trigger_blend_normal_covers_lower_clip",
+		occlusion(func(up *timeline.Item) { up.Blend = "normal" }),
+	)
+
+	for _, blend := range []string{"multiply", "screen", "overlay", "add"} {
+		rc(CodeOccluded, "quiet_upper_blends_"+blend, occlusion(func(up *timeline.Item) { up.Blend = blend }))
+	}
+
+	rc(CodeOccluded, "quiet_upper_has_a_chroma_key", occlusion(func(up *timeline.Item) {
+		up.ChromaKey = &timeline.ChromaKey{Color: "#00FF00", Similarity: 0.3, Smoothness: 0.1}
+	}))
+	rc(CodeOccluded, "quiet_upper_is_blurred", occlusion(func(up *timeline.Item) { up.Blur = 8 }))
+	rc(CodeOccluded, "quiet_upper_shakes", occlusion(func(up *timeline.Item) {
+		up.Effects = []timeline.Effect{{Kind: timeline.EffectShake, Amount: new(0.3), Speed: new(8), Seed: new(0)}}
+	}))
+	rc(CodeOccluded, "quiet_upper_has_a_motion_blur", occlusion(func(up *timeline.Item) {
+		up.Effects = []timeline.Effect{{Kind: timeline.EffectMotionBlur, Amount: new(0.5), Angle: new(0.0)}}
+	}))
+	rc(CodeOccluded, "trigger_upper_has_a_vignette", occlusion(func(up *timeline.Item) {
+		up.Effects = []timeline.Effect{{Kind: timeline.EffectVignette, Amount: new(0.5), Softness: new(0.5)}}
+	}))
 	rc(CodeOccluded, "quiet_upper_does_not_contain_the_range", occlusion(func(up *timeline.Item) { up.Duration = 60 }))
 	rc(CodeOccluded, "quiet_upper_has_a_transition", occlusion(func(up *timeline.Item) {
 		up.TransitionIn = &timeline.Transition{Kind: "fade", Duration: 10}

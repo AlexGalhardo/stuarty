@@ -10,11 +10,12 @@ import (
 )
 
 // The set of epic 16: the skills that lead a creator and an agent through the first flow (SDD-018 section 16), and
-// the skill of epic 33 for an animation made by an external motion engine.
+// the skill of epic 33 for an animation made by an external motion engine, and the recipes of epic 39.
 var wantSkills = []string{
 	"start-here", "brief-a-production", "short-vertical-video", "captions-for-shorts", "thumbnail",
 	"recall-learnings", "production-retro", "fetch-clip", "write-a-hook", "short-script", "caption-per-network",
 	"motion-with-an-external-engine",
+	"product-commercial", "commercial-copy", "long-talking-video", "chapter-titles",
 }
 
 func TestTheSetIsComplete(t *testing.T) {

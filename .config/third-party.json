@@ -195,7 +195,7 @@
     "files": [
       "licenses/vendored/marketingskills-MIT.txt"
     ],
-    "note": "adapted, with attribution, into the skills write-a-hook, short-script and caption-per-network (web/resources/skills); see licenses/vendored/NOTICE-skills.md",
+    "note": "adapted, with attribution, into the skills write-a-hook, short-script, caption-per-network and commercial-copy (web/resources/skills); see licenses/vendored/NOTICE-skills.md",
     "shipped_in": [
       "archive",
       "image"

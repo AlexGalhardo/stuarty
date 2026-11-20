@@ -42,7 +42,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [20](20-publishing-calendar-and-scheduler.md) | Publishing: calendar, approval and scheduler | L | 06, 07, 18 | DONE (2026-11-20, `0e4e0dbe2`..`77d7bc3b7`, merge `e0453f55f`; the scheduler runs while the app runs until epic 21; a real post not verified) |
 | [21](21-desktop-background-service.md) | Desktop background service for scheduled posts | M | 20 | DONE (2026-11-20, `d7d8dc810`..`38dc447d9` replayed, merge `7eb3945ee`; the tray, the real sign-in registration and the installer are a manual check of the author, D-096) |
 | [22](22-x-and-tiktok-drafts.md) | X and TikTok drafts | M | 20 | DONE (2026-11-20, 167d36b57..afe427f7a, merge 68cec8110; threats T-68, T-69, T-79; task 6, a real post and draft, waits for the author) |
-| [23](23-blog-and-its-destinations.md) | Blog posts and their four destinations | L | 17, 20 | IN PROGRESS (senior-d, 2026-11-20) |
+| [23](23-blog-and-its-destinations.md) | Blog posts and their four destinations | L | 17, 20 | DONE (2026-11-21, b41f480ee..71dfe873d, merge 099a668f1; threats T-86 to T-88, T-95, T-99; task 10, a real WordPress, waits for the author) |
 | [24](24-google-account-and-server-login.md) | Optional Google account and login on a server | M | 04, 18 | DONE (2026-11-20, `46c44b677`..`cde96fa60`, merge `105a2cf8a`; a real Google login and `scripts/no-egress.sh`, which needs Linux, not verified) |
 | [25](25-vps-package.md) | VPS package: Caddy, install, update and backup | M | 24 | DONE (2026-11-20, `7da749ed7`..`6293c2d78`, merge `2722becab`; a real VPS, the built image and `caddy validate` not verified) |
 
@@ -64,7 +64,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [37](37-editor-ui-and-shortcuts.md) | Final editor UI, shortcuts and open fixes | L | 07 | DONE (2026-11-19, `7921c340`..`2715dcc0`, merge `46691bb3`; criterion 4 not met on this Windows machine: WebKit/Firefox limits and VV-238, VV-253, VV-260 to VV-264) |
 | [48](48-image-import-and-image-events.md) | Image import and the image event stream | M | 27, 28 | DONE (2026-11-20, `eaabd4cde`..`7975f0872`, merge `80a23e8dd`; an `image` project item is not in the schema, SDD-021 §10.2) |
 | [49](49-image-lut.md) | Image lookup tables (.cube) | S | 29 | IN PROGRESS (tasks 1 to 6 merged 2026-11-20, da804c05a..819435062, merge 23d185e93; threats T-92 to T-94; task 7, the pinned renderer digest, waits for VV-276) |
-| [50](50-image-revert-checkpoints-and-diff.md) | Revert to a revision, checkpoints and a diff for image documents | M | 36, 29 | TODO |
+| [50](50-image-revert-checkpoints-and-diff.md) | Revert to a revision, checkpoints and a diff for image documents | M | 36, 29 | DONE (2026-11-21, 916861fda..f0345a119, merge 443892948) |
 | [51](51-processed-audio-preview-on-the-timeline.md) | Processed audio preview on the timeline | M | 34 | DONE (2026-11-20, `e1729a0bf`..`8778074ef`, merge `74a429def`; the latency budget on an idle machine not measured) |
 | [52](52-live-composition-groups-in-the-browser.md) | Live composition groups in the browser preview | M | 32, 26 | DONE (2026-11-20, `43b11f50e`..`5332706c1`, merge `7cb81c176`; Firefox and WebKit not run) |
 | [53](53-constant-speed-for-compositions.md) | Constant speed for compositions | M | 32 | DONE (2026-11-20, 38369a110..6dc199452, merge 425c9bf14; the audio keeps the pitch through atempo, no nested bus) |
@@ -74,7 +74,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | Epic | Title | Size | Depends on | Status |
 | --- | --- | --- | --- | --- |
 | [38](38-first-complete-flow-pilot.md) | Pilot of the first complete flow | M | 16, 19, 20, 28, 35 | IN PROGRESS (tasks 1 to 3 and the skill fixes merged 2026-11-20, 919a32d8b..e045447db, merge 59722df91; tasks 4 and 6, the paid agent runs, wait for the author's budget) |
-| [39](39-recipes-for-commercials-and-long-videos.md) | Recipes for commercials and long videos | M | 33, 38 | TODO |
+| [39](39-recipes-for-commercials-and-long-videos.md) | Recipes for commercials and long videos | M | 33, 38 | DONE (2026-11-21, c9e92558c..34f52a00c, merge 96f77dc1e; the Portuguese guides are in docs/guides/pt-BR) |
 | [40](40-documentation-site.md) | Documentation site for Stuarty | L | 02, and each section it documents | TODO |
 | [41](41-accessibility.md) | Accessibility of every section | M | 07, 28, 37 | TODO |
 | [42](42-quality-campaigns.md) | Quality campaigns: budgets, fuzz, crash, soak, security | L | every epic above | TODO |

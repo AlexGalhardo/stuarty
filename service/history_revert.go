@@ -13,9 +13,6 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/textview"
 )
 
-// maxRebuildSteps is how many revisions back a document is rebuilt from the log (SDD-005 section 12.4).
-const maxRebuildSteps = 5000
-
 // revertOp is the name the log gives the step that a revert writes; it is not a command of any registry.
 const revertOp = "history.revert"
 
@@ -55,7 +52,7 @@ func (s *svc) HistoryRevert(ctx context.Context, req HistoryRevertRequest) (*His
 				withHint("%s", hintRestore)
 		}
 
-		target, terr := revertTarget(ctx, tx.Checkpoints(), row.ID, req.Revision, req.Checkpoint)
+		target, terr := revertTarget(ctx, tx.Checkpoints(), timelineNoun, row.ID, req.Revision, req.Checkpoint)
 		if terr != nil {
 			return terr
 		}
@@ -154,7 +151,7 @@ func revertTargetOf(raw json.RawMessage) int64 {
 func revertTarget(
 	ctx context.Context,
 	repo CheckpointRepo,
-	project string,
+	noun, id string,
 	revision int64,
 	name string,
 ) (int64, error) {
@@ -162,9 +159,9 @@ func revertTarget(
 		return revision, nil
 	}
 
-	cp, err := repo.Get(ctx, project, name)
+	cp, err := repo.Get(ctx, id, name)
 	if errors.Is(err, ErrNotFound) {
-		return 0, checkpointNotFound(name)
+		return 0, checkpointNotFoundIn(noun, name)
 	}
 
 	return cp.Revision, err
@@ -334,65 +331,27 @@ func (s *svc) documentAt(
 	currentRev, target int64,
 	path string,
 ) (*timeline.Document, error) {
-	if target < 1 || target > currentRev {
-		return nil, newError(command.CodeValidation, "revision %d does not exist; the timeline is at revision %d.",
-			target, currentRev).withPath(path).withHint("use a revision from 1 to %d", currentRev)
+	log := &revisionLog[*timeline.Document]{
+		noun:      timelineNoun,
+		idKey:     "project_id",
+		id:        project,
+		current:   current,
+		revision:  currentRev,
+		canonical: timeline.Canonical,
+		rebuild:   command.RebuildAt,
+		row: func(ctx context.Context, rev int64) (logRow, error) {
+			r, err := repo.Get(ctx, project, rev)
+
+			return logRow{Kind: r.Kind, Inverse: r.Inverse, DocSHA256: r.DocSHA256}, err
+		},
+		blocks: func(kind OperationKind) string {
+			if kind == OpMigrate || kind == OpImport {
+				return "the migration or import"
+			}
+
+			return ""
+		},
 	}
 
-	if target == currentRev {
-		return current, nil
-	}
-
-	if currentRev-target > maxRebuildSteps {
-		return nil, newError(command.CodeLimit, "revision %d is more than %d revisions behind revision %d.",
-			target, maxRebuildSteps, currentRev).withPath(path).
-			withHint("go back in steps, through a checkpoint nearer to the current revision")
-	}
-
-	inverses := make([][]command.Primitive, 0, currentRev-target)
-
-	for rev := currentRev; rev > target; rev-- {
-		row, err := repo.Get(ctx, project, rev)
-		if err != nil {
-			return nil, err
-		}
-
-		if row.Kind == OpMigrate || row.Kind == OpImport {
-			return nil, newError(command.CodeInvalidState,
-				"revision %d is before the migration or import at revision %d, which the log cannot go back across.",
-				target, rev).withPath(path).withHint("use a revision from %d on", rev)
-		}
-
-		var prims []command.Primitive
-		if err := json.Unmarshal(row.Inverse, &prims); err != nil {
-			return nil, internalError()
-		}
-
-		inverses = append(inverses, prims)
-	}
-
-	doc, err := command.RebuildAt(current, inverses)
-	if err != nil {
-		return nil, s.rebuildFailed(project, currentRev, target, err.Error())
-	}
-
-	want, err := repo.Get(ctx, project, target)
-	if err != nil {
-		return nil, err
-	}
-
-	if got := sha256Hex(timeline.Canonical(doc)); got != want.DocSHA256 {
-		return nil, s.rebuildFailed(project, currentRev, target, "the rebuilt document does not match the log")
-	}
-
-	return doc, nil
-}
-
-// rebuildFailed is the answer when the log and the document disagree, which is a defect and never something to
-// continue from: E_INTERNAL, with the revisions so that the report can be traced.
-func (s *svc) rebuildFailed(project string, current, target int64, why string) error {
-	_ = why
-
-	return internalError().withDetail("project_id", project).withDetail("revision", target).
-		withDetail("current_revision", current)
+	return rebuildAt(ctx, log, target, path)
 }

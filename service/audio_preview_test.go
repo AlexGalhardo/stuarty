@@ -598,3 +598,90 @@ func TestAudioPreviewPlanKeyIsThePlansKey(t *testing.T) {
 		t.Errorf("key %s, want %s", got, plan.PreviewKey(doc, &src))
 	}
 }
+
+// An item with a chain inside a composition is askable by the key its plan entry names (VV-275): the whole file is
+// the source of the export, a window of it is a frame of the file, and the render gets the document of the timeline
+// that holds the asset.
+func TestAudioPreviewNestedItem(t *testing.T) {
+	t.Parallel()
+
+	const (
+		child  = "prj_c1c1c1c1c1"
+		parent = "prj_p1p1p1p1p1"
+		track  = "trk_aaaaaaaaa1"
+		asset  = "ast_bbbbbbbbbb"
+		item   = "itm_cccccccc01"
+		comp   = "itm_cccccccc02"
+	)
+
+	mk := func(id string) *timeline.Document {
+		return &timeline.Document{
+			SchemaVersion: timeline.CurrentSchemaVersion, ID: id, Settings: timeline.DefaultSettings(),
+			Assets: map[string]timeline.Asset{asset: {
+				ID: asset, Kind: timeline.AssetAudio, Hash: "sha256:" + strings.Repeat("1", 64),
+				FrameRate: timeline.Rational{Num: 30, Den: 1}, FrameCount: 900,
+			}},
+			Tracks: map[string]timeline.Track{track: {ID: track, Kind: timeline.TrackAudio, Order: "a0"}},
+			Items:  map[string]timeline.Item{},
+		}
+	}
+
+	inner := mk(child)
+	voice := timeline.NewItem(item, timeline.ItemAudio, track, 0, 90)
+	voice.Asset, voice.Processors = asset, voiceChain
+	inner.Items[item] = voice
+
+	outer := mk(parent)
+	cut := timeline.NewItem(comp, timeline.ItemComposition, track, 30, 90)
+	cut.Timeline = child
+	outer.Items[comp] = cut
+
+	opts := plan.Options{Nested: func(id string) (*timeline.Document, bool) { return inner, id == child }}
+	w := plan.WindowWith(outer, 0, 150, opts)
+
+	var entry *plan.WindowAudio
+
+	for i := range w.Audio {
+		if w.Audio[i].Item == comp+"/"+item {
+			entry = &w.Audio[i]
+		}
+	}
+
+	if entry == nil || entry.Processed == nil || entry.Timeline != child {
+		t.Fatalf("plan audio = %+v, want an entry of the child's timeline with a processed file", w.Audio)
+	}
+
+	s := &svc{}
+	s.registerAudioPreviews("prj_one", outer, opts, &w)
+
+	known, ok := s.previews.lookup("prj_one", entry.Processed.Key)
+	if !ok {
+		t.Fatal("the key of the plan entry is not askable")
+	}
+
+	whole, err := known.target(entry.Processed.Key, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if whole.src.Samples != 90*1600 || len(whole.src.Chain) != 1 || whole.src.Gain != nil ||
+		whole.doc.Assets[asset].Hash == "" {
+		t.Errorf("whole = %+v, want the 90 frames with the chain, no envelope and the asset in its document", whole)
+	}
+
+	if plan.PreviewKey(whole.doc, &whole.src) != entry.Processed.Key {
+		t.Error("the key of the whole file is not the key of the plan")
+	}
+
+	win, err := known.target(entry.Processed.Key, "10")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// File frame 10 is child frame 10: the source is read from there, for the window of the file.
+	if !win.window || win.first != 10 || win.src.SourceStart != 10*1600 ||
+		win.src.Samples != int64(win.last-win.first+1)*1600 ||
+		win.key == whole.key {
+		t.Errorf("window = %+v, want a window of its own from the source frame 10", win)
+	}
+}

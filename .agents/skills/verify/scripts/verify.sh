@@ -5,8 +5,9 @@
 #
 # --quick (default): commit messages, flaky patterns, and the lint, build and tests of what the change
 #                    touches (Go packages, web/, site/ and the generated docs).
-# --full:            --quick plus the full local gate (scripts/gate.sh) and the end-to-end smoke test
-#                    (scripts/smoke-e2e.sh). Required before opening or updating a pull request.
+# --full:            --quick plus the full local gate (scripts/gate.sh), the end-to-end smoke test
+#                    (scripts/smoke-e2e.sh) and the two scripted recipes (scripts/recipe-commercial.sh and
+#                    scripts/recipe-long-video.sh). Required before opening or updating a pull request.
 #
 # The checks come from the default branch, never from the change under test: the scripts are read from
 # <base> (default origin/main) with `git show` and run against the working tree. A change that edits a check
@@ -151,6 +152,9 @@ if [ "$mode" = full ]; then
 	step gate bash "$(script scripts/gate.sh)" verify
 	grep -q "GATE_FAIL=0" "$L/gate.log" || { echo "gate: $(grep GATE_FAIL "$L/gate.log")"; }
 	step smoke-e2e bash "$(script scripts/smoke-e2e.sh)"
+	# The recipes of epic 39: a commercial in three aspect ratios and a long video with its short (SDD-018 section 17).
+	step recipe-commercial bash "$root/scripts/recipe-commercial.sh"
+	step recipe-long-video bash "$root/scripts/recipe-long-video.sh"
 fi
 
 echo "logs: $L"

@@ -531,7 +531,9 @@ func (j *job) posters(
 	deadline time.Duration,
 ) error {
 	in := ffargs.FileInput(j.path(proxyName))
-	if alpha {
+	// Only the WebM proxy of a video with alpha needs the VP9 decoder that carries the alpha
+	// plane; the proxy of an image is a PNG that any decoder reads with its alpha.
+	if alpha && strings.HasSuffix(proxyName, ".webm") {
 		in = in.Decoder("libvpx-vp9")
 	}
 	if seekMS > 0 {

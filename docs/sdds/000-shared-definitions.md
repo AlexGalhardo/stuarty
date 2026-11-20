@@ -63,6 +63,7 @@
 | `ImageDescribe` | `image` (`action` show) | `image:show` | `GET /images/{id}` | read |
 | `ImageEdit` | `image` (`action` edit) | `image:edit` | `POST /images/{id}/edit` | edit |
 | `ImageUndo`, `ImageRedo` | `image` (`action` undo, redo) | `image:undo`, `image:redo` | `POST /images/{id}/undo`, `POST /images/{id}/redo` | edit |
+| `ImageRevert`, `ImageDiff`, `ImageCheckpointCreate`, `ImageCheckpointList`, `ImageCheckpointRename`, `ImageCheckpointRemove` | `history` (`domain` `image`, `image_id`; `action` `revert`, `diff`, `checkpoint`, `checkpoints`, `rename_checkpoint`, `remove_checkpoint`) | `image:revert`, `image:diff`, `image:checkpoint:create`, `image:checkpoint:list`, `image:checkpoint:rename`, `image:checkpoint:remove` (the id of the image is the first argument, as in `image:undo`) | `POST /images/{id}/revert`, `GET /images/{id}/diff`, `/images/{id}/checkpoints` (`GET`, `POST`) and `/images/{id}/checkpoints/{name}` (`PATCH`, `DELETE`) (SDD-021 section 4, epic 50) | read, edit |
 | `ImageExport` | `image` (`action` export) | `image:export` | `POST /images/{id}/export` | edit |
 | `ImageImport` | `image` (`action` import) | `image:import` | `POST /images/import` (an image file from a path or a library hash becomes a new image document, or one more layer of the document `image_id`; SDD-021 §10) | edit |
 | `ImageImportFile` | none | none | `POST /images/import/file` (a file chosen in the browser, as the bytes of the request, becomes a new image document or a layer; SDD-021 §10.2; HTTP only because the bytes are the request) | edit |
@@ -120,6 +121,8 @@
 | `TextRevert` | `project_item` (`action` `revert`) | `text:revert` | `POST /projects/{id}/texts/{item}/revert` | edit |
 | `TextDraft` | `job_start` (kind `text.draft`) | `text:draft` | `POST /projects/{id}/texts/{item}/draft` | edit |
 | `CaptionValidate` | `project_item` (`action` `check`, with `network`) | `caption:validate` | `POST /captions/validate` | read |
+| `PostCheck` | `project_item` (`action` `check`, with an `item_id` of a text of the kind `post`) | `post:check` | `GET /projects/{id}/texts/{item}/post` | read (SDD-019 §13) |
+| `PublishedPostList`, `PublishedPostGet`, `PublishedPostMedia` | none (for the system of the creator, SDD-020 §47) | none | `GET /api/v1/posts`, `GET /api/v1/posts/{slug}`, `GET /api/v1/posts/{slug}/media/{name}` | `posts:read` |
 | `ScriptEstimate` | `project_item` (`action` `check`, with `wpm`) | `script:estimate` | `POST /scripts/estimate` | read |
 | `AgentProfileList` | none (an agent has no use for the command line of another) | `agent:profiles` | `GET /agents/profiles` | read (SDD-017 §3) |
 | `AgentProfileSet`, `AgentProfileRemove` | none | none | `PUT /agents/profiles/{name}`, `DELETE /agents/profiles/{name}` | admin, and only from a privileged browser session; every other caller gets `E_PRIVILEGED_SESSION` (SDD-017 §3, §10) |
@@ -185,7 +188,9 @@ An actor string is one of `user:<id>`, `key:<key id>`, `local:<label>`. `<label>
 
 ## 4. Scopes
 
-`read`, `edit`, `media`, `render`, `admin`. In local mode the local token carries all five.
+`read`, `edit`, `media`, `render`, `admin`. In local mode the local token carries all five. A sixth scope, `posts:read` (epic 23, SDD-020 §47), is held by a key made for the read API of the blog and by the local token; it is accepted by three routes and no other, and is not implied by `read`.
+
+The connection kinds of the blog destinations (SDD-020 §42): `blog_files`, `blog_wordpress`, `blog_webhook`, `blog_webhook_local`, `blog_api`. The text kind `post` (SDD-019 §13).
 
 ## 5. Events on a project stream
 
@@ -216,6 +221,7 @@ Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, `text.generate
 | `project_items` | the items of a project: brief, text, timeline, output; their order and trash state | SDD-005 §5.12 |
 | `text_revisions` | one row per save of a text item: body, actor, source (`created`, `write`, `generated`, `revert`), and for a generated one the provider, model, cost and job | SDD-019 §3 |
 | `checkpoints` | the names and notes a person or an agent put on a revision of a timeline, and the automatic ones before an agent's first edit of the day | SDD-005 §5.14 |
+| `image_checkpoints` | the names and notes a person or an agent put on a revision of an image document, and the automatic ones before an agent's first edit of the day | SDD-005 §5.14.1 |
 | `timelines` | one row per timeline document: current document, revision, schema version, trash state (the former `projects` table, renamed) | SDD-005 §5.2 |
 | `operations` | the append-only log, one row per committed batch of a timeline (its `project_id` column holds the timeline id) | SDD-005 |
 | `idempotency_keys` | stored batch results by key | SDD-005 |
@@ -236,6 +242,7 @@ Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, `text.generate
 | `image_documents`, `image_operations` | image documents, and their append-only log of batches | SDD-005 §5.12, SDD-021 |
 | `approval_requests`, `approval_rules`, `cost_ceilings`, `cost_ledger` | the approval queue, the rules that approve without asking, the cost ceilings and the record of every estimate and real cost; no secret | SDD-015 |
 | `publications`, `publication_targets` | the calendar: what is published, to which account, at what time, in which state, with its lease and its result; no secret | SDD-005 §5.15, SDD-020 §23 |
+| `published_posts`, `blog_remote_posts` | the posts a `blog_api` destination published (what the read API serves), and the remote id of a post at each destination, so a second send updates; no secret | SDD-005 §5.15, SDD-020 §47, §48 |
 | `image_documents`, `image_operations` | image documents, and their append-only log of batches | SDD-005 §5.13, SDD-021 |
 | `library_entries`, `library_fts` | the index of memory, skills and prompts for search and lists; rebuilt from the files, holds no content that the files lack | SDD-018 §9 |
 | `asset_info`, `asset_tags`, `asset_search` | the library side of an asset by hash: origin, rights note, description, the reuse mark, the tags and the full-text index over them | SDD-005 §5.5.1, SDD-011 §14 |

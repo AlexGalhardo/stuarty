@@ -14,8 +14,9 @@ const (
 	ScopeAdmin  = "admin"
 )
 
-// AllScopes is the five scopes: what a local caller holds.
-var AllScopes = []string{ScopeRead, ScopeEdit, ScopeMedia, ScopeRender, ScopeAdmin}
+// AllScopes is the five scopes of SDD-000 section 4 and the scope of the read API of the blog: what a local caller
+// holds.
+var AllScopes = []string{ScopeRead, ScopeEdit, ScopeMedia, ScopeRender, ScopeAdmin, ScopePostsRead}
 
 // Caller is what authentication established (SDD-007 section 5.1) and the
 // adapters put in the context.
@@ -140,34 +141,40 @@ var Scopes = map[string]string{
 	"ChatSessionGet":       ScopeRead,
 	"ChatTranscriptGet":    ScopeRead,
 
-	"ProjectDescribe":    ScopeRead,
-	"ProjectDuplicate":   ScopeEdit,
-	"ProjectItemAdd":     ScopeEdit,
-	"ProjectItemMove":    ScopeEdit,
-	"ProjectItemRename":  ScopeEdit,
-	"ProjectItemTrash":   ScopeEdit,
-	"ProjectItemRestore": ScopeEdit,
-	"BriefGet":           ScopeRead,
-	"BriefSet":           ScopeEdit,
-	"BriefingQuestions":  ScopeRead,
-	"BriefingAnswer":     ScopeEdit,
-	"ImageCreate":        ScopeEdit,
-	"ImageList":          ScopeRead,
-	"ImageDescribe":      ScopeRead,
-	"ImageEdit":          ScopeEdit,
-	"ImageUndo":          ScopeEdit,
-	"ImageRedo":          ScopeEdit,
-	"ImageExport":        ScopeEdit,
-	"ImageImport":        ScopeEdit,
-	"ImageImportFile":    ScopeEdit,
-	"ImageFrame":         ScopeRead,
-	"ImageHistory":       ScopeRead,
-	"ImageFile":          ScopeRead,
-	"ConnectionList":     ScopeRead,
-	"ConnectionGet":      ScopeRead,
-	"ConnectionCreate":   ScopeAdmin,
-	"ConnectionRemove":   ScopeAdmin,
-	"ConnectionTest":     ScopeAdmin,
+	"ProjectDescribe":       ScopeRead,
+	"ProjectDuplicate":      ScopeEdit,
+	"ProjectItemAdd":        ScopeEdit,
+	"ProjectItemMove":       ScopeEdit,
+	"ProjectItemRename":     ScopeEdit,
+	"ProjectItemTrash":      ScopeEdit,
+	"ProjectItemRestore":    ScopeEdit,
+	"BriefGet":              ScopeRead,
+	"BriefSet":              ScopeEdit,
+	"BriefingQuestions":     ScopeRead,
+	"BriefingAnswer":        ScopeEdit,
+	"ImageCreate":           ScopeEdit,
+	"ImageList":             ScopeRead,
+	"ImageDescribe":         ScopeRead,
+	"ImageEdit":             ScopeEdit,
+	"ImageUndo":             ScopeEdit,
+	"ImageRedo":             ScopeEdit,
+	"ImageRevert":           ScopeEdit,
+	"ImageDiff":             ScopeRead,
+	"ImageCheckpointCreate": ScopeEdit,
+	"ImageCheckpointList":   ScopeRead,
+	"ImageCheckpointRename": ScopeEdit,
+	"ImageCheckpointRemove": ScopeEdit,
+	"ImageExport":           ScopeEdit,
+	"ImageImport":           ScopeEdit,
+	"ImageImportFile":       ScopeEdit,
+	"ImageFrame":            ScopeRead,
+	"ImageHistory":          ScopeRead,
+	"ImageFile":             ScopeRead,
+	"ConnectionList":        ScopeRead,
+	"ConnectionGet":         ScopeRead,
+	"ConnectionCreate":      ScopeAdmin,
+	"ConnectionRemove":      ScopeAdmin,
+	"ConnectionTest":        ScopeAdmin,
 	// ApprovalDecide is read plus Caller.Browser (SDD-015 section 4), as KeyCreate is.
 	"ApprovalList":       ScopeRead,
 	"ApprovalGet":        ScopeRead,
@@ -228,6 +235,13 @@ var Scopes = map[string]string{
 	"MotionBrief":   ScopeRead,
 	"MotionCheck":   ScopeRead,
 	"MotionReplace": ScopeEdit,
+
+	// The blog (SDD-019 section 13, SDD-020 section 47): the check of a post is a read; the three routes of the
+	// published posts take the scope posts:read and no other.
+	"PostCheck":          ScopeRead,
+	"PublishedPostList":  ScopePostsRead,
+	"PublishedPostGet":   ScopePostsRead,
+	"PublishedPostMedia": ScopePostsRead,
 }
 
 // authorize checks the caller first, as every method does: a missing caller
@@ -311,7 +325,7 @@ func RoleScopes(role string) []string {
 	case RoleAdmin:
 		return slices.Clone(AllScopes)
 	case RoleMember:
-		return []string{ScopeRead, ScopeEdit, ScopeMedia, ScopeRender}
+		return []string{ScopeRead, ScopeEdit, ScopeMedia, ScopeRender, ScopePostsRead}
 	}
 
 	return nil

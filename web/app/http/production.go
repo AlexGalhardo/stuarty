@@ -29,7 +29,7 @@ type itemAddIn struct {
 	Title    string  `json:"title"               validate:"required" doc:"1 to 120 characters."`
 	Position *int    `json:"position,omitempty"                      doc:"Where in the order of the items, from 0; default the end."`
 	Text     string  `json:"text,omitempty"                          doc:"Markdown of a text item, at most 256 KiB."`
-	TextKind string  `json:"text_kind,omitempty"                     doc:"A text item: script, copy (default) or caption."`
+	TextKind string  `json:"text_kind,omitempty"                     doc:"A text item: script, copy (default), caption or post."`
 	Preset   string  `json:"preset,omitempty"                        doc:"A timeline: 9:16 (default), 1:1, 16:9 or 4:5."`
 	FPS      fpsText `json:"fps,omitempty"                           doc:"A timeline: 30 (default); n or n/1001."`
 	JobID    string  `json:"job_id,omitempty"                        doc:"An output: a succeeded export job of this project."`

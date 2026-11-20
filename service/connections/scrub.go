@@ -31,7 +31,11 @@ func echoesSecret(body, secret []byte) bool {
 		return false
 	}
 
-	seen := make(map[[minScrubbed]byte]struct{}, 2*len(body))
+	hint := len(body)
+	if hint <= int(^uint(0)>>1)/2 {
+		hint *= 2
+	}
+	seen := make(map[[minScrubbed]byte]struct{}, hint)
 
 	for _, h := range [][]byte{body, []byte(untrusted.Clean(string(body)))} {
 		for i := 0; i+minScrubbed <= len(h); i++ {
