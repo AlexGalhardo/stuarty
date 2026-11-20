@@ -468,7 +468,8 @@ export type ProjectEvent =                         // mirrors SDD-000 §5 and SD
   | { name: "project.updated"; project_id: string; state: string }
   | { name: "asset.updated"; asset_id: string; state: AssetState; progress: number }
   | { name: "job.updated"; job_id: string; kind: JobKind; state: JobState; progress: number; message: string }
-  | { name: "resync.required"; revision: number; reason: string };
+  | { name: "resync.required"; revision: number; reason: string }
+  | { name: "nested.updated"; project_id: string; timeline_id: string; revision: number; at: string };
 ```
 
 Boot and reconciliation algorithm (the same code serves boot and resync). It is the algorithm of SDD-006 §6, which is authoritative:
@@ -480,7 +481,7 @@ Boot and reconciliation algorithm (the same code serves boot and resync). It is 
    - `revision === current + 1`: `applyRevisionDiff`.
    - `revision > current + 1`: hold it in a buffer and start a 2 s timer; when the missing revision arrives the buffer drains in order.
 4. Resync (set status `resyncing`, close the stream, go to step 1) on: `resync.required`, a `batch.committed` with `diff_truncated`, `applyDiff` returning `"unpatchable"`, or the 2 s gap timer. At most 3 consecutive resyncs without progress; then status `failed` with a banner and a Reload button.
-5. `asset.updated`, `job.updated`, `project.updated` update `mediaStore`, `jobsStore` and the trash flag. They do not carry revisions and need no ordering.
+5. `asset.updated`, `job.updated`, `project.updated` update `mediaStore`, `jobsStore` and the trash flag. They do not carry revisions and need no ordering. `nested.updated` (a timeline this one uses as a composition changed, SDD-006 §3.3.1) leaves the read model alone: the preview drops its plan windows (`PreviewExecutor.refresh`), draws the frame again and, when paused, asks for the paused frame again, because the revision of this timeline did not change.
 6. `EventSource` reconnects by itself and sends `Last-Event-ID` (ADR-0017 item 5); the server replays or sends `resync.required`. When `readyState` becomes `CLOSED` (an HTTP error response such as 401 ends the automatic retry), `events.ts` probes `GET /projects/{id}`: a 401 follows the `E_UNAUTHORIZED` policy, any other failure schedules a manual reopen with delays 1, 2, 4, 8, 15 s (15 s thereafter) and state `offline`; success runs the algorithm from step 1.
 7. Staleness: the server sends an unnamed empty event every 15 s as a heartbeat that JavaScript can see (SDD-006 §3.1). `events.ts` listens to `message` only to record the time; 40 s without any event closes the `EventSource` and opens a new one with `since=<current revision>`. The same check runs on `visibilitychange` to visible and on `online`.
 

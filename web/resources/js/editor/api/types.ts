@@ -168,6 +168,15 @@ export type ProjectEvent =
 			project_id: string;
 			revision: number;
 			reason: string;
+	  }
+	| {
+			// A timeline this one uses as a composition changed (SDD-006 section
+			// 3.3.1): `timeline_id` and `revision` are those of that timeline.
+			name: "nested.updated";
+			project_id: string;
+			timeline_id: string;
+			revision: number;
+			at: string;
 	  };
 
 export const EVENT_NAMES = [
@@ -176,6 +185,7 @@ export const EVENT_NAMES = [
 	"asset.updated",
 	"job.updated",
 	"resync.required",
+	"nested.updated",
 ] as const;
 
 // The part of PlanWindow (SDD-004 section 10) the timeline needs: the end of
