@@ -22,6 +22,7 @@ The product was a video editor called Vukem Video until 2026-11-18, when it beca
 | know what to build next, in what order, and how to verify it | `plans/00-roadmap.md`, then the epic you were given |
 | know how an agent uses the product | `prds/002-agent-operability.md`, then `sdds/003-agent-interfaces.md` |
 | know what may leave the machine, and what waits for a person | `adrs/0032-*.md`, then `sdds/007-security-model.md` |
+| know what must be true of the accessibility of every section, and the script of the screen reader pass | `sdds/012-ui-architecture.md` section 18.10, `accessibility-screen-reader-script.md` |
 | use a name (operation, table, error code, variable) | `sdds/000-shared-definitions.md` |
 | change the timeline document format | `sdds/001-timeline-schema.md` |
 | add or change a command of the video editor | `sdds/002-command-catalogue.md` |
