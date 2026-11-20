@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatDateTime } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
 import type { ProjectSummary } from "@/types";
+import { formatMoney } from "../../dashboard/approval/money";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
 import type { Job, SocialAccount, SocialNetwork } from "../../editor/api/types";
@@ -138,6 +139,7 @@ function Preview({
 	visibility: string;
 }): ReactNode {
 	const t = useT();
+	const locale = useLocale();
 	const limits = network?.limits;
 	return (
 		<div
@@ -173,6 +175,32 @@ function Preview({
 			{tags.trim() !== "" && (
 				<p className="mt-1 text-xs">
 					<UntrustedText>{tags}</UntrustedText>
+				</p>
+			)}
+			{network?.price !== undefined && (
+				<p className="mt-2 text-xs" data-testid="target-price">
+					{t("ui.publish.price", {
+						post: formatMoney(
+							{
+								micros: network.price.post_micros,
+								currency: network.price.currency,
+							},
+							locale,
+						),
+						link: formatMoney(
+							{
+								micros: network.price.link_micros,
+								currency: network.price.currency,
+							},
+							locale,
+						),
+						date: network.price.edited ?? network.price.read,
+					})}
+				</p>
+			)}
+			{network?.draft === true && (
+				<p className="mt-2 text-xs" data-testid="target-draft-warning">
+					{t("ui.publish.draft_warning", { name: network.name })}
 				</p>
 			)}
 		</div>

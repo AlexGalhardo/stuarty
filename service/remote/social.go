@@ -42,6 +42,13 @@ func (c *Client) SocialAccountSelect(
 	return post[service.SocialAccount](ctx, c, "/social/select", req)
 }
 
+// SocialPriceSet implements service.Service.
+func (c *Client) SocialPriceSet(
+	ctx context.Context, req service.SocialPriceSetRequest,
+) (*service.SocialAccount, error) {
+	return post[service.SocialAccount](ctx, c, "/social/price", req)
+}
+
 // PublishValidate implements service.Service.
 func (c *Client) PublishValidate(
 	ctx context.Context, req service.PublishValidateRequest,
