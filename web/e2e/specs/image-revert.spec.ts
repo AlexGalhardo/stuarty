@@ -79,6 +79,10 @@ test.describe("image revert, named versions and the diff", () => {
 		const after = await imageState(call, id);
 		expect(after.revision).toBe(before + 1);
 		expect(layerByName(after.layers, "Agent circle")).toBeUndefined();
+		// the row of the revert says what it did, in words, and not the name of its operation
+		await expect(page.getByTestId("image-history-entry").first()).toContainText(
+			"Reverted to r",
+		);
 
 		// the revert is a step of the person: undo takes it back, and the agent circle returns
 		await page.getByTestId("image-undo").click();

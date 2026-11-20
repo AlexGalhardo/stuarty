@@ -47,7 +47,7 @@ test.describe("image history and other actors", () => {
 		await expect(page.getByTestId("image-changed")).toHaveCount(1);
 		const entry = page
 			.getByTestId("image-history-entry")
-			.filter({ hasText: "layer.add_shape" });
+			.filter({ hasText: "Adds a rectangle" });
 		await expect(entry).toHaveAttribute("data-actor", "local:agent");
 		await expect(entry.getByTestId("image-history-actor")).toHaveText(
 			"local:agent",
@@ -84,7 +84,7 @@ test.describe("image history and other actors", () => {
 		await expect(row(page, "Agent box")).toBeVisible();
 		// the log says so, in words: the step is undone, by whom
 		const entries = page.getByTestId("image-history-entry");
-		await expect(entries.first()).toContainText("undid revision");
+		await expect(entries.first()).toContainText("Undid r");
 		await expect(page.getByText(/Undone by revision/)).toBeVisible();
 
 		// redo brings the person's step back

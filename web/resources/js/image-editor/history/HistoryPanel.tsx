@@ -3,7 +3,7 @@ import { type ReactNode, useState } from "react";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
-import { useLocale, useT } from "@/lib/i18n";
+import { type Translate, useLocale, useT } from "@/lib/i18n";
 import { formatRelative } from "../../editor/ui/format";
 import type { ImageHistoryEntry } from "../api/types";
 import { useImage } from "../state/context";
@@ -62,6 +62,18 @@ export default function HistoryPanel(): ReactNode {
 	);
 }
 
+// The line under the revision: the description of the core, in words, as received; only a row without one (a
+// service of an older version) says what the operations were.
+export function entryText(t: Translate, entry: ImageHistoryEntry): string {
+	if (entry.description !== undefined && entry.description !== "")
+		return entry.description;
+	if (entry.kind === "undo")
+		return t("ui.image.history.undo_of", { revision: entry.undo_of ?? 0 });
+	if (entry.kind === "redo")
+		return t("ui.image.history.redo_of", { revision: entry.undo_of ?? 0 });
+	return entry.ops.join(", ");
+}
+
 function Entry({
 	entry,
 	current,
@@ -77,12 +89,7 @@ function Entry({
 	const t = useT();
 	const locale = useLocale();
 	const undone = entry.undone_by !== undefined;
-	const what =
-		entry.kind === "undo"
-			? t("ui.image.history.undo_of", { revision: entry.undo_of ?? 0 })
-			: entry.kind === "redo"
-				? t("ui.image.history.redo_of", { revision: entry.undo_of ?? 0 })
-				: entry.ops.join(", ");
+	const what = entryText(t, entry);
 
 	return (
 		<li
