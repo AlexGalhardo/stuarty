@@ -9,14 +9,6 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
-// RunSubKey is the key, under HKEY_CURRENT_USER, whose values Windows starts at sign-in for the signed-in
-// user alone, with no administrator rights. RunValueName is the value of Stuarty in it; the Windows
-// uninstaller deletes the same value (desktop/packaging/windows/stuarty-desktop.iss).
-const (
-	RunSubKey    = `Software\Microsoft\Windows\CurrentVersion\Run`
-	RunValueName = "StuartyDesktop"
-)
-
 type registryRegistrar struct{ subKey, name, exe string }
 
 // NewRegistryRegistrar is a Registrar over a value of a key of HKEY_CURRENT_USER. The tests give it a key
