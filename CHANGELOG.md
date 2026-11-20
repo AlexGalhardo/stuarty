@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.0] - 2026-11-20
+
+### Added
+
+- **image:** Rebuild a document at a revision and diff two documents ([01d7be2](https://github.com/AlexGalhardo/stuarty/commit/01d7be2fe6d040ae96c625e52523b7c2e44ea571))
+- **service:** Render the diff of an image within the budget of an edit ([b6b00dd](https://github.com/AlexGalhardo/stuarty/commit/b6b00dde2cb4317df62b265d1a718d704aa2b94f))
+- **service:** Revert, checkpoints and diff of image documents ([4069e8b](https://github.com/AlexGalhardo/stuarty/commit/4069e8bc2bb386c390f6d14577e3002299689cf8))
+- **api:** Expose image revert, checkpoints and diff on the three surfaces ([779822c](https://github.com/AlexGalhardo/stuarty/commit/779822cefd6d9e0bed0be2cb71423c24778c5837))
+- **ui:** Revert, named versions and changes in the image history panel ([da2be03](https://github.com/AlexGalhardo/stuarty/commit/da2be036198f672677d7e3d5eb92ed053126c46f))
+- **core:** Add the production kind and the briefing questions of a commercial and a long video ([c9e9255](https://github.com/AlexGalhardo/stuarty/commit/c9e92558c43c3244976f1dc07ea0aedcf25a0963))
+- **web:** Add the templates of the commercial and long video recipes with golden exports ([162d27b](https://github.com/AlexGalhardo/stuarty/commit/162d27b1b5565b48bbc196a92a656aa1a96fabf3))
+- **service:** Install the recipe templates as built-in in a new workspace ([228e264](https://github.com/AlexGalhardo/stuarty/commit/228e2645332a6998a2db80caf86b19ede024fdef))
+- **web:** Add the product-commercial and commercial-copy skills ([192caa1](https://github.com/AlexGalhardo/stuarty/commit/192caa127ff9dfe2551b4f31f780438345da1001))
+- **web:** Add the long-talking-video and chapter-titles skills ([a284ab9](https://github.com/AlexGalhardo/stuarty/commit/a284ab9affadbce6fd1b64a6cb152d1070a0f8fc))
+- **core:** Add the post text kind with validation and html ([04099d0](https://github.com/AlexGalhardo/stuarty/commit/04099d029f6454a6f98dd69e26396b1faeeeae06))
+- **service:** Add the blog files destination with templates ([51b20d1](https://github.com/AlexGalhardo/stuarty/commit/51b20d14a35940003f832f8eb96dddd322cbd7a5))
+- **service:** Add the blog wordpress destination ([26ab2e5](https://github.com/AlexGalhardo/stuarty/commit/26ab2e5484174b3c7ab047ae9ecb9da780f673b7))
+- **service:** Add the blog webhook with signing and address rules ([ed6cd02](https://github.com/AlexGalhardo/stuarty/commit/ed6cd0228b0c5dd5e950e580e0600ef885873e9c))
+- **web:** Serve published posts on a read api with its own scope ([660b162](https://github.com/AlexGalhardo/stuarty/commit/660b1628346b58209c77202f20dcf6d069480c8a))
+- **service:** Send posts through approval to blog destinations ([4e0866d](https://github.com/AlexGalhardo/stuarty/commit/4e0866d1109c6049818f18dfa231deca49997e7f))
+- **web:** Add the post editor and the blog destination forms ([d596cf0](https://github.com/AlexGalhardo/stuarty/commit/d596cf02b2f0d9c7221e05a99215b7278fb8436d))
+- **service:** Serve the briefing of every kind of production ([d79bf1e](https://github.com/AlexGalhardo/stuarty/commit/d79bf1ea63e67bbd4de78d7492ca4beea67ca602))
+- **image:** Share the recipe image templates in network mode ([b8c7bb3](https://github.com/AlexGalhardo/stuarty/commit/b8c7bb3e829405d7f85691c11c73b669d1055dde))
+
+### Fixed
+
+- **service:** Find an image operation in command help when its name is unique ([b08bfee](https://github.com/AlexGalhardo/stuarty/commit/b08bfee3fd7ba837e5084ee4fa807df015974653))
+- **service:** Answer a create in UTC and accept a date in the list range ([db74d66](https://github.com/AlexGalhardo/stuarty/commit/db74d6661a30496fda8e9973b146fba21c256d2b))
+- **service:** Name the domain of an operation command help found elsewhere ([584380c](https://github.com/AlexGalhardo/stuarty/commit/584380c067960fa3e7ebfa91e11594222e25b1fa))
+- **core:** Keep the millisecond of a scheduled instant ([20b3938](https://github.com/AlexGalhardo/stuarty/commit/20b393834e7a8d5794866f376d4194abd04b4a9e))
+- **remote:** Send the zone of a publication list to the server ([1253d1e](https://github.com/AlexGalhardo/stuarty/commit/1253d1e3c6d3a3a3ad2ae66caed14b9e60b18194))
+- **renderer:** Make the source paths of the module the same on Windows and Linux ([000394e](https://github.com/AlexGalhardo/stuarty/commit/000394e3a89faea568c636bce901156fa35282ca))
+- **renderer:** Give rustc forward slashes instead of rewriting the module ([b257ca3](https://github.com/AlexGalhardo/stuarty/commit/b257ca389e9c6efe8fb0781169bc3fa46e586c95))
+- **ingest:** Read a lut with the parser the export reads ([4c32367](https://github.com/AlexGalhardo/stuarty/commit/4c32367a9937b0d299111afb595de15c2b6851ff))
+- **lint:** Do not call an item hidden under a blended clip ([546c7ec](https://github.com/AlexGalhardo/stuarty/commit/546c7ec91ac91926d5c3eb5c24f22832d1f97569))
+- **command:** Say the stacking order in track.add and its result ([d35bda2](https://github.com/AlexGalhardo/stuarty/commit/d35bda24aefe8a30e4f565b8de07226a9e231875))
+- **command:** Say one visual track in the singular in track.add stacking ([7bdf899](https://github.com/AlexGalhardo/stuarty/commit/7bdf899f349cdc70967ef424d9e0ac99d44f23ff))
+- **web:** Write the recipe briefs with the headings and order of their set ([fc2abfa](https://github.com/AlexGalhardo/stuarty/commit/fc2abfa05886d4bd314dc9e96e57b0bd471efd11))
+- **web:** Send a commercial with no proof to the 15 second template ([0f5ba06](https://github.com/AlexGalhardo/stuarty/commit/0f5ba0672b23137859a8f17a6870c0b6b1bb8b6c))
+- **core:** Render a post in linear time and refuse a backslash in a link ([89a58ab](https://github.com/AlexGalhardo/stuarty/commit/89a58ab98d299c7f500de23d4b8b01a6a714010b))
+- **ui:** Offer the posts:read scope when a key is made ([417e474](https://github.com/AlexGalhardo/stuarty/commit/417e4748746c50c71f9db4ee5ed8987109cb89a9))
+- **cli:** Name the post kind wherever the text kinds are listed ([d70fd60](https://github.com/AlexGalhardo/stuarty/commit/d70fd60f59400250c6a62ca198deaab44e7297a4))
+- **core:** Do not report an item below a keyed or blurred clip as occluded ([6f04228](https://github.com/AlexGalhardo/stuarty/commit/6f04228a8b13cdad020b2733f184796f618bb4a1))
+- **lint:** Do not report an item below a shaken or motion blurred clip as occluded ([d8dc51e](https://github.com/AlexGalhardo/stuarty/commit/d8dc51eb7e2f846191e4410910e8d0617ae4e514))
+- **ingest:** Keep the alpha in the posters of an image ([71887a1](https://github.com/AlexGalhardo/stuarty/commit/71887a1c4d594322ab504e875c9cec4d6308654f))
+- **plan:** Process the sound of an item inside a composition in the preview ([4fa67c2](https://github.com/AlexGalhardo/stuarty/commit/4fa67c2323e397478757a4b1fffb37bd4d641a3b))
+- **engine:** Refuse lut lines longer than the documented 512 bytes ([40755d9](https://github.com/AlexGalhardo/stuarty/commit/40755d95e8147147c1a351d94e43d0f0048eddd2))
+- **web:** Show transform, transitions and audio in the composition inspector ([7c14947](https://github.com/AlexGalhardo/stuarty/commit/7c14947e42dd8b74af8019f2a19900b545b1383c))
+- **cli:** Stuarty mcp takes its address from host and port like serve ([f00c92a](https://github.com/AlexGalhardo/stuarty/commit/f00c92a24c1dd108bbf608309afc724eec01daea))
+- **mcp:** Name the kind of production of the briefing apart from the item kind ([5757854](https://github.com/AlexGalhardo/stuarty/commit/5757854bbaafee09a20e256cce314cde06a29bd3))
+
+### Security
+
+- **security:** Accept three-digit threat ids from t-100 in the threat check ([7c395a2](https://github.com/AlexGalhardo/stuarty/commit/7c395a2a133f7d8fcc6a92f380a7f9c4f39a5449))
+- **security:** Refuse padded threat ids and report misnamed security tests ([11246c8](https://github.com/AlexGalhardo/stuarty/commit/11246c825001e127a478e1479c12151ce3404ece))
+- **security:** Run the blog threat rows with the whole suite ([8e57f41](https://github.com/AlexGalhardo/stuarty/commit/8e57f41debf4a54809d7f01b2a546041f46f6bc4))
+- **security:** Prove a shared image template is read only and shows nothing else ([9e9c279](https://github.com/AlexGalhardo/stuarty/commit/9e9c279ab79c6162c27dcc5cf16165110dddf707))
 ## [0.39.0] - 2026-11-20
 
 ### Added
@@ -1910,7 +1967,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.39.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.40.0...HEAD
+[0.40.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.39.0...v0.40.0
 [0.39.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.38.0...v0.39.0
 [0.38.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.37.0...v0.38.0
 [0.37.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.36.0...v0.37.0
