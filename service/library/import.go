@@ -235,8 +235,8 @@ func isJunk(name string) bool {
 	return name == junkDir || strings.HasPrefix(name, junkDir+"/") || path.Base(name) == ".DS_Store"
 }
 
-func readZip(f *os.File, size int64) ([]core.File, error) {
-	zr, err := zip.NewReader(f, size)
+func readZip(r io.ReaderAt, size int64) ([]core.File, error) {
+	zr, err := zip.NewReader(r, size)
 	if err != nil {
 		return nil, invalid("source", "the archive cannot be read as a .zip")
 	}

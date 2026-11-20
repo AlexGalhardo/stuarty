@@ -24,6 +24,7 @@ targets=(
 	"./core/otio FuzzImport"
 	"./core/library FuzzParseFrontMatter"
 	"./core/library FuzzParseSkill"
+	"./service/library FuzzSkillArchive"
 	"./engine/ffmpeg FuzzSniffMedia"
 	"./engine/ffmpeg FuzzFFArgsCheck"
 	"./engine/ingest FuzzChunkIndex"
