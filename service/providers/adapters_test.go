@@ -12,6 +12,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/connections/connectionstest"
 	"github.com/AlexGalhardo/stuarty/service/providers"
 	"github.com/AlexGalhardo/stuarty/service/providers/anthropic"
+	"github.com/AlexGalhardo/stuarty/service/providers/google"
 	"github.com/AlexGalhardo/stuarty/service/providers/openai"
 	"github.com/AlexGalhardo/stuarty/service/providers/openrouter"
 	"github.com/AlexGalhardo/stuarty/service/providers/providertest"
@@ -20,7 +21,7 @@ import (
 // adapters is the one list of the adapters of a build: a provider is added with one line here, the
 // same line the owner has (web/app/owner).
 func adapters() []providers.Provider {
-	return []providers.Provider{openai.New(), anthropic.New(), openrouter.New()}
+	return []providers.Provider{openai.New(), anthropic.New(), openrouter.New(), google.New()}
 }
 
 func TestBothAdaptersServeThroughTheRegistry(t *testing.T) {
@@ -48,7 +49,7 @@ func TestBothAdaptersServeThroughTheRegistry(t *testing.T) {
 		ids = append(ids, d.ID)
 	}
 
-	if !slices.Equal(ids, []string{"anthropic", "openai", "openrouter"}) {
+	if !slices.Equal(ids, []string{"anthropic", "google", "openai", "openrouter"}) {
 		t.Fatalf("got %v", ids)
 	}
 

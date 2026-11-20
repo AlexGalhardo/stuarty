@@ -37,7 +37,7 @@ A creator asks for a few seconds of generated footage, from a prompt or from one
 - [x] 1. Propose the provider (API, pricing source, terms, limits); STOP for approval. Verify: the approval is in the hand-off. Decided by the author (D-105): Google through the Gemini API with the user's own API key; SDD-016 section 2.3 has the API, the pricing source, the terms and the limits, and says that the model is `gemini-omni-1.2-flash` because Google shut down the Veo 3.1 preview models on 2026-10-22.
 - [x] 2. Amend SDD-016 and SDD-000. Verify: `task lint:md` exits 0.
 - [x] 3. Implement validation and estimation with table tests. Verify: `go test ./core/provider/...` passes.
-- [ ] 4. Implement the adapter with contract tests from recorded responses (submit, pending, done, failed, refused). Verify: `go test ./service/providers/...` passes with no network.
+- [x] 4. Implement the adapter with contract tests from recorded responses (submit, pending, done, failed, refused). Verify: `go test ./service/providers/...` passes with no network.
 - [x] 5. Implement the job with resume after restart and cancellation. Verify: `go test ./service/... -run TestVideoGenerate` passes, including the restart test that counts one submission.
 - [ ] 6. Expose on HTTP, CLI and MCP; add the video tab to the dialog. Verify: `go test ./web/contract/...`, `task test:web` and `web/e2e/specs/generate-video.spec.ts` pass against a fake provider.
 

@@ -1,0 +1,1 @@
+{"id":"v1_task0001","object":"interaction","status":"failed","steps":[],"errors":[{"code":"safety_blocked","message":"The prompt was blocked."}]}
