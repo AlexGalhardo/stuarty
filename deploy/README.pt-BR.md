@@ -29,7 +29,8 @@ A que o pacote se conecta:
 - O Caddy pede o certificado do seu domínio a uma autoridade certificadora e o renova. É a única
   conexão de saída que o próprio pacote precisa.
 - Construir a imagem baixa as imagens base, os pacotes Go e JavaScript e o FFmpeg fixado. Acontece na
-  instalação e na atualização, no servidor.
+  instalação, na atualização e na restauração em um servidor novo, no servidor. A imagem do Stuarty nunca é
+  procurada em um registro.
 - `update.sh` consulta o repositório git de onde você clonou para ver as tags novas.
 - O Stuarty em si não abre nenhuma conexão de saída até você conectar uma conta ou um provedor.
 
@@ -65,7 +66,7 @@ tag anterior, restaura o backup e sobe a imagem anterior. O que a versão que fa
 `replaced-<hora>/` do volume. O código de saída é 0 para uma atualização concluída, 1 para uma revertida e 2
 quando até a reversão falhou: a mensagem diz qual backup restaurar à mão.
 
-Leia o [changelog](/changelog) antes. Um workspace migrado por uma versão mais nova não abre em uma mais
+Leia o [changelog](../CHANGELOG.md) antes. Um workspace migrado por uma versão mais nova não abre em uma mais
 antiga, e por isso o backup vem primeiro.
 
 ### Fazer backup
@@ -74,7 +75,8 @@ antiga, e por isso o backup vem primeiro.
 bash deploy/backup.sh
 ```
 
-Grava `deploy/backups/stuarty-backup-<hora>.tar` e o `.sha256` dele. O servidor continua rodando: o banco é
+Grava `deploy/backups/stuarty-backup-<hora>.tar` e o `.sha256` dele, legíveis só pelo seu usuário (modo
+0600). O servidor continua rodando: o banco é
 copiado pelo backup online do SQLite, nunca como um arquivo bruto de um banco em escrita. O backup tem o
 banco, seus arquivos originais, a biblioteca (memória, prompts e skills), as fontes, a tabela de preços dos
 provedores e o cofre. Ficam de fora o que é refeito ou não é dado: exportações, proxies e quadros, logs,
