@@ -91,27 +91,25 @@ async function fakeNetwork(): Promise<FakeNetwork> {
 			})();
 		},
 	);
-	const deadline = Date.now() + 120_000;
-	for (;;) {
-		try {
-			await new Promise<void>((resolve, reject) => {
-				server.once("error", reject);
-				server.listen(SOCIAL_PORT, "127.0.0.1", () => {
-					server.off("error", reject);
-					resolve();
-				});
-			});
-			break;
-		} catch (error) {
-			if (
-				(error as NodeJS.ErrnoException).code !== "EADDRINUSE" ||
-				Date.now() > deadline
-			) {
-				throw error;
-			}
-			await new Promise((resolve) => setTimeout(resolve, 500));
-		}
-	}
+	// Another spec of the suite may hold the port for a while (the server of the suite knows one address), so
+	// the port is asked for until it is free.
+	await expect
+		.poll(
+			() =>
+				new Promise<boolean>((resolve, reject) => {
+					const failed = (error: NodeJS.ErrnoException): void => {
+						if (error.code === "EADDRINUSE") resolve(false);
+						else reject(error);
+					};
+					server.once("error", failed);
+					server.listen(SOCIAL_PORT, "127.0.0.1", () => {
+						server.off("error", failed);
+						resolve(true);
+					});
+				}),
+			{ timeout: 120_000, intervals: [500] },
+		)
+		.toBe(true);
 	return {
 		received,
 		uploads: () => received.filter((r) => r === "POST /videos").length,
