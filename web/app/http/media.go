@@ -52,6 +52,12 @@ type mediaFileIn struct {
 	AssetID string `json:"asset_id" validate:"required"`
 }
 
+type audioPreviewIn struct {
+	ID   string `json:"id"             validate:"required"`
+	Key  string `json:"key"            validate:"required"`
+	From string `json:"from,omitempty"                     doc:"A frame of the file, counted from its first: the 2 seconds from it are rendered first, as a window."`
+}
+
 type thumbnailIn struct {
 	ID      string `json:"id"              validate:"required"`
 	AssetID string `json:"asset_id"        validate:"required"`
@@ -214,8 +220,24 @@ func (h *apiHandler) serveAsset(c *web.Ctx, kind, projectID, assetID, variant st
 	}
 
 	hd := c.Writer().Header()
+
+	// A file that is still being made (the processed sound of the preview, SDD-003 section 6.5): not a file, not cached.
+	if f.Pending {
+		hd.Set("Content-Type", "application/json")
+		hd.Set("Cache-Control", "no-store")
+		hd.Set("Retry-After", "1")
+		c.Writer().WriteHeader(http.StatusAccepted)
+		_, _ = c.Writer().WriteString(`{"state":"processing"}`)
+
+		return noIn{}, nil
+	}
+
 	hd.Set("Content-Type", f.ContentType)
 	hd.Set("ETag", f.ETag)
+
+	for name, value := range f.Header {
+		hd.Set(name, value)
+	}
 
 	maxAge := f.MaxAge
 	if maxAge <= 0 {

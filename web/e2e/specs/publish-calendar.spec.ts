@@ -257,7 +257,11 @@ test.describe("publishing calendar @chromium-only", () => {
 			await expect(dialog).toHaveCount(0);
 
 			// The post is on today's cell of the calendar, in words as well as in colour.
-			const chip = page.getByTestId("target-chip");
+			// Only the chip of this post: other specs (x-tiktok) plan publications in the same workspace at the
+			// same time.
+			const chip = page
+				.getByTestId("target-chip")
+				.filter({ hasText: "Calendar post" });
 			await expect(chip).toHaveCount(1);
 			await expect(chip).toContainText("Calendar post");
 			await expect(chip).toContainText("Waiting for approval");
@@ -283,7 +287,7 @@ test.describe("publishing calendar @chromium-only", () => {
 			expect(network.uploads()).toBe(0);
 
 			await page.goto("/publish");
-			await expect(page.getByTestId("target-chip")).toContainText("Scheduled");
+			await expect(chip).toContainText("Scheduled");
 
 			// At its time the scheduler sends it, once.
 			await expect
@@ -293,11 +297,13 @@ test.describe("publishing calendar @chromium-only", () => {
 				.toBe("published");
 			expect(network.uploads()).toBe(1);
 
-			await expect(page.getByTestId("target-chip")).toContainText("Published", {
+			await expect(chip).toContainText("Published", {
 				timeout: 30_000,
 			});
 			await page.getByTestId("publish-mode-list").click();
-			const row = page.getByTestId("publish-row");
+			const row = page.locator(
+				`[data-testid="publish-row"][data-target-id="${pub?.targets[0]?.id}"]`,
+			);
 			await expect(row).toHaveCount(1);
 			await expect(row.getByTestId("target-url")).toHaveAttribute(
 				"href",
@@ -410,5 +416,130 @@ test.describe("publishing calendar @chromium-only", () => {
 		await expect(
 			page.getByTestId("publish-filter-state").locator("option").first(),
 		).toHaveText("Todos");
+	});
+
+	// Epic 21 (SDD-012 section 21.3 item 7): in the desktop shell, the first post a person schedules brings the
+	// question about the background mode, and only the first. The shell is faked by a bridge that keeps the answer
+	// and counts how often the page read it. It runs last: the list of the first test counts the publications.
+	test("in the desktop shell the first schedule asks about the background mode, once", async ({
+		page,
+		request,
+	}) => {
+		const network = await fakeNetwork();
+		const made: Publication[] = [];
+		const api = await caller(request);
+		try {
+			await page.addInitScript(() => {
+				const w = window as unknown as Record<string, unknown>;
+				let held = {
+					keep_running: false,
+					start_at_sign_in: false,
+					asked: false,
+				};
+				const sent: unknown[] = [];
+				let reads = 0;
+				w.__background = { sent, reads: () => reads };
+				w.vukemDesktop = {
+					getBackground: () => {
+						reads += 1;
+						return Promise.resolve({ ...held });
+					},
+					setBackground: (s: typeof held) => {
+						sent.push(s);
+						held = { ...s };
+						return Promise.resolve({ ...held });
+					},
+				};
+			});
+			const shell = (): Promise<{ sent: unknown[]; reads: number }> =>
+				page.evaluate(() => {
+					const b = (
+						window as unknown as {
+							__background: { sent: unknown[]; reads(): number };
+						}
+					).__background;
+					return { sent: b.sent, reads: b.reads() };
+				});
+
+			await signInAsPerson(page);
+			await connectAccount(page);
+			const project = (await api("POST", "/projects", {
+				name: "Calendar background",
+				preset: "9:16",
+			})) as { project_id: string };
+			const exportJob = seedExport(project.project_id);
+			const accounts = (await api("GET", "/social/accounts")) as {
+				accounts: { connection_id: string }[];
+			};
+			const at = new Date();
+			at.setDate(at.getDate() + 5);
+			at.setHours(10, 0, 0, 0);
+			const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+			for (const title of ["Background first", "Background second"]) {
+				made.push(
+					(await api("POST", "/publications", {
+						project_id: project.project_id,
+						title,
+						export: exportJob,
+						targets: [
+							{
+								connection_id: accounts.accounts[0]?.connection_id,
+								at: localField(at),
+								zone,
+								fields: { made_for_kids: false },
+							},
+						],
+					})) as Publication,
+				);
+			}
+
+			await page.goto("/publish");
+			await page.getByTestId("publish-mode-list").click();
+			const editor = page.getByTestId("publication-editor");
+			const schedule = async (publication: Publication): Promise<void> => {
+				await page
+					.locator(
+						`[data-testid="publish-row"][data-target-id="${publication.targets[0]?.id}"]`,
+					)
+					.getByRole("button", { name: "Open" })
+					.click();
+				const panel = editor.getByTestId("target-panel");
+				await panel.getByTestId("target-schedule").click();
+				await expect(panel.getByTestId("target-state")).toHaveText(
+					"Waiting for approval",
+				);
+			};
+
+			const [first, second] = made;
+			if (first === undefined || second === undefined)
+				throw new Error("no posts");
+			await schedule(first);
+			const ask = page.getByTestId("background-ask");
+			await expect(ask).toBeVisible();
+			await expect(ask).toContainText(
+				"only if the computer is on and you are signed in",
+			);
+			await expect(ask).toContainText("waits for your decision");
+			await ask.getByTestId("background-ask-yes").click();
+			await expect(ask).toHaveCount(0);
+			expect((await shell()).sent).toEqual([
+				{ keep_running: true, start_at_sign_in: false, asked: true },
+			]);
+			await page.keyboard.press("Escape");
+			await expect(editor).toHaveCount(0);
+
+			// Answered once, the next schedule reads the answer and asks nothing.
+			await schedule(second);
+			await expect.poll(async () => (await shell()).reads).toBe(2);
+			await expect(ask).toHaveCount(0);
+			expect((await shell()).sent).toHaveLength(1);
+			expect(network.uploads()).toBe(0);
+		} finally {
+			// The posts wait for an approval nobody gives: cancelled, they leave the queue.
+			for (const publication of made) {
+				await api("POST", `/publications/${publication.id}/cancel`, {});
+			}
+			await cleanUp(request, network);
+		}
 	});
 });

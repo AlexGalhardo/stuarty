@@ -22,15 +22,18 @@ const (
 	TargetScheduled       TargetState = "scheduled"
 	TargetPublishing      TargetState = "publishing"
 	TargetPublished       TargetState = "published"
-	TargetFailed          TargetState = "failed"
-	TargetMissed          TargetState = "missed"
-	TargetCancelled       TargetState = "cancelled"
+	// TargetSentAsDraft is a post the network took as a draft in the person's own app, to be finished and
+	// published there (SDD-020 section 38). It is final and it is not published.
+	TargetSentAsDraft TargetState = "sent_as_draft"
+	TargetFailed      TargetState = "failed"
+	TargetMissed      TargetState = "missed"
+	TargetCancelled   TargetState = "cancelled"
 )
 
 // TargetStates lists every state of a target.
 var TargetStates = []TargetState{
 	TargetDraft, TargetWaitingApproval, TargetApproved, TargetScheduled, TargetPublishing, TargetPublished,
-	TargetFailed, TargetMissed, TargetCancelled,
+	TargetSentAsDraft, TargetFailed, TargetMissed, TargetCancelled,
 }
 
 var targetMoves = map[TargetState][]TargetState{
@@ -45,7 +48,7 @@ var targetMoves = map[TargetState][]TargetState{
 	},
 	TargetApproved:   {TargetPublishing, TargetMissed, TargetWaitingApproval, TargetCancelled},
 	TargetScheduled:  {TargetPublishing, TargetMissed, TargetWaitingApproval, TargetCancelled},
-	TargetPublishing: {TargetPublished, TargetFailed, TargetScheduled},
+	TargetPublishing: {TargetPublished, TargetSentAsDraft, TargetFailed, TargetScheduled},
 	TargetFailed:     {TargetWaitingApproval, TargetCancelled},
 	TargetMissed:     {TargetWaitingApproval, TargetCancelled},
 }
@@ -54,7 +57,9 @@ var targetMoves = map[TargetState][]TargetState{
 func CanTarget(from, to TargetState) bool { return slices.Contains(targetMoves[from], to) }
 
 // Final says whether a state is the end of a target.
-func (s TargetState) Final() bool { return s == TargetPublished || s == TargetCancelled }
+func (s TargetState) Final() bool {
+	return s == TargetPublished || s == TargetSentAsDraft || s == TargetCancelled
+}
 
 // Waiting says whether a person's yes was asked or given and the post has not gone yet: editing such a
 // target makes it another post, so it goes back to waiting_approval (SDD-020 section 24).
@@ -63,7 +68,9 @@ func (s TargetState) Waiting() bool {
 }
 
 // Editable says whether the fields of a target may change.
-func (s TargetState) Editable() bool { return s != TargetPublishing && s != TargetPublished }
+func (s TargetState) Editable() bool {
+	return s != TargetPublishing && s != TargetPublished && s != TargetSentAsDraft
+}
 
 // The statuses a publication shows in the overview of its project (core/project, SDD-020 section 23).
 const (

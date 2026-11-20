@@ -35,7 +35,8 @@ func TestPublicationsTablesCascadeAndCheck(t *testing.T) {
 	}
 
 	for _, s := range []string{
-		"draft", "waiting_approval", "approved", "scheduled", "publishing", "published", "failed", "missed", "cancelled",
+		"draft", "waiting_approval", "approved", "scheduled", "publishing", "published", "sent_as_draft", "failed",
+		"missed", "cancelled",
 	} {
 		if _, err := db.ExecContext(ctx, `UPDATE publication_targets SET state = ? WHERE id = 'tgt_a'`, s); err != nil {
 			t.Errorf("state %s: %v", s, err)
@@ -54,6 +55,79 @@ func TestPublicationsTablesCascadeAndCheck(t *testing.T) {
 		`SELECT count(*) FROM publication_targets`,
 	); n != 0 {
 		t.Errorf("rows left after the project went: %d", n)
+	}
+}
+
+// The migration that adds sent_as_draft keeps every row and every index, and its down turns a draft back into
+// a published target, since the older table has no such state (SDD-005 section 5.15).
+func TestSentAsDraftMigrationKeepsRowsAndIndexesBothWays(t *testing.T) {
+	db := openMigrated(t)
+	ctx := context.Background()
+
+	execAll(
+		t,
+		db,
+		`INSERT INTO projects (id, name, created_ms, updated_ms, created_by) VALUES ('prj_a', 'a', 1, 1, 'u')`,
+		`INSERT INTO publications (id, project_id, title, export_job, created_ms, updated_ms, created_by)
+ VALUES ('pub_a', 'prj_a', 't', 'job_1', 1, 1, 'u')`,
+		`INSERT INTO publication_targets (id, publication_id, position, connection_id, network, fields, state, remote_id, created_ms, updated_ms)
+ VALUES ('tgt_a', 'pub_a', 0, 'con_1', 'tiktok', '{}', 'sent_as_draft', 'v_inbox_file~v2.1', 1, 1),
+        ('tgt_b', 'pub_a', 1, 'con_1', 'x', '{}', 'published', '1234', 1, 1)`,
+	)
+
+	for _, idx := range []string{
+		"publication_targets_publication_id_index", "publication_targets_state_scheduled_ms_index",
+		"publication_targets_approval_id_index",
+	} {
+		if n := count(t, db, `SELECT count(*) FROM sqlite_master WHERE type = 'index' AND name = '`+idx+`'`); n != 1 {
+			t.Errorf("the index %s is gone", idx)
+		}
+	}
+
+	m, err := newMigrator(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for {
+		step, rerr := m.Rollback(ctx, 1)
+		if rerr != nil || len(step) != 1 {
+			t.Fatalf("Rollback = %v, %v", step, rerr)
+		}
+
+		if step[0] == "20261120100000_publication_targets_sent_as_draft" {
+			break
+		}
+	}
+
+	if n := count(t, db, `SELECT count(*) FROM publication_targets WHERE state = 'published'`); n != 2 {
+		t.Errorf("after the down %d targets are published, want 2 (the draft is published again)", n)
+	}
+
+	if _, err := db.ExecContext(
+		ctx,
+		`UPDATE publication_targets SET state = 'sent_as_draft' WHERE id = 'tgt_a'`,
+	); err == nil {
+		t.Error("the older table accepted sent_as_draft")
+	}
+
+	if n := count(
+		t,
+		db,
+		`SELECT count(*) FROM sqlite_master WHERE type = 'index' AND name LIKE 'publication_targets_%'`,
+	); n != 3 {
+		t.Errorf("after the down %d indexes are left, want 3", n)
+	}
+
+	if _, err := m.Up(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := db.ExecContext(
+		ctx,
+		`UPDATE publication_targets SET state = 'sent_as_draft' WHERE id = 'tgt_a'`,
+	); err != nil {
+		t.Errorf("after the up again: %v", err)
 	}
 }
 

@@ -33,12 +33,12 @@ A creator removes the background of a photo, or asks for a generated background 
 
 ## Tasks
 
-- [ ] 1. Confirm the provider offers background removal through its official API, with pricing and terms; if a new provider is needed, STOP for approval. Verify: the decision is in the hand-off.
-- [ ] 2. Amend SDD-016 and SDD-021. Verify: `task lint:md` exits 0.
-- [ ] 3. Implement the capability and the adapter method with contract fixtures. Verify: `go test ./service/providers/...` passes with no network.
-- [ ] 4. Implement `image.edit` and `layer.replace_source` with golden cases. Verify: `go test ./core/image/... ./service/... -run "TestReplaceSource|TestImageEdit"` passes.
-- [ ] 5. Expose on the three surfaces. Verify: `go test ./web/contract/...` passes.
-- [ ] 6. Add the two toolbar actions in both languages. Verify: `task test:web` and `web/e2e/specs/image-model-ops.spec.ts` pass with a fake provider.
+- [x] 1. Confirm the provider offers background removal through its official API, with pricing and terms; if a new provider is needed, STOP for approval. Verify: the decision is in the hand-off.
+- [x] 2. Amend SDD-016 and SDD-021. Verify: `task lint:md` exits 0.
+- [x] 3. Implement the capability and the adapter method with contract fixtures. Verify: `go test ./service/providers/...` passes with no network.
+- [x] 4. Implement `image.edit` and `layer.replace_source` with golden cases. Verify: `go test ./core/image/... ./service/... -run "TestReplaceSource|TestImageEdit"` passes.
+- [x] 5. Expose on the three surfaces. Verify: `go test ./web/contract/...` passes.
+- [x] 6. Add the two toolbar actions in both languages. Verify: `task test:web` and `web/e2e/specs/image-model-ops.spec.ts` pass with a fake provider.
 
 ## Test strategy
 

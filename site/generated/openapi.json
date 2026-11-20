@@ -1468,6 +1468,9 @@
           "ai_disclosure": {
             "type": "boolean"
           },
+          "draft": {
+            "type": "boolean"
+          },
           "endpoint": {
             "type": "string"
           },
@@ -1504,6 +1507,16 @@
           "post_cost_micros": {
             "format": "int64",
             "type": "integer"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Price"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "publishes": {
             "items": {
@@ -2358,6 +2371,16 @@
           "delivered": {
             "type": "integer"
           },
+          "image": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ImageApplied"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "items": {
             "items": {
               "$ref": "#/components/schemas/GeneratedItem"
@@ -2649,6 +2672,24 @@
         },
         "type": "object"
       },
+      "ImageApplied": {
+        "properties": {
+          "applied": {
+            "type": "boolean"
+          },
+          "image_id": {
+            "type": "string"
+          },
+          "layer_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "ImageCreateResult": {
         "properties": {
           "height": {
@@ -2882,6 +2923,68 @@
           },
           "revision": {
             "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ImageImportResult": {
+        "properties": {
+          "applied": {
+            "type": "boolean"
+          },
+          "created": {
+            "type": "boolean"
+          },
+          "dry_run": {
+            "type": "boolean"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "type": "array"
+          },
+          "hash": {
+            "type": "string"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "image_id": {
+            "type": "string"
+          },
+          "job_id": {
+            "type": "string"
+          },
+          "layer_id": {
+            "type": "string"
+          },
+          "lint": {
+            "$ref": "#/components/schemas/LintTotals"
+          },
+          "name": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "replayed": {
+            "type": "boolean"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "width": {
             "type": "integer"
           }
         },
@@ -4254,6 +4357,9 @@
           "caption_max": {
             "type": "integer"
           },
+          "caption_network": {
+            "type": "string"
+          },
           "daily_posts": {
             "type": "integer"
           },
@@ -4277,6 +4383,9 @@
             "type": "integer"
           },
           "needs_kids_declaration": {
+            "type": "boolean"
+          },
+          "no_caption": {
             "type": "boolean"
           },
           "preset": {
@@ -4818,7 +4927,7 @@
           "price": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/Price"
+                "$ref": "#/components/schemas/provider.Price"
               },
               {
                 "type": "null"
@@ -5661,20 +5770,22 @@
           "currency": {
             "type": "string"
           },
-          "input_micros_per_mtok": {
-            "format": "int64",
-            "type": "integer"
-          },
-          "output_micros_per_mtok": {
-            "format": "int64",
-            "type": "integer"
-          },
-          "unit": {
+          "edited": {
             "type": "string"
           },
-          "unit_micros": {
+          "link_micros": {
             "format": "int64",
             "type": "integer"
+          },
+          "post_micros": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "read": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -5857,6 +5968,20 @@
           },
           "type": {
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ProcessedAudio": {
+        "properties": {
+          "frames": {
+            "type": "integer"
+          },
+          "key": {
+            "type": "string"
+          },
+          "start": {
+            "type": "integer"
           }
         },
         "type": "object"
@@ -7384,6 +7509,16 @@
           "network": {
             "type": "string"
           },
+          "price": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Price"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "state": {
             "type": "string"
           }
@@ -8646,6 +8781,16 @@
           },
           "last": {
             "type": "integer"
+          },
+          "processed": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProcessedAudio"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "reverse": {
             "type": "boolean"
@@ -13896,6 +14041,42 @@
         },
         "type": "object"
       },
+      "provider.Price": {
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "input_micros_per_mtok": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "output_micros_per_mtok": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "unit_micros": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "schedulerOut": {
+        "properties": {
+          "paused": {
+            "description": "Whether publishing is paused.",
+            "type": "boolean"
+          },
+          "scheduled": {
+            "description": "The targets that still have to go out: approved, scheduled and publishing.",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "userListOut": {
         "properties": {
           "users": {
@@ -16766,6 +16947,141 @@
         "summary": "Create an image document, blank or from a template"
       }
     },
+    "/api/v1/images/import": {
+      "post": {
+        "operationId": "images.import",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "base_revision": {
+                    "description": "With image_id: the revision the layer was planned against.",
+                    "format": "int64",
+                    "type": "integer"
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "hash": {
+                    "description": "sha256: and 64 hex characters: an image already in the workspace, instead of path.",
+                    "type": "string"
+                  },
+                  "height": {
+                    "description": "The canvas of a new document, with width.",
+                    "type": "integer"
+                  },
+                  "idempotency_key": {
+                    "description": "With image_id: 8 to 64 characters; the Idempotency-Key header is the same.",
+                    "type": "string"
+                  },
+                  "image_id": {
+                    "description": "Put the file in this document as one more layer; without it a new document is made.",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "The name of the new document, or of the layer when image_id is given; default the name of the file.",
+                    "type": "string"
+                  },
+                  "path": {
+                    "description": "An absolute path to an image file on the machine of the server, read with the rules of media:import.",
+                    "type": "string"
+                  },
+                  "preset": {
+                    "description": "The canvas of a new document: video_thumbnail, square_post or vertical_cover.",
+                    "type": "string"
+                  },
+                  "wait_ms": {
+                    "description": "How long to wait for the ingest of the file, 0 to 25000; default 10000.",
+                    "type": "integer"
+                  },
+                  "width": {
+                    "description": "The canvas of a new document, with height; default the size of the file when it fits 4096.",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageImportResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Import an image file into a new image document, or as a layer of one"
+      }
+    },
+    "/api/v1/images/import/file": {
+      "post": {
+        "operationId": "images.import_file",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageImportResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Import an image file sent as the body of the request into a new image document, or as a layer of one"
+      }
+    },
     "/api/v1/images/{id}": {
       "get": {
         "operationId": "images.get",
@@ -16910,6 +17226,56 @@
           }
         ],
         "summary": "Apply a batch of image operations"
+      }
+    },
+    "/api/v1/images/{id}/events": {
+      "get": {
+        "operationId": "images.events",
+        "parameters": [
+          {
+            "description": "The revision the client holds; Last-Event-ID wins.",
+            "in": "query",
+            "name": "since",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Stream the events of an image document"
       }
     },
     "/api/v1/images/{id}/export": {
@@ -17177,6 +17543,123 @@
           }
         ],
         "summary": "List the latest batches of an image document"
+      }
+    },
+    "/api/v1/images/{id}/model-edit": {
+      "post": {
+        "operationId": "images.model_edit",
+        "parameters": [
+          {
+            "description": "The image document, img_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "connection_id": {
+                    "description": "The connection to the provider: with the image_edit capability and accepting image for remove_background, with the image capability and accepting text for generate.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "dry_run": {
+                    "description": "true answers the job it would create, with its estimate, and writes and sends nothing.",
+                    "type": "boolean"
+                  },
+                  "layer_id": {
+                    "description": "remove_background: the image layer, required. generate: a layer whose box the new picture must cover; without it, the canvas.",
+                    "type": "string"
+                  },
+                  "model": {
+                    "description": "The model id, as provider:models lists it.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "operation": {
+                    "description": "remove_background (the picture of the layer is sent to the provider) or generate (only the prompt is sent).",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "project_id": {
+                    "description": "The project that holds the generated file and its cost, prj_ and 10 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "prompt": {
+                    "description": "generate only: what to draw, 1 to 4000 characters.",
+                    "type": "string"
+                  },
+                  "size": {
+                    "description": "generate only: width and height in pixels joined by x; the default is the size nearest to the box to cover.",
+                    "type": "string"
+                  },
+                  "wait_ms": {
+                    "description": "Wait up to this many milliseconds for the job to finish.",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "project_id",
+                  "connection_id",
+                  "operation",
+                  "model"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove the background of a layer, or generate an image into the document, with the provider of a connection; the job says that the picture is sent, waits for approval, shows its estimate and puts the result in the document as one undoable step"
       }
     },
     "/api/v1/images/{id}/redo": {
@@ -19285,6 +19768,65 @@
           }
         ],
         "summary": "Measure the sound with and without the audio processors"
+      }
+    },
+    "/api/v1/projects/{id}/audio-previews/{key}": {
+      "get": {
+        "operationId": "audio_previews.get",
+        "parameters": [
+          {
+            "description": "A frame of the file, counted from its first: the 2 seconds from it are rendered first, as a window.",
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Download the processed sound of an item, or start rendering it"
       }
     },
     "/api/v1/projects/{id}/bitmaps/{key}": {
@@ -24086,11 +24628,11 @@
                     "type": "string"
                   },
                   "unit": {
-                    "description": "Empty for a price of tokens, image for the price of one image, mchar for the price of a million characters of speech.",
+                    "description": "Empty for a price of tokens, image for the price of one image, mchar for the price of a million characters of speech, second for the price of one second of video.",
                     "type": "string"
                   },
                   "unit_micros": {
-                    "description": "With a unit of image or mchar: the price of one image or of a million characters, in millionths of the currency unit; the token prices stay out.",
+                    "description": "With a unit of image, mchar or second: the price of one image, of a million characters or of one second of video, in millionths of the currency unit; the token prices stay out.",
                     "format": "int64",
                     "type": [
                       "integer",
@@ -24345,7 +24887,7 @@
             }
           },
           {
-            "description": "Only publications with a target in this state: draft, waiting_approval, approved, scheduled, publishing, published, failed, missed or cancelled.",
+            "description": "Only publications with a target in this state: draft, waiting_approval, approved, scheduled, publishing, published, sent_as_draft, failed, missed or cancelled.",
             "in": "query",
             "name": "state",
             "schema": {
@@ -25592,6 +26134,84 @@
         "summary": "List the social networks of this build and their limits"
       }
     },
+    "/api/v1/social/price": {
+      "post": {
+        "operationId": "social.price",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "connection_id": {
+                    "description": "The connection of the network whose price is corrected.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "link_micros": {
+                    "description": "The price of a post with a link, in millionths of the currency: 200000 is $0.20.",
+                    "exclusiveMinimum": 0,
+                    "format": "int64",
+                    "type": "integer"
+                  },
+                  "post_micros": {
+                    "description": "The price of a post, in millionths of the currency: 15000 is $0.015.",
+                    "exclusiveMinimum": 0,
+                    "format": "int64",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "connection_id",
+                  "post_micros",
+                  "link_micros"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialAccount"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Correct the price of a post on a network that charges for one (a person in the browser only)"
+      }
+    },
     "/api/v1/social/select": {
       "post": {
         "operationId": "social.select",
@@ -25751,6 +26371,75 @@
           }
         ],
         "summary": "Issue a one-time browser launch code"
+      }
+    },
+    "/api/v1/system/scheduler": {
+      "post": {
+        "operationId": "system.scheduler",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "action": {
+                    "description": "status, pause or resume.",
+                    "enum": [
+                      "status",
+                      "pause",
+                      "resume"
+                    ],
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "action"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/schedulerOut"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read, pause or resume the publication scheduler (pause and resume only for the desktop shell)"
       }
     },
     "/api/v1/system/tools": {
@@ -26727,6 +27416,108 @@
           }
         ],
         "summary": "Change the role of a user or disable or enable them (an administrator session only; network mode)"
+      }
+    },
+    "/api/v1/video/generate": {
+      "post": {
+        "operationId": "video.generate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "aspect": {
+                    "description": "16:9 (the default), 9:16, 1:1, 4:3 or 3:4. The model may make only some.",
+                    "type": "string"
+                  },
+                  "connection_id": {
+                    "description": "The connection to the provider that makes the clip.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "dry_run": {
+                    "description": "true answers the job it would create, with its estimate, and writes and sends nothing.",
+                    "type": "boolean"
+                  },
+                  "first_frame": {
+                    "description": "The id of an image asset of the project the clip starts from; it is sent to the provider after approval.",
+                    "type": "string"
+                  },
+                  "model": {
+                    "description": "The model id, as provider:models lists it.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "project_id": {
+                    "description": "The project the clip belongs to, prj_ and 10 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "prompt": {
+                    "description": "What the clip shows, 1 to 4000 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "seconds": {
+                    "description": "The length of the clip in seconds, 1 to 60; the default is 5. The model may make only some lengths.",
+                    "type": "integer"
+                  },
+                  "wait_ms": {
+                    "description": "Wait up to this many milliseconds for the job to finish.",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "project_id",
+                  "connection_id",
+                  "model",
+                  "prompt"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start a video generation with the provider of a connection; the job waits for a person unless a rule the user wrote covers it, shows its estimate and stores the clip as an asset with its origin"
       }
     },
     "/api/v1/voice/generate": {

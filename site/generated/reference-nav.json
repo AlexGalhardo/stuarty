@@ -8,6 +8,7 @@
         "projects.create",
         "projects.get",
         "audio.measure",
+        "audio_previews.get",
         "bitmaps.get",
         "projects.brief.get",
         "projects.brief.set",
@@ -176,6 +177,7 @@
         "providers.signin.begin",
         "providers.signin.complete",
         "text.generate",
+        "video.generate",
         "voice.generate"
       ]
     },
@@ -186,12 +188,16 @@
         "images.create",
         "images.get",
         "images.edit",
+        "images.events",
         "images.export",
         "images.file",
         "images.frame",
         "images.history",
+        "images.model_edit",
         "images.redo",
-        "images.undo"
+        "images.undo",
+        "images.import",
+        "images.import_file"
       ]
     },
     {
@@ -227,6 +233,7 @@
         "social.complete",
         "social.connect",
         "social.networks",
+        "social.price",
         "social.select"
       ]
     },
@@ -253,6 +260,7 @@
         "handshake.get",
         "system.get",
         "system.launch",
+        "system.scheduler",
         "system.tools",
         "system.tools.install"
       ]

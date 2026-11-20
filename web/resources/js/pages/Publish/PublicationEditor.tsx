@@ -17,10 +17,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatDateTime } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
 import type { ProjectSummary } from "@/types";
+import { formatMoney } from "../../dashboard/approval/money";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
 import type { Job, SocialAccount, SocialNetwork } from "../../editor/api/types";
 import type { PublishApi } from "./api";
+import { useBackgroundAsk } from "./BackgroundAsk";
 import { browserZone } from "./calendar";
 import { TargetResult } from "./ListView";
 import { actionsOf } from "./publicationState";
@@ -137,6 +139,7 @@ function Preview({
 	visibility: string;
 }): ReactNode {
 	const t = useT();
+	const locale = useLocale();
 	const limits = network?.limits;
 	return (
 		<div
@@ -172,6 +175,32 @@ function Preview({
 			{tags.trim() !== "" && (
 				<p className="mt-1 text-xs">
 					<UntrustedText>{tags}</UntrustedText>
+				</p>
+			)}
+			{network?.price !== undefined && (
+				<p className="mt-2 text-xs" data-testid="target-price">
+					{t("ui.publish.price", {
+						post: formatMoney(
+							{
+								micros: network.price.post_micros,
+								currency: network.price.currency,
+							},
+							locale,
+						),
+						link: formatMoney(
+							{
+								micros: network.price.link_micros,
+								currency: network.price.currency,
+							},
+							locale,
+						),
+						date: network.price.edited ?? network.price.read,
+					})}
+				</p>
+			)}
+			{network?.draft === true && (
+				<p className="mt-2 text-xs" data-testid="target-draft-warning">
+					{t("ui.publish.draft_warning", { name: network.name })}
 				</p>
 			)}
 		</div>
@@ -225,6 +254,7 @@ export function PublicationEditor({
 	const [notes, setNotes] = useState<string[]>([]);
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [busy, setBusy] = useState(false);
+	const backgroundAsk = useBackgroundAsk();
 	const ready = accounts.filter((a) => a.state === "ready");
 	const isNew = current === null;
 
@@ -257,13 +287,15 @@ export function PublicationEditor({
 		onChanged();
 	}
 
-	async function run(action: () => Promise<Publication>): Promise<void> {
+	async function run(action: () => Promise<Publication>): Promise<boolean> {
 		setBusy(true);
 		setFailure(null);
 		try {
 			adopt(await action());
+			return true;
 		} catch (error) {
 			setFailure(failureOf(error));
+			return false;
 		} finally {
 			setBusy(false);
 		}
@@ -645,6 +677,8 @@ export function PublicationEditor({
 														zone: d.zone,
 														late_window_minutes: Number(d.late) || 0,
 													}),
+												).then((scheduled) =>
+													scheduled ? backgroundAsk.ask() : undefined,
 												)
 											}
 											onSendNow={() =>
@@ -707,6 +741,7 @@ export function PublicationEditor({
 						</Button>
 					</div>
 				</form>
+				{backgroundAsk.dialog}
 			</DialogContent>
 		</Dialog>
 	);

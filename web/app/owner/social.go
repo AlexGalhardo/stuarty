@@ -18,6 +18,8 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/social/fake"
 	"github.com/AlexGalhardo/stuarty/service/social/instagram"
 	"github.com/AlexGalhardo/stuarty/service/social/meta"
+	"github.com/AlexGalhardo/stuarty/service/social/tiktok"
+	"github.com/AlexGalhardo/stuarty/service/social/x"
 	"github.com/AlexGalhardo/stuarty/service/social/youtube"
 )
 
@@ -58,9 +60,9 @@ const EnvTestSocialURL = "STUARTY_TEST_SOCIAL_URL"
 // ErrTestSocial is the start-up refusal of STUARTY_TEST_SOCIAL_URL outside the test condition.
 var ErrTestSocial = errors.New("owner: test social network refused")
 
-// socialRegistry is the registry of the social network connectors of the build: YouTube, Instagram and
-// Facebook, and the fake network of the end-to-end suite when STUARTY_TEST_SOCIAL_URL is set (then Instagram
-// and Facebook also speak to that server alone, so the suite runs a whole Meta flow with no Meta account).
+// socialRegistry is the registry of the social network connectors of the build: YouTube, Instagram, Facebook,
+// X and TikTok, and the fake network of the end-to-end suite when STUARTY_TEST_SOCIAL_URL is set (then every
+// network but YouTube also speaks to that server alone, so the suite runs a whole flow with no account).
 // Adding a network is its package and one Register line here (acceptance criteria 5 of epics 18 and 19).
 func socialRegistry(getenv func(string) string, mode string) (*social.Registry, error) {
 	reg := social.NewRegistry()
@@ -75,8 +77,14 @@ func socialRegistry(getenv func(string) string, mode string) (*social.Registry, 
 		metaCfg = meta.AtBase(testBase)
 	}
 
+	xCfg, tiktokCfg := x.Config{}, tiktok.Config{}
+	if testBase != "" {
+		xCfg, tiktokCfg = x.AtBase(testBase), tiktok.AtBase(testBase)
+	}
+
 	for _, c := range []social.Connector{
-		youtube.New(youtube.Config{}), instagram.New(metaCfg), facebook.New(metaCfg),
+		youtube.New(youtube.Config{}), instagram.New(metaCfg), facebook.New(metaCfg), x.New(xCfg),
+		tiktok.New(tiktokCfg),
 	} {
 		if err := reg.Register(c); err != nil {
 			return nil, err
@@ -98,6 +106,10 @@ func testSocialBase(getenv func(string) string, mode string) (string, error) {
 	raw := strings.TrimSpace(getenv(EnvTestSocialURL))
 	if raw == "" {
 		return "", nil
+	}
+
+	if err := requireTestEnv(getenv, EnvTestSocialURL, ErrTestSocial); err != nil {
+		return "", err
 	}
 
 	if mode == config.ModeNetwork {

@@ -31,6 +31,9 @@ export const MAX_DISPLACEMENT = 1;
 // colour per channel, in levels of 255; the float shaders may differ by a rounding step.
 export const COLOUR_CASE = /^(lut-|grade-|color-keyframes)/;
 export const MAX_MEAN_COLOUR_DIFF = 4;
+// The nested projects of epic 52 (a composition drawn as a group, see
+// support/nested.ts): compared by SSIM and mean colour.
+export const GROUP_CASE = /^nested-/;
 // Below this much edge per pixel (see globalShift) the offset of the whole
 // picture is noise and the markers give the displacement instead.
 export const MIN_TEXTURE = 0.05;
@@ -585,7 +588,9 @@ export async function capture(
 	page: Page,
 	id: string,
 	frame: number,
-	timelineId?: string,
+	// A project with compositions has more than one timeline, and the frame
+	// route asks which: the project's own (its id).
+	ownTimeline = false,
 ): Promise<Capture> {
 	const canvas = page.getByRole("main", { name: "Preview" }).locator("canvas");
 	let previous: Buffer | null = null;
@@ -631,9 +636,9 @@ export async function capture(
 		.poll(
 			async () => {
 				const answer = await page.evaluate(
-					async ({ projectId, at, w, timeline }) => {
+					async ({ projectId, at, w, own }) => {
 						const response = await fetch(
-							`/api/v1/projects/${projectId}/frame?at=${at}f&width=${w}${timeline ? `&timeline_id=${timeline}` : ""}`,
+							`/api/v1/projects/${projectId}/frame?at=${at}f&width=${w}${own ? `&timeline_id=${projectId}` : ""}`,
 							{ headers: { Accept: "application/json" } },
 						);
 						if (response.status === 429) return { status: 429, image: "" };
@@ -645,7 +650,7 @@ export async function capture(
 						const body = (await response.json()) as { image_base64: string };
 						return { status: 200, image: body.image_base64 };
 					},
-					{ projectId: id, at: frame, w: width, timeline: timelineId },
+					{ projectId: id, at: frame, w: width, own: ownTimeline },
 				);
 				if (answer.status === 200) exportedBase64 = answer.image;
 				return answer.status;
@@ -803,14 +808,14 @@ export async function compareFrame(
 	id: string,
 	frame: number,
 	label: string,
-	timelineId?: string,
+	ownTimeline = false,
 ): Promise<void> {
 	const {
 		canvas,
 		frame: exported,
 		canvasPng,
 		frameJpeg,
-	} = await capture(page, id, frame, timelineId);
+	} = await capture(page, id, frame, ownTimeline);
 	const ssim = lumaSsim(canvas, exported);
 	if (ssim < MIN_SSIM) {
 		const videos = await page.evaluate(() =>
@@ -904,7 +909,7 @@ export async function compareFrame(
 	);
 	// SSIM on luma cannot see a missing lookup table or a wrong grade (the
 	// luma barely moves), so the colour cases also compare the mean colour.
-	if (COLOUR_CASE.test(name)) {
+	if (COLOUR_CASE.test(name) || GROUP_CASE.test(name)) {
 		for (let c = 0; c < 3; c++) {
 			expect
 				.soft(
@@ -920,8 +925,16 @@ export async function compareFrame(
 	expect
 		.soft(ssim, `${name} frame ${frame}: SSIM(luma)`)
 		.toBeGreaterThanOrEqual(MIN_SSIM);
+	// The nested projects are made of the smooth gradient clips: they have too
+	// little edge for the global shift (a texture of 0.002 to 0.01, under
+	// MIN_TEXTURE) and no red or blue marker, so the chroma centroids of the
+	// fallback move with the blend and the opacity and say nothing of where the
+	// group is. Their displacement is not measured: the SSIM and the mean colour
+	// hold the picture, and the group-picture case (support/nested.ts), a picture
+	// with edges in a group, measures the displacement of a group.
+	const moved = GROUP_CASE.test(name) ? 0 : shift.distance;
 	expect
-		.soft(shift.distance, `${name} frame ${frame}: picture displacement`)
+		.soft(moved, `${name} frame ${frame}: picture displacement`)
 		.toBeLessThanOrEqual(MAX_DISPLACEMENT);
 	for (const m of markers) {
 		expect
@@ -930,7 +943,7 @@ export async function compareFrame(
 	}
 	const missed =
 		ssim < MIN_SSIM ||
-		shift.distance > MAX_DISPLACEMENT ||
+		moved > MAX_DISPLACEMENT ||
 		markers.some((m) => m.distance > MAX_DISPLACEMENT);
 	if (missed) {
 		// Both sides and where they differ, so a failure shows which one is wrong.

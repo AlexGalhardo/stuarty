@@ -510,6 +510,11 @@ var Endpoints = []Endpoint{
 		Summary: "Choose the Page or Instagram account a sign-in reached (a person in the browser only)",
 	},
 	{
+		ID: "social.price", Method: http.MethodPost, Path: "/social/price", Scope: service.ScopeAdmin,
+		Service: "SocialPriceSet", Status: 200,
+		Summary: "Correct the price of a post on a network that charges for one (a person in the browser only)",
+	},
+	{
 		ID:      "publish.validate",
 		Method:  http.MethodPost,
 		Path:    "/publish/validate",
@@ -682,6 +687,24 @@ var Endpoints = []Endpoint{
 		Summary: "Start a speech generation with the provider of a connection; the job waits for approval, shows its estimate and stores the audio as an asset with its origin",
 	},
 	{
+		ID:      "images.model_edit",
+		Method:  http.MethodPost,
+		Path:    "/images/{id}/model-edit",
+		Scope:   service.ScopeEdit,
+		Service: "ImageModelEdit",
+		Status:  202,
+		Summary: "Remove the background of a layer, or generate an image into the document, with the provider of a connection; the job says that the picture is sent, waits for approval, shows its estimate and puts the result in the document as one undoable step",
+	},
+	{
+		ID:      "video.generate",
+		Method:  http.MethodPost,
+		Path:    "/video/generate",
+		Scope:   service.ScopeEdit,
+		Service: "VideoGenerate",
+		Status:  202,
+		Summary: "Start a video generation with the provider of a connection; the job waits for a person unless a rule the user wrote covers it, shows its estimate and stores the clip as an asset with its origin",
+	},
+	{
 		ID: "voice.list", Method: http.MethodGet, Path: "/connections/{id}/voices", Scope: service.ScopeRead,
 		Service: "VoiceList", Status: 200, Summary: "List the voices of the provider of a connection",
 	},
@@ -849,6 +872,11 @@ var Endpoints = []Endpoint{
 		ID: "bitmaps.get", Method: http.MethodGet, Path: "/projects/{id}/bitmaps/{key}", Scope: service.ScopeRead,
 		Uncounted: true, Status: 200, Summary: "Download a rasterized text or shape",
 	},
+	{
+		ID: "audio_previews.get", Method: http.MethodGet, Path: "/projects/{id}/audio-previews/{key}",
+		Scope: service.ScopeRead, Uncounted: true, Status: 200,
+		Summary: "Download the processed sound of an item, or start rendering it",
+	},
 
 	{
 		ID: "handshake.get", Method: http.MethodGet, Path: "/handshake", Status: 200,
@@ -857,6 +885,11 @@ var Endpoints = []Endpoint{
 	{
 		ID: "system.launch", Method: http.MethodPost, Path: "/system/launch", Scope: service.ScopeAdmin, Status: 200,
 		Summary: "Issue a one-time browser launch code",
+	},
+	{
+		ID: "system.scheduler", Method: http.MethodPost, Path: "/system/scheduler", Scope: service.ScopeAdmin,
+		Status:  200,
+		Summary: "Read, pause or resume the publication scheduler (pause and resume only for the desktop shell)",
 	},
 
 	{
@@ -985,6 +1018,16 @@ var Endpoints = []Endpoint{
 		ID: "images.export", Method: http.MethodPost, Path: "/images/{id}/export", Scope: service.ScopeEdit,
 		Service: "ImageExport", Status: 200, Summary: "Export an image document to a PNG, JPEG or WebP file",
 	},
+	{
+		ID: "images.import", Method: http.MethodPost, Path: "/images/import", Scope: service.ScopeEdit,
+		Service: "ImageImport", Status: 200,
+		Summary: "Import an image file into a new image document, or as a layer of one",
+	},
+	{
+		ID: "images.import_file", Method: http.MethodPost, Path: "/images/import/file", Scope: service.ScopeEdit,
+		Service: "ImageImportFile", Status: 200,
+		Summary: "Import an image file sent as the body of the request into a new image document, or as a layer of one",
+	},
 	// The reads of the image editor screen (SDD-012 section 24.3).
 	{
 		ID: "images.frame", Method: http.MethodGet, Path: "/images/{id}/frame", Scope: service.ScopeRead,
@@ -998,6 +1041,10 @@ var Endpoints = []Endpoint{
 	{
 		ID: "images.file", Method: http.MethodGet, Path: "/images/{id}/exports/{name}", Scope: service.ScopeRead,
 		Service: "ImageFile", Status: 200, Summary: "Download a file that an image export wrote",
+	},
+	{
+		ID: "images.events", Method: http.MethodGet, Path: "/images/{id}/events", Scope: service.ScopeRead,
+		Uncounted: true, Status: 200, Summary: "Stream the events of an image document",
 	},
 	{
 		ID: "agents.profiles.list", Method: http.MethodGet, Path: "/agents/profiles", Scope: service.ScopeRead,

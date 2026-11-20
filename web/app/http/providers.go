@@ -17,8 +17,8 @@ type providerPriceIn struct {
 	Currency            string `json:"currency,omitempty"                                   doc:"Three letters, for example USD; needed to set a price."`
 	InputMicrosPerMTok  *int64 `json:"input_micros_per_mtok,omitempty"                      doc:"The price of a million input tokens, in millionths of the currency unit. Leave both prices out to remove the entry."`
 	OutputMicrosPerMTok *int64 `json:"output_micros_per_mtok,omitempty"                     doc:"The price of a million output tokens, in millionths of the currency unit."`
-	Unit                string `json:"unit,omitempty"                                       doc:"Empty for a price of tokens, image for the price of one image, mchar for the price of a million characters of speech."`
-	UnitMicros          *int64 `json:"unit_micros,omitempty"                                doc:"With a unit of image or mchar: the price of one image or of a million characters, in millionths of the currency unit; the token prices stay out."`
+	Unit                string `json:"unit,omitempty"                                       doc:"Empty for a price of tokens, image for the price of one image, mchar for the price of a million characters of speech, second for the price of one second of video."`
+	UnitMicros          *int64 `json:"unit_micros,omitempty"                                doc:"With a unit of image, mchar or second: the price of one image, of a million characters or of one second of video, in millionths of the currency unit; the token prices stay out."`
 }
 
 type textGenerateIn struct {
@@ -86,6 +86,27 @@ type voiceGenerateIn struct {
 	DryRun       bool   `json:"dry_run,omitempty"                      doc:"true answers the job it would create, with its estimate, and writes and sends nothing."`
 }
 
+type videoGenerateIn struct {
+	ProjectID    string `json:"project_id"            validate:"required" doc:"The project the clip belongs to, prj_ and 10 characters."`
+	ConnectionID string `json:"connection_id"         validate:"required" doc:"The connection to the provider that makes the clip."`
+	Model        string `json:"model"                 validate:"required" doc:"The model id, as provider:models lists it."`
+	Prompt       string `json:"prompt"                validate:"required" doc:"What the clip shows, 1 to 4000 characters."`
+	Seconds      int    `json:"seconds,omitempty"                         doc:"The length of the clip in seconds, 1 to 60; the default is 5. The model may make only some lengths."`
+	Aspect       string `json:"aspect,omitempty"                          doc:"16:9 (the default), 9:16, 1:1, 4:3 or 3:4. The model may make only some."`
+	FirstFrame   string `json:"first_frame,omitempty"                     doc:"The id of an image asset of the project the clip starts from; it is sent to the provider after approval."`
+	WaitMS       int    `json:"wait_ms,omitempty"                         doc:"Wait up to this many milliseconds for the job to finish."`
+	DryRun       bool   `json:"dry_run,omitempty"                         doc:"true answers the job it would create, with its estimate, and writes and sends nothing."`
+}
+
+func (h *apiHandler) videoGenerate(c *web.Ctx, in videoGenerateIn) (service.Job, error) {
+	res, err := h.Service.VideoGenerate(c.Context(), service.VideoGenerateRequest{
+		ProjectID: in.ProjectID, ConnectionID: in.ConnectionID, WaitMS: in.WaitMS, DryRun: in.DryRun,
+		Model: in.Model, Prompt: in.Prompt, Seconds: in.Seconds, Aspect: in.Aspect, FirstFrame: in.FirstFrame,
+	})
+
+	return deref(res), err
+}
+
 type voiceListIn struct {
 	ID string `json:"id" validate:"required" doc:"The id of a connection to an AI provider, con_ and 10 characters."`
 }
@@ -110,6 +131,29 @@ func (h *apiHandler) voiceGenerate(c *web.Ctx, in voiceGenerateIn) (service.Job,
 
 func (h *apiHandler) voiceList(c *web.Ctx, in voiceListIn) (service.VoiceListResult, error) {
 	res, err := h.Service.VoiceList(c.Context(), service.VoiceListRequest{ConnectionID: in.ID})
+
+	return deref(res), err
+}
+
+type imageModelEditIn struct {
+	ID           string `json:"id"                 validate:"required" doc:"The image document, img_ and 10 characters."`
+	ProjectID    string `json:"project_id"         validate:"required" doc:"The project that holds the generated file and its cost, prj_ and 10 characters."`
+	ConnectionID string `json:"connection_id"      validate:"required" doc:"The connection to the provider: with the image_edit capability and accepting image for remove_background, with the image capability and accepting text for generate."`
+	Operation    string `json:"operation"          validate:"required" doc:"remove_background (the picture of the layer is sent to the provider) or generate (only the prompt is sent)."`
+	Model        string `json:"model"              validate:"required" doc:"The model id, as provider:models lists it."`
+	LayerID      string `json:"layer_id,omitempty"                     doc:"remove_background: the image layer, required. generate: a layer whose box the new picture must cover; without it, the canvas."`
+	Prompt       string `json:"prompt,omitempty"                       doc:"generate only: what to draw, 1 to 4000 characters."`
+	Size         string `json:"size,omitempty"                         doc:"generate only: width and height in pixels joined by x; the default is the size nearest to the box to cover."`
+	WaitMS       int    `json:"wait_ms,omitempty"                      doc:"Wait up to this many milliseconds for the job to finish."`
+	DryRun       bool   `json:"dry_run,omitempty"                      doc:"true answers the job it would create, with its estimate, and writes and sends nothing."`
+}
+
+func (h *apiHandler) imageModelEdit(c *web.Ctx, in imageModelEditIn) (service.Job, error) {
+	res, err := h.Service.ImageModelEdit(c.Context(), service.ImageModelEditRequest{
+		ProjectID: in.ProjectID, WaitMS: in.WaitMS, DryRun: in.DryRun,
+		ConnectionID: in.ConnectionID, ImageID: in.ID, Operation: in.Operation, Model: in.Model,
+		LayerID: in.LayerID, Prompt: in.Prompt, Size: in.Size,
+	})
 
 	return deref(res), err
 }
