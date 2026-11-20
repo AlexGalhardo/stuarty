@@ -68,7 +68,11 @@ var parity = []row{
 	{method: "Doctor", command: "doctor", route: "GET /system"},
 	{method: "SnapPoints", route: "GET /projects/{}/snap-points", httpOnly: true},
 	{method: "FontList", command: "fonts", route: "GET /fonts"},
-	{method: "AssetList", route: "GET /assets", httpOnly: true},
+	{method: "AssetList", tool: "media_inspect", command: "asset:list", route: "GET /assets"},
+	{method: "AssetGet", tool: "media_inspect", command: "asset:show", route: "GET /assets/{}"},
+	{method: "AssetUses", command: "asset:uses", route: "GET /assets/{}/uses"},
+	{method: "AssetSetInfo", tool: "media_import", command: "asset:set", route: "PUT /assets/{}"},
+	{method: "AssetTag", tool: "media_import", command: "asset:tag", route: "POST /assets/{}/tags"},
 	{method: "AuditList", command: "audit", route: "GET /audit"},
 	{method: "ExportFile", route: "GET /jobs/{}/file", httpOnly: true},
 	// The CLI command tools:install is for the person at the terminal and has
@@ -120,6 +124,14 @@ var parity = []row{
 	},
 	{method: "BriefGet", tool: "project_item", command: "brief:show", route: "GET /projects/{}/brief"},
 	{method: "BriefSet", tool: "project_item", command: "brief:set", route: "PUT /projects/{}/brief"},
+	// The guided briefing (SDD-005 section 5.12.1): project_item with action briefing.
+	{
+		method:  "BriefingQuestions",
+		tool:    "project_item",
+		command: "briefing:questions",
+		route:   "GET /briefing/questions",
+	},
+	{method: "BriefingAnswer", tool: "project_item", command: "briefing:answer", route: "PUT /projects/{}/briefing"},
 	// Connections (SDD-014 section 10): the read-only tool lists or reads one; creating, removing and
 	// testing one take a credential or reach the network, so they have no tool.
 	{method: "ConnectionList", tool: "connection", command: "connection:list", route: "GET /connections"},
@@ -156,6 +168,12 @@ var parity = []row{
 	{method: "ApprovalRuleRemove", command: "approval:rule:remove", route: "DELETE /approval-rules/{}"},
 	{method: "CostSummary", command: "cost:show", route: "GET /cost"},
 	{method: "CostCeilingSet", command: "cost:ceiling", route: "PUT /cost/ceilings"},
+	// The AI providers (SDD-016 section 10): a generation starts with job_start (kind text.generate), the
+	// byte budget of the tool list leaves no room for a tool of its own. Setting a price is for a person.
+	{method: "ProviderList", command: "provider:list", route: "GET /providers"},
+	{method: "ProviderModels", command: "provider:models", route: "GET /connections/{}/models"},
+	{method: "ProviderPriceSet", command: "provider:price", route: "PUT /providers/prices"},
+	{method: "TextGenerate", tool: "job_start", command: "text:generate", route: "POST /text/generate"},
 	// The library (SDD-018): one MCP tool, library, serves the lists, reads, writes, searches, renders and
 	// lints. Removing a note, importing and exporting skills read and write files by path (no tool), and
 	// marking a skill as read is for a person at the browser (HTTP only).
@@ -425,12 +443,16 @@ func TestBudgetsOfTheSurfacesArePrinted(t *testing.T) {
 	}
 
 	raw := encode(t, list)
-	tokens := len(raw) / 3 // the conservative 3 bytes per token of SDD-003 section 4.1
 
-	t.Logf("NFR-020: tools/list is %d bytes, about %d tokens (limit 7500)", len(raw), tokens)
+	t.Logf(
+		"NFR-020: tools/list is %d bytes, about %d tokens (limit %d bytes)",
+		len(raw),
+		len(raw)*10/32,
+		mcp.MaxToolListBytes,
+	)
 
-	if tokens > 7500 {
-		t.Errorf("tools/list is about %d tokens, over the interim 7500 of NFR-020", tokens)
+	if len(raw) > mcp.MaxToolListBytes {
+		t.Errorf("tools/list is %d bytes, over the %d of NFR-020 (SDD-003 section 4.1)", len(raw), mcp.MaxToolListBytes)
 	}
 
 	steps, fixtures := loadScenario(t, "prototype")

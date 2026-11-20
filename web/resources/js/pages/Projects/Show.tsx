@@ -20,7 +20,12 @@ import { useT } from "@/lib/i18n";
 import { SIZE_PRESETS } from "@/types";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
-import type { BriefResult, ProjectItem } from "../../editor/api/types";
+import type {
+	BriefingQuestionsResult,
+	BriefResult,
+	ProjectItem,
+} from "../../editor/api/types";
+import { Briefing } from "./Briefing";
 
 const TITLE_MAX = 120;
 
@@ -28,6 +33,7 @@ interface ShowProps {
 	project: { id: string; name: string; state: string };
 	items: ProjectItem[];
 	brief: BriefResult;
+	briefing: BriefingQuestionsResult;
 	[key: string]: unknown;
 }
 
@@ -311,7 +317,7 @@ function AddItem({
 // page draws what the service says and sends commands; the rules of the production are the core's.
 export default function ProjectShow() {
 	const t = useT();
-	const { project, items, brief } = usePage<ShowProps>().props;
+	const { project, items, brief, briefing } = usePage<ShowProps>().props;
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [draft, setDraft] = useState(brief.text);
 	const [saving, setSaving] = useState(false);
@@ -358,6 +364,15 @@ export default function ProjectShow() {
 					</h1>
 				</div>
 				<FailureNote failure={failure} />
+
+				<Briefing
+					projectId={project.id}
+					briefing={briefing}
+					onSaved={(text) => {
+						setDraft(text);
+						router.reload();
+					}}
+				/>
 
 				<section aria-labelledby="brief-title" className="flex flex-col gap-3">
 					<h2 id="brief-title" className="text-lg font-semibold">

@@ -7,7 +7,10 @@ import type {
 	ApprovalRule,
 	ApprovalRuleListResult,
 	ApprovalRuleSetRequest,
+	AssetInfoBody,
 	AssetListResult,
+	AssetQuery,
+	AssetResult,
 	AuditListResult,
 	AuditQuery,
 	BrandKit,
@@ -53,6 +56,10 @@ import type {
 	ProjectItemResult,
 	ProjectListResult,
 	ProjectStateResult,
+	ProviderListResult,
+	ProviderModelsResult,
+	ProviderPriceSetRequest,
+	ProviderPricesResult,
 	SessionResult,
 	SnapPointsQuery,
 	SnapPointsResult,
@@ -154,6 +161,13 @@ export interface ApiClient {
 	getFonts(): Promise<FontListResult>;
 	// The ready files of the workspace by content hash (VV-117); `kind` keeps one kind.
 	listAssets(kind?: "image" | "video" | "audio"): Promise<AssetListResult>;
+	// The asset library with its filters (SDD-011 section 14.4), and one entry with the projects that use it.
+	queryAssets(query: AssetQuery): Promise<AssetListResult>;
+	getAsset(hash: string): Promise<AssetResult>;
+	setAssetInfo(hash: string, info: AssetInfoBody): Promise<AssetResult>;
+	tagAsset(hash: string, add: string[], remove: string[]): Promise<AssetResult>;
+	// Uses a file of the library in a project: no copy, no ingest (SDD-011 section 14.3).
+	useAsset(projectId: string, hash: string): Promise<MediaImportResult>;
 	// `path` is an absolute path to a font file on the machine of the service.
 	importFont(path: string): Promise<FontImportResult>;
 	getBrandKit(): Promise<BrandKit>;
@@ -173,6 +187,16 @@ export interface ApiClient {
 	createConnection(request: ConnectionCreateRequest): Promise<Connection>;
 	removeConnection(id: string): Promise<Connection>;
 	testConnection(id: string): Promise<ConnectionTestResult>;
+	// The AI providers (SDD-016). Setting a price is for a person in a browser session; any other
+	// caller gets E_PRIVILEGED_SESSION.
+	listProviders(): Promise<ProviderListResult>;
+	listProviderModels(
+		connectionId: string,
+		refresh?: boolean,
+	): Promise<ProviderModelsResult>;
+	setProviderPrice(
+		request: ProviderPriceSetRequest,
+	): Promise<ProviderPricesResult>;
 	// The approval queue (SDD-015). Deciding, the rules and the ceilings are for a person in a
 	// browser session; any other caller gets E_PRIVILEGED_SESSION.
 	listApprovals(state?: string): Promise<ApprovalListResult>;
@@ -189,6 +213,7 @@ export interface ApiClient {
 	// An administrator session; any other caller gets E_FORBIDDEN.
 	listUsers(): Promise<UserListResult>;
 	listTrashedProjects(): Promise<ProjectListResult>;
+	listProjects(): Promise<ProjectListResult>;
 	createProject(name: string, preset: string): Promise<ProjectCreateResult>;
 	duplicateProject(
 		projectId: string,
@@ -217,6 +242,11 @@ export interface ApiClient {
 		itemId: string,
 	): Promise<ProjectItemResult>;
 	setBrief(projectId: string, text: string): Promise<BriefResult>;
+	answerBriefing(
+		projectId: string,
+		answers: Record<string, string>,
+		replace: boolean,
+	): Promise<BriefResult>;
 	trashProject(projectId: string): Promise<ProjectStateResult>;
 	restoreProject(projectId: string): Promise<ProjectStateResult>;
 	// The two routes of network mode live at the root, not under /api/v1: a client
@@ -411,6 +441,30 @@ export function createClient(
 		getFonts: () => call("GET", "/fonts", READ_TIMEOUT_MS),
 		listAssets: (kind) =>
 			call("GET", `/assets${query({ kind })}`, READ_TIMEOUT_MS),
+		queryAssets: (q) =>
+			call(
+				"GET",
+				`/assets${query({ ...q, reusable: q.reusable === undefined ? undefined : String(q.reusable) })}`,
+				READ_TIMEOUT_MS,
+			),
+		getAsset: (hash) =>
+			call("GET", `/assets/${encodeURIComponent(hash)}`, READ_TIMEOUT_MS),
+		setAssetInfo: (hash, info) =>
+			call("PUT", `/assets/${encodeURIComponent(hash)}`, EDIT_TIMEOUT_MS, info),
+		tagAsset: (hash, add, remove) =>
+			call(
+				"POST",
+				`/assets/${encodeURIComponent(hash)}/tags`,
+				EDIT_TIMEOUT_MS,
+				{
+					add,
+					remove,
+				},
+			),
+		useAsset: (id, hash) =>
+			call("POST", `${project(id)}/media`, EDIT_TIMEOUT_MS, {
+				files: [{ hash }],
+			}),
 		importFont: (path) => call("POST", "/fonts", EDIT_TIMEOUT_MS, { path }),
 		getBrandKit: () => call("GET", "/brand-kit", READ_TIMEOUT_MS),
 		setBrandKit: (kit) => call("PUT", "/brand-kit", EDIT_TIMEOUT_MS, kit),
@@ -445,6 +499,15 @@ export function createClient(
 				EDIT_TIMEOUT_MS,
 				{},
 			),
+		listProviders: () => call("GET", "/providers", READ_TIMEOUT_MS),
+		listProviderModels: (connectionId, refresh) =>
+			call(
+				"GET",
+				`/connections/${encodeURIComponent(connectionId)}/models${refresh === true ? "?refresh=true" : ""}`,
+				EDIT_TIMEOUT_MS,
+			),
+		setProviderPrice: (request) =>
+			call("PUT", "/providers/prices", EDIT_TIMEOUT_MS, request),
 		listApprovals: (state) =>
 			call(
 				"GET",
@@ -474,6 +537,7 @@ export function createClient(
 			call("PUT", "/cost/ceilings", EDIT_TIMEOUT_MS, request),
 		revokeKey: (keyId) =>
 			call("DELETE", `/keys/${encodeURIComponent(keyId)}`, EDIT_TIMEOUT_MS),
+		listProjects: () => call("GET", "/projects", READ_TIMEOUT_MS),
 		listTrashedProjects: () =>
 			call("GET", "/projects?state=trashed", READ_TIMEOUT_MS),
 		createProject: (name, preset) =>
@@ -517,6 +581,11 @@ export function createClient(
 			),
 		setBrief: (id, text) =>
 			call("PUT", `${project(id)}/brief`, EDIT_TIMEOUT_MS, { text }),
+		answerBriefing: (id, answers, replace) =>
+			call("PUT", `${project(id)}/briefing`, EDIT_TIMEOUT_MS, {
+				answers,
+				replace,
+			}),
 		trashProject: (id) =>
 			call("POST", `${project(id)}/trash`, EDIT_TIMEOUT_MS, {}),
 		restoreProject: (id) =>

@@ -310,6 +310,37 @@ func (s stub) BriefSet(context.Context, service.BriefSetRequest) (*service.Brief
 	return reply[service.BriefResult](s.err)
 }
 
+func (s stub) AssetList(context.Context, service.AssetListRequest) (*service.AssetListResult, error) {
+	return reply[service.AssetListResult](s.err)
+}
+
+func (s stub) AssetGet(context.Context, service.AssetRef) (*service.AssetResult, error) {
+	return reply[service.AssetResult](s.err)
+}
+
+func (s stub) AssetUses(context.Context, service.AssetUsesRequest) (*service.AssetUsesResult, error) {
+	return reply[service.AssetUsesResult](s.err)
+}
+
+func (s stub) AssetSetInfo(context.Context, service.AssetSetInfoRequest) (*service.AssetResult, error) {
+	return reply[service.AssetResult](s.err)
+}
+
+func (s stub) AssetTag(context.Context, service.AssetTagRequest) (*service.AssetResult, error) {
+	return reply[service.AssetResult](s.err)
+}
+
+func (s stub) BriefingQuestions(
+	context.Context,
+	service.BriefingQuestionsRequest,
+) (*service.BriefingQuestionsResult, error) {
+	return reply[service.BriefingQuestionsResult](s.err)
+}
+
+func (s stub) BriefingAnswer(context.Context, service.BriefingAnswerRequest) (*service.BriefResult, error) {
+	return reply[service.BriefResult](s.err)
+}
+
 func (s stub) MemoryList(context.Context, service.MemoryListRequest) (*service.LibraryListResult, error) {
 	return reply[service.LibraryListResult](s.err)
 }

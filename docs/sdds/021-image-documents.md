@@ -28,7 +28,7 @@ An image document is a canvas with an ordered tree of layers: image, text, shape
 
 What this SDD does not change: the video document, its catalogue, its plan and its renderer. An image operation lives in its own registry (domain `image`) so that a video batch can never reach it and the video tests keep their meaning. What it shares with the video core is code, not copies: the argument decoder and the JSON Schema generator of `core/command` (the tags of SDD-002 section A.2), the `Operation`, `Error`, `Primitive`, `Change` and `Guard` types, `timeline.TextStyle` and its validation for the style of a text layer, `timeline.Color`, the shape names, `plan.FramePlan`, `plan.BitmapSpec` and `lint.Finding`. A new rule that a video and an image both need goes to the shared package, never into a second copy.
 
-Out of scope (epics 29 and 30): adjustments, filters, masks and the wider set of blend modes, operations with a model, brushes, selections by pixel, vector pen paths, RAW, CMYK and PSD import. The screen is epic 28.
+Epic 29 adds adjustments, filters, masks and blend modes to a layer (sections 2, 3.1 and 5). Out of scope (epic 30 and later): operations with a model, brushes, selections by pixel, vector pen paths, RAW, CMYK and PSD import. The screen is epic 28.
 
 ## 2. The document
 
@@ -59,12 +59,13 @@ Out of scope (epics 29 and 30): adjustments, filters, masks and the wider set of
   - `shape`: `shape` (`rect`, `rounded_rect` or `ellipse`), `fill`, `stroke_color` and `stroke_width` (whole pixels), `radius` (whole pixels, `rounded_rect` only).
   - `fill`: `fill` (a colour). It is a rectangle, created over the whole canvas, that a person can move and resize like any layer.
   - `group`: `children`. A group has no size of its own: its `x` and `y` are an offset added to every descendant, `w` and `h` are 0, `rotation` is 0, and its `opacity` multiplies the opacity of each descendant (isolated group compositing arrives with the blend modes of epic 29). Groups nest up to 8 levels.
+- **Look** (epic 29, every layer but a group; all optional, absent means none, and the stored form never holds a neutral value). `adjust` (section 3.1), `filters` (an ordered list, at most 8, each kind at most once), `mask` (a shape, or the alpha of another layer) and `blend` (a blend mode, absent means `normal`). A group has none of them: isolated group compositing (a group drawn on its own and then blended, adjusted or masked as one picture) needs a plan with sub-compositions that the renderer does not have, and stays a later epic; until then the group opacity is the multiplication stated above and `layer.adjust`, the filter and mask commands and `layer.blend` answer `E_TYPE_MISMATCH` for a group.
 - `assets` is the table of the images the document uses, by hash: `hash`, `name` (the base name, untrusted text), `width` and `height` of the source. It is filled by `layer.add_image` from what the service knows of the file, so the core never reads a file, and an entry no layer uses is removed by the same batch that removes the last use.
 - A **template** (`"template": true`) is a document that names slots (section 7). Nothing else differs.
 
 ## 3. The catalogue
 
-Eighteen operations in the registry of domain `image`. The names are in SDD-000 section 1. `text.set` and `shape.set` exist for video with another schema and other code (they take an `item_id`), so the image operations that edit a text or a shape are `layer.set_text` and `layer.set_shape`; the other names did not exist before. Every argument that names a layer is a `lyr_` id; an id that is not in the document is `E_NOT_FOUND`. A locked layer (or one inside a locked group) accepts only `layer.set` (to unlock it, rename it or change its slot) and the commands that read it as a target (`layer.align` to it); any other change is `E_INVALID_STATE`. Every command that adds a layer takes an optional `id` (the caller's id, `E_ID_EXISTS` when taken), an optional `parent` (a group; absent means the top level) and an optional `index` (the position among its siblings, 0 is the bottom; absent means on top) and returns `effective.layer_id`.
+Twenty-six operations in the registry of domain `image`. The names are in SDD-000 section 1. `text.set` and `shape.set` exist for video with another schema and other code (they take an `item_id`), so the image operations that edit a text or a shape are `layer.set_text` and `layer.set_shape`; the other names did not exist before. Every argument that names a layer is a `lyr_` id; an id that is not in the document is `E_NOT_FOUND`. A locked layer (or one inside a locked group) accepts only `layer.set` (to unlock it, rename it or change its slot) and the commands that read it as a target (`layer.align` to it); any other change is `E_INVALID_STATE`. Every command that adds a layer takes an optional `id` (the caller's id, `E_ID_EXISTS` when taken), an optional `parent` (a group; absent means the top level) and an optional `index` (the position among its siblings, 0 is the bottom; absent means on top) and returns `effective.layer_id`.
 
 | Operation | Arguments (`?` optional) | What it does | Errors |
 | --- | --- | --- | --- |
@@ -86,8 +87,54 @@ Eighteen operations in the registry of domain `image`. The names are in SDD-000 
 | `layer.set_shape` | `layer_id`, any of `shape`, `fill`, `stroke_color` (an empty string removes it), `stroke_width`, `radius` | Changes a shape or the colour of a fill layer (`fill` only); the radius goes with `rounded_rect` and leaves with another shape | `E_VALIDATION`, `E_NOT_FOUND`, `E_TYPE_MISMATCH`, `E_INVALID_STATE` |
 | `layer.align` | `layer_ids`, `to` (`canvas` or a layer id), `horizontal?` (`left`, `center`, `right`), `vertical?` (`top`, `middle`, `bottom`) | Moves each layer so its box edge or centre meets the edge or centre of the target; the box of a group is the union of its children; at least one of the two axes | `E_VALIDATION`, `E_NOT_FOUND`, `E_INVALID_STATE` |
 | `layer.fit` | `layer_id`, `mode` (`cover` or `contain`), `to?` (`canvas` default, or a layer id) | Scales the box of an image, a shape or a fill, keeping its aspect (the crop of an image layer, the box of the others), to cover or to be contained in the target box, and centres it on it; a text layer and a group are sized with `layer.transform` | `E_VALIDATION`, `E_NOT_FOUND`, `E_TYPE_MISMATCH`, `E_INVALID_STATE` |
+| `layer.adjust` | `layer_id`, any of `brightness`, `contrast`, `saturation`, `temperature`, `tint`, `hue`, `exposure`, `levels` (`black?`, `white?`, `gamma?`), `curve` (a list of points; an empty list removes the curve), or `reset` | Sets the adjustments of a layer, merged key by key; a value that equals its neutral one is removed; `reset` removes every adjustment | `E_VALIDATION`, `E_NOT_FOUND`, `E_TYPE_MISMATCH`, `E_INVALID_STATE` |
+| `layer.filter_add` | `layer_id`, `kind`, the parameters of the kind (section 3.1), `index?` | Adds a filter to the list of a layer (on top, or at `index`), the parameters left out taking the defaults of the kind | `E_VALIDATION`, `E_NOT_FOUND`, `E_TYPE_MISMATCH`, `E_INVALID_STATE`, `E_LIMIT` |
+| `layer.filter_set` | `layer_id`, `kind`, any parameter of the kind | Changes the parameters of the filter of that kind, merged key by key | `E_VALIDATION`, `E_NOT_FOUND`, `E_TYPE_MISMATCH`, `E_INVALID_STATE` |
+| `layer.filter_remove` | `layer_id`, `kind` | Removes the filter of that kind | `E_VALIDATION`, `E_NOT_FOUND`, `E_TYPE_MISMATCH`, `E_INVALID_STATE` |
+| `layer.filter_move` | `layer_id`, `kind`, `index` (the final position in the list) | Changes the place of a filter: filters act in list order | `E_VALIDATION`, `E_NOT_FOUND`, `E_TYPE_MISMATCH`, `E_INVALID_STATE` |
+| `layer.mask_set` | `layer_id`, `kind` (`rect`, `rounded_rect`, `ellipse` or `layer`), `x?`, `y?`, `w?`, `h?`, `radius?`, `feather?`, `invert?`, `source?` | Sets the mask of a layer, replacing any mask it had (section 3.1) | `E_VALIDATION`, `E_NOT_FOUND`, `E_TYPE_MISMATCH`, `E_INVALID_STATE` |
+| `layer.mask_clear` | `layer_id` | Removes the mask of a layer | `E_NOT_FOUND`, `E_TYPE_MISMATCH`, `E_INVALID_STATE` |
+| `layer.blend` | `layer_id`, `mode` | Sets the blend mode of a layer (`normal` removes it) | `E_VALIDATION`, `E_NOT_FOUND`, `E_TYPE_MISMATCH`, `E_INVALID_STATE` |
 
 Each operation has its JSON Schema, generated from the arguments type with the tags of SDD-002 section A.2, an example and a list of error codes; `task codegen` writes them to `core/schema/image/commands/<name>.schema.json` and the snapshot `core/schema/image/commands.json`. The golden cases (`core/image/testdata/<operation>/<case>/`) hold, per operation, one case that succeeds with its expected document, diff, inverse and effective values, and one for each error code it can return, in the form of the golden cases of the video catalogue. A test fails when an operation has no case.
+
+### 3.1 Adjustments, filters, masks and blend modes
+
+Added by epic 29 (PRD-004 RF-333, RF-334, RF-335). Every value is a whole number, so no float is stored; the plan turns them into the numbers of SDD-013 (section 5 here) and the arithmetic of the pixels is in SDD-013 section 3.11. A locked layer refuses these commands like any other change, and `layer.remove` clears the `mask` of every layer whose `source` was removed.
+
+**Adjustments** (`layer.adjust`; a stored `adjust` holds only the keys that differ from neutral, `levels` and `curve` included):
+
+| Key | Range | Neutral | Meaning |
+| --- | --- | --- | --- |
+| `brightness` | -100 to 100 | 0 | the brightness of SDD-004 section 3.5 times 100 |
+| `contrast` | -100 to 100 | 0 | the contrast is `1 + contrast / 100` |
+| `saturation` | -100 to 100 | 0 | the saturation is `1 + saturation / 100` |
+| `temperature`, `tint` | -100 to 100 | 0 | the temperature and the tint of section 3.5 times 100 |
+| `hue` | -180 to 180 | 0 | degrees |
+| `exposure` | -300 to 300 | 0 | hundredths of a stop: the colour is multiplied by `2^(exposure / 100)` |
+| `levels` | `black` 0 to 254, `white` 1 to 255 (above `black`), `gamma` 10 to 1000 | 0, 255, 100 | the black point and the white point map to 0 and 255; `gamma` is in hundredths, 100 leaves the middle where it is and a higher value brightens it |
+| `curve` | 1 to 8 points `{x, y}` of 0 to 255, `x` strictly increasing | none | a tone curve through the points, straight between them, with `(0, 0)` and `(255, 255)` as the ends when the list does not give them |
+
+Brightness, contrast, saturation, temperature, tint and hue are the colour matrix of the video core (`plan.ColorMatrix`); exposure, levels and the curve are one 256-entry table built by `core/image` (SDD-013 section 3.11.1).
+
+**Filters** (`layer.filter_*`; `kind` is also the name of the filter inside the layer, so a layer has at most one of each kind, and at most 8 filters). A parameter left out takes the default of the kind:
+
+| Kind | Parameters (range, default) | Drawn as |
+| --- | --- | --- |
+| `grayscale`, `sepia`, `invert`, `warm`, `cool` | `amount` (1 to 100, 100) | the colour filter of SDD-004 section 3.6 mixed in by `amount` per cent |
+| `blur` | `radius` (1 to 100, 8) | the Gaussian blur of SDD-013 section 3.5, `radius` the standard deviation in canvas pixels |
+| `sharpen` | `amount` (1 to 300, 100) per cent, `radius` (1 to 20, 2) | an unsharp mask on that blur (SDD-013 section 3.11.3) |
+| `vignette` | `amount` (1 to 100, 50), `softness` (0 to 100, 50) | the vignette of SDD-004 section 3.13 |
+| `grain` | `amount` (1 to 100, 30), `size` (1 to 8, 1), `seed` (0 to 65535, 0) | the grain of SDD-004 section 3.13 |
+| `shadow` | `color` (`#000000`), `opacity` (0 to 100, 50), `dx` and `dy` (-200 to 200, 4), `blur` (0 to 100, 8) | the drop shadow of SDD-004 section 3.15 |
+| `glow` | `color` (`#FFFFFF`), `radius` (1 to 100, 12), `amount` (1 to 400, 100) | the outer glow of SDD-013 section 3.11.3 |
+| `stroke` | `color` (`#000000`), `width` (1 to 100, 4) | the outline of SDD-004 section 3.15 |
+
+The filters act on the pixels of the layer in list order (a `shadow` before a `blur` is blurred with the picture), after the adjustments and before the mask. Adding a kind the layer already has is `E_INVALID_STATE` (use `layer.filter_set`); a kind the layer lacks in `filter_set`, `filter_remove` or `filter_move` is `E_NOT_FOUND`; the ninth filter is `E_LIMIT` (`details.limit` `filters_per_layer`). The video lookup table (`.cube`) is not a filter kind of an image yet: it needs the service to resolve a lookup-table asset for a document, which no image operation does today.
+
+**Masks** (`layer.mask_set` replaces, `layer.mask_clear` removes). A shape mask (`rect`, `rounded_rect`, `ellipse`) is in thousandths of the box of the layer: `x`, `y`, `w`, `h` (0 to 1000, `w` and `h` at least 1, `x + w` and `y + h` at most 1000; the defaults are the whole box: 0, 0, 1000, 1000), `radius` (`rounded_rect` only, 0 to 16384 pixels, default 16, held to half the smaller side when drawn), `feather` (0 to 200 pixels, the soft edge of SDD-004 section 3.9, default 0) and `invert` (default false). A mask of kind `layer` takes `source`, the id of another layer, and `invert`: the layer is drawn only where the source layer has pixels, scaled by the alpha of the source. The source must be an existing layer other than the layer itself, not a group, and without a mask of kind `layer` of its own (so there is no chain and no cycle); it may be hidden, in which case it is not drawn and still gives its shape. `x`, `y`, `w`, `h`, `radius` and `feather` are not valid for kind `layer`, and `source` is valid for it only.
+
+**Blend modes** (`layer.blend`): `normal`, `multiply`, `screen`, `overlay`, `soft_light`, `hard_light`, `darken`, `lighten`, `color_dodge`, `color_burn`, `difference`. The formulas are SDD-013 section 3.11.2.
 
 ## 4. The batch machinery
 
@@ -109,7 +156,7 @@ Each operation has its JSON Schema, generated from the arguments type with the t
 - `image` becomes a `media` layer with `asset` = the content hash, `asset_kind` `image` and `crop` the source rectangle (the whole source when the layer has no crop).
 - `shape` and `fill` become `bitmap` layers with a `shape` bitmap (`rect` for a fill).
 - `text` becomes a `bitmap` layer with a `text` bitmap, whose style is the resolved style of the layer (the defaults of a video text item, `max_width` = `w`). The measurer gives the natural size of the block, `fit` shrinks a block with a word wider than `w` as in SDD-004 section 5.1, and the block is placed at the top of the box and, by the style's `align`, at its left, centre or right.
-- No effect, mask, blend, shadow or outline is set: those are epic 29.
+- **Look** (epic 29), per layer that is not a group: `adjust` becomes `color_matrix` (the matrix of `plan.ColorMatrix`, from the six colour keys) and `tone` (the table of SDD-013 section 3.11.1, absent when exposure, levels and curve are neutral); `filters` becomes the `filters` list of SDD-013 section 3.11.3, one entry per filter in list order, with the document numbers divided as that section says (percentages to fractions) and the colour filters as `matrix` entries; a shape `mask` becomes `mask` (`rounded_rect` with its `radius`) and a `mask` of kind `layer` becomes `clip`, whose `source` is the item id of the plan layer of the source: it is drawn where it stands and, when it is hidden (itself or a group above it) or its opacity, its own times that of its groups, rounds to no weight (SDD-013 section 3.3 step 2.1), it is added as a `stencil` layer at its place with opacity 1 (drawn by nobody, read by the clip only); `blend` becomes `blend`. A layer with none of them gets none of the fields, so a document without a look gives the plan it gave before epic 29.
 
 The plan is the same on every machine: it holds numbers rounded to three decimals and the text measurer is the one of `engine/rasterize` (the Rust renderer, one module for every host).
 
@@ -187,7 +234,7 @@ Seven operations are added to `service.Service`, each with exactly one MCP actio
 
 ## 12. Errors and limits
 
-No new code in the core: `E_VALIDATION`, `E_NOT_FOUND`, `E_ID_EXISTS`, `E_TYPE_MISMATCH`, `E_INVALID_STATE`, `E_OUT_OF_SOURCE`, `E_LIMIT`, `E_SLOT` and `E_REVISION_CONFLICT` keep their meaning. The service adds none. Limits (`E_LIMIT`, `details.limit`): 500 layers in a document, 8 levels of groups, 100 layers in one `layer.group` or `layer.align`, 64 distinct images, a canvas side of 4096, 2,000 characters in a text, 200 operations and 512 KiB in a batch (the video limits), and 25 slots in a template.
+No new code in the core: `E_VALIDATION`, `E_NOT_FOUND`, `E_ID_EXISTS`, `E_TYPE_MISMATCH`, `E_INVALID_STATE`, `E_OUT_OF_SOURCE`, `E_LIMIT`, `E_SLOT` and `E_REVISION_CONFLICT` keep their meaning. The service adds none. Limits (`E_LIMIT`, `details.limit`): 500 layers in a document, 8 levels of groups, 100 layers in one `layer.group` or `layer.align`, 64 distinct images, a canvas side of 4096, 2,000 characters in a text, 200 operations and 512 KiB in a batch (the video limits), 25 slots in a template, 8 filters in a layer and 8 points in a curve.
 
 An export renders in the request, on the caller thread, bounded by the canvas (4096 per side) and by the size of the output (8192 per side, 33,177,600 pixels). A layer box may be larger than the canvas (16384 per side), so the pixels of the layers are bounded by the renderer instead: each layer is uploaded as soon as it is drawn, so the process holds one layer at a time, a bitmap holds at most 33,554,432 pixels (`MAX_PIXELS` of the rasterizer), and what the module holds is bounded by its memory (1 GiB, `out_of_memory` past it). It is not yet in the group of heavy operations of SDD-000 section 10 (which is a list of seven call sites that the OpenAPI document and the site pages repeat), so only the general rate limit of the caller applies; adding it is a change of that list and of its tests, left to the epic that adds the image jobs (epic 28 or 42).
 
@@ -196,6 +243,10 @@ An export renders in the request, on the caller thread, bounded by the canvas (4
 - Golden cases per operation (section 3), a determinism test (same input, same result) and a property test that the inverse of every applied batch restores the document.
 - `TestUndo`, `TestConflict`, `TestDryRun`, `TestTemplate`, `TestLint` in `core/image`; `TestImageRender` (golden PNG files) and `TestImageExportDeterministic` in `engine/export`; `TestImage` in `service`; the contract and parity tests of `web/contract` for the seven operations; the reference scenario of `scripts/smoke-e2e.sh` (a thumbnail from a template, by the CLI and by MCP).
 - A review rule: an image rule written outside `core/image`, a copy of a type of the video core instead of sharing it, or a second pixel path is rejected.
+
+### 13.1 NFR-061 on the reference document (epic 29)
+
+`engine/export` `TestImageReferenceDocument` builds the reference document of NFR-061 (4,000 by 4,000 pixels, 30 layers of 1,200 by 900 pixels or more, ten photos, ten rounded rectangles and ten ellipses, rotated) and renders it twice through the WebAssembly module under `wazero`, with a look on every layer (adjustments with a curve, sharpen, a shadow with a soft light blend, a glow with a rounded mask): `STUARTY_NFR061=1 go test ./engine/export -run TestImageReferenceDocument -v` (`STUARTY_NFR061_PLAIN=1` leaves the looks out). It asserts that the two exports are the same bytes and prints the times; it runs only when one of the two variables is set, because the two exports take more than two minutes and would push the package past the ten minutes of `go test` (the determinism of a look export is held on every run by `TestImageLookRenderIsTheGoldenFileAndDeterministic`). Measured on the author's Windows machine **with other agents running** (so not a reference number): composed in about 51 s and exported (with the PNG) in about 75 s with the looks, 7 to 8 s and 10 to 11 s without them. A native release build of the CPU path draws one 1,200 by 900 layer with one filter in 16 to 143 ms (tone 7 ms over the plain draw, sharpen 66, shadow 87, glow 87, stroke 132, soft light 36, rounded mask 16), so the module under `wazero` is the cost, not the arithmetic. The budget of NFR-061 (2 s) is therefore **not met by the CPU path through `wazero`** and is to be measured on the idle reference machine with the GPU host (SDD-013 section 4.9) for the export and the browser GPU path for the preview; this paragraph records the CPU number so the gap is known.
 
 ## 14. Decisions of this SDD
 
@@ -206,3 +257,5 @@ An export renders in the request, on the caller thread, bounded by the canvas (4
 5. **WebP through FFmpeg `libwebp`**, no new dependency, once `engine/ffmpeg/ffargs` has a builder for it; until then `webp_unavailable`. PNG and JPEG from the standard library.
 6. **Group opacity multiplies the children's.** The approximation is stated; isolated groups come with epic 29.
 7. **Text height is measured by the caller's measurer** and stored, so a replay of the log gives the same document.
+8. **Epic 29: one filter per kind, in a list.** The kind names a filter, so no id is needed and the order is the only other thing to change; two blurs in a row are one blur with a larger radius. Mask rectangles are thousandths of the box because the contract of SDD-004 section 3.9 already works in thousandths. A mask from another layer is a clip on the plan, so the renderer needs no second picture of the document. Groups stay without a look (isolated groups are a later epic).
+9. **The video lookup table is not exposed to an image.** It needs a `.cube` asset resolved by the service for a document; adding it is cheap once an image can name a lookup-table asset, and the plan already has the field.

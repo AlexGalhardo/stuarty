@@ -385,6 +385,8 @@ type AssetRepo interface {
 }
 ```
 
+`Repos` also has `AssetLibrary() assets.Store` (package `service/assets`, as `Connections()` has `connections.Store`; `Library()` is the index of memory, skills and prompts of SDD-018): `Get(hash)`, `GetMany(hashes)`, `Put(row)` (the `asset_info` row, its tags and its `asset_search` row in one call, inside the caller's transaction), `Reindex(hash)` (the `asset_search` row alone) and `Search(match)` (the hashes whose search row matches an expression built by `core/asset`, section 5.5.1). `AssetRepo.Delete` also removes the `asset_search` row of the hash.
+
 ### 3.5 Jobs, templates, backups
 
 ```go
@@ -827,6 +829,47 @@ State of a `project_assets` row:
 
 **Facts.** The `assets` fact columns are the denormalized probe facts used by the media library list; they are written by `SetFacts` when ingest reaches `ready`, in the same transaction as the `ingest_state` change. The authoritative copy for editing is the Asset object in the document.
 
+#### 5.5.1 The library side of an asset (`asset_info`, `asset_tags`, `asset_search`)
+
+Migration `20261119150000_asset_library`. `assets` is already one row per file by hash and shared by every project, so the library is workspace-wide without moving a file (ADR-0010, ADR-0039); what the library adds is the record of where a file came from, what the user may do with it and how to find it. It lives beside `assets`, keyed by the same hash, so that the ingest never writes it and a release that does not know it still opens the workspace.
+
+```sql
+CREATE TABLE asset_info (
+  asset_hash  TEXT    NOT NULL REFERENCES assets (id) ON DELETE CASCADE,
+  origin_kind TEXT    NOT NULL DEFAULT 'imported' CHECK (origin_kind IN ('imported','generated','fetched_by_agent','rendered_externally')),
+  source      TEXT    NOT NULL DEFAULT '',          -- a path, a URL or a tool name, as plain text; untrusted
+  provider    TEXT    NOT NULL DEFAULT '',          -- generated: the provider of the connection
+  model       TEXT    NOT NULL DEFAULT '',          -- generated: the model
+  prompt      TEXT    NOT NULL DEFAULT '',          -- generated: the prompt; untrusted
+  cost_micros INTEGER CHECK (cost_micros IS NULL OR cost_micros >= 0), -- millionths of a US dollar, NULL when unknown
+  rights_note TEXT    NOT NULL DEFAULT '',          -- the user's own record of the licence or the permission; untrusted
+  description TEXT    NOT NULL DEFAULT '',          -- untrusted
+  reusable    INTEGER NOT NULL DEFAULT 0 CHECK (reusable IN (0,1)),
+  created_by  TEXT    NOT NULL,                     -- the actor of the first import
+  created_ms  INTEGER NOT NULL,
+  updated_ms  INTEGER NOT NULL,
+  PRIMARY KEY (asset_hash)
+);
+CREATE INDEX asset_info_reusable_index ON asset_info (asset_hash) WHERE reusable = 1;
+
+CREATE TABLE asset_tags (
+  asset_hash TEXT NOT NULL REFERENCES assets (id) ON DELETE CASCADE,
+  tag        TEXT NOT NULL,                         -- normalised by core/asset (SDD-011 section 14.3)
+  PRIMARY KEY (asset_hash, tag)
+);
+CREATE INDEX asset_tags_tag_index ON asset_tags (tag, asset_hash);
+
+CREATE VIRTUAL TABLE asset_search USING fts5(
+  asset_hash UNINDEXED, name, tags, description, origin, tokenize = 'unicode61 remove_diacritics 2'
+);
+```
+
+- **A row is optional.** An asset with no `asset_info` row reads as `origin_kind = 'imported'`, no source, not reusable, no tags (the writers of `assets` that are not `MediaImport`, for example a bundle import, need not know the library). `MediaImport` writes the row when it creates the asset, and the migration writes one for every asset that exists.
+- **Origin is written once.** The row of a hash keeps the origin of its first import. `rights_note`, `description`, `reusable` and the tags are the user's and change through `AssetSetInfo` and `AssetTag`. A later import of the same bytes with an origin block is validated and does not replace the origin.
+- **`asset_search`** has one row per hash, written by the service in the same transaction as every change of `asset_info`, `asset_tags`, `assets.original_name` or a `project_assets.name`: `name` is the names the file is known by (the first one and those of the projects), `tags` the tags joined by spaces, `origin` the source, provider, model and prompt. A virtual table holds no foreign key, so `Assets().Delete` (the emptying of the trash) deletes its row too. A query is built by `core/asset` (every term quoted, a prefix match on the last) and never concatenated from the caller's text.
+- **Migration.** For every `assets` row: an `asset_info` row with `origin_kind = 'imported'`, `created_by` the importer of its oldest `project_assets` row (`migration` when there is none) and `created_ms` of the asset, and its `asset_search` row. `Down` drops the three tables. No `project_assets` row and no file changes: a clip still resolves its media by the hash.
+- **Uses.** The projects that use an asset are computed, never stored: the `project_assets` rows of the hash in state `active` (`pending` is an import not yet added; `trashed` is removed), each timeline mapped to its production by `project_items` (section 5.12). The same hash held by two timelines of one project is one use.
+
 ### 5.6 `jobs`
 
 ```sql
@@ -1042,6 +1085,27 @@ CREATE UNIQUE INDEX project_items_brief_unique ON project_items (project_id) WHE
 - **Migration.** Backup first: `Open` copies the database with `VACUUM INTO` before a migration runs (section 7 step 3). Then, in one transaction: `ALTER TABLE projects RENAME TO timelines` (SQLite rewrites the foreign keys that name it), rename the index, create the two tables, and for every row of `timelines` insert one `projects` row with the same `id`, `name`, `state`, times, actor, owner and trash columns, and one `project_items` row (kind `timeline`, title = name, position 0, `ref` = the id, the `pit_` id with the characters of the project id, state `active`: the trash of a former project is that of the project, and its restore brings the timeline back through the mirror of the trash rule of this section). Every id a surface exposed is kept. **Down** deletes the items and productions, drops them, and renames `timelines` back to `projects`; a timeline that is not the first of its project (its id differs from its project's) is deleted with its log, which is why the backup comes first. Tests run both directions over fixtures of the workspaces of releases 0.2.0, 0.17.0 and 0.29.0.
 - **Document backups.** `document_backups.owner_kind` stays `project`; `owner_id` is a timeline id.
 
+### 5.12.1 The guided briefing and the brief schema (RF-301, RF-302)
+
+The brief is still one item with one Markdown body (section 5.12); the guided briefing is a way to fill it, and it adds no table and no column. The questions and the rules are data and pure functions of `core/project` (`briefing.go`), so a form, the CLI, the HTTP API and an agent in a chat ask and store the same thing.
+
+| Id | Heading in the brief | Answer | Required |
+| --- | --- | --- | --- |
+| `audience` | Audience | text, at most 400 characters | yes |
+| `goal` | Goal | text, at most 400 | yes |
+| `platform` | Platform | one of `youtube-shorts`, `tiktok`, `instagram-reels`, `facebook-reels`, `other` | yes |
+| `format` | Format | one of `vertical-9x16`, `square-1x1`, `horizontal-16x9` | yes |
+| `duration` | Duration (seconds) | a whole number from 1 to 180 | yes |
+| `tone` | Tone | text, at most 200 | no |
+| `references` | References | text, at most 2000 | no |
+| `must_include` | Must appear | text, at most 1000 | no |
+| `must_avoid` | Must not appear | text, at most 1000 | no |
+| `deadline` | Deadline | a date, `YYYY-MM-DD` | no |
+
+**The schema of the brief the briefing writes** is Markdown: the line `# Brief`, then for each answered question, in the order above, a blank line, `## <heading>`, a blank line and the answer. An unanswered optional question has no section. A line of an answer that starts with `#` is written with a backslash in front, so an answer never makes a heading, and is read back without it. `ParseBriefing` reads the answers back and answers `ok` only for a text of this shape (the title, only known headings, each at most once) whose answers pass `CheckAnswers` and that `BriefingMarkdown` writes again as it is (trailing line ends aside): a brief written by hand, even one that uses the same headings, is never taken for one.
+
+**`BriefingAnswer`** validates every answer (`CheckAnswers`: white space trimmed, line ends as LF, an empty answer left out, no control or text direction character, an id that is not a question refused, a required question left unanswered refused; `E_VALIDATION` with `path` `answers.<id>`), writes the Markdown with `BriefSet` (so the audit row is `project.brief.set`, the dry run and the item rules are those of `BriefSet`), and replaces the whole brief. A brief that has text and is not a guided one is not replaced unless `replace` is true (`CheckBriefingReplace`: `E_INVALID_STATE`, `path` `replace`), so a briefing never destroys text a person wrote; the check runs in the transaction of the write, so no other write of the brief lands between them, and it needs no scope beyond `edit`. **`BriefingQuestions`** returns the questions and, given a project, whether it `has_brief`, whether it is `guided` and the answers it holds, for a form to start from what is there. The text of an answer is the user's and is untrusted (SDD-007 section 8).
+
 ### 5.13 `image_documents` and `image_operations` (SDD-021)
 
 Migration `20261119110000_create_image_documents_and_operations`. They follow `projects` and `operations` with the columns an image needs and no more.
@@ -1199,6 +1263,7 @@ Open (Auto)                                  (the order of SDD-003 §5.2)
      deadline passed -> E_WORKSPACE_LOCKED (retryable, exit code 2)
 ```
 
+- **A slow owner is not an absent owner (VV-252).** Only the lock says whether an owner exists: a command takes the in-process path solely when `TryLock` succeeds. While the lock is held, a probe that times out or fails only means the owner is slow or starting, so the command keeps retrying (step 4) and, at the deadline, fails with `E_WORKSPACE_LOCKED`; it never opens the workspace itself and never answers from it. A test double of an owner therefore holds the lock, as a real owner does; one that does not is a workspace with no owner, and the in-process path is then correct. `TestOpenSlowOwnerHoldingTheLockIsNeverReplacedByInProcess` and `TestASlowOwnerIsNeverReplacedByLocalAccess` (`web/app/cli`) cover it.
 - `host(addr)`: an unspecified address (`0.0.0.0`, `::`) is replaced by `127.0.0.1` or `::1`.
 - `processAlive`: `os.FindProcess` then, on Unix, `Signal(0)`; on Windows `os.FindProcess` already fails when `OpenProcess` fails. A `PermissionDenied` answer counts as alive.
 - The probe is `GET /up`, which vukem registers by default (`http.go`, `r.Get("/up", ...)`), answers 200 with `{"status":"ok"}` and is outside `/api/v1`. The token is sent only after `/up` succeeds on a loopback address of a live pid and the server has proved that it knows the token (the handshake of SDD-007 §3.8), so it is never sent to a stranger that took the port of a dead owner. When `runtime.json` says `mode` is `network`, no local token exists: the command needs `STUARTY_KEY` (SDD-007 §4.6) and fails with `E_UNAUTHORIZED` and that hint when it is unset.

@@ -37,6 +37,8 @@ func Validate(d *Document) []Violation {
 
 	v.layers(d.Layers, "layers", "", 0)
 
+	v.maskSources()
+
 	if n := Count(d); n > MaxLayers {
 		v.add("limit", "layers", "", "the document has %d layers; the limit is %d", n, MaxLayers)
 	}
@@ -157,6 +159,8 @@ func (v *validator) layer(l *Layer, p string) {
 	if l.Slot != "" {
 		v.slot(l, p)
 	}
+
+	v.look(l, p)
 
 	if l.Kind != KindGroup {
 		if l.W < 1 || l.H < 1 || l.W > MaxBoxSide || l.H > MaxBoxSide {

@@ -80,6 +80,15 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 			return inertia.Render(c, "Approvals/Index", inertia.Props{})
 		}).Name("approvals.index")
 
+		// The asset library (epic 08, SDD-011 section 14.6): two sections over one library; the pages read and
+		// change it through /api/v1/assets.
+		r.Get("/visual-assets", func(c *web.Ctx) error {
+			return inertia.Render(c, "VisualAssets/Index", inertia.Props{})
+		}).Name("dashboard.visual-assets")
+		r.Get("/video-assets", func(c *web.Ctx) error {
+			return inertia.Render(c, "VideoAssets/Index", inertia.Props{})
+		}).Name("dashboard.video-assets")
+
 		// The brand kit is read and saved by the page through /api/v1/brand-kit.
 		r.Get("/settings/brand-kit", func(c *web.Ctx) error {
 			return inertia.Render(c, "Settings/BrandKit", inertia.Props{})
@@ -202,9 +211,14 @@ func projectPageShow(c *web.Ctx, d *httpapi.Deps) error {
 		return err
 	}
 
+	briefing, err := d.Service.BriefingQuestions(c.Context(), service.BriefingQuestionsRequest{ProjectID: id})
+	if err != nil {
+		return err
+	}
+
 	return inertia.Render(c, "Projects/Show", inertia.Props{
 		"project":    map[string]any{"id": desc.ProjectID, "name": desc.Name, "state": desc.State},
-		"production": desc.Production, "items": nonNil(desc.Items), "brief": brief,
+		"production": desc.Production, "items": nonNil(desc.Items), "brief": brief, "briefing": briefing,
 	})
 }
 

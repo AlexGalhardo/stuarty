@@ -329,7 +329,7 @@ func finalDocument(t *testing.T, d driver, project string) []byte {
 
 var renderedByAdapter = map[string]bool{
 	"Edit": true, "Undo": true, "Redo": true, "ImageEdit": true, "ImageUndo": true, "ImageRedo": true,
-	"ImageExport": true, "BriefGet": true, "BriefSet": true,
+	"ImageExport": true, "BriefGet": true, "BriefSet": true, "BriefingAnswer": true,
 }
 
 func TestScenarioIsTheSameThroughEverySurface(t *testing.T) {
@@ -872,4 +872,11 @@ func importedDocument(t *testing.T, d driver, original string) []byte {
 // project is described, reordered and copied. The results are the same on the four surfaces.
 func TestProductionScenarioIsTheSameThroughEverySurface(t *testing.T) {
 	sameThroughEverySurface(t, "production")
+}
+
+// TestBriefingScenarioIsTheSameThroughEverySurface (epic 16): the questions are asked, the answers become the
+// brief, the questions read them back, a bad answer and a brief written by hand are refused the same way, and
+// replace overrides. The results are the same on the four surfaces.
+func TestBriefingScenarioIsTheSameThroughEverySurface(t *testing.T) {
+	sameThroughEverySurface(t, "briefing")
 }

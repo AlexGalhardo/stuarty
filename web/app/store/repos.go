@@ -6,6 +6,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/approval"
+	"github.com/AlexGalhardo/stuarty/service/assets"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/library"
 
@@ -31,6 +32,7 @@ func (r repos) Connections() connections.Store       { return connectionRepo(r) 
 func (r repos) Approvals() approval.Store            { return approvalRepo(r) }
 func (r repos) Images() service.ImageRepo            { return imageRepo(r) }
 func (r repos) Library() library.Index               { return libraryRepo(r) }
+func (r repos) AssetLibrary() assets.Store           { return assetLibraryRepo(r) }
 
 // nullJSON stores an empty raw message as NULL.
 func nullJSON(m json.RawMessage) any {

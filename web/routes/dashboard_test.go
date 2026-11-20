@@ -33,7 +33,9 @@ func TestDashboardSectionsMatchTheSidebar(t *testing.T) {
 	}
 
 	// The sections with a page of their own, served by Pages.
-	own := []string{"projects", "connections", "skills", "prompts", "memory", "edit-image"}
+	own := []string{
+		"projects", "connections", "skills", "prompts", "memory", "edit-image", "visual-assets", "video-assets",
+	}
 
 	for _, key := range keys {
 		if !slices.Contains(own, key) && !slices.Contains(dashboardSections, key) {

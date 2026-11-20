@@ -23,6 +23,48 @@
       }
     },
     "schemas": {
+      "Adjust": {
+        "properties": {
+          "brightness": {
+            "type": "integer"
+          },
+          "contrast": {
+            "type": "integer"
+          },
+          "curve": {
+            "items": {
+              "$ref": "#/components/schemas/image.CurvePoint"
+            },
+            "type": "array"
+          },
+          "exposure": {
+            "type": "integer"
+          },
+          "hue": {
+            "type": "integer"
+          },
+          "levels": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Levels"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "saturation": {
+            "type": "integer"
+          },
+          "temperature": {
+            "type": "integer"
+          },
+          "tint": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "ApprovalListResult": {
         "properties": {
           "next_cursor": {
@@ -110,6 +152,26 @@
         },
         "type": "object"
       },
+      "AssetInfo": {
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "reusable": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "AssetListResult": {
         "properties": {
           "assets": {
@@ -118,11 +180,120 @@
             },
             "type": "array"
           },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "AssetResult": {
+        "properties": {
+          "bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "duration_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "hash": {
+            "type": "string"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/Origin"
+          },
+          "poster": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Poster"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "projects": {
+            "type": "integer"
+          },
+          "reusable": {
+            "type": "boolean"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "text": {
             "type": "string"
           },
           "untrusted_notice": {
             "type": "string"
+          },
+          "uses": {
+            "items": {
+              "$ref": "#/components/schemas/Use"
+            },
+            "type": "array"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "AssetUsesResult": {
+        "properties": {
+          "hash": {
+            "type": "string"
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "uses": {
+            "items": {
+              "$ref": "#/components/schemas/Use"
+            },
+            "type": "array"
           }
         },
         "type": "object"
@@ -335,6 +506,85 @@
               "string",
               "null"
             ]
+          }
+        },
+        "type": "object"
+      },
+      "BriefingAnswer": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string",
+            "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
+      "BriefingQuestion": {
+        "properties": {
+          "heading": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "max": {
+            "type": "integer"
+          },
+          "max_chars": {
+            "type": "integer"
+          },
+          "min": {
+            "type": "integer"
+          },
+          "options": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "BriefingQuestionsResult": {
+        "properties": {
+          "answers": {
+            "items": {
+              "$ref": "#/components/schemas/BriefingAnswer"
+            },
+            "type": "array"
+          },
+          "guided": {
+            "type": "boolean"
+          },
+          "has_brief": {
+            "type": "boolean"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/BriefingQuestion"
+            },
+            "type": "array"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -660,6 +910,12 @@
             },
             "type": "array"
           },
+          "domains": {
+            "items": {
+              "$ref": "#/components/schemas/DomainSummary"
+            },
+            "type": "array"
+          },
           "text": {
             "type": "string"
           }
@@ -982,6 +1238,20 @@
               "$ref": "#/components/schemas/Track"
             },
             "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "DomainSummary": {
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "operations": {
+            "type": "integer"
+          },
+          "summary": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -1385,6 +1655,77 @@
           },
           "text": {
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Filter": {
+        "properties": {
+          "amount": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "blur": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "color": {
+            "type": "string"
+          },
+          "dx": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "dy": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "opacity": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "radius": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "seed": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "size": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "softness": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "width": {
+            "type": [
+              "integer",
+              "null"
+            ]
           }
         },
         "type": "object"
@@ -2527,6 +2868,16 @@
               }
             ]
           },
+          "estimate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Money"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "finished_at": {
             "format": "date-time",
             "type": [
@@ -2634,6 +2985,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/ExportResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "text": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TextResult"
               },
               {
                 "type": "null"
@@ -2755,7 +3116,20 @@
       },
       "Layer": {
         "properties": {
+          "adjust": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Adjust"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "asset": {
+            "type": "string"
+          },
+          "blend": {
             "type": "string"
           },
           "children": {
@@ -2777,6 +3151,12 @@
           "fill": {
             "type": "string"
           },
+          "filters": {
+            "items": {
+              "$ref": "#/components/schemas/Filter"
+            },
+            "type": "array"
+          },
           "h": {
             "type": "integer"
           },
@@ -2788,6 +3168,16 @@
           },
           "locked": {
             "type": "boolean"
+          },
+          "mask": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/image.Mask"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "name": {
             "type": "string"
@@ -2844,9 +3234,37 @@
         },
         "type": "object"
       },
+      "Levels": {
+        "properties": {
+          "black": {
+            "type": "integer"
+          },
+          "gamma": {
+            "type": "integer"
+          },
+          "white": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "LibraryAsset": {
         "properties": {
           "bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "duration_ms": {
             "format": "int64",
             "type": "integer"
           },
@@ -2863,8 +3281,36 @@
             "type": "string",
             "x-untrusted": true
           },
+          "origin": {
+            "$ref": "#/components/schemas/Origin"
+          },
+          "poster": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Poster"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "projects": {
             "type": "integer"
+          },
+          "reusable": {
+            "type": "boolean"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "uses": {
+            "items": {
+              "$ref": "#/components/schemas/Use"
+            },
+            "type": "array"
           },
           "width": {
             "type": "integer"
@@ -3251,6 +3697,9 @@
           "invert": {
             "type": "boolean"
           },
+          "radius": {
+            "type": "integer"
+          },
           "shape": {
             "type": "string"
           },
@@ -3536,6 +3985,37 @@
             "type": "string"
           },
           "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ModelView": {
+        "properties": {
+          "context_tokens": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "output_tokens": {
+            "type": "integer"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Price"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "price_source": {
             "type": "string"
           }
         },
@@ -3900,6 +4380,39 @@
           }
         }
       },
+      "Origin": {
+        "properties": {
+          "cost_micros": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "provider": {
+            "type": "string"
+          },
+          "rights_note": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "source": {
+            "type": "string",
+            "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
       "OtioLost": {
         "properties": {
           "feature": {
@@ -3967,6 +4480,55 @@
           "width": {
             "format": "double",
             "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "Poster": {
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "timeline_id": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Price": {
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "input_micros_per_mtok": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "output_micros_per_mtok": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "PriceEntry": {
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "input_micros_per_mtok": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "model": {
+            "type": "string"
+          },
+          "output_micros_per_mtok": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "provider": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -4610,6 +5172,93 @@
               "type": "string"
             },
             "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ProviderListResult": {
+        "properties": {
+          "prices": {
+            "items": {
+              "$ref": "#/components/schemas/PriceEntry"
+            },
+            "type": "array"
+          },
+          "providers": {
+            "items": {
+              "$ref": "#/components/schemas/ProviderView"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ProviderModelsResult": {
+        "properties": {
+          "cached": {
+            "type": "boolean"
+          },
+          "connection_id": {
+            "type": "string"
+          },
+          "fetched_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/ModelView"
+            },
+            "type": "array"
+          },
+          "provider": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ProviderPricesResult": {
+        "properties": {
+          "prices": {
+            "items": {
+              "$ref": "#/components/schemas/PriceEntry"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ProviderView": {
+        "properties": {
+          "capabilities": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "connections": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "credential_kinds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "default_endpoint": {
+            "type": "string"
+          },
+          "docs_url": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -5406,6 +6055,33 @@
         },
         "type": "object"
       },
+      "TextResult": {
+        "properties": {
+          "cost": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "finish_reason": {
+            "type": "string"
+          },
+          "input_tokens": {
+            "type": "integer"
+          },
+          "model": {
+            "type": "string"
+          },
+          "output_tokens": {
+            "type": "integer"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string",
+            "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
       "TimeRange": {
         "properties": {
           "end": {
@@ -5790,6 +6466,27 @@
           "transcript": {
             "items": {
               "$ref": "#/components/schemas/TranscriptLine"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "Use": {
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "timelines": {
+            "items": {
+              "type": "string"
             },
             "type": "array"
           }
@@ -10105,6 +10802,49 @@
         },
         "type": "object"
       },
+      "image.CurvePoint": {
+        "properties": {
+          "x": {
+            "type": "integer"
+          },
+          "y": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "image.Mask": {
+        "properties": {
+          "feather": {
+            "type": "integer"
+          },
+          "h": {
+            "type": "integer"
+          },
+          "invert": {
+            "type": "boolean"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "radius": {
+            "type": "integer"
+          },
+          "source": {
+            "type": "string"
+          },
+          "w": {
+            "type": "integer"
+          },
+          "x": {
+            "type": "integer"
+          },
+          "y": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "image.SlotValue": {
         "properties": {
           "asset": {
@@ -10126,15 +10866,15 @@
             "pattern": "^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
             "type": "string"
           },
+          "hash": {
+            "description": "sha256: and 64 hex digits of a file the library holds, in place of a path: the project uses it with no copy.",
+            "type": "string"
+          },
           "path": {
-            "description": "An absolute path on the machine that runs the server.",
-            "minLength": 1,
+            "description": "An absolute path on the machine that runs the server; or a hash.",
             "type": "string"
           }
         },
-        "required": [
-          "path"
-        ],
         "type": "object"
       },
       "launchOut": {
@@ -10603,7 +11343,15 @@
         "operationId": "assets.list",
         "parameters": [
           {
-            "description": "Keep the first files of the list; the default and the largest are 500.",
+            "description": "The next_cursor of the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page size; the default depends on the operation.",
             "in": "query",
             "name": "limit",
             "schema": {
@@ -10611,9 +11359,57 @@
             }
           },
           {
-            "description": "image, video or audio; omit it for every kind.",
+            "description": "image, video, audio or lut; omit it for every kind.",
             "in": "query",
             "name": "kind",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "visual (image, lut) or video (video, audio): the two sections of the library.",
+            "in": "query",
+            "name": "section",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Keep the files that carry this tag.",
+            "in": "query",
+            "name": "tag",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Keep the files a project, or one of its timelines, uses.",
+            "in": "query",
+            "name": "project",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "imported, generated, fetched_by_agent or rendered_externally.",
+            "in": "query",
+            "name": "origin",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "true keeps the files marked reusable, false the others.",
+            "in": "query",
+            "name": "reusable",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "A full-text query over name, tags, description and origin; at most 8 words.",
+            "in": "query",
+            "name": "text",
             "schema": {
               "type": "string"
             }
@@ -10651,7 +11447,298 @@
             "bearer": []
           }
         ],
-        "summary": "List the files of the workspace by content hash"
+        "summary": "List the files of the library by content hash, with origin, tags and reuse"
+      }
+    },
+    "/api/v1/assets/{hash}": {
+      "get": {
+        "operationId": "assets.get",
+        "parameters": [
+          {
+            "description": "sha256: and 64 hex digits, as the library lists it.",
+            "in": "path",
+            "name": "hash",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read one file of the library with its origin and the projects that use it"
+      },
+      "put": {
+        "operationId": "assets.set",
+        "parameters": [
+          {
+            "description": "sha256: and 64 hex digits, as the library lists it.",
+            "in": "path",
+            "name": "hash",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "description": {
+                    "description": "What the file is, in your words; at most 2,000 characters.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "reusable": {
+                    "description": "Mark the file to be offered again, or take the mark off.",
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "rights_note": {
+                    "description": "Your own record of the licence or the permission; the product does not check it.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set the description, the rights note and the reuse mark of a file"
+      }
+    },
+    "/api/v1/assets/{hash}/tags": {
+      "post": {
+        "operationId": "assets.tag",
+        "parameters": [
+          {
+            "description": "sha256: and 64 hex digits, as the library lists it.",
+            "in": "path",
+            "name": "hash",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "add": {
+                    "description": "Tags to add; at most 20 tags on a file.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "remove": {
+                    "description": "Tags to take off.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add and remove the tags of a file"
+      }
+    },
+    "/api/v1/assets/{hash}/uses": {
+      "get": {
+        "operationId": "assets.uses",
+        "parameters": [
+          {
+            "description": "The next_cursor of the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page size; the default depends on the operation.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "sha256: and 64 hex digits, as the library lists it.",
+            "in": "path",
+            "name": "hash",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetUsesResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the projects that use a file of the library"
       }
     },
     "/api/v1/audit": {
@@ -10819,12 +11906,60 @@
         "summary": "Replace the brand kit"
       }
     },
+    "/api/v1/briefing/questions": {
+      "get": {
+        "operationId": "briefing.questions",
+        "parameters": [
+          {
+            "description": "With a project: also the answers its brief holds.",
+            "in": "query",
+            "name": "project_id",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BriefingQuestionsResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "The questions of the guided briefing"
+      }
+    },
     "/api/v1/commands": {
       "get": {
         "operationId": "commands.list",
         "parameters": [
           {
-            "description": "video (default) or image.",
+            "description": "A domain of the product, video by default.",
             "in": "query",
             "name": "domain",
             "schema": {
@@ -10872,7 +12007,7 @@
         "operationId": "commands.get",
         "parameters": [
           {
-            "description": "video (default) or image.",
+            "description": "A domain of the product, video by default.",
             "in": "query",
             "name": "domain",
             "schema": {
@@ -11159,6 +12294,67 @@
           }
         ],
         "summary": "Read one connection (never a secret)"
+      }
+    },
+    "/api/v1/connections/{id}/models": {
+      "get": {
+        "operationId": "providers.models",
+        "parameters": [
+          {
+            "description": "true reads the list from the provider again; the default serves a list at most ten minutes old.",
+            "in": "query",
+            "name": "refresh",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "The id of a connection to an AI provider, con_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderModelsResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read the current models of a provider through its connection"
       }
     },
     "/api/v1/connections/{id}/test": {
@@ -14306,6 +15502,84 @@
         "summary": "Write the brief of a project"
       }
     },
+    "/api/v1/projects/{id}/briefing": {
+      "put": {
+        "operationId": "projects.briefing.answer",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "answers": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Question id to answer; the questions are GET /briefing/questions. The answers replace the brief.",
+                    "type": "object"
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "replace": {
+                    "description": "Replace a brief that was written by hand.",
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BriefResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Answer the briefing: the answers become the brief of the project"
+      }
+    },
     "/api/v1/projects/{id}/bundle": {
       "post": {
         "description": "Heavy call: shares the limit of 10 a minute per credential (E_RATE_LIMITED with Retry-After).",
@@ -15910,6 +17184,28 @@
                     "minItems": 1,
                     "type": "array"
                   },
+                  "info": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/AssetInfo"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Tags, the reuse mark and a description for the files of the call."
+                  },
+                  "origin": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/Origin"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Where the files came from: kind imported (default), generated (provider and model), fetched_by_agent (source and rights_note) or rendered_externally (source)."
+                  },
                   "timeline_id": {
                     "description": "The timeline of the project; required when the project has several.",
                     "type": "string"
@@ -17319,6 +18615,125 @@
         "summary": "Undo the caller's latest step"
       }
     },
+    "/api/v1/providers": {
+      "get": {
+        "operationId": "providers.list",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the AI providers, the connections of each and the price table"
+      }
+    },
+    "/api/v1/providers/prices": {
+      "put": {
+        "operationId": "providers.prices.set",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "currency": {
+                    "description": "Three letters, for example USD; needed to set a price.",
+                    "type": "string"
+                  },
+                  "input_micros_per_mtok": {
+                    "description": "The price of a million input tokens, in millionths of the currency unit. Leave both prices out to remove the entry.",
+                    "format": "int64",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "model": {
+                    "description": "The model id, as provider:models lists it.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "output_micros_per_mtok": {
+                    "description": "The price of a million output tokens, in millionths of the currency unit.",
+                    "format": "int64",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "provider": {
+                    "description": "The id of the provider, for example openai.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "provider",
+                  "model"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderPricesResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set or remove the price of a model (a person in the browser only; the local token and keys get 403)"
+      }
+    },
     "/api/v1/system": {
       "get": {
         "operationId": "system.get",
@@ -17940,6 +19355,112 @@
           }
         ],
         "summary": "Make a project from a template"
+      }
+    },
+    "/api/v1/text/generate": {
+      "post": {
+        "operationId": "text.generate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "connection_id": {
+                    "description": "The connection to the provider that writes the text.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "dry_run": {
+                    "description": "true answers the job it would create, with its estimate, and writes and sends nothing.",
+                    "type": "boolean"
+                  },
+                  "max_tokens": {
+                    "description": "The most tokens the model may write; the default is 1024. The estimate counts all of them.",
+                    "type": "integer"
+                  },
+                  "model": {
+                    "description": "The model id, as provider:models lists it.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "project_id": {
+                    "description": "The project the generation belongs to, prj_ and 10 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "prompt": {
+                    "description": "What to write, 1 to 100000 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "system": {
+                    "description": "Instructions for the model, at most 20000 characters.",
+                    "type": "string"
+                  },
+                  "temperature": {
+                    "description": "0 to 2; leave out for the default of the provider.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "wait_ms": {
+                    "description": "Wait up to this many milliseconds for the job to finish.",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "project_id",
+                  "connection_id",
+                  "model",
+                  "prompt"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start a text generation with the provider of a connection; the job waits for approval and shows its estimate"
       }
     },
     "/api/v1/trash/empty": {

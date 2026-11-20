@@ -265,12 +265,25 @@ Import media files into a project
 
 ```text
 stuarty media:import <path>... --project <id> [--asset-id ast_...] [--wait] [--timeout d]
+stuarty media:import --hash sha256:... --project <id>   (a file the library already holds: no copy)
+origin and reuse: [--origin-kind k] [--origin-source s] [--provider p] [--model m] [--prompt t] [--rights-note t] [--tag t] [--reusable] [--description t]
 formats: MP4, MOV, MKV, WebM, AVI, MP3, WAV, FLAC, OGG, PNG, JPEG, WebP, GIF and .cube; not SVG
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `--asset-id` | string, repeatable |  | id to give the asset, once per path, in order |
+| `--hash` | string, repeatable |  | the hash of a file of the library to use in the project, in place of a path |
+| `--origin-kind` | string |  | imported (default), generated, fetched_by_agent or rendered_externally |
+| `--origin-source` | string |  | a path, a URL or a tool name, as plain text (required for fetched_by_agent and rendered_externally) |
+| `--provider` | string |  | the provider that generated the files (required for generated) |
+| `--model` | string |  | the model that generated the files (required for generated) |
+| `--prompt` | string |  | the prompt that generated the files |
+| `--cost-micros` | integer |  | what the files cost, in millionths of a US dollar |
+| `--rights-note` | string |  | your own record of the licence or the permission (required for fetched_by_agent) |
+| `--tag` | string, repeatable |  | a tag for the files; repeat it or give a comma list |
+| `--reusable` | boolean |  | mark the files to be offered again |
+| `--description` | string |  | what the files are, in your words |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--wait`, `--timeout`.
 
@@ -563,15 +576,16 @@ stuarty events --project prj_7k2m9x4q1b --since 4 --count 3
 
 ## `command:help`
 
-List the editing commands, or describe one
+List the editing commands and the domains, or describe one command
 
 ```text
 stuarty command:help [<name>]
+stuarty command:help --domain <domain>
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `--domain` | string | `video` | video, or image for the commands of image documents |
+| `--domain` | string |  | a domain of the product: its commands (without it, the video commands and the list of domains) |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 
@@ -733,11 +747,12 @@ Print or write the material for agents: the skill, the AGENTS.md snippet, the MC
 ```text
 stuarty agent:docs --print skill|agents|instructions
 stuarty agent:docs --write <dir>
+stuarty agent:docs --print guide:<domain>
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `--print` | string |  | print one of skill, agents or instructions |
+| `--print` | string |  | print one of skill, agents or instructions, or guide:&lt;domain&gt; for the page of a domain |
 | `--write` | string |  | write the three files into this directory |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
@@ -1139,6 +1154,49 @@ Example:
 stuarty brief:set --project prj_7k2m9x4q1b --text brief.md
 ```
 
+## `briefing:questions`
+
+List the questions of the guided briefing; with --project, also what its brief already answers
+
+```text
+stuarty briefing:questions [--project <id>]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--project` | string |  | a project: also the answers its brief holds |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty briefing:questions --project prj_7k2m9x4q1b
+```
+
+## `briefing:answer`
+
+Answer the guided briefing: the answers become the brief of a project
+
+```text
+stuarty briefing:answer --project <id> --answer <question>=<text> [--answer ...] [--replace]
+stuarty briefing:answer --project <id> --answers <file|-> [--replace]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--answer` | string, repeatable |  | one answer as &lt;question id&gt;=&lt;text&gt;; repeat for each question |
+| `--answers` | string |  | a JSON object of question id to answer: a file, or - for standard input |
+| `--replace` | boolean | `false` | replace a brief that was written by hand |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty briefing:answer --project prj_7k2m9x4q1b --answer audience="indie developers" --answer goal="get sign-ups" --answer platform=youtube-shorts --answer format=vertical-9x16 --answer duration=30
+```
+
 ## `connection:list`
 
 List the destinations Stuarty may reach
@@ -1387,6 +1445,92 @@ Example:
 stuarty cost:ceiling --currency USD --per-day 5000000
 ```
 
+## `provider:list`
+
+List the AI providers, the connections of each and the price table
+
+```text
+stuarty provider:list
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty provider:list --json
+```
+
+## `provider:models`
+
+List the models a provider offers through a connection, read from the provider now, with their price
+
+```text
+stuarty provider:models <connection id> [--refresh]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--refresh` | boolean | `false` | read the list from the provider again |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty provider:models con_0123456789
+```
+
+## `provider:price`
+
+Set or remove the price of a model (for a person in the app; the local token is refused)
+
+```text
+stuarty provider:price --provider <id> --model <id> --currency USD --price-in <micros> --price-out <micros>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--provider` | string |  | the provider id (required) |
+| `--model` | string |  | the model id (required) |
+| `--currency` | string |  | three letters, such as USD; needed to set a price |
+| `--price-in` | string |  | the price of a million input tokens, in millionths of the currency unit |
+| `--price-out` | string |  | the price of a million output tokens; leave both prices out to remove the entry |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty provider:price --provider openai --model a-model --currency USD --price-in 2500000 --price-out 10000000
+```
+
+## `text:generate`
+
+Generate text with the provider of a connection; the job shows its estimate and waits for approval
+
+```text
+stuarty text:generate --project <id> --connection <id> --model <id> [--prompt <text> | --prompt-file <file>] [--system <text>] [--max-tokens <n>] [--temperature <t>] [--dry-run]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--connection` | string |  | the connection to the provider (required) |
+| `--model` | string |  | the model id, as provider:models lists it (required) |
+| `--prompt` | string |  | what to write; without it and without --prompt-file the prompt is read from standard input |
+| `--prompt-file` | string |  | a file that holds the prompt |
+| `--system` | string |  | instructions for the model |
+| `--max-tokens` | integer |  | the most tokens the model may write (default 1024); the estimate counts all of them |
+| `--temperature` | string |  | 0 to 2 |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty text:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --prompt "Write a caption"
+```
+
 ## `image:create`
 
 Create an image document, blank or from a template
@@ -1529,6 +1673,114 @@ Example:
 
 ```bash
 stuarty image:export img_7k2m9x4q1b --format jpeg --quality 85
+```
+
+## `asset:list`
+
+List the files of the library, with origin, tags and reuse
+
+```text
+stuarty asset:list
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--section` | string |  | visual (images and LUTs) or video (video and audio) |
+| `--kind` | string |  | image, video, audio or lut |
+| `--tag` | string |  | only the files with this tag |
+| `--project` | string |  | only the files this project, or one of its timelines, uses |
+| `--origin` | string |  | imported, generated, fetched_by_agent or rendered_externally |
+| `--reusable` | boolean |  | only the files marked reusable; --no-reusable keeps the others |
+| `--text` | string |  | a full-text query over name, tags, description and origin |
+| `--cursor` | string |  | continue a list from this cursor |
+| `--limit` | integer | `50` | items per page |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty asset:list --tag logo --reusable --json
+```
+
+## `asset:show`
+
+Show a file of the library: its origin, its tags and the projects that use it
+
+```text
+stuarty asset:show <hash>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty asset:show sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --json
+```
+
+## `asset:uses`
+
+List the projects that use a file of the library
+
+```text
+stuarty asset:uses <hash>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--cursor` | string |  | continue a list from this cursor |
+| `--limit` | integer | `50` | items per page |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty asset:uses sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --json
+```
+
+## `asset:set`
+
+Set the description, the rights note and the reuse mark of a file of the library
+
+```text
+stuarty asset:set <hash>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--description` | string |  | what the file is, in your words; an empty value clears it |
+| `--rights-note` | string |  | your own record of the licence or the permission; the product does not check it |
+| `--reusable` | boolean |  | mark the file to be offered again; --no-reusable takes the mark off |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty asset:set sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --reusable
+```
+
+## `asset:tag`
+
+Add and remove the tags of a file of the library
+
+```text
+stuarty asset:tag <hash>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--add` | string, repeatable |  | tags to add; repeat it or give a comma list |
+| `--remove` | string, repeatable |  | tags to take off |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty asset:tag sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --add logo,brand
 ```
 
 ## `memory:list`

@@ -11,12 +11,14 @@ Every operation has its own page with the parameters, the body, the responses an
 
 | Method | Path | Operation | Summary |
 | --- | --- | --- | --- |
+| `GET` | `/api/v1/briefing/questions` | [`briefing.questions`](/docs/api/briefing.questions) | The questions of the guided briefing |
 | `GET` | `/api/v1/projects` | [`projects.list`](/docs/api/projects.list) | List projects |
 | `POST` | `/api/v1/projects` | [`projects.create`](/docs/api/projects.create) | Create a project |
 | `GET` | `/api/v1/projects/{id}` | [`projects.get`](/docs/api/projects.get) | Read a project |
 | `GET` | `/api/v1/projects/{id}/bitmaps/{key}` | [`bitmaps.get`](/docs/api/bitmaps.get) | Download a rasterized text or shape |
 | `GET` | `/api/v1/projects/{id}/brief` | [`projects.brief.get`](/docs/api/projects.brief.get) | Read the brief of a project |
 | `PUT` | `/api/v1/projects/{id}/brief` | [`projects.brief.set`](/docs/api/projects.brief.set) | Write the brief of a project |
+| `PUT` | `/api/v1/projects/{id}/briefing` | [`projects.briefing.answer`](/docs/api/projects.briefing.answer) | Answer the briefing: the answers become the brief of the project |
 | `POST` | `/api/v1/projects/{id}/bundle` | [`projects.bundle.export`](/docs/api/projects.bundle.export) | Export a project as a .vvbundle |
 | `GET` | `/api/v1/projects/{id}/describe` | [`projects.describe`](/docs/api/projects.describe) | Describe a project as text: brief, items and state |
 | `POST` | `/api/v1/projects/{id}/duplicate` | [`projects.duplicate`](/docs/api/projects.duplicate) | Duplicate a project |
@@ -45,7 +47,11 @@ Every operation has its own page with the parameters, the body, the responses an
 
 | Method | Path | Operation | Summary |
 | --- | --- | --- | --- |
-| `GET` | `/api/v1/assets` | [`assets.list`](/docs/api/assets.list) | List the files of the workspace by content hash |
+| `GET` | `/api/v1/assets` | [`assets.list`](/docs/api/assets.list) | List the files of the library by content hash, with origin, tags and reuse |
+| `GET` | `/api/v1/assets/{hash}` | [`assets.get`](/docs/api/assets.get) | Read one file of the library with its origin and the projects that use it |
+| `PUT` | `/api/v1/assets/{hash}` | [`assets.set`](/docs/api/assets.set) | Set the description, the rights note and the reuse mark of a file |
+| `POST` | `/api/v1/assets/{hash}/tags` | [`assets.tag`](/docs/api/assets.tag) | Add and remove the tags of a file |
+| `GET` | `/api/v1/assets/{hash}/uses` | [`assets.uses`](/docs/api/assets.uses) | List the projects that use a file of the library |
 | `GET` | `/api/v1/projects/{id}/media` | [`media.list`](/docs/api/media.list) | List the assets of a project |
 | `POST` | `/api/v1/projects/{id}/media` | [`media.import`](/docs/api/media.import) | Import media files |
 | `GET` | `/api/v1/projects/{id}/media/{asset_id}` | [`media.inspect`](/docs/api/media.inspect) | Inspect an asset |
@@ -139,7 +145,16 @@ Every operation has its own page with the parameters, the body, the responses an
 | `POST` | `/api/v1/connections` | [`connections.create`](/docs/api/connections.create) | Connect a destination; the secret goes into the vault |
 | `GET` | `/api/v1/connections/{id}` | [`connections.get`](/docs/api/connections.get) | Read one connection (never a secret) |
 | `DELETE` | `/api/v1/connections/{id}` | [`connections.remove`](/docs/api/connections.remove) | Remove a connection and its credential |
+| `GET` | `/api/v1/connections/{id}/models` | [`providers.models`](/docs/api/providers.models) | Read the current models of a provider through its connection |
 | `POST` | `/api/v1/connections/{id}/test` | [`connections.test`](/docs/api/connections.test) | Make one request through a connection |
+
+## AI providers
+
+| Method | Path | Operation | Summary |
+| --- | --- | --- | --- |
+| `GET` | `/api/v1/providers` | [`providers.list`](/docs/api/providers.list) | List the AI providers, the connections of each and the price table |
+| `PUT` | `/api/v1/providers/prices` | [`providers.prices.set`](/docs/api/providers.prices.set) | Set or remove the price of a model (a person in the browser only; the local token and keys get 403) |
+| `POST` | `/api/v1/text/generate` | [`text.generate`](/docs/api/text.generate) | Start a text generation with the provider of a connection; the job waits for approval and shows its estimate |
 
 ## Images
 

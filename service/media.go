@@ -22,6 +22,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/core/timeval"
 	"github.com/AlexGalhardo/stuarty/engine/ingest"
+	assetlib "github.com/AlexGalhardo/stuarty/service/assets"
 	"github.com/AlexGalhardo/stuarty/service/pathguard"
 	"github.com/AlexGalhardo/stuarty/service/textview"
 	"github.com/AlexGalhardo/stuarty/service/untrusted"
@@ -125,6 +126,11 @@ func (s *svc) MediaImport(ctx context.Context, req MediaImportRequest) (*MediaIm
 		}
 	}
 
+	rec, rerr := checkImportBlocks(&req)
+	if rerr != nil {
+		return nil, rerr
+	}
+
 	row, lerr := s.loadProject(ctx, c, req.ProjectID)
 	if lerr != nil {
 		return nil, lerr
@@ -142,7 +148,7 @@ func (s *svc) MediaImport(ctx context.Context, req MediaImportRequest) (*MediaIm
 	}
 
 	for i, f := range req.Files {
-		res.Assets[i] = s.importFile(ctx, c, &row, f, req.DryRun)
+		res.Assets[i] = s.importFile(ctx, c, &row, f, req.DryRun, &rec)
 		if res.Assets[i].Error != nil {
 			res.Failed++
 		}
@@ -199,7 +205,18 @@ func (s *svc) MediaImport(ctx context.Context, req MediaImportRequest) (*MediaIm
 
 // importFile is the flow of SDD-011 section 2.3 for one file. It never fails
 // the call: a refusal is the Error of the entry.
-func (s *svc) importFile(ctx context.Context, c Caller, project *ProjectRow, f ImportFile, dryRun bool) ImportedAsset {
+func (s *svc) importFile(
+	ctx context.Context,
+	c Caller,
+	project *ProjectRow,
+	f ImportFile,
+	dryRun bool,
+	rec *libraryRecord,
+) ImportedAsset {
+	if f.Hash != "" {
+		return s.reuseFile(ctx, c, project, f, dryRun, rec)
+	}
+
 	out := ImportedAsset{Name: displayName(f.Path), State: string(IngestPending)}
 
 	refuse := func(err error) ImportedAsset {
@@ -252,13 +269,7 @@ func (s *svc) importFile(ctx context.Context, c Caller, project *ProjectRow, f I
 	hash := "sha256:" + put.Hash
 	out.Deduplicated = put.Deduplicated
 
-	var (
-		jobID  string
-		addNow *ProjectAssetRow
-		asset  AssetRow
-		pa     ProjectAssetRow
-		fresh  bool
-	)
+	var att attached
 
 	werr := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
 		now := s.nowMs()
@@ -271,60 +282,92 @@ func (s *svc) importFile(ctx context.Context, c Caller, project *ProjectRow, f I
 			return uerr
 		}
 
-		if ar.IngestState == IngestFailed {
-			if err := tx.Assets().SetIngest(ctx, hash, IngestPending, 0, nil, now); err != nil {
-				return err
-			}
-
-			ar.IngestState, ar.Progress, ar.IngestError = IngestPending, 0, nil
+		var aerr error
+		if att, aerr = s.attach(ctx, tx, project, ar, out.Name, f.AssetID, c.Actor, now); aerr != nil {
+			return aerr
 		}
 
-		_, ferr := tx.Assets().FindProjectAssetByHash(ctx, project.ID, hash)
-		fresh = ferr != nil
-
-		row, perr := s.linkProjectAsset(ctx, tx, project.ID, hash, out.Name, f.AssetID, c.Actor, now)
-		if perr != nil {
-			return perr
-		}
-
-		asset, pa = ar, row
-
-		// Registered before the enqueue: an inline queue runs the job in its own
-		// after-commit hook, and this event must come first.
-		tx.AfterCommit(func() { s.emitAssetFor(project.ID, row.AssetID, ar.IngestState, ar.Progress, nil) })
-
-		switch ar.IngestState {
-		case IngestReady:
-			if row.State == ProjectAssetPending {
-				addNow = &row
-			}
-		default:
-			id, jerr := s.ensureIngestJob(ctx, tx, hash, c.Actor, now)
-			if jerr != nil {
-				return jerr
-			}
-
-			jobID = id
-		}
-
-		return nil
+		return assetlib.RecordImport(ctx, tx.AssetLibrary(), hash, rec.origin, rec.info, c.Actor, now)
 	})
 	s.storeMu.RUnlock()
 
 	if werr != nil {
-		return refuse(werr)
+		// A refusal of the library rules (too many tags) is the caller's, not an internal fault.
+		return refuse(libraryRefusal(werr))
 	}
 
-	out.AssetID, out.JobID, out.Kind, out.Hash = pa.AssetID, jobID, asset.Kind, hash
-	out.newInProject = fresh
+	out.AssetID, out.JobID, out.Kind, out.Hash = att.pa.AssetID, att.jobID, att.asset.Kind, hash
+	out.newInProject = att.fresh
 
-	if addNow != nil {
-		if aerr := s.addAsset(ctx, project, *addNow, asset, ""); aerr != nil {
+	if att.addNow != nil {
+		if aerr := s.addAsset(ctx, project, *att.addNow, att.asset, ""); aerr != nil {
 			out.Error = aerr
 		}
 	}
 
 	return out
+}
+
+// attached is what linking an asset row to a project made: the use, the job when the asset still needs an
+// ingest, and the use to add to the document at once when the asset is ready.
+type attached struct {
+	asset  AssetRow
+	pa     ProjectAssetRow
+	addNow *ProjectAssetRow
+	jobID  string
+	fresh  bool // the project did not have the file before
+}
+
+// attach links an asset row that is in the store to a project, inside the import's transaction, and queues the
+// ingest the asset still needs: the part of an import that a file read from a path and a file named by its hash
+// share (SDD-011 sections 2.3 and 14.3).
+func (s *svc) attach(
+	ctx context.Context,
+	tx Tx,
+	project *ProjectRow,
+	ar AssetRow,
+	name, wanted, actor string,
+	now int64,
+) (attached, error) {
+	hash := ar.Hash
+
+	if ar.IngestState == IngestFailed {
+		if err := tx.Assets().SetIngest(ctx, hash, IngestPending, 0, nil, now); err != nil {
+			return attached{}, err
+		}
+
+		ar.IngestState, ar.Progress, ar.IngestError = IngestPending, 0, nil
+	}
+
+	_, ferr := tx.Assets().FindProjectAssetByHash(ctx, project.ID, hash)
+	att := attached{asset: ar, fresh: ferr != nil}
+
+	row, perr := s.linkProjectAsset(ctx, tx, project.ID, hash, name, wanted, actor, now)
+	if perr != nil {
+		return attached{}, perr
+	}
+
+	att.pa = row
+
+	// Registered before the enqueue: an inline queue runs the job in its own
+	// after-commit hook, and this event must come first.
+	tx.AfterCommit(func() { s.emitAssetFor(project.ID, row.AssetID, ar.IngestState, ar.Progress, nil) })
+
+	switch ar.IngestState {
+	case IngestReady:
+		if row.State == ProjectAssetPending {
+			att.addNow = &row
+		}
+	default:
+		id, jerr := s.ensureIngestJob(ctx, tx, hash, actor, now)
+		if jerr != nil {
+			return attached{}, jerr
+		}
+
+		att.jobID = id
+	}
+
+	return att, nil
 }
 
 // sizesApart formats a size and the ceiling it exceeds so that they never read

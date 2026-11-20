@@ -226,6 +226,22 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.AssetList(ctx, service.AssetListRequest{})
 			return err
 		},
+		"AssetGet": func() error {
+			_, err := e.svc.AssetGet(ctx, service.AssetRef{Hash: "sha256:" + strings.Repeat("0", 64)})
+			return err
+		},
+		"AssetUses": func() error {
+			_, err := e.svc.AssetUses(ctx, service.AssetUsesRequest{Hash: "sha256:" + strings.Repeat("0", 64)})
+			return err
+		},
+		"AssetSetInfo": func() error {
+			_, err := e.svc.AssetSetInfo(ctx, service.AssetSetInfoRequest{Hash: "sha256:" + strings.Repeat("0", 64)})
+			return err
+		},
+		"AssetTag": func() error {
+			_, err := e.svc.AssetTag(ctx, service.AssetTagRequest{Hash: "sha256:" + strings.Repeat("0", 64)})
+			return err
+		},
 		"ExportFile": func() error {
 			_, err := e.svc.ExportFile(ctx, service.ExportFileRequest{JobID: "job_0000000001"})
 			return err
@@ -282,6 +298,14 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.BriefSet(ctx, service.BriefSetRequest{ProjectID: "prj_0000000001"})
 			return err
 		},
+		"BriefingQuestions": func() error {
+			_, err := e.svc.BriefingQuestions(ctx, service.BriefingQuestionsRequest{})
+			return err
+		},
+		"BriefingAnswer": func() error {
+			_, err := e.svc.BriefingAnswer(ctx, service.BriefingAnswerRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
 		"ConnectionList": func() error {
 			_, err := e.svc.ConnectionList(ctx, service.ConnectionListRequest{})
 			return err
@@ -335,6 +359,22 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 		},
 		"CostCeilingSet": func() error {
 			_, err := e.svc.CostCeilingSet(ctx, service.CostCeilingSetRequest{Currency: "USD"})
+			return err
+		},
+		"ProviderList": func() error {
+			_, err := e.svc.ProviderList(ctx, service.ProviderListRequest{})
+			return err
+		},
+		"ProviderModels": func() error {
+			_, err := e.svc.ProviderModels(ctx, service.ProviderModelsRequest{ConnectionID: "con_0000000001"})
+			return err
+		},
+		"ProviderPriceSet": func() error {
+			_, err := e.svc.ProviderPriceSet(ctx, service.ProviderPriceSetRequest{Provider: "openai", Model: "m"})
+			return err
+		},
+		"TextGenerate": func() error {
+			_, err := e.svc.TextGenerate(ctx, service.TextGenerateRequest{ProjectID: "prj_0000000001"})
 			return err
 		},
 		"MemoryList": func() error {
@@ -941,6 +981,33 @@ func TestCommandHelp(t *testing.T) {
 		if c.Name == "asset.add" {
 			t.Error("the list shows the internal command asset.add")
 		}
+	}
+
+	// The call with no name and no domain also lists the domains (SDD-003 section 4.8); one with a domain does not.
+	if len(list.Domains) != len(command.Domains()) || !strings.Contains(list.Text, "\nimage: ") {
+		t.Errorf("the discovery lists %d domains, want %d, in %q", len(list.Domains), len(command.Domains()), list.Text)
+	}
+
+	imageList, err := e.svc.CommandHelp(e.as(ui), service.CommandHelpRequest{Domain: command.DomainImage})
+	if err != nil || len(imageList.Commands) == 0 || len(imageList.Domains) != 0 {
+		t.Errorf("image list = %+v, %v", imageList, err)
+	}
+
+	for _, d := range []string{"publish", "memory"} {
+		empty, derr := e.svc.CommandHelp(e.as(ui), service.CommandHelpRequest{Domain: d})
+		if derr != nil || len(empty.Commands) != 0 || !strings.Contains(empty.Text, "No edit operations") {
+			t.Errorf("%s list = %+v, %v", d, empty, derr)
+		}
+	}
+
+	if _, err = e.svc.CommandHelp(
+		e.as(ui),
+		service.CommandHelpRequest{Domain: "nope"},
+	); serviceError(
+		t,
+		err,
+	).Path != "domain" {
+		t.Errorf("an unknown domain: %v", err)
 	}
 
 	one, err := e.svc.CommandHelp(e.as(ui), service.CommandHelpRequest{Name: "item.move"})
