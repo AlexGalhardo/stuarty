@@ -55,7 +55,7 @@ export function start(): void {
 			// The mascot waits off stage until the export; in the plain layout it greets the reader in the intro.
 			// The mascot greets the reader beside the intro, then steps off stage while the timeline plays and comes
 			// back at the export.
-			Object.assign(stage.pose, timelineOn ? { x: 0.62, y: 0.12, scale: 0.62, turn: -0.5, opacity: 1 } : { x: 0.6, y: 0.5, scale: 0.4, turn: -0.4, opacity: 1 });
+			Object.assign(stage.pose, timelineOn ? { x: 0.62, y: 0.12, scale: 0.62, turn: -0.5, opacity: 1 } : { x: 0.66, y: 0.84, scale: 0.26, turn: -0.4, opacity: 1 });
 			if (!reduced) {
 				gsap.from(stage.pose, { scale: 0, turn: -2.5, duration: 1.4, ease: "back.out(1.4)", onComplete: () => stage?.blink() });
 				gsap.to(stage.pose, {

@@ -52,7 +52,11 @@ export function start(): void {
 			if (!canvas) return;
 			stage = createStage(canvas);
 			if (!stage) return;
-			Object.assign(stage.pose, POSES[takesOn() ? current : 0], { opacity: 1 });
+			Object.assign(stage.pose, takesOn() ? POSES[current] : { x: 0.62, y: 0.82, scale: 0.3, turn: -0.4 }, { opacity: 1 });
+			if (!takesOn() && !reduced) {
+				// The plain scroll: the mascot greets the reader in the first take and fades when it scrolls away.
+				gsap.to(stage.pose, { opacity: 0, ease: "none", immediateRender: false, scrollTrigger: { trigger: takes[1], start: "top 90%", end: "top 40%", scrub: true } });
+			}
 			if (reduced) stage.renderOnce();
 			else gsap.from(stage.pose, { scale: 0, turn: -2, duration: 1.4, ease: "back.out(1.4)", onComplete: () => stage?.blink() });
 		});
@@ -100,21 +104,29 @@ export function start(): void {
 		setRail(i);
 		history.replaceState(null, "", `#${next.id}`);
 		if (hint) hint.style.opacity = i === 0 ? "1" : "0";
-		if (opts.focus) next.querySelector<HTMLElement>("h1, h2")?.focus({ preventScroll: true });
+		// Focus after two frames: the take has just become visible, and the global reduced-motion rule gives
+		// every element a tiny transition, visibility included, so the heading is not focusable in this frame.
+		if (opts.focus) {
+			const heading = next.querySelector<HTMLElement>("h1, h2");
+			requestAnimationFrame(() => requestAnimationFrame(() => heading?.focus({ preventScroll: true })));
+		}
 
 		const items = next.querySelectorAll<HTMLElement>("[data-in]");
 		const frames = next.querySelectorAll<HTMLElement>("[data-in-3d]");
 		if (opts.instant || reduced) {
-			if (prev && prev !== next) gsap.fromTo(prev, { autoAlpha: 1 }, { autoAlpha: 0, duration: reduced ? 0.15 : 0, clearProps: "opacity,visibility" });
-			gsap.fromTo(next, { autoAlpha: 0 }, { autoAlpha: 1, duration: reduced ? 0.15 : 0, clearProps: "opacity,visibility" });
+			// Opacity only on the takes: hiding the incoming take, even for a frame, would blur the focused heading.
+			if (prev && prev !== next) {
+				gsap.fromTo(prev, { opacity: 1, visibility: "visible" }, { opacity: 0, duration: reduced ? 0.15 : 0, clearProps: "opacity,visibility" });
+			}
+			gsap.fromTo(next, { opacity: 0 }, { opacity: 1, duration: reduced ? 0.15 : 0, clearProps: "opacity" });
 			if (items.length + frames.length > 0) gsap.set([...items, ...frames], { clearProps: "all" });
 		} else {
 			const tl = gsap.timeline();
 			if (prev && prev !== next) {
-				tl.fromTo(prev, { autoAlpha: 1 }, { autoAlpha: 0, y: -30, duration: 0.35, ease: "power2.in", clearProps: "opacity,visibility,transform" }, 0);
+				tl.fromTo(prev, { opacity: 1, visibility: "visible" }, { opacity: 0, y: -30, duration: 0.35, ease: "power2.in", clearProps: "opacity,visibility,transform" }, 0);
 			}
-			tl.fromTo(next, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.01, clearProps: "opacity,visibility" }, 0.25);
-			if (items.length > 0) tl.fromTo(items, { autoAlpha: 0, y: 36 }, { autoAlpha: 1, y: 0, duration: 0.9, ease: "expo.out", stagger: 0.07 }, 0.3);
+			tl.fromTo(next, { opacity: 0 }, { opacity: 1, duration: 0.01, clearProps: "opacity" }, 0.25);
+			if (items.length > 0) tl.fromTo(items, { opacity: 0, y: 36 }, { opacity: 1, y: 0, duration: 0.9, ease: "expo.out", stagger: 0.07 }, 0.3);
 			if (frames.length > 0) tl.fromTo(
 				frames,
 				{ autoAlpha: 0, rotateY: (k: number) => (k % 2 ? 18 : -22), rotateX: 8, z: -200, y: 60 },
