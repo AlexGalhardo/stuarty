@@ -126,10 +126,10 @@ func TestTheRealModelParses(t *testing.T) {
 	// the AI provider sign-in threats of epic 12; T-80 to T-85 are the Google sign-in threats of epic 24; T-86
 	// to T-88, T-95 and T-99 are the blog threats of epic 23; T-90 and T-91 are the processed-sound threats of
 	// epic 51; T-92 to T-94 are the lookup table threats of an image, epic 49; T-96 to T-98 are the image edit
-	// threats of epic 30; T-89 is the shared image templates of network mode (VV-291), T-102 the
-	// chapter file of an export (VV-290).
-	if len(threats) != 100 {
-		t.Errorf("the model has %d threats, want 100 (T-89 shared image templates, T-102 chapter file)", len(threats))
+	// threats of epic 30; T-89 is the shared image templates of network mode (VV-291), T-100 and
+	// T-101 the quality campaigns of epic 42, T-102 the chapter file of an export (VV-290).
+	if len(threats) != 102 {
+		t.Errorf("the model has %d threats, want 102 (T-89, T-100, T-101, T-102)", len(threats))
 	}
 }
 
