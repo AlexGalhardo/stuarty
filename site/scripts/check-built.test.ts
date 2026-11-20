@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { basePathProblems, foreignOriginProblems, pageProblems, searchProblems, twinProblems } from "./check-built.ts";
 
-const own = "video.vukem.dev";
+const own = "stuarty.com";
 
 test("a script, stylesheet, font or image from another origin is refused", () => {
 	const html = [

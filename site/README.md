@@ -13,7 +13,7 @@ npm run build      # static export to out/
 npm run preview
 ```
 
-The site is served under the base path of its address. `SITE_URL` (default `https://video.vukem.dev`, a custom domain on GitHub Pages, so the base is `/`) sets both the address and the base path; an address with a path (a project site) sets that path as the base. Every internal link goes through `withBase` in `lib/site.ts` or the `Link` component.
+The site is served under the base path of its address. `SITE_URL` (default `https://stuarty.com`, a custom domain on GitHub Pages, so the base is `/`) sets both the address and the base path; an address with a path (a project site) sets that path as the base. Every internal link goes through `withBase` in `lib/site.ts` or the `Link` component.
 
 ## Checks
 

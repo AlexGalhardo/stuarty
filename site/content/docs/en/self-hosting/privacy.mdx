@@ -20,7 +20,7 @@ A connection **to** the server, from a browser or a client you use, is inbound a
 | Transcription API | `STUARTY_TRANSCRIBE_URL` and `STUARTY_TRANSCRIBE_KEY` are set and a transcription runs | the host you configured, with the audio of one asset and the key | off |
 | Helper download | a person runs `tools:install` or presses Install in the editor | the hosts of the embedded manifest | never at run time |
 | OpenTelemetry | `OTEL_EXPORTER_OTLP_ENDPOINT` is set | that endpoint | off |
-| Desktop update check | you answered Yes to the first-use question, or you choose **Help**, **Check for updates** | `video.vukem.dev`, one signed file, nothing about you | asked once; nothing connects before the answer |
+| Desktop update check | you answered Yes to the first-use question, or you choose **Help**, **Check for updates** | `stuarty.com`, one signed file, nothing about you | asked once; nothing connects before the answer |
 | CLI and stdio MCP as clients | a server owns the workspace | the loopback address of that server, or `STUARTY_URL` when you set it | loopback only |
 | Browser launch | `serve` opens your browser | your browser connects to loopback; the product makes no connection | loopback only |
 | AI provider | you create a connection to one (an API key, Sign in with ChatGPT, OpenRouter) and a draft, an image, a voice or a model operation uses it, after your approval when it costs money | the host of that connection, with the prompt and what you chose to send (a picture, a text), and your key | off until you connect one |

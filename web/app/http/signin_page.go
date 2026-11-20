@@ -9,7 +9,7 @@ import (
 const signInHint = "send the local token as Authorization: Bearer <token>, or run `stuarty open` to open the editor in a browser"
 
 // docsSignInURL is the documentation page that explains the way in.
-const docsSignInURL = "https://video.vukem.dev/docs/self-hosting/binary"
+const docsSignInURL = "https://stuarty.com/docs/self-hosting/binary"
 
 const signInPage = `<!doctype html>
 <html lang="en">

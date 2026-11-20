@@ -46,7 +46,7 @@ test("under a base path, every root-relative href and src starts with it (SDD-01
 });
 
 test("on a custom domain the base is the root and no page carries the project base path", () => {
-	const { dir, pages } = build("https://video.vukem.dev");
+	const { dir, pages } = build("https://stuarty.com");
 	try {
 		assert.ok(pages.length > 50, `only ${pages.length} pages were built`);
 		const leaks = pages.filter((f) => /\b(?:href|src)\s*=\s*"\/stuarty[/"]/.test(fs.readFileSync(f, "utf8")));
