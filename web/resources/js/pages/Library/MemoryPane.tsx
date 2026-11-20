@@ -103,6 +103,8 @@ export default function MemoryPane({
 				keep: entry !== null && !entry.kept ? true : undefined,
 			});
 			setBaseline(current);
+			// The note as the service kept it: after Keep the panel says it is kept, with no reload.
+			setEntry(written.entry);
 			setSaved(true);
 			onChanged(written.entry.name);
 		} catch (error) {

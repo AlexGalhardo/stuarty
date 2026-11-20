@@ -3279,7 +3279,7 @@
       "memory": {
         "description": "O fato, em uma linha",
         "keep": "Manter esta nota",
-        "pending_hint": "Um agente escreveu esta nota. Os agentes não a recebem antes de você mantê-la."
+        "pending_hint": "Esta nota não foi escrita por uma pessoa no aplicativo (um agente a escreveu, ou ela veio de uma janela que não é a sessão de uma pessoa). Os agentes não a recebem antes de você mantê-la."
       },
       "prompt": {
         "variables_hint": "Escreva {{variable}} onde entra um valor.",
