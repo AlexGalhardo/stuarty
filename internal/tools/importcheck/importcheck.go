@@ -34,9 +34,12 @@ const EngineException = VukemModule + "/contrib/engine"
 
 // CoreLibraries are the pure third-party libraries core/ may import, as
 // import path prefixes. A library enters this list only together with the
-// author's approval of the dependency (ADR-0014 names the JSON Schema validator).
+// author's approval of the dependency (ADR-0014 names the JSON Schema validator;
+// D-094 approves the Unicode normalization of the Go team, for the caption counts
+// of core/writing).
 var CoreLibraries = []string{
 	"github.com/santhosh-tekuri/jsonschema",
+	"golang.org/x/text/unicode/norm",
 }
 
 // Violation is one forbidden import.
