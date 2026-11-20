@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
 import { ApiError } from "../../editor/api/errors";
 import type { ImageApi } from "../api/imageApi";
@@ -6,6 +6,8 @@ import type {
 	ImageDocument,
 	ImageEditResult,
 	ImageHistoryEntry,
+	ImageImportResult,
+	ImageUpdatedEvent,
 	Layer,
 } from "../api/types";
 import { changedLayers, createImageStore, layerIds } from "./store";
@@ -51,16 +53,40 @@ const edited = (revision: number): ImageEditResult => ({
 	description: "",
 });
 
+const importResult = (revision: number): ImageImportResult => ({
+	state: "ready",
+	image_id: "img_aaaaaaaaaa",
+	revision,
+	created: false,
+	layer_id: "imported",
+	name: "photo.png",
+	applied: true,
+	text: "",
+});
+
+const updated = (revision: number): ImageUpdatedEvent => ({
+	name: "image.updated",
+	image_id: "img_aaaaaaaaaa",
+	revision,
+	base_revision: revision - 1,
+	kind: "edit",
+	actor: "agent:claude",
+	at: "2026-11-20T12:00:00.000Z",
+	diff: [],
+});
+
 // A server in memory: it keeps one document and answers like the real one (a stale base is a conflict).
 function fakeApi(start: ImageDocument): {
 	api: ImageApi;
 	current: () => ImageDocument;
 	set(next: ImageDocument): void;
 	sent: { base: number; ops: string[] }[];
+	imports: { base?: number; path?: string; file?: string }[];
 	entries: ImageHistoryEntry[];
 } {
 	let current = start;
 	const sent: { base: number; ops: string[] }[] = [];
+	const imports: { base?: number; path?: string; file?: string }[] = [];
 	const entries: ImageHistoryEntry[] = [];
 	const api: ImageApi = {
 		list: async () => ({ images: [], next_cursor: null }),
@@ -93,12 +119,30 @@ function fakeApi(start: ImageDocument): {
 			revision: current.revision,
 			entries,
 		}),
+		importImage: async (request) => {
+			imports.push({ base: request.base_revision, path: request.path });
+			current = doc(current.revision + 1, [
+				...current.layers,
+				layer("imported"),
+			]);
+			return importResult(current.revision);
+		},
+		importFile: async (file, request) => {
+			imports.push({ base: request.base_revision, file: file.name });
+			current = doc(current.revision + 1, [
+				...current.layers,
+				layer("imported"),
+			]);
+			return importResult(current.revision);
+		},
+		probe: async () => 200,
 	};
 	return {
 		api,
 		current: () => current,
 		set: (n) => (current = n),
 		sent,
+		imports,
 		entries,
 	};
 }
@@ -208,6 +252,119 @@ describe("the image store", () => {
 		await store.getState().poll();
 		expect(store.getState().doc).toBe(before);
 		expect(store.getState().notice).toBeNull();
+	});
+
+	test("an event of a newer revision fetches the document, outlines what changed and says who", async () => {
+		const server = fakeApi(doc(1, [layer("a")]));
+		const store = createImageStore(server.api, "img_aaaaaaaaaa");
+		await store.getState().open();
+		server.entries.unshift({
+			revision: 2,
+			kind: "edit",
+			actor: "agent:claude",
+			at: "2026-11-20T12:00:00Z",
+			ops: ["layer.add_text"],
+			changes: 1,
+			mine: false,
+		});
+		server.set(doc(2, [layer("a"), layer("t", { kind: "text" })]));
+		await store.getState().receive(updated(2));
+		expect(store.getState().doc?.revision).toBe(2);
+		expect(store.getState().changedByOthers).toEqual(["t"]);
+		expect(store.getState().notice).toEqual({
+			kind: "agent",
+			actor: "agent:claude",
+		});
+	});
+
+	test("an event of the revision on screen, or an older one, is ignored: a commit of this window is applied once", async () => {
+		const server = fakeApi(doc(1, []));
+		let describes = 0;
+		const inner = server.api.describe;
+		server.api.describe = async (id, signal) => {
+			describes++;
+			return inner(id, signal);
+		};
+		const store = createImageStore(server.api, "img_aaaaaaaaaa");
+		await store.getState().open();
+		await store.getState().send([{ op: "layer.add_fill" }]);
+		const before = describes;
+		const doc2 = store.getState().doc;
+		// the event of the revision this window just made, and an old one
+		await store.getState().receive(updated(2));
+		await store.getState().receive(updated(1));
+		expect(describes).toBe(before);
+		expect(store.getState().doc).toBe(doc2);
+		expect(store.getState().notice).toBeNull();
+	});
+
+	test("an event that arrives while a command runs is looked at once the command ends", async () => {
+		const server = fakeApi(doc(1, []));
+		const store = createImageStore(server.api, "img_aaaaaaaaaa");
+		await store.getState().open();
+		const edit = server.api.edit;
+		server.api.edit = async (id, base, ops) => {
+			const result = await edit(id, base, ops);
+			// another actor commits revision 3 while this window's batch (revision 2) is being answered
+			server.set(doc(3, [layer("x"), layer("y"), layer("z")]));
+			await store.getState().receive(updated(3));
+			return result;
+		};
+		await store.getState().send([{ op: "layer.add_fill" }]);
+		await vi.waitFor(() => expect(store.getState().doc?.revision).toBe(3));
+	});
+
+	test("a file is put in this image against the revision on screen, by its path or as a file", async () => {
+		const server = fakeApi(doc(1, [layer("a")]));
+		const store = createImageStore(server.api, "img_aaaaaaaaaa");
+		await store.getState().open();
+		const byPath = await store
+			.getState()
+			.importFile({ path: "/home/ana/a.png" });
+		expect(byPath?.revision).toBe(2);
+		expect(store.getState().selection).toEqual(["imported"]);
+		const file = new File([new Uint8Array([1, 2, 3])], "b.png");
+		await store.getState().importFile({ file });
+		expect(server.imports).toEqual([
+			{ base: 1, path: "/home/ana/a.png" },
+			{ base: 2, file: "b.png" },
+		]);
+		expect(store.getState().doc?.revision).toBe(3);
+	});
+
+	test("a file the server is still reading makes no layer and says so", async () => {
+		const server = fakeApi(doc(1, [layer("a")]));
+		server.api.importFile = async () => ({
+			state: "pending",
+			hash: "sha256:00",
+			created: false,
+			name: "big.png",
+			applied: false,
+			text: "file sha256:00 is still being ingested",
+		});
+		const store = createImageStore(server.api, "img_aaaaaaaaaa");
+		await store.getState().open();
+		const file = new File([new Uint8Array([1, 2, 3])], "big.png");
+		expect(await store.getState().importFile({ file })).toBeNull();
+		expect(store.getState().error?.code).toBe("E_ASSET_NOT_READY");
+		expect(store.getState().doc?.revision).toBe(1);
+		expect(store.getState().busy).toBe(false);
+	});
+
+	test("a refused import keeps the error and leaves the document as it was", async () => {
+		const server = fakeApi(doc(1, [layer("a")]));
+		server.api.importImage = async () => {
+			throw new ApiError(422, {
+				code: "E_UNSUPPORTED_MEDIA",
+				message: "not an image",
+			});
+		};
+		const store = createImageStore(server.api, "img_aaaaaaaaaa");
+		await store.getState().open();
+		expect(await store.getState().importFile({ path: "/x.mov" })).toBeNull();
+		expect(store.getState().error?.code).toBe("E_UNSUPPORTED_MEDIA");
+		expect(store.getState().doc?.revision).toBe(1);
+		expect(store.getState().busy).toBe(false);
 	});
 
 	test("a failed open is a failed state with the error", async () => {

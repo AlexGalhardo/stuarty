@@ -46,6 +46,21 @@ func TestGoldenBytesOfEachEvent(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	imageRow := service.ImageOpRow{
+		ImageID:      "img_7k2m9x4q1b",
+		Revision:     7,
+		BaseRevision: 6,
+		Kind:         service.OpEdit,
+		Actor:        "local:claude-code",
+		AtMs:         at.UnixMilli(),
+		Diff:         json.RawMessage(`[{"kind":"layer.updated","id":"lyr_a1b2c3d4e5","changes":{"x":[10,40]}}]`),
+	}
+
+	image, err := events.ImageRowFrame(&imageRow)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	moved := time.Date(2026, 11, 14, 12, 20, 31, 870_000_000, time.UTC)
 	job := service.Event{
 		ProjectID: "prj_7k2m9x4q1b", JobID: "job_4f8h2k9m3q", Kind: "export", State: "running", Progress: 0.31,
@@ -67,6 +82,7 @@ func TestGoldenBytesOfEachEvent(t *testing.T) {
 		"asset.updated":   events.AssetFrame(&asset),
 		"job.updated":     events.JobFrame(&job),
 		"resync.required": events.ResyncFrame("prj_7k2m9x4q1b", 1500, events.ReasonGapTooLarge),
+		"image.updated":   image,
 	}
 
 	for name, f := range cases {
@@ -88,8 +104,8 @@ func TestGoldenBytesOfEachEvent(t *testing.T) {
 			t.Errorf("%s bytes:\n got %q\nwant %q", name, got, want)
 		}
 
-		if (f.ID != "") != (name == "batch.committed") {
-			t.Errorf("%s: id %q is set only for batch.committed", name, f.ID)
+		if (f.ID != "") != (name == "batch.committed" || name == "image.updated") {
+			t.Errorf("%s: id %q is set only for batch.committed and image.updated", name, f.ID)
 		}
 
 		if strings.Count(got, "data:") != 1 || strings.Contains(f.Data, "\n") {
@@ -115,7 +131,7 @@ func TestSDDExamplesMatchTheSchemas(t *testing.T) {
 
 	for _, name := range []string{
 		events.BatchCommitted, events.ProjectUpdated, events.NestedUpdated, events.AssetUpdated, events.JobUpdated,
-		events.ResyncRequired,
+		events.ResyncRequired, events.ImageUpdated,
 	} {
 		f, err := os.Open(filepath.Join("testdata", "schema", name+".json"))
 		if err != nil {
@@ -173,7 +189,7 @@ func TestSDDExamplesMatchTheSchemas(t *testing.T) {
 			t.Errorf("%s example does not match its schema: %v\n%s", event, err, data)
 		}
 
-		if (id != "") != (event == events.BatchCommitted) {
+		if (id != "") != (event == events.BatchCommitted || event == events.ImageUpdated) {
 			t.Errorf("%s example has id %q", event, id)
 		}
 	}

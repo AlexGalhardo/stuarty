@@ -238,3 +238,72 @@ var imageExport = &spec{
 		return &output{value: res, text: service.ImageExportText(res)}, nil
 	},
 }
+
+var imageImport = &spec{
+	name:    "image:import",
+	summary: "bring an image file into a new image document, or into an existing one as a layer",
+	usage: []string{
+		"stuarty image:import --path <file>",
+		"stuarty image:import --hash <sha256:...> [--id <image>] [--name n] [--preset p | --width w --height h]",
+	},
+	example: `stuarty image:import --path /home/ana/photos/face.jpg --preset video_thumbnail`,
+	globals: []string{"dry-run"},
+	write:   true,
+	flags: []flagDef{
+		{Name: "path", Kind: kindString, Usage: "an absolute path to an image file on the machine of the server"},
+		{Name: "hash", Kind: kindString, Usage: "an image already in the workspace (asset:list shows its hash)"},
+		{Name: "id", Kind: kindString, Usage: "put the file in this image as a layer (default: a new image)"},
+		{Name: "name", Kind: kindString, Usage: "the name of the new image, or of the layer with --id"},
+		{
+			Name:  "preset",
+			Kind:  kindString,
+			Usage: "the canvas of a new image: video_thumbnail, square_post or vertical_cover",
+		},
+		{
+			Name:  "width",
+			Kind:  kindInt,
+			Usage: "the canvas of a new image, with --height (default: the size of the file, up to 4096)",
+		},
+		{Name: "height", Kind: kindInt, Usage: "the canvas of a new image, with --width"},
+		{
+			Name:  "wait-ms",
+			Kind:  kindInt,
+			Usage: "how long to wait for the file to be ingested, 0 to 25000 (default 10000)",
+		},
+		{
+			Name:  "base",
+			Kind:  kindInt,
+			Usage: "with --id: the revision the layer was planned against (default: the current one)",
+		},
+		{Name: "key", Kind: kindString, Usage: "with --id: idempotency key"},
+	},
+	run: func(ctx context.Context, c *call) (*output, error) {
+		req := service.ImageImportRequest{
+			Path: c.args.str("path"), Hash: c.args.str("hash"), ImageID: c.args.str("id"), Name: c.args.str("name"),
+			Preset: c.args.str("preset"), Width: c.args.integer("width"), Height: c.args.integer("height"),
+			WaitMS: c.args.integer("wait-ms"), IdempotencyKey: c.args.str("key"), DryRun: c.args.boolean("dry-run"),
+		}
+
+		if req.ImageID != "" {
+			req.BaseRevision = int64(c.args.integer("base"))
+
+			if !c.args.has("base") {
+				cur, err := c.svc.ImageDescribe(ctx, service.ImageDescribeRequest{ImageID: req.ImageID})
+				if err != nil {
+					return nil, err
+				}
+
+				req.BaseRevision = cur.Revision
+			}
+		} else if c.args.has("base") {
+			req.BaseRevision = int64(c.args.integer("base"))
+		}
+
+		res, err := c.svc.ImageImport(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: res.Text}, nil
+	},
+}
