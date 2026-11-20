@@ -1,0 +1,140 @@
+---
+title: "Your first short video, from idea to published"
+description: "The first complete flow: a brief, a script, a vertical video with captions, a thumbnail, and a post that goes out only after you approve it."
+---
+
+## You will learn
+
+- how to go from an idea to a published short vertical video with captions and a thumbnail;
+- which steps you do in the editor and which the command line does for you or for an agent;
+- that nothing is sent to a network until you approve it.
+
+## What you need
+
+- Stuarty [installed](/docs/installation) and running, and FFmpeg (`stuarty doctor --full` says).
+- A video file, `talk.mp4`, a few seconds of speech is enough.
+- For the script: a connection to an AI provider (optional: you can write the script yourself).
+- For the post: your own developer app on a network, such as [YouTube](/docs/publish/youtube) (optional: everything up to the export works without it).
+
+Each step has the path in the editor and the command that does the same. An agent uses the same commands through the CLI, or the MCP tools that wrap them. The identifiers below (`prj_...`, `ast_...`) are the ones you choose with `--id` in a local server; a server in network mode chooses them for you and prints them.
+
+## The steps
+
+1. **Create the project.** In the editor, open **Projects** and choose **New project**: name it and keep the 9:16 preset. With the command line:
+
+   ```bash
+   stuarty project:create --name "Sourdough short" --id prj_5k2m9x4q1b
+   ```
+
+2. **Answer the briefing.** The brief is what the project is for: who it is for, the goal, the platform, the tone. In the editor it is the questions of the project. With the command line:
+
+   ```bash
+   stuarty briefing:answer --project prj_5k2m9x4q1b \
+     --answer audience="Home bakers who want a first sourdough loaf" \
+     --answer goal="Watch to the end and try the recipe" \
+     --answer platform=youtube-shorts --answer format=vertical-9x16 \
+     --answer duration=10 --answer tone=warm
+   stuarty brief:show --project prj_5k2m9x4q1b
+   ```
+
+3. **Connect an AI provider and draft the script.** In the editor, open **Connections**, choose **Connect**, pick your provider and paste your key: it goes into the vault and is never shown again. Then open the script of the project in **Write**, find **Draft with a model** and choose **Ask for the draft**. A draft costs money, so it first becomes a request in **Approvals**, with the estimate, and waits for you to choose **Approve**. With the command line (the key is read from the standard input, never from an argument):
+
+   ```console
+   printf '%s' "$OPENAI_API_KEY" | stuarty connection:add --kind openai --label "My AI" --accepts text
+   stuarty item:add --project prj_5k2m9x4q1b --kind text --title Script --text-kind script --text script.md
+   stuarty text:draft <script id> --project prj_5k2m9x4q1b --connection <connection id> \
+     --model <model> --instruction "A 10 second script about baking a first sourdough loaf"
+   stuarty approval:list
+   ```
+
+   An agent can ask for the draft and cannot approve it: the command `approval:decide` with an agent's key is refused, and a person decides in **Approvals**. Edit the draft in **Write**; every save is a revision you can go back to. No provider? Write the script in **Write** yourself and go on.
+
+4. **Import the footage and cut it.** In **Edit Video**, open the project and drop `talk.mp4` in the library, then drag it to the timeline. With the command line:
+
+   ```bash
+   stuarty media:import talk.mp4 --project prj_5k2m9x4q1b --asset-id ast_3c5v8n2w6d --wait
+   stuarty edit --project prj_5k2m9x4q1b --ops - <<'JSON'
+   [{"op":"track.add","args":{"kind":"visual","name":"Video","id":"trk_v2dec00001"}},
+    {"op":"clip.add","args":{"track_id":"trk_v2dec00001","asset_id":"ast_3c5v8n2w6d","start":"0s","source_in":"0s","duration":"4s","fit":"cover","id":"itm_c2mp000001"}}]
+   JSON
+   ```
+
+5. **Add the captions from the speech.** In the editor, select the clip and choose **Captions from transcript**. With the command line, transcribe the audio and turn the transcript into captions (the first transcription needs a model; see [Transcription](/docs/guide/transcription)):
+
+   ```bash
+   stuarty transcribe --project prj_5k2m9x4q1b --asset ast_3c5v8n2w6d --language en --wait
+   stuarty edit --project prj_5k2m9x4q1b --ops - <<'JSON'
+   [{"op":"track.add","args":{"kind":"visual","name":"Captions","id":"trk_cap7ts0001"}},
+    {"op":"caption.from_transcript","args":{"clip_item_id":"itm_c2mp000001","track_id":"trk_cap7ts0001","new_ids":["itm_cap0000001","itm_cap0000002"]}}]
+   JSON
+   stuarty lint --project prj_5k2m9x4q1b
+   ```
+
+   The lint must end with no error. It checks the captions against the safe area of the platform.
+
+6. **Make the thumbnail from a template.** In **Edit Image**, create an image from the **Vertical cover** preset, add a fill and a title text on a slot, and choose **Make it a template**; then choose **New from template**, pick it, give your title and choose **Create from template**. With the command line:
+
+   ```bash
+   stuarty image:create --preset vertical_cover --name "Cover template" --template --id img_7k2m9x4q1b
+   stuarty image:edit img_7k2m9x4q1b layer.add_fill color='#1B1B2F'
+   stuarty image:edit img_7k2m9x4q1b layer.add_text text=Title slot=title \
+     style:='{"size":160,"color":"#FFE600","font_weight":700}'
+   echo '{"title":{"text":"First sourdough"}}' | stuarty image:create --from-template img_7k2m9x4q1b \
+     --name "Sourdough cover" --values - --id img_3c5v8n2w6d
+   stuarty image:export img_3c5v8n2w6d --format png
+   ```
+
+7. **Export with the platform preset.** In the editor, choose **Export**, pick **YouTube Shorts** and start it. The export is checked against the limits of the preset when it ends. With the command line:
+
+   ```bash
+   stuarty export --project prj_5k2m9x4q1b --preset youtube-shorts --wait
+   stuarty export --project prj_5k2m9x4q1b --format png --at 1s --wait
+   ```
+
+   The first command makes the video, the second a still of it, which the publication takes as its cover.
+
+8. **Connect your account.** Create a developer app on the network (the page of each network walks through it: [YouTube](/docs/publish/youtube), [Instagram](/docs/publish/instagram), [Facebook](/docs/publish/facebook), [X](/docs/publish/x), [TikTok](/docs/publish/tiktok)). In **Connections**, choose **Connect**, pick the network, paste the client id and the client secret, and sign in on the network's own page. With the command line the secret comes from the standard input:
+
+   ```console
+   printf '%s' "$CLIENT_SECRET" | stuarty social:connect --network youtube --client-id <client id> \
+     --redirect-uri http://127.0.0.1:7878/social/callback
+   ```
+
+   The command prints an address. Open it, accept the permissions, and the network sends you back to Stuarty, which finishes the connection. Stuarty asked for the permissions of the page [of that network](/docs/reference/network-limits) and no others.
+
+9. **Create the publication and schedule it.** In **Publish**, choose **New publication**: pick the video export and the still, the account and the time, then choose **Schedule and ask for approval**. The check against the limits of the network runs before anything is asked of you, and names the limit when a post breaks one. With the command line:
+
+   ```console
+   stuarty publish:validate --connection <connection id> --export <export job id> --thumbnail <still job id> \
+     --title "Sourdough short" --visibility public --made-for-kids no
+   stuarty publication:create --project prj_5k2m9x4q1b --title "Sourdough short" \
+     --text "From starter to slice in four seconds #sourdough" --export <export job id> \
+     --thumbnail <still job id> --connection <connection id> --at 2026-12-01T18:00:00Z \
+     --made-for-kids no --visibility public
+   stuarty publication:schedule <publication id>
+   ```
+
+10. **Approve it.** Scheduling makes a request in **Approvals**: it shows what will be sent, to which account and when. Nothing is sent before you choose **Approve**, and a post whose time passes while it waits does not go out on its own. The command `approval:decide` with an agent's key is refused. After your approval the post goes out at its time, and the publication shows its address:
+
+    ```console
+    stuarty publication:show <publication id>
+    stuarty publication:list --from 2026-11-30T00:00:00Z --until 2026-12-02T00:00:00Z
+    ```
+
+    The post is also on the **Publish** calendar, as published.
+
+## What the scripted run proves
+
+The repository has `scripts/first-flow.sh`: the same ten steps against a fake AI provider and a fake social network on your own computer, with a person's approval made through the API. It exits 0 only when every step held: nothing left the machine before the approval, the file that went out is the exported one, and the post is on the calendar as published. The page [Agents](/docs/agents/overview) shows how an agent drives the same flow.
+
+## Common mistakes
+
+- Looking for a way for an agent to approve its own post. There is none: the approval is a person's, from a signed-in browser session.
+- A post refused by the check: the message names the limit (a title too long, a video too long for the network). Fix it and run `publish:validate` again; see [limits of the networks](/docs/reference/network-limits).
+- Captions with lint errors in the margin of the platform: read [The safe area](/docs/guide/safe-area).
+
+## Next steps
+
+- [Approvals, rules and cost ceilings](/docs/guide/approvals)
+- [The publishing calendar](/docs/guide/publishing-calendar)
+- [Agents overview](/docs/agents/overview)

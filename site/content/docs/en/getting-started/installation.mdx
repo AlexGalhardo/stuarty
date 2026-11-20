@@ -1,67 +1,56 @@
 ---
 title: "Installation"
-description: "Where to get Stuarty, what each download is, and how to check it before you run it."
+description: "Which way to install Stuarty fits you, and how to check a download before you run it."
 ---
-
-<Callout type="warning" title="Still before 1.0">
-Stuarty is released and still before 1.0. New releases (`v0.N.0`) add features about every 90 commits and may change a public interface. Check the [changelog](/changelog) for what a release changes.
-</Callout>
 
 ## You will learn
 
-- which file to download for your system, or how to run the container image;
-- how to start the server and where it listens;
-- how to check a download before you run it.
+- which of the three ways to install fits you;
+- why Windows and macOS warn before the first run, and how to check a download.
 
 ## The idea
 
-Stuarty runs only on your computer. You install one program, `stuarty`. It serves the editor in your browser, the MCP server, the CLI and the HTTP API from the same process and the same workspace.
+Stuarty runs only on a computer you own. You install one program, `stuarty`. It serves the editor in your browser, the MCP server, the CLI and the HTTP API from the same process and the same workspace.
 
-## Quick start
+| You want | Install | Page |
+| --- | --- | --- |
+| to try it on your Windows computer, in a window | the desktop application | [Install on Windows](/docs/install-windows) |
+| a command line, agents and scripts on your computer | the local server | [Install on Windows](/docs/install-windows) |
+| the same thing on any system with Docker | the container image | [Install with Docker](/docs/install-docker) |
+| it always on, for you or a small team, with HTTPS | the server package | [Install on a server](/docs/install-server) |
 
-1. Open the [releases page](https://github.com/AlexGalhardo/stuarty/releases) and download the installer for your system, or the archive for your platform.
-2. Install it. The installer adds `stuarty` to your path.
-3. Run `stuarty version`. It prints the version, which tells you the program is installed.
-4. Run `stuarty serve`. It listens on `127.0.0.1:7878` and nowhere else.
+Each release attaches installers (Windows 11, a macOS package, `.deb`, `.AppImage`), archives for six targets and `checksums.txt`, signed with cosign.
 
-### The container image
+## The installers are not signed with a paid certificate
 
-Every stable release also publishes a multi-architecture image with the pinned LGPL FFmpeg inside, on two registries with the same digest: `ghcr.io/alexgalhardo/stuarty` and `alexgalhardo/stuarty` on Docker Hub. The tags are `X.Y.Z`, `X.Y` and `latest`. The workspace lives in the `/data` volume, so keep it in a named volume or a folder of your choice:
-
-```bash
-docker run --rm -p 127.0.0.1:7878:7878 -v stuarty:/data \
-  -e APP_KEY="$(openssl rand -base64 32)" \
-  -e STUARTY_ADMIN_EMAIL=admin@example.com \
-  -e STUARTY_ADMIN_PASSWORD="choose-a-long-password" \
-  ghcr.io/alexgalhardo/stuarty:latest
-```
-
-`latest` is for trying it out; pin `X.Y.Z` for a server you keep. The `127.0.0.1:` in `-p` matters: over plain HTTP nothing is encrypted, so any other interface needs TLS in front (see the [Docker page](/docs/self-hosting/docker)).
-
-A container always runs in [network mode](/docs/self-hosting/network-mode), where sign-in is required, so the two `STUARTY_ADMIN_*` variables create the first administrator. Open `http://127.0.0.1:7878` and sign in with that email and password. The [Docker page](/docs/self-hosting/docker) explains each option and walks from this command to a first verified export.
-
-The container runs as the user `app` (uid 10001) and sends no data anywhere by default. `docker run --rm ghcr.io/alexgalhardo/stuarty:X.Y.Z version` prints the version.
-
-To build from source you need Go (the version in `go.mod`) and Bun for the front end.
-
-### The desktop application
-
-A release that carries the desktop application lists one file per system next to the other installers: `stuarty-desktop-X-Y-Z.exe` for Windows 11 (`stuarty-desktop-0-28-0.exe`), `stuarty-desktop-X-Y-Z-arm64.dmg` (Apple silicon) or `stuarty-desktop-X-Y-Z-amd64.dmg` (Intel) for macOS, `stuarty-desktop-X-Y-Z.AppImage` for Linux, and `stuarty-desktop_X.Y.Z_linux_amd64.deb` for Debian and Ubuntu. Each holds the window and the server it starts. The [desktop application](/docs/guide/desktop) page says what it does.
-
-### The installers are not signed
-
-No installer is signed with a paid certificate: there is no Apple Developer ID, no notarization and no Windows code-signing certificate. Windows and macOS therefore warn before the first run. This is expected; what proves the file is genuine is the checksum and the signature in the release, which you can [verify](/docs/self-hosting/verify-a-release).
+There is no Apple Developer ID, no notarization and no Windows code-signing certificate. Windows and macOS therefore warn before the first run. This is expected; what proves the file is genuine is the checksum and the signature in the release, which you can [verify](/docs/self-hosting/verify-a-release).
 
 - **Windows.** SmartScreen shows "Windows protected your PC". Choose **More info**, then **Run anyway**.
-- **macOS.** Gatekeeper says the app cannot be opened because Apple cannot check it. Control-click (right-click) the app, choose **Open**, then **Open** again. Or remove the quarantine mark in a terminal: `xattr -d com.apple.quarantine "/Applications/Stuarty.app"`.
+- **macOS.** Gatekeeper says the app cannot be opened because Apple cannot check it. Control-click (right-click) the app, choose **Open**, then **Open** again.
 - **Debian and Ubuntu.** No warning. Install with `sudo apt install ./stuarty-desktop_X.Y.Z_linux_amd64.deb`.
+
+## From install to a first export
+
+The promise is a first export in under ten minutes. `scripts/first-export-timing.sh --binary <path to stuarty>` times the part that runs on your computer, from a clean workspace: the server starts, a project is created, a clip is imported, one clip is placed and the MP4 is exported and verified.
+
+| What was measured | Result |
+| --- | --- |
+| Date | 2026-11-20 |
+| Machine | AMD Ryzen 7 5700X3D, 8 cores and 16 threads, 32 GB of memory, Windows 11 Pro |
+| Program | the `stuarty` binary built from the branch of release 0.30.0 |
+| Path timed | clean workspace, server up, project, import, edit, export and verify, with a 3 second 1080 x 1920 clip |
+| Result | 55.0 s, 55.8 s and 40.6 s in three runs |
+| Condition | not an idle machine: other programs kept the processor at 100 percent, so the real figure is lower |
+
+What the table does not include: downloading the installer or pulling the image, which depends on your connection. The same script times the container, `bash scripts/first-export-timing.sh [image]`, and it has not been run for this release because the image of this version is not published yet.
 
 ## Common mistakes
 
-- The system warns before the first run. The installers are not signed with a paid certificate; see [The installers are not signed](#the-installers-are-not-signed) above for the SmartScreen and Gatekeeper steps, and [verify the download](/docs/self-hosting/verify-a-release) first if you want proof.
-- FFmpeg is not found. The editor uses your FFmpeg, and `STUARTY_FFMPEG` and `STUARTY_FFPROBE` name the binaries explicitly. See the [configuration variables](/docs/reference/configuration).
+- FFmpeg is not found. The editor uses your FFmpeg for the binary installers, and `STUARTY_FFMPEG` and `STUARTY_FFPROBE` name the binaries explicitly. See the [configuration variables](/docs/reference/configuration).
+- Opening the plain address in a browser and getting 401. A local server answers 401 until a browser has signed in with `stuarty open`.
 
 ## Next steps
 
-- [Quick start: your first export](/docs/quick-start)
+- [What leaves your machine](/docs/what-leaves-your-machine)
 - [Workspace and storage](/docs/workspace)
+- [Make a vertical short with captions](/docs/guide/tutorial-vertical-short)

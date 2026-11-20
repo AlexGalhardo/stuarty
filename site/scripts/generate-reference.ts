@@ -13,6 +13,7 @@ import path from "node:path";
 import { apiPages, type OpenApi } from "./api-reference.ts";
 import { topicPages } from "./glossary-pages.ts";
 import { mcpPages } from "./mcp-reference.ts";
+import { networkPage, networksOverview, readNetworks, readSetup } from "./network-reference.ts";
 import { readKeymap, shortcutsPage } from "./shortcuts-reference.ts";
 import { code, esc, page, sentence, table } from "./reference-md.ts";
 
@@ -26,6 +27,8 @@ const glossaryDir = path.join(siteDir, "content", "generated", "glossary");
 const apiDir = path.join(siteDir, "content", "generated", "api");
 const mcpDir = path.join(siteDir, "content", "generated", "mcp");
 const guideDir = path.join(siteDir, "content", "generated", "guide");
+const publishDir = path.join(siteDir, "content", "generated", "publish");
+const startDir = path.join(siteDir, "content", "generated", "getting-started");
 
 type Json = Record<string, unknown>;
 
@@ -245,15 +248,34 @@ function timelineSchema(): string {
 	);
 }
 
+/** The variables SDD-000 section 10 names in prose after its table: the framework's own and those of deploy/. */
+function proseVariables(): { framework: string[]; deploy: string[] } {
+	const sdd = fs.readFileSync(path.join(root, "docs", "sdds", "000-shared-definitions.md"), "utf8");
+	const para = sdd.match(/^The limits and their errors are specified.*$/m)?.[0] ?? "";
+	const names = (text: string | undefined): string[] => [...(text ?? "").matchAll(/`([A-Z][A-Z_0-9]+)`/g)].map((m) => m[1] as string);
+	return {
+		framework: names(para.match(/used by the product \(([^)]*)\)/)?.[1]),
+		deploy: [...names(para.match(/`deploy\/\.env` \(([^)]*)\)/)?.[1]), ...names(para.match(/scripts of `deploy\/` \(([^)]*)\)/)?.[1])],
+	};
+}
+
+/** The page for people who used the product under its former name (SDD-000 section 13): the only page that says it. */
+function migrationPage(): string {
+	const pairs = sddTable("docs/sdds/000-shared-definitions.md", /^### 13\.1 /m).map(([was, now]) => [esc(was ?? ""), esc(now ?? "")]);
+	const prose = fs.readFileSync(path.join(siteDir, "content", "fragments", "migration.md"), "utf8");
+	return page(
+		// The title and the description show on every page (the sidebar, the search, llms.txt): only the body says the name.
+		"Migrating from the former name",
+		"Stuarty had another name until v0.29.0: what is adopted, what is still read, and what to rename.",
+		[prose.trim(), table(["Former variable", "Variable"], pairs)].join("\n\n"),
+	);
+}
+
 function configuration(): string {
 	const rows = sddTable("docs/sdds/000-shared-definitions.md", /^## 10\. /m).map(([name, def, meaning]) => [
 		(name ?? "").replace(/\\/g, "\\\\").replace(/\|/g, "\\|"),
 		esc(def ?? ""),
 		esc(meaning ?? ""),
-	]);
-	const former = sddTable("docs/sdds/000-shared-definitions.md", /^### 13\.1 /m).map(([was, now]) => [
-		esc(was ?? ""),
-		esc(now ?? ""),
 	]);
 	return page(
 		"Configuration variables",
@@ -261,9 +283,15 @@ function configuration(): string {
 		[
 			"All variables are optional.",
 			table(["Variable", "Default", "Meaning"], rows),
+			"## Variables of the server and of the server package",
+			`The framework the server is built on reads these, with its own names: ${proseVariables()
+				.framework.map((v) => code(v))
+				.join(", ")}. \`APP_KEY\` is required in network mode (32 bytes or more, base64).`,
+			`The scripts and the compose file of \`deploy/\` read these, never the program itself: ${proseVariables()
+				.deploy.map((v) => code(v))
+				.join(", ")}.`,
 			"## Names before the rename",
-			"The product was called Vukem Video until `v0.29.0`. A variable below is still read, until `1.0.0`, when its new name is not set; each use prints one warning. The new name wins when both are set.",
-			table(["Former variable", "Variable"], former),
+			"The product has had another name. The variables of that name are still read for a while: see [Migrating from the former name](/docs/migration).",
 		].join("\n\n"),
 	);
 }
@@ -361,6 +389,9 @@ async function main() {
 	fs.mkdirSync(path.join(siteDir, "generated"), { recursive: true });
 	fs.writeFileSync(path.join(siteDir, "generated", "cli.json"), cliJson);
 
+	const networksJson = execFileSync("go", ["run", "./internal/tools/clidoc", "-networks"], { cwd: root, encoding: "utf8", maxBuffer: 1 << 26 });
+	fs.writeFileSync(path.join(siteDir, "generated", "networks.json"), networksJson);
+
 	const written = new Set<string>();
 	const commands = readJson<Command[]>("core/schema/commands.json")
 		.filter((c) => !c.internal)
@@ -371,6 +402,10 @@ async function main() {
 	write("error-codes.mdx", errorCodes(), written);
 	write("configuration.mdx", configuration(), written);
 	write("glossary.mdx", glossary(), written);
+	write("migration.mdx", migrationPage(), written, startDir);
+	const networks = readNetworks(siteDir);
+	write("network-limits.mdx", networksOverview(networks), written);
+	for (const n of networks) write(`${n.network}.mdx`, networkPage(n, readSetup(siteDir, n.network)), written, publishDir);
 	write("skill.mdx", skillPage(), written, agentsDir);
 	for (const p of domainPages()) write(p.file, p.text, written, agentsDir);
 
@@ -391,7 +426,7 @@ async function main() {
 		fs.existsSync(dir)
 			? fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]))
 			: [];
-	for (const dir of [outDir, agentsDir, glossaryDir, apiDir, mcpDir, guideDir]) for (const file of walk(dir)) if (!written.has(path.resolve(file))) fs.rmSync(file);
+	for (const dir of [outDir, agentsDir, glossaryDir, apiDir, mcpDir, guideDir, publishDir, startDir]) for (const file of walk(dir)) if (!written.has(path.resolve(file))) fs.rmSync(file);
 
 	console.log(`reference: ${written.size} pages`);
 }

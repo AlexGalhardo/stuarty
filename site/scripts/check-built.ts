@@ -9,6 +9,7 @@
 // Node strips the types (no build step).
 import fs from "node:fs";
 import path from "node:path";
+import type { NetworkDoc } from "./network-reference.ts";
 import { sourceRegistry } from "../lib/glossary-data.ts";
 import { search } from "../lib/search-rank.ts";
 
@@ -34,6 +35,7 @@ const INERT_HOSTS = new Set([
 	"localhost",
 	// Example names of the self-hosting pages (a domain you would own); text, never loaded.
 	"video.example.com",
+	"stuarty.example.com",
 	"collector.example.com",
 	"www.conventionalcommits.org",
 	"caddyserver.com",
@@ -63,9 +65,20 @@ export function hostsIn(text: string): string[] {
 
 /** Problems of the "no external origin" property for one built file. */
 // The glossary cites authorities by link (text, never loaded): the hosts of its source registry and Wikipedia.
+// The network pages cite the official page of each limit and name the hosts Stuarty contacts: text, never loaded,
+// read from the same data (generated/networks.json) the pages are generated from.
+function networkHosts(): string[] {
+	const file = path.join(import.meta.dirname, "..", "generated", "networks.json");
+	if (!fs.existsSync(file)) return [];
+	const networks = JSON.parse(fs.readFileSync(file, "utf8")) as NetworkDoc[];
+	const urls = networks.flatMap((n) => [n.limits.source, n.guide, ...(n.price ? [n.price.source] : []), ...(n.preset?.sources ?? []).map((s) => s.url)]);
+	return [...urls.map((u) => new URL(u).hostname), ...networks.flatMap((n) => n.hosts)];
+}
+
 const CITED_HOSTS = new Set([
 	"en.wikipedia.org",
 	...Object.values(sourceRegistry()).map((s) => new URL(s.url).hostname),
+	...networkHosts(),
 ]);
 
 export function foreignOriginProblems(file: string, text: string, ownHost: string): string[] {
