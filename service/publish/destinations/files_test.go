@@ -435,7 +435,7 @@ func TestSecurity_T99_FilesDestinationStaysInItsFolder(t *testing.T) {
 	// A slug folder that is a symbolic link to another place is refused and the other place is not touched.
 	if err := os.Symlink(outside, filepath.Join(folder, p.Slug)); err != nil {
 		// skip-env: symlink-privilege
-		t.Skipf("no symlink privilege on this machine; the link case is not run: %v", err)
+		t.Skipf("no symlink privilege: %v", err) // verify:env-skip symlink-privilege
 	}
 
 	if _, err := sendFiles(t, folder, nil, p, data); err == nil {
