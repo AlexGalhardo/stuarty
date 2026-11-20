@@ -37,7 +37,12 @@ func TestChaptersFromLabelledMarkers(t *testing.T) {
 }
 
 func TestChaptersOfARangeAreShiftedAndClipped(t *testing.T) {
-	marks := []timeline.Marker{{Frame: 10, Label: "before"}, {Frame: 60, Label: "in"}, {Frame: 120, Label: "end"}, {Frame: 200, Label: "after"}}
+	marks := []timeline.Marker{
+		{Frame: 10, Label: "before"},
+		{Frame: 60, Label: "in"},
+		{Frame: 120, Label: "end"},
+		{Frame: 200, Label: "after"},
+	}
 
 	got := Chapters(marks, fps30, 30, 120)
 	if len(got) != 1 || got[0] != (Chapter{StartMS: 1000, EndMS: 3000, Title: "in"}) {

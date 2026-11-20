@@ -65,13 +65,17 @@ func (s *state) verifyChapters(ctx context.Context, partial string) ([]Check, er
 
 	var got probedChapters
 	if err := json.Unmarshal(raw, &got); err != nil {
-		return []Check{{Name: "chapters", Expected: "ffprobe JSON", Got: err.Error()}}, nil
+		return nil, verifyError([]Check{{Name: "chapters", Expected: "ffprobe JSON", Got: err.Error()}})
 	}
 
 	if len(got.Chapters) != len(want) {
-		return []Check{{
-			Name: "chapters", Expected: strconv.Itoa(len(want)) + " chapters", Got: strconv.Itoa(len(got.Chapters)) + " chapters",
-		}}, nil
+		return []Check{
+			{
+				Name:     "chapters",
+				Expected: strconv.Itoa(len(want)) + " chapters",
+				Got:      strconv.Itoa(len(got.Chapters)) + " chapters",
+			},
+		}, nil
 	}
 
 	var failed []Check
@@ -81,7 +85,8 @@ func (s *state) verifyChapters(ctx context.Context, partial string) ([]Check, er
 		start, _ := strconv.ParseFloat(g.Start, 64)
 		end, _ := strconv.ParseFloat(g.End, 64)
 
-		if math.Abs(start*1000-float64(w.StartMS)) > 1.5 || math.Abs(end*1000-float64(w.EndMS)) > 1.5 || g.Tags.Title != w.Title {
+		if math.Abs(start*1000-float64(w.StartMS)) > 1.5 || math.Abs(end*1000-float64(w.EndMS)) > 1.5 ||
+			g.Tags.Title != w.Title {
 			failed = append(failed, Check{
 				Name:     fmt.Sprintf("chapter_%d", i+1),
 				Expected: fmt.Sprintf("%q from %d to %d ms", w.Title, w.StartMS, w.EndMS),
@@ -111,4 +116,32 @@ func (s *state) chapterTrackNote() string {
 	}
 
 	return " only"
+}
+
+// dataStreams counts the streams of codec type data: the chapter track of an MP4 with chapters.
+func dataStreams(streams []probedStream) int {
+	n := 0
+
+	for _, x := range streams {
+		if x.CodecType == "data" {
+			n++
+		}
+	}
+
+	return n
+}
+
+// streamsCheck is the check that a file has the video and the audio stream and nothing else but the
+// chapter track of a file with chapters; bad is false when it holds.
+func (s *state) streamsCheck(streams []probedStream, media int) (Check, bool) {
+	data := dataStreams(streams)
+	if len(streams) == media+data && data == s.chapterTracks() {
+		return Check{}, false
+	}
+
+	return Check{
+		Name:     "streams",
+		Expected: "a video and an audio stream" + s.chapterTrackNote(),
+		Got:      strconv.Itoa(len(streams)) + " streams",
+	}, true
 }

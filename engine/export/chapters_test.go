@@ -1,16 +1,15 @@
 package export
 
 import (
-	"errors"
-
 	"context"
 	"encoding/json"
-	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"errors"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
 )
 
@@ -20,8 +19,7 @@ func runExport(t *testing.T, job Job) *Result {
 
 	res, err := Run(context.Background(), job)
 	if err != nil {
-		var fe *ffmpeg.Error
-		if errors.As(err, &fe) {
+		if fe, ok := errors.AsType[*ffmpeg.Error](err); ok {
 			t.Fatalf("%v %+v", err, fe.Details)
 		}
 

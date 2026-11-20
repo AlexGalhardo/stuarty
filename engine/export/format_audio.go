@@ -155,7 +155,11 @@ func (s *state) verifyAudio(ctx context.Context, partial string, f Format) (Veri
 
 	switch {
 	case len(media) != 1 || data > s.chapterTracks():
-		fail("streams", "one audio stream and no video stream"+s.chapterTrackNote(), strconv.Itoa(len(pf.Streams))+" streams")
+		fail(
+			"streams",
+			"one audio stream and no video stream"+s.chapterTrackNote(),
+			strconv.Itoa(len(pf.Streams))+" streams",
+		)
 	default:
 		a := media[0]
 		if a.CodecType != "audio" || a.CodecName != codec {

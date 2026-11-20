@@ -93,7 +93,13 @@ func FFMetadata(chapters []Chapter) string {
 	esc := strings.NewReplacer(`\`, `\\`, "=", `\=`, ";", `\;`, "#", `\#`, "\n", `\n`)
 
 	for _, c := range chapters {
-		fmt.Fprintf(&b, "[CHAPTER]\nTIMEBASE=1/1000\nSTART=%d\nEND=%d\ntitle=%s\n", c.StartMS, c.EndMS, esc.Replace(c.Title))
+		fmt.Fprintf(
+			&b,
+			"[CHAPTER]\nTIMEBASE=1/1000\nSTART=%d\nEND=%d\ntitle=%s\n",
+			c.StartMS,
+			c.EndMS,
+			esc.Replace(c.Title),
+		)
 	}
 
 	return b.String()
