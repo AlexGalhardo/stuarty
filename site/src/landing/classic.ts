@@ -103,7 +103,20 @@ function choreograph(stage: Stage, root: HTMLElement, reduced: boolean, mm: gsap
 	const wide = window.matchMedia("(min-width: 64rem)").matches;
 	Object.assign(stage.pose, wide ? { x: 0.72, y: 0.62, scale: 0.42, turn: -0.5, opacity: 1 } : { x: 0.66, y: 0.84, scale: 0.26, turn: -0.4, opacity: 1 });
 	if (reduced) {
+		// No motion: the still mascot belongs to the hero and is simply gone once the hero has scrolled away.
 		stage.renderOnce();
+		ScrollTrigger.create({
+			trigger: "#problem-title",
+			start: "top 60%",
+			onEnter: () => {
+				stage.pose.opacity = 0;
+				stage.renderOnce();
+			},
+			onLeaveBack: () => {
+				stage.pose.opacity = 1;
+				stage.renderOnce();
+			},
+		});
 		return;
 	}
 	gsap.from(stage.pose, { scale: 0, duration: 1.2, ease: "back.out(1.6)", delay: 0.2, onComplete: () => stage.blink() });
