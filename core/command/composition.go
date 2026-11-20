@@ -7,7 +7,7 @@ import (
 func init() {
 	Register(Define(Spec{
 		Name:    "clip.add_composition",
-		Summary: "Uses a timeline as a clip.",
+		Summary: "Places another timeline of the project on a visual track as one clip.",
 		Description: "Adds a composition: the timeline named by timeline_id, used as a clip (RF-083). Nothing is copied, so " +
 			"changing that timeline changes every composition that uses it. The default duration is the rest of the nested " +
 			"timeline from source_in. A timeline cannot contain itself at any depth, and compositions nest at most 4 deep.",

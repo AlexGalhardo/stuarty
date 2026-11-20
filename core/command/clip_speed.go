@@ -12,7 +12,7 @@ import (
 func init() {
 	Register(Define(Spec{
 		Name:    "clip.set_speed",
-		Summary: "Sets the speed of a clip or audio item: constant, curve or reverse.",
+		Summary: "Changes the speed of a clip or audio item, constant or along a curve, or plays it backwards.",
 		Description: "Sets either speed, from 0.25x to 4x, or curve, 2 to 8 points {t, speed} (speed is text like \"0.5x\") with t the fraction of the " +
 			"item from 0 to 1 (first 0, last 1) and a linear ramp between points; a speed clears the curve. Rescales the " +
 			"duration, the fades, the transitions and the keyframes by the ratio of the old to the new mean speed. With " +

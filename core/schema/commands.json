@@ -74,7 +74,7 @@
     "internal": false,
     "name": "animation.apply_preset",
     "scope": "edit",
-    "summary": "Animates the start or end of a visual item with a preset."
+    "summary": "Animates the start or end of a visual item with a preset: fade, slide, scale, pop, push in or pull out."
   },
   {
     "args_schema": {
@@ -2344,7 +2344,7 @@
     "internal": false,
     "name": "clip.add_composition",
     "scope": "edit",
-    "summary": "Uses a timeline as a clip."
+    "summary": "Places another timeline of the project on a visual track as one clip."
   },
   {
     "args_schema": {
@@ -2951,7 +2951,7 @@
     "internal": false,
     "name": "clip.set_color",
     "scope": "edit",
-    "summary": "Sets colour adjustments, LUT, HSL bands, wheels and curves of a clip."
+    "summary": "Sets brightness, contrast, saturation, temperature, tint, hue, LUT, HSL bands, wheels and curves of a clip."
   },
   {
     "args_schema": {
@@ -3604,7 +3604,7 @@
     "internal": false,
     "name": "clip.set_speed",
     "scope": "edit",
-    "summary": "Sets the speed of a clip or audio item: constant, curve or reverse."
+    "summary": "Changes the speed of a clip or audio item, constant or along a curve, or plays it backwards."
   },
   {
     "args_schema": {
@@ -3665,7 +3665,7 @@
     "internal": false,
     "name": "composition.create_from_selection",
     "scope": "edit",
-    "summary": "Moves items into a new timeline."
+    "summary": "Moves the selected items into a new timeline and puts one composition clip in their place."
   },
   {
     "args_schema": {
@@ -3699,7 +3699,7 @@
     "internal": false,
     "name": "composition.expand",
     "scope": "edit",
-    "summary": "Puts a composition's items back."
+    "summary": "Puts the items of a composition's timeline back on this timeline in place of the composition."
   },
   {
     "args_schema": {
@@ -3851,7 +3851,7 @@
     "internal": false,
     "name": "item.crossfade",
     "scope": "edit",
-    "summary": "Sets a fade-out and fade-in on two overlapping visual items."
+    "summary": "Sets a matching fade-out and fade-in on two overlapping visual items of different tracks."
   },
   {
     "args_schema": {
@@ -3998,7 +3998,7 @@
     "internal": false,
     "name": "item.extract_audio",
     "scope": "edit",
-    "summary": "Makes a linked audio item from a video clip's audio and mutes the clip."
+    "summary": "Creates an audio item from the audio of a video clip, linked to it, and mutes the clip."
   },
   {
     "args_schema": {
@@ -4056,7 +4056,7 @@
     "internal": false,
     "name": "item.freeze_frame",
     "scope": "edit",
-    "summary": "Holds one frame of a clip as a still inserted at that frame."
+    "summary": "Holds one frame of a clip: splits the clip at a frame and inserts a still of that frame."
   },
   {
     "args_schema": {
@@ -4311,7 +4311,7 @@
     "internal": false,
     "name": "item.repeat",
     "scope": "edit",
-    "summary": "Repeats an item back to back, a number of times or until a time."
+    "summary": "Repeats an item back to back, a number of times or until a time, such as a looping background."
   },
   {
     "args_schema": {

@@ -11,7 +11,7 @@ import (
 func init() {
 	Register(Define(Spec{
 		Name:    "animation.apply_preset",
-		Summary: "Animates the start or end of a visual item with a preset.",
+		Summary: "Animates the start or end of a visual item with a preset: fade, slide, scale, pop, push in or pull out.",
 		Description: "Writes ordinary keyframes (with a Bezier easing where the preset needs a curve) on the first " +
 			"duration frames (edge in) or the last ones (edge out) of a clip, text, caption or shape item; edit them " +
 			"afterwards with keyframe.set and keyframe.set_easing. Keyframes of the same properties inside that window " +

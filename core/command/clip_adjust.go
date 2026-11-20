@@ -20,7 +20,7 @@ func init() {
 
 	Register(Define(Spec{
 		Name:    "clip.set_color",
-		Summary: "Sets colour adjustments, LUT, HSL bands, wheels and curves of a clip.",
+		Summary: "Sets brightness, contrast, saturation, temperature, tint, hue, LUT, HSL bands, wheels and curves of a clip.",
 		Description: "Sets the given adjustments, rounded to 3 decimals; a value equal to the default (brightness 0, " +
 			"contrast 1, saturation 1, temperature 0, tint 0, hue 0) clears the stored one. Positive temperature is " +
 			"warmer, positive tint is more magenta, hue rotates the colours in degrees. lut_asset is the id of a lut asset (a " +

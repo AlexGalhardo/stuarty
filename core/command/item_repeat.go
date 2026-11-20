@@ -15,7 +15,7 @@ const (
 func init() {
 	Register(Define(Spec{
 		Name:    "item.repeat",
-		Summary: "Repeats an item back to back, a number of times or until a time.",
+		Summary: "Repeats an item back to back, a number of times or until a time, such as a looping background.",
 		Description: "Adds copies of the item one after the other on its track, starting at its end: give copies " +
 			"(1 to 200 extra plays) or until (an absolute time; the last copy is trimmed to end exactly there). " +
 			"Keyframes, words and the name are copied; the slot mark is not. With ripple none (default) it fails " +
