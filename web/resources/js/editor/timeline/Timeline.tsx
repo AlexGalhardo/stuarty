@@ -55,6 +55,7 @@ import SnapLine from "./SnapLine";
 import TimelineToolbar from "./TimelineToolbar";
 import TrackHeader from "./TrackHeader";
 import { TrackRow } from "./TrackRow";
+import { useSelectionAnnouncement } from "./useSelectionAnnouncement";
 import { type FrameWindow, frameWindow, VIRTUALIZE_ABOVE } from "./virtualize";
 import { TimelineWindowContext } from "./windowContext";
 
@@ -101,6 +102,7 @@ export default function Timeline({
 		[markerKey],
 	);
 
+	useSelectionAnnouncement();
 	const itemCount = useDocumentState(selectItemCount);
 	const actions = useActions();
 	const gridRef = useRef<HTMLDivElement>(null);

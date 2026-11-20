@@ -735,6 +735,25 @@
           "one": "{name}, {count} item",
           "other": "{name}, {count} items, {shown} listed near the playhead; the arrow keys reach the others"
         },
+        "table": {
+          "open": "List view",
+          "hint": "List view: the items of the timeline as a table",
+          "title": "Timeline as a table",
+          "description": "Every item with its track, start, end and duration. Choose a name to select the item.",
+          "caption": {
+            "one": "Timeline items, {count} row",
+            "other": "Timeline items, {count} rows"
+          },
+          "empty": "The timeline has no items yet.",
+          "name": "Name",
+          "type": "Type",
+          "track": "Track",
+          "start": "Start",
+          "end": "End",
+          "duration": "Duration",
+          "state": "State",
+          "selected": "Selected"
+        },
         "snap": "Snap",
         "magnet": "Magnet",
         "magnet_hint": "Magnet (P): keep the items of the track packed with no gap",
@@ -2329,7 +2348,13 @@
           "other": "Deleted, {count} items"
         },
         "undone": "Undone",
-        "redone": "Redone"
+        "redone": "Redone",
+        "selected_one": "Selected {name}, {type}, {start} to {end}, track {track}",
+        "selected_many": {
+          "one": "{count} item selected",
+          "other": "{count} items selected"
+        },
+        "selection_cleared": "Selection cleared"
       },
       "tour": {
         "step": "Step {current} of {total}",

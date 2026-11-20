@@ -735,6 +735,25 @@
           "one": "{name}, {count} item",
           "other": "{name}, {count} itens, {shown} listados perto do cabeçote; as setas alcançam os demais"
         },
+        "table": {
+          "open": "Lista",
+          "hint": "Lista: os itens da linha do tempo como tabela",
+          "title": "Linha do tempo como tabela",
+          "description": "Cada item com sua trilha, início, fim e duração. Escolha um nome para selecionar o item.",
+          "caption": {
+            "one": "Itens da linha do tempo, {count} linha",
+            "other": "Itens da linha do tempo, {count} linhas"
+          },
+          "empty": "A linha do tempo ainda não tem itens.",
+          "name": "Nome",
+          "type": "Tipo",
+          "track": "Trilha",
+          "start": "Início",
+          "end": "Fim",
+          "duration": "Duração",
+          "state": "Estado",
+          "selected": "Selecionado"
+        },
         "snap": "Encaixar",
         "magnet": "Ímã",
         "magnet_hint": "Ímã (P): mantém os itens da faixa juntos, sem espaços",
@@ -2329,7 +2348,13 @@
           "other": "Excluídos, {count} itens"
         },
         "undone": "Desfeito",
-        "redone": "Refeito"
+        "redone": "Refeito",
+        "selected_one": "Selecionado {name}, {type}, de {start} a {end}, trilha {track}",
+        "selected_many": {
+          "one": "{count} item selecionado",
+          "other": "{count} itens selecionados"
+        },
+        "selection_cleared": "Seleção desfeita"
       },
       "tour": {
         "step": "Passo {current} de {total}",
