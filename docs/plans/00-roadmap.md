@@ -66,7 +66,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [49](49-image-lut.md) | Image lookup tables (.cube) | S | 29 | TODO |
 | [50](50-image-revert-checkpoints-and-diff.md) | Revert to a revision, checkpoints and a diff for image documents | M | 36, 29 | TODO |
 | [51](51-processed-audio-preview-on-the-timeline.md) | Processed audio preview on the timeline | M | 34 | IN PROGRESS (senior-b, 2026-11-20) |
-| [52](52-live-composition-groups-in-the-browser.md) | Live composition groups in the browser preview | M | 32, 26 | TODO |
+| [52](52-live-composition-groups-in-the-browser.md) | Live composition groups in the browser preview | M | 32, 26 | IN PROGRESS (senior-a, 2026-11-20) |
 | [53](53-constant-speed-for-compositions.md) | Constant speed for compositions | M | 32 | TODO |
 
 ### 1.4 Closing (after the tracks)
