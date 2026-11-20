@@ -379,6 +379,17 @@ func VerifyBackup(from string) (*Manifest, error) {
 		}
 
 		rel, _ := filepath.Rel(from, p)
+
+		// A backup holds regular files only. A symbolic link (or a device, a pipe) would be followed
+		// when hashed and linked as a link into the workspace, pointing anywhere.
+		if !d.Type().IsRegular() {
+			return fmt.Errorf(
+				"%w: %s is not a regular file (a link or a special file)",
+				ErrBackupInvalid,
+				filepath.ToSlash(rel),
+			)
+		}
+
 		if !listed[filepath.ToSlash(rel)] {
 			return fmt.Errorf(
 				"%w: %s is in the backup but not in its manifest",
