@@ -103,7 +103,7 @@ var ffmpegOptions = map[string]optSpec{
 	// both
 	"-ss":      {class: classEither, value: kNumber},
 	"-t":       {class: classEither, value: kNumber},
-	"-f":       {class: classEither, value: enum(append([]string{"lavfi", "rawvideo", "s16le"}, outputFormats...)...)},
+	"-f":       {class: classEither, value: enum(append([]string{"lavfi", "rawvideo", "s16le", "ffmetadata"}, outputFormats...)...)},
 	"-pix_fmt": {class: classEither, value: kPixFmt},
 	"-ar":      {class: classEither, value: intRange(8000, 192000)},
 	"-ac":      {class: classEither, value: intRange(1, 8)},
@@ -114,7 +114,9 @@ var ffmpegOptions = map[string]optSpec{
 	// output only
 	"-map":                   {class: classOutput, value: kMap},
 	"-map_metadata":          {class: classOutput, value: enum("-1")},
-	"-map_chapters":          {class: classOutput, value: enum("-1")},
+	"-map_metadata:g":        {class: classOutput, value: enum("-1")},
+	"-map_metadata:s":        {class: classOutput, value: enum("-1")},
+	"-map_chapters":          {class: classOutput, value: match(`^(-1|[1-7])$`)},
 	"-metadata:s:v:0":        {class: classOutput, value: enum("alpha_mode=1")},
 	"-an":                    {class: classOutput, flag: true},
 	"-vn":                    {class: classOutput, flag: true},

@@ -231,10 +231,15 @@ type Input struct {
 	ar, ac  int
 	seekMS  int64
 	decoder string // forces the decoder of a file input (-c:v before -i)
+	meta    bool   // an ffmetadata file: it carries chapters and no stream
 }
 
 // FileInput reads the file at an absolute path (a store file or a file of the run).
 func FileInput(path string) Input { return Input{path: toSlash(path)} }
+
+// MetadataInput reads an ffmetadata file the engine wrote in the run directory (the chapters of an
+// export, SDD-004 section 8.1). Only an output with Chapters set to its index takes anything from it.
+func MetadataInput(path string) Input { return Input{path: toSlash(path), meta: true} }
 
 // PipeRawVideo reads raw frames of the given pixel format and size on pipe:0.
 func PipeRawVideo(pixFmt string, w, h int, rate Rate) Input {
@@ -298,6 +303,7 @@ type Output struct {
 	Maps                             []string
 	NoAudio, NoVideo, NoSubs, NoData bool
 	Shortest                         bool
+	Chapters                         int    // the index of a MetadataInput whose chapters are written; 0 writes none
 	VF, AF                           string // a plain filter chain, from Chain1
 	Opts                             []Opt
 }
@@ -362,6 +368,9 @@ func (c Cmd) Argv(pol Policy) ([]string, error) {
 // appendTo adds the whitelist options, the input options and the -i of one input.
 func (in *Input) appendTo(a []string, threads int) []string {
 	a = append(a, "-protocol_whitelist", "file,pipe")
+	if in.meta {
+		return append(a, "-f", "ffmetadata", "-i", "file:"+in.path)
+	}
 	if in.path != "" {
 		a = append(a, "-format_whitelist", InputFormats, "-sn", "-dn")
 	}
@@ -398,7 +407,11 @@ func (o *Output) appendTo(a []string) []string {
 			a = append(a, d.flag)
 		}
 	}
-	a = append(a, "-map_metadata", "-1", "-map_chapters", "-1")
+	if o.Chapters > 0 {
+		a = append(a, "-map_metadata:g", "-1", "-map_metadata:s", "-1", "-map_chapters", strconv.Itoa(o.Chapters))
+	} else {
+		a = append(a, "-map_metadata", "-1", "-map_chapters", "-1")
+	}
 	if o.VF != "" {
 		a = append(a, "-vf", o.VF)
 	}
@@ -458,6 +471,11 @@ func probeArgv(pol Policy, path string, extra ...string) ([]string, error) {
 // ProbeJSON is the first run of SDD-011 3.1: container and streams as JSON.
 func ProbeJSON(pol Policy, path string) ([]string, error) {
 	return probeArgv(pol, path, "-print_format", "json", "-show_format", "-show_streams")
+}
+
+// ProbeChapters lists the chapters of a file the export wrote, as JSON (SDD-004 section 8.1).
+func ProbeChapters(pol Policy, path string) ([]string, error) {
+	return probeArgv(pol, path, "-print_format", "json", "-show_chapters")
 }
 
 // ProbePacketFlags lists the pts_time and flags of the packets of one stream, for the keyframe

@@ -119,18 +119,31 @@ func (s *state) encodeArgv(cand ffmpeg.Candidate, codec exportcore.Codec, mix, p
 	)
 	opts = append(opts, ffargs.Bitexact()...)
 
+	inputs := []ffargs.Input{
+		ffargs.PipeRawVideo("rgba", st.Width, st.Height, ffargs.Rate{Num: st.FPS.Num, Den: st.FPS.Den}),
+		ffargs.FileInput(mix),
+	}
+
+	meta, hasChapters, err := s.chapterInput()
+	if err != nil {
+		return nil, err
+	}
+
+	chapters := 0
+	if hasChapters {
+		inputs = append(inputs, meta)
+		chapters = len(inputs) - 1
+	}
+
 	r := s.job.Runner
 	return ffargs.Cmd{
 		Progress:      true,
 		Threads:       r.In.ThreadLimit(),
 		FilterThreads: r.In.ThreadLimit(),
 		VaapiDevice:   cand.Input.VaapiDevice,
-		Inputs: []ffargs.Input{
-			ffargs.PipeRawVideo("rgba", st.Width, st.Height, ffargs.Rate{Num: st.FPS.Num, Den: st.FPS.Den}),
-			ffargs.FileInput(mix),
-		},
+		Inputs:        inputs,
 		Outputs: []ffargs.Output{{
-			Format: "mp4", Path: partial, Maps: []string{"0:v:0", "1:a:0"}, Shortest: true,
+			Format: "mp4", Path: partial, Maps: []string{"0:v:0", "1:a:0"}, Shortest: true, Chapters: chapters,
 			VF:   ffargs.Chain1(ffargs.ScaleBT709Out(), ffargs.Filter(cand.Input.Filter)),
 			Opts: opts,
 		}},

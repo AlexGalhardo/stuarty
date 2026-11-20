@@ -43,7 +43,7 @@ A long video of one person speaking is won in the cut: the viewer stays when the
 
 1. Read the transcript and the pieces of the cut and list where a new topic begins. A chapter is at least thirty seconds, and the first is at the start of the video.
 2. `chapter-titles` writes the title of each one.
-3. A marker at the start of each chapter: `marker.add` with `at` and `label` set to the title. The markers show on the timeline and are for you and the person; the exported file carries no chapters, so the list for the description is made too.
+3. A marker at the start of each chapter: `marker.add` with `at` and `label` set to the title. The markers show on the timeline and the MP4 export writes the labelled ones as the chapters of the file; a platform reads the description, so the list for it is made too.
 4. The list for the description: a text item, `item:add --project <project id> --kind text --title "Chapters" --text <file|->`, one line for each chapter, the time as minutes and seconds (hours when the video has them), a space and the title. The first line is 00:00. A platform takes a list only when it starts at 00:00, has at least three chapters and has chapters of at least ten seconds each.
 
 ## 7. Check and export

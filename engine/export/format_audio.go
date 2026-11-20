@@ -60,11 +60,26 @@ func (s *state) encodeAAC(ctx context.Context, mix, partial string) error {
 	}
 	opts = append(opts, ffargs.Bitexact()...)
 
+	inputs := []ffargs.Input{ffargs.FileInput(mix)}
+
+	meta, hasChapters, err := s.chapterInput()
+	if err != nil {
+		return err
+	}
+
+	chapters := 0
+	if hasChapters {
+		inputs = append(inputs, meta)
+		chapters = len(inputs) - 1
+	}
+
 	r := s.job.Runner
 	argv, err := ffargs.Cmd{
 		Progress: true,
-		Inputs:   []ffargs.Input{ffargs.FileInput(mix)},
-		Outputs:  []ffargs.Output{{Format: "mp4", Path: partial, Maps: []string{"0:a:0"}, NoVideo: true, Opts: opts}},
+		Inputs:   inputs,
+		Outputs: []ffargs.Output{{
+			Format: "mp4", Path: partial, Maps: []string{"0:a:0"}, NoVideo: true, Chapters: chapters, Opts: opts,
+		}},
 	}.Argv(r.Policy(s.dir))
 	if err != nil {
 		return exportErr(ReasonAudio, "The audio encoder command was refused.", err, "")
@@ -126,11 +141,23 @@ func (s *state) verifyAudio(ctx context.Context, partial string, f Format) (Veri
 	var failed []Check
 	fail := func(name, expected, got string) { failed = append(failed, Check{name, expected, got}) }
 
+	var media []probedAudioStream
+
+	data := 0
+
+	for _, x := range pf.Streams {
+		if x.CodecType == "data" {
+			data++
+		} else {
+			media = append(media, x)
+		}
+	}
+
 	switch {
-	case len(pf.Streams) != 1:
-		fail("streams", "one audio stream and no video stream", strconv.Itoa(len(pf.Streams))+" streams")
+	case len(media) != 1 || data > s.chapterTracks():
+		fail("streams", "one audio stream and no video stream"+s.chapterTrackNote(), strconv.Itoa(len(pf.Streams))+" streams")
 	default:
-		a := pf.Streams[0]
+		a := media[0]
 		if a.CodecType != "audio" || a.CodecName != codec {
 			fail("audio_stream", "one "+codec+" stream", a.CodecType+" "+a.CodecName)
 		}
@@ -159,6 +186,13 @@ func (s *state) verifyAudio(ctx context.Context, partial string, f Format) (Veri
 		case b.moov < 0 || b.mdat < 0 || b.moov > b.mdat:
 			fail("faststart", "moov before mdat", fmt.Sprintf("moov at %d, mdat at %d", b.moov, b.mdat))
 		}
+
+		checks, err := s.verifyChapters(ctx, partial)
+		if err != nil {
+			return Verified{}, err
+		}
+
+		failed = append(failed, checks...)
 	case FormatMP4, FormatGIF:
 	}
 

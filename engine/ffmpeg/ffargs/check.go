@@ -18,6 +18,7 @@ type scanner struct {
 	pol               Policy
 	pending           []option
 	inputs, outputs   int
+	metaInputs        []int // indexes of the ffmetadata inputs
 	seenN, seenAlloc  bool
 	progress, pipeOut bool
 }
@@ -60,6 +61,11 @@ func (s *scanner) input(i int) (int, error) {
 	i++
 	if err := checkInput(s.argv, i, s.pending, s.argv[i], s.pol); err != nil {
 		return i, err
+	}
+	for _, o := range s.pending {
+		if o.name == "-f" && o.value == "ffmetadata" {
+			s.metaInputs = append(s.metaInputs, s.inputs)
+		}
 	}
 	s.inputs++
 	if s.inputs > 8 {
@@ -136,7 +142,7 @@ func (s *scanner) output(i int) error {
 	if !s.seenN || !s.seenAlloc {
 		return violate("FF-01", s.argv, i, "-n and -max_alloc %d come before the first input", MaxAlloc)
 	}
-	if err := checkOutput(s.argv, i, s.pending, s.argv[i], s.pol, &s.pipeOut); err != nil {
+	if err := checkOutput(s.argv, i, s.pending, s.argv[i], s.pol, &s.pipeOut, s.metaInputs); err != nil {
 		return err
 	}
 	s.outputs++
@@ -166,7 +172,7 @@ func ruleOf(opt string) string {
 		return "FF-13"
 	case "-threads", "-filter_threads", "-filter_complex_threads":
 		return "FF-16"
-	case "-map", "-map_metadata", "-map_chapters":
+	case "-map", "-map_metadata", "-map_metadata:g", "-map_metadata:s", "-map_chapters":
 		return "FF-08"
 	case "-c:v", "-c:a", "-q:v", "-b:v", "-b:a", "-crf", "-g", "-bf", "-profile:v", "-preset", "-quality", "-lossless":
 		return "FF-15"
@@ -203,8 +209,8 @@ func inputFormat(argv []string, i int, opts []option) (string, error) {
 	forced := ""
 	for _, o := range opts {
 		if o.name == "-f" {
-			if o.value != "lavfi" && o.value != "rawvideo" && o.value != "s16le" {
-				return "", violate("FF-13", argv, o.idx, "an input format is lavfi, rawvideo or s16le")
+			if o.value != "lavfi" && o.value != "rawvideo" && o.value != "s16le" && o.value != "ffmetadata" {
+				return "", violate("FF-13", argv, o.idx, "an input format is lavfi, rawvideo, s16le or ffmetadata")
 			}
 			forced = o.value
 			continue
@@ -260,6 +266,12 @@ func checkInput(argv []string, i int, opts []option, path string, pol Policy) er
 	if !ok {
 		return violate("FF-03", argv, i, "-i takes file:<absolute path> or pipe:0")
 	}
+	if forced == "ffmetadata" {
+		if len(opts) != 2 {
+			return violate("FF-02", argv, i, "an ffmetadata input carries only -protocol_whitelist and -f")
+		}
+		return checkFilePath("FF-03", argv, i, p, pathInput, pol)
+	}
 	if forced != "" {
 		return violate("FF-13", argv, i, "a file input is probed, never forced with -f")
 	}
@@ -274,9 +286,10 @@ func checkInput(argv []string, i int, opts []option, path string, pol Policy) er
 	return checkFilePath("FF-03", argv, i, p, pathInput, pol)
 }
 
-func checkOutput(argv []string, i int, opts []option, path string, pol Policy, pipeOut *bool) error {
+func checkOutput(argv []string, i int, opts []option, path string, pol Policy, pipeOut *bool, metaInputs []int) error {
 	format := ""
-	var maps, meta, chap int
+	var maps, meta, metaG, metaS, chap int
+	chapterInput := false
 	for _, o := range opts {
 		switch o.name {
 		case "-f":
@@ -285,8 +298,16 @@ func checkOutput(argv []string, i int, opts []option, path string, pol Policy, p
 			maps++
 		case "-map_metadata":
 			meta++
+		case "-map_metadata:g":
+			metaG++
+		case "-map_metadata:s":
+			metaS++
 		case "-map_chapters":
 			chap++
+			chapterInput = o.value != "-1"
+			if n, err := strconv.Atoi(o.value); err == nil && n >= 0 && !slices.Contains(metaInputs, n) {
+				return violate("FF-08", argv, o.idx, "-map_chapters names an input that is not an ffmetadata input")
+			}
 		case "-protocol_whitelist", "-format_whitelist", "-pattern_type", "-framerate", "-s":
 			return violate("FF-07", argv, o.idx, "option %s is an input option", o.name)
 		case "-sn", "-dn", "-ss", "-t":
@@ -302,8 +323,17 @@ func checkOutput(argv []string, i int, opts []option, path string, pol Policy, p
 	if maps == 0 {
 		return violate("FF-08", argv, i, "-map is explicit on every output")
 	}
-	if meta != 1 || chap != 1 {
-		return violate("FF-08", argv, i, "-map_metadata -1 and -map_chapters -1 are required on every output")
+	// Chapters from an ffmetadata input need the chapter metadata (the title) to survive, which
+	// -map_metadata -1 also drops: then the global and the stream metadata are dropped one by one.
+	plain := meta == 1 && metaG == 0 && metaS == 0 && !chapterInput
+	chapters := meta == 0 && metaG == 1 && metaS == 1 && chapterInput
+	if chap != 1 || !(plain || chapters) {
+		return violate(
+			"FF-08",
+			argv,
+			i,
+			"-map_metadata -1 and -map_chapters -1 are required on every output (-map_metadata:g -1 -map_metadata:s -1 with an ffmetadata chapter input)",
+		)
 	}
 
 	switch format {

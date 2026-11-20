@@ -38,6 +38,7 @@ var ffprobeOptions = map[string]optSpec{
 	"-of":                 {value: kPrintFormat},
 	"-show_format":        {flag: true},
 	"-show_streams":       {flag: true},
+	"-show_chapters":      {flag: true},
 	"-show_frames":        {flag: true},
 	"-count_packets":      {flag: true},
 	"-select_streams":     {value: kSelect},
