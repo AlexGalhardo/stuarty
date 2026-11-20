@@ -11,6 +11,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/library"
 	"github.com/AlexGalhardo/stuarty/service/publish"
+	"github.com/AlexGalhardo/stuarty/service/publish/destinations"
 )
 
 // Sentinel errors returned by the store (SDD-005 section 2 item 8). The
@@ -69,6 +70,9 @@ type Repos interface {
 	Backups() BackupRepo
 	Audit() AuditRepo
 	Checkpoints() CheckpointRepo
+	// ImageCheckpoints is the checkpoints of the image documents: the same repository, over `image_checkpoints`
+	// (SDD-005 section 5.14.1), with the id of the image in the ProjectID of a row.
+	ImageCheckpoints() CheckpointRepo
 	Fonts() FontRepo
 	BrandKit() BrandKitRepo
 	Images() ImageRepo
@@ -77,6 +81,7 @@ type Repos interface {
 	Library() library.Index
 	AssetLibrary() assets.Store
 	Publications() publish.Store
+	Blog() destinations.Store
 	Chat() agenthost.Store
 }
 

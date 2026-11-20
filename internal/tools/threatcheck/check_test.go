@@ -123,11 +123,12 @@ func TestTheRealModelParses(t *testing.T) {
 	// T-60 and T-61 are the Meta threats of epic 19; T-62 to T-66 are the threats of a file sent from the
 	// browser into an image, epic 48; T-67 is the test address variables (D-093); T-68, T-69 and T-79 are the
 	// X and TikTok threats of epic 22; T-70 to T-74 are the hosted agent threats of epic 14; T-75 to T-78 are
-	// the AI provider sign-in threats of epic 12; T-80 to T-85 are the Google sign-in threats of epic 24; T-90
-	// and T-91 are the processed-sound threats of epic 51; T-92 to T-94 are the lookup table threats of an
-	// image, epic 49; T-96 to T-98 are the image edit threats of epic 30.
-	if len(threats) != 93 {
-		t.Errorf("the model has %d threats, want 93 (T-92 to T-94, the image table threats)", len(threats))
+	// the AI provider sign-in threats of epic 12; T-80 to T-85 are the Google sign-in threats of epic 24; T-86
+	// to T-88, T-95 and T-99 are the blog threats of epic 23; T-90 and T-91 are the processed-sound threats of
+	// epic 51; T-92 to T-94 are the lookup table threats of an image, epic 49; T-96 to T-98 are the image edit
+	// threats of epic 30; T-89 is the shared image templates of network mode (VV-291).
+	if len(threats) != 99 {
+		t.Errorf("the model has %d threats, want 99 (T-89, the shared image templates)", len(threats))
 	}
 }
 
@@ -167,5 +168,81 @@ func TestTheRepositoryHasNoUnmarkedSecuritySkip(t *testing.T) {
 
 	if len(problems) > 0 {
 		t.Errorf("%s", strings.Join(problems, "\n"))
+	}
+}
+
+func TestThreatIDsHaveTwoOrThreeDigits(t *testing.T) {
+	t.Parallel()
+
+	row := func(id string) string {
+		return "## 1. Intro\n\n## 2. Threat model\n\n| " + id + " | a | b | c | m | `TestSecurity_T100_X` |\n\n## 3. x\n"
+	}
+
+	for _, id := range []string{"T-01", "T-99", "T-100", "T-999"} {
+		if _, err := parseThreats(row(id)); err != nil {
+			t.Errorf("%s was refused: %v", id, err)
+		}
+	}
+
+	for _, id := range []string{"T-1", "T-1000", "T-050", "T-099"} {
+		if _, err := parseThreats(row(id)); err == nil {
+			t.Errorf("%s was accepted", id)
+		}
+	}
+}
+
+func TestThreeDigitSecurityTestNames(t *testing.T) {
+	t.Parallel()
+
+	sdd := "## 1. Intro\n\n## 2. Threat model\n\n" +
+		"| T-100 | a | b | c | m | `TestSecurity_T100_One` |\n" +
+		"| T-101 | a | b | c | m | `TestSecurity_T100_Wrong` |\n" +
+		"\n## 3. Local mode\n\n## 5. Scope matrix\n\n## 6. Next\n"
+
+	root := t.TempDir()
+	put := func(rel, body string) {
+		full := filepath.Join(root, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(full), 0o750); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := os.WriteFile(full, []byte(body), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	put("docs/sdds/007-security-model.md", sdd)
+	put("service/service.go", "package service\n\ntype Service interface {\n}\n")
+	put(
+		"x/x_test.go",
+		"package x\n\nfunc TestSecurity_T100_One(t *testing.T) {}\nfunc TestSecurity_T100_Wrong(t *testing.T) {}\n"+
+			"func TestSecurity_T1000_Four(t *testing.T) {}\nfunc TestSecurity_T050_Padded(t *testing.T) {}\n"+
+			"func TestSecurity_T7_One(t *testing.T) {}\nfunc TestSecurity_ActorCannotImpersonate(t *testing.T) {}\n",
+	)
+
+	problems, err := check(root, "docs/sdds/007-security-model.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := strings.Join(problems, "\n")
+	if !strings.Contains(got, "TestSecurity_T100_Wrong is named by the row T-101") {
+		t.Errorf("a three-digit test under the wrong row is not reported:\n%s", got)
+	}
+
+	// A security test whose id is not a threat id would escape the check altogether (D-102).
+	for _, name := range []string{"TestSecurity_T1000_Four", "TestSecurity_T050_Padded", "TestSecurity_T7_One"} {
+		if !strings.Contains(got, name+" has no valid threat id") {
+			t.Errorf("the misnamed %s is not reported:\n%s", name, got)
+		}
+	}
+
+	// A security test with no threat id at all is a test of a rule, not of a threat row, and stays allowed.
+	if strings.Contains(got, "TestSecurity_ActorCannotImpersonate") {
+		t.Errorf("a security test with no threat id is reported:\n%s", got)
+	}
+
+	if strings.Contains(got, "TestSecurity_T100_One") {
+		t.Errorf("a correct three-digit test is reported:\n%s", got)
 	}
 }

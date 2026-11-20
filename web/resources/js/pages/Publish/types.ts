@@ -65,6 +65,8 @@ export interface Publication {
 	text?: string;
 	export: string;
 	thumbnail?: string;
+	// The id of the text of a blog post, instead of an export (SDD-020 section 43).
+	post?: string;
 	targets: Target[];
 	notes?: string[];
 	created_at: string;
@@ -91,8 +93,9 @@ export interface PublicationCreateInput {
 	project_id: string;
 	title: string;
 	text?: string;
-	export: string;
+	export?: string;
 	thumbnail?: string;
+	post?: string;
 	targets?: TargetInput[];
 }
 
@@ -101,6 +104,7 @@ export interface PublicationUpdateInput {
 	text?: string;
 	export?: string;
 	thumbnail?: string;
+	post?: string;
 	targets?: TargetInput[];
 }
 

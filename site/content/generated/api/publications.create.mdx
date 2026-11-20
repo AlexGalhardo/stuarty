@@ -23,7 +23,8 @@ Content type `application/json`.
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `export` | `string` | yes | The id of a succeeded export job of the project: the video.. min length 1 |
+| `export` | `string` | no | The id of a succeeded export job of the project: the video. Give this or post. |
+| `post` | `string` | no | The id of a text of the kind post of the project: a blog post, which goes to the blog destinations. Give this or export. |
 | `project_id` | `string` | yes | The project the publication belongs to.. min length 1 |
 | `targets` | array of [`TargetInput`](/docs/api/schemas#targetinput) | no | One entry per account the post goes to: connection_id, fields (title, description, tags, visibility, made_for_kids, ai_disclosure), at (a time such as 2026-11-20T09:00 read in zone, or an instant with an offset), zone (an IANA name such as America/Sao_Paulo), late_window_minutes. |
 | `text` | `string` | no | The caption the targets use unless they have their own description. |
@@ -42,6 +43,7 @@ Content type `application/json`. Schema: [`Publication`](/docs/api/schemas#publi
 | `export` | `string` | no |  |
 | `id` | `string` | no |  |
 | `notes` | array of `string` | no |  |
+| `post` | `string` | no |  |
 | `project_id` | `string` | no |  |
 | `targets` | array of [`Target`](/docs/api/schemas#target) | no |  |
 | `text` | `string` | no |  |
@@ -102,7 +104,6 @@ curl -X POST "http://127.0.0.1:7878/api/v1/publications" \
   -H "Authorization: Bearer $STUARTY_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-  "export": "string",
   "project_id": "string",
   "title": "string"
 }'
@@ -117,7 +118,6 @@ response = requests.post(
     "http://127.0.0.1:7878/api/v1/publications",
     headers={"Authorization": f"Bearer {os.environ['STUARTY_KEY']}"},
     json={
-        "export": "string",
         "project_id": "string",
         "title": "string",
     },
@@ -135,7 +135,6 @@ const response = await fetch("http://127.0.0.1:7878/api/v1/publications", {
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    "export": "string",
     "project_id": "string",
     "title": "string"
   }),
@@ -157,7 +156,6 @@ import (
 
 func main() {
 	body := strings.NewReader(`{
-  "export": "string",
   "project_id": "string",
   "title": "string"
 }`)
@@ -194,7 +192,6 @@ curl_setopt_array($ch, [
         "Content-Type: application/json",
     ],
     CURLOPT_POSTFIELDS => '{
-  "export": "string",
   "project_id": "string",
   "title": "string"
 }',
@@ -221,7 +218,6 @@ public class Example {
             .header("Content-Type", "application/json")
             .method("POST", HttpRequest.BodyPublishers.ofString("""
                 {
-                  "export": "string",
                   "project_id": "string",
                   "title": "string"
                 }
@@ -248,7 +244,6 @@ request.Headers.Authorization = new AuthenticationHeaderValue(
     "Bearer", Environment.GetEnvironmentVariable("STUARTY_KEY"));
 request.Content = new StringContent("""
 {
-  "export": "string",
   "project_id": "string",
   "title": "string"
 }
@@ -267,7 +262,6 @@ request = Net::HTTP::Post.new(uri)
 request["Authorization"] = "Bearer #{ENV.fetch('STUARTY_KEY')}"
 request["Content-Type"] = "application/json"
 request.body = '{
-  "export": "string",
   "project_id": "string",
   "title": "string"
 }'
@@ -292,6 +286,7 @@ puts "#{response.code} #{response.body}"
   "notes": [
     "string"
   ],
+  "post": "string",
   "project_id": "string",
   "targets": [
     {

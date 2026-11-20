@@ -48,8 +48,10 @@ type PublicationListRequest struct {
 	Network   string `json:"network,omitempty"`
 	From      string `json:"from,omitempty"`
 	To        string `json:"to,omitempty"`
-	Limit     int    `json:"limit,omitempty"`
-	Offset    int    `json:"offset,omitempty"`
+	// Zone is the IANA zone a date or a local time of From and To is read in; empty is UTC.
+	Zone   string `json:"zone,omitempty"`
+	Limit  int    `json:"limit,omitempty"`
+	Offset int    `json:"offset,omitempty"`
 }
 
 // PublicationListResult is a page of publications.
@@ -207,9 +209,12 @@ func (s *svc) PublicationList(ctx context.Context, req PublicationListRequest) (
 			continue
 		}
 
-		v, perr := time.Parse(time.RFC3339, t.raw)
+		v, perr := corepub.ParseBound(t.raw, req.Zone)
 		if perr != nil {
-			return nil, validationAt(t.path, "must be a time such as 2026-11-01T00:00:00Z.")
+			return nil, validationAt(
+				t.path,
+				"must be a date such as 2026-11-01, or a time such as 2026-11-01T00:00:00Z.",
+			)
 		}
 
 		*t.dst = &v
@@ -324,8 +329,11 @@ func (c svcClock) After(d time.Duration) <-chan time.Time { return time.After(d)
 // pubEnv is the service as the calendar sees it.
 type pubEnv struct{ s *svc }
 
-func (e pubEnv) Store() pub.Store           { return e.s.store.Publications() }
-func (e pubEnv) Now() time.Time             { return e.s.now() }
+func (e pubEnv) Store() pub.Store { return e.s.store.Publications() }
+
+// Now is the instant in the form the store keeps it, UTC to the millisecond, so that what a create answers is what
+// every later read answers (VV-285).
+func (e pubEnv) Now() time.Time             { return e.s.now().UTC().Truncate(time.Millisecond) }
 func (e pubEnv) NewID(prefix string) string { return e.s.newIDs(prefix) }
 
 func (e pubEnv) Actor(ctx context.Context) pub.Actor {
@@ -588,6 +596,10 @@ func (g pubGateway) Resolve(ctx context.Context, p pub.Post) (*pub.Resolved, err
 		return nil, newError(CodeUnauthorized, "no caller.")
 	}
 
+	if out, handled, berr := g.s.resolveBlogTarget(ctx, c, &p); handled {
+		return out, berr
+	}
+
 	a := PublishArgs{
 		ConnectionID: p.ConnectionID, Export: p.Export, Thumbnail: p.Thumbnail, Title: p.Fields.Title,
 		Description: p.Fields.Description, Tags: p.Fields.Tags, Visibility: p.Fields.Visibility,
@@ -623,6 +635,15 @@ func (g pubGateway) Resolve(ctx context.Context, p pub.Post) (*pub.Resolved, err
 
 // Send sends the snapshot of an approved target.
 func (g pubGateway) Send(ctx context.Context, t pub.Target, report func(float64, string)) (pub.Sent, error) {
+	if snap, isPost := blogSnapshotOf(t.Snapshot); isPost {
+		sent, err := g.s.sendBlog(ctx, &t, snap, report)
+		if err != nil {
+			return pub.Sent{}, sendError(err)
+		}
+
+		return sent, nil
+	}
+
 	var in publishInput
 	if err := json.Unmarshal(t.Snapshot, &in); err != nil {
 		return pub.Sent{}, &pub.SendError{

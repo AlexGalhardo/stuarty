@@ -157,6 +157,7 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/projects/{id}/texts/{item_id}` | [`texts.get`](/docs/api/texts.get) | Read a text, or one of its revisions |
 | `PUT` | `/api/v1/projects/{id}/texts/{item_id}` | [`texts.write`](/docs/api/texts.write) | Save a new revision of a text |
 | `POST` | `/api/v1/projects/{id}/texts/{item_id}/draft` | [`texts.draft`](/docs/api/texts.draft) | Ask a model for a draft of a text; the job waits for approval and shows its estimate |
+| `GET` | `/api/v1/projects/{id}/texts/{item_id}/post` | [`texts.post`](/docs/api/texts.post) | Check a blog post and render its sanitised HTML |
 | `POST` | `/api/v1/projects/{id}/texts/{item_id}/revert` | [`texts.revert`](/docs/api/texts.revert) | Bring an older revision back as a new one |
 | `GET` | `/api/v1/projects/{id}/texts/{item_id}/revisions` | [`texts.revisions`](/docs/api/texts.revisions) | List the revisions of a text, and compare two |
 | `POST` | `/api/v1/scripts/estimate` | [`scripts.estimate`](/docs/api/scripts.estimate) | Estimate how long a script takes when read aloud |
@@ -195,6 +196,11 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/images` | [`images.list`](/docs/api/images.list) | List the image documents and templates |
 | `POST` | `/api/v1/images` | [`images.create`](/docs/api/images.create) | Create an image document, blank or from a template |
 | `GET` | `/api/v1/images/{id}` | [`images.get`](/docs/api/images.get) | Describe an image document: layers, findings and text view |
+| `GET` | `/api/v1/images/{id}/checkpoints` | [`images.checkpoints.list`](/docs/api/images.checkpoints.list) | List the checkpoints of an image |
+| `POST` | `/api/v1/images/{id}/checkpoints` | [`images.checkpoints.create`](/docs/api/images.checkpoints.create) | Name a revision of an image |
+| `PATCH` | `/api/v1/images/{id}/checkpoints/{name}` | [`images.checkpoints.rename`](/docs/api/images.checkpoints.rename) | Rename a checkpoint of an image |
+| `DELETE` | `/api/v1/images/{id}/checkpoints/{name}` | [`images.checkpoints.remove`](/docs/api/images.checkpoints.remove) | Remove a checkpoint of an image, never a revision |
+| `GET` | `/api/v1/images/{id}/diff` | [`images.diff`](/docs/api/images.diff) | List what changed between two revisions of an image |
 | `POST` | `/api/v1/images/{id}/edit` | [`images.edit`](/docs/api/images.edit) | Apply a batch of image operations |
 | `GET` | `/api/v1/images/{id}/events` | [`images.events`](/docs/api/images.events) | Stream the events of an image document |
 | `POST` | `/api/v1/images/{id}/export` | [`images.export`](/docs/api/images.export) | Export an image document to a PNG, JPEG or WebP file |
@@ -203,6 +209,7 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/images/{id}/history` | [`images.history`](/docs/api/images.history) | List the latest batches of an image document |
 | `POST` | `/api/v1/images/{id}/model-edit` | [`images.model_edit`](/docs/api/images.model_edit) | Remove the background of a layer, or generate an image into the document, with the provider of a connection; the job says that the picture is sent, waits for approval, shows its estimate and puts the result in the document as one undoable step |
 | `POST` | `/api/v1/images/{id}/redo` | [`images.redo`](/docs/api/images.redo) | Redo the latest undone step of the caller on an image |
+| `POST` | `/api/v1/images/{id}/revert` | [`images.revert`](/docs/api/images.revert) | Go back to an earlier revision of an image as a new step |
 | `POST` | `/api/v1/images/{id}/undo` | [`images.undo`](/docs/api/images.undo) | Undo the latest step of the caller on an image |
 | `POST` | `/api/v1/images/import` | [`images.import`](/docs/api/images.import) | Import an image file into a new image document, or as a layer of one |
 | `POST` | `/api/v1/images/import/file` | [`images.import_file`](/docs/api/images.import_file) | Import an image file sent as the body of the request into a new image document, or as a layer of one |
@@ -225,6 +232,9 @@ Every operation has its own page with the parameters, the body, the responses an
 
 | Method | Path | Operation | Summary |
 | --- | --- | --- | --- |
+| `GET` | `/api/v1/posts` | [`posts.list`](/docs/api/posts.list) | List the posts published to the read API |
+| `GET` | `/api/v1/posts/{slug}` | [`posts.get`](/docs/api/posts.get) | Read a post published to the read API |
+| `GET` | `/api/v1/posts/{slug}/media/{name}` | [`posts.media`](/docs/api/posts.media) | Download an image of a published post |
 | `GET` | `/api/v1/publications` | [`publications.list`](/docs/api/publications.list) | List the publications of the calendar, by project, state, network or time range |
 | `POST` | `/api/v1/publications` | [`publications.create`](/docs/api/publications.create) | Plan a publication: a video for one or more accounts, each with its time; every target starts as a draft |
 | `GET` | `/api/v1/publications/{id}` | [`publications.get`](/docs/api/publications.get) | Read one publication with its targets |

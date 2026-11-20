@@ -287,7 +287,7 @@ func history(ctx context.Context, svc service.Service, raw json.RawMessage) (*to
 	}
 
 	if domain == command.DomainImage {
-		return imageHistory(ctx, svc, raw, in.Action, in.ImageID)
+		return imageHistory(ctx, svc, raw, &in)
 	}
 
 	if err := checkMembers("history", domain, raw, []string{"project_id"}, []string{"image_id"}); err != nil {
@@ -883,6 +883,9 @@ type itemArgs struct {
 	TextKind       string `json:"text_kind"`
 	Network        string `json:"network"`
 	WordsPerMinute int    `json:"wpm"`
+	// ProductionKind is the set of questions of the briefing (SDD-018 section 17): `kind` stays the kind of an
+	// item, so one member never means two things (VV-289).
+	ProductionKind string `json:"production_kind"`
 }
 
 // projectItem is the operations on the items of a production behind one tool (SDD-003 section 4.1): add, move,
@@ -891,6 +894,10 @@ func projectItem(ctx context.Context, svc service.Service, raw json.RawMessage) 
 	in, err := decode[itemArgs](raw)
 	if err != nil {
 		return nil, err
+	}
+
+	if verr := checkKindMembers(&in); verr != nil {
+		return nil, verr
 	}
 
 	if isWritingAction(in.Action) {
@@ -902,7 +909,7 @@ func projectItem(ctx context.Context, svc service.Service, raw json.RawMessage) 
 	}
 
 	if in.Action == "briefing" {
-		return briefingTool(ctx, svc, in.ProjectID, in.Answers)
+		return briefingTool(ctx, svc, in.ProjectID, in.ProductionKind, in.Answers)
 	}
 
 	var res *service.ProjectItemResult
@@ -944,6 +951,26 @@ func projectItem(ctx context.Context, svc service.Service, raw json.RawMessage) 
 	}
 
 	return &toolOutput{value: res, text: res.Text}, nil
+}
+
+// checkKindMembers refuses the two kinds in the place of each other: a kind of production given as `kind` would
+// otherwise be ignored and the briefing would quietly serve the short video.
+func checkKindMembers(in *itemArgs) error {
+	switch {
+	case in.Action == "briefing" && in.Kind != "":
+		return &service.Error{
+			Code: command.CodeValidation, Path: "kind", Message: "kind is not used by the action briefing.",
+			Hint: "the kind of production is production_kind: short (the default), commercial or long",
+		}
+	case in.Action != "briefing" && in.ProductionKind != "":
+		return &service.Error{
+			Code: command.CodeValidation, Path: "production_kind",
+			Message: "production_kind is used by the action briefing only.",
+			Hint:    "the kind of an item is kind: text, timeline or output",
+		}
+	}
+
+	return nil
 }
 
 func missingArg(name, action string) error {

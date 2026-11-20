@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -47,8 +46,8 @@ func runBinary(t *testing.T, bin, home string, args ...string) (stdout, stderr s
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, bin, args...)
-	cmd.Env = append(os.Environ(), "STUARTY_HOME="+home, "STUARTY_URL=", "APP_KEY=", "APP_ENV=")
+	cmd := stuartyCmd(ctx, t, bin, addrEnv(t),
+		[]string{"STUARTY_HOME=" + home, "STUARTY_URL=", "APP_KEY=", "APP_ENV="}, args...)
 
 	var out, errOut bytes.Buffer
 
@@ -173,8 +172,7 @@ func TestMCPOverStdioThroughTheBinary(t *testing.T) {
 	bin := buildBinary(t)
 	home := filepath.Join(t.TempDir(), "ws")
 
-	cmd := exec.CommandContext(t.Context(), bin, "mcp")
-	cmd.Env = append(os.Environ(), "STUARTY_HOME="+home, "STUARTY_URL=", "APP_KEY=", "APP_ENV=")
+	cmd := stuartyCmd(t.Context(), t, bin, nil, mcpTestEnv(t, home), "mcp")
 
 	client := sdk.NewClient(&sdk.Implementation{Name: "Claude Code", Version: "1"}, nil)
 

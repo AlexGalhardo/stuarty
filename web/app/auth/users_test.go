@@ -115,12 +115,19 @@ func TestUsersRefuseWhatIsNotAUser(t *testing.T) {
 func TestRoleScopes(t *testing.T) {
 	t.Parallel()
 
-	if got := service.RoleScopes(service.RoleAdmin); len(got) != 5 {
-		t.Errorf("admin scopes = %v, want the five", got)
+	// The five scopes of SDD-000 section 4 and the scope of the read API of the blog (SDD-020 section 47).
+	if got := service.RoleScopes(service.RoleAdmin); len(got) != 6 || got[5] != service.ScopePostsRead {
+		t.Errorf("admin scopes = %v, want the five and posts:read", got)
 	}
 
 	member := service.RoleScopes(service.RoleMember)
-	want := []string{service.ScopeRead, service.ScopeEdit, service.ScopeMedia, service.ScopeRender}
+	want := []string{
+		service.ScopeRead,
+		service.ScopeEdit,
+		service.ScopeMedia,
+		service.ScopeRender,
+		service.ScopePostsRead,
+	}
 
 	if strings.Join(member, ",") != strings.Join(want, ",") {
 		t.Errorf("member scopes = %v, want %v", member, want)

@@ -35,38 +35,52 @@ func SeedStarterTemplates(ctx context.Context, st Store, nowMs int64) (int, erro
 	added := 0
 
 	for _, s := range starters {
-		if _, gerr := st.Templates().Get(ctx, s.ID); gerr == nil {
-			continue
-		} else if !errors.Is(gerr, ErrNotFound) {
-			return added, fmt.Errorf("service: starter template %s: %w", s.ID, gerr)
+		ok, err := seedTimelineTemplate(ctx, st, nowMs, s.ID, s.Document)
+		if err != nil {
+			return added, err
 		}
 
-		doc, derr := timeline.Decode(s.Document)
-		if derr != nil {
-			return added, fmt.Errorf("service: starter template %s: %w", s.ID, derr)
-		}
-
-		slots, merr := json.Marshal(slotInfos(doc))
-		if merr != nil {
-			return added, merr
-		}
-
-		row := TemplateRow{
-			ID: s.ID, Name: doc.Name, Description: doc.Template.Description, SchemaVersion: doc.SchemaVersion,
-			Document: s.Document, DocSHA256: sha256Hex(s.Document), Slots: slots, Summary: summarize(doc),
-			CreatedMs: nowMs, CreatedBy: StarterActor,
-		}
-
-		err := st.Write(ctx, func(ctx context.Context, tx Tx) error { return tx.Templates().Create(ctx, row) })
-
-		switch {
-		case err == nil:
+		if ok {
 			added++
-		case errors.Is(err, ErrExists):
-		default:
-			return added, fmt.Errorf("service: starter template %s: %w", s.ID, err)
 		}
 	}
 
 	return added, nil
+}
+
+// seedTimelineTemplate adds one template with a fixed identifier to the library, as a shared one. It reports
+// whether it added the row: a workspace that holds the identifier is left as it is.
+func seedTimelineTemplate(ctx context.Context, st Store, nowMs int64, id string, document []byte) (bool, error) {
+	if _, gerr := st.Templates().Get(ctx, id); gerr == nil {
+		return false, nil
+	} else if !errors.Is(gerr, ErrNotFound) {
+		return false, fmt.Errorf("service: built-in template %s: %w", id, gerr)
+	}
+
+	doc, derr := timeline.Decode(document)
+	if derr != nil {
+		return false, fmt.Errorf("service: built-in template %s: %w", id, derr)
+	}
+
+	slots, merr := json.Marshal(slotInfos(doc))
+	if merr != nil {
+		return false, merr
+	}
+
+	row := TemplateRow{
+		ID: id, Name: doc.Name, Description: doc.Template.Description, SchemaVersion: doc.SchemaVersion,
+		Document: document, DocSHA256: sha256Hex(document), Slots: slots, Summary: summarize(doc),
+		CreatedMs: nowMs, CreatedBy: StarterActor,
+	}
+
+	err := st.Write(ctx, func(ctx context.Context, tx Tx) error { return tx.Templates().Create(ctx, row) })
+
+	switch {
+	case err == nil:
+		return true, nil
+	case errors.Is(err, ErrExists):
+		return false, nil
+	default:
+		return false, fmt.Errorf("service: built-in template %s: %w", id, err)
+	}
 }

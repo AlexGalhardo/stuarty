@@ -171,6 +171,39 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.ImageRedo(ctx, service.ImageStepRequest{ImageID: "img_0000000001"})
 			return err
 		},
+		"ImageRevert": func() error {
+			_, err := e.svc.ImageRevert(ctx, service.ImageRevertRequest{ImageID: "img_0000000001", Revision: 1})
+			return err
+		},
+		"ImageDiff": func() error {
+			_, err := e.svc.ImageDiff(ctx, service.ImageDiffRequest{ImageID: "img_0000000001", From: 1})
+			return err
+		},
+		"ImageCheckpointCreate": func() error {
+			_, err := e.svc.ImageCheckpointCreate(
+				ctx,
+				service.ImageCheckpointCreateRequest{ImageID: "img_0000000001", Name: "x"},
+			)
+			return err
+		},
+		"ImageCheckpointList": func() error {
+			_, err := e.svc.ImageCheckpointList(ctx, service.ImageCheckpointListRequest{ImageID: "img_0000000001"})
+			return err
+		},
+		"ImageCheckpointRename": func() error {
+			_, err := e.svc.ImageCheckpointRename(
+				ctx,
+				service.ImageCheckpointRenameRequest{ImageID: "img_0000000001", Name: "x", NewName: "y"},
+			)
+			return err
+		},
+		"ImageCheckpointRemove": func() error {
+			_, err := e.svc.ImageCheckpointRemove(
+				ctx,
+				service.ImageCheckpointRemoveRequest{ImageID: "img_0000000001", Name: "x"},
+			)
+			return err
+		},
 		"ImageExport": func() error {
 			_, err := e.svc.ImageExport(ctx, service.ImageExportRequest{ImageID: "img_0000000001"})
 			return err
@@ -629,6 +662,25 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 		},
 		"ScriptEstimate": func() error {
 			_, err := e.svc.ScriptEstimate(ctx, service.ScriptEstimateRequest{Text: "a"})
+			return err
+		},
+		"PostCheck": func() error {
+			_, err := e.svc.PostCheck(
+				ctx,
+				service.PostCheckRequest{ProjectID: "prj_0000000001", ItemID: "pit_0000000001"},
+			)
+			return err
+		},
+		"PublishedPostList": func() error {
+			_, err := e.svc.PublishedPostList(ctx, service.PublishedPostListRequest{})
+			return err
+		},
+		"PublishedPostGet": func() error {
+			_, err := e.svc.PublishedPostGet(ctx, service.PublishedPostGetRequest{Slug: "a"})
+			return err
+		},
+		"PublishedPostMedia": func() error {
+			_, err := e.svc.PublishedPostMedia(ctx, service.PublishedPostMediaRequest{Slug: "a", Name: "cover.png"})
 			return err
 		},
 		"AgentProfileList": func() error {
@@ -1249,6 +1301,37 @@ func TestCommandHelp(t *testing.T) {
 	if err != nil || one.Command == nil || one.Command.ArgsSchema["$schema"] == nil ||
 		one.Command.Example["item_id"] == nil {
 		t.Fatalf("detail = %+v, %v", one, err)
+	}
+
+	// VV-283: an image operation with no domain asked is found when its name is unique among the domains.
+	img, err := e.svc.CommandHelp(e.as(ui), service.CommandHelpRequest{Name: "layer.add_text"})
+	if err != nil || img.Command == nil || img.Command.Name != "layer.add_text" {
+		t.Fatalf("layer.add_text with no domain = %+v, %v", img, err)
+	}
+
+	if !strings.HasPrefix(img.Text, "Domain: image.\n") {
+		t.Errorf("the help of an operation found with no domain does not name its domain: %q", img.Text)
+	}
+
+	named, err := e.svc.CommandHelp(
+		e.as(ui),
+		service.CommandHelpRequest{Name: "layer.add_text", Domain: command.DomainImage},
+	)
+	if err != nil || strings.HasPrefix(named.Text, "Domain:") {
+		t.Errorf("the help asked with domain=image = %+v, %v", named, err)
+	}
+
+	_, err = e.svc.CommandHelp(
+		e.as(ui),
+		service.CommandHelpRequest{Name: "layer.add_text", Domain: command.DomainVideo},
+	)
+	if se := serviceError(t, err); se.Code != command.CodeUnknownCommand {
+		t.Errorf("layer.add_text in the video domain = %+v, want E_UNKNOWN_COMMAND", se)
+	}
+
+	_, err = e.svc.CommandHelp(e.as(ui), service.CommandHelpRequest{Name: "nope.nothing"})
+	if se := serviceError(t, err); !strings.Contains(se.Hint, "domain=image") {
+		t.Errorf("the hint of an unknown name does not point at the domain parameter: %q", se.Hint)
 	}
 
 	for _, name := range []string{"asset.add", "nope.nothing"} {

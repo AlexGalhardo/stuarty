@@ -28,9 +28,10 @@ Run it from the repository or worktree root, with `STUARTY_TEST_FFMPEG_DIR` set 
 - **`web/app`, `core/schema` or agent docs changed:** `go run ./web/cmd/gen-agent-docs -check`.
 - **`web/` UI changed:** `bun run lint`, `typecheck`, `check:thin-client`, `check:i18n`, `bunx vitest run`.
 - **`site/` or the reference changed:** `check:last-updated` and `reference:check`.
-- **`--full` adds two steps:**
+- **`--full` adds four steps:**
   - `scripts/gate.sh`, the whole local release gate;
   - `scripts/smoke-e2e.sh`, which boots the product end to end. It builds the binary and starts `stuarty serve` with a private workspace. It then creates a project, imports a generated clip, adds a clip and a title, lints and exports with `--wait`. Finally `ffprobe` checks the MP4 (video, audio, 4 s), and the server is stopped by its pid.
+  - `scripts/recipe-commercial.sh` and `scripts/recipe-long-video.sh`, the two recipes of epic 39: each starts its own server on a free port with a private workspace, makes a commercial in three aspect ratios and a long video with an extracted short from generated footage, and checks every exported file with `ffprobe`.
 
 The last line is `VERIFY_OK` (exit 0), `VERIFY_FAIL=<n>` (exit 1) or `VERIFY_NEEDS_HUMAN` (exit 3). Logs are in `$TEMP/verify-<time>/`.
 

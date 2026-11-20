@@ -135,6 +135,24 @@ function fakeApi(start: ImageDocument): {
 			]);
 			return importResult(current.revision);
 		},
+		checkpoints: async () => ({
+			image_id: "img_aaaaaaaaaa",
+			revision: current.revision,
+			checkpoints: [],
+			text: "",
+		}),
+		createCheckpoint: async () => {
+			throw new Error("not used");
+		},
+		removeCheckpoint: async () => {
+			throw new Error("not used");
+		},
+		diff: async () => {
+			throw new Error("not used");
+		},
+		revert: async () => {
+			throw new Error("not used");
+		},
 		probe: async () => 200,
 	};
 	return {
@@ -148,6 +166,19 @@ function fakeApi(start: ImageDocument): {
 }
 
 describe("the image store", () => {
+	test("reload reads the document and the history again after a step the window did not send", async () => {
+		const server = fakeApi(doc(1, []));
+		const store = createImageStore(server.api, "img_aaaaaaaaaa");
+		await store.getState().open();
+
+		// a revert made through the API moves the document under the window
+		server.set(doc(5, [layer("back")]));
+		await store.getState().reload();
+
+		expect(store.getState().doc?.revision).toBe(5);
+		expect(store.getState().doc?.layers.map((l) => l.id)).toEqual(["back"]);
+	});
+
 	test("a batch goes out against the revision on screen and the answer replaces the document", async () => {
 		const server = fakeApi(doc(1, []));
 		const store = createImageStore(server.api, "img_aaaaaaaaaa");

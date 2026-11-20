@@ -36,15 +36,15 @@ A creator writes a blog post in Stuarty, with its images, and sends it where the
 
 ## Tasks
 
-- [ ] 1. Amend SDD-019 (the post) and SDD-020 (the four destinations, the payload, the signature, the API); add SDD-007 rows (webhook to an internal address, signature replay, HTML injection in a post, the read token reaching other routes). Verify: `task lint:md` exits 0.
-- [ ] 2. Implement the post kind, validation and sanitised rendering with table tests. Verify: `go test ./core/writing/... -run TestPost` passes.
-- [ ] 3. Implement the files destination with templates. Verify: `go test ./service/publish/destinations/... -run TestFiles` passes (round trip of a post with two images).
-- [ ] 4. Implement the WordPress destination with contract fixtures. Verify: `go test ./service/publish/destinations/... -run TestWordPress` passes with no network (create, update, media, auth failure).
-- [ ] 5. Implement the webhook destination with signing, retries and the address rules. Verify: `go test ./service/publish/destinations/... -run TestWebhook` passes.
-- [ ] 6. Implement the read API and its token scope. Verify: `go test ./web/app/... -run TestPostsAPI` passes (only published posts; the token is refused elsewhere).
-- [ ] 7. Expose post operations on HTTP, CLI and MCP with parity. Verify: `go test ./web/contract/...` passes.
-- [ ] 8. Build the post editor with preview and the destination forms, in both languages. Verify: `task test:web` and `web/e2e/specs/blog.spec.ts` pass.
-- [ ] 9. Security tests of the new rows. Verify: `go test -run TestSecurity_ ./...` and `go run ./internal/tools/threatcheck` exit 0.
+- [x] 1. Amend SDD-019 (the post) and SDD-020 (the four destinations, the payload, the signature, the API); add SDD-007 rows (webhook to an internal address, signature replay, HTML injection in a post, the read token reaching other routes). Verify: `task lint:md` exits 0.
+- [x] 2. Implement the post kind, validation and sanitised rendering with table tests. Verify: `go test ./core/writing/... -run TestPost` passes.
+- [x] 3. Implement the files destination with templates. Verify: `go test ./service/publish/destinations/... -run TestFiles` passes (round trip of a post with two images).
+- [x] 4. Implement the WordPress destination with contract fixtures. Verify: `go test ./service/publish/destinations/... -run TestWordPress` passes with no network (create, update, media, auth failure).
+- [x] 5. Implement the webhook destination with signing, retries and the address rules. Verify: `go test ./service/publish/destinations/... -run TestWebhook` passes.
+- [x] 6. Implement the read API and its token scope. Verify: `go test ./web/app/... -run TestPostsAPI` passes (only published posts; the token is refused elsewhere).
+- [x] 7. Expose post operations on HTTP, CLI and MCP with parity. Verify: `go test ./web/contract/...` passes.
+- [x] 8. Build the post editor with preview and the destination forms, in both languages. Verify: `task test:web` and `web/e2e/specs/blog.spec.ts` pass.
+- [x] 9. Security tests of the new rows. Verify: `go test -run TestSecurity_ ./...` and `go run ./internal/tools/threatcheck` exit 0.
 - [ ] 10. Publish to a real WordPress in a local container, if the author approves pulling the image; otherwise marked as not verified. Verify: the result or the note is in the hand-off.
 
 ## Test strategy

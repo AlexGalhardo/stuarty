@@ -30,6 +30,7 @@ Content type `application/json`.
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `export` | `string` or `null` | no | The new video; leave out to keep it. |
+| `post` | `string` or `null` | no | The new post; leave out to keep it. |
 | `targets` | array of [`TargetInput`](/docs/api/schemas#targetinput) | no | Targets to change (with their id), add (without one) or remove (remove: true). A target that was waiting for approval, approved or scheduled and whose post changed goes back to waiting for approval. |
 | `text` | `string` or `null` | no | The new caption; leave out to keep it. |
 | `thumbnail` | `string` or `null` | no | The new cover; an empty text removes it. |
@@ -47,6 +48,7 @@ Content type `application/json`. Schema: [`Publication`](/docs/api/schemas#publi
 | `export` | `string` | no |  |
 | `id` | `string` | no |  |
 | `notes` | array of `string` | no |  |
+| `post` | `string` | no |  |
 | `project_id` | `string` | no |  |
 | `targets` | array of [`Target`](/docs/api/schemas#target) | no |  |
 | `text` | `string` | no |  |
@@ -259,6 +261,7 @@ puts "#{response.code} #{response.body}"
   "notes": [
     "string"
   ],
+  "post": "string",
   "project_id": "string",
   "targets": [
     {

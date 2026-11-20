@@ -284,6 +284,7 @@ func (h *apiHandler) registerAll() {
 		return h.step(c, in, h.Service.Redo)
 	})
 	h.registerHistoryOps()
+	h.registerImageHistoryOps()
 	register(h, "projects.lint", func(c *web.Ctx, in lintIn) (service.LintResult, error) {
 		res, err := h.Service.Lint(
 			c.Context(),
@@ -464,6 +465,10 @@ func (h *apiHandler) registerAll() {
 	register(h, "texts.draft", h.textDraft)
 	register(h, "captions.validate", h.captionValidate)
 	register(h, "scripts.estimate", h.scriptEstimate)
+	register(h, "texts.post", h.postCheck)
+	register(h, "posts.list", h.postsList)
+	register(h, "posts.get", h.postsGet)
+	register(h, "posts.media", h.postsMedia)
 	register(h, "image.generate", h.imageGenerate)
 	register(h, "voice.generate", h.voiceGenerate)
 	register(h, "images.model_edit", h.imageModelEdit)

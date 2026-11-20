@@ -46,6 +46,7 @@ func nestedWindowAudio(doc *timeline.Document, from, to int, opts Options) []Win
 			continue
 		}
 
+		processed := nestedProcessed(doc, opts, s)
 		speed := float64(s.Speed.Num) / float64(max(s.Speed.Den, 1))
 
 		// The executor of the browser does not know the time scale of a curve (SDD-004 §7): it plays the entry at
@@ -60,7 +61,7 @@ func nestedWindowAudio(doc *timeline.Document, from, to int, opts Options) []Win
 
 		wa := WindowAudio{
 			Item: s.ItemID, Asset: s.AssetID, First: first, Last: last, Speed: round3(speed), Curve: s.Curve,
-			Reverse: s.Reverse, Denoise: s.Denoise, Voice: s.Voice, Timeline: s.Timeline,
+			Reverse: s.Reverse, Denoise: s.Denoise, Voice: s.Voice, Timeline: s.Timeline, Processed: processed,
 		}
 		skipped := float64(frameSample(fps, first) - s.StartSample)
 		wa.SourceSeconds = round3((float64(s.SourceStart) + skipped*speed) / SampleRate)

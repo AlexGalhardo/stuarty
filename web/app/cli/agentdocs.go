@@ -83,7 +83,8 @@ func AgentDocsInputs() agentdocs.Inputs {
 	// at its cap (12,400 characters, D-094) and the image tool of MCP carries the import action.
 	for _, s := range []*spec{
 		revertCmd, diffCmd, checkpointCreateCmd, checkpointListCmd, checkpointRenameCmd, checkpointRemoveCmd, agentDocs,
-		imageImport,
+		imageImport, imageRevert, imageDiff, imageCheckpointCreate, imageCheckpointList, imageCheckpointRename,
+		imageCheckpointRemove,
 	} {
 		inLibrary[s.name] = true
 	}

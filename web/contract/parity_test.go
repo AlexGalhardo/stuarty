@@ -167,6 +167,25 @@ var parity = []row{
 	{method: "ImageRedo", tool: "image", command: "image:redo", route: "POST /images/{}/redo"},
 	{method: "ImageExport", tool: "image", command: "image:export", route: "POST /images/{}/export"},
 	{method: "ImageImport", tool: "image", command: "image:import", route: "POST /images/import"},
+	// Revert, the diff and the checkpoints of an image (epic 50): the tool is history with domain image.
+	{method: "ImageRevert", tool: "history", command: "image:revert", route: "POST /images/{}/revert"},
+	{method: "ImageDiff", tool: "history", command: "image:diff", route: "GET /images/{}/diff"},
+	{
+		method: "ImageCheckpointCreate", tool: "history", command: "image:checkpoint:create",
+		route: "POST /images/{}/checkpoints",
+	},
+	{
+		method: "ImageCheckpointList", tool: "history", command: "image:checkpoint:list",
+		route: "GET /images/{}/checkpoints",
+	},
+	{
+		method: "ImageCheckpointRename", tool: "history", command: "image:checkpoint:rename",
+		route: "PATCH /images/{}/checkpoints/{}",
+	},
+	{
+		method: "ImageCheckpointRemove", tool: "history", command: "image:checkpoint:remove",
+		route: "DELETE /images/{}/checkpoints/{}",
+	},
 	// The export presets, the check against one and the batch (SDD-004 sections 8.2 to 8.4). The MCP tools are the
 	// ones that already exist (NFR-020 leaves no room for three more): command_help with domain export, lint with a
 	// preset, and job_start with kind export_batch.
@@ -231,6 +250,13 @@ var parity = []row{
 	{method: "TextDraft", tool: "job_start", command: "text:draft", route: "POST /projects/{}/texts/{}/draft"},
 	{method: "CaptionValidate", tool: "project_item", command: "caption:validate", route: "POST /captions/validate"},
 	{method: "ScriptEstimate", tool: "project_item", command: "script:estimate", route: "POST /scripts/estimate"},
+	// The blog (SDD-019 section 13, SDD-020 sections 47 and 48): the check of a post is on every surface; the three
+	// routes of the published posts are for the system of the creator, with a key of the scope posts:read, so they
+	// are HTTP only.
+	{method: "PostCheck", tool: "project_item", command: "post:check", route: "GET /projects/{}/texts/{}/post"},
+	{method: "PublishedPostList", route: "GET /posts", httpOnly: true},
+	{method: "PublishedPostGet", route: "GET /posts/{}", httpOnly: true},
+	{method: "PublishedPostMedia", route: "GET /posts/{}/media/{}", httpOnly: true},
 	// Image and voice generation (SDD-016 section 6.1, epic 10): job_start again, with the kinds image.generate
 	// and voice.generate; the voices of a connection are read with the CLI or HTTP, as its models are.
 	{method: "ImageGenerate", tool: "job_start", command: "image:generate", route: "POST /image/generate"},

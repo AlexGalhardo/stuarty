@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"path"
 	"slices"
 	"strings"
 	"time"
@@ -299,6 +300,19 @@ func (h *apiHandler) authenticateNetwork(w http.ResponseWriter, r *http.Request,
 		case err != nil:
 			web.Fail(w, r, &service.Error{Code: command.CodeInternal, Message: "the key could not be checked."})
 		default:
+			// A key made for the read API of the blog reaches its three routes and nothing else: not a page, a
+			// stream or another operation (SDD-020 section 47, T-95).
+			if postsKeyOnly(&caller) && !postsRoute(r) {
+				web.Fail(w, r, &service.Error{
+					Code:    service.CodeForbidden,
+					Message: "this key can read published posts and nothing else.",
+					Hint:    "use a key with the scope of the route",
+					Details: map[string]any{"scope": service.ScopePostsRead},
+				})
+
+				return
+			}
+
 			next.ServeHTTP(w, r.WithContext(service.WithCaller(r.Context(), caller)))
 		}
 
@@ -330,6 +344,28 @@ func (h *apiHandler) authenticateNetwork(w http.ResponseWriter, r *http.Request,
 	}
 
 	next.ServeHTTP(w, r.WithContext(service.WithCaller(r.Context(), user.Caller())))
+}
+
+// postsKeyOnly says whether the caller holds the scope of the read API of the blog and no other.
+func postsKeyOnly(c *service.Caller) bool {
+	return len(c.Scopes) == 1 && c.Scopes[0] == service.ScopePostsRead
+}
+
+// postsRoute says whether the request is a read of the published posts: GET or HEAD of /api/v1/posts, of one post, or
+// of one image of it. The path is cleaned the way the router does, so a dot segment reaches no other route.
+func postsRoute(r *http.Request) bool {
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		return false
+	}
+
+	p := r.URL.Path
+	if p != path.Clean(p) {
+		return false
+	}
+
+	base := BasePath + "/posts"
+
+	return p == base || strings.HasPrefix(p, base+"/")
 }
 
 // LoginPath is the page of network mode that turns a password into a session; it is

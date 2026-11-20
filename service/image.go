@@ -152,15 +152,50 @@ func imageAuthorize(ctx context.Context, method string) (Caller, error) {
 	return c, nil
 }
 
-// loadImage reads a document the caller may see.
+// SharedImageTemplate reports whether a row is a template that ships with the product (VV-291, SDD-021): in
+// network mode it belongs to no user and every user may read it and make a document from it, but none may change
+// it. The starter actor made it and it has no owner.
+func SharedImageTemplate(h ImageHead) bool {
+	return h.Template && h.OwnerUserID == nil && h.CreatedBy == StarterActor
+}
+
+// loadImage reads a document the caller may see and change. A shared template is refused to a writer with
+// E_FORBIDDEN, so one user never edits what every user sees.
 func (s *svc) loadImage(
 	ctx context.Context,
 	repo ImageRepo,
 	c Caller,
 	id string,
 ) (ImageRow, *coreimage.Document, error) {
+	return s.loadImageFor(ctx, repo, c, id, true)
+}
+
+// loadImageRead is loadImage for a reader: a shared template is visible to every user.
+func (s *svc) loadImageRead(
+	ctx context.Context,
+	repo ImageRepo,
+	c Caller,
+	id string,
+) (ImageRow, *coreimage.Document, error) {
+	return s.loadImageFor(ctx, repo, c, id, false)
+}
+
+func (s *svc) loadImageFor(
+	ctx context.Context,
+	repo ImageRepo,
+	c Caller,
+	id string,
+	write bool,
+) (ImageRow, *coreimage.Document, error) {
 	row, err := repo.Get(ctx, id)
-	if errors.Is(err, ErrNotFound) || err == nil && !visible(c, row.OwnerUserID) {
+
+	shared := err == nil && SharedImageTemplate(row.ImageHead)
+	if shared && write && c.OwnerUserID != "" {
+		return ImageRow{}, nil, newError(CodeForbidden, "a template that ships with the product cannot be changed.").
+			withHint("make your own document from it with image:create and its template id")
+	}
+
+	if errors.Is(err, ErrNotFound) || err == nil && !visible(c, row.OwnerUserID) && !shared {
 		return ImageRow{}, nil, imageNotFound(id)
 	}
 
@@ -290,7 +325,7 @@ func (s *svc) newImageDocument(
 				withPath("template_id").withHint("give template_id and values only")
 		}
 
-		_, tpl, err := s.loadImage(ctx, tx.Images(), c, req.TemplateID)
+		_, tpl, err := s.loadImageRead(ctx, tx.Images(), c, req.TemplateID)
 		if err != nil {
 			return nil, err
 		}
@@ -425,7 +460,7 @@ func (s *svc) ImageDescribe(ctx context.Context, req ImageDescribeRequest) (*Ima
 		return nil, err
 	}
 
-	row, doc, lerr := s.loadImage(ctx, s.store.Images(), c, req.ImageID)
+	row, doc, lerr := s.loadImageRead(ctx, s.store.Images(), c, req.ImageID)
 	if lerr != nil {
 		return nil, lerr
 	}
@@ -521,8 +556,17 @@ func (s *svc) ImageEdit(ctx context.Context, req ImageEditRequest) (*ImageEditRe
 		}
 
 		rev, err := s.commitImage(ctx, tx, &row, &imageBatch{
-			kind: OpEdit, actor: c.Actor, base: req.BaseRevision, ops: req.Operations, doc: out.Doc,
-			inverse: out.Inverse, diff: out.Diff, key: req.IdempotencyKey, hash: hash, closeRedo: true,
+			kind:       OpEdit,
+			actor:      c.Actor,
+			base:       req.BaseRevision,
+			ops:        req.Operations,
+			doc:        out.Doc,
+			inverse:    out.Inverse,
+			diff:       out.Diff,
+			key:        req.IdempotencyKey,
+			hash:       hash,
+			closeRedo:  true,
+			checkpoint: true,
 			result: func(rev int64) json.RawMessage {
 				stored := *res
 				stored.Revision = rev
@@ -791,7 +835,10 @@ type imageBatch struct {
 	hash      string
 	closeRedo bool
 	closeStep bool
-	result    func(rev int64) json.RawMessage
+	// checkpoint makes the automatic checkpoint of an agent's first edit of the day, at the revision the batch
+	// starts from (SDD-005 section 5.14.1).
+	checkpoint bool
+	result     func(rev int64) json.RawMessage
 }
 
 // commitImage writes a batch inside the open transaction and returns the new revision.
@@ -799,6 +846,12 @@ func (s *svc) commitImage(ctx context.Context, tx Tx, row *ImageRow, b *imageBat
 	rev := row.Revision + 1
 	now := s.nowMs()
 	u := imageUpdate(b.doc, now)
+
+	if b.checkpoint {
+		if err := s.autoCheckpointOn(ctx, tx.ImageCheckpoints(), row.ID, b.actor, row.Revision); err != nil {
+			return 0, err
+		}
+	}
 
 	ops := marshalOr(b.ops)
 	inverse := marshalOr(nonNilPrimitives(b.inverse))

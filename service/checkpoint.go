@@ -20,6 +20,12 @@ const (
 	maxAutoActorRunes  = 100
 )
 
+// The words an error uses for the document a checkpoint or a revert is of.
+const (
+	timelineNoun = "timeline"
+	imageNoun    = "image"
+)
+
 // CheckpointCreate puts a name and a note on a revision (SDD-003 section 2.5.1).
 func (s *svc) CheckpointCreate(ctx context.Context, req CheckpointCreateRequest) (*Checkpoint, error) {
 	c, head, err := s.checkpointScope(ctx, "CheckpointCreate", &req.ProjectID, req.TimelineID, true)
@@ -27,6 +33,18 @@ func (s *svc) CheckpointCreate(ctx context.Context, req CheckpointCreateRequest)
 		return nil, err
 	}
 
+	return s.createCheckpoint(ctx, s.store.Checkpoints(), timelineNoun, req.ProjectID, c.Actor, head.Revision, &req)
+}
+
+// createCheckpoint is the creation of a checkpoint of a timeline or of an image: one rule for both. head is the
+// current revision of the document, which the revision named must not pass; id is the id of the document.
+func (s *svc) createCheckpoint(
+	ctx context.Context,
+	repo CheckpointRepo,
+	noun, id, actor string,
+	head int64,
+	req *CheckpointCreateRequest,
+) (*Checkpoint, error) {
 	name, nerr := cleanCheckpointName(req.Name, "name")
 	if nerr != nil {
 		return nil, nerr
@@ -34,22 +52,21 @@ func (s *svc) CheckpointCreate(ctx context.Context, req CheckpointCreateRequest)
 
 	rev := req.Revision
 	if rev == 0 {
-		rev = head.Revision
+		rev = head
 	}
 
-	if rev < 1 || rev > head.Revision {
-		return nil, newError(command.CodeValidation, "revision %d does not exist; the timeline is at revision %d.",
-			rev, head.Revision).withPath("revision").withHint("use a revision from 1 to %d", head.Revision)
+	if rev < 1 || rev > head {
+		return nil, newError(command.CodeValidation, "revision %d does not exist; the %s is at revision %d.",
+			rev, noun, head).withPath("revision").withHint("use a revision from 1 to %d", head)
 	}
 
 	row := CheckpointRow{
-		ProjectID: req.ProjectID, Name: name, Note: cleanCheckpointNote(req.Note), Revision: rev, Actor: c.Actor,
-		AtMs: s.nowMs(),
+		ProjectID: id, Name: name, Note: cleanCheckpointNote(req.Note), Revision: rev, Actor: actor, AtMs: s.nowMs(),
 	}
 
-	if err := s.store.Checkpoints().Create(ctx, row); err != nil {
+	if err := repo.Create(ctx, row); err != nil {
 		if errors.Is(err, ErrExists) {
-			return nil, newError(command.CodeIDExists, "the timeline already has a checkpoint named %q.", name).
+			return nil, newError(command.CodeIDExists, "the %s already has a checkpoint named %q.", noun, name).
 				withPath("name").withHint("choose another name, or rename or remove the existing one")
 		}
 
@@ -66,31 +83,44 @@ func (s *svc) CheckpointList(ctx context.Context, req CheckpointListRequest) (*C
 		return nil, err
 	}
 
-	rows, err := s.store.Checkpoints().List(ctx, req.ProjectID)
+	cps, text, err := s.listCheckpoints(ctx, s.store.Checkpoints(), req.ProjectID, head.Revision)
 	if err != nil {
-		return nil, asError(err)
+		return nil, err
 	}
 
-	res := &CheckpointListResult{
+	return &CheckpointListResult{
 		UntrustedNotice: UntrustedNotice, ProjectID: req.ProjectID, Revision: head.Revision,
-		Checkpoints: make([]Checkpoint, 0, len(rows)),
+		Checkpoints: cps, Text: text,
+	}, nil
+}
+
+// listCheckpoints reads the checkpoints of a document, newest revision first, and the text that fits the cap.
+func (s *svc) listCheckpoints(
+	ctx context.Context,
+	repo CheckpointRepo,
+	id string,
+	head int64,
+) ([]Checkpoint, string, error) {
+	rows, err := repo.List(ctx, id)
+	if err != nil {
+		return nil, "", asError(err)
 	}
 
+	cps := make([]Checkpoint, 0, len(rows))
 	lines := make([]textview.CheckpointLine, 0, len(rows))
 
 	for i := range rows {
 		cp := checkpointOf(rows[i])
 		cp.UntrustedNotice = ""
-		res.Checkpoints = append(res.Checkpoints, *cp)
+		cps = append(cps, *cp)
 		lines = append(lines, textview.CheckpointLine{
 			Revision: cp.Revision, Name: cp.Name, Note: cp.Note, Actor: cp.Actor, At: cp.At, Auto: cp.Auto,
 		})
 	}
 
 	fit := textview.FitCheckpoints(lines)
-	res.Text = textview.Checkpoints(req.ProjectID, head.Revision, lines[:fit], len(lines))
 
-	return res, nil
+	return cps, textview.Checkpoints(id, head, lines[:fit], len(lines)), nil
 }
 
 // CheckpointRename changes the name of a checkpoint, and its note when given.
@@ -99,33 +129,40 @@ func (s *svc) CheckpointRename(ctx context.Context, req CheckpointRenameRequest)
 		return nil, err
 	}
 
-	newName, nerr := cleanCheckpointName(req.NewName, "new_name")
+	return s.renameCheckpoint(ctx, s.store.Checkpoints(), timelineNoun, req.ProjectID, req.Name, req.NewName, req.Note)
+}
+
+func (s *svc) renameCheckpoint(
+	ctx context.Context,
+	repo CheckpointRepo,
+	noun, id, name, newName string,
+	note *string,
+) (*Checkpoint, error) {
+	newName, nerr := cleanCheckpointName(newName, "new_name")
 	if nerr != nil {
 		return nil, nerr
 	}
 
-	var note *string
+	var cleaned *string
 
-	if req.Note != nil {
-		n := cleanCheckpointNote(*req.Note)
-		note = &n
+	if note != nil {
+		n := cleanCheckpointNote(*note)
+		cleaned = &n
 	}
 
-	repo := s.store.Checkpoints()
-
-	if err := repo.Rename(ctx, req.ProjectID, req.Name, newName, note); err != nil {
+	if err := repo.Rename(ctx, id, name, newName, cleaned); err != nil {
 		switch {
 		case errors.Is(err, ErrNotFound):
-			return nil, checkpointNotFound(req.Name)
+			return nil, checkpointNotFoundIn(noun, name)
 		case errors.Is(err, ErrExists):
-			return nil, newError(command.CodeIDExists, "the timeline already has a checkpoint named %q.", newName).
+			return nil, newError(command.CodeIDExists, "the %s already has a checkpoint named %q.", noun, newName).
 				withPath("new_name").withHint("choose another name")
 		}
 
 		return nil, asError(err)
 	}
 
-	row, err := repo.Get(ctx, req.ProjectID, newName)
+	row, err := repo.Get(ctx, id, newName)
 	if err != nil {
 		return nil, asError(err)
 	}
@@ -139,16 +176,18 @@ func (s *svc) CheckpointRemove(ctx context.Context, req CheckpointRemoveRequest)
 		return nil, err
 	}
 
-	repo := s.store.Checkpoints()
+	return s.removeCheckpoint(ctx, s.store.Checkpoints(), timelineNoun, req.ProjectID, req.Name)
+}
 
-	row, err := repo.Get(ctx, req.ProjectID, req.Name)
+func (s *svc) removeCheckpoint(ctx context.Context, repo CheckpointRepo, noun, id, name string) (*Checkpoint, error) {
+	row, err := repo.Get(ctx, id, name)
 	if err == nil {
-		err = repo.Remove(ctx, req.ProjectID, req.Name)
+		err = repo.Remove(ctx, id, name)
 	}
 
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
-			return nil, checkpointNotFound(req.Name)
+			return nil, checkpointNotFoundIn(noun, name)
 		}
 
 		return nil, asError(err)
@@ -188,8 +227,10 @@ func (s *svc) checkpointScope(
 	return c, head, nil
 }
 
-func checkpointNotFound(name string) *Error {
-	return newError(command.CodeNotFound, "the timeline has no checkpoint named %q.", name).
+func checkpointNotFound(name string) *Error { return checkpointNotFoundIn(timelineNoun, name) }
+
+func checkpointNotFoundIn(noun, name string) *Error {
+	return newError(command.CodeNotFound, "the %s has no checkpoint named %q.", noun, name).
 		withDetail("checkpoint", name).withHint("list the checkpoints to see the names")
 }
 
@@ -247,21 +288,27 @@ func autoCheckpointName(actor string, at time.Time) string {
 	return autoNamePrefix + kept + " " + at.UTC().Format("2006-01-02")
 }
 
-// autoCheckpoint makes the checkpoint before an agent's first edit of the day, at the revision the edit starts
-// from, inside the transaction of the edit (SDD-005 section 5.14). It keeps at most maxAutoCheckpoints automatic
-// checkpoints; a checkpoint a person or an agent named is never removed here.
+// autoCheckpoint makes the checkpoint before an agent's first edit of the day of a timeline, at the revision the
+// edit starts from, inside the transaction of the edit (SDD-005 section 5.14).
 func (s *svc) autoCheckpoint(ctx context.Context, tx ProjectTx, actor string, revision int64) error {
+	return s.autoCheckpointOn(ctx, tx.Checkpoints(), tx.Project().ID, actor, revision)
+}
+
+// autoCheckpointOn is the rule for a timeline and for an image: the checkpoint `auto <actor> <date>` at the
+// revision the edit starts from, once a day per actor. It keeps at most maxAutoCheckpoints automatic checkpoints;
+// a checkpoint a person or an agent named is never removed here.
+func (s *svc) autoCheckpointOn(ctx context.Context, repo CheckpointRepo, id, actor string, revision int64) error {
 	if !isAgentActor(actor) || revision < 1 {
 		return nil
 	}
 
 	now := s.now()
 	row := CheckpointRow{
-		ProjectID: tx.Project().ID, Name: autoCheckpointName(actor, now), Revision: revision, Actor: actor, Auto: true,
+		ProjectID: id, Name: autoCheckpointName(actor, now), Revision: revision, Actor: actor, Auto: true,
 		Note: "Made before the first edit of the day by " + actor + ".", AtMs: now.UnixMilli(),
 	}
 
-	if err := tx.Checkpoints().Create(ctx, row); err != nil {
+	if err := repo.Create(ctx, row); err != nil {
 		if errors.Is(err, ErrExists) {
 			return nil
 		}
@@ -269,5 +316,5 @@ func (s *svc) autoCheckpoint(ctx context.Context, tx ProjectTx, actor string, re
 		return err
 	}
 
-	return tx.Checkpoints().TrimAuto(ctx, row.ProjectID, maxAutoCheckpoints)
+	return repo.TrimAuto(ctx, row.ProjectID, maxAutoCheckpoints)
 }
