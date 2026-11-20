@@ -614,3 +614,36 @@ func TestTestMessageKeepsABodyThatDoesNotEchoTheSecret(t *testing.T) {
 		t.Errorf("the body was dropped: %q", res.Message)
 	}
 }
+
+func TestRotateWritesTheNewSecretOverTheOldOneInTheVault(t *testing.T) {
+	srv := newServer(t, http.StatusOK, "ok")
+	m, st, v := newManager(t)
+	connect(t, m, st, v, srv, "refresh-one")
+
+	err := m.With(context.Background(), "con_a", func(c Credential) error {
+		if string(c.Secret) != "refresh-one" {
+			t.Errorf("the closure was given %q", c.Secret)
+		}
+
+		return c.Rotate([]byte("refresh-two"))
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// The next use reads the secret that was written, under the same reference.
+	err = m.With(context.Background(), "con_a", func(c Credential) error {
+		if string(c.Secret) != "refresh-two" {
+			t.Errorf("the next closure was given %q, want the rotated secret", c.Secret)
+		}
+
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if conn, gerr := m.Get(context.Background(), "con_a"); gerr != nil || !conn.SecretSet {
+		t.Errorf("after a rotation: %+v, %v", conn, gerr)
+	}
+}
