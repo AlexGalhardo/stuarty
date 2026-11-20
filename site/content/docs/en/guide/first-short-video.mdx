@@ -29,7 +29,11 @@ Each step has the path in the editor and the command that does the same. An agen
 2. **Answer the briefing.** The brief is what the project is for: who it is for, the goal, the platform, the tone. In the editor it is the questions of the project. With the command line:
 
    ```bash
-   stuarty briefing:answer --project prj_5k2m9x4q1b      --answer audience="Home bakers who want a first sourdough loaf"      --answer goal="Watch to the end and try the recipe"      --answer platform=youtube-shorts --answer format=vertical-9x16      --answer duration=10 --answer tone=warm
+   stuarty briefing:answer --project prj_5k2m9x4q1b \
+     --answer audience="Home bakers who want a first sourdough loaf" \
+     --answer goal="Watch to the end and try the recipe" \
+     --answer platform=youtube-shorts --answer format=vertical-9x16 \
+     --answer duration=10 --answer tone=warm
    stuarty brief:show --project prj_5k2m9x4q1b
    ```
 
