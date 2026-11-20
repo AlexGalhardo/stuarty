@@ -17,6 +17,7 @@ targets=(
 	"./core/command FuzzApplyBatch"
 	"./core/command FuzzApplyArgs"
 	"./core/image FuzzApplyArgs"
+	"./core/image FuzzApplyBatch"
 	"./core/image FuzzDecode"
 	"./core/timeline FuzzDecode"
 	"./core/timeval FuzzParse"
