@@ -44,7 +44,7 @@ A creator publishes the same short video as a Reel on Instagram and on their Fac
 - [x] 6. Implement the disclosure flag from asset origins. Verify: `go test ./service/... -run TestDisclosure` passes.
 - [x] 7. Write the setup guide for a Meta app and the account picker, in both languages. Verify: `task test:web` and `web/e2e/specs/meta-connect.spec.ts` pass with the fake server.
 - [x] 8. Security tests of the new rows (posting to a Page the user did not pick; a long-lived token in a log). Verify: `go test -run TestSecurity_ ./...` exits 0.
-- [ ] 9. One real post per network by the author, or marked as not verified. Verify: the result or the note is in the hand-off.
+- [x] 9. One real post per network by the author, or marked as not verified. Verify: the result or the note is in the hand-off. (Marked as not verified: it needs the author's Meta app and accounts; the manual steps are in the hand-off and in `development/QUESTIONS.md`.)
 
 ## Test strategy
 
