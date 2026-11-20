@@ -147,11 +147,13 @@ void main() {
 	// uSpill.yzw is one-hot on the dominant channel (all zero: none). No integer modulus and no
 	// indexing of a vector by a variable: a WebGL context that compiles a fragment shader as
 	// GLSL ES 1.00 refuses both, and the layer then draws nothing (VV-093).
+	// The two other channels are summed in 0..255 as the integer reference does, (c1 + c2) / 2: a
+	// product by 0 or 1 is exact, so no step is lost to rounding a sum of all three less one.
 	vec3 dom = uSpill.yzw;
 	if (dom.x + dom.y + dom.z > 0.0 && uSpill.x > 0.0) {
 		float kept = dot(rgb, dom);
-		float others = rgb.r + rgb.g + rgb.b - kept;
-		float limit = floor(others * 255.0 / 2.0) / 255.0;
+		float others = dot(rgb * 255.0, vec3(1.0) - dom);
+		float limit = floor(others / 2.0) / 255.0;
 		float excess = kept - limit;
 		if (excess > 0.0) {
 			rgb -= dom * excess * uSpill.x;
@@ -244,8 +246,8 @@ fn mainFragment(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
 	let dom = keyUniforms.uSpill.yzw;
 	if (dom.x + dom.y + dom.z > 0.0 && keyUniforms.uSpill.x > 0.0) {
 		let kept = dot(rgb, dom);
-		let others = rgb.r + rgb.g + rgb.b - kept;
-		let limit = floor(others * 255.0 / 2.0) / 255.0;
+		let others = dot(rgb * 255.0, vec3<f32>(1.0) - dom);
+		let limit = floor(others / 2.0) / 255.0;
 		let excess = kept - limit;
 		if (excess > 0.0) {
 			rgb = rgb - dom * excess * keyUniforms.uSpill.x;
@@ -267,6 +269,9 @@ export class ChromaKeyFilter extends Filter {
 				vertex: VERTEX,
 				fragment: FRAGMENT,
 				name: "chroma-key-filter",
+				// The chroma distances reach 32640, past what a mediump float must hold (2^14): ask for
+				// highp, which Pixi lowers to mediump only where the GPU has no highp.
+				preferredFragmentPrecision: "highp",
 			}),
 			gpuProgram: GpuProgram.from({
 				vertex: { source: WGSL, entryPoint: "mainVertex" },
