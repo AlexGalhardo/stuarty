@@ -38,13 +38,27 @@ stuarty image:export img_9d2f4h6j8k --format png
 
 Make a document a template with **Make it a template**, and mark the layers that change as **slots**. **New from template** then asks for the value of each slot (a title, a photo) and makes a new image. In the CLI, `image:create --template` starts a template and `image:create --from-template <id> --values -` fills one from JSON on the standard input. A slot you leave empty is a finding of the lint, not a silent gap.
 
+## Go back to an earlier version
+
+Every edit is a revision of the image, listed in **History**. **Name this version**, then **Save version**, keeps a checkpoint you can come back to; **Revert to here** on a row, or **Revert to** on a named version, first shows **What would change**, and **Revert** takes the image back as a new step. The steps in between stay in the history, and undo takes the revert back. Removing a named version never removes a revision. From a terminal, with the image of the quick start:
+
+```bash
+stuarty image:checkpoint:create img_9d2f4h6j8k --name "first draft"
+stuarty image:edit img_9d2f4h6j8k layer.add_fill color='#F4F1EA'
+stuarty image:diff img_9d2f4h6j8k --from-checkpoint "first draft"
+stuarty image:revert img_9d2f4h6j8k --checkpoint "first draft" --dry-run
+stuarty image:revert img_9d2f4h6j8k --checkpoint "first draft"
+```
+
+`--dry-run` shows what the revert would change and writes nothing. [Commands and revisions](/docs/concepts/commands-and-revisions) has the rules, which are the same as for a video project.
+
 ## Operations with a model
 
 Two operations use an AI provider: **Remove background** and **Generate image**. Both show the estimated price first, then wait in the [approval queue](/docs/guide/approvals) until you approve. The result arrives as a new layer you can undo. The picture of the layer goes to the provider you choose, and only after your approval. See [AI providers](/docs/guide/ai-providers).
 
 ## For an agent
 
-The domain has 27 edit operations (`canvas`, `image` and `layer` namespaces) and eight commands; [the image domain](/docs/agents/domain-image) lists them with their arguments, and the MCP tool `image` carries the document operations. An editor open on an image shows what an agent changed, without a reload.
+The domain has its edit operations (`canvas`, `image` and `layer` namespaces) and its commands; [the image domain](/docs/agents/domain-image) lists them with their arguments, and the MCP tool `image` carries the document operations. An editor open on an image shows what an agent changed, without a reload.
 
 ## Common mistakes
 
