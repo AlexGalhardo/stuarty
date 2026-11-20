@@ -49,13 +49,21 @@ func TestSharedImageTemplatesInNetworkMode(t *testing.T) {
 		t.Fatalf("a user reads a shared template: %v", err)
 	}
 
-	if _, err := e.svc.ImageCreate(bob, service.ImageCreateRequest{TemplateID: images[0].ID}); code(err) == "E_NOT_FOUND" {
+	if _, err := e.svc.ImageCreate(
+		bob,
+		service.ImageCreateRequest{TemplateID: images[0].ID},
+	); code(
+		err,
+	) == "E_NOT_FOUND" {
 		t.Fatalf("a user cannot make a document from a shared template: %v", err)
 	}
 
 	if _, err := e.svc.ImageEdit(alice, service.ImageEditRequest{
-		ImageID: images[0].ID, BaseRevision: 1,
-		Operations: []command.Operation{{Op: "layer.transform", Args: json.RawMessage(`{"layer_id":"lyr_0000000001","x":3}`)}},
+		ImageID:      images[0].ID,
+		BaseRevision: 1,
+		Operations: []command.Operation{
+			{Op: "layer.transform", Args: json.RawMessage(`{"layer_id":"lyr_0000000001","x":3}`)},
+		},
 	}); code(err) != "E_FORBIDDEN" {
 		t.Fatalf("a user changed a shared template: %v", err)
 	}
