@@ -80,11 +80,27 @@ type LUTRef struct {
 	Intensity int    `json:"intensity"`
 }
 
-// Limits of the lookup table of a layer: its intensity in per cent.
+// Limits of the lookup table of a layer: its intensity in per cent, and the distinct tables of a document, which
+// are the tables the renderer holds at once (render_luts, SDD-013 section 7.2): the whole image is one frame, so
+// a document with more could be edited and never exported.
 const (
 	MinLUTIntensity = 1
 	MaxLUTIntensity = 100
+	MaxLUTs         = 32
 )
+
+// lutCount is the number of lookup tables the document lists in assets.
+func lutCount(d *Document) int {
+	n := 0
+
+	for _, a := range d.Assets {
+		if a.isLUT() {
+			n++
+		}
+	}
+
+	return n
+}
 
 // Adjust holds the adjustments of a layer that differ from neutral.
 type Adjust struct {

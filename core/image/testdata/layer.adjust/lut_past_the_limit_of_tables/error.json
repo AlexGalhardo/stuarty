@@ -1,0 +1,12 @@
+{
+  "code": "E_LIMIT",
+  "details": {
+    "ceiling": 32,
+    "limit": "lookup tables",
+    "value": 32
+  },
+  "hint": "Remove lookup tables that you no longer need, or put the work in another image.",
+  "message": "The document already has 32 lookup tables; the limit is 32.",
+  "op_index": 0,
+  "retryable": false
+}
