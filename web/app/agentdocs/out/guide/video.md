@@ -14,6 +14,12 @@ CLI: `stuarty video` lists the commands of the domain and `stuarty video <verb>`
 - `undo`: undo the last step of the caller
 - `redo`: redo the last undone step of the caller
 - `lint`: check a project against every lint rule (an edit result runs only the fast rules, lint_scope fast)
+- `revert`: go back to the document of an earlier revision, as a new step that undo takes back
+- `diff`: list what changed between two revisions, most significant first
+- `checkpoint:create`: name a revision so that it can be gone back to
+- `checkpoint:list`: list the checkpoints of a project, newest revision first
+- `checkpoint:rename`: rename a checkpoint, and change its note
+- `checkpoint:remove`: remove a checkpoint; no revision is removed
 - `view`: render a frame or a contact sheet of a project, or measure its sound
 - `export`: export a project to a file
 - `export:presets`: list the export presets of the platforms

@@ -65,9 +65,10 @@ var Provenance = map[string]string{
 	"service.PublishResult.URL":             SourceNetworkText,
 	"service.SocialAccount.Label":           SourceProjectText,
 	"service.SocialAccount.AccountTitle":    SourceNetworkText,
+	"service.SocialChoice.Title":            SourceNetworkText,
 	"service.PublishValidateResult.Summary": SourceProjectText,
 
-	// the calendar of publications (SDD-020 section 15): the text of a post and what the network named
+	// the calendar of publications (SDD-020 section 23): the text of a post and what the network named
 	"publish.Publication.Title":  SourceProjectText,
 	"publish.Publication.Text":   SourceProjectText,
 	"publish.Fields.Title":       SourceProjectText,

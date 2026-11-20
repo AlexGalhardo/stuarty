@@ -59,6 +59,12 @@ var Scopes = map[string]string{
 	"HistoryList":         ScopeRead,
 	"Undo":                ScopeEdit,
 	"Redo":                ScopeEdit,
+	"HistoryRevert":       ScopeEdit,
+	"HistoryDiff":         ScopeRead,
+	"CheckpointCreate":    ScopeEdit,
+	"CheckpointList":      ScopeRead,
+	"CheckpointRename":    ScopeEdit,
+	"CheckpointRemove":    ScopeEdit,
 	"Lint":                ScopeRead,
 	"MediaImport":         ScopeMedia,
 	"MediaInspect":        ScopeRead,
@@ -172,10 +178,11 @@ var Scopes = map[string]string{
 	"SocialConnectBegin":    ScopeAdmin,
 	"SocialConnectComplete": ScopeAdmin,
 	"SocialAccountList":     ScopeRead,
+	"SocialAccountSelect":   ScopeAdmin,
 	"PublishValidate":       ScopeRead,
 	"PublishNow":            ScopeRender,
 	"PublishStatus":         ScopeRead,
-	// The calendar of publications (SDD-020 section 20). Scheduling, sending now and retrying only ask for
+	// The calendar of publications (SDD-020 section 28). Scheduling, sending now and retrying only ask for
 	// approval, so they take the scope of PublishNow.
 	"PublicationCreate":   ScopeEdit,
 	"PublicationGet":      ScopeRead,

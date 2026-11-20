@@ -13,7 +13,12 @@
         "projects.brief.set",
         "projects.briefing.answer",
         "projects.bundle.export",
+        "projects.checkpoints.list",
+        "projects.checkpoints.create",
+        "projects.checkpoints.rename",
+        "projects.checkpoints.remove",
         "projects.describe",
+        "projects.diff",
         "projects.duplicate",
         "projects.edit",
         "projects.frame",
@@ -32,6 +37,7 @@
         "projects.plan",
         "projects.redo",
         "projects.restore",
+        "projects.revert",
         "projects.sheet",
         "projects.snap_points",
         "projects.trash",
@@ -200,7 +206,8 @@
         "social.accounts",
         "social.complete",
         "social.connect",
-        "social.networks"
+        "social.networks",
+        "social.select"
       ]
     },
     {

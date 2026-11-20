@@ -513,7 +513,7 @@ func (o *Owner) Announce(addr string) error {
 // Work runs the queue workers until ctx ends. Jobs still running when the
 // timeout passes are interrupted; the service requeues them (SDD-005 section
 // 14.5), so none is lost to a shutdown. The publication scheduler runs beside them for as long as the server
-// does (SDD-020 section 19); keeping it alive with the window closed is the desktop service of epic 21.
+// does (SDD-020 section 27); keeping it alive with the window closed is the desktop service of epic 21.
 func (o *Owner) Work(ctx context.Context) error {
 	if sched, ok := service.SchedulerOf(o.Service); ok {
 		done := make(chan struct{})

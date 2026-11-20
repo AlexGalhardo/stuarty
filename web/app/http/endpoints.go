@@ -190,6 +190,35 @@ var Endpoints = []Endpoint{
 		Service: "Redo", Status: 200, Summary: "Redo the caller's latest undone step",
 	},
 	{
+		ID: "projects.revert", Method: http.MethodPost, Path: "/projects/{id}/revert", Scope: service.ScopeEdit,
+		Service: "HistoryRevert", Status: 200, Summary: "Go back to an earlier revision as a new step",
+	},
+	{
+		ID: "projects.diff", Method: http.MethodGet, Path: "/projects/{id}/diff", Scope: service.ScopeRead,
+		Service: "HistoryDiff", Status: 200, Summary: "List what changed between two revisions",
+	},
+	{
+		ID: "projects.checkpoints.list", Method: http.MethodGet, Path: "/projects/{id}/checkpoints",
+		Scope: service.ScopeRead, Service: "CheckpointList", Status: 200, Summary: "List the checkpoints of a project",
+	},
+	{
+		ID: "projects.checkpoints.create", Method: http.MethodPost, Path: "/projects/{id}/checkpoints",
+		Scope: service.ScopeEdit, Service: "CheckpointCreate", Status: 201, Summary: "Name a revision",
+	},
+	{
+		ID: "projects.checkpoints.rename", Method: http.MethodPatch, Path: "/projects/{id}/checkpoints/{name}",
+		Scope: service.ScopeEdit, Service: "CheckpointRename", Status: 200, Summary: "Rename a checkpoint",
+	},
+	{
+		ID:      "projects.checkpoints.remove",
+		Method:  http.MethodDelete,
+		Path:    "/projects/{id}/checkpoints/{name}",
+		Scope:   service.ScopeEdit,
+		Service: "CheckpointRemove",
+		Status:  200,
+		Summary: "Remove a checkpoint, never a revision",
+	},
+	{
 		ID: "projects.lint", Method: http.MethodGet, Path: "/projects/{id}/lint", Scope: service.ScopeRead,
 		Service: "Lint", Status: 200, Summary: "Lint a project with every rule",
 	},
@@ -474,6 +503,11 @@ var Endpoints = []Endpoint{
 	{
 		ID: "social.accounts", Method: http.MethodGet, Path: "/social/accounts", Scope: service.ScopeRead,
 		Service: "SocialAccountList", Status: 200, Summary: "List the connected social accounts and their state",
+	},
+	{
+		ID: "social.select", Method: http.MethodPost, Path: "/social/select", Scope: service.ScopeAdmin,
+		Service: "SocialAccountSelect", Status: 200,
+		Summary: "Choose the Page or Instagram account a sign-in reached (a person in the browser only)",
 	},
 	{
 		ID:      "publish.validate",

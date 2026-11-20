@@ -43,12 +43,21 @@ type Connector struct {
 	CostMicros   int64
 	CostCurrency string
 
-	mu       sync.Mutex
-	uploaded []string
+	mu        sync.Mutex
+	uploaded  []string
+	disclosed []bool
 }
 
 // New returns a fake connector for the server at base.
 func New(base string) *Connector { return &Connector{Base: base} }
+
+// Disclosed lists, for each post Publish sent, whether it carried the AI disclosure flag.
+func (c *Connector) Disclosed() []bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	return append([]bool(nil), c.disclosed...)
+}
 
 // Uploaded lists the titles Publish sent.
 func (c *Connector) Uploaded() []string {
@@ -88,7 +97,7 @@ func (c *Connector) Describe() social.Description {
 		},
 		PostCostMicros: c.CostMicros, PostCostCurrency: c.CostCurrency,
 		Endpoint: c.Base, Hosts: []string{u.Hostname()}, Scopes: []string{"fake.upload"},
-		Guide: "https://example.com/fake", GuideRead: "2026-11-19",
+		Guide: "https://example.com/fake", GuideRead: "2026-11-19", AIDisclosure: true,
 	}
 }
 
@@ -257,6 +266,7 @@ func (c *Connector) Publish(
 
 	c.mu.Lock()
 	c.uploaded = append(c.uploaded, u.Post.Title)
+	c.disclosed = append(c.disclosed, u.Post.AIDisclosure)
 	c.mu.Unlock()
 
 	if c.Fail != nil {

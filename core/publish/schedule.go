@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 	// The zone database travels with the binary: a creator's machine has no GOROOT, and a schedule that
-	// reads its zone wrongly sends a post at the wrong hour (SDD-020 section 17).
+	// reads its zone wrongly sends a post at the wrong hour (SDD-020 section 25).
 	_ "time/tzdata"
 )
 
-// TargetState is the state of one target of a publication (SDD-020 section 16).
+// TargetState is the state of one target of a publication (SDD-020 section 24).
 type TargetState string
 
 // The states of a target.
@@ -57,7 +57,7 @@ func CanTarget(from, to TargetState) bool { return slices.Contains(targetMoves[f
 func (s TargetState) Final() bool { return s == TargetPublished || s == TargetCancelled }
 
 // Waiting says whether a person's yes was asked or given and the post has not gone yet: editing such a
-// target makes it another post, so it goes back to waiting_approval (SDD-020 section 16).
+// target makes it another post, so it goes back to waiting_approval (SDD-020 section 24).
 func (s TargetState) Waiting() bool {
 	return s == TargetWaitingApproval || s == TargetApproved || s == TargetScheduled
 }
@@ -65,7 +65,7 @@ func (s TargetState) Waiting() bool {
 // Editable says whether the fields of a target may change.
 func (s TargetState) Editable() bool { return s != TargetPublishing && s != TargetPublished }
 
-// The statuses a publication shows in the overview of its project (core/project, SDD-020 section 15).
+// The statuses a publication shows in the overview of its project (core/project, SDD-020 section 23).
 const (
 	ItemPendingApproval = "pending_approval"
 	ItemPublished       = "published"
@@ -99,7 +99,7 @@ func ItemStatus(states []TargetState) string {
 	return ""
 }
 
-// The timing constants (SDD-020 sections 17 and 19).
+// The timing constants (SDD-020 sections 25 and 27).
 const (
 	// Grace is how late the loop may be woken and still be on time.
 	Grace = 60 * time.Second
@@ -304,7 +304,7 @@ func EffectiveLate(minutes int, sendNow bool) int {
 	return minutes
 }
 
-// Decide is what to do with one target at now (SDD-020 sections 17 and 19). A target that is already
+// Decide is what to do with one target at now (SDD-020 sections 25 and 27). A target that is already
 // being retried is bounded by its attempts and not by its first time; a target that was being sent
 // resumes; one whose time passed beyond its window is missed and never sent on its own (RF-406).
 func Decide(t Candidate, now time.Time) Action {
@@ -388,7 +388,7 @@ func Wake(t Candidate) (time.Time, bool) {
 
 // Transient says whether a kind of error of a connector may pass by itself: the scheduler retries only
 // those. A quota comes back at a time of the network's, a refused sign-in and a refused video need a
-// person, so the person retries them (SDD-020 section 19).
+// person, so the person retries them (SDD-020 section 27).
 func Transient(kind string) bool { return kind == "unavailable" }
 
 var retryDelays = []time.Duration{time.Minute, 2 * time.Minute, 4 * time.Minute, 8 * time.Minute}

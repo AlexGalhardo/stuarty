@@ -19,6 +19,7 @@
 | `Edit` | `edit` | `edit` | `POST /projects/{id}/edit` | edit (or media, per command) |
 | `CommandHelp` | `command_help` | `command:help` | `GET /commands`, `GET /commands/{name}` | read |
 | `HistoryList`, `Undo`, `Redo` | `history` | `history`, `undo`, `redo` | `GET /projects/{id}/history`, `POST /projects/{id}/undo`, `POST /projects/{id}/redo` | read, edit |
+| `HistoryRevert`, `HistoryDiff`, `CheckpointCreate`, `CheckpointList`, `CheckpointRename`, `CheckpointRemove` | `history` (`action` `revert`, `diff`, `checkpoint`, `checkpoints`, `rename_checkpoint`, `remove_checkpoint`) | `revert`, `diff`, `checkpoint:create`, `checkpoint:list`, `checkpoint:rename`, `checkpoint:remove` | `POST /projects/{id}/revert`, `GET /projects/{id}/diff`, `/projects/{id}/checkpoints` (`GET`, `POST`) and `/projects/{id}/checkpoints/{name}` (`PATCH`, `DELETE`) | read, edit |
 | `MediaImport` | `media_import` | `media:import` | `POST /projects/{id}/media` | media |
 | `MediaInspect` | `media_inspect` | `media:inspect` | `GET /projects/{id}/media/{asset_id}` | read |
 | `MediaTrash`, `MediaRestore` | none (CLI and HTTP only) | `media:trash`, `media:restore` | `POST /projects/{id}/media/{asset_id}/trash`, `.../restore` | media |
@@ -81,15 +82,16 @@
 | `SocialConnectBegin` | none | `social:connect` | `POST /social/connect` | admin |
 | `SocialConnectComplete` | none | none | `POST /social/complete` (the page `/social/callback` posts to it) | admin, and only from a browser session |
 | `SocialAccountList` | none | `social:account:list` | `GET /social/accounts` | read |
+| `SocialAccountSelect` | none | none | `POST /social/select` | admin, and only from a browser session (SDD-020 §17) |
 | `PublishValidate` | none | `publish:validate` | `POST /publish/validate` | read |
 | `PublishNow` | none yet (later `job_start` with kind `publish.upload`, SDD-020 §13) | `publish:now` | `POST /publish` | render; the job waits for approval |
 | `PublishStatus` | none | `publish:status` | `GET /publish/{job_id}` | read |
-| `PublicationCreate` | none (SDD-020 §21) | `publication:create` | `POST /publications` | edit (SDD-020) |
+| `PublicationCreate` | none (SDD-020 §29) | `publication:create` | `POST /publications` | edit (SDD-020) |
 | `PublicationGet`, `PublicationList` | none | `publication:show`, `publication:list` | `GET /publications/{id}`, `GET /publications` | read |
 | `PublicationUpdate` | none | `publication:update` | `PUT /publications/{id}` | edit |
 | `PublicationSchedule`, `PublicationSendNow`, `PublicationRetry` | none | `publication:schedule`, `publication:send-now`, `publication:retry` | `POST /publications/{id}/schedule`, `POST /publications/{id}/send-now`, `POST /publications/{id}/retry` | render; the target waits for approval |
 | `PublicationCancel` | none | `publication:cancel` | `POST /publications/{id}/cancel` | edit |
-| publication stream | none | none | `GET /publications/events` (SDD-020 §21) | read |
+| publication stream | none | none | `GET /publications/events` (SDD-020 §29) | read |
 | `ProviderList` | none | `provider:list` | `GET /providers` | read (SDD-016) |
 | `ProviderModels` | none | `provider:models` | `GET /connections/{id}/models` | read |
 | `ProviderPriceSet` | none | `provider:price` | `PUT /providers/prices` | admin, and only from a privileged browser session (SDD-016 §7) |
@@ -111,7 +113,7 @@ Routes that are not service operations: `POST /mcp` (the MCP server over Streama
 
 The MCP catalogue is 20 tools: `project_list`, `project_create`, `project_get`, `project_trash`, `edit`, `command_help`, `history`, `media_import`, `media_inspect`, `view`, `lint`, `job_start`, `job_get`, `job_cancel`, `template`, `font_import`, `connection` (read only: the destinations the user connected, SDD-014), `image` (the image documents of SDD-021, one tool with an `action`), `project_item` (the items and the brief of a production, SDD-003 section 2.3), `library` (memory, skills and prompts: search, list, get, write, render and lint; SDD-018).
 
-**Projects and timelines (ADR-0039).** A project is a production; its timelines are items of it. Every operation above that edits or reads a timeline document (`Edit`, `HistoryList`, `Undo`, `Redo`, `Lint`, `MediaImport`, `MediaInspect`, `MediaList`, `MediaTrash`, `MediaRestore`, `ViewFrame`, `ViewSheet`, `JobStart`, `JobList`, `PlanWindow`, `SnapPoints`, `ProjectOtioExport`, `ProjectOtioImport`, `ProjectBundleExport`, `ExportCheck`, `ExportBatch`, and `ProjectGet` with a detail) accepts an optional `timeline_id` next to `project_id`; the rule is SDD-003 §1.7.
+**Projects and timelines (ADR-0039).** A project is a production; its timelines are items of it. Every operation above that edits or reads a timeline document (`Edit`, `HistoryList`, `Undo`, `Redo`, `HistoryRevert`, `HistoryDiff`, `Checkpoint*`, `Lint`, `MediaImport`, `MediaInspect`, `MediaList`, `MediaTrash`, `MediaRestore`, `ViewFrame`, `ViewSheet`, `JobStart`, `JobList`, `PlanWindow`, `SnapPoints`, `ProjectOtioExport`, `ProjectOtioImport`, `ProjectBundleExport`, `ExportCheck`, `ExportBatch`, and `ProjectGet` with a detail) accepts an optional `timeline_id` next to `project_id`; the rule is SDD-003 §1.7.
 
 Other CLI commands that are not service operations: `serve` (start the owner process), `mcp` (stdio MCP server), `open` (open the UI of a running server with a fresh launch code), `token:rotate`, `user:create` and `user:passwd` (network mode; they need the workspace lock, so no server may be running), `tools:install` (download a helper such as whisper.cpp after stating its size), `agent:docs` (print or write the generated material for agents, SDD-003 §8), plus vukem's built-in commands.
 
@@ -122,11 +124,11 @@ Every operation belongs to one **domain**. The domain names are fixed here; a ne
 | Domain | What it holds | Operations today |
 | --- | --- | --- |
 | `project` | productions: projects, their items, the brief, bundles | `ProjectList`, `ProjectCreate`, `ProjectGet`, `ProjectTrash`, `ProjectRestore`, `ProjectDescribe`, `ProjectDuplicate`, `ProjectItem*`, `Brief*`, `ProjectBundle*`, the event stream |
-| `video` | the timeline document: its edit commands, history, lint, frames, jobs, templates, OpenTimelineIO, the hand-off from a motion engine | `Edit` and the commands of the timeline registry, `HistoryList`, `Undo`, `Redo`, `Lint`, `View*`, `Motion*` (brief, check, replace; epic 33), `JobStart`, `JobGet`, `JobList`, `JobCancel`, `ExportFile`, `Template*`, `SnapPoints`, `ProjectOtio*`, `Export*` (presets, the check against one, the batch) |
+| `video` | the timeline document: its edit commands, history, lint, frames, jobs, templates, OpenTimelineIO, the hand-off from a motion engine | `Edit` and the commands of the timeline registry, `HistoryList`, `Undo`, `Redo`, `HistoryRevert`, `HistoryDiff`, `Checkpoint*`, `Lint`, `View*`, `Motion*` (brief, check, replace; epic 33), `JobStart`, `JobGet`, `JobList`, `JobCancel`, `ExportFile`, `Template*`, `SnapPoints`, `ProjectOtio*`, `Export*` (presets, the check against one, the batch) |
 | `image` | image documents (SDD-021) | `Image*` and the commands of the image registry |
 | `writing` | written documents | none yet |
 | `asset` | files of the workspace: media, the asset library, fonts | `Media*`, `Asset*` (the library of epic 08: list, get, uses, set info, tag), `FontImport`, `FontList` |
-| `publish` | publications and their approval | `Approval*` (the queue that gates a publication and a costly generation, SDD-015), `Social*` (the networks and the accounts a publication goes to), `Publish*` (validate, publish now, status; SDD-020), `Publication*` (the calendar: create, list, edit, schedule, send now, retry, cancel; SDD-020 §15 to §23) |
+| `publish` | publications and their approval | `Approval*` (the queue that gates a publication and a costly generation, SDD-015), `Social*` (the networks and the accounts a publication goes to), `Publish*` (validate, publish now, status; SDD-020), `Publication*` (the calendar: create, list, edit, schedule, send now, retry, cancel; SDD-020 §23 to §31) |
 | `provider` | AI providers and generation | `Provider*` (the providers, their models and the price table, SDD-016), `TextGenerate`, `Cost*` (the spend on providers and its ceilings) |
 | `memory` | the library: notes, skills, prompts, search | `Memory*`, `Skill*`, `Prompt*`, `Library*` |
 | `workspace` | the installation: help, connections, brand kit, health, keys, audit, trash, helpers, the hosted agent chat | `CommandHelp`, `Connection*`, `BrandKit*`, `Doctor`, `AuditList`, `TrashEmpty`, `Tools*`, `Key*`, `AgentProfile*`, `Chat*` (SDD-017) |
@@ -152,8 +154,8 @@ Rules: a command (an operation of a registry in `core/command`) takes its domain
 | `apr_` | approval request (SDD-015) | SDD-015 |
 | `rul_` | approval rule (SDD-015) | SDD-015 |
 | `led_` | cost ledger entry (SDD-015) | SDD-015 |
-| `pub_` | publication (SDD-020 §15) | SDD-020 |
-| `tgt_` | target of a publication: one account, one time (SDD-020 §15) | SDD-020 |
+| `pub_` | publication (SDD-020 §23) | SDD-020 |
+| `tgt_` | target of a publication: one account, one time (SDD-020 §23) | SDD-020 |
 | `cht_` | hosted agent chat session (SDD-017) | SDD-017 |
 | `cpr_` | permission request of a hosted agent (SDD-017 §7) | SDD-017 |
 
@@ -177,7 +179,7 @@ An actor string is one of `user:<id>`, `key:<key id>`, `local:<label>`. `<label>
 | `job.updated` | a job's state or progress changed | `job_id`, `kind`, `state`, `progress`, `message` |
 | `resync.required` | the client is too far behind to replay | `revision` |
 
-Two events are not on a project stream but on the approval queue stream `GET /approvals/events` (SDD-015 §7): `approval.requested` (a request was made, or is pending when the stream opens) and `approval.decided` (a request was approved, rejected or expired); both carry the request. A third, `publication.updated`, is on the stream `GET /publications/events` (SDD-020 §21) and carries the publication with its targets.
+Two events are not on a project stream but on the approval queue stream `GET /approvals/events` (SDD-015 §7): `approval.requested` (a request was made, or is pending when the stream opens) and `approval.decided` (a request was approved, rejected or expired); both carry the request. A third, `publication.updated`, is on the stream `GET /publications/events` (SDD-020 §29) and carries the publication with its targets.
 
 The event `id` of `batch.committed` is the revision. Details in SDD-006.
 
@@ -191,6 +193,7 @@ Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, `text.generate
 | --- | --- | --- |
 | `projects` | one row per project (a production): name, trash state, owner | SDD-005 §5.12 |
 | `project_items` | the items of a project: brief, text, timeline, output; their order and trash state | SDD-005 §5.12 |
+| `checkpoints` | the names and notes a person or an agent put on a revision of a timeline, and the automatic ones before an agent's first edit of the day | SDD-005 §5.14 |
 | `timelines` | one row per timeline document: current document, revision, schema version, trash state (the former `projects` table, renamed) | SDD-005 §5.2 |
 | `operations` | the append-only log, one row per committed batch of a timeline (its `project_id` column holds the timeline id) | SDD-005 |
 | `idempotency_keys` | stored batch results by key | SDD-005 |
@@ -209,7 +212,7 @@ Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, `text.generate
 | `connections` | the destinations the user connected: kind, label, hosts, what each may receive, last use and the id of its secret in the vault; no secret | SDD-014 |
 | `image_documents`, `image_operations` | image documents, and their append-only log of batches | SDD-005 §5.12, SDD-021 |
 | `approval_requests`, `approval_rules`, `cost_ceilings`, `cost_ledger` | the approval queue, the rules that approve without asking, the cost ceilings and the record of every estimate and real cost; no secret | SDD-015 |
-| `publications`, `publication_targets` | the calendar: what is published, to which account, at what time, in which state, with its lease and its result; no secret | SDD-005 §5.14, SDD-020 §15 |
+| `publications`, `publication_targets` | the calendar: what is published, to which account, at what time, in which state, with its lease and its result; no secret | SDD-005 §5.15, SDD-020 §23 |
 | `image_documents`, `image_operations` | image documents, and their append-only log of batches | SDD-005 §5.13, SDD-021 |
 | `library_entries`, `library_fts` | the index of memory, skills and prompts for search and lists; rebuilt from the files, holds no content that the files lack | SDD-018 §9 |
 | `asset_info`, `asset_tags`, `asset_search` | the library side of an asset by hash: origin, rights note, description, the reuse mark, the tags and the full-text index over them | SDD-005 §5.5.1, SDD-011 §14 |

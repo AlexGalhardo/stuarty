@@ -345,6 +345,28 @@ The types named in the tables of the operations. The arguments of each editing c
 | `next_after` | `integer (int64)` or `null` | no |  |
 | `session` | [`ChatSession`](/docs/api/schemas#chatsession) | no |  |
 
+### Checkpoint
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actor` | `string` | no |  |
+| `at` | `string (date-time)` | no |  |
+| `auto` | `boolean` | no |  |
+| `name` | `string` | no |  |
+| `note` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
+### CheckpointListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `checkpoints` | array of [`Checkpoint`](/docs/api/schemas#checkpoint) | no |  |
+| `project_id` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
 ### ChromaKey
 
 | Name | Type | Required | Description |
@@ -477,9 +499,11 @@ The types named in the tables of the operations. The arguments of each editing c
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
+| `ai_disclosure` | `boolean` | no |  |
 | `endpoint` | `string` | no |  |
 | `guide` | `string` | no |  |
 | `guide_read` | `string` | no |  |
+| `hints` | map of `string` | no |  |
 | `hosts` | array of `string` | no |  |
 | `limits` | [`Limits`](/docs/api/schemas#limits) | no |  |
 | `name` | `string` | no |  |
@@ -488,6 +512,15 @@ The types named in the tables of the operations. The arguments of each editing c
 | `post_cost_micros` | `integer (int64)` | no |  |
 | `publishes` | array of `string` | no |  |
 | `scopes` | array of `string` | no |  |
+
+### DiffEntry
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `change` | [`Change`](/docs/api/schemas#change) | no |  |
+| `line` | `string` | no |  |
+| `noun` | `string` | no |  |
+| `verb` | `string` | no |  |
 
 ### DoctorCheck
 
@@ -803,6 +836,19 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `proof` | `string` | no | HMAC-SHA256 keyed by the token over the nonce (SDD-007 section 3.8). |
 
+### HistoryDiffResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `count` | `integer` | no |  |
+| `entries` | array of [`DiffEntry`](/docs/api/schemas#diffentry) | no |  |
+| `from` | `integer (int64)` | no |  |
+| `project_id` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+| `to` | `integer (int64)` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
 ### HistoryEntry
 
 | Name | Type | Required | Description |
@@ -837,6 +883,29 @@ The types named in the tables of the operations. The arguments of each editing c
 | `at` | `string (date-time)` | no |  |
 | `kind` | `string` | no |  |
 | `revision` | `integer (int64)` | no |  |
+
+### HistoryRevertResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actor` | `string` | no |  |
+| `applied` | `boolean` | no |  |
+| `base_revision` | `integer (int64)` | no |  |
+| `created` | array of `string` | no |  |
+| `description` | `string` | no |  |
+| `diff` | array of [`Change`](/docs/api/schemas#change) | no |  |
+| `dry_run` | `boolean` | no |  |
+| `effective` | array of [`OpEffect`](/docs/api/schemas#opeffect) | no |  |
+| `findings` | array of [`Finding`](/docs/api/schemas#finding) | no |  |
+| `kind` | `string` | no |  |
+| `lint` | [`LintTotals`](/docs/api/schemas#linttotals) | no |  |
+| `project_id` | `string` | no |  |
+| `replayed` | `boolean` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `same` | `boolean` | no |  |
+| `target` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
 
 ### HslBand
 
@@ -1380,17 +1449,23 @@ The types named in the tables of the operations. The arguments of each editing c
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
+| `audio_codecs` | array of `string` | no |  |
+| `caption_max` | `integer` | no |  |
+| `daily_posts` | `integer` | no |  |
 | `description_max_bytes` | `integer` | no |  |
 | `file_max_bytes` | `integer (int64)` | no |  |
 | `forbidden` | `string` | no |  |
 | `formats` | array of `string` | no |  |
+| `hashtags_max` | `integer` | no |  |
 | `needs_kids_declaration` | `boolean` | no |  |
+| `preset` | `string` | no |  |
 | `read` | `string` | no |  |
 | `source` | `string` | no |  |
 | `tags_max_chars` | `integer` | no |  |
 | `thumbnail_formats` | array of `string` | no |  |
 | `thumbnail_max_bytes` | `integer (int64)` | no |  |
 | `title_max` | `integer` | no |  |
+| `video_codecs` | array of `string` | no |  |
 | `visibilities` | array of `string` | no |  |
 
 ### LintResult
@@ -2403,6 +2478,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `account_id` | `string` | no |  |
 | `account_title` | `string` | no |  |
+| `choices` | array of [`SocialChoice`](/docs/api/schemas#socialchoice) | no |  |
 | `connection_id` | `string` | no |  |
 | `label` | `string` | no |  |
 | `network` | `string` | no |  |
@@ -2413,6 +2489,13 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `accounts` | array of [`SocialAccount`](/docs/api/schemas#socialaccount) | no |  |
+
+### SocialChoice
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | `string` | no |  |
+| `title` | `string` | no |  |
 
 ### SocialConnectBeginResult
 

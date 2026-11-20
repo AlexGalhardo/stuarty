@@ -214,7 +214,7 @@ func (s *svc) releaseJob(ctx context.Context, tx Tx, row *approval.Row, now int6
 // rejectJob ends the job of a request that was rejected, cancelled or expired, with why as its error.
 func (s *svc) rejectJob(ctx context.Context, tx Tx, row *approval.Row, why *Error, now int64) error {
 	if row.JobID == "" {
-		// A request with no job is the request of a scheduled post: its target hears of it (SDD-020 section 18).
+		// A request with no job is the request of a scheduled post: its target hears of it (SDD-020 section 26).
 		return s.targetDeclined(ctx, tx, row, why)
 	}
 

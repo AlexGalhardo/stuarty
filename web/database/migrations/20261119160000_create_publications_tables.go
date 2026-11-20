@@ -2,7 +2,7 @@ package migrations
 
 import "github.com/AlexGalhardo/vukem/schema"
 
-// The calendar of publications and their targets (SDD-020 sections 15 to 21, SDD-005 section 5.14). A target
+// The calendar of publications and their targets (SDD-020 sections 23 to 29, SDD-005 section 5.15). A target
 // holds the instant in UTC with the zone the person chose, its state, the lease a scheduler holds while it
 // sends, the snapshot of the post that was approved and the result. No table holds a secret.
 func m20261119160000CreatePublicationsTables() schema.Migration {

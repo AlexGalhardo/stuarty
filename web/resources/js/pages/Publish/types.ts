@@ -1,4 +1,4 @@
-// The calendar of publications as the service answers it (SDD-020 sections 15 to 21). Every state, time and
+// The calendar of publications as the service answers it (SDD-020 sections 23 to 29). Every state, time and
 // error here is read from the answer: the page draws them and computes none.
 
 export const TARGET_STATES = [

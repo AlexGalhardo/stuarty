@@ -28,6 +28,7 @@ func (r repos) Jobs() service.JobRepo                { return jobRepo(r) }
 func (r repos) Templates() service.TemplateRepo      { return templateRepo(r) }
 func (r repos) Backups() service.BackupRepo          { return backupRepo(r) }
 func (r repos) Audit() service.AuditRepo             { return auditRepo(r) }
+func (r repos) Checkpoints() service.CheckpointRepo  { return checkpointRepo(r) }
 func (r repos) Fonts() service.FontRepo              { return fontRepo(r) }
 func (r repos) BrandKit() service.BrandKitRepo       { return brandKitRepo(r) }
 func (r repos) Connections() connections.Store       { return connectionRepo(r) }

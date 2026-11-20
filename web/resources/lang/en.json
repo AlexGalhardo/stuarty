@@ -1857,7 +1857,29 @@
           "one": "{count} change",
           "other": "{count} changes",
           "zero": "No changes"
-        }
+        },
+        "compare": "Compare r{revision}",
+        "revert_here": "Revert to here",
+        "revert_row": "Revert to r{revision}",
+        "diff_title": "Changes between r{from} and r{to}",
+        "diff_hint": "Tick two steps to see in words what changed between them.",
+        "diff_empty": "The two states are the same.",
+        "diff_failed": "The changes could not be read.",
+        "checkpoints_title": "Checkpoints",
+        "checkpoints_empty": "No checkpoints yet. Name a state to come back to it.",
+        "checkpoint_label": "Name this state",
+        "checkpoint_add": "Add checkpoint",
+        "checkpoint_auto": "Automatic",
+        "checkpoint_remove": "Remove {name}",
+        "checkpoint_revert": "Revert to {name}",
+        "revert_title": "Go back to r{revision}?",
+        "revert_title_named": "Go back to {name}?",
+        "revert_body": "This adds a new step that takes the project back. The steps in between stay in the history, and you can undo it.",
+        "revert_changes": "What would change",
+        "revert_same": "The project already looks like this. Nothing would change.",
+        "revert_cancel": "Cancel",
+        "revert_confirm": "Revert",
+        "revert_loading": "Reading what would change"
       },
       "shape": {
         "title": "Shape",
@@ -2307,6 +2329,33 @@
       "callback_done": "Signed in as",
       "callback_failed": "The sign-in could not be finished. Start it again from the Connections page.",
       "back": "Back to Connections",
+      "needs_account": "Signed in. Choose the account this connection publishes to.",
+      "pick_title": "Choose the account",
+      "pick_hint": "Your sign-in reached these accounts. Stuarty publishes only to the one you choose, and only after you approve each post.",
+      "pick_use": "Use this account",
+      "callback_choose": "Signed in. Now go back to Connections and choose the account to publish to.",
+      "instagram": {
+        "step": {
+          "project": "At developers.facebook.com create an app of the type \"Business\" in your own account. It is yours; Stuarty never sees it. Keep it in development mode with yourself as administrator: that is Standard Access, and Meta asks for no review of an app used only for your own accounts.",
+          "api": "Add the product \"Facebook Login for Business\" (or \"Facebook Login\") to the app. A Reel reaches Instagram through the Facebook Page that your Instagram account is linked to.",
+          "consent": "Make sure your Instagram account is a professional account (Business or Creator) linked to a Facebook Page you administer: in Instagram, Settings, Account type and tools, then the Page link. A personal Instagram account cannot be published to.",
+          "client": "In the app, under Settings, Basic, copy the App ID and the App Secret.",
+          "redirect": "Under Facebook Login, Settings, add exactly this address to \"Valid OAuth Redirect URIs\": {redirect}",
+          "paste": "Paste the app id and the app secret into the form below. Stuarty asks for these permissions: {scopes}. After you sign in you choose which Instagram account this connection publishes to."
+        },
+        "research": "What Meta said on {read}: an app used only for a business you own or manage needs no App Review at Standard Access. Instagram publishes only to professional accounts. The file goes from your computer to Meta with the resumable upload, so no public address of your video is needed, and none is created. A Reel is 3 seconds to 15 minutes, up to 300 MB, with a caption of up to 2,200 characters and 30 hashtags; a cover image is not offered, because Meta takes it only from a public address. A Reel has no private mode, so every post goes out as public. An app may publish 100 posts in a moving 24 hours."
+      },
+      "facebook": {
+        "step": {
+          "project": "At developers.facebook.com create an app of the type \"Business\" in your own account. It is yours; Stuarty never sees it. Keep it in development mode with yourself as administrator: that is Standard Access, and Meta asks for no review of an app used only for your own Pages.",
+          "api": "Add the product \"Facebook Login for Business\" (or \"Facebook Login\") to the app. Reels are published to a Facebook Page; Meta does not publish to a personal profile.",
+          "consent": "You need a role on the Page that can create content (Admin or Editor, for example). The sign-in lists your Pages and you choose one.",
+          "client": "In the app, under Settings, Basic, copy the App ID and the App Secret.",
+          "redirect": "Under Facebook Login, Settings, add exactly this address to \"Valid OAuth Redirect URIs\": {redirect}",
+          "paste": "Paste the app id and the app secret into the form below. Stuarty asks for these permissions: {scopes}. After you sign in you choose which Page this connection publishes to."
+        },
+        "research": "What Meta said on {read}: an app used only for a business you own or manage needs no App Review at Standard Access. The file goes from your computer to Meta with the resumable upload, so no public address of your video is needed, and none is created. A Page Reel is 3 to 90 seconds, 9:16, at least 540 by 960, 24 to 60 frames a second; an app may publish 30 in a moving 24 hours. Meta states no largest file and no longest description, so Stuarty applies 1 GiB and 2,200 characters. Only Reels are offered: a longer or wider video is refused with the limit it breaks. There is no cover image field and no private mode, so every post goes out as public."
+      },
       "youtube": {
         "step": {
           "project": "In the Google Cloud console, create a project (or choose one you already have). It is yours; Stuarty never sees it.",

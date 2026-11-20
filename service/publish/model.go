@@ -1,5 +1,5 @@
 // Package publish is the calendar of publications and the scheduler that sends an approved post at its
-// time (SDD-020 sections 15 to 21, ADR-0046). The rules are pure and live in core/publish; this package
+// time (SDD-020 sections 23 to 29, ADR-0046). The rules are pure and live in core/publish; this package
 // holds the plan (a publication and its targets), the operations over it, the approval of a scheduled post
 // and the loop that claims a due target with a lease, sends it and records the result. It reaches the
 // network only through a Gateway the service supplies, which goes through connections.Manager.With.
@@ -38,7 +38,7 @@ type TargetError struct {
 	Retryable bool   `json:"retryable"`
 }
 
-// Target is one account a publication goes to, at one time (SDD-020 section 15).
+// Target is one account a publication goes to, at one time (SDD-020 section 23).
 type Target struct {
 	ID            string           `json:"id"`
 	PublicationID string           `json:"publication_id"`
@@ -96,7 +96,7 @@ func (t *Target) Candidate() core.Candidate {
 	return c
 }
 
-// Publication is what is published: shared by its targets (SDD-020 section 15).
+// Publication is what is published: shared by its targets (SDD-020 section 23).
 type Publication struct {
 	ID        string   `json:"id"`
 	ProjectID string   `json:"project_id"`
@@ -141,7 +141,7 @@ type Filter struct {
 // ErrNotFound is a publication or a target that does not exist.
 var ErrNotFound = errors.New("publish: not found")
 
-// Store is where publications live (the tables of SDD-005 section 5.14). On a transaction it is bound to it.
+// Store is where publications live (the tables of SDD-005 section 5.15). On a transaction it is bound to it.
 type Store interface {
 	// Insert adds a publication with its targets.
 	Insert(ctx context.Context, p *Publication) error

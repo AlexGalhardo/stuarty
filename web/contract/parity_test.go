@@ -44,6 +44,18 @@ var parity = []row{
 	{method: "HistoryList", tool: "history", command: "history", route: "GET /projects/{}/history"},
 	{method: "Undo", tool: "history", command: "undo", route: "POST /projects/{}/undo"},
 	{method: "Redo", tool: "history", command: "redo", route: "POST /projects/{}/redo"},
+	{method: "HistoryRevert", tool: "history", command: "revert", route: "POST /projects/{}/revert"},
+	{method: "HistoryDiff", tool: "history", command: "diff", route: "GET /projects/{}/diff"},
+	{method: "CheckpointCreate", tool: "history", command: "checkpoint:create", route: "POST /projects/{}/checkpoints"},
+	{method: "CheckpointList", tool: "history", command: "checkpoint:list", route: "GET /projects/{}/checkpoints"},
+	{
+		method: "CheckpointRename", tool: "history", command: "checkpoint:rename",
+		route: "PATCH /projects/{}/checkpoints/{}",
+	},
+	{
+		method: "CheckpointRemove", tool: "history", command: "checkpoint:remove",
+		route: "DELETE /projects/{}/checkpoints/{}",
+	},
 	{method: "MediaImport", tool: "media_import", command: "media:import", route: "POST /projects/{}/media"},
 	{method: "MediaInspect", tool: "media_inspect", command: "media:inspect", route: "GET /projects/{}/media/{}"},
 	{method: "MediaList", tool: "media_inspect", command: "media:list", route: "GET /projects/{}/media"},
@@ -181,11 +193,12 @@ var parity = []row{
 	{method: "SocialConnectBegin", command: "social:connect", route: "POST /social/connect"},
 	{method: "SocialConnectComplete", route: "POST /social/complete", httpOnly: true},
 	{method: "SocialAccountList", command: "social:account:list", route: "GET /social/accounts"},
+	{method: "SocialAccountSelect", route: "POST /social/select", httpOnly: true},
 	{method: "PublishValidate", command: "publish:validate", route: "POST /publish/validate"},
 	{method: "PublishNow", command: "publish:now", route: "POST /publish"},
 	{method: "PublishStatus", command: "publish:status", route: "GET /publish/{}"},
-	// The calendar of publications (SDD-020 section 21): no MCP tool, the budget of the tool list leaves no room for
-	// one; an agent plans through the CLI and HTTP, and approval stays with a person.
+	// The calendar of publications (SDD-020 section 29): no MCP tool (author decision D-094); an agent plans
+	// through the CLI and HTTP, and approval stays with a person.
 	{method: "PublicationCreate", command: "publication:create", route: "POST /publications"},
 	{method: "PublicationGet", command: "publication:show", route: "GET /publications/{}"},
 	{method: "PublicationList", command: "publication:list", route: "GET /publications"},

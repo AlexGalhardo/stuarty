@@ -16,6 +16,9 @@ var OperationDomains = map[string]string{
 	"ProjectBundleExport": command.DomainProject, "ProjectBundleImport": command.DomainProject,
 
 	"Edit": command.DomainVideo, "HistoryList": command.DomainVideo, "Undo": command.DomainVideo,
+	"HistoryRevert": command.DomainVideo, "HistoryDiff": command.DomainVideo,
+	"CheckpointCreate": command.DomainVideo, "CheckpointList": command.DomainVideo,
+	"CheckpointRename": command.DomainVideo, "CheckpointRemove": command.DomainVideo,
 	"Redo": command.DomainVideo, "Lint": command.DomainVideo, "ViewFrame": command.DomainVideo,
 	"ViewSheet": command.DomainVideo, "JobStart": command.DomainVideo, "JobGet": command.DomainVideo,
 	"JobList": command.DomainVideo, "JobCancel": command.DomainVideo, "ExportFile": command.DomainVideo,
@@ -55,9 +58,10 @@ var OperationDomains = map[string]string{
 	// The social networks a publication goes to, and the publication itself (SDD-020 section 9).
 	"SocialNetworkList": command.DomainPublish, "SocialConnectBegin": command.DomainPublish,
 	"SocialConnectComplete": command.DomainPublish, "SocialAccountList": command.DomainPublish,
-	"PublishValidate": command.DomainPublish, "PublishNow": command.DomainPublish,
+	"SocialAccountSelect": command.DomainPublish,
+	"PublishValidate":     command.DomainPublish, "PublishNow": command.DomainPublish,
 	"PublishStatus": command.DomainPublish,
-	// The calendar of publications (SDD-020 section 20).
+	// The calendar of publications (SDD-020 section 28).
 	"PublicationCreate": command.DomainPublish, "PublicationGet": command.DomainPublish,
 	"PublicationList": command.DomainPublish, "PublicationUpdate": command.DomainPublish,
 	"PublicationSchedule": command.DomainPublish, "PublicationSendNow": command.DomainPublish,

@@ -55,6 +55,12 @@ type Service interface {
 	HistoryList(ctx context.Context, req HistoryListRequest) (*HistoryListResult, error)
 	Undo(ctx context.Context, req UndoRequest) (*UndoResult, error)
 	Redo(ctx context.Context, req UndoRequest) (*UndoResult, error)
+	HistoryRevert(ctx context.Context, req HistoryRevertRequest) (*HistoryRevertResult, error)
+	HistoryDiff(ctx context.Context, req HistoryDiffRequest) (*HistoryDiffResult, error)
+	CheckpointCreate(ctx context.Context, req CheckpointCreateRequest) (*Checkpoint, error)
+	CheckpointList(ctx context.Context, req CheckpointListRequest) (*CheckpointListResult, error)
+	CheckpointRename(ctx context.Context, req CheckpointRenameRequest) (*Checkpoint, error)
+	CheckpointRemove(ctx context.Context, req CheckpointRemoveRequest) (*Checkpoint, error)
 
 	Lint(ctx context.Context, req LintRequest) (*LintResult, error)
 
@@ -198,11 +204,12 @@ type Service interface {
 	SocialConnectBegin(ctx context.Context, req SocialConnectBeginRequest) (*SocialConnectBeginResult, error)
 	SocialConnectComplete(ctx context.Context, req SocialConnectCompleteRequest) (*SocialAccount, error)
 	SocialAccountList(ctx context.Context, req SocialAccountListRequest) (*SocialAccountListResult, error)
+	SocialAccountSelect(ctx context.Context, req SocialAccountSelectRequest) (*SocialAccount, error)
 	PublishValidate(ctx context.Context, req PublishValidateRequest) (*PublishValidateResult, error)
 	PublishNow(ctx context.Context, req PublishNowRequest) (*Job, error)
 	PublishStatus(ctx context.Context, req PublishStatusRequest) (*PublishStatusResult, error)
 
-	// The calendar of publications (SDD-020 sections 15 to 23): a publication with one target per account, each
+	// The calendar of publications (SDD-020 sections 23 to 31): a publication with one target per account, each
 	// with its time. PublicationSchedule, PublicationSendNow and PublicationRetry only ask for approval: a
 	// target is sent by the scheduler, after a person or a rule the person wrote approved it.
 	PublicationCreate(ctx context.Context, req PublicationCreateRequest) (*Publication, error)
@@ -242,7 +249,7 @@ type Event struct {
 	// Owner the user it belongs to in network mode, so that a member's stream carries their own only.
 	Approval *approval.Request
 	Owner    string
-	// Publication is the publication of publication.updated (SDD-020 section 21).
+	// Publication is the publication of publication.updated (SDD-020 section 29).
 	Publication *pub.Publication
 }
 
@@ -355,7 +362,7 @@ type svc struct {
 	doctorCaps  *ffmpeg.Capabilities
 
 	// pubs is the calendar of publications and sched the loop that sends the approved ones at their time
-	// (SDD-020 sections 15 to 21).
+	// (SDD-020 sections 23 to 29).
 	pubs  *pub.Manager
 	sched *pub.Scheduler
 

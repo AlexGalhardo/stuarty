@@ -276,6 +276,7 @@ func (h *apiHandler) registerAll() {
 	register(h, "projects.redo", func(c *web.Ctx, in stepIn) (service.UndoResult, error) {
 		return h.step(c, in, h.Service.Redo)
 	})
+	h.registerHistoryOps()
 	register(h, "projects.lint", func(c *web.Ctx, in lintIn) (service.LintResult, error) {
 		res, err := h.Service.Lint(
 			c.Context(),
@@ -423,6 +424,7 @@ func (h *apiHandler) registerAll() {
 	register(h, "social.connect", h.socialConnect)
 	register(h, "social.complete", h.socialComplete)
 	register(h, "social.accounts", h.socialAccounts)
+	register(h, "social.select", h.socialSelect)
 	register(h, "publish.validate", h.publishValidate)
 	register(h, "publish.now", h.publishNow)
 	register(h, "publish.status", h.publishStatus)

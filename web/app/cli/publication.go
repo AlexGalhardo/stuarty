@@ -11,7 +11,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/untrusted"
 )
 
-// The calendar commands (SDD-020 section 21). Like the publishing commands they are for the skills of
+// The calendar commands (SDD-020 section 29). Like the publishing commands they are for the skills of
 // publishing, not for the editor skill; publishingCommands includes them.
 func publicationCommands() []*spec {
 	return []*spec{

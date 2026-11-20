@@ -103,7 +103,7 @@ func (h *apiHandler) publicationsCancel(c *web.Ctx, in publicationTargetIn) (ser
 	return deref(res), err
 }
 
-// publicationsStream is GET /publications/events (SDD-020 section 21): publication.updated for every change
+// publicationsStream is GET /publications/events (SDD-020 section 29): publication.updated for every change
 // of a publication the caller may see. It has no replay: a client lists first and listens after. A key limited
 // to one project has no use for a stream of the whole calendar and is refused.
 func (h *apiHandler) publicationsStream(c *web.Ctx, _ noIn) (noIn, error) {

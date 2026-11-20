@@ -170,7 +170,7 @@ func coreItems(rows []ItemRow) []project.Item {
 	return out
 }
 
-// withPublications adds the publications of a project to its items (ADR-0039, SDD-020 section 15): a
+// withPublications adds the publications of a project to its items (ADR-0039, SDD-020 section 23): a
 // publication is an item of the project, kept in its own tables, so it is read from them. Its Ref holds the
 // status the core rolls up from its targets and its Format the networks they go to. Nothing is added when the
 // publications cannot be read: the overview is still the production.

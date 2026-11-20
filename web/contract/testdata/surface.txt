@@ -23,6 +23,10 @@ command bundle:import
 command chat:session
 command chat:sessions
 command chat:transcript
+command checkpoint:create
+command checkpoint:list
+command checkpoint:remove
+command checkpoint:rename
 command command:help
 command connection:add
 command connection:list
@@ -31,6 +35,7 @@ command connection:show
 command connection:test
 command cost:ceiling
 command cost:show
+command diff
 command doctor
 command edit
 command events
@@ -100,6 +105,7 @@ command publish:now
 command publish:status
 command publish:validate
 command redo
+command revert
 command skill:export
 command skill:import
 command skill:lint
@@ -127,6 +133,7 @@ route DELETE /chat/sessions/{}
 route DELETE /connections/{}
 route DELETE /keys/{}
 route DELETE /library/memory/{}
+route DELETE /projects/{}/checkpoints/{}
 route GET /agents/profiles
 route GET /approval-rules
 route GET /approvals
@@ -172,7 +179,9 @@ route GET /projects/{}/audio-measure
 route GET /projects/{}/bitmaps/{}
 route GET /projects/{}/brief
 route GET /projects/{}/chat/sessions
+route GET /projects/{}/checkpoints
 route GET /projects/{}/describe
+route GET /projects/{}/diff
 route GET /projects/{}/events
 route GET /projects/{}/export-check
 route GET /projects/{}/frame
@@ -205,6 +214,7 @@ route GET /system/tools
 route GET /templates
 route GET /templates/{}/file
 route GET /users
+route PATCH /projects/{}/checkpoints/{}
 route PATCH /users/{}
 route POST /approval-rules
 route POST /approvals/{}/decide
@@ -232,6 +242,7 @@ route POST /projects
 route POST /projects/import
 route POST /projects/{}/bundle
 route POST /projects/{}/chat/sessions
+route POST /projects/{}/checkpoints
 route POST /projects/{}/duplicate
 route POST /projects/{}/edit
 route POST /projects/{}/export-batches
@@ -248,6 +259,7 @@ route POST /projects/{}/motion/replace
 route POST /projects/{}/otio
 route POST /projects/{}/redo
 route POST /projects/{}/restore
+route POST /projects/{}/revert
 route POST /projects/{}/trash
 route POST /projects/{}/undo
 route POST /publications
@@ -259,6 +271,7 @@ route POST /publish
 route POST /publish/validate
 route POST /social/complete
 route POST /social/connect
+route POST /social/select
 route POST /system/launch
 route POST /system/tools/install
 route POST /templates

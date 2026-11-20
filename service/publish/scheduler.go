@@ -45,7 +45,7 @@ type SchedulerOptions struct {
 	Housekeeping func(ctx context.Context)
 }
 
-// Scheduler sends the approved targets at their time (SDD-020 section 19). It sleeps until the next time
+// Scheduler sends the approved targets at their time (SDD-020 section 27). It sleeps until the next time
 // something is due, claims a target with a lease so that no other scheduler sends it too, sends it through
 // the gateway and records the result.
 type Scheduler struct {

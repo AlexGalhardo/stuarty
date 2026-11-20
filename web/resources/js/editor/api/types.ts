@@ -601,6 +601,56 @@ export interface HistoryQuery {
 	limit?: number;
 }
 
+// Revert, the diff of two revisions and checkpoints (SDD-003 section 2.5.1). The
+// core classifies and words every change: `line` is shown as it comes.
+export interface Checkpoint {
+	name: string;
+	note: string;
+	revision: number;
+	actor: string;
+	at: string;
+	auto: boolean;
+}
+
+export interface CheckpointListResult {
+	project_id: string;
+	revision: number;
+	checkpoints: Checkpoint[];
+	text: string;
+}
+
+export interface DiffEntry {
+	verb: "added" | "removed" | "moved" | "trimmed" | "changed";
+	noun: string;
+	line: string;
+}
+
+export interface HistoryDiffResult {
+	project_id: string;
+	revision: number;
+	from: number;
+	to: number;
+	count: number;
+	entries: DiffEntry[];
+	text: string;
+}
+
+export interface HistoryRevertResult extends Omit<EditResult, "kind"> {
+	kind: "revert";
+	target: number;
+	same: boolean;
+	text: string;
+}
+
+export interface RevertRequest {
+	revision?: number;
+	checkpoint?: string;
+	// The revision the caller read; a change by another actor since then to what
+	// the revert changes is E_REVISION_CONFLICT (SDD-002 A.7).
+	base_revision?: number;
+	dry_run?: boolean;
+}
+
 // GET /projects/{id}/media/{asset_id}: the facts and the text of one asset.
 export interface MediaInspectResult {
 	asset_id: string;
@@ -1061,7 +1111,7 @@ export const APPROVAL_EVENT_NAMES = [
 	"approval.decided",
 ] as const;
 
-// The event of GET /publications/events: the data is a publication with its targets (SDD-020 section 21).
+// The event of GET /publications/events: the data is a publication with its targets (SDD-020 section 29).
 export const PUBLICATION_EVENT_NAMES = ["publication.updated"] as const;
 
 // GET /users: an administrator session only (SDD-007 section 4.1 item 2). The
@@ -1496,6 +1546,10 @@ export interface SocialLimits {
 	tags_max_chars: number;
 	file_max_bytes: number;
 	formats: string[];
+	// What the network takes besides the video; the dialog asks only for these (SDD-020 section 18).
+	thumbnail_formats?: string[];
+	visibilities?: string[];
+	needs_kids_declaration?: boolean;
 	source: string;
 	read: string;
 }
@@ -1505,6 +1559,8 @@ export interface SocialNetwork {
 	name: string;
 	publishes: string[];
 	limits: SocialLimits;
+	// The network takes a flag that says the video has synthetic content.
+	ai_disclosure?: boolean;
 	endpoint: string;
 	hosts: string[];
 	scopes: string[];
@@ -1543,7 +1599,19 @@ export interface SocialAccount {
 	label: string;
 	account_id?: string;
 	account_title?: string;
-	state: "ready" | "needs_sign_in";
+	// needs_account: the sign-in reached several accounts and a person has not chosen one (SDD-020 section 17).
+	state: "ready" | "needs_sign_in" | "needs_account";
+	choices?: SocialChoice[];
+}
+
+export interface SocialChoice {
+	id: string;
+	title: string;
+}
+
+export interface SocialSelectRequest {
+	connection_id: string;
+	account_id: string;
 }
 
 export interface SocialAccountListResult {
