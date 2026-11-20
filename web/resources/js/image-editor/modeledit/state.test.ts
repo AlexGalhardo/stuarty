@@ -7,6 +7,7 @@ import {
 	isFinal,
 	modelJobStore,
 	orderedModels,
+	settledFor,
 } from "./state";
 
 const provider = (
@@ -119,6 +120,7 @@ describe("the tracked job", () => {
 		state.track({
 			job: job({ job_id: "job_1" }),
 			operation: "remove_background",
+			imageId: "img_1",
 			layerId: "lyr_1",
 			layerName: "Photo",
 		});
@@ -135,6 +137,41 @@ describe("the tracked job", () => {
 
 		modelJobStore.getState().dismiss();
 		expect(modelJobStore.getState().tracked).toBeNull();
+	});
+
+	test("settles only on the screen of the image the job edited", () => {
+		const tracked = (state: Job["state"], applied: boolean) => ({
+			job: job({
+				job_id: "job_1",
+				state,
+				result: {
+					generated: {
+						provider: "openai",
+						model: "gpt-image-1",
+						items: [],
+						requested: 1,
+						delivered: 1,
+						cost: { micros: 40_000, currency: "USD" },
+						image: { image_id: "img_1", layer_id: "lyr_9", applied },
+					},
+				},
+			}),
+			operation: "generate" as const,
+			imageId: "img_1",
+			layerId: null,
+			layerName: "",
+		});
+
+		expect(settledFor(tracked("succeeded", true), "img_1")).toEqual({
+			select: "lyr_9",
+		});
+		expect(settledFor(tracked("succeeded", false), "img_1")).toEqual({
+			select: null,
+		});
+		// another image opened meanwhile is not reloaded, and a job not done settles nothing
+		expect(settledFor(tracked("succeeded", true), "img_2")).toBeNull();
+		expect(settledFor(tracked("running", true), "img_1")).toBeNull();
+		expect(settledFor(null, "img_1")).toBeNull();
 	});
 
 	test("isFinal is true for the three states that end a job", () => {
