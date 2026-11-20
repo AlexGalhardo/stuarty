@@ -1,4 +1,4 @@
-import { Head, Link } from "@inertiajs/react";
+import { Head, Link, router } from "@inertiajs/react";
 import { type ReactNode, useEffect, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
@@ -26,6 +26,14 @@ export default function SignInCallback(): ReactNode {
 		const code = query.get("code") ?? undefined;
 		const error = query.get("error") ?? undefined;
 		const clientId = query.get("client_id") ?? undefined;
+		// The state and the code leave the address before the exchange starts, not after it ends (SDD-007
+		// T-76). Inertia keeps the address of the page in its own history entry and writes it after the first
+		// render, so the address is replaced through Inertia, which also drops the code from that entry.
+		router.replace({
+			url: window.location.pathname,
+			preserveState: true,
+			preserveScroll: true,
+		});
 		createClient(new HttpTransport("/api/v1"))
 			.completeProviderSignIn({
 				state,
@@ -40,13 +48,6 @@ export default function SignInCallback(): ReactNode {
 			.catch((e) => {
 				setFailure(failureOf(e));
 				setPhase("failed");
-			})
-			.finally(() => {
-				window.history.replaceState(
-					window.history.state,
-					"",
-					window.location.pathname,
-				);
 			});
 	}, []);
 
