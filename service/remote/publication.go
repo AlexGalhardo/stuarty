@@ -33,6 +33,7 @@ func (c *Client) PublicationList(
 
 	for k, v := range map[string]string{
 		"project_id": req.ProjectID, "state": req.State, "network": req.Network, "from": req.From, "to": req.To,
+		"zone": req.Zone,
 	} {
 		if v != "" {
 			q.Set(k, v)

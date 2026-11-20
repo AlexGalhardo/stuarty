@@ -5,7 +5,35 @@ import { type Transport, TransportError } from "../../editor/api/transport";
 // production. The page computes nothing: the counts, the problems, the estimates and the differences are the
 // core's, and this file only sends what the person wrote and hands back what the service answered.
 
-export type TextKind = "script" | "copy" | "caption";
+export type TextKind = "script" | "copy" | "caption" | "post";
+
+// The check of a blog post (SDD-019 section 13): the issues, the images the post uses and the body the service read
+// after the front matter. The page draws them; the rules are the core's.
+export interface PostIssue {
+	path: string;
+	code: string;
+	message: string;
+}
+
+export interface PostImage {
+	asset_id: string;
+	role: "cover" | "body";
+	name: string;
+	found: boolean;
+	bytes?: number;
+	content_type?: string;
+}
+
+export interface PostCheckResult {
+	project_id: string;
+	item_id: string;
+	slug: string;
+	ok: boolean;
+	issues: PostIssue[];
+	images: PostImage[];
+	words: number;
+	markdown: string;
+}
 
 export interface Money {
 	micros: number;
@@ -189,6 +217,7 @@ export interface WritingClient {
 		projectId: string,
 		wordsPerMinute?: number,
 	): Promise<ScriptEstimateResult>;
+	checkPost(projectId: string, itemId: string): Promise<PostCheckResult>;
 }
 
 export function writingClient(transport: Transport): WritingClient {
@@ -257,5 +286,7 @@ export function writingClient(transport: Transport): WritingClient {
 				project_id: projectId,
 				words_per_minute: wordsPerMinute,
 			}),
+		checkPost: (projectId, itemId) =>
+			call("GET", path(projectId, itemId, "/post")),
 	};
 }

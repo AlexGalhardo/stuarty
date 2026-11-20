@@ -65,7 +65,7 @@ Authorization: Bearer <secret>
 
 A request with a header that is not valid is refused with `401`; it never falls back to a session cookie. The browser editor uses a cookie, which scripts do not need. A token or key is accepted only in a header, never in a URL.
 
-An API key has scopes (`read`, `edit`, `media`, `render`, `admin`) and each operation page says which one it needs. The local token has every scope, with one exception: emptying the trash for good (`POST /trash/empty`) and installing the transcription helper (`POST /system/tools/install`) answer `403 E_FORBIDDEN` to it, because only a person in the browser or an admin key may do them. The [local and network mode](/docs/concepts/local-and-network-mode) page explains the two modes.
+An API key has scopes (`read`, `edit`, `media`, `render`, `admin`, and `posts:read`, which reads the posts of the [read API of the blog](/docs/guide/blog-posts) and nothing else) and each operation page says which one it needs. The local token has every scope, with one exception: emptying the trash for good (`POST /trash/empty`) and installing the transcription helper (`POST /system/tools/install`) answer `403 E_FORBIDDEN` to it, because only a person in the browser or an admin key may do them. The [local and network mode](/docs/concepts/local-and-network-mode) page explains the two modes.
 
 ### Name your client
 

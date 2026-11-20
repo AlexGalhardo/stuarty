@@ -114,8 +114,12 @@ func BriefingQuestions() []Question {
 // ends, line ends as LF, an empty answer left out. Every required question must be answered, and an id that is
 // not a question is refused, so that a typo never passes silently. The answers replace the whole briefing.
 func CheckAnswers(answers map[string]string) (map[string]string, *RuleError) {
-	known := make(map[string]Question, len(briefingQuestions))
-	for _, q := range briefingQuestions {
+	return checkAnswers(briefingQuestions, answers)
+}
+
+func checkAnswers(set []Question, answers map[string]string) (map[string]string, *RuleError) {
+	known := make(map[string]Question, len(set))
+	for _, q := range set {
 		known[q.ID] = q
 	}
 
@@ -132,7 +136,7 @@ func CheckAnswers(answers map[string]string) (map[string]string, *RuleError) {
 
 	out := make(map[string]string, len(answers))
 
-	for _, q := range briefingQuestions {
+	for _, q := range set {
 		a := strings.TrimSpace(strings.ReplaceAll(answers[q.ID], "\r\n", "\n"))
 		path := "answers." + q.ID
 
@@ -180,9 +184,9 @@ func checkAnswer(q *Question, a, path string) *RuleError {
 		return validation(path, "send one of: "+strings.Join(q.Options, ", "), "%q is not an option of %q", a, q.ID)
 	case AnswerSeconds:
 		n, err := strconv.Atoi(a)
-		if err != nil || n < MinSeconds || n > MaxSeconds || strconv.Itoa(n) != a {
-			return validation(path, fmt.Sprintf("send a whole number from %d to %d", MinSeconds, MaxSeconds),
-				"%q is not a number of seconds from %d to %d", a, MinSeconds, MaxSeconds)
+		if err != nil || n < q.Min || n > q.Max || strconv.Itoa(n) != a {
+			return validation(path, fmt.Sprintf("send a whole number from %d to %d", q.Min, q.Max),
+				"%q is not a number of seconds from %d to %d", a, q.Min, q.Max)
 		}
 	case AnswerDate:
 		if _, err := time.Parse(time.DateOnly, a); err != nil {
@@ -197,11 +201,15 @@ func checkAnswer(q *Question, a, path string) *RuleError {
 // answered question, in the order of the questions. A line of an answer that starts with # gets a backslash, so
 // an answer never makes a heading of its own; ParseBriefing takes it away.
 func BriefingMarkdown(answers map[string]string) string {
+	return briefingMarkdown(briefingQuestions, answers)
+}
+
+func briefingMarkdown(set []Question, answers map[string]string) string {
 	var b strings.Builder
 
 	b.WriteString(BriefTitle + "\n")
 
-	for _, q := range briefingQuestions {
+	for _, q := range set {
 		a, ok := answers[q.ID]
 		if !ok || a == "" {
 			continue
@@ -232,13 +240,17 @@ func BriefingMarkdown(answers map[string]string) string {
 // text BriefingMarkdown would not write), so a brief written by hand is never taken for one and never
 // rewritten by accident.
 func ParseBriefing(text string) (answers map[string]string, ok bool) {
+	return parseBriefing(briefingQuestions, text)
+}
+
+func parseBriefing(set []Question, text string) (answers map[string]string, ok bool) {
 	lines := strings.Split(strings.ReplaceAll(text, "\r\n", "\n"), "\n")
 	if len(lines) == 0 || strings.TrimSpace(lines[0]) != BriefTitle {
 		return nil, false
 	}
 
-	byHeading := make(map[string]string, len(briefingQuestions))
-	for _, q := range briefingQuestions {
+	byHeading := make(map[string]string, len(set))
+	for _, q := range set {
 		byHeading[q.Heading] = q.ID
 	}
 
@@ -290,12 +302,12 @@ func ParseBriefing(text string) (answers map[string]string, ok bool) {
 	// The shape is not enough: a person may write the same headings by hand, with a long text or without the
 	// required answers. Only a text whose answers pass CheckAnswers and that the briefing writes again as it
 	// is counts, so that answering again never loses a word of it.
-	checked, v := CheckAnswers(answers)
+	checked, v := checkAnswers(set, answers)
 	if v != nil {
 		return nil, false
 	}
 
-	if strings.TrimRight(BriefingMarkdown(checked), "\n") != strings.TrimRight(strings.Join(lines, "\n"), "\n") {
+	if strings.TrimRight(briefingMarkdown(set, checked), "\n") != strings.TrimRight(strings.Join(lines, "\n"), "\n") {
 		return nil, false
 	}
 

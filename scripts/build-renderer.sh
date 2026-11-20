@@ -14,8 +14,9 @@
 # to it. embed copies both to engine/renderhost/ (renderer.wasm and renderer.wasm.sha256).
 # Reproducible: the toolchain is the one of rust-toolchain.toml, dependencies come from Cargo.lock
 # (--locked), the build path is fixed (renderer/target), SOURCE_DATE_EPOCH defaults to the commit time
-# of HEAD and --remap-path-prefix hides the machine paths and the separators of the source paths, so the
-# digest is the same on every system. The memory of the module is capped at 16,384 pages (1 GiB).
+# of HEAD and --remap-path-prefix, with one remap per source folder, hides the machine paths and the
+# separators of the system in the source paths; the module fails to build when a path of the machine or a
+# backslash is left in a source path. The memory of the module is capped at 16,384 pages (1 GiB).
 # Runs on bash 3.2 (macOS).
 set -euo pipefail
 
@@ -64,14 +65,48 @@ native_build() {
 	cargo build --locked --release -p stuarty-renderer --manifest-path "$manifest"
 }
 
+# A remap rewrites the start of a source path and keeps what follows, so a Windows build names a module
+# in a subfolder "/cargo/registry/src/<index>/harfrust-0.16.0/src/ot\map.rs" where Linux has a slash
+# (VV-276). A remap whose target ends in a slash leaves only the file name after it, so every folder that
+# holds a source file of a crate compiled into the module gets its own remap. rustc applies the last remap
+# that matches, and a sorted list puts a subfolder after its parent. The path must be right when rustc
+# compiles it: the module lays out the panic locations in the order of their content, so slashes written
+# into a built module would keep the order of a Windows build.
+source_remaps() {
+	local crate dir
+	(cd "$root/renderer" && find stuarty-renderer/src stuarty-renderer-text/src -name '*.rs') |
+		sed 's|/[^/]*$||' | LC_ALL=C sort -u | while IFS= read -r dir; do
+		case "$dir" in
+		stuarty-renderer/src*) printf ' --remap-path-prefix=%s=renderer-src%s/' "$dir" "${dir#stuarty-renderer/src}" ;;
+		*) printf ' --remap-path-prefix=%s=%s/' "$dir" "$dir" ;;
+		esac
+	done
+	cargo tree --locked -p stuarty-renderer --target wasm32-unknown-unknown -e normal --prefix none --manifest-path "$manifest" |
+		awk '{ print $1 "-" substr($2, 2) }' | LC_ALL=C sort -u | while IFS= read -r crate; do
+		for dir in "$cargo_home"/registry/src/*/"$crate"; do
+			if [ -d "$dir" ]; then find "$dir" -name '*.rs'; fi
+		done
+	done | sed 's|/[^/]*$||' | LC_ALL=C sort -u | while IFS= read -r dir; do
+		printf ' --remap-path-prefix=%s=/cargo%s/' "$dir" "${dir#"$cargo_home"}"
+	done
+}
+
 wasm_build() {
+	local remaps
+	remaps="$(source_remaps)"
 	# 16,384 pages of 64 KiB: the memory limit of SDD-013 section 4.1, also set in wazero.
-	RUSTFLAGS="$remap -C link-arg=--max-memory=1073741824" \
+	RUSTFLAGS="$remap$remaps -C link-arg=--max-memory=1073741824" \
 		cargo build --locked --release -p stuarty-renderer --lib --target wasm32-unknown-unknown --manifest-path "$manifest"
 
 	rm -rf "$dist"
 	mkdir -p "$dist"
 	cp "$CARGO_TARGET_DIR/wasm32-unknown-unknown/release/stuarty_renderer.wasm" "$dist/stuarty_renderer.wasm"
+	if LC_ALL=C grep -aqF -e "$src" -e "$cargo_home" -e "$rustup_home" "$dist/stuarty_renderer.wasm"; then
+		die "the module names a folder of this machine: a source path escaped --remap-path-prefix"
+	fi
+	if LC_ALL=C grep -aqE '\\[ -~]*\.rs' "$dist/stuarty_renderer.wasm"; then
+		die "the module names a source path with a backslash: a source folder has no remap"
+	fi
 	sha256 "$dist/stuarty_renderer.wasm" >"$dist/stuarty_renderer.wasm.sha256"
 	printf 'build-renderer: stuarty_renderer.wasm sha256 %s\n' "$(cat "$dist/stuarty_renderer.wasm.sha256")"
 }

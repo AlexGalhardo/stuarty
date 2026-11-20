@@ -28,7 +28,7 @@ import TextEditor from "./TextEditor";
 
 type ProjectSummary = ProjectListResult["projects"][number];
 
-const KINDS: readonly TextKind[] = ["script", "copy", "caption"];
+const KINDS: readonly TextKind[] = ["script", "copy", "caption", "post"];
 
 type Loaded =
 	| { state: "loading" }

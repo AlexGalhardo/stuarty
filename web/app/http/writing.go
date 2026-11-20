@@ -13,7 +13,7 @@ import (
 
 type textListIn struct {
 	ProjectID string `json:"project_id,omitempty" doc:"Only the texts of this project; omit it for every project the caller may see."`
-	TextKind  string `json:"text_kind,omitempty"  doc:"script, copy or caption; omit it for every kind."`
+	TextKind  string `json:"text_kind,omitempty"  doc:"script, copy, caption or post; omit it for every kind."`
 	State     string `json:"state,omitempty"      doc:"active (default) or trashed."`
 	pageIn
 }
@@ -27,7 +27,7 @@ type textGetIn struct {
 type textCreateIn struct {
 	ID       string `json:"id"                  validate:"required"`
 	Title    string `json:"title"               validate:"required" doc:"1 to 120 characters."`
-	TextKind string `json:"text_kind,omitempty"                     doc:"script, copy (default) or caption."`
+	TextKind string `json:"text_kind,omitempty"                     doc:"script, copy (default), caption or post."`
 	Text     string `json:"text"                                    doc:"The Markdown, at most 256 KiB."`
 	DryRun   any    `json:"dry_run,omitempty"`
 }

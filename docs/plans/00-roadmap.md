@@ -42,7 +42,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [20](20-publishing-calendar-and-scheduler.md) | Publishing: calendar, approval and scheduler | L | 06, 07, 18 | DONE (2026-11-20, `0e4e0dbe2`..`77d7bc3b7`, merge `e0453f55f`; the scheduler runs while the app runs until epic 21; a real post not verified) |
 | [21](21-desktop-background-service.md) | Desktop background service for scheduled posts | M | 20 | DONE (2026-11-20, `d7d8dc810`..`38dc447d9` replayed, merge `7eb3945ee`; the tray, the real sign-in registration and the installer are a manual check of the author, D-096) |
 | [22](22-x-and-tiktok-drafts.md) | X and TikTok drafts | M | 20 | DONE (2026-11-20, 167d36b57..afe427f7a, merge 68cec8110; threats T-68, T-69, T-79; task 6, a real post and draft, waits for the author) |
-| [23](23-blog-and-its-destinations.md) | Blog posts and their four destinations | L | 17, 20 | IN PROGRESS (senior-d, 2026-11-20) |
+| [23](23-blog-and-its-destinations.md) | Blog posts and their four destinations | L | 17, 20 | DONE (2026-11-21, b41f480ee..71dfe873d, merge 099a668f1; threats T-86 to T-88, T-95, T-99; task 10, a real WordPress, waits for the author) |
 | [24](24-google-account-and-server-login.md) | Optional Google account and login on a server | M | 04, 18 | DONE (2026-11-20, `46c44b677`..`cde96fa60`, merge `105a2cf8a`; a real Google login and `scripts/no-egress.sh`, which needs Linux, not verified) |
 | [25](25-vps-package.md) | VPS package: Caddy, install, update and backup | M | 24 | DONE (2026-11-20, `7da749ed7`..`6293c2d78`, merge `2722becab`; a real VPS, the built image and `caddy validate` not verified) |
 
@@ -74,7 +74,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | Epic | Title | Size | Depends on | Status |
 | --- | --- | --- | --- | --- |
 | [38](38-first-complete-flow-pilot.md) | Pilot of the first complete flow | M | 16, 19, 20, 28, 35 | IN PROGRESS (tasks 1 to 3 and the skill fixes merged 2026-11-20, 919a32d8b..e045447db, merge 59722df91; tasks 4 and 6, the paid agent runs, wait for the author's budget) |
-| [39](39-recipes-for-commercials-and-long-videos.md) | Recipes for commercials and long videos | M | 33, 38 | TODO |
+| [39](39-recipes-for-commercials-and-long-videos.md) | Recipes for commercials and long videos | M | 33, 38 | DONE (2026-11-21, c9e92558c..34f52a00c, merge 96f77dc1e; the Portuguese guides are in docs/guides/pt-BR) |
 | [40](40-documentation-site.md) | Documentation site for Stuarty | L | 02, and each section it documents | TODO |
 | [41](41-accessibility.md) | Accessibility of every section | M | 07, 28, 37 | TODO |
 | [42](42-quality-campaigns.md) | Quality campaigns: budgets, fuzz, crash, soak, security | L | every epic above | TODO |

@@ -82,10 +82,11 @@ func TestOpenReusesARunningServer(t *testing.T) {
 	}
 }
 
-// VV-079: open finds the server through runtime.json, whatever address it was started on, and opens the
-// launch address, not the plain one that answers 401.
-func TestOpenUsesTheRunningServerOfTheWorkspaceAndItsLaunchCode(t *testing.T) {
-	code := strings.Repeat("ab", 32)
+// launchOwner makes this test the running owner of the fixture's workspace: it holds the lock,
+// publishes runtime.json and answers the handshake and system/launch with code for the workspace
+// token. It returns the owner's base address.
+func launchOwner(t *testing.T, f *fixture, code string) string {
+	t.Helper()
 	token := ""
 	mux := upHandler().(*http.ServeMux)
 	mux.HandleFunc("/api/v1/handshake", func(w http.ResponseWriter, r *http.Request) {
@@ -99,10 +100,9 @@ func TestOpenUsesTheRunningServerOfTheWorkspaceAndItsLaunchCode(t *testing.T) {
 		_, _ = w.Write([]byte(`{"code":"` + code + `","url":"http://127.0.0.1:1/auth/launch?code=` + code + `"}`))
 	})
 	srv := httptest.NewServer(mux)
-	defer srv.Close()
+	t.Cleanup(srv.Close)
 	addr := strings.TrimPrefix(srv.URL, "http://")
 
-	f := newFixture(t, freePort(t), map[string]string{envNoBrowser: "1"})
 	ws := workspace.Dir(f.home)
 	var err error
 	if token, err = ws.EnsureToken(); err != nil {
@@ -120,13 +120,44 @@ func TestOpenUsesTheRunningServerOfTheWorkspaceAndItsLaunchCode(t *testing.T) {
 		f.started++
 		return nil, errors.New("must not start a second server")
 	}
+	return srv.URL
+}
+
+// VV-079: open finds the server through runtime.json, whatever address it was started on, and opens the
+// launch address, not the plain one that answers 401. VV-211: with STUARTY_NO_BROWSER the one-time
+// link is what open prints, on standard output.
+func TestOpenUsesTheRunningServerOfTheWorkspaceAndItsLaunchCode(t *testing.T) {
+	code := strings.Repeat("ab", 32)
+	f := newFixture(t, freePort(t), map[string]string{envNoBrowser: "1"})
+	base := launchOwner(t, f, code)
 
 	if err := f.o.run(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	want := srv.URL + "/auth/launch?code=" + code
-	if f.started != 0 || strings.TrimSpace(f.out.String()) != want {
-		t.Errorf("started %d, printed %q, want %q", f.started, f.out.String(), want)
+	want := base + "/auth/launch?code=" + code
+	if f.started != 0 || len(f.browsed) != 0 || strings.TrimSpace(f.out.String()) != want {
+		t.Errorf("started %d, browsed %v, printed %q, want %q", f.started, f.browsed, f.out.String(), want)
+	}
+}
+
+// VV-211: without STUARTY_NO_BROWSER the browser gets the one-time link and open prints only the
+// address, on standard error: a printed link would sit in the terminal history (SDD-009, binary.mdx).
+func TestOpenGivesTheLinkToTheBrowserAndPrintsOnlyTheAddress(t *testing.T) {
+	code := strings.Repeat("cd", 32)
+	f := newFixture(t, freePort(t), nil)
+	base := launchOwner(t, f, code)
+
+	if err := f.o.run(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if want := base + "/auth/launch?code=" + code; len(f.browsed) != 1 || f.browsed[0] != want {
+		t.Errorf("browsed %v, want [%s]", f.browsed, want)
+	}
+	if f.out.Len() != 0 {
+		t.Errorf("standard output %q, want nothing", f.out.String())
+	}
+	if got := f.errOut.String(); got != "Opening "+base+"/\n" || strings.Contains(got, code) {
+		t.Errorf("standard error %q, want only the address", got)
 	}
 }
 
