@@ -132,6 +132,8 @@ func run() error {
 	})
 	bg := newBackground(app, srv, settingsDir, settings)
 	bg.install(win)
+	// The framework closes the windows after the shutdown tasks: an update or the system quits, never hides.
+	app.OnShutdown(bg.shuttingDown)
 	bgp.Store(bg)
 	br.bg.Store(bg)
 	guardNavigation(win, srv.Port, home)
