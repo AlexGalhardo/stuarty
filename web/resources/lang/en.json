@@ -2304,6 +2304,11 @@
         "voice": "No connected provider makes speech yet.",
         "video": "No connected provider makes video yet."
       },
+      "no_maker": {
+        "image": "No provider Stuarty works with makes images yet, so there is nothing to connect.",
+        "voice": "No provider Stuarty works with makes speech yet, so there is nothing to connect.",
+        "video": "No provider Stuarty works with makes video yet, so there is nothing to connect. Video generation is ready and waits for a provider to be added."
+      },
       "open_connections": "Connect one on the Connections page",
       "project": "Project",
       "connection": "Connection",
