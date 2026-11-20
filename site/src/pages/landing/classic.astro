@@ -6,12 +6,12 @@ import "@/src/landing/landing.css";
 import Base from "../../layouts/Base.astro";
 import DriveTabs from "../../components/landing/DriveTabs.astro";
 import LandingFooter from "../../components/landing/LandingFooter.astro";
+import LandingActions from "../../components/landing/LandingActions.astro";
 import Placeholder from "../../components/landing/Placeholder.astro";
 import Shot from "../../components/landing/Shot.astro";
 import SplitTitle from "../../components/landing/SplitTitle.astro";
 import StageCanvas from "../../components/landing/StageCanvas.astro";
 import { cta, features, hero, problem, shots, trust } from "@/lib/landing-pages";
-import { site, withBase } from "@/lib/site";
 
 const chapters = [
 	{ time: "0:00", name: "The brief" },
@@ -46,11 +46,9 @@ const trustIcons = [
 				<p class="eyebrow" data-hero-item>{hero.eyebrow}</p>
 				<SplitTitle text={hero.title} id="hero-title" class="display-hero mt-5 text-fg" />
 				<p class="lead mt-6 max-w-xl" data-hero-item>{hero.lead}</p>
-				<div class="mt-9 flex flex-wrap gap-3" data-hero-item>
-					<a class="btn btn-brand" href={withBase(hero.primary.href)}>{hero.primary.label} <span aria-hidden="true">&rarr;</span></a>
-					<a class="btn btn-outline" href={withBase(hero.secondary.href)}>{hero.secondary.label}</a>
+				<div class="mt-9" data-hero-item>
+					<LandingActions idPrefix="hero" />
 				</div>
-				<p class="mt-6 text-sm text-muted" data-hero-item>Free and open source (MIT). Windows, macOS, Linux and your own server.</p>
 			</div>
 			<div class="lg:col-span-5 [perspective:1600px]" data-hero-frame>
 				<div class="showcase origin-center will-change-transform lg:w-[135%] max-lg:w-full" style="transform: rotateY(-14deg) rotateX(6deg)" data-tilt>
@@ -170,10 +168,6 @@ const trustIcons = [
 		<section aria-labelledby="cta-title" class="site-container relative py-24 text-center lg:py-40">
 			<h2 id="cta-title" class="display-hero mx-auto max-w-4xl text-fg" data-split-scroll>{cta.title}</h2>
 			<p class="lead mx-auto mt-6 max-w-xl">{cta.lead}</p>
-			<div class="mt-10 flex flex-wrap justify-center gap-3">
-				<a class="btn btn-brand" href={withBase(cta.primary.href)}>{cta.primary.label} <span aria-hidden="true">&rarr;</span></a>
-				<a class="btn btn-outline" href={site.repo}>{cta.secondary.label}</a>
-			</div>
 		</section>
 	</main>
 	<LandingFooter />

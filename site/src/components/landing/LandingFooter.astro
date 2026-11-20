@@ -1,32 +1,13 @@
 ---
-import { Logo } from "@/components/logo";
+// The footer of the landing pages: the same four actions as the hero (the author's choice), and the attribution
+// the CC BY footage in the screenshots requires.
+import LandingActions from "./LandingActions.astro";
 import { credits } from "@/lib/landing-pages";
-import { site, withBase } from "@/lib/site";
-
-const links = [
-	{ label: "Documentation", href: withBase("/docs/introduction/") },
-	{ label: "Quick start", href: withBase("/docs/getting-started/quick-start/") },
-	{ label: "HTTP API", href: withBase("/docs/api/overview/") },
-	{ label: "MCP", href: withBase("/docs/mcp/overview/") },
-	{ label: "Changelog", href: withBase("/changelog/") },
-	{ label: "For agents (llms.txt)", href: withBase("/llms.txt") },
-	{ label: "GitHub", href: site.repo },
-];
 ---
 
 <footer class="landing-footer relative border-t border-fg/10 bg-bg">
-	<div class="mx-auto flex max-w-6xl flex-col gap-8 px-(--gutter) py-12 md:flex-row md:items-start md:justify-between">
-		<div class="max-w-sm">
-			<Logo size="lg" />
-			<p class="mt-3 text-sm leading-relaxed text-muted">Create, edit, manage and publish your content in one place. Open source (MIT), self-hosted, no telemetry.</p>
-		</div>
-		<nav aria-label="Footer">
-			<ul class="grid grid-cols-2 gap-x-10 gap-y-2 text-sm sm:grid-cols-3">
-				{links.map((l) => (
-					<li><a href={l.href} class="inline-flex min-h-8 items-center text-muted hover:text-fg">{l.label}</a></li>
-				))}
-			</ul>
-		</nav>
+	<div class="site-container py-14">
+		<LandingActions idPrefix="footer" align="center" />
+		<p class="mt-10 text-center text-xs text-muted">{credits}</p>
 	</div>
-	<p class="mx-auto max-w-6xl px-(--gutter) pb-10 text-xs text-muted">{credits}</p>
 </footer>
