@@ -474,6 +474,7 @@
         "size": "Size",
         "original": "Original ({w} x {h})",
         "quality": "Quality",
+        "lossless": "Lossless",
         "findings": "Problems found",
         "no_findings": "No problems found. The image is ready to export.",
         "error": "Error",
