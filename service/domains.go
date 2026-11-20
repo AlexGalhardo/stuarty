@@ -16,6 +16,9 @@ var OperationDomains = map[string]string{
 	"ProjectBundleExport": command.DomainProject, "ProjectBundleImport": command.DomainProject,
 
 	"Edit": command.DomainVideo, "HistoryList": command.DomainVideo, "Undo": command.DomainVideo,
+	"HistoryRevert": command.DomainVideo, "HistoryDiff": command.DomainVideo,
+	"CheckpointCreate": command.DomainVideo, "CheckpointList": command.DomainVideo,
+	"CheckpointRename": command.DomainVideo, "CheckpointRemove": command.DomainVideo,
 	"Redo": command.DomainVideo, "Lint": command.DomainVideo, "ViewFrame": command.DomainVideo,
 	"ViewSheet": command.DomainVideo, "JobStart": command.DomainVideo, "JobGet": command.DomainVideo,
 	"JobList": command.DomainVideo, "JobCancel": command.DomainVideo, "ExportFile": command.DomainVideo,
