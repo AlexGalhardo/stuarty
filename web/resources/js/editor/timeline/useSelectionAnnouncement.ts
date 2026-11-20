@@ -24,14 +24,29 @@ export function useSelectionAnnouncement(): void {
 	latest.current = { items, tracks, assets, order, fps, t };
 	const key = selection.join(",");
 	const first = useRef(true);
+	const previous = useRef<readonly string[]>(selection);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: only a change of the selection speaks; the document is read through the ref
 	useEffect(() => {
+		const before = previous.current;
+		previous.current = selection;
 		if (first.current) {
 			first.current = false;
 			return;
 		}
 		const now = latest.current;
+		// The read model removed selected items (a delete of the person or of an agent): the edit has its own
+		// sentence in the same one-slot region ("Deleted, 1 item", "claude-code changed the project"), which a
+		// "Selection cleared" right after would replace.
+		if (
+			droppedByTheDocument(
+				before,
+				selection,
+				(id) => now.items?.[id] !== undefined,
+			)
+		) {
+			return;
+		}
 		if (selection.length === 0) {
 			announce("ui.editor.announce.selection_cleared");
 			return;
@@ -60,4 +75,16 @@ export function useSelectionAnnouncement(): void {
 					: track.name,
 		});
 	}, [key]);
+}
+
+// True when the selection only lost items, and every item it lost is gone from the document: the change was
+// made by the read model, not by the person.
+export function droppedByTheDocument(
+	before: readonly string[],
+	after: readonly string[],
+	exists: (id: string) => boolean,
+): boolean {
+	if (after.some((id) => !before.includes(id))) return false;
+	const lost = before.filter((id) => !after.includes(id));
+	return lost.length > 0 && lost.every((id) => !exists(id));
 }
