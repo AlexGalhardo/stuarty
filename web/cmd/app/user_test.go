@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -119,6 +120,38 @@ func TestUserCommandsNeverTakeThePasswordFromArgv(t *testing.T) {
 
 // While a server owns the workspace the commands fail with E_WORKSPACE_LOCKED;
 // with none they work (P2-SRV-012 assert 3).
+// With STUARTY_URL set, workspace.Open returns a remote session with no folder: the commands must refuse
+// instead of creating a workspace in the current directory (VV-272).
+func TestUserCommandsRefuseARemoteSession(t *testing.T) {
+	for _, name := range []string{"user:create", "user:passwd"} {
+		cwd := t.TempDir()
+		t.Chdir(cwd)
+
+		var r userRun
+
+		code := runUser(t.Context(), name, []string{"ana@example.com"}, userIO{
+			In: strings.NewReader(userPassword + "\n"), Out: &r.out, Err: &r.err,
+			Getenv: func(k string) string {
+				switch k {
+				case workspace.EnvURL:
+					return "https://stuarty.example.invalid"
+				case workspace.EnvKey:
+					return "a-key"
+				}
+
+				return ""
+			},
+		})
+		if code == 0 || !strings.Contains(r.err.String(), workspace.EnvURL) {
+			t.Errorf("%s with %s set: exit %d, %q", name, workspace.EnvURL, code, r.err.String())
+		}
+
+		if left, _ := os.ReadDir(cwd); len(left) != 0 {
+			t.Errorf("%s wrote into the current directory: %v", name, left)
+		}
+	}
+}
+
 func TestUserCreateWhileAServerOwnsTheWorkspace(t *testing.T) {
 	home := filepath.Join(t.TempDir(), "ws")
 
