@@ -39,7 +39,7 @@ A creator who already pays for ChatGPT, or has an OpenRouter account, connects i
 - [x] 3. Implement the generic flow with a fake authorization server in tests. Verify: `go test ./service/connections/oauth/...` passes (happy path, replayed state, wrong verifier, expired state).
 - [x] 4. Implement refresh with the lock and the "needs sign-in" state. Verify: `go test ./service/connections/oauth/... -run TestRefresh` passes with the race detector.
 - [x] 5. Implement the OpenRouter credential kind and adapter. Verify: `go test ./service/providers/openrouter/...` passes against recorded responses.
-- [ ] 6. Implement the OpenAI sign-in credential kind. Verify: `go test ./service/providers/openai/...` passes against recorded responses.
+- [x] 6. Implement the OpenAI sign-in credential kind. Verify: `go test ./service/providers/openai/...` passes against recorded responses.
 - [ ] 7. Add the sign-in buttons and states to the provider cards, in both languages. Verify: `task test:web` and `web/e2e/specs/provider-sign-in.spec.ts` pass against the fake authorization server.
 - [ ] 8. Security tests of the new rows. Verify: `go test -run TestSecurity_ ./...` and `go run ./internal/tools/threatcheck` exit 0.
 
