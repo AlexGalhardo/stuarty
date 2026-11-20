@@ -683,7 +683,7 @@ The implementation of this SDD is complete when every check passes. Server tests
 
 **Access.** The caller must be able to read the image: an unknown image, or one the caller may not see in network mode, is `E_NOT_FOUND`; a key limited to one project reaches no image and gets `E_FORBIDDEN` (SDD-021 section 10). The handler asks the Service (`ImageDescribe`) before the response becomes a stream and again at every revalidation.
 
-**Topic and publishing.** One topic per image, `"image:" + imageID`. A batch that an image operation commits (`ImageEdit`, `ImageUndo`, `ImageRedo`, and `ImageImport` into an existing image) publishes `image.updated` after the commit, in revision order, as section 5.3 says. A dry run, a batch with an empty diff (a no-op, or an undo step whose primitives were all skipped) and the creation of a document (revision 1) publish nothing, so the revisions of this stream rise but are not always consecutive: a client never waits for a missing one, it compares revisions.
+**Topic and publishing.** One topic per image, `"image:" + imageID`. A batch that an image operation commits (`ImageEdit`, `ImageUndo`, `ImageRedo`, `ImageRevert` and `ImageImport` into an existing image) publishes `image.updated` after the commit, in revision order, as section 5.3 says. A dry run, a batch with an empty diff (a no-op, or an undo step whose primitives were all skipped) and the creation of a document (revision 1) publish nothing, so the revisions of this stream rise but are not always consecutive: a client never waits for a missing one, it compares revisions.
 
 ### 12.1 `image.updated`
 

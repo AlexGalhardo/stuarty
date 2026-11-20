@@ -45,5 +45,6 @@ func All() []schema.Migration {
 		m20261120100000PublicationTargetsSentAsDraft(),
 		m20261120110000TextKindPost(),
 		m20261120110100CreateBlogTables(),
+		m20261120120000CreateImageCheckpoints(),
 	}
 }

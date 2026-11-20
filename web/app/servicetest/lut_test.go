@@ -69,6 +69,8 @@ func TestImportingACubeFileMakesALutAsset(t *testing.T) {
 	}
 }
 
+// A header after the data is not here: the export parser reads it, so the ingest takes it too (VV-287,
+// TestCheckCubeAgreesWithTheExportParserAndEchoesNothing in service).
 func TestImportingAnInvalidCubeFileFails(t *testing.T) {
 	cases := map[string]string{
 		"too few lines":    cubeFile(2, "", 7),
@@ -79,7 +81,6 @@ func TestImportingAnInvalidCubeFileFails(t *testing.T) {
 		"no size":          "TITLE \"x\"\n0 0 0\n",
 		"not a number":     "LUT_3D_SIZE 2\n" + strings.Repeat("0.1 nan 0.3\n", 8),
 		"two numbers":      "LUT_3D_SIZE 2\n" + strings.Repeat("0.1 0.3\n", 8),
-		"header after":     cubeFile(2, "", 8) + "TITLE \"late\"\n",
 		"empty domain":     cubeFile(2, "DOMAIN_MIN 1 1 1\nDOMAIN_MAX 0 0 0\n", 8),
 		"unknown keyword":  "LUT_3D_SIZE 2\nWHATEVER 1\n",
 		"a very long line": "TITLE x\n# " + strings.Repeat("x", 5000) + "\nLUT_3D_SIZE 2\n",

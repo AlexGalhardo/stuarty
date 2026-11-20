@@ -1956,6 +1956,130 @@ Example:
 stuarty image:import --path /home/ana/photos/face.jpg --preset video_thumbnail
 ```
 
+## `image:revert`
+
+Go back to the document of an earlier revision of an image, as a new step that image:undo takes back
+
+```text
+stuarty image:revert <id> (--revision n | --checkpoint name) [--base n] [--dry-run]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--revision` | integer |  | the revision to go back to |
+| `--checkpoint` | string |  | the name of a checkpoint to go back to |
+| `--base` | integer |  | the revision you read (default the current one); an older one conflicts with other actors' changes |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty image:revert img_7k2m9x4q1b --checkpoint "before the agent" --dry-run
+```
+
+## `image:diff`
+
+List what changed between two revisions of an image, most significant first
+
+```text
+stuarty image:diff <id> (--from n | --from-checkpoint name) [--until n]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--from` | integer |  | the revision the diff starts from |
+| `--from-checkpoint` | string |  | the name of a checkpoint the diff starts from |
+| `--until` | integer |  | the revision the diff ends at (default the current one) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty image:diff img_7k2m9x4q1b --from 12
+```
+
+## `image:checkpoint:create`
+
+Name a revision of an image so that it can be gone back to
+
+```text
+stuarty image:checkpoint:create <id> --name <name> [--note t] [--revision n]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--name` | string |  | 1 to 60 characters, no slash |
+| `--note` | string |  | up to 300 characters |
+| `--revision` | integer |  | the revision to name (default the current one) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty image:checkpoint:create img_7k2m9x4q1b --name "before the agent"
+```
+
+## `image:checkpoint:list`
+
+List the checkpoints of an image, newest revision first
+
+```text
+stuarty image:checkpoint:list <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty image:checkpoint:list img_7k2m9x4q1b --json
+```
+
+## `image:checkpoint:rename`
+
+Rename a checkpoint of an image, and change its note
+
+```text
+stuarty image:checkpoint:rename <id> --name <name> --new-name <name> [--note t]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--name` | string |  | the checkpoint to rename |
+| `--new-name` | string |  | the new name |
+| `--note` | string |  | replaces the note when given |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty image:checkpoint:rename img_7k2m9x4q1b --name draft --new-name "first cut"
+```
+
+## `image:checkpoint:remove`
+
+Remove a checkpoint of an image; no revision is removed
+
+```text
+stuarty image:checkpoint:remove <id> --name <name>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--name` | string |  | the checkpoint to remove |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty image:checkpoint:remove img_7k2m9x4q1b --name draft
+```
+
 ## `asset:list`
 
 List the files of the library, with origin, tags and reuse
