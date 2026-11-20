@@ -258,7 +258,7 @@ func (s *svc) importFile(
 		return out
 	}
 
-	return s.putAndAttach(ctx, c.Actor, project, file, f.AssetID, out, rec)
+	return s.putAndAttach(ctx, c.Actor, c.OwnerUserID, project, file, f.AssetID, out, rec)
 }
 
 // putAndAttach is the part of an import from the open file to the linked asset: the copy into the store, the
@@ -267,7 +267,7 @@ func (s *svc) importFile(
 // the Error of the entry.
 func (s *svc) putAndAttach(
 	ctx context.Context,
-	actor string,
+	actor, owner string,
 	project *ProjectRow,
 	file io.Reader,
 	wantedID string,
@@ -313,7 +313,7 @@ func (s *svc) putAndAttach(
 			return aerr
 		}
 
-		return assetlib.RecordImport(ctx, tx.AssetLibrary(), hash, rec.origin, rec.info, actor, now)
+		return assetlib.RecordImport(ctx, tx.AssetLibrary(), owner, hash, rec.origin, rec.info, actor, now)
 	})
 	s.storeMu.RUnlock()
 
