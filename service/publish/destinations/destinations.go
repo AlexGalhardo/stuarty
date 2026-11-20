@@ -197,6 +197,23 @@ func (c Config) now() time.Time {
 	return time.Now()
 }
 
+// wait sleeps for d, or until the context ends.
+func (c Config) wait(ctx context.Context, d time.Duration) error {
+	if c.Sleep != nil {
+		return c.Sleep(ctx, d)
+	}
+
+	t := time.NewTimer(d)
+	defer t.Stop()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-t.C:
+		return nil
+	}
+}
+
 // Registry maps a kind of connection to its destination.
 type Registry struct {
 	byKind map[string]Destination
@@ -207,7 +224,9 @@ type Registry struct {
 func NewRegistry(cfg Config) *Registry {
 	r := &Registry{byKind: map[string]Destination{}}
 
-	for _, d := range []Destination{newFiles(cfg), newWordPress(cfg)} {
+	for _, d := range []Destination{
+		newFiles(cfg), newWordPress(cfg), newWebhook(cfg, KindWebhook), newWebhook(cfg, KindWebhookLocal),
+	} {
 		k := d.Describe().Kind
 		r.byKind[k] = d
 		r.order = append(r.order, k)

@@ -1,0 +1,48 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://stuarty.dev/schemas/blog-webhook-payload.v1.json",
+	"title": "The payload Stuarty POSTs to the webhook of a blog destination (SDD-020 section 46)",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["schema_version", "event", "delivery_id", "sent_at", "status", "post", "images"],
+	"properties": {
+		"schema_version": { "const": 1 },
+		"event": { "enum": ["post.published", "post.updated"] },
+		"delivery_id": { "type": "string", "pattern": "^tgt_[0-9a-z]{10}$" },
+		"sent_at": { "type": "string", "format": "date-time" },
+		"status": { "enum": ["draft", "published"] },
+		"post": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["slug", "title", "summary", "tags", "language", "canonical_url", "cover", "markdown", "html"],
+			"properties": {
+				"slug": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 80 },
+				"title": { "type": "string", "minLength": 1, "maxLength": 200 },
+				"summary": { "type": "string", "maxLength": 500 },
+				"tags": { "type": "array", "maxItems": 20, "items": { "type": "string", "minLength": 1, "maxLength": 40 } },
+				"language": { "type": "string" },
+				"canonical_url": { "type": "string" },
+				"cover": { "type": "string", "description": "images/<name> of the cover, empty with none" },
+				"markdown": { "type": "string", "description": "the body, with images written as images/<name>" },
+				"html": { "type": "string", "description": "the sanitised HTML of the body, with images written as images/<name>" }
+			}
+		},
+		"images": {
+			"type": "array",
+			"maxItems": 20,
+			"items": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["name", "role", "content_type", "bytes", "sha256"],
+				"properties": {
+					"name": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*\\.(png|jpg|gif|webp|avif)$" },
+					"role": { "enum": ["cover", "body"] },
+					"content_type": { "type": "string", "pattern": "^image/" },
+					"bytes": { "type": "integer", "minimum": 0 },
+					"sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+					"url": { "type": "string", "format": "uri", "description": "where the image is fetched with a posts:read key; present only when the connection has a media_base_url" }
+				}
+			}
+		}
+	}
+}

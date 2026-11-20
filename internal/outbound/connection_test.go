@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/netip"
 	"net/url"
 	"strings"
 	"sync"
@@ -390,6 +391,52 @@ func TestConnectionStillAllowsEmbeddedIPv4OfAllowedAddresses(t *testing.T) {
 
 		if !errors.Is(err, stop) {
 			t.Errorf("%s: %v, want the gate to let the dial reach the recorder", host, err)
+		}
+	}
+}
+
+func TestConnectionPublicRefusesInternalAddressesAtDial(t *testing.T) {
+	dst := newDestination(t)
+	reg := &fakeRegistry{dests: map[string]Destination{"con_a": {ID: "con_a", Hosts: []string{dst.host()}}}}
+
+	// The plain client reaches a server on loopback: a self-hosted server is a destination the user typed.
+	if status, _, err := get(
+		Connection(reg, "con_a", 2*time.Second, nil),
+		dst.srv.URL,
+	); err != nil ||
+		status != http.StatusOK {
+		t.Fatalf("the plain client: %d %v", status, err)
+	}
+
+	before := dst.hits()
+
+	// The public-only client does not, whatever the name resolved to: the dial itself is judged.
+	_, _, err := get(ConnectionPublic(reg, "con_a", 2*time.Second, nil), dst.srv.URL)
+	if !errors.Is(err, ErrNotPublic) {
+		t.Fatalf("%v, want ErrNotPublic", err)
+	}
+
+	if dst.hits() != before {
+		t.Error("a request reached a loopback server through the public-only client")
+	}
+}
+
+func TestNotPublicAddr(t *testing.T) {
+	t.Parallel()
+
+	for _, a := range []string{
+		"127.0.0.1", "::1", "10.0.0.1", "172.16.5.4", "192.168.1.1", "169.254.169.254", "100.64.0.1", "100.127.255.255",
+		"0.0.0.0", "224.0.0.1", "fc00::1", "fd12:3456::1", "fe80::1", "::ffff:10.0.0.1", "64:ff9b::a00:1", "2002:c0a8:101::",
+		"100.100.100.200", "::",
+	} {
+		if !NotPublicAddr(netip.MustParseAddr(a)) {
+			t.Errorf("%s is judged public", a)
+		}
+	}
+
+	for _, a := range []string{"8.8.8.8", "1.1.1.1", "93.184.216.34", "2606:4700:4700::1111", "100.128.0.1", "172.32.0.1"} {
+		if NotPublicAddr(netip.MustParseAddr(a)) {
+			t.Errorf("%s is judged not public", a)
 		}
 	}
 }
