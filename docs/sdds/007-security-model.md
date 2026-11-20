@@ -118,7 +118,7 @@ flowchart LR
 
 ## 2. Threat model
 
-Impact is stated for the product as designed. "Test" names the primary tests; a threat may have more. Every test listed must exist and run in CI (section 12).
+Impact is stated for the product as designed. "Test" names the primary tests; a threat may have more. Every test listed must exist and run in CI (section 12). Threat ids have two or three digits (`T-01` to `T-99`, then `T-100` and up, with test names `TestSecurity_TNN_` and `TestSecurity_TNNN_`); a new threat takes the next free id, and no id is renumbered.
 
 | ID | Threat | How it happens in this product | Impact | Mitigation | Test |
 | --- | --- | --- | --- | --- | --- |

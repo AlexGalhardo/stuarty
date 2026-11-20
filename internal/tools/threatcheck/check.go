@@ -19,10 +19,10 @@ type threat struct {
 }
 
 var (
-	rowID    = regexp.MustCompile(`^T-\d\d$`)
+	rowID    = regexp.MustCompile(`^T-\d{2,3}$`)
 	spanCode = regexp.MustCompile("`([^`]+)`")
-	testFunc = regexp.MustCompile(`(?m)^func (TestSecurity_T\d\d_\w+|Fuzz\w+)\(`)
-	secTest  = regexp.MustCompile(`^TestSecurity_T(\d\d)_`)
+	testFunc = regexp.MustCompile(`(?m)^func (TestSecurity_T\d{2,3}_\w+|Fuzz\w+)\(`)
+	secTest  = regexp.MustCompile(`^TestSecurity_T(\d{2,3})_`)
 	method   = regexp.MustCompile(`^\t([A-Z]\w*)\(ctx context\.Context`)
 )
 
