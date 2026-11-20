@@ -2517,6 +2517,33 @@
         "bad_amount": "Um valor é um número com no máximo seis casas decimais, por exemplo 2,50."
       }
     },
+    "google": {
+      "nav": "Entrar com Google",
+      "sign_in": "Entrar com o Google",
+      "title": "Entrar com o Google",
+      "off": "Entrar com o Google está desligado neste servidor. Um administrador pode ligar aqui.",
+      "account": "Sua conta Google",
+      "linked": "Conta Google vinculada:",
+      "not_linked": "Nenhuma conta Google vinculada. Vincule a sua para entrar com ela; a senha continua funcionando.",
+      "unlink_note": "Desvincular não muda sua senha nem encerra suas sessões.",
+      "password": "Sua senha",
+      "link": "Vincular minha conta Google",
+      "unlink": "Desvincular",
+      "owner": "Para o dono deste servidor",
+      "owner_intro": "Os usuários entram com um projeto Google que você mesmo criou. Crie a conexão desse projeto na página Conexões (uma conexão do YouTube com o client id e o segredo; não precisa entrar no YouTube).",
+      "redirect": "Adicione este endereço aos URIs de redirecionamento autorizados do seu projeto Google:",
+      "enabled": "Permitir que usuários entrem com o Google",
+      "connection": "Conexão do seu projeto Google",
+      "connection_none": "Escolha uma conexão",
+      "allowed": "Somente estes e-mails do Google (opcional)",
+      "allowed_hint": "Um por linha. Deixe vazio para permitir todo usuário vinculado. O usuário precisa estar vinculado antes: não há cadastro pelo Google.",
+      "save": "Salvar",
+      "saved": "Salvo.",
+      "callback_title": "Entrando com o Google",
+      "callback_working": "Concluindo a entrada…",
+      "callback_failed": "A entrada com o Google não funcionou.",
+      "back_to_login": "Voltar ao login"
+    },
     "chat": {
       "open": "Conversar com o seu agente",
       "close": "Fechar o chat",

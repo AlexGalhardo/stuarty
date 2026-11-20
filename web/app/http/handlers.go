@@ -210,6 +210,13 @@ func pending(h *apiHandler, id string) {
 func (h *apiHandler) registerAll() {
 	register(h, "auth.login", h.login).Use(h.loginThrottle.middleware)
 	register(h, "auth.logout", h.logout)
+	register(h, "google.status", h.googleStatus)
+	register(h, "google.start", h.googleStart)
+	register(h, "google.complete", h.googleComplete)
+	register(h, "google.link", h.googleLink)
+	register(h, "google.unlink", h.googleUnlink)
+	register(h, "google.settings.get", h.googleSettingsGet)
+	register(h, "google.settings.put", h.googleSettingsPut)
 	register(h, "keys.create", h.keysCreate)
 	register(h, "keys.list", func(c *web.Ctx, _ noIn) (service.KeyListResult, error) {
 		res, err := h.Service.KeyList(c.Context(), service.KeyListRequest{})

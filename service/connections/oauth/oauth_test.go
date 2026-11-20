@@ -195,3 +195,17 @@ func TestRequestReadsTokensAndRefusals(t *testing.T) {
 		t.Errorf("a code that is not a plain OAuth code was kept: %v", err)
 	}
 }
+
+func TestRequestKeepsTheIDTokenOfAnOpenIDAnswer(t *testing.T) {
+	t.Parallel()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{"access_token": "at", "id_token": "a.b.c", "expires_in": 60})
+	}))
+	t.Cleanup(srv.Close)
+
+	tok, err := Exchange(context.Background(), srv.Client(), srv.URL, "cid", "cs", "good", "v", "http://127.0.0.1/cb")
+	if err != nil || tok.IDToken != "a.b.c" || tok.RefreshToken != "" {
+		t.Fatalf("Exchange = %+v, %v", tok, err)
+	}
+}
