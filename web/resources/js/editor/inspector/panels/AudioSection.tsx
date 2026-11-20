@@ -22,9 +22,10 @@ import { useFieldCommit } from "../useFieldCommit";
 const isVoice = (value: string): value is VoicePreset =>
 	(VOICE_PRESETS as readonly string[]).includes(value);
 
-// The Audio section of SDD-012 section 12.1 for a clip and an audio item:
-// volume, the two fades, the noise reduction, the voice filter and, for a clip, the mute flag. Each field is one
-// `item.set_audio` with only the field that changed.
+// The Audio section of SDD-012 section 12.1 for a clip, an audio item and a composition:
+// volume, the two fades, the noise reduction, the voice filter and, for a clip and a composition, the mute flag.
+// A composition has no noise reduction and no voice filter (its sound is the mix of the nested timeline; the core
+// refuses them), so they are not offered. Each field is one `item.set_audio` with only the field that changed.
 export default function AudioSection({
 	itemId,
 }: {
@@ -37,6 +38,7 @@ export default function AudioSection({
 	const rate = useDocumentState((s) => s.document?.settings.fps);
 	if (item === undefined) return null;
 	const fps = fpsOf(rate);
+	const composition = item.type === "composition";
 	return (
 		<Section title={t("ui.editor.clip.audio_title")}>
 			<NumberField
@@ -59,29 +61,33 @@ export default function AudioSection({
 				disabled={!canEdit}
 				commit={(fade_out) => send(audioOperations(itemId, { fade_out }))}
 			/>
-			<SliderField
-				label={t("ui.editor.clip.denoise")}
-				stored={String(item.denoise ?? 0)}
-				disabled={!canEdit}
-				{...registryRange("item.set_audio", "denoise")}
-				step={0.01}
-				commit={(denoise) => send(audioOperations(itemId, { denoise }))}
-			/>
-			<SelectField
-				label={t("ui.editor.clip.voice")}
-				stored={item.voice ?? "none"}
-				disabled={!canEdit}
-				options={VOICE_PRESETS.map((preset) => ({
-					value: preset,
-					label: t(`ui.editor.clip.voice_${preset}`),
-				}))}
-				commit={async (value) =>
-					isVoice(value)
-						? send(audioOperations(itemId, { voice: value }))
-						: { ok: true }
-				}
-			/>
-			{item.type === "clip" && (
+			{!composition && (
+				<>
+					<SliderField
+						label={t("ui.editor.clip.denoise")}
+						stored={String(item.denoise ?? 0)}
+						disabled={!canEdit}
+						{...registryRange("item.set_audio", "denoise")}
+						step={0.01}
+						commit={(denoise) => send(audioOperations(itemId, { denoise }))}
+					/>
+					<SelectField
+						label={t("ui.editor.clip.voice")}
+						stored={item.voice ?? "none"}
+						disabled={!canEdit}
+						options={VOICE_PRESETS.map((preset) => ({
+							value: preset,
+							label: t(`ui.editor.clip.voice_${preset}`),
+						}))}
+						commit={async (value) =>
+							isVoice(value)
+								? send(audioOperations(itemId, { voice: value }))
+								: { ok: true }
+						}
+					/>
+				</>
+			)}
+			{(item.type === "clip" || composition) && (
 				<ToggleField
 					label={t("ui.editor.clip.mute")}
 					stored={item.audio_muted === true}
