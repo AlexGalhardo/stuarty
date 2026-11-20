@@ -9,6 +9,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/plan"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/internal/perfgate"
 )
 
 func countCode(doc *timeline.Document, env Env, code string) int {
@@ -255,11 +256,9 @@ func TestThreeFindingsReport(t *testing.T) {
 	}
 }
 
-// The transition rule costs the sort of the spans, not the length of the items: a
-// 2-hour item with a transition among 300 items lints well under 100 ms.
-func TestTransitionEmptyCostDoesNotGrowWithLength(t *testing.T) {
-	t.Parallel()
-
+// transitionLengthDoc is 300 short items with a transition and one more item of the given length, whose
+// transitions are as long as the item.
+func transitionLengthDoc(frames int) *timeline.Document {
 	d := withVideoTrack(newDoc())
 
 	for i := range 300 {
@@ -268,17 +267,51 @@ func TestTransitionEmptyCostDoesNotGrowWithLength(t *testing.T) {
 		put(d, it)
 	}
 
-	long := clip("itm_long0001", 0, 216000)
-	long.TransitionIn = &timeline.Transition{Kind: "fade", Duration: 100000}
-	long.TransitionOut = &timeline.Transition{Kind: "fade", Duration: 100000}
+	long := clip("itm_long0001", 0, frames)
+	long.TransitionIn = &timeline.Transition{Kind: "fade", Duration: frames / 2}
+	long.TransitionOut = &timeline.Transition{Kind: "fade", Duration: frames / 2}
 	put(d, long)
 
-	start := time.Now()
-	Lint(d, Env{}, Full)
+	return d
+}
 
-	// The race detector slows this loop about tenfold; the limit holds for a
-	// normal build, which CI runs too.
-	if took := time.Since(start); took > 100*time.Millisecond && !raceEnabled {
+// fastestLint is the shortest of a few runs: the noise of the machine only ever adds time, so the
+// shortest run is the cost of the work.
+func fastestLint(d *timeline.Document) time.Duration {
+	best := time.Duration(1<<63 - 1)
+
+	for range 7 {
+		start := time.Now()
+		Lint(d, Env{}, Full)
+		best = min(best, time.Since(start))
+	}
+
+	return best
+}
+
+// The transition rule costs the sort of the spans, not the length of the items: a 2-hour item costs
+// about what a 2-second one does. The cost of the rule grown with the length would make the ratio
+// thousands; the limit of 20 leaves a wide margin for noise, on any machine and any load.
+func TestTransitionEmptyCostDoesNotGrowWithLength(t *testing.T) {
+	t.Parallel()
+
+	short, long := fastestLint(transitionLengthDoc(60)), fastestLint(transitionLengthDoc(216000))
+
+	if long > 20*short+time.Millisecond {
+		t.Errorf("a 2-hour item lints in %v, a 2-second one in %v: the cost grows with the length", long, short)
+	}
+}
+
+// A 2-hour item with a transition among 300 items lints well under 100 ms. It is an absolute time budget:
+// it runs only on the idle machine with STUARTY_PERF=1 (SDD-008 section 10).
+func TestTransitionEmptyLintTimeBudget(t *testing.T) {
+	perfgate.Require(t)
+
+	if raceEnabled {
+		t.Skip("the race detector slows this loop about tenfold") // verify:env-skip a race build changes the cost of the loop
+	}
+
+	if took := fastestLint(transitionLengthDoc(216000)); took > 100*time.Millisecond {
 		t.Errorf("lint took %v", took)
 	}
 }
