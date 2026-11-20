@@ -29,7 +29,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [07](07-dashboard-shell.md) | Dashboard: sidebar, navigation, profile, theme | M | 03 | DONE (2026-11-19, 70387363..171fb786) |
 | [08](08-asset-library.md) | Asset library with origin, rights and reuse | M | 06, 07 | DONE (2026-11-19, `ba30f86f`..`fdcdc23a`, merge `86c682f9`) |
 | [09](09-ai-provider-layer.md) | AI provider layer with API keys, text generation and cost | L | 04, 05 | DONE (2026-11-19, `96540531`..`7b5f1caa`, merge `5a97458e`; task 2 provider choice and task 8 real call wait for the author) |
-| [10](10-image-and-voice-generation.md) | Image and voice generation | M | 08, 09 | IN PROGRESS (senior-d, 2026-11-20) |
+| [10](10-image-and-voice-generation.md) | Image and voice generation | M | 08, 09 | DONE (2026-11-20, `18d2e82b4`..`a94e2d963`, merge `3402308e1`; a real call with the author's OpenAI key not verified) |
 | [11](11-video-generation.md) | Video generation | M | 10 | TODO |
 | [12](12-ai-oauth-connections.md) | Sign in with ChatGPT and OpenRouter | M | 09 | IN PROGRESS (senior-d, 2026-11-20) |
 | [13](13-mcp-domains-and-agent-docs.md) | MCP tools by domain and generated agent documentation | M | 06 | DONE (2026-11-19, `773674ed`..`e9e671d4`, merge `c3be54a0`) |
@@ -43,7 +43,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [21](21-desktop-background-service.md) | Desktop background service for scheduled posts | M | 20 | TODO |
 | [22](22-x-and-tiktok-drafts.md) | X and TikTok drafts | M | 20 | TODO |
 | [23](23-blog-and-its-destinations.md) | Blog posts and their four destinations | L | 17, 20 | TODO |
-| [24](24-google-account-and-server-login.md) | Optional Google account and login on a server | M | 04, 18 | IN PROGRESS (senior-e, 2026-11-20) |
+| [24](24-google-account-and-server-login.md) | Optional Google account and login on a server | M | 04, 18 | DONE (2026-11-20, `46c44b677`..`cde96fa60`, merge `105a2cf8a`; a real Google login and `scripts/no-egress.sh`, which needs Linux, not verified) |
 | [25](25-vps-package.md) | VPS package: Caddy, install, update and backup | M | 24 | TODO |
 
 ### 1.3 Editor track (two seniors)
