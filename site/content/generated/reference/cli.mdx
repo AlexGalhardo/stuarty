@@ -2988,3 +2988,31 @@ Example:
 ```bash
 stuarty user:passwd ana@example.com
 ```
+
+## `workspace:backup`
+
+Write a consistent backup of the workspace to a folder (never with the master key); a server may keep running
+
+```text
+stuarty workspace:backup <folder>
+```
+
+Example:
+
+```bash
+stuarty workspace:backup ~/stuarty-backup-2026-11-19
+```
+
+## `workspace:restore`
+
+Restore a backup folder into an empty workspace, checked against its manifest and the master key at hand
+
+```text
+stuarty workspace:restore <folder> [--replace] [--without-vault]
+```
+
+Example:
+
+```bash
+stuarty workspace:restore ~/stuarty-backup-2026-11-19
+```
