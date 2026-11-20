@@ -1,0 +1,476 @@
+{
+  "assets": {
+    "ast_0000000001": {
+      "frame_count": 210,
+      "frame_rate": {
+        "den": 1,
+        "num": 30
+      },
+      "has_audio": true,
+      "hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb0",
+      "height": 640,
+      "id": "ast_0000000001",
+      "kind": "video",
+      "name": "shot-1.mp4",
+      "width": 360
+    },
+    "ast_0000000002": {
+      "frame_count": 210,
+      "frame_rate": {
+        "den": 1,
+        "num": 30
+      },
+      "has_audio": true,
+      "hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb1",
+      "height": 640,
+      "id": "ast_0000000002",
+      "kind": "video",
+      "name": "shot-2.mp4",
+      "width": 360
+    },
+    "ast_0000000003": {
+      "frame_count": 210,
+      "frame_rate": {
+        "den": 1,
+        "num": 30
+      },
+      "has_audio": true,
+      "hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2",
+      "height": 640,
+      "id": "ast_0000000003",
+      "kind": "video",
+      "name": "shot-3.mp4",
+      "width": 360
+    },
+    "ast_0000000004": {
+      "frame_count": 210,
+      "frame_rate": {
+        "den": 1,
+        "num": 30
+      },
+      "has_audio": true,
+      "hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb3",
+      "height": 640,
+      "id": "ast_0000000004",
+      "kind": "video",
+      "name": "shot-4.mp4",
+      "width": 360
+    },
+    "ast_0000000063": {
+      "has_audio": true,
+      "hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa9",
+      "id": "ast_0000000063",
+      "kind": "audio",
+      "name": "music.wav",
+      "sample_count": 1764000
+    }
+  },
+  "id": "prj_0000000002",
+  "items": {
+    "itm_0000000001": {
+      "asset": "ast_0000000001",
+      "duration": 120,
+      "id": "itm_0000000001",
+      "slot": {
+        "description": "The opening shot: what stops the thumb.",
+        "filled": true,
+        "kind": "media",
+        "name": "hook_shot"
+      },
+      "start": 0,
+      "track": "trk_0000000001",
+      "type": "clip"
+    },
+    "itm_0000000002": {
+      "asset": "ast_0000000002",
+      "duration": 180,
+      "id": "itm_0000000002",
+      "slot": {
+        "description": "The shot of the problem the person has.",
+        "filled": true,
+        "kind": "media",
+        "name": "problem_shot"
+      },
+      "start": 120,
+      "track": "trk_0000000001",
+      "type": "clip"
+    },
+    "itm_0000000003": {
+      "asset": "ast_0000000003",
+      "duration": 180,
+      "id": "itm_0000000003",
+      "slot": {
+        "description": "The product, in use.",
+        "filled": true,
+        "kind": "media",
+        "name": "product_shot_1"
+      },
+      "start": 300,
+      "track": "trk_0000000001",
+      "type": "clip"
+    },
+    "itm_0000000004": {
+      "asset": "ast_0000000004",
+      "duration": 150,
+      "id": "itm_0000000004",
+      "slot": {
+        "description": "A second view of the product: a detail, or the result.",
+        "filled": true,
+        "kind": "media",
+        "name": "product_shot_2"
+      },
+      "start": 480,
+      "track": "trk_0000000001",
+      "type": "clip"
+    },
+    "itm_0000000005": {
+      "duration": 120,
+      "fill": "$accent",
+      "height": 1920,
+      "id": "itm_0000000005",
+      "shape": "rect",
+      "start": 630,
+      "track": "trk_0000000002",
+      "type": "shape",
+      "width": 1080
+    },
+    "itm_0000000006": {
+      "duration": 150,
+      "fill": "$brand",
+      "height": 1920,
+      "id": "itm_0000000006",
+      "shape": "rect",
+      "start": 750,
+      "track": "trk_0000000002",
+      "type": "shape",
+      "width": 1080
+    },
+    "itm_0000000007": {
+      "asset": "ast_0000000063",
+      "duration": 900,
+      "id": "itm_0000000007",
+      "slot": {
+        "description": "The music bed.",
+        "filled": true,
+        "kind": "media",
+        "name": "music",
+        "required": false
+      },
+      "start": 0,
+      "track": "trk_0000000004",
+      "type": "audio"
+    },
+    "itm_0000000008": {
+      "duration": 111,
+      "id": "itm_0000000008",
+      "keyframes": {
+        "opacity": [
+          {
+            "easing": "ease_out",
+            "t": 0,
+            "value": 0
+          },
+          {
+            "t": 12,
+            "value": 1
+          }
+        ],
+        "scale": [
+          {
+            "easing": "ease_out",
+            "t": 0,
+            "value": 0.6
+          },
+          {
+            "easing": "ease_in_out",
+            "t": 8,
+            "value": 1.1
+          },
+          {
+            "t": 12,
+            "value": 1
+          }
+        ]
+      },
+      "slot": {
+        "description": "The hook, five words or fewer.",
+        "filled": true,
+        "kind": "text",
+        "name": "hook"
+      },
+      "start": 9,
+      "style": {
+        "align": "center",
+        "color": "$ink",
+        "font_family": "Montserrat",
+        "font_weight": 800,
+        "line_height": 1.1,
+        "max_width": 880,
+        "shadow_blur": 14,
+        "shadow_color": "#000000AA",
+        "shadow_dy": 4,
+        "size": 96,
+        "uppercase": true
+      },
+      "text": "Tired of soggy fries?",
+      "track": "trk_0000000003",
+      "type": "text",
+      "y": 1100
+    },
+    "itm_0000000009": {
+      "duration": 171,
+      "id": "itm_0000000009",
+      "slot": {
+        "description": "The problem, in one line.",
+        "filled": true,
+        "kind": "text",
+        "name": "problem"
+      },
+      "start": 129,
+      "style": {
+        "align": "center",
+        "color": "$ink",
+        "font_family": "Montserrat",
+        "font_weight": 800,
+        "line_height": 1.1,
+        "max_width": 880,
+        "shadow_blur": 14,
+        "shadow_color": "#000000AA",
+        "shadow_dy": 4,
+        "size": 96,
+        "uppercase": true
+      },
+      "text": "Every batch comes out limp",
+      "track": "trk_0000000003",
+      "type": "text",
+      "y": 1100
+    },
+    "itm_000000000a": {
+      "duration": 321,
+      "id": "itm_000000000a",
+      "slot": {
+        "description": "What the product is or does, in one line.",
+        "filled": true,
+        "kind": "text",
+        "name": "product_line"
+      },
+      "start": 309,
+      "style": {
+        "align": "center",
+        "color": "$ink",
+        "font_family": "Montserrat",
+        "font_weight": 800,
+        "line_height": 1.1,
+        "max_width": 880,
+        "shadow_blur": 14,
+        "shadow_color": "#000000AA",
+        "shadow_dy": 4,
+        "size": 96,
+        "uppercase": true
+      },
+      "text": "Meet the AirCrisp basket",
+      "track": "trk_0000000003",
+      "type": "text",
+      "y": 1100
+    },
+    "itm_000000000b": {
+      "duration": 111,
+      "id": "itm_000000000b",
+      "keyframes": {
+        "opacity": [
+          {
+            "easing": "ease_out",
+            "t": 0,
+            "value": 0
+          },
+          {
+            "t": 12,
+            "value": 1
+          }
+        ],
+        "y": [
+          {
+            "easing": "ease_out",
+            "t": 0,
+            "value": 896
+          },
+          {
+            "t": 12,
+            "value": 800
+          }
+        ]
+      },
+      "slot": {
+        "description": "One proof from the brief: a number, a review, a demonstration.",
+        "filled": true,
+        "kind": "text",
+        "name": "proof"
+      },
+      "start": 639,
+      "style": {
+        "align": "center",
+        "color": "$ink",
+        "font_family": "Montserrat",
+        "font_weight": 800,
+        "line_height": 1.1,
+        "max_width": 880,
+        "shadow_blur": 14,
+        "shadow_color": "#000000AA",
+        "shadow_dy": 4,
+        "size": 96,
+        "uppercase": true
+      },
+      "text": "4.8 stars from 2,300 cooks",
+      "track": "trk_0000000003",
+      "type": "text",
+      "y": 800
+    },
+    "itm_000000000c": {
+      "duration": 87,
+      "id": "itm_000000000c",
+      "keyframes": {
+        "opacity": [
+          {
+            "easing": "ease_out",
+            "t": 0,
+            "value": 0
+          },
+          {
+            "t": 12,
+            "value": 1
+          }
+        ],
+        "y": [
+          {
+            "easing": "ease_out",
+            "t": 0,
+            "value": 896
+          },
+          {
+            "t": 12,
+            "value": 800
+          }
+        ]
+      },
+      "slot": {
+        "description": "The offer: the price, the discount or the deadline.",
+        "filled": true,
+        "kind": "text",
+        "name": "offer"
+      },
+      "start": 759,
+      "style": {
+        "align": "center",
+        "color": "$ink",
+        "font_family": "Montserrat",
+        "font_weight": 800,
+        "line_height": 1.1,
+        "max_width": 880,
+        "shadow_blur": 14,
+        "shadow_color": "#000000AA",
+        "shadow_dy": 4,
+        "size": 96,
+        "uppercase": true
+      },
+      "text": "20% off this week",
+      "track": "trk_0000000003",
+      "type": "text",
+      "y": 800
+    },
+    "itm_000000000d": {
+      "duration": 51,
+      "id": "itm_000000000d",
+      "keyframes": {
+        "opacity": [
+          {
+            "easing": "ease_out",
+            "t": 0,
+            "value": 0
+          },
+          {
+            "t": 12,
+            "value": 1
+          }
+        ],
+        "scale": [
+          {
+            "easing": "ease_out",
+            "t": 0,
+            "value": 0.6
+          },
+          {
+            "easing": "ease_in_out",
+            "t": 8,
+            "value": 1.1
+          },
+          {
+            "t": 12,
+            "value": 1
+          }
+        ]
+      },
+      "slot": {
+        "description": "What to do next, in three words.",
+        "filled": true,
+        "kind": "text",
+        "name": "call_to_action"
+      },
+      "start": 849,
+      "style": {
+        "align": "center",
+        "background_color": "$ink",
+        "background_padding": 30,
+        "background_radius": 24,
+        "color": "$brand",
+        "font_family": "Inter",
+        "font_weight": 800,
+        "max_width": 820,
+        "size": 64
+      },
+      "text": "Order today",
+      "track": "trk_0000000003",
+      "type": "text",
+      "y": 1100
+    }
+  },
+  "name": "Golden commercial-30s",
+  "schema_version": 1,
+  "settings": {
+    "background": "$accent"
+  },
+  "template": {
+    "colors": {
+      "accent": "#1B1B2F",
+      "brand": "#FF3366",
+      "ink": "#FFFFFF"
+    },
+    "description": "A 30 second vertical commercial: a hook, the problem, two shots of the product, a proof card, the offer and a call to action.",
+    "instance": true
+  },
+  "tracks": {
+    "trk_0000000001": {
+      "id": "trk_0000000001",
+      "kind": "visual",
+      "name": "Footage",
+      "order": "i"
+    },
+    "trk_0000000002": {
+      "id": "trk_0000000002",
+      "kind": "visual",
+      "name": "Cards",
+      "order": "9"
+    },
+    "trk_0000000003": {
+      "id": "trk_0000000003",
+      "kind": "visual",
+      "name": "Text",
+      "order": "4"
+    },
+    "trk_0000000004": {
+      "id": "trk_0000000004",
+      "kind": "audio",
+      "name": "Music",
+      "order": "2"
+    }
+  }
+}
