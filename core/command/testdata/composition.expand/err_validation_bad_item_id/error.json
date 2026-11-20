@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.item_id \"x\" is not an item id: an id is \"itm_\" followed by 10 characters from 0-9 and a-z without i, l, o and u.",
+  "hint": "Use an id like \"itm_s6t7v8w9x0\" or omit it.",
+  "retryable": false,
+  "path": "args.item_id"
+}

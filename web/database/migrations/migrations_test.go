@@ -90,7 +90,12 @@ func TestTablesMatchSDD005Section5(t *testing.T) {
 			"id TEXT 1 - 1", "project_id TEXT 1 - 0", "kind TEXT 1 - 0", "title TEXT 1 - 0",
 			"position INTEGER 1 - 0", "state TEXT 1 'active' 0", "ref TEXT 0 - 0", "body TEXT 1 '' 0",
 			"format TEXT 0 - 0", "created_ms INTEGER 1 - 0", "updated_ms INTEGER 1 - 0", "created_by TEXT 1 - 0",
-			"trashed_ms INTEGER 0 - 0",
+			"trashed_ms INTEGER 0 - 0", "text_kind TEXT 0 - 0",
+		},
+		"text_revisions": {
+			"item_id TEXT 1 - 1", "revision INTEGER 1 - 2", "body TEXT 1 - 0", "actor TEXT 1 - 0",
+			"source TEXT 1 - 0", "reverted_to INTEGER 0 - 0", "provider TEXT 0 - 0", "model TEXT 0 - 0",
+			"cost_micros INTEGER 0 - 0", "currency TEXT 0 - 0", "job_id TEXT 0 - 0", "created_ms INTEGER 1 - 0",
 		},
 		"timelines": {
 			"id TEXT 1 - 1", "name TEXT 1 - 0", "state TEXT 1 'active' 0", "revision INTEGER 1 0 0",

@@ -528,6 +528,53 @@ var Endpoints = []Endpoint{
 		Service: "PublishStatus", Status: 200, Summary: "Read the state of a publication",
 	},
 	{
+		ID:      "publications.create",
+		Method:  http.MethodPost,
+		Path:    "/publications",
+		Scope:   service.ScopeEdit,
+		Service: "PublicationCreate",
+		Status:  200,
+		Summary: "Plan a publication: a video for one or more accounts, each with its time; every target starts as a draft",
+	},
+	{
+		ID: "publications.list", Method: http.MethodGet, Path: "/publications", Scope: service.ScopeRead,
+		Service: "PublicationList", Status: 200,
+		Summary: "List the publications of the calendar, by project, state, network or time range",
+	},
+	{
+		ID: "publications.events", Method: http.MethodGet, Path: "/publications/events", Scope: service.ScopeRead,
+		Uncounted: true, Status: 200, Summary: "Stream the changes of the publications of the calendar",
+	},
+	{
+		ID: "publications.get", Method: http.MethodGet, Path: "/publications/{id}", Scope: service.ScopeRead,
+		Service: "PublicationGet", Status: 200, Summary: "Read one publication with its targets",
+	},
+	{
+		ID: "publications.update", Method: http.MethodPut, Path: "/publications/{id}", Scope: service.ScopeEdit,
+		Service: "PublicationUpdate", Status: 200,
+		Summary: "Change a publication or its targets; a post that waited for approval goes back to waiting for it",
+	},
+	{
+		ID: "publications.schedule", Method: http.MethodPost, Path: "/publications/{id}/schedule",
+		Scope: service.ScopeRender, Service: "PublicationSchedule", Status: 200,
+		Summary: "Give a target its time and ask for approval; it is sent only after a person approves it",
+	},
+	{
+		ID: "publications.send-now", Method: http.MethodPost, Path: "/publications/{id}/send-now",
+		Scope: service.ScopeRender, Service: "PublicationSendNow", Status: 200,
+		Summary: "Ask for approval to send a target as soon as it is approved",
+	},
+	{
+		ID: "publications.retry", Method: http.MethodPost, Path: "/publications/{id}/retry",
+		Scope: service.ScopeRender, Service: "PublicationRetry", Status: 200,
+		Summary: "Ask for approval to send a failed target again",
+	},
+	{
+		ID: "publications.cancel", Method: http.MethodPost, Path: "/publications/{id}/cancel",
+		Scope: service.ScopeEdit, Service: "PublicationCancel", Status: 200,
+		Summary: "Cancel a target, or every target that has not gone out",
+	},
+	{
 		ID:      "providers.list",
 		Method:  http.MethodGet,
 		Path:    "/providers",
@@ -553,6 +600,46 @@ var Endpoints = []Endpoint{
 		Service: "TextGenerate",
 		Status:  202,
 		Summary: "Start a text generation with the provider of a connection; the job waits for approval and shows its estimate",
+	},
+	{
+		ID: "texts.list", Method: http.MethodGet, Path: "/texts", Scope: service.ScopeRead, Service: "TextList",
+		Status: 200, Summary: "List the texts of a project, or of every project the caller may see",
+	},
+	{
+		ID: "texts.get", Method: http.MethodGet, Path: "/projects/{id}/texts/{item_id}", Scope: service.ScopeRead,
+		Service: "TextGet", Status: 200, Summary: "Read a text, or one of its revisions",
+	},
+	{
+		ID: "texts.create", Method: http.MethodPost, Path: "/projects/{id}/texts", Scope: service.ScopeEdit,
+		Service: "TextWrite", Status: 201, Summary: "Make a script, a copy text or a caption in a project",
+	},
+	{
+		ID: "texts.write", Method: http.MethodPut, Path: "/projects/{id}/texts/{item_id}", Scope: service.ScopeEdit,
+		Service: "TextWrite", Status: 200, Summary: "Save a new revision of a text",
+	},
+	{
+		ID: "texts.revisions", Method: http.MethodGet, Path: "/projects/{id}/texts/{item_id}/revisions",
+		Scope: service.ScopeRead, Service: "TextRevisions", Status: 200,
+		Summary: "List the revisions of a text, and compare two",
+	},
+	{
+		ID: "texts.revert", Method: http.MethodPost, Path: "/projects/{id}/texts/{item_id}/revert",
+		Scope: service.ScopeEdit, Service: "TextRevert", Status: 200,
+		Summary: "Bring an older revision back as a new one",
+	},
+	{
+		ID: "texts.draft", Method: http.MethodPost, Path: "/projects/{id}/texts/{item_id}/draft",
+		Scope: service.ScopeEdit, Service: "TextDraft", Status: 202,
+		Summary: "Ask a model for a draft of a text; the job waits for approval and shows its estimate",
+	},
+	{
+		ID: "captions.validate", Method: http.MethodPost, Path: "/captions/validate", Scope: service.ScopeRead,
+		Service: "CaptionValidate", Status: 200,
+		Summary: "Measure a caption against the limits of each network",
+	},
+	{
+		ID: "scripts.estimate", Method: http.MethodPost, Path: "/scripts/estimate", Scope: service.ScopeRead,
+		Service: "ScriptEstimate", Status: 200, Summary: "Estimate how long a script takes when read aloud",
 	},
 	{
 		ID:      "image.generate",

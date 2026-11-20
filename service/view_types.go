@@ -47,5 +47,8 @@ type ViewResult struct {
 	// Path is the cached file on the machine of the server; a local caller only.
 	Path  string `json:"path,omitempty"`
 	Image []byte `json:"image_base64,omitempty" bulk:"true"`
-	Text  string `json:"text"`
+	// Composite says the picture depends on timelines other than ProjectID (compositions): a request pinned to
+	// the revision of the project is then not immutable, because those can change without it.
+	Composite bool   `json:"-"`
+	Text      string `json:"text"`
 }

@@ -82,7 +82,7 @@ var itemAddCmd = &spec{
 	summary: "add a text, a timeline or an output to a project",
 	usage: []string{
 		"stuarty item:add --project <id> --kind text|timeline|output --title <t>",
-		"stuarty item:add --project <id> --kind text --title <t> --text <file|->",
+		"stuarty item:add --project <id> --kind text --title <t> --text <file|-> [--text-kind script|copy|caption]",
 		"stuarty item:add --project <id> --kind output --title <t> --job <export job id>",
 	},
 	example: `stuarty item:add --project prj_7k2m9x4q1b --kind timeline --title "Wide cut" --preset 16:9`,
@@ -94,6 +94,7 @@ var itemAddCmd = &spec{
 		{Name: "title", Kind: kindString, Usage: "1 to 120 characters (required)"},
 		{Name: "position", Kind: kindInt, Usage: "where in the order of the items, from 0 (default: the end)"},
 		{Name: "text", Kind: kindString, Usage: "a text item: a file with its Markdown, or - for standard input"},
+		{Name: "text-kind", Kind: kindString, Usage: "a text item: script, copy (default) or caption"},
 		{Name: "preset", Kind: kindString, Usage: "a timeline: 9:16 (default), 1:1, 16:9 or 4:5"},
 		{Name: "fps", Kind: kindString, Usage: "a timeline: 30 (default), or n/1001"},
 		{Name: "job", Kind: kindString, Usage: "an output: a succeeded export job of this project"},
@@ -107,7 +108,8 @@ var itemAddCmd = &spec{
 
 		req := service.ProjectItemAddRequest{
 			ProjectID: c.projectID, Kind: c.args.str("kind"), Title: c.args.str("title"), Preset: c.args.str("preset"),
-			FPS: c.args.str("fps"), JobID: c.args.str("job"), DryRun: c.args.boolean("dry-run"),
+			FPS: c.args.str("fps"), JobID: c.args.str("job"), TextKind: c.args.str("text-kind"),
+			DryRun: c.args.boolean("dry-run"),
 		}
 
 		if c.args.has("position") {

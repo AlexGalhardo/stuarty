@@ -1,0 +1,27 @@
+[
+  {
+    "assets": {},
+    "id": "prj_n1n1n1n1n1",
+    "items": {
+      "itm_m1n2p3q4r5": {
+        "duration": 100,
+        "id": "itm_m1n2p3q4r5",
+        "start": 0,
+        "timeline": "prj_c2c2c2c2c2",
+        "track": "trk_f6g7h8j9k0",
+        "type": "composition"
+      }
+    },
+    "name": "Composition",
+    "schema_version": 1,
+    "settings": {},
+    "tracks": {
+      "trk_f6g7h8j9k0": {
+        "id": "trk_f6g7h8j9k0",
+        "kind": "visual",
+        "name": "Video",
+        "order": "a1"
+      }
+    }
+  }
+]

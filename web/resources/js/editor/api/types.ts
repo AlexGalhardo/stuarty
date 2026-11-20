@@ -168,6 +168,15 @@ export type ProjectEvent =
 			project_id: string;
 			revision: number;
 			reason: string;
+	  }
+	| {
+			// A timeline this one uses as a composition changed (SDD-006 section
+			// 3.3.1): `timeline_id` and `revision` are those of that timeline.
+			name: "nested.updated";
+			project_id: string;
+			timeline_id: string;
+			revision: number;
+			at: string;
 	  };
 
 export const EVENT_NAMES = [
@@ -176,6 +185,7 @@ export const EVENT_NAMES = [
 	"asset.updated",
 	"job.updated",
 	"resync.required",
+	"nested.updated",
 ] as const;
 
 // The part of PlanWindow (SDD-004 section 10) the timeline needs: the end of
@@ -192,6 +202,9 @@ export interface PlanWindowHead {
 export type PerFrame = number | number[];
 
 interface PlanLayerBase {
+	// The timeline whose assets table names this layer's asset, for a layer that comes from a composition
+	// (SDD-004 section 3.16); absent for a layer of the timeline being edited.
+	timeline?: string;
 	item: string;
 	first: number;
 	last: number;
@@ -367,6 +380,8 @@ export interface PlanBitmapLayer extends PlanLayerBase {
 export type PlanLayer = PlanMediaLayer | PlanBitmapLayer;
 
 export interface PlanAudio {
+	// As on a layer: the timeline that holds `asset` when the sound comes from a composition.
+	timeline?: string;
 	item: string;
 	asset: string;
 	first: number;
@@ -602,6 +617,19 @@ export interface JobListResult {
 	jobs: Job[];
 	next_cursor: string | null;
 	text: string;
+}
+
+// GET /projects/{id}/describe (SDD-003): the items of a production; the editor reads the timelines of it, to name
+// the timeline a composition uses (SDD-001 section 3.5.1).
+export interface ProjectDescribeResult {
+	project_id: string;
+	items: {
+		id: string;
+		kind: string;
+		title: string;
+		timeline_id?: string;
+		state: string;
+	}[];
 }
 
 export interface LintResult {
@@ -1181,6 +1209,9 @@ export const APPROVAL_EVENT_NAMES = [
 	"approval.decided",
 ] as const;
 
+// The event of GET /publications/events: the data is a publication with its targets (SDD-020 section 29).
+export const PUBLICATION_EVENT_NAMES = ["publication.updated"] as const;
+
 // GET /users: an administrator session only (SDD-007 section 4.1 item 2). The
 // editor reads it once, to show the name of the actors `user:<id>`.
 export interface UserSummary {
@@ -1278,6 +1309,8 @@ export interface ProjectItem {
 	job_id?: string;
 	format?: string;
 	text?: string;
+	// A text item: script, copy or caption (SDD-019).
+	text_kind?: "script" | "copy" | "caption";
 	updated_at: string;
 }
 

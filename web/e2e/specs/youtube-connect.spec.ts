@@ -11,6 +11,7 @@ import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import type { Page } from "@playwright/test";
 import { LAUNCHER_SECRET } from "../support/launcher";
+import { listenWhenFree, SOCIAL_PORT } from "../support/social";
 import { caller, expect, home, test } from "./helpers";
 
 // ADR-0035, ADR-0032, epic 18 (SDD-020): a creator connects a channel with their own developer project,
@@ -19,7 +20,6 @@ import { caller, expect, home, test } from "./helpers";
 // receives, so the spec can prove that nothing was sent before the approval.
 test.describe.configure({ mode: "serial" });
 
-const SOCIAL_PORT = Number(process.env.STUARTY_E2E_PORT ?? 3101) + 3;
 const CLIENT_SECRET = "GOCSPX-e2e-client-secret-CANARY";
 
 interface FakeNetwork {
@@ -90,9 +90,7 @@ async function fakeNetwork(): Promise<FakeNetwork> {
 			})();
 		},
 	);
-	await new Promise<void>((resolve) =>
-		server.listen(SOCIAL_PORT, "127.0.0.1", () => resolve()),
-	);
+	await listenWhenFree(server);
 	return {
 		received,
 		close: () => new Promise((resolve) => server.close(() => resolve())),

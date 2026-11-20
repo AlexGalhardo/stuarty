@@ -125,7 +125,7 @@ test.describe("image export", () => {
 		expect(body.subarray(0, 3).toString("hex")).toBe("ffd8ff");
 	});
 
-	test("WebP shows the answer of the service while the encoder is not wired", async ({
+	test("WebP gives a WebP file, lossless or with a quality", async ({
 		page,
 		request,
 	}) => {
@@ -136,11 +136,27 @@ test.describe("image export", () => {
 		await page.goto(`/edit-image/${id}`);
 		await page.getByTestId("image-export-open").click();
 		await page.getByTestId("image-export-format-webp").check();
+		await expect(page.getByTestId("image-export-quality")).toHaveCount(0);
 		await page.getByTestId("image-export-run").click();
-		await expect(
-			page.getByTestId("image-export-dialog").getByRole("alert"),
-		).toContainText(/WebP/i);
-		await expect(page.getByTestId("image-export-result")).toHaveCount(0);
+		await expect(page.getByTestId("image-export-result")).toBeVisible();
+		const lossless = await (
+			await page.request.get(
+				(await page
+					.getByTestId("image-export-download")
+					.getAttribute("href")) ?? "",
+			)
+		).body();
+		// RIFF, then WEBP at byte 8
+		expect(lossless.subarray(0, 4).toString("latin1")).toBe("RIFF");
+		expect(lossless.subarray(8, 12).toString("latin1")).toBe("WEBP");
+
+		await page.getByTestId("image-export-lossless").uncheck();
+		await page.getByTestId("image-export-quality").fill("60");
+		await page.getByTestId("image-export-run").click();
+		await expect(page.getByTestId("image-export-download")).toHaveAttribute(
+			"href",
+			/\.webp$/,
+		);
 	});
 
 	test("the findings are listed with a link to the layer, and an error that blocks turns the button off", async ({

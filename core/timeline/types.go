@@ -57,7 +57,7 @@ type (
 	AssetKind string
 	// TrackKind is visual or audio.
 	TrackKind string
-	// ItemType is clip, audio, text, caption or shape.
+	// ItemType is clip, audio, text, caption, shape or composition.
 	ItemType string
 )
 
@@ -77,7 +77,14 @@ const (
 	ItemText    ItemType = "text"
 	ItemCaption ItemType = "caption"
 	ItemShape   ItemType = "shape"
+	// ItemComposition shows another timeline of the same project as one clip (SDD-001 §3.5.1).
+	ItemComposition ItemType = "composition"
 )
+
+// MaxCompositionDepth is the deepest nesting of compositions a project may have (SDD-001 §3.5.1): a
+// timeline with no composition has depth 0, one that holds compositions has 1 plus the deepest timeline
+// they name.
+const MaxCompositionDepth = 4
 
 // Rational is {"num", "den"}, both positive.
 type Rational struct {
@@ -158,16 +165,16 @@ type Track struct {
 // value and are omitted on encode. Use NewItem to get the defaults.
 type Item struct {
 	ID            string      `json:"id"                       pattern:"^itm_[0-9a-hjkmnp-tv-z]{10}$"`
-	Type          ItemType    `json:"type"                                                            enum:"clip,audio,text,caption,shape"`
+	Type          ItemType    `json:"type"                                                            enum:"clip,audio,text,caption,shape,composition"`
 	Track         string      `json:"track"                    pattern:"^trk_[0-9a-hjkmnp-tv-z]{10}$"`
-	Start         int         `json:"start"                                                                                                min:"0"`
-	Duration      int         `json:"duration"                                                                                             min:"1"`
-	Name          string      `json:"name,omitempty"                                                                                               maxlen:"120"`
+	Start         int         `json:"start"                                                                                                            min:"0"`
+	Duration      int         `json:"duration"                                                                                                         min:"1"`
+	Name          string      `json:"name,omitempty"                                                                                                           maxlen:"120"`
 	TransitionIn  *Transition `json:"transition_in,omitempty"`
 	TransitionOut *Transition `json:"transition_out,omitempty"`
 	Keyframes     Keyframes   `json:"keyframes,omitempty"`
 	Slot          *Slot       `json:"slot,omitempty"`
-	Markers       []Marker    `json:"markers,omitempty"                                                                                                         maxitems:"200"`
+	Markers       []Marker    `json:"markers,omitempty"                                                                                                                     maxitems:"200"`
 
 	// Visual items.
 	X        *float64 `json:"x,omitempty"`
@@ -209,10 +216,13 @@ type Item struct {
 	Outline *Outline `json:"outline,omitempty"`
 
 	// Clip and audio.
-	Asset      string   `json:"asset,omitempty"       pattern:"^ast_([0-9a-hjkmnp-tv-z]{10}|placeholder)$"`
-	SourceIn   int      `json:"source_in,omitempty"                                                        min:"0"`
-	Speed      Rational `json:"speed"                                                                              default:"1/1"`
-	Volume     float64  `json:"volume"                                                                     min:"0" default:"1"   max:"4"`
+	Asset string `json:"asset,omitempty" pattern:"^ast_([0-9a-hjkmnp-tv-z]{10}|placeholder)$"`
+	// Composition only (SDD-001 §3.5.1): the timeline of the same project that the item shows, with SourceIn,
+	// Volume, the fades and the visual fields of a clip.
+	Timeline   string   `json:"timeline,omitempty"    pattern:"^prj_[0-9a-hjkmnp-tv-z]{10}$"`
+	SourceIn   int      `json:"source_in,omitempty"                                          min:"0"`
+	Speed      Rational `json:"speed"                                                                default:"1/1"`
+	Volume     float64  `json:"volume"                                                       min:"0" default:"1"   max:"4"`
 	AudioMuted bool     `json:"audio_muted,omitempty"`
 	// Clip only, optional and additive (SDD-001 §3.5): a freeze frame. The item shows the one source frame
 	// SourceIn for its whole duration, with no sound; Speed is 1/1 and there is no curve or reverse.
@@ -503,5 +513,5 @@ func NewKeyframe(t int, value float64) Keyframe {
 	return k
 }
 
-// IsVisual reports whether the item type is drawn (clip, text, caption, shape).
+// IsVisual reports whether the item type is drawn (clip, text, caption, shape, composition).
 func (t ItemType) IsVisual() bool { return t != ItemAudio }

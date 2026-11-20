@@ -317,6 +317,8 @@ func itemDetail(it *timeline.Item) string {
 		return fmt.Sprintf("%dw", len(it.Words))
 	case timeline.ItemShape:
 		return fmt.Sprintf("%s %sx%s", it.Shape, num(it.Width), num(it.Height))
+	case timeline.ItemComposition:
+		return it.Timeline
 	}
 
 	return ""

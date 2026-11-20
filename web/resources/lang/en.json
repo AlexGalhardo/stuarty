@@ -185,6 +185,7 @@
         "item_title": "Title",
         "item_text": "Text",
         "rename_title": "Rename item",
+        "write": "Write",
         "move_up": "Move up",
         "move_down": "Move down",
         "kind": {
@@ -473,6 +474,7 @@
         "size": "Size",
         "original": "Original ({w} x {h})",
         "quality": "Quality",
+        "lossless": "Lossless",
         "findings": "Problems found",
         "no_findings": "No problems found. The image is ready to export.",
         "error": "Error",
@@ -673,6 +675,10 @@
         "text": "Text",
         "caption": "Caption",
         "shape": "Shape",
+        "composition": "Composition",
+        "composition_open": "Open composition",
+        "composition_missing": "Timeline not found",
+        "from_breadcrumb": "Back to {name}",
         "speed_badge": "Speed {speed}",
         "slot_badge": "Slot: {name}",
         "asset_missing": "The media of this item is missing",
@@ -874,6 +880,8 @@
         "link": "Link items",
         "unlink": "Unlink items",
         "extract_audio": "Extract audio",
+        "create_composition": "Create composition from selection",
+        "expand_composition": "Expand composition",
         "freeze_frame": "Freeze frame",
         "copy_attributes": "Copy attributes",
         "paste_attributes": "Paste attributes",
@@ -1086,6 +1094,9 @@
           "add": {
             "title": "Add clip"
           },
+          "add_composition": {
+            "title": "Add a timeline as a clip"
+          },
           "set_blur": {
             "title": "Set clip blur"
           },
@@ -1127,6 +1138,14 @@
           },
           "set_speed": {
             "title": "Set clip speed"
+          }
+        },
+        "composition": {
+          "create_from_selection": {
+            "title": "Make a composition from the selection"
+          },
+          "expand": {
+            "title": "Expand the composition into its items"
           }
         },
         "font": {
@@ -2465,6 +2484,77 @@
       "spend": "Spent today: {amount}",
       "spend_none": "Nothing spent today."
     },
+    "publish": {
+      "title": "Publish",
+      "intro": "Plan which piece goes to which account and when. Every post waits for your yes in Approvals before it is sent.",
+      "new": "New publication",
+      "view": "View",
+      "view_month": "Month",
+      "view_week": "Week",
+      "view_list": "List",
+      "previous": "Previous",
+      "next": "Next",
+      "today": "Today",
+      "live": "Live",
+      "moving": "Moving to {time}. Use the arrow keys: left and right move by a day, up and down by an hour. Enter drops it, Escape lets it go.",
+      "empty": "Nothing is planned here yet.",
+      "list_caption": "Planned publications, one row for each account",
+      "no_time": "No time yet",
+      "open": "Open",
+      "error": "Error",
+      "preview": "Preview",
+      "title_count": "{count} of {max} characters",
+      "description_count": "{count} of {max} bytes",
+      "filter": {
+        "state": "State",
+        "network": "Network",
+        "all": "All"
+      },
+      "col": {
+        "when": "When",
+        "title": "Title",
+        "account": "Account",
+        "state": "State",
+        "result": "Result",
+        "actions": "Actions"
+      },
+      "state": {
+        "draft": "Draft",
+        "waiting_approval": "Waiting for approval",
+        "approved": "Approved",
+        "scheduled": "Scheduled",
+        "publishing": "Publishing",
+        "published": "Published",
+        "failed": "Failed",
+        "missed": "Missed",
+        "cancelled": "Cancelled"
+      },
+      "editor": {
+        "new": "New publication",
+        "edit": "Publication",
+        "intro": "The title and the caption are shared by every account; each account can have its own. Nothing is sent before you approve it in Approvals.",
+        "caption": "Caption",
+        "targets": "Accounts",
+        "no_targets": "No account yet. Add one to plan where this goes.",
+        "target": "Account {number}",
+        "account": "Account",
+        "at": "Date and time",
+        "zone": "Time zone",
+        "late": "Send late up to (minutes)",
+        "late_help": "0 means a post whose time passed is never sent on its own; you choose to send it now or give it a new time.",
+        "target_title": "Title for this account",
+        "target_description": "Description for this account",
+        "waits": "This post waits for your approval.",
+        "remove": "Remove",
+        "add_target": "Add an account",
+        "save": "Save",
+        "save_first": "Save your changes first",
+        "schedule": "Schedule and ask for approval",
+        "send_now": "Send now (asks for approval)",
+        "retry": "Retry (asks for approval)",
+        "cancel": "Cancel this post"
+      }
+    },
     "approvals": {
       "title": "Approvals",
       "intro": "Publishing and costly generation wait here for you. An agent can prepare them; only you can say yes, or write a rule that says yes for you.",
@@ -2712,6 +2802,128 @@
         "use_in": "Use in a project",
         "use": "Use",
         "used": "Added to the project. No copy was made."
+      }
+    },
+    "write": {
+      "title": "Write",
+      "intro": "Scripts, copy and captions of your productions, written by you or with a model. Every save is a revision you can go back to.",
+      "filter": {
+        "project": "Project",
+        "kind": "Kind",
+        "all_projects": "Every project",
+        "all_kinds": "Every kind"
+      },
+      "kind": {
+        "script": "Script",
+        "copy": "Copy",
+        "caption": "Caption"
+      },
+      "new": "New text",
+      "new_form": {
+        "title": "New text",
+        "project": "Project",
+        "name": "Title",
+        "kind": "Kind",
+        "create": "Create",
+        "cancel": "Cancel",
+        "no_projects": "Make a project first."
+      },
+      "list": {
+        "label": "Texts",
+        "loading": "Loading.",
+        "failed": "The texts could not be loaded.",
+        "empty": "No texts yet.",
+        "row": "Revision {revision}, {words} words",
+        "more": "More",
+        "in_project": "in {project}"
+      },
+      "pick": "Choose a text, or make a new one.",
+      "editor": {
+        "title": "Title",
+        "body": "Text (Markdown)",
+        "tab_edit": "Write",
+        "tab_preview": "Preview",
+        "preview_label": "Preview of the text",
+        "preview_empty": "Nothing to show yet.",
+        "save": "Save",
+        "saving": "Saving.",
+        "saved": "Saved as revision {revision}.",
+        "unchanged": "Nothing changed: still revision {revision}.",
+        "unsaved": "Unsaved changes",
+        "loading": "Loading the text.",
+        "conflict": "Someone saved revision {revision} after you opened this text. Your changes are still here.",
+        "reload": "Read the latest revision"
+      },
+      "script": {
+        "heading": "Duration",
+        "pace": "Words per minute",
+        "result": "About {duration} read aloud at {pace} words per minute.",
+        "words": "{words} words spoken, {screen} on screen.",
+        "scenes": "Scenes",
+        "scene_line": "{title}: {words} words, {duration}",
+        "untitled": "Before the first heading",
+        "plain": "No VO: line was found, so every paragraph is counted as narration.",
+        "empty": "Write some narration to see how long it takes."
+      },
+      "caption": {
+        "heading": "Networks",
+        "common": "Common text",
+        "count": "{length} of {max} {unit}",
+        "count_free": "{length} {unit}, no limit published",
+        "hashtags": "hashtags: {count}",
+        "mentions": "mentions: {count}",
+        "links": "links: {count}",
+        "links_dead": "Links are not clickable on this network.",
+        "ok": "Within the limits",
+        "hint": "Start a part for a network with a line such as ## instagram. The networks are youtube, instagram, facebook, x and tiktok.",
+        "empty": "Write the caption to see the counters.",
+        "unit": {
+          "bytes": "UTF-8 bytes",
+          "characters": "characters",
+          "utf16_units": "UTF-16 units",
+          "weighted": "weighted characters"
+        }
+      },
+      "revisions": {
+        "heading": "Revisions",
+        "loading": "Loading the revisions.",
+        "source": {
+          "created": "made",
+          "write": "saved",
+          "generated": "drafted by a model",
+          "revert": "went back"
+        },
+        "line": "Revision {revision}, {source} by {actor}",
+        "reverted_to": "back to revision {revision}",
+        "model_line": "{provider}, {model}, cost {cost}",
+        "read": "Read",
+        "compare": "Compare with the one before",
+        "back": "Go back to this revision",
+        "went_back": "Went back to revision {from}: it is revision {revision} now.",
+        "diff_heading": "Changes from revision {from} to {to}",
+        "diff_added": "Added",
+        "diff_removed": "Removed",
+        "diff_none": "No paragraph changed.",
+        "diff_coarse": "The texts are too long to compare paragraph by paragraph; all of one is shown against all of the other."
+      },
+      "draft": {
+        "heading": "Draft with a model",
+        "intro": "A model writes a draft as a new revision. You see the estimated cost first, and the draft waits for your approval.",
+        "connection": "Connection",
+        "model": "Model",
+        "instruction": "What to write",
+        "network": "Network",
+        "whole": "The whole caption",
+        "estimate": "Estimate the cost",
+        "start": "Ask for the draft",
+        "estimated": "Estimated cost: {cost}.",
+        "waiting": "Waiting for your approval.",
+        "open_approvals": "Open the approval queue",
+        "running": "The model is writing.",
+        "done": "The draft is revision {revision}. It cost {cost}.",
+        "failed": "The draft failed.",
+        "no_connection": "Connect an AI provider that writes text first.",
+        "open_connections": "Open Connections"
       }
     },
     "library": {

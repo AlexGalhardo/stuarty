@@ -197,12 +197,37 @@ var parity = []row{
 	{method: "PublishValidate", command: "publish:validate", route: "POST /publish/validate"},
 	{method: "PublishNow", command: "publish:now", route: "POST /publish"},
 	{method: "PublishStatus", command: "publish:status", route: "GET /publish/{}"},
+	// The calendar of publications (SDD-020 section 29): no MCP tool (author decision D-094); an agent plans
+	// through the CLI and HTTP, and approval stays with a person.
+	{method: "PublicationCreate", command: "publication:create", route: "POST /publications"},
+	{method: "PublicationGet", command: "publication:show", route: "GET /publications/{}"},
+	{method: "PublicationList", command: "publication:list", route: "GET /publications"},
+	{method: "PublicationUpdate", command: "publication:update", route: "PUT /publications/{}"},
+	{method: "PublicationSchedule", command: "publication:schedule", route: "POST /publications/{}/schedule"},
+	{method: "PublicationSendNow", command: "publication:send-now", route: "POST /publications/{}/send-now"},
+	{method: "PublicationRetry", command: "publication:retry", route: "POST /publications/{}/retry"},
+	{method: "PublicationCancel", command: "publication:cancel", route: "POST /publications/{}/cancel"},
 	// The AI providers (SDD-016 section 10): a generation starts with job_start (kind text.generate), the
 	// byte budget of the tool list leaves no room for a tool of its own. Setting a price is for a person.
 	{method: "ProviderList", command: "provider:list", route: "GET /providers"},
 	{method: "ProviderModels", command: "provider:models", route: "GET /connections/{}/models"},
 	{method: "ProviderPriceSet", command: "provider:price", route: "PUT /providers/prices"},
 	{method: "TextGenerate", tool: "job_start", command: "text:generate", route: "POST /text/generate"},
+	// The texts of a production (SDD-019): no tool of their own, the budget of the tool list leaves no room.
+	// project_item has the actions text (list, read, write), revisions, revert and check (caption or script),
+	// and job_start the kind text.draft, which a person approves.
+	{method: "TextList", tool: "project_item", command: "text:list", route: "GET /texts"},
+	{method: "TextGet", tool: "project_item", command: "text:show", route: "GET /projects/{}/texts/{}"},
+	{method: "TextWrite", tool: "project_item", command: "text:write", route: "POST /projects/{}/texts"},
+	{method: "TextWrite", tool: "project_item", command: "text:write", route: "PUT /projects/{}/texts/{}"},
+	{
+		method: "TextRevisions", tool: "project_item", command: "text:revisions",
+		route: "GET /projects/{}/texts/{}/revisions",
+	},
+	{method: "TextRevert", tool: "project_item", command: "text:revert", route: "POST /projects/{}/texts/{}/revert"},
+	{method: "TextDraft", tool: "job_start", command: "text:draft", route: "POST /projects/{}/texts/{}/draft"},
+	{method: "CaptionValidate", tool: "project_item", command: "caption:validate", route: "POST /captions/validate"},
+	{method: "ScriptEstimate", tool: "project_item", command: "script:estimate", route: "POST /scripts/estimate"},
 	// Image and voice generation (SDD-016 section 6.1, epic 10): job_start again, with the kinds image.generate
 	// and voice.generate; the voices of a connection are read with the CLI or HTTP, as its models are.
 	{method: "ImageGenerate", tool: "job_start", command: "image:generate", route: "POST /image/generate"},

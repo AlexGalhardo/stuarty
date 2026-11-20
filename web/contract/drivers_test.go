@@ -212,6 +212,22 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.PublishNow)
 	case "PublishStatus":
 		return invoke(ctx, s, svc.PublishStatus)
+	case "PublicationCreate":
+		return invoke(ctx, s, svc.PublicationCreate)
+	case "PublicationGet":
+		return invoke(ctx, s, svc.PublicationGet)
+	case "PublicationList":
+		return invoke(ctx, s, svc.PublicationList)
+	case "PublicationUpdate":
+		return invoke(ctx, s, svc.PublicationUpdate)
+	case "PublicationSchedule":
+		return invoke(ctx, s, svc.PublicationSchedule)
+	case "PublicationSendNow":
+		return invoke(ctx, s, svc.PublicationSendNow)
+	case "PublicationRetry":
+		return invoke(ctx, s, svc.PublicationRetry)
+	case "PublicationCancel":
+		return invoke(ctx, s, svc.PublicationCancel)
 	case "ApprovalList":
 		return invoke(ctx, s, svc.ApprovalList)
 	case "ApprovalGet":
@@ -297,6 +313,10 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 	}
 
 	if res, ok, err := libraryCall(ctx, svc, s); ok {
+		return res, err
+	}
+
+	if res, ok, err := writingCall(ctx, svc, s); ok {
 		return res, err
 	}
 
@@ -710,6 +730,10 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		return tool, args, err
 	}
 
+	if tool, args, ok, err := writingTool(s); ok {
+		return tool, args, err
+	}
+
 	return "", nil, fmt.Errorf("no tool for %s", s.Call)
 }
 
@@ -806,6 +830,11 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 }
 
 func commandOf(s step) (name string, argv []string, stdin string, err error) {
+	// The writing steps first: their from is a revision number, which the time of a motion range below refuses.
+	if name, argv, stdin, ok, err := writingCommand(s); ok {
+		return name, argv, stdin, err
+	}
+
 	// First: its members are numbers where the generic decoding below reads strings (until).
 	if name, argv, ok, err := historyCommand(s); ok {
 		return name, argv, "", err
@@ -869,6 +898,7 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		ItemID   string `json:"item_id"`
 		Title    string `json:"title"`
 		Text     string `json:"text"`
+		TextKind string `json:"text_kind"`
 		Position *int   `json:"position"`
 
 		Answers map[string]string `json:"answers"`
@@ -1142,6 +1172,9 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		return name, argv, "", nil
 	case "PublishStatus":
 		return "publish:status", []string{a.JobID}, "", nil
+	case "PublicationCreate", "PublicationGet", "PublicationList", "PublicationUpdate", "PublicationSchedule",
+		"PublicationSendNow", "PublicationRetry", "PublicationCancel":
+		return publicationCommand(s)
 	case "ApprovalList":
 		return "approval:list", slices.Concat(flag("state", a.State), flag("project", a.ProjectID)), "", nil
 	case "ApprovalGet":
@@ -1253,6 +1286,7 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 	case "ProjectItemAdd":
 		argv = append(slices.Clone(proj), "--kind", a.Kind, "--title", a.Title)
 		argv = append(argv, flag("preset", a.Preset)...)
+		argv = append(argv, flag("text-kind", a.TextKind)...)
 
 		if a.Position != nil {
 			argv = append(argv, "--position", strconv.Itoa(*a.Position))

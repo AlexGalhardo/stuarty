@@ -15,6 +15,10 @@ var OperationDomains = map[string]string{
 	"BriefingQuestions": command.DomainProject, "BriefingAnswer": command.DomainProject,
 	"ProjectBundleExport": command.DomainProject, "ProjectBundleImport": command.DomainProject,
 
+	"TextList": command.DomainWriting, "TextGet": command.DomainWriting, "TextWrite": command.DomainWriting,
+	"TextRevisions": command.DomainWriting, "TextRevert": command.DomainWriting, "TextDraft": command.DomainWriting,
+	"CaptionValidate": command.DomainWriting, "ScriptEstimate": command.DomainWriting,
+
 	"Edit": command.DomainVideo, "HistoryList": command.DomainVideo, "Undo": command.DomainVideo,
 	"HistoryRevert": command.DomainVideo, "HistoryDiff": command.DomainVideo,
 	"CheckpointCreate": command.DomainVideo, "CheckpointList": command.DomainVideo,
@@ -61,6 +65,11 @@ var OperationDomains = map[string]string{
 	"SocialAccountSelect": command.DomainPublish,
 	"PublishValidate":     command.DomainPublish, "PublishNow": command.DomainPublish,
 	"PublishStatus": command.DomainPublish,
+	// The calendar of publications (SDD-020 section 28).
+	"PublicationCreate": command.DomainPublish, "PublicationGet": command.DomainPublish,
+	"PublicationList": command.DomainPublish, "PublicationUpdate": command.DomainPublish,
+	"PublicationSchedule": command.DomainPublish, "PublicationSendNow": command.DomainPublish,
+	"PublicationRetry": command.DomainPublish, "PublicationCancel": command.DomainPublish,
 
 	"CostSummary": command.DomainProvider, "CostCeilingSet": command.DomainProvider,
 	"ProviderList": command.DomainProvider, "ProviderModels": command.DomainProvider,
