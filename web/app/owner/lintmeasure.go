@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"math"
 
-	"github.com/AlexGalhardo/vukem-video/core/lint"
-	"github.com/AlexGalhardo/vukem-video/core/plan"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/core/lint"
+	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/rasterize"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 // lintMeasurer is lint.Measurer over the plan and the rasterizer: the box of an

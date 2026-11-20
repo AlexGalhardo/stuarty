@@ -1,7 +1,7 @@
 // Package owner is the process that owns a workspace (SDD-005 section 6.3): it
 // takes the lock, opens the store, builds the Service with its media, exporter
 // and queue, and hands the HTTP adapter its dependencies. cmd/app runs it for
-// `vukem-video serve`; it holds no rule about timelines or jobs, which are
+// `stuarty serve`; it holds no rule about timelines or jobs, which are
 // service/.
 package owner
 
@@ -14,34 +14,38 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
+
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/lint"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/cache"
+	"github.com/AlexGalhardo/stuarty/engine/export"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/frame"
+	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
+	"github.com/AlexGalhardo/stuarty/internal/ffmpegpins"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/agenthost"
+	"github.com/AlexGalhardo/stuarty/service/config"
+	"github.com/AlexGalhardo/stuarty/service/connections"
+	"github.com/AlexGalhardo/stuarty/service/exporter"
+	"github.com/AlexGalhardo/stuarty/service/pathguard"
+	"github.com/AlexGalhardo/stuarty/service/vault"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
+	"github.com/AlexGalhardo/stuarty/web/app/auth"
+	"github.com/AlexGalhardo/stuarty/web/app/events"
+	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
+	"github.com/AlexGalhardo/stuarty/web/app/http/middleware"
+	"github.com/AlexGalhardo/stuarty/web/app/jobs"
+	"github.com/AlexGalhardo/stuarty/web/app/store"
+	"github.com/AlexGalhardo/stuarty/web/resources/skills"
 
 	vukem "github.com/AlexGalhardo/vukem"
 	"github.com/AlexGalhardo/vukem/queue"
 	"github.com/AlexGalhardo/vukem/ratelimit"
-
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/lint"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/cache"
-	"github.com/AlexGalhardo/vukem-video/engine/export"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/frame"
-	enginestore "github.com/AlexGalhardo/vukem-video/engine/store"
-	"github.com/AlexGalhardo/vukem-video/internal/ffmpegpins"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/config"
-	"github.com/AlexGalhardo/vukem-video/service/exporter"
-	"github.com/AlexGalhardo/vukem-video/service/pathguard"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
-	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
-	"github.com/AlexGalhardo/vukem-video/web/app/auth"
-	"github.com/AlexGalhardo/vukem-video/web/app/events"
-	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
-	"github.com/AlexGalhardo/vukem-video/web/app/http/middleware"
-	"github.com/AlexGalhardo/vukem-video/web/app/jobs"
-	"github.com/AlexGalhardo/vukem-video/web/app/mcp"
-	"github.com/AlexGalhardo/vukem-video/web/app/store"
 )
 
 // Config is how the owner is started.
@@ -59,7 +63,7 @@ type Config struct {
 	// directory and lock instead of taking them, and Close releases the lock.
 	Session *workspace.Session
 	// Resolved is the configuration that config.Validate accepted; its zero
-	// value is the mode named by VUKEM_VIDEO_MODE with no network facts (the
+	// value is the mode named by STUARTY_MODE with no network facts (the
 	// commands, which never serve).
 	Resolved config.Resolved
 	// Telemetry builds the OpenTelemetry provider; it is called only when
@@ -86,12 +90,22 @@ type Owner struct {
 	// runtimeSecret is the per-run secret of network mode, the key of its handshake.
 	runtimeSecret string
 	Events        *events.Events
-
-	deps   *httpapi.Deps
-	lock   *workspace.Lock
-	limits service.Limits
-	child  service.ChildPolicy
-	// gpuRenderer is the GPU renderer request and the vukem-render found for it.
+	// Agents hosts the agent a user installed, for the chat panel (SDD-017); nil in a process that only
+	// runs a command.
+	Agents *agenthost.Host
+	// mcpURL is the address of this server's own MCP endpoint, as the hosted agent reaches it; empty until the
+	// listener is bound.
+	mcpURL atomic.Value
+	appURL string
+	// agentTokens is the registry of the session tokens of the hosted agent.
+	agentTokens *agenthost.Tokens
+	deps        *httpapi.Deps
+	lock        *workspace.Lock
+	limits      service.Limits
+	child       service.ChildPolicy
+	// webp is the WebP encoder of the image export; nil when FFmpeg is missing.
+	webp export.WebPEncoder
+	// gpuRenderer is the GPU renderer request and the stuarty-render found for it.
 	gpuRenderer service.GPURenderer
 	version     string
 	now         func() time.Time
@@ -111,6 +125,10 @@ type lateRunner struct{ service.JobRunner }
 func Open(ctx context.Context, cfg Config) (*Owner, error) {
 	if cfg.Getenv == nil {
 		cfg.Getenv = os.Getenv
+	}
+
+	if err := refuseTestAddresses(cfg.Getenv); err != nil {
+		return nil, err
 	}
 
 	if cfg.Log == nil {
@@ -221,7 +239,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		return err
 	}
 
-	model := cfg.Getenv("VUKEM_VIDEO_WHISPER_MODEL")
+	model := cfg.Getenv("STUARTY_WHISPER_MODEL")
 
 	explicit := model != ""
 	if !explicit {
@@ -261,6 +279,15 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 	if !cfg.Inline {
 		o.Events = events.New(st, events.Options{Log: cfg.Log, RedactPaths: o.mode == config.ModeNetwork})
 		publish = o.Events.Publish
+
+		// The agent a user installed, hosted in the chat panel (SDD-017). A command has no panel and
+		// hosts none.
+		o.appURL = cfg.Resolved.AppURL
+		o.agentTokens = agenthost.NewTokens(cfg.Now)
+		o.Agents = agenthost.New(agenthost.Options{
+			Store: st.Chat(), Tokens: o.agentTokens, MCPURL: o.MCPURL, Workspace: string(o.Dir), Now: cfg.Now,
+			Version: o.version, Log: cfg.Log,
+		})
 	}
 
 	rates, err := rateLimitsFromEnv(cfg.Getenv, o.mode == config.ModeNetwork)
@@ -268,9 +295,9 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		return err
 	}
 
-	var keys service.KeyStore
-	if o.netAuth != nil {
-		keys = o.netAuth.Keys()
+	out, err := o.outbound(cfg.Getenv, st, cfg.Now)
+	if err != nil {
+		return err
 	}
 
 	heavy := rates.Heavy
@@ -279,11 +306,13 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 	}
 
 	o.Service, err = service.New(service.Options{
-		Keys: keys, HeavyPerMinute: heavy,
+		Keys: o.keyStore(), Connections: out.conns, Providers: out.provs, Social: out.socials, HeavyPerMinute: heavy,
+		SignIns: out.signInSet,
+		Agents:  o.Agents, WebP: o.webp,
 		Heavy: middleware.ServiceLimiter{L: ratelimit.NewMemory(heavy, time.Minute)},
 		Store: st, Registry: command.Default(), Now: cfg.Now, Workspace: string(o.Dir), Media: media,
 		Exporter: exp, Enqueue: jobs.Dispatcher{Queue: o.Queue}, Limits: limits, Publish: publish, Version: o.version,
-		Transcriber: transcriber, Tools: tools, Log: cfg.Log,
+		BuiltInSkills: skills.FS(), Transcriber: transcriber, Tools: tools, Log: cfg.Log,
 		Lint: lint.Env{Measurer: lintMeasurer{workspace: string(o.Dir)}},
 		Doctor: service.DoctorOptions{
 			Mode: o.mode, StartedAt: o.now().UTC(), Child: o.child, FFmpegPins: ffmpegpins.Current(),
@@ -319,14 +348,15 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		RuntimeSecret: o.runtimeSecret, LauncherSecret: launcherSecret,
 		Sessions: auth.NewSessions(cfg.Now), Launch: auth.NewLaunch(cfg.Now), Now: cfg.Now,
 		Events: o.Events, Version: o.version, Network: o.network, Auth: o.netAuth, RateLimits: rates,
+		Chat: o.chatStreams(), AgentTokens: o.agentLookup(),
 	}
 
-	if o.deps.MCP, err = mcp.Handler(o.Service, mcp.Options{Version: o.version}); err != nil {
-		return err
+	if aerr := o.attachHandlers(cfg, st.DB(), out.conns); aerr != nil {
+		return aerr
 	}
 
 	// The library of a new workspace holds the starter templates; later starts add nothing.
-	if _, serr := service.SeedStarterTemplates(ctx, st, o.now().UnixMilli()); serr != nil {
+	if serr := o.seedTemplates(ctx, st); serr != nil {
 		return serr
 	}
 
@@ -372,8 +402,8 @@ func (o *Owner) authSetup(ctx context.Context, cfg Config) error {
 	var err error
 
 	if cfg.Resolved.AppURL == "" {
-		return errors.New("owner: network mode runs only through `vukem-video serve`, which validates the " +
-			"configuration; unset VUKEM_VIDEO_MODE for any other command")
+		return errors.New("owner: network mode runs only through `stuarty serve`, which validates the " +
+			"configuration; unset STUARTY_MODE for any other command")
 	}
 
 	// Written before runtime.json: a command that finds the owner must find the secret too.
@@ -400,7 +430,7 @@ func (o *Owner) authSetup(ctx context.Context, cfg Config) error {
 // error of the missing tool. The error is kept on Media so a job returns it instead
 // of panicking on a nil runner.
 func (o *Owner) media(ctx context.Context, cfg Config) (service.Media, service.Exporter, error) {
-	roots := splitList(cfg.Getenv("VUKEM_VIDEO_IMPORT_ROOTS"))
+	roots := splitList(cfg.Getenv("STUARTY_IMPORT_ROOTS"))
 
 	guard, err := pathguard.New(pathguard.Config{Roots: roots, Workspace: string(o.Dir)})
 	if err != nil {
@@ -410,7 +440,7 @@ func (o *Owner) media(ctx context.Context, cfg Config) (service.Media, service.E
 	media := service.Media{Content: enginestore.New(string(o.Dir)), Guard: guard}
 
 	fc := ffmpeg.Config{
-		FFmpegPath: cfg.Getenv("VUKEM_VIDEO_FFMPEG"), FFprobePath: cfg.Getenv("VUKEM_VIDEO_FFPROBE"), Log: cfg.Log,
+		FFmpegPath: cfg.Getenv("STUARTY_FFMPEG"), FFprobePath: cfg.Getenv("STUARTY_FFPROBE"), Log: cfg.Log,
 		ToolsDir: filepath.Join(string(o.Dir), "tools"),
 	}
 	if self, err := os.Executable(); err == nil {
@@ -426,13 +456,14 @@ func (o *Owner) media(ctx context.Context, cfg Config) (service.Media, service.E
 	}
 
 	child, err := newChildRunners(
-		ctx, in, string(o.Dir), cfg.Getenv("VUKEM_VIDEO_SANDBOX"), o.limits.MaxExportBytes,
+		ctx, in, string(o.Dir), cfg.Getenv("STUARTY_SANDBOX"), o.limits.MaxExportBytes,
 	)
 	if err != nil {
 		return service.Media{}, nil, err
 	}
 
 	o.child = child.Policy
+	o.webp = export.FFmpegWebP{Runner: child.Export, MaxBytes: o.limits.MaxExportBytes}
 	runner := child.Ingest
 	media.Runner = runner
 
@@ -452,11 +483,11 @@ func (o *Owner) media(ctx context.Context, cfg Config) (service.Media, service.E
 		Cache:        frames,
 	}
 
-	allowX264, _ := strconv.ParseBool(cfg.Getenv("VUKEM_VIDEO_ALLOW_USER_X264"))
+	allowX264, _ := strconv.ParseBool(cfg.Getenv("STUARTY_ALLOW_USER_X264"))
 
-	pixelRenderer, err := export.ParsePixelRenderer(cfg.Getenv("VUKEM_VIDEO_EXPORT_RENDERER"))
+	pixelRenderer, err := export.ParsePixelRenderer(cfg.Getenv("STUARTY_EXPORT_RENDERER"))
 	if err != nil {
-		return service.Media{}, nil, fmt.Errorf("owner: VUKEM_VIDEO_EXPORT_RENDERER: %w", err)
+		return service.Media{}, nil, fmt.Errorf("owner: STUARTY_EXPORT_RENDERER: %w", err)
 	}
 
 	o.gpuRenderer = service.GPURenderer{Requested: pixelRenderer == export.PixelRendererGPU}
@@ -464,7 +495,7 @@ func (o *Owner) media(ctx context.Context, cfg Config) (service.Media, service.E
 
 	return media, exporter.New(exporter.Config{
 		Runner: child.Export, HardwareRunner: child.ExportHardware, Workspace: string(o.Dir),
-		Encoder:       ffmpeg.DetectOptions{Forced: cfg.Getenv("VUKEM_VIDEO_ENCODER"), AllowUserX264: allowX264},
+		Encoder:       ffmpeg.DetectOptions{Forced: cfg.Getenv("STUARTY_ENCODER"), AllowUserX264: allowX264},
 		Lint:          lint.Env{Measurer: lintMeasurer{workspace: string(o.Dir)}},
 		PixelRenderer: pixelRenderer,
 		GPUHost:       o.gpuRenderer.Host,
@@ -478,6 +509,7 @@ func (o *Owner) Deps() *httpapi.Deps { return o.deps }
 // 6.3 step 5): from then on a command finds this process and talks to it.
 func (o *Owner) Announce(addr string) error {
 	o.announce = true
+	o.mcpURL.Store(mcpURLFor(addr))
 
 	return o.Dir.WriteRuntime(workspace.Runtime{
 		Schema: 1, PID: os.Getpid(), Addr: addr, Mode: o.mode, StartedAt: o.now().UTC(),
@@ -487,8 +519,21 @@ func (o *Owner) Announce(addr string) error {
 
 // Work runs the queue workers until ctx ends. Jobs still running when the
 // timeout passes are interrupted; the service requeues them (SDD-005 section
-// 14.5), so none is lost to a shutdown.
+// 14.5), so none is lost to a shutdown. The publication scheduler runs beside them for as long as the server
+// does (SDD-020 section 27); keeping it alive with the window closed is the desktop service of epic 21.
 func (o *Owner) Work(ctx context.Context) error {
+	if sched, ok := service.SchedulerOf(o.Service); ok {
+		done := make(chan struct{})
+
+		go func() {
+			defer close(done)
+
+			_ = sched.Run(ctx)
+		}()
+
+		defer func() { <-done }()
+	}
+
 	err := o.Queue.Work(ctx, queue.WorkOptions{
 		Queues:      jobs.Queues,
 		Concurrency: o.limits.MaxIngests + o.limits.MaxExports + 2,
@@ -512,6 +557,11 @@ func (o *Owner) Close() error {
 		o.Events.Close() // ends the open streams at once
 	}
 
+	// No agent process is left behind: every tree is killed before the store closes (SDD-017 section 4).
+	if o.Agents != nil {
+		o.Agents.Shutdown()
+	}
+
 	if o.announce || o.runtimeSecret != "" {
 		errs = append(errs, o.Dir.RemoveRuntime())
 	}
@@ -528,7 +578,7 @@ func (o *Owner) Close() error {
 }
 
 func cacheLimit(getenv func(string) string, network bool) (int64, error) {
-	const name = "VUKEM_VIDEO_CACHE_MAX_BYTES"
+	const name = "STUARTY_CACHE_MAX_BYTES"
 
 	raw := getenv(name)
 
@@ -572,16 +622,16 @@ func limitsFromEnv(getenv func(string) string, network bool) (service.Limits, er
 		name string
 		set  func(int64)
 	}{
-		{"VUKEM_VIDEO_MAX_IMPORT_BYTES", func(v int64) { l.MaxImportBytes = v }},
-		{"VUKEM_VIDEO_MIN_FREE_BYTES", func(v int64) { l.MinFreeBytes = v }},
-		{"VUKEM_VIDEO_MAX_INGESTS", func(v int64) { l.MaxIngests = int(v) }},
-		{"VUKEM_VIDEO_MAX_EXPORTS", func(v int64) { l.MaxExports = int(v) }},
-		{"VUKEM_VIDEO_MAX_EXPORTS_PER_KEY", func(v int64) { l.MaxExportsPerActor = int(v) }},
-		{"VUKEM_VIDEO_MAX_TRANSCRIBES", func(v int64) { l.MaxTranscribes = int(v) }},
-		{"VUKEM_VIDEO_MAX_TRANSCRIBES_PER_KEY", func(v int64) { l.MaxTranscribesPerActor = int(v) }},
-		{"VUKEM_VIDEO_MAX_TRANSCRIBE_SECONDS", func(v int64) { l.MaxTranscribeSeconds = v }},
-		{"VUKEM_VIDEO_MAX_EXPORT_BYTES", func(v int64) { l.MaxExportBytes = v }},
-		{"VUKEM_VIDEO_MAX_IMPORT_PIXELS", func(v int64) { l.Ceilings.MaxPixels = v }},
+		{"STUARTY_MAX_IMPORT_BYTES", func(v int64) { l.MaxImportBytes = v }},
+		{"STUARTY_MIN_FREE_BYTES", func(v int64) { l.MinFreeBytes = v }},
+		{"STUARTY_MAX_INGESTS", func(v int64) { l.MaxIngests = int(v) }},
+		{"STUARTY_MAX_EXPORTS", func(v int64) { l.MaxExports = int(v) }},
+		{"STUARTY_MAX_EXPORTS_PER_KEY", func(v int64) { l.MaxExportsPerActor = int(v) }},
+		{"STUARTY_MAX_TRANSCRIBES", func(v int64) { l.MaxTranscribes = int(v) }},
+		{"STUARTY_MAX_TRANSCRIBES_PER_KEY", func(v int64) { l.MaxTranscribesPerActor = int(v) }},
+		{"STUARTY_MAX_TRANSCRIBE_SECONDS", func(v int64) { l.MaxTranscribeSeconds = v }},
+		{"STUARTY_MAX_EXPORT_BYTES", func(v int64) { l.MaxExportBytes = v }},
+		{"STUARTY_MAX_IMPORT_PIXELS", func(v int64) { l.Ceilings.MaxPixels = v }},
 	} {
 		raw := getenv(f.name)
 
@@ -602,7 +652,7 @@ func limitsFromEnv(getenv func(string) string, network bool) (service.Limits, er
 		f.set(v)
 	}
 
-	const seconds = "VUKEM_VIDEO_MAX_IMPORT_SECONDS"
+	const seconds = "STUARTY_MAX_IMPORT_SECONDS"
 
 	raw := getenv(seconds)
 
@@ -627,9 +677,9 @@ func rateLimitsFromEnv(getenv func(string) string, network bool) (httpapi.RateLi
 		name string
 		set  func(int)
 	}{
-		{"VUKEM_VIDEO_RATE_LIMIT_PER_MINUTE", func(v int) { r.PerCredential = v }},
-		{"VUKEM_VIDEO_RATE_LIMIT_SESSION_PER_MINUTE", func(v int) { r.PerSession = v }},
-		{"VUKEM_VIDEO_RATE_LIMIT_HEAVY_PER_MINUTE", func(v int) { r.Heavy = v }},
+		{"STUARTY_RATE_LIMIT_PER_MINUTE", func(v int) { r.PerCredential = v }},
+		{"STUARTY_RATE_LIMIT_SESSION_PER_MINUTE", func(v int) { r.PerSession = v }},
+		{"STUARTY_RATE_LIMIT_HEAVY_PER_MINUTE", func(v int) { r.Heavy = v }},
 	} {
 		raw := getenv(f.name)
 
@@ -651,4 +701,39 @@ func rateLimitsFromEnv(getenv func(string) string, network bool) (httpapi.RateLi
 	}
 
 	return r, nil
+}
+
+// connections builds the registry of connections over the vault of the workspace. The master key
+// comes from the environment, a file or the operating system keychain (SDD-014 section 4). It is
+// read once and removed from the environment, so no child process inherits it. A key named twice
+// stops the start. A key that is absent or is not a key does not: the vault is created with the first
+// credential, and until then `doctor` reports the key (the check `vault`) and a credential answers
+// E_VAULT_LOCKED, so the command that would diagnose the problem can still run (VV-269).
+func (o *Owner) connections(
+	getenv func(string) string, st service.Store, now func() time.Time,
+) (*connections.Manager, error) {
+	keys, err := vault.Resolve(vault.ConfigFromEnv(getenv, string(o.Dir)))
+	if err != nil {
+		return nil, err
+	}
+
+	for _, name := range []string{vault.EnvMasterKey, vault.EnvMasterKeyFile} {
+		if getenv(name) != "" {
+			_ = os.Unsetenv(name)
+		}
+	}
+
+	return connections.NewManager(connections.Options{
+		Store: st.Connections(), Now: now,
+		Vault: vault.Open(filepath.Join(string(o.Dir), connections.VaultFile), keys),
+	}), nil
+}
+
+// keyStore is the API key store of network mode; local mode has none.
+func (o *Owner) keyStore() service.KeyStore {
+	if o.netAuth == nil {
+		return nil
+	}
+
+	return o.netAuth.Keys()
 }

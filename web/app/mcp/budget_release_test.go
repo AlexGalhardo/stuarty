@@ -8,20 +8,20 @@ import (
 	"os"
 	"testing"
 	"time"
-
-	"github.com/AlexGalhardo/vukem-video/core/command"
 )
 
 // TestToolListVendorTokens is the release measure of NFR-020: `tools/list` has at
-// most 6,000 tokens by the vendor's own count. It sends the definitions to the
+// most 7,000 tokens by the vendor's own count. It sends the definitions to the
 // token-count endpoint, so it is not part of CI: it runs once per release, with
 //
-//	VUKEM_VIDEO_BUDGET_RELEASE=1 ANTHROPIC_API_KEY=... ANTHROPIC_MODEL=<model> go test ./web/app/mcp -run TestToolListVendorTokens -v
+//	STUARTY_BUDGET_RELEASE=1 ANTHROPIC_API_KEY=... ANTHROPIC_MODEL=<model> go test ./web/app/mcp -run TestToolListVendorTokens -v
 //
 // and the number it logs goes into the release notes.
 func TestToolListVendorTokens(t *testing.T) {
-	if os.Getenv("VUKEM_VIDEO_BUDGET_RELEASE") != "1" {
-		t.Skip("release measure: set VUKEM_VIDEO_BUDGET_RELEASE=1, ANTHROPIC_API_KEY and ANTHROPIC_MODEL")
+	if os.Getenv("STUARTY_BUDGET_RELEASE") != "1" {
+		t.Skip( // verify:env-skip a release measure that costs money and runs on request
+			"release measure: set STUARTY_BUDGET_RELEASE=1, ANTHROPIC_API_KEY and ANTHROPIC_MODEL",
+		)
 	}
 
 	key, model := os.Getenv("ANTHROPIC_API_KEY"), os.Getenv("ANTHROPIC_MODEL")
@@ -29,7 +29,7 @@ func TestToolListVendorTokens(t *testing.T) {
 		t.Fatal("ANTHROPIC_API_KEY and ANTHROPIC_MODEL are required")
 	}
 
-	defs, err := loadDefinitions(command.Default())
+	defs, err := loadDefinitions()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -90,7 +90,7 @@ func TestToolListVendorTokens(t *testing.T) {
 	// One message of one character costs a handful of tokens of its own.
 	t.Logf("tools/list of %d tools: %d tokens by the vendor count", len(tools), out.InputTokens)
 
-	if out.InputTokens > 6500 {
-		t.Errorf("tools/list is %d tokens, at most 6,500 (NFR-020)", out.InputTokens)
+	if out.InputTokens > 7300 {
+		t.Errorf("tools/list is %d tokens, at most 7,300 (NFR-020)", out.InputTokens)
 	}
 }

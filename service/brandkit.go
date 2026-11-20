@@ -8,8 +8,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // Limits of the brand kit (SDD-005 section 5.11).

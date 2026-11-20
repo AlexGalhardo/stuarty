@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // Golden cases of font.add and font.remove (SDD-002 C.53, C.54) and of the font
@@ -107,7 +107,7 @@ func TestFontAddThenStyleInOneBatch(t *testing.T) {
 	}
 	env := Env{NewIDs: (&seqIDs{}).next}
 
-	res, err := BetaBuild().ApplyBatch(base().d, []Operation{addOp, textOp}, env)
+	res, err := FullRegistry().ApplyBatch(base().d, []Operation{addOp, textOp}, env)
 	if err != nil {
 		t.Fatalf("font.add then text.add: %v", err)
 	}
@@ -116,7 +116,7 @@ func TestFontAddThenStyleInOneBatch(t *testing.T) {
 		t.Errorf("style family %q", got)
 	}
 
-	_, err = BetaBuild().ApplyBatch(base().d, []Operation{textOp, addOp}, env)
+	_, err = FullRegistry().ApplyBatch(base().d, []Operation{textOp, addOp}, env)
 	if e := AsError(err); e == nil || e.Code != CodeFontUnknown {
 		t.Errorf("text.add then font.add: %v, want %s", err, CodeFontUnknown)
 	}

@@ -3,7 +3,7 @@ package command
 import (
 	"math"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // reframeSizes are the frame sizes of the aspect presets of settings.reframe.
@@ -26,7 +26,6 @@ func init() {
 		Example: `{"aspect": "9:16"}`,
 		Errors:  []string{CodeValidation},
 		Scope:   ScopeEdit,
-		Phase:   Beta,
 	}, applySettingsReframe))
 }
 
@@ -92,7 +91,7 @@ func resizedByReframe(it *timeline.Item) bool {
 	switch it.Type {
 	case timeline.ItemText, timeline.ItemShape:
 		return true
-	case timeline.ItemClip:
+	case timeline.ItemClip, timeline.ItemComposition:
 		return it.Fit == "none"
 	case timeline.ItemAudio, timeline.ItemCaption:
 		return false

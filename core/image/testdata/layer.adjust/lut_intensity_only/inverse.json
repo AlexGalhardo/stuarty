@@ -1,0 +1,16 @@
+[
+  {
+    "collection": "layers",
+    "id": "lyr_bbbbbbbbbb",
+    "set": {
+      "adjust": {
+        "brightness": 10,
+        "lut": {
+          "asset": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "intensity": 80
+        }
+      }
+    },
+    "type": "patch"
+  }
+]

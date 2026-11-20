@@ -12,10 +12,12 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
 func upHandler() http.Handler {
@@ -51,12 +53,12 @@ type fixture struct {
 func newFixture(t *testing.T, port string, extra map[string]string) *fixture {
 	t.Helper()
 	f := &fixture{out: &bytes.Buffer{}, errOut: &bytes.Buffer{}, home: t.TempDir()}
-	vars := map[string]string{"VUKEM_VIDEO_HOME": f.home, "PORT": port, "HOST": "127.0.0.1"}
+	vars := map[string]string{"STUARTY_HOME": f.home, "PORT": port, "HOST": "127.0.0.1"}
 	maps.Copy(vars, extra)
 	f.o = &opener{
 		getenv: func(k string) string { return vars[k] }, stdout: f.out, stderr: f.errOut,
 		client:  &http.Client{Timeout: time.Second}, //nolint:forbidigo // loopback test server
-		self:    func() (string, error) { return "/path/to/vukem-video", nil },
+		self:    func() (string, error) { return "/path/to/stuarty", nil },
 		browse:  func(u string) error { f.browsed = append(f.browsed, u); return nil },
 		timeout: 3 * time.Second,
 	}
@@ -80,10 +82,11 @@ func TestOpenReusesARunningServer(t *testing.T) {
 	}
 }
 
-// VV-079: open finds the server through runtime.json, whatever address it was started on, and opens the
-// launch address, not the plain one that answers 401.
-func TestOpenUsesTheRunningServerOfTheWorkspaceAndItsLaunchCode(t *testing.T) {
-	code := strings.Repeat("ab", 32)
+// launchOwner makes this test the running owner of the fixture's workspace: it holds the lock,
+// publishes runtime.json and answers the handshake and system/launch with code for the workspace
+// token. It returns the owner's base address.
+func launchOwner(t *testing.T, f *fixture, code string) string {
+	t.Helper()
 	token := ""
 	mux := upHandler().(*http.ServeMux)
 	mux.HandleFunc("/api/v1/handshake", func(w http.ResponseWriter, r *http.Request) {
@@ -97,15 +100,19 @@ func TestOpenUsesTheRunningServerOfTheWorkspaceAndItsLaunchCode(t *testing.T) {
 		_, _ = w.Write([]byte(`{"code":"` + code + `","url":"http://127.0.0.1:1/auth/launch?code=` + code + `"}`))
 	})
 	srv := httptest.NewServer(mux)
-	defer srv.Close()
+	t.Cleanup(srv.Close)
 	addr := strings.TrimPrefix(srv.URL, "http://")
 
-	f := newFixture(t, freePort(t), map[string]string{envNoBrowser: "1"})
 	ws := workspace.Dir(f.home)
 	var err error
 	if token, err = ws.EnsureToken(); err != nil {
 		t.Fatal(err)
 	}
+	lock, err := ws.TryLock() // a real owner holds the lock while it publishes runtime.json
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = lock.Release() })
 	if err := ws.WriteRuntime(workspace.Runtime{PID: os.Getpid(), Addr: addr, Mode: workspace.ModeLocal}); err != nil {
 		t.Fatal(err)
 	}
@@ -113,13 +120,44 @@ func TestOpenUsesTheRunningServerOfTheWorkspaceAndItsLaunchCode(t *testing.T) {
 		f.started++
 		return nil, errors.New("must not start a second server")
 	}
+	return srv.URL
+}
+
+// VV-079: open finds the server through runtime.json, whatever address it was started on, and opens the
+// launch address, not the plain one that answers 401. VV-211: with STUARTY_NO_BROWSER the one-time
+// link is what open prints, on standard output.
+func TestOpenUsesTheRunningServerOfTheWorkspaceAndItsLaunchCode(t *testing.T) {
+	code := strings.Repeat("ab", 32)
+	f := newFixture(t, freePort(t), map[string]string{envNoBrowser: "1"})
+	base := launchOwner(t, f, code)
 
 	if err := f.o.run(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	want := srv.URL + "/auth/launch?code=" + code
-	if f.started != 0 || strings.TrimSpace(f.out.String()) != want {
-		t.Errorf("started %d, printed %q, want %q", f.started, f.out.String(), want)
+	want := base + "/auth/launch?code=" + code
+	if f.started != 0 || len(f.browsed) != 0 || strings.TrimSpace(f.out.String()) != want {
+		t.Errorf("started %d, browsed %v, printed %q, want %q", f.started, f.browsed, f.out.String(), want)
+	}
+}
+
+// VV-211: without STUARTY_NO_BROWSER the browser gets the one-time link and open prints only the
+// address, on standard error: a printed link would sit in the terminal history (SDD-009, binary.mdx).
+func TestOpenGivesTheLinkToTheBrowserAndPrintsOnlyTheAddress(t *testing.T) {
+	code := strings.Repeat("cd", 32)
+	f := newFixture(t, freePort(t), nil)
+	base := launchOwner(t, f, code)
+
+	if err := f.o.run(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if want := base + "/auth/launch?code=" + code; len(f.browsed) != 1 || f.browsed[0] != want {
+		t.Errorf("browsed %v, want [%s]", f.browsed, want)
+	}
+	if f.out.Len() != 0 {
+		t.Errorf("standard output %q, want nothing", f.out.String())
+	}
+	if got := f.errOut.String(); got != "Opening "+base+"/\n" || strings.Contains(got, code) {
+		t.Errorf("standard error %q, want only the address", got)
 	}
 }
 
@@ -135,7 +173,7 @@ func TestOpenStartsTheServerWhenNoneRuns(t *testing.T) {
 	f.o.startSrv = func(self, host, p string, env []string, log string) (<-chan error, error) {
 		f.started++
 		f.env = env
-		if self != "/path/to/vukem-video" || host != "127.0.0.1" || p != port {
+		if self != "/path/to/stuarty" || host != "127.0.0.1" || p != port {
 			t.Errorf("start(%q, %q, %q)", self, host, p)
 		}
 		if filepath.Base(log) != "server.log" || filepath.Base(filepath.Dir(log)) != "logs" {
@@ -264,11 +302,11 @@ func TestResolveAddr(t *testing.T) {
 	}{
 		{map[string]string{}, "127.0.0.1", "7878", false},
 		{map[string]string{"PORT": "9000"}, "127.0.0.1", "9000", false},
-		{map[string]string{"VUKEM_VIDEO_ADDR": "localhost:8080"}, "localhost", "8080", false},
-		{map[string]string{"VUKEM_VIDEO_ADDR": "[::1]:8080"}, "::1", "8080", false},
-		{map[string]string{"VUKEM_VIDEO_ADDR": "0.0.0.0:7878"}, "", "", true},
+		{map[string]string{"STUARTY_ADDR": "localhost:8080"}, "localhost", "8080", false},
+		{map[string]string{"STUARTY_ADDR": "[::1]:8080"}, "::1", "8080", false},
+		{map[string]string{"STUARTY_ADDR": "0.0.0.0:7878"}, "", "", true},
 		{map[string]string{"HOST": "192.168.1.5"}, "", "", true},
-		{map[string]string{"VUKEM_VIDEO_ADDR": "no-port"}, "", "", true},
+		{map[string]string{"STUARTY_ADDR": "no-port"}, "", "", true},
 		{map[string]string{"PORT": "80/../x"}, "", "", true},
 	} {
 		h, p, err := resolveAddr(env(c.env))
@@ -293,5 +331,142 @@ func TestOpenBrowserRefusesWhatIsNotAnHTTPAddress(t *testing.T) {
 		if err := openBrowser(u); err == nil {
 			t.Errorf("%q accepted", u)
 		}
+	}
+}
+
+// holdOwner makes this test the owner of a workspace: it holds the lock, publishes runtime.json for
+// an /up whose answers wait until gate is closed. When openAfter is above zero the owner closes the
+// gate itself on that many probes: it is "slow" by a count, not by a clock.
+func holdOwner(t *testing.T, f *fixture, gate chan struct{}, openAfter int32) {
+	t.Helper()
+	hits := &atomic.Int32{}
+	var once sync.Once
+	mux := http.NewServeMux()
+	mux.HandleFunc("/up", func(w http.ResponseWriter, r *http.Request) {
+		if openAfter > 0 && hits.Add(1) >= openAfter {
+			once.Do(func() { close(gate) })
+		}
+		select {
+		case <-gate:
+		case <-r.Context().Done():
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
+	})
+	srv := httptest.NewServer(mux)
+	t.Cleanup(srv.Close)
+	ws := workspace.Dir(f.home)
+	lock, err := ws.TryLock()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = lock.Release() })
+	rt := workspace.Runtime{PID: os.Getpid(), Addr: strings.TrimPrefix(srv.URL, "http://"), Mode: workspace.ModeLocal}
+	if err := ws.WriteRuntime(rt); err != nil {
+		t.Fatal(err)
+	}
+	f.o.startSrv = func(string, string, string, []string, string) (<-chan error, error) {
+		f.started++
+		return nil, errors.New("must not start a second server")
+	}
+	f.o.client = &http.Client{Timeout: 50 * time.Millisecond} //nolint:forbidigo // loopback test server
+	f.o.ownerWait = 5 * time.Second
+	f.o.poll = 10 * time.Millisecond
+}
+
+// VV-258: an owner that holds the lock and answers /up late is waited for, never replaced.
+func TestOpenWaitsForASlowOwnerThatHoldsTheLock(t *testing.T) {
+	f := newFixture(t, freePort(t), map[string]string{envNoBrowser: "1"})
+	gate := make(chan struct{})
+	holdOwner(t, f, gate, 3)
+	if err := f.o.run(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if f.started != 0 || !strings.HasPrefix(strings.TrimSpace(f.out.String()), "http://127.0.0.1:") {
+		t.Errorf("started %d, printed %q", f.started, f.out.String())
+	}
+}
+
+// VV-258: an owner that never answers is reported with E_WORKSPACE_LOCKED, never as a server that
+// stopped right after it started.
+func TestOpenReportsAnOwnerThatNeverAnswers(t *testing.T) {
+	f := newFixture(t, freePort(t), map[string]string{envNoBrowser: "1"})
+	gate := make(chan struct{})
+	t.Cleanup(func() { close(gate) })
+	holdOwner(t, f, gate, 0)
+	f.o.ownerWait = 300 * time.Millisecond
+	err := f.o.run(context.Background())
+	var werr *workspace.Error
+	if !errors.As(err, &werr) || werr.Code != workspace.CodeWorkspaceLocked || !werr.Retryable {
+		t.Fatalf("error %v, want a retryable E_WORKSPACE_LOCKED", err)
+	}
+	if !strings.Contains(err.Error(), "another Stuarty is running and not answering") ||
+		strings.Contains(err.Error(), "stopped right after") {
+		t.Errorf("message %q", err)
+	}
+	if f.started != 0 {
+		t.Errorf("started %d servers beside the owner", f.started)
+	}
+	if got := runExitCode(err); got != 2 {
+		t.Errorf("exit code %d, want 2 (retryable)", got)
+	}
+}
+
+// VV-258: an owner that dies while open waits for it (its lock is released) is not reported as
+// locked: open starts the server as when no owner exists. The owner dies on its second /up probe,
+// which is the first probe of the wait, so the wait has begun when the lock goes.
+func TestOpenStartsTheServerWhenTheOwnerDiesWhileWaiting(t *testing.T) {
+	port := freePort(t)
+	f := newFixture(t, port, map[string]string{envNoBrowser: "1"})
+	ws := workspace.Dir(f.home)
+	lock, err := ws.TryLock()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var die sync.Once
+	t.Cleanup(func() { die.Do(func() { _ = lock.Release() }) })
+	hits := &atomic.Int32{}
+	mux := http.NewServeMux()
+	mux.HandleFunc("/up", func(_ http.ResponseWriter, r *http.Request) {
+		if hits.Add(1) == 2 {
+			die.Do(func() { _ = lock.Release() })
+		}
+		<-r.Context().Done() // a stuck owner never answers
+	})
+	owner := httptest.NewServer(mux)
+	t.Cleanup(owner.Close)
+	rt := workspace.Runtime{PID: os.Getpid(), Addr: strings.TrimPrefix(owner.URL, "http://"), Mode: workspace.ModeLocal}
+	if err := ws.WriteRuntime(rt); err != nil {
+		t.Fatal(err)
+	}
+	var started *httptest.Server
+	t.Cleanup(func() {
+		if started != nil {
+			started.Close()
+		}
+	})
+	f.o.startSrv = func(string, string, string, []string, string) (<-chan error, error) {
+		f.started++
+		l, err := net.Listen("tcp", "127.0.0.1:"+port)
+		if err != nil {
+			return nil, err
+		}
+		started = httptest.NewUnstartedServer(upHandler())
+		started.Listener = l
+		started.Start()
+		return make(chan error), nil
+	}
+	f.o.client = &http.Client{Timeout: 50 * time.Millisecond} //nolint:forbidigo // loopback test server
+	f.o.ownerWait = 5 * time.Second
+	f.o.poll = 10 * time.Millisecond
+	if err := f.o.run(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if f.started != 1 || strings.TrimSpace(f.out.String()) != "http://127.0.0.1:"+port+"/" {
+		t.Errorf("started %d, printed %q", f.started, f.out.String())
+	}
+	if !strings.Contains(f.errOut.String(), "waiting for it to answer") {
+		t.Errorf("open did not wait for the owner before it died: %q", f.errOut.String())
 	}
 }

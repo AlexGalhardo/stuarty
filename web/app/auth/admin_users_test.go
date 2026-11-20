@@ -5,10 +5,10 @@ import (
 	"errors"
 	"testing"
 
-	vauth "github.com/AlexGalhardo/vukem/auth"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/web/app/auth"
 
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/web/app/auth"
+	vauth "github.com/AlexGalhardo/vukem/auth"
 )
 
 const adminPassword = "correct horse battery staple"

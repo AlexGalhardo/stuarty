@@ -537,6 +537,32 @@ func ProbeEncodedPackets(pol Policy, path string) ([]string, error) {
 	)
 }
 
+// WebPStill encodes one picture, a PNG file of the run directory, as a WebP file of the run directory with
+// libwebp (SDD-021 section 6). Quality 0 is lossless; 1 to 100 is lossy. The alpha plane is kept.
+func WebPStill(pol Policy, pngPath, webpPath string, quality int) ([]string, error) {
+	if quality < 0 || quality > 100 {
+		return nil, &ViolationError{Rule: "FF-15", Index: -1, Msg: "the WebP quality is 0 to 100"}
+	}
+	opts := []Opt{Enum("-c:v", "libwebp")}
+	if quality == 0 {
+		opts = append(opts, Enum("-lossless", "1"))
+	} else {
+		opts = append(opts, Int("-quality", quality))
+	}
+	opts = append(opts, Int("-frames:v", 1), Enum("-update", "1"))
+	opts = append(opts, Bitexact()...)
+	return Cmd{
+		LogErrorOnly: true,
+		Inputs:       []Input{FileInput(pngPath)},
+		Outputs: []Output{
+			{
+				Format: "image2", Path: webpPath, Maps: []string{"0:v:0"},
+				NoAudio: true, NoSubs: true, NoData: true, Opts: opts,
+			},
+		},
+	}.Argv(pol)
+}
+
 // DetectInput is what encoder detection records for the encoder it chose: the input
 // arguments and filter its test encode needed (SDD-011 8.4, DS-13).
 type DetectInput struct {
@@ -559,6 +585,14 @@ func EncoderTestAt(pol Policy, encoder string, di DetectInput, out string, w, h 
 	case "libx264":
 		opts = append(opts, Int("-crf", 18), Enum("-preset", "medium"), Enum("-profile:v", "high"))
 	case "h264_vaapi", "h264_mf", "libopenh264":
+		opts = append(opts, Bitrate("-b:v", "8M"))
+	case "libsvtav1":
+		opts = append(opts, Bitrate("-b:v", "8M"), Enum("-preset", "8"))
+	case "libaom-av1":
+		opts = append(opts, Bitrate("-b:v", "8M"), Int("-cpu-used", 8), Enum("-row-mt", "1"))
+	case "hevc_videotoolbox", "hevc_nvenc", "hevc_qsv", "hevc_amf", "hevc_mf", "hevc_vaapi",
+		"av1_nvenc", "av1_qsv", "av1_amf", "av1_vaapi":
+		// The default profile of the encoder is the 8-bit 4:2:0 one the export writes: no -profile:v.
 		opts = append(opts, Bitrate("-b:v", "8M"))
 	default:
 		opts = append(opts, Bitrate("-b:v", "8M"), Enum("-profile:v", "high"))

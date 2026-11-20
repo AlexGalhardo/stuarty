@@ -18,11 +18,11 @@ import (
 	"time"
 )
 
-// DefaultMaxBytes is the default of VUKEM_VIDEO_CACHE_MAX_BYTES: 2 GiB, shared by frames/ and bitmaps/.
+// DefaultMaxBytes is the default of STUARTY_CACHE_MAX_BYTES: 2 GiB, shared by frames/ and bitmaps/.
 const DefaultMaxBytes int64 = 2 << 30
 
 // cacheDirs are the folders of the root that the cache owns.
-var cacheDirs = []string{"frames", "bitmaps"}
+var cacheDirs = []string{"frames", "bitmaps", "audio-previews"}
 
 // ErrKey is returned for a key that is not a plain relative slash path inside the cache.
 var ErrKey = errors.New("cache: invalid key")
@@ -48,6 +48,9 @@ func SheetKey(project string, revision int64, keyHash string, width int) string 
 
 // BitmapKey is the file of a rasterized bitmap: bitmaps/<key>.png.
 func BitmapKey(key string) string { return path.Join("bitmaps", key+".png") }
+
+// AudioPreviewKey is the file of the processed sound of an item: audio-previews/<key>.wav (SDD-004 section 7.1).
+func AudioPreviewKey(key string) string { return path.Join("audio-previews", key+".wav") }
 
 type entry struct {
 	key  string

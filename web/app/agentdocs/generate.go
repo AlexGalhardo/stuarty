@@ -7,9 +7,9 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/lint"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/lint"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 //go:embed templates/*.tmpl
@@ -19,6 +19,7 @@ var templateFS embed.FS
 // this package, so the caller passes the list in.
 type CLICommand struct {
 	Name    string
+	Domain  string
 	Summary string
 	Usage   string
 	Pending bool
@@ -30,6 +31,13 @@ type Inputs struct {
 	Commands []*command.Command
 	Lint     []lint.Rule
 	CLI      []CLICommand
+	// GuideCLI is every command of the CLI with its domain, for the pages of the guide; CLI leaves out the library
+	// commands to keep the skill under its cap.
+	GuideCLI []CLICommand
+	// ToolDomains are the domains each MCP tool belongs to, and ToolRoutes those it routes by its domain argument
+	// (SDD-003 section 4.8). The MCP package imports this one, so the caller passes them in.
+	ToolDomains map[string][]string
+	ToolRoutes  map[string][]string
 }
 
 // errorView is a row of the error table.
@@ -87,10 +95,6 @@ func newView(in Inputs) (view, error) {
 		}
 
 		ns, action, _ := strings.Cut(c.Name, ".")
-		if c.Phase != command.Prototype {
-			action += "*"
-		}
-
 		if n := len(v.Ops); n > 0 && v.Ops[n-1].Namespace == ns {
 			v.Ops[n-1].Names += ", " + action
 
@@ -155,6 +159,10 @@ func Generate(in Inputs) (map[string][]byte, error) {
 
 		// One final newline: `agent:docs --print` writes exactly the file.
 		out[file] = append(bytes.TrimRight(buf.Bytes(), "\n"), '\n')
+	}
+
+	if err := generateGuides(in, tmpl, out); err != nil {
+		return nil, err
 	}
 
 	return out, nil

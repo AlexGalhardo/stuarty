@@ -17,9 +17,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem/contrib/engine"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/vukem/contrib/engine"
 )
 
 const helperFlag = "--vukem-helper="
@@ -163,7 +163,7 @@ func helperRunner(t *testing.T) (*Runner, *RunDir, *engine.Tool) {
 }
 
 func TestSecurity_T16_ChildEnvironmentMinimal(t *testing.T) {
-	for _, k := range []string{"VUKEM_VIDEO_TRANSCRIBE_KEY", "APP_KEY", "VUKEM_VIDEO_KEY", "OTEL_EXPORTER_OTLP_ENDPOINT", "VUKEM_VIDEO_TOKEN", "FFREPORT"} {
+	for _, k := range []string{"STUARTY_TRANSCRIBE_KEY", "APP_KEY", "STUARTY_KEY", "OTEL_EXPORTER_OTLP_ENDPOINT", "STUARTY_TOKEN", "FFREPORT"} {
 		t.Setenv(k, "canary-"+k)
 	}
 	r, dir, tool := helperRunner(t)

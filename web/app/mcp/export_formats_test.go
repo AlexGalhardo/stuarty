@@ -5,7 +5,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 // TestJobStartFormatsMatchTheService fails when the hand-written job_start definition drifts

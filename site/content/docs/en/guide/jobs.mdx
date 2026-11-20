@@ -15,7 +15,7 @@ Long work runs as a **job** so that nothing blocks a request. Two kinds are publ
 
 In the editor, the top bar shows a **jobs chip**, such as `2 jobs · 40%`, while anything runs. The export dialog keeps running when you close it. A job started by an agent shows in the same chip.
 
-The limits protect the machine and, in network mode, the other users: `VUKEM_VIDEO_MAX_EXPORTS` (2 at once per workspace), `VUKEM_VIDEO_MAX_EXPORTS_PER_KEY` (1 running per user or key, two more may wait), `VUKEM_VIDEO_MAX_TRANSCRIBES` and `VUKEM_VIDEO_MAX_TRANSCRIBES_PER_KEY`. Past the limits, the call fails with `E_QUEUE_FULL`, which is retryable.
+The limits protect the machine and, in network mode, the other users: `STUARTY_MAX_EXPORTS` (2 at once per workspace), `STUARTY_MAX_EXPORTS_PER_KEY` (1 running per user or key, two more may wait), `STUARTY_MAX_TRANSCRIBES` and `STUARTY_MAX_TRANSCRIBES_PER_KEY`. Past the limits, the call fails with `E_QUEUE_FULL`, which is retryable.
 
 ## Quick start
 
@@ -23,10 +23,10 @@ The limits protect the machine and, in network mode, the other users: `VUKEM_VID
 <Tab title="CLI">
 
 ```bash
-vukem-video export --project prj_7k2m9x4q1b --no-wait
-vukem-video job:list --project prj_7k2m9x4q1b --state active
-vukem-video job:show job_4h8k2m6p9t --wait
-vukem-video job:cancel job_4h8k2m6p9t
+stuarty export --project prj_7k2m9x4q1b --no-wait
+stuarty job:list --project prj_7k2m9x4q1b --state active
+stuarty job:show job_4h8k2m6p9t --wait
+stuarty job:cancel job_4h8k2m6p9t
 ```
 
 </Tab>
@@ -42,7 +42,7 @@ By default the CLI waits for the job up to `--timeout` (10 minutes). Exit code 2
 ## Common mistakes
 
 - Starting a second export of the same project at once: it waits behind the first or fails with `E_QUEUE_FULL`. Wait for the first.
-- Treating `E_RATE_LIMITED` as final. Heavy calls (`job_start`, `media_import`, `template:import`, `font:import`, `bundle:import`, `bundle:export` and `otio:import`) share their own limit per minute for one credential; wait for `Retry-After`.
+- Treating `E_RATE_LIMITED` as final. Heavy calls (`job_start`, `media_import`, `template:import`, `font:import`, `bundle:import`, `bundle:export`, `otio:import` and `view --mode audio`) share their own limit per minute for one credential; wait for `Retry-After`.
 - Cancelling a succeeded job: the file stays; there is nothing to cancel.
 
 ## Next steps

@@ -1,0 +1,8 @@
+{
+  "code": "E_VALIDATION",
+  "hint": "Use a value between -360 and 360.",
+  "message": "The value of args.rotation is 400, outside the accepted range.",
+  "op_index": 0,
+  "path": "args.rotation",
+  "retryable": false
+}

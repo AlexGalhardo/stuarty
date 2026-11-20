@@ -22,7 +22,6 @@ Groups the transcript words of the visible range of the clip into captions of at
 | `max_words` | `integer` | no | Words per caption, default 5.; min 1; max 60 |
 | `new_ids` | array of `string` | no | Ids for the created captions, in order. |
 | `replace` | `boolean` | no | Remove the captions linked to this clip on this track first. Default true. |
-| `resolved` | `object` | no | Filled by the service from the transcript of the asset; never sent by a caller. |
 | `track_id` | `string` | yes | A visual track that receives the captions.; pattern `^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 
 ## Errors
@@ -36,9 +35,9 @@ Groups the transcript words of the visible range of the clip into captions of at
 - [`E_LIMIT`](/docs/reference/error-codes#e_limit)
 - [`E_OVERLAP`](/docs/reference/error-codes#e_overlap)
 
-## Scope and phase
+## Scope
 
-Scope `edit`, phase `alpha`. The scope is the one an API key needs in network mode. Run `vukem-video command:help caption.from_transcript` for the same description from the binary, or call the [`command_help`](/docs/mcp/tools/command_help) tool.
+Scope `edit`. The scope is the one an API key needs in network mode. Run `stuarty command:help caption.from_transcript` for the same description from the binary, or call the [`command_help`](/docs/mcp/tools/command_help) tool.
 
 ## Next steps
 
@@ -92,14 +91,14 @@ Scope `edit`, phase `alpha`. The scope is the one an API key needs in network mo
 ```
 
 ```bash title="Terminal"
-vukem-video edit --project prj_7k2m9x4q1b --ops batch.json --json
+stuarty edit --project prj_7k2m9x4q1b --ops batch.json --json
 ```
 
 **Over HTTP**
 
 ```bash title="curl"
 curl -X POST "http://127.0.0.1:7878/api/v1/projects/prj_7k2m9x4q1b/edit" \
-  -H "Authorization: Bearer $VUKEM_VIDEO_KEY" \
+  -H "Authorization: Bearer $STUARTY_KEY" \
   -H "Content-Type: application/json" \
   -d '{
   "base_revision": 12,

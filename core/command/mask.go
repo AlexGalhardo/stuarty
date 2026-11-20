@@ -3,7 +3,7 @@ package command
 import (
 	"reflect"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 func init() {
@@ -21,7 +21,6 @@ func init() {
 		Example: `{"item_id": "itm_m1n2p3q4r5", "mask": {"shape": "ellipse", "x": 0.1, "y": 0.1, "width": 0.8, "height": 0.8, "feather": 12}}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
 		Scope:   ScopeEdit,
-		Phase:   Beta,
 	}, applyClipSetMask))
 }
 

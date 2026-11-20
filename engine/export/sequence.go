@@ -3,8 +3,8 @@ package export
 import (
 	"context"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
-	"github.com/AlexGalhardo/vukem-video/engine/audio"
+	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/engine/audio"
 )
 
 // MixFrom mixes the timeline audio from frame from, for n frames, and hands the
@@ -27,7 +27,7 @@ func (r *Renderer) MixFrom(ctx context.Context, from, n int, sink func([]float32
 		return nil
 	}
 
-	srcs := plan.Audio(doc, from, from+n)
+	srcs := plan.AudioWith(doc, from, from+n, r.s.opts)
 	for i := range srcs {
 		srcs[i].StartSample -= start
 	}

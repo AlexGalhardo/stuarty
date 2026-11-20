@@ -1,0 +1,15 @@
+[
+  {
+    "collection": "layers",
+    "id": "lyr_dddddddddd",
+    "set": {
+      "shape": "rect"
+    },
+    "type": "patch",
+    "unset": [
+      "radius",
+      "stroke_color",
+      "stroke_width"
+    ]
+  }
+]

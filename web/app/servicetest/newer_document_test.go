@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 // SDD-005 section 8 step 3 and SDD-001 section 11 rule 5: a stored document with a schema_version
@@ -22,7 +22,7 @@ func TestNewerDocumentIsRefusedByEveryLoad(t *testing.T) {
 
 	_, err := e.store.DB().ExecContext(
 		e.as(ui),
-		"UPDATE projects SET document = replace(document, ?, ?) WHERE id = ?",
+		"UPDATE timelines SET document = replace(document, ?, ?) WHERE id = ?",
 		fmt.Sprintf(`"schema_version":%d`, timeline.CurrentSchemaVersion),
 		fmt.Sprintf(`"schema_version":%d`, newer),
 		project,

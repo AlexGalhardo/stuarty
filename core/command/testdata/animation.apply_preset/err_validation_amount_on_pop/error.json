@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.amount does not apply to pop.",
+  "hint": "Leave amount out.",
+  "retryable": false,
+  "path": "args.amount"
+}

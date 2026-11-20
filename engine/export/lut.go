@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/lut"
+	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/lut"
 )
 
 // lutExt is the extension of the normalized artifact of a lut asset: the .cube file the ingest checked and kept.
@@ -20,7 +20,7 @@ func (f *frameSource) lut(asset string) (*lut.Table, error) {
 		return t, nil
 	}
 
-	a, ok := f.s.job.Doc.Assets[asset]
+	a, ok := f.s.asset(asset)
 	if !ok || a.Kind != timeline.AssetLUT {
 		return nil, fmt.Errorf("the asset %s is not a lookup table of the document", asset)
 	}

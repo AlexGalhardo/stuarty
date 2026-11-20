@@ -66,8 +66,8 @@ func hashes(path string) ([]string, error) {
 		return nil, fmt.Errorf("manifest.json: %w", err)
 	}
 
-	if m.Format != "vukem-video-bundle" {
-		return nil, fmt.Errorf("manifest.json: format %q is not a vukem-video bundle", m.Format)
+	if m.Format != "stuarty-bundle" && m.Format != "vukem-video-bundle" {
+		return nil, fmt.Errorf("manifest.json: format %q is not a stuarty bundle", m.Format)
 	}
 
 	doc, err := readEntry(zr, "document.json", maxManifest)

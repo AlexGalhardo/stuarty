@@ -4,7 +4,7 @@ import (
 	"math"
 	"slices"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // keyframeValue evaluates keyframes at r, the frame inside the item (SDD-004
@@ -24,7 +24,12 @@ func keyframeValue(kfs []timeline.Keyframe, r float64) float64 {
 // static value.
 func property(it *timeline.Item, name string, static, r float64) float64 {
 	if kfs := it.Keyframes[name]; len(kfs) > 0 {
-		return keyframeValue(kfs, r)
+		v := keyframeValue(kfs, r)
+		if lo, hi, ok := timeline.KeyframeRange(name); ok {
+			v = min(max(v, lo), hi)
+		}
+
+		return v
 	}
 
 	return static
@@ -146,6 +151,13 @@ func colorMatrixAt(it *timeline.Item, r int) *[12]float64 {
 	temp, tint, hue := property(it, "temperature", it.Temperature, fr), property(it, "tint", it.Tint, fr),
 		property(it, "hue", it.Hue, fr)
 
+	return ColorMatrix(b, k, s, temp, tint, hue)
+}
+
+// ColorMatrix is the matrix H×S×C×G of SDD-004 §3.5 for a brightness, a contrast, a saturation, a temperature,
+// a tint and a hue (degrees), or nil when all are neutral (0, 1, 1, 0, 0, 0). core/image uses it for the
+// adjustments of an image layer.
+func ColorMatrix(b, k, s, temp, tint, hue float64) *[12]float64 {
 	if b == 0 && k == 1 && s == 1 && temp == 0 && tint == 0 && hue == 0 {
 		return nil
 	}

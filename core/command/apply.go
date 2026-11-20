@@ -5,8 +5,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/core/timeval"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeval"
 )
 
 // Operation is one use of a command: {"op": "<command>", "args": {...}}.
@@ -21,6 +21,15 @@ type Env struct {
 	// NewIDs returns a fresh identifier for a prefix; deterministic in tests,
 	// random in production. A command uses it only when the caller supplied no id.
 	NewIDs func(prefix string) string
+
+	// Extra is what the commands of another document type need besides identifiers: the lookup of a file and
+	// the text measurer of an image (SDD-021 section 4). The timeline commands ignore it.
+	Extra any
+
+	// Timelines is how the composition commands read the other timelines of the production (SDD-002 A.3,
+	// SDD-001 section 3.5.1): the caller answers from its own store, so Apply stays pure. Nil when the caller
+	// has no production.
+	Timelines timeline.Graph
 }
 
 // Result is the outcome of one operation.
@@ -29,6 +38,9 @@ type Result struct {
 	Inverse   []Primitive        // undo (SDD-002 §A.6), in the order they were computed
 	Diff      []Change           // SDD-002 §A.5
 	Effective map[string]any     // the values actually applied (SDD-002 §A.4)
+	// Spawned are the timelines the operation made besides Doc (composition.create_from_selection); the
+	// caller stores them in the same transaction as Doc.
+	Spawned []*timeline.Document
 }
 
 // BatchResult is the outcome of a batch: the net difference of all its operations.
@@ -37,6 +49,8 @@ type BatchResult struct {
 	Inverse   []Primitive
 	Diff      []Change
 	Effective []map[string]any // one entry per operation, in order
+	// Spawned are the timelines the operations made, in order (see Result.Spawned).
+	Spawned []*timeline.Document
 }
 
 // NoOp reports whether the batch left the document as it was: nothing to commit, so no
@@ -49,11 +63,18 @@ type Context struct {
 	Doc *timeline.Document
 	Env Env
 
-	// build is the phase of the registry running the command; a few values are
-	// accepted only from ALPHA on (decision 36 of SDD-002 Part C).
-	build Phase
+	// Custom is the document of a command defined with DefineIn, a type other than the timeline.
+	Custom any
 
 	effective map[string]any
+	spawned   *[]*timeline.Document
+}
+
+// Spawn records a new timeline that the command made (SDD-002 A.3): the caller stores it with the commit.
+func (c *Context) Spawn(d *timeline.Document) {
+	if c.spawned != nil {
+		*c.spawned = append(*c.spawned, d)
+	}
 }
 
 // NewID returns an identifier for a new object: supplied when the caller gave one
@@ -119,7 +140,8 @@ func TimeEffective(fps timeval.FPS, frame int, requested string) map[string]any 
 // the command on a private copy and leaves doc untouched, also on error.
 func (r *Registry) Apply(doc *timeline.Document, op Operation, env Env) (Result, error) {
 	work := timeline.Clone(doc)
-	effective, err := r.run(work, op, env)
+	var spawned []*timeline.Document
+	effective, err := r.run(work, op, env, &spawned)
 	if err != nil {
 		return Result{}, err
 	}
@@ -129,12 +151,15 @@ func (r *Registry) Apply(doc *timeline.Document, op Operation, env Env) (Result,
 		Inverse:   inverseOf(before, after),
 		Diff:      diffOf(fullPair(doc, work)),
 		Effective: effective,
+		Spawned:   spawned,
 	}, nil
 }
 
 // run applies op to work in place. work is the caller's private copy; on error it
-// may be half edited and must be dropped.
-func (r *Registry) run(work *timeline.Document, op Operation, env Env) (effective map[string]any, err error) {
+// may be half edited and must be dropped. The timelines the command spawns are appended to spawned.
+func (r *Registry) run(
+	work *timeline.Document, op Operation, env Env, spawned *[]*timeline.Document,
+) (effective map[string]any, err error) {
 	cmd, ok := r.cmds[op.Op]
 	if !ok {
 		return nil, r.unknown(op.Op)
@@ -143,7 +168,7 @@ func (r *Registry) run(work *timeline.Document, op Operation, env Env) (effectiv
 	if e != nil {
 		return nil, e
 	}
-	ctx := &Context{Doc: work, Env: env, build: r.phase, effective: map[string]any{}}
+	ctx := &Context{Doc: work, Env: env, effective: map[string]any{}, spawned: spawned}
 	locks := lockedItems(work)
 	defer func() {
 		if recover() != nil {
@@ -185,8 +210,9 @@ func (r *Registry) ApplyBatch(doc *timeline.Document, ops []Operation, env Env) 
 	}
 	work := timeline.Clone(doc) // one private copy for the whole batch; dropped if an operation fails
 	effective := make([]map[string]any, 0, len(ops))
+	var spawned []*timeline.Document
 	for i, op := range ops {
-		eff, err := r.run(work, op, env)
+		eff, err := r.run(work, op, env, &spawned)
 		if err != nil {
 			e := *AsError(err)
 			idx := i
@@ -201,6 +227,7 @@ func (r *Registry) ApplyBatch(doc *timeline.Document, ops []Operation, env Env) 
 		Inverse:   inverseOf(before, after),
 		Diff:      diffOf(fullPair(doc, work)),
 		Effective: effective,
+		Spawned:   spawned,
 	}, nil
 }
 

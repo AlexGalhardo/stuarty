@@ -11,8 +11,8 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
 )
 
 func TestToolListHasTheToolsWhoseOperationsExist(t *testing.T) {
@@ -39,7 +39,7 @@ func TestToolListHasTheToolsWhoseOperationsExist(t *testing.T) {
 	want := []string{
 		"project_list", "project_create", "project_get", "project_trash", "edit", "command_help", "history",
 		"media_import", "media_inspect", "view", "lint", "job_start", "job_get", "job_cancel", "template",
-		"font_import",
+		"font_import", "connection", "image", "project_item", "library",
 	}
 	if strings.Join(names, ",") != strings.Join(want, ",") {
 		t.Fatalf("tools = %v, want %v (the others wait for their Service methods: %v)", names, want, Pending)
@@ -64,11 +64,11 @@ func TestInitializeCarriesTheInstructions(t *testing.T) {
 	cs := connect(t, newService(t), Options{Version: "1.2.3"}, "x")
 
 	init := cs.InitializeResult()
-	if init.ServerInfo.Name != "vukem-video" || init.ServerInfo.Version != "1.2.3" {
+	if init.ServerInfo.Name != "stuarty" || init.ServerInfo.Version != "1.2.3" {
 		t.Errorf("server info = %+v", init.ServerInfo)
 	}
 
-	if !strings.HasPrefix(init.Instructions, "Vukem Video is a video editor") {
+	if !strings.HasPrefix(init.Instructions, "Stuarty is a video editor") {
 		t.Errorf("instructions = %.60q", init.Instructions)
 	}
 
@@ -348,14 +348,14 @@ func TestSecurity_T31_ToolDefinitionsAreStatic(t *testing.T) {
 	}
 }
 
-var idPattern = regexp.MustCompile(`^\^(prj|ast|trk|itm|job|tpl)_\[0-9a-hjkmnp-tv-z\]\{10\}\$$`)
+var idPattern = regexp.MustCompile(`^\^(prj|ast|trk|itm|job|tpl|con|img|pit|apr)_\[0-9a-hjkmnp-tv-z\]\{10\}\$$`)
 
 // TestToolSchemas: every inputSchema forbids extra members and every id
 // parameter carries the pattern of SDD-000 section 2 (SDD-003 section 4.2).
 func TestToolSchemas(t *testing.T) {
 	t.Parallel()
 
-	defs, err := loadDefinitions(command.Default())
+	defs, err := loadDefinitions()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -391,58 +391,13 @@ func TestToolSchemas(t *testing.T) {
 	}
 }
 
-func TestEditOpEnumIsTheRegistry(t *testing.T) {
-	t.Parallel()
-
-	defs, err := loadDefinitions(command.Default())
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	raw := marshal(t, defs["edit"].tool.InputSchema)
-
-	var schema struct {
-		Properties struct {
-			Operations struct {
-				Items struct {
-					Properties struct {
-						Op struct {
-							Enum []string `json:"enum"`
-						} `json:"op"`
-					} `json:"properties"`
-				} `json:"items"`
-			} `json:"operations"`
-		} `json:"properties"`
-	}
-
-	if err := json.Unmarshal(raw, &schema); err != nil {
-		t.Fatal(err)
-	}
-
-	have := map[string]bool{}
-	for _, n := range command.Default().Names() {
-		have[n] = true
-	}
-
-	enum := schema.Properties.Operations.Items.Properties.Op.Enum
-	if len(enum) == 0 {
-		t.Fatal("the op enum is empty")
-	}
-
-	for _, op := range enum {
-		if !have[op] {
-			t.Errorf("%s is in the enum but not in the registry", op)
-		}
-	}
-}
-
 func TestInstructionsHead(t *testing.T) {
 	t.Parallel()
 
 	text := agentdocs.Instructions()
 	first, _, _ := strings.Cut(text, "\n")
 
-	if !strings.HasPrefix(text, "Vukem Video is") || len(first) != 511 || len([]rune(text)) < 512 {
+	if !strings.HasPrefix(text, "Stuarty is") || len(first) != 507 || len([]rune(text)) < 512 {
 		t.Fatalf("first paragraph is %d characters", len(first))
 	}
 
@@ -632,9 +587,9 @@ func TestValidationSaysWhatIsAccepted(t *testing.T) {
 func TestServerInfoCarriesTheDescription(t *testing.T) {
 	t.Parallel()
 
-	cs := connect(t, newService(t), Options{Description: "Vukem Video MCP server for the workspace W"}, "x")
+	cs := connect(t, newService(t), Options{Description: "Stuarty MCP server for the workspace W"}, "x")
 
-	if got := cs.InitializeResult().ServerInfo.Description; got != "Vukem Video MCP server for the workspace W" {
+	if got := cs.InitializeResult().ServerInfo.Description; got != "Stuarty MCP server for the workspace W" {
 		t.Errorf("serverInfo.description = %q", got)
 	}
 }

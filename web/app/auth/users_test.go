@@ -10,14 +10,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/stuarty/web/app/auth"
+	"github.com/AlexGalhardo/stuarty/web/app/store"
+
 	vauth "github.com/AlexGalhardo/vukem/auth"
 	"github.com/AlexGalhardo/vukem/auth/hash"
-
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
-	"github.com/AlexGalhardo/vukem-video/web/app/auth"
-	"github.com/AlexGalhardo/vukem-video/web/app/store"
 )
 
 const canary = "c4n4ry-admin-password-0123456789"
@@ -115,12 +115,19 @@ func TestUsersRefuseWhatIsNotAUser(t *testing.T) {
 func TestRoleScopes(t *testing.T) {
 	t.Parallel()
 
-	if got := service.RoleScopes(service.RoleAdmin); len(got) != 5 {
-		t.Errorf("admin scopes = %v, want the five", got)
+	// The five scopes of SDD-000 section 4 and the scope of the read API of the blog (SDD-020 section 47).
+	if got := service.RoleScopes(service.RoleAdmin); len(got) != 6 || got[5] != service.ScopePostsRead {
+		t.Errorf("admin scopes = %v, want the five and posts:read", got)
 	}
 
 	member := service.RoleScopes(service.RoleMember)
-	want := []string{service.ScopeRead, service.ScopeEdit, service.ScopeMedia, service.ScopeRender}
+	want := []string{
+		service.ScopeRead,
+		service.ScopeEdit,
+		service.ScopeMedia,
+		service.ScopeRender,
+		service.ScopePostsRead,
+	}
 
 	if strings.Join(member, ",") != strings.Join(want, ",") {
 		t.Errorf("member scopes = %v, want %v", member, want)

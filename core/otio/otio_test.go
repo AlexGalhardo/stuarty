@@ -14,8 +14,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 var update = flag.Bool("update", false, "rewrite the golden files")
@@ -1402,6 +1402,69 @@ func TestRoundTripKeepsMaskAndCropKeyframes(t *testing.T) {
 	}
 }
 
+// A keyframe with a Bezier easing (epic 31) travels with its four numbers; a curve that is not valid is
+// reported and its property left out, like any other bad keyframe list.
+func TestRoundTripKeepsBezierKeyframes(t *testing.T) {
+	d := sampleDoc()
+	c1 := d.Items["itm_c000000001"]
+	c1.Keyframes = timeline.Keyframes{"scale": {
+		{T: 0, Value: 1, Easing: timeline.EasingBezier, Bezier: []float64{0.34, 1.56, 0.64, 1}},
+		{T: 30, Value: 1.5, Easing: "linear"},
+	}}
+	d.Items[c1.ID] = c1
+
+	first, _, err := Export(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	im, err := Parse(first)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, l := range im.Lost {
+		if strings.Contains(l.Feature, "keyframes") {
+			t.Errorf("the curve was reported as lost: %+v", l)
+		}
+	}
+
+	doc := build(t, im, newDoc(im.FPS))
+	found := false
+
+	for _, it := range doc.Items {
+		if it.Name == "intro" {
+			found = true
+			kfs := it.Keyframes["scale"]
+
+			if len(kfs) != 2 || kfs[0].Easing != timeline.EasingBezier ||
+				!reflect.DeepEqual(kfs[0].Bezier, []float64{0.34, 1.56, 0.64, 1}) || kfs[1].Value != 1.5 {
+				t.Errorf("the Bezier keyframes did not come back: %+v", it.Keyframes)
+			}
+		}
+	}
+
+	if !found {
+		t.Fatal("no item named intro after the import")
+	}
+
+	for _, bad := range []any{nil, []any{0.5, 0.0, 1.5, 1.0}, []any{0.5, 0.0, 1.0}, "0.5"} {
+		entry := map[string]any{"t": 0.0, "value": 1.0, "easing": "bezier"}
+		if bad != nil {
+			entry["bezier"] = bad
+		}
+
+		if _, ok := keyframeList("scale", []any{entry}, modeClip, 30); ok {
+			t.Errorf("a curve %v was accepted", bad)
+		}
+	}
+
+	linearWithCurve := map[string]any{"t": 0.0, "value": 1.0, "easing": "linear", "bezier": []any{0.5, 0.0, 0.5, 1.0}}
+	if _, ok := keyframeList("scale", []any{linearWithCurve}, modeClip, 30); ok {
+		t.Error("a curve on a linear keyframe was accepted")
+	}
+}
+
 func TestRoundTripKeepsEveryTransitionKind(t *testing.T) {
 	d := sampleDoc()
 	c1 := d.Items["itm_c000000001"]
@@ -1489,5 +1552,35 @@ func TestRoundTripKeepsTrackLockSoloVolumeAndReportsTheRest(t *testing.T) {
 
 	if !bytes.Equal(withoutMarkers(t, second), withoutMarkers(t, first)) {
 		t.Errorf("round trip differs:\n%s\n---\n%s", second, first)
+	}
+}
+
+// A composition item is another timeline: the file keeps its time as a gap and the loss is reported (SDD-001
+// section 3.5.1), never dropped silently.
+func TestExportReportsACompositionAsLost(t *testing.T) {
+	d := sampleDoc()
+	comp := timeline.NewItem("itm_c000000009", timeline.ItemComposition, trkTop, 60, 30)
+	comp.Timeline = "prj_a1b2c3d4e5"
+	d.Items[comp.ID] = comp
+
+	data, lost, err := Export(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	found := false
+
+	for _, l := range lost {
+		if l.ID == comp.ID && strings.Contains(l.Feature, "composition") {
+			found = true
+		}
+	}
+
+	if !found {
+		t.Errorf("the composition is not in the losses: %+v", lost)
+	}
+
+	if bytes.Contains(data, []byte(comp.Timeline)) {
+		t.Error("the file names the nested timeline, which another document holds")
 	}
 }

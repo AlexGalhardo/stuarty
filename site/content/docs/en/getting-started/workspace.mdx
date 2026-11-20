@@ -1,6 +1,6 @@
 ---
 title: "Workspace and storage"
-description: "The one directory where Vukem Video keeps your projects, media and exports, and how it is protected."
+description: "The one directory where Stuarty keeps your projects, media and exports, and how it is protected."
 ---
 
 ## You will learn
@@ -11,7 +11,7 @@ description: "The one directory where Vukem Video keeps your projects, media and
 
 ## The idea
 
-Everything the program stores is in one directory, the workspace. It is `~/.vukem-video` unless `VUKEM_VIDEO_HOME` says otherwise. Your original media is copied into it once and kept by content, so importing the same file twice adds nothing, and deleting a project never deletes your only copy of a file by surprise.
+Everything the program stores is in one directory, the workspace. It is `~/.stuarty` unless `STUARTY_HOME` says otherwise. Your original media is copied into it once and kept by content, so importing the same file twice adds nothing, and deleting a project never deletes your only copy of a file by surprise.
 
 ```text
 <workspace>/
@@ -28,7 +28,7 @@ The full layout is in SDD-000 section 9 of the repository.
 
 ## One owner at a time
 
-Exactly one process owns the workspace and writes to it: `vukem-video serve`, or a `vukem-video mcp` session when no server is running. Every other command, the editor and the agents talk to that owner over HTTP on your machine. A second process that cannot reach the owner fails with `E_WORKSPACE_LOCKED`, which is safe to retry.
+Exactly one process owns the workspace and writes to it: `stuarty serve`, or a `stuarty mcp` session when no server is running. Every other command, the editor and the agents talk to that owner over HTTP on your machine. A second process that cannot reach the owner fails with `E_WORKSPACE_LOCKED`, which is safe to retry.
 
 ## Common mistakes
 

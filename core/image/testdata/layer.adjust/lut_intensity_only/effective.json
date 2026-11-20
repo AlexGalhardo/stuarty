@@ -1,0 +1,10 @@
+{
+  "adjust": {
+    "brightness": 10,
+    "lut": {
+      "asset": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "intensity": 30
+    }
+  },
+  "layer_id": "lyr_bbbbbbbbbb"
+}

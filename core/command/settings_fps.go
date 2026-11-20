@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 func init() {
@@ -22,7 +22,6 @@ func init() {
 		Example: `{"fps": "24"}`,
 		Errors:  []string{CodeValidation, CodeInvalidTime},
 		Scope:   ScopeEdit,
-		Phase:   Alpha,
 	}, applySettingsSetFPS))
 }
 

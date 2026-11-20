@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 // projectCalls is one call of every operation that names a project (or a job
@@ -35,6 +35,22 @@ func projectCalls(m *mediaEnv, project, job string) map[string]func(ctx context.
 		},
 		"HistoryList": func(ctx context.Context) error {
 			_, err := m.svc.HistoryList(ctx, service.HistoryListRequest{ProjectID: project})
+			return err
+		},
+		"HistoryRevert": func(ctx context.Context) error {
+			_, err := m.svc.HistoryRevert(ctx, service.HistoryRevertRequest{ProjectID: project, Revision: 1})
+			return err
+		},
+		"HistoryDiff": func(ctx context.Context) error {
+			_, err := m.svc.HistoryDiff(ctx, service.HistoryDiffRequest{ProjectID: project, From: 1})
+			return err
+		},
+		"CheckpointList": func(ctx context.Context) error {
+			_, err := m.svc.CheckpointList(ctx, service.CheckpointListRequest{ProjectID: project})
+			return err
+		},
+		"CheckpointCreate": func(ctx context.Context) error {
+			_, err := m.svc.CheckpointCreate(ctx, service.CheckpointCreateRequest{ProjectID: project, Name: "n"})
 			return err
 		},
 		"Undo": func(ctx context.Context) error {

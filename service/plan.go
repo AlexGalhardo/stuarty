@@ -8,19 +8,20 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/plan"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/cache"
-	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/cache"
+	"github.com/AlexGalhardo/stuarty/engine/rasterize"
 )
 
 // PlanWindowRequest asks for the render plan of frames From up to, not
 // including, Until (SDD-004 section 10).
 type PlanWindowRequest struct {
-	ProjectID string `json:"project_id"`
-	From      int    `json:"from"`
-	Until     int    `json:"until"`
+	ProjectID  string `json:"project_id"`
+	TimelineID string `json:"timeline_id,omitempty"` // SDD-003 section 1.7
+	From       int    `json:"from"`
+	Until      int    `json:"until"`
 	// Width is the output width in pixels the preview draws at; 0 is the project width. The
 	// bitmaps of the plan are rasterized at that scale, as ViewFrame does (SDD-004 section 10).
 	Width int `json:"width,omitempty"`
@@ -166,8 +167,12 @@ func planOutputScale(width, projectWidth int) (float64, *Error) {
 // PlanWindow reads the render plan of a window of the current revision. The
 // editor draws what it says and computes nothing (ADR-0007).
 func (s *svc) PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindowResult, error) {
-	c, err := authorize(ctx, "PlanWindow", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "PlanWindow", req.ProjectID)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
 		return nil, err
 	}
 
@@ -197,8 +202,16 @@ func (s *svc) PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindo
 		return nil, derr
 	}
 
+	nested, _ := s.nestedFor(ctx, s.store, doc)
+	// The texts of the nested timelines are measured and drawn with their own user fonts (SDD-004 §3.16); the
+	// document differs from doc in its fonts only, which the planner does not read.
+	doc = withNestedFonts(doc, nested)
 	fonts := s.fontSet(doc)
 	opts := plan.Options{Measure: rasterize.Measure(fonts)}
+
+	if nested != nil {
+		opts.Nested = nestedLookup(nested)
+	}
 
 	scale, werr := planOutputScale(req.Width, doc.Settings.Width)
 	if werr != nil {
@@ -213,6 +226,8 @@ func (s *svc) PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindo
 	if err := s.registerBitmaps(ctx, &row, doc, fonts, opts, &w, req.From, req.Until); err != nil {
 		return nil, err
 	}
+
+	s.registerAudioPreviews(row.ID, doc, opts, &w)
 
 	return &w, nil
 }
@@ -239,38 +254,58 @@ func (s *svc) registerBitmaps(
 			}
 		}
 
-		layers := plan.FrameWith(doc, t, opts).Layers
-		for i := range layers {
-			if layers[i].Bitmap == nil {
-				continue
-			}
-
-			spec := *layers[i].Bitmap
-			key := spec.Key()
-
-			if salt := userFontKey(doc, &spec); salt != "" {
-				sum := sha256.Sum256([]byte(key + ":" + salt))
-				key = hex.EncodeToString(sum[:])
-				renamed[spec.Key()] = key
-			}
-
-			s.bitmaps.remember(row.ID, key, spec, doc, fonts)
-		}
+		s.rememberBitmaps(row.ID, plan.FrameWith(doc, t, opts).Layers, doc, fonts, renamed)
 	}
 
-	for i := range w.Layers {
-		if w.Layers[i].Bitmaps == nil {
+	renameBitmapKeys(w.Layers, renamed)
+
+	return nil
+}
+
+// rememberBitmaps registers the bitmaps of layers, those inside a group too. A bitmap of a nested timeline is
+// drawn with the fonts of the parent: a user font of the nested timeline alone is not found there.
+func (s *svc) rememberBitmaps(
+	project string, layers []plan.Layer, doc *timeline.Document, fonts *rasterize.FontSet, renamed map[string]string,
+) {
+	for i := range layers {
+		if layers[i].Group != nil {
+			s.rememberBitmaps(project, layers[i].Group.Layers, doc, fonts, renamed)
+		}
+
+		if layers[i].Bitmap == nil {
 			continue
 		}
 
-		for j, k := range w.Layers[i].Bitmaps.Keys {
+		spec := *layers[i].Bitmap
+		key := spec.Key()
+
+		if salt := userFontKey(doc, &spec); salt != "" {
+			sum := sha256.Sum256([]byte(key + ":" + salt))
+			key = hex.EncodeToString(sum[:])
+			renamed[spec.Key()] = key
+		}
+
+		s.bitmaps.remember(project, key, spec, doc, fonts)
+	}
+}
+
+// renameBitmapKeys rewrites the keys of a window to the ones registered, in the groups too.
+func renameBitmapKeys(layers []plan.WindowLayer, renamed map[string]string) {
+	for i := range layers {
+		if g := layers[i].Group; g != nil {
+			renameBitmapKeys(g.Layers, renamed)
+		}
+
+		if layers[i].Bitmaps == nil {
+			continue
+		}
+
+		for j, k := range layers[i].Bitmaps.Keys {
 			if r, ok := renamed[k]; ok {
-				w.Layers[i].Bitmaps.Keys[j] = r
+				layers[i].Bitmaps.Keys[j] = r
 			}
 		}
 	}
-
-	return nil
 }
 
 // openBitmap serves a rasterized text or shape by its content key: the PNG is

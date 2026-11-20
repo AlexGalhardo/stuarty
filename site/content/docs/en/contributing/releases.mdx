@@ -11,7 +11,7 @@ description: "How a release is cut: the pull request, the changelog, the tag rul
 
 ## The idea
 
-Releases follow [Semantic Versioning](https://semver.org/) and [Conventional Commits](https://www.conventionalcommits.org/). Before `1.0.0` a minor release (`v0.N.0`) adds features and may change a public interface, and a patch release (`v0.N.1`) fixes bugs only. A minor is cut about every 90 commits on `main`, and always at the end of a phase (Prototype, ALPHA, BETA).
+Releases follow [Semantic Versioning](https://semver.org/) and [Conventional Commits](https://www.conventionalcommits.org/). A minor release (`v0.N.0`) adds features and may change a public interface, and a patch release (`v0.N.1`) fixes bugs only. A minor is cut about every 90 commits on `main`.
 
 One pull request carries a release. Its branch, `release/vX.Y.Z`, collects the work of the release as small, self-contained commits, each a Conventional Commit with a header of at most 100 characters. The pull request is titled `chore(release): vX.Y.Z updates` and is **rebase-merged**, so every commit reaches `main` as it is and becomes one entry of the changelog. `main` is protected: nobody commits or pushes to it directly, and a change reaches it only through a pull request whose required checks are green and which is up to date with `main`.
 

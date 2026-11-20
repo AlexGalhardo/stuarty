@@ -1,0 +1,9 @@
+{
+  "args": {
+    "layer_id": "lyr_bbbbbbbbbb",
+    "lut": {
+      "asset": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    }
+  },
+  "op": "layer.adjust"
+}

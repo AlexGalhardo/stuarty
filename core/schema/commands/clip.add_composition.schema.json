@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "duration": {
+      "description": "A length; default the rest of the nested timeline from source_in.",
+      "type": "string",
+      "x-vv-kind": "time"
+    },
+    "fit": {
+      "enum": [
+        "cover",
+        "contain",
+        "none"
+      ],
+      "type": "string"
+    },
+    "id": {
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "source_in": {
+      "description": "Where in the nested timeline to start, as a length from its start; default 0s.",
+      "type": "string",
+      "x-vv-kind": "time"
+    },
+    "start": {
+      "description": "Absolute position; omitted, the end of the last item of the track (0s on an empty track).",
+      "type": "string",
+      "x-vv-kind": "time"
+    },
+    "timeline_id": {
+      "description": "Another timeline of the same project.",
+      "pattern": "^prj_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "track_id": {
+      "description": "A visual track.",
+      "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "track_id",
+    "timeline_id"
+  ],
+  "type": "object"
+}

@@ -32,32 +32,55 @@ export function writeTimeUnit(unit: TimeUnit): void {
 	}
 }
 
-// The shortcut overrides (SDD-012 section 18.2): a JSON object from binding id
-// to key. Anything that is not an object of strings reads as no overrides.
-export function readKeymap(): Record<string, string> {
+// The shortcut choice (SDD-012 sections 18.2 and 18.9): the preset and the
+// overrides of the person, a JSON object from row id to key. It is stored as
+// `{"preset": "...", "overrides": {...}}`; a flat object of the first format
+// (the overrides alone) still reads. Anything else reads as the defaults.
+export interface KeymapPrefs {
+	preset: string | null;
+	overrides: Record<string, string>;
+}
+
+function stringMap(value: unknown): Record<string, string> {
+	if (typeof value !== "object" || value === null || Array.isArray(value))
+		return {};
+	const out: Record<string, string> = {};
+	for (const [id, key] of Object.entries(value)) {
+		if (typeof key === "string") out[id] = key;
+	}
+	return out;
+}
+
+export function readKeymap(): KeymapPrefs {
 	try {
 		const parsed: unknown = JSON.parse(
 			localStorage.getItem("vv.keymap") ?? "null",
 		);
 		if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed))
-			return {};
-		const out: Record<string, string> = {};
-		for (const [id, key] of Object.entries(parsed)) {
-			if (typeof key === "string") out[id] = key;
+			return { preset: null, overrides: {} };
+		const record = parsed as { preset?: unknown; overrides?: unknown };
+		if (typeof record.overrides === "object" && record.overrides !== null) {
+			return {
+				preset: typeof record.preset === "string" ? record.preset : null,
+				overrides: stringMap(record.overrides),
+			};
 		}
-		return out;
+		if (typeof record.preset === "string")
+			return { preset: record.preset, overrides: {} };
+		return { preset: null, overrides: stringMap(parsed) };
 	} catch {
-		return {};
+		return { preset: null, overrides: {} };
 	}
 }
 
-export function writeKeymap(overrides: Readonly<Record<string, string>>): void {
+// Nothing is stored for the default preset with no overrides.
+export function writeKeymap(prefs: KeymapPrefs): void {
 	try {
-		if (Object.keys(overrides).length === 0) {
+		if (prefs.preset === null && Object.keys(prefs.overrides).length === 0) {
 			localStorage.removeItem("vv.keymap");
 			return;
 		}
-		localStorage.setItem("vv.keymap", JSON.stringify(overrides));
+		localStorage.setItem("vv.keymap", JSON.stringify(prefs));
 	} catch {
 		// Storage can be blocked: the bindings last for this page only.
 	}
@@ -131,13 +154,23 @@ export function writeLayout(layout: LayoutPrefs): void {
 
 // The language of the interface is a preference of this browser (SDD-012
 // section 16.3), not of the workspace: two browsers on one server keep their own.
-// It is sent on every request in the Vukem-Video-Lang header.
+// It is sent on every request in the Stuarty-Lang header.
 const LOCALE_TAG = /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/;
 
 export function readLocale(): string | null {
 	try {
 		const value = localStorage.getItem("vv.lang");
 		return value !== null && LOCALE_TAG.test(value) ? value : null;
+	} catch {
+		return null;
+	}
+}
+
+// The preview executor this browser forces (SDD-012 section 11.1), for
+// comparison and bug reports; `preview/executorChoice.ts` reads the value.
+export function readPreviewExecutor(): string | null {
+	try {
+		return localStorage.getItem("stuarty.preview.executor");
 	} catch {
 		return null;
 	}

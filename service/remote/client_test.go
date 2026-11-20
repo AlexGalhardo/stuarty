@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 type seen struct {
@@ -92,6 +92,10 @@ func TestRequestsMatchTheRoutes(t *testing.T) {
 			_, err := c.CommandHelp(ctx, service.CommandHelpRequest{})
 			return err
 		}, "GET", "/api/v1/commands", "", "", `{"commands":[]}`, true},
+		{"help domain", func(c *Client) error {
+			_, err := c.CommandHelp(ctx, service.CommandHelpRequest{Domain: "image"})
+			return err
+		}, "GET", "/api/v1/commands", "domain=image", "", `{"commands":[]}`, true},
 		{"help one", func(c *Client) error {
 			_, err := c.CommandHelp(ctx, service.CommandHelpRequest{Name: "item.move"})
 			return err
@@ -202,7 +206,7 @@ func TestErrorEnvelopeBecomesAServiceError(t *testing.T) {
 
 	var got seen
 
-	c := server(t, 409, `{"type":"urn:vukem-video:error:E_REVISION_CONFLICT","title":"E_REVISION_CONFLICT","status":409,
+	c := server(t, 409, `{"type":"urn:stuarty:error:E_REVISION_CONFLICT","title":"E_REVISION_CONFLICT","status":409,
 		"code":"E_REVISION_CONFLICT","message":"behind","hint":"read again","retryable":true,"op_index":2,"path":"operations[2]",
 		"details":{"current_revision":5}}`, &got)
 

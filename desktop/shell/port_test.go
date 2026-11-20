@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
 func TestPickStablePortReusesTheLastPort(t *testing.T) {

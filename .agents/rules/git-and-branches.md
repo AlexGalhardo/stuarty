@@ -1,11 +1,14 @@
 # Git and branches
 
-1. `main` is protected by the ruleset `protect-main`. Never commit or push to it. Every change reaches `main` through a release pull request that is rebase-merged.
-2. One pull request per release: `release/vX.Y.Z`, titled `chore(release): vX.Y.Z updates`. Task branches never get pull requests; their commits are cherry-picked into the release line.
-3. GitHub refuses a rebase-merge of more than 100 commits ("This branch can't be rebased"), and it counts one more commit than `git rev-list --count origin/main..HEAD` sometimes does. Keep every release pull request at 97 commits or fewer, the `chore(release)` commit included. Move the excess to the next release.
-4. A force push is allowed only on a release branch that the author named for it, only as `git push --force-with-lease=<branch>:<sha you inspected>`. `main` is never force pushed.
-5. Before a force push, look at what is on the remote. A CodeQL autofix ("Potential fix for ...") may have been committed to the branch from the GitHub interface. Keep its change, or confirm that your branch already supersedes it.
-6. Never `git stash`, `git reset --hard`, `git checkout -- .`. `git reset --soft` to squash your own unpushed commits is fine.
-7. Chain with `&&`. Never pipe a check into `tail` or `head` before a push: the pipe hides the exit code. Write the output to a file, test `$?`, then push.
-8. Rewording a pushed commit changes its hash. The skip list by hash in `.github/workflows/pr-title.yml` then no longer covers it; shorten an over-long header instead of relying on the list.
-9. No pull request is opened and no branch with a pull request is pushed without `bash .agents/skills/verify/scripts/verify.sh --full` green on that commit (`VERIFY_OK`). A change to the checks themselves (`VERIFY_NEEDS_HUMAN`) goes in its own pull request and waits for the author's review (`.github/CODEOWNERS`, `REVIEW.md`).
+The process is ADR-0045: one integration branch, one pull request, no release while the epics are implemented.
+
+1. Never commit or push to `main`. Without the author: no merge to `main`, no marking the pull request ready, no release, no tag.
+2. **One integration branch carries the single draft pull request.** The branch is `release/0.30.0` and the pull request is #106, codename "release 0.30.0": every commit of the work is saved there. Every epic is a branch from it, `epic/NN-<slug>`, and a fix of the feedback queue is `fix/VV-NNN-<slug>`. Epic branches are never pushed and never get pull requests of their own.
+3. **Only the orchestrator pushes, and only the integration branch**, after merging an epic the specialist approved, so that the draft pull request shows what is finished. The work-session prompt carries the author's authorization; without it, do not push. Never push a branch whose local checks failed.
+4. **Each agent works in its own worktree outside the repository folder**, in the sibling folder `stuarty-worktrees/<agent>`, created by the orchestrator from the integration branch. Parallel agents and worktrees need the author's explicit yes; the work-session prompt carries it.
+5. The orchestrator merges an approved epic into the integration branch with a merge that keeps its commits (`git merge --no-ff epic/NN-<slug>`), then removes the worktree and the local branch. Shared files (`rules/plans.md` section 4) are merged one epic at a time.
+6. Before starting, an epic branch is created from the tip of the integration branch. A long epic is updated by merging the integration branch into it, never by rebasing commits another agent may have based work on.
+7. Never `git stash`, `git reset --hard`, `git checkout -- .`. `git reset --soft` to squash your own unpushed commits is fine. No force push.
+8. Chain with `&&`. Never pipe a check into `tail` or `head` before a push: the pipe hides the exit code. Write the output to a file, test `$?`, then push.
+9. When the epics are done and the QA campaign ended (`rules/plans.md` section 6), the integration pull request is split into releases (`v0.30.0`, `v0.31.0` and so on). GitHub refuses a rebase-merge of more than 100 commits ("This branch can't be rebased"), and it counts one more commit than `git rev-list --count origin/main..HEAD` sometimes does: keep every release pull request at 97 commits or fewer. The rules of that split are written, with the author, when it happens.
+10. Old worktrees and merged branches are removed when their epic is done. A branch that was deleted on 2026-11-18 can be recovered from the maintainers' backup bundle; ask the author.

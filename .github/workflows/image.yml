@@ -49,10 +49,10 @@ jobs:
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
-          file: .config/docker/vukem-video.Dockerfile
+          file: .config/docker/stuarty.Dockerfile
           load: true
-          tags: vukem-video:ci
+          tags: stuarty:ci
           build-args: |
             VERSION=0.0.0-ci
       - name: Smoke test
-        run: bash scripts/image-smoke.sh vukem-video:ci 0.0.0-ci
+        run: bash scripts/image-smoke.sh stuarty:ci 0.0.0-ci

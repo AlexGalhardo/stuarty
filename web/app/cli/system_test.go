@@ -7,10 +7,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/transcribe"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 // sysService answers the commands of system.go and records what they sent.
@@ -385,6 +385,20 @@ func TestCLIToolsInstall(t *testing.T) {
 		}
 
 		if doc := decodeOut(t, h); doc["code"] != command.CodeValidation || doc["path"] != "yes" {
+			t.Fatalf("document %v", doc)
+		}
+	})
+
+	t.Run("--yes with an unknown helper is refused before any download", func(t *testing.T) {
+		t.Parallel()
+
+		h, s := newSysHarness(t)
+
+		if code := h.run("tools:install", "no-such-helper", "--yes", "--json"); code != ExitFailure || s.installs != 0 {
+			t.Fatalf("exit %d, installs %d", code, s.installs)
+		}
+
+		if doc := decodeOut(t, h); doc["code"] != command.CodeValidation || doc["path"] != "name" {
 			t.Fatalf("document %v", doc)
 		}
 	})

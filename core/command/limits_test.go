@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/lint"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/lint"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 const lastItem = "itm_z000000499"

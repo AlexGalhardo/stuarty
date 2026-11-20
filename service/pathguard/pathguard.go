@@ -156,7 +156,7 @@ type Config struct {
 	// Network is true in network mode (SDD-007 section 4): failures after
 	// step 6 are all the same refusal, and an empty Roots refuses every path.
 	Network bool
-	// Roots is VUKEM_VIDEO_IMPORT_ROOTS. Each is canonicalised with steps 1
+	// Roots is STUARTY_IMPORT_ROOTS. Each is canonicalised with steps 1
 	// to 7 by New.
 	Roots []string
 	// Workspace is the workspace root: no root may lie inside it and no file
@@ -276,45 +276,60 @@ func (g *Guard) OpenExported(path string) (*os.File, error) {
 }
 
 func (g *Guard) open(path string, exported bool) (*os.File, error) {
-	if _, err := Clean(path, g.goos); err != nil {
+	resolved, root, before, err := g.locate(path, exported)
+	if err != nil {
 		return nil, err
-	}
-
-	if g.network && len(g.roots) == 0 {
-		return nil, refuse("this server has no import roots.", "Ask the operator to set VUKEM_VIDEO_IMPORT_ROOTS.")
-	}
-
-	resolved, err := g.resolve(path)
-	if err != nil {
-		return nil, g.late(err)
-	}
-
-	ours := exported && g.exportedByUs(resolved)
-
-	if g.workspace != "" && g.within(g.workspace, resolved) && !ours {
-		return nil, g.late(refuse("the file lies inside the workspace.", hintInside))
-	}
-
-	var root string
-
-	if len(g.roots) > 0 && !ours {
-		i := slices.IndexFunc(g.roots, func(r string) bool { return g.within(r, resolved) })
-		if i < 0 {
-			return nil, g.late(refuse("the file is outside the import roots.", "Move the file under an import root."))
-		}
-
-		root = g.roots[i]
-	}
-
-	before, err := os.Lstat(resolved)
-	if err != nil {
-		return nil, g.late(err)
 	}
 
 	if !before.Mode().IsRegular() {
 		return nil, g.late(refuse("the path is not a regular file.", "Import a file, not a directory or a device."))
 	}
 
+	return g.openFile(resolved, root, before)
+}
+
+// locate is steps 1 to 9: it resolves the path, applies the rules of the workspace and of the import
+// roots, and returns the real path, the root it lies under ("" with no roots) and what it is.
+func (g *Guard) locate(path string, exported bool) (resolved, root string, before os.FileInfo, err error) {
+	if _, err := Clean(path, g.goos); err != nil {
+		return "", "", nil, err
+	}
+
+	if g.network && len(g.roots) == 0 {
+		return "", "", nil, refuse("this server has no import roots.", "Ask the operator to set STUARTY_IMPORT_ROOTS.")
+	}
+
+	resolved, err = g.resolve(path)
+	if err != nil {
+		return "", "", nil, g.late(err)
+	}
+
+	ours := exported && g.exportedByUs(resolved)
+
+	if g.workspace != "" && g.within(g.workspace, resolved) && !ours {
+		return "", "", nil, g.late(refuse("the file lies inside the workspace.", hintInside))
+	}
+
+	if len(g.roots) > 0 && !ours {
+		i := slices.IndexFunc(g.roots, func(r string) bool { return g.within(r, resolved) })
+		if i < 0 {
+			return "", "", nil, g.late(
+				refuse("the file is outside the import roots.", "Move the file under an import root."),
+			)
+		}
+
+		root = g.roots[i]
+	}
+
+	before, err = os.Lstat(resolved)
+	if err != nil {
+		return "", "", nil, g.late(err)
+	}
+
+	return resolved, root, before, nil
+}
+
+func (g *Guard) openFile(resolved, root string, before os.FileInfo) (*os.File, error) {
 	f, err := openUnder(root, resolved)
 	if err != nil {
 		return nil, g.late(err)
@@ -328,6 +343,37 @@ func (g *Guard) open(path string, exported bool) (*os.File, error) {
 	}
 
 	return f, nil
+}
+
+// OpenImportPath is OpenImport for a source that is a file or a folder (a skill, SDD-018 section 8): it
+// returns the file opened for reading, or the folder opened as an os.Root, and the caller closes it. The
+// folder rules are those of a file; a folder that the server itself wrote under exports/ of a local
+// workspace is accepted too, so an exported skill can be imported again. Every later read goes through the
+// handle, so a link swapped after the check cannot lead out of the folder.
+func (g *Guard) OpenImportPath(path string) (*os.File, *os.Root, error) {
+	resolved, root, before, err := g.locate(path, true)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if before.IsDir() {
+		r, err := os.OpenRoot(resolved)
+		if err != nil {
+			return nil, nil, g.late(err)
+		}
+
+		return nil, r, nil
+	}
+
+	if !before.Mode().IsRegular() {
+		return nil, nil, g.late(
+			refuse("the path is not a file or a folder.", "Import a file or a folder, not a device."),
+		)
+	}
+
+	f, err := g.openFile(resolved, root, before)
+
+	return f, nil, err
 }
 
 // exportedByUs reports whether resolved lies under exports/ or templates/ of the workspace of a local server.

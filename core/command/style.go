@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // Style arguments (SDD-002 R15): a partial TextStyle or CaptionStyle given as an
@@ -98,13 +98,6 @@ func (c *Context) checkStyleValue(path, key string, v any, rule styleRule) *Erro
 		if !ok || !slices.Contains(rule.enum, s) {
 			return bad("%s must be one of %s, got %v.", path, strings.Join(rule.enum, ", "), v).
 				WithHint("Use one of: %s.", strings.Join(rule.enum, ", "))
-		}
-		if key == "highlight" && s != "none" && c.build.rank() < Alpha.rank() {
-			return bad(
-				"%s must be \"none\" in this build, got %q.",
-				path,
-				s,
-			).WithHint(`Word highlight arrives in ALPHA; use "none".`)
 		}
 	default:
 		return checkStyleNumber(path, key, v, rule)

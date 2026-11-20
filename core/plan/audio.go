@@ -6,7 +6,7 @@ import (
 	"math"
 	"slices"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // SampleRate is the rate of the mix (SDD-004 §7).
@@ -23,6 +23,28 @@ type GainPoint struct {
 	Gain   float64 `json:"gain"`
 }
 
+// ProcessorSpec is one enabled processor of a chain as the plan carries it (SDD-004 §7.1): the kind and every
+// parameter with its value, the defaults filled in.
+type ProcessorSpec struct {
+	Kind   string             `json:"kind"`
+	Params map[string]float64 `json:"params"`
+}
+
+// processorSpecs is the plan form of a chain: the enabled processors, in order, or nil when there is none.
+func processorSpecs(chain []timeline.Processor) []ProcessorSpec {
+	var out []ProcessorSpec
+
+	for _, p := range chain {
+		if p.Disabled {
+			continue
+		}
+
+		out = append(out, ProcessorSpec{Kind: p.Kind, Params: p.FullParams()})
+	}
+
+	return out
+}
+
 // AudioSource is one source of the mix (SDD-004 §7): a clip with audio or an
 // audio item, clipped to the requested frames.
 type AudioSource struct {
@@ -37,6 +59,13 @@ type AudioSource struct {
 	Gain        []GainPoint       `json:"gain"`              // volume or its keyframes, times the fades
 	Denoise     float64           `json:"denoise,omitempty"` // noise reduction strength 0 to 1 (SDD-004 §7); absent means off
 	Voice       string            `json:"voice,omitempty"`   // voice preset (SDD-004 §7); absent means none
+	// Timeline is the timeline whose assets table names AssetID, for a source that comes from a composition.
+	Timeline string `json:"timeline,omitempty"`
+	// Chain is the enabled processors of the item and, when its track has a chain too, Track names the track and
+	// BusChain is that chain (the same on every source of the track): SDD-004 §7.1. Absent means none.
+	Chain    []ProcessorSpec `json:"chain,omitempty"`
+	Track    string          `json:"track,omitempty"`
+	BusChain []ProcessorSpec `json:"bus_chain,omitempty"`
 }
 
 // SpeedRamp is the speed curve of an item as the plan carries it (SDD-004 §3.11): the points,
@@ -46,6 +75,9 @@ type SpeedRamp struct {
 	Points     []timeline.SpeedPoint `json:"points"`
 	ItemFrames int                   `json:"item_frames"`
 	FirstFrame int                   `json:"first_frame"`
+	// TimeScale is the speed of the composition items the source sits in (SDD-004 §7, epic 53): the frames of the
+	// item that carries the curve pass at TimeScale times the rate of the output. Absent means 1.
+	TimeScale *timeline.Rational `json:"time_scale,omitempty"`
 }
 
 // curveOf is the ramp of an item whose window starts at timeline frame cs, or nil when its speed is constant.
@@ -150,7 +182,7 @@ func audioSource(doc *timeline.Document, it *timeline.Item, cs, ce int) AudioSou
 		}
 	}
 
-	return AudioSource{
+	src := AudioSource{
 		ItemID:      it.ID,
 		AssetID:     it.Asset,
 		StartSample: start,
@@ -162,7 +194,14 @@ func audioSource(doc *timeline.Document, it *timeline.Item, cs, ce int) AudioSou
 		Gain:        gain,
 		Denoise:     round3(it.Denoise),
 		Voice:       it.Voice,
+		Chain:       processorSpecs(it.Processors),
 	}
+
+	if bus := processorSpecs(doc.Tracks[it.Track].Processors); len(bus) > 0 {
+		src.Track, src.BusChain = it.Track, bus
+	}
+
+	return src
 }
 
 // envelope is the gain of the item over frames [rs, re) inside it as points in

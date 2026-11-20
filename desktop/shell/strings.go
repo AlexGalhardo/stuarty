@@ -3,6 +3,8 @@ package shell
 import (
 	"os"
 	"strings"
+
+	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
 // The few texts of the native menu and dialogs, in the languages of the editor
@@ -37,6 +39,7 @@ const (
 	TextNoFeed        = "no_feed"
 	TextCheckFailed   = "check_failed"
 	TextInstallFailed = "install_failed"
+	TextAdopted       = "adopted"
 )
 
 var catalogues = map[string]map[string]string{
@@ -45,21 +48,22 @@ var catalogues = map[string]map[string]string{
 		TextView: "View", TextReload: "Reload", TextFullScreen: "Toggle full screen",
 		TextHelp: "Help", TextCheckUpdates: "Check for updates",
 		TextCheckAtStart: "Check for updates automatically", TextAbout: "About",
-		TextAboutTitle: "About Vukem Video", TextInstall: "Install and restart", TextNotNow: "Not now",
-		TextCannotStart: "Vukem Video cannot start", TextServerStopped: "The local server stopped unexpectedly.",
+		TextAboutTitle: "About Stuarty", TextInstall: "Install and restart", TextNotNow: "Not now",
+		TextCannotStart: "Stuarty cannot start", TextServerStopped: "The local server stopped unexpectedly.",
 		TextCannotOpen: "Cannot open the folder: ", TextCannotSave: "Cannot save the setting: ",
 		TextConsentTitle: "Check for updates automatically?",
-		TextConsentBody: "Vukem Video can look for a new version when it starts and once a day. " +
+		TextConsentBody: "Stuarty can look for a new version when it starts and once a day. " +
 			"It connects only to the update server, only for this check, and sends nothing about you. " +
 			"You can change this in Help.",
-		TextYes: "Yes", TextNo: "No", TextDownloading: "Downloading Vukem Video ",
-		TextUndone:   "Vukem Video could not start the new version, so the previous version was restored. Version ",
-		TextUpToDate: "Vukem Video %s is up to date.",
+		TextYes: "Yes", TextNo: "No", TextDownloading: "Downloading Stuarty ",
+		TextUndone:   "Stuarty could not start the new version, so the previous version was restored. Version ",
+		TextUpToDate: "Stuarty %s is up to date.",
 		TextOffer:    "Version %s is available (this is %s). Download and install it?",
 		TextNoFeed: "This build has no update feed or signing key, so it cannot check for updates. " +
 			"Download new versions from %s",
 		TextCheckFailed:      "Could not check for updates: ",
 		TextInstallFailed:    "The update was not installed and this version is unchanged: ",
+		TextAdopted:          "Your projects from Vukem Video are now in Stuarty.",
 		TextMenuEdit:         "Edit",
 		TextMenuClip:         "Clip",
 		TextMenuTimeline:     "Timeline",
@@ -92,6 +96,7 @@ var catalogues = map[string]map[string]string{
 		TextMenuPanelInspect: "Inspector panel",
 		TextMenuPanelHistory: "History panel",
 		TextMenuShortcuts:    "Keyboard shortcuts",
+		TextMenuTour:         "Take the tour",
 	},
 	"pt-BR": {
 		TextFile:          "Arquivo",
@@ -104,27 +109,28 @@ var catalogues = map[string]map[string]string{
 		TextCheckUpdates:  "Verificar atualizações",
 		TextCheckAtStart:  "Verificar atualizações automaticamente",
 		TextAbout:         "Sobre",
-		TextAboutTitle:    "Sobre o Vukem Video",
+		TextAboutTitle:    "Sobre o Stuarty",
 		TextInstall:       "Instalar e reiniciar",
 		TextNotNow:        "Agora não",
-		TextCannotStart:   "O Vukem Video não consegue iniciar",
+		TextCannotStart:   "O Stuarty não consegue iniciar",
 		TextServerStopped: "O servidor local parou de repente.",
 		TextCannotOpen:    "Não foi possível abrir a pasta: ",
 		TextCannotSave:    "Não foi possível salvar a configuração: ",
 		TextConsentTitle:  "Verificar atualizações automaticamente?",
-		TextConsentBody: "O Vukem Video pode procurar uma versão nova ao iniciar e uma vez por dia. " +
+		TextConsentBody: "O Stuarty pode procurar uma versão nova ao iniciar e uma vez por dia. " +
 			"Ele se conecta só ao servidor de atualizações, só para essa verificação, e não envia nada sobre você. " +
 			"Você pode mudar isso em Ajuda.",
 		TextYes:         "Sim",
 		TextNo:          "Não",
-		TextDownloading: "Baixando o Vukem Video ",
-		TextUndone:      "O Vukem Video não conseguiu iniciar a versão nova e restaurou a anterior. Versão ",
-		TextUpToDate:    "O Vukem Video %s está atualizado.",
+		TextDownloading: "Baixando o Stuarty ",
+		TextUndone:      "O Stuarty não conseguiu iniciar a versão nova e restaurou a anterior. Versão ",
+		TextUpToDate:    "O Stuarty %s está atualizado.",
 		TextOffer:       "A versão %s está disponível (esta é a %s). Baixar e instalar?",
 		TextNoFeed: "Esta versão não tem endereço de atualizações nem chave de assinatura, então não consegue verificar atualizações. " +
 			"Baixe as versões novas em %s",
 		TextCheckFailed:      "Não foi possível verificar atualizações: ",
 		TextInstallFailed:    "A atualização não foi instalada e esta versão continua como estava: ",
+		TextAdopted:          "Seus projetos do Vukem Video agora estão no Stuarty.",
 		TextMenuEdit:         "Editar",
 		TextMenuClip:         "Clipe",
 		TextMenuTimeline:     "Linha do tempo",
@@ -157,6 +163,7 @@ var catalogues = map[string]map[string]string{
 		TextMenuPanelInspect: "Painel do inspetor",
 		TextMenuPanelHistory: "Painel de histórico",
 		TextMenuShortcuts:    "Atalhos de teclado",
+		TextMenuTour:         "Fazer o tour",
 	},
 }
 
@@ -179,3 +186,18 @@ func Text(language, key string) string {
 
 // SystemLanguage is the catalogue for the language of the system.
 func SystemLanguage() string { return Language(systemLocale(os.Getenv)) }
+
+// AdoptionMessage is the text of the dialog that tells a person, once, that the workspace of Vukem Video
+// was adopted (ADR-0044, PRD-003 RF-221): a sentence in the language, then the line Resolve printed, with
+// its folders and its backup. Notices captures what Resolve wrote; with no adoption among them it is "".
+func AdoptionMessage(language, notices string) string {
+	for line := range strings.Lines(notices) {
+		if strings.HasPrefix(line, workspace.AdoptedNoticePrefix) {
+			detail := strings.TrimSpace(strings.TrimPrefix(line, "stuarty: "))
+
+			return Text(language, TextAdopted) + "\n\n" + strings.ToUpper(detail[:1]) + detail[1:]
+		}
+	}
+
+	return ""
+}

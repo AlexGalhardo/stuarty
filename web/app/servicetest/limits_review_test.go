@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 // requireLimit is the P4-SRV-003 contract of SDD-007 section 9.1: a limit error carries
@@ -44,7 +44,7 @@ func requireLimit(t *testing.T, what string, err error, wantCode, wantLimit stri
 
 // P4-SRV-003: the disk guard of every write operation, including the BETA ones.
 func TestLimitDiskLowCarriesValueAndCeiling(t *testing.T) {
-	m := newMediaEnv(t, mediaCfg{exporter: goodExporter(), beta: true})
+	m := newMediaEnv(t, mediaCfg{exporter: goodExporter()})
 	project, track := m.withTrack()
 	clip := m.write("a.mp4", clipBytes)
 	bundle := m.exportBundle(project, nil).Result.Export.Path

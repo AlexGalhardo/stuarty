@@ -7,8 +7,6 @@ import (
 	"slices"
 	"strings"
 	"testing"
-
-	"github.com/AlexGalhardo/vukem-video/core/command"
 )
 
 // TestNoOutboundTools is SDD-003 section 9 check 25 and T10: no tool takes a
@@ -16,7 +14,7 @@ import (
 func TestNoOutboundTools(t *testing.T) {
 	t.Parallel()
 
-	defs, err := loadDefinitions(command.Default())
+	defs, err := loadDefinitions()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,7 +62,7 @@ func TestNoOutboundTools(t *testing.T) {
 }
 
 // TestToolsListIsByteEqualAcrossCalls: tools/list is static (ADR-0020), so two
-// calls answer the same bytes, and the 16 tools of the build are all there.
+// calls answer the same bytes, and the 20 tools of the build are all there.
 func TestToolsListIsByteEqualAcrossCalls(t *testing.T) {
 	t.Parallel()
 
@@ -84,7 +82,7 @@ func TestToolsListIsByteEqualAcrossCalls(t *testing.T) {
 		t.Error("two tools/list calls differ")
 	}
 
-	if len(first.Tools) != 16 {
-		t.Errorf("tools/list has %d tools, want the 16 of SDD-000 section 1", len(first.Tools))
+	if len(first.Tools) != 20 {
+		t.Errorf("tools/list has %d tools, want the 20 of SDD-000 section 1", len(first.Tools))
 	}
 }

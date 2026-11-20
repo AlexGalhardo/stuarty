@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-const mod = "github.com/AlexGalhardo/vukem-video"
+const mod = "github.com/AlexGalhardo/stuarty"
 
 // TestRepository runs the rules over the real module. It is the check that
 // fails the build when someone breaks ADR-0001.
@@ -36,6 +36,8 @@ func TestRules(t *testing.T) {
 		{"core stdlib", "core/timeval/a.go", "math/big", ""},
 		{"core own package", "core/command/a.go", mod + "/core/timeline", ""},
 		{"core pure library", "core/command/a.go", "github.com/santhosh-tekuri/jsonschema/v6", ""},
+		{"core unicode norm", "core/writing/a.go", "golang.org/x/text/unicode/norm", ""},
+		{"core other x/text", "core/writing/a.go", "golang.org/x/text/language", "core/ imports only"},
 		{"core third party", "core/command/a.go", "github.com/google/uuid", "core/ imports only"},
 		{"command imports plan", "core/command/a.go", mod + "/core/plan", "never imports core/plan"},
 		{"command test imports plan", "core/command/a_test.go", mod + "/core/plan", "never imports core/plan"},
@@ -57,6 +59,12 @@ func TestRules(t *testing.T) {
 		{"root file imports vukem", "main.go", VukemModule + "/config", "only web/"},
 		{"web imports vukem", "web/bootstrap/a.go", VukemModule, ""},
 		{"web imports engine", "web/app/a.go", mod + "/engine/store", ""},
+		{"connections import the vault", "service/connections/a.go", mod + "/service/vault", ""},
+		{"the owner imports the vault", "web/app/owner/a.go", mod + "/service/vault", ""},
+		{"a test imports the vault", "web/app/servicetest/a_test.go", mod + "/service/vault", ""},
+		{"the service imports the vault", "service/a.go", mod + "/service/vault", "only by service/connections"},
+		{"a controller imports the vault", "web/app/http/a.go", mod + "/service/vault", "only by service/connections"},
+		{"the engine imports the vault", "engine/ffmpeg/a.go", mod + "/service/vault", "only by service/connections"},
 	}
 
 	for _, tc := range tests {
@@ -85,7 +93,7 @@ func TestCheckWalksFilesAndSkipsNestedModules(t *testing.T) {
 		t,
 		root,
 		"core/command/b.go",
-		"package command\n\nimport _ \"github.com/AlexGalhardo/vukem-video/core/plan\"\n",
+		"package command\n\nimport _ \"github.com/AlexGalhardo/stuarty/core/plan\"\n",
 	)
 	write(t, root, "spikes/x/go.mod", "module x\n")
 	write(t, root, "spikes/x/a.go", "package x\n\nimport _ \"github.com/AlexGalhardo/vukem\"\n")
@@ -138,5 +146,98 @@ func moduleRoot(t *testing.T) string {
 		}
 
 		dir = parent
+	}
+}
+
+// TestOutboundRepository fails the build when a package other than internal/outbound opens a
+// connection to a host (SDD-014 section 6, the risk "an outbound path that skips the gate").
+func TestOutboundRepository(t *testing.T) {
+	got, err := CheckOutbound(moduleRoot(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, v := range got {
+		t.Error(v)
+	}
+}
+
+func TestOutboundRule(t *testing.T) {
+	t.Parallel()
+
+	root := t.TempDir()
+	write(
+		t,
+		root,
+		"service/leak/a.go",
+		"package leak\n\nimport \"net/http\"\n\nfunc f() { _, _ = http.Get(\"https://example.com\") }\n",
+	)
+	write(t, root, "service/leak/b.go", "package leak\n\nimport h \"net/http\"\n\nvar c = &h.Client{}\n")
+	write(
+		t,
+		root,
+		"service/leak/c.go",
+		"package leak\n\nimport \"net\"\n\nfunc g() { _, _ = net.Dial(\"tcp\", \"example.com:80\") }\n",
+	)
+	write(
+		t,
+		root,
+		"service/leak/ok.go",
+		"package leak\n\nimport \"net/http\"\n\n// A loopback probe.\nvar c = &http.Client{} //nolint:forbidigo // loopback only: the probe\n",
+	)
+	write(
+		t,
+		root,
+		"service/leak/above.go",
+		"package leak\n\nimport \"net/http\"\n\n//nolint:forbidigo // loopback only: the probe\nvar c = &http.Client{}\n",
+	)
+	write(
+		t,
+		root,
+		"service/leak/unmarked.go",
+		"package leak\n\nimport \"net/http\"\n\nvar c = &http.Client{} //nolint:forbidigo // because\n",
+	)
+	write(t, root, "service/leak/a_test.go", "package leak\n\nimport \"net/http\"\n\nvar c = &http.Client{}\n")
+	write(t, root, "internal/outbound/o.go", "package outbound\n\nimport \"net/http\"\n\nvar c = &http.Client{}\n")
+	write(
+		t,
+		root,
+		"service/leak/server.go",
+		"package leak\n\nimport \"net/http\"\n\nvar _ = http.StatusOK\nvar _ http.Handler\n",
+	)
+	// TLS dialled by hand, and a DNS lookup, leave the machine as surely as an HTTP client.
+	write(
+		t,
+		root,
+		"service/leak/d.go",
+		"package leak\n\nimport \"crypto/tls\"\n\nfunc d() { _, _ = tls.Dial(\"tcp\", \"example.com:443\", nil) }\n",
+	)
+	write(
+		t,
+		root,
+		"service/leak/e.go",
+		"package leak\n\nimport \"net\"\n\nfunc e() { _, _ = net.LookupHost(\"example.com\") }\n",
+	)
+	write(
+		t,
+		root,
+		"service/leak/f.go",
+		"package leak\n\nimport \"net\"\n\nvar _, _ = net.ParseCIDR(\"10.0.0.0/8\")\nvar _ net.IP\n",
+	)
+
+	got, err := CheckOutbound(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var files []string
+	for _, v := range got {
+		files = append(files, v.File)
+	}
+
+	want := "service/leak/a.go service/leak/b.go service/leak/c.go service/leak/d.go service/leak/e.go " +
+		"service/leak/unmarked.go"
+	if strings.Join(files, " ") != want {
+		t.Fatalf("violations in %v, want %s", files, want)
 	}
 }

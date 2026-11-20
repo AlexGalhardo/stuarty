@@ -4,7 +4,7 @@ import (
 	"maps"
 	"slices"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // namedSchemas are the schemas of the arguments whose Go type is any or a map of any
@@ -20,6 +20,7 @@ var namedSchemas = map[string]func() map[string]any{
 	"fps":                        fpsSchema,
 	"transition_kind":            func() map[string]any { return nullable(map[string]any{"type": "string", "enum": transitionKinds}) },
 	"template_colors":            templateColorsSchema,
+	"processor_params":           processorParamsSchema,
 	"chroma_color":               chromaColorSchema,
 }
 

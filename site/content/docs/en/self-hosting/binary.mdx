@@ -11,44 +11,44 @@ description: "Start the local server from the downloaded program, where it liste
 
 ## The idea
 
-The release archive and the installers carry one program, `vukem-video`. `vukem-video serve` is the process that owns the [workspace](/docs/workspace): it serves the editor, the HTTP API and the MCP endpoint, and it runs the jobs. Without a container it runs in **local mode**: it listens on `127.0.0.1:7878` only, and a request needs the token in `<workspace>/token`. To serve other machines, use [network mode](/docs/self-hosting/network-mode), which has login and API keys.
+The release archive and the installers carry one program, `stuarty`. `stuarty serve` is the process that owns the [workspace](/docs/workspace): it serves the editor, the HTTP API and the MCP endpoint, and it runs the jobs. Without a container it runs in **local mode**: it listens on `127.0.0.1:7878` only, and a request needs the token in `<workspace>/token`. To serve other machines, use [network mode](/docs/self-hosting/network-mode), which has login and API keys.
 
 The server makes no outbound connection by default and sends no telemetry; see [Privacy](/docs/self-hosting/privacy).
 
 ## Quick start
 
-1. [Download and verify](/docs/self-hosting/verify-a-release) the archive of your platform, and put `vukem-video` on your `PATH`.
-2. Check the installation: `vukem-video doctor --full` runs every check and names what to fix.
-3. Start the server: `vukem-video serve`. It stays in the foreground and logs to standard error.
-4. Open the editor with `vukem-video open`. It opens your browser with a one-time link (valid for two minutes) and does not print the link, because the browser uses it up and a printed copy would only leak into your terminal history. To get a link for a tool such as Playwright, run it with `VUKEM_VIDEO_NO_BROWSER=1`: it then prints a fresh link and starts no browser. Opening `http://127.0.0.1:7878` directly shows a "401 Sign-in needed" page, because local mode has no login and the browser needs that link to get a session.
+1. [Download and verify](/docs/self-hosting/verify-a-release) the archive of your platform, and put `stuarty` on your `PATH`.
+2. Check the installation: `stuarty doctor --full` runs every check and names what to fix.
+3. Start the server: `stuarty serve`. It stays in the foreground and logs to standard error.
+4. Open the editor with `stuarty open`. It opens your browser with a one-time link (valid for two minutes) and does not print the link, because the browser uses it up and a printed copy would only leak into your terminal history. To get a link for a tool such as Playwright, run it with `STUARTY_NO_BROWSER=1`: it then prints a fresh link and starts no browser. Opening `http://127.0.0.1:7878` directly shows a "401 Sign-in needed" page, because local mode has no login and the browser needs that link to get a session.
 
 ```bash
-vukem-video version
-vukem-video doctor --full
-vukem-video serve
+stuarty version
+stuarty doctor --full
+stuarty serve
 ```
 
 Stop the server with `Ctrl+C` or by sending `SIGTERM`. It waits up to 15 seconds for running jobs to reach a safe point; a job that is still running then is interrupted and requeued, and the next start recovers it.
 
-`vukem-video open` starts a local server first when none runs, then opens the browser. With `VUKEM_VIDEO_NO_BROWSER` set it prints the one-time link instead of starting a browser; open it once, it works for two minutes.
+`stuarty open` starts a local server first when none runs, then opens the browser. When another process owns the workspace but does not answer yet (it is starting or busy), `open` never starts a second server: it waits up to 10 seconds for the owner, and then fails with `E_WORKSPACE_LOCKED` and exit code `2` ([the workspace is locked](/docs/troubleshooting/workspace-locked)). With `STUARTY_NO_BROWSER` set it prints the one-time link instead of starting a browser; open it once, it works for two minutes.
 
 ## What it uses
 
 | Item | Where | Notes |
 | --- | --- | --- |
-| Workspace | `~/.vukem-video`, or `VUKEM_VIDEO_HOME` | one directory; see [Workspace and storage](/docs/workspace) |
-| Address | `127.0.0.1:7878`, or `VUKEM_VIDEO_ADDR` | an address that is not loopback is refused in local mode |
-| Local token | `<workspace>/token` | readable only by you; `vukem-video token:rotate` makes a new one |
+| Workspace | `~/.stuarty`, or `STUARTY_HOME` | one directory; see [Workspace and storage](/docs/workspace) |
+| Address | `127.0.0.1:7878`, or `STUARTY_ADDR` | an address that is not loopback is refused in local mode |
+| Local token | `<workspace>/token` | readable only by you; `stuarty token:rotate` makes a new one |
 | Application key | `<workspace>/app.key` | created on first start in local mode when `APP_KEY` is unset; keep it private |
-| Logs | `<workspace>/logs/vukem-video.log` | rotated at 10 MiB, three old files kept; `LOG_LEVEL` sets the level |
-| FFmpeg | the order of [FFmpeg, codecs and licences](/docs/self-hosting/ffmpeg-and-licences) | `VUKEM_VIDEO_FFMPEG` and `VUKEM_VIDEO_FFPROBE` name it explicitly |
+| Logs | `<workspace>/logs/stuarty.log` | rotated at 10 MiB, three old files kept; `LOG_LEVEL` sets the level |
+| FFmpeg | the order of [FFmpeg, codecs and licences](/docs/self-hosting/ffmpeg-and-licences) | `STUARTY_FFMPEG` and `STUARTY_FFPROBE` name it explicitly |
 
 Every variable is in the [configuration reference](/docs/reference/configuration).
 
 ## Common mistakes
 
-- Starting a second `vukem-video serve` on the same workspace: it fails with `E_WORKSPACE_LOCKED`. See [The workspace is locked](/docs/troubleshooting/workspace-locked).
-- Binding another address in local mode. Set `VUKEM_VIDEO_MODE=network`, an `APP_KEY` and the rest of the network settings first.
+- Starting a second `stuarty serve` on the same workspace: it fails with `E_WORKSPACE_LOCKED`. See [The workspace is locked](/docs/troubleshooting/workspace-locked).
+- Binding another address in local mode. Set `STUARTY_MODE=network`, an `APP_KEY` and the rest of the network settings first.
 - Putting the workspace inside a folder that a cloud-sync client manages: it can corrupt the database and the lock. `doctor --full` warns when it recognises such a folder.
 - Deleting `app.key` or changing `APP_KEY` by accident: keep the key with your other secrets and back it up with the workspace.
 

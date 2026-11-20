@@ -6,8 +6,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/core/timeval"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeval"
 )
 
 // ProjectOptions select what Project renders.
@@ -317,6 +317,13 @@ func itemDetail(it *timeline.Item) string {
 		return fmt.Sprintf("%dw", len(it.Words))
 	case timeline.ItemShape:
 		return fmt.Sprintf("%s %sx%s", it.Shape, num(it.Width), num(it.Height))
+	case timeline.ItemComposition:
+		// A composition takes a constant speed (epic 53); an agent reads it here as on a clip.
+		if it.Speed.Num != it.Speed.Den && it.Speed.Den > 0 {
+			return it.Timeline + " x" + num(float64(it.Speed.Num)/float64(it.Speed.Den))
+		}
+
+		return it.Timeline
 	}
 
 	return ""

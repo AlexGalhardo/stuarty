@@ -1,0 +1,8 @@
+{
+  "args": {
+    "id": "lyr_mmmmmmmmmm",
+    "layer_id": "lyr_cccccccccc",
+    "name": "Title 2"
+  },
+  "op": "layer.duplicate"
+}

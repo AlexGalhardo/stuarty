@@ -13,9 +13,10 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/lint"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	coreimage "github.com/AlexGalhardo/stuarty/core/image"
+	"github.com/AlexGalhardo/stuarty/core/lint"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // httpStatus is the status of each core error code (SDD-000 section 8).
@@ -57,6 +58,10 @@ func run(out string) error {
 	if err := writeCommands(out); err != nil {
 		return err
 	}
+
+	if err := writeImageCommands(out); err != nil {
+		return err
+	}
 	var errs []map[string]any
 	for _, code := range command.Codes() {
 		errs = append(
@@ -78,7 +83,7 @@ func run(out string) error {
 }
 
 // lintRules is the rule table of core/lint as data for the surfaces: the code, the
-// severity, the phase, the depths it runs at, whether it blocks an export and the key
+// severity, the depths it runs at, whether it blocks an export and the key
 // of its title in the catalogue of texts.
 func lintRules() []map[string]any {
 	var rules []map[string]any
@@ -86,7 +91,6 @@ func lintRules() []map[string]any {
 		rules = append(rules, map[string]any{
 			"code":     r.Code,
 			"severity": r.Severity,
-			"phase":    r.Phase,
 			"depth":    strings.Split(strings.ReplaceAll(r.Run, " ", ""), ","),
 			"blocking": lint.Blocking(r.Code),
 			"key":      "lint.rule." + r.Code + ".title",
@@ -95,8 +99,17 @@ func lintRules() []map[string]any {
 	return rules
 }
 
+// writeImageCommands writes the registry of the image domain (SDD-021 section 3): one schema per operation under
+// core/schema/image/commands and the snapshot core/schema/image/commands.json.
+func writeImageCommands(out string) error {
+	return writeRegistry(coreimage.Registry(), filepath.Join(out, "image"))
+}
+
 func writeCommands(out string) error {
-	reg := command.Default()
+	return writeRegistry(command.Default(), out)
+}
+
+func writeRegistry(reg *command.Registry, out string) error {
 	var list []map[string]any
 	for _, c := range reg.List() {
 		raw, err := reg.Schema(c.Name)
@@ -122,8 +135,8 @@ func writeCommands(out string) error {
 			"example":     example,
 			"errors":      slices.Clone(c.Errors),
 			"scope":       c.Scope,
-			"phase":       c.Phase,
 			"internal":    c.Internal,
+			"domain":      c.Domain,
 		})
 	}
 	return write(filepath.Join(out, "commands.json"), list)

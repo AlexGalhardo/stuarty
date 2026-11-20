@@ -167,3 +167,25 @@ func FuzzCubeParse(f *testing.F) {
 		}
 	})
 }
+
+// A line of maxLine bytes is read (with LF or CR LF) and one byte more is refused, whatever the initial buffer
+// of the scanner (VV-293: it was 4096, so the documented 512 was never the limit).
+func TestParseHoldsLinesToMaxLine(t *testing.T) {
+	body := cube(2, "", func(int, int, int) [3]string { return [3]string{"0", "0", "0"} })
+
+	for _, eol := range []string{"\n", "\r\n"} {
+		at := "#" + strings.Repeat("a", maxLine-1) + eol
+		if _, err := Parse(strings.NewReader(at + body)); err != nil {
+			t.Errorf("a line of %d bytes with %q: %v", maxLine, eol, err)
+		}
+
+		over := "#" + strings.Repeat("a", maxLine) + eol
+		if _, err := Parse(strings.NewReader(over + body)); !errors.Is(err, ErrInvalid) {
+			t.Errorf("a line of %d bytes with %q: error %v, want ErrInvalid", maxLine+1, eol, err)
+		}
+	}
+
+	if _, err := Parse(strings.NewReader(body + "#" + strings.Repeat("a", 600))); !errors.Is(err, ErrInvalid) {
+		t.Errorf("a last line of 601 bytes without a newline: error %v, want ErrInvalid", err)
+	}
+}

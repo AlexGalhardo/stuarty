@@ -11,10 +11,23 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/core/timeval"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeval"
 )
+
+// jobExportRange is the frames of an export job: the one frame of a png, else the range; at is for a png only.
+func jobExportRange(doc *timeline.Document, a ExportArgs) (start, end int64, err *Error) {
+	switch {
+	case a.Format == FormatPNG:
+		return stillRange(doc, a)
+	case a.At != "":
+		return 0, 0, newError(command.CodeValidation, "at is for a png export.").withPath("args.at").
+			withHint("set format to png, or use start and end")
+	}
+
+	return exportRange(doc, a)
+}
 
 // stillRange is the one frame of a png export (VV-037): args.at, "0s" when it is not given, as the
 // frame [at, at+1). start and end belong to a video and are refused. A time past the last frame is
@@ -63,7 +76,12 @@ func (s *svc) runStillExport(ctx context.Context, job *JobRow, pw *progress, in 
 
 	pw.report(ctx, 0.05, "Rendering the frame")
 
-	body, err := s.framesFor(doc).Still(ctx, doc, int(in.Start))
+	nested, nerr := decodeNested(in.Nested)
+	if nerr != nil {
+		return nil, nerr
+	}
+
+	body, err := s.framesFor(doc, nested).Still(ctx, doc, int(in.Start))
 	if err != nil {
 		return nil, viewError(err)
 	}
@@ -79,13 +97,13 @@ func (s *svc) runStillExport(ctx context.Context, job *JobRow, pw *progress, in 
 
 		return nil, newError(
 			CodeExportFailed,
-			"The export is %s; the export limit is %s (VUKEM_VIDEO_MAX_EXPORT_BYTES).",
+			"The export is %s; the export limit is %s (STUARTY_MAX_EXPORT_BYTES).",
 			have,
 			ceiling,
 		).
 			withDetail("reason", exportSizeLimitReason).
 			withLimit("export_bytes", int64(len(body)), s.limits.MaxExportBytes).
-			withDetail("variable", "VUKEM_VIDEO_MAX_EXPORT_BYTES")
+			withDetail("variable", "STUARTY_MAX_EXPORT_BYTES")
 	}
 
 	out, aerr := filepath.Abs(filepath.Join(s.workspace, "exports", *job.ProjectID, exportFileName(job.ID, in.Format)))

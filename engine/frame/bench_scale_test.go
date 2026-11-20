@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/ingest"
-	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/ingest"
+	"github.com/AlexGalhardo/stuarty/engine/rasterize"
 )
 
 // The ViewFrame and ViewSheet benchmarks of the ALPHA phase (P2-RND-014) run on the project of NFR-009:

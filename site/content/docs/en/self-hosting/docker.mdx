@@ -11,42 +11,42 @@ description: "Start the published image with a workspace volume, the required ke
 
 ## The idea
 
-Every stable release publishes one multi-architecture image (`linux/amd64` and `linux/arm64`) with the Vukem Video binary and a pinned LGPL FFmpeg inside. Pull it from either registry, the digest is the same:
+Every stable release publishes one multi-architecture image (`linux/amd64` and `linux/arm64`) with the Stuarty binary and a pinned LGPL FFmpeg inside. Pull it from either registry, the digest is the same:
 
-- `ghcr.io/alexgalhardo/vukem-video`
-- `alexgalhardo/vukem-video` on Docker Hub
+- `ghcr.io/alexgalhardo/stuarty`
+- `alexgalhardo/stuarty` on Docker Hub
 
 The tags are `X.Y.Z`, `X.Y` and `latest`. Pin `X.Y.Z` for a server you keep.
 
-A container binds every network interface, so the image always runs in [network mode](/docs/self-hosting/network-mode): login is mandatory and the server needs an `APP_KEY`. The image sets `HOST=0.0.0.0`, `PORT=7878`, `VUKEM_VIDEO_MODE=network`, `APP_URL=http://localhost:7878` and `VUKEM_VIDEO_HOME=/data`. It runs as the user `app` (uid 10001), writes only to the `/data` volume and sends no data anywhere. No web server runs in it: the Go binary serves HTTP.
+A container binds every network interface, so the image always runs in [network mode](/docs/self-hosting/network-mode): login is mandatory and the server needs an `APP_KEY`. The image sets `HOST=0.0.0.0`, `PORT=7878`, `STUARTY_MODE=network`, `APP_URL=http://localhost:7878` and `STUARTY_HOME=/data`. It runs as the user `app` (uid 10001), writes only to the `/data` volume and sends no data anywhere. No web server runs in it: the Go binary serves HTTP.
 
 ## Quick start
 
 ```bash
-docker run -d --name vukem-video \
+docker run -d --name stuarty \
   -p 127.0.0.1:7878:7878 \
-  -v vukem-video:/data \
+  -v stuarty:/data \
   -e APP_KEY="$(openssl rand -base64 32)" \
-  -e VUKEM_VIDEO_ADMIN_EMAIL=admin@example.com \
-  -e VUKEM_VIDEO_ADMIN_PASSWORD="choose-a-long-password" \
-  ghcr.io/alexgalhardo/vukem-video:X.Y.Z
+  -e STUARTY_ADMIN_EMAIL=admin@example.com \
+  -e STUARTY_ADMIN_PASSWORD="choose-a-long-password" \
+  ghcr.io/alexgalhardo/stuarty:X.Y.Z
 curl -fsS http://localhost:7878/up
 ```
 
 - `-p 127.0.0.1:7878:7878` publishes the port on your own machine only. With the default `APP_URL=http://localhost:7878` this is the one case where plain HTTP is accepted.
-- `-v vukem-video:/data` keeps the workspace (database, media, exports) across container runs.
+- `-v stuarty:/data` keeps the workspace (database, media, exports) across container runs.
 - `APP_KEY` is required: 32 bytes or more, base64. It is not baked into the image, because a key in a public image is public. Store the value somewhere safe and give the container the same one on every start.
-- The two `VUKEM_VIDEO_ADMIN_*` variables create the first administrator, once, when no user exists. A container never lets you run `user:create` before the first start, because the server owns the workspace. Afterwards the variables are ignored. The password may be `@file:/run/secrets/admin_password` to keep it out of the environment, and the log shows the email and never the password.
-- `GET /up` answers 200 when the server is healthy; the image has a health check on it. `docker run --rm ghcr.io/alexgalhardo/vukem-video:X.Y.Z version` prints the version.
+- The two `STUARTY_ADMIN_*` variables create the first administrator, once, when no user exists. A container never lets you run `user:create` before the first start, because the server owns the workspace. Afterwards the variables are ignored. The password may be `@file:/run/secrets/admin_password` to keep it out of the environment, and the log shows the email and never the password.
+- `GET /up` answers 200 when the server is healthy; the image has a health check on it. `docker run --rm ghcr.io/alexgalhardo/stuarty:X.Y.Z version` prints the version.
 
 ### Your first export from the container
 
 The container has no files of yours and the CLI needs a key, so three more steps lead to a verified export. Run them in a shell on the host.
 
-1. Give the container a folder to import from. In network mode an import is confined to `VUKEM_VIDEO_IMPORT_ROOTS`, so mount a folder with your clip and name it (add the two lines to the `docker run` above; on Windows with Git Bash set `MSYS_NO_PATHCONV=1` so `/media` is not rewritten):
+1. Give the container a folder to import from. In network mode an import is confined to `STUARTY_IMPORT_ROOTS`, so mount a folder with your clip and name it (add the two lines to the `docker run` above; on Windows with Git Bash set `MSYS_NO_PATHCONV=1` so `/media` is not rewritten):
 
    ```bash
-   -v "$HOME/clips:/media:ro"    -e VUKEM_VIDEO_IMPORT_ROOTS=/media    ```
+   -v "$HOME/clips:/media:ro"    -e STUARTY_IMPORT_ROOTS=/media    ```
 
 2. Create an API key with the administrator you made (the secret is shown once; see [API keys](/docs/self-hosting/api-keys)):
 
@@ -59,8 +59,8 @@ The container has no files of yours and the CLI needs a key, so three more steps
 3. Run the CLI inside the container with the key. The server owns the workspace, so the CLI talks to it as a client; inside the container the address is already `http://localhost:7878`. The server chooses the project id (`project:create --id` is refused in network mode): use the ids the commands print.
 
    ```bash
-   export VUKEM_VIDEO_KEY="vvk_<the secret from step 2>"
-   vv() { docker exec -i -e VUKEM_VIDEO_KEY vukem-video vukem-video "$@"; }
+   export STUARTY_KEY="vvk_<the secret from step 2>"
+   vv() { docker exec -i -e STUARTY_KEY stuarty stuarty "$@"; }
    vv project:create --name "First export" --json     # prints project_id
    vv media:import /media/clip.mp4 --project <project id> --json   # prints asset_id
    vv edit --project <project id> --ops - <<'EOF'
@@ -84,12 +84,30 @@ If you see it, republish the port on `127.0.0.1`, or terminate TLS in the server
 
 For any use other than `localhost` (another machine, a domain name), set `APP_URL` to the public `https` address and put TLS in front: see [Put Caddy in front](/docs/self-hosting/caddy).
 
+## The key of the credential vault
+
+When you connect an account (the Connections page), Stuarty keeps its credential in an encrypted file, `vault.json`, in the workspace. The key that opens it is never in the workspace, so a copy of the volume reveals no credential. Give the container the key once, as a Docker secret:
+
+```bash
+openssl rand -base64 32 > master.key
+docker run -d --name stuarty \
+  -p 127.0.0.1:7878:7878 \
+  -v stuarty:/data \
+  -v "$PWD/master.key:/run/secrets/master_key:ro" \
+  -e STUARTY_MASTER_KEY_FILE=/run/secrets/master_key \
+  ghcr.io/alexgalhardo/stuarty:X.Y.Z
+```
+
+Add the other variables of the command above (`APP_KEY` and the first administrator) to the same `docker run`.
+
+`STUARTY_MASTER_KEY` takes the key itself instead of a file. Keep a copy of the key next to your backups: without it the connections cannot be opened and you connect the accounts again (projects and media are not encrypted and are not affected). Nothing is created until the first credential, so a server with no connection needs no key.
+
 ## Common mistakes
 
 - Publishing the port as `-p 7878:7878`, which listens on every interface: a password and a session cookie then cross the network in clear, and the server logs the warning above. Use `127.0.0.1:` unless a proxy with TLS is in front.
 - Starting without `APP_KEY`: the server exits with `APP_KEY missing`. The message names the variable.
 - Reaching the published port from another machine by the address of the host: refused, since the host and origin must be `localhost:7878`.
-- Importing a file the server cannot reach: the CLI runs inside the container, so the path is a path in the container, and it must be inside `VUKEM_VIDEO_IMPORT_ROOTS`. A path outside it answers `E_FILE_NOT_FOUND`, the same as a missing file.
+- Importing a file the server cannot reach: the CLI runs inside the container, so the path is a path in the container, and it must be inside `STUARTY_IMPORT_ROOTS`. A path outside it answers `E_FILE_NOT_FOUND`, the same as a missing file.
 - Starting a second container on the same volume. One process owns a workspace; the second fails with `E_WORKSPACE_LOCKED`.
 
 ## Next steps

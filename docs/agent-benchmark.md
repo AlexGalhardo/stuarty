@@ -1,6 +1,6 @@
 # Agent benchmark: the model ladder
 
-Can a modest AI agent edit video with Vukem Video almost as well as a large one? This document answers that question release after release. Each round runs three agents, one per model tier (Claude Haiku, Sonnet and Opus, all at medium effort), through exactly the same fixed script of tasks, as first-class users of the product. Every gap between the smallest and the largest model is treated as a defect of the product (documentation, error messages, schemas, MCP, CLI, HTTP API or UI), not of the model, and the goal is that the gap shrinks from one round to the next.
+Can a modest AI agent edit video with Stuarty almost as well as a large one? This document answers that question release after release. Each round runs three agents, one per model tier (Claude Haiku, Sonnet and Opus, all at medium effort), through exactly the same fixed script of tasks, as first-class users of the product. Every gap between the smallest and the largest model is treated as a defect of the product (documentation, error messages, schemas, MCP, CLI, HTTP API or UI), not of the model, and the goal is that the gap shrinks from one round to the next.
 
 ## 1. Method
 
@@ -100,3 +100,22 @@ Product performance, re-exporting the agents' projects on an idle machine (media
 | V16, 60 fps mixed sources | 180 s | 146 to 156 s | 177 to 190 s | 14 to 17% |
 
 Export got slower between 0.24.0 and this build. The cause is being traced, and 0.25.0 is not released until it is fixed. In the editor, opening the V06 project took 0.51 to 0.58 s, playback advanced about 29.3 frames per second, and a click on the ruler moved the playhead in about 33 ms.
+
+## 4. The first complete flow on a small model (epic 38, NFR-066)
+
+The scenario `first-flow` of `internal/tools/agentharness` gives a small model only the brief ("make a short vertical video for YouTube Shorts from this footage about baking a first sourdough loaf, and schedule it for fifteen minutes from now") and the built-in skills in `web/resources/skills/`. It measures completion, tool calls, errors recovered and tokens. A run is a success only when the harness finds what the flow must leave behind: a published target that carries an approval, an export whose checks all passed, and the same file at the fake network, with nothing sent before the harness, playing the person, approved. The harness approves; the agent cannot. The time of the post is far enough ahead to be still on time when the agent stops and the harness approves, and the harness waits for it.
+
+The runs of a series share one server and one workspace, so each run is judged only by what it added: the publications that were not there when it started and the uploads the network received since. A run whose services do not answer fails before its first turn, at no cost.
+
+The scripted run of the same flow is `bash scripts/first-flow.sh` (CLI and MCP calls, no model) and the UI run is `web/e2e/specs/first-flow.spec.ts`. Both are regression tests of the whole product and cost nothing.
+
+**Cost.** A run with a model calls a paid API with the author's key, so the estimate is shown first and the author approves the budget. `STUARTY_HARNESS=1 go run ./internal/tools/agentharness --scenario first-flow --runs 5 --max-turns 60 --model <small model> --price-in <price> --price-out <price> --estimate` prints it without calling the API and without the services or a key; it is the worst case (every attempt uses every turn, every turn re-sends the whole context and writes the most tokens).
+
+**How to run it.** The services behind Stuarty are the fakes of `internal/tools/firstflowfake`, started by hand on loopback:
+
+1. `go run ./internal/tools/firstflowfake -media-root <workspace>` prints `ready provider=<url> social=<url>`. The fake network accepts an upload only for a file inside `-media-root` (by default the system temporary folder).
+2. `stuarty serve` with `APP_ENV=test`, `STUARTY_TEST_SOCIAL_URL=<social>`, `STUARTY_TEST_TRANSCRIBER=stub`, `STUARTY_LAUNCHER_SECRET=<secret>`, `STUARTY_HOME=<workspace>` and `STUARTY_ADDR=127.0.0.1:<port>` (never the default port of a person's own Stuarty).
+3. In that workspace: `connection:add --kind openai --endpoint <provider> --accepts text` for the fake provider, a price for the model `fake-small`, and the fake account connected (`social:connect --network fake`, then the consent redirect completed by a person).
+4. `STUARTY_HARNESS=1 ANTHROPIC_API_KEY=... go run ./internal/tools/agentharness --scenario first-flow --runs 5 --max-turns 60 --bin <stuarty> --clip <clip.mp4> --flow-base http://127.0.0.1:<port> --flow-home <workspace> --flow-launcher-secret <secret> --flow-social <social> --model <small model> --out <folder>`.
+
+Results of the runs are added here, as measurements, when the author has approved the budget.

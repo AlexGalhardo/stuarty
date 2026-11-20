@@ -23,5 +23,5 @@ export function transcriptionState(
 // The command a person runs in a terminal when this session cannot install: the server refuses a
 // local token and every agent surface (SDD-007 section 6.8).
 export function installCommand(model: string): string {
-	return `vukem-video tools:install whisper --model ${model}`;
+	return `stuarty tools:install whisper --model ${model}`;
 }

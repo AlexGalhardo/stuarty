@@ -13,20 +13,21 @@ import (
 	"testing"
 	"time"
 
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/config"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/stuarty/web/app/auth"
+	"github.com/AlexGalhardo/stuarty/web/app/events"
+	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
+	"github.com/AlexGalhardo/stuarty/web/app/store"
+	"github.com/AlexGalhardo/stuarty/web/bootstrap"
+
 	vukem "github.com/AlexGalhardo/vukem"
 	"github.com/AlexGalhardo/vukem/auth/hash"
 	"github.com/AlexGalhardo/vukem/ratelimit"
 	"github.com/AlexGalhardo/vukem/vukemtest"
-
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/config"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
-	"github.com/AlexGalhardo/vukem-video/web/app/auth"
-	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
-	"github.com/AlexGalhardo/vukem-video/web/app/store"
-	"github.com/AlexGalhardo/vukem-video/web/bootstrap"
 )
 
 type networkHarness struct {
@@ -100,12 +101,17 @@ func newNetworkHarnessRates(
 		t.Fatal(err)
 	}
 
-	svc, err := service.New(service.Options{Store: st, Now: now, Keys: netAuth.Keys()})
+	// The streams are served as in a real server, so a test can check who may open one in network mode.
+	hub := events.New(st, events.Options{})
+	t.Cleanup(hub.Close)
+
+	svc, err := service.New(service.Options{Store: st, Now: now, Keys: netAuth.Keys(), Publish: hub.Publish})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	deps := &httpapi.Deps{
+		Events:        hub,
 		Service:       svc,
 		Registry:      command.Default(),
 		Workspace:     dir,
@@ -405,7 +411,7 @@ func TestNetworkWithNoUsersAnswers401AndLogsHowToCreateOne(t *testing.T) {
 	}
 
 	if !strings.Contains(h.log.String(), "user:create") ||
-		!strings.Contains(h.log.String(), "VUKEM_VIDEO_ADMIN_EMAIL") {
+		!strings.Contains(h.log.String(), "STUARTY_ADMIN_EMAIL") {
 		t.Errorf("log does not say how to create a user:\n%s", h.log)
 	}
 

@@ -20,7 +20,7 @@ body = """
 ### {{ group | striptags | trim }}
 
 {% for commit in commits %}\
-- {% if commit.breaking %}**BREAKING:** {% endif %}{% if commit.scope %}**{{ commit.scope }}:** {% endif %}{{ commit.message | upper_first | replace(from="<", to="\\<") }} ([{{ commit.id | truncate(length=7, end="") }}](https://github.com/AlexGalhardo/vukem-video/commit/{{ commit.id }}))
+- {% if commit.breaking %}**BREAKING:** {% endif %}{% if commit.scope %}**{{ commit.scope }}:** {% endif %}{{ commit.message | upper_first | replace(from="<", to="\\<") }} ([{{ commit.id | truncate(length=7, end="") }}](https://github.com/AlexGalhardo/stuarty/commit/{{ commit.id }}))
 {% endfor %}\
 {% endfor %}
 """
@@ -28,12 +28,12 @@ footer = """
 {% for release in releases -%}
 {% if release.version -%}
 {% if release.previous.version -%}
-[{{ release.version | trim_start_matches(pat="v") }}]: https://github.com/AlexGalhardo/vukem-video/compare/{{ release.previous.version }}...{{ release.version }}
+[{{ release.version | trim_start_matches(pat="v") }}]: https://github.com/AlexGalhardo/stuarty/compare/{{ release.previous.version }}...{{ release.version }}
 {% else -%}
-[{{ release.version | trim_start_matches(pat="v") }}]: https://github.com/AlexGalhardo/vukem-video/releases/tag/{{ release.version }}
+[{{ release.version | trim_start_matches(pat="v") }}]: https://github.com/AlexGalhardo/stuarty/releases/tag/{{ release.version }}
 {% endif -%}
 {% else -%}
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/{{ release.previous.version }}...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/{{ release.previous.version }}...HEAD
 {% endif -%}
 {% endfor %}
 """

@@ -9,17 +9,22 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/events"
 
-	"github.com/AlexGalhardo/vukem-video/desktop/shell"
-	"github.com/AlexGalhardo/vukem-video/desktop/shell/webviewenv"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
+	"github.com/AlexGalhardo/stuarty/desktop/service"
+	"github.com/AlexGalhardo/stuarty/desktop/shell"
+	"github.com/AlexGalhardo/stuarty/desktop/shell/webviewenv"
+	"github.com/AlexGalhardo/stuarty/service/config"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
 // version is set at build time: -ldflags "-X main.version=1.2.3".
@@ -34,15 +39,24 @@ const (
 
 func main() {
 	if err := run(); err != nil {
-		fmt.Fprintln(os.Stderr, "vukem-video-desktop:", err)
+		fmt.Fprintln(os.Stderr, "stuarty-desktop:", err)
 		os.Exit(1)
 	}
 }
 
 func run() error {
-	binary := flag.String("binary", defaultBinary(), "path of the vukem-video server binary")
+	// A variable set under its former name (VUKEM_VIDEO_*) is read under the new one, with a warning
+	// (SDD-000 section 13.1), before the workspace or the server is looked at.
+	if _, err := config.ApplyFormerVariables(config.ProcessEnviron(), os.Stderr); err != nil {
+		return err
+	}
+
+	binary := flag.String("binary", defaultBinary(), "path of the stuarty server binary")
 	devtools := flag.Bool("devtools", false, "bind F12 to the developer tools (debugging and QA builds)")
 	watch := flag.String(shell.WatchFlag[2:], "", "internal: run the watchdog of an update (marker file)")
+	flag.Bool(
+		strings.TrimPrefix(service.BackgroundFlag, "--"), false, "start with the window hidden (the start at sign-in)",
+	)
 	flag.Parse()
 
 	// The watchdog is the previous version started by the new one's installer; it has no window.
@@ -56,12 +70,31 @@ func run() error {
 	}
 
 	br := &bridge{}
+	// A window has no standard error to read: what Resolve says about the workspace of Vukem Video is kept
+	// and the adoption is shown in a dialog once the loop runs (PRD-003 RF-221).
+	var notices strings.Builder
+	workspace.Notice = io.MultiWriter(os.Stderr, &notices)
 	ws, wsErr := workspace.Resolve(os.Getenv)
+	settingsDir, _ := service.Dir()
+	settings := service.Load(settingsDir)
+	// A second launch of the same workspace focuses the first and exits before it starts a second server
+	// (SDD-012 section 21.3 item 7); the lease of SDD-020 section 27 stays the protection against two senders.
+	var bgp atomic.Pointer[background]
 	app := application.New(application.Options{
-		Name:              "Vukem Video",
-		Description:       "Vukem Video desktop",
+		Name:              "Stuarty",
+		// The window and the taskbar show this icon: the binary carries no icon resource.
+		Icon:              trayPNG,
+		Description:       "Stuarty desktop",
 		RawMessageHandler: br.handle,
-		Mac:               application.MacOptions{ApplicationShouldTerminateAfterLastWindowClosed: true},
+		SingleInstance: &application.SingleInstanceOptions{
+			UniqueID: shell.InstanceID(string(ws)),
+			OnSecondInstanceLaunch: func(d application.SecondInstanceData) {
+				if bg := bgp.Load(); bg != nil && shell.DecideSecondLaunch(d.Args) == shell.SecondFocus {
+					bg.showWindow()
+				}
+			},
+		},
+		Mac: application.MacOptions{ApplicationShouldTerminateAfterLastWindowClosed: true},
 		Windows: application.WindowsOptions{
 			WebviewUserDataPath:   shell.WebviewDataPath(webviewenv.Getenv, string(ws)),
 			AdditionalBrowserArgs: shell.WebviewArgs(webviewenv.Getenv),
@@ -86,8 +119,9 @@ func run() error {
 	if err != nil {
 		return failStartup(app, err)
 	}
+	hidden := shell.StartHidden(os.Args[1:], settings.KeepRunning)
 	win := app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title:            "Vukem Video",
+		Title:            "Stuarty",
 		Width:            defaultWidth,
 		Height:           defaultHeight,
 		MinWidth:         minWidth,
@@ -96,7 +130,14 @@ func run() error {
 		EnableFileDrop:   true,
 		KeyBindings:      windowKeyBindings(*devtools),
 		URL:              launch,
+		Hidden:           hidden,
 	})
+	bg := newBackground(app, srv, settingsDir, settings)
+	bg.install(win)
+	// The framework closes the windows after the shutdown tasks: an update or the system quits, never hides.
+	app.OnShutdown(bg.shuttingDown)
+	bgp.Store(bg)
+	br.bg.Store(bg)
 	guardNavigation(win, srv.Port, home)
 	br.app = app
 	br.port.Store(int64(srv.Port))
@@ -106,12 +147,19 @@ func run() error {
 	// and without win.SetMenu the window has no menu bar.
 	up := newUpdater(app)
 	app.OnShutdown(up.launcher.Close)
-	menu := buildMenu(app, win, ws, up)
+	menu := buildMenu(app, win, ws, up, bg.quit)
 	app.Menu.SetApplicationMenu(menu)
 	win.SetMenu(menu)
 	// A dialog shown before the loop runs is dropped (VV-006), so the launcher starts with the loop.
 	app.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(*application.ApplicationEvent) {
 		go confirmStart()
+		go bg.Reconcile()
+		if hidden {
+			bg.ensureTray()
+		}
+		if msg := shell.AdoptionMessage(shell.SystemLanguage(), notices.String()); msg != "" {
+			go application.InvokeSync(func() { app.Dialog.Info().SetTitle("Stuarty").SetMessage(msg).Show() })
+		}
 		up.start()
 	})
 
@@ -119,8 +167,8 @@ func run() error {
 	go func() {
 		<-srv.Done()
 		application.InvokeSync(func() {
-			app.Dialog.Error().SetTitle("Vukem Video").SetMessage(tr(shell.TextServerStopped)).Show()
-			app.Quit()
+			app.Dialog.Error().SetTitle("Stuarty").SetMessage(tr(shell.TextServerStopped)).Show()
+			bg.quit()
 		})
 	}()
 
@@ -156,7 +204,7 @@ func failStartup(app *application.App, err error) error {
 
 // defaultBinary is the server next to the shell executable.
 func defaultBinary() string {
-	name := "vukem-video"
+	name := "stuarty"
 	if runtime.GOOS == "windows" {
 		name += ".exe"
 	}
@@ -167,9 +215,8 @@ func defaultBinary() string {
 	return filepath.Join(filepath.Dir(exe), name)
 }
 
-// confirmStart tells the watchdog of an update that this version started (SDD-009 section 10.5 item 7).
+// confirmStart tells the watchdog of an update that this version started (SDD-009 section 10.5 item 7),
+// also the watchdog of an installed Vukem Video that replaced itself with Stuarty (ADR-0044).
 func confirmStart() {
-	if dir, err := shell.UpdateStateDir(); err == nil {
-		_ = shell.ConfirmStart(dir, version)
-	}
+	_ = shell.ConfirmUpdates(version)
 }

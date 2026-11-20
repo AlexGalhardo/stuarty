@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // The golden-case runner of SDD-002 §A.11 and SDD-008 §3. A case is a directory
@@ -61,12 +61,7 @@ func runGolden(t *testing.T, reg *Registry, root string) int {
 			}
 			n++
 			dir := filepath.Join(root, cmd.Name, c.Name())
-			// A case named *_in_prototype runs against the Prototype build.
-			caseReg := reg
-			if strings.HasSuffix(c.Name(), "_in_prototype") {
-				caseReg = prototypeBuild()
-			}
-			t.Run(cmd.Name+"/"+c.Name(), func(t *testing.T) { runGoldenCase(t, caseReg, dir) })
+			t.Run(cmd.Name+"/"+c.Name(), func(t *testing.T) { runGoldenCase(t, reg, dir) })
 		}
 	}
 	return n
@@ -109,6 +104,9 @@ func runGoldenCase(t *testing.T, reg *Registry, dir string) {
 		generated = generated[1:]
 		return id
 	}}
+	if b, err := os.ReadFile(filepath.Join(dir, "timelines.json")); err == nil {
+		env.Timelines = caseGraphOf(t, doc, b)
+	}
 	res, applyErr := reg.Apply(doc, op, env)
 	checkCaseName(t, filepath.Base(dir), applyErr)
 	if applyErr == nil {
@@ -125,6 +123,13 @@ func runGoldenCase(t *testing.T, reg *Registry, dir string) {
 	if _, err := os.Stat(filepath.Join(dir, "error.json")); err == nil && !*update {
 		t.Fatal("error.json exists but the operation succeeded")
 	}
+	if len(res.Spawned) > 0 {
+		docs := make([]json.RawMessage, len(res.Spawned))
+		for i, s := range res.Spawned {
+			docs[i] = timeline.Canonical(s)
+		}
+		compareFile(t, dir, "spawned.json", goldenBytes(t, docs))
+	}
 	compareFile(t, dir, "after.json", append(timeline.Canonical(res.Doc), '\n'))
 	compareFile(t, dir, "inverse.json", goldenBytes(t, nonNil(res.Inverse)))
 	compareFile(t, dir, "diff.json", goldenBytes(t, nonNil(res.Diff)))
@@ -135,6 +140,39 @@ func runGoldenCase(t *testing.T, reg *Registry, dir string) {
 	if len(skipped) != 0 || !bytes.Equal(timeline.Canonical(back.Doc), timeline.Canonical(doc)) {
 		t.Errorf("the inverse does not restore the document (skipped %v)", skipped)
 	}
+}
+
+// caseGraph is the production of a case: the document under test and the others of timelines.json.
+type caseGraph map[string]*timeline.Document
+
+func (g caseGraph) Doc(id string) (*timeline.Document, bool) { d, ok := g[id]; return d, ok }
+
+func (g caseGraph) Users(id string) []string {
+	var out []string
+	for uid, d := range g {
+		if slices.Contains(timeline.CompositionTimelines(d), id) {
+			out = append(out, uid)
+		}
+	}
+	slices.Sort(out)
+	return out
+}
+
+func caseGraphOf(t *testing.T, doc *timeline.Document, timelines []byte) caseGraph {
+	t.Helper()
+	var raws []json.RawMessage
+	if err := json.Unmarshal(timelines, &raws); err != nil {
+		t.Fatal(err)
+	}
+	g := caseGraph{doc.ID: doc}
+	for _, r := range raws {
+		d, err := timeline.Decode(r)
+		if err != nil {
+			t.Fatal(err)
+		}
+		g[d.ID] = d
+	}
+	return g
 }
 
 func nonNil[T any](s []T) []T {
@@ -207,15 +245,4 @@ func checkCaseName(t *testing.T, name string, err error) {
 	default:
 		t.Errorf("case name %q starts with neither ok_ nor err_", name)
 	}
-}
-
-// prototypeBuild is the Prototype registry: the commands of Default that belong to it.
-func prototypeBuild() *Registry {
-	r := NewRegistry(Prototype)
-	for _, c := range Default().List() {
-		if err := r.Register(*c); err != nil {
-			panic(err)
-		}
-	}
-	return r
 }

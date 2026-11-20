@@ -1,0 +1,12 @@
+{
+  "args": {
+    "fill": "#e63946",
+    "h": 200,
+    "radius": 24,
+    "shape": "rounded_rect",
+    "stroke_color": "#ffffff",
+    "stroke_width": 4,
+    "w": 600
+  },
+  "op": "layer.add_shape"
+}

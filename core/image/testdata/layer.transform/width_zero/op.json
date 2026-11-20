@@ -1,0 +1,7 @@
+{
+  "args": {
+    "layer_id": "lyr_dddddddddd",
+    "w": 0
+  },
+  "op": "layer.transform"
+}

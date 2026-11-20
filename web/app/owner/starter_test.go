@@ -5,15 +5,15 @@ import (
 	"path/filepath"
 	"testing"
 
-	vukem "github.com/AlexGalhardo/vukem"
+	"github.com/AlexGalhardo/stuarty/internal/outbound"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
 
-	"github.com/AlexGalhardo/vukem-video/internal/outbound"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
+	vukem "github.com/AlexGalhardo/vukem"
 )
 
-// ADR-0022 item 8: a new workspace lists exactly the 3 starter templates, and
-// the next start of the same workspace lists 3 again.
+// ADR-0022 item 8 and SDD-018 section 17: a new workspace lists the 3 starter templates and the 3 templates of
+// the recipes, and the next start of the same workspace lists 6 again.
 func TestANewWorkspaceHoldsTheStarterTemplates(t *testing.T) {
 	getenv := envOf(map[string]string{workspace.EnvHome: filepath.Join(t.TempDir(), "ws")})
 	ctx := service.WithCaller(context.Background(), service.Caller{Actor: "local:cli", Scopes: service.AllScopes})
@@ -25,8 +25,8 @@ func TestANewWorkspaceHoldsTheStarterTemplates(t *testing.T) {
 		}
 
 		res, lerr := o.Service.TemplateList(ctx, service.TemplateListRequest{Limit: 100})
-		if lerr != nil || len(res.Templates) != 3 {
-			t.Errorf("start %d lists %+v, %v; want 3 templates", start, res, lerr)
+		if lerr != nil || len(res.Templates) != 6 {
+			t.Errorf("start %d lists %+v, %v; want 6 templates", start, res, lerr)
 		}
 
 		if err := o.Close(); err != nil {

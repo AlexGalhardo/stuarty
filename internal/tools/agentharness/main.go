@@ -4,11 +4,11 @@
 // Messages API over HTTPS with the key of ANTHROPIC_API_KEY.
 //
 // It costs money, so it never runs by itself and never in CI: it refuses to start unless
-// VUKEM_VIDEO_HARNESS=1 is set and --runs is given, and it prints the estimated cost first. It is a
+// STUARTY_HARNESS=1 is set and --runs is given, and it prints the estimated cost first. It is a
 // release-checklist tool, not part of the product: no shipped binary contains it.
 //
-//	VUKEM_VIDEO_HARNESS=1 ANTHROPIC_API_KEY=... go run ./internal/tools/agentharness \
-//	    --runs 10 --bin ./vukem-video --clip ./clip.mp4 --out ./transcripts
+//	STUARTY_HARNESS=1 ANTHROPIC_API_KEY=... go run ./internal/tools/agentharness \
+//	    --runs 10 --bin ./stuarty --clip ./clip.mp4 --out ./transcripts
 package main
 
 import (
@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/internal/outbound"
+	"github.com/AlexGalhardo/stuarty/internal/outbound"
 )
 
 const (
@@ -61,6 +61,10 @@ type options struct {
 	sleep                func(time.Duration)
 	scenarioList         []scenario
 	apiKey, systemPrompt string
+	// The first-flow scenario runs against services the operator started on loopback.
+	skillsDir                                  string
+	flowBase, flowHome, flowSecret, flowSocial string
+	flowEnv                                    *flowEnv
 }
 
 func parseOptions(argv []string, getenv func(string) string, stderr io.Writer) (options, int) {
@@ -71,9 +75,19 @@ func parseOptions(argv []string, getenv func(string) string, stderr io.Writer) (
 	fs.IntVar(&o.runs, "runs", 0, "runs per scenario (required)")
 	fs.StringVar(&o.model, "model", defaultModel, "the model the agent runs on")
 	fs.StringVar(&o.endpoint, "endpoint", defaultEndpoint, "the Messages API URL (https; tests use a loopback server)")
-	fs.StringVar(&o.scenario, "scenario", "all", "prototype, template or all")
+	fs.StringVar(&o.scenario, "scenario", "all", "prototype, template, first-flow or all (all leaves first-flow out)")
+	fs.StringVar(
+		&o.skillsDir,
+		"skills",
+		"web/resources/skills",
+		"first-flow: the folder of the built-in skills given to the agent",
+	)
+	fs.StringVar(&o.flowBase, "flow-base", "", "first-flow: the address of the Stuarty server on loopback")
+	fs.StringVar(&o.flowHome, "flow-home", "", "first-flow: the workspace of that server (STUARTY_HOME)")
+	fs.StringVar(&o.flowSecret, "flow-launcher-secret", "", "first-flow: the STUARTY_LAUNCHER_SECRET of that server")
+	fs.StringVar(&o.flowSocial, "flow-social", "", "first-flow: the address of the fake social network")
 	fs.StringVar(&o.skill, "skill", "web/app/agentdocs/out/SKILL.md", "the SKILL.md given to the agent")
-	fs.StringVar(&o.bin, "bin", "vukem-video", "the vukem-video binary the agent drives")
+	fs.StringVar(&o.bin, "bin", "stuarty", "the stuarty binary the agent drives")
 	fs.StringVar(&o.clip, "clip", "", "a short video copied to clip.mp4 for the prototype scenario")
 	fs.StringVar(&o.out, "out", "agent-transcripts", "where the transcripts and summary.json are written")
 	fs.IntVar(&o.maxTurns, "max-turns", 40, "model calls allowed per run")
@@ -87,8 +101,8 @@ func parseOptions(argv []string, getenv func(string) string, stderr io.Writer) (
 	}
 
 	switch {
-	case getenv("VUKEM_VIDEO_HARNESS") != "1":
-		fmt.Fprintln(stderr, "agentharness: refusing to run: it costs money; set VUKEM_VIDEO_HARNESS=1 to run it")
+	case getenv("STUARTY_HARNESS") != "1":
+		fmt.Fprintln(stderr, "agentharness: refusing to run: it costs money; set STUARTY_HARNESS=1 to run it")
 
 		return o, 2
 	case o.runs < 1:
@@ -104,6 +118,17 @@ func parseOptions(argv []string, getenv func(string) string, stderr io.Writer) (
 	var ok bool
 	if o.scenarioList, ok = findScenarios(o.scenario); !ok {
 		fmt.Fprintf(stderr, "agentharness: unknown scenario %q\n", o.scenario)
+
+		return o, 2
+	}
+
+	// The estimate is shown to the author before anything is started, so it needs none of the services.
+	if o.scenario == firstFlow.Name && !o.estimateOnly &&
+		(o.flowBase == "" || o.flowHome == "" || o.flowSecret == "" || o.flowSocial == "") {
+		fmt.Fprintln(
+			stderr,
+			"agentharness: first-flow needs --flow-base, --flow-home, --flow-launcher-secret and --flow-social",
+		)
 
 		return o, 2
 	}
@@ -159,6 +184,17 @@ func run(
 
 	o.systemPrompt = systemPrompt(string(skill))
 
+	if o.scenario == firstFlow.Name {
+		extra, err := builtinSkills(o.skillsDir)
+		if err != nil {
+			fmt.Fprintf(stderr, "agentharness: %v\n", err)
+
+			return 1
+		}
+
+		o.systemPrompt += extra
+	}
+
 	est := estimate(o, len(o.systemPrompt))
 	fmt.Fprintf(stdout, "agentharness: %d runs of %d scenario(s) on %s\n", o.runs, len(o.scenarioList), o.model)
 	fmt.Fprintf(stdout, "agentharness: estimated cost up to USD %.2f (%d input and %d output tokens at worst; "+
@@ -185,11 +221,19 @@ func run(
 
 	o.runnerFor = mk(o.bin)
 
+	if o.scenario == firstFlow.Name {
+		o.flowEnv = &flowEnv{
+			person:  newLivePerson(o.flowBase, o.flowSecret, o.flowHome),
+			network: newLiveNetwork(o.flowSocial),
+			wait:    3 * time.Minute, poll: 2 * time.Second,
+		}
+	}
+
 	return playAll(ctx, o, api, stdout, stderr)
 }
 
 func systemPrompt(skill string) string {
-	return "You are an agent that edits video with the vukem-video command line. You have one tool, " +
+	return "You are an agent that edits video with the stuarty command line. You have one tool, " +
 		toolName + ", that runs a command of the CLI; the working directory holds any file the task names. " +
 		"The CLI reference is `help`; the skill below is everything else you know.\n\n" + skill
 }
@@ -201,6 +245,7 @@ func playAll(ctx context.Context, o options, api Doer, stdout, stderr io.Writer)
 			sleep: func(d time.Duration) { sleepFor(o, d) },
 		},
 		model: o.model, maxTokens: o.maxTokens, maxTurns: o.maxTurns, system: o.systemPrompt,
+		flow: o.flowEnv,
 	}
 
 	summary := map[string]any{"model": o.model, "runs": o.runs}
@@ -290,6 +335,11 @@ func playOnce(ctx context.Context, a *agent, o options, sc scenario, n int) (run
 		}
 	}
 
+	if sc.Flow {
+		// The post goes out from the server of the operator, so the run uses its workspace.
+		home = o.flowHome
+	}
+
 	return a.play(ctx, sc, n, o.runnerFor(home, work))
 }
 
@@ -304,7 +354,7 @@ func saveTranscript(dir string, r runResult) error {
 	return os.WriteFile(filepath.Join(dir, name), raw, 0o600)
 }
 
-// execRunner is the real Runner: the vukem-video binary, run with no shell, in the work directory,
+// execRunner is the real Runner: the stuarty binary, run with no shell, in the work directory,
 // on a workspace of its own so no run sees another one.
 func execRunner(bin string) func(home, work string) Runner {
 	return func(home, work string) Runner {
@@ -316,7 +366,7 @@ func execRunner(bin string) func(home, work string) Runner {
 			// and reach the program as an argument vector, never a shell.
 			cmd := exec.CommandContext(ctx, bin, args...)
 			cmd.Dir = work
-			cmd.Env = append(os.Environ(), "VUKEM_VIDEO_HOME="+home)
+			cmd.Env = append(os.Environ(), "STUARTY_HOME="+home)
 			cmd.Stdin = strings.NewReader(stdin)
 
 			out, err := cmd.CombinedOutput()

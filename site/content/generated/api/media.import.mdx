@@ -33,6 +33,9 @@ Content type `application/json`.
 | --- | --- | --- | --- |
 | `dry_run` | `boolean` | no | Checks the paths and limits only: the format is probed on the real import, so a file that is refused there (SVG, for one) still answers 202. |
 | `files` | array of [`importFileIn`](/docs/api/schemas#importfilein) | yes | at least 1 items; at most 50 items |
+| `info` | [`AssetInfo`](/docs/api/schemas#assetinfo) or `any` or `null` or `null` | no | Tags, the reuse mark and a description for the files of the call. |
+| `origin` | [`Origin`](/docs/api/schemas#origin) or `any` or `null` or `null` | no | Where the files came from: kind imported (default), generated (provider and model), fetched_by_agent (source and rights_note) or rendered_externally (source). |
+| `timeline_id` | `string` | no | The timeline of the project; required when the project has several. |
 | `wait_ms` | `integer` | no | 0 to 25000: hold the call until the assets are ready. |
 
 ## Responses
@@ -123,12 +126,13 @@ Content type `application/problem+json`. Schema: [`Problem`](/docs/api/schemas#p
 
 ```bash title="curl"
 curl -X POST "http://127.0.0.1:7878/api/v1/projects/PROJECT_ID/media" \
-  -H "Authorization: Bearer $VUKEM_VIDEO_KEY" \
+  -H "Authorization: Bearer $STUARTY_KEY" \
   -H "Content-Type: application/json" \
   -d '{
   "files": [
     {
       "asset_id": "string",
+      "hash": "string",
       "path": "string"
     }
   ]
@@ -142,11 +146,12 @@ import requests
 
 response = requests.post(
     "http://127.0.0.1:7878/api/v1/projects/PROJECT_ID/media",
-    headers={"Authorization": f"Bearer {os.environ['VUKEM_VIDEO_KEY']}"},
+    headers={"Authorization": f"Bearer {os.environ['STUARTY_KEY']}"},
     json={
         "files": [
             {
                 "asset_id": "string",
+                "hash": "string",
                 "path": "string",
             },
         ],
@@ -161,13 +166,14 @@ print(response.json())
 const response = await fetch("http://127.0.0.1:7878/api/v1/projects/PROJECT_ID/media", {
   method: "POST",
   headers: {
-    Authorization: `Bearer ${process.env.VUKEM_VIDEO_KEY}`,
+    Authorization: `Bearer ${process.env.STUARTY_KEY}`,
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
     "files": [
       {
         "asset_id": "string",
+        "hash": "string",
         "path": "string"
       }
     ]
@@ -193,6 +199,7 @@ func main() {
   "files": [
     {
       "asset_id": "string",
+      "hash": "string",
       "path": "string"
     }
   ]
@@ -202,7 +209,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	req.Header.Set("Authorization", "Bearer "+os.Getenv("VUKEM_VIDEO_KEY"))
+	req.Header.Set("Authorization", "Bearer "+os.Getenv("STUARTY_KEY"))
 	req.Header.Set("Content-Type", "application/json")
 
 	res, err := http.DefaultClient.Do(req)
@@ -227,13 +234,14 @@ curl_setopt_array($ch, [
     CURLOPT_CUSTOMREQUEST => "POST",
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_HTTPHEADER => [
-        "Authorization: Bearer " . getenv("VUKEM_VIDEO_KEY"),
+        "Authorization: Bearer " . getenv("STUARTY_KEY"),
         "Content-Type: application/json",
     ],
     CURLOPT_POSTFIELDS => '{
   "files": [
     {
       "asset_id": "string",
+      "hash": "string",
       "path": "string"
     }
   ]
@@ -257,13 +265,14 @@ public class Example {
     public static void main(String[] args) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create("http://127.0.0.1:7878/api/v1/projects/PROJECT_ID/media"))
-            .header("Authorization", "Bearer " + System.getenv("VUKEM_VIDEO_KEY"))
+            .header("Authorization", "Bearer " + System.getenv("STUARTY_KEY"))
             .header("Content-Type", "application/json")
             .method("POST", HttpRequest.BodyPublishers.ofString("""
                 {
                   "files": [
                     {
                       "asset_id": "string",
+                      "hash": "string",
                       "path": "string"
                     }
                   ]
@@ -288,12 +297,13 @@ using var client = new HttpClient();
 using var request = new HttpRequestMessage(
     HttpMethod.Post, "http://127.0.0.1:7878/api/v1/projects/PROJECT_ID/media");
 request.Headers.Authorization = new AuthenticationHeaderValue(
-    "Bearer", Environment.GetEnvironmentVariable("VUKEM_VIDEO_KEY"));
+    "Bearer", Environment.GetEnvironmentVariable("STUARTY_KEY"));
 request.Content = new StringContent("""
 {
   "files": [
     {
       "asset_id": "string",
+      "hash": "string",
       "path": "string"
     }
   ]
@@ -310,12 +320,13 @@ require "uri"
 
 uri = URI("http://127.0.0.1:7878/api/v1/projects/PROJECT_ID/media")
 request = Net::HTTP::Post.new(uri)
-request["Authorization"] = "Bearer #{ENV.fetch('VUKEM_VIDEO_KEY')}"
+request["Authorization"] = "Bearer #{ENV.fetch('STUARTY_KEY')}"
 request["Content-Type"] = "application/json"
 request.body = '{
   "files": [
     {
       "asset_id": "string",
+      "hash": "string",
       "path": "string"
     }
   ]
@@ -346,6 +357,7 @@ puts "#{response.code} #{response.body}"
       "name": "string",
       "probe": {},
       "progress": 0,
+      "replaces": [],
       "state": "string"
     }
   ],
@@ -371,6 +383,7 @@ puts "#{response.code} #{response.body}"
       "name": "string",
       "probe": {},
       "progress": 0,
+      "replaces": [],
       "state": "string"
     }
   ],
@@ -418,7 +431,7 @@ puts "#{response.code} #{response.body}"
   "detail": "string",
   "details": {},
   "errors": {},
-  "hint": "send the local token as Authorization: Bearer <token>, or run `vukem-video open` to open the editor in a browser",
+  "hint": "send the local token as Authorization: Bearer <token>, or run `stuarty open` to open the editor in a browser",
   "instance": "string",
   "issues": [
     {

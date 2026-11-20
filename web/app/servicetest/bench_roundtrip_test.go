@@ -7,16 +7,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/internal/outbound"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/remote"
+	"github.com/AlexGalhardo/stuarty/web/app/auth"
+	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
+	"github.com/AlexGalhardo/stuarty/web/bootstrap"
+
 	vukem "github.com/AlexGalhardo/vukem"
 	"github.com/AlexGalhardo/vukem/vukemtest"
-
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/internal/outbound"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/remote"
-	"github.com/AlexGalhardo/vukem-video/web/app/auth"
-	httpapi "github.com/AlexGalhardo/vukem-video/web/app/http"
-	"github.com/AlexGalhardo/vukem-video/web/bootstrap"
 )
 
 // BenchmarkRoundTrip200Items is SDD-005 section 18 check 12 over the real wire: the same

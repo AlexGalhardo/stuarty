@@ -28,14 +28,15 @@ const (
 	Auto Force = iota
 	// Server never falls back to in-process: E_WORKSPACE_LOCKED when no owner answers.
 	Server
-	// InProcess never uses a server: E_WORKSPACE_LOCKED when one exists.
+	// InProcess never uses a server: E_WORKSPACE_LOCKED when one exists, and E_INVALID_STATE naming
+	// STUARTY_URL when that names a remote one.
 	InProcess
 )
 
 // Environment variables of SDD-000 section 10 read by Open.
 const (
-	EnvURL = "VUKEM_VIDEO_URL"
-	EnvKey = "VUKEM_VIDEO_KEY"
+	EnvURL = "STUARTY_URL"
+	EnvKey = "STUARTY_KEY"
 )
 
 const (
@@ -48,14 +49,14 @@ const (
 	ProbeTimeout = 500 * time.Millisecond
 
 	handshakePath    = "/api/v1/handshake"
-	handshakeContext = "vukem-video-handshake-v1"
+	handshakeContext = "stuarty-handshake-v1"
 )
 
 // Options configures Open. The zero value is Auto with the process environment.
 type Options struct {
 	Force   Force
 	Getenv  func(string) string // default os.Getenv
-	KeyFile string              // --key-file; used with VUKEM_VIDEO_URL
+	KeyFile string              // --key-file; used with STUARTY_URL
 	// Test seams; zero values mean the constants above.
 	Wait   time.Duration
 	Poll   time.Duration
@@ -78,7 +79,7 @@ const (
 // remote client.
 type Session struct {
 	Mode Mode
-	Dir  Dir // empty when VUKEM_VIDEO_URL was used: no local file is read
+	Dir  Dir // empty when STUARTY_URL was used: no local file is read
 	// Lock is held until Close when Mode is ModeInProcess.
 	Lock *Lock
 	// BaseURL and Token are set when Mode is ModeHTTP.
@@ -108,6 +109,15 @@ func Open(ctx context.Context, o Options) (*Session, error) {
 	}
 
 	if raw := o.Getenv(EnvURL); raw != "" {
+		// A command that must own the workspace has no folder in a remote session: answering with one let
+		// it write the workspace into the current directory (VV-272).
+		if o.Force == InProcess {
+			return nil, &Error{
+				Code: CodeInvalidState,
+				Message: "this command writes the local workspace and " + EnvURL + " names a server: unset it " +
+					"and run the command on the machine of the workspace, with no server running",
+			}
+		}
 		return remoteSession(raw, o)
 	}
 

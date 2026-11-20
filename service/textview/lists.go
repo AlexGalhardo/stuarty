@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeval"
+	"github.com/AlexGalhardo/stuarty/core/timeval"
 )
 
 // ProjectLine is one project of the listing.
@@ -17,7 +17,10 @@ type ProjectLine struct {
 	FPS           timeval.FPS
 	DurationFrame int64
 	Items         int
-	Trashed       bool
+	// Timelines is how many timelines the project holds; it is printed only when there is more than one, so the
+	// line of a project that has one is what it always was.
+	Timelines int
+	Trashed   bool
 }
 
 // ProjectList renders the project list of SDD-003 section 3.9: the note, a
@@ -34,6 +37,10 @@ func ProjectList(lines []ProjectLine, total int, state string) string {
 		fmt.Fprintf(&b, "\n%s %s r%d %dx%d %sfps %s items=%d", l.ID, Quote(l.Name, 60), l.Revision,
 			l.Width, l.Height, l.FPS, Cell(l.FPS, l.DurationFrame), l.Items)
 
+		if l.Timelines > 1 {
+			fmt.Fprintf(&b, " timelines=%d", l.Timelines)
+		}
+
 		if l.Trashed {
 			b.WriteString(" trashed")
 		}
@@ -49,7 +56,7 @@ func FitProjectList(lines []ProjectLine) int {
 
 	for _, l := range lines {
 		cost := runeLen(fmt.Sprintf("\n%s %s r%d %dx%d %sfps %s items=%d trashed", l.ID, Quote(l.Name, 60), l.Revision,
-			l.Width, l.Height, l.FPS, Cell(l.FPS, l.DurationFrame), l.Items))
+			l.Width, l.Height, l.FPS, Cell(l.FPS, l.DurationFrame), l.Items)) + len(" timelines=99")
 		if n > 0 && used+cost > CapProjectList {
 			break
 		}

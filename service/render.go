@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/lint"
-	"github.com/AlexGalhardo/vukem-video/service/textview"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/lint"
+	"github.com/AlexGalhardo/stuarty/service/textview"
 )
 
 // The texts below are shared by the CLI and the MCP adapter, so that the two
@@ -153,6 +153,23 @@ func UndoText(r *UndoResult) string {
 	return renderEdit(&r.EditResult, state, suffix, r.Skipped)
 }
 
+// CheckpointText is the text of one checkpoint after an operation on it (SDD-003 section 3.7.1): the note line,
+// then "<state> checkpoint "<name>" at r<revision> by <actor>", with the note after a dash.
+func CheckpointText(state string, c *Checkpoint) string {
+	line := textview.Note + "\n" + state + " checkpoint " + textview.Quote(c.Name, 60) +
+		" at r" + strconv.FormatInt(c.Revision, 10) + " by " + c.Actor
+
+	if c.Auto {
+		line += " (automatic)"
+	}
+
+	if c.Note != "" {
+		line += " - " + textview.Quote(c.Note, 300)
+	}
+
+	return line
+}
+
 // EditText is the text of an edit result (SDD-003 section 3.5). The result carries
 // no frame rate, so the ranges of findings are printed in frames only.
 func EditText(r *EditResult) string { return renderEdit(r, editState(r), "", nil) }
@@ -202,7 +219,7 @@ type ErrorDocument struct {
 // Document is the error document of SDD-003 section 1.4 for this error.
 func (se *Error) Document() ErrorDocument {
 	return ErrorDocument{
-		Type: "urn:vukem-video:error:" + se.Code, Title: se.Code, Status: se.HTTPStatus(),
+		Type: "urn:stuarty:error:" + se.Code, Title: se.Code, Status: se.HTTPStatus(),
 		Detail: se.Message, Code: se.Code, Message: se.Message, Hint: se.Hint,
 		Retryable: se.IsRetryable(), OpIndex: se.OpIndex, Path: se.Path, Details: se.Details,
 	}

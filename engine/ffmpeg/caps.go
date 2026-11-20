@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
 )
 
 // Capabilities is the listing of SDD-011 8.3.
@@ -84,7 +84,7 @@ func missingErr(missing []string) *Error {
 		Code:    CodeFFmpegMissing,
 		Reason:  "capabilities_missing",
 		Message: "The FFmpeg in use lacks what the product needs: " + strings.Join(missing, ", ") + ".",
-		Hint:    `Use the FFmpeg that ships with Vukem Video, or an FFmpeg 7 or newer that has these items. Run "vukem-video doctor" for details.`,
+		Hint:    `Use the FFmpeg that ships with Stuarty, or an FFmpeg 7 or newer that has these items. Run "stuarty doctor" for details.`,
 		Details: map[string]any{"missing": missing},
 	}
 }

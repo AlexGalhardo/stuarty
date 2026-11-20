@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
 // Defaults of the local server (SDD-000 section 10).
@@ -29,15 +29,15 @@ const (
 
 	// envNoBrowser makes open print the address instead of starting a browser. The installer
 	// smoke tests of SDD-009 use it on runners with no desktop.
-	envNoBrowser = "VUKEM_VIDEO_NO_BROWSER"
-	envAddr      = "VUKEM_VIDEO_ADDR"
+	envNoBrowser = "STUARTY_NO_BROWSER"
+	envAddr      = "STUARTY_ADDR"
 
 	// startTimeout is how long open waits for a server it started to answer /up.
 	startTimeout = 30 * time.Second
 	startPoll    = 200 * time.Millisecond
 )
 
-// opener is `vukem-video open` (SDD-003 5.4, SDD-007 3.4): make sure the local server runs, then
+// opener is `stuarty open` (SDD-003 5.4, SDD-007 3.4): make sure the local server runs, then
 // open the UI in the default browser. The seams are fields so the tests need no browser and no
 // server process.
 //
@@ -55,6 +55,10 @@ type opener struct {
 	startSrv func(self string, host, port string, env []string, log string) (exited <-chan error, err error)
 	browse   func(rawURL string) error
 	timeout  time.Duration
+	// ownerWait bounds the wait for an owner that holds the workspace lock; poll is the pause
+	// between its probes. Zero means the defaults (workspace.WaitLimit, startPoll).
+	ownerWait time.Duration
+	poll      time.Duration
 }
 
 func newOpener(stdout, stderr io.Writer) *opener {
@@ -71,19 +75,29 @@ func newOpener(stdout, stderr io.Writer) *opener {
 // runOpen is the entry of the command; it returns the exit code.
 func runOpen(args []string, stdout, stderr io.Writer) int {
 	if len(args) > 0 {
-		_, _ = fmt.Fprintln(stderr, "usage: vukem-video open")
+		_, _ = fmt.Fprintln(stderr, "usage: stuarty open")
 		return 2
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	if err := newOpener(stdout, stderr).run(ctx); err != nil {
-		_, _ = fmt.Fprintln(stderr, "vukem-video open:", err)
-		return 1
+		_, _ = fmt.Fprintln(stderr, "stuarty open:", err)
+		return runExitCode(err)
 	}
 	return 0
 }
 
-// resolveAddr returns the host and port to reach: VUKEM_VIDEO_ADDR, else HOST and PORT (the
+// runExitCode is 2 for a retryable error of the workspace (E_WORKSPACE_LOCKED), 1 otherwise, as the
+// exit codes of SDD-003 section 5.4.
+func runExitCode(err error) int {
+	var werr *workspace.Error
+	if errors.As(err, &werr) && werr.Retryable {
+		return 2
+	}
+	return 1
+}
+
+// resolveAddr returns the host and port to reach: STUARTY_ADDR, else HOST and PORT (the
 // variables vukem reads), else 127.0.0.1:7878. Only a loopback address is accepted: open starts
 // and opens a local server, never a remote one.
 func resolveAddr(getenv func(string) string) (host, port string, err error) {
@@ -149,6 +163,10 @@ func (o *opener) run(ctx context.Context) error {
 	// default address, so open never starts a second server beside it (VV-079).
 	if rb, ok := o.runningServer(ctx); ok {
 		base = rb
+	} else if rb, ok, err := o.waitForLockOwner(ctx, base); err != nil {
+		return err
+	} else if ok {
+		base = rb
 	} else if !o.isUp(ctx, base) {
 		if err := o.start(ctx, host, port, base); err != nil {
 			return err
@@ -167,6 +185,73 @@ func (o *opener) run(ctx context.Context) error {
 		return fmt.Errorf("the server is running but the browser could not be started: %w", err)
 	}
 	return nil
+}
+
+// lockHeld reports whether another process holds the workspace lock, that is, whether an owner
+// lives, whatever it answers on /up (VV-258). A lock that cannot be tried says nothing: not held.
+func lockHeld(ws workspace.Dir) bool {
+	l, err := ws.TryLock()
+	if err != nil {
+		return errors.Is(err, workspace.ErrLocked)
+	}
+	_ = l.Release()
+	return false
+}
+
+// waitForLockOwner is for an owner that holds the lock but is not answering /up yet (busy, starting
+// or stuck). It never lets open start a second server beside it: it waits up to ownerWait for the
+// owner's /up, at the address of runtime.json or the default one, and then gives up with
+// E_WORKSPACE_LOCKED. When the lock is free, or is released while waiting, it answers false with no
+// error and open goes on as with no owner.
+func (o *opener) waitForLockOwner(ctx context.Context, defaultBase string) (string, bool, error) {
+	ws, err := workspace.Resolve(o.getenv)
+	if err != nil || !lockHeld(ws) {
+		return "", false, nil
+	}
+	limit, poll := o.ownerWait, o.poll
+	if limit <= 0 {
+		limit = workspace.WaitLimit
+	}
+	if poll <= 0 {
+		poll = startPoll
+	}
+	_, _ = fmt.Fprintln(o.stderr, "Another Stuarty owns this workspace; waiting for it to answer")
+	deadline := time.NewTimer(limit)
+	defer deadline.Stop()
+	tick := time.NewTicker(poll)
+	defer tick.Stop()
+	for {
+		if rb, ok := o.runningServer(ctx); ok {
+			return rb, true, nil
+		}
+		if o.isUp(ctx, defaultBase) {
+			return defaultBase, true, nil
+		}
+		if !lockHeld(ws) {
+			return "", false, nil
+		}
+		select {
+		case <-ctx.Done():
+			return "", false, ctx.Err()
+		case <-deadline.C:
+			return "", false, &workspace.Error{
+				Code: workspace.CodeWorkspaceLocked,
+				Message: fmt.Sprintf(
+					"another Stuarty is running and not answering within %s; wait a few seconds and run open again, "+
+						"or stop it (%s)", limit, ownerHint(ws)),
+				Retryable: true,
+				Err:       workspace.ErrLocked,
+			}
+		case <-tick.C:
+		}
+	}
+}
+
+func ownerHint(ws workspace.Dir) string {
+	if rt, err := ws.ReadRuntime(); err == nil {
+		return fmt.Sprintf("pid %d, %s", rt.PID, rt.Addr)
+	}
+	return "its process holds " + ws.Path("lock")
 }
 
 var launchCode = regexp.MustCompile(`^[0-9a-f]{64}$`)
@@ -209,7 +294,7 @@ func (o *opener) launchURL(ctx context.Context, base string) string {
 		return plain
 	}
 	if err := workspace.Handshake(ctx, o.client, base, token); err != nil {
-		_, _ = fmt.Fprintln(o.stderr, "vukem-video open: the server did not prove it knows the token:", err)
+		_, _ = fmt.Fprintln(o.stderr, "stuarty open: the server did not prove it knows the token:", err)
 		return plain
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, base+"/api/v1/system/launch", strings.NewReader("{}"))
@@ -233,7 +318,7 @@ func (o *opener) launchURL(ctx context.Context, base string) string {
 	return base + "/auth/launch?code=" + body.Code
 }
 
-// start launches `vukem-video serve` in the background and waits for /up.
+// start launches `stuarty serve` in the background and waits for /up.
 func (o *opener) start(ctx context.Context, host, port, base string) error {
 	self, err := o.self()
 	if err != nil {

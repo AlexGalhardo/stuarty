@@ -6,7 +6,7 @@ import (
 
 // signInHint says how to get in when a request carries no credentials in local
 // mode. It names the command, never a token or a launch code.
-const signInHint = "send the local token as Authorization: Bearer <token>, or run `vukem-video open` to open the editor in a browser"
+const signInHint = "send the local token as Authorization: Bearer <token>, or run `stuarty open` to open the editor in a browser"
 
 // docsSignInURL is the documentation page that explains the way in.
 const docsSignInURL = "https://video.vukem.dev/docs/self-hosting/binary"
@@ -21,8 +21,8 @@ const signInPage = `<!doctype html>
 <body>
 <main>
 <h1>401 Sign-in needed</h1>
-<p>This browser has no session with the local Vukem Video server.</p>
-<p>Run <code>vukem-video open</code> in a terminal: it opens the editor here with a one-time link that works for two minutes. The desktop application does this in its own window.</p>
+<p>This browser has no session with the local Stuarty server.</p>
+<p>Run <code>stuarty open</code> in a terminal: it opens the editor here with a one-time link that works for two minutes. The desktop application does this in its own window.</p>
 <p><a href="` + docsSignInURL + `" rel="noopener noreferrer">How to open the editor</a></p>
 </main>
 </body>

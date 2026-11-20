@@ -1,26 +1,26 @@
 ---
 title: "Any MCP client"
-description: "Connect any MCP client to Vukem Video over stdio or HTTP, then copy a setup prompt and task prompts that work."
+description: "Connect any MCP client to Stuarty over stdio or HTTP, then copy a setup prompt and task prompts that work."
 ---
 
 ## You will learn
 
-- how to register the Vukem Video MCP server in Any MCP client
+- how to register the Stuarty MCP server in Any MCP client
 - a setup prompt to paste as the first message
 - four prompts for the tasks people ask most: a vertical video with captions, a product commercial, cutting silences, and exporting
 
 ## The idea
 
-Any MCP client starts `vukem-video mcp` and gives its agent the 16 [tools](/docs/mcp/tools) of Vukem Video. The agent edits the same projects you see in the editor. The prompts on this page are written to be pasted as they are: replace the words in capital letters (such as `PATH_TO_CLIP`) with your own, and nothing else.
+Any MCP client starts `stuarty mcp` and gives its agent the 16 [tools](/docs/mcp/tools) of Stuarty. The agent edits the same projects you see in the editor. The prompts on this page are written to be pasted as they are: replace the words in capital letters (such as `PATH_TO_CLIP`) with your own, and nothing else.
 
 ## Register the server
 
-Any client that starts a stdio server takes the same command: `vukem-video mcp`. In a JSON configuration file it is usually this shape; the name of the key (`mcpServers`) and the place of the file depend on the client:
+Any client that starts a stdio server takes the same command: `stuarty mcp`. In a JSON configuration file it is usually this shape; the name of the key (`mcpServers`) and the place of the file depend on the client:
 
 ```json
 {
   "mcpServers": {
-    "vukem-video": { "command": "vukem-video", "args": ["mcp"] }
+    "stuarty": { "command": "stuarty", "args": ["mcp"] }
   }
 }
 ```
@@ -31,14 +31,14 @@ Source: [Model Context Protocol](https://modelcontextprotocol.io/).
 
 ## Check the connection
 
-Ask the client to list its tools: there must be 16, from `project_list` to `font_import`. If there are none, run `vukem-video mcp` in a terminal and check that it waits for input without printing anything.
+Ask the client to list its tools: there must be 16, from `project_list` to `font_import`. If there are none, run `stuarty mcp` in a terminal and check that it waits for input without printing anything.
 
 ## Setup prompt
 
 Paste this as the first message of a session. It teaches the agent the loop that keeps an edit safe and checked.
 
 ```text
-You will edit videos with Vukem Video through its MCP server, "vukem-video".
+You will edit videos with Stuarty through its MCP server, "stuarty".
 
 1. Call project_list to check that the tools work, then tell me how many projects exist.
 2. Work in this loop. Read the project with project_get and note its revision. Change it with
@@ -68,7 +68,7 @@ Make a short vertical video with captions from the clip at PATH_TO_CLIP.
 2. List the templates with the template tool and create a project from "Vertical cut with
    captions", named NAME_OF_THE_VIDEO, with my clip in the clip slot.
 3. Transcribe the asset with job_start (kind transcribe) and wait for the job with job_get. If the
-   transcription helper is not installed, stop and tell me to run: vukem-video tools:install
+   transcription helper is not installed, stop and tell me to run: stuarty tools:install
    whisper
 4. Make the captions with the caption.from_transcript operation (call command_help first).
 5. Run lint and fix every error. Look at the frame at 2s with view and tell me whether the
@@ -133,7 +133,7 @@ Export the project NAME_OF_THE_PROJECT as an MP4.
 - Sending a prompt before the server is connected: the agent then answers from memory and invents commands. Run the check above first.
 - Leaving a word in capital letters in the prompt: the agent will ask you for it or guess.
 - Asking for an export and a look at the result in one step: ask for the check first, then export.
-- Transcribing with no helper installed: install it once with `vukem-video tools:install whisper`.
+- Transcribing with no helper installed: install it once with `stuarty tools:install whisper`.
 
 ## Next steps
 

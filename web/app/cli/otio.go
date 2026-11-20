@@ -9,7 +9,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 // The OpenTimelineIO commands have no MCP tool: a timeline moves as a file, which is for the person
@@ -26,11 +26,12 @@ type otioExportDoc struct {
 }
 
 var otioExport = &spec{
-	name:    "otio:export",
-	summary: "write the timeline of a project as an OpenTimelineIO file",
-	usage:   []string{"vukem-video otio:export --project <id> [--out f] [--force]"},
-	example: "vukem-video otio:export --project prj_7k2m9x4q1b --out cut.otio",
-	project: true,
+	name:     "otio:export",
+	timeline: true,
+	summary:  "write the timeline of a project as an OpenTimelineIO file",
+	usage:    []string{"stuarty otio:export --project <id> [--out f] [--force]"},
+	example:  "stuarty otio:export --project prj_7k2m9x4q1b --out cut.otio",
+	project:  true,
 	flags: []flagDef{
 		{
 			Name:  "out",
@@ -40,7 +41,10 @@ var otioExport = &spec{
 		{Name: "force", Kind: kindBool, Default: "false", Usage: "replace the file when it exists"},
 	},
 	run: func(ctx context.Context, c *call) (*output, error) {
-		res, err := c.svc.ProjectOtioExport(ctx, service.ProjectOtioExportRequest{ProjectID: c.projectID})
+		res, err := c.svc.ProjectOtioExport(
+			ctx,
+			service.ProjectOtioExportRequest{ProjectID: c.projectID, TimelineID: c.timelineID},
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -123,9 +127,10 @@ func writeFile(path string, data []byte, mode int, makeFolders bool) error {
 
 var otioImport = &spec{
 	name:       "otio:import",
+	timeline:   true,
 	summary:    "apply an OpenTimelineIO file to a project as one undo step",
-	usage:      []string{"vukem-video otio:import <path> --project <id> [--base-revision n]"},
-	example:    "vukem-video otio:import cut.otio --project prj_7k2m9x4q1b --dry-run",
+	usage:      []string{"stuarty otio:import <path> --project <id> [--base-revision n]"},
+	example:    "stuarty otio:import cut.otio --project prj_7k2m9x4q1b --dry-run",
 	project:    true,
 	positional: true,
 	globals:    []string{"dry-run"},
@@ -148,14 +153,17 @@ var otioImport = &spec{
 		}
 
 		req := service.ProjectOtioImportRequest{
-			ProjectID: c.projectID, Path: path, DryRun: c.args.boolean("dry-run"),
+			ProjectID: c.projectID, TimelineID: c.timelineID, Path: path, DryRun: c.args.boolean("dry-run"),
 			AllowPartial: c.args.boolean("allow-partial"),
 		}
 
 		if c.args.has("base-revision") {
 			req.BaseRevision = int64(c.args.integer("base-revision"))
 		} else {
-			cur, gerr := c.svc.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: c.projectID})
+			cur, gerr := c.svc.ProjectGet(
+				ctx,
+				service.ProjectGetRequest{ProjectID: c.projectID, TimelineID: c.timelineID},
+			)
 			if gerr != nil {
 				return nil, gerr
 			}

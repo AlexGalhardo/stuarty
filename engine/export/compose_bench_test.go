@@ -5,8 +5,8 @@ import (
 	"math/rand/v2"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
-	"github.com/AlexGalhardo/vukem-video/engine/compositor"
+	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/engine/compositor"
 )
 
 const benchFPS = 30.0

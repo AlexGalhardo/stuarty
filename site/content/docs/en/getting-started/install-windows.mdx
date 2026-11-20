@@ -1,0 +1,60 @@
+---
+title: "Install on Windows"
+description: "Install Stuarty on Windows 11, start it, and check that it runs."
+---
+
+## You will learn
+
+- which Windows file to download;
+- how to get past the SmartScreen warning, and how to check the file first;
+- how to start Stuarty and where your workspace lives.
+
+## The idea
+
+A release carries two Windows files. Pick one:
+
+- `stuarty-desktop-X-Y-Z.exe`: the **desktop application**. One window that starts the server for you and shows the editor. This is the one most people want.
+- `stuarty-X-Y-Z.exe`: the **local server**. It adds `stuarty` to your path and a shortcut that starts the server and opens the editor in your browser. Choose it for the command line, for agents and for scripts.
+
+Both run only on your computer. Stuarty listens on `127.0.0.1` and nowhere else, and it signs you in without a password because nobody else can reach it. Uninstalling removes the program and keeps your workspace.
+
+## Quick start
+
+1. Download the file from the [releases page](https://github.com/AlexGalhardo/stuarty/releases).
+2. Run it. Windows shows **Windows protected your PC** because the installers are not signed with a paid certificate: choose **More info**, then **Run anyway**. What proves the file is genuine is its checksum and signature; [check them first](/docs/self-hosting/verify-a-release) if you want proof.
+3. With the desktop application, open it from the Start menu: you are done. With the local server, open a new terminal and check the installation:
+
+   ```bash
+   stuarty version
+   stuarty doctor
+   ```
+
+   `stuarty version` prints the version, which tells you the program is installed. `stuarty doctor` checks the workspace, FFmpeg and the encoders, and says what to fix.
+
+4. Start the server, and in a second terminal open the editor:
+
+   ```console
+   stuarty serve
+   stuarty open
+   ```
+
+   `stuarty serve` keeps running in its terminal. `stuarty open` finds the running server and opens the editor in your browser, signed in with a one-time code.
+
+### FFmpeg
+
+Import and export need FFmpeg and ffprobe, run as separate programs. The installers do not carry them. If `stuarty doctor --full` reports `E_FFMPEG_MISSING`, install FFmpeg 9 so that `ffmpeg` and `ffprobe` are on your `PATH`, or name them with `STUARTY_FFMPEG` and `STUARTY_FFPROBE` (absolute paths of the files). In a clone of the repository, `scripts/install-ffmpeg.ps1` downloads the pinned LGPL build and verifies its checksum. See [FFmpeg is not found](/docs/troubleshooting/ffmpeg-missing).
+
+### Where your files are
+
+Everything Stuarty stores is in one folder, the [workspace](/docs/workspace): `.stuarty` in your user folder, unless `STUARTY_HOME` says otherwise. Back it up with `stuarty workspace:backup <folder>`.
+
+## Common mistakes
+
+- Starting two servers on the same workspace. One process owns it and the second reports `E_WORKSPACE_LOCKED`. Use `stuarty open`: it finds the one that runs.
+- Expecting the application to update itself without asking. It asks once, and checks only if you say Yes: [Desktop updates](/docs/self-hosting/desktop-updates).
+
+## Next steps
+
+- [What leaves your machine](/docs/what-leaves-your-machine)
+- [The desktop application](/docs/guide/desktop)
+- [Make a vertical short with captions](/docs/guide/tutorial-vertical-short)

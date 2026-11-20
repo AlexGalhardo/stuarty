@@ -15,8 +15,8 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
-	"github.com/AlexGalhardo/vukem-video/engine/bitmap"
+	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/engine/bitmap"
 )
 
 // MaxBands is the largest number of bands (SDD-004 section 12, rule 5).
@@ -61,8 +61,14 @@ type Compositor struct {
 	LUTs LUTSource
 	// Bands is the number of bands for per-pixel work; zero is DefaultBands.
 	Bands int
+	// Scoped is called with the output scale of the nested frame of a group before its layers are drawn and
+	// returns what puts the scale back. A media source that sizes the pixels it delivers by the output scale
+	// of the frame (the export's does) needs it: the nested frame is drawn at a scale of its own (SDD-013
+	// section 3.12). Nil when the source does not care.
+	Scoped func(scale float64) (restore func())
 
-	scratch []byte
+	groupDepth int
+	scratch    []byte
 	// flipBuf holds the mirrored pixels of a flipped layer.
 	flipBuf []byte
 	// blurA holds the blurred pixels and blurB the rows between the two directions of a blur.
@@ -130,6 +136,13 @@ func (c *Compositor) layer(dst *image.RGBA, l *plan.Layer, fp *plan.FramePlan, o
 			return fmt.Errorf("%w: no media source", ErrSource)
 		}
 		img, err := c.Media(l)
+		if err != nil {
+			return err
+		}
+		src = img
+		p = placement{cx: l.CX * outScale, cy: l.CY * outScale, w: l.W * outScale, h: l.H * outScale, rot: l.Rotation}
+	case plan.Group:
+		img, err := c.groupSurface(l, outScale)
 		if err != nil {
 			return err
 		}

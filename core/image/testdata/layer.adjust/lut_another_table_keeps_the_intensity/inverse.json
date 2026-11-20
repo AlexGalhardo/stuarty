@@ -1,0 +1,31 @@
+[
+  {
+    "collection": "layers",
+    "id": "lyr_bbbbbbbbbb",
+    "set": {
+      "adjust": {
+        "brightness": 10,
+        "lut": {
+          "asset": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "intensity": 80
+        }
+      }
+    },
+    "type": "patch"
+  },
+  {
+    "collection": "assets",
+    "id": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "object": {
+      "hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "kind": "lut",
+      "name": "warm.cube"
+    },
+    "type": "put"
+  },
+  {
+    "collection": "assets",
+    "id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "type": "remove"
+  }
+]

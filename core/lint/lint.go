@@ -4,7 +4,7 @@ import (
 	"cmp"
 	"slices"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // Severities of a finding. An error blocks an export (E_LINT_BLOCKING).
@@ -27,14 +27,19 @@ const (
 	CodeSlotUnfilled  = "L_SLOT_UNFILLED"
 	CodeSafeArea      = "L_SAFE_AREA"
 
-	CodeOccluded        = "L_OCCLUDED"
-	CodeAudioOverlap    = "L_AUDIO_OVERLAP"
+	CodeOccluded     = "L_OCCLUDED"
+	CodeAudioOverlap = "L_AUDIO_OVERLAP"
+
+	CodeAudioLimiterNotLast        = "L_AUDIO_LIMITER_NOT_LAST"
+	CodeAudioNoiseReductionRepeats = "L_AUDIO_NOISE_REDUCTION_REPEATED"
+
 	CodeTransitionEmpty = "L_TRANSITION_EMPTY"
 	CodeDurationLimit   = "L_DURATION_LIMIT"
 	CodeOffFrame        = "L_OFF_FRAME"
 	CodeCaptionDesync   = "L_CAPTION_DESYNC"
 	CodeAudioClip       = "L_AUDIO_CLIP"
 	CodeLoudness        = "L_LOUDNESS"
+	CodeAlphaMissing    = "L_ALPHA_MISSING"
 )
 
 // Finding is one result of a rule (SDD-003 §3.6).
@@ -98,6 +103,12 @@ type Env struct {
 	// MediaFrames is the frame count of the normalized media actually in the
 	// store, on the asset's own frame rate (Full only): L_SOURCE_RANGE.
 	MediaFrames func(assetID string) (frames int, ok bool)
+	// Nested gives the timeline a composition item uses, from the same production; ok is false when it is
+	// missing or in the trash. Without it the composition rules are silent (rules_composition.go).
+	Nested func(timelineID string) (doc *timeline.Document, ok bool)
+	// AlphaOpaque reports that an asset which declares an alpha channel has only opaque pictures in what the
+	// ingest sampled (Full only): L_ALPHA_MISSING. known is false when the fact is not stored.
+	AlphaOpaque func(assetID string) (opaque, known bool)
 }
 
 // Lint runs the rules over doc and returns the findings in report order:
@@ -112,6 +123,7 @@ func Lint(doc *timeline.Document, env Env, mode Mode) []Finding {
 	c.emptyTimeline()
 	c.dimensions()
 	c.media()
+	c.compositions(mode == Full)
 	c.slots()
 	c.layers()
 	c.silent()
@@ -120,6 +132,7 @@ func Lint(doc *timeline.Document, env Env, mode Mode) []Finding {
 	c.offFrame()
 	c.occluded()
 	c.audioOverlap()
+	c.processorChains()
 	c.transitionEmpty()
 	c.durationLimit()
 
@@ -129,6 +142,7 @@ func Lint(doc *timeline.Document, env Env, mode Mode) []Finding {
 		c.sourceRange()
 		c.audioClip()
 		c.loudness()
+		c.alphaMissing()
 	}
 
 	Sort(c.out)

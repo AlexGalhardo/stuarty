@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 var update = flag.Bool("update", false, "rewrite the golden files")
@@ -96,7 +96,7 @@ func testCommands() []Command {
 	return []Command{
 		Define(Spec{
 			Name: "test.name", Summary: "Renames the project.", Description: "Sets the project name.",
-			Example: `{"name": "Teaser"}`, Errors: []string{CodeValidation}, Scope: ScopeEdit, Phase: Prototype,
+			Example: `{"name": "Teaser"}`, Errors: []string{CodeValidation}, Scope: ScopeEdit,
 		}, func(c *Context, a *tNameArgs) error {
 			c.Doc.Name = a.Name
 			return nil
@@ -104,7 +104,7 @@ func testCommands() []Command {
 		Define(Spec{
 			Name: "test.track_add", Summary: "Adds a track.", Description: "Adds an empty track with the given order.",
 			Example: `{"kind": "visual", "order": "b0", "id": "trk_k000000001"}`,
-			Errors:  []string{CodeValidation, CodeIDExists}, Scope: ScopeEdit, Phase: Prototype,
+			Errors:  []string{CodeValidation, CodeIDExists}, Scope: ScopeEdit,
 		}, func(c *Context, a *tTrackAddArgs) error {
 			id, err := c.NewID(timeline.PrefixTrack, a.ID)
 			if err != nil {
@@ -120,7 +120,7 @@ func testCommands() []Command {
 		Define(Spec{
 			Name: "test.item_add", Summary: "Adds a text item.", Description: "Adds a text item on a visual track.",
 			Example: `{"track_id": "trk_a1b2c3d4e5", "start": "100f", "duration": 10}`,
-			Errors:  errorsOfTest, Scope: ScopeEdit, Phase: Prototype,
+			Errors:  errorsOfTest, Scope: ScopeEdit,
 		}, func(c *Context, a *tItemAddArgs) error {
 			if _, ok := c.Doc.Tracks[a.TrackID]; !ok {
 				return Errorf(CodeNotFound, "Track %s does not exist.", a.TrackID).
@@ -150,7 +150,7 @@ func testCommands() []Command {
 		Define(Spec{
 			Name: "test.item_move", Summary: "Moves an item.", Description: "Sets the start of an item.",
 			Example: `{"item_id": "itm_m1n2p3q4r5", "start": "30f"}`,
-			Errors:  errorsOfTest, Scope: ScopeEdit, Phase: Prototype,
+			Errors:  errorsOfTest, Scope: ScopeEdit,
 		}, func(c *Context, a *tItemMoveArgs) error {
 			it, ok := c.Doc.Items[a.ItemID]
 			if !ok {
@@ -171,7 +171,7 @@ func testCommands() []Command {
 		Define(Spec{
 			Name: "test.item_remove", Summary: "Removes items.", Description: "Deletes the given items.",
 			Example: `{"item_ids": ["itm_m1n2p3q4r5"]}`, Errors: []string{CodeValidation, CodeNotFound},
-			Scope: ScopeEdit, Phase: Prototype,
+			Scope: ScopeEdit,
 		}, func(c *Context, a *tItemRemoveArgs) error {
 			for _, id := range a.ItemIDs {
 				if _, ok := c.Doc.Items[id]; !ok {
@@ -192,7 +192,6 @@ func testCommands() []Command {
 			Example:     `{"width": 1920, "height": 1080}`,
 			Errors:      []string{CodeValidation},
 			Scope:       ScopeEdit,
-			Phase:       Prototype,
 		}, func(c *Context, a *tSettingsArgs) error {
 			if a.Width != nil {
 				c.Doc.Settings.Width = *a.Width
@@ -205,7 +204,7 @@ func testCommands() []Command {
 		Define(Spec{
 			Name: "test.asset_add", Summary: "Adds an asset.", Description: "Adds an asset object as given.",
 			Example: `{"asset": {"id": "ast_k000000001"}}`, Errors: []string{CodeValidation}, Scope: ScopeMedia,
-			Phase: Prototype, Internal: true,
+			Internal: true,
 		}, func(c *Context, a *tAssetArgs) error {
 			id, _ := a.Asset["id"].(string)
 			c.Doc.Assets[id] = timeline.Asset{
@@ -220,7 +219,7 @@ func testCommands() []Command {
 		}),
 		Define(Spec{
 			Name: "test.font", Summary: "Adds a font.", Description: "Adds or replaces a user font.",
-			Example: `{"family": "Mine"}`, Errors: []string{CodeValidation}, Scope: ScopeEdit, Phase: Alpha,
+			Example: `{"family": "Mine"}`, Errors: []string{CodeValidation}, Scope: ScopeEdit,
 		}, func(c *Context, a *tFontArgs) error {
 			if c.Doc.Fonts == nil {
 				c.Doc.Fonts = map[string]timeline.ProjectFont{}
@@ -234,7 +233,7 @@ func testCommands() []Command {
 		}),
 		Define(Spec{
 			Name: "test.misbehave", Summary: "Fails in ways a command should not.", Description: "Test only.",
-			Example: `{"mode": "bug"}`, Errors: []string{CodeInternal}, Scope: ScopeEdit, Phase: Prototype,
+			Example: `{"mode": "bug"}`, Errors: []string{CodeInternal}, Scope: ScopeEdit,
 		}, func(c *Context, a *panicArgs) error {
 			switch a.Mode {
 			case "panic":
@@ -251,14 +250,14 @@ func testCommands() []Command {
 		}),
 		Define(Spec{
 			Name: "test.noop", Summary: "Does nothing.", Description: "Changes nothing.",
-			Example: `{}`, Errors: []string{CodeValidation}, Scope: ScopeEdit, Phase: Prototype,
+			Example: `{}`, Errors: []string{CodeValidation}, Scope: ScopeEdit,
 		}, func(*Context, *noArgs) error { return nil }),
 	}
 }
 
 func testRegistry(t *testing.T) *Registry {
 	t.Helper()
-	r := NewRegistry(Prototype)
+	r := NewRegistry(DomainVideo)
 	r.Debug = true
 	cmds := testCommands()
 	for i := range cmds {
@@ -281,10 +280,10 @@ func opJSON(op, args string) Operation {
 	return Operation{Op: op, Args: []byte(args)}
 }
 
-// fullRegistry is every registered command, Beta included, with validation of every
+// fullRegistry is every registered command, with validation of every
 // result on: what the golden cases and the registry-wide gates run against.
 func fullRegistry() *Registry {
-	r := BetaBuild()
+	r := FullRegistry()
 	r.Debug = true
 
 	return r

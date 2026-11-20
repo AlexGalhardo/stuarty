@@ -12,13 +12,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/stuarty/web/database/migrations"
+
 	"github.com/AlexGalhardo/vukem/database"
 	"github.com/AlexGalhardo/vukem/queue"
 	"github.com/AlexGalhardo/vukem/schema"
 	"github.com/AlexGalhardo/vukem/session"
-
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
-	"github.com/AlexGalhardo/vukem-video/web/database/migrations"
 )
 
 // QueueOptions are the vukem queue tables of SDD-005 section 14.1. The editor
@@ -161,9 +161,11 @@ func (s *Store) checkSchemaVersions(ctx context.Context, known int) error {
 	if known <= 0 {
 		return nil
 	}
-	for _, table := range []string{"projects", "templates"} {
+	// timelines holds the documents since ADR-0039; projects held them before, and is then a production table
+	// that has no schema_version, so a table counts only when it has the column.
+	for _, table := range []string{"timelines", "projects", "templates"} {
 		var exists int
-		err := s.db.QueryRowContext(ctx, "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = ?", table).
+		err := s.db.QueryRowContext(ctx, "SELECT count(*) FROM pragma_table_info(?) WHERE name = 'schema_version'", table).
 			Scan(&exists)
 		if err != nil {
 			return err

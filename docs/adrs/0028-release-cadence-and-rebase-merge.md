@@ -1,6 +1,6 @@
 # ADR-0028: One legacy release, a minor release about every 90 commits, rebase-merged pull requests
 
-- Status: Accepted (2026-11-14)
+- Status: Suspended (2026-11-18) by [ADR-0045](0045-epics-one-pull-request-ci-and-releases-deferred.md): no release is cut while the epics are implemented. Accepted on 2026-11-14; its rules return, revised, when the single pull request is split into releases
 - Deciders: author (D-026), orchestrator
 - Supersedes: ADR-0025 items 1 and 2 (the version line starting at `v0.5.0` and one release per task group); the merge method of SDD-009 section 6.3
 - Links: author decision D-026, ADR-0025, SDD-009

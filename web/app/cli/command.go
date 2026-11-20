@@ -8,9 +8,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
 )
 
 // call is what a handler receives: the connected Service, the parsed flags
@@ -20,8 +20,10 @@ type call struct {
 	svc       service.Service
 	args      *parsed
 	projectID string
-	events    EventOpener
-	download  Downloader
+	// timelineID is --timeline, for a command that takes it.
+	timelineID string
+	events     EventOpener
+	download   Downloader
 	// inProcess is true when this process owns the workspace: the person at the
 	// terminal of the owner machine, who may install helpers and sweep the workspace.
 	inProcess bool
@@ -42,12 +44,14 @@ type spec struct {
 	// globals names the global flags the command accepts (see globalFlag).
 	globals []string
 	// project is true when the command acts on a project: the id comes from
-	// the first positional argument, --project or VUKEM_VIDEO_PROJECT.
+	// the first positional argument, --project or STUARTY_PROJECT.
 	project bool
 	// projectPositional lets the first positional argument be the project id.
 	projectPositional bool
 	// positional is true when positional arguments are allowed beyond the project id.
 	positional bool
+	// timeline is true when the command acts on one timeline of the project and takes --timeline (SDD-003 section 1.7).
+	timeline bool
 	// write is true for a command that writes or starts a job.
 	write bool
 	// stream is true for a command that owns standard output while it runs (mcp):
@@ -57,6 +61,9 @@ type spec struct {
 	// offline is true for a command that needs no Service: it never opens the
 	// workspace and c.svc is nil.
 	offline bool
+	// person is true for a command only a person in the app may succeed at (SDD-015 section 4): it
+	// exists so that an agent that tries gets the stable refusal, and the skill for agents leaves it out.
+	person bool
 	// pending names the task that delivers the command; the handler is a stub until then.
 	pending string
 	run     handler
@@ -73,7 +80,7 @@ func globalFlag(name string) flagDef {
 		return flagDef{
 			Name:  "workspace",
 			Kind:  kindString,
-			Usage: "workspace directory (default $VUKEM_VIDEO_HOME, else ~/.vukem-video)",
+			Usage: "workspace directory (default $STUARTY_HOME, else ~/.stuarty)",
 		}
 	case "actor":
 		return flagDef{
@@ -84,6 +91,8 @@ func globalFlag(name string) flagDef {
 		}
 	case "key-file":
 		return flagDef{Name: "key-file", Kind: kindString, Usage: "file holding an API key for a remote server"}
+	case "timeline":
+		return flagDef{Name: "timeline", Kind: kindString, Usage: "timeline id; needed when the project has several"}
 	case "dry-run":
 		return flagDef{Name: "dry-run", Kind: kindBool, Default: "false", Usage: "validate and report, change nothing"}
 	case "wait":
@@ -107,6 +116,10 @@ func (s *spec) flagDefs() []flagDef {
 	names := slices.Clone(baseGlobals)
 	if s.project {
 		names = append(names, "project")
+	}
+
+	if s.timeline {
+		names = append(names, "timeline")
 	}
 
 	names = append(names, s.globals...)
@@ -196,7 +209,7 @@ func (rt *Runtime) Execute(ctx context.Context, name string, args []string) int 
 
 	if s.write && conn.InProcess && !asJSON {
 		fmt.Fprintf(rt.Stderr, "note: no server owns %s; this ran in process. "+
-			"Run \"vukem-video serve\" to share the workspace with the UI and other clients.\n", conn.Workspace)
+			"Run \"stuarty serve\" to share the workspace with the UI and other clients.\n", conn.Workspace)
 	}
 
 	return writeOutput(rt, asJSON, out)
@@ -255,6 +268,7 @@ func (rt *Runtime) prepare(s *spec, p *parsed) (*call, error) {
 	}
 
 	c.projectID = id
+	c.timelineID = p.str("timeline")
 	p.Positional = rest
 
 	if len(rest) > 0 && !s.positional {
@@ -373,28 +387,40 @@ var processCommands = []processCommand{
 	{
 		name:    "serve",
 		summary: "run the server that owns the workspace, configured by environment variables (see the configuration reference)",
-		usage:   []string{"vukem-video serve"},
-		example: "VUKEM_VIDEO_ADDR=127.0.0.1:7878 vukem-video serve",
+		usage:   []string{"stuarty serve"},
+		example: "STUARTY_ADDR=127.0.0.1:7878 stuarty serve",
 		noArgs:  true,
 	},
 	{
 		name:    "open",
 		summary: "open the editor in the browser of the running server",
-		usage:   []string{"vukem-video open"},
-		example: "vukem-video open",
+		usage:   []string{"stuarty open"},
+		example: "stuarty open",
 		noArgs:  true,
 	},
 	{
 		name:    "user:create",
 		summary: "create a user of network mode (the password is asked, never an argument)",
-		usage:   []string{"vukem-video user:create <email> [--admin]"},
-		example: "vukem-video user:create ana@example.com --admin",
+		usage:   []string{"stuarty user:create <email> [--admin]"},
+		example: "stuarty user:create ana@example.com --admin",
 	},
 	{
 		name:    "user:passwd",
 		summary: "change the password of a user of network mode",
-		usage:   []string{"vukem-video user:passwd <email>"},
-		example: "vukem-video user:passwd ana@example.com",
+		usage:   []string{"stuarty user:passwd <email>"},
+		example: "stuarty user:passwd ana@example.com",
+	},
+	{
+		name:    "workspace:backup",
+		summary: "write a consistent backup of the workspace to a folder (never with the master key); a server may keep running",
+		usage:   []string{"stuarty workspace:backup <folder>"},
+		example: "stuarty workspace:backup ~/stuarty-backup-2026-11-19",
+	},
+	{
+		name:    "workspace:restore",
+		summary: "restore a backup folder into an empty workspace, checked against its manifest and the master key at hand",
+		usage:   []string{"stuarty workspace:restore <folder> [--replace] [--without-vault]"},
+		example: "stuarty workspace:restore ~/stuarty-backup-2026-11-19",
 	},
 }
 
@@ -422,19 +448,30 @@ func (p *processCommand) help() string {
 	return b.String()
 }
 
-// List prints the short command list of "vukem-video" with no arguments.
+// List prints the short command list of "stuarty" with no arguments, grouped by domain: stuarty <domain> lists one.
 func List(w io.Writer) {
-	fmt.Fprintln(w, "vukem-video commands:")
+	fmt.Fprintln(w, "stuarty commands, by domain (stuarty <domain> <verb> runs one of a domain):")
 
-	for _, s := range registry() {
-		fmt.Fprintf(w, "  %-16s %s\n", s.name, s.summary)
+	for _, d := range command.DomainNames() {
+		in := domainCommands(d)
+		if len(in) == 0 {
+			continue
+		}
+
+		fmt.Fprintf(w, "%s:\n", d)
+
+		for _, s := range in {
+			fmt.Fprintf(w, "  %-16s %s\n", s.name, s.summary)
+		}
 	}
+
+	fmt.Fprintln(w, "process:")
 
 	for i := range processCommands {
 		fmt.Fprintf(w, "  %-16s %s\n", processCommands[i].name, processCommands[i].summary)
 	}
 
-	fmt.Fprintln(w, "\nrun vukem-video help <command> or vukem-video <command> --help for the arguments of a command")
+	fmt.Fprintln(w, "\nrun stuarty help <command> or stuarty <command> --help for the arguments of a command")
 }
 
 // Help answers the help requests of the binary before any framework code runs:
@@ -452,7 +489,11 @@ func Help(args []string, stdout, stderr io.Writer) (code int, handled bool) {
 
 		return ExitOK, true
 	case args[0] == "--version" || args[0] == "-v":
-		fmt.Fprintln(stdout, "vukem-video "+agentdocs.Version)
+		fmt.Fprintln(stdout, "stuarty "+agentdocs.Version)
+
+		return ExitOK, true
+	case args[0] == "help" && len(args) == 2 && command.KnownDomain(args[1]) && lookup(args[1]) == nil:
+		listDomain(stdout, args[1])
 
 		return ExitOK, true
 	case args[0] == "help" && len(args) >= 2:
@@ -477,7 +518,7 @@ func helpFor(name string, stdout, stderr io.Writer) int {
 		return ExitOK
 	}
 
-	fmt.Fprintf(stderr, "error E_VALIDATION: unknown command %q; run vukem-video help to list the commands\n", name)
+	fmt.Fprintf(stderr, "error E_VALIDATION: unknown command %q; run stuarty help to list the commands\n", name)
 
 	return ExitFailure
 }
@@ -502,10 +543,10 @@ func unknownHint(name string) string {
 	}
 
 	if best == "" {
-		return "run vukem-video help to list the commands"
+		return "run stuarty help to list the commands"
 	}
 
-	return fmt.Sprintf("did you mean %q? run vukem-video help to list the commands", best)
+	return fmt.Sprintf("did you mean %q? run stuarty help to list the commands", best)
 }
 
 // editDistance is the Levenshtein distance of two short command names.
@@ -551,7 +592,7 @@ func RejectArgs(name string, args []string, stdout, stderr io.Writer) (code int,
 	rt := &Runtime{Stdout: stdout, Stderr: stderr}
 	err := &service.Error{
 		Code: command.CodeValidation, Message: msg,
-		Hint: fmt.Sprintf("%s is configured by environment variables: run vukem-video help %s", name, name),
+		Hint: fmt.Sprintf("%s is configured by environment variables: run stuarty help %s", name, name),
 	}
 
 	return writeError(rt, jsonRequested(args), err), true
@@ -561,7 +602,7 @@ func RejectArgs(name string, args []string, stdout, stderr io.Writer) (code int,
 func IsCommand(name string) bool { return lookup(name) != nil }
 
 // namingWorkspace adds the workspace this process opened to a not-found answer when no server owns it.
-// Without VUKEM_VIDEO_HOME or --workspace that is the default ~/.vukem-video, which may not be the
+// Without STUARTY_HOME or --workspace that is the default ~/.stuarty, which may not be the
 // workspace of a running server, so a project that exists there looks missing (VV-151).
 func namingWorkspace(err error, conn *Connection) error {
 	se := asServiceError(err)
@@ -571,7 +612,7 @@ func namingWorkspace(err error, conn *Connection) error {
 
 	out := *se
 	note := fmt.Sprintf("this command read the workspace %s, which no server owns; "+
-		"to read another one use --workspace <dir> or set VUKEM_VIDEO_HOME", conn.Workspace)
+		"to read another one use --workspace <dir> or set STUARTY_HOME", conn.Workspace)
 
 	if out.Hint == "" {
 		out.Hint = note

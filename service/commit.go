@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/lint"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/service/crashpoint"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/lint"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/service/crashpoint"
 )
 
 const (
@@ -41,6 +41,8 @@ type batch struct {
 	result         func(revision int64) ([]byte, error) // the result to store under the key, when there is one
 	closeTarget    bool                                 // undo and redo close the step they consume
 	closeOpenRedo  bool                                 // a new edit ends the actor's redo chain
+	spawned        []*timeline.Document                 // the timelines the batch made, stored with it
+	checkpoint     bool                                 // an agent's first edit of the day makes a checkpoint first
 }
 
 // commit runs steps 7 to 14 inside the open transaction. It returns the new
@@ -49,6 +51,13 @@ func (s *svc) commit(ctx context.Context, tx ProjectTx, b *batch) (int64, error)
 	row := tx.Project()
 	newRev := row.Revision + 1
 	now := s.nowMs()
+
+	// The point to come back to, at the revision this batch starts from (RF-121).
+	if b.checkpoint {
+		if err := s.autoCheckpoint(ctx, tx, b.actor, row.Revision); err != nil {
+			return 0, err
+		}
+	}
 
 	canon := timeline.Canonical(b.after)
 	sha := sha256Hex(canon)
@@ -107,6 +116,10 @@ func (s *svc) commit(ctx context.Context, tx ProjectTx, b *batch) (int64, error)
 	}
 
 	crashpoint.Hit("commit.after_assets_sync")
+
+	if err := s.storeSpawned(ctx, tx, b.actor, b.spawned); err != nil {
+		return 0, err
+	}
 
 	if b.key != "" && b.result != nil {
 		stored, err := b.result(newRev)
@@ -215,10 +228,25 @@ func (s *svc) assetAdded(
 	hash, _ := ch.Object["hash"].(string)
 	name, _ := ch.Object["name"].(string)
 
-	return tx.Assets().PutProjectAsset(ctx, ProjectAssetRow{
+	if err := tx.Assets().PutProjectAsset(ctx, ProjectAssetRow{
 		ProjectID: projectID, AssetID: ch.ID, AssetHash: hash, State: ProjectAssetActive, Name: name,
 		Snapshot: snap, ImportedBy: actor, ImportedMs: now,
-	})
+	}); err != nil {
+		return err
+	}
+
+	// A file that reaches a project by asset.add with no import (a template fill) is found by the name the
+	// project gives it: the search row belongs to the owner of the project, who may have none yet (VV-254).
+	return tx.AssetLibrary().Reindex(ctx, ownerOf(tx.Project().OwnerUserID), hash)
+}
+
+// ownerOf is the owner of the library side of a project's files: its user in network mode, "" in local mode.
+func ownerOf(owner *string) string {
+	if owner == nil {
+		return ""
+	}
+
+	return *owner
 }
 
 func isNotFound(err error) bool { return errors.Is(err, ErrNotFound) }

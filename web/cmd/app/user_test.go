@@ -3,16 +3,17 @@ package main
 import (
 	"bytes"
 	"context"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem/auth/hash"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/stuarty/web/app/auth"
+	"github.com/AlexGalhardo/stuarty/web/app/store"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
-	"github.com/AlexGalhardo/vukem-video/web/app/auth"
-	"github.com/AlexGalhardo/vukem-video/web/app/store"
+	"github.com/AlexGalhardo/vukem/auth/hash"
 )
 
 const userPassword = "c4n4ry correct horse battery"
@@ -114,6 +115,38 @@ func TestUserCommandsNeverTakeThePasswordFromArgv(t *testing.T) {
 
 	if _, err := userByEmail(t, home, "ana@example.com"); err == nil {
 		t.Error("a user was created from a refused command line")
+	}
+}
+
+// With STUARTY_URL set the commands refuse and name the variable instead of creating a workspace in the
+// current directory (VV-272).
+func TestUserCommandsRefuseARemoteSession(t *testing.T) {
+	for _, name := range []string{"user:create", "user:passwd"} {
+		cwd := t.TempDir()
+		t.Chdir(cwd)
+
+		var r userRun
+
+		code := runUser(t.Context(), name, []string{"ana@example.com"}, userIO{
+			In: strings.NewReader(userPassword + "\n"), Out: &r.out, Err: &r.err,
+			Getenv: func(k string) string {
+				switch k {
+				case workspace.EnvURL:
+					return "https://stuarty.example.invalid"
+				case workspace.EnvKey:
+					return "a-key"
+				}
+
+				return ""
+			},
+		})
+		if code == 0 || !strings.Contains(r.err.String(), workspace.EnvURL) {
+			t.Errorf("%s with %s set: exit %d, %q", name, workspace.EnvURL, code, r.err.String())
+		}
+
+		if left, _ := os.ReadDir(cwd); len(left) != 0 {
+			t.Errorf("%s wrote into the current directory: %v", name, left)
+		}
 	}
 }
 

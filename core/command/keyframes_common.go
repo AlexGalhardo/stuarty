@@ -3,7 +3,7 @@ package command
 import (
 	"slices"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // Keyframe rules R10 to R13 of SDD-002: the value of an animated property, and how
@@ -62,6 +62,13 @@ func easingOrLinear(e string) string {
 	return e
 }
 
+// inheritEasing gives dst the easing of src, with its Bezier curve: a keyframe made where a
+// trim or a split cuts a segment continues the segment it was cut from.
+func inheritEasing(dst *timeline.Keyframe, src timeline.Keyframe) {
+	dst.Easing = easingOrLinear(src.Easing)
+	dst.Bezier = slices.Clone(src.Bezier)
+}
+
 // kShift is R11: the item loses its first d frames (d < 0: it gains -d).
 func kShift(it *timeline.Item, d int) {
 	mShift(it, d)
@@ -69,14 +76,14 @@ func kShift(it *timeline.Item, d int) {
 		old := it.Keyframes[prop]
 		v0 := 0.0
 		if d > 0 {
-			v0 = timeline.ValueAt(old, d, 0)
+			v0 = timeline.ValueAtProp(prop, old, d, 0)
 		}
 		var kept []timeline.Keyframe
-		dropped, lastEasing := false, "linear"
+		dropped, lastKey := false, timeline.Keyframe{}
 		for _, k := range old {
 			k.T -= d
 			if k.T < 0 {
-				dropped, lastEasing = true, easingOrLinear(k.Easing)
+				dropped, lastKey = true, k
 				continue
 			}
 			kept = append(kept, k)
@@ -87,7 +94,7 @@ func kShift(it *timeline.Item, d int) {
 			setStatic(it, prop, v0)
 		case dropped && kept[0].T > 0:
 			first := timeline.NewKeyframe(0, v0)
-			first.Easing = lastEasing
+			inheritEasing(&first, lastKey)
 			it.Keyframes[prop] = append([]timeline.Keyframe{first}, kept...)
 		default:
 			it.Keyframes[prop] = kept
@@ -113,10 +120,10 @@ func kCut(it *timeline.Item, l int) {
 		case len(kept) == len(old):
 		case len(kept) == 0:
 			delete(it.Keyframes, prop)
-			setStatic(it, prop, timeline.ValueAt(old, l, 0))
+			setStatic(it, prop, timeline.ValueAtProp(prop, old, l, 0))
 		default:
 			if kept[len(kept)-1].T < l {
-				kept = append(kept, timeline.NewKeyframe(l, timeline.ValueAt(old, l, 0)))
+				kept = append(kept, timeline.NewKeyframe(l, timeline.ValueAtProp(prop, old, l, 0)))
 			}
 			it.Keyframes[prop] = kept
 		}
@@ -147,7 +154,7 @@ func kSplit(it *timeline.Item, tc int) (left, right timeline.Item) {
 				after = append(after, k)
 			}
 		}
-		v := timeline.ValueAt(kfs, tc, 0)
+		v := timeline.ValueAtProp(prop, kfs, tc, 0)
 
 		l := slices.Clone(before)
 		if at != nil {
@@ -170,9 +177,9 @@ func kSplit(it *timeline.Item, tc int) (left, right timeline.Item) {
 			first := timeline.NewKeyframe(0, v)
 			switch {
 			case at != nil:
-				first.Easing = easingOrLinear(at.Easing)
+				inheritEasing(&first, *at)
 			default:
-				first.Easing = easingOrLinear(before[len(before)-1].Easing)
+				inheritEasing(&first, before[len(before)-1])
 			}
 			r = append(r, first)
 		}

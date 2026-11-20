@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"slices"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 var hashForm = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
@@ -20,7 +20,6 @@ func init() {
 			`"sample_count": 1440000, "width": 1080, "height": 1920, "has_audio": true}}`,
 		Errors:   []string{CodeValidation, CodeIDExists, CodeLimit},
 		Scope:    ScopeMedia,
-		Phase:    Prototype,
 		Internal: true,
 	}, applyAssetAdd))
 }

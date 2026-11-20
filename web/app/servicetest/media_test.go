@@ -14,12 +14,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem/queue"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/ingest"
+	"github.com/AlexGalhardo/stuarty/service"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/ingest"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem/queue"
 )
 
 const clipBytes = "not really a clip, but long enough for the store"
@@ -350,7 +350,7 @@ func TestImportLimits(t *testing.T) {
 
 	se := serviceError(t, err)
 	if se.Code != "E_LIMIT_EXCEEDED" || se.Details["limit"] != "import_bytes" || se.Details["ceiling"] != int64(20) ||
-		se.Details["variable"] != "VUKEM_VIDEO_MAX_IMPORT_BYTES" {
+		se.Details["variable"] != "STUARTY_MAX_IMPORT_BYTES" {
 		t.Errorf("error = %+v", se)
 	}
 
@@ -672,6 +672,21 @@ func TestEditWithAnAssetStillIngestingIsNotReady(t *testing.T) {
 	var se *service.Error
 	if !errors.As(err, &se) || se.Code != "E_ASSET_NOT_READY" || !se.IsRetryable() {
 		t.Fatalf("error = %v", err)
+	}
+
+	// VV-204: the error names the call that follows the asset and says how far the ingest is.
+	if !strings.Contains(se.Hint, "media_inspect") || !strings.Contains(se.Hint, asset.AssetID) {
+		t.Errorf("hint = %q, want the media_inspect call for %s", se.Hint, asset.AssetID)
+	}
+
+	if !strings.Contains(se.Message, "% done") {
+		t.Errorf("message = %q, want the progress", se.Message)
+	}
+
+	progress, isNumber := se.Details["progress"].(float64)
+	if se.Details["asset_id"] != asset.AssetID || se.Details["state"] != "pending" || !isNumber ||
+		progress < 0 || progress > 1 {
+		t.Errorf("details = %v, want asset_id, state pending and progress from 0 to 1", se.Details)
 	}
 }
 

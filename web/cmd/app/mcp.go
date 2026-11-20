@@ -9,19 +9,19 @@ import (
 	"os"
 	"time"
 
-	vukem "github.com/AlexGalhardo/vukem"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
+	"github.com/AlexGalhardo/stuarty/web/app/cli"
+	"github.com/AlexGalhardo/stuarty/web/app/owner"
 
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
-	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
-	"github.com/AlexGalhardo/vukem-video/web/app/cli"
-	"github.com/AlexGalhardo/vukem-video/web/app/owner"
+	vukem "github.com/AlexGalhardo/vukem"
 )
 
 // announceTimeout bounds the wait for the listener of a stdio MCP server that
 // became the owner.
 const announceTimeout = 30 * time.Second
 
-// runMCP is `vukem-video mcp`. With no owner running, this process becomes the
+// runMCP is `stuarty mcp`. With no owner running, this process becomes the
 // owner of the workspace (SDD-003 section 4.7, SDD-005 section 6.3): it serves
 // the HTTP API and the UI on a loopback port, runs the workers and writes
 // runtime.json, so the browser and the other commands reach the same project
@@ -45,7 +45,7 @@ func becomeOwner(
 
 		// An agent's server has no business failing because the usual port is
 		// taken: runtime.json tells everyone else where it listens.
-		if addr := freePortIfBusy(ctx, getenv, net.JoinHostPort(defaultHost, defaultPort)); addr != "" {
+		if addr := freePortIfBusy(ctx, getenv, net.JoinHostPort(defaultHost, defaultPort), listenProbe); addr != "" {
 			if err := os.Setenv(envAddr, addr); err != nil {
 				_ = closeLog.Close()
 
@@ -107,15 +107,24 @@ func becomeOwner(
 	}
 }
 
-// freePortIfBusy returns an address on any free loopback port when the address
-// was not chosen (VUKEM_VIDEO_ADDR unset) and the default one is taken; empty
-// means keep what is configured.
-func freePortIfBusy(ctx context.Context, getenv func(string) string, def string) string {
-	if getenv(envAddr) != "" {
-		return ""
+// freePortIfBusy returns an address on any free loopback port when no address
+// was chosen (none of STUARTY_ADDR, HOST and PORT is set, the same variables
+// serve reads, SDD-003 section 4.7) and the default one is taken; empty means
+// keep what is configured. When an address was chosen the default port is never
+// probed. probe opens a listener to test an address.
+func freePortIfBusy(
+	ctx context.Context,
+	getenv func(string) string,
+	def string,
+	probe func(context.Context, string) (net.Listener, error),
+) string {
+	for _, k := range []string{envAddr, "HOST", "PORT"} {
+		if getenv(k) != "" {
+			return ""
+		}
 	}
 
-	ln, err := (&net.ListenConfig{}).Listen(ctx, "tcp", def)
+	ln, err := probe(ctx, def)
 	if err != nil {
 		return net.JoinHostPort(defaultHost, "0")
 	}
@@ -123,6 +132,10 @@ func freePortIfBusy(ctx context.Context, getenv func(string) string, def string)
 	_ = ln.Close()
 
 	return ""
+}
+
+func listenProbe(ctx context.Context, addr string) (net.Listener, error) {
+	return (&net.ListenConfig{}).Listen(ctx, "tcp", addr)
 }
 
 // awaitAnnounce waits for runtime.json to name this process, or for the server

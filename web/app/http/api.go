@@ -5,9 +5,18 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"path"
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/agenthost"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/stuarty/web/app/auth"
+	"github.com/AlexGalhardo/stuarty/web/app/events"
+	"github.com/AlexGalhardo/stuarty/web/app/http/middleware"
 
 	vukem "github.com/AlexGalhardo/vukem"
 	"github.com/AlexGalhardo/vukem/api"
@@ -15,13 +24,6 @@ import (
 	"github.com/AlexGalhardo/vukem/openapi"
 	"github.com/AlexGalhardo/vukem/router"
 	"github.com/AlexGalhardo/vukem/web"
-
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
-	"github.com/AlexGalhardo/vukem-video/web/app/auth"
-	"github.com/AlexGalhardo/vukem-video/web/app/events"
-	"github.com/AlexGalhardo/vukem-video/web/app/http/middleware"
 )
 
 // Deps is what the adapter needs from the process that serves it.
@@ -44,6 +46,9 @@ type Deps struct {
 	// Auth is the credential side of network mode: users, the session guard and
 	// the keys. It is required with Network and unused without it.
 	Auth *auth.Network
+	// Google is the optional Google sign-in of network mode (SDD-007 section 4.7); nil leaves its routes
+	// answering E_NOT_FOUND, as in local mode.
+	Google *auth.Google
 	// LoginLimits replaces the limits of the login route; nil is the defaults.
 	LoginLimits *LoginLimits
 	// RateLimits are the per-credential limits of SDD-007 section 4.4.
@@ -56,6 +61,12 @@ type Deps struct {
 	Events *events.Events
 	// Version is the binary version the editor page shows in bug reports.
 	Version string
+	// AgentTokens is the registry of the session tokens of the hosted agent chat (SDD-017 section 6.1); nil
+	// means no hosted agent can authenticate.
+	AgentTokens auth.AgentTokens
+	// Chat is the host of the hosted agent, for the event stream of a session (SDD-017 section 8); nil serves the stored
+	// events only.
+	Chat ChatStreams
 }
 
 type apiHandler struct {
@@ -162,24 +173,12 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 		}
 
 		if header := r.Header.Get("Authorization"); header != "" {
-			token, ok := auth.Bearer(header)
-			if !ok || !auth.TokenMatches(h.Token, token) {
-				h.unauthorized(w, r, &service.Error{Code: service.CodeUnauthorized, Message: "the token is not valid."})
-
+			bearer, ok := h.bearerCaller(w, r, header)
+			if !ok {
 				return
 			}
 
-			actor, err := auth.Actor(r.Header.Get(auth.ClientHeader))
-			if err != nil {
-				web.Fail(
-					w,
-					r,
-					&service.Error{Code: command.CodeValidation, Message: err.Error(), Path: auth.ClientHeader},
-				)
-				return
-			}
-
-			caller = service.Caller{Actor: actor, Scopes: service.AllScopes}
+			caller = bearer
 		} else if valid {
 			if !ambientAllowed(r) {
 				web.Fail(w, r, refused())
@@ -188,6 +187,17 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 
 			caller = service.Caller{Actor: "local:" + auth.UILabel, Scopes: service.AllScopes, Browser: privileged}
 		} else {
+			// The consent screen of a social network sends the browser back to the sign-in page by a
+			// cross-site navigation, which carries no SameSite=Strict session cookie. The page is drawn
+			// with no caller: it holds no data, calls no operation, and hands the state and the code to
+			// POST /api/v1/social/complete, a same-origin call that does carry the cookie and is
+			// authenticated as every other one (SDD-007 section 3.7, SDD-020 section 6).
+			if r.Method == http.MethodGet && isSignInCallbackPath(r.URL.Path) {
+				next.ServeHTTP(w, r)
+
+				return
+			}
+
 			// A browser that opens a page with no session is told how to get in (VV-157):
 			// the page is plain HTML and carries no secret, since the launch code is
 			// issued only to a caller that proves the token (SDD-007 section 3.4).
@@ -210,6 +220,41 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 	})
 }
 
+// bearerCaller is the caller of an Authorization header in local mode: the session token of a hosted
+// agent, or the local token with the client header. A false ok means the refusal was written.
+func (h *apiHandler) bearerCaller(w http.ResponseWriter, r *http.Request, header string) (service.Caller, bool) {
+	token, ok := auth.Bearer(header)
+
+	// The session token of a hosted agent: bound to one project, never a person (SDD-017 section 6.1).
+	if g, found := h.agentGrant(token, ok); found {
+		return auth.AgentCaller(g, false), true
+	}
+
+	if !ok || !auth.TokenMatches(h.Token, token) {
+		h.unauthorized(w, r, &service.Error{Code: service.CodeUnauthorized, Message: "the token is not valid."})
+
+		return service.Caller{}, false
+	}
+
+	actor, err := auth.Actor(r.Header.Get(auth.ClientHeader))
+	if err != nil {
+		web.Fail(w, r, &service.Error{Code: command.CodeValidation, Message: err.Error(), Path: auth.ClientHeader})
+
+		return service.Caller{}, false
+	}
+
+	return service.Caller{Actor: actor, Scopes: service.AllScopes}, true
+}
+
+// agentGrant is the grant of a bearer credential that is a live session token.
+func (h *apiHandler) agentGrant(token string, ok bool) (agenthost.Grant, bool) {
+	if !ok || h.AgentTokens == nil {
+		return agenthost.Grant{}, false
+	}
+
+	return h.AgentTokens.Lookup(token)
+}
+
 // authenticateNetwork is the authentication of network mode (SDD-007 sections
 // 4.1 and 5.1 item 3): the session cookie of a user who logged in. The local
 // token and the launch code do not exist in this mode, and the handshake exists
@@ -218,7 +263,7 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 // login is 401, which the start-up log says.
 func (h *apiHandler) authenticateNetwork(w http.ResponseWriter, r *http.Request, next http.Handler) {
 	if r.URL.Path == healthPath || r.URL.Path == "/auth/login" || r.URL.Path == "/auth/logout" ||
-		(r.URL.Path == LoginPath && r.Method == http.MethodGet) ||
+		(r.URL.Path == LoginPath && r.Method == http.MethodGet) || googleOpen(r) ||
 		(r.URL.Path == handshakePath && h.RuntimeSecret != "") {
 		next.ServeHTTP(w, r)
 		return
@@ -242,6 +287,11 @@ func (h *apiHandler) authenticateNetwork(w http.ResponseWriter, r *http.Request,
 			return
 		}
 
+		if g, found := h.agentGrant(secret, true); found {
+			next.ServeHTTP(w, r.WithContext(service.WithCaller(r.Context(), auth.AgentCaller(g, true))))
+			return
+		}
+
 		caller, err := h.Auth.KeyCaller(r.Context(), secret)
 
 		switch {
@@ -250,6 +300,19 @@ func (h *apiHandler) authenticateNetwork(w http.ResponseWriter, r *http.Request,
 		case err != nil:
 			web.Fail(w, r, &service.Error{Code: command.CodeInternal, Message: "the key could not be checked."})
 		default:
+			// A key made for the read API of the blog reaches its three routes and nothing else: not a page, a
+			// stream or another operation (SDD-020 section 47, T-95).
+			if postsKeyOnly(&caller) && !postsRoute(r) {
+				web.Fail(w, r, &service.Error{
+					Code:    service.CodeForbidden,
+					Message: "this key can read published posts and nothing else.",
+					Hint:    "use a key with the scope of the route",
+					Details: map[string]any{"scope": service.ScopePostsRead},
+				})
+
+				return
+			}
+
 			next.ServeHTTP(w, r.WithContext(service.WithCaller(r.Context(), caller)))
 		}
 
@@ -281,6 +344,28 @@ func (h *apiHandler) authenticateNetwork(w http.ResponseWriter, r *http.Request,
 	}
 
 	next.ServeHTTP(w, r.WithContext(service.WithCaller(r.Context(), user.Caller())))
+}
+
+// postsKeyOnly says whether the caller holds the scope of the read API of the blog and no other.
+func postsKeyOnly(c *service.Caller) bool {
+	return len(c.Scopes) == 1 && c.Scopes[0] == service.ScopePostsRead
+}
+
+// postsRoute says whether the request is a read of the published posts: GET or HEAD of /api/v1/posts, of one post, or
+// of one image of it. The path is cleaned the way the router does, so a dot segment reaches no other route.
+func postsRoute(r *http.Request) bool {
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		return false
+	}
+
+	p := r.URL.Path
+	if p != path.Clean(p) {
+		return false
+	}
+
+	base := BasePath + "/posts"
+
+	return p == base || strings.HasPrefix(p, base+"/")
 }
 
 // LoginPath is the page of network mode that turns a password into a session; it is

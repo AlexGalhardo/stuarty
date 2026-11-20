@@ -10,7 +10,6 @@ import (
 
 type registryEntry struct {
 	Name     string   `json:"name"`
-	Phase    string   `json:"phase"`
 	Scope    string   `json:"scope"`
 	Internal bool     `json:"internal"`
 	Errors   []string `json:"errors"`
@@ -35,17 +34,13 @@ func loadRegistry(t *testing.T) []registryEntry {
 // mediaCommands are the commands whose scope is media; every other command is edit.
 var mediaCommands = map[string]bool{"asset.add": true, "asset.remove": true, "font.add": true, "font.remove": true}
 
-// The registry snapshot has the 74 commands of SDD-002 Part C: 16 of the Prototype, 32 of ALPHA
-// and 26 of BETA; every scope is edit or media, and asset.add is the only internal command.
+// The registry snapshot has the commands of SDD-002 Part C; every scope is edit or media, and
+// asset.add is the only internal command.
 func TestRegistrySnapshotShape(t *testing.T) {
 	t.Parallel()
 
 	cmds := loadRegistry(t)
-	phases := map[string]int{}
-
 	for _, c := range cmds {
-		phases[c.Phase]++
-
 		if c.Scope != "edit" && c.Scope != "media" {
 			t.Errorf("%s: scope %q is neither edit nor media", c.Name, c.Scope)
 		}
@@ -59,12 +54,8 @@ func TestRegistrySnapshotShape(t *testing.T) {
 		}
 	}
 
-	if len(cmds) != 74 || phases["prototype"] != 16 || phases["alpha"] != 32 || phases["beta"] != 26 {
-		t.Errorf(
-			"%d commands (%v), want 74 with 16 prototype, 32 alpha and 26 beta (the exposed build)",
-			len(cmds),
-			phases,
-		)
+	if len(cmds) != 86 {
+		t.Errorf("%d commands, want 86", len(cmds))
 	}
 }
 
@@ -98,7 +89,7 @@ func TestCommandErrorCodesExist(t *testing.T) {
 	}
 }
 
-// Every section of Part C has a registry entry of the same phase, and the other way round (the exposed build is BETA).
+// Every section of Part C has a registry entry, and the other way round, and both count 74.
 func TestPartCSectionsMatchTheRegistry(t *testing.T) {
 	t.Parallel()
 
@@ -107,32 +98,77 @@ func TestPartCSectionsMatchTheRegistry(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	sections := regexp.MustCompile(`(?m)^### C\.\d+ \x60([a-z_.]+)\x60 \(phase ([PAB])\b`).
+	sections := regexp.MustCompile(`(?m)^### C\.\d+ \x60([a-z_.]+)\x60\s*$`).
 		FindAllStringSubmatch(string(b), -1)
-	want := map[string]string{}
+	want := map[string]bool{}
 
 	for _, s := range sections {
-		want[s[1]] = map[string]string{"P": "prototype", "A": "alpha", "B": "beta"}[s[2]]
+		want[s[1]] = true
 	}
 
-	got := map[string]string{}
+	got := map[string]bool{}
 	for _, c := range loadRegistry(t) {
-		got[c.Name] = c.Phase
+		got[c.Name] = true
 	}
 
-	if len(want) != 74 {
-		t.Fatalf("Part C has %d sections, want 74", len(want))
+	if len(want) != 86 {
+		t.Fatalf("Part C has %d sections, want 86", len(want))
 	}
 
-	for name, phase := range want {
-		if got[name] != phase {
-			t.Errorf("Part C says %s is %q, the registry has %q", name, phase, got[name])
+	if len(sections) != len(want) {
+		t.Errorf("Part C has %d sections for %d distinct commands", len(sections), len(want))
+	}
+
+	if len(got) != len(want) {
+		t.Errorf("the registry snapshot has %d commands, Part C has %d", len(got), len(want))
+	}
+
+	for name := range want {
+		if !got[name] {
+			t.Errorf("Part C has a section for %s, which the registry does not have", name)
 		}
 	}
 
 	for name := range got {
-		if _, ok := want[name]; !ok {
+		if !want[name] {
 			t.Errorf("%s is registered but has no section in Part C", name)
+		}
+	}
+}
+
+// Every command of the snapshot names a domain of SDD-000 section 1.1: the timeline registry is video, the
+// image registry image (epic 13).
+func TestRegistrySnapshotsCarryTheDomain(t *testing.T) {
+	t.Parallel()
+
+	known := []string{"project", "video", "image", "writing", "asset", "publish", "provider", "memory", "workspace"}
+
+	for file, want := range map[string]string{"commands.json": "video", "image/commands.json": "image"} {
+		b, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		var cmds []struct {
+			Name   string `json:"name"`
+			Domain string `json:"domain"`
+		}
+		if err := json.Unmarshal(b, &cmds); err != nil {
+			t.Fatal(err)
+		}
+
+		if len(cmds) == 0 {
+			t.Errorf("%s lists no command", file)
+		}
+
+		for _, c := range cmds {
+			if !slices.Contains(known, c.Domain) {
+				t.Errorf("%s: %s has domain %q, which SDD-000 section 1.1 does not list", file, c.Name, c.Domain)
+			}
+
+			if c.Domain != want {
+				t.Errorf("%s: %s has domain %q, want %q", file, c.Name, c.Domain, want)
+			}
 		}
 	}
 }

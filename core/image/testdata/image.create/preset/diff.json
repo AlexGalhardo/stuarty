@@ -1,0 +1,28 @@
+[
+  {
+    "changes": {
+      "background": [
+        "",
+        "#101820"
+      ],
+      "height": [
+        0,
+        720
+      ],
+      "name": [
+        "",
+        "Episode 12"
+      ],
+      "preset": [
+        null,
+        "video_thumbnail"
+      ],
+      "width": [
+        0,
+        1280
+      ]
+    },
+    "id": "img_aaaaaaaaaa",
+    "kind": "document.updated"
+  }
+]

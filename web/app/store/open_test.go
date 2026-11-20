@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/AlexGalhardo/stuarty/service/workspace"
+
 	"github.com/AlexGalhardo/vukem/database"
 	"github.com/AlexGalhardo/vukem/schema"
-
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
 )
 
 func newDir(t *testing.T) workspace.Dir {
@@ -83,7 +83,7 @@ func TestOpenRefusesPathCharacters(t *testing.T) {
 // the Windows case is the one that matters).
 func TestOpenUnderSpaceAndNonASCIIPath(t *testing.T) {
 	d, err := workspace.Resolve(func(string) string {
-		return filepath.Join(t.TempDir(), "Test User", "é", ".vukem-video")
+		return filepath.Join(t.TempDir(), "Test User", "é", ".stuarty")
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -140,7 +140,7 @@ func TestOpenRefusesUnknownMigration(t *testing.T) {
 func TestOpenRefusesNewerSchemaVersion(t *testing.T) {
 	d := newDir(t)
 	s := openStore(t, d, Options{SchemaVersion: 1})
-	if _, err := s.db.ExecContext(context.Background(), `INSERT INTO projects
+	if _, err := s.db.ExecContext(context.Background(), `INSERT INTO timelines
  (id, name, schema_version, document, doc_sha256, width, height, fps_num, fps_den, created_ms, updated_ms, created_by)
  VALUES ('prj_new', 'n', 2, '{}', 'x', 1, 1, 30, 1, 1, 1, 'local:ui')`); err != nil {
 		t.Fatal(err)

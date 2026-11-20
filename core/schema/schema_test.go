@@ -95,19 +95,12 @@ func TestCommandSchemasAcceptTheirExamples(t *testing.T) {
 		Name     string          `json:"name"`
 		Example  json.RawMessage `json:"example"`
 		Internal bool            `json:"internal"`
-		Phase    string          `json:"phase"`
 	}
 	if err := json.Unmarshal(b, &cmds); err != nil {
 		t.Fatal(err)
 	}
-	prototype := 0
-	for _, c := range cmds {
-		if c.Phase == "prototype" {
-			prototype++
-		}
-	}
-	if prototype != 16 {
-		t.Fatalf("the Prototype has 16 commands, commands.json lists %d", prototype)
+	if len(cmds) != 86 {
+		t.Fatalf("commands.json lists %d commands, want 86", len(cmds))
 	}
 	internal := 0
 	for _, c := range cmds {

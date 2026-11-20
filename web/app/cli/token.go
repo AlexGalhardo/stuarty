@@ -4,14 +4,14 @@ import (
 	"context"
 	"os"
 
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
 var tokenRotate = &spec{
 	name:    "token:rotate",
 	summary: "replace the local token; clients that hold the old one must be set up again",
-	usage:   []string{"vukem-video token:rotate"},
-	example: "vukem-video token:rotate",
+	usage:   []string{"stuarty token:rotate"},
+	example: "stuarty token:rotate",
 	offline: true,
 	write:   true,
 	run:     runTokenRotate,

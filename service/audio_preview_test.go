@@ -1,0 +1,687 @@
+package service
+
+import (
+	"context"
+	"errors"
+	"os"
+	"runtime"
+	"strconv"
+	"strings"
+	"sync"
+	"testing"
+	"time"
+
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/cache"
+	"github.com/AlexGalhardo/stuarty/engine/frame"
+)
+
+const (
+	previewItemA = "itm_aaaaaaaaa1"
+	previewItemB = "itm_aaaaaaaaa2"
+	previewItemC = "itm_aaaaaaaaa3"
+)
+
+// fakePreviewer renders nothing: it writes a few bytes, and records what it was asked.
+type fakePreviewer struct {
+	Exporter
+
+	mu      sync.Mutex
+	samples []int64
+	sources []plan.AudioSource
+	fail    bool
+	gate    chan struct{} // when set, a render waits for it to be closed
+}
+
+func (f *fakePreviewer) RenderAudioPreview(_ context.Context, in AudioPreviewInput) error {
+	if f.gate != nil {
+		<-f.gate
+	}
+
+	f.mu.Lock()
+	f.samples = append(f.samples, in.Source.Samples)
+	f.sources = append(f.sources, in.Source)
+	fail := f.fail
+	f.mu.Unlock()
+
+	if fail {
+		return errors.New("decoder failed")
+	}
+
+	return os.WriteFile(in.OutPath, []byte("RIFF....WAVEfake"), 0o600)
+}
+
+func (f *fakePreviewer) renders() []int64 {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	return append([]int64(nil), f.samples...)
+}
+
+var voiceChain = []timeline.Processor{{Kind: timeline.ProcEQ, Params: map[string]float64{"hp_hz": 90}}}
+
+// previewEnv is the project of measureEnv with items A and B on one chain over the same range of one asset, and C
+// without a chain, and a renderer that writes small files into a cache under the workspace.
+func previewEnv(t *testing.T, fake *fakePreviewer) *batchEnv {
+	t.Helper()
+
+	env := measureEnv(t, nil)
+	store, _ := env.s.store.(*batchStore)
+
+	doc, err := timeline.Decode(store.projects.row.Document)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, id := range []string{previewItemA, previewItemB, previewItemC} {
+		it := timeline.NewItem(id, timeline.ItemAudio, measureTrack, 30, 150)
+		it.Asset = "ast_bbbbbbbbbb"
+
+		if id != previewItemC {
+			it.Processors = voiceChain
+		}
+
+		doc.Items[id] = it
+	}
+
+	delete(doc.Items, measureAudioItem)
+
+	store.projects.row.Document = timeline.Canonical(doc)
+
+	dir := t.TempDir()
+
+	cs, err := cache.Open(dir, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// The background renders end before the folder is removed (cleanups run last in, first out).
+	t.Cleanup(func() {
+		deadline := time.Now().Add(20 * time.Second)
+
+		for time.Now().Before(deadline) {
+			env.s.previews.mu.Lock()
+			idle := env.s.previews.queued == 0
+			env.s.previews.mu.Unlock()
+
+			if idle {
+				return
+			}
+
+			runtime.Gosched()
+		}
+	})
+
+	env.s.workspace = dir
+	env.s.media.Frames = &frame.Frames{Cache: cs}
+	fake.Exporter = env.s.exporter
+	env.s.exporter = fake
+
+	return env
+}
+
+func previewKeys(t *testing.T, env *batchEnv) map[string]*plan.ProcessedAudio {
+	t.Helper()
+
+	res, err := env.s.PlanWindow(renderCtx(), PlanWindowRequest{ProjectID: batchProject, From: 0, Until: 300})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	keys := map[string]*plan.ProcessedAudio{}
+	for i := range res.Audio {
+		keys[res.Audio[i].Item] = res.Audio[i].Processed
+	}
+
+	return keys
+}
+
+func openPreview(env *batchEnv, project, key, from string) (*File, error) {
+	return env.s.OpenFile(renderCtx(), FileRef{Kind: "audio_preview", ProjectID: project, ID: key, Variant: from})
+}
+
+// waitReady asks again until the file is there: the render runs in the background.
+func waitReady(t *testing.T, env *batchEnv, key, from string) *File {
+	t.Helper()
+
+	deadline := time.Now().Add(20 * time.Second)
+
+	for {
+		f, err := openPreview(env, batchProject, key, from)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if !f.Pending {
+			return f
+		}
+
+		if time.Now().After(deadline) {
+			t.Fatal("the file was not rendered in 20 seconds")
+		}
+
+		runtime.Gosched()
+	}
+}
+
+// A window is rendered first, then the whole item by itself; each is stored once, by its key, and asked for again it
+// is served with no new render.
+func TestAudioPreviewCache(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePreviewer{}
+	env := previewEnv(t, fake)
+	keys := previewKeys(t, env)
+
+	a := keys[previewItemA]
+	if a == nil || keys[previewItemC] != nil {
+		t.Fatalf("processed: %+v", keys)
+	}
+
+	// The playhead is at frame 60 of an item that starts at 30, frame 30 of its file: the window is the two seconds
+	// from there.
+	win := waitReady(t, env, a.Key, "30")
+
+	if win.ContentType != "audio/wav" || win.Header["X-Stuarty-Window"] != "30-89" || !win.Immutable {
+		t.Errorf("window file: %+v", win)
+	}
+
+	whole := waitReady(t, env, a.Key, "")
+	if whole.Header != nil || whole.ETag != `"ap-`+a.Key+`"` {
+		t.Errorf("whole file: %+v", whole)
+	}
+
+	// The render of the whole item followed the window by itself, with nothing asked for it.
+	got := fake.renders()
+	if len(got) != 2 || got[0] != 2*48000 || got[1] != 150*48000/30 {
+		t.Fatalf("renders (samples) = %v, want the window of 96000 then the item of 240000", got)
+	}
+
+	// Asked again, both are served from the store.
+	waitReady(t, env, a.Key, "30")
+	waitReady(t, env, a.Key, "")
+
+	if n := len(fake.renders()); n != 2 {
+		t.Errorf("a stored file was rendered again: %d renders", n)
+	}
+
+	// Past the end of the file, before it, or not a number: a validation error, and no render.
+	for _, from := range []string{"-1", "150", "x", "180"} {
+		_, err := openPreview(env, batchProject, a.Key, from)
+		if se, ok := errors.AsType[*Error](err); !ok || se.Code != command.CodeValidation {
+			t.Errorf("from %q: %v", from, err)
+		}
+	}
+}
+
+// The window is ready within three seconds of the first request (acceptance criterion 1). The render of this test is
+// a fake, so it measures what the service adds (the queue, the store, the answer); the render of the real 2 seconds
+// of the reference clip is measured by TestAudioPreviewWindowRenderLatency in engine/export.
+func TestAudioPreviewWindowLatency(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePreviewer{}
+	env := previewEnv(t, fake)
+	a := previewKeys(t, env)[previewItemA]
+
+	start := time.Now()
+	waitReady(t, env, a.Key, "30")
+
+	if took := time.Since(start); took > 3*time.Second {
+		t.Errorf("the window took %v, the budget is 3s", took)
+	}
+}
+
+// A window near the end of the item is cut to it.
+func TestAudioPreviewCacheWindowIsCutAtTheEndOfTheItem(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePreviewer{}
+	env := previewEnv(t, fake)
+	a := previewKeys(t, env)[previewItemA]
+
+	win := waitReady(t, env, a.Key, "140")
+	if win.Header["X-Stuarty-Window"] != "140-149" {
+		t.Errorf("window = %q", win.Header["X-Stuarty-Window"])
+	}
+}
+
+// Two items that share a key sit at different frames of the timeline: a window is named by a frame of the file, so the
+// window that one of them asks for holds its own sound, whichever item handed the key out first.
+func TestAudioPreviewWindowIsAFrameOfTheFile(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePreviewer{}
+	env := previewEnv(t, fake)
+	store, _ := env.s.store.(*batchStore)
+
+	// A, at 30, hands the key out first; then B moves to 90.
+	first := previewKeys(t, env)
+
+	doc, err := timeline.Decode(store.projects.row.Document)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	b := doc.Items[previewItemB]
+	b.Start = 90
+	doc.Items[b.ID] = b
+	store.projects.row.Document = timeline.Canonical(doc)
+
+	keys := previewKeys(t, env)
+	pb := keys[previewItemB]
+
+	if pb == nil || pb.Key != first[previewItemA].Key || pb.Start != 90 {
+		t.Fatalf("B = %+v, A = %+v", pb, first[previewItemA])
+	}
+
+	// The playhead is at frame 120, 30 frames into B: the window from frame 30 of the file.
+	win := waitReady(t, env, pb.Key, "30")
+	if win.Header["X-Stuarty-Window"] != "30-89" {
+		t.Errorf("window = %q, want the frames 30-89 of the file", win.Header["X-Stuarty-Window"])
+	}
+
+	want, ok := plan.PreviewSource(doc, previewItemB, 120, 180)
+	if !ok {
+		t.Fatal("no source")
+	}
+
+	fake.mu.Lock()
+	got := fake.sources[0]
+	fake.mu.Unlock()
+
+	if got.SourceStart != want.SourceStart || got.Samples != want.Samples {
+		t.Errorf("the window renders the source from sample %d (%d samples), want %d (%d)",
+			got.SourceStart, got.Samples, want.SourceStart, want.Samples)
+	}
+}
+
+// A file that the cache could never hold is refused before its render, and its windows are still rendered: otherwise
+// a long item under a small cap would be rendered in full, refused by the cache, and rendered again every 30 seconds.
+func TestAudioPreviewFileOverTheCapIsNotRendered(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePreviewer{}
+	env := previewEnv(t, fake)
+	a := previewKeys(t, env)[previewItemA]
+
+	// The item is 240000 samples, 960044 bytes as a 16-bit stereo WAV; a window is 384044.
+	small, err := cache.Open(t.TempDir(), 500000)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	env.s.media.Frames = &frame.Frames{Cache: small}
+
+	_, err = openPreview(env, batchProject, a.Key, "")
+	if se, ok := errors.AsType[*Error](err); !ok || se.Code != command.CodeLimit {
+		t.Fatalf("the whole file over the cap: %v", err)
+	}
+
+	if n := len(fake.renders()); n != 0 {
+		t.Fatalf("a file over the cap was rendered: %d renders", n)
+	}
+
+	waitReady(t, env, a.Key, "0")
+
+	if got := fake.renders(); len(got) != 1 || got[0] != 2*48000 {
+		t.Errorf("renders (samples) = %v, want only the window of 96000", got)
+	}
+}
+
+// A render that fails is an error, is not tried again at once, and leaves no file.
+func TestAudioPreviewCacheFailure(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePreviewer{fail: true}
+	env := previewEnv(t, fake)
+	a := previewKeys(t, env)[previewItemA]
+
+	deadline := time.Now().Add(20 * time.Second)
+
+	for {
+		_, err := openPreview(env, batchProject, a.Key, "")
+		if se, ok := errors.AsType[*Error](err); ok && se.Code == command.CodeInternal {
+			break
+		}
+
+		if time.Now().After(deadline) {
+			t.Fatalf("the failed render was not reported: %v", err)
+		}
+
+		runtime.Gosched()
+	}
+
+	if _, err := openPreview(env, batchProject, a.Key, ""); err == nil {
+		t.Error("a failed render was asked again at once")
+	}
+
+	if n := len(fake.renders()); n != 1 {
+		t.Errorf("renders = %d, want 1", n)
+	}
+}
+
+// A failure that may be tried again is forgotten when the next one is recorded: windows asked one after another of a
+// source that cannot be decoded do not grow the memory of the service without end.
+func TestAudioPreviewCacheForgetsOldFailures(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePreviewer{fail: true}
+	env := previewEnv(t, fake)
+	a := previewKeys(t, env)[previewItemA]
+
+	p := &env.s.previews
+	p.setup()
+	p.mu.Lock()
+	p.failed["stale"] = time.Now().Add(-time.Second)
+	p.mu.Unlock()
+
+	deadline := time.Now().Add(20 * time.Second)
+
+	for {
+		_, err := openPreview(env, batchProject, a.Key, "")
+		if se, ok := errors.AsType[*Error](err); ok && se.Code == command.CodeInternal {
+			break
+		}
+
+		if time.Now().After(deadline) {
+			t.Fatalf("the failed render was not reported: %v", err)
+		}
+
+		runtime.Gosched()
+	}
+
+	p.mu.Lock()
+	_, stale := p.failed["stale"]
+	_, fresh := p.failed[a.Key]
+	p.mu.Unlock()
+
+	if stale || !fresh {
+		t.Errorf("failures: stale kept %v, new recorded %v", stale, fresh)
+	}
+}
+
+// Two items with one chain over one range share one file; an edit of another item, of a volume or of a position
+// makes none; a changed parameter makes another (acceptance criterion 2).
+func TestAudioPreviewKeyIsPerClip(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePreviewer{}
+	env := previewEnv(t, fake)
+	keys := previewKeys(t, env)
+
+	a, b := keys[previewItemA], keys[previewItemB]
+	if a == nil || b == nil || a.Key != b.Key {
+		t.Fatalf("A and B on one chain have two keys: %+v %+v", a, b)
+	}
+
+	waitReady(t, env, a.Key, "")
+	waitReady(t, env, b.Key, "")
+
+	if n := len(fake.renders()); n != 1 {
+		t.Fatalf("two items, one file: renders = %d", n)
+	}
+
+	// Edit other items and the volume of A: the keys stay and nothing is rendered.
+	store, _ := env.s.store.(*batchStore)
+
+	doc, err := timeline.Decode(store.projects.row.Document)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	c := doc.Items[previewItemC]
+	c.Volume, c.Start = 0.2, 40
+	doc.Items[c.ID] = c
+
+	va := doc.Items[previewItemA]
+	va.Volume = 0.5
+	va.FadeIn = 6
+	doc.Items[va.ID] = va
+
+	store.projects.row.Document = timeline.Canonical(doc)
+
+	again := previewKeys(t, env)
+	if again[previewItemA].Key != a.Key || again[previewItemB].Key != a.Key {
+		t.Error("an edit of another item or of a volume moved a key")
+	}
+
+	if _, err := openPreview(env, batchProject, a.Key, ""); err != nil {
+		t.Fatal(err)
+	}
+
+	if n := len(fake.renders()); n != 1 {
+		t.Errorf("an edit outside the entry made a render: %d", n)
+	}
+
+	// A parameter of A is another key, and another file.
+	vb := doc.Items[previewItemA]
+	vb.Processors = []timeline.Processor{{Kind: timeline.ProcEQ, Params: map[string]float64{"hp_hz": 91}}}
+	doc.Items[vb.ID] = vb
+	store.projects.row.Document = timeline.Canonical(doc)
+
+	changed := previewKeys(t, env)
+	if changed[previewItemA].Key == a.Key || changed[previewItemB].Key != a.Key {
+		t.Fatalf("a changed parameter: %+v", changed)
+	}
+
+	waitReady(t, env, changed[previewItemA].Key, "")
+
+	if n := len(fake.renders()); n != 2 {
+		t.Errorf("renders = %d, want 2", n)
+	}
+}
+
+// A key that the project's plan did not hand out, or one of another project, is not found, and nothing is rendered.
+func TestAudioPreviewCacheKeyBelongsToTheProject(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePreviewer{}
+	env := previewEnv(t, fake)
+	a := previewKeys(t, env)[previewItemA]
+
+	bad := []string{
+		"", "short", a.Key[:63], a.Key + "0", "../" + a.Key[3:], a.Key[:63] + "G",
+		"0000000000000000000000000000000000000000000000000000000000000000",
+	}
+
+	for _, key := range bad {
+		_, err := openPreview(env, batchProject, key, "")
+		if se, ok := errors.AsType[*Error](err); !ok || se.Code != command.CodeNotFound {
+			t.Errorf("key %q: %v", key, err)
+		}
+	}
+
+	if _, err := openPreview(env, "prj_zzzzzzzzzz", a.Key, ""); err == nil {
+		t.Error("a key was served through another project")
+	}
+
+	if n := len(fake.renders()); n != 0 {
+		t.Errorf("renders = %d", n)
+	}
+}
+
+// T-90: the key opens the sound only through the project whose plan handed it out, and no crafted key or frame reaches
+// another file or starts a render.
+func TestSecurity_T90_AudioPreviewKeyIsTheProjects(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePreviewer{}
+	env := previewEnv(t, fake)
+	a := previewKeys(t, env)[previewItemA]
+
+	for _, key := range []string{
+		"../" + a.Key, "..\\" + a.Key, "/" + a.Key[1:], "C:/" + a.Key[3:], a.Key + "/../x", strings.ToUpper(a.Key),
+		a.Key[:32] + "/" + a.Key[33:], "audio-previews/" + a.Key[:48], strings.Repeat("0", 64),
+	} {
+		if _, err := openPreview(env, batchProject, key, ""); err == nil {
+			t.Errorf("key %q was served", key)
+		}
+	}
+
+	for _, from := range []string{"../x", "60/../1", "1e2", " 60", "0x3c", "99999999999999999999"} {
+		if _, err := openPreview(env, batchProject, a.Key, from); err == nil {
+			t.Errorf("from %q was served", from)
+		}
+	}
+
+	if _, err := openPreview(env, "prj_zzzzzzzzzz", a.Key, ""); err == nil {
+		t.Error("the key of this project opened a sound through another project")
+	}
+
+	if n := len(fake.renders()); n != 0 {
+		t.Errorf("a refused request rendered: %d", n)
+	}
+}
+
+// At most sixteen renders wait; one file is rendered once however many ask for it (SDD-007 T-91).
+func TestSecurity_T91_AudioPreviewRendersAreBounded(t *testing.T) {
+	t.Parallel()
+
+	gate := make(chan struct{})
+	fake := &fakePreviewer{gate: gate}
+	env := previewEnv(t, fake)
+	a := previewKeys(t, env)[previewItemA]
+
+	// The same window asked for many times is one render.
+	for range 50 {
+		if _, err := openPreview(env, batchProject, a.Key, "30"); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	var full *Error
+
+	for from := 1; from < 150 && full == nil; from++ {
+		_, err := openPreview(env, batchProject, a.Key, strconv.Itoa(from))
+		if se, ok := errors.AsType[*Error](err); ok {
+			full = se
+		}
+	}
+
+	if full == nil || full.Code != CodeQueueFull {
+		t.Fatalf("the queue never filled: %v", full)
+	}
+
+	env.s.previews.mu.Lock()
+	q := env.s.previews.queued
+	env.s.previews.mu.Unlock()
+
+	if q != maxQueuedPreviews {
+		t.Errorf("queued = %d, want %d", q, maxQueuedPreviews)
+	}
+
+	// Released, the waiting renders all end (the cleanup of previewEnv waits for them).
+	close(gate)
+}
+
+// A source with its asset's content hash in the key: the plan's key is the one of plan.PreviewKey.
+func TestAudioPreviewPlanKeyIsThePlansKey(t *testing.T) {
+	t.Parallel()
+
+	env := previewEnv(t, &fakePreviewer{})
+	store, _ := env.s.store.(*batchStore)
+
+	doc, err := timeline.Decode(store.projects.row.Document)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	src, ok := plan.PreviewSource(doc, previewItemA, 30, 180)
+	if !ok {
+		t.Fatal("no source")
+	}
+
+	if got := previewKeys(t, env)[previewItemA].Key; got != plan.PreviewKey(doc, &src) {
+		t.Errorf("key %s, want %s", got, plan.PreviewKey(doc, &src))
+	}
+}
+
+// An item with a chain inside a composition is askable by the key its plan entry names (VV-275): the whole file is
+// the source of the export, a window of it is a frame of the file, and the render gets the document of the timeline
+// that holds the asset.
+func TestAudioPreviewNestedItem(t *testing.T) {
+	t.Parallel()
+
+	const (
+		child  = "prj_c1c1c1c1c1"
+		parent = "prj_p1p1p1p1p1"
+		track  = "trk_aaaaaaaaa1"
+		asset  = "ast_bbbbbbbbbb"
+		item   = "itm_cccccccc01"
+		comp   = "itm_cccccccc02"
+	)
+
+	mk := func(id string) *timeline.Document {
+		return &timeline.Document{
+			SchemaVersion: timeline.CurrentSchemaVersion, ID: id, Settings: timeline.DefaultSettings(),
+			Assets: map[string]timeline.Asset{asset: {
+				ID: asset, Kind: timeline.AssetAudio, Hash: "sha256:" + strings.Repeat("1", 64),
+				FrameRate: timeline.Rational{Num: 30, Den: 1}, FrameCount: 900,
+			}},
+			Tracks: map[string]timeline.Track{track: {ID: track, Kind: timeline.TrackAudio, Order: "a0"}},
+			Items:  map[string]timeline.Item{},
+		}
+	}
+
+	inner := mk(child)
+	voice := timeline.NewItem(item, timeline.ItemAudio, track, 0, 90)
+	voice.Asset, voice.Processors = asset, voiceChain
+	inner.Items[item] = voice
+
+	outer := mk(parent)
+	cut := timeline.NewItem(comp, timeline.ItemComposition, track, 30, 90)
+	cut.Timeline = child
+	outer.Items[comp] = cut
+
+	opts := plan.Options{Nested: func(id string) (*timeline.Document, bool) { return inner, id == child }}
+	w := plan.WindowWith(outer, 0, 150, opts)
+
+	var entry *plan.WindowAudio
+
+	for i := range w.Audio {
+		if w.Audio[i].Item == comp+"/"+item {
+			entry = &w.Audio[i]
+		}
+	}
+
+	if entry == nil || entry.Processed == nil || entry.Timeline != child {
+		t.Fatalf("plan audio = %+v, want an entry of the child's timeline with a processed file", w.Audio)
+	}
+
+	s := &svc{}
+	s.registerAudioPreviews("prj_one", outer, opts, &w)
+
+	known, ok := s.previews.lookup("prj_one", entry.Processed.Key)
+	if !ok {
+		t.Fatal("the key of the plan entry is not askable")
+	}
+
+	whole, err := known.target(entry.Processed.Key, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if whole.src.Samples != 90*1600 || len(whole.src.Chain) != 1 || whole.src.Gain != nil ||
+		whole.doc.Assets[asset].Hash == "" {
+		t.Errorf("whole = %+v, want the 90 frames with the chain, no envelope and the asset in its document", whole)
+	}
+
+	if plan.PreviewKey(whole.doc, &whole.src) != entry.Processed.Key {
+		t.Error("the key of the whole file is not the key of the plan")
+	}
+
+	win, err := known.target(entry.Processed.Key, "10")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// File frame 10 is child frame 10: the source is read from there, for the window of the file.
+	if !win.window || win.first != 10 || win.src.SourceStart != 10*1600 ||
+		win.src.Samples != int64(win.last-win.first+1)*1600 ||
+		win.key == whole.key {
+		t.Errorf("window = %+v, want a window of its own from the source frame 10", win)
+	}
+}

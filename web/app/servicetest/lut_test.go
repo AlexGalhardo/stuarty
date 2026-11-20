@@ -13,11 +13,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/ingest"
-	"github.com/AlexGalhardo/vukem-video/engine/lut"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/ingest"
+	"github.com/AlexGalhardo/stuarty/engine/lut"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 func cubeFile(size int, header string, rows int) string {
@@ -69,6 +69,8 @@ func TestImportingACubeFileMakesALutAsset(t *testing.T) {
 	}
 }
 
+// A header after the data is not here: the export parser reads it, so the ingest takes it too (VV-287,
+// TestCheckCubeAgreesWithTheExportParserAndEchoesNothing in service).
 func TestImportingAnInvalidCubeFileFails(t *testing.T) {
 	cases := map[string]string{
 		"too few lines":    cubeFile(2, "", 7),
@@ -79,10 +81,11 @@ func TestImportingAnInvalidCubeFileFails(t *testing.T) {
 		"no size":          "TITLE \"x\"\n0 0 0\n",
 		"not a number":     "LUT_3D_SIZE 2\n" + strings.Repeat("0.1 nan 0.3\n", 8),
 		"two numbers":      "LUT_3D_SIZE 2\n" + strings.Repeat("0.1 0.3\n", 8),
-		"header after":     cubeFile(2, "", 8) + "TITLE \"late\"\n",
 		"empty domain":     cubeFile(2, "DOMAIN_MIN 1 1 1\nDOMAIN_MAX 0 0 0\n", 8),
 		"unknown keyword":  "LUT_3D_SIZE 2\nWHATEVER 1\n",
 		"a very long line": "TITLE x\n# " + strings.Repeat("x", 5000) + "\nLUT_3D_SIZE 2\n",
+		// A whole table with one comment past the 512 bytes of a line (VV-293): refused, as the export refuses it.
+		"a line over 512 bytes": cubeFile(2, "# "+strings.Repeat("x", 600)+"\n", 8),
 	}
 
 	for name, body := range cases {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 func init() {
@@ -18,7 +18,6 @@ func init() {
 			CodeValidation, CodeNotFound, CodeTypeMismatch, CodeIDExists, CodeLimit,
 		},
 		Scope: ScopeEdit,
-		Phase: Alpha,
 	}, applyCaptionSplit))
 
 	Register(Define(Spec{
@@ -31,7 +30,6 @@ func init() {
 			CodeValidation, CodeNotFound, CodeTypeMismatch, CodeInvalidState, CodeLimit,
 		},
 		Scope: ScopeEdit,
-		Phase: Alpha,
 	}, applyCaptionMerge))
 }
 

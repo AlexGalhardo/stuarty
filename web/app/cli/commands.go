@@ -7,22 +7,126 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/web/app/agentdocs"
-	"github.com/AlexGalhardo/vukem-video/web/app/mcp"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
+	"github.com/AlexGalhardo/stuarty/web/app/mcp"
 )
 
 // registry lists the commands in the order the short list prints them.
 func registry() []*spec {
-	return []*spec{
-		projectList, projectCreate, projectShow, projectTrash, projectRestore,
-		edit, history, undo, redo, lintCmd, version, mcpCmd,
-		mediaImport, mediaInspect, mediaList, mediaTrash, mediaRestore, view, export,
-		jobShow, jobCancel, jobList, eventsCmd, commandHelp,
-		templateList, templateSave, templateNew, templateExport, templateImport, bundleExport, bundleImport,
-		agentDocs, transcribeCmd, doctorCmd, fontsCmd, auditCmd, toolsInstallCmd, tokenRotate,
-		fontImportCmd, brandShowCmd, brandSetCmd, otioExport, otioImport,
-	}
+	return append([]*spec{
+		projectList,
+		projectCreate,
+		projectShow,
+		projectTrash,
+		projectRestore,
+		edit,
+		history,
+		undo,
+		redo,
+		lintCmd,
+		version,
+		mcpCmd,
+		revertCmd,
+		diffCmd,
+		checkpointCreateCmd,
+		checkpointListCmd,
+		checkpointRenameCmd,
+		checkpointRemoveCmd,
+		mediaImport,
+		mediaInspect,
+		mediaList,
+		mediaTrash,
+		mediaRestore,
+		view,
+		export,
+		exportPresets,
+		exportCheck,
+		exportBatch,
+		jobShow,
+		jobCancel,
+		jobList,
+		eventsCmd,
+		commandHelp,
+		templateList,
+		templateSave,
+		templateNew,
+		templateExport,
+		templateImport,
+		bundleExport,
+		bundleImport,
+		agentDocs,
+		transcribeCmd,
+		doctorCmd,
+		fontsCmd,
+		auditCmd,
+		toolsInstallCmd,
+		tokenRotate,
+		fontImportCmd,
+		brandShowCmd,
+		brandSetCmd,
+		otioExport,
+		otioImport,
+		projectDescribeCmd,
+		projectDuplicateCmd,
+		itemAddCmd,
+		itemMoveCmd,
+		itemRenameCmd,
+		itemTrashCmd,
+		itemRestoreCmd,
+		briefShowCmd,
+		briefSetCmd,
+		briefingQuestionsCmd,
+		briefingAnswerCmd,
+		connectionListCmd,
+		connectionShowCmd,
+		connectionAddCmd,
+		connectionRemoveCmd,
+		connectionTestCmd,
+		approvalListCmd,
+		approvalShowCmd,
+		approvalDecideCmd,
+		approvalRuleListCmd,
+		approvalRuleSetCmd,
+		approvalRuleRemoveCmd,
+		costShowCmd,
+		costCeilingCmd,
+		providerListCmd,
+		providerModelsCmd,
+		providerPriceCmd,
+		textGenerateCmd,
+		imageGenerateCmd,
+		voiceGenerateCmd,
+		videoGenerateCmd,
+		voiceListCmd,
+		imageModelEditCmd,
+		imageCreate,
+		imageList,
+		imageShow,
+		imageEdit,
+		imageUndo,
+		imageRedo,
+		imageExport,
+		imageImport,
+		imageRevert,
+		imageDiff,
+		imageCheckpointCreate,
+		imageCheckpointList,
+		imageCheckpointRename,
+		imageCheckpointRemove,
+		assetListCmd,
+		assetShowCmd,
+		assetUsesCmd,
+		assetSetCmd,
+		assetTagCmd,
+		motionBriefCmd,
+		motionCheckCmd,
+		motionReplaceCmd,
+		agentProfilesCmd,
+		chatSessionsCmd,
+		chatSessionCmd,
+		chatTranscriptCmd,
+	}, append(append(libraryCommands(), publishingCommands()...), writingCommands()...)...)
 }
 
 // CommandNames lists the commands the binary knows, and those among them that
@@ -64,8 +168,8 @@ func page(p *parsed) service.Page {
 var projectList = &spec{
 	name:    "project:list",
 	summary: "list the projects of the workspace",
-	usage:   []string{"vukem-video project:list [--state active|trashed|all] [--cursor c] [--limit n]"},
-	example: "vukem-video project:list --json",
+	usage:   []string{"stuarty project:list [--state active|trashed|all] [--cursor c] [--limit n]"},
+	example: "stuarty project:list --json",
 	flags: append([]flagDef{{Name: "state", Kind: kindString, Default: "active", Usage: "active, trashed or all"}},
 		pageFlags("20")...),
 	run: func(ctx context.Context, c *call) (*output, error) {
@@ -82,9 +186,9 @@ var projectCreate = &spec{
 	name:    "project:create",
 	summary: "create a project",
 	usage: []string{
-		"vukem-video project:create --name <name> [--preset 9:16|1:1|16:9|4:5] [--fps 30] [--id prj_...]",
+		"stuarty project:create --name <name> [--preset 9:16|1:1|16:9|4:5] [--fps 30] [--id prj_...]",
 	},
-	example: `vukem-video project:create --name "Launch teaser" --json`,
+	example: `stuarty project:create --name "Launch teaser" --json`,
 	globals: []string{"dry-run"},
 	write:   true,
 	flags: []flagDef{
@@ -114,19 +218,20 @@ var projectCreate = &spec{
 }
 
 var projectShow = &spec{
-	name:    "project:show",
-	summary: "show a project",
+	name:     "project:show",
+	timeline: true,
+	summary:  "show a project",
 	usage: []string{
-		"vukem-video project:show [<project id>] [--detail concise|full|document] [--cursor c] [--limit n]",
+		"stuarty project:show [<project id>] [--detail concise|full|document] [--cursor c] [--limit n]",
 	},
-	example:           "vukem-video project:show --project prj_7k2m9x4q1b",
+	example:           "stuarty project:show --project prj_7k2m9x4q1b",
 	project:           true,
 	projectPositional: true,
 	flags: append([]flagDef{{Name: "detail", Kind: kindString, Default: "concise", Usage: "concise, full or document"}},
 		pageFlags("")...),
 	run: func(ctx context.Context, c *call) (*output, error) {
 		res, err := c.svc.ProjectGet(ctx, service.ProjectGetRequest{
-			ProjectID: c.projectID, Detail: c.args.str("detail"), Page: page(c.args),
+			ProjectID: c.projectID, TimelineID: c.timelineID, Detail: c.args.str("detail"), Page: page(c.args),
 		})
 		if err != nil {
 			return nil, err
@@ -154,8 +259,8 @@ func projectStateCommand(
 	return &spec{
 		name:              name,
 		summary:           summary,
-		usage:             []string{"vukem-video " + name + " <project id>"},
-		example:           "vukem-video " + name + " prj_7k2m9x4q1b",
+		usage:             []string{"stuarty " + name + " <project id>"},
+		example:           "stuarty " + name + " prj_7k2m9x4q1b",
 		project:           true,
 		projectPositional: true,
 		globals:           []string{"dry-run"},
@@ -186,16 +291,17 @@ var projectRestore = projectStateCommand("project:restore", "restore a trashed p
 	})
 
 var history = &spec{
-	name:    "history",
-	summary: "list the steps of a project history",
-	usage:   []string{"vukem-video history --project <id> [--by a] [--cursor c] [--limit n]"},
-	example: "vukem-video history --project prj_7k2m9x4q1b --json",
-	project: true,
+	name:     "history",
+	timeline: true,
+	summary:  "list the steps of a project history",
+	usage:    []string{"stuarty history --project <id> [--by a] [--cursor c] [--limit n]"},
+	example:  "stuarty history --project prj_7k2m9x4q1b --json",
+	project:  true,
 	flags: append([]flagDef{{Name: "by", Kind: kindString, Usage: "only the steps of this actor"}},
 		pageFlags("20")...),
 	run: func(ctx context.Context, c *call) (*output, error) {
 		res, err := c.svc.HistoryList(ctx, service.HistoryListRequest{
-			ProjectID: c.projectID, Actor: c.args.str("by"), Page: page(c.args),
+			ProjectID: c.projectID, TimelineID: c.timelineID, Actor: c.args.str("by"), Page: page(c.args),
 		})
 		if err != nil {
 			return nil, err
@@ -207,15 +313,20 @@ var history = &spec{
 
 func undoCommand(name, summary string, redo bool) *spec {
 	return &spec{
-		name:    name,
-		summary: summary,
-		usage:   []string{"vukem-video " + name + " --project <id>"},
-		example: "vukem-video " + name + " --project prj_7k2m9x4q1b",
-		project: true,
-		globals: []string{"dry-run"},
-		write:   true,
+		name:     name,
+		timeline: true,
+		summary:  summary,
+		usage:    []string{"stuarty " + name + " --project <id>"},
+		example:  "stuarty " + name + " --project prj_7k2m9x4q1b",
+		project:  true,
+		globals:  []string{"dry-run"},
+		write:    true,
 		run: func(ctx context.Context, c *call) (*output, error) {
-			req := service.UndoRequest{ProjectID: c.projectID, DryRun: c.args.boolean("dry-run")}
+			req := service.UndoRequest{
+				ProjectID:  c.projectID,
+				TimelineID: c.timelineID,
+				DryRun:     c.args.boolean("dry-run"),
+			}
 
 			var (
 				res *service.UndoResult
@@ -243,11 +354,12 @@ var (
 )
 
 var lintCmd = &spec{
-	name:    "lint",
-	summary: "check a project against every lint rule (an edit result runs only the fast rules, lint_scope fast)",
-	usage:   []string{"vukem-video lint --project <id> [--severity error|warning] [--cursor c] [--limit n] [--strict]"},
-	example: "vukem-video lint --project prj_7k2m9x4q1b --json",
-	project: true,
+	name:     "lint",
+	timeline: true,
+	summary:  "check a project against every lint rule (an edit result runs only the fast rules, lint_scope fast)",
+	usage:    []string{"stuarty lint --project <id> [--severity error|warning] [--cursor c] [--limit n] [--strict]"},
+	example:  "stuarty lint --project prj_7k2m9x4q1b --json",
+	project:  true,
 	flags: append([]flagDef{
 		{
 			Name:    "severity",
@@ -259,7 +371,7 @@ var lintCmd = &spec{
 	}, pageFlags("25")...),
 	run: func(ctx context.Context, c *call) (*output, error) {
 		res, err := c.svc.Lint(ctx, service.LintRequest{
-			ProjectID: c.projectID, Severity: c.args.str("severity"), Page: page(c.args),
+			ProjectID: c.projectID, TimelineID: c.timelineID, Severity: c.args.str("severity"), Page: page(c.args),
 		})
 		if err != nil {
 			return nil, err
@@ -276,16 +388,23 @@ var lintCmd = &spec{
 
 var commandHelp = &spec{
 	name:       "command:help",
-	summary:    "list the editing commands, or describe one",
-	usage:      []string{"vukem-video command:help [<name>]"},
-	example:    "vukem-video command:help item.move",
+	summary:    "list the editing commands and the domains, or describe one command",
+	usage:      []string{"stuarty command:help [<name>]", "stuarty command:help --domain <domain>"},
+	example:    "stuarty command:help item.move",
 	positional: true,
+	flags: []flagDef{
+		{
+			Name:  "domain",
+			Kind:  kindString,
+			Usage: "a domain of the product: its commands (without it, the video commands and the list of domains)",
+		},
+	},
 	run: func(ctx context.Context, c *call) (*output, error) {
 		if len(c.args.Positional) > 1 {
 			return nil, validation("", "command:help takes one command name, got %d.", len(c.args.Positional))
 		}
 
-		req := service.CommandHelpRequest{}
+		req := service.CommandHelpRequest{Domain: c.args.str("domain")}
 		if len(c.args.Positional) == 1 {
 			req.Name = c.args.Positional[0]
 		}
@@ -308,21 +427,21 @@ type versionDoc struct {
 var version = &spec{
 	name:    "version",
 	summary: "print the version of this binary",
-	usage:   []string{"vukem-video version [--json]"},
-	example: "vukem-video version",
+	usage:   []string{"stuarty version [--json]"},
+	example: "stuarty version",
 	offline: true,
 	run: func(_ context.Context, _ *call) (*output, error) {
 		v := agentdocs.Version
-		text := "vukem-video " + v
+		text := "stuarty " + v
 
 		return &output{value: versionDoc{Version: v, Text: text}, text: text}, nil
 	},
 }
 
 // mcpDescription tells the client which workspace and server its tools act on, because a server
-// started without VUKEM_VIDEO_HOME or VUKEM_VIDEO_ADDR opens the default workspace of the user (VV-114).
+// started without STUARTY_HOME or STUARTY_ADDR opens the default workspace of the user (VV-114).
 func mcpDescription(workspace, server string) string {
-	text := "Vukem Video MCP server"
+	text := "Stuarty MCP server"
 
 	if workspace != "" {
 		text += " for the workspace " + workspace
@@ -344,8 +463,8 @@ func mcpDescription(workspace, server string) string {
 var mcpCmd = &spec{
 	name:    "mcp",
 	summary: "serve the MCP tools on standard input and output",
-	usage:   []string{"vukem-video mcp [--actor <label>]"},
-	example: "claude mcp add vukem-video -- vukem-video mcp",
+	usage:   []string{"stuarty mcp [--actor <label>]"},
+	example: "claude mcp add stuarty -- stuarty mcp",
 	stream:  true,
 	run: func(ctx context.Context, c *call) (*output, error) {
 		o := mcp.Options{Description: mcpDescription(c.workspace, c.server)}

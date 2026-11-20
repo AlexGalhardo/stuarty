@@ -1,6 +1,6 @@
 package plan
 
-import "github.com/AlexGalhardo/vukem-video/core/timeline"
+import "github.com/AlexGalhardo/stuarty/core/timeline"
 
 // TransitionSpec is the state of a transition that the executors draw (SDD-004 §3.2): the kinds
 // whip, dip and wipe, which change pixels and not only the animated values. P is the progress as

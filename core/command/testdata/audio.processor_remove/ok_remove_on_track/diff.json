@@ -1,0 +1,38 @@
+[
+  {
+    "kind": "track.updated",
+    "id": "trk_m1n2p3q4r5",
+    "changes": {
+      "processors": [
+        [
+          {
+            "kind": "gate",
+            "params": {
+              "threshold_db": -45
+            }
+          },
+          {
+            "kind": "compressor",
+            "params": {
+              "ratio": 4
+            }
+          },
+          {
+            "kind": "limiter"
+          }
+        ],
+        [
+          {
+            "kind": "compressor",
+            "params": {
+              "ratio": 4
+            }
+          },
+          {
+            "kind": "limiter"
+          }
+        ]
+      ]
+    }
+  }
+]

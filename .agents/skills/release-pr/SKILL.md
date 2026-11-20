@@ -1,9 +1,11 @@
 ---
 name: release-pr
-description: Cut a release of Vukem Video through one rebase-merged pull request, including stacked release branches that must be rebuilt on main after the previous release merges.
+description: Suspended by ADR-0045 while the epics are implemented. Cut a release of Stuarty through one rebase-merged pull request, including stacked release branches that must be rebuilt on main after the previous release merges.
 ---
 
 # Release pull request
+
+**Suspended (ADR-0045, 2026-11-18):** no release is cut while the epics are implemented, and the default branch is not protected or green. This procedure describes the flow of ADR-0028 as it worked until release 0.29.0. It is the starting point when the integration pull request is split into releases (`v0.30.0`, `v0.31.0` and so on); revise it with the author then.
 
 Read `rules/git-and-branches.md` first. The release tool is `go run ./internal/tools/release` (SDD-009).
 
@@ -42,7 +44,7 @@ After release N is merged, its commits get new hashes on `main`, and branch N+1,
    1. `bash scripts/release-pr-body.sh vX.Y.Z`. It edits the pull request itself; never pipe its output into `gh pr edit`.
    2. `gh pr ready N`
    3. `gh pr merge N --rebase --auto`
-   - Until the end of BETA the pull-request workflows are disabled by the author's decision (2026-11-15), so nothing would fire auto-merge: after the full local gate passes, merge with `gh pr merge N --rebase --admin`.
+   - While the epics are implemented the pull-request workflows are disabled by the author's decision (2026-11-15), so nothing would fire auto-merge: after the full local gate passes, merge with `gh pr merge N --rebase --admin`.
    - "This branch can't be rebased" right after a push can be GitHub still computing mergeability. Check `gh pr view N --json mergeable,mergeStateStatus` and look for an empty commit (`git diff-tree --no-commit-id -r <sha>` prints nothing); if `mergeable` is `MERGEABLE` and no commit is empty, retry the merge once.
 5. If a fix is needed after `prepare`, branch from `HEAD~1`, commit the fix, move `release/vX.Y.Z` there, push with lease, and run `prepare` again. The CHANGELOG must be written last.
 6. Auto-merge sometimes does not fire on a clean pull request. When every check is green, run `gh pr merge N --rebase` yourself.

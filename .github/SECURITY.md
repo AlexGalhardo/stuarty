@@ -1,6 +1,6 @@
 # Security policy
 
-Vukem Video handles people's footage and is driven by AI agents, so security reports are welcome and taken seriously. The security model is [SDD-007](../docs/sdds/007-security-model.md).
+Stuarty handles people's footage, holds the credentials of their social accounts and AI providers, and is driven by AI agents, so security reports are welcome and taken seriously. The security model is [SDD-007](../docs/sdds/007-security-model.md), amended by [ADR-0032](../docs/adrs/0032-controlled-outbound-and-human-approval.md) and [ADR-0033](../docs/adrs/0033-secret-vault.md).
 
 ## Supported versions
 
@@ -14,7 +14,7 @@ The supported version is the latest minor of the current major; during 0.x it is
 
 ## Reporting a vulnerability
 
-Do not open a public issue. Use GitHub: Security, Report a vulnerability, at <https://github.com/AlexGalhardo/vukem-video/security/advisories/new>.
+Do not open a public issue. Use GitHub: Security, Report a vulnerability, at <https://github.com/AlexGalhardo/stuarty/security/advisories/new>.
 
 Include:
 
@@ -67,10 +67,10 @@ Each release has `checksums.txt`, a keyless signature bundle `checksums.txt.sigs
 ```sh
 cosign verify-blob checksums.txt \
   --bundle checksums.txt.sigstore.json \
-  --certificate-identity-regexp '^https://github\.com/AlexGalhardo/vukem-video/\.github/workflows/release\.yml@refs/tags/v' \
+  --certificate-identity-regexp '^https://github\.com/AlexGalhardo/stuarty/\.github/workflows/release\.yml@refs/tags/v' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 sha256sum --ignore-missing -c checksums.txt
-gh attestation verify vukem-video_<version>_<os>_<arch>.tar.gz -R AlexGalhardo/vukem-video
+gh attestation verify stuarty_<version>_<os>_<arch>.tar.gz -R AlexGalhardo/stuarty
 ```
 
 On Windows PowerShell, compare `Get-FileHash -Algorithm SHA256` with the line in `checksums.txt`.
@@ -78,8 +78,8 @@ On Windows PowerShell, compare `Get-FileHash -Algorithm SHA256` with the line in
 Container image, verified by digest with the same workflow identity:
 
 ```sh
-cosign verify ghcr.io/alexgalhardo/vukem-video@sha256:<digest> \
-  --certificate-identity-regexp '^https://github\.com/AlexGalhardo/vukem-video/\.github/workflows/release\.yml@refs/tags/v' \
+cosign verify ghcr.io/alexgalhardo/stuarty@sha256:<digest> \
+  --certificate-identity-regexp '^https://github\.com/AlexGalhardo/stuarty/\.github/workflows/release\.yml@refs/tags/v' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
@@ -88,6 +88,6 @@ cosign verify ghcr.io/alexgalhardo/vukem-video@sha256:<digest> \
 - Network mode needs TLS.
 - Keep FFmpeg updated.
 - Set the import roots.
-- Consider `VUKEM_VIDEO_SANDBOX=bwrap`.
+- Consider `STUARTY_SANDBOX=bwrap`.
 - Run as a non-root user.
 - Keep the workspace out of synced folders.

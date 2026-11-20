@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.bezier is missing; the easing bezier needs four numbers.",
+  "hint": "Add bezier, for example [0.34, 1.56, 0.64, 1], or use a named easing.",
+  "retryable": false,
+  "path": "args.bezier"
+}

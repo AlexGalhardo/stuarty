@@ -2,10 +2,11 @@ package command
 
 import (
 	"cmp"
+	"fmt"
 	"slices"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 func init() {
@@ -13,12 +14,13 @@ func init() {
 		Name:    "track.add",
 		Summary: "Adds an empty track at a place in the track order.",
 		Description: "Adds a visual or audio track. A visual track goes on top by default and an audio track at the bottom, " +
-			"below the visual ones; position top or bottom, above or below another track places it elsewhere. The first track in the order is the top layer. " +
-			"The document keeps tracks in a map by id, so read the stacking from the order field (ascending, the smallest is the top layer), not from the position of a track in the listing.",
+			"below the visual ones; position top or bottom, above or below another track places it elsewhere. The first track in the order is the top layer and covers the ones below it, " +
+			"so a visual track added last covers the earlier ones: add the background first, or place a later track with below or position bottom. " +
+			"The document keeps tracks in a map by id, so read the stacking from the order field (ascending, the smallest is the top layer), not from the position of a track in the listing. " +
+			"The result says the layer of a visual track in stacking.",
 		Example: `{"kind": "visual", "name": "Captions", "id": "trk_a1b2c3d4e5"}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeIDExists, CodeLimit},
 		Scope:   ScopeEdit,
-		Phase:   Prototype,
 	}, applyTrackAdd))
 
 	Register(Define(Spec{
@@ -32,7 +34,6 @@ func init() {
 		Example: `{"track_id": "trk_f6g7h8j9k0", "hidden": true}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
 		Scope:   ScopeEdit,
-		Phase:   Prototype,
 	}, applyTrackUpdate))
 
 	Register(Define(Spec{
@@ -42,7 +43,6 @@ func init() {
 		Example:     `{"track_id": "trk_m1n2p3q4r5", "below": "trk_a1b2c3d4e5"}`,
 		Errors:      []string{CodeValidation, CodeNotFound, CodeInvalidState},
 		Scope:       ScopeEdit,
-		Phase:       Prototype,
 	}, applyTrackMove))
 
 	Register(Define(Spec{
@@ -53,7 +53,6 @@ func init() {
 		Example: `{"track_id": "trk_f6g7h8j9k0", "with_items": true}`,
 		Errors:  []string{CodeNotFound, CodeNotEmpty},
 		Scope:   ScopeEdit,
-		Phase:   Prototype,
 	}, applyTrackRemove))
 
 	Register(Define(Spec{
@@ -64,7 +63,6 @@ func init() {
 		Example: `{"track_id": "trk_a1b2c3d4e5", "style": {"size": 72, "position": "middle"}}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch, CodeFontUnknown},
 		Scope:   ScopeEdit,
-		Phase:   Prototype,
 	}, applyTrackSetCaptionStyle))
 }
 
@@ -191,7 +189,34 @@ func applyTrackAdd(c *Context, a *trackAddArgs) error {
 	c.Doc.Tracks[id] = timeline.Track{ID: id, Kind: timeline.TrackKind(a.Kind), Name: a.Name, Order: order}
 	c.SetEffective("track_id", id)
 	c.SetEffective("order", order)
+	if a.Kind == string(timeline.TrackVisual) {
+		c.SetEffective("stacking", c.stackingOf(id))
+	}
 	return nil
+}
+
+// stackingOf says where a visual track lies in the picture, so that an agent does not find out from the
+// preview that a track it added last covers the others (VV-203).
+func (c *Context) stackingOf(id string) string {
+	layer, total := 0, 0
+	for _, other := range c.tracksByOrder("") {
+		if c.Doc.Tracks[other].Kind != timeline.TrackVisual {
+			continue
+		}
+		total++
+		if other == id {
+			layer = total
+		}
+	}
+	if total == 1 {
+		return "layer 1 of 1 visual track: no other visual track covers it or lies under it."
+	}
+
+	return fmt.Sprintf(
+		"layer %d of %d visual tracks, counting from the top; a track with a lower number covers the ones with a higher number.",
+		layer,
+		total,
+	)
 }
 
 type trackUpdateArgs struct {

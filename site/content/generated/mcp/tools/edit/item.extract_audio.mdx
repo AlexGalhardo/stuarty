@@ -30,9 +30,9 @@ Adds an audio item on an audio track with the same asset, start, duration, sourc
 - [`E_ID_EXISTS`](/docs/reference/error-codes#e_id_exists)
 - [`E_LIMIT`](/docs/reference/error-codes#e_limit)
 
-## Scope and phase
+## Scope
 
-Scope `edit`, phase `beta`. The scope is the one an API key needs in network mode. Run `vukem-video command:help item.extract_audio` for the same description from the binary, or call the [`command_help`](/docs/mcp/tools/command_help) tool.
+Scope `edit`. The scope is the one an API key needs in network mode. Run `stuarty command:help item.extract_audio` for the same description from the binary, or call the [`command_help`](/docs/mcp/tools/command_help) tool.
 
 ## Next steps
 
@@ -84,14 +84,14 @@ Scope `edit`, phase `beta`. The scope is the one an API key needs in network mod
 ```
 
 ```bash title="Terminal"
-vukem-video edit --project prj_7k2m9x4q1b --ops batch.json --json
+stuarty edit --project prj_7k2m9x4q1b --ops batch.json --json
 ```
 
 **Over HTTP**
 
 ```bash title="curl"
 curl -X POST "http://127.0.0.1:7878/api/v1/projects/prj_7k2m9x4q1b/edit" \
-  -H "Authorization: Bearer $VUKEM_VIDEO_KEY" \
+  -H "Authorization: Bearer $STUARTY_KEY" \
   -H "Content-Type: application/json" \
   -d '{
   "base_revision": 12,

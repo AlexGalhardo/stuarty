@@ -153,7 +153,7 @@ jobs:
     env:
       SHARD: ${{ matrix.shard }}
       # Frames that differ from a golden are written here and uploaded on failure.
-      VUKEM_VIDEO_TEST_ARTIFACTS_DIR: ${{ github.workspace }}/golden-mismatch
+      STUARTY_TEST_ARTIFACTS_DIR: ${{ github.workspace }}/golden-mismatch
       EXPORT_N: ${{ matrix.export_n }}
       SPLIT_CONTRACT: ${{ matrix.split_contract }}
     steps:
@@ -177,7 +177,7 @@ jobs:
         shell: bash
         run: |
           bin_dir="$(bash scripts/install-ffmpeg.sh)"
-          echo "VUKEM_VIDEO_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
+          echo "STUARTY_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
       # The own build has no H.264 encoder until the user installs Cisco OpenH264 (D-017): the engine
       # suites install it the way a user does and point the tests at the tools folder. No effect while
       # the BtbN build is pinned.
@@ -185,9 +185,9 @@ jobs:
         shell: bash
         run: |
           if [ "$(. .config/ffmpeg.env && echo "${FFMPEG_SOURCE:-btbn}")" = own ]; then
-            home="${RUNNER_TEMP}/vukem-video-tools-home"
+            home="${RUNNER_TEMP}/stuarty-tools-home"
             go run ./web/cmd/app tools:install openh264 --workspace "$home" --yes
-            echo "VUKEM_VIDEO_TEST_TOOLS_DIR=${home}/tools" >> "$GITHUB_ENV"
+            echo "STUARTY_TEST_TOOLS_DIR=${home}/tools" >> "$GITHUB_ENV"
           fi
       - name: go test
         # Non-blocking for the export shards while the golden frames diverge on the runners
@@ -232,7 +232,7 @@ jobs:
         if: matrix.shard == 'export-1'
         shell: bash
         env:
-          VUKEM_VIDEO_BENCH_MIN_RT: ${{ matrix.os == 'ubuntu-latest' && '1.5' || '' }}
+          STUARTY_BENCH_MIN_RT: ${{ matrix.os == 'ubuntu-latest' && '1.5' || '' }}
         run: |
           go test -run '^$' -bench BenchmarkExportCommonCase -benchtime=1x -count=1 -timeout=10m ./engine/export/ | tee bench.txt
           { echo '### BenchmarkExportCommonCase (${{ matrix.os }})'; echo '```'; grep -E "^Benchmark|x real time" bench.txt || echo "skipped: no pinned LGPL FFmpeg on this runner"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
@@ -368,7 +368,7 @@ jobs:
         shell: bash
         run: |
           bin_dir="$(bash scripts/install-ffmpeg.sh)"
-          echo "VUKEM_VIDEO_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
+          echo "STUARTY_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
       - name: Reference scenario through the CLI and MCP
         shell: bash
         run: |
@@ -427,7 +427,7 @@ jobs:
       - name: Install FFmpeg
         run: |
           bin_dir="$(bash scripts/install-ffmpeg.sh)"
-          echo "VUKEM_VIDEO_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
+          echo "STUARTY_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
       - run: bun install --frozen-lockfile
         working-directory: web
       - run: bun run build
@@ -471,7 +471,7 @@ jobs:
       - name: Install FFmpeg
         run: |
           bin_dir="$(bash scripts/install-ffmpeg.sh)"
-          echo "VUKEM_VIDEO_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
+          echo "STUARTY_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
       - run: bun install --frozen-lockfile
         working-directory: web
       - run: bun run build:e2e
@@ -485,7 +485,7 @@ jobs:
       # display has WebGL2 on Mesa (web/e2e/playwright.config.ts).
       - run: |
           if [ "$BROWSER" = firefox ]; then
-            VUKEM_VIDEO_FIREFOX_HEADED=1 xvfb-run -a bunx playwright test -c e2e/playwright.config.ts --project=firefox --shard="$SHARD"/2
+            STUARTY_FIREFOX_HEADED=1 xvfb-run -a bunx playwright test -c e2e/playwright.config.ts --project=firefox --shard="$SHARD"/2
           else
             bunx playwright test -c e2e/playwright.config.ts --project="$BROWSER" --shard="$SHARD"/2
           fi
@@ -594,7 +594,7 @@ jobs:
       - name: Every archive is under 60 MB
         run: |
           count=0
-          for f in dist/vukem-video_*.tar.gz dist/vukem-video_*.zip; do
+          for f in dist/stuarty_*.tar.gz dist/stuarty_*.zip; do
             size="$(stat -c %s "$f")"
             echo "$f $size"
             [ "$size" -lt 60000000 ] || { echo "::error::$f is $size bytes"; exit 1; }
@@ -624,7 +624,7 @@ jobs:
         shell: bash
         run: |
           bin_dir="$(bash scripts/install-ffmpeg.sh)"
-          echo "VUKEM_VIDEO_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
+          echo "STUARTY_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
       - name: TestSecurity_T16_
         run: |
           go test -count=1 -v -run 'TestSecurity_T16_' ./engine/... | tee t16.log
@@ -654,7 +654,7 @@ jobs:
           go-version-file: go.mod
           cache-dependency-path: go.sum
       - run: sudo apt-get update && sudo apt-get install -y ffmpeg
-      - run: VUKEM_VIDEO_FFMPEG="$(command -v ffmpeg)" go test -count=1 -v -run Golden ./engine/export/...
+      - run: STUARTY_FFMPEG="$(command -v ffmpeg)" go test -count=1 -v -run Golden ./engine/export/...
 
   vuln:
     name: Vulnerabilities
@@ -773,7 +773,7 @@ jobs:
         shell: bash
         run: |
           bin_dir="$(bash scripts/install-ffmpeg.sh)"
-          echo "VUKEM_VIDEO_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
+          echo "STUARTY_TEST_FFMPEG_DIR=${bin_dir}" >> "$GITHUB_ENV"
       - name: go test -run TestSecurity_
         shell: bash
         run: go test -count=1 -v -timeout=17m -run TestSecurity_ ./... | tee security.log

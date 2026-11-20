@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 // longLogRows is the size of the log of the reviews of P4-SRV-002: a project that was edited for a
@@ -48,7 +48,7 @@ SELECT ?, i, 'edit', 'local:pad', i - 1, 0, '[]', '[]', '[]', ?, ?, i FROM n`,
 	}
 
 	if _, err = e.store.DB().
-		ExecContext(ctx, "UPDATE projects SET revision = ? WHERE id = ?", last, project); err != nil {
+		ExecContext(ctx, "UPDATE timelines SET revision = ? WHERE id = ?", last, project); err != nil {
 		tb.Fatal(err)
 	}
 }

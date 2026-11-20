@@ -6,14 +6,15 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/plan"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // SnapPointsRequest asks for the snap points of a project (SDD-012 section 7.8).
 type SnapPointsRequest struct {
-	ProjectID string `json:"project_id"`
+	ProjectID  string `json:"project_id"`
+	TimelineID string `json:"timeline_id,omitempty"` // SDD-003 section 1.7
 	// Revision, when set, is the revision the caller holds; a project that has moved on answers
 	// E_REVISION_CONFLICT with the current revision, so a cached answer is never mixed with a new one.
 	Revision int64 `json:"revision,omitempty"`
@@ -91,8 +92,12 @@ func (c *snapCache) get(k snapKey, compute func() (plan.Snap, error)) (plan.Snap
 }
 
 func (s *svc) SnapPoints(ctx context.Context, req SnapPointsRequest) (*SnapPointsResult, error) {
-	c, err := authorize(ctx, "SnapPoints", req.ProjectID)
+	c, err := s.authorizeProject(ctx, "SnapPoints", req.ProjectID)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
 		return nil, err
 	}
 

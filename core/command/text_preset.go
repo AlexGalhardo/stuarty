@@ -6,7 +6,7 @@ import (
 	"math"
 	"slices"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 func init() {
@@ -21,7 +21,6 @@ func init() {
 			CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeInvalidState, CodeLimit,
 		},
 		Scope: ScopeEdit,
-		Phase: Alpha,
 	}, applyTextPreset))
 }
 
@@ -120,7 +119,7 @@ func (c *Context) presetBase(it *timeline.Item, prop string, at int) float64 {
 	case "opacity":
 		static = it.Opacity
 	}
-	return timeline.ValueAt(it.Keyframes[prop], at, static)
+	return timeline.ValueAtProp(prop, it.Keyframes[prop], at, static)
 }
 
 // easingAt is the easing in force at frame t: that of the last keyframe at or before
@@ -136,6 +135,20 @@ func easingAt(keys []timeline.Keyframe, t int) string {
 		return ""
 	}
 	return e
+}
+
+// fillPresetPlan sets the base value and the tail easing of each property a preset may write, and returns
+// the curve of each "bezier" tail: it goes with the easing, or the keyframe would carry it without its numbers.
+func (c *Context) fillPresetPlan(plan *presetPlan, it *timeline.Item, at int) map[string][]float64 {
+	curves := map[string][]float64{}
+	for _, prop := range []string{"y", "scale", "opacity"} {
+		plan.base[prop] = c.presetBase(it, prop, at)
+		plan.tail[prop] = easingAt(it.Keyframes[prop], at)
+		if gov := governing(it.Keyframes[prop], at); gov != nil {
+			curves[prop] = gov.Bezier
+		}
+	}
+	return curves
 }
 
 func applyTextPreset(c *Context, a *textPresetArgs) error {
@@ -195,10 +208,7 @@ func applyTextPreset(c *Context, a *textPresetArgs) error {
 		preset: a.Preset, in: in, n: n, d: d, h: round3(0.05 * float64(c.Doc.Settings.Height)),
 		base: map[string]float64{}, tail: map[string]string{},
 	}
-	for _, prop := range []string{"y", "scale", "opacity"} {
-		plan.base[prop] = c.presetBase(&it, prop, at)
-		plan.tail[prop] = easingAt(it.Keyframes[prop], at)
-	}
+	curves := c.fillPresetPlan(&plan, &it, at)
 	writes := plan.writes()
 	written := slices.Sorted(maps.Keys(writes))
 	lo, hi := 0, n
@@ -220,7 +230,7 @@ func applyTextPreset(c *Context, a *textPresetArgs) error {
 		for _, k := range writes[prop] {
 			nk := timeline.NewKeyframe(k.t, round3(k.value))
 			if k.easing != "" {
-				nk.Easing = k.easing
+				setEasing(&nk, k.easing, slices.Clone(curves[prop]))
 			}
 			merged = append(merged, nk)
 		}

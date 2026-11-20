@@ -1,18 +1,20 @@
 package httpapi
 
 import (
+	"context"
+	"errors"
 	"net/http"
 	"strconv"
 
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
+
 	"github.com/AlexGalhardo/vukem/errs"
 	"github.com/AlexGalhardo/vukem/web"
-
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
 )
 
-// ProblemTypePrefix starts the type of every problem: urn:vukem-video:error:<code>.
-const ProblemTypePrefix = "urn:vukem-video:error:"
+// ProblemTypePrefix starts the type of every problem: urn:stuarty:error:<code>.
+const ProblemTypePrefix = "urn:stuarty:error:"
 
 // CodeMethodNotAllowed is the code of a 405 (OPTIONS included). SDD-000 section 8
 // lists no code for it, so it falls under "everything else", status 405.
@@ -23,7 +25,27 @@ const CodeMethodNotAllowed = service.CodeMethodNotAllowed
 // them, code, message, hint, retryable, op_index, path and details.
 func installErrors(s *web.Services) {
 	web.MapError(s, func(_ *web.Ctx, e *service.Error) error { return httpError(e.ForSurface(service.SurfaceHTTP)) })
+	s.ErrorMappers = append(s.ErrorMappers, clientGone)
 	s.ProblemDecorator = decorate
+}
+
+// clientGone maps a context error to E_CLIENT_CLOSED (499) when the request
+// itself has ended, so a caller that gave up is not logged as a 5xx. vukem
+// renders any error it does not know as 500 (VF-068). A context error on a
+// request that is still live stays a real fault.
+func clientGone(c *web.Ctx, err error) (error, bool) { //nolint:revive // the signature of web.Services.ErrorMappers
+
+	if !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
+		return nil, false
+	}
+
+	if c.Context().Err() == nil {
+		return nil, false
+	}
+
+	return httpError((&service.Error{
+		Code: service.CodeClientClosed, Message: "the caller closed the request before it finished.",
+	}).ForSurface(service.SurfaceHTTP)), true
 }
 
 func httpError(e *service.Error) *errs.HTTPError {

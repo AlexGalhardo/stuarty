@@ -14,13 +14,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/service"
+	wire "github.com/AlexGalhardo/stuarty/service/events"
+
 	"github.com/AlexGalhardo/vukem/sse"
 	"github.com/AlexGalhardo/vukem/web"
-
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/service"
-	wire "github.com/AlexGalhardo/vukem-video/service/events"
 )
 
 // Defaults of SDD-006 sections 3.1 and 9.
@@ -36,6 +36,7 @@ const (
 
 // Store is what the stream reads: the log, the project, the jobs and the assets.
 type Store interface {
+	Images() service.ImageRepo
 	Projects() service.ProjectRepo
 	Operations() service.OperationRepo
 	Jobs() service.JobRepo
@@ -146,6 +147,8 @@ func (e *Events) Publish(ev service.Event) {
 		}
 	case wire.ProjectUpdated:
 		f = wire.ProjectFrame(&ev)
+	case wire.NestedUpdated:
+		f = wire.NestedFrame(&ev)
 	case wire.AssetUpdated:
 		f = wire.AssetFrame(&ev)
 	case wire.JobUpdated:
@@ -154,6 +157,18 @@ func (e *Events) Publish(ev service.Event) {
 		}
 
 		f = wire.JobFrame(&ev)
+	case wire.ApprovalRequested, wire.ApprovalDecided:
+		e.publishApproval(&ev)
+
+		return
+	case wire.PublicationUpdated:
+		e.publishPublication(&ev)
+
+		return
+	case wire.ImageUpdated:
+		e.publishImage(&ev)
+
+		return
 	default:
 		return
 	}
@@ -293,10 +308,12 @@ func (e *Events) run(
 	authorized func() bool,
 ) error {
 	if s.SendEvent(sse.Event{Retry: time.Second}) != nil { // the preamble
-		return nil
+		return nil //nolint:nilerr // a client that cannot be written to has left: the stream ends quietly
 	}
 
-	c := &conn{e: e, s: s, project: project, fresh: since == nil}
+	c := &conn{e: e, s: s, project: project, fresh: since == nil, event: wire.BatchCommitted}
+	c.fill = func(from, to, headRev int64) (int64, bool) { return e.replay(s, project, from, to, headRev) }
+
 	if since != nil {
 		c.last = *since
 	}
@@ -318,9 +335,15 @@ func (e *Events) run(
 	}
 
 	if e.snapshot(s, project) != nil {
-		return nil
+		return nil //nolint:nilerr // the client left while the snapshot was written
 	}
 
+	return e.loop(s, c, live, authorized)
+}
+
+// loop delivers the live events of a stream in order, with the visible heartbeat and the revalidation, until
+// the client leaves, the subscription is dropped or the caller is no longer authorized.
+func (e *Events) loop(s *sse.Stream, c *conn, live <-chan sse.Event, authorized func() bool) error {
 	hb, rv := time.NewTicker(e.o.Heartbeat), time.NewTicker(e.o.Revalidate)
 	defer hb.Stop()
 	defer rv.Stop()
@@ -355,6 +378,10 @@ type conn struct {
 	last    int64
 	// fresh is a client that gave no revision: it takes the stream from where it joined.
 	fresh bool
+	// event is the name of the ordered event of the stream, and fill sends the revisions after from up to to
+	// from the log: the batch events of a project, or the image.updated events of an image (SDD-006 section 12).
+	event string
+	fill  func(from, to, head int64) (last int64, stop bool)
 }
 
 // deliver sends one live event and reports whether the stream goes on. A batch
@@ -362,7 +389,7 @@ type conn struct {
 // the log first (section 5.4).
 func (c *conn) deliver(ev sse.Event) bool {
 	f := wire.Frame{ID: ev.ID, Event: ev.Event, Data: ev.Data}
-	if ev.Event != wire.BatchCommitted {
+	if ev.Event != c.event {
 		return send(c.s, f) == nil
 	}
 
@@ -377,7 +404,7 @@ func (c *conn) deliver(ev sse.Event) bool {
 	}
 
 	if rev > c.last+1 {
-		last, stop := c.e.replay(c.s, c.project, c.last, rev-1, rev)
+		last, stop := c.fill(c.last, rev-1, rev)
 		c.last = last
 
 		if stop {

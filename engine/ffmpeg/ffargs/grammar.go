@@ -48,8 +48,12 @@ var (
 
 // Codecs of the fixed table of ADR-0011 item 5 and SDD-011 section 4.2.
 var videoCodecs = []string{
-	"mpeg4", "prores_ks", "libvpx-vp9", "mjpeg", "png", "copy",
+	"mpeg4", "prores_ks", "libvpx-vp9", "mjpeg", "png", "libwebp", "copy",
 	"libopenh264", "libx264", "h264_nvenc", "h264_qsv", "h264_amf", "h264_videotoolbox", "h264_mf", "h264_vaapi",
+	// HEVC and AV1 (RF-089, D-067): the vendor encoders and the permissively licensed software ones.
+	// libx265 and every other GPL encoder are absent on purpose; TestEncoderAllowList keeps them out.
+	"hevc_videotoolbox", "hevc_nvenc", "hevc_qsv", "hevc_amf", "hevc_mf", "hevc_vaapi",
+	"av1_nvenc", "av1_qsv", "av1_amf", "av1_vaapi", "libsvtav1", "libaom-av1",
 }
 
 var audioCodecs = []string{"pcm_s16le", "aac", "libopus", "copy"}
@@ -120,12 +124,15 @@ var ffmpegOptions = map[string]optSpec{
 	"-b:v":                   {class: classOutput, value: kBitrate},
 	"-b:a":                   {class: classOutput, value: kBitrate},
 	"-crf":                   {class: classOutput, value: intRange(0, 63)},
+	"-quality":               {class: classOutput, value: intRange(1, 100)}, // libwebp, lossy
+	"-lossless":              {class: classOutput, value: enum("1")},        // libwebp
 	"-g":                     {class: classOutput, value: intRange(1, 1200)},
 	"-keyint_min":            {class: classOutput, value: intRange(1, 1200)},
 	"-bf":                    {class: classOutput, value: intRange(0, 16)},
 	"-dct":                   {class: classOutput, value: enum("int")},
 	"-profile:v":             {class: classOutput, value: enum("high", "main", "baseline", "4444")},
-	"-preset":                {class: classOutput, value: enum("medium")},
+	"-preset":                {class: classOutput, value: enum("medium", "8")}, // 8: the speed of libsvtav1
+	"-tag:v":                 {class: classOutput, value: enum("hvc1")},
 	"-deadline":              {class: classOutput, value: enum("realtime", "good")},
 	"-cpu-used":              {class: classOutput, value: intRange(0, 16)},
 	"-row-mt":                {class: classOutput, value: enum("0", "1")},

@@ -21,7 +21,7 @@ A value equal to its default clears the stored one, so an item that is back at t
 `clip.set_color` sets three numbers: `brightness` (-1 to 1, default 0), `contrast` (0 to 2, default 1) and `saturation` (0 to 2, default 1).
 
 ```bash
-vukem-video edit --project prj_7k2m9x4q1b clip.set_color item_id=itm_m1n2p3q4r5 \
+stuarty edit --project prj_7k2m9x4q1b clip.set_color item_id=itm_m1n2p3q4r5 \
   brightness:=0.1 saturation:=1.2
 ```
 
@@ -32,16 +32,18 @@ vukem-video edit --project prj_7k2m9x4q1b clip.set_color item_id=itm_m1n2p3q4r5 
 Both are constant over the clip: they cannot be keyframed. The filter is applied after the <Term id="color-correction">color correction</Term> and before the blur.
 
 ```bash
-vukem-video edit --project prj_7k2m9x4q1b clip.set_filter item_id=itm_m1n2p3q4r5 filter=sepia amount:=0.6
-vukem-video edit --project prj_7k2m9x4q1b clip.set_blur item_id=itm_m1n2p3q4r5 radius:=12
+stuarty edit --project prj_7k2m9x4q1b clip.set_filter item_id=itm_m1n2p3q4r5 filter=sepia amount:=0.6
+stuarty edit --project prj_7k2m9x4q1b clip.set_blur item_id=itm_m1n2p3q4r5 radius:=12
 ```
 
 A lookup table (<Term id="lut">LUT</Term>) is part of the color correction. Import a `.cube` file with `media:import`: it becomes an asset of kind `lut`. Then `clip.set_color` takes `lut_asset` (the id of that asset) and `lut_intensity`, from 0 to 1 (default 1; 0 removes the table).
 
 ```bash
-vukem-video media:import grade.cube --project prj_7k2m9x4q1b
-vukem-video edit --project prj_7k2m9x4q1b clip.set_color item_id=itm_m1n2p3q4r5   lut_asset=ast_k4m6p8r0t2 lut_intensity:=0.8
+stuarty media:import grade.cube --project prj_7k2m9x4q1b
+stuarty edit --project prj_7k2m9x4q1b clip.set_color item_id=itm_m1n2p3q4r5   lut_asset=ast_k4m6p8r0t2 lut_intensity:=0.8
 ```
+
+A layer of an image document takes the same `.cube` file. Its `layer.adjust` has `lut`, with `asset` the content hash of the table (the `sha256:` hash that `asset:list --kind lut` shows) and `intensity` a whole percent from 1 to 100 (default 100; 0 removes the table). In the image editor it is the table and its strength under the adjustments of the layer. The table is drawn after the other adjustments and before the filters, with the same arithmetic as on a clip, so the same table gives the same colours in a video and in an image. A document holds at most 32 tables, and a file that no longer reads as a table fails the export instead of drawing the layer without it.
 
 ## Blend a layer with the ones below
 
@@ -83,7 +85,7 @@ On a clip that is already keyed, a value you do not give keeps its current value
 For text, captions, clips and shapes there are six **animation presets**: `fade_up`, `fade_down`, `pop`, `zoom_in`, `slide_left` and `slide_right`. A preset writes keyframes (or, for the slides, a transition) on the `in` or the `out` edge, 0.4 seconds long unless you give a duration. The inspector has an Animation section with the preset and the edge. A preset replaces the keyframes of the same properties inside its edge and keeps the rest of the animation.
 
 ```bash
-vukem-video edit --project prj_7k2m9x4q1b text.apply_preset item_id=itm_t1u2v3w4x5 \
+stuarty edit --project prj_7k2m9x4q1b text.apply_preset item_id=itm_t1u2v3w4x5 \
   preset=fade_up edge=in
 ```
 

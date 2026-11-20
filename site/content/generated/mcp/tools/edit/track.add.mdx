@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Adds a visual or audio track. A visual track goes on top by default and an audio track at the bottom, below the visual ones; position top or bottom, above or below another track places it elsewhere. The first track in the order is the top layer. The document keeps tracks in a map by id, so read the stacking from the order field (ascending, the smallest is the top layer), not from the position of a track in the listing.
+Adds a visual or audio track. A visual track goes on top by default and an audio track at the bottom, below the visual ones; position top or bottom, above or below another track places it elsewhere. The first track in the order is the top layer and covers the ones below it, so a visual track added last covers the earlier ones: add the background first, or place a later track with below or position bottom. The document keeps tracks in a map by id, so read the stacking from the order field (ascending, the smallest is the top layer), not from the position of a track in the listing. The result says the layer of a visual track in stacking.
 
 ## Arguments
 
@@ -30,9 +30,9 @@ Adds a visual or audio track. A visual track goes on top by default and an audio
 - [`E_ID_EXISTS`](/docs/reference/error-codes#e_id_exists)
 - [`E_LIMIT`](/docs/reference/error-codes#e_limit)
 
-## Scope and phase
+## Scope
 
-Scope `edit`, phase `prototype`. The scope is the one an API key needs in network mode. Run `vukem-video command:help track.add` for the same description from the binary, or call the [`command_help`](/docs/mcp/tools/command_help) tool.
+Scope `edit`. The scope is the one an API key needs in network mode. Run `stuarty command:help track.add` for the same description from the binary, or call the [`command_help`](/docs/mcp/tools/command_help) tool.
 
 ## Next steps
 
@@ -86,14 +86,14 @@ Scope `edit`, phase `prototype`. The scope is the one an API key needs in networ
 ```
 
 ```bash title="Terminal"
-vukem-video edit --project prj_7k2m9x4q1b --ops batch.json --json
+stuarty edit --project prj_7k2m9x4q1b --ops batch.json --json
 ```
 
 **Over HTTP**
 
 ```bash title="curl"
 curl -X POST "http://127.0.0.1:7878/api/v1/projects/prj_7k2m9x4q1b/edit" \
-  -H "Authorization: Bearer $VUKEM_VIDEO_KEY" \
+  -H "Authorization: Bearer $STUARTY_KEY" \
   -H "Content-Type: application/json" \
   -d '{
   "base_revision": 12,

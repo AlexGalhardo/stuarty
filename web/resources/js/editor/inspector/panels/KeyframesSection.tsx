@@ -18,12 +18,15 @@ import {
 	KEYFRAME_EASINGS,
 	KEYFRAME_FRAMING_PROPERTIES,
 	KEYFRAME_MASK_PROPERTIES,
+	KEYFRAME_NAMED_EASINGS,
 	KEYFRAME_PROPERTIES,
 	type KeyframeEasing,
 	keyframeClearOperations,
+	keyframeEasingOperations,
 	keyframeFrame,
 	keyframeRemoveOperations,
 	keyframeSetOperations,
+	type NamedKeyframeEasing,
 } from "../../commands/builders";
 import { formatTime, fpsOf } from "../../commands/units";
 import { useCanEdit } from "../../commands/useActions";
@@ -39,6 +42,8 @@ import { FieldMessage } from "../fields/FieldFrame";
 import { useCommitField } from "../fields/useCommitField";
 import Section from "../Section";
 import { useFieldCommit } from "../useFieldCommit";
+import BezierEditor from "./BezierEditor";
+import { curveOf } from "./bezierModel";
 import { round3, shown } from "./TransformSection";
 
 const SELECT_CLASS =
@@ -61,7 +66,9 @@ function propertiesOf(
 		];
 	}
 	return [
-		...KEYFRAME_PROPERTIES.filter((property) => property !== "volume"),
+		...KEYFRAME_PROPERTIES.filter(
+			(property) => property !== "volume" || type === "composition",
+		),
 		...mask,
 	];
 }
@@ -85,6 +92,9 @@ const isFraming = (
 
 const isEasing = (name: string): name is KeyframeEasing =>
 	(KEYFRAME_EASINGS as readonly string[]).includes(name);
+
+const isNamedEasing = (name: string): name is NamedKeyframeEasing =>
+	(KEYFRAME_NAMED_EASINGS as readonly string[]).includes(name);
 
 // The value cell of a keyframe row: Enter or blur sends `keyframe.set` for the
 // same position with the new value (SDD-012 section 12.3).
@@ -137,7 +147,9 @@ export default function KeyframesSection({
 	const effective = useEffectiveState((s) => s.items[itemId]);
 	const [property, setProperty] = useState<AnyKeyframeProperty | null>(null);
 	const [valueText, setValueText] = useState("");
-	const [easing, setEasing] = useState<KeyframeEasing>("linear");
+	const [easing, setEasing] = useState<NamedKeyframeEasing>("linear");
+	// The row whose curve editor is open: "<property>:<t>".
+	const [curveOpen, setCurveOpen] = useState<string | null>(null);
 	// The refusal of the last "Add at playhead": the core's message and hint.
 	const [addError, setAddError] = useState<FieldSnapshot["error"]>(null);
 	if (item === undefined || width === undefined || height === undefined) {
@@ -232,10 +244,10 @@ export default function KeyframesSection({
 					className={SELECT_CLASS}
 					onChange={(event) => {
 						const next = event.target.value;
-						if (isEasing(next)) setEasing(next);
+						if (isNamedEasing(next)) setEasing(next);
 					}}
 				>
-					{KEYFRAME_EASINGS.map((name) => (
+					{KEYFRAME_NAMED_EASINGS.map((name) => (
 						<option key={name} value={name}>
 							{t(`ui.editor.keyframes.easing_name.${name}`)}
 						</option>
@@ -320,23 +332,44 @@ export default function KeyframesSection({
 									picked?.item === itemId &&
 									picked.property === name &&
 									picked.t === key.t;
+								const rowId = `${name}:${key.t}`;
+								const curve = curveOf(key.bezier);
+								// A new value keeps the easing of the keyframe, a curve included.
 								const resend = (next: {
-									value?: number;
-									easing?: KeyframeEasing;
+									value: number;
 								}): Promise<CommitResult> =>
 									send(
 										keyframeSetOperations({
 											itemId,
 											property: name,
 											frame,
-											value: next.value ?? key.value,
-											easing: next.easing ?? key.easing ?? "linear",
+											value: next.value,
+											easing: key.easing ?? "linear",
+											...(key.bezier === undefined
+												? {}
+												: { bezier: key.bezier }),
 										}),
 									);
+								// A named easing, or the soft curve as the start of a custom one.
+								const setEasingOf = (next: KeyframeEasing): void => {
+									if (next === key.easing) return;
+									void send(
+										keyframeEasingOperations({
+											itemId,
+											property: name,
+											frame,
+											...(isNamedEasing(next)
+												? { easing: next }
+												: { preset: "in_out" as const }),
+										}),
+									).then((result) => {
+										if (result.ok && next === "bezier") setCurveOpen(rowId);
+									});
+								};
 								return (
 									<li
 										key={key.t}
-										data-keyframe-row={`${name}:${key.t}`}
+										data-keyframe-row={rowId}
 										data-selected={isPicked ? "" : undefined}
 										className={cn(
 											"flex flex-wrap items-start gap-1 rounded-md px-1",
@@ -391,7 +424,7 @@ export default function KeyframesSection({
 											className={cn(SELECT_CLASS, "h-7 w-28 text-xs")}
 											onChange={(event) => {
 												const next = event.target.value;
-												if (isEasing(next)) void resend({ easing: next });
+												if (isEasing(next)) setEasingOf(next);
 											}}
 										>
 											{KEYFRAME_EASINGS.map((easingName) => (
@@ -400,6 +433,25 @@ export default function KeyframesSection({
 												</option>
 											))}
 										</select>
+										{curve !== null && (
+											<Button
+												type="button"
+												size="xs"
+												variant="ghost"
+												aria-expanded={curveOpen === rowId}
+												aria-label={t(
+													curveOpen === rowId
+														? "ui.editor.keyframes.curve_close"
+														: "ui.editor.keyframes.curve_edit",
+													{ property: label, time },
+												)}
+												onClick={() =>
+													setCurveOpen(curveOpen === rowId ? null : rowId)
+												}
+											>
+												{t("ui.editor.keyframes.curve")}
+											</Button>
+										)}
 										<Button
 											type="button"
 											size="xs"
@@ -415,6 +467,16 @@ export default function KeyframesSection({
 										>
 											{t("ui.editor.keyframes.remove")}
 										</Button>
+										{curve !== null && curveOpen === rowId && (
+											<BezierEditor
+												itemId={itemId}
+												property={name}
+												frame={frame}
+												label={label}
+												time={time}
+												stored={curve}
+											/>
+										)}
 									</li>
 								);
 							})}

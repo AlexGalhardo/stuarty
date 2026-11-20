@@ -17,7 +17,8 @@ Sets the value of x, y, scale, rotation, opacity, (clips and audio) volume, (cli
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `at` | `string` | yes | Position on the project timeline, from the item start to its end inclusive. |
-| `easing` | `linear`, `ease_in`, `ease_out`, `ease_in_out`, `hold` | no | From this keyframe to the next. Default linear. |
+| `bezier` | array of `number` | no | X1, y1, x2, y2 of the curve of easing bezier: x1 and x2 from 0 to 1, y1 and y2 from -2 to 3.; at least 4 items; at most 4 items |
+| `easing` | `linear`, `ease_in`, `ease_out`, `ease_in_out`, `hold`, `bezier` | no | From this keyframe to the next. Default linear. bezier needs the bezier argument. |
 | `item_id` | `string` | yes | pattern `^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
 | `property` | `string`, one of 21 values | yes |  |
 | `value` | `number` | yes | Valid for the property: scale above 0 up to 20, opacity 0 to 1, volume 0 to 4. |
@@ -31,9 +32,9 @@ Sets the value of x, y, scale, rotation, opacity, (clips and audio) volume, (cli
 - [`E_LIMIT`](/docs/reference/error-codes#e_limit)
 - [`E_INVALID_STATE`](/docs/reference/error-codes#e_invalid_state)
 
-## Scope and phase
+## Scope
 
-Scope `edit`, phase `alpha`. The scope is the one an API key needs in network mode. Run `vukem-video command:help keyframe.set` for the same description from the binary, or call the [`command_help`](/docs/mcp/tools/command_help) tool.
+Scope `edit`. The scope is the one an API key needs in network mode. Run `stuarty command:help keyframe.set` for the same description from the binary, or call the [`command_help`](/docs/mcp/tools/command_help) tool.
 
 ## Next steps
 
@@ -91,14 +92,14 @@ Scope `edit`, phase `alpha`. The scope is the one an API key needs in network mo
 ```
 
 ```bash title="Terminal"
-vukem-video edit --project prj_7k2m9x4q1b --ops batch.json --json
+stuarty edit --project prj_7k2m9x4q1b --ops batch.json --json
 ```
 
 **Over HTTP**
 
 ```bash title="curl"
 curl -X POST "http://127.0.0.1:7878/api/v1/projects/prj_7k2m9x4q1b/edit" \
-  -H "Authorization: Bearer $VUKEM_VIDEO_KEY" \
+  -H "Authorization: Bearer $STUARTY_KEY" \
   -H "Content-Type: application/json" \
   -d '{
   "base_revision": 12,

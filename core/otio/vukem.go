@@ -9,7 +9,7 @@ import (
 	"sort"
 	"unicode/utf8"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // The properties of an item that Export keeps in the vukem metadata and Import turns back
@@ -448,7 +448,7 @@ func speedCurve(p *propReader) []timeline.SpeedPoint {
 	return pts
 }
 
-var keyframeEasings = []string{"linear", "ease_in", "ease_out", "ease_in_out", "hold"}
+var keyframeEasings = []string{"linear", "ease_in", "ease_out", "ease_in_out", "hold", timeline.EasingBezier}
 
 // keyframeValueOK is the range of a keyframe value per property (keyframe.set).
 func keyframeValueOK(prop string, v float64) bool {
@@ -478,6 +478,7 @@ type keyframeAt struct {
 	t      int
 	value  float64
 	easing string
+	bezier []float64
 }
 
 // keyframes turns the keyframes object into keyframe.set commands at absolute frames. A property
@@ -514,9 +515,14 @@ func keyframes(p *propReader, mode itemMode, start, dur int) []propOp {
 		}
 
 		for i, k := range list {
-			ops = append(ops, propOp{op: "keyframe.set", args: map[string]any{
+			args := map[string]any{
 				"property": name, "at": frameTime(start + k.t), "value": k.value, "easing": k.easing,
-			}})
+			}
+			if k.bezier != nil {
+				args["bezier"] = k.bezier
+			}
+
+			ops = append(ops, propOp{op: "keyframe.set", args: args})
 
 			if i == 0 && k.t > 0 {
 				ops = append(ops, propOp{op: "keyframe.remove", args: map[string]any{
@@ -557,10 +563,37 @@ func keyframeList(name string, raw any, mode itemMode, dur int) ([]keyframeAt, b
 			return nil, false
 		}
 
-		out = append(out, keyframeAt{t: int(t), value: v, easing: easing})
+		curve, ok := keyframeCurve(easing, m["bezier"])
+		if !ok {
+			return nil, false
+		}
+
+		out = append(out, keyframeAt{t: int(t), value: v, easing: easing, bezier: curve})
 	}
 
 	return out, true
+}
+
+// keyframeCurve reads the four numbers of a "bezier" easing (epic 31): present exactly when the easing is
+// "bezier", and a curve the document accepts.
+func keyframeCurve(easing string, raw any) ([]float64, bool) {
+	if easing != timeline.EasingBezier {
+		return nil, raw == nil
+	}
+
+	list, _ := raw.([]any)
+	curve := make([]float64, 0, len(list))
+
+	for _, e := range list {
+		f, ok := e.(float64)
+		if !ok {
+			return nil, false
+		}
+
+		curve = append(curve, f)
+	}
+
+	return curve, timeline.BezierValid(curve)
 }
 
 // slot reads the slot object of an item; its kind follows from the item type.

@@ -1,9 +1,9 @@
 package httpapi
 
 import (
-	"github.com/AlexGalhardo/vukem/web"
+	"github.com/AlexGalhardo/stuarty/service"
 
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem/web"
 )
 
 type keyCreateIn struct {

@@ -1,6 +1,6 @@
 ---
 title: "clip.remove_silences"
-description: "Cuts the silent stretches out of a clip or an audio item, leaving one item per stretch of speech."
+description: "Cuts the silences out of a clip or audio item, one item per stretch of speech."
 wide: true
 ---
 
@@ -20,7 +20,6 @@ Replaces the clip or audio item by one item per non-silent stretch of its source
 | `min_silence` | `string` | no | A length; shorter silences are ignored. Default "0.4s". |
 | `new_ids` | array of `string` | no | Ids for the second, third, ... pieces, in order. |
 | `padding` | `string` | no | A length, may be 0; speech kept around each cut. Default "0.1s". |
-| `resolved` | `object` | no | Filled by the service from the silence analysis of the asset; never sent by a caller. |
 | `ripple` | `track`, `none` | no | Track (default) or none. |
 | `threshold_db` | `integer` | no | Noise level of silence: -30, -35 (default), -40 or -45. |
 
@@ -34,9 +33,9 @@ Replaces the clip or audio item by one item per non-silent stretch of its source
 - [`E_INVALID_STATE`](/docs/reference/error-codes#e_invalid_state)
 - [`E_LIMIT`](/docs/reference/error-codes#e_limit)
 
-## Scope and phase
+## Scope
 
-Scope `edit`, phase `alpha`. The scope is the one an API key needs in network mode. Run `vukem-video command:help clip.remove_silences` for the same description from the binary, or call the [`command_help`](/docs/mcp/tools/command_help) tool.
+Scope `edit`. The scope is the one an API key needs in network mode. Run `stuarty command:help clip.remove_silences` for the same description from the binary, or call the [`command_help`](/docs/mcp/tools/command_help) tool.
 
 ## Next steps
 
@@ -92,14 +91,14 @@ Scope `edit`, phase `alpha`. The scope is the one an API key needs in network mo
 ```
 
 ```bash title="Terminal"
-vukem-video edit --project prj_7k2m9x4q1b --ops batch.json --json
+stuarty edit --project prj_7k2m9x4q1b --ops batch.json --json
 ```
 
 **Over HTTP**
 
 ```bash title="curl"
 curl -X POST "http://127.0.0.1:7878/api/v1/projects/prj_7k2m9x4q1b/edit" \
-  -H "Authorization: Bearer $VUKEM_VIDEO_KEY" \
+  -H "Authorization: Bearer $STUARTY_KEY" \
   -H "Content-Type: application/json" \
   -d '{
   "base_revision": 12,

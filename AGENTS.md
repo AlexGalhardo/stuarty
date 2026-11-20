@@ -1,106 +1,115 @@
-# AGENTS.md: how the team works on Vukem Video
+# AGENTS.md: how the team works on Stuarty
 
-Read this file first, then the current state at the end of `development/PROMPT.md` and the index of plans in `docs/plans/README.md`. Together with `docs/` and `.agents/rules/` they are enough to start working without asking the author anything.
+Read this file first, then the roadmap in `docs/plans/00-roadmap.md` and the rules in `.agents/rules/`. Together with `docs/` they are enough to start working without asking the author anything.
 
 ## 1. What this is
 
-**Vukem Video** is a minimalist, open source (MIT) video editor, web first and desktop later, built to be operated by AI agents (through MCP, a CLI and an HTTP API) as first-class users. A person edits the same project in a browser UI. Both go through one command core, so a human and an agent see the same result. Two use cases drive every priority: short vertical videos with captions for social networks, and product commercials.
+**Stuarty: create, edit, manage and publish your content in one place.** An open source (MIT), self-hosted studio, web and desktop, for independent creators, with AI agents as first-class users: everything a person does in the UI is possible through the HTTP API, the CLI and MCP. Files, tokens and credentials stay on the user's machine or on the user's own server.
 
-The product is built in public releases (`CHANGELOG.md`). What defines it: research (`development/search/`, private) and decisions of the author (`development/brainstorming.md`, `D-NNN`, private; D-037), requirements (`docs/prds/`), architecture decisions (`docs/adrs/`), specifications (`docs/sdds/`). What is left to do: new work in the plans of `docs/plans/` (index `docs/plans/README.md`, one plan is one unit of work), and fixes in the issue queue of `development/feedbacks/vukem-video.md` (rule `.agents/rules/plans.md`).
+It grew out of a video editor called Vukem Video. The editor (a command core in Go, a renderer in Rust, MCP, CLI and HTTP API with tested parity) is what exists; the other domains (projects as productions, the dashboard, image editing, writing, AI providers, the agent chat, publishing, memory, skills and prompts) are built by the epics of `docs/plans/`. The first complete flow to deliver is a short vertical video with captions and a thumbnail, from the briefing to the publication (ADR-0031, PRD-004 section 3).
 
-Direction since 2026-11-18 (author decisions D-041 to D-046): the editor stays an editing toolkit with no intelligence and no outbound capability; agents generate assets with the providers' own tools, download clips, keep memory and choose the engine (HyperFrames, Remotion or the editor) on their side, guided by the studio plugin of plans 001-010. **There is one UI:** the desktop application (Wails v3, `desktop/shell/app/`) is a native window over the same web UI that the same binary serves (ADR-0023), so every page, the editor and the home dashboard of plan 012 are written once in `web/resources/` and appear in both; only native menus, file dialogs, drops and updates belong to the shell.
+What defines the product: requirements (`docs/prds/`), architecture decisions (`docs/adrs/`), specifications (`docs/sdds/`), and the decisions of the author (`D-NNN`, private, cited by id). What is left to do: the epics of `docs/plans/`, in the order of `docs/plans/00-roadmap.md`. There are no phases and no milestones (ADR-0045).
+
+**The name in the code.** The product was renamed in one epic (ADR-0044): the Go module, the binary, the variables (`STUARTY_*`) and the workspace folder (`~/.stuarty`) say `stuarty`. The former names are still read for a deprecation period (SDD-000 section 13). The specifications SDD-000, SDD-002, SDD-003 and SDD-007 are read by tests and by the site generator: their names change only together with the code.
 
 ## 2. Where things are
 
 ```text
-C:/dev/vukem-video/                 THE PRODUCT REPOSITORY (remote AlexGalhardo/vukem-video)
+the repository (remote AlexGalhardo/stuarty)
 ├── AGENTS.md                       this file
 ├── CLAUDE.md                       points here
 ├── .agents/                        rules/ (always apply) and skills/ (procedures); start with .agents/README.md
-├── development/                    local work files only, git-ignored, in Portuguese (D-036, rule development-folder.md)
-│   ├── README.md                   the map of the folder
-│   ├── PROMPT.md                   the prompt that starts a work session; its last section is the current state
-│   ├── QUESTIONS.md                questions for the author asked while they were away, with the decision taken
-│   ├── feedbacks/                  vukem-video.md (product issues VV-NNN), vukem.md (framework frictions VF-NNN)
-│   ├── tests/                      PLAN.md (QA campaign and benchmark history), inventory/, assets/, bench/, results/
-│   └── scripts/                    traceability.py, build-todo.py
-├── plans/                          advisor plans of the improve skill, git-ignored
-├── docs/                           prds/, adrs/, sdds/, plans/ (the work, one plan per unit), README.md (index), traceability.md, design-system.md
-├── scripts/                        versioned scripts, gate.sh (the full local release gate: task gate)
-├── spikes/                         disposable experiments, never promoted to product code
-└── web/, core/, engine/, service/, site/, desktop/ ...  the product
+├── .claude/agents/                 the seven agents of the team (section 4)
+├── development/                    local work files only, git-ignored, in Portuguese (rule development-folder.md)
+├── docs/                           prds/, adrs/, sdds/, plans/ (the epics and 00-roadmap.md), README.md (index), design-system.md
+├── core/                           the pure rules of every domain (Go, no I/O)
+├── engine/                         media: FFmpeg, ingest, export, transcription, the renderer hosts
+├── renderer/                       the pixel renderer (Rust, compiled to WebAssembly)
+├── service/                        the Service interface and its implementation
+├── web/                            the server (vukem), the MCP server, the CLI, the web UI in web/resources/
+├── desktop/                        the Wails shell, packaging, the update feed
+├── site/                           the documentation site
+├── internal/, scripts/, licenses/  build tools, scripts, third-party licences
+└── spikes/                         disposable experiments, never promoted to product code
 ```
 
-- New work: `docs/plans/NNN-<slug>.md`, in English, with the index `docs/plans/README.md` (rule `.agents/rules/plans.md`). Paths inside plans are relative to the repository root.
-- `development/` is git-ignored (D-036, which replaces D-025): nothing in it is published, and nothing outside it may reference it. Its layout, names and languages are fixed by `.agents/rules/development-folder.md`; names elsewhere by `.agents/rules/naming.md`.
-- A clone of the vukem framework, if kept, lives outside this repository; never commit it. Parallel worktrees live in `C:/dev/vukem-video-worktrees/`.
-- After task P1-REL-003 the product has `core/`, `engine/`, `service/`, `web/`, `site/` (ADR-0001).
+- The work: `docs/plans/NN-<slug>.md`, one file per epic, in English, with the index `docs/plans/00-roadmap.md` (rule `.agents/rules/plans.md`).
+- `development/` is git-ignored: nothing in it is published, and nothing outside it may reference it, except this file, `CLAUDE.md` and `.agents/`. The current state of the work is in `development/STATE.md` (read it first); questions waiting for the author in `development/QUESTIONS.md`; decisions of the author in `development/brainstorming.md`; the open product issues in `development/feedbacks/vukem-video.md`; research notes in `development/search/`; the state of the code on 2026-11-18 in `development/context/estado-atual.md`. How the folder is used, and who may write what in it, is the rule `.agents/rules/development-folder.md`; the folder is kept in step with the project, so what a change makes stale there is updated or deleted in the same change.
+- There is one UI: the desktop application is the Wails shell over the same web UI (ADR-0041). A page is written once in `web/resources/`.
 
 ## 3. The rules that are never traded
 
-1. **One command core.** All editing logic lives in `core/` (Go, pure, no I/O). The UI, the MCP server, the CLI and the HTTP API are thin adapters over `service.Service`. A rule about timelines written in a handler, a tool or in TypeScript is rejected in review, even "for now" (ADR-0002, ADR-0007, ADR-0008).
+1. **One command core.** The rules of every domain live in `core/` (Go, pure, no I/O). The UI, the MCP server, the CLI and the HTTP API are thin adapters over `service.Service`. A rule written in a handler, a tool or in TypeScript is rejected in review, even "for now" (ADR-0002, ADR-0007, ADR-0008, ADR-0031).
 2. **The UI never computes an edit result.** It draws what the core says and sends commands. `bun run check:thin-client` enforces it (SDD-012 §1).
 3. **Names come from one place.** Operations, tables, error codes, variables: `docs/sdds/000-shared-definitions.md`. Change it first, then everything else.
-4. **A specification is the contract.** When the code must differ from an SDD, fix the SDD in the same pull request and say why. Never let them drift.
-5. **Only LGPL FFmpeg, as a separate process; pixels are composed by one renderer** (ADR-0003, ADR-0011, ADR-0029). Today that is the Go compositor; Phase 5 replaces it with the Rust renderer in `renderer/`, compiled to WebAssembly and run by the browser preview and, through `wazero` (no cgo), by the Go export. Rust lives only in `renderer/`; the plan (`core/plan`) stays in Go and the renderer decides nothing. No GPL component in anything we publish (`cargo-deny` uses the same allowlist as `internal/tools/notices`).
-6. **No outbound network connection by default, no telemetry** (D-016, RF-206). Agents cannot make the product send data anywhere (ADR-0020).
-7. **Releases follow the vukem pattern strictly** (SDD-009): SemVer tags, Conventional Commits, changelog generated from commits, signed artifacts. The legacy Studio is the single release `v0.1.0`; the editor continues `v0.2.0`, `v0.3.0` ..., one minor about every 90 commits on `main` and at every phase exit (D-026, ADR-0028). Release notes have only five sections: **Added** (`feat`), **Changed** (a breaking change of a public interface), **Removed**, **Fixed** (`fix`), **Security**; no introduction, nothing else (D-027).
-8. **Everything in the repository is in English** (D-008); the git-ignored `development/` is in Portuguese, for the author (D-036). The conversation with the author is in Brazilian Portuguese.
-9. **No new dependency without the author's approval.** JavaScript uses Bun in `web/`; the documentation site keeps npm (it already uses it). Exact versions, never `latest`, `next`, `rc`, `beta`, `alpha`. Docker images use fixed tags; any HTTP server in an image is Caddy. Rust (D-035): the stable toolchain pinned in `rust-toolchain.toml`, `Cargo.lock` committed; approved crates and tools are `wgpu`, `wasm-bindgen` (and its CLI), `bytemuck`, `cargo-deny`, `harfrust`, `skrifa`, `unicode-bidi`, `unicode-linebreak` and `unicode-script` (text shaping, font parsing, bidi, line breaking and script lookup for the renderer, approved 2026-11-16), and `wazero` on the Go side; any other crate needs the author's approval.
-10. **vukem frictions are recorded when found**, in `development/feedbacks/vukem.md`, format `VF-NNN`, each checked against the vukem source.
+4. **A specification is the contract.** When the code must differ from an SDD, fix the SDD in the same change and say why. A new domain gets its specification before its code.
+5. **Only LGPL FFmpeg, as a separate process; pixels are composed by one renderer** (ADR-0003, ADR-0011, ADR-0029, ADR-0038). The Rust renderer in `renderer/`, compiled to WebAssembly, draws video frames and image documents in the browser and, through `wazero` (no cgo), in the export. Rust lives only in `renderer/`; the plan stays in Go and the renderer decides nothing. No GPL component in anything we publish.
+6. **Outbound only to connected destinations; publishing waits for a person; no telemetry** (ADR-0032). With no connection configured, the product opens no outbound connection. An agent can prepare a publication or a costly generation and cannot run it without the approval queue or a rule the user wrote. Credentials live only in the vault and no tool returns one (ADR-0033).
+7. **The user brings their own access.** Social networks through the user's own developer apps (ADR-0035); AI through an API key, Sign in with ChatGPT, OpenRouter or the user's local agent (ADR-0036). Never a subscription login a provider forbids, never automation of a service with no API, never a central Stuarty service.
+8. **Everything in the repository is in English**; the git-ignored `development/` is in Portuguese. The conversation with the author is in Brazilian Portuguese.
+9. **No new dependency without the author's approval.** JavaScript uses Bun in `web/`; the documentation site keeps npm. Exact versions, never `latest`, `next`, `rc`, `beta`, `alpha`. Docker images use fixed tags; any HTTP server in an image is Caddy. Rust: the stable toolchain pinned in `rust-toolchain.toml`, `Cargo.lock` committed, approved crates listed in `.agents/rules/rust.md`.
+10. **vukem stays, and its frictions are recorded when found** (ADR-0047). Every friction with the framework and every idea to improve it goes to `development/feedbacks/vukem.md`, format `VF-NNN`, checked against the vukem source. Never work around the framework silently.
+11. **`main` is never touched without the author** (ADR-0045): no push or merge to it, no marking the pull request ready, no release and no tag. Only the orchestrator pushes, only the integration branch, only approved epics, and only when the session prompt carries the author's authorization.
 
 ## 4. Roles
 
-| Role | Who | Does | Model |
+Seven agents, defined in `.claude/agents/`.
+
+| Role | Agent | Model and effort | Does |
 | --- | --- | --- | --- |
-| Orchestrator | the main session | plans the session, writes the briefings, reviews and audits every delivery, fixes the last defects itself, runs git wiring, merges, pushes and releases, marks the plans of `docs/plans/` done | the model chosen with the author at session start |
-| Senior | `senior-a` to `senior-e` | implements: features, fixes, migrations, tests | Sonnet |
-| Intern | `estagiario-1`, `estagiario-2` | mechanical, checkable work: translations, catalogue keys, running a suite and reporting, building fixtures, gathering data | Haiku |
+| Orchestrator | the main session | chosen with the author | picks the next epics, writes the briefings, dispatches, consolidates, merges approved epics into the integration branch, marks the roadmap, decides when the author is needed |
+| Senior | `senior-a` to `senior-e` | Claude Sonnet, medium | implements one epic at a time, from the first task to the hand-off: features, fixes, migrations, tests, the specification of its domain |
+| Intern | `intern` | Claude Haiku | mechanical, checkable work: running tests and reporting, reports, small lookups, i18n, fixtures |
+| Specialist | `specialist` | Claude Opus, high | reviews each delivery with no prior context, fixes the bugs it finds and approves |
 
-Each senior has a stable area, so that two never edit the same folder:
-
-| Senior | Area | Folders |
-| --- | --- | --- |
-| senior-a | command core and schema | `core/` |
-| senior-b | render, export, ingest, transcription, the Rust renderer | `engine/`, `renderer/` |
-| senior-c | service, persistence, HTTP, events, jobs, auth | `service/`, `web/app/` (except `mcp`, `cli`, `agentdocs`), `web/routes/`, `web/database/`, `web/cmd/` (except `gen-agent-docs`), `internal/outbound/` |
-| senior-d | agent surfaces, documentation site, releases and CI | `web/app/mcp/`, `web/app/cli/`, `web/app/agentdocs/`, `web/cmd/gen-agent-docs/`, `web/contract/`, `site/`, `.github/`, `.config/`, `internal/tools/`, `scripts/`, `licenses/`, root files |
-| senior-e | editor UI, desktop shell | `web/resources/`, `web/scripts/`, `web/package.json`, `web/biome.json`, `web/e2e/`, `desktop/` |
-
-Generated folders are written only by the generators. A task with more than one owner is one branch on which the owners work one after the other. Interns write no code: scripts, tests and scenarios belong to the senior named in the card. A plan that crosses two areas gives each step one owner, and the owners work one after the other on one branch (`.agents/rules/plans.md` section 1).
-
-Dispatch by the named type (`senior-a`, never the generic `senior`), and never reuse a name while an agent with that name is alive. Stop an agent as soon as its delivery is reviewed, together with any process it left running.
+- **A senior owns one epic at a time**, not a folder. Two epics that touch the same modules are never in progress together; the roadmap says which epics can run side by side.
+- **Two tracks run in parallel**: the editor (two seniors) and the platform (three seniors), after a short sequential foundation (ADR-0045).
+- **The specialist starts from zero.** It receives only the epic, its acceptance criteria and the diff: never the senior's report, the orchestrator's opinion or the conversation. That is what keeps the review free of the implementer's bias.
+- The intern writes no product code.
+- Dispatch by the named type, and never reuse a name while an agent with that name is alive. Stop an agent as soon as its delivery is reviewed, together with any process it left running.
 
 ## 5. Starting a session
 
-1. Read the current state at the end of `development/PROMPT.md`, this file, `.agents/rules/` and `docs/plans/README.md` (execution order and status).
-2. Follow the author's global instructions for the session start (model and effort are chosen with the author; questions go through the question tool, one at a time, with a recommended option first).
-3. Pick the next plans whose dependencies are done and whose files do not intersect. One agent (or one sequence of owners on one branch) per plan. In parallel, one senior is the feedback agent: it fixes the open issues of `development/feedbacks/vukem-video.md` one at a time, lowest number first (`.agents/rules/plans.md` section 5). Parallel agents and worktrees need the author's explicit yes.
-4. For each plan, write a briefing (section 6), dispatch, and keep working on what does not depend on the answer.
-5. At the end, or before a context compaction, refresh the last section of `development/PROMPT.md` (the current state): plans done, commands that validate, decisions taken, what is open.
+1. Read this file, `.agents/rules/`, `docs/plans/00-roadmap.md` and the current state in `development/STATE.md`, then `development/QUESTIONS.md` for what the author answered.
+2. Follow the author's instructions for the session start (model and effort; questions through the question tool, one at a time, with a recommended option first).
+3. Pick the next epics whose dependencies are done and whose modules do not intersect: at most five seniors at once. Parallel agents and worktrees need the author's explicit yes; the work-session prompt carries it.
+4. For each epic, write a briefing (section 6), dispatch, and keep working on what does not depend on the answer.
+5. After every event (an epic dispatched, handed off, reviewed, merged or blocked), at the end, and before a context compaction, rewrite `development/STATE.md`: what each agent is doing, epics done, commands that validate, decisions taken, what waits for the author.
 
 ## 6. A briefing
 
 A delegated engineer knows only what the briefing says. It contains:
 
-- the path of the plan in `docs/plans/` and the steps it owns; the engineer reads the whole plan and runs its drift check first;
-- the goal in one sentence and why it matters;
-- the files and folders it owns, and the ones it must not touch;
-- the acceptance: the asserts of the task, as commands to run;
+- the path of the epic in `docs/plans/`; the engineer reads the whole epic and the documents it links first;
+- the goal in one sentence and why it matters to a user;
+- the branch and the worktree to work in, the modules it owns, and what it must not touch;
+- the acceptance criteria, as commands to run;
 - what was already ruled out, and decisions of the author that apply;
-- the standing rules: no push, no new dependency, no forbidden git command, no process left running, record vukem frictions, report what was not run;
-- the report format: the commit hash; each assert, done or not done with the reason; the commands run and their result; anything that contradicts a specification.
+- the standing rules: no push, no new dependency, no forbidden git command, no process left running, record vukem frictions, report what was not run, stop and ask instead of improvising when a STOP condition of the epic is true;
+- the hand-off format of the epic: the commits, each acceptance criterion as done or not done with the reason, the commands run and their result, how to run and how to test, anything that contradicts a specification.
 
 ## 7. Review and completion
 
-The protocol is in `.agents/rules/plans.md` section 3. Every delivery is verified with `.agents/skills/verify/` (`--full`), whose checks come from the default branch; review findings follow `REVIEW.md`, and a failure that survives three fix rounds goes to the author. In short: a report is a claim, not evidence. The orchestrator reads the diff (`git diff --stat` first, and reverts anything outside the briefing), runs the asserts, fixes or sends back, and only then ticks the plan's acceptance items and writes its `Status` line (date, commits) in the plan and in `docs/plans/README.md`. One pull request per release (D-031): the branch `release/vX.Y.Z` collects the task branches (the orchestrator cherry-picks or fast-forwards them in, never force pushes), the pull request is titled `chore(release): vX.Y.Z updates`, holds about 90 microcommits, has its body refreshed with `task release:pr-body -- vX.Y.Z` (Added, Changed, Removed, Fixed, Security with linked commit hashes) and is rebase-merged so every microcommit reaches `main` (ADR-0028). Seniors branch from the open `release/vX.Y.Z` and never open pull requests; each commit is small and self-contained. Nobody else pushes. `main` is protected by the ruleset `protect-main`: no direct commit or push to `main`, ever, including releases: every change, the release commit of `v0.3.0` and later included, goes through a pull request whose required checks are green and which is up to date with `main`.
+The protocol is `.agents/rules/plans.md` section 3, and its step-by-step procedures are three skills of `.agents/skills/`: `orchestrator-loop` (the session), `epic-loop` (one epic, for its senior) and `qa-campaign` (the rounds after the epics). In short:
 
-The author confirms before: the first push of the repository, a release tag, repository settings, secrets, anything paid, a new dependency.
+1. **The senior works the epic in a loop**: read the epic; do task 1; run the command that verifies task 1; if it fails, fix and run it again; only when it passes, commit and move to task 2. When every task is done and every acceptance criterion passes, write the hand-off.
+2. The orchestrator opens a **new** specialist session with only the epic, its acceptance criteria and the diff of the epic branch against the integration branch.
+3. The specialist runs every acceptance criterion and the checks again, reads the diff against `REVIEW.md`, fixes what it finds in new commits, and approves or sends back what is too large to fix in review.
+4. Only then the orchestrator merges the epic branch into the integration branch, pushes the integration branch so the draft pull request shows the finished epic, ticks the epic in the roadmap with the date and the commits, and stops the agents.
+5. A delivery that fails review twice stops: the orchestrator marks the epic blocked, records why, and moves to the next unblocked epic; the author decides.
+
+**When every epic is done, the QA campaign runs in a loop** (ADR-0045 item 8): the five seniors test the whole product in parallel, end to end, each on its own surface (every CLI command, the HTTP API, the MCP tools, every control of the UI, the desktop application, the installation); each problem becomes a `VV` entry, is fixed with a reproducing test and reviewed by the specialist; then a new round starts. The campaign ends when a full round finds no problem.
+
+A report is a claim, not evidence. The Definition of Done of every epic: its tests pass, `task lint` and the type checks are clean, the documents it changes are updated (the SDD of its domain, the roadmap, the user documentation when behaviour changes), and every acceptance criterion was verified by the specialist. CI is not a gate while the epics are implemented (ADR-0045): the evidence is the local checks.
+
+The author confirms before: a push or a merge to `main`, marking the pull request ready, a release or a tag, repository settings, secrets, anything paid, a new dependency, a decision that contradicts an ADR, a change of the scope of an epic. In an unattended session these are STOP conditions: record the question with the options and a recommendation, leave that epic blocked, and continue with work that does not depend on the answer.
 
 ## 8. Git and shell
 
+- One integration branch, `release/0.30.0`, carries the single draft pull request (#106, codename "release 0.30.0"), where every commit of the work is saved; each epic is a branch from it, in its own worktree outside the repository folder (`.agents/rules/git-and-branches.md`). The orchestrator pushes the integration branch after each approved epic; nobody else pushes, and nothing else is pushed.
+- Conventional Commits, one small self-contained commit per task of the epic, with `Refs: epic NN task N`.
 - Never `git stash`, `git checkout -- .`, `git reset --hard`, or a force push.
-- Chain with `&&`; never `;` before a push or a deploy.
+- Chain with `&&`; never `;` before a push.
 - Edit versioned files with the edit tools, not with `sed` or redirection.
 - Windows: expect CRLF, re-read a file before repeating a failed edit, keep apostrophes out of shell commands, use the session scratchpad or `$TEMP` and never `/tmp`.
 - Do not read lockfiles, `node_modules/`, build outputs or generated files.
@@ -113,20 +122,19 @@ The author confirms before: the first push of the repository, a release tag, rep
 | `task test` | Go tests (short mode, no race detector) |
 | `task test:race` | Go tests of core, service and web/app with the race detector |
 | `task test:web` | the web unit tests (Vitest) |
-| `task ci` | everything the pull-request pipeline runs |
 | `task codegen` | regenerates schemas, TypeScript types and the registry snapshot |
-| `bun run check:thin-client` (in `web/`) | the thin-client rules |
+| `bun run typecheck` and `bun run check:thin-client` (in `web/`) | the TypeScript types and the thin-client rules |
+| `bun run e2e` (in `web/`) | the browser tests (Playwright) |
 | `go test -run TestSecurity_ ./...` | the security suite |
-| `bash .agents/skills/verify/scripts/verify.sh --quick` / `--full` | the verification loop (`.agents/skills/verify/`): the checks of what changed; `--full` adds the gate and the end-to-end smoke test (`scripts/smoke-e2e.sh`, boots the product and exports through the CLI). Required before a pull request |
-| `task gate -- <tag>` (run inside the worktree) | the full local release gate (lint on three GOOS, tidy, notices, threatcheck, ffmpegpins, agent docs, Go tests, security suite, web, Markdown, leaks, site, commits); used instead of CI while the pull-request workflows are disabled until the BETA exit |
-| `python development/scripts/traceability.py` | lists the requirements of the PRDs with no SDD or ADR (it read the retired task cards for open work; update `docs/traceability.md` by hand for the requirements a plan touches) |
-| `bash scripts/build-renderer.sh` (after P5-REL-001) | builds the Rust renderer natively and to WebAssembly, reproducibly |
+| `bash .agents/skills/verify/scripts/verify.sh --quick --base release/0.30.0` | the checks of what changed against the integration branch, before a commit (without `--base` it compares with `main`) |
+| `bash scripts/build-renderer.sh` | builds the Rust renderer natively and to WebAssembly, reproducibly |
 | `cargo fmt --check && cargo clippy -- -D warnings && cargo test && cargo deny check` (in `renderer/`) | the Rust gate (rule `.agents/rules/rust.md`) |
+| `task ci`, `task gate -- <tag>`, `verify.sh --full` | the full gates; not required while releases are deferred (ADR-0045), useful before a large merge |
 
-Phase 5 (Renderer evolution, ADR-0029): read `.agents/rules/rust.md` and `.agents/skills/renderer-parity/` before touching `renderer/`, the preview executor or the export compositor.
+Read `.agents/rules/rust.md` and `.agents/skills/renderer-parity/` before touching `renderer/`, the preview executor or the export compositor.
 
-Working conventions learned in BETA (details in `.agents/skills/` and `.agents/rules/`): at most five seniors at once; performance budgets are measured only with every agent stopped and the machine idle; a test that fails on a line is checked against the previous tag in a detached worktree before it is called a regression; build inputs are pinned by digests measured from real downloads; a release can be prepared as a GitHub draft before it is cut.
+Working conventions learned so far: at most five seniors at once (the author's machine runs out of CPU and memory above that); performance budgets are measured only with every agent stopped and the machine idle; a test that fails on a line is checked against the previous tag in a detached worktree before it is called a regression; build inputs are pinned by digests measured from real downloads.
 
 ## 10. When something is unclear
 
-Look in this order: the SDD named in the task, `000-shared-definitions.md`, the ADR, `development/brainstorming.md`. If two documents disagree, the ADR wins over a research note, SDD-000 wins on names, and the more specific SDD wins on behaviour; fix the loser in the same pull request. If the answer is nowhere, it is a decision: take the simplest option that meets the requirement when it is cheap to undo, record it in the SDD, and ask the author only when it is irreversible or costs money.
+Look in this order: the epic, the SDD of the domain, `000-shared-definitions.md`, the ADR, the PRD. If two documents disagree, a newer ADR wins over an older one it amends, an ADR wins over a research note, SDD-000 wins on names, and the more specific SDD wins on behaviour; fix the loser in the same change. If the answer is nowhere, it is a decision: take the simplest option that meets the requirement when it is cheap to undo, record it in the specification, and ask the author only when it is irreversible, costs money, contradicts an ADR or changes the scope of the epic.

@@ -15,8 +15,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
 )
 
 // AnimKind and AnimExt name the frame sequence artifact of an animated image: frames-1.anim
@@ -132,6 +132,7 @@ func (j *job) animated(ctx context.Context, plan ImagePlan) error {
 		return ingestErr(ReasonDecodeFailed, "The frames of the animated image could not be packed.",
 			map[string]any{"step": StepVideo}, err)
 	}
+	j.markAlphaOpaque(func() bool { return rawAlphaOpaque(j.path("frames.rgba")) })
 	_ = os.Remove(j.path("frames.rgba"))
 	j.add(workFile{kind: AnimKind, profile: ProfileNormalized, ext: AnimExt, name: "frames.anim"})
 	return nil

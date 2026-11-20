@@ -16,8 +16,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
 )
 
 // checks collects the named checks of SDD-011 5.1 that failed.
@@ -264,6 +264,10 @@ func (j *job) verifyVideo(ctx context.Context, plan VideoPlan, frames int, sampl
 	j.prog.set(StepVerify, 1)
 	if e := c.err("normalized video"); e != nil {
 		return e
+	}
+	if plan.Alpha {
+		layout := j.layout
+		j.markAlphaOpaque(func() bool { return pngAlphaOpaque(j.path("thumbnails."+plan.TileExt()), &layout) })
 	}
 	if j.decodeErrs > 0 {
 		j.res.Warnings = append(j.res.Warnings, "decode_errors: "+strconv.Itoa(j.decodeErrs))
@@ -615,7 +619,12 @@ func (j *job) verifyImage(plan ImagePlan, proxyName string) error {
 	}
 	c.eq("proxy_size", fmt.Sprintf("%dx%d", plan.PW, plan.PH), fmt.Sprintf("%dx%d", pw, ph))
 	for _, pwid := range PosterWidths {
-		w, _ := size("w"+itoa(pwid)+".jpg", jpgCfg)
+		// The poster of an image with alpha is a PNG, like its proxy (SDD-011 4.5).
+		poster, dec := "w"+itoa(pwid)+".jpg", jpgCfg
+		if plan.Alpha {
+			poster, dec = "w"+itoa(pwid)+".png", pngCfg
+		}
+		w, _ := size(poster, dec)
 		c.eq(
 			"thumbnails",
 			"poster w"+itoa(pwid)+" width "+itoa(min(pwid, plan.PW)),

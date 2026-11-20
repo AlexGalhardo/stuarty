@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 type keyBody struct {
@@ -424,6 +424,165 @@ func TestKeyLimitedToAProject(t *testing.T) {
 		"",
 	); res.status != http.StatusForbidden {
 		t.Errorf("another project = %d, want 403", res.status)
+	}
+}
+
+// VV-246: a key is limited to a project, never to the id of one of its timelines: that id is refused with
+// the answer for an id that names nothing, and another user's project is not found either.
+func TestSecurity_T06_KeyIsNotLimitedToATimelineID(t *testing.T) {
+	h := newNetworkHarness(t, resolved(), true)
+	h.user(t, "ana@example.com", service.RoleMember)
+	h.user(t, "bob@example.com", service.RoleMember)
+	ana := h.session(t, "ana@example.com")
+	bob := h.session(t, "bob@example.com")
+
+	res := h.send(t, http.MethodPost, "/api/v1/projects", `{"name":"p"}`, ana, nil)
+
+	var p struct {
+		ProjectID string `json:"project_id"`
+	}
+
+	_ = json.Unmarshal(res.body, &p)
+
+	res = h.send(
+		t, http.MethodPost, "/api/v1/projects/"+p.ProjectID+"/items",
+		`{"kind":"timeline","title":"Wide","preset":"16:9"}`, ana, nil,
+	)
+
+	var added struct {
+		Item struct {
+			TimelineID string `json:"timeline_id"`
+		} `json:"item"`
+	}
+
+	if err := json.Unmarshal(res.body, &added); err != nil || added.Item.TimelineID == "" {
+		t.Fatalf("the second timeline = %d %s", res.status, res.body)
+	}
+
+	missing := h.send(
+		t, http.MethodPost, "/api/v1/keys", `{"name":"a","scopes":["read"],"project_id":"prj_0000000000"}`, ana, nil,
+	)
+
+	for name, c := range map[string]struct{ session, id string }{
+		"a timeline of mine":          {ana, added.Item.TimelineID},
+		"the project of another user": {bob, p.ProjectID},
+		"a timeline of another user":  {bob, added.Item.TimelineID},
+	} {
+		got := h.send(
+			t,
+			http.MethodPost,
+			"/api/v1/keys",
+			`{"name":"a","scopes":["read"],"project_id":"`+c.id+`"}`,
+			c.session,
+			nil,
+		)
+		if got.status != missing.status || got.status == http.StatusCreated {
+			t.Errorf(
+				"%s = %d %s, want the refusal of an id that names nothing (%d)",
+				name,
+				got.status,
+				got.body,
+				missing.status,
+			)
+		}
+	}
+}
+
+// VV-246 in network mode: a key stored before the fix with the id of a timeline as its project reaches none of
+// the production that holds the timeline, and a key of project A asking for a timeline of another user's
+// project gets the answer of an id that names nothing.
+func TestSecurity_T06_NetworkKeyDoesNotCrossProductionsByTimeline(t *testing.T) {
+	h := newNetworkHarness(t, resolved(), true)
+	h.user(t, "ana@example.com", service.RoleMember)
+	h.user(t, "bob@example.com", service.RoleMember)
+	ana := h.session(t, "ana@example.com")
+	bob := h.session(t, "bob@example.com")
+
+	project := func(session string) string {
+		res := h.send(t, http.MethodPost, "/api/v1/projects", `{"name":"p"}`, session, nil)
+
+		var p struct {
+			ProjectID string `json:"project_id"`
+		}
+
+		if err := json.Unmarshal(res.body, &p); err != nil || p.ProjectID == "" {
+			t.Fatalf("ProjectCreate = %d %s", res.status, res.body)
+		}
+
+		return p.ProjectID
+	}
+
+	timeline := func(session, projectID string) string {
+		res := h.send(
+			t, http.MethodPost, "/api/v1/projects/"+projectID+"/items",
+			`{"kind":"timeline","title":"Wide","preset":"16:9"}`, session, nil,
+		)
+
+		var added struct {
+			Item struct {
+				TimelineID string `json:"timeline_id"`
+			} `json:"item"`
+		}
+
+		if err := json.Unmarshal(res.body, &added); err != nil || added.Item.TimelineID == "" {
+			t.Fatalf("the second timeline = %d %s", res.status, res.body)
+		}
+
+		return added.Item.TimelineID
+	}
+
+	mine := project(ana)
+	myTimeline := timeline(ana, mine)
+	theirs := project(bob)
+	theirTimeline := timeline(bob, theirs)
+
+	// What KeyCreate used to accept: a key limited to the id of a timeline, written as the store keeps it.
+	stale := h.makeKey(t, ana, `{"name":"stale","scopes":["read","edit"],"project_id":"`+mine+`"}`)
+	if _, err := h.st.DB().ExecContext(
+		t.Context(), `UPDATE api_keys SET project_id = ? WHERE id = ?`, myTimeline, stale.Key.KeyID,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	limited := h.makeKey(t, ana, `{"name":"a","scopes":["read","edit"],"project_id":"`+mine+`"}`)
+
+	calls := []struct{ method, path, body string }{
+		{http.MethodGet, "", ""},
+		{http.MethodGet, "/describe", ""},
+		{http.MethodGet, "/brief", ""},
+		{http.MethodPut, "/brief", `{"text":"taken"}`},
+		{http.MethodPost, "/items", `{"kind":"text","title":"t","text":"x"}`},
+		{http.MethodPost, "/trash", `{}`},
+	}
+
+	for _, c := range calls {
+		if res := h.asKey(
+			t, stale.Secret, c.method, "/api/v1/projects/"+myTimeline+c.path, c.body,
+		); res.status != http.StatusForbidden {
+			t.Errorf("the stale key, %s %s = %d %s, want 403", c.method, c.path, res.status, res.body)
+		}
+
+		nothing := h.asKey(t, limited.Secret, c.method, "/api/v1/projects/prj_0000000000"+c.path, c.body)
+		got := h.asKey(t, limited.Secret, c.method, "/api/v1/projects/"+theirTimeline+c.path, c.body)
+
+		if got.status != http.StatusForbidden || got.status != nothing.status {
+			t.Errorf(
+				"the key of A, %s %s on a timeline of another user = %d %s, want %d as for an id of nothing",
+				c.method, c.path, got.status, got.body, nothing.status,
+			)
+		}
+	}
+
+	var state string
+	if err := h.st.DB().QueryRowContext(
+		t.Context(), `SELECT state FROM projects WHERE id = ?`, mine,
+	).Scan(&state); err != nil || state != "active" {
+		t.Errorf("the project of the stale key is %q (%v), want it active", state, err)
+	}
+
+	res := h.send(t, http.MethodGet, "/api/v1/projects/"+theirs+"/brief", "", bob, nil)
+	if res.status != http.StatusOK || strings.Contains(string(res.body), "taken") {
+		t.Errorf("the brief of the other user = %d %s", res.status, res.body)
 	}
 }
 

@@ -13,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // determinismOut names a file that receives one "name sha256" line per case, sorted by name, so
@@ -72,10 +72,6 @@ func goldenHashes(t *testing.T, root string, into map[string]string) {
 
 			dir := filepath.Join(root, cmd.Name, c.Name())
 			reg := fullRegistry()
-
-			if strings.HasSuffix(c.Name(), "_in_prototype") {
-				reg = prototypeBuild()
-			}
 
 			before, err := os.ReadFile(filepath.Join(dir, "before.json"))
 			if err != nil {

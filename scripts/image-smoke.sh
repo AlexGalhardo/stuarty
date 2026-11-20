@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Smoke test of a built image: bash scripts/image-smoke.sh <image> [<version>]
-# With a version (no leading v), `version` must print exactly vukem-video <version>.
+# With a version (no leading v), `version` must print exactly stuarty <version>.
 # It starts the container the way the documentation says (published on the
 # loopback of the host) and removes it and its volume at the end.
 set -euo pipefail
 img="${1:?usage: image-smoke.sh <image> [<version>]}"
 want="${2:-}"
-name="vukem-video-smoke-$$"
-vol="vukem-video-smoke-$$"
+name="stuarty-smoke-$$"
+vol="stuarty-smoke-$$"
 
 cleanup() {
 	docker rm -f "$name" >/dev/null 2>&1 || true
@@ -16,13 +16,18 @@ cleanup() {
 trap cleanup EXIT
 
 got="$(docker run --rm "$img" version)"
-if [ -n "$want" ] && [ "$got" != "vukem-video $want" ]; then
-	echo "image-smoke: version printed [$got], want [vukem-video $want]" >&2
+if [ -n "$want" ] && [ "$got" != "stuarty $want" ]; then
+	echo "image-smoke: version printed [$got], want [stuarty $want]" >&2
 	exit 1
 fi
-case "$got" in "vukem-video "*) ;; *) echo "image-smoke: version printed [$got]" >&2; exit 1 ;; esac
+case "$got" in "stuarty "*) ;; *) echo "image-smoke: version printed [$got]" >&2; exit 1 ;; esac
 
 docker run --rm --entrypoint sh "$img" -c "id -u | grep -qx 10001"
+# Hardening of the VPS package (SDD-009 section 21.6): the compose file runs the image as this
+# non-root user with a read-only root file system, so the image must work that way. With the root
+# read-only only /tmp (a tmpfs) and the /data volume are writable.
+docker run --rm --read-only --tmpfs /tmp --entrypoint sh "$img" -c "test \"\$(id -u)\" = 10001 && ! touch /usr/local/bin/x 2>/dev/null && ! touch /etc/x 2>/dev/null && ! touch /opt/x 2>/dev/null && touch /tmp/ok"
+docker run --rm --read-only --tmpfs /tmp -v "$vol:/data" --entrypoint sh "$img" -c "touch /data/ok && rm /data/ok"
 docker run --rm --entrypoint sh "$img" -c "ffmpeg -version | head -n 1"
 # The BtbN build (through ALPHA) has OpenH264 compiled in and encodes with it at once. The own
 # build (D-017) has none: libopenh264 is absent until the explicit install step, and the
@@ -42,11 +47,11 @@ else
 	fi
 fi
 docker run --rm --entrypoint sh "$img" -c "if ffmpeg -version | grep -q -e --enable-gpl -e --enable-nonfree; then exit 1; fi"
-docker run --rm --entrypoint sh "$img" -c "test -s /usr/share/doc/vukem-video/ffmpeg/LICENSE.txt && test -s /usr/share/doc/vukem-video/ffmpeg/configure.txt && test -s /usr/share/doc/vukem-video/ffmpeg/SOURCE.txt"
+docker run --rm --entrypoint sh "$img" -c "test -s /usr/share/doc/stuarty/ffmpeg/LICENSE.txt && test -s /usr/share/doc/stuarty/ffmpeg/configure.txt && test -s /usr/share/doc/stuarty/ffmpeg/SOURCE.txt"
 docker image inspect --format "{{json .Config.Healthcheck.Test}}" "$img" | grep -q 7878
-docker image inspect --format "{{json .Config.Env}}" "$img" | grep -q "VUKEM_VIDEO_HOME=/data"
+docker image inspect --format "{{json .Config.Env}}" "$img" | grep -q "STUARTY_HOME=/data"
 docker image inspect --format "{{json .Config.Volumes}}" "$img" | grep -q "\"/data\""
-docker run --rm --entrypoint sh "$img" -c "test -s /usr/share/doc/vukem-video/LICENSE.md && test -s /usr/share/doc/vukem-video/THIRD_PARTY_NOTICES.md && test -d /usr/share/doc/vukem-video/licenses && test -s /usr/share/doc/vukem-video/base-image-packages.txt"
+docker run --rm --entrypoint sh "$img" -c "test -s /usr/share/doc/stuarty/LICENSE.md && test -s /usr/share/doc/stuarty/THIRD_PARTY_NOTICES.md && test -d /usr/share/doc/stuarty/licenses && test -s /usr/share/doc/stuarty/base-image-packages.txt"
 docker run --rm --entrypoint prlimit "$img" --version >/dev/null
 # The whisper.cpp helper installed by tools:install needs the OpenMP runtime (VV-012).
 docker run --rm --entrypoint sh "$img" -c "ldconfig -p | grep -q libgomp.so.1"
@@ -65,7 +70,10 @@ docker run "${net[@]}" "$img" history --project "$id" --json | grep -q "\"entrie
 # from inside the container as the HEALTHCHECK does. With no user yet, the API
 # answers 401 to everyone.
 key="$(head -c 32 /dev/urandom | base64)"
-docker run -d --name "$name" -e APP_KEY="$key" "$img" >/dev/null
+# The server boots the way the compose file of deploy/ runs it: a read-only root file system, no
+# capability and no new privileges (a published port is not needed: the check is made inside).
+docker run -d --name "$name" --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges:true \
+	-e APP_KEY="$key" "$img" >/dev/null
 for _ in $(seq 1 30); do
 	if docker exec "$name" curl -fsS http://127.0.0.1:7878/up >/dev/null 2>&1; then
 		echo "image-smoke: /up answered inside the container"

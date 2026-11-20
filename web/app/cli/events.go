@@ -16,9 +16,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
-	event "github.com/AlexGalhardo/vukem-video/service/events"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
+	event "github.com/AlexGalhardo/stuarty/service/events"
 )
 
 // EventsQuery is what the stream of a project is opened with.
@@ -39,8 +39,8 @@ const (
 var eventsCmd = &spec{
 	name:    "events",
 	summary: "print the events of a project as they arrive",
-	usage:   []string{"vukem-video events --project <id> [--from-id n] [--since n] [--count n]"},
-	example: "vukem-video events --project prj_7k2m9x4q1b --since 4 --count 3",
+	usage:   []string{"stuarty events --project <id> [--from-id n] [--since n] [--count n]"},
+	example: "stuarty events --project prj_7k2m9x4q1b --since 4 --count 3",
 	project: true,
 	stream:  true,
 	flags: []flagDef{
@@ -68,7 +68,7 @@ func runEvents(ctx context.Context, c *call) (*output, error) {
 	if c.events == nil {
 		return nil, &service.Error{
 			Code: command.CodeInvalidState, Message: "no server answers for this workspace, so there are no events.",
-			Hint: "run vukem-video serve, then repeat the command",
+			Hint: "run stuarty serve, then repeat the command",
 		}
 	}
 

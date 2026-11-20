@@ -3,7 +3,7 @@ package compositor
 import (
 	"math"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/plan"
 )
 
 // maxOutlineRadius is the largest outline radius in source pixels, the same bound as an effect length.

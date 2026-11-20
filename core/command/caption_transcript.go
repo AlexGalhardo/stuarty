@@ -6,7 +6,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 func init() {
@@ -23,7 +23,6 @@ func init() {
 			CodeLimit, CodeOverlap,
 		},
 		Scope: ScopeEdit,
-		Phase: Alpha,
 	}, applyCaptionFromTranscript))
 
 	Register(Define(Spec{
@@ -37,7 +36,6 @@ func init() {
 			CodeValidation, CodeNotFound, CodeTypeMismatch, CodeInvalidState, CodeOverlap,
 		},
 		Scope: ScopeEdit,
-		Phase: Alpha,
 	}, applyCaptionRetime))
 }
 
@@ -136,7 +134,7 @@ type captionFromTranscriptArgs struct {
 	MaxGap     Time           `json:"max_gap,omitempty"   desc:"A length, may be 0; a longer pause starts a caption. Default \"0.6s\"."`
 	Replace    *bool          `json:"replace,omitempty"   desc:"Remove the captions linked to this clip on this track first. Default true."`
 	NewIDs     []string       `json:"new_ids,omitempty"   desc:"Ids for the created captions, in order."                                         pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
-	Resolved   *ResolvedWords `json:"resolved,omitempty"  desc:"Filled by the service from the transcript of the asset; never sent by a caller."`
+	Resolved   *ResolvedWords `json:"resolved,omitempty"  desc:"Filled by the service from the transcript of the asset; never sent by a caller."                                                                          internal:"true"`
 }
 
 // groupWords is postcondition 2 of C.40.
@@ -272,7 +270,7 @@ func applyCaptionFromTranscript(c *Context, a *captionFromTranscriptArgs) error 
 
 type captionRetimeArgs struct {
 	ClipItemID string         `json:"clip_item_id"       desc:"A clip of a video asset with audio, or an audio item."                           pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
-	Resolved   *ResolvedWords `json:"resolved,omitempty" desc:"Filled by the service from the transcript of the asset; never sent by a caller."`
+	Resolved   *ResolvedWords `json:"resolved,omitempty" desc:"Filled by the service from the transcript of the asset; never sent by a caller."                                                        internal:"true"`
 }
 
 // linkedCaptions returns the captions linked to a clip, per track, each list in

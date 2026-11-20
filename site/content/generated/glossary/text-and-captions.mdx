@@ -13,7 +13,7 @@ Captions write down the speech and also important sounds, like [laughter]. They 
 
 **Example.** On a train, you watch a video with the sound off, and captions let you follow the story.
 
-**In Vukem Video.** A caption is word-timed text on a caption track. See [Text and captions](/docs/guide/text-and-captions).
+**In Stuarty.** A caption is word-timed text on a caption track. See [Text and captions](/docs/guide/text-and-captions).
 
 **See also:** [Subtitle](#subtitle), [Transcript](#transcript), [Word timing](#word-timing).
 
@@ -65,7 +65,7 @@ A font decides how letters look. Some are plain, some playful, some formal.
 
 **Example.** A birthday card in a curly font looks friendlier than one in a strict font.
 
-**In Vukem Video.** Import your own with `font_import`, then add it with `font.add`. See [Brand kit](/docs/guide/brand-kit).
+**In Stuarty.** Import your own with `font_import`, then add it with `font.add`. See [Brand kit](/docs/guide/brand-kit).
 
 **Also called:** typeface. **See also:** [Serif and sans-serif](#serif-and-sans-serif), [Font weight](#font-weight).
 
@@ -117,7 +117,7 @@ Good captions break lines at natural places, like after a comma, so each line is
 
 **Example.** "I love my new" / "red bicycle" is better than "I love" / "my new red bicycle".
 
-**In Vukem Video.** `caption.set_breaks` chooses where a caption breaks.
+**In Stuarty.** `caption.set_breaks` chooses where a caption breaks.
 
 **See also:** [Reading speed](#reading-speed), [Leading](#leading).
 
@@ -137,7 +137,7 @@ Open (burned-in) captions are part of the video image. Every viewer sees them, o
 
 **Example.** Short videos for social networks often have big words burned in.
 
-**In Vukem Video.** Captions in Vukem Video are burned in when you export.
+**In Stuarty.** Captions in Stuarty are burned in when you export.
 
 **Also called:** burned-in captions, hardcoded subtitles. **See also:** [Closed captions](#closed-captions).
 
@@ -159,7 +159,7 @@ Apps put buttons and names over the video, and some screens cut the edges. Keepi
 
 **Example.** On a short video the bottom is covered by the caption and the heart button, so the words go higher.
 
-**In Vukem Video.** The lint checks text against the safe area. See [Safe area](/docs/guide/safe-area).
+**In Stuarty.** The lint checks text against the safe area. See [Safe area](/docs/guide/safe-area).
 
 **See also:** [Vertical video](/docs/glossary/shooting-and-footage#vertical-video), [Lower third](#lower-third).
 
@@ -231,7 +231,7 @@ Text animation can fade, pop, slide or typewriter the words. It catches attentio
 
 **Example.** A title that pops in with a bounce.
 
-**In Vukem Video.** `text.apply_preset` has six presets. See [Effects and color](/docs/guide/effects-and-color).
+**In Stuarty.** `text.apply_preset` has six presets. See [Effects and color](/docs/guide/effects-and-color).
 
 **See also:** [Keyframe](/docs/glossary/effects-and-compositing#keyframe), [Easing](/docs/glossary/cuts-and-transitions#easing).
 
@@ -241,7 +241,7 @@ A title card or title text names the video, a chapter or a place. It is differen
 
 **Example.** "Summer 2026" appears at the start of a holiday video.
 
-**In Vukem Video.** `text.add`.
+**In Stuarty.** `text.add`.
 
 **See also:** [Lower third](#lower-third), [Credits](#credits).
 
@@ -263,7 +263,7 @@ A transcription program listens to the audio and writes the words with the time 
 
 **Example.** Your voice message turned into text.
 
-**In Vukem Video.** `vukem-video transcribe` and `caption.from_transcript`. See [Transcription](/docs/guide/transcription).
+**In Stuarty.** `stuarty transcribe` and `caption.from_transcript`. See [Transcription](/docs/guide/transcription).
 
 **Also called:** speech to text. **See also:** [Transcript](#transcript), [Word timing](#word-timing).
 
@@ -305,6 +305,6 @@ With word timing each word knows when it is said. This lets the caption highligh
 
 **Example.** In a short video the current word turns yellow as the person says it.
 
-**In Vukem Video.** Every caption word has its own start and length.
+**In Stuarty.** Every caption word has its own start and length.
 
 **See also:** [Caption](#caption), [Transcription](#transcription).

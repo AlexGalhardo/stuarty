@@ -1,0 +1,12 @@
+{
+  "layer_id": "lyr_bbbbbbbbbb",
+  "mask": {
+    "feather": 4,
+    "h": 900,
+    "kind": "rounded_rect",
+    "radius": 40,
+    "w": 900,
+    "x": 50,
+    "y": 50
+  }
+}

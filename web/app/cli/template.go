@@ -7,14 +7,14 @@ import (
 	"io"
 	"os"
 
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 var templateList = &spec{
 	name:    "template:list",
 	summary: "list the templates of the library",
-	usage:   []string{"vukem-video template:list [--cursor c] [--limit n]"},
-	example: "vukem-video template:list --json",
+	usage:   []string{"stuarty template:list [--cursor c] [--limit n]"},
+	example: "stuarty template:list --json",
 	flags:   pageFlags("20"),
 	run: func(ctx context.Context, c *call) (*output, error) {
 		res, err := c.svc.TemplateList(ctx, service.TemplateListRequest{Page: page(c.args)})
@@ -27,13 +27,14 @@ var templateList = &spec{
 }
 
 var templateSave = &spec{
-	name:    "template:save",
-	summary: "make a template from a project",
-	usage:   []string{"vukem-video template:save --project <id> --name <name> [--description d]"},
-	example: `vukem-video template:save --project prj_7k2m9x4q1b --name "Spring sale"`,
-	project: true,
-	globals: []string{"dry-run"},
-	write:   true,
+	name:     "template:save",
+	timeline: true,
+	summary:  "make a template from a project",
+	usage:    []string{"stuarty template:save --project <id> --name <name> [--description d]"},
+	example:  `stuarty template:save --project prj_7k2m9x4q1b --name "Spring sale"`,
+	project:  true,
+	globals:  []string{"dry-run"},
+	write:    true,
 	flags: []flagDef{
 		{Name: "name", Kind: kindString, Usage: "template name (required)"},
 		{Name: "description", Kind: kindString, Usage: "what the template is for"},
@@ -44,8 +45,11 @@ var templateSave = &spec{
 		}
 
 		res, err := c.svc.TemplateSave(ctx, service.TemplateSaveRequest{
-			ProjectID: c.projectID, Name: c.args.str("name"), Description: c.args.str("description"),
-			DryRun: c.args.boolean("dry-run"),
+			ProjectID:   c.projectID,
+			TimelineID:  c.timelineID,
+			Name:        c.args.str("name"),
+			Description: c.args.str("description"),
+			DryRun:      c.args.boolean("dry-run"),
 		})
 		if err != nil {
 			return nil, err
@@ -59,9 +63,9 @@ var templateNew = &spec{
 	name:    "template:new",
 	summary: "create a project from a template",
 	usage: []string{
-		"vukem-video template:new <template id> --name <name> [--fill <file|->] [--id prj_...]",
+		"stuarty template:new <template id> --name <name> [--fill <file|->] [--id prj_...]",
 	},
-	example:    `vukem-video template:new tpl_5n8b2v6c1x --name "Spring sale" --fill fill.json`,
+	example:    `stuarty template:new tpl_5n8b2v6c1x --name "Spring sale" --fill fill.json`,
 	positional: true,
 	globals:    []string{"dry-run"},
 	write:      true,
@@ -117,8 +121,8 @@ var templateNew = &spec{
 var templateExport = &spec{
 	name:       "template:export",
 	summary:    "write a template to a file the workspace keeps",
-	usage:      []string{"vukem-video template:export <template id> [--out f] [--force]"},
-	example:    "vukem-video template:export tpl_5n8b2v6c1x --out ~/spring-sale.vukem-template.zip",
+	usage:      []string{"stuarty template:export <template id> [--out f] [--force]"},
+	example:    "stuarty template:export tpl_5n8b2v6c1x --out ~/spring-sale.stuarty-template.zip",
 	positional: true,
 	flags:      outFlags(),
 	run: func(ctx context.Context, c *call) (*output, error) {
@@ -147,8 +151,8 @@ var templateExport = &spec{
 var templateImport = &spec{
 	name:       "template:import",
 	summary:    "add a template file to the library",
-	usage:      []string{"vukem-video template:import <path>"},
-	example:    "vukem-video template:import spring-sale.vukem-template.zip",
+	usage:      []string{"stuarty template:import <path>"},
+	example:    "stuarty template:import spring-sale.stuarty-template.zip",
 	positional: true,
 	globals:    []string{"dry-run"},
 	write:      true,

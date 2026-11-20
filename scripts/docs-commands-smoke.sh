@@ -4,16 +4,23 @@
 #
 #   bash scripts/docs-commands-smoke.sh [page.mdx ...]
 #
-# With no argument it takes the tutorials of site/content/docs/en/guide/ (tutorial-vertical-short first: it
-# creates the project that the next tutorial reads). It extracts every fenced bash block, starts
-# `vukem-video serve` with a private workspace on a loopback port, runs the blocks one after the other in a
+# With no argument it takes the install pages of site/content/docs/en/getting-started/ and the tutorials of
+# site/content/docs/en/guide/ (the first short video, then tutorial-vertical-short: it creates the project that
+# the next tutorial reads). It extracts every fenced bash block, starts
+# `stuarty serve` with a private workspace on a loopback port, runs the blocks one after the other in a
 # folder that holds the sample media (made with ffmpeg) and stops at the first non-zero exit. The server and
 # the work folder are removed at the end.
 #
+# A block that needs what this machine does not have (Docker, root, a server of its own, a git clone from
+# the network) is not run: it is checked instead, and reported as "check". bash -n must accept it, every
+# STUARTY_* and APP_* variable it names must be in the configuration reference, and a deploy/ script it calls
+# must exist and know the flags the block passes. A block that starts the server (`stuarty serve`) is skipped:
+# this script already runs that server. SMOKE_DOCKER=1 runs the Docker blocks too.
+#
 # A block is skipped, and reported, when it cannot run offline: it installs a tool or a model (needs the
-# network, D-016) or it starts another agent client (`claude`). SMOKE_NETWORK=1 runs the model blocks too.
-# Needs: ffmpeg on PATH, go (only when VUKEM_VIDEO_BIN is not set). Environment:
-#   VUKEM_VIDEO_BIN   the binary to test (default: built from this checkout)
+# network, D-016; a transcription runs with the stub of the test condition) or it starts another agent client (`claude`). SMOKE_NETWORK=1 runs the model blocks too.
+# Needs: ffmpeg on PATH, go (only when STUARTY_BIN is not set). Environment:
+#   STUARTY_BIN   the binary to test (default: built from this checkout)
 #   SMOKE_PORT        loopback port of the server (default a random one in 20000 to 39999)
 #   SMOKE_KEEP        set to 1 to keep the work folder
 set -euo pipefail
@@ -27,8 +34,12 @@ command -v ffmpeg >/dev/null 2>&1 || die "ffmpeg is required to make the sample 
 if [ "$#" -gt 0 ]; then
 	pages=("$@")
 else
+	start="$root/site/content/docs/en/getting-started"
 	guide="$root/site/content/docs/en/guide"
-	pages=("$guide/tutorial-vertical-short.mdx" "$guide/tutorial-agent-edit.mdx")
+	pages=("$start/install-windows.mdx" "$start/install-docker.mdx" "$start/install-server.mdx")
+	[ ! -f "$guide/first-short-video.mdx" ] || pages+=("$guide/first-short-video.mdx")
+	pages+=("$guide/tutorial-vertical-short.mdx" "$guide/tutorial-agent-edit.mdx")
+	pages+=("$guide/image-editor.mdx" "$guide/asset-library.mdx" "$guide/memory-skills-prompts.mdx")
 fi
 for p in "${pages[@]}"; do [ -f "$p" ] || die "no such page: $p"; done
 
@@ -50,12 +61,12 @@ cleanup() {
 }
 trap cleanup EXIT
 
-case "$(uname -s)" in MINGW* | MSYS* | CYGWIN*) exe=vukem-video.exe ;; *) exe=vukem-video ;; esac
+case "$(uname -s)" in MINGW* | MSYS* | CYGWIN*) exe=stuarty.exe ;; *) exe=stuarty ;; esac
 mkdir -p "$work/bin" "$work/cwd" "$work/home" "$work/blocks"
-if [ -n "${VUKEM_VIDEO_BIN:-}" ]; then
-	cp "$VUKEM_VIDEO_BIN" "$work/bin/$exe"
+if [ -n "${STUARTY_BIN:-}" ]; then
+	cp "$STUARTY_BIN" "$work/bin/$exe"
 else
-	command -v go >/dev/null 2>&1 || die "go is required to build the binary (or set VUKEM_VIDEO_BIN)"
+	command -v go >/dev/null 2>&1 || die "go is required to build the binary (or set STUARTY_BIN)"
 	log "building the binary"
 	(cd "$root" && go build -o "$work/bin/$exe" ./web/cmd/app)
 fi
@@ -63,11 +74,13 @@ chmod +x "$work/bin/$exe"
 export PATH="$work/bin:$PATH"
 
 # The private home keeps the run away from the workspace of the person who runs it. No server of another
-# workspace can be reached: VUKEM_VIDEO_URL is cleared.
-unset VUKEM_VIDEO_URL APP_KEY APP_ENV
-export VUKEM_VIDEO_HOME="$work/home"
+# workspace can be reached: STUARTY_URL is cleared.
+unset STUARTY_URL APP_KEY APP_ENV
+export STUARTY_HOME="$work/home"
 port="${SMOKE_PORT:-$((20000 + RANDOM % 20000))}"
-VUKEM_VIDEO_ADDR="127.0.0.1:$port" "$work/bin/$exe" serve >"$work/serve.log" 2>&1 &
+# APP_ENV=test with the stub transcriber (four fixed words) lets the pages run a transcription with no model
+# and no network; nothing else of the test condition is used.
+APP_ENV=test STUARTY_TEST_TRANSCRIBER=stub STUARTY_ADDR="127.0.0.1:$port" "$work/bin/$exe" serve >"$work/serve.log" 2>&1 &
 server_pid=$!
 for _ in $(seq 1 120); do
 	[ -s "$work/home/runtime.json" ] && break
@@ -87,6 +100,23 @@ fi
 
 ran=0
 skipped=0
+checked=0
+config="$root/site/content/generated/reference/configuration.mdx"
+
+# check_block verifies a block that cannot run here: its syntax, its variables and the deploy scripts it calls.
+check_block() {
+	local b="$1" label="$2" v flag script
+	bash -n "$b" || die "the block $label is not valid bash"
+	for v in $(grep -oE '(STUARTY|APP)_[A-Z_]+' "$b" | sort -u); do
+		grep -q "\`$v\`" "$config" || die "the block $label names $v, which the configuration reference does not list"
+	done
+	for script in $(grep -oE 'deploy/[a-z]+\.sh' "$b" | sort -u); do
+		[ -f "$root/$script" ] || die "the block $label calls $script, which does not exist"
+		for flag in $(grep -E "bash $script" "$b" | grep -oE ' --[a-z-]+' | sort -u); do
+			grep -q -- "$flag" "$root/$script" || die "the block $label passes$flag to $script, which does not know it"
+		done
+	done
+}
 for page in "${pages[@]}"; do
 	name="$(basename "$page" .mdx)"
 	rm -f "$work"/blocks/"$name"-*.sh
@@ -104,8 +134,16 @@ for page in "${pages[@]}"; do
 		if grep -qE '^[[:space:]]*claude[[:space:]]' "$b"; then
 			log "skip $label (starts another client)"; skipped=$((skipped + 1)); continue
 		fi
-		if [ "${SMOKE_NETWORK:-}" != 1 ] && grep -qE 'tools:install|--language|transcribe' "$b"; then
-			log "skip $label (installs or runs a model, needs the network; SMOKE_NETWORK=1 runs it)"; skipped=$((skipped + 1)); continue
+		if grep -qE '^[[:space:]]*stuarty serve' "$b"; then
+			log "skip $label (starts the server: this script already runs one)"; skipped=$((skipped + 1)); continue
+		fi
+		if [ "${SMOKE_DOCKER:-}" != 1 ] && grep -qE '^[[:space:]]*(docker|sudo|git clone|bash deploy/)' "$b"; then
+			check_block "$b" "$label"
+			log "check $label (needs Docker or a server: syntax, variables and flags only; SMOKE_DOCKER=1 runs it)"
+			checked=$((checked + 1)); continue
+		fi
+		if [ "${SMOKE_NETWORK:-}" != 1 ] && grep -qE 'tools:install' "$b"; then
+			log "skip $label (installs a model, needs the network; SMOKE_NETWORK=1 runs it)"; skipped=$((skipped + 1)); continue
 		fi
 		log "run  $label"
 		if ! bash -eo pipefail "$b"; then
@@ -117,5 +155,25 @@ for page in "${pages[@]}"; do
 	done
 done
 
-[ "$ran" -gt 0 ] || die "no block ran"
-log "ok: $ran block(s) ran, $skipped skipped"
+# The steps that need an account of the reader (an AI provider, a social network, a person's approval) are
+# written as console blocks, which are not run. Every command they show must be a command of the CLI, and
+# the whole flow, with those very steps, is run against the fake services by scripts/first-flow.sh.
+cli_names="$(grep -oE '"name": "[a-z:-]+"' "$root/site/generated/cli.json" | cut -d'"' -f4)"
+for page in "${pages[@]}"; do
+	name="$(basename "$page" .mdx)"
+	awk '{ sub(/\r$/, "") } /^[ ]*```console[ ]*$/ { inb = 1; next } inb && /^[ ]*```[ ]*$/ { inb = 0; next } inb { print }' "$page" |
+		{ grep -oE '(^|[|;] *)[ ]*stuarty [a-z][a-z:-]*' || true; } | sed -E 's/.*stuarty //' | sort -u |
+		while read -r cmd; do
+			echo "$cli_names" | grep -qx "$cmd" || die "$name: a console block runs stuarty $cmd, which is not a command of the CLI"
+		done
+	if [ "$name" = first-short-video ]; then
+		log "running scripts/first-flow.sh (the fake provider, the fake network and a person approval)"
+		STUARTY_BIN="$work/bin/$exe" bash "$root/scripts/first-flow.sh" >"$work/first-flow.out" 2>&1 ||
+			{ tail -n 20 "$work/first-flow.out" >&2; die "scripts/first-flow.sh failed"; }
+		log "first-flow: $(tail -n 1 "$work/first-flow.out")"
+		ran=$((ran + 1))
+	fi
+done
+
+[ "$((ran + checked))" -gt 0 ] || die "no block ran"
+log "ok: $ran block(s) ran, $checked checked without running, $skipped skipped"

@@ -13,9 +13,9 @@ description: "What file an export produces, which H.264 encoder it uses and how 
 
 There is one **export preset**: an MP4 file with H.264 video, AAC audio at 48 kHz stereo and the project's own frame size and frame rate, with the index at the front (fast start). The name of a project is never part of the output path: the file is `<workspace>/exports/<project id>/<job id>.mp4`. Before the job is marked done, the file is verified (streams, duration, dimensions, pixel format and fast start). You can export a part of the timeline with a start and an end.
 
-An H.264 encoder is needed only for export. The product tests the candidates on your machine with a real test encode, in this order: `h264_videotoolbox` (macOS), `h264_nvenc`, `h264_qsv`, `h264_amf`, `h264_mf` (Windows), `h264_vaapi` (Linux) and `libopenh264`, which the bundled FFmpeg has. `libx264` is used only when the FFmpeg is your own and `VUKEM_VIDEO_ALLOW_USER_X264` is `true`. The first that works is used. The result is cached for 24 hours.
+An H.264 encoder is needed only for export. The product tests the candidates on your machine with a real test encode, in this order: `h264_videotoolbox` (macOS), `h264_nvenc`, `h264_qsv`, `h264_amf`, `h264_mf` (Windows), `h264_vaapi` (Linux) and `libopenh264`, which the bundled FFmpeg has. `libx264` is used only when the FFmpeg is your own and `STUARTY_ALLOW_USER_X264` is `true`. The first that works is used. The result is cached for 24 hours.
 
-To force one encoder, set `VUKEM_VIDEO_ENCODER` to its FFmpeg name. Only that one is tried; if it fails the export fails with `E_NO_ENCODER` and the reason, and the product never swaps it silently.
+To force one encoder, set `STUARTY_ENCODER` to its FFmpeg name. Only that one is tried; if it fails the export fails with `E_NO_ENCODER` and the reason, and the product never swaps it silently.
 
 ## Quick start
 
@@ -23,15 +23,15 @@ To force one encoder, set `VUKEM_VIDEO_ENCODER` to its FFmpeg name. Only that on
 <Tab title="CLI">
 
 ```bash
-vukem-video doctor --full
-vukem-video export --project prj_7k2m9x4q1b --start 0s --end 10s
-VUKEM_VIDEO_ENCODER=libopenh264 vukem-video serve
+stuarty doctor --full
+stuarty export --project prj_7k2m9x4q1b --start 0s --end 10s
+STUARTY_ENCODER=libopenh264 stuarty serve
 ```
 
 </Tab>
 <Tab title="MCP">
 
-`job_start` with `{"project_id": "prj_7k2m9x4q1b", "kind": "export"}`. The finished job reports the encoder used. There is no MCP tool for the diagnostic; ask the operator to run `vukem-video doctor --full`.
+`job_start` with `{"project_id": "prj_7k2m9x4q1b", "kind": "export"}`. The finished job reports the encoder used. There is no MCP tool for the diagnostic; ask the operator to run `stuarty doctor --full`.
 
 </Tab>
 </Tabs>
@@ -40,8 +40,8 @@ The result of the job has the path, the size, the duration and the encoder used.
 
 ## Common mistakes
 
-- `E_NO_ENCODER` on a machine with no working hardware encoder and an FFmpeg without OpenH264. Use the bundled FFmpeg, or set `VUKEM_VIDEO_FFMPEG` to a build that has `libx264` and set `VUKEM_VIDEO_ALLOW_USER_X264=true`.
-- Pointing `VUKEM_VIDEO_ENCODER` at an encoder the machine does not have.
+- `E_NO_ENCODER` on a machine with no working hardware encoder and an FFmpeg without OpenH264. Use the bundled FFmpeg, or set `STUARTY_FFMPEG` to a build that has `libx264` and set `STUARTY_ALLOW_USER_X264=true`.
+- Pointing `STUARTY_ENCODER` at an encoder the machine does not have.
 - Expecting other containers or codecs. This release writes MP4 with H.264 only.
 
 ## Next steps

@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 func apply(m *[12]float64, in [3]float64) [3]float64 {

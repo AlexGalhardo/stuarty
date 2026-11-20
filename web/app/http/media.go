@@ -9,31 +9,38 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem/web"
+	"github.com/AlexGalhardo/stuarty/core/asset"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/vukem/web"
 )
 
 type importFileIn struct {
-	Path    string `json:"path"               validate:"required" doc:"An absolute path on the machine that runs the server."`
-	AssetID string `json:"asset_id,omitempty"                     doc:"An id of your own; ignored for a duplicate."`
+	Path    string `json:"path,omitempty"     doc:"An absolute path on the machine that runs the server; or a hash."`
+	Hash    string `json:"hash,omitempty"     doc:"sha256: and 64 hex digits of a file the library holds, in place of a path: the project uses it with no copy."`
+	AssetID string `json:"asset_id,omitempty" doc:"An id of your own; ignored for a duplicate."`
 }
 
 type mediaImportIn struct {
-	ID     string         `json:"id"                validate:"required"`
-	Files  []importFileIn `json:"files"             validate:"required,min=1,max=50"`
-	WaitMS int            `json:"wait_ms,omitempty"                                  doc:"0 to 25000: hold the call until the assets are ready."`
-	DryRun any            `json:"dry_run,omitempty"                                  doc:"Checks the paths and limits only: the format is probed on the real import, so a file that is refused there (SVG, for one) still answers 202."`
+	ID         string             `json:"id"                    validate:"required"`
+	TimelineID string             `json:"timeline_id,omitempty"                                  doc:"The timeline of the project; required when the project has several."`
+	Files      []importFileIn     `json:"files"                 validate:"required,min=1,max=50"`
+	WaitMS     int                `json:"wait_ms,omitempty"                                      doc:"0 to 25000: hold the call until the assets are ready."`
+	DryRun     any                `json:"dry_run,omitempty"                                      doc:"Checks the paths and limits only: the format is probed on the real import, so a file that is refused there (SVG, for one) still answers 202."`
+	Origin     *asset.Origin      `json:"origin,omitempty"                                       doc:"Where the files came from: kind imported (default), generated (provider and model), fetched_by_agent (source and rights_note) or rendered_externally (source)."`
+	Info       *service.AssetInfo `json:"info,omitempty"                                         doc:"Tags, the reuse mark and a description for the files of the call."`
 }
 
 type mediaListIn struct {
-	ID string `json:"id" validate:"required"`
+	ID         string `json:"id"                    validate:"required"`
+	TimelineID string `json:"timeline_id,omitempty"                     doc:"The timeline of the project; required when the project has several."`
 	pageIn
 }
 
 type mediaInspectIn struct {
 	ID         string `json:"id"                    validate:"required"`
+	TimelineID string `json:"timeline_id,omitempty"                     doc:"The timeline of the project; required when the project has several."`
 	AssetID    string `json:"asset_id"              validate:"required"`
 	Sections   string `json:"sections,omitempty"                        doc:"Comma separated: probe (default), transcript, silences, loudness, beats."`
 	MinSilence string `json:"min_silence,omitempty"                     doc:"The shortest silence to list, as a time; default 0.4s."`
@@ -45,6 +52,12 @@ type mediaFileIn struct {
 	AssetID string `json:"asset_id" validate:"required"`
 }
 
+type audioPreviewIn struct {
+	ID   string `json:"id"             validate:"required"`
+	Key  string `json:"key"            validate:"required"`
+	From string `json:"from,omitempty"                     doc:"A frame of the file, counted from its first: the 2 seconds from it are rendered first, as a window."`
+}
+
 type thumbnailIn struct {
 	ID      string `json:"id"              validate:"required"`
 	AssetID string `json:"asset_id"        validate:"required"`
@@ -52,16 +65,18 @@ type thumbnailIn struct {
 }
 
 type jobStartIn struct {
-	ID     string         `json:"id"                validate:"required"`
-	Kind   string         `json:"kind"              validate:"required" doc:"export."`
-	Args   map[string]any `json:"args,omitempty"                        doc:"The arguments of the kind: start, end and format (mp4, gif, wav or aac; default mp4) for an export."`
-	WaitMS int            `json:"wait_ms,omitempty"                     doc:"0 to 25000: hold the call until the job is final."`
-	DryRun any            `json:"dry_run,omitempty"`
+	ID         string         `json:"id"                    validate:"required"`
+	TimelineID string         `json:"timeline_id,omitempty"                     doc:"The timeline of the project; required when the project has several."`
+	Kind       string         `json:"kind"                  validate:"required" doc:"export."`
+	Args       map[string]any `json:"args,omitempty"                            doc:"The arguments of the kind: start, end, format (mp4, gif, wav, aac or png; default mp4), preset and codec (h264, hevc or av1, for mp4) for an export."`
+	WaitMS     int            `json:"wait_ms,omitempty"                         doc:"0 to 25000: hold the call until the job is final."`
+	DryRun     any            `json:"dry_run,omitempty"`
 }
 
 type jobListIn struct {
-	ID    string `json:"id"              validate:"required"`
-	State string `json:"state,omitempty"                     doc:"queued, running, succeeded, failed, cancelled, active or all."`
+	ID         string `json:"id"                    validate:"required"`
+	TimelineID string `json:"timeline_id,omitempty"                     doc:"The timeline of the project; required when the project has several."`
+	State      string `json:"state,omitempty"                           doc:"queued, running, succeeded, failed, cancelled, active or all."`
 	pageIn
 }
 
@@ -73,7 +88,7 @@ type jobGetIn struct {
 func (h *apiHandler) mediaImport(c *web.Ctx, in mediaImportIn) (service.MediaImportResult, error) {
 	files := make([]service.ImportFile, len(in.Files))
 	for i, f := range in.Files {
-		files[i] = service.ImportFile{Path: f.Path, AssetID: f.AssetID}
+		files[i] = service.ImportFile{Path: f.Path, Hash: f.Hash, AssetID: f.AssetID}
 	}
 
 	dryRun, err := readDryRun(c, in.DryRun)
@@ -82,7 +97,8 @@ func (h *apiHandler) mediaImport(c *web.Ctx, in mediaImportIn) (service.MediaImp
 	}
 
 	res, err := h.Service.MediaImport(c.Context(), service.MediaImportRequest{
-		ProjectID: in.ID, Files: files, WaitMS: in.WaitMS, DryRun: dryRun,
+		ProjectID: in.ID, TimelineID: in.TimelineID, Files: files, WaitMS: in.WaitMS, DryRun: dryRun,
+		Origin: in.Origin, Info: in.Info,
 	})
 	if err != nil {
 		return service.MediaImportResult{}, err
@@ -99,7 +115,10 @@ func (h *apiHandler) mediaImport(c *web.Ctx, in mediaImportIn) (service.MediaImp
 }
 
 func (h *apiHandler) mediaList(c *web.Ctx, in mediaListIn) (service.MediaListResult, error) {
-	res, err := h.Service.MediaList(c.Context(), service.MediaListRequest{ProjectID: in.ID, Page: page(in.pageIn)})
+	res, err := h.Service.MediaList(
+		c.Context(),
+		service.MediaListRequest{ProjectID: in.ID, TimelineID: in.TimelineID, Page: page(in.pageIn)},
+	)
 
 	return deref(res), err
 }
@@ -114,7 +133,12 @@ func (h *apiHandler) mediaInspect(c *web.Ctx, in mediaInspectIn) (service.MediaI
 	}
 
 	res, err := h.Service.MediaInspect(c.Context(), service.MediaInspectRequest{
-		ProjectID: in.ID, AssetID: in.AssetID, Sections: sections, MinSilence: in.MinSilence, Page: page(in.pageIn),
+		ProjectID:  in.ID,
+		TimelineID: in.TimelineID,
+		AssetID:    in.AssetID,
+		Sections:   sections,
+		MinSilence: in.MinSilence,
+		Page:       page(in.pageIn),
 	})
 
 	return deref(res), err
@@ -140,7 +164,7 @@ func (h *apiHandler) jobStart(c *web.Ctx, in jobStartIn) (service.Job, error) {
 	}
 
 	res, err := h.Service.JobStart(c.Context(), service.JobStartRequest{
-		ProjectID: in.ID, Kind: in.Kind, Args: args, WaitMS: in.WaitMS, DryRun: isDry,
+		ProjectID: in.ID, TimelineID: in.TimelineID, Kind: in.Kind, Args: args, WaitMS: in.WaitMS, DryRun: isDry,
 	})
 	if err != nil {
 		return service.Job{}, err
@@ -177,7 +201,7 @@ func (h *apiHandler) jobCancel(c *web.Ctx, in jobCancelIn) (service.Job, error) 
 
 func (h *apiHandler) jobList(c *web.Ctx, in jobListIn) (service.JobListResult, error) {
 	res, err := h.Service.JobList(c.Context(), service.JobListRequest{
-		ProjectID: in.ID, State: in.State, Page: page(in.pageIn),
+		ProjectID: in.ID, TimelineID: in.TimelineID, State: in.State, Page: page(in.pageIn),
 	})
 
 	return deref(res), err
@@ -196,8 +220,24 @@ func (h *apiHandler) serveAsset(c *web.Ctx, kind, projectID, assetID, variant st
 	}
 
 	hd := c.Writer().Header()
+
+	// A file that is still being made (the processed sound of the preview, SDD-003 section 6.5): not a file, not cached.
+	if f.Pending {
+		hd.Set("Content-Type", "application/json")
+		hd.Set("Cache-Control", "no-store")
+		hd.Set("Retry-After", "1")
+		c.Writer().WriteHeader(http.StatusAccepted)
+		_, _ = c.Writer().WriteString(`{"state":"processing"}`)
+
+		return noIn{}, nil
+	}
+
 	hd.Set("Content-Type", f.ContentType)
 	hd.Set("ETag", f.ETag)
+
+	for name, value := range f.Header {
+		hd.Set(name, value)
+	}
 
 	maxAge := f.MaxAge
 	if maxAge <= 0 {
@@ -228,6 +268,7 @@ type templateListIn struct{ pageIn }
 
 type templateSaveIn struct {
 	ProjectID   string `json:"project_id"            validate:"required"`
+	TimelineID  string `json:"timeline_id,omitempty"                     doc:"The timeline of the project; required when the project has several."`
 	Name        string `json:"name"                  validate:"required"`
 	Description string `json:"description,omitempty"`
 	DryRun      any    `json:"dry_run,omitempty"`
@@ -257,7 +298,7 @@ func (h *apiHandler) templateSave(c *web.Ctx, in templateSaveIn) (service.Templa
 	}
 
 	res, err := h.Service.TemplateSave(c.Context(), service.TemplateSaveRequest{
-		ProjectID: in.ProjectID, Name: in.Name, Description: in.Description, DryRun: dryRun,
+		ProjectID: in.ProjectID, TimelineID: in.TimelineID, Name: in.Name, Description: in.Description, DryRun: dryRun,
 	})
 	if err != nil {
 		return service.TemplateResult{}, err
@@ -344,7 +385,7 @@ func (h *apiHandler) templateFile(c *web.Ctx, in templateRefIn) (noIn, error) {
 	hd.Set("Content-Type", f.ContentType)
 	hd.Set("ETag", f.ETag)
 	hd.Set("Cache-Control", "private, no-cache")
-	hd.Set("Content-Disposition", `attachment; filename="`+in.TemplateID+`.vukem-template.zip"`)
+	hd.Set("Content-Disposition", `attachment; filename="`+in.TemplateID+`.stuarty-template.zip"`)
 
 	if err := c.File(os.DirFS(string(h.Workspace)), f.Path); err != nil {
 		return noIn{}, err

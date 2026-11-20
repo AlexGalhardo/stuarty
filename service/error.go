@@ -6,22 +6,37 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
+	"github.com/AlexGalhardo/stuarty/core/command"
 )
 
 // Codes the service adds to those of the core (SDD-000 section 8).
 const (
-	CodeUnauthorized      = "E_UNAUTHORIZED"
-	CodeForbidden         = "E_FORBIDDEN"
-	CodePayloadTooLarge   = "E_PAYLOAD_TOO_LARGE"
-	CodeNothingToUndo     = "E_NOTHING_TO_UNDO"
-	CodeNothingToRedo     = "E_NOTHING_TO_REDO"
-	CodeQueueFull         = "E_QUEUE_FULL"
-	CodeRateLimited       = "E_RATE_LIMITED"
-	CodeWorkspaceLocked   = "E_WORKSPACE_LOCKED"
-	CodeLintBlocking      = "E_LINT_BLOCKING"
-	CodeClientClosed      = "E_CLIENT_CLOSED"
-	CodeMethodNotAllowed  = "E_METHOD_NOT_ALLOWED"
+	CodeUnauthorized     = "E_UNAUTHORIZED"
+	CodeForbidden        = "E_FORBIDDEN"
+	CodePayloadTooLarge  = "E_PAYLOAD_TOO_LARGE"
+	CodeNothingToUndo    = "E_NOTHING_TO_UNDO"
+	CodeNothingToRedo    = "E_NOTHING_TO_REDO"
+	CodeQueueFull        = "E_QUEUE_FULL"
+	CodeRateLimited      = "E_RATE_LIMITED"
+	CodeWorkspaceLocked  = "E_WORKSPACE_LOCKED"
+	CodeLintBlocking     = "E_LINT_BLOCKING"
+	CodeClientClosed     = "E_CLIENT_CLOSED"
+	CodeMethodNotAllowed = "E_METHOD_NOT_ALLOWED"
+
+	// CodeConnectionNotFound, CodeConnectionDestination and CodeVaultLocked are the codes of SDD-014 section 7.
+	CodeConnectionNotFound    = "E_CONNECTION_NOT_FOUND"
+	CodeConnectionDestination = "E_CONNECTION_DESTINATION"
+	CodeVaultLocked           = "E_VAULT_LOCKED"
+	// CodePrivilegedSession, CodeApprovalNotFound, CodeCostCeiling and CodeApprovalExpired are the codes of SDD-015 section 8.
+	CodePrivilegedSession = "E_PRIVILEGED_SESSION"
+	CodeApprovalNotFound  = "E_APPROVAL_NOT_FOUND"
+	CodeCostCeiling       = "E_COST_CEILING"
+	CodeApprovalExpired   = "E_APPROVAL_EXPIRED"
+	// CodePublish is the code of SDD-020 section 11: a network refused or failed a publication.
+	CodePublish = "E_PUBLISH"
+	// CodeProvider and CodePriceUnknown are the codes of SDD-016 section 8.
+	CodeProvider          = "E_PROVIDER"
+	CodePriceUnknown      = "E_PRICE_UNKNOWN"
 	codeInternalMessage   = "the operation failed because of an internal error."
 	codeInternalHint      = "Report this as a bug with the operation that was sent."
 	hintRestoreProject    = "restore the project first"
@@ -53,12 +68,14 @@ func (e *Error) HTTPStatus() int {
 		return http.StatusBadRequest
 	case CodeUnauthorized:
 		return http.StatusUnauthorized
-	case CodeForbidden, "E_PATH_NOT_ALLOWED":
+	case CodeForbidden, "E_PATH_NOT_ALLOWED", CodeConnectionDestination, CodePrivilegedSession:
 		return http.StatusForbidden
-	case command.CodeNotFound, "E_FILE_NOT_FOUND":
+	case command.CodeNotFound, "E_FILE_NOT_FOUND", CodeConnectionNotFound, CodeApprovalNotFound, CodeAgentNotFound,
+		CodeChatNotFound:
 		return http.StatusNotFound
 	case command.CodeRevisionConflict, command.CodeIdempotencyMismatch, command.CodeOverlap, command.CodeInvalidState,
-		command.CodeInUse, command.CodeNotEmpty, command.CodeIDExists, "E_ASSET_NOT_READY", CodeNothingToUndo, CodeNothingToRedo:
+		command.CodeInUse, command.CodeNotEmpty, command.CodeIDExists, "E_ASSET_NOT_READY", CodeNothingToUndo, CodeNothingToRedo,
+		CodeApprovalExpired:
 		return http.StatusConflict
 	case CodeMethodNotAllowed:
 		return http.StatusMethodNotAllowed
@@ -71,13 +88,20 @@ func (e *Error) HTTPStatus() int {
 		command.CodeOutOfSource,
 		command.CodeFontUnknown,
 		command.CodeSlot,
-		CodeLintBlocking:
+		CodeLintBlocking,
+		CodeCostCeiling,
+		CodePriceUnknown:
 		return http.StatusUnprocessableEntity
+	case CodeProvider:
+		return http.StatusBadGateway
 	case CodeQueueFull, CodeRateLimited:
 		return http.StatusTooManyRequests
 	case CodeClientClosed:
 		return StatusClientClosed
-	case CodeWorkspaceLocked, "E_TRANSCRIBE_UNAVAILABLE", "E_FFMPEG_MISSING", "E_NO_ENCODER":
+	case CodePublish:
+		return http.StatusBadGateway
+	case CodeWorkspaceLocked, "E_TRANSCRIBE_UNAVAILABLE", "E_FFMPEG_MISSING", "E_NO_ENCODER", CodeVaultLocked,
+		CodeAgentUnavailable:
 		return http.StatusServiceUnavailable
 	}
 
@@ -135,9 +159,9 @@ func (e *Error) withLimit(name string, value, ceiling any) *Error {
 // queueVariables names the variable that sets the ceiling of a job kind, for the workspace and for
 // one actor.
 var queueVariables = map[string][2]string{
-	JobExport:     {"VUKEM_VIDEO_MAX_EXPORTS", "VUKEM_VIDEO_MAX_EXPORTS_PER_KEY"},
-	JobIngest:     {"VUKEM_VIDEO_MAX_INGESTS", "VUKEM_VIDEO_MAX_INGESTS"},
-	JobTranscribe: {"VUKEM_VIDEO_MAX_TRANSCRIBES", "VUKEM_VIDEO_MAX_TRANSCRIBES_PER_KEY"},
+	JobExport:     {"STUARTY_MAX_EXPORTS", "STUARTY_MAX_EXPORTS_PER_KEY"},
+	JobIngest:     {"STUARTY_MAX_INGESTS", "STUARTY_MAX_INGESTS"},
+	JobTranscribe: {"STUARTY_MAX_TRANSCRIBES", "STUARTY_MAX_TRANSCRIBES_PER_KEY"},
 }
 
 // queueFullError is E_QUEUE_FULL with the jobs that hold the slots and the limit that was reached.

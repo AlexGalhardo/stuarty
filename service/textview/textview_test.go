@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/core/timeval"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeval"
 )
 
 const teaser = `{
@@ -465,6 +465,20 @@ func TestItemFlagsDetailsAndAssetKinds(t *testing.T) {
 
 	if got := itemDetail(&shp); got != "rect 200x100" {
 		t.Errorf("shape detail = %s", got)
+	}
+
+	cmp := timeline.NewItem("itm_k", timeline.ItemComposition, "trk_a1b2c3d4e5", 0, 30)
+	cmp.Timeline = "prj_a1b2c3d4e5"
+
+	if got := itemDetail(&cmp); got != "prj_a1b2c3d4e5" {
+		t.Errorf("composition detail = %s", got)
+	}
+
+	// A composition at a constant speed shows it as a clip does (epic 53).
+	cmp.Speed = timeline.Rational{Num: 1, Den: 2}
+
+	if got := itemDetail(&cmp); got != "prj_a1b2c3d4e5 x0.5" {
+		t.Errorf("composition detail at a speed = %s", got)
 	}
 
 	doc.Assets["ast_aaaaaaaaaa"] = timeline.Asset{ID: "ast_aaaaaaaaaa", Kind: timeline.AssetAudio, SampleCount: 96000}

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+	"github.com/AlexGalhardo/stuarty/engine/ingest"
 )
 
 func TestMetadataSectionSortedWithinBudget(t *testing.T) {

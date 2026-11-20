@@ -9,12 +9,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/audio"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
-	"github.com/AlexGalhardo/vukem-video/engine/ingest"
+	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/audio"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/stuarty/engine/ingest"
 )
 
 // Loudness is what the mix measured and the gain that was applied to it (SDD-004 section 7).
@@ -53,7 +53,7 @@ func (s *state) mixAudio(ctx context.Context) (string, Loudness, error) {
 	if err != nil {
 		return "", loud, err
 	}
-	srcs := plan.Audio(doc, s.offset, s.offset+s.frames)
+	srcs := plan.AudioWith(doc, s.offset, s.offset+s.frames, s.opts)
 	for i := range srcs {
 		srcs[i].StartSample -= from
 	}
@@ -196,7 +196,7 @@ func (o *audioOpener) Open(ctx context.Context, src plan.AudioSource) (io.ReadCl
 	}
 
 	s := o.s
-	a, ok := s.job.Doc.Assets[src.AssetID]
+	a, ok := s.asset(src.AssetID)
 	if !ok {
 		return nil, fmt.Errorf("the asset %s is not in the document", src.AssetID)
 	}

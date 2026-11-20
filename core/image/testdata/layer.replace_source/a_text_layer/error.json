@@ -1,0 +1,8 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "hint": "Use an image layer.",
+  "message": "Layer lyr_cccccccccc is a text; layer.replace_source changes image layers.",
+  "op_index": 0,
+  "path": "args.layer_id",
+  "retryable": false
+}

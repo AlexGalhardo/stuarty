@@ -1,7 +1,7 @@
 package command
 
 import (
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // The values a chroma key starts with when the clip has none and the command does not give them.
@@ -23,7 +23,6 @@ func init() {
 		Example: `{"item_id": "itm_m1n2p3q4r5", "color": "#00FF00", "similarity": 0.35, "smoothness": 0.1, "spill": 0.2}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
 		Scope:   ScopeEdit,
-		Phase:   Beta,
 	}, applyClipSetChromaKey))
 }
 

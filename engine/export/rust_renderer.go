@@ -8,12 +8,12 @@ import (
 	"math"
 	"sync"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
-	"github.com/AlexGalhardo/vukem-video/engine/bitmap"
-	"github.com/AlexGalhardo/vukem-video/engine/compositor"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/gpuhost"
-	"github.com/AlexGalhardo/vukem-video/engine/renderhost"
+	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/engine/bitmap"
+	"github.com/AlexGalhardo/stuarty/engine/compositor"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/gpuhost"
+	"github.com/AlexGalhardo/stuarty/engine/renderhost"
 )
 
 // PixelRenderer names what places the pixels of an exported frame (SDD-013 section 4.6, ADR-0029 item 8).
@@ -24,13 +24,13 @@ type PixelRenderer string
 const (
 	PixelRendererGo   PixelRenderer = "go"
 	PixelRendererRust PixelRenderer = "rust"
-	// PixelRendererGPU draws on the GPU in the child process vukem-render when there is an adapter and a
+	// PixelRendererGPU draws on the GPU in the child process stuarty-render when there is an adapter and a
 	// GPU host, and as PixelRendererRust otherwise. The GPU frames are held to the CPU path by SSIM, not byte
 	// for byte (SDD-013 section 3.8).
 	PixelRendererGPU PixelRenderer = "gpu"
 )
 
-// ParsePixelRenderer reads VUKEM_VIDEO_EXPORT_RENDERER: empty is the default, the Go compositor.
+// ParsePixelRenderer reads STUARTY_EXPORT_RENDERER: empty is the default, the Go compositor.
 func ParsePixelRenderer(s string) (PixelRenderer, error) {
 	switch s {
 	case "", string(PixelRendererGo):
@@ -62,6 +62,9 @@ type rustRenderer struct {
 	// was attempted, so a machine without an adapter is asked once.
 	gpu      *gpuhost.Host
 	gpuTried bool
+
+	// depth is how many group surfaces are being drawn.
+	depth int
 }
 
 func newRustRenderer(
@@ -120,35 +123,18 @@ func (r *rustRenderer) compose(dst *image.RGBA, fp plan.FramePlan, scale float64
 			continue
 		}
 
-		switch l.Kind {
-		case plan.Media:
-			img, err := r.fs.media(&l)
-			if err != nil {
-				return fmt.Errorf("layer %s: %w", l.ItemID, err)
-			}
+		tex, bm, err := r.layerPixels(&l, scale)
+		if err != nil {
+			return fmt.Errorf("layer %s: %w", l.ItemID, err)
+		}
 
-			if img.W <= 0 || img.H <= 0 || len(img.Pix) < img.W*img.H*4 {
-				continue
-			}
-
-			textures = append(textures, textureUpload{l.ItemID, img, img.Opaque})
-		case plan.Bitmap:
-			if l.Bitmap == nil {
-				return fmt.Errorf("layer %s: %w: no bitmap source", l.ItemID, compositor.ErrSource)
-			}
-
-			bm, err := r.bitmaps(*l.Bitmap)
-			if err != nil {
-				return fmt.Errorf("layer %s: %w", l.ItemID, err)
-			}
-
-			if bm.Width <= 0 || bm.Height <= 0 || len(bm.Pix) < bm.Width*bm.Height*4 {
-				continue
-			}
-
-			bitmaps = append(bitmaps, bitmapUpload{l.Bitmap.Key(), bm})
+		switch {
+		case tex != nil:
+			textures = append(textures, *tex)
+		case bm != nil:
+			bitmaps = append(bitmaps, *bm)
 		default:
-			return fmt.Errorf("layer %s: %w: kind %q", l.ItemID, compositor.ErrSource, l.Kind)
+			continue
 		}
 
 		kept = append(kept, l)
@@ -191,6 +177,97 @@ func (r *rustRenderer) compose(dst *image.RGBA, fp plan.FramePlan, scale float64
 	wg.Wait()
 
 	return rendererError(errors.Join(errs...))
+}
+
+// layerPixels fetches the pixels of a layer for the module: the texture of a media layer or of a group, or the
+// bitmap of a text; both nil when the layer draws nothing.
+func (r *rustRenderer) layerPixels(l *plan.Layer, scale float64) (*textureUpload, *bitmapUpload, error) {
+	switch l.Kind {
+	case plan.Media:
+		img, err := r.fs.media(l)
+		if err != nil || img.W <= 0 || img.H <= 0 || len(img.Pix) < img.W*img.H*4 {
+			return nil, nil, err
+		}
+
+		return &textureUpload{l.ItemID, img, img.Opaque}, nil, nil
+	case plan.Group:
+		up, drawn, err := r.groupTexture(l, scale)
+		if err != nil || !drawn {
+			return nil, nil, err
+		}
+
+		return &up, nil, nil
+	case plan.Bitmap:
+		if l.Bitmap == nil {
+			return nil, nil, fmt.Errorf("%w: no bitmap source", compositor.ErrSource)
+		}
+
+		bm, err := r.bitmaps(*l.Bitmap)
+		if err != nil || bm.Width <= 0 || bm.Height <= 0 || len(bm.Pix) < bm.Width*bm.Height*4 {
+			return nil, nil, err
+		}
+
+		return nil, &bitmapUpload{l.Bitmap.Key(), bm}, nil
+	}
+
+	return nil, nil, fmt.Errorf("%w: kind %q", compositor.ErrSource, l.Kind)
+}
+
+// groupTexture is the texture of a group layer, and turns the layer into the media layer of it: the module never
+// draws a group, the surface of its nested frame is drawn here and the module draws that as the pixels of a media
+// layer (SDD-013 section 3.12 step 4). drawn is false when the surface has no pixels.
+func (r *rustRenderer) groupTexture(l *plan.Layer, scale float64) (up textureUpload, drawn bool, err error) {
+	img, err := r.groupSurface(l, scale)
+	if err != nil || img.W <= 0 || img.H <= 0 {
+		return textureUpload{}, false, err
+	}
+
+	l.Kind, l.AssetKind, l.Group = plan.Media, "image", nil
+
+	return textureUpload{l.ItemID, img, false}, true, nil
+}
+
+// groupSurface draws the nested frame of a group layer on a surface of its own with the same path that draws the
+// frame (the module on the CPU, or the child of the GPU path), clear where nothing is drawn (SDD-013 section 3.12
+// steps 1 to 3).
+func (r *rustRenderer) groupSurface(l *plan.Layer, scale float64) (compositor.Image, error) {
+	g := l.Group
+	if g == nil {
+		return compositor.Image{}, fmt.Errorf("%w: a group layer has no frame", compositor.ErrSource)
+	}
+
+	k, w, h := compositor.GroupGeometry(g, l.W, scale)
+	if w < 1 {
+		return compositor.Image{}, nil
+	}
+
+	if r.depth >= compositor.MaxGroupDepth {
+		return compositor.Image{}, fmt.Errorf(
+			"%w: groups nested more than %d deep",
+			compositor.ErrSource,
+			compositor.MaxGroupDepth,
+		)
+	}
+
+	r.depth++
+	defer func() { r.depth-- }()
+
+	defer r.s.scoped(k)()
+
+	surface := image.NewRGBA(image.Rect(0, 0, w, h))
+	nested := plan.FramePlan{
+		Width:       g.Width,
+		Height:      g.Height,
+		Background:  "#000000",
+		Transparent: true,
+		Layers:      g.Layers,
+	}
+
+	if err := r.compose(surface, nested, k); err != nil {
+		return compositor.Image{}, err
+	}
+
+	return compositor.Image{Pix: surface.Pix, W: w, H: h}, nil
 }
 
 // gpuHost is the child process of the GPU path, or nil when the export draws on the CPU path: the job did not ask

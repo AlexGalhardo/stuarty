@@ -18,9 +18,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/transcribe"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/transcribe"
 )
 
 // Downloader does one HTTP request; in the product it is the client of
@@ -130,7 +130,7 @@ func humanForTools(c Caller) bool {
 func installDenied() *Error {
 	return newError(CodeForbidden, "only a person can install the transcription helper.").
 		withHint("the local token and the agent surfaces cannot start a download; ask the person to run " +
-			"vukem-video tools:install whisper in a terminal of this machine (it works while the server " +
+			"stuarty tools:install whisper in a terminal of this machine (it works while the server " +
 			"runs) or to use the install button of the editor")
 }
 

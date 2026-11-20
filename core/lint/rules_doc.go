@@ -2,10 +2,11 @@ package lint
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // maxSeconds is the YouTube Shorts limit that L_DURATION_LIMIT warns about.
@@ -80,12 +81,33 @@ func (c *check) durationLimit() {
 }
 
 // covers says whether an item fills the whole frame, opaque, unrotated and in its
-// default position, with no mask and nothing that animates or fades it: what it takes to hide the
-// items below.
+// default position, with no mask, no chroma key, no blur, no shake or motion blur, in the normal blend and nothing
+// that animates or fades it: what it takes to hide the items below.
 func (c *check) covers(it *timeline.Item) bool {
 	if it.Opacity != 1 || it.Mask != nil || it.X != nil || it.Y != nil || it.Scale < 1 || it.Rotation != 0 ||
 		it.TransitionIn != nil || it.TransitionOut != nil {
 		return false
+	}
+
+	// Every blend other than normal mixes the item with what lies beneath it (SDD-004 section 3.8), so the
+	// item below still shows (VV-218).
+	if it.Blend != "" && it.Blend != "normal" {
+		return false
+	}
+
+	// A chroma key turns the pixels near its colour transparent (SDD-004 section 3.7) and a blur softens the
+	// edge of the layer into transparent pixels (section 3.6), so the item below shows through (VV-296).
+	if it.ChromaKey != nil || it.Blur > 0 {
+		return false
+	}
+
+	// A shake moves the layer every frame (SDD-004 section 3.13), which uncovers the edge of the frame, and a motion
+	// blur averages the alpha with the transparent padding along its angle, as the blur does. The other effects keep
+	// the alpha of an opaque layer (VV-296).
+	for _, e := range it.Effects {
+		if (e.Kind == timeline.EffectShake || e.Kind == timeline.EffectMotionBlur) && e.Amount != nil && *e.Amount > 0 {
+			return false
+		}
 	}
 
 	for _, p := range []string{"opacity", "x", "y", "scale", "rotation"} {
@@ -113,7 +135,7 @@ func (c *check) covers(it *timeline.Item) bool {
 
 		return it.Shape == "rect" && opaque && it.Width*it.Scale >= float64(st.Width) &&
 			it.Height*it.Scale >= float64(st.Height)
-	case timeline.ItemAudio, timeline.ItemText, timeline.ItemCaption:
+	case timeline.ItemAudio, timeline.ItemText, timeline.ItemCaption, timeline.ItemComposition:
 	}
 
 	return false
@@ -166,6 +188,32 @@ func (c *check) audioOverlap() {
 				fmt.Sprintf("%s and %s both play sound during frames %d-%d.", a.ID, b.ID, start, end-1),
 				"mute one with item.set_audio audio_muted or move one")
 		}
+	}
+}
+
+// processorChains reports a limiter that another processor follows, and a second noise reduction, in the chain of
+// an item or a track (SDD-001 section 3.5).
+func (c *check) processorChains() {
+	report := func(id string, chain []timeline.Processor, rng *Range) {
+		notLast, repeated := timeline.ChainWarnings(chain)
+		for _, i := range notLast {
+			c.add(CodeAudioLimiterNotLast, id, rng,
+				fmt.Sprintf("The limiter at place %d of the chain of %s is not the last processor.", i, id),
+				"move it last with audio.processor_move")
+		}
+
+		for _, i := range repeated {
+			c.add(CodeAudioNoiseReductionRepeats, id, rng,
+				fmt.Sprintf("The chain of %s has a second noise reduction at place %d.", id, i), "remove one")
+		}
+	}
+
+	for _, id := range slices.Sorted(maps.Keys(c.doc.Tracks)) {
+		report(id, c.doc.Tracks[id].Processors, nil)
+	}
+
+	for _, it := range c.sorted() {
+		report(it.ID, it.Processors, itemRange(it))
 	}
 }
 

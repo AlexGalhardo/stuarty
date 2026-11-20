@@ -51,6 +51,7 @@ func (s *svc) writeBundle(ctx context.Context, c Caller, res *DoctorResult, proj
 	files["doctor.txt"] = []byte(report.Text + "\n")
 	files["versions.txt"] = []byte(s.versionsText())
 	files["environment.txt"] = []byte(s.environmentNames())
+	files["connections.txt"] = []byte(s.connectionsText(ctx))
 
 	for name, data := range s.recentLogs() {
 		files["logs/"+name] = data
@@ -72,11 +73,36 @@ func (s *svc) writeBundle(ctx context.Context, c Caller, res *DoctorResult, proj
 		return "", internalError()
 	}
 
+	// A credential of a connection and the master key are not in the environment: the vault knows them.
+	for name, data := range files {
+		files[name] = s.conns.Redact(data)
+	}
+
 	if err := writeZip(abs, files, secrets); err != nil {
 		return "", internalError()
 	}
 
 	return rel, nil
+}
+
+// connectionsText lists the connections by id, kind, label and hosts: never a credential, and no
+// endpoint, which can carry a path a person would rather not send.
+func (s *svc) connectionsText(ctx context.Context) string {
+	list, err := s.conns.List(ctx)
+	if err != nil {
+		return "connections: not readable\n"
+	}
+
+	var b strings.Builder
+
+	fmt.Fprintf(&b, "%d connection(s); vault: %s\n", len(list), s.conns.VaultStatus().Provider)
+
+	for i := range list {
+		c := &list[i]
+		fmt.Fprintf(&b, "%s %s %q hosts=%s\n", c.ID, c.Kind, c.Label, strings.Join(c.Hosts, ","))
+	}
+
+	return b.String()
 }
 
 func (s *svc) localToken() string {
@@ -91,7 +117,7 @@ func (s *svc) localToken() string {
 func (s *svc) versionsText() string {
 	var b strings.Builder
 
-	fmt.Fprintf(&b, "vukem-video %s\n", s.version)
+	fmt.Fprintf(&b, "stuarty %s\n", s.version)
 
 	if r := s.media.Runner; r != nil && r.In != nil {
 		fmt.Fprintf(&b, "ffmpeg %s\nffprobe %s\nffmpeg configuration: %s\n",
@@ -103,14 +129,14 @@ func (s *svc) versionsText() string {
 	return b.String()
 }
 
-// environmentNames lists the names of the VUKEM_VIDEO_ variables that are set,
+// environmentNames lists the names of the STUARTY_ variables that are set,
 // never a value: a bundle is meant to be sent to someone else.
 func (s *svc) environmentNames() string {
 	var names []string
 
 	for _, kv := range s.environ() {
 		name, value, ok := strings.Cut(kv, "=")
-		if ok && value != "" && strings.HasPrefix(name, "VUKEM_VIDEO_") {
+		if ok && value != "" && strings.HasPrefix(name, "STUARTY_") {
 			names = append(names, name)
 		}
 	}

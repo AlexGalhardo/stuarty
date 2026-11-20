@@ -6,9 +6,9 @@ import (
 	"encoding/binary"
 	"io"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/audio"
+	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/audio"
 )
 
 // This file is the audio of an item with a speed curve or with reverse (SDD-004 sections 3.11, 3.12 and 7).
@@ -128,12 +128,22 @@ func (o *audioOpener) curved(ctx context.Context, src plan.AudioSource, fps time
 		offA, offB int64
 	)
 
+	// A curve inside a composition at a speed n/d: the frames of the item pass n/d times faster than the
+	// output, so the boundary of frame r falls at output sample floor(boundary x d / n) (SDD-004 section 7).
+	scale := func(x int64) int64 { return x }
+
+	if ts := ramp.TimeScale; ts != nil && ts.Num > 0 && ts.Den > 0 {
+		scale = func(x int64) int64 { return x * int64(ts.Den) / int64(ts.Num) }
+	}
+
+	boundary := func(r int) int64 { return scale(samplesAt(fps, r) - samplesAt(fps, first)) }
+
 	for j := range src.Samples {
 		// The frame k of the window whose output samples hold j; the offsets of its two boundaries are
 		// computed once per frame (they use arbitrary precision).
-		for k < 0 || samplesAt(fps, first+k+1)-samplesAt(fps, first) <= j && first+k+1 < last {
+		for k < 0 || boundary(first+k+1) <= j && first+k+1 < last {
 			k++
-			bk, bn = samplesAt(fps, first+k)-samplesAt(fps, first), samplesAt(fps, first+k+1)-samplesAt(fps, first)
+			bk, bn = boundary(first+k), boundary(first+k+1)
 			offA = samplesAt(fps, timeline.CurveOffset(ramp.Points, ramp.ItemFrames, first+k)) - base
 			offB = samplesAt(fps, timeline.CurveOffset(ramp.Points, ramp.ItemFrames, first+k+1)) - base
 		}

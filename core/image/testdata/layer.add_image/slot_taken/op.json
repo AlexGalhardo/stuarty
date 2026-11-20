@@ -1,0 +1,7 @@
+{
+  "args": {
+    "asset": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "slot": "title"
+  },
+  "op": "layer.add_image"
+}

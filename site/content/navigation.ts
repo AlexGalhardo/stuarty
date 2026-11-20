@@ -71,12 +71,23 @@ export const navigation: NavCategory[] = [
 		dir: "getting-started",
 		prefix: "",
 		title: "Getting started",
-		pages: ["introduction", "installation", "quick-start", "workspace", "projects"],
+		pages: [
+			"introduction",
+			"what-leaves-your-machine",
+			"installation",
+			"install-windows",
+			"install-docker",
+			"install-server",
+			"quick-start",
+			"workspace",
+			"projects",
+			"migration",
+		],
 	},
 	{
 		dir: "guide",
 		title: "Tutorials",
-		pages: ["tutorial-vertical-short", "tutorial-agent-edit"],
+		pages: ["first-short-video", "tutorial-vertical-short", "tutorial-agent-edit", "recipe-product-commercial", "recipe-long-talking-video"],
 	},
 	{
 		dir: "concepts",
@@ -86,7 +97,7 @@ export const navigation: NavCategory[] = [
 	{
 		dir: "guide",
 		title: "Core editing",
-		pages: ["media-library", "timeline", "preview", "editing-tools", "clip-properties", "undo-and-history"],
+		pages: ["media-library", "asset-library", "timeline", "preview", "editing-tools", "clip-properties", "undo-and-history"],
 	},
 	{
 		dir: "guide",
@@ -116,13 +127,54 @@ export const navigation: NavCategory[] = [
 	},
 	{
 		dir: "guide",
+		title: "Writing",
+		pages: ["writing"],
+	},
+	{
+		dir: "guide",
+		title: "Images",
+		pages: ["image-editor"],
+	},
+	{
+		dir: "guide",
+		title: "AI providers",
+		pages: ["ai-providers", "agent-chat", "memory-skills-prompts"],
+	},
+	{
+		dir: "guide",
+		title: "Publishing",
+		pages: ["approvals", "publishing-calendar", "blog-posts"],
+	},
+	{
+		dir: "publish",
+		title: "Networks",
+		label: "Publishing",
+		pages: ["youtube", "instagram", "facebook", "x", "tiktok"],
+	},
+	{
+		dir: "guide",
 		title: "The editor",
-		pages: ["keyboard-shortcuts", "keyboard-shortcuts-list", "coming-from-capcut", "settings", "accessibility", "desktop"],
+		pages: ["dashboard", "keyboard-shortcuts", "keyboard-shortcuts-list", "coming-from-capcut", "settings", "accessibility", "desktop"],
 	},
 	{
 		dir: "agents",
 		title: "Agents",
-		pages: ["overview", "connect", "mcp", "cli", "verify", "batches", "skill", "safety", "recipes", "drive-the-editor"],
+		pages: ["overview", "connect", "mcp", "cli", "verify", "batches", "skill", "safety", "approvals", "recipes", "drive-the-editor"],
+	},
+	{
+		dir: "agents",
+		title: "Agents by domain",
+		pages: [
+			"domain-project",
+			"domain-video",
+			"domain-image",
+			"domain-writing",
+			"domain-asset",
+			"domain-publish",
+			"domain-provider",
+			"domain-memory",
+			"domain-workspace",
+		],
 	},
 	{
 		dir: "prompts",
@@ -135,7 +187,9 @@ export const navigation: NavCategory[] = [
 		pages: [
 			"binary",
 			"docker",
+			"vps",
 			"network-mode",
+			"google-sign-in",
 			"api-keys",
 			"caddy",
 			"backups-and-upgrades",
@@ -143,13 +197,14 @@ export const navigation: NavCategory[] = [
 			"verify-a-release",
 			"observability",
 			"privacy",
+			"security",
 			"desktop-updates",
 		],
 	},
 	{
 		dir: "reference",
 		title: "Reference",
-		pages: ["cli", "timeline-schema", "error-codes", "configuration", "events", "glossary"],
+		pages: ["cli", "timeline-schema", "error-codes", "configuration", "network-limits", "events", "glossary"],
 	},
 	{
 		dir: "glossary",
@@ -172,7 +227,7 @@ export const navigation: NavCategory[] = [
 	{
 		dir: "troubleshooting",
 		title: "Troubleshooting",
-		pages: ["common-problems", "ffmpeg-missing", "no-encoder", "workspace-locked", "import-fails", "slow-export", "diagnostic-bundle"],
+		pages: ["common-problems", "ffmpeg-missing", "no-encoder", "workspace-locked", "import-fails", "slow-export", "publish-fails", "diagnostic-bundle"],
 	},
 	{
 		dir: "contributing",

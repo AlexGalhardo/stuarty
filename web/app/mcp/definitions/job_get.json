@@ -1,6 +1,6 @@
 {
  "name": "job_get",
- "description": "Get a job's state, progress and result (job_id). wait_ms waits for a final state (succeeded, failed, cancelled) for up to that many milliseconds. A succeeded export is verified; its result has the file path. Give project_id instead of job_id to list its queued, running and recent jobs.",
+ "description": "A job's state, progress, result (job_id). wait_ms: wait up to that many ms for succeeded, failed or cancelled. A succeeded export is verified; its result has the file path. project_id instead of job_id lists its queued, running and recent jobs. approval_id reads a request (job.approval_id), approvals (state) lists them; read only, a person decides.",
  "inputSchema": {
   "type": "object",
   "properties": {
@@ -11,6 +11,19 @@
    "project_id": {
     "type": "string",
     "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
+   },
+   "approval_id": {
+    "type": "string",
+    "pattern": "^apr_[0-9a-hjkmnp-tv-z]{10}$"
+   },
+   "approvals": {
+    "enum": [
+     "pending",
+     "approved",
+     "rejected",
+     "expired",
+     "all"
+    ]
    },
    "state": {
     "enum": [
@@ -42,13 +55,7 @@
     "type": "string"
    },
    "state": {
-    "enum": [
-     "queued",
-     "running",
-     "succeeded",
-     "failed",
-     "cancelled"
-    ]
+    "type": "string"
    },
    "progress": {
     "type": "number"

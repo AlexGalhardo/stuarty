@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // musicOnClipAsset adds an audio track and an audio item of the clip's asset, so the same
@@ -42,7 +42,7 @@ func (m *mediaEnv) musicOnClipAsset(project, clip string) (music string) {
 // SDD-002 C.51: the speech comes from the speech artifact of the asset of each speech item, in
 // asset frames, and the stored operation carries it.
 func TestResolveSpeechFromTheArtifact(t *testing.T) {
-	m := newMediaEnv(t, mediaCfg{beta: true})
+	m := newMediaEnv(t, mediaCfg{})
 	project, clip, _, _ := m.speechProject()
 	music := m.musicOnClipAsset(project, clip)
 
@@ -61,9 +61,32 @@ func TestResolveSpeechFromTheArtifact(t *testing.T) {
 	}
 }
 
+// VV-199: audio.duck in the batch that adds the speech item finds the speech of that item's asset;
+// before, the batch was refused with "args.resolved is missing" because only item_id and
+// clip_item_id were looked up in the batch.
+func TestResolveSpeechOfAnItemCreatedInTheSameBatch(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	project, clip, _, _ := m.speechProject()
+	music := m.musicOnClipAsset(project, clip)
+
+	doc, _ := timeline.Decode(m.document(project))
+
+	res := m.mustEdit(ui, project, m.head(project).Revision,
+		op("audio.add", fmt.Sprintf(
+			`{"id":"itm_3k4m5n6p7q","track_id":%q,"asset_id":%q,"start":"4s","duration":"2s"}`,
+			doc.Items[music].Track, doc.Items[clip].Asset)),
+		op("audio.duck", fmt.Sprintf(`{"item_id":%q,"speech_item_ids":["itm_3k4m5n6p7q"]}`, music)),
+	)
+
+	args := string(storedOps(t, m, project, res.Revision)[1].Args)
+	if !strings.Contains(args, `"resolved":{"speech":[{"item_id":"itm_3k4m5n6p7q","ranges":[`) {
+		t.Errorf("stored operation = %s, want the speech of the item added in the batch", args)
+	}
+}
+
 // SDD-002 C.52: the beats of the grid become increasing asset frames.
 func TestResolveBeatsFromTheArtifact(t *testing.T) {
-	m := newMediaEnv(t, mediaCfg{beta: true})
+	m := newMediaEnv(t, mediaCfg{})
 	project, clip, _, _ := m.speechProject()
 	music := m.musicOnClipAsset(project, clip)
 
@@ -77,7 +100,7 @@ func TestResolveBeatsFromTheArtifact(t *testing.T) {
 
 // VV-083: clip.remove_silences on an audio item gets its silences from the artifact of the asset, like a clip.
 func TestResolveSilencesOfAnAudioItem(t *testing.T) {
-	m := newMediaEnv(t, mediaCfg{beta: true})
+	m := newMediaEnv(t, mediaCfg{})
 	project, clip, _, _ := m.speechProject()
 	music := m.musicOnClipAsset(project, clip)
 
@@ -94,7 +117,7 @@ func TestResolveSilencesOfAnAudioItem(t *testing.T) {
 // VV-153: a manual tempo builds the grid in the core, so the service resolves no beats and an
 // asset that was never analysed does not stop the edit.
 func TestMarkBeatsWithAManualTempoResolvesNothing(t *testing.T) {
-	m := newMediaEnv(t, mediaCfg{beta: true})
+	m := newMediaEnv(t, mediaCfg{})
 	project, clip, _, _ := m.speechProject()
 	music := m.musicOnClipAsset(project, clip)
 
@@ -110,7 +133,7 @@ func TestMarkBeatsWithAManualTempoResolvesNothing(t *testing.T) {
 
 // VV-206: `resolved` is internal to the service; a caller that sends it is refused, never obeyed.
 func TestCallerCannotSupplyResolved(t *testing.T) {
-	m := newMediaEnv(t, mediaCfg{beta: true})
+	m := newMediaEnv(t, mediaCfg{})
 	project, clip, _, _ := m.speechProject()
 	music := m.musicOnClipAsset(project, clip)
 

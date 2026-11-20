@@ -14,7 +14,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/service"
 )
 
 // patchDeclaredSize rewrites the uncompressed size that the central directory of a zip declares for
@@ -139,10 +139,10 @@ func TestSecurity_T21_BundleWithACraftedFontStoresNothing(t *testing.T) {
 
 	for name, font := range crafted {
 		t.Run(name, func(t *testing.T) {
-			src := newMediaEnv(t, mediaCfg{beta: true})
+			src := newMediaEnv(t, mediaCfg{})
 			path, hash := fontBundle(t, src, font)
 
-			dst := newMediaEnv(t, mediaCfg{beta: true})
+			dst := newMediaEnv(t, mediaCfg{})
 
 			res, err := dst.importBundle(path, false)
 			if err == nil {
@@ -171,7 +171,7 @@ func TestSecurity_T21_BundleWithACraftedFontStoresNothing(t *testing.T) {
 // SDD-007 T-21, SDD-005 section 16.3 step 4: in network mode a bundle cannot link a font it does not
 // carry, and the refusal is the same whether the font store holds that hash or not.
 func TestSecurity_T21_BundleCannotNameAnotherUsersFont(t *testing.T) {
-	src := newMediaEnv(t, mediaCfg{beta: true})
+	src := newMediaEnv(t, mediaCfg{})
 	path, hash := fontBundle(t, src, bundledFontFile(t, "Anton-Regular.ttf"))
 
 	var kept []testEntry
@@ -189,7 +189,7 @@ func TestSecurity_T21_BundleCannotNameAnotherUsersFont(t *testing.T) {
 	bob := service.Caller{Actor: "user:bob", Scopes: service.RoleScopes(service.RoleMember), OwnerUserID: "bob"}
 
 	known, errKnown := src.svc.(bundleImporter).ProjectBundleImport(service.WithCaller(context.Background(), bob), req)
-	fresh := newMediaEnv(t, mediaCfg{beta: true})
+	fresh := newMediaEnv(t, mediaCfg{})
 	_, errUnknown := fresh.svc.(bundleImporter).ProjectBundleImport(service.WithCaller(context.Background(), bob), req)
 
 	if known != nil || !isCode(errKnown, "E_VALIDATION") || !isCode(errUnknown, "E_VALIDATION") {
@@ -235,7 +235,7 @@ func fuzzBundleZip(entries map[string]string) []byte {
 // panics, and a refusal leaves no project and no file in the stores (SDD-007 T-20, T-21).
 func FuzzBundleArchive(f *testing.F) {
 	hexName := strings.Repeat("ab", 32)
-	manifest := `{"format":"vukem-video-bundle","bundle_version":1,"project":{"id":"prj_0000000000"}}`
+	manifest := `{"format":"stuarty-bundle","bundle_version":1,"project":{"id":"prj_0000000000"}}`
 
 	f.Add(fuzzBundleZip(map[string]string{"manifest.json": manifest, "document.json": "{}"}))
 	f.Add(fuzzBundleZip(map[string]string{
@@ -248,7 +248,7 @@ func FuzzBundleArchive(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, data []byte) {
 		tb := plainTempTB{t}
-		dst := newMediaEnv(tb, mediaCfg{beta: true})
+		dst := newMediaEnv(tb, mediaCfg{})
 
 		path := filepath.Join(tb.TempDir(), "fuzz.vvbundle")
 		if err := os.WriteFile(path, data, 0o600); err != nil {

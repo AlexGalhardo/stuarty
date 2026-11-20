@@ -9,7 +9,10 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/80",
+        // The hover darkens the primary instead of fading it: at 80% over the
+        // light surface white text fell to 3.7:1 (WCAG 1.4.3 needs 4.5:1).
+        default:
+          "bg-primary text-primary-foreground hover:bg-[color-mix(in_oklab,var(--primary),black_10%)]",
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 aria-pressed:border-foreground/50 aria-pressed:bg-accent aria-pressed:text-accent-foreground",
         secondary:
@@ -53,6 +56,14 @@ function Button({
     asChild?: boolean
   }) {
   const render = childRender(asChild, children)
+  // Base UI gives a non-native button role="button"; a child with an href (an
+  // anchor or an Inertia Link) is a link, and a link that announces itself as
+  // a button breaks the name and the role that people and tests look for. Any
+  // other child keeps the button role: a role={undefined} prop would erase it.
+  const linkRole =
+    render !== undefined && render.props.href !== undefined
+      ? { role: "link" }
+      : {}
 
   return (
     <ButtonPrimitive
@@ -61,6 +72,7 @@ function Button({
       data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
       nativeButton={render ? false : true}
+      {...linkRole}
       render={render}
       {...props}
     >

@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexGalhardo/vukem/contrib/engine"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
+	"github.com/AlexGalhardo/vukem/contrib/engine"
 )
 
 var (

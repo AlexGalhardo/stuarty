@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -22,7 +21,7 @@ import (
 func buildBinary(t *testing.T) string {
 	t.Helper()
 
-	name := "vukem-video"
+	name := "stuarty"
 	if runtime.GOOS == "windows" {
 		name += ".exe"
 	}
@@ -47,8 +46,8 @@ func runBinary(t *testing.T, bin, home string, args ...string) (stdout, stderr s
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, bin, args...)
-	cmd.Env = append(os.Environ(), "VUKEM_VIDEO_HOME="+home, "VUKEM_VIDEO_URL=", "APP_KEY=", "APP_ENV=")
+	cmd := stuartyCmd(ctx, t, bin, addrEnv(t),
+		[]string{"STUARTY_HOME=" + home, "STUARTY_URL=", "APP_KEY=", "APP_ENV="}, args...)
 
 	var out, errOut bytes.Buffer
 
@@ -165,7 +164,7 @@ func TestHelpThroughTheBinaryIsTheProductHelp(t *testing.T) {
 	}
 }
 
-// TestMCPOverStdioThroughTheBinary runs vukem-video mcp as a client such as
+// TestMCPOverStdioThroughTheBinary runs stuarty mcp as a client such as
 // Claude Code does: a process on standard input and output. The client name
 // becomes the actor, standard output carries only protocol messages, and the
 // server stops when the client closes the pipe.
@@ -173,8 +172,7 @@ func TestMCPOverStdioThroughTheBinary(t *testing.T) {
 	bin := buildBinary(t)
 	home := filepath.Join(t.TempDir(), "ws")
 
-	cmd := exec.CommandContext(t.Context(), bin, "mcp")
-	cmd.Env = append(os.Environ(), "VUKEM_VIDEO_HOME="+home, "VUKEM_VIDEO_URL=", "APP_KEY=", "APP_ENV=")
+	cmd := stuartyCmd(t.Context(), t, bin, nil, mcpTestEnv(t, home), "mcp")
 
 	client := sdk.NewClient(&sdk.Implementation{Name: "Claude Code", Version: "1"}, nil)
 

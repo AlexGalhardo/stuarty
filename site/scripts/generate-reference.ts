@@ -13,6 +13,7 @@ import path from "node:path";
 import { apiPages, type OpenApi } from "./api-reference.ts";
 import { topicPages } from "./glossary-pages.ts";
 import { mcpPages } from "./mcp-reference.ts";
+import { networkPage, networksOverview, readNetworks, readSetup } from "./network-reference.ts";
 import { readKeymap, shortcutsPage } from "./shortcuts-reference.ts";
 import { code, esc, page, sentence, table } from "./reference-md.ts";
 
@@ -26,6 +27,8 @@ const glossaryDir = path.join(siteDir, "content", "generated", "glossary");
 const apiDir = path.join(siteDir, "content", "generated", "api");
 const mcpDir = path.join(siteDir, "content", "generated", "mcp");
 const guideDir = path.join(siteDir, "content", "generated", "guide");
+const publishDir = path.join(siteDir, "content", "generated", "publish");
+const startDir = path.join(siteDir, "content", "generated", "getting-started");
 
 type Json = Record<string, unknown>;
 
@@ -38,7 +41,6 @@ type Command = {
 	errors: string[];
 	example: unknown;
 	internal: boolean;
-	phase: string;
 	scope: string;
 	args_schema: Schema;
 };
@@ -161,6 +163,7 @@ const STATUS_NUMBERS: Record<string, number> = {
 	StatusTooManyRequests: 429,
 	StatusClientClosed: 499,
 	StatusInternalServerError: 500,
+	StatusBadGateway: 502,
 	StatusServiceUnavailable: 503,
 };
 
@@ -211,7 +214,7 @@ function cliReference(cli: CliDoc): string {
 	});
 	return page(
 		"CLI reference",
-		"Every vukem-video command, its flags and the exit codes.",
+		"Every stuarty command, its flags and the exit codes.",
 		[
 			"The CLI is a thin adapter over the same service as the editor, the MCP server and the HTTP API. Add `--json` to any command for one JSON document on standard output.",
 			"## Global flags",
@@ -245,6 +248,29 @@ function timelineSchema(): string {
 	);
 }
 
+/** The variables SDD-000 section 10 names in prose after its table: the framework's own and those of deploy/. */
+function proseVariables(): { framework: string[]; deploy: string[] } {
+	const sdd = fs.readFileSync(path.join(root, "docs", "sdds", "000-shared-definitions.md"), "utf8");
+	const para = sdd.match(/^The limits and their errors are specified.*$/m)?.[0] ?? "";
+	const names = (text: string | undefined): string[] => [...(text ?? "").matchAll(/`([A-Z][A-Z_0-9]+)`/g)].map((m) => m[1] as string);
+	return {
+		framework: names(para.match(/used by the product \(([^)]*)\)/)?.[1]),
+		deploy: [...names(para.match(/`deploy\/\.env` \(([^)]*)\)/)?.[1]), ...names(para.match(/scripts of `deploy\/` \(([^)]*)\)/)?.[1])],
+	};
+}
+
+/** The page for people who used the product under its former name (SDD-000 section 13): the only page that says it. */
+function migrationPage(): string {
+	const pairs = sddTable("docs/sdds/000-shared-definitions.md", /^### 13\.1 /m).map(([was, now]) => [esc(was ?? ""), esc(now ?? "")]);
+	const prose = fs.readFileSync(path.join(siteDir, "content", "fragments", "migration.md"), "utf8");
+	return page(
+		// The title and the description show on every page (the sidebar, the search, llms.txt): only the body says the name.
+		"Migrating from the former name",
+		"Stuarty had another name until v0.29.0: what is adopted, what is still read, and what to rename.",
+		[prose.trim(), table(["Former variable", "Variable"], pairs)].join("\n\n"),
+	);
+}
+
 function configuration(): string {
 	const rows = sddTable("docs/sdds/000-shared-definitions.md", /^## 10\. /m).map(([name, def, meaning]) => [
 		(name ?? "").replace(/\\/g, "\\\\").replace(/\|/g, "\\|"),
@@ -253,8 +279,20 @@ function configuration(): string {
 	]);
 	return page(
 		"Configuration variables",
-		"Every environment variable of vukem-video, with its default.",
-		["All variables are optional.", table(["Variable", "Default", "Meaning"], rows)].join("\n\n"),
+		"Every environment variable of Stuarty, with its default.",
+		[
+			"All variables are optional.",
+			table(["Variable", "Default", "Meaning"], rows),
+			"## Variables of the server and of the server package",
+			`The framework the server is built on reads these, with its own names: ${proseVariables()
+				.framework.map((v) => code(v))
+				.join(", ")}. \`APP_KEY\` is required in network mode (32 bytes or more, base64).`,
+			`The scripts and the compose file of \`deploy/\` read these, never the program itself: ${proseVariables()
+				.deploy.map((v) => code(v))
+				.join(", ")}.`,
+			"## Names before the rename",
+			"The product has had another name. The variables of that name are still read for a while: see [Migrating from the former name](/docs/migration).",
+		].join("\n\n"),
 	);
 }
 
@@ -305,10 +343,38 @@ function skillPage(): string {
 		"The agent skill",
 		"The skill file that teaches an agent the edit loop, the rules, the commands and the errors, as shipped in the release archives.",
 		[
-			"This page is the skill file `agent/skills/vukem-video/SKILL.md` of every release archive. Write it into an agent's skills folder with `vukem-video agent:docs --write <dir>`, or print it with `vukem-video agent:docs --print skill`.",
+			"This page is the skill file `agent/skills/stuarty/SKILL.md` of every release archive. Write it into an agent's skills folder with `stuarty agent:docs --write <dir>`, or print it with `stuarty agent:docs --print skill`.",
 			lines.join("\n"),
 		].join("\n\n"),
 	);
+}
+
+/**
+ * The guide of the agents, one page per domain (SDD-003 section 8.1, epic 13): the body of
+ * web/app/agentdocs/out/guide/<domain>.md without its generated comment and its H1, as the skill page is.
+ */
+export function domainPages(): { file: string; text: string }[] {
+	const dir = path.join(root, "web", "app", "agentdocs", "out", "guide");
+	if (!fs.existsSync(dir)) return [];
+	return fs
+		.readdirSync(dir)
+		.filter((f) => f.endsWith(".md"))
+		.sort()
+		.map((f) => {
+			const domain = f.replace(/\.md$/, "");
+			const raw = fs.readFileSync(path.join(dir, f), "utf8").replace(/\r\n/g, "\n");
+			const body = raw.replace(/^<!--.*-->\n/m, "").replace(/^# .*\n/m, "");
+			const lines = body.split("\n").map((line) => escProse(line));
+			const intro = `This page is generated from the registry. Print it with \`stuarty agent:docs --print guide:${domain}\`; \`stuarty ${domain}\` lists the commands of the domain.`;
+			return {
+				file: `domain-${domain}.mdx`,
+				text: page(
+					`The ${domain} domain`,
+					`How an agent reaches the ${domain} domain: its MCP tools, its CLI commands and its edit operations.`,
+					[intro, lines.join("\n")].join("\n\n"),
+				),
+			};
+		});
 }
 
 function write(file: string, text: string, expected: Set<string>, base = outDir) {
@@ -323,6 +389,9 @@ async function main() {
 	fs.mkdirSync(path.join(siteDir, "generated"), { recursive: true });
 	fs.writeFileSync(path.join(siteDir, "generated", "cli.json"), cliJson);
 
+	const networksJson = execFileSync("go", ["run", "./internal/tools/clidoc", "-networks"], { cwd: root, encoding: "utf8", maxBuffer: 1 << 26 });
+	fs.writeFileSync(path.join(siteDir, "generated", "networks.json"), networksJson);
+
 	const written = new Set<string>();
 	const commands = readJson<Command[]>("core/schema/commands.json")
 		.filter((c) => !c.internal)
@@ -333,7 +402,12 @@ async function main() {
 	write("error-codes.mdx", errorCodes(), written);
 	write("configuration.mdx", configuration(), written);
 	write("glossary.mdx", glossary(), written);
+	write("migration.mdx", migrationPage(), written, startDir);
+	const networks = readNetworks(siteDir);
+	write("network-limits.mdx", networksOverview(networks), written);
+	for (const n of networks) write(`${n.network}.mdx`, networkPage(n, readSetup(siteDir, n.network)), written, publishDir);
 	write("skill.mdx", skillPage(), written, agentsDir);
+	for (const p of domainPages()) write(p.file, p.text, written, agentsDir);
 
 	const api = apiPages(readJson<OpenApi>("site/generated/openapi.json"), root, new Map(commands.map((c) => [c.name, c.example])));
 	for (const [file, text] of api.files) write(file, text, written, apiDir);
@@ -352,7 +426,7 @@ async function main() {
 		fs.existsSync(dir)
 			? fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]))
 			: [];
-	for (const dir of [outDir, agentsDir, glossaryDir, apiDir, mcpDir, guideDir]) for (const file of walk(dir)) if (!written.has(path.resolve(file))) fs.rmSync(file);
+	for (const dir of [outDir, agentsDir, glossaryDir, apiDir, mcpDir, guideDir, publishDir, startDir]) for (const file of walk(dir)) if (!written.has(path.resolve(file))) fs.rmSync(file);
 
 	console.log(`reference: ${written.size} pages`);
 }

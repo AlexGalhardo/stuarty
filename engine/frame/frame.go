@@ -16,12 +16,12 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/cache"
-	"github.com/AlexGalhardo/vukem-video/engine/export"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/rasterize"
+	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/cache"
+	"github.com/AlexGalhardo/stuarty/engine/export"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/rasterize"
 )
 
 // Frames makes frames and sheets for the documents of one workspace.
@@ -31,6 +31,9 @@ type Frames struct {
 	Fonts        *rasterize.FontSet // the bundled fonts when nil
 	// Cache holds the JPEGs by project, revision, frame and width. It may be nil: nothing is kept.
 	Cache *cache.Store
+	// Nested are the timelines the compositions of the document use, by id; the caller sets them on the copy it
+	// renders with and puts their revisions into the Revision of the Ref (SDD-004 section 3.16).
+	Nested map[string]*timeline.Document
 }
 
 // Ref names the version of the project a document is: the cache key is made of it.
@@ -49,7 +52,7 @@ func (f *Frames) renderer(ctx context.Context, doc *timeline.Document) (*export.
 	}
 	return export.NewRenderer(ctx, export.RenderConfig{
 		Runner: f.Runner, Doc: doc, JobID: "frame-" + hex.EncodeToString(id[:]),
-		ArtifactsDir: f.ArtifactsDir, Fonts: f.Fonts,
+		ArtifactsDir: f.ArtifactsDir, Fonts: f.Fonts, Nested: f.Nested,
 	})
 }
 

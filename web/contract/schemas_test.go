@@ -13,9 +13,9 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/AlexGalhardo/vukem-video/core/command"
-	"github.com/AlexGalhardo/vukem-video/service"
-	"github.com/AlexGalhardo/vukem-video/web/app/cli"
+	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/web/app/cli"
 )
 
 // helpers read command_help the five ways SDD-003 section 9 lists, each as the
@@ -234,7 +234,7 @@ func TestSchemasMatch(t *testing.T) {
 	}
 }
 
-// TestSummariesMatch: the one-line summary and the phase and scope of every
+// TestSummariesMatch: the one-line summary and the scope of every
 // public command are the same in the list of every surface, which all read the
 // registry.
 func TestSummariesMatch(t *testing.T) {

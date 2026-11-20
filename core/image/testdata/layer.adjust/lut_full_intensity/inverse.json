@@ -1,0 +1,15 @@
+[
+  {
+    "collection": "layers",
+    "id": "lyr_bbbbbbbbbb",
+    "type": "patch",
+    "unset": [
+      "adjust"
+    ]
+  },
+  {
+    "collection": "assets",
+    "id": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "type": "remove"
+  }
+]

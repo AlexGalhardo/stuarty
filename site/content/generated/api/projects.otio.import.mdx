@@ -35,6 +35,7 @@ Content type `application/json`.
 | `base_revision` | `integer (int64)` | no | The revision the import is applied to. |
 | `dry_run` | `boolean` | no |  |
 | `path` | `string` | yes | An absolute path to an .otio file on the machine that runs the server.. min length 1 |
+| `timeline_id` | `string` | no | The timeline of the project; required when the project has several. |
 
 ## Responses
 
@@ -111,7 +112,7 @@ Content type `application/problem+json`. Schema: [`Problem`](/docs/api/schemas#p
 
 ```bash title="curl"
 curl -X POST "http://127.0.0.1:7878/api/v1/projects/PROJECT_ID/otio" \
-  -H "Authorization: Bearer $VUKEM_VIDEO_KEY" \
+  -H "Authorization: Bearer $STUARTY_KEY" \
   -H "Content-Type: application/json" \
   -d '{
   "path": "string"
@@ -125,7 +126,7 @@ import requests
 
 response = requests.post(
     "http://127.0.0.1:7878/api/v1/projects/PROJECT_ID/otio",
-    headers={"Authorization": f"Bearer {os.environ['VUKEM_VIDEO_KEY']}"},
+    headers={"Authorization": f"Bearer {os.environ['STUARTY_KEY']}"},
     json={
         "path": "string",
     },
@@ -139,7 +140,7 @@ print(response.json())
 const response = await fetch("http://127.0.0.1:7878/api/v1/projects/PROJECT_ID/otio", {
   method: "POST",
   headers: {
-    Authorization: `Bearer ${process.env.VUKEM_VIDEO_KEY}`,
+    Authorization: `Bearer ${process.env.STUARTY_KEY}`,
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
@@ -170,7 +171,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	req.Header.Set("Authorization", "Bearer "+os.Getenv("VUKEM_VIDEO_KEY"))
+	req.Header.Set("Authorization", "Bearer "+os.Getenv("STUARTY_KEY"))
 	req.Header.Set("Content-Type", "application/json")
 
 	res, err := http.DefaultClient.Do(req)
@@ -195,7 +196,7 @@ curl_setopt_array($ch, [
     CURLOPT_CUSTOMREQUEST => "POST",
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_HTTPHEADER => [
-        "Authorization: Bearer " . getenv("VUKEM_VIDEO_KEY"),
+        "Authorization: Bearer " . getenv("STUARTY_KEY"),
         "Content-Type: application/json",
     ],
     CURLOPT_POSTFIELDS => '{
@@ -220,7 +221,7 @@ public class Example {
     public static void main(String[] args) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create("http://127.0.0.1:7878/api/v1/projects/PROJECT_ID/otio"))
-            .header("Authorization", "Bearer " + System.getenv("VUKEM_VIDEO_KEY"))
+            .header("Authorization", "Bearer " + System.getenv("STUARTY_KEY"))
             .header("Content-Type", "application/json")
             .method("POST", HttpRequest.BodyPublishers.ofString("""
                 {
@@ -246,7 +247,7 @@ using var client = new HttpClient();
 using var request = new HttpRequestMessage(
     HttpMethod.Post, "http://127.0.0.1:7878/api/v1/projects/PROJECT_ID/otio");
 request.Headers.Authorization = new AuthenticationHeaderValue(
-    "Bearer", Environment.GetEnvironmentVariable("VUKEM_VIDEO_KEY"));
+    "Bearer", Environment.GetEnvironmentVariable("STUARTY_KEY"));
 request.Content = new StringContent("""
 {
   "path": "string"
@@ -263,7 +264,7 @@ require "uri"
 
 uri = URI("http://127.0.0.1:7878/api/v1/projects/PROJECT_ID/otio")
 request = Net::HTTP::Post.new(uri)
-request["Authorization"] = "Bearer #{ENV.fetch('VUKEM_VIDEO_KEY')}"
+request["Authorization"] = "Bearer #{ENV.fetch('STUARTY_KEY')}"
 request["Content-Type"] = "application/json"
 request.body = '{
   "path": "string"
@@ -378,7 +379,7 @@ puts "#{response.code} #{response.body}"
   "detail": "string",
   "details": {},
   "errors": {},
-  "hint": "send the local token as Authorization: Bearer <token>, or run `vukem-video open` to open the editor in a browser",
+  "hint": "send the local token as Authorization: Bearer <token>, or run `stuarty open` to open the editor in a browser",
   "instance": "string",
   "issues": [
     {

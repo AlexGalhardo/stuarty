@@ -9,11 +9,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/desktop/update"
+	"github.com/AlexGalhardo/stuarty/desktop/update"
 )
 
 // ReleasePageURL is where a person downloads a version the shell cannot install by itself.
-const ReleasePageURL = "https://github.com/AlexGalhardo/vukem-video/releases"
+const ReleasePageURL = "https://github.com/AlexGalhardo/stuarty/releases"
 
 // Settings are the preferences of the desktop shell. They are not workspace data: the update client
 // never touches the workspace (SDD-009 section 10.5 item 7), so they live in the user config directory.
@@ -43,7 +43,26 @@ func SettingsPath() (string, error) {
 		return "", fmt.Errorf("shell settings: %w", err)
 	}
 
-	return filepath.Join(dir, "vukem-video", "desktop.json"), nil
+	path := filepath.Join(dir, "stuarty", "desktop.json")
+	adoptFormerSettings(filepath.Join(dir, "vukem-video", "desktop.json"), path)
+
+	return path, nil
+}
+
+// adoptFormerSettings copies the settings file that Vukem Video wrote (ADR-0044) to its new place, once, so
+// that the answer to the first-start question about updates is not asked again. The former file is left
+// where it is. A missing or damaged former file changes nothing: the defaults ask again and connect to nothing.
+func adoptFormerSettings(former, current string) {
+	if _, err := os.Stat(current); err == nil {
+		return
+	}
+
+	s, err := LoadSettings(former)
+	if err != nil || !s.Asked() {
+		return
+	}
+
+	_ = s.Save(current)
 }
 
 // LoadSettings reads the settings file. A missing file gives the defaults: not asked yet, so nothing

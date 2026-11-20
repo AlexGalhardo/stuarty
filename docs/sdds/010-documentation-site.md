@@ -23,7 +23,7 @@
 13. [Implementation tasks owned by this SDD](#13-implementation-tasks-owned-by-this-sdd)
 14. [Acceptance](#14-acceptance)
 
-Citations of the form `path:line` refer to the vukem repository at `C:\dev\vukem-video\vukem\` at the tag `v0.43.0`, that is `v0.43.0:<path>:<line>`, read with `git -C C:\dev\vukem-video\vukem show v0.43.0:<path>` (the working tree of vukem is ahead of the tag), unless stated otherwise. **Decision of this SDD** marks a choice made where the ADRs or vukem were silent or contradictory. Values known only when a task runs are written `<recorded by SITE-...>`; the task identifiers are in section 13.
+Citations of the form `path:line` refer to the vukem repository at `C:\dev\stuarty\vukem\` at the tag `v0.43.0`, that is `v0.43.0:<path>:<line>`, read with `git -C C:\dev\stuarty\vukem show v0.43.0:<path>` (the working tree of vukem is ahead of the tag), unless stated otherwise. **Decision of this SDD** marks a choice made where the ADRs or vukem were silent or contradictory. Values known only when a task runs are written `<recorded by SITE-...>`; the task identifiers are in section 13.
 
 ## 1. Starting point: what is copied, changed and left out
 
@@ -43,7 +43,7 @@ ADR-0024 item 1: the site starts from the **current** vukem `site/`, not from th
 | `site/src/pages/{404,changelog,index,robots.txt,search-index.json,sitemap.xml,llms.txt,llms-full.txt}` and `site/src/pages/docs/[...slug].{astro,md.ts}` | Pages and endpoints (changed for locales) |
 | `site/src/layouts/Base.astro`, `site/src/prerender.tsx` | The page layout every `.astro` page imports and the React prerender entry; without them the copied site does not build |
 | `site/src/assets/` | present on vukem main after `v0.43.0` (the animated gopher `svg` of the landing page, commit `0d9fb139`); not in the `v0.43.0` tree. Copied only if the copied landing page imports it, and then replaced by the product mark (the `SITE-COPY` report records which) |
-| `site/public/logo.svg`, `site/public/icon.svg`, `site/public/.nojekyll` | The logo and icon (replaced by the product ones) and the marker that stops GitHub Pages from running Jekyll |
+| `site/public/logo.png`, `site/public/icon.png`, `site/public/.nojekyll` | The logo (256 px) and the favicon (64 px), scaled from the official icon `.config/installers/assets/stuarty-icon.png` by `internal/tools/installericon`, and the marker that stops GitHub Pages from running Jekyll |
 | `site/.gitignore` | Ignores `node_modules`, `out/` and local env files; checked against the real vukem file so the copied site builds from a clean clone |
 | `site/package-lock.json` | Created by `npm install` in `SITE-COPY`; never copied from vukem |
 | `scripts/refresh-last-updated.sh` (repository root) | The pre-push hook script (SDD-009 section 15.1) |
@@ -56,9 +56,9 @@ ADR-0024 item 1: the site starts from the **current** vukem `site/`, not from th
 
 | File | Change | Reason |
 | --- | --- | --- |
-| `package.json` | `name: vukem-video-docs`; scripts added: `reference`, `reference:check`, `check:translations`, `test:base-path`, `check:built` (section 12.1); `test:scripts` and `test:site` rewritten (section 12.1) | |
+| `package.json` | `name: stuarty-docs`; scripts added: `reference`, `reference:check`, `check:translations`, `test:base-path`, `check:built` (section 12.1); `test:scripts` and `test:site` rewritten (section 12.1) | |
 | `astro.config.mjs` | `site` and `base` from `SITE_URL`; `trailingSlash: "always"` and `output: "static"`, `outDir: "out"` kept; `redirects` replaced by `"/docs": "/docs/introduction/"` and `"/pt-br/docs": "/pt-br/docs/introduction/"`; the `/docs/0.20` redirect removed; an `i18n` block: `defaultLocale: "en"`, `locales: ["en", "pt-br"]`, `routing: { prefixDefaultLocale: false }` | the site is served under a base path unless a custom domain is set (section 12.4) |
-| `lib/site.ts` | `name: "Vukem Video"`, `repo: "https://github.com/AlexGalhardo/vukem-video"`, `editBase: "https://github.com/AlexGalhardo/vukem-video/edit/main/site/content/docs"`, `url` from `SITE_URL`, `base` derived from the URL path | |
+| `lib/site.ts` | `name: "Stuarty"`, `repo: "https://github.com/AlexGalhardo/stuarty"`, `editBase: "https://github.com/AlexGalhardo/stuarty/edit/main/site/content/docs"`, `url` from `SITE_URL`, `base` derived from the URL path | |
 | `lib/content.ts` (135 lines in vukem) | loads by locale; no version snapshots; fallback to English; generated pages (sections 2, 4, 8) | i18n |
 | `lib/ui-text.ts` | a dictionary per locale instead of one `t` object (section 4.4) | i18n |
 | `content/navigation.ts` | localized titles and groups (section 3) | i18n |
@@ -75,7 +75,7 @@ ADR-0024 item 1: the site starts from the **current** vukem `site/`, not from th
 | `site/content/docs/**` | vukem's pages are about vukem |
 | `site/content/versions/0.20/**`, `lib/versions.ts`, `components/legacy-path-redirect.tsx`, `scripts/{legacy-path-redirect,current-equivalent}.test.ts` | versioned snapshots are out of scope until after 1.0 (PRD-003 section 6) |
 | `site/public/CNAME` | not used here: with `build_type: workflow` the custom domain (`video.vukem.dev`) is a repository setting (section 12.4) |
-| `site/src/pages/index.astro` content | the landing page is rewritten with the structure of <https://www.freecut.net/> (hero with a run/download call to action, feature tour, agents, open source and local-first, links to docs and repository) and only Vukem Video copy, mark and colours (D-028; it replaced the vukem structure of hero, three cards and a command block) |
+| `site/src/pages/index.astro` content | the landing page is rewritten with the structure of <https://www.freecut.net/> (hero with a run/download call to action, feature tour, agents, open source and local-first, links to docs and repository) and only Stuarty copy, mark and colours (D-028; it replaced the vukem structure of hero, three cards and a command block) |
 
 ### 1.4 Taken from neither the Studio fork nor FreeCut, and why
 
@@ -89,11 +89,11 @@ The shell was copied from vukem commit `c9a3fcca` (the last commit that touched 
 
 - **Base path.** `lib/site.ts` reads `import.meta.env.SITE` and `import.meta.env.BASE_URL` (both set by `astro.config.mjs` from `SITE_URL`, default `https://video.vukem.dev`, so `BASE_URL` is `/`) and exports `withBase`, used by `Link` and by every component that wrote a root-relative path. Astro does not add the base to the destination of a `redirects` entry, so `astro.config.mjs` writes `/docs` to `<base>/docs/introduction/` in full. `robots.txt` has no `Host:` line.
 - **No versions, no i18n yet.** `lib/versions.ts`, the snapshot tree, `legacy-path-redirect` and the `/pt-br` redirect script of `404.astro` are not copied; `lib/content.ts`, the sidebar, the header, `doc-article` and `check-mdx` have no version parameter. Only English docs exist (an introduction and `quick-start`, "Getting started"); the locale layout of sections 2 to 4 comes with P1-DOC-001. The landing page has an English and a Brazilian Portuguese version (`lib/landing.ts`, `src/components/Landing.astro`, `src/pages/index.astro`, `src/pages/pt-br/index.astro`).
-- **Landing page (D-028).** Hero, feature tour (each item marked Prototype or Later from PRD-001), how agents drive the editor, open source and local-first, footer. Copy, mark and colours are the product's own (violet `#7c5cff` mark; dark by default, D-024: the theme script and `ThemeToggle` default to `dark` instead of `system`); `--faint` was darkened in both themes and the primary button uses `#6446f0` so text meets contrast 4.5:1. The vukem gopher asset, `lib/landing.ts` of vukem (Go sample code) and `public/CNAME` are not copied; `public/.nojekyll` is.
-- **Landing page, one viewport (TASK-0264, 2026-11-16).** The structure follows <https://vukem.dev> (hero with a terminal block and four check-marked points, a link to the quick start), with the Vukem Video tokens, and replaces the long page of D-028. On a window at least 1024 px wide and 700 px tall it is exactly one viewport with two columns and no scroll (`fit` variant in `app/globals.css`; on a window up to 896 px tall the base type scale drops to 100%, and the point list is hidden under 760 px); on a smaller window the columns stack and the page scrolls. Left column: the status pill with the latest version, the title, the lead, and the one command that starts the latest release with Docker. Right column: a tabbed gallery of the editor with five features (captions; cuts; chroma key, blend modes and masks; agents through MCP and the CLI; export), each with a screenshot, a short text and the operation it is driven by. The screenshots are placeholders (`public/placeholders/*.svg`, 1600 x 1000, marked in the image) to be replaced by real ones. `lib/landing.ts` holds the copy (English only), `lib/latest-release.ts` reads the newest `## [X.Y.Z]` heading of `CHANGELOG.md` at build time (no network) and builds the command from the documented flags of the Docker page (port published on `127.0.0.1`, the `/data` volume, `APP_KEY`, the first administrator): the version cannot be older than the changelog that the release commit updates.
+- **Landing page (D-028).** Hero, feature tour (each item marked built or planned from PRD-001), how agents drive the editor, open source and local-first, footer. Copy, mark and colours are the product's own (violet `#7c5cff` mark; dark by default, D-024: the theme script and `ThemeToggle` default to `dark` instead of `system`); `--faint` was darkened in both themes and the primary button uses `#6446f0` so text meets contrast 4.5:1. The vukem gopher asset, `lib/landing.ts` of vukem (Go sample code) and `public/CNAME` are not copied; `public/.nojekyll` is.
+- **Landing page, one viewport (TASK-0264, 2026-11-16).** The structure follows <https://vukem.dev> (hero with a terminal block and four check-marked points, a link to the quick start), with the Stuarty tokens, and replaces the long page of D-028. On a window at least 1024 px wide and 700 px tall it is exactly one viewport with two columns and no scroll (`fit` variant in `app/globals.css`; on a window up to 896 px tall the base type scale drops to 100%, and the point list is hidden under 760 px); on a smaller window the columns stack and the page scrolls. Left column: the status pill with the latest version, the title, the lead, and the one command that starts the latest release with Docker. Right column: a tabbed gallery of the editor with five features (captions; cuts; chroma key, blend modes and masks; agents through MCP and the CLI; export), each with a screenshot, a short text and the operation it is driven by. The screenshots are placeholders (`public/placeholders/*.svg`, 1600 x 1000, marked in the image) to be replaced by real ones. `lib/landing.ts` holds the copy (English only), `lib/latest-release.ts` reads the newest `## [X.Y.Z]` heading of `CHANGELOG.md` at build time (no network) and builds the command from the documented flags of the Docker page (port published on `127.0.0.1`, the `/data` volume, `APP_KEY`, the first administrator): the version cannot be older than the changelog that the release commit updates.
 - **`check:built` exists early.** `scripts/check-built.ts` (and its test) implements only the properties P1-DOC-002 needs: static files only, no resource from another origin and no host other than the inert ones listed in the script, and every root-relative `href` or `src` carrying the base path. The checks on twins, `llms.txt` and the section 4.3 table remain for P1-DOC-001. `test:scripts` includes its test.
 - **Not copied yet:** `scripts/refresh-last-updated.sh` and the `docs-last-updated.yml` workflow (CI owner), `check:translations`, `reference`, `reference:check`, `test:base-path`. `site.yml` therefore has no `setup-go` step and no `reference:check`; they are added with P1-DOC-001.
-- **What P1-DOC-001 built, and where it differs from sections 2 to 9.** Both locales are served (sections 2 and 4): the content is `content/docs/en/`, `content/docs/pt-br/` and `content/generated/`; `lib/page-files.ts` finds the file of a page (its own, else the generated one, else the English one as a fallback); `lib/locale.ts`, `lib/locale-context.tsx` and `lib/ui-text.ts` (a typed dictionary per locale) carry the locale to the components, and `Link` rewrites `/docs/...` to `/pt-br/docs/...` in a Portuguese page. The switcher is two plain links (`EN`, `PT`) in the header; hreflang, canonicals, the sitemap alternates, the fallback notice, the twins, `llms.txt`, `llms-full.txt` and the search index exist per locale, and the search folds accents. `navigation.ts` has `title` per locale and a flat `pages` list per category (no sub-groups yet). `check:translations` (section 6, with `translations.config.json`), the extended `check:mdx` and `check:built` (twins, `llms.txt`, the section 4.3 table, the bilingual 404) and `docs-last-updated.yml` exist. The reference is generated by `scripts/generate-reference.ts` into `content/generated/reference/` (committed; `reference:check` and `site.yml` fail on a difference). It reads `core/schema/commands.json` (one page per public command), `core/schema/errors.json` with the meanings of SDD-000 section 8, `core/schema/timeline.v1.schema.json`, the table of SDD-000 section 10, `content/glossary.json`, `site/generated/cli.json`, which `go run ./internal/tools/clidoc` writes from the declarations of `web/app/cli`, and `site/generated/openapi.json`, which `UPDATE_OPENAPI=1 go test ./web/contract/ -run OpenAPI` writes from the running API (the test fails when the file is stale). The warmup mode of vukem's `openapi:export` cannot see the routes that need the Service, so the document comes from the contract environment instead; the binary has no `command:help --json` with a `cli` block and no `configref` yet, so section 8.1 is met with these sources. Generated pages have English text in both locales and a note says so in Portuguese. The Prototype pages written in both locales: getting started (introduction, installation, quick start, workspace, projects), concepts (how it works, time, commands and revisions, tracks), guide (media library, timeline, editing tools, text and captions, undo, exporting) and agents (overview, connect, MCP, CLI, verify, batches). **Not written:** the other pages of section 7 (concepts and guide pages of ALPHA, self-hosting, troubleshooting, contributing, `reference/workspace-layout`), `check:translations` ran report-only then (`strict` is true since P3-DOC-002), and `scripts/locale-routing.test.ts` of section 12.1 does not exist (`check:built` covers the locale properties on the built output); `scripts/base-path.test.ts` exists since TASK-0168.
+- **What P1-DOC-001 built, and where it differs from sections 2 to 9.** Both locales are served (sections 2 and 4): the content is `content/docs/en/`, `content/docs/pt-br/` and `content/generated/`; `lib/page-files.ts` finds the file of a page (its own, else the generated one, else the English one as a fallback); `lib/locale.ts`, `lib/locale-context.tsx` and `lib/ui-text.ts` (a typed dictionary per locale) carry the locale to the components, and `Link` rewrites `/docs/...` to `/pt-br/docs/...` in a Portuguese page. The switcher is two plain links (`EN`, `PT`) in the header; hreflang, canonicals, the sitemap alternates, the fallback notice, the twins, `llms.txt`, `llms-full.txt` and the search index exist per locale, and the search folds accents. `navigation.ts` has `title` per locale and a flat `pages` list per category (no sub-groups yet). `check:translations` (section 6, with `translations.config.json`), the extended `check:mdx` and `check:built` (twins, `llms.txt`, the section 4.3 table, the bilingual 404) and `docs-last-updated.yml` exist. The reference is generated by `scripts/generate-reference.ts` into `content/generated/reference/` (committed; `reference:check` and `site.yml` fail on a difference). It reads `core/schema/commands.json` (one page per public command), `core/schema/errors.json` with the meanings of SDD-000 section 8, `core/schema/timeline.v1.schema.json`, the table of SDD-000 section 10, `content/glossary.json`, `site/generated/cli.json`, which `go run ./internal/tools/clidoc` writes from the declarations of `web/app/cli`, and `site/generated/openapi.json`, which `UPDATE_OPENAPI=1 go test ./web/contract/ -run OpenAPI` writes from the running API (the test fails when the file is stale). The warmup mode of vukem's `openapi:export` cannot see the routes that need the Service, so the document comes from the contract environment instead; the binary has no `command:help --json` with a `cli` block and no `configref` yet, so section 8.1 is met with these sources. Generated pages have English text in both locales and a note says so in Portuguese. The first pages written in both locales: getting started (introduction, installation, quick start, workspace, projects), concepts (how it works, time, commands and revisions, tracks), guide (media library, timeline, editing tools, text and captions, undo, exporting) and agents (overview, connect, MCP, CLI, verify, batches). **Not written:** the other pages of section 7 (concepts and guide pages, self-hosting, troubleshooting, contributing, `reference/workspace-layout`), `check:translations` ran report-only then (`strict` is true since P3-DOC-002), and `scripts/locale-routing.test.ts` of section 12.1 does not exist (`check:built` covers the locale properties on the built output); `scripts/base-path.test.ts` exists since TASK-0168.
 - **Formatting.** The copied `.ts`, `.tsx`, `.astro` and `.mjs` files were reformatted to tabs with Biome (indent tab 4, line width 120) in the isolated commit `style(site)`; the `.astro` templates were re-indented by hand because Biome formats only their front matter.
 
 ## 2. Content tree and URLs
@@ -264,7 +264,7 @@ Rules:
 1. `title` and `description` are required. `since` (the first release in which the page is true) is optional. `generated: true` appears only in generated pages.
 2. "The idea" and "Next steps" are required in every page. "Quick start" is required in every page that teaches an action. "Common mistakes" is required where an error code or a known failure exists. "You will learn" is required in guide and getting-started pages.
 3. Every action that exists in the UI, the CLI and the agent tools is shown for each surface that has it: a `Tabs` block with `UI`, `CLI`, `MCP` and `HTTP` tabs, the command names being those of SDD-000 section 1. The CLI tab shows the exact command; the MCP tab shows the tool name and the arguments object.
-4. A feature that is not implemented in the released version carries `<Callout type="warning">Planned for ALPHA</Callout>` (or BETA), as vukem's `site/README.md` says. The callout is removed in the pull request that ships the feature.
+4. A feature that is not implemented in the released version carries `<Callout type="warning">Planned</Callout>`, as vukem's `site/README.md` says. The callout is removed in the pull request that ships the feature.
 5. Page links are root-relative `/docs/...` links with a trailing slash; `check:mdx` fails a link to a page that does not exist (vukem's check, `scripts/check-mdx.ts`), and `link-anchors.ts` fails a fragment that does not exist.
 6. No bare `{` or `<` in prose (MDX), no HTML other than the MDX components, code lines at most 100 characters (`MAX_CODE_LINE`, `scripts/check-mdx.ts:16`). A fenced block names its language.
 7. Code, command names, flag names, error codes, field names and identifiers (`E_REVISION_CONFLICT`, `prj_...`) are written exactly as the program prints them.
@@ -287,141 +287,141 @@ The translation staleness check of ADR-0024 item 3 (`check-translations.ts`, `tr
 
 ## 7. Page list
 
-Phase: `P` Prototype, `A` ALPHA, `B` BETA (RF-211: skeleton and reference in the Prototype, guide in ALPHA, complete in BETA). A page is written in the phase shown; it may be updated in later phases as features land. Source: **H** hand-written, **G** generated (section 8). Slugs are `<dir>/<slug>`; the Getting started pages have no `<dir>` in the URL.
+A page is written when its feature exists and is updated as features land (RF-211). Source: **H** hand-written, **G** generated (section 8). Slugs are `<dir>/<slug>`; the Getting started pages have no `<dir>` in the URL.
 
 The user guide follows the FreeCut outline of research note `notes/vukem` section 4.3 (Start, Core editing, Creative tools, Output, Reference), without the FreeCut pages for features this product does not have (source monitor, motion workspace, scene browser with AI analysis; their purpose is covered by Transcription, Silence removal and Templates). The Agents section is specific to this product.
 
 ### 7.1 Getting started (`getting-started`, no URL prefix)
 
-| Page title | Slug | Phase | Source |
-| --- | --- | --- | --- |
-| Introduction | `introduction` | P | H |
-| Installation | `installation` | P | H |
-| Quick start: your first export | `quick-start` | P | H |
-| Workspace and storage | `workspace` | P | H |
-| Projects | `projects` | P | H |
+| Page title | Slug | Source |
+| --- | --- | --- |
+| Introduction | `introduction` | H |
+| Installation | `installation` | H |
+| Quick start: your first export | `quick-start` | H |
+| Workspace and storage | `workspace` | H |
+| Projects | `projects` | H |
 
 `quick-start` is the page NFR-040 measures: from download to the first exported video in under ten minutes, written for a person and ending with the agent route in a "Next steps" link.
 
 ### 7.2 Concepts (`concepts`)
 
-| Page title | Slug | Phase | Source |
-| --- | --- | --- | --- |
-| How Vukem Video works | `concepts/how-it-works` | P | H |
-| Time and frames | `concepts/time` | P | H |
-| Commands, batches and revisions | `concepts/commands-and-revisions` | P | H |
-| Tracks, clips and items | `concepts/tracks-clips-items` | P | H |
-| Render: one plan, two executors | `concepts/render` | A | H |
-| Local mode and network mode | `concepts/local-and-network-mode` | A | H |
+| Page title | Slug | Source |
+| --- | --- | --- |
+| How Stuarty works | `concepts/how-it-works` | H |
+| Time and frames | `concepts/time` | H |
+| Commands, batches and revisions | `concepts/commands-and-revisions` | H |
+| Tracks, clips and items | `concepts/tracks-clips-items` | H |
+| Render: one plan, two executors | `concepts/render` | H |
+| Local mode and network mode | `concepts/local-and-network-mode` | H |
 
 ### 7.3 Editing guide (`guide`)
 
-| Group | Page title | Slug | Phase | Source |
-| --- | --- | --- | --- | --- |
-| Core editing | Media library | `guide/media-library` | P | H |
-| Core editing | Basic timeline editing | `guide/timeline` | P | H |
-| Core editing | Trim, split and move clips | `guide/editing-tools` | P | H |
-| Core editing | Preview and playback | `guide/preview` | P | H |
-| Core editing | Clip properties | `guide/clip-properties` | A | H |
-| Core editing | Undo and history | `guide/undo-and-history` | P | H |
-| Creative tools | Text and captions | `guide/text-and-captions` | P | H |
-| Creative tools | Shapes | `guide/shapes` | A | H |
-| Creative tools | Audio editing | `guide/audio` | A | H |
-| Creative tools | Effects and color | `guide/effects-and-color` | A | H |
-| Creative tools | Transitions | `guide/transitions` | A | H |
-| Creative tools | Animate with keyframes | `guide/keyframes` | A | H |
-| Creative tools | Transcription | `guide/transcription` | A | H |
-| Creative tools | Remove silence | `guide/silence-removal` | A | H |
-| Creative tools | The safe area | `guide/safe-area` | A | H |
-| Creative tools | Templates | `guide/templates` | A | H |
-| Creative tools | Template: vertical cut with captions | `guide/template-vertical-cut` | A | H |
-| Creative tools | Template: product teaser | `guide/template-product-teaser` | A | H |
-| Creative tools | Template: quote card | `guide/template-quote-card` | A | H |
-| Output | Exporting | `guide/exporting` | P | H |
-| Output | Jobs and the queue | `guide/jobs` | A | H |
-| Output | Encoders and export presets | `guide/encoders-and-presets` | A | H |
-| Interface | Keyboard shortcuts (the basic shortcuts that exist in ALPHA; RF-074, advanced and customizable shortcuts, is BETA and extends this page then) | `guide/keyboard-shortcuts` | A | H |
-| Interface | Settings | `guide/settings` | A | H |
-| Tutorials | Make a vertical short with captions | `guide/tutorial-vertical-short` | B | H |
-| Tutorials | Edit by prompting an agent, end to end | `guide/tutorial-agent-edit` | B | H |
-| Tutorials | The desktop application | `guide/desktop` | B | H |
+| Group | Page title | Slug | Source |
+| --- | --- | --- | --- |
+| Core editing | Media library | `guide/media-library` | H |
+| Core editing | Basic timeline editing | `guide/timeline` | H |
+| Core editing | Trim, split and move clips | `guide/editing-tools` | H |
+| Core editing | Preview and playback | `guide/preview` | H |
+| Core editing | Clip properties | `guide/clip-properties` | H |
+| Core editing | Undo and history | `guide/undo-and-history` | H |
+| Creative tools | Text and captions | `guide/text-and-captions` | H |
+| Creative tools | Shapes | `guide/shapes` | H |
+| Creative tools | Audio editing | `guide/audio` | H |
+| Creative tools | Effects and color | `guide/effects-and-color` | H |
+| Creative tools | Transitions | `guide/transitions` | H |
+| Creative tools | Animate with keyframes | `guide/keyframes` | H |
+| Creative tools | Transcription | `guide/transcription` | H |
+| Creative tools | Remove silence | `guide/silence-removal` | H |
+| Creative tools | The safe area | `guide/safe-area` | H |
+| Creative tools | Templates | `guide/templates` | H |
+| Creative tools | Template: vertical cut with captions | `guide/template-vertical-cut` | H |
+| Creative tools | Template: product teaser | `guide/template-product-teaser` | H |
+| Creative tools | Template: quote card | `guide/template-quote-card` | H |
+| Output | Exporting | `guide/exporting` | H |
+| Output | Jobs and the queue | `guide/jobs` | H |
+| Output | Encoders and export presets | `guide/encoders-and-presets` | H |
+| Interface | Keyboard shortcuts (the basic shortcuts; RF-074, advanced and customizable shortcuts, extends this page) | `guide/keyboard-shortcuts` | H |
+| Interface | Settings | `guide/settings` | H |
+| Tutorials | Make a vertical short with captions | `guide/tutorial-vertical-short` | H |
+| Tutorials | Edit by prompting an agent, end to end | `guide/tutorial-agent-edit` | H |
+| Tutorials | The desktop application | `guide/desktop` | H |
 
-(The three template pages are one per template of D-019; their names change if the template names change in SDD-005/SDD-002. The group `Tutorials` is added to `navigation.ts` by the BETA task.)
+(The three template pages are one per template of D-019; their names change if the template names change in SDD-005/SDD-002. The group `Tutorials` is added to `navigation.ts` by its own task.)
 
 ### 7.4 Agents (`agents`)
 
-| Page title | Slug | Phase | Source |
-| --- | --- | --- | --- |
-| Agents overview | `agents/overview` | P | H |
-| Connect an agent (Claude Code, Cursor and others) | `agents/connect` | P | H |
-| The MCP server | `agents/mcp` | P | H |
-| The CLI for agents | `agents/cli` | P | H |
-| How an agent verifies its work: view and lint | `agents/verify` | P | H |
-| Batches, revisions and idempotency | `agents/batches` | P | H |
-| The agent skill | `agents/skill` | A | H |
-| Safety: undo, trash and limits | `agents/safety` | A | H |
-| Recipes: cut, caption, export | `agents/recipes` | A | H |
+| Page title | Slug | Source |
+| --- | --- | --- |
+| Agents overview | `agents/overview` | H |
+| Connect an agent (Claude Code, Cursor and others) | `agents/connect` | H |
+| The MCP server | `agents/mcp` | H |
+| The CLI for agents | `agents/cli` | H |
+| How an agent verifies its work: view and lint | `agents/verify` | H |
+| Batches, revisions and idempotency | `agents/batches` | H |
+| The agent skill | `agents/skill` | H |
+| Safety: undo, trash and limits | `agents/safety` | H |
+| Recipes: cut, caption, export | `agents/recipes` | H |
 
 ### 7.5 Reference (`reference`)
 
-| Page title | Slug | Phase | Source |
-| --- | --- | --- | --- |
-| Command catalogue | `reference/commands` | P | G |
-| One page per command (48 commands in SDD-002, 47 of them public; for example `Add a clip`) | `reference/commands/<command>` | P | G |
-| Timeline schema | `reference/timeline-schema` | P | G |
-| CLI reference | `reference/cli` | P | G |
-| HTTP API | `reference/http-api` | P | G |
-| Error codes | `reference/error-codes` | P | G |
-| Configuration variables | `reference/configuration` | P | G |
-| Workspace layout | `reference/workspace-layout` | P | H |
-| Events stream | `reference/events` | A | H |
-| Glossary | `reference/glossary` | P | G (from `glossary.json`) |
+| Page title | Slug | Source |
+| --- | --- | --- |
+| Command catalogue | `reference/commands` | G |
+| One page per command (48 commands in SDD-002, 47 of them public; for example `Add a clip`) | `reference/commands/<command>` | G |
+| Timeline schema | `reference/timeline-schema` | G |
+| CLI reference | `reference/cli` | G |
+| HTTP API | `reference/http-api` | G |
+| Error codes | `reference/error-codes` | G |
+| Configuration variables | `reference/configuration` | G |
+| Workspace layout | `reference/workspace-layout` | H |
+| Events stream | `reference/events` | H |
+| Glossary | `reference/glossary` | G (from `glossary.json`) |
 
 ### 7.6 Self-hosting (`self-hosting`)
 
-| Page title | Slug | Phase | Source |
-| --- | --- | --- | --- |
-| Run the binary | `self-hosting/binary` | P | H |
-| Run the Docker image | `self-hosting/docker` | A | H |
-| Network mode and login | `self-hosting/network-mode` | A | H |
-| API keys and scopes | `self-hosting/api-keys` | A | H |
-| Put Caddy in front | `self-hosting/caddy` | A | H |
-| Backups and upgrades | `self-hosting/backups-and-upgrades` | A | H |
-| FFmpeg, codecs and licences | `self-hosting/ffmpeg-and-licences` | A | H |
-| Verify a release | `self-hosting/verify-a-release` | A | H |
-| Logs and OpenTelemetry | `self-hosting/observability` | A | H |
-| Privacy: nothing leaves your machine | `self-hosting/privacy` | A | H |
+| Page title | Slug | Source |
+| --- | --- | --- |
+| Run the binary | `self-hosting/binary` | H |
+| Run the Docker image | `self-hosting/docker` | H |
+| Network mode and login | `self-hosting/network-mode` | H |
+| API keys and scopes | `self-hosting/api-keys` | H |
+| Put Caddy in front | `self-hosting/caddy` | H |
+| Backups and upgrades | `self-hosting/backups-and-upgrades` | H |
+| FFmpeg, codecs and licences | `self-hosting/ffmpeg-and-licences` | H |
+| Verify a release | `self-hosting/verify-a-release` | H |
+| Logs and OpenTelemetry | `self-hosting/observability` | H |
+| Privacy: nothing leaves your machine | `self-hosting/privacy` | H |
 
 ### 7.7 Troubleshooting (`troubleshooting`)
 
-| Page title | Slug | Phase | Source |
-| --- | --- | --- | --- |
-| Common problems | `troubleshooting/common-problems` | P | H |
-| FFmpeg is not found | `troubleshooting/ffmpeg-missing` | P | H |
-| No H.264 encoder works | `troubleshooting/no-encoder` | P | H |
-| The workspace is locked | `troubleshooting/workspace-locked` | P | H |
-| An import fails | `troubleshooting/import-fails` | A | H |
-| Export is slow | `troubleshooting/slow-export` | A | H |
-| The diagnostic bundle | `troubleshooting/diagnostic-bundle` | A | H |
+| Page title | Slug | Source |
+| --- | --- | --- |
+| Common problems | `troubleshooting/common-problems` | H |
+| FFmpeg is not found | `troubleshooting/ffmpeg-missing` | H |
+| No H.264 encoder works | `troubleshooting/no-encoder` | H |
+| The workspace is locked | `troubleshooting/workspace-locked` | H |
+| An import fails | `troubleshooting/import-fails` | H |
+| Export is slow | `troubleshooting/slow-export` | H |
+| The diagnostic bundle | `troubleshooting/diagnostic-bundle` | H |
 
 ### 7.8 Contributing (`contributing`)
 
-| Page title | Slug | Phase | Source |
-| --- | --- | --- | --- |
-| Contributing guide | `contributing/guide` | P | H |
-| Development setup | `contributing/setup` | P | H |
-| Repository layout | `contributing/repository-layout` | P | H |
-| Commits and pull requests | `contributing/commits-and-prs` | P | H |
-| Writing documentation | `contributing/writing-docs` | P | H |
-| The release process | `contributing/releases` | A | H |
+| Page title | Slug | Source |
+| --- | --- | --- |
+| Contributing guide | `contributing/guide` | H |
+| Development setup | `contributing/setup` | H |
+| Repository layout | `contributing/repository-layout` | H |
+| Commits and pull requests | `contributing/commits-and-prs` | H |
+| Writing documentation | `contributing/writing-docs` | H |
+| The release process | `contributing/releases` | H |
 
 ### 7.9 Outside the sidebar
 
-| Page | URL | Phase | Source |
-| --- | --- | --- | --- |
-| Landing page | `/` | P | H |
-| Changelog | `/changelog/` | P | generated from `CHANGELOG.md` (section 11.3) |
-| 404 | `/404.html` | P | H |
+| Page | URL | Source |
+| --- | --- | --- |
+| Landing page | `/` | H |
+| Changelog | `/changelog/` | generated from `CHANGELOG.md` (section 11.3) |
+| 404 | `/404.html` | H |
 
 ## 8. Generated reference pages
 
@@ -431,10 +431,10 @@ ADR-0024 item 5: the reference is generated from the binary and the schemas at b
 
 | Pages | Source | How the generator reads it |
 | --- | --- | --- |
-| Command catalogue and one page per command (`reference/commands`, `reference/commands/<command>`) | `vukem-video command:help --json` (SDD-000 operation `CommandHelp`, ADR-0016 item 8): all commands with summary, argument schema, example, errors, scope, phase and, for each, its CLI, MCP and HTTP forms | `site/generated/commands.json` |
+| Command catalogue and one page per command (`reference/commands`, `reference/commands/<command>`) | `stuarty command:help --json` (SDD-000 operation `CommandHelp`, ADR-0016 item 8): all commands with summary, argument schema, example, errors, scope and, for each, its CLI, MCP and HTTP forms | `site/generated/commands.json` |
 | Timeline schema (`reference/timeline-schema`) | the JSON Schema files under `core/schema/` (ADR-0014 item 2; the file names are those of SDD-001) | read directly, no binary needed; rendered as a nested table per entity with `description`, type, constraints, default and `x-status` |
 | CLI reference (`reference/cli`) | the `cli` block of every descriptor of `command:help --json`, plus the global flags and exit codes table (SDD-000 section 8: exit `0`, `2` for retryable codes, `1` otherwise) | `site/generated/commands.json` |
-| HTTP API (`reference/http-api`) | `vukem-video openapi:export -prefix /api/v1`, the vukem command that prints the OpenAPI 3.1 document in warmup mode (no database, no FFmpeg; `docs/cli.md:93`, `docs/api.md:270`) | `site/generated/openapi.json`; one section per tag, one block per operation, with the request and response schemas |
+| HTTP API (`reference/http-api`) | `stuarty openapi:export -prefix /api/v1`, the vukem command that prints the OpenAPI 3.1 document in warmup mode (no database, no FFmpeg; `docs/cli.md:93`, `docs/api.md:270`) | `site/generated/openapi.json`; one section per tag, one block per operation, with the request and response schemas |
 | Error codes (`reference/error-codes`) | the error registry of SDD-002 section A.8 and SDD-000 section 8, exported as `site/generated/errors.json` by `go run ./internal/tools/contractgen -errors` (code, meaning, retryable, HTTP status, since; the plain `contractgen` run writes `core/schema/` and `web/resources/js/generated/`, SDD-009 section 9.4 job 6) | `site/generated/errors.json` |
 | Configuration variables (`reference/configuration`) | the configuration struct, through `go run ./internal/tools/configref -json` (the vukem tool of the same name, `Taskfile.yml:151-159`; vukem's has only `-check` and writes `docs/configuration.md`, so `REL-TOOLS` adds the `-json` flag when it copies it) | `site/generated/config.json`: variable, default, meaning, matches SDD-000 section 10 |
 | Glossary (`reference/glossary`) | `site/content/glossary.json` (section 10) | |
@@ -446,15 +446,15 @@ ADR-0024 item 5: the reference is generated from the binary and the schemas at b
 
 `site/scripts/generate-reference.ts` (Node with type stripping; `npm run reference` in `site/`; `task site:reference` and `task generate` of SDD-009 run it). Steps:
 
-1. Build the binary once to a temporary path: `go build -o "$TEMP/vukem-video" ./web/cmd/app` (from the repository root; the script finds the root with `git rev-parse --show-toplevel`).
+1. Build the binary once to a temporary path: `go build -o "$TEMP/stuarty" ./web/cmd/app` (from the repository root; the script finds the root with `git rev-parse --show-toplevel`).
 2. Write the four JSON files into `site/generated/`:
-   - `vukem-video command:help --json > site/generated/commands.json`
-   - `vukem-video openapi:export -prefix /api/v1 > site/generated/openapi.json`
+   - `stuarty command:help --json > site/generated/commands.json`
+   - `stuarty openapi:export -prefix /api/v1 > site/generated/openapi.json`
    - `go run ./internal/tools/configref -json > site/generated/config.json`
    - `go run ./internal/tools/contractgen -errors > site/generated/errors.json`
-   The binary is run with `VUKEM_VIDEO_HOME` pointing at an empty temporary directory and with no network. JSON is written with sorted keys and two-space indentation so diffs are stable; no timestamp, no absolute path and no version string enters the output (the page shows the version only through the changelog).
+   The binary is run with `STUARTY_HOME` pointing at an empty temporary directory and with no network. JSON is written with sorted keys and two-space indentation so diffs are stable; no timestamp, no absolute path and no version string enters the output (the page shows the version only through the changelog).
 3. Render the MDX pages into `site/content/generated/reference/`: one file per command, plus `commands.mdx`, `timeline-schema.mdx`, `cli.mdx`, `http-api.mdx`, `error-codes.mdx`, `configuration.mdx`, `glossary.mdx`. The front matter has `generated: true` and `title` and `description` from a dictionary in the script. The body is English (identifiers, schema descriptions and error meanings are English; they come from Go struct tags and the registry, D-008). The first line of the body is a comment `{/* Generated by site/scripts/generate-reference.ts. Do not edit. */}`.
-4. Render command pages in the page template of section 5 where it applies: summary, "Arguments" table from the schema, "Example" with the CLI form and the MCP form, "Errors" table with links to `error-codes`, "Scope and phase".
+4. Render command pages in the page template of section 5 where it applies: summary, "Arguments" table from the schema, "Example" with the CLI form and the MCP form, "Errors" table with links to `error-codes`, "Scope".
 5. Idempotent: running it twice produces no diff.
 
 `npm run reference:check` runs the script and `git diff --exit-code -- generated content/generated` (it is the same check that the `Generated files` job of `ci.yml` runs from the repository root, SDD-009 section 9.4 job 6).
@@ -469,7 +469,7 @@ ADR-0024 item 6 is a requirement, built by the same code as vukem's endpoints (`
 
 | Artefact | URL | Content |
 | --- | --- | --- |
-| `llms.txt` | `/llms.txt` | llms.txt convention: `# Vukem Video`, a one-sentence summary as a blockquote, the line "Full documentation in one file: ...", the line "Every page is also available as Markdown: add `.md` to its URL", then one `##` heading per navigation section with `- [Title](URL): description` per page (`llms.txt.ts:20-27`) |
+| `llms.txt` | `/llms.txt` | llms.txt convention: `# Stuarty`, a one-sentence summary as a blockquote, the line "Full documentation in one file: ...", the line "Every page is also available as Markdown: add `.md` to its URL", then one `##` heading per navigation section with `- [Title](URL): description` per page (`llms.txt.ts:20-27`) |
 | `llms-full.txt` | `/llms-full.txt` | every page's Markdown twin concatenated in sidebar order, each preceded by a `---` line and its `Source:` URL |
 | Markdown twin | `/docs/<dir>/<slug>.md` | `# Title`, a `> description` line, `Source: <HTML URL>`, then the page body with MDX components converted to Markdown by `lib/text.ts` `mdxToMarkdown` (`[...slug].md.ts:15`). Content type `text/markdown; charset=utf-8`. Every page has one, including generated pages |
 | `sitemap.xml` | `/sitemap.xml` | one URL entry per HTML page (not the twins), the landing page and the changelog page; no alternates |
@@ -592,9 +592,9 @@ GitHub Pages, source "GitHub Actions" (ADR-0024 item 2; D-015): a push to `main`
 
 ### 12.4 Site URL and base path
 
-`SITE_URL` (a repository variable, optional) is the public URL. Default: `https://video.vukem.dev` (TASK-0263, decision of the author, 2026-11-16), a custom domain on GitHub Pages, so `site.base` is `/` and `robots.txt` and the sitemap are at the host root. The earlier default was the project site `https://alexgalhardo.github.io/vukem-video` (base `/vukem-video`); an address with a path still works and sets that path as the base. Every internal link, asset path, canonical URL, sitemap URL and `llms.txt` URL is built from `site.url` and `site.base` (`lib/site.ts`); `scripts/base-path.test.ts` builds the site under both a base path (`https://example.org/vukem-video`) and `/` (`https://video.vukem.dev`) and fails on any `href="/..."` or `src="/..."` that does not start with the base.
+`SITE_URL` (a repository variable, optional) is the public URL. Default: `https://video.vukem.dev` (TASK-0263, decision of the author, 2026-11-16), a custom domain on GitHub Pages, so `site.base` is `/` and `robots.txt` and the sitemap are at the host root. The earlier default was the project site `https://alexgalhardo.github.io/stuarty` (base `/stuarty`); an address with a path still works and sets that path as the base. Every internal link, asset path, canonical URL, sitemap URL and `llms.txt` URL is built from `site.url` and `site.base` (`lib/site.ts`); `scripts/base-path.test.ts` builds the site under both a base path (`https://example.org/stuarty`) and `/` (`https://video.vukem.dev`) and fails on any `href="/..."` or `src="/..."` that does not start with the base.
 
-**The custom domain is a repository setting, not a file.** The site is deployed with `actions/deploy-pages` (source "GitHub Actions", `build_type: workflow`), and a deployment of that kind ignores a `CNAME` file in the artifact, so `site/public/CNAME` is not added. The author sets the domain once: a DNS `CNAME` record `video` pointing to `alexgalhardo.github.io` (at the DNS host of `vukem.dev`), then Settings, Pages, Custom domain `video.vukem.dev`, and Enforce HTTPS once the certificate is issued (or `gh api -X PUT repos/AlexGalhardo/vukem-video/pages -f cname=video.vukem.dev`). The repository variable `SITE_URL` may stay unset, because the default is already the domain; if it is set to the old project address it must be removed or changed, since `site.yml`, `desktop.yml` and `release.yml` read it. GitHub then answers the old project address with a redirect to the domain; the update client of desktop applications up to v0.20.0 does not follow it (SDD-009 section 10.5).
+**The custom domain is a repository setting, not a file.** The site is deployed with `actions/deploy-pages` (source "GitHub Actions", `build_type: workflow`), and a deployment of that kind ignores a `CNAME` file in the artifact, so `site/public/CNAME` is not added. The author sets the domain once: a DNS `CNAME` record `video` pointing to `alexgalhardo.github.io` (at the DNS host of `vukem.dev`), then Settings, Pages, Custom domain `video.vukem.dev`, and Enforce HTTPS once the certificate is issued (or `gh api -X PUT repos/AlexGalhardo/stuarty/pages -f cname=video.vukem.dev`). The repository variable `SITE_URL` may stay unset, because the default is already the domain; if it is set to the old project address it must be removed or changed, since `site.yml`, `desktop.yml` and `release.yml` read it. GitHub then answers the old project address with a redirect to the domain; the update client of desktop applications up to v0.20.0 does not follow it (SDD-009 section 10.5).
 
 ### 12.5 Local commands
 
@@ -613,8 +613,7 @@ Identifiers for the ROADMAP; all `senior-d` unless stated.
 | `SITE-AGENT` | `llms.txt`, `llms-full.txt`, twins, sitemap, robots, `check-built.ts`, with the no-external-resource assertion | acceptance checks 11 to 13 and 18 |
 | `SITE-TRANSLATE-CHECK` | (superseded by TASK-0265) `check-translations.ts` and its tests | removed |
 | `SITE-CI` | `site.yml`, `docs-last-updated.yml` changes (with `REL-CI` of SDD-009) | acceptance check 14 |
-| `SITE-P` | The Prototype pages of section 7 (English, by `senior-d` and feature seniors) | every `P` row exists |
-| `SITE-A`, `SITE-B` | The ALPHA and BETA pages | every `A` or `B` row exists |
+| `SITE-PAGES` | The pages of section 7 (English, by `senior-d` and feature seniors) | every row exists |
 
 ## 14. Acceptance
 
@@ -634,8 +633,62 @@ Each check is verifiable from this document and the repository alone.
 12. No twin contains JSX tags or `import` lines.
 13. After deployment: `curl -sI <site>/docs/introduction.md` returns `200` with `text/markdown`; `curl -s -o /dev/null -w "%{http_code}" <site>/nope/` prints `404`.
 14. `site.yml` on a pull request that edits `site/content/docs/en/guide/exporting.mdx` runs `build` and `last-updated`; there is no translation step.
-15. `npm run test:base-path` (or `scripts/base-path.test.ts`) passes with `SITE_URL=https://example.org/vukem-video` (a base path) and with `SITE_URL=https://video.vukem.dev` (base `/`): no absolute link lacks the base.
+15. `npm run test:base-path` (or `scripts/base-path.test.ts`) passes with `SITE_URL=https://example.org/stuarty` (a base path) and with `SITE_URL=https://video.vukem.dev` (base `/`): no absolute link lacks the base.
 16. `content/glossary.json` has the 30 terms of section 10, each with `en` and `pt-br` (the editor's Portuguese), and is the file SDD-012 imports (a grep of `web/resources/js` finds no second copy of the term list once SDD-012 is implemented).
-17. Every `P` row of section 7 exists at the end of the Prototype; every `A` row at the end of ALPHA; every `B` row at the end of BETA.
+17. Every row of section 7 exists.
 18. No external resource (D-015, D-016): `npm run check:built` passes on the real `out/` and fails on a scratch change that adds `<script src="https://example.org/x.js">`, an external stylesheet or an external font to a page; the built site makes no request to another origin when opened with the network blocked (property 7 of section 9).
-19. A person following only `getting-started/quick-start` reaches an exported MP4 in under ten minutes on a clean machine (NFR-040), timed by the author at the end of the Prototype and recorded in the ROADMAP.
+19. A person following only `getting-started/quick-start` reaches an exported MP4 in under ten minutes on a clean machine (NFR-040), timed by the author and recorded in the ROADMAP.
+
+## 15. The site of Stuarty (epic 40, 2026-11-20)
+
+The site was written for the editor alone. Epic 40 turns it into the site of the product of ADR-0044 and ADR-0031: it documents the sections that are merged when the epic runs and lists the ones that are not. Sections 1 to 14 still describe the shell, the checks and the generators; this section replaces the page list of section 7 and the page order of section 3 where it says otherwise.
+
+### 15.1 Language
+
+Epic 40 asks for English and Brazilian Portuguese and for a check that fails on a missing translation. The amendment of ADR-0024 and the amendment at the top of this document (TASK-0265, the author, 2026-11-16) removed the second language, the switcher and that check. The later decision of the author wins over the plan, and bringing the language back is a change of scope (a second tree of about 150 pages, a staleness check, per-locale endpoints). **Decision of this SDD, cheap to undo: the site stays English only.** What epic 40 gives the reader of Portuguese is two guides written once in Portuguese and kept next to the repository documents, as `deploy/README.pt-BR.md` already is: `docs/guides/pt-BR/comecar.md` (what Stuarty is, what stays on the machine, install) and `docs/guides/pt-BR/primeiro-short.md` (the first short video). The introduction links to them and to the two Portuguese recipe guides of epic 39 (`docs/guides/pt-BR/recipe-product-commercial.md`, `docs/guides/pt-BR/recipe-long-talking-video.md`), and `site/scripts/pt-br-guides.test.ts` fails when one of the four is missing, is not linked, or names a command that is not in the CLI. Task 8 of the epic is met in that form, and the question is recorded for the author.
+
+### 15.2 Structure
+
+| Section | Directory and pages |
+| --- | --- |
+| Start | `getting-started`: `introduction`, `what-leaves-your-machine`, `installation` (which one to choose, and the measured time), `install-windows`, `install-docker`, `install-server`, `quick-start`, `workspace`, `projects`, `migration` |
+| First short video | `guide/first-short-video`: the flow of epic 38 (`scripts/first-flow.sh`) as a tutorial, the scripted commands and the path in the UI; `guide/tutorial-vertical-short` stays as the editor-only tutorial, and the recipes of epic 39 (`guide/recipe-product-commercial`, `guide/recipe-long-talking-video`) follow in the same sidebar group |
+| Guides | one page per section of the sidebar of the product: the video editor (the existing `guide/` pages), `guide/dashboard`, `guide/asset-library`, `guide/image-editor`, `guide/writing`, publishing (`guide/approvals`, `guide/publishing-calendar`, `guide/blog-posts` and `publish/<network>`: `youtube`, `instagram`, `facebook`, `x`, `tiktok`), `guide/ai-providers`, `guide/agent-chat`, `guide/memory-skills-prompts` |
+| Agents | `agents`: connect over MCP, the CLI, the HTTP API, the generated page per domain, the approval queue from an agent's point of view (`agents/approvals`) |
+| Reference | generated: operations (`api/`, `mcp/`), CLI, MCP tools, errors, configuration, and the limits of the networks (`reference/network-limits`) |
+| Security and privacy | `self-hosting/privacy` (every way out, one row each) and `self-hosting/security` (the vault, the master key, the approval queue, what an agent cannot do) |
+| Troubleshooting, Glossary | as they are, with the pages of the new domains added |
+
+The landing page and `getting-started/what-leaves-your-machine` state the outbound rule of ADR-0032 in plain words: with no connection configured nothing leaves the machine; a connection a person creates is the only thing that opens one; publishing waits for the person's approval; there is no telemetry.
+
+### 15.3 Generated by this epic
+
+- `internal/tools/clidoc -networks` writes `site/generated/networks.json`: the `Description` of each social connector of the build (limits with the official page and the date they were read, the scopes, the hosts) and the export preset the network's `Preset` names, from the same data `PublishValidate` checks against. `scripts/network-reference.ts` (called by `generate-reference.ts`) turns it into `content/generated/reference/network-limits.mdx` and one generated page per network, `content/generated/publish/<network>.mdx`: the hand-written steps of the developer app (`content/network-setup/<network>.md`), the permissions and hosts, and the limits table with the official page and the date each number was read (and the price of a post where the network charges one). The hosts those pages cite are read from the same file by `check-built.ts`.
+- `task generate:check` runs `task codegen`, the OpenAPI export of `web/contract`, and the reference script (which runs `clidoc` and `clidoc -networks`), and fails when a committed generated file differs. `scripts/network-reference.test.ts` fails when an operation of the registry has no generated page.
+- The former name is generated too: `content/generated/getting-started/migration.mdx` is the one page that says it, from `content/fragments/migration.md` and the table of SDD-000 section 13.1. Only its body says it: its title and description show on every page (the sidebar, the search, `llms.txt`), and `scripts/generate-reference.test.ts` fails when the front matter of any page names it.
+
+### 15.4 Every command on the site runs, and the ten minutes
+
+`scripts/docs-commands-smoke.sh` runs the bash blocks of the install pages, of `guide/first-short-video`, of the two older tutorials, of `guide/image-editor`, `guide/asset-library` and `guide/memory-skills-prompts` against a local build with the stub transcriber. A block that needs Docker or a server is checked instead (bash syntax, every `STUARTY_*` and `APP_*` variable in the configuration reference, the flags of `deploy/` scripts). The steps that need an account of the reader are `console` blocks: every `stuarty` command in them must be a command of the CLI, and `scripts/first-flow.sh` runs the whole flow with a fake provider, a fake network and a person approval. `scripts/first-export-timing.sh --binary <path>` (or an image) measures the first export on a clean workspace; the number, the date, the machine and the condition are published on `getting-started/installation`.
+
+### 15.5 The old pages: keep, rewrite, remove
+
+| Pages | Decision |
+| --- | --- |
+| `getting-started/introduction`, `installation`, `quick-start`, `projects` | rewrite: they describe an editor alone; `quick-start` becomes the first export in the editor and points to the first short video |
+| `getting-started/workspace` | keep, with the name of the folder checked |
+| `concepts/*` (7 pages) | keep |
+| `guide/*` of the video editor (media library to exporting, 40 pages) | keep; `writing`, `ai-providers`, `agent-chat`, `publishing-calendar` are checked against the merged epics |
+| `guide/tutorial-vertical-short`, `tutorial-agent-edit` | keep (the editor-only tutorials the smoke script already runs) |
+| `agents/*`, `mcp/*`, `api/overview`, `prompts/*`, `reference/events` | keep; `agents/overview` rewritten for the domains |
+| `self-hosting/*` | keep; `privacy` rewritten; `vps`, `docker`, `binary` stay as the detail behind the three install pages |
+| `troubleshooting/*`, `glossary/*`, `contributing/*` | keep |
+| the former name | `self-hosting/backups-and-upgrades` and the configuration reference point to the migration page instead of saying it; the only page that names it is `getting-started/migration` (SDD-000 section 13). The address of the site and of the update feed still carries the former name as a host name: that is the author's to change with the domain |
+| wording of stages | the callouts "still before 1.0" and the sentences that put the product before a 1.0 are removed (D-049); a version number as a version (the deprecation of the former variables "until 1.0.0", Conventional Commits 1.0) stays |
+| removed | none: no page is deleted, so no redirect is needed; a page that moves gets an entry in `astro.config.mjs` |
+
+### 15.6 Not documented, because not merged when the epic ran
+
+The video generation that needs a provider (11, only the part without a provider is merged) and the agent's completion rate in the first flow (38 tasks 4 and 6). `getting-started/introduction` lists them as "in progress".
+
+The blog and its destinations (epic 23), the recipes for commercials and long videos (39) and the revert of an image (50) were merged into the integration branch while the epic ran, with their own pages (`guide/blog-posts`, `guide/recipe-*`, the revert in `concepts/commands-and-revisions` and `guide/image-editor`): the review of the epic put them in the sidebar, in the introduction and, for the blog destinations, in the list of what leaves the machine.

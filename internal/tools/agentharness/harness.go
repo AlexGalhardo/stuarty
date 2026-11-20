@@ -11,14 +11,14 @@ import (
 
 const maxOutputBytes = 8000
 
-const toolName = "vukem_video"
+const toolName = "stuarty"
 
 var toolSchema = json.RawMessage(`{"type":"object","properties":{` +
 	`"args":{"type":"string","description":"the arguments after the program name, for example: project:list --json"},` +
 	`"stdin":{"type":"string","description":"text sent to the standard input of the command, when it reads one"}},` +
 	`"required":["args"]}`)
 
-// Runner runs one vukem-video command line and returns what it printed and its exit code.
+// Runner runs one stuarty command line and returns what it printed and its exit code.
 type Runner func(ctx context.Context, args []string, stdin string) (output string, exitCode int, err error)
 
 // commandRecord is one command the agent ran.
@@ -48,6 +48,8 @@ type agent struct {
 	maxTokens int
 	maxTurns  int
 	system    string
+	// flow is the world of the first-flow scenario; nil for the others.
+	flow *flowEnv
 }
 
 // splitArgs splits a command line the way a POSIX shell does for quotes and backslashes, with no
@@ -171,9 +173,20 @@ func (a *agent) play(ctx context.Context, sc scenario, n int, run Runner) (runRe
 	res := runResult{Scenario: sc.Name, Run: n}
 	tools := []toolDef{{
 		Name: toolName, InputSchema: toolSchema,
-		Description: "Runs one vukem-video command and returns its exit code and output.",
+		Description: "Runs one stuarty command and returns its exit code and output.",
 	}}
 	res.Messages = []message{{Role: "user", Content: []block{{Type: "text", Text: sc.Prompt}}}}
+
+	var before flowBefore
+
+	if sc.Flow {
+		var why string
+		if before, why = beforeFlow(ctx, a.flow, run); why != "" {
+			res.Reason = why
+
+			return res, nil
+		}
+	}
 
 	var apiFailure string
 
@@ -228,6 +241,10 @@ func (a *agent) play(ctx context.Context, sc scenario, n int, run Runner) (runRe
 	}
 
 	res.Success, res.Reason = judge(sc, res.Commands)
+	if res.Success && sc.Flow {
+		res.Success, res.Reason = settleFlow(ctx, a.flow, run, before)
+	}
+
 	if !res.Success && res.Turns >= a.maxTurns {
 		res.Reason += " (turn limit reached)"
 	}

@@ -15,13 +15,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AlexGalhardo/vukem-video/core/plan"
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
-	"github.com/AlexGalhardo/vukem-video/engine/compositor"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg"
-	"github.com/AlexGalhardo/vukem-video/engine/ffmpeg/ffargs"
-	"github.com/AlexGalhardo/vukem-video/engine/ingest"
-	"github.com/AlexGalhardo/vukem-video/engine/lut"
+	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/compositor"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
+	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
+	"github.com/AlexGalhardo/stuarty/engine/ingest"
+	"github.com/AlexGalhardo/stuarty/engine/lut"
 )
 
 // layerInfo is what the pre-pass learns about a media layer over its whole item: whether its drawn
@@ -111,7 +111,7 @@ func newFrameSource(s *state, infos map[string]*layerInfo) *frameSource {
 
 // media is the compositor.MediaSource.
 func (f *frameSource) media(l *plan.Layer) (compositor.Image, error) {
-	a, ok := f.s.job.Doc.Assets[l.AssetID]
+	a, ok := f.s.asset(l.AssetID)
 	if !ok {
 		return compositor.Image{}, fmt.Errorf("the asset %s is not in the document", l.AssetID)
 	}
@@ -359,7 +359,7 @@ func (f *frameSource) prestart(fp *plan.FramePlan) {
 			continue
 		}
 
-		a, ok := f.s.job.Doc.Assets[l.AssetID]
+		a, ok := f.s.asset(l.AssetID)
 		if !ok || a.Kind == timeline.AssetImage {
 			continue
 		}

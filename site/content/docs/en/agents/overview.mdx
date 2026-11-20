@@ -1,9 +1,11 @@
 ---
 title: "Agents overview"
-description: "How an AI agent edits a video with Vukem Video, and which of the three ways in to use."
+description: "How an AI agent works in Stuarty, across video, images, writing and publishing, and which of the three ways in to use."
 ---
 
-Vukem Video is built to be operated by an agent as much as by a person. There is one command core. The MCP server, the CLI, the HTTP API and the browser editor are thin adapters over it, so they all produce the same project document.
+Stuarty is built to be operated by an agent as much as by a person: everything a person does in the interface is also a command. There is one command core. The MCP server, the CLI, the HTTP API and the browser editor are thin adapters over it, so they all produce the same project document, and a person and an agent share one history.
+
+An agent works in the same domains a person does: [project](/docs/agents/domain-project), [video](/docs/agents/domain-video), [image](/docs/agents/domain-image), [writing](/docs/agents/domain-writing), [assets](/docs/agents/domain-asset), [publishing](/docs/agents/domain-publish), [providers](/docs/agents/domain-provider), [memory](/docs/agents/domain-memory) and [workspace](/docs/agents/domain-workspace). Each page is generated from the registry and lists the tools, the commands and the operations of the domain.
 
 ## The three ways in
 
@@ -13,7 +15,7 @@ Vukem Video is built to be operated by an agent as much as by a person. There is
 | CLI | the agent has a shell | [CLI reference](/docs/reference/cli) |
 | HTTP API | you write your own client | the local server, on `127.0.0.1:7878` |
 
-The product sends nothing outside your computer, and an agent cannot make it. Nothing an agent can call deletes data for good, and every edit can be undone.
+With nothing connected, the product sends nothing outside your computer, and an agent cannot make it. An agent works only with the destinations a person connected; it can prepare a publication or a costly generation, and a person approves it in the [approval queue](/docs/agents/approvals). Nothing an agent can call deletes data for good, and every edit can be undone.
 
 ## The loop
 

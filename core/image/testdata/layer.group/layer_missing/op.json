@@ -1,0 +1,8 @@
+{
+  "args": {
+    "layer_ids": [
+      "lyr_zzzzzzzzzz"
+    ]
+  },
+  "op": "layer.group"
+}

@@ -6,7 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/service"
+	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
 // fakeService records the last request of each method and answers with the
@@ -164,11 +165,22 @@ type harness struct {
 func newHarness(t *testing.T) *harness {
 	t.Helper()
 
+	// A command that does not go through the resolver (token:rotate) opens the workspace itself: it gets
+	// a private one, never the default folder of the person running the tests, which Resolve also adopts
+	// from ~/.vukem-video (ADR-0044).
+	home := t.TempDir()
+
 	h := &harness{svc: &fakeService{}, stdout: &bytes.Buffer{}, stderr: &bytes.Buffer{}}
 	h.res = &fakeResolver{svc: h.svc}
 	h.rt = &Runtime{
 		Stdin: strings.NewReader(""), Stdout: h.stdout, Stderr: h.stderr,
-		Getenv:   func(string) string { return "" },
+		Getenv: func(name string) string {
+			if name == workspace.EnvHome {
+				return home
+			}
+
+			return ""
+		},
 		Getwd:    func() (string, error) { return t.TempDir(), nil },
 		Resolver: h.res,
 	}

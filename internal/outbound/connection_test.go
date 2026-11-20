@@ -1,0 +1,442 @@
+package outbound
+
+import (
+	"context"
+	"errors"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"net/netip"
+	"net/url"
+	"strings"
+	"sync"
+	"testing"
+	"time"
+)
+
+type fakeRegistry struct {
+	mu    sync.Mutex
+	dests map[string]Destination
+	used  []string
+}
+
+func (r *fakeRegistry) Destination(_ context.Context, id string) (Destination, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	d, ok := r.dests[id]
+	if !ok {
+		return Destination{}, ErrNoConnection
+	}
+
+	return d, nil
+}
+
+func (r *fakeRegistry) Used(_ context.Context, id string, _ time.Time) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	r.used = append(r.used, id)
+}
+
+func (r *fakeRegistry) remove(id string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	delete(r.dests, id)
+}
+
+// destination is a fake server that records what it receives.
+type destination struct {
+	srv  *httptest.Server
+	mu   sync.Mutex
+	seen []string
+}
+
+func newDestination(t *testing.T) *destination {
+	t.Helper()
+
+	d := &destination{}
+	d.srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		d.mu.Lock()
+		d.seen = append(d.seen, r.URL.Path+" "+r.Header.Get("Authorization"))
+		d.mu.Unlock()
+
+		if r.URL.Path == "/redirect" {
+			http.Redirect(w, r, "/elsewhere", http.StatusFound)
+
+			return
+		}
+
+		_, _ = io.WriteString(w, "hello")
+	}))
+
+	t.Cleanup(d.srv.Close)
+
+	return d
+}
+
+func (d *destination) hits() int {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	return len(d.seen)
+}
+
+func (d *destination) host() string {
+	u, _ := url.Parse(d.srv.URL)
+
+	return u.Hostname()
+}
+
+// get makes a GET through c, closes the body and returns the status and the body.
+func get(c *http.Client, target string) (status int, body string, err error) {
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, target, http.NoBody)
+	if err != nil {
+		return 0, "", err
+	}
+
+	res, err := c.Do(req)
+	if err != nil {
+		return 0, "", err
+	}
+
+	defer func() { _ = res.Body.Close() }()
+
+	raw, _ := io.ReadAll(res.Body)
+
+	return res.StatusCode, string(raw), nil
+}
+
+func TestConnectionReachesItsHostAndRecordsTheUse(t *testing.T) {
+	dst := newDestination(t)
+	reg := &fakeRegistry{dests: map[string]Destination{"con_a": {ID: "con_a", Hosts: []string{dst.host()}}}}
+
+	var purposes []Purpose
+
+	restore := SetDialRecorder(func(p Purpose, _ string) error {
+		purposes = append(purposes, p)
+
+		return nil
+	})
+	defer restore()
+
+	_, body, err := get(Connection(reg, "con_a", 5*time.Second, nil), dst.srv.URL+"/ping")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if body != "hello" || dst.hits() != 1 {
+		t.Fatalf("body %q, hits %d", body, dst.hits())
+	}
+
+	if len(reg.used) != 1 || reg.used[0] != "con_a" {
+		t.Errorf("Used = %v", reg.used)
+	}
+
+	if len(purposes) != 1 || purposes[0] != PurposeConnection {
+		t.Errorf("the dial recorder saw %v", purposes)
+	}
+}
+
+func TestConnectionRefusesAnotherHostBeforeAnySocket(t *testing.T) {
+	dst := newDestination(t)
+	other := newDestination(t)
+	reg := &fakeRegistry{dests: map[string]Destination{"con_a": {ID: "con_a", Hosts: []string{dst.host()}}}}
+
+	dials := 0
+	restore := SetDialRecorder(func(Purpose, string) error { dials++; return nil })
+
+	defer restore()
+
+	client := Connection(reg, "con_a", 5*time.Second, nil)
+
+	// "localhost" reaches the same machine but is not the listed host.
+	_, port, _ := hostAndPort(other.srv.URL)
+
+	for _, target := range []string{
+		"http://localhost:" + port + "/x",
+		"https://example.com/x",
+		"https://user:pass@" + dst.host() + "/x",
+		"ftp://" + dst.host() + "/x",
+		"file:///etc/passwd",
+	} {
+		_, _, err := get(client, target)
+		if !errors.Is(err, ErrDestination) {
+			t.Errorf("%s: %v, want ErrDestination", target, err)
+		}
+	}
+
+	if dials != 0 || dst.hits() != 0 || other.hits() != 0 {
+		t.Errorf("a refused request reached the network: dials %d, hits %d and %d", dials, dst.hits(), other.hits())
+	}
+
+	if len(reg.used) != 0 {
+		t.Errorf("a refused request was recorded as a use: %v", reg.used)
+	}
+}
+
+func TestConnectionRefusesPlainHTTPToAPublicHost(t *testing.T) {
+	reg := &fakeRegistry{dests: map[string]Destination{"con_a": {ID: "con_a", Hosts: []string{"api.example.com"}}}}
+
+	_, _, err := get(Connection(reg, "con_a", time.Second, nil), "http://api.example.com/x")
+	if !errors.Is(err, ErrDestination) {
+		t.Fatalf("%v, want ErrDestination", err)
+	}
+}
+
+func TestConnectionHostMatchIsCaseInsensitive(t *testing.T) {
+	u, _ := url.Parse("https://API.Example.com./x")
+
+	if err := checkDestination(u, []string{"api.example.com"}); err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	if err := checkDestination(u, []string{"example.com"}); !errors.Is(err, ErrDestination) {
+		t.Fatalf("a parent domain matched: %v", err)
+	}
+}
+
+func TestConnectionStopsAtOnceWhenRemoved(t *testing.T) {
+	dst := newDestination(t)
+	reg := &fakeRegistry{dests: map[string]Destination{"con_a": {ID: "con_a", Hosts: []string{dst.host()}}}}
+	client := Connection(reg, "con_a", 5*time.Second, nil)
+
+	if _, _, err := get(client, dst.srv.URL+"/one"); err != nil {
+		t.Fatal(err)
+	}
+
+	reg.remove("con_a")
+
+	if _, _, err := get(client, dst.srv.URL+"/two"); !errors.Is(err, ErrNoConnection) {
+		t.Fatalf("after removal: %v, want ErrNoConnection", err)
+	}
+
+	if dst.hits() != 1 {
+		t.Errorf("the destination saw %d requests, want 1", dst.hits())
+	}
+}
+
+func TestConnectionFollowsNoRedirect(t *testing.T) {
+	dst := newDestination(t)
+	reg := &fakeRegistry{dests: map[string]Destination{"con_a": {ID: "con_a", Hosts: []string{dst.host()}}}}
+
+	status, _, err := get(Connection(reg, "con_a", 5*time.Second, nil), dst.srv.URL+"/redirect")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if status != http.StatusFound || dst.hits() != 1 {
+		t.Errorf("status %d, hits %d: the redirect was followed", status, dst.hits())
+	}
+}
+
+func TestConnectionRefusesAMetadataAddressAtDial(t *testing.T) {
+	reg := &fakeRegistry{dests: map[string]Destination{"con_a": {ID: "con_a", Hosts: []string{"169.254.169.254"}}}}
+
+	dials := 0
+	restore := SetDialRecorder(func(Purpose, string) error { dials++; return nil })
+
+	defer restore()
+
+	_, _, err := get(Connection(reg, "con_a", 2*time.Second, nil), "https://169.254.169.254/latest/meta-data/")
+	if !errors.Is(err, ErrNotPublic) {
+		t.Fatalf("%v, want ErrNotPublic", err)
+	}
+
+	if dials != 0 {
+		t.Errorf("the recorder saw %d dials of a refused address", dials)
+	}
+}
+
+func TestConnectionDialRecorderCanStopTheAttempt(t *testing.T) {
+	dst := newDestination(t)
+	reg := &fakeRegistry{dests: map[string]Destination{"con_a": {ID: "con_a", Hosts: []string{dst.host()}}}}
+
+	stop := errors.New("stop")
+	restore := SetDialRecorder(func(Purpose, string) error { return stop })
+
+	defer restore()
+
+	if _, _, err := get(Connection(reg, "con_a", 2*time.Second, nil), dst.srv.URL); !errors.Is(err, stop) {
+		t.Fatalf("%v, want the recorder error", err)
+	}
+
+	if dst.hits() != 0 {
+		t.Error("the destination was reached")
+	}
+}
+
+// hostAndPort is the host and the port of a URL.
+func hostAndPort(raw string) (host, port string, err error) {
+	u, err := url.Parse(raw)
+	if err != nil {
+		return "", "", err
+	}
+
+	return u.Hostname(), u.Port(), nil
+}
+
+// TestConnectionRefusesNamedCloudMetadataAddressesAtDial: the metadata services that sit in ranges
+// the gate allows on purpose (the CGNAT block and the unique-local block) are refused by address.
+func TestConnectionRefusesNamedCloudMetadataAddressesAtDial(t *testing.T) {
+	hosts := []string{
+		"100.100.100.200", "fd00:ec2::254", "::ffff:100.100.100.200",
+		// A zone does not make it another address, and the NAT64 prefix embeds the IPv4 one.
+		"fd00:ec2::254%1", "64:ff9b::6464:64c8", "64:ff9b::a9fe:a9fe",
+	}
+
+	for _, host := range hosts {
+		t.Run(host, func(t *testing.T) {
+			reg := &fakeRegistry{dests: map[string]Destination{"con_a": {ID: "con_a", Hosts: []string{host}}}}
+
+			dials := 0
+			restore := SetDialRecorder(func(Purpose, string) error { dials++; return nil })
+
+			defer restore()
+
+			authority := host
+			if strings.Contains(host, ":") {
+				authority = "[" + strings.ReplaceAll(host, "%", "%25") + "]"
+			}
+
+			_, _, err := get(Connection(reg, "con_a", 2*time.Second, nil), "https://"+authority+"/latest/meta-data/")
+			if !errors.Is(err, ErrNotPublic) {
+				t.Fatalf("%v, want ErrNotPublic", err)
+			}
+
+			if dials != 0 {
+				t.Errorf("the recorder saw %d dials of a refused address", dials)
+			}
+		})
+	}
+}
+
+// TestConnectionStillAllowsCGNATAndUniqueLocalNeighbours: only the named addresses are refused.
+func TestConnectionStillAllowsCGNATAndUniqueLocalNeighbours(t *testing.T) {
+	for _, host := range []string{"100.100.100.201", "fd00:ec2::255", "10.0.0.1", "64:ff9b::6464:64c9"} {
+		reg := &fakeRegistry{dests: map[string]Destination{"con_a": {ID: "con_a", Hosts: []string{host}}}}
+		stop := errors.New("stop")
+		restore := SetDialRecorder(func(Purpose, string) error { return stop })
+
+		authority := host
+		if strings.Contains(host, ":") {
+			authority = "[" + host + "]"
+		}
+
+		_, _, err := get(Connection(reg, "con_a", 2*time.Second, nil), "https://"+authority+"/")
+
+		restore()
+
+		if !errors.Is(err, stop) {
+			t.Errorf("%s: %v, want the gate to let the dial reach the recorder", host, err)
+		}
+	}
+}
+
+// TestConnectionRefusesEmbeddedIPv4OfRefusedAddresses: the IPv4 address that 6to4, the deprecated
+// IPv4-compatible form and the local-use NAT64 prefix carry is judged like a plain one (VV-245).
+func TestConnectionRefusesEmbeddedIPv4OfRefusedAddresses(t *testing.T) {
+	hosts := []string{
+		"2002:a9fe:a9fe::", "2002:a9fe:a9fe:1::5", "2002:6464:64c8::1", "2002:0:0::",
+		"::a9fe:a9fe", "::6464:64c8", "::e000:1",
+		"64:ff9b:1::a9fe:a9fe", "64:ff9b:1::1", "64:ff9b:1::",
+		// A zone does not hide the embedded address.
+		"2002:a9fe:a9fe::%1", "::a9fe:a9fe%1", "64:ff9b:1::1%1",
+	}
+
+	for _, host := range hosts {
+		t.Run(host, func(t *testing.T) {
+			reg := &fakeRegistry{dests: map[string]Destination{"con_a": {ID: "con_a", Hosts: []string{host}}}}
+
+			// The recorder refuses too, so a regression is counted without opening a socket to
+			// the embedded address.
+			dials := 0
+			restore := SetDialRecorder(func(Purpose, string) error { dials++; return errors.New("stop") })
+
+			defer restore()
+
+			authority := "[" + strings.ReplaceAll(host, "%", "%25") + "]"
+
+			_, _, err := get(Connection(reg, "con_a", 2*time.Second, nil), "https://"+authority+"/latest/meta-data/")
+			if !errors.Is(err, ErrNotPublic) {
+				t.Fatalf("%v, want ErrNotPublic", err)
+			}
+
+			if dials != 0 {
+				t.Errorf("the recorder saw %d dials of a refused address", dials)
+			}
+		})
+	}
+}
+
+// TestConnectionStillAllowsEmbeddedIPv4OfAllowedAddresses: the neighbours that carry an allowed
+// address reach the dial, and so do the IPv6 loopback (inside ::/96) and the tunnel forms the gate does
+// not decode (Teredo, an ISATAP interface identifier), whose embedded IPv4 receives a tunnel packet,
+// never the connection.
+func TestConnectionStillAllowsEmbeddedIPv4OfAllowedAddresses(t *testing.T) {
+	hosts := []string{
+		"2002:6464:64c9::1", "2002:a00:1::", "::a00:1", "::6464:64c9", "2002:7f00:1::", "::1",
+		"2001:0:4136:e378:8000:63bf:5601:5601", "2001:db8::5efe:a9fe:a9fe",
+	}
+
+	for _, host := range hosts {
+		reg := &fakeRegistry{dests: map[string]Destination{"con_a": {ID: "con_a", Hosts: []string{host}}}}
+		stop := errors.New("stop")
+		restore := SetDialRecorder(func(Purpose, string) error { return stop })
+
+		_, _, err := get(Connection(reg, "con_a", 2*time.Second, nil), "https://["+host+"]/")
+
+		restore()
+
+		if !errors.Is(err, stop) {
+			t.Errorf("%s: %v, want the gate to let the dial reach the recorder", host, err)
+		}
+	}
+}
+
+func TestConnectionPublicRefusesInternalAddressesAtDial(t *testing.T) {
+	dst := newDestination(t)
+	reg := &fakeRegistry{dests: map[string]Destination{"con_a": {ID: "con_a", Hosts: []string{dst.host()}}}}
+
+	// The plain client reaches a server on loopback: a self-hosted server is a destination the user typed.
+	if status, _, err := get(
+		Connection(reg, "con_a", 2*time.Second, nil),
+		dst.srv.URL,
+	); err != nil ||
+		status != http.StatusOK {
+		t.Fatalf("the plain client: %d %v", status, err)
+	}
+
+	before := dst.hits()
+
+	// The public-only client does not, whatever the name resolved to: the dial itself is judged.
+	_, _, err := get(ConnectionPublic(reg, "con_a", 2*time.Second, nil), dst.srv.URL)
+	if !errors.Is(err, ErrNotPublic) {
+		t.Fatalf("%v, want ErrNotPublic", err)
+	}
+
+	if dst.hits() != before {
+		t.Error("a request reached a loopback server through the public-only client")
+	}
+}
+
+func TestNotPublicAddr(t *testing.T) {
+	t.Parallel()
+
+	for _, a := range []string{
+		"127.0.0.1", "::1", "10.0.0.1", "172.16.5.4", "192.168.1.1", "169.254.169.254", "100.64.0.1", "100.127.255.255",
+		"0.0.0.0", "224.0.0.1", "fc00::1", "fd12:3456::1", "fe80::1", "::ffff:10.0.0.1", "64:ff9b::a00:1", "2002:c0a8:101::",
+		"100.100.100.200", "::",
+	} {
+		if !NotPublicAddr(netip.MustParseAddr(a)) {
+			t.Errorf("%s is judged public", a)
+		}
+	}
+
+	for _, a := range []string{"8.8.8.8", "1.1.1.1", "93.184.216.34", "2606:4700:4700::1111", "100.128.0.1", "172.32.0.1"} {
+		if NotPublicAddr(netip.MustParseAddr(a)) {
+			t.Errorf("%s is judged not public", a)
+		}
+	}
+}

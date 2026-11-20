@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/AlexGalhardo/vukem-video/core/timeline"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // The values a shadow and an outline start with when the command does not give them (VV-122).
@@ -39,7 +39,6 @@ func init() {
 		Example: `{"item_id": "itm_m1n2p3q4r5", "shadow": {"color": "#000000", "opacity": 0.6, "dx": 10, "dy": 12, "blur": 16}}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
 		Scope:   ScopeEdit,
-		Phase:   Beta,
 	}, applyClipSetShadow))
 
 	Register(Define(Spec{
@@ -51,7 +50,6 @@ func init() {
 		Example: `{"item_id": "itm_m1n2p3q4r5", "outline": {"color": "#FFFFFF", "width": 6}}`,
 		Errors:  []string{CodeValidation, CodeNotFound, CodeTypeMismatch},
 		Scope:   ScopeEdit,
-		Phase:   Beta,
 	}, applyClipSetOutline))
 }
 
@@ -101,7 +99,7 @@ func orDefault3(p *float64, def float64) float64 {
 }
 
 func applyClipSetShadow(c *Context, a *clipShadowArgs) error {
-	it, err := c.clipItem(a.ItemID, "a shadow")
+	it, err := c.clipOrCompositionItem(a.ItemID, "a shadow")
 	if err != nil {
 		return err
 	}
@@ -145,7 +143,7 @@ func applyClipSetShadow(c *Context, a *clipShadowArgs) error {
 }
 
 func applyClipSetOutline(c *Context, a *clipOutlineArgs) error {
-	it, err := c.clipItem(a.ItemID, "an outline")
+	it, err := c.clipOrCompositionItem(a.ItemID, "an outline")
 	if err != nil {
 		return err
 	}

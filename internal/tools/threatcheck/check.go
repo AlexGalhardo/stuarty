@@ -19,10 +19,15 @@ type threat struct {
 }
 
 var (
-	rowID    = regexp.MustCompile(`^T-\d\d$`)
+	// A threat id has two digits up to T-99 and three from T-100 (D-102): a padded T-050 would be a second
+	// name for T-50.
+	rowID    = regexp.MustCompile(`^T-(?:\d\d|[1-9]\d\d)$`)
 	spanCode = regexp.MustCompile("`([^`]+)`")
-	testFunc = regexp.MustCompile(`(?m)^func (TestSecurity_T\d\d_\w+|Fuzz\w+)\(`)
-	secTest  = regexp.MustCompile(`^TestSecurity_T(\d\d)_`)
+	// testFunc collects every security test, so that one that carries a threat id of the wrong form
+	// (TestSecurity_T7_, T050 or T1000) is reported instead of escaping the check.
+	testFunc = regexp.MustCompile(`(?m)^func (TestSecurity_\w+|Fuzz\w+)\(`)
+	idLike   = regexp.MustCompile(`^TestSecurity_T\d+_`)
+	secTest  = regexp.MustCompile(`^TestSecurity_T(\d\d|[1-9]\d\d)_`)
 	method   = regexp.MustCompile(`^\t([A-Z]\w*)\(ctx context\.Context`)
 )
 
@@ -155,7 +160,7 @@ func operationsOf(root string) ([]string, error) {
 }
 
 // check returns the problems of the repository at root against the security model.
-func check(root, sddPath, phase string) ([]string, error) {
+func check(root, sddPath string) ([]string, error) {
 	raw, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(sddPath)))
 	if err != nil {
 		return nil, err
@@ -182,20 +187,18 @@ func check(root, sddPath, phase string) ([]string, error) {
 			named[name] = true
 		}
 
-		if phase == "P1" && !phaseOne[t.id] {
-			continue
-		}
-
 		problems = append(problems, threatProblems(t, have)...)
 	}
 
 	// A security test no row names has no threat behind it; it is a defect of the
-	// table or of the name. Only the whole table can tell, so a phase run skips it.
-	if phase == "" {
-		for name := range have {
-			if secTest.MatchString(name) && !named[name] {
-				problems = append(problems, name+" is named by no threat row")
-			}
+	// table or of the name.
+	for name := range have {
+		switch {
+		case !idLike.MatchString(name):
+		case !secTest.MatchString(name):
+			problems = append(problems, name+" has no valid threat id: name it TestSecurity_TNN_ or TestSecurity_TNNN_")
+		case !named[name]:
+			problems = append(problems, name+" is named by no threat row")
 		}
 	}
 
@@ -241,16 +244,9 @@ func threatProblems(t threat, have map[string]bool) []string {
 		return append(out, t.id+" names no test")
 	}
 
-	_, later := laterThreats[t.id]
 	covered := false
 
 	for _, name := range t.tests {
-		if _, wait := laterTests[name]; wait || later {
-			covered = true
-
-			continue
-		}
-
 		if m := secTest.FindStringSubmatch(name); len(m) == 2 && "T-"+m[1] != t.id {
 			out = append(out, fmt.Sprintf("%s is named by the row %s", name, t.id))
 		}
@@ -264,7 +260,7 @@ func threatProblems(t threat, have map[string]bool) []string {
 		covered = true
 	}
 
-	if !covered && !later {
+	if !covered {
 		out = append(out, t.id+" has no test that exists")
 	}
 

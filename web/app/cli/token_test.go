@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/vukem-video/service/workspace"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
 func TestTokenRotateReplacesTheTokenAndNeverPrintsIt(t *testing.T) {
@@ -90,6 +90,34 @@ func TestTokenRotateRefusesWhileAnOwnerHoldsTheWorkspace(t *testing.T) {
 
 	if !strings.Contains(h.stdout.String(), "close the desktop app or serve") {
 		t.Errorf("the refusal has no hint: %s", h.stdout)
+	}
+}
+
+// With STUARTY_URL set the rotation refuses and names the variable instead of writing a token file and the
+// workspace folders into the current directory (VV-272).
+func TestTokenRotateRefusesARemoteServer(t *testing.T) {
+	cwd := t.TempDir()
+	t.Chdir(cwd)
+
+	h := newHarness(t)
+	h.rt.Getenv = func(k string) string {
+		switch k {
+		case workspace.EnvURL:
+			return "https://stuarty.example.invalid"
+		case workspace.EnvKey:
+			return "a-key"
+		}
+
+		return ""
+	}
+
+	if code := h.run("token:rotate", "--json"); code == ExitOK ||
+		!strings.Contains(h.stdout.String(), workspace.EnvURL) {
+		t.Errorf("exit %d: %s", code, h.stdout)
+	}
+
+	if left, _ := os.ReadDir(cwd); len(left) != 0 {
+		t.Errorf("token:rotate wrote into the current directory: %v", left)
 	}
 }
 

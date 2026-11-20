@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "amount": {
+      "description": "Per cent: a colour filter 1 to 100, sharpen 1 to 300, vignette and grain 1 to 100, glow 1 to 400.",
+      "maximum": 400,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "blur": {
+      "description": "Shadow blur in pixels.",
+      "maximum": 100,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "color": {
+      "description": "Shadow, glow and stroke: #RRGGBB or #RRGGBBAA.",
+      "type": "string"
+    },
+    "dx": {
+      "description": "Shadow offset in pixels.",
+      "maximum": 200,
+      "minimum": -200,
+      "type": "integer"
+    },
+    "dy": {
+      "description": "Shadow offset in pixels.",
+      "maximum": 200,
+      "minimum": -200,
+      "type": "integer"
+    },
+    "kind": {
+      "enum": [
+        "grayscale",
+        "sepia",
+        "invert",
+        "warm",
+        "cool",
+        "blur",
+        "sharpen",
+        "vignette",
+        "grain",
+        "shadow",
+        "glow",
+        "stroke"
+      ],
+      "type": "string"
+    },
+    "layer_id": {
+      "pattern": "^lyr_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "opacity": {
+      "description": "Shadow, per cent.",
+      "maximum": 100,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "radius": {
+      "description": "Pixels: blur and glow 1 to 100, sharpen 1 to 20.",
+      "maximum": 100,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "seed": {
+      "description": "Grain, 0 to 65535.",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "size": {
+      "description": "Grain, 1 to 8.",
+      "maximum": 8,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "softness": {
+      "description": "Vignette, 0 to 100.",
+      "maximum": 100,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "width": {
+      "description": "Stroke width in pixels.",
+      "maximum": 100,
+      "minimum": 1,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "layer_id",
+    "kind"
+  ],
+  "type": "object"
+}

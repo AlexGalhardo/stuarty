@@ -13,10 +13,10 @@ A change is done when this skill says so, not when the code looks right. It is t
 | Moment | Command |
 | --- | --- |
 | After each logical step of a task, before its commit | `bash .agents/skills/verify/scripts/verify.sh --quick` |
-| Before opening or updating a pull request, before pushing a release branch, before reporting a card done | `bash .agents/skills/verify/scripts/verify.sh --full` |
-| A senior's delivery under review (`skills/integrate-agent-work/`) | `--full` on the integration line after the cherry-picks |
+| Before a large merge into the integration branch, and before any release branch when releases return | `bash .agents/skills/verify/scripts/verify.sh --full` |
+| A senior's delivery under review by the specialist (`rules/plans.md` section 3) | the acceptance criteria of the epic and the checks of what changed; `--full` is optional while releases are deferred (ADR-0045) |
 
-Run it from the repository or worktree root, with `VUKEM_VIDEO_TEST_FFMPEG_DIR` set to the LGPL FFmpeg `bin` folder so the export tests and the smoke test do not skip or pick another FFmpeg.
+Run it from the repository or worktree root, with `STUARTY_TEST_FFMPEG_DIR` set to the LGPL FFmpeg `bin` folder so the export tests and the smoke test do not skip or pick another FFmpeg.
 
 ## 2. What it runs
 
@@ -24,18 +24,22 @@ Run it from the repository or worktree root, with `VUKEM_VIDEO_TEST_FFMPEG_DIR` 
   - the commit headers (`skills/ci-preflight/scripts/check-commits.sh`);
   - the flaky-pattern check (`scripts/check-flaky-patterns.sh`, section 5).
 - **Go files changed:** `gofmt`, `go build ./...`, then `go vet`, `go test -count=1` and `golangci-lint` on the touched packages.
+- **Only `go.mod` or `go.sum` changed** (a module added, edited or deleted): `go build ./...` of the root module and of each changed module that still exists.
 - **`web/app`, `core/schema` or agent docs changed:** `go run ./web/cmd/gen-agent-docs -check`.
 - **`web/` UI changed:** `bun run lint`, `typecheck`, `check:thin-client`, `check:i18n`, `bunx vitest run`.
 - **`site/` or the reference changed:** `check:last-updated` and `reference:check`.
-- **`--full` adds two steps:**
+- **`--full` adds four steps:**
   - `scripts/gate.sh`, the whole local release gate;
-  - `scripts/smoke-e2e.sh`, which boots the product end to end. It builds the binary and starts `vukem-video serve` with a private workspace. It then creates a project, imports a generated clip, adds a clip and a title, lints and exports with `--wait`. Finally `ffprobe` checks the MP4 (video, audio, 4 s), and the server is stopped by its pid.
+  - `scripts/smoke-e2e.sh`, which boots the product end to end. It builds the binary and starts `stuarty serve` with a private workspace. It then creates a project, imports a generated clip, adds a clip and a title, lints and exports with `--wait`. Finally `ffprobe` checks the MP4 (video, audio, 4 s), and the server is stopped by its pid.
+  - `scripts/recipe-commercial.sh` and `scripts/recipe-long-video.sh`, the two recipes of epic 39: each starts its own server on a free port with a private workspace, makes a commercial in three aspect ratios and a long video with an extracted short from generated footage, and checks every exported file with `ffprobe`.
 
 The last line is `VERIFY_OK` (exit 0), `VERIFY_FAIL=<n>` (exit 1) or `VERIFY_NEEDS_HUMAN` (exit 3). Logs are in `$TEMP/verify-<time>/`.
 
 ## 3. The checks come from the default branch
 
-`verify.sh` reads its own scripts, `check-commits.sh`, `gate.sh` and `smoke-e2e.sh` from `origin/main` with `git show` and runs those against the working tree, so a change can never loosen the checks that judge it.
+`verify.sh` reads its own scripts, `check-commits.sh`, `gate.sh` and `smoke-e2e.sh` from `origin/main` (or the `--base` ref) with `git show` and runs those against the working tree, so a change can never loosen the checks that judge it.
+
+A base that is not a commit, or a check that is on the base and cannot be read, stops the run with exit 2. Only a base that has no `verify.sh` at all (the first rollout) runs the working copy, and the script says so.
 
 A change that edits a check is reported as `CHECKS_CHANGED` and ends with `VERIFY_NEEDS_HUMAN`. The checks are this skill, `REVIEW.md`, `.agents/rules/`, `.github/workflows/`, `.github/CODEOWNERS`, `scripts/gate.sh`, `scripts/smoke-e2e.sh`, and the Playwright and Vitest configs. Stop, and ask the author to review those files. An agent never approves a change to its own checks, and CODEOWNERS plus the `protect-main` ruleset require the author's review on GitHub.
 

@@ -5,8 +5,9 @@
 #
 # --quick (default): commit messages, flaky patterns, and the lint, build and tests of what the change
 #                    touches (Go packages, web/, site/ and the generated docs).
-# --full:            --quick plus the full local gate (scripts/gate.sh) and the end-to-end smoke test
-#                    (scripts/smoke-e2e.sh). Required before opening or updating a pull request.
+# --full:            --quick plus the full local gate (scripts/gate.sh), the end-to-end smoke test
+#                    (scripts/smoke-e2e.sh) and the two scripted recipes (scripts/recipe-commercial.sh and
+#                    scripts/recipe-long-video.sh). Required before opening or updating a pull request.
 #
 # The checks come from the default branch, never from the change under test: the scripts are read from
 # <base> (default origin/main) with `git show` and run against the working tree. A change that edits a check
@@ -33,12 +34,30 @@ git fetch -q origin main 2>/dev/null || echo "verify: could not fetch origin/mai
 
 # Run the copy of this script that is on the default branch, so a change cannot loosen its own checks.
 if [ -z "${VERIFY_FROM_BASE:-}" ]; then
-	if git cat-file -e "$base:.agents/skills/verify/scripts/verify.sh" 2>/dev/null; then
-		checks="$(mktemp -d)"
+	# Git Bash on Windows rewrites an argument shaped like <rev>:.<path> (MSYS path conversion), so the
+	# <rev>:<path> arguments below turn conversion off for the git call alone (VV-229). The variable is
+	# ignored elsewhere. Whether a file is on the base is asked with ls-tree, whose arguments are never
+	# converted, so a check that is there but cannot be read stops the run instead of being replaced by the
+	# working copy.
+	base_has() {
+		local out
+		out="$(git ls-tree --name-only "$base" -- "$1")" || { echo "verify: could not list $1 on $base" >&2; exit 2; }
+		[ -n "$out" ]
+	}
+	base_show() { MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' git show "$base:$1"; }
+	# A base that does not resolve is an error, never a reason to run the working copy.
+	if ! git rev-parse --verify -q "$base^{commit}" >/dev/null; then
+		echo "verify: the base $base is not a commit; cannot read the checks from it" >&2
+		exit 2
+	fi
+	if base_has .agents/skills/verify/scripts/verify.sh; then
+		checks="$(mktemp -d)" || exit 2
 		for f in .agents/skills/verify/scripts/verify.sh .agents/skills/verify/scripts/check-flaky-patterns.sh \
 			.agents/skills/ci-preflight/scripts/check-commits.sh scripts/gate.sh scripts/smoke-e2e.sh; do
 			mkdir -p "$checks/$(dirname "$f")"
-			git show "$base:$f" >"$checks/$f" 2>/dev/null || rm -f "$checks/$f"
+			if base_has "$f"; then
+				base_show "$f" >"$checks/$f" || { echo "verify: could not read $f from $base" >&2; exit 2; }
+			fi
 		done
 		VERIFY_FROM_BASE="$checks" exec bash "$checks/.agents/skills/verify/scripts/verify.sh" "--$mode" --base "$base"
 	fi
@@ -78,9 +97,21 @@ fi
 step commits bash "$(script .agents/skills/ci-preflight/scripts/check-commits.sh)"
 step flaky bash "$(script .agents/skills/verify/scripts/check-flaky-patterns.sh)" "$base"
 
-export VUKEM_VIDEO_MIN_FREE_BYTES=1
+export STUARTY_MIN_FREE_BYTES=1
 go_files="$(echo "$changed" | grep -E '\.go$' | while read -r f; do [ -f "$f" ] && echo "$f"; done)"
-if [ -n "$go_files" ] || echo "$changed" | grep -qE '(^|/)go\.(mod|sum)$'; then
+if [ -z "$go_files" ] && echo "$changed" | grep -qE '(^|/)go\.(mod|sum)$'; then
+	# Only module files changed (a go.mod or go.sum added, edited or deleted): there is no package to vet or
+	# test, but the root module and every changed module that still exists must build (VV-230). A module whose
+	# go.mod was deleted is never entered; whatever is left of it now builds with the root module.
+	gomods="$( (echo .; echo "$changed" | grep -E '(^|/)go\.(mod|sum)$' | while read -r f; do
+		if [ -f "$(dirname "$f")/go.mod" ]; then dirname "$f"; fi
+	done) | sort -u)"
+	for m in $gomods; do
+		tag=""
+		[ "$m" = . ] || tag="-$(echo "$m" | tr '/' '-')"
+		step "go-build$tag" go -C "$m" build ./...
+	done
+elif [ -n "$go_files" ]; then
 	step gofmt bash -c "out=\$(gofmt -l $(echo "$go_files" | tr '\n' ' ')); [ -z \"\$out\" ] || { echo \"\$out\"; exit 1; }"
 	# A nested module (desktop/shell/app has its own go.mod) is built, vetted, tested and linted inside it.
 	modof() {
@@ -121,6 +152,9 @@ if [ "$mode" = full ]; then
 	step gate bash "$(script scripts/gate.sh)" verify
 	grep -q "GATE_FAIL=0" "$L/gate.log" || { echo "gate: $(grep GATE_FAIL "$L/gate.log")"; }
 	step smoke-e2e bash "$(script scripts/smoke-e2e.sh)"
+	# The recipes of epic 39: a commercial in three aspect ratios and a long video with its short (SDD-018 section 17).
+	step recipe-commercial bash "$root/scripts/recipe-commercial.sh"
+	step recipe-long-video bash "$root/scripts/recipe-long-video.sh"
 fi
 
 echo "logs: $L"
