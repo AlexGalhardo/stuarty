@@ -54,7 +54,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [27](27-image-document-core.md) | Image documents: core, catalogue, templates and export | L | 03 | DONE (2026-11-19, 97d5c560..7758cdda replayed and merged; WebP export waits for an ffargs builder) |
 | [28](28-image-editor-ui.md) | Image editor in the UI | L | 07, 27 | DONE (2026-11-19, `95ed640f`..`28a3e533`, merge `fac66975`) |
 | [29](29-image-adjustments-filters-and-masks.md) | Image adjustments, filters, masks and blend modes | L | 27 | DONE (2026-11-19, `5d7680de`..`525c359b`, merge `1ee6a61d`; image LUT waits for the author) |
-| [30](30-image-operations-with-a-model.md) | Image operations with a model | S | 10, 28 | TODO |
+| [30](30-image-operations-with-a-model.md) | Image operations with a model | S | 10, 28 | IN PROGRESS (senior-e, 2026-11-20) |
 | [31](31-motion-easing-crop-and-mask.md) | Motion: easing curves, animated crop and mask, presets | L | 03 | DONE (2026-11-19, `e914c99b`..`a88f8e63`, merge `4c2c5c85`) |
 | [32](32-nested-compositions.md) | Nested compositions | M | 06, 31 | IN PROGRESS (senior-a, 2026-11-20) |
 | [33](33-external-motion-engine-hand-off.md) | Hand-off from an external motion engine | M | 08 | DONE (2026-11-20, `4f4022cc`..`bb19aa733` replayed, merge `3d693ba1d`; real HyperFrames round and no-egress on Linux not verified) |
