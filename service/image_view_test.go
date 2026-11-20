@@ -83,6 +83,65 @@ func TestImageFrameNamesTheSizeOfThePicture(t *testing.T) {
 	}
 }
 
+// TestImageFrameStartsFromTheCacheOfItsOwnUser: the frame of the editor is drawn from the pictures an earlier
+// frame of the same user left in the cache, and in network mode never from those of another user, even for a
+// document with the same content (SDD-021 section 6.1, T-89).
+func TestImageFrameStartsFromTheCacheOfItsOwnUser(t *testing.T) {
+	s, _ := newImageService(t)
+	alice, bob := networkUser("alice"), networkUser("bob")
+
+	same := func(ctx context.Context) string {
+		t.Helper()
+
+		c, err := s.ImageCreate(ctx, ImageCreateRequest{Width: 200, Height: 100, Background: "#102030"})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if _, err := s.ImageEdit(ctx, ImageEditRequest{
+			ImageID: c.ImageID, BaseRevision: 1,
+			Operations: ops(
+				"layer.add_fill", `{"color": "#335577", "id": "lyr_aaaaaaaaaa"}`,
+				"layer.add_shape", `{"shape": "ellipse", "w": 60, "h": 40, "fill": "#FF8800", "id": "lyr_bbbbbbbbbb"}`,
+			),
+		}); err != nil {
+			t.Fatal(err)
+		}
+
+		return c.ImageID
+	}
+
+	frame := func(ctx context.Context, id string) []byte {
+		t.Helper()
+
+		f, err := s.ImageFrame(ctx, ImageFrameRequest{ImageID: id})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		return f.Image
+	}
+
+	mine, theirs := same(alice), same(bob)
+
+	first := frame(alice, mine)
+	if h := s.imageFrames.Stats().Hits; h != 0 {
+		t.Fatalf("the first frame found %d pictures in an empty cache", h)
+	}
+
+	if again := frame(alice, mine); !bytes.Equal(again, first) || s.imageFrames.Stats().Hits != 1 {
+		t.Fatalf("the same frame again must be the same picture, from the cache: %+v", s.imageFrames.Stats())
+	}
+
+	if other := frame(bob, theirs); !bytes.Equal(other, first) || s.imageFrames.Stats().Hits != 1 {
+		t.Fatalf("bob started from a picture of alice: %+v", s.imageFrames.Stats())
+	}
+
+	if frame(bob, theirs); s.imageFrames.Stats().Hits != 2 {
+		t.Fatalf("bob does not find his own picture: %+v", s.imageFrames.Stats())
+	}
+}
+
 func TestImageHistoryNamesTheActors(t *testing.T) {
 	s, _ := newImageService(t)
 	person := asActor("local:person")
