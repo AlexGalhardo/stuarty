@@ -27,6 +27,16 @@ case "$out" in *"not at a release tag"*) pass "no tag: clear failure" ;; *) fail
 # 3. A bad domain or e-mail is refused.
 if run_install --domain "bad domain" --email me@example.com --version 0.30.0 >/dev/null 2>&1; then fail "a bad domain must fail"; fi
 pass "a bad domain is refused"
+# A value whose first line is good: grep -E would match that line alone and the rest would land in .env.
+nl=$'\n'
+for bad in "--domain=stuarty.example.com${nl}STUARTY_VERSION=9.9.9" "--email=me@example.com${nl}X=1" "--email=a\$b@example.com" "--email=a}@example.com" "--version=0.30.0${nl}X=1"; do
+	flag="${bad%%=*}" value="${bad#*=}"
+	args=(--domain stuarty.example.com --email me@example.com --version 0.30.0 "$flag" "$value")
+	if run_install "${args[@]}" >/dev/null 2>&1; then fail "install.sh accepted $flag $(printf '%q' "$value")"; fi
+done
+assert "a value with a second line, a \$ or a brace is refused, and nothing is written" test ! -f "$DEP/.env"
+if STUARTY_TLS_DIRECTIVE="tls internal${nl}}" run_install --domain stuarty.example.com --email me@example.com --version 0.30.0 >/dev/null 2>&1; then fail "a TLS directive other than tls internal was accepted"; fi
+pass "STUARTY_TLS_DIRECTIVE is only empty or tls internal"
 
 # 4. The install: writes .env and three keys, builds, starts, waits for health and HTTPS, prints the login.
 out="$(run_install --domain stuarty.example.com --email me@example.com --version 0.30.0)"
@@ -84,6 +94,8 @@ echo "$images" | grep -qE '^stuarty:\$\{STUARTY_VERSION:-devel\}$' && pass "stua
 assert "no image uses latest, edge or nightly" bash -c "! grep -rniE '(:|=)(latest|edge|nightly)' '$REPO_DIR/deploy/compose.yml' '$REPO_DIR/deploy/.env.example'"
 assert "the Caddyfile turns response buffering off" grep -q 'flush_interval -1' "$REPO_DIR/deploy/Caddyfile"
 assert "the Caddyfile limits the request body" grep -q 'max_size' "$REPO_DIR/deploy/Caddyfile"
+assert "the body limit is 8 GiB, as STUARTY_MAX_IMPORT_BYTES" bash -c "grep -q 'STUARTY_MAX_BODY:-8GiB}' '$REPO_DIR/deploy/compose.yml' && grep -qx 'STUARTY_MAX_BODY=8GiB' '$REPO_DIR/deploy/.env.example'"
+assert "the stuarty image is never pulled from a registry" grep -qE '^[[:space:]]+pull_policy: never$' "$REPO_DIR/deploy/compose.yml"
 
 if [ -n "$REAL_DOCKER" ] && "$REAL_DOCKER" compose version >/dev/null 2>&1; then
 	cfg="$(PATH="$(dirname "$REAL_DOCKER"):$PATH" "$REAL_DOCKER" compose -f "$REPO_DIR/deploy/compose.yml" --env-file "$REPO_DIR/deploy/.env.example" config)" || fail "docker compose config"
