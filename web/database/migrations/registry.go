@@ -42,5 +42,6 @@ func All() []schema.Migration {
 		m20261119230000CreateCheckpoints(),
 		m20261119240000TextRevisions(),
 		m20261119250000CreatePublicationsTables(),
+		m20261120100000PublicationTargetsSentAsDraft(),
 	}
 }

@@ -281,6 +281,19 @@ func TestPriceOfAPost(t *testing.T) {
 	}
 }
 
+func TestFormatMicros(t *testing.T) {
+	t.Parallel()
+
+	for micros, want := range map[int64]string{
+		0: "0.00", 15_000: "0.015", 200_000: "0.20", 10_000: "0.01", 1: "0.000001", 1_000_000: "1.00",
+		12_500_000: "12.50", MaxPriceMicros: "100.00",
+	} {
+		if got := FormatMicros(micros); got != want {
+			t.Errorf("FormatMicros(%d) = %q, want %q", micros, got, want)
+		}
+	}
+}
+
 func TestPriceBounds(t *testing.T) {
 	t.Parallel()
 

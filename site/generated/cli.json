@@ -3740,7 +3740,7 @@
     {
       "name": "publish:status",
       "domain": "publish",
-      "summary": "show the state of a publication: waiting_approval, uploading, processing, published or failed",
+      "summary": "show the state of a publication: waiting_approval, uploading, processing, published, sent_as_draft or failed",
       "usage": [
         "stuarty publish:status <job id>"
       ],

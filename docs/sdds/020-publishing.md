@@ -129,16 +129,16 @@ func Validate(p Post, l Limits) []Issue   // every problem at once, each with a 
 
 ## 4. The state of a publication
 
-`prepared`, `waiting_approval`, `uploading`, `processing`, `published`, `failed`. The moves allowed, and only these:
+`prepared`, `waiting_approval`, `uploading`, `processing`, `published`, `sent_as_draft` (epic 22, section 38), `failed`. The moves allowed, and only these:
 
 ```text
 prepared         -> waiting_approval
 waiting_approval -> uploading | failed        (approved, or rejected, cancelled or expired)
-uploading        -> processing | published | failed
-processing       -> published | failed
+uploading        -> processing | published | sent_as_draft | failed
+processing       -> published | sent_as_draft | failed
 ```
 
-`core/publish.Can(from, to)` says whether a move is allowed. The job is the record: `waiting_approval` is the job state of that name; `queued` and `running` are `uploading`; a `succeeded` job carries the state of the video (`processing` or `published`) in its result; `failed` and `cancelled` are `failed`. `prepared` is what `PublishValidate` answers for a post that is valid and not yet submitted.
+`core/publish.Can(from, to)` says whether a move is allowed. The job is the record: `waiting_approval` is the job state of that name; `queued` and `running` are `uploading`; a `succeeded` job carries the state of the video (`processing`, `published` or `sent_as_draft`) in its result; `failed` and `cancelled` are `failed`. `prepared` is what `PublishValidate` answers for a post that is valid and not yet submitted.
 
 ## 5. The connector interface (`service/social`)
 
@@ -647,9 +647,10 @@ The reason is a code of this table that passed the reason pattern, never the tex
 
 - the calendar, the list and the editor show it with its own colour and the words "sent as a draft: finish it in the TikTok app", never "published" and never the green of a publication;
 - the item of the project is `published` only when every target that is not cancelled is `published`: a draft is not (`core/publish.ItemStatus`);
-- the approval says "sent as a draft to the TikTok app of the account; the title, text and tags are not sent; you finish and publish it there" before the person approves, and the guide says the same;
+- the approval says "a draft in the TikTok app: the title, text and tags are not sent, you finish it there" before the person approves, and the guide says the same;
 - the remote id is the `publish_id` and there is no URL;
-- the job of `PublishNow` ends `succeeded` with the result state `sent_as_draft`; `PublishStatus` reads TikTok once more for it.
+- the job of `PublishNow` ends `succeeded` with the result state `sent_as_draft`, which `PublishStatus` answers as it is (it asks the network again only for a post that is `processing`);
+- a target that is `sent_as_draft` is not edited and not cancelled: the draft is in the person's app, which is where it is deleted.
 
 The migration `publication_targets_sent_as_draft` rebuilds `publication_targets` with the longer `CHECK` (SDD-005 section 5.15), as the earlier epics rebuilt their tables.
 
@@ -672,7 +673,7 @@ The migration `publication_targets_sent_as_draft` rebuilds `publication_targets`
 | The TikTok adapter the same: the hex challenge, the chunks and their ranges, the states, every error, no `PULL_FROM_URL`, no upload address on disk | `go test ./service/social/tiktok/...` |
 | A refresh token that changes is kept, two sends at once refresh once | `go test ./service/social/... ./service/connections/...` |
 | The cost in the approval and the ledger, a draft in the calendar | `TestPublication*` in `web/app/servicetest`, `go test ./service/publish/...` |
-| Nothing leaves before approval, now, scheduled or retried; the token and the upload address in no answer; the price an approval was shown is the one settled | `TestSecurity_T62_*` to `TestSecurity_T64_*` |
+| Nothing leaves before approval, now, scheduled or retried; the token and the upload address in no answer; the price an approval was shown is the one settled | `TestSecurity_T67_*` to `TestSecurity_T69_*` |
 | The guides, the price, the draft state and the editor, in both languages | `web/e2e/specs/x-tiktok.spec.ts`, `task test:web` |
 
 **Not verified by the product's tests, only by the author's own app** (task 6 of the epic): that X accepts `client_id` with the Basic header and no `client_secret` in the body; whether its refresh token changes; whether `localhost` can be registered as a callback; the status and the body of the refusal for no credits; the text of a duplicate refusal; that `https://x.com/i/status/<id>` opens the post; how X decides that a post has a link and so charges $0.200; the answer of `append`; whether the 1,280 x 1,024 limit is enforced for a portrait video; that TikTok approves the scope `video.upload` for an app that is the person's own, and whether the audit applies to the draft flow; that a desktop-kit redirect is allowed for an app of the Content Posting API; the answer of the final chunk; that the draft reaches the inbox of the account.
