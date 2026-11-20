@@ -11,6 +11,7 @@ import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import type { APIRequestContext, Page } from "@playwright/test";
 import { LAUNCHER_SECRET } from "../support/launcher";
+import { listenWhenFree, SOCIAL_PORT } from "../support/social";
 import { caller, expect, home, test } from "./helpers";
 
 // ADR-0046, ADR-0032, epic 20 (SDD-020 sections 15 to 23): a creator plans a post on the calendar, a person
@@ -19,7 +20,6 @@ import { caller, expect, home, test } from "./helpers";
 // nothing was sent before the approval and that a post was sent once.
 test.describe.configure({ mode: "serial" });
 
-const SOCIAL_PORT = Number(process.env.STUARTY_E2E_PORT ?? 3101) + 3;
 const CLIENT_SECRET = "GOCSPX-e2e-client-secret-CANARY";
 
 interface FakeNetwork {
@@ -91,25 +91,7 @@ async function fakeNetwork(): Promise<FakeNetwork> {
 			})();
 		},
 	);
-	// Another spec of the suite may hold the port for a while (the server of the suite knows one address), so
-	// the port is asked for until it is free.
-	await expect
-		.poll(
-			() =>
-				new Promise<boolean>((resolve, reject) => {
-					const failed = (error: NodeJS.ErrnoException): void => {
-						if (error.code === "EADDRINUSE") resolve(false);
-						else reject(error);
-					};
-					server.once("error", failed);
-					server.listen(SOCIAL_PORT, "127.0.0.1", () => {
-						server.off("error", failed);
-						resolve(true);
-					});
-				}),
-			{ timeout: 120_000, intervals: [500] },
-		)
-		.toBe(true);
+	await listenWhenFree(server);
 	return {
 		received,
 		uploads: () => received.filter((r) => r === "POST /videos").length,
