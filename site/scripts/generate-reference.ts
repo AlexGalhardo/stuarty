@@ -247,6 +247,17 @@ function timelineSchema(): string {
 	);
 }
 
+/** The variables SDD-000 section 10 names in prose after its table: the framework's own and those of deploy/. */
+function proseVariables(): { framework: string[]; deploy: string[] } {
+	const sdd = fs.readFileSync(path.join(root, "docs", "sdds", "000-shared-definitions.md"), "utf8");
+	const para = sdd.match(/^The limits and their errors are specified.*$/m)?.[0] ?? "";
+	const names = (text: string | undefined): string[] => [...(text ?? "").matchAll(/`([A-Z][A-Z_0-9]+)`/g)].map((m) => m[1] as string);
+	return {
+		framework: names(para.match(/used by the product \(([^)]*)\)/)?.[1]),
+		deploy: [...names(para.match(/`deploy\/\.env` \(([^)]*)\)/)?.[1]), ...names(para.match(/scripts of `deploy\/` \(([^)]*)\)/)?.[1])],
+	};
+}
+
 function configuration(): string {
 	const rows = sddTable("docs/sdds/000-shared-definitions.md", /^## 10\. /m).map(([name, def, meaning]) => [
 		(name ?? "").replace(/\\/g, "\\\\").replace(/\|/g, "\\|"),
@@ -263,6 +274,13 @@ function configuration(): string {
 		[
 			"All variables are optional.",
 			table(["Variable", "Default", "Meaning"], rows),
+			"## Variables of the server and of the server package",
+			`The framework the server is built on reads these, with its own names: ${proseVariables()
+				.framework.map((v) => code(v))
+				.join(", ")}. \`APP_KEY\` is required in network mode (32 bytes or more, base64).`,
+			`The scripts and the compose file of \`deploy/\` read these, never the program itself: ${proseVariables()
+				.deploy.map((v) => code(v))
+				.join(", ")}.`,
 			"## Names before the rename",
 			"The product was called Vukem Video until `v0.29.0`. A variable below is still read, until `1.0.0`, when its new name is not set; each use prints one warning. The new name wins when both are set.",
 			table(["Former variable", "Variable"], former),

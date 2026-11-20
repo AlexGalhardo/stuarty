@@ -47,6 +47,12 @@ All variables are optional.
 | `STUARTY_PROJECT` | none | client side: the default project of CLI commands that take one |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | none | turns on OpenTelemetry (ADR-0026) |
 
+## Variables of the server and of the server package
+
+The framework the server is built on reads these, with its own names: `APP_URL`, `APP_KEY`, `TLS_CERT_FILE`, `TLS_KEY_FILE`, `TRUSTED_PROXIES`, `TRUST_FORWARDED_PROTO`, `SHUTDOWN_TIMEOUT`, `DB_MAX_OPEN`. `APP_KEY` is required in network mode (32 bytes or more, base64).
+
+The scripts and the compose file of `deploy/` read these, never the program itself: `STUARTY_DOMAIN`, `STUARTY_VERSION`, `STUARTY_ACME_EMAIL`, `STUARTY_TLS_DIRECTIVE`, `STUARTY_SUBNET`, `STUARTY_CADDY_IP`, `STUARTY_MAX_BODY`, `STUARTY_HEALTH_TIMEOUT`, `STUARTY_HTTPS_TIMEOUT`.
+
 ## Names before the rename
 
 The product was called Vukem Video until `v0.29.0`. A variable below is still read, until `1.0.0`, when its new name is not set; each use prints one warning. The new name wins when both are set.
