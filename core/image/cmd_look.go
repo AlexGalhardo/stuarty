@@ -271,6 +271,10 @@ func applyAdjust(c *command.Context, d *Document, a *adjustArgs) error {
 		if err := limit("files", len(d.Assets)-1, MaxAssets); err != nil {
 			return err
 		}
+
+		if err := limit("lookup tables", lutCount(d)-1, MaxLUTs); err != nil {
+			return err
+		}
 	}
 
 	c.SetEffective("layer_id", l.ID)

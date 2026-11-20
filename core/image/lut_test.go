@@ -152,6 +152,43 @@ func TestAdjustLUTSwapAtTheCeilingOfFiles(t *testing.T) {
 	}
 }
 
+// A document holds at most the 32 tables the renderer holds at once, so every valid document can be exported: a
+// 33rd table is E_LIMIT, a swap at the ceiling is not, and the validator catches a stored document with more.
+func TestAdjustLUTCeilingOfTables(t *testing.T) {
+	d := withFullTables()
+	if vs := Validate(d); len(vs) > 0 {
+		t.Fatalf("the fixture is not a valid document: %v", vs)
+	}
+
+	_, err := adjustLUT(t, d, lid('b'), `"lut": {"asset": "`+hashCube+`"}`)
+	if err == nil || err.Code != command.CodeLimit || err.Details["limit"] != "lookup tables" {
+		t.Fatalf("a 33rd table is E_LIMIT for the lookup tables: %v", err)
+	}
+
+	got, err := adjustLUT(t, d, "lyr_0000000000", `"lut": {"asset": "`+hashCube+`"}`)
+	if err != nil {
+		t.Fatalf("swapping a table at the ceiling was refused: %v", err)
+	}
+
+	if n := lutCount(got); n != MaxLUTs {
+		t.Errorf("the swap keeps %d tables: %d", MaxLUTs, n)
+	}
+
+	got.Assets[hashCube2] = AssetRef{Hash: hashCube2, Name: "teal.cube", Kind: AssetLUT}
+	l, _ := Find(got, lid('b'))
+	l.Adjust = &Adjust{LUT: &LUTRef{Asset: hashCube2, Intensity: 50}}
+
+	found := false
+
+	for _, v := range Validate(got) {
+		found = found || (v.Code == "limit" && strings.Contains(v.Message, "lookup tables"))
+	}
+
+	if !found {
+		t.Error("the validator lets a document with 33 tables through")
+	}
+}
+
 func TestAdjustLUTRefusals(t *testing.T) {
 	photo, group, locked := lid('b'), lid('e'), lid('h')
 
