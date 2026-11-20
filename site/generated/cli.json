@@ -2163,7 +2163,7 @@
       "usage": [
         "stuarty approval:rule:set --kind <k>"
       ],
-      "example": "stuarty approval:rule:set --kind publish.post --connection con_0123456789",
+      "example": "stuarty approval:rule:set --kind publish.upload --connection con_0123456789",
       "flags": [
         {
           "name": "id",
@@ -2173,7 +2173,7 @@
         {
           "name": "kind",
           "type": "string",
-          "usage": "the kind of action the rule covers (required)"
+          "usage": "the kind of action: publish.upload, publish.scheduled, text.generate, ... (required)"
         },
         {
           "name": "connection",

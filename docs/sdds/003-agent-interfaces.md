@@ -47,7 +47,7 @@ Rules that hold for every surface (each is tested in §9):
 4. **Errors have one shape.** Every failure is a `*service.Error` with the members of SDD-002 §A.8 (`code`, `message`, `hint`, `retryable`, `op_index`, `path`, `details`). Core errors are converted without loss. Each surface encodes it as §1.4 says.
 5. **Times are strings with a unit** on every input (SDD-002 §A.4). The one exception is `wait_ms`, whose unit is in its name. Results state both seconds and frames.
 6. **Identifiers are explicit.** No surface keeps a "current project". The CLI's `--project` flag and `$STUARTY_PROJECT` are shell conveniences resolved before the call (the variable is named in SDD-000 §10).
-7. **Unknown input members are rejected** with `E_VALIDATION` and the `path` of the member (every schema has `additionalProperties: false`). An unknown operation name in a batch is the exception: `E_UNKNOWN_COMMAND` with `details.known` on every surface (§2.4).
+7. **Unknown input members are rejected** with `E_VALIDATION` and the `path` of the member (every schema has `additionalProperties: false`). On HTTP the check covers the members of a JSON body, nested ones included (`path` is `operations[0].arg`), and not the query string, which stays free; a route that declares no input, and a route that exists in network mode only while the server runs in local mode, do not read the body for it (VV-302). An unknown operation name in a batch is the exception: `E_UNKNOWN_COMMAND` with `details.known` on every surface (§2.4).
 8. **Paths in requests are absolute.** The CLI makes them absolute (§5.3); MCP and HTTP reject a relative path with `E_PATH_NOT_ALLOWED`, hint "use an absolute path" (SDD-007 §7.1).
 9. **Validation messages never quote an untrusted value.** They name the `path` and the constraint that failed ("args.start: not a time"), never the value, because the value may be text from media or from another actor (SDD-007 §8.4).
 
@@ -969,6 +969,7 @@ type Job struct {
 	State      string     `json:"state"` // queued | waiting_approval | running | succeeded | failed | cancelled; waiting_approval: a kind that needs approval waits for a person or a rule (SDD-015 §5)
 	ApprovalID string     `json:"approval_id,omitempty"` // the approval request of a job of a kind that needs approval (SDD-015 §5)
 	Estimate   *Money     `json:"estimate,omitempty"` // text.generate, image.generate, voice.generate and video.generate: the cost estimated before it runs, on the job from the moment it exists (SDD-016 §6, §6.1)
+	DryRun     bool       `json:"dry_run,omitempty"` // true on the answer to a dry run of a job kind (export, transcribe, a generation, publish.upload): nothing was created, so job_id is empty and there is no job to read; state is the one the job would start in (VV-303)
 	Progress   float64    `json:"progress"` // 0 to 1
 	Message    string     `json:"message,omitempty"`
 	Result     *JobResult `json:"result,omitempty"` // export, transcribe, text.generate, image.generate, voice.generate and video.generate only; an ingest job has no result member (its outcome is the asset state, MediaList)
@@ -2795,7 +2796,7 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
 ```json
 {
   "name": "job_start",
-  "description": "Start long work; args by kind. export: args properties (at: png frame); export_batch: items (export args); transcribe {asset_id, language?, model?}; publish.upload {connection_id, export (job_id), title, made_for_kids, thumbnail?, description?, tags?, visibility?, ai_disclosure?}; with connection_id, model: text.generate {prompt}; image.generate {prompt, size?, count?}; voice.generate {text, voice, format?}; image.edit {image_id, operation, layer_id?, prompt?}; text.draft {item_id, instruction}; video.generate {prompt, seconds?, aspect?, first_frame?}. A person approves; poll job_get.",
+  "description": "Start long work; fields go in args. export: schema props (at: png frame); export_batch: items; transcribe {asset_id, language?, model?}; publish.upload {connection_id, export (job_id), title, made_for_kids, thumbnail?, description?, tags?, visibility?, ai_disclosure?}; generations add connection_id, model: text.generate {prompt}; image.generate {prompt, size?, count?}; voice.generate {text, voice, format?}; image.edit {image_id, operation, layer_id?, prompt?}; text.draft {item_id, instruction}; video.generate {prompt, seconds?, aspect?, first_frame?}. A person approves; poll job_get.",
   "inputSchema": {
     "type": "object",
     "properties": {
