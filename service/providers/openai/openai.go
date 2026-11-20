@@ -30,8 +30,10 @@ func New() *Adapter { return &Adapter{} }
 func (*Adapter) Descriptor() providers.Descriptor {
 	return providers.Descriptor{
 		ID: ID, Name: "OpenAI",
-		Capabilities:    []string{provider.CapabilityText, provider.CapabilityImage, provider.CapabilityVoice},
-		CredentialKinds: []string{provider.CredentialAPIKey, provider.CredentialOAuth},
+		Capabilities: []string{
+			provider.CapabilityText, provider.CapabilityImage, provider.CapabilityVoice, provider.CapabilityImageEdit,
+		},
+		CredentialKinds: []string{provider.CredentialAPIKey},
 		DefaultEndpoint: "https://api.openai.com/v1",
 		DocsURL:         "https://platform.openai.com/api-keys",
 	}
