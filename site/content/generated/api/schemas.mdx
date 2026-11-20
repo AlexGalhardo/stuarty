@@ -499,9 +499,11 @@ The types named in the tables of the operations. The arguments of each editing c
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
+| `ai_disclosure` | `boolean` | no |  |
 | `endpoint` | `string` | no |  |
 | `guide` | `string` | no |  |
 | `guide_read` | `string` | no |  |
+| `hints` | map of `string` | no |  |
 | `hosts` | array of `string` | no |  |
 | `limits` | [`Limits`](/docs/api/schemas#limits) | no |  |
 | `name` | `string` | no |  |
@@ -1434,17 +1436,23 @@ The types named in the tables of the operations. The arguments of each editing c
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
+| `audio_codecs` | array of `string` | no |  |
+| `caption_max` | `integer` | no |  |
+| `daily_posts` | `integer` | no |  |
 | `description_max_bytes` | `integer` | no |  |
 | `file_max_bytes` | `integer (int64)` | no |  |
 | `forbidden` | `string` | no |  |
 | `formats` | array of `string` | no |  |
+| `hashtags_max` | `integer` | no |  |
 | `needs_kids_declaration` | `boolean` | no |  |
+| `preset` | `string` | no |  |
 | `read` | `string` | no |  |
 | `source` | `string` | no |  |
 | `tags_max_chars` | `integer` | no |  |
 | `thumbnail_formats` | array of `string` | no |  |
 | `thumbnail_max_bytes` | `integer (int64)` | no |  |
 | `title_max` | `integer` | no |  |
+| `video_codecs` | array of `string` | no |  |
 | `visibilities` | array of `string` | no |  |
 
 ### LintResult
@@ -2434,6 +2442,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `account_id` | `string` | no |  |
 | `account_title` | `string` | no |  |
+| `choices` | array of [`SocialChoice`](/docs/api/schemas#socialchoice) | no |  |
 | `connection_id` | `string` | no |  |
 | `label` | `string` | no |  |
 | `network` | `string` | no |  |
@@ -2444,6 +2453,13 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `accounts` | array of [`SocialAccount`](/docs/api/schemas#socialaccount) | no |  |
+
+### SocialChoice
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | `string` | no |  |
+| `title` | `string` | no |  |
 
 ### SocialConnectBeginResult
 

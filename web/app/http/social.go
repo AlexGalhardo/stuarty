@@ -21,6 +21,11 @@ type socialCompleteIn struct {
 	Error string `json:"error,omitempty"                     doc:"The error the network sent back instead of a code, for example access_denied."`
 }
 
+type socialSelectIn struct {
+	ConnectionID string `json:"connection_id" validate:"required" doc:"The connection whose account is chosen."`
+	AccountID    string `json:"account_id"    validate:"required" doc:"The id of one of the choices the connection lists after the sign-in."`
+}
+
 type publishValidateIn struct {
 	ProjectID    string   `json:"project_id"              validate:"required" doc:"The project the video was exported from."`
 	ConnectionID string   `json:"connection_id"           validate:"required" doc:"The connection of the network and the account the video goes to."`
@@ -92,6 +97,12 @@ func (h *apiHandler) socialComplete(c *web.Ctx, in socialCompleteIn) (service.So
 
 func (h *apiHandler) socialAccounts(c *web.Ctx, _ noIn) (service.SocialAccountListResult, error) {
 	res, err := h.Service.SocialAccountList(c.Context(), service.SocialAccountListRequest{})
+
+	return deref(res), err
+}
+
+func (h *apiHandler) socialSelect(c *web.Ctx, in socialSelectIn) (service.SocialAccount, error) {
+	res, err := h.Service.SocialAccountSelect(c.Context(), service.SocialAccountSelectRequest(in))
 
 	return deref(res), err
 }
