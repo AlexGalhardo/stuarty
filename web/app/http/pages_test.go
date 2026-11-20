@@ -77,7 +77,7 @@ func TestPages(t *testing.T) {
 		t.Errorf("/ = %d, want the dashboard home", home.status)
 	}
 
-	for _, key := range []string{"edit-video", "write"} {
+	for _, key := range []string{"edit-video"} {
 		res := page("/" + key)
 		if res.status != http.StatusOK || !strings.Contains(string(res.body), `Dashboard\/Section`) ||
 			!strings.Contains(string(res.body), `"section":"`+key+`"`) {
@@ -89,6 +89,11 @@ func TestPages(t *testing.T) {
 	if res := page("/publish"); res.status != http.StatusOK || !strings.Contains(string(res.body), `Publish\/Index`) ||
 		strings.Contains(string(res.body), `Dashboard\/Section`) {
 		t.Errorf("/publish = %d, want the calendar page", res.status)
+	}
+
+	// Write has its own page (epic 17).
+	if res := page("/write"); res.status != http.StatusOK || !strings.Contains(string(res.body), `Write\/Index`) {
+		t.Errorf("/write = %d, want the writing page", res.status)
 	}
 
 	// The Connections section has its own page (epic 04).

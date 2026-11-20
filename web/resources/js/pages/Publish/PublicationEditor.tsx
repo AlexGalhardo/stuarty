@@ -178,7 +178,7 @@ function Preview({
 	);
 }
 
-// The editor of a publication (SDD-020 section 22): what it publishes, and one panel for each account with its
+// The editor of a publication (SDD-020 section 30): what it publishes, and one panel for each account with its
 // time, its fields, a preview, its state and what it came to. It sends what the person typed and shows what the
 // service answers; every rule of a time, a post and an approval is the service's.
 export function PublicationEditor({

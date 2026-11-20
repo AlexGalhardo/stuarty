@@ -11,7 +11,7 @@ import (
 	"github.com/AlexGalhardo/vukem/web"
 )
 
-// publicationsTopic is the stream of the calendar (SDD-020 section 21): every publication, for local mode and
+// publicationsTopic is the stream of the calendar (SDD-020 section 29): every publication, for local mode and
 // for an administrator. A user of network mode who is not an administrator has a topic of their own that
 // carries their publications only.
 const publicationsTopic = "publications"

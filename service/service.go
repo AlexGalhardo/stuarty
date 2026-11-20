@@ -213,7 +213,7 @@ type Service interface {
 	PublishNow(ctx context.Context, req PublishNowRequest) (*Job, error)
 	PublishStatus(ctx context.Context, req PublishStatusRequest) (*PublishStatusResult, error)
 
-	// The calendar of publications (SDD-020 sections 15 to 23): a publication with one target per account, each
+	// The calendar of publications (SDD-020 sections 23 to 31): a publication with one target per account, each
 	// with its time. PublicationSchedule, PublicationSendNow and PublicationRetry only ask for approval: a
 	// target is sent by the scheduler, after a person or a rule the person wrote approved it.
 	PublicationCreate(ctx context.Context, req PublicationCreateRequest) (*Publication, error)
@@ -253,7 +253,7 @@ type Event struct {
 	// Owner the user it belongs to in network mode, so that a member's stream carries their own only.
 	Approval *approval.Request
 	Owner    string
-	// Publication is the publication of publication.updated (SDD-020 section 21).
+	// Publication is the publication of publication.updated (SDD-020 section 29).
 	Publication *pub.Publication
 }
 
@@ -327,6 +327,9 @@ type Options struct {
 	// SchedulerClock is the clock the publication scheduler sleeps on; tests move it. Default: the service
 	// clock to read and the system timer to wait.
 	SchedulerClock pub.Clock
+	// Agents hosts the agent a user installed, for the chat (SDD-017). Nil in a process that only runs a
+	// command: the chat operations that need a process then answer E_AGENT_UNAVAILABLE, and the reads work.
+	Agents *agenthost.Host
 }
 
 type svc struct {
@@ -363,7 +366,7 @@ type svc struct {
 	doctorCaps  *ffmpeg.Capabilities
 
 	// pubs is the calendar of publications and sched the loop that sends the approved ones at their time
-	// (SDD-020 sections 15 to 21).
+	// (SDD-020 sections 23 to 29).
 	pubs  *pub.Manager
 	sched *pub.Scheduler
 

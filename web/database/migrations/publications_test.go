@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-// The tables of the calendar (SDD-005 section 5.14): a publication leaves with its project, a target leaves
-// with its publication, and a target holds only the states of SDD-020 section 16.
+// The tables of the calendar (SDD-005 section 5.15): a publication leaves with its project, a target leaves
+// with its publication, and a target holds only the states of SDD-020 section 24.
 func TestPublicationsTablesCascadeAndCheck(t *testing.T) {
 	db := openMigrated(t)
 	ctx := context.Background()
@@ -72,7 +72,7 @@ func TestPublicationsMigrationDownDropsBothTables(t *testing.T) {
 			t.Fatalf("Rollback = %v, %v", step, rerr)
 		}
 
-		if step[0] == "20261119160000_create_publications_tables" {
+		if step[0] == "20261119250000_create_publications_tables" {
 			break
 		}
 	}

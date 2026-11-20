@@ -25,7 +25,7 @@ export interface PublishApi {
 	cancel(id: string, targetId?: string): Promise<Publication>;
 }
 
-// The calls of the calendar (SDD-020 section 21). They send what the person typed and return what the service
+// The calls of the calendar (SDD-020 section 29). They send what the person typed and return what the service
 // answers; a refusal is an ApiError with the message and the hint of the core.
 export function createPublishApi(
 	transport: HttpTransport = new HttpTransport("/api/v1"),

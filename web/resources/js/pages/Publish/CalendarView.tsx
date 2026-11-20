@@ -26,7 +26,7 @@ interface Entry {
 	target: Target;
 }
 
-// The month and the week of the calendar (SDD-020 section 22). A target is a button on the day of its time in the
+// The month and the week of the calendar (SDD-020 section 30). A target is a button on the day of its time in the
 // zone of the person. A person drags it to another day, or does the same with the keyboard: Space takes it, the
 // arrow keys move it by a day (left and right) or an hour (up and down), Enter drops it and Escape lets it go. The
 // page sends the new time and the zone; the service decides what it means.

@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// SDD-020 section 21: the calendar listens to a stream, and the stream is an event stream for a person.
+// SDD-020 section 29: the calendar listens to a stream, and the stream is an event stream for a person.
 func TestPublicationsStreamOpensForACallerWithCredentials(t *testing.T) {
 	t.Parallel()
 
