@@ -44,7 +44,7 @@ func TestPublicationsStreamOfAMemberCarriesTheirOwnOnly(t *testing.T) {
 	for name, ch := range map[string]<-chan sse.Event{"every publication": all, "its owner": first} {
 		select {
 		case ev := <-ch:
-			if ev.Event != wire.PublicationUpdated || !strings.Contains(string(ev.Data), p.ID) {
+			if ev.Event != wire.PublicationUpdated || !strings.Contains(ev.Data, p.ID) {
 				t.Errorf("the stream of %s got %+v", name, ev)
 			}
 		case <-time.After(5 * time.Second):
