@@ -1188,7 +1188,7 @@ export interface ClipSetSpeedArgs {
     t: number;
   }[];
   /**
-   * A clip of a video asset, or an audio item.
+   * A clip of a video asset, an audio item, or a composition item.
    */
   item_id: string;
   /**
