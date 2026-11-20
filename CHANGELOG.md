@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **site:** Keep the former name out of the sidebar title of the migration page ([bd24020](https://github.com/AlexGalhardo/stuarty/commit/bd24020aa1ae0021cc6162d3b37919db062512bd))
 - **service:** Check the digits of a hash before they become a folder ([d62b533](https://github.com/AlexGalhardo/stuarty/commit/d62b5332c9f4e0ee4fb65b0e421fd378e8fd32ca))
 - **tools:** Scope the first flow fake uploads to a media root ([eb6bd2c](https://github.com/AlexGalhardo/stuarty/commit/eb6bd2cacde816858cce9956b5d1efe1b21923d8))
+
 ## [0.41.0] - 2026-11-20
 
 ### Added
@@ -71,6 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Accept three-digit threat ids from t-100 in the threat check ([7c395a2](https://github.com/AlexGalhardo/stuarty/commit/7c395a2a133f7d8fcc6a92f380a7f9c4f39a5449))
 - **security:** Refuse padded threat ids and report misnamed security tests ([11246c8](https://github.com/AlexGalhardo/stuarty/commit/11246c825001e127a478e1479c12151ce3404ece))
 - **security:** Run the blog threat rows with the whole suite ([8e57f41](https://github.com/AlexGalhardo/stuarty/commit/8e57f41debf4a54809d7f01b2a546041f46f6bc4))
+
 ## [0.40.0] - 2026-11-20
 
 ### Added
@@ -121,6 +123,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **security:** Prove mcp job tools cannot decide, update sdd-007 ([b0f7504](https://github.com/AlexGalhardo/stuarty/commit/b0f7504cb2ff4edc3e0844ccbd75d4f4de94dd97))
 - **security:** Prove mcp job tools cannot decide, update sdd-007 ([44ec53b](https://github.com/AlexGalhardo/stuarty/commit/44ec53ba8131de14ce2066dd0429cd82cda8e9e0))
+
 ## [0.39.0] - 2026-11-20
 
 ### Added
@@ -158,6 +161,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **ui:** Say when a model edit has no project to keep it ([00aec52](https://github.com/AlexGalhardo/stuarty/commit/00aec523bd3a2c55d168fbbe2210ef012ed3344f))
 - **service:** Rotate a refresh token by a locked read and write ([5b9d327](https://github.com/AlexGalhardo/stuarty/commit/5b9d3279fb0b9acba99b00491c27aa1da3a1ec3c))
 - **preview:** Blend inside a group over its clear surface ([d8822a6](https://github.com/AlexGalhardo/stuarty/commit/d8822a65fd0a5051a83c52aa01ac578c29cfe6b3))
+
 ## [0.38.0] - 2026-11-20
 
 ### Added
@@ -206,6 +210,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 - **security:** The sign-in threats T-75 to T-78 ([9d767b0](https://github.com/AlexGalhardo/stuarty/commit/9d767b08829c36e6ed087007bf972e031d9bb435))
+
 ## [0.37.0] - 2026-11-20
 
 ### Added
@@ -252,6 +257,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **security:** The sign-in threats T-75 to T-78 ([bf51d3a](https://github.com/AlexGalhardo/stuarty/commit/bf51d3aee102a9499115c1d4794e3bbc88430826))
 - **security:** Count the sign-in threats of epic 12 ([7a13f1c](https://github.com/AlexGalhardo/stuarty/commit/7a13f1c33b8258711aa717d70b670c38c7ca31e7))
+
 ## [0.36.0] - 2026-11-20
 
 ### Added
@@ -301,6 +307,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **security:** Cover the Google sign-in threat rows ([a1aa962](https://github.com/AlexGalhardo/stuarty/commit/a1aa962c6769b85fc07630bbe2f240ce64a980a5))
 - **security:** Count the threats of epics 19 and 24 ([18ecb9c](https://github.com/AlexGalhardo/stuarty/commit/18ecb9c2ab2943d5d3a08eac65e9a251f3d2f8a4))
+
 ## [0.35.0] - 2026-11-20
 
 ### Added
@@ -343,6 +350,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **security:** Cover the publishing threats T-56 to T-59 ([a039d04](https://github.com/AlexGalhardo/stuarty/commit/a039d04a31b64f6d245a63a513d9b850a8ea9057))
 - **security:** Reach the second timeline of a limited key in the motion hand-off ([627393e](https://github.com/AlexGalhardo/stuarty/commit/627393ef03aff3390189b3ce617013c5ed060c63))
+
 ## [0.34.0] - 2026-11-20
 
 ### Added
@@ -396,6 +404,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Key the asset library side by owner and hash ([1adc215](https://github.com/AlexGalhardo/stuarty/commit/1adc215b1f093a667b6cbc3b7dc3c8b2f764229c))
 - **security:** Count the threats of epics 19 and 24 ([b377357](https://github.com/AlexGalhardo/stuarty/commit/b377357cf9c2e225baac7cb4e1c3f149fd3476fa))
 - **security:** Reach every timeline of a key project in library and approvals ([d34b77c](https://github.com/AlexGalhardo/stuarty/commit/d34b77cb912a84195ccaaec9a65f8fa6411a5d2b))
+
 ## [0.33.0] - 2026-11-20
 
 ### Added
@@ -439,6 +448,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **mcp:** Fit tools/list in its budget with the asset library ([c859da1](https://github.com/AlexGalhardo/stuarty/commit/c859da1da29489c35cd82d949527995fa58bed0a))
 - **cli:** Hold the workspace lock in the fake owner of the client-mode tests ([92c839e](https://github.com/AlexGalhardo/stuarty/commit/92c839ee783827b19fd1bb2df678dd6983df2406))
 - **command:** Stop telling agents the publish and provider domains have no operations ([e47f77f](https://github.com/AlexGalhardo/stuarty/commit/e47f77f81488db61820d7152f3b99209c00afd7d))
+
 ## [0.32.0] - 2026-11-20
 
 ### Added
@@ -484,6 +494,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Hold a stale timeline key and a key of A in network mode ([fc7afed](https://github.com/AlexGalhardo/stuarty/commit/fc7afedb907061eb90c3e48c65db4e706556f558))
 - **security:** State the project limit of a key and list its T-06 tests ([7475ce3](https://github.com/AlexGalhardo/stuarty/commit/7475ce3f5d0e20c2d5a81031d3a71ec8d6e69b3e))
 - **security:** Wrap a long line of the network key test for golines ([12a36e6](https://github.com/AlexGalhardo/stuarty/commit/12a36e63b10624991862b83ca8ca50a871d68917))
+
 ## [0.31.0] - 2026-11-20
 
 ### Added
@@ -549,6 +560,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Wrap two long lines of the scrub for golines ([7d6be26](https://github.com/AlexGalhardo/stuarty/commit/7d6be26be540649242d89f6514153bbdca1d3ea2))
 - **security:** Reach the second timeline of a limited key in the motion hand-off ([03c2a43](https://github.com/AlexGalhardo/stuarty/commit/03c2a432ecda1141717c5eb1681bf2ea78dc9a95))
 - **security:** Cover the library threats T-44 to T-47 ([13d1703](https://github.com/AlexGalhardo/stuarty/commit/13d17033116dc229e288c078174a4c578ab956ac))
+
 ## [0.30.0] - 2026-11-20
 
 ### Added
@@ -592,6 +604,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **repo:** Close the gaps in the project permission rules ([715f276](https://github.com/AlexGalhardo/stuarty/commit/715f27645884b5b3a9abd7f5bf8df72233275d0c))
 - **security:** Add the encrypted secret vault ([792c9a0](https://github.com/AlexGalhardo/stuarty/commit/792c9a0c1c190e0569b46dd0d0272c22f87ea8a5))
 - **security:** Add the outbound rule check and the T-38 to T-41 tests ([654a821](https://github.com/AlexGalhardo/stuarty/commit/654a8214a0ec95d806361141719b555495f6521c))
+
 ## [0.29.0] - 2026-11-18
 
 ### Added
