@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-11-20
+
+### Added
+
+- **workspace:** Adopt the workspace of Vukem Video at the first start ([a6f7745](https://github.com/AlexGalhardo/stuarty/commit/a6f7745110d02c6aa393af996c37d1cbfd3c2016))
+- **renderer:** Draw image adjustments, filters, masks and blend modes ([559b45d](https://github.com/AlexGalhardo/stuarty/commit/559b45d981d45954704219437b659d4833d276f6))
+- **contract:** Reach the image looks through the HTTP API, the CLI and MCP ([4fd0f20](https://github.com/AlexGalhardo/stuarty/commit/4fd0f2075db45061065ff3ec7853882c99d6f0ac))
+- **ui:** Add the dashboard layout with the sidebar, the profile and the theme toggle ([58e2865](https://github.com/AlexGalhardo/stuarty/commit/58e2865056972b2e1dad1f9bd1da0d02a7cb57b8))
+- **ui:** Add the dashboard home and the section routes with their empty states ([7cfa7be](https://github.com/AlexGalhardo/stuarty/commit/7cfa7bed0b7dd48a5cdf8bc9e4ffa08142bd039f))
+- **ui:** Add the dashboard link to the editor top bar and the navigation spec ([69ddc6f](https://github.com/AlexGalhardo/stuarty/commit/69ddc6fc0d0b6c8b7f3e6b2aaa03ad49566faa1b))
+- **ui:** Add the render worker and its protocol over the core module ([39d9d2e](https://github.com/AlexGalhardo/stuarty/commit/39d9d2e34c24f869f5aeebf77c50d3687ea46963))
+- **ui:** Draw the preview with the renderer of the export in a worker ([48b6c94](https://github.com/AlexGalhardo/stuarty/commit/48b6c94248a33dce3de9f7885658307eeeb7e801))
+- **api:** Expose connections on HTTP, the CLI and MCP ([6310307](https://github.com/AlexGalhardo/stuarty/commit/6310307de1d29c8a5791bec6091d24fc887a611d))
+
+### Fixed
+
+- **service:** Refuse a price table with two prices for one model ([d9e5d62](https://github.com/AlexGalhardo/stuarty/commit/d9e5d62b7980817adac4f5bb029efcf7401bfdf6))
+- **mcp:** Count job_start in the provider domain it starts text.generate for ([552d8c8](https://github.com/AlexGalhardo/stuarty/commit/552d8c82da33733c2b59a6d7ac536c4103e7403a))
+- **desktop:** Confirm an update from Vukem Video in its own state folder ([1dec0a2](https://github.com/AlexGalhardo/stuarty/commit/1dec0a2be576cb7468fd54247a87b95ea5604e77))
+- **installers:** Upgrade an installed Vukem Video instead of leaving it running ([b9fec27](https://github.com/AlexGalhardo/stuarty/commit/b9fec27eac182a991848a7b5921169de2ec47407))
+- **workspace:** Answer an adoption failure with its reason ([e688fdf](https://github.com/AlexGalhardo/stuarty/commit/e688fdfdccd52c93a2e3c0a1a37926c6186abfb7))
+- **workspace:** Report a failed note after a verified copy as adopted ([b60fc92](https://github.com/AlexGalhardo/stuarty/commit/b60fc92a21a349edb7a2ee7c03a2ef27473c4ce8))
+- **image:** Name the first shape member in the error of a layer mask every time ([355fdeb](https://github.com/AlexGalhardo/stuarty/commit/355fdebb3290140a320b938a6d92ae94c11844d8))
+- **desktop:** Show the adoption of the Vukem Video workspace in a dialog ([7b0e607](https://github.com/AlexGalhardo/stuarty/commit/7b0e607ac04afbb3d185caacee0915cff00ec638))
+- **ui:** Plan each mask field against the document of its turn ([dfb9393](https://github.com/AlexGalhardo/stuarty/commit/dfb939343610ebeda6223af4eab1e19dea2d93f4))
+- **ui:** Keep the pages in the dashboard at 320 px and let an anchor button be a link ([2579c59](https://github.com/AlexGalhardo/stuarty/commit/2579c596577e51c833c404aaed8580846d2a7403))
+- **ui:** Keep the button role of an asChild button that is not a link ([5c7e117](https://github.com/AlexGalhardo/stuarty/commit/5c7e11774a04dde14384b3593e8a90968c39a489))
+- **ui:** Give the select popup the nonce of the page and a layer above the dialog ([420f641](https://github.com/AlexGalhardo/stuarty/commit/420f64176afae9b52ff180b0b5bbc122118d5cf8))
+- **e2e:** Expect the ripple of the Q trim in keyboard-only-edit ([8c148e6](https://github.com/AlexGalhardo/stuarty/commit/8c148e6b7831706d59d8d0055685e09aebba3e29))
+- **e2e:** Follow the Base UI dialog and the icon-only toolbar in wcag22 ([996c759](https://github.com/AlexGalhardo/stuarty/commit/996c7596c37ae9f3307b41adf902417df7fdf438))
+- **preview:** Start a new renderer instance after a trap ([49602a0](https://github.com/AlexGalhardo/stuarty/commit/49602a0f79a887e10749dd44cf8aaabac8a30f6d))
+- **ui:** Read the forced preview executor through prefs ([e4fec44](https://github.com/AlexGalhardo/stuarty/commit/e4fec44605155bc5bfb70aee2deadf3b0bfad5bd))
+- **ui:** Let the render worker call fetch and nothing else of R6 ([b10fe40](https://github.com/AlexGalhardo/stuarty/commit/b10fe409646820c76506994cefaf9f570bc4da15))
+- **ui:** Show skeletons, not empty sentences, while the project loads ([ca9d1f7](https://github.com/AlexGalhardo/stuarty/commit/ca9d1f76b2792f0a8a6f8f790fa1904ce89b9419))
+- **preview:** Draw a frame of playback once with the renderer ([9c75031](https://github.com/AlexGalhardo/stuarty/commit/9c7503193caf4f321f74187dcd7b0deaa7f75003))
+- **e2e:** Search the shortcuts dialog with the modifier the platform shows ([4e44750](https://github.com/AlexGalhardo/stuarty/commit/4e4475029b814ab21080d0d33710bd32b71b121a))
+- **e2e:** Load an empty project in loading-states ([6c90e95](https://github.com/AlexGalhardo/stuarty/commit/6c90e952a7ce32f274096ca6ba569340dd8f1c7c))
+
+### Security
+
+- **repo:** Close the gaps in the project permission rules ([715f276](https://github.com/AlexGalhardo/stuarty/commit/715f27645884b5b3a9abd7f5bf8df72233275d0c))
+- **security:** Add the encrypted secret vault ([792c9a0](https://github.com/AlexGalhardo/stuarty/commit/792c9a0c1c190e0569b46dd0d0272c22f87ea8a5))
+- **security:** Add the outbound rule check and the T-38 to T-41 tests ([654a821](https://github.com/AlexGalhardo/stuarty/commit/654a8214a0ec95d806361141719b555495f6521c))
 ## [0.29.0] - 2026-11-18
 
 ### Added
@@ -1348,7 +1391,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/vukem-video/compare/v0.29.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.30.0...HEAD
+[0.30.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.29.0...v0.30.0
 [0.29.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.28.0...v0.29.0
 [0.28.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.27.0...v0.28.0
 [0.27.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.26.0...v0.27.0
