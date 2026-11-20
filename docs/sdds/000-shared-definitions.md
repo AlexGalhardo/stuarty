@@ -63,6 +63,7 @@
 | `ImageDescribe` | `image` (`action` show) | `image:show` | `GET /images/{id}` | read |
 | `ImageEdit` | `image` (`action` edit) | `image:edit` | `POST /images/{id}/edit` | edit |
 | `ImageUndo`, `ImageRedo` | `image` (`action` undo, redo) | `image:undo`, `image:redo` | `POST /images/{id}/undo`, `POST /images/{id}/redo` | edit |
+| `ImageRevert`, `ImageDiff`, `ImageCheckpointCreate`, `ImageCheckpointList`, `ImageCheckpointRename`, `ImageCheckpointRemove` | `history` (`domain` `image`, `image_id`; `action` `revert`, `diff`, `checkpoint`, `checkpoints`, `rename_checkpoint`, `remove_checkpoint`) | `revert`, `diff`, `checkpoint:create`, `checkpoint:list`, `checkpoint:rename`, `checkpoint:remove` (each with `--image <id>` in place of `--project`) | `POST /images/{id}/revert`, `GET /images/{id}/diff`, `/images/{id}/checkpoints` (`GET`, `POST`) and `/images/{id}/checkpoints/{name}` (`PATCH`, `DELETE`) (SDD-021 section 4, epic 50) | read, edit |
 | `ImageExport` | `image` (`action` export) | `image:export` | `POST /images/{id}/export` | edit |
 | `ImageImport` | `image` (`action` import) | `image:import` | `POST /images/import` (an image file from a path or a library hash becomes a new image document, or one more layer of the document `image_id`; SDD-021 §10) | edit |
 | `ImageImportFile` | none | none | `POST /images/import/file` (a file chosen in the browser, as the bytes of the request, becomes a new image document or a layer; SDD-021 §10.2; HTTP only because the bytes are the request) | edit |
@@ -216,6 +217,7 @@ Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, `text.generate
 | `project_items` | the items of a project: brief, text, timeline, output; their order and trash state | SDD-005 §5.12 |
 | `text_revisions` | one row per save of a text item: body, actor, source (`created`, `write`, `generated`, `revert`), and for a generated one the provider, model, cost and job | SDD-019 §3 |
 | `checkpoints` | the names and notes a person or an agent put on a revision of a timeline, and the automatic ones before an agent's first edit of the day | SDD-005 §5.14 |
+| `image_checkpoints` | the names and notes a person or an agent put on a revision of an image document, and the automatic ones before an agent's first edit of the day | SDD-005 §5.14.1 |
 | `timelines` | one row per timeline document: current document, revision, schema version, trash state (the former `projects` table, renamed) | SDD-005 §5.2 |
 | `operations` | the append-only log, one row per committed batch of a timeline (its `project_id` column holds the timeline id) | SDD-005 |
 | `idempotency_keys` | stored batch results by key | SDD-005 |
