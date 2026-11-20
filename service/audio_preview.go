@@ -227,6 +227,13 @@ func (s *svc) startPreview(store *cache.Store, known *knownPreview, t *previewTa
 		return newError(command.CodeInternal, "the processed sound is not available in this build.")
 	}
 
+	// The file is a 48 kHz stereo 16-bit WAV: 4 bytes a sample after a 44-byte header. One the cache could never hold
+	// would be rendered in full, refused by Commit, and rendered again after every pause of previewRetryAfter.
+	if 44+4*t.src.Samples > store.Max() {
+		return newError(command.CodeLimit, "the processed sound of the item is larger than the cache.").
+			withHint("raise STUARTY_CACHE_MAX_BYTES; the item plays its windows until then")
+	}
+
 	p := &s.previews
 	p.setup()
 
