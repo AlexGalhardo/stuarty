@@ -1,0 +1,49 @@
+---
+title: "Install on a server"
+description: "One script puts Stuarty on a small Linux server of your own, behind Caddy with HTTPS."
+---
+
+## You will learn
+
+- what you need: a Linux server, a domain and two open ports;
+- the two commands that install it;
+- where the secrets are, and the one you must copy somewhere safe.
+
+## The idea
+
+The server package is the `deploy/` folder of the repository: a Docker Compose file with two containers, Stuarty and [Caddy](https://caddyserver.com/), and four scripts (install, update, back up, restore). Caddy owns ports 80 and 443 and gets the certificate for your domain. Stuarty listens only on the internal network, and everything it keeps is in one volume.
+
+Three secrets are files in `deploy/secrets/`: the master key that seals your connected accounts, the application key and the password of the first administrator. None is inside the image or in a backup.
+
+The image is built on your server from the source of the release you check out. Nothing is pulled from a Stuarty registry.
+
+## Quick start
+
+You need a Linux server with Docker 24 or later and the Compose plugin 2.20 or later, a domain whose DNS record points to the server, and ports 80 and 443 open. Pick a release tag and install it:
+
+```bash
+git clone --branch vX.Y.Z https://github.com/AlexGalhardo/stuarty.git
+cd stuarty
+bash deploy/install.sh --domain stuarty.example.com --email you@example.com
+```
+
+The script checks Docker, creates the keys, builds the image, starts the stack, waits until `https://stuarty.example.com/up` answers, and prints the address, the email and the first password. The first build takes several minutes. Sign in and change the password.
+
+Keep the master key: copy `deploy/secrets/master_key` to a password manager, away from the server. It is the one file you cannot get back.
+
+To update, run `bash deploy/update.sh X.Y.Z`: it backs up first and rolls back when the new version does not start. To back up, run `bash deploy/backup.sh`.
+
+## What connects to the network
+
+Caddy asks a certificate authority for the certificate of your domain. Building the image downloads base images and the pinned FFmpeg, on the server. `update.sh` asks the remote you cloned from for new tags. Stuarty itself opens no outbound connection until you connect an account or a provider.
+
+## Common mistakes
+
+- Pointing the domain after running the script: Caddy cannot get the certificate until the DNS record resolves.
+- Restoring without the master key. Your projects come back; the connected accounts must be connected again.
+
+## Next steps
+
+- [Install on a server, in detail: update, backup and restore](/docs/self-hosting/vps)
+- [Put Caddy in front](/docs/self-hosting/caddy)
+- [Network mode and login](/docs/self-hosting/network-mode)

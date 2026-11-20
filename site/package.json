@@ -19,7 +19,7 @@
     "test:base-path": "node --test scripts/base-path.test.ts",
     "check:links-live": "node scripts/check-links-live.ts",
     "test:scripts": "node --test scripts/check-last-updated.test.ts scripts/committed-dates.test.ts scripts/trailing-slash.test.ts scripts/check-links-live.test.ts",
-    "test:site": "node --test scripts/link-anchors.test.ts scripts/markdown-twin.test.ts scripts/generate-reference.test.ts scripts/api-reference.test.ts scripts/mcp-reference.test.ts scripts/check-doc-claims.test.ts scripts/accessibility-page.test.ts scripts/latest-release.test.ts scripts/glossary.test.ts scripts/shortcuts-reference.test.ts scripts/base-path.test.ts scripts/check-built.test.ts"
+    "test:site": "node --test scripts/link-anchors.test.ts scripts/markdown-twin.test.ts scripts/generate-reference.test.ts scripts/api-reference.test.ts scripts/mcp-reference.test.ts scripts/check-doc-claims.test.ts scripts/accessibility-page.test.ts scripts/latest-release.test.ts scripts/glossary.test.ts scripts/shortcuts-reference.test.ts scripts/base-path.test.ts scripts/check-built.test.ts scripts/network-reference.test.ts scripts/pt-br-guides.test.ts"
   },
   "dependencies": {
     "@astrojs/react": "7.1.4",

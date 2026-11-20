@@ -1,0 +1,58 @@
+---
+title: "Memory, skills and prompts"
+description: "The way you work, kept as plain files you own: notes an agent can read, procedures it follows, and reusable prompts with variables."
+---
+
+## You will learn
+
+- what memory, skills and prompts are, and where the files are;
+- how to write each one, in the editor and from the command line;
+- why an imported skill waits for you to read it before an agent sees it.
+
+## The idea
+
+Three kinds of file make up your library:
+
+- **Memory**: one fact per note, with what was learned ("my audience prefers hooks under three seconds").
+- **Skills**: procedures an agent follows, in the open Agent Skills format. A skill is text an agent reads. Stuarty never runs a script that comes with a skill: the script is stored as an inert file and flagged.
+- **Prompts**: a reusable text with `{{variables}}`.
+
+The files are the truth: plain Markdown in the `library/` folder of your [workspace](/docs/workspace), which you can open, version and copy. A search index sits beside them and can be deleted and rebuilt from the files at any time.
+
+## Quick start
+
+1. In the editor, open **Memory**, **Skills** or **Prompts** in the sidebar. Each lists what you have, searchable, and each has a place to write a new one.
+2. Or from a terminal:
+
+   ```bash
+   stuarty memory:write audience-hooks --description "Hooks under three seconds work best for this audience" \
+     --body "Start on the result, not on the greeting."
+   stuarty prompt:write script-short --description "A short script" \
+     --body "Write a {{seconds}} second script about {{topic}}." --default seconds=10
+   stuarty prompt:render script-short --value topic="a first sourdough loaf"
+   stuarty library:search sourdough hooks
+   ```
+
+   `prompt:render` fills the variables and prints the text; nothing is sent anywhere. `library:search` finds across the three kinds.
+
+3. To share a skill with your own agent, export it: `stuarty skill:export` writes the skills as folders in the Agent Skills layout, ready to install.
+
+## A skill you did not write waits for you
+
+A skill you import (`stuarty skill:import <folder or archive>`) starts **unreviewed**. It is listed with a warning, and it is not offered to an agent until you open it in **Skills**, read it and mark it reviewed. Any change to its text takes the mark away. `stuarty skill:lint <name>` checks a skill's structure and names its findings.
+
+## What an agent sees
+
+Everything that comes out of the library toward an agent is delimited as untrusted text, even what you wrote, because a note can have been written by another agent. An agent reads memory and prompts through the CLI and the library tool, and can write a note; it cannot mark a skill reviewed.
+
+## Common mistakes
+
+- Putting a secret in a note. The library is plain files: keep keys in the vault, which is in Connections.
+- Expecting a skill's script to run. It never does.
+- Editing a reviewed skill and wondering why an agent stopped seeing it: the review mark goes away with a change; read it again and mark it.
+
+## Next steps
+
+- [Agents overview](/docs/agents/overview)
+- [The memory domain, for agents](/docs/agents/domain-memory)
+- [Prompts for your agent client](/docs/prompts/overview)

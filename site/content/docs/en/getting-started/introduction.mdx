@@ -1,42 +1,52 @@
 ---
 title: "Introduction"
-description: "What Stuarty is, who it is for, and what exists today."
+description: "What Stuarty is, what stays on your machine, and where each part of it is documented."
 ---
 
-Stuarty is a minimalist, open source (MIT) video editor, web first and desktop later, built so that an AI agent can operate it as a first-class user. A person edits the same project in a browser.
+Stuarty is a place to create, edit, manage and publish your content. It is open source (MIT), you run it on your own computer or your own server, and it is built so that an AI agent can do anything a person does in it: everything in the interface is also in the command line, the HTTP API and MCP.
 
-<Callout type="warning" title="Still before 1.0">
-The product is released and still before 1.0: it works, and a minor release may still change a public interface. The [changelog](/changelog) lists what each release added and changed.
-</Callout>
+## What it does
 
-## The idea
+- **Video.** Import clips, cut and arrange them on a timeline, add captions, animate, and export a checked MP4. The first complete flow is a short vertical video with captions and a thumbnail, from the idea to the published post: [follow it step by step](/docs/guide/first-short-video).
+- **Images.** An image editor with layers, templates, adjustments, filters and masks, for thumbnails and covers.
+- **Writing.** Scripts, captions and blog posts, kept with their history.
+- **Projects.** Every production is a project with its assets, its brief and its publications.
+- **AI, on your terms.** You bring your own access: an API key, Sign in with ChatGPT, OpenRouter or your local agent. You choose what is sent and what it may cost.
+- **Publishing.** Your own developer apps for YouTube, Instagram, Facebook, X and TikTok, and your blog. Nothing is published until you approve it.
 
-An agent edits through **MCP**, a **command-line interface** or an **HTTP API**. A person edits the same project in a **browser UI**. All of them go through one command core written in Go, so a human and an agent see the same result and the same history. The user interface never computes the result of an edit: it draws what the core says and sends commands.
+## What stays on your machine
 
-Two use cases decide every priority:
+Your files, your projects, your tokens and your credentials. A credential lives in the vault of the workspace and no tool, page or agent can read it back. With no connection configured, Stuarty opens no outbound connection at all, and it has no telemetry. [What leaves your machine, and when](/docs/what-leaves-your-machine) lists every case.
 
-- short vertical videos with captions for social networks (9:16 is the default frame);
-- product commercials with animated text, music and reusable templates.
+## How it fits together
 
-## What it does not do
+An agent edits through **MCP**, the **CLI** or the **HTTP API**. A person edits the same project in a **browser** or in the **desktop application**, which is a window over the same interface. All of them go through one command core written in Go, so a person and an agent see the same result and the same history. The interface never computes the result of an edit: it draws what the core says and sends commands.
 
-- It does not send your media anywhere. There is no outbound network connection by default and no telemetry.
-- It does not need an account or a cloud service. It runs on your machine.
-- It does not ship FFmpeg inside the editor. FFmpeg is used only as a separate LGPL process, and the pixels are composed in Go.
+## What is documented here
 
-## Where things stand
-
-| Area | State |
+| Part | State |
 | --- | --- |
-| Requirements, architecture decisions and specifications | written, in the repository `docs/` folder |
-| Command core, editing operations, render, export | released |
-| MCP server, CLI commands, HTTP API | released |
-| Browser editor | released |
-| Installers, container image and desktop app | released with each version |
-| Generated reference and the agent quick start | on this site |
+| Video editor, export presets, batch export | documented |
+| Image editor, filters, masks, lookup tables, checkpoints and revert | documented |
+| Writing | documented |
+| AI providers, Sign in with ChatGPT, the agent chat, memory, skills and prompts | documented |
+| Publishing to YouTube, Instagram, Facebook, X and TikTok, the calendar, the approval queue | documented |
+| Blog posts and their destinations: files for a static site, WordPress, a webhook, the read API | documented |
+| Recipes for a product commercial and a long talking video | documented |
+| MCP, CLI and HTTP API, with a generated reference of every operation | documented |
+| Installation on Windows, with Docker and on a server | documented |
 
-The [changelog](/changelog) lists what has been released. Follow the [repository](https://github.com/AlexGalhardo/stuarty) for progress.
+Still in progress, and documented when each is merged:
+
+- video generation by a model;
+- the measured success rate of an agent on the first flow.
+
+The [changelog](/changelog) lists what each release added and changed.
+
+The site is in English. Para quem lê português, há guias no repositório: [começar](https://github.com/AlexGalhardo/stuarty/blob/main/docs/guides/pt-BR/comecar.md), [seu primeiro short](https://github.com/AlexGalhardo/stuarty/blob/main/docs/guides/pt-BR/primeiro-short.md) e as receitas de [um comercial de produto](https://github.com/AlexGalhardo/stuarty/blob/main/docs/guides/pt-BR/recipe-product-commercial.md) e de [um vídeo longo](https://github.com/AlexGalhardo/stuarty/blob/main/docs/guides/pt-BR/recipe-long-talking-video.md).
 
 ## Next steps
 
-Read [Getting started](/docs/quick-start) for how to run it.
+1. [What leaves your machine](/docs/what-leaves-your-machine)
+2. [Install it](/docs/installation): on Windows, with Docker, or on a server
+3. [Make your first short video](/docs/guide/first-short-video)

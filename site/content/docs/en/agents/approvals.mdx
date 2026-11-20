@@ -1,0 +1,67 @@
+---
+title: "The approval queue, from an agent's point of view"
+description: "What an agent can prepare, what it can read about the queue, and what only a person can do."
+---
+
+## You will learn
+
+- which actions an agent can prepare and which wait for a person;
+- how an agent starts a costly or publishing job and follows it;
+- what it is refused, and the error it gets.
+
+## The idea
+
+An agent can **prepare** a publication or a request that costs money. It cannot run either. The job is created in the state `waiting_approval`, with the estimate and what would be sent, and nothing leaves the machine until a person approves it in the browser, or a rule that the person wrote does. A rule is written by a person from a browser session, never by an agent. See [Approvals, rules and cost ceilings](/docs/guide/approvals) for what the person sees.
+
+The kinds that wait are the ones that spend or publish: `publish.upload`, `text.draft`, `text.generate`, `image.generate`, `image.edit` with a model, `voice.generate` and `video.generate`. An export, a transcription and every edit of the project run at once: they spend nothing and send nothing.
+
+## Quick start
+
+Over MCP, start the job with `job_start` and read the answer: its `approval_id` names the request.
+
+```text
+job_start { "project_id": "prj_...", "kind": "text.draft",
+            "args": { "item_id": "pit_...", "connection_id": "con_...", "model": "...",
+                      "instruction": "A 10 second script about a first sourdough loaf" } }
+```
+
+Then poll the job, and read the queue if you need to see the request. Both are read only:
+
+```text
+job_get { "job_id": "job_...", "wait_ms": 25000 }
+job_get { "approval_id": "apr_..." }
+job_get { "approvals": "pending" }
+```
+
+With the CLI, the same:
+
+```bash
+stuarty approval:list
+stuarty approval:show <approval id>
+stuarty cost:show
+```
+
+The job stays `waiting_approval` while the person decides. When they approve, it runs and `job_get` shows `succeeded` (or the error). When they reject it, the job ends `cancelled` with the reason. A request that nobody decides expires, and the job ends with `E_APPROVAL_EXPIRED`.
+
+## What an agent is refused
+
+| Call | Answer |
+| --- | --- |
+| `approval:decide`, the approval endpoint of the API, with an agent's key or the local token | `E_PRIVILEGED_SESSION` |
+| writing or removing an approval rule | `E_PRIVILEGED_SESSION` |
+| setting or removing a cost ceiling | `E_PRIVILEGED_SESSION` |
+| a job whose estimate is over a ceiling | `E_COST_CEILING`, with the ceiling and what to change; nothing is recorded |
+| an argument that is a URL, a host or a destination | not accepted: an agent works with the connections a person created |
+
+The calendar of publications is read through the CLI and the HTTP API (`publication:list`, `publication:show`); the MCP server has no tool for it.
+
+## Common mistakes
+
+- Polling for an approval and never telling the person. A request is only a line in a queue: say in your answer that a request waits and where.
+- Retrying a refused job in a loop. A ceiling or a missing privilege does not change by itself.
+
+## Next steps
+
+- [Agents overview](/docs/agents/overview)
+- [The MCP server](/docs/agents/mcp)
+- [Your first short video](/docs/guide/first-short-video)
