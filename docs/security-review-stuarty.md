@@ -9,9 +9,9 @@ This document is the successor of [the review of the editor](security-review-1.0
 | Check | Command | Result |
 | --- | --- | --- |
 | Every threat has a test that exists, every operation a scope | `go run ./internal/tools/threatcheck` | exits 0 with 101 threats (T-100 and T-101 added by this epic) |
-| The security tests | `go test -run TestSecurity_ ./...` | to be run by the orchestrator with the machine idle; see the hand-off of the epic |
+| The security tests | `go test -run TestSecurity_ ./...` | exits 0 (116 packages), run in the review of epic 42 on 2026-11-20 with other agents working; run again by the orchestrator on the final branch |
 | No egress with no connection | `bash scripts/no-egress.sh` | Linux only (`strace`); to be run on Linux or in Docker by the orchestrator |
-| Fuzzing of the parsers of untrusted input | `bash scripts/fuzz.sh 30s` | [the fuzz report](quality/2026-11-20-fuzz.md): 26 targets, two real defects found and fixed |
+| Fuzzing of the parsers of untrusted input | `bash scripts/fuzz.sh 30s` | [the fuzz report](quality/2026-11-20-fuzz.md): 27 targets, two real defects found and fixed |
 | Kill points | `bash scripts/crash.sh` | the vault kill points and the coverage check pass; the server kill points are run by `scripts/crash.sh` as a whole |
 
 ## 2. Findings
