@@ -170,7 +170,9 @@ type scan struct {
 
 func newScan(r []rune) *scan {
 	n := len(r)
-	sc := &scan{r: r, match: make([]int, n), paren: make([]int, n+1), single: make([]int, n+1), double: make([]int, n+1)}
+	sc := &scan{
+		r: r, match: make([]int, n), paren: make([]int, n+1), single: make([]int, n+1), double: make([]int, n+1),
+	}
 
 	var open []int
 
