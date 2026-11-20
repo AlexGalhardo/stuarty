@@ -583,3 +583,47 @@ func TestImageEdit_ArgumentsAreChecked(t *testing.T) {
 		t.Fatal("a refused request reached the provider")
 	}
 }
+
+// SDD-016 section 12.2: a sign-in grants text only, so neither operation of image.edit runs through a ChatGPT
+// connection, even with a price set for the model: refused before a job or an approval exists, with the hint
+// to use an API key.
+func TestImageEdit_ASignInConnectionIsRefused(t *testing.T) {
+	t.Parallel()
+
+	se := newSignInEnv(t)
+	done := se.signIn("openai", "")
+
+	micros := int64(40_000)
+	if _, err := se.svc.ProviderPriceSet(se.asPerson(), service.ProviderPriceSetRequest{
+		Provider: "openai", Model: imageModel, Currency: "USD", Unit: "image", UnitMicros: &micros,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	created, err := se.svc.ImageCreate(se.as(token), service.ImageCreateRequest{Preset: "video_thumbnail"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, a := range []service.ImageModelArgs{
+		{Operation: provider.OperationRemoveBackground, LayerID: photoLayer},
+		{Operation: provider.OperationGenerate, Prompt: "a beach"},
+	} {
+		a.ConnectionID, a.ImageID, a.Model = done.ConnectionID, created.ImageID, imageModel
+
+		_, err := se.svc.ImageModelEdit(se.as(token), service.ImageModelEditRequest{
+			ProjectID: se.prj, ImageModelArgs: a,
+		})
+
+		e, ok := svcErr(err)
+		if !ok || e.Code != "E_VALIDATION" || e.Path != "args.connection_id" || !strings.Contains(e.Hint, "API key") {
+			t.Errorf("%s through a sign-in = %v, want E_VALIDATION at args.connection_id naming an API key",
+				a.Operation, err)
+		}
+	}
+
+	approvals, _ := se.svc.ApprovalList(se.as(token), service.ApprovalListRequest{State: "all"})
+	if len(approvals.Requests) != 0 {
+		t.Errorf("a refused image.edit left %d approval requests", len(approvals.Requests))
+	}
+}
