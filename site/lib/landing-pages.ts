@@ -130,87 +130,95 @@ export type DriveTab = {
 	label: string;
 	title: string;
 	text: string;
-	/** Lines of the sample; `cmd` lines are typed, `out` lines are the answer, `note` lines are comments. */
-	lines: { kind: "cmd" | "out" | "note"; text: string }[];
+	/**
+	 * A Claude Code session, line by line: `cmd` a shell command, `prompt` what the person asks, `tool` a tool call
+	 * of Claude Code, `out` its result and `more` the next lines of that result, `note` a comment.
+	 */
+	lines: { kind: "cmd" | "prompt" | "tool" | "out" | "more" | "note"; text: string }[];
 	/** What the copy button copies (the commands only). */
 	copy: string;
 	doc: { label: string; href: string };
 };
 
-const projectId = "prj_6jzec0m2nn";
+// Every answer below is the real output of a demo workspace (2026-11-20): `stuarty project:show`, `lint`, `history`
+// and `export`, the MCP tools `lint` and `history` and the HTTP routes of web/contract/testdata/surface.txt.
+const curlEdit = `curl -s -X POST "http://127.0.0.1:7878/api/v1/projects/prj_6jzec0m2nn/edit" -H "Authorization: Bearer $STUARTY_KEY" -H "Content-Type: application/json" -d '{"base_revision": 5, "dry_run": true, "operations": [{"op": "caption.add", "args": {"start": "14.5s", "text": "Approve and publish", "duration": "3s"}}]}'`;
 
 export const drive: DriveTab[] = [
 	{
 		id: "agent",
 		label: "Agent",
-		title: "Your agent edits beside you",
-		text: "Connect the agent you already use. It reads the project, plans a batch, lints and exports, and every change appears in the timeline signed with its name.",
+		title: "Claude Code edits beside you",
+		text: "Add Stuarty to Claude Code once. Ask in plain words: it reads the project, checks it and edits it, and every change lands on the timeline signed local:claude.",
 		lines: [
-			{ kind: "cmd", text: "claude mcp add stuarty -- stuarty mcp" },
-			{ kind: "note", text: "> Add the four captions of the script to Launch teaser, then export it." },
-			{ kind: "out", text: `project_get   ${projectId}  rev 4, 4 tracks, 22 s` },
-			{ kind: "out", text: "edit          caption.add x4, item.set_transition  rev 5, actor local:claude" },
-			{ kind: "out", text: "lint          0 errors" },
-			{ kind: "out", text: "job_start     kind=export  job_zv5ar08jeb" },
-			{ kind: "out", text: "job_get       succeeded  1080x1920  22s/660f  21.9 MiB" },
+			{ kind: "cmd", text: "claude mcp add stuarty -- stuarty mcp --actor claude" },
+			{ kind: "cmd", text: "claude" },
+			{ kind: "prompt", text: "Check Launch teaser, then add the caption \"Approve and publish\" at 14.5 s." },
+			{ kind: "tool", text: 'stuarty - project_get (MCP)(project_id: "prj_6jzec0m2nn")' },
+			{ kind: "out", text: 'project prj_6jzec0m2nn "Launch teaser" rev 5' },
+			{ kind: "more", text: "1080x1920 30fps duration=22s/660f tracks=4 items=9 assets=3" },
+			{ kind: "tool", text: 'stuarty - lint (MCP)(project_id: "prj_6jzec0m2nn")' },
+			{ kind: "out", text: "lint r5 prj_6jzec0m2nn: errors=0 warnings=1 (showing 1 of 1)" },
+			{ kind: "tool", text: 'stuarty - edit (MCP)(project_id: "prj_6jzec0m2nn", base_revision: 5, operations: [{"op": "caption.add", ...}])' },
+			{ kind: "out", text: '{"revision": 6, "base_revision": 5, "applied": true, "actor": "local:claude", ...}' },
 		],
-		copy: "claude mcp add stuarty -- stuarty mcp",
-		doc: { label: "Agents guide", href: "/docs/mcp/overview/" },
+		copy: "claude mcp add stuarty -- stuarty mcp --actor claude",
+		doc: { label: "Connect an agent", href: "/docs/mcp/overview/" },
 	},
 	{
 		id: "cli",
 		label: "CLI",
-		title: "Every action is a command",
-		text: "The same operations as the editor, from a terminal or a script. Add --json to any command for one JSON document.",
+		title: "Claude Code runs the stuarty CLI",
+		text: "Every action of the editor is a command. Claude Code runs them in its shell, reads the plain-text answers and adds --json when it needs fields.",
 		lines: [
-			{ kind: "cmd", text: 'stuarty project:create --name "Launch teaser" --preset 9:16' },
-			{ kind: "out", text: `created ${projectId} "Launch teaser" r0 1080x1920 30fps; add tracks with edit op track.add` },
-			{ kind: "cmd", text: `stuarty media:import talk.mp4 --project ${projectId} --wait` },
-			{ kind: "cmd", text: `stuarty edit --project ${projectId} caption.add start=0.3s text="One studio for everything you make" duration=3s` },
-			{ kind: "cmd", text: `stuarty lint --project ${projectId}` },
-			{ kind: "cmd", text: `stuarty export --project ${projectId} --wait` },
+			{ kind: "cmd", text: "claude" },
+			{ kind: "prompt", text: "What changed in Launch teaser? Then export it." },
+			{ kind: "tool", text: "Bash(stuarty history --project prj_6jzec0m2nn)" },
+			{ kind: "out", text: "history prj_6jzec0m2nn rev 5 (showing 5 of 5, newest first)" },
+			{ kind: "more", text: "r5 2026-11-20T21:57:39Z local:claude ops=5 caption.add,caption.add,caption.add,+2" },
+			{ kind: "more", text: "r4 2026-11-20T21:57:30Z local:cli ops=9 track.add,track.add,track.add,+6" },
+			{ kind: "tool", text: "Bash(stuarty export --project prj_6jzec0m2nn --wait)" },
 			{ kind: "out", text: "job_zv5ar08jeb export succeeded 100% 1080x1920 22s/660f 21.9 MiB" },
 		],
-		copy: [
-			'stuarty project:create --name "Launch teaser" --preset 9:16',
-			`stuarty media:import talk.mp4 --project ${projectId} --wait`,
-			`stuarty edit --project ${projectId} caption.add start=0.3s text="One studio for everything you make" duration=3s`,
-			`stuarty lint --project ${projectId}`,
-			`stuarty export --project ${projectId} --wait`,
-		].join("\n"),
+		copy: ["stuarty history --project prj_6jzec0m2nn", "stuarty export --project prj_6jzec0m2nn --wait"].join("\n"),
 		doc: { label: "CLI reference", href: "/docs/reference/cli/" },
 	},
 	{
 		id: "http",
 		label: "HTTP API",
-		title: "REST routes with an event stream",
-		text: "The API lives under /api/v1 with a bearer token. Edits are batches against a revision, and the events route streams every change as it lands.",
+		title: "Claude Code calls the HTTP API",
+		text: "The same operations as REST routes under /api/v1, with a bearer token. A batch can be checked with dry_run before it is applied.",
 		lines: [
-			{ kind: "cmd", text: 'curl -X POST "http://127.0.0.1:7878/api/v1/projects" -H "Authorization: Bearer $STUARTY_KEY" -H "Content-Type: application/json" -d \'{"name": "Launch teaser", "preset": "9:16"}\'' },
-			{ kind: "out", text: "201 Created" },
-			{ kind: "cmd", text: `curl -X POST "http://127.0.0.1:7878/api/v1/projects/${projectId}/edit" -H "Authorization: Bearer $STUARTY_KEY" -H "Content-Type: application/json" -d '{"base_revision": 4, "operations": [{"op": "caption.add", "args": {"start": "0.3s", "text": "One studio", "duration": "3s"}}]}'` },
-			{ kind: "cmd", text: `curl -N "http://127.0.0.1:7878/api/v1/projects/${projectId}/events" -H "Authorization: Bearer $STUARTY_KEY"` },
+			{ kind: "cmd", text: "claude" },
+			{ kind: "prompt", text: "With the HTTP API, try a caption at 14.5 s on Launch teaser without saving it." },
+			{ kind: "tool", text: `Bash(${curlEdit})` },
+			{ kind: "out", text: '{"project_id": "prj_6jzec0m2nn", "revision": 6, "base_revision": 5, "applied": false, "dry_run": true,' },
+			{ kind: "more", text: '"actor": "local:api", "created": ["itm_b2jzp3byyr"], "effective": [...], "diff": [...]}' },
+			{ kind: "tool", text: 'Bash(curl -s "http://127.0.0.1:7878/api/v1/projects" -H "Authorization: Bearer $STUARTY_KEY")' },
+			{ kind: "out", text: '{"projects": [{"id": "prj_6jzec0m2nn", "name": "Launch teaser", "revision": 5, "width": 1080, "height": 1920, "fps": "30", ...}]}' },
 		],
-		copy: [
-			'curl -X POST "http://127.0.0.1:7878/api/v1/projects" -H "Authorization: Bearer $STUARTY_KEY" -H "Content-Type: application/json" -d \'{"name": "Launch teaser", "preset": "9:16"}\'',
-			`curl -N "http://127.0.0.1:7878/api/v1/projects/${projectId}/events" -H "Authorization: Bearer $STUARTY_KEY"`,
-		].join("\n"),
+		copy: [curlEdit, 'curl -s "http://127.0.0.1:7878/api/v1/projects" -H "Authorization: Bearer $STUARTY_KEY"'].join("\n"),
 		doc: { label: "API reference", href: "/docs/api/overview/" },
 	},
 	{
 		id: "mcp",
 		label: "MCP",
-		title: "Tools grouped by intent",
-		text: "tools/list returns 20 tools: read, edit, view, lint and run jobs. One edit call applies a whole batch of operations as one undo step.",
+		title: "Twenty tools, grouped by intent",
+		text: "stuarty mcp serves the tools on standard input and output. One edit call applies a whole batch as one undo step; history lists every step with who made it.",
 		lines: [
-			{ kind: "note", text: "tools/call" },
-			{ kind: "out", text: '{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {' },
-			{ kind: "out", text: '  "name": "edit", "arguments": {' },
-			{ kind: "out", text: `    "project_id": "${projectId}", "base_revision": 4,` },
-			{ kind: "out", text: '    "operations": [{"op": "caption.add", "args": {"start": "0.3s",' },
-			{ kind: "out", text: '      "text": "One studio for everything you make", "duration": "3s"}}]}}}' },
+			{ kind: "cmd", text: "claude mcp add stuarty -- stuarty mcp --actor claude" },
+			{ kind: "note", text: "# 20 tools: project_list project_create project_get project_trash" },
+			{ kind: "note", text: "#   edit command_help history media_import media_inspect view lint" },
+			{ kind: "note", text: "#   job_start job_get job_cancel template font_import connection" },
+			{ kind: "note", text: "#   image project_item library" },
+			{ kind: "cmd", text: "claude" },
+			{ kind: "prompt", text: "Who edited Launch teaser last?" },
+			{ kind: "tool", text: 'stuarty - history (MCP)(project_id: "prj_6jzec0m2nn", action: "list", limit: 2)' },
+			{ kind: "out", text: "history prj_6jzec0m2nn rev 5 (showing 2 of 5, newest first)" },
+			{ kind: "more", text: "r5 2026-11-20T21:57:39Z local:claude ops=5 caption.add,caption.add,caption.add,+2" },
+			{ kind: "more", text: "r4 2026-11-20T21:57:30Z local:cli ops=9 track.add,track.add,track.add,+6" },
 		],
-		copy: `{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "edit", "arguments": {"project_id": "${projectId}", "base_revision": 4, "operations": [{"op": "caption.add", "args": {"start": "0.3s", "text": "One studio for everything you make", "duration": "3s"}}]}}}`,
+		copy: "claude mcp add stuarty -- stuarty mcp --actor claude",
 		doc: { label: "MCP tools", href: "/docs/mcp/tools/" },
 	},
 ];
