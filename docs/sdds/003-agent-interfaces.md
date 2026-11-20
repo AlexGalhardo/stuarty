@@ -922,8 +922,8 @@ type Range struct {
 ```go
 type JobStartRequest struct {
 	ProjectID  string          `json:"project_id"`
-	Kind       string          `json:"kind"` // "export" | "transcribe" | "text.generate" | "image.generate" | "voice.generate" | "image.edit" (ingest and frame jobs are internal)
-	Args       json.RawMessage `json:"args,omitempty"` // one object, validated by Kind: ExportArgs, TranscribeArgs or the arguments of text.generate, image.generate and voice.generate (SDD-016 sections 6 and 6.1); an unknown member is E_VALIDATION with path args.<name>
+	Kind       string          `json:"kind"` // "export" | "transcribe" | "text.generate" | "image.generate" | "voice.generate" | "video.generate" | "image.edit" (ingest and frame jobs are internal)
+	Args       json.RawMessage `json:"args,omitempty"` // one object, validated by Kind: ExportArgs, TranscribeArgs or the arguments of text.generate, image.generate, voice.generate, video.generate and image.edit (SDD-016 sections 6, 6.1, 6.4 and 6.5); an unknown member is E_VALIDATION with path args.<name>
 	WaitMS     int             `json:"wait_ms,omitempty"` // default 0; 0 to 25000
 	DryRun     bool            `json:"dry_run,omitempty"` // runs the lint gate and limits, queues nothing
 }
@@ -2779,7 +2779,7 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
 ```json
 {
   "name": "job_start",
-  "description": "Start long work; args by kind. export renders a workspace file: {start?, end?, format?, at? (the png frame), preset?, codec?}; export_batch: items (export args) in turn; transcribe: {asset_id, language?, model?}; text.generate: {connection_id, model, prompt}; image.generate: {connection_id, model, prompt, size?, count?}; voice.generate: {connection_id, model, text, voice, format?}; image.edit: {image_id, operation, connection_id, model, layer_id?, prompt?}; text.draft: {item_id, connection_id, model, instruction}; a person approves. Poll job_get.",
+  "description": "Start long work; args by kind. export renders a workspace file: {start?, end?, format?, at? (the png frame), preset?, codec?}; export_batch: items (export args) in turn; transcribe: {asset_id, language?, model?}; the kinds below also take connection_id, model: text.generate: {prompt}; image.generate: {prompt, size?, count?}; voice.generate: {text, voice, format?}; image.edit: {image_id, operation, layer_id?, prompt?}; text.draft: {item_id, instruction}; video.generate: {prompt, seconds?, aspect?, first_frame?}; a person approves. Poll job_get.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -2800,7 +2800,8 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
           "image.generate",
           "voice.generate",
           "text.draft",
-          "image.edit"
+          "image.edit",
+          "video.generate"
         ]
       },
       "args": {
