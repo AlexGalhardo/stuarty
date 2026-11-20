@@ -45,7 +45,7 @@ A creator drags a photo from their computer into a new thumbnail in one step, an
 
 ## Tasks
 
-- [ ] 1. Amend SDD-000 (the operation `ImageImport`, the route, the event `image.updated` in a stream of an image), SDD-003 (section 4.2, action `import`; section 6.3, the routes; section 7.1, the table), SDD-006 (a section for the image stream), SDD-012 (sections 24.3 and 24.13) and SDD-021 (sections 10 and 11). Verify: `task lint:md` exits 0.
+- [x] 1. Amend SDD-000 (the operation `ImageImport`, the route, the event `image.updated` in a stream of an image), SDD-003 (section 4.2, action `import`; section 6.3, the routes; section 7.1, the table), SDD-006 (a section for the image stream), SDD-012 (sections 24.3 and 24.13) and SDD-021 (sections 10 and 11). Verify: `task lint:md` exits 0.
 - [ ] 2. Check whether `project_items` already holds an image (SDD-005 section 5.12 says the kind is reserved), then implement `ImageImport` in `service/` with the atomic creation and the path rules, and a table test for each refusal. Verify: `go test ./service/... -run TestImageImport` passes.
 - [ ] 3. Publish `image.updated` after every committed image batch, and serve `GET /images/{id}/events` with replay. Verify: `go test ./web/app/http/... -run TestImageEvents` passes, including the replay after `Last-Event-ID`.
 - [ ] 4. Expose on MCP, CLI and HTTP. Verify: `go test ./web/contract/...` passes; `go run ./internal/tools/surfacebudget` exits 0; `task generate:check` exits 0.
