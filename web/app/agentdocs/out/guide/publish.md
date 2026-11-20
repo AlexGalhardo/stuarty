@@ -18,6 +18,14 @@ CLI: `stuarty publish` lists the commands of the domain and `stuarty publish <ve
 - `publish:validate`: check a post against the limits of its network and show what a person would approve; sends nothing
 - `publish:now`: prepare the publication of an exported video: it waits for a person to approve it in the app, then it is sent; you cannot approve it
 - `publish:status`: show the state of a publication: waiting_approval, uploading, processing, published or failed
+- `publication:create`: plan a publication: a video for one or more accounts, each with its own time; nothing is asked or sent until you schedule it
+- `publication:list`: list the publications of the calendar, by project, state, network or time range
+- `publication:show`: show one publication with each target: its time, its state, its approval, its address or its error
+- `publication:update`: change a publication or its targets; a post that waited for approval or was approved goes back to waiting for approval
+- `publication:schedule`: give a target its time and ask for approval: it is sent at that time only after a person approves it in the app; you cannot approve it
+- `publication:send-now`: ask for approval to send a target as soon as it is approved; use it for a missed target too
+- `publication:retry`: ask for approval to send a failed target again; read why it failed with publication:show
+- `publication:cancel`: cancel a target, or every target that has not gone out when --target is left out
 
 ## Operations
 

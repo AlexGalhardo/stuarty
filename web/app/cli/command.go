@@ -410,6 +410,18 @@ var processCommands = []processCommand{
 		usage:   []string{"stuarty user:passwd <email>"},
 		example: "stuarty user:passwd ana@example.com",
 	},
+	{
+		name:    "workspace:backup",
+		summary: "write a consistent backup of the workspace to a folder (never with the master key); a server may keep running",
+		usage:   []string{"stuarty workspace:backup <folder>"},
+		example: "stuarty workspace:backup ~/stuarty-backup-2026-11-19",
+	},
+	{
+		name:    "workspace:restore",
+		summary: "restore a backup folder into an empty workspace, checked against its manifest and the master key at hand",
+		usage:   []string{"stuarty workspace:restore <folder> [--replace] [--without-vault]"},
+		example: "stuarty workspace:restore ~/stuarty-backup-2026-11-19",
+	},
 }
 
 func lookupProcess(name string) *processCommand {

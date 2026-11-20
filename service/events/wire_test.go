@@ -61,6 +61,9 @@ func TestGoldenBytesOfEachEvent(t *testing.T) {
 		"project.updated": events.ProjectFrame(
 			&service.Event{ProjectID: "prj_7k2m9x4q1b", State: "trashed", At: moved},
 		),
+		"nested.updated": events.NestedFrame(&service.Event{
+			ProjectID: "prj_7k2m9x4q1b", TimelineID: "prj_a1b2c3d4e5", Revision: 12, At: moved,
+		}),
 		"asset.updated":   events.AssetFrame(&asset),
 		"job.updated":     events.JobFrame(&job),
 		"resync.required": events.ResyncFrame("prj_7k2m9x4q1b", 1500, events.ReasonGapTooLarge),
@@ -111,7 +114,8 @@ func TestSDDExamplesMatchTheSchemas(t *testing.T) {
 	c := jsonschema.NewCompiler()
 
 	for _, name := range []string{
-		events.BatchCommitted, events.ProjectUpdated, events.AssetUpdated, events.JobUpdated, events.ResyncRequired,
+		events.BatchCommitted, events.ProjectUpdated, events.NestedUpdated, events.AssetUpdated, events.JobUpdated,
+		events.ResyncRequired,
 	} {
 		f, err := os.Open(filepath.Join("testdata", "schema", name+".json"))
 		if err != nil {

@@ -2591,6 +2591,190 @@ Example:
 stuarty publish:status job_0123456789
 ```
 
+## `publication:create`
+
+Plan a publication: a video for one or more accounts, each with its own time; nothing is asked or sent until you schedule it
+
+```text
+stuarty publication:create --project <id> --title <t> --export <job> --connection <id> --at <time> --zone <zone> --made-for-kids yes|no
+stuarty publication:create --project <id> --title <t> --export <job> --targets <json>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--title` | string |  | the title (required) |
+| `--text` | string |  | the caption the accounts use unless they have their own |
+| `--export` | string |  | the id of a succeeded export job of the project: the video (required) |
+| `--thumbnail` | string |  | the id of a succeeded export job of a still: the cover |
+| `--connection` | string |  | the connection of the account the post goes to |
+| `--at` | string |  | the time: 2026-11-20T09:00 read in --zone, or an instant such as 2026-11-20T12:00:00Z |
+| `--zone` | string |  | the IANA zone the time is read in, for example America/Sao_Paulo (default UTC) |
+| `--late-window` | string |  | minutes, 0 to 1440, a late post may still be sent without asking (default 0) |
+| `--target-title` | string |  | a title for this account instead of the publication's |
+| `--target-description` | string |  | a description for this account instead of the caption |
+| `--tags` | string |  | the tags, a comma list |
+| `--visibility` | string |  | private (the default), unlisted or public |
+| `--made-for-kids` | string |  | yes or no: whether the video is made for kids |
+| `--ai-disclosure` | boolean | `false` | the video has realistic altered or synthetic content |
+| `--targets` | string |  | a JSON list of targets, for several accounts at once |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty publication:create --project prj_7k2m9x4q1b --title "Week one" --export job_0123456789 --connection con_0123456789 --at 2026-11-20T09:00 --zone America/Sao_Paulo --made-for-kids no
+```
+
+## `publication:list`
+
+List the publications of the calendar, by project, state, network or time range
+
+```text
+stuarty publication:list [--project <id>] [--state <state>] [--from <time>] [--until <time>]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--project` | string |  | only the publications of this project |
+| `--state` | string |  | only those with a target in this state, for example waiting_approval or failed |
+| `--network` | string |  | only those with a target on this network |
+| `--from` | string |  | only those with a target at or after this time (RFC 3339) |
+| `--until` | string |  | only those with a target before this time (RFC 3339) |
+| `--limit` | integer |  | the page size, 1 to 500 (default 100) |
+| `--offset` | integer |  | how many to skip |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty publication:list --from 2026-11-16T00:00:00Z --until 2026-11-23T00:00:00Z --json
+```
+
+## `publication:show`
+
+Show one publication with each target: its time, its state, its approval, its address or its error
+
+```text
+stuarty publication:show <publication id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty publication:show pub_0123456789
+```
+
+## `publication:update`
+
+Change a publication or its targets; a post that waited for approval or was approved goes back to waiting for approval
+
+```text
+stuarty publication:update <publication id> [--title <t>] [--text <t>] [--export <job>] [--targets <json>]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--title` | string |  | the new title |
+| `--text` | string |  | the new caption |
+| `--export` | string |  | the new video: a succeeded export job of the project |
+| `--thumbnail` | string |  | the new cover; an empty text removes it |
+| `--targets` | string |  | a JSON list of targets to change (with an id), add (without) or remove ("remove":true) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty publication:update pub_0123456789 --title "A better title"
+```
+
+## `publication:schedule`
+
+Give a target its time and ask for approval: it is sent at that time only after a person approves it in the app; you cannot approve it
+
+```text
+stuarty publication:schedule <publication id> [--target <id>] [--at <time>] [--zone <zone>] [--late-window <min>]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--target` | string |  | the target; leave out for every draft target that has a time |
+| `--at` | string |  | the time: 2026-11-20T09:00 read in --zone, or an instant such as 2026-11-20T12:00:00Z |
+| `--zone` | string |  | the IANA zone the time is read in (default UTC) |
+| `--late-window` | string |  | minutes, 0 to 1440, a late post may still be sent without asking (default 0) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty publication:schedule pub_0123456789 --target tgt_0123456789 --at 2026-11-20T09:00 --zone America/Sao_Paulo
+```
+
+## `publication:send-now`
+
+Ask for approval to send a target as soon as it is approved; use it for a missed target too
+
+```text
+stuarty publication:send-now <publication id> --target <id>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--target` | string |  | the target, tgt_ and 10 characters |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty publication:send-now pub_0123456789 --target tgt_0123456789
+```
+
+## `publication:retry`
+
+Ask for approval to send a failed target again; read why it failed with publication:show
+
+```text
+stuarty publication:retry <publication id> --target <id>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--target` | string |  | the target, tgt_ and 10 characters |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty publication:retry pub_0123456789 --target tgt_0123456789
+```
+
+## `publication:cancel`
+
+Cancel a target, or every target that has not gone out when --target is left out
+
+```text
+stuarty publication:cancel <publication id> --target <id>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--target` | string |  | the target, tgt_ and 10 characters |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty publication:cancel pub_0123456789 --target tgt_0123456789
+```
+
 ## `text:list`
 
 List the scripts, copy and captions of a project, or of every project
@@ -2829,4 +3013,32 @@ Example:
 
 ```bash
 stuarty user:passwd ana@example.com
+```
+
+## `workspace:backup`
+
+Write a consistent backup of the workspace to a folder (never with the master key); a server may keep running
+
+```text
+stuarty workspace:backup <folder>
+```
+
+Example:
+
+```bash
+stuarty workspace:backup ~/stuarty-backup-2026-11-19
+```
+
+## `workspace:restore`
+
+Restore a backup folder into an empty workspace, checked against its manifest and the master key at hand
+
+```text
+stuarty workspace:restore <folder> [--replace] [--without-vault]
+```
+
+Example:
+
+```bash
+stuarty workspace:restore ~/stuarty-backup-2026-11-19
 ```

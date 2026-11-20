@@ -497,33 +497,65 @@ func (s *svc) runPublish(ctx context.Context, run JobRun) (JobOutcome, error) {
 		return JobOutcome{}, internalError()
 	}
 
-	reg, err := s.socialRegistry()
+	pub, err := s.sendPost(ctx, &in, "", func(p float64, m string) { run.Report(ctx, p, m) })
 	if err != nil {
 		return JobOutcome{}, err
 	}
 
+	raw, merr := json.Marshal(JobResult{Publish: &PublishResult{
+		Network: in.Network, ConnectionID: in.Args.ConnectionID, RemoteID: pub.RemoteID, URL: pub.URL,
+		State: string(pub.State), ThumbnailError: pub.ThumbnailError,
+	}})
+	if merr != nil {
+		return JobOutcome{}, merr
+	}
+
+	return JobOutcome{Result: raw}, nil
+}
+
+// sendPost sends an approved post: it checks that the files are the ones that were shown, and reaches the
+// network only through the connection. keyExtra, when set, is added to the key of the upload session, so two
+// targets with the same post do not share a session (SDD-020 section 7.4). The error is the service error
+// to show.
+func (s *svc) sendPost(
+	ctx context.Context, in *publishInput, keyExtra string, report func(float64, string),
+) (social.Published, error) {
+	reg, err := s.socialRegistry()
+	if err != nil {
+		return social.Published{}, err
+	}
+
 	conn, cerr := reg.Get(in.Network)
 	if cerr != nil {
-		return JobOutcome{}, newError(command.CodeNotFound, "the network is not built into this server.")
+		return social.Published{}, newError(command.CodeNotFound, "the network is not built into this server.")
 	}
 
 	full, ferr := s.approvedFile(in.Output)
 	if ferr != nil {
-		return JobOutcome{}, ferr
+		return social.Published{}, ferr
+	}
+
+	if report == nil {
+		report = func(float64, string) {}
+	}
+
+	key := uploadKey(in)
+	if keyExtra != "" {
+		key = social.UploadKey(key, keyExtra)
 	}
 
 	up := social.Upload{
 		Post:     in.post(),
 		Path:     full,
-		Key:      uploadKey(&in),
+		Key:      key,
 		Sessions: social.FileSessions{Dir: filepath.Join(s.workspace, "publish", "uploads")},
-		Report:   func(p float64, m string) { run.Report(ctx, p, m) },
+		Report:   report,
 	}
 
 	if in.Thumbnail != nil {
 		th, terr := s.approvedFile(*in.Thumbnail)
 		if terr != nil {
-			return JobOutcome{}, terr
+			return social.Published{}, terr
 		}
 
 		up.ThumbnailPath = th
@@ -549,24 +581,16 @@ func (s *svc) runPublish(ctx context.Context, run JobRun) (JobOutcome, error) {
 		return perr
 	})
 	if werr != nil {
-		return JobOutcome{}, s.socialError(werr)
+		return social.Published{}, s.socialError(werr)
 	}
 
 	if moved {
-		return JobOutcome{}, newError(
+		return social.Published{}, newError(
 			command.CodeInvalidState, "the connection no longer publishes to the account that was approved.",
 		).withHint("publish again, and approve the account the connection now names")
 	}
 
-	raw, merr := json.Marshal(JobResult{Publish: &PublishResult{
-		Network: in.Network, ConnectionID: in.Args.ConnectionID, RemoteID: pub.RemoteID, URL: pub.URL,
-		State: string(pub.State), ThumbnailError: pub.ThumbnailError,
-	}})
-	if merr != nil {
-		return JobOutcome{}, merr
-	}
-
-	return JobOutcome{Result: raw}, nil
+	return pub, nil
 }
 
 // approvedFile is the path of a file the person was shown, checked once more: a file that changed since

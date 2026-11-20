@@ -467,6 +467,13 @@ func TestItemFlagsDetailsAndAssetKinds(t *testing.T) {
 		t.Errorf("shape detail = %s", got)
 	}
 
+	cmp := timeline.NewItem("itm_k", timeline.ItemComposition, "trk_a1b2c3d4e5", 0, 30)
+	cmp.Timeline = "prj_a1b2c3d4e5"
+
+	if got := itemDetail(&cmp); got != "prj_a1b2c3d4e5" {
+		t.Errorf("composition detail = %s", got)
+	}
+
 	doc.Assets["ast_aaaaaaaaaa"] = timeline.Asset{ID: "ast_aaaaaaaaaa", Kind: timeline.AssetAudio, SampleCount: 96000}
 	doc.Assets["ast_bbbbbbbbbb"] = timeline.Asset{
 		ID:     "ast_bbbbbbbbbb",

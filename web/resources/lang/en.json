@@ -675,6 +675,10 @@
         "text": "Text",
         "caption": "Caption",
         "shape": "Shape",
+        "composition": "Composition",
+        "composition_open": "Open composition",
+        "composition_missing": "Timeline not found",
+        "from_breadcrumb": "Back to {name}",
         "speed_badge": "Speed {speed}",
         "slot_badge": "Slot: {name}",
         "asset_missing": "The media of this item is missing",
@@ -876,6 +880,8 @@
         "link": "Link items",
         "unlink": "Unlink items",
         "extract_audio": "Extract audio",
+        "create_composition": "Create composition from selection",
+        "expand_composition": "Expand composition",
         "freeze_frame": "Freeze frame",
         "copy_attributes": "Copy attributes",
         "paste_attributes": "Paste attributes",
@@ -1088,6 +1094,9 @@
           "add": {
             "title": "Add clip"
           },
+          "add_composition": {
+            "title": "Add a timeline as a clip"
+          },
           "set_blur": {
             "title": "Set clip blur"
           },
@@ -1129,6 +1138,14 @@
           },
           "set_speed": {
             "title": "Set clip speed"
+          }
+        },
+        "composition": {
+          "create_from_selection": {
+            "title": "Make a composition from the selection"
+          },
+          "expand": {
+            "title": "Expand the composition into its items"
           }
         },
         "font": {
@@ -2482,7 +2499,99 @@
       "price_output": "Output, per million tokens",
       "price_save": "Save the price",
       "spend": "Spent today: {amount}",
-      "spend_none": "Nothing spent today."
+      "spend_none": "Nothing spent today.",
+      "signin_title": "Or sign in, with no key to copy",
+      "signin": {
+        "openai": "Sign in with ChatGPT",
+        "openrouter": "Sign in with OpenRouter",
+        "generic": "Sign in to {provider}"
+      },
+      "signin_hint": {
+        "openai": "Uses your ChatGPT plan, within the limits of the plan. To sign in, open Stuarty at http://127.0.0.1 on the computer where it runs.",
+        "openrouter": "OpenRouter gives Stuarty a key of your account. It stays in the vault of this machine and spends your OpenRouter credits.",
+        "generic": "You sign in on the provider's page. The access stays in the vault of this machine."
+      },
+      "signin_account": "Signed in as {account}",
+      "signin_ready": "Signed in",
+      "signin_needs": "Needs sign-in",
+      "signin_needs_help": "The provider no longer accepts this sign-in. Nothing was deleted: sign in again to use it.",
+      "signin_again": "Sign in again",
+      "callback_title": "Sign-in to an AI provider",
+      "callback_working": "Finishing the sign-in...",
+      "callback_done": "Signed in:",
+      "callback_failed": "The sign-in did not finish.",
+      "back": "Back to the connections"
+    },
+    "publish": {
+      "title": "Publish",
+      "intro": "Plan which piece goes to which account and when. Every post waits for your yes in Approvals before it is sent.",
+      "new": "New publication",
+      "view": "View",
+      "view_month": "Month",
+      "view_week": "Week",
+      "view_list": "List",
+      "previous": "Previous",
+      "next": "Next",
+      "today": "Today",
+      "live": "Live",
+      "moving": "Moving to {time}. Use the arrow keys: left and right move by a day, up and down by an hour. Enter drops it, Escape lets it go.",
+      "empty": "Nothing is planned here yet.",
+      "list_caption": "Planned publications, one row for each account",
+      "no_time": "No time yet",
+      "open": "Open",
+      "error": "Error",
+      "preview": "Preview",
+      "title_count": "{count} of {max} characters",
+      "description_count": "{count} of {max} bytes",
+      "filter": {
+        "state": "State",
+        "network": "Network",
+        "all": "All"
+      },
+      "col": {
+        "when": "When",
+        "title": "Title",
+        "account": "Account",
+        "state": "State",
+        "result": "Result",
+        "actions": "Actions"
+      },
+      "state": {
+        "draft": "Draft",
+        "waiting_approval": "Waiting for approval",
+        "approved": "Approved",
+        "scheduled": "Scheduled",
+        "publishing": "Publishing",
+        "published": "Published",
+        "failed": "Failed",
+        "missed": "Missed",
+        "cancelled": "Cancelled"
+      },
+      "editor": {
+        "new": "New publication",
+        "edit": "Publication",
+        "intro": "The title and the caption are shared by every account; each account can have its own. Nothing is sent before you approve it in Approvals.",
+        "caption": "Caption",
+        "targets": "Accounts",
+        "no_targets": "No account yet. Add one to plan where this goes.",
+        "target": "Account {number}",
+        "account": "Account",
+        "at": "Date and time",
+        "zone": "Time zone",
+        "late": "Send late up to (minutes)",
+        "late_help": "0 means a post whose time passed is never sent on its own; you choose to send it now or give it a new time.",
+        "target_title": "Title for this account",
+        "target_description": "Description for this account",
+        "waits": "This post waits for your approval.",
+        "remove": "Remove",
+        "add_target": "Add an account",
+        "save": "Save",
+        "save_first": "Save your changes first",
+        "schedule": "Schedule and ask for approval",
+        "send_now": "Send now (asks for approval)",
+        "retry": "Retry (asks for approval)",
+        "cancel": "Cancel this post"
+      }
     },
     "approvals": {
       "title": "Approvals",
