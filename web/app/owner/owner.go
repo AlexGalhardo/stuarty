@@ -705,19 +705,16 @@ func rateLimitsFromEnv(getenv func(string) string, network bool) (httpapi.RateLi
 
 // connections builds the registry of connections over the vault of the workspace. The master key
 // comes from the environment, a file or the operating system keychain (SDD-014 section 4). It is
-// read once and removed from the environment, so no child process inherits it. A key that is named
-// and malformed, or named twice, stops the start; a key that is merely absent does not: the vault
-// is created with the first credential.
+// read once and removed from the environment, so no child process inherits it. A key named twice
+// stops the start. A key that is absent or is not a key does not: the vault is created with the first
+// credential, and until then `doctor` reports the key (the check `vault`) and a credential answers
+// E_VAULT_LOCKED, so the command that would diagnose the problem can still run (VV-269).
 func (o *Owner) connections(
 	getenv func(string) string, st service.Store, now func() time.Time,
 ) (*connections.Manager, error) {
 	keys, err := vault.Resolve(vault.ConfigFromEnv(getenv, string(o.Dir)))
 	if err != nil {
 		return nil, err
-	}
-
-	if _, err := keys.Load(); err != nil && !errors.Is(err, vault.ErrKeyNotFound) {
-		return nil, fmt.Errorf("owner: the master key of the vault from %s is not usable: %w", keys.Name(), err)
 	}
 
 	for _, name := range []string{vault.EnvMasterKey, vault.EnvMasterKeyFile} {
