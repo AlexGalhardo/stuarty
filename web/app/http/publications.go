@@ -23,8 +23,9 @@ type publicationListIn struct {
 	ProjectID string `json:"project_id,omitempty" doc:"Only the publications of one project."`
 	State     string `json:"state,omitempty"      doc:"Only publications with a target in this state: draft, waiting_approval, approved, scheduled, publishing, published, sent_as_draft, failed, missed or cancelled."`
 	Network   string `json:"network,omitempty"    doc:"Only publications with a target on this network."`
-	From      string `json:"from,omitempty"       doc:"Only publications with a target at or after this time (RFC 3339)."`
-	To        string `json:"to,omitempty"         doc:"Only publications with a target before this time (RFC 3339)."`
+	From      string `json:"from,omitempty"       doc:"Only publications with a target at or after this time (RFC 3339) or date."`
+	To        string `json:"to,omitempty"         doc:"Only publications with a target before this time (RFC 3339) or date."`
+	Zone      string `json:"zone,omitempty"       doc:"The zone a date or local time of from and to is read in; empty is UTC."`
 	Limit     int    `json:"limit,omitempty"      doc:"The page size, 1 to 500; the default is 100."`
 	Offset    int    `json:"offset,omitempty"     doc:"How many publications to skip."`
 }

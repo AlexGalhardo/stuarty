@@ -4034,7 +4034,7 @@
       "domain": "publish",
       "summary": "list the publications of the calendar, by project, state, network or time range",
       "usage": [
-        "stuarty publication:list [--project <id>] [--state <state>] [--from <time>] [--until <time>]"
+        "stuarty publication:list [--project <id>] [--state <state>] [--from <time>] [--until <time>] [--zone <zone>]"
       ],
       "example": "stuarty publication:list --from 2026-11-16T00:00:00Z --until 2026-11-23T00:00:00Z --json",
       "flags": [
@@ -4056,12 +4056,17 @@
         {
           "name": "from",
           "type": "string",
-          "usage": "only those with a target at or after this time (RFC 3339)"
+          "usage": "only those with a target at or after this time (RFC 3339) or date"
         },
         {
           "name": "until",
           "type": "string",
-          "usage": "only those with a target before this time (RFC 3339)"
+          "usage": "only those with a target before this time (RFC 3339) or date"
+        },
+        {
+          "name": "zone",
+          "type": "string",
+          "usage": "the zone a date or local time of --from and --until is read in (default UTC)"
         },
         {
           "name": "limit",

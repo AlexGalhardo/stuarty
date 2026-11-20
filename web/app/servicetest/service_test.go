@@ -1251,6 +1251,37 @@ func TestCommandHelp(t *testing.T) {
 		t.Fatalf("detail = %+v, %v", one, err)
 	}
 
+	// VV-283: an image operation with no domain asked is found when its name is unique among the domains.
+	img, err := e.svc.CommandHelp(e.as(ui), service.CommandHelpRequest{Name: "layer.add_text"})
+	if err != nil || img.Command == nil || img.Command.Name != "layer.add_text" {
+		t.Fatalf("layer.add_text with no domain = %+v, %v", img, err)
+	}
+
+	if !strings.HasPrefix(img.Text, "Domain: image.\n") {
+		t.Errorf("the help of an operation found with no domain does not name its domain: %q", img.Text)
+	}
+
+	named, err := e.svc.CommandHelp(
+		e.as(ui),
+		service.CommandHelpRequest{Name: "layer.add_text", Domain: command.DomainImage},
+	)
+	if err != nil || strings.HasPrefix(named.Text, "Domain:") {
+		t.Errorf("the help asked with domain=image = %+v, %v", named, err)
+	}
+
+	_, err = e.svc.CommandHelp(
+		e.as(ui),
+		service.CommandHelpRequest{Name: "layer.add_text", Domain: command.DomainVideo},
+	)
+	if se := serviceError(t, err); se.Code != command.CodeUnknownCommand {
+		t.Errorf("layer.add_text in the video domain = %+v, want E_UNKNOWN_COMMAND", se)
+	}
+
+	_, err = e.svc.CommandHelp(e.as(ui), service.CommandHelpRequest{Name: "nope.nothing"})
+	if se := serviceError(t, err); !strings.Contains(se.Hint, "domain=image") {
+		t.Errorf("the hint of an unknown name does not point at the domain parameter: %q", se.Hint)
+	}
+
 	for _, name := range []string{"asset.add", "nope.nothing"} {
 		_, err = e.svc.CommandHelp(e.as(ui), service.CommandHelpRequest{Name: name})
 		if se := serviceError(t, err); se.Code != command.CodeUnknownCommand || se.Details["known"] == nil {
