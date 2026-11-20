@@ -4,6 +4,7 @@
 // its clapper on the cut. On a small screen, with no script, the page is a normal scroll of the same six sections.
 import "@/src/landing/landing.css";
 import Base from "../../layouts/Base.astro";
+import FontPreload from "../../components/landing/FontPreload.astro";
 import DriveTabs from "../../components/landing/DriveTabs.astro";
 import LandingFooter from "../../components/landing/LandingFooter.astro";
 import LandingActions from "../../components/landing/LandingActions.astro";
@@ -18,6 +19,7 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 ---
 
 <Base title="Stuarty: the studio in six takes" description="An open source studio for creators: video, images, writing and publishing in one place on your own machine, with AI agents as first-class users." noindex headerVariant="landing">
+	<FontPreload slot="head" />
 	<script is:inline>
 		(function () {
 			var big = matchMedia("(min-width: 64rem) and (min-height: 45rem)").matches;
