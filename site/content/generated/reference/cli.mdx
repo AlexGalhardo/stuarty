@@ -2605,7 +2605,7 @@ stuarty publication:create --project prj_7k2m9x4q1b --title "Week one" --export 
 List the publications of the calendar, by project, state, network or time range
 
 ```text
-stuarty publication:list [--project <id>] [--state <state>] [--from <time>] [--to <time>]
+stuarty publication:list [--project <id>] [--state <state>] [--from <time>] [--until <time>]
 ```
 
 | Flag | Type | Default | Meaning |
@@ -2614,7 +2614,7 @@ stuarty publication:list [--project <id>] [--state <state>] [--from <time>] [--t
 | `--state` | string |  | only those with a target in this state, for example waiting_approval or failed |
 | `--network` | string |  | only those with a target on this network |
 | `--from` | string |  | only those with a target at or after this time (RFC 3339) |
-| `--to` | string |  | only those with a target before this time (RFC 3339) |
+| `--until` | string |  | only those with a target before this time (RFC 3339) |
 | `--limit` | integer |  | the page size, 1 to 500 (default 100) |
 | `--offset` | integer |  | how many to skip |
 
@@ -2623,7 +2623,7 @@ Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 Example:
 
 ```bash
-stuarty publication:list --from 2026-11-16T00:00:00Z --to 2026-11-23T00:00:00Z --json
+stuarty publication:list --from 2026-11-16T00:00:00Z --until 2026-11-23T00:00:00Z --json
 ```
 
 ## `publication:show`
