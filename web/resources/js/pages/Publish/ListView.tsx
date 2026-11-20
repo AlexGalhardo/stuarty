@@ -27,6 +27,11 @@ export function TargetResult({ target }: { target: Target }): ReactNode {
 						<UntrustedText>{target.url}</UntrustedText>
 					</a>
 				))}
+			{target.state === "sent_as_draft" && (
+				<span role="note" className="block text-sm" data-testid="target-draft">
+					{t("ui.publish.draft_note")}
+				</span>
+			)}
 			{target.error !== undefined && (
 				<span role="note" className="block text-sm" data-testid="target-error">
 					<span className="font-medium text-destructive">

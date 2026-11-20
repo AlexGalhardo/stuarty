@@ -1666,11 +1666,32 @@ export interface SocialNetwork {
 	limits: SocialLimits;
 	// The network takes a flag that says the video has synthetic content.
 	ai_disclosure?: boolean;
+	// What a post costs on a network that charges for one (X), as the service has it.
+	price?: SocialPrice;
+	// The network takes the file as a draft to be finished in its own app (TikTok): it ends sent_as_draft.
+	draft?: boolean;
 	endpoint: string;
 	hosts: string[];
 	scopes: string[];
 	guide: string;
 	guide_read: string;
+}
+
+// Amounts in millionths of the currency, with the page they were read from, the date, and the date a person
+// edited them (SDD-020 section 35).
+export interface SocialPrice {
+	currency: string;
+	post_micros: number;
+	link_micros: number;
+	source: string;
+	read: string;
+	edited?: string;
+}
+
+export interface SocialPriceRequest {
+	connection_id: string;
+	post_micros: number;
+	link_micros: number;
 }
 
 export interface SocialNetworkListResult {
@@ -1707,6 +1728,7 @@ export interface SocialAccount {
 	// needs_account: the sign-in reached several accounts and a person has not chosen one (SDD-020 section 17).
 	state: "ready" | "needs_sign_in" | "needs_account";
 	choices?: SocialChoice[];
+	price?: SocialPrice;
 }
 
 export interface SocialChoice {
