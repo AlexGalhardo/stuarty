@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -101,7 +102,7 @@ func (s *svc) ImageExport(ctx context.Context, req ImageExportRequest) (*ImageEx
 		width, height = export.ImageOutputSize(pix.Rect.Dx(), pix.Rect.Dy(), w, h)
 	}
 
-	return &ImageExportResult{
+	res := &ImageExportResult{
 		ImageID:  row.ID,
 		Revision: row.Revision,
 		Format:   format,
@@ -119,7 +120,85 @@ func (s *svc) ImageExport(ctx context.Context, req ImageExportRequest) (*ImageEx
 			height,
 			len(body),
 		),
-	}, nil
+	}
+
+	if jerr := s.recordImageExport(ctx, c, res); jerr != nil {
+		return nil, jerr
+	}
+
+	return res, nil
+}
+
+// recordImageExport writes the export job of the file just made, already succeeded: the rule of a job that a
+// publication may take as a thumbnail (D-111). The job has no project, since an image has none; who may use it is
+// who may see the image (canSeeImageJob).
+func (s *svc) recordImageExport(ctx context.Context, c Caller, res *ImageExportResult) error {
+	rel, rerr := filepath.Rel(s.workspace, res.Path)
+	if rerr != nil {
+		return internalError()
+	}
+
+	// The path of the file is rebuilt from the image, the revision and the digest when it is used, and the job
+	// keeps only those; the absolute path of the machine is not stored.
+	stored := *res
+	stored.Path, stored.JobID = filepath.ToSlash(rel), ""
+
+	id := s.newIDs("job")
+	input := marshalOrNull(map[string]string{"image_id": res.ImageID})
+	result := marshalOrNull(JobResult{Image: &stored})
+
+	err := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
+		now := s.nowMs()
+		job := JobRow{
+			ID: id, Kind: JobImageExport, Actor: c.Actor, State: JobQueued, Input: input,
+			CreatedMs: now, UpdatedMs: now,
+		}
+
+		if err := tx.Jobs().CreateLimited(ctx, job, nil); err != nil {
+			return err
+		}
+
+		if ok, err := tx.Jobs().Claim(ctx, id, now); err != nil || !ok {
+			return errors.Join(err, internalError())
+		}
+
+		if ok, err := tx.Jobs().Finish(ctx, id, JobSucceeded, result, nil, now); err != nil || !ok {
+			return errors.Join(err, internalError())
+		}
+
+		return nil
+	})
+	if err != nil {
+		return asError(err)
+	}
+
+	res.JobID = id
+
+	return nil
+}
+
+// imageJobOf is the image an image.export job exported and the file it wrote, as the job recorded them.
+func imageJobOf(j *JobRow) (*ImageExportResult, bool) {
+	var res JobResult
+
+	if j.Kind != JobImageExport || json.Unmarshal(j.Result, &res) != nil || res.Image == nil {
+		return nil, false
+	}
+
+	return res.Image, res.Image.ImageID != ""
+}
+
+// canSeeImageJob says whether the caller may use an image.export job: a key limited to one project reaches no
+// image (SDD-021 section 10), and any other caller reaches the job of an image they may see.
+func (s *svc) canSeeImageJob(ctx context.Context, c Caller, j *JobRow) bool {
+	img, ok := imageJobOf(j)
+	if !ok || c.ProjectID != "" {
+		return false
+	}
+
+	row, err := s.store.Images().Get(ctx, img.ImageID)
+
+	return err == nil && (visible(c, row.OwnerUserID) || SharedImageTemplate(row.ImageHead))
 }
 
 // imageExportSize is the size asked for: a preset, or a width and a height (either may be 0 to keep the aspect).

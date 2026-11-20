@@ -58,6 +58,7 @@ Prove, by doing it, that a creator and their agent can go from an idea to a publ
 4. Every finding is a `VV` entry, fixed with a test or filed with a reason.
 5. The publish step never happens without approval in any run.
 6. `task lint`, `task test` and `task test:web` pass.
+7. The thumbnail made from a template is the one the publication takes: `image:export` records an `image.export` job and `publication:create --thumbnail` accepts it (D-111, VV-280; `TestAnImageExportIsAThumbnailOfAPublicationOnEverySurface`, step 5 of `scripts/first-flow.sh`).
 
 ## Risks and mitigation
 

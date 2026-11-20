@@ -46,5 +46,6 @@ func All() []schema.Migration {
 		m20261120110000TextKindPost(),
 		m20261120110100CreateBlogTables(),
 		m20261120120000CreateImageCheckpoints(),
+		m20261120130000JobsImageExportKind(),
 	}
 }

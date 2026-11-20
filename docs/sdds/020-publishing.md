@@ -247,7 +247,7 @@ A project-limited key may use the operations that name its project and is refuse
 
 ## 10. The job `publish.upload` and its approval
 
-`publish.upload` is registered with `ApprovableKind` (SDD-015 section 5) by the service when a registry of connectors is given. Its arguments: `connection_id`, `export` (the id of a succeeded export job of the project, the video), `thumbnail` (the id of a succeeded still export, optional), `title`, `description`, `tags`, `visibility`, `made_for_kids`, `ai_disclosure`.
+`publish.upload` is registered with `ApprovableKind` (SDD-015 section 5) by the service when a registry of connectors is given. Its arguments: `connection_id`, `export` (the id of a succeeded export job of the project, the video), `thumbnail` (the id of a succeeded still export of the project, or of an `image.export` job of an image the caller may see, SDD-021 section 6; optional), `title`, `description`, `tags`, `visibility`, `made_for_kids`, `ai_disclosure`.
 
 `Prepare` resolves the files (the export must belong to the project and be `succeeded`, inside the workspace), validates the post with the connector (`E_VALIDATION`), checks that the connection exists and is of a social kind, and describes the action: the **summary** (one line: network, channel, title, visibility, file name and size; the title is the person's text, so control and invisible characters are refused as SDD-015 section 3 says), the connection, the estimate (no cost). It makes no request.
 
@@ -413,7 +413,7 @@ The guide of section 8 is written per network from the `Description` (steps, sco
 
 Section 10 sends one post now, as a job. A creator plans: which piece goes to which network, and when. That plan is a **publication** (epic 20).
 
-A publication belongs to one project (ADR-0039) and holds what the networks share: a `title`, a `text` (the default caption; the caption of epic 17 is copied into it when that epic is merged, otherwise the person types it), the `export` (the id of a succeeded export job of the project: the video, checked as `PublishNow` checks it) and an optional `thumbnail` (a succeeded still export). It holds one or more **targets**, one per account it goes to. A target is where the plan meets a network:
+A publication belongs to one project (ADR-0039) and holds what the networks share: a `title`, a `text` (the default caption; the caption of epic 17 is copied into it when that epic is merged, otherwise the person types it), the `export` (the id of a succeeded export job of the project: the video, checked as `PublishNow` checks it) and an optional `thumbnail` (a succeeded still export of the project, or an `image.export` job, the export of an image document made from a template for instance: SDD-021 section 6, D-111). It holds one or more **targets**, one per account it goes to. A target is where the plan meets a network:
 
 | Field | Meaning |
 | --- | --- |
