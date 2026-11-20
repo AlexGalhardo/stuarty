@@ -1,0 +1,1 @@
+{"id":"v1_task0001","object":"interaction","status":"incomplete","model":"gemini-omni-1.2-flash","steps":[{"type":"model_output","content":[{"type":"video","mime_type":"video/mp4","data":"AAAAGGZ0eXBpc29tAAACAGlzb21pc28ybXA0MSBmYWtlIGNsaXA="}]}]}

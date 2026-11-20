@@ -127,9 +127,12 @@ func taskPath(taskID string) (string, error) {
 	return "/interactions/" + url.PathEscape(taskID), nil
 }
 
-// Poll implements providers.VideoGenerator: GET /interactions/{id}. in_progress is pending, completed is done,
-// and failed, cancelled and incomplete are failed, with a refusal when the provider names a safety block.
-// requires_action and requires_continuation never end a generation of one request and are an unreadable answer.
+// Poll implements providers.VideoGenerator: GET /interactions/{id}. in_progress is pending; completed is done, and
+// so is incomplete, which the documentation calls a completed interaction with incomplete results, so Fetch takes
+// the clip if there is one and the generation is paid for either way. failed and cancelled are failed, with a
+// refusal when the provider names a safety block, and charged: the documentation of the Omni models does not say
+// that a generation that ends with no clip is free. requires_action and requires_continuation never end a
+// generation of one request and are an unreadable answer.
 func (*Adapter) Poll(ctx context.Context, c connections.Credential, taskID string) (providers.VideoStatus, error) {
 	path, err := taskPath(taskID)
 	if err != nil {
@@ -146,10 +149,12 @@ func (*Adapter) Poll(ctx context.Context, c connections.Credential, taskID strin
 	switch ans.Status {
 	case "in_progress":
 		return providers.VideoStatus{State: providers.VideoPending}, nil
-	case "completed":
+	case "completed", "incomplete":
 		return providers.VideoStatus{State: providers.VideoDone}, nil
-	case "failed", "cancelled", "incomplete":
-		return providers.VideoStatus{State: providers.VideoFailed, Err: failure(ans.Status, ans.Errors)}, nil
+	case "failed", "cancelled":
+		return providers.VideoStatus{
+			State: providers.VideoFailed, Err: failure(ans.Status, ans.Errors), Charged: true,
+		}, nil
 	}
 
 	return providers.VideoStatus{}, errUnreadable()
@@ -175,8 +180,8 @@ func failure(status string, errs []apiError) error {
 	return &providers.Error{Kind: providers.KindUnavailable, Status: http.StatusOK}
 }
 
-// Fetch implements providers.VideoGenerator: GET /interactions/{id} of a completed interaction, whose
-// model_output step holds the clip inline as base64 (the documentation says a later read of an interaction
+// Fetch implements providers.VideoGenerator: GET /interactions/{id} of a completed or incomplete interaction,
+// whose model_output step holds the clip inline as base64 (the documentation says a later read of an interaction
 // returns it inline whatever the delivery was). A finished interaction with no clip in it is a refusal of the
 // output; one that names the clip by URI only is the same, because that URI is for the Files API and the key
 // is sent to the API host only.
@@ -200,7 +205,7 @@ func (*Adapter) Fetch(
 		return providers.GeneratedFile{}, err
 	}
 
-	if ans.Status != "completed" {
+	if ans.Status != "completed" && ans.Status != "incomplete" {
 		return providers.GeneratedFile{}, errUnreadable()
 	}
 

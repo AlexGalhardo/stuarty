@@ -39,8 +39,10 @@ type clipMaker struct {
 	mu sync.Mutex
 	// pending is how many polls answer "pending" before "done"; a negative number never ends.
 	pending int
-	// failed makes the task end failed with this error; fetchErr makes the download fail.
+	// failed makes the task end failed with this error, charged says the provider may have billed it; fetchErr
+	// makes the download fail.
 	failed   error
+	charged  bool
 	fetchErr error
 	// submitErr makes the submission fail; confirm is what Cancel answers.
 	submitErr error
@@ -117,7 +119,7 @@ func (c *clipMaker) Poll(_ context.Context, _ connections.Credential, id string)
 	}
 
 	if c.failed != nil {
-		return providers.VideoStatus{State: providers.VideoFailed, Err: c.failed}, nil
+		return providers.VideoStatus{State: providers.VideoFailed, Err: c.failed, Charged: c.charged}, nil
 	}
 
 	if c.pending < 0 || int(n) <= c.pending {
@@ -688,6 +690,30 @@ func TestVideoGenerate_AFailedTaskIsAStableErrorAndCostsNothing(t *testing.T) {
 				t.Error("a failed task was fetched")
 			}
 		})
+	}
+}
+
+// A provider whose documentation does not say that a task with no clip is free (Google, SDD-016 section 2.3)
+// marks the failure charged, and the job records the estimate, as a cancel the provider does not confirm does.
+func TestVideoGenerate_AFailedTaskTheProviderMayHaveBilledRecordsTheEstimate(t *testing.T) {
+	t.Parallel()
+
+	v := newVideoEnv(t)
+	v.maker.set(func(c *clipMaker) {
+		c.failed, c.charged = &providers.Error{Kind: providers.KindRefused}, true
+	})
+
+	done := v.run(v.approved().JobID)
+	if done.State != service.JobFailed || done.Error == nil || done.Error.Details["kind"] != "refused" {
+		t.Fatalf("job = %+v (error %+v)", done, done.Error)
+	}
+
+	if n := v.spent(); n != 2_000_000 {
+		t.Errorf("a failed task the provider may have billed is recorded at its estimate: spent = %d", n)
+	}
+
+	if v.maker.fetches.Load() != 0 {
+		t.Error("a failed task was fetched")
 	}
 }
 

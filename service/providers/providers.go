@@ -187,6 +187,9 @@ type VideoStatus struct {
 	PollAfter time.Duration
 	// Err explains a failed task: a *Error, such as a refusal of the prompt.
 	Err error
+	// Charged says, of a failed task, that the provider may have charged for it: its documentation does not say
+	// that a task that ends with no clip is free. The job then records the estimate (SDD-016 section 6.4).
+	Charged bool
 }
 
 // VideoGenerator is a provider that makes clips (SDD-016 section 2). Generation is asynchronous at every provider:
