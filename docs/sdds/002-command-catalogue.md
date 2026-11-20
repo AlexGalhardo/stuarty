@@ -1,7 +1,7 @@
 # SDD-002: Command catalogue of the core
 
 - Amended (2026-11-18) for Stuarty: this is the catalogue of the video domain. Other domains get their own catalogue (ADR-0031, ADR-0038).
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 78 commands have golden cases and pass the registry-wide gates. The binary exposes all 78 commands, 77 of them public; `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 86 commands have golden cases and pass the registry-wide gates. The binary exposes all 86 commands, 85 of them public (epic 32 added three, C.84 to C.86); `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -42,7 +42,8 @@
 func (r *Registry) Apply(doc *timeline.Document, op Operation, env Env) (Result, error)
 
 type Env struct {
-    NewIDs func(prefix string) string // deterministic in tests; random in production
+    NewIDs    func(prefix string) string // deterministic in tests; random in production
+    Timelines timeline.Graph             // the other timelines of the production (epic 32); nil when the caller has none
 }
 
 type Result struct {
@@ -50,8 +51,18 @@ type Result struct {
     Inverse   []Primitive        // undo, section A.6
     Diff      []Change           // section A.5
     Effective map[string]any     // values actually applied, section A.4
+    Spawned   []*timeline.Document // timelines the command made besides Doc (composition.create_from_selection); the caller stores them
+}
+
+// timeline.Graph is what the three composition commands read of the production: pure lookups the caller
+// answers from its own store. The documents it returns are read-only.
+type Graph interface {
+    Doc(id string) (*timeline.Document, bool) // a timeline of the production by its id
+    Users(id string) []string                 // the ids of the timelines that hold a composition of id, sorted
 }
 ```
+
+`Env.Timelines` is how a command that places one timeline in another stays pure: it never opens a store. A command that needs it and finds it nil answers `E_NOT_FOUND` for the timeline (the production is unknown). The golden runner builds it from the optional file `timelines.json` of a case (the other documents of the production as an array of canonical documents). `Result.Spawned` holds the new documents of a command that makes a timeline; the service creates their rows in the transaction of the commit, with the rows of the assets their documents name (copied from the timeline they came from, so their files are served and kept under them), and an undo of the batch leaves them in place (it restores the document, and the timeline is the user's to trash).
 
 Rules:
 
@@ -286,6 +297,9 @@ Scope is `edit` unless stated. "Time" marks arguments parsed by A.4. Optional ar
 | --- | --- | --- |
 | `clip.add` | `track_id`, `asset_id`, `start?` (time; default the end of the last item of the track), `source_in?` (time, offset into the asset; default 0), `duration?` (time, as a length; default: the rest of the asset from `source_in`, or `"5s"` for an image), `fit?`, `id?` | Places a video or image asset on a visual track |
 | `audio.add` | `track_id`, `asset_id`, `start?` (default the end of the last item of the track), `source_in?`, `duration?`, `id?` | Places an audio asset, or the audio of a video asset, on an audio track |
+| `clip.add_composition` | `track_id`, `timeline_id`, `start?`, `source_in?`, `duration?` (default the rest of the nested timeline from `source_in`), `fit?`, `id?` | Places another timeline of the production on a visual track as one clip (RF-083, SDD-001 section 3.5.1). Refuses a cycle and a nesting deeper than 4. See C.84 |
+| `composition.create_from_selection` | `item_ids` (1 to 100), `name?`, `timeline_id?`, `id?` | Moves the selected items into a new timeline of the production and puts one composition clip in their place, in one batch. See C.85 |
+| `composition.expand` | `item_id` | The inverse: puts the items of the nested timeline back on the timeline in place of a composition that uses no group feature. See C.86 |
 | `clip.set_framing` | `item_id`, `fit?`, `crop?` | Sets fit and crop |
 | `clip.set_speed` | `item_id`, `speed` (`"1.5x"`, `"0.5x"` or a rational object) or `curve` (2 to 8 `{t, speed}` points), `ripple?` (`"none"` default, `"track"`) | Changes speed keeping the same source range: the new duration is `ceil(duration × old / new)`, reduced by the rounding excess if that would read past the end of the asset. Keyframe times and transition and fade lengths are scaled by the same ratio and rounded. With `ripple: "track"`, later items on the track shift by the change in length; otherwise a resulting overlap is `E_OVERLAP`. Captions linked to the clip are not changed; the lint reports them as out of sync until `caption.retime_from_clip` runs |
 | `clip.set_color` | `item_id`, `brightness?`, `contrast?`, `saturation?`, `temperature?`, `tint?`, `hue?` | Sets colour adjustment; also white balance and hue rotation (TASK-0233). See C.26 |
@@ -6533,3 +6547,213 @@ Replaces the chain of an item or a track with a preset (epic 34; the shared rule
 - `err_validation_no_target`
 - `err_type_mismatch_text_item`
 - `err_not_found_track`
+
+### C.84 `clip.add_composition`
+
+Places another timeline of the production on a visual track as one `composition` item (SDD-001 section 3.5.1, RF-083). Nothing is copied: the item names the timeline.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `track_id` | track id | yes | none | a visual track |
+| `timeline_id` | timeline id | yes | none | a timeline of the production, read through `Env.Timelines` (A.3) |
+| `start` | time | no | the end of the last item of the track (`"0s"` on an empty track) | absolute; omitted, the item goes to the first free position at or after the end of the track |
+| `source_in` | time | no | `"0s"` | the first frame shown of the nested timeline, in frames of this timeline |
+| `duration` | time, as a length | no | the rest of the nested timeline from `source_in`, in frames of this timeline (the nested end frame converted with the frame rates, rounded up) | at least 1 frame |
+| `fit` | `"cover"`, `"contain"`, `"none"` | no | `"cover"` | SDD-001 section 3.5.1 |
+| `id` | item id | no | generated | R6 |
+
+**Preconditions.**
+
+1. Arguments match the schema and times parse (`E_VALIDATION`, `E_INVALID_TIME`).
+2. The track exists and is visual (`E_NOT_FOUND`, `E_TYPE_MISMATCH`); the timeline is in the production (`E_NOT_FOUND`; with no `Env.Timelines` no timeline is).
+3. The timeline is not this timeline and does not hold, at any depth, a composition of this timeline (`E_INVALID_STATE`, `details.reason` `composition_cycle`, `details.path` the ids from the nested timeline to this one).
+4. The nesting stays within 4: the number of timelines above this one (through `Env.Timelines.Users`), plus one, plus the depth of the nested timeline is at most 4 (`E_LIMIT`, `details.reason` `composition_depth`, `details.depth` the depth it would have).
+5. The nested timeline is not empty (`E_INVALID_STATE`); `id` is not used (`E_ID_EXISTS`); the document has fewer than 500 items (`E_LIMIT`).
+6. `source_in` is below the converted length `L` of the nested timeline and `source_in + duration` is at most `L` (`E_OUT_OF_SOURCE`). The later edits of the nested timeline do not move this check: a composition that is longer than a shortened nested timeline shows nothing after its end and the lint says so.
+7. The item ends at or before 108,000 (`E_INVALID_TIME`) and does not overlap an item of the track (`E_OVERLAP`, R8).
+
+**Postconditions.**
+
+1. A `composition` item is added: `start`, `track`, `timeline`, `duration`, plus `source_in` above 0 and `fit` when not `"cover"`. Every other field is absent.
+2. `diff` has one `item.added`. `effective` has `id`, `start`, `source_in`, `duration` (A.4 triples; `requested` is `null` for a default).
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | bad argument | `args.fit "stretch" is not one of cover, contain, none.` | `Use cover, contain or none.` |
+| `E_INVALID_TIME` | malformed time, zero duration, item ending after 108,000 | `The item would occupy frames 108000-108099, past the limit 108000.` | `Use a start of at most "7800f" for this 300-frame item.` |
+| `E_NOT_FOUND` | unknown track, or a timeline that is not in the production | `Timeline prj_zzzzzzzzzz is not in this production.` | `Use the id of a timeline listed by project_get.` |
+| `E_TYPE_MISMATCH` | audio track | `Track trk_a1b2c3d4e5 is an audio track; a composition goes on a visual track.` | `Use a visual track.` |
+| `E_INVALID_STATE` | a cycle, or an empty nested timeline | `Timeline prj_f6g7h8j9k0 holds this timeline, so placing it here would make a loop.` | `Use a timeline that does not contain this one.` |
+| `E_LIMIT` | nesting deeper than 4, or 500 items | `Placing this timeline would nest compositions 5 deep; the limit is 4.` | `Flatten a level with composition.expand.` |
+| `E_ID_EXISTS` | `id` used | `Item id itm_m1n2p3q4r5 already exists.` | `Omit id or use an unused id.` |
+| `E_OUT_OF_SOURCE` | the range leaves the nested timeline | `The composition would show frames 0 to 449 of timeline prj_a1b2c3d4e5, which has 300 frames.` | `Use a duration of at most "300f" (10.000s), the most this timeline allows from source_in 0.` |
+| `E_OVERLAP` | overlap on the track | `Item itm_m1n2p3q4r5 would occupy frames 100-249 on track trk_f6g7h8j9k0, where item itm_c3d4e5f6g7 already is (frames 90-179).` | `Use start "180f" (6.000s), the next free position, or another track.` |
+
+**Inverse.** `remove {collection: "items", id: <new id>}`.
+
+**Idempotency.** With `id`: the second application returns `E_ID_EXISTS`. Without: the copy overlaps the first (`E_OVERLAP`).
+
+**Example.** 30 fps; empty track `trk_f6g7h8j9k0`; timeline `prj_a1b2c3d4e5` of 300 frames.
+
+```json
+{"op": "clip.add_composition", "args": {"track_id": "trk_f6g7h8j9k0", "timeline_id": "prj_a1b2c3d4e5", "start": "0s", "id": "itm_m1n2p3q4r5"}}
+```
+
+**Golden cases.**
+
+- `ok_default_duration_rest_of_nested`
+- `ok_explicit_duration`
+- `ok_source_in`
+- `ok_other_frame_rate_converts_the_length`
+- `ok_start_omitted_goes_to_the_end_of_the_track`
+- `ok_fit_contain`
+- `ok_supplied_id`
+- `ok_nested_two_levels`
+- `ok_depth_exactly_four`
+- `err_validation_bad_fit`
+- `err_invalid_time_malformed`
+- `err_invalid_time_zero_duration`
+- `err_not_found_track`
+- `err_not_found_timeline`
+- `err_not_found_no_production`
+- `err_type_mismatch_audio_track`
+- `err_invalid_state_itself`
+- `err_invalid_state_cycle_direct`
+- `err_invalid_state_cycle_indirect`
+- `err_invalid_state_empty_timeline`
+- `err_limit_depth_five`
+- `err_limit_depth_through_the_timelines_above`
+- `err_limit_500_items`
+- `err_id_exists`
+- `err_out_of_source_one_frame_too_long`
+- `err_out_of_source_source_in_at_the_end`
+- `err_overlap`
+
+### C.85 `composition.create_from_selection`
+
+Moves the selected items into a new timeline of the production and puts one composition item in their place, in one batch (RF-083): the way a creator turns a part they built into something they can reuse. The command is pure: it makes the new document and returns it in `Result.Spawned` (A.3); the service stores it in the same transaction as the commit.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_ids` | list of item ids, 1 to 100 | yes | none | items of this timeline, each once |
+| `name` | string, 1 to 120 characters | no | `"Composition"` | the name of the new timeline |
+| `timeline_id` | timeline id | no | generated (`prj_`) | the id of the new timeline |
+| `id` | item id | no | generated | the id of the composition item |
+
+**Preconditions.**
+
+1. Arguments match the schema; the ids are distinct (`E_VALIDATION`); every item exists (`E_NOT_FOUND`); none is on a locked track (`E_INVALID_STATE`, A.3 rule 5).
+2. The document is not a template (`E_INVALID_STATE`): the slots and the colours of a template do not move into a timeline.
+3. `timeline_id` is not a timeline of the production and `id` is not an item (`E_ID_EXISTS`).
+4. The composition goes on the top-most visual track of the selected items (the smallest `order`; for a selection of audio items only, the top-most visual track of the document, and `E_INVALID_STATE` when there is none) and covers `[first start, last end)` of the selection. An item of that track that is not selected and lies in that range is `E_OVERLAP`.
+5. The new timeline has the depth of the deepest composition of the selection plus one, and the production's limit of 4 holds with the timelines above this one (`E_LIMIT`, `details.reason` `composition_depth`). The count of items of this document never grows (n items leave, one comes).
+
+**Postconditions.**
+
+1. The new document has this document's `width`, `height`, `fps`, `background` and `loudness_target`, the given or default `name`, and: the tracks that held selected items, with the same ids, kinds, names and orders (their `locked`, `hidden`, `muted`, `solo`, `volume` and `magnet` kept); the selected items with the same ids, moved earlier by the first start (so the new timeline begins at frame 0); the assets they use and the fonts of this document. An item's `slot` is dropped. A `link` whose other members were not all selected is removed from the moved items, and a caption whose `linked_item` was not selected loses it.
+2. This document loses the selected items and gains one `composition` item (`id`) on the track of precondition 4: `start` the first start, `duration` the length of the selection, `timeline` the new id. The tracks stay, empty or not.
+3. `diff` has one `item.removed` per selected item and one `item.added`. `effective` has `id`, `timeline_id`, `name`, `start`, `duration` and `moved` (the ids moved, sorted). The inverse restores the selected items exactly; the new timeline is left to the user, who may trash it (SDD-001 section 3.5.1 rule 3).
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | no item, more than 100, or a repeated item | `args.item_ids repeats itm_m1n2p3q4r5.` | `Name each item once.` |
+| `E_NOT_FOUND` | unknown item | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_INVALID_STATE` | a locked track, a template, or no visual track | `Track trk_f6g7h8j9k0 is locked.` | `Unlock the track first.` |
+| `E_ID_EXISTS` | `timeline_id` or `id` used | `Timeline id prj_a1b2c3d4e5 already exists.` | `Omit timeline_id or use an unused id.` |
+| `E_OVERLAP` | an item that is not selected lies in the range of the composition | `The composition would cover frames 0-149 of track trk_a1b2c3d4e5, where item itm_s6t7v8w9x0 (frames 60-89) is not selected.` | `Select that item too, or move it to another track.` |
+| `E_LIMIT` | nesting deeper than 4 | `Placing this timeline would nest compositions 6 deep; the limit is 4.` | `Flatten a level with composition.expand.` |
+
+**Inverse.** As for any command, the exact inverse of the net change of this document (A.6).
+
+**Idempotency.** With `timeline_id` and `id`: the second application returns `E_ID_EXISTS`.
+
+**Example.**
+
+```json
+{"op": "composition.create_from_selection", "args": {"item_ids": ["itm_m1n2p3q4r5", "itm_c3d4e5f6g7"], "name": "Intro", "timeline_id": "prj_a1b2c3d4e5", "id": "itm_k1k2k3k4k5"}}
+```
+
+**Golden cases.**
+
+- `ok_one_clip`
+- `ok_two_clips_on_two_tracks`
+- `ok_selection_not_at_zero_starts_the_nested_timeline_at_zero`
+- `ok_with_an_audio_item`
+- `ok_a_link_that_is_not_whole_is_removed`
+- `ok_supplied_name_and_ids`
+- `ok_nests_a_composition`
+- `err_validation_no_items`
+- `err_validation_repeated_item`
+- `err_not_found_item`
+- `err_invalid_state_track_locked`
+- `err_id_exists_timeline`
+- `err_id_exists_item`
+- `err_overlap_unselected_item_in_range`
+- `err_limit_depth_five`
+
+### C.86 `composition.expand`
+
+Puts the items of a nested timeline on this timeline in place of a composition item that uses no group feature: the inverse of `composition.create_from_selection`. The nested timeline stays in the production, unchanged.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `composition` item |
+
+**Preconditions.**
+
+1. The item exists and is a composition (`E_NOT_FOUND`, `E_TYPE_MISMATCH`); its timeline is in the production (`E_NOT_FOUND`); its track is not locked (`E_INVALID_STATE`, A.3 rule 5).
+2. The item only places its timeline (`E_INVALID_STATE`, `details.reason` and `details.feature`): no `opacity`, `scale`, `rotation`, position, keyframe, transition, mask, effect, shadow, outline, blur, filter, blend or flip of its own, and no volume, fade or mute; and it is drawn: not disabled and not on a hidden track, `details.feature` `disabled` or `hidden_track`, since its items would be drawn on their new tracks (`composition_group_feature`); `source_in` 0 and a duration that shows the whole nested timeline (`composition_window`); and the nested timeline has this timeline's `width`, `height` and `fps` (`composition_geometry`).
+3. No item id of the nested timeline is used here (`E_ID_EXISTS`); an asset of the nested timeline that has the id of one here has the same file (`E_INVALID_STATE`, `details.reason` `composition_asset_clash`); the document stays within 50 tracks, 500 items and 200 assets (`E_LIMIT`).
+
+**Postconditions.**
+
+1. The composition item is removed. Every track of the nested timeline that holds an item is added here with a new id (`effective.tracks`, in the order of the nested track ids): its visual tracks, keeping their relative order, take the places directly above the track of the item (`order` strings between that track and the one above it), and its audio tracks go after the last track. Every item of the nested timeline is added to its new track with the same id, moved later by the `start` of the item; the assets and fonts it uses are added when missing.
+2. `diff` has the `item.removed`, `track.added` and `item.added` entries and the added assets. `effective` has `item_id`, `timeline_id`, `tracks` (the new ids) and `items` (the added ids, sorted).
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | bad argument | `args.item_id "x" is not an item id.` | `Use an id like itm_m1n2p3q4r5.` |
+| `E_NOT_FOUND` | unknown item, or a timeline that is not in the production | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | the item is not a composition | `Item itm_m1n2p3q4r5 is a clip item; composition.expand needs a composition.` | `Use it on a composition item.` |
+| `E_INVALID_STATE` | a group feature, a window or a geometry that makes the picture differ, a locked track, or a differing asset | `Item itm_m1n2p3q4r5 has its own opacity, so it is drawn as one unit and cannot be expanded.` | `Remove it first, or keep the composition.` |
+| `E_ID_EXISTS` | an item id of the nested timeline is used here | `Item id itm_c3d4e5f6g7 of the nested timeline already exists here.` | `Rename the clash first.` |
+| `E_LIMIT` | 50 tracks, 500 items or 200 assets | `Expanding would give the document 501 items; the limit is 500.` | `Delete unused items first.` |
+
+**Inverse.** The exact inverse of the net change (A.6).
+
+**Idempotency.** Not idempotent: the second call is `E_NOT_FOUND`.
+
+**Example.**
+
+```json
+{"op": "composition.expand", "args": {"item_id": "itm_k1k2k3k4k5"}}
+```
+
+**Golden cases.**
+
+- `ok_one_visual_track`
+- `ok_two_visual_tracks_keep_their_order`
+- `ok_with_an_audio_track`
+- `ok_later_start_shifts_the_items`
+- `err_validation_bad_item_id`
+- `err_not_found_item`
+- `err_not_found_timeline`
+- `err_type_mismatch_not_a_composition`
+- `err_invalid_state_opacity`
+- `err_invalid_state_window`
+- `err_invalid_state_other_size`
+- `err_invalid_state_track_locked`
+- `err_id_exists`
+- `err_limit_500_items`

@@ -13,8 +13,10 @@ import (
 
 // RenderConfig is what a Renderer needs: the same inputs as an export, without the output.
 type RenderConfig struct {
-	Runner       *ffmpeg.Runner
-	Doc          *timeline.Document
+	Runner *ffmpeg.Runner
+	Doc    *timeline.Document
+	// Nested are the timelines the compositions of Doc use, by id (Job.Nested).
+	Nested       map[string]*timeline.Document
 	JobID        string
 	ArtifactsDir string
 	Fonts        *rasterize.FontSet // the bundled fonts when nil
@@ -57,7 +59,18 @@ func newRenderer(ctx context.Context, cfg RenderConfig, single bool) (*Renderer,
 	if err != nil {
 		return nil, wrapRun(err, ReasonRender, "A work folder for the frame could not be made.", "")
 	}
-	job := &Job{Runner: cfg.Runner, Doc: cfg.Doc, JobID: cfg.JobID, ArtifactsDir: cfg.ArtifactsDir, Fonts: cfg.Fonts}
+	job := &Job{
+		Runner:       cfg.Runner,
+		Doc:          cfg.Doc,
+		Nested:       cfg.Nested,
+		JobID:        cfg.JobID,
+		ArtifactsDir: cfg.ArtifactsDir,
+		Fonts:        cfg.Fonts,
+	}
+	if err := job.checkNested(); err != nil {
+		_ = dir.Remove()
+		return nil, exportErr(ReasonRender, "The timelines of the project do not agree on their media.", err, "")
+	}
 	s := newState(ctx, job, dir, endFrame(cfg.Doc))
 	s.single = single
 

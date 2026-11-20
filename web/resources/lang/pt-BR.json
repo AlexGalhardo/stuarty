@@ -675,6 +675,10 @@
         "text": "Texto",
         "caption": "Legenda",
         "shape": "Forma",
+        "composition": "Composição",
+        "composition_open": "Abrir composição",
+        "composition_missing": "Timeline não encontrada",
+        "from_breadcrumb": "Voltar para {name}",
         "speed_badge": "Velocidade {speed}",
         "slot_badge": "Espaço do modelo: {name}",
         "asset_missing": "A mídia original deste item não está no projeto",
@@ -876,6 +880,8 @@
         "link": "Vincular itens",
         "unlink": "Desvincular itens",
         "extract_audio": "Extrair o áudio",
+        "create_composition": "Criar composição da seleção",
+        "expand_composition": "Expandir composição",
         "freeze_frame": "Congelar quadro",
         "copy_attributes": "Copiar atributos",
         "paste_attributes": "Colar atributos",
@@ -1088,6 +1094,9 @@
           "add": {
             "title": "Adicionar clipe"
           },
+          "add_composition": {
+            "title": "Adicionar uma linha do tempo como clipe"
+          },
           "set_blur": {
             "title": "Definir desfoque do clipe"
           },
@@ -1129,6 +1138,14 @@
           },
           "set_speed": {
             "title": "Definir velocidade do clipe"
+          }
+        },
+        "composition": {
+          "create_from_selection": {
+            "title": "Criar uma composição a partir da seleção"
+          },
+          "expand": {
+            "title": "Expandir a composição em seus itens"
           }
         },
         "font": {

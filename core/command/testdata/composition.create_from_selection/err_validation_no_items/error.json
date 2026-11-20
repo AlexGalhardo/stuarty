@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The length of args.item_ids is 0, outside the accepted range.",
+  "hint": "Use a length between 1 and 100.",
+  "retryable": false,
+  "path": "args.item_ids"
+}

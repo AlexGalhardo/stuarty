@@ -470,7 +470,8 @@ export type ProjectEvent =                         // mirrors SDD-000 §5 and SD
   | { name: "project.updated"; project_id: string; state: string }
   | { name: "asset.updated"; asset_id: string; state: AssetState; progress: number }
   | { name: "job.updated"; job_id: string; kind: JobKind; state: JobState; progress: number; message: string }
-  | { name: "resync.required"; revision: number; reason: string };
+  | { name: "resync.required"; revision: number; reason: string }
+  | { name: "nested.updated"; project_id: string; timeline_id: string; revision: number; at: string };
 ```
 
 Boot and reconciliation algorithm (the same code serves boot and resync). It is the algorithm of SDD-006 §6, which is authoritative:
@@ -482,7 +483,7 @@ Boot and reconciliation algorithm (the same code serves boot and resync). It is 
    - `revision === current + 1`: `applyRevisionDiff`.
    - `revision > current + 1`: hold it in a buffer and start a 2 s timer; when the missing revision arrives the buffer drains in order.
 4. Resync (set status `resyncing`, close the stream, go to step 1) on: `resync.required`, a `batch.committed` with `diff_truncated`, `applyDiff` returning `"unpatchable"`, or the 2 s gap timer. At most 3 consecutive resyncs without progress; then status `failed` with a banner and a Reload button.
-5. `asset.updated`, `job.updated`, `project.updated` update `mediaStore`, `jobsStore` and the trash flag. They do not carry revisions and need no ordering.
+5. `asset.updated`, `job.updated`, `project.updated` update `mediaStore`, `jobsStore` and the trash flag. They do not carry revisions and need no ordering. `nested.updated` (a timeline this one uses as a composition changed, SDD-006 §3.3.1) leaves the read model alone: the preview drops its plan windows (`PreviewExecutor.refresh`), draws the frame again and, when paused, asks for the paused frame again, because the revision of this timeline did not change.
 6. `EventSource` reconnects by itself and sends `Last-Event-ID` (ADR-0017 item 5); the server replays or sends `resync.required`. When `readyState` becomes `CLOSED` (an HTTP error response such as 401 ends the automatic retry), `events.ts` probes `GET /projects/{id}`: a 401 follows the `E_UNAUTHORIZED` policy, any other failure schedules a manual reopen with delays 1, 2, 4, 8, 15 s (15 s thereafter) and state `offline`; success runs the algorithm from step 1.
 7. Staleness: the server sends an unnamed empty event every 15 s as a heartbeat that JavaScript can see (SDD-006 §3.1). `events.ts` listens to `message` only to record the time; 40 s without any event closes the `EventSource` and opens a new one with `since=<current revision>`. The same check runs on `visibilitychange` to visible and on `online`.
 
@@ -808,6 +809,7 @@ Every item is a `div.tl-item` with a type class (`tl-clip`, `tl-audio`, `tl-text
 | `text` | the first line of `text` | none |
 | `caption` | one segment per word when the item is wider than 120 px and `ppf >= 0.5`, else one block with the word count; the selected word is outlined | `words[i].start` and `.duration` relative to the item, turned into segments by `captionWordSegments(item, ppf)` of `units.ts` (rule R5); `CaptionItem` does no arithmetic of its own |
 | `shape` | fill colour swatch and shape icon | none |
+| `composition` | a small picture of the first frame of the timeline it uses and that timeline's name (the item `name` wins); a dashed outline; "Timeline not found" when the production no longer lists it | the frame endpoint of the nested timeline, asked for without `rev` so it answers with the current frame; the names come from `describe` (read again when the page gets the focus) |
 
 The label and the caption words are rendered with `UntrustedText` (§1.2, untrusted text). Colours come from tokens (§17). A selected item has a 2 px selection ring (token `--ed-selection`). A locked or hidden track dims its row. An item whose asset is missing (`ast_placeholder` or unknown) shows a warning icon.
 
@@ -909,6 +911,9 @@ A gesture that touches several items (a multi-selection move) sends one batch co
 | `Delete` | `item.delete {item_ids}` | none |
 | `Shift+Delete`, context menu "Ripple delete" | `item.delete {item_ids, ripple: "track"}`; menu "Ripple delete all tracks": `ripple: "all"` | none |
 | `Ctrl+D` | `item.duplicate {item_id, start: "<item end>f"}` with the same track (the end frame is read from the item) | none |
+| Context menu "Create composition from selection" | `composition.create_from_selection {item_ids}`: the selected items move into a new timeline of the project and one composition takes their place, in one batch | none |
+| Context menu "Expand composition" on a composition | `composition.expand {item_id}` (the core refuses when the composition has an effect or a trim of its own) | none |
+| Double click on a composition, context menu "Open composition" | none: the editor opens the nested timeline at `/editor/<timeline id>?from=<this timeline id>`; the top bar then shows a link "Back to" and the name of the timeline `from` (only an id of the form `prj_` and 10 characters is linked) | none |
 | Right-click an empty gap, "Close gap" | `timeline.close_gap {track_id, at: "<frame under pointer>f"}` | none |
 | Toolbar "Add text" (`T`) | `text.add {track_id, start: "<playhead>f", duration: "3s", text: t("ui.editor.defaults.text")}` on the first visual track (created as above if none) | none |
 | Toolbar "Add caption" (`C`) | dialog with text, start (playhead), duration; sends `caption.add {track_id, start, text, duration}` on the first visual track named by the user or created, `track.add` first when none | none |

@@ -675,6 +675,10 @@
         "text": "Text",
         "caption": "Caption",
         "shape": "Shape",
+        "composition": "Composition",
+        "composition_open": "Open composition",
+        "composition_missing": "Timeline not found",
+        "from_breadcrumb": "Back to {name}",
         "speed_badge": "Speed {speed}",
         "slot_badge": "Slot: {name}",
         "asset_missing": "The media of this item is missing",
@@ -876,6 +880,8 @@
         "link": "Link items",
         "unlink": "Unlink items",
         "extract_audio": "Extract audio",
+        "create_composition": "Create composition from selection",
+        "expand_composition": "Expand composition",
         "freeze_frame": "Freeze frame",
         "copy_attributes": "Copy attributes",
         "paste_attributes": "Paste attributes",
@@ -1088,6 +1094,9 @@
           "add": {
             "title": "Add clip"
           },
+          "add_composition": {
+            "title": "Add a timeline as a clip"
+          },
           "set_blur": {
             "title": "Set clip blur"
           },
@@ -1129,6 +1138,14 @@
           },
           "set_speed": {
             "title": "Set clip speed"
+          }
+        },
+        "composition": {
+          "create_from_selection": {
+            "title": "Make a composition from the selection"
+          },
+          "expand": {
+            "title": "Expand the composition into its items"
           }
         },
         "font": {

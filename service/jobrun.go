@@ -756,6 +756,11 @@ func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 		return nil, derr
 	}
 
+	nested, nerr := decodeNested(in.Nested)
+	if nerr != nil {
+		return nil, nerr
+	}
+
 	if in.Preset != "" {
 		if p, ok := exportcore.Lookup(in.Preset); ok {
 			if perr := presetFit(doc, &p, in.End-in.Start, exportcore.Codec(in.Codec)); perr != nil {
@@ -779,7 +784,7 @@ func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 	}
 
 	res, err := s.exporter.Export(ctx, ExportInput{
-		JobID: job.ID, Doc: doc, OutPath: out, Start: in.Start, End: in.End, Format: in.Format,
+		JobID: job.ID, Doc: doc, Nested: nested, OutPath: out, Start: in.Start, End: in.End, Format: in.Format,
 		MaxBytes: s.limits.MaxExportBytes, Preset: in.Preset, Codec: in.Codec,
 		OnProgress: func(done, total int) {
 			if total > 0 {
