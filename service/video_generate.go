@@ -72,7 +72,35 @@ func (s *svc) VideoGenerate(ctx context.Context, req VideoGenerateRequest) (*Job
 }
 
 func (s *svc) videoGenerateKind() ApprovableKind {
-	return ApprovableKind{Name: JobVideoGenerate, Scope: ScopeEdit, Prepare: s.prepareVideo, Run: s.runVideo}
+	return ApprovableKind{
+		Name: JobVideoGenerate, Scope: ScopeEdit, Prepare: s.prepareVideo, Run: s.runVideo, Abandon: s.abandonVideo,
+	}
+}
+
+// abandonVideo is the cancel of a video.generate job queued again after a shutdown with the task of its first run
+// in its input: the task goes on at the provider, so the provider is asked to stop it, and the clip is owed unless
+// it confirms that nothing is charged (SDD-016 section 6.4).
+func (s *svc) abandonVideo(ctx context.Context, job *JobRow) *core.Money {
+	var in generateInput
+	if json.Unmarshal(job.Input, &in) != nil || in.TaskID == "" || in.Video == nil {
+		return nil
+	}
+
+	spent := moneyOf(provider.VideoCost(in.Video.Seconds, in.Price))
+
+	gen, ok := s.providers.Video(in.Provider)
+	if !ok {
+		return &spent
+	}
+
+	bg, cancel := context.WithTimeout(context.WithoutCancel(ctx), videoCallTimeout)
+	defer cancel()
+
+	if s.cancelVideoTaskIn(bg, &in, gen) {
+		return nil
+	}
+
+	return &spent
 }
 
 func (s *svc) prepareVideo(ctx context.Context, req JobStartRequest) (Prepared, error) {

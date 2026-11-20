@@ -75,6 +75,10 @@ type ApprovableKind struct {
 	Prepare func(ctx context.Context, req JobStartRequest) (Prepared, error)
 	// Run is the job once approved. It reaches the network only through connections.Manager.With.
 	Run func(ctx context.Context, run JobRun) (JobOutcome, error)
+	// Abandon is optional. It is called when a job of the kind is cancelled while queued again after a shutdown
+	// interrupted a run that had started work at a provider (the task of a video, kept in the saved input): it
+	// asks the provider to stop that work and returns the cost that is owed for it, or nil when nothing is owed.
+	Abandon func(ctx context.Context, job *JobRow) *core.Money
 }
 
 var builtinKinds = []string{JobIngest, JobTranscribe, JobExport, JobFrame}
@@ -485,6 +489,21 @@ func (s *svc) releaseUnrun(ctx context.Context, j *JobRow) {
 		s.logJob(ctx, slog.LevelWarn, "the reservation of a cancelled job was not released", j,
 			slog.String("error", err.Error()))
 	}
+}
+
+// settleQueuedCancel settles an approved job cancelled while queued. It did not run, so its reservation goes back,
+// unless an earlier run that a shutdown interrupted left work at a provider: then the kind abandons that work and
+// what it says is owed is recorded (SDD-015 section 6).
+func (s *svc) settleQueuedCancel(ctx context.Context, k *ApprovableKind, j *JobRow) {
+	if k.Abandon != nil {
+		if cost := k.Abandon(ctx, j); cost != nil {
+			s.finishCost(ctx, j, cost)
+
+			return
+		}
+	}
+
+	s.releaseUnrun(ctx, j)
 }
 
 // kindOf is the registered approvable kind of a job kind, or nil.

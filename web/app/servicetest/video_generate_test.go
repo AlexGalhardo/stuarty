@@ -512,6 +512,91 @@ func TestVideoGenerate_ARestartDuringThePollingMakesOneSubmission(t *testing.T) 
 	}
 }
 
+// A job a shutdown queued again keeps the task its first run started, and the provider goes on making the clip:
+// a cancel before the job runs again asks the provider to stop it and records the cost unless the provider
+// confirms that nothing is charged, instead of giving the reservation back (SDD-016 section 6.4).
+func TestVideoGenerate_ACancelAfterARestartAbandonsTheTaskAndRecordsWhatIsOwed(t *testing.T) {
+	t.Parallel()
+
+	for name, tc := range map[string]struct {
+		confirm bool
+		spent   int64
+	}{
+		"a provider that confirms the cancel is paid nothing": {true, 0},
+		"a provider that does not confirm may have charged":   {false, 2_000_000},
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			v := newVideoEnv(t)
+			v.maker.set(func(c *clipMaker) { c.pending, c.confirm = -1, tc.confirm })
+
+			job := v.approved()
+
+			ctx, stop := context.WithCancel(context.Background())
+			ended := make(chan error, 1)
+
+			go func() { ended <- v.runner.RunJob(ctx, job.JobID) }()
+
+			eventually(t, "a poll", func() bool { return v.maker.polls.Load() >= 1 })
+			stop()
+
+			if err := <-ended; !errors.Is(err, context.Canceled) {
+				t.Fatalf("the interrupted run returned %v", err)
+			}
+
+			if st := v.job(job.JobID).State; st != service.JobQueued {
+				t.Fatalf("the interrupted job is %s, want queued", st)
+			}
+
+			if _, err := v.svc.JobCancel(v.as(token), service.JobCancelRequest{JobID: job.JobID}); err != nil {
+				t.Fatal(err)
+			}
+
+			if st := v.job(job.JobID).State; st != service.JobCancelled {
+				t.Fatalf("job = %s, want cancelled", st)
+			}
+
+			if n := v.maker.cancels.Load(); n != 1 {
+				t.Errorf("cancels = %d, want 1: the task the first run started is still at the provider", n)
+			}
+
+			if n := v.spent(); n != tc.spent {
+				t.Errorf("spent = %d, want %d", n, tc.spent)
+			}
+
+			if n := v.maker.submits.Load(); n != 1 {
+				t.Errorf("submissions = %d, want 1", n)
+			}
+		})
+	}
+}
+
+// A job cancelled while queued before it ever ran has no task at the provider: nothing is asked of it and the
+// reservation goes back.
+func TestVideoGenerate_ACancelBeforeTheFirstRunAsksTheProviderNothing(t *testing.T) {
+	t.Parallel()
+
+	v := newVideoEnv(t)
+	job := v.approved()
+
+	if _, err := v.svc.JobCancel(v.as(token), service.JobCancelRequest{JobID: job.JobID}); err != nil {
+		t.Fatal(err)
+	}
+
+	if st := v.job(job.JobID).State; st != service.JobCancelled {
+		t.Fatalf("job = %s, want cancelled", st)
+	}
+
+	if n := v.maker.submits.Load() + v.maker.polls.Load() + v.maker.cancels.Load(); n != 0 {
+		t.Errorf("the provider was reached %d times", n)
+	}
+
+	if n := v.spent(); n != 0 {
+		t.Errorf("spent = %d, want 0", n)
+	}
+}
+
 func TestVideoGenerate_ACancelAsksTheProviderAndRecordsWhatIsOwed(t *testing.T) {
 	t.Parallel()
 
