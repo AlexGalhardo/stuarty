@@ -24,9 +24,11 @@ import type {
 	PublishRequest,
 	PublishValidateResult,
 	SocialAccount,
+	SocialNetwork,
 } from "../../editor/api/types";
 
-const VISIBILITIES = ["private", "unlisted", "public"] as const;
+// What a network allows is what the service says in its limits; these are the choices when it said nothing.
+const VISIBILITIES = ["private", "unlisted", "public"];
 const STILLS = ["png", "jpg", "jpeg"];
 
 function api() {
@@ -46,13 +48,23 @@ function exportsOf(jobs: Job[], formats: string[] | null): Job[] {
 // nothing leaves this computer until a person approves it there. The dialog validates nothing itself.
 export function PublishDialog({
 	account,
+	network,
 	onClose,
 }: {
 	account: SocialAccount;
+	network?: SocialNetwork;
 	onClose(): void;
 }): ReactNode {
 	const t = useT();
 	const locale = useLocale();
+	// The dialog asks only what the network takes: the visibilities it lists, the kids question when it asks
+	// one, and a thumbnail when it takes one (SDD-020 section 18).
+	const visibilities = network?.limits.visibilities ?? VISIBILITIES;
+	const asksKids = network?.limits.needs_kids_declaration ?? true;
+	// The service sends null for a network that takes no thumbnail: a known network with none says so.
+	const takesThumbnail =
+		network === undefined ||
+		(network.limits.thumbnail_formats ?? []).length > 0;
 	const [projects, setProjects] = useState<ProjectSummary[]>([]);
 	const [jobs, setJobs] = useState<Job[]>([]);
 	const [project, setProject] = useState("");
@@ -61,7 +73,11 @@ export function PublishDialog({
 	const [title, setTitle] = useState("");
 	const [description, setDescription] = useState("");
 	const [tags, setTags] = useState("");
-	const [visibility, setVisibility] = useState("private");
+	const [visibility, setVisibility] = useState(
+		visibilities.includes("private")
+			? "private"
+			: (visibilities[0] ?? "private"),
+	);
 	const [kids, setKids] = useState<"" | "yes" | "no">("");
 	const [synthetic, setSynthetic] = useState(false);
 	const [checked, setChecked] = useState<PublishValidateResult | null>(null);
@@ -98,12 +114,12 @@ export function PublishDialog({
 			project_id: project,
 			connection_id: account.connection_id,
 			export: video,
-			...(still === "" ? {} : { thumbnail: still }),
+			...(still === "" || !takesThumbnail ? {} : { thumbnail: still }),
 			title,
 			description,
 			...(list.length === 0 ? {} : { tags: list }),
 			visibility,
-			...(kids === "" ? {} : { made_for_kids: kids === "yes" }),
+			...(kids === "" || !asksKids ? {} : { made_for_kids: kids === "yes" }),
 			ai_disclosure: synthetic,
 		};
 	}
@@ -199,22 +215,26 @@ export function PublishDialog({
 								))}
 							</select>
 						</div>
-						<div className="flex flex-col gap-2">
-							<Label htmlFor="publish-still">{t("ui.social.thumbnail")}</Label>
-							<select
-								id="publish-still"
-								className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm"
-								value={still}
-								onChange={(event) => setStill(event.target.value)}
-							>
-								<option value="">{t("ui.social.no_thumbnail")}</option>
-								{stills.map((job) => (
-									<option key={job.job_id} value={job.job_id}>
-										{job.job_id} · {formatDateTime(job.created_at, locale)}
-									</option>
-								))}
-							</select>
-						</div>
+						{takesThumbnail && (
+							<div className="flex flex-col gap-2">
+								<Label htmlFor="publish-still">
+									{t("ui.social.thumbnail")}
+								</Label>
+								<select
+									id="publish-still"
+									className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm"
+									value={still}
+									onChange={(event) => setStill(event.target.value)}
+								>
+									<option value="">{t("ui.social.no_thumbnail")}</option>
+									{stills.map((job) => (
+										<option key={job.job_id} value={job.job_id}>
+											{job.job_id} · {formatDateTime(job.created_at, locale)}
+										</option>
+									))}
+								</select>
+							</div>
+						)}
 						<div className="flex flex-col gap-2">
 							<Label htmlFor="publish-title">{t("ui.social.post_title")}</Label>
 							<Input
@@ -254,32 +274,34 @@ export function PublishDialog({
 								value={visibility}
 								onChange={(event) => setVisibility(event.target.value)}
 							>
-								{VISIBILITIES.map((v) => (
+								{visibilities.map((v) => (
 									<option key={v} value={v}>
 										{t(`ui.social.visibility_${v}`)}
 									</option>
 								))}
 							</select>
 						</div>
-						<fieldset className="flex flex-col gap-2">
-							<legend className="text-sm font-medium">
-								{t("ui.social.kids")}
-							</legend>
-							<div className="flex gap-4 text-sm">
-								{(["yes", "no"] as const).map((answer) => (
-									<label key={answer} className="flex items-center gap-2">
-										<input
-											type="radio"
-											name="publish-kids"
-											className="accent-primary"
-											checked={kids === answer}
-											onChange={() => setKids(answer)}
-										/>
-										{t(`ui.social.kids_${answer}`)}
-									</label>
-								))}
-							</div>
-						</fieldset>
+						{asksKids && (
+							<fieldset className="flex flex-col gap-2">
+								<legend className="text-sm font-medium">
+									{t("ui.social.kids")}
+								</legend>
+								<div className="flex gap-4 text-sm">
+									{(["yes", "no"] as const).map((answer) => (
+										<label key={answer} className="flex items-center gap-2">
+											<input
+												type="radio"
+												name="publish-kids"
+												className="accent-primary"
+												checked={kids === answer}
+												onChange={() => setKids(answer)}
+											/>
+											{t(`ui.social.kids_${answer}`)}
+										</label>
+									))}
+								</div>
+							</fieldset>
+						)}
 						<label className="flex items-center gap-2 text-sm">
 							<input
 								type="checkbox"

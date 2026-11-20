@@ -2329,6 +2329,33 @@
       "callback_done": "Conectado como",
       "callback_failed": "Não foi possível concluir o login. Comece de novo pela página Conexões.",
       "back": "Voltar para Conexões",
+      "needs_account": "Login feito. Escolha a conta em que esta conexão publica.",
+      "pick_title": "Escolha a conta",
+      "pick_hint": "O seu login alcançou estas contas. O Stuarty publica só na que você escolher, e só depois que você aprovar cada publicação.",
+      "pick_use": "Usar esta conta",
+      "callback_choose": "Login feito. Volte para Conexões e escolha a conta em que publicar.",
+      "instagram": {
+        "step": {
+          "project": "Em developers.facebook.com crie um app do tipo \"Business\" na sua própria conta. Ele é seu; o Stuarty nunca o vê. Deixe-o em modo de desenvolvimento, com você como administrador: isso é Acesso Padrão, e a Meta não pede revisão para um app usado só nas suas próprias contas.",
+          "api": "Adicione ao app o produto \"Facebook Login for Business\" (ou \"Facebook Login\"). Um Reel chega ao Instagram pela Página do Facebook à qual a sua conta do Instagram está ligada.",
+          "consent": "Confirme que a sua conta do Instagram é profissional (Business ou Creator) e está ligada a uma Página do Facebook que você administra: no Instagram, Configurações, Tipo de conta e ferramentas, depois o vínculo com a Página. Não dá para publicar numa conta pessoal do Instagram.",
+          "client": "No app, em Configurações, Básico, copie o ID do app e a Chave secreta do app.",
+          "redirect": "Em Facebook Login, Configurações, adicione exatamente este endereço em \"URIs de redirecionamento do OAuth válidos\": {redirect}",
+          "paste": "Cole o id e o segredo do app no formulário abaixo. O Stuarty pede estas permissões: {scopes}. Depois do login, você escolhe em qual conta do Instagram esta conexão publica."
+        },
+        "research": "O que a Meta disse em {read}: um app usado só para um negócio que você possui ou administra não precisa de App Review no Acesso Padrão. O Instagram publica só em contas profissionais. O arquivo vai do seu computador para a Meta pelo envio retomável, então nenhum endereço público do seu vídeo é preciso, e nenhum é criado. Um Reel tem de 3 segundos a 15 minutos, até 300 MB, com legenda de até 2.200 caracteres e 30 hashtags; a imagem de capa não é oferecida, porque a Meta só a aceita a partir de um endereço público. Um Reel não tem modo privado, então toda publicação sai como pública. Um app pode publicar 100 posts em 24 horas corridas."
+      },
+      "facebook": {
+        "step": {
+          "project": "Em developers.facebook.com crie um app do tipo \"Business\" na sua própria conta. Ele é seu; o Stuarty nunca o vê. Deixe-o em modo de desenvolvimento, com você como administrador: isso é Acesso Padrão, e a Meta não pede revisão para um app usado só nas suas próprias Páginas.",
+          "api": "Adicione ao app o produto \"Facebook Login for Business\" (ou \"Facebook Login\"). Reels são publicados em uma Página do Facebook; a Meta não publica em perfil pessoal.",
+          "consent": "Você precisa de uma função na Página que possa criar conteúdo (Administrador ou Editor, por exemplo). O login lista as suas Páginas e você escolhe uma.",
+          "client": "No app, em Configurações, Básico, copie o ID do app e a Chave secreta do app.",
+          "redirect": "Em Facebook Login, Configurações, adicione exatamente este endereço em \"URIs de redirecionamento do OAuth válidos\": {redirect}",
+          "paste": "Cole o id e o segredo do app no formulário abaixo. O Stuarty pede estas permissões: {scopes}. Depois do login, você escolhe em qual Página esta conexão publica."
+        },
+        "research": "O que a Meta disse em {read}: um app usado só para um negócio que você possui ou administra não precisa de App Review no Acesso Padrão. O arquivo vai do seu computador para a Meta pelo envio retomável, então nenhum endereço público do seu vídeo é preciso, e nenhum é criado. Um Reel de Página tem de 3 a 90 segundos, 9:16, ao menos 540 por 960, de 24 a 60 quadros por segundo; um app pode publicar 30 em 24 horas corridas. A Meta não informa um arquivo máximo nem uma descrição máxima, então o Stuarty aplica 1 GiB e 2.200 caracteres. Só Reels são oferecidos: um vídeo mais longo ou mais largo é recusado com o limite que ele quebra. Não há campo de capa nem modo privado, então toda publicação sai como pública."
+      },
       "youtube": {
         "step": {
           "project": "No console do Google Cloud, crie um projeto (ou escolha um que você já tenha). Ele é seu; o Stuarty nunca o vê.",

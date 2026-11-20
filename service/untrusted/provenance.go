@@ -65,6 +65,7 @@ var Provenance = map[string]string{
 	"service.PublishResult.URL":             SourceNetworkText,
 	"service.SocialAccount.Label":           SourceProjectText,
 	"service.SocialAccount.AccountTitle":    SourceNetworkText,
+	"service.SocialChoice.Title":            SourceNetworkText,
 	"service.PublishValidateResult.Summary": SourceProjectText,
 
 	// the asset library (SDD-011 section 14): the text a person or an agent wrote about a file

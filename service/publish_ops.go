@@ -6,12 +6,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/AlexGalhardo/stuarty/core/approval"
+	"github.com/AlexGalhardo/stuarty/core/asset"
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/publish"
 	"github.com/AlexGalhardo/stuarty/service/connections"
@@ -99,11 +102,16 @@ type publishFile struct {
 	Bytes  int64  `json:"bytes"`
 	SHA256 string `json:"sha256,omitempty"`
 	Format string `json:"format"`
+	// Media is what the export measured on the written video: the limits of a network are checked against it.
+	Media *publish.Media `json:"media,omitempty"`
 }
 
 // publishInput is the input column of a publish.upload job.
 type publishInput struct {
-	Network   string       `json:"network"`
+	Network string `json:"network"`
+	// Account is the id of the account the person was shown in the request; the run refuses to send to any
+	// other, so a choice or a sign-in changed while the request waited does not move the post (T-60).
+	Account   string       `json:"account,omitempty"`
 	Args      PublishArgs  `json:"args"`
 	Output    publishFile  `json:"output"`
 	Thumbnail *publishFile `json:"thumbnail,omitempty"`
@@ -111,9 +119,17 @@ type publishInput struct {
 
 func (in *publishInput) post() publish.Post {
 	p := publish.Post{
-		Output: publish.File{Bytes: in.Output.Bytes, Format: in.Output.Format}, Title: in.Args.Title,
-		Description: in.Args.Description, Tags: in.Args.Tags, Visibility: publish.Visibility(in.Args.Visibility),
-		MadeForKids: in.Args.MadeForKids, AIDisclosure: in.Args.AIDisclosure,
+		Output: publish.File{
+			Bytes:  in.Output.Bytes,
+			Format: in.Output.Format,
+			Media:  in.Output.Media,
+		},
+		Title:        in.Args.Title,
+		Description:  in.Args.Description,
+		Tags:         in.Args.Tags,
+		Visibility:   publish.Visibility(in.Args.Visibility),
+		MadeForKids:  in.Args.MadeForKids,
+		AIDisclosure: in.Args.AIDisclosure,
 	}
 
 	if in.Thumbnail != nil {
@@ -168,6 +184,10 @@ type publishTarget struct {
 	signedIn bool
 	input    publishInput
 	issues   []publish.Issue
+	// generated is true when an asset of the video has the origin generated (section 20 of SDD-020).
+	generated bool
+	// needsAccount is true when the sign-in reached several accounts and none is chosen (section 17).
+	needsAccount bool
 }
 
 // resolvePublish reads the connection and the files of a post and validates it. It makes no request.
@@ -198,15 +218,26 @@ func (s *svc) resolvePublish(ctx context.Context, c Caller, projectID string, a 
 	if werr := s.conns.With(ctx, row.ID, func(cred connections.Credential) error {
 		t.account, t.signedIn = conn.SignedIn(cred.Secret)
 
+		if ch, ok := conn.(social.Chooser); ok && !t.signedIn {
+			t.needsAccount = len(ch.Choices(cred.Secret)) > 0
+		}
+
 		return nil
 	}); werr != nil {
 		return nil, connectionError(werr)
+	}
+
+	if t.needsAccount {
+		return nil, validationAt("connection_id", "no account is chosen for the connection yet.").
+			withHint("choose the account in the Connections page, then publish")
 	}
 
 	if !t.signedIn {
 		return nil, validationAt("connection_id", "the connection is not signed in.").
 			withHint("sign in again from the Connections page, then publish")
 	}
+
+	t.input.Account = t.account.ID
 
 	out, ferr := s.publishFile(ctx, c, projectID, "export", a.Export)
 	if ferr != nil {
@@ -222,6 +253,17 @@ func (s *svc) resolvePublish(ctx context.Context, c Caller, projectID string, a 
 		}
 
 		t.input.Thumbnail = th
+	}
+
+	gen, gerr := s.generatedAsset(ctx, c, a.Export)
+	if gerr != nil {
+		return nil, gerr
+	}
+
+	// The disclosure travels from the generation to the publication (RF-407): a generated asset sets it, and
+	// nothing the person said lowers it.
+	if t.generated = gen; gen {
+		t.input.Args.AIDisclosure = true
 	}
 
 	t.issues = conn.Validate(t.input.post())
@@ -291,6 +333,7 @@ func (s *svc) publishFile(ctx context.Context, c Caller, projectID, path, jobID 
 	}
 	if res.Export != nil {
 		out.SHA256 = res.Export.SHA256
+		out.Media = exportMedia(res.Export)
 
 		if res.Export.Bytes > 0 && res.Export.Bytes != st.Size() {
 			return nil, validationAt(
@@ -301,6 +344,75 @@ func (s *svc) publishFile(ctx context.Context, c Caller, projectID, path, jobID 
 	}
 
 	return out, nil
+}
+
+// exportMedia is what the export measured on the video it wrote, in the terms of core/publish; nil for an
+// export that recorded none (an image, or a result stored before the export kept them).
+func exportMedia(e *ExportResult) *publish.Media {
+	if e.VideoCodec == "" || e.Width <= 0 || e.Height <= 0 {
+		return nil
+	}
+
+	num, den := publish.ParseFPS(e.FPS)
+
+	return &publish.Media{
+		Width: e.Width, Height: e.Height, FPSNum: num, FPSDen: den,
+		DurationMS: int64(math.Round(e.Duration.Seconds * 1000)),
+		VideoCodec: strings.ToLower(e.VideoCodec), AudioCodec: strings.ToLower(e.AudioCodec),
+	}
+}
+
+// generatedAsset says whether the video was made with an asset that has the origin generated (RF-407): an
+// asset a timeline of the export's project holds. The rule is conservative on purpose: the assets of every
+// active timeline of the project count, not only those a clip uses, because a flag left out is the worse
+// mistake and the person can read in the approval request that it is set (SDD-020 section 20).
+func (s *svc) generatedAsset(ctx context.Context, c Caller, exportJob string) (bool, error) {
+	row, err := s.store.Jobs().Get(ctx, exportJob)
+	if err != nil || row.ProjectID == nil {
+		return false, nil //nolint:nilerr // publishFile checked the job: no project means no assets to read
+	}
+
+	// The export of a timeline is kept under the id of the timeline; one kept under a project is a project of
+	// timelines, whose active timelines are read.
+	ids := []string{*row.ProjectID}
+
+	if refs, rerr := s.store.Productions().ActiveTimelines(ctx, *row.ProjectID); rerr == nil {
+		for i := range refs {
+			ids = append(ids, refs[i].TimelineID)
+		}
+	}
+
+	var hashes []string
+
+	for _, id := range ids {
+		held, aerr := s.store.Assets().ListProjectAssets(ctx, id, ProjectAssetActive)
+		if aerr != nil {
+			return false, asError(aerr)
+		}
+
+		for i := range held {
+			if !slices.Contains(hashes, held[i].AssetHash) {
+				hashes = append(hashes, held[i].AssetHash)
+			}
+		}
+	}
+
+	if len(hashes) == 0 {
+		return false, nil
+	}
+
+	rows, gerr := s.store.AssetLibrary().GetMany(ctx, c.OwnerUserID, hashes)
+	if gerr != nil {
+		return false, asError(gerr)
+	}
+
+	for h := range rows {
+		if rows[h].Origin.Kind == asset.Generated {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 func issuesError(issues []publish.Issue) *Error {
@@ -327,9 +439,23 @@ func publishSummary(t *publishTarget) string {
 		vis = publish.Private
 	}
 
-	return fmt.Sprintf("Publish %q to %s, channel %q (%s), visible to: %s; file %s, %d bytes",
+	return fmt.Sprintf("Publish %q to %s, channel %q (%s), visible to: %s; file %s, %d bytes; AI disclosure: %s",
 		clean(a.Title, 100), t.desc.Name, clean(t.account.Title, 80), t.connRow.ID, vis,
-		filepath.Base(t.input.Output.Rel), t.input.Output.Bytes)
+		filepath.Base(t.input.Output.Rel), t.input.Output.Bytes, disclosureText(t))
+}
+
+// disclosureText says whether the post carries the AI disclosure flag and why, for the person who approves.
+func disclosureText(t *publishTarget) string {
+	switch {
+	case !t.input.Args.AIDisclosure:
+		return "not set"
+	case !t.desc.AIDisclosure:
+		return "wanted, but " + t.desc.Name + " takes no such flag"
+	case t.generated:
+		return "set (a generated asset is used)"
+	}
+
+	return "set"
 }
 
 // preparePublish is the Prepare of publish.upload: it checks and describes, and sends nothing.
@@ -405,7 +531,17 @@ func (s *svc) runPublish(ctx context.Context, run JobRun) (JobOutcome, error) {
 
 	var pub social.Published
 
+	var moved bool
+
 	werr := s.conns.With(ctx, in.Args.ConnectionID, func(cred connections.Credential) error {
+		// The account the person approved, and no other: nothing is sent when the connection now signs in as
+		// another account or has none chosen.
+		if acc, ok := conn.SignedIn(cred.Secret); in.Account != "" && (!ok || acc.ID != in.Account) {
+			moved = true
+
+			return nil
+		}
+
 		var perr error
 
 		pub, perr = conn.Publish(ctx, cred, up)
@@ -414,6 +550,12 @@ func (s *svc) runPublish(ctx context.Context, run JobRun) (JobOutcome, error) {
 	})
 	if werr != nil {
 		return JobOutcome{}, s.socialError(werr)
+	}
+
+	if moved {
+		return JobOutcome{}, newError(
+			command.CodeInvalidState, "the connection no longer publishes to the account that was approved.",
+		).withHint("publish again, and approve the account the connection now names")
 	}
 
 	raw, merr := json.Marshal(JobResult{Publish: &PublishResult{
@@ -587,6 +729,8 @@ func (s *svc) refreshProcessing(ctx context.Context, out *PublishStatusResult) {
 	out.Result, out.State = &res, string(remote.State)
 
 	if remote.State == publish.StateFailed {
-		out.Error = publishError(social.NewError(social.KindRejected, res.Network, remote.Reason, 0, nil))
+		out.Error = publishError(
+			social.NewError(social.KindRejected, res.Network, remote.Reason, 0, nil), conn.Describe().Hints,
+		)
 	}
 }
