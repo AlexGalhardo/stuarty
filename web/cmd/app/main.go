@@ -72,6 +72,11 @@ func main() {
 		code := runUser(ctx, args[1], args[2:], processUserIO())
 		stop()
 		os.Exit(code)
+	case isWorkspaceCommand(args[1]):
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+		code := runWorkspace(ctx, args[1], args[2:], processWorkspaceIO())
+		stop()
+		os.Exit(code)
 	case args[1] == "mcp":
 		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 		code := runMCP(ctx, args[2:], os.Stderr)
