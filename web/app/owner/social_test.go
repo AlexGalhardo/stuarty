@@ -10,7 +10,7 @@ import (
 
 func env(vars map[string]string) func(string) string { return func(k string) string { return vars[k] } }
 
-func TestSocialRegistryHasTheThreeNetworksAtTheirOwnHostsByDefault(t *testing.T) {
+func TestSocialRegistryHasTheNetworksAtTheirOwnHostsByDefault(t *testing.T) {
 	t.Parallel()
 
 	reg, err := socialRegistry(env(nil), config.ModeLocal)
@@ -18,14 +18,18 @@ func TestSocialRegistryHasTheThreeNetworksAtTheirOwnHostsByDefault(t *testing.T)
 		t.Fatal(err)
 	}
 
-	if got := reg.Networks(); !slices.Equal(got, []string{"facebook", "instagram", "youtube"}) {
-		t.Errorf("networks = %v, want facebook, instagram and youtube", got)
+	if got := reg.Networks(); !slices.Equal(got, []string{"facebook", "instagram", "x", "youtube"}) {
+		t.Errorf("networks = %v, want facebook, instagram, x and youtube", got)
 	}
 
-	for _, n := range []string{"facebook", "instagram"} {
+	for n, want := range map[string][]string{
+		"facebook":  {"graph.facebook.com", "rupload.facebook.com"},
+		"instagram": {"graph.facebook.com", "rupload.facebook.com"},
+		"x":         {"api.x.com"},
+	} {
 		c, _ := reg.Get(n)
-		if got := c.Describe().Hosts; !slices.Equal(got, []string{"graph.facebook.com", "rupload.facebook.com"}) {
-			t.Errorf("%s reaches %v", n, got)
+		if got := c.Describe().Hosts; !slices.Equal(got, want) {
+			t.Errorf("%s reaches %v, want %v", n, got, want)
 		}
 	}
 }
@@ -38,12 +42,13 @@ func TestSocialRegistryTakesTheFakeNetworkOnlyOnLoopbackInLocalMode(t *testing.T
 		t.Fatal(err)
 	}
 
-	if got := reg.Networks(); !slices.Equal(got, []string{"facebook", "fake", "instagram", "youtube"}) {
-		t.Errorf("networks = %v, want the fake network besides the three", got)
+	if got := reg.Networks(); !slices.Equal(got, []string{"facebook", "fake", "instagram", "x", "youtube"}) {
+		t.Errorf("networks = %v, want the fake network besides the four", got)
 	}
 
-	// The Meta networks speak to the loopback server alone, never to Meta, while the suite runs.
-	for _, n := range []string{"facebook", "instagram"} {
+	// The networks that have a fake server speak to the loopback server alone, never to the network, while the
+	// suite runs.
+	for _, n := range []string{"facebook", "instagram", "x"} {
 		c, _ := reg.Get(n)
 		if got := c.Describe().Hosts; !slices.Equal(got, []string{"127.0.0.1"}) {
 			t.Errorf("%s reaches %v under the test address", n, got)

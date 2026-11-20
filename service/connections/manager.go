@@ -38,6 +38,10 @@ type Credential struct {
 	Connection Connection
 	Secret     []byte
 	Client     Doer
+	// Rotate writes a new secret over the one of the connection, in the vault. A network that replaces
+	// the refresh token at every refresh (TikTok) needs it: a token that was not kept is a sign-in lost
+	// (SDD-020 section 34). The secret goes straight into the vault and nowhere else.
+	Rotate func(secret []byte) error
 }
 
 // TestResult is the outcome of a test request.
@@ -221,6 +225,7 @@ func (m *Manager) WithTimeout(ctx context.Context, id string, timeout time.Durat
 
 	return fn(Credential{
 		Connection: View(r, true), Secret: secret, Client: outbound.Connection(m, r.ID, timeout, m.trust),
+		Rotate: func(next []byte) error { return m.vault.Put(r.SecretRef, next) },
 	})
 }
 

@@ -36,7 +36,7 @@ A creator who also posts on X and TikTok handles them from the same calendar, wi
 
 - [x] 1. Read the official pages of both networks again; record flows, limits, prices and the date in SDD-020; STOP if either no longer offers the path described. Verify: `task lint:md` exits 0 and the links are in the hand-off.
 - [x] 2. Add the limits, the cost of a post and `sent_as_draft` to `core/publish` with table tests. Verify: `go test ./core/publish/...` passes.
-- [ ] 3. Implement the X adapter with contract fixtures. Verify: `go test ./service/social/x/...` passes with no network.
+- [x] 3. Implement the X adapter with contract fixtures. Verify: `go test ./service/social/x/...` passes with no network.
 - [ ] 4. Implement the TikTok adapter with contract fixtures. Verify: `go test ./service/social/tiktok/...` passes with no network.
 - [ ] 5. Show cost and the draft state in the approval, the calendar and the publication editor; write the two guides; both languages. Verify: `task test:web` and `web/e2e/specs/x-tiktok.spec.ts` pass with fake servers.
 - [ ] 6. One real post on X and one real draft on TikTok by the author, or marked as not verified. Verify: the result or the note is in the hand-off.
