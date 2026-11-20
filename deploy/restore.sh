@@ -29,16 +29,28 @@ file="$(cd "$(dirname "$file")" && pwd)/$(basename "$file")"
 
 check_docker
 require_env
-[ -s "$SECRETS_DIR/master_key" ] || die "$SECRETS_DIR/master_key is missing: a backup does not hold the master key. Put the key that sealed the vault there (or use --without-vault and connect the accounts again)"
+[ -s "$SECRETS_DIR/master_key" ] || die "$SECRETS_DIR/master_key is missing: a backup does not hold the master key. Put the key that sealed the vault there and run deploy/install.sh --no-start (without the old key, install.sh makes a new one and --without-vault restores everything but the connected accounts)"
 if [ -n "$(dc ps -q 2>/dev/null || true)" ]; then
 	die "the stack is running: stop it first (docker compose --project-directory $DEPLOY_DIR -f $DEPLOY_DIR/compose.yml stop), restore, then run deploy/install.sh to start it"
 fi
 
 if [ -f "$file.sha256" ]; then
-	(cd "$(dirname "$file")" && sha256sum -c "$(basename "$file").sha256" >/dev/null) || die "the checksum of $file does not match $file.sha256: the file is damaged"
+	# The sum of this file against the first field of the .sha256, whatever name that line gives: a
+	# `sha256sum -c` would check the file the line names, which need not be this one.
+	want="$(cut -d' ' -f1 <"$file.sha256")"
+	got="$(sha256sum <"$file" | cut -d' ' -f1)"
+	[ -n "$want" ] && [ "$want" = "$got" ] || die "the checksum of $file does not match $file.sha256: the file is damaged"
 	say "checksum of the archive: ok"
 else
 	warn "$file.sha256 is not there: only the manifest inside the backup is checked"
+fi
+
+# A new host prepared with install.sh --no-start has no image yet. Build it here, from this checkout:
+# left to `docker compose run`, a missing image is first looked for in a registry.
+version="$(env_get STUARTY_VERSION)"
+if ! docker image inspect "stuarty:$version" >/dev/null 2>&1; then
+	say "building stuarty:$version from this checkout (the first build takes several minutes)..."
+	dc build stuarty
 fi
 
 name="import-$(date -u +%Y%m%dT%H%M%SZ)"
