@@ -11,7 +11,9 @@ description: "Create, list, open and trash projects, with the same result from t
 
 ## The idea
 
-A project is one JSON document: tracks, items, the assets it uses and its settings. Every change is a batch of operations that raises its `revision` by one, so a project always has a clean history you can undo.
+A project is one production: a short video, a series of thumbnails, a post. It holds a **brief** (who it is for, the goal, the platform, the tone), **items** (texts such as a script, a copy or a caption; one or more timelines; outputs, the exports you keep), the assets it uses, and its publications. The timeline is a JSON document of tracks and items, and every change to it is a batch of operations that raises its `revision` by one, so a project always has a clean history you can undo.
+
+`stuarty project:describe <id>` prints the brief, the items and the state as text, which is what an agent reads first. `stuarty project:duplicate <id>` copies a project with its brief, texts and timelines.
 
 ## Quick start
 

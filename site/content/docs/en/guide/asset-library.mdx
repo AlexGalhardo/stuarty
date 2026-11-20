@@ -1,0 +1,51 @@
+---
+title: "The asset library"
+description: "Every image, clip, sound and colour table in one place, with where it came from and whether you may reuse it."
+---
+
+## You will learn
+
+- what the library holds and how a file gets into it;
+- how to find a file, tag it and mark whether it may be reused;
+- how to see which projects use a file.
+
+## The idea
+
+Everything you import or generate lands in one **library**, kept by content: the same file imported twice is one entry. Each entry records where it came from (a file you imported, a model that generated it, a template), its tags, a note about the rights you have to it, whether it may be reused, and the projects that use it. In the sidebar, **Visual Assets** holds images and **Video Assets** holds clips; sounds and colour tables (`.cube` files) are in the same library.
+
+An agent finds a reaction clip or a logo from a past production by searching, not by guessing a path.
+
+## Quick start
+
+1. Open **Visual Assets** or **Video Assets**. Search by name, tag or origin, and filter by kind.
+2. Open a file to see its details: origin, tags, the projects that use it.
+3. Tag it, write a rights note and mark it reusable (or not), from the same page.
+
+From a terminal:
+
+```bash
+stuarty asset:list --kind image
+stuarty asset:list --tag logo --reusable
+```
+
+Then, with the hash that `asset:list` prints:
+
+```console
+stuarty asset:show <hash>
+stuarty asset:tag <hash> --add logo
+stuarty asset:set <hash> --rights-note "Mine, all rights" --reusable
+stuarty asset:uses <hash>
+```
+
+`asset:uses` lists the projects that use the file, which is what to read before you delete anything.
+
+## Common mistakes
+
+- Deleting a project and expecting its files to go. Files are kept by content in the library; trash is a state, not a folder.
+- Marking a file reusable when its licence is not yours to pass on. The mark is a note to you and to your agent, not a check.
+
+## Next steps
+
+- [Media library](/docs/guide/media-library): the import side
+- [The image editor](/docs/guide/image-editor)
+- [The asset domain, for agents](/docs/agents/domain-asset)
