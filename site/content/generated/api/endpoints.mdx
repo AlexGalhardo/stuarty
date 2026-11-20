@@ -195,6 +195,7 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/images/{id}/exports/{name}` | [`images.file`](/docs/api/images.file) | Download a file that an image export wrote |
 | `GET` | `/api/v1/images/{id}/frame` | [`images.frame`](/docs/api/images.frame) | Render the picture of an image document |
 | `GET` | `/api/v1/images/{id}/history` | [`images.history`](/docs/api/images.history) | List the latest batches of an image document |
+| `POST` | `/api/v1/images/{id}/model-edit` | [`images.model_edit`](/docs/api/images.model_edit) | Remove the background of a layer, or generate an image into the document, with the provider of a connection; the job says that the picture is sent, waits for approval, shows its estimate and puts the result in the document as one undoable step |
 | `POST` | `/api/v1/images/{id}/redo` | [`images.redo`](/docs/api/images.redo) | Redo the latest undone step of the caller on an image |
 | `POST` | `/api/v1/images/{id}/undo` | [`images.undo`](/docs/api/images.undo) | Undo the latest step of the caller on an image |
 

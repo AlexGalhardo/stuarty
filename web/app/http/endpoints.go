@@ -613,6 +613,15 @@ var Endpoints = []Endpoint{
 		Summary: "Start a speech generation with the provider of a connection; the job waits for approval, shows its estimate and stores the audio as an asset with its origin",
 	},
 	{
+		ID:      "images.model_edit",
+		Method:  http.MethodPost,
+		Path:    "/images/{id}/model-edit",
+		Scope:   service.ScopeEdit,
+		Service: "ImageModelEdit",
+		Status:  202,
+		Summary: "Remove the background of a layer, or generate an image into the document, with the provider of a connection; the job says that the picture is sent, waits for approval, shows its estimate and puts the result in the document as one undoable step",
+	},
+	{
 		ID: "voice.list", Method: http.MethodGet, Path: "/connections/{id}/voices", Scope: service.ScopeRead,
 		Service: "VoiceList", Status: 200, Summary: "List the voices of the provider of a connection",
 	},

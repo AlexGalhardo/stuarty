@@ -113,3 +113,26 @@ func (h *apiHandler) voiceList(c *web.Ctx, in voiceListIn) (service.VoiceListRes
 
 	return deref(res), err
 }
+
+type imageModelEditIn struct {
+	ID           string `json:"id"                 validate:"required" doc:"The image document, img_ and 10 characters."`
+	ProjectID    string `json:"project_id"         validate:"required" doc:"The project that holds the generated file and its cost, prj_ and 10 characters."`
+	ConnectionID string `json:"connection_id"      validate:"required" doc:"The connection to the provider: with the image_edit capability and accepting image for remove_background, with the image capability and accepting text for generate."`
+	Operation    string `json:"operation"          validate:"required" doc:"remove_background (the picture of the layer is sent to the provider) or generate (only the prompt is sent)."`
+	Model        string `json:"model"              validate:"required" doc:"The model id, as provider:models lists it."`
+	LayerID      string `json:"layer_id,omitempty"                     doc:"remove_background: the image layer, required. generate: a layer whose box the new picture must cover; without it, the canvas."`
+	Prompt       string `json:"prompt,omitempty"                       doc:"generate only: what to draw, 1 to 4000 characters."`
+	Size         string `json:"size,omitempty"                         doc:"generate only: width and height in pixels joined by x; the default is the size nearest to the box to cover."`
+	WaitMS       int    `json:"wait_ms,omitempty"                      doc:"Wait up to this many milliseconds for the job to finish."`
+	DryRun       bool   `json:"dry_run,omitempty"                      doc:"true answers the job it would create, with its estimate, and writes and sends nothing."`
+}
+
+func (h *apiHandler) imageModelEdit(c *web.Ctx, in imageModelEditIn) (service.Job, error) {
+	res, err := h.Service.ImageModelEdit(c.Context(), service.ImageModelEditRequest{
+		ProjectID: in.ProjectID, WaitMS: in.WaitMS, DryRun: in.DryRun,
+		ConnectionID: in.ConnectionID, ImageID: in.ID, Operation: in.Operation, Model: in.Model,
+		LayerID: in.LayerID, Prompt: in.Prompt, Size: in.Size,
+	})
+
+	return deref(res), err
+}

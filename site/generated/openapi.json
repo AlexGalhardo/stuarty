@@ -2319,6 +2319,16 @@
           "delivered": {
             "type": "integer"
           },
+          "image": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ImageApplied"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "items": {
             "items": {
               "$ref": "#/components/schemas/GeneratedItem"
@@ -2606,6 +2616,24 @@
           "saturation": {
             "format": "double",
             "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "ImageApplied": {
+        "properties": {
+          "applied": {
+            "type": "boolean"
+          },
+          "image_id": {
+            "type": "string"
+          },
+          "layer_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
           }
         },
         "type": "object"
@@ -16741,6 +16769,123 @@
           }
         ],
         "summary": "List the latest batches of an image document"
+      }
+    },
+    "/api/v1/images/{id}/model-edit": {
+      "post": {
+        "operationId": "images.model_edit",
+        "parameters": [
+          {
+            "description": "The image document, img_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "connection_id": {
+                    "description": "The connection to the provider: with the image_edit capability and accepting image for remove_background, with the image capability and accepting text for generate.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "dry_run": {
+                    "description": "true answers the job it would create, with its estimate, and writes and sends nothing.",
+                    "type": "boolean"
+                  },
+                  "layer_id": {
+                    "description": "remove_background: the image layer, required. generate: a layer whose box the new picture must cover; without it, the canvas.",
+                    "type": "string"
+                  },
+                  "model": {
+                    "description": "The model id, as provider:models lists it.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "operation": {
+                    "description": "remove_background (the picture of the layer is sent to the provider) or generate (only the prompt is sent).",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "project_id": {
+                    "description": "The project that holds the generated file and its cost, prj_ and 10 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "prompt": {
+                    "description": "generate only: what to draw, 1 to 4000 characters.",
+                    "type": "string"
+                  },
+                  "size": {
+                    "description": "generate only: width and height in pixels joined by x; the default is the size nearest to the box to cover.",
+                    "type": "string"
+                  },
+                  "wait_ms": {
+                    "description": "Wait up to this many milliseconds for the job to finish.",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "project_id",
+                  "connection_id",
+                  "operation",
+                  "model"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove the background of a layer, or generate an image into the document, with the provider of a connection; the job says that the picture is sent, waits for approval, shows its estimate and puts the result in the document as one undoable step"
       }
     },
     "/api/v1/images/{id}/redo": {

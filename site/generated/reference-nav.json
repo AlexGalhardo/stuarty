@@ -187,6 +187,7 @@
         "images.file",
         "images.frame",
         "images.history",
+        "images.model_edit",
         "images.redo",
         "images.undo"
       ]

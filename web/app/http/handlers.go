@@ -450,6 +450,7 @@ func (h *apiHandler) registerAll() {
 	register(h, "scripts.estimate", h.scriptEstimate)
 	register(h, "image.generate", h.imageGenerate)
 	register(h, "voice.generate", h.voiceGenerate)
+	register(h, "images.model_edit", h.imageModelEdit)
 	register(h, "voice.list", h.voiceList)
 	register(h, "library.memory.list", h.memoryList)
 	register(h, "library.memory.get", h.memoryGet)

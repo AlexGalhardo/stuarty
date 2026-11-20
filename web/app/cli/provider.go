@@ -17,7 +17,7 @@ import (
 func providerCommands() []*spec {
 	return []*spec{
 		providerListCmd, providerModelsCmd, providerPriceCmd, textGenerateCmd, imageGenerateCmd, voiceGenerateCmd,
-		voiceListCmd,
+		voiceListCmd, imageModelEditCmd,
 	}
 }
 
