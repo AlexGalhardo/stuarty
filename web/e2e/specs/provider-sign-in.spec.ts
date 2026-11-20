@@ -26,6 +26,9 @@ const ROUTER_KEY = "sk-or-v1-e2e-key-CANARY-0123456789";
 
 interface FakeProvider {
 	received: string[];
+	// holdExchange makes the next key exchange of OpenRouter wait until the returned function is called, so
+	// a spec can look at the page while the exchange is in flight.
+	holdExchange(): () => void;
 	close(): Promise<void>;
 }
 
@@ -62,6 +65,7 @@ interface Grant {
 async function fakeProvider(): Promise<FakeProvider> {
 	const received: string[] = [];
 	const grants = new Map<string, Grant>();
+	let held: Promise<void> = Promise.resolve();
 	const server: Server = createServer(
 		(request: IncomingMessage, response: ServerResponse) => {
 			void (async () => {
@@ -130,6 +134,7 @@ async function fakeProvider(): Promise<FakeProvider> {
 						}),
 					});
 				} else if (url.pathname === "/api/v1/auth/keys") {
+					await held;
 					const input = JSON.parse(body || "{}") as {
 						code?: string;
 						code_verifier?: string;
@@ -186,6 +191,13 @@ async function fakeProvider(): Promise<FakeProvider> {
 	);
 	return {
 		received,
+		holdExchange: () => {
+			let release = () => {};
+			held = new Promise<void>((resolve) => {
+				release = resolve;
+			});
+			return release;
+		},
 		close: () => new Promise((resolve) => server.close(() => resolve())),
 	};
 }
@@ -324,9 +336,18 @@ test.describe("provider sign-in @chromium-only", () => {
 			await signInAsPerson(page);
 			await page.goto("/connections");
 			const card = page.locator('[data-provider="openrouter"]');
+			const release = fake.holdExchange();
 			await card
 				.getByRole("button", { name: "Sign in with OpenRouter" })
 				.click();
+			// While the code is being exchanged (the fake holds the answer), the address no longer holds the
+			// state or the code (SDD-007 T-76).
+			await expect
+				.poll(() => fake.received.includes("POST /api/v1/auth/keys"))
+				.toBe(true);
+			await expect(page.getByRole("status")).toContainText("Finishing");
+			expect(new URL(page.url()).search).toBe("");
+			release();
 			await expect(page.locator("[data-signed-in]")).toBeVisible();
 			await page.getByRole("link", { name: "Back to the connections" }).click();
 
