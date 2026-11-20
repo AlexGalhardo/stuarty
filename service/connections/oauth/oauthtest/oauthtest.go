@@ -129,6 +129,16 @@ func (s *Server) DelayRefresh(d time.Duration) {
 	s.refreshDelay = d
 }
 
+// RevokeAll plays the person who takes the access back on the account of the provider: every access token
+// and key issued so far is refused from now on, before it expires.
+func (s *Server) RevokeAll() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	clear(s.access)
+	clear(s.keys)
+}
+
 // Refreshes is how many refresh requests were made, and Exchanges how many code exchanges.
 func (s *Server) Refreshes() int {
 	s.mu.Lock()
