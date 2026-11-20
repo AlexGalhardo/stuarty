@@ -39,8 +39,8 @@ func SeedBuiltInTemplates(ctx context.Context, st Store, nowMs int64, set []Buil
 }
 
 // SeedBuiltInImageTemplates installs image templates that ship with the product into the library of images, with
-// the same rules as SeedBuiltInTemplates. An image belongs to one user in network mode (SDD-021), so the caller
-// seeds them in local mode only. It returns how many it added.
+// the same rules as SeedBuiltInTemplates. In network mode they belong to no user and are shared and read only
+// (SharedImageTemplate). It returns how many it added.
 func SeedBuiltInImageTemplates(ctx context.Context, st Store, nowMs int64, set []BuiltInTemplate) (int, error) {
 	added := 0
 
