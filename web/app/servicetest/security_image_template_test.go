@@ -150,7 +150,9 @@ func TestSecurity_T89_SharedImageTemplateIsReadOnlyAndShowsNothingElse(t *testin
 
 		writes := map[string]func() error{
 			"edit": func() error {
-				_, werr := e.svc.ImageEdit(who, service.ImageEditRequest{ImageID: shared, BaseRevision: 1, Operations: move})
+				_, werr := e.svc.ImageEdit(who, service.ImageEditRequest{
+					ImageID: shared, BaseRevision: 1, Operations: move,
+				})
 
 				return werr
 			},
@@ -172,7 +174,9 @@ func TestSecurity_T89_SharedImageTemplateIsReadOnlyAndShowsNothingElse(t *testin
 				return werr
 			},
 			"import into": func() error {
-				_, werr := e.svc.ImageImport(who, service.ImageImportRequest{ImageID: shared, Hash: hash, BaseRevision: 1})
+				_, werr := e.svc.ImageImport(who, service.ImageImportRequest{
+					ImageID: shared, Hash: hash, BaseRevision: 1,
+				})
 
 				return werr
 			},
