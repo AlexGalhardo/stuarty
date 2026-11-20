@@ -32,28 +32,66 @@ async function destination(): Promise<Destination> {
 	};
 }
 
+// Other specs of the suite leave connections in the shared workspace and run in parallel with
+// this one (VV-253), so each test looks only at the connection it made, found by a label no
+// other spec uses, and removes it at the end.
+let sequence = 0;
+
+function uniqueLabel(name: string): string {
+	sequence++;
+	return `${name} ${Date.now().toString(36)}-${process.pid}-${sequence}`;
+}
+
+async function removeByLabel(
+	api: Awaited<ReturnType<typeof caller>>,
+	label: string,
+): Promise<void> {
+	const list = (await api("GET", "/connections")) as {
+		connections: { id: string; label: string }[];
+	};
+	for (const connection of list.connections.filter((c) => c.label === label)) {
+		await api("DELETE", `/connections/${connection.id}`);
+	}
+}
+
+async function labelled(
+	api: Awaited<ReturnType<typeof caller>>,
+	label: string,
+): Promise<number> {
+	const list = (await api("GET", "/connections")) as {
+		connections: { label: string }[];
+	};
+	return list.connections.filter((c) => c.label === label).length;
+}
+
 test.describe("connections", () => {
 	test("add, test and remove a connection; the secret is never shown and a removed connection stops traffic", async ({
 		page,
 		request,
 	}) => {
 		const dest = await destination();
+		const label = uniqueLabel("My blog");
+		const api = await caller(request);
 		try {
 			await page.goto("/connections");
 			await expect(
 				page.getByRole("heading", { name: "Connections", level: 1 }),
 			).toBeVisible();
 			await expect(
-				page.getByText("Nothing leaves this computer."),
+				page.getByText(
+					"Until you connect something, nothing leaves your computer.",
+				),
 			).toBeVisible();
 
-			await page.getByLabel("Name", { exact: true }).fill("My blog");
+			await page.getByLabel("Name", { exact: true }).fill(label);
 			await page.getByLabel("Address (https)").fill(dest.url);
 			await page.getByLabel("Credential").fill(SECRET);
 			await page.getByRole("button", { name: "Connect" }).click();
 
-			const row = page.locator("[data-connection-id]").first();
-			await expect(row).toContainText("My blog");
+			const row = page
+				.locator("[data-connection-id]")
+				.filter({ hasText: label });
+			await expect(row).toContainText(label);
 			await expect(row).toContainText("Reaches: 127.0.0.1");
 			await expect(row).toContainText("May receive: Text");
 			await expect(row).toContainText("Never used");
@@ -72,19 +110,16 @@ test.describe("connections", () => {
 			expect(dest.received).toEqual([`Bearer ${SECRET}`]);
 
 			// No answer of the API carries the credential.
-			const api = await caller(request);
 			expect(JSON.stringify(await api("GET", "/connections"))).not.toContain(
 				SECRET,
 			);
 
 			await row.getByRole("button", { name: "Remove" }).click();
-			await expect(page.locator("[data-connection-id]")).toHaveCount(0);
-			await expect(
-				page.getByText("Nothing leaves this computer."),
-			).toBeVisible();
-			expect(await api("GET", "/connections")).toEqual({ connections: [] });
+			await expect(row).toHaveCount(0);
+			expect(await labelled(api, label)).toBe(0);
 			expect(dest.received).toHaveLength(1);
 		} finally {
+			await removeByLabel(api, label);
 			await dest.close();
 		}
 	});
@@ -95,7 +130,11 @@ test.describe("connections", () => {
 		await expect(
 			page.getByRole("heading", { name: "Conexões", level: 1 }),
 		).toBeVisible();
-		await expect(page.getByText("Nada sai deste computador.")).toBeVisible();
+		await expect(
+			page.getByText(
+				"Enquanto você não conectar nada, nada sai do seu computador.",
+			),
+		).toBeVisible();
 		await expect(page.getByRole("button", { name: "Conectar" })).toBeDisabled();
 	});
 
@@ -104,11 +143,12 @@ test.describe("connections", () => {
 		request,
 	}) => {
 		const dest = await destination();
+		const label = uniqueLabel("Meu blog");
+		const api = await caller(request);
 		try {
-			const api = await caller(request);
 			await api("POST", "/connections", {
 				kind: "test",
-				label: "Meu blog",
+				label,
 				endpoint: dest.url,
 				accepts: ["text", "video"],
 				secret: SECRET,
@@ -116,8 +156,10 @@ test.describe("connections", () => {
 
 			await page.addInitScript(() => localStorage.setItem("vv.lang", "pt-BR"));
 			await page.goto("/connections");
-			const row = page.locator("[data-connection-id]").first();
-			await expect(row).toContainText("Meu blog");
+			const row = page
+				.locator("[data-connection-id]")
+				.filter({ hasText: label });
+			await expect(row).toContainText(label);
 			await expect(row).toContainText("Acessa: 127.0.0.1");
 			await expect(row).toContainText("Pode receber: Texto, Vídeo");
 			await expect(row).toContainText("Nunca usada");
@@ -130,22 +172,29 @@ test.describe("connections", () => {
 			await expect(row).toContainText("Usada pela última vez em");
 
 			await row.getByRole("button", { name: "Remover" }).click();
-			await expect(page.locator("[data-connection-id]")).toHaveCount(0);
-			await expect(page.getByText("Nada sai deste computador.")).toBeVisible();
+			await expect(row).toHaveCount(0);
+			expect(await labelled(api, label)).toBe(0);
 		} finally {
+			await removeByLabel(api, label);
 			await dest.close();
 		}
 	});
 
 	test("a destination that is not https is refused in words, and nothing is added", async ({
 		page,
+		request,
 	}) => {
+		const label = uniqueLabel("Plain");
+		const api = await caller(request);
 		await page.goto("/connections");
-		await page.getByLabel("Name", { exact: true }).fill("Plain");
+		await page.getByLabel("Name", { exact: true }).fill(label);
 		await page.getByLabel("Address (https)").fill("http://example.com/x");
 		await page.getByLabel("Credential").fill(SECRET);
 		await page.getByRole("button", { name: "Connect" }).click();
 		await expect(page.getByRole("alert")).toContainText("https");
-		await expect(page.locator("[data-connection-id]")).toHaveCount(0);
+		await expect(
+			page.locator("[data-connection-id]").filter({ hasText: label }),
+		).toHaveCount(0);
+		expect(await labelled(api, label)).toBe(0);
 	});
 });
