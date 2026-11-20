@@ -66,7 +66,9 @@ function propertiesOf(
 		];
 	}
 	return [
-		...KEYFRAME_PROPERTIES.filter((property) => property !== "volume"),
+		...KEYFRAME_PROPERTIES.filter(
+			(property) => property !== "volume" || type === "composition",
+		),
 		...mask,
 	];
 }
