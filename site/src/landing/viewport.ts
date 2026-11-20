@@ -14,7 +14,7 @@ const POSES: Omit<MascotPose, "opacity">[] = [
 	{ x: 0.72, y: 0.72, scale: 0.22, turn: -0.6 },
 	{ x: -0.52, y: 0.72, scale: 0.22, turn: 0.5 },
 	{ x: 0.74, y: 0.7, scale: 0.24, turn: -0.55 },
-	{ x: 0, y: 0.56, scale: 0.42, turn: 0 },
+	{ x: 0, y: 0.6, scale: 0.28, turn: 0 },
 ];
 
 export function start(): void {

@@ -9,7 +9,6 @@ import FontPreload from "../../components/landing/FontPreload.astro";
 import DriveTabs from "../../components/landing/DriveTabs.astro";
 import LandingFooter from "../../components/landing/LandingFooter.astro";
 import LandingActions from "../../components/landing/LandingActions.astro";
-import Placeholder from "../../components/landing/Placeholder.astro";
 import Shot from "../../components/landing/Shot.astro";
 import SplitTitle from "../../components/landing/SplitTitle.astro";
 import StageCanvas from "../../components/landing/StageCanvas.astro";
@@ -145,7 +144,7 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 		<!-- Take 6: open source, on your machine -->
 		<section id="yours" class="take" aria-labelledby="yours-title" data-take>
 			<div class="site-container text-center lg:pr-20">
-				<p class="eyebrow mt-[18vh] lg:mt-[22vh]" data-in>Take {number("yours")} &middot; {trust.eyebrow}</p>
+				<p class="eyebrow" data-in>Take {number("yours")} &middot; {trust.eyebrow}</p>
 				<h2 id="yours-title" tabindex="-1" class="display-title mx-auto mt-4 max-w-3xl text-fg" data-in>{trust.title}</h2>
 				<ul class="mx-auto mt-8 flex max-w-4xl flex-wrap justify-center gap-2" data-in>
 					{trust.points.map((p) => (
@@ -154,9 +153,6 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 				</ul>
 				<div class="mt-9" data-in>
 					<LandingActions idPrefix="take" align="center" />
-				</div>
-				<div class="mx-auto mt-10 max-w-md" data-in>
-					<Placeholder label="Stuarty in 30 seconds" aspect="16 / 9" class="showcase rounded-2xl" />
 				</div>
 				<p class="take-credits mt-8 text-xs text-muted" data-in>{credits}</p>
 			</div>
