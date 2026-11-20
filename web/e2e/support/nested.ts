@@ -95,30 +95,17 @@ export async function nestedProject(
 		await edit(call, outer.timeline, [
 			{ op: "item.set_transform", args: { item_id: inner.id, opacity: 0.8 } },
 		]);
-		// The upper clip of the innermost timeline is smaller, so both layers show.
-		const innermost = (await call(
-			"GET",
-			`/projects/${inner.timeline}?detail=document&timeline_id=${inner.timeline}`,
-		)) as { document: { items: Record<string, { track_id: string }> } };
-		const ids = Object.keys(innermost.document.items);
-		const second = ids[1];
-		if (second !== undefined) {
-			await edit(call, inner.timeline, [
-				{ op: "item.set_transform", args: { item_id: second, scale: 0.5 } },
-			]);
-		}
-	} else {
-		const nested = (await call(
-			"GET",
-			`/projects/${outer.timeline}?detail=document&timeline_id=${outer.timeline}`,
-		)) as { document: { items: Record<string, unknown> } };
-		const second = Object.keys(nested.document.items)[1];
-		if (second !== undefined) {
-			await edit(call, outer.timeline, [
-				{ op: "item.set_transform", args: { item_id: second, scale: 0.5 } },
-			]);
-		}
 	}
+	// The upper clip of the innermost timeline is smaller, so both layers show. A
+	// moved item keeps its id (composition.create_from_selection), and the item
+	// ids of a document are not in track order, so the clip is named, not picked.
+	const innermost =
+		options.levels === 2
+			? (await compositionOf(call, outer.timeline)).timeline
+			: outer.timeline;
+	await edit(call, innermost, [
+		{ op: "item.set_transform", args: { item_id: upper, scale: 0.5 } },
+	]);
 
 	await edit(call, seeded.id, [
 		{ op: "item.set_transform", args: { item_id: outer.id, opacity: 0.5 } },
