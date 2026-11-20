@@ -257,7 +257,7 @@ The core's codes are in SDD-002 §A.8. The service adds:
 | `E_FILE_NOT_FOUND` | the path does not exist or cannot be read | no |
 | `E_UNSUPPORTED_MEDIA` | the file is not media FFmpeg can decode, or has no usable stream | no |
 | `E_INGEST_FAILED` | ingest failed; `details.reason` | no |
-| `E_ASSET_NOT_READY` | the asset is still ingesting | yes |
+| `E_ASSET_NOT_READY` | the asset is still ingesting; `details` has `asset_id`, `state` and `progress` (0 to 1) when an edit names it | yes |
 | `E_FFMPEG_MISSING` | no usable FFmpeg was found | no |
 | `E_NO_ENCODER` | no encoder works on this machine for the codec the export needs (H.264, or the `details.codec` that was asked for: `hevc` or `av1`, SDD-004 section 8.3); `details.reason` `codec_unavailable` and `details.candidates` | no |
 | `E_EXPORT_FAILED` | the export process failed; `details.reason` | no |

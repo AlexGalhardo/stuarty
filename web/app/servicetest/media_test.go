@@ -673,6 +673,19 @@ func TestEditWithAnAssetStillIngestingIsNotReady(t *testing.T) {
 	if !errors.As(err, &se) || se.Code != "E_ASSET_NOT_READY" || !se.IsRetryable() {
 		t.Fatalf("error = %v", err)
 	}
+
+	// VV-204: the error names the call that follows the asset and says how far the ingest is.
+	if !strings.Contains(se.Hint, "media_inspect") || !strings.Contains(se.Hint, asset.AssetID) {
+		t.Errorf("hint = %q, want the media_inspect call for %s", se.Hint, asset.AssetID)
+	}
+
+	if !strings.Contains(se.Message, "% done") {
+		t.Errorf("message = %q, want the progress", se.Message)
+	}
+
+	if se.Details["asset_id"] != asset.AssetID || se.Details["state"] == nil || se.Details["progress"] == nil {
+		t.Errorf("details = %v, want asset_id, state and progress", se.Details)
+	}
 }
 
 // A source with alpha has a WebM proxy and PNG posters and sheet (VV-013): they are served with their
