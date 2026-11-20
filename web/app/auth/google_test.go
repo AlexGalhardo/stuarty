@@ -13,6 +13,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/connections/connectionstest"
+	"github.com/AlexGalhardo/stuarty/service/connections/oauth"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 	"github.com/AlexGalhardo/stuarty/web/app/auth"
 	"github.com/AlexGalhardo/stuarty/web/app/auth/googletest"
@@ -370,6 +371,14 @@ func TestLinkIdentityStateIsSingleUseAndOfTheRightPurpose(t *testing.T) {
 		t.Fatalf("a link state as a sign-in state: err = %v, want ErrFlow", err)
 	}
 
+	// The swap spent the state: shown with its own prefix by its own user, it is refused now.
+	again := h.answer(f, "sub-ana", "ana@example.test")
+	again.SessionUserID = ana.ID
+
+	if _, err := h.g.Complete(t.Context(), again); !errors.Is(err, auth.ErrFlow) {
+		t.Fatalf("the link state after a swap: err = %v, want ErrFlow", err)
+	}
+
 	for _, bad := range []string{"", "k.", "l.", "x.abc", "abc"} {
 		if _, err := h.g.Complete(
 			t.Context(),
@@ -441,5 +450,36 @@ func TestLinkIdentityDeletesWithTheUser(t *testing.T) {
 
 	if n := countRows(t, h, "SELECT COUNT(*) FROM user_identities"); n != 0 {
 		t.Errorf("identities after the user was deleted = %d, want 0", n)
+	}
+}
+
+// Anyone may begin a sign-in without a credential, and the flows that wait are capped; a flood of them must
+// not push out the linking a signed-in user began with their password.
+func TestLinkIdentitySurvivesAFloodOfSignIns(t *testing.T) {
+	h := newGoogleHarness(t)
+	h.enable(t)
+	ana := h.user(t, "ana@example.test")
+
+	raw, err := h.g.BeginLink(t.Context(), ana.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for range oauth.MaxPending + 5 {
+		binding, berr := auth.NewBinding()
+		if berr != nil {
+			t.Fatal(berr)
+		}
+
+		if _, berr := h.g.BeginSignIn(t.Context(), binding); berr != nil {
+			t.Fatal(berr)
+		}
+	}
+
+	req := h.answer(flowOf(t, raw), "sub-ana", "ana@example.test")
+	req.SessionUserID = ana.ID
+
+	if _, err := h.g.Complete(t.Context(), req); err != nil {
+		t.Fatalf("linking after a flood of sign-ins: %v", err)
 	}
 }
