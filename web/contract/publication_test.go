@@ -63,7 +63,7 @@ func publicationCommand(s step) (name string, argv []string, stdin string, err e
 		}
 
 		argv = slices.Concat(optFlag("project", r.ProjectID), optFlag("state", r.State), optFlag("network", r.Network),
-			optFlag("from", r.From), optFlag("to", r.To))
+			optFlag("from", r.From), optFlag("until", r.To))
 		if r.Limit > 0 {
 			argv = append(argv, "--limit", strconv.Itoa(r.Limit))
 		}
