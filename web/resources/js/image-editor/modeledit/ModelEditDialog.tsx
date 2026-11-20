@@ -187,6 +187,7 @@ export function ModelEditDialog({
 			modelJobStore.getState().track({
 				job,
 				operation,
+				imageId: store.getState().imageId,
 				layerId: isRemoval || cover ? layerId : null,
 				layerName: layer?.name ?? "",
 			});

@@ -11,6 +11,8 @@ import type { ModelOperation } from "../api/modelEdit";
 export interface TrackedJob {
 	job: Job;
 	operation: ModelOperation;
+	// The image the job edits: the store outlives the screen, so another image opened meanwhile is not it.
+	imageId: string;
 	// The layer the operation was started for, and its name when it was started, for the words of the strip.
 	layerId: string | null;
 	layerName: string;
@@ -45,6 +47,33 @@ export function isFinal(job: Job): boolean {
 		job.state === "failed" ||
 		job.state === "cancelled"
 	);
+}
+
+export interface Settled {
+	// The layer the service says the result is in, when its batch was applied.
+	select: string | null;
+}
+
+// What the screen of an image does once the tracked job succeeded: read the document again and select the layer
+// of the result. Only the screen of the image the job edited does it; null means nothing to do here.
+export function settledFor(
+	tracked: TrackedJob | null,
+	imageId: string,
+): Settled | null {
+	if (
+		tracked === null ||
+		tracked.imageId !== imageId ||
+		tracked.job.state !== "succeeded"
+	) {
+		return null;
+	}
+	const image = tracked.job.result?.generated?.image;
+	return {
+		select:
+			image?.applied === true && image.layer_id !== undefined
+				? image.layer_id
+				: null,
+	};
 }
 
 // The capability a provider needs for the operation: removing a background sends the picture to an editor of
