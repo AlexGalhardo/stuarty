@@ -166,7 +166,7 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 	}
 
 	if req.DryRun {
-		return s.jobView(c, s.stamp(job), false), nil
+		return s.dryRunView(c, job), nil
 	}
 
 	lim := &JobLimit{
@@ -1010,6 +1010,27 @@ func (s *svc) jobView(c Caller, r JobRow, waited bool) *Job {
 	viewGeneration(j, &r)
 
 	j.Text = jobText(j, waited)
+
+	return j
+}
+
+// dryRunView is the answer to a dry run of a job kind: what the job would be, with no id, because none was
+// created and job_get would not find it (VV-303).
+func (s *svc) dryRunView(c Caller, r JobRow) *Job {
+	j := s.jobView(c, s.stamp(r), false)
+	j.JobID, j.DryRun = "", true
+
+	next := "start at once"
+	if j.State == JobWaitingApproval {
+		next = "wait for the approval of a person"
+	}
+
+	j.Text = fmt.Sprintf("dry run: a %s job would %s", j.Kind, next)
+	if j.Estimate != nil {
+		j.Text += "; estimate " + money(j.Estimate.Micros, j.Estimate.Currency)
+	}
+
+	j.Text += ". Nothing was created: there is no job to read; repeat without the dry run to start it."
 
 	return j
 }

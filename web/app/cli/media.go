@@ -376,6 +376,9 @@ func jobOutput(
 ) (*output, error) {
 	p.job(job)
 
+	// A dry run created no job: there is nothing to wait for.
+	wait = wait && !job.DryRun
+
 	for wait && !service.JobFinal(job.State) && time.Until(deadline) > 0 {
 		var err error
 

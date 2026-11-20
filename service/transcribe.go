@@ -265,7 +265,7 @@ func (s *svc) startTranscribe(ctx context.Context, c Caller, req JobStartRequest
 	}
 
 	if req.DryRun {
-		return s.jobView(c, s.stamp(job), false), nil
+		return s.dryRunView(c, job), nil
 	}
 
 	lim := &JobLimit{
