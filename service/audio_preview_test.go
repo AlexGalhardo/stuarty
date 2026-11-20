@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"os"
+	"runtime"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -95,7 +97,9 @@ func previewEnv(t *testing.T, fake *fakePreviewer) *batchEnv {
 
 	// The background renders end before the folder is removed (cleanups run last in, first out).
 	t.Cleanup(func() {
-		for range 4000 {
+		deadline := time.Now().Add(20 * time.Second)
+
+		for time.Now().Before(deadline) {
 			env.s.previews.mu.Lock()
 			idle := env.s.previews.queued == 0
 			env.s.previews.mu.Unlock()
@@ -104,7 +108,7 @@ func previewEnv(t *testing.T, fake *fakePreviewer) *batchEnv {
 				return
 			}
 
-			time.Sleep(5 * time.Millisecond)
+			runtime.Gosched()
 		}
 	})
 
@@ -156,7 +160,7 @@ func waitReady(t *testing.T, env *batchEnv, key, from string) *File {
 			t.Fatal("the file was not rendered in 20 seconds")
 		}
 
-		time.Sleep(5 * time.Millisecond)
+		runtime.Gosched()
 	}
 }
 
@@ -261,7 +265,7 @@ func TestAudioPreviewCacheFailure(t *testing.T) {
 			t.Fatalf("the failed render was not reported: %v", err)
 		}
 
-		time.Sleep(5 * time.Millisecond)
+		runtime.Gosched()
 	}
 
 	if _, err := openPreview(env, batchProject, a.Key, ""); err == nil {
@@ -370,6 +374,39 @@ func TestAudioPreviewCacheKeyBelongsToTheProject(t *testing.T) {
 
 	if n := len(fake.renders()); n != 0 {
 		t.Errorf("renders = %d", n)
+	}
+}
+
+// T-90: the key opens the sound only through the project whose plan handed it out, and no crafted key or frame reaches
+// another file or starts a render.
+func TestSecurity_T90_AudioPreviewKeyIsTheProjects(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePreviewer{}
+	env := previewEnv(t, fake)
+	a := previewKeys(t, env)[previewItemA]
+
+	for _, key := range []string{
+		"../" + a.Key, "..\\" + a.Key, "/" + a.Key[1:], "C:/" + a.Key[3:], a.Key + "/../x", strings.ToUpper(a.Key),
+		a.Key[:32] + "/" + a.Key[33:], "audio-previews/" + a.Key[:48], strings.Repeat("0", 64),
+	} {
+		if _, err := openPreview(env, batchProject, key, ""); err == nil {
+			t.Errorf("key %q was served", key)
+		}
+	}
+
+	for _, from := range []string{"../x", "60/../1", "1e2", " 60", "0x3c", "99999999999999999999"} {
+		if _, err := openPreview(env, batchProject, a.Key, from); err == nil {
+			t.Errorf("from %q was served", from)
+		}
+	}
+
+	if _, err := openPreview(env, "prj_zzzzzzzzzz", a.Key, ""); err == nil {
+		t.Error("the key of this project opened a sound through another project")
+	}
+
+	if n := len(fake.renders()); n != 0 {
+		t.Errorf("a refused request rendered: %d", n)
 	}
 }
 

@@ -306,6 +306,9 @@ func (h *apiHandler) registerAll() {
 	register(h, "bitmaps.get", func(c *web.Ctx, in bitmapIn) (noIn, error) {
 		return h.serveAsset(c, "bitmap", in.ID, in.Key, "")
 	})
+	register(h, "audio_previews.get", func(c *web.Ctx, in audioPreviewIn) (noIn, error) {
+		return h.serveAsset(c, "audio_preview", in.ID, in.Key, in.From)
+	})
 	register(h, "projects.frame", h.projectsFrame)
 	register(h, "projects.sheet", h.projectsSheet)
 	register(h, "projects.motion.brief", h.motionBrief)
