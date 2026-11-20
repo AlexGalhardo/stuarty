@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.0] - 2026-11-20
+
+### Added
+
+- **service:** Add the Agent Client Protocol client and the fake agent ([4748658](https://github.com/AlexGalhardo/stuarty/commit/47486583a43a424b02bcc9f0b567019cad3f2fe1))
+- **service:** Issue the project-scoped session token and hand the MCP address to the agent ([4bfa457](https://github.com/AlexGalhardo/stuarty/commit/4bfa457738125361237fb8d5e4c4b20ef326a2ae))
+- **service:** Add the pure approval decision and cost ceilings ([68726d9](https://github.com/AlexGalhardo/stuarty/commit/68726d93f56911acd5f7e6414120e87cf3bcf3df))
+- **service:** Add the approval tables, operations and waiting_approval state ([82d1e98](https://github.com/AlexGalhardo/stuarty/commit/82d1e98c17123bbddcdfbee02fa9d1cc1a42a85e))
+- **web:** Expose the approval queue on HTTP, CLI and MCP ([ed7d0cf](https://github.com/AlexGalhardo/stuarty/commit/ed7d0cfd2dcbc6ebcf4d32c9b066fc4ccd75d60a))
+- **web:** Add the approval queue page with rules and cost ceilings ([3cf88b4](https://github.com/AlexGalhardo/stuarty/commit/3cf88b455427f8d13038657858f8246024353e11))
+- **timeline:** Evaluate a cubic bezier easing in fixed-point arithmetic ([4c2de97](https://github.com/AlexGalhardo/stuarty/commit/4c2de971a23a4b3353552849c41ef919f7bc2e3d))
+- **command:** Set a keyframe easing with keyframe.set_easing and a bezier curve ([280b5d8](https://github.com/AlexGalhardo/stuarty/commit/280b5d83e18f6cd80fc9bbfd8bae95591bfdc82b))
+- **command:** Apply layer animation presets as ordinary keyframes with animation.apply_preset ([9fcf6cf](https://github.com/AlexGalhardo/stuarty/commit/9fcf6cf6c105364401842a6df6737a60b1deed11))
+- **ui:** Edit a keyframe curve, keyframe the crop edges and apply motion presets ([ae7e4a9](https://github.com/AlexGalhardo/stuarty/commit/ae7e4a9f008678e713a383f9d9d9803b25c9722b))
+- **web:** Add the image frame, history and file reads and the edit-image pages ([997ff0a](https://github.com/AlexGalhardo/stuarty/commit/997ff0a34b131a9797e3785142dc2228bac82438))
+- **web:** Build the image inspector and the buttons that add layers ([07010f0](https://github.com/AlexGalhardo/stuarty/commit/07010f06d4e93b8c82f3dc98bfc35908e40e60c9))
+- **web:** Build the image export dialog with findings and a download ([b6081ea](https://github.com/AlexGalhardo/stuarty/commit/b6081ea84ef2695b3714b212b5658b9419f126a4))
+
+### Fixed
+
+- **library:** Keep what a write does not carry and refuse oversized folder files ([73773d3](https://github.com/AlexGalhardo/stuarty/commit/73773d3dfa72c4988813e0771e60d5994c0f9650))
+- **library:** Seal skill reviews, bind them to the text read and delimit file names ([eebaf13](https://github.com/AlexGalhardo/stuarty/commit/eebaf131ff1dfb502f199797f8f7e9d00d2b1433))
+- **service:** Record what an interrupted run spent before it was requeued ([4d87eb6](https://github.com/AlexGalhardo/stuarty/commit/4d87eb6cd96850d38ef59cbb219da1d2d8545972))
+- **mcp:** Declare the waiting_approval state in the job tools output schema ([7f793df](https://github.com/AlexGalhardo/stuarty/commit/7f793dfe27415234d0d00c7b790bd1b0ab05efec))
+- **service:** Cancel a job that was approved while its cancel was on the way ([b4c658e](https://github.com/AlexGalhardo/stuarty/commit/b4c658ebdb937e59c6ab82e257cd926e8f7ae029))
+- **service:** Say in the audit what a removed approval rule covered ([55eedd3](https://github.com/AlexGalhardo/stuarty/commit/55eedd379cad127e5d511690bebbfe603d4ce1b0))
+- **web:** Add the command title of keyframe.set_easing in both languages ([d74c892](https://github.com/AlexGalhardo/stuarty/commit/d74c892cdfdbf46f44d79c51b27df5e8eeb240a0))
+- **command:** Carry the bezier numbers when text.apply_preset inherits a curve ([2942ef5](https://github.com/AlexGalhardo/stuarty/commit/2942ef510bcbed3d992f7647c7a6c9b99d02503a))
+- **ui:** Show the refusal of a motion preset under its section ([0479915](https://github.com/AlexGalhardo/stuarty/commit/04799151bb961afe8edd7b821a89165843898294))
+- **ui:** Label the motion preset defaults without the numbers of one preset ([a643165](https://github.com/AlexGalhardo/stuarty/commit/a6431658184c8591c1bbc4cf29213b1a25af9ba8))
+- **mcp:** Fit tools/list in its budget after the merge ([1e046ec](https://github.com/AlexGalhardo/stuarty/commit/1e046ecd8cd084c505926681c9afa0d2502727c8))
+- **ui:** Name the revision of the picture that is drawn on the image canvas ([3b4121d](https://github.com/AlexGalhardo/stuarty/commit/3b4121d7835cb72f7e7bd117a31dfdfcc0dcd7dd))
+
+### Security
+
+- **security:** Refuse look-alike characters in approval text ([bf3f868](https://github.com/AlexGalhardo/stuarty/commit/bf3f868777059bc7fed492d93ca735e8a4ffb698))
+- **security:** Prove a requeued job cannot run past a ceiling it did not reserve under ([b2b56d1](https://github.com/AlexGalhardo/stuarty/commit/b2b56d11268d21a3f5b31024dd809108818f2a7d))
+- **security:** Cover the approval threat rows T-48 to T-51 ([d2d0a06](https://github.com/AlexGalhardo/stuarty/commit/d2d0a066b37754888f3ad2d46b81f159096177d0))
+- **security:** Count the hosted agent threats in the model ([e2210e9](https://github.com/AlexGalhardo/stuarty/commit/e2210e91ef5e2587d707b445236a5e215d4cddc7))
+- **security:** Prove concurrent approvals never pass a cost ceiling ([ceb4175](https://github.com/AlexGalhardo/stuarty/commit/ceb4175b98f38a117b657fbc463b888fb06f0020))
+- **security:** Cover a project-limited key and a timeline id (VV-246) ([1148016](https://github.com/AlexGalhardo/stuarty/commit/1148016e0df1d68668bd96a6e6b86c4e92cfb910))
+- **security:** Hold a limited key to its project in loadProduction (VV-246) ([c603a02](https://github.com/AlexGalhardo/stuarty/commit/c603a02062ba870e8bf991d92858111d8285db82))
+- **security:** Hold a stale timeline key and a key of A in network mode ([fc7afed](https://github.com/AlexGalhardo/stuarty/commit/fc7afedb907061eb90c3e48c65db4e706556f558))
+- **security:** State the project limit of a key and list its T-06 tests ([7475ce3](https://github.com/AlexGalhardo/stuarty/commit/7475ce3f5d0e20c2d5a81031d3a71ec8d6e69b3e))
+- **security:** Wrap a long line of the network key test for golines ([12a36e6](https://github.com/AlexGalhardo/stuarty/commit/12a36e63b10624991862b83ca8ca50a871d68917))
 ## [0.31.0] - 2026-11-20
 
 ### Added
@@ -1456,7 +1501,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.31.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.32.0...HEAD
+[0.32.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.31.0...v0.32.0
 [0.31.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.30.0...v0.31.0
 [0.30.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.29.0...v0.30.0
 [0.29.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.28.0...v0.29.0
