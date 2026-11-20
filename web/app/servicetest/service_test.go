@@ -171,6 +171,39 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.ImageRedo(ctx, service.ImageStepRequest{ImageID: "img_0000000001"})
 			return err
 		},
+		"ImageRevert": func() error {
+			_, err := e.svc.ImageRevert(ctx, service.ImageRevertRequest{ImageID: "img_0000000001", Revision: 1})
+			return err
+		},
+		"ImageDiff": func() error {
+			_, err := e.svc.ImageDiff(ctx, service.ImageDiffRequest{ImageID: "img_0000000001", From: 1})
+			return err
+		},
+		"ImageCheckpointCreate": func() error {
+			_, err := e.svc.ImageCheckpointCreate(
+				ctx,
+				service.ImageCheckpointCreateRequest{ImageID: "img_0000000001", Name: "x"},
+			)
+			return err
+		},
+		"ImageCheckpointList": func() error {
+			_, err := e.svc.ImageCheckpointList(ctx, service.ImageCheckpointListRequest{ImageID: "img_0000000001"})
+			return err
+		},
+		"ImageCheckpointRename": func() error {
+			_, err := e.svc.ImageCheckpointRename(
+				ctx,
+				service.ImageCheckpointRenameRequest{ImageID: "img_0000000001", Name: "x", NewName: "y"},
+			)
+			return err
+		},
+		"ImageCheckpointRemove": func() error {
+			_, err := e.svc.ImageCheckpointRemove(
+				ctx,
+				service.ImageCheckpointRemoveRequest{ImageID: "img_0000000001", Name: "x"},
+			)
+			return err
+		},
 		"ImageExport": func() error {
 			_, err := e.svc.ImageExport(ctx, service.ImageExportRequest{ImageID: "img_0000000001"})
 			return err

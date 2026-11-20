@@ -521,8 +521,17 @@ func (s *svc) ImageEdit(ctx context.Context, req ImageEditRequest) (*ImageEditRe
 		}
 
 		rev, err := s.commitImage(ctx, tx, &row, &imageBatch{
-			kind: OpEdit, actor: c.Actor, base: req.BaseRevision, ops: req.Operations, doc: out.Doc,
-			inverse: out.Inverse, diff: out.Diff, key: req.IdempotencyKey, hash: hash, closeRedo: true,
+			kind:       OpEdit,
+			actor:      c.Actor,
+			base:       req.BaseRevision,
+			ops:        req.Operations,
+			doc:        out.Doc,
+			inverse:    out.Inverse,
+			diff:       out.Diff,
+			key:        req.IdempotencyKey,
+			hash:       hash,
+			closeRedo:  true,
+			checkpoint: true,
 			result: func(rev int64) json.RawMessage {
 				stored := *res
 				stored.Revision = rev
@@ -791,7 +800,10 @@ type imageBatch struct {
 	hash      string
 	closeRedo bool
 	closeStep bool
-	result    func(rev int64) json.RawMessage
+	// checkpoint makes the automatic checkpoint of an agent's first edit of the day, at the revision the batch
+	// starts from (SDD-005 section 5.14.1).
+	checkpoint bool
+	result     func(rev int64) json.RawMessage
 }
 
 // commitImage writes a batch inside the open transaction and returns the new revision.
@@ -799,6 +811,12 @@ func (s *svc) commitImage(ctx context.Context, tx Tx, row *ImageRow, b *imageBat
 	rev := row.Revision + 1
 	now := s.nowMs()
 	u := imageUpdate(b.doc, now)
+
+	if b.checkpoint {
+		if err := s.autoCheckpointOn(ctx, tx.ImageCheckpoints(), row.ID, b.actor, row.Revision); err != nil {
+			return 0, err
+		}
+	}
 
 	ops := marshalOr(b.ops)
 	inverse := marshalOr(nonNilPrimitives(b.inverse))
