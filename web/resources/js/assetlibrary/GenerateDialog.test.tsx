@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import type { ModelView, ProviderView } from "../editor/api/types";
-import { choicesOf, orderedModels } from "./GenerateDialog";
+import { anyMaker, choicesOf, orderedModels } from "./GenerateDialog";
 
 const provider = (
 	id: string,
@@ -79,5 +79,20 @@ describe("the choices of the Generate dialog", () => {
 			"clip-1",
 			"gpt-test",
 		]);
+	});
+
+	test("tells apart no provider that makes video from one that is not connected (epic 11)", () => {
+		// No provider of the product makes video: there is nothing to connect, so no link to Connections.
+		const today = [
+			provider("openai", ["text", "image", "voice"], ["con_o1"]),
+			provider("anthropic", ["text"], []),
+		];
+		expect(anyMaker(today, "video")).toBe(false);
+		expect(choicesOf(today, "video")).toEqual([]);
+
+		// A provider makes video and has no connection yet: the person is sent to connect one.
+		const later = [...today, provider("clips", ["video"], [])];
+		expect(anyMaker(later, "video")).toBe(true);
+		expect(choicesOf(later, "video")).toEqual([]);
 	});
 });
