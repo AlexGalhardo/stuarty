@@ -19,6 +19,7 @@ import { fetchLut, type LutTable } from "../api/lut";
 import type { PlanLayer, PlanMediaLayer, PlanWindow } from "../api/types";
 import { chunksUrl, proxyUrl, thumbnailUrl } from "../api/urls";
 import { setProcessedAudioStates } from "../state/processedAudioStore";
+import { AssetOwners } from "./assetOwners";
 import "pixi.js/advanced-blend-modes";
 
 import { AudioGraph } from "./audioGraph";
@@ -1381,7 +1382,8 @@ export class PixiExecutor implements PreviewExecutor {
 			const processed = this.processedAudio.resolve(audio, frame);
 			const entry = this.sounds.acquire(
 				audio.item,
-				processed?.url ?? proxyUrl(info.projectId, audio.asset),
+				processed?.url ??
+					proxyUrl(this.owners.of(audio.asset, info.projectId), audio.asset),
 			);
 			if (entry.gain !== null) {
 				entry.gain.gain.value = valueAt(audio.gain, frame, audio.first);
