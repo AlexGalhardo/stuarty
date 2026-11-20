@@ -1,5 +1,4 @@
 import { usePage } from "@inertiajs/react";
-import { Video } from "lucide-react";
 import { type ReactNode, useEffect } from "react";
 
 import LocaleSwitcher from "@/components/LocaleSwitcher";
@@ -38,13 +37,20 @@ function Shell({ children }: { children: ReactNode }) {
 		return (
 			<TooltipProvider>
 				<header className="flex min-h-14 flex-wrap items-center gap-x-4 gap-y-1 border-b px-4 py-2 md:px-6">
-					<span className="flex items-center gap-2">
-						<span className="flex size-8 items-center justify-center rounded-lg bg-brand text-brand-foreground">
-							<Video aria-hidden="true" className="size-4" />
-						</span>
-						<span className="text-lg font-semibold tracking-tight">
-							{appName}
-						</span>
+					<span className="flex items-center">
+						<img
+							src="/logo-wordmark-light.png"
+							loading="lazy"
+							alt=""
+							className="h-7 w-auto dark:hidden"
+						/>
+						<img
+							src="/logo-wordmark-dark.png"
+							loading="lazy"
+							alt=""
+							className="hidden h-7 w-auto dark:block"
+						/>
+						<span className="sr-only">{appName}</span>
 					</span>
 					<div className="ml-auto flex flex-wrap items-center gap-2">
 						<LocaleSwitcher />

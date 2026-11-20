@@ -7,7 +7,6 @@ import {
 	PanelLeftOpen,
 	Settings,
 	User,
-	Video,
 } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 
@@ -224,17 +223,30 @@ export default function Sidebar({
 					collapsed && "justify-center",
 				)}
 			>
-				<span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-brand text-brand-foreground">
-					<Video aria-hidden="true" className="size-4" />
-				</span>
-				<span
-					className={cn(
-						"truncate text-lg font-semibold tracking-tight",
-						collapsed && "sr-only",
-					)}
-				>
-					{appName}
-				</span>
+				{collapsed ? (
+					<img
+						src="/icon.png"
+						loading="lazy"
+						alt=""
+						className="size-8 shrink-0"
+					/>
+				) : (
+					<>
+						<img
+							src="/logo-wordmark-light.png"
+							loading="lazy"
+							alt=""
+							className="h-7 w-auto dark:hidden"
+						/>
+						<img
+							src="/logo-wordmark-dark.png"
+							loading="lazy"
+							alt=""
+							className="hidden h-7 w-auto dark:block"
+						/>
+					</>
+				)}
+				<span className="sr-only">{appName}</span>
 			</Link>
 			<nav
 				aria-label={t("ui.nav.label")}
