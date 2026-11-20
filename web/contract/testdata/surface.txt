@@ -50,6 +50,7 @@ command history
 command image:create
 command image:edit
 command image:export
+command image:generate
 command image:import
 command image:list
 command image:redo
