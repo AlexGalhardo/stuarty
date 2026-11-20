@@ -185,11 +185,12 @@ A project is one JSON document. Times are whole frames at the frame rate of the 
 | `style` | `CaptionStyle` | no |  |
 | `temperature` | `number` | no | min -1; max 1 |
 | `text` | `string` | no |  |
+| `timeline` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]\{10\}$` |
 | `tint` | `number` | no | min -1; max 1 |
 | `track` | `string` | yes | pattern `^trk_[0-9a-hjkmnp-tv-z]\{10\}$` |
 | `transition_in` | `Transition` | no |  |
 | `transition_out` | `Transition` | no |  |
-| `type` | `clip`, `audio`, `text`, `caption`, `shape` | yes |  |
+| `type` | `clip`, `audio`, `text`, `caption`, `shape`, `composition` | yes |  |
 | `voice` | `clear`, `warm`, `deep`, `bright`, `radio` | no |  |
 | `volume` | `number` | no | min 0; max 4; default `1` |
 | `wheels` | `Wheels` | no |  |

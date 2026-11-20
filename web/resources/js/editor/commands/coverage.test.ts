@@ -20,6 +20,7 @@ import {
 	chromaKeyOperations,
 	closeGapOperations,
 	colorOperations,
+	createCompositionOperations,
 	crossfadeOperations,
 	deleteOperations,
 	dropAssetOperations,
@@ -27,6 +28,7 @@ import {
 	duplicateOperations,
 	effectsOperations,
 	enabledOperations,
+	expandCompositionOperations,
 	extractAudioOperations,
 	filterOperations,
 	flipOperations,
@@ -146,7 +148,7 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 	test("every non-internal command has a key", () => {
 		const keys = commands.filter((c) => !c.internal).map((c) => c.name);
 		expect(Object.keys(COVERAGE).sort()).toEqual(keys.sort());
-		expect(keys).toHaveLength(82);
+		expect(keys).toHaveLength(85);
 	});
 
 	test("every command has a palette entry, and the commands with an inspector control keep it", () => {
@@ -277,6 +279,12 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 				(o) => o.op,
 			),
 			"timeline.duplicate": duplicateOperations(items).map((o) => o.op),
+			"timeline.create_composition": createCompositionOperations(["itm_a"]).map(
+				(o) => o.op,
+			),
+			"timeline.expand_composition": expandCompositionOperations("itm_a").map(
+				(o) => o.op,
+			),
 			"timeline.toggle_enabled": enabledOperations("itm_a", false).map(
 				(o) => o.op,
 			),

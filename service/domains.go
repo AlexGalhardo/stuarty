@@ -36,7 +36,8 @@ var OperationDomains = map[string]string{
 	"ImageCreate": command.DomainImage, "ImageList": command.DomainImage, "ImageDescribe": command.DomainImage,
 	"ImageEdit": command.DomainImage, "ImageUndo": command.DomainImage, "ImageRedo": command.DomainImage,
 	"ImageExport": command.DomainImage, "ImageFrame": command.DomainImage, "ImageHistory": command.DomainImage,
-	"ImageFile": command.DomainImage,
+	"ImageFile": command.DomainImage, "ImageImport": command.DomainImage,
+	"ImageImportFile": command.DomainImage,
 
 	// The hand-off from an external motion engine (epic 33) works on the clips of a timeline.
 	"MotionBrief": command.DomainVideo, "MotionCheck": command.DomainVideo, "MotionReplace": command.DomainVideo,
@@ -75,7 +76,9 @@ var OperationDomains = map[string]string{
 	"ProviderList": command.DomainProvider, "ProviderModels": command.DomainProvider,
 	"ProviderPriceSet": command.DomainProvider, "TextGenerate": command.DomainProvider,
 	"ImageGenerate": command.DomainProvider, "VoiceGenerate": command.DomainProvider,
-	"VoiceList": command.DomainProvider,
+	"VoiceList":           command.DomainProvider,
+	"ProviderSignInBegin": command.DomainProvider, "ProviderSignInComplete": command.DomainProvider,
+	"ProviderSignInList": command.DomainProvider,
 
 	"CommandHelp": command.DomainWorkspace, "ConnectionList": command.DomainWorkspace,
 	"ConnectionGet": command.DomainWorkspace, "ConnectionCreate": command.DomainWorkspace,

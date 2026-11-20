@@ -2887,6 +2887,68 @@
         },
         "type": "object"
       },
+      "ImageImportResult": {
+        "properties": {
+          "applied": {
+            "type": "boolean"
+          },
+          "created": {
+            "type": "boolean"
+          },
+          "dry_run": {
+            "type": "boolean"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "type": "array"
+          },
+          "hash": {
+            "type": "string"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "image_id": {
+            "type": "string"
+          },
+          "job_id": {
+            "type": "string"
+          },
+          "layer_id": {
+            "type": "string"
+          },
+          "lint": {
+            "$ref": "#/components/schemas/LintTotals"
+          },
+          "name": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "replayed": {
+            "type": "boolean"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "ImageListResult": {
         "properties": {
           "images": {
@@ -3431,6 +3493,9 @@
           "text": {
             "type": "string"
           },
+          "timeline": {
+            "type": "string"
+          },
           "tint": {
             "format": "double",
             "type": "number"
@@ -3464,7 +3529,8 @@
               "audio",
               "text",
               "caption",
-              "shape"
+              "shape",
+              "composition"
             ],
             "type": "string"
           },
@@ -5158,6 +5224,7 @@
               "caption.set_words",
               "caption.split",
               "clip.add",
+              "clip.add_composition",
               "clip.remove_silences",
               "clip.replace_media",
               "clip.set_blend",
@@ -5172,6 +5239,8 @@
               "clip.set_outline",
               "clip.set_shadow",
               "clip.set_speed",
+              "composition.create_from_selection",
+              "composition.expand",
               "font.add",
               "font.remove",
               "item.crossfade",
@@ -5294,6 +5363,9 @@
           "clip.add": {
             "$ref": "#/components/schemas/args.clip.add"
           },
+          "clip.add_composition": {
+            "$ref": "#/components/schemas/args.clip.add_composition"
+          },
           "clip.remove_silences": {
             "$ref": "#/components/schemas/args.clip.remove_silences"
           },
@@ -5335,6 +5407,12 @@
           },
           "clip.set_speed": {
             "$ref": "#/components/schemas/args.clip.set_speed"
+          },
+          "composition.create_from_selection": {
+            "$ref": "#/components/schemas/args.composition.create_from_selection"
+          },
+          "composition.expand": {
+            "$ref": "#/components/schemas/args.composition.expand"
           },
           "font.add": {
             "$ref": "#/components/schemas/args.font.add"
@@ -6444,6 +6522,50 @@
           "prices": {
             "items": {
               "$ref": "#/components/schemas/PriceEntry"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ProviderSignIn": {
+        "properties": {
+          "account": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "connection_id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "provider": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ProviderSignInBeginResult": {
+        "properties": {
+          "authorize_url": {
+            "type": "string"
+          },
+          "connection_id": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ProviderSignInListResult": {
+        "properties": {
+          "sign_ins": {
+            "items": {
+              "$ref": "#/components/schemas/ProviderSignIn"
             },
             "type": "array"
           }
@@ -8598,6 +8720,9 @@
               }
             ]
           },
+          "timeline": {
+            "type": "string"
+          },
           "voice": {
             "type": "string"
           }
@@ -8617,6 +8742,23 @@
               "type": "string"
             },
             "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "WindowGroup": {
+        "properties": {
+          "height": {
+            "type": "integer"
+          },
+          "layers": {
+            "items": {
+              "$ref": "#/components/schemas/WindowLayer"
+            },
+            "type": "array"
+          },
+          "width": {
+            "type": "integer"
           }
         },
         "type": "object"
@@ -8718,6 +8860,16 @@
               }
             ]
           },
+          "group": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WindowGroup"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "h": {},
           "item": {
             "type": "string"
@@ -8806,6 +8958,9 @@
               "type": "number"
             },
             "type": "array"
+          },
+          "timeline": {
+            "type": "string"
           },
           "transition": {
             "items": {
@@ -10577,6 +10732,53 @@
         ],
         "type": "object"
       },
+      "args.clip.add_composition": {
+        "additionalProperties": false,
+        "properties": {
+          "duration": {
+            "description": "A length; default the rest of the nested timeline from source_in.",
+            "type": "string",
+            "x-vv-kind": "time"
+          },
+          "fit": {
+            "enum": [
+              "cover",
+              "contain",
+              "none"
+            ],
+            "type": "string"
+          },
+          "id": {
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "source_in": {
+            "description": "Where in the nested timeline to start, as a length from its start; default 0s.",
+            "type": "string",
+            "x-vv-kind": "time"
+          },
+          "start": {
+            "description": "Absolute position; omitted, the end of the last item of the track (0s on an empty track).",
+            "type": "string",
+            "x-vv-kind": "time"
+          },
+          "timeline_id": {
+            "description": "Another timeline of the same project.",
+            "pattern": "^prj_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "track_id": {
+            "description": "A visual track.",
+            "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "track_id",
+          "timeline_id"
+        ],
+        "type": "object"
+      },
       "args.clip.remove_silences": {
         "additionalProperties": false,
         "properties": {
@@ -11519,6 +11721,55 @@
                 "type": "object"
               }
             ]
+          }
+        },
+        "required": [
+          "item_id"
+        ],
+        "type": "object"
+      },
+      "args.composition.create_from_selection": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "The id of the composition item.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "item_ids": {
+            "description": "The items to move, each once.",
+            "items": {
+              "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+              "type": "string"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "type": "array"
+          },
+          "name": {
+            "description": "The name of the new timeline; default Composition.",
+            "maxLength": 120,
+            "minLength": 1,
+            "type": "string"
+          },
+          "timeline_id": {
+            "description": "The id of the new timeline.",
+            "pattern": "^prj_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_ids"
+        ],
+        "type": "object"
+      },
+      "args.composition.expand": {
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "description": "A composition item.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
           }
         },
         "required": [
@@ -16580,6 +16831,141 @@
         "summary": "Create an image document, blank or from a template"
       }
     },
+    "/api/v1/images/import": {
+      "post": {
+        "operationId": "images.import",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "base_revision": {
+                    "description": "With image_id: the revision the layer was planned against.",
+                    "format": "int64",
+                    "type": "integer"
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "hash": {
+                    "description": "sha256: and 64 hex characters: an image already in the workspace, instead of path.",
+                    "type": "string"
+                  },
+                  "height": {
+                    "description": "The canvas of a new document, with width.",
+                    "type": "integer"
+                  },
+                  "idempotency_key": {
+                    "description": "With image_id: 8 to 64 characters; the Idempotency-Key header is the same.",
+                    "type": "string"
+                  },
+                  "image_id": {
+                    "description": "Put the file in this document as one more layer; without it a new document is made.",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "The name of the new document, or of the layer when image_id is given; default the name of the file.",
+                    "type": "string"
+                  },
+                  "path": {
+                    "description": "An absolute path to an image file on the machine of the server, read with the rules of media:import.",
+                    "type": "string"
+                  },
+                  "preset": {
+                    "description": "The canvas of a new document: video_thumbnail, square_post or vertical_cover.",
+                    "type": "string"
+                  },
+                  "wait_ms": {
+                    "description": "How long to wait for the ingest of the file, 0 to 25000; default 10000.",
+                    "type": "integer"
+                  },
+                  "width": {
+                    "description": "The canvas of a new document, with height; default the size of the file when it fits 4096.",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageImportResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Import an image file into a new image document, or as a layer of one"
+      }
+    },
+    "/api/v1/images/import/file": {
+      "post": {
+        "operationId": "images.import_file",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageImportResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Import an image file sent as the body of the request into a new image document, or as a layer of one"
+      }
+    },
     "/api/v1/images/{id}": {
       "get": {
         "operationId": "images.get",
@@ -16724,6 +17110,56 @@
           }
         ],
         "summary": "Apply a batch of image operations"
+      }
+    },
+    "/api/v1/images/{id}/events": {
+      "get": {
+        "operationId": "images.events",
+        "parameters": [
+          {
+            "description": "The revision the client holds; Last-Event-ID wins.",
+            "in": "query",
+            "name": "since",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Stream the events of an image document"
       }
     },
     "/api/v1/images/{id}/export": {
@@ -23955,6 +24391,195 @@
           }
         ],
         "summary": "Set or remove the price of a model (a person in the browser only; the local token and keys get 403)"
+      }
+    },
+    "/api/v1/providers/sign-ins": {
+      "get": {
+        "operationId": "providers.sign-ins",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderSignInListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the connections made by a sign-in and their state"
+      }
+    },
+    "/api/v1/providers/signin": {
+      "post": {
+        "operationId": "providers.signin.begin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "connection_id": {
+                    "description": "Sign in again an existing connection made by a sign-in, instead of making one.",
+                    "type": "string"
+                  },
+                  "label": {
+                    "description": "A name for a new connection, 1 to 60 characters; the default name of the provider when left out.",
+                    "type": "string"
+                  },
+                  "provider": {
+                    "description": "The provider to sign in to: openai (Sign in with ChatGPT) or openrouter.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "redirect_uri": {
+                    "description": "The address of this app followed by /auth/callback, at the address you opened the app with. OpenAI accepts only http://127.0.0.1:<port>/auth/callback.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "provider",
+                  "redirect_uri"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderSignInBeginResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start the sign-in to an AI provider; answers the address of the consent screen (a person in the browser only)"
+      }
+    },
+    "/api/v1/providers/signin/complete": {
+      "post": {
+        "operationId": "providers.signin.complete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "client_id": {
+                    "description": "The client id the provider issued at the first sign-in (OpenAI sends it in the redirect).",
+                    "type": "string"
+                  },
+                  "code": {
+                    "description": "The authorization code the provider sent back.",
+                    "type": "string"
+                  },
+                  "error": {
+                    "description": "The error the provider sent back instead of a code, for example access_denied.",
+                    "type": "string"
+                  },
+                  "state": {
+                    "description": "The state the provider sent back to the redirect address.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "state"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderSignIn"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Finish the sign-in with what the provider sent to the redirect address (a person in the browser only)"
       }
     },
     "/api/v1/publications": {

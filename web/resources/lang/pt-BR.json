@@ -333,6 +333,26 @@
         "image_hint": "Escolha uma imagem do seu espaço de trabalho.",
         "image_none": "Ainda não há imagens no espaço de trabalho. Importe uma em um projeto primeiro."
       },
+      "import": {
+        "open_new": "Importar imagem",
+        "open_layer": "Colocar um arquivo nesta imagem",
+        "title_new": "Importar uma imagem",
+        "title_layer": "Colocar um arquivo nesta imagem",
+        "description_new": "Crie uma imagem nova a partir de uma foto ou de uma figura que você tem.",
+        "description_layer": "Acrescente uma foto ou uma figura como mais uma camada desta imagem.",
+        "file": "Escolher um arquivo",
+        "file_help": "Uma figura de até 64 MB. Para uma maior, informe o caminho dela no servidor.",
+        "path": "Ou o caminho de um arquivo no servidor",
+        "path_placeholder": "/home/ana/imagens/foto.jpg",
+        "name": "Nome",
+        "name_placeholder": "O nome do arquivo",
+        "size": "Tamanho da imagem nova",
+        "size_file": "O tamanho do arquivo",
+        "submit": "Importar",
+        "working": "Importando…",
+        "cancel": "Cancelar",
+        "need_source": "Escolha um arquivo ou informe um caminho."
+      },
       "brand": {
         "place_logo": "Colocar logotipo",
         "logo_name": "Logotipo",
@@ -690,6 +710,10 @@
         "text": "Texto",
         "caption": "Legenda",
         "shape": "Forma",
+        "composition": "Composição",
+        "composition_open": "Abrir composição",
+        "composition_missing": "Timeline não encontrada",
+        "from_breadcrumb": "Voltar para {name}",
         "speed_badge": "Velocidade {speed}",
         "slot_badge": "Espaço do modelo: {name}",
         "asset_missing": "A mídia original deste item não está no projeto",
@@ -891,6 +915,8 @@
         "link": "Vincular itens",
         "unlink": "Desvincular itens",
         "extract_audio": "Extrair o áudio",
+        "create_composition": "Criar composição da seleção",
+        "expand_composition": "Expandir composição",
         "freeze_frame": "Congelar quadro",
         "copy_attributes": "Copiar atributos",
         "paste_attributes": "Colar atributos",
@@ -1103,6 +1129,9 @@
           "add": {
             "title": "Adicionar clipe"
           },
+          "add_composition": {
+            "title": "Adicionar uma linha do tempo como clipe"
+          },
           "set_blur": {
             "title": "Definir desfoque do clipe"
           },
@@ -1144,6 +1173,14 @@
           },
           "set_speed": {
             "title": "Definir velocidade do clipe"
+          }
+        },
+        "composition": {
+          "create_from_selection": {
+            "title": "Criar uma composição a partir da seleção"
+          },
+          "expand": {
+            "title": "Expandir a composição em seus itens"
           }
         },
         "font": {
@@ -2480,7 +2517,28 @@
       "price_output": "Saída, por milhão de tokens",
       "price_save": "Guardar o preço",
       "spend": "Gasto hoje: {amount}",
-      "spend_none": "Nada gasto hoje."
+      "spend_none": "Nada gasto hoje.",
+      "signin_title": "Ou entre com a sua conta, sem copiar chave",
+      "signin": {
+        "openai": "Entrar com o ChatGPT",
+        "openrouter": "Entrar com o OpenRouter",
+        "generic": "Entrar em {provider}"
+      },
+      "signin_hint": {
+        "openai": "Usa o seu plano do ChatGPT, dentro dos limites do plano. Para entrar, abra o Stuarty em http://127.0.0.1 no computador onde ele roda.",
+        "openrouter": "O OpenRouter entrega ao Stuarty uma chave da sua conta. Ela fica no cofre desta máquina e gasta os seus créditos do OpenRouter.",
+        "generic": "Você entra na página do provedor. O acesso fica no cofre desta máquina."
+      },
+      "signin_account": "Conectado como {account}",
+      "signin_ready": "Conectado",
+      "signin_needs": "Precisa entrar de novo",
+      "signin_needs_help": "O provedor não aceita mais esta conexão. Nada foi apagado: entre de novo para voltar a usá-la.",
+      "signin_again": "Entrar de novo",
+      "callback_title": "Entrada em um provedor de IA",
+      "callback_working": "Concluindo a entrada...",
+      "callback_done": "Conectado:",
+      "callback_failed": "A entrada não foi concluída.",
+      "back": "Voltar às conexões"
     },
     "publish": {
       "title": "Publicar",

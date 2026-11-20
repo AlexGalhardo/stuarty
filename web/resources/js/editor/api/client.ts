@@ -68,6 +68,7 @@ import type {
 	PlanWindow,
 	PlanWindowHead,
 	ProjectCreateResult,
+	ProjectDescribeResult,
 	ProjectGetResult,
 	ProjectItemAddRequest,
 	ProjectItemResult,
@@ -77,6 +78,11 @@ import type {
 	ProviderModelsResult,
 	ProviderPriceSetRequest,
 	ProviderPricesResult,
+	ProviderSignIn,
+	ProviderSignInCompleteRequest,
+	ProviderSignInListResult,
+	ProviderSignInRequest,
+	ProviderSignInResult,
 	PublishRequest,
 	PublishValidateResult,
 	RevertRequest,
@@ -123,6 +129,8 @@ export interface ApiClient {
 	listMedia(projectId: string): Promise<MediaListResult>;
 	importMedia(projectId: string, paths: string[]): Promise<MediaImportResult>;
 	getLint(projectId: string): Promise<LintResult>;
+	// The items of the production the project belongs to, for the names of its timelines.
+	describeProject(projectId: string): Promise<ProjectDescribeResult>;
 	// `options` are the export arguments the server schema exposes (format only: fps
 	// and size are project settings); `dryRun` runs the lint gate and the limits and queues nothing.
 	startExport(
@@ -265,6 +273,15 @@ export interface ApiClient {
 	generateImage(request: ImageGenerateRequest): Promise<Job>;
 	generateVoice(request: VoiceGenerateRequest): Promise<Job>;
 	listVoices(connectionId: string): Promise<VoiceListResult>;
+	// The sign-in to an AI provider (SDD-016 section 12): beginning and completing one are for a person in a
+	// browser session; the list is for anyone who may read connections.
+	beginProviderSignIn(
+		request: ProviderSignInRequest,
+	): Promise<ProviderSignInResult>;
+	completeProviderSignIn(
+		request: ProviderSignInCompleteRequest,
+	): Promise<ProviderSignIn>;
+	listProviderSignIns(): Promise<ProviderSignInListResult>;
 	// The approval queue (SDD-015). Deciding, the rules and the ceilings are for a person in a
 	// browser session; any other caller gets E_PRIVILEGED_SESSION.
 	listApprovals(state?: string): Promise<ApprovalListResult>;
@@ -420,6 +437,8 @@ export function createClient(
 				files: paths.map((path) => ({ path })),
 			}),
 		getLint: (id) => call("GET", `${project(id)}/lint`, READ_TIMEOUT_MS),
+		describeProject: (id) =>
+			call("GET", `${project(id)}/describe`, READ_TIMEOUT_MS),
 		startExport: (id, options = {}, dryRun = false) => {
 			const args = Object.fromEntries(
 				Object.entries(options).filter(([, value]) => value !== undefined),
@@ -719,6 +738,12 @@ export function createClient(
 				`/connections/${encodeURIComponent(connectionId)}/voices`,
 				READ_TIMEOUT_MS,
 			),
+		beginProviderSignIn: (request) =>
+			call("POST", "/providers/signin", EDIT_TIMEOUT_MS, request),
+		completeProviderSignIn: (request) =>
+			call("POST", "/providers/signin/complete", EDIT_TIMEOUT_MS, request),
+		listProviderSignIns: () =>
+			call("GET", "/providers/sign-ins", READ_TIMEOUT_MS),
 		listApprovals: (state) =>
 			call(
 				"GET",

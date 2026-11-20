@@ -1,0 +1,12 @@
+event: response.created
+data: {"type":"response.created","response":{"id":"resp_01","status":"in_progress"}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","item_id":"msg_01","output_index":0,"content_index":0,"delta":"Sourdough, "}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","item_id":"msg_01","output_index":0,"content_index":0,"delta":"from starter to slice."}
+
+event: response.completed
+data: {"type":"response.completed","response":{"id":"resp_01","status":"completed","usage":{"input_tokens":24,"output_tokens":9,"total_tokens":33}}}
+

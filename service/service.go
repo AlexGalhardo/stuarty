@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"io/fs"
 	"log/slog"
@@ -110,6 +111,10 @@ type Service interface {
 	ImageGenerate(ctx context.Context, req ImageGenerateRequest) (*Job, error)
 	VoiceGenerate(ctx context.Context, req VoiceGenerateRequest) (*Job, error)
 	VoiceList(ctx context.Context, req VoiceListRequest) (*VoiceListResult, error)
+	// The sign-in to an AI provider in the browser (SDD-016 section 12): only a person begins and completes one.
+	ProviderSignInBegin(ctx context.Context, req ProviderSignInBeginRequest) (*ProviderSignInBeginResult, error)
+	ProviderSignInComplete(ctx context.Context, req ProviderSignInCompleteRequest) (*ProviderSignIn, error)
+	ProviderSignInList(ctx context.Context, req ProviderSignInListRequest) (*ProviderSignInListResult, error)
 
 	JobGet(ctx context.Context, req JobGetRequest) (*Job, error)
 	JobList(ctx context.Context, req JobListRequest) (*JobListResult, error)
@@ -177,6 +182,10 @@ type Service interface {
 	ImageUndo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
 	ImageRedo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
 	ImageExport(ctx context.Context, req ImageExportRequest) (*ImageExportResult, error)
+	// ImageImport brings an image file into an image document: a new one, or a layer of ImageID (SDD-021 section 10.1).
+	ImageImport(ctx context.Context, req ImageImportRequest) (*ImageImportResult, error)
+	// ImageImportFile is ImageImport for a file that arrives as the bytes of a request (SDD-021 section 10.2); HTTP only.
+	ImageImportFile(ctx context.Context, req ImageImportFileRequest) (*ImageImportResult, error)
 	// ImageFrame, ImageHistory and ImageFile are the reads of the image editor screen (SDD-012 section 24.3); HTTP only.
 	ImageFrame(ctx context.Context, req ImageFrameRequest) (*ImageFrameResult, error)
 	ImageHistory(ctx context.Context, req ImageHistoryRequest) (*ImageHistoryResult, error)
@@ -230,7 +239,7 @@ type Service interface {
 // section 3). The hub that carries it is the business of the events task; the
 // service only calls Options.Publish.
 type Event struct {
-	// Type is "batch.committed", "project.updated", "job.updated" or
+	// Type is "batch.committed", "project.updated", "nested.updated", "job.updated" or
 	// "asset.updated".
 	Type        string
 	ProjectID   string
@@ -242,20 +251,31 @@ type Event struct {
 
 	// The members below are set by job.updated and asset.updated, which are
 	// not replayable and carry no revision.
-	JobID    string
-	AssetID  string // the asset id of this project, for asset.updated
-	State    string
-	Progress float64
-	Message  string
-	Error    *Error
-	Result   *JobResult
+	JobID   string
+	AssetID string // the asset id of this project, for asset.updated
+	// TimelineID is the timeline that changed, for nested.updated: ProjectID is then a timeline that holds it.
+	TimelineID string
+	State      string
+	Progress   float64
+	Message    string
+	Error      *Error
+	Result     *JobResult
 	// Approval is the request of approval.requested and approval.decided (SDD-015 section 7), and
 	// Owner the user it belongs to in network mode, so that a member's stream carries their own only.
 	Approval *approval.Request
 	Owner    string
 	// Publication is the publication of publication.updated (SDD-020 section 29).
 	Publication *pub.Publication
+
+	// The members below are set by image.updated (SDD-006 section 12): ImageID names the document, and
+	// Revision, Kind, Actor and At are those of the committed batch.
+	ImageID      string
+	BaseRevision int64
+	Diff         json.RawMessage
 }
+
+// EventImageUpdated is the type of the event a committed batch of an image document publishes.
+const EventImageUpdated = "image.updated"
 
 // Options configure New. Store is required.
 type Options struct {
@@ -311,6 +331,9 @@ type Options struct {
 	// Providers is the registry of the AI providers, with their adapters registered (SDD-016); without one
 	// the service has a registry with no provider, so no generation can start.
 	Providers *providers.Registry
+	// SignIns are the sign-ins to an AI provider of this build (SDD-016 section 12); without any the
+	// sign-in operations answer that none is built in, and no credential is ever renewed.
+	SignIns *oauth.SignIns
 	// JobKinds are the job kinds that need approval, registered by the epics of publishing and
 	// generation (SDD-015 section 5). The product registers none of its own; tests register one.
 	JobKinds []ApprovableKind
@@ -354,6 +377,8 @@ type svc struct {
 	kinds       map[string]*ApprovableKind
 	social      *social.Registry
 	flows       *oauth.Flows
+	signInSet   *oauth.SignIns
+	signFlows   *oauth.Flows
 	providers   *providers.Registry
 	lib         *library.Manager // the files of memory, skills and prompts; nil without a workspace
 	heavy       RateLimiter
@@ -416,6 +441,7 @@ func New(o Options) (Service, error) {
 		keys:        o.Keys,
 		conns:       o.Connections,
 		social:      o.Social,
+		signInSet:   o.SignIns,
 		heavy:       o.Heavy,
 		heavyLimitN: o.HeavyPerMinute,
 		log:         o.Log,
@@ -482,6 +508,12 @@ func New(o Options) (Service, error) {
 	}
 
 	s.flows = oauth.NewFlows(s.now)
+	s.signFlows = oauth.NewFlows(s.now)
+
+	// A sign-in credential is renewed by the manager before a closure gets it (SDD-014 section 13).
+	if s.signInSet != nil {
+		s.conns.SetRefresher(oauth.NewRefresher(s.signInSet, s.now))
+	}
 
 	if s.jobWait <= 0 {
 		s.jobWait = jobWait

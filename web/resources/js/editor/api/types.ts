@@ -168,6 +168,15 @@ export type ProjectEvent =
 			project_id: string;
 			revision: number;
 			reason: string;
+	  }
+	| {
+			// A timeline this one uses as a composition changed (SDD-006 section
+			// 3.3.1): `timeline_id` and `revision` are those of that timeline.
+			name: "nested.updated";
+			project_id: string;
+			timeline_id: string;
+			revision: number;
+			at: string;
 	  };
 
 export const EVENT_NAMES = [
@@ -176,7 +185,11 @@ export const EVENT_NAMES = [
 	"asset.updated",
 	"job.updated",
 	"resync.required",
+	"nested.updated",
 ] as const;
+
+// The event of GET /images/{id}/events (SDD-006 section 12); `resync.required` is the one above.
+export const IMAGE_EVENT_NAMES = ["image.updated"] as const;
 
 // The part of PlanWindow (SDD-004 section 10) the timeline needs: the end of
 // the project as the core computed it.
@@ -192,6 +205,9 @@ export interface PlanWindowHead {
 export type PerFrame = number | number[];
 
 interface PlanLayerBase {
+	// The timeline whose assets table names this layer's asset, for a layer that comes from a composition
+	// (SDD-004 section 3.16); absent for a layer of the timeline being edited.
+	timeline?: string;
 	item: string;
 	first: number;
 	last: number;
@@ -367,6 +383,8 @@ export interface PlanBitmapLayer extends PlanLayerBase {
 export type PlanLayer = PlanMediaLayer | PlanBitmapLayer;
 
 export interface PlanAudio {
+	// As on a layer: the timeline that holds `asset` when the sound comes from a composition.
+	timeline?: string;
 	item: string;
 	asset: string;
 	first: number;
@@ -602,6 +620,19 @@ export interface JobListResult {
 	jobs: Job[];
 	next_cursor: string | null;
 	text: string;
+}
+
+// GET /projects/{id}/describe (SDD-003): the items of a production; the editor reads the timelines of it, to name
+// the timeline a composition uses (SDD-001 section 3.5.1).
+export interface ProjectDescribeResult {
+	project_id: string;
+	items: {
+		id: string;
+		kind: string;
+		title: string;
+		timeline_id?: string;
+		state: string;
+	}[];
 }
 
 export interface LintResult {
@@ -1071,6 +1102,38 @@ export interface ProviderPriceSetRequest {
 
 export interface ProviderPricesResult {
 	prices: PriceEntry[];
+}
+
+// The sign-in to an AI provider in the browser (SDD-016 section 12). A result never carries a token.
+export interface ProviderSignInRequest {
+	provider: string;
+	label?: string;
+	connection_id?: string;
+	redirect_uri: string;
+}
+
+export interface ProviderSignInResult {
+	connection_id: string;
+	authorize_url: string;
+}
+
+export interface ProviderSignInCompleteRequest {
+	state: string;
+	code?: string;
+	error?: string;
+	client_id?: string;
+}
+
+export interface ProviderSignIn {
+	connection_id: string;
+	provider: string;
+	label: string;
+	account?: string;
+	state: "ready" | "needs_sign_in";
+}
+
+export interface ProviderSignInListResult {
+	sign_ins: ProviderSignIn[];
 }
 
 // The approval queue, its rules and the cost ceilings (SDD-015). An amount is an integer in

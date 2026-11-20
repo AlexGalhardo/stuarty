@@ -49,7 +49,7 @@ func init() {
 // propApplies is precondition 3: volume belongs to clips and audio items, the other
 // properties to visual items.
 func propApplies(it *timeline.Item, prop string) *Error {
-	hasVolume := it.Type == timeline.ItemClip || it.Type == timeline.ItemAudio
+	hasVolume := it.Type == timeline.ItemClip || it.Type == timeline.ItemAudio || it.Type == timeline.ItemComposition
 	switch {
 	case prop == "volume" && !hasVolume:
 		return Errorf(CodeTypeMismatch, "Property volume does not apply to %s item %s.", it.Type, it.ID).

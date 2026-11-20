@@ -114,7 +114,7 @@ func (c *check) covers(it *timeline.Item) bool {
 
 		return it.Shape == "rect" && opaque && it.Width*it.Scale >= float64(st.Width) &&
 			it.Height*it.Scale >= float64(st.Height)
-	case timeline.ItemAudio, timeline.ItemText, timeline.ItemCaption:
+	case timeline.ItemAudio, timeline.ItemText, timeline.ItemCaption, timeline.ItemComposition:
 	}
 
 	return false
