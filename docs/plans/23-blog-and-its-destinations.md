@@ -38,7 +38,7 @@ A creator writes a blog post in Stuarty, with its images, and sends it where the
 
 - [x] 1. Amend SDD-019 (the post) and SDD-020 (the four destinations, the payload, the signature, the API); add SDD-007 rows (webhook to an internal address, signature replay, HTML injection in a post, the read token reaching other routes). Verify: `task lint:md` exits 0.
 - [x] 2. Implement the post kind, validation and sanitised rendering with table tests. Verify: `go test ./core/writing/... -run TestPost` passes.
-- [ ] 3. Implement the files destination with templates. Verify: `go test ./service/publish/destinations/... -run TestFiles` passes (round trip of a post with two images).
+- [x] 3. Implement the files destination with templates. Verify: `go test ./service/publish/destinations/... -run TestFiles` passes (round trip of a post with two images).
 - [ ] 4. Implement the WordPress destination with contract fixtures. Verify: `go test ./service/publish/destinations/... -run TestWordPress` passes with no network (create, update, media, auth failure).
 - [ ] 5. Implement the webhook destination with signing, retries and the address rules. Verify: `go test ./service/publish/destinations/... -run TestWebhook` passes.
 - [ ] 6. Implement the read API and its token scope. Verify: `go test ./web/app/... -run TestPostsAPI` passes (only published posts; the token is refused elsewhere).
