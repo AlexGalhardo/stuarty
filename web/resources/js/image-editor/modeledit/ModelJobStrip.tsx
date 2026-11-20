@@ -9,7 +9,7 @@ import { useLocale, useT } from "@/lib/i18n";
 import { formatMoney } from "../../dashboard/approval/money";
 import { getModelJob } from "../api/modelEdit";
 import { useImageStore } from "../state/context";
-import { isFinal, modelJobStore, useModelJob } from "./state";
+import { isFinal, modelJobStore, settledFor, useModelJob } from "./state";
 
 const POLL_MS = 1500;
 
@@ -37,19 +37,18 @@ export function ModelJobStrip(): ReactNode {
 		return () => clearInterval(timer);
 	}, [jobId, final]);
 
-	// A job that ended and changed the document: the screen reads the document again and selects the layer.
+	// A job that ended and changed this image: the screen reads the document again and selects the layer. The
+	// screen of another image opened meanwhile leaves its own document alone.
 	useEffect(() => {
-		if (tracked === null || tracked.job.state !== "succeeded") return;
+		const settled = settledFor(tracked, store.getState().imageId);
+		if (tracked === null || settled === null) return;
 		if (reloaded.current === tracked.job.job_id) return;
 		reloaded.current = tracked.job.job_id;
-		const image = tracked.job.result?.generated?.image;
 		void store
 			.getState()
 			.open()
 			.then(() => {
-				if (image?.applied === true && image.layer_id !== undefined) {
-					store.getState().select([image.layer_id]);
-				}
+				if (settled.select !== null) store.getState().select([settled.select]);
 			});
 	}, [tracked, store]);
 
