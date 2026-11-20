@@ -169,3 +169,79 @@ func TestTheRepositoryHasNoUnmarkedSecuritySkip(t *testing.T) {
 		t.Errorf("%s", strings.Join(problems, "\n"))
 	}
 }
+
+func TestThreatIDsHaveTwoOrThreeDigits(t *testing.T) {
+	t.Parallel()
+
+	row := func(id string) string {
+		return "## 1. Intro\n\n## 2. Threat model\n\n| " + id + " | a | b | c | m | `TestSecurity_T100_X` |\n\n## 3. x\n"
+	}
+
+	for _, id := range []string{"T-01", "T-99", "T-100", "T-999"} {
+		if _, err := parseThreats(row(id)); err != nil {
+			t.Errorf("%s was refused: %v", id, err)
+		}
+	}
+
+	for _, id := range []string{"T-1", "T-1000", "T-050", "T-099"} {
+		if _, err := parseThreats(row(id)); err == nil {
+			t.Errorf("%s was accepted", id)
+		}
+	}
+}
+
+func TestThreeDigitSecurityTestNames(t *testing.T) {
+	t.Parallel()
+
+	sdd := "## 1. Intro\n\n## 2. Threat model\n\n" +
+		"| T-100 | a | b | c | m | `TestSecurity_T100_One` |\n" +
+		"| T-101 | a | b | c | m | `TestSecurity_T100_Wrong` |\n" +
+		"\n## 3. Local mode\n\n## 5. Scope matrix\n\n## 6. Next\n"
+
+	root := t.TempDir()
+	put := func(rel, body string) {
+		full := filepath.Join(root, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(full), 0o750); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := os.WriteFile(full, []byte(body), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	put("docs/sdds/007-security-model.md", sdd)
+	put("service/service.go", "package service\n\ntype Service interface {\n}\n")
+	put(
+		"x/x_test.go",
+		"package x\n\nfunc TestSecurity_T100_One(t *testing.T) {}\nfunc TestSecurity_T100_Wrong(t *testing.T) {}\n"+
+			"func TestSecurity_T1000_Four(t *testing.T) {}\nfunc TestSecurity_T050_Padded(t *testing.T) {}\n"+
+			"func TestSecurity_T7_One(t *testing.T) {}\nfunc TestSecurity_ActorCannotImpersonate(t *testing.T) {}\n",
+	)
+
+	problems, err := check(root, "docs/sdds/007-security-model.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := strings.Join(problems, "\n")
+	if !strings.Contains(got, "TestSecurity_T100_Wrong is named by the row T-101") {
+		t.Errorf("a three-digit test under the wrong row is not reported:\n%s", got)
+	}
+
+	// A security test whose id is not a threat id would escape the check altogether (D-102).
+	for _, name := range []string{"TestSecurity_T1000_Four", "TestSecurity_T050_Padded", "TestSecurity_T7_One"} {
+		if !strings.Contains(got, name+" has no valid threat id") {
+			t.Errorf("the misnamed %s is not reported:\n%s", name, got)
+		}
+	}
+
+	// A security test with no threat id at all is a test of a rule, not of a threat row, and stays allowed.
+	if strings.Contains(got, "TestSecurity_ActorCannotImpersonate") {
+		t.Errorf("a security test with no threat id is reported:\n%s", got)
+	}
+
+	if strings.Contains(got, "TestSecurity_T100_One") {
+		t.Errorf("a correct three-digit test is reported:\n%s", got)
+	}
+}
