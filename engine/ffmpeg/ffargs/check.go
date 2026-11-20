@@ -327,7 +327,7 @@ func checkOutput(argv []string, i int, opts []option, path string, pol Policy, p
 	// -map_metadata -1 also drops: then the global and the stream metadata are dropped one by one.
 	plain := meta == 1 && metaG == 0 && metaS == 0 && !chapterInput
 	chapters := meta == 0 && metaG == 1 && metaS == 1 && chapterInput
-	if chap != 1 || !(plain || chapters) {
+	if chap != 1 || (!plain && !chapters) {
 		return violate(
 			"FF-08",
 			argv,
