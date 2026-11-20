@@ -64,6 +64,8 @@ function ExportDialog({ onClose }: { onClose(): void }): ReactNode {
 	const [format, setFormat] = useState<Format>("png");
 	const [size, setSize] = useState("original");
 	const [quality, setQuality] = useState("90");
+	// WebP is lossless unless a quality is sent (SDD-021 section 6).
+	const [lossless, setLossless] = useState(true);
 	const [busy, setBusy] = useState(false);
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [result, setResult] = useState<ImageExportResult | null>(null);
@@ -71,6 +73,7 @@ function ExportDialog({ onClose }: { onClose(): void }): ReactNode {
 	if (doc === null) return null;
 	const findings = doc.findings;
 	const blocked = findings.filter(blocks);
+	const takesQuality = format === "jpeg" || (format === "webp" && !lossless);
 
 	const run = async (): Promise<void> => {
 		setBusy(true);
@@ -82,7 +85,7 @@ function ExportDialog({ onClose }: { onClose(): void }): ReactNode {
 				await api.exportImage(doc.image_id, {
 					format,
 					...(size === "original" ? {} : { preset: size }),
-					...(format === "jpeg" && Number.isFinite(q) ? { quality: q } : {}),
+					...(takesQuality && Number.isFinite(q) ? { quality: q } : {}),
 				}),
 			);
 		} catch (error) {
@@ -148,7 +151,18 @@ function ExportDialog({ onClose }: { onClose(): void }): ReactNode {
 							))}
 						</select>
 					</div>
-					{format === "jpeg" && (
+					{format === "webp" && (
+						<label className="flex items-center gap-1 text-sm">
+							<input
+								type="checkbox"
+								checked={lossless}
+								data-testid="image-export-lossless"
+								onChange={(event) => setLossless(event.target.checked)}
+							/>
+							{t("ui.image.export.lossless")}
+						</label>
+					)}
+					{takesQuality && (
 						<div className="flex w-24 flex-col gap-1">
 							<Label htmlFor="image-export-quality">
 								{t("ui.image.export.quality")}

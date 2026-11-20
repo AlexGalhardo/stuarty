@@ -516,6 +516,9 @@ func TestSecurity_T15_ArgvPolicy(t *testing.T) {
 			"anim":      func() ([]string, error) { return ProbeAnimPackets(pol, storeFile(), 0) },
 			"timing":    func() ([]string, error) { return ProbeStreamTiming(pol, run("normalized.mov")) },
 			"encoded":   func() ([]string, error) { return ProbeEncodedPackets(pol, run("probe-x.mp4")) },
+			// the WebP still of an image export (SDD-021 section 6), lossless and lossy
+			"webp lossless": func() ([]string, error) { return WebPStill(pol, run("in.png"), run("out.webp"), 0) },
+			"webp lossy":    func() ([]string, error) { return WebPStill(pol, run("in.png"), run("out.webp"), 100) },
 		}
 		for name, f := range probes {
 			if _, err := f(); err != nil {

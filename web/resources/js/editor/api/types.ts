@@ -1278,6 +1278,8 @@ export interface ProjectItem {
 	job_id?: string;
 	format?: string;
 	text?: string;
+	// A text item: script, copy or caption (SDD-019).
+	text_kind?: "script" | "copy" | "caption";
 	updated_at: string;
 }
 

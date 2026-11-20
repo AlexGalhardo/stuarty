@@ -186,7 +186,7 @@ func TestWorkspaceAssetsMigrationDown(t *testing.T) {
 	}
 
 	// The migrations that came after this one (the render origin of epic 33, the chat tables of epic 14, the
-	// checkpoints of epic 36) are rolled back first, newest first.
+	// checkpoints of epic 36, the texts of epic 17) are rolled back first, newest first.
 	want := downTo(assetLibraryID)
 
 	rolled, err := m.Rollback(ctx, len(want))

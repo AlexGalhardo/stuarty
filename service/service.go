@@ -37,6 +37,7 @@ import (
 // failure and never a partial result with a non-nil error.
 type Service interface {
 	ProductionService
+	WritingService
 	BriefingService
 	AssetLibraryService
 	ChatService
@@ -404,7 +405,7 @@ func New(o Options) (Service, error) {
 	s.providers = o.Providers
 
 	kinds, err := registerKinds(append(slices.Clone(o.JobKinds),
-		s.textGenerateKind(), s.imageGenerateKind(), s.voiceGenerateKind()))
+		s.textGenerateKind(), s.imageGenerateKind(), s.voiceGenerateKind(), s.textDraftKind()))
 	if err != nil {
 		return nil, err
 	}
