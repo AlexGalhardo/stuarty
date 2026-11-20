@@ -3,12 +3,16 @@ package export
 import (
 	"bytes"
 	"context"
+	"encoding/binary"
+	"math"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/AlexGalhardo/stuarty/core/plan"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/audio"
 )
 
 const chainItem = "itm_chain00001"
@@ -143,4 +147,93 @@ func TestAudioChainPreviewRender(t *testing.T) {
 	if len(window) >= len(whole) {
 		t.Errorf("the window (%d bytes) is not shorter than the item (%d)", len(window), len(whole))
 	}
+}
+
+// The time to render the window of two seconds at the playhead, with the "voice" chain, on the noisy tone of the
+// fixture (SDD-004 section 7.1; acceptance criterion 1 of epic 51 is three seconds). On a loaded machine the number is
+// only logged against the budget, never judged by a tighter one.
+func TestAudioPreviewWindowRenderLatency(t *testing.T) {
+	doc := chainDoc(t, withItemChain(timeline.PresetChain("voice")...))
+	job := newJob(t, doc, "preview-latency", "unused.wav")
+	fps := doc.Settings.FPS
+	window := (2*fps.Num + fps.Den - 1) / fps.Den
+	src := previewSourceOf(t, doc, 0, window)
+	out := filepath.Join(shared.dir, "preview-latency.wav")
+
+	_ = os.Remove(out)
+
+	start := time.Now()
+
+	if err := RenderAudioPreview(context.Background(), job, src, out); err != nil {
+		t.Fatal(err)
+	}
+
+	took := time.Since(start)
+	t.Logf("window of %d frames (2 s): %v", window, took)
+
+	if took > 3*time.Second {
+		t.Errorf("the window took %v, the budget is 3s", took)
+	}
+}
+
+// What the timeline plays for a whole item is what the export mixes: the processed file times the gain of the plan
+// (volume and track volume) equals the export's float mix before the loudness gain, within 2 steps of the 16-bit
+// scale (SDD-004 section 7.1; the fades are per frame in the plan and per sample in the mix, so they are left out).
+func TestAudioChainExportEqualsPreviewWithTheEnvelope(t *testing.T) {
+	doc := chainDoc(t, func(d *timeline.Document) {
+		withItemChain(timeline.PresetChain("voice")...)(d)
+
+		it := d.Items[chainItem]
+		it.Volume = 0.6
+		d.Items[it.ID] = it
+
+		tr := d.Tracks[chainTrack]
+		v := 0.5
+		tr.Volume = &v
+		d.Tracks[chainTrack] = tr
+	})
+
+	end := doc.Items[chainItem].Duration
+	job := newJob(t, doc, "env-export", "unused.wav")
+	s := testState(t, job, "env-export")
+
+	var mixed []float32
+
+	srcs := plan.Audio(doc, 0, end)
+	total := samplesAt(doc.Settings.FPS, end)
+
+	err := audio.Mix(context.Background(), srcs, total, &audioOpener{s: s}, func(block []float32) error {
+		mixed = append(mixed, block...)
+
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	file := renderPreview(t, doc, 0, end, "envelope")
+	gains := plan.Window(doc, 0, end).Audio[0].Gain
+
+	if int64(len(mixed)/2) != total || len(file) != 44+int(total)*4 {
+		t.Fatalf("lengths: mix %d, file %d, total %d", len(mixed)/2, len(file), total)
+	}
+
+	fps := doc.Settings.FPS
+	worst := 0.0
+
+	for i := range int(total) {
+		g := gains[i*fps.Num/(fps.Den*audio.SampleRate)]
+
+		for ch := range 2 {
+			pcm := int16(binary.LittleEndian.Uint16(file[44+i*4+ch*2:]))
+			got := float64(pcm) / 32768 * g
+			worst = max(worst, math.Abs(got-float64(mixed[i*2+ch]))*32768)
+		}
+	}
+
+	if worst > 2 {
+		t.Errorf("the preview differs from the export mix by %.2f steps of the 16-bit scale, want at most 2", worst)
+	}
+
+	t.Logf("largest difference between the preview and the export mix: %.3f steps of the 16-bit scale", worst)
 }
