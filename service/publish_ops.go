@@ -31,7 +31,8 @@ type PublishArgs struct {
 	ConnectionID string `json:"connection_id"`
 	// Export is the id of a succeeded export job of the project: the video.
 	Export string `json:"export"`
-	// Thumbnail is the id of a succeeded export job of a still of the project; optional.
+	// Thumbnail is the id of a succeeded export job of a still of the project, or of an image.export job the
+	// caller made (SDD-020 section 10); optional.
 	Thumbnail   string   `json:"thumbnail,omitempty"`
 	Title       string   `json:"title"`
 	Description string   `json:"description,omitempty"`

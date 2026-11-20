@@ -135,7 +135,7 @@ func publishFlags() []flagDef {
 			Kind:  kindString,
 			Usage: "the id of a succeeded export job of the project: the video (required)",
 		},
-		{Name: "thumbnail", Kind: kindString, Usage: "the id of a succeeded export job of a still: the cover"},
+		{Name: "thumbnail", Kind: kindString, Usage: "the cover: the export job of a still, or the job_id of image:export"},
 		{Name: "title", Kind: kindString, Usage: "the title (required)"},
 		{Name: "description", Kind: kindString, Usage: "the description"},
 		{Name: "tags", Kind: kindString, Usage: "the tags, a comma list"},

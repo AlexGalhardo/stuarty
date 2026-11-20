@@ -3988,7 +3988,7 @@
         {
           "name": "thumbnail",
           "type": "string",
-          "usage": "the id of a succeeded export job of a still: the cover"
+          "usage": "the cover: the export job of a still, or the job_id of image:export"
         },
         {
           "name": "title",
@@ -4052,7 +4052,7 @@
         {
           "name": "thumbnail",
           "type": "string",
-          "usage": "the id of a succeeded export job of a still: the cover"
+          "usage": "the cover: the export job of a still, or the job_id of image:export"
         },
         {
           "name": "title",
@@ -4138,7 +4138,7 @@
         {
           "name": "thumbnail",
           "type": "string",
-          "usage": "the id of a succeeded export job of a still: the cover"
+          "usage": "the cover: the export job of a still, or the job_id of image:export"
         },
         {
           "name": "post",
