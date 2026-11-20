@@ -607,6 +607,9 @@ export class PixiExecutor implements PreviewExecutor {
 		const usedVideos = new Set<string>();
 		const used = new Set<string>();
 		this.complete = true;
+		// Before drawLevel, which draws the groups on their textures: a blend filter inside a group needs
+		// the back buffer turned on as well.
+		this.setBackdrop(app, nodesReadBackdrop(nodes, this.clearsToAlpha));
 
 		this.drawLevel(
 			this.stage,
@@ -811,12 +814,6 @@ export class PixiExecutor implements PreviewExecutor {
 		console.info(
 			"preview: a composition drawn as one unit is drawn approximately by the PixiJS executor; the renderer executor draws it as the export does",
 		);
-		app.render();
-		// A frame evicted from the decode cache is closed only after the render
-		// that may have read it.
-		this.decoder.sweep();
-		this.publishDecode();
-		this.markDrawn(frame);
 	}
 
 	// A frame with a layer whose blend reads the pixels drawn so far needs the back buffer on WebGL (VV-268);
