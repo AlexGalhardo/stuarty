@@ -28,6 +28,10 @@ func googleEndpoints(getenv func(string) string) (auth.Endpoints, error) {
 		return auth.GoogleEndpoints(), nil
 	}
 
+	if err := requireTestEnv(getenv, EnvTestGoogleURL, ErrTestGoogle); err != nil {
+		return auth.Endpoints{}, err
+	}
+
 	u, err := url.Parse(raw)
 	if err != nil || u.Scheme != "http" || u.Path != "" && u.Path != "/" || u.User != nil || u.RawQuery != "" ||
 		!loopbackHost(u.Hostname()) {
