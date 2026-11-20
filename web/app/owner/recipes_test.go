@@ -77,7 +77,9 @@ func TestEveryModeInstallsTheRecipeImageTemplates(t *testing.T) {
 // SDD-018 section 17: a fresh workspace lists the templates of the recipes, the timeline ones in the library of
 // templates and the covers in the library of images, and starting it again adds nothing and changes nothing.
 func TestANewWorkspaceHoldsTheRecipeTemplates(t *testing.T) {
-	getenv := envOf(map[string]string{workspace.EnvHome: filepath.Join(t.TempDir(), "ws")})
+	getenv := envOf(
+		map[string]string{workspace.EnvHome: filepath.Join(t.TempDir(), "ws"), "STUARTY_MIN_FREE_BYTES": "1"},
+	)
 	ctx := service.WithCaller(context.Background(), service.Caller{Actor: "local:cli", Scopes: service.AllScopes})
 
 	timelines, err := templates.Timelines()

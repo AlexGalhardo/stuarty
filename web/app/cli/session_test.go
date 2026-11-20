@@ -33,9 +33,16 @@ func newRealRuntime(t *testing.T) *realRuntime {
 	r := &realRuntime{t: t, ws: filepath.Join(t.TempDir(), "ws")}
 	r.rt = &Runtime{
 		Stdout: &r.stdout, Stderr: &r.stderr,
-		Getenv:   func(string) string { return "" },
-		Getwd:    os.Getwd,
-		Resolver: LocalResolver{Getenv: func(string) string { return "" }},
+		Getenv: func(string) string { return "" },
+		Getwd:  os.Getwd,
+		Resolver: LocalResolver{Getenv: func(k string) string {
+			// The tests are not about the disk guard, so they must not depend on the free space of the machine.
+			if k == "STUARTY_MIN_FREE_BYTES" {
+				return "1"
+			}
+
+			return ""
+		}},
 	}
 
 	return r

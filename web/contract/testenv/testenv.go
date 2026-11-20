@@ -63,7 +63,8 @@ type Options struct {
 	// Frames wires the real frame renderer of view over the pinned FFmpeg; the
 	// test is skipped when that build is not installed.
 	Frames bool
-	// Limits are the ceilings of the service; zero fields keep the defaults.
+	// Limits are the ceilings of the service; zero fields keep the defaults, except the
+	// free-space floor, which is off (MinFreeBytes -1) unless set.
 	Limits service.Limits
 	// Transcriber is the transcription provider of the transcribe job; nil
 	// leaves transcription unavailable. StubTranscriber needs no helper.
@@ -189,11 +190,18 @@ func New(tb testing.TB, o Options) *Env {
 		}
 	}
 
+	// The disk guard is off unless a test sets a floor: a contract test must not depend on the
+	// free space of the machine (the guard has its own tests).
+	limits := o.Limits
+	if limits.MinFreeBytes == 0 {
+		limits.MinFreeBytes = -1
+	}
+
 	svc, err := service.New(service.Options{
 		Connections: conns, Providers: reg, Social: o.Social,
 		Store: st, Registry: command.Default(), Now: o.Clock, NewIDs: e.newID,
 		Workspace:   string(dir),
-		Limits:      o.Limits,
+		Limits:      limits,
 		Transcriber: o.Transcriber,
 		Media:       media,
 		Exporter:    exporter,

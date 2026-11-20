@@ -67,6 +67,8 @@ func TestInProcessConnectionCanExport(t *testing.T) {
 			return home
 		case "STUARTY_FFMPEG":
 			return ff
+		case "STUARTY_MIN_FREE_BYTES":
+			return "1" // not a test of the disk guard: it must not depend on the free space of the machine
 		}
 
 		return ""

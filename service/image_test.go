@@ -330,11 +330,15 @@ func newImageService(t *testing.T) (*svc, string) {
 
 	n := 0
 
-	s, err := New(Options{Store: st, Workspace: ws, NewIDs: func(prefix string) string {
-		n++
+	// MinFreeBytes -1 turns the disk guard off: these tests are about images,
+	// and must not depend on the free space of the machine that runs them.
+	s, err := New(
+		Options{Store: st, Workspace: ws, Limits: Limits{MinFreeBytes: -1}, NewIDs: func(prefix string) string {
+			n++
 
-		return fmt.Sprintf("%s_%010x", prefix, n)[:14]
-	}})
+			return fmt.Sprintf("%s_%010x", prefix, n)[:14]
+		}},
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -507,8 +511,12 @@ func TestImageCreationIsNotUndone(t *testing.T) {
 	s, _ := newImageService(t)
 	ctx := asActor("local:agent")
 
-	c, _ := s.ImageCreate(ctx, ImageCreateRequest{Width: 100, Height: 100})
-	_, err := s.ImageUndo(ctx, ImageStepRequest{ImageID: c.ImageID})
+	c, err := s.ImageCreate(ctx, ImageCreateRequest{Width: 100, Height: 100})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = s.ImageUndo(ctx, ImageStepRequest{ImageID: c.ImageID})
 	mustCode(t, err, CodeNothingToUndo)
 }
 
