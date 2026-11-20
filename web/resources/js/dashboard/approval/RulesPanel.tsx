@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLocale, useT } from "@/lib/i18n";
+import { PersonOnlyNote, useSession } from "@/lib/session";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
 import type {
@@ -114,6 +115,7 @@ export default function RulesPanel({
 	onChanged(): void;
 }): ReactNode {
 	const t = useT();
+	const { privileged } = useSession();
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [kind, setKind] = useState("");
 	const [connection, setConnection] = useState("");
@@ -302,8 +304,13 @@ export default function RulesPanel({
 				<p className="text-xs text-muted-foreground">
 					{t("ui.approvals.rules.note")}
 				</p>
+				<PersonOnlyNote id="rules-person-only" />
 				<div>
-					<Button type="submit" disabled={kind.trim() === ""}>
+					<Button
+						type="submit"
+						disabled={kind.trim() === "" || !privileged}
+						aria-describedby={privileged ? undefined : "rules-person-only"}
+					>
 						{t("ui.approvals.rules.add")}
 					</Button>
 				</div>

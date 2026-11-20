@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
+import { PersonOnlyNote, useSession } from "@/lib/session";
 import { useUnsavedGuard } from "@/lib/unsaved";
 import type { LibraryClient, LibraryEntry } from "./client";
 import { EntryBadges, FileText } from "./parts";
@@ -23,6 +24,7 @@ export default function MemoryPane({
 	onChanged: (name: string | null) => void;
 }): ReactNode {
 	const t = useT();
+	const { privileged } = useSession();
 	const [entry, setEntry] = useState<LibraryEntry | null>(null);
 	const [newName, setNewName] = useState("");
 	const [description, setDescription] = useState("");
@@ -32,6 +34,7 @@ export default function MemoryPane({
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [saved, setSaved] = useState(false);
 	const [busy, setBusy] = useState(false);
+	const pending = entry !== null && !entry.kept;
 	// The fields as last read or saved: what differs from it is unsaved text.
 	const [baseline, setBaseline] = useState(
 		JSON.stringify(["", "", "", "", ""]),
@@ -205,11 +208,18 @@ export default function MemoryPane({
 							</div>
 						</div>
 						<div className="flex flex-wrap gap-2">
-							<Button type="submit" disabled={busy}>
-								{entry !== null && !entry.kept
+							<Button
+								type="submit"
+								disabled={busy || (pending && !privileged)}
+								aria-describedby={
+									pending && !privileged ? "keep-person-only" : undefined
+								}
+							>
+								{pending
 									? t("ui.library.memory.keep")
 									: t("ui.library.action.save")}
 							</Button>
+							{pending && <PersonOnlyNote id="keep-person-only" />}
 							{name !== null && (
 								<Button
 									type="button"

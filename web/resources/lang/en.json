@@ -1,5 +1,11 @@
 {
   "ui": {
+    "session": {
+      "person_only": {
+        "local": "Only a person in the Stuarty desktop app can do this. Approve it there.",
+        "network": "Only a person who signs in with a password can do this. Sign in with your password."
+      }
+    },
     "unsaved": {
       "leave": "You have text that is not saved yet. If you leave, it is lost. Leave anyway?"
     },

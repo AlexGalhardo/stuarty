@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatDateTime } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
+import { PersonOnlyNote, useSession } from "@/lib/session";
 import {
 	formatMoney,
 	microsToInput,
@@ -65,6 +66,7 @@ export function ModelRow({
 }): ReactNode {
 	const t = useT();
 	const locale = useLocale();
+	const { privileged } = useSession();
 	// A model an adapter hints as an image, a voice or a video model is priced per image, per million characters
 	// or per second (SDD-016 section 4.5); the rest, per million tokens. The price shown is the one in that unit.
 	const unit =
@@ -147,12 +149,17 @@ export function ModelRow({
 				<Button
 					type="button"
 					variant="outline"
+					disabled={!privileged}
+					aria-describedby={
+						privileged ? undefined : `price-person-only-${model.id}`
+					}
 					onClick={() => setOpen(!open)}
 					aria-expanded={open}
 				>
 					{t("ui.providers.set_price")}
 					<span className="sr-only"> {model.id}</span>
 				</Button>
+				<PersonOnlyNote id={`price-person-only-${model.id}`} />
 			</div>
 			{open && (
 				<form

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLocale, useT } from "@/lib/i18n";
+import { PersonOnlyNote, useSession } from "@/lib/session";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
 import type { CostSummary } from "../../editor/api/types";
@@ -25,6 +26,7 @@ export default function CostPanel({
 }): ReactNode {
 	const t = useT();
 	const locale = useLocale();
+	const { privileged } = useSession();
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [currency, setCurrency] = useState("USD");
 	const [project, setProject] = useState("");
@@ -191,8 +193,15 @@ export default function CostPanel({
 				<p className="text-xs text-muted-foreground">
 					{t("ui.approvals.ceiling_note")}
 				</p>
+				<PersonOnlyNote id="cost-person-only" />
 				<div>
-					<Button type="submit">{t("ui.approvals.save_ceiling")}</Button>
+					<Button
+						type="submit"
+						disabled={!privileged}
+						aria-describedby={privileged ? undefined : "cost-person-only"}
+					>
+						{t("ui.approvals.save_ceiling")}
+					</Button>
 				</div>
 			</form>
 		</section>

@@ -167,7 +167,7 @@ type sharedUser struct {
 	Role  string `json:"role"`
 }
 
-// sharedProps shares on every page the name of the app and, in network mode,
+// sharedProps shares on every page the name of the app, the privilege of the session and, in network mode,
 // the signed-in user (`auth.user`, null with no session and always in local
 // mode). The caller was put in the context by the guard of the API.
 func sharedProps(d *httpapi.Deps) func(http.Handler) http.Handler {
@@ -175,6 +175,17 @@ func sharedProps(d *httpapi.Deps) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			inertia.Share(ctx, "appName", appName)
+
+			// Whether this session may do what only a person does (approve, set a price, keep a note, mark a skill
+			// as read), so the pages disable those controls and say why instead of refusing after the click
+			// (VV-319). The server decides; the page only reads it. The refusal of the call itself is unchanged.
+			mode := "local"
+			if d.Network != nil {
+				mode = "network"
+			}
+
+			person, _ := service.CallerFrom(ctx)
+			inertia.Share(ctx, "session", map[string]any{"privileged": person.Browser, "mode": mode})
 
 			if d.Network != nil && d.Auth != nil {
 				var user *sharedUser

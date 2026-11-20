@@ -15,7 +15,7 @@ An agent, a schedule or you can **prepare** a publication or a request that cost
 
 Three rules hold everywhere:
 
-1. **A person decides, an agent never does.** Approving, rejecting, writing a rule and setting a ceiling need a signed-in browser session. The local token of the CLI, an API key and every agent surface are refused with `E_PRIVILEGED_SESSION`.
+1. **A person decides, an agent never does.** Approving, rejecting, writing a rule and setting a ceiling need a signed-in browser session. The local token of the CLI, an API key and every agent surface are refused with `E_PRIVILEGED_SESSION`. A browser window opened with `stuarty open` is not a person's session either, so there the buttons that need a person (Approve, Reject, save a rule or a ceiling, set a price, keep a note, mark a skill as read) are shown disabled with the reason: do it in the Stuarty desktop app, or sign in with your password when the server runs in network mode.
 2. **A ceiling is a hard stop.** A request whose estimate is over a ceiling is refused with a message that says what to do. Approving a request does not lift a ceiling: you raise the ceiling first, on purpose.
 3. **Every use of a rule is recorded** in the audit log, with the rule, the request and the time.
 
