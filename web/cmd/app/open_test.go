@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -106,6 +108,11 @@ func TestOpenUsesTheRunningServerOfTheWorkspaceAndItsLaunchCode(t *testing.T) {
 	if token, err = ws.EnsureToken(); err != nil {
 		t.Fatal(err)
 	}
+	lock, err := ws.TryLock() // a real owner holds the lock while it publishes runtime.json
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = lock.Release() })
 	if err := ws.WriteRuntime(workspace.Runtime{PID: os.Getpid(), Addr: addr, Mode: workspace.ModeLocal}); err != nil {
 		t.Fatal(err)
 	}
@@ -293,5 +300,84 @@ func TestOpenBrowserRefusesWhatIsNotAnHTTPAddress(t *testing.T) {
 		if err := openBrowser(u); err == nil {
 			t.Errorf("%q accepted", u)
 		}
+	}
+}
+
+// holdOwner makes this test the owner of a workspace: it holds the lock, publishes runtime.json for
+// an /up whose answers wait until gate is closed. When openAfter is above zero the owner closes the
+// gate itself on that many probes: it is "slow" by a count, not by a clock.
+func holdOwner(t *testing.T, f *fixture, gate chan struct{}, openAfter int32) {
+	t.Helper()
+	hits := &atomic.Int32{}
+	var once sync.Once
+	mux := http.NewServeMux()
+	mux.HandleFunc("/up", func(w http.ResponseWriter, r *http.Request) {
+		if openAfter > 0 && hits.Add(1) >= openAfter {
+			once.Do(func() { close(gate) })
+		}
+		select {
+		case <-gate:
+		case <-r.Context().Done():
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
+	})
+	srv := httptest.NewServer(mux)
+	t.Cleanup(srv.Close)
+	ws := workspace.Dir(f.home)
+	lock, err := ws.TryLock()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = lock.Release() })
+	rt := workspace.Runtime{PID: os.Getpid(), Addr: strings.TrimPrefix(srv.URL, "http://"), Mode: workspace.ModeLocal}
+	if err := ws.WriteRuntime(rt); err != nil {
+		t.Fatal(err)
+	}
+	f.o.startSrv = func(string, string, string, []string, string) (<-chan error, error) {
+		f.started++
+		return nil, errors.New("must not start a second server")
+	}
+	f.o.client = &http.Client{Timeout: 50 * time.Millisecond} //nolint:forbidigo // loopback test server
+	f.o.ownerWait = 5 * time.Second
+	f.o.poll = 10 * time.Millisecond
+}
+
+// VV-258: an owner that holds the lock and answers /up late is waited for, never replaced.
+func TestOpenWaitsForASlowOwnerThatHoldsTheLock(t *testing.T) {
+	f := newFixture(t, freePort(t), map[string]string{envNoBrowser: "1"})
+	gate := make(chan struct{})
+	holdOwner(t, f, gate, 3)
+	if err := f.o.run(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if f.started != 0 || !strings.HasPrefix(strings.TrimSpace(f.out.String()), "http://127.0.0.1:") {
+		t.Errorf("started %d, printed %q", f.started, f.out.String())
+	}
+}
+
+// VV-258: an owner that never answers is reported with E_WORKSPACE_LOCKED, never as a server that
+// stopped right after it started.
+func TestOpenReportsAnOwnerThatNeverAnswers(t *testing.T) {
+	f := newFixture(t, freePort(t), map[string]string{envNoBrowser: "1"})
+	gate := make(chan struct{})
+	t.Cleanup(func() { close(gate) })
+	holdOwner(t, f, gate, 0)
+	f.o.ownerWait = 300 * time.Millisecond
+	err := f.o.run(context.Background())
+	var werr *workspace.Error
+	if !errors.As(err, &werr) || werr.Code != workspace.CodeWorkspaceLocked || !werr.Retryable {
+		t.Fatalf("error %v, want a retryable E_WORKSPACE_LOCKED", err)
+	}
+	if !strings.Contains(err.Error(), "another Stuarty is running and not answering") ||
+		strings.Contains(err.Error(), "stopped right after") {
+		t.Errorf("message %q", err)
+	}
+	if f.started != 0 {
+		t.Errorf("started %d servers beside the owner", f.started)
+	}
+	if got := runExitCode(err); got != 2 {
+		t.Errorf("exit code %d, want 2 (retryable)", got)
 	}
 }
