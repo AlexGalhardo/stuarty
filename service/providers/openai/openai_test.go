@@ -44,11 +44,13 @@ func TestDescriptor(t *testing.T) {
 
 	if !slices.Equal(
 		d.Capabilities,
-		[]string{provider.CapabilityText, provider.CapabilityImage, provider.CapabilityVoice},
+		[]string{
+			provider.CapabilityText, provider.CapabilityImage, provider.CapabilityVoice, provider.CapabilityImageEdit,
+		},
 	) ||
 		len(d.CredentialKinds) != 1 ||
 		d.CredentialKinds[0] != provider.CredentialAPIKey {
-		t.Fatalf("text, image and voice with an API key: %+v", d)
+		t.Fatalf("text, image, voice and image edit with an API key: %+v", d)
 	}
 }
 
