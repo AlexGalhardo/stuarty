@@ -76,10 +76,10 @@ tasks:
     status:
       - test ! -f site/package.json
     cmds:
-      - cd site && npm ci
-      - cd site && npm run lint
-      - cd site && npm run build
-      - cd site && npm run check:built
+      - cd site && bun install --frozen-lockfile
+      - cd site && bun run lint
+      - cd site && bun run build
+      - cd site && bun run check:built
 
   labels:sync:
     desc: Create or update the GitHub labels listed in .github/labels.txt (never deletes; needs gh auth)
@@ -187,19 +187,19 @@ tasks:
     cmds:
       - task: codegen
       - UPDATE_OPENAPI=1 go test ./web/contract/ -run OpenAPI -count=1
-      - cd site && npm run reference
+      - cd site && bun run reference
       - git diff --exit-code -- core/schema web/resources/js/generated site/generated site/content/generated internal/ffmpegpins web/app/agentdocs/out
 
   site:build:
     desc: Build the documentation site and run its checks
     dir: site
     cmds:
-      - npm ci
-      - npm run check:mdx
-      - npm run build
-      - npm run check:built
-      - npm run reference:check
-      - npm run check:last-updated
+      - bun install --frozen-lockfile
+      - bun run check:mdx
+      - bun run build
+      - bun run check:built
+      - bun run reference:check
+      - bun run check:last-updated
 
   image:build:
     desc: Build the container image as stuarty:local
