@@ -191,6 +191,7 @@ type Service interface {
 	SocialConnectBegin(ctx context.Context, req SocialConnectBeginRequest) (*SocialConnectBeginResult, error)
 	SocialConnectComplete(ctx context.Context, req SocialConnectCompleteRequest) (*SocialAccount, error)
 	SocialAccountList(ctx context.Context, req SocialAccountListRequest) (*SocialAccountListResult, error)
+	SocialAccountSelect(ctx context.Context, req SocialAccountSelectRequest) (*SocialAccount, error)
 	PublishValidate(ctx context.Context, req PublishValidateRequest) (*PublishValidateResult, error)
 	PublishNow(ctx context.Context, req PublishNowRequest) (*Job, error)
 	PublishStatus(ctx context.Context, req PublishStatusRequest) (*PublishStatusResult, error)

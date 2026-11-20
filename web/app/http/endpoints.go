@@ -445,6 +445,11 @@ var Endpoints = []Endpoint{
 		Service: "SocialAccountList", Status: 200, Summary: "List the connected social accounts and their state",
 	},
 	{
+		ID: "social.select", Method: http.MethodPost, Path: "/social/select", Scope: service.ScopeAdmin,
+		Service: "SocialAccountSelect", Status: 200,
+		Summary: "Choose the Page or Instagram account a sign-in reached (a person in the browser only)",
+	},
+	{
 		ID:      "publish.validate",
 		Method:  http.MethodPost,
 		Path:    "/publish/validate",

@@ -187,7 +187,8 @@
         "social.accounts",
         "social.complete",
         "social.connect",
-        "social.networks"
+        "social.networks",
+        "social.select"
       ]
     },
     {

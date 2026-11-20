@@ -77,6 +77,7 @@
 | `SocialConnectBegin` | none | `social:connect` | `POST /social/connect` | admin |
 | `SocialConnectComplete` | none | none | `POST /social/complete` (the page `/social/callback` posts to it) | admin, and only from a browser session |
 | `SocialAccountList` | none | `social:account:list` | `GET /social/accounts` | read |
+| `SocialAccountSelect` | none | none | `POST /social/select` | admin, and only from a browser session (SDD-020 §17) |
 | `PublishValidate` | none | `publish:validate` | `POST /publish/validate` | read |
 | `PublishNow` | none yet (later `job_start` with kind `publish.upload`, SDD-020 §13) | `publish:now` | `POST /publish` | render; the job waits for approval |
 | `PublishStatus` | none | `publish:status` | `GET /publish/{job_id}` | read |

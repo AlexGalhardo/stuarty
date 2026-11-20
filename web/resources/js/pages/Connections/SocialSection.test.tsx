@@ -4,7 +4,7 @@ import { describe, expect, test, vi } from "vitest";
 import { I18nProvider } from "@/lib/i18n";
 import type { SocialAccount, SocialNetwork } from "../../editor/api/types";
 import { SetupGuide } from "./SetupGuide";
-import { AccountRow } from "./SocialSection";
+import { AccountPicker, AccountRow } from "./SocialSection";
 
 vi.mock("@inertiajs/react", () => ({ Head: () => null, Link: () => null }));
 
@@ -34,6 +34,18 @@ const messages = {
 		"Copy the id and the secret. Permissions: {scopes}.",
 	"ui.social.youtube.research":
 		"What Google said on {read}: unverified projects are no longer forced to private.",
+	"ui.social.needs_account": "Signed in. Choose the account.",
+	"ui.social.pick_title": "Choose the account",
+	"ui.social.pick_hint": "Your sign-in reached these accounts.",
+	"ui.social.pick_use": "Use this account",
+	"ui.social.instagram.step.project": "Create a Business app.",
+	"ui.social.instagram.step.api": "Add Facebook Login.",
+	"ui.social.instagram.step.consent": "Use a professional account.",
+	"ui.social.instagram.step.client": "Copy the App ID and the App Secret.",
+	"ui.social.instagram.step.redirect": "Add exactly: {redirect}",
+	"ui.social.instagram.step.paste": "Paste them. Permissions: {scopes}.",
+	"ui.social.instagram.research":
+		"What Meta said on {read}: the file needs no public address.",
 };
 
 const network: SocialNetwork = {
@@ -55,6 +67,26 @@ const network: SocialNetwork = {
 	guide:
 		"https://developers.google.com/youtube/v3/guides/auth/server-side-web-apps",
 	guide_read: "2026-11-19",
+};
+
+const instagram: SocialNetwork = {
+	...network,
+	network: "instagram",
+	name: "Instagram",
+	publishes: ["video"],
+	endpoint: "https://graph.facebook.com",
+	hosts: ["graph.facebook.com", "rupload.facebook.com"],
+	scopes: ["pages_show_list", "instagram_content_publish"],
+	guide:
+		"https://developers.facebook.com/docs/instagram-platform/content-publishing",
+	ai_disclosure: true,
+	limits: {
+		...network.limits,
+		formats: ["mp4", "mov"],
+		visibilities: ["public"],
+		needs_kids_declaration: false,
+		thumbnail_formats: [],
+	},
 };
 
 const account = (extra: Partial<SocialAccount> = {}): SocialAccount => ({
@@ -109,6 +141,67 @@ describe("the accounts of the social networks", () => {
 		expect(html).toMatch(/<button[^>]*disabled[^>]*>\s*Publish now/);
 		expect(html).toContain("Sign in again");
 	});
+
+	test("a sign-in that reached several accounts asks which one, and cannot publish until chosen", () => {
+		const html = wrap(
+			<ul>
+				<AccountRow
+					account={account({
+						network: "instagram",
+						state: "needs_account",
+						account_title: undefined,
+						choices: [
+							{ id: "IG1", title: "@first (First Page)" },
+							{ id: "IG2", title: PAYLOAD },
+						],
+					})}
+					networkName="Instagram"
+					onSignInAgain={() => undefined}
+					onPublish={() => undefined}
+					onSelect={() => undefined}
+				/>
+			</ul>,
+		);
+		expect(html).toContain("Signed in. Choose the account.");
+		expect(html).toContain("Choose the account");
+		expect(html).toContain("@first (First Page)");
+		expect((html.match(/type="radio"/g) ?? []).length).toBe(2);
+		// A title the network wrote is text, never markup.
+		expect(html).not.toContain(PAYLOAD);
+		expect(html).toContain("&lt;img");
+		// Nothing is chosen for the person: the confirm button and the publish button wait.
+		expect(html).toMatch(/<button[^>]*disabled[^>]*>\s*Use this account/);
+		expect(html).toMatch(/<button[^>]*disabled[^>]*>\s*Publish now/);
+		expect(html).not.toMatch(/type="radio"[^>]*checked/);
+	});
+
+	test("an account that is ready shows no picker", () => {
+		const html = wrap(
+			<ul>
+				<AccountRow
+					account={account({ choices: [{ id: "x", title: "x" }] })}
+					networkName="Instagram"
+					onSignInAgain={() => undefined}
+					onPublish={() => undefined}
+					onSelect={() => undefined}
+				/>
+			</ul>,
+		);
+		expect(html).not.toContain("data-account-picker");
+	});
+
+	test("the picker names its radios by the connection, so two connections do not share a choice", () => {
+		const html = wrap(
+			<AccountPicker
+				connectionId="con_9"
+				choices={[{ id: "P1", title: "Page" }]}
+				busy={false}
+				onSelect={() => undefined}
+			/>,
+		);
+		expect(html).toContain('name="social-account-con_9"');
+		expect(html).toContain('data-account-picker="con_9"');
+	});
 });
 
 describe("the setup guide of a network", () => {
@@ -147,5 +240,26 @@ describe("the setup guide of a network", () => {
 		const html = guide("con_1");
 		expect(html).not.toContain("social-client-id");
 		expect(html).toContain("Sign in again");
+	});
+
+	test("a Meta network has its own steps, the date read and the page of Meta", () => {
+		const html = wrap(
+			<SetupGuide
+				network={instagram}
+				redirectPath="/social/callback"
+				origin="http://127.0.0.1:7878"
+				onClose={() => undefined}
+				navigate={() => undefined}
+			/>,
+		);
+		expect(html).toContain("Create a Business app.");
+		expect(html).toContain("Use a professional account.");
+		expect(html).toContain(
+			"Add exactly: http://127.0.0.1:7878/social/callback",
+		);
+		expect(html).toContain("pages_show_list, instagram_content_publish");
+		expect(html).toContain("What Meta said on 2026-11-19");
+		expect(html).toContain(instagram.guide);
+		expect(html).not.toContain("Google");
 	});
 });

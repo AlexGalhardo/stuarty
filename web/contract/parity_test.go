@@ -174,6 +174,7 @@ var parity = []row{
 	{method: "SocialConnectBegin", command: "social:connect", route: "POST /social/connect"},
 	{method: "SocialConnectComplete", route: "POST /social/complete", httpOnly: true},
 	{method: "SocialAccountList", command: "social:account:list", route: "GET /social/accounts"},
+	{method: "SocialAccountSelect", route: "POST /social/select", httpOnly: true},
 	{method: "PublishValidate", command: "publish:validate", route: "POST /publish/validate"},
 	{method: "PublishNow", command: "publish:now", route: "POST /publish"},
 	{method: "PublishStatus", command: "publish:status", route: "GET /publish/{}"},

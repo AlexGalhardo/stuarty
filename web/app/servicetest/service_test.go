@@ -377,6 +377,10 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.SocialAccountList(ctx, service.SocialAccountListRequest{})
 			return err
 		},
+		"SocialAccountSelect": func() error {
+			_, err := e.svc.SocialAccountSelect(ctx, service.SocialAccountSelectRequest{})
+			return err
+		},
 		"PublishValidate": func() error {
 			_, err := e.svc.PublishValidate(ctx, service.PublishValidateRequest{ProjectID: "prj_0000000001"})
 			return err

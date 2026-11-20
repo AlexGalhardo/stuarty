@@ -183,6 +183,8 @@ type publishTarget struct {
 	issues   []publish.Issue
 	// generated is true when an asset of the video has the origin generated (section 20 of SDD-020).
 	generated bool
+	// needsAccount is true when the sign-in reached several accounts and none is chosen (section 17).
+	needsAccount bool
 }
 
 // resolvePublish reads the connection and the files of a post and validates it. It makes no request.
@@ -213,9 +215,18 @@ func (s *svc) resolvePublish(ctx context.Context, c Caller, projectID string, a 
 	if werr := s.conns.With(ctx, row.ID, func(cred connections.Credential) error {
 		t.account, t.signedIn = conn.SignedIn(cred.Secret)
 
+		if ch, ok := conn.(social.Chooser); ok && !t.signedIn {
+			t.needsAccount = len(ch.Choices(cred.Secret)) > 0
+		}
+
 		return nil
 	}); werr != nil {
 		return nil, connectionError(werr)
+	}
+
+	if t.needsAccount {
+		return nil, validationAt("connection_id", "no account is chosen for the connection yet.").
+			withHint("choose the account in the Connections page, then publish")
 	}
 
 	if !t.signedIn {
