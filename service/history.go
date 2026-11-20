@@ -574,11 +574,23 @@ func (s *svc) stepCandidates(ctx context.Context, project, actor string) (undo, 
 // distinct commands of an edit, or what an undo, a redo, a migration or an
 // import did. Never media text (SDD-012 section 15).
 func (s *svc) stepDescription(row *OperationRow, ops []string) string {
-	switch row.Kind {
+	return describeStep(s.reg, row.Kind, row.TargetRevision, row.Ops, ops)
+}
+
+// describeStep is the one line of a history row, shared by the timeline and the image: the summaries of the distinct
+// commands of reg that an edit ran, or the words for an undo, a redo, a revert, a migration or an import.
+func describeStep(
+	reg *command.Registry,
+	kind OperationKind,
+	target *int64,
+	rawOps json.RawMessage,
+	ops []string,
+) string {
+	switch kind {
 	case OpUndo:
-		return "Undid r" + strconv.FormatInt(derefInt64(row.TargetRevision), 10) + "."
+		return "Undid r" + strconv.FormatInt(derefInt64(target), 10) + "."
 	case OpRedo:
-		return "Redid r" + strconv.FormatInt(derefInt64(row.TargetRevision), 10) + "."
+		return "Redid r" + strconv.FormatInt(derefInt64(target), 10) + "."
 	case OpMigrate:
 		return "Migrated the project to the current schema."
 	case OpImport:
@@ -586,14 +598,14 @@ func (s *svc) stepDescription(row *OperationRow, ops []string) string {
 	case OpEdit:
 	}
 
-	if len(ops) == 1 && ops[0] == revertOp {
-		return "Reverted to r" + strconv.FormatInt(revertTargetOf(row.Ops), 10) + "."
+	if len(ops) == 1 && (ops[0] == revertOp || ops[0] == imageRevertOp) {
+		return "Reverted to r" + strconv.FormatInt(revertTargetOf(rawOps), 10) + "."
 	}
 
 	var parts []string
 
 	for _, name := range ops {
-		cmd, ok := s.reg.Get(name)
+		cmd, ok := reg.Get(name)
 		if !ok || slices.Contains(parts, cmd.Summary) {
 			continue
 		}
