@@ -381,3 +381,61 @@ func TestOpenReportsAnOwnerThatNeverAnswers(t *testing.T) {
 		t.Errorf("exit code %d, want 2 (retryable)", got)
 	}
 }
+
+// VV-258: an owner that dies while open waits for it (its lock is released) is not reported as
+// locked: open starts the server as when no owner exists. The owner dies on its second /up probe,
+// which is the first probe of the wait, so the wait has begun when the lock goes.
+func TestOpenStartsTheServerWhenTheOwnerDiesWhileWaiting(t *testing.T) {
+	port := freePort(t)
+	f := newFixture(t, port, map[string]string{envNoBrowser: "1"})
+	ws := workspace.Dir(f.home)
+	lock, err := ws.TryLock()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var die sync.Once
+	t.Cleanup(func() { die.Do(func() { _ = lock.Release() }) })
+	hits := &atomic.Int32{}
+	mux := http.NewServeMux()
+	mux.HandleFunc("/up", func(_ http.ResponseWriter, r *http.Request) {
+		if hits.Add(1) == 2 {
+			die.Do(func() { _ = lock.Release() })
+		}
+		<-r.Context().Done() // a stuck owner never answers
+	})
+	owner := httptest.NewServer(mux)
+	t.Cleanup(owner.Close)
+	rt := workspace.Runtime{PID: os.Getpid(), Addr: strings.TrimPrefix(owner.URL, "http://"), Mode: workspace.ModeLocal}
+	if err := ws.WriteRuntime(rt); err != nil {
+		t.Fatal(err)
+	}
+	var started *httptest.Server
+	t.Cleanup(func() {
+		if started != nil {
+			started.Close()
+		}
+	})
+	f.o.startSrv = func(string, string, string, []string, string) (<-chan error, error) {
+		f.started++
+		l, err := net.Listen("tcp", "127.0.0.1:"+port)
+		if err != nil {
+			return nil, err
+		}
+		started = httptest.NewUnstartedServer(upHandler())
+		started.Listener = l
+		started.Start()
+		return make(chan error), nil
+	}
+	f.o.client = &http.Client{Timeout: 50 * time.Millisecond} //nolint:forbidigo // loopback test server
+	f.o.ownerWait = 5 * time.Second
+	f.o.poll = 10 * time.Millisecond
+	if err := f.o.run(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if f.started != 1 || strings.TrimSpace(f.out.String()) != "http://127.0.0.1:"+port+"/" {
+		t.Errorf("started %d, printed %q", f.started, f.out.String())
+	}
+	if !strings.Contains(f.errOut.String(), "waiting for it to answer") {
+		t.Errorf("open did not wait for the owner before it died: %q", f.errOut.String())
+	}
+}
