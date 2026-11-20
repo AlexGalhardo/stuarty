@@ -88,8 +88,8 @@ test.describe("history-revert", () => {
 		await dialog.getByRole("button", { name: "Revert", exact: true }).click();
 		await expect(dialog).toBeHidden();
 		await expect.poll(itemName).toBe("Intro");
-		// The event's row reads "Reverted to r<n>." for a moment; the page of the
-		// history that replaces it lists the step by its operation.
+		// The event's row reads "Reverted to r<n>." and so does the page of the
+		// history that replaces it: both say the description of the core.
 		await expect(
 			history.getByLabel(`Compare r${newest + 1}`, { exact: true }),
 		).toBeVisible();
@@ -97,7 +97,8 @@ test.describe("history-revert", () => {
 			"data-revision",
 			String(newest + 1),
 		);
-		await expect(rows.first()).toContainText("history.revert");
+		await expect(rows.first()).toContainText(`Reverted to r`);
+		await expect(rows.first()).not.toContainText("history.revert");
 
 		// The revert is a step of the person: Undo takes it back.
 		await page.getByRole("button", { name: "Undo" }).click();
