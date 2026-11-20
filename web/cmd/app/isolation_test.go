@@ -183,7 +183,8 @@ func processStarts(name string, src any) ([]string, error) {
 				goBuild[n.Fun] = true
 			}
 
-			if id, ok := n.Fun.(*ast.Ident); ok && id.Name == "new" && len(n.Args) == 1 && is(n.Args[0], execName, "Cmd") {
+			if id, ok := n.Fun.(*ast.Ident); ok && id.Name == "new" && len(n.Args) == 1 &&
+				is(n.Args[0], execName, "Cmd") {
 				report(n, "an exec.Cmd made by hand")
 			}
 		case *ast.SelectorExpr:
@@ -200,7 +201,8 @@ func processStarts(name string, src any) ([]string, error) {
 			}
 		case *ast.AssignStmt:
 			for _, lhs := range n.Lhs {
-				if sel, ok := lhs.(*ast.SelectorExpr); ok && slices.Contains([]string{"Env", "Path", "Args"}, sel.Sel.Name) {
+				sel, ok := lhs.(*ast.SelectorExpr)
+				if ok && slices.Contains([]string{"Env", "Path", "Args"}, sel.Sel.Name) {
 					report(lhs, sel.Sel.Name+" assigned after the command was made")
 				}
 			}
