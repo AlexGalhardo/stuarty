@@ -425,8 +425,9 @@ func TestImageFlow(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if cfg, derr := png.DecodeConfig(bytes.NewReader(narrowBody)); derr != nil || cfg.Width != 640 || cfg.Height != 360 {
-		t.Fatalf("the file is %v %+v", derr, cfg)
+	cfg, err := png.DecodeConfig(bytes.NewReader(narrowBody))
+	if err != nil || cfg.Width != 640 || cfg.Height != 360 {
+		t.Fatalf("the file is %v %+v", err, cfg)
 	}
 
 	_, err = s.ImageExport(ctx, ImageExportRequest{ImageID: id, Format: "webp"})
