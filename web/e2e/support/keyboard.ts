@@ -7,10 +7,8 @@ import type { Page } from "@playwright/test";
 // pointerdown and a mousedown, so the click itself is not counted: Firefox gives
 // the click of Enter on a link a detail of 1.
 export async function countPointerEvents(page: Page): Promise<void> {
+	// The count lives in localStorage, so it survives the full page loads of a flow that visits many pages.
 	await page.addInitScript(() => {
-		const counts = { pointer: 0 };
-		(window as unknown as { __pointerEvents: typeof counts }).__pointerEvents =
-			counts;
 		for (const type of [
 			"pointerdown",
 			"pointerup",
@@ -19,16 +17,22 @@ export async function countPointerEvents(page: Page): Promise<void> {
 			"dblclick",
 			"contextmenu",
 		]) {
-			window.addEventListener(type, () => (counts.pointer += 1), true);
+			window.addEventListener(
+				type,
+				() =>
+					localStorage.setItem(
+						"__pointerEvents",
+						String(Number(localStorage.getItem("__pointerEvents") ?? "0") + 1),
+					),
+				true,
+			);
 		}
 	});
 }
 
 export async function pointerEvents(page: Page): Promise<number> {
-	return page.evaluate(
-		() =>
-			(window as unknown as { __pointerEvents: { pointer: number } })
-				.__pointerEvents.pointer,
+	return page.evaluate(() =>
+		Number(localStorage.getItem("__pointerEvents") ?? "0"),
 	);
 }
 
@@ -82,4 +86,22 @@ export async function tabToLink(
 		return;
 	}
 	await tabTo(page, link);
+}
+
+// Presses `key` (an arrow, for a composite widget with one tab stop) until the element is focused.
+export async function arrowTo(
+	page: Page,
+	target: ReturnType<Page["locator"]>,
+	key: string,
+	limit = 40,
+): Promise<void> {
+	for (let i = 0; i < limit; i++) {
+		const focused = await target
+			.first()
+			.evaluate((el) => el === document.activeElement)
+			.catch(() => false);
+		if (focused) return;
+		await page.keyboard.press(key);
+	}
+	throw new Error(`${key} did not reach the element in ${limit} presses`);
 }
