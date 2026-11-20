@@ -98,9 +98,11 @@ func (s *state) verifyChapters(ctx context.Context, partial string) ([]Check, er
 	return failed, nil
 }
 
-// chapterTracks is the number of data streams an exported MP4 carries: the FFmpeg MP4 muxer writes
-// the chapters twice, as a Nero `chpl` atom and as a QuickTime chapter track, and ffprobe lists the
-// track as one `data` stream (an audio only file gets the atom and no track). A file with no chapters has none.
+// chapterTracks is the most data streams an exported MP4 may carry: the MP4 muxer of the pinned build
+// writes the chapters twice, as a Nero `chpl` atom and as a QuickTime chapter track, and ffprobe lists
+// the track as one `data` stream (an audio only file gets the atom and no track). Whether the track is
+// written is the muxer's choice, not ours, so it is allowed and not required: verifyChapters is what
+// proves the chapters are there. A file with no chapters has none.
 func (s *state) chapterTracks() int {
 	if len(s.chapterPlan()) > 0 {
 		return 1
@@ -112,7 +114,7 @@ func (s *state) chapterTracks() int {
 // chapterTrackNote completes the expectation of the streams check when a chapter track is allowed.
 func (s *state) chapterTrackNote() string {
 	if s.chapterTracks() > 0 {
-		return " and the data stream of the chapters"
+		return " and at most the data stream of the chapters"
 	}
 
 	return " only"
@@ -135,7 +137,7 @@ func dataStreams(streams []probedStream) int {
 // chapter track of a file with chapters; bad is false when it holds.
 func (s *state) streamsCheck(streams []probedStream, media int) (Check, bool) {
 	data := dataStreams(streams)
-	if len(streams) == media+data && data == s.chapterTracks() {
+	if len(streams) == media+data && data <= s.chapterTracks() {
 		return Check{}, false
 	}
 

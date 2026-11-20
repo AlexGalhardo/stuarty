@@ -58,7 +58,7 @@ func TestChaptersRefusals(t *testing.T) {
 	}
 
 	// Nor is one in the store or in an artifact directory, where another input may come from: the bytes
-	// there are a user's file, never the chapters the engine wrote (FF-08, T-89).
+	// there are a user's file, never the chapters the engine wrote (FF-08, T-102).
 	for _, p := range []string{
 		root() + "/store/ab/" + digest,
 		root() + "/artifacts/" + digest + "/chapters.ffmeta",
