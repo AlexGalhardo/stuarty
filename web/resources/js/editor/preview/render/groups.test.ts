@@ -260,6 +260,25 @@ describe("drawable", () => {
 		});
 	});
 
+	it("tells the caller the scale each layer is drawn at: its own frame's", () => {
+		const nodes = expandGroups(
+			[media("top"), group("g", [media("a")])],
+			0,
+			2,
+			new GroupIds(),
+		);
+		const seen: [string, number][] = [];
+		drawable(nodes, 0, (layer, scale) => {
+			seen.push([layer.item.startsWith("~") ? "nested" : layer.item, scale]);
+			return layer;
+		});
+		// The top layer at the output scale; the nested one at 2 x 8 / 16.
+		expect(seen).toEqual([
+			["top", 2],
+			["nested", 1],
+		]);
+	});
+
 	it("leaves out a group none of whose layers is ready", () => {
 		const nodes = expandGroups(
 			[group("g", [media("a")])],
