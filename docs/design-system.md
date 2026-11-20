@@ -19,6 +19,7 @@ A paragraph headed **Decision of this document** fills a gap that no SDD or ADR 
 8. [Web and desktop](#8-web-and-desktop)
 9. [Governance](#9-governance)
 10. [Decisions of this document and open points for the specifications](#10-decisions-of-this-document-and-open-points-for-the-specifications)
+11. [Brand refresh: the identity from the official icon (2026-11-20)](#11-brand-refresh-the-identity-from-the-official-icon-2026-11-20)
 
 ## 1. Principles
 
@@ -1068,3 +1069,149 @@ Open points found in the specifications while writing this document, and how eac
 11. **Light `--ed-safe-area` on the preview surround is 3.03:1**, the smallest margin of the whole set. Open: since the surround is the same in both themes, the overlay colours drawn on it could be theme-independent (the dark value, 9.65:1).
 12. **The error envelope** is specified in SDD-002 A.8; SDD-003 §1.4 carries it across surfaces. A note for briefings, no change needed.
 13. **The border of a pressed toggle (resolved).** `Button` draws a pressed toggle with `border-foreground/50` over `--accent`. Composited in sRGB, that border is 3.98:1 against `--ed-panel` in light and 5.67:1 in dark, above the 3:1 of a state indicator (WCAG 1.4.11). At 40% it was 2.92:1 in light. The `--accent` fill alone cannot carry the state, because it is barely lighter or darker than the panel.
+
+## 11. Brand refresh: the identity from the official icon (2026-11-20)
+
+- Status: Proposed (2026-11-20), from the author's decision to redefine the identity from the official icon and to apply it to the landing, the documentation and the product, in the product only through tokens. The reasoning is in [brainstorming-design-system-and-landing-page.md](brainstorming-design-system-and-landing-page.md).
+- This section adds to sections 1 to 10 and wins over them where it says so. Every other rule stays.
+
+### 11.1 The mark and its colours
+
+The official icon is the clapperboard with eyes (`.config/installers/assets/stuarty-icon.png`, scaled by `internal/tools/installericon` into every copy the project ships, section 5). Its three colours, measured on the source file:
+
+| Name | Hex | OKLCH | Role |
+| --- | --- | --- | --- |
+| Indigo | `#3534CA` | `oklch(0.442 0.222 272.9)` | the body of the clapperboard; the brand in the light theme |
+| Lilac | `#8078FB` | `oklch(0.645 0.189 282.5)` | the clapper bar; the brand in the dark theme and the accent of gradients |
+| White | `#FDFDFD` | `oklch(0.994 0 0)` | the eyes; text on the indigo brand |
+
+The logo lockup (the icon and the word "Stuarty") replaces the separate mark and name in the navbar, the README and the title of the dashboard when it is delivered; until then, the icon and the name set in Geist 600 with `tracking-tight` stand together.
+
+### 11.2 The brand scale
+
+One scale, hue 272 to 283, built so that step 500 is the lilac and step 700 the indigo of the icon. Contrast is WCAG 2.x against white and against the dark `--background` (`oklch(0.145 0 0)`).
+
+| Step | OKLCH | Hex | vs white | vs dark background |
+| --- | --- | --- | --- | --- |
+| 50 | `oklch(0.97 0.025 280)` | `#F1F4FF` | 1.10 | 18.01 |
+| 100 | `oklch(0.94 0.045 280)` | `#E5E9FF` | 1.21 | 16.38 |
+| 200 | `oklch(0.88 0.08 280)` | `#CCD2FF` | 1.47 | 13.46 |
+| 300 | `oklch(0.8 0.13 281)` | `#AFB3FF` | 1.96 | 10.12 |
+| 400 | `oklch(0.72 0.17 282)` | `#9694FF` | 2.64 | 7.49 |
+| 500 (lilac) | `oklch(0.645 0.189 282.5)` | `#8078FB` | 3.50 | 5.66 |
+| 600 | `oklch(0.55 0.21 278)` | `#5C58E8` | 5.22 | 3.79 |
+| 700 (indigo) | `oklch(0.442 0.222 272.9)` | `#3534CA` | 8.43 | 2.35 |
+| 800 | `oklch(0.37 0.18 272)` | `#26299C` | 11.13 | 1.78 |
+| 900 | `oklch(0.29 0.13 272)` | `#191E6A` | 14.63 | 1.35 |
+| 950 | `oklch(0.21 0.09 272)` | `#0C1040` | 17.99 | 1.10 |
+
+The neutral scale of section 2.2 stays the scale of the chrome.
+
+### 11.3 Brand tokens
+
+| Token (Tailwind) | Light | Dark | Use |
+| --- | --- | --- | --- |
+| `--brand`, `--brand-foreground` | 700, white (8.43:1) | 500, `oklch(0.145 0 0)` (5.66:1) | the mark, the primary action of the dashboard pages and of the documentation, the active navigation item |
+| `--brand-accent` (new) | 500 | 400 | gradients, highlights, the clapper bar of the 3D mascot; never text on white (3.50:1) |
+| `--brand-subtle` (new) | 50 | 900 at 40% | tinted surfaces: a selected card, a callout, a badge background |
+| `--brand-text` (new) | 700 | 300 | brand-coloured text and links on `--background` (8.43:1 light, 10.12:1 dark) |
+
+**What changes from section 2.4.** `--brand` was a placeholder, `oklch(0.511 0.262 276.966)` in both themes, "never a button". It becomes the icon's indigo (light) and lilac (dark), and it may now carry the one primary action of a dashboard page and of the documentation. Inside the editors (`web/resources/js/editor/**` and the image editor) the primary action stays the neutral `--primary` of section 2.3, and principle P2 is unchanged: no brand colour near the picture, the timeline or the canvas.
+
+### 11.4 Two registers
+
+| | Quiet register (the product) | Expressive register (the landing and the documentation home) |
+| --- | --- | --- |
+| Where | dashboard, editors, settings, the desktop app, the documentation pages | `/` and `/landing/*` of the documentation site |
+| Colour | neutral chrome; brand on the mark, the primary action, the active navigation item; states as section 2.4 | brand gradients (700 to 500, at most two stops plus neutral), the brand scale for surfaces |
+| Type | the scale of section 2.7 | adds the display scale of section 11.5 |
+| Motion | the two kinds of section 2.13 | adds the scene motion of section 11.8 |
+| 3D | none | three.js scenes and a living background (section 11.9) |
+
+The two registers share every token; the expressive one only uses more of them.
+
+### 11.5 Typography
+
+Geist Variable stays the only family (section 2.7; bundled, no other origin). The expressive register adds a display scale:
+
+| Role | Utility | Line height | Weight and tracking |
+| --- | --- | --- | --- |
+| Hero | `text-6xl` to `text-8xl` (`clamp(2.75rem, 7vw, 6rem)`) | 1.0 | 600, `tracking-tight` (-0.025em) |
+| Section title | `text-4xl` to `text-5xl` | 1.1 | 600, `tracking-tight` |
+| Lead | `text-lg` to `text-xl` | 1.6 | 400, `text-muted-foreground` |
+| Eyebrow | `text-xs`, uppercase | 1.4 | 500, `tracking-widest`, `--brand-text` |
+| Code and terminals | `font-mono`, `text-sm` | 1.7 | 400 |
+
+The 12 px minimum and the weights 400, 500 and 600 of section 2.7 hold in both registers.
+
+### 11.6 Buttons
+
+All buttons are the Base UI `Button` of section 4.2, with `rounded-lg` (10 px), heights `h-9` (`sm`), `h-10` (default) or `h-12` (landing `lg`), and a 6 px gap between icon and label.
+
+| Variant | Light | Dark | Use |
+| --- | --- | --- | --- |
+| `brand` (new) | `bg-brand text-brand-foreground`, hover 800 | `bg-brand text-brand-foreground`, hover 400 | the one primary action of a dashboard or documentation page; the main call to action of the landing |
+| `default` | the neutral `--primary` of section 2.3 | same | the primary action inside the editors |
+| `secondary`, `outline`, `ghost`, `link`, `destructive` | as section 4.2 | as section 4.2 | as section 4.2 |
+
+At most one `brand` button per view. Focus is the 2 px `--ring` outline of section 2.10 on every variant.
+
+### 11.7 Radii, borders and shadows
+
+- Radii: `--radius` (10 px) and its scale (section 2.9) stay. The expressive register adds `rounded-3xl` (24 px) for large showcase frames (the product window of the hero) and `rounded-full` for pills.
+- Borders: as section 2.10. On dark expressive surfaces a hairline `border-white/10` frames floating panels.
+- Shadows: the product keeps the elevation of section 2.11. The expressive register adds one brand glow for showcase frames only, `0 30px 80px -20px oklch(0.442 0.222 272.9 / 45%)`, and no other coloured shadow.
+
+### 11.8 Motion
+
+The product keeps section 2.13. The expressive register adds:
+
+| Token | Value | Use |
+| --- | --- | --- |
+| `--ease-out-expo` | `cubic-bezier(0.22, 1, 0.36, 1)` | entrances, scene changes |
+| `--ease-in-out` | `cubic-bezier(0.65, 0, 0.35, 1)` | camera moves |
+| `--duration-scene` | 700 ms (500 to 900) | the change between two scenes of the viewport version |
+| `--duration-reveal` | 500 ms, 60 ms stagger | text and cards entering on scroll |
+| `--duration-hover` | 150 ms | hover and press |
+
+`prefers-reduced-motion: reduce` turns every entrance and scene change into a 150 ms crossfade, stops the camera and the background on their first frame, and disables scroll-linked effects. Motion never carries information alone.
+
+### 11.9 3D and the living background (expressive register only)
+
+- three.js 0.187.0 (r187, the current stable release), one renderer per page, `devicePixelRatio` capped at 2 (1.5 on small screens), the render loop paused when the tab is hidden or the canvas is off screen, loaded as a client-only island after the text has painted.
+- The living background: one full-screen fragment shader, a slow noise flow of brand 700 and 500 on the background of the theme, the pointer and the scroll velocity adding a gentle disturbance; at most 10% of the frame budget.
+- The mascot: the icon in 3D from primitives (a rounded box in 700, the clapper bar in 500, two capsule eyes in white), no model file; it may blink, follow the pointer and snap the clapper shut on a scene change.
+- A WebGL failure, a very slow device or reduced motion falls back to a static brand gradient and a still image of the mascot. All text is HTML over the canvas, never drawn in WebGL.
+
+### 11.10 Layout of the expressive register
+
+- Content width `max-w-6xl` (72 rem) with 24 px gutters (`px-6`), 16 px below `sm`; the hero and showcase frames may bleed to the full width.
+- A 12-column grid from `lg`; sections separated by 128 px (`py-32`) from `lg`, 80 px below.
+- One idea per section: an eyebrow, a title, a lead of at most two lines, then the proof (a clip, a code sample, a card grid).
+
+### 11.11 Marketing components
+
+| Component | Built from | Notes |
+| --- | --- | --- |
+| Navbar | the documentation `Header` (structure and behaviour kept: the mark, the name, search on Ctrl+K, the links, the theme toggle) | translucent `bg-background/70` with `backdrop-blur` over a scene, a hairline bottom border |
+| Hero | display title, lead, `brand` and `outline` buttons, a showcase frame | the frame holds a screenshot or a clip placeholder |
+| Feature card | `Card` (`rounded-xl`, `--card`) with a lucide icon in a `--brand-subtle` square | one clip placeholder per card |
+| Code tabs | Base UI `Tabs` and a code block with a copy button | Agent, CLI, HTTP API, MCP; the code is copied from the build |
+| Terminal | a `font-mono` panel on `oklch(0.145 0 0)` with a typed reveal (instant with reduced motion) | real commands only |
+| Media placeholder | a `rounded-2xl` frame with the brand gradient and a play glyph, in the aspect ratio of the real asset | replaced by the real clip later |
+| Scene rail (viewport version) | a vertical list of buttons with names, `aria-current` on the active scene | reachable with the keyboard |
+
+### 11.12 Iconography
+
+lucide (section 5), 1.5 px stroke at 16 and 20 px, 2 px at 24 px and above. Icons in the expressive register sit in a 40 px `--brand-subtle` rounded square, coloured `--brand-text`. No emoji in the interface; no icon without a text label or an accessible name.
+
+### 11.13 References that shaped this section
+
+Researched on 2026-11-20 (sources in the brainstorming document, section 3): real product interfaces as the hero instead of screenshots (Linear); a simulated agent chat with visible tool steps and tabs of previews (Raycast); scroll-led 3D storytelling with an explicit "scroll to explore" cue (Lusion); one typeface family for sans and mono (Vercel Geist); tokens in CSS through `@theme`, OKLCH colours and OKLab gradients (Tailwind CSS v4).
+
+### 11.14 Applying the tokens
+
+1. `web/resources/css/app.css`: set `--brand` and `--brand-foreground` per theme as section 11.3, add `--brand-accent`, `--brand-subtle` and `--brand-text` to `:root`, `.dark` and `@theme inline`; add the `brand` button variant; move the sidebar mark and the active navigation item to the brand tokens. `bun run check:contrast` gets the new pairs; nothing in `editor/**` changes.
+2. `site/app/globals.css`: the same tokens, so the documentation and the landing share them.
+3. The desktop shell has no styles of its own (principle P6): it follows `app.css`.
+4. The landing versions (`/landing/viewport`, `/landing/classic`, `/landing/creative`) use the expressive register; the chosen one becomes the home.
