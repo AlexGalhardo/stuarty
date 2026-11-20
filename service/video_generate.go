@@ -184,6 +184,11 @@ func (s *svc) firstFrameAsset(ctx context.Context, projectID, assetID string) (A
 	case ar.Kind != "image":
 		return AssetRow{}, newError(command.CodeTypeMismatch, "the asset %s is not an image.", assetID).
 			withPath("args.first_frame").withHint("the first frame of a clip must be an image asset")
+	case ar.SizeBytes > maxFirstFrame:
+		// Said before a person approves, not after, when the run reads the file.
+		return AssetRow{}, newError(command.CodeValidation,
+			"the image %s is larger than %d MB, too large to be a first frame.", assetID, maxFirstFrame>>20).
+			withPath("args.first_frame").withHint("pick a smaller image, or export a smaller copy of it")
 	}
 
 	return ar, nil
