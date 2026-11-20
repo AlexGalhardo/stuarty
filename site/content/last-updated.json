@@ -31,7 +31,7 @@
   "docs/en/glossary/how-to-use.mdx": "2026-11-18T22:50:48-03:00",
   "docs/en/guide/accessibility.mdx": "2026-11-15T21:11:26-03:00",
   "docs/en/guide/agent-chat.mdx": "2026-11-19T19:18:10-03:00",
-  "docs/en/guide/ai-providers.mdx": "2026-11-19T22:34:48-03:00",
+  "docs/en/guide/ai-providers.mdx": "2026-11-20T00:41:30-03:00",
   "docs/en/guide/audio.mdx": "2026-11-18T22:50:48-03:00",
   "docs/en/guide/brand-kit.mdx": "2026-11-18T22:50:48-03:00",
   "docs/en/guide/clip-properties.mdx": "2026-11-18T22:50:48-03:00",
@@ -389,7 +389,7 @@
   "generated/mcp/tools/template.mdx": "2026-11-19T22:03:23-03:00",
   "generated/mcp/tools/view.mdx": "2026-11-19T22:03:23-03:00",
   "generated/reference/cli.mdx": "2026-11-19T17:25:26-03:00",
-  "generated/reference/configuration.mdx": "2026-11-19T19:42:52-03:00",
+  "generated/reference/configuration.mdx": "2026-11-20T00:57:53-03:00",
   "generated/reference/error-codes.mdx": "2026-11-19T17:25:26-03:00",
   "generated/reference/glossary.mdx": "2026-11-16T11:48:35-03:00",
   "generated/reference/timeline-schema.mdx": "2026-11-19T16:46:34-03:00"
