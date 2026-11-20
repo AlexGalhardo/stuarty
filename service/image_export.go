@@ -14,6 +14,7 @@ import (
 	coreimage "github.com/AlexGalhardo/stuarty/core/image"
 	"github.com/AlexGalhardo/stuarty/engine/export"
 	"github.com/AlexGalhardo/stuarty/engine/ingest"
+	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
 )
 
 var imageExtensions = map[string]string{export.ImagePNG: "png", export.ImageJPEG: "jpg", export.ImageWebP: "webp"}
@@ -210,9 +211,10 @@ func (s *svc) preparedImagePath(hash string) (string, error) {
 }
 
 // preparedArtifactPath is the normalized artifact of a file of the workspace with the extension, if it exists.
+// The digits are checked here again, whatever the caller did, because they become a folder name (T-94).
 func (s *svc) preparedArtifactPath(hash, ext, what string) (string, error) {
 	hexDigest, ok := strings.CutPrefix(hash, "sha256:")
-	if !ok || len(hexDigest) != 64 {
+	if !ok || !enginestore.ValidHash(hexDigest) {
 		return "", fmt.Errorf("%q is not a content hash", hash)
 	}
 

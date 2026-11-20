@@ -287,8 +287,25 @@ func TestSecurity_T69_LookupTableIsNamedByHashNeverByPath(t *testing.T) {
 		}
 	}
 
+	// a name of 64 characters that climbs out of artifacts/ to a table that is really there: only the digits of a
+	// hash may become a folder name, so its length alone is not enough
+	outside := strings.Repeat("o", 61)
+	escape := "sha256:../" + outside
+	planted := filepath.Join(ws, outside)
+
+	if err := os.MkdirAll(planted, 0o750); err != nil {
+		t.Fatal(err)
+	}
+
+	cube := ingest.ArtifactName("normalized", ingest.ProfileNormalized, "", "cube")
+	if err := os.WriteFile(filepath.Join(planted, cube), []byte(invertCube), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
 	path := s.imageLUTPath(ctx, Caller{Actor: "local:agent"})
-	for _, name := range []string{"../../etc/passwd", "sha256:../x", "sha256:" + strings.Repeat("9", 65)} {
+	for _, name := range []string{
+		"../../etc/passwd", "sha256:../x", "sha256:" + strings.Repeat("9", 65), escape,
+	} {
 		if p, err := path(name); err == nil {
 			t.Errorf("the path of %q was built: %s", name, p)
 		}
