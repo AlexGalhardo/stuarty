@@ -597,6 +597,13 @@ export interface GeneratedResult {
 	delivered: number;
 	notes?: string[];
 	cost: Money;
+	// What an image.edit job did to the document (SDD-016 section 6.4).
+	image?: {
+		image_id: string;
+		layer_id?: string;
+		revision?: number;
+		applied: boolean;
+	};
 }
 
 // The bodies of POST /image/generate and POST /voice/generate.
