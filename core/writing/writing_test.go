@@ -519,3 +519,22 @@ func TestDiffTooLargeIsCoarse(t *testing.T) {
 		t.Fatalf("coarse=%v hunks=%d", d.Coarse, len(d.Hunks))
 	}
 }
+
+// VV-324: the words of a post are the words of its body; the front matter is metadata.
+func TestTextWordsOfAPostLeaveOutTheFrontMatter(t *testing.T) {
+	t.Parallel()
+
+	body := "---\ntitle: Bread at home\nslug: bread-at-home\ntags: [bread, home]\n---\nOne two three.\n\nFour five.\n"
+
+	if got := TextWords("post", body); got != 5 {
+		t.Errorf("TextWords(post) = %d, want 5", got)
+	}
+
+	if got := TextWords("copy", body); got <= 5 {
+		t.Errorf("TextWords(copy) = %d, a copy text counts everything it holds", got)
+	}
+
+	if got := TextWords("post", "no front matter here"); got != 4 {
+		t.Errorf("TextWords(post, no front matter) = %d, want 4", got)
+	}
+}
