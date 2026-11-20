@@ -315,6 +315,37 @@ func TestWorkspaceBackupDetectsTamperingAndStrangers(t *testing.T) {
 		}
 	})
 
+	// A crafted archive can carry a symbolic link with the name and the checksum of a listed file: the
+	// link would be followed when hashed and hard linked as a link into the workspace.
+	t.Run("a listed file that is a symbolic link", func(t *testing.T) {
+		t.Parallel()
+
+		out := backupOf(t, seeded(t))
+		outside := filepath.Join(t.TempDir(), "elsewhere")
+		writeFile(t, filepath.Dir(outside), filepath.Base(outside), "a font")
+
+		_ = os.Remove(filepath.Join(out, "fonts", "f1"))
+		if err := os.Symlink(outside, filepath.Join(out, "fonts", "f1")); err != nil {
+			t.Skipf( // verify:env-skip creating a symbolic link needs a privilege on Windows
+				"this system does not allow a symbolic link here: %v", err)
+		}
+
+		if _, err := VerifyBackup(out); !errors.Is(err, ErrBackupInvalid) {
+			t.Errorf("err = %v", err)
+		}
+
+		fresh := Dir(t.TempDir())
+		if _, err := Restore(context.Background(), RestoreOptions{
+			Dir: fresh, From: out, VerifyVault: func(string) error { return nil },
+		}); !errors.Is(err, ErrBackupInvalid) {
+			t.Errorf("restore: err = %v", err)
+		}
+
+		if left, _ := os.ReadDir(string(fresh)); len(left) != 0 {
+			t.Error("the restore wrote before it refused")
+		}
+	})
+
 	t.Run("a path outside the trees", func(t *testing.T) {
 		t.Parallel()
 
