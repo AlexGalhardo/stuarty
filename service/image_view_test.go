@@ -137,7 +137,9 @@ func TestImageFrameStartsFromTheCacheOfItsOwnUser(t *testing.T) {
 		t.Fatalf("bob started from a picture of alice: %+v", s.imageFrames.Stats())
 	}
 
-	if frame(bob, theirs); s.imageFrames.Stats().Hits != 2 {
+	frame(bob, theirs)
+
+	if s.imageFrames.Stats().Hits != 2 {
 		t.Fatalf("bob does not find his own picture: %+v", s.imageFrames.Stats())
 	}
 }
