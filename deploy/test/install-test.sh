@@ -69,6 +69,11 @@ run_install --domain new.example.com --email me@example.com --version 0.30.0 --n
 [ "$(sha256sum "$DEP/secrets/master_key" | cut -d' ' -f1)" = "$sum_key" ] && pass "an existing master key is never replaced" || fail "the master key was replaced"
 assert "--no-start starts nothing" bash -c "! grep -q ' up ' '$STUB_STATE/calls.log'"
 
+# 6b. A container that turns unhealthy makes `docker compose up -d` itself fail (Caddy waits for
+# `service_healthy`): the script still shows the log and says what to do.
+if out="$(STUB_FAIL_VERSIONS=0.30.0 run_install 2>&1)"; then fail "an unhealthy start reported success"; fi
+case "$out" in *"did not become healthy"*) pass "an unhealthy start is reported with the log" ;; *) fail "unexpected message: $out" ;; esac
+
 # 7. The static rules of the compose file and the Caddyfile.
 for f in compose.yml Caddyfile .env.example install.sh; do
 	assert "$f names no other web server" bash -c "! grep -qiE 'nginx|apache|traefik|httpd' '$REPO_DIR/deploy/$f'"

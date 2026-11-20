@@ -57,8 +57,9 @@ main() {
 	fi
 
 	say "3/4 starting $new (the migrations run now)..."
-	dc up -d
-	if wait_healthy "${STUARTY_HEALTH_TIMEOUT:-120}" && wait_https "${STUARTY_HEALTH_TIMEOUT:-120}"; then
+	# `up -d` is part of the check: Caddy waits for `service_healthy`, so `up` itself fails when the new
+	# container turns unhealthy or exits, and under `set -e` that would skip the rollback below.
+	if dc up -d && wait_healthy "${STUARTY_HEALTH_TIMEOUT:-120}" && wait_https "${STUARTY_HEALTH_TIMEOUT:-120}"; then
 		say "4/4 $new is healthy."
 		say "updated $current -> $new. The backup made before is $backup"
 		return 0
