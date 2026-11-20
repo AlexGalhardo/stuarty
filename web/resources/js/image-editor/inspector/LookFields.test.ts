@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import type { ImageDocument, Layer, Mask } from "../api/types";
-import { maskChange } from "./LookFields";
+import { lutOptions, maskChange } from "./LookFields";
 
 function doc(mask: Mask | undefined): ImageDocument {
 	const box: Layer = {
@@ -73,6 +73,19 @@ describe("maskChange", () => {
 				},
 			},
 		]);
+	});
+
+	test("the lookup tables offered are none, the library's, and the one the layer already names", () => {
+		const luts = [{ hash: "sha256:aa", name: "warm.cube" }];
+		expect(lutOptions(luts, undefined, "No table")).toEqual([
+			{ value: "", label: "No table" },
+			{ value: "sha256:aa", label: "warm.cube" },
+		]);
+		expect(lutOptions(luts, "sha256:aa", "No table")).toHaveLength(2);
+		expect(lutOptions(luts, "sha256:zz", "No table").at(-1)).toEqual({
+			value: "sha256:zz",
+			label: "sha256:zz",
+		});
 	});
 
 	test("a layer with no mask sends only what the field gives", () => {
