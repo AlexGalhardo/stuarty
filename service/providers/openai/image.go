@@ -70,6 +70,12 @@ func (*Adapter) GenerateImages(
 	req provider.ImageRequest,
 	maxBytes int64,
 ) (providers.ImageResult, error) {
+	// The token of a sign-in is for the text of a plan only (SDD-016 section 12.2); the service refuses
+	// before a job exists, and this keeps it off the image endpoint whatever the caller.
+	if c.SignedIn {
+		return providers.ImageResult{}, errSignInTextOnly
+	}
+
 	var ans imageAnswer
 
 	call := wire.Call{

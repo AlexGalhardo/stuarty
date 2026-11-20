@@ -24,6 +24,10 @@ const codeUsageLimit = "subscription_sharing_usage_limit_exceeded"
 // maxLine is the longest line of a stream that is read.
 const maxLine = 1 << 20
 
+// errSignInTextOnly is an image or a voice asked of a connection made by a sign-in: the plan grants the
+// Responses API only, so the request is not sent (SDD-016 section 12.2).
+var errSignInTextOnly = &providers.Error{Kind: providers.KindBadRequest}
+
 type planModelsAnswer struct {
 	Models []struct {
 		Slug        string `json:"slug"`
