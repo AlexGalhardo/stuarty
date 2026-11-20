@@ -21,8 +21,9 @@ func post(t *testing.T, h http.Handler, path, body string) *httptest.ResponseRec
 }
 
 func TestUploadChecksTheFileItNames(t *testing.T) {
-	h := (&network{}).mux()
-	video := filepath.Join(t.TempDir(), "out.mp4")
+	root := t.TempDir()
+	h := (&network{mediaRoot: root}).mux()
+	video := filepath.Join(root, "out.mp4")
 
 	if got := post(t, h, "/videos", `{"title":"t","path":`+quote(video)+`}`); got.Code != http.StatusBadRequest {
 		t.Errorf("a missing file was accepted: %d", got.Code)
@@ -41,6 +42,41 @@ func TestUploadChecksTheFileItNames(t *testing.T) {
 
 	if !strings.Contains(rec.Body.String(), `"bytes":9`) {
 		t.Errorf("the upload was not recorded with its size: %s", rec.Body)
+	}
+}
+
+func TestUploadRefusesAFileOutsideTheMediaRoot(t *testing.T) {
+	outside := filepath.Join(t.TempDir(), "out.mp4")
+	if err := os.WriteFile(outside, []byte("not empty"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	h := (&network{mediaRoot: t.TempDir()}).mux()
+
+	if got := post(t, h, "/videos", `{"title":"t","path":`+quote(outside)+`}`); got.Code != http.StatusBadRequest {
+		t.Errorf("a file outside the media root was accepted: %d %s", got.Code, got.Body)
+	}
+}
+
+func TestAuthorizeSendsBackOnlyToLoopback(t *testing.T) {
+	h := (&network{}).mux()
+
+	for _, uri := range []string{"http://evil.example/cb", "https://127.0.0.1/cb", "%zz", ""} {
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, httptest.NewRequestWithContext(t.Context(), http.MethodGet,
+			"/authorize?redirect_uri="+url.QueryEscape(uri), http.NoBody))
+
+		if rec.Code != http.StatusBadRequest {
+			t.Errorf("redirect_uri %q got %d, want 400", uri, rec.Code)
+		}
+	}
+
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, httptest.NewRequestWithContext(t.Context(), http.MethodGet,
+		"/authorize?redirect_uri="+url.QueryEscape("http://127.0.0.1:9/cb"), http.NoBody))
+
+	if rec.Code != http.StatusFound && rec.Code != http.StatusSeeOther {
+		t.Errorf("a loopback redirect_uri got %d", rec.Code)
 	}
 }
 
