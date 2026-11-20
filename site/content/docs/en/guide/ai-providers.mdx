@@ -54,7 +54,7 @@ stuarty voice:generate --project prj_7k2m9x4q1b --connection con_0123456789 --mo
 
 A short clip is made the same way, with one difference: **it always waits for you**, whatever the estimate is, because a video costs far more than an image. Only a rule you wrote on the Approvals page can lift that wait, and a cost ceiling still refuses what is above it.
 
-The provider for video is not chosen yet: OpenAI shut down its video API (Sora 2) in September 2026 and Anthropic has none. Until one is approved and connected, the video tab of the Generate dialog says there is no video provider connected, and `video:generate` answers that the connection has no video capability.
+The provider for video is not chosen yet: OpenAI shut down its video API (Sora 2) in September 2026 and Anthropic has none. Until one is approved and connected, the video clip dialog says that no provider Stuarty works with makes video yet, with nothing to connect, and `video:generate` answers that the connection has no video capability.
 
 - **The clip is generated in the background.** Stuarty sends the request once, keeps the task number of the provider with the job, and asks for the result every few seconds. If you restart the app or the server meanwhile, the job picks the same task up and does not send the request again, so you are not charged twice. The only moment a crash could cause a second charge is the instant between the provider's answer and the write of that number to disk.
 - **Cancel** asks the provider to stop. If it confirms, the job costs nothing; if it does not, the job is recorded at its estimate, because the provider may have charged for the work already done.
