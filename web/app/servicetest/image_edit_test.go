@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"image"
 	"image/color"
+	"image/gif"
 	"image/png"
 	"net/http"
 	"strings"
@@ -581,6 +582,48 @@ func TestImageEdit_ArgumentsAreChecked(t *testing.T) {
 
 	if e.api.edits.Load() != 0 || e.providerCalls() != 0 {
 		t.Fatal("a refused request reached the provider")
+	}
+}
+
+// A picture the ingest takes and the provider does not (a GIF) is refused at the estimate, before a person is
+// asked to approve a job that could not send it.
+func TestImageEdit_APictureTheProviderCannotTakeIsRefusedFirst(t *testing.T) {
+	t.Parallel()
+
+	e := newEditEnv(t)
+
+	var b bytes.Buffer
+
+	frame := image.NewPaletted(image.Rect(0, 0, 32, 24), color.Palette{color.Black, color.White})
+	if err := gif.Encode(&b, frame, nil); err != nil {
+		t.Fatal(err)
+	}
+
+	imp := e.importOne(e.prj, e.write("still.gif", b.String()))
+	if len(imp.Assets) != 1 || imp.Assets[0].State != "ready" {
+		t.Fatalf("the GIF did not become a ready image: %+v", imp)
+	}
+
+	e.edit(e.describe().Revision, op("layer.add_image", `{"asset":"`+imp.Assets[0].Hash+
+		`","id":"lyr_0000000098","x":0,"y":0,"w":320,"h":240,"name":"Gif"}`))
+
+	_, err := e.svc.ImageModelEdit(e.as(token), service.ImageModelEditRequest{
+		ProjectID: e.prj, ImageModelArgs: service.ImageModelArgs{
+			ConnectionID: e.imageConn, ImageID: e.image, Operation: provider.OperationRemoveBackground,
+			Model: imageModel, LayerID: "lyr_0000000098",
+		},
+	})
+	if se, ok := svcErr(err); !ok || se.Code != "E_VALIDATION" || se.Path != "args.layer_id" ||
+		!strings.Contains(se.Message, "not a PNG, a JPEG or a WebP") {
+		t.Fatalf("a GIF layer = %v, want E_VALIDATION at args.layer_id", err)
+	}
+
+	if list, _ := e.svc.ApprovalList(e.as(token), service.ApprovalListRequest{State: "all"}); list.Total != 0 {
+		t.Errorf("a picture that cannot be sent left %d approval requests", list.Total)
+	}
+
+	if e.api.edits.Load() != 0 {
+		t.Fatal("a picture that cannot be sent reached the provider")
 	}
 }
 

@@ -279,6 +279,14 @@ func (s *svc) prepareRemoveBackground(
 			withLimit("source_bytes", ar.SizeBytes, limits.SourceLimit())
 	}
 
+	// The ingest takes other pictures (a GIF, for one) that the provider does not: refused now, before a person
+	// is asked to approve a job that could not send it.
+	if !s.sendableSource(layer.Asset) {
+		return Prepared{}, newError(command.CodeValidation,
+			"the picture of the layer %s is not a PNG, a JPEG or a WebP file.", layer.ID).
+			withPath("args.layer_id").withHint("put a PNG, a JPEG or a WebP picture in the layer")
+	}
+
 	size := ""
 	if len(limits.Sizes) > 0 {
 		size = provider.ClosestSize(ref.Width, ref.Height, limits.Sizes)
@@ -367,6 +375,27 @@ func (s *svc) prepareGenerateInto(
 		r.Size, excerpt(doc.Name, 40), name, r.Model, name)
 
 	return Prepared{Summary: summaryWithExcerpt(head, r.Prompt), ConnectionID: conn.ID, Estimate: estimate}, nil
+}
+
+// sendableSource reports whether the file of a layer has the signature of a format the provider takes. Only its
+// first bytes are read, locally; with no content store there is nothing to read and the run decides.
+func (s *svc) sendableSource(hash string) bool {
+	if s.media.Content == nil {
+		return true
+	}
+
+	f, err := s.media.Content.Open(strings.TrimPrefix(hash, "sha256:"))
+	if err != nil {
+		return false
+	}
+
+	defer func() { _ = f.Close() }()
+
+	head := make([]byte, 12)
+	n, _ := io.ReadFull(f, head)
+	_, ok := provider.CheckImage(head[:n])
+
+	return ok
 }
 
 // readEditSource reads the file of the layer from the content store, to the bound the provider takes, and names
