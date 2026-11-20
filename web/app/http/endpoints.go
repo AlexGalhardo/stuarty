@@ -867,6 +867,11 @@ var Endpoints = []Endpoint{
 		ID: "system.launch", Method: http.MethodPost, Path: "/system/launch", Scope: service.ScopeAdmin, Status: 200,
 		Summary: "Issue a one-time browser launch code",
 	},
+	{
+		ID: "system.scheduler", Method: http.MethodPost, Path: "/system/scheduler", Scope: service.ScopeAdmin,
+		Status:  200,
+		Summary: "Read, pause or resume the publication scheduler (pause and resume only for the desktop shell)",
+	},
 
 	{
 		ID:      "openapi.get",
