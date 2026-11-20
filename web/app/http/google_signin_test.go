@@ -116,7 +116,7 @@ func TestGoogleSignInOpensTheSameSessionAsAPassword(t *testing.T) {
 	}
 }
 
-func TestGoogleSignInRefusesAnIdentityThatWasNeverLinked(t *testing.T) {
+func TestSecurity_T80_UnlinkedIdentityCannotSignIn(t *testing.T) {
 	s := newGoogleSite(t, googleSiteOptions{})
 	s.enable(t)
 	s.user(t, "ana@example.com", service.RoleAdmin)
@@ -144,7 +144,7 @@ func TestGoogleSignInRefusesAnIdentityThatWasNeverLinked(t *testing.T) {
 	}
 }
 
-func TestGoogleSignInIsBoundToTheBrowserThatBeganIt(t *testing.T) {
+func TestSecurity_T82_CallbackStateIsBoundToTheBrowser(t *testing.T) {
 	s := newGoogleSite(t, googleSiteOptions{})
 	s.enable(t)
 	s.linkedUser(t, "ana@example.com", "sub-ana")
@@ -171,7 +171,7 @@ func TestGoogleSignInIsBoundToTheBrowserThatBeganIt(t *testing.T) {
 	}
 }
 
-func TestGoogleSignInRotatesTheSession(t *testing.T) {
+func TestSecurity_T83_GoogleSignInRotatesTheSession(t *testing.T) {
 	s := newGoogleSite(t, googleSiteOptions{})
 	s.enable(t)
 	s.linkedUser(t, "ana@example.com", "sub-ana")
