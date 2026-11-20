@@ -407,7 +407,7 @@ A result URL on a host outside the destinations of the connection is `E_CONNECTI
 | The surfaces agree on the three operations | `web/contract` parity (epic 10) |
 | The Generate dialog against a fake provider server | `web/e2e/specs/generate-assets.spec.ts` |
 | Video: limits, estimates, the signature of a clip | `core/provider` table tests (epic 11) |
-| A video job: approval by default and no outbound call before it, a rule that lifts it, the task id stored before the first poll, a restart that makes one submission, a cancel, a refused prompt, a clip with a complete origin | `TestVideoGenerate_*` over the Service (epic 11) |
+| A video job: approval by default and no outbound call before it, a rule that lifts it, the task id stored before the first poll, a restart that makes one submission, a cancel (also of a job queued again after a restart), a refused prompt, a clip with a complete origin, a first frame of another project refused, a real clip probed, placed on a timeline and exported on the pinned FFmpeg | `TestVideoGenerate_*` over the Service (epic 11) |
 | The adapter of the approved provider: submit, pending, done, failed and refused against recorded answers | `service/providers/<name>` contract tests (epic 11, waits for the choice of section 2.3) |
 
 No test calls a real provider. The recorded responses are written by hand from the public documentation of each API and kept in `testdata/` next to the adapter; the manual check with a real key of the author (task 8) is not part of the suite.
