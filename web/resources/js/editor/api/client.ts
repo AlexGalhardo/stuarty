@@ -268,6 +268,11 @@ export interface ApiClient {
 	setProviderPrice(
 		request: ProviderPriceSetRequest,
 	): Promise<ProviderPricesResult>;
+	// Image and voice generation (SDD-016 section 6.1): each answers the job with its estimate, which waits
+	// for a person; dry_run answers the estimate and writes nothing.
+	generateImage(request: ImageGenerateRequest): Promise<Job>;
+	generateVoice(request: VoiceGenerateRequest): Promise<Job>;
+	listVoices(connectionId: string): Promise<VoiceListResult>;
 	// The sign-in to an AI provider (SDD-016 section 12): beginning and completing one are for a person in a
 	// browser session; the list is for anyone who may read connections.
 	beginProviderSignIn(
@@ -723,6 +728,16 @@ export function createClient(
 			),
 		setProviderPrice: (request) =>
 			call("PUT", "/providers/prices", EDIT_TIMEOUT_MS, request),
+		generateImage: (request) =>
+			call("POST", "/image/generate", EDIT_TIMEOUT_MS, request),
+		generateVoice: (request) =>
+			call("POST", "/voice/generate", EDIT_TIMEOUT_MS, request),
+		listVoices: (connectionId) =>
+			call(
+				"GET",
+				`/connections/${encodeURIComponent(connectionId)}/voices`,
+				READ_TIMEOUT_MS,
+			),
 		beginProviderSignIn: (request) =>
 			call("POST", "/providers/signin", EDIT_TIMEOUT_MS, request),
 		completeProviderSignIn: (request) =>

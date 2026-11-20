@@ -200,7 +200,8 @@ type Token struct {
 	RefreshToken string
 	ExpiresIn    time.Duration
 	Scope        string
-	// IDToken is the OpenID Connect identity token of an answer that has one (epic 12); empty otherwise.
+	// IDToken is the OpenID Connect ID token when the answer carries one (epics 12 and 24), empty
+	// otherwise; it is not verified here.
 	IDToken string
 }
 
