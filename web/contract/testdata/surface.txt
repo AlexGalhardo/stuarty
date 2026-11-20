@@ -302,6 +302,7 @@ route POST /social/complete
 route POST /social/connect
 route POST /social/select
 route POST /system/launch
+route POST /system/scheduler
 route POST /system/tools/install
 route POST /templates
 route POST /templates/import

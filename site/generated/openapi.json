@@ -13948,6 +13948,19 @@
         },
         "type": "object"
       },
+      "schedulerOut": {
+        "properties": {
+          "paused": {
+            "description": "Whether publishing is paused.",
+            "type": "boolean"
+          },
+          "scheduled": {
+            "description": "The targets that still have to go out: approved, scheduled and publishing.",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "userListOut": {
         "properties": {
           "users": {
@@ -25988,6 +26001,75 @@
           }
         ],
         "summary": "Issue a one-time browser launch code"
+      }
+    },
+    "/api/v1/system/scheduler": {
+      "post": {
+        "operationId": "system.scheduler",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "action": {
+                    "description": "status, pause or resume.",
+                    "enum": [
+                      "status",
+                      "pause",
+                      "resume"
+                    ],
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "action"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/schedulerOut"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read, pause or resume the publication scheduler (pause and resume only for the desktop shell)"
       }
     },
     "/api/v1/system/tools": {

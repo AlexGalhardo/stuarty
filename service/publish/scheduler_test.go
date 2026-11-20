@@ -570,3 +570,63 @@ func TestSchedulerSendsThePostApprovedAtTheClaim(t *testing.T) {
 		t.Errorf("state = %s", got.State)
 	}
 }
+
+func TestSchedulerPausedStartsNothingAndMissesWhatIsLate(t *testing.T) {
+	t.Parallel()
+
+	r := newSchedRig(t)
+	s := r.scheduler("paused")
+	p, id := r.plan(time.Hour, nil)
+
+	if n, err := s.Waiting(context.Background()); err != nil || n != 1 {
+		t.Fatalf("waiting = %d, %v; want 1", n, err)
+	}
+
+	s.SetPaused(true)
+
+	if !s.Paused() {
+		t.Fatal("not paused")
+	}
+
+	r.clock.advance(time.Hour)
+
+	if n := r.tick(s); n != 0 || r.gw.total() != 0 {
+		t.Fatalf("a paused pass started %d, sent %d", n, r.gw.total())
+	}
+
+	if tg := r.target(p, id); tg.State != core.TargetScheduled {
+		t.Fatalf("state = %s while paused, want scheduled", tg.State)
+	}
+
+	if d, err := s.Next(context.Background()); err != nil || d != 30*time.Second {
+		t.Fatalf("next = %v, %v; a paused loop sleeps at the poll", d, err)
+	}
+
+	// Resumed, the post that is still on time goes out once.
+	s.SetPaused(false)
+
+	if n := r.tick(s); n != 1 || r.gw.sent(id) != 1 {
+		t.Fatalf("after resume started %d, sent %d", n, r.gw.sent(id))
+	}
+}
+
+func TestSchedulerPausedPastTheWindowIsMissedNotSent(t *testing.T) {
+	t.Parallel()
+
+	r := newSchedRig(t)
+	s := r.scheduler("paused-late")
+	p, id := r.plan(time.Hour, nil)
+
+	s.SetPaused(true)
+	r.clock.advance(3 * time.Hour)
+	r.tick(s)
+	s.SetPaused(false)
+
+	if n := r.tick(s); n != 0 || r.gw.total() != 0 {
+		t.Fatalf("a late post was sent after the resume: started %d, sent %d", n, r.gw.total())
+	}
+
+	if tg := r.target(p, id); tg.State != core.TargetMissed {
+		t.Fatalf("state = %s, want missed", tg.State)
+	}
+}
