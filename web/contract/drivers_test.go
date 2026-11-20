@@ -814,9 +814,9 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 }
 
 func commandOf(s step) (name string, argv []string, stdin string, err error) {
-	// First: its members are numbers where the generic decoding below reads strings (until).
-	if name, argv, ok, err := historyCommand(s); ok {
-		return name, argv, "", err
+	// The writing steps first: their from is a revision number, which the time of a motion range below refuses.
+	if name, argv, stdin, ok, err := writingCommand(s); ok {
+		return name, argv, stdin, err
 	}
 
 	var a struct {
@@ -1324,10 +1324,6 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 	}
 
 	if name, argv, stdin, ok, err := libraryCommand(s); ok {
-		return name, argv, stdin, err
-	}
-
-	if name, argv, stdin, ok, err := writingCommand(s); ok {
 		return name, argv, stdin, err
 	}
 
