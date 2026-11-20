@@ -63,7 +63,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [36](36-revert-checkpoints-and-diff.md) | Revert to a revision, checkpoints and a diff | M | 03 | DONE (2026-11-20, `c42f2f5ad`..`90c6df86c`, merge `8d12df6d4`; image documents left for a later epic) |
 | [37](37-editor-ui-and-shortcuts.md) | Final editor UI, shortcuts and open fixes | L | 07 | DONE (2026-11-19, `7921c340`..`2715dcc0`, merge `46691bb3`; criterion 4 not met on this Windows machine: WebKit/Firefox limits and VV-238, VV-253, VV-260 to VV-264) |
 | [48](48-image-import-and-image-events.md) | Image import and the image event stream | M | 27, 28 | DONE (2026-11-20, `eaabd4cde`..`7975f0872`, merge `80a23e8dd`; an `image` project item is not in the schema, SDD-021 §10.2) |
-| [49](49-image-lut.md) | Image lookup tables (.cube) | S | 29 | IN PROGRESS (senior-a, 2026-11-20) |
+| [49](49-image-lut.md) | Image lookup tables (.cube) | S | 29 | IN PROGRESS (tasks 1 to 6 merged 2026-11-20, da804c05a..819435062, merge 23d185e93; threats T-92 to T-94; task 7, the pinned renderer digest, waits for VV-276) |
 | [50](50-image-revert-checkpoints-and-diff.md) | Revert to a revision, checkpoints and a diff for image documents | M | 36, 29 | TODO |
 | [51](51-processed-audio-preview-on-the-timeline.md) | Processed audio preview on the timeline | M | 34 | DONE (2026-11-20, `e1729a0bf`..`8778074ef`, merge `74a429def`; the latency budget on an idle machine not measured) |
 | [52](52-live-composition-groups-in-the-browser.md) | Live composition groups in the browser preview | M | 32, 26 | DONE (2026-11-20, `43b11f50e`..`5332706c1`, merge `7cb81c176`; Firefox and WebKit not run) |
