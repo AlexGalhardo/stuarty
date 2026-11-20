@@ -64,7 +64,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [37](37-editor-ui-and-shortcuts.md) | Final editor UI, shortcuts and open fixes | L | 07 | DONE (2026-11-19, `7921c340`..`2715dcc0`, merge `46691bb3`; criterion 4 not met on this Windows machine: WebKit/Firefox limits and VV-238, VV-253, VV-260 to VV-264) |
 | [48](48-image-import-and-image-events.md) | Image import and the image event stream | M | 27, 28 | DONE (2026-11-20, `eaabd4cde`..`7975f0872`, merge `80a23e8dd`; an `image` project item is not in the schema, SDD-021 §10.2) |
 | [49](49-image-lut.md) | Image lookup tables (.cube) | S | 29 | IN PROGRESS (tasks 1 to 6 merged 2026-11-20, da804c05a..819435062, merge 23d185e93; threats T-92 to T-94; task 7, the pinned renderer digest, waits for VV-276) |
-| [50](50-image-revert-checkpoints-and-diff.md) | Revert to a revision, checkpoints and a diff for image documents | M | 36, 29 | TODO |
+| [50](50-image-revert-checkpoints-and-diff.md) | Revert to a revision, checkpoints and a diff for image documents | M | 36, 29 | DONE (2026-11-21, 916861fda..f0345a119, merge 443892948) |
 | [51](51-processed-audio-preview-on-the-timeline.md) | Processed audio preview on the timeline | M | 34 | DONE (2026-11-20, `e1729a0bf`..`8778074ef`, merge `74a429def`; the latency budget on an idle machine not measured) |
 | [52](52-live-composition-groups-in-the-browser.md) | Live composition groups in the browser preview | M | 32, 26 | DONE (2026-11-20, `43b11f50e`..`5332706c1`, merge `7cb81c176`; Firefox and WebKit not run) |
 | [53](53-constant-speed-for-compositions.md) | Constant speed for compositions | M | 32 | DONE (2026-11-20, 38369a110..6dc199452, merge 425c9bf14; the audio keeps the pitch through atempo, no nested bus) |
