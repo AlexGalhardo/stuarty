@@ -26,7 +26,7 @@
 
 - [Appendix A: Decisions of this SDD and required amendments elsewhere](#appendix-a-decisions-of-this-sdd-and-required-amendments-elsewhere)
 
-Conventions. "Must" is a requirement with a test. Items marked **Decision of this SDD** fill a gap or narrow another document and are collected in Appendix A. Test names follow vukem's convention `TestSecurity_<id>_<Behaviour>`, with `T<nn>` the threat identifier of section 2 (vukem uses its OWASP identifiers there; this product uses its own threat identifiers). Names of vukem APIs are used only where they were read in the vukem source: `auth.Tokens` (`Create`, `Find`, `List`, `RevokeFor`, `Prefix`), `auth.Token.Can`, `ratelimit.NewMemory`, `ratelimit.NewMemoryBurst`, `ratelimit.Limiter.Allow`, `ratelimit.ByIP`, `ratelimit.ByToken`, `ratelimit.ByUser`, `contrib/engine` (`Find`, `Config`, `Limits`, `Tool.Run`, `Tool.RunStream`, `Sanitized`), `archive.Zip`, `httpclient.Safe()`, `config.Secret`, `cpu.Count`, `os.Root`.
+Conventions. "Must" is a requirement with a test. Items marked **Decision of this SDD** fill a gap or narrow another document and are collected in Appendix A. Test names follow vukem's convention `TestSecurity_<id>_<Behaviour>`, with `T<nn>` or `T<nnn>` the threat identifier of section 2 (vukem uses its OWASP identifiers there; this product uses its own threat identifiers). Names of vukem APIs are used only where they were read in the vukem source: `auth.Tokens` (`Create`, `Find`, `List`, `RevokeFor`, `Prefix`), `auth.Token.Can`, `ratelimit.NewMemory`, `ratelimit.NewMemoryBurst`, `ratelimit.Limiter.Allow`, `ratelimit.ByIP`, `ratelimit.ByToken`, `ratelimit.ByUser`, `contrib/engine` (`Find`, `Config`, `Limits`, `Tool.Run`, `Tool.RunStream`, `Sanitized`), `archive.Zip`, `httpclient.Safe()`, `config.Secret`, `cpu.Count`, `os.Root`.
 
 ## 1. Assets, actors and trust boundaries
 
@@ -118,7 +118,7 @@ flowchart LR
 
 ## 2. Threat model
 
-Impact is stated for the product as designed. "Test" names the primary tests; a threat may have more. Every test listed must exist and run in CI (section 12). Threat ids have two or three digits (`T-01` to `T-99`, then `T-100` and up, with test names `TestSecurity_TNN_` and `TestSecurity_TNNN_`); a new threat takes the next free id, and no id is renumbered.
+Impact is stated for the product as designed. "Test" names the primary tests; a threat may have more. Every test listed must exist and run in CI (section 12). Threat ids have two or three digits (`T-01` to `T-99`, then `T-100` and up, with test names `TestSecurity_TNN_` and `TestSecurity_TNNN_`; a padded id such as `T-050` is refused); a new threat takes the next free id, and no id is renumbered. The threat check reports a test named `TestSecurity_T` and digits whose id has another form.
 
 | ID | Threat | How it happens in this product | Impact | Mitigation | Test |
 | --- | --- | --- | --- | --- | --- |
