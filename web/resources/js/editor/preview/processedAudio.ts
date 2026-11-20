@@ -78,13 +78,19 @@ export class ProcessedAudio {
 		if (entry.full.phase === "ready") {
 			return { url: audioPreviewUrl(projectId, key), zero: processed.start };
 		}
+		// A window is named by a frame of the file, not of the timeline: items
+		// with the same key share it wherever they sit (SDD-004 section 7.1).
+		const offset = frame - processed.start;
 		const hit = entry.windows.find(
-			(w) => w.phase === "ready" && frame >= w.first && frame <= w.last,
+			(w) => w.phase === "ready" && offset >= w.first && offset <= w.last,
 		);
-		this.ensureWindow(key, entry, frame, processed.start, processed.frames);
+		this.ensureWindow(key, entry, offset, processed.frames);
 		this.ensureFull(key, entry);
 		if (hit === undefined) return null;
-		return { url: audioPreviewUrl(projectId, key, hit.from), zero: hit.first };
+		return {
+			url: audioPreviewUrl(projectId, key, hit.from),
+			zero: processed.start + hit.first,
+		};
 	}
 
 	// "processing" while an item with a processed sound plays unprocessed and
@@ -134,20 +140,20 @@ export class ProcessedAudio {
 		);
 	}
 
-	// One window at a time per key: the one that starts at the playhead.
+	// One window at a time per key: the one that starts at the playhead, at the
+	// frame `offset` of the file.
 	private ensureWindow(
 		key: string,
 		entry: Entry,
-		frame: number,
-		start: number,
+		offset: number,
 		frames: number,
 	): void {
 		if (entry.windows.some((w) => w.phase === "polling")) return;
 		const covered = entry.windows.some(
-			(w) => w.phase !== "failed" && frame >= w.first && frame <= w.last,
+			(w) => w.phase !== "failed" && offset >= w.first && offset <= w.last,
 		);
 		if (covered) return;
-		const from = Math.min(Math.max(frame, start), start + frames - 1);
+		const from = Math.min(Math.max(offset, 0), frames - 1);
 		const failed = entry.windows.find(
 			(w) => w.phase === "failed" && w.from === from,
 		);

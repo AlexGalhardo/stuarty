@@ -18880,7 +18880,7 @@
         "operationId": "audio_previews.get",
         "parameters": [
           {
-            "description": "A frame of the item: the 2 seconds from it are rendered first, as a window.",
+            "description": "A frame of the file, counted from its first: the 2 seconds from it are rendered first, as a window.",
             "in": "query",
             "name": "from",
             "schema": {

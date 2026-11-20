@@ -123,37 +123,39 @@ func (s *svc) registerAudioPreviews(project string, doc *timeline.Document, w *p
 type previewTarget struct {
 	src         plan.AudioSource
 	key         string // the key of the file: the one of the request, or the one of the window
-	first, last int    // the timeline frames of the file, the last inclusive
+	first, last int    // the frames of the whole file that this one covers, counted from its first, the last inclusive
 	window      bool
 	job         string // the id of the work folder of the render
 }
 
-// target resolves a request: the whole item, or the window of PreviewWindowSeconds that starts at the frame from.
+// target resolves a request: the whole item, or the window of PreviewWindowSeconds that starts at the frame from of
+// the file. from counts from the first frame of the file, not of the timeline: a key is shared by every item with the
+// same source wherever it sits, and the item that handed it out first may since have moved, so only a frame of the
+// file names one sound for all of them (SDD-004 section 7.1).
 func (k *knownPreview) target(key, from string) (*previewTarget, error) {
 	doc := k.doc
-	end := k.start + k.count
 
 	if from == "" {
-		src, ok := plan.PreviewSource(doc, k.item, k.start, end)
+		src, ok := plan.PreviewSource(doc, k.item, k.start, k.start+k.count)
 		if !ok {
 			return nil, newError(command.CodeNotFound, "there is no processed sound with that key.")
 		}
 
-		return &previewTarget{src: src, key: key, first: k.start, last: end - 1}, nil
+		return &previewTarget{src: src, key: key, first: 0, last: k.count - 1}, nil
 	}
 
 	n, err := strconv.Atoi(from)
-	if err != nil || n < k.start || n >= end {
+	if err != nil || n < 0 || n >= k.count {
 		return nil, newError(
-			command.CodeValidation, "from %q is not a frame of the item, %d to %d.", from, k.start, end-1,
+			command.CodeValidation, "from %q is not a frame of the file, 0 to %d.", from, k.count-1,
 		).withPath("from")
 	}
 
 	fps := doc.Settings.FPS
 	window := (PreviewWindowSeconds*fps.Num + fps.Den - 1) / fps.Den
-	to := min(n+window, end)
+	to := min(n+window, k.count)
 
-	src, ok := plan.PreviewSource(doc, k.item, n, to)
+	src, ok := plan.PreviewSource(doc, k.item, k.start+n, k.start+to)
 	if !ok {
 		return nil, newError(command.CodeNotFound, "there is no processed sound with that key.")
 	}

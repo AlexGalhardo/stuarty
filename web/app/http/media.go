@@ -55,7 +55,7 @@ type mediaFileIn struct {
 type audioPreviewIn struct {
 	ID   string `json:"id"             validate:"required"`
 	Key  string `json:"key"            validate:"required"`
-	From string `json:"from,omitempty"                     doc:"A frame of the item: the 2 seconds from it are rendered first, as a window."`
+	From string `json:"from,omitempty"                     doc:"A frame of the file, counted from its first: the 2 seconds from it are rendered first, as a window."`
 }
 
 type thumbnailIn struct {

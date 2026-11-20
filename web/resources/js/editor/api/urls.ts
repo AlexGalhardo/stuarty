@@ -44,7 +44,7 @@ export function bitmapUrl(projectId: string, key: string): string {
 }
 
 // The processed sound of an item; `from` asks for the window that starts at
-// that frame (SDD-004 section 7.1).
+// that frame of the file, counted from its first (SDD-004 section 7.1).
 export function audioPreviewUrl(
 	projectId: string,
 	key: string,
