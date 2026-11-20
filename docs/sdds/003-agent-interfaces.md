@@ -1438,8 +1438,8 @@ The diff of two revisions of an image (epic 50) has the same header and the same
 diff img_7k2m9x4q1b r3 -> r5 (4 changes)
 added text "Title" lyr_a1b2c3d4e5 at 80,440 800x200
 removed image "Photo" lyr_f6g7h8j9k0
-moved lyr_m1n2p3q4r5: x 0 -> 40, y 0 -> 40
-changed lyr_s6t7v8w9x0: opacity 100 -> 60
+moved "Badge" lyr_m1n2p3q4r5: x 0 -> 40, y 0 -> 40
+changed "Logo" lyr_s6t7v8w9x0: opacity 100 -> 60
 ```
 
 The text of a revert of an image is `reverted r9 (base r8) by <actor>: changes=<n>, to r5` and the same lines, or `reverted nothing: the image already equals r5` when `same`.
