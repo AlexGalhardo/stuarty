@@ -108,7 +108,10 @@ type publishFile struct {
 
 // publishInput is the input column of a publish.upload job.
 type publishInput struct {
-	Network   string       `json:"network"`
+	Network string `json:"network"`
+	// Account is the id of the account the person was shown in the request; the run refuses to send to any
+	// other, so a choice or a sign-in changed while the request waited does not move the post (T-60).
+	Account   string       `json:"account,omitempty"`
 	Args      PublishArgs  `json:"args"`
 	Output    publishFile  `json:"output"`
 	Thumbnail *publishFile `json:"thumbnail,omitempty"`
@@ -233,6 +236,8 @@ func (s *svc) resolvePublish(ctx context.Context, c Caller, projectID string, a 
 		return nil, validationAt("connection_id", "the connection is not signed in.").
 			withHint("sign in again from the Connections page, then publish")
 	}
+
+	t.input.Account = t.account.ID
 
 	out, ferr := s.publishFile(ctx, c, projectID, "export", a.Export)
 	if ferr != nil {
@@ -526,7 +531,17 @@ func (s *svc) runPublish(ctx context.Context, run JobRun) (JobOutcome, error) {
 
 	var pub social.Published
 
+	var moved bool
+
 	werr := s.conns.With(ctx, in.Args.ConnectionID, func(cred connections.Credential) error {
+		// The account the person approved, and no other: nothing is sent when the connection now signs in as
+		// another account or has none chosen.
+		if acc, ok := conn.SignedIn(cred.Secret); in.Account != "" && (!ok || acc.ID != in.Account) {
+			moved = true
+
+			return nil
+		}
+
 		var perr error
 
 		pub, perr = conn.Publish(ctx, cred, up)
@@ -535,6 +550,12 @@ func (s *svc) runPublish(ctx context.Context, run JobRun) (JobOutcome, error) {
 	})
 	if werr != nil {
 		return JobOutcome{}, s.socialError(werr)
+	}
+
+	if moved {
+		return JobOutcome{}, newError(
+			command.CodeInvalidState, "the connection no longer publishes to the account that was approved.",
+		).withHint("publish again, and approve the account the connection now names")
 	}
 
 	raw, merr := json.Marshal(JobResult{Publish: &PublishResult{

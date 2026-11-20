@@ -94,6 +94,60 @@ func TestSecurity_T60_AnAgentCannotChooseOrChangeTheAccount(t *testing.T) {
 	}
 }
 
+// The person approves the account the request names: a choice changed while the request waited does not move
+// the post to another account.
+func TestSecurity_T60_AnApprovalGoesOnlyToTheAccountItNamed(t *testing.T) {
+	m := newMetaEnv(t)
+	person := m.browser(ui)
+
+	conn, _ := m.connect("facebook")
+
+	if _, err := m.selectAccount(person, conn, "P2"); err != nil {
+		t.Fatal(err)
+	}
+
+	exp := m.seedReel("job_0000000974", 1080, 1920, 20)
+
+	job, err := m.pub.PublishNow(m.as(token), service.PublishNowRequest{
+		ProjectID: m.project, PublishArgs: m.reelArgs(conn, exp),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// While the request waits, the connection signs in again and another Page is chosen.
+	begun, err := m.ops.SocialConnectBegin(person, service.SocialConnectBeginRequest{
+		Network: "facebook", ConnectionID: conn, RedirectURI: redirect,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, cerr := m.ops.SocialConnectComplete(
+		person, service.SocialConnectCompleteRequest{State: stateOf(m.tt, begun.AuthorizeURL), Code: "c3"},
+	); cerr != nil {
+		t.Fatal(cerr)
+	}
+
+	if _, serr := m.selectAccount(person, conn, "P1"); serr != nil {
+		t.Fatal(serr)
+	}
+
+	before := m.graph.count()
+
+	m.decide(job, "approve")
+
+	if done := m.job(job.JobID); done.State != service.JobFailed {
+		t.Fatalf("job = %+v; want failed, since the account is not the one approved", done)
+	}
+
+	for _, call := range m.graph.seen()[before:] {
+		if strings.Contains(call, "video_reels") || strings.Contains(call, "/P1") {
+			t.Errorf("a request went out for an account the person did not approve: %s", call)
+		}
+	}
+}
+
 func TestSecurity_T60_ANewSignInDoesNotKeepTheEarlierChoice(t *testing.T) {
 	m := newMetaEnv(t)
 	person := m.browser(ui)
