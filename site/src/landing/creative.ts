@@ -67,6 +67,22 @@ export function start(): void {
 					scrollTrigger: { trigger: "#timeline", start: "top 85%", end: "top 20%", scrub: true },
 				});
 			}
+			if (reduced) {
+				ScrollTrigger.create({
+					trigger: "#timeline",
+					start: "top 60%",
+					onEnter: () => {
+						if (!stage) return;
+						stage.pose.opacity = 0;
+						stage.renderOnce();
+					},
+					onLeaveBack: () => {
+						if (!stage) return;
+						stage.pose.opacity = 1;
+						stage.renderOnce();
+					},
+				});
+			}
 			stage.renderOnce();
 		});
 	});
