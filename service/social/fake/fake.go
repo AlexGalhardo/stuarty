@@ -39,6 +39,9 @@ type Connector struct {
 	Name string
 	// Fail, when set, is returned by Publish after it made its request.
 	Fail error
+	// CostMicros and CostCurrency are what the fake network charges for a post; none by default.
+	CostMicros   int64
+	CostCurrency string
 
 	mu        sync.Mutex
 	uploaded  []string
@@ -92,6 +95,7 @@ func (c *Connector) Describe() social.Description {
 			Source:               "the test server",
 			Read:                 "2026-11-19",
 		},
+		PostCostMicros: c.CostMicros, PostCostCurrency: c.CostCurrency,
 		Endpoint: c.Base, Hosts: []string{u.Hostname()}, Scopes: []string{"fake.upload"},
 		Guide: "https://example.com/fake", GuideRead: "2026-11-19", AIDisclosure: true,
 	}

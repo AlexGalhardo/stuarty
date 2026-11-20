@@ -13,14 +13,14 @@ import (
 // publishing, not for the editor skill, whose size is limited (SDD-003 section 8.1), as the library
 // commands are: publishingCommands is read by AgentDocsInputs.
 func publishingCommands() []*spec {
-	return []*spec{
+	return append([]*spec{
 		socialNetworkListCmd,
 		socialConnectCmd,
 		socialAccountListCmd,
 		publishValidateCmd,
 		publishNowCmd,
 		publishStatusCmd,
-	}
+	}, publicationCommands()...)
 }
 
 var socialNetworkListCmd = &spec{
