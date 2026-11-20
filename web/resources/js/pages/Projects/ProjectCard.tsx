@@ -38,7 +38,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatDateTime } from "@/lib/format";
 import { useT } from "@/lib/i18n";
-import { createSlotQueue, type Release } from "@/lib/slotQueue";
+import { createSlotQueue, type Release, whileNear } from "@/lib/slotQueue";
 import type { ProjectSummary } from "@/types";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
@@ -50,7 +50,7 @@ const THUMBNAIL_WIDTH = 270;
 
 // The frame endpoint refuses a credential with more than two frames in flight
 // (429, SDD-007 section 4.4), so every card draws its picture through this
-// queue, and only once it is near the viewport.
+// queue, and only while it is near the viewport.
 const thumbnails = createSlotQueue(2);
 
 // The picture of a card: the frame at the start, as the player draws it. A
@@ -75,15 +75,15 @@ function Thumbnail({ project }: { project: ProjectSummary }): ReactNode {
 		const element = box.current;
 		if (!wanted || !element) return;
 
-		let withdraw: (() => void) | null = null;
+		const ticket = whileNear(thumbnails, (done) => {
+			release.current = done;
+			setSrc(url);
+		});
+		// The last record of a batch is the current state of the element.
 		const observer = new IntersectionObserver(
 			(entries) => {
-				if (!entries.some((entry) => entry.isIntersecting) || withdraw) return;
-				observer.disconnect();
-				withdraw = thumbnails.acquire((done) => {
-					release.current = done;
-					setSrc(url);
-				});
+				const last = entries.at(-1);
+				if (last) ticket.near(last.isIntersecting);
 			},
 			{ rootMargin: "200px" },
 		);
@@ -91,7 +91,7 @@ function Thumbnail({ project }: { project: ProjectSummary }): ReactNode {
 
 		return () => {
 			observer.disconnect();
-			withdraw?.();
+			ticket.stop();
 			release.current = null;
 		};
 	}, [wanted, url]);
