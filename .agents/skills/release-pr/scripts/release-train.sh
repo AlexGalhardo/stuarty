@@ -100,7 +100,7 @@ write_changelog() {
 		skipping && /^## \[/ { skipping = 0 }
 		skipping { next }
 		index($0, "[" ver "]: ") == 1 { next }
-		/^## \[Unreleased\]/ && !done { print; print ""; while ((getline l < sec) > 0) print l; done = 1; blank = 1; next }
+		/^## \[Unreleased\]/ && !done { print; print ""; while ((getline l < sec) > 0) { print l; last = l } if (last != "") print ""; done = 1; blank = 1; next }
 		blank && /^$/ { blank = 0; next }
 		{ blank = 0 }
 		/^\[Unreleased\]: / { print "[Unreleased]: " url "/compare/v" ver "...HEAD"; print "[" ver "]: " url "/compare/" prev "...v" ver; next }
