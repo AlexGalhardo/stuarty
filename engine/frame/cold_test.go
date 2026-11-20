@@ -3,7 +3,6 @@ package frame
 import (
 	"context"
 	"os"
-	"os/exec"
 	"slices"
 	"testing"
 	"time"
@@ -11,6 +10,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/engine/ingest"
 	"github.com/AlexGalhardo/stuarty/engine/rasterize"
+	"github.com/AlexGalhardo/stuarty/internal/perfgate"
 )
 
 // phoneDoc is the clip-caption scene on a 1080x1920 portrait clip of the given length, the shape of the
@@ -94,52 +94,6 @@ func coldRun(tb testing.TB, doc *timeline.Document, count int) []time.Duration {
 	return out
 }
 
-// busyStartLimit is the median time that starting FFmpeg may take for a timing gate to mean anything.
-// A cold frame is mostly one process start and a few decoded frames; on the reference machine a start
-// takes 60 to 80 ms and a cold frame at the UI width 90 to 150 ms. With the CPU taken by other builds a
-// start alone takes 150 ms and a frame 400 ms to 1.7 s, which says nothing about the engine.
-const busyStartLimit = 150 * time.Millisecond
-
-// startTime is the median time of five FFmpeg starts.
-func startTime(tb testing.TB) time.Duration {
-	tb.Helper()
-	setup(tb)
-
-	var starts []time.Duration
-
-	for range 5 {
-		start := time.Now()
-
-		if err := exec.Command(shared.runner.In.FFmpeg.Path(), "-version").Run(); err != nil {
-			tb.Fatal(err)
-		}
-
-		starts = append(starts, time.Since(start))
-	}
-
-	return percentile(starts, 0.5)
-}
-
-// skipIfBusy skips a timing gate on a machine that is too loaded to time a process start. It does not
-// loosen the limit: on a quiet machine the gate is the one of the requirement. A gate calls it before
-// measuring and again before it fails, because the load of other builds comes and goes.
-func skipIfBusy(tb testing.TB) {
-	tb.Helper()
-
-	if med, busy := machineBusy(tb); busy {
-		tb.Skipf("the machine is busy: starting FFmpeg takes %s (median of 5), over %s", med, busyStartLimit)
-	}
-}
-
-// machineBusy says whether starting FFmpeg is slower than busyStartLimit now.
-func machineBusy(tb testing.TB) (time.Duration, bool) {
-	tb.Helper()
-
-	med := startTime(tb)
-
-	return med, med > busyStartLimit
-}
-
 func percentile(d []time.Duration, p float64) time.Duration {
 	s := slices.Clone(d)
 	slices.Sort(s)
@@ -162,14 +116,15 @@ func BenchmarkViewFrameCold(b *testing.B) {
 }
 
 // A cold frame at the editor width stays under the 350 ms of SDD-004 section 13 item 6 at the 95th
-// percentile: the budget of NFR-004 (500 ms) less the 150 ms delay. The race detector and coverage
-// instrumentation slow every step, so the gate is for normal builds.
+// percentile: the budget of NFR-004 (500 ms) less the 150 ms delay. It is an absolute time budget: it
+// runs only on the idle machine with STUARTY_PERF=1 (SDD-008 section 10). The race detector and
+// coverage instrumentation slow every step, so the gate is for normal builds.
 func TestViewFrameColdP95(t *testing.T) {
-	if raceEnabled || testing.CoverMode() != "" {
-		t.Skip("the race detector and coverage instrumentation slow every step")
-	}
+	perfgate.Require(t)
 
-	skipIfBusy(t)
+	if raceEnabled || testing.CoverMode() != "" {
+		t.Skip("the race detector and coverage instrumentation slow every step") // verify:env-skip instrumentation changes the cost of every step
+	}
 
 	doc := phoneDoc(t, 6)
 	d := coldRun(t, doc, 20)
@@ -177,8 +132,17 @@ func TestViewFrameColdP95(t *testing.T) {
 	t.Logf("cold frame at 540: p50 %s, p95 %s", p50, p95)
 
 	if p95 > 350*time.Millisecond {
-		skipIfBusy(t)
 		t.Errorf("p95 %s, want at most 350 ms", p95)
+	}
+}
+
+// Every cold frame of the clip is composed, whatever the time it takes: the functional half of the
+// gate above, which runs on a busy machine too.
+func TestViewFrameColdComposesEveryFrame(t *testing.T) {
+	doc := phoneDoc(t, 6)
+
+	if d := coldRun(t, doc, 20); len(d) != 20 {
+		t.Fatalf("%d cold frames timed, want 20", len(d))
 	}
 }
 
