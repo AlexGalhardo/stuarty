@@ -1873,6 +1873,36 @@ Example:
 stuarty image:export img_7k2m9x4q1b --format jpeg --quality 85
 ```
 
+## `image:import`
+
+Bring an image file into a new image document, or into an existing one as a layer
+
+```text
+stuarty image:import --path <file>
+stuarty image:import --hash <sha256:...> [--id <image>] [--name n] [--preset p | --width w --height h]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--path` | string |  | an absolute path to an image file on the machine of the server |
+| `--hash` | string |  | an image already in the workspace (asset:list shows its hash) |
+| `--id` | string |  | put the file in this image as a layer (default: a new image) |
+| `--name` | string |  | the name of the new image, or of the layer with --id |
+| `--preset` | string |  | the canvas of a new image: video_thumbnail, square_post or vertical_cover |
+| `--width` | integer |  | the canvas of a new image, with --height (default: the size of the file, up to 4096) |
+| `--height` | integer |  | the canvas of a new image, with --width |
+| `--wait-ms` | integer |  | how long to wait for the file to be ingested, 0 to 25000 (default 10000) |
+| `--base` | integer |  | with --id: the revision the layer was planned against (default: the current one) |
+| `--key` | string |  | with --id: idempotency key |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty image:import --path /home/ana/photos/face.jpg --preset video_thumbnail
+```
+
 ## `asset:list`
 
 List the files of the library, with origin, tags and reuse

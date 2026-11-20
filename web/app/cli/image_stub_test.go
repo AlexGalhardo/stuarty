@@ -35,3 +35,7 @@ func (s stub) ImageRedo(context.Context, service.ImageStepRequest) (*service.Ima
 func (s stub) ImageExport(context.Context, service.ImageExportRequest) (*service.ImageExportResult, error) {
 	return reply[service.ImageExportResult](s.err)
 }
+
+func (s stub) ImageImport(context.Context, service.ImageImportRequest) (*service.ImageImportResult, error) {
+	return reply[service.ImageImportResult](s.err)
+}

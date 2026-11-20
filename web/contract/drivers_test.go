@@ -282,6 +282,8 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ImageRedo)
 	case "ImageExport":
 		return invoke(ctx, s, svc.ImageExport)
+	case "ImageImport":
+		return invoke(ctx, s, svc.ImageImport)
 	case "ProjectOtioImport":
 		return invoke(ctx, s, svc.ProjectOtioImport)
 	case "ProjectDescribe":
@@ -491,7 +493,8 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 	switch s.Call {
 	case "AssetList", "AssetGet", "AssetUses", "AssetSetInfo", "AssetTag":
 		return assetToolCall(s.Call, args)
-	case "ImageCreate", "ImageList", "ImageDescribe", "ImageEdit", "ImageUndo", "ImageRedo", "ImageExport":
+	case "ImageCreate", "ImageList", "ImageDescribe", "ImageEdit", "ImageUndo", "ImageRedo", "ImageExport",
+		"ImageImport":
 		args["action"] = imageActions[s.Call]
 
 		// the tool names the template to start from from_template, which is not an id member
@@ -928,7 +931,8 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		name, argv, err = assetArgv(s.Call, s.Args)
 
 		return name, argv, "", err
-	case "ImageCreate", "ImageList", "ImageDescribe", "ImageEdit", "ImageUndo", "ImageRedo", "ImageExport":
+	case "ImageCreate", "ImageList", "ImageDescribe", "ImageEdit", "ImageUndo", "ImageRedo", "ImageExport",
+		"ImageImport":
 		return imageArgv(s)
 	case "ProjectList":
 		return "project:list", nil, "", nil
@@ -1475,7 +1479,7 @@ func withoutProject(args json.RawMessage) string {
 // imageActions are the actions of the image tool, by the Service operation they stand for.
 var imageActions = map[string]string{
 	"ImageCreate": "create", "ImageList": "list", "ImageDescribe": "show", "ImageEdit": "edit", "ImageUndo": "undo",
-	"ImageRedo": "redo", "ImageExport": "export",
+	"ImageRedo": "redo", "ImageExport": "export", "ImageImport": "import",
 }
 
 // imageArgv encodes an image operation as the command line of the CLI (SDD-021 section 11).
@@ -1547,6 +1551,22 @@ func imageArgv(s step) (name string, argv []string, stdin string, err error) {
 		}
 
 		return "image:" + strings.ToLower(strings.TrimPrefix(s.Call, "Image")), argv, "", nil
+	case "ImageImport":
+		add("path", str("path"))
+		add("hash", str("hash"))
+		add("id", str("image_id"))
+		add("name", str("name"))
+		add("preset", str("preset"))
+		add("width", num("width"))
+		add("height", num("height"))
+		add("base", num("base_revision"))
+		add("key", str("idempotency_key"))
+
+		if b, _ := a["dry_run"].(bool); b {
+			argv = append(argv, "--dry-run")
+		}
+
+		return "image:import", argv, "", nil
 	}
 
 	argv = []string{str("image_id")}
