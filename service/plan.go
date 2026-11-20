@@ -219,6 +219,8 @@ func (s *svc) PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindo
 		return nil, err
 	}
 
+	s.registerAudioPreviews(row.ID, doc, &w)
+
 	return &w, nil
 }
 

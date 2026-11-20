@@ -351,9 +351,11 @@ type svc struct {
 
 	running registry
 	bitmaps bitmaps
-	fonts   *enginestore.Fonts // user fonts of the workspace; nil without one
-	snaps   snapCache
-	sems    map[string]chan struct{}
+	// previews are the processed sounds of the timeline preview that a plan window handed out (SDD-004 section 7.1).
+	previews audioPreviews
+	fonts    *enginestore.Fonts // user fonts of the workspace; nil without one
+	snaps    snapCache
+	sems     map[string]chan struct{}
 
 	// defaultIngest is true when New installed ingest.Run. A substitute ingester
 	// does not touch the runner, so a nil runner is not a missing tool.
