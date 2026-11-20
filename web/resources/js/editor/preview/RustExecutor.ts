@@ -3,6 +3,7 @@ import type { ApiClient } from "../api/client";
 import { fetchLut } from "../api/lut";
 import type { PlanLayer, PlanMediaLayer, PlanWindow } from "../api/types";
 import { chunksUrl, proxyUrl, thumbnailUrl } from "../api/urls";
+import { setProcessedAudioStates } from "../state/processedAudioStore";
 import { AssetOwners } from "./assetOwners";
 
 import { AudioGraph } from "./audioGraph";
@@ -16,6 +17,7 @@ import {
 	MAX_VIDEO_LAYERS,
 	needsCorrection,
 	PlaybackClock,
+	processedDrive,
 	rankVideoLayers,
 	videoDrive,
 } from "./mediaSync";
@@ -27,6 +29,7 @@ import {
 	valueAt,
 } from "./planValue";
 import { PlanWindows } from "./planWindows";
+import { ProcessedAudio } from "./processedAudio";
 import { RenderClient } from "./render/client";
 import { createRenderWorker } from "./render/createRenderWorker";
 import { frameInput } from "./render/frameInput";
@@ -98,6 +101,7 @@ export class RustExecutor implements PreviewExecutor {
 	// Where the assets of compositions live (see AssetOwners).
 	private readonly owners = new AssetOwners();
 	private readonly sounds: MediaPool;
+	private readonly processedAudio: ProcessedAudio;
 	private readonly decoder: DecodeClient<VideoFrame>;
 	private decodedUs = -1;
 	// What the worker holds for each item: the tag of the pixels uploaded.
@@ -152,6 +156,12 @@ export class RustExecutor implements PreviewExecutor {
 			poolTimers,
 			redraw,
 		);
+		this.processedAudio = new ProcessedAudio({
+			projectId: () => this.info?.projectId ?? "",
+			timers: poolTimers,
+			now: () => performance.now(),
+			onChange: redraw,
+		});
 	}
 
 	get stats(): PreviewExecutor["stats"] {
@@ -226,6 +236,8 @@ export class RustExecutor implements PreviewExecutor {
 		cancelAnimationFrame(this.raf);
 		this.videos.dispose();
 		this.sounds.dispose();
+		this.processedAudio.dispose();
+		setProcessedAudioStates({});
 		this.decoder.dispose();
 		this.render?.dispose();
 		this.render = null;
@@ -909,15 +921,22 @@ export class RustExecutor implements PreviewExecutor {
 		for (const audio of plan.audio) {
 			if (frame < audio.first || frame > audio.last) continue;
 			inUse.add(audio.item);
+			// An item with a processed sound plays its file once there is one for
+			// the playhead, and the proxy until then (SDD-004 section 7.1).
+			const processed = this.processedAudio.resolve(audio, frame);
 			const entry = this.sounds.acquire(
 				audio.item,
-				proxyUrl(this.owners.of(audio.asset, info.projectId), audio.asset),
+				processed?.url ??
+					proxyUrl(this.owners.of(audio.asset, info.projectId), audio.asset),
 			);
 			if (entry.gain !== null) {
 				entry.gain.gain.value = valueAt(audio.gain, frame, audio.first);
 			}
 			const element = entry.element;
-			const drive = audioDrive(audio, frame, info.fps);
+			const drive =
+				processed === null
+					? audioDrive(audio, frame, info.fps)
+					: processedDrive(frame, processed.zero, info.fps);
 			element.playbackRate = drive.rate;
 			if (!playing || drive.silent) {
 				element.pause();
@@ -929,5 +948,6 @@ export class RustExecutor implements PreviewExecutor {
 			if (element.paused) void element.play().catch(() => undefined);
 		}
 		this.sounds.idle(inUse);
+		setProcessedAudioStates(this.processedAudio.states());
 	}
 }
