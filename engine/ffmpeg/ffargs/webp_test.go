@@ -1,6 +1,7 @@
 package ffargs
 
 import (
+	"errors"
 	"slices"
 	"testing"
 )
@@ -68,8 +69,23 @@ func TestWebPStillRefuses(t *testing.T) {
 		{"-c:v", "libwebp_anim"},
 		{"-preset", "picture"},
 	} {
-		if err := Check(FFmpeg, insertBeforeLast(good, extra[0], extra[1]), pol); err == nil {
-			t.Errorf("%v was accepted", extra)
+		err := Check(FFmpeg, insertBeforeLast(good, extra[0], extra[1]), pol)
+
+		var ve *ViolationError
+		if !errors.As(err, &ve) {
+			t.Errorf("%v was accepted: %v", extra, err)
+
+			continue
 		}
+
+		// the codec options of the WebP still are the fixed table of FF-15
+		if ve.Rule != "FF-15" {
+			t.Errorf("%v is refused under %s, not FF-15", extra, ve.Rule)
+		}
+	}
+
+	// the refusals above come from the values: the same option with a value in range passes
+	if err := Check(FFmpeg, insertBeforeLast(good, "-quality", "50"), pol); err != nil {
+		t.Errorf("-quality 50 was refused: %v", err)
 	}
 }

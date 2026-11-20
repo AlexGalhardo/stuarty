@@ -168,7 +168,7 @@ func ruleOf(opt string) string {
 		return "FF-16"
 	case "-map", "-map_metadata", "-map_chapters":
 		return "FF-08"
-	case "-c:v", "-c:a", "-q:v", "-b:v", "-b:a", "-crf", "-g", "-bf", "-profile:v", "-preset":
+	case "-c:v", "-c:a", "-q:v", "-b:v", "-b:a", "-crf", "-g", "-bf", "-profile:v", "-preset", "-quality", "-lossless":
 		return "FF-15"
 	}
 	return "FF-07"
