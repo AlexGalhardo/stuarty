@@ -2779,7 +2779,7 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
 ```json
 {
   "name": "job_start",
-  "description": "Start long work. export renders a workspace file: args {start?, end?, format?, at? (the png frame), preset?, codec?}. export_batch runs args.items (export args) in turn. transcribe: args {asset_id, language?, model?}. text.generate: args {connection_id, model, prompt}; image.generate: {connection_id, model, prompt, size?, count?}; voice.generate: {connection_id, model, text, voice, format?}; a person approves. Poll job_get.",
+  "description": "Start long work. export renders a workspace file: args {start?, end?, format?, at? (the png frame), preset?, codec?}. export_batch runs args.items (export args) in turn. transcribe: args {asset_id, language?, model?}. text.generate: args {connection_id, model, prompt}; image.generate adds size?, count?; voice.generate: text, voice, format? for prompt; a person approves. Poll job_get.",
   "inputSchema": {
     "type": "object",
     "properties": {
