@@ -21,9 +21,9 @@ import {
 	useImageApi,
 	useImageStore,
 } from "../state/context";
-import { withLayerName } from "./findingText";
 import ToolButton from "../toolbar/ToolButton";
 import { ToolGroup } from "../toolbar/Toolbar";
+import { withLayerName } from "./findingText";
 
 const FORMATS = ["png", "jpeg", "webp"] as const;
 type Format = (typeof FORMATS)[number];
