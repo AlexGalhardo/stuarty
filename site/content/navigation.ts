@@ -87,7 +87,7 @@ export const navigation: NavCategory[] = [
 	{
 		dir: "guide",
 		title: "Tutorials",
-		pages: ["first-short-video", "tutorial-vertical-short", "tutorial-agent-edit"],
+		pages: ["first-short-video", "tutorial-vertical-short", "tutorial-agent-edit", "recipe-product-commercial", "recipe-long-talking-video"],
 	},
 	{
 		dir: "concepts",
@@ -143,7 +143,7 @@ export const navigation: NavCategory[] = [
 	{
 		dir: "guide",
 		title: "Publishing",
-		pages: ["approvals", "publishing-calendar"],
+		pages: ["approvals", "publishing-calendar", "blog-posts"],
 	},
 	{
 		dir: "publish",
