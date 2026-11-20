@@ -135,12 +135,12 @@ func (s *svc) mediaConnection(ctx context.Context, id, capability, members strin
 	}
 
 	// A sign-in grants the text of a plan through the Responses API, and nothing else (SDD-016 section
-	// 12.2): its token is never sent to the image or the speech endpoint.
+	// 12.2): its token is never sent to the image, the speech or the video endpoint.
 	if s.isSignIn(ctx, conn.ID) {
 		return conn, newError(command.CodeValidation,
 			"a connection made by a sign-in generates text only, not %s.", capability).
 			withPath("args.connection_id").
-			withHint("connect the provider with an API key for an image or a voice")
+			withHint("connect the provider with an API key to generate %s", capability)
 	}
 
 	return conn, nil
