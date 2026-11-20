@@ -1176,7 +1176,7 @@ Contrast (WCAG 2.x): `--cta-foreground` on `--cta` 6.91:1, on the light hover 5.
 | macOS | `oklch(0.82 0.01 260)` `#C0C4CB` | `oklch(0.62 0.01 260)` / `oklch(0.82 0.01 260)` | `oklch(0.145 0 0)` | 11.34:1 |
 | Linux | `oklch(0.84 0.15 85)` `#F7C243` | `oklch(0.72 0.15 75)` / `oklch(0.84 0.15 85)` | `oklch(0.145 0 0)` | 12.01:1 |
 
-At rest the label is `--fg` on `--bg` (above 15:1 in both themes) and the version line `--muted` on `--bg` (7.8:1 light, 7.4:1 dark); on hover the version line takes the label colour. The border is decorative: the label identifies the control.
+At rest the label is `--fg` on `--bg` (above 15:1 in both themes) and the version line `--muted` on `--bg` (7.9:1 light, 7.7:1 dark); on hover the version line takes the label colour. The border is decorative: the label identifies the control.
 
 ### 11.7 Radii, borders and shadows
 
