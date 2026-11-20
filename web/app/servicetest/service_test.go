@@ -449,6 +449,18 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.TextGenerate(ctx, service.TextGenerateRequest{ProjectID: "prj_0000000001"})
 			return err
 		},
+		"ImageGenerate": func() error {
+			_, err := e.svc.ImageGenerate(ctx, service.ImageGenerateRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"VoiceGenerate": func() error {
+			_, err := e.svc.VoiceGenerate(ctx, service.VoiceGenerateRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"VoiceList": func() error {
+			_, err := e.svc.VoiceList(ctx, service.VoiceListRequest{ConnectionID: "con_0000000001"})
+			return err
+		},
 		"MemoryList": func() error {
 			_, err := e.svc.MemoryList(ctx, service.MemoryListRequest{})
 			return err
@@ -515,6 +527,44 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 		},
 		"LibraryReindex": func() error {
 			_, err := e.svc.LibraryReindex(ctx, service.LibraryReindexRequest{})
+			return err
+		},
+		"TextList": func() error {
+			_, err := e.svc.TextList(ctx, service.TextListRequest{})
+			return err
+		},
+		"TextGet": func() error {
+			_, err := e.svc.TextGet(ctx, service.TextGetRequest{ProjectID: "prj_0000000001", ItemID: "pit_0000000001"})
+			return err
+		},
+		"TextWrite": func() error {
+			_, err := e.svc.TextWrite(ctx, service.TextWriteRequest{ProjectID: "prj_0000000001", Title: "t"})
+			return err
+		},
+		"TextRevisions": func() error {
+			_, err := e.svc.TextRevisions(
+				ctx,
+				service.TextRevisionsRequest{ProjectID: "prj_0000000001", ItemID: "pit_0000000001"},
+			)
+			return err
+		},
+		"TextRevert": func() error {
+			_, err := e.svc.TextRevert(
+				ctx,
+				service.TextRevertRequest{ProjectID: "prj_0000000001", ItemID: "pit_0000000001", Revision: 1},
+			)
+			return err
+		},
+		"TextDraft": func() error {
+			_, err := e.svc.TextDraft(ctx, service.TextDraftRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"CaptionValidate": func() error {
+			_, err := e.svc.CaptionValidate(ctx, service.CaptionValidateRequest{Text: "a", Network: "x"})
+			return err
+		},
+		"ScriptEstimate": func() error {
+			_, err := e.svc.ScriptEstimate(ctx, service.ScriptEstimateRequest{Text: "a"})
 			return err
 		},
 		"AgentProfileList": func() error {

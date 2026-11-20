@@ -710,6 +710,43 @@
         },
         "type": "object"
       },
+      "CaptionCounts": {
+        "properties": {
+          "hashtags": {
+            "type": "integer"
+          },
+          "length": {
+            "type": "integer"
+          },
+          "links": {
+            "type": "integer"
+          },
+          "mentions": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "CaptionProblem": {
+        "properties": {
+          "actual": {
+            "type": "integer"
+          },
+          "code": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "CaptionStyle": {
         "properties": {
           "align": {
@@ -864,6 +901,64 @@
               "boolean",
               "null"
             ]
+          }
+        },
+        "type": "object"
+      },
+      "CaptionValidateResult": {
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/CaptionVariantReport"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "CaptionVariantReport": {
+        "properties": {
+          "counts": {
+            "$ref": "#/components/schemas/CaptionCounts"
+          },
+          "links_clickable": {
+            "type": "boolean"
+          },
+          "max_length": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "network": {
+            "type": "string"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "problems": {
+            "items": {
+              "$ref": "#/components/schemas/CaptionProblem"
+            },
+            "type": "array"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "words": {
+            "type": "integer"
           }
         },
         "type": "object"
@@ -2191,6 +2286,63 @@
         },
         "type": "object"
       },
+      "GeneratedItem": {
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "hash": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "revised_prompt": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "GeneratedResult": {
+        "properties": {
+          "cost": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "delivered": {
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/GeneratedItem"
+            },
+            "type": "array"
+          },
+          "model": {
+            "type": "string"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "requested": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "GradeSpec": {
         "properties": {
           "curves": {
@@ -3473,6 +3625,16 @@
               }
             ]
           },
+          "generated": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GeneratedResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "publish": {
             "anyOf": [
               {
@@ -4594,6 +4756,9 @@
       },
       "ModelView": {
         "properties": {
+          "capability": {
+            "type": "string"
+          },
           "context_tokens": {
             "type": "integer"
           },
@@ -5448,6 +5613,13 @@
           "output_micros_per_mtok": {
             "format": "int64",
             "type": "integer"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "unit_micros": {
+            "format": "int64",
+            "type": "integer"
           }
         },
         "type": "object"
@@ -5470,6 +5642,13 @@
           },
           "provider": {
             "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "unit_micros": {
+            "format": "int64",
+            "type": "integer"
           }
         },
         "type": "object"
@@ -5682,6 +5861,9 @@
             "type": "integer"
           },
           "published": {
+            "type": "integer"
+          },
+          "texts": {
             "type": "integer"
           },
           "timelines": {
@@ -5905,6 +6087,9 @@
           "text": {
             "type": "string",
             "x-untrusted": true
+          },
+          "text_kind": {
+            "type": "string"
           },
           "timeline_id": {
             "type": "string"
@@ -6530,6 +6715,61 @@
               "string",
               "null"
             ]
+          }
+        },
+        "type": "object"
+      },
+      "SceneEstimate": {
+        "properties": {
+          "duration_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "on_screen_words": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "words": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ScriptEstimateResult": {
+        "properties": {
+          "duration_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "on_screen_words": {
+            "type": "integer"
+          },
+          "plain": {
+            "type": "boolean"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "scenes": {
+            "items": {
+              "$ref": "#/components/schemas/SceneEstimate"
+            },
+            "type": "array"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "words": {
+            "type": "integer"
+          },
+          "words_per_minute": {
+            "type": "integer"
           }
         },
         "type": "object"
@@ -7266,6 +7506,117 @@
         },
         "type": "object"
       },
+      "TextDiff": {
+        "properties": {
+          "coarse": {
+            "type": "boolean"
+          },
+          "hunks": {
+            "items": {
+              "$ref": "#/components/schemas/TextHunk"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "TextGetResult": {
+        "properties": {
+          "body": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "item": {
+            "$ref": "#/components/schemas/TextItem"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "revision": {
+            "$ref": "#/components/schemas/TextRevision"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "TextHunk": {
+        "properties": {
+          "op": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string",
+            "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
+      "TextItem": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "project_name": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "revision": {
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          },
+          "text_kind": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updated_by": {
+            "type": "string"
+          },
+          "words": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "TextListResult": {
+        "properties": {
+          "next_cursor": {
+            "type": "string"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "texts": {
+            "items": {
+              "$ref": "#/components/schemas/TextItem"
+            },
+            "type": "array"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "TextResult": {
         "properties": {
           "cost": {
@@ -7277,6 +7628,9 @@
           "input_tokens": {
             "type": "integer"
           },
+          "item_id": {
+            "type": "string"
+          },
           "model": {
             "type": "string"
           },
@@ -7286,9 +7640,124 @@
           "provider": {
             "type": "string"
           },
+          "revision": {
+            "type": "integer"
+          },
           "text": {
             "type": "string",
             "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
+      "TextRevision": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "cost": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Money"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "job_id": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "provider": {
+            "type": "string"
+          },
+          "reverted_to": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "revision": {
+            "type": "integer"
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "TextRevisionsResult": {
+        "properties": {
+          "diff": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TextDiff"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "diff_from": {
+            "type": "integer"
+          },
+          "diff_to": {
+            "type": "integer"
+          },
+          "item_id": {
+            "type": "string"
+          },
+          "next_before": {
+            "type": "integer"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "revisions": {
+            "items": {
+              "$ref": "#/components/schemas/TextRevision"
+            },
+            "type": "array"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "TextWriteResult": {
+        "properties": {
+          "changed": {
+            "type": "boolean"
+          },
+          "created": {
+            "type": "boolean"
+          },
+          "item": {
+            "$ref": "#/components/schemas/TextItem"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "revision": {
+            "$ref": "#/components/schemas/TextRevision"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -7775,6 +8244,41 @@
           },
           "ok": {
             "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "VoiceListResult": {
+        "properties": {
+          "connection_id": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "voices": {
+            "items": {
+              "$ref": "#/components/schemas/VoiceView"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "VoiceView": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "source": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -14206,6 +14710,82 @@
         "summary": "The questions of the guided briefing"
       }
     },
+    "/api/v1/captions/validate": {
+      "post": {
+        "operationId": "captions.validate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "body": {
+                    "description": "Check a whole caption, saved or not: the parts that start with ## youtube, ## instagram, ## facebook, ## x or ## tiktok.",
+                    "type": "string"
+                  },
+                  "item_id": {
+                    "description": "Check a stored caption.",
+                    "type": "string"
+                  },
+                  "network": {
+                    "description": "The network of Text, or the one variant of a stored caption to check.",
+                    "type": "string"
+                  },
+                  "project_id": {
+                    "description": "The project of the caption, prj_ and 10 characters.",
+                    "type": "string"
+                  },
+                  "text": {
+                    "description": "Check one variant; give its network too.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaptionValidateResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Measure a caption against the limits of each network"
+      }
+    },
     "/api/v1/chat/sessions/{id}": {
       "delete": {
         "operationId": "chat.sessions.delete",
@@ -15156,6 +15736,59 @@
         "summary": "Make one request through a connection"
       }
     },
+    "/api/v1/connections/{id}/voices": {
+      "get": {
+        "operationId": "voice.list",
+        "parameters": [
+          {
+            "description": "The id of a connection to an AI provider, con_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the voices of the provider of a connection"
+      }
+    },
     "/api/v1/cost": {
       "get": {
         "operationId": "cost.get",
@@ -15464,6 +16097,104 @@
           }
         ],
         "summary": "Prove that the server knows the local token"
+      }
+    },
+    "/api/v1/image/generate": {
+      "post": {
+        "operationId": "image.generate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "connection_id": {
+                    "description": "The connection to the provider that makes the images.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "count": {
+                    "description": "How many images, 1 to 10; the default is 1. A model may make fewer at a time. The estimate counts all of them.",
+                    "type": "integer"
+                  },
+                  "dry_run": {
+                    "description": "true answers the job it would create, with its estimate, and writes and sends nothing.",
+                    "type": "boolean"
+                  },
+                  "model": {
+                    "description": "The model id, as provider:models lists it.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "project_id": {
+                    "description": "The project the images belong to, prj_ and 10 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "prompt": {
+                    "description": "What to draw, 1 to 4000 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "size": {
+                    "description": "Width and height in pixels joined by x; the default is 1024x1024. The model may make only some sizes.",
+                    "type": "string"
+                  },
+                  "wait_ms": {
+                    "description": "Wait up to this many milliseconds for the job to finish.",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "project_id",
+                  "connection_id",
+                  "model",
+                  "prompt"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start an image generation with the provider of a connection; the job waits for approval, shows its estimate and stores the images as assets with their origin"
       }
     },
     "/api/v1/images": {
@@ -19762,6 +20493,10 @@
                     "description": "Markdown of a text item, at most 256 KiB.",
                     "type": "string"
                   },
+                  "text_kind": {
+                    "description": "A text item: script, copy (default) or caption.",
+                    "type": "string"
+                  },
                   "title": {
                     "description": "1 to 120 characters.",
                     "minLength": 1,
@@ -22222,6 +22957,558 @@
         "summary": "Read the snap points and trim limits"
       }
     },
+    "/api/v1/projects/{id}/texts": {
+      "post": {
+        "operationId": "texts.create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "text": {
+                    "description": "The Markdown, at most 256 KiB.",
+                    "type": "string"
+                  },
+                  "text_kind": {
+                    "description": "script, copy (default) or caption.",
+                    "type": "string"
+                  },
+                  "title": {
+                    "description": "1 to 120 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "title"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextWriteResult"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Make a script, a copy text or a caption in a project"
+      }
+    },
+    "/api/v1/projects/{id}/texts/{item_id}": {
+      "get": {
+        "operationId": "texts.get",
+        "parameters": [
+          {
+            "description": "A revision number from 1; default the latest.",
+            "in": "query",
+            "name": "revision",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextGetResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read a text, or one of its revisions"
+      },
+      "put": {
+        "operationId": "texts.write",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "base_revision": {
+                    "description": "The revision the writer read: a newer one is E_REVISION_CONFLICT.",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "text": {
+                    "description": "The Markdown of the new revision, at most 256 KiB.",
+                    "type": "string"
+                  },
+                  "title": {
+                    "description": "A new title; omit it to keep the title.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextWriteResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Save a new revision of a text"
+      }
+    },
+    "/api/v1/projects/{id}/texts/{item_id}/draft": {
+      "post": {
+        "operationId": "texts.draft",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "connection_id": {
+                    "description": "The connection to the provider that writes the draft.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "dry_run": {
+                    "description": "true answers the job it would create, with its estimate, and writes and sends nothing.",
+                    "type": "boolean"
+                  },
+                  "instruction": {
+                    "description": "What to write, 1 to 4000 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "max_tokens": {
+                    "description": "The most tokens the model may write; the estimate counts all of them.",
+                    "type": "integer"
+                  },
+                  "model": {
+                    "description": "The model id, as provider:models lists it.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "network": {
+                    "description": "A caption: draft the variant of this network only.",
+                    "type": "string"
+                  },
+                  "temperature": {
+                    "description": "0 to 2; leave out for the default of the provider.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "wait_ms": {
+                    "description": "Wait up to this many milliseconds for the job to finish.",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "connection_id",
+                  "model",
+                  "instruction"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Ask a model for a draft of a text; the job waits for approval and shows its estimate"
+      }
+    },
+    "/api/v1/projects/{id}/texts/{item_id}/revert": {
+      "post": {
+        "operationId": "texts.revert",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "revision": {
+                    "description": "The revision whose text comes back as a new revision.",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "revision"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextWriteResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Bring an older revision back as a new one"
+      }
+    },
+    "/api/v1/projects/{id}/texts/{item_id}/revisions": {
+      "get": {
+        "operationId": "texts.revisions",
+        "parameters": [
+          {
+            "description": "Start under this revision: the next_before of the previous page.",
+            "in": "query",
+            "name": "before",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "1 to 100; default 50.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Compare this revision with To, by paragraph.",
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The revision to compare with; default the latest.",
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextRevisionsResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the revisions of a text, and compare two"
+      }
+    },
     "/api/v1/projects/{id}/trash": {
       "post": {
         "operationId": "projects.trash",
@@ -22444,6 +23731,18 @@
                     "description": "The id of the provider, for example openai.",
                     "minLength": 1,
                     "type": "string"
+                  },
+                  "unit": {
+                    "description": "Empty for a price of tokens, image for the price of one image, mchar for the price of a million characters of speech.",
+                    "type": "string"
+                  },
+                  "unit_micros": {
+                    "description": "With a unit of image or mchar: the price of one image or of a million characters, in millionths of the currency unit; the token prices stay out.",
+                    "format": "int64",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
                   }
                 },
                 "required": [
@@ -22773,6 +24072,78 @@
           }
         ],
         "summary": "Read the state of a publication"
+      }
+    },
+    "/api/v1/scripts/estimate": {
+      "post": {
+        "operationId": "scripts.estimate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "item_id": {
+                    "description": "Estimate a stored script.",
+                    "type": "string"
+                  },
+                  "project_id": {
+                    "description": "The project of the script, prj_ and 10 characters.",
+                    "type": "string"
+                  },
+                  "text": {
+                    "description": "Estimate a script that is not saved.",
+                    "type": "string"
+                  },
+                  "words_per_minute": {
+                    "description": "60 to 300; default 150.",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScriptEstimateResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Estimate how long a script takes when read aloud"
       }
     },
     "/api/v1/social/accounts": {
@@ -23802,6 +25173,86 @@
         "summary": "Start a text generation with the provider of a connection; the job waits for approval and shows its estimate"
       }
     },
+    "/api/v1/texts": {
+      "get": {
+        "operationId": "texts.list",
+        "parameters": [
+          {
+            "description": "Only the texts of this project; omit it for every project the caller may see.",
+            "in": "query",
+            "name": "project_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "script, copy or caption; omit it for every kind.",
+            "in": "query",
+            "name": "text_kind",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "active (default) or trashed.",
+            "in": "query",
+            "name": "state",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The next_cursor of the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page size; the default depends on the operation.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the texts of a project, or of every project the caller may see"
+      }
+    },
     "/api/v1/trash/empty": {
       "post": {
         "operationId": "trash.empty",
@@ -24058,6 +25509,110 @@
           }
         ],
         "summary": "Change the role of a user or disable or enable them (an administrator session only; network mode)"
+      }
+    },
+    "/api/v1/voice/generate": {
+      "post": {
+        "operationId": "voice.generate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "connection_id": {
+                    "description": "The connection to the provider that reads the text out.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "dry_run": {
+                    "description": "true answers the job it would create, with its estimate, and writes and sends nothing.",
+                    "type": "boolean"
+                  },
+                  "format": {
+                    "description": "mp3 (the default), wav, flac, opus or aac.",
+                    "type": "string"
+                  },
+                  "language": {
+                    "description": "A language tag such as pt-BR; a provider that detects the language from the text ignores it.",
+                    "type": "string"
+                  },
+                  "model": {
+                    "description": "The model id, as provider:models lists it.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "project_id": {
+                    "description": "The project the speech belongs to, prj_ and 10 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "text": {
+                    "description": "What to read out, 1 to 4096 characters (the provider may take fewer).",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "voice": {
+                    "description": "The voice id, as voice:list names it.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "wait_ms": {
+                    "description": "Wait up to this many milliseconds for the job to finish.",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "project_id",
+                  "connection_id",
+                  "model",
+                  "text",
+                  "voice"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start a speech generation with the provider of a connection; the job waits for approval, shows its estimate and stores the audio as an asset with its origin"
       }
     }
   }

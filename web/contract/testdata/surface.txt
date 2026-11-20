@@ -20,6 +20,7 @@ command briefing:answer
 command briefing:questions
 command bundle:export
 command bundle:import
+command caption:validate
 command chat:session
 command chat:sessions
 command chat:transcript
@@ -49,6 +50,7 @@ command history
 command image:create
 command image:edit
 command image:export
+command image:generate
 command image:list
 command image:redo
 command image:show
@@ -98,6 +100,7 @@ command publish:status
 command publish:validate
 command redo
 command revert
+command script:estimate
 command skill:export
 command skill:import
 command skill:lint
@@ -112,13 +115,21 @@ command template:import
 command template:list
 command template:new
 command template:save
+command text:draft
 command text:generate
+command text:list
+command text:revert
+command text:revisions
+command text:show
+command text:write
 command token:rotate
 command tools:install
 command transcribe
 command undo
 command version
 command view
+command voice:generate
+command voice:list
 route DELETE /agents/profiles/{}
 route DELETE /approval-rules/{}
 route DELETE /chat/sessions/{}
@@ -145,6 +156,7 @@ route GET /commands/{}
 route GET /connections
 route GET /connections/{}
 route GET /connections/{}/models
+route GET /connections/{}/voices
 route GET /cost
 route GET /export-presets
 route GET /fonts
@@ -195,6 +207,8 @@ route GET /projects/{}/otio
 route GET /projects/{}/plan
 route GET /projects/{}/sheet
 route GET /projects/{}/snap-points
+route GET /projects/{}/texts/{}
+route GET /projects/{}/texts/{}/revisions
 route GET /providers
 route GET /publish/{}
 route GET /social/accounts
@@ -203,18 +217,21 @@ route GET /system
 route GET /system/tools
 route GET /templates
 route GET /templates/{}/file
+route GET /texts
 route GET /users
 route PATCH /projects/{}/checkpoints/{}
 route PATCH /users/{}
 route POST /approval-rules
 route POST /approvals/{}/decide
 route POST /assets/{}/tags
+route POST /captions/validate
 route POST /chat/sessions/{}/cancel
 route POST /chat/sessions/{}/messages
 route POST /chat/sessions/{}/permissions/{}
 route POST /connections
 route POST /connections/{}/test
 route POST /fonts
+route POST /image/generate
 route POST /images
 route POST /images/{}/edit
 route POST /images/{}/export
@@ -250,10 +267,14 @@ route POST /projects/{}/otio
 route POST /projects/{}/redo
 route POST /projects/{}/restore
 route POST /projects/{}/revert
+route POST /projects/{}/texts
+route POST /projects/{}/texts/{}/draft
+route POST /projects/{}/texts/{}/revert
 route POST /projects/{}/trash
 route POST /projects/{}/undo
 route POST /publish
 route POST /publish/validate
+route POST /scripts/estimate
 route POST /social/complete
 route POST /social/connect
 route POST /social/select
@@ -266,6 +287,7 @@ route POST /templates/{}/instantiate
 route POST /text/generate
 route POST /trash/empty
 route POST /users
+route POST /voice/generate
 route PUT /agents/profiles/{}
 route PUT /assets/{}
 route PUT /brand-kit
@@ -274,6 +296,7 @@ route PUT /library/prompts/{}
 route PUT /library/skills/{}
 route PUT /projects/{}/brief
 route PUT /projects/{}/briefing
+route PUT /projects/{}/texts/{}
 route PUT /providers/prices
 tool command_help
 tool connection

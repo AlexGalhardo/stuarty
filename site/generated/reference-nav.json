@@ -142,6 +142,20 @@
       ]
     },
     {
+      "tag": "Writing",
+      "pages": [
+        "captions.validate",
+        "texts.create",
+        "texts.get",
+        "texts.write",
+        "texts.draft",
+        "texts.revert",
+        "texts.revisions",
+        "scripts.estimate",
+        "texts.list"
+      ]
+    },
+    {
       "tag": "Connections",
       "pages": [
         "connections.list",
@@ -149,15 +163,18 @@
         "connections.get",
         "connections.remove",
         "providers.models",
-        "connections.test"
+        "connections.test",
+        "voice.list"
       ]
     },
     {
       "tag": "AI providers",
       "pages": [
+        "image.generate",
         "providers.list",
         "providers.prices.set",
-        "text.generate"
+        "text.generate",
+        "voice.generate"
       ]
     },
     {

@@ -46,6 +46,9 @@ type TextResult struct {
 	InputTokens  int        `json:"input_tokens"`
 	OutputTokens int        `json:"output_tokens"`
 	Cost         core.Money `json:"cost"`
+	// ItemID and Revision are set by a text.draft job: the text and the revision the draft was written as.
+	ItemID   string `json:"item_id,omitempty"`
+	Revision int    `json:"revision,omitempty"`
 }
 
 // textInput is the input column of a text.generate job: what was asked, and the price the person saw,
@@ -113,7 +116,8 @@ func (s *svc) prepareText(ctx context.Context, req JobStartRequest) (Prepared, e
 		return Prepared{}, providerError(perr)
 	}
 
-	if source == provider.SourceNone {
+	// A price per image or per million characters is the price of another capability: for text it is none.
+	if source == provider.SourceNone || price.Unit != provider.UnitTokens {
 		return Prepared{}, newError(CodePriceUnknown, "no price is known for the model %s of %s.", r.Model, conn.Kind).
 			withDetail("provider", conn.Kind).withDetail("model", r.Model).
 			withHint("read the models of the connection with provider:models to see if the provider publishes a price, " +
@@ -271,6 +275,12 @@ func providerError(err error) error {
 		return nil
 	}
 
+	if errors.Is(err, context.DeadlineExceeded) {
+		return newError(CodeProvider, "the provider did not answer in time.").
+			withDetail("kind", providers.KindTimeout).
+			withHint("try again later; a generation of several files may be asked in smaller ones")
+	}
+
 	if pe, ok := providers.AsError(err); ok {
 		e := newError(
 			CodeProvider,
@@ -314,6 +324,10 @@ func providerSentence(pe *providers.Error) string {
 		return "the provider is limiting the requests."
 	case providers.KindBadRequest:
 		return "the provider refused the request."
+	case providers.KindRefused:
+		return "the provider declined the prompt."
+	case providers.KindTimeout:
+		return "the provider did not answer in time."
 	case providers.KindUnreadable:
 		return "the provider answered in a form this version does not understand."
 	}
@@ -329,6 +343,10 @@ func providerHint(pe *providers.Error) string {
 		return "wait and submit the generation again"
 	case providers.KindBadRequest:
 		return "check the model and the size of the request against the models of the connection (provider:models)"
+	case providers.KindRefused:
+		return "the provider applies its own content policy: change the prompt and submit the generation again"
+	case providers.KindTimeout:
+		return "try again later; a generation of several files may be asked in smaller ones"
 	}
 
 	return "try again later; the connection is tested with connection:test"

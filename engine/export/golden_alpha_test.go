@@ -81,6 +81,10 @@ var requiredCases = []string{
 	"blend-screen",
 	"blend-overlay",
 	"blend-add",
+	"blend-multiply-transparent",
+	"blend-screen-transparent",
+	"blend-overlay-transparent",
+	"blend-add-transparent",
 	"mask-rect",
 	"mask-animated",
 	"mask-ellipse-feather",
@@ -351,6 +355,30 @@ func blendCase(mode string) alphaCase {
 	return b.build(0, 15, 29)
 }
 
+// blendTransparentCase draws, on a transparent background, a clip at half opacity, an opaque clip and,
+// over both, an opaque clip with a blend mode: the blended clip lands on transparent pixels (SDD-013
+// section 3.11.2, a destination with alpha 0), on half-transparent ones (the general form with
+// 0 < da < 255) and on opaque ones (SDD-004 section 3.8). It covers the whole half-opacity clip, so
+// every pixel of the frame has alpha 0 or 255 and the PNG round trip keeps every byte of the reference
+// (the encoder stores straight alpha).
+func blendTransparentCase(mode string) alphaCase {
+	b := newCase("blend "+mode+" on a transparent frame", rate(30, 1))
+	b.doc.Settings.Background = timeline.BackgroundTransparent
+	b.clip(b.track(), b.video(landscape), 0, 30, func(it *timeline.Item) {
+		it.Fit, it.Scale, it.Opacity = "contain", 0.3, 0.5
+		it.X, it.Y = new(55.0), new(160.0)
+	})
+	b.clip(b.track(), b.video(landscape), 0, 30, func(it *timeline.Item) {
+		it.Fit, it.Scale = "contain", 0.3
+		it.X, it.Y = new(130.0), new(160.0)
+	})
+	b.clip(b.track(), b.video(landscape), 0, 30, func(it *timeline.Item) {
+		it.Fit, it.Scale, it.Blend = "contain", 0.6, mode
+		it.X, it.Y = new(70.0), new(160.0)
+	})
+	return b.build(0, 15, 29)
+}
+
 // maskCase draws a clip through a mask over the portrait clip; edit sets what else the item has.
 func maskCase(name string, m timeline.Mask, edit func(it *timeline.Item)) alphaCase {
 	b := newCase("mask "+name, rate(30, 1))
@@ -591,10 +619,14 @@ var alphaCases = map[string]func() alphaCase{
 		})
 		return b.build(0, 15, 29)
 	},
-	"blend-multiply": func() alphaCase { return blendCase("multiply") },
-	"blend-screen":   func() alphaCase { return blendCase("screen") },
-	"blend-overlay":  func() alphaCase { return blendCase("overlay") },
-	"blend-add":      func() alphaCase { return blendCase("add") },
+	"blend-multiply":             func() alphaCase { return blendCase("multiply") },
+	"blend-screen":               func() alphaCase { return blendCase("screen") },
+	"blend-overlay":              func() alphaCase { return blendCase("overlay") },
+	"blend-add":                  func() alphaCase { return blendCase("add") },
+	"blend-multiply-transparent": func() alphaCase { return blendTransparentCase("multiply") },
+	"blend-screen-transparent":   func() alphaCase { return blendTransparentCase("screen") },
+	"blend-overlay-transparent":  func() alphaCase { return blendTransparentCase("overlay") },
+	"blend-add-transparent":      func() alphaCase { return blendTransparentCase("add") },
 	"mask-rect": func() alphaCase {
 		return maskCase("rect", timeline.Mask{Shape: "rect", X: 0.2, Y: 0.1, Width: 0.6, Height: 0.7}, nil)
 	},
@@ -907,6 +939,22 @@ func TestCompositorBandsEqualBlurAndFilter(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// VV-257: the blended clip of the transparent blend cases reaches pixels its mode changes, so no two
+// modes give the same reference; equal references would mean it draws only on alpha 0.
+func TestBlendTransparentCasesDifferByMode(t *testing.T) {
+	modes := []string{"multiply", "screen", "overlay", "add"}
+	for _, f := range readFrames(t, goldenDir("blend-multiply-transparent")) {
+		seen := map[string]string{}
+		for _, mode := range modes {
+			h := sum(readPNG(t, framePNG(goldenDir("blend-"+mode+"-transparent"), f)))
+			if other, ok := seen[h]; ok {
+				t.Errorf("frame %d: blend-%s-transparent and blend-%s-transparent are the same", f, other, mode)
+			}
+			seen[h] = mode
+		}
 	}
 }
 

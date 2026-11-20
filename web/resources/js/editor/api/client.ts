@@ -41,10 +41,16 @@ import type {
 	ExportPresetListResult,
 	FontImportResult,
 	FontListResult,
+	GoogleComplete,
+	GoogleSettings,
+	GoogleSettingsRequest,
+	GoogleStart,
+	GoogleStatus,
 	HistoryDiffResult,
 	HistoryListResult,
 	HistoryQuery,
 	HistoryRevertResult,
+	ImageGenerateRequest,
 	InstallToolRequest,
 	InstallToolResult,
 	Job,
@@ -93,6 +99,8 @@ import type {
 	TemplateSaveRequest,
 	ToolsStatusResult,
 	UserListResult,
+	VoiceGenerateRequest,
+	VoiceListResult,
 } from "./types";
 
 // Timeouts of SDD-012 section 4.3 item 4.
@@ -252,6 +260,11 @@ export interface ApiClient {
 	setProviderPrice(
 		request: ProviderPriceSetRequest,
 	): Promise<ProviderPricesResult>;
+	// Image and voice generation (SDD-016 section 6.1): each answers the job with its estimate, which waits
+	// for a person; dry_run answers the estimate and writes nothing.
+	generateImage(request: ImageGenerateRequest): Promise<Job>;
+	generateVoice(request: VoiceGenerateRequest): Promise<Job>;
+	listVoices(connectionId: string): Promise<VoiceListResult>;
 	// The approval queue (SDD-015). Deciding, the rules and the ceilings are for a person in a
 	// browser session; any other caller gets E_PRIVILEGED_SESSION.
 	listApprovals(state?: string): Promise<ApprovalListResult>;
@@ -331,6 +344,18 @@ export interface ApiClient {
 	// for them is built on a transport with an empty base.
 	login(email: string, password: string): Promise<SessionResult>;
 	logout(): Promise<void>;
+	// The optional Google sign-in of network mode (SDD-007 section 4.7): root routes too.
+	googleStatus(): Promise<GoogleStatus>;
+	googleStart(): Promise<GoogleStart>;
+	googleLink(password: string): Promise<GoogleStart>;
+	googleUnlink(password: string): Promise<GoogleStatus>;
+	googleComplete(request: {
+		state: string;
+		code?: string;
+		error?: string;
+	}): Promise<GoogleComplete>;
+	googleSettings(): Promise<GoogleSettings>;
+	setGoogleSettings(request: GoogleSettingsRequest): Promise<GoogleSettings>;
 	listTemplates(): Promise<TemplateListResult>;
 	instantiateTemplate(
 		templateId: string,
@@ -684,6 +709,16 @@ export function createClient(
 			),
 		setProviderPrice: (request) =>
 			call("PUT", "/providers/prices", EDIT_TIMEOUT_MS, request),
+		generateImage: (request) =>
+			call("POST", "/image/generate", EDIT_TIMEOUT_MS, request),
+		generateVoice: (request) =>
+			call("POST", "/voice/generate", EDIT_TIMEOUT_MS, request),
+		listVoices: (connectionId) =>
+			call(
+				"GET",
+				`/connections/${encodeURIComponent(connectionId)}/voices`,
+				READ_TIMEOUT_MS,
+			),
 		listApprovals: (state) =>
 			call(
 				"GET",
@@ -771,6 +806,17 @@ export function createClient(
 		logout: async () => {
 			await call("POST", "/auth/logout", EDIT_TIMEOUT_MS, {});
 		},
+		googleStatus: () => call("GET", "/auth/google", READ_TIMEOUT_MS),
+		googleStart: () => call("POST", "/auth/google/start", EDIT_TIMEOUT_MS, {}),
+		googleLink: (password) =>
+			call("POST", "/auth/google/link", EDIT_TIMEOUT_MS, { password }),
+		googleUnlink: (password) =>
+			call("POST", "/auth/google/unlink", EDIT_TIMEOUT_MS, { password }),
+		googleComplete: (request) =>
+			call("POST", "/auth/google/complete", EDIT_TIMEOUT_MS, request),
+		googleSettings: () => call("GET", "/auth/google/settings", READ_TIMEOUT_MS),
+		setGoogleSettings: (request) =>
+			call("PUT", "/auth/google/settings", EDIT_TIMEOUT_MS, request),
 		listTemplates: () => call("GET", "/templates", READ_TIMEOUT_MS),
 		instantiateTemplate: (templateId, request) =>
 			call(

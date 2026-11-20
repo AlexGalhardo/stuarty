@@ -15,6 +15,10 @@ var OperationDomains = map[string]string{
 	"BriefingQuestions": command.DomainProject, "BriefingAnswer": command.DomainProject,
 	"ProjectBundleExport": command.DomainProject, "ProjectBundleImport": command.DomainProject,
 
+	"TextList": command.DomainWriting, "TextGet": command.DomainWriting, "TextWrite": command.DomainWriting,
+	"TextRevisions": command.DomainWriting, "TextRevert": command.DomainWriting, "TextDraft": command.DomainWriting,
+	"CaptionValidate": command.DomainWriting, "ScriptEstimate": command.DomainWriting,
+
 	"Edit": command.DomainVideo, "HistoryList": command.DomainVideo, "Undo": command.DomainVideo,
 	"HistoryRevert": command.DomainVideo, "HistoryDiff": command.DomainVideo,
 	"CheckpointCreate": command.DomainVideo, "CheckpointList": command.DomainVideo,
@@ -65,6 +69,8 @@ var OperationDomains = map[string]string{
 	"CostSummary": command.DomainProvider, "CostCeilingSet": command.DomainProvider,
 	"ProviderList": command.DomainProvider, "ProviderModels": command.DomainProvider,
 	"ProviderPriceSet": command.DomainProvider, "TextGenerate": command.DomainProvider,
+	"ImageGenerate": command.DomainProvider, "VoiceGenerate": command.DomainProvider,
+	"VoiceList": command.DomainProvider,
 
 	"CommandHelp": command.DomainWorkspace, "ConnectionList": command.DomainWorkspace,
 	"ConnectionGet": command.DomainWorkspace, "ConnectionCreate": command.DomainWorkspace,

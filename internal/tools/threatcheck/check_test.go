@@ -120,9 +120,10 @@ func TestTheRealModelParses(t *testing.T) {
 	}
 
 	// T-52 to T-55 are the AI provider threats of epic 09; T-56 to T-59 are the publishing threats of epic 18;
-	// T-70 to T-74 are the hosted agent threats of epic 14.
-	if len(threats) != 64 {
-		t.Errorf("the model has %d threats, want 64 (T-74, the chat used to approve)", len(threats))
+	// T-60 and T-61 are the Meta threats of epic 19; T-70 to T-74 are the hosted agent threats of epic 14;
+	// T-80 to T-85 are the Google sign-in threats of epic 24; T-90 and T-91 are the processed-sound threats of epic 51.
+	if len(threats) != 74 {
+		t.Errorf("the model has %d threats, want 74 (T-91, the processed sound of the preview)", len(threats))
 	}
 }
 
