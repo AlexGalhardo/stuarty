@@ -58,6 +58,7 @@ import {
 	valueAt,
 } from "./planValue";
 import { PlanWindows } from "./planWindows";
+import { ProcessedAudio } from "./processedAudio";
 import {
 	type DrawNode,
 	expandGroups,
