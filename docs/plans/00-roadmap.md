@@ -36,7 +36,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [14](14-hosted-agent-chat.md) | The user's agent hosted in the chat panel | L | 07, 13 | DONE (2026-11-20, `23d31581`..`26a80add0` replayed, merge `365dcd1bd`; run with a real installed agent not verified) |
 | [15](15-memory-skills-and-prompts.md) | Memory, skills and prompts | L | 07 | DONE (2026-11-19, 65d33593..d2e8660f) |
 | [16](16-curated-skills-and-briefing.md) | Curated skills and the guided briefing | M | 06, 15 | DONE (2026-11-19, `6a134407`..`6771dee1`, merge `7aff38e0`) |
-| [17](17-writing.md) | Writing: scripts, copy and captions | M | 06, 09 | IN PROGRESS (senior-e, 2026-11-19) |
+| [17](17-writing.md) | Writing: scripts, copy and captions | M | 06, 09 | DONE (2026-11-20, `ef219641c`..`5fb9bbf52` replayed, merge `6989137a2`; a real draft with a provider key not verified) |
 | [18](18-social-connectors-and-youtube.md) | Social connectors and YouTube | L | 04, 05 | DONE (2026-11-20, `4cfc130a`..`375f681d`, merge `f4c35c228`; task 10 real upload waits for the author) |
 | [19](19-instagram-and-facebook.md) | Instagram and Facebook | L | 18 | DONE (2026-11-20, `c86c2f10b`..`8428bc2d3`, merge `ada3c608f`; task 9, a real post with the author's Meta app, not verified) |
 | [20](20-publishing-calendar-and-scheduler.md) | Publishing: calendar, approval and scheduler | L | 06, 07, 18 | IN PROGRESS (senior-b, 2026-11-20) |
