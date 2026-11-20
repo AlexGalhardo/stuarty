@@ -42,7 +42,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [20](20-publishing-calendar-and-scheduler.md) | Publishing: calendar, approval and scheduler | L | 06, 07, 18 | DONE (2026-11-20, `0e4e0dbe2`..`77d7bc3b7`, merge `e0453f55f`; the scheduler runs while the app runs until epic 21; a real post not verified) |
 | [21](21-desktop-background-service.md) | Desktop background service for scheduled posts | M | 20 | DONE (2026-11-20, `d7d8dc810`..`38dc447d9` replayed, merge `7eb3945ee`; the tray, the real sign-in registration and the installer are a manual check of the author, D-096) |
 | [22](22-x-and-tiktok-drafts.md) | X and TikTok drafts | M | 20 | IN PROGRESS (senior-d, 2026-11-20) |
-| [23](23-blog-and-its-destinations.md) | Blog posts and their four destinations | L | 17, 20 | TODO |
+| [23](23-blog-and-its-destinations.md) | Blog posts and their four destinations | L | 17, 20 | IN PROGRESS (senior-d, 2026-11-20) |
 | [24](24-google-account-and-server-login.md) | Optional Google account and login on a server | M | 04, 18 | DONE (2026-11-20, `46c44b677`..`cde96fa60`, merge `105a2cf8a`; a real Google login and `scripts/no-egress.sh`, which needs Linux, not verified) |
 | [25](25-vps-package.md) | VPS package: Caddy, install, update and backup | M | 24 | DONE (2026-11-20, `7da749ed7`..`6293c2d78`, merge `2722becab`; a real VPS, the built image and `caddy validate` not verified) |
 
