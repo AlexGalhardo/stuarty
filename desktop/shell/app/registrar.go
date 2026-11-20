@@ -10,7 +10,7 @@ import (
 const autostartID = "stuarty-desktop"
 
 // newRegistrar is the registration of the start at sign-in: the Run key of the user on Windows (written by
-// desktop/service, which the tests exercise on a key of their own), and the autostart of the framework
+// desktop/service, which the tests exercise on an in-memory key), and the autostart of the framework
 // elsewhere, where epic 43 verifies it.
 func newRegistrar(app *application.App) service.Registrar {
 	if r := service.SystemRegistrar(); r != nil {
