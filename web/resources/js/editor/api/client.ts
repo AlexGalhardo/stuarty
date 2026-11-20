@@ -46,6 +46,7 @@ import type {
 	GoogleSettingsRequest,
 	GoogleStart,
 	GoogleStatus,
+	HistoryDiffResult,
 	HistoryListResult,
 	HistoryQuery,
 	HistoryRevertResult,
