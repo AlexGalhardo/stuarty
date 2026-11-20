@@ -5775,6 +5775,126 @@
         },
         "type": "object"
       },
+      "PostCheckResult": {
+        "properties": {
+          "html": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "images": {
+            "items": {
+              "$ref": "#/components/schemas/PostImageReport"
+            },
+            "type": "array"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/PostIssue"
+            },
+            "type": "array"
+          },
+          "item_id": {
+            "type": "string"
+          },
+          "markdown": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PostMeta"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "words": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "PostImageReport": {
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "content_type": {
+            "type": "string"
+          },
+          "found": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PostIssue": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PostMeta": {
+        "properties": {
+          "canonical": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "cover": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "x-untrusted": true
+          },
+          "title": {
+            "type": "string",
+            "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
       "Poster": {
         "properties": {
           "asset_id": {
@@ -6709,6 +6829,9 @@
             },
             "type": "array"
           },
+          "post": {
+            "type": "string"
+          },
           "project_id": {
             "type": "string"
           },
@@ -6823,6 +6946,142 @@
           "summary": {
             "type": "string",
             "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
+      "PublishedPostImage": {
+        "properties": {
+          "bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "content_type": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PublishedPostListResult": {
+        "properties": {
+          "next_cursor": {
+            "type": "string"
+          },
+          "posts": {
+            "items": {
+              "$ref": "#/components/schemas/PublishedPostSummary"
+            },
+            "type": "array"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PublishedPostResult": {
+        "properties": {
+          "canonical_url": {
+            "type": "string"
+          },
+          "cover": {
+            "type": "string"
+          },
+          "html": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "images": {
+            "items": {
+              "$ref": "#/components/schemas/PublishedPostImage"
+            },
+            "type": "array"
+          },
+          "language": {
+            "type": "string"
+          },
+          "markdown": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "published_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "title": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PublishedPostSummary": {
+        "properties": {
+          "canonical_url": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "cover": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "published_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "x-untrusted": true
+          },
+          "title": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
           }
         },
         "type": "object"
@@ -19217,6 +19476,168 @@
         "summary": "Mark a skill as read (a browser session only)"
       }
     },
+    "/api/v1/posts": {
+      "get": {
+        "operationId": "posts.list",
+        "parameters": [
+          {
+            "description": "The page size, 1 to 50; the default is 20.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The next_cursor of the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishedPostListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the posts published to the read API"
+      }
+    },
+    "/api/v1/posts/{slug}": {
+      "get": {
+        "operationId": "posts.get",
+        "parameters": [
+          {
+            "description": "The slug of a published post.",
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishedPostResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read a post published to the read API"
+      }
+    },
+    "/api/v1/posts/{slug}/media/{name}": {
+      "get": {
+        "operationId": "posts.media",
+        "parameters": [
+          {
+            "description": "The slug of a published post.",
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "The file name of an image of the post, as the post lists it.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Download an image of a published post"
+      }
+    },
     "/api/v1/projects": {
       "get": {
         "operationId": "projects.list",
@@ -24079,6 +24500,69 @@
         "summary": "Ask a model for a draft of a text; the job waits for approval and shows its estimate"
       }
     },
+    "/api/v1/projects/{id}/texts/{item_id}/post": {
+      "get": {
+        "operationId": "texts.post",
+        "parameters": [
+          {
+            "description": "The project of the post, prj_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "A text of the kind post.",
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostCheckResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Check a blog post and render its sanitised HTML"
+      }
+    },
     "/api/v1/projects/{id}/texts/{item_id}/revert": {
       "post": {
         "operationId": "texts.revert",
@@ -24842,8 +25326,11 @@
               "schema": {
                 "properties": {
                   "export": {
-                    "description": "The id of a succeeded export job of the project: the video.",
-                    "minLength": 1,
+                    "description": "The id of a succeeded export job of the project: the video. Give this or post.",
+                    "type": "string"
+                  },
+                  "post": {
+                    "description": "The id of a text of the kind post of the project: a blog post, which goes to the blog destinations. Give this or export.",
                     "type": "string"
                   },
                   "project_id": {
@@ -24874,8 +25361,7 @@
                 },
                 "required": [
                   "project_id",
-                  "title",
-                  "export"
+                  "title"
                 ],
                 "type": "object"
               }
@@ -25022,6 +25508,13 @@
                 "properties": {
                   "export": {
                     "description": "The new video; leave out to keep it.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "post": {
+                    "description": "The new post; leave out to keep it.",
                     "type": [
                       "string",
                       "null"

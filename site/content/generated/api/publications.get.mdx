@@ -35,6 +35,7 @@ Content type `application/json`. Schema: [`Publication`](/docs/api/schemas#publi
 | `export` | `string` | no |  |
 | `id` | `string` | no |  |
 | `notes` | array of `string` | no |  |
+| `post` | `string` | no |  |
 | `project_id` | `string` | no |  |
 | `targets` | array of [`Target`](/docs/api/schemas#target) | no |  |
 | `text` | `string` | no |  |
@@ -228,6 +229,7 @@ puts "#{response.code} #{response.body}"
   "notes": [
     "string"
   ],
+  "post": "string",
   "project_id": "string",
   "targets": [
     {

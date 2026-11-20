@@ -37,6 +37,10 @@ func (s stub) CaptionValidate(
 	return reply[service.CaptionValidateResult](s.err)
 }
 
+func (s stub) PostCheck(context.Context, service.PostCheckRequest) (*service.PostCheckResult, error) {
+	return reply[service.PostCheckResult](s.err)
+}
+
 func (s stub) ScriptEstimate(context.Context, service.ScriptEstimateRequest) (*service.ScriptEstimateResult, error) {
 	return reply[service.ScriptEstimateResult](s.err)
 }

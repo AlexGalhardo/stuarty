@@ -2661,8 +2661,9 @@ stuarty publication:create --project <id> --title <t> --export <job> --targets <
 | --- | --- | --- | --- |
 | `--title` | string |  | the title (required) |
 | `--text` | string |  | the caption the accounts use unless they have their own |
-| `--export` | string |  | the id of a succeeded export job of the project: the video (required) |
+| `--export` | string |  | the id of a succeeded export job of the project: the video (this or --post) |
 | `--thumbnail` | string |  | the id of a succeeded export job of a still: the cover |
+| `--post` | string |  | the id of a text of the kind post: a blog post (this or --export) |
 | `--connection` | string |  | the connection of the account the post goes to |
 | `--at` | string |  | the time: 2026-11-20T09:00 read in --zone, or an instant such as 2026-11-20T12:00:00Z |
 | `--zone` | string |  | the IANA zone the time is read in, for example America/Sao_Paulo (default UTC) |
@@ -3015,6 +3016,26 @@ Example:
 
 ```bash
 stuarty script:estimate pit_3c5v8n2w6d --project prj_7k2m9x4q1b --wpm 130
+```
+
+## `post:check`
+
+Check a blog post (SDD-019 section 13): its front matter, its images and its sanitised HTML
+
+```text
+stuarty post:check <item> --project <id>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--project` | string |  | the project of the text (default $STUARTY_PROJECT) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty post:check pit_3c5v8n2w6d --project prj_7k2m9x4q1b
 ```
 
 ## `serve`
