@@ -31,6 +31,9 @@ on:
       - ".github/workflows/site.yml"
       - "scripts/update-feed.sh"
   workflow_dispatch:
+  # A published release rebuilds the site: the landing download buttons read the latest release at build time.
+  release:
+    types: [published]
 
 permissions:
   contents: read
@@ -77,6 +80,9 @@ jobs:
           go-version-file: go.mod
       - run: npm run reference:check
       - run: npm run build
+        env:
+          # site/lib/releases.ts reads the latest release; the token only raises the API rate limit.
+          GITHUB_TOKEN: ${{ github.token }}
       - run: npm run check:built
       - name: Add the desktop update feed and its installers
         if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
