@@ -154,6 +154,9 @@ export default function Palette({
 
 	const rows = usePaletteSearch(t, locale, registry, query);
 	const activeRow = rows[Math.min(active, rows.length - 1)];
+	// The combobox points at its listbox only while the listbox is in the page: while the registry loads, or
+	// when nothing matches, an aria-controls to a missing id is an invalid value (axe aria-valid-attr-value).
+	const listShown = registry.status === "ready" && rows.length > 0;
 	const count = useMemo(
 		() =>
 			registry.status === "ready"
@@ -280,10 +283,12 @@ export default function Palette({
 							/>
 							<Input
 								role="combobox"
-								aria-expanded="true"
-								aria-controls={listId}
+								aria-expanded={listShown}
+								aria-controls={listShown ? listId : undefined}
 								aria-activedescendant={
-									activeRow ? `${listId}-${activeRow.command.name}` : undefined
+									listShown && activeRow
+										? `${listId}-${activeRow.command.name}`
+										: undefined
 								}
 								aria-label={t("ui.editor.palette.search")}
 								placeholder={t("ui.editor.palette.search")}
