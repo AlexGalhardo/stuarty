@@ -136,7 +136,9 @@ test.describe("asset-library", () => {
 			}
 		).project_id;
 		const two = (
-			(await call("POST", "/projects", { name: `Library two tl ${stamp}` })) as {
+			(await call("POST", "/projects", {
+				name: `Library two tl ${stamp}`,
+			})) as {
 				project_id: string;
 			}
 		).project_id;
