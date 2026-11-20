@@ -4,6 +4,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/web/app/auth"
+
 	"github.com/AlexGalhardo/vukem/web"
 )
 
