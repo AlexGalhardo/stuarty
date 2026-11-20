@@ -47,6 +47,7 @@ export type NetworkDoc = {
 		read: string;
 	};
 	draft?: boolean;
+	price?: { currency: string; post_micros: number; link_micros: number; source: string; read: string };
 	hosts: string[];
 	scopes: string[];
 	guide: string;
@@ -68,6 +69,9 @@ export function duration(ms: number): string {
 	if (ms % 60_000 === 0) return `${ms / 60_000} min`;
 	return `${+(ms / 1000).toFixed(1)} s`;
 }
+
+/** An amount in millionths of a currency, as a person writes it. */
+export const money = (micros: number, currency: string): string => `${+(micros / 1_000_000).toFixed(3)} ${currency}`;
 
 const list = (items: string[] | null | undefined): string => (items && items.length > 0 ? items.join(", ") : "none");
 
@@ -102,15 +106,23 @@ export function limitRows(n: NetworkDoc): string[][] {
 export function limitsSection(n: NetworkDoc): string {
 	const sources = [`- [${n.name}: the page for the post](${n.limits.source}), read on ${n.limits.read}.`];
 	for (const s of n.preset?.sources ?? []) sources.push(`- [The page for the video](${s.url}), read on ${s.read}: ${esc(s.says)}.`);
+	const price = n.price
+		? `### The price of a post
+
+${n.name} charges for use of its API: ${money(n.price.post_micros, n.price.currency)} for a post and ${money(n.price.link_micros, n.price.currency)} for a post with a link, on ${n.price.read} ([source](${n.price.source})). The approval of a post shows the price Stuarty has; you can correct it on the Connections page when ${n.name} changes it.`
+		: "";
 	return [
 		`These are the limits Stuarty checks a post to ${n.name} against before anything is sent (\`publish:validate\`). A post that breaks one is refused with the limit named, and nothing leaves your machine.`,
 		table(["Limit", "Value"], limitRows(n)),
 		"### Where the numbers come from",
 		sources.join("\n"),
+		price,
 		n.draft
 			? `${n.name} takes the file as a draft in your own app: it is never public until you finish it there.`
 			: `${n.name} publishes only after you approve the post.`,
-	].join("\n\n");
+	]
+		.filter((part) => part !== "")
+		.join("\n\n");
 }
 
 export function networksOverview(networks: NetworkDoc[]): string {

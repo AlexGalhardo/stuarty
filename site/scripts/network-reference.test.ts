@@ -59,3 +59,11 @@ test("every operation of the registry has a generated reference page", () => {
 		assert.ok(have.has(c.name.replace(/:/g, ".")) || have.has(c.name), `${c.name} has no page`);
 	}
 });
+
+test("the price of a post on X is generated with its source and date", () => {
+	const x = networks.find((n) => n.network === "x") as NetworkDoc;
+	const text = networkPage(x, undefined);
+	assert.match(text, /0\.015 USD for a post and 0\.2 USD for a post with a link/);
+	assert.ok(text.includes(`on ${x.price?.read}`));
+	assert.ok(!networkPage(networks[0] as NetworkDoc, undefined).includes("The price of a post"));
+});

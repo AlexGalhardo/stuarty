@@ -1,0 +1,59 @@
+---
+title: "The image editor"
+description: "Make thumbnails and covers: layers, text, templates, adjustments, filters, masks, lookup tables and operations with a model, with the same history an agent uses."
+---
+
+## You will learn
+
+- how to start an image from a preset, a file or a template;
+- the layers, adjustments, filters, masks and colour tables you can apply;
+- how an agent and you work on the same image, and how to export it.
+
+## The idea
+
+An image is a document of layers: a fill, a photo, a shape, a piece of text. You edit it in **Edit Image**; an agent edits it with the commands of the `image` domain. Both send the same commands to the same core, so they share one history: either of you can undo what the other did and continue from there. The picture on the canvas and the exported file come from the same renderer, so they match.
+
+## Quick start
+
+1. Open **Edit Image** and choose **New image**. Pick a preset: **Video thumbnail (16:9)**, **Square post (1:1)**, **Vertical cover (9:16)** or a custom size. To start from a photo, choose **Import image** and pick a file; the image takes the size of the file or the size you choose.
+2. Add layers from the toolbar: a fill, an image, a shape or text. Select a layer to move, resize, rotate or reorder it, and use the inspector for its properties. Everything is in **Layers**, and every step is in **History**.
+3. Make it look right with the **Adjustments** of the layer (exposure, brightness, contrast, saturation and temperature), its **filters** (grayscale, blur, sharpen, vignette, grain, shadow, glow and stroke), and a **Mask** (a rectangle, a rounded rectangle, an ellipse, or the shape of another layer, with a soft edge and an invert switch).
+4. For a colour grade, use **Colour lookup table (.cube)** in the inspector: it is the same `.cube` file you use on a video, and the editor's picture and the exported file show the same colours.
+5. Choose **Export**: PNG, JPEG or WebP.
+
+From a terminal, the same flow:
+
+```bash
+stuarty image:create --preset vertical_cover --name "Cover" --id img_9d2f4h6j8k
+stuarty image:edit img_9d2f4h6j8k layer.add_fill color='#1B1B2F'
+stuarty image:edit img_9d2f4h6j8k layer.add_text text="First sourdough" \
+  style:='{"size":160,"color":"#FFE600","font_weight":700}'
+stuarty image:show img_9d2f4h6j8k
+stuarty image:export img_9d2f4h6j8k --format png
+```
+
+`image:show` describes the document in words: the layers, the findings and the revision. `image:undo` and `image:redo` undo and redo the last step of whoever calls them.
+
+## Templates
+
+Make a document a template with **Make it a template**, and mark the layers that change as **slots**. **New from template** then asks for the value of each slot (a title, a photo) and makes a new image. In the CLI, `image:create --template` starts a template and `image:create --from-template <id> --values -` fills one from JSON on the standard input. A slot you leave empty is a finding of the lint, not a silent gap.
+
+## Operations with a model
+
+Two operations use an AI provider: **Remove background** and **Generate image**. Both show the estimated price first, then wait in the [approval queue](/docs/guide/approvals) until you approve. The result arrives as a new layer you can undo. The picture of the layer goes to the provider you choose, and only after your approval. See [AI providers](/docs/guide/ai-providers).
+
+## For an agent
+
+The domain has 27 edit operations (`canvas`, `image` and `layer` namespaces) and eight commands; [the image domain](/docs/agents/domain-image) lists them with their arguments, and the MCP tool `image` carries the document operations. An editor open on an image shows what an agent changed, without a reload.
+
+## Common mistakes
+
+- Looking for a layer in the wrong group. A grouped layer is inside its group in **Layers**; `layer.ungroup` brings it out.
+- Expecting a slot to be filled with a file that is not in the image. Import it first: `image:import`.
+- Exporting a template with empty slots. The lint names them.
+
+## Next steps
+
+- [Your first short video](/docs/guide/first-short-video): a thumbnail from a template
+- [Effects and color](/docs/guide/effects-and-color)
+- [The image domain, for agents](/docs/agents/domain-image)

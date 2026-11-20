@@ -39,6 +39,7 @@ else
 	pages=("$start/install-windows.mdx" "$start/install-docker.mdx" "$start/install-server.mdx")
 	[ ! -f "$guide/first-short-video.mdx" ] || pages+=("$guide/first-short-video.mdx")
 	pages+=("$guide/tutorial-vertical-short.mdx" "$guide/tutorial-agent-edit.mdx")
+	pages+=("$guide/image-editor.mdx" "$guide/asset-library.mdx" "$guide/memory-skills-prompts.mdx")
 fi
 for p in "${pages[@]}"; do [ -f "$p" ] || die "no such page: $p"; done
 
