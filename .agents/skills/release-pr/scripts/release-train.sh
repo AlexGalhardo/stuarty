@@ -33,7 +33,8 @@ require_release_branch() {
 	local b
 	b=$(branch)
 	[ -n "$(version_of "$b")" ] || die "the checkout is on $b, not on a release/vX.Y.Z branch"
-	[ -z "$(git status --porcelain --untracked-files=no)" ] || die "the working tree has changes"
+	# Unstaged local edits may stay (a cherry-pick that touches one of those files stops safely).
+	git diff --cached --quiet || die "the index has staged changes"
 	git fetch -q origin main
 	git merge-base --is-ancestor origin/main HEAD || die "$b does not start from origin/main"
 }
