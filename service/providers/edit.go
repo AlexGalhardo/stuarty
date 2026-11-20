@@ -15,7 +15,7 @@ type SourceImage struct {
 	Format string
 }
 
-// ImageEditor is a provider that edits a picture it is sent (SDD-016 section 2.3). The estimate of an edit is
+// ImageEditor is a provider that edits a picture it is sent (SDD-016 section 2.4). The estimate of an edit is
 // the price per image of the person's table, so the adapter has no method for it.
 type ImageEditor interface {
 	Provider

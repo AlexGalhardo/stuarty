@@ -6,10 +6,10 @@ import (
 	"strings"
 )
 
-// CapabilityImageEdit is the capability of a provider that edits a picture it is sent (SDD-016 section 2.3).
+// CapabilityImageEdit is the capability of a provider that edits a picture it is sent (SDD-016 section 2.4).
 const CapabilityImageEdit = "image_edit"
 
-// The operations of the job image.edit (SDD-016 section 6.4).
+// The operations of the job image.edit (SDD-016 section 6.5).
 const (
 	// OperationRemoveBackground sends a picture to the provider and gets it back with a transparent background.
 	OperationRemoveBackground = "remove_background"
@@ -24,7 +24,7 @@ var EditOperations = []string{OperationRemoveBackground}
 // base64 form of it inside the 20,971,520 characters OpenAI takes for an image.
 const DefaultMaxSourceBytes = 15 << 20
 
-// EditRequest is one request to edit a picture (SDD-016 section 5.4).
+// EditRequest is one request to edit a picture (SDD-016 section 5.5).
 type EditRequest struct {
 	Model     string `json:"model"`
 	Operation string `json:"operation"`
@@ -59,7 +59,7 @@ func NormalizeEdit(r EditRequest) EditRequest {
 	return r
 }
 
-// ValidateEdit checks a request, in stored form (NormalizeEdit), against SDD-016 section 5.4 and the limits the
+// ValidateEdit checks a request, in stored form (NormalizeEdit), against SDD-016 section 5.5 and the limits the
 // adapter documents for the model.
 func ValidateEdit(r EditRequest, l EditLimits) *FieldError {
 	if !ValidModel(r.Model) {

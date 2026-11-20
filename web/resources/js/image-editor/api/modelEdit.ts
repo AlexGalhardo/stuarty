@@ -6,7 +6,7 @@ import type { Job, ModelView, ProviderView } from "../../editor/api/types";
 import type { ProjectSummary } from "../../types";
 import { API_BASE } from "./imageApi";
 
-// The operations of an image with a model (SDD-016 section 6.4, epic 30), read and started through the
+// The operations of an image with a model (SDD-016 section 6.5, epic 30), read and started through the
 // client of the video editor, which already has the providers, the projects and the jobs. The only place of
 // the image editor that reaches the network for them (rule R6).
 
