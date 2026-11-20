@@ -318,6 +318,11 @@ func itemDetail(it *timeline.Item) string {
 	case timeline.ItemShape:
 		return fmt.Sprintf("%s %sx%s", it.Shape, num(it.Width), num(it.Height))
 	case timeline.ItemComposition:
+		// A composition takes a constant speed (epic 53); an agent reads it here as on a clip.
+		if it.Speed.Num != it.Speed.Den && it.Speed.Den > 0 {
+			return it.Timeline + " x" + num(float64(it.Speed.Num)/float64(it.Speed.Den))
+		}
+
 		return it.Timeline
 	}
 
