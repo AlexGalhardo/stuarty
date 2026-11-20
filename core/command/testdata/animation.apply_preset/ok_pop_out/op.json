@@ -1,0 +1,9 @@
+{
+  "op": "animation.apply_preset",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "preset": "pop",
+    "edge": "out",
+    "duration": "10f"
+  }
+}

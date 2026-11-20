@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The length of args.bezier is 3, outside the accepted range.",
+  "hint": "Use a length between 4 and 4.",
+  "retryable": false,
+  "path": "args.bezier"
+}

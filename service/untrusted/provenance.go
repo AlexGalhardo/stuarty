@@ -39,6 +39,8 @@ var Provenance = map[string]string{
 	"service.ImageEditResult.Description":  SourceProjectText,
 	"connections.Connection.Label":         SourceProjectText,
 	"service.ConnectionTestResult.Message": SourceNetworkText,
+	"approval.Request.Summary":             SourceProjectText,
+	"approval.Request.Reason":              SourceProjectText,
 	"service.LibraryEntry.Description":     SourceLibraryText,
 	"service.LibraryEntry.Tags":            SourceLibraryText,
 	"service.LibraryEntry.Error":           SourceLibraryText,

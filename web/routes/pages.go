@@ -52,6 +52,9 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 		// The home and the sections that have no page of their own yet (dashboard.go).
 		dashboardPages(r)
 
+		// Edit Image, the image editor (epic 28, image_pages.go).
+		imagePages(r)
+
 		r.Get("/projects", func(c *web.Ctx) error { return projectsPage(c, d) }).Name("projects.index")
 		r.Post("/projects", func(c *web.Ctx) error { return projectCreate(c, d) }).Name("projects.store")
 
@@ -69,6 +72,13 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 		r.Get("/connections", func(c *web.Ctx) error {
 			return inertia.Render(c, "Connections/Index", inertia.Props{})
 		}).Name("connections.index")
+
+		// The approval queue, the rules and the cost ceilings (epic 05, SDD-015): the page reads and
+		// changes them through /api/v1/approvals, /approval-rules and /cost, and follows the queue on
+		// /api/v1/approvals/events.
+		r.Get("/approvals", func(c *web.Ctx) error {
+			return inertia.Render(c, "Approvals/Index", inertia.Props{})
+		}).Name("approvals.index")
 
 		// The brand kit is read and saved by the page through /api/v1/brand-kit.
 		r.Get("/settings/brand-kit", func(c *web.Ctx) error {

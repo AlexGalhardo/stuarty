@@ -2,6 +2,11 @@ import { fromResponse, networkError } from "./errors";
 import { type RetryDeps, withRetry } from "./retry";
 import { type Transport, TransportError } from "./transport";
 import type {
+	ApprovalListResult,
+	ApprovalRequest,
+	ApprovalRule,
+	ApprovalRuleListResult,
+	ApprovalRuleSetRequest,
 	AssetListResult,
 	AuditListResult,
 	AuditQuery,
@@ -14,9 +19,14 @@ import type {
 	ConnectionCreateRequest,
 	ConnectionListResult,
 	ConnectionTestResult,
+	CostCeilingSetRequest,
+	CostSummary,
 	EditRequest,
 	EditResult,
+	ExportBatchItem,
+	ExportCheckResult,
 	ExportOptions,
+	ExportPresetListResult,
 	FontImportResult,
 	FontListResult,
 	HistoryListResult,
@@ -87,6 +97,20 @@ export interface ApiClient {
 	// A transcription of one asset (SDD-012 section 12.4); E_TRANSCRIBE_UNAVAILABLE
 	// answers at once when no provider can run.
 	startTranscribe(projectId: string, assetId: string): Promise<Job>;
+	// The platform presets, and with `codecs` which codecs this machine writes.
+	getExportPresets(codecs?: boolean): Promise<ExportPresetListResult>;
+	// What does not fit a preset, before anything is encoded.
+	checkExport(
+		projectId: string,
+		preset: string,
+		range?: { start?: string; end?: string },
+	): Promise<ExportCheckResult>;
+	// Several exports of the project, one after the other, as one job; the core
+	// queues them behind the exports that are running.
+	startExportBatch(
+		projectId: string,
+		items: readonly ExportBatchItem[],
+	): Promise<Job>;
 	getJob(jobId: string): Promise<Job>;
 	cancelJob(jobId: string): Promise<Job>;
 	listJobs(projectId: string): Promise<JobListResult>;
@@ -149,6 +173,19 @@ export interface ApiClient {
 	createConnection(request: ConnectionCreateRequest): Promise<Connection>;
 	removeConnection(id: string): Promise<Connection>;
 	testConnection(id: string): Promise<ConnectionTestResult>;
+	// The approval queue (SDD-015). Deciding, the rules and the ceilings are for a person in a
+	// browser session; any other caller gets E_PRIVILEGED_SESSION.
+	listApprovals(state?: string): Promise<ApprovalListResult>;
+	decideApproval(
+		id: string,
+		decision: "approve" | "reject",
+		reason?: string,
+	): Promise<ApprovalRequest>;
+	listApprovalRules(): Promise<ApprovalRuleListResult>;
+	setApprovalRule(request: ApprovalRuleSetRequest): Promise<ApprovalRule>;
+	removeApprovalRule(id: string): Promise<ApprovalRule>;
+	getCostSummary(): Promise<CostSummary>;
+	setCostCeiling(request: CostCeilingSetRequest): Promise<CostSummary>;
 	// An administrator session; any other caller gets E_FORBIDDEN.
 	listUsers(): Promise<UserListResult>;
 	listTrashedProjects(): Promise<ProjectListResult>;
@@ -275,6 +312,30 @@ export function createClient(
 				kind: "transcribe",
 				args: { asset_id: assetId },
 			}),
+		getExportPresets: (codecs) =>
+			call(
+				"GET",
+				`/export-presets${codecs === true ? "?codecs=true" : ""}`,
+				READ_TIMEOUT_MS * 3,
+			),
+		checkExport: (id, preset, range = {}) => {
+			const query = new URLSearchParams({ preset });
+			if (range.start !== undefined) query.set("start", range.start);
+			if (range.end !== undefined) query.set("end", range.end);
+			return call(
+				"GET",
+				`${project(id)}/export-check?${query.toString()}`,
+				READ_TIMEOUT_MS,
+			);
+		},
+		startExportBatch: (id, items) =>
+			call("POST", `${project(id)}/export-batches`, READ_TIMEOUT_MS, {
+				items: items.map((item) =>
+					Object.fromEntries(
+						Object.entries(item).filter(([, value]) => value !== undefined),
+					),
+				),
+			}),
 		getJob: (jobId) =>
 			call("GET", `/jobs/${encodeURIComponent(jobId)}`, READ_TIMEOUT_MS),
 		cancelJob: (jobId) =>
@@ -384,6 +445,33 @@ export function createClient(
 				EDIT_TIMEOUT_MS,
 				{},
 			),
+		listApprovals: (state) =>
+			call(
+				"GET",
+				`/approvals?state=${encodeURIComponent(state ?? "pending")}&limit=200`,
+				READ_TIMEOUT_MS,
+			),
+		decideApproval: (id, decision, reason) =>
+			call(
+				"POST",
+				`/approvals/${encodeURIComponent(id)}/decide`,
+				EDIT_TIMEOUT_MS,
+				reason === undefined || reason === ""
+					? { decision }
+					: { decision, reason },
+			),
+		listApprovalRules: () => call("GET", "/approval-rules", READ_TIMEOUT_MS),
+		setApprovalRule: (request) =>
+			call("POST", "/approval-rules", EDIT_TIMEOUT_MS, request),
+		removeApprovalRule: (id) =>
+			call(
+				"DELETE",
+				`/approval-rules/${encodeURIComponent(id)}`,
+				EDIT_TIMEOUT_MS,
+			),
+		getCostSummary: () => call("GET", "/cost", READ_TIMEOUT_MS),
+		setCostCeiling: (request) =>
+			call("PUT", "/cost/ceilings", EDIT_TIMEOUT_MS, request),
 		revokeKey: (keyId) =>
 			call("DELETE", `/keys/${encodeURIComponent(keyId)}`, EDIT_TIMEOUT_MS),
 		listTrashedProjects: () =>

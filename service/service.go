@@ -18,6 +18,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/engine/rasterize"
 	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
 	"github.com/AlexGalhardo/stuarty/engine/transcribe"
+	"github.com/AlexGalhardo/stuarty/service/approval"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/library"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
@@ -99,6 +100,11 @@ type Service interface {
 	// AssetList lists the files the projects hold, by content hash, for the picker of a brand logo (VV-117).
 	AssetList(ctx context.Context, req AssetListRequest) (*AssetListResult, error)
 	ExportFile(ctx context.Context, req ExportFileRequest) (*File, error)
+	// ExportPresetList, ExportCheck and ExportBatch are the export presets, the check against one and the batch of
+	// exports of SDD-004 sections 8.2 to 8.4 (RF-087 to RF-089).
+	ExportPresetList(ctx context.Context, req ExportPresetListRequest) (*ExportPresetListResult, error)
+	ExportCheck(ctx context.Context, req ExportCheckRequest) (*ExportCheckResult, error)
+	ExportBatch(ctx context.Context, req ExportBatchRequest) (*Job, error)
 	AuditList(ctx context.Context, req AuditListRequest) (*AuditListResult, error)
 
 	// Doctor is the diagnostic report (SDD-003 section 2, SDD-011 section 8.6).
@@ -140,6 +146,10 @@ type Service interface {
 	ImageUndo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
 	ImageRedo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
 	ImageExport(ctx context.Context, req ImageExportRequest) (*ImageExportResult, error)
+	// ImageFrame, ImageHistory and ImageFile are the reads of the image editor screen (SDD-012 section 24.3); HTTP only.
+	ImageFrame(ctx context.Context, req ImageFrameRequest) (*ImageFrameResult, error)
+	ImageHistory(ctx context.Context, req ImageHistoryRequest) (*ImageHistoryResult, error)
+	ImageFile(ctx context.Context, req ImageFileRequest) (*File, error)
 	// ConnectionList and ConnectionGet read the destinations the user connected; ConnectionCreate,
 	// ConnectionRemove and ConnectionTest are for an administrator. No result carries a credential
 	// (SDD-014 section 5).
@@ -148,6 +158,18 @@ type Service interface {
 	ConnectionCreate(ctx context.Context, req ConnectionCreateRequest) (*connections.Connection, error)
 	ConnectionRemove(ctx context.Context, req ConnectionRef) (*connections.Connection, error)
 	ConnectionTest(ctx context.Context, req ConnectionRef) (*ConnectionTestResult, error)
+
+	// The approval queue, its rules and the cost ceilings (SDD-015). Reading is for every caller that
+	// may read; ApprovalDecide, ApprovalRuleSet, ApprovalRuleRemove and CostCeilingSet are for a
+	// person in a privileged browser session and answer E_PRIVILEGED_SESSION to everyone else.
+	ApprovalList(ctx context.Context, req ApprovalListRequest) (*ApprovalListResult, error)
+	ApprovalGet(ctx context.Context, req ApprovalRef) (*approval.Request, error)
+	ApprovalDecide(ctx context.Context, req ApprovalDecideRequest) (*approval.Request, error)
+	ApprovalRuleList(ctx context.Context, req ApprovalRuleListRequest) (*ApprovalRuleListResult, error)
+	ApprovalRuleSet(ctx context.Context, req ApprovalRuleSetRequest) (*approval.RuleView, error)
+	ApprovalRuleRemove(ctx context.Context, req ApprovalRef) (*approval.RuleView, error)
+	CostSummary(ctx context.Context, req CostSummaryRequest) (*CostSummaryResult, error)
+	CostCeilingSet(ctx context.Context, req CostCeilingSetRequest) (*CostSummaryResult, error)
 }
 
 // Event is what the service publishes after the change is durable (SDD-006
@@ -173,6 +195,10 @@ type Event struct {
 	Message  string
 	Error    *Error
 	Result   *JobResult
+	// Approval is the request of approval.requested and approval.decided (SDD-015 section 7), and
+	// Owner the user it belongs to in network mode, so that a member's stream carries their own only.
+	Approval *approval.Request
+	Owner    string
 }
 
 // Options configure New. Store is required.
@@ -220,6 +246,9 @@ type Options struct {
 	// credentials; without one the service builds a registry over the store with a vault in the
 	// workspace that has no master key source, so a connection cannot be created (SDD-014).
 	Connections *connections.Manager
+	// JobKinds are the job kinds that need approval, registered by the epics of publishing and
+	// generation (SDD-015 section 5). The product registers none of its own; tests register one.
+	JobKinds []ApprovableKind
 	// Heavy limits the heavy operations (jobs, media, template, font, bundle and OpenTimelineIO imports and exports) per actor; nil counts nothing.
 	Heavy RateLimiter
 	// HeavyPerMinute is the limit Heavy enforces, for the error message; zero is HeavyPerMinute.
@@ -251,6 +280,7 @@ type svc struct {
 	doctor      DoctorOptions
 	keys        KeyStore
 	conns       *connections.Manager
+	kinds       map[string]*ApprovableKind
 	lib         *library.Manager // the files of memory, skills and prompts; nil without a workspace
 	heavy       RateLimiter
 	heavyLimitN int
@@ -312,6 +342,13 @@ func New(o Options) (Service, error) {
 		webp:        o.WebP,
 		startedAt:   time.Now(),
 	}
+
+	kinds, err := registerKinds(o.JobKinds)
+	if err != nil {
+		return nil, err
+	}
+
+	s.kinds = kinds
 
 	if s.workspace != "" {
 		s.fonts = enginestore.NewFonts(s.workspace)

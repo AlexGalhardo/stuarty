@@ -62,9 +62,12 @@ Every operation has its own page with the parameters, the body, the responses an
 
 | Method | Path | Operation | Summary |
 | --- | --- | --- | --- |
+| `GET` | `/api/v1/export-presets` | [`export.presets`](/docs/api/export.presets) | List the export presets of the platforms |
 | `GET` | `/api/v1/jobs/{job_id}` | [`jobs.get`](/docs/api/jobs.get) | Read a job |
 | `POST` | `/api/v1/jobs/{job_id}/cancel` | [`jobs.cancel`](/docs/api/jobs.cancel) | Cancel a job |
 | `GET` | `/api/v1/jobs/{job_id}/file` | [`jobs.file`](/docs/api/jobs.file) | Download the file of a finished export |
+| `POST` | `/api/v1/projects/{id}/export-batches` | [`export.batch`](/docs/api/export.batch) | Export a project several times, one after the other |
+| `GET` | `/api/v1/projects/{id}/export-check` | [`export.check`](/docs/api/export.check) | Check a project against an export preset |
 | `GET` | `/api/v1/projects/{id}/jobs` | [`jobs.list`](/docs/api/jobs.list) | List the jobs of a project |
 | `POST` | `/api/v1/projects/{id}/jobs` | [`jobs.start`](/docs/api/jobs.start) | Start a job |
 
@@ -147,8 +150,25 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/images/{id}` | [`images.get`](/docs/api/images.get) | Describe an image document: layers, findings and text view |
 | `POST` | `/api/v1/images/{id}/edit` | [`images.edit`](/docs/api/images.edit) | Apply a batch of image operations |
 | `POST` | `/api/v1/images/{id}/export` | [`images.export`](/docs/api/images.export) | Export an image document to a PNG, JPEG or WebP file |
+| `GET` | `/api/v1/images/{id}/exports/{name}` | [`images.file`](/docs/api/images.file) | Download a file that an image export wrote |
+| `GET` | `/api/v1/images/{id}/frame` | [`images.frame`](/docs/api/images.frame) | Render the picture of an image document |
+| `GET` | `/api/v1/images/{id}/history` | [`images.history`](/docs/api/images.history) | List the latest batches of an image document |
 | `POST` | `/api/v1/images/{id}/redo` | [`images.redo`](/docs/api/images.redo) | Redo the latest undone step of the caller on an image |
 | `POST` | `/api/v1/images/{id}/undo` | [`images.undo`](/docs/api/images.undo) | Undo the latest step of the caller on an image |
+
+## Approvals
+
+| Method | Path | Operation | Summary |
+| --- | --- | --- | --- |
+| `GET` | `/api/v1/approval-rules` | [`approval-rules.list`](/docs/api/approval-rules.list) | List the rules that approve without asking |
+| `POST` | `/api/v1/approval-rules` | [`approval-rules.set`](/docs/api/approval-rules.set) | Create or replace a rule (a person in the browser only; the local token and keys get 403) |
+| `DELETE` | `/api/v1/approval-rules/{id}` | [`approval-rules.remove`](/docs/api/approval-rules.remove) | Remove a rule (a person in the browser only; the local token and keys get 403) |
+| `GET` | `/api/v1/approvals` | [`approvals.list`](/docs/api/approvals.list) | List the approval queue (pending requests by default) |
+| `GET` | `/api/v1/approvals/{id}` | [`approvals.get`](/docs/api/approvals.get) | Read one approval request |
+| `POST` | `/api/v1/approvals/{id}/decide` | [`approvals.decide`](/docs/api/approvals.decide) | Approve or reject a request (a person in the browser only; the local token and keys get 403) |
+| `GET` | `/api/v1/approvals/events` | [`approvals.events`](/docs/api/approvals.events) | Stream the events of the approval queue |
+| `GET` | `/api/v1/cost` | [`cost.get`](/docs/api/cost.get) | Read the cost ceilings and what was spent |
+| `PUT` | `/api/v1/cost/ceilings` | [`cost.ceilings.set`](/docs/api/cost.ceilings.set) | Set or remove a cost ceiling (a person in the browser only; the local token and keys get 403) |
 
 ## System
 

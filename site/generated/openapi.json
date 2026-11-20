@@ -23,6 +23,43 @@
       }
     },
     "schemas": {
+      "ApprovalListResult": {
+        "properties": {
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "requests": {
+            "items": {
+              "$ref": "#/components/schemas/Request"
+            },
+            "type": "array"
+          },
+          "text": {
+            "type": "string"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ApprovalRuleListResult": {
+        "properties": {
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/RuleView"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "Asset": {
         "properties": {
           "frame_count": {
@@ -128,6 +165,76 @@
               "string",
               "null"
             ]
+          }
+        },
+        "type": "object"
+      },
+      "BatchItem": {
+        "properties": {
+          "codec": {
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Error"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "format": {
+            "type": "string"
+          },
+          "index": {
+            "type": "integer"
+          },
+          "job_id": {
+            "type": "string"
+          },
+          "preset": {
+            "type": "string"
+          },
+          "progress": {
+            "format": "double",
+            "type": "number"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExportResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "BatchResult": {
+        "properties": {
+          "cancelled": {
+            "type": "integer"
+          },
+          "failed": {
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BatchItem"
+            },
+            "type": "array"
+          },
+          "succeeded": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
           }
         },
         "type": "object"
@@ -390,6 +497,41 @@
         },
         "type": "object"
       },
+      "CeilingView": {
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "per_day_micros": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "per_item_micros": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "project_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updated_by": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "Change": {
         "properties": {
           "changes": {
@@ -448,6 +590,23 @@
           "spill": {
             "format": "double",
             "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "CodecAvailability": {
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "codec": {
+            "type": "string"
+          },
+          "encoder": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -590,6 +749,50 @@
           },
           "status": {
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "CostLine": {
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "micros": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "CostSummaryResult": {
+        "properties": {
+          "ceilings": {
+            "items": {
+              "$ref": "#/components/schemas/CeilingView"
+            },
+            "type": "array"
+          },
+          "day": {
+            "type": "string"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/Total"
+            },
+            "type": "array"
+          },
+          "today": {
+            "items": {
+              "$ref": "#/components/schemas/CostLine"
+            },
+            "type": "array"
           }
         },
         "type": "object"
@@ -943,6 +1146,163 @@
         },
         "type": "object"
       },
+      "ExportCheckResult": {
+        "properties": {
+          "duration_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "errors": {
+            "type": "integer"
+          },
+          "estimated_bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/export.Finding"
+            },
+            "type": "array"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "preset": {
+            "type": "string"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          },
+          "warnings": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ExportPresetInfo": {
+        "properties": {
+          "codecs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "container": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "limits": {
+            "$ref": "#/components/schemas/ExportPresetLimits"
+          },
+          "network": {
+            "type": "string"
+          },
+          "placement": {
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "type": "array"
+          },
+          "targets": {
+            "$ref": "#/components/schemas/ExportPresetTargets"
+          }
+        },
+        "type": "object"
+      },
+      "ExportPresetLimits": {
+        "properties": {
+          "aspect_ratio": {
+            "type": "string"
+          },
+          "max_bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "max_duration_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "max_fps": {
+            "type": "integer"
+          },
+          "max_height": {
+            "type": "integer"
+          },
+          "max_video_kbps": {
+            "type": "integer"
+          },
+          "max_width": {
+            "type": "integer"
+          },
+          "min_duration_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "min_fps": {
+            "type": "integer"
+          },
+          "min_height": {
+            "type": "integer"
+          },
+          "min_width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ExportPresetListResult": {
+        "properties": {
+          "codecs": {
+            "items": {
+              "$ref": "#/components/schemas/CodecAvailability"
+            },
+            "type": "array"
+          },
+          "presets": {
+            "items": {
+              "$ref": "#/components/schemas/ExportPresetInfo"
+            },
+            "type": "array"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ExportPresetTargets": {
+        "properties": {
+          "audio_kbps": {
+            "type": "integer"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "video_kbps": {
+            "type": "integer"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "ExportResult": {
         "properties": {
           "audio_codec": {
@@ -957,6 +1317,9 @@
               "$ref": "#/components/schemas/VerifyCheck"
             },
             "type": "array"
+          },
+          "codec_fallback": {
+            "type": "string"
           },
           "download_url": {
             "type": "string"
@@ -980,7 +1343,16 @@
               "null"
             ]
           },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "path": {
+            "type": "string"
+          },
+          "preset": {
             "type": "string"
           },
           "revision": {
@@ -1432,6 +1804,72 @@
             "type": "string"
           },
           "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ImageHistoryEntry": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "changes": {
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "mine": {
+            "type": "boolean"
+          },
+          "ops": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "skipped": {
+            "type": "integer"
+          },
+          "undo_of": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "undone_by": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "ImageHistoryResult": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/ImageHistoryEntry"
+            },
+            "type": "array"
+          },
+          "image_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
             "type": "integer"
           }
         },
@@ -2072,6 +2510,9 @@
           "actor": {
             "type": "string"
           },
+          "approval_id": {
+            "type": "string"
+          },
           "created_at": {
             "format": "date-time",
             "type": "string"
@@ -2179,6 +2620,16 @@
       },
       "JobResult": {
         "properties": {
+          "batch": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BatchResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "export": {
             "anyOf": [
               {
@@ -2274,13 +2725,21 @@
       },
       "Keyframe": {
         "properties": {
+          "bezier": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": "array"
+          },
           "easing": {
             "enum": [
               "linear",
               "ease_in",
               "ease_out",
               "ease_in_out",
-              "hold"
+              "hold",
+              "bezier"
             ],
             "type": "string"
           },
@@ -3082,6 +3541,18 @@
         },
         "type": "object"
       },
+      "Money": {
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "micros": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "OpEffect": {
         "properties": {
           "created": {
@@ -3113,6 +3584,8 @@
           "op": {
             "description": "A command name, as listed by GET /commands.",
             "enum": [
+              "animation.apply_preset",
+              "animation.list_presets",
               "asset.remove",
               "audio.add",
               "audio.duck",
@@ -3164,6 +3637,7 @@
               "keyframe.clear",
               "keyframe.remove",
               "keyframe.set",
+              "keyframe.set_easing",
               "marker.add",
               "marker.remove",
               "marker.set",
@@ -3196,6 +3670,12 @@
         ],
         "type": "object",
         "x-args-by-op": {
+          "animation.apply_preset": {
+            "$ref": "#/components/schemas/args.animation.apply_preset"
+          },
+          "animation.list_presets": {
+            "$ref": "#/components/schemas/args.animation.list_presets"
+          },
           "asset.remove": {
             "$ref": "#/components/schemas/args.asset.remove"
           },
@@ -3348,6 +3828,9 @@
           },
           "keyframe.set": {
             "$ref": "#/components/schemas/args.keyframe.set"
+          },
+          "keyframe.set_easing": {
+            "$ref": "#/components/schemas/args.keyframe.set_easing"
           },
           "marker.add": {
             "$ref": "#/components/schemas/args.marker.add"
@@ -4155,6 +4638,132 @@
         },
         "type": "object"
       },
+      "Request": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "connection_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "decided_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "decided_by": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "estimate": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "job_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "payload_ref": {
+            "type": "string"
+          },
+          "project_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "rule_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "state": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string",
+            "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
+      "RuleView": {
+        "properties": {
+          "connection_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "per_day_micros": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "per_item_micros": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "project_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
       "Settings": {
         "properties": {
           "background": {
@@ -4593,6 +5202,20 @@
         },
         "type": "object"
       },
+      "Source": {
+        "properties": {
+          "read": {
+            "type": "string"
+          },
+          "says": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "SpeedPoint": {
         "properties": {
           "speed": {
@@ -4874,6 +5497,27 @@
           "total_bytes": {
             "format": "int64",
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "Total": {
+        "properties": {
+          "connection_id": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "day": {
+            "type": "string"
+          },
+          "micros": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "project_id": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -5580,6 +6224,66 @@
             "type": "string"
           }
         },
+        "type": "object"
+      },
+      "args.animation.apply_preset": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "description": "slide: distance in pixels; scale: factor at the far end; push_in and pull_out: zoom factor. Per preset default.",
+            "type": "number"
+          },
+          "direction": {
+            "description": "slide only: the side it comes from or leaves to. Default left.",
+            "enum": [
+              "left",
+              "right",
+              "up",
+              "down"
+            ],
+            "type": "string"
+          },
+          "duration": {
+            "description": "A length, at most the item's duration. Default 0.5s; the whole item for push_in and pull_out.",
+            "type": "string",
+            "x-vv-kind": "time"
+          },
+          "edge": {
+            "description": "in animates the start of the item, out its end. Default in.",
+            "enum": [
+              "in",
+              "out"
+            ],
+            "type": "string"
+          },
+          "item_id": {
+            "description": "A clip, text, caption or shape item.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "preset": {
+            "description": "The animation.",
+            "enum": [
+              "fade",
+              "slide",
+              "scale",
+              "pop",
+              "push_in",
+              "pull_out"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "preset"
+        ],
+        "type": "object"
+      },
+      "args.animation.list_presets": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
         "type": "object"
       },
       "args.asset.remove": {
@@ -8066,14 +8770,24 @@
             "type": "string",
             "x-vv-kind": "time"
           },
+          "bezier": {
+            "description": "x1, y1, x2, y2 of the curve of easing bezier: x1 and x2 from 0 to 1, y1 and y2 from -2 to 3.",
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": "array"
+          },
           "easing": {
-            "description": "From this keyframe to the next. Default linear.",
+            "description": "From this keyframe to the next. Default linear. bezier needs the bezier argument.",
             "enum": [
               "linear",
               "ease_in",
               "ease_out",
               "ease_in_out",
-              "hold"
+              "hold",
+              "bezier"
             ],
             "type": "string"
           },
@@ -8117,6 +8831,83 @@
           "property",
           "at",
           "value"
+        ],
+        "type": "object"
+      },
+      "args.keyframe.set_easing": {
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "description": "Position of an existing keyframe on the project timeline.",
+            "type": "string",
+            "x-vv-kind": "time"
+          },
+          "bezier": {
+            "description": "x1, y1, x2, y2 of a cubic Bezier curve: x1 and x2 from 0 to 1, y1 and y2 from -2 to 3.",
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": "array"
+          },
+          "easing": {
+            "description": "A named easing. Exactly one of easing, bezier and preset.",
+            "enum": [
+              "linear",
+              "ease_in",
+              "ease_out",
+              "ease_in_out",
+              "hold"
+            ],
+            "type": "string"
+          },
+          "item_id": {
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "preset": {
+            "description": "A named Bezier curve, stored as its four numbers.",
+            "enum": [
+              "in",
+              "out",
+              "in_out",
+              "back",
+              "overshoot"
+            ],
+            "type": "string"
+          },
+          "property": {
+            "enum": [
+              "x",
+              "y",
+              "scale",
+              "rotation",
+              "opacity",
+              "volume",
+              "brightness",
+              "contrast",
+              "saturation",
+              "temperature",
+              "tint",
+              "hue",
+              "mask_x",
+              "mask_y",
+              "mask_width",
+              "mask_height",
+              "mask_feather",
+              "crop_left",
+              "crop_top",
+              "crop_right",
+              "crop_bottom"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "property",
+          "at"
         ],
         "type": "object"
       },
@@ -9245,6 +10036,49 @@
         ],
         "type": "object"
       },
+      "export.Finding": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "got": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "exportBatchItemIn": {
+        "properties": {
+          "codec": {
+            "description": "h264, hevc or av1, for mp4; empty is the choice of the preset.",
+            "type": "string"
+          },
+          "end": {
+            "type": "string"
+          },
+          "format": {
+            "description": "mp4 (default), gif, wav or aac.",
+            "type": "string"
+          },
+          "preset": {
+            "description": "A preset id; it needs the format mp4.",
+            "type": "string"
+          },
+          "start": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "handshakeOut": {
         "properties": {
           "proof": {
@@ -9342,6 +10176,428 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/approval-rules": {
+      "get": {
+        "operationId": "approval-rules.list",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRuleListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the rules that approve without asking"
+      },
+      "post": {
+        "operationId": "approval-rules.set",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "connection_id": {
+                    "description": "Only this destination; leave out for any.",
+                    "type": "string"
+                  },
+                  "currency": {
+                    "description": "Three upper-case letters; needed with a limit.",
+                    "type": "string"
+                  },
+                  "enabled": {
+                    "description": "false keeps the rule and stops it; the default is true.",
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "id": {
+                    "description": "The rule to replace; leave out to create one.",
+                    "type": "string"
+                  },
+                  "kind": {
+                    "description": "The kind of action the rule covers, for example publish.post.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "per_day_micros": {
+                    "description": "The most the rule may approve in one UTC day, in millionths of the currency unit.",
+                    "format": "int64",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "per_item_micros": {
+                    "description": "The most one action may cost for the rule to approve it, in millionths of the currency unit. A rule with no limit never approves a costly action.",
+                    "format": "int64",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "project_id": {
+                    "description": "Only this project; leave out for any.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuleView"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create or replace a rule (a person in the browser only; the local token and keys get 403)"
+      }
+    },
+    "/api/v1/approval-rules/{id}": {
+      "delete": {
+        "operationId": "approval-rules.remove",
+        "parameters": [
+          {
+            "description": "An approval request id, apr_ and 10 characters; or a rule id, rul_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuleView"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a rule (a person in the browser only; the local token and keys get 403)"
+      }
+    },
+    "/api/v1/approvals": {
+      "get": {
+        "operationId": "approvals.list",
+        "parameters": [
+          {
+            "description": "pending (the default), approved, rejected, expired or all.",
+            "in": "query",
+            "name": "state",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only the requests of one project.",
+            "in": "query",
+            "name": "project_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The next_cursor of the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page size; the default depends on the operation.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the approval queue (pending requests by default)"
+      }
+    },
+    "/api/v1/approvals/events": {
+      "get": {
+        "operationId": "approvals.events",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Stream the events of the approval queue"
+      }
+    },
+    "/api/v1/approvals/{id}": {
+      "get": {
+        "operationId": "approvals.get",
+        "parameters": [
+          {
+            "description": "An approval request id, apr_ and 10 characters; or a rule id, rul_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Request"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read one approval request"
+      }
+    },
+    "/api/v1/approvals/{id}/decide": {
+      "post": {
+        "operationId": "approvals.decide",
+        "parameters": [
+          {
+            "description": "An approval request id, apr_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "decision": {
+                    "description": "approve or reject.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "reason": {
+                    "description": "Why a request is rejected, at most 500 characters of plain text.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "decision"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Request"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Approve or reject a request (a person in the browser only; the local token and keys get 403)"
+      }
+    },
     "/api/v1/assets": {
       "get": {
         "operationId": "assets.list",
@@ -9975,6 +11231,167 @@
         "summary": "Make one request through a connection"
       }
     },
+    "/api/v1/cost": {
+      "get": {
+        "operationId": "cost.get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostSummaryResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read the cost ceilings and what was spent"
+      }
+    },
+    "/api/v1/cost/ceilings": {
+      "put": {
+        "operationId": "cost.ceilings.set",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "currency": {
+                    "description": "Three upper-case letters, for example USD.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "per_day_micros": {
+                    "description": "The most that may be spent in one UTC day, in millionths of the currency unit. With neither limit, the ceiling is removed.",
+                    "format": "int64",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "per_item_micros": {
+                    "description": "The most one action may cost, in millionths of the currency unit.",
+                    "format": "int64",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "project_id": {
+                    "description": "The project the ceiling is for; leave out for the whole workspace.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "currency"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostSummaryResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set or remove a cost ceiling (a person in the browser only; the local token and keys get 403)"
+      }
+    },
+    "/api/v1/export-presets": {
+      "get": {
+        "operationId": "export.presets",
+        "parameters": [
+          {
+            "description": "true also tells which codecs this machine can write (runs the test encodes the first time).",
+            "in": "query",
+            "name": "codecs",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportPresetListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the export presets of the platforms"
+      }
+    },
     "/api/v1/fonts": {
       "get": {
         "operationId": "fonts.list",
@@ -10515,6 +11932,183 @@
           }
         ],
         "summary": "Export an image document to a PNG, JPEG or WebP file"
+      }
+    },
+    "/api/v1/images/{id}/exports/{name}": {
+      "get": {
+        "operationId": "images.file",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "The file name ImageExport returned: <revision>-<12 hex>.<png|jpg|webp>.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Download a file that an image export wrote"
+      }
+    },
+    "/api/v1/images/{id}/frame": {
+      "get": {
+        "operationId": "images.frame",
+        "parameters": [
+          {
+            "description": "Pixels, 16 to 4096; default the canvas width.",
+            "in": "query",
+            "name": "width",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Only a cache key of the caller: the answer is always the current revision.",
+            "in": "query",
+            "name": "rev",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Render the picture of an image document"
+      }
+    },
+    "/api/v1/images/{id}/history": {
+      "get": {
+        "operationId": "images.history",
+        "parameters": [
+          {
+            "description": "1 to 100; default 30.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageHistoryResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the latest batches of an image document"
       }
     },
     "/api/v1/images/{id}/redo": {
@@ -13093,6 +14687,190 @@
         "summary": "Stream the events of a project"
       }
     },
+    "/api/v1/projects/{id}/export-batches": {
+      "post": {
+        "operationId": "export.batch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "items": {
+                    "description": "The exports, one after the other.",
+                    "items": {
+                      "$ref": "#/components/schemas/exportBatchItemIn"
+                    },
+                    "maxItems": 12,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "timeline_id": {
+                    "description": "The timeline of the project; required when the project has several.",
+                    "type": "string"
+                  },
+                  "wait_ms": {
+                    "description": "0 to 25000: hold the call until the job is final.",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "items"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export a project several times, one after the other"
+      }
+    },
+    "/api/v1/projects/{id}/export-check": {
+      "get": {
+        "operationId": "export.check",
+        "parameters": [
+          {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "A preset id, as listed by GET /export-presets.",
+            "in": "query",
+            "name": "preset",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "The start of the range to export; empty is the start of the timeline.",
+            "in": "query",
+            "name": "start",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The end of the range to export; empty is the end of the timeline.",
+            "in": "query",
+            "name": "end",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "h264, hevc or av1: the codec of the estimate of the size; empty is the first of the preset.",
+            "in": "query",
+            "name": "codec",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportCheckResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Check a project against an export preset"
+      }
+    },
     "/api/v1/projects/{id}/frame": {
       "get": {
         "operationId": "projects.frame",
@@ -13815,7 +15593,7 @@
                 "properties": {
                   "args": {
                     "additionalProperties": false,
-                    "description": "The arguments of the kind: start, end and format (mp4, gif, wav or aac; default mp4) for an export.",
+                    "description": "The arguments of the kind: start, end, format (mp4, gif, wav, aac or png; default mp4), preset and codec (h264, hevc or av1, for mp4) for an export.",
                     "properties": {
                       "asset_id": {
                         "description": "transcribe: the asset to transcribe.",

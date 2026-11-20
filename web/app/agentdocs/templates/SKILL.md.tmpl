@@ -10,7 +10,7 @@ metadata:
 
 Edit video with commands: the CLI `stuarty` or the MCP server (`stuarty mcp`). Output is text; `--json` is JSON.
 
-Check with `project:list`. Workspace: `~/.stuarty` or `$STUARTY_HOME`; `serve` shares it with the browser.
+Workspace: `~/.stuarty` or `$STUARTY_HOME`; `serve` shares it with the browser.
 
 ## The loop
 
@@ -41,11 +41,11 @@ Prefix each with `stuarty`.
 
 {{range .CLI}}{{if not .Pending}}- `{{.Usage}}`
 {{end}}{{end}}
-Batches: `--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` any JSON). `--dry-run` saves nothing; `--key <k>` makes retries safe. `--out f` copies the result file out (`--force` replaces).
+`--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` JSON). `--dry-run` saves nothing; `--key <k>` makes retries safe; `--out f` copies the file out (`--force` replaces).
 
 ## Reading results
 
-`project:show` lists tracks top to bottom, then items timed as `2s/60f`. In a diff `+`, `~`, `-` are added, changed, removed.
+`project:show` lists tracks top to bottom, then items timed `2s/60f`. Diff: `+` added, `~` changed, `-` removed.
 
 Lint rules (`!` blocks export):
 
@@ -53,9 +53,9 @@ Lint rules (`!` blocks export):
 {{end}}
 ## Errors and recovery
 
-Exit codes: 0 success; 1 failure, do not retry; 2 retryable or a `--wait` timeout. `undo` reverts your last step.
+Exit codes: 0 success; 1 failure, do not retry; 2 retryable or a `--wait` timeout.
 
-{{range .Errors}}- `{{.Code}}` {{.HTTP}}{{if eq .Exit 2}} retry{{end}}: {{.Fix}}
+{{range .Errors}}- `{{.Code}}`{{if eq .Exit 2}} retry{{end}}: {{.Fix}}
 {{end}}
 ## Recipes
 

@@ -31,6 +31,7 @@
 21. [Desktop shell](#21-desktop-shell)
 22. [Acceptance](#22-acceptance)
 23. [The dashboard](#23-the-dashboard)
+24. [The image editor](#24-the-image-editor)
 
 - [Appendix A: Decisions of this SDD](#appendix-a-decisions-of-this-sdd)
 - [Appendix B: Contract needs beyond SDD-000](#appendix-b-contract-needs-beyond-sdd-000)
@@ -990,6 +991,8 @@ Every command is also reachable through the command palette (§9.2), which is wh
 | `text.add` | toolbar "Add text" (`T`) |
 | `text.set` | inspector Text section, inline canvas editor |
 | `text.apply_preset` | inspector Animation section |
+| `keyframe.set_easing` | inspector Keyframes section: the easing select of a row and the curve editor of a custom curve (epic 31) |
+| `animation.apply_preset` | inspector Motion presets section (epic 31) |
 | `shape.add` | toolbar "Add shape" menu |
 | `shape.set` | inspector Shape section |
 | `caption.add` | toolbar "Add caption" dialog |
@@ -1203,11 +1206,12 @@ The inspector panel shows one panel by selection: nothing selected, the project 
 | Silences | minimum silence, padding, ripple toggle, button | `clip.remove_silences {min_silence, padding, ripple}` | clip |
 | Text | content (multi-line), font family, weight, size, color, stroke color and width, shadow color, dx, dy and blur, background color, padding and radius, align, line height, max width, uppercase | `text.set {text, style}` (style is the partial of changed fields) | text |
 | Animation | preset, edge, duration | `text.apply_preset {preset, edge, duration}` | any visual item (the command works on any visual item, SDD-002 B.6) |
+| Motion presets | preset (fade, slide, scale, pop, push in, pull out), edge, duration, direction (slide), amount (slide, scale, push in, pull out) | `animation.apply_preset {item_id, preset, edge, duration?, direction?, amount?}` | any visual item. The core writes ordinary keyframes at the start or the end of the item, edited afterwards in the Keyframes section; the section sends the arguments and shows nothing of the result (epic 31, RF-082) |
 | Shape | shape, width, height, radius, fill, stroke color and width | `shape.set {...}` | shape |
 | Caption words | table: index, text (rendered with `UntrustedText`, §1.2), start, duration, line break toggle; buttons: split before word, merge with next | `caption.edit_word`, `caption.set_words`, `caption.set_breaks`, `caption.split`, `caption.merge` | caption |
 | Caption style | the CaptionStyle fields; "Use track style" | `caption.set_style {style}` (`null` to clear) | caption |
 | Auto captions | max words, max chars, max gap, replace toggle, button "Generate"; "Re-sync captions" | `caption.from_transcript`, `caption.retime_from_clip` | clip |
-| Keyframes | per animated property: list of keyframes (time, value, easing; the time field is item-relative and `keyframe.set` and `keyframe.remove` receive the absolute `at` from `keyframeFrame(itemStart, t)` of `commands/builders.ts`, rule R5), "Add at playhead", remove, "Clear"; a clip also offers the six colour properties (brightness, contrast, saturation, temperature, tint, hue) in the property select | `keyframe.set`, `keyframe.remove`, `keyframe.clear` | visual and audio items |
+| Keyframes | per animated property: list of keyframes (time, value, easing; the time field is item-relative and `keyframe.set` and `keyframe.remove` receive the absolute `at` from `keyframeFrame(itemStart, t)` of `commands/builders.ts`, rule R5), "Add at playhead", remove, "Clear"; a clip also offers the six colour properties (brightness, contrast, saturation, temperature, tint, hue) in the property select | `keyframe.set`, `keyframe.set_easing`, `keyframe.remove`, `keyframe.clear` | visual and audio items. The easing select of a row sends `keyframe.set_easing`; the option "Custom curve" starts from the named curve `in_out` and opens the curve editor of the row: a plot with the two control handles (pointer, or arrow keys with Shift for a larger step; the gesture ends and the four numbers go as `keyframe.set_easing {bezier}`), a list of the named curves (`preset`) and the four numbers typed. The plot draws the SVG cubic through the numbers; no value between keyframes is worked out in the UI (epic 31, RF-080) |
 | Template | "Template slot" toggle, name (fixed once marked: the core refuses another name on a slot), description, required, duration policy (media slots only). Each change is one `slot.mark` with the whole slot; the toggle off is `slot.unmark` | `slot.mark`, `slot.unmark` | clip, audio, text, caption |
 | Template slots (in the project panel) | one row per slot with an asset picker (media) or a text field (text) and "Fill"; the required slots still open are read from the `L_SLOT_UNFILLED` findings of the lint, read again at each revision. A caption slot is filled from the CLI, MCP or API (its words carry times, which the browser does not compute) | `slot.fill` | nothing selected |
 | Track panel | name, hidden, muted, magnet, caption style (partial and "Replace"); on a visual track a closed "Import subtitles" section with a button that opens a file picker for `.srt` and `.vtt` (the caption panel has the same section for the track of the caption): the browser reads the text of the file and sends it, with `format` from the extension, in one `caption.import_subtitles {track_id, text, format?}`; the core parses it, creates one caption per cue and judges the cues, and its refusal (`E_VALIDATION` for a bad file, `E_OVERLAP`, `E_INVALID_STATE`, ...) shows under the button as received; the page parses no time line and builds no caption | `track.update`, `track.set_caption_style`, `caption.import_subtitles` | track |
@@ -1322,6 +1326,16 @@ stateDiagram-v2
 ### 14.2 Jobs chip
 
 Shows the number of running jobs (ingest, transcribe, export) with the highest progress; click opens the export dialog if an export runs, else a small list. Ingest jobs are also shown on their asset cards.
+
+### 14.3 Platforms, codecs and batches (RF-087 to RF-089)
+
+In the Ready state the dialog lists the platform presets of `GET /export-presets` grouped by network (a fieldset per network), each with its limits as short phrases, a link to the page they were read on and the date (`Limits read on 2026-11-19`). The browser words the limits and decides nothing: whether the project fits is `GET /projects/{id}/export-check` (`ExportCheck`), asked again for each chosen preset when the range or the revision changes, and shown under the preset as `The project fits.` or as the findings with their code, message and exact limit (`limit 90 s, now 100 s`); a preset that does not fit stays selectable and the dialog says how many will fail.
+
+Several presets can be chosen at once. A preset is an mp4, so choosing one puts the format back on the video and keeps the range. **Start** then sends one `POST /projects/{id}/export-batches` with an item per preset (and the range, and the codec when one is chosen) and follows the batch job: the Running state lists the children from `result.batch.items` (the job is read every second, because its events carry the progress of the parent and not the state of the children), each row with its state, its progress, and, once done, its file with a copy and a Download link, or its error with the code and the hint. The batch ends Succeeded when every child did and Failed otherwise, and the list stays: a failed row never hides the files of the others.
+
+The **codec** select offers Automatic (the first codec of the preset that this machine can write, else H.264, and the result says so), H.264, H.265 and AV1; the second call of `GET /export-presets?codecs=true` runs the test encodes of SDD-004 §8.3 and the select disables the codecs the machine cannot write. A plain export (no preset) sends the codec as `args.codec`.
+
+**A busy server is not a dead end (VV-220).** When a plain export is refused with `E_QUEUE_FULL` because every export slot is taken, the dialog starts the same export as a batch of one: the core queues it behind the running exports and starts it by itself, and the dialog says it waits. A png is one frame and has no batch, so it keeps the error and the retry.
 
 ## 15. History panel
 
@@ -1923,8 +1937,10 @@ Implements RF-310, RF-311 and RF-312 (PRD-004), author decision D-075 and epic 0
 | --- | --- | --- |
 | `GET /` | `pages/Dashboard/Home.tsx` | the home: a short welcome and one card for each section, with what it will hold |
 | `GET /projects` | `pages/Projects/Index.tsx` | Projects (epic 06 owns the content) |
-| `GET /edit-video`, `/edit-image`, `/write`, `/visual-assets`, `/video-assets`, `/publish`, `/skills`, `/prompts`, `/memory` | `pages/Dashboard/Section.tsx` | an honest empty state, until the epic of the section replaces the route's page |
+| `GET /edit-image` and `/edit-image/{image_id}` | `pages/EditImage/Index.tsx`, `pages/EditImage/Show.tsx` | the image editor (epic 28, section 24) |
+| `GET /edit-video`, `/write`, `/visual-assets`, `/video-assets`, `/publish`, `/skills`, `/prompts`, `/memory` | `pages/Dashboard/Section.tsx` | an honest empty state, until the epic of the section replaces the route's page |
 | `GET /connections` | `pages/Dashboard/Section.tsx` | an empty state until epic 04 puts the Connections page there |
+| `GET /approvals` | `pages/Approvals/Index.tsx` | the approval queue, the rules and the cost ceilings (epic 05, SDD-015), built from `dashboard/approval/`; not a section of the sidebar: it is linked from the Connections page, and the Publish section (epic 20) will link it too. The queue follows `GET /api/v1/approvals/events` and shows what the service answers (the summary and the actor as untrusted text, the amounts formatted and never summed) |
 | `GET /settings`, `/settings/*` | the existing pages | reached from the profile block, not a section |
 
 `GET /` stopped redirecting to `/projects`. A controller of these routes renders an Inertia page with the key of the section as its only prop; it computes nothing. The section list (key, path, icon) is data in `resources/js/dashboard/sections.ts`; the paths are the single list the sidebar, the home and the routes of `web/routes/pages.go` agree on, and a test compares the Go routes with it.
@@ -1947,6 +1963,112 @@ The editor is not drawn by this layout (section 2.2): it opens on the full windo
 2. A section whose epic is not done shows a heading, one sentence on what it will hold and a link to the sections that work today; never a blank page or an error. The text is in both languages under `ui.dashboard.*`.
 3. The pages ask for data through the existing service results; the dashboard computes no result (section 1).
 4. Test ids stay as they were; the specs that moved selectors are listed in the epic's hand-off.
+
+## 24. The image editor
+
+Implements RF-341 and RF-342 (PRD-004), author decisions D-062 and D-075, and epic 28. It is the screen over the image documents of SDD-021: a creator opens Edit Image, sees a thumbnail on a canvas, moves a title, swaps a photo, applies the brand colours and exports. Like the dashboard it is written once, in `web/resources/js/`, and the web UI and the desktop shell both load it (ADR-0041). It follows the thin-client rules of section 1: it sends the commands of SDD-021 section 3, draws what the core and the renderer answer, and decides no result.
+
+### 24.1 Routes
+
+| Route | Page component | Holds |
+| --- | --- | --- |
+| `GET /edit-image` | `pages/EditImage/Index.tsx` | the documents and, in a list of their own, the templates, newest first; "New image" (a preset or a size, and "Make it a template", the `template` flag of `image.create`) and "New from template" |
+| `GET /edit-image/{image_id}` | `pages/EditImage/Show.tsx` | the editor of one document |
+
+A controller validates the shape of `image_id` (`img_` and ten characters, SDD-000 section 2) and renders the page with that id; it computes nothing. The page reads the document through `GET /api/v1/images/{id}` and sends every change through `POST /api/v1/images/{id}/edit`, the calls of SDD-021 section 11. `edit-image` leaves the list of empty sections of section 23.1.
+
+### 24.2 Directory layout
+
+Under `web/resources/js/image-editor/`, one folder per area. `check:thin-client` scans the whole tree with rules R1 to R7 of section 1.4; the import graph R8 is that of the video editor and does not apply.
+
+| Folder | Holds |
+| --- | --- |
+| `api/` | the only place that calls the network (rule R6): a client over the `Transport` of `editor/api/http.ts`, the types of the answers, the polling of the revision |
+| `state/` | one `zustand` store: the read model (the last `ImageDescribeResult`), the selection, the viewport, the history and the status; a command goes out through `api/` and the answer replaces the read model |
+| `canvas/` | the frame, the viewport maths (zoom, pan, fit: display only), the selection overlay, the handles, the guides, the snapping to the boxes of the read model and the keyboard nudges |
+| `layers/` | the layer panel, a tree |
+| `inspector/` | the fields of the document and of each layer kind, with the brand kit swatches of the colour fields and its families in the font field |
+| `toolbar/` | the actions that add (with "Place logo" of the brand kit), arrange, align, undo and redo |
+| `templates/`, `export/`, `history/` | new from template, the export dialog and the list of recent operations |
+
+### 24.3 What the screen asks of the service
+
+Besides the seven operations of SDD-021 section 11, the screen reads the asset library (`GET /api/v1/assets?kind=image`), the brand kit (`GET /api/v1/brand-kit`) and the fonts (`GET /api/v1/fonts`), and three HTTP-only operations added by epic 28, with no MCP tool and no CLI command because an agent has the text view and the log of the same data (SDD-000 section 1):
+
+| Operation | Route | Answers |
+| --- | --- | --- |
+| `ImageFrame` | `GET /api/v1/images/{id}/frame?width=<px>` | the PNG of the current revision at that width, drawn by the renderer of SDD-021 section 6, with the header `X-Vukem-Revision`; unlike `ImageExport` it writes no file and a blocking finding does not stop it |
+| `ImageHistory` | `GET /api/v1/images/{id}/history?limit=<n>` | the latest batches, newest first: revision, kind (`edit`, `undo`, `redo`), actor, time, whether it applied, and the names of its operations |
+| `ImageFile` | `GET /api/v1/images/{id}/exports/{name}` | the bytes of a file that `ImageExport` wrote for that document, for the browser to download |
+
+**Decision of this SDD.** The video editor learns of a change of another actor from the event stream of the project. An image has no event stream yet, so the screen polls the revision (`GET /images/{id}` every 2 seconds while the window is visible, and at once when it becomes visible) and replaces its read model when the revision moved. The polling is one function in `api/`; an event stream for images replaces it without touching the rest.
+
+### 24.4 The canvas
+
+The picture is the PNG of `ImageFrame`, drawn in an `img` the size of the canvas times the zoom, so what a person sees is what the renderer and the export draw. When the render worker of the browser preview (epic 26) is wired to the one-frame plan of an image, it could draw it in the browser instead; the server path is the one in use, and the switch is a change of `canvas/Frame.tsx` only.
+
+- **Viewport.** Zoom (10% to 800%, by the wheel with `Ctrl`, by `+` and `-`), pan (drag with the middle button or with `Space` held), "fit" and "100%". Zoom and pan are display state; none of it is sent.
+- **Selection.** A click selects the topmost visible, unlocked layer whose box holds the point (hit testing over the boxes of the read model, display only; a rotated layer is hit through the inverse rotation); `Shift` adds to the selection; a click on nothing clears it. The outline and its eight handles are drawn over the picture from the box of the read model.
+- **Gestures.** Move, scale (the handles) and rotate (the handle above the box, `Shift` in steps of 15 degrees) preview with a transient transform of the outline only, never of pixels, and on release send one `layer.transform` batch; the answer replaces the read model and the picture is the one of the new revision. A drag cancelled with `Escape` sends nothing.
+- **Snapping.** While a layer moves or scales, its edges and centre snap to the canvas edges and centre and to the edges and centres of the other visible layers within 6 screen pixels; the targets are the boxes of the read model (a child of a group with the offsets of its groups added), the guides are lines over the picture, and `Alt` held turns snapping off. What goes into the command is the snapped integer position; alignment is the core's `layer.align`, never computed here.
+- **Keyboard.** With the canvas focused, the arrow keys nudge the selection by 1 pixel, `Shift` with an arrow by 10, `PageUp` and `PageDown` move the selection to the layer above or below (`Tab` leaves the canvas, as it must), `Delete` removes it, `Escape` cancels a drag. The canvas announces the selection in a live region ("Layer Title, text, at 80, 440, 800 by 200").
+
+### 24.5 The layer panel
+
+A `role="tree"` with one `treeitem` per layer, the top layer first, groups as expandable items (`aria-expanded`, `aria-level`, `aria-setsize`, `aria-posinset`). A row has the kind icon, the name (`UntrustedText`) and a visibility and a lock toggle (`layer.set`). `F2` renames. Reordering and grouping are by drag and drop and by keyboard: `Alt+Up` and `Alt+Down` move a layer one place among its siblings, `Alt+Left` takes it out of its group and `Alt+Right` puts it in the group below it in the list, all `layer.move`; `Ctrl+G` and `Ctrl+Shift+G` are `layer.group` and `layer.ungroup`. A locked layer can be selected and unlocked, and nothing else (SDD-021 section 3).
+
+### 24.6 The inspector
+
+Fields for the document (the canvas size and the resize mode, `canvas.resize`; the name of a document is given when it is created, and the catalogue has no operation that renames it) and, for the selected layer, per kind: common (name, opacity, visible, locked, slot: `layer.set`), box and rotation (`layer.transform`), image (the asset, the crop and its reset: `layer.crop`; fit and fill the canvas: `layer.fit`), text (the text, the font, size, colour, alignment: `layer.set_text`), shape and fill (the shape, the fill, the stroke, the radius: `layer.set_shape`), the alignment buttons (`layer.align`, to the canvas or to another layer) and, for an image, "Replace the photo": one batch with the new image above the old one, `layer.fit` to cover the old box, `layer.remove` of the old layer and `layer.set` of its slot and opacity, so it is one step of the history (the catalogue has no operation that changes the file of a layer; the UI gives the new layer an id of its own, as decision 3 of Appendix A allows). A numeric field takes the units of the video inspector (section 12.2): a whole number of pixels, or a percent of the canvas written with `%`, which the field resolves to the integer it shows before it sends. A field sends its command on `Enter` or on leaving the field (section 12.3), not on every key. What the core refuses comes back as its error, shown beside the field.
+
+### 24.7 Brand kit and templates
+
+The brand kit (RF-342) is read from `GET /api/v1/brand-kit`: its colours are swatches in the colour fields (one click sets the colour), its font families are choices of the font field, and "Place logo" adds an image layer with the hash of the logo (`layer.add_image`). "New from template" lists `ImageList` with `templates=only`, asks for the value of each slot (a text for a text slot, an image of the library for an image slot), marks as required the slots whose layer has the core's finding `L_IMAGE_EMPTY_SLOT` in the read model of the template (the screen has no rule of its own for it), and calls `ImageCreate` with `template_id` and `values`; a missing required slot is the core's `E_SLOT` with the list, shown beside the form.
+
+### 24.8 Export
+
+The dialog asks for the format (PNG, JPEG, WebP), the preset size or "original", and the quality for JPEG. Before it sends `ImageExport` it shows the findings of the read model (SDD-021 section 8), each with a link that selects its layer, and a finding that blocks disables the button with the reason (the core still refuses it with `E_LINT_BLOCKING`). WebP shows the service's answer while it is `webp_unavailable`. A finished export offers the file for download through `ImageFile`, with its size, digest and pixel size; the bytes are those the CLI export of the same revision writes.
+
+### 24.9 History and the other actors
+
+The history panel lists `ImageHistory`: the revision, the actor as a chip (person or agent, with a text label, never colour alone), the time and the operations. Undo and Redo send `ImageUndo` and `ImageRedo`, which act on the caller's own last step (SDD-021 section 4): the person's step is undone and an agent's later step stays; a primitive the core skipped because another actor changed the object since is shown with its reason. When the polling finds a new revision, the layers it changed are outlined with `--agent` (a static class, as in section 5.8) and the live region says that the image changed.
+
+### 24.10 Keyboard map
+
+| Keys | Does |
+| --- | --- |
+| `Ctrl+Z`, `Ctrl+Shift+Z` or `Ctrl+Y` | undo, redo |
+| `Ctrl+D` | duplicate (`layer.duplicate`, offset 10, 10) |
+| `Delete`, `Backspace` | remove (`layer.remove`) |
+| `Ctrl+G`, `Ctrl+Shift+G` | group, ungroup |
+| `[` and `]` | send a layer back, bring it forward (`layer.move`) |
+| `+`, `-`, `0`, `1` | zoom in, zoom out, fit, 100% |
+| `Alt+arrows` in the tree | move, out of and into a group |
+| arrows on the canvas | nudge by 1 pixel, by 10 with `Shift` |
+| `PageUp`, `PageDown` on the canvas | select the layer above, below |
+| `F2`, `H`, `L` in the tree | rename, hide or show, lock or unlock |
+| `Escape` | cancel a drag, close a dialog |
+
+Letters and symbols act only when no field has the focus. Every other action is a button of the toolbar, reachable by `Tab`.
+
+### 24.11 Accessibility
+
+Every action has a keyboard path (section 24.10 and the toolbar of design system 4.3.1); the layer panel is a tree with its roles; the canvas is one focusable region with an accessible name, and the selection is announced in a polite live region; handles are not tab stops (their action is the inspector fields and the arrow keys). Contrast, focus rings and target sizes follow the design system; axe runs in both languages and both themes (section 18.4).
+
+### 24.12 Tests
+
+- Vitest: the viewport maths (zoom about a point, fit), hit testing, the snapping targets and tolerance, the store (an answer replaces the read model, a polled revision replaces it), the tree rows.
+- Playwright (`web/e2e/specs/`): `image-transform`, `image-layers`, `image-inspector`, `image-template-brand`, `image-export` (the file equals the CLI export), `a11y-image-editor` (axe in both languages and both themes, and a keyboard-only session), and a mixed session where an agent command arrives while the person edits.
+
+### 24.13 Decisions of this section
+
+1. The picture is the renderer's PNG of the current revision, drawn by the server (`ImageFrame`); the browser worker is a later switch of one file.
+2. Three HTTP-only operations (`ImageFrame`, `ImageHistory`, `ImageFile`) are added because the screen cannot compute a frame, a history or a download path.
+3. Changes of another actor arrive by polling the revision until an image has an event stream.
+4. Snapping and hit testing are display arithmetic over the boxes of the read model (section 1.1, screen arithmetic); the position they produce is an integer sent to `layer.transform`.
+5. An image enters a document from the workspace library; putting a file from the computer straight into an image waits for an `ImageImport` operation of the service.
+6. A command planned from a key that repeats (an arrow, `Alt` with an arrow) is given to the store as a function of the document, evaluated when its turn comes, so each press is planned against the document the one before it made.
+7. The picture is asked for again twice after a failure or a 429 (the route allows two renders at once per caller) before the canvas says it could not be drawn.
 
 ## Appendix A: Decisions of this SDD
 

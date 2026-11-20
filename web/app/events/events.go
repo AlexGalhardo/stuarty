@@ -154,6 +154,10 @@ func (e *Events) Publish(ev service.Event) {
 		}
 
 		f = wire.JobFrame(&ev)
+	case wire.ApprovalRequested, wire.ApprovalDecided:
+		e.publishApproval(&ev)
+
+		return
 	default:
 		return
 	}

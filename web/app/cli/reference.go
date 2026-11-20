@@ -20,6 +20,8 @@ type CommandDoc struct {
 	Globals []string `json:"globals"`
 	// Pending names the task that delivers a command that is still a stub.
 	Pending string `json:"pending,omitempty"`
+	// Person marks a command only a person in the app may succeed at; the skill for agents leaves it out.
+	Person bool `json:"-"`
 }
 
 // ReferenceDoc is what the documentation site renders as the CLI reference
@@ -64,7 +66,14 @@ func Reference() ReferenceDoc {
 	}
 
 	for _, s := range registry() {
-		c := CommandDoc{Name: s.name, Summary: s.summary, Usage: s.usage, Example: s.example, Pending: s.pending}
+		c := CommandDoc{
+			Name:    s.name,
+			Summary: s.summary,
+			Usage:   s.usage,
+			Example: s.example,
+			Pending: s.pending,
+			Person:  s.person,
+		}
 
 		c.Globals = append(c.Globals, baseGlobals...)
 		if s.project {

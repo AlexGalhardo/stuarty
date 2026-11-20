@@ -35,6 +35,7 @@ import {
 	framingOperations,
 	freezeFrameOperations,
 	keyframeClearOperations,
+	keyframeEasingOperations,
 	keyframeFallbackOperations,
 	keyframeRemoveOperations,
 	keyframeSetOperations,
@@ -44,6 +45,7 @@ import {
 	markerRemoveOperations,
 	markerSetOperations,
 	maskOperations,
+	motionPresetOperations,
 	moveOperations,
 	outlineOperations,
 	pasteAttributesOperations,
@@ -137,7 +139,7 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 	test("every non-internal command has a key", () => {
 		const keys = commands.filter((c) => !c.internal).map((c) => c.name);
 		expect(Object.keys(COVERAGE).sort()).toEqual(keys.sort());
-		expect(keys).toHaveLength(73);
+		expect(keys).toHaveLength(76);
 	});
 
 	test("every command has a palette entry, and the commands with an inspector control keep it", () => {
@@ -330,9 +332,18 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 			"inspector.keyframe_add": keyframeSetOperations(setInput).map(
 				(o) => o.op,
 			),
-			"inspector.keyframe_easing": keyframeSetOperations(setInput).map(
-				(o) => o.op,
-			),
+			"inspector.keyframe_easing": keyframeEasingOperations({
+				itemId: "itm_a",
+				property: "scale",
+				frame: 10,
+				easing: "hold",
+			}).map((o) => o.op),
+			"inspector.keyframe_curve": keyframeEasingOperations({
+				itemId: "itm_a",
+				property: "scale",
+				frame: 10,
+				bezier: [0.1, 0.2, 0.3, 0.4],
+			}).map((o) => o.op),
 			"inspector.keyframe_value": keyframeSetOperations(setInput).map(
 				(o) => o.op,
 			),
@@ -362,6 +373,12 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 				itemId: "itm_a",
 				edge: "out",
 				preset: "pop",
+			}).map((o) => o.op),
+			"inspector.motion": motionPresetOperations({
+				itemId: "itm_a",
+				preset: "slide",
+				edge: "in",
+				direction: "left",
 			}).map((o) => o.op),
 			"inspector.auto_captions": captionFromTranscriptOperations({
 				clipId: "itm_a",

@@ -390,7 +390,7 @@ stuarty view --project prj_7k2m9x4q1b --at 1s --json
 Export a project to a file
 
 ```text
-stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--wait] [--timeout d] [--out f] [--force]
+stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--preset p] [--codec c] [--wait] [--out f] [--force]
 ```
 
 | Flag | Type | Default | Meaning |
@@ -398,6 +398,8 @@ stuarty export --project <id> [--start t] [--end t] [--format f] [--at t] [--wai
 | `--start` | string |  | first time to export (default: the start) |
 | `--end` | string |  | end of the export (default: the end of the timeline) |
 | `--at` | string |  | the time of the frame, only with --format png (default: the start) |
+| `--preset` | string |  | a platform preset, as export:presets lists them (mp4 only) |
+| `--codec` | string |  | h264 (default), hevc or av1 (mp4 only) |
 | `--format` | string |  | mp4 (default), gif, wav, aac or png |
 | `--out` | string |  | copy the file to this path when the job succeeds (implies --wait; the workspace keeps its own copy) |
 | `--force` | boolean | `false` | replace the --out file when it exists |
@@ -408,6 +410,75 @@ Example:
 
 ```bash
 stuarty export --project prj_7k2m9x4q1b --json
+```
+
+## `export:presets`
+
+List the export presets of the platforms
+
+```text
+stuarty export:presets [--codecs]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--codecs` | boolean | `false` | also tell which codecs this machine can write (runs the test encodes the first time) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty export:presets --codecs --json
+```
+
+## `export:check`
+
+Check that a project fits an export preset, before any encoding
+
+```text
+stuarty export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--preset` | string |  | the preset id, as export:presets lists them |
+| `--start` | string |  | first time to export (default: the start) |
+| `--end` | string |  | end of the export (default: the end of the timeline) |
+| `--codec` | string |  | h264, hevc or av1, for the estimate of the size (default: the preset's first) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty export:check --project prj_7k2m9x4q1b --preset tiktok --json
+```
+
+## `export:batch`
+
+Export a project several times, one after the other, as one job
+
+```text
+stuarty export:batch --project <id> --preset <id>... [--codec c] [--start t] [--end t] [--wait]
+stuarty export:batch --project <id> --items '<json array of {preset, format, codec, start, end}>' [--wait]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--preset` | string, repeatable |  | a preset id; give the flag once for each export |
+| `--items` | string |  | the exports as a JSON array of \{preset, format, codec, start, end\}, instead of --preset |
+| `--format` | string |  | the format of every --preset export that is not mp4 (default mp4) |
+| `--codec` | string |  | h264, hevc or av1 for every --preset export (default: the choice of the preset) |
+| `--start` | string |  | first time to export, for every --preset export (default: the start) |
+| `--end` | string |  | end of the export, for every --preset export (default: the end of the timeline) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--wait`, `--timeout`.
+
+Example:
+
+```bash
+stuarty export:batch --project prj_7k2m9x4q1b --preset tiktok --preset youtube-shorts --wait
 ```
 
 ## `job:show`
@@ -1155,6 +1226,165 @@ Example:
 
 ```bash
 stuarty connection:test con_0123456789
+```
+
+## `approval:list`
+
+List the approval queue: what waits for a person (pending by default)
+
+```text
+stuarty approval:list
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--state` | string |  | pending (default), approved, rejected, expired or all |
+| `--project` | string |  | only the requests of one project |
+| `--cursor` | string |  | continue a list from this cursor |
+| `--limit` | integer | `50` | items per page |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty approval:list --state all
+```
+
+## `approval:show`
+
+Show one approval request: what will be sent, where, the cost and its state
+
+```text
+stuarty approval:show <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty approval:show apr_0123456789
+```
+
+## `approval:decide`
+
+Approve or reject a request (for a person in the app; the local token is refused)
+
+```text
+stuarty approval:decide <id> --approve|--reject
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--approve` | boolean |  | approve the request |
+| `--reject` | boolean |  | reject the request |
+| `--reason` | string |  | why a request is rejected |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty approval:decide apr_0123456789 --reject --reason "wrong channel"
+```
+
+## `approval:rule:list`
+
+List the rules that approve without asking
+
+```text
+stuarty approval:rule:list
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty approval:rule:list --json
+```
+
+## `approval:rule:set`
+
+Create or replace a rule that approves a kind of action (for a person in the app; the local token is refused)
+
+```text
+stuarty approval:rule:set --kind <k>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--id` | string |  | the rule to replace; leave out to create one |
+| `--kind` | string |  | the kind of action the rule covers (required) |
+| `--connection` | string |  | only this destination |
+| `--project` | string |  | only this project |
+| `--currency` | string |  | three upper-case letters, needed with a limit |
+| `--per-item` | string |  | the most one action may cost, in millionths of the currency unit |
+| `--per-day` | string |  | the most the rule may approve in a UTC day, in millionths |
+| `--disabled` | boolean |  | keep the rule but stop it |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty approval:rule:set --kind publish.post --connection con_0123456789
+```
+
+## `approval:rule:remove`
+
+Remove a rule (for a person in the app; the local token is refused)
+
+```text
+stuarty approval:rule:remove <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty approval:rule:remove rul_0123456789
+```
+
+## `cost:show`
+
+Show the cost ceilings and what was spent today and over the last 30 days
+
+```text
+stuarty cost:show
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty cost:show --json
+```
+
+## `cost:ceiling`
+
+Set or remove a cost ceiling (for a person in the app; the local token is refused)
+
+```text
+stuarty cost:ceiling --currency USD
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--currency` | string |  | three upper-case letters (required) |
+| `--project` | string |  | the project the ceiling is for; leave out for the whole workspace |
+| `--per-item` | string |  | the most one action may cost, in millionths of the currency unit |
+| `--per-day` | string |  | the most that may be spent in a UTC day, in millionths; with neither limit the ceiling is removed |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty cost:ceiling --currency USD --per-day 5000000
 ```
 
 ## `image:create`

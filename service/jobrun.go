@@ -17,7 +17,9 @@ import (
 	"sync"
 	"time"
 
+	core "github.com/AlexGalhardo/stuarty/core/approval"
 	"github.com/AlexGalhardo/stuarty/core/command"
+	exportcore "github.com/AlexGalhardo/stuarty/core/export"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 	"github.com/AlexGalhardo/stuarty/engine/ingest"
@@ -217,9 +219,24 @@ func (s *svc) RunJob(ctx context.Context, jobID string) (err error) {
 		result, herr = s.runIngest(jctx, &job, pw)
 	case JobExport:
 		result, herr = s.runExport(jctx, &job, pw)
+	case JobExportBatch:
+		result, herr = s.runExportBatch(jctx, &job, pw)
 	case JobTranscribe:
 		result, herr = s.runTranscribe(jctx, &job, pw)
 	default:
+		if k := s.kindOf(job.Kind); k != nil {
+			var cost *core.Money
+
+			result, cost, herr = s.runApprovable(jctx, k, &job, pw)
+
+			// The ledger is settled after the outcome is final: a run a shutdown interrupted is requeued
+			// and keeps its reservation (SDD-015 section 6).
+			serr := s.settle(ctx, jctx, &job, result, herr)
+			s.finishCost(ctx, &job, cost)
+
+			return serr
+		}
+
 		herr = newError(command.CodeInternal, "jobs of the kind %s are not available in this build.", job.Kind)
 	}
 
@@ -739,6 +756,14 @@ func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 		return nil, derr
 	}
 
+	if in.Preset != "" {
+		if p, ok := exportcore.Lookup(in.Preset); ok {
+			if perr := presetFit(doc, &p, in.End-in.Start, exportcore.Codec(in.Codec)); perr != nil {
+				return nil, perr
+			}
+		}
+	}
+
 	if err := s.checkDisk(); err != nil {
 		return nil, err
 	}
@@ -755,7 +780,7 @@ func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 
 	res, err := s.exporter.Export(ctx, ExportInput{
 		JobID: job.ID, Doc: doc, OutPath: out, Start: in.Start, End: in.End, Format: in.Format,
-		MaxBytes: s.limits.MaxExportBytes,
+		MaxBytes: s.limits.MaxExportBytes, Preset: in.Preset, Codec: in.Codec,
 		OnProgress: func(done, total int) {
 			if total > 0 {
 				pw.report(ctx, float64(done)/float64(total), "Rendering ("+strconv.Itoa(done*100/total)+"%)")
@@ -819,6 +844,8 @@ func (s *svc) runExport(ctx context.Context, job *JobRow, pw *progress) (json.Ra
 		AudioCodec:   res.AudioCodec,
 		LoudnessLUFS: res.LoudnessLUFS,
 		Checks:       res.Checks,
+
+		Preset: in.Preset, CodecFallback: res.CodecFallback, Notes: res.Notes,
 	}
 
 	if export.Checks == nil {
@@ -967,6 +994,8 @@ func queueKindFor(jobKind string) string {
 		return QueueKindIngest
 	case JobExport:
 		return QueueKindExport
+	case JobExportBatch:
+		return QueueKindExportBatch
 	default:
 		return QueueKindFrame
 	}
@@ -975,7 +1004,7 @@ func queueKindFor(jobKind string) string {
 // failCode is the error code of a job of the kind that was stopped.
 func failCode(kind string) string {
 	switch kind {
-	case JobExport:
+	case JobExport, JobExportBatch:
 		return CodeExportFailed
 	case JobIngest:
 		return CodeIngestFailed

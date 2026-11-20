@@ -1,0 +1,13 @@
+{
+  "code": "E_INVALID_TIME",
+  "message": "args.duration \"5s\" is 150 frames; item itm_m1n2p3q4r5 lasts 90.",
+  "hint": "Use a duration of at most \"90f\".",
+  "retryable": false,
+  "path": "args.duration",
+  "details": {
+    "range": [
+      1,
+      90
+    ]
+  }
+}

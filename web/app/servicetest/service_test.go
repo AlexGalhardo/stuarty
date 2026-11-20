@@ -69,6 +69,20 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.JobStart(ctx, service.JobStartRequest{ProjectID: "prj_0000000001"})
 			return err
 		},
+		"ExportPresetList": func() error {
+			_, err := e.svc.ExportPresetList(ctx, service.ExportPresetListRequest{Codecs: true})
+			return err
+		},
+		"ExportCheck": func() error {
+			_, err := e.svc.ExportCheck(ctx, service.ExportCheckRequest{ProjectID: "prj_0000000001", Preset: "tiktok"})
+			return err
+		},
+		"ExportBatch": func() error {
+			_, err := e.svc.ExportBatch(ctx, service.ExportBatchRequest{
+				ProjectID: "prj_0000000001", Items: []service.ExportBatchItem{{Preset: "tiktok"}},
+			})
+			return err
+		},
 		"JobGet": func() error { _, err := e.svc.JobGet(ctx, service.JobGetRequest{JobID: "job_0000000001"}); return err },
 		"TemplateList": func() error {
 			_, err := e.svc.TemplateList(ctx, service.TemplateListRequest{})
@@ -131,6 +145,21 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 		},
 		"ImageExport": func() error {
 			_, err := e.svc.ImageExport(ctx, service.ImageExportRequest{ImageID: "img_0000000001"})
+			return err
+		},
+		"ImageFrame": func() error {
+			_, err := e.svc.ImageFrame(ctx, service.ImageFrameRequest{ImageID: "img_0000000001"})
+			return err
+		},
+		"ImageHistory": func() error {
+			_, err := e.svc.ImageHistory(ctx, service.ImageHistoryRequest{ImageID: "img_0000000001"})
+			return err
+		},
+		"ImageFile": func() error {
+			_, err := e.svc.ImageFile(
+				ctx,
+				service.ImageFileRequest{ImageID: "img_0000000001", Name: "1-000000000000.png"},
+			)
 			return err
 		},
 		"FontImport": func() error {
@@ -271,6 +300,41 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 		},
 		"ConnectionTest": func() error {
 			_, err := e.svc.ConnectionTest(ctx, service.ConnectionRef{ID: "con_0000000001"})
+			return err
+		},
+		"ApprovalList": func() error {
+			_, err := e.svc.ApprovalList(ctx, service.ApprovalListRequest{})
+			return err
+		},
+		"ApprovalGet": func() error {
+			_, err := e.svc.ApprovalGet(ctx, service.ApprovalRef{ID: "apr_0000000001"})
+			return err
+		},
+		"ApprovalDecide": func() error {
+			_, err := e.svc.ApprovalDecide(
+				ctx,
+				service.ApprovalDecideRequest{ID: "apr_0000000001", Decision: "approve"},
+			)
+			return err
+		},
+		"ApprovalRuleList": func() error {
+			_, err := e.svc.ApprovalRuleList(ctx, service.ApprovalRuleListRequest{})
+			return err
+		},
+		"ApprovalRuleSet": func() error {
+			_, err := e.svc.ApprovalRuleSet(ctx, service.ApprovalRuleSetRequest{Kind: "k"})
+			return err
+		},
+		"ApprovalRuleRemove": func() error {
+			_, err := e.svc.ApprovalRuleRemove(ctx, service.ApprovalRef{ID: "rul_0000000001"})
+			return err
+		},
+		"CostSummary": func() error {
+			_, err := e.svc.CostSummary(ctx, service.CostSummaryRequest{})
+			return err
+		},
+		"CostCeilingSet": func() error {
+			_, err := e.svc.CostCeilingSet(ctx, service.CostCeilingSetRequest{Currency: "USD"})
 			return err
 		},
 		"MemoryList": func() error {

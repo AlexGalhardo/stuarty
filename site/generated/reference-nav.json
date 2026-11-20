@@ -54,9 +54,12 @@
     {
       "tag": "Jobs",
       "pages": [
+        "export.presets",
         "jobs.get",
         "jobs.cancel",
         "jobs.file",
+        "export.batch",
+        "export.check",
         "jobs.list",
         "jobs.start"
       ]
@@ -139,8 +142,25 @@
         "images.get",
         "images.edit",
         "images.export",
+        "images.file",
+        "images.frame",
+        "images.history",
         "images.redo",
         "images.undo"
+      ]
+    },
+    {
+      "tag": "Approvals",
+      "pages": [
+        "approval-rules.list",
+        "approval-rules.set",
+        "approval-rules.remove",
+        "approvals.list",
+        "approvals.get",
+        "approvals.decide",
+        "approvals.events",
+        "cost.get",
+        "cost.ceilings.set"
       ]
     },
     {
@@ -200,6 +220,8 @@
       "library"
     ],
     "operations": [
+      "animation.apply_preset",
+      "animation.list_presets",
       "asset.remove",
       "audio.add",
       "audio.duck",
@@ -251,6 +273,7 @@
       "keyframe.clear",
       "keyframe.remove",
       "keyframe.set",
+      "keyframe.set_easing",
       "marker.add",
       "marker.remove",
       "marker.set",

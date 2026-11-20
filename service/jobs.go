@@ -29,7 +29,7 @@ const (
 	codeTranscribeOff = "E_TRANSCRIBE_UNAVAILABLE"
 )
 
-var jobStates = []string{JobQueued, JobRunning, JobSucceeded, JobFailed, JobCancelled}
+var jobStates = []string{JobQueued, JobWaitingApproval, JobRunning, JobSucceeded, JobFailed, JobCancelled}
 
 // JobFinal reports whether a job state is final: succeeded, failed or cancelled.
 func JobFinal(state string) bool {
@@ -42,9 +42,15 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		err error
 	)
 
-	if req.Kind == JobTranscribe {
+	// A kind that needs approval waits for a person or a rule (SDD-015 section 5); it has its own scope.
+	approvable := s.kinds[req.Kind]
+
+	switch {
+	case approvable != nil:
+		c, err = authorizeScope(ctx, approvable.Scope, req.ProjectID)
+	case req.Kind == JobTranscribe:
 		c, err = authorizeScope(ctx, ScopeMedia, req.ProjectID)
-	} else {
+	default:
 		c, err = authorize(ctx, "JobStart", req.ProjectID)
 	}
 
@@ -63,6 +69,10 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 	if req.WaitMS < 0 || req.WaitMS > maxWaitMS {
 		return nil, newError(command.CodeValidation, "wait_ms is %d; it must be 0 to %d.", req.WaitMS, maxWaitMS).
 			withPath("wait_ms")
+	}
+
+	if approvable != nil {
+		return s.startApprovable(ctx, c, req, approvable)
 	}
 
 	switch req.Kind {
@@ -109,21 +119,7 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		return nil, gerr
 	}
 
-	var (
-		start, end int64
-		terr       *Error
-	)
-
-	switch {
-	case args.Format == FormatPNG:
-		start, end, terr = stillRange(doc, args)
-	case args.At != "":
-		terr = newError(command.CodeValidation, "at is for a png export.").withPath("args.at").
-			withHint("set format to png, or use start and end")
-	default:
-		start, end, terr = exportRange(doc, args)
-	}
-
+	start, end, terr := jobExportRange(doc, args)
 	if terr != nil {
 		return nil, terr
 	}
@@ -137,10 +133,14 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		return nil, lerr
 	}
 
+	if perr := checkPresetArgs(doc, format, args, end-start); perr != nil {
+		return nil, perr
+	}
+
 	input := marshalOrNull(
 		exportInput{
 			Revision: row.Revision, Start: start, End: end, Lint: &totals, Document: row.Document, Format: format,
-			Warnings: exportWarnings(doc, format, end-start),
+			Warnings: exportWarnings(doc, format, end-start), Preset: args.Preset, Codec: args.Codec,
 		},
 	)
 	projectID := row.ID
@@ -196,7 +196,7 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		return nil, asError(gerr2)
 	}
 
-	return s.jobView(c, cur, req.WaitMS > 0), nil
+	return s.jobViewCtx(ctx, c, cur, req.WaitMS > 0), nil
 }
 
 // stamp gives a job that is never stored the times of a new one.
@@ -251,14 +251,17 @@ func decodeExportArgs(raw json.RawMessage) (ExportArgs, *Error) {
 	}
 
 	for name := range probe {
-		if name != "start" && name != "end" && name != "format" && name != "at" {
+		if name != "start" && name != "end" && name != "format" && name != "at" && name != "preset" && name != "codec" {
 			return a, newError(command.CodeValidation, "the export does not take the argument %q.", name).
-				withPath("args." + name).withHint("use start, end, format and at, all optional; at is for format png")
+				withPath("args." + name).
+				withHint("use start, end, format, at, preset and codec, all optional; at is for format png; " +
+					"preset and codec are for format mp4")
 		}
 	}
 
 	if err := json.Unmarshal(raw, &a); err != nil {
-		return a, newError(command.CodeValidation, "start, end, format and at must be strings.").withPath("args")
+		return a, newError(command.CodeValidation, "start, end, format, at, preset and codec must be strings.").
+			withPath("args")
 	}
 
 	return a, nil
@@ -463,7 +466,7 @@ func (s *svc) JobGet(ctx context.Context, req JobGetRequest) (*Job, error) {
 		}
 	}
 
-	return s.jobView(c, row, req.WaitMS > 0), nil
+	return s.jobViewCtx(ctx, c, row, req.WaitMS > 0), nil
 }
 
 // waitJob holds until the job is final or the time passes.
@@ -559,7 +562,7 @@ func (s *svc) listJobs(ctx context.Context, projectID, state string, off, limit 
 
 	switch state {
 	case "":
-		active, err := pick([]string{JobQueued, JobRunning}, 0)
+		active, err := pick([]string{JobQueued, JobWaitingApproval, JobRunning}, 0)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -577,7 +580,7 @@ func (s *svc) listJobs(ctx context.Context, projectID, state string, off, limit 
 		}
 	case jobStateActive:
 		var err error
-		if all, err = pick([]string{JobQueued, JobRunning}, 0); err != nil {
+		if all, err = pick([]string{JobQueued, JobWaitingApproval, JobRunning}, 0); err != nil {
 			return nil, 0, err
 		}
 	default:
@@ -660,13 +663,17 @@ func (s *svc) JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error)
 				return nil, asError(gerr)
 			}
 
-			return s.jobView(c, after, false), nil
+			return s.jobViewCtx(ctx, c, after, false), nil
+		}
+	} else if row.State == JobWaitingApproval {
+		if err := s.cancelWaitingJob(ctx, c.Actor, &row); err != nil {
+			return nil, asError(err)
 		}
 	} else if err := s.cancelJob(ctx, row.ID); err != nil {
 		return nil, asError(err)
 	}
 
-	if !JobFinal(row.State) {
+	if !JobFinal(row.State) && row.State != JobWaitingApproval {
 		s.waitJob(ctx, row.ID, cancelWait)
 	}
 
@@ -675,7 +682,7 @@ func (s *svc) JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error)
 		return nil, asError(gerr)
 	}
 
-	return s.jobView(c, after, false), nil
+	return s.jobViewCtx(ctx, c, after, false), nil
 }
 
 // cancelSharedIngest decides and applies the cancellation of an ingest, which
@@ -791,6 +798,21 @@ func (s *svc) cancelJob(ctx context.Context, id string) error {
 		return nil
 	}
 
+	if before.State == JobWaitingApproval {
+		if err := s.cancelWaiting(ctx, "system", &before); !errors.Is(err, errNoLongerWaiting) {
+			return err
+		}
+
+		// Approved since it was read: it is queued or running now, and is cancelled as such.
+		if before, err = s.store.Jobs().Get(ctx, id); err != nil || JobFinal(before.State) {
+			return err
+		}
+	}
+
+	if before.Kind == JobExportBatch {
+		s.cancelBatchChildren(ctx, &before)
+	}
+
 	after, err := s.store.Jobs().RequestCancel(ctx, id, s.nowMs())
 	if err != nil {
 		return err
@@ -800,7 +822,7 @@ func (s *svc) cancelJob(ctx context.Context, id string) error {
 		s.running.cancel(id)
 	}
 
-	if before.State == JobQueued && after.State == JobCancelled {
+	if before.State != JobRunning && after.State == JobCancelled {
 		s.afterQueuedCancel(ctx, &after)
 	}
 
@@ -816,13 +838,19 @@ func (s *svc) afterQueuedCancel(ctx context.Context, j *JobRow) {
 		}
 	}
 
+	// An approved job cancelled before it ran spent nothing, and RunJob never reaches finishCost for
+	// it: its reservation goes back here, or it would hold the ceiling of the day (SDD-015 section 6).
+	if s.kindOf(j.Kind) != nil {
+		s.releaseUnrun(ctx, j)
+	}
+
 	s.emitJob(ctx, j)
 }
 
 // cancelProjectJobs asks for the cancellation of the export and frame jobs of
 // a project that went to the trash (SDD-005 section 14.4 item 5).
 func (s *svc) cancelProjectJobs(ctx context.Context, projectID string) {
-	rows, err := s.store.Jobs().List(ctx, projectID, []string{JobQueued, JobRunning}, 0)
+	rows, err := s.store.Jobs().List(ctx, projectID, []string{JobQueued, JobWaitingApproval, JobRunning}, 0)
 	if err != nil {
 		return
 	}
@@ -836,8 +864,19 @@ func (s *svc) cancelProjectJobs(ctx context.Context, projectID string) {
 // callers only.
 func (s *svc) jobView(c Caller, r JobRow, waited bool) *Job {
 	j := &Job{
-		JobID: r.ID, Kind: r.Kind, ProjectID: r.ProjectID, State: r.State, Progress: r.Progress, Message: r.Message,
-		Error: forCaller(c, parseError(r.Error)), Actor: r.Actor, CreatedAt: msTime(r.CreatedMs),
+		JobID:     r.ID,
+		Kind:      r.Kind,
+		ProjectID: r.ProjectID,
+		State:     r.State,
+		Progress:  r.Progress,
+		Message:   r.Message,
+		Error: forCaller(
+			c,
+			parseError(r.Error),
+		),
+		Actor:      r.Actor,
+		CreatedAt:  msTime(r.CreatedMs),
+		ApprovalID: r.ApprovalID,
 	}
 
 	// The last progress message of a finished job ("Rendering (97%)") contradicts its state (VV-102).
@@ -905,6 +944,13 @@ func jobText(j *Job, waited bool) string {
 
 	if j.Error != nil && j.State == JobFailed {
 		v.Error = "error " + j.Error.Code + ": " + j.Error.Message
+	}
+
+	if j.State == JobWaitingApproval {
+		// The agent that reads this must know it waits and cannot decide (RF-135).
+		v.Warnings = append(v.Warnings, fmt.Sprintf(
+			"waiting for approval %s: a person approves or rejects it in the app, and you cannot; "+
+				"do not submit it again, read it with job_get later", j.ApprovalID))
 	}
 
 	return textview.Job(v)

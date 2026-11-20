@@ -93,6 +93,30 @@ func TestPages(t *testing.T) {
 		t.Errorf("/connections = %d, want the connections page", res.status)
 	}
 
+	// Edit Image has its own pages (epic 28): the list, and the editor of a document whose id has the shape of one.
+	if res := page("/edit-image"); res.status != http.StatusOK ||
+		!strings.Contains(string(res.body), `EditImage\/Index`) {
+		t.Errorf("/edit-image = %d, want the image list page", res.status)
+	}
+
+	if res := page("/edit-image/img_0123456789"); res.status != http.StatusOK ||
+		!strings.Contains(string(res.body), `EditImage\/Show`) ||
+		!strings.Contains(string(res.body), `"imageId":"img_0123456789"`) {
+		t.Errorf("/edit-image/img_0123456789 = %d, want the editor page", res.status)
+	}
+
+	for _, p := range []string{"/edit-image/not-an-id", "/edit-image/img_0123", "/edit-image/IMG_0123456789"} {
+		if res := page(p); res.status != http.StatusNotFound {
+			t.Errorf("%s = %d, want 404", p, res.status)
+		}
+	}
+
+	// The approval queue has its own page (epic 05).
+	if res := page("/approvals"); res.status != http.StatusOK ||
+		!strings.Contains(string(res.body), `Approvals\/Index`) {
+		t.Errorf("/approvals = %d, want the approvals page", res.status)
+	}
+
 	if res := h.do(req{path: "/projects", noAuth: true}); res.status != http.StatusUnauthorized {
 		t.Errorf("/projects without a session = %d", res.status)
 	}

@@ -49,7 +49,8 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"inspector.transform": ["item.set_transform", "keyframe.set"],
 	"notice.use_keyframes": ["keyframe.set"],
 	"inspector.keyframe_add": ["keyframe.set"],
-	"inspector.keyframe_easing": ["keyframe.set"],
+	"inspector.keyframe_easing": ["keyframe.set_easing"],
+	"inspector.keyframe_curve": ["keyframe.set_easing"],
 	"inspector.keyframe_value": ["keyframe.set"],
 	"inspector.keyframe_remove": ["keyframe.remove"],
 	"inspector.keyframe_clear": ["keyframe.clear"],
@@ -57,6 +58,7 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"inspector.transition": ["item.set_transition"],
 	"timeline.crossfade": ["item.crossfade"],
 	"inspector.animation": ["text.apply_preset"],
+	"inspector.motion": ["animation.apply_preset"],
 	"timeline.edit_word": ["caption.edit_word"],
 	"inspector.word_text": ["caption.edit_word"],
 	"timeline.word_boundary": ["caption.set_words"],
@@ -125,6 +127,11 @@ const palette: EntryPoint = {
 };
 
 export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
+	"animation.apply_preset": [
+		{ kind: "inspector", action: "inspector.motion" },
+		palette,
+	],
+	"animation.list_presets": [palette],
 	"asset.remove": [{ kind: "menu", action: "library.remove" }, palette],
 	"audio.add": [
 		{ kind: "gesture", action: "library.add_to_timeline" },
@@ -330,8 +337,12 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "menu", action: "notice.use_keyframes" },
 		{ kind: "inspector", action: "inspector.keyframe_add" },
 		{ kind: "inspector", action: "inspector.color_keyframe" },
-		{ kind: "inspector", action: "inspector.keyframe_easing" },
 		{ kind: "inspector", action: "inspector.keyframe_value" },
+		palette,
+	],
+	"keyframe.set_easing": [
+		{ kind: "inspector", action: "inspector.keyframe_easing" },
+		{ kind: "inspector", action: "inspector.keyframe_curve" },
 		palette,
 	],
 	"project.rename": [{ kind: "toolbar", action: "topbar.rename" }, palette],

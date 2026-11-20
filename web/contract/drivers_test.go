@@ -138,6 +138,12 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ProjectRestore)
 	case "CommandHelp":
 		return invoke(ctx, s, svc.CommandHelp)
+	case "ExportPresetList":
+		return invoke(ctx, s, svc.ExportPresetList)
+	case "ExportCheck":
+		return invoke(ctx, s, svc.ExportCheck)
+	case "ExportBatch":
+		return invoke(ctx, s, svc.ExportBatch)
 	case "MediaTrash":
 		return invoke(ctx, s, svc.MediaTrash)
 	case "MediaRestore":
@@ -168,6 +174,22 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ConnectionRemove)
 	case "ConnectionTest":
 		return invoke(ctx, s, svc.ConnectionTest)
+	case "ApprovalList":
+		return invoke(ctx, s, svc.ApprovalList)
+	case "ApprovalGet":
+		return invoke(ctx, s, svc.ApprovalGet)
+	case "ApprovalDecide":
+		return invoke(ctx, s, svc.ApprovalDecide)
+	case "ApprovalRuleList":
+		return invoke(ctx, s, svc.ApprovalRuleList)
+	case "ApprovalRuleSet":
+		return invoke(ctx, s, svc.ApprovalRuleSet)
+	case "ApprovalRuleRemove":
+		return invoke(ctx, s, svc.ApprovalRuleRemove)
+	case "CostSummary":
+		return invoke(ctx, s, svc.CostSummary)
+	case "CostCeilingSet":
+		return invoke(ctx, s, svc.CostCeilingSet)
 	case "AuditList":
 		return invoke(ctx, s, svc.AuditList)
 	case "ToolsInstall":
@@ -487,6 +509,22 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		return "project_trash", args, nil
 	case "CommandHelp":
 		return "command_help", args, nil
+	case "ExportPresetList":
+		args["domain"] = "export"
+		delete(args, "codecs")
+
+		return "command_help", args, nil
+	case "ExportCheck":
+		return "lint", args, nil
+	case "ExportBatch":
+		items := args["items"]
+
+		delete(args, "items")
+
+		args["kind"] = service.JobExportBatch
+		args["args"] = map[string]any{"items": items}
+
+		return "job_start", args, nil
 	case "JobCancel":
 		return "job_cancel", args, nil
 	case "ViewFrame":
@@ -640,7 +678,10 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		Kind      string               `json:"kind"`
 		Files     []service.ImportFile `json:"files"`
 		WaitMS    int                  `json:"wait_ms"`
-		Args      struct {
+		Items     []struct {
+			Preset string `json:"preset"`
+		} `json:"items"`
+		Args struct {
 			AssetID  string `json:"asset_id"`
 			Language string `json:"language"`
 			Format   string `json:"format"`
@@ -793,6 +834,21 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		return "project:restore", []string{a.ProjectID}, "", nil
 	case "CommandHelp":
 		return "command:help", []string{a.Name}, "", nil
+	case "ExportPresetList":
+		return "export:presets", nil, "", nil
+	case "ExportCheck":
+		return "export:check", append(slices.Clone(proj), flag("preset", a.Preset)...), "", nil
+	case "ExportBatch":
+		argv = slices.Clone(proj)
+		for _, it := range a.Items {
+			argv = append(argv, flag("preset", it.Preset)...)
+		}
+
+		if a.WaitMS == 0 {
+			return "export:batch", append(argv, "--no-wait"), "", nil
+		}
+
+		return "export:batch", argv, "", nil
 	case "MediaTrash":
 		return "media:trash", append([]string{a.AssetID}, proj...), "", nil
 	case "MediaRestore":
@@ -833,6 +889,40 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 			"--kind", c.Kind, "--label", c.Label, "--endpoint", c.Endpoint, "--accepts", strings.Join(c.Accepts, ","),
 			"--hosts", strings.Join(c.Hosts, ","),
 		}, c.Secret, nil
+	case "ApprovalList":
+		return "approval:list", slices.Concat(flag("state", a.State), flag("project", a.ProjectID)), "", nil
+	case "ApprovalGet":
+		return "approval:show", []string{a.ID}, "", nil
+	case "ApprovalDecide":
+		var d service.ApprovalDecideRequest
+		if err := json.Unmarshal(s.Args, &d); err != nil {
+			return "", nil, "", err
+		}
+
+		return "approval:decide", slices.Concat([]string{d.ID, "--" + d.Decision}, flag("reason", d.Reason)), "", nil
+	case "ApprovalRuleList":
+		return "approval:rule:list", nil, "", nil
+	case "ApprovalRuleSet":
+		var r service.ApprovalRuleSetRequest
+		if err := json.Unmarshal(s.Args, &r); err != nil {
+			return "", nil, "", err
+		}
+
+		return "approval:rule:set", slices.Concat(
+			[]string{"--kind", r.Kind}, flag("id", r.ID), flag("connection", r.ConnectionID),
+			flag("project", r.ProjectID), flag("currency", r.Currency),
+		), "", nil
+	case "ApprovalRuleRemove":
+		return "approval:rule:remove", []string{a.ID}, "", nil
+	case "CostSummary":
+		return "cost:show", nil, "", nil
+	case "CostCeilingSet":
+		var c service.CostCeilingSetRequest
+		if err := json.Unmarshal(s.Args, &c); err != nil {
+			return "", nil, "", err
+		}
+
+		return "cost:ceiling", slices.Concat([]string{"--currency", c.Currency}, flag("project", c.ProjectID)), "", nil
 	case "AuditList":
 		return "audit", flag("project", a.ProjectID), "", nil
 	case "ToolsInstall":

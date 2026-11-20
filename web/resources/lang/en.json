@@ -202,6 +202,219 @@
         "copy_command": "Copy the command"
       }
     },
+    "image": {
+      "editor": {
+        "title": "Image editor",
+        "loading": "Loading image…",
+        "failed": "The image could not be opened.",
+        "back": "Back to Edit Image",
+        "size": "{w} x {h} px",
+        "revision": "revision {revision}"
+      },
+      "canvas": {
+        "label": "Image canvas",
+        "picture": "The image as it is drawn now",
+        "loading": "Drawing the image…",
+        "failed": "The picture could not be drawn.",
+        "retry": "Try again",
+        "locked": "Locked",
+        "none_selected": "Nothing selected",
+        "many_selected": "{count} layers selected",
+        "selected": "Layer {name}, {kind}, at {x}, {y}, {w} by {h}"
+      },
+      "view": {
+        "zoom_out": "Zoom out",
+        "zoom_in": "Zoom in",
+        "fit": "Fit to window",
+        "actual": "Actual size (100%)"
+      },
+      "kind": {
+        "image": "image",
+        "text": "text",
+        "shape": "shape",
+        "fill": "fill",
+        "group": "group"
+      },
+      "layers": {
+        "title": "Layers",
+        "label": "Layers, top first",
+        "empty_title": "The image has no layers",
+        "empty_body": "Add a text, a shape or a photo from the toolbar.",
+        "hidden": "hidden",
+        "locked": "locked",
+        "rename": "Layer name"
+      },
+      "arrange": {
+        "group": "Group layers",
+        "ungroup": "Ungroup",
+        "duplicate": "Duplicate",
+        "remove": "Remove",
+        "forward": "Bring forward",
+        "back": "Send backward"
+      },
+      "history": {
+        "undo": "Undo my last step",
+        "redo": "Redo my step",
+        "title": "History",
+        "empty": "No changes yet. Every change by you or an agent is listed here.",
+        "undo_of": "undid revision {revision}",
+        "redo_of": "redid revision {revision}",
+        "revision": "revision {revision}",
+        "you": "You",
+        "undone": "Undone by revision {revision}",
+        "skipped": {
+          "one": "{count} change left alone because another actor changed it since",
+          "other": "{count} changes left alone because another actor changed them since"
+        },
+        "agent_changed_prefix": "The image was changed by",
+        "agent_changed_suffix": "and the canvas shows it."
+      },
+      "add": {
+        "text": "Add text",
+        "text_default": "Your text",
+        "rectangle": "Add rectangle",
+        "ellipse": "Add ellipse",
+        "fill": "Add fill",
+        "image": "Add image",
+        "image_hint": "Choose an image of your workspace.",
+        "image_none": "There are no images in the workspace yet. Import one into a project first."
+      },
+      "brand": {
+        "place_logo": "Place logo",
+        "logo_name": "Logo",
+        "swatches": "Brand colours for {label}",
+        "use_color": "Use {name} ({value})"
+      },
+      "align": {
+        "left": "Left",
+        "center": "Centre",
+        "right": "Right",
+        "top": "Top",
+        "middle": "Middle",
+        "bottom": "Bottom"
+      },
+      "shape": {
+        "rect": "Rectangle",
+        "rounded_rect": "Rounded rectangle",
+        "ellipse": "Ellipse"
+      },
+      "inspector": {
+        "title": "Inspector",
+        "x": "X position",
+        "y": "Y position",
+        "selection": "Selection",
+        "document": "Canvas",
+        "canvas_width": "Width",
+        "canvas_height": "Height",
+        "resize_mode": "When the size changes",
+        "resize_keep": "Keep layers where they are",
+        "resize_scale": "Scale layers with the canvas",
+        "document_hint": "Select a layer to edit it.",
+        "align": "Align",
+        "align_to": "Align to",
+        "canvas": "Canvas",
+        "layer": "Layer",
+        "name": "Name",
+        "opacity": "Opacity",
+        "visible": "Visible",
+        "locked": "Locked",
+        "slot": "Template slot",
+        "box": "Position and size",
+        "width": "Width",
+        "height": "Height",
+        "rotation": "Rotation",
+        "image": "Image",
+        "replace": "Replace the photo",
+        "current_image": "Current image",
+        "fit_cover": "Cover canvas",
+        "fit_contain": "Fit in canvas",
+        "crop": "Crop of the source",
+        "crop_reset": "Reset crop",
+        "text": "Text",
+        "content": "Content",
+        "font": "Font",
+        "font_default": "Default font",
+        "weight": "Weight",
+        "size": "Size",
+        "color": "Colour",
+        "align_text": "Text alignment",
+        "uppercase": "Uppercase",
+        "stroke_color": "Outline colour",
+        "stroke_width": "Outline width",
+        "shape": "Shape",
+        "shape_kind": "Kind",
+        "fill": "Fill",
+        "radius": "Corner radius",
+        "bad_number": "Type a whole number of pixels, such as 120, 120px or 50%.",
+        "pick_color": "Pick {label}",
+        "none": "none"
+      },
+      "export": {
+        "open": "Export image",
+        "title": "Export image",
+        "hint": "Draws the current revision and saves a file in your workspace.",
+        "format": "Format",
+        "size": "Size",
+        "original": "Original ({w} x {h})",
+        "quality": "Quality",
+        "findings": "Problems found",
+        "no_findings": "No problems found. The image is ready to export.",
+        "error": "Error",
+        "warning": "Warning",
+        "go_to_layer": "Go to layer",
+        "blocked": {
+          "one": "{count} error stops the export. Fix it first.",
+          "other": "{count} errors stop the export. Fix them first."
+        },
+        "done": "Exported {w} x {h}, {bytes} bytes.",
+        "digest": "SHA-256 digest {hash}",
+        "download": "Download the file",
+        "close": "Close",
+        "run": "Export",
+        "exporting": "Exporting…"
+      },
+      "toolbar": {
+        "label": "Image tools"
+      },
+      "error": {
+        "dismiss": "Dismiss the error"
+      },
+      "index": {
+        "title": "Edit Image",
+        "new": "New image",
+        "name": "Name",
+        "name_placeholder": "Untitled",
+        "size": "Size",
+        "width": "Width",
+        "height": "Height",
+        "create": "Create image",
+        "as_template": "Make it a template",
+        "templates": "Your templates",
+        "documents": "Your images",
+        "loading": "Loading…",
+        "empty": "No images yet. Create one above.",
+        "layers": {
+          "one": "{count} layer",
+          "other": "{count} layers"
+        }
+      },
+      "preset": {
+        "video_thumbnail": "Video thumbnail (16:9)",
+        "square_post": "Square post (1:1)",
+        "vertical_cover": "Vertical cover (9:16)",
+        "custom": "Custom size"
+      },
+      "template": {
+        "title": "New from template",
+        "none": "There are no image templates yet. Make an image a template and it is listed here.",
+        "pick": "Template",
+        "choose": "Choose a template",
+        "required": "required",
+        "no_image": "No image",
+        "create": "Create from template",
+        "slot_hint": "Fill the slots marked required, then create again."
+      }
+    },
     "editor": {
       "dialog": {
         "close": "Close"
@@ -397,6 +610,9 @@
         "E_NETWORK": "Network error",
         "E_UNAUTHORIZED": "Session ended",
         "E_FORBIDDEN": "Not allowed",
+        "E_PRIVILEGED_SESSION": "Only you in the app can do this",
+        "E_COST_CEILING": "Over a cost ceiling",
+        "E_APPROVAL_NOT_FOUND": "No such request or rule",
         "E_ASSET_NOT_READY": "The media is still being prepared",
         "E_NOTHING_TO_UNDO": "Nothing to undo",
         "E_NOTHING_TO_REDO": "Nothing to redo",
@@ -621,9 +837,65 @@
             "aac": "AAC audio only",
             "png": "PNG image of the frame at the playhead"
           }
+        },
+        "presets": {
+          "title": "Platforms",
+          "hint": "Pick one or more: each becomes a file that fits that network.",
+          "loading": "Loading the platforms",
+          "unavailable": "The platforms could not be loaded.",
+          "limit_duration_max": "up to {seconds} s",
+          "limit_duration_range": "{min} to {max} s",
+          "limit_duration_min": "at least {seconds} s",
+          "limit_fps": "{min} to {max} fps",
+          "limit_fps_max": "up to {max} fps",
+          "limit_aspect": "aspect {ratio}",
+          "limit_size": "file up to {size}",
+          "source": "Limits read on {date}",
+          "source_link": "Source",
+          "checking": "Checking",
+          "fits": "The project fits.",
+          "does_not_fit": "The project does not fit:",
+          "limit_line": "limit {limit}, now {got}",
+          "misfit": "{count} of the chosen platforms do not fit and will fail; fix the project or leave them out.",
+          "start_many": "Export {count} files"
+        },
+        "codec": {
+          "label": "Video codec",
+          "auto": "Automatic (as the platform prefers)",
+          "h264": "H.264 (works everywhere)",
+          "hevc": "H.265 (HEVC, smaller files)",
+          "av1": "AV1 (smallest files, newer devices)",
+          "unavailable": "{name} (not available on this machine)",
+          "fallback_note": "If this machine cannot encode the preferred codec, H.264 is used and the result says so."
+        },
+        "batch": {
+          "title": "Exports",
+          "summary": "{done} of {total} done",
+          "state": {
+            "queued": "Waiting",
+            "running": "Exporting",
+            "succeeded": "Done",
+            "failed": "Failed",
+            "cancelled": "Cancelled"
+          },
+          "item": "Export {index}: {name}",
+          "queued_behind": "Another export is running: this one waits for it and starts by itself.",
+          "finished": "Exports finished",
+          "some_failed": "Some exports failed",
+          "download": "Download {name}",
+          "codec_note": "File: {codec}, {size} MB",
+          "plain": "Export"
         }
       },
       "commands": {
+        "animation": {
+          "apply_preset": {
+            "title": "Apply a motion preset"
+          },
+          "list_presets": {
+            "title": "List the motion presets"
+          }
+        },
         "asset": {
           "remove": {
             "title": "Remove media"
@@ -789,6 +1061,9 @@
           },
           "set": {
             "title": "Set keyframe"
+          },
+          "set_easing": {
+            "title": "Set keyframe easing"
           }
         },
         "project": {
@@ -1475,7 +1750,26 @@
           "ease_in": "Ease in",
           "ease_out": "Ease out",
           "ease_in_out": "Ease in and out",
-          "hold": "Hold"
+          "hold": "Hold",
+          "bezier": "Custom curve"
+        },
+        "curve": "Curve",
+        "curve_edit": "Edit the curve of the {property} keyframe at {time}",
+        "curve_close": "Close the curve editor of the {property} keyframe at {time}",
+        "curve_plot": "Curve of the {property} keyframe",
+        "curve_hint": "Drag the two handles, move one with the arrow keys (Shift for a larger step) or type the four numbers.",
+        "curve_handle": "Control point {n} of the curve",
+        "curve_handle_value": "x {x}, y {y}",
+        "curve_preset": "Named curve",
+        "curve_preset_of": "Named curve for the {property} keyframe",
+        "curve_preset_none": "Pick one...",
+        "curve_number": "{name} of the {property} curve",
+        "curve_preset_name": {
+          "in": "Ease in",
+          "out": "Ease out",
+          "in_out": "Ease in and out",
+          "back": "Back (pulls back first)",
+          "overshoot": "Overshoot (goes past, then settles)"
         }
       },
       "effects": {
@@ -1550,6 +1844,36 @@
           "zoom_in": "Zoom in",
           "slide_left": "Slide left",
           "slide_right": "Slide right"
+        }
+      },
+      "motion": {
+        "title": "Motion presets",
+        "preset": "Preset",
+        "preset_of": "Motion preset",
+        "edge_of": "Edge of the motion preset",
+        "duration_of": "Duration of the motion preset",
+        "apply": "Add motion",
+        "direction": "Direction",
+        "use_default": "Default",
+        "preset_name": {
+          "fade": "Fade",
+          "slide": "Slide",
+          "scale": "Scale",
+          "pop": "Pop",
+          "push_in": "Push in",
+          "pull_out": "Pull out"
+        },
+        "direction_name": {
+          "left": "From the left",
+          "right": "From the right",
+          "up": "From the top",
+          "down": "From the bottom"
+        },
+        "amount_of": {
+          "slide": "Distance (px)",
+          "scale": "Scale factor",
+          "push_in": "Zoom factor",
+          "pull_out": "Zoom factor"
         }
       },
       "template": {
@@ -1652,6 +1976,7 @@
     },
     "connections": {
       "title": "Connections",
+      "approvals_link": "Approvals and cost ceilings",
       "intro": "Every place Stuarty is allowed to talk to. Until you connect something, nothing leaves your computer.",
       "list": "Your connections",
       "empty": "No connections yet. Nothing leaves this computer.",
@@ -1681,6 +2006,58 @@
       "secret_missing": "No credential: connect it again",
       "test_ok": "The destination answered {status}.",
       "test_failed": "The destination did not answer well (status {status})."
+    },
+    "approvals": {
+      "title": "Approvals",
+      "intro": "Publishing and costly generation wait here for you. An agent can prepare them; only you can say yes, or write a rule that says yes for you.",
+      "queue": "Waiting for you",
+      "live": "Live: new requests appear here by themselves.",
+      "offline": "Not live: reload the page to see new requests.",
+      "empty": "Nothing is waiting for you.",
+      "kind": "Kind",
+      "destination": "Goes to",
+      "no_destination": "No destination",
+      "cost": "Estimated cost",
+      "no_cost": "Free",
+      "actor": "Asked by",
+      "asked": "Asked",
+      "reason": "Reason (optional, when rejecting)",
+      "approve": "Approve",
+      "reject": "Reject",
+      "currency": "Currency",
+      "per_item": "Most per item",
+      "per_day": "Most per day",
+      "cost_title": "Cost",
+      "cost_intro": "A ceiling stops further spending, whoever approves it: raise it here first. A day is a UTC day.",
+      "spent_today": "Spent today",
+      "nothing_spent": "Nothing spent today.",
+      "scope_workspace": "Whole workspace",
+      "ceilings": "Ceilings",
+      "no_ceilings": "No ceilings: every costly request still waits for you.",
+      "set_ceiling": "Set a ceiling",
+      "ceiling_note": "Leave both limits empty to remove the ceiling of that currency.",
+      "save_ceiling": "Save ceiling",
+      "rules": {
+        "title": "Rules that approve for you",
+        "intro": "A rule lets a kind of action go without asking. Only you can write one; no agent can.",
+        "empty": "No rules: everything waits for you.",
+        "new": "New rule",
+        "kind": "Kind of action (for example publish.post)",
+        "destination": "Destination",
+        "project": "Project id (optional)",
+        "any_destination": "Any destination",
+        "any_project": "Any project",
+        "disabled": "(off)",
+        "applies": "Destination: {destination}. Project: {project}.",
+        "no_limits": "No limits.",
+        "limits": "Most per item: {item}. Most per day: {day}.",
+        "disable": "Turn off",
+        "enable": "Turn on",
+        "remove": "Remove",
+        "add": "Add rule",
+        "note": "A rule with no limit per item never approves something that costs money.",
+        "bad_amount": "An amount is a number with at most six decimals, for example 2.50."
+      }
     },
     "keys": {
       "title": "API keys",

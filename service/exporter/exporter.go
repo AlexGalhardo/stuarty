@@ -8,14 +8,16 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
-	"slices"
 	"strconv"
+	"strings"
 	"sync"
 
+	exportcore "github.com/AlexGalhardo/stuarty/core/export"
 	"github.com/AlexGalhardo/stuarty/core/lint"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/engine/export"
@@ -71,7 +73,15 @@ func (a *adapter) Export(ctx context.Context, in service.ExportInput) (*service.
 		return nil, err
 	}
 
-	res, err := export.Run(ctx, a.job(in, a.runnerFor(ctx, caps), caps))
+	preset, plan, err := a.codecPlan(ctx, in, caps)
+	if err != nil {
+		return nil, err
+	}
+
+	job := a.job(in, a.runnerFor(ctx, caps, plan.Codec), caps)
+	job.Preset, job.Codec, job.CodecPlan = preset, plan.Codec, &plan
+
+	res, err := export.Run(ctx, job)
 	if err != nil {
 		return nil, err
 	}
@@ -88,6 +98,13 @@ func (a *adapter) Export(ctx context.Context, in service.ExportInput) (*service.
 	}
 	out.VideoCodec, out.AudioCodec, out.Checks = describe(res, in.Doc.Settings)
 	out.Width, out.Height = res.Width, res.Height
+	out.CodecFallback, out.Notes = string(res.CodecWanted), res.Notes
+
+	if preset != nil {
+		out.Checks = append(out.Checks, service.VerifyCheck{
+			Name: "preset", OK: true, Detail: "fits " + preset.Label + " (" + preset.ID + ")",
+		})
+	}
 
 	if l := res.Loudness.IntegratedLUFS; l != nil {
 		v := *l + res.Loudness.GainDB
@@ -141,7 +158,7 @@ func describe(res *export.Result, st timeline.Settings) (video, audio string, ch
 	case export.FormatMP4:
 	}
 
-	return "h264", "aac", []service.VerifyCheck{
+	return string(res.Codec.Normal()), "aac", []service.VerifyCheck{
 		{Name: "streams", OK: true, Detail: "video and audio present"},
 		dur,
 		{Name: "dimensions", OK: true, Detail: size},
@@ -176,17 +193,99 @@ func (a *adapter) job(in service.ExportInput, runner *ffmpeg.Runner, caps *ffmpe
 	}
 }
 
-// runnerFor picks the runner by the encoder detection finds: a software encoder (or none) runs
-// under the address space limit, a hardware encoder does not. Detection runs on the hardware
-// runner, whose child has no such limit, so a driver that maps a large address range is not
-// mistaken for a missing encoder; a detection error leaves the stricter runner to report it.
-func (a *adapter) runnerFor(ctx context.Context, caps *ffmpeg.Capabilities) *ffmpeg.Runner {
+// codecPlan resolves the preset of the input and decides the codec before any work, on the runner that detects
+// (the hardware one when there is one: its child has no address space limit, so a driver that maps a large range
+// is not mistaken for a missing encoder). A format that is not mp4 has no codec to choose.
+func (a *adapter) codecPlan(
+	ctx context.Context,
+	in service.ExportInput,
+	caps *ffmpeg.Capabilities,
+) (*exportcore.Preset, export.CodecPlan, error) {
+	var preset *exportcore.Preset
+
+	if in.Preset != "" {
+		p, ok := exportcore.Lookup(in.Preset)
+		if !ok {
+			return nil, export.CodecPlan{}, internal("the export preset " + in.Preset + " is not known")
+		}
+
+		preset = &p
+	}
+
+	if in.Format != "" && in.Format != string(export.FormatMP4) {
+		return preset, export.CodecPlan{}, nil
+	}
+
+	plan, err := export.PlanCodec(ctx, a.detectRunner(), caps, a.cfg.Encoder, exportcore.Codec(in.Codec), preset)
+	if err != nil {
+		return nil, export.CodecPlan{}, err
+	}
+
+	return preset, plan, nil
+}
+
+// detectRunner is the runner that runs the encoder detection.
+func (a *adapter) detectRunner() *ffmpeg.Runner {
+	if a.cfg.HardwareRunner != nil {
+		return a.cfg.HardwareRunner
+	}
+
+	return a.cfg.Runner
+}
+
+// Codecs implements service.CodecReporter: which codecs this machine writes, with the encoder that passed its
+// test encode, or why none did (SDD-004 section 8.3). The answers are those the exports use, cached on the runner.
+func (a *adapter) Codecs(ctx context.Context) []service.CodecAvailability {
+	caps, err := a.capabilities(ctx)
+	if err != nil || a.cfg.Runner == nil {
+		return nil
+	}
+
+	var out []service.CodecAvailability
+
+	for _, c := range exportcore.Codecs() {
+		det, derr := a.detectRunner().DetectCodec(ctx, caps, string(c), a.cfg.Encoder)
+		if derr == nil && det != nil {
+			out = append(out, service.CodecAvailability{Codec: string(c), Available: true, Encoder: det.Chosen})
+
+			continue
+		}
+
+		out = append(out, service.CodecAvailability{Codec: string(c), Reason: unavailableReason(det, derr)})
+	}
+
+	return out
+}
+
+// unavailableReason is the answer of each candidate, in one line without paths.
+func unavailableReason(det *ffmpeg.EncoderDetection, err error) string {
+	if det == nil || len(det.Candidates) == 0 {
+		if fe, ok := errors.AsType[*ffmpeg.Error](err); ok {
+			return fe.Message
+		}
+
+		return "no encoder was tried"
+	}
+
+	parts := make([]string, 0, len(det.Candidates))
+
+	for _, c := range det.Candidates {
+		parts = append(parts, c.Name+" "+string(c.Status))
+	}
+
+	return strings.Join(parts, ", ")
+}
+
+// runnerFor picks the runner by the encoder detection finds for the codec: a software encoder (or none) runs
+// under the address space limit, a hardware encoder does not. A detection error leaves the stricter runner to
+// report it.
+func (a *adapter) runnerFor(ctx context.Context, caps *ffmpeg.Capabilities, codec exportcore.Codec) *ffmpeg.Runner {
 	hw := a.cfg.HardwareRunner
 	if hw == nil {
 		return a.cfg.Runner
 	}
 
-	det, err := hw.DetectEncoder(ctx, caps, a.cfg.Encoder)
+	det, err := hw.DetectCodec(ctx, caps, string(codec.Normal()), a.cfg.Encoder)
 
 	return pickRunner(det, err, a.cfg.Runner, hw)
 }
@@ -194,16 +293,11 @@ func (a *adapter) runnerFor(ctx context.Context, caps *ffmpeg.Capabilities) *ffm
 // pickRunner is the hardware runner only for a detected encoder that is known to be hardware:
 // anything else, an unknown name and a failed detection included, keeps the address space limit.
 func pickRunner(det *ffmpeg.EncoderDetection, err error, software, hardware *ffmpeg.Runner) *ffmpeg.Runner {
-	if err != nil || det == nil || !slices.Contains(hardwareEncoders, det.Chosen) {
+	if err != nil || det == nil || !ffmpeg.IsHardwareEncoder(det.Chosen) {
 		return software
 	}
 
 	return hardware
-}
-
-// hardwareEncoders are the H.264 encoders whose drivers map very large address ranges.
-var hardwareEncoders = []string{
-	"h264_videotoolbox", "h264_nvenc", "h264_qsv", "h264_amf", "h264_mf", "h264_vaapi",
 }
 
 // capabilities reads what ffmpeg can do once, on the first export.
