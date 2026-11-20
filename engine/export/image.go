@@ -39,17 +39,30 @@ func RenderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig) 
 	kept := make([]plan.Layer, 0, len(fp.Layers))
 	tables := map[string]bool{}
 
-	host, err := renderhost.New(ctx, renderhost.Config{})
+	// The instance that does not test the context at every loop back edge draws about three times faster
+	// (SDD-021 section 13.2); the cancellation is kept by checking the context between the layers and by
+	// not waiting for the draw itself (renderDetached).
+	host, err := renderhost.New(ctx, renderhost.Config{Uncancellable: true})
 	if err != nil {
 		return nil, rendererError(err)
 	}
 
-	defer func() { _ = host.Close(context.WithoutCancel(ctx)) }()
+	abandoned := false
+
+	defer func() {
+		if !abandoned {
+			_ = host.Close(context.WithoutCancel(ctx))
+		}
+	}()
 
 	// Each layer is uploaded as soon as it is drawn, so the process never holds the pixels of every layer at
 	// once: a document of many large layers is bounded by the memory of the renderer module (out_of_memory),
 	// not by the memory of the machine.
 	for i := range fp.Layers {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+
 		l := fp.Layers[i]
 		if opacity(&l) == 0 {
 			continue
@@ -96,11 +109,46 @@ func RenderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig) 
 	dst := image.NewRGBA(image.Rect(0, 0, doc.Width, doc.Height))
 	out := renderhost.Output{Width: doc.Width, Height: doc.Height, Scale: 1}
 
-	if err := host.Render(ctx, renderhost.RenderInput{Output: out, Plan: fp}, dst); err != nil {
-		return nil, rendererError(err)
+	if err := renderDetached(ctx, host, renderhost.RenderInput{Output: out, Plan: fp}, dst, &abandoned); err != nil {
+		return nil, err
 	}
 
 	return dst, nil
+}
+
+// renderDetached runs the draw on an instance that cannot be interrupted and gives up waiting when the context
+// ends: the caller gets the context error at once, and the goroutine closes the instance when the draw, which
+// the limits of the document bound, is over. abandoned tells the caller not to close the instance itself.
+func renderDetached(
+	ctx context.Context, host *renderhost.Host, in renderhost.RenderInput, dst *image.RGBA, abandoned *bool,
+) error {
+	done := make(chan error, 1)
+
+	go func() {
+		done <- host.Render(context.WithoutCancel(ctx), in, dst)
+
+		close(done)
+	}()
+
+	select {
+	case err := <-done:
+		if err != nil {
+			return rendererError(err)
+		}
+
+		return nil
+	case <-ctx.Done():
+		*abandoned = true
+
+		go func() {
+			for range done { // the draw has returned when the channel is closed
+			}
+
+			_ = host.Close(context.WithoutCancel(ctx))
+		}()
+
+		return ctx.Err()
+	}
 }
 
 // withoutLostClips drops the layers whose mask source did not make it to the renderer (a text with no pixels, an
