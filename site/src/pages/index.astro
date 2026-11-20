@@ -1,9 +1,308 @@
 ---
+// The landing page, "The studio in takes" (brainstorming section 5.1, chosen by the author): a full-screen experience
+// with no scrollbar on a large screen. Each wheel step, swipe, arrow or Page Down moves to the next take; in the
+// timeline take they move the playhead first. On a small screen, with no script, the page is a normal scroll.
+import "@/src/landing/landing.css";
 import Base from "../layouts/Base.astro";
-import Landing from "../components/Landing.astro";
 import { landing } from "@/lib/landing";
+import FontPreload from "../components/landing/FontPreload.astro";
+import DriveTabs from "../components/landing/DriveTabs.astro";
+import LandingFooter from "../components/landing/LandingFooter.astro";
+import LandingActions from "../components/landing/LandingActions.astro";
+import Shot from "../components/landing/Shot.astro";
+import SplitTitle from "../components/landing/SplitTitle.astro";
+import StageCanvas from "../components/landing/StageCanvas.astro";
+import TimelineEditor from "../components/landing/TimelineEditor.astro";
+import { credits, hero, shots, takes, trust } from "@/lib/landing-pages";
+import { withBase } from "@/lib/site";
+
+const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).padStart(2, "0");
 ---
 
-<Base title={landing.title} description={landing.description} canonical="/">
-	<Landing />
+<Base title={landing.title} description={landing.description} canonical="/" headerVariant="landing">
+	<FontPreload slot="head" />
+	<script is:inline>
+		(function () {
+			var big = matchMedia("(min-width: 64rem) and (min-height: 45rem)").matches;
+			if (big) document.documentElement.classList.add("takes-on", "timeline-on");
+			if (!matchMedia("(prefers-reduced-motion: reduce)").matches) document.documentElement.classList.add("motion-ok");
+		})();
+	</script>
+	<main id="content" data-expressive data-page="viewport" class="relative isolate">
+		<a href={withBase("/docs/introduction/")} class="sr-only focus:not-sr-only focus:fixed focus:top-[calc(var(--header-h)+0.75rem)] focus:left-4 focus:z-50 focus:rounded-lg focus:bg-bg focus:px-4 focus:py-2 focus:text-sm focus:font-medium">Skip to the docs</a>
+
+		<div class="pointer-events-none fixed inset-0 -z-10">
+			<StageCanvas id="viewport-stage" mascot={false} />
+		</div>
+
+
+		<p class="take-hint" aria-hidden="true" data-hint>Scroll, swipe or press <kbd>&darr;</kbd></p>
+
+		<!-- Take 1: one place -->
+		<section id="studio" class="take" aria-labelledby="studio-title" data-take>
+			<div class="site-container">
+				<div class="grid items-center gap-10 lg:grid-cols-12">
+					<div class="lg:col-span-6">
+						<p class="eyebrow" data-hero-item>{hero.eyebrow}</p>
+						<SplitTitle text={hero.title} id="studio-title" tabindex="-1" class="display-hero mt-5 text-fg" />
+						<p class="lead mt-6 max-w-xl" data-hero-item>{hero.lead}</p>
+					</div>
+					<div class="lg:col-span-6" data-hero-frame>
+						<figure class="showcase theme-swap m-0" aria-label="The Stuarty home, in the light and the dark theme">
+							<Shot shot={shots.dashboardLight} eager sizes="(min-width: 64rem) 34rem, 100vw" class="shot-light" />
+							<Shot shot={shots.dashboard} sizes="(min-width: 64rem) 34rem, 100vw" class="shot-dark" />
+						</figure>
+					</div>
+				</div>
+				<div class="mt-10 lg:mt-12" data-hero-item>
+					<LandingActions idPrefix="hero" align="center" />
+				</div>
+			</div>
+		</section>
+
+		<!-- Take 2: the timeline (the scroll, the wheel or the arrows move the playhead) -->
+		<section id="timeline" class="take take-timeline" aria-labelledby="timeline-title" data-take data-editor>
+			<h2 id="timeline-title" tabindex="-1" class="site-container eyebrow pt-5">Take {number("timeline")} &middot; The studio, clip by clip</h2>
+			<TimelineEditor headingLevel="h3" />
+		</section>
+
+		<!-- Take 3: edit video -->
+		<section id="video" class="take" aria-labelledby="video-title" data-take>
+			<div class="site-container grid items-center gap-10 lg:grid-cols-12">
+				<div class="lg:col-span-4">
+					<p class="eyebrow" data-in>Take {number("video")} &middot; Edit video</p>
+					<h2 id="video-title" tabindex="-1" class="display-title mt-4 text-fg" data-in>A real editor, in your browser.</h2>
+					<p class="lead mt-5" data-in>Trim, split, captions that follow the voice, transitions, colour and keyframes. Export with a preset for each network.</p>
+					<ul class="mt-6 space-y-2 text-[0.9375rem] text-fg" data-in>
+						<li class="flex gap-2"><span class="text-brand-text" aria-hidden="true">&#10003;</span>Word-timed captions from the transcript</li>
+						<li class="flex gap-2"><span class="text-brand-text" aria-hidden="true">&#10003;</span>Every change signed by who made it</li>
+						<li class="flex gap-2"><span class="text-brand-text" aria-hidden="true">&#10003;</span>Undo for people and agents alike</li>
+					</ul>
+				</div>
+				<div class="lg:col-span-8 [perspective:1800px]">
+					<div class="showcase" data-in-3d>
+						<Shot shot={shots.videoEditor} sizes="(min-width: 64rem) 46rem, 100vw" />
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Take 3: images and writing -->
+		<section id="images" class="take" aria-labelledby="images-title" data-take>
+			<div class="site-container grid items-center gap-10 lg:grid-cols-12">
+				<div class="relative lg:col-span-7 lg:order-1 [perspective:1800px]">
+					<div class="showcase relative z-10 lg:w-[88%]" data-in-3d>
+						<Shot shot={shots.imageEditor} sizes="(min-width: 64rem) 40rem, 100vw" />
+					</div>
+					<div class="showcase absolute right-0 -bottom-14 z-20 hidden w-[52%] lg:block" data-in-3d data-depth="2">
+						<Shot shot={shots.writing} sizes="24rem" />
+					</div>
+				</div>
+				<div class="lg:col-span-5 lg:order-2">
+					<p class="eyebrow" data-in>Take {number("images")} &middot; Images and writing</p>
+					<h2 id="images-title" tabindex="-1" class="display-title mt-4 text-fg" data-in>The thumbnail and the script, next door.</h2>
+					<p class="lead mt-5" data-in>Layers, text, masks and templates for covers. Scripts, copy and posts with revisions and a read-aloud estimate. All in the same project as the video.</p>
+				</div>
+			</div>
+		</section>
+
+		<!-- Take 4: publish with a person in the loop -->
+		<section id="publish" class="take" aria-labelledby="publish-title" data-take>
+			<div class="site-container grid items-center gap-10 lg:grid-cols-12">
+				<div class="lg:col-span-5">
+					<p class="eyebrow" data-in>Take {number("publish")} &middot; Publish</p>
+					<h2 id="publish-title" tabindex="-1" class="display-title mt-4 text-fg" data-in>Nothing goes out until you say so.</h2>
+					<p class="lead mt-5" data-in>Plan posts on a calendar for your own accounts, through your own developer apps. An agent can prepare one; only a person approves it.</p>
+				</div>
+				<div class="relative lg:col-span-7 [perspective:1800px]">
+					<div class="showcase" data-in-3d>
+						<Shot shot={shots.calendar} sizes="(min-width: 64rem) 40rem, 100vw" />
+					</div>
+					<figure class="approval-card" data-in data-approval aria-label="Illustration: a post waiting for approval">
+						<p class="flex items-center gap-2 text-xs font-medium text-brand-text"><span class="size-2 rounded-full bg-brand-accent" aria-hidden="true"></span>waiting_approval</p>
+						<p class="mt-2 text-sm font-semibold text-fg">Launch teaser &middot; YouTube</p>
+						<p class="mt-0.5 text-xs text-muted">Tue, Nov 24, 18:00 &middot; prepared by local:claude</p>
+						<div class="mt-3 flex gap-2" aria-hidden="true">
+							<span class="rounded-md bg-brand px-3 py-1.5 text-xs font-semibold text-brand-foreground">Approve</span>
+							<span class="rounded-md border border-border-strong px-3 py-1.5 text-xs font-semibold text-fg">Reject</span>
+						</div>
+					</figure>
+				</div>
+			</div>
+		</section>
+
+		<!-- Take 5: agents drive it too -->
+		<section id="agents" class="take" aria-labelledby="agents-title" data-take>
+			<div class="site-container">
+				<p class="eyebrow" data-in>Take {number("agents")} &middot; Agents</p>
+				<h2 id="agents-title" tabindex="-1" class="display-title mt-4 max-w-3xl text-fg" data-in>Agents drive it too.</h2>
+				<p class="lead mt-4 max-w-2xl" data-in>The editor, the CLI, the HTTP API and MCP are thin doors to one command core, tested for parity.</p>
+				<div data-in>
+					<DriveTabs idPrefix="viewport" class="mt-8" />
+				</div>
+			</div>
+		</section>
+
+		<!-- Take 6: open source, on your machine -->
+		<section id="yours" class="take" aria-labelledby="yours-title" data-take>
+			<div class="site-container text-center">
+				<p class="eyebrow" data-in>Take {number("yours")} &middot; {trust.eyebrow}</p>
+				<h2 id="yours-title" tabindex="-1" class="display-title mx-auto mt-4 max-w-3xl text-fg" data-in>{trust.title}</h2>
+				<ul class="mx-auto mt-8 flex max-w-4xl flex-wrap justify-center gap-2" data-in>
+					{trust.points.map((p) => (
+						<li class="rounded-full border border-fg/12 bg-bg/70 px-4 py-2 text-sm text-fg backdrop-blur" title={p.text}>{p.title}</li>
+					))}
+				</ul>
+				<div class="mt-9" data-in>
+					<LandingActions idPrefix="take" align="center" />
+				</div>
+				<p class="take-credits mt-8 text-xs text-muted" data-in>{credits}</p>
+			</div>
+		</section>
+	</main>
+	<LandingFooter />
 </Base>
+
+<style is:global>
+	/* Takes mode: one take fills the viewport, the others wait off stage (no scrollbar). */
+	html.takes-on,
+	html.takes-on body {
+		height: 100%;
+		overflow: hidden;
+		overscroll-behavior: none;
+	}
+	html.takes-on .landing-footer {
+		display: none;
+	}
+	html.takes-on .take {
+		position: fixed;
+		inset: var(--header-h) 0 0 0;
+		display: flex;
+		align-items: center;
+		visibility: hidden;
+		opacity: 0;
+	}
+	html.takes-on .take[data-active] {
+		visibility: visible;
+		opacity: 1;
+	}
+	html:not(.takes-on) .take {
+		position: relative;
+		display: flex;
+		align-items: center;
+		min-height: 100svh;
+		padding-block: calc(var(--header-h) + 3rem) 4rem;
+	}
+	html:not(.takes-on) .take-hint,
+	html:not(.takes-on) .take-credits {
+		display: none;
+	}
+
+	/* The timeline take fills the screen under the header: its title, then the editor. */
+	html.takes-on .take-timeline {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+	}
+	html.takes-on .take-timeline .editor-frame {
+		flex: 1 1 auto;
+		min-height: 0;
+		height: auto;
+		padding-top: 0;
+	}
+	html:not(.takes-on) .take-timeline {
+		display: block;
+	}
+
+	/* The home of the product in both themes, crossfading every 3 seconds; one still image under reduced motion. */
+	.theme-swap {
+		position: relative;
+	}
+	.theme-swap .shot-dark {
+		position: absolute;
+		inset: 0;
+		animation: theme-swap 6s ease-in-out infinite;
+	}
+	@keyframes theme-swap {
+		0%,
+		40% {
+			opacity: 0;
+		}
+		50%,
+		90% {
+			opacity: 1;
+		}
+		100% {
+			opacity: 0;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.theme-swap .shot-dark {
+			animation: none !important;
+			opacity: 0;
+		}
+		.dark .theme-swap .shot-dark {
+			opacity: 1;
+		}
+	}
+
+	/* A take heading takes the focus only to move the reading position; it is not a control, so no ring. */
+	html.takes-on .take h1[tabindex="-1"]:focus-visible,
+	html.takes-on .take h2[tabindex="-1"]:focus-visible {
+		outline: none;
+	}
+
+	.take-hint {
+		position: fixed;
+		bottom: 1.5rem;
+		left: 50%;
+		z-index: 30;
+		transform: translateX(-50%);
+		font-size: 0.75rem;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--muted);
+		transition: opacity 400ms;
+	}
+	.take-hint kbd {
+		font-family: var(--font-mono);
+		padding: 0.05rem 0.35rem;
+		border: 1px solid var(--border-strong);
+		border-radius: 4px;
+	}
+	.approval-card {
+		position: absolute;
+		left: -1.5rem;
+		bottom: -2rem;
+		z-index: 10;
+		margin: 0;
+		width: min(18rem, 70%);
+		padding: 1rem 1.125rem;
+		border-radius: 1rem;
+		border: 1px solid color-mix(in oklab, var(--fg) 14%, transparent);
+		background: color-mix(in oklab, var(--bg) 88%, transparent);
+		backdrop-filter: blur(16px);
+		box-shadow: 0 24px 60px -24px rgb(0 0 0 / 55%);
+	}
+	@media (max-width: 63.99rem) {
+		.approval-card {
+			position: relative;
+			left: 0;
+			bottom: 0;
+			margin-top: 1rem;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		/* The global reduced-motion rule gives every element a tiny transition; on a take switching from hidden to
+		   visible it would delay the visibility its heading needs to take the focus. */
+		html.takes-on .take,
+		html.takes-on .take * {
+			transition: none !important;
+		}
+	}
+</style>
+
+<script>
+	import { start } from "../landing/viewport";
+	start();
+</script>
