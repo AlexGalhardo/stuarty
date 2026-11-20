@@ -7,6 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.0] - 2026-11-20
+
+### Added
+
+- **service:** Add the image_edit capability to the openai adapter ([9f0b5ce](https://github.com/AlexGalhardo/stuarty/commit/9f0b5ce4bc406eab48b3bc164c5edb5bbcfaf1c2))
+- **image:** Add layer.replace_source and the image.edit job ([dff4a9c](https://github.com/AlexGalhardo/stuarty/commit/dff4a9cf65813d457e48b887fe22e3769009a56f))
+- **api:** Expose image.edit on HTTP, the CLI and job_start ([b10e0d5](https://github.com/AlexGalhardo/stuarty/commit/b10e0d5d4d8735b95b71f8ac8a487e4900b0410a))
+- **core:** Add x and tiktok limits, the price of a post and sent_as_draft ([da3e1a0](https://github.com/AlexGalhardo/stuarty/commit/da3e1a0be3999f2dfe6270d4bb3b86aed19c2c79))
+- **service:** Add the x connector with a price and a kept refresh token ([5d273bf](https://github.com/AlexGalhardo/stuarty/commit/5d273bfc897d6ac73543263138d164975dc54a31))
+- **service:** Add tiktok drafts, sent_as_draft and the price of a post ([e757b8e](https://github.com/AlexGalhardo/stuarty/commit/e757b8e7b8b20a0be2b4ac8029c8bdeff089d91e))
+- **image:** Add a lookup table to the adjustments of a layer ([2ea832b](https://github.com/AlexGalhardo/stuarty/commit/2ea832b10428b1fd0cd1fc5f1c2038c962511c7e))
+- **mcp:** Read approvals and start publish.upload via jobs ([bc1967b](https://github.com/AlexGalhardo/stuarty/commit/bc1967b58ad8a2a6eec5356db0a4a4fe5ab81947))
+- **service:** Resolve a lookup table for an image document ([ab1a1ee](https://github.com/AlexGalhardo/stuarty/commit/ab1a1ee260939368d630823e8015ba194bec07d5))
+- **web:** Choose a lookup table for an image layer ([aab7f88](https://github.com/AlexGalhardo/stuarty/commit/aab7f8803f7dbff4284e44b1dab0c8c04eaf34e6))
+
+### Fixed
+
+- **ui:** Word history rows with the core description ([00eb04b](https://github.com/AlexGalhardo/stuarty/commit/00eb04b5afaef3f8e22d2d8217cf399f9f8af2c6))
+- **service:** Never build a scoped token near miss equal to the token ([f7abc84](https://github.com/AlexGalhardo/stuarty/commit/f7abc847c852359067b32aad4e019cf2ab9699e3))
+- **service:** Refuse a sign-in connection for image.edit ([82aad3d](https://github.com/AlexGalhardo/stuarty/commit/82aad3dcd37ac1ee45c4f33f363e33fbf49f36e4))
+- **http:** Report a request the client gave up on as 499, not 500 ([e531aff](https://github.com/AlexGalhardo/stuarty/commit/e531aff25ea1cbc012e6f006ba3902b7c9234d40))
+- **ui:** Load project pictures near the viewport through a queue of two ([96a0aa7](https://github.com/AlexGalhardo/stuarty/commit/96a0aa7ba0b1f81fba1b06719e2396843af56f61))
+- **service:** Refuse a layer picture the provider cannot take ([db93e0f](https://github.com/AlexGalhardo/stuarty/commit/db93e0f77344fa3966250d42451185bd3b31f9f3))
+- **ui:** Withdraw a project picture that left the viewport before its turn ([c59dec2](https://github.com/AlexGalhardo/stuarty/commit/c59dec2700c3ad339acd543f1193ac1d45930f26))
+- **ui:** Say when a model edit has no project to keep it ([afe28dc](https://github.com/AlexGalhardo/stuarty/commit/afe28dc0da28db6ca351a1c840e8bdc3c5ba0377))
+- **service:** Show the speed of a composition in the concise view ([3ea88f0](https://github.com/AlexGalhardo/stuarty/commit/3ea88f0f6a6389eda399c20563b9e0d174687e97))
+- **ci:** Make the no-egress yes step match the spec and download nothing ([211da5d](https://github.com/AlexGalhardo/stuarty/commit/211da5d3d182bf8c6cd5405b23ad0ee5b1ef4ea1))
+- **ffmpeg:** Install by rename and reuse a matching folder instead of deleting it ([59d623f](https://github.com/AlexGalhardo/stuarty/commit/59d623f8c0b8997e57810584b6fcf22e16095d92))
+- **ffmpeg:** Reuse before downloading and stop the powershell installer deleting in place ([270ad94](https://github.com/AlexGalhardo/stuarty/commit/270ad9492df9023634390e428eb78275e3abbc5d))
+- **web:** Spell the network names in pt-BR as the export dialog does ([28988bc](https://github.com/AlexGalhardo/stuarty/commit/28988bc66734ff04bba161e81163b2c61fe5794e))
+- **service:** Rotate a refresh token by a locked read and write ([4b4860f](https://github.com/AlexGalhardo/stuarty/commit/4b4860fd316e8c636eea296d8c9a67871d7db78e))
+- **service:** Never post to x again after a send stopped mid-post ([342a241](https://github.com/AlexGalhardo/stuarty/commit/342a24119cdf372c4de6af27a63888a280f9c037))
+- **repo:** Judge each first-flow harness run by what it added ([56450f3](https://github.com/AlexGalhardo/stuarty/commit/56450f328dd1a6b927cc84302b0399b745e69c2f))
+- **service:** Say how far an asset is and which call follows it in E_ASSET_NOT_READY ([a2c472c](https://github.com/AlexGalhardo/stuarty/commit/a2c472c35b7f44d649d327a47aa9cca14cb280ff))
+- **service:** Resolve the speech of an item added earlier in the same batch ([abeb21d](https://github.com/AlexGalhardo/stuarty/commit/abeb21d039004eb5d6defdf8710832d99690ca71))
+- **service:** Keep the progress detail of E_ASSET_NOT_READY between 0 and 1 ([40addc4](https://github.com/AlexGalhardo/stuarty/commit/40addc4ebaf53aa5606bba21dd100b7aa56c9b90))
+- **ui:** Say in the item menu and the shortcut list that mirroring is not pasted ([0759d9d](https://github.com/AlexGalhardo/stuarty/commit/0759d9d848a65d70199be0898a332523ede7df47))
+- **contract:** Record the OpenAPI document without the internal resolved field ([1dcb668](https://github.com/AlexGalhardo/stuarty/commit/1dcb6686a12897cf1f54d857ac81413886188330))
+- **command:** Tell a caller of caption.import_subtitles to send the content, not the path ([bc450f5](https://github.com/AlexGalhardo/stuarty/commit/bc450f5f2ab56e035412d6a5d0674bad2e431df5))
+- **service:** Check the digits of a hash before they become a folder ([0fcd58e](https://github.com/AlexGalhardo/stuarty/commit/0fcd58e2238245e0dd8fcef3aea17af4bcb95f86))
+- **image:** Hold an image to the tables the renderer can hold ([e3b2b49](https://github.com/AlexGalhardo/stuarty/commit/e3b2b495195d026255c6dd715f9a286762f1f176))
+- **service:** Find an image operation in command help when its name is unique ([b08bfee](https://github.com/AlexGalhardo/stuarty/commit/b08bfee3fd7ba837e5084ee4fa807df015974653))
+- **service:** Answer a create in UTC and accept a date in the list range ([db74d66](https://github.com/AlexGalhardo/stuarty/commit/db74d6661a30496fda8e9973b146fba21c256d2b))
+- **service:** Name the domain of an operation command help found elsewhere ([584380c](https://github.com/AlexGalhardo/stuarty/commit/584380c067960fa3e7ebfa91e11594222e25b1fa))
+- **core:** Keep the millisecond of a scheduled instant ([20b3938](https://github.com/AlexGalhardo/stuarty/commit/20b393834e7a8d5794866f376d4194abd04b4a9e))
+
+### Security
+
+- **security:** Prove mcp job tools cannot decide, update sdd-007 ([b0f7504](https://github.com/AlexGalhardo/stuarty/commit/b0f7504cb2ff4edc3e0844ccbd75d4f4de94dd97))
+- **security:** Prove mcp job tools cannot decide, update sdd-007 ([44ec53b](https://github.com/AlexGalhardo/stuarty/commit/44ec53ba8131de14ce2066dd0429cd82cda8e9e0))
 ## [0.39.0] - 2026-11-20
 
 ### Added
@@ -1819,7 +1869,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.39.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.40.0...HEAD
+[0.40.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.39.0...v0.40.0
 [0.39.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.38.0...v0.39.0
 [0.38.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.37.0...v0.38.0
 [0.37.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.36.0...v0.37.0
