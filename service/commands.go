@@ -77,10 +77,12 @@ func (s *svc) CommandHelp(ctx context.Context, req CommandHelpRequest) (*Command
 	}
 
 	cmd, ok := reg.Get(req.Name)
+	elsewhere := false
+
 	if (!ok || cmd.Internal) && req.Domain == "" {
 		// No domain asked: a name that exists in exactly one other domain is that domain's command.
 		if other, c, found := uniqueInOtherDomain(s.reg, req.Name); found {
-			reg, cmd, ok = other, c, true
+			reg, cmd, ok, elsewhere = other, c, true, true
 		}
 	}
 
@@ -91,6 +93,11 @@ func (s *svc) CommandHelp(ctx context.Context, req CommandHelpRequest) (*Command
 	text, err := reg.Help(req.Name)
 	if err != nil {
 		return nil, asError(err)
+	}
+
+	if elsewhere {
+		// The caller did not name the domain, and an edit with this operation must (SDD-003 section 4.3).
+		text = "Domain: " + reg.Domain() + ".\n\n" + text
 	}
 
 	schemaRaw, err := reg.Schema(req.Name)

@@ -1257,6 +1257,18 @@ func TestCommandHelp(t *testing.T) {
 		t.Fatalf("layer.add_text with no domain = %+v, %v", img, err)
 	}
 
+	if !strings.HasPrefix(img.Text, "Domain: image.\n") {
+		t.Errorf("the help of an operation found with no domain does not name its domain: %q", img.Text)
+	}
+
+	named, err := e.svc.CommandHelp(
+		e.as(ui),
+		service.CommandHelpRequest{Name: "layer.add_text", Domain: command.DomainImage},
+	)
+	if err != nil || strings.HasPrefix(named.Text, "Domain:") {
+		t.Errorf("the help asked with domain=image = %+v, %v", named, err)
+	}
+
 	_, err = e.svc.CommandHelp(
 		e.as(ui),
 		service.CommandHelpRequest{Name: "layer.add_text", Domain: command.DomainVideo},
