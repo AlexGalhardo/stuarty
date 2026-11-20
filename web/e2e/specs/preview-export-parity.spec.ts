@@ -9,6 +9,7 @@ import {
 	openCase,
 	stepThrough,
 } from "../support/golden";
+import { nestedProject } from "../support/nested";
 import { canvasOf } from "../support/webcodecs";
 import { expect, test } from "./helpers";
 
@@ -31,6 +32,30 @@ test.describe("preview-export-parity", () => {
 	test.beforeEach(({ browserName }) => {
 		test.skip(noVideoDecode(browserName), NO_VIDEO_DECODE_REASON); // verify:env-skip the browser cannot decode the proxy
 	});
+
+	// Epic 52: a composition drawn as a group (SDD-013 section 3.12), one level
+	// and two, is drawn by the worker on a surface of its own, and the frame matches
+	// the export's, which draws the same group.
+	for (const levels of [1, 2] as const) {
+		test(`nested ${levels === 1 ? "one level" : "two levels"}: the group is drawn as the export draws it (SSIM of at least ${MIN_SSIM}, at most ${MAX_DISPLACEMENT} px)`, async ({
+			page,
+			request,
+		}) => {
+			const project = await nestedProject(request, { levels });
+			await openCase(page, project.id, "?executor=rust");
+			await expect(canvasOf(page)).toHaveAttribute("data-executor", "rust");
+			await stepThrough(page, project.frames, async (frame) => {
+				await compareFrame(
+					page,
+					`nested-${levels}`,
+					project.id,
+					frame,
+					"preview-export-parity",
+					true,
+				);
+			});
+		});
+	}
 
 	for (const name of goldenCases()) {
 		test(`golden ${name}: the renderer's frames match the export's (SSIM of at least ${MIN_SSIM}, at most ${MAX_DISPLACEMENT} px)`, async ({
