@@ -248,6 +248,14 @@ function ExportDialog({ onClose }: { onClose(): void }): ReactNode {
 						<p className="break-all font-mono text-xs text-muted-foreground">
 							{t("ui.image.export.digest", { hash: result.sha256 })}
 						</p>
+						{result.job_id !== undefined && (
+							<p
+								className="break-all font-mono text-xs text-muted-foreground"
+								data-testid="image-export-job"
+							>
+								{t("ui.image.export.job", { job: result.job_id })}
+							</p>
+						)}
 						<Button asChild variant="outline" size="sm">
 							<a
 								href={fileUrl(result.image_id, result.path)}

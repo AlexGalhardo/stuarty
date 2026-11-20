@@ -524,6 +524,14 @@ export function PublicationEditor({
 										</option>
 									))}
 								</select>
+								<Label htmlFor="pub-still-image">
+									{t("ui.social.thumbnail_image")}
+								</Label>
+								<Input
+									id="pub-still-image"
+									value={still}
+									onChange={(event) => setStill(event.target.value.trim())}
+								/>
 							</div>
 						)}
 					</div>
