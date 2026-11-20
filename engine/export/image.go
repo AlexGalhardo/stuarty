@@ -22,6 +22,11 @@ type ImageConfig struct {
 	LUTPath func(hash string) (string, error)
 	// Fonts is the font set of the text layers; the bundled fonts when nil.
 	Fonts *rasterize.FontSet
+	// Cache, when set, lets the render start from the picture of the layers that an earlier render of the same
+	// document already drew (SDD-021 section 6.1); CacheScope is the owner of those pictures, a user in network
+	// mode, and a render never reads a picture of another scope. A custom Fonts set turns the cache off.
+	Cache      *ImageCache
+	CacheScope string
 }
 
 // RenderImage draws an image document at its canvas size with the CPU path of the Rust renderer (the bit-exact
@@ -35,9 +40,35 @@ func RenderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig) 
 	}
 
 	fp := coreimage.Plan(doc, plan.Options{Measure: rasterize.Measure(fonts), OutputScale: 1})
-	cache := rasterize.NewCache(fonts, 0)
-	kept := make([]plan.Layer, 0, len(fp.Layers))
-	tables := map[string]bool{}
+
+	live := make([]plan.Layer, 0, len(fp.Layers))
+
+	for i := range fp.Layers {
+		if opacity(&fp.Layers[i]) != 0 {
+			live = append(live, fp.Layers[i])
+		}
+	}
+
+	// The cache keys layers by what they draw; a custom font set is not part of the key, so it is not cached.
+	var chain *layerChain
+	if cfg.Cache != nil && cfg.Fonts == nil {
+		chain = newLayerChain(fp, live)
+	}
+
+	start, base := 0, (*image.RGBA)(nil)
+	if chain != nil {
+		start, base = cfg.Cache.nearest(cfg.CacheScope, chain)
+		if start == len(live) {
+			return cloneRGBA(base), nil
+		}
+	}
+
+	// A first stage that ends one layer before the top is kept, so that the next edit of the top layer draws
+	// that layer over it; the stage after it draws the rest.
+	stops := []int{len(live)}
+	if chain != nil && len(live)-1 > start && len(live) >= 2 && chain.valid[len(live)-1] {
+		stops = []int{len(live) - 1, len(live)}
+	}
 
 	// The instance that does not test the context at every loop back edge draws about three times faster
 	// (SDD-021 section 13.2); the cancellation is kept by checking the context between the layers and by
@@ -47,30 +78,83 @@ func RenderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig) 
 		return nil, rendererError(err)
 	}
 
-	abandoned := false
+	run := &imageRun{
+		ctx: ctx, cfg: cfg, host: host, plan: fp, raster: rasterize.NewCache(fonts, 0), tables: map[string]bool{},
+	}
 
 	defer func() {
-		if !abandoned {
+		if !run.abandoned {
 			_ = host.Close(context.WithoutCancel(ctx))
 		}
 	}()
 
+	for _, stop := range stops {
+		img, err := run.stage(base, live[start:stop])
+		if err != nil {
+			return nil, err
+		}
+
+		if chain != nil && stop < len(live) {
+			cfg.Cache.put(cfg.CacheScope, chain.digest[stop], img)
+		}
+
+		base, start = img, stop
+	}
+
+	if chain != nil {
+		cfg.Cache.put(cfg.CacheScope, chain.digest[len(live)], cloneRGBA(base))
+	}
+
+	return base, nil
+}
+
+// prefixItem is the id of the texture that holds the picture of the layers already drawn (SDD-021 section 6.1).
+const prefixItem = "stuarty-prefix"
+
+// imageRun is one render of a document on one instance of the module.
+type imageRun struct {
+	ctx       context.Context
+	cfg       ImageConfig
+	host      *renderhost.Host
+	plan      plan.FramePlan
+	raster    *rasterize.Cache
+	tables    map[string]bool
+	abandoned bool
+}
+
+// stage draws the layers over base, the picture of the layers below them, or over the background when base is
+// nil, and gives the pixels. A picture drawn first and the layers over it are the same pixels as the layers
+// drawn in one pass: the draw is a source-over of integers onto the frame, in order.
+func (r *imageRun) stage(base *image.RGBA, layers []plan.Layer) (*image.RGBA, error) {
+	ctx, host, fp := r.ctx, r.host, r.plan
+	kept := make([]plan.Layer, 0, len(layers)+1)
+
+	if base != nil {
+		b := base.Rect
+		if err := host.PutTexture(ctx, prefixItem, b.Dx(), b.Dy(), base.Pix, !fp.Transparent); err != nil {
+			return nil, rendererError(err)
+		}
+
+		kept = append(kept, plan.Layer{
+			ItemID: prefixItem, Kind: plan.Media, AssetID: prefixItem, AssetKind: "image",
+			Crop: plan.Rect{W: float64(b.Dx()), H: float64(b.Dy())}, CX: float64(b.Dx()) / 2, CY: float64(b.Dy()) / 2,
+			W: float64(b.Dx()), H: float64(b.Dy()), Scale: 1, Opacity: 1,
+		})
+	}
+
 	// Each layer is uploaded as soon as it is drawn, so the process never holds the pixels of every layer at
 	// once: a document of many large layers is bounded by the memory of the renderer module (out_of_memory),
 	// not by the memory of the machine.
-	for i := range fp.Layers {
+	for i := range layers {
 		if err := ctx.Err(); err != nil {
 			return nil, err
 		}
 
-		l := fp.Layers[i]
-		if opacity(&l) == 0 {
-			continue
-		}
+		l := layers[i]
 
 		switch l.Kind {
 		case plan.Media:
-			img, err := imageTexture(&l, cfg)
+			img, err := imageTexture(&l, r.cfg)
 			if err != nil {
 				return nil, fmt.Errorf("layer %s: %w", l.ItemID, err)
 			}
@@ -79,7 +163,7 @@ func RenderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig) 
 				return nil, rendererError(err)
 			}
 		case plan.Bitmap:
-			bm, err := cache.Get(*l.Bitmap)
+			bm, err := r.raster.Get(*l.Bitmap)
 			if err != nil {
 				return nil, fmt.Errorf("layer %s: %w", l.ItemID, err)
 			}
@@ -97,7 +181,7 @@ func RenderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig) 
 		}
 
 		// A table is in the module before the layer that names it is drawn: a layer is never drawn without it.
-		if err := putImageLUT(ctx, host, &l, tables, cfg); err != nil {
+		if err := putImageLUT(ctx, host, &l, r.tables, r.cfg); err != nil {
 			return nil, err
 		}
 
@@ -106,10 +190,10 @@ func RenderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig) 
 
 	fp.Layers = withoutLostClips(kept)
 
-	dst := image.NewRGBA(image.Rect(0, 0, doc.Width, doc.Height))
-	out := renderhost.Output{Width: doc.Width, Height: doc.Height, Scale: 1}
+	dst := image.NewRGBA(image.Rect(0, 0, fp.Width, fp.Height))
+	out := renderhost.Output{Width: fp.Width, Height: fp.Height, Scale: 1}
 
-	if err := renderDetached(ctx, host, renderhost.RenderInput{Output: out, Plan: fp}, dst, &abandoned); err != nil {
+	if err := renderDetached(ctx, host, renderhost.RenderInput{Output: out, Plan: fp}, dst, &r.abandoned); err != nil {
 		return nil, err
 	}
 

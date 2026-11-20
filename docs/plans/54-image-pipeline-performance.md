@@ -38,7 +38,7 @@ A creator editing a large image document (a 4,000 by 4,000 pixel thumbnail or po
 ## Tasks
 
 - [x] 1. Profile compose and export of the reference document; write the top costs in SDD-021. Verify: `task lint:md` exits 0 and the hand-off quotes the profile.
-- [ ] 2. Incremental composition with the bounded per-layer cache, specified first in SDD-021. Verify: `go test ./engine/export/... -run 'TestImage'` passes and the golden files are unchanged.
+- [x] 2. Incremental composition with the bounded per-layer cache, specified first in SDD-021. Verify: `go test ./engine/export/... -run 'TestImage'` passes and the golden files are unchanged.
 - [x] 3. The export path: one composition and a fast lossless encode. Verify: `go test ./engine/export/... -run 'TestImage|TestSecurity_'` passes and an export twice gives the same bytes.
 - [ ] 4. The browser preview of an edit within 100 ms on the reference document. Verify: the image editor performance spec passes in Chromium.
 - [ ] 5. Measure on the idle machine (all agents stopped). Verify: `STUARTY_TEST_FFMPEG_DIR=... go run ./internal/tools/perfreport -write -absolute -gated -only NFR-061` exits 0 with `compose_ms` ≤ 100 and `s_export` ≤ 2.
