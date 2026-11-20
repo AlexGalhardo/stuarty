@@ -1,0 +1,55 @@
+---
+title: "What leaves your machine"
+description: "Stuarty sends nothing anywhere until you connect a destination, and publishes only what you approve. Every case, in plain words."
+---
+
+## You will learn
+
+- that a fresh Stuarty opens no outbound connection and sends no telemetry;
+- the only things that can send data out, who switches each one on, and what each one sends;
+- that publishing and costly generation wait for you.
+
+## The short version
+
+- **Your files, projects and notes stay on your computer or your server.** There is no Stuarty cloud and no account with us.
+- **With nothing connected, nothing leaves.** A test starts the server with every setting unset, runs a whole create, import, edit and export, and fails on any outbound connection.
+- **A connection you create is the only way out.** A connection is an address you connected on purpose: a social account, an AI provider, a Google sign-in. Each one is listed in Connections with what it may receive and when it was last used, and removing it removes its credentials.
+- **Publishing waits for you.** An agent or a schedule can prepare a post. It becomes an item in the approval queue, with what will be sent, where, and the estimated cost. You approve or reject it.
+- **Credentials never come back out.** A token or a key lives in the vault of the workspace, sealed by a master key that never leaves your machine. No page, command or agent can read one.
+- **No telemetry.** Stuarty never sends data to its authors.
+
+## Every way out
+
+| What | Starts when | What is sent, and to whom |
+| --- | --- | --- |
+| An AI provider | you create a connection to it and something uses it | the prompt, and the images or audio you choose to send, to the provider you connected, with your key |
+| A social network | you create the connection with your own developer app, then approve a post | the video, the title, the caption and the thumbnail of the post you approved, to that network |
+| Sign in with ChatGPT or OpenRouter | you choose it as the way to reach a model | the same as an AI provider, through your own account |
+| Your local agent | you connect it | nothing leaves the machine: it runs on your side |
+| Google sign-in (a server) | the owner of a server turns it on | the sign-in code and keys, to Google |
+| Transcription API | you set a transcription address and run a transcription | the audio of that one asset, to the host you set |
+| Helper download | you press Install or run `tools:install` | a download from the hosts the command names first |
+| Desktop update check | you answered Yes, or choose **Check for updates** | a request for one signed file; nothing about you |
+| OpenTelemetry | you set an endpoint | request traces, to that endpoint |
+
+That is the whole list. The [privacy page](/docs/self-hosting/privacy) has the detail of each row and how to check it with the tool of your system.
+
+## What an agent cannot do
+
+No tool of an agent takes a URL, a host or a destination as an argument. An agent works with the destinations you connected, never with an address of its own choosing. It can prepare a publication or a request that costs money, and it cannot run either without the approval queue or a rule that you wrote yourself, from a signed-in browser session. A rule is never created by an agent, and every use of one is recorded in the audit log. Text that comes from a provider or a network is treated as untrusted.
+
+## Check it yourself
+
+Start the server, and list its connections with the tool of your system. On Linux:
+
+```console
+stuarty serve &
+ss -tnp | grep stuarty
+```
+
+You should see the listening socket and your own browser, and nothing else.
+
+## Next steps
+
+- [Install Stuarty](/docs/installation)
+- [Security and privacy](/docs/self-hosting/privacy)
