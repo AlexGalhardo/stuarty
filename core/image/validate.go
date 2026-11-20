@@ -56,6 +56,10 @@ func Validate(d *Document) []Violation {
 		v.add("limit", "assets", "", "the document uses %d files; the limit is %d", len(d.Assets), MaxAssets)
 	}
 
+	if n := lutCount(d); n > MaxLUTs {
+		v.add("limit", "assets", "", "the document uses %d lookup tables; the limit is %d", n, MaxLUTs)
+	}
+
 	images, luts := usedAssets(d)
 
 	for h := range images {

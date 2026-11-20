@@ -42,6 +42,24 @@ func fillAssets(d *Document) *Document {
 	return d
 }
 
+// withFullTables has the 32 lookup tables a document may hold, each graded on a copy of the photo of its own.
+func withFullTables() *Document {
+	d := baseDoc()
+
+	for i := range MaxLUTs {
+		h := fmt.Sprintf("sha256:%064x", i+1)
+		d.Assets[h] = AssetRef{Hash: h, Name: "x.cube", Kind: AssetLUT}
+		d.Layers = append(d.Layers, Layer{
+			ID: fmt.Sprintf("lyr_%010d", i), Kind: KindImage, Name: "x", Visible: true, Opacity: 100, W: 1, H: 1,
+			Asset: hashFace, Adjust: &Adjust{LUT: &LUTRef{Asset: h, Intensity: MaxLUTIntensity}},
+		})
+	}
+
+	ReorderAll(d)
+
+	return d
+}
+
 func withFilters() *Document {
 	d := baseDoc()
 	f1, f2, f3 := NewFilter(FilterBlur), NewFilter(FilterShadow), NewFilter(FilterVignette)
@@ -159,6 +177,11 @@ func init() {
 			"lut_past_the_limit_of_files",
 			arg(photo, fmt.Sprintf(`"lut": {"asset": %q}`, hashCube)),
 		).on(withFullAssets),
+		gc(
+			"layer.adjust",
+			"lut_past_the_limit_of_tables",
+			arg(photo, fmt.Sprintf(`"lut": {"asset": %q}`, hashCube)),
+		).on(withFullTables),
 		gc("layer.filter_add", "blur_defaults", arg(photo, `"kind": "blur"`)),
 		gc(
 			"layer.filter_add",
