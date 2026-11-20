@@ -1,0 +1,123 @@
+---
+title: "Blog posts and their destinations"
+description: "Write a blog post with its images, check it, and send it after your approval to files for a static site, to WordPress, to a webhook or to the read API of your server."
+---
+
+<Callout type="warning" title="New">
+This page covers blog posts and their four destinations, tested against fixtures and fake servers. Publishing to a real WordPress was not verified yet.
+</Callout>
+
+## You will learn
+
+- how to write a post with a front matter and the images of your project;
+- which destination fits your blog: files, WordPress, a webhook or the read API;
+- why a post waits for your approval like any other publication;
+- how your receiver checks that a webhook delivery came from Stuarty.
+
+## The idea
+
+A **post** is a text of the kind `post`: a front matter between two lines of `---`, then the body in Markdown. Its images are images of the project, written as `![alt](asset:ast_0123456789)`; a picture from another address is refused, so nothing outside the project is ever fetched. Stuarty checks the post and renders it to HTML with its own renderer, which escapes every character of the text, so the HTML a destination receives carries no script.
+
+A **destination** is a connection of one of five kinds. A post is published like a video: it is a target of a publication on the calendar, it waits for your approval, and what is sent is exactly the post you approved.
+
+| Kind | What it does | Leaves your computer? |
+| --- | --- | --- |
+| `blog_files` | writes `<slug>/index.md` and `images/` (or a zip) into a folder you chose, with the front matter of Astro, Hugo, Jekyll or your own template | no |
+| `blog_wordpress` | uploads the images to the media library, then creates the post as a draft or published; a second send updates the same post | yes, to your site |
+| `blog_webhook` | sends the post, signed, to a public URL of yours | yes, to that URL |
+| `blog_webhook_local` | the same, to a URL on this machine or your own network | yes, to that URL |
+| `blog_api` | publishes the post on this server, for your own system to read with a key | no |
+
+## Write a post
+
+```text
+---
+title: How I cut a video in a day
+slug: how-i-cut-a-video-in-a-day
+summary: One sentence for the list and the search result.
+tags: video, editing
+cover: ast_0123456789
+language: en
+---
+The body, in Markdown, with a picture: ![the desk](asset:ast_0123456789)
+```
+
+`title` is required. The slug is made from the title when you leave it out. The renderer knows headings, paragraphs, quotes, lists of one level, fenced code, rules, bold, italic, code, links and images; anything else stays text, and a link that is not `http`, `https`, `mailto`, a path or an anchor is written as its text.
+
+## Quick start
+
+<Tabs>
+<Tab title="Browser or desktop">
+
+1. Open **Write**, choose **New text**, the project and the kind **Blog post**, and write the post. Save it: the **Blog post** panel shows what to fix, the images it found and how the body reads.
+2. Open **Connections**, find **Blog destinations**, choose the destination and fill its form. A folder must exist; a WordPress needs an application password made in your profile in wp-admin; a webhook needs a signing secret of 16 to 256 characters.
+3. Open **Publish**, choose **New publication**, pick **A blog post** under **What you publish**, then the post, the destination, **Draft** or **Published**, and a time.
+4. **Save**, then **Schedule and ask for approval**, and approve it on the **Approvals** page.
+
+For the read API, make a key with the scope `posts:read` on the **API keys** page (network mode): that key reads the published posts and nothing else.
+
+</Tab>
+<Tab title="CLI">
+
+```bash
+stuarty text:write --project prj_7k2m9x4q1b --title "My post" --kind post --text post.md
+stuarty post:check pit_3c5v8n2w6d --project prj_7k2m9x4q1b
+echo '{"folder":"/home/me/site/src/content/blog","template":"astro"}' | \
+  stuarty connection:add --kind blog_files --label Site \
+  --endpoint http://localhost --accepts text,image,metadata
+stuarty publication:create --project prj_7k2m9x4q1b --title "My post" --post pit_3c5v8n2w6d \
+  --connection con_0123456789 --visibility public --at 2026-11-20T09:00 --zone America/Sao_Paulo
+stuarty publication:schedule pub_0123456789 --target tgt_0123456789
+```
+
+The settings of a destination are the secret of its connection: they are read from standard input, kept in the vault and never shown again.
+
+</Tab>
+<Tab title="MCP">
+
+An agent writes the post with `project_item` (`action` `text`, with `text_kind` `post`) and checks it with `project_item` (`action` `check`, with the `item_id` of the post). It plans the publication through the CLI or the HTTP API, and the post still waits for your approval.
+
+</Tab>
+<Tab title="HTTP">
+
+```bash
+curl -H "Authorization: Bearer $KEY" \
+  "http://127.0.0.1:7878/api/v1/projects/prj_7k2m9x4q1b/texts/pit_3c5v8n2w6d/post"
+curl -H "Authorization: Bearer $POSTS_KEY" "http://127.0.0.1:7878/api/v1/posts"
+curl -H "Authorization: Bearer $POSTS_KEY" \
+  "http://127.0.0.1:7878/api/v1/posts/how-i-cut-a-video-in-a-day"
+```
+
+The read API serves only posts an approved target published to a `blog_api` destination, pages of at most 50 with `limit` and `cursor`, and an `ETag` on every answer.
+
+</Tab>
+</Tabs>
+
+## Check a webhook delivery
+
+Every delivery is one `POST` with a JSON body and three headers: `X-Stuarty-Delivery` (the same in every retry of one send), `X-Stuarty-Timestamp` (Unix seconds) and `X-Stuarty-Signature`, which is `v1=` followed by the hex of an HMAC-SHA256 with your signing secret:
+
+```text
+HMAC-SHA256(signing_secret, timestamp + "." + delivery + "." + body)
+```
+
+Your receiver computes it over the exact bytes of the body, compares it in constant time, refuses a timestamp more than 5 minutes from its clock, and may drop a delivery id it has already seen. A transport error, `408`, `425`, `429` or `5xx` is retried; a redirect is never followed, so give the final address.
+
+## Common mistakes
+
+- `E_VALIDATION` on `body.images`: an image is not an image of the project. Import it, then write `![alt](asset:<id>)`.
+- `E_VALIDATION` on `endpoint` when you add a `blog_webhook`: the address is on this machine or a private network. Use `blog_webhook_local` for a service you run yourself.
+- `E_CONNECTION_DESTINATION` when a webhook is sent: the name of the host resolved to an internal address. A public webhook never delivers inside your network.
+- A post with the visibility **Draft** sent to the read API is stored as a draft, which the routes do not list.
+- `slug_taken` when sending to the read API: another post already holds that slug. Give the post its own `slug`.
+
+## What never leaves your computer
+
+- No post is sent before you, or a rule you wrote, approved it, and an image that changed after the approval is not sent.
+- The files and read API destinations open no connection at all; WordPress and a webhook reach only the address of their connection.
+- The application password and the signing secret live in the vault and are never shown or returned.
+
+## Next steps
+
+- [The publishing calendar](/docs/guide/publishing-calendar)
+- [Local and network mode](/docs/concepts/local-and-network-mode)

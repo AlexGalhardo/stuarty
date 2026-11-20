@@ -9,6 +9,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/connections/oauth"
 	"github.com/AlexGalhardo/stuarty/service/providers"
+	"github.com/AlexGalhardo/stuarty/service/publish/destinations"
 )
 
 // ConnectionListRequest has no member.
@@ -146,6 +147,19 @@ func (s *svc) ConnectionCreate(ctx context.Context, req ConnectionCreateRequest)
 	if _, isSignIn := oauth.ParseEnvelope([]byte(req.Secret)); isSignIn {
 		return nil, newError(command.CodeValidation, "the secret is not a key: a sign-in is made in the browser.").
 			withPath("secret")
+	}
+
+	// The settings of a blog destination are checked before they are kept: the folder, the signing secret, the
+	// address rule of a webhook that is not local (SDD-020 sections 42 and 46, T-86).
+	if d, ok := s.blog.Get(spec.Kind); ok {
+		if verr := d.ValidateConfig([]byte(req.Secret), spec.Endpoint); verr != nil {
+			path := "secret"
+			if _, isEndpoint := errors.AsType[*destinations.EndpointError](verr); isEndpoint {
+				path = "endpoint"
+			}
+
+			return nil, newError(command.CodeValidation, "%s.", verr.Error()).withPath(path)
+		}
 	}
 
 	return s.insertConnection(ctx, c, spec, []byte(req.Secret))

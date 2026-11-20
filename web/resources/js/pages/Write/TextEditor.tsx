@@ -16,6 +16,7 @@ import { useT } from "@/lib/i18n";
 import CaptionPanel from "./CaptionPanel";
 import type { TextGetResult, WritingClient } from "./client";
 import DraftPanel from "./DraftPanel";
+import PostPanel from "./PostPanel";
 import MarkdownPreview from "./Preview";
 import RevisionsPanel from "./RevisionsPanel";
 import ScriptPanel from "./ScriptPanel";
@@ -221,6 +222,15 @@ export default function TextEditor({
 			)}
 			{kind === "caption" && (
 				<CaptionPanel client={client} projectId={projectId} body={body} />
+			)}
+			{kind === "post" && (
+				<PostPanel
+					client={client}
+					projectId={projectId}
+					itemId={itemId}
+					revision={loaded.item.revision}
+					dirty={dirty}
+				/>
 			)}
 			<DraftPanel client={client} item={loaded.item} onDone={drafted} />
 			<RevisionsPanel

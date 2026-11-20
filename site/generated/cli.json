@@ -1731,7 +1731,7 @@
         {
           "name": "text-kind",
           "type": "string",
-          "usage": "a text item: script, copy (default) or caption"
+          "usage": "a text item: script, copy (default), caption or post"
         },
         {
           "name": "preset",
@@ -3957,12 +3957,17 @@
         {
           "name": "export",
           "type": "string",
-          "usage": "the id of a succeeded export job of the project: the video (required)"
+          "usage": "the id of a succeeded export job of the project: the video (this or --post)"
         },
         {
           "name": "thumbnail",
           "type": "string",
           "usage": "the id of a succeeded export job of a still: the cover"
+        },
+        {
+          "name": "post",
+          "type": "string",
+          "usage": "the id of a text of the kind post: a blog post (this or --export)"
         },
         {
           "name": "connection",
@@ -4251,7 +4256,7 @@
       "domain": "writing",
       "summary": "list the scripts, copy and captions of a project, or of every project",
       "usage": [
-        "stuarty text:list [--project <id>] [--kind script|copy|caption] [--state active|trashed]"
+        "stuarty text:list [--project <id>] [--kind script|copy|caption|post] [--state active|trashed]"
       ],
       "example": "stuarty text:list --kind caption --json",
       "flags": [
@@ -4263,7 +4268,7 @@
         {
           "name": "kind",
           "type": "string",
-          "usage": "script, copy or caption"
+          "usage": "script, copy, caption or post"
         },
         {
           "name": "state",
@@ -4317,7 +4322,7 @@
       "domain": "writing",
       "summary": "make a text, or save a new revision of one, from a Markdown file",
       "usage": [
-        "stuarty text:write --project <id> --title <t> [--kind script|copy|caption] --text <file|->",
+        "stuarty text:write --project <id> --title <t> [--kind script|copy|caption|post] --text <file|->",
         "stuarty text:write <item> --project <id> --text <file|-> [--title <t>] [--base <revision>]"
       ],
       "example": "stuarty text:write --project prj_7k2m9x4q1b --title Hook --kind script --text hook.md",
@@ -4335,7 +4340,7 @@
         {
           "name": "kind",
           "type": "string",
-          "usage": "making a text: script, copy (default) or caption"
+          "usage": "making a text: script, copy (default), caption or post"
         },
         {
           "name": "base",
@@ -4526,6 +4531,28 @@
           "name": "wpm",
           "type": "integer",
           "usage": "words per minute, 60 to 300 (default 150)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "post:check",
+      "domain": "writing",
+      "summary": "check a blog post (SDD-019 section 13): its front matter, its images and its sanitised HTML",
+      "usage": [
+        "stuarty post:check <item> --project <id>"
+      ],
+      "example": "stuarty post:check pit_3c5v8n2w6d --project prj_7k2m9x4q1b",
+      "flags": [
+        {
+          "name": "project",
+          "type": "string",
+          "usage": "the project of the text (default $STUARTY_PROJECT)"
         }
       ],
       "globals": [
