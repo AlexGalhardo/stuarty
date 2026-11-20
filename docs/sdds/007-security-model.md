@@ -522,6 +522,8 @@ Scopes: `read`, `edit`, `media`, `render`, `admin` (SDD-000 §4). They are indep
 | `ImageList` | `GET /images` | R | - | - | - | - | Only the caller's images in network mode |
 | `ImageDescribe` | `GET /images/{id}` | R | - | - | - | - | In network mode an image is visible to its owner and to an administrator, `E_NOT_FOUND` otherwise (SDD-021) |
 | `ImageEdit` | `POST /images/{id}/edit` | - | R | - | - | - | In network mode an image is visible to its owner and to an administrator, `E_NOT_FOUND` otherwise (SDD-021); a batch is atomic and checked against the revision |
+| `ImageDiff`, `ImageCheckpointList` | `GET /images/{id}/diff`, `/checkpoints` | R | - | - | - | - | In network mode an image is visible to its owner and to an administrator, `E_NOT_FOUND` otherwise; names and notes are untrusted text (SDD-003 §3.7.1) |
+| `ImageRevert`, `ImageCheckpointCreate`, `ImageCheckpointRename`, `ImageCheckpointRemove` | `POST /images/{id}/revert`, `POST /images/{id}/checkpoints`, `PATCH`, `DELETE /images/{id}/checkpoints/{name}` | - | R | - | - | - | As `ImageUndo`; a revert is a new step of the caller and never rewrites the log (SDD-021 §4) |
 | `ImageUndo` | `POST /images/{id}/undo` | - | R | - | - | - | In network mode an image is visible to its owner and to an administrator, `E_NOT_FOUND` otherwise (SDD-021) |
 | `ImageRedo` | `POST /images/{id}/redo` | - | R | - | - | - | In network mode an image is visible to its owner and to an administrator, `E_NOT_FOUND` otherwise (SDD-021) |
 | `ImageExport` | `POST /images/{id}/export` | - | R | - | - | - | In network mode an image is visible to its owner and to an administrator, `E_NOT_FOUND` otherwise (SDD-021); writes one file under `exports/images` of the workspace |
