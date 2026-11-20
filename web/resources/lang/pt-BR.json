@@ -880,7 +880,7 @@
         "E_CHAT_NOT_FOUND": "Conversa não encontrada",
         "E_AGENT_UNAVAILABLE": "Não foi possível iniciar o agente",
         "E_COST_CEILING": "Acima de um teto de custo",
-        "E_PUBLISH": "A rede recusou ou falhou na publicação",
+        "E_PUBLISH": "A rede recusou ou falhou no pedido",
         "E_PROVIDER": "O provedor de IA recusou ou falhou",
         "E_PRICE_UNKNOWN": "Sem preço para esse modelo",
         "E_APPROVAL_NOT_FOUND": "Pedido ou regra não encontrado",
