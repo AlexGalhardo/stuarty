@@ -20,13 +20,10 @@ export function start(): void {
 
 	// Tilted product window follows the pointer a little.
 	if (tilt && !reduced && window.matchMedia("(pointer: fine)").matches) {
-		const rx = gsap.quickTo(tilt, "rotateX", { duration: 0.8, ease: "power3.out" });
-		const ry = gsap.quickTo(tilt, "rotateY", { duration: 0.8, ease: "power3.out" });
 		window.addEventListener("pointermove", (e) => {
 			const x = e.clientX / window.innerWidth - 0.5;
 			const y = e.clientY / window.innerHeight - 0.5;
-			ry(-14 + x * 10);
-			rx(6 - y * 8);
+			gsap.to(tilt, { rotateY: -14 + x * 10, rotateX: 6 - y * 8, duration: 0.8, ease: "power3.out", overwrite: "auto" });
 		});
 	}
 

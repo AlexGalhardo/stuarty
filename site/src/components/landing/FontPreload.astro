@@ -1,0 +1,9 @@
+---
+// Preloads the two Inter faces of the landing hero, so the display title is laid out once in its own font: with a
+// late swap the title re-wraps and shifts the page (CLS) on a slow phone.
+import inter400 from "@fontsource/inter/files/inter-latin-400-normal.woff2?url";
+import inter600 from "@fontsource/inter/files/inter-latin-600-normal.woff2?url";
+---
+
+<link rel="preload" href={inter600} as="font" type="font/woff2" crossorigin />
+<link rel="preload" href={inter400} as="font" type="font/woff2" crossorigin />
