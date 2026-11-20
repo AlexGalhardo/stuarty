@@ -38,7 +38,7 @@ func FuzzTokenResponse(f *testing.F) {
 		tok, err := Request(context.Background(), answer{status, body}, "https://token.example/", url.Values{})
 		if err == nil {
 			if tok.AccessToken == "" || tok.ExpiresIn < 0 {
-				t.Fatalf("%d %q: a success with no access token or a negative lifetime (%v)", status, body, tok.ExpiresIn)
+				t.Fatalf("%d %q: no access token or a negative lifetime (%v)", status, body, tok.ExpiresIn)
 			}
 
 			return
@@ -61,8 +61,9 @@ func TestTokenLifetimeThatOverflowsIsUnknown(t *testing.T) {
 	t.Parallel()
 
 	for _, secs := range []string{"9227000000", "18446744074", "9223372036854775807", "-5"} {
-		tok, err := Request(context.Background(), answer{200, []byte(`{"access_token":"at","expires_in":` + secs + `}`)},
-			"https://token.example/", url.Values{})
+		body := []byte(`{"access_token":"at","expires_in":` + secs + `}`)
+
+		tok, err := Request(context.Background(), answer{200, body}, "https://token.example/", url.Values{})
 		if err != nil {
 			t.Fatal(err)
 		}

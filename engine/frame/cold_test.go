@@ -123,7 +123,7 @@ func TestViewFrameColdP95(t *testing.T) {
 	perfgate.Require(t)
 
 	if raceEnabled || testing.CoverMode() != "" {
-		t.Skip("the race detector and coverage instrumentation slow every step") // verify:env-skip instrumentation changes the cost of every step
+		t.Skip("the race detector and coverage slow every step") // verify:env-skip an instrumented build
 	}
 
 	doc := phoneDoc(t, 6)
