@@ -42,6 +42,7 @@ type batch struct {
 	closeTarget    bool                                 // undo and redo close the step they consume
 	closeOpenRedo  bool                                 // a new edit ends the actor's redo chain
 	spawned        []*timeline.Document                 // the timelines the batch made, stored with it
+	checkpoint     bool                                 // an agent's first edit of the day makes a checkpoint first
 }
 
 // commit runs steps 7 to 14 inside the open transaction. It returns the new

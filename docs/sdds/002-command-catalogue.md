@@ -1,7 +1,7 @@
 # SDD-002: Command catalogue of the core
 
 - Amended (2026-11-18) for Stuarty: this is the catalogue of the video domain. Other domains get their own catalogue (ADR-0031, ADR-0038).
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 80 commands have golden cases and pass the registry-wide gates. The binary exposes all 80 commands, 79 of them public (epic 32 added three, C.78 to C.80); `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 86 commands have golden cases and pass the registry-wide gates. The binary exposes all 86 commands, 85 of them public (epic 32 added three, C.84 to C.86); `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -297,9 +297,9 @@ Scope is `edit` unless stated. "Time" marks arguments parsed by A.4. Optional ar
 | --- | --- | --- |
 | `clip.add` | `track_id`, `asset_id`, `start?` (time; default the end of the last item of the track), `source_in?` (time, offset into the asset; default 0), `duration?` (time, as a length; default: the rest of the asset from `source_in`, or `"5s"` for an image), `fit?`, `id?` | Places a video or image asset on a visual track |
 | `audio.add` | `track_id`, `asset_id`, `start?` (default the end of the last item of the track), `source_in?`, `duration?`, `id?` | Places an audio asset, or the audio of a video asset, on an audio track |
-| `clip.add_composition` | `track_id`, `timeline_id`, `start?`, `source_in?`, `duration?` (default the rest of the nested timeline from `source_in`), `fit?`, `id?` | Places another timeline of the production on a visual track as one clip (RF-083, SDD-001 section 3.5.1). Refuses a cycle and a nesting deeper than 4. See C.78 |
-| `composition.create_from_selection` | `item_ids` (1 to 100), `name?`, `timeline_id?`, `id?` | Moves the selected items into a new timeline of the production and puts one composition clip in their place, in one batch. See C.79 |
-| `composition.expand` | `item_id` | The inverse: puts the items of the nested timeline back on the timeline in place of a composition that uses no group feature. See C.80 |
+| `clip.add_composition` | `track_id`, `timeline_id`, `start?`, `source_in?`, `duration?` (default the rest of the nested timeline from `source_in`), `fit?`, `id?` | Places another timeline of the production on a visual track as one clip (RF-083, SDD-001 section 3.5.1). Refuses a cycle and a nesting deeper than 4. See C.84 |
+| `composition.create_from_selection` | `item_ids` (1 to 100), `name?`, `timeline_id?`, `id?` | Moves the selected items into a new timeline of the production and puts one composition clip in their place, in one batch. See C.85 |
+| `composition.expand` | `item_id` | The inverse: puts the items of the nested timeline back on the timeline in place of a composition that uses no group feature. See C.86 |
 | `clip.set_framing` | `item_id`, `fit?`, `crop?` | Sets fit and crop |
 | `clip.set_speed` | `item_id`, `speed` (`"1.5x"`, `"0.5x"` or a rational object) or `curve` (2 to 8 `{t, speed}` points), `ripple?` (`"none"` default, `"track"`) | Changes speed keeping the same source range: the new duration is `ceil(duration × old / new)`, reduced by the rounding excess if that would read past the end of the asset. Keyframe times and transition and fade lengths are scaled by the same ratio and rounded. With `ripple: "track"`, later items on the track shift by the change in length; otherwise a resulting overlap is `E_OVERLAP`. Captions linked to the clip are not changed; the lint reports them as out of sync until `caption.retime_from_clip` runs |
 | `clip.set_color` | `item_id`, `brightness?`, `contrast?`, `saturation?`, `temperature?`, `tint?`, `hue?` | Sets colour adjustment; also white balance and hue rotation (TASK-0233). See C.26 |
@@ -6633,7 +6633,7 @@ Places another timeline of the production on a visual track as one `composition`
 - `err_out_of_source_source_in_at_the_end`
 - `err_overlap`
 
-### C.79 `composition.create_from_selection`
+### C.85 `composition.create_from_selection`
 
 Moves the selected items into a new timeline of the production and puts one composition item in their place, in one batch (RF-083): the way a creator turns a part they built into something they can reuse. The command is pure: it makes the new document and returns it in `Result.Spawned` (A.3); the service stores it in the same transaction as the commit.
 
@@ -6699,7 +6699,7 @@ Moves the selected items into a new timeline of the production and puts one comp
 - `err_overlap_unselected_item_in_range`
 - `err_limit_depth_five`
 
-### C.80 `composition.expand`
+### C.86 `composition.expand`
 
 Puts the items of a nested timeline on this timeline in place of a composition item that uses no group feature: the inverse of `composition.create_from_selection`. The nested timeline stays in the production, unchanged.
 

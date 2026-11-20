@@ -61,6 +61,11 @@ type AudioSource struct {
 	Voice       string            `json:"voice,omitempty"`   // voice preset (SDD-004 §7); absent means none
 	// Timeline is the timeline whose assets table names AssetID, for a source that comes from a composition.
 	Timeline string `json:"timeline,omitempty"`
+	// Chain is the enabled processors of the item and, when its track has a chain too, Track names the track and
+	// BusChain is that chain (the same on every source of the track): SDD-004 §7.1. Absent means none.
+	Chain    []ProcessorSpec `json:"chain,omitempty"`
+	Track    string          `json:"track,omitempty"`
+	BusChain []ProcessorSpec `json:"bus_chain,omitempty"`
 }
 
 // SpeedRamp is the speed curve of an item as the plan carries it (SDD-004 §3.11): the points,

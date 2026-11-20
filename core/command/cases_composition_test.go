@@ -6,7 +6,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
-// Golden cases of the composition commands (SDD-002 C.78 to C.80). The production a case runs in is its
+// Golden cases of the composition commands (SDD-002 C.84 to C.86). The production a case runs in is its
 // timelines.json: the other timelines the command may read.
 
 const (
