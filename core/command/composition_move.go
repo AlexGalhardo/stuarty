@@ -15,7 +15,7 @@ import (
 func init() {
 	Register(Define(Spec{
 		Name:    "composition.create_from_selection",
-		Summary: "Moves items into a new timeline.",
+		Summary: "Moves the selected items into a new timeline and puts one composition clip in their place.",
 		Description: "Makes a new timeline of the project from the selected items (same tracks, same frame size and rate, " +
 			"starting at frame 0) and replaces them with one composition of it, on the top-most visual track of the selection, " +
 			"for the same frames. The inverse puts the items back; the new timeline stays in the project.",
@@ -28,7 +28,7 @@ func init() {
 
 	Register(Define(Spec{
 		Name:    "composition.expand",
-		Summary: "Puts a composition's items back.",
+		Summary: "Puts the items of a composition's timeline back on this timeline in place of the composition.",
 		Description: "The inverse of composition.create_from_selection, for a composition that only places its timeline: no opacity, " +
 			"mask, effect, transform, keyframe, transition, blend or volume of its own, the whole timeline shown, and the same frame " +
 			"size and rate. The nested timeline stays in the project.",
