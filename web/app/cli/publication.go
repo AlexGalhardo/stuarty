@@ -181,7 +181,11 @@ var publicationCreateCmd = &spec{
 			Kind:  kindString,
 			Usage: "the id of a succeeded export job of the project: the video (this or --post)",
 		},
-		{Name: "thumbnail", Kind: kindString, Usage: "the cover: the export job of a still, or the job_id of image:export"},
+		{
+			Name:  "thumbnail",
+			Kind:  kindString,
+			Usage: "the cover: the export job of a still, or the job_id of image:export",
+		},
 		{Name: "post", Kind: kindString, Usage: "the id of a text of the kind post: a blog post (this or --export)"},
 	}, targetFlags()...),
 	run: func(ctx context.Context, c *call) (*output, error) {
