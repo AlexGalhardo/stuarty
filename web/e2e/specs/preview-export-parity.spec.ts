@@ -9,7 +9,7 @@ import {
 	openCase,
 	stepThrough,
 } from "../support/golden";
-import { nestedProject } from "../support/nested";
+import { nestedProject, pictureGroupProject } from "../support/nested";
 import { canvasOf } from "../support/webcodecs";
 import { expect, test } from "./helpers";
 
@@ -56,6 +56,29 @@ test.describe("preview-export-parity", () => {
 			});
 		});
 	}
+
+	// A group of another timeline of the production that holds a picture wider
+	// than the poster: the preview cuts the poster with the size of the picture,
+	// which only the nested timeline's document names, and the picture's edges
+	// let the displacement of the group be measured.
+	test(`group of a wide picture of another timeline: drawn as the export draws it (SSIM of at least ${MIN_SSIM}, at most ${MAX_DISPLACEMENT} px)`, async ({
+		page,
+		request,
+	}) => {
+		const project = await pictureGroupProject(request);
+		await openCase(page, project.id, "?executor=rust");
+		await expect(canvasOf(page)).toHaveAttribute("data-executor", "rust");
+		await stepThrough(page, project.frames, async (frame) => {
+			await compareFrame(
+				page,
+				"group-picture",
+				project.id,
+				frame,
+				"preview-export-parity",
+				true,
+			);
+		});
+	});
 
 	for (const name of goldenCases()) {
 		test(`golden ${name}: the renderer's frames match the export's (SSIM of at least ${MIN_SSIM}, at most ${MAX_DISPLACEMENT} px)`, async ({

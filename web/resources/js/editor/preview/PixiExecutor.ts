@@ -72,6 +72,7 @@ import {
 	type ShadowOutlineImage,
 	shadowOutline,
 } from "./shadowOutline";
+import { inspectSourceSize, type SourceSize, SourceSizes } from "./sourceSizes";
 import { STILL_POSTER_WIDTH, stillFrameRect } from "./stillFrame";
 import type {
 	LayerGeometry,
@@ -204,6 +205,8 @@ export class PixiExecutor implements PreviewExecutor {
 	private readonly stills = new Map<string, Texture>();
 	// The poster of a still asset, shared by every crop of that asset.
 	private readonly stillImages = new Map<string, HTMLImageElement>();
+	// The source size of each asset, which the crop of a still is measured in.
+	private readonly sizes: SourceSizes;
 	// Pixels of a layer, read once per source, to paint its shadow and outline.
 	private shadowScratch: HTMLCanvasElement | null = null;
 	private readonly shadowStamps = new WeakMap<object, number>();
@@ -219,15 +222,19 @@ export class PixiExecutor implements PreviewExecutor {
 		timers?: PoolTimers,
 		// Asset pixel size, the space the plan's crop is measured in. Absent
 		// means the poster is the source (a still at most STILL_POSTER_WIDTH wide).
-		private readonly sources: (
-			asset: string,
-		) => { width: number; height: number } | null = () => null,
+		sources: (asset: string) => { width: number; height: number } | null = () =>
+			null,
 	) {
 		const poolTimers = timers ?? browserTimers;
 		this.windows = new PlanWindows(() =>
 			Promise.reject(new Error("no project")),
 		);
 		const redraw = (): void => this.redraw();
+		this.sizes = new SourceSizes(
+			sources,
+			(timeline, asset) => inspectSourceSize(client, timeline, asset),
+			redraw,
+		);
 		this.decoder = new DecodeClient<VideoFrame>({
 			preference: decoderPreference(window.location.search),
 			createWorker: createDecodeWorker,
@@ -1490,7 +1497,13 @@ export class PixiExecutor implements PreviewExecutor {
 		if (cached !== undefined) return cached;
 		const image = this.stillImages.get(layer.asset);
 		if (image !== undefined) {
-			const texture = this.textureOfStill(image, layer.asset, crop);
+			const source = this.sizes.of(
+				layer.asset,
+				projectId,
+				this.info?.projectId ?? projectId,
+			);
+			if (source === undefined) return null;
+			const texture = this.textureOfStill(image, source, crop);
 			this.stills.set(key, texture);
 			return texture;
 		}
@@ -1511,10 +1524,9 @@ export class PixiExecutor implements PreviewExecutor {
 
 	private textureOfStill(
 		image: HTMLImageElement,
-		asset: string,
+		source: SourceSize | null,
 		crop: [number, number, number, number],
 	): Texture {
-		const source = this.sources(asset);
 		const rect = stillFrameRect(
 			crop,
 			image.naturalWidth,
