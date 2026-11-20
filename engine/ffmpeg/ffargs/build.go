@@ -555,7 +555,10 @@ func WebPStill(pol Policy, pngPath, webpPath string, quality int) ([]string, err
 		LogErrorOnly: true,
 		Inputs:       []Input{FileInput(pngPath)},
 		Outputs: []Output{
-			{Format: "image2", Path: webpPath, Maps: []string{"0:v:0"}, NoAudio: true, NoSubs: true, NoData: true, Opts: opts},
+			{
+				Format: "image2", Path: webpPath, Maps: []string{"0:v:0"},
+				NoAudio: true, NoSubs: true, NoData: true, Opts: opts,
+			},
 		},
 	}.Argv(pol)
 }
