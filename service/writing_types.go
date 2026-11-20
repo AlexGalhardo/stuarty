@@ -92,7 +92,7 @@ type TextWriteRequest struct {
 	// ItemID names the text to write; empty makes a new text (Title and TextKind).
 	ItemID   string `json:"item_id,omitempty"`
 	Title    string `json:"title,omitempty"`     // 1 to 120 characters; needed to make a text
-	TextKind string `json:"text_kind,omitempty"` // making a text: script, copy (default) or caption
+	TextKind string `json:"text_kind,omitempty"` // making a text: script, copy (default), caption or post
 	Text     string `json:"text"`                // the Markdown, at most 256 KiB
 	// BaseRevision, when set, must be the latest revision of the text: the write is refused when someone wrote
 	// after the revision the writer read.

@@ -3020,7 +3020,7 @@
     },
     "write": {
       "title": "Escrever",
-      "intro": "Roteiros, textos e legendas das suas produções, escritos por você ou com um modelo. Cada salvamento é uma revisão à qual você pode voltar.",
+      "intro": "Roteiros, textos, legendas e posts de blog das suas produções, escritos por você ou com um modelo. Cada salvamento é uma revisão à qual você pode voltar.",
       "filter": {
         "project": "Projeto",
         "kind": "Tipo",

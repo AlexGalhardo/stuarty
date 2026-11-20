@@ -1162,7 +1162,7 @@ stuarty item:add --project <id> --kind output --title <t> --job <export job id>
 | `--title` | string |  | 1 to 120 characters (required) |
 | `--position` | integer |  | where in the order of the items, from 0 (default: the end) |
 | `--text` | string |  | a text item: a file with its Markdown, or - for standard input |
-| `--text-kind` | string |  | a text item: script, copy (default) or caption |
+| `--text-kind` | string |  | a text item: script, copy (default), caption or post |
 | `--preset` | string |  | a timeline: 9:16 (default), 1:1, 16:9 or 4:5 |
 | `--fps` | string |  | a timeline: 30 (default), or n/1001 |
 | `--job` | string |  | an output: a succeeded export job of this project |
@@ -2839,13 +2839,13 @@ stuarty publication:cancel pub_0123456789 --target tgt_0123456789
 List the scripts, copy and captions of a project, or of every project
 
 ```text
-stuarty text:list [--project <id>] [--kind script|copy|caption] [--state active|trashed]
+stuarty text:list [--project <id>] [--kind script|copy|caption|post] [--state active|trashed]
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `--project` | string |  | only the texts of this project |
-| `--kind` | string |  | script, copy or caption |
+| `--kind` | string |  | script, copy, caption or post |
 | `--state` | string |  | active (default) or trashed |
 | `--cursor` | string |  | continue a list from this cursor |
 | `--limit` | integer | `50` | items per page |
@@ -2883,7 +2883,7 @@ stuarty text:show pit_3c5v8n2w6d --project prj_7k2m9x4q1b
 Make a text, or save a new revision of one, from a Markdown file
 
 ```text
-stuarty text:write --project <id> --title <t> [--kind script|copy|caption] --text <file|->
+stuarty text:write --project <id> --title <t> [--kind script|copy|caption|post] --text <file|->
 stuarty text:write <item> --project <id> --text <file|-> [--title <t>] [--base <revision>]
 ```
 
@@ -2891,7 +2891,7 @@ stuarty text:write <item> --project <id> --text <file|-> [--title <t>] [--base <
 | --- | --- | --- | --- |
 | `--text` | string |  | the Markdown: a file, or - for standard input (required) |
 | `--title` | string |  | the title: needed to make a text, a new title when saving one |
-| `--kind` | string |  | making a text: script, copy (default) or caption |
+| `--kind` | string |  | making a text: script, copy (default), caption or post |
 | `--base` | integer |  | the revision you read: a newer one is refused |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
