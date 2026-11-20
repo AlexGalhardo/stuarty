@@ -8,6 +8,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/providers"
 	"github.com/AlexGalhardo/stuarty/service/providers/anthropic"
+	"github.com/AlexGalhardo/stuarty/service/providers/google"
 	"github.com/AlexGalhardo/stuarty/service/providers/openai"
 	"github.com/AlexGalhardo/stuarty/service/providers/openrouter"
 )
@@ -19,6 +20,7 @@ func adapters() []providers.Provider {
 		openai.New(),
 		anthropic.New(),
 		openrouter.New(),
+		google.New(),
 	}
 }
 

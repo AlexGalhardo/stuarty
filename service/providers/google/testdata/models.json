@@ -1,0 +1,1 @@
+{"models":[{"name":"models/gemini-omni-1.2-flash","displayName":"Gemini Omni 1.2 Flash","inputTokenLimit":131072,"outputTokenLimit":65536},{"name":"models/gemini-3.8-flash","displayName":"","inputTokenLimit":1048576,"outputTokenLimit":65536}]}
