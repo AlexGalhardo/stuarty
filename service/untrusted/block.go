@@ -98,3 +98,22 @@ func writeAttrs(b *strings.Builder, attrs Attrs) {
 		fmt.Fprintf(b, ` %s="%s"`, k, strings.ReplaceAll(Escape(Clean(attrs[k])), `"`, "&quot;"))
 	}
 }
+
+// Plain is the text inside a block made by Block, for the pages of the application, which draw it as text
+// and so do not need the envelope that tells a model the words are data. A text that is not a block is
+// returned as it is. The escape is undone and the note that the text was cut stays.
+func Plain(block string) string {
+	rest, ok := strings.CutPrefix(block, openTag)
+	if !ok {
+		return block
+	}
+
+	_, body, ok := strings.Cut(rest, ">\n")
+	if !ok {
+		return block
+	}
+
+	body = strings.TrimSuffix(body, "\n"+closeTag)
+
+	return strings.NewReplacer("&lt;", "<", "&amp;", "&").Replace(strings.TrimSpace(body))
+}

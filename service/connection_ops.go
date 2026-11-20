@@ -10,6 +10,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/connections/oauth"
 	"github.com/AlexGalhardo/stuarty/service/providers"
 	"github.com/AlexGalhardo/stuarty/service/publish/destinations"
+	"github.com/AlexGalhardo/stuarty/service/untrusted"
 )
 
 // ConnectionListRequest has no member.
@@ -257,7 +258,8 @@ func (s *svc) ConnectionRemove(ctx context.Context, req ConnectionRef) (*connect
 
 // ConnectionTest makes one request through the connection.
 func (s *svc) ConnectionTest(ctx context.Context, req ConnectionRef) (*ConnectionTestResult, error) {
-	if _, err := s.connectionCaller(ctx, "ConnectionTest"); err != nil {
+	c, err := s.connectionCaller(ctx, "ConnectionTest")
+	if err != nil {
 		return nil, err
 	}
 
@@ -266,5 +268,11 @@ func (s *svc) ConnectionTest(ctx context.Context, req ConnectionRef) (*Connectio
 		return nil, connectionError(err)
 	}
 
-	return &ConnectionTestResult{ID: req.ID, OK: res.OK, Status: res.Status, Message: res.Message}, nil
+	message := res.Message
+	if c.Browser || c.Actor == uiActor {
+		// A page draws the answer as text; the envelope that marks it as data is for a model (VV-322).
+		message = untrusted.Plain(message)
+	}
+
+	return &ConnectionTestResult{ID: req.ID, OK: res.OK, Status: res.Status, Message: message}, nil
 }

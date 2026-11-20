@@ -201,6 +201,11 @@ func TestConnectionLifecycleThroughTheService(t *testing.T) {
 		t.Fatalf("test %+v, %v", tested, err)
 	}
 
+	// VV-322: the session of the UI draws the answer as text, with no envelope.
+	if strings.Contains(tested.Message, "untrusted_media_text") {
+		t.Errorf("the UI got the envelope: %q", tested.Message)
+	}
+
 	if dst.hits() != 1 || dst.auth[0] != "Bearer "+secret {
 		t.Errorf("the destination saw %v", dst.auth)
 	}
@@ -622,4 +627,27 @@ func TestDoctorReportsAMasterKeyFileThatIsNotAKey(t *testing.T) {
 	}
 
 	t.Fatal("no vault check in the doctor report")
+}
+
+// VV-322: the answer of a test is data for a key (inside the envelope) and plain text for the session of the UI.
+func TestConnectionTestEnvelopeIsForAgentsOnly(t *testing.T) {
+	dst := newDestination(t)
+	e := newConnEnv(t, vault.NewMemoryProvider(nil))
+
+	created, err := e.svc.ConnectionCreate(e.as(ui), connectionRequest(dst.srv.URL+"/ping", "sk-test-SECRET-1a2b3c"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	agent := service.WithCaller(context.Background(), service.Caller{Actor: "key:key_aaaaaaaaaa", Scopes: service.AllScopes})
+
+	asData, err := e.svc.ConnectionTest(agent, service.ConnectionRef{ID: created.ID})
+	if err != nil || !strings.HasPrefix(asData.Message, "<untrusted_media_text ") {
+		t.Errorf("a key must get the envelope: %+v, %v", asData, err)
+	}
+
+	asText, err := e.svc.ConnectionTest(e.as(ui), service.ConnectionRef{ID: created.ID})
+	if err != nil || strings.Contains(asText.Message, "untrusted_media_text") || !strings.Contains(asText.Message, "pong") {
+		t.Errorf("the UI must get the text only: %+v, %v", asText, err)
+	}
 }
