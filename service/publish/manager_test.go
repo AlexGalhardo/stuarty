@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	core "github.com/AlexGalhardo/stuarty/core/publish"
 )
@@ -792,6 +793,39 @@ func TestApprovalSummaryIsCleaned(t *testing.T) {
 	s := r.env.asks[0].Summary
 	if len(s) > 500 || strings.ContainsAny(s, "\n\r\t") {
 		t.Errorf("summary (%d): %q", len(s), s)
+	}
+}
+
+// The person who approves a scheduled post reads whether it carries the AI disclosure flag, as for a post
+// sent now (SDD-020 section 20, RF-407), and the summary stays within its 500 characters with every part at
+// its longest: the text gives way.
+func TestApprovalSummaryNamesTheAIDisclosure(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	r := newRig(t)
+	r.gw.disclosure = "wanted, but Some Network With A Long Name takes no such flag"
+	r.gw.account = strings.Repeat("A", 80)
+
+	p, err := r.m.Create(ctx, CreateInput{
+		ProjectID: "prj_1", Title: strings.Repeat("T", 200), Text: strings.Repeat("x", 400), Export: "e",
+		Targets: []TargetInput{tin("2026-11-21T09:00", "America/Argentina/ComodRivadavia")},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := r.m.Schedule(ctx, ScheduleInput{ID: p.ID, TargetID: p.Targets[0].ID}); err != nil {
+		t.Fatal(err)
+	}
+
+	s := r.env.asks[0].Summary
+	if !strings.Contains(s, "AI disclosure: "+r.gw.disclosure) {
+		t.Errorf("the summary does not say whether the AI flag is set: %s", s)
+	}
+
+	if n := utf8.RuneCountInString(s); n > 500 {
+		t.Errorf("the summary is %d characters: %s", n, s)
 	}
 }
 

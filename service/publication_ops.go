@@ -602,7 +602,7 @@ func (g pubGateway) Resolve(ctx context.Context, p pub.Post) (*pub.Resolved, err
 	out := &pub.Resolved{
 		Network: t.desc.Network, NetworkName: t.desc.Name, Account: t.account.Title,
 		FileName: path.Base(t.input.Output.Rel), FileBytes: t.input.Output.Bytes,
-		CostMicros: t.desc.PostCostMicros, Currency: t.desc.PostCostCurrency,
+		CostMicros: t.desc.PostCostMicros, Currency: t.desc.PostCostCurrency, Disclosure: disclosureText(t),
 	}
 
 	if !p.Strict {
