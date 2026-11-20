@@ -131,7 +131,10 @@ type Google struct {
 	conns    ConnectionSource
 	ep       Endpoints
 	redirect string
-	flows    *oauth.Flows
+	// signIns and links wait apart: anyone may begin a sign-in, and the store of waiting flows is capped, so
+	// a flood of sign-ins would otherwise push out the linking a user began with their password.
+	signIns  *oauth.Flows
+	links    *oauth.Flows
 	nonceKey [32]byte
 	now      func() time.Time
 }
@@ -158,7 +161,7 @@ func NewGoogle(o GoogleOptions) (*Google, error) {
 	g := &Google{
 		db: o.DB, users: o.Users, conns: o.Connections, ep: o.Endpoints,
 		redirect: strings.TrimRight(o.AppURL, "/") + GoogleCallbackPath,
-		flows:    oauth.NewFlows(o.Now), now: o.Now,
+		signIns:  oauth.NewFlows(o.Now), links: oauth.NewFlows(o.Now), now: o.Now,
 	}
 
 	if _, err := rand.Read(g.nonceKey[:]); err != nil {
@@ -472,7 +475,7 @@ func (g *Google) begin(ctx context.Context, prefix, purpose, actor string) (stri
 		return "", err
 	}
 
-	state, challenge := g.flows.Begin(oauth.Pending{
+	state, challenge := g.flowsOf(purpose).Begin(oauth.Pending{
 		ConnectionID: s.ConnectionID, Network: purpose, RedirectURI: g.redirect, Actor: actor, Browser: true,
 	})
 
@@ -530,7 +533,10 @@ func (g *Google) Complete(ctx context.Context, req CompleteRequest) (Completed, 
 		actor = "user:" + req.SessionUserID // no session: "user:", which no flow was begun by
 	}
 
-	p, err := g.flows.Take(flowState, actor, true)
+	// A state shown with the prefix of the other purpose is spent there too, so it cannot be tried again.
+	_, _ = g.flowsOf(otherPurpose(purpose)).Take(flowState, "", true)
+
+	p, err := g.flowsOf(purpose).Take(flowState, actor, true)
 	if err != nil || p.Network != purpose {
 		return Completed{}, ErrFlow
 	}
@@ -613,6 +619,23 @@ func (g *Google) exchange(
 	})
 
 	return id, err
+}
+
+// flowsOf is the store of the flows of a purpose.
+func (g *Google) flowsOf(purpose string) *oauth.Flows {
+	if purpose == flowLink {
+		return g.links
+	}
+
+	return g.signIns
+}
+
+func otherPurpose(purpose string) string {
+	if purpose == flowLink {
+		return flowSignIn
+	}
+
+	return flowLink
 }
 
 // splitState reads the state the browser carries: l. or k. and the state of the flow.

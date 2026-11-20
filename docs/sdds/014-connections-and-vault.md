@@ -251,7 +251,7 @@ The redirect address is `APP_URL` followed by `/login/google/callback`, built by
 
 ### 12.5 The sign-in cookie and the `state`
 
-The `state` the browser carries is `l.` (sign-in) or `k.` (linking) followed by the `state` of the flow. The prefix only chooses which actor to check; the flow records its purpose in `Pending.Network` (`google:login`, `google:link`), and a mismatch spends the state and refuses.
+The `state` the browser carries is `l.` (sign-in) or `k.` (linking) followed by the `state` of the flow. The prefix chooses which actor to check and where the flow waits: sign-ins and linkings wait in two separate stores of `oauth.Flows`, because anyone may begin a sign-in and the store is capped (`oauth.MaxPending`), so a flood of sign-ins must not push out a linking a user began with their password. The flow records its purpose in `Pending.Network` (`google:login`, `google:link`), and a state shown with the other prefix is spent in both stores and refused.
 
 - **Linking** binds the flow to the actor of the browser session, `user:<id>`, which `Flows.Take` already checks.
 - **Signing in** has no session, so the flow is bound to a random cookie: `__Host-stuarty_gsi` (`stuarty_gsi` without TLS, the case of SDD-007 section 4.3 item 4; both `HttpOnly`, `SameSite=Lax`, `Path=/`, 10 minutes). The actor of the flow is `gsi:` plus the SHA-256 of its value. A callback for a `state` that another browser began, which is what a forged callback is, finds no cookie or another one, and is refused after the `state` is spent. `complete` clears the cookie whatever the result.
