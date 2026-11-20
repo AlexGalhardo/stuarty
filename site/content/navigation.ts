@@ -196,6 +196,7 @@ export const navigation: NavCategory[] = [
 			"verify-a-release",
 			"observability",
 			"privacy",
+			"security",
 			"desktop-updates",
 		],
 	},
@@ -225,7 +226,7 @@ export const navigation: NavCategory[] = [
 	{
 		dir: "troubleshooting",
 		title: "Troubleshooting",
-		pages: ["common-problems", "ffmpeg-missing", "no-encoder", "workspace-locked", "import-fails", "slow-export", "diagnostic-bundle"],
+		pages: ["common-problems", "ffmpeg-missing", "no-encoder", "workspace-locked", "import-fails", "slow-export", "publish-fails", "diagnostic-bundle"],
 	},
 	{
 		dir: "contributing",
