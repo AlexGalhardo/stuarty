@@ -1,6 +1,6 @@
 # SDD-019: Writing: scripts, copy and captions
 
-- Status: Draft (2026-11-19). Written by epic 17; the code follows in the same epic.
+- Status: Draft (2026-11-19). Written by epic 17; the code follows in the same epic. Section 13 (the post, its text kind, validation and sanitised rendering) was added by epic 23 on 2026-11-20.
 - Depends on: ADR-0031 (writing is a domain of the same core), ADR-0039 (a project is a production), ADR-0036 (the user brings the provider), ADR-0020 (untrusted text), ADR-0032 (generation waits for approval), SDD-000 (names), SDD-003 (surfaces), SDD-005 section 5.12 (items), SDD-015 (approval and cost), SDD-016 (providers)
 - Implements: PRD-004 RF-350, RF-351, RF-352, RF-354 (the script structure that a timeline will follow: RF-352 stops at the text; turning it into a timeline is out of scope)
 - Owner area: `core/writing/`, the text operations in `service/`, the controllers, commands and tool arguments in `web/app/`, the page Write in `web/resources/js/pages/Write/`
@@ -19,6 +19,7 @@
 10. Untrusted text
 11. The page Write
 12. Tests
+13. The post (epic 23)
 
 ## 1. Overview
 
@@ -41,6 +42,7 @@ A text is a project item of kind `text` (SDD-005 section 5.12) with a **text kin
 | `script` | what is said and shown in a video | scenes, narration and on-screen text (section 4) |
 | `copy` | free text: an advertisement, a commercial, a newsletter | none |
 | `caption` | the text that goes out with a post | one text with variants per network (section 5) |
+| `post` | a blog post (section 13) | a front matter and a Markdown body with images from the project's assets |
 
 The body is Markdown, at most 256 KiB (`project.MaxText`). The text kind is fixed when the text is made: `ProjectItemAdd` with kind `text` takes `text_kind` on every surface (`project_item` `add`, `item:add --text-kind`, `POST /projects/{id}/items`) and without one makes a `copy`, and `TextWrite` without an `item_id` makes the item. Changing the kind of a text is not an operation: the structure a kind adds is read from the body, so a person who wants a caption from a copy copies the body.
 
@@ -194,3 +196,44 @@ Strings are in `en` and `pt-BR`. The page follows `docs/design-system.md` and th
 | `web/contract` | one row per operation of section 8 on the three surfaces, and the scenario `writing.json` |
 | `web/e2e/specs/writing.spec.ts` | write a script, draft a caption, see the counters, revert |
 | security | an agent cannot reach a text of another user or of another project of its key; a body is delimited; the preview does not render HTML |
+
+## 13. The post (epic 23)
+
+A blog post (PRD-004 RF-353) is a text of the kind `post`. It stays a plain file a person can read and write by hand, as a caption does: **a front matter, then the Markdown body**, both in the one body of the text, so the revisions of section 3 cover them together and `TextWrite` needs no new member. The kind is fixed when the text is made (`text_kind` `post`), as section 2 says, and `project_items.text_kind` accepts it from the migration `text_kind_post`.
+
+```text
+---
+title: How I cut a video in a day
+slug: how-i-cut-a-video-in-a-day
+summary: One sentence for the list and the search result.
+tags: video, editing
+cover: ast_0123456789
+canonical: https://example.com/blog/how-i-cut-a-video-in-a-day
+language: en
+---
+The body, in Markdown, with a picture: ![the desk](asset:ast_0123456789)
+```
+
+**The front matter** starts on the first line with `---` and ends at the next line that is `---`; between them each line is `key: value`. A value may be in double quotes (`\"` and `\\` are escapes). The keys are `title` (required), `slug`, `summary`, `tags`, `cover`, `canonical` and `language`; a key twice, an unknown key and a line that is not `key: value` are issues. `tags` is a list separated by commas, with or without `[` `]`. A text with no front matter has no metadata: its issue is `required` on `title`.
+
+**`core/writing.ParsePost(body)`** returns the `PostMeta` (the members above and the effective slug), the body after the front matter (`Markdown`) and the issues of the syntax; **`CheckPost(body, images)`** adds the rules of the values, with `images` the ids of the assets the caller found in the project (kind image), and returns every issue at once, each with a `path`, a `code` and a sentence, as `ValidateCaption` does:
+
+| Path | Rule | Code |
+| --- | --- | --- |
+| `title` | 1 to 200 characters, no control and no invisible or direction-changing character | `required`, `too_long`, `invalid` |
+| `slug` | 1 to 80 characters of `a-z`, `0-9` and `-`, no leading, trailing or doubled `-`; empty means `Slugify(title)` (lower-case, accents removed, anything else a `-`), and a title with nothing to slug is `required` | `invalid`, `too_long` |
+| `summary` | at most 500 characters on one line, no control character | `too_long`, `invalid` |
+| `tags` | at most 20, each 1 to 40 characters with no comma and no control character, no duplicate (case-insensitive) | `too_many`, `too_long`, `invalid` |
+| `cover` | an asset id (`ast_` and 10 characters) that is in `images`, or empty | `invalid`, `unknown_asset` |
+| `canonical` | an `https` URL of at most 2,048 characters with a host and no user information, or empty | `invalid` |
+| `language` | a language tag (`en`, `pt-BR`, `zh-Hant-TW`: 2 or 3 letters, then groups of 2 to 8 letters or digits) or empty | `invalid` |
+| `body` | not empty after trimming, at most 256 KiB with the front matter (the limit of every text), valid UTF-8 | `required`, `too_long`, `invalid` |
+| `body.images` | an image is `![alt](asset:<id>)` and the id is in `images`; at most 20 images; an image with any other address (`http`, `data`, a path) is an issue, because a post that points outside the project would make the reader's browser or the destination fetch from where nobody approved | `external_image`, `unknown_asset`, `too_many` |
+
+**`Images(markdown, cover)`** lists the ids of the assets a post uses, cover first, each once, in the order of the body.
+
+**The rendering is `RenderHTML(markdown, src)`**, a renderer of `core/writing` for a documented subset, written for this purpose because the repository has no renderer of Markdown to HTML (the one of `core/chat` writes Markdown) and a library is a dependency decision that is the author's (QUESTIONS.md; the subset below is what the destinations need, and a full CommonMark renderer replaces it behind the same function if the author approves one). The renderer **never copies text into the output without escaping it**: every `&`, `<`, `>`, `"` and `'` of the text becomes an entity, and the only tags it ever writes are the fixed ones below, so raw HTML in a post is shown as text and a script is never a tag. The subset: headings `#` to `######` (`h1` to `h6`), paragraphs, block quotes (`>`), unordered (`-`, `*`, `+`) and ordered (`1.`) lists of one level, fenced code (``` ``` ```), horizontal rules (`---`), and inline `**strong**`, `*emphasis*`, `` `code` ``, links `[text](address)` and images `![alt](asset:id)`. A link whose address is not `http`, `https`, `mailto`, a path that starts with `/` or an anchor that starts with `#` (so `javascript:`, `data:`, `vbscript:` and every unknown scheme, in any case, with or without the white space and the control characters a browser ignores) is written as its text with no anchor; an allowed link gets `rel="noopener noreferrer"`; an image is `<img src="<src(id)>" alt="...">` with the address the caller gave (`images/<file>` in a package), and an id `src` does not know is written as its alt text. Nothing else is rendered: tables, footnotes, autolinks, setext headings, raw HTML, nested lists and reference links stay text. The output is deterministic, so a test pins it and the digest of the package is stable.
+
+**Untrusted text.** A post is the creator's own text and is stored and returned as it is (section 10); the defence of an output that is HTML is this renderer, tested with hostile posts (SDD-007 T-94). The page Write shows the preview of a post as section 11 says for every text (text nodes from the structure `PostCheck` returned: the editor never sets HTML); the HTML itself is for the destinations and for `PostCheck`, which returns it as a field of text.
+
+**`PostCheck`** (domain `writing`, scope `read`, SDD-020 section 48) reads a stored post (`project_id`, `item_id`), resolves the images against the active image assets of the project, and answers the metadata, the issues, the images with their file names and the HTML. The page Write shows the issues and, for a post, the list of images and the destinations that can receive it; it computes none of them.

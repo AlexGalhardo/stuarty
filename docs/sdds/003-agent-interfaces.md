@@ -4265,6 +4265,7 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `TextRevisions`, `TextRevert` | `project_item` (`action` `revisions`, `revert`) | `text:revisions`, `text:revert` | `GET /projects/{id}/texts/{item_id}/revisions`, `POST /projects/{id}/texts/{item_id}/revert` |
 | `TextDraft` | `job_start` (kind `text.draft`) | `text:draft` | `POST /projects/{id}/texts/{item_id}/draft` |
 | `CaptionValidate`, `ScriptEstimate` | `project_item` (`action` `check`) | `caption:validate`, `script:estimate` | `POST /captions/validate`, `POST /scripts/estimate` |
+| `PostCheck` | `project_item` (`action` `check` on a text of the kind `post`) | `post:check` | `GET /projects/{id}/texts/{item}/post` |
 | `ImageCreate` | `image` (`action` create) | `image:create` | `POST /images` |
 | `ImageList` | `image` (`action` list) | `image:list` | `GET /images` |
 | `ImageDescribe` | `image` (`action` show) | `image:show` | `GET /images/{id}` |

@@ -1,6 +1,6 @@
 # SDD-020: Publishing: the connector frame, YouTube, Instagram and Facebook
 
-- Status: Draft (2026-11-19). Written by epic 18 (sections 1 to 14: the connector frame and YouTube); the code follows in the same epic. Part 2 (sections 15 to 22, Instagram and Facebook) was written by epic 19 on 2026-11-19. Part 3 (sections 23 to 31: the publication, the calendar, the approval of a scheduled post and the scheduler) was written by epic 20. Epics 22, 44 and 45 add their own parts below.
+- Status: Draft (2026-11-19). Written by epic 18 (sections 1 to 14: the connector frame and YouTube); the code follows in the same epic. Part 2 (sections 15 to 22, Instagram and Facebook) was written by epic 19 on 2026-11-19. Part 3 (sections 23 to 31: the publication, the calendar, the approval of a scheduled post and the scheduler) was written by epic 20. Epics 22, 44 and 45 add their own parts below. Part 5 (sections 41 to 49: blog posts and their four destinations) was written by epic 23 on 2026-11-20.
 - Depends on: ADR-0032 (publishing waits for a person), ADR-0033 (the vault), ADR-0035 (the user's own developer apps), ADR-0039 (a publication belongs to a project), ADR-0046 (the publishing scheduler), SDD-000 (names), SDD-003 (agent interfaces), SDD-005 (tables), SDD-007 (threat model), SDD-014 (connections), SDD-015 (approval and cost)
 - Implements: PRD-004 RF-400, RF-401 (YouTube, Instagram, Facebook), RF-402 to RF-406, RF-407 (AI disclosure), RF-408, NFR-063, NFR-064
 - Owner area: `core/publish/`, `service/publish/`, `service/social/`, `service/social/youtube/`, `service/social/meta/`, `service/social/instagram/`, `service/social/facebook/`, `service/connections/oauth/`, the publishing operations in `service/`, the controllers, commands and the callback route in `web/app/`, the setup guide and the publish dialog of the Connections page, the Publish pages in `web/resources/js/pages/Publish/`
@@ -44,6 +44,18 @@ Part 3, the calendar and the scheduler (epic 20):
 29. Tables, events and surfaces of the publication
 30. The calendar and the editor
 31. Tests of the publication
+
+Part 5, blog posts and their four destinations (epic 23):
+
+41. What the official pages said (read on 2026-11-20)
+42. The destinations and their connections
+43. The post that is approved and the package
+44. Files
+45. WordPress
+46. The webhook: payload, signature and address rules
+47. The read API and the scope `posts:read`
+48. Operations, tables and surfaces of part 5
+49. Tests of part 5
 
 ## 1. Overview
 
@@ -498,3 +510,180 @@ The page `/publish` of the app (`web/resources/js/pages/Publish/`): a month view
 | The approval request of a target, a rule that approves, a ceiling, the cost; a scheduled post sends only to the account that was approved | `go test ./service/publish/... -run TestApproval` and `-run TestCost`; `TestPublication*` in `web/app/servicetest` |
 | The surfaces agree | `go test ./web/contract/...` |
 | The calendar, the list and the editor, in both languages, by keyboard, with the fake connector | `web/e2e/specs/publish-calendar.spec.ts` |
+
+## Part 5: Blog posts and their four destinations (epic 23)
+
+A creator writes a post (SDD-019 section 13) and sends it where their blog lives: as files for a static site generator, to WordPress, to a webhook of their own automation, or by letting their own system read it from an API. A destination is one more kind of connection and one more kind of target of the publication of part 3, so the calendar, the approval, the lease, the retries and the results are the ones of sections 23 to 29. Nothing in this part skips the approval: the target of a post waits for a person or for a rule the person wrote, as every other target does (T-48).
+
+## 41. What the official pages said (read on 2026-11-20)
+
+| Fact | Value | Official page |
+| --- | --- | --- |
+| Create a post | `POST /wp/v2/posts` (the base is `<site>/wp-json`); the fields `date`, `date_gmt`, `slug`, `status`, `password`, `title`, `content`, `author`, `excerpt`, `featured_media`, `comment_status`, `ping_status`, `format`, `meta`, `sticky`, `template`, `categories`, `tags` | `developer.wordpress.org/rest-api/reference/posts/` |
+| Update a post | `POST /wp/v2/posts/<id>` with the same fields | the same page |
+| Statuses | `publish`, `future`, `draft`, `pending`, `private` | the same page |
+| `tags` | "The terms assigned to the post in the post_tag taxonomy": ids of terms, not names | the same page |
+| Tags | `GET /wp/v2/tags` with `search`; `POST /wp/v2/tags` with `name` (required) and `slug`; the response has the integer `id` | `developer.wordpress.org/rest-api/reference/tags/` |
+| Media | `POST /wp/v2/media`; the fields `title`, `alt_text`, `post`; the response has `id` and `source_url` | `developer.wordpress.org/rest-api/reference/media/` |
+| Authentication | Application Passwords, generated in the page Edit User of wp-admin, sent as HTTP Basic Auth with the user name and the application password; shipped with WordPress since 5.6; preferred over the Basic Authentication plugin | `developer.wordpress.org/rest-api/using-the-rest-api/authentication/` |
+| `_fields` | `?_fields=id,link` returns only those fields | `developer.wordpress.org/rest-api/using-the-rest-api/global-parameters/` |
+
+**Not stated by the pages read, so not verified (it needs the author's account and a WordPress):** how the bytes of a file are sent to `/wp/v2/media` (the media page names no header and no body; Stuarty sends the raw bytes with `Content-Type` and `Content-Disposition: attachment; filename="<name>"`, the form the WordPress code reads, and the contract fixtures of `TestWordPress` hold that form); the members of the answer to a create (the page does not say that `id` and `link` are in it; Stuarty reads them and refuses an answer without a numeric `id`); whether HTTPS is mandatory for an application password (the page says "served over https"; Stuarty accepts `http` only for a loopback host, the rule of every connection); the per-page limit and the total headers of a list; how the REST API is reached on a site with plain permalinks (`?rest_route=`: Stuarty does not try it, and the setup guide says to turn on pretty permalinks). The tests run against fixtures and a fake server, never a WordPress; task 10 of the epic (a WordPress in a local container) was not run: it needs the author's approval to pull the image (QUESTIONS.md).
+
+The webhook and the read API have no official page: they are Stuarty's own contract (sections 46 and 47).
+
+## 42. The destinations and their connections
+
+A destination is a connection (SDD-014) of one of five kinds. The kind says what it does; the settings are one JSON document, the secret of the connection, kept in the vault, so no surface returns them (T-77 for the rule, ADR-0033). `ConnectionCreate` validates the document of these kinds (`E_VALIDATION` on the path `secret`), and `ConnectionTest` answers a sentence the product wrote.
+
+| Kind | The endpoint | The secret (JSON) | Opens a connection? |
+| --- | --- | --- | --- |
+| `blog_files` | `http://localhost` (a placeholder: nothing calls it) | `folder` (an absolute path of a folder that exists), `template` (`astro`, `hugo`, `jekyll` or `custom`, default `astro`), `front_matter` (the text of a `custom` template), `zip` (true to write a zip) | no |
+| `blog_wordpress` | the address of the site, `https` (`http` for a loopback host only) | `user`, `application_password` | yes: the site, through the gate |
+| `blog_webhook` | the URL that receives the POST, `https` (`http` for a loopback host only) | `signing_secret` (16 to 256 characters), `media_base_url` (optional, the address of the Stuarty server as the receiver reaches it, `https`) | yes: that host, and only if it is a public address |
+| `blog_webhook_local` | the same, and the user chose to deliver to this machine or this network | the same | yes: that host, whatever its address |
+| `blog_api` | `http://localhost` (a placeholder) | `{}` | no |
+
+- The two kinds of the webhook are what makes "explicitly allowed" visible: the user picks `blog_webhook_local` knowingly, the Connections page says what it means, and the kind is in the list, in the audit and in the approval summary. An agent cannot turn a public webhook into a local one: `ConnectionCreate` is `admin`, and the kind is not editable.
+- A connection that opens no connection has the placeholder endpoint so that it passes the one validation of every connection; no request is ever made to it and its `hosts` hold `localhost`.
+- The settings go in a JSON document because a connection has one secret field and no settings field, and a folder, a template and a signing secret are one thing the person sets once. A document with a member this section does not name is refused.
+- The network of a target made for these kinds is the kind itself, and `Description` names them `Blog: files`, `Blog: WordPress`, `Blog: webhook`, `Blog: webhook (this machine)` and `Blog: read API`.
+
+## 43. The post that is approved and the package
+
+A publication of part 3 carries either the `export` of a video or a `post`, the id of a text item of the kind `post` of the same project (never both: `E_VALIDATION`). A post goes only to the destinations of this part, and a video only to the networks of parts 1 to 4; the other combination is `E_VALIDATION` on `connection_id`. The column `publications.post_item_id` (empty for a video) holds it, and `export_job` is empty for a post.
+
+**Resolve** (no request): the service reads the text, checks it with `core/writing` (`CheckPost`, SDD-019 section 13: every issue is `E_VALIDATION` with `details.issues`), resolves each image to an asset of the project (kind `image`, active, at most 10 MiB each and 20 in a post, 50 MiB in all; the file is read from the content-addressed store, never from a path in the request), and builds the **package**: the slug, the metadata, the Markdown of the body with the image references rewritten to `images/<file>`, the sanitised HTML (images as `images/<file>` too), and the list of images, each with its file name (`<n>-<slug of the name>.<ext>`, `cover.<ext>` for the cover), the asset hash, the size, the SHA-256 and the content type. The status the person chose (`fields.visibility`: `private` is a draft, `public` is published, the default is `private`) and the language are part of it.
+
+**The approval is of exactly that package.** The snapshot of the target (section 26) is `{"kind":"post","network":...,"account":<connection id>,"fields":...,"package":{...}}` with the digest of each image; the summary a person reads says the network, the connection label, the title, the slug, the visibility, the number and total size of the images and the time (section 26). At the send, the scheduler checks the digest of the snapshot and reads every image again from the store: a file whose size or SHA-256 differs is `E_INVALID_STATE`, the target is `failed`, nothing is sent (the rule of `approvedFile`). A change of the text after the approval does not travel: the target waits in `waiting_approval` or is already approved with the old package; editing the publication (`PublicationUpdate`) makes a new request (section 24).
+
+The connector-like interface of the destinations is in `service/publish/destinations`:
+
+```go
+type Destination interface {
+	Describe() Description                                              // the kind, the name, the hosts, the hints
+	ValidateConfig(secret []byte) error                                 // ConnectionCreate
+	Test(ctx context.Context, c connections.Credential) (connections.TestResult, error)
+	Send(ctx context.Context, c connections.Credential, p Package, prev *Remote, report func(float64, string)) (Result, error)
+}
+```
+
+`Remote` is what an earlier send of the same post to the same connection left (`blog_remote_posts`: the connection, the post item, the remote id, the URL), and `Result` is the remote id, the URL and the state. A destination returns `*destinations.Error` with the kinds of `social.Error` (`auth`, `invalid`, `unavailable`, `rejected`) so the scheduler retries only `unavailable` (section 27) and the text of a remote system is never in the message of the target (T-58): a reason is a short code that passed `[A-Za-z0-9_.-]{1,60}`.
+
+**A second send updates.** `blog_remote_posts` is keyed by `(connection_id, post_item_id)`. A destination that has a remote id for the pair updates the remote post; one that has none creates it and records the id in the same transaction as the end of the target (the result of the send and the remote id are written together; a crash between the call and the write is the case of an interrupted attempt of section 27, where WordPress finds its post again by slug, section 45).
+
+## 44. Files
+
+`blog_files` opens no connection. The send writes, under the `folder` of the connection:
+
+```text
+<folder>/<slug>/index.md           the front matter of the template, then the Markdown of the body
+<folder>/<slug>/images/<file>      every image of the post, the cover included
+<folder>/<slug>.zip                only with zip: the same tree, instead of the folder
+```
+
+- **Templates.** The front matter is made by `core/writing` (`FrontMatter`) from the metadata with a small template the user can edit: the presets `astro` (`title`, `description`, `pubDate`, `heroImage`, `tags`, `lang`, `draft`), `hugo` (`title`, `date`, `draft`, `slug`, `summary`, `tags`, `cover.image`, `canonicalURL`, `languageCode`) and `jekyll` (`layout: post`, `title`, `date`, `excerpt`, `tags`, `lang`, `canonical_url`, `image`, `published`), or a `custom` text with the placeholders `{{title}}`, `{{slug}}`, `{{summary}}`, `{{tags}}` (a YAML list on one line), `{{cover}}` (the path `images/<file>`, empty with no cover), `{{canonical}}`, `{{language}}`, `{{date}}` (RFC 3339, the time of the send), `{{draft}}` (`true` or `false`). A value is written as a YAML double-quoted string, with `\\`, `\"` and the line break escaped, so no value can add a key or close the block. An unknown placeholder is refused when the connection is created.
+- **The image paths work.** The body keeps its Markdown; every `![alt](asset:<id>)` becomes `![alt](images/<file>)` relative to `index.md`, which is where a static site generator reads it from (the page bundle of Hugo, the content folder of Astro, the post folder of Jekyll).
+- **Safe writing (T-99).** The slug is `[a-z0-9-]`, so the path cannot leave the folder; the service refuses a `<slug>` that is a symbolic link or a file, writes to a new sibling folder and replaces the old one (a failed write leaves the previous version), never writes outside the folder (a check on the cleaned path), and caps the post as in section 43. The folder must exist when the connection is created and when the target is sent.
+- The result: `remote_id` is `<slug>`, the `url` is the absolute path of the folder or of the zip (text a person reads, not a link).
+
+## 45. WordPress
+
+`blog_wordpress` reaches `<endpoint>/wp-json/wp/v2/` through the gate of the connection, with the header `Authorization: Basic base64(user:application_password)` built inside the closure of `Manager.With`; no redirect is followed. The send:
+
+1. **Find or know the post.** With a remote id in `blog_remote_posts`, update it. Without one, look for a post with the slug (`GET /wp/v2/posts?slug=<slug>&status=any&_fields=id,link`) so that an interrupted send, or one that lost its record, does not create a second post; with none found, create it.
+2. **Images.** Each image is uploaded to `POST /wp/v2/media` (section 41), and its `id` and `source_url` are read. The cover becomes `featured_media`. In the HTML of the post, `images/<file>` becomes the `source_url`. A media item is uploaded once per send; an update uploads the images again (the media library keeps the older ones: Stuarty never deletes anything at WordPress).
+3. **Tags.** Each tag is looked up (`GET /wp/v2/tags?search=<name>`, an exact match of the name, case-insensitive) or created; the ids go in `tags`.
+4. **The post.** `POST /wp/v2/posts` (or `/posts/<id>`) with `title`, `slug`, `content` (the sanitised HTML of the package), `excerpt` (the summary), `status` (`draft` or `publish` from the visibility), `featured_media` and `tags`. The canonical URL and the language have no field in the core API: they are not sent (the setup guide says so).
+5. The result: `remote_id` is the numeric id, the `url` the `link` of the answer, `remote_state` `draft` or `published`.
+
+Errors, by status: `401` and `403` are `auth` (the application password was refused or the user may not publish), `400` and `422` are `invalid` (with the code of the answer when it is a plain code, such as `rest_invalid_param`), `404` on an update means the post was deleted at WordPress: the record is dropped and the post is created again, `429` and `5xx` and a transport error are `unavailable`. Everything the site says is untrusted text and is never copied into a message (T-58). The size of an answer read is capped at 1 MiB.
+
+## 46. The webhook: payload, signature and address rules
+
+`blog_webhook` and `blog_webhook_local` send one `POST` to the endpoint of the connection per send, with `Content-Type: application/json`, the body below and these headers:
+
+| Header | Value |
+| --- | --- |
+| `X-Stuarty-Delivery` | the id of the delivery: the id of the target (`tgt_...`), the same in every retry of one send, so the receiver can drop a duplicate |
+| `X-Stuarty-Timestamp` | the Unix time in seconds, set at each attempt |
+| `X-Stuarty-Signature` | `v1=` and the lower-case hex of `HMAC-SHA256(signing_secret, timestamp + "." + delivery + "." + body)` |
+| `User-Agent` | `Stuarty` |
+
+**The receiver verifies** the signature in constant time over the exact bytes of the body, and refuses a timestamp more than 5 minutes from its clock (so a captured request cannot be replayed later: T-93), and may drop a delivery id it has seen. Because the delivery id and the timestamp are in the signed text, neither can be changed by a person in the middle.
+
+**The payload** (`schema_version` 1; the schema is `service/publish/destinations/testdata/webhook-payload.schema.json`, and the test validates the real body against it):
+
+```json
+{
+  "schema_version": 1,
+  "event": "post.published",
+  "delivery_id": "tgt_0123456789",
+  "sent_at": "2026-11-20T12:00:00Z",
+  "status": "published",
+  "post": {
+    "slug": "how-i-cut-a-video-in-a-day",
+    "title": "How I cut a video in a day",
+    "summary": "...",
+    "tags": ["video", "editing"],
+    "language": "en",
+    "canonical_url": "https://example.com/blog/how-i-cut-a-video-in-a-day",
+    "cover": "images/cover.png",
+    "markdown": "Body, with ![a photo](images/1-photo.png)",
+    "html": "<p>Body, with <img src=\"images/1-photo.png\" alt=\"a photo\"></p>"
+  },
+  "images": [
+    { "name": "cover.png", "role": "cover", "content_type": "image/png", "bytes": 1234, "sha256": "...", "url": "https://stuarty.example/api/v1/posts/how-i-cut-a-video-in-a-day/media/cover.png" }
+  ]
+}
+```
+
+`status` is `draft` or `published` (the visibility). `event` is `post.published` for a first delivery and `post.updated` when `blog_remote_posts` holds an earlier one. `images[].url` is `media_base_url` plus `/api/v1/posts/<slug>/media/<name>` and is omitted when the connection has no `media_base_url`; the images are fetched with a token of the scope `posts:read` (section 47) and only for a post that was also published to a `blog_api` destination (one publication with two targets), because the read API serves only what was approved for it. The response body is untrusted text: only the status code is used, at most 4 KiB are read, and none of it is kept or shown.
+
+**Retries.** A transient failure (a transport error, `408`, `425`, `429`, `5xx`) is retried inside the send three times with the delays 1, 2 and 4 seconds (`Retry-After` of at most 30 seconds is honoured), and what is left is `unavailable`, which the scheduler retries with its own backoff (section 27). Any other `4xx` is `rejected` with the code `http_<status>` and is not retried; a `2xx` is a success; a `3xx` is `rejected` with the code `redirect` (no redirect is followed, so a destination cannot move the post to another host: T-92).
+
+**The address rules (T-92).** The webhook is the one destination whose host a person types, so Stuarty does not trust where it leads. For `blog_webhook`: before the connection is created the host is refused when it is `localhost`, an IP literal that is loopback, private (RFC 1918, the unique-local `fc00::/7`), link-local, shared (`100.64.0.0/10`), unspecified or multicast; and **at every request, at the moment of the dial**, the address the name resolved to is checked again with the same rule, so a name that resolves to an internal address, or that changed after it was checked, is refused (`E_CONNECTION_DESTINATION`) and no byte is sent. `blog_webhook_local` skips that rule only; the gate of every connection still refuses link-local, the cloud metadata addresses and multicast (SDD-014 section 6). The check is `connections.Manager.WithPublic`, which builds the gated client with the extra dial rule; the redirect rule is the gate's (a redirect is returned, never followed).
+
+## 47. The read API and the scope `posts:read`
+
+`blog_api` is a destination that opens no connection: the send **publishes** the package in the workspace, in the table `published_posts` (section 48), so that the creator's own system can read it. The routes (HTTP only; they are for another system, which holds a key, and an agent of Stuarty reads its own texts with `TextGet`):
+
+| Operation | Route | Does |
+| --- | --- | --- |
+| `PublishedPostList` | `GET /api/v1/posts` | the published posts, newest first, a page of at most 50 (`limit`, `cursor`: the opaque position of the last one read), with the metadata and no body; the response has `ETag` |
+| `PublishedPostGet` | `GET /api/v1/posts/{slug}` | one post with the Markdown, the HTML and the list of images; `ETag` |
+| `PublishedPostMedia` | `GET /api/v1/posts/{slug}/media/{name}` | the bytes of one image of a published post, with its content type, `X-Content-Type-Options: nosniff` and `Content-Disposition: inline`; `ETag` is the SHA-256 |
+
+- `ETag` is a strong tag of the content (`"<sha256 of the JSON of the answer>"`); `If-None-Match` with it is `304` with no body. A list changes its tag when any post of the page changes.
+- **Only what was approved and published to this destination.** The routes read `published_posts` and nothing else: a draft text, a post whose target is not `published`, a post of another user (network mode: the owner is checked) and a slug that is not in the table are `404 E_NOT_FOUND`, the same answer. The row is written by the send of an approved target of a `blog_api` connection, in the same transaction as the end of the target. A target with the visibility `private` publishes a draft, which the routes do not list. Cancelling or failing a target changes nothing in the table. There is no unpublish in this epic: a published row changes only when a newer approved send of the same post replaces it (a post that must disappear is removed by the owner of the workspace; a later epic may add the operation).
+- **The scope `posts:read`** is a sixth scope, held by no caller by default except the local token (which holds every scope) and a person's session. It is created from a privileged session (`KeyCreate` with the scope `posts:read`, a browser session of a user in network mode; the key cannot manage keys, T-33) and is accepted by these three routes **only**. A key whose scopes are `["posts:read"]` is refused with `E_FORBIDDEN` by every other operation (the service checks the scope of each method, SDD-007 section 5.1) and by every other route and page (a middleware of the API refuses it before the handler: T-95). A key that also holds other scopes is held to them as before; the scope `posts:read` is not implied by `read`, so a key with only `read` is refused here.
+- Network mode: the keys exist there. In local mode the local token holds every scope and reaches the routes, for a build script on the same machine; the read API is meant for a server (SDD-007 section 3.7 says what it means to expose one).
+- The text a post carries is the creator's own and is served as data: the JSON has `Content-Type: application/json`, and the HTML in it is the sanitised HTML of the package (SDD-019 section 13), which the consumer still treats as untrusted if it comes from a system it does not run.
+
+## 48. Operations, tables and surfaces of part 5
+
+| Operation | Scope | Surfaces |
+| --- | --- | --- |
+| `PostCheck` | read | MCP `project_item` (`action` `check` on a text of the kind `post`), CLI `post:check`, HTTP `GET /projects/{id}/texts/{item}/post` |
+| `PublishedPostList`, `PublishedPostGet`, `PublishedPostMedia` | `posts:read` | HTTP only, the routes of section 47 |
+
+`PostCheck` answers the metadata the front matter read, the issues of `CheckPost` (each with a path, a code and a sentence), the list of images with their file names, size and state (found, not an image, not in the project), and the sanitised HTML; it is a pure read. `PublicationCreate` and `PublicationUpdate` take `post` (SDD-020 section 28 otherwise unchanged); every operation of the publication, the approval and the scheduler work for the targets of these kinds as they do for a video. No MCP tool is added (D-094): an agent writes a post with `project_item`, checks it with `action` `check` and plans the publication through the CLI or HTTP, as section 29 says.
+
+Tables (SDD-005 section 5.15, SDD-000 section 7), from the migrations `text_kind_post` and `create_blog_tables`:
+
+- `project_items.text_kind` accepts `post` (the column is rebuilt; no row changes).
+- `publications.post_item_id`: the post of a publication, empty for a video.
+- `published_posts`: `slug` (the key), `post_item_id`, `project_id`, `connection_id`, `owner_user_id`, the metadata, `markdown`, `html`, `images` (JSON: name, asset hash, size, SHA-256, content type), `status`, `published_ms`, `updated_ms`. A slug belongs to one post: a send of another post with a taken slug is `invalid` with the code `slug_taken`.
+- `blog_remote_posts`: `(connection_id, post_item_id)`, `remote_id`, `url`, `updated_ms`. It holds no secret and no text of a remote system but the link a person follows, which is delimited when shown.
+
+## 49. Tests of part 5
+
+| What | Test |
+| --- | --- |
+| The files tree of a post with a cover and two images; the templates; a hostile slug and folder | `go test ./service/publish/destinations/... -run TestFiles` |
+| WordPress: create, update, media, tags, an interrupted send, an auth failure, from fixtures, no network | `go test ./service/publish/destinations/... -run TestWordPress` |
+| The webhook: the signature and the timestamp, the retry, the address rules, a redirect, the payload against its schema | `go test ./service/publish/destinations/... -run TestWebhook` |
+| The read API: only published posts, the pages, `ETag`, the scope | `go test ./web/app/... -run TestPostsAPI` |
+| The surfaces agree | `go test ./web/contract/...` |
+| The editor, the preview and the destination forms, in both languages | `task test:web`, `web/e2e/specs/blog.spec.ts` |
+| One test per new threat | `go test -run TestSecurity_ ./...` (T-92 to T-95 and T-99) |
