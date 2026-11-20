@@ -801,9 +801,9 @@ func TestXTikTok_ValidationRefusesWhatTheNetworksDoNotAllowBeforeAnyRequest(t *t
 	}
 }
 
-// T-67: no token and no upload address of X or TikTok is in any answer of the service, any log, any job or any
+// T-79: no token and no upload address of X or TikTok is in any answer of the service, any log, any job or any
 // address of a request; the new refresh token is kept in the vault, so the next send signs in with it.
-func TestSecurity_T67_NoTokenOrUploadAddressLeavesTheVault(t *testing.T) {
+func TestSecurity_T79_NoTokenOrUploadAddressLeavesTheVault(t *testing.T) {
 	e := newXTEnv(t)
 	xConn, _ := e.connect("x", xClientSecret)
 	tkConn, _ := e.connect("tiktok", tkClientSecret)

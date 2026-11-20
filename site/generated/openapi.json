@@ -14054,6 +14054,19 @@
         },
         "type": "object"
       },
+      "schedulerOut": {
+        "properties": {
+          "paused": {
+            "description": "Whether publishing is paused.",
+            "type": "boolean"
+          },
+          "scheduled": {
+            "description": "The targets that still have to go out: approved, scheduled and publishing.",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "userListOut": {
         "properties": {
           "users": {
