@@ -144,12 +144,17 @@ void main() {
 		finalColor = vec4(0.0);
 		return;
 	}
-	int dom = int(uSpill.y);
-	if (dom >= 0 && uSpill.x > 0.0) {
-		float limit = floor((rgb[(dom + 1) % 3] * 255.0 + rgb[(dom + 2) % 3] * 255.0) / 2.0) / 255.0;
-		float excess = rgb[dom] - limit;
+	// uSpill.yzw is one-hot on the dominant channel (all zero: none). No integer modulus and no
+	// indexing of a vector by a variable: a WebGL context that compiles a fragment shader as
+	// GLSL ES 1.00 refuses both, and the layer then draws nothing (VV-093).
+	vec3 dom = uSpill.yzw;
+	if (dom.x + dom.y + dom.z > 0.0 && uSpill.x > 0.0) {
+		float kept = dot(rgb, dom);
+		float others = rgb.r + rgb.g + rgb.b - kept;
+		float limit = floor(others * 255.0 / 2.0) / 255.0;
+		float excess = kept - limit;
 		if (excess > 0.0) {
-			rgb[dom] -= excess * uSpill.x;
+			rgb -= dom * excess * uSpill.x;
 		}
 	}
 	float a = c.a * f;
@@ -236,12 +241,14 @@ fn mainFragment(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
 	if (f <= 0.0) {
 		return vec4<f32>(0.0);
 	}
-	let dom = i32(keyUniforms.uSpill.y);
-	if (dom >= 0 && keyUniforms.uSpill.x > 0.0) {
-		let limit = floor((rgb[(dom + 1) % 3] * 255.0 + rgb[(dom + 2) % 3] * 255.0) / 2.0) / 255.0;
-		let excess = rgb[dom] - limit;
+	let dom = keyUniforms.uSpill.yzw;
+	if (dom.x + dom.y + dom.z > 0.0 && keyUniforms.uSpill.x > 0.0) {
+		let kept = dot(rgb, dom);
+		let others = rgb.r + rgb.g + rgb.b - kept;
+		let limit = floor(others * 255.0 / 2.0) / 255.0;
+		let excess = kept - limit;
 		if (excess > 0.0) {
-			rgb[dom] = rgb[dom] - excess * keyUniforms.uSpill.x;
+			rgb = rgb - dom * excess * keyUniforms.uSpill.x;
 		}
 	}
 	let a = c.a * f;
@@ -273,6 +280,14 @@ export class ChromaKeyFilter extends Filter {
 		const s = chromaSettings(key);
 		const u = this.resources.keyUniforms.uniforms;
 		u.uKey = new Float32Array([s.cb, s.cr, s.t0, s.t1]);
-		u.uSpill = new Float32Array([s.spill / 65536, s.dominant, 0, 0]);
+		u.uSpill = new Float32Array([
+			s.spill / 65536,
+			s.dominant === 0 ? 1 : 0,
+			s.dominant === 1 ? 1 : 0,
+			s.dominant === 2 ? 1 : 0,
+		]);
 	}
 }
+
+// The fragment shader of the filter, for the test that keeps out of it what a GLSL ES 1.00 compile refuses.
+export const CHROMA_FRAGMENT_SOURCE = FRAGMENT;

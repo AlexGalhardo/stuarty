@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { chromaSettings, keepOf, keyPixel } from "./chromaKey";
+import {
+	CHROMA_FRAGMENT_SOURCE,
+	chromaSettings,
+	keepOf,
+	keyPixel,
+} from "./chromaKey";
 
 const key = (color: string, similarity: number, smoothness = 0, spill = 0) =>
 	chromaSettings({ color, similarity, smoothness, spill });
@@ -57,5 +62,15 @@ describe("chroma key reference", () => {
 		expect(keyPixel(s, [0, 128, 0, 128])).toEqual([0, 0, 0, 0]);
 		expect(keyPixel(s, [128, 0, 0, 128])).toEqual([128, 0, 0, 128]);
 		expect(keyPixel(s, [0, 0, 0, 0])).toEqual([0, 0, 0, 0]);
+	});
+});
+
+// VV-093: a WebGL context that compiles a fragment shader as GLSL ES 1.00 refuses an integer modulus and an
+// index by a variable ("integer modulus operator supported in GLSL ES 3.00 and above only"); the program is
+// then not valid and the keyed layer draws nothing at all, subject included.
+describe("chroma key shader", () => {
+	it("uses no integer modulus and no vector indexed by a variable", () => {
+		expect(CHROMA_FRAGMENT_SOURCE).not.toMatch(/%/);
+		expect(CHROMA_FRAGMENT_SOURCE).not.toMatch(/\w\[\s*[A-Za-z_]/);
 	});
 });
