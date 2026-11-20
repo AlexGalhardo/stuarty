@@ -9,9 +9,27 @@ import (
 	"github.com/AlexGalhardo/vukem/database"
 )
 
-type checkpointRepo struct{ ex database.Executor }
+// checkpointRepo stores the checkpoints of a document in one table: `checkpoints` for a timeline (SDD-005
+// section 5.14) and `image_checkpoints` for an image (section 5.14.1). The two have the same columns and the same
+// rules; only the table and the name of the column that holds the document id differ, so the code is one.
+type checkpointRepo struct {
+	ex    database.Executor
+	table string
+	owner string
+}
 
-const checkpointColumns = `project_id, name, note, revision, actor, auto, at_ms`
+func timelineCheckpoints(ex database.Executor) checkpointRepo {
+	return checkpointRepo{ex: ex, table: "checkpoints", owner: "project_id"}
+}
+
+func imageCheckpoints(ex database.Executor) checkpointRepo {
+	return checkpointRepo{ex: ex, table: "image_checkpoints", owner: "image_id"}
+}
+
+// columns is the select list: the owner column is always read as the first one.
+func (r checkpointRepo) columns() string {
+	return r.owner + `, name, note, revision, actor, auto, at_ms`
+}
 
 func scanCheckpoint(sc scanner) (service.CheckpointRow, error) {
 	var (
@@ -34,7 +52,7 @@ func (r checkpointRepo) Create(ctx context.Context, c service.CheckpointRow) err
 		auto = 1
 	}
 
-	_, err := r.ex.ExecContext(ctx, `INSERT INTO checkpoints (`+checkpointColumns+`) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+	_, err := r.ex.ExecContext(ctx, `INSERT INTO `+r.table+` (`+r.columns()+`) VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		c.ProjectID, c.Name, c.Note, c.Revision, c.Actor, auto, c.AtMs)
 	if isUnique(r.ex, err) {
 		return service.ErrExists
@@ -45,13 +63,13 @@ func (r checkpointRepo) Create(ctx context.Context, c service.CheckpointRow) err
 
 func (r checkpointRepo) Get(ctx context.Context, projectID, name string) (service.CheckpointRow, error) {
 	c, err := scanCheckpoint(r.ex.QueryRowContext(ctx,
-		`SELECT `+checkpointColumns+` FROM checkpoints WHERE project_id = ? AND name = ?`, projectID, name))
+		`SELECT `+r.columns()+` FROM `+r.table+` WHERE `+r.owner+` = ? AND name = ?`, projectID, name))
 
 	return c, mapNoRows(err)
 }
 
 func (r checkpointRepo) List(ctx context.Context, projectID string) ([]service.CheckpointRow, error) {
-	rows, err := r.ex.QueryContext(ctx, `SELECT `+checkpointColumns+` FROM checkpoints WHERE project_id = ?
+	rows, err := r.ex.QueryContext(ctx, `SELECT `+r.columns()+` FROM `+r.table+` WHERE `+r.owner+` = ?
  ORDER BY revision DESC, name`, projectID)
 	if err != nil {
 		return nil, err
@@ -82,10 +100,10 @@ func (r checkpointRepo) Rename(ctx context.Context, projectID, name, newName str
 	// A renamed checkpoint is a named one: auto goes to 0, so the ceiling of the automatic ones keeps it.
 	if note != nil {
 		res, err = r.ex.ExecContext(ctx,
-			`UPDATE checkpoints SET name = ?, note = ?, auto = 0 WHERE project_id = ? AND name = ?`,
+			`UPDATE `+r.table+` SET name = ?, note = ?, auto = 0 WHERE `+r.owner+` = ? AND name = ?`,
 			newName, *note, projectID, name)
 	} else {
-		res, err = r.ex.ExecContext(ctx, `UPDATE checkpoints SET name = ?, auto = 0 WHERE project_id = ? AND name = ?`,
+		res, err = r.ex.ExecContext(ctx, `UPDATE `+r.table+` SET name = ?, auto = 0 WHERE `+r.owner+` = ? AND name = ?`,
 			newName, projectID, name)
 	}
 
@@ -101,7 +119,7 @@ func (r checkpointRepo) Rename(ctx context.Context, projectID, name, newName str
 }
 
 func (r checkpointRepo) Remove(ctx context.Context, projectID, name string) error {
-	res, err := r.ex.ExecContext(ctx, `DELETE FROM checkpoints WHERE project_id = ? AND name = ?`, projectID, name)
+	res, err := r.ex.ExecContext(ctx, `DELETE FROM `+r.table+` WHERE `+r.owner+` = ? AND name = ?`, projectID, name)
 	if err != nil {
 		return err
 	}
@@ -119,8 +137,8 @@ func needOne(res sql.Result) error {
 }
 
 func (r checkpointRepo) TrimAuto(ctx context.Context, projectID string, keep int) error {
-	_, err := r.ex.ExecContext(ctx, `DELETE FROM checkpoints WHERE project_id = ? AND auto = 1 AND name NOT IN (
- SELECT name FROM checkpoints WHERE project_id = ? AND auto = 1 ORDER BY at_ms DESC, revision DESC, name DESC LIMIT ?)`,
+	_, err := r.ex.ExecContext(ctx, `DELETE FROM `+r.table+` WHERE `+r.owner+` = ? AND auto = 1 AND name NOT IN (
+ SELECT name FROM `+r.table+` WHERE `+r.owner+` = ? AND auto = 1 ORDER BY at_ms DESC, revision DESC, name DESC LIMIT ?)`,
 		projectID, projectID, keep)
 
 	return err

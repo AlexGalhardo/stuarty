@@ -55,6 +55,91 @@ func (c *Client) ImageRedo(ctx context.Context, req service.ImageStepRequest) (*
 	return post[service.ImageStepResult](ctx, c, imagePath(req.ImageID, "/redo"), dryBody{req.DryRun})
 }
 
+func imageCheckpointPath(id, name string) string {
+	return imagePath(id, "/checkpoints/"+url.PathEscape(name))
+}
+
+// ImageRevert implements service.Service.
+func (c *Client) ImageRevert(ctx context.Context, req service.ImageRevertRequest) (*service.ImageRevertResult, error) {
+	body := struct {
+		Revision     int64  `json:"revision,omitempty"`
+		Checkpoint   string `json:"checkpoint,omitempty"`
+		BaseRevision int64  `json:"base_revision,omitempty"`
+		DryRun       bool   `json:"dry_run,omitempty"`
+	}{req.Revision, req.Checkpoint, req.BaseRevision, req.DryRun}
+
+	return post[service.ImageRevertResult](ctx, c, imagePath(req.ImageID, "/revert"), body)
+}
+
+// ImageDiff implements service.Service.
+func (c *Client) ImageDiff(ctx context.Context, req service.ImageDiffRequest) (*service.ImageDiffResult, error) {
+	q := url.Values{}
+	setIf(q, "from_checkpoint", req.FromCheckpoint)
+
+	if req.From > 0 {
+		q.Set("from", strconv.FormatInt(req.From, 10))
+	}
+
+	if req.Until > 0 {
+		q.Set("until", strconv.FormatInt(req.Until, 10))
+	}
+
+	return get[service.ImageDiffResult](ctx, c, imagePath(req.ImageID, "/diff"), q)
+}
+
+// ImageCheckpointCreate implements service.Service.
+func (c *Client) ImageCheckpointCreate(
+	ctx context.Context,
+	req service.ImageCheckpointCreateRequest,
+) (*service.Checkpoint, error) {
+	body := struct {
+		Name     string `json:"name"`
+		Note     string `json:"note,omitempty"`
+		Revision int64  `json:"revision,omitempty"`
+	}{req.Name, req.Note, req.Revision}
+
+	return post[service.Checkpoint](ctx, c, imagePath(req.ImageID, "/checkpoints"), body)
+}
+
+// ImageCheckpointList implements service.Service.
+func (c *Client) ImageCheckpointList(
+	ctx context.Context,
+	req service.ImageCheckpointListRequest,
+) (*service.ImageCheckpointListResult, error) {
+	return get[service.ImageCheckpointListResult](ctx, c, imagePath(req.ImageID, "/checkpoints"), nil)
+}
+
+// ImageCheckpointRename implements service.Service.
+func (c *Client) ImageCheckpointRename(
+	ctx context.Context,
+	req service.ImageCheckpointRenameRequest,
+) (*service.Checkpoint, error) {
+	body := struct {
+		NewName string  `json:"new_name"`
+		Note    *string `json:"note,omitempty"`
+	}{req.NewName, req.Note}
+
+	out := new(service.Checkpoint)
+	if err := c.do(ctx, http.MethodPatch, imageCheckpointPath(req.ImageID, req.Name), nil, body, out); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+// ImageCheckpointRemove implements service.Service.
+func (c *Client) ImageCheckpointRemove(
+	ctx context.Context,
+	req service.ImageCheckpointRemoveRequest,
+) (*service.Checkpoint, error) {
+	out := new(service.Checkpoint)
+	if err := c.do(ctx, http.MethodDelete, imageCheckpointPath(req.ImageID, req.Name), nil, nil, out); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
 // ImageExport implements service.Service.
 func (c *Client) ImageExport(ctx context.Context, req service.ImageExportRequest) (*service.ImageExportResult, error) {
 	return post[service.ImageExportResult](ctx, c, imagePath(req.ImageID, "/export"), req)
