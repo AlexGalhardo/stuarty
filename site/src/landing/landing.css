@@ -68,7 +68,8 @@ main[data-expressive] {
 .split-word {
   white-space: nowrap;
 }
-[data-split] {
+[data-split-scroll],
+.take h2 {
   perspective: 600px;
 }
 
@@ -242,20 +243,46 @@ main[data-expressive] :focus-visible {
   }
 }
 
-/* Entrance of the first screen. An inline script adds .motion-ok before the main content parses (never under
-   reduced motion), so the title does not flash before its letters come in. If the motion script never runs, a
-   CSS fail-safe shows everything after 2.5 s. */
-html.motion-ok [data-split],
+/* Entrance of the first screen, in CSS so that it starts at the first paint. The letters of a SplitTitle turn up
+   one by one; the items under it rise after them. .motion-ok is added by an inline script before the content parses,
+   never under reduced motion. Letters start barely visible (not hidden), so the title counts as painted at once. */
+html.motion-ok .split-title .ch {
+  display: inline-block;
+  animation: landing-letter 0.9s var(--ease-out-expo) both;
+  animation-delay: calc(var(--split-delay, 0.1s) + var(--i) * 22ms);
+  transform-origin: 50% 100%;
+}
 html.motion-ok [data-hero-item] {
-  opacity: 0;
-  animation: landing-failsafe 0.4s 2.5s forwards;
+  animation: landing-rise 0.9s var(--ease-out-expo) both;
+  animation-delay: 0.55s;
 }
-html.motion-live [data-split],
-html.motion-live [data-hero-item] {
-  animation: none;
+html.motion-ok [data-hero-item] ~ [data-hero-item] {
+  animation-delay: 0.65s;
 }
-@keyframes landing-failsafe {
-  to {
-    opacity: 1;
+html.motion-ok [data-hero-item] ~ [data-hero-item] ~ [data-hero-item] {
+  animation-delay: 0.75s;
+}
+@keyframes landing-letter {
+  from {
+    opacity: 0.12;
+    transform: translateY(45%) rotateX(-75deg);
   }
+}
+@keyframes landing-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+html.motion-ok [data-hero-frame] {
+  animation: landing-frame 1.4s var(--ease-out-expo) 0.25s both;
+}
+@keyframes landing-frame {
+  from {
+    opacity: 0.01;
+    transform: translateY(60px);
+  }
+}
+.split-title {
+  perspective: 600px;
 }
