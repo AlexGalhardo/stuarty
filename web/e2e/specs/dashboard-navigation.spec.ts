@@ -137,12 +137,14 @@ test.describe("dashboard-navigation", () => {
 		}
 	}
 
-	test("a section that is not built says so and leads to the projects", async ({
+	// Every section but Edit Video has its own page now; Edit Video opens from a project, and its section
+	// says so and leads there.
+	test("a section with no page of its own says so and leads to the projects", async ({
 		page,
 	}) => {
 		await page.goto("/edit-video");
 		await expect(page.getByTestId("empty-edit-video")).toContainText(
-			"This section is not available yet",
+			"The video editor opens from a project",
 		);
 		await page.getByRole("link", { name: "Go to Projects" }).click();
 		await expect(page).toHaveURL(/\/projects$/);
