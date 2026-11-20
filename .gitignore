@@ -11,6 +11,8 @@ development/
 /TODO.md
 # Local QA builds and the workspaces of test runs (servers write tokens there).
 /qa-build/
+# A desktop installer built locally for the author to try.
+/installer/
 .playwright-mcp/
 
 # Advisor plans of the improve skill: local working files, never committed.
