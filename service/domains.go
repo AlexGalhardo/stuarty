@@ -30,6 +30,9 @@ var OperationDomains = map[string]string{
 	"ImageExport": command.DomainImage, "ImageFrame": command.DomainImage, "ImageHistory": command.DomainImage,
 	"ImageFile": command.DomainImage,
 
+	// The hand-off from an external motion engine (epic 33) works on the clips of a timeline.
+	"MotionBrief": command.DomainVideo, "MotionCheck": command.DomainVideo, "MotionReplace": command.DomainVideo,
+
 	"MediaImport": command.DomainAsset, "MediaInspect": command.DomainAsset, "MediaList": command.DomainAsset,
 	"MediaTrash": command.DomainAsset, "MediaRestore": command.DomainAsset, "AssetList": command.DomainAsset,
 	"FontImport": command.DomainAsset, "FontList": command.DomainAsset,
@@ -48,6 +51,12 @@ var OperationDomains = map[string]string{
 	"ApprovalList": command.DomainPublish, "ApprovalGet": command.DomainPublish,
 	"ApprovalDecide": command.DomainPublish, "ApprovalRuleList": command.DomainPublish,
 	"ApprovalRuleSet": command.DomainPublish, "ApprovalRuleRemove": command.DomainPublish,
+	// The social networks a publication goes to, and the publication itself (SDD-020 section 9).
+	"SocialNetworkList": command.DomainPublish, "SocialConnectBegin": command.DomainPublish,
+	"SocialConnectComplete": command.DomainPublish, "SocialAccountList": command.DomainPublish,
+	"PublishValidate": command.DomainPublish, "PublishNow": command.DomainPublish,
+	"PublishStatus": command.DomainPublish,
+
 	"CostSummary": command.DomainProvider, "CostCeilingSet": command.DomainProvider,
 	"ProviderList": command.DomainProvider, "ProviderModels": command.DomainProvider,
 	"ProviderPriceSet": command.DomainProvider, "TextGenerate": command.DomainProvider,
@@ -59,6 +68,14 @@ var OperationDomains = map[string]string{
 	"Doctor": command.DomainWorkspace, "AuditList": command.DomainWorkspace, "TrashEmpty": command.DomainWorkspace,
 	"ToolsInstall": command.DomainWorkspace, "ToolsStatus": command.DomainWorkspace,
 	"KeyCreate": command.DomainWorkspace, "KeyList": command.DomainWorkspace, "KeyRevoke": command.DomainWorkspace,
+
+	// The agent the user hosted in the chat panel (SDD-017).
+	"AgentProfileList": command.DomainWorkspace, "AgentProfileSet": command.DomainWorkspace,
+	"AgentProfileRemove": command.DomainWorkspace, "ChatSessionStart": command.DomainWorkspace,
+	"ChatSend": command.DomainWorkspace, "ChatCancel": command.DomainWorkspace,
+	"ChatAnswerPermission": command.DomainWorkspace, "ChatSessionDelete": command.DomainWorkspace,
+	"ChatSessionList": command.DomainWorkspace, "ChatSessionGet": command.DomainWorkspace,
+	"ChatTranscriptGet": command.DomainWorkspace,
 }
 
 // OperationDomain is the domain of a Service method.

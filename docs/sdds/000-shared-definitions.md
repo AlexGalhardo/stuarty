@@ -29,6 +29,9 @@
 | `JobCancel` | `job_cancel` | `job:cancel` | `POST /jobs/{job_id}/cancel` | render; media is enough for the caller's own `transcribe` or `ingest` job |
 | `TemplateList`, `TemplateSave`, `TemplateInstantiate`, `TemplateExport`, `TemplateImport` | `template` | `template:list`, `template:save`, `template:new`, `template:export`, `template:import` | `GET /templates`, `POST /templates`, `POST /templates/{id}/instantiate`, `GET /templates/{id}/file`, `POST /templates/import` | read, edit |
 | `Doctor` | none | `doctor` | `GET /system` | read |
+| `MotionBrief` | `view` with `mode` `motion` | `motion:brief` | `GET /projects/{id}/motion/brief` (what an external motion render must fit; SDD-011 §15) | read |
+| `MotionCheck` | none (the tool list has no room, SDD-011 §15.5) | `motion:check` | `GET /projects/{id}/motion/check` (whether a rendered file fits the brief; SDD-011 §15.3) | read |
+| `MotionReplace` | `edit` (a batch of `clip.replace_media`) | `motion:replace` | `POST /projects/{id}/motion/replace` (every clip that reads an earlier render of the same `render_key`, in one undoable batch; SDD-011 §15.4) | edit |
 | event stream | none | `events` (prints the stream) | `GET /projects/{id}/events` | read |
 | `PlanWindow` | none | none | `GET /projects/{id}/plan` (SDD-004 §10) | read |
 | `MediaList` | `media_inspect` called without an asset | `media:list` | `GET /projects/{id}/media` (every asset of the project, including those still ingesting or failed, which are not in the document) | read |
@@ -73,6 +76,13 @@
 | `CostSummary` | none | `cost:show` | `GET /cost` | read |
 | `CostCeilingSet` | none | `cost:ceiling` | `PUT /cost/ceilings` | admin, and only from a privileged browser session |
 | approval queue stream | none | none | `GET /approvals/events` (SDD-015 §7) | read |
+| `SocialNetworkList` | none | `social:network:list` | `GET /social/networks` | read (SDD-020) |
+| `SocialConnectBegin` | none | `social:connect` | `POST /social/connect` | admin |
+| `SocialConnectComplete` | none | none | `POST /social/complete` (the page `/social/callback` posts to it) | admin, and only from a browser session |
+| `SocialAccountList` | none | `social:account:list` | `GET /social/accounts` | read |
+| `PublishValidate` | none | `publish:validate` | `POST /publish/validate` | read |
+| `PublishNow` | none yet (later `job_start` with kind `publish.upload`, SDD-020 §13) | `publish:now` | `POST /publish` | render; the job waits for approval |
+| `PublishStatus` | none | `publish:status` | `GET /publish/{job_id}` | read |
 | `ProviderList` | none | `provider:list` | `GET /providers` | read (SDD-016) |
 | `ProviderModels` | none | `provider:models` | `GET /connections/{id}/models` | read |
 | `ProviderPriceSet` | none | `provider:price` | `PUT /providers/prices` | admin, and only from a privileged browser session (SDD-016 §7) |
@@ -84,6 +94,11 @@
 | `SkillMarkReviewed` | none | none | `POST /library/skills/{name}/review` | edit, and only from a browser session (SDD-018 section 7) |
 | `PromptList`, `PromptGet`, `PromptWrite`, `PromptRender` | `library` (kind `prompt`; actions `list`, `get`, `write`, `render`) | `prompt:list`, `prompt:show`, `prompt:write`, `prompt:render` | `GET /library/prompts`, `GET /library/prompts/{name}`, `PUT /library/prompts/{name}`, `POST /library/prompts/{name}/render` | read, edit |
 | `LibrarySearch`, `LibraryReindex` | `library` (action `search`), none | `library:search`, `library:reindex` | `GET /library/search`, `POST /library/reindex` | read, edit |
+| `AgentProfileList` | none (an agent has no use for the command line of another) | `agent:profiles` | `GET /agents/profiles` | read (SDD-017 §3) |
+| `AgentProfileSet`, `AgentProfileRemove` | none | none | `PUT /agents/profiles/{name}`, `DELETE /agents/profiles/{name}` | admin, and only from a privileged browser session; every other caller gets `E_PRIVILEGED_SESSION` (SDD-017 §3, §10) |
+| `ChatSessionStart`, `ChatSend`, `ChatCancel`, `ChatAnswerPermission`, `ChatSessionDelete` | none | none | `POST /projects/{id}/chat/sessions`, `POST /chat/sessions/{id}/messages`, `POST /chat/sessions/{id}/cancel`, `POST /chat/sessions/{id}/permissions/{request_id}`, `DELETE /chat/sessions/{id}` | edit, and only from a privileged browser session; the hosted agent's own token is refused (SDD-017 §10) |
+| `ChatSessionList`, `ChatSessionGet`, `ChatTranscriptGet` | none | `chat:sessions`, `chat:session`, `chat:transcript` | `GET /projects/{id}/chat/sessions`, `GET /chat/sessions/{id}`, `GET /chat/sessions/{id}/transcript` | read (SDD-017 §9) |
+| chat session stream | none | none | `GET /chat/sessions/{id}/events` (SDD-017 §8) | read |
 
 Routes that are not service operations: `POST /mcp` (the MCP server over Streamable HTTP, SDD-003 §4.3; `GET` and `DELETE` on the path are not routes and answer 405 `E_METHOD_NOT_ALLOWED`, because the server is stateless; every tool call behind it is a service operation with the scope of its tool), `GET /api/v1/handshake` (the server proves it knows the local token, SDD-007 §3.8), `GET /auth/launch` and `POST /api/v1/system/launch` (browser session from a one-time code, SDD-007 §3.4), `POST /auth/login` and `POST /auth/logout` (network mode: the browser session of a user, SDD-007 §4.1; in local mode they answer 404 `E_NOT_FOUND`), `GET /up` (vukem health probe), `GET /openapi.json` and `GET /api/docs` (the OpenAPI document and its viewer), `POST /api/v1/system/tools/install` and `GET /api/v1/system/tools` (the explicit install of a helper such as whisper.cpp from the editor, and its state with the progress of a running install; the same step as the CLI command `tools:install`; the install is allowed only to a browser session in local mode or an `admin` key in network mode, never to the local token and never on an agent surface, SDD-007 §6.8; the `GET` only reads and takes the `read` scope, so an agent can tell whether a helper is installed before it asks for a transcript), and the byte-serving routes that the editor uses, all `read`, all under the project so that access is checked against it, all with HTTP Range and long-lived caching because their content never changes: `GET /projects/{id}/media/{asset_id}/proxy`, `.../thumbnail`, `.../strip`, `.../peaks`, `.../lut` (the parsed table of a lookup table asset, SDD-004 §3.6), and `GET /projects/{id}/bitmaps/{key}` (rasterized text and shapes by content key). What each returns is in SDD-011 and SDD-004.
 
@@ -100,14 +115,14 @@ Every operation belongs to one **domain**. The domain names are fixed here; a ne
 | Domain | What it holds | Operations today |
 | --- | --- | --- |
 | `project` | productions: projects, their items, the brief, bundles | `ProjectList`, `ProjectCreate`, `ProjectGet`, `ProjectTrash`, `ProjectRestore`, `ProjectDescribe`, `ProjectDuplicate`, `ProjectItem*`, `Brief*`, `ProjectBundle*`, the event stream |
-| `video` | the timeline document: its edit commands, history, lint, frames, jobs, templates, OpenTimelineIO | `Edit` and the commands of the timeline registry, `HistoryList`, `Undo`, `Redo`, `Lint`, `View*`, `JobStart`, `JobGet`, `JobList`, `JobCancel`, `ExportFile`, `Template*`, `SnapPoints`, `ProjectOtio*`, `Export*` (presets, the check against one, the batch) |
+| `video` | the timeline document: its edit commands, history, lint, frames, jobs, templates, OpenTimelineIO, the hand-off from a motion engine | `Edit` and the commands of the timeline registry, `HistoryList`, `Undo`, `Redo`, `Lint`, `View*`, `Motion*` (brief, check, replace; epic 33), `JobStart`, `JobGet`, `JobList`, `JobCancel`, `ExportFile`, `Template*`, `SnapPoints`, `ProjectOtio*`, `Export*` (presets, the check against one, the batch) |
 | `image` | image documents (SDD-021) | `Image*` and the commands of the image registry |
 | `writing` | written documents | none yet |
 | `asset` | files of the workspace: media, the asset library, fonts | `Media*`, `Asset*` (the library of epic 08: list, get, uses, set info, tag), `FontImport`, `FontList` |
-| `publish` | publications and their approval | `Approval*` (the queue that gates a publication and a costly generation, SDD-015) |
+| `publish` | publications and their approval | `Approval*` (the queue that gates a publication and a costly generation, SDD-015), `Social*` (the networks and the accounts a publication goes to), `Publish*` (validate, publish now, status; SDD-020) |
 | `provider` | AI providers and generation | `Provider*` (the providers, their models and the price table, SDD-016), `TextGenerate`, `Cost*` (the spend on providers and its ceilings) |
 | `memory` | the library: notes, skills, prompts, search | `Memory*`, `Skill*`, `Prompt*`, `Library*` |
-| `workspace` | the installation: help, connections, brand kit, health, keys, audit, trash, helpers | `CommandHelp`, `Connection*`, `BrandKit*`, `Doctor`, `AuditList`, `TrashEmpty`, `Tools*`, `Key*` |
+| `workspace` | the installation: help, connections, brand kit, health, keys, audit, trash, helpers, the hosted agent chat | `CommandHelp`, `Connection*`, `BrandKit*`, `Doctor`, `AuditList`, `TrashEmpty`, `Tools*`, `Key*`, `AgentProfile*`, `Chat*` (SDD-017) |
 
 Rules: a command (an operation of a registry in `core/command`) takes its domain from the registry that holds it (`command.NewRegistry(domain)`); the registry refuses a command whose own `Domain` differs, and a registry with no domain. The timeline registry is `video`, the image registry `image`. A Service operation has its domain in the table `service.OperationDomains`, and `TestOperationDomains` fails when a Service method has none. The `domain` argument of an MCP tool (SDD-003 section 4.8) takes these names; a missing one means `video`.
 
@@ -130,12 +145,14 @@ Rules: a command (an operation of a registry in `core/command`) takes its domain
 | `apr_` | approval request (SDD-015) | SDD-015 |
 | `rul_` | approval rule (SDD-015) | SDD-015 |
 | `led_` | cost ledger entry (SDD-015) | SDD-015 |
+| `cht_` | hosted agent chat session (SDD-017) | SDD-017 |
+| `cpr_` | permission request of a hosted agent (SDD-017 §7) | SDD-017 |
 
 All have the form `<prefix>_<10 lower-case Crockford base32 characters>`.
 
 ## 3. Actors
 
-An actor string is one of `user:<id>`, `key:<key id>`, `local:<label>`. `<label>` is supplied by the client in local mode (for example `local:ui`, `local:cli`, `local:claude-code`), limited to `[a-z0-9-]{1,32}`, default `local:cli` for the CLI, `local:mcp` for the MCP server, `local:ui` for the browser and `local:api` for a raw HTTP client that sends no label. A client never obtains `local:ui` by asking for it: that label belongs to the browser session. The stdio MCP server, when it is not given `--actor`, builds its label from the client name and a session id (`local:claude-code-k3m9x2`, SDD-003 section 4.5), so two agents with the same client name are two actors and undo never crosses sessions or reconnections; the label stays within the same `[a-z0-9-]{1,32}` rule.
+An actor string is one of `user:<id>`, `key:<key id>`, `local:<label>`. `<label>` is supplied by the client in local mode (for example `local:ui`, `local:cli`, `local:claude-code`), limited to `[a-z0-9-]{1,32}`, default `local:cli` for the CLI, `local:mcp` for the MCP server, `local:ui` for the browser and `local:api` for a raw HTTP client that sends no label. A client never obtains `local:ui` by asking for it: that label belongs to the browser session. The stdio MCP server, when it is not given `--actor`, builds its label from the client name and a session id (`local:claude-code-k3m9x2`, SDD-003 section 4.5), so two agents with the same client name are two actors and undo never crosses sessions or reconnections; the label stays within the same `[a-z0-9-]{1,32}` rule. The agent hosted in the chat (SDD-017 section 6.1) is the actor `local:chat-<10 characters of its session id>` in local mode and `key:<session id>` (`cht_` and 10 characters) in network mode, fixed by its token whatever label the client sends.
 
 ## 4. Scopes
 
@@ -186,6 +203,7 @@ Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, `text.generate
 | `image_documents`, `image_operations` | image documents, and their append-only log of batches | SDD-005 §5.13, SDD-021 |
 | `library_entries`, `library_fts` | the index of memory, skills and prompts for search and lists; rebuilt from the files, holds no content that the files lack | SDD-018 §9 |
 | `asset_info`, `asset_tags`, `asset_search` | the library side of an asset by hash: origin, rights note, description, the reuse mark, the tags and the full-text index over them | SDD-005 §5.5.1, SDD-011 §14 |
+| `agent_profiles`, `chat_sessions`, `chat_events` | the agents the user may host (a name, an executable and its arguments), and the transcripts of the chat sessions per project; no credential, no environment | SDD-017 §3, §9 |
 | vukem's own tables for sessions (`sessions`) and tokens (`access_tokens`) | network mode | vukem |
 
 A document with a `template` member is a template draft, or an instance when `template.instance` is true (SDD-001 section 3.10). `TemplateInstantiate` writes the flag; lint reads it (`L_SLOT_UNFILLED`, SDD-003).
@@ -227,10 +245,14 @@ The core's codes are in SDD-002 §A.8. The service adds:
 | `E_APPROVAL_NOT_FOUND` | the approval request or the approval rule does not exist (SDD-015 §8) | no |
 | `E_COST_CEILING` | an estimate is over a cost ceiling; `details` hold `scope`, `reason`, `limit_micros`, `spent_micros`, `estimate_micros`, `currency`; nothing was spent (SDD-015 §6) | no |
 | `E_APPROVAL_EXPIRED` | in the error of a job whose approval request expired before a person answered (SDD-015 §3) | no |
+| `E_PUBLISH` | a network refused or failed a publication; `details.kind` is `quota`, `not_eligible`, `auth`, `invalid`, `rejected` or `unavailable`, with `network` and, for a quota, `retry_after`; the `retryable` of the error is true for the kinds `quota`, `auth` and `unavailable` (SDD-020 §7.3) | no |
 | `E_PROVIDER` | an AI provider refused or failed a request; `details.kind` is `auth`, `rate_limited`, `bad_request`, `unavailable` or `unreadable`, with `status`, `code` and `retry_after_seconds` when known; the body of the provider is never in it (SDD-016 §8) | no |
 | `E_PRICE_UNKNOWN` | no price is known for the model of a generation, so no estimate can be made; `details` hold `provider` and `model` (SDD-016 §4.2) | no |
+| `E_AGENT_NOT_FOUND` | the agent profile does not exist (SDD-017 §11) | no |
+| `E_CHAT_NOT_FOUND` | the chat session does not exist, or the caller may not see its project (SDD-017 §11) | no |
+| `E_AGENT_UNAVAILABLE` | the hosted agent could not be started or opened; `details.reason` `not_found`, `start_failed`, `exited`, `timeout`, `protocol`, `protocol_version`, `no_http_mcp`, `sign_in_required`, `limit` (SDD-017 §11) | no |
 
-HTTP status mapping: `E_VALIDATION`, `E_INVALID_TIME`, `E_UNKNOWN_COMMAND` 400; `E_UNAUTHORIZED` 401; `E_FORBIDDEN`, `E_PATH_NOT_ALLOWED`, `E_CONNECTION_DESTINATION`, `E_PRIVILEGED_SESSION` 403; `E_NOT_FOUND`, `E_FILE_NOT_FOUND`, `E_CONNECTION_NOT_FOUND`, `E_APPROVAL_NOT_FOUND` 404; `E_REVISION_CONFLICT`, `E_IDEMPOTENCY_MISMATCH`, `E_OVERLAP`, `E_INVALID_STATE`, `E_IN_USE`, `E_NOT_EMPTY`, `E_ID_EXISTS`, `E_ASSET_NOT_READY` 409; `E_PAYLOAD_TOO_LARGE` 413; `E_METHOD_NOT_ALLOWED` 405; `E_LIMIT`, `E_LIMIT_EXCEEDED`, `E_UNSUPPORTED_MEDIA`, `E_TYPE_MISMATCH`, `E_OUT_OF_SOURCE`, `E_FONT_UNKNOWN`, `E_SLOT`, `E_LINT_BLOCKING`, `E_COST_CEILING`, `E_PRICE_UNKNOWN` 422; `E_QUEUE_FULL`, `E_RATE_LIMITED` 429; `E_NOTHING_TO_UNDO`, `E_NOTHING_TO_REDO`, `E_APPROVAL_EXPIRED` 409; `E_CLIENT_CLOSED` 499; `E_WORKSPACE_LOCKED`, `E_TRANSCRIBE_UNAVAILABLE`, `E_FFMPEG_MISSING`, `E_NO_ENCODER`, `E_VAULT_LOCKED` 503; `E_PROVIDER` 502; `E_INTERNAL` and everything else 500. The job codes `E_INGEST_FAILED`, `E_EXPORT_FAILED`, `E_VERIFY_FAILED`, `E_TRANSCRIBE_FAILED` and `E_CANCELLED` normally travel inside a job object in a 200 answer; they are 500 only when a call itself raises them.
+HTTP status mapping: `E_VALIDATION`, `E_INVALID_TIME`, `E_UNKNOWN_COMMAND` 400; `E_UNAUTHORIZED` 401; `E_FORBIDDEN`, `E_PATH_NOT_ALLOWED`, `E_CONNECTION_DESTINATION`, `E_PRIVILEGED_SESSION` 403; `E_NOT_FOUND`, `E_FILE_NOT_FOUND`, `E_CONNECTION_NOT_FOUND`, `E_APPROVAL_NOT_FOUND`, `E_AGENT_NOT_FOUND`, `E_CHAT_NOT_FOUND` 404; `E_REVISION_CONFLICT`, `E_IDEMPOTENCY_MISMATCH`, `E_OVERLAP`, `E_INVALID_STATE`, `E_IN_USE`, `E_NOT_EMPTY`, `E_ID_EXISTS`, `E_ASSET_NOT_READY` 409; `E_PAYLOAD_TOO_LARGE` 413; `E_METHOD_NOT_ALLOWED` 405; `E_LIMIT`, `E_LIMIT_EXCEEDED`, `E_UNSUPPORTED_MEDIA`, `E_TYPE_MISMATCH`, `E_OUT_OF_SOURCE`, `E_FONT_UNKNOWN`, `E_SLOT`, `E_LINT_BLOCKING`, `E_COST_CEILING`, `E_PRICE_UNKNOWN` 422; `E_QUEUE_FULL`, `E_RATE_LIMITED` 429; `E_NOTHING_TO_UNDO`, `E_NOTHING_TO_REDO`, `E_APPROVAL_EXPIRED` 409; `E_CLIENT_CLOSED` 499; `E_WORKSPACE_LOCKED`, `E_TRANSCRIBE_UNAVAILABLE`, `E_FFMPEG_MISSING`, `E_NO_ENCODER`, `E_VAULT_LOCKED`, `E_AGENT_UNAVAILABLE` 503; `E_PUBLISH`, `E_PROVIDER` 502; `E_INTERNAL` and everything else 500. The job codes `E_INGEST_FAILED`, `E_EXPORT_FAILED`, `E_VERIFY_FAILED`, `E_TRANSCRIBE_FAILED` and `E_CANCELLED` normally travel inside a job object in a 200 answer; they are 500 only when a call itself raises them.
 
 CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the rest.
 
@@ -244,6 +266,7 @@ CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the re
 ├── runtime.json             owner process: schema, pid, addr, mode, started_at, version (present only while a server runs; no secret)
 ├── token                    local token, file mode 0600 (local mode only)
 ├── vault.json               encrypted credentials of the connections, file mode 0600; created with the first credential (SDD-014 §3)
+├── publish/                 uploads/<key>.json: the address of an upload session of a publication in progress, file mode 0600, no token (SDD-020 §7.4)
 ├── providers/               prices.json: the price table the person edits for the models whose provider publishes no price, file mode 0600 (SDD-016 §4.3)
 ├── library/                 memory/, prompts/ and skills/<name>/SKILL.md: the files of the library, the truth of the index; .review-key seals the review marks (SDD-018 §2, §7)
 ├── store/                   content-addressed originals: store/<first 2 hex>/<sha256>; store/.incoming/ holds copies in progress
@@ -254,6 +277,7 @@ CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the re
 ├── bitmaps/                 cache of rasterized text and shapes, by content hash
 ├── fonts/                   user fonts, by hash 
 ├── tools/                   installed helpers (whisper.cpp, models); tools/.download/ holds downloads in progress
+├── chat/                    the working directory of a hosted agent, one folder per project: chat/<project id>/, mode 0700 (SDD-017 §4)
 ├── tmp/                     one directory per running child process: tmp/<job id>/ (SDD-007 §6.4)
 ├── backups/                 copies of db.sqlite made before a migration (SDD-005 §7)
 ├── logs/                    rotating log files
@@ -279,6 +303,7 @@ Environment variables, all optional. Names are final. Ceilings that have no vari
 | `STUARTY_TRANSCRIBE_URL`, `STUARTY_TRANSCRIBE_KEY`, `STUARTY_TRANSCRIBE_MODEL` | none | OpenAI-compatible transcription API; when unset, the local provider is used |
 | `STUARTY_WHISPER_MODEL` | `small` | local model name: `tiny`, `base`, `small` or `large-v3-turbo` |
 | `STUARTY_TEST_TRANSCRIBER` | none | test only: `stub` selects a provider that answers every audio with four fixed words (`hello` 100-400 ms, `brave` 400-700, `new` 1100-1400, `world` 1400-1900, language `en`). Honoured only with `APP_ENV=test` in local mode; with any other `APP_ENV`, in network mode, or with any other value the server refuses to start. Never set in production |
+| `STUARTY_TEST_SOCIAL_URL` | none | test only: the address (`http://127.0.0.1:<port>`) of a server on loopback that plays a social network; the build then also offers the network `fake`, which speaks only to that address (SDD-020 §12). Honoured in local mode only; any other address, scheme or mode and the server refuses to start. Never set in production |
 | `STUARTY_MAX_EXPORTS_PER_KEY` | `1` | concurrent exports running per actor (two more may wait) |
 | `STUARTY_MAX_INGESTS` | `2` | concurrent ingests per workspace |
 | `STUARTY_MAX_TRANSCRIBES` | `1` | concurrent transcriptions per workspace |
@@ -500,5 +525,5 @@ The operations of the registry of domain `image` (`core/command` registry built 
 | --- | --- | --- |
 | `imported`, `generated`, `fetched_by_agent`, `rendered_externally` | origin kind | where an asset came from: a file the user brought, a file a provider generated, a file an agent downloaded on its own side, a file rendered by another tool |
 | `visual`, `video` | library section | the two sections over one library: Visual Assets (kinds `image`, `lut`) and Video Assets (kinds `video`, `audio`) |
-| `E_VALIDATION` `details.reason` `origin_kind_unknown`, `source_required`, `rights_note_required`, `provider_required`, `model_required`, `too_long`, `cost_invalid`, `tags_invalid`, `kind_unknown`, `section_unknown` | error detail | an origin, a tag set or a list filter the library refuses (`path` is `origin.<field>`, `tags`, `kind`, `section`, `origin` or `tag`); stable for agents |
+| `E_VALIDATION` `details.reason` `origin_kind_unknown`, `source_required`, `rights_note_required`, `provider_required`, `model_required`, `too_long`, `cost_invalid`, `tags_invalid`, `kind_unknown`, `section_unknown`, `origin_member_not_allowed`, `origin_member_invalid` | error detail | an origin, a tag set or a list filter the library refuses (`path` is `origin.<field>`, `tags`, `kind`, `section`, `origin` or `tag`); the last two refuse `engine`, `engine_version` or `render_key` on another kind than `rendered_externally`, or in a form that is not a token (SDD-011 §14.2, epic 33); stable for agents |
 | `asset_hash`, `hash` | field | the content hash `sha256:<64 hex>` of an asset, the key of the library (a bare 64 hex string is accepted and normalised) |

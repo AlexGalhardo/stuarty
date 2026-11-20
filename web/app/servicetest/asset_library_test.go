@@ -507,3 +507,313 @@ func TestAssetLibraryKeyLimitedToAProject(t *testing.T) {
 		t.Errorf("a refused call changed the file: %+v, %v", e, err)
 	}
 }
+
+// Two users of network mode who hold the same bytes each have their own library record of them (VV-254): the
+// origin, the rights note, the description, the tags and the reuse mark of one are neither read, searched nor
+// changed by the other, and a project-limited key of one user reaches that user's record only.
+func TestSecurity_T06_AssetLibraryRecordIsPerOwner(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+
+	as := func(user string) context.Context {
+		return service.WithCaller(
+			context.Background(),
+			service.Caller{Actor: "user:" + user, Scopes: service.AllScopes, OwnerUserID: user},
+		)
+	}
+	mk := func(c context.Context, name string) string {
+		res, err := m.svc.ProjectCreate(c, service.ProjectCreateRequest{Name: name})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		return res.ProjectID
+	}
+
+	alice, bob := as("alice"), as("bob")
+	pa, pb := mk(alice, "alice cut"), mk(bob, "bob cut")
+
+	imp := func(c context.Context, project, name, prompt, note, text string, tags ...string) string {
+		res, err := m.svc.MediaImport(c, service.MediaImportRequest{
+			ProjectID: project,
+			Files:     []service.ImportFile{{Path: m.write(name, clipBytes)}},
+			Origin: &asset.Origin{
+				Kind:       asset.Generated,
+				Provider:   "acme",
+				Model:      "m-1",
+				Prompt:     prompt,
+				RightsNote: note,
+			},
+			Info: &service.AssetInfo{Tags: tags, Reusable: new(true), Description: text},
+		})
+		if err != nil || res.Failed != 0 {
+			t.Fatalf("import = %+v, %v", res, err)
+		}
+
+		return res.Assets[0].Hash
+	}
+
+	hash := imp(alice, pa, "alice-take.mp4", "alices secret prompt", "alice owns it", "alice describes", "alicetag")
+	if other := imp(
+		bob,
+		pb,
+		"bob-take.mp4",
+		"bobs prompt",
+		"bob licensed it",
+		"bob describes",
+		"bobtag",
+	); other != hash {
+		t.Fatalf("the same bytes have two hashes: %s, %s", hash, other)
+	}
+
+	got, err := m.svc.AssetGet(bob, service.AssetRef{Hash: hash})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got.Origin.Prompt != "bobs prompt" || got.Origin.RightsNote != "bob licensed it" ||
+		got.Description != "bob describes" || !slices.Equal(got.Tags, []string{"bobtag"}) ||
+		got.Projects != 1 || strings.Contains(got.Text, "alice") {
+		t.Errorf("bob reads %+v", got)
+	}
+
+	for _, q := range []string{"alice", "alicetag", "alices", "secret", "describes alice"} {
+		if list, lerr := m.svc.AssetList(bob, service.AssetListRequest{Text: q}); lerr != nil || len(list.Assets) != 0 {
+			t.Errorf("bob's search for %q matched alice's text: %+v, %v", q, list, lerr)
+		}
+	}
+
+	for _, q := range []string{"bob", "bobtag", "bobs", "licensed"} {
+		if list, lerr := m.svc.AssetList(
+			alice,
+			service.AssetListRequest{Text: q},
+		); lerr != nil ||
+			len(list.Assets) != 0 {
+			t.Errorf("alice's search for %q matched bob's text: %+v, %v", q, list, lerr)
+		}
+	}
+
+	if list, _ := m.svc.AssetList(bob, service.AssetListRequest{Tag: "alicetag"}); len(list.Assets) != 0 {
+		t.Errorf("bob filters by alice's tag: %+v", list.Assets)
+	}
+
+	// Bob changes his record; alice's is as she left it.
+	if _, err := m.svc.AssetSetInfo(bob, service.AssetSetInfoRequest{
+		Hash: hash, Description: new("bob rewrote"), RightsNote: new("bob note two"), Reusable: new(false),
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := m.svc.AssetTag(bob, service.AssetTagRequest{
+		Hash: hash, Add: []string{"extra"}, Remove: []string{"alicetag", "bobtag"},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	mine, err := m.svc.AssetGet(alice, service.AssetRef{Hash: hash})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if mine.Origin.Prompt != "alices secret prompt" || mine.Origin.RightsNote != "alice owns it" ||
+		mine.Description != "alice describes" || !mine.Reusable || !slices.Equal(mine.Tags, []string{"alicetag"}) {
+		t.Errorf("bob's change reached alice's record: %+v", mine)
+	}
+
+	if list, _ := m.svc.AssetList(alice, service.AssetListRequest{Text: "rewrote"}); len(list.Assets) != 0 {
+		t.Errorf("alice finds bob's text: %+v", list.Assets)
+	}
+
+	// A project-limited key of alice reaches her record, and only through her project.
+	key := service.WithCaller(context.Background(), service.Caller{
+		Actor: "key:k", Scopes: service.AllScopes, OwnerUserID: "alice", ProjectID: pa,
+	})
+
+	entry, err := m.svc.AssetGet(key, service.AssetRef{Hash: hash})
+	if err != nil || entry.Origin.RightsNote != "alice owns it" || len(entry.Uses) != 1 ||
+		entry.Uses[0].ProjectID != pa {
+		t.Errorf("alice's key reads %+v, %v", entry, err)
+	}
+
+	// Reuse by hash across the projects of one owner keeps working with no second copy.
+	pa2 := mk(alice, "alice second")
+	files := len(storeFiles(t, m.ws))
+
+	if _, err := m.svc.MediaImport(alice, service.MediaImportRequest{
+		ProjectID: pa2, Files: []service.ImportFile{{Hash: hash}},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(storeFiles(t, m.ws)) != files {
+		t.Error("reusing a file by hash made a second copy")
+	}
+
+	if again, _ := m.svc.AssetGet(alice, service.AssetRef{Hash: hash}); again == nil || again.Projects != 2 ||
+		again.Origin.RightsNote != "alice owns it" {
+		t.Errorf("after the reuse: %+v", again)
+	}
+}
+
+// A file that reaches a project of an owner with no library row for it, by a copy of a project or by the asset of
+// a template fill, is found by the name that owner's project gives it, as an imported file is (VV-254: the search
+// row is per owner and the ingest writes none).
+func TestAssetLibraryFindsAFileCopiedToAnotherOwner(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	alice := service.WithCaller(context.Background(), service.Caller{
+		Actor: "user:alice", Scopes: service.AllScopes, OwnerUserID: "alice",
+	})
+	local := m.as(ui)
+
+	mk := func(c context.Context, name string) string {
+		res, err := m.svc.ProjectCreate(c, service.ProjectCreateRequest{Name: name})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		return res.ProjectID
+	}
+	imp := func(project, name, body string) service.ImportedAsset {
+		res, err := m.svc.MediaImport(alice, service.MediaImportRequest{
+			ProjectID: project, Files: []service.ImportFile{{Path: m.write(name, body)}},
+		})
+		if err != nil || res.Failed != 0 {
+			t.Fatalf("import = %+v, %v", res, err)
+		}
+
+		return res.Assets[0]
+	}
+	found := func(text string) []string {
+		res, err := m.svc.AssetList(local, service.AssetListRequest{Text: text})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		return assetIDs(res)
+	}
+
+	harbourProject := mk(alice, "alice harbour")
+	harbour := imp(harbourProject, "harbour-night.mp4", clipBytes+" harbour")
+	meadow := imp(mk(alice, "alice meadow"), "meadow-dawn.mp4", clipBytes+" meadow")
+
+	// The copy of alice's project belongs to the local owner, who had no record of the file.
+	copied, err := m.svc.ProjectDuplicate(local, service.ProjectDuplicateRequest{ProjectID: harbourProject})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got := found("harbour"); !slices.Equal(got, []string{harbour.Hash}) {
+		t.Errorf("after the copy %s, the search for its file = %v", copied.ProjectID, got)
+	}
+
+	// A template of the local owner filled with alice's file adds it to a new project by asset.add.
+	source := mk(local, "tpl")
+	steps := []command.Operation{
+		op("track.add", `{"kind":"visual","name":"V"}`),
+		op("template.set_info", `{"description":"t"}`),
+	}
+
+	var track, clip string
+
+	for i, o := range steps {
+		res, eerr := m.svc.Edit(
+			local,
+			service.EditRequest{ProjectID: source, BaseRevision: int64(i), Operations: []command.Operation{o}},
+		)
+		if eerr != nil {
+			t.Fatal(eerr)
+		}
+
+		if i == 0 {
+			track = res.Created[0]
+		}
+	}
+
+	res, err := m.svc.Edit(
+		local,
+		service.EditRequest{ProjectID: source, BaseRevision: 2, Operations: []command.Operation{op(
+			"clip.add", `{"track_id":"`+track+`","asset_id":"ast_placeholder","start":"0s","duration":"1s"}`,
+		)}},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	clip = res.Created[0]
+
+	if _, err := m.svc.Edit(
+		local,
+		service.EditRequest{ProjectID: source, BaseRevision: 3, Operations: []command.Operation{
+			op("slot.mark", `{"item_id":"`+clip+`","name":"hero"}`),
+		}},
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	tpl, err := m.svc.TemplateSave(local, service.TemplateSaveRequest{ProjectID: source, Name: "T"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := m.svc.TemplateInstantiate(local, service.TemplateInstantiateRequest{
+		TemplateID: tpl.Template.TemplateID, Name: "Filled",
+		Fill: map[string]service.SlotValue{"hero": {AssetID: meadow.AssetID}},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if got := found("meadow"); !slices.Equal(got, []string{meadow.Hash}) {
+		t.Errorf("after the template fill, the search for its file = %v", got)
+	}
+}
+
+// Reusing a file by hash in network mode names the new use as the caller's own projects name the file, never by
+// the name of the first import, which may be another user's (VV-254: the names are per owner).
+func TestAssetLibraryReuseByHashKeepsTheCallersName(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	as := func(user string) context.Context {
+		return service.WithCaller(context.Background(), service.Caller{
+			Actor: "user:" + user, Scopes: service.AllScopes, OwnerUserID: user,
+		})
+	}
+	mk := func(c context.Context, name string) string {
+		res, err := m.svc.ProjectCreate(c, service.ProjectCreateRequest{Name: name})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		return res.ProjectID
+	}
+	alice, bob := as("alice"), as("bob")
+
+	first, err := m.svc.MediaImport(alice, service.MediaImportRequest{
+		ProjectID: mk(alice, "a"), Files: []service.ImportFile{{Path: m.write("merger-secret-plan.mp4", clipBytes)}},
+	})
+	if err != nil || first.Failed != 0 {
+		t.Fatalf("alice's import = %+v, %v", first, err)
+	}
+
+	if _, err := m.svc.MediaImport(bob, service.MediaImportRequest{
+		ProjectID: mk(bob, "b"), Files: []service.ImportFile{{Path: m.write("holiday.mp4", clipBytes)}},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	second := mk(bob, "b2")
+
+	reused, err := m.svc.MediaImport(bob, service.MediaImportRequest{
+		ProjectID: second, Files: []service.ImportFile{{Hash: first.Assets[0].Hash}},
+	})
+	if err != nil || reused.Failed != 0 || reused.Assets[0].Name != "holiday.mp4" {
+		t.Fatalf("bob's reuse = %+v, %v", reused, err)
+	}
+
+	list, err := m.svc.MediaList(bob, service.MediaListRequest{ProjectID: second})
+	if err != nil || len(list.Assets) != 1 || strings.Contains(list.Text, "secret") {
+		t.Errorf("bob's media = %+v, %v", list, err)
+	}
+
+	if found, _ := m.svc.AssetList(bob, service.AssetListRequest{Text: "secret"}); found == nil ||
+		len(found.Assets) != 0 {
+		t.Errorf("bob finds the file by alice's name: %+v", found)
+	}
+}

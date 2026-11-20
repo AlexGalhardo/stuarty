@@ -7,99 +7,113 @@ description: "Every shortcut of the editor, generated from its keymap, with the 
 
 This list is generated from the keymap of the editor, the same table the cheat sheet shows when you press `?`, so it always matches the version of the editor it was built from. `Mod` is `Ctrl` on Windows and Linux and `Cmd` on macOS; the two columns spell it out. A shortcut never fires while you type in a field, except `Mod+K`.
 
+The Windows, Linux and macOS columns are the **Short video** preset, close to the most used short-video editor, which is the default. The **Classic** column lists the keys that differ in the preset of a traditional timeline editor; where it says "same" the key is the one of the first preset. You choose the preset and change any key in the shortcuts dialog (`?`).
+
 For how to change a key and how the command palette reaches every command, see [Keyboard shortcuts](/docs/guide/keyboard-shortcuts).
 
 ## Play and move the playhead
 
-| Does | Windows and Linux | macOS | Also |
-| --- | --- | --- | --- |
-| Play or pause | `Space` | `Space` |  |
-| Step one frame | `Left`, `Right` | `Left`, `Right` |  |
-| Step one second | `Shift+Left`, `Shift+Right` | `Shift+Left`, `Shift+Right` |  |
-| Go to start or end | `Home`, `End` | `Home`, `End` |  |
-| Go to the previous or next cut | `Up`, `Down` | `Up`, `Down` |  |
-| Play (L), pause (K), back one second (J) | `J`, `K`, `L` | `J`, `K`, `L` |  |
+| Does | Windows and Linux | macOS | Classic preset | Also |
+| --- | --- | --- | --- | --- |
+| Play or pause (can be changed) | `Space` | `Space` | same |  |
+| Back one second (player) (can be changed) | `J` | `J` | same |  |
+| Pause (can be changed) | `K` | `K` | same |  |
+| Play (can be changed) | `L` | `L` | same |  |
+| Step back one frame (can be changed) | `Left` | `Left` | same |  |
+| Step forward one frame (can be changed) | `Right` | `Right` | same |  |
+| Step back one second (can be changed) | `Shift+Left` | `Shift+Left` | same | `PageDown` |
+| Step forward one second (can be changed) | `Shift+Right` | `Shift+Right` | same | `PageUp` |
+| Go to the start (can be changed) | `Home` | `Home` | same |  |
+| Go to the end (can be changed) | `End` | `End` | same |  |
+| Go to the previous cut (can be changed) | `Up` | `Up` | same |  |
+| Go to the next cut (can be changed) | `Down` | `Down` | same |  |
 
 ## Markers and range
 
-| Does | Windows and Linux | macOS | Also |
-| --- | --- | --- | --- |
-| Add a marker at the playhead, or remove the one there | `M` | `M` |  |
-| Go to the previous or next marker | `Shift+M`, `Alt+Shift+M`, `Ctrl+Shift+Left`, `Ctrl+Shift+Right` | `Shift+M`, `Alt+Shift+M`, `Cmd+Shift+Left`, `Cmd+Shift+Right` |  |
-| Set the in point (I) and the out point (O) | `I`, `O` | `I`, `O` |  |
-| Set the in and out points to the selected items | `Shift+X` | `Shift+X` |  |
-| Clear the in and out points | `Alt+X`, `Ctrl+Shift+X` | `Alt+X`, `Cmd+Shift+X` |  |
+| Does | Windows and Linux | macOS | Classic preset | Also |
+| --- | --- | --- | --- | --- |
+| Add a marker at the playhead, or remove the one there (can be changed) | `M` | `M` | same |  |
+| Go to the previous marker (can be changed) | `Alt+Shift+M`, `Ctrl+Shift+Left` | `Alt+Shift+M`, `Cmd+Shift+Left` | same |  |
+| Go to the next marker (can be changed) | `Shift+M`, `Ctrl+Shift+Right` | `Shift+M`, `Cmd+Shift+Right` | same |  |
+| Set the in point (can be changed) | `I` | `I` | same |  |
+| Set the out point (can be changed) | `O` | `O` | same |  |
+| Set the in and out points to the selected items (can be changed) | `Shift+X` | `Shift+X` | same |  |
+| Clear the in and out points (can be changed) | `Alt+X`, `Ctrl+Shift+X` | `Alt+X`, `Cmd+Shift+X` | same |  |
 
 ## Cut and arrange
 
-| Does | Windows and Linux | macOS | Also |
-| --- | --- | --- | --- |
-| Blade tool (B), select tool (A) | `B`, `A` | `B`, `A` |  |
-| Split the selected item at the playhead (can be changed) | `Ctrl+B` | `Cmd+B` |  |
-| Split every track at the playhead | `Ctrl+Shift+B` | `Cmd+Shift+B` |  |
-| Delete what is left of the playhead (can be changed) | `Q` | `Q` |  |
-| Delete what is right of the playhead (can be changed) | `W` | `W` |  |
-| Slide the selected item, its neighbours keep touching it (1 frame) | `Ctrl+Alt+Left`, `Ctrl+Alt+Right` | `Cmd+Alt+Left`, `Cmd+Alt+Right` |  |
-| Roll the cut after the selected item (1 frame) | `Ctrl+Alt+Shift+Left`, `Ctrl+Alt+Shift+Right` | `Cmd+Alt+Shift+Left`, `Cmd+Alt+Shift+Right` |  |
-| Slip the selected clip, showing another part of its source (1 frame) | `Alt+,`, `Alt+.` | `Alt+,`, `Alt+.` |  |
-| Select everything left, right of the playhead | `[`, `]` | `[`, `]` |  |
-| Select all items | `Ctrl+A` | `Cmd+A` |  |
-| Delete | `Delete`, `Backspace` | `Delete`, `Backspace` |  |
-| Ripple delete | `Shift+Delete` | `Shift+Delete` |  |
-| Duplicate | `Ctrl+D` | `Cmd+D` |  |
-| Copy the selected items | `Ctrl+C` | `Cmd+C` |  |
-| Cut the selected items | `Ctrl+X` | `Cmd+X` |  |
-| Paste a copy of the items | `Ctrl+V` | `Cmd+V` |  |
-| Rename | `F2` | `F2` |  |
-| Turn the selected items on or off | `V` | `V` |  |
-| Link or unlink the selected items | `~` | `~` |  |
-| Extract the audio of the selected clips | `Ctrl+Shift+S` | `Cmd+Shift+S` |  |
-| Volume up by 0.1 dB | `Ctrl+.` | `Cmd+.` |  |
-| Volume down by 0.1 dB | `Ctrl+,` | `Cmd+,` |  |
+| Does | Windows and Linux | macOS | Classic preset | Also |
+| --- | --- | --- | --- | --- |
+| Blade tool (can be changed) | `B` | `B` | `C` |  |
+| Select tool (can be changed) | `A` | `A` | `V` |  |
+| Split the selected item at the playhead (can be changed) | `Ctrl+B` | `Cmd+B` | `S` |  |
+| Split every track at the playhead (can be changed) | `Ctrl+Shift+B` | `Cmd+Shift+B` | `Shift+S` |  |
+| Delete what is left of the playhead (can be changed) | `Q` | `Q` | same |  |
+| Delete what is right of the playhead (can be changed) | `W` | `W` | same |  |
+| Slide the selected item back, its neighbours keep touching it (1 frame) (can be changed) | `Ctrl+Alt+Left` | `Cmd+Alt+Left` | same |  |
+| Slide the selected item forward, its neighbours keep touching it (1 frame) (can be changed) | `Ctrl+Alt+Right` | `Cmd+Alt+Right` | same |  |
+| Roll the cut after the selected item back (1 frame) (can be changed) | `Ctrl+Alt+Shift+Left` | `Cmd+Alt+Shift+Left` | same |  |
+| Roll the cut after the selected item forward (1 frame) (can be changed) | `Ctrl+Alt+Shift+Right` | `Cmd+Alt+Shift+Right` | same |  |
+| Slip the selected clip back, showing an earlier part of its source (1 frame) (can be changed) | `Alt+,` | `Alt+,` | same |  |
+| Slip the selected clip forward, showing a later part of its source (1 frame) (can be changed) | `Alt+.` | `Alt+.` | same |  |
+| Select everything left of the playhead (can be changed) | `[` | `[` | same |  |
+| Select everything right of the playhead (can be changed) | `]` | `]` | same |  |
+| Select all items (can be changed) | `Ctrl+A` | `Cmd+A` | same |  |
+| Delete (can be changed) | `Delete`, `Backspace` | `Delete`, `Backspace` | same |  |
+| Ripple delete (can be changed) | `Shift+Delete` | `Shift+Delete` | same |  |
+| Duplicate (can be changed) | `Ctrl+D` | `Cmd+D` | same |  |
+| Copy the selected items (can be changed) | `Ctrl+C` | `Cmd+C` | same |  |
+| Cut the selected items (can be changed) | `Ctrl+X` | `Cmd+X` | same |  |
+| Paste a copy of the items (can be changed) | `Ctrl+V` | `Cmd+V` | same |  |
+| Rename (can be changed) | `F2` | `F2` | same |  |
+| Turn the selected items on or off (can be changed) | `V` | `V` | `Shift+E` |  |
+| Link or unlink the selected items (can be changed) | `~` | `~` | same |  |
+| Extract the audio of the selected clips (can be changed) | `Ctrl+Shift+S` | `Cmd+Shift+S` | same |  |
+| Copy the look of the selected item (can be changed) | `Ctrl+Shift+C` | `Cmd+Shift+C` | same |  |
+| Paste the copied look onto the selected items (can be changed) | `Ctrl+Shift+V` | `Cmd+Shift+V` | same |  |
+| Volume up by 0.1 dB (can be changed) | `Ctrl+.` | `Cmd+.` | same |  |
+| Volume down by 0.1 dB (can be changed) | `Ctrl+,` | `Cmd+,` | same |  |
 
 ## Add, import and export
 
-| Does | Windows and Linux | macOS | Also |
-| --- | --- | --- | --- |
-| Add caption (can be changed) | `C` | `C` |  |
-| Add text (can be changed) | `T` | `T` |  |
-| Import media | `Ctrl+I` | `Cmd+I` |  |
-| Export | `Ctrl+E` | `Cmd+E` |  |
+| Does | Windows and Linux | macOS | Classic preset | Also |
+| --- | --- | --- | --- | --- |
+| Add caption (can be changed) | `C` | `C` | `Shift+C` |  |
+| Add text (can be changed) | `T` | `T` | `Shift+T` |  |
+| Import media (can be changed) | `Ctrl+I` | `Cmd+I` | same |  |
+| Export (can be changed) | `Ctrl+E` | `Cmd+E` | same |  |
 
 ## History, zoom and panels
 
-| Does | Windows and Linux | macOS | Also |
-| --- | --- | --- | --- |
-| Undo | `Ctrl+Z` | `Cmd+Z` |  |
-| Redo | `Ctrl+Shift+Z` | `Cmd+Shift+Z` |  |
-| Redo (alternative) | `Ctrl+Y` | `Ctrl+Y` |  |
-| Zoom in (can be changed) | `Ctrl+=` | `Cmd+=` | `+`, `Ctrl++` |
-| Zoom out (can be changed) | `Ctrl+-` | `Cmd+-` | `-` |
-| Fit the timeline (can be changed) | `Shift+Z` | `Shift+Z` |  |
-| Zoom the timeline with the wheel | `Ctrl+Wheel` | `Cmd+Wheel` |  |
-| Fit the preview, zoom it in, zoom it out | `Alt+Shift+Z`, `Alt+Shift+=`, `Alt+Shift+-` | `Alt+Shift+Z`, `Alt+Shift+=`, `Alt+Shift+-` |  |
-| Toggle snapping (can be changed) | `N` | `N` |  |
-| Show or hide the keyframes of the selected item | `Alt+K` | `Alt+K` |  |
-| Toggle library, inspector and history | `Alt+1`, `Alt+2`, `Alt+3` | `Alt+1`, `Alt+2`, `Alt+3` |  |
+| Does | Windows and Linux | macOS | Classic preset | Also |
+| --- | --- | --- | --- | --- |
+| Undo (can be changed) | `Ctrl+Z` | `Cmd+Z` | same |  |
+| Redo (can be changed) | `Ctrl+Shift+Z`, `Ctrl+Y` | `Cmd+Shift+Z`, `Cmd+Y` | same |  |
+| Zoom in (can be changed) | `Ctrl+=` | `Cmd+=` | same | `+`, `Ctrl++`, `=` |
+| Zoom out (can be changed) | `Ctrl+-` | `Cmd+-` | same | `-` |
+| Fit the timeline (can be changed) | `Shift+Z` | `Shift+Z` | `\\` |  |
+| Zoom the timeline with the wheel | `Ctrl+Wheel` | `Cmd+Wheel` | same |  |
+| Scroll the timeline: wheel up and down, Alt+wheel sideways | `Wheel`, `Alt+Wheel` | `Wheel`, `Alt+Wheel` | same |  |
+| Fit the preview (can be changed) | `Alt+Shift+Z` | `Alt+Shift+Z` | same |  |
+| Zoom the preview in (can be changed) | `Alt+Shift+=` | `Alt+Shift+=` | same |  |
+| Zoom the preview out (can be changed) | `Alt+Shift+-` | `Alt+Shift+-` | same |  |
+| Toggle snapping (can be changed) | `N` | `N` | same |  |
+| Turn the magnet of the track on or off (can be changed) | `P` | `P` | same |  |
+| Show or hide the keyframes of the selected item (can be changed) | `Alt+K` | `Alt+K` | same |  |
+| Open the speed curve of the selected clip (can be changed) | `Shift+B` | `Shift+B` | same |  |
+| Show or hide the library (can be changed) | `Alt+1` | `Alt+1` | same |  |
+| Show or hide the inspector (can be changed) | `Alt+2` | `Alt+2` | same |  |
+| Show or hide the history (can be changed) | `Alt+3` | `Alt+3` | same |  |
 
 ## The editor
 
-| Does | Windows and Linux | macOS | Also |
-| --- | --- | --- | --- |
-| Command palette | `Ctrl+K` | `Cmd+K` |  |
-| Find in the project | `Ctrl+F` | `Cmd+F` |  |
-| Save (every edit is saved already) | `Ctrl+S` | `Cmd+S` |  |
-| Cancel, close or clear the selection | `Esc` | `Esc` |  |
-| Jump to the next region | `F6` | `F6` |  |
-| Move inside the timeline | Timeline grid keys | Timeline grid keys |  |
-| Open this list | `?` | `?` |  |
-
-## More shortcuts
-
-| Does | Windows and Linux | macOS | Also |
-| --- | --- | --- | --- |
-| Turn the magnet of the track on or off | `P` | `P` |  |
-| Copy the look of the selected item | `Ctrl+Shift+C` | `Cmd+Shift+C` |  |
-| Paste the copied look onto the selected items | `Ctrl+Shift+V` | `Cmd+Shift+V` |  |
-| Open the speed curve of the selected clip | `Shift+B` | `Shift+B` |  |
-| Scroll the timeline: wheel up and down, Alt+wheel sideways | `Wheel`, `Alt+Wheel` | `Wheel`, `Alt+Wheel` |  |
+| Does | Windows and Linux | macOS | Classic preset | Also |
+| --- | --- | --- | --- | --- |
+| Command palette (can be changed) | `Ctrl+K` | `Cmd+K` | same |  |
+| Find in the project (can be changed) | `Ctrl+F` | `Cmd+F` | same |  |
+| Save (every edit is saved already) (can be changed) | `Ctrl+S` | `Cmd+S` | same |  |
+| Cancel, close or clear the selection | `Esc` | `Esc` | same |  |
+| Jump to the next region (can be changed) | `F6` | `F6` | same |  |
+| Jump to the previous region (can be changed) | `Shift+F6` | `Shift+F6` | same |  |
+| Move inside the timeline | Timeline grid keys | Timeline grid keys | same |  |
+| Open this list (can be changed) | `?` | `?` | same |  |

@@ -35,6 +35,20 @@ func libraryWorkspace(t *testing.T, r release) *database.DB {
 	return db
 }
 
+// downTo is what a rollback to id, inclusive, takes off: the ids from the newest migration down to id. A test of a
+// down names its own migration and keeps passing when later ones are added.
+func downTo(id string) []string {
+	all := All()
+	at := slices.IndexFunc(all, func(mig schema.Migration) bool { return mig.ID == id })
+
+	var want []string
+	for i := len(all) - 1; i >= at && at >= 0; i-- {
+		want = append(want, all[i].ID)
+	}
+
+	return want
+}
+
 func newMigrator(db *database.DB) (*schema.Migrator, error) {
 	return schema.NewMigrator(db, allMigrations())
 }
@@ -117,17 +131,22 @@ func TestWorkspaceAssetsMigration(t *testing.T) {
 				t.Errorf("%d of %d uses resolve their asset", n, uses)
 			}
 
+			// One imported row for each owner whose projects use a file (the projects of the fixture belong to
+			// the local owner and to usr_a), and one for the local owner for a file no project uses.
 			if n := count(t, db, `SELECT count(*) FROM assets a JOIN asset_info i ON i.asset_hash = a.id
- WHERE i.origin_kind = 'imported' AND i.reusable = 0 AND i.source = '' AND i.created_ms = a.created_ms`); n != assets {
-				t.Errorf("%d of %d assets have an imported row", n, assets)
+ WHERE i.origin_kind = 'imported' AND i.reusable = 0 AND i.source = '' AND i.created_ms = a.created_ms`); n != 5 {
+				t.Errorf("%d imported rows, want 5", n)
 			}
 
-			by := map[string]string{"sha256:aa": "local:cli", "sha256:bb": "usr_a", "sha256:cc": "migration"}
-			for hash, want := range by {
+			by := map[string]string{
+				":sha256:bb": "local:cli", "usr_a:sha256:bb": "usr_a", ":sha256:cc": "migration",
+			}
+			for key, want := range by {
 				var got string
-				if err := db.QueryRowContext(ctx, "SELECT created_by FROM asset_info WHERE asset_hash = ?", hash).
+				if err := db.QueryRowContext(ctx,
+					"SELECT created_by FROM asset_info WHERE owner_user_id || ':' || asset_hash = ?", key).
 					Scan(&got); err != nil || got != want {
-					t.Errorf("created_by of %s = %q, %v; want %q (the oldest use)", hash, got, err, want)
+					t.Errorf("created_by of %s = %q, %v; want %q (the oldest use of that owner)", key, got, err, want)
 				}
 			}
 
@@ -154,7 +173,10 @@ func TestWorkspaceAssetsMigrationDown(t *testing.T) {
 
 	upgradeAll(t, db)
 
-	if _, err := db.ExecContext(ctx, `INSERT INTO asset_tags VALUES ('sha256:aa', 'logo')`); err != nil {
+	if _, err := db.ExecContext(
+		ctx,
+		`INSERT INTO asset_tags (owner_user_id, asset_hash, tag) VALUES ('', 'sha256:aa', 'logo')`,
+	); err != nil {
 		t.Fatal(err)
 	}
 
@@ -163,9 +185,13 @@ func TestWorkspaceAssetsMigrationDown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	rolled, err := m.Rollback(ctx, 1)
-	if err != nil || !slices.Equal(rolled, []string{assetLibraryID}) {
-		t.Fatalf("Rollback = %v, %v", rolled, err)
+	// The migrations that came after this one (the render origin of epic 33, the chat tables of epic 14) are rolled
+	// back first, newest first.
+	want := downTo(assetLibraryID)
+
+	rolled, err := m.Rollback(ctx, len(want))
+	if err != nil || !slices.Equal(rolled, want) || !slices.Contains(want, renderOriginID) {
+		t.Fatalf("Rollback = %v, %v; want %v", rolled, err, want)
 	}
 
 	for _, table := range []string{"asset_info", "asset_tags", "asset_search"} {
@@ -180,8 +206,8 @@ func TestWorkspaceAssetsMigrationDown(t *testing.T) {
 
 	upgradeAll(t, db)
 
-	if n := count(t, db, "SELECT count(*) FROM asset_info"); n != 3 {
-		t.Errorf("asset_info after going forward again = %d, want 3", n)
+	if n := count(t, db, "SELECT count(*) FROM asset_info"); n != 5 {
+		t.Errorf("asset_info after going forward again = %d, want 5", n)
 	}
 }
 
@@ -195,7 +221,7 @@ func TestAssetLibraryConstraints(t *testing.T) {
 		`UPDATE asset_info SET origin_kind = 'stolen' WHERE asset_hash = 'sha256:aa'`,
 		`UPDATE asset_info SET reusable = 2 WHERE asset_hash = 'sha256:aa'`,
 		`UPDATE asset_info SET cost_micros = -1 WHERE asset_hash = 'sha256:aa'`,
-		`INSERT INTO asset_tags VALUES ('sha256:missing', 'x')`,
+		`INSERT INTO asset_tags (owner_user_id, asset_hash, tag) VALUES ('', 'sha256:missing', 'x')`,
 		`INSERT INTO asset_info (asset_hash, created_by, created_ms, updated_ms) VALUES ('sha256:missing', 'x', 1, 1)`,
 	}
 
@@ -205,7 +231,10 @@ func TestAssetLibraryConstraints(t *testing.T) {
 		}
 	}
 
-	if _, err := db.ExecContext(ctx, `INSERT INTO asset_tags VALUES ('sha256:cc', 'logo')`); err != nil {
+	if _, err := db.ExecContext(
+		ctx,
+		`INSERT INTO asset_tags (owner_user_id, asset_hash, tag) VALUES ('', 'sha256:cc', 'logo')`,
+	); err != nil {
 		t.Fatal(err)
 	}
 
@@ -218,5 +247,68 @@ func TestAssetLibraryConstraints(t *testing.T) {
 		if n := count(t, db, "SELECT count(*) FROM "+table+" WHERE asset_hash = 'sha256:cc'"); n != 0 {
 			t.Errorf("%s kept the row of a deleted asset", table)
 		}
+	}
+}
+
+// TestAssetLibraryMigrationPerOwner is VV-254 (prj_0000000003 belongs to usr_a, the others to the local owner): a file that projects of two owners use gets one library row for
+// each owner, created by that owner's oldest import and found by the names that owner's projects give it, and a
+// file no project uses gets one for the empty owner.
+func TestAssetLibraryMigrationPerOwner(t *testing.T) {
+	ctx := context.Background()
+	db := libraryWorkspace(t, releases[len(releases)-1])
+
+	upgradeAll(t, db)
+
+	owners := func(hash string) []string {
+		rows, err := db.QueryContext(
+			ctx,
+			"SELECT owner_user_id || ':' || created_by FROM asset_info WHERE asset_hash = ? ORDER BY owner_user_id",
+			hash,
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer rows.Close()
+
+		var out []string
+
+		for rows.Next() {
+			var o string
+			if err := rows.Scan(&o); err != nil {
+				t.Fatal(err)
+			}
+
+			out = append(out, o)
+		}
+
+		if err := rows.Err(); err != nil {
+			t.Fatal(err)
+		}
+
+		return out
+	}
+
+	if got := owners("sha256:bb"); !slices.Equal(got, []string{":local:cli", "usr_a:usr_a"}) {
+		t.Errorf("rows of the shared file = %v", got)
+	}
+
+	if got := owners("sha256:cc"); !slices.Equal(got, []string{":migration"}) {
+		t.Errorf("rows of the unused file = %v", got)
+	}
+
+	found := func(owner, match string) int {
+		return count(
+			t,
+			db,
+			"SELECT count(*) FROM asset_search WHERE owner_user_id = '"+owner+"' AND asset_search MATCH '"+match+"'",
+		)
+	}
+
+	if found("usr_a", `"funny"*`) != 1 || found("", `"funny"*`) != 0 {
+		t.Error("the name one owner gave the file is found by the other owner")
+	}
+
+	if found("", `"reaction"*`) != 1 || found("usr_a", `"reaction"*`) != 0 {
+		t.Error("the name the other owner gave the file is found by this owner")
 	}
 }

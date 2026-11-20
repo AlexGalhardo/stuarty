@@ -64,6 +64,12 @@ var parity = []row{
 	{method: "JobList", tool: "job_get", command: "job:list", route: "GET /projects/{}/jobs"},
 	{method: "ViewFrame", tool: "view", command: "view", route: "GET /projects/{}/frame"},
 	{method: "ViewSheet", tool: "view", command: "view", route: "GET /projects/{}/sheet"},
+	// The hand-off from an external motion engine (SDD-011 section 15): view with mode motion.
+	{method: "MotionBrief", tool: "view", command: "motion:brief", route: "GET /projects/{}/motion/brief"},
+	// The check has no tool: the tool list has no room for it (SDD-011 section 15.5).
+	{method: "MotionCheck", command: "motion:check", route: "GET /projects/{}/motion/check"},
+	// The replacement is a batch of clip.replace_media in one edit call over MCP: it has no tool of its own.
+	{method: "MotionReplace", command: "motion:replace", route: "POST /projects/{}/motion/replace"},
 	{method: "TrashEmpty", route: "POST /trash/empty", httpOnly: true},
 	{method: "Doctor", command: "doctor", route: "GET /system"},
 	{method: "SnapPoints", route: "GET /projects/{}/snap-points", httpOnly: true},
@@ -168,6 +174,15 @@ var parity = []row{
 	{method: "ApprovalRuleRemove", command: "approval:rule:remove", route: "DELETE /approval-rules/{}"},
 	{method: "CostSummary", command: "cost:show", route: "GET /cost"},
 	{method: "CostCeilingSet", command: "cost:ceiling", route: "PUT /cost/ceilings"},
+	// Social networks and publishing (SDD-020 section 13): no MCP tool routes to them yet; an agent reaches them
+	// through the CLI and HTTP. The sign-in redirect is the browser's: it has no command.
+	{method: "SocialNetworkList", command: "social:network:list", route: "GET /social/networks"},
+	{method: "SocialConnectBegin", command: "social:connect", route: "POST /social/connect"},
+	{method: "SocialConnectComplete", route: "POST /social/complete", httpOnly: true},
+	{method: "SocialAccountList", command: "social:account:list", route: "GET /social/accounts"},
+	{method: "PublishValidate", command: "publish:validate", route: "POST /publish/validate"},
+	{method: "PublishNow", command: "publish:now", route: "POST /publish"},
+	{method: "PublishStatus", command: "publish:status", route: "GET /publish/{}"},
 	// The AI providers (SDD-016 section 10): a generation starts with job_start (kind text.generate), the
 	// byte budget of the tool list leaves no room for a tool of its own. Setting a price is for a person.
 	{method: "ProviderList", command: "provider:list", route: "GET /providers"},
@@ -194,6 +209,22 @@ var parity = []row{
 	{method: "PromptRender", tool: "library", command: "prompt:render", route: "POST /library/prompts/{}/render"},
 	{method: "LibrarySearch", tool: "library", command: "library:search", route: "GET /library/search"},
 	{method: "LibraryReindex", command: "library:reindex", route: "POST /library/reindex"},
+	// The hosted agent chat (SDD-017 section 10, SDD-003 exception E-7): no MCP tool, a hosted agent has no use
+	// for the chat of another. The reads have a command; the profiles and the five operations that drive a session
+	// are for a person in the browser (HTTP only).
+	{method: "AgentProfileList", command: "agent:profiles", route: "GET /agents/profiles"},
+	{method: "AgentProfileSet", route: "PUT /agents/profiles/{}", httpOnly: true},
+	{method: "AgentProfileRemove", route: "DELETE /agents/profiles/{}", httpOnly: true},
+	{method: "ChatSessionStart", route: "POST /projects/{}/chat/sessions", httpOnly: true},
+	{method: "ChatSend", route: "POST /chat/sessions/{}/messages", httpOnly: true},
+	{method: "ChatCancel", route: "POST /chat/sessions/{}/cancel", httpOnly: true},
+	{method: "ChatAnswerPermission", route: "POST /chat/sessions/{}/permissions/{}", httpOnly: true},
+	{method: "ChatSessionDelete", route: "DELETE /chat/sessions/{}", httpOnly: true},
+	{method: "ChatSessionList", command: "chat:sessions", route: "GET /projects/{}/chat/sessions"},
+	{method: "ChatSessionGet", command: "chat:session", route: "GET /chat/sessions/{}"},
+	{method: "ChatTranscriptGet", command: "chat:transcript", route: "GET /chat/sessions/{}/transcript"},
+	// The stream of a session is not a Service operation (SDD-017 section 8).
+	{route: "GET /chat/sessions/{}/events", httpOnly: true, noMethod: true},
 }
 
 // notOperations are Service methods that are not operations an agent calls

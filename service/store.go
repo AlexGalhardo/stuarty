@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/AlexGalhardo/stuarty/service/agenthost"
 	"github.com/AlexGalhardo/stuarty/service/approval"
 	"github.com/AlexGalhardo/stuarty/service/assets"
 	"github.com/AlexGalhardo/stuarty/service/connections"
@@ -73,6 +74,7 @@ type Repos interface {
 	Approvals() approval.Store
 	Library() library.Index
 	AssetLibrary() assets.Store
+	Chat() agenthost.Store
 }
 
 // Tx is a write transaction.
@@ -138,7 +140,7 @@ type ProjectQuery struct {
 	State          ProjectState // "" means active only
 	IncludeTrashed bool         // both states; wins over State
 	OwnerUserID    string       // network mode: only this user's projects, applied in SQL
-	ProjectID      string       // a key limited to one project: only that one
+	ProjectID      string       // a key limited to one project: the timelines of that one
 	After          string       // opaque cursor from the previous page
 	Limit          int          // 1 to 200; 0 means 50
 }

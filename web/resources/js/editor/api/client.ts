@@ -2,6 +2,8 @@ import { fromResponse, networkError } from "./errors";
 import { type RetryDeps, withRetry } from "./retry";
 import { type Transport, TransportError } from "./transport";
 import type {
+	AgentProfile,
+	AgentProfileListResult,
 	ApprovalListResult,
 	ApprovalRequest,
 	ApprovalRule,
@@ -17,6 +19,9 @@ import type {
 	BrandKitBody,
 	BriefResult,
 	BundleImportResult,
+	ChatSession,
+	ChatSessionListResult,
+	ChatTranscriptResult,
 	CommandHelpResult,
 	Connection,
 	ConnectionCreateRequest,
@@ -60,9 +65,17 @@ import type {
 	ProviderModelsResult,
 	ProviderPriceSetRequest,
 	ProviderPricesResult,
+	PublishRequest,
+	PublishValidateResult,
 	SessionResult,
 	SnapPointsQuery,
 	SnapPointsResult,
+	SocialAccount,
+	SocialAccountListResult,
+	SocialCompleteRequest,
+	SocialConnectRequest,
+	SocialConnectResult,
+	SocialNetworkListResult,
 	SystemQuery,
 	SystemResult,
 	TemplateInstantiateRequest,
@@ -77,6 +90,8 @@ import type {
 // Timeouts of SDD-012 section 4.3 item 4.
 const READ_TIMEOUT_MS = 10_000;
 const EDIT_TIMEOUT_MS = 30_000;
+// Starting an agent waits for its process to start and open the protocol (SDD-017 section 4).
+const CHAT_START_TIMEOUT_MS = 45_000;
 // A bundle call may hold for up to 25 s (wait_ms) before the job is returned.
 const BUNDLE_WAIT_MS = 20_000;
 const BUNDLE_TIMEOUT_MS = 60_000;
@@ -184,6 +199,14 @@ export interface ApiClient {
 	listKeys(): Promise<KeyListResult>;
 	revokeKey(keyId: string): Promise<KeyRevokeResult>;
 	listConnections(): Promise<ConnectionListResult>;
+	// The social networks and publishing (SDD-020): a publication waits for a person to approve it.
+	listSocialNetworks(): Promise<SocialNetworkListResult>;
+	connectSocial(request: SocialConnectRequest): Promise<SocialConnectResult>;
+	completeSocial(request: SocialCompleteRequest): Promise<SocialAccount>;
+	listSocialAccounts(): Promise<SocialAccountListResult>;
+	validatePublish(request: PublishRequest): Promise<PublishValidateResult>;
+	publishNow(request: PublishRequest): Promise<Job>;
+	listActiveProjects(): Promise<ProjectListResult>;
 	createConnection(request: ConnectionCreateRequest): Promise<Connection>;
 	removeConnection(id: string): Promise<Connection>;
 	testConnection(id: string): Promise<ConnectionTestResult>;
@@ -210,6 +233,29 @@ export interface ApiClient {
 	removeApprovalRule(id: string): Promise<ApprovalRule>;
 	getCostSummary(): Promise<CostSummary>;
 	setCostCeiling(request: CostCeilingSetRequest): Promise<CostSummary>;
+	// The hosted agent chat (SDD-017). Everything that drives a session, and the profiles, are for
+	// a person in a browser session; any other caller gets E_PRIVILEGED_SESSION.
+	listAgentProfiles(): Promise<AgentProfileListResult>;
+	setAgentProfile(
+		name: string,
+		command: string,
+		args: string[],
+	): Promise<AgentProfile>;
+	removeAgentProfile(name: string): Promise<AgentProfile>;
+	startChatSession(projectId: string, profile: string): Promise<ChatSession>;
+	sendChatMessage(sessionId: string, text: string): Promise<ChatSession>;
+	cancelChat(sessionId: string, end: boolean): Promise<ChatSession>;
+	answerChatPermission(
+		sessionId: string,
+		requestId: string,
+		answer: "allow" | "reject" | "cancel",
+	): Promise<ChatSession>;
+	listChatSessions(projectId: string): Promise<ChatSessionListResult>;
+	getChatTranscript(
+		sessionId: string,
+		options?: { after?: number; format?: "json" | "markdown" },
+	): Promise<ChatTranscriptResult>;
+	deleteChatSession(sessionId: string): Promise<ChatSession>;
 	// An administrator session; any other caller gets E_FORBIDDEN.
 	listUsers(): Promise<UserListResult>;
 	listTrashedProjects(): Promise<ProjectListResult>;
@@ -488,6 +534,16 @@ export function createClient(
 		listKeys: () => call("GET", "/keys", READ_TIMEOUT_MS),
 		listUsers: () => call("GET", "/users", READ_TIMEOUT_MS),
 		listConnections: () => call("GET", "/connections", READ_TIMEOUT_MS),
+		listSocialNetworks: () => call("GET", "/social/networks", READ_TIMEOUT_MS),
+		connectSocial: (request) =>
+			call("POST", "/social/connect", EDIT_TIMEOUT_MS, request),
+		completeSocial: (request) =>
+			call("POST", "/social/complete", EDIT_TIMEOUT_MS, request),
+		listSocialAccounts: () => call("GET", "/social/accounts", READ_TIMEOUT_MS),
+		validatePublish: (request) =>
+			call("POST", "/publish/validate", EDIT_TIMEOUT_MS, request),
+		publishNow: (request) => call("POST", "/publish", EDIT_TIMEOUT_MS, request),
+		listActiveProjects: () => call("GET", "/projects", READ_TIMEOUT_MS),
 		createConnection: (request) =>
 			call("POST", "/connections", EDIT_TIMEOUT_MS, request),
 		removeConnection: (id) =>
@@ -498,6 +554,62 @@ export function createClient(
 				`/connections/${encodeURIComponent(id)}/test`,
 				EDIT_TIMEOUT_MS,
 				{},
+			),
+		listAgentProfiles: () => call("GET", "/agents/profiles", READ_TIMEOUT_MS),
+		setAgentProfile: (name, command, args) =>
+			call(
+				"PUT",
+				`/agents/profiles/${encodeURIComponent(name)}`,
+				EDIT_TIMEOUT_MS,
+				{ command, args },
+			),
+		removeAgentProfile: (name) =>
+			call(
+				"DELETE",
+				`/agents/profiles/${encodeURIComponent(name)}`,
+				EDIT_TIMEOUT_MS,
+			),
+		startChatSession: (projectId, profile) =>
+			call(
+				"POST",
+				`${project(projectId)}/chat/sessions`,
+				CHAT_START_TIMEOUT_MS,
+				{ profile },
+			),
+		sendChatMessage: (sessionId, text) =>
+			call(
+				"POST",
+				`/chat/sessions/${encodeURIComponent(sessionId)}/messages`,
+				EDIT_TIMEOUT_MS,
+				{ text },
+			),
+		cancelChat: (sessionId, end) =>
+			call(
+				"POST",
+				`/chat/sessions/${encodeURIComponent(sessionId)}/cancel`,
+				EDIT_TIMEOUT_MS,
+				{ end },
+			),
+		answerChatPermission: (sessionId, requestId, answer) =>
+			call(
+				"POST",
+				`/chat/sessions/${encodeURIComponent(sessionId)}/permissions/${encodeURIComponent(requestId)}`,
+				EDIT_TIMEOUT_MS,
+				{ answer },
+			),
+		listChatSessions: (projectId) =>
+			call("GET", `${project(projectId)}/chat/sessions`, READ_TIMEOUT_MS),
+		getChatTranscript: (sessionId, options) =>
+			call(
+				"GET",
+				`/chat/sessions/${encodeURIComponent(sessionId)}/transcript?format=${options?.format ?? "json"}&after=${options?.after ?? 0}`,
+				READ_TIMEOUT_MS,
+			),
+		deleteChatSession: (sessionId) =>
+			call(
+				"DELETE",
+				`/chat/sessions/${encodeURIComponent(sessionId)}`,
+				EDIT_TIMEOUT_MS,
 			),
 		listProviders: () => call("GET", "/providers", READ_TIMEOUT_MS),
 		listProviderModels: (connectionId, refresh) =>

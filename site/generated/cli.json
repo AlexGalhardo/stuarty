@@ -384,7 +384,7 @@
       "usage": [
         "stuarty media:import <path>... --project <id> [--asset-id ast_...] [--wait] [--timeout d]",
         "stuarty media:import --hash sha256:... --project <id>   (a file the library already holds: no copy)",
-        "origin and reuse: [--origin-kind k] [--origin-source s] [--provider p] [--model m] [--prompt t] [--rights-note t] [--tag t] [--reusable] [--description t]",
+        "origin and reuse: [--origin-kind k] [--origin-source s] [--provider p] [--model m] [--prompt t] [--rights-note t] [--engine e] [--engine-version v] [--render-key k] [--tag t] [--reusable] [--description t]",
         "formats: MP4, MOV, MKV, WebM, AVI, MP3, WAV, FLAC, OGG, PNG, JPEG, WebP, GIF and .cube; not SVG"
       ],
       "example": "stuarty media:import clip.mov --project prj_7k2m9x4q1b --json",
@@ -430,6 +430,21 @@
           "name": "cost-micros",
           "type": "integer",
           "usage": "what the files cost, in millionths of a US dollar"
+        },
+        {
+          "name": "engine",
+          "type": "string",
+          "usage": "the motion engine that rendered the files (rendered_externally)"
+        },
+        {
+          "name": "engine-version",
+          "type": "string",
+          "usage": "the version of that engine (rendered_externally)"
+        },
+        {
+          "name": "render-key",
+          "type": "string",
+          "usage": "a stable name for the animation, the same each time it is rendered again (rendered_externally)"
         },
         {
           "name": "rights-note",
@@ -2594,6 +2609,186 @@
       ]
     },
     {
+      "name": "motion:brief",
+      "domain": "video",
+      "summary": "what a render by an external motion engine must fit: size, rate, length, safe area, brand kit, captions",
+      "usage": [
+        "stuarty motion:brief --project <id> [--from t] [--until t] [--track <trk_id>]"
+      ],
+      "example": "stuarty motion:brief --project prj_7k2m9x4q1b --from 2s --until 5s --track trk_f6g7h8j9k0",
+      "flags": [
+        {
+          "name": "from",
+          "type": "string",
+          "usage": "start of the range, a time (default 0s)"
+        },
+        {
+          "name": "until",
+          "type": "string",
+          "usage": "end of the range, exclusive (default the end of the timeline)"
+        },
+        {
+          "name": "track",
+          "type": "string",
+          "usage": "the visual track the clip will go on: tells whether the render needs alpha"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "motion:check",
+      "domain": "video",
+      "summary": "check a rendered asset against the brief: each mismatch of size, rate, length or alpha, with the value expected",
+      "usage": [
+        "stuarty motion:check --project <id> --asset <ast_id> [--from t] [--until t] [--track <trk_id>]"
+      ],
+      "example": "stuarty motion:check --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --from 2s --until 5s --track trk_f6g7h8j9k0",
+      "flags": [
+        {
+          "name": "asset",
+          "type": "string",
+          "usage": "the asset to check: an asset of the project, ready (required)"
+        },
+        {
+          "name": "from",
+          "type": "string",
+          "usage": "start of the range, a time (default 0s)"
+        },
+        {
+          "name": "until",
+          "type": "string",
+          "usage": "end of the range, exclusive (default the end of the timeline)"
+        },
+        {
+          "name": "track",
+          "type": "string",
+          "usage": "the visual track the clip will go on: tells whether the render needs alpha"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "motion:replace",
+      "domain": "video",
+      "summary": "replace, in one undoable batch, every clip that reads an earlier render of an animation with a new render",
+      "usage": [
+        "stuarty motion:replace --project <id> --asset <ast_id> [--render-key <key>] [--dry-run]"
+      ],
+      "example": "stuarty motion:replace --project prj_7k2m9x4q1b --asset ast_k8m2n4p6q9",
+      "flags": [
+        {
+          "name": "asset",
+          "type": "string",
+          "usage": "the new render: an asset of the timeline, ready (required)"
+        },
+        {
+          "name": "render-key",
+          "type": "string",
+          "usage": "the key of the animation (default the render key of the origin of the new asset)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "agent:profiles",
+      "domain": "workspace",
+      "summary": "list the agents the chat may host, with their full command, and the known agents found on this machine",
+      "usage": [
+        "stuarty agent:profiles"
+      ],
+      "example": "stuarty agent:profiles --json",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "chat:sessions",
+      "domain": "workspace",
+      "summary": "list the chat sessions of a project, newest first",
+      "usage": [
+        "stuarty chat:sessions --project <id>"
+      ],
+      "example": "stuarty chat:sessions --project prj_7k2m9x4q1b",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "chat:session",
+      "domain": "workspace",
+      "summary": "show one chat session: its agent, its state and how many events it holds",
+      "usage": [
+        "stuarty chat:session <id>"
+      ],
+      "example": "stuarty chat:session cht_7k2m9x4q1b",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "chat:transcript",
+      "domain": "workspace",
+      "summary": "read the transcript of a chat session as events, or the whole of it as Markdown",
+      "usage": [
+        "stuarty chat:transcript <id> [--format json|markdown] [--after n] [--limit n]"
+      ],
+      "example": "stuarty chat:transcript cht_7k2m9x4q1b --format markdown",
+      "flags": [
+        {
+          "name": "format",
+          "type": "string",
+          "usage": "json (the default: events after a number) or markdown"
+        },
+        {
+          "name": "after",
+          "type": "integer",
+          "default": "0",
+          "usage": "only the events with a number above this one"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "default": "0",
+          "usage": "the most events in the page, at most 500 (0 is 500)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
       "name": "memory:list",
       "domain": "memory",
       "summary": "list the memory notes",
@@ -3018,6 +3213,228 @@
         "stuarty library:reindex"
       ],
       "example": "stuarty library:reindex",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "social:network:list",
+      "domain": "publish",
+      "summary": "list the social networks this build can publish to, with their limits and where they were read",
+      "usage": [
+        "stuarty social:network:list"
+      ],
+      "example": "stuarty social:network:list --json",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "social:connect",
+      "domain": "publish",
+      "summary": "start the sign-in to a network with your own developer app; the client secret is read from standard input or a file, never from an argument",
+      "usage": [
+        "stuarty social:connect --network <n> --client-id <id> --redirect-uri <url> [--label <t>]",
+        "stuarty social:connect --network <n> --connection <id> --redirect-uri <url>"
+      ],
+      "example": "echo $CLIENT_SECRET | stuarty social:connect --network youtube --client-id 123.apps.googleusercontent.com --redirect-uri http://127.0.0.1:7878/social/callback",
+      "flags": [
+        {
+          "name": "network",
+          "type": "string",
+          "usage": "the network, for example youtube (required)"
+        },
+        {
+          "name": "client-id",
+          "type": "string",
+          "usage": "the client id of your developer project"
+        },
+        {
+          "name": "redirect-uri",
+          "type": "string",
+          "usage": "the address of this app followed by /social/callback (required)"
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "usage": "a name for the connection"
+        },
+        {
+          "name": "connection",
+          "type": "string",
+          "usage": "sign in again an existing connection instead of making one"
+        },
+        {
+          "name": "secret-file",
+          "type": "string",
+          "usage": "a file that holds the client secret; without it it is read from standard input"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "social:account:list",
+      "domain": "publish",
+      "summary": "list the connected social accounts and whether each is signed in",
+      "usage": [
+        "stuarty social:account:list"
+      ],
+      "example": "stuarty social:account:list",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "publish:validate",
+      "domain": "publish",
+      "summary": "check a post against the limits of its network and show what a person would approve; sends nothing",
+      "usage": [
+        "stuarty publish:validate --project <id> --connection <id> --export <job> --title <t> --made-for-kids yes|no"
+      ],
+      "example": "stuarty publish:validate --project prj_7k2m9x4q1b --connection con_0123456789 --export job_0123456789 --title \"My short\" --made-for-kids no",
+      "flags": [
+        {
+          "name": "connection",
+          "type": "string",
+          "usage": "the connection the video goes to (required)"
+        },
+        {
+          "name": "export",
+          "type": "string",
+          "usage": "the id of a succeeded export job of the project: the video (required)"
+        },
+        {
+          "name": "thumbnail",
+          "type": "string",
+          "usage": "the id of a succeeded export job of a still: the cover"
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "usage": "the title (required)"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "usage": "the description"
+        },
+        {
+          "name": "tags",
+          "type": "string",
+          "usage": "the tags, a comma list"
+        },
+        {
+          "name": "visibility",
+          "type": "string",
+          "usage": "private (the default), unlisted or public"
+        },
+        {
+          "name": "made-for-kids",
+          "type": "string",
+          "usage": "yes or no: whether the video is made for kids (required)"
+        },
+        {
+          "name": "ai-disclosure",
+          "type": "boolean",
+          "default": "false",
+          "usage": "the video has realistic altered or synthetic content"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "publish:now",
+      "domain": "publish",
+      "summary": "prepare the publication of an exported video: it waits for a person to approve it in the app, then it is sent; you cannot approve it",
+      "usage": [
+        "stuarty publish:now --project <id> --connection <id> --export <job> --title <t> --made-for-kids yes|no"
+      ],
+      "example": "stuarty publish:now --project prj_7k2m9x4q1b --connection con_0123456789 --export job_0123456789 --title \"My short\" --made-for-kids no --visibility private",
+      "flags": [
+        {
+          "name": "connection",
+          "type": "string",
+          "usage": "the connection the video goes to (required)"
+        },
+        {
+          "name": "export",
+          "type": "string",
+          "usage": "the id of a succeeded export job of the project: the video (required)"
+        },
+        {
+          "name": "thumbnail",
+          "type": "string",
+          "usage": "the id of a succeeded export job of a still: the cover"
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "usage": "the title (required)"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "usage": "the description"
+        },
+        {
+          "name": "tags",
+          "type": "string",
+          "usage": "the tags, a comma list"
+        },
+        {
+          "name": "visibility",
+          "type": "string",
+          "usage": "private (the default), unlisted or public"
+        },
+        {
+          "name": "made-for-kids",
+          "type": "string",
+          "usage": "yes or no: whether the video is made for kids (required)"
+        },
+        {
+          "name": "ai-disclosure",
+          "type": "boolean",
+          "default": "false",
+          "usage": "the video has realistic altered or synthetic content"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "publish:status",
+      "domain": "publish",
+      "summary": "show the state of a publication: waiting_approval, uploading, processing, published or failed",
+      "usage": [
+        "stuarty publish:status <job id>"
+      ],
+      "example": "stuarty publish:status job_0123456789",
       "globals": [
         "json",
         "workspace",
