@@ -2508,7 +2508,7 @@
       "no_maker": {
         "image": "Nenhum provedor com que o Stuarty trabalha faz imagens ainda, então não há o que conectar.",
         "voice": "Nenhum provedor com que o Stuarty trabalha faz voz ainda, então não há o que conectar.",
-        "video": "Nenhum provedor com que o Stuarty trabalha faz vídeo ainda, então não há o que conectar. A geração de vídeo está pronta e espera um provedor ser adicionado."
+        "video": "Nenhum provedor com que o Stuarty trabalha faz vídeo ainda, então não há o que conectar."
       },
       "open_connections": "Conecte um na página Conexões",
       "project": "Projeto",

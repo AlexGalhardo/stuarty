@@ -4,7 +4,7 @@ description: "Connect an AI service with your own API key, see what a text, an i
 ---
 
 <Callout type="warning" title="New">
-This page covers text, image and voice generation with an API key for OpenAI, text generation for Anthropic, and signing in with ChatGPT or OpenRouter instead of pasting a key. It has been tested against recorded answers of the APIs and a fake authorization server, not against a real account: a real sign-in has not been checked yet. Video generation is built and waits for a provider to be chosen; your own local agent comes in a later version.
+This page covers text, image and voice generation with an API key for OpenAI, text generation for Anthropic, and signing in with ChatGPT or OpenRouter instead of pasting a key. It has been tested against recorded answers of the APIs and a fake authorization server, not against a real account: a real sign-in has not been checked yet. Video generation uses Google through the Gemini API and has been tested against answers written from its documentation, not against a real key; your own local agent comes in a later version.
 </Callout>
 
 ## You will learn
@@ -70,10 +70,10 @@ A connection for a removal must accept `image`, so connect it with `--accepts te
 
 A short clip is made the same way, with one difference: **it always waits for you**, whatever the estimate is, because a video costs far more than an image. Only a rule you wrote on the Approvals page can lift that wait, and a cost ceiling still refuses what is above it.
 
-Video comes from Google through the Gemini API, with your own API key from <https://aistudio.google.com/apikey>: connect it with `connection:add --kind google` and a model that makes video (`gemini-omni-1.2-flash`, 3 to 15 seconds, 16:9 or 9:16). Google lists its price per second of video on its pricing page; Stuarty ships no price, so add the one you read there with `provider:price` and the estimate and the approval show it. A clip is not charged by Stuarty: Google bills your key.
+Video comes from Google through the Gemini API, with your own API key from Google AI Studio (the API keys page, `aistudio.google.com/apikey`, which the card of the provider also names): connect it with `connection:add --kind google` and a model that makes video (`gemini-omni-1.2-flash`, 3 to 15 seconds, 16:9 or 9:16). Google lists its price per second of video on its pricing page; Stuarty ships no price, so add the one you read there with `provider:price` and the estimate and the approval show it. A clip is not charged by Stuarty: Google bills your key.
 
 - **The clip is generated in the background.** Stuarty sends the request once, keeps the task number of the provider with the job, and asks for the result every few seconds. If you restart the app or the server meanwhile, the job picks the same task up and does not send the request again, so you are not charged twice. The only moment a crash could cause a second charge is the instant between the provider's answer and the write of that number to disk.
-- **Cancel** asks the provider to stop. If it confirms, the job costs nothing; if it does not, the job is recorded at its estimate, because the provider may have charged for the work already done.
+- **Cancel** asks the provider to stop. If it confirms, the job costs nothing; if it does not, the job is recorded at its estimate, because the provider may have charged for the work already done. Google does not say that a stopped, failed or blocked clip is free, so with Google such a job is recorded at its estimate too.
 - **A first frame** can be an image of the project: the clip starts from it. The image is sent to the provider only after you approve.
 - **The clip lands in your library** as a file with its origin (the provider, the model, the prompt, the cost and who asked), is probed and gets a proxy and a thumbnail like any import, and goes on a timeline like any file.
 - **Say it is AI.** A generated clip may need to be disclosed as AI-generated where you publish it; the usage policy of the provider says how.
@@ -81,8 +81,8 @@ Video comes from Google through the Gemini API, with your own API key from <http
 A price per second of video is set with `--unit second --unit-micros <millionths of the currency per second>`.
 
 ```bash
-stuarty provider:price --provider a-provider --model a-video-model --currency USD --unit second --unit-micros 400000
-stuarty video:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-video-model --prompt "A red fox in the snow" --seconds 6 --aspect 9:16 --dry-run
+stuarty provider:price --provider google --model gemini-omni-1.2-flash --currency USD --unit second --unit-micros 70000
+stuarty video:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model gemini-omni-1.2-flash --prompt "A red fox in the snow" --seconds 6 --aspect 9:16 --dry-run
 ```
 
 ## Quick start
