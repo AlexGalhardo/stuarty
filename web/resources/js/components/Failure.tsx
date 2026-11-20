@@ -20,15 +20,18 @@ export function failureOf(error: unknown): Failure {
 	throw error;
 }
 
+// `id` lets the fields of the form that failed point at the note with aria-describedby (SDD-012 section 18.10).
 export function FailureNote({
 	failure,
+	id,
 }: {
 	failure: Failure | null;
+	id?: string;
 }): ReactNode {
 	const t = useT();
 	if (failure === null) return null;
 	return (
-		<div role="alert" className="mt-2 text-sm text-destructive">
+		<div id={id} role="alert" className="mt-2 text-sm text-destructive">
 			<p className="font-medium">{errorHeadline(t, failure.code)}</p>
 			<p lang="en">
 				<UntrustedText>{failure.message}</UntrustedText>

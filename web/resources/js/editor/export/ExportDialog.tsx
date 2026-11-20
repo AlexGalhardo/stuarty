@@ -63,12 +63,8 @@ import ExportOptionsFields, {
 } from "./ExportOptions";
 import ExportPresets, { type PresetCheck } from "./ExportPresets";
 import { exportCapabilities } from "./exportCapabilities";
-import {
-	announcedPercent,
-	exportIsStale,
-	exportPhase,
-	groupFindings,
-} from "./exportPhase";
+import { exportIsStale, exportPhase, groupFindings } from "./exportPhase";
+import ProgressText from "./ProgressText";
 import { batchItems, plainOptions, queuedItem } from "./presetText";
 
 const POLL_AFTER_MS = 5000;
@@ -634,18 +630,10 @@ export default function ExportDialog({
 								aria-label={t("ui.editor.export.progress")}
 								className="my-2 h-2"
 							/>
-							<p
-								className="text-xs [font-variant-numeric:tabular-nums]"
-								data-announce={announcedPercent(job?.progress ?? 0)}
-							>
-								{percent}%
-								{job?.message !== undefined && (
-									<span lang="en">
-										{" · "}
-										<UntrustedText>{job.message}</UntrustedText>
-									</span>
-								)}
-							</p>
+							<ProgressText
+								progress={job?.progress ?? 0}
+								message={job?.message}
+							/>
 							{queuedBehind && (
 								<p role="status" className="mt-1 text-xs text-muted-foreground">
 									{t("ui.editor.export.batch.queued_behind")}

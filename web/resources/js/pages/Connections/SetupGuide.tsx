@@ -142,6 +142,8 @@ export function SetupGuide({
 							<Input
 								id="social-client-id"
 								required
+								aria-invalid={failure === null ? undefined : true}
+								aria-describedby={failure === null ? undefined : "setup-error"}
 								autoComplete="off"
 								value={clientId}
 								onChange={(event) => setClientId(event.target.value)}
@@ -154,6 +156,8 @@ export function SetupGuide({
 							<Input
 								id="social-client-secret"
 								required
+								aria-invalid={failure === null ? undefined : true}
+								aria-describedby={failure === null ? undefined : "setup-error"}
 								type="password"
 								autoComplete="off"
 								value={clientSecret}
@@ -177,7 +181,7 @@ export function SetupGuide({
 						</div>
 					</>
 				)}
-				<FailureNote failure={failure} />
+				<FailureNote id="setup-error" failure={failure} />
 				<div className="flex gap-2">
 					<Button
 						type="submit"
