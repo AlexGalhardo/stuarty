@@ -414,6 +414,21 @@ func TestImageFlow(t *testing.T) {
 		t.Fatalf("%v %+v", err, small)
 	}
 
+	// one side alone keeps the aspect, and the result gives the size of the file, not the canvas's other side
+	narrow, err := s.ImageExport(ctx, ImageExportRequest{ImageID: id, Width: 640})
+	if err != nil || narrow.Width != 640 || narrow.Height != 360 {
+		t.Fatalf("%v %+v", err, narrow)
+	}
+
+	narrowBody, err := os.ReadFile(narrow.Path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if cfg, derr := png.DecodeConfig(bytes.NewReader(narrowBody)); derr != nil || cfg.Width != 640 || cfg.Height != 360 {
+		t.Fatalf("the file is %v %+v", derr, cfg)
+	}
+
 	_, err = s.ImageExport(ctx, ImageExportRequest{ImageID: id, Format: "webp"})
 	if se := mustCode(t, err, CodeExportFailed); se.Details["reason"] != "webp_unavailable" {
 		t.Fatalf("%+v", se)
