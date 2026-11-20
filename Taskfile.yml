@@ -186,6 +186,7 @@ tasks:
     desc: Regenerate every generated folder and fail when one differs from what is committed
     cmds:
       - task: codegen
+      - UPDATE_OPENAPI=1 go test ./web/contract/ -run OpenAPI -count=1
       - cd site && npm run reference
       - git diff --exit-code -- core/schema web/resources/js/generated site/generated site/content/generated internal/ffmpegpins web/app/agentdocs/out
 

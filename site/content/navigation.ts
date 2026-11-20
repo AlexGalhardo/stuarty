@@ -130,6 +130,12 @@ export const navigation: NavCategory[] = [
 		pages: ["publishing-calendar"],
 	},
 	{
+		dir: "publish",
+		title: "Networks",
+		label: "Publishing",
+		pages: ["youtube", "instagram", "facebook", "x", "tiktok"],
+	},
+	{
 		dir: "guide",
 		title: "The editor",
 		pages: ["keyboard-shortcuts", "keyboard-shortcuts-list", "coming-from-capcut", "settings", "accessibility", "desktop"],
@@ -181,7 +187,7 @@ export const navigation: NavCategory[] = [
 	{
 		dir: "reference",
 		title: "Reference",
-		pages: ["cli", "timeline-schema", "error-codes", "configuration", "events", "glossary"],
+		pages: ["cli", "timeline-schema", "error-codes", "configuration", "network-limits", "events", "glossary"],
 	},
 	{
 		dir: "glossary",

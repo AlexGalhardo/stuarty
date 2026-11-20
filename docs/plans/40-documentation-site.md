@@ -39,7 +39,7 @@ Someone who has never heard of Stuarty lands on the site, understands in a minut
 ## Tasks
 
 - [x] 1. Amend SDD-010 with the structure; produce the keep, rewrite, remove table for the existing pages. Verify: `task lint:md` exits 0; the table is in the hand-off.
-- [ ] 2. Extend the generators to every merged domain and wire `task generate:check`. Verify: `task codegen && task generate:check` exits 0.
+- [x] 2. Extend the generators to every merged domain and wire `task generate:check`. Verify: `task codegen && task generate:check` exits 0.
 - [ ] 3. Write Start and the three install pages. Verify: `bash scripts/docs-commands-smoke.sh` passes for them.
 - [ ] 4. Write the first-short tutorial from `scripts/first-flow.sh`. Verify: the smoke script runs the tutorial's commands end to end.
 - [ ] 5. Write the guides for the merged sections, including one page per network's developer app. Verify: `task lint:site` exits 0.
