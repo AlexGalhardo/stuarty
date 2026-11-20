@@ -9,7 +9,6 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/plan"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
-	"github.com/AlexGalhardo/stuarty/internal/perfgate"
 )
 
 func countCode(doc *timeline.Document, env Env, code string) int {
@@ -256,6 +255,18 @@ func TestThreeFindingsReport(t *testing.T) {
 	}
 }
 
+// requirePerf skips an absolute time budget unless STUARTY_PERF=1 (SDD-008 section 10). core/ imports only the
+// standard library, so this is internal/perfgate.Require written out.
+func requirePerf(t *testing.T) {
+	t.Helper()
+
+	if os.Getenv("STUARTY_PERF") != "1" {
+		t.Skip( // verify:env-skip opt-in by variable: an absolute time budget of the idle machine
+			"an absolute time budget: runs only on the idle machine with STUARTY_PERF=1",
+		)
+	}
+}
+
 // transitionLengthDoc is 300 short items with a transition and one more item of the given length, whose
 // transitions are as long as the item.
 func transitionLengthDoc(frames int) *timeline.Document {
@@ -305,10 +316,12 @@ func TestTransitionEmptyCostDoesNotGrowWithLength(t *testing.T) {
 // A 2-hour item with a transition among 300 items lints well under 100 ms. It is an absolute time budget:
 // it runs only on the idle machine with STUARTY_PERF=1 (SDD-008 section 10).
 func TestTransitionEmptyLintTimeBudget(t *testing.T) {
-	perfgate.Require(t)
+	requirePerf(t)
 
 	if raceEnabled {
-		t.Skip("the race detector slows this loop about tenfold") // verify:env-skip a race build changes the cost of the loop
+		t.Skip(
+			"the race detector slows this loop about tenfold",
+		) // verify:env-skip a race build changes the cost of the loop
 	}
 
 	if took := fastestLint(transitionLengthDoc(216000)); took > 100*time.Millisecond {
