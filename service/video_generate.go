@@ -425,12 +425,13 @@ func (s *svc) waitVideo(
 		case st.State == providers.VideoDone:
 			return nil
 		case st.State == providers.VideoFailed:
-			// The provider says the task ended with no clip; it charges nothing for one.
+			// The provider says the task ended with no clip; it is owed only when the provider does not say that
+			// such a task is free.
 			if st.Err == nil {
 				st.Err = &providers.Error{Kind: providers.KindUnavailable}
 			}
 
-			return &owedError{err: providerError(st.Err)}
+			return &owedError{err: providerError(st.Err), owed: st.Charged}
 		case st.State == providers.VideoPending:
 			failures = 0
 

@@ -188,6 +188,7 @@ func TestSubmitFailuresAreMappedByStatus(t *testing.T) {
 func TestPollStates(t *testing.T) {
 	t.Parallel()
 
+	// A task that ends with no clip is charged: the documentation of the Omni models does not say it is free.
 	for _, tc := range []struct {
 		fixture string
 		state   string
@@ -196,13 +197,14 @@ func TestPollStates(t *testing.T) {
 	}{
 		{"poll_pending.json", providers.VideoPending, "", ""},
 		{"poll_done.json", providers.VideoDone, "", ""},
+		{"poll_incomplete.json", providers.VideoDone, "", ""},
 		{"poll_failed_safety.json", providers.VideoFailed, providers.KindRefused, ""},
 		{"poll_failed_other.json", providers.VideoFailed, providers.KindUnavailable, ""},
 		{"poll_cancelled.json", providers.VideoFailed, providers.KindUnavailable, "cancelled"},
 	} {
 		run(t, func(ctx context.Context, c connections.Credential) {
 			st, err := google.New().Poll(ctx, c, taskID)
-			if err != nil || st.State != tc.state {
+			if err != nil || st.State != tc.state || st.Charged != (tc.state == providers.VideoFailed) {
 				t.Fatalf("%s: %+v %v", tc.fixture, st, err)
 			}
 
@@ -247,12 +249,15 @@ func TestPollFailuresAreMappedByStatus(t *testing.T) {
 func TestFetchDecodesTheClip(t *testing.T) {
 	t.Parallel()
 
-	run(t, func(ctx context.Context, c connections.Credential) {
-		f, err := google.New().Fetch(ctx, c, taskID, maxClip)
-		if err != nil || !bytes.HasPrefix(f.Data, clipHead) || !isVideo(f.Data) {
-			t.Fatalf("%q %v", f.Data, err)
-		}
-	}, get("poll_done.json", 0))
+	// An incomplete interaction is a completed one with incomplete results: its clip, when there is one, is taken.
+	for _, fixture := range []string{"poll_done.json", "poll_incomplete.json"} {
+		run(t, func(ctx context.Context, c connections.Credential) {
+			f, err := google.New().Fetch(ctx, c, taskID, maxClip)
+			if err != nil || !bytes.HasPrefix(f.Data, clipHead) || !isVideo(f.Data) {
+				t.Fatalf("%s: %q %v", fixture, f.Data, err)
+			}
+		}, get(fixture, 0))
+	}
 }
 
 func TestFetchOfAClipThatIsNotThere(t *testing.T) {
