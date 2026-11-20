@@ -55,6 +55,12 @@ type Service interface {
 	HistoryList(ctx context.Context, req HistoryListRequest) (*HistoryListResult, error)
 	Undo(ctx context.Context, req UndoRequest) (*UndoResult, error)
 	Redo(ctx context.Context, req UndoRequest) (*UndoResult, error)
+	HistoryRevert(ctx context.Context, req HistoryRevertRequest) (*HistoryRevertResult, error)
+	HistoryDiff(ctx context.Context, req HistoryDiffRequest) (*HistoryDiffResult, error)
+	CheckpointCreate(ctx context.Context, req CheckpointCreateRequest) (*Checkpoint, error)
+	CheckpointList(ctx context.Context, req CheckpointListRequest) (*CheckpointListResult, error)
+	CheckpointRename(ctx context.Context, req CheckpointRenameRequest) (*Checkpoint, error)
+	CheckpointRemove(ctx context.Context, req CheckpointRemoveRequest) (*Checkpoint, error)
 
 	Lint(ctx context.Context, req LintRequest) (*LintResult, error)
 

@@ -388,6 +388,28 @@ The types named in the tables of the operations. The arguments of each editing c
 | `next_after` | `integer (int64)` or `null` | no |  |
 | `session` | [`ChatSession`](/docs/api/schemas#chatsession) | no |  |
 
+### Checkpoint
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actor` | `string` | no |  |
+| `at` | `string (date-time)` | no |  |
+| `auto` | `boolean` | no |  |
+| `name` | `string` | no |  |
+| `note` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
+### CheckpointListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `checkpoints` | array of [`Checkpoint`](/docs/api/schemas#checkpoint) | no |  |
+| `project_id` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
 ### ChromaKey
 
 | Name | Type | Required | Description |
@@ -529,6 +551,15 @@ The types named in the tables of the operations. The arguments of each editing c
 | `network` | `string` | no |  |
 | `publishes` | array of `string` | no |  |
 | `scopes` | array of `string` | no |  |
+
+### DiffEntry
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `change` | [`Change`](/docs/api/schemas#change) | no |  |
+| `line` | `string` | no |  |
+| `noun` | `string` | no |  |
+| `verb` | `string` | no |  |
 
 ### DoctorCheck
 
@@ -833,6 +864,19 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `proof` | `string` | no | HMAC-SHA256 keyed by the token over the nonce (SDD-007 section 3.8). |
 
+### HistoryDiffResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `count` | `integer` | no |  |
+| `entries` | array of [`DiffEntry`](/docs/api/schemas#diffentry) | no |  |
+| `from` | `integer (int64)` | no |  |
+| `project_id` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+| `to` | `integer (int64)` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
 ### HistoryEntry
 
 | Name | Type | Required | Description |
@@ -867,6 +911,29 @@ The types named in the tables of the operations. The arguments of each editing c
 | `at` | `string (date-time)` | no |  |
 | `kind` | `string` | no |  |
 | `revision` | `integer (int64)` | no |  |
+
+### HistoryRevertResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actor` | `string` | no |  |
+| `applied` | `boolean` | no |  |
+| `base_revision` | `integer (int64)` | no |  |
+| `created` | array of `string` | no |  |
+| `description` | `string` | no |  |
+| `diff` | array of [`Change`](/docs/api/schemas#change) | no |  |
+| `dry_run` | `boolean` | no |  |
+| `effective` | array of [`OpEffect`](/docs/api/schemas#opeffect) | no |  |
+| `findings` | array of [`Finding`](/docs/api/schemas#finding) | no |  |
+| `kind` | `string` | no |  |
+| `lint` | [`LintTotals`](/docs/api/schemas#linttotals) | no |  |
+| `project_id` | `string` | no |  |
+| `replayed` | `boolean` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `same` | `boolean` | no |  |
+| `target` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
 
 ### HslBand
 

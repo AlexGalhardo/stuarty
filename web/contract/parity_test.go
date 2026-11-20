@@ -44,6 +44,18 @@ var parity = []row{
 	{method: "HistoryList", tool: "history", command: "history", route: "GET /projects/{}/history"},
 	{method: "Undo", tool: "history", command: "undo", route: "POST /projects/{}/undo"},
 	{method: "Redo", tool: "history", command: "redo", route: "POST /projects/{}/redo"},
+	{method: "HistoryRevert", tool: "history", command: "revert", route: "POST /projects/{}/revert"},
+	{method: "HistoryDiff", tool: "history", command: "diff", route: "GET /projects/{}/diff"},
+	{method: "CheckpointCreate", tool: "history", command: "checkpoint:create", route: "POST /projects/{}/checkpoints"},
+	{method: "CheckpointList", tool: "history", command: "checkpoint:list", route: "GET /projects/{}/checkpoints"},
+	{
+		method: "CheckpointRename", tool: "history", command: "checkpoint:rename",
+		route: "PATCH /projects/{}/checkpoints/{}",
+	},
+	{
+		method: "CheckpointRemove", tool: "history", command: "checkpoint:remove",
+		route: "DELETE /projects/{}/checkpoints/{}",
+	},
 	{method: "MediaImport", tool: "media_import", command: "media:import", route: "POST /projects/{}/media"},
 	{method: "MediaInspect", tool: "media_inspect", command: "media:inspect", route: "GET /projects/{}/media/{}"},
 	{method: "MediaList", tool: "media_inspect", command: "media:list", route: "GET /projects/{}/media"},

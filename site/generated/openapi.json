@@ -1099,6 +1099,58 @@
         },
         "type": "object"
       },
+      "Checkpoint": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "auto": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "CheckpointListResult": {
+        "properties": {
+          "checkpoints": {
+            "items": {
+              "$ref": "#/components/schemas/Checkpoint"
+            },
+            "type": "array"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "ChromaKey": {
         "properties": {
           "color": {
@@ -1448,6 +1500,23 @@
               "type": "string"
             },
             "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "DiffEntry": {
+        "properties": {
+          "change": {
+            "$ref": "#/components/schemas/Change"
+          },
+          "line": {
+            "type": "string"
+          },
+          "noun": {
+            "type": "string"
+          },
+          "verb": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -2239,6 +2308,41 @@
         },
         "type": "object"
       },
+      "HistoryDiffResult": {
+        "properties": {
+          "count": {
+            "type": "integer"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/DiffEntry"
+            },
+            "type": "array"
+          },
+          "from": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          },
+          "to": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "HistoryEntry": {
         "properties": {
           "actor": {
@@ -2332,6 +2436,80 @@
           "revision": {
             "format": "int64",
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "HistoryRevertResult": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "applied": {
+            "type": "boolean"
+          },
+          "base_revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "created": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "description": {
+            "type": "string"
+          },
+          "diff": {
+            "items": {
+              "$ref": "#/components/schemas/Change"
+            },
+            "type": "array"
+          },
+          "dry_run": {
+            "type": "boolean"
+          },
+          "effective": {
+            "items": {
+              "$ref": "#/components/schemas/OpEffect"
+            },
+            "type": "array"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "type": "array"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "lint": {
+            "$ref": "#/components/schemas/LintTotals"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "replayed": {
+            "type": "boolean"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "same": {
+            "type": "boolean"
+          },
+          "target": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -18828,6 +19006,316 @@
         "summary": "Start the agent of a profile on a project (a person in the browser only; others get 403)"
       }
     },
+    "/api/v1/projects/{id}/checkpoints": {
+      "get": {
+        "operationId": "projects.checkpoints.list",
+        "parameters": [
+          {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckpointListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the checkpoints of a project"
+      },
+      "post": {
+        "operationId": "projects.checkpoints.create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "name": {
+                    "description": "1 to 60 characters, no slash.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "note": {
+                    "description": "Up to 300 characters.",
+                    "type": "string"
+                  },
+                  "revision": {
+                    "description": "The revision to name; default the current one.",
+                    "format": "int64",
+                    "type": "integer"
+                  },
+                  "timeline_id": {
+                    "description": "The timeline of the project; required when the project has several.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Checkpoint"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Name a revision"
+      }
+    },
+    "/api/v1/projects/{id}/checkpoints/{name}": {
+      "delete": {
+        "operationId": "projects.checkpoints.remove",
+        "parameters": [
+          {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "The checkpoint to remove.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Checkpoint"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a checkpoint, never a revision"
+      },
+      "patch": {
+        "operationId": "projects.checkpoints.rename",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "The checkpoint to rename.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "new_name": {
+                    "description": "The new name.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "note": {
+                    "description": "Replaces the note when present.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "timeline_id": {
+                    "description": "The timeline of the project; required when the project has several.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "new_name"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Checkpoint"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Rename a checkpoint"
+      }
+    },
     "/api/v1/projects/{id}/describe": {
       "get": {
         "operationId": "projects.describe",
@@ -18886,6 +19374,92 @@
           }
         ],
         "summary": "Describe a project as text: brief, items and state"
+      }
+    },
+    "/api/v1/projects/{id}/diff": {
+      "get": {
+        "operationId": "projects.diff",
+        "parameters": [
+          {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The revision the diff starts from; or from_checkpoint.",
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The name of the checkpoint the diff starts from; or from.",
+            "in": "query",
+            "name": "from_checkpoint",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The revision the diff ends at; default the current one.",
+            "in": "query",
+            "name": "until",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryDiffResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List what changed between two revisions"
       }
     },
     "/api/v1/projects/{id}/duplicate": {
@@ -21690,6 +22264,97 @@
           }
         ],
         "summary": "Restore a project from the trash"
+      }
+    },
+    "/api/v1/projects/{id}/revert": {
+      "post": {
+        "operationId": "projects.revert",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "base_revision": {
+                    "description": "The revision the caller read; default the current one.",
+                    "format": "int64",
+                    "type": "integer"
+                  },
+                  "checkpoint": {
+                    "description": "The name of a checkpoint to go back to; or revision.",
+                    "type": "string"
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "revision": {
+                    "description": "The revision to go back to; or checkpoint.",
+                    "format": "int64",
+                    "type": "integer"
+                  },
+                  "timeline_id": {
+                    "description": "The timeline of the project; required when the project has several.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryRevertResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Go back to an earlier revision as a new step"
       }
     },
     "/api/v1/projects/{id}/sheet": {

@@ -85,7 +85,12 @@ func checkMembers(tool, domain string, raw json.RawMessage, required, refused []
 func imageHistory(
 	ctx context.Context, svc service.Service, raw json.RawMessage, action, imageID string,
 ) (*toolOutput, error) {
-	refused := []string{"project_id", "timeline_id", "actor", "cursor", "limit"}
+	// The members of revert, diff and checkpoints are of timelines only; an image undo has no dry run, so a
+	// dry_run that were ignored here would undo for real.
+	refused := []string{
+		"project_id", "timeline_id", "actor", "cursor", "limit", "revision", "until", "name", "new_name", "note",
+		"dry_run",
+	}
 	if err := checkMembers("history", command.DomainImage, raw, []string{"image_id"}, refused); err != nil {
 		return nil, err
 	}

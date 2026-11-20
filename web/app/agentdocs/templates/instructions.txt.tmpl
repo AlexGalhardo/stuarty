@@ -6,5 +6,5 @@ edit applies a batch of operations all or nothing, as one undo step. Call comman
 Ids (prj_, ast_, trk_, itm_, job_) are stable. Give a new track or item your own id when later operations in the same batch refer to it.
 A failed call returns code, message, hint and retryable. Retry only when retryable is true. E_REVISION_CONFLICT includes the changes since your revision: read them and re-plan.
 Lists carry next_cursor: pass it back as cursor.
-history action=undo reverts your own latest step. Nothing here deletes data for good and nothing is sent outside this machine.
+history action=undo reverts your own latest step. To undo a whole line of work, name the state first (action=checkpoint, name), and later read action=diff (revision or name) and go back with action=revert (dry_run=true first); a revert is a step undo takes back. Nothing here deletes data for good and nothing is sent outside this machine.
 A started export or import keeps running after the call returns: keep polling job_get until it finishes (wait_ms makes it wait).

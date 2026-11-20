@@ -153,6 +153,23 @@ func UndoText(r *UndoResult) string {
 	return renderEdit(&r.EditResult, state, suffix, r.Skipped)
 }
 
+// CheckpointText is the text of one checkpoint after an operation on it (SDD-003 section 3.7.1): the note line,
+// then "<state> checkpoint "<name>" at r<revision> by <actor>", with the note after a dash.
+func CheckpointText(state string, c *Checkpoint) string {
+	line := textview.Note + "\n" + state + " checkpoint " + textview.Quote(c.Name, 60) +
+		" at r" + strconv.FormatInt(c.Revision, 10) + " by " + c.Actor
+
+	if c.Auto {
+		line += " (automatic)"
+	}
+
+	if c.Note != "" {
+		line += " - " + textview.Quote(c.Note, 300)
+	}
+
+	return line
+}
+
 // EditText is the text of an edit result (SDD-003 section 3.5). The result carries
 // no frame rate, so the ranges of findings are printed in frames only.
 func EditText(r *EditResult) string { return renderEdit(r, editState(r), "", nil) }

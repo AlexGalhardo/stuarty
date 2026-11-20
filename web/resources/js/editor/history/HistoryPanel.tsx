@@ -4,9 +4,11 @@ import { type ReactNode, useEffect, useState } from "react";
 import UntrustedText from "@/components/UntrustedText";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { type Translate, useLocale, useT } from "@/lib/i18n";
 import ErrorBody from "../commands/ErrorBody";
+import { useCanEdit } from "../commands/useActions";
 import { actorLabel } from "../state/activityStore";
 import { useStore } from "../state/createStore";
 import { useRuntime } from "../state/EditorContext";
@@ -14,6 +16,9 @@ import type { HistoryRow } from "../state/historyStore";
 import EmptyState from "../ui/EmptyState";
 import { errorHeadline } from "../ui/errorHeadline";
 import { formatRelative } from "../ui/format";
+import CheckpointsSection from "./CheckpointsSection";
+import DiffView from "./DiffView";
+import RevertDialog, { type RevertTarget } from "./RevertDialog";
 
 const TICK_MS = 30_000;
 
@@ -45,12 +50,21 @@ function Row({
 	now,
 	expanded,
 	onToggle,
+	picked,
+	onPick,
+	onRevert,
 }: {
 	row: HistoryRow;
 	own: boolean;
 	now: number;
 	expanded: boolean;
 	onToggle(): void;
+	// The step is one of the two being compared; a step the core has not listed yet
+	// (provisional) is not offered.
+	picked: boolean;
+	onPick(): void;
+	// Absent on the newest step: going back to it changes nothing.
+	onRevert?(): void;
 }): ReactNode {
 	const t = useT();
 	const locale = useLocale();
@@ -58,11 +72,25 @@ function Row({
 	const first = text.split("\n")[0] ?? "";
 	const Icon = row.kind === "undo" ? Undo2 : row.kind === "redo" ? Redo2 : null;
 	return (
-		<li data-revision={row.revision} data-actor={row.actor}>
+		<li
+			data-revision={row.revision}
+			data-actor={row.actor}
+			className="flex items-start gap-1"
+		>
+			{!row.provisional && (
+				<Checkbox
+					className="mt-2.5"
+					checked={picked}
+					aria-label={t("ui.editor.history.compare", {
+						revision: row.revision,
+					})}
+					onCheckedChange={onPick}
+				/>
+			)}
 			<button
 				type="button"
 				aria-expanded={expanded}
-				className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-x-2 gap-y-0.5 px-1 py-1.5 text-left hover:bg-accent"
+				className="grid min-w-0 flex-1 grid-cols-[auto_1fr_auto] items-center gap-x-2 gap-y-0.5 px-1 py-1.5 text-left hover:bg-accent"
 				onClick={onToggle}
 			>
 				<span className="font-mono text-xs text-muted-foreground tabular-nums">
@@ -100,6 +128,20 @@ function Row({
 					</Badge>
 				)}
 			</button>
+			{onRevert !== undefined && !row.provisional && (
+				<Button
+					type="button"
+					size="sm"
+					variant="ghost"
+					className="mt-1"
+					aria-label={t("ui.editor.history.revert_row", {
+						revision: row.revision,
+					})}
+					onClick={onRevert}
+				>
+					{t("ui.editor.history.revert_here")}
+				</Button>
+			)}
 		</li>
 	);
 }
@@ -114,6 +156,19 @@ export default function HistoryPanel(): ReactNode {
 	const state = useStore(runtime.history, (s) => s);
 	const [expanded, setExpanded] = useState<ReadonlySet<number>>(new Set());
 	const [now, setNow] = useState(() => Date.now());
+	const canEdit = useCanEdit();
+	// The two steps picked to compare, oldest pick first; a third pick replaces
+	// the oldest one.
+	const [picked, setPicked] = useState<readonly number[]>([]);
+	const [revertTarget, setRevertTarget] = useState<RevertTarget | null>(null);
+	const head = state.rows[0]?.revision ?? 0;
+
+	const pick = (revision: number): void =>
+		setPicked((was) =>
+			was.includes(revision)
+				? was.filter((r) => r !== revision)
+				: [...was, revision].slice(-2),
+		);
 
 	useEffect(() => {
 		const id = setInterval(() => setNow(Date.now()), TICK_MS);
@@ -133,6 +188,20 @@ export default function HistoryPanel(): ReactNode {
 			aria-busy={state.status === "loading"}
 			className="flex min-h-0 min-w-0 flex-col gap-2 overflow-auto"
 		>
+			<CheckpointsSection head={head} onRevert={setRevertTarget} />
+			{picked.length === 2 ? (
+				<DiffView from={Math.min(...picked)} until={Math.max(...picked)} />
+			) : (
+				state.rows.length > 1 && (
+					<p className="text-xs text-muted-foreground">
+						{t("ui.editor.history.diff_hint")}
+					</p>
+				)
+			)}
+			<RevertDialog
+				target={revertTarget}
+				onClose={() => setRevertTarget(null)}
+			/>
 			{state.status === "loading" && (
 				<div className="flex flex-col gap-1">
 					<Skeleton className="h-12" />
@@ -172,6 +241,13 @@ export default function HistoryPanel(): ReactNode {
 							now={now}
 							expanded={expanded.has(row.revision)}
 							onToggle={() => toggle(row.revision)}
+							picked={picked.includes(row.revision)}
+							onPick={() => pick(row.revision)}
+							onRevert={
+								canEdit && row.revision !== head
+									? () => setRevertTarget({ revision: row.revision })
+									: undefined
+							}
 						/>
 					))}
 				</ul>

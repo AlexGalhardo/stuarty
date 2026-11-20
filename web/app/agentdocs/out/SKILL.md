@@ -87,7 +87,6 @@ Prefix: `stuarty`.
 - `template:import <path>`
 - `bundle:export --project <id> [--no-log] [--wait] [--out f] [--force]`
 - `bundle:import <path> [--as-new]`
-- `agent:docs --print skill|agents|instructions`
 - `transcribe --project <id> --asset <id> [--language auto] [--model <name>] [--wait] [--timeout d]`
 - `doctor [--full] [--verify] [--bundle] [--gc]`
 - `fonts`
@@ -130,7 +129,7 @@ Prefix: `stuarty`.
 - `asset:set <hash>`
 - `asset:tag <hash>`
 
-`--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` JSON). `--dry-run` saves nothing; `--key <k>` makes retries safe; `--out f` copies the file out.
+`--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` JSON). `--dry-run` saves nothing; `--key <k>` makes retries safe; `--out f` copies the file out. Back: `agent:docs --print guide:video|skill|agents|instructions`
 
 ## Reading results
 

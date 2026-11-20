@@ -109,6 +109,7 @@ type Repos interface {
 	Templates() TemplateRepo
 	Backups() BackupRepo
 	Audit() AuditRepo // section 5.9
+	Checkpoints() CheckpointRepo // section 5.14
 }
 
 type Tx interface {
@@ -278,6 +279,29 @@ type OperationRepo interface {
 	CloseOpenRedo(ctx context.Context, projectID, actor string, by int64) error
 	// CloseAllOpen closes every open row of the project (a migration or import ends all undo chains).
 	CloseAllOpen(ctx context.Context, projectID string, by int64) error
+}
+
+// CheckpointRepo is the checkpoints of a timeline (section 5.14; epic 36). Repos.Checkpoints() returns it.
+type CheckpointRow struct {
+	ProjectID string
+	Name      string
+	Note      string
+	Revision  int64
+	Actor     string
+	Auto      bool
+	AtMs      int64
+}
+
+type CheckpointRepo interface {
+	Create(ctx context.Context, row CheckpointRow) error // ErrExists on a duplicate name
+	Get(ctx context.Context, projectID, name string) (CheckpointRow, error)
+	List(ctx context.Context, projectID string) ([]CheckpointRow, error) // newest revision first, then name
+	// Rename changes the name, and the note when note is not nil, and makes the checkpoint a named one (auto 0);
+	// ErrNotFound, ErrExists on a taken name.
+	Rename(ctx context.Context, projectID, name, newName string, note *string) error
+	Remove(ctx context.Context, projectID, name string) error // ErrNotFound; no revision is touched
+	// TrimAuto removes the oldest automatic checkpoints until at most keep remain.
+	TrimAuto(ctx context.Context, projectID string, keep int) error
 }
 ```
 
@@ -1174,6 +1198,28 @@ CREATE UNIQUE INDEX image_operations_key_index ON image_operations (image_id, ac
 
 The log is append-only except `closed_by`, which moves from `NULL` to a revision, as in section 5.3; undo and redo follow section 12 with the rules of SDD-021 section 4. `Repos` gains `Images() ImageRepo` with `Create`, `Get`, `List`, `Commit` (a compare-and-set on the revision, `ErrStale` otherwise), `AppendOperation`, `Operation`, `LastOpen` (the actor's last step open to undo or redo), `Close`, `CloseOpenRedo` and `ByKey`. The writer is the one write transaction of `Store.Write`.
 
+### 5.14 `checkpoints` (RF-121, epic 36)
+
+A name and a note on a revision of a timeline, so that a person or an agent can say "this is the state to come back to" and go back by that name. A checkpoint is not a copy of the document: it points at a revision, whose document the log rebuilds (section 12.4).
+
+```sql
+CREATE TABLE checkpoints (
+  project_id TEXT    NOT NULL REFERENCES timelines (id) ON DELETE CASCADE, -- the id of the timeline document (section 5.12): a second timeline is not a row of `projects`
+  name       TEXT    NOT NULL CHECK (length(name) BETWEEN 1 AND 240),
+  note       TEXT    NOT NULL DEFAULT '',
+  revision   INTEGER NOT NULL CHECK (revision >= 1),
+  actor      TEXT    NOT NULL,
+  auto       INTEGER NOT NULL DEFAULT 0 CHECK (auto IN (0,1)),
+  at_ms      INTEGER NOT NULL,
+  PRIMARY KEY (project_id, name)
+);
+CREATE INDEX checkpoints_revision_index ON checkpoints (project_id, revision DESC);
+```
+
+The name is unique inside a timeline (`ErrExists` becomes `E_ID_EXISTS`), 1 to 60 characters after `untrusted.Clean` and trimming, with no `/`; the note is cut at 300 characters. A checkpoint is removed with its project (the cascade of `Delete`, section 13.3) and never otherwise except by `CheckpointRemove` and by the ceiling of the automatic ones below; it holds no foreign key to `operations`, which is append-only. `Repos` gains `Checkpoints() CheckpointRepo` (section 3.2).
+
+**Automatic checkpoint.** In the transaction of `Edit` (and of `HistoryRevert`, which commits a batch the same way), after the checks that can refuse the batch and before the commit, when the batch is not a dry run and changes the document (not a no-op), and the actor is an agent (SDD-003 §2.5.1), the service makes the checkpoint `auto <actor> <YYYY-MM-DD>` (UTC date of the service clock) at the revision the batch started from, unless that name exists in the timeline. The name is the whole "once a day per actor" rule: the first edit of the day creates it, the later ones find it. At most 30 automatic checkpoints are kept per timeline: after creating one, `TrimAuto(project, 30)` removes the oldest automatic ones. A checkpoint made by a person or an agent by name is never removed by the ceiling, and neither is an automatic one that a person or an agent renamed: the rename makes it a named one (`auto` 0).
+
 ## 6. Workspace ownership
 
 ADR-0008 decides that one process owns a workspace. This section fixes how.
@@ -1478,6 +1524,10 @@ SELECT revision, kind, actor, at_ms, base_revision, target_revision, closed_by, 
 
 A row is shown as undone when it is an `edit` or `redo` with `closed_by` set.
 
+### 11.3 Retention (epic 36)
+
+The log has no retention policy: no row is ever deleted, except by the cascade of emptying the trash (section 13.3), and every row keeps its `inverse`, which is what lets any revision be rebuilt (section 12.4). The rule that goes with checkpoints is therefore a constraint on the future more than a job of today: **a revision that a checkpoint names is kept, and so is every revision after it**, because the document at the checkpoint is rebuilt by walking back from the current one through each later row. Any later policy that compacts old rows may drop only rows older than the oldest checkpoint, and must keep a rebuildable form of that revision (its `doc_sha256` row and the document). The ceiling on automatic checkpoints (section 5.14) keeps the number of pinned revisions bounded.
+
 ## 12. Undo and redo
 
 SDD-002 §A.6; ADR-0006 item 6. Undo and redo are service operations (`Undo`, `Redo`) that are themselves committed batches: they go through the same steps as section 9, with the differences below.
@@ -1571,6 +1621,19 @@ Fields beyond the common edit result of SDD-003 (`revision`, `diff`, `descriptio
 ```
 
 `undone` is `redone` for a redo. `primitive_index` counts in the order the primitives were attempted (reversed). `by_revision` and `by_actor` are present for the two `*_other_actor` reasons. `E_NOTHING_TO_UNDO` and `E_NOTHING_TO_REDO` have no `details`.
+
+### 12.4 Revert and the diff of two revisions (RF-120, RF-121)
+
+`HistoryRevert` and `HistoryDiff` (SDD-003 §2.5.1) need the document at a revision. There is no stored copy of it, so the service rebuilds it from the log:
+
+1. Read the project row and its current document (inside `WriteProject` for a revert; a plain read for a diff). The target `T` must satisfy `1 <= T <= current`; a checkpoint name is resolved to its revision first (`E_NOT_FOUND` when it does not exist).
+2. Walk the rows `T+1 .. current` through `Operations.Get`. A row of kind `migrate` or `import` among them refuses the operation with `E_INVALID_STATE` (the schema of the document changed there, so its `inverse` does not describe a step back). A walk of more than 5,000 rows is `E_LIMIT` with the hint to go back in steps through a nearer checkpoint.
+3. Give the `inverse` of each row, newest first, to `command.RebuildAt(current, inverses)` (SDD-002 A.6): the lists are applied one after the other, each in reverse order, on one working copy with no guard and no validation in between, and the result is validated once.
+4. Compare `SHA-256(timeline.Canonical(rebuilt))` with the `doc_sha256` of the row `T`. A difference is `E_INTERNAL` with the revisions in `details`: the log and the document disagree, which is a defect, never something to continue from.
+
+`HistoryRevert` then calls `command.Revert(current, rebuilt)` and commits the batch like an edit (section 9) as a row of kind `edit`, `ops` `[{"op":"history.revert","args":{"revision":T}}]`, with the `inverse` and `diff` of that call, `base_revision` the revision the caller read, and `closeOpenRedo` as any new edit of the actor. Because it is an `edit` row, the actor's `Undo` (section 12.2) applies its `inverse`, and the guard protects what other actors changed after it, as for any step. It writes nothing when the diff is empty. An idempotency key is not part of the request.
+
+The two properties the tests hold (`TestRevertProperty`, `TestRevertThroughTheService`): revert to `R` leaves a document equal in canonical bytes to the document at `R`, so an export of it equals an export at `R`; and revert followed by undo leaves the document the revert started from.
 
 ## 13. Trash
 
