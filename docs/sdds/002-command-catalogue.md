@@ -62,7 +62,7 @@ type Graph interface {
 }
 ```
 
-`Env.Timelines` is how a command that places one timeline in another stays pure: it never opens a store. A command that needs it and finds it nil answers `E_NOT_FOUND` for the timeline (the production is unknown). The golden runner builds it from the optional file `timelines.json` of a case (the other documents of the production as an array of canonical documents). `Result.Spawned` holds the new documents of a command that makes a timeline; the service creates their rows in the transaction of the commit, and an undo of the batch leaves them in place (it restores the document, and the timeline is the user's to trash).
+`Env.Timelines` is how a command that places one timeline in another stays pure: it never opens a store. A command that needs it and finds it nil answers `E_NOT_FOUND` for the timeline (the production is unknown). The golden runner builds it from the optional file `timelines.json` of a case (the other documents of the production as an array of canonical documents). `Result.Spawned` holds the new documents of a command that makes a timeline; the service creates their rows in the transaction of the commit, with the rows of the assets their documents name (copied from the timeline they came from, so their files are served and kept under them), and an undo of the batch leaves them in place (it restores the document, and the timeline is the user's to trash).
 
 Rules:
 
