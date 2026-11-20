@@ -250,6 +250,8 @@ cover="$(printf '{"title":{"text":"First sourdough"}}' | stuarty image:create --
 COVER="$(need image_id "$(printf '%s' "$cover" | field image_id)" "$cover")"
 cover_png="$(stuarty image:export "$COVER" --format png --json)"
 [ "$(printf '%s' "$cover_png" | number bytes)" -gt 1000 ] || die "the cover png is empty: $cover_png"
+# The export of the image is a job, and the publication takes that job as its thumbnail (D-111).
+COVER_JOB="$(need job_id "$(printf '%s' "$cover_png" | field job_id)" "$cover_png")"
 
 # ---- 6. the export with a platform preset --------------------------------------------------------------------
 
@@ -265,9 +267,6 @@ case "$got" in *'"ok":false'*) die "a check of the export failed: $got" ;; esac
 case "$got" in *'fits YouTube Shorts'*) ;; *) die "the export was not checked against the preset: $got" ;; esac
 VIDEO_BYTES="$(printf '%s' "$got" | number bytes)"
 [ "${VIDEO_BYTES:-0}" -gt 10000 ] || die "the exported video is too small: $got"
-# The cover of the post is a still of the video: the publication takes a succeeded export of a still.
-still="$(stuarty export --project "$P" --format png --at 1s --wait --json)"
-STILL_JOB="$(need job_id "$(printf '%s' "$still" | field job_id)" "$still")"
 
 # ---- 7. the account ------------------------------------------------------------------------------------------
 
@@ -292,7 +291,7 @@ step "8. create the publication, schedule it, and approve it as a person"
 # (core/publish), so the post then goes out at once.
 AT="$(utc $(($(date -u +%s) + 5)))"
 pub="$(stuarty publication:create --project "$P" --title "Sourdough short" \
-	--text "From starter to slice in four seconds #sourdough" --export "$EXPORT_JOB" --thumbnail "$STILL_JOB" \
+	--text "From starter to slice in four seconds #sourdough" --export "$EXPORT_JOB" --thumbnail "$COVER_JOB" \
 	--connection "$SOCIAL_CONN" --at "$AT" --made-for-kids no --visibility public --json)"
 PUB="$(need publication "$(printf '%s' "$pub" | field id)" "$pub")"
 [ "$(upload_count)" = 0 ] || die "something was sent before the post was scheduled"

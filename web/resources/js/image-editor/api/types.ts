@@ -272,6 +272,8 @@ export interface ImageExportOptions {
 
 export interface ImageExportResult {
 	image_id: string;
+	// The export job that records the file: a publication takes it as its thumbnail.
+	job_id?: string;
 	revision: number;
 	format: string;
 	path: string;
