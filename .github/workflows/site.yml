@@ -52,7 +52,7 @@ jobs:
       run:
         working-directory: site
     env:
-      # Optional repository variable; the default is the custom domain https://video.vukem.dev, served by
+      # Optional repository variable; the default is the custom domain https://stuarty.com, served by
       # GitHub Pages with base path / (SDD-010 section 12.4). The domain itself is a repository Pages setting.
       SITE_URL: ${{ vars.SITE_URL }}
     steps:

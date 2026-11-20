@@ -43,7 +43,7 @@ env:
   UPDATE_PUBLIC_KEY: ${{ vars.UPDATE_FEED_PUBLIC_KEY }}
   # The feed is served by GitHub Pages, from the same host as the installers it lists (the client follows
   # no redirect and talks to one host only; SDD-009 section 10.5).
-  UPDATE_FEED_URL: ${{ vars.SITE_URL || 'https://video.vukem.dev' }}/updates/feed.json
+  UPDATE_FEED_URL: ${{ vars.SITE_URL || 'https://stuarty.com' }}/updates/feed.json
 
 jobs:
   # In a release the binaries come from installers.yml, which release.yml runs first and which uploads the
