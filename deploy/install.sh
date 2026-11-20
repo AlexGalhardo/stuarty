@@ -50,14 +50,19 @@ if [ -f "$ENV_FILE" ]; then
 else
 	[ -n "$domain" ] || ask domain "Domain of this server (its DNS record must point here)"
 	[ -n "$email" ] || ask email "E-mail of the first administrator (also given to the certificate authority)"
-	printf '%s' "$domain" | grep -Eq '^[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)+$' || die "'$domain' is not a domain name such as stuarty.example.com"
-	printf '%s' "$email" | grep -Eq '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$' || die "'$email' is not an e-mail address"
+	# [[ =~ ]] matches the whole value: grep would accept a value with a newline whose first line is
+	# good, and the rest would become lines of .env. The e-mail is kept to characters that mean
+	# nothing to Compose ($) or to the Caddyfile ({ } quotes), where it is substituted.
+	label='[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?'
+	[[ "$domain" =~ ^$label(\.$label)+$ ]] || die "'$domain' is not a domain name such as stuarty.example.com"
+	[[ "$email" =~ ^[A-Za-z0-9._%+-]+@$label(\.$label)+$ ]] || die "'$email' is not an e-mail address such as you@example.com"
+	case "${STUARTY_TLS_DIRECTIVE:-}" in "" | "tls internal") ;; *) die "STUARTY_TLS_DIRECTIVE is empty (a public domain) or 'tls internal' (a test), not '$STUARTY_TLS_DIRECTIVE'" ;; esac
 	if [ -z "$version" ]; then
 		version="$(git -C "$DEPLOY_DIR/.." describe --tags --exact-match 2>/dev/null || true)"
 		version="${version#v}"
 	fi
 	[ -n "$version" ] || die "this checkout is not at a release tag: run git checkout vX.Y.Z first, or pass --version X.Y.Z"
-	printf '%s' "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || die "'$version' is not a version such as 0.30.0"
+	[[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "'$version' is not a version such as 0.30.0"
 	created_env=1
 fi
 
