@@ -25,7 +25,7 @@ type approvalDecideIn struct {
 
 type approvalRuleSetIn struct {
 	ID            string `json:"id,omitempty"              doc:"The rule to replace; leave out to create one."`
-	Kind          string `json:"kind"                      doc:"The kind of action the rule covers, for example publish.post."                                                                                     validate:"required"`
+	Kind          string `json:"kind"                      doc:"The kind of action the rule covers, for example publish.upload (publish now) or publish.scheduled."                                                validate:"required"`
 	ConnectionID  string `json:"connection_id,omitempty"   doc:"Only this destination; leave out for any."`
 	ProjectID     string `json:"project_id,omitempty"      doc:"Only this project; leave out for any."`
 	Currency      string `json:"currency,omitempty"        doc:"Three upper-case letters; needed with a limit."`

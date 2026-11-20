@@ -34,7 +34,7 @@ type Money struct {
 
 // Action is what is about to run: the question Decide answers.
 type Action struct {
-	Kind       string // the kind of the job, for example "publish.post"
+	Kind       string // the kind of the job, for example "publish.upload"
 	Connection string // the destination connection; empty when it has none
 	Project    string // the project; empty when it has none
 	Cost       Money  // the estimate; Micros 0 is no cost

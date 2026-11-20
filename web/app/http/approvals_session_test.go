@@ -19,7 +19,7 @@ func TestSecurity_T48_BrowserSessionWithoutTheLauncherSecretCannotDecide(t *test
 	writes := func(id string) []req {
 		return []req{
 			{method: http.MethodPost, path: "/api/v1/approvals/" + id + "/decide", body: `{"decision":"approve"}`},
-			{method: http.MethodPost, path: "/api/v1/approval-rules", body: `{"kind":"publish.post"}`},
+			{method: http.MethodPost, path: "/api/v1/approval-rules", body: `{"kind":"publish.scheduled"}`},
 			{method: http.MethodPut, path: "/api/v1/cost/ceilings", body: `{"currency":"USD","per_day_micros":1}`},
 		}
 	}

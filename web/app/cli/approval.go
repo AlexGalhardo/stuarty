@@ -129,11 +129,15 @@ var approvalRuleSetCmd = &spec{
 	name:    "approval:rule:set",
 	summary: "create or replace a rule that approves a kind of action (for a person in the app; the local token is refused)",
 	usage:   []string{"stuarty approval:rule:set --kind <k>"},
-	example: "stuarty approval:rule:set --kind publish.post --connection con_0123456789",
+	example: "stuarty approval:rule:set --kind publish.upload --connection con_0123456789",
 	write:   true,
 	flags: []flagDef{
 		{Name: "id", Kind: kindString, Usage: "the rule to replace; leave out to create one"},
-		{Name: "kind", Kind: kindString, Usage: "the kind of action the rule covers (required)"},
+		{
+			Name:  "kind",
+			Kind:  kindString,
+			Usage: "the kind of action: publish.upload, publish.scheduled, text.generate, ... (required)",
+		},
 		{Name: "connection", Kind: kindString, Usage: "only this destination"},
 		{Name: "project", Kind: kindString, Usage: "only this project"},
 		{Name: "currency", Kind: kindString, Usage: "three upper-case letters, needed with a limit"},
