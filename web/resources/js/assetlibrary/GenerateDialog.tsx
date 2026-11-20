@@ -77,6 +77,12 @@ export function choicesOf(providers: ProviderView[], kind: Kind): Choice[] {
 	return out;
 }
 
+// Whether a provider of the product has the capability at all, connected or not: with none (no provider makes
+// video yet, SDD-016 section 2.3) there is nothing to connect, so the dialog does not send the person to look.
+export function anyMaker(providers: ProviderView[], kind: Kind): boolean {
+	return providers.some((provider) => provider.capabilities.includes(kind));
+}
+
 // The models the picker offers: the ones whose hint is the capability first, then the others, since the hint
 // is not a rule and the provider is the judge.
 export function orderedModels(models: ModelView[], kind: Kind): ModelView[] {
@@ -320,6 +326,7 @@ export function GenerateDialog({
 		prompt.trim() !== "" &&
 		(kind !== "voice" || voice !== "");
 	const noProvider = providers !== null && choices.length === 0;
+	const noMaker = providers !== null && !anyMaker(providers, kind);
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
@@ -332,10 +339,16 @@ export function GenerateDialog({
 				</DialogHeader>
 				{noProvider && (
 					<p className="text-sm" data-testid="generate-no-provider">
-						{t(`ui.generate.no_provider.${kind}`)}{" "}
-						<Link href="/connections" className="underline">
-							{t("ui.generate.open_connections")}
-						</Link>
+						{noMaker ? (
+							t(`ui.generate.no_maker.${kind}`)
+						) : (
+							<>
+								{t(`ui.generate.no_provider.${kind}`)}{" "}
+								<Link href="/connections" className="underline">
+									{t("ui.generate.open_connections")}
+								</Link>
+							</>
+						)}
 					</p>
 				)}
 				{!noProvider && (
@@ -484,7 +497,10 @@ export function GenerateDialog({
 									<select
 										id="generate-aspect"
 										value={aspect}
-										onChange={(event) => setAspect(event.target.value)}
+										onChange={(event) => {
+											setAspect(event.target.value);
+											setEstimate(null);
+										}}
 										className="h-8 rounded-lg border border-input bg-background px-2 text-sm"
 									>
 										{VIDEO_ASPECTS.map((a) => (
