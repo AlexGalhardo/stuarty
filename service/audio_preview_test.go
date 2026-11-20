@@ -30,6 +30,7 @@ type fakePreviewer struct {
 
 	mu      sync.Mutex
 	samples []int64
+	sources []plan.AudioSource
 	fail    bool
 	gate    chan struct{} // when set, a render waits for it to be closed
 }
@@ -41,6 +42,7 @@ func (f *fakePreviewer) RenderAudioPreview(_ context.Context, in AudioPreviewInp
 
 	f.mu.Lock()
 	f.samples = append(f.samples, in.Source.Samples)
+	f.sources = append(f.sources, in.Source)
 	fail := f.fail
 	f.mu.Unlock()
 
@@ -178,10 +180,11 @@ func TestAudioPreviewCache(t *testing.T) {
 		t.Fatalf("processed: %+v", keys)
 	}
 
-	// The playhead is at frame 60 of an item that starts at 30: the window is the two seconds from there.
-	win := waitReady(t, env, a.Key, "60")
+	// The playhead is at frame 60 of an item that starts at 30, frame 30 of its file: the window is the two seconds
+	// from there.
+	win := waitReady(t, env, a.Key, "30")
 
-	if win.ContentType != "audio/wav" || win.Header["X-Stuarty-Window"] != "60-119" || !win.Immutable {
+	if win.ContentType != "audio/wav" || win.Header["X-Stuarty-Window"] != "30-89" || !win.Immutable {
 		t.Errorf("window file: %+v", win)
 	}
 
@@ -197,15 +200,15 @@ func TestAudioPreviewCache(t *testing.T) {
 	}
 
 	// Asked again, both are served from the store.
-	waitReady(t, env, a.Key, "60")
+	waitReady(t, env, a.Key, "30")
 	waitReady(t, env, a.Key, "")
 
 	if n := len(fake.renders()); n != 2 {
 		t.Errorf("a stored file was rendered again: %d renders", n)
 	}
 
-	// Past the end of the item, before it, or not a number: a validation error, and no render.
-	for _, from := range []string{"29", "180", "x", "-1"} {
+	// Past the end of the file, before it, or not a number: a validation error, and no render.
+	for _, from := range []string{"-1", "150", "x", "180"} {
 		_, err := openPreview(env, batchProject, a.Key, from)
 		if se, ok := errors.AsType[*Error](err); !ok || se.Code != command.CodeValidation {
 			t.Errorf("from %q: %v", from, err)
@@ -224,7 +227,7 @@ func TestAudioPreviewWindowLatency(t *testing.T) {
 	a := previewKeys(t, env)[previewItemA]
 
 	start := time.Now()
-	waitReady(t, env, a.Key, "60")
+	waitReady(t, env, a.Key, "30")
 
 	if took := time.Since(start); took > 3*time.Second {
 		t.Errorf("the window took %v, the budget is 3s", took)
@@ -239,9 +242,59 @@ func TestAudioPreviewCacheWindowIsCutAtTheEndOfTheItem(t *testing.T) {
 	env := previewEnv(t, fake)
 	a := previewKeys(t, env)[previewItemA]
 
-	win := waitReady(t, env, a.Key, "170")
-	if win.Header["X-Stuarty-Window"] != "170-179" {
+	win := waitReady(t, env, a.Key, "140")
+	if win.Header["X-Stuarty-Window"] != "140-149" {
 		t.Errorf("window = %q", win.Header["X-Stuarty-Window"])
+	}
+}
+
+// Two items that share a key sit at different frames of the timeline: a window is named by a frame of the file, so the
+// window that one of them asks for holds its own sound, whichever item handed the key out first.
+func TestAudioPreviewWindowIsAFrameOfTheFile(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePreviewer{}
+	env := previewEnv(t, fake)
+	store, _ := env.s.store.(*batchStore)
+
+	// A, at 30, hands the key out first; then B moves to 90.
+	first := previewKeys(t, env)
+
+	doc, err := timeline.Decode(store.projects.row.Document)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	b := doc.Items[previewItemB]
+	b.Start = 90
+	doc.Items[b.ID] = b
+	store.projects.row.Document = timeline.Canonical(doc)
+
+	keys := previewKeys(t, env)
+	pb := keys[previewItemB]
+
+	if pb == nil || pb.Key != first[previewItemA].Key || pb.Start != 90 {
+		t.Fatalf("B = %+v, A = %+v", pb, first[previewItemA])
+	}
+
+	// The playhead is at frame 120, 30 frames into B: the window from frame 30 of the file.
+	win := waitReady(t, env, pb.Key, "30")
+	if win.Header["X-Stuarty-Window"] != "30-89" {
+		t.Errorf("window = %q, want the frames 30-89 of the file", win.Header["X-Stuarty-Window"])
+	}
+
+	want, ok := plan.PreviewSource(doc, previewItemB, 120, 180)
+	if !ok {
+		t.Fatal("no source")
+	}
+
+	fake.mu.Lock()
+	got := fake.sources[0]
+	fake.mu.Unlock()
+
+	if got.SourceStart != want.SourceStart || got.Samples != want.Samples {
+		t.Errorf("the window renders the source from sample %d (%d samples), want %d (%d)",
+			got.SourceStart, got.Samples, want.SourceStart, want.Samples)
 	}
 }
 
@@ -421,14 +474,14 @@ func TestSecurity_T91_AudioPreviewRendersAreBounded(t *testing.T) {
 
 	// The same window asked for many times is one render.
 	for range 50 {
-		if _, err := openPreview(env, batchProject, a.Key, "60"); err != nil {
+		if _, err := openPreview(env, batchProject, a.Key, "30"); err != nil {
 			t.Fatal(err)
 		}
 	}
 
 	var full *Error
 
-	for from := 31; from < 170 && full == nil; from++ {
+	for from := 1; from < 150 && full == nil; from++ {
 		_, err := openPreview(env, batchProject, a.Key, strconv.Itoa(from))
 		if se, ok := errors.AsType[*Error](err); ok {
 			full = se
