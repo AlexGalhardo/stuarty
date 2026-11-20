@@ -51,6 +51,7 @@ import type {
 	PlanWindow,
 	PlanWindowHead,
 	ProjectCreateResult,
+	ProjectDescribeResult,
 	ProjectGetResult,
 	ProjectItemAddRequest,
 	ProjectItemResult,
@@ -90,6 +91,8 @@ export interface ApiClient {
 	listMedia(projectId: string): Promise<MediaListResult>;
 	importMedia(projectId: string, paths: string[]): Promise<MediaImportResult>;
 	getLint(projectId: string): Promise<LintResult>;
+	// The items of the production the project belongs to, for the names of its timelines.
+	describeProject(projectId: string): Promise<ProjectDescribeResult>;
 	// `options` are the export arguments the server schema exposes (format only: fps
 	// and size are project settings); `dryRun` runs the lint gate and the limits and queues nothing.
 	startExport(
@@ -317,6 +320,8 @@ export function createClient(
 				files: paths.map((path) => ({ path })),
 			}),
 		getLint: (id) => call("GET", `${project(id)}/lint`, READ_TIMEOUT_MS),
+		describeProject: (id) =>
+			call("GET", `${project(id)}/describe`, READ_TIMEOUT_MS),
 		startExport: (id, options = {}, dryRun = false) => {
 			const args = Object.fromEntries(
 				Object.entries(options).filter(([, value]) => value !== undefined),
