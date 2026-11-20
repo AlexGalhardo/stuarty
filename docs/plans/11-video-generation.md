@@ -39,7 +39,7 @@ A creator asks for a few seconds of generated footage, from a prompt or from one
 - [x] 3. Implement validation and estimation with table tests. Verify: `go test ./core/provider/...` passes.
 - [x] 4. Implement the adapter with contract tests from recorded responses (submit, pending, done, failed, refused). Verify: `go test ./service/providers/...` passes with no network.
 - [x] 5. Implement the job with resume after restart and cancellation. Verify: `go test ./service/... -run TestVideoGenerate` passes, including the restart test that counts one submission.
-- [ ] 6. Expose on HTTP, CLI and MCP; add the video tab to the dialog. Verify: `go test ./web/contract/...`, `task test:web` and `web/e2e/specs/generate-video.spec.ts` pass against a fake provider.
+- [x] 6. Expose on HTTP, CLI and MCP; add the video tab to the dialog. Verify: `go test ./web/contract/...`, `task test:web` and `web/e2e/specs/generate-video.spec.ts` pass against a fake provider.
 
 ## Test strategy
 
