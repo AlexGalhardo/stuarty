@@ -1,6 +1,6 @@
 // Refreshes content/last-updated.json, the fallback "Last updated" map for
 // builds without full git history. Run from site/ with full history:
-// `npm run last-updated`. Node strips the types (no build step).
+// `bun run last-updated`. Bun runs the TypeScript directly (no build step).
 import fs from "node:fs";
 import path from "node:path";
 import { gitLastUpdated } from "../lib/git-dates.ts";

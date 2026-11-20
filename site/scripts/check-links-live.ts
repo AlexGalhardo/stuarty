@@ -1,5 +1,5 @@
 // Link check over a deployed site (SDD-010 section 14, P4-DOC-001):
-//   npm run check:links-live [-- <site url>]
+//   bun run check:links-live [-- <site url>]
 // Starts at the documentation entry, follows every internal link of the pages under /docs/, and reports
 // each link that does not answer 200 and each #fragment with no matching id.
 // Links to pages outside the doc tree (home, changelog) are fetched but not crawled further.

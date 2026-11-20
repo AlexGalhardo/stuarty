@@ -1,6 +1,6 @@
 // Every guide page names the command that does what it teaches, and every command
 // it names exists (P2-DOC-003). Run from site/:
-//   npm run check:command-mentions
+//   bun run check:command-mentions
 // A page passes when it mentions at least one real operation, CLI command or MCP tool,
 // and mentions no operation, CLI command or MCP tool that does not exist. Node strips
 // the types (no build step).

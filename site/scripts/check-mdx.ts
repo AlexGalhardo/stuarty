@@ -1,11 +1,11 @@
 // Validates docs MDX without a full Next build. Run from site/:
-//   npm run check:mdx                 every .mdx under content/
-//   npm run check:mdx -- <file|dir>   only those files (or folders)
+//   bun run check:mdx                 every .mdx under content/
+//   bun run check:mdx -- <file|dir>   only those files (or folders)
 // Errors (exit 1): MDX that does not compile with the site's plugins, a
 // component missing from components/mdx/index.tsx, a /docs/... link without
 // a page, a bare {placeholder} in prose. Warnings: fenced code lines over MAX_CODE_LINE characters
 // .
-// Node strips the types (no build step).
+// Bun runs the TypeScript directly (no build step).
 import fs from "node:fs";
 import path from "node:path";
 import { compile } from "@mdx-js/mdx";
