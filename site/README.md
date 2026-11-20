@@ -7,10 +7,10 @@ The shell is copied from the vukem documentation site (`vukem/site/`, the templa
 ## Run it
 
 ```sh
-npm ci
-npm run dev        # http://localhost:3000/
-npm run build      # static export to out/
-npm run preview
+bun install --frozen-lockfile
+bun run dev        # http://localhost:3000/
+bun run build      # static export to out/
+bun run preview
 ```
 
 The site is served under the base path of its address. `SITE_URL` (default `https://stuarty.com`, a custom domain on GitHub Pages, so the base is `/`) sets both the address and the base path; an address with a path (a project site) sets that path as the base. Every internal link goes through `withBase` in `lib/site.ts` or the `Link` component.
@@ -19,19 +19,19 @@ The site is served under the base path of its address. `SITE_URL` (default `http
 
 | Command | What it checks |
 | --- | --- |
-| `npm run lint` | ESLint |
-| `npm run check:mdx` | every page compiles, its components exist, its `/docs/` links resolve |
-| `npm run build` then `npm run check:built` | only static files; no resource from another origin; every root-relative link carries the base path |
-| `npm run test:scripts`, `npm run test:site` | the script tests |
-| `npm run check:last-updated` | every docs page has a "Last updated" date at least as new as its last commit |
+| `bun run lint` | ESLint |
+| `bun run check:mdx` | every page compiles, its components exist, its `/docs/` links resolve |
+| `bun run build` then `bun run check:built` | only static files; no resource from another origin; every root-relative link carries the base path |
+| `bun run test:scripts`, `bun run test:site` | the script tests |
+| `bun run check:last-updated` | every docs page has a "Last updated" date at least as new as its last commit |
 
 ## Add a docs page
 
 1. Create `content/docs/<dir>/<slug>.mdx` with `title` and `description` front matter.
 2. List the slug in `content/navigation.ts`.
-3. Run `npm run check:mdx`.
-4. After the commit, run `npm run last-updated` (needs the full git history) and commit `content/last-updated.json`. Never edit it by hand.
+3. Run `bun run check:mdx`.
+4. After the commit, run `bun run last-updated` (needs the full git history) and commit `content/last-updated.json`. Never edit it by hand.
 
 ## Status
 
-The site is in English only: there is no language switcher and no translation check. The old `/pt-br/...` addresses redirect to the English pages (`redirects` in `astro.config.mjs`). The generated reference is written by `npm run reference`.
+The site is in English only: there is no language switcher and no translation check. The old `/pt-br/...` addresses redirect to the English pages (`redirects` in `astro.config.mjs`). The generated reference is written by `bun run reference`.

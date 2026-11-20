@@ -45,12 +45,12 @@ ADR-0024 item 1: the site starts from the **current** vukem `site/`, not from th
 | `site/src/assets/` | present on vukem main after `v0.43.0` (the animated gopher `svg` of the landing page, commit `0d9fb139`); not in the `v0.43.0` tree. Copied only if the copied landing page imports it, and then replaced by the product mark (the `SITE-COPY` report records which) |
 | `site/public/logo.png`, `site/public/icon.png`, `site/public/.nojekyll` | The logo (256 px) and the favicon (64 px), scaled from the official icon `.config/installers/assets/stuarty-icon.png` by `internal/tools/installericon`, and the marker that stops GitHub Pages from running Jekyll |
 | `site/.gitignore` | Ignores `node_modules`, `out/` and local env files; checked against the real vukem file so the copied site builds from a clean clone |
-| `site/package-lock.json` | Created by `npm install` in `SITE-COPY`; never copied from vukem |
+| `site/bun.lock` | Created by `bun install` in `SITE-COPY`; never copied from vukem |
 | `scripts/refresh-last-updated.sh` (repository root) | The pre-push hook script (SDD-009 section 15.1) |
 
 **Theme and visual identity of the site.** The site keeps the theme behaviour of the copied shell (its `globals.css` and theme toggle, unchanged): D-024's dark default is a rule of the editor interface (SDD-012 §17), not of the documentation. The site does not import the product's `web/resources/css/app.css`; it keeps the shell's typography, spacing and layout, and takes from `docs/design-system.md` §8.4 only the product mark and the `--brand` colour (when the mark exists), the content style and the shared glossary (section 10), and the rule for screenshots of the UI (dark theme, 1600 by 900, the fixture project of the end-to-end suite, no personal paths visible).
 
-`package.json` dependencies are copied with the exact versions of `vukem/site/package.json` (astro 7.4.7, react 19.3.1, tailwindcss 4.3.3, @mdx-js/mdx 3.1.1, shiki 4.5.0 and the rest; `package.json:15-40`). `SITE-COPY` re-checks each against the newest stable release at copy time (the author's dependency rule: stable only, no `latest`, no pre-release) and records any difference; it does not add a package that vukem's site does not use. The package manager is **npm** with `package-lock.json`, as in vukem and in the Studio's `site/` (Decision of this SDD: the author's global rule prefers Bun unless the project already uses another manager, and both predecessors have an npm lockfile here; the React UI in `web/` stays on Bun). Node 24 in CI (`site.yml:35-37`).
+`package.json` dependencies are copied with the exact versions of `vukem/site/package.json` (astro 7.4.7, react 19.3.1, tailwindcss 4.3.3, @mdx-js/mdx 3.1.1, shiki 4.5.0 and the rest; `package.json:15-40`). `SITE-COPY` re-checks each against the newest stable release at copy time (the author's dependency rule: stable only, no `latest`, no pre-release) and records any difference; it does not add a package that vukem's site does not use. The package manager and runtime is **Bun** (1.4.5) with `bun.lock`, as in `web/` (decision D-115 of the author, 2026-11-20: Bun in place of npm and Node, with npm and Node only as a fallback where Bun has no native support). The one remaining use of Node is `scripts/api-reference.test.ts`, run by `node --test` because its syntax check of the generated JavaScript samples needs `node --check`, which Bun does not have; the CI job `build` installs Node 24 for it.
 
 ### 1.2 Changed
 
@@ -445,7 +445,7 @@ ADR-0024 item 5: the reference is generated from the binary and the schemas at b
 
 ### 8.2 The generation script
 
-`site/scripts/generate-reference.ts` (Node with type stripping; `npm run reference` in `site/`; `task site:reference` and `task generate` of SDD-009 run it). Steps:
+`site/scripts/generate-reference.ts` (run by Bun; `bun run reference` in `site/`; `task site:reference` and `task generate` of SDD-009 run it). Steps:
 
 1. Build the binary once to a temporary path: `go build -o "$TEMP/stuarty" ./web/cmd/app` (from the repository root; the script finds the root with `git rev-parse --show-toplevel`).
 2. Write the four JSON files into `site/generated/`:
@@ -458,7 +458,7 @@ ADR-0024 item 5: the reference is generated from the binary and the schemas at b
 4. Render command pages in the page template of section 5 where it applies: summary, "Arguments" table from the schema, "Example" with the CLI form and the MCP form, "Errors" table with links to `error-codes`, "Scope".
 5. Idempotent: running it twice produces no diff.
 
-`npm run reference:check` runs the script and `git diff --exit-code -- generated content/generated` (it is the same check that the `Generated files` job of `ci.yml` runs from the repository root, SDD-009 section 9.4 job 6).
+`bun run reference:check` runs the script and `git diff --exit-code -- generated content/generated` (it is the same check that the `Generated files` job of `ci.yml` runs from the repository root, SDD-009 section 9.4 job 6).
 
 ### 8.3 Generated pages
 
@@ -545,7 +545,7 @@ vukem builds a search index at build time and loads the dialog on first open (`s
 
 ### 11.2 "Last updated" from git
 
-Unchanged from vukem (`scripts/last-updated.ts`, `lib/git-dates.ts`, `scripts/check-last-updated.ts`): `content/last-updated.json` maps each page file to the ISO date of its last commit (author date, so a rebase merge keeps it), is generated by `npm run last-updated` and never edited by hand, and is checked in CI and by the pre-push hook (`lefthook.yml:40-42` equivalent in SDD-009 section 15.1). Changes: keys are `docs/en/<dir>/<slug>.mdx` and `generated/reference/...mdx`; `isDocPage` in `check-last-updated.ts` (vukem line 14-16: `.mdx` under `docs/`) also accepts `generated/`; the date is shown formatted with `Intl.DateTimeFormat` in English, in UTC, as `Last updated: ...`. Both checks run on every pull request through `docs-last-updated.yml` (SDD-009 section 9.6), so a page left out of the file cannot hide.
+Unchanged from vukem (`scripts/last-updated.ts`, `lib/git-dates.ts`, `scripts/check-last-updated.ts`): `content/last-updated.json` maps each page file to the ISO date of its last commit (author date, so a rebase merge keeps it), is generated by `bun run last-updated` and never edited by hand, and is checked in CI and by the pre-push hook (`lefthook.yml:40-42` equivalent in SDD-009 section 15.1). Changes: keys are `docs/en/<dir>/<slug>.mdx` and `generated/reference/...mdx`; `isDocPage` in `check-last-updated.ts` (vukem line 14-16: `.mdx` under `docs/`) also accepts `generated/`; the date is shown formatted with `Intl.DateTimeFormat` in English, in UTC, as `Last updated: ...`. Both checks run on every pull request through `docs-last-updated.yml` (SDD-009 section 9.6), so a page left out of the file cannot hide.
 
 ### 11.3 The changelog page
 
@@ -562,15 +562,15 @@ Copied from vukem (`package.json:6-14`) and extended:
 | `dev` | `astro dev` | local preview at `http://localhost:3000` |
 | `build` | `astro build` | static export to `out/` |
 | `lint` | `eslint .` | |
-| `check:mdx` | `node scripts/check-mdx.ts` | MDX compiles, components exist, `/docs/` links resolve, no bare braces; extended: every nav slug has a file, every file is listed, every section title is non-empty |
-| `last-updated` | `node scripts/last-updated.ts` | refresh `content/last-updated.json` |
-| `check:last-updated` | `node scripts/check-last-updated.ts` | every page has a date at least as new as its last commit |
-| `reference` | `node scripts/generate-reference.ts` | section 8 |
-| `reference:check` | `node scripts/generate-reference.ts && git diff --exit-code -- generated content/generated` | section 8.2 |
-| `check:built` | `node scripts/check-built.ts` | section 9 properties (including the no-external-resource property 7) and the section 4.3 table on `out/` |
-| `test:scripts` | `node --test scripts/check-last-updated.test.ts scripts/committed-dates.test.ts scripts/trailing-slash.test.ts scripts/check-built.test.ts scripts/check-links-live.test.ts` | dependency-free tests, so the `Last updated` jobs need no `npm ci` of the whole site (vukem comment, `site.yml:25-26`); `base-path.test.ts` is not here because it builds the site |
-| `test:site` | `node --test scripts/link-anchors.test.ts scripts/markdown-twin.test.ts scripts/generate-reference.test.ts scripts/check-doc-claims.test.ts scripts/accessibility-page.test.ts scripts/latest-release.test.ts scripts/base-path.test.ts` | tests that import site modules or build the site; needs `npm ci` |
-| `test:base-path` | `node --test scripts/base-path.test.ts` | the base path test alone (builds the site under a base path and under `/`, section 12.4); it is also run by `test:site` |
+| `check:mdx` | `bun scripts/check-mdx.ts` | MDX compiles, components exist, `/docs/` links resolve, no bare braces; extended: every nav slug has a file, every file is listed, every section title is non-empty |
+| `last-updated` | `bun scripts/last-updated.ts` | refresh `content/last-updated.json` |
+| `check:last-updated` | `bun scripts/check-last-updated.ts` | every page has a date at least as new as its last commit |
+| `reference` | `bun scripts/generate-reference.ts` | section 8 |
+| `reference:check` | `bun scripts/generate-reference.ts && git diff --exit-code -- generated content/generated` | section 8.2 |
+| `check:built` | `bun scripts/check-built.ts` | section 9 properties (including the no-external-resource property 7) and the section 4.3 table on `out/` |
+| `test:scripts` | `bun test scripts/check-last-updated.test.ts scripts/committed-dates.test.ts scripts/trailing-slash.test.ts scripts/check-built.test.ts scripts/check-links-live.test.ts` | dependency-free tests, so the `Last updated` jobs need no `bun install --frozen-lockfile` of the whole site (vukem comment, `site.yml:25-26`); `base-path.test.ts` is not here because it builds the site |
+| `test:site` | `bun test --timeout 600000 scripts/link-anchors.test.ts scripts/markdown-twin.test.ts scripts/generate-reference.test.ts scripts/check-doc-claims.test.ts scripts/accessibility-page.test.ts scripts/latest-release.test.ts scripts/base-path.test.ts && node --test scripts/api-reference.test.ts` | tests that import site modules or build the site; needs `bun install --frozen-lockfile` |
+| `test:base-path` | `bun test --timeout 600000 scripts/base-path.test.ts` | the base path test alone (builds the site under a base path and under `/`, section 12.4); it is also run by `test:site` |
 
 (vukem's `legacy-path-redirect` and `current-equivalent` tests are not copied.)
 
@@ -578,8 +578,8 @@ Copied from vukem (`package.json:6-14`) and extended:
 
 Both are specified in SDD-009 section 9.6; the steps of `site.yml` are, in order:
 
-- Job `build`: `actions/checkout`; `actions/setup-go` (`go-version-file: go.mod`, needed by `reference:check`, which builds the binary); `actions/setup-node` (Node 24, npm cache on `site/package-lock.json`); `npm ci`; `npm run test:site` (which includes the base path test); `npm run lint`; `npm run check:mdx`; `npm run reference:check` (run with `working-directory: site`); `npm run build`; `npm run check:built`; on `main` or manual dispatch, `actions/upload-pages-artifact` with `path: site/out`. In the Taskfile the same list is `task site:build` (SDD-009 section 14).
-- Job `last-updated`: `fetch-depth: 0`; `actions/setup-node` (Node 24); `npm run test:scripts`; `npm run check:last-updated`.
+- Job `build`: `actions/checkout`; `actions/setup-go` (`go-version-file: go.mod`, needed by `reference:check`, which builds the binary); `oven-sh/setup-bun` (1.4.5) and `actions/setup-node` (Node 24, only for `api-reference.test.ts`, whose syntax check needs `node --check`); `bun install --frozen-lockfile`; `bun run test:site` (which includes the base path test); `bun run lint`; `bun run check:mdx`; `bun run reference:check` (run with `working-directory: site`); `bun run build`; `bun run check:built`; on `main` or manual dispatch, `actions/upload-pages-artifact` with `path: site/out`. In the Taskfile the same list is `task site:build` (SDD-009 section 14).
+- Job `last-updated`: `fetch-depth: 0`; `oven-sh/setup-bun`; `bun run test:scripts`; `bun run check:last-updated`.
 
 These step lists are the same as in SDD-009 section 9.6.
 
@@ -607,7 +607,7 @@ Identifiers for the ROADMAP; all `senior-d` unless stated.
 
 | Id | Task | Done when |
 | --- | --- | --- |
-| `SITE-COPY` | Copy the files of section 1.1 from the current vukem `site/` (record the vukem commit in the report), apply 1.2, drop 1.3, run `npm install` to create `package-lock.json`, replace the icon and logo; then the isolated `style(site)` reformat to tabs (section 1.2) | `npm ci && npm run build` succeeds with one placeholder page per locale, from a clean clone (so `Base.astro`, `prerender.tsx`, `public/` and `.gitignore` are all copied) |
+| `SITE-COPY` | Copy the files of section 1.1 from the current vukem `site/` (record the vukem commit in the report), apply 1.2, drop 1.3, run `bun install` to create `bun.lock`, replace the icon and logo; then the isolated `style(site)` reformat to tabs (section 1.2) | `bun install --frozen-lockfile && bun run build` succeeds with one placeholder page per locale, from a clean clone (so `Base.astro`, `prerender.tsx`, `public/` and `.gitignore` are all copied) |
 | `SITE-I18N` | (superseded by TASK-0265: the site is English only) Locale routing, content loader with fallback, switcher, notice, hreflang, canonical, per-locale search index, `lib/ui-text.ts` dictionary, bilingual 404 and landing | removed |
 | `SITE-NAV` | `navigation.ts` with the types and categories of section 3; the `check:mdx` extensions | acceptance check 3 |
 | `SITE-REF` | `scripts/generate-reference.ts`, the four JSON sources, the generated pages | acceptance check 10 |
@@ -620,24 +620,24 @@ Identifiers for the ROADMAP; all `senior-d` unless stated.
 
 Each check is verifiable from this document and the repository alone.
 
-1. `cd site && npm ci && npm run build` succeeds and `out/` contains `index.html`, `docs/introduction/index.html`, `404.html`, `llms.txt`, `sitemap.xml`, `robots.txt`.
-2. For every page listed in `navigation.ts` there is, in `out/`, a page and a twin (`npm run check:built` passes).
-3. `npm run check:mdx` fails when: a slug is in `navigation.ts` with no file; a file is not listed; a section title is empty; a link points to a page that does not exist.
+1. `cd site && bun install --frozen-lockfile && bun run build` succeeds and `out/` contains `index.html`, `docs/introduction/index.html`, `404.html`, `llms.txt`, `sitemap.xml`, `robots.txt`.
+2. For every page listed in `navigation.ts` there is, in `out/`, a page and a twin (`bun run check:built` passes).
+3. `bun run check:mdx` fails when: a slug is in `navigation.ts` with no file; a file is not listed; a section title is empty; a link points to a page that does not exist.
 4. (removed with the fallback pages, TASK-0265)
 5. Every docs page has `<html lang="en">`, one `canonical` pointing to itself and no hreflang (verified by `check-built.ts`).
 6. (removed with the language switcher, TASK-0265) The header has no language control, and `/pt-br/...` addresses redirect to the English page (a built `out/pt-br/docs/guide/audio/index.html` refreshes to `docs/guide/audio/`).
 7. `sitemap.xml` lists every page and the landing page and the changelog, no `.md` twin and no `pt-br` URL.
 8. Searching `trim` in the dialog finds `Trim, split and move clips`.
 9. (removed with the translation check, TASK-0265)
-10. `npm run reference` run twice produces no diff; changing a command description in the Go struct tags and rerunning changes only that command page and `commands.json`; a pull request that changes a command without regenerating fails the `Generated files` job and `reference:check`.
+10. `bun run reference` run twice produces no diff; changing a command description in the Go struct tags and rerunning changes only that command page and `commands.json`; a pull request that changes a command without regenerating fails the `Generated files` job and `reference:check`.
 11. `llms.txt` follows section 9 and every URL in it resolves in `out/`; `llms-full.txt` contains every page's twin in sidebar order.
 12. No twin contains JSX tags or `import` lines.
 13. After deployment: `curl -sI <site>/docs/introduction.md` returns `200` with `text/markdown`; `curl -s -o /dev/null -w "%{http_code}" <site>/nope/` prints `404`.
 14. `site.yml` on a pull request that edits `site/content/docs/en/guide/exporting.mdx` runs `build` and `last-updated`; there is no translation step.
-15. `npm run test:base-path` (or `scripts/base-path.test.ts`) passes with `SITE_URL=https://example.org/stuarty` (a base path) and with `SITE_URL=https://stuarty.com` (base `/`): no absolute link lacks the base.
+15. `bun run test:base-path` (or `scripts/base-path.test.ts`) passes with `SITE_URL=https://example.org/stuarty` (a base path) and with `SITE_URL=https://stuarty.com` (base `/`): no absolute link lacks the base.
 16. `content/glossary.json` has the 30 terms of section 10, each with `en` and `pt-br` (the editor's Portuguese), and is the file SDD-012 imports (a grep of `web/resources/js` finds no second copy of the term list once SDD-012 is implemented).
 17. Every row of section 7 exists.
-18. No external resource (D-015, D-016): `npm run check:built` passes on the real `out/` and fails on a scratch change that adds `<script src="https://example.org/x.js">`, an external stylesheet or an external font to a page; the built site makes no request to another origin when opened with the network blocked (property 7 of section 9).
+18. No external resource (D-015, D-016): `bun run check:built` passes on the real `out/` and fails on a scratch change that adds `<script src="https://example.org/x.js">`, an external stylesheet or an external font to a page; the built site makes no request to another origin when opened with the network blocked (property 7 of section 9).
 19. A person following only `getting-started/quick-start` reaches an exported MP4 in under ten minutes on a clean machine (NFR-040), timed by the author and recorded in the ROADMAP.
 
 ## 15. The site of Stuarty (epic 40, 2026-11-20)

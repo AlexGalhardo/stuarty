@@ -1115,7 +1115,7 @@ Run locally with the commands CI uses; "reads" means the result comes from GitHu
 | --- | --- | --- |
 | Go vulnerabilities | `go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...` | exit 0, no reachable vulnerability. Eight advisories (GO-2026-4961, 4962, 5031, 5032, 5061, 5062, 5066, 6222) hit `golang.org/x/image@v0.38.0` in code that is imported but not called; the fix is `v0.45.0` (a version bump of an existing module, left to the owner of `go.mod`) |
 | UI vulnerabilities | `bun audit --audit-level=high` in `web/` | exit 0, 440 packages, none at high or critical |
-| Site vulnerabilities | `npm audit --omit=dev --audit-level=high` in `site/` | exit 0, 0 vulnerabilities |
+| Site vulnerabilities | `bun audit --prod --audit-level=high` in `site/` | exit 0, 0 vulnerabilities |
 | Rust | `cargo deny check` in `renderer/` | exit 0: advisories, bans, licenses, sources ok |
 | Secrets | `betterleaks git . --config .betterleaks.toml --no-banner --redact --log-opts="origin/main..HEAD"` | no leaks found (121 commits) |
 | CodeQL | reads `gh api "repos/AlexGalhardo/stuarty/code-scanning/alerts?state=open&tool_name=CodeQL"` and the analyses of `refs/pull/86/merge` | 0 open alerts; the analyses of `e143e20b` (Go) report 0 results |

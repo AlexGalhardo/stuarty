@@ -37,7 +37,7 @@ After release N is merged, its commits get new hashes on `main`, and branch N+1,
    - `go run ./internal/tools/ffmpegpins`
    - `cd web && bun run codegen:ts`
    - `UPDATE_OPENAPI=1 go test ./web/contract/ -run OpenAPI`
-   - `cd site && npm run reference && npm run last-updated`
+   - `cd site && bun run reference && bun run last-updated`
    - `go run ./web/cmd/gen-agent-docs`
    - `go run ./internal/tools/notices`
 5. Run `skills/ci-preflight/`.

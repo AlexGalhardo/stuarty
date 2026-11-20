@@ -59,7 +59,7 @@ CI is not a gate while the epics are implemented (ADR-0045), so the checks are r
 - The tests of what you touched, including the browser specs in `web/e2e/` for a change of the UI.
 - `bash .agents/skills/verify/scripts/verify.sh --quick` before a commit.
 
-Work in `web/` uses Bun, not npm.
+Work in `web/` and `site/` uses Bun, not npm.
 
 The pull-request pipeline (`ci.yml`) still exists and will be required again. Its jobs, for reference:
 
