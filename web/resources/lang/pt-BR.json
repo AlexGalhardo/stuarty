@@ -2284,19 +2284,23 @@
     "generate": {
       "open": {
         "visual": "Gerar uma imagem",
-        "video": "Gerar uma locução"
+        "video": "Gerar uma locução",
+        "clip": "Gerar um clipe de vídeo"
       },
       "title": {
         "image": "Gerar uma imagem",
-        "voice": "Gerar uma locução"
+        "voice": "Gerar uma locução",
+        "video": "Gerar um clipe de vídeo"
       },
       "intro": {
         "image": "O preço aparece antes de qualquer pedido ao provedor. A imagem vai para a biblioteca, com o modelo e o prompt de onde veio.",
-        "voice": "O preço aparece antes de qualquer pedido ao provedor. A narração vai para a biblioteca, com o modelo e o texto de onde veio."
+        "voice": "O preço aparece antes de qualquer pedido ao provedor. A narração vai para a biblioteca, com o modelo e o texto de onde veio.",
+        "video": "O preço aparece antes de qualquer pedido ao provedor. O clipe vai para a biblioteca, com o modelo e o prompt de onde veio."
       },
       "no_provider": {
         "image": "Nenhum provedor conectado faz imagens ainda.",
-        "voice": "Nenhum provedor conectado faz voz ainda."
+        "voice": "Nenhum provedor conectado faz voz ainda.",
+        "video": "Nenhum provedor conectado faz vídeo ainda."
       },
       "open_connections": "Conecte um na página Conexões",
       "project": "Projeto",
@@ -2306,8 +2310,14 @@
       "voice": "Voz",
       "prompt": {
         "image": "O que desenhar",
-        "voice": "O que ler em voz alta"
+        "voice": "O que ler em voz alta",
+        "video": "O que o clipe mostra"
       },
+      "seconds": "Segundos",
+      "aspect": "Proporção",
+      "first_frame": "Primeiro quadro (opcional)",
+      "no_first_frame": "Sem primeiro quadro",
+      "always_asks": "Um vídeo sempre espera a sua aprovação, qualquer que seja o custo, a menos que você tenha escrito uma regra para ele. Nada é enviado ao provedor antes disso.",
       "size": "Tamanho",
       "count": "Quantas",
       "format": "Formato",
@@ -2446,11 +2456,13 @@
       "price_none": "Ainda sem preço: nada pode ser gerado com este modelo até você definir um.",
       "price_unit": {
         "image": "Por imagem: {amount} ({source})",
-        "mchar": "Por milhão de caracteres: {amount} ({source})"
+        "mchar": "Por milhão de caracteres: {amount} ({source})",
+        "second": "Por segundo de vídeo: {amount} ({source})"
       },
       "price_per": {
         "image": "Preço de uma imagem",
-        "mchar": "Preço de um milhão de caracteres"
+        "mchar": "Preço de um milhão de caracteres",
+        "second": "Preço de um segundo de vídeo"
       },
       "source": {
         "user": "preço seu",
