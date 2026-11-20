@@ -249,7 +249,8 @@ export default function WritePage(): ReactNode {
 						</Button>
 					)}
 				</nav>
-				<main className="min-w-0">
+				{/* A div, not a second main: the layout's main is the only one (SDD-012 section 18.10, the skip link). */}
+				<div className="min-w-0">
 					{selected === null ? (
 						<p className="text-sm text-muted-foreground">
 							{t("ui.write.pick")}
@@ -263,7 +264,7 @@ export default function WritePage(): ReactNode {
 							onChanged={() => void reload()}
 						/>
 					)}
-				</main>
+				</div>
 			</div>
 		</div>
 	);
