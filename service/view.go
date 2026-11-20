@@ -101,6 +101,7 @@ func (s *svc) ViewFrame(ctx context.Context, req ViewFrameRequest) (*ViewResult,
 		Width:       w,
 		Height:      h,
 		ImageTokens: frame.Tokens(w, h),
+		Composite:   len(v.nested) > 0,
 		MIME:        "image/jpeg",
 		Cells:       []ViewCell{{Index: 1, At: timeValue(st.FPS, at)}},
 		Path:        path,
@@ -167,8 +168,17 @@ func (s *svc) ViewSheet(ctx context.Context, req ViewSheetRequest) (*ViewResult,
 	path := s.viewPath(v.caller, sheet.Key)
 
 	res := &ViewResult{
-		ProjectID: v.row.ID, Revision: v.row.Revision, Mode: "sheet", Width: sheet.Width, Height: sheet.Height,
-		ImageTokens: sheet.Tokens, MIME: "image/jpeg", Cells: cells, Path: path, Image: sheet.JPEG,
+		ProjectID:   v.row.ID,
+		Revision:    v.row.Revision,
+		Mode:        "sheet",
+		Composite:   len(v.nested) > 0,
+		Width:       sheet.Width,
+		Height:      sheet.Height,
+		ImageTokens: sheet.Tokens,
+		MIME:        "image/jpeg",
+		Cells:       cells,
+		Path:        path,
+		Image:       sheet.JPEG,
 	}
 	res.Text = fmt.Sprintf("sheet %dx%d of %s r%d: %dx%d jpeg, about %d image tokens%s\ncells:%s",
 		cols, rows, res.ProjectID, res.Revision, res.Width, res.Height, res.ImageTokens, saved(path), labels.String())

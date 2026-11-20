@@ -22,6 +22,7 @@ import { useActions, useCanEdit } from "../commands/useActions";
 import ExportButton from "../export/ExportButton";
 import { useDocumentState } from "../state/EditorContext";
 import ActivityIndicator from "./ActivityIndicator";
+import CompositionBreadcrumb from "./CompositionBreadcrumb";
 import EditorMenu from "./EditorMenu";
 
 type Shown =
@@ -175,6 +176,7 @@ export default function TopBar({
 					<House aria-hidden="true" />
 				</a>
 			</Button>
+			<CompositionBreadcrumb />
 			{name !== undefined && <ProjectName name={name} />}
 			<span
 				className={cn("flex items-center gap-1.5 text-xs", TONE[shown])}
