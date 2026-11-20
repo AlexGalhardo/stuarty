@@ -13,11 +13,14 @@ test.describe("project overview", () => {
 		const created = await call("POST", "/projects", { name: label });
 		const id = created.project_id as string;
 
-		// A slow save, so the spec does not depend on the machine being fast (VV-262).
+		// The save is held until the spec has seen the button disabled, so a read that did not wait for the
+		// write would fail on every run, not only on a loaded machine (VV-262).
+		let release = (): void => {};
+		const held = new Promise<void>((resolve) => {
+			release = resolve;
+		});
 		await page.route("**/api/v1/projects/*/brief", async (route) => {
-			if (route.request().method() === "PUT") {
-				await new Promise((resolve) => setTimeout(resolve, 400));
-			}
+			if (route.request().method() === "PUT") await held;
 			await route.continue();
 		});
 
@@ -32,6 +35,10 @@ test.describe("project overview", () => {
 			(r) => r.request().method() === "PUT" && r.url().endsWith("/brief"),
 		);
 		await page.getByRole("button", { name: "Save brief" }).click();
+		await expect(
+			page.getByRole("button", { name: "Save brief" }),
+		).toBeDisabled();
+		release();
 		expect((await saved).ok()).toBe(true);
 		await expect(
 			page.getByRole("button", { name: "Save brief" }),
