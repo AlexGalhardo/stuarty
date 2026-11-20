@@ -216,6 +216,7 @@ test.describe("AI providers", () => {
 		};
 		expect(list.providers.map((p) => p.id)).toEqual([
 			"anthropic",
+			"google",
 			"openai",
 			"openrouter",
 		]);
