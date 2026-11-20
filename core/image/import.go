@@ -57,7 +57,7 @@ func clipName(name string) string {
 // ImportBatch is the batch that makes a new document from an image file (SDD-021 section 10.1): image.create,
 // then layer.add_image with the fit contain and no box, which centres the whole source on the canvas. The canvas
 // is the size of the source when both sides fit the canvas limit and nothing else was asked; a larger source
-// needs a preset or both sides (E_LIMIT_EXCEEDED, with a hint). name is the name of the document; empty means
+// needs a preset or both sides (E_LIMIT, details.limit canvas, with a hint). name is the name of the document; empty means
 // the name of the file.
 func ImportBatch(src ImportSource, canvas ImportCanvas, name string) ([]command.Operation, error) {
 	create := map[string]any{}
