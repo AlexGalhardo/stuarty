@@ -20,6 +20,7 @@ version_ge() { [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -n 1)" = "$2" ]
 # check_docker needs Docker 24 or later and Compose 2.20 or later.
 check_docker() {
 	command -v docker >/dev/null 2>&1 || die "docker is not installed: see https://docs.docker.com/engine/install/"
+	command -v curl >/dev/null 2>&1 || die "curl is not installed: it checks that https://<domain>/up answers"
 	local dv cv
 	dv="$(docker version --format '{{.Server.Version}}' 2>/dev/null)" || die "cannot talk to the Docker daemon: is it running, and may this user use it?"
 	version_ge "${dv%%-*}" 24.0 || die "Docker $dv is too old: 24 or later is needed"
