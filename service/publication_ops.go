@@ -596,6 +596,10 @@ func (g pubGateway) Resolve(ctx context.Context, p pub.Post) (*pub.Resolved, err
 		return nil, newError(CodeUnauthorized, "no caller.")
 	}
 
+	if out, handled, berr := g.s.resolveBlogTarget(ctx, c, &p); handled {
+		return out, berr
+	}
+
 	a := PublishArgs{
 		ConnectionID: p.ConnectionID, Export: p.Export, Thumbnail: p.Thumbnail, Title: p.Fields.Title,
 		Description: p.Fields.Description, Tags: p.Fields.Tags, Visibility: p.Fields.Visibility,
@@ -631,6 +635,15 @@ func (g pubGateway) Resolve(ctx context.Context, p pub.Post) (*pub.Resolved, err
 
 // Send sends the snapshot of an approved target.
 func (g pubGateway) Send(ctx context.Context, t pub.Target, report func(float64, string)) (pub.Sent, error) {
+	if snap, isPost := blogSnapshotOf(t.Snapshot); isPost {
+		sent, err := g.s.sendBlog(ctx, &t, snap, report)
+		if err != nil {
+			return pub.Sent{}, sendError(err)
+		}
+
+		return sent, nil
+	}
+
 	var in publishInput
 	if err := json.Unmarshal(t.Snapshot, &in); err != nil {
 		return pub.Sent{}, &pub.SendError{

@@ -41,7 +41,7 @@ type writingArgs struct {
 func isWritingStep(call string) bool {
 	switch call {
 	case "TextList", "TextGet", "TextWrite", "TextRevisions", "TextRevert", "TextDraft", "CaptionValidate",
-		"ScriptEstimate":
+		"ScriptEstimate", "PostCheck":
 		return true
 	}
 
@@ -79,6 +79,8 @@ func writingCall(ctx context.Context, svc service.Service, s step) (res any, ok 
 		res, err = invoke(ctx, s, svc.CaptionValidate)
 	case "ScriptEstimate":
 		res, err = invoke(ctx, s, svc.ScriptEstimate)
+	case "PostCheck":
+		res, err = invoke(ctx, s, svc.PostCheck)
 	default:
 		return nil, false, nil
 	}
@@ -143,7 +145,7 @@ func writingTool(s step) (tool string, args map[string]any, ok bool, err error) 
 
 		set("item_id", a.ItemID)
 		number("revision", a.Revision)
-	case "CaptionValidate", "ScriptEstimate":
+	case "CaptionValidate", "ScriptEstimate", "PostCheck":
 		args["action"] = "check"
 
 		set("item_id", a.ItemID)
@@ -254,6 +256,8 @@ func writingCommand(s step) (name string, argv []string, stdin string, ok bool, 
 		}
 
 		return "caption:validate", out, "", true, nil
+	case "PostCheck":
+		return "post:check", append(item(), flag("project", a.ProjectID)...), "", true, nil
 	case "ScriptEstimate":
 		out = append(item(), flag("project", a.ProjectID)...)
 		out = append(out, number("wpm", a.WordsPerMinute)...)
