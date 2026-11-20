@@ -47,7 +47,7 @@ Not in progress together with 51 (both change `engine/audio` and SDD-004 section
 - [x] 3. The plan: the child frame mapping, with golden plans. Verify: `go test ./core/plan/... -run TestCompositionSpeed` passes.
 - [x] 4. Audio: the nested bus under the rule of task 1, with a golden WAV. Verify: `go test ./engine/audio/... -run TestCompositionSpeedMix` passes.
 - [x] 5. Export and preview: golden frames at 0.5 and at 2, and the parity spec. Verify: `go test ./engine/export/... -run TestCompositionSpeed` passes, and `web/e2e/specs/preview-export-parity.spec.ts` passes with a composition at speed.
-- [ ] 6. The Speed section of the inspector for a composition clip, in both languages. Verify: `bun run check:i18n` and `task test:web` pass, and `web/e2e/specs/composition-speed.spec.ts` (new, `bun run e2e`) passes.
+- [x] 6. The Speed section of the inspector for a composition clip, in both languages. Verify: `bun run check:i18n` and `task test:web` pass, and `web/e2e/specs/composition-speed.spec.ts` (new, `bun run e2e`) passes.
 - [ ] 7. Surfaces and generated documents. Verify: `go test ./web/contract/...` passes and `task generate:check` exits 0.
 
 ## Test strategy
