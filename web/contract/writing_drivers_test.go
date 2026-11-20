@@ -36,6 +36,18 @@ type writingArgs struct {
 	DryRun         bool     `json:"dry_run"`
 }
 
+// isWritingStep reports whether a step calls a writing operation. The mappings below decode only those: another
+// domain may give the same member another type (the from of a motion range is a time, of a comparison a number).
+func isWritingStep(call string) bool {
+	switch call {
+	case "TextList", "TextGet", "TextWrite", "TextRevisions", "TextRevert", "TextDraft", "CaptionValidate",
+		"ScriptEstimate":
+		return true
+	}
+
+	return false
+}
+
 func writingStep(s step) (writingArgs, error) {
 	var a writingArgs
 
@@ -77,6 +89,10 @@ func writingCall(ctx context.Context, svc service.Service, s step) (res any, ok 
 // writingTool maps a step to a call of an MCP tool: project_item with an action, or job_start with the kind
 // text.draft. ok is false for a step that is not a writing one.
 func writingTool(s step) (tool string, args map[string]any, ok bool, err error) {
+	if !isWritingStep(s.Call) {
+		return "", nil, false, nil
+	}
+
 	a, err := writingStep(s)
 	if err != nil {
 		return "", nil, true, err
@@ -160,6 +176,10 @@ func writingTool(s step) (tool string, args map[string]any, ok bool, err error) 
 
 // writingCommand maps a step to a command of the CLI.
 func writingCommand(s step) (name string, argv []string, stdin string, ok bool, err error) {
+	if !isWritingStep(s.Call) {
+		return "", nil, "", false, nil
+	}
+
 	a, err := writingStep(s)
 	if err != nil {
 		return "", nil, "", true, err
