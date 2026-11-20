@@ -1,6 +1,8 @@
 package image
 
 import (
+	"strings"
+
 	"github.com/AlexGalhardo/stuarty/core/plan"
 )
 
@@ -18,7 +20,11 @@ func (p *planner) look(l *Layer, out *plan.Layer) {
 		}
 
 		if a.LUT != nil {
-			out.Lut = &plan.LutSpec{Asset: a.LUT.Asset, Intensity: percent(a.LUT.Intensity)}
+			// The renderer names a table by at most 64 bytes (SDD-013 section 2.2): the 64 digits of the hash.
+			out.Lut = &plan.LutSpec{
+				Asset:     strings.TrimPrefix(a.LUT.Asset, "sha256:"),
+				Intensity: percent(a.LUT.Intensity),
+			}
 		}
 	}
 

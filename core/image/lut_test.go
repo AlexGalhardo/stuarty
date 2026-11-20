@@ -274,7 +274,7 @@ func TestAdjustLUTCloneAndPlan(t *testing.T) {
 		}
 	}
 
-	if got == nil || got.asset != hashCube || got.mix != 0.8 {
+	if got == nil || got.asset != strings.TrimPrefix(hashCube, "sha256:") || got.mix != 0.8 {
 		t.Fatalf("the plan layer carries the table as a fraction: %+v", got)
 	}
 
