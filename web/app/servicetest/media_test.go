@@ -683,8 +683,10 @@ func TestEditWithAnAssetStillIngestingIsNotReady(t *testing.T) {
 		t.Errorf("message = %q, want the progress", se.Message)
 	}
 
-	if se.Details["asset_id"] != asset.AssetID || se.Details["state"] == nil || se.Details["progress"] == nil {
-		t.Errorf("details = %v, want asset_id, state and progress", se.Details)
+	progress, isNumber := se.Details["progress"].(float64)
+	if se.Details["asset_id"] != asset.AssetID || se.Details["state"] != "pending" || !isNumber ||
+		progress < 0 || progress > 1 {
+		t.Errorf("details = %v, want asset_id, state pending and progress from 0 to 1", se.Details)
 	}
 }
 

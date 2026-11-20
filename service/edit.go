@@ -217,19 +217,19 @@ func (s *svc) assetStillIngesting(ctx context.Context, projectID string, err err
 		return err
 	}
 
-	percent := int(math.Round(math.Min(math.Max(ar.Progress, 0), 1) * 100))
+	progress := math.Min(math.Max(ar.Progress, 0), 1)
 
 	out := newError(
 		"E_ASSET_NOT_READY",
 		"the asset %s is %s (%d%% done); it cannot be used until its ingest ends.",
 		id,
 		ar.IngestState,
-		percent,
+		int(math.Round(progress*100)),
 	).
 		withHint("call media_inspect with asset_id %s until its state is ready, then repeat the edit", id).
 		withDetail("asset_id", id).
 		withDetail("state", string(ar.IngestState)).
-		withDetail("progress", ar.Progress)
+		withDetail("progress", progress)
 	out.OpIndex, out.Path = se.OpIndex, se.Path
 
 	return out
