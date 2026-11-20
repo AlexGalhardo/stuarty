@@ -208,8 +208,8 @@ function choreograph(stage: Stage, root: HTMLElement, reduced: boolean, mm: gsap
 			{ opacity: 0 },
 			{
 				x: 0,
-				y: 0.55,
-				scale: 0.45,
+				y: 0.76,
+				scale: 0.3,
 				opacity: 1,
 				turn: 0,
 				immediateRender: false,

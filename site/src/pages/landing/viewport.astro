@@ -6,12 +6,13 @@ import "@/src/landing/landing.css";
 import Base from "../../layouts/Base.astro";
 import DriveTabs from "../../components/landing/DriveTabs.astro";
 import LandingFooter from "../../components/landing/LandingFooter.astro";
+import LandingActions from "../../components/landing/LandingActions.astro";
 import Placeholder from "../../components/landing/Placeholder.astro";
 import Shot from "../../components/landing/Shot.astro";
 import SplitTitle from "../../components/landing/SplitTitle.astro";
 import StageCanvas from "../../components/landing/StageCanvas.astro";
-import { credits, cta, hero, shots, takes, trust } from "@/lib/landing-pages";
-import { site, withBase } from "@/lib/site";
+import { credits, hero, shots, takes, trust } from "@/lib/landing-pages";
+import { withBase } from "@/lib/site";
 
 const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).padStart(2, "0");
 ---
@@ -54,9 +55,8 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 					<p class="eyebrow" data-hero-item>Take {number("studio")} &middot; {hero.eyebrow}</p>
 					<SplitTitle text={hero.title} id="studio-title" tabindex="-1" class="display-hero mt-5 text-fg" />
 					<p class="lead mt-6 max-w-xl" data-hero-item>{hero.lead}</p>
-					<div class="mt-9 flex flex-wrap gap-3" data-hero-item>
-						<a class="btn btn-brand" href={withBase(hero.primary.href)}>{hero.primary.label} <span aria-hidden="true">&rarr;</span></a>
-						<a class="btn btn-outline" href={withBase(hero.secondary.href)}>{hero.secondary.label}</a>
+					<div class="mt-9" data-hero-item>
+						<LandingActions idPrefix="hero" />
 					</div>
 				</div>
 			</div>
@@ -149,10 +149,8 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 						<li class="rounded-full border border-fg/12 bg-bg/70 px-4 py-2 text-sm text-fg backdrop-blur" title={p.text}>{p.title}</li>
 					))}
 				</ul>
-				<div class="mt-9 flex flex-wrap justify-center gap-3" data-in>
-					<a class="btn btn-brand" href={withBase(cta.primary.href)}>{cta.primary.label} <span aria-hidden="true">&rarr;</span></a>
-					<a class="btn btn-outline" href={withBase("/docs/introduction/")}>Read the docs</a>
-					<a class="btn btn-outline" href={site.repo}>{cta.secondary.label}</a>
+				<div class="mt-9" data-in>
+					<LandingActions idPrefix="take" align="center" />
 				</div>
 				<div class="mx-auto mt-10 max-w-md" data-in>
 					<Placeholder label="Stuarty in 30 seconds" aspect="16 / 9" class="showcase rounded-2xl" />

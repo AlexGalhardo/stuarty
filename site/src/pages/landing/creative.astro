@@ -7,13 +7,14 @@ import "@/src/landing/landing.css";
 import Base from "../../layouts/Base.astro";
 import DriveTabs from "../../components/landing/DriveTabs.astro";
 import LandingFooter from "../../components/landing/LandingFooter.astro";
+import LandingActions from "../../components/landing/LandingActions.astro";
 import Placeholder from "../../components/landing/Placeholder.astro";
 import Shot from "../../components/landing/Shot.astro";
 import SplitTitle from "../../components/landing/SplitTitle.astro";
 import StageCanvas from "../../components/landing/StageCanvas.astro";
 import { cta, features, shots, trust, type Shot as ShotData } from "@/lib/landing-pages";
 import { dockerRunCommand } from "@/lib/latest-release";
-import { site, withBase } from "@/lib/site";
+import { withBase } from "@/lib/site";
 
 type Clip = { id: string; tc: string; label: string; title: string; text: string; shot?: ShotData; clip?: string };
 
@@ -58,10 +59,10 @@ const install = dockerRunCommand();
 			<p class="eyebrow" data-hero-item>Stuarty &middot; a creative cut</p>
 			<SplitTitle text="This page is a timeline." id="creative-title" class="display-hero mt-5 max-w-4xl text-fg" />
 			<p class="lead mt-6 max-w-2xl" data-hero-item>Scroll to move the playhead. Each clip is one part of the studio: create, edit, manage and publish your content in one place, with an agent editing beside you.</p>
-			<div class="mt-9 flex flex-wrap items-center gap-3" data-hero-item>
-				<a class="btn btn-brand" href="#timeline">Play the timeline <span aria-hidden="true">&darr;</span></a>
-				<a class="btn btn-outline" href={withBase("/docs/introduction/")}>Read the docs</a>
+			<div class="mt-9" data-hero-item>
+				<LandingActions idPrefix="hero" />
 			</div>
+			<a href="#timeline" class="mt-8 inline-flex min-h-11 items-center gap-2 self-start text-sm font-medium text-brand-text underline-offset-4 hover:underline" data-hero-item>Play the timeline <span aria-hidden="true">&darr;</span></a>
 		</section>
 
 		<!-- The editor: preview, log, tracks -->
@@ -166,10 +167,6 @@ const install = dockerRunCommand();
 		<section aria-labelledby="cli-title" class="site-container relative py-16 lg:py-24">
 			<div class="mx-auto max-w-3xl">
 			<h2 id="cli-title" class="display-title text-center text-fg">{cta.title}</h2>
-			<div class="mt-10 flex flex-wrap justify-center gap-3">
-				<a class="btn btn-brand" href={withBase(cta.primary.href)}>{cta.primary.label} <span aria-hidden="true">&rarr;</span></a>
-				<a class="btn btn-outline" href={site.repo}>{cta.secondary.label}</a>
-			</div>
 			<form class="terminal mt-12 overflow-hidden" data-cli data-install={install} data-quick={withBase("/docs/getting-started/quick-start/")}>
 				<div class="border-b border-white/10 px-4 py-2 font-sans text-xs text-white/70">Try a command: <code class="font-mono">help</code>, <code class="font-mono">features</code> or <code class="font-mono">install</code></div>
 				<div class="max-h-72 overflow-y-auto px-4 py-3" data-cli-out role="log" aria-live="polite" aria-label="Command output"></div>

@@ -23,6 +23,9 @@
   --color-brand-accent: var(--brand-accent);
   --color-brand-subtle: var(--brand-subtle);
   --color-brand-text: var(--brand-text);
+  /* The one orange call to action of the landing pages (design-system section 11.6). */
+  --color-cta: var(--cta);
+  --color-cta-foreground: var(--cta-foreground);
   --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
@@ -46,6 +49,9 @@
   --brand-accent: oklch(0.645 0.189 282.5);
   --brand-subtle: oklch(0.97 0.025 280);
   --brand-text: oklch(0.442 0.222 272.9);
+  --cta: oklch(0.7 0.2 48);
+  --cta-foreground: oklch(0.145 0 0);
+  --cta-hover: oklch(0.64 0.2 45);
   --duration-scene: 700ms;
   --duration-reveal: 500ms;
   --duration-hover: 150ms;
@@ -72,6 +78,7 @@
   --brand-accent: oklch(0.72 0.17 282);
   --brand-subtle: oklch(0.29 0.13 272 / 40%);
   --brand-text: oklch(0.8 0.13 281);
+  --cta-hover: oklch(0.76 0.18 55);
   color-scheme: dark;
 }
 

@@ -1157,6 +1157,15 @@ All buttons are the Base UI `Button` of section 4.2, with `rounded-lg` (10 px), 
 | `secondary`, `outline`, `ghost`, `link`, `destructive` | as section 4.2 | as section 4.2 | as section 4.2 |
 
 At most one `brand` button per view. Focus is the 2 px `--ring` outline of section 2.10 on every variant.
+**The call-to-action orange (landing only).** The author asked for one striking "Getting Started" button on the landing pages. Orange is the one hue added to the palette, and only for that button: it never appears in the product or in the documentation pages.
+
+| Token | Both themes | Hex | Use |
+| --- | --- | --- | --- |
+| `--cta` | `oklch(0.7 0.2 48)` | `#FC6D00` | the "Getting Started" button of the landing hero and footer |
+| `--cta-foreground` | `oklch(0.145 0 0)` | `#0A0A0A` | its label |
+| `--cta-hover` | light `oklch(0.64 0.2 45)`, dark `oklch(0.76 0.18 55)` | `#E85600`, `#FF8C1E` | hover; the focus ring stays the 2 px outline |
+
+Contrast (WCAG 2.x): `--cta-foreground` on `--cta` 6.91:1, on the light hover 5.45:1, on the dark hover 8.52:1, all above 4.5:1. The button fill against the page is 2.86:1 on white and 6.91:1 on the dark background; the label, not the fill, identifies the control, so WCAG 1.4.11 does not apply to the fill.
 
 ### 11.7 Radii, borders and shadows
 
