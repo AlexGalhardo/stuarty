@@ -33,12 +33,24 @@ git fetch -q origin main 2>/dev/null || echo "verify: could not fetch origin/mai
 
 # Run the copy of this script that is on the default branch, so a change cannot loosen its own checks.
 if [ -z "${VERIFY_FROM_BASE:-}" ]; then
-	if git cat-file -e "$base:.agents/skills/verify/scripts/verify.sh" 2>/dev/null; then
+	# Git Bash on Windows rewrites an argument shaped like <rev>:.<path> (MSYS path conversion), so the
+	# <rev>:<path> arguments below turn conversion off for the git call alone (VV-229). The variable is
+	# ignored elsewhere.
+	base_has() { MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' git cat-file -e "$base:$1" 2>/dev/null; }
+	base_show() { MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' git show "$base:$1"; }
+	# A base that does not resolve is an error, never a reason to run the working copy.
+	if ! git rev-parse --verify -q "$base^{commit}" >/dev/null; then
+		echo "verify: the base $base is not a commit; cannot read the checks from it" >&2
+		exit 2
+	fi
+	if base_has .agents/skills/verify/scripts/verify.sh; then
 		checks="$(mktemp -d)"
 		for f in .agents/skills/verify/scripts/verify.sh .agents/skills/verify/scripts/check-flaky-patterns.sh \
 			.agents/skills/ci-preflight/scripts/check-commits.sh scripts/gate.sh scripts/smoke-e2e.sh; do
 			mkdir -p "$checks/$(dirname "$f")"
-			git show "$base:$f" >"$checks/$f" 2>/dev/null || rm -f "$checks/$f"
+			if base_has "$f"; then
+				base_show "$f" >"$checks/$f" || { echo "verify: could not read $f from $base" >&2; exit 2; }
+			fi
 		done
 		VERIFY_FROM_BASE="$checks" exec bash "$checks/.agents/skills/verify/scripts/verify.sh" "--$mode" --base "$base"
 	fi
@@ -80,7 +92,11 @@ step flaky bash "$(script .agents/skills/verify/scripts/check-flaky-patterns.sh)
 
 export STUARTY_MIN_FREE_BYTES=1
 go_files="$(echo "$changed" | grep -E '\.go$' | while read -r f; do [ -f "$f" ] && echo "$f"; done)"
-if [ -n "$go_files" ] || echo "$changed" | grep -qE '(^|/)go\.(mod|sum)$'; then
+if [ -z "$go_files" ] && echo "$changed" | grep -qE '(^|/)go\.(mod|sum)$'; then
+	# Only module files changed (a go.mod added, edited or deleted): there is no package to vet or test, but the
+	# root module must still build (VV-230). A module directory that no longer exists is never entered.
+	step go-build go build ./...
+elif [ -n "$go_files" ]; then
 	step gofmt bash -c "out=\$(gofmt -l $(echo "$go_files" | tr '\n' ' ')); [ -z \"\$out\" ] || { echo \"\$out\"; exit 1; }"
 	# A nested module (desktop/shell/app has its own go.mod) is built, vetted, tested and linted inside it.
 	modof() {
