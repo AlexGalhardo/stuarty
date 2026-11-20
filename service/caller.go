@@ -158,6 +158,8 @@ var Scopes = map[string]string{
 	"ImageUndo":          ScopeEdit,
 	"ImageRedo":          ScopeEdit,
 	"ImageExport":        ScopeEdit,
+	"ImageImport":        ScopeEdit,
+	"ImageImportFile":    ScopeEdit,
 	"ImageFrame":         ScopeRead,
 	"ImageHistory":       ScopeRead,
 	"ImageFile":          ScopeRead,
@@ -206,6 +208,7 @@ var Scopes = map[string]string{
 	"TextGenerate":     ScopeEdit,
 	"ImageGenerate":    ScopeEdit,
 	"VoiceGenerate":    ScopeEdit,
+	"VideoGenerate":    ScopeEdit,
 	"VoiceList":        ScopeRead,
 	"TextList":         ScopeRead,
 	"TextGet":          ScopeRead,
@@ -215,6 +218,10 @@ var Scopes = map[string]string{
 	"TextDraft":        ScopeEdit,
 	"CaptionValidate":  ScopeRead,
 	"ScriptEstimate":   ScopeRead,
+
+	"ProviderSignInBegin":    ScopeAdmin,
+	"ProviderSignInComplete": ScopeAdmin,
+	"ProviderSignInList":     ScopeRead,
 
 	"MotionBrief":   ScopeRead,
 	"MotionCheck":   ScopeRead,

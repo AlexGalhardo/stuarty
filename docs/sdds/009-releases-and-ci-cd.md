@@ -28,6 +28,7 @@
 18. [Wiring the local repository to the remote history](#18-wiring-the-local-repository-to-the-remote-history)
 19. [Implementation tasks owned by this SDD](#19-implementation-tasks-owned-by-this-sdd)
 20. [Acceptance](#20-acceptance)
+21. [The VPS package (epic 25)](#21-the-vps-package-epic-25)
 
 ## 1. Scope, sources and conventions of this document
 
@@ -1314,7 +1315,7 @@ The application finds the server next to its own executable (`desktop/shell`). E
 
 ### 11.1 Decisions
 
-- The Go binary serves HTTP and the UI itself (RF-200), so **no Caddy or any other web server is needed inside the image**. The author's Caddy rule is for images that serve static files or proxy; this one does neither. A reverse proxy for TLS is the operator's concern and is documented in the self-hosting guide (SDD-010).
+- The Go binary serves HTTP and the UI itself (RF-200), so **no Caddy or any other web server is needed inside the image**. The author's Caddy rule is for images that serve static files or proxy; this one does neither. A reverse proxy for TLS is the operator's concern and is documented in the self-hosting guide (SDD-010); the VPS package of section 21 runs Caddy as a second container beside this image.
 - Base images, all with fixed version tags: `oven/bun:1.4.4-alpine` (asset build stage only, same as the Studio's `Dockerfile.app`; it never reaches the runtime image, so the Alpine in this stage is not a runtime base), `golang:1.27.4@sha256:5e8afd493a7124a8586e134d9b532731161d4b9becf9dee5a5956b107426f93d` (build, the Debian image vukem pins by digest, `.config/docker/vukem.Dockerfile:11`; it has `git`, which the version stamp needs), `debian:13.7-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2` (runtime; tag and digest read from Docker Hub on 2026-11-14, `REL-DOCKER` re-reads them and records the values it pins).
 - The runtime base is a fixed-tag `debian:13-slim` pinned by digest. This reverses the first draft, which chose Alpine on the claim that the BtbN builds are static and run on musl: the BtbN Linux builds are linked against glibc, so they do not run on Alpine. Debian is also what vukem uses (`.config/docker/vukem.Dockerfile:9-10`). The first subtask of `REL-DOCKER` is a smoke test that runs `ffmpeg -version` and the reference export inside the image on the Debian runtime, before any other work on the image; if it fails the task stops and reports. No Alpine image is the runtime anywhere in this document.
 - FFmpeg is the BtbN `lgpl` variant on a release branch, downloaded by exact URL and verified by SHA-256 (ADR-0011 item 2). Its single source of truth is `.config/ffmpeg.env`, sourced by the Dockerfile and by `scripts/install-ffmpeg.sh` (CI). The Dockerfile copies the file into the build and fails if a value is missing or a hash does not match.
@@ -2370,3 +2371,60 @@ Each check is verifiable by someone who has only this document and the repositor
     - The judges are `go run ./internal/tools/notices -audit-tree DIR`, which matches every text under `DIR/licenses` with the signatures of the generator and applies its allow-list, and `-audit-spdx`, which reads one `name<TAB>SPDX expression` per line on stdin (the SBOM packages) and applies the same allow-list: one source of truth (section 12.2). A verdict is `deny` (GPL, AGPL, SSPL, LGPL-2.x or LGPL-3.0-only), `notallowed` or `unknown`; any of them is a finding, except that an SBOM `unknown` (`LicenseRef-*` and `NOASSERTION`, which the SBOM scanner prints when it cannot identify a text) is a "NOTE" that fails only under `--strict`, because the `licenses/` scan of the same archive is the judge of the text.
     - A scanner can claim a licence the shipped text does not show. The decision is a reviewed waiver in `.config/sbom-waivers.json`, read by `-audit-spdx -waivers FILE -waiver-root DIR`. Each entry has `package`, `claimed` (the licence the scanner reports), `shipped` (the licence the text shows), `path` (the text, relative to the root of the archive of that SBOM), `sha256` of that text, and a one-line `reason`; every field is required and an unknown field is an error. A waiver applies only to the exact `package` and `claimed` pair and only while the text at `path` still has the `sha256`: when the text changes, or `path` disappears (a dependency upgrade moves it), the line is printed as `expired` and is a finding again, so the waiver has to be reviewed again. A waived line is printed as `WAIVED` and is not a finding. The file starts with three waivers: `modernc.org/libc` (GPL-2.0-only claimed from the comments of generated header translations of subpackages that are not linked; the module text is BSD-3-Clause), the product module (LGPL-3.0-only claimed from the aggregate of `licenses/`, which holds the text of the separate FFmpeg program; the product is MIT) and `github.com/modelcontextprotocol/go-sdk` (CC-BY-4.0 claimed; the text says the code is Apache-2.0 or MIT and CC-BY-4.0 covers only documentation).
     - `scripts/release-verify.sh` expects 26 assets from `v0.16.0` and 29 from `v0.18.0` (one more for a stable release, with `feed.json`) and 21 for `v0.15.0`, which has no desktop application or feed.
+
+## 21. The VPS package (epic 25)
+
+Implements RF-218, RF-203, RF-204 and NFR-060 (ADR-0034, ADR-0033, ADR-0019). It is the self-hosted promise: a creator with a small Linux server runs one script and has Stuarty on their own domain with HTTPS, and can update it, back it up and restore it. Section 11.1 stays true for the image: the Go binary serves HTTP and no web server is inside it. The package adds a **second container**, Caddy, in front of it; that is the one place where the product ships a web server, and it is Caddy (author rule).
+
+### 21.1 Layout of `deploy/`
+
+| File | Purpose |
+| --- | --- |
+| `compose.yml` | two services, `stuarty` and `caddy`, on one internal network; named volumes `stuarty-data` (the workspace, `/data`), `caddy-data` and `caddy-config`; three Docker secrets |
+| `Caddyfile` | TLS for `STUARTY_DOMAIN`, `reverse_proxy` to `stuarty:7878` with no response buffering (the SSE stream), a request body limit equal to `STUARTY_MAX_IMPORT_BYTES` |
+| `.env.example` | every variable the compose file reads; `install.sh` writes the real `.env` (mode 0600) |
+| `install.sh`, `update.sh`, `backup.sh`, `restore.sh` | the four scripts of 21.3 to 21.5; plain `bash`, `docker` and `docker compose` only; `lib.sh` holds what they share |
+| `README.md`, `README.pt-BR.md` | the short English summary and the Portuguese guide; the full English guide is the page `self-hosting/vps` of the site |
+| `test/` | `install-test.sh`, `backup-restore-test.sh`, `update-test.sh`, `common.sh` and the stand-ins of `docker` and `curl` in `stub/` (no daemon, no pull, no network) |
+
+Image tags: Stuarty is built on the server from the tagged source (`build:` in `compose.yml`, the Dockerfile of section 11) and tagged `stuarty:<version>`, never `latest`; Caddy is `caddy:2.11.9-alpine` pinned by the digest of its index (read from Docker Hub on 2026-11-19). Publishing the image to a registry returns with the releases (ADR-0045), so nothing here pulls a Stuarty image: the service has `pull_policy: never` (by default Compose first tries to pull an image that has a `build:` section and is missing), and every script that needs the image builds it first when it is absent. The body limit `STUARTY_MAX_BODY` is `8GiB`, in binary units: for Caddy `8GB` is 8,000,000,000 bytes, less than `STUARTY_MAX_IMPORT_BYTES`. The Caddy line (`2.11`) changes only by a reviewed edit of `compose.yml`.
+
+### 21.2 Runtime
+
+- `stuarty` runs in network mode (`STUARTY_MODE=network`, the image default), listens only on the internal network (`expose`, no `ports`), as the user `app` (uid 10001, section 11.1) with `read_only: true`, a `tmpfs` on `/tmp`, `cap_drop: [ALL]` and `no-new-privileges`. `/data` is the only writable volume.
+- `caddy` is the only service with `ports`: `80` and `443`. It obtains and renews certificates by itself; **its requests to the certificate authority are the one outbound connection the package needs**, and the guide says so (ADR-0032). The server's own outbound rules are unchanged: with no connection configured it opens none.
+- The server trusts the proxy: `APP_URL=https://<domain>`, `TRUSTED_PROXIES` is the fixed address of the Caddy container on the compose network (`STUARTY_SUBNET`, default `172.31.88.0/24`, Caddy at `.2`), `TRUST_FORWARDED_PROTO=true`.
+- Secrets are files under `deploy/secrets/` (directory 0700, files 0644, so that uid 10001 reads the bind mounts while other host users cannot traverse the directory): `master_key` is `STUARTY_MASTER_KEY_FILE` (ADR-0033, epic 04), `app_key` is `APP_KEY=@file:...`, `admin_password` is `STUARTY_ADMIN_PASSWORD=@file:...`. None is in `.env`, in the image or in a backup.
+- Network mode refuses to start without `APP_KEY`, with a short one, or with a plain-HTTP public `APP_URL` (SDD-007 section 4.3); `deploy/test/install-test.sh` runs the binary to show it.
+
+### 21.3 `install.sh`
+
+Run from a checkout of a release tag. It checks Docker 24 or later and Compose 2.20 or later; takes the domain and the administrator e-mail from `--domain` and `--email` (or asks) and checks the whole value of each (a domain of letters, digits and hyphens; an e-mail of those and `._%+-`, so nothing in it means anything to Compose or to the Caddyfile), and accepts `STUARTY_TLS_DIRECTIVE` only empty or `tls internal`; derives the version from the tag (`--version` overrides) and refuses a checkout with none; creates the three secrets **only when the file is absent**, writes `.env` once, builds `stuarty:<version>` when it is missing, starts the stack, waits for the container to be healthy and then for `https://<domain>/up`, and prints the URL, the first login and where the master key is. Running it again changes no file and keeps every key (it prints where the password is, never the password again). `--no-start` writes the configuration and the secrets and stops there: the way to prepare a new host for `restore.sh`.
+
+### 21.4 Backup and restore
+
+A backup is one directory `stuarty-backup-<UTC>/` (the script packs it as a `.tar` with a `.sha256` beside it). It is made by the command `stuarty workspace:backup <dir>` and contains:
+
+- `db.sqlite`, a snapshot made with `VACUUM INTO` through a second connection (the SQLite online backup, consistent while the server writes; **never a copy of the live file**). The snapshot is taken first, then the files, so every file the snapshot refers to is there;
+- `store/` (the originals; content-addressed, so immutable: hard links when the filesystem allows, copies otherwise), `library/` (memory, prompts, skills and the review key), `fonts/`, `providers/` and `vault.json` when it exists (the credentials, sealed under the master key);
+- `manifest.json` (format `stuarty-backup`, version 1, the Stuarty version, the time, `master_key_included: false`, and for every file its path, size and SHA-256) and `SHA256SUMS` (the same sums for `sha256sum -c`).
+
+Not included, because they are rebuilt or are not data: `artifacts/`, `frames/`, `bitmaps/`, `exports/`, `tmp/`, `logs/`, `tools/`, `chat/`, `publish/`, `backups/`, `lock`, `runtime.json`, `token`. **The master key is never in a backup**: the command and both scripts say so and name where the key is (`deploy/secrets/master_key`). Keep it with the other secrets: without it a restored `vault.json` cannot be opened and the accounts are connected again; projects, media and the library are unaffected.
+
+`stuarty workspace:restore <dir> [--replace] [--without-vault]` runs in process under the workspace lock (no server may run), and refuses when `STUARTY_URL` names a server: it only ever writes the local workspace. In this order it: verifies every file against the manifest, and that the backup folder holds regular files only (a symbolic link or any special file makes the backup invalid); opens the vault of the backup with the key at hand and **refuses with a plain message** when there is no key or the key is not the one that sealed it (`--without-vault` drops `vault.json`, and the accounts are connected again); refuses a workspace that already has a database, a vault or originals (`--replace` first moves them to `replaced-<UTC>/` inside the workspace, nothing is deleted); copies the files in; verifies the written files against the manifest again. The database restored is the file of the snapshot: the next start migrates it as usual (SDD-005 section 7).
+
+`backup.sh` runs the command in a one-shot container (`docker compose run --rm --no-deps`) that writes into `/data/backups/`, streams the directory out as a tar to the host, checks it, removes the copy and writes the checksum; the archive and its `.sha256` are mode 0600 (`umask 077`), because the database and the sealed vault are in it. `restore.sh <backup.tar>` checks the checksum (the SHA-256 of that file against the `.sha256`, whatever name the line gives), the stopped stack and the presence of `secrets/master_key`, builds `stuarty:<version>` when the host has no image yet (a host prepared with `install.sh --no-start`), streams the tar into `/data/backups/`, runs `workspace:restore` and removes the copy.
+
+### 21.5 `update.sh <version>`
+
+1. Refuse a dirty checkout; run `backup.sh` and keep the path of the backup.
+2. Record the running version (`STUARTY_VERSION` of `.env`) and check that its image is still on the host.
+3. Check out the tag, set `STUARTY_VERSION`, build `stuarty:<new>`; a failed build changes nothing that runs.
+4. `docker compose up -d`: the new container starts, runs the migrations (the server writes its own `backups/db-*-before-*.sqlite`, SDD-005 section 7) and must become healthy within `STUARTY_HEALTH_TIMEOUT` seconds (default 120), including `/up` through Caddy.
+5. On a failed health check: stop the stack, put `STUARTY_VERSION` and the checkout back, restore the backup of step 1 into the workspace with `--replace` (the data written by the new version is kept in `replaced-<UTC>/`), start the previous image, wait for health and exit 1 saying so. If the rollback itself fails the script says which backup to restore by hand and exits 2.
+
+The script never changes `latest`, never pulls a Stuarty image and contacts only the git remote the checkout came from.
+
+### 21.6 Hardening checks
+
+`scripts/image-smoke.sh` also proves, on the built image: uid 10001 (existing), a read-only root file system (a write outside `/data` and `/tmp` fails under `--read-only --tmpfs /tmp`), and that the server starts and answers `/up` under `--read-only --cap-drop ALL --security-opt no-new-privileges`. `deploy/test/install-test.sh` checks that `docker compose config` publishes only 80 and 443, that every `image:` is a fixed tag and that no other web server is named.

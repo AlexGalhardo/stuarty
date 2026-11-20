@@ -318,6 +318,26 @@
         "image_hint": "Escolha uma imagem do seu espaço de trabalho.",
         "image_none": "Ainda não há imagens no espaço de trabalho. Importe uma em um projeto primeiro."
       },
+      "import": {
+        "open_new": "Importar imagem",
+        "open_layer": "Colocar um arquivo nesta imagem",
+        "title_new": "Importar uma imagem",
+        "title_layer": "Colocar um arquivo nesta imagem",
+        "description_new": "Crie uma imagem nova a partir de uma foto ou de uma figura que você tem.",
+        "description_layer": "Acrescente uma foto ou uma figura como mais uma camada desta imagem.",
+        "file": "Escolher um arquivo",
+        "file_help": "Uma figura de até 64 MB. Para uma maior, informe o caminho dela no servidor.",
+        "path": "Ou o caminho de um arquivo no servidor",
+        "path_placeholder": "/home/ana/imagens/foto.jpg",
+        "name": "Nome",
+        "name_placeholder": "O nome do arquivo",
+        "size": "Tamanho da imagem nova",
+        "size_file": "O tamanho do arquivo",
+        "submit": "Importar",
+        "working": "Importando…",
+        "cancel": "Cancelar",
+        "need_source": "Escolha um arquivo ou informe um caminho."
+      },
       "brand": {
         "place_logo": "Colocar logotipo",
         "logo_name": "Logotipo",
@@ -2303,19 +2323,28 @@
     "generate": {
       "open": {
         "visual": "Gerar uma imagem",
-        "video": "Gerar uma locução"
+        "video": "Gerar uma locução",
+        "clip": "Gerar um clipe de vídeo"
       },
       "title": {
         "image": "Gerar uma imagem",
-        "voice": "Gerar uma locução"
+        "voice": "Gerar uma locução",
+        "video": "Gerar um clipe de vídeo"
       },
       "intro": {
         "image": "O preço aparece antes de qualquer pedido ao provedor. A imagem vai para a biblioteca, com o modelo e o prompt de onde veio.",
-        "voice": "O preço aparece antes de qualquer pedido ao provedor. A narração vai para a biblioteca, com o modelo e o texto de onde veio."
+        "voice": "O preço aparece antes de qualquer pedido ao provedor. A narração vai para a biblioteca, com o modelo e o texto de onde veio.",
+        "video": "O preço aparece antes de qualquer pedido ao provedor. O clipe vai para a biblioteca, com o modelo e o prompt de onde veio."
       },
       "no_provider": {
         "image": "Nenhum provedor conectado faz imagens ainda.",
-        "voice": "Nenhum provedor conectado faz voz ainda."
+        "voice": "Nenhum provedor conectado faz voz ainda.",
+        "video": "Nenhum provedor conectado faz vídeo ainda."
+      },
+      "no_maker": {
+        "image": "Nenhum provedor com que o Stuarty trabalha faz imagens ainda, então não há o que conectar.",
+        "voice": "Nenhum provedor com que o Stuarty trabalha faz voz ainda, então não há o que conectar.",
+        "video": "Nenhum provedor com que o Stuarty trabalha faz vídeo ainda, então não há o que conectar. A geração de vídeo está pronta e espera um provedor ser adicionado."
       },
       "open_connections": "Conecte um na página Conexões",
       "project": "Projeto",
@@ -2325,8 +2354,14 @@
       "voice": "Voz",
       "prompt": {
         "image": "O que desenhar",
-        "voice": "O que ler em voz alta"
+        "voice": "O que ler em voz alta",
+        "video": "O que o clipe mostra"
       },
+      "seconds": "Segundos",
+      "aspect": "Proporção",
+      "first_frame": "Primeiro quadro (opcional)",
+      "no_first_frame": "Sem primeiro quadro",
+      "always_asks": "Um vídeo sempre espera a sua aprovação, qualquer que seja o custo, a menos que você tenha escrito uma regra para ele. Nada é enviado ao provedor antes disso.",
       "size": "Tamanho",
       "count": "Quantas",
       "format": "Formato",
@@ -2465,11 +2500,13 @@
       "price_none": "Ainda sem preço: nada pode ser gerado com este modelo até você definir um.",
       "price_unit": {
         "image": "Por imagem: {amount} ({source})",
-        "mchar": "Por milhão de caracteres: {amount} ({source})"
+        "mchar": "Por milhão de caracteres: {amount} ({source})",
+        "second": "Por segundo de vídeo: {amount} ({source})"
       },
       "price_per": {
         "image": "Preço de uma imagem",
-        "mchar": "Preço de um milhão de caracteres"
+        "mchar": "Preço de um milhão de caracteres",
+        "second": "Preço de um segundo de vídeo"
       },
       "source": {
         "user": "preço seu",
@@ -2482,7 +2519,28 @@
       "price_output": "Saída, por milhão de tokens",
       "price_save": "Guardar o preço",
       "spend": "Gasto hoje: {amount}",
-      "spend_none": "Nada gasto hoje."
+      "spend_none": "Nada gasto hoje.",
+      "signin_title": "Ou entre com a sua conta, sem copiar chave",
+      "signin": {
+        "openai": "Entrar com o ChatGPT",
+        "openrouter": "Entrar com o OpenRouter",
+        "generic": "Entrar em {provider}"
+      },
+      "signin_hint": {
+        "openai": "Usa o seu plano do ChatGPT, dentro dos limites do plano. Para entrar, abra o Stuarty em http://127.0.0.1 no computador onde ele roda.",
+        "openrouter": "O OpenRouter entrega ao Stuarty uma chave da sua conta. Ela fica no cofre desta máquina e gasta os seus créditos do OpenRouter.",
+        "generic": "Você entra na página do provedor. O acesso fica no cofre desta máquina."
+      },
+      "signin_account": "Conectado como {account}",
+      "signin_ready": "Conectado",
+      "signin_needs": "Precisa entrar de novo",
+      "signin_needs_help": "O provedor não aceita mais esta conexão. Nada foi apagado: entre de novo para voltar a usá-la.",
+      "signin_again": "Entrar de novo",
+      "callback_title": "Entrada em um provedor de IA",
+      "callback_working": "Concluindo a entrada...",
+      "callback_done": "Conectado:",
+      "callback_failed": "A entrada não foi concluída.",
+      "back": "Voltar às conexões"
     },
     "publish": {
       "title": "Publicar",

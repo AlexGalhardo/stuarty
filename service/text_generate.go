@@ -241,7 +241,7 @@ func (s *svc) runText(ctx context.Context, run JobRun) (JobOutcome, error) {
 			res.Text, res.Model = connections.EchoedAnswer, in.Request.Model
 		}
 
-		return gerr
+		return providers.SignInAware(gerr, c)
 	})
 	if err != nil {
 		return JobOutcome{}, providerError(err)
@@ -319,6 +319,10 @@ func providerError(err error) error {
 func providerSentence(pe *providers.Error) string {
 	switch pe.Kind {
 	case providers.KindAuth:
+		if pe.Code == signInProviderCode {
+			return "the sign-in of the connection is no longer valid."
+		}
+
 		return "the provider refused the key of the connection."
 	case providers.KindRateLimited:
 		return "the provider is limiting the requests."
@@ -338,6 +342,10 @@ func providerSentence(pe *providers.Error) string {
 func providerHint(pe *providers.Error) string {
 	switch pe.Kind {
 	case providers.KindAuth:
+		if pe.Code == signInProviderCode {
+			return "a person signs in again from the Connections page; nothing was deleted"
+		}
+
 		return "check the key: connect the account again with connection:add"
 	case providers.KindRateLimited:
 		return "wait and submit the generation again"

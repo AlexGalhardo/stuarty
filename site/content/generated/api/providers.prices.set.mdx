@@ -28,8 +28,8 @@ Content type `application/json`.
 | `model` | `string` | yes | The model id, as provider:models lists it.. min length 1 |
 | `output_micros_per_mtok` | `integer (int64)` or `null` | no | The price of a million output tokens, in millionths of the currency unit. |
 | `provider` | `string` | yes | The id of the provider, for example openai.. min length 1 |
-| `unit` | `string` | no | Empty for a price of tokens, image for the price of one image, mchar for the price of a million characters of speech. |
-| `unit_micros` | `integer (int64)` or `null` | no | With a unit of image or mchar: the price of one image or of a million characters, in millionths of the currency unit; the token prices stay out. |
+| `unit` | `string` | no | Empty for a price of tokens, image for the price of one image, mchar for the price of a million characters of speech, second for the price of one second of video. |
+| `unit_micros` | `integer (int64)` or `null` | no | With a unit of image, mchar or second: the price of one image, of a million characters or of one second of video, in millionths of the currency unit; the token prices stay out. |
 
 ## Responses
 

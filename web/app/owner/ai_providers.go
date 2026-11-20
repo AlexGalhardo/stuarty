@@ -9,6 +9,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/providers"
 	"github.com/AlexGalhardo/stuarty/service/providers/anthropic"
 	"github.com/AlexGalhardo/stuarty/service/providers/openai"
+	"github.com/AlexGalhardo/stuarty/service/providers/openrouter"
 )
 
 // adapters is the one list of the AI providers of this build (SDD-016 section 2): a provider is a package
@@ -17,6 +18,7 @@ func adapters() []providers.Provider {
 	return []providers.Provider{
 		openai.New(),
 		anthropic.New(),
+		openrouter.New(),
 	}
 }
 

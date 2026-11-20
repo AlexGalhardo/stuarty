@@ -1103,6 +1103,28 @@ The types named in the tables of the operations. The arguments of each editing c
 | `image_id` | `string` | no |  |
 | `revision` | `integer (int64)` | no |  |
 
+### ImageImportResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `applied` | `boolean` | no |  |
+| `created` | `boolean` | no |  |
+| `dry_run` | `boolean` | no |  |
+| `findings` | array of [`Finding`](/docs/api/schemas#finding) | no |  |
+| `hash` | `string` | no |  |
+| `height` | `integer` | no |  |
+| `image_id` | `string` | no |  |
+| `job_id` | `string` | no |  |
+| `layer_id` | `string` | no |  |
+| `lint` | [`LintTotals`](/docs/api/schemas#linttotals) | no |  |
+| `name` | `string` | no |  |
+| `replayed` | `boolean` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `state` | `string` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+| `width` | `integer` | no |  |
+
 ### ImageListResult
 
 | Name | Type | Required | Description |
@@ -2230,6 +2252,29 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `prices` | array of [`PriceEntry`](/docs/api/schemas#priceentry) | no |  |
+
+### ProviderSignIn
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `account` | `string` | no |  |
+| `connection_id` | `string` | no |  |
+| `label` | `string` | no |  |
+| `provider` | `string` | no |  |
+| `state` | `string` | no |  |
+
+### ProviderSignInBeginResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `authorize_url` | `string` | no |  |
+| `connection_id` | `string` | no |  |
+
+### ProviderSignInListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `sign_ins` | array of [`ProviderSignIn`](/docs/api/schemas#providersignin) | no |  |
 
 ### ProviderView
 

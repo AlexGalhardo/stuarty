@@ -175,6 +175,14 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.ImageExport(ctx, service.ImageExportRequest{ImageID: "img_0000000001"})
 			return err
 		},
+		"ImageImport": func() error {
+			_, err := e.svc.ImageImport(ctx, service.ImageImportRequest{Hash: "sha256:" + strings.Repeat("a", 64)})
+			return err
+		},
+		"ImageImportFile": func() error {
+			_, err := e.svc.ImageImportFile(ctx, service.ImageImportFileRequest{Body: strings.NewReader("x"), Size: 1})
+			return err
+		},
 		"ImageFrame": func() error {
 			_, err := e.svc.ImageFrame(ctx, service.ImageFrameRequest{ImageID: "img_0000000001"})
 			return err
@@ -477,6 +485,18 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.ProviderPriceSet(ctx, service.ProviderPriceSetRequest{Provider: "openai", Model: "m"})
 			return err
 		},
+		"ProviderSignInBegin": func() error {
+			_, err := e.svc.ProviderSignInBegin(ctx, service.ProviderSignInBeginRequest{Provider: "openai"})
+			return err
+		},
+		"ProviderSignInComplete": func() error {
+			_, err := e.svc.ProviderSignInComplete(ctx, service.ProviderSignInCompleteRequest{State: "s"})
+			return err
+		},
+		"ProviderSignInList": func() error {
+			_, err := e.svc.ProviderSignInList(ctx, service.ProviderSignInListRequest{})
+			return err
+		},
 		"TextGenerate": func() error {
 			_, err := e.svc.TextGenerate(ctx, service.TextGenerateRequest{ProjectID: "prj_0000000001"})
 			return err
@@ -487,6 +507,10 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 		},
 		"VoiceGenerate": func() error {
 			_, err := e.svc.VoiceGenerate(ctx, service.VoiceGenerateRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"VideoGenerate": func() error {
+			_, err := e.svc.VideoGenerate(ctx, service.VideoGenerateRequest{ProjectID: "prj_0000000001"})
 			return err
 		},
 		"VoiceList": func() error {

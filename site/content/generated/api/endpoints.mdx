@@ -180,7 +180,11 @@ Every operation has its own page with the parameters, the body, the responses an
 | `POST` | `/api/v1/image/generate` | [`image.generate`](/docs/api/image.generate) | Start an image generation with the provider of a connection; the job waits for approval, shows its estimate and stores the images as assets with their origin |
 | `GET` | `/api/v1/providers` | [`providers.list`](/docs/api/providers.list) | List the AI providers, the connections of each and the price table |
 | `PUT` | `/api/v1/providers/prices` | [`providers.prices.set`](/docs/api/providers.prices.set) | Set or remove the price of a model (a person in the browser only; the local token and keys get 403) |
+| `GET` | `/api/v1/providers/sign-ins` | [`providers.sign-ins`](/docs/api/providers.sign-ins) | List the connections made by a sign-in and their state |
+| `POST` | `/api/v1/providers/signin` | [`providers.signin.begin`](/docs/api/providers.signin.begin) | Start the sign-in to an AI provider; answers the address of the consent screen (a person in the browser only) |
+| `POST` | `/api/v1/providers/signin/complete` | [`providers.signin.complete`](/docs/api/providers.signin.complete) | Finish the sign-in with what the provider sent to the redirect address (a person in the browser only) |
 | `POST` | `/api/v1/text/generate` | [`text.generate`](/docs/api/text.generate) | Start a text generation with the provider of a connection; the job waits for approval and shows its estimate |
+| `POST` | `/api/v1/video/generate` | [`video.generate`](/docs/api/video.generate) | Start a video generation with the provider of a connection; the job waits for a person unless a rule the user wrote covers it, shows its estimate and stores the clip as an asset with its origin |
 | `POST` | `/api/v1/voice/generate` | [`voice.generate`](/docs/api/voice.generate) | Start a speech generation with the provider of a connection; the job waits for approval, shows its estimate and stores the audio as an asset with its origin |
 
 ## Images
@@ -191,12 +195,15 @@ Every operation has its own page with the parameters, the body, the responses an
 | `POST` | `/api/v1/images` | [`images.create`](/docs/api/images.create) | Create an image document, blank or from a template |
 | `GET` | `/api/v1/images/{id}` | [`images.get`](/docs/api/images.get) | Describe an image document: layers, findings and text view |
 | `POST` | `/api/v1/images/{id}/edit` | [`images.edit`](/docs/api/images.edit) | Apply a batch of image operations |
+| `GET` | `/api/v1/images/{id}/events` | [`images.events`](/docs/api/images.events) | Stream the events of an image document |
 | `POST` | `/api/v1/images/{id}/export` | [`images.export`](/docs/api/images.export) | Export an image document to a PNG, JPEG or WebP file |
 | `GET` | `/api/v1/images/{id}/exports/{name}` | [`images.file`](/docs/api/images.file) | Download a file that an image export wrote |
 | `GET` | `/api/v1/images/{id}/frame` | [`images.frame`](/docs/api/images.frame) | Render the picture of an image document |
 | `GET` | `/api/v1/images/{id}/history` | [`images.history`](/docs/api/images.history) | List the latest batches of an image document |
 | `POST` | `/api/v1/images/{id}/redo` | [`images.redo`](/docs/api/images.redo) | Redo the latest undone step of the caller on an image |
 | `POST` | `/api/v1/images/{id}/undo` | [`images.undo`](/docs/api/images.undo) | Undo the latest step of the caller on an image |
+| `POST` | `/api/v1/images/import` | [`images.import`](/docs/api/images.import) | Import an image file into a new image document, or as a layer of one |
+| `POST` | `/api/v1/images/import/file` | [`images.import_file`](/docs/api/images.import_file) | Import an image file sent as the body of the request into a new image document, or as a layer of one |
 
 ## Approvals
 
