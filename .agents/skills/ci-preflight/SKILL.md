@@ -39,7 +39,7 @@ GOOS=windows golangci-lint run ./...
 
 ## 4. Generated files
 
-Run the generators of `skills/release-pr/` step 2.4. After that, `git status` must be clean; commit whatever changed. The site's "Last updated" check compares `site/content/last-updated.json` with the date of the last commit of each page, so run `npm run last-updated` after the commits that touch the pages.
+Run the generators of `skills/release-pr/` step 2.4. After that, `git status` must be clean; commit whatever changed. The site's "Last updated" check compares `site/content/last-updated.json` with the date of the last commit of each page, so run `bun run last-updated` after the commits that touch the pages.
 
 Hand-kept lists that a new feature must update in the same change:
 
@@ -52,7 +52,7 @@ Hand-kept lists that a new feature must update in the same change:
 
 - In `web/`: `bun install --frozen-lockfile`, then `bun run lint`, `bun run typecheck`, `bun run check:i18n`, `bun run check:thin-client`, `bun run test`.
 - `check:i18n` runs with Node: the TypeScript 7 API it uses (`typescript/unstable/sync`) reads a Node child-process internal that Bun does not have. Do not move it back to Bun, and do not use `Bun.*` APIs in it.
-- In `site/`, which uses npm: `npm run lint`, `npm run test:scripts`.
+- In `site/`, which uses Bun: `bun run lint`, `bun run test:scripts`.
 - Markdown: `bunx markdownlint-cli2@0.24.1 "**/*.md"`.
 
 ## 6. Security and notices
