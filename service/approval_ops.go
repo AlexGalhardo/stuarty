@@ -555,7 +555,7 @@ func (s *svc) approve(ctx context.Context, tx Tx, row *approval.Row, decidedBy, 
 		return err
 	}
 
-	// The request of a scheduled post has no job: its target becomes scheduled (SDD-020 section 18).
+	// The request of a scheduled post has no job: its target becomes scheduled (SDD-020 section 26).
 	return s.targetApproved(ctx, tx, row)
 }
 

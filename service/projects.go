@@ -383,7 +383,7 @@ func (s *svc) ProjectGet(ctx context.Context, req ProjectGetRequest) (*ProjectGe
 		return nil, asError(err)
 	}
 
-	// The publications of the project are items of its overview (SDD-020 section 15).
+	// The publications of the project are items of its overview (SDD-020 section 23).
 	rows = s.withPublications(ctx, head.ID, rows)
 
 	timelineID := req.TimelineID

@@ -182,7 +182,7 @@ var Scopes = map[string]string{
 	"PublishValidate":       ScopeRead,
 	"PublishNow":            ScopeRender,
 	"PublishStatus":         ScopeRead,
-	// The calendar of publications (SDD-020 section 20). Scheduling, sending now and retrying only ask for
+	// The calendar of publications (SDD-020 section 28). Scheduling, sending now and retrying only ask for
 	// approval, so they take the scope of PublishNow.
 	"PublicationCreate":   ScopeEdit,
 	"PublicationGet":      ScopeRead,

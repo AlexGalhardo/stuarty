@@ -8,6 +8,7 @@ import {
 } from "./transport";
 import {
 	APPROVAL_EVENT_NAMES,
+	CHAT_EVENT_NAMES,
 	EVENT_NAMES,
 	PUBLICATION_EVENT_NAMES,
 } from "./types";
@@ -74,6 +75,7 @@ export class HttpTransport implements Transport {
 			...EVENT_NAMES,
 			...APPROVAL_EVENT_NAMES,
 			...PUBLICATION_EVENT_NAMES,
+			...CHAT_EVENT_NAMES,
 		]) {
 			source.addEventListener(name, (event) =>
 				handlers.onMessage(name, (event as MessageEvent<string>).data),

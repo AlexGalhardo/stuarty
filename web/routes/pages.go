@@ -80,7 +80,7 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 			return inertia.Render(c, "Social/Callback", inertia.Props{})
 		}).Name("social.callback")
 
-		// The publishing calendar (epic 20, SDD-020 sections 15 to 23): the page reads and changes the
+		// The publishing calendar (epic 20, SDD-020 sections 23 to 31): the page reads and changes the
 		// publications through /api/v1/publications and follows them on /api/v1/publications/events.
 		r.Get("/publish", func(c *web.Ctx) error {
 			return inertia.Render(c, "Publish/Index", inertia.Props{})

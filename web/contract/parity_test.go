@@ -197,8 +197,8 @@ var parity = []row{
 	{method: "PublishValidate", command: "publish:validate", route: "POST /publish/validate"},
 	{method: "PublishNow", command: "publish:now", route: "POST /publish"},
 	{method: "PublishStatus", command: "publish:status", route: "GET /publish/{}"},
-	// The calendar of publications (SDD-020 section 21): no MCP tool, the budget of the tool list leaves no room for
-	// one; an agent plans through the CLI and HTTP, and approval stays with a person.
+	// The calendar of publications (SDD-020 section 29): no MCP tool (author decision D-094); an agent plans
+	// through the CLI and HTTP, and approval stays with a person.
 	{method: "PublicationCreate", command: "publication:create", route: "POST /publications"},
 	{method: "PublicationGet", command: "publication:show", route: "GET /publications/{}"},
 	{method: "PublicationList", command: "publication:list", route: "GET /publications"},

@@ -1198,9 +1198,31 @@ CREATE UNIQUE INDEX image_operations_key_index ON image_operations (image_id, ac
 
 The log is append-only except `closed_by`, which moves from `NULL` to a revision, as in section 5.3; undo and redo follow section 12 with the rules of SDD-021 section 4. `Repos` gains `Images() ImageRepo` with `Create`, `Get`, `List`, `Commit` (a compare-and-set on the revision, `ErrStale` otherwise), `AppendOperation`, `Operation`, `LastOpen` (the actor's last step open to undo or redo), `Close`, `CloseOpenRedo` and `ByKey`. The writer is the one write transaction of `Store.Write`.
 
-### 5.14 `publications` and `publication_targets` (SDD-020 sections 15 to 21)
+### 5.14 `checkpoints` (RF-121, epic 36)
 
-Migration `20261119160000_create_publications_tables`. A publication is an item of its project (ADR-0039) and is kept in tables of its own: the item the surfaces show is read from them (SDD-020 section 15), and `project_items` is not rebuilt for it.
+A name and a note on a revision of a timeline, so that a person or an agent can say "this is the state to come back to" and go back by that name. A checkpoint is not a copy of the document: it points at a revision, whose document the log rebuilds (section 12.4).
+
+```sql
+CREATE TABLE checkpoints (
+  project_id TEXT    NOT NULL REFERENCES timelines (id) ON DELETE CASCADE, -- the id of the timeline document (section 5.12): a second timeline is not a row of `projects`
+  name       TEXT    NOT NULL CHECK (length(name) BETWEEN 1 AND 240),
+  note       TEXT    NOT NULL DEFAULT '',
+  revision   INTEGER NOT NULL CHECK (revision >= 1),
+  actor      TEXT    NOT NULL,
+  auto       INTEGER NOT NULL DEFAULT 0 CHECK (auto IN (0,1)),
+  at_ms      INTEGER NOT NULL,
+  PRIMARY KEY (project_id, name)
+);
+CREATE INDEX checkpoints_revision_index ON checkpoints (project_id, revision DESC);
+```
+
+The name is unique inside a timeline (`ErrExists` becomes `E_ID_EXISTS`), 1 to 60 characters after `untrusted.Clean` and trimming, with no `/`; the note is cut at 300 characters. A checkpoint is removed with its project (the cascade of `Delete`, section 13.3) and never otherwise except by `CheckpointRemove` and by the ceiling of the automatic ones below; it holds no foreign key to `operations`, which is append-only. `Repos` gains `Checkpoints() CheckpointRepo` (section 3.2).
+
+**Automatic checkpoint.** In the transaction of `Edit` (and of `HistoryRevert`, which commits a batch the same way), after the checks that can refuse the batch and before the commit, when the batch is not a dry run and changes the document (not a no-op), and the actor is an agent (SDD-003 §2.5.1), the service makes the checkpoint `auto <actor> <YYYY-MM-DD>` (UTC date of the service clock) at the revision the batch started from, unless that name exists in the timeline. The name is the whole "once a day per actor" rule: the first edit of the day creates it, the later ones find it. At most 30 automatic checkpoints are kept per timeline: after creating one, `TrimAuto(project, 30)` removes the oldest automatic ones. A checkpoint made by a person or an agent by name is never removed by the ceiling, and neither is an automatic one that a person or an agent renamed: the rename makes it a named one (`auto` 0).
+
+### 5.15 `publications` and `publication_targets` (SDD-020 sections 23 to 29)
+
+Migration `20261119250000_create_publications_tables`. A publication is an item of its project (ADR-0039) and is kept in tables of its own: the item the surfaces show is read from them (SDD-020 section 23), and `project_items` is not rebuilt for it.
 
 ```sql
 CREATE TABLE publications (

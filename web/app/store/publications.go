@@ -13,7 +13,7 @@ import (
 	"github.com/AlexGalhardo/vukem/database"
 )
 
-// publicationRepo is publish.Store over the tables of SDD-005 section 5.14.
+// publicationRepo is publish.Store over the tables of SDD-005 section 5.15.
 type publicationRepo struct{ ex database.Executor }
 
 const publicationColumns = `id, project_id, title, text, export_job, thumbnail_job, created_ms, updated_ms, created_by, owner_user_id`

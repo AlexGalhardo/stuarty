@@ -32,7 +32,7 @@ type Description struct {
 	Limits publish.Limits `json:"limits"`
 	// PostCostMicros and PostCostCurrency are what the network charges for one post, in millionths of the
 	// currency; zero for a network that charges nothing. A scheduled post shows it in its approval and counts
-	// it against the ceilings (SDD-020 section 18, RF-408).
+	// it against the ceilings (SDD-020 section 26, RF-408).
 	PostCostMicros   int64  `json:"post_cost_micros,omitempty"`
 	PostCostCurrency string `json:"post_cost_currency,omitempty"`
 	// Endpoint and Hosts are what a connection of the network is created with.

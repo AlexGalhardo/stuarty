@@ -42,7 +42,7 @@ type Actor struct {
 	OwnerUserID string
 }
 
-// Ask is the approval request of one target (SDD-020 section 18).
+// Ask is the approval request of one target (SDD-020 section 26).
 type Ask struct {
 	// ApprovalID is the id the request is made with; the target already names it.
 	ApprovalID    string
@@ -522,7 +522,7 @@ func (m *Manager) List(ctx context.Context, f Filter) ([]Publication, int, error
 	return list, total, nil
 }
 
-// ask moves a target to waiting_approval with a new request (SDD-020 section 18). Whatever the target was
+// ask moves a target to waiting_approval with a new request (SDD-020 section 26). Whatever the target was
 // asked about before is withdrawn and its reserved cost released. The caller saves nothing: ask does, and
 // replaces p with what the store holds after a rule may have approved the request at once.
 func (m *Manager) ask(ctx context.Context, tx Tx, p *Publication, id, reason string, now time.Time) error {
@@ -869,7 +869,7 @@ func (m *Manager) change(
 
 // Update changes a publication. A target that was waiting for approval, approved or scheduled and whose
 // post changed returns to waiting_approval with a new request: what a person approved is exactly what is
-// sent (SDD-020 section 16).
+// sent (SDD-020 section 24).
 func (m *Manager) Update(ctx context.Context, in UpdateInput) (*Publication, error) {
 	return m.change(ctx, in.ID, func(ctx context.Context, tx Tx, p *Publication, now time.Time) error {
 		shared, err := m.applyShared(p, &in)
@@ -1098,7 +1098,7 @@ func ptrEqual(a, b *time.Time) bool {
 }
 
 // Approved is what approving the request of a target does, inside the transaction of the approval
-// (SDD-020 section 18): the target is scheduled while its time is ahead, approved when it has come, and
+// (SDD-020 section 26): the target is scheduled while its time is ahead, approved when it has come, and
 // missed when the person answered after its window.
 func (m *Manager) Approved(ctx context.Context, tx Tx, targetID, approvalID string) error {
 	p, err := tx.Store().OfTarget(ctx, targetID)
@@ -1226,7 +1226,7 @@ func (m *Manager) Send(ctx context.Context, t Target, report func(float64, strin
 var ErrLeaseLost = errors.New("publish: the lease was lost")
 
 // Finish records the end of a send in one transaction: the result and the settlement of the cost, or the
-// error and either a later attempt (a transient error with attempts left) or the end (SDD-020 section 19).
+// error and either a later attempt (a transient error with attempts left) or the end (SDD-020 section 27).
 func (m *Manager) Finish(ctx context.Context, owner, targetID string, sent *Sent, serr *SendError) error {
 	err := m.env.Write(ctx, func(ctx context.Context, tx Tx) error {
 		p, err := tx.Store().OfTarget(ctx, targetID)

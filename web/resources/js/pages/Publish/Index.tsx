@@ -31,7 +31,7 @@ function api() {
 	return createClient(new HttpTransport("/api/v1"));
 }
 
-// The publishing calendar (ADR-0046, SDD-020 section 22): which piece goes to which account and when, in a month,
+// The publishing calendar (ADR-0046, SDD-020 section 30): which piece goes to which account and when, in a month,
 // a week or a list. It draws what the service answers and sends what the person does; the approval of a post is
 // in the Approvals page, and nothing is sent before it.
 export default function Publish(): ReactNode {

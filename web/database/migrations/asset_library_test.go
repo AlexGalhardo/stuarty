@@ -185,20 +185,13 @@ func TestWorkspaceAssetsMigrationDown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// The migrations of later epics come off first, one at a time, until the library's own.
-	var rolled []string
+	// The migrations that came after this one (the render origin of epic 33, the chat tables of epic 14, the
+	// checkpoints of epic 36, the texts of epic 17) are rolled back first, newest first.
+	want := downTo(assetLibraryID)
 
-	for !slices.Contains(rolled, assetLibraryID) {
-		step, rerr := m.Rollback(ctx, 1)
-		if rerr != nil || len(step) != 1 {
-			t.Fatalf("Rollback = %v, %v (rolled so far %v)", step, rerr, rolled)
-		}
-
-		rolled = append(rolled, step...)
-	}
-
-	if rolled[len(rolled)-1] != assetLibraryID {
-		t.Fatalf("Rollback = %v", rolled)
+	rolled, err := m.Rollback(ctx, len(want))
+	if err != nil || !slices.Equal(rolled, want) || !slices.Contains(want, renderOriginID) {
+		t.Fatalf("Rollback = %v, %v; want %v", rolled, err, want)
 	}
 
 	for _, table := range []string{"asset_info", "asset_tags", "asset_search"} {
