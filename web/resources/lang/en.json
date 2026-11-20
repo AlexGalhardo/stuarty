@@ -2,6 +2,7 @@
   "ui": {
     "nav": {
       "label": "Main navigation",
+      "skip": "Skip to the main content",
       "home": "{name}, dashboard",
       "language": "Language",
       "languages": {
@@ -2823,6 +2824,8 @@
       "live": "Live: new requests appear here by themselves.",
       "offline": "Not live: reload the page to see new requests.",
       "empty": "Nothing is waiting for you.",
+      "result_approve": "Approved: {summary}",
+      "result_reject": "Rejected: {summary}",
       "kind": "Kind",
       "destination": "Goes to",
       "no_destination": "No destination",

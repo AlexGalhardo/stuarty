@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
@@ -122,10 +122,50 @@ export default function ApprovalQueue({
 	onDecide(id: string, decision: "approve" | "reject", reason: string): void;
 }): ReactNode {
 	const t = useT();
+	const heading = useRef<HTMLHeadingElement>(null);
+	const section = useRef<HTMLElement>(null);
+	// The request a person just decided: its row leaves the list, and the focus that was on its button
+	// would fall to the page, so it moves to the next request, or to the heading when none is left
+	// (WCAG 2.4.3), and a polite region says what was decided (WCAG 4.1.3).
+	const decided = useRef<{
+		id: string;
+		index: number;
+		decision: "approve" | "reject";
+		summary: string;
+	} | null>(null);
+	const [result, setResult] = useState("");
+	const count = requests.length;
+	// biome-ignore lint/correctness/useExhaustiveDependencies: runs when the number of requests changes
+	useEffect(() => {
+		const last = decided.current;
+		if (last === null || requests.some((request) => request.id === last.id)) {
+			return;
+		}
+		decided.current = null;
+		setResult(
+			t(`ui.approvals.result_${last.decision}`, { summary: last.summary }),
+		);
+		const next = requests[Math.min(last.index, requests.length - 1)];
+		const button =
+			next === undefined
+				? null
+				: section.current?.querySelector<HTMLElement>(
+						`[data-approval-id="${next.id}"] button`,
+					);
+		(button ?? heading.current)?.focus();
+	}, [count]);
 	return (
-		<section aria-labelledby="approvals-queue">
+		<section ref={section} aria-labelledby="approvals-queue">
+			<p role="status" className="sr-only" data-testid="approval-result">
+				{result}
+			</p>
 			<div className="flex items-center justify-between gap-4">
-				<h2 id="approvals-queue" className="text-lg font-semibold">
+				<h2
+					ref={heading}
+					id="approvals-queue"
+					tabIndex={-1}
+					className="text-lg font-semibold"
+				>
 					{t("ui.approvals.queue")}
 				</h2>
 				<p
@@ -156,9 +196,15 @@ export default function ApprovalQueue({
 									: (destinations[request.connection_id] ?? null)
 							}
 							busy={busyId === request.id}
-							onDecide={(decision, reason) =>
-								onDecide(request.id, decision, reason)
-							}
+							onDecide={(decision, reason) => {
+								decided.current = {
+									id: request.id,
+									index: requests.indexOf(request),
+									decision,
+									summary: request.summary,
+								};
+								onDecide(request.id, decision, reason);
+							}}
 						/>
 					))}
 				</ul>

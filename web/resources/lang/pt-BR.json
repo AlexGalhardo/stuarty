@@ -2,6 +2,7 @@
   "ui": {
     "nav": {
       "label": "Navegação principal",
+      "skip": "Ir para o conteúdo principal",
       "home": "{name}, painel",
       "language": "Idioma",
       "languages": {
@@ -2823,6 +2824,8 @@
       "live": "Ao vivo: os pedidos novos aparecem aqui sozinhos.",
       "offline": "Sem conexão ao vivo: recarregue a página para ver pedidos novos.",
       "empty": "Nada está esperando por você.",
+      "result_approve": "Aprovado: {summary}",
+      "result_reject": "Rejeitado: {summary}",
       "kind": "Tipo",
       "destination": "Vai para",
       "no_destination": "Sem destino",
