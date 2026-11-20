@@ -46,6 +46,50 @@ test.describe("a11y-live-regions", () => {
 		await expect(item).toBeFocused();
 	});
 
+	test("an agent that deletes the selected item is announced, not replaced by the selection change", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, {
+			files: [testClip()],
+			tracks: 1,
+			perTrack: 2,
+		});
+		await page.goto(`/editor/${seeded.id}`);
+		const items = page.locator("[data-item-id]");
+		await expect(items).toHaveCount(2);
+		await page.locator(`[data-item-id="${seeded.itemIds[0]}"]`).focus();
+		await page.keyboard.press("Enter");
+		const live = page.locator("[data-live-region]");
+		await expect(live).toContainText("Selected");
+		// Every text of the region from here on, in the order it changed.
+		await live.evaluate((el) => {
+			const log: string[] = [];
+			(window as unknown as { __said: string[] }).__said = log;
+			new MutationObserver(() => {
+				log.push(el.textContent?.trim() ?? "");
+			}).observe(el, { childList: true, characterData: true, subtree: true });
+		});
+
+		const agent = await caller(request, "claude-code");
+		const head = (await agent("GET", `/projects/${seeded.id}`)) as {
+			revision: number;
+		};
+		await agent("POST", `/projects/${seeded.id}/edit`, {
+			base_revision: head.revision,
+			operations: [
+				{ op: "item.delete", args: { item_ids: [seeded.itemIds[0]] } },
+			],
+		});
+		await expect(items).toHaveCount(1);
+		await expect(live).toHaveText("claude-code changed the project");
+		// The selection lost the item because the document did: that is no sentence of its own.
+		const said = await page.evaluate(
+			() => (window as unknown as { __said: string[] }).__said,
+		);
+		expect(said).not.toContain("Selection cleared");
+	});
+
 	test("an edit by an agent is announced in the image editor", async ({
 		page,
 		request,
