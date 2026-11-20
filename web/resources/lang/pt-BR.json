@@ -2877,7 +2877,7 @@
       "account": "Sua conta Google",
       "linked": "Conta Google vinculada:",
       "not_linked": "Nenhuma conta Google vinculada. Vincule a sua para entrar com ela; a senha continua funcionando.",
-      "unlink_note": "Desvincular não muda sua senha nem encerra suas sessões.",
+      "unlink_note": "Desvincular não muda sua senha. Encerra a sessão em todos os outros navegadores; este continua conectado.",
       "password": "Sua senha",
       "link": "Vincular minha conta Google",
       "unlink": "Desvincular",

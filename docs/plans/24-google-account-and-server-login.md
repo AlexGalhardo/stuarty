@@ -56,6 +56,7 @@ A creator who runs Stuarty on their own server signs in with a password, as toda
 1. In network mode a linked user signs in with Google and gets the same session as with a password.
 2. A Google identity that was never linked cannot sign in, even when its e-mail equals a local user's.
 3. The password login keeps working after linking and after unlinking.
+3a. Unlinking ends every other session of the user and keeps the current one (D-104; `TestUnlinkEndsTheOtherSessionsAndKeepsTheCurrentOne`).
 4. With Google sign-in off, `bash scripts/no-egress.sh` passes on a server with no other connection.
 5. In local mode on the desktop no login is shown.
 6. `go test ./web/app/...`, `go test -run TestSecurity_ ./...` and `task test:web` pass with no network access.

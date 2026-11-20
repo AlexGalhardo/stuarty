@@ -382,6 +382,11 @@ func (h *apiHandler) googleUnlink(c *web.Ctx, in googlePasswordIn) (googleStatus
 		return googleStatusOut{}, googleError(err)
 	}
 
+	// The Google link was a way in: every other session of the user ends, this one stays (D-104).
+	if err := h.Auth.RevokeOtherSessions(c.Context(), user.ID, c.Session().ID()); err != nil {
+		return googleStatusOut{}, err
+	}
+
 	enabled, err := g.Enabled(c.Context())
 
 	return googleStatusOut{Enabled: enabled}, err
