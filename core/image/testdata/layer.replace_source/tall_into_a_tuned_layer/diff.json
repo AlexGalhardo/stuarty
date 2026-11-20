@@ -1,0 +1,49 @@
+[
+  {
+    "changes": {
+      "asset": [
+        "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "sha256:3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c"
+      ],
+      "crop": [
+        {
+          "h": 450,
+          "w": 800,
+          "x": 0,
+          "y": 0
+        },
+        null
+      ],
+      "w": [
+        640,
+        120
+      ],
+      "x": [
+        100,
+        360
+      ]
+    },
+    "id": "lyr_bbbbbbbbbb",
+    "kind": "layer.updated"
+  },
+  {
+    "id": "sha256:3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c",
+    "kind": "asset.added",
+    "object": {
+      "hash": "sha256:3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c",
+      "height": 900,
+      "name": "tall.png",
+      "width": 300
+    }
+  },
+  {
+    "id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "kind": "asset.removed",
+    "object": {
+      "hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "height": 900,
+      "name": "face.png",
+      "width": 1600
+    }
+  }
+]

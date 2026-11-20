@@ -333,6 +333,59 @@
         "image_hint": "Choose an image of your workspace.",
         "image_none": "There are no images in the workspace yet. Import one into a project first."
       },
+      "model": {
+        "remove": "Remove background",
+        "remove_needs_layer": "Remove background (select an image layer first)",
+        "generate": "Generate image",
+        "title": {
+          "remove_background": "Remove the background",
+          "generate": "Generate an image into this one"
+        },
+        "intro": {
+          "remove_background": "The background of the layer is removed by the model of a provider you connected. The result is the same layer with its new picture, and one Undo brings the original back.",
+          "generate": "A new layer is made from your prompt by the model of a provider you connected. One Undo takes it away. The price is shown before anything is asked of the provider."
+        },
+        "sent": {
+          "remove_background": "The picture of the layer {layer} will be sent to {provider}. Nothing is sent until you approve the cost.",
+          "generate": "Only the text you write below will be sent to {provider}. Nothing is sent until you approve the cost."
+        },
+        "no_provider": {
+          "remove_background": "No connected provider removes backgrounds yet. The connection must accept pictures.",
+          "generate": "No connected provider makes images yet."
+        },
+        "open_connections": "Connect one on the Connections page",
+        "project": "Project",
+        "project_hint": "The project that keeps the new file and its cost. The image itself belongs to no project.",
+        "no_project": "Make a project first: it keeps the new file and its cost.",
+        "connection": "Connection",
+        "model": "Model",
+        "no_price": "no price yet",
+        "prompt": "What to draw",
+        "cover_layer": "Cover the layer",
+        "estimate": "Show the estimate",
+        "estimated": "Estimated cost: {amount}",
+        "submit": "Start",
+        "working": {
+          "remove_background": "Removing the background of",
+          "generate": "Generating an image"
+        },
+        "layer_working": "working on it",
+        "state": {
+          "queued": "Waiting to start.",
+          "waiting_approval": "Waiting for your approval.",
+          "running": "Working.",
+          "succeeded": "Done.",
+          "failed": "It did not work.",
+          "cancelled": "Cancelled."
+        },
+        "progress": "{percent}% done",
+        "open_approvals": "Open the Approvals page",
+        "done": {
+          "applied": "The layer is in the image and it cost {amount}.",
+          "kept": "The image was not changed. The file is in your library and it cost {amount}."
+        },
+        "dismiss": "Close this message"
+      },
       "import": {
         "open_new": "Import image",
         "open_layer": "Put a file in this image",
