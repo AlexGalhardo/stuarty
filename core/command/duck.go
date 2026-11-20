@@ -50,7 +50,7 @@ type duckArgs struct {
 func checkSpeech(ids []string, r *ResolvedSpeech) *Error {
 	if r == nil {
 		return Errorf(CodeValidation, "args.resolved is missing: the speech of the items is not known.").
-			WithHint("The service fills it from the speech map made when a file is imported (no transcript is needed): call media_inspect on the speech assets, and if one is still analysing wait for its job (job_get) and retry; send audio.duck in a later call than the one that adds the speech items; an asset without audio has no speech. The cause is the state of the assets, not the arguments.").
+			WithHint("The service fills it from the speech map made when a file is imported (no transcript is needed): call media_inspect on the speech assets, and if one is still analysing wait for its job (job_get) and retry; an asset without audio has no speech. The cause is the state of the assets, not the arguments.").
 			WithPath("args.resolved")
 	}
 	seen := map[string]bool{}
