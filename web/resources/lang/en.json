@@ -239,6 +239,21 @@
         "forbidden": "This session cannot install files. Run the command below in a terminal.",
         "command": "Install command",
         "copy_command": "Copy the command"
+      },
+      "background": {
+        "title": "Background",
+        "intro": "A scheduled post goes out at its time only while Stuarty is running. With this on, closing the window while a post is scheduled keeps Stuarty running behind an icon in the system tray, so the post still goes out.",
+        "keep_running": "Keep running in the background",
+        "start_at_sign_in": "Start when I sign in",
+        "start_at_sign_in_hint": "Starts Stuarty hidden, only for you, with no administrator rights. Turning this off, or uninstalling Stuarty, removes it.",
+        "limit_computer": "A post goes out only if the computer is on and you are signed in. Stuarty does not wake the computer.",
+        "limit_missed": "A post whose time passed while Stuarty was not running is not sent on its own. It waits for your decision.",
+        "limit_quit": "Quit in the tray icon stops publishing. Pause publishing is in the same menu.",
+        "failed": "The setting could not be changed.",
+        "ask_title": "Keep Stuarty running so scheduled posts go out?",
+        "ask_yes": "Keep running in the background",
+        "ask_no": "Not now",
+        "ask_later": "You can change this in Settings, Background."
       }
     },
     "image": {
@@ -370,6 +385,26 @@
           "kept": "The image was not changed. The file is in your library and it cost {amount}."
         },
         "dismiss": "Close this message"
+      },
+      "import": {
+        "open_new": "Import image",
+        "open_layer": "Put a file in this image",
+        "title_new": "Import an image",
+        "title_layer": "Put a file in this image",
+        "description_new": "Make a new image from a photo or a picture you have.",
+        "description_layer": "Add a photo or a picture as one more layer of this image.",
+        "file": "Choose a file",
+        "file_help": "A picture of up to 64 MB. For a larger one, give its path on the server.",
+        "path": "Or the path of a file on the server",
+        "path_placeholder": "/home/ana/pictures/photo.jpg",
+        "name": "Name",
+        "name_placeholder": "The name of the file",
+        "size": "Size of the new image",
+        "size_file": "The size of the file",
+        "submit": "Import",
+        "working": "Importing…",
+        "cancel": "Cancel",
+        "need_source": "Choose a file or give a path."
       },
       "brand": {
         "place_logo": "Place logo",
@@ -2356,19 +2391,28 @@
     "generate": {
       "open": {
         "visual": "Generate an image",
-        "video": "Generate a voice-over"
+        "video": "Generate a voice-over",
+        "clip": "Generate a video clip"
       },
       "title": {
         "image": "Generate an image",
-        "voice": "Generate a voice-over"
+        "voice": "Generate a voice-over",
+        "video": "Generate a video clip"
       },
       "intro": {
         "image": "The price is shown before anything is asked of the provider. The image lands in the library, with the model and the prompt it came from.",
-        "voice": "The price is shown before anything is asked of the provider. The narration lands in the library, with the model and the text it came from."
+        "voice": "The price is shown before anything is asked of the provider. The narration lands in the library, with the model and the text it came from.",
+        "video": "The price is shown before anything is asked of the provider. The clip lands in the library, with the model and the prompt it came from."
       },
       "no_provider": {
         "image": "No connected provider makes images yet.",
-        "voice": "No connected provider makes speech yet."
+        "voice": "No connected provider makes speech yet.",
+        "video": "No connected provider makes video yet."
+      },
+      "no_maker": {
+        "image": "No provider Stuarty works with makes images yet, so there is nothing to connect.",
+        "voice": "No provider Stuarty works with makes speech yet, so there is nothing to connect.",
+        "video": "No provider Stuarty works with makes video yet, so there is nothing to connect. Video generation is ready and waits for a provider to be added."
       },
       "open_connections": "Connect one on the Connections page",
       "project": "Project",
@@ -2378,8 +2422,14 @@
       "voice": "Voice",
       "prompt": {
         "image": "What to draw",
-        "voice": "What to read out"
+        "voice": "What to read out",
+        "video": "What the clip shows"
       },
+      "seconds": "Seconds",
+      "aspect": "Aspect ratio",
+      "first_frame": "First frame (optional)",
+      "no_first_frame": "No first frame",
+      "always_asks": "A video always waits for your approval, whatever it costs, unless you wrote a rule for it. Nothing is sent to the provider before that.",
       "size": "Size",
       "count": "How many",
       "format": "Format",
@@ -2518,11 +2568,13 @@
       "price_none": "No price yet: nothing can be generated with this model until you set one.",
       "price_unit": {
         "image": "Per image: {amount} ({source})",
-        "mchar": "Per million characters: {amount} ({source})"
+        "mchar": "Per million characters: {amount} ({source})",
+        "second": "Per second of video: {amount} ({source})"
       },
       "price_per": {
         "image": "Price of one image",
-        "mchar": "Price of a million characters"
+        "mchar": "Price of a million characters",
+        "second": "Price of one second of video"
       },
       "source": {
         "user": "your price",

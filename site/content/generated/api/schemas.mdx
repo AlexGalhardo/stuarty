@@ -1113,6 +1113,28 @@ The types named in the tables of the operations. The arguments of each editing c
 | `image_id` | `string` | no |  |
 | `revision` | `integer (int64)` | no |  |
 
+### ImageImportResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `applied` | `boolean` | no |  |
+| `created` | `boolean` | no |  |
+| `dry_run` | `boolean` | no |  |
+| `findings` | array of [`Finding`](/docs/api/schemas#finding) | no |  |
+| `hash` | `string` | no |  |
+| `height` | `integer` | no |  |
+| `image_id` | `string` | no |  |
+| `job_id` | `string` | no |  |
+| `layer_id` | `string` | no |  |
+| `lint` | [`LintTotals`](/docs/api/schemas#linttotals) | no |  |
+| `name` | `string` | no |  |
+| `replayed` | `boolean` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `state` | `string` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+| `width` | `integer` | no |  |
+
 ### ImageListResult
 
 | Name | Type | Required | Description |
@@ -2402,6 +2424,13 @@ The types named in the tables of the operations. The arguments of each editing c
 | `on_screen_words` | `integer` | no |  |
 | `title` | `string` | no |  |
 | `words` | `integer` | no |  |
+
+### schedulerOut
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `paused` | `boolean` | no | Whether publishing is paused. |
+| `scheduled` | `integer` | no | The targets that still have to go out: approved, scheduled and publishing. |
 
 ### ScriptEstimateResult
 

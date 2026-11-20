@@ -51,6 +51,7 @@ command image:create
 command image:edit
 command image:export
 command image:generate
+command image:import
 command image:list
 command image:model-edit
 command image:redo
@@ -136,6 +137,7 @@ command tools:install
 command transcribe
 command undo
 command version
+command video:generate
 command view
 command voice:generate
 command voice:list
@@ -172,6 +174,7 @@ route GET /fonts
 route GET /handshake
 route GET /images
 route GET /images/{}
+route GET /images/{}/events
 route GET /images/{}/exports/{}
 route GET /images/{}/frame
 route GET /images/{}/history
@@ -245,6 +248,8 @@ route POST /connections/{}/test
 route POST /fonts
 route POST /image/generate
 route POST /images
+route POST /images/import
+route POST /images/import/file
 route POST /images/{}/edit
 route POST /images/{}/export
 route POST /images/{}/model-edit
@@ -299,6 +304,7 @@ route POST /social/complete
 route POST /social/connect
 route POST /social/select
 route POST /system/launch
+route POST /system/scheduler
 route POST /system/tools/install
 route POST /templates
 route POST /templates/import
@@ -307,6 +313,7 @@ route POST /templates/{}/instantiate
 route POST /text/generate
 route POST /trash/empty
 route POST /users
+route POST /video/generate
 route POST /voice/generate
 route PUT /agents/profiles/{}
 route PUT /assets/{}

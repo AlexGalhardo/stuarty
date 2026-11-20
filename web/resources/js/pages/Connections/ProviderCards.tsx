@@ -60,19 +60,21 @@ export function ModelRow({
 		currency: string,
 		input: number,
 		output: number,
-		unit?: "image" | "mchar",
+		unit?: "image" | "mchar" | "second",
 	): Promise<void>;
 }): ReactNode {
 	const t = useT();
 	const locale = useLocale();
-	// A model an adapter hints as an image or a voice model is priced per image or per million characters
-	// (SDD-016 section 4.5); the rest, per million tokens. The price shown is the one in that unit.
+	// A model an adapter hints as an image, a voice or a video model is priced per image, per million characters
+	// or per second (SDD-016 section 4.5); the rest, per million tokens. The price shown is the one in that unit.
 	const unit =
 		model.capability === "image"
 			? "image"
 			: model.capability === "voice"
 				? "mchar"
-				: undefined;
+				: model.capability === "video"
+					? "second"
+					: undefined;
 	const shown =
 		model.price !== null && model.price.unit === unit ? model.price : null;
 	const [unitInput, setUnitInput] = useState(
@@ -303,7 +305,7 @@ function ProviderConnection({
 		currency: string,
 		input: number,
 		output: number,
-		unit?: "image" | "mchar",
+		unit?: "image" | "mchar" | "second",
 	): Promise<void> {
 		setFailure(null);
 		try {

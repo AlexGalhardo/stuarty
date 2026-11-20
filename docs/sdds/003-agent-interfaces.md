@@ -922,8 +922,8 @@ type Range struct {
 ```go
 type JobStartRequest struct {
 	ProjectID  string          `json:"project_id"`
-	Kind       string          `json:"kind"` // "export" | "transcribe" | "text.generate" | "image.generate" | "voice.generate" | "image.edit" (ingest and frame jobs are internal)
-	Args       json.RawMessage `json:"args,omitempty"` // one object, validated by Kind: ExportArgs, TranscribeArgs or the arguments of text.generate, image.generate and voice.generate (SDD-016 sections 6 and 6.1); an unknown member is E_VALIDATION with path args.<name>
+	Kind       string          `json:"kind"` // "export" | "transcribe" | "text.generate" | "image.generate" | "voice.generate" | "video.generate" | "image.edit" (ingest and frame jobs are internal)
+	Args       json.RawMessage `json:"args,omitempty"` // one object, validated by Kind: ExportArgs, TranscribeArgs or the arguments of text.generate, image.generate, voice.generate, video.generate and image.edit (SDD-016 sections 6, 6.1, 6.4 and 6.5); an unknown member is E_VALIDATION with path args.<name>
 	WaitMS     int             `json:"wait_ms,omitempty"` // default 0; 0 to 25000
 	DryRun     bool            `json:"dry_run,omitempty"` // runs the lint gate and limits, queues nothing
 }
@@ -965,10 +965,10 @@ type Job struct {
 	ProjectID  *string    `json:"project_id"` // null for an ingest job: it belongs to the file, which projects may share
 	State      string     `json:"state"` // queued | waiting_approval | running | succeeded | failed | cancelled; waiting_approval: a kind that needs approval waits for a person or a rule (SDD-015 §5)
 	ApprovalID string     `json:"approval_id,omitempty"` // the approval request of a job of a kind that needs approval (SDD-015 §5)
-	Estimate   *Money     `json:"estimate,omitempty"` // text.generate, image.generate and voice.generate: the cost estimated before it runs, on the job from the moment it exists (SDD-016 §6, §6.1)
+	Estimate   *Money     `json:"estimate,omitempty"` // text.generate, image.generate, voice.generate and video.generate: the cost estimated before it runs, on the job from the moment it exists (SDD-016 §6, §6.1)
 	Progress   float64    `json:"progress"` // 0 to 1
 	Message    string     `json:"message,omitempty"`
-	Result     *JobResult `json:"result,omitempty"` // export, transcribe, text.generate, image.generate and voice.generate only; an ingest job has no result member (its outcome is the asset state, MediaList)
+	Result     *JobResult `json:"result,omitempty"` // export, transcribe, text.generate, image.generate, voice.generate and video.generate only; an ingest job has no result member (its outcome is the asset state, MediaList)
 	Error      *Error     `json:"error,omitempty"` // set when State is "failed" and when it is "cancelled" (E_CANCELLED); E_INGEST_FAILED, E_EXPORT_FAILED, E_VERIFY_FAILED, E_TRANSCRIBE_FAILED and E_CANCELLED travel here with HTTP status 200
 	Lint       *LintTotals `json:"lint,omitempty"` // export: totals at the pinned revision (warnings only: errors refuse the start)
 	Warnings   []string    `json:"warnings,omitempty"` // export: notes about an accepted start, not a reason to refuse it; a GIF whose typical size is over 25 MB says its estimated size (VV-056)
@@ -982,7 +982,7 @@ type JobResult struct { // exactly one member is set
 	Export     *ExportResult     `json:"export,omitempty"`
 	Transcribe *TranscribeResult `json:"transcribe,omitempty"`
 	Text       *TextResult       `json:"text,omitempty"` // text.generate: the text (untrusted), the model, the tokens and the real cost (SDD-016 section 6)
-	Generated  *GeneratedResult  `json:"generated,omitempty"` // image.generate and voice.generate: the assets stored (asset id, hash, kind, bytes, state, the revised prompt as untrusted text), requested and delivered, notes, the real cost (SDD-016 section 6.1)
+	Generated  *GeneratedResult  `json:"generated,omitempty"` // image.generate, voice.generate and video.generate: the assets stored (asset id, hash, kind, bytes, state, the revised prompt as untrusted text), requested and delivered, notes, the real cost (SDD-016 section 6.1)
 }
 type ExportResult struct {
 	Revision    int64        `json:"revision"`
@@ -1603,7 +1603,7 @@ Tool and Service mapping, scope and annotations (annotations are hints and clien
 | `template` | `TemplateList`, `TemplateSave`, `TemplateInstantiate`, `TemplateExport`, `TemplateImport` | read (list, export), edit (the others) | false | false | false | false |
 | `font_import` | `FontImport` | media | false | false | true | false |
 | `connection` | `ConnectionList` (without `id`), `ConnectionGet` (with `id`) | read | true | n/a | true | false |
-| `image` | `ImageCreate`, `ImageList`, `ImageDescribe`, `ImageEdit`, `ImageUndo`, `ImageRedo`, `ImageExport` (SDD-021) | read (list, show), edit (the others) | false | false | false | false |
+| `image` | `ImageCreate`, `ImageList`, `ImageDescribe`, `ImageEdit`, `ImageUndo`, `ImageRedo`, `ImageExport`, `ImageImport` (SDD-021) | read (list, show), edit (the others) | false | false | false | false |
 | `project_item` | `ProjectItemAdd`, `ProjectItemMove`, `ProjectItemRename`, `ProjectItemTrash`, `ProjectItemRestore`, `BriefGet`, `BriefSet`, `BriefingQuestions`, `BriefingAnswer`, and the texts of SDD-019: `TextList`, `TextGet`, `TextWrite`, `TextRevisions`, `TextRevert`, `CaptionValidate`, `ScriptEstimate` (argument `action`: `text`, `revisions`, `revert`, `check`) | edit (read for `brief` without `text`, for `briefing` without `answers`, and for the actions `revisions` and `check` and the action `text` without `text`) | false | false | false | false |
 | `library` | `LibrarySearch`, `MemoryList`, `SkillList`, `PromptList`, `MemoryGet`, `SkillGet`, `PromptGet`, `MemoryWrite`, `SkillWrite`, `PromptWrite`, `PromptRender`, `SkillLint` | read (search, list, get, render, lint), edit (write) | false | false | false | false |
 
@@ -2779,7 +2779,7 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
 ```json
 {
   "name": "job_start",
-  "description": "Start long work; args by kind. export renders a workspace file: {start?, end?, format?, at? (the png frame), preset?, codec?}; export_batch: items (export args) in turn; transcribe: {asset_id, language?, model?}; text.generate: {connection_id, model, prompt}; image.generate: {connection_id, model, prompt, size?, count?}; voice.generate: {connection_id, model, text, voice, format?}; image.edit: {image_id, operation, connection_id, model, layer_id?, prompt?}; text.draft: {item_id, connection_id, model, instruction}; a person approves. Poll job_get.",
+  "description": "Start long work; args by kind. export renders a workspace file: {start?, end?, format?, at? (the png frame), preset?, codec?}; export_batch: items (export args) in turn; transcribe: {asset_id, language?, model?}; the kinds below also take connection_id, model: text.generate: {prompt}; image.generate: {prompt, size?, count?}; voice.generate: {text, voice, format?}; image.edit: {image_id, operation, layer_id?, prompt?}; text.draft: {item_id, instruction}; video.generate: {prompt, seconds?, aspect?, first_frame?}; a person approves. Poll job_get.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -2800,7 +2800,8 @@ Example (the text of §3.6): `{"name": "lint", "arguments": {"project_id": "prj_
           "image.generate",
           "voice.generate",
           "text.draft",
-          "image.edit"
+          "image.edit",
+          "video.generate"
         ]
       },
       "args": {
@@ -3180,7 +3181,7 @@ The only tool of the connections domain (ADR-0043 item 3: an intent no other too
 ```json
 {
   "name": "image",
-  "description": "Images. action=create (preset or width+height; or from_template+values), list, show, edit (operations: command_help domain=image), undo, redo, export.",
+  "description": "Images. action=create (preset or width+height; or from_template+values), list, show, edit (operations: command_help domain=image), undo, redo, export, import (path or hash of an image file; image_id adds a layer).",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -3192,7 +3193,8 @@ The only tool of the connections domain (ADR-0043 item 3: an intent no other too
           "edit",
           "undo",
           "redo",
-          "export"
+          "export",
+          "import"
         ]
       },
       "image_id": {
@@ -3248,6 +3250,12 @@ The only tool of the connections domain (ADR-0043 item 3: an intent no other too
       },
       "from_template": {
         "type": "string"
+      },
+      "path": {
+        "type": "string"
+      },
+      "hash": {
+        "type": "string"
       }
     },
     "required": [
@@ -3275,6 +3283,8 @@ The only tool of the connections domain (ADR-0043 item 3: an intent no other too
 ```
 
 The `image` tool is the image documents of SDD-021 behind one tool, as `template` is the templates: `action` picks the Service operation (`create` is `ImageCreate`, `list` `ImageList`, `show` `ImageDescribe`, `edit` `ImageEdit`, `undo` and `redo` `ImageUndo` and `ImageRedo`, `export` `ImageExport`) and a member the action does not use is refused. `operations` of `edit` are the operations of the image registry, which `command_help` serves with `domain` `image` (the video `edit` enum does not list them). The definition is as small as the budget of §4.1 allows, so some members are CLI and HTTP only: the background, the id, the paging and the template filter of the list, and the output schema names only `text`. The template to start from is `from_template` (an image id, not an `_id` member, to save the pattern). An agent sets a background with `layer.add_fill`.
+
+`import` is `ImageImport` (epic 48): `path` (an absolute path on the machine of the server, read with the path rules of `MediaImport`, §2.6) or `hash` (an image already in the workspace, as `media_import` accepts) makes a new image document, sized as the file when both sides are at most 4,096 pixels, otherwise by `width` and `height` or a `preset`; with `image_id` the file is one more layer of that document (`base_revision`, `idempotency_key` and `dry_run` as in `edit`). It is one more action and two members (`path`, `hash`) of the same tool, not a tool of its own, and the wait for the ingest (`wait_ms`) is CLI and HTTP only, so the budget of §4.1 is held. The result is `ImageImportResult`.
 
 #### `project_item`
 
@@ -3994,6 +4004,9 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `assets.get`, `assets.uses` | `GET /assets/{hash}`, `GET /assets/{hash}/uses` | `cursor`, `limit` (uses) | none | 200 `AssetResult`, 200 `AssetUsesResult` | read | 400 `E_VALIDATION` for a bad hash; 404 `E_NOT_FOUND` |
 | `assets.set`, `assets.tag` | `PUT /assets/{hash}`, `POST /assets/{hash}/tags` | none | `{description?, rights_note?, reusable?}`, `{add?, remove?}` | 200 `AssetResult` | media | 400 `E_VALIDATION` with `details.reason` (SDD-011 §14.2) |
 | `audit.list` | `GET /audit` | `cursor`, `limit` | none | 200 `AuditListResult` (the audit record of RF-134: actions outside a document batch, with their actor, SDD-005 §5.9) | admin | none |
+| `images.import` | `POST /images/import` | none | `{path or hash, image_id?, name?, width?, height?, preset?, wait_ms?, base_revision?, idempotency_key?, dry_run?}`, `path` an absolute path to an image file on the machine of the server, read with the path rules of `MediaImport` (§2.6), `hash` an image already in the workspace | 200 `ImageImportResult` (the id and revision of the document, the layer, the asset hash and `state` `ready`; `state` `pending` and no document when the ingest of the file outlived `wait_ms`, with the `hash` to import again) | edit | 403 `E_PATH_NOT_ALLOWED`; 404 `E_FILE_NOT_FOUND`; 422 `E_LIMIT_EXCEEDED` (`import_bytes`, `import_pixels`); 422 `E_LIMIT` (`details.limit` `canvas`: a source over 4,096 pixels a side with no `width`, `height` or `preset`); 422 `E_UNSUPPORTED_MEDIA` (not an image); 400 `E_VALIDATION` (`path` or `hash` wrong, an unknown `hash`); a refused import creates no document (SDD-021 §10.1) |
+| `images.import_file` | `POST /images/import/file` | `file_name`, `image_id`, `name`, `width`, `height`, `preset`, `wait_ms`, `base_revision`, `idempotency_key`, `dry_run` | the bytes of an image file, at most 64 MiB (or `STUARTY_MAX_IMPORT_BYTES` when smaller); the content type is ignored and the screen sends `application/json` so that a cookie session passes SDD-007 §3.6 step 6 | 200 `ImageImportResult`, as `images.import` | edit | 422 `E_LIMIT_EXCEEDED` (a declared or a streamed size over the limit); 422 `E_UNSUPPORTED_MEDIA`; as `images.import` (SDD-021 §10.2) |
+| `images.events` | `GET /images/{id}/events` | `since` (a revision, SDD-006 §2); header `Last-Event-ID` | none | 200 `text/event-stream` with `image.updated` (SDD-006 §12) | read | 400 `E_VALIDATION` for a non-integer or negative `since`; 404 `E_NOT_FOUND` |
 | `events.stream` | `GET /projects/{id}/events` | `since` (a revision, SDD-006 §2); header `Last-Event-ID` | none | 200 `text/event-stream` (SDD-006) | read | 400 `E_VALIDATION` for a non-integer or negative `since` |
 | `trash.empty` | `POST /trash/empty` | none | `{project_id?, older_than_days?}` (SDD-005 §13.3) | 200 `TrashEmptyResult` | admin, and only from a browser session (local mode) or an `admin` key (network mode); the local token is refused | 403 `E_FORBIDDEN` |
 | `keys.create`, `keys.list`, `keys.revoke` | `POST /keys`, `GET /keys`, `DELETE /keys/{key_id}` | none | `KeyCreateRequest` for create | 201 `KeyCreateResult`, 200 `KeyListResult`, 200 `KeyRevokeResult` | a logged-in browser session; a key cannot call them (network mode only, SDD-007 §5.3) | 403 `E_FORBIDDEN` |
@@ -4257,6 +4270,7 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `ImageEdit` | `image` (`action` edit) | `image:edit` | `POST /images/{id}/edit` |
 | `ImageUndo`, `ImageRedo` | `image` (`action` undo, redo) | `image:undo`, `image:redo` | `POST /images/{id}/undo`, `POST /images/{id}/redo` |
 | `ImageExport` | `image` (`action` export) | `image:export` | `POST /images/{id}/export` |
+| `ImageImport` | `image` (`action` import) | `image:import` | `POST /images/import` |
 | `AgentProfileList` | none (exception E-7) | `agent:profiles` | `GET /agents/profiles` |
 | `AgentProfileSet`, `AgentProfileRemove` | none (exception E-7) | none | `PUT /agents/profiles/{name}`, `DELETE /agents/profiles/{name}` |
 | `ChatSessionStart`, `ChatSend`, `ChatCancel`, `ChatAnswerPermission`, `ChatSessionDelete` | none (exception E-7) | none | `POST /projects/{id}/chat/sessions`, `POST /chat/sessions/{id}/messages`, `POST /chat/sessions/{id}/cancel`, `POST /chat/sessions/{id}/permissions/{request_id}`, `DELETE /chat/sessions/{id}` |

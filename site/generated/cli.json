@@ -2345,12 +2345,12 @@
         {
           "name": "unit",
           "type": "string",
-          "usage": "image for the price of one image, mchar for the price of a million characters of speech; leave out for tokens"
+          "usage": "image for the price of one image, mchar for the price of a million characters of speech, second for one second of video; leave out for tokens"
         },
         {
           "name": "unit-micros",
           "type": "string",
-          "usage": "with --unit: the price of one image or of a million characters, in millionths of the currency unit"
+          "usage": "with --unit: the price of one image, of a million characters or of one second, in millionths of the currency unit"
         }
       ],
       "globals": [
@@ -2506,6 +2506,60 @@
           "name": "format",
           "type": "string",
           "usage": "mp3 (default), wav, flac, opus or aac"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "video:generate",
+      "domain": "provider",
+      "summary": "generate a video clip with the provider of a connection; the job shows its estimate, always waits for a person unless a rule covers it, and stores the clip as an asset",
+      "usage": [
+        "stuarty video:generate --project <id> --connection <id> --model <id> [--prompt <text> | --prompt-file <file>] [--seconds <n>] [--aspect 16:9|9:16|1:1|4:3|3:4] [--first-frame <asset id>] [--dry-run]"
+      ],
+      "example": "stuarty video:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --prompt \"A red fox\" --seconds 6 --aspect 9:16",
+      "flags": [
+        {
+          "name": "connection",
+          "type": "string",
+          "usage": "the connection to the provider (required)"
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "usage": "the model id, as provider:models lists it (required)"
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "usage": "what the clip shows; without it and without --prompt-file the prompt is read from standard input"
+        },
+        {
+          "name": "prompt-file",
+          "type": "string",
+          "usage": "a file that holds the prompt"
+        },
+        {
+          "name": "seconds",
+          "type": "integer",
+          "usage": "the length of the clip, 1 to 60 (default 5); the model may make fewer lengths"
+        },
+        {
+          "name": "aspect",
+          "type": "string",
+          "usage": "16:9 (default), 9:16, 1:1, 4:3 or 3:4"
+        },
+        {
+          "name": "first-frame",
+          "type": "string",
+          "usage": "the id of an image asset of the project the clip starts from"
         }
       ],
       "globals": [
@@ -2808,6 +2862,75 @@
         "workspace",
         "actor",
         "key-file"
+      ]
+    },
+    {
+      "name": "image:import",
+      "domain": "image",
+      "summary": "bring an image file into a new image document, or into an existing one as a layer",
+      "usage": [
+        "stuarty image:import --path <file>",
+        "stuarty image:import --hash <sha256:...> [--id <image>] [--name n] [--preset p | --width w --height h]"
+      ],
+      "example": "stuarty image:import --path /home/ana/photos/face.jpg --preset video_thumbnail",
+      "flags": [
+        {
+          "name": "path",
+          "type": "string",
+          "usage": "an absolute path to an image file on the machine of the server"
+        },
+        {
+          "name": "hash",
+          "type": "string",
+          "usage": "an image already in the workspace (asset:list shows its hash)"
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "usage": "put the file in this image as a layer (default: a new image)"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "usage": "the name of the new image, or of the layer with --id"
+        },
+        {
+          "name": "preset",
+          "type": "string",
+          "usage": "the canvas of a new image: video_thumbnail, square_post or vertical_cover"
+        },
+        {
+          "name": "width",
+          "type": "integer",
+          "usage": "the canvas of a new image, with --height (default: the size of the file, up to 4096)"
+        },
+        {
+          "name": "height",
+          "type": "integer",
+          "usage": "the canvas of a new image, with --width"
+        },
+        {
+          "name": "wait-ms",
+          "type": "integer",
+          "usage": "how long to wait for the file to be ingested, 0 to 25000 (default 10000)"
+        },
+        {
+          "name": "base",
+          "type": "integer",
+          "usage": "with --id: the revision the layer was planned against (default: the current one)"
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "usage": "with --id: idempotency key"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "dry-run"
       ]
     },
     {

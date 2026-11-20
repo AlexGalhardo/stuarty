@@ -1625,8 +1625,8 @@ stuarty provider:price --provider <id> --model <id> --currency USD --price-in <m
 | `--currency` | string |  | three letters, such as USD; needed to set a price |
 | `--price-in` | string |  | the price of a million input tokens, in millionths of the currency unit |
 | `--price-out` | string |  | the price of a million output tokens; leave all prices out to remove the entry |
-| `--unit` | string |  | image for the price of one image, mchar for the price of a million characters of speech; leave out for tokens |
-| `--unit-micros` | string |  | with --unit: the price of one image or of a million characters, in millionths of the currency unit |
+| `--unit` | string |  | image for the price of one image, mchar for the price of a million characters of speech, second for one second of video; leave out for tokens |
+| `--unit-micros` | string |  | with --unit: the price of one image, of a million characters or of one second, in millionths of the currency unit |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 
@@ -1711,6 +1711,32 @@ Example:
 
 ```bash
 stuarty voice:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --voice alloy --text "Welcome"
+```
+
+## `video:generate`
+
+Generate a video clip with the provider of a connection; the job shows its estimate, always waits for a person unless a rule covers it, and stores the clip as an asset
+
+```text
+stuarty video:generate --project <id> --connection <id> --model <id> [--prompt <text> | --prompt-file <file>] [--seconds <n>] [--aspect 16:9|9:16|1:1|4:3|3:4] [--first-frame <asset id>] [--dry-run]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--connection` | string |  | the connection to the provider (required) |
+| `--model` | string |  | the model id, as provider:models lists it (required) |
+| `--prompt` | string |  | what the clip shows; without it and without --prompt-file the prompt is read from standard input |
+| `--prompt-file` | string |  | a file that holds the prompt |
+| `--seconds` | integer |  | the length of the clip, 1 to 60 (default 5); the model may make fewer lengths |
+| `--aspect` | string |  | 16:9 (default), 9:16, 1:1, 4:3 or 3:4 |
+| `--first-frame` | string |  | the id of an image asset of the project the clip starts from |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty video:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --prompt "A red fox" --seconds 6 --aspect 9:16
 ```
 
 ## `voice:list`
@@ -1898,6 +1924,36 @@ Example:
 
 ```bash
 stuarty image:export img_7k2m9x4q1b --format jpeg --quality 85
+```
+
+## `image:import`
+
+Bring an image file into a new image document, or into an existing one as a layer
+
+```text
+stuarty image:import --path <file>
+stuarty image:import --hash <sha256:...> [--id <image>] [--name n] [--preset p | --width w --height h]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--path` | string |  | an absolute path to an image file on the machine of the server |
+| `--hash` | string |  | an image already in the workspace (asset:list shows its hash) |
+| `--id` | string |  | put the file in this image as a layer (default: a new image) |
+| `--name` | string |  | the name of the new image, or of the layer with --id |
+| `--preset` | string |  | the canvas of a new image: video_thumbnail, square_post or vertical_cover |
+| `--width` | integer |  | the canvas of a new image, with --height (default: the size of the file, up to 4096) |
+| `--height` | integer |  | the canvas of a new image, with --width |
+| `--wait-ms` | integer |  | how long to wait for the file to be ingested, 0 to 25000 (default 10000) |
+| `--base` | integer |  | with --id: the revision the layer was planned against (default: the current one) |
+| `--key` | string |  | with --id: idempotency key |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty image:import --path /home/ana/photos/face.jpg --preset video_thumbnail
 ```
 
 ## `asset:list`

@@ -188,6 +188,9 @@ export const EVENT_NAMES = [
 	"nested.updated",
 ] as const;
 
+// The event of GET /images/{id}/events (SDD-006 section 12); `resync.required` is the one above.
+export const IMAGE_EVENT_NAMES = ["image.updated"] as const;
+
 // The part of PlanWindow (SDD-004 section 10) the timeline needs: the end of
 // the project as the core computed it.
 export interface PlanWindowHead {
@@ -602,6 +605,19 @@ export interface VoiceGenerateRequest {
 	voice: string;
 	language?: string;
 	format?: string;
+	wait_ms?: number;
+	dry_run?: boolean;
+}
+
+// The body of POST /video/generate (SDD-016 section 6.4).
+export interface VideoGenerateRequest {
+	project_id: string;
+	connection_id: string;
+	model: string;
+	prompt: string;
+	seconds?: number;
+	aspect?: string;
+	first_frame?: string;
 	wait_ms?: number;
 	dry_run?: boolean;
 }
@@ -1048,8 +1064,9 @@ export interface ProviderPrice {
 	currency: string;
 	input_micros_per_mtok: number;
 	output_micros_per_mtok: number;
-	// image or mchar for the price of one image or of a million characters of speech; absent for tokens.
-	unit?: "image" | "mchar";
+	// image, mchar or second for the price of one image, of a million characters of speech or of one second
+	// of video; absent for tokens.
+	unit?: "image" | "mchar" | "second";
 	unit_micros?: number;
 }
 
@@ -1083,7 +1100,7 @@ export interface ModelView {
 	price: ProviderPrice | null;
 	price_source: PriceSource;
 	// A hint of the adapter, never a rule: it orders what a picker shows.
-	capability?: "text" | "image" | "voice";
+	capability?: "text" | "image" | "voice" | "video";
 }
 
 export interface ProviderModelsResult {
@@ -1100,7 +1117,7 @@ export interface ProviderPriceSetRequest {
 	currency?: string;
 	input_micros_per_mtok?: number;
 	output_micros_per_mtok?: number;
-	unit?: "image" | "mchar";
+	unit?: "image" | "mchar" | "second";
 	unit_micros?: number;
 }
 

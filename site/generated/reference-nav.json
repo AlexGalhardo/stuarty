@@ -176,6 +176,7 @@
         "providers.signin.begin",
         "providers.signin.complete",
         "text.generate",
+        "video.generate",
         "voice.generate"
       ]
     },
@@ -186,13 +187,16 @@
         "images.create",
         "images.get",
         "images.edit",
+        "images.events",
         "images.export",
         "images.file",
         "images.frame",
         "images.history",
         "images.model_edit",
         "images.redo",
-        "images.undo"
+        "images.undo",
+        "images.import",
+        "images.import_file"
       ]
     },
     {
@@ -254,6 +258,7 @@
         "handshake.get",
         "system.get",
         "system.launch",
+        "system.scheduler",
         "system.tools",
         "system.tools.install"
       ]
