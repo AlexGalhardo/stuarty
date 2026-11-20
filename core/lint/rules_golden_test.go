@@ -160,6 +160,12 @@ func init() {
 		return d
 	}())
 	rc(CodeOccluded, "quiet_opacity_below_1", occlusion(func(up *timeline.Item) { up.Opacity = 0.9 }))
+	rc(CodeOccluded, "trigger_blend_normal_covers_lower_clip", occlusion(func(up *timeline.Item) { up.Blend = "normal" }))
+
+	for _, blend := range []string{"multiply", "screen", "overlay", "add"} {
+		rc(CodeOccluded, "quiet_upper_blends_"+blend, occlusion(func(up *timeline.Item) { up.Blend = blend }))
+	}
+
 	rc(CodeOccluded, "quiet_upper_does_not_contain_the_range", occlusion(func(up *timeline.Item) { up.Duration = 60 }))
 	rc(CodeOccluded, "quiet_upper_has_a_transition", occlusion(func(up *timeline.Item) {
 		up.TransitionIn = &timeline.Transition{Kind: "fade", Duration: 10}
