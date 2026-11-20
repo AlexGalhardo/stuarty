@@ -372,5 +372,11 @@ func retryAfter(v string) time.Duration {
 		return 0
 	}
 
-	return min(time.Duration(secs)*time.Second, maxRetryAfter)
+	// Capped as a number of seconds: a receiver that sends 9227000000 would overflow the Duration into a
+	// negative wait (found by FuzzRetryAfter).
+	if secs >= int(maxRetryAfter/time.Second) {
+		return maxRetryAfter
+	}
+
+	return time.Duration(secs) * time.Second
 }
