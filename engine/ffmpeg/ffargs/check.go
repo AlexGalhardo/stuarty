@@ -270,7 +270,7 @@ func checkInput(argv []string, i int, opts []option, path string, pol Policy) er
 		if len(opts) != 2 {
 			return violate("FF-02", argv, i, "an ffmetadata input carries only -protocol_whitelist and -f")
 		}
-		return checkFilePath("FF-03", argv, i, p, pathInput, pol)
+		return checkFilePath("FF-03", argv, i, p, pathRunInput, pol)
 	}
 	if forced != "" {
 		return violate("FF-13", argv, i, "a file input is probed, never forced with -f")

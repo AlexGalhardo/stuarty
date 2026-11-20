@@ -136,6 +136,9 @@ type pathKind int
 const (
 	pathInput pathKind = iota
 	pathOutput
+	// pathRunInput is an input the engine wrote itself (the ffmetadata of the chapters, FF-08): only the
+	// run directory, never the store or an artifact directory.
+	pathRunInput
 )
 
 func toSlash(p string) string { return filepath.ToSlash(filepath.Clean(p)) }
@@ -198,12 +201,19 @@ func checkFilePath(rule string, argv []string, i int, p string, kind pathKind, p
 		if strings.Contains(rest, "%") {
 			return violate(rule, argv, i, "only a %%0Nd frame number may appear in a name")
 		}
-		if kind == pathInput && strings.Contains(name, "%") {
+		if kind != pathOutput && strings.Contains(name, "%") {
 			return violate(rule, argv, i, "an input name has no pattern (image2 sequences are not used)")
 		}
 		return nil
 	}
 
+	if kind == pathRunInput {
+		rel, ok := hasPrefixDir(p, pol.RunDir)
+		if !ok {
+			return violate(rule, argv, i, "an ffmetadata input is a file of the run directory")
+		}
+		return check(rel, false)
+	}
 	if kind == pathOutput {
 		rel, ok := hasPrefixDir(p, pol.RunDir)
 		if !ok {
