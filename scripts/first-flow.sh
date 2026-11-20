@@ -86,7 +86,7 @@ fi
 
 # ---- the fake provider and the fake social network ---------------------------------------------------------
 
-"$WORK/bin/firstflowfake$exe" >"$WORK/fake.log" 2>&1 &
+"$WORK/bin/firstflowfake$exe" -media-root "$(native "$WORK")" >"$WORK/fake.log" 2>&1 &
 FAKE_PID=$!
 for _ in $(seq 1 50); do
 	grep -q '^ready ' "$WORK/fake.log" 2>/dev/null && break
