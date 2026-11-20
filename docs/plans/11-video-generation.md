@@ -35,7 +35,7 @@ A creator asks for a few seconds of generated footage, from a prompt or from one
 ## Tasks
 
 - [ ] 1. Propose the provider (API, pricing source, terms, limits); STOP for approval. Verify: the approval is in the hand-off.
-- [ ] 2. Amend SDD-016 and SDD-000. Verify: `task lint:md` exits 0.
+- [x] 2. Amend SDD-016 and SDD-000. Verify: `task lint:md` exits 0.
 - [ ] 3. Implement validation and estimation with table tests. Verify: `go test ./core/provider/...` passes.
 - [ ] 4. Implement the adapter with contract tests from recorded responses (submit, pending, done, failed, refused). Verify: `go test ./service/providers/...` passes with no network.
 - [ ] 5. Implement the job with resume after restart and cancellation. Verify: `go test ./service/... -run TestVideoGenerate` passes, including the restart test that counts one submission.

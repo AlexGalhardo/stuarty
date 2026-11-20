@@ -1,6 +1,6 @@
 # SDD-016: The AI provider layer (API key, text generation, cost)
 
-- Status: Draft (2026-11-19). Written by epic 09, extended by epic 10 (image and voice, sections 2.2, 4.5, 5.1, 5.2, 6.1 to 6.3 and the lines marked epic 10); the code follows in the same epics.
+- Status: Draft (2026-11-19). Written by epic 09, extended by epic 10 (image and voice, sections 2.2, 4.5, 5.1, 5.2, 6.1 to 6.3 and the lines marked epic 10) and by epic 11 (video, sections 2.3, 4.5, 5.4, 6.4 and the lines marked epic 11); the code follows in the same epics.
 - Depends on: ADR-0036 (one provider layer), ADR-0032 (outbound only to connected destinations; costly generation waits for a person), ADR-0033 (the vault), ADR-0018 (jobs), SDD-000 (names), SDD-007 (threat model, untrusted text), SDD-014 (connections and vault), SDD-015 (approval and cost)
 - Implements: PRD-004 RF-360, RF-361, RF-362, RF-363, RF-364, RF-365; PRD-002 RF-133; NFR-063, NFR-064
 - Owner area: `core/provider/`, `service/providers/` and `service/providers/<name>/`, the provider operations and the job kinds in `service/`, the controllers, commands and the job arguments in `web/app/`, the provider cards of the Connections page
@@ -22,7 +22,7 @@
 
 ## 1. Overview
 
-A creator connects the AI services they already pay for with an API key, once, and every part of Stuarty can use them. This document specifies the provider layer, its first capability, text, and (epic 10) image and voice generation. Video (epic 11), the sign-ins (epic 12) and the local agent (epic 14) add adapters and credential kinds to the same layer; none of them changes what is written here.
+A creator connects the AI services they already pay for with an API key, once, and every part of Stuarty can use them. This document specifies the provider layer, its first capability, text, and (epic 10) image and voice generation, and (epic 11) video generation. The sign-ins (epic 12) and the local agent (epic 14) add adapters and credential kinds to the same layer; none of them changes what is written here.
 
 Four rules carry the design:
 
@@ -31,7 +31,7 @@ Four rules carry the design:
 3. **Nothing about a model is fixed in code.** The list of models is read from the provider at run time. A price is read from the catalogue of the provider when it publishes one, or from a table the person edits; a model with no price is refused, never estimated at zero.
 4. **A provider answers with untrusted text.** The text a model wrote is untrusted (SDD-007 section 8); the error body of a provider is never shown.
 
-What this document does not specify: no chat and no agent loop (one request, one answer, ADR-0037); no streaming (an adapter may offer it later behind the same interface, and the sign-in path of section 12 reads a stream only to join it into one answer); no video; no editing of an image with a model and no cloning of a voice from a recording of a person (epic 10 leaves both out). Transcription (`engine/transcribe`, SDD-011 section 10) keeps working as it is, with its own provider settings; moving it onto this layer is left for the epic that adds the transcription capability. The sign-in to a provider is section 12 (epic 12).
+What this document does not specify: no chat and no agent loop (one request, one answer, ADR-0037); no streaming (an adapter may offer it later behind the same interface); no editing of a video with a model, no extending or restyling of a clip, no avatar and no talking head (epic 11 leaves them out); no sign-in; no editing of an image with a model and no cloning of a voice from a recording of a person (epic 10 leaves both out). Transcription (`engine/transcribe`, SDD-011 section 10) keeps working as it is, with its own provider settings; moving it onto this layer is left for the epic that adds the transcription capability.
 
 ## 2. Providers and connections
 
@@ -41,8 +41,8 @@ What this document does not specify: no chat and no agent loop (one request, one
 type Descriptor struct {
 	ID              string   // the connection kind: lower-case letters, digits and dash, 2 to 32 characters
 	Name            string   // shown to a person
-	Capabilities    []string // "text", "image" and "voice" (epic 10); "video" later
-	CredentialKinds []string // "api_key"; "oauth" for a provider with a sign-in (section 12)
+	Capabilities    []string // "text", "image" and "voice" (epic 10) and "video" (epic 11)
+	CredentialKinds []string // "api_key" here
 	DefaultEndpoint string   // the base URL a new connection starts from
 	DocsURL         string   // where the person finds the key; shown, never called
 }
@@ -79,7 +79,21 @@ type VoiceGenerator interface { // epic 10
 	GenerateVoice(ctx context.Context, c connections.Credential, req provider.VoiceRequest, maxBytes int64) (VoiceResult, error)
 }
 
-// VideoGenerator is declared with no method and no adapter: epic 11 adds the methods and the adapters.
+type VideoGenerator interface { // epic 11
+	Provider
+	// VideoLimits are the durations, the aspect ratios and the first frame the provider documents for a model; needs no network.
+	VideoLimits(model string) provider.VideoLimits
+	// Submit starts one generation and returns the task id of the provider. It is the only call that spends:
+	// the caller stores the id before it polls. frame is the first frame, or nil.
+	Submit(ctx context.Context, c connections.Credential, req provider.VideoRequest, frame *VideoFrame) (taskID string, err error)
+	// Poll reads the state of a task: pending (with a progress when the provider says one), done, or failed
+	// (with the error that explains it, such as a refusal). It costs nothing and may be repeated.
+	Poll(ctx context.Context, c connections.Credential, taskID string) (VideoStatus, error)
+	// Fetch downloads the clip of a done task through the gated client. The file is no larger than maxBytes.
+	Fetch(ctx context.Context, c connections.Credential, taskID string, maxBytes int64) (GeneratedFile, error)
+	// Cancel asks the provider to stop a task and reports whether it confirmed that nothing will be charged.
+	Cancel(ctx context.Context, c connections.Credential, taskID string) (confirmed bool, err error)
+}
 ```
 
 - **The registry** (`providers.Registry`) is built at start-up from the adapters: each adapter is registered by one line in the owner (`web/app/owner`). `Register` also registers the provider as the connector of its kind in `connections.Manager`, so a connection of kind `openai` can be created, listed and tested through the five operations of SDD-014. The connector's `Test` reads the model list (a harmless request) and reports the number of models in text the product wrote, or the kind of failure in a fixed sentence (section 8); it never forwards a body.
@@ -115,6 +129,10 @@ Chosen with D-093 (the pair of providers is OpenAI and Anthropic) and the ones t
 - **Models by capability.** The catalogue of OpenAI names models and nothing else, so the adapter gives each model a `capability` hint from its documented naming (`dall-e-*` and `gpt-image-*` for image, `tts-*` and `*-tts` for voice, the `gpt-*` and `o*` families for text; anything else has no hint). The hint only orders what a picker shows: a request names the model it wants and the provider is the judge.
 - **A reference image** (an optional asset the model starts from) is not offered: the endpoint takes none, and an edit of an image with a model is epic 30.
 
+### 2.3 The provider of video (epic 11)
+
+**The provider is not chosen yet.** Neither provider of D-093 can serve: Anthropic has no video API, and the Videos API of OpenAI (the Sora 2 models) was shut down on 24 September 2026 with no replacement. ADR-0036 asks for the author's approval of the provider, and the proposal is waiting for it (Google Veo through the Gemini API with the user's own key is the recommended option). Until then the layer is complete and tested with a fake adapter, and no real adapter is registered, so no provider says it makes video and the Generate dialog offers no video connection. A provider is added as in section 2: one package `service/providers/<name>/`, one registration line, the descriptor capability `video`, and the five methods of `VideoGenerator`. What every adapter must do is in the rest of this document; what the chosen one documents (endpoints, models, limits, price, terms of use of the outputs) is written here when it is approved.
+
 ## 3. The model catalogue
 
 ```go
@@ -124,7 +142,7 @@ type Model struct {
 	ContextTokens int             // the largest input plus output, 0 when the provider does not say
 	OutputTokens  int             // the largest output, 0 when the provider does not say
 	Price         *provider.Price // set when the catalogue publishes a price
-	Capability    string          // epic 10: "text", "image", "voice" or empty; a hint from the adapter, never a rule
+	Capability    string          // epic 10: "text", "image", "voice", "video" or empty; a hint from the adapter, never a rule
 }
 ```
 
@@ -176,18 +194,19 @@ The estimate goes to `core/approval` `Decide` as the `Cost` of the action (kind 
 
 ### 4.5 Prices of an image and of speech (epic 10)
 
-A price has a `unit`. The default (empty) is the price of tokens of sections 4.1 and 4.3, and an old table has no other. Two units are added; an entry of either has `input_micros_per_mtok` and `output_micros_per_mtok` at zero and sets `unit_micros`:
+A price has a `unit`. The default (empty) is the price of tokens of sections 4.1 and 4.3, and an old table has no other. Three units are added (the third by epic 11); an entry of any has `input_micros_per_mtok` and `output_micros_per_mtok` at zero and sets `unit_micros`:
 
 | `unit` | `unit_micros` is | Used by |
 | --- | --- | --- |
 | `image` | the cost of one image | `image.generate` |
 | `mchar` | the cost of a million characters of the text of a speech | `voice.generate` |
+| `second` | the cost of one second of video | `video.generate` |
 
 ```json
 { "provider": "openai", "model": "an-image-model", "currency": "USD", "unit": "image", "unit_micros": 40000 }
 ```
 
-- `ImageCost(count, price)` is `count * unit_micros`; `VoiceCost(characters, price)` is `ceil(characters * unit_micros / 10^6)`, in 128-bit arithmetic as `TextCost` is, so a speech of one character at a nonzero price is never rounded to nothing (`ImageCost` saturates at the largest int64). A price whose unit does not fit the capability of the job (a token price for an image) is the same as none: the request is refused with `E_PRICE_UNKNOWN`, whose hint says which unit is wanted.
+- `ImageCost(count, price)` is `count * unit_micros`; `VoiceCost(characters, price)` is `ceil(characters * unit_micros / 10^6)`, in 128-bit arithmetic as `TextCost` is, so a speech of one character at a nonzero price is never rounded to nothing (`ImageCost` saturates at the largest int64). `VideoCost(seconds, price)` is `seconds * unit_micros`, saturating the same way. A price whose unit does not fit the capability of the job (a token price for an image) is the same as none: the request is refused with `E_PRICE_UNKNOWN`, whose hint says which unit is wanted.
 - The rules of sections 4.2 to 4.4 apply unchanged: the table of the person wins over a catalogue, a missing price is never zero, only a privileged browser session sets a price, and the estimate goes to `Decide` as the `Cost` of the action.
 - An estimate of an image is exact for the images the provider returns, and an upper bound when the provider returns fewer (a partial batch costs what arrived, section 6.2). The estimate of speech counts the characters of the text, so it is exact for a provider that bills by character; a provider that bills by the second of audio is priced by the person in the table at the rate the person finds fair, since the real cost is recorded from the price the person saw (section 6.1).
 
@@ -247,6 +266,22 @@ type VoiceRequest struct {
 
 A file a provider returns is checked before it becomes an asset, by `provider.CheckImage` and `provider.CheckAudio` (pure, over the first bytes): an image is a PNG, a JPEG or a WebP by its signature, not empty and not above the import limit of the workspace; audio has the signature of the format that was asked for (an MP3 with an ID3 tag or a frame sync, `RIFF`/`WAVE`, `fLaC`, an Ogg page, an ADTS header), under the same limit. A file that is neither is `E_PROVIDER` with `details.kind` `unreadable`, and nothing is stored. The ingest of SDD-011 then probes the file as it does any other, so a file that passes the signature and is not decodable still ends as a failed asset with its reason, and no more than the bytes already counted were written.
 
+### 5.4 The video request (epic 11)
+
+```go
+type VideoRequest struct {
+	Model      string // required
+	Prompt     string // required
+	Seconds    int    // the length of the clip; default 5
+	Aspect     string // "16:9" (the default), "9:16", "1:1", "4:3" or "3:4"
+	FirstFrame string // optional: the id of an image asset of the project, the first frame of the clip
+}
+```
+
+`ValidateVideo(req, limits)` checks, with `E_VALIDATION` and the path of the member: `model` (the pattern of section 3); `prompt` (1 to 4,000 characters of valid UTF-8, no NUL); `seconds` (1 to 60, and within `limits.MinSeconds` and `limits.MaxSeconds` when the provider documents them); `aspect` (one of the five, and one of `limits.Aspects` when documented); `first_frame` (empty, or an asset id of the pattern of SDD-011, and refused when the model documents that it takes no image, `limits.NoFirstFrame`). `VideoLimits` is what the adapter documents for the model; zero means not documented. The asset is checked by the service, not by `core`: it must exist, be an image the caller can read and be ready (`E_NOT_FOUND`, `E_TYPE_MISMATCH`, `E_ASSET_NOT_READY`).
+
+`provider.CheckVideo` (pure, over the first bytes) accepts an MP4 or a QuickTime file (`ftyp` at byte 4) and a WebM file (the EBML signature), and nothing else.
+
 ## 6. The job `text.generate`
 
 Epic 17 registers a second kind of the same shape, `text.draft` (SDD-019 section 6): it is `text.generate` with a prompt that `core/writing` builds from the brief, the current text and an instruction, and with a text to put the answer in as a new revision. It has the estimate, the summary, the ceilings, the approval and the ledger described here, and its result is the result of this section with `item_id` and `revision`.
@@ -288,9 +323,20 @@ A refusal of the prompt by the provider (a content policy) is `E_PROVIDER` with 
 
 `VoiceList` reads the voices of a connection (`id`, `name`, `language`, `source` of `provider` or `documented`) through the connection, and costs nothing. The voice names are untrusted text, cleaned and cut like the names of models (section 3), and a name that echoes the key is dropped (section 9).
 
+### 6.4 The job `video.generate` (epic 11)
+
+An approvable kind of scope `edit`, registered like the others (section 6.1) and passing through the same estimate, ceiling and approval. Arguments: `connection_id` (capability `video`, `accepts` has `text`; a first frame is sent through the same connection, so a connection that lists no host for it is refused at the gate), and the members of section 5.4 (`project_id` as in section 6.1).
+
+- **Approval by default.** A video costs far more per unit than the other kinds, so a `video.generate` job waits for a person whatever its estimate is (a ceiling only refuses, and under it nothing approves by itself), unless a rule the person wrote covers it (a rule needs a per-item limit, SDD-015 section 4). This is the decision of `core/approval` as it is: the kind adds nothing to it and no rule of its own, and a test pins it (`TestVideoGenerate_WaitsForApprovalByDefault`). A request above a ceiling is refused with `E_COST_CEILING` at the start.
+- **Prepare** validates the arguments with the limits of the adapter, checks the first frame asset, finds the price in the unit `second` (section 4.5) and computes `VideoCost(seconds, price)`. It makes no outbound call and reads no file. The summary names the provider, the model, the length and the aspect, says whether a first frame is sent, and gives the excerpt of the prompt cleaned as in section 6.
+- **Run** is asynchronous because every provider is. It (1) checks the disk for the largest result and, with a first frame, reads that asset; (2) calls `Submit` once and **stores the task id in the input of the job before anything else**, so that a crash after the charge leaves the id behind; (3) calls `Poll` with a backoff (2 seconds, doubling to 30) until the task is done or failed, reporting progress; (4) calls `Fetch` at the end and checks the file (section 5.4, then the probe of the ingest). The whole run is bounded by 30 minutes.
+- **Restart.** A job a shutdown interrupted is queued again (SDD-015 section 6) and runs again from the start with its stored input. A run that finds a task id in its input does not call `Submit`: it resumes at `Poll`. So a restart during the polling costs one submission. The one window left is a crash between the answer of `Submit` and the write of the id; it is as short as one local write and is said in the user guide.
+- **Cancel.** `JobCancel` stops the polling and calls `Cancel` of the adapter when a task exists (a fresh context, since the job's own is cancelled). A provider that confirms the cancel costs nothing: the reservation is released. One that does not confirm, or fails, leaves the cost already incurred, which is the estimate (the provider may have charged), settled in the ledger.
+- **The result** is `result.generated` as in section 6.1: one item of kind `video`, `requested` and `delivered` 1 or 0, and the cost `VideoCost(seconds, price)`. The asset has the origin `generated` (`provider`, `model`, `prompt`, `cost_micros`) and the ingest probes the file, builds its proxy and thumbnail, as for an import; a file the probe refuses is stored, paid for and said in a note. A failed task (a refusal is `E_PROVIDER`, `details.kind` `refused`) fails the job and records no cost when the provider says it charged none.
+
 ## 7. Service operations and who may call them
 
-Four operations on `service.Service`, in `service/provider_ops.go`, and three of epic 10 in `service/generate_ops.go`:
+Four operations on `service.Service`, in `service/provider_ops.go`, and three of epic 10 in `service/generate_ops.go` (and `VideoGenerate` of epic 11):
 
 | Operation | Scope | Result |
 | --- | --- | --- |
@@ -301,8 +347,9 @@ Four operations on `service.Service`, in `service/provider_ops.go`, and three of
 | `ImageGenerate` | edit | the job (`JobStart` of `image.generate`); `dry_run` as `TextGenerate` |
 | `VoiceGenerate` | edit | the job (`JobStart` of `voice.generate`) |
 | `VoiceList` | read | the voices of one connection |
+| `VideoGenerate` | edit | the job (`JobStart` of `video.generate`); `dry_run` as `TextGenerate` |
 
-- `ProviderPriceSet` takes `unit` (empty, `image` or `mchar`) and `unit_micros` besides the members of section 4.3 (epic 10).
+- `ProviderPriceSet` takes `unit` (empty, `image`, `mchar` or, from epic 11, `second`) and `unit_micros` besides the members of section 4.3 (epic 10).
 - `ProviderPriceSet` is checked like `CostCeilingSet`: a caller that is not a privileged browser session gets `E_PRIVILEGED_SESSION` whatever scope it holds; then the scope. It is audited (`provider.price.set`, with the provider, the model and the amounts).
 - A project-limited key is refused `ProviderList`, `ProviderModels` and `ProviderPriceSet` (they name no project) and may call `TextGenerate` for its project only.
 - No operation returns a key, and none takes one: the key is given once, to `ConnectionCreate` (SDD-014).
@@ -335,8 +382,9 @@ A result URL on a host outside the destinations of the connection is `E_CONNECTI
 - CLI: `provider:list`, `provider:models <connection id>`, `provider:price` and `text:generate`. The API key is added with `connection:add --kind <provider id>` (SDD-014), which reads it from standard input or a file. `text:generate` takes the prompt from `--prompt`, `--prompt-file` or standard input, and answers the job with its estimate, without waiting for it: a generation waits for a person, so there is no `--wait`. `provider:price` needs a privileged session, so with the local token it always fails with `E_PRIVILEGED_SESSION`, which gives an agent the stable error and its hint. The four commands are in the `provider` domain (SDD-000 section 1.1): the guide of that domain (`agent:docs --print guide:provider`) lists the three an agent may run, and `stuarty provider <verb>` runs them. They are not in the generated skill for agents, whose 12,400 characters have no room left.
 - MCP: no new tool. A new domain adds no tool (SDD-003 section 3.11, as revised by epic 13). An agent starts a generation with `job_start` (kind `text.generate`, arguments `connection_id`, `model`, `prompt` and optionally `system`, `max_tokens`, `temperature`) and reads it with `job_get`. The description of `job_start` names the three required arguments, and a start with no `connection_id` is refused with a hint that names every argument. To fit the budget, the `kind` enum of `job_start` gains `text.generate` and the `state` of the `outputSchema` of `job_start` and `job_get` becomes a plain string (it lists `waiting_approval`, which the five-value enum did not; SDD-003 section 4.2, SDD-015 section 10). `provider:list` and `provider:models` have no tool: a provider is a connection (`connection`), and the models are read with the CLI or HTTP.
 - Epic 10 adds, on HTTP: `POST /image/generate` and `POST /voice/generate` (status 202, the job is the answer) and `GET /connections/{id}/voices`; on the CLI: `image:generate`, `voice:generate` (the text from `--text`, `--text-file` or standard input) and `voice:list <connection id>`, in the `provider` domain, with the same rules as `text:generate` (no `--wait`); on MCP: no new tool, the `kind` enum of `job_start` gains `image.generate` and `voice.generate`, and `voice:list` has no tool, like the models. The `format` member of `args` is shared with the export formats and its `enum` is exactly those (`TestJobStartFormatsMatchTheService`), so over MCP a narration is asked in `wav` or `aac`, or in the default `mp3` by leaving `format` out; `flac` and `opus` are asked over HTTP or the CLI.
-- The Generate dialog (epic 10) is in the two sections of the asset library (`VisualAssets` for an image, `VideoAssets` for speech). It asks for the connection, the model (the models whose capability hint matches come first), the prompt or the text, the options, and shows the estimate from a `dry_run` before anything is submitted; then the job (it may wait for approval) and, when done, the files in the grid. For a voice it shows the disclosure line of section 2.2. The dialog computes nothing.
-- The Connections page shows one card per provider: connect with a key (the key goes to `ConnectionCreate`), test it, the models with their price and its source, a form to set a price for a model, and the spend of the day of each connection from `CostSummary`. The page computes nothing: amounts are formatted, not summed (SDD-012 section 1). A provider whose `credential_kinds` has `oauth` also has a sign-in button on its card, and a connection made by a sign-in shows its state and the account from `ProviderSignInList`, with **Sign in again** (section 12); the page where the provider sends the browser is `/auth/callback`.
+- Epic 11 adds `POST /video/generate` (status 202, the job is the answer) and `video:generate` in the `provider` domain (the prompt from `--prompt` or `--prompt-file`, `--seconds`, `--aspect`, `--first-frame <asset id>`; no `--wait`); on MCP the `kind` enum of `job_start` gains `video.generate` and its description names `{connection_id, model, prompt, seconds?, aspect?, first_frame?}`; `first_frame` is not a new argument of the tool but a member of `args`, which is one object validated by `kind`.
+- The Generate dialog (epic 10) is in the two sections of the asset library (`VisualAssets` for an image, `VideoAssets` for speech). It asks for the connection, the model (the models whose capability hint matches come first), the prompt or the text, the options, and shows the estimate from a `dry_run` before anything is submitted; then the job (it may wait for approval) and, when done, the files in the grid. For a voice it shows the disclosure line of section 2.2. The dialog computes nothing. Epic 11 adds a video tab to the dialog of `VideoAssets` (prompt, length, aspect, an optional first frame picked from the image assets of the project): the estimate is shown from a `dry_run`, and the dialog says in words that this kind always waits for a person.
+- The Connections page shows one card per provider: connect with a key (the key goes to `ConnectionCreate`), test it, the models with their price and its source, a form to set a price for a model, and the spend of the day of each connection from `CostSummary`. The page computes nothing: amounts are formatted, not summed (SDD-012 section 1).
 
 ## 11. Tests
 
@@ -359,6 +407,9 @@ A result URL on a host outside the destinations of the connection is `E_CONNECTI
 | A generated narration is placed on a timeline and exported | `TestGeneratedVoiceOnTimeline` |
 | The surfaces agree on the three operations | `web/contract` parity (epic 10) |
 | The Generate dialog against a fake provider server | `web/e2e/specs/generate-assets.spec.ts` |
+| Video: limits, estimates, the signature of a clip | `core/provider` table tests (epic 11) |
+| A video job: approval by default and no outbound call before it, a rule that lifts it, the task id stored before the first poll, a restart that makes one submission, a cancel, a refused prompt, a clip with a complete origin | `TestVideoGenerate_*` over the Service (epic 11) |
+| The adapter of the approved provider: submit, pending, done, failed and refused against recorded answers | `service/providers/<name>` contract tests (epic 11, waits for the choice of section 2.3) |
 
 No test calls a real provider. The recorded responses are written by hand from the public documentation of each API and kept in `testdata/` next to the adapter; the manual check with a real key of the author (task 8) is not part of the suite.
 
