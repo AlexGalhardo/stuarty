@@ -127,6 +127,10 @@ func Open(ctx context.Context, cfg Config) (*Owner, error) {
 		cfg.Getenv = os.Getenv
 	}
 
+	if err := refuseTestAddresses(cfg.Getenv); err != nil {
+		return nil, err
+	}
+
 	if cfg.Log == nil {
 		cfg.Log = slog.Default()
 
