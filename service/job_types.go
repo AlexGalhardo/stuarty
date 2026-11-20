@@ -152,7 +152,10 @@ type Job struct {
 	// moment the job exists, also for a dry run and for a job that waits for approval.
 	Estimate *core.Money `json:"estimate,omitempty"`
 	// Warnings are notes about an accepted export that are not a reason to refuse it, such as a huge GIF.
-	Warnings   []string   `json:"warnings,omitempty"`
+	Warnings []string `json:"warnings,omitempty"`
+	// DryRun marks the answer to a dry run: nothing was created, so JobID is empty and there is no job to read
+	// with job_get; State is the one the job would start in (VV-303).
+	DryRun     bool       `json:"dry_run,omitempty"`
 	Actor      string     `json:"actor"`
 	CreatedAt  time.Time  `json:"created_at"`
 	StartedAt  *time.Time `json:"started_at,omitempty"`

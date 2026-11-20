@@ -167,7 +167,7 @@ func (s *svc) startApprovable(ctx context.Context, c Caller, req JobStartRequest
 			job.State = JobQueued
 		}
 
-		return s.jobView(c, s.stamp(job), false), nil
+		return s.dryRunView(c, job), nil
 	}
 
 	sub := &submission{c: c, k: k, prep: prep, action: action, job: job}

@@ -628,6 +628,11 @@ func TestTextGenerate_DryRunShowsTheEstimateAndWritesNothing(t *testing.T) {
 		t.Fatalf("job = %+v, %v", job, err)
 	}
 
+	// VV-303: the answer says it was a simulation and carries no id of a job that does not exist.
+	if !job.DryRun || job.JobID != "" || strings.Contains(job.Text, "waiting for approval") {
+		t.Errorf("a dry run answered like a created job: %+v", job)
+	}
+
 	if list, lerr := te.svc.ApprovalList(
 		te.as(token),
 		service.ApprovalListRequest{State: "all"},
