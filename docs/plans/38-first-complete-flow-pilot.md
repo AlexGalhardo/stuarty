@@ -36,7 +36,7 @@ Prove, by doing it, that a creator and their agent can go from an idea to a publ
 
 ## Tasks
 
-- [ ] 1. Write `scripts/first-flow.sh` step by step, fixing what blocks it. Verify: `bash scripts/first-flow.sh` exits 0 and prints the URL the fake connector returned.
+- [x] 1. Write `scripts/first-flow.sh` step by step, fixing what blocks it. Verify: `bash scripts/first-flow.sh` exits 0 and prints the URL the fake connector returned.
 - [ ] 2. Write `web/e2e/specs/first-flow.spec.ts`. Verify: it passes in Chromium.
 - [ ] 3. Add the flow as a harness task with its success check (an approved, published target exists and the exported file passes verification). Verify: `go test ./internal/tools/agentharness/...` passes with the fake model script.
 - [ ] 4. Show the harness estimate and STOP for the author's budget; then run five attempts on the small model. Verify: the results table is in `docs/agent-benchmark.md`.
