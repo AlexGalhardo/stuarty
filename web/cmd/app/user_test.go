@@ -118,10 +118,8 @@ func TestUserCommandsNeverTakeThePasswordFromArgv(t *testing.T) {
 	}
 }
 
-// While a server owns the workspace the commands fail with E_WORKSPACE_LOCKED;
-// with none they work (P2-SRV-012 assert 3).
-// With STUARTY_URL set, workspace.Open returns a remote session with no folder: the commands must refuse
-// instead of creating a workspace in the current directory (VV-272).
+// With STUARTY_URL set the commands refuse and name the variable instead of creating a workspace in the
+// current directory (VV-272).
 func TestUserCommandsRefuseARemoteSession(t *testing.T) {
 	for _, name := range []string{"user:create", "user:passwd"} {
 		cwd := t.TempDir()
@@ -152,6 +150,8 @@ func TestUserCommandsRefuseARemoteSession(t *testing.T) {
 	}
 }
 
+// While a server owns the workspace the commands fail with E_WORKSPACE_LOCKED;
+// with none they work (P2-SRV-012 assert 3).
 func TestUserCreateWhileAServerOwnsTheWorkspace(t *testing.T) {
 	home := filepath.Join(t.TempDir(), "ws")
 
