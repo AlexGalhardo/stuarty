@@ -7,6 +7,74 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-11-20
+
+### Added
+
+- **core:** Add the image document, its registry and the structure commands ([9a68ce4](https://github.com/AlexGalhardo/stuarty/commit/9a68ce49675d37d7e86587fd20201caa0d4d3b10))
+- **core:** Add the layer transform, set, crop, align, fit, text and shape commands ([dc1985c](https://github.com/AlexGalhardo/stuarty/commit/dc1985ca26e6fcbd73d8201b490356ecff96cfe9))
+- **core:** Add undo, redo, conflicts and the diff text of image batches ([ebdca71](https://github.com/AlexGalhardo/stuarty/commit/ebdca71f9cd01a00a2bbb8015f936fbfe097cfb4))
+- **export:** Plan an image document and render it through the Go host ([7316350](https://github.com/AlexGalhardo/stuarty/commit/731635085802f25e7eae10cf7a1f7f04a3821855))
+- **export:** Encode image exports as PNG and JPEG with presets and a determinism test ([5fbc0de](https://github.com/AlexGalhardo/stuarty/commit/5fbc0de0324424343cf46bbdca7a0ba87c63ba9a))
+- **core:** Fill image templates from slot values and lint image documents ([10cf698](https://github.com/AlexGalhardo/stuarty/commit/10cf69848a53b8d5455e381ae1ef0faa63af10d8))
+- **service:** Store image documents and serve their create, edit, undo and export ([6159b3a](https://github.com/AlexGalhardo/stuarty/commit/6159b3acaa25e3ed9d2f3030d89f276635542275))
+- **web:** Expose the image documents on HTTP, the CLI and the MCP tool with parity ([8cc0ffa](https://github.com/AlexGalhardo/stuarty/commit/8cc0ffaa17a67190b5ac98faac7aa67f5deda2e0))
+- **core:** Add the rules of a production ([331d0b1](https://github.com/AlexGalhardo/stuarty/commit/331d0b1f17bb9d9c6b0ff833b7f83ffb83df04f8))
+- **store:** Add projects and project_items, rename the table to timelines ([18e05ba](https://github.com/AlexGalhardo/stuarty/commit/18e05ba2dc8da069769bff2abf4dc6e157b14bae))
+- **service:** Add the production operations and the timeline_id rule ([2894498](https://github.com/AlexGalhardo/stuarty/commit/289449883282f4e7f88c7ba6d6cb6aafb728a4c3))
+- **service:** Export and import the whole project in a bundle ([7ca9d43](https://github.com/AlexGalhardo/stuarty/commit/7ca9d434318dfb5ca7c4e9df4d51a19d42b0a2cf))
+- **http:** Expose the production on HTTP, CLI and MCP with the text view ([bf9ace9](https://github.com/AlexGalhardo/stuarty/commit/bf9ace9b914744877896ba892c130daab85cd696))
+- **ui:** Build the project overview page and add Duplicate to the card ([0c2b98f](https://github.com/AlexGalhardo/stuarty/commit/0c2b98f1b2a80f007fe3c83d67f83d6fe5f54d15))
+- **library:** Add the pure rules of memory, skills and prompts ([c7f6649](https://github.com/AlexGalhardo/stuarty/commit/c7f6649057133bee1e21310bb8d6ddfe4d2dc4f9))
+- **library:** Store the library as files and index them for search ([c4a1b44](https://github.com/AlexGalhardo/stuarty/commit/c4a1b441733ac149f2ab7d02eeab9b92586b62f5))
+- **library:** Add the rules of memory notes and prompts and the search ([839abab](https://github.com/AlexGalhardo/stuarty/commit/839abab4c64a503043a80b89ebe2713d3bcc2c6a))
+- **library:** Write, lint, import, review and export skills ([1b8180e](https://github.com/AlexGalhardo/stuarty/commit/1b8180eb8731702c3e1a025e22b5d54cda05765a))
+- **api:** Expose the library on HTTP, the CLI and the MCP tool library ([03c2a43](https://github.com/AlexGalhardo/stuarty/commit/03c2a432ecda1141717c5eb1681bf2ea78dc9a95))
+- **ui:** Add the memory, skills and prompts sections of the dashboard ([05cebef](https://github.com/AlexGalhardo/stuarty/commit/05cebef8ca81beb047dc3e9d650d0aecccf79b30))
+
+### Fixed
+
+- **cli:** Use an example host the site check accepts in connection:add ([16089e6](https://github.com/AlexGalhardo/stuarty/commit/16089e6e91b8947c159fbc1b1ce08273edb4f535))
+- **core:** End the undo of an image when nothing live remains ([5276bfa](https://github.com/AlexGalhardo/stuarty/commit/5276bfa54e9d8e15659ea6701ded9f63b1ab18ee))
+- **export:** Bound the size of an image export and refuse an empty picture ([79eb14f](https://github.com/AlexGalhardo/stuarty/commit/79eb14fabdc1e57b2dfef07b97778c31b2b59cf0))
+- **service:** Refuse another user's file, a project-limited key and a chosen id in image operations ([a11726a](https://github.com/AlexGalhardo/stuarty/commit/a11726a4d214458f188cb7e75d099ad0d253fb6f))
+- **service:** Name an image from the project entry of the caller, not the global row ([d75e020](https://github.com/AlexGalhardo/stuarty/commit/d75e020e8e96efe0dc030f8c578bf82a5a234bc5))
+- **service:** Never fall back to the global file name in network mode ([c1cf5b0](https://github.com/AlexGalhardo/stuarty/commit/c1cf5b00c6977356cac5b6591d9683fe87bc5733))
+- **service:** Consume an image undo step whose primitives were all skipped ([51999ff](https://github.com/AlexGalhardo/stuarty/commit/51999ffde85f2de7eed044688d5420583420cbfa))
+- **export:** Upload each layer of an image as soon as it is drawn ([21bb217](https://github.com/AlexGalhardo/stuarty/commit/21bb2170104f67510d4d5a689063e0f265ab9ec6))
+- **image:** Quote untrusted names and texts in the image views ([f3ac9ad](https://github.com/AlexGalhardo/stuarty/commit/f3ac9adf002d02daac5bb367bbefb79df1ee2cdb))
+- **service:** Check the quality of an image export that names a preset ([2779add](https://github.com/AlexGalhardo/stuarty/commit/2779add9e5eaa094593c80fa4e2c673209702657))
+- **store:** Rename the image migration to avoid epic 04's timestamp ([b2655bc](https://github.com/AlexGalhardo/stuarty/commit/b2655bc9b821b06494db015c4f3f61c510263904))
+- **mcp:** Shorten tool descriptions so tools/list fits NFR-020 with 18 tools ([16ede9f](https://github.com/AlexGalhardo/stuarty/commit/16ede9ff4acb3a9f540819de75aa35e090c0e7a4))
+- **store:** Derive the item id of a migrated timeline from the project id ([3a44916](https://github.com/AlexGalhardo/stuarty/commit/3a449164e47a7a573dad2e8c3e2148de6e7e7887))
+- **ui:** Run the onSelect of a menu item when it is chosen ([e1b757b](https://github.com/AlexGalhardo/stuarty/commit/e1b757baf5c898a31fbf19a3a2dc01ea89231f00))
+- **core:** Keep the brief out of the trash and bound the items of a project ([3203ebb](https://github.com/AlexGalhardo/stuarty/commit/3203ebb1df728b72a7890c2b81533cd935f273be))
+- **service:** Carry the texts of a bundle in entries of their own ([2c5ae33](https://github.com/AlexGalhardo/stuarty/commit/2c5ae33bec15a75981ccb39d71dd9264c03b7f13))
+- **ui:** Open the first active timeline from the project card ([046ec4c](https://github.com/AlexGalhardo/stuarty/commit/046ec4c180489af9a09f2432b7e914c449480ee4))
+- **ui:** Name the timeline of the editor in the body of a JSON request ([7479d9e](https://github.com/AlexGalhardo/stuarty/commit/7479d9e5398200daed1e8fbdb0bfa82e609485b0))
+- **library:** Look for hidden text in every text file of a skill ([37d98c7](https://github.com/AlexGalhardo/stuarty/commit/37d98c74ab66bdd8de42c64affb72ed3dfd9d6ab))
+- **library:** Keep what a write does not carry and refuse oversized folder files ([73773d3](https://github.com/AlexGalhardo/stuarty/commit/73773d3dfa72c4988813e0771e60d5994c0f9650))
+- **library:** Write the notes of a project key into its project by default ([54f4b3c](https://github.com/AlexGalhardo/stuarty/commit/54f4b3c497c774f13517b7050ca5ddf56134306f))
+- **library:** Seal skill reviews, bind them to the text read and delimit file names ([eebaf13](https://github.com/AlexGalhardo/stuarty/commit/eebaf131ff1dfb502f199797f8f7e9d00d2b1433))
+
+### Security
+
+- **security:** Add the image operations to the scope matrix ([dc96256](https://github.com/AlexGalhardo/stuarty/commit/dc96256a4576b7c8edbc05640efbe1b31e5293bb))
+- **security:** Reproduce VV-243 metadata dial and echoed secret ([bd23242](https://github.com/AlexGalhardo/stuarty/commit/bd23242120bc6fe42d51a9d61b4393c0053fee9d))
+- **security:** Refuse named cloud metadata addresses and scrub an echoed secret ([c8f2b61](https://github.com/AlexGalhardo/stuarty/commit/c8f2b61aff00551b04e0765c579991b48b8b99fe))
+- **security:** Expect the dropped sentence when a destination echoes the credential ([4d04e9e](https://github.com/AlexGalhardo/stuarty/commit/4d04e9ea4b090353ba33e6835edd02be5e5ac7df))
+- **security:** Wrap a long line of the echo test ([a901ee5](https://github.com/AlexGalhardo/stuarty/commit/a901ee583144cb315519edb90a5a5545c00c5c33))
+- **security:** Refuse a metadata address with a zone or behind NAT64 ([da7bf7f](https://github.com/AlexGalhardo/stuarty/commit/da7bf7f18de46b00a400323f92a208bd6b903aef))
+- **security:** Find a JSON escaped or upper hex echo of the credential ([5944e50](https://github.com/AlexGalhardo/stuarty/commit/5944e5033d2afee0214f16375c385bc581bcd456))
+- **security:** Describe the JSON escapes of the scrub in words ([78669df](https://github.com/AlexGalhardo/stuarty/commit/78669df19362b37d681a91e56c15d3b20a7e76e8))
+- **security:** Tell no timeline existence to a caller who may not reach it ([516d780](https://github.com/AlexGalhardo/stuarty/commit/516d780b55be9b84b00336f860742d1b3b64a02f))
+- **security:** Reproduce embedded IPv4 dials and a mid-secret echo ([061a70a](https://github.com/AlexGalhardo/stuarty/commit/061a70a06cb4c70b83da9970ed715a5c1f917da0))
+- **security:** Size the mid-secret echo fixture to 40 bytes ([0547321](https://github.com/AlexGalhardo/stuarty/commit/0547321f7a367e171946dfd4073b06e03afc8f8e))
+- **security:** Judge embedded IPv4 at dial and scrub any echo window ([2626bb4](https://github.com/AlexGalhardo/stuarty/commit/2626bb416fb1279413c36725177ffe7ddf111a63))
+- **security:** Find base64 of any part of the secret and bound the scrub cost ([e431aaf](https://github.com/AlexGalhardo/stuarty/commit/e431aafdd4f8912b963e180b2e0d3d6145267c24))
+- **security:** Document the tunnel forms the dial gate leaves undecoded ([9496918](https://github.com/AlexGalhardo/stuarty/commit/9496918ec63ea3bedf1e908d75f6b93112b1e799))
+- **security:** Wrap two long lines of the scrub for golines ([7d6be26](https://github.com/AlexGalhardo/stuarty/commit/7d6be26be540649242d89f6514153bbdca1d3ea2))
+- **security:** Cover the library threats T-44 to T-47 ([13d1703](https://github.com/AlexGalhardo/stuarty/commit/13d17033116dc229e288c078174a4c578ab956ac))
 ## [0.30.0] - 2026-11-20
 
 ### Added
@@ -1400,7 +1468,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.30.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.31.0...HEAD
+[0.31.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.30.0...v0.31.0
 [0.30.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.29.0...v0.30.0
 [0.29.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.28.0...v0.29.0
 [0.28.0]: https://github.com/AlexGalhardo/vukem-video/compare/v0.27.0...v0.28.0
