@@ -4,7 +4,7 @@ import { createStore } from "zustand/vanilla";
 import type { Job, ModelView, ProviderView } from "../../editor/api/types";
 import type { ModelOperation } from "../api/modelEdit";
 
-// What the screen keeps of an operation with a model (SDD-016 section 6.4): the job that was started, so that
+// What the screen keeps of an operation with a model (SDD-016 section 6.5): the job that was started, so that
 // the strip under the toolbar can follow it after the dialog is closed. Nothing here is a result: the job is
 // what the service answered.
 

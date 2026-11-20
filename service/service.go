@@ -113,7 +113,7 @@ type Service interface {
 	VideoGenerate(ctx context.Context, req VideoGenerateRequest) (*Job, error)
 	VoiceList(ctx context.Context, req VoiceListRequest) (*VoiceListResult, error)
 	// ImageModelEdit removes the background of a layer, or generates an image into a document, with a provider
-	// (SDD-016 section 6.4); a job of a kind that needs approval.
+	// (SDD-016 section 6.5); a job of a kind that needs approval.
 	ImageModelEdit(ctx context.Context, req ImageModelEditRequest) (*Job, error)
 	// The sign-in to an AI provider in the browser (SDD-016 section 12): only a person begins and completes one.
 	ProviderSignInBegin(ctx context.Context, req ProviderSignInBeginRequest) (*ProviderSignInBeginResult, error)

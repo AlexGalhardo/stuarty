@@ -9,7 +9,7 @@ import { ToolGroup } from "../toolbar/Toolbar";
 import { ModelEditDialog } from "./ModelEditDialog";
 import { isFinal, useModelJob } from "./state";
 
-// The two buttons of the operations with a model (SDD-016 section 6.4, SDD-012 section 24.14): "Remove
+// The two buttons of the operations with a model (SDD-016 section 6.5, SDD-012 section 24.14): "Remove
 // background" for the selected image layer, and "Generate" for a new layer from a prompt. Each opens the dialog
 // that shows what is sent and the estimate; a job already running disables both, so one is followed at a time.
 export function ModelEditTools(): ReactNode {

@@ -139,7 +139,7 @@ The filters act on the pixels of the layer in list order (a `shadow` before a `b
 
 ### 3.2 Replacing the file of a layer (epic 30)
 
-`layer.replace_source` puts the result of an operation with a model (SDD-016 section 6.4) into the layer it was made from, and is useful on its own to swap a photo and keep everything around it. The caller gives the layer and the content hash of a ready image of the workspace (`E_NOT_FOUND`, as `layer.add_image`, when it is not); the layer must be an image layer (`E_TYPE_MISMATCH`) and not locked (`E_INVALID_STATE`); a layer that has no file yet, an empty slot, is filled. The rules are all in `core/image`:
+`layer.replace_source` puts the result of an operation with a model (SDD-016 section 6.5) into the layer it was made from, and is useful on its own to swap a photo and keep everything around it. The caller gives the layer and the content hash of a ready image of the workspace (`E_NOT_FOUND`, as `layer.add_image`, when it is not); the layer must be an image layer (`E_TYPE_MISMATCH`) and not locked (`E_INVALID_STATE`); a layer that has no file yet, an empty slot, is filled. The rules are all in `core/image`:
 
 - The layer keeps every property it has except its file and its crop. Its slot stays, so a template slot filled this way is still the slot.
 - **A file of the size of the old one** (the usual answer of an edit) leaves the box and the crop exactly as they were.
@@ -264,7 +264,7 @@ Seven operations are added to `service.Service`, each with exactly one MCP actio
 | `ImageExport` | renders and writes a file (section 6), after the lint; returns the path, bytes, digest and size |
 | `ImageImport` | an image file (a `path` on the server, or a library `hash`) becomes a new document with one image layer, or one more layer of `image_id` (section 10.1); returns the id, the revision, the layer and the text view |
 
-`ImageModelEdit` (epic 30) is a ninth operation of another kind: it starts the job `image.edit` that removes the background of a layer, or generates an image into the document, with the provider of a connection, and, when the job is done, commits one batch of section 3 as the actor that asked (SDD-016 section 6.4). It is specified there because it spends money and sends a picture out; the document and its undo are as for any batch of this section.
+`ImageModelEdit` (epic 30) is a ninth operation of another kind: it starts the job `image.edit` that removes the background of a layer, or generates an image into the document, with the provider of a connection, and, when the job is done, commits one batch of section 3 as the actor that asked (SDD-016 section 6.5). It is specified there because it spends money and sends a picture out; the document and its undo are as for any batch of this section.
 
 `CommandHelp` takes an optional `domain` (`video` default, or `image`), so an agent learns the catalogue, the schemas and the examples of the image operations through the same call, and the same flag exists in the CLI (`command:help --domain image`) and the same parameter in the MCP tool and the HTTP query.
 

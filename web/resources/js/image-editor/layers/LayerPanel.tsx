@@ -55,7 +55,7 @@ export default function LayerPanel(): ReactNode {
 	const store = useImageStore();
 	const doc = useImage((s) => s.doc);
 	const selection = useImage((s) => s.selection);
-	// The layer an operation with a model is working on (SDD-016 section 6.4), while its job has not ended.
+	// The layer an operation with a model is working on (SDD-016 section 6.5), while its job has not ended.
 	const working = useModelJob((s) =>
 		s.tracked !== null && !isFinal(s.tracked.job) ? s.tracked.layerId : null,
 	);

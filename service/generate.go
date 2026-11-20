@@ -72,7 +72,7 @@ type GeneratedResult struct {
 	// Notes say, in words the product wrote, what did not arrive.
 	Notes []string   `json:"notes,omitempty"`
 	Cost  core.Money `json:"cost"`
-	// Image is what an image.edit job did to the document (SDD-016 section 6.4); other kinds leave it out.
+	// Image is what an image.edit job did to the document (SDD-016 section 6.5); other kinds leave it out.
 	Image *ImageApplied `json:"image,omitempty"`
 }
 

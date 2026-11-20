@@ -13,7 +13,7 @@ import (
 )
 
 // removeBackgroundPrompt is what the adapter asks of the model. OpenAI has no operation of this name: the edit
-// of a picture with a prompt and a transparent background is the documented way (SDD-016 section 2.3).
+// of a picture with a prompt and a transparent background is the documented way (SDD-016 section 2.4).
 const removeBackgroundPrompt = "Remove the background of this picture. Keep the subject exactly as it is, with clean " +
 	"edges and unchanged colours, and make everything behind it transparent."
 

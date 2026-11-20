@@ -576,7 +576,7 @@ export interface GeneratedResult {
 	delivered: number;
 	notes?: string[];
 	cost: Money;
-	// What an image.edit job did to the document (SDD-016 section 6.4).
+	// What an image.edit job did to the document (SDD-016 section 6.5).
 	image?: {
 		image_id: string;
 		layer_id?: string;

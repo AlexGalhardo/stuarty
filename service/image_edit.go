@@ -22,7 +22,7 @@ import (
 )
 
 // JobImageEdit is the job kind that removes the background of a layer, or generates an image into a document,
-// with the provider of a connection (SDD-016 section 6.4).
+// with the provider of a connection (SDD-016 section 6.5).
 const JobImageEdit = "image.edit"
 
 const (
@@ -35,7 +35,7 @@ const (
 	removedBackgroundPrompt = "remove background"
 )
 
-// ImageModelArgs are the arguments of an image.edit job (SDD-016 section 6.4).
+// ImageModelArgs are the arguments of an image.edit job (SDD-016 section 6.5).
 type ImageModelArgs struct {
 	ConnectionID string `json:"connection_id"`
 	ImageID      string `json:"image_id"`
@@ -58,7 +58,7 @@ type ImageModelEditRequest struct {
 	DryRun bool `json:"dry_run,omitempty"`
 }
 
-// ImageApplied says what the job did to the document (SDD-016 section 6.4): the layer it replaced or added, the
+// ImageApplied says what the job did to the document (SDD-016 section 6.5): the layer it replaced or added, the
 // revision of the batch, and whether the batch was applied.
 type ImageApplied struct {
 	ImageID  string `json:"image_id"`
@@ -114,7 +114,7 @@ func (s *svc) ImageModelEdit(ctx context.Context, req ImageModelEditRequest) (*J
 }
 
 // editConnection finds the connection and checks that its provider has the capability and that the connection
-// accepts the kind of data the job sends (SDD-016 section 2.3).
+// accepts the kind of data the job sends (SDD-016 section 2.4).
 func (s *svc) editConnection(
 	ctx context.Context,
 	id, capability, accept, members string,
