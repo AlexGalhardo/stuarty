@@ -588,7 +588,9 @@ export async function capture(
 	page: Page,
 	id: string,
 	frame: number,
-	timelineId?: string,
+	// A project with compositions has more than one timeline, and the frame
+	// route asks which: the project's own (its id).
+	ownTimeline = false,
 ): Promise<Capture> {
 	const canvas = page.getByRole("main", { name: "Preview" }).locator("canvas");
 	let previous: Buffer | null = null;
@@ -634,9 +636,9 @@ export async function capture(
 		.poll(
 			async () => {
 				const answer = await page.evaluate(
-					async ({ projectId, at, w, timeline }) => {
+					async ({ projectId, at, w, own }) => {
 						const response = await fetch(
-							`/api/v1/projects/${projectId}/frame?at=${at}f&width=${w}${timeline ? `&timeline_id=${timeline}` : ""}`,
+							`/api/v1/projects/${projectId}/frame?at=${at}f&width=${w}${own ? `&timeline_id=${projectId}` : ""}`,
 							{ headers: { Accept: "application/json" } },
 						);
 						if (response.status === 429) return { status: 429, image: "" };
@@ -648,7 +650,7 @@ export async function capture(
 						const body = (await response.json()) as { image_base64: string };
 						return { status: 200, image: body.image_base64 };
 					},
-					{ projectId: id, at: frame, w: width, timeline: timelineId },
+					{ projectId: id, at: frame, w: width, own: ownTimeline },
 				);
 				if (answer.status === 200) exportedBase64 = answer.image;
 				return answer.status;
@@ -806,14 +808,14 @@ export async function compareFrame(
 	id: string,
 	frame: number,
 	label: string,
-	timelineId?: string,
+	ownTimeline = false,
 ): Promise<void> {
 	const {
 		canvas,
 		frame: exported,
 		canvasPng,
 		frameJpeg,
-	} = await capture(page, id, frame, timelineId);
+	} = await capture(page, id, frame, ownTimeline);
 	const ssim = lumaSsim(canvas, exported);
 	if (ssim < MIN_SSIM) {
 		const videos = await page.evaluate(() =>
