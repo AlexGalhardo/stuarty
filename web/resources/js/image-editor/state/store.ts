@@ -297,6 +297,19 @@ export function createImageStore(api: ImageApi, imageId: string): ImageStore {
 							"path" in source
 								? await api.importImage({ ...target, path: source.path })
 								: await api.importFile(source.file, target);
+						if (result.state === "pending") {
+							// The server is still reading the file: no layer was made. Saying so keeps the dialog
+							// open, and the person tries again once the file is ready.
+							set({
+								busy: false,
+								error: new ApiError(0, {
+									code: "E_ASSET_NOT_READY",
+									message: result.text,
+									retryable: true,
+								}),
+							});
+							return null;
+						}
 						replace(await api.describe(imageId), { busy: false });
 						if (result.layer_id !== undefined)
 							set({ selection: [result.layer_id] });

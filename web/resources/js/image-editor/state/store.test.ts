@@ -332,6 +332,25 @@ describe("the image store", () => {
 		expect(store.getState().doc?.revision).toBe(3);
 	});
 
+	test("a file the server is still reading makes no layer and says so", async () => {
+		const server = fakeApi(doc(1, [layer("a")]));
+		server.api.importFile = async () => ({
+			state: "pending",
+			hash: "sha256:00",
+			created: false,
+			name: "big.png",
+			applied: false,
+			text: "file sha256:00 is still being ingested",
+		});
+		const store = createImageStore(server.api, "img_aaaaaaaaaa");
+		await store.getState().open();
+		const file = new File([new Uint8Array([1, 2, 3])], "big.png");
+		expect(await store.getState().importFile({ file })).toBeNull();
+		expect(store.getState().error?.code).toBe("E_ASSET_NOT_READY");
+		expect(store.getState().doc?.revision).toBe(1);
+		expect(store.getState().busy).toBe(false);
+	});
+
 	test("a refused import keeps the error and leaves the document as it was", async () => {
 		const server = fakeApi(doc(1, [layer("a")]));
 		server.api.importImage = async () => {
