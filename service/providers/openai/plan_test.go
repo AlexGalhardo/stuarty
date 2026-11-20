@@ -221,3 +221,25 @@ func TestPlanRedirectIsNotFollowed(t *testing.T) {
 		ResponseHeader: map[string]string{"Location": "http://127.0.0.1:1/steal"},
 	})
 }
+
+// The token of a plan is for the Responses API only (SDD-016 section 12.2): an image or a voice asked of a
+// sign-in sends nothing, so the token never reaches the image or the speech endpoint.
+func TestPlanSendsNoImageAndNoVoice(t *testing.T) {
+	t.Parallel()
+
+	runPlan(t, func(ctx context.Context, c connections.Credential) {
+		_, err := openai.New().GenerateImages(ctx, c, provider.ImageRequest{
+			Model: "gpt-image-1", Prompt: "a loaf", Count: 1, Size: "1024x1024",
+		}, 1<<20)
+		if pe, ok := providers.AsError(err); !ok || pe.Kind != providers.KindBadRequest {
+			t.Errorf("an image through a sign-in = %v, want a bad request that sends nothing", err)
+		}
+
+		_, err = openai.New().GenerateVoice(ctx, c, provider.VoiceRequest{
+			Model: "gpt-4o-mini-tts", Text: "Hello.", Voice: "alloy", Format: "mp3",
+		}, 1<<20)
+		if pe, ok := providers.AsError(err); !ok || pe.Kind != providers.KindBadRequest {
+			t.Errorf("a voice through a sign-in = %v, want a bad request that sends nothing", err)
+		}
+	})
+}
