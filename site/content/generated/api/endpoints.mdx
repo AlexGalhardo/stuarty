@@ -147,6 +147,20 @@ Every operation has its own page with the parameters, the body, the responses an
 | `POST` | `/api/v1/library/skills/export` | [`library.skills.export`](/docs/api/library.skills.export) | Export skills as folders in the Agent Skills layout |
 | `POST` | `/api/v1/library/skills/import` | [`library.skills.import`](/docs/api/library.skills.import) | Import a skill from a folder or an archive; it starts unreviewed |
 
+## Writing
+
+| Method | Path | Operation | Summary |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/captions/validate` | [`captions.validate`](/docs/api/captions.validate) | Measure a caption against the limits of each network |
+| `POST` | `/api/v1/projects/{id}/texts` | [`texts.create`](/docs/api/texts.create) | Make a script, a copy text or a caption in a project |
+| `GET` | `/api/v1/projects/{id}/texts/{item_id}` | [`texts.get`](/docs/api/texts.get) | Read a text, or one of its revisions |
+| `PUT` | `/api/v1/projects/{id}/texts/{item_id}` | [`texts.write`](/docs/api/texts.write) | Save a new revision of a text |
+| `POST` | `/api/v1/projects/{id}/texts/{item_id}/draft` | [`texts.draft`](/docs/api/texts.draft) | Ask a model for a draft of a text; the job waits for approval and shows its estimate |
+| `POST` | `/api/v1/projects/{id}/texts/{item_id}/revert` | [`texts.revert`](/docs/api/texts.revert) | Bring an older revision back as a new one |
+| `GET` | `/api/v1/projects/{id}/texts/{item_id}/revisions` | [`texts.revisions`](/docs/api/texts.revisions) | List the revisions of a text, and compare two |
+| `POST` | `/api/v1/scripts/estimate` | [`scripts.estimate`](/docs/api/scripts.estimate) | Estimate how long a script takes when read aloud |
+| `GET` | `/api/v1/texts` | [`texts.list`](/docs/api/texts.list) | List the texts of a project, or of every project the caller may see |
+
 ## Connections
 
 | Method | Path | Operation | Summary |
@@ -157,14 +171,17 @@ Every operation has its own page with the parameters, the body, the responses an
 | `DELETE` | `/api/v1/connections/{id}` | [`connections.remove`](/docs/api/connections.remove) | Remove a connection and its credential |
 | `GET` | `/api/v1/connections/{id}/models` | [`providers.models`](/docs/api/providers.models) | Read the current models of a provider through its connection |
 | `POST` | `/api/v1/connections/{id}/test` | [`connections.test`](/docs/api/connections.test) | Make one request through a connection |
+| `GET` | `/api/v1/connections/{id}/voices` | [`voice.list`](/docs/api/voice.list) | List the voices of the provider of a connection |
 
 ## AI providers
 
 | Method | Path | Operation | Summary |
 | --- | --- | --- | --- |
+| `POST` | `/api/v1/image/generate` | [`image.generate`](/docs/api/image.generate) | Start an image generation with the provider of a connection; the job waits for approval, shows its estimate and stores the images as assets with their origin |
 | `GET` | `/api/v1/providers` | [`providers.list`](/docs/api/providers.list) | List the AI providers, the connections of each and the price table |
 | `PUT` | `/api/v1/providers/prices` | [`providers.prices.set`](/docs/api/providers.prices.set) | Set or remove the price of a model (a person in the browser only; the local token and keys get 403) |
 | `POST` | `/api/v1/text/generate` | [`text.generate`](/docs/api/text.generate) | Start a text generation with the provider of a connection; the job waits for approval and shows its estimate |
+| `POST` | `/api/v1/voice/generate` | [`voice.generate`](/docs/api/voice.generate) | Start a speech generation with the provider of a connection; the job waits for approval, shows its estimate and stores the audio as an asset with its origin |
 
 ## Images
 

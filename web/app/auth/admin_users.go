@@ -265,3 +265,7 @@ func userError(err error) error {
 
 	return err
 }
+
+// AdminSession is Admin.authorize for a feature that is not user management (the Google sign-in
+// settings): the caller must be a logged-in browser session of an administrator, never a key.
+func AdminSession(ctx context.Context) error { return Admin{}.authorize(ctx) }

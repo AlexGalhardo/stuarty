@@ -1703,7 +1703,7 @@
       "summary": "add a text, a timeline or an output to a project",
       "usage": [
         "stuarty item:add --project <id> --kind text|timeline|output --title <t>",
-        "stuarty item:add --project <id> --kind text --title <t> --text <file|->",
+        "stuarty item:add --project <id> --kind text --title <t> --text <file|-> [--text-kind script|copy|caption]",
         "stuarty item:add --project <id> --kind output --title <t> --job <export job id>"
       ],
       "example": "stuarty item:add --project prj_7k2m9x4q1b --kind timeline --title \"Wide cut\" --preset 16:9",
@@ -1727,6 +1727,11 @@
           "name": "text",
           "type": "string",
           "usage": "a text item: a file with its Markdown, or - for standard input"
+        },
+        {
+          "name": "text-kind",
+          "type": "string",
+          "usage": "a text item: script, copy (default) or caption"
         },
         {
           "name": "preset",
@@ -2335,7 +2340,17 @@
         {
           "name": "price-out",
           "type": "string",
-          "usage": "the price of a million output tokens; leave both prices out to remove the entry"
+          "usage": "the price of a million output tokens; leave all prices out to remove the entry"
+        },
+        {
+          "name": "unit",
+          "type": "string",
+          "usage": "image for the price of one image, mchar for the price of a million characters of speech; leave out for tokens"
+        },
+        {
+          "name": "unit-micros",
+          "type": "string",
+          "usage": "with --unit: the price of one image or of a million characters, in millionths of the currency unit"
         }
       ],
       "globals": [
@@ -2397,6 +2412,124 @@
         "key-file",
         "project",
         "dry-run"
+      ]
+    },
+    {
+      "name": "image:generate",
+      "domain": "provider",
+      "summary": "generate images with the provider of a connection; the job shows its estimate, waits for approval and stores the images as assets",
+      "usage": [
+        "stuarty image:generate --project <id> --connection <id> --model <id> [--prompt <text> | --prompt-file <file>] [--size <width>x<height>] [--count <n>] [--dry-run]"
+      ],
+      "example": "stuarty image:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --prompt \"A red fox\" --count 2",
+      "flags": [
+        {
+          "name": "connection",
+          "type": "string",
+          "usage": "the connection to the provider (required)"
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "usage": "the model id, as provider:models lists it (required)"
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "usage": "what to draw; without it and without --prompt-file the prompt is read from standard input"
+        },
+        {
+          "name": "prompt-file",
+          "type": "string",
+          "usage": "a file that holds the prompt"
+        },
+        {
+          "name": "size",
+          "type": "string",
+          "usage": "width and height in pixels joined by x (default 1024x1024)"
+        },
+        {
+          "name": "count",
+          "type": "integer",
+          "usage": "how many images, 1 to 10 (default 1); the estimate counts all of them"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "voice:generate",
+      "domain": "provider",
+      "summary": "generate speech with the provider of a connection; the job shows its estimate, waits for approval and stores the audio as an asset",
+      "usage": [
+        "stuarty voice:generate --project <id> --connection <id> --model <id> --voice <id> [--text <text> | --text-file <file>] [--language <tag>] [--format mp3|wav|flac|opus|aac] [--dry-run]"
+      ],
+      "example": "stuarty voice:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --voice alloy --text \"Welcome\"",
+      "flags": [
+        {
+          "name": "connection",
+          "type": "string",
+          "usage": "the connection to the provider (required)"
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "usage": "the model id, as provider:models lists it (required)"
+        },
+        {
+          "name": "voice",
+          "type": "string",
+          "usage": "the voice id, as voice:list names it (required)"
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "usage": "what to read out; without it and without --text-file the text is read from standard input"
+        },
+        {
+          "name": "text-file",
+          "type": "string",
+          "usage": "a file that holds the text"
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "usage": "a language tag such as pt-BR"
+        },
+        {
+          "name": "format",
+          "type": "string",
+          "usage": "mp3 (default), wav, flac, opus or aac"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "voice:list",
+      "domain": "provider",
+      "summary": "list the voices of the provider of a connection",
+      "usage": [
+        "stuarty voice:list <connection id>"
+      ],
+      "example": "stuarty voice:list con_0123456789",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
       ]
     },
     {
@@ -3917,6 +4050,295 @@
           "name": "target",
           "type": "string",
           "usage": "the target, tgt_ and 10 characters"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "text:list",
+      "domain": "writing",
+      "summary": "list the scripts, copy and captions of a project, or of every project",
+      "usage": [
+        "stuarty text:list [--project <id>] [--kind script|copy|caption] [--state active|trashed]"
+      ],
+      "example": "stuarty text:list --kind caption --json",
+      "flags": [
+        {
+          "name": "project",
+          "type": "string",
+          "usage": "only the texts of this project"
+        },
+        {
+          "name": "kind",
+          "type": "string",
+          "usage": "script, copy or caption"
+        },
+        {
+          "name": "state",
+          "type": "string",
+          "usage": "active (default) or trashed"
+        },
+        {
+          "name": "cursor",
+          "type": "string",
+          "usage": "continue a list from this cursor"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "default": "50",
+          "usage": "items per page"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "text:show",
+      "domain": "writing",
+      "summary": "show a text, or one of its revisions",
+      "usage": [
+        "stuarty text:show <item> --project <id> [--revision n]"
+      ],
+      "example": "stuarty text:show pit_3c5v8n2w6d --project prj_7k2m9x4q1b",
+      "flags": [
+        {
+          "name": "revision",
+          "type": "integer",
+          "usage": "a revision number from 1; default the latest"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "text:write",
+      "domain": "writing",
+      "summary": "make a text, or save a new revision of one, from a Markdown file",
+      "usage": [
+        "stuarty text:write --project <id> --title <t> [--kind script|copy|caption] --text <file|->",
+        "stuarty text:write <item> --project <id> --text <file|-> [--title <t>] [--base <revision>]"
+      ],
+      "example": "stuarty text:write --project prj_7k2m9x4q1b --title Hook --kind script --text hook.md",
+      "flags": [
+        {
+          "name": "text",
+          "type": "string",
+          "usage": "the Markdown: a file, or - for standard input (required)"
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "usage": "the title: needed to make a text, a new title when saving one"
+        },
+        {
+          "name": "kind",
+          "type": "string",
+          "usage": "making a text: script, copy (default) or caption"
+        },
+        {
+          "name": "base",
+          "type": "integer",
+          "usage": "the revision you read: a newer one is refused"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "text:revisions",
+      "domain": "writing",
+      "summary": "list the revisions of a text, and compare two by paragraph",
+      "usage": [
+        "stuarty text:revisions <item> --project <id> [--from n [--until n]]"
+      ],
+      "example": "stuarty text:revisions pit_3c5v8n2w6d --project prj_7k2m9x4q1b --from 1",
+      "flags": [
+        {
+          "name": "before",
+          "type": "integer",
+          "usage": "start under this revision (the next_before of the last page)"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "usage": "revisions per page, 1 to 100 (default 50)"
+        },
+        {
+          "name": "from",
+          "type": "integer",
+          "usage": "compare this revision with --until"
+        },
+        {
+          "name": "until",
+          "type": "integer",
+          "usage": "the revision to compare with (default the latest)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "text:revert",
+      "domain": "writing",
+      "summary": "bring an older revision of a text back as a new revision",
+      "usage": [
+        "stuarty text:revert <item> --project <id> --revision n"
+      ],
+      "example": "stuarty text:revert pit_3c5v8n2w6d --project prj_7k2m9x4q1b --revision 2",
+      "flags": [
+        {
+          "name": "revision",
+          "type": "integer",
+          "usage": "the revision whose text comes back (required)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "text:draft",
+      "domain": "writing",
+      "summary": "ask a model for a draft of a text; the job shows its estimate and waits for approval",
+      "usage": [
+        "stuarty text:draft <item> --project <id> --connection <id> --model <id> --instruction <text> [--network <n>] [--max-tokens <n>] [--temperature <t>] [--dry-run]"
+      ],
+      "example": "stuarty text:draft pit_3c5v8n2w6d --project prj_7k2m9x4q1b --connection con_0123456789 --model a-model --instruction \"A hook in 20 seconds\"",
+      "flags": [
+        {
+          "name": "connection",
+          "type": "string",
+          "usage": "the connection to the provider (required)"
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "usage": "the model id, as provider:models lists it (required)"
+        },
+        {
+          "name": "instruction",
+          "type": "string",
+          "usage": "what to write, 1 to 4000 characters (required)"
+        },
+        {
+          "name": "network",
+          "type": "string",
+          "usage": "a caption: draft the variant of this network only"
+        },
+        {
+          "name": "max-tokens",
+          "type": "integer",
+          "usage": "the most tokens the model may write; the estimate counts all of them"
+        },
+        {
+          "name": "temperature",
+          "type": "string",
+          "usage": "0 to 2"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "caption:validate",
+      "domain": "writing",
+      "summary": "measure a caption against the limits of each network",
+      "usage": [
+        "stuarty caption:validate <item> --project <id> [--network <n>]",
+        "stuarty caption:validate --body <file|->",
+        "stuarty caption:validate --text <file|-> --network <n>"
+      ],
+      "example": "stuarty caption:validate pit_3c5v8n2w6d --project prj_7k2m9x4q1b",
+      "flags": [
+        {
+          "name": "project",
+          "type": "string",
+          "usage": "the project of the text (default $STUARTY_PROJECT)"
+        },
+        {
+          "name": "body",
+          "type": "string",
+          "usage": "a whole caption, saved or not: a file, or - for standard input"
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "usage": "one variant: a file, or - for standard input (needs --network)"
+        },
+        {
+          "name": "network",
+          "type": "string",
+          "usage": "youtube, instagram, facebook, x or tiktok"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "script:estimate",
+      "domain": "writing",
+      "summary": "estimate how long a script takes when read aloud",
+      "usage": [
+        "stuarty script:estimate <item> --project <id> [--wpm n]",
+        "stuarty script:estimate --text <file|-> [--wpm n]"
+      ],
+      "example": "stuarty script:estimate pit_3c5v8n2w6d --project prj_7k2m9x4q1b --wpm 130",
+      "flags": [
+        {
+          "name": "project",
+          "type": "string",
+          "usage": "the project of the text (default $STUARTY_PROJECT)"
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "usage": "a script that is not saved: a file, or - for standard input"
+        },
+        {
+          "name": "wpm",
+          "type": "integer",
+          "usage": "words per minute, 60 to 300 (default 150)"
         }
       ],
       "globals": [

@@ -62,6 +62,10 @@ func (r *Registry) Register(p Provider) error {
 		return fmt.Errorf("providers: %s has no capability", d.ID)
 	case slices.Contains(d.Capabilities, provider.CapabilityText) && !isTextGenerator(p):
 		return fmt.Errorf("providers: %s says it writes text and does not implement TextGenerator", d.ID)
+	case slices.Contains(d.Capabilities, provider.CapabilityImage) && !isImageGenerator(p):
+		return fmt.Errorf("providers: %s says it makes images and does not implement ImageGenerator", d.ID)
+	case slices.Contains(d.Capabilities, provider.CapabilityVoice) && !isVoiceGenerator(p):
+		return fmt.Errorf("providers: %s says it makes speech and does not implement VoiceGenerator", d.ID)
 	}
 
 	r.mu.Lock()
@@ -81,6 +85,42 @@ func isTextGenerator(p Provider) bool {
 	_, ok := p.(TextGenerator)
 
 	return ok
+}
+
+func isImageGenerator(p Provider) bool {
+	_, ok := p.(ImageGenerator)
+
+	return ok
+}
+
+func isVoiceGenerator(p Provider) bool {
+	_, ok := p.(VoiceGenerator)
+
+	return ok
+}
+
+// Image returns the image generator whose id is kind, when its descriptor says it makes images.
+func (r *Registry) Image(kind string) (ImageGenerator, bool) {
+	p, ok := r.Provider(kind)
+	if !ok || !slices.Contains(p.Descriptor().Capabilities, provider.CapabilityImage) {
+		return nil, false
+	}
+
+	g, ok := p.(ImageGenerator)
+
+	return g, ok
+}
+
+// Voice returns the voice generator whose id is kind, when its descriptor says it makes speech.
+func (r *Registry) Voice(kind string) (VoiceGenerator, bool) {
+	p, ok := r.Provider(kind)
+	if !ok || !slices.Contains(p.Descriptor().Capabilities, provider.CapabilityVoice) {
+		return nil, false
+	}
+
+	g, ok := p.(VoiceGenerator)
+
+	return g, ok
 }
 
 // Descriptors lists the registered providers, sorted by id.

@@ -1,9 +1,9 @@
 # SDD-016: The AI provider layer (API key, text generation, cost)
 
-- Status: Draft (2026-11-19). Written by epic 09; the code follows in the same epic.
+- Status: Draft (2026-11-19). Written by epic 09, extended by epic 10 (image and voice, sections 2.2, 4.5, 5.1, 5.2, 6.1 to 6.3 and the lines marked epic 10); the code follows in the same epics.
 - Depends on: ADR-0036 (one provider layer), ADR-0032 (outbound only to connected destinations; costly generation waits for a person), ADR-0033 (the vault), ADR-0018 (jobs), SDD-000 (names), SDD-007 (threat model, untrusted text), SDD-014 (connections and vault), SDD-015 (approval and cost)
 - Implements: PRD-004 RF-360, RF-361, RF-362, RF-363, RF-364, RF-365; PRD-002 RF-133; NFR-063, NFR-064
-- Owner area: `core/provider/`, `service/providers/` and `service/providers/<name>/`, the provider operations and the job kind in `service/`, the controllers, commands and the job arguments in `web/app/`, the provider cards of the Connections page
+- Owner area: `core/provider/`, `service/providers/` and `service/providers/<name>/`, the provider operations and the job kinds in `service/`, the controllers, commands and the job arguments in `web/app/`, the provider cards of the Connections page
 
 ## Contents
 
@@ -21,7 +21,7 @@
 
 ## 1. Overview
 
-A creator connects the AI services they already pay for with an API key, once, and every part of Stuarty can use them. This document specifies the provider layer and its first capability, text. Image, voice and video (epics 10 and 11), the sign-ins (epic 12) and the local agent (epic 14) add adapters and credential kinds to the same layer; none of them changes what is written here.
+A creator connects the AI services they already pay for with an API key, once, and every part of Stuarty can use them. This document specifies the provider layer, its first capability, text, and (epic 10) image and voice generation. Video (epic 11), the sign-ins (epic 12) and the local agent (epic 14) add adapters and credential kinds to the same layer; none of them changes what is written here.
 
 Four rules carry the design:
 
@@ -30,7 +30,7 @@ Four rules carry the design:
 3. **Nothing about a model is fixed in code.** The list of models is read from the provider at run time. A price is read from the catalogue of the provider when it publishes one, or from a table the person edits; a model with no price is refused, never estimated at zero.
 4. **A provider answers with untrusted text.** The text a model wrote is untrusted (SDD-007 section 8); the error body of a provider is never shown.
 
-What this epic does not do: no chat and no agent loop (one request, one answer, ADR-0037); no streaming (an adapter may offer it later behind the same interface); no image, voice or video; no sign-in. Transcription (`engine/transcribe`, SDD-011 section 10) keeps working as it is, with its own provider settings; moving it onto this layer is left for the epic that adds the transcription capability.
+What this document does not specify: no chat and no agent loop (one request, one answer, ADR-0037); no streaming (an adapter may offer it later behind the same interface); no video; no sign-in; no editing of an image with a model and no cloning of a voice from a recording of a person (epic 10 leaves both out). Transcription (`engine/transcribe`, SDD-011 section 10) keeps working as it is, with its own provider settings; moving it onto this layer is left for the epic that adds the transcription capability.
 
 ## 2. Providers and connections
 
@@ -40,7 +40,7 @@ What this epic does not do: no chat and no agent loop (one request, one answer, 
 type Descriptor struct {
 	ID              string   // the connection kind: lower-case letters, digits and dash, 2 to 32 characters
 	Name            string   // shown to a person
-	Capabilities    []string // "text" here; "image", "voice" and "video" later
+	Capabilities    []string // "text", "image" and "voice" (epic 10); "video" later
 	CredentialKinds []string // "api_key" here
 	DefaultEndpoint string   // the base URL a new connection starts from
 	DocsURL         string   // where the person finds the key; shown, never called
@@ -61,8 +61,24 @@ type TextGenerator interface {
 	GenerateText(ctx context.Context, c connections.Credential, req provider.TextRequest) (TextResult, error)
 }
 
-// ImageGenerator, VoiceGenerator and VideoGenerator are declared here with no method and no adapter: the
-// epics that add those capabilities add the methods and the adapters.
+type ImageGenerator interface { // epic 10
+	Provider
+	// ImageLimits are the sizes and the count the provider documents for a model; needs no network.
+	ImageLimits(model string) provider.ImageLimits
+	// GenerateImages makes one request and returns the files, fetched through the gated client when the
+	// provider answers with a URL. No file is larger than maxBytes.
+	GenerateImages(ctx context.Context, c connections.Credential, req provider.ImageRequest, maxBytes int64) (ImageResult, error)
+}
+
+type VoiceGenerator interface { // epic 10
+	Provider
+	VoiceLimits(model string) provider.VoiceLimits
+	// Voices lists the voices of the provider; a provider with no endpoint for them says what its documentation lists.
+	Voices(ctx context.Context, c connections.Credential) ([]Voice, error)
+	GenerateVoice(ctx context.Context, c connections.Credential, req provider.VoiceRequest, maxBytes int64) (VoiceResult, error)
+}
+
+// VideoGenerator is declared with no method and no adapter: epic 11 adds the methods and the adapters.
 ```
 
 - **The registry** (`providers.Registry`) is built at start-up from the adapters: each adapter is registered by one line in the owner (`web/app/owner`). `Register` also registers the provider as the connector of its kind in `connections.Manager`, so a connection of kind `openai` can be created, listed and tested through the five operations of SDD-014. The connector's `Test` reads the model list (a harmless request) and reports the number of models in text the product wrote, or the kind of failure in a fixed sentence (section 8); it never forwards a body.
@@ -82,6 +98,22 @@ Chosen in task 2 of the epic, proposed to the author for approval (the question 
 
 Neither catalogue publishes prices, so both use the table of section 4.2. The adapters use the standard library HTTP types and no vendor SDK. A provider that publishes prices (the catalogue of OpenRouter does) fills `Model.Price` and needs no entry in the table.
 
+### 2.2 The providers of image and voice (epic 10)
+
+Chosen with D-093 (the pair of providers is OpenAI and Anthropic) and the ones the epic asked the author to approve in its task 1. The adapter of OpenAI gains the two capabilities, in its own package, with no new registration line; Anthropic offers no image and no voice API, so its adapter stays a text provider and no capability is declared for it that it does not have.
+
+| Capability | Endpoint of OpenAI | Request | Answer |
+| --- | --- | --- | --- |
+| `image` | `POST {endpoint}/images/generations` | `model`, `prompt`, `n`, `size`; no `response_format` (a model that needs one rejects it, and the adapter reads either answer) | `data[]` with `b64_json` or `url`, and `revised_prompt` for a model that rewrites the prompt |
+| `voice` | `POST {endpoint}/audio/speech` | `model`, `input` (the text, at most 4,096 characters), `voice`, `response_format` (`mp3`, `wav`, `flac`, `opus` or `aac`) | the bytes of the audio |
+
+- **Pricing.** Neither endpoint publishes a price, so both use the table of section 4.2, with a unit of its own (section 4.5). An image is paid per image and speech per million characters; the product knows no price.
+- **Terms of use of the outputs.** Under the API terms of OpenAI the person who sends the request owns the output, as between the person and OpenAI, subject to the law and to the usage policies. The usage policies ask that a voice an API reads out be disclosed as AI-generated to the people who hear it, and forbid generating a voice or an image in the likeness of a real person without their consent. The product records provider and model in the origin of every file so a person can check the terms later, never treats the rights note as a licence (SDD-011 section 14.1), and shows the disclosure line in the Generate dialog of a voice. A person who connects another server that speaks the same protocol (the connection names its own base address) is bound by the terms of that service, which the product cannot read.
+- **Voices.** OpenAI has no endpoint that lists voices; `Voices` returns the ones its documentation lists (alloy, ash, ballad, coral, echo, fable, nova, onyx, sage, shimmer, verse, marin, cedar), marked `source: documented`. A voice id the provider does not know is refused by the provider with `bad_request`. The voice cloning of a recording of a person is not offered.
+- **A language** is accepted on a voice request and validated, and is not sent: the speech endpoint reads the language from the text. A provider that takes one sends it.
+- **Models by capability.** The catalogue of OpenAI names models and nothing else, so the adapter gives each model a `capability` hint from its documented naming (`dall-e-*` and `gpt-image-*` for image, `tts-*` and `*-tts` for voice, the `gpt-*` and `o*` families for text; anything else has no hint). The hint only orders what a picker shows: a request names the model it wants and the provider is the judge.
+- **A reference image** (an optional asset the model starts from) is not offered: the endpoint takes none, and an edit of an image with a model is epic 30.
+
 ## 3. The model catalogue
 
 ```go
@@ -91,6 +123,7 @@ type Model struct {
 	ContextTokens int             // the largest input plus output, 0 when the provider does not say
 	OutputTokens  int             // the largest output, 0 when the provider does not say
 	Price         *provider.Price // set when the catalogue publishes a price
+	Capability    string          // epic 10: "text", "image", "voice" or empty; a hint from the adapter, never a rule
 }
 ```
 
@@ -140,6 +173,23 @@ At most 500 entries, one per provider and model: a file edited by hand with two 
 
 The estimate goes to `core/approval` `Decide` as the `Cost` of the action (kind `text.generate`, the connection, the project), so the workspace and project ceilings of epic 05 apply as they do to every costly action: a request above a ceiling is refused with `E_COST_CEILING` and nothing is written; any other request waits for a person unless a rule the person wrote covers it (a rule needs a per-item limit to approve a costly action). This epic adds no rule of its own to the decision.
 
+### 4.5 Prices of an image and of speech (epic 10)
+
+A price has a `unit`. The default (empty) is the price of tokens of sections 4.1 and 4.3, and an old table has no other. Two units are added; an entry of either has `input_micros_per_mtok` and `output_micros_per_mtok` at zero and sets `unit_micros`:
+
+| `unit` | `unit_micros` is | Used by |
+| --- | --- | --- |
+| `image` | the cost of one image | `image.generate` |
+| `mchar` | the cost of a million characters of the text of a speech | `voice.generate` |
+
+```json
+{ "provider": "openai", "model": "an-image-model", "currency": "USD", "unit": "image", "unit_micros": 40000 }
+```
+
+- `ImageCost(count, price)` is `count * unit_micros`; `VoiceCost(characters, price)` is `ceil(characters * unit_micros / 10^6)`, in 128-bit arithmetic as `TextCost` is, so a speech of one character at a nonzero price is never rounded to nothing (`ImageCost` saturates at the largest int64). A price whose unit does not fit the capability of the job (a token price for an image) is the same as none: the request is refused with `E_PRICE_UNKNOWN`, whose hint says which unit is wanted.
+- The rules of sections 4.2 to 4.4 apply unchanged: the table of the person wins over a catalogue, a missing price is never zero, only a privileged browser session sets a price, and the estimate goes to `Decide` as the `Cost` of the action.
+- An estimate of an image is exact for the images the provider returns, and an upper bound when the provider returns fewer (a partial batch costs what arrived, section 6.2). The estimate of speech counts the characters of the text, so it is exact for a provider that bills by character; a provider that bills by the second of audio is priced by the person in the table at the rate the person finds fair, since the real cost is recorded from the price the person saw (section 6.1).
+
 ## 5. The text request
 
 ```go
@@ -165,7 +215,40 @@ type TextRequest struct {
 
 The prompt and the system text are text a person or an agent wrote, and may hold untrusted text (a transcript, a note): they are sent as they are to the provider the user chose and to no other destination, and they are never put in a log. What is shown to a person is in section 6.
 
+### 5.1 The image request (epic 10)
+
+```go
+type ImageRequest struct {
+	Model  string // required
+	Prompt string // required
+	Size   string // "<width>x<height>"; default "1024x1024"
+	Count  int    // images wanted; default 1
+}
+```
+
+`ValidateImage(req, limits)` checks, with `E_VALIDATION` and the path of the member: `model` (the pattern of section 3); `prompt` (1 to 4,000 characters of valid UTF-8, no NUL); `size` (two whole numbers from 64 to 4,096 joined by `x`, and one of `limits.Sizes` when the provider documents the sizes of the model); `count` (1 to 10, and not above `limits.MaxCount` when documented). `ImageLimits` (`Sizes`, `MaxCount`) is what the adapter documents for the model; zero means not documented. Limits are read with no network, so `Prepare` stays free of outbound calls.
+
+### 5.2 The voice request (epic 10)
+
+```go
+type VoiceRequest struct {
+	Model    string // required
+	Text     string // required: what is read out
+	Voice    string // required: a voice id of the provider
+	Language string // optional: a BCP 47 tag such as pt-BR
+	Format   string // mp3 (the default), wav, flac, opus or aac
+}
+```
+
+`ValidateVoice(req, limits)` checks: `model` as above; `text` (1 to `limits.MaxChars` characters, 4,096 when the provider documents none, valid UTF-8, no NUL); `voice` (1 to 100 characters of letters, digits and `. _ : / @ + -`, the first a letter or a digit); `language` (empty, or a tag of letters, digits and dashes starting with two or three letters, at most 35 characters); `format` (one of the five, and one of `limits.Formats` when documented).
+
+### 5.3 What a result must be (epic 10)
+
+A file a provider returns is checked before it becomes an asset, by `provider.CheckImage` and `provider.CheckAudio` (pure, over the first bytes): an image is a PNG, a JPEG or a WebP by its signature, not empty and not above the import limit of the workspace; audio has the signature of the format that was asked for (an MP3 with an ID3 tag or a frame sync, `RIFF`/`WAVE`, `fLaC`, an Ogg page, an ADTS header), under the same limit. A file that is neither is `E_PROVIDER` with `details.kind` `unreadable`, and nothing is stored. The ingest of SDD-011 then probes the file as it does any other, so a file that passes the signature and is not decodable still ends as a failed asset with its reason, and no more than the bytes already counted were written.
+
 ## 6. The job `text.generate`
+
+Epic 17 registers a second kind of the same shape, `text.draft` (SDD-019 section 6): it is `text.generate` with a prompt that `core/writing` builds from the brief, the current text and an instruction, and with a text to put the answer in as a new revision. It has the estimate, the summary, the ceilings, the approval and the ledger described here, and its result is the result of this section with `item_id` and `revision`.
 
 `text.generate` is registered in `service.Options.JobKinds` by the service when a provider registry is configured (SDD-015 section 5). Its scope is `edit` (it writes text into a project). Its arguments (`JobStartRequest.Args`, and the body of `TextGenerate`):
 
@@ -180,9 +263,33 @@ The prompt and the system text are text a person or an agent wrote, and may hold
 - **The estimate before the job.** The job view carries `estimate` (`micros`, `currency`) from the moment the job exists, also for `dry_run` and for a job that waits for approval; its `text` says it. The approval request of epic 05 carries the same estimate.
 - The ledger (SDD-015 section 6) records the estimate when the job is approved and the real cost when it ends.
 
+### 6.1 The jobs `image.generate` and `voice.generate` (epic 10)
+
+Both are approvable kinds of scope `edit`, registered like `text.generate` and passing through the same estimate, ceiling and approval (SDD-015 section 5). Arguments (`JobStartRequest.Args`, and the body of `ImageGenerate` and `VoiceGenerate`):
+
+| Kind | Arguments |
+| --- | --- |
+| `image.generate` | `connection_id` (a connection to a provider with the `image` capability whose `accepts` has `text`, since only text is sent), and the members of section 5.1 |
+| `voice.generate` | `connection_id` (capability `voice`), and the members of section 5.2 |
+
+- **Prepare** validates the arguments with the limits of the adapter, finds the price of the model in the unit of the capability (section 4.5) and computes the estimate; it makes no outbound call. The summary is made by the product: the provider and the model, what is asked for (the count and size of the images, or the number of characters, the voice and the format of the speech) and an excerpt of the first 200 characters of the prompt or the text, cleaned as in section 6. The input stored in the job holds the arguments, the price used and the estimate.
+- **The project.** The job belongs to a project (`project_id`, a production or a timeline of it, as `MediaImport` takes it): the library is the view of the files that projects hold (SDD-011 section 14), so a file with no project would be in no list. The epic that lists "an optional `project_id`" is refined to required for that reason.
+- **Run** checks that the disk of the workspace has room for the largest result (the guard of SDD-011 section 2.3 step 3, before any request), reads the credential with `connections.Manager.With` (a timeout of 180 seconds for images and 120 seconds for speech), calls the adapter and checks every file (section 5.3). It then stores each file in the media store, content-addressed, and links it to the project as an asset of the same flow as an import (SDD-011 section 2.3), with the origin `generated`: `provider`, `model`, `prompt` (the prompt or the text, cut to the limit of the library, untrusted), `cost_micros` (the cost of that file; for an image the price of one, for speech the cost of the text) and the actor of the job as the creator (`created_by`). The ingest then runs as for any file, and the job waits for it for up to 60 seconds, so that it ends with assets a project can use (`items[].state` is `ready`); a file whose ingest fails is stored, paid for and said in a note.
+- **A URL result.** An adapter that receives a URL downloads it with the gated client of the connection only: a host the connection does not list is refused by the gate, and the job reports `E_CONNECTION_DESTINATION`. A download is read to `maxBytes` and no further. Nothing else in the product fetches it.
+- **The result** (`result.generated`): `provider`, `model`, `items` (each with `asset_id`, `hash`, `kind`, `bytes` and, for an image, `revised_prompt`, untrusted text like the prompt), `requested`, `delivered`, `notes` (text the product wrote about what did not arrive) and `cost` (`micros`, `currency`). The job `text` lists the items.
+- **The ledger.** The estimate is recorded at approval and the real cost at the end: the price the person saw times what arrived (images delivered, characters of the text of a delivered speech). A request that fails records no cost and releases the reservation.
+
+### 6.2 Failures and a partial batch (epic 10)
+
+A refusal of the prompt by the provider (a content policy) is `E_PROVIDER` with `details.kind` `refused`; a rate limit is `rate_limited` (with `retry_after_seconds`); a request that did not finish in time is `timeout`; each is a distinct stable error. A batch of images that delivers some of the files keeps what arrived: the job succeeds with the items it has, `delivered` below `requested`, a note for the rest, and the cost of what arrived. A batch that delivers none fails with the error of the first failure.
+
+### 6.3 Voices (epic 10)
+
+`VoiceList` reads the voices of a connection (`id`, `name`, `language`, `source` of `provider` or `documented`) through the connection, and costs nothing. The voice names are untrusted text, cleaned and cut like the names of models (section 3), and a name that echoes the key is dropped (section 9).
+
 ## 7. Service operations and who may call them
 
-Four operations on `service.Service`, in `service/provider_ops.go`:
+Four operations on `service.Service`, in `service/provider_ops.go`, and three of epic 10 in `service/generate_ops.go`:
 
 | Operation | Scope | Result |
 | --- | --- | --- |
@@ -190,7 +297,11 @@ Four operations on `service.Service`, in `service/provider_ops.go`:
 | `ProviderModels` | read | the models of one connection, read from the provider (`refresh` forces a new read): each with `id`, `name`, `context_tokens`, `output_tokens`, `price` and `price_source` |
 | `ProviderPriceSet` | admin, and only from a privileged browser session | the price table after the entry was set; with both amounts empty the entry is removed |
 | `TextGenerate` | edit | the job (`JobStart` of `text.generate`); `dry_run` answers the job it would create, or the error, and writes nothing |
+| `ImageGenerate` | edit | the job (`JobStart` of `image.generate`); `dry_run` as `TextGenerate` |
+| `VoiceGenerate` | edit | the job (`JobStart` of `voice.generate`) |
+| `VoiceList` | read | the voices of one connection |
 
+- `ProviderPriceSet` takes `unit` (empty, `image` or `mchar`) and `unit_micros` besides the members of section 4.3 (epic 10).
 - `ProviderPriceSet` is checked like `CostCeilingSet`: a caller that is not a privileged browser session gets `E_PRIVILEGED_SESSION` whatever scope it holds; then the scope. It is audited (`provider.price.set`, with the provider, the model and the amounts).
 - A project-limited key is refused `ProviderList`, `ProviderModels` and `ProviderPriceSet` (they name no project) and may call `TextGenerate` for its project only.
 - No operation returns a key, and none takes one: the key is given once, to `ConnectionCreate` (SDD-014).
@@ -201,10 +312,10 @@ Added to SDD-000 section 8:
 
 | Code | Meaning | HTTP |
 | --- | --- | --- |
-| `E_PROVIDER` | the provider refused or failed a request; `details.kind` is `auth` (the key was refused), `rate_limited`, `bad_request` (the provider refused the request; `details.code` carries the provider's short error code when it is a safe token), `unavailable` (5xx or no answer) or `unreadable` (an answer that is not the documented shape); `details.status` is the HTTP status when there was one, and `details.retry_after_seconds` is set when the provider gave one. The body of the provider is never in the error | 502 |
+| `E_PROVIDER` | the provider refused or failed a request; `details.kind` is `auth` (the key was refused), `rate_limited`, `bad_request` (the provider refused the request; `details.code` carries the provider's short error code when it is a safe token), `unavailable` (5xx or no answer), `unreadable` (an answer that is not the documented shape, or a generated file that is not what it must be, section 5.3), `refused` (the provider declined the prompt under its content policy; epic 10) or `timeout` (the request did not finish in time; epic 10); `details.status` is the HTTP status when there was one, and `details.retry_after_seconds` is set when the provider gave one. The body of the provider is never in the error | 502 |
 | `E_PRICE_UNKNOWN` | no price is known for the model: neither the table nor the catalogue has one; `details` hold `provider` and `model`; the hint names `provider:price` and the Connections page | 422 |
 
-A missing or removed connection is `E_CONNECTION_NOT_FOUND`; a connection whose kind is not a text provider is `E_VALIDATION` on the path `connection_id`; a bad field is `E_VALIDATION` with `path`. An error text is written by the product from the kind and the status, never from the body of the provider, and holds no key.
+A result URL on a host outside the destinations of the connection is `E_CONNECTION_DESTINATION` (SDD-014 section 7). A missing or removed connection is `E_CONNECTION_NOT_FOUND`; a connection whose kind is not a provider of the capability of the job is `E_VALIDATION` on the path `connection_id`; a bad field is `E_VALIDATION` with `path`. An error text is written by the product from the kind and the status, never from the body of the provider, and holds no key.
 
 ## 9. Safety
 
@@ -215,11 +326,15 @@ A missing or removed connection is `E_CONNECTION_NOT_FOUND`; a connection whose 
 - **The error body.** A provider may echo the prompt or the key in an error. The body is read to a bound of 8 KiB to take the short code and is then dropped (T-55).
 - **An echo.** A server that speaks the protocol, such as one a connection names with its own base address, may repeat the key it was sent. The text of an answer, the id and the name of a model and an error code are checked for the key, or any eight consecutive bytes of it, in the forms of SDD-014 section 9 (`Credential.Echoes`): a model that echoes it is not listed, an answer that echoes it is replaced by a fixed sentence (the cost is still recorded), and a code that echoes it is not shown (T-55).
 
+- **Generated media (epic 10).** A file is untrusted input: it is fetched only through the gated client (a result URL on a host the connection does not list is refused), read to a bound, checked by signature before it is stored, and then probed by the ingest like any import. The prompt and the revised prompt are stored as untrusted text in the origin. The key never appears in a revised prompt, a voice name or a note: each is checked for it as the text of an answer is.
+
 ## 10. Surfaces
 
 - HTTP: `GET /providers`, `GET /connections/{id}/models` (query `refresh`), `PUT /providers/prices`, `POST /text/generate` (status 202, as `POST /projects/{id}/jobs`: the job is the answer).
 - CLI: `provider:list`, `provider:models <connection id>`, `provider:price` and `text:generate`. The API key is added with `connection:add --kind <provider id>` (SDD-014), which reads it from standard input or a file. `text:generate` takes the prompt from `--prompt`, `--prompt-file` or standard input, and answers the job with its estimate, without waiting for it: a generation waits for a person, so there is no `--wait`. `provider:price` needs a privileged session, so with the local token it always fails with `E_PRIVILEGED_SESSION`, which gives an agent the stable error and its hint. The four commands are in the `provider` domain (SDD-000 section 1.1): the guide of that domain (`agent:docs --print guide:provider`) lists the three an agent may run, and `stuarty provider <verb>` runs them. They are not in the generated skill for agents, whose 12,400 characters have no room left.
 - MCP: no new tool. A new domain adds no tool (SDD-003 section 3.11, as revised by epic 13). An agent starts a generation with `job_start` (kind `text.generate`, arguments `connection_id`, `model`, `prompt` and optionally `system`, `max_tokens`, `temperature`) and reads it with `job_get`. The description of `job_start` names the three required arguments, and a start with no `connection_id` is refused with a hint that names every argument. To fit the budget, the `kind` enum of `job_start` gains `text.generate` and the `state` of the `outputSchema` of `job_start` and `job_get` becomes a plain string (it lists `waiting_approval`, which the five-value enum did not; SDD-003 section 4.2, SDD-015 section 10). `provider:list` and `provider:models` have no tool: a provider is a connection (`connection`), and the models are read with the CLI or HTTP.
+- Epic 10 adds, on HTTP: `POST /image/generate` and `POST /voice/generate` (status 202, the job is the answer) and `GET /connections/{id}/voices`; on the CLI: `image:generate`, `voice:generate` (the text from `--text`, `--text-file` or standard input) and `voice:list <connection id>`, in the `provider` domain, with the same rules as `text:generate` (no `--wait`); on MCP: no new tool, the `kind` enum of `job_start` gains `image.generate` and `voice.generate`, and `voice:list` has no tool, like the models. The `format` member of `args` is shared with the export formats and its `enum` is exactly those (`TestJobStartFormatsMatchTheService`), so over MCP a narration is asked in `wav` or `aac`, or in the default `mp3` by leaving `format` out; `flac` and `opus` are asked over HTTP or the CLI.
+- The Generate dialog (epic 10) is in the two sections of the asset library (`VisualAssets` for an image, `VideoAssets` for speech). It asks for the connection, the model (the models whose capability hint matches come first), the prompt or the text, the options, and shows the estimate from a `dry_run` before anything is submitted; then the job (it may wait for approval) and, when done, the files in the grid. For a voice it shows the disclosure line of section 2.2. The dialog computes nothing.
 - The Connections page shows one card per provider: connect with a key (the key goes to `ConnectionCreate`), test it, the models with their price and its source, a form to set a price for a model, and the spend of the day of each connection from `CostSummary`. The page computes nothing: amounts are formatted, not summed (SDD-012 section 1).
 
 ## 11. Tests
@@ -237,5 +352,11 @@ A missing or removed connection is `E_CONNECTION_NOT_FOUND`; a connection whose 
 | A key or a provider error body never reaches a log, an error or a result | `TestSecurity_T55_KeyAndErrorBodyNeverLeave` |
 | The surfaces agree | `web/contract` parity |
 | Connect with a fake provider server, generate, see the cost | `web/e2e/specs/providers.spec.ts` |
+| Image and voice: limits, estimates, signatures of results | `core/provider` table tests (epic 10) |
+| The OpenAI adapter against recorded requests and answers: a base64 image, an image by URL, a refused prompt, a rate limit, the speech bytes, the voices | `service/providers/openai` contract tests (epic 10) |
+| An image and a voice job: estimate first, a ceiling that waits for approval with no outbound call, assets with a complete origin, a partial batch, a URL on a foreign host | `TestImageGenerate_*`, `TestVoiceGenerate_*` over the Service (epic 10) |
+| A generated narration is placed on a timeline and exported | `TestGeneratedVoiceOnTimeline` |
+| The surfaces agree on the three operations | `web/contract` parity (epic 10) |
+| The Generate dialog against a fake provider server | `web/e2e/specs/generate-assets.spec.ts` |
 
 No test calls a real provider. The recorded responses are written by hand from the public documentation of each API and kept in `testdata/` next to the adapter; the manual check with a real key of the author (task 8) is not part of the suite.

@@ -252,6 +252,12 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ProviderPriceSet)
 	case "TextGenerate":
 		return invoke(ctx, s, svc.TextGenerate)
+	case "ImageGenerate":
+		return invoke(ctx, s, svc.ImageGenerate)
+	case "VoiceGenerate":
+		return invoke(ctx, s, svc.VoiceGenerate)
+	case "VoiceList":
+		return invoke(ctx, s, svc.VoiceList)
 	case "AuditList":
 		return invoke(ctx, s, svc.AuditList)
 	case "ToolsInstall":
@@ -307,6 +313,10 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 	}
 
 	if res, ok, err := libraryCall(ctx, svc, s); ok {
+		return res, err
+	}
+
+	if res, ok, err := writingCall(ctx, svc, s); ok {
 		return res, err
 	}
 
@@ -620,6 +630,28 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		args["kind"], args["args"] = "text.generate", inner
 
 		return "job_start", args, nil
+	case "ImageGenerate", "VoiceGenerate":
+		// the same: the request members are the arguments of the job kind
+		delete(args, "dry_run")
+
+		inner := map[string]any{}
+
+		for _, k := range []string{
+			"connection_id", "model", "prompt", "size", "count", "text", "voice", "language", "format",
+		} {
+			if v, ok := args[k]; ok {
+				inner[k] = v
+
+				delete(args, k)
+			}
+		}
+
+		args["kind"], args["args"] = "image.generate", inner
+		if s.Call == "VoiceGenerate" {
+			args["kind"] = "voice.generate"
+		}
+
+		return "job_start", args, nil
 	case "ViewFrame":
 		args["mode"] = "frame"
 
@@ -695,6 +727,10 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 	}
 
 	if tool, args, ok, err := libraryTool(s); ok {
+		return tool, args, err
+	}
+
+	if tool, args, ok, err := writingTool(s); ok {
 		return tool, args, err
 	}
 
@@ -794,6 +830,11 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 }
 
 func commandOf(s step) (name string, argv []string, stdin string, err error) {
+	// The writing steps first: their from is a revision number, which the time of a motion range below refuses.
+	if name, argv, stdin, ok, err := writingCommand(s); ok {
+		return name, argv, stdin, err
+	}
+
 	// First: its members are numbers where the generic decoding below reads strings (until).
 	if name, argv, ok, err := historyCommand(s); ok {
 		return name, argv, "", err
@@ -848,10 +889,16 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		InMicros     *int64 `json:"input_micros_per_mtok"`
 		OutMicros    *int64 `json:"output_micros_per_mtok"`
 		Refresh      bool   `json:"refresh"`
+		Size         string `json:"size"`
+		Count        int    `json:"count"`
+		Voice        string `json:"voice"`
+		Language     string `json:"language"`
+		Format       string `json:"format"`
 
 		ItemID   string `json:"item_id"`
 		Title    string `json:"title"`
 		Text     string `json:"text"`
+		TextKind string `json:"text_kind"`
 		Position *int   `json:"position"`
 
 		Answers map[string]string `json:"answers"`
@@ -1200,6 +1247,34 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		}
 
 		return "text:generate", argv, "", nil
+	case "ImageGenerate":
+		argv = slices.Concat(
+			proj, []string{"--connection", a.ConnectionID, "--model", a.Model, "--prompt", a.Prompt},
+			flag("size", a.Size),
+		)
+
+		if a.Count > 0 {
+			argv = append(argv, "--count", strconv.Itoa(a.Count))
+		}
+
+		if a.DryRun {
+			argv = append(argv, "--dry-run")
+		}
+
+		return "image:generate", argv, "", nil
+	case "VoiceGenerate":
+		argv = slices.Concat(
+			proj, []string{"--connection", a.ConnectionID, "--model", a.Model, "--voice", a.Voice, "--text", a.Text},
+			flag("language", a.Language), flag("format", a.Format),
+		)
+
+		if a.DryRun {
+			argv = append(argv, "--dry-run")
+		}
+
+		return "voice:generate", argv, "", nil
+	case "VoiceList":
+		return "voice:list", []string{a.ConnectionID}, "", nil
 	case "AuditList":
 		return "audit", flag("project", a.ProjectID), "", nil
 	case "ToolsInstall":
@@ -1211,6 +1286,7 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 	case "ProjectItemAdd":
 		argv = append(slices.Clone(proj), "--kind", a.Kind, "--title", a.Title)
 		argv = append(argv, flag("preset", a.Preset)...)
+		argv = append(argv, flag("text-kind", a.TextKind)...)
 
 		if a.Position != nil {
 			argv = append(argv, "--position", strconv.Itoa(*a.Position))

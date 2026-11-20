@@ -116,6 +116,11 @@ export const navigation: NavCategory[] = [
 	},
 	{
 		dir: "guide",
+		title: "Writing",
+		pages: ["writing"],
+	},
+	{
+		dir: "guide",
 		title: "AI providers",
 		pages: ["ai-providers", "agent-chat"],
 	},

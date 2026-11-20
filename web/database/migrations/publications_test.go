@@ -72,7 +72,7 @@ func TestPublicationsMigrationDownDropsBothTables(t *testing.T) {
 			t.Fatalf("Rollback = %v, %v", step, rerr)
 		}
 
-		if step[0] == "20261119160000_create_publications_tables" {
+		if step[0] == "20261119250000_create_publications_tables" {
 			break
 		}
 	}

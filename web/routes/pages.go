@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/web/app/auth"
 	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
 	"github.com/AlexGalhardo/stuarty/web/resources"
 
@@ -124,6 +125,25 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 
 			return inertia.Render(c, "Settings/Keys", inertia.Props{})
 		}).Name("settings.keys")
+
+		// The optional Google sign-in (epic 24, SDD-007 section 4.7, SDD-014 section 12): the page where
+		// Google sends the browser back (it needs no session and hands the state and the code to
+		// POST /auth/google/complete), and the settings page. Network mode only; 404 in local mode.
+		r.Get(auth.GoogleCallbackPath, func(c *web.Ctx) error {
+			if d.Network == nil || d.Google == nil {
+				return errs.ErrNotFound
+			}
+
+			return inertia.Render(c, "Auth/GoogleCallback", inertia.Props{})
+		}).Name("login.google.callback")
+
+		r.Get("/settings/google", func(c *web.Ctx) error {
+			if d.Network == nil || d.Google == nil {
+				return errs.ErrNotFound
+			}
+
+			return inertia.Render(c, "Settings/Google", inertia.Props{})
+		}).Name("settings.google")
 
 		return nil
 	}

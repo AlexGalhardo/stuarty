@@ -15,7 +15,7 @@ import (
 // The keys are the paths the sidebar links to in resources/js/dashboard/sections.ts;
 // TestDashboardSectionsMatchTheSidebar compares the two lists.
 var dashboardSections = []string{
-	"edit-video", "write",
+	"edit-video",
 }
 
 // dashboardPages installs the home and one empty-state route for each section
@@ -30,6 +30,12 @@ func dashboardPages(r *router.Router) {
 			return inertia.Render(c, page.component, inertia.Props{})
 		}).Name("library." + page.path)
 	}
+
+	// Write has its page too (epic 17, SDD-019 section 11): the page reads and writes the texts of the projects
+	// through /api/v1/texts and /api/v1/projects/{id}/texts.
+	r.Get("/write", func(c *web.Ctx) error {
+		return inertia.Render(c, "Write/Index", inertia.Props{})
+	}).Name("write.index")
 
 	r.Get("/{$}", func(c *web.Ctx) error {
 		return inertia.Render(c, "Dashboard/Home", inertia.Props{})

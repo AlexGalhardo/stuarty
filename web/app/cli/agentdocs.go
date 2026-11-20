@@ -64,8 +64,15 @@ func AgentDocsInputs() agentdocs.Inputs {
 	}
 
 	// The commands of the AI provider layer (SDD-016 section 10) are in the guide of the provider domain, not in the
-	// editor skill, which has no room for them. An agent starts a generation with job_start (kind text.generate).
+	// editor skill, which has no room for them. An agent starts a generation with job_start (kind text.generate, image.generate or voice.generate).
 	for _, s := range providerCommands() {
+		inLibrary[s.name] = true
+	}
+
+	// The commands of the writing domain (SDD-019 section 8) are in the guide of that domain, not in the editor
+	// skill, which has no room for them: the skills short-script and caption-per-network carry the steps, and
+	// project_item (actions text, revisions, revert, check) is the MCP form.
+	for _, s := range writingCommands() {
 		inLibrary[s.name] = true
 	}
 

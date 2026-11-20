@@ -55,7 +55,7 @@ export const BASE_URL = "http://127.0.0.1:7878";
 const METHOD_ORDER = ["get", "post", "put", "patch", "delete"];
 
 /** The sidebar groups of the API reference, in order. The OpenAPI document has no tags, so the route decides. */
-export const TAGS = ["Projects", "Media", "Jobs", "Events", "Commands", "Templates", "Fonts", "Brand kit", "Library", "Connections", "AI providers", "Images", "Approvals", "Publishing", "Agent chat", "System", "API keys", "Users", "Audit"] as const;
+export const TAGS = ["Projects", "Media", "Jobs", "Events", "Commands", "Templates", "Fonts", "Brand kit", "Library", "Writing", "Connections", "AI providers", "Images", "Approvals", "Publishing", "Agent chat", "System", "API keys", "Users", "Audit"] as const;
 export type Tag = (typeof TAGS)[number];
 
 export function tagOf(route: string): Tag {
@@ -64,6 +64,7 @@ export function tagOf(route: string): Tag {
 	if (parts[0] === "projects" && parts[2] === "media") return "Media";
 	if ((parts[0] === "projects" && ["jobs", "export-check", "export-batches"].includes(parts[2] ?? "")) || parts[0] === "jobs" || parts[0] === "export-presets") return "Jobs";
 	if (parts[0] === "projects" && parts[2] === "events") return "Events";
+	if (parts[0] === "projects" && parts[2] === "texts") return "Writing";
 	if (parts[0] === "projects" && parts[2] === "chat") return "Agent chat";
 	if (parts[0] === "projects" || parts[0] === "trash") return "Projects";
 	const byRoot: Record<string, Tag> = {
@@ -76,6 +77,8 @@ export function tagOf(route: string): Tag {
 		connections: "Connections",
 		providers: "AI providers",
 		text: "AI providers",
+		image: "AI providers",
+		voice: "AI providers",
 		images: "Images",
 		approvals: "Approvals",
 		"approval-rules": "Approvals",
@@ -84,6 +87,9 @@ export function tagOf(route: string): Tag {
 		publish: "Publishing",
 		publications: "Publishing",
 		library: "Library",
+		texts: "Writing",
+		captions: "Writing",
+		scripts: "Writing",
 		agents: "Agent chat",
 		chat: "Agent chat",
 		system: "System",
