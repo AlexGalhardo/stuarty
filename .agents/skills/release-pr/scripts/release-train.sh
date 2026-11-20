@@ -139,7 +139,9 @@ cut_release() {
 	if [ -z "$pr" ]; then
 		pr=$(gh pr create --base main --head "$b" --title "chore(release): v$v" --body-file "$body" | sed 's#.*/##')
 	else
-		gh pr edit "$pr" --title "chore(release): v$v" --body-file "$body" >/dev/null
+		# gh pr edit can fail on an unrelated GraphQL field of the repository; the body is only text.
+		gh pr edit "$pr" --title "chore(release): v$v" --body-file "$body" >/dev/null ||
+			echo "release-train: the body of #$pr was not updated" >&2
 	fi
 	gh pr merge "$pr" --rebase --admin
 	until git fetch -q origin main && [ "$(git rev-parse 'origin/main^{tree}')" = "$(git rev-parse 'HEAD^{tree}')" ]; do sleep 5; done
