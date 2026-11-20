@@ -11,9 +11,10 @@ export interface HistoryRow {
 	actor: string;
 	at: string;
 	kind: string;
-	// The description of the event, English, shown as received.
+	// The description of the core, English, shown as received: from the event on
+	// a provisional row, from the page of the history on the others (VV-266).
 	description?: string;
-	// What the page of the history says instead of a description.
+	// What a row says only when its description is empty.
 	ops?: readonly string[];
 	changes?: number;
 	undone: boolean;
