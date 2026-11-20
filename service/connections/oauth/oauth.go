@@ -13,6 +13,7 @@ import (
 	"errors"
 	"io"
 	"maps"
+	"math"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -266,8 +267,19 @@ func Request(ctx context.Context, c Doer, tokenURL string, form url.Values) (Tok
 
 	return Token{
 		AccessToken: out.AccessToken, RefreshToken: out.RefreshToken,
-		ExpiresIn: time.Duration(out.ExpiresIn) * time.Second, Scope: out.Scope, IDToken: out.IDToken,
+		ExpiresIn: lifetime(out.ExpiresIn), Scope: out.Scope, IDToken: out.IDToken,
 	}, nil
+}
+
+// lifetime is the expires_in of a token answer as a duration, checked as a number of seconds first: a value
+// that is not positive or does not fit a Duration is no lifetime (0, which the caller replaces with its default),
+// never one that overflowed into a negative or a tiny wait (found by FuzzTokenResponse).
+func lifetime(secs int64) time.Duration {
+	if secs <= 0 || secs > int64(math.MaxInt64/time.Second) {
+		return 0
+	}
+
+	return time.Duration(secs) * time.Second
 }
 
 // Exchange trades an authorization code (with the PKCE verifier) for tokens.

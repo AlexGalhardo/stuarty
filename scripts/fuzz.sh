@@ -34,6 +34,7 @@ targets=(
 	"./service FuzzTemplateArchive"
 	"./service/untrusted FuzzUntrustedClean"
 	"./service/connections/oauth FuzzParseEnvelope"
+	"./service/connections/oauth FuzzTokenResponse"
 	"./service/publish/destinations FuzzRetryAfter"
 	"./web/app/http FuzzHostCheck"
 	"./web/app/http FuzzSignInRedirect"
