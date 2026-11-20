@@ -58,6 +58,9 @@ func TestWritingScenarioIsEqualOnEverySurface(t *testing.T) {
 		libraryStepOf("ProjectItemAdd", `{`+project+`,"kind":"text","title":"Outro","text_kind":"script"}`, ""),
 		libraryStepOf("ProjectItemAdd", `{`+project+`,"kind":"timeline","title":"Wide","text_kind":"script"}`,
 			"E_VALIDATION"),
+		libraryStepOf("TextWrite", `{`+project+`,"title":"A post","text_kind":"post","text":"---\ntitle: A post\n`+
+			`slug: a-post\n---\nHello *world*.\n"}`, ""),
+		libraryStepOf("PostCheck", `{`+project+`,"item_id":"$item:5"}`, ""),
 	}
 
 	_, outcomes := runEverywhere(t, steps, nil, testenv.Options{})
