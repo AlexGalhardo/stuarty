@@ -106,6 +106,9 @@ type Env struct {
 	// Nested gives the timeline a composition item uses, from the same production; ok is false when it is
 	// missing or in the trash. Without it the composition rules are silent (rules_composition.go).
 	Nested func(timelineID string) (doc *timeline.Document, ok bool)
+	// AlphaOpaque reports that an asset which declares an alpha channel has only opaque pictures in what the
+	// ingest sampled (Full only): L_ALPHA_MISSING. known is false when the fact is not stored.
+	AlphaOpaque func(assetID string) (opaque, known bool)
 }
 
 // Lint runs the rules over doc and returns the findings in report order:
