@@ -233,7 +233,12 @@ export interface ApiClient {
 	setAssetInfo(hash: string, info: AssetInfoBody): Promise<AssetResult>;
 	tagAsset(hash: string, add: string[], remove: string[]): Promise<AssetResult>;
 	// Uses a file of the library in a project: no copy, no ingest (SDD-011 section 14.3).
-	useAsset(projectId: string, hash: string): Promise<MediaImportResult>;
+	// `timelineId` names the timeline of a project that holds several; the service refuses the call without it.
+	useAsset(
+		projectId: string,
+		hash: string,
+		timelineId?: string,
+	): Promise<MediaImportResult>;
 	// `path` is an absolute path to a font file on the machine of the service.
 	importFont(path: string): Promise<FontImportResult>;
 	getBrandKit(): Promise<BrandKit>;
@@ -619,9 +624,10 @@ export function createClient(
 					remove,
 				},
 			),
-		useAsset: (id, hash) =>
+		useAsset: (id, hash, timelineId) =>
 			call("POST", `${project(id)}/media`, EDIT_TIMEOUT_MS, {
 				files: [{ hash }],
+				timeline_id: timelineId,
 			}),
 		importFont: (path) => call("POST", "/fonts", EDIT_TIMEOUT_MS, { path }),
 		getBrandKit: () => call("GET", "/brand-kit", READ_TIMEOUT_MS),

@@ -161,6 +161,12 @@ export function AssetDetail({
 	const [tag, setTag] = useState("");
 	const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
 	const [target, setTarget] = useState("");
+	// The timelines of the chosen project, when it holds more than one: the service says which one is missing,
+	// the person picks it here.
+	const [timelines, setTimelines] = useState<{ id: string; title: string }[]>(
+		[],
+	);
+	const [timeline, setTimeline] = useState("");
 	const [said, setSaid] = useState<string | null>(null);
 
 	// The text boxes take the service's text when the file is opened and after Save; a tag or the reuse mark
@@ -212,15 +218,38 @@ export function AssetDetail({
 		}
 	}
 
+	async function chooseProject(projectId: string): Promise<void> {
+		setTarget(projectId);
+		setTimeline("");
+		setTimelines([]);
+		setFailure(null);
+		try {
+			const described = await api().describeProject(projectId);
+			const found = described.items
+				.filter((item) => item.kind === "timeline" && item.state === "active")
+				.map((item) => ({
+					id: item.timeline_id ?? item.id,
+					title: item.title,
+				}));
+			setTimelines(found.length > 1 ? found : []);
+		} catch (error) {
+			setFailure(failureOf(error));
+		}
+	}
+
 	async function addToProject(
 		event: FormEvent<HTMLFormElement>,
 	): Promise<void> {
 		event.preventDefault();
-		if (target === "") return;
+		if (target === "" || (timelines.length > 0 && timeline === "")) return;
 		setFailure(null);
 		setSaid(null);
 		try {
-			const result = await api().useAsset(target, hash);
+			const result = await api().useAsset(
+				target,
+				hash,
+				timelines.length > 0 ? timeline : undefined,
+			);
 			const entry = result.assets[0];
 			if (entry?.error !== undefined) {
 				setFailure({
@@ -478,17 +507,44 @@ export function AssetDetail({
 											name={`${id}-project`}
 											className="accent-primary"
 											checked={target === project.id}
-											onChange={() => setTarget(project.id)}
+											onChange={() => void chooseProject(project.id)}
 										/>
 										<UntrustedText>{project.name}</UntrustedText>
 									</label>
 								))}
 							</fieldset>
+							{timelines.length > 0 && (
+								<fieldset
+									className="flex max-h-40 flex-col gap-1 overflow-auto"
+									data-testid="asset-use-timelines"
+								>
+									<legend className="mb-1 text-sm font-medium">
+										{t("ui.assets.detail.use_timeline")}
+									</legend>
+									{timelines.map((tl) => (
+										<label
+											key={tl.id}
+											className="flex items-center gap-2 text-sm"
+										>
+											<input
+												type="radio"
+												name={`${id}-timeline`}
+												className="accent-primary"
+												checked={timeline === tl.id}
+												onChange={() => setTimeline(tl.id)}
+											/>
+											<UntrustedText>{tl.title}</UntrustedText>
+										</label>
+									))}
+								</fieldset>
+							)}
 							<div>
 								<Button
 									type="submit"
 									variant="outline"
-									disabled={target === ""}
+									disabled={
+										target === "" || (timelines.length > 0 && timeline === "")
+									}
 								>
 									{t("ui.assets.detail.use")}
 								</Button>

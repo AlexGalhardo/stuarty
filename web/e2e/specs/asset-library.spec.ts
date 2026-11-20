@@ -123,6 +123,46 @@ test.describe("asset-library", () => {
 		await expect(page.locator(`[data-asset-hash="${hash}"]`)).toHaveCount(0);
 	});
 
+	// VV-321: a project with two timelines asks in which one the file goes; the person picks it in the page.
+	test("use a file in a project with two timelines by choosing the timeline", async ({
+		page,
+		request,
+	}) => {
+		const call = await caller(request);
+		const stamp = Date.now();
+		const one = (
+			(await call("POST", "/projects", { name: `Library src ${stamp}` })) as {
+				project_id: string;
+			}
+		).project_id;
+		const two = (
+			(await call("POST", "/projects", { name: `Library two tl ${stamp}` })) as {
+				project_id: string;
+			}
+		).project_id;
+		await call("POST", `/projects/${two}/items`, {
+			kind: "timeline",
+			title: "Second cut",
+			preset: "16:9",
+		});
+		const imported = (await call("POST", `/projects/${one}/media`, {
+			files: [{ path: testClip(8) }],
+			wait_ms: 20_000,
+		})) as { assets: { hash: string }[] };
+		const hash = imported.assets[0]?.hash;
+		expect(hash).toMatch(/^sha256:[0-9a-f]{64}$/);
+
+		await page.goto("/video-assets");
+		await page.locator(`[data-asset-hash="${hash}"]`).click();
+		const detail = page.getByTestId("asset-detail");
+		await detail.getByLabel(`Library two tl ${stamp}`).check();
+		await expect(detail.getByRole("button", { name: "Use" })).toBeDisabled();
+		const timelines = detail.getByTestId("asset-use-timelines");
+		await timelines.getByLabel("Second cut").check();
+		await detail.getByRole("button", { name: "Use" }).click();
+		await expect(detail.getByRole("status")).toContainText("No copy was made");
+	});
+
 	test("the sections speak Portuguese", async ({ page }) => {
 		await page.addInitScript(() => localStorage.setItem("vv.lang", "pt-BR"));
 		await page.goto("/visual-assets");
