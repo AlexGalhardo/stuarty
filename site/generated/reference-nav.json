@@ -148,18 +148,21 @@
         "connections.get",
         "connections.remove",
         "providers.models",
-        "connections.test"
+        "connections.test",
+        "voice.list"
       ]
     },
     {
       "tag": "AI providers",
       "pages": [
+        "image.generate",
         "providers.list",
         "providers.prices.set",
         "providers.sign-ins",
         "providers.signin.begin",
         "providers.signin.complete",
-        "text.generate"
+        "text.generate",
+        "voice.generate"
       ]
     },
     {
@@ -200,7 +203,8 @@
         "social.accounts",
         "social.complete",
         "social.connect",
-        "social.networks"
+        "social.networks",
+        "social.select"
       ]
     },
     {

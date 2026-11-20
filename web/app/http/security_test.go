@@ -258,6 +258,8 @@ func TestSecurity_T05_EveryOperationHasScope(t *testing.T) {
 		"GET /social/callback",
 		// The redirect address of the sign-in to an AI provider (epic 12): a page that posts to /api/v1/providers/signin/complete.
 		"GET /auth/callback",
+		// The optional Google sign-in (epic 24): the page Google sends the browser to, and its settings page.
+		"GET /login/google/callback", "GET /settings/google",
 	}
 
 	for _, r := range h.vapp.Router.Routes() {

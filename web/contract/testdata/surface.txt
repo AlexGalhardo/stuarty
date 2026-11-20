@@ -49,6 +49,7 @@ command history
 command image:create
 command image:edit
 command image:export
+command image:generate
 command image:list
 command image:redo
 command image:show
@@ -119,6 +120,8 @@ command transcribe
 command undo
 command version
 command view
+command voice:generate
+command voice:list
 route DELETE /agents/profiles/{}
 route DELETE /approval-rules/{}
 route DELETE /chat/sessions/{}
@@ -145,6 +148,7 @@ route GET /commands/{}
 route GET /connections
 route GET /connections/{}
 route GET /connections/{}/models
+route GET /connections/{}/voices
 route GET /cost
 route GET /export-presets
 route GET /fonts
@@ -215,6 +219,7 @@ route POST /chat/sessions/{}/permissions/{}
 route POST /connections
 route POST /connections/{}/test
 route POST /fonts
+route POST /image/generate
 route POST /images
 route POST /images/{}/edit
 route POST /images/{}/export
@@ -258,6 +263,7 @@ route POST /publish
 route POST /publish/validate
 route POST /social/complete
 route POST /social/connect
+route POST /social/select
 route POST /system/launch
 route POST /system/tools/install
 route POST /templates
@@ -267,6 +273,7 @@ route POST /templates/{}/instantiate
 route POST /text/generate
 route POST /trash/empty
 route POST /users
+route POST /voice/generate
 route PUT /agents/profiles/{}
 route PUT /assets/{}
 route PUT /brand-kit

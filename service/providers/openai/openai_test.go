@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"slices"
 	"strings"
 	"testing"
 
@@ -41,10 +42,13 @@ func TestDescriptor(t *testing.T) {
 		t.Fatalf("%+v", d)
 	}
 
-	if len(d.Capabilities) != 1 || d.Capabilities[0] != provider.CapabilityText ||
-		len(d.CredentialKinds) != 2 || d.CredentialKinds[0] != provider.CredentialAPIKey ||
-		d.CredentialKinds[1] != provider.CredentialOAuth || d.DefaultEndpoint != openai.DefaultEndpoint {
-		t.Fatalf("the text capability with an API key or a sign-in: %+v", d)
+	if !slices.Equal(
+		d.Capabilities,
+		[]string{provider.CapabilityText, provider.CapabilityImage, provider.CapabilityVoice},
+	) ||
+		!slices.Equal(d.CredentialKinds, []string{provider.CredentialAPIKey, provider.CredentialOAuth}) ||
+		d.DefaultEndpoint != openai.DefaultEndpoint {
+		t.Fatalf("text, image and voice with an API key, or a sign-in: %+v", d)
 	}
 }
 

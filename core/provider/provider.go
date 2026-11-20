@@ -100,12 +100,22 @@ type TokenEstimate struct {
 	Output int
 }
 
+// The units of a price (SDD-016 section 4.5). The empty unit is a price of tokens.
+const (
+	UnitTokens = ""
+	UnitImage  = "image"
+	UnitMChar  = "mchar"
+)
+
 // Price is the cost of one million input tokens and of one million output tokens, in millionths of the
-// currency unit.
+// currency unit. A price of an image or of speech has a Unit and sets UnitMicros instead (the cost of one
+// image, or of a million characters), with both token amounts at zero.
 type Price struct {
 	Currency            string `json:"currency"`
 	InputMicrosPerMTok  int64  `json:"input_micros_per_mtok"`
 	OutputMicrosPerMTok int64  `json:"output_micros_per_mtok"`
+	Unit                string `json:"unit,omitempty"`
+	UnitMicros          int64  `json:"unit_micros,omitempty"`
 }
 
 // Usage is what a provider says it counted for a finished request.
@@ -205,6 +215,7 @@ func EstimateTokens(r TextRequest, framing int) TokenEstimate {
 // MaxPriceMicros, and the currency is three upper-case letters.
 func NormalizePrice(p Price) (Price, *FieldError) {
 	p.Currency = strings.ToUpper(strings.TrimSpace(p.Currency))
+	p.Unit = strings.ToLower(strings.TrimSpace(p.Unit))
 
 	switch {
 	case !currencyRe.MatchString(p.Currency):
@@ -213,6 +224,22 @@ func NormalizePrice(p Price) (Price, *FieldError) {
 		return p, bad("input_micros_per_mtok", "must be 0 to %d", int64(MaxPriceMicros))
 	case p.OutputMicrosPerMTok < 0 || p.OutputMicrosPerMTok > MaxPriceMicros:
 		return p, bad("output_micros_per_mtok", "must be 0 to %d", int64(MaxPriceMicros))
+	}
+
+	switch p.Unit {
+	case UnitTokens:
+		if p.UnitMicros != 0 {
+			return p, bad("unit_micros", "must be empty for a price of tokens")
+		}
+	case UnitImage, UnitMChar:
+		switch {
+		case p.InputMicrosPerMTok != 0 || p.OutputMicrosPerMTok != 0:
+			return p, bad("input_micros_per_mtok", "must be 0 for a price per %s", p.Unit)
+		case p.UnitMicros < 0 || p.UnitMicros > MaxPriceMicros:
+			return p, bad("unit_micros", "must be 0 to %d", int64(MaxPriceMicros))
+		}
+	default:
+		return p, bad("unit", "must be empty, %s or %s", UnitImage, UnitMChar)
 	}
 
 	return p, nil

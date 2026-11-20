@@ -417,6 +417,10 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.SocialAccountList(ctx, service.SocialAccountListRequest{})
 			return err
 		},
+		"SocialAccountSelect": func() error {
+			_, err := e.svc.SocialAccountSelect(ctx, service.SocialAccountSelectRequest{})
+			return err
+		},
 		"PublishValidate": func() error {
 			_, err := e.svc.PublishValidate(ctx, service.PublishValidateRequest{ProjectID: "prj_0000000001"})
 			return err
@@ -455,6 +459,18 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 		},
 		"TextGenerate": func() error {
 			_, err := e.svc.TextGenerate(ctx, service.TextGenerateRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ImageGenerate": func() error {
+			_, err := e.svc.ImageGenerate(ctx, service.ImageGenerateRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"VoiceGenerate": func() error {
+			_, err := e.svc.VoiceGenerate(ctx, service.VoiceGenerateRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"VoiceList": func() error {
+			_, err := e.svc.VoiceList(ctx, service.VoiceListRequest{ConnectionID: "con_0000000001"})
 			return err
 		},
 		"MemoryList": func() error {

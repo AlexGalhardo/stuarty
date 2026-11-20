@@ -14,7 +14,10 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/connections/oauth"
 	"github.com/AlexGalhardo/stuarty/service/providers"
 	"github.com/AlexGalhardo/stuarty/service/social"
+	"github.com/AlexGalhardo/stuarty/service/social/facebook"
 	"github.com/AlexGalhardo/stuarty/service/social/fake"
+	"github.com/AlexGalhardo/stuarty/service/social/instagram"
+	"github.com/AlexGalhardo/stuarty/service/social/meta"
 	"github.com/AlexGalhardo/stuarty/service/social/youtube"
 )
 
@@ -55,37 +58,60 @@ const EnvTestSocialURL = "STUARTY_TEST_SOCIAL_URL"
 // ErrTestSocial is the start-up refusal of STUARTY_TEST_SOCIAL_URL outside the test condition.
 var ErrTestSocial = errors.New("owner: test social network refused")
 
-// socialRegistry is the registry of the social network connectors of the build: YouTube, and the fake
-// network of the end-to-end suite when STUARTY_TEST_SOCIAL_URL is set. Adding a network is its package
-// and one Register line here (acceptance criterion 5 of epic 18).
+// socialRegistry is the registry of the social network connectors of the build: YouTube, Instagram and
+// Facebook, and the fake network of the end-to-end suite when STUARTY_TEST_SOCIAL_URL is set (then Instagram
+// and Facebook also speak to that server alone, so the suite runs a whole Meta flow with no Meta account).
+// Adding a network is its package and one Register line here (acceptance criteria 5 of epics 18 and 19).
 func socialRegistry(getenv func(string) string, mode string) (*social.Registry, error) {
 	reg := social.NewRegistry()
 
-	if err := reg.Register(youtube.New(youtube.Config{})); err != nil {
+	testBase, err := testSocialBase(getenv, mode)
+	if err != nil {
 		return nil, err
 	}
 
+	metaCfg := meta.Config{}
+	if testBase != "" {
+		metaCfg = meta.AtBase(testBase)
+	}
+
+	for _, c := range []social.Connector{
+		youtube.New(youtube.Config{}), instagram.New(metaCfg), facebook.New(metaCfg),
+	} {
+		if err := reg.Register(c); err != nil {
+			return nil, err
+		}
+	}
+
+	if testBase != "" {
+		if err := reg.Register(fake.New(testBase)); err != nil {
+			return nil, err
+		}
+	}
+
+	return reg, nil
+}
+
+// testSocialBase is the address of the fake network of the suite, or empty when there is none: loopback, http
+// and local mode only.
+func testSocialBase(getenv func(string) string, mode string) (string, error) {
 	raw := strings.TrimSpace(getenv(EnvTestSocialURL))
 	if raw == "" {
-		return reg, nil
+		return "", nil
 	}
 
 	if mode == config.ModeNetwork {
-		return nil, fmt.Errorf("%w: %s works only in local mode; unset it", ErrTestSocial, EnvTestSocialURL)
+		return "", fmt.Errorf("%w: %s works only in local mode; unset it", ErrTestSocial, EnvTestSocialURL)
 	}
 
 	u, err := url.Parse(raw)
 	if err != nil || u.Scheme != "http" || u.Path != "" && u.Path != "/" || u.User != nil ||
 		!loopbackHost(u.Hostname()) {
-		return nil, fmt.Errorf("%w: %s must be an http address on loopback, such as http://127.0.0.1:3104",
+		return "", fmt.Errorf("%w: %s must be an http address on loopback, such as http://127.0.0.1:3104",
 			ErrTestSocial, EnvTestSocialURL)
 	}
 
-	if err := reg.Register(fake.New(strings.TrimRight(raw, "/"))); err != nil {
-		return nil, err
-	}
-
-	return reg, nil
+	return strings.TrimRight(raw, "/"), nil
 }
 
 func loopbackHost(host string) bool {

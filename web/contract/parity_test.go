@@ -193,6 +193,7 @@ var parity = []row{
 	{method: "SocialConnectBegin", command: "social:connect", route: "POST /social/connect"},
 	{method: "SocialConnectComplete", route: "POST /social/complete", httpOnly: true},
 	{method: "SocialAccountList", command: "social:account:list", route: "GET /social/accounts"},
+	{method: "SocialAccountSelect", route: "POST /social/select", httpOnly: true},
 	{method: "PublishValidate", command: "publish:validate", route: "POST /publish/validate"},
 	{method: "PublishNow", command: "publish:now", route: "POST /publish"},
 	{method: "PublishStatus", command: "publish:status", route: "GET /publish/{}"},
@@ -202,6 +203,11 @@ var parity = []row{
 	{method: "ProviderModels", command: "provider:models", route: "GET /connections/{}/models"},
 	{method: "ProviderPriceSet", command: "provider:price", route: "PUT /providers/prices"},
 	{method: "TextGenerate", tool: "job_start", command: "text:generate", route: "POST /text/generate"},
+	// Image and voice generation (SDD-016 section 6.1, epic 10): job_start again, with the kinds image.generate
+	// and voice.generate; the voices of a connection are read with the CLI or HTTP, as its models are.
+	{method: "ImageGenerate", tool: "job_start", command: "image:generate", route: "POST /image/generate"},
+	{method: "VoiceGenerate", tool: "job_start", command: "voice:generate", route: "POST /voice/generate"},
+	{method: "VoiceList", command: "voice:list", route: "GET /connections/{}/voices"},
 	// The sign-in to an AI provider (SDD-016 section 12) is made by a person in the browser: no tool, no command.
 	{method: "ProviderSignInBegin", route: "POST /providers/signin", httpOnly: true},
 	{method: "ProviderSignInComplete", route: "POST /providers/signin/complete", httpOnly: true},

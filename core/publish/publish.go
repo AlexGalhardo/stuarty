@@ -6,9 +6,12 @@ package publish
 import (
 	"fmt"
 	"slices"
+	"strconv"
 	"strings"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/AlexGalhardo/stuarty/core/export"
 )
 
 // Visibility is who may watch a published video.
@@ -24,7 +27,9 @@ const (
 
 // Network names.
 const (
-	NetworkYouTube = "youtube"
+	NetworkYouTube   = "youtube"
+	NetworkInstagram = "instagram"
+	NetworkFacebook  = "facebook"
 )
 
 // Invisible says whether r is a character that shows nothing or changes the direction of the text around
@@ -44,6 +49,42 @@ func Invisible(r rune) bool {
 type File struct {
 	Bytes  int64  `json:"bytes"`
 	Format string `json:"format"`
+	// Media is what the probe measured on a video file; nil for a file that is not one, or when it is not known.
+	Media *Media `json:"media,omitempty"`
+}
+
+// Media is the properties of a video file, measured on the written file by the export (SDD-020 section 18).
+type Media struct {
+	Width      int   `json:"width"`
+	Height     int   `json:"height"`
+	FPSNum     int   `json:"fps_num"`
+	FPSDen     int   `json:"fps_den"`
+	DurationMS int64 `json:"duration_ms"`
+	// VideoCodec and AudioCodec are the names of the probe (h264, hevc, aac); AudioCodec is empty for a video
+	// with no sound.
+	VideoCodec string `json:"video_codec"`
+	AudioCodec string `json:"audio_codec,omitempty"`
+}
+
+// ParseFPS reads a frame rate the way an export records it: "30" or "30000/1001". It returns 0, 0 for any
+// other text.
+func ParseFPS(s string) (num, den int) {
+	n, d, found := strings.Cut(strings.TrimSpace(s), "/")
+	if !found {
+		d = "1"
+	}
+
+	num, err := strconv.Atoi(n)
+	if err != nil || num <= 0 {
+		return 0, 0
+	}
+
+	den, err = strconv.Atoi(d)
+	if err != nil || den <= 0 {
+		return 0, 0
+	}
+
+	return num, den
 }
 
 // Post is one publication to one network (SDD-020 section 3).
@@ -77,6 +118,18 @@ type Limits struct {
 	NeedsKidsDeclaration bool `json:"needs_kids_declaration"`
 	// Forbidden lists characters a title and a description may not hold.
 	Forbidden string `json:"forbidden,omitempty"`
+	// Preset is the id of the export preset of core/export whose limits (length, frame rate, size, picture)
+	// the video must fit; empty for a network that has no such limits. The limits are written once, there.
+	Preset string `json:"preset,omitempty"`
+	// VideoCodecs and AudioCodecs are the codecs the network takes, by the names of the probe; empty is any.
+	VideoCodecs []string `json:"video_codecs,omitempty"`
+	AudioCodecs []string `json:"audio_codecs,omitempty"`
+	// CaptionMax is the most characters of the caption (Caption); HashtagsMax the most hashtags in it. Zero
+	// is no limit.
+	CaptionMax  int `json:"caption_max,omitempty"`
+	HashtagsMax int `json:"hashtags_max,omitempty"`
+	// DailyPosts is how many posts the network lets the API publish in a moving 24 hours; zero is not stated.
+	DailyPosts int `json:"daily_posts,omitempty"`
 	// Source is the official page the limits come from and Read the date it was read.
 	Source string `json:"source"`
 	Read   string `json:"read"`
@@ -187,12 +240,151 @@ func Validate(p Post, l Limits) []Issue {
 	}
 
 	fileIssues("output", p.Output, l.Formats, l.FileMaxBytes, add)
+	mediaIssues(p.Output, &l, add)
+	captionIssues(&p, &l, add)
 
 	if p.Thumbnail != nil {
-		fileIssues("thumbnail", *p.Thumbnail, l.ThumbnailFormats, l.ThumbnailMaxBytes, add)
+		if len(l.ThumbnailFormats) == 0 {
+			add("thumbnail", CodeNotAllowed, "this network takes no separate thumbnail.")
+		} else {
+			fileIssues("thumbnail", *p.Thumbnail, l.ThumbnailFormats, l.ThumbnailMaxBytes, add)
+		}
 	}
 
 	return out
+}
+
+// Caption is the text a network that has no title shows with a video: the title, the description and the
+// tags as hashtags, each part on its own paragraph. Spaces inside a tag are removed, since a hashtag is one
+// word.
+func Caption(p *Post) string {
+	var parts []string
+
+	if t := strings.TrimSpace(p.Title); t != "" {
+		parts = append(parts, t)
+	}
+
+	if d := strings.TrimSpace(p.Description); d != "" {
+		parts = append(parts, d)
+	}
+
+	var tags []string
+
+	for _, t := range p.Tags {
+		if w := strings.Join(strings.Fields(t), ""); w != "" {
+			tags = append(tags, "#"+strings.TrimPrefix(w, "#"))
+		}
+	}
+
+	if len(tags) > 0 {
+		parts = append(parts, strings.Join(tags, " "))
+	}
+
+	return strings.Join(parts, "\n\n")
+}
+
+// Hashtags counts the hashtags of a text: a # followed by a letter, a digit or an underscore.
+func Hashtags(text string) int {
+	n, rs := 0, []rune(text)
+
+	for i, r := range rs {
+		if r == '#' && i+1 < len(rs) && (unicode.IsLetter(rs[i+1]) || unicode.IsDigit(rs[i+1]) || rs[i+1] == '_') {
+			n++
+		}
+	}
+
+	return n
+}
+
+func captionIssues(p *Post, l *Limits, add adder) {
+	if l.CaptionMax == 0 && l.HashtagsMax == 0 {
+		return
+	}
+
+	caption := Caption(p)
+
+	if l.CaptionMax > 0 {
+		if n := utf8.RuneCountInString(caption); n > l.CaptionMax {
+			add(
+				"description",
+				CodeTooLong,
+				"the caption (the title, the description and the tags as hashtags) has %d characters; the network allows %d.",
+				n,
+				l.CaptionMax,
+			)
+		}
+	}
+
+	if l.HashtagsMax > 0 {
+		if n := Hashtags(caption); n > l.HashtagsMax {
+			add("tags", CodeTooLong, "the caption has %d hashtags; the network allows %d.", n, l.HashtagsMax)
+		}
+	}
+}
+
+// findingWhat names what a finding of core/export is about, for the sentence of the issue.
+var findingWhat = map[string]string{
+	export.CodeDurationTooLong:    "length",
+	export.CodeDurationTooShort:   "length",
+	export.CodeFPSTooHigh:         "frame rate",
+	export.CodeFPSTooLow:          "frame rate",
+	export.CodeResolutionTooSmall: "size in pixels",
+	export.CodeResolutionTooLarge: "size in pixels",
+	export.CodeAspectRatio:        "aspect ratio",
+}
+
+// mediaIssues checks the properties of the video against the preset of the network and the codecs it takes.
+// The size of the file is the business of FileMaxBytes, so that finding of the preset is not repeated.
+func mediaIssues(f File, l *Limits, add adder) {
+	if l.Preset == "" && len(l.VideoCodecs) == 0 && len(l.AudioCodecs) == 0 {
+		return
+	}
+
+	m := f.Media
+	if m == nil || m.Width <= 0 || m.Height <= 0 || m.DurationMS <= 0 {
+		add(
+			"output", CodeRequired,
+			"the properties of the video (length, size, frame rate and codecs) are not known: export it again.",
+		)
+
+		return
+	}
+
+	if l.Preset != "" {
+		pr, ok := export.Lookup(l.Preset)
+		if !ok {
+			add("output", CodeInvalid, "the export preset %q of this network is not known.", l.Preset)
+
+			return
+		}
+
+		for _, fd := range pr.Check(export.Input{
+			Width: m.Width, Height: m.Height, FPSNum: m.FPSNum, FPSDen: m.FPSDen, DurationMS: m.DurationMS,
+			Bytes: f.Bytes,
+		}) {
+			if fd.Code == export.CodeSizeTooLarge {
+				continue
+			}
+
+			add(
+				"output", strings.ToLower(strings.TrimPrefix(fd.Code, "X_")),
+				"the video's %s does not fit %s: the limit is %s and the file has %s.",
+				findingWhat[fd.Code], pr.Label, fd.Limit, fd.Got,
+			)
+		}
+	}
+
+	codecIssues("video", m.VideoCodec, l.VideoCodecs, add)
+
+	if m.AudioCodec != "" {
+		codecIssues("audio", m.AudioCodec, l.AudioCodecs, add)
+	}
+}
+
+func codecIssues(what, codec string, allowed []string, add adder) {
+	if len(allowed) > 0 && !slices.Contains(allowed, strings.ToLower(codec)) {
+		add("output", CodeUnsupported, "the %s codec %q is not one of %s.", what, codec, strings.Join(allowed, ", "))
+	}
 }
 
 func textIssues(path, text, forbidden string, add adder) {

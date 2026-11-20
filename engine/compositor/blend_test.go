@@ -1,6 +1,7 @@
 package compositor
 
 import (
+	"bytes"
 	"image"
 	"math"
 	"testing"
@@ -120,6 +121,78 @@ func TestBlendOfNames(t *testing.T) {
 	} {
 		if got := blendOf(name); got != want {
 			t.Errorf("blendOf(%q) = %d, want %d", name, got, want)
+		}
+	}
+}
+
+// mixGeneralRef is the W3C compositing of SDD-013 section 3.11.2 in floating point, premultiplied, for
+// one channel: c x (1 - da) + dc x (1 - a) + a x da x B(cs, cd), with every value scaled to 0..255.
+func mixGeneralRef(mode blendMode, c, a, dc, da uint32) float64 {
+	cs, cd := float64(c)/float64(a), float64(dc)/float64(da)
+	var b float64
+	switch mode {
+	case blendMultiply:
+		b = cs * cd
+	case blendScreen:
+		b = cs + cd - cs*cd
+	case blendOverlay:
+		if cd <= 0.5 {
+			b = 2 * cs * cd
+		} else {
+			b = cs + (2*cd - 1) - cs*(2*cd-1)
+		}
+	case blendAdd:
+		b = min(cs+cd, 1)
+	case blendNormal:
+	}
+	fa, fda := float64(a)/255, float64(da)/255
+
+	return 255 * (float64(c)/255*(1-fda) + float64(dc)/255*(1-fa) + fa*fda*b)
+}
+
+// On a destination with alpha below 255 every mode follows the general form of SDD-013 section 3.11.2:
+// a destination with alpha 0 takes the source, a partial one agrees with the W3C formula within two
+// levels and takes the alpha of a source-over.
+func TestBlendOverATransparentDestination(t *testing.T) {
+	for _, mode := range []blendMode{blendMultiply, blendScreen, blendOverlay, blendAdd} {
+		d := []byte{9, 9, 9, 0}
+		mixPixel(d, 40, 80, 120, 200, mode)
+		if want := []byte{40, 80, 120, 200}; !bytes.Equal(d, want) {
+			t.Errorf("mode %d over alpha 0: got %v, want %v", mode, d, want)
+		}
+
+		for _, da := range []uint32{1, 64, 128, 200, 254} {
+			for _, a := range []uint32{1, 90, 128, 255} {
+				for _, sv := range []uint32{0, 60, 130, 255} {
+					for _, dv := range []uint32{0, 50, 128, 255} {
+						c, dc := min(sv*a/255, a), min(dv*da/255, da)
+						d := []byte{byte(dc), byte(dc), byte(dc), byte(da)}
+						mixPixel(d, c, c, c, a, mode)
+
+						wantA := a + da - div255(a*da)
+						if uint32(d[3]) != wantA {
+							t.Fatalf("mode %d: alpha %d, want %d", mode, d[3], wantA)
+						}
+						if diff := math.Abs(float64(d[0]) - mixGeneralRef(mode, c, a, dc, da)); diff > 2 {
+							t.Fatalf("mode %d src %d/%d dst %d/%d: got %d, off the W3C form by %.1f",
+								mode, c, a, dc, da, d[0], diff)
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+// An opaque destination keeps the formulas of SDD-004 section 3.8 and its alpha.
+func TestBlendOverAnOpaqueDestinationKeepsItsFormulas(t *testing.T) {
+	for _, mode := range []blendMode{blendMultiply, blendScreen, blendOverlay, blendAdd} {
+		d := []byte{100, 100, 100, 255}
+		mixPixel(d, 50, 50, 50, 128, mode)
+
+		want := blendChannel(mode, 50, 100, 128)
+		if d[0] != want || d[3] != 255 {
+			t.Errorf("mode %d: got %v, want colour %d and alpha 255", mode, d, want)
 		}
 	}
 }

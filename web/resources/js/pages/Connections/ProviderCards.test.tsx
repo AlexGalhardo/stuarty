@@ -30,6 +30,9 @@ const messages = {
 	"ui.providers.price":
 		"Per million tokens: {input} in, {output} out ({source})",
 	"ui.providers.price_none": "No price yet.",
+	"ui.providers.price_unit.image": "Per image: {amount} ({source})",
+	"ui.providers.price_unit.mchar":
+		"Per million characters: {amount} ({source})",
 	"ui.providers.source.user": "your price",
 	"ui.providers.source.catalogue": "published by the provider",
 	"ui.providers.source.none": "none",
@@ -221,6 +224,48 @@ describe("a model row", () => {
 		expect(priced).toContain("your price");
 		expect(priced).toContain("128,000");
 		expect(priced).not.toContain("No price yet.");
+	});
+
+	test("prices an image model per image and says a price of tokens is no price for it", () => {
+		const perImage = wrap(
+			<ul>
+				<ModelRow
+					model={model({
+						capability: "image",
+						price: {
+							currency: "USD",
+							input_micros_per_mtok: 0,
+							output_micros_per_mtok: 0,
+							unit: "image",
+							unit_micros: 40_000,
+						},
+						price_source: "user",
+					})}
+					onPrice={() => Promise.resolve()}
+				/>
+			</ul>,
+		);
+		expect(perImage).toContain("Per image: $0.04");
+		expect(perImage).toContain("your price");
+
+		// The price of tokens does not apply to an image: the row says there is none.
+		const wrongUnit = wrap(
+			<ul>
+				<ModelRow
+					model={model({
+						capability: "image",
+						price: {
+							currency: "USD",
+							input_micros_per_mtok: 2_500_000,
+							output_micros_per_mtok: 10_000_000,
+						},
+						price_source: "user",
+					})}
+					onPrice={() => Promise.resolve()}
+				/>
+			</ul>,
+		);
+		expect(wrongUnit).toContain("No price yet.");
 	});
 });
 

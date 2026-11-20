@@ -105,6 +105,9 @@ type Service interface {
 	ProviderModels(ctx context.Context, req ProviderModelsRequest) (*ProviderModelsResult, error)
 	ProviderPriceSet(ctx context.Context, req ProviderPriceSetRequest) (*ProviderPricesResult, error)
 	TextGenerate(ctx context.Context, req TextGenerateRequest) (*Job, error)
+	ImageGenerate(ctx context.Context, req ImageGenerateRequest) (*Job, error)
+	VoiceGenerate(ctx context.Context, req VoiceGenerateRequest) (*Job, error)
+	VoiceList(ctx context.Context, req VoiceListRequest) (*VoiceListResult, error)
 	// The sign-in to an AI provider in the browser (SDD-016 section 12): only a person begins and completes one.
 	ProviderSignInBegin(ctx context.Context, req ProviderSignInBeginRequest) (*ProviderSignInBeginResult, error)
 	ProviderSignInComplete(ctx context.Context, req ProviderSignInCompleteRequest) (*ProviderSignIn, error)
@@ -207,6 +210,7 @@ type Service interface {
 	SocialConnectBegin(ctx context.Context, req SocialConnectBeginRequest) (*SocialConnectBeginResult, error)
 	SocialConnectComplete(ctx context.Context, req SocialConnectCompleteRequest) (*SocialAccount, error)
 	SocialAccountList(ctx context.Context, req SocialAccountListRequest) (*SocialAccountListResult, error)
+	SocialAccountSelect(ctx context.Context, req SocialAccountSelectRequest) (*SocialAccount, error)
 	PublishValidate(ctx context.Context, req PublishValidateRequest) (*PublishValidateResult, error)
 	PublishNow(ctx context.Context, req PublishNowRequest) (*Job, error)
 	PublishStatus(ctx context.Context, req PublishStatusRequest) (*PublishStatusResult, error)
@@ -409,7 +413,8 @@ func New(o Options) (Service, error) {
 
 	s.providers = o.Providers
 
-	kinds, err := registerKinds(append(slices.Clone(o.JobKinds), s.textGenerateKind()))
+	kinds, err := registerKinds(append(slices.Clone(o.JobKinds),
+		s.textGenerateKind(), s.imageGenerateKind(), s.voiceGenerateKind()))
 	if err != nil {
 		return nil, err
 	}
@@ -465,7 +470,7 @@ func New(o Options) (Service, error) {
 	s.flows = oauth.NewFlows(s.now)
 	s.signFlows = oauth.NewFlows(s.now)
 
-	// A sign-in credential is renewed by the manager before a closure gets it (SDD-014 section 12).
+	// A sign-in credential is renewed by the manager before a closure gets it (SDD-014 section 13).
 	if s.signInSet != nil {
 		s.conns.SetRefresher(oauth.NewRefresher(s.signInSet, s.now))
 	}
