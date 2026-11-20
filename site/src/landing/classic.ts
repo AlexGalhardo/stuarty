@@ -2,7 +2,7 @@
 // first paint, when the browser is idle. Under reduced motion every scroll-linked effect is off and the page is a
 // plain document with the stage frozen on its first frame.
 import { afterPaint, reducedMotion } from "./boot";
-import { drawPaths, gsap, letters, revealOnScroll, rise, ScrollTrigger, typeLines } from "./motion";
+import { drawPaths, gsap, hideStillAfter, letters, revealOnScroll, rise, ScrollTrigger, typeLines } from "./motion";
 import type { Stage } from "./stage";
 import { enhanceTabs } from "./tabs";
 
@@ -92,7 +92,10 @@ export function start(): void {
 			const canvas = document.getElementById("classic-stage") as HTMLCanvasElement | null;
 			if (!canvas) return;
 			const stage = createStage(canvas);
-			if (!stage) return;
+			if (!stage) {
+				hideStillAfter("#problem-title");
+				return;
+			}
 			choreograph(stage, root, reduced, mm);
 		});
 	});
