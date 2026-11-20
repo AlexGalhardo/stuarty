@@ -43,6 +43,7 @@ import {
 	ZOOM_SLIDER_MIN,
 	zoomToSlider,
 } from "./geometry";
+import TimelineTable from "./TimelineTable";
 
 // A text button keeps its label from the 2xl breakpoint up and collapses to its
 // icon below it; the name stays for assistive technology (design system 4.3.1).
@@ -231,6 +232,7 @@ export default function TimelineToolbar({
 					<Link aria-hidden="true" />
 					<Label>{t("ui.editor.timeline.link")}</Label>
 				</Button>
+				<TimelineTable />
 				<Button
 					type="button"
 					variant="ghost"
