@@ -111,35 +111,41 @@ test.describe("approval queue", () => {
 		const tag = unique(browserName);
 		const api = await caller(request);
 		const connection = await connect(api, `Blog ${tag}`);
-		const [id] = seed([
-			{
-				summary: `Post the launch video ${tag}`,
-				actor: "key:key_e2e",
-				connection,
-				micros: 2_500_000,
-			},
-		]);
+		// The connection is removed at the end: the specs share one workspace, and a
+		// connection left behind shows on the pages of the others (VV-253).
+		try {
+			const [id] = seed([
+				{
+					summary: `Post the launch video ${tag}`,
+					actor: "key:key_e2e",
+					connection,
+					micros: 2_500_000,
+				},
+			]);
 
-		await openQueue(page);
-		const row = page.locator(`[data-approval-id="${id}"]`);
-		await expect(row.getByTestId("approval-summary")).toHaveText(
-			`Post the launch video ${tag}`,
-		);
-		await expect(row.getByTestId("approval-destination")).toHaveText(
-			`Blog ${tag}`,
-		);
-		await expect(row.getByTestId("approval-cost")).toHaveText("$2.50");
-		await expect(row.getByTestId("approval-actor")).toHaveText("key:key_e2e");
+			await openQueue(page);
+			const row = page.locator(`[data-approval-id="${id}"]`);
+			await expect(row.getByTestId("approval-summary")).toHaveText(
+				`Post the launch video ${tag}`,
+			);
+			await expect(row.getByTestId("approval-destination")).toHaveText(
+				`Blog ${tag}`,
+			);
+			await expect(row.getByTestId("approval-cost")).toHaveText("$2.50");
+			await expect(row.getByTestId("approval-actor")).toHaveText("key:key_e2e");
 
-		await row.getByRole("button", { name: "Approve" }).click();
-		await expect(row).toHaveCount(0);
+			await row.getByRole("button", { name: "Approve" }).click();
+			await expect(row).toHaveCount(0);
 
-		const decided = await api("GET", `/approvals/${id}`);
-		expect(decided).toMatchObject({
-			id,
-			state: "approved",
-			decided_by: "local:ui",
-		});
+			const decided = await api("GET", `/approvals/${id}`);
+			expect(decided).toMatchObject({
+				id,
+				state: "approved",
+				decided_by: "local:ui",
+			});
+		} finally {
+			await api("DELETE", `/connections/${connection}`);
+		}
 	});
 
 	test("a decision made in another window removes the request here without a reload", async ({
