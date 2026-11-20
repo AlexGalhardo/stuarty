@@ -221,7 +221,7 @@ Local mode (ADR-0019) is a server bound to `127.0.0.1` or `::1`. There are no us
 
 1. The token is created by the first owner process that finds no `token` file (`stuarty serve`, or `stuarty mcp` when it becomes the owner), or by `stuarty token:rotate`.
 2. 32 bytes from `crypto/rand`, encoded as 64 lower-case hexadecimal characters, prefixed `vvl_`. The prefix lets secret scanners recognise a leaked token. Total length 68 characters.
-3. It is persistent across restarts, so a configured MCP client keeps working. It changes only with `stuarty token:rotate` (a CLI command that takes the workspace lock and therefore refuses while a server runs). Rotation invalidates all browser sessions. **Decision of this SDD** (ADR-0019 says "at first start"; rotation is the missing way out of a leak).
+3. It is persistent across restarts, so a configured MCP client keeps working. It changes only with `stuarty token:rotate` (a CLI command that takes the workspace lock and therefore refuses while a server runs, and refuses with `STUARTY_URL` set, naming the variable). Rotation invalidates all browser sessions. **Decision of this SDD** (ADR-0019 says "at first start"; rotation is the missing way out of a leak).
 4. The token is never derived from other data and never transmitted in a URL.
 
 ### 3.2 Local token: storage and permissions

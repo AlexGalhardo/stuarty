@@ -51,14 +51,6 @@ func runUser(ctx context.Context, name string, args []string, u userIO) int {
 
 	defer func() { _ = sess.Close() }()
 
-	// With STUARTY_URL set, Open answers with a remote session that has no folder and no lock: the
-	// store would then be created in the current directory and the user would never reach the server.
-	if sess.Mode != workspace.ModeInProcess || sess.Dir == "" {
-		return userFail(u, fmt.Sprintf(
-			"%s writes the local workspace and %s names a server: unset it and run the command on the "+
-				"machine of the workspace, with no server running", name, workspace.EnvURL))
-	}
-
 	if err := sess.Dir.EnsureLayout(); err != nil {
 		return userFailWith(u, err)
 	}
