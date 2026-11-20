@@ -1355,7 +1355,7 @@ vukem API to be confirmed in task: how the application learns the address the bu
 
 ### 6.4 How a command chooses in-process or HTTP
 
-Implemented in `web/app/workspace/open.go`: `func Open(ctx context.Context, o Options) (service.Service, io.Closer, error)`. `Options.Force` may be `Auto` (default), `Server` (never fall back; `E_WORKSPACE_LOCKED` when no owner) or `InProcess` (never use a server; fail with `E_WORKSPACE_LOCKED` when one exists).
+Implemented in `web/app/workspace/open.go`: `func Open(ctx context.Context, o Options) (service.Service, io.Closer, error)`. `Options.Force` may be `Auto` (default), `Server` (never fall back; `E_WORKSPACE_LOCKED` when no owner) or `InProcess` (never use a server; fail with `E_WORKSPACE_LOCKED` when one exists, and with `E_INVALID_STATE` naming `STUARTY_URL` when that variable is set, before step 1: the commands that force it, `token:rotate`, `user:create`, `user:passwd` and `workspace:restore`, write the local workspace only).
 
 ```text
 Open (Auto)                                  (the order of SDD-003 §5.2)
