@@ -11,6 +11,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -88,9 +89,9 @@ var jobID = regexp.MustCompile(`job_[0-9a-hjkmnp-tv-z]{10}`)
 // web/app/mcp sessionLabel); the other surfaces have no session, so it is dropped to compare them.
 var mcpSession = regexp.MustCompile(`(local:contract)-[0-9a-hjkmnp-tv-z]{6}\b`)
 
-// templateID is the identifier a saved template is given: the Service makes it,
-// so a scenario reads it back as "$template:0", the first one a result named, or, robustly, by the
-// template name as "$template:name=Quote card" (the built-in templates come first and may grow).
+// templateID is the identifier a saved template is given: the Service makes it, so a scenario reads it back by
+// the template name, as "$template:name=Quote card". There is no positional form: the built-in templates come
+// first in a list and their number grows (VV-299).
 var templateID = regexp.MustCompile(`tpl_[0-9a-hjkmnp-tv-z]{10}`)
 
 // itemID is the identifier of a project item (SDD-000 section 2), read back as "$item:n".
@@ -229,9 +230,10 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 	// bundles are the paths of the bundles the exports wrote, read back as "$bundle:0"; imported are the
 	// ids the server gave to imported projects, read back as "$project:0" and masked in the results,
 	// because the server chooses them.
-	var jobs, templates, bundles, imported, timelines, items []string
+	var jobs, bundles, imported, timelines, items []string
 
-	// templateByName maps the name of each template a result named to its id.
+	// templateByName maps the name of each template a result named to its id; a name two templates share maps
+	// to "", so that a step that picks it fails instead of taking one of them at random.
 	templateByName := map[string]string{}
 
 	for i, s := range steps {
@@ -245,13 +247,12 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 			s.Args = json.RawMessage(strings.ReplaceAll(string(s.Args), `"$timeline:`+strconv.Itoa(n)+`"`, `"`+id+`"`))
 		}
 
-		for n, id := range templates {
-			s.Args = json.RawMessage(strings.ReplaceAll(string(s.Args), `"$template:`+strconv.Itoa(n)+`"`, `"`+id+`"`))
+		args, err := resolveTemplateNames(string(s.Args), templateByName)
+		if err != nil {
+			t.Fatalf("%s step %d (%s): %v", d.name(), i, s.Call, err)
 		}
 
-		for name, id := range templateByName {
-			s.Args = json.RawMessage(strings.ReplaceAll(string(s.Args), `"$template:name=`+name+`"`, `"`+id+`"`))
-		}
+		s.Args = json.RawMessage(args)
 
 		for n, id := range items {
 			s.Args = json.RawMessage(strings.ReplaceAll(string(s.Args), `"$item:`+strconv.Itoa(n)+`"`, `"`+id+`"`))
@@ -301,12 +302,6 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 				}
 			}
 
-			for _, id := range templateID.FindAllString(string(raw), -1) {
-				if !slices.Contains(templates, id) {
-					templates = append(templates, id)
-				}
-			}
-
 			learnTemplateNames(raw, templateByName)
 
 			// The text items a result named, in order: a scenario of the writing domain reads the first as "$item:0".
@@ -333,6 +328,32 @@ func run(t *testing.T, d driver, steps []step, fixtures map[string]string) []out
 	return out
 }
 
+// templatePlaceholder is a "$template:..." a step still holds once the names it can resolve are replaced.
+var templatePlaceholder = regexp.MustCompile(`"\$template:(?:name=)?([^"]*)"`)
+
+// resolveTemplateNames replaces each "$template:name=<name>" of the arguments of a step by the id of the template
+// of that name, and fails when one is left: a name no earlier result listed, or one two templates share.
+func resolveTemplateNames(args string, byName map[string]string) (string, error) {
+	for name, id := range byName {
+		if id != "" {
+			args = strings.ReplaceAll(args, `"$template:name=`+name+`"`, `"`+id+`"`)
+		}
+	}
+
+	m := templatePlaceholder.FindStringSubmatch(args)
+	if m == nil {
+		return args, nil
+	}
+
+	why := "no earlier result listed a template of that name"
+	if id, seen := byName[m[1]]; seen && id == "" {
+		why = "two templates have that name"
+	}
+
+	return "", fmt.Errorf(`%s does not resolve: %s (a step names a template as "$template:name=<name>"; known: %q)`,
+		m[0], why, slices.Sorted(maps.Keys(byName)))
+}
+
 // learnTemplateNames records, for every object of a result that has a "template_id" and a name, the
 // id under the name, so a scenario can pick a template by name instead of by position.
 func learnTemplateNames(raw json.RawMessage, into map[string]string) {
@@ -350,6 +371,10 @@ func learnTemplateNames(raw json.RawMessage, into map[string]string) {
 			name, _ := x["name"].(string)
 
 			if templateID.MatchString(id) && name != "" {
+				if known, seen := into[name]; seen && known != id {
+					id = "" // two templates share the name: a step that picks it fails
+				}
+
 				into[name] = id
 			}
 
