@@ -312,8 +312,6 @@
         "redo": "Refazer meu passo",
         "title": "Histórico",
         "empty": "Nenhuma mudança ainda. Toda mudança sua ou de um agente aparece aqui.",
-        "undo_of": "desfez a revisão {revision}",
-        "redo_of": "refez a revisão {revision}",
         "revision": "revisão {revision}",
         "you": "Você",
         "undone": "Desfeito pela revisão {revision}",

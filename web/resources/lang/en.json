@@ -312,8 +312,6 @@
         "redo": "Redo my step",
         "title": "History",
         "empty": "No changes yet. Every change by you or an agent is listed here.",
-        "undo_of": "undid revision {revision}",
-        "redo_of": "redid revision {revision}",
         "revision": "revision {revision}",
         "you": "You",
         "undone": "Undone by revision {revision}",
