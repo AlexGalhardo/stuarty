@@ -154,11 +154,12 @@ export interface Item {
   style?: CaptionStyle;
   temperature?: number;
   text?: string;
+  timeline?: string;
   tint?: number;
   track: string;
   transition_in?: Transition;
   transition_out?: Transition;
-  type: "clip" | "audio" | "text" | "caption" | "shape";
+  type: "clip" | "audio" | "text" | "caption" | "shape" | "composition";
   voice?: "clear" | "warm" | "deep" | "bright" | "radio";
   volume?: number;
   wheels?: Wheels;

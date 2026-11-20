@@ -16,11 +16,12 @@ CLI: `stuarty image` lists the commands of the domain and `stuarty image <verb>`
 - `image:undo`: undo the last step of the caller on an image
 - `image:redo`: redo the last undone step of the caller on an image
 - `image:export`: export an image document to a PNG, JPEG or WebP file
+- `image:import`: bring an image file into a new image document, or into an existing one as a layer
 
 ## Operations
 
-These 26 operations go in the `operations` of `edit` with `domain=image`, grouped by namespace; `command_help domain=image` lists them with their summaries and `command_help name=<operation> domain=image` gives the arguments of one.
+These 27 operations go in the `operations` of `edit` with `domain=image`, grouped by namespace; `command_help domain=image` lists them with their summaries and `command_help name=<operation> domain=image` gives the arguments of one.
 
 - `canvas`: resize
 - `image`: create
-- `layer`: add_fill, add_image, add_shape, add_text, adjust, align, blend, crop, duplicate, filter_add, filter_move, filter_remove, filter_set, fit, group, mask_clear, mask_set, move, remove, set, set_shape, set_text, transform, ungroup
+- `layer`: add_fill, add_image, add_shape, add_text, adjust, align, blend, crop, duplicate, filter_add, filter_move, filter_remove, filter_set, fit, group, mask_clear, mask_set, move, remove, replace_source, set, set_shape, set_text, transform, ungroup

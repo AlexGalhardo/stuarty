@@ -36,7 +36,8 @@ var OperationDomains = map[string]string{
 	"ImageCreate": command.DomainImage, "ImageList": command.DomainImage, "ImageDescribe": command.DomainImage,
 	"ImageEdit": command.DomainImage, "ImageUndo": command.DomainImage, "ImageRedo": command.DomainImage,
 	"ImageExport": command.DomainImage, "ImageFrame": command.DomainImage, "ImageHistory": command.DomainImage,
-	"ImageFile": command.DomainImage,
+	"ImageFile": command.DomainImage, "ImageImport": command.DomainImage,
+	"ImageImportFile": command.DomainImage,
 
 	// The hand-off from an external motion engine (epic 33) works on the clips of a timeline.
 	"MotionBrief": command.DomainVideo, "MotionCheck": command.DomainVideo, "MotionReplace": command.DomainVideo,
@@ -65,12 +66,19 @@ var OperationDomains = map[string]string{
 	"SocialAccountSelect": command.DomainPublish,
 	"PublishValidate":     command.DomainPublish, "PublishNow": command.DomainPublish,
 	"PublishStatus": command.DomainPublish,
+	// The calendar of publications (SDD-020 section 28).
+	"PublicationCreate": command.DomainPublish, "PublicationGet": command.DomainPublish,
+	"PublicationList": command.DomainPublish, "PublicationUpdate": command.DomainPublish,
+	"PublicationSchedule": command.DomainPublish, "PublicationSendNow": command.DomainPublish,
+	"PublicationRetry": command.DomainPublish, "PublicationCancel": command.DomainPublish,
 
 	"CostSummary": command.DomainProvider, "CostCeilingSet": command.DomainProvider,
 	"ProviderList": command.DomainProvider, "ProviderModels": command.DomainProvider,
 	"ProviderPriceSet": command.DomainProvider, "TextGenerate": command.DomainProvider,
 	"ImageGenerate": command.DomainProvider, "VoiceGenerate": command.DomainProvider,
-	"VoiceList": command.DomainProvider,
+	"VoiceList": command.DomainProvider, "ImageModelEdit": command.DomainProvider,
+	"ProviderSignInBegin": command.DomainProvider, "ProviderSignInComplete": command.DomainProvider,
+	"ProviderSignInList": command.DomainProvider, "VideoGenerate": command.DomainProvider,
 
 	"CommandHelp": command.DomainWorkspace, "ConnectionList": command.DomainWorkspace,
 	"ConnectionGet": command.DomainWorkspace, "ConnectionCreate": command.DomainWorkspace,

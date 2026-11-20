@@ -133,8 +133,8 @@ var toolDomains = map[string][]string{
 	"project_item": {command.DomainProject, command.DomainWriting},
 	"edit":         {command.DomainVideo, command.DomainImage}, "history": {command.DomainVideo, command.DomainImage},
 	"view": {command.DomainVideo}, "lint": {command.DomainVideo},
-	// job_start also starts text.generate, image.generate and voice.generate, the generations of the provider
-	// domain (SDD-016 sections 10 and 6.1), and text.draft, the draft of a text of the writing domain (SDD-019
+	// job_start also starts text.generate, image.generate, voice.generate and video.generate, the generations of
+	// the provider domain (SDD-016 sections 10, 6.1 and 6.4), and text.draft, the draft of a text of the writing domain (SDD-019
 	// section 6).
 	"job_start": {command.DomainVideo, command.DomainProvider, command.DomainWriting},
 	"job_get":   {command.DomainVideo}, "job_cancel": {command.DomainVideo}, "template": {command.DomainVideo},

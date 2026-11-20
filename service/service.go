@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"io/fs"
 	"log/slog"
@@ -26,6 +27,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/connections/oauth"
 	"github.com/AlexGalhardo/stuarty/service/library"
 	"github.com/AlexGalhardo/stuarty/service/providers"
+	pub "github.com/AlexGalhardo/stuarty/service/publish"
 	"github.com/AlexGalhardo/stuarty/service/social"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
@@ -108,7 +110,15 @@ type Service interface {
 	TextGenerate(ctx context.Context, req TextGenerateRequest) (*Job, error)
 	ImageGenerate(ctx context.Context, req ImageGenerateRequest) (*Job, error)
 	VoiceGenerate(ctx context.Context, req VoiceGenerateRequest) (*Job, error)
+	VideoGenerate(ctx context.Context, req VideoGenerateRequest) (*Job, error)
 	VoiceList(ctx context.Context, req VoiceListRequest) (*VoiceListResult, error)
+	// ImageModelEdit removes the background of a layer, or generates an image into a document, with a provider
+	// (SDD-016 section 6.5); a job of a kind that needs approval.
+	ImageModelEdit(ctx context.Context, req ImageModelEditRequest) (*Job, error)
+	// The sign-in to an AI provider in the browser (SDD-016 section 12): only a person begins and completes one.
+	ProviderSignInBegin(ctx context.Context, req ProviderSignInBeginRequest) (*ProviderSignInBeginResult, error)
+	ProviderSignInComplete(ctx context.Context, req ProviderSignInCompleteRequest) (*ProviderSignIn, error)
+	ProviderSignInList(ctx context.Context, req ProviderSignInListRequest) (*ProviderSignInListResult, error)
 
 	JobGet(ctx context.Context, req JobGetRequest) (*Job, error)
 	JobList(ctx context.Context, req JobListRequest) (*JobListResult, error)
@@ -176,6 +186,10 @@ type Service interface {
 	ImageUndo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
 	ImageRedo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
 	ImageExport(ctx context.Context, req ImageExportRequest) (*ImageExportResult, error)
+	// ImageImport brings an image file into an image document: a new one, or a layer of ImageID (SDD-021 section 10.1).
+	ImageImport(ctx context.Context, req ImageImportRequest) (*ImageImportResult, error)
+	// ImageImportFile is ImageImport for a file that arrives as the bytes of a request (SDD-021 section 10.2); HTTP only.
+	ImageImportFile(ctx context.Context, req ImageImportFileRequest) (*ImageImportResult, error)
 	// ImageFrame, ImageHistory and ImageFile are the reads of the image editor screen (SDD-012 section 24.3); HTTP only.
 	ImageFrame(ctx context.Context, req ImageFrameRequest) (*ImageFrameResult, error)
 	ImageHistory(ctx context.Context, req ImageHistoryRequest) (*ImageHistoryResult, error)
@@ -211,13 +225,25 @@ type Service interface {
 	PublishValidate(ctx context.Context, req PublishValidateRequest) (*PublishValidateResult, error)
 	PublishNow(ctx context.Context, req PublishNowRequest) (*Job, error)
 	PublishStatus(ctx context.Context, req PublishStatusRequest) (*PublishStatusResult, error)
+
+	// The calendar of publications (SDD-020 sections 23 to 31): a publication with one target per account, each
+	// with its time. PublicationSchedule, PublicationSendNow and PublicationRetry only ask for approval: a
+	// target is sent by the scheduler, after a person or a rule the person wrote approved it.
+	PublicationCreate(ctx context.Context, req PublicationCreateRequest) (*Publication, error)
+	PublicationGet(ctx context.Context, req PublicationGetRequest) (*Publication, error)
+	PublicationList(ctx context.Context, req PublicationListRequest) (*PublicationListResult, error)
+	PublicationUpdate(ctx context.Context, req PublicationUpdateRequest) (*Publication, error)
+	PublicationSchedule(ctx context.Context, req PublicationScheduleRequest) (*Publication, error)
+	PublicationSendNow(ctx context.Context, req PublicationSendNowRequest) (*Publication, error)
+	PublicationRetry(ctx context.Context, req PublicationRetryRequest) (*Publication, error)
+	PublicationCancel(ctx context.Context, req PublicationCancelRequest) (*Publication, error)
 }
 
 // Event is what the service publishes after the change is durable (SDD-006
 // section 3). The hub that carries it is the business of the events task; the
 // service only calls Options.Publish.
 type Event struct {
-	// Type is "batch.committed", "project.updated", "job.updated" or
+	// Type is "batch.committed", "project.updated", "nested.updated", "job.updated" or
 	// "asset.updated".
 	Type        string
 	ProjectID   string
@@ -229,18 +255,31 @@ type Event struct {
 
 	// The members below are set by job.updated and asset.updated, which are
 	// not replayable and carry no revision.
-	JobID    string
-	AssetID  string // the asset id of this project, for asset.updated
-	State    string
-	Progress float64
-	Message  string
-	Error    *Error
-	Result   *JobResult
+	JobID   string
+	AssetID string // the asset id of this project, for asset.updated
+	// TimelineID is the timeline that changed, for nested.updated: ProjectID is then a timeline that holds it.
+	TimelineID string
+	State      string
+	Progress   float64
+	Message    string
+	Error      *Error
+	Result     *JobResult
 	// Approval is the request of approval.requested and approval.decided (SDD-015 section 7), and
 	// Owner the user it belongs to in network mode, so that a member's stream carries their own only.
 	Approval *approval.Request
 	Owner    string
+	// Publication is the publication of publication.updated (SDD-020 section 29).
+	Publication *pub.Publication
+
+	// The members below are set by image.updated (SDD-006 section 12): ImageID names the document, and
+	// Revision, Kind, Actor and At are those of the committed batch.
+	ImageID      string
+	BaseRevision int64
+	Diff         json.RawMessage
 }
+
+// EventImageUpdated is the type of the event a committed batch of an image document publishes.
+const EventImageUpdated = "image.updated"
 
 // Options configure New. Store is required.
 type Options struct {
@@ -296,6 +335,9 @@ type Options struct {
 	// Providers is the registry of the AI providers, with their adapters registered (SDD-016); without one
 	// the service has a registry with no provider, so no generation can start.
 	Providers *providers.Registry
+	// SignIns are the sign-ins to an AI provider of this build (SDD-016 section 12); without any the
+	// sign-in operations answer that none is built in, and no credential is ever renewed.
+	SignIns *oauth.SignIns
 	// JobKinds are the job kinds that need approval, registered by the epics of publishing and
 	// generation (SDD-015 section 5). The product registers none of its own; tests register one.
 	JobKinds []ApprovableKind
@@ -309,6 +351,9 @@ type Options struct {
 	WebP export.WebPEncoder
 	// JobWait is how long TrashEmpty waits for the jobs of a trashed project to stop; zero is 15 s.
 	JobWait time.Duration
+	// SchedulerClock is the clock the publication scheduler sleeps on; tests move it. Default: the service
+	// clock to read and the system timer to wait.
+	SchedulerClock pub.Clock
 	// Agents hosts the agent a user installed, for the chat (SDD-017). Nil in a process that only runs a
 	// command: the chat operations that need a process then answer E_AGENT_UNAVAILABLE, and the reads work.
 	Agents *agenthost.Host
@@ -336,6 +381,8 @@ type svc struct {
 	kinds       map[string]*ApprovableKind
 	social      *social.Registry
 	flows       *oauth.Flows
+	signInSet   *oauth.SignIns
+	signFlows   *oauth.Flows
 	providers   *providers.Registry
 	lib         *library.Manager // the files of memory, skills and prompts; nil without a workspace
 	heavy       RateLimiter
@@ -347,6 +394,11 @@ type svc struct {
 	doctorMu    sync.Mutex
 	doctorCaps  *ffmpeg.Capabilities
 
+	// pubs is the calendar of publications and sched the loop that sends the approved ones at their time
+	// (SDD-020 sections 23 to 29).
+	pubs  *pub.Manager
+	sched *pub.Scheduler
+
 	storeMu sync.RWMutex
 
 	// startedAt is when this service was made: a bundle temp file older than it belongs to a process
@@ -355,9 +407,11 @@ type svc struct {
 
 	running registry
 	bitmaps bitmaps
-	fonts   *enginestore.Fonts // user fonts of the workspace; nil without one
-	snaps   snapCache
-	sems    map[string]chan struct{}
+	// previews are the processed sounds of the timeline preview that a plan window handed out (SDD-004 section 7.1).
+	previews audioPreviews
+	fonts    *enginestore.Fonts // user fonts of the workspace; nil without one
+	snaps    snapCache
+	sems     map[string]chan struct{}
 
 	// defaultIngest is true when New installed ingest.Run. A substitute ingester
 	// does not touch the runner, so a nil runner is not a missing tool.
@@ -393,6 +447,7 @@ func New(o Options) (Service, error) {
 		keys:        o.Keys,
 		conns:       o.Connections,
 		social:      o.Social,
+		signInSet:   o.SignIns,
 		heavy:       o.Heavy,
 		heavyLimitN: o.HeavyPerMinute,
 		log:         o.Log,
@@ -405,13 +460,15 @@ func New(o Options) (Service, error) {
 	s.providers = o.Providers
 
 	kinds, err := registerKinds(append(slices.Clone(o.JobKinds),
-		s.textGenerateKind(), s.imageGenerateKind(), s.voiceGenerateKind(), s.textDraftKind()))
+		s.textGenerateKind(), s.imageGenerateKind(), s.voiceGenerateKind(), s.textDraftKind(),
+		s.videoGenerateKind()))
 	if err != nil {
 		return nil, err
 	}
 
 	s.kinds = kinds
 	s.registerPublishKind()
+	s.registerImageEditKind()
 
 	if s.workspace != "" {
 		s.fonts = enginestore.NewFonts(s.workspace)
@@ -459,6 +516,12 @@ func New(o Options) (Service, error) {
 	}
 
 	s.flows = oauth.NewFlows(s.now)
+	s.signFlows = oauth.NewFlows(s.now)
+
+	// A sign-in credential is renewed by the manager before a closure gets it (SDD-014 section 13).
+	if s.signInSet != nil {
+		s.conns.SetRefresher(oauth.NewRefresher(s.signInSet, s.now))
+	}
 
 	if s.jobWait <= 0 {
 		s.jobWait = jobWait
@@ -485,6 +548,15 @@ func New(o Options) (Service, error) {
 			return int(r.X), int(r.Y), int(r.W), int(r.H)
 		}
 	}
+
+	s.pubs = pub.NewManager(pubEnv{s}, pubGateway{s})
+
+	clock := o.SchedulerClock
+	if clock == nil {
+		clock = svcClock{now: s.now}
+	}
+
+	s.sched = pub.NewScheduler(s.pubs, pub.SchedulerOptions{Clock: clock, Log: s.log, Housekeeping: s.expireDue})
 
 	return s, nil
 }

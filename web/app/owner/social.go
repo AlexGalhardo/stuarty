@@ -11,6 +11,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/config"
 	"github.com/AlexGalhardo/stuarty/service/connections"
+	"github.com/AlexGalhardo/stuarty/service/connections/oauth"
 	"github.com/AlexGalhardo/stuarty/service/providers"
 	"github.com/AlexGalhardo/stuarty/service/social"
 	"github.com/AlexGalhardo/stuarty/service/social/facebook"
@@ -23,9 +24,10 @@ import (
 // reach is everything the service reaches out through: the connections over the vault, the AI providers
 // over them, and the social network connectors.
 type reach struct {
-	conns   *connections.Manager
-	provs   *providers.Registry
-	socials *social.Registry
+	conns     *connections.Manager
+	provs     *providers.Registry
+	socials   *social.Registry
+	signInSet *oauth.SignIns
 }
 
 // outbound builds the destinations of the service (the connections and the AI providers) and the registry
@@ -41,7 +43,12 @@ func (o *Owner) outbound(getenv func(string) string, st service.Store, now func(
 		return reach{}, err
 	}
 
-	return reach{conns: conns, provs: provs, socials: socials}, nil
+	signInSet, err := o.signIns(getenv, now)
+	if err != nil {
+		return reach{}, err
+	}
+
+	return reach{conns: conns, provs: provs, socials: socials, signInSet: signInSet}, nil
 }
 
 // EnvTestSocialURL names a fake social network of the end-to-end suite: the address of a server on
@@ -91,6 +98,10 @@ func testSocialBase(getenv func(string) string, mode string) (string, error) {
 	raw := strings.TrimSpace(getenv(EnvTestSocialURL))
 	if raw == "" {
 		return "", nil
+	}
+
+	if err := requireTestEnv(getenv, EnvTestSocialURL, ErrTestSocial); err != nil {
+		return "", err
 	}
 
 	if mode == config.ModeNetwork {

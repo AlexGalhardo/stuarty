@@ -21,8 +21,12 @@ const (
 	CapabilityVideo = "video"
 )
 
-// CredentialAPIKey is the one credential kind of epic 09 (ADR-0036 item 2).
-const CredentialAPIKey = "api_key"
+// The credential kinds of a provider (ADR-0036 item 2): a key the person pastes, or a sign-in in the
+// browser (epic 12, SDD-016 section 12) whose tokens the vault keeps.
+const (
+	CredentialAPIKey = "api_key"
+	CredentialOAuth  = "oauth"
+)
 
 // Limits of SDD-016 sections 3 to 5.
 const (
@@ -227,7 +231,7 @@ func NormalizePrice(p Price) (Price, *FieldError) {
 		if p.UnitMicros != 0 {
 			return p, bad("unit_micros", "must be empty for a price of tokens")
 		}
-	case UnitImage, UnitMChar:
+	case UnitImage, UnitMChar, UnitSecond:
 		switch {
 		case p.InputMicrosPerMTok != 0 || p.OutputMicrosPerMTok != 0:
 			return p, bad("input_micros_per_mtok", "must be 0 for a price per %s", p.Unit)
@@ -235,7 +239,7 @@ func NormalizePrice(p Price) (Price, *FieldError) {
 			return p, bad("unit_micros", "must be 0 to %d", int64(MaxPriceMicros))
 		}
 	default:
-		return p, bad("unit", "must be empty, %s or %s", UnitImage, UnitMChar)
+		return p, bad("unit", "must be empty, %s, %s or %s", UnitImage, UnitMChar, UnitSecond)
 	}
 
 	return p, nil

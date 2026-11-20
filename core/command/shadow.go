@@ -99,7 +99,7 @@ func orDefault3(p *float64, def float64) float64 {
 }
 
 func applyClipSetShadow(c *Context, a *clipShadowArgs) error {
-	it, err := c.clipItem(a.ItemID, "a shadow")
+	it, err := c.clipOrCompositionItem(a.ItemID, "a shadow")
 	if err != nil {
 		return err
 	}
@@ -143,7 +143,7 @@ func applyClipSetShadow(c *Context, a *clipShadowArgs) error {
 }
 
 func applyClipSetOutline(c *Context, a *clipOutlineArgs) error {
-	it, err := c.clipItem(a.ItemID, "an outline")
+	it, err := c.clipOrCompositionItem(a.ItemID, "an outline")
 	if err != nil {
 		return err
 	}

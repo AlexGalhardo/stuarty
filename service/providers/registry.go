@@ -66,6 +66,10 @@ func (r *Registry) Register(p Provider) error {
 		return fmt.Errorf("providers: %s says it makes images and does not implement ImageGenerator", d.ID)
 	case slices.Contains(d.Capabilities, provider.CapabilityVoice) && !isVoiceGenerator(p):
 		return fmt.Errorf("providers: %s says it makes speech and does not implement VoiceGenerator", d.ID)
+	case slices.Contains(d.Capabilities, provider.CapabilityImageEdit) && !isImageEditor(p):
+		return fmt.Errorf("providers: %s says it edits images and does not implement ImageEditor", d.ID)
+	case slices.Contains(d.Capabilities, provider.CapabilityVideo) && !isVideoGenerator(p):
+		return fmt.Errorf("providers: %s says it makes video and does not implement VideoGenerator", d.ID)
 	}
 
 	r.mu.Lock()
@@ -97,6 +101,24 @@ func isVoiceGenerator(p Provider) bool {
 	_, ok := p.(VoiceGenerator)
 
 	return ok
+}
+
+func isVideoGenerator(p Provider) bool {
+	_, ok := p.(VideoGenerator)
+
+	return ok
+}
+
+// Video returns the video generator whose id is kind, when its descriptor says it makes video.
+func (r *Registry) Video(kind string) (VideoGenerator, bool) {
+	p, ok := r.Provider(kind)
+	if !ok || !slices.Contains(p.Descriptor().Capabilities, provider.CapabilityVideo) {
+		return nil, false
+	}
+
+	g, ok := p.(VideoGenerator)
+
+	return g, ok
 }
 
 // Image returns the image generator whose id is kind, when its descriptor says it makes images.
@@ -222,7 +244,7 @@ func (r *Registry) Models(ctx context.Context, connectionID string, refresh bool
 		models, merr = p.Models(ctx, cred)
 		models = withoutEchoes(cred, models)
 
-		return merr
+		return SignInAware(merr, cred)
 	})
 	if err != nil {
 		return nil, err

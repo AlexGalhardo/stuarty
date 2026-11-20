@@ -72,6 +72,8 @@ type GeneratedResult struct {
 	// Notes say, in words the product wrote, what did not arrive.
 	Notes []string   `json:"notes,omitempty"`
 	Cost  core.Money `json:"cost"`
+	// Image is what an image.edit job did to the document (SDD-016 section 6.5); other kinds leave it out.
+	Image *ImageApplied `json:"image,omitempty"`
 }
 
 // generateInput is the input column of an image.generate or voice.generate job: what was asked, and the price
@@ -81,9 +83,13 @@ type generateInput struct {
 	Provider     string                 `json:"provider"`
 	Image        *provider.ImageRequest `json:"image,omitempty"`
 	Voice        *provider.VoiceRequest `json:"voice,omitempty"`
-	Price        provider.Price         `json:"price"`
-	PriceSource  string                 `json:"price_source"`
-	Estimate     core.Money             `json:"estimate"`
+	Video        *provider.VideoRequest `json:"video,omitempty"`
+	// TaskID is the task the provider started for a video: saved before the first poll, so that a run that is
+	// queued again after a restart resumes it and does not submit (and charge) twice (SDD-016 section 6.4).
+	TaskID      string         `json:"task_id,omitempty"`
+	Price       provider.Price `json:"price"`
+	PriceSource string         `json:"price_source"`
+	Estimate    core.Money     `json:"estimate"`
 }
 
 func (s *svc) imageGenerateKind() ApprovableKind {
@@ -130,6 +136,15 @@ func (s *svc) mediaConnection(ctx context.Context, id, capability, members strin
 			withHint("list the providers with provider:list and connect one with connection:add")
 	}
 
+	// A sign-in grants the text of a plan through the Responses API, and nothing else (SDD-016 section
+	// 12.2): its token is never sent to the image, the speech or the video endpoint.
+	if s.isSignIn(ctx, conn.ID) {
+		return conn, newError(command.CodeValidation,
+			"a connection made by a sign-in generates text only, not %s.", capability).
+			withPath("args.connection_id").
+			withHint("connect the provider with an API key to generate %s", capability)
+	}
+
 	return conn, nil
 }
 
@@ -141,7 +156,9 @@ func (s *svc) generationPrice(conn *connections.Connection, model, unit string) 
 	}
 
 	if source == provider.SourceNone || price.Unit != unit {
-		what := map[string]string{provider.UnitImage: "image", provider.UnitMChar: "million characters"}[unit]
+		what := map[string]string{
+			provider.UnitImage: "image", provider.UnitMChar: "million characters", provider.UnitSecond: "second of video",
+		}[unit]
 
 		return price, source, newError(
 			CodePriceUnknown,
@@ -497,15 +514,15 @@ func (s *svc) storeGenerated(
 
 // viewGeneration puts on the job the estimate of a generation (it is there from the moment the job exists) and,
 // once it ended, its result: the text of text.generate and text.draft (SDD-019 section 6) or the files of
-// image.generate and voice.generate.
+// image.generate, voice.generate and video.generate.
 func viewGeneration(j *Job, r *JobRow) {
 	switch r.Kind {
-	case JobTextGenerate, JobTextDraft, JobImageGenerate, JobVoiceGenerate:
+	case JobTextGenerate, JobTextDraft, JobImageGenerate, JobVoiceGenerate, JobVideoGenerate, JobImageEdit:
 	default:
 		return
 	}
 
-	// The input of the four kinds names its estimate the same way.
+	// The input of the five kinds names its estimate the same way.
 	var in struct {
 		Estimate core.Money `json:"estimate"`
 	}

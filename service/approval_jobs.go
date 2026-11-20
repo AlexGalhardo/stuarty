@@ -48,6 +48,11 @@ type JobRun struct {
 	Input     json.RawMessage
 	// Report records the progress of the job, 0 to 1, and a short message.
 	Report func(ctx context.Context, progress float64, message string)
+	// SaveInput replaces the input the job is given, durably: a run that is interrupted and queued again starts
+	// with the saved input, so a job that submits work to a provider saves its task id here before it waits.
+	SaveInput func(ctx context.Context, input json.RawMessage) error
+	// CancelRequested reports whether a person asked for this job to be cancelled (a shutdown is not that).
+	CancelRequested func(ctx context.Context) bool
 }
 
 // JobOutcome is what a finished job reports.
@@ -70,6 +75,10 @@ type ApprovableKind struct {
 	Prepare func(ctx context.Context, req JobStartRequest) (Prepared, error)
 	// Run is the job once approved. It reaches the network only through connections.Manager.With.
 	Run func(ctx context.Context, run JobRun) (JobOutcome, error)
+	// Abandon is optional. It is called when a job of the kind is cancelled while queued again after a shutdown
+	// interrupted a run that had started work at a provider (the task of a video, kept in the saved input): it
+	// asks the provider to stop that work and returns the cost that is owed for it, or nil when nothing is owed.
+	Abandon func(ctx context.Context, job *JobRow) *core.Money
 }
 
 var builtinKinds = []string{JobIngest, JobTranscribe, JobExport, JobFrame}
@@ -214,7 +223,8 @@ func (s *svc) releaseJob(ctx context.Context, tx Tx, row *approval.Row, now int6
 // rejectJob ends the job of a request that was rejected, cancelled or expired, with why as its error.
 func (s *svc) rejectJob(ctx context.Context, tx Tx, row *approval.Row, why *Error, now int64) error {
 	if row.JobID == "" {
-		return nil
+		// A request with no job is the request of a scheduled post: its target hears of it (SDD-020 section 26).
+		return s.targetDeclined(ctx, tx, row, why)
 	}
 
 	ok, err := tx.Jobs().FinishWaiting(ctx, row.JobID, JobCancelled, errorJSON(why), now)
@@ -328,6 +338,19 @@ func (s *svc) runApprovable(
 	out, err := k.Run(ctx, JobRun{
 		ID: job.ID, Kind: job.Kind, Actor: job.Actor, ProjectID: project, Input: job.Input,
 		Report: func(ctx context.Context, p float64, msg string) { pw.report(ctx, p, msg) },
+		SaveInput: func(ctx context.Context, input json.RawMessage) error {
+			ok, err := s.store.Jobs().SaveInput(ctx, job.ID, input, s.nowMs())
+			if err == nil && !ok {
+				err = newError(command.CodeInvalidState, "the job is no longer running.")
+			}
+
+			return err
+		},
+		CancelRequested: func(ctx context.Context) bool {
+			row, err := s.store.Jobs().Get(ctx, job.ID)
+
+			return err == nil && row.CancelRequested
+		},
 	})
 
 	return out.Result, out.Cost, err
@@ -467,6 +490,21 @@ func (s *svc) releaseUnrun(ctx context.Context, j *JobRow) {
 		s.logJob(ctx, slog.LevelWarn, "the reservation of a cancelled job was not released", j,
 			slog.String("error", err.Error()))
 	}
+}
+
+// settleQueuedCancel settles an approved job cancelled while queued. It did not run, so its reservation goes back,
+// unless an earlier run that a shutdown interrupted left work at a provider: then the kind abandons that work and
+// what it says is owed is recorded (SDD-015 section 6).
+func (s *svc) settleQueuedCancel(ctx context.Context, k *ApprovableKind, j *JobRow) {
+	if k.Abandon != nil {
+		if cost := k.Abandon(ctx, j); cost != nil {
+			s.finishCost(ctx, j, cost)
+
+			return
+		}
+	}
+
+	s.releaseUnrun(ctx, j)
 }
 
 // kindOf is the registered approvable kind of a job kind, or nil.

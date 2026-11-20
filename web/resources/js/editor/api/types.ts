@@ -168,6 +168,15 @@ export type ProjectEvent =
 			project_id: string;
 			revision: number;
 			reason: string;
+	  }
+	| {
+			// A timeline this one uses as a composition changed (SDD-006 section
+			// 3.3.1): `timeline_id` and `revision` are those of that timeline.
+			name: "nested.updated";
+			project_id: string;
+			timeline_id: string;
+			revision: number;
+			at: string;
 	  };
 
 export const EVENT_NAMES = [
@@ -176,7 +185,11 @@ export const EVENT_NAMES = [
 	"asset.updated",
 	"job.updated",
 	"resync.required",
+	"nested.updated",
 ] as const;
+
+// The event of GET /images/{id}/events (SDD-006 section 12); `resync.required` is the one above.
+export const IMAGE_EVENT_NAMES = ["image.updated"] as const;
 
 // The part of PlanWindow (SDD-004 section 10) the timeline needs: the end of
 // the project as the core computed it.
@@ -192,6 +205,9 @@ export interface PlanWindowHead {
 export type PerFrame = number | number[];
 
 interface PlanLayerBase {
+	// The timeline whose assets table names this layer's asset, for a layer that comes from a composition
+	// (SDD-004 section 3.16); absent for a layer of the timeline being edited.
+	timeline?: string;
 	item: string;
 	first: number;
 	last: number;
@@ -366,7 +382,27 @@ export interface PlanBitmapLayer extends PlanLayerBase {
 
 export type PlanLayer = PlanMediaLayer | PlanBitmapLayer;
 
+// A composition drawn as one unit (SDD-004 section 3.16, SDD-013 section 3.12):
+// the placement and look of a media layer of a picture of `group.width` by
+// `group.height`, whose `crop` is the whole nested frame, and the layers of
+// that frame, bottom first, with the series of the frames of the window.
+export interface PlanGroupLayer extends PlanLayerBase {
+	kind: "group";
+	crop: [number, number, number, number];
+	group: {
+		width: number;
+		height: number;
+		layers: (PlanLayer | PlanGroupLayer)[];
+	};
+}
+
+// What a window's `layers` holds: the layers an executor draws itself and the
+// groups it draws through a surface of their own.
+export type PlanWindowLayer = PlanLayer | PlanGroupLayer;
+
 export interface PlanAudio {
+	// As on a layer: the timeline that holds `asset` when the sound comes from a composition.
+	timeline?: string;
 	item: string;
 	asset: string;
 	first: number;
@@ -379,6 +415,9 @@ export interface PlanAudio {
 	// The item reads its source backwards (SDD-004 section 3.12).
 	reverse?: boolean;
 	gain: PerFrame;
+	// The file of the item's processed sound (SDD-004 section 7.1): its key, the
+	// timeline frame of its first sample and its length in frames.
+	processed?: { key: string; start: number; frames: number };
 }
 
 // The ramp of a speed curve as the plan carries it: the points (`t` a fraction
@@ -399,7 +438,7 @@ export interface PlanWindow extends PlanWindowHead {
 	// #000000 and uncovered pixels stay clear (SDD-001).
 	transparent?: boolean;
 	safe_area: [number, number, number, number];
-	layers: PlanLayer[];
+	layers: PlanWindowLayer[];
 	audio: PlanAudio[];
 }
 
@@ -558,6 +597,13 @@ export interface GeneratedResult {
 	delivered: number;
 	notes?: string[];
 	cost: Money;
+	// What an image.edit job did to the document (SDD-016 section 6.5).
+	image?: {
+		image_id: string;
+		layer_id?: string;
+		revision?: number;
+		applied: boolean;
+	};
 }
 
 // The bodies of POST /image/generate and POST /voice/generate.
@@ -584,6 +630,19 @@ export interface VoiceGenerateRequest {
 	dry_run?: boolean;
 }
 
+// The body of POST /video/generate (SDD-016 section 6.4).
+export interface VideoGenerateRequest {
+	project_id: string;
+	connection_id: string;
+	model: string;
+	prompt: string;
+	seconds?: number;
+	aspect?: string;
+	first_frame?: string;
+	wait_ms?: number;
+	dry_run?: boolean;
+}
+
 export interface VoiceView {
 	id: string;
 	name: string;
@@ -602,6 +661,19 @@ export interface JobListResult {
 	jobs: Job[];
 	next_cursor: string | null;
 	text: string;
+}
+
+// GET /projects/{id}/describe (SDD-003): the items of a production; the editor reads the timelines of it, to name
+// the timeline a composition uses (SDD-001 section 3.5.1).
+export interface ProjectDescribeResult {
+	project_id: string;
+	items: {
+		id: string;
+		kind: string;
+		title: string;
+		timeline_id?: string;
+		state: string;
+	}[];
 }
 
 export interface LintResult {
@@ -1013,8 +1085,9 @@ export interface ProviderPrice {
 	currency: string;
 	input_micros_per_mtok: number;
 	output_micros_per_mtok: number;
-	// image or mchar for the price of one image or of a million characters of speech; absent for tokens.
-	unit?: "image" | "mchar";
+	// image, mchar or second for the price of one image, of a million characters of speech or of one second
+	// of video; absent for tokens.
+	unit?: "image" | "mchar" | "second";
 	unit_micros?: number;
 }
 
@@ -1048,7 +1121,7 @@ export interface ModelView {
 	price: ProviderPrice | null;
 	price_source: PriceSource;
 	// A hint of the adapter, never a rule: it orders what a picker shows.
-	capability?: "text" | "image" | "voice";
+	capability?: "text" | "image" | "voice" | "video";
 }
 
 export interface ProviderModelsResult {
@@ -1065,12 +1138,44 @@ export interface ProviderPriceSetRequest {
 	currency?: string;
 	input_micros_per_mtok?: number;
 	output_micros_per_mtok?: number;
-	unit?: "image" | "mchar";
+	unit?: "image" | "mchar" | "second";
 	unit_micros?: number;
 }
 
 export interface ProviderPricesResult {
 	prices: PriceEntry[];
+}
+
+// The sign-in to an AI provider in the browser (SDD-016 section 12). A result never carries a token.
+export interface ProviderSignInRequest {
+	provider: string;
+	label?: string;
+	connection_id?: string;
+	redirect_uri: string;
+}
+
+export interface ProviderSignInResult {
+	connection_id: string;
+	authorize_url: string;
+}
+
+export interface ProviderSignInCompleteRequest {
+	state: string;
+	code?: string;
+	error?: string;
+	client_id?: string;
+}
+
+export interface ProviderSignIn {
+	connection_id: string;
+	provider: string;
+	label: string;
+	account?: string;
+	state: "ready" | "needs_sign_in";
+}
+
+export interface ProviderSignInListResult {
+	sign_ins: ProviderSignIn[];
 }
 
 // The approval queue, its rules and the cost ceilings (SDD-015). An amount is an integer in
@@ -1180,6 +1285,9 @@ export const APPROVAL_EVENT_NAMES = [
 	"approval.requested",
 	"approval.decided",
 ] as const;
+
+// The event of GET /publications/events: the data is a publication with its targets (SDD-020 section 29).
+export const PUBLICATION_EVENT_NAMES = ["publication.updated"] as const;
 
 // GET /users: an administrator session only (SDD-007 section 4.1 item 2). The
 // editor reads it once, to show the name of the actors `user:<id>`.

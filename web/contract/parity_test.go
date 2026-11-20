@@ -166,6 +166,7 @@ var parity = []row{
 	{method: "ImageUndo", tool: "image", command: "image:undo", route: "POST /images/{}/undo"},
 	{method: "ImageRedo", tool: "image", command: "image:redo", route: "POST /images/{}/redo"},
 	{method: "ImageExport", tool: "image", command: "image:export", route: "POST /images/{}/export"},
+	{method: "ImageImport", tool: "image", command: "image:import", route: "POST /images/import"},
 	// The export presets, the check against one and the batch (SDD-004 sections 8.2 to 8.4). The MCP tools are the
 	// ones that already exist (NFR-020 leaves no room for three more): command_help with domain export, lint with a
 	// preset, and job_start with kind export_batch.
@@ -173,6 +174,7 @@ var parity = []row{
 	{method: "ExportCheck", tool: "lint", command: "export:check", route: "GET /projects/{}/export-check"},
 	{method: "ExportBatch", tool: "job_start", command: "export:batch", route: "POST /projects/{}/export-batches"},
 	// The reads of the image editor screen (SDD-012 section 24.3): HTTP only, an agent has the text view.
+	{method: "ImageImportFile", route: "POST /images/import/file", httpOnly: true},
 	{method: "ImageFrame", route: "GET /images/{}/frame", httpOnly: true},
 	{method: "ImageHistory", route: "GET /images/{}/history", httpOnly: true},
 	{method: "ImageFile", route: "GET /images/{}/exports/{}", httpOnly: true},
@@ -197,6 +199,16 @@ var parity = []row{
 	{method: "PublishValidate", command: "publish:validate", route: "POST /publish/validate"},
 	{method: "PublishNow", command: "publish:now", route: "POST /publish"},
 	{method: "PublishStatus", command: "publish:status", route: "GET /publish/{}"},
+	// The calendar of publications (SDD-020 section 29): no MCP tool (author decision D-094); an agent plans
+	// through the CLI and HTTP, and approval stays with a person.
+	{method: "PublicationCreate", command: "publication:create", route: "POST /publications"},
+	{method: "PublicationGet", command: "publication:show", route: "GET /publications/{}"},
+	{method: "PublicationList", command: "publication:list", route: "GET /publications"},
+	{method: "PublicationUpdate", command: "publication:update", route: "PUT /publications/{}"},
+	{method: "PublicationSchedule", command: "publication:schedule", route: "POST /publications/{}/schedule"},
+	{method: "PublicationSendNow", command: "publication:send-now", route: "POST /publications/{}/send-now"},
+	{method: "PublicationRetry", command: "publication:retry", route: "POST /publications/{}/retry"},
+	{method: "PublicationCancel", command: "publication:cancel", route: "POST /publications/{}/cancel"},
 	// The AI providers (SDD-016 section 10): a generation starts with job_start (kind text.generate), the
 	// byte budget of the tool list leaves no room for a tool of its own. Setting a price is for a person.
 	{method: "ProviderList", command: "provider:list", route: "GET /providers"},
@@ -222,7 +234,16 @@ var parity = []row{
 	// and voice.generate; the voices of a connection are read with the CLI or HTTP, as its models are.
 	{method: "ImageGenerate", tool: "job_start", command: "image:generate", route: "POST /image/generate"},
 	{method: "VoiceGenerate", tool: "job_start", command: "voice:generate", route: "POST /voice/generate"},
+	// Removing a background and generating into an image document (SDD-016 section 6.5, epic 30): job_start with
+	// the kind image.edit.
+	{method: "ImageModelEdit", tool: "job_start", command: "image:model-edit", route: "POST /images/{}/model-edit"},
 	{method: "VoiceList", command: "voice:list", route: "GET /connections/{}/voices"},
+	// Video generation (SDD-016 section 6.4, epic 11): job_start with the kind video.generate.
+	{method: "VideoGenerate", tool: "job_start", command: "video:generate", route: "POST /video/generate"},
+	// The sign-in to an AI provider (SDD-016 section 12) is made by a person in the browser: no tool, no command.
+	{method: "ProviderSignInBegin", route: "POST /providers/signin", httpOnly: true},
+	{method: "ProviderSignInComplete", route: "POST /providers/signin/complete", httpOnly: true},
+	{method: "ProviderSignInList", route: "GET /providers/sign-ins", httpOnly: true},
 	// The library (SDD-018): one MCP tool, library, serves the lists, reads, writes, searches, renders and
 	// lints. Removing a note, importing and exporting skills read and write files by path (no tool), and
 	// marking a skill as read is for a person at the browser (HTTP only).

@@ -37,15 +37,15 @@ A creator builds an intro once, as its own small timeline, and drops it into eve
 
 ## Tasks
 
-- [ ] 1. Amend SDD-001, SDD-002 and SDD-013 (the clip kind, the rules, flattening, the group and its pixel rules). Verify: `task lint:md` exits 0 and the tests that read SDD-002 pass.
-- [ ] 2. Implement the clip kind, cycle and depth checks, and `clip.add_composition` with golden cases. Verify: `go test ./core/command/... ./core/timeline/...` passes.
-- [ ] 3. Implement flattening in `core/plan` with golden plans. Verify: `go test ./core/plan/... -run TestNested` passes.
-- [ ] 4. Implement the group on the CPU path of both executors that export uses today. Verify: `go test ./engine/compositor/... ./engine/renderhost/...` and `cargo test` in `renderer/` pass with new golden frames.
+- [x] 1. Amend SDD-001, SDD-002 and SDD-013 (the clip kind, the rules, flattening, the group and its pixel rules). Verify: `task lint:md` exits 0 and the tests that read SDD-002 pass.
+- [x] 2. Implement the clip kind, cycle and depth checks, and `clip.add_composition` with golden cases. Verify: `go test ./core/command/... ./core/timeline/...` passes.
+- [x] 3. Implement flattening in `core/plan` with golden plans. Verify: `go test ./core/plan/... -run TestNested` passes.
+- [x] 4. Implement the group on the CPU path of both executors that export uses today. Verify: `go test ./engine/compositor/... ./engine/renderhost/...` and `cargo test` in `renderer/` pass with new golden frames.
 - [ ] 5. Implement the group on the GPU path and the browser executor in use. Verify: the parity tests of `renderer-parity` pass.
-- [ ] 6. Mix nested audio. Verify: `go test ./engine/audio/... -run TestNestedMix` passes.
-- [ ] 7. Implement `composition.create_from_selection` and `composition.expand` with golden cases. Verify: `go test ./core/command/... -run TestComposition` passes.
-- [ ] 8. Key caches by child revision and emit the invalidation event. Verify: `go test ./service/... -run TestNestedInvalidation` passes.
-- [ ] 9. Expose on the three surfaces; build the UI in both languages. Verify: `go test ./web/contract/...`, `task generate:check`, `task test:web` and `web/e2e/specs/nested-composition.spec.ts` pass.
+- [x] 6. Mix nested audio. Verify: `go test ./engine/audio/... -run TestNestedMix` passes.
+- [x] 7. Implement `composition.create_from_selection` and `composition.expand` with golden cases. Verify: `go test ./core/command/... -run TestComposition` passes.
+- [x] 8. Key caches by child revision and emit the invalidation event. Verify: `go test ./service/... -run TestNestedInvalidation` passes.
+- [x] 9. Expose on the three surfaces; build the UI in both languages. Verify: `go test ./web/contract/...`, `task generate:check`, `task test:web` and `web/e2e/specs/nested-composition.spec.ts` pass.
 
 ## Test strategy
 

@@ -4,7 +4,7 @@ description: "Connect an AI service with your own API key, see what a text, an i
 ---
 
 <Callout type="warning" title="New">
-This page covers text, image and voice generation with an API key for OpenAI, and text generation for Anthropic. It has been tested against recorded answers of the APIs, not against a real account. Video, signing in with ChatGPT, and your own local agent come in later versions.
+This page covers text, image and voice generation with an API key for OpenAI, text generation for Anthropic, and signing in with ChatGPT or OpenRouter instead of pasting a key. It has been tested against recorded answers of the APIs and a fake authorization server, not against a real account: a real sign-in has not been checked yet. Video generation is built and waits for a provider to be chosen; your own local agent comes in a later version.
 </Callout>
 
 ## You will learn
@@ -50,6 +50,41 @@ stuarty voice:list con_0123456789
 stuarty voice:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-voice-model --voice alloy --text "Welcome to the channel." --format wav
 ```
 
+### Remove a background or generate inside an image
+
+In the image editor, **Remove background** and **Generate** in the toolbar use the same kind of connection and the same prices (per image). OpenAI has no operation named "remove background": Stuarty asks its image edit endpoint to keep the subject and make the rest transparent, and the model decides how well it does.
+
+- **The picture leaves your computer.** Remove background sends the picture of the layer to the provider you choose, and the dialog and the approval request say so and name the provider. Generate sends only the prompt. Nothing is sent before you see the estimate and approve it; a connection that does not accept pictures cannot be chosen for a removal.
+- **The result is an ordinary layer.** The layer keeps its place, name and effects and gets the new file; if the new picture has other proportions it is fitted inside the old box, never stretched. A generated picture is a new layer that covers the canvas or the layer you picked. One **Undo** takes either back, and the original file is never changed.
+- **A cut-out with no transparency is not applied.** If the provider answers a picture that has no transparent pixel, the layer is left alone; the file is kept in your library with its origin and you pay for it, because the provider billed the request.
+- **A conflict is not an overwrite.** If someone else changed the layer while you were deciding, the result stays in the library and the job says so.
+
+```bash
+stuarty image:model-edit --project prj_7k2m9x4q1b --image img_7k2m9x4q1b --operation remove_background --connection con_0123456789 --model an-image-model --layer lyr_7k2m9x4q1b --dry-run
+stuarty image:model-edit --project prj_7k2m9x4q1b --image img_7k2m9x4q1b --operation generate --connection con_0123456789 --model an-image-model --prompt "A snowy forest, soft light"
+```
+
+A connection for a removal must accept `image`, so connect it with `--accepts text,image`.
+
+## Video
+
+A short clip is made the same way, with one difference: **it always waits for you**, whatever the estimate is, because a video costs far more than an image. Only a rule you wrote on the Approvals page can lift that wait, and a cost ceiling still refuses what is above it.
+
+The provider for video is not chosen yet: OpenAI shut down its video API (Sora 2) in September 2026 and Anthropic has none. Until one is approved and connected, the video clip dialog says that no provider Stuarty works with makes video yet, with nothing to connect, and `video:generate` answers that the connection has no video capability.
+
+- **The clip is generated in the background.** Stuarty sends the request once, keeps the task number of the provider with the job, and asks for the result every few seconds. If you restart the app or the server meanwhile, the job picks the same task up and does not send the request again, so you are not charged twice. The only moment a crash could cause a second charge is the instant between the provider's answer and the write of that number to disk.
+- **Cancel** asks the provider to stop. If it confirms, the job costs nothing; if it does not, the job is recorded at its estimate, because the provider may have charged for the work already done.
+- **A first frame** can be an image of the project: the clip starts from it. The image is sent to the provider only after you approve.
+- **The clip lands in your library** as a file with its origin (the provider, the model, the prompt, the cost and who asked), is probed and gets a proxy and a thumbnail like any import, and goes on a timeline like any file.
+- **Say it is AI.** A generated clip may need to be disclosed as AI-generated where you publish it; the usage policy of the provider says how.
+
+A price per second of video is set with `--unit second --unit-micros <millionths of the currency per second>`.
+
+```bash
+stuarty provider:price --provider a-provider --model a-video-model --currency USD --unit second --unit-micros 400000
+stuarty video:generate --project prj_7k2m9x4q1b --connection con_0123456789 --model a-video-model --prompt "A red fox in the snow" --seconds 6 --aspect 9:16 --dry-run
+```
+
 ## Quick start
 
 <Tabs>
@@ -73,6 +108,15 @@ stuarty text:generate --project prj_7k2m9x4q1b --connection con_0123456789 --mod
 
 </Tab>
 </Tabs>
+
+## Sign in instead of pasting a key
+
+Two providers can be connected with a sign-in in the browser. Open **Connections**, find the provider and choose the sign-in button.
+
+- **Sign in with ChatGPT** uses your ChatGPT plan, within the limits of the plan, through the sign-in OpenAI documents for open source and local applications. Stuarty asks OpenAI for access in your name, you accept on the page of OpenAI, and the plan is used for text. OpenAI accepts the sign-in only at `http://127.0.0.1:<port>/auth/callback`, so open Stuarty at `127.0.0.1` on the computer where it runs (the desktop app and a local server do). A server on another machine, or any server in network mode, refuses this sign-in: use an API key there. The plan is for text only, so a ChatGPT sign-in cannot make an image or a voice-over; connect OpenAI with an API key for those. A plan has no price per token, so its models show a price of zero and no ceiling stops them.
+- **Sign in with OpenRouter** makes a key of your OpenRouter account, which Stuarty keeps like any pasted key. It spends your OpenRouter credits, and the models show the price OpenRouter publishes.
+
+Either way the tokens or the key go straight into the vault of this machine: no page, command, tool or log shows them, and an agent cannot start, finish or remove a sign-in, only a person in the app can. The access of ChatGPT is renewed by itself before it expires. If the provider stops accepting it, the card says **Needs sign-in**, nothing is deleted, and **Sign in again** brings it back. There is no sign-in with a Claude subscription: Anthropic is reached with an API key only.
 
 ## What the answer is
 

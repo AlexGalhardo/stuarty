@@ -1498,6 +1498,13 @@
           "network": {
             "type": "string"
           },
+          "post_cost_currency": {
+            "type": "string"
+          },
+          "post_cost_micros": {
+            "format": "int64",
+            "type": "integer"
+          },
           "publishes": {
             "items": {
               "type": "string"
@@ -2107,6 +2114,38 @@
         },
         "type": "object"
       },
+      "Fields": {
+        "properties": {
+          "ai_disclosure": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "made_for_kids": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "x-untrusted": true
+          },
+          "title": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "visibility": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "FileResult": {
         "properties": {
           "bytes": {
@@ -2318,6 +2357,16 @@
           },
           "delivered": {
             "type": "integer"
+          },
+          "image": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ImageApplied"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "items": {
             "items": {
@@ -2610,6 +2659,24 @@
         },
         "type": "object"
       },
+      "ImageApplied": {
+        "properties": {
+          "applied": {
+            "type": "boolean"
+          },
+          "image_id": {
+            "type": "string"
+          },
+          "layer_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "ImageCreateResult": {
         "properties": {
           "height": {
@@ -2843,6 +2910,68 @@
           },
           "revision": {
             "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ImageImportResult": {
+        "properties": {
+          "applied": {
+            "type": "boolean"
+          },
+          "created": {
+            "type": "boolean"
+          },
+          "dry_run": {
+            "type": "boolean"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "type": "array"
+          },
+          "hash": {
+            "type": "string"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "image_id": {
+            "type": "string"
+          },
+          "job_id": {
+            "type": "string"
+          },
+          "layer_id": {
+            "type": "string"
+          },
+          "lint": {
+            "$ref": "#/components/schemas/LintTotals"
+          },
+          "name": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "replayed": {
+            "type": "boolean"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "width": {
             "type": "integer"
           }
         },
@@ -3392,6 +3521,9 @@
           "text": {
             "type": "string"
           },
+          "timeline": {
+            "type": "string"
+          },
           "tint": {
             "format": "double",
             "type": "number"
@@ -3425,7 +3557,8 @@
               "audio",
               "text",
               "caption",
-              "shape"
+              "shape",
+              "composition"
             ],
             "type": "string"
           },
@@ -5119,6 +5252,7 @@
               "caption.set_words",
               "caption.split",
               "clip.add",
+              "clip.add_composition",
               "clip.remove_silences",
               "clip.replace_media",
               "clip.set_blend",
@@ -5133,6 +5267,8 @@
               "clip.set_outline",
               "clip.set_shadow",
               "clip.set_speed",
+              "composition.create_from_selection",
+              "composition.expand",
               "font.add",
               "font.remove",
               "item.crossfade",
@@ -5255,6 +5391,9 @@
           "clip.add": {
             "$ref": "#/components/schemas/args.clip.add"
           },
+          "clip.add_composition": {
+            "$ref": "#/components/schemas/args.clip.add_composition"
+          },
           "clip.remove_silences": {
             "$ref": "#/components/schemas/args.clip.remove_silences"
           },
@@ -5296,6 +5435,12 @@
           },
           "clip.set_speed": {
             "$ref": "#/components/schemas/args.clip.set_speed"
+          },
+          "composition.create_from_selection": {
+            "$ref": "#/components/schemas/args.composition.create_from_selection"
+          },
+          "composition.expand": {
+            "$ref": "#/components/schemas/args.composition.expand"
           },
           "font.add": {
             "$ref": "#/components/schemas/args.font.add"
@@ -5806,6 +5951,20 @@
         },
         "type": "object"
       },
+      "ProcessedAudio": {
+        "properties": {
+          "frames": {
+            "type": "integer"
+          },
+          "key": {
+            "type": "string"
+          },
+          "start": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "Processor": {
         "properties": {
           "disabled": {
@@ -6068,6 +6227,9 @@
             "type": "integer"
           },
           "state": {
+            "type": "string"
+          },
+          "status": {
             "type": "string"
           },
           "text": {
@@ -6408,6 +6570,50 @@
         },
         "type": "object"
       },
+      "ProviderSignIn": {
+        "properties": {
+          "account": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "connection_id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "provider": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ProviderSignInBeginResult": {
+        "properties": {
+          "authorize_url": {
+            "type": "string"
+          },
+          "connection_id": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ProviderSignInListResult": {
+        "properties": {
+          "sign_ins": {
+            "items": {
+              "$ref": "#/components/schemas/ProviderSignIn"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "ProviderView": {
         "properties": {
           "capabilities": {
@@ -6439,6 +6645,65 @@
           },
           "name": {
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Publication": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "export": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "targets": {
+            "items": {
+              "$ref": "#/components/schemas/Target"
+            },
+            "type": "array"
+          },
+          "text": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "thumbnail": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PublicationListResult": {
+        "properties": {
+          "publications": {
+            "items": {
+              "$ref": "#/components/schemas/Publication"
+            },
+            "type": "array"
+          },
+          "total": {
+            "type": "integer"
           }
         },
         "type": "object"
@@ -7367,6 +7632,142 @@
           },
           "store_files": {
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "Target": {
+        "properties": {
+          "approval_id": {
+            "type": "string"
+          },
+          "attempts": {
+            "type": "integer"
+          },
+          "connection_id": {
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TargetError"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fields": {
+            "$ref": "#/components/schemas/Fields"
+          },
+          "id": {
+            "type": "string"
+          },
+          "late_window_minutes": {
+            "type": "integer"
+          },
+          "local_time": {
+            "type": "string"
+          },
+          "network": {
+            "type": "string"
+          },
+          "next_attempt_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "publication_id": {
+            "type": "string"
+          },
+          "published_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "remote_id": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "remote_state": {
+            "type": "string"
+          },
+          "scheduled_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "send_now": {
+            "type": "boolean"
+          },
+          "state": {
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "zone": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "TargetError": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "hint": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "retryable": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "TargetInput": {
+        "properties": {
+          "at": {
+            "type": "string"
+          },
+          "connection_id": {
+            "type": "string"
+          },
+          "fields": {
+            "$ref": "#/components/schemas/Fields"
+          },
+          "id": {
+            "type": "string"
+          },
+          "late_window_minutes": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "remove": {
+            "type": "boolean"
+          },
+          "zone": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -8340,6 +8741,16 @@
           "last": {
             "type": "integer"
           },
+          "processed": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProcessedAudio"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "reverse": {
             "type": "boolean"
           },
@@ -8361,6 +8772,9 @@
               }
             ]
           },
+          "timeline": {
+            "type": "string"
+          },
           "voice": {
             "type": "string"
           }
@@ -8380,6 +8794,23 @@
               "type": "string"
             },
             "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "WindowGroup": {
+        "properties": {
+          "height": {
+            "type": "integer"
+          },
+          "layers": {
+            "items": {
+              "$ref": "#/components/schemas/WindowLayer"
+            },
+            "type": "array"
+          },
+          "width": {
+            "type": "integer"
           }
         },
         "type": "object"
@@ -8481,6 +8912,16 @@
               }
             ]
           },
+          "group": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WindowGroup"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "h": {},
           "item": {
             "type": "string"
@@ -8569,6 +9010,9 @@
               "type": "number"
             },
             "type": "array"
+          },
+          "timeline": {
+            "type": "string"
           },
           "transition": {
             "items": {
@@ -10340,6 +10784,53 @@
         ],
         "type": "object"
       },
+      "args.clip.add_composition": {
+        "additionalProperties": false,
+        "properties": {
+          "duration": {
+            "description": "A length; default the rest of the nested timeline from source_in.",
+            "type": "string",
+            "x-vv-kind": "time"
+          },
+          "fit": {
+            "enum": [
+              "cover",
+              "contain",
+              "none"
+            ],
+            "type": "string"
+          },
+          "id": {
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "source_in": {
+            "description": "Where in the nested timeline to start, as a length from its start; default 0s.",
+            "type": "string",
+            "x-vv-kind": "time"
+          },
+          "start": {
+            "description": "Absolute position; omitted, the end of the last item of the track (0s on an empty track).",
+            "type": "string",
+            "x-vv-kind": "time"
+          },
+          "timeline_id": {
+            "description": "Another timeline of the same project.",
+            "pattern": "^prj_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "track_id": {
+            "description": "A visual track.",
+            "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "track_id",
+          "timeline_id"
+        ],
+        "type": "object"
+      },
       "args.clip.remove_silences": {
         "additionalProperties": false,
         "properties": {
@@ -11282,6 +11773,55 @@
                 "type": "object"
               }
             ]
+          }
+        },
+        "required": [
+          "item_id"
+        ],
+        "type": "object"
+      },
+      "args.composition.create_from_selection": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "The id of the composition item.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "item_ids": {
+            "description": "The items to move, each once.",
+            "items": {
+              "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+              "type": "string"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "type": "array"
+          },
+          "name": {
+            "description": "The name of the new timeline; default Composition.",
+            "maxLength": 120,
+            "minLength": 1,
+            "type": "string"
+          },
+          "timeline_id": {
+            "description": "The id of the new timeline.",
+            "pattern": "^prj_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_ids"
+        ],
+        "type": "object"
+      },
+      "args.composition.expand": {
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "description": "A composition item.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
           }
         },
         "required": [
@@ -13456,6 +13996,19 @@
           "url": {
             "description": "The address that exchanges the code for a browser session.",
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "schedulerOut": {
+        "properties": {
+          "paused": {
+            "description": "Whether publishing is paused.",
+            "type": "boolean"
+          },
+          "scheduled": {
+            "description": "The targets that still have to go out: approved, scheduled and publishing.",
+            "type": "integer"
           }
         },
         "type": "object"
@@ -16330,6 +16883,141 @@
         "summary": "Create an image document, blank or from a template"
       }
     },
+    "/api/v1/images/import": {
+      "post": {
+        "operationId": "images.import",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "base_revision": {
+                    "description": "With image_id: the revision the layer was planned against.",
+                    "format": "int64",
+                    "type": "integer"
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "hash": {
+                    "description": "sha256: and 64 hex characters: an image already in the workspace, instead of path.",
+                    "type": "string"
+                  },
+                  "height": {
+                    "description": "The canvas of a new document, with width.",
+                    "type": "integer"
+                  },
+                  "idempotency_key": {
+                    "description": "With image_id: 8 to 64 characters; the Idempotency-Key header is the same.",
+                    "type": "string"
+                  },
+                  "image_id": {
+                    "description": "Put the file in this document as one more layer; without it a new document is made.",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "The name of the new document, or of the layer when image_id is given; default the name of the file.",
+                    "type": "string"
+                  },
+                  "path": {
+                    "description": "An absolute path to an image file on the machine of the server, read with the rules of media:import.",
+                    "type": "string"
+                  },
+                  "preset": {
+                    "description": "The canvas of a new document: video_thumbnail, square_post or vertical_cover.",
+                    "type": "string"
+                  },
+                  "wait_ms": {
+                    "description": "How long to wait for the ingest of the file, 0 to 25000; default 10000.",
+                    "type": "integer"
+                  },
+                  "width": {
+                    "description": "The canvas of a new document, with height; default the size of the file when it fits 4096.",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageImportResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Import an image file into a new image document, or as a layer of one"
+      }
+    },
+    "/api/v1/images/import/file": {
+      "post": {
+        "operationId": "images.import_file",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageImportResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Import an image file sent as the body of the request into a new image document, or as a layer of one"
+      }
+    },
     "/api/v1/images/{id}": {
       "get": {
         "operationId": "images.get",
@@ -16474,6 +17162,56 @@
           }
         ],
         "summary": "Apply a batch of image operations"
+      }
+    },
+    "/api/v1/images/{id}/events": {
+      "get": {
+        "operationId": "images.events",
+        "parameters": [
+          {
+            "description": "The revision the client holds; Last-Event-ID wins.",
+            "in": "query",
+            "name": "since",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Stream the events of an image document"
       }
     },
     "/api/v1/images/{id}/export": {
@@ -16741,6 +17479,123 @@
           }
         ],
         "summary": "List the latest batches of an image document"
+      }
+    },
+    "/api/v1/images/{id}/model-edit": {
+      "post": {
+        "operationId": "images.model_edit",
+        "parameters": [
+          {
+            "description": "The image document, img_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "connection_id": {
+                    "description": "The connection to the provider: with the image_edit capability and accepting image for remove_background, with the image capability and accepting text for generate.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "dry_run": {
+                    "description": "true answers the job it would create, with its estimate, and writes and sends nothing.",
+                    "type": "boolean"
+                  },
+                  "layer_id": {
+                    "description": "remove_background: the image layer, required. generate: a layer whose box the new picture must cover; without it, the canvas.",
+                    "type": "string"
+                  },
+                  "model": {
+                    "description": "The model id, as provider:models lists it.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "operation": {
+                    "description": "remove_background (the picture of the layer is sent to the provider) or generate (only the prompt is sent).",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "project_id": {
+                    "description": "The project that holds the generated file and its cost, prj_ and 10 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "prompt": {
+                    "description": "generate only: what to draw, 1 to 4000 characters.",
+                    "type": "string"
+                  },
+                  "size": {
+                    "description": "generate only: width and height in pixels joined by x; the default is the size nearest to the box to cover.",
+                    "type": "string"
+                  },
+                  "wait_ms": {
+                    "description": "Wait up to this many milliseconds for the job to finish.",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "project_id",
+                  "connection_id",
+                  "operation",
+                  "model"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove the background of a layer, or generate an image into the document, with the provider of a connection; the job says that the picture is sent, waits for approval, shows its estimate and puts the result in the document as one undoable step"
       }
     },
     "/api/v1/images/{id}/redo": {
@@ -18849,6 +19704,65 @@
           }
         ],
         "summary": "Measure the sound with and without the audio processors"
+      }
+    },
+    "/api/v1/projects/{id}/audio-previews/{key}": {
+      "get": {
+        "operationId": "audio_previews.get",
+        "parameters": [
+          {
+            "description": "A frame of the file, counted from its first: the 2 seconds from it are rendered first, as a window.",
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Download the processed sound of an item, or start rendering it"
       }
     },
     "/api/v1/projects/{id}/bitmaps/{key}": {
@@ -23650,11 +24564,11 @@
                     "type": "string"
                   },
                   "unit": {
-                    "description": "Empty for a price of tokens, image for the price of one image, mchar for the price of a million characters of speech.",
+                    "description": "Empty for a price of tokens, image for the price of one image, mchar for the price of a million characters of speech, second for the price of one second of video.",
                     "type": "string"
                   },
                   "unit_micros": {
-                    "description": "With a unit of image or mchar: the price of one image or of a million characters, in millionths of the currency unit; the token prices stay out.",
+                    "description": "With a unit of image, mchar or second: the price of one image, of a million characters or of one second of video, in millionths of the currency unit; the token prices stay out.",
                     "format": "int64",
                     "type": [
                       "integer",
@@ -23705,6 +24619,871 @@
           }
         ],
         "summary": "Set or remove the price of a model (a person in the browser only; the local token and keys get 403)"
+      }
+    },
+    "/api/v1/providers/sign-ins": {
+      "get": {
+        "operationId": "providers.sign-ins",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderSignInListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the connections made by a sign-in and their state"
+      }
+    },
+    "/api/v1/providers/signin": {
+      "post": {
+        "operationId": "providers.signin.begin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "connection_id": {
+                    "description": "Sign in again an existing connection made by a sign-in, instead of making one.",
+                    "type": "string"
+                  },
+                  "label": {
+                    "description": "A name for a new connection, 1 to 60 characters; the default name of the provider when left out.",
+                    "type": "string"
+                  },
+                  "provider": {
+                    "description": "The provider to sign in to: openai (Sign in with ChatGPT) or openrouter.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "redirect_uri": {
+                    "description": "The address of this app followed by /auth/callback, at the address you opened the app with. OpenAI accepts only http://127.0.0.1:<port>/auth/callback.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "provider",
+                  "redirect_uri"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderSignInBeginResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start the sign-in to an AI provider; answers the address of the consent screen (a person in the browser only)"
+      }
+    },
+    "/api/v1/providers/signin/complete": {
+      "post": {
+        "operationId": "providers.signin.complete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "client_id": {
+                    "description": "The client id the provider issued at the first sign-in (OpenAI sends it in the redirect).",
+                    "type": "string"
+                  },
+                  "code": {
+                    "description": "The authorization code the provider sent back.",
+                    "type": "string"
+                  },
+                  "error": {
+                    "description": "The error the provider sent back instead of a code, for example access_denied.",
+                    "type": "string"
+                  },
+                  "state": {
+                    "description": "The state the provider sent back to the redirect address.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "state"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderSignIn"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Finish the sign-in with what the provider sent to the redirect address (a person in the browser only)"
+      }
+    },
+    "/api/v1/publications": {
+      "get": {
+        "operationId": "publications.list",
+        "parameters": [
+          {
+            "description": "Only the publications of one project.",
+            "in": "query",
+            "name": "project_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only publications with a target in this state: draft, waiting_approval, approved, scheduled, publishing, published, failed, missed or cancelled.",
+            "in": "query",
+            "name": "state",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only publications with a target on this network.",
+            "in": "query",
+            "name": "network",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only publications with a target at or after this time (RFC 3339).",
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only publications with a target before this time (RFC 3339).",
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page size, 1 to 500; the default is 100.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "How many publications to skip.",
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicationListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the publications of the calendar, by project, state, network or time range"
+      },
+      "post": {
+        "operationId": "publications.create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "export": {
+                    "description": "The id of a succeeded export job of the project: the video.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "project_id": {
+                    "description": "The project the publication belongs to.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "targets": {
+                    "description": "One entry per account the post goes to: connection_id, fields (title, description, tags, visibility, made_for_kids, ai_disclosure), at (a time such as 2026-11-20T09:00 read in zone, or an instant with an offset), zone (an IANA name such as America/Sao_Paulo), late_window_minutes.",
+                    "items": {
+                      "$ref": "#/components/schemas/TargetInput"
+                    },
+                    "type": "array"
+                  },
+                  "text": {
+                    "description": "The caption the targets use unless they have their own description.",
+                    "type": "string"
+                  },
+                  "thumbnail": {
+                    "description": "The id of a succeeded export job of a still of the project: the cover.",
+                    "type": "string"
+                  },
+                  "title": {
+                    "description": "The title the targets use unless they have their own, 1 to 200 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "project_id",
+                  "title",
+                  "export"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Publication"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Plan a publication: a video for one or more accounts, each with its time; every target starts as a draft"
+      }
+    },
+    "/api/v1/publications/events": {
+      "get": {
+        "operationId": "publications.events",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Stream the changes of the publications of the calendar"
+      }
+    },
+    "/api/v1/publications/{id}": {
+      "get": {
+        "operationId": "publications.get",
+        "parameters": [
+          {
+            "description": "A publication id, pub_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Publication"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read one publication with its targets"
+      },
+      "put": {
+        "operationId": "publications.update",
+        "parameters": [
+          {
+            "description": "A publication id, pub_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "export": {
+                    "description": "The new video; leave out to keep it.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "targets": {
+                    "description": "Targets to change (with their id), add (without one) or remove (remove: true). A target that was waiting for approval, approved or scheduled and whose post changed goes back to waiting for approval.",
+                    "items": {
+                      "$ref": "#/components/schemas/TargetInput"
+                    },
+                    "type": "array"
+                  },
+                  "text": {
+                    "description": "The new caption; leave out to keep it.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "thumbnail": {
+                    "description": "The new cover; an empty text removes it.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "title": {
+                    "description": "The new title; leave out to keep it.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Publication"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change a publication or its targets; a post that waited for approval goes back to waiting for it"
+      }
+    },
+    "/api/v1/publications/{id}/cancel": {
+      "post": {
+        "operationId": "publications.cancel",
+        "parameters": [
+          {
+            "description": "A publication id, pub_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "target_id": {
+                    "description": "The target, tgt_ and 10 characters.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Publication"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel a target, or every target that has not gone out"
+      }
+    },
+    "/api/v1/publications/{id}/retry": {
+      "post": {
+        "operationId": "publications.retry",
+        "parameters": [
+          {
+            "description": "A publication id, pub_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "target_id": {
+                    "description": "The target, tgt_ and 10 characters.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Publication"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Ask for approval to send a failed target again"
+      }
+    },
+    "/api/v1/publications/{id}/schedule": {
+      "post": {
+        "operationId": "publications.schedule",
+        "parameters": [
+          {
+            "description": "A publication id, pub_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "at": {
+                    "description": "The time: a date and time such as 2026-11-20T09:00 read in zone, or an instant with an offset or Z. Leave out to keep the time the target has.",
+                    "type": "string"
+                  },
+                  "late_window_minutes": {
+                    "description": "0 to 1440: how late after its time the post may still be sent without asking again. The default is 0: a post whose time passed is never sent on its own.",
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "target_id": {
+                    "description": "The target; leave out to schedule every draft target that has a time.",
+                    "type": "string"
+                  },
+                  "zone": {
+                    "description": "The IANA zone the time is read in, for example America/Sao_Paulo; the default is UTC.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Publication"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Give a target its time and ask for approval; it is sent only after a person approves it"
+      }
+    },
+    "/api/v1/publications/{id}/send-now": {
+      "post": {
+        "operationId": "publications.send-now",
+        "parameters": [
+          {
+            "description": "A publication id, pub_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "target_id": {
+                    "description": "The target, tgt_ and 10 characters.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Publication"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Ask for approval to send a target as soon as it is approved"
       }
     },
     "/api/v1/publish": {
@@ -24450,6 +26229,75 @@
           }
         ],
         "summary": "Issue a one-time browser launch code"
+      }
+    },
+    "/api/v1/system/scheduler": {
+      "post": {
+        "operationId": "system.scheduler",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "action": {
+                    "description": "status, pause or resume.",
+                    "enum": [
+                      "status",
+                      "pause",
+                      "resume"
+                    ],
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "action"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/schedulerOut"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read, pause or resume the publication scheduler (pause and resume only for the desktop shell)"
       }
     },
     "/api/v1/system/tools": {
@@ -25426,6 +27274,108 @@
           }
         ],
         "summary": "Change the role of a user or disable or enable them (an administrator session only; network mode)"
+      }
+    },
+    "/api/v1/video/generate": {
+      "post": {
+        "operationId": "video.generate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "aspect": {
+                    "description": "16:9 (the default), 9:16, 1:1, 4:3 or 3:4. The model may make only some.",
+                    "type": "string"
+                  },
+                  "connection_id": {
+                    "description": "The connection to the provider that makes the clip.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "dry_run": {
+                    "description": "true answers the job it would create, with its estimate, and writes and sends nothing.",
+                    "type": "boolean"
+                  },
+                  "first_frame": {
+                    "description": "The id of an image asset of the project the clip starts from; it is sent to the provider after approval.",
+                    "type": "string"
+                  },
+                  "model": {
+                    "description": "The model id, as provider:models lists it.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "project_id": {
+                    "description": "The project the clip belongs to, prj_ and 10 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "prompt": {
+                    "description": "What the clip shows, 1 to 4000 characters.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "seconds": {
+                    "description": "The length of the clip in seconds, 1 to 60; the default is 5. The model may make only some lengths.",
+                    "type": "integer"
+                  },
+                  "wait_ms": {
+                    "description": "Wait up to this many milliseconds for the job to finish.",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "project_id",
+                  "connection_id",
+                  "model",
+                  "prompt"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start a video generation with the provider of a connection; the job waits for a person unless a rule the user wrote covers it, shows its estimate and stores the clip as an asset with its origin"
       }
     },
     "/api/v1/voice/generate": {

@@ -8,6 +8,7 @@
         "projects.create",
         "projects.get",
         "audio.measure",
+        "audio_previews.get",
         "bitmaps.get",
         "projects.brief.get",
         "projects.brief.set",
@@ -172,7 +173,11 @@
         "image.generate",
         "providers.list",
         "providers.prices.set",
+        "providers.sign-ins",
+        "providers.signin.begin",
+        "providers.signin.complete",
         "text.generate",
+        "video.generate",
         "voice.generate"
       ]
     },
@@ -183,12 +188,16 @@
         "images.create",
         "images.get",
         "images.edit",
+        "images.events",
         "images.export",
         "images.file",
         "images.frame",
         "images.history",
+        "images.model_edit",
         "images.redo",
-        "images.undo"
+        "images.undo",
+        "images.import",
+        "images.import_file"
       ]
     },
     {
@@ -208,6 +217,15 @@
     {
       "tag": "Publishing",
       "pages": [
+        "publications.list",
+        "publications.create",
+        "publications.get",
+        "publications.update",
+        "publications.cancel",
+        "publications.retry",
+        "publications.schedule",
+        "publications.send-now",
+        "publications.events",
         "publish.now",
         "publish.status",
         "publish.validate",
@@ -241,6 +259,7 @@
         "handshake.get",
         "system.get",
         "system.launch",
+        "system.scheduler",
         "system.tools",
         "system.tools.install"
       ]
@@ -314,6 +333,7 @@
       "caption.set_words",
       "caption.split",
       "clip.add",
+      "clip.add_composition",
       "clip.remove_silences",
       "clip.replace_media",
       "clip.set_blend",
@@ -328,6 +348,8 @@
       "clip.set_outline",
       "clip.set_shadow",
       "clip.set_speed",
+      "composition.create_from_selection",
+      "composition.expand",
       "font.add",
       "font.remove",
       "item.crossfade",

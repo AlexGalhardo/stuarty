@@ -528,6 +528,53 @@ var Endpoints = []Endpoint{
 		Service: "PublishStatus", Status: 200, Summary: "Read the state of a publication",
 	},
 	{
+		ID:      "publications.create",
+		Method:  http.MethodPost,
+		Path:    "/publications",
+		Scope:   service.ScopeEdit,
+		Service: "PublicationCreate",
+		Status:  200,
+		Summary: "Plan a publication: a video for one or more accounts, each with its time; every target starts as a draft",
+	},
+	{
+		ID: "publications.list", Method: http.MethodGet, Path: "/publications", Scope: service.ScopeRead,
+		Service: "PublicationList", Status: 200,
+		Summary: "List the publications of the calendar, by project, state, network or time range",
+	},
+	{
+		ID: "publications.events", Method: http.MethodGet, Path: "/publications/events", Scope: service.ScopeRead,
+		Uncounted: true, Status: 200, Summary: "Stream the changes of the publications of the calendar",
+	},
+	{
+		ID: "publications.get", Method: http.MethodGet, Path: "/publications/{id}", Scope: service.ScopeRead,
+		Service: "PublicationGet", Status: 200, Summary: "Read one publication with its targets",
+	},
+	{
+		ID: "publications.update", Method: http.MethodPut, Path: "/publications/{id}", Scope: service.ScopeEdit,
+		Service: "PublicationUpdate", Status: 200,
+		Summary: "Change a publication or its targets; a post that waited for approval goes back to waiting for it",
+	},
+	{
+		ID: "publications.schedule", Method: http.MethodPost, Path: "/publications/{id}/schedule",
+		Scope: service.ScopeRender, Service: "PublicationSchedule", Status: 200,
+		Summary: "Give a target its time and ask for approval; it is sent only after a person approves it",
+	},
+	{
+		ID: "publications.send-now", Method: http.MethodPost, Path: "/publications/{id}/send-now",
+		Scope: service.ScopeRender, Service: "PublicationSendNow", Status: 200,
+		Summary: "Ask for approval to send a target as soon as it is approved",
+	},
+	{
+		ID: "publications.retry", Method: http.MethodPost, Path: "/publications/{id}/retry",
+		Scope: service.ScopeRender, Service: "PublicationRetry", Status: 200,
+		Summary: "Ask for approval to send a failed target again",
+	},
+	{
+		ID: "publications.cancel", Method: http.MethodPost, Path: "/publications/{id}/cancel",
+		Scope: service.ScopeEdit, Service: "PublicationCancel", Status: 200,
+		Summary: "Cancel a target, or every target that has not gone out",
+	},
+	{
 		ID:      "providers.list",
 		Method:  http.MethodGet,
 		Path:    "/providers",
@@ -544,6 +591,28 @@ var Endpoints = []Endpoint{
 		ID: "providers.prices.set", Method: http.MethodPut, Path: "/providers/prices", Scope: service.ScopeAdmin,
 		Service: "ProviderPriceSet", Status: 200,
 		Summary: "Set or remove the price of a model (a person in the browser only; the local token and keys get 403)",
+	},
+	{
+		ID:      "providers.signin.begin",
+		Method:  http.MethodPost,
+		Path:    "/providers/signin",
+		Scope:   service.ScopeAdmin,
+		Service: "ProviderSignInBegin",
+		Status:  200,
+		Summary: "Start the sign-in to an AI provider; answers the address of the consent screen (a person in the browser only)",
+	},
+	{
+		ID:      "providers.signin.complete",
+		Method:  http.MethodPost,
+		Path:    "/providers/signin/complete",
+		Scope:   service.ScopeAdmin,
+		Service: "ProviderSignInComplete",
+		Status:  200,
+		Summary: "Finish the sign-in with what the provider sent to the redirect address (a person in the browser only)",
+	},
+	{
+		ID: "providers.sign-ins", Method: http.MethodGet, Path: "/providers/sign-ins", Scope: service.ScopeRead,
+		Service: "ProviderSignInList", Status: 200, Summary: "List the connections made by a sign-in and their state",
 	},
 	{
 		ID:      "text.generate",
@@ -611,6 +680,24 @@ var Endpoints = []Endpoint{
 		Service: "VoiceGenerate",
 		Status:  202,
 		Summary: "Start a speech generation with the provider of a connection; the job waits for approval, shows its estimate and stores the audio as an asset with its origin",
+	},
+	{
+		ID:      "images.model_edit",
+		Method:  http.MethodPost,
+		Path:    "/images/{id}/model-edit",
+		Scope:   service.ScopeEdit,
+		Service: "ImageModelEdit",
+		Status:  202,
+		Summary: "Remove the background of a layer, or generate an image into the document, with the provider of a connection; the job says that the picture is sent, waits for approval, shows its estimate and puts the result in the document as one undoable step",
+	},
+	{
+		ID:      "video.generate",
+		Method:  http.MethodPost,
+		Path:    "/video/generate",
+		Scope:   service.ScopeEdit,
+		Service: "VideoGenerate",
+		Status:  202,
+		Summary: "Start a video generation with the provider of a connection; the job waits for a person unless a rule the user wrote covers it, shows its estimate and stores the clip as an asset with its origin",
 	},
 	{
 		ID: "voice.list", Method: http.MethodGet, Path: "/connections/{id}/voices", Scope: service.ScopeRead,
@@ -780,6 +867,11 @@ var Endpoints = []Endpoint{
 		ID: "bitmaps.get", Method: http.MethodGet, Path: "/projects/{id}/bitmaps/{key}", Scope: service.ScopeRead,
 		Uncounted: true, Status: 200, Summary: "Download a rasterized text or shape",
 	},
+	{
+		ID: "audio_previews.get", Method: http.MethodGet, Path: "/projects/{id}/audio-previews/{key}",
+		Scope: service.ScopeRead, Uncounted: true, Status: 200,
+		Summary: "Download the processed sound of an item, or start rendering it",
+	},
 
 	{
 		ID: "handshake.get", Method: http.MethodGet, Path: "/handshake", Status: 200,
@@ -788,6 +880,11 @@ var Endpoints = []Endpoint{
 	{
 		ID: "system.launch", Method: http.MethodPost, Path: "/system/launch", Scope: service.ScopeAdmin, Status: 200,
 		Summary: "Issue a one-time browser launch code",
+	},
+	{
+		ID: "system.scheduler", Method: http.MethodPost, Path: "/system/scheduler", Scope: service.ScopeAdmin,
+		Status:  200,
+		Summary: "Read, pause or resume the publication scheduler (pause and resume only for the desktop shell)",
 	},
 
 	{
@@ -916,6 +1013,16 @@ var Endpoints = []Endpoint{
 		ID: "images.export", Method: http.MethodPost, Path: "/images/{id}/export", Scope: service.ScopeEdit,
 		Service: "ImageExport", Status: 200, Summary: "Export an image document to a PNG, JPEG or WebP file",
 	},
+	{
+		ID: "images.import", Method: http.MethodPost, Path: "/images/import", Scope: service.ScopeEdit,
+		Service: "ImageImport", Status: 200,
+		Summary: "Import an image file into a new image document, or as a layer of one",
+	},
+	{
+		ID: "images.import_file", Method: http.MethodPost, Path: "/images/import/file", Scope: service.ScopeEdit,
+		Service: "ImageImportFile", Status: 200,
+		Summary: "Import an image file sent as the body of the request into a new image document, or as a layer of one",
+	},
 	// The reads of the image editor screen (SDD-012 section 24.3).
 	{
 		ID: "images.frame", Method: http.MethodGet, Path: "/images/{id}/frame", Scope: service.ScopeRead,
@@ -929,6 +1036,10 @@ var Endpoints = []Endpoint{
 	{
 		ID: "images.file", Method: http.MethodGet, Path: "/images/{id}/exports/{name}", Scope: service.ScopeRead,
 		Service: "ImageFile", Status: 200, Summary: "Download a file that an image export wrote",
+	},
+	{
+		ID: "images.events", Method: http.MethodGet, Path: "/images/{id}/events", Scope: service.ScopeRead,
+		Uncounted: true, Status: 200, Summary: "Stream the events of an image document",
 	},
 	{
 		ID: "agents.profiles.list", Method: http.MethodGet, Path: "/agents/profiles", Scope: service.ScopeRead,

@@ -51,7 +51,9 @@ command image:create
 command image:edit
 command image:export
 command image:generate
+command image:import
 command image:list
+command image:model-edit
 command image:redo
 command image:show
 command image:undo
@@ -95,6 +97,14 @@ command prompt:write
 command provider:list
 command provider:models
 command provider:price
+command publication:cancel
+command publication:create
+command publication:list
+command publication:retry
+command publication:schedule
+command publication:send-now
+command publication:show
+command publication:update
 command publish:now
 command publish:status
 command publish:validate
@@ -127,6 +137,7 @@ command tools:install
 command transcribe
 command undo
 command version
+command video:generate
 command view
 command voice:generate
 command voice:list
@@ -163,6 +174,7 @@ route GET /fonts
 route GET /handshake
 route GET /images
 route GET /images/{}
+route GET /images/{}/events
 route GET /images/{}/exports/{}
 route GET /images/{}/frame
 route GET /images/{}/history
@@ -180,6 +192,7 @@ route GET /library/skills/{}/lint
 route GET /projects
 route GET /projects/{}
 route GET /projects/{}/audio-measure
+route GET /projects/{}/audio-previews/{}
 route GET /projects/{}/bitmaps/{}
 route GET /projects/{}/brief
 route GET /projects/{}/chat/sessions
@@ -209,6 +222,10 @@ route GET /projects/{}/snap-points
 route GET /projects/{}/texts/{}
 route GET /projects/{}/texts/{}/revisions
 route GET /providers
+route GET /providers/sign-ins
+route GET /publications
+route GET /publications/events
+route GET /publications/{}
 route GET /publish/{}
 route GET /social/accounts
 route GET /social/networks
@@ -232,8 +249,11 @@ route POST /connections/{}/test
 route POST /fonts
 route POST /image/generate
 route POST /images
+route POST /images/import
+route POST /images/import/file
 route POST /images/{}/edit
 route POST /images/{}/export
+route POST /images/{}/model-edit
 route POST /images/{}/redo
 route POST /images/{}/undo
 route POST /jobs/{}/cancel
@@ -271,6 +291,13 @@ route POST /projects/{}/texts/{}/draft
 route POST /projects/{}/texts/{}/revert
 route POST /projects/{}/trash
 route POST /projects/{}/undo
+route POST /providers/signin
+route POST /providers/signin/complete
+route POST /publications
+route POST /publications/{}/cancel
+route POST /publications/{}/retry
+route POST /publications/{}/schedule
+route POST /publications/{}/send-now
 route POST /publish
 route POST /publish/validate
 route POST /scripts/estimate
@@ -278,6 +305,7 @@ route POST /social/complete
 route POST /social/connect
 route POST /social/select
 route POST /system/launch
+route POST /system/scheduler
 route POST /system/tools/install
 route POST /templates
 route POST /templates/import
@@ -286,6 +314,7 @@ route POST /templates/{}/instantiate
 route POST /text/generate
 route POST /trash/empty
 route POST /users
+route POST /video/generate
 route POST /voice/generate
 route PUT /agents/profiles/{}
 route PUT /assets/{}
@@ -297,6 +326,7 @@ route PUT /projects/{}/brief
 route PUT /projects/{}/briefing
 route PUT /projects/{}/texts/{}
 route PUT /providers/prices
+route PUT /publications/{}
 tool command_help
 tool connection
 tool edit

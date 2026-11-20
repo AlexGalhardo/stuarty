@@ -175,6 +175,14 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.ImageExport(ctx, service.ImageExportRequest{ImageID: "img_0000000001"})
 			return err
 		},
+		"ImageImport": func() error {
+			_, err := e.svc.ImageImport(ctx, service.ImageImportRequest{Hash: "sha256:" + strings.Repeat("a", 64)})
+			return err
+		},
+		"ImageImportFile": func() error {
+			_, err := e.svc.ImageImportFile(ctx, service.ImageImportFileRequest{Body: strings.NewReader("x"), Size: 1})
+			return err
+		},
 		"ImageFrame": func() error {
 			_, err := e.svc.ImageFrame(ctx, service.ImageFrameRequest{ImageID: "img_0000000001"})
 			return err
@@ -433,6 +441,38 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.PublishStatus(ctx, service.PublishStatusRequest{JobID: "job_0000000001"})
 			return err
 		},
+		"PublicationCreate": func() error {
+			_, err := e.svc.PublicationCreate(ctx, service.PublicationCreateRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"PublicationGet": func() error {
+			_, err := e.svc.PublicationGet(ctx, service.PublicationGetRequest{ID: "pub_0000000001"})
+			return err
+		},
+		"PublicationList": func() error {
+			_, err := e.svc.PublicationList(ctx, service.PublicationListRequest{})
+			return err
+		},
+		"PublicationUpdate": func() error {
+			_, err := e.svc.PublicationUpdate(ctx, service.PublicationUpdateRequest{ID: "pub_0000000001"})
+			return err
+		},
+		"PublicationSchedule": func() error {
+			_, err := e.svc.PublicationSchedule(ctx, service.PublicationScheduleRequest{ID: "pub_0000000001"})
+			return err
+		},
+		"PublicationSendNow": func() error {
+			_, err := e.svc.PublicationSendNow(ctx, service.PublicationSendNowRequest{ID: "pub_0000000001"})
+			return err
+		},
+		"PublicationRetry": func() error {
+			_, err := e.svc.PublicationRetry(ctx, service.PublicationRetryRequest{ID: "pub_0000000001"})
+			return err
+		},
+		"PublicationCancel": func() error {
+			_, err := e.svc.PublicationCancel(ctx, service.PublicationCancelRequest{ID: "pub_0000000001"})
+			return err
+		},
 		"ProviderList": func() error {
 			_, err := e.svc.ProviderList(ctx, service.ProviderListRequest{})
 			return err
@@ -445,6 +485,18 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.ProviderPriceSet(ctx, service.ProviderPriceSetRequest{Provider: "openai", Model: "m"})
 			return err
 		},
+		"ProviderSignInBegin": func() error {
+			_, err := e.svc.ProviderSignInBegin(ctx, service.ProviderSignInBeginRequest{Provider: "openai"})
+			return err
+		},
+		"ProviderSignInComplete": func() error {
+			_, err := e.svc.ProviderSignInComplete(ctx, service.ProviderSignInCompleteRequest{State: "s"})
+			return err
+		},
+		"ProviderSignInList": func() error {
+			_, err := e.svc.ProviderSignInList(ctx, service.ProviderSignInListRequest{})
+			return err
+		},
 		"TextGenerate": func() error {
 			_, err := e.svc.TextGenerate(ctx, service.TextGenerateRequest{ProjectID: "prj_0000000001"})
 			return err
@@ -455,6 +507,14 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 		},
 		"VoiceGenerate": func() error {
 			_, err := e.svc.VoiceGenerate(ctx, service.VoiceGenerateRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"ImageModelEdit": func() error {
+			_, err := e.svc.ImageModelEdit(ctx, service.ImageModelEditRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"VideoGenerate": func() error {
+			_, err := e.svc.VideoGenerate(ctx, service.VideoGenerateRequest{ProjectID: "prj_0000000001"})
 			return err
 		},
 		"VoiceList": func() error {

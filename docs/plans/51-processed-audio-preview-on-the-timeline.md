@@ -42,13 +42,13 @@ Not in progress together with 53 (both change `engine/audio` and SDD-004 section
 
 ## Tasks
 
-- [ ] 1. Amend SDD-004 section 7.1 (the key, the window rule, the gain rule; the track chain is excluded; the open question is answered by author decision D-094), SDD-003 (sections 6.3 and 6.5), SDD-007 (the byte-serving table), SDD-000 (the folder) and SDD-012 (the preview). Verify: `task lint:md` exits 0.
-- [ ] 2. Render one item's chain before the loudness gain, and key it. Verify: `go test ./engine/audio/... ./engine/export/... -run "TestAudioChain|TestAudioPreviewKey"` passes.
-- [ ] 3. The cache in `service/`: the window first, the background job, the atomic store, the reuse by key. Verify: `go test ./service/... -run TestAudioPreviewCache` passes.
-- [ ] 4. The route, with `Range` and the project check. Verify: `go test ./web/app/http/... -run TestAudioPreviewRoute` passes (206 for a range, 404 for a key the project did not hand out).
-- [ ] 5. The preview switches the item's audio element; the inspector shows "processing" and "ready". Verify: `task test:web` and `bun run check:thin-client` pass, and `web/e2e/specs/audio-processed-preview.spec.ts` (new, `bun run e2e`) passes.
-- [ ] 6. Parity: the export of the whole timeline equals the preview of the same revision within the audio tolerance. Verify: `go test ./engine/export/... -run TestAudioChainExportEqualsPreview` passes.
-- [ ] 7. Both languages, and the measurement. Verify: `bun run check:i18n` passes; the measured time is in the hand-off.
+- [x] 1. Amend SDD-004 section 7.1 (the key, the window rule, the gain rule; the track chain is excluded; the open question is answered by author decision D-094), SDD-003 (sections 6.3 and 6.5), SDD-007 (the byte-serving table), SDD-000 (the folder) and SDD-012 (the preview). Verify: `task lint:md` exits 0.
+- [x] 2. Render one item's chain before the loudness gain, and key it. Verify: `go test ./engine/audio/... ./engine/export/... -run "TestAudioChain|TestAudioPreviewKey"` passes.
+- [x] 3. The cache in `service/`: the window first, the background job, the atomic store, the reuse by key. Verify: `go test ./service/... -run TestAudioPreviewCache` passes.
+- [x] 4. The route, with `Range` and the project check. Verify: `go test ./web/app/http/... -run TestAudioPreviewRoute` passes (206 for a range, 404 for a key the project did not hand out).
+- [x] 5. The preview switches the item's audio element; the inspector shows "processing" and "ready". Verify: `task test:web` and `bun run check:thin-client` pass, and `web/e2e/specs/audio-processed-preview.spec.ts` (new, `bun run e2e`) passes.
+- [x] 6. Parity: the export of the whole timeline equals the preview of the same revision within the audio tolerance. Verify: `go test ./engine/export/... -run TestAudioChainExportEqualsPreview` passes.
+- [x] 7. Both languages, and the measurement. Verify: `bun run check:i18n` passes; the measured time is in the hand-off.
 
 ## Test strategy
 

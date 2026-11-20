@@ -49,9 +49,35 @@ func (c *Client) ImageGenerate(ctx context.Context, req service.ImageGenerateReq
 	return jobText(post[service.Job](ctx, c, "/image/generate", req))
 }
 
+// VideoGenerate implements service.Service.
+func (c *Client) VideoGenerate(ctx context.Context, req service.VideoGenerateRequest) (*service.Job, error) {
+	return jobText(post[service.Job](ctx, c, "/video/generate", req))
+}
+
 // VoiceGenerate implements service.Service.
 func (c *Client) VoiceGenerate(ctx context.Context, req service.VoiceGenerateRequest) (*service.Job, error) {
 	return jobText(post[service.Job](ctx, c, "/voice/generate", req))
+}
+
+// modelEditBody is the body of POST /images/{id}/model-edit: the image is in the path.
+type modelEditBody struct {
+	ProjectID    string `json:"project_id"`
+	ConnectionID string `json:"connection_id"`
+	Operation    string `json:"operation"`
+	Model        string `json:"model"`
+	LayerID      string `json:"layer_id,omitempty"`
+	Prompt       string `json:"prompt,omitempty"`
+	Size         string `json:"size,omitempty"`
+	WaitMS       int    `json:"wait_ms,omitempty"`
+	DryRun       bool   `json:"dry_run,omitempty"`
+}
+
+// ImageModelEdit implements service.Service.
+func (c *Client) ImageModelEdit(ctx context.Context, req service.ImageModelEditRequest) (*service.Job, error) {
+	return jobText(post[service.Job](ctx, c, imagePath(req.ImageID, "/model-edit"), modelEditBody{
+		ProjectID: req.ProjectID, ConnectionID: req.ConnectionID, Operation: req.Operation, Model: req.Model,
+		LayerID: req.LayerID, Prompt: req.Prompt, Size: req.Size, WaitMS: req.WaitMS, DryRun: req.DryRun,
+	}))
 }
 
 // VoiceList implements service.Service.

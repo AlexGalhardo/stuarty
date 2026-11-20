@@ -37,6 +37,17 @@ interface Identity {
 // The Google account of the person at the keyboard; a test sets it before it presses the button.
 let identity: Identity = { sub: "", email: "" };
 let google: Server;
+// A test can hold the next token answer of the fake, to look at the page while the exchange is in flight.
+let tokenGate: Promise<void> | null = null;
+let tokenRequests = 0;
+
+function holdGoogleToken(): () => void {
+	let release = () => {};
+	tokenGate = new Promise<void>((resolve) => {
+		release = resolve;
+	});
+	return release;
+}
 
 async function startGoogle(): Promise<Server> {
 	const { privateKey, publicKey } = generateKeyPairSync("rsa", {
@@ -77,7 +88,13 @@ async function startGoogle(): Promise<Server> {
 			request.on("data", (chunk) => {
 				body += chunk;
 			});
-			request.on("end", () => {
+			request.on("end", async () => {
+				tokenRequests += 1;
+				if (tokenGate !== null) {
+					const waiting = tokenGate;
+					tokenGate = null;
+					await waiting;
+				}
 				const form = new URLSearchParams(body);
 				const grant = grants.get(form.get("code") ?? "");
 				response.setHeader("Content-Type", "application/json");
@@ -263,6 +280,29 @@ test.describe("google-sign-in", () => {
 		await page.getByLabel("Password").fill(PASSWORD);
 		await page.getByRole("button", { name: "Log in" }).click();
 		await expect(page).toHaveURL(`${NETWORK_URL}/projects`);
+	});
+
+	test("the state and the code leave the address before the exchange ends @chromium-only", async ({
+		page,
+	}) => {
+		identity = { sub: "sub-a-stranger", email };
+		await page.goto("/login");
+		const release = holdGoogleToken();
+		try {
+			await page.getByRole("button", { name: "Sign in with Google" }).click();
+			// The fake holds the token answer, so the server is still exchanging the code: the address
+			// (and the history entry of Inertia) no longer holds the state or the code (SDD-007 T-76).
+			await expect.poll(() => tokenRequests).toBeGreaterThan(0);
+			await expect(page.locator("[data-google-phase='working']")).toBeVisible();
+			await expect.poll(() => new URL(page.url()).search).toBe("");
+			expect(
+				await page.evaluate(() => JSON.stringify(window.history.state)),
+			).not.toContain("code=");
+		} finally {
+			release();
+		}
+		await expect(page.locator("[data-google-phase='failed']")).toBeVisible();
+		expect(new URL(page.url()).search).toBe("");
 	});
 
 	// The two pages of the epic and the login with its new button, in both languages and both themes: the

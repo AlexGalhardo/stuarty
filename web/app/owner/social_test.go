@@ -33,7 +33,8 @@ func TestSocialRegistryHasTheThreeNetworksAtTheirOwnHostsByDefault(t *testing.T)
 func TestSocialRegistryTakesTheFakeNetworkOnlyOnLoopbackInLocalMode(t *testing.T) {
 	t.Parallel()
 
-	reg, err := socialRegistry(env(map[string]string{EnvTestSocialURL: "http://127.0.0.1:3104"}), config.ModeLocal)
+	vars := map[string]string{EnvTestSocialURL: "http://127.0.0.1:3104", "APP_ENV": "test"}
+	reg, err := socialRegistry(env(vars), config.ModeLocal)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,7 +61,7 @@ func TestSocialRegistryTakesTheFakeNetworkOnlyOnLoopbackInLocalMode(t *testing.T
 		"a name that resolves": {"http://localtest.me:3104", config.ModeLocal},
 	} {
 		if _, err := socialRegistry(
-			env(map[string]string{EnvTestSocialURL: tc.url}),
+			env(map[string]string{EnvTestSocialURL: tc.url, "APP_ENV": "test"}),
 			tc.mode,
 		); !errors.Is(
 			err,
