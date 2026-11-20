@@ -16,7 +16,7 @@
 set -euo pipefail
 
 MIN=${RELEASE_TRAIN_MIN:-88}
-MAX=${RELEASE_TRAIN_MAX:-95}
+MAX=${RELEASE_TRAIN_MAX:-94} # the cut adds two commits (version stamp, chore(release)): 96 at most
 URL=https://github.com/AlexGalhardo/stuarty
 
 die() {
@@ -111,6 +111,17 @@ write_changelog() {
 	rm -f "$section"
 }
 
+# Stamps the version into the agent docs (the one version of the binary: `version`, `doctor` and
+# the agent docs read it) and regenerates them, in its own commit.
+stamp_version() {
+	local v=$1 f=web/app/agentdocs/agentdocs.go
+	grep -q "^var Version = \"$v\"$" "$f" && return 0
+	sed -i "s/^var Version = \".*\"$/var Version = \"$v\"/" "$f"
+	go run ./web/cmd/gen-agent-docs >/dev/null
+	git add "$f" web/app/agentdocs/out
+	git commit -q -m "docs(cli): stamp the agent docs with version $v" -m "Refs: release $v"
+}
+
 pr_body() { # $1 version, $2 file to write
 	local v=$1
 	{
@@ -129,6 +140,7 @@ cut_release() {
 	n=$(count)
 	[ "$n" -le 99 ] || die "$b holds $n commits: GitHub refuses a rebase-merge above 100; split it first"
 	[ "$(git rev-list --merges --count origin/main..HEAD)" = 0 ] || die "$b has a merge commit"
+	stamp_version "$v"
 	write_changelog "$v"
 	git add CHANGELOG.md
 	git commit -q -m "chore(release): v$v"
