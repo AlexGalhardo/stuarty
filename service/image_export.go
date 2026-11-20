@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -129,22 +130,24 @@ func (s *svc) ImageExport(ctx context.Context, req ImageExportRequest) (*ImageEx
 	return res, nil
 }
 
+// imageExportInput is the input an image.export job keeps: the image, and the user who exported it (empty in local
+// mode), since the export of a template every user may read is still the export of one person.
+type imageExportInput struct {
+	ImageID     string `json:"image_id"`
+	OwnerUserID string `json:"owner_user_id,omitempty"`
+}
+
 // recordImageExport writes the export job of the file just made, already succeeded: the rule of a job that a
 // publication may take as a thumbnail (D-111). The job has no project, since an image has none; who may use it is
-// who may see the image (canSeeImageJob).
+// the person who exported it, while they may still see the image (canSeeImageJob).
 func (s *svc) recordImageExport(ctx context.Context, c Caller, res *ImageExportResult) error {
-	rel, rerr := filepath.Rel(s.workspace, res.Path)
-	if rerr != nil {
-		return internalError()
-	}
-
 	// The path of the file is rebuilt from the image, the revision and the digest when it is used, and the job
 	// keeps only those; the absolute path of the machine is not stored.
 	stored := *res
-	stored.Path, stored.JobID = filepath.ToSlash(rel), ""
+	stored.Path, stored.JobID = path.Join("exports", "images", res.ImageID, filepath.Base(res.Path)), ""
 
 	id := s.newIDs("job")
-	input := marshalOrNull(map[string]string{"image_id": res.ImageID})
+	input := marshalOrNull(imageExportInput{ImageID: res.ImageID, OwnerUserID: c.OwnerUserID})
 	result := marshalOrNull(JobResult{Image: &stored})
 
 	err := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
@@ -189,10 +192,17 @@ func imageJobOf(j *JobRow) (*ImageExportResult, bool) {
 }
 
 // canSeeImageJob says whether the caller may use an image.export job: a key limited to one project reaches no
-// image (SDD-021 section 10), and any other caller reaches the job of an image they may see.
+// image (SDD-021 section 10); in network mode only the user who exported it reaches it, so the export one user made
+// of a shared template is not another user's; and the image must still be one the caller may see.
 func (s *svc) canSeeImageJob(ctx context.Context, c Caller, j *JobRow) bool {
 	img, ok := imageJobOf(j)
 	if !ok || c.ProjectID != "" {
+		return false
+	}
+
+	var in imageExportInput
+	if json.Unmarshal(j.Input, &in) != nil || in.ImageID != img.ImageID ||
+		c.OwnerUserID != "" && in.OwnerUserID != c.OwnerUserID {
 		return false
 	}
 
