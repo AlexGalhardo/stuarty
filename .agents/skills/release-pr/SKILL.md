@@ -1,13 +1,22 @@
 ---
 name: release-pr
-description: Suspended by ADR-0045 while the epics are implemented. Cut a release of Stuarty through one rebase-merged pull request, including stacked release branches that must be rebuilt on main after the previous release merges.
+description: Run the release train of Stuarty (ADR-0048) - integrate approved work as linear commits on the open release pull request, cut it at about 90 commits, rebase-merge it into main and open the next one, without waiting for the author.
 ---
 
 # Release pull request
 
-**Suspended (ADR-0045, 2026-11-18):** no release is cut while the epics are implemented, and the default branch is not protected or green. This procedure describes the flow of ADR-0028 as it worked until release 0.29.0. It is the starting point when the integration pull request is split into releases (`v0.30.0`, `v0.31.0` and so on); revise it with the author then.
+The release train (ADR-0048, author's decision of 2026-11-20) replaces the single integration pull request of ADR-0045. Read `rules/git-and-branches.md` first. The tool is `bash .agents/skills/release-pr/scripts/release-train.sh`.
 
-Read `rules/git-and-branches.md` first. The release tool is `go run ./internal/tools/release` (SDD-009).
+## 0. The train
+
+1. **One open release at a time.** The open release branch is the integration line: `release-train.sh status` prints the branch, its version, its commit count and its pull request. It is linear and starts at `main`.
+2. **Approved work joins it** with `release-train.sh integrate <branch>`: the branch's own commits, in order, cherry-picked with `-x`; merge commits and commits already on `main`, on a release branch or on the line are left out. A conflict stops the tool; resolve it, `git cherry-pick --continue`, and run `integrate` again. The tool pushes the release branch and opens its pull request when the branch has its first commit.
+3. **The cut.** At 88 commits or more, `release-train.sh cut`; `integrate` cuts by itself when the line reaches 95. The cut writes the CHANGELOG section of the version from every commit since the last `chore(release)` on `main` (it replaces a section of the same version an earlier cut wrote), commits `chore(release): vX.Y.Z`, pushes, rebase-merges the pull request (`gh pr merge --rebase --admin`), waits until `main` has the same tree, and starts `release/v<next minor>` from the new `main`. The orchestrator does this on its own, as part of the loop, without asking the author.
+4. **Limits.** GitHub refuses a rebase-merge above 100 commits, and one that needs a merge commit; the tool refuses to cut above 99 or with a merge commit, and never opens a pull request with an empty commit. A rebase-merge gives every commit a new id, so a branch stacked on an unmerged release cannot be prepared in advance: the next release always starts from the new `main`.
+5. **Tags.** No tag is pushed while CI is off: a pushed tag starts `release.yml`, which publishes images and needs secrets. When the author turns CI back on, the tags go on the `chore(release)` commits of `main` (section 4). The commits of v0.30.0 and v0.31.0 carry the subject of the commit before them, by an error of the first split; they are still the release commits of those versions.
+6. A name already spent on the remote (a branch pushed by mistake) is not reused: the release goes to `release/vX.Y.Z-r2`, because rewriting a pushed branch needs a force push.
+
+The sections below are the flow of ADR-0028 until release 0.29.0. The release tool (`go run ./internal/tools/release`) finds the previous release by its tag, so it is used again once the tags exist.
 
 ## 1. Size
 

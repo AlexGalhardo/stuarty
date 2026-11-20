@@ -5,14 +5,14 @@ description: Merge an epic that the specialist approved into the integration bra
 
 # Integrate agent work
 
-The integration line is the single integration branch of ADR-0045, which carries the one pull request. Every epic is a branch from it (`epic/NN-<slug>`), in its own worktree (`rules/git-and-branches.md`). An epic is integrated only after the specialist approved it (`rules/plans.md` section 3).
+The integration line is the open release branch of the release train (ADR-0048), linear, with its pull request against `main`. Every epic is a branch from it (`epic/NN-<slug>`), in its own worktree (`rules/git-and-branches.md`). An epic is integrated only after the specialist approved it (`rules/plans.md` section 3).
 
-The steps below were written when commits were cherry-picked into a release branch. They still apply where an epic branch is old or two epics touched the same file; the normal case is now one `git merge --no-ff epic/NN-<slug>` on the integration branch.
+An approved branch is integrated by cherry-picking its own commits, in order, onto the release branch: `bash .agents/skills/release-pr/scripts/release-train.sh integrate epic/NN-<slug>`. The release branch never gets a merge commit, because GitHub refuses to rebase-merge a pull request that has one.
 
 ## Steps
 
 1. List what is new: `git log --oneline <line>..epic/NN-<slug>`. The specialist's fix commits are part of the epic. An epic based on an old tip of the line is first updated by merging the line into it, in its worktree, and its checks are run again.
-2. Merge it: `git merge --no-ff epic/NN-<slug>` on the integration branch. Shared files (`rules/plans.md` section 4) are merged one epic at a time. Fall back to `git cherry-pick <commits>` in order only when a merge would bring commits that do not belong to the epic.
+2. Integrate it: `release-train.sh integrate epic/NN-<slug>` on the release branch. It picks the epic's commits that are not on `main`, on a release branch or already on the line by patch, skips merge commits, pushes, and cuts the release by itself when the line reaches 95 commits. Shared files (`rules/plans.md` section 4) are integrated one epic at a time.
 3. Conflicts:
    - In generated files, take either side and regenerate.
    - An empty cherry-pick ("The previous cherry-pick is now empty") means the change is already there: `git cherry-pick --skip`.
@@ -22,7 +22,7 @@ The steps below were written when commits were cherry-picked into a release bran
    - Two seniors shrinking the same list (the `KNOWN_DIVERGENCES` of `preview-vs-export`, each removing the cases it fixed) conflict on every entry: the result is the intersection, often an empty object. Run the web lint afterwards; Biome wants `{}` on one line.
 4. Check the diff against the briefing with `git diff --stat`, and revert what is outside the agent's area unless it is a minimal compile fix the report names.
 5. Run `go build ./...` after every integrated series, not only at the end: a type one senior changes in its area breaks another senior's surface (the OpenTimelineIO result moved from `otio.Lost` to `service.OtioLost` and broke `web/app/cli`). Then run `skills/ci-preflight/`, at least the package tests, the cross-target lint and the generators.
-6. Mark the epic in `docs/plans/00-roadmap.md`, remove its worktree and its local branch, stop its agents, and dispatch the next unblocked epic to the free senior, so nobody waits idle. Nothing is pushed without the author.
+6. Mark the epic in `docs/plans/00-roadmap.md`, remove its worktree and its local branch, stop its agents, and dispatch the next unblocked epic to the free senior, so nobody waits idle. At 88 commits or more, cut the release (`release-train.sh cut`, `skills/release-pr/`).
 7. When a test fails on the line, decide regression or environment before you route it: run the same test at the previous tag from a throwaway `git worktree add --detach <dir> vX.Y.Z` (remove it after), and, for a timing test, interleave runs of `main` and the line under the same load. `TestCancelTimeoutFailsTheJob` passed 3/3 at v0.14.0 and failed 3/3 later, which pointed at the v0.15.0 Job Object start; `TestEventsLatencyFromCommitToClient` failed on `main` and on the line alike, which made it load.
 8. Mark the epic from the acceptance criteria the specialist ran, never from memory (rule `rules/plans.md` section 3): write `DONE (<date>, <commits>)` in the roadmap. An epic whose remaining criterion needs another system, a quiet machine or the author stays open with `BLOCKED (<reason>)`.
 

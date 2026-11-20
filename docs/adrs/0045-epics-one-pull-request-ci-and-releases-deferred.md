@@ -1,6 +1,6 @@
 # ADR-0045: Work is epics in a loop on one draft pull request; CI and releases are deferred
 
-- Status: Accepted (2026-11-18)
+- Status: Accepted (2026-11-18); its single integration pull request and its deferred releases are amended by [ADR-0048](0048-release-train.md) (2026-11-20)
 - Deciders: author
 - Suspends: ADR-0028 (release cadence and one pull request per release)
 - Amends: ADR-0025 (releases and CI), SDD-009
