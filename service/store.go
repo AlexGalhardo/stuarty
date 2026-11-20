@@ -70,6 +70,9 @@ type Repos interface {
 	Backups() BackupRepo
 	Audit() AuditRepo
 	Checkpoints() CheckpointRepo
+	// ImageCheckpoints is the checkpoints of the image documents: the same repository, over `image_checkpoints`
+	// (SDD-005 section 5.14.1), with the id of the image in the ProjectID of a row.
+	ImageCheckpoints() CheckpointRepo
 	Fonts() FontRepo
 	BrandKit() BrandKitRepo
 	Images() ImageRepo

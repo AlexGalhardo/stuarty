@@ -187,6 +187,14 @@ type Service interface {
 	ImageEdit(ctx context.Context, req ImageEditRequest) (*ImageEditResult, error)
 	ImageUndo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
 	ImageRedo(ctx context.Context, req ImageStepRequest) (*ImageStepResult, error)
+	// ImageRevert and the checkpoints of an image are those of a timeline (SDD-003 section 2.5.1) for an image
+	// document (SDD-021 section 4).
+	ImageRevert(ctx context.Context, req ImageRevertRequest) (*ImageRevertResult, error)
+	ImageDiff(ctx context.Context, req ImageDiffRequest) (*ImageDiffResult, error)
+	ImageCheckpointCreate(ctx context.Context, req ImageCheckpointCreateRequest) (*Checkpoint, error)
+	ImageCheckpointList(ctx context.Context, req ImageCheckpointListRequest) (*ImageCheckpointListResult, error)
+	ImageCheckpointRename(ctx context.Context, req ImageCheckpointRenameRequest) (*Checkpoint, error)
+	ImageCheckpointRemove(ctx context.Context, req ImageCheckpointRemoveRequest) (*Checkpoint, error)
 	ImageExport(ctx context.Context, req ImageExportRequest) (*ImageExportResult, error)
 	// ImageImport brings an image file into an image document: a new one, or a layer of ImageID (SDD-021 section 10.1).
 	ImageImport(ctx context.Context, req ImageImportRequest) (*ImageImportResult, error)

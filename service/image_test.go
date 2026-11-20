@@ -228,9 +228,10 @@ type memTx struct {
 	st *memStore
 }
 
-func (t memTx) Images() ImageRepo  { return t.st.images }
-func (t memTx) Assets() AssetRepo  { return t.st.assets }
-func (t memTx) AfterCommit(func()) {}
+func (t memTx) Images() ImageRepo                { return t.st.images }
+func (t memTx) ImageCheckpoints() CheckpointRepo { return t.st.checkpoints }
+func (t memTx) Assets() AssetRepo                { return t.st.assets }
+func (t memTx) AfterCommit(func())               {}
 
 // memLibrary is the library side of the files, by owner and hash: the rows an import writes.
 type memLibrary struct {
@@ -256,13 +257,16 @@ func (noJobs) ActiveIngestForHash(context.Context, string) (JobRow, error) {
 
 type memStore struct {
 	Store
-	images   *memImages
-	assets   memAssets
-	projects memProjects
-	library  memLibrary
+	images      *memImages
+	checkpoints *memCheckpoints
+	assets      memAssets
+	projects    memProjects
+	library     memLibrary
 }
 
 func (m *memStore) Images() ImageRepo { return m.images }
+
+func (m *memStore) ImageCheckpoints() CheckpointRepo { return m.checkpoints }
 
 func (m *memStore) AssetLibrary() assetlib.Store { return m.library }
 
@@ -290,8 +294,9 @@ func newImageService(t *testing.T) (*svc, string) {
 	w, h := 64, 48
 
 	st := &memStore{
-		library: memLibrary{rows: map[string]assetlib.Row{}},
-		images:  &memImages{rows: map[string]*ImageRow{}, ops: map[string][]ImageOpRow{}},
+		library:     memLibrary{rows: map[string]assetlib.Row{}},
+		images:      &memImages{rows: map[string]*ImageRow{}, ops: map[string][]ImageOpRow{}},
+		checkpoints: &memCheckpoints{rows: map[string]CheckpointRow{}},
 		assets: memAssets{projects: map[string][]ProjectAssetRow{}, rows: map[string]AssetRow{imgHash: {
 			Hash: imgHash, Kind: "image", OriginalName: "/home/me/face.png", IngestState: IngestReady,
 			Facts: AssetFacts{Width: &w, Height: &h},
