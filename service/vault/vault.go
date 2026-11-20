@@ -137,16 +137,29 @@ func (v *Vault) Has(id string) (bool, error) {
 	return ok, nil
 }
 
-// Verify reports whether the vault can be opened, for doctor: nil when there is no file yet or when
-// the master key opens it, else ErrKeyMissing, ErrWrongKey, ErrCorrupt or the error of the provider.
-// It decrypts no entry.
+// Verify reports whether the vault can be opened, for doctor: nil when the master key opens it, else
+// ErrKeyMissing, ErrWrongKey, ErrCorrupt or the error of the provider. With no file yet the only
+// failure is a key that is there and is not a key (ErrBadKey), which the first credential would hit;
+// an absent key is fine, the vault makes one. It decrypts no entry.
 func (v *Vault) Verify() error {
 	v.mu.Lock()
 	defer v.mu.Unlock()
 
 	f, err := v.read()
-	if err != nil || f == nil {
+	if err != nil {
 		return err
+	}
+
+	if f == nil {
+		if v.key != nil {
+			return nil
+		}
+
+		if _, err := v.keys.Load(); err != nil && !errors.Is(err, ErrKeyNotFound) {
+			return err
+		}
+
+		return nil
 	}
 
 	key, err := v.masterKey(true)
