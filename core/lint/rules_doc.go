@@ -81,11 +81,17 @@ func (c *check) durationLimit() {
 }
 
 // covers says whether an item fills the whole frame, opaque, unrotated and in its
-// default position, with no mask and nothing that animates or fades it: what it takes to hide the
+// default position, with no mask, in the normal blend and nothing that animates or fades it: what it takes to hide the
 // items below.
 func (c *check) covers(it *timeline.Item) bool {
 	if it.Opacity != 1 || it.Mask != nil || it.X != nil || it.Y != nil || it.Scale < 1 || it.Rotation != 0 ||
 		it.TransitionIn != nil || it.TransitionOut != nil {
+		return false
+	}
+
+	// Every blend other than normal mixes the item with what lies beneath it (SDD-004 section 3.8), so the
+	// item below still shows (VV-218).
+	if it.Blend != "" && it.Blend != "normal" {
 		return false
 	}
 
