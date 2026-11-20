@@ -98,7 +98,14 @@ func (s *svc) ProviderSignInBegin(
 		return nil, err
 	}
 
-	if rerr := method.ValidateRedirect(req.RedirectURI); rerr != nil {
+	rerr := method.ValidateRedirect(req.RedirectURI)
+	if errors.Is(rerr, oauth.ErrLocalOnly) {
+		return nil, validationAt("provider", "the sign-in to %s is not offered on a server shared on a network.",
+			method.Describe().Name).
+			withHint("connect the provider with an API key on the Connections page")
+	}
+
+	if rerr != nil {
 		return nil, validationAt("redirect_uri", "%s.", rerr.Error()).
 			withHint("open Stuarty at the address the provider accepts and sign in from there")
 	}
