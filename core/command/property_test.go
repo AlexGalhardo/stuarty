@@ -375,6 +375,11 @@ var alphaOps = map[string]func(p *docPick) string{
 			float64(p.n(101))/100,
 		)
 	},
+	// The random documents hold one video, so a swap succeeds only as the same asset (a no-op); an image for a
+	// video is the refusal the sequences should also meet.
+	"clip.replace_media": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q,"asset_id":%q}`, p.clip(), p.oneOf(vidAsset, vidAsset, imgAsset))
+	},
 	"clip.set_blur": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"radius":%d}`, p.clip(), p.n(101))
 	},
@@ -395,6 +400,23 @@ var alphaOps = map[string]func(p *docPick) string{
 	},
 	"item.freeze_frame": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"at":%q,"duration":%q}`, p.clip(), p.frames(400), p.frames(60))
+	},
+	"audio.processor_add": func(p *docPick) string {
+		kind := p.oneOf("eq", "compressor", "limiter", "gate", "deesser", "noise_reduction")
+		return fmt.Sprintf(`{"item_id":%q,"kind":%q,"index":%d}`, p.audioItem(), kind, p.n(3))
+	},
+	"audio.processor_set": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q,"index":%d,"enabled":%s}`, p.audioItem(), p.n(3), p.oneOf("true", "false"))
+	},
+	"audio.processor_move": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q,"index":%d,"to":%d}`, p.audioItem(), p.n(3), p.n(3))
+	},
+	"audio.processor_remove": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q,"index":%d}`, p.audioItem(), p.n(3))
+	},
+	"audio.apply_preset": func(p *docPick) string {
+		presets := []string{"voice", "voice_with_music", "podcast", "clean_noisy_room"}
+		return fmt.Sprintf(`{"item_id":%q,"preset":%q}`, p.audioItem(), p.oneOf(presets...))
 	},
 	"item.set_enabled": func(p *docPick) string {
 		return fmt.Sprintf(`{"item_id":%q,"enabled":%s}`, p.clip(), p.oneOf("true", "false"))

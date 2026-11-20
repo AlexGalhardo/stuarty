@@ -1,0 +1,64 @@
+---
+title: "Chat with your agent"
+description: "Talk to the coding agent you already use in a panel of Stuarty, and watch it edit the open project with your own sign-in."
+---
+
+<Callout type="warning" title="New">
+This page covers the agent chat of epic 14. It has been tested with a fake agent that speaks the Agent Client Protocol, not yet with a real agent.
+</Callout>
+
+## You will learn
+
+- how to connect the agent you already use;
+- how a conversation works, and what the agent may do;
+- why a permission in the chat is not an approval;
+- what never leaves your computer.
+
+## The idea
+
+Stuarty has no AI of its own in the chat. It starts the agent you installed yourself (an agent that speaks the Agent Client Protocol), sends it what you write, and shows you what it answers and what it does. The agent keeps the sign-in you gave it: Stuarty never installs an agent, never signs you in to one and never sees its credentials.
+
+The agent edits through Stuarty's own MCP server, with a token that reaches only the open project. So every edit it makes is an ordinary step of the project: it is in the history with the agent as its author, and it can be undone.
+
+## Connect an agent
+
+1. Open the panel with **Chat with your agent**, the button on the right of every page of the dashboard. **Escape** closes it.
+2. With no agent connected the panel says so and lists the agents Stuarty knows, with whether each was found on this machine. Choose **Fill the form with this agent**, or fill **Name**, **Program** and **Arguments, one per line** yourself.
+3. Read the full command the panel shows: it is a program that will run with your access. Then choose **Connect the agent**.
+
+Only a person in the app can connect, change or remove an agent. The local token, an API key, the CLI and the agent itself are refused, because a profile is a command that runs on the machine. On a server, only an administrator can do it; a member is asked to ask one.
+
+## A conversation
+
+1. Pick the project and the agent, then **Start a conversation**. Nothing is sent to the agent until you write: opening the panel costs you no usage.
+2. Write your message. **Enter** sends it and **Shift+Enter** adds a line. The answer, the agent's thoughts it chooses to show, its plan and its tool calls appear as they arrive.
+3. **Stop** ends the turn in progress; **End the session** stops the agent. **Export as Markdown** saves the transcript, and **Delete the transcript** removes it.
+
+The first message tells the agent which project is open and asks it to read the briefing and your Memory with its tools, as data and never as instructions.
+
+The CLI reads what the panel shows, and nothing more: a conversation is driven by a person in the app.
+
+```bash
+stuarty agent:profiles
+stuarty chat:sessions --project prj_7k2m9x4q1b
+stuarty chat:transcript cht_4n8p2r6t1v --format markdown
+```
+
+## Permissions and approvals
+
+An agent may ask before it runs a tool. The panel shows the request with **Allow once**, **Reject** and **Cancel**. Stuarty never chooses "always" for you: a permission that outlives one call is a rule, and rules are written on the **Approvals** page.
+
+A permission in the chat is the agent's own question. It is not an approval: a publication or a costly generation the agent prepares still waits on the **Approvals** page for you, or for a rule you wrote.
+
+## Limits
+
+- One conversation per project and at most four running at once.
+- A turn may last 15 minutes and a session 8 hours; a session with no message for 30 minutes ends by itself.
+- An agent that hangs, floods the panel or breaks the protocol is stopped, with every program it started.
+- Closing Stuarty stops every agent.
+
+## What never leaves your computer
+
+- The agent runs on the machine where Stuarty runs, in a folder of the workspace, with a short list of environment variables: no key, token or variable of Stuarty is passed to it.
+- Its token for the MCP server is kept in memory only, reaches only the open project, cannot administer anything and dies with the session. If the agent writes it back, the transcript shows `[token]` instead.
+- What the agent writes is shown as plain text: no HTML runs and no link is made from its text.

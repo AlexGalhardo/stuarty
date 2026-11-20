@@ -17,6 +17,7 @@ func registry() []*spec {
 	return append([]*spec{
 		projectList, projectCreate, projectShow, projectTrash, projectRestore,
 		edit, history, undo, redo, lintCmd, version, mcpCmd,
+		revertCmd, diffCmd, checkpointCreateCmd, checkpointListCmd, checkpointRenameCmd, checkpointRemoveCmd,
 		mediaImport, mediaInspect, mediaList, mediaTrash, mediaRestore, view, export,
 		exportPresets, exportCheck, exportBatch,
 		jobShow, jobCancel, jobList, eventsCmd, commandHelp,
@@ -31,6 +32,8 @@ func registry() []*spec {
 		providerListCmd, providerModelsCmd, providerPriceCmd, textGenerateCmd,
 		imageCreate, imageList, imageShow, imageEdit, imageUndo, imageRedo, imageExport,
 		assetListCmd, assetShowCmd, assetUsesCmd, assetSetCmd, assetTagCmd,
+		motionBriefCmd, motionCheckCmd, motionReplaceCmd,
+		agentProfilesCmd, chatSessionsCmd, chatSessionCmd, chatTranscriptCmd,
 	}, append(libraryCommands(), publishingCommands()...)...)
 }
 

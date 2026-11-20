@@ -164,6 +164,14 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ViewFrame)
 	case "ViewSheet":
 		return invoke(ctx, s, svc.ViewSheet)
+	case "AudioMeasure":
+		return invoke(ctx, s, svc.AudioMeasure)
+	case "MotionBrief":
+		return invoke(ctx, s, svc.MotionBrief)
+	case "MotionCheck":
+		return invoke(ctx, s, svc.MotionCheck)
+	case "MotionReplace":
+		return invoke(ctx, s, svc.MotionReplace)
 	case "Doctor":
 		return invoke(ctx, s, svc.Doctor)
 	case "FontList":
@@ -184,6 +192,14 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ConnectionRemove)
 	case "ConnectionTest":
 		return invoke(ctx, s, svc.ConnectionTest)
+	case "AgentProfileList":
+		return invoke(ctx, s, svc.AgentProfileList)
+	case "ChatSessionList":
+		return invoke(ctx, s, svc.ChatSessionList)
+	case "ChatSessionGet":
+		return invoke(ctx, s, svc.ChatSessionGet)
+	case "ChatTranscriptGet":
+		return invoke(ctx, s, svc.ChatTranscriptGet)
 	case "SocialNetworkList":
 		return invoke(ctx, s, svc.SocialNetworkList)
 	case "SocialConnectBegin":
@@ -268,6 +284,10 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.BriefingQuestions)
 	case "BriefingAnswer":
 		return invoke(ctx, s, svc.BriefingAnswer)
+	}
+
+	if res, ok, err := historyCall(ctx, svc, s); ok {
+		return res, err
 	}
 
 	if res, ok, err := libraryCall(ctx, svc, s); ok {
@@ -592,6 +612,28 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		args["mode"] = "sheet"
 
 		return "view", args, nil
+	case "AudioMeasure":
+		args["mode"] = "audio"
+
+		if v, ok := args["start"]; ok {
+			args["from"] = v
+
+			delete(args, "start")
+		}
+
+		if v, ok := args["end"]; ok {
+			args["until"] = v
+
+			delete(args, "end")
+		}
+
+		return "view", args, nil
+	case "MotionBrief":
+		delete(args, "track_id") // the tool has no track: SDD-011 section 15.5
+
+		args["mode"] = "motion"
+
+		return "view", args, nil
 	case "ProjectDescribe":
 		args["detail"] = "overview"
 
@@ -630,6 +672,10 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		args["action"] = "briefing"
 
 		return "project_item", args, nil
+	}
+
+	if tool, args, ok, err := historyTool(s); ok {
+		return tool, args, err
 	}
 
 	if tool, args, ok, err := libraryTool(s); ok {
@@ -732,6 +778,11 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 }
 
 func commandOf(s step) (name string, argv []string, stdin string, err error) {
+	// First: its members are numbers where the generic decoding below reads strings (until).
+	if name, argv, ok, err := historyCommand(s); ok {
+		return name, argv, "", err
+	}
+
 	var a struct {
 		ProjectID string               `json:"project_id"`
 		AssetID   string               `json:"asset_id"`
@@ -761,7 +812,10 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		Fill        json.RawMessage `json:"fill"`
 		Path        string          `json:"path"`
 		At          string          `json:"at"`
+		From        string          `json:"from"`
 		Until       string          `json:"until"`
+		TrackID     string          `json:"track_id"`
+		RenderKey   string          `json:"render_key"`
 		IncludeLog  *bool           `json:"include_log"`
 		AsNew       bool            `json:"as_new"`
 		DryRun      bool            `json:"dry_run"`
@@ -786,6 +840,9 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 
 		Answers map[string]string `json:"answers"`
 		Replace bool              `json:"replace"`
+
+		Start string `json:"start"`
+		End   string `json:"end"`
 	}
 
 	if len(s.Args) > 0 {
@@ -955,6 +1012,32 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		argv = append(slices.Clone(proj), "--mode", "sheet")
 
 		return "view", append(argv, flag("until", a.Until)...), "", nil
+	case "AudioMeasure":
+		argv = append(slices.Clone(proj), "--mode", "audio")
+		argv = append(argv, flag("item", a.ItemID)...)
+		argv = append(argv, flag("from", a.Start)...)
+
+		return "view", append(argv, flag("until", a.End)...), "", nil
+	case "MotionBrief":
+		argv = append(slices.Clone(proj), flag("from", a.From)...)
+		argv = append(argv, flag("until", a.Until)...)
+
+		return "motion:brief", append(argv, flag("track", a.TrackID)...), "", nil
+	case "MotionCheck":
+		argv = append(slices.Clone(proj), flag("asset", a.AssetID)...)
+		argv = append(argv, flag("from", a.From)...)
+		argv = append(argv, flag("until", a.Until)...)
+
+		return "motion:check", append(argv, flag("track", a.TrackID)...), "", nil
+	case "MotionReplace":
+		argv = append(slices.Clone(proj), flag("asset", a.AssetID)...)
+		argv = append(argv, flag("render-key", a.RenderKey)...)
+
+		if a.DryRun {
+			argv = append(argv, "--dry-run")
+		}
+
+		return "motion:replace", argv, "", nil
 	case "Doctor":
 		return "doctor", []string{"--full"}, "", nil
 	case "FontList":
@@ -983,6 +1066,14 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 			"--kind", c.Kind, "--label", c.Label, "--endpoint", c.Endpoint, "--accepts", strings.Join(c.Accepts, ","),
 			"--hosts", strings.Join(c.Hosts, ","),
 		}, c.Secret, nil
+	case "AgentProfileList":
+		return "agent:profiles", nil, "", nil
+	case "ChatSessionList":
+		return "chat:sessions", flag("project", a.ProjectID), "", nil
+	case "ChatSessionGet":
+		return "chat:session", []string{a.ID}, "", nil
+	case "ChatTranscriptGet":
+		return "chat:transcript", []string{a.ID}, "", nil
 	case "SocialNetworkList":
 		return "social:network:list", nil, "", nil
 	case "SocialAccountList":

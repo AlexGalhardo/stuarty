@@ -224,7 +224,8 @@ func TestEveryOperationHasADomainOnEverySurface(t *testing.T) {
 	for _, r := range parity {
 		if r.noMethod {
 			// The event stream is no Service method (SDD-003 section 7.1, exception E-1); it belongs to the project.
-			if got := cli.CommandDomain(r.command); got != command.DomainProject {
+			// A stream with no command (the chat, SDD-017 section 8) has no CLI domain to check.
+			if got := cli.CommandDomain(r.command); r.command != "" && got != command.DomainProject {
 				t.Errorf("%s: the CLI command %s is in %q, want project", r.method, r.command, got)
 			}
 

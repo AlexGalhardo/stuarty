@@ -148,7 +148,9 @@ type Track struct {
 	Magnet       bool          `json:"magnet,omitempty"`
 	Volume       *float64      `json:"volume,omitempty"                                                                               min:"0" max:"4"`
 	CaptionStyle *CaptionStyle `json:"caption_style,omitempty"`
-	Extra        Extra         `json:"-"`
+	// Optional and additive (SDD-001 §3.3): the processor chain of the track, run on the sum of its items.
+	Processors []Processor `json:"processors,omitempty"`
+	Extra      Extra       `json:"-"`
 }
 
 // Item is any of the five item types (SDD-001 §3.4 to §3.7). One flat struct holds
@@ -233,6 +235,8 @@ type Item struct {
 	Voice   string `json:"voice,omitempty"    enum:"clear,warm,deep,bright,radio"`
 	FadeIn  int    `json:"fade_in,omitempty"                                      min:"0"`
 	FadeOut int    `json:"fade_out,omitempty"                                     min:"0"`
+	// Clip and audio, optional and additive (SDD-001 §3.5): the audio processor chain, in the user's order.
+	Processors []Processor `json:"processors,omitempty"`
 
 	// Clip only.
 	Fit        string  `json:"fit"                  default:"cover" enum:"cover,contain,none"`

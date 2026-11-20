@@ -200,6 +200,8 @@ func (s *svc) MediaImport(ctx context.Context, req MediaImportRequest) (*MediaIm
 
 	res.Text = textview.Import(lines)
 
+	s.offerReplacements(ctx, c, row.ID, rec.origin.RenderKey, req.DryRun, res)
+
 	return res, nil
 }
 
