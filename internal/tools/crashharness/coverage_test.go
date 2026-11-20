@@ -30,9 +30,9 @@ var covered = map[string]string{
 	"bundle_import.after_commit":    "web/app/servicetest TestCrashBundleImport",
 	"migrate.before_commit":         "web/app/servicetest TestCrashMigration",
 	"migrate.after_commit":          "web/app/servicetest TestCrashMigration",
-	"trash_empty.after_lock":        "web/app/servicetest TestCrashSuite",
-	"trash_empty.before_commit":     "web/app/servicetest TestCrashSuite",
-	"trash_empty.after_commit":      "web/app/servicetest TestCrashSuite",
+	"trash_empty.after_lock":        "web/app/servicetest TestCrashTrashEmpty",
+	"trash_empty.before_commit":     "web/app/servicetest TestCrashTrashEmpty",
+	"trash_empty.after_commit":      "web/app/servicetest TestCrashTrashEmpty",
 	"vault.before_rename":           "internal/tools/crashharness TestSecurity_T101_VaultKilledMidWriteKeepsEveryAcknowledgedSecret",
 	"vault.after_rename":            "internal/tools/crashharness TestSecurity_T101_VaultKilledMidWriteKeepsEveryAcknowledgedSecret",
 }
@@ -110,17 +110,23 @@ func TestEveryCrashPointHasARecoveryTest(t *testing.T) {
 
 		pkg, name, _ := strings.Cut(test, " ")
 
-		found := false
+		found, named := false, false
 
 		files, _ := filepath.Glob(filepath.Join(root, pkg, "*_test.go"))
 		for _, f := range files {
 			if raw, err := os.ReadFile(f); err == nil && strings.Contains(string(raw), "func "+name+"(") {
 				found = true
+				// The file of the test names the point it kills, so a line cannot point at a test that exists
+				// but kills something else.
+				named = named || strings.Contains(string(raw), `"`+p+`"`)
 			}
 		}
 
-		if !found {
+		switch {
+		case !found:
 			t.Errorf("%s: the test %s does not exist in %s", p, name, pkg)
+		case !named:
+			t.Errorf("%s: the file of %s in %s does not name the point", p, name, pkg)
 		}
 	}
 }
