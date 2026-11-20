@@ -181,8 +181,8 @@ var parity = []row{
 	// The approval queue (SDD-015 section 10): no MCP tool, the budget of the tool list leaves no room
 	// for one; deciding, writing a rule and setting a ceiling are for a person, and their commands
 	// always fail for an agent.
-	{method: "ApprovalList", command: "approval:list", route: "GET /approvals"},
-	{method: "ApprovalGet", command: "approval:show", route: "GET /approvals/{}"},
+	{method: "ApprovalList", tool: "job_get", command: "approval:list", route: "GET /approvals"},
+	{method: "ApprovalGet", tool: "job_get", command: "approval:show", route: "GET /approvals/{}"},
 	{method: "ApprovalDecide", command: "approval:decide", route: "POST /approvals/{}/decide"},
 	{method: "ApprovalRuleList", command: "approval:rule:list", route: "GET /approval-rules"},
 	{method: "ApprovalRuleSet", command: "approval:rule:set", route: "POST /approval-rules"},
@@ -197,8 +197,8 @@ var parity = []row{
 	{method: "SocialAccountList", command: "social:account:list", route: "GET /social/accounts"},
 	{method: "SocialAccountSelect", route: "POST /social/select", httpOnly: true},
 	{method: "PublishValidate", command: "publish:validate", route: "POST /publish/validate"},
-	{method: "PublishNow", command: "publish:now", route: "POST /publish"},
-	{method: "PublishStatus", command: "publish:status", route: "GET /publish/{}"},
+	{method: "PublishNow", tool: "job_start", command: "publish:now", route: "POST /publish"},
+	{method: "PublishStatus", tool: "job_get", command: "publish:status", route: "GET /publish/{}"},
 	// The calendar of publications (SDD-020 section 29): no MCP tool (author decision D-094); an agent plans
 	// through the CLI and HTTP, and approval stays with a person.
 	{method: "PublicationCreate", command: "publication:create", route: "POST /publications"},
