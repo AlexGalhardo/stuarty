@@ -112,7 +112,10 @@ func TestNestedRestoreKeepsTheDepth(t *testing.T) {
 	ctx := e.as(ui)
 
 	add := func(title string) (timelineID, itemID string) {
-		res, err := e.svc.ProjectItemAdd(ctx, service.ProjectItemAddRequest{ProjectID: x, Kind: "timeline", Title: title})
+		res, err := e.svc.ProjectItemAdd(
+			ctx,
+			service.ProjectItemAddRequest{ProjectID: x, Kind: "timeline", Title: title},
+		)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -149,12 +152,14 @@ func TestNestedRestoreKeepsTheDepth(t *testing.T) {
 
 	// X goes to the trash first, then T, which no active timeline uses any more; X comes back still naming T.
 	for _, id := range []string{xItem, heldItem} {
-		if _, err := e.svc.ProjectItemTrash(ctx, service.ProjectItemTrashRequest{ProjectID: x, ItemID: id}); err != nil {
+		req := service.ProjectItemTrashRequest{ProjectID: x, ItemID: id}
+		if _, err := e.svc.ProjectItemTrash(ctx, req); err != nil {
 			t.Fatalf("trash %s: %v", id, err)
 		}
 	}
 
-	if _, err := e.svc.ProjectItemRestore(ctx, service.ProjectItemTrashRequest{ProjectID: x, ItemID: xItem}); err != nil {
+	restoreX := service.ProjectItemTrashRequest{ProjectID: x, ItemID: xItem}
+	if _, err := e.svc.ProjectItemRestore(ctx, restoreX); err != nil {
 		t.Fatalf("restore X: %v", err)
 	}
 
