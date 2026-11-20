@@ -210,33 +210,33 @@ func TestImageLUTExportFailsWithoutTheTable(t *testing.T) {
 func TestSecurity_T68_LookupTableOfAnotherUserIsNotUsable(t *testing.T) {
 	s, ws := newImageService(t)
 	holdLUT(t, s, ws)
-	holdAsset(s, "alice")
+	holdAsset(s, "carol")
 
 	st := s.store.(*memStore)
 	st.projects.heads = append(st.projects.heads, ProjectHead{ID: "prj_bob", OwnerUserID: new("bob")})
-	st.assets.projects["prj_alice"] = append(st.assets.projects["prj_alice"], ProjectAssetRow{
-		ProjectID: "prj_alice", AssetHash: lutHash, Name: "invert.cube",
+	st.assets.projects["prj_carol"] = append(st.assets.projects["prj_carol"], ProjectAssetRow{
+		ProjectID: "prj_carol", AssetHash: lutHash, Name: "invert.cube",
 	})
 
 	add := ops("layer.add_image", `{"asset": "`+imgHash+`", "id": "lyr_aaaaaaaaaa"}`)
 	adjust := ops("layer.adjust", `{"layer_id": "lyr_aaaaaaaaaa", "lut": {"asset": "`+lutHash+`"}}`)
 
-	alice, bob := networkUser("alice"), networkUser("bob")
+	carol, bob := networkUser("carol"), networkUser("bob")
 
-	ca, err := s.ImageCreate(alice, ImageCreateRequest{Width: 100, Height: 100})
+	ca, err := s.ImageCreate(carol, ImageCreateRequest{Width: 100, Height: 100})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if _, err := s.ImageEdit(
-		alice,
+		carol,
 		ImageEditRequest{ImageID: ca.ImageID, BaseRevision: 1, Operations: add},
 	); err != nil {
 		t.Fatal(err)
 	}
 
 	if _, err := s.ImageEdit(
-		alice,
+		carol,
 		ImageEditRequest{ImageID: ca.ImageID, BaseRevision: 2, Operations: adjust},
 	); err != nil {
 		t.Fatalf("the user who holds the table may use it: %v", err)
@@ -261,7 +261,7 @@ func TestSecurity_T68_LookupTableOfAnotherUserIsNotUsable(t *testing.T) {
 	st.images.rows[cb.ImageID].Document = st.images.rows[ca.ImageID].Document
 
 	if _, err := s.ImageExport(bob, ImageExportRequest{ImageID: cb.ImageID}); err == nil {
-		t.Fatal("bob exported with the table of alice")
+		t.Fatal("bob exported with the table of carol")
 	}
 }
 
