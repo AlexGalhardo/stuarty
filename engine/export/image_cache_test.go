@@ -285,3 +285,20 @@ func TestImageCacheOnATransparentCanvas(t *testing.T) {
 		t.Fatalf("the edits must start from the cache: %+v", s)
 	}
 }
+
+// TestImageCacheOnADocumentWithNoLayerToDraw: a document whose layers are all hidden (or a new one with none)
+// has nothing to look up; with a cache it draws the canvas like the render with none.
+func TestImageCacheOnADocumentWithNoLayerToDraw(t *testing.T) {
+	base := imageDoc("transparent")
+	base.Assets = nil
+	base.Layers = nil
+
+	cache := NewImageCache(0)
+	cfg, plain := cachedConfig(t, cache, "u1"), cachedConfig(t, nil, "")
+
+	for range 2 {
+		if got, want := renderWith(t, base, cfg), renderWith(t, base, plain); !bytes.Equal(got.Pix, want.Pix) {
+			t.Fatal("a document with no layer to draw renders differently with a cache")
+		}
+	}
+}
