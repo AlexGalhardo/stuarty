@@ -1,0 +1,34 @@
+{
+	"name": "history",
+	"actor": "contract",
+	"steps": [
+		{"call": "ProjectCreate", "args": {"id": "prj_7k2m9x4q1b", "name": "Revert"}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 0, "operations": [
+			{"op": "track.add", "args": {"kind": "visual", "name": "Video", "id": "trk_f6g7h8j9k0"}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 1, "operations": [
+			{"op": "text.add", "args": {"id": "itm_a000000001", "track_id": "trk_f6g7h8j9k0", "start": "0s", "duration": "1s", "text": "one"}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 2, "operations": [
+			{"op": "text.add", "args": {"id": "itm_a000000002", "track_id": "trk_f6g7h8j9k0", "start": "2s", "duration": "1s", "text": "two"}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 3, "operations": [
+			{"op": "text.add", "args": {"id": "itm_a000000003", "track_id": "trk_f6g7h8j9k0", "start": "4s", "duration": "1s", "text": "three"}}]}},
+		{"call": "CheckpointCreate", "args": {"project_id": "prj_7k2m9x4q1b", "name": "two texts", "revision": 3, "note": "the cut so far"}},
+		{"call": "CheckpointCreate", "args": {"project_id": "prj_7k2m9x4q1b", "name": "two texts"}, "expect_error": {"code": "E_ID_EXISTS"}},
+		{"call": "CheckpointList", "args": {"project_id": "prj_7k2m9x4q1b"}},
+		{"call": "HistoryDiff", "args": {"project_id": "prj_7k2m9x4q1b", "from": 2}},
+		{"call": "HistoryDiff", "args": {"project_id": "prj_7k2m9x4q1b", "from_checkpoint": "two texts", "until": 4}},
+		{"call": "HistoryDiff", "args": {"project_id": "prj_7k2m9x4q1b"}, "expect_error": {"code": "E_VALIDATION"}},
+		{"call": "HistoryRevert", "args": {"project_id": "prj_7k2m9x4q1b", "checkpoint": "two texts", "dry_run": true}},
+		{"call": "HistoryRevert", "args": {"project_id": "prj_7k2m9x4q1b", "checkpoint": "two texts"}},
+		{"call": "HistoryRevert", "args": {"project_id": "prj_7k2m9x4q1b", "checkpoint": "two texts"}},
+		{"call": "HistoryList", "args": {"project_id": "prj_7k2m9x4q1b"}},
+		{"call": "Undo", "args": {"project_id": "prj_7k2m9x4q1b"}},
+		{"call": "HistoryRevert", "args": {"project_id": "prj_7k2m9x4q1b", "revision": 4}},
+		{"call": "HistoryRevert", "args": {"project_id": "prj_7k2m9x4q1b", "revision": 99}, "expect_error": {"code": "E_VALIDATION"}},
+		{"call": "HistoryRevert", "args": {"project_id": "prj_7k2m9x4q1b", "checkpoint": "missing"}, "expect_error": {"code": "E_NOT_FOUND"}},
+		{"call": "CheckpointRename", "args": {"project_id": "prj_7k2m9x4q1b", "name": "two texts", "new_name": "first cut", "note": "kept"}},
+		{"call": "CheckpointRename", "args": {"project_id": "prj_7k2m9x4q1b", "name": "nope", "new_name": "x"}, "expect_error": {"code": "E_NOT_FOUND"}},
+		{"call": "CheckpointRemove", "args": {"project_id": "prj_7k2m9x4q1b", "name": "first cut"}},
+		{"call": "CheckpointList", "args": {"project_id": "prj_7k2m9x4q1b"}},
+		{"call": "ProjectGet", "args": {"project_id": "prj_7k2m9x4q1b", "detail": "concise"}}
+	]
+}

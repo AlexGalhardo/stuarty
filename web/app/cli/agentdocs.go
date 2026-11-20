@@ -69,6 +69,15 @@ func AgentDocsInputs() agentdocs.Inputs {
 		inLibrary[s.name] = true
 	}
 
+	// Revert, the diff and the checkpoints (epic 36) are in the guide of the video domain: the skill was at its cap
+	// and has no room for six lines, so it points at the guide with one sentence. That sentence is also where the skill
+	// names agent:docs, so its own line is left out too.
+	for _, s := range []*spec{
+		revertCmd, diffCmd, checkpointCreateCmd, checkpointListCmd, checkpointRenameCmd, checkpointRemoveCmd, agentDocs,
+	} {
+		inLibrary[s.name] = true
+	}
+
 	for i := range commands {
 		c := &commands[i]
 		if c.Person {

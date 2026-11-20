@@ -24,6 +24,8 @@ import type {
 	ChatSession,
 	ChatSessionListResult,
 	ChatTranscriptResult,
+	Checkpoint,
+	CheckpointListResult,
 	CommandHelpResult,
 	Connection,
 	ConnectionCreateRequest,
@@ -44,8 +46,10 @@ import type {
 	GoogleSettingsRequest,
 	GoogleStart,
 	GoogleStatus,
+	HistoryDiffResult,
 	HistoryListResult,
 	HistoryQuery,
+	HistoryRevertResult,
 	InstallToolRequest,
 	InstallToolResult,
 	Job,
@@ -74,6 +78,7 @@ import type {
 	ProviderPricesResult,
 	PublishRequest,
 	PublishValidateResult,
+	RevertRequest,
 	SessionResult,
 	SnapPointsQuery,
 	SnapPointsResult,
@@ -170,6 +175,22 @@ export interface ApiClient {
 		projectId: string,
 		query?: HistoryQuery,
 	): Promise<HistoryListResult>;
+	// Revert, the diff of two revisions and checkpoints (epic 36). The core words
+	// every change; a revert with `dry_run` returns the diff it would make.
+	getCheckpoints(projectId: string): Promise<CheckpointListResult>;
+	createCheckpoint(
+		projectId: string,
+		body: { name: string; note?: string; revision?: number },
+	): Promise<Checkpoint>;
+	removeCheckpoint(projectId: string, name: string): Promise<Checkpoint>;
+	getHistoryDiff(
+		projectId: string,
+		range: { from: number; until?: number },
+	): Promise<HistoryDiffResult>;
+	revertTo(
+		projectId: string,
+		request: RevertRequest,
+	): Promise<HistoryRevertResult>;
 	inspectMedia(
 		projectId: string,
 		assetId: string,
@@ -485,6 +506,24 @@ export function createClient(
 				`${project(id)}/history${query({ actor: q.actor, cursor: q.cursor, limit: q.limit })}`,
 				READ_TIMEOUT_MS,
 			),
+		getCheckpoints: (id) =>
+			call("GET", `${project(id)}/checkpoints`, READ_TIMEOUT_MS),
+		createCheckpoint: (id, body) =>
+			call("POST", `${project(id)}/checkpoints`, EDIT_TIMEOUT_MS, body),
+		removeCheckpoint: (id, name) =>
+			call(
+				"DELETE",
+				`${project(id)}/checkpoints/${encodeURIComponent(name)}`,
+				EDIT_TIMEOUT_MS,
+			),
+		getHistoryDiff: (id, range) =>
+			call(
+				"GET",
+				`${project(id)}/diff${query({ from: range.from, until: range.until })}`,
+				READ_TIMEOUT_MS,
+			),
+		revertTo: (id, request) =>
+			call("POST", `${project(id)}/revert`, EDIT_TIMEOUT_MS, request),
 		inspectMedia: (id, asset, q = {}) =>
 			call(
 				"GET",

@@ -39,5 +39,6 @@ func All() []schema.Migration {
 		m20261119160000CreateUserIdentitiesAndAuthSettings(),
 		m20261119210000AssetRenderOrigin(),
 		m20261119220000CreateChatTables(),
+		m20261119230000CreateCheckpoints(),
 	}
 }
