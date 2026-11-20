@@ -342,6 +342,11 @@ export class PixiExecutor implements PreviewExecutor {
 		this.redraw();
 	}
 
+	refresh(): void {
+		this.windows.invalidate();
+		this.redraw();
+	}
+
 	resize(bufferWidth: number, bufferHeight: number): void {
 		this.buffer = { width: bufferWidth, height: bufferHeight };
 		this.windows.setWidth(this.planWidth());
