@@ -504,6 +504,11 @@ func (s *svc) projectOverview(
 			return nil, asError(err)
 		}
 
+		if len(tls) == 0 {
+			return nil, newError(command.CodeInvalidState, "the project %s has no timeline yet.", head.ID).
+				withHint("add one with project_item action add kind timeline, which asks for the size")
+		}
+
 		ids := make([]string, len(tls))
 		for i := range tls {
 			ids[i] = tls[i].TimelineID
