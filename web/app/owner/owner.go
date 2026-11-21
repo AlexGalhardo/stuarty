@@ -534,6 +534,19 @@ func (o *Owner) Work(ctx context.Context) error {
 		defer func() { <-done }()
 	}
 
+	// The outbound webhooks (SDD-022) are sent on a worker of their own, never in a request.
+	if hooks, ok := service.WebhookDispatcherOf(o.Service); ok {
+		done := make(chan struct{})
+
+		go func() {
+			defer close(done)
+
+			_ = hooks.Run(ctx)
+		}()
+
+		defer func() { <-done }()
+	}
+
 	err := o.Queue.Work(ctx, queue.WorkOptions{
 		Queues:      jobs.Queues,
 		Concurrency: o.limits.MaxIngests + o.limits.MaxExports + 2,

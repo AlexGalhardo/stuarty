@@ -30,6 +30,7 @@ import (
 	pub "github.com/AlexGalhardo/stuarty/service/publish"
 	"github.com/AlexGalhardo/stuarty/service/publish/destinations"
 	"github.com/AlexGalhardo/stuarty/service/social"
+	"github.com/AlexGalhardo/stuarty/service/webhooks"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
@@ -214,6 +215,19 @@ type Service interface {
 	ConnectionRemove(ctx context.Context, req ConnectionRef) (*connections.Connection, error)
 	ConnectionTest(ctx context.Context, req ConnectionRef) (*ConnectionTestResult, error)
 
+	// The outbound webhooks (SDD-022). All but the list of events are for an administrator; no result carries the
+	// signing secret except WebhookCreate and WebhookRotateSecret, once.
+	WebhookEventList(ctx context.Context, req WebhookEventListRequest) (*WebhookEventListResult, error)
+	WebhookList(ctx context.Context, req WebhookListRequest) (*WebhookListResult, error)
+	WebhookGet(ctx context.Context, req WebhookRef) (*Webhook, error)
+	WebhookCreate(ctx context.Context, req WebhookCreateRequest) (*WebhookSecretResult, error)
+	WebhookUpdate(ctx context.Context, req WebhookUpdateRequest) (*Webhook, error)
+	WebhookRemove(ctx context.Context, req WebhookRef) (*Webhook, error)
+	WebhookRotateSecret(ctx context.Context, req WebhookRef) (*WebhookSecretResult, error)
+	WebhookTest(ctx context.Context, req WebhookRef) (*WebhookDelivery, error)
+	WebhookDeliveryList(ctx context.Context, req WebhookDeliveriesRequest) (*WebhookDeliveriesResult, error)
+	WebhookRedeliver(ctx context.Context, req WebhookRedeliverRequest) (*WebhookDelivery, error)
+
 	// The approval queue, its rules and the cost ceilings (SDD-015). Reading is for every caller that
 	// may read; ApprovalDecide, ApprovalRuleSet, ApprovalRuleRemove and CostCeilingSet are for a
 	// person in a privileged browser session and answer E_PRIVILEGED_SESSION to everyone else.
@@ -372,6 +386,8 @@ type Options struct {
 	// Agents hosts the agent a user installed, for the chat (SDD-017). Nil in a process that only runs a
 	// command: the chat operations that need a process then answer E_AGENT_UNAVAILABLE, and the reads work.
 	Agents *agenthost.Host
+	// WebhookTimeout is how long one delivery of an outbound webhook may take; zero is 10 s (SDD-022). Tests shorten it.
+	WebhookTimeout time.Duration
 }
 
 type svc struct {
@@ -415,6 +431,8 @@ type svc struct {
 
 	// pubs is the calendar of publications and sched the loop that sends the approved ones at their time
 	// (SDD-020 sections 23 to 29).
+	hooks *webhooks.Dispatcher // the outbound webhooks (SDD-022); nil when the store has no table for them
+
 	pubs  *pub.Manager
 	sched *pub.Scheduler
 
@@ -581,6 +599,13 @@ func New(o Options) (Service, error) {
 
 	s.pubs = pub.NewManager(pubEnv{s}, pubGateway{s})
 
+	if st := o.Store.Webhooks(); st != nil {
+		s.hooks = webhooks.New(webhooks.Options{
+			Store: st, Secrets: webhookSecrets{s}, NewID: s.newIDs, Workspace: s.workspace,
+			Clock: svcClock{now: s.now}, Log: s.log, Timeout: o.WebhookTimeout,
+		})
+	}
+
 	clock := o.SchedulerClock
 	if clock == nil {
 		clock = svcClock{now: s.now}
@@ -598,4 +623,6 @@ func (s *svc) emit(e Event) {
 	if s.publish != nil {
 		s.publish(e)
 	}
+
+	s.fanWebhooks(e)
 }

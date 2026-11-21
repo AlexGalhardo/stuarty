@@ -59,6 +59,9 @@ func record(p Purpose, address string) error {
 // TestOptions are for tests with a local server only: a CA to trust. Production code never sets them.
 type TestOptions struct {
 	RootCAs *x509.CertPool
+	// Resolve maps a host name to the IP address it "resolves" to, for the webhook client only: the dialled address is
+	// the mapped one, and the checks at dial time judge it, so a test can play a name that turns internal.
+	Resolve map[string]string
 }
 
 // TranscribeAPI is the client of the transcription API provider (purpose transcribe_api). It reaches the
