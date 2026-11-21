@@ -10,6 +10,10 @@ import (
 // CharsPerToken is the conservative estimate of SDD-003 section 3.10 that turns a token budget into characters.
 const CharsPerToken = 3
 
+// longestContext is what the longest context of a project takes with its labels: a description of 1,024 characters,
+// five goal parts of 280 and the due date (SDD-005 section 5.12.2).
+const longestContext = 2600
+
 // ProductionLine is one item of a production in the description.
 type ProductionLine struct {
 	ID      string
@@ -68,9 +72,16 @@ func Production(v *ProductionView, maxTokens int) string {
 			"context: not written yet (a project made before descriptions and goals); ask the person to complete it\n",
 		)
 	} else {
+		// What an agent reads first comes whole whenever the budget still keeps its third for the brief, as the
+		// default does; a smaller budget, asked for on purpose, cuts it.
+		budget := max(limit/4, 250)
+		if limit-longestContext >= limit/3 {
+			budget = longestContext
+		}
+
 		head.WriteString("context (read it first):\n")
 		head.WriteString(untrusted.Block(untrusted.SourceProjectText,
-			untrusted.Attrs{"project": v.ID, "item": "context"}, v.Context, max(limit/4, 250)))
+			untrusted.Attrs{"project": v.ID, "item": "context"}, v.Context, budget))
 		head.WriteString("\n")
 	}
 
