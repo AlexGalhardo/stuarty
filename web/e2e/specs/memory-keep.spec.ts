@@ -1,6 +1,4 @@
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
-import { LAUNCHER_SECRET } from "../support/launcher";
+import { ensureAccount, signInWithPassword } from "../support/account";
 import { caller, expect, home, test } from "./helpers";
 
 // VV-320: a note an agent wrote waits for a person; after the person keeps it the panel says it is kept, with no
@@ -18,14 +16,8 @@ test.describe("keeping a memory note", () => {
 			body: "Cut it to two seconds.",
 		});
 
-		const launch = await page.request.post("/api/v1/system/launch", {
-			headers: {
-				Authorization: `Bearer ${(await readFile(join(home, "token"), "utf8")).trim()}`,
-				"Stuarty-Launcher": LAUNCHER_SECRET,
-			},
-		});
-		const { url } = (await launch.json()) as { url: string };
-		await page.goto(url);
+		await ensureAccount(page.request, home);
+		await signInWithPassword(page.request);
 		await page.goto("/memory");
 		await page.locator(`[data-entry='${name}']`).click();
 
