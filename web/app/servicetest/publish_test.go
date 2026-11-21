@@ -632,6 +632,40 @@ func TestPublishNow_TrashingAnotherTimelineKeepsThePost(t *testing.T) {
 	}
 }
 
+// VV-315: with an export on each timeline, a post that names no timeline waits for a person and then sends the file
+// of the export it named, and not the one of the first timeline.
+func TestPublishNow_TwoTimelinesSendTheExportItNamed(t *testing.T) {
+	p := newPubEnv(t)
+	_, second := p.addSecondTimeline()
+
+	p.seedExport(p.project, "job_0000000951", ".mp4", []byte("the first cut"))
+	exp := p.seedExport(second, "job_0000000952", ".mp4", []byte("the second cut, longer"))
+	before := p.net.count()
+
+	job, err := p.pub.PublishNow(p.as(token), service.PublishNowRequest{ProjectID: p.project, PublishArgs: p.args(exp)})
+	if err != nil || job.State != service.JobWaitingApproval {
+		t.Fatalf("the post = %+v, %v", job, err)
+	}
+
+	if p.net.count() != before {
+		t.Fatal("something was sent before a person approved")
+	}
+
+	p.decide(job, "approve")
+
+	if got := p.job(job.JobID); got.State != service.JobSucceeded {
+		t.Fatalf("the approved post = %+v", got)
+	}
+
+	p.net.mu.Lock()
+	defer p.net.mu.Unlock()
+
+	want := filepath.Join(second, "job_0000000952.mp4")
+	if len(p.net.posted) != 1 || !strings.HasSuffix(p.net.posted[0], want) {
+		t.Errorf("the file sent = %v, want the export of the second timeline %s", p.net.posted, want)
+	}
+}
+
 // VV-315: the export of a timeline that is already in the trash is refused, named by its project.
 func TestPublishNow_AnExportOfATrashedTimelineIsRefused(t *testing.T) {
 	p := newPubEnv(t)
