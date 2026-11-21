@@ -3121,7 +3121,7 @@
         {
           "name": "section",
           "type": "string",
-          "usage": "visual (images and LUTs) or video (video and audio)"
+          "usage": "visual (images and LUTs), video (clips) or audio (sounds)"
         },
         {
           "name": "kind",

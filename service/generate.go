@@ -93,11 +93,17 @@ type generateInput struct {
 }
 
 func (s *svc) imageGenerateKind() ApprovableKind {
-	return ApprovableKind{Name: JobImageGenerate, Scope: ScopeEdit, Prepare: s.prepareImage, Run: s.runImage}
+	return ApprovableKind{
+		Name: JobImageGenerate, Scope: ScopeEdit, ProjectWide: true,
+		Prepare: s.prepareImage, Run: s.runImage,
+	}
 }
 
 func (s *svc) voiceGenerateKind() ApprovableKind {
-	return ApprovableKind{Name: JobVoiceGenerate, Scope: ScopeEdit, Prepare: s.prepareVoice, Run: s.runVoice}
+	return ApprovableKind{
+		Name: JobVoiceGenerate, Scope: ScopeEdit, ProjectWide: true,
+		Prepare: s.prepareVoice, Run: s.runVoice,
+	}
 }
 
 func decodeGenerateArgs[T any](raw json.RawMessage, members string) (T, *Error) {

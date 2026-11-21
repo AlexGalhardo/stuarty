@@ -89,6 +89,12 @@ func TestAssetLibraryScenarioSaysWhatItShould(t *testing.T) {
 		t.Errorf("the visual section holds a video: %s", got[6].result)
 	}
 
+	// the clip is a video: the audio section, listed on every surface, holds no entry of it
+	audio := len(got) - 3
+	if strings.Contains(got[audio].result, `"name":`) {
+		t.Errorf("the audio section holds a video: %s", got[audio].result)
+	}
+
 	// step 11: the detail names both projects
 	if !strings.Contains(got[11].result, "Teaser") || !strings.Contains(got[11].result, "Trailer") {
 		t.Errorf("the detail does not name both projects: %s", got[11].result)

@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, sizeText } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
 import { createClient } from "../editor/api/client";
 import { HttpTransport } from "../editor/api/http";
@@ -27,13 +27,21 @@ import type {
 } from "../editor/api/types";
 import { thumbnailUrl } from "../editor/api/urls";
 import { GenerateDialog, type Kind as GenerateKind } from "./GenerateDialog";
+import { SoundImport } from "./SoundImport";
+import { SoundRow } from "./SoundRow";
 
-// The two sections of the asset library (SDD-011 section 14.6, RF-320 to RF-323): Visual Assets and Video
-// Assets are one library seen through a filter on the kind. The page draws what the service answers and sends
+// The three sections of the asset library (SDD-011 section 14.6, RF-320 to RF-323, D-121): Visual Assets, Video
+// Assets and Sound Assets are one library seen through a filter on the kind. The page draws what the service answers and sends
 // what the person does; it decides nothing: the filters, the search, the uses and the rules of an origin or a
 // tag are the service's.
 
-export type Section = "visual" | "video";
+export type Section = "visual" | "video" | "audio";
+
+const NAV_KEY: Record<Section, string> = {
+	visual: "visual-assets",
+	video: "video-assets",
+	audio: "sound-assets",
+};
 
 const ORIGINS: readonly OriginKind[] = [
 	"imported",
@@ -41,22 +49,17 @@ const ORIGINS: readonly OriginKind[] = [
 	"fetched_by_agent",
 	"rendered_externally",
 ];
+// What the button of each section generates: pictures, a clip, a voice-over (the voices land in Sound Assets).
+const GENERATES: Record<Section, GenerateKind> = {
+	visual: "image",
+	video: "video",
+	audio: "voice",
+};
 const PAGE = 48;
 const POSTER_WIDTH = 320;
 
 function api() {
 	return createClient(new HttpTransport("/api/v1"));
-}
-
-function sizeText(bytes: number, locale: string): string {
-	const units = ["B", "KB", "MB", "GB"];
-	let value = bytes;
-	let unit = 0;
-	while (value >= 1024 && unit < units.length - 1) {
-		value /= 1024;
-		unit += 1;
-	}
-	return `${new Intl.NumberFormat(locale, { maximumFractionDigits: unit === 0 ? 0 : 1 }).format(value)} ${units[unit]}`;
 }
 
 function hasPicture(asset: LibraryAsset): boolean {
@@ -282,6 +285,25 @@ export function AssetDetail({
 		}
 	}
 
+	// Moves the file to the trash of one project that holds it (MediaTrash); the library lists what a project
+	// still holds, so a file that no project holds any more leaves the list and the panel closes.
+	async function trash(projectId: string, assetId: string): Promise<void> {
+		setFailure(null);
+		setSaid(null);
+		try {
+			await api().trashMedia(projectId, assetId);
+			onChanged();
+			try {
+				show(await api().getAsset(hash));
+				setSaid(t("ui.assets.detail.trashed"));
+			} catch {
+				onClose();
+			}
+		} catch (error) {
+			setFailure(failureOf(error));
+		}
+	}
+
 	return (
 		<aside
 			aria-labelledby={`${id}-title`}
@@ -493,13 +515,22 @@ export function AssetDetail({
 								data-testid="asset-uses"
 							>
 								{(asset.uses ?? []).map((use) => (
-									<li key={use.project_id}>
+									<li key={use.project_id} className="flex items-center gap-2">
 										<Link
 											href={`/projects/${use.project_id}`}
 											className="underline"
 										>
 											<UntrustedText>{use.name}</UntrustedText>
 										</Link>
+										{asset.kind === "audio" && (
+											<Button
+												type="button"
+												variant="outline"
+												onClick={() => void trash(use.project_id, use.asset_id)}
+											>
+												{t("ui.assets.detail.trash", { project: use.name })}
+											</Button>
+										)}
 									</li>
 								))}
 							</ul>
@@ -569,7 +600,7 @@ export function AssetDetail({
 // One section of the library: the filters, the grid and the detail of the file that is open.
 export function AssetLibrary({ section }: { section: Section }): ReactNode {
 	const t = useT();
-	const key = section === "visual" ? "visual-assets" : "video-assets";
+	const key = NAV_KEY[section];
 	const [items, setItems] = useState<LibraryAsset[] | null>(null);
 	const [total, setTotal] = useState(0);
 	const [next, setNext] = useState<string | null>(null);
@@ -656,27 +687,12 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 								setGenerating((was) => ({
 									open: true,
 									count: was.count + 1,
-									kind: section === "visual" ? "image" : "voice",
+									kind: GENERATES[section],
 								}))
 							}
 						>
 							{t(`ui.generate.open.${section}`)}
 						</Button>
-						{section === "video" && (
-							<Button
-								type="button"
-								variant="outline"
-								onClick={() =>
-									setGenerating((was) => ({
-										open: true,
-										count: was.count + 1,
-										kind: "video",
-									}))
-								}
-							>
-								{t("ui.generate.open.clip")}
-							</Button>
-						)}
 					</div>
 				</div>
 				{generating.count > 0 && (
@@ -689,6 +705,9 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 						}
 						onGenerated={() => void load(applied)}
 					/>
+				)}
+				{section === "audio" && (
+					<SoundImport onImported={() => void load(applied)} />
 				)}
 				<search>
 					<form
@@ -770,7 +789,19 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 									: t(`ui.assets.empty.${section}`)}
 							</p>
 						)}
-						{items !== null && items.length > 0 && (
+						{items !== null && items.length > 0 && section === "audio" && (
+							<ul className="mt-3 flex flex-col gap-3" data-testid="asset-grid">
+								{items.map((asset) => (
+									<SoundRow
+										key={asset.hash}
+										asset={asset}
+										selected={open === asset.hash}
+										onOpen={() => setOpen(asset.hash)}
+									/>
+								))}
+							</ul>
+						)}
+						{items !== null && items.length > 0 && section !== "audio" && (
 							<ul
 								className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-3"
 								data-testid="asset-grid"

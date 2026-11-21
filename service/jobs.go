@@ -62,6 +62,51 @@ func (s *svc) authorizeStart(ctx context.Context, req *JobStartRequest, approvab
 	return c, s.requireCovers(ctx, c, req.ProjectID)
 }
 
+// useStartTimeline resolves the timeline a job is kept under: the one the request names, or for a kind of work that
+// belongs to the project (ProjectWide) the first active one.
+func (s *svc) useStartTimeline(ctx context.Context, c Caller, req *JobStartRequest, k *ApprovableKind) error {
+	if k != nil && k.ProjectWide && req.TimelineID == "" {
+		return s.useAnchorTimeline(ctx, c, &req.ProjectID)
+	}
+
+	return s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID)
+}
+
+// useAnchorTimeline is useTimeline for work that belongs to the project (a generation, VV-330): the job is kept
+// under the first active timeline, since a job row still names a timeline, and the caller is not asked which of
+// several. A project with no active timeline cannot hold the job yet.
+//
+// A timeline id in the place of the project id still names that timeline (SDD-003 section 1.7 rule 2): the job,
+// and the files a generation links, stay with it, and one in the trash is refused by the caller of this.
+func (s *svc) useAnchorTimeline(ctx context.Context, c Caller, id *string) error {
+	if *id == "" {
+		return nil
+	}
+
+	head, err := s.loadProduction(ctx, s.store.Productions(), c, *id)
+	if err != nil {
+		return err
+	}
+
+	if *id != head.ID {
+		return nil
+	}
+
+	tls, err := s.store.Productions().ActiveTimelines(ctx, head.ID)
+	if err != nil {
+		return asError(err)
+	}
+
+	if len(tls) == 0 {
+		return newError(command.CodeInvalidState, "the project %s has no timeline to hold the job.", head.ID).
+			withHint("add a video to the project first, or restore a timeline")
+	}
+
+	*id = tls[0].TimelineID
+
+	return nil
+}
+
 func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 	// A kind that needs approval waits for a person or a rule (SDD-015 section 5); it has its own scope.
 	approvable := s.kinds[req.Kind]
@@ -75,7 +120,7 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		return nil, err
 	}
 
-	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
+	if err := s.useStartTimeline(ctx, c, &req, approvable); err != nil {
 		return nil, err
 	}
 

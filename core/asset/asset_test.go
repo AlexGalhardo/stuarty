@@ -158,7 +158,8 @@ func TestFilter(t *testing.T) {
 		{"none", Filter{}, []*Entry{logo, clip, sound}},
 		{"kind", Filter{Kind: KindVideo}, []*Entry{clip}},
 		{"visual section", Filter{Section: SectionVisual}, []*Entry{logo}},
-		{"video section holds audio", Filter{Section: SectionVideo}, []*Entry{clip, sound}},
+		{"video section holds only video", Filter{Section: SectionVideo}, []*Entry{clip}},
+		{"audio section holds only audio", Filter{Section: SectionAudio}, []*Entry{sound}},
 		{"tag is normalised", Filter{Tag: "#LOGO"}, []*Entry{logo, sound}},
 		{"reusable and tag", Filter{Tag: "logo", Reusable: &yes}, []*Entry{logo}},
 		{"project", Filter{Project: "prj_a_tl"}, []*Entry{logo}},
@@ -183,7 +184,7 @@ func TestFilter(t *testing.T) {
 		}
 	}
 
-	for _, f := range []Filter{{Kind: "gif"}, {Section: "audio"}, {Origin: "stolen"}, {Tag: "no way!"}} {
+	for _, f := range []Filter{{Kind: "gif"}, {Section: "sounds"}, {Origin: "stolen"}, {Tag: "no way!"}} {
 		if f.Validate() == nil {
 			t.Errorf("%+v was accepted", f)
 		}

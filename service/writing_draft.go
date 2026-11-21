@@ -41,32 +41,18 @@ type draftInput struct {
 // textDraftKind is the approvable kind of a draft: text.generate with a prompt that core/writing built and a text to
 // put the answer in, under the same estimate, ceilings and approval (SDD-015 section 5, SDD-016 section 6).
 func (s *svc) textDraftKind() ApprovableKind {
-	return ApprovableKind{Name: JobTextDraft, Scope: ScopeEdit, Prepare: s.prepareDraft, Run: s.runDraft}
+	return ApprovableKind{
+		Name: JobTextDraft, Scope: ScopeEdit, ProjectWide: true,
+		Prepare: s.prepareDraft, Run: s.runDraft,
+	}
 }
 
 // TextDraft asks a model for a draft of a text. It starts a text.draft job that shows its estimate and waits for a
 // person or a rule; when it succeeds the draft is a new revision of the text, never an overwrite.
 func (s *svc) TextDraft(ctx context.Context, req TextDraftRequest) (*Job, error) {
-	c, err := s.authorizeProject(ctx, "TextDraft", req.ProjectID)
+	_, err := s.authorizeProject(ctx, "TextDraft", req.ProjectID)
 	if err != nil {
 		return nil, err
-	}
-
-	// A job belongs to a timeline; a draft belongs to the production, so it takes the first one and the caller of a
-	// project with several is not asked which (the other job kinds are).
-	head, err := s.loadProduction(ctx, s.store.Productions(), c, req.ProjectID)
-	if err != nil {
-		return nil, err
-	}
-
-	tls, err := s.store.Productions().ActiveTimelines(ctx, head.ID)
-	if err != nil {
-		return nil, asError(err)
-	}
-
-	if len(tls) == 0 {
-		return nil, newError(command.CodeInvalidState, "the project %s has no timeline to hold the job.", head.ID).
-			withHint("restore a timeline first")
 	}
 
 	args, err := json.Marshal(DraftArgs{
@@ -78,7 +64,7 @@ func (s *svc) TextDraft(ctx context.Context, req TextDraftRequest) (*Job, error)
 	}
 
 	return s.JobStart(ctx, JobStartRequest{
-		ProjectID: head.ID, TimelineID: tls[0].TimelineID, Kind: JobTextDraft, Args: args, WaitMS: req.WaitMS,
+		ProjectID: req.ProjectID, Kind: JobTextDraft, Args: args, WaitMS: req.WaitMS,
 		DryRun: req.DryRun,
 	})
 }

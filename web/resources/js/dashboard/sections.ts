@@ -1,4 +1,5 @@
 import {
+	AudioLines,
 	Brain,
 	Clapperboard,
 	Film,
@@ -23,6 +24,7 @@ export const SECTION_KEYS = [
 	"write",
 	"visual-assets",
 	"video-assets",
+	"sound-assets",
 	"publish",
 	"skills",
 	"prompts",
@@ -45,6 +47,7 @@ const ICONS: Record<SectionKey, LucideIcon> = {
 	write: PenLine,
 	"visual-assets": Images,
 	"video-assets": Film,
+	"sound-assets": AudioLines,
 	publish: Send,
 	skills: Sparkles,
 	prompts: MessageSquareText,

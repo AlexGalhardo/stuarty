@@ -28,14 +28,14 @@ func TestDashboardSectionsMatchTheSidebar(t *testing.T) {
 		keys = append(keys, string(m[1]))
 	}
 
-	if len(keys) != 11 {
-		t.Fatalf("the sidebar lists %d sections, want the eleven of RF-311: %v", len(keys), keys)
+	if len(keys) != 12 {
+		t.Fatalf("the sidebar lists %d sections, want the twelve of RF-311: %v", len(keys), keys)
 	}
 
 	// The sections with a page of their own, served by Pages.
 	own := []string{
 		"projects", "connections", "skills", "prompts", "memory", "edit-image", "visual-assets", "video-assets",
-		"publish", "write",
+		"sound-assets", "publish", "write",
 	}
 
 	for _, key := range keys {

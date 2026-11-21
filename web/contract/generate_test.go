@@ -91,6 +91,21 @@ func testGeneration(
 	prompt string,
 ) {
 	t.Helper()
+	testGenerationIn(t, false, call, model, unit, wantEstimate, want, request, prompt)
+}
+
+// testGenerationIn is testGeneration in a project that holds one timeline or, with two set, two (VV-330: a
+// generation belongs to the project, so the number of timelines does not matter).
+func testGenerationIn(
+	t *testing.T,
+	two bool,
+	call, model, unit string,
+	wantEstimate int64,
+	want int,
+	request func(project, conn string) []byte,
+	prompt string,
+) {
+	t.Helper()
 
 	master := bytes.Repeat([]byte{0x5C}, 32)
 
@@ -176,6 +191,14 @@ func testGeneration(
 			project, err := svc.ProjectCreate(callerCtx(), service.ProjectCreateRequest{Name: "generated"})
 			if err != nil {
 				t.Fatal(err)
+			}
+
+			if two {
+				if _, err := svc.(service.ProductionService).ProjectItemAdd(callerCtx(), service.ProjectItemAddRequest{
+					ProjectID: project.ProjectID, Kind: "timeline", Title: "Second", Preset: "16:9",
+				}); err != nil {
+					t.Fatal(err)
+				}
 			}
 
 			raw, text, fail := d.do(t, step{Call: call, Args: request(project.ProjectID, conn.ID)})
@@ -321,4 +344,21 @@ func TestVoiceList_EverySurfaceNamesTheVoicesAndNoneReturnsTheKey(t *testing.T) 
 			}
 		})
 	}
+}
+
+// VV-330 on every surface: the same generations in a project that holds two timelines.
+func TestGenerate_EverySurfaceAcceptsAProjectWithTwoTimelines(t *testing.T) {
+	testGenerationIn(t, true, "ImageGenerate", "gpt-image-test", "image", 80_000, 2, func(
+		project, conn string,
+	) []byte {
+		raw, err := json.Marshal(service.ImageGenerateRequest{
+			ProjectID: project, ConnectionID: conn,
+			Model: "gpt-image-test", Prompt: "A red fox in the snow", Count: 2,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		return raw
+	}, "A red fox in the snow")
 }

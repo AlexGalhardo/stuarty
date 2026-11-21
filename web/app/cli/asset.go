@@ -96,7 +96,7 @@ var assetListCmd = &spec{
 	},
 	example: "stuarty asset:list --tag logo --reusable --json",
 	flags: append([]flagDef{
-		{Name: "section", Kind: kindString, Usage: "visual (images and LUTs) or video (video and audio)"},
+		{Name: "section", Kind: kindString, Usage: "visual (images and LUTs), video (clips) or audio (sounds)"},
 		{Name: "kind", Kind: kindString, Usage: "image, video, audio or lut"},
 		{Name: "tag", Kind: kindString, Usage: "only the files with this tag"},
 		{Name: "project", Kind: kindString, Usage: "only the files this project, or one of its timelines, uses"},

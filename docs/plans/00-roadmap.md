@@ -72,7 +72,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [55](55-image-renderer-performance.md) | Image renderer performance (NFR-061, the renderer half) | L | 54 | TODO |
 | [56](56-projects-page-and-project-context.md) | The projects page and the project context | L | 06, 16, 39 | IN PROGRESS |
 | [57](57-local-account-and-encrypted-workspace.md) | A local account and an encrypted workspace | XL | 04, 05, 07 | IN PROGRESS |
-| [58](58-sound-assets.md) | Sound assets | M | 08, 21 | IN PROGRESS |
+| [58](58-sound-assets.md) | Sound assets | M | 08, 21 | DONE (2026-11-21, in v0.46.0; peaks of a sound over 1 GiB of WAV wait for a peaks job, VV-335) |
 | [59](59-outbound-webhooks.md) | Outbound webhooks | L | 04, 05, 30 | IN PROGRESS |
 | [60](60-video-editor-polish.md) | Video editor polish: dark menus, a wider sidebar, rename, the history sidebar | M | 08, 21 | TODO |
 

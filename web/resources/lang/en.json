@@ -32,6 +32,7 @@
         "write": "Write",
         "visual-assets": "Visual Assets",
         "video-assets": "Video Assets",
+        "sound-assets": "Sound Assets",
         "publish": "Publish",
         "skills": "Skills",
         "prompts": "Prompts",
@@ -71,7 +72,10 @@
           "holds": "Images, logos and generated art that you reuse across projects."
         },
         "video-assets": {
-          "holds": "Footage, clips, music and voice-overs that you reuse across projects."
+          "holds": "Footage and clips that you reuse across projects."
+        },
+        "sound-assets": {
+          "holds": "Music, effects, narration and voices that you reuse across projects."
         },
         "publish": {
           "holds": "The calendar of what goes out and the approval queue that waits for you."
@@ -2497,8 +2501,8 @@
     "generate": {
       "open": {
         "visual": "Generate an image",
-        "video": "Generate a voice-over",
-        "clip": "Generate a video clip"
+        "video": "Generate a video clip",
+        "audio": "Generate a voice-over"
       },
       "title": {
         "image": "Generate an image",
@@ -3026,7 +3030,8 @@
     "assets": {
       "intro": {
         "visual": "The images and colour tables of your workspace, with where each came from and where it is used.",
-        "video": "The video and audio of your workspace, with where each came from and where it is used."
+        "video": "The videos of your workspace, with where each came from and where it is used.",
+        "audio": "The sounds of your workspace (music, effects, narration and generated voices), with where each came from and where it is used."
       },
       "filter": {
         "text": "Search",
@@ -3053,7 +3058,8 @@
       "count": "{count} files",
       "empty": {
         "visual": "No images yet. Import a file in a project and it appears here.",
-        "video": "No video or audio yet. Import a file in a project and it appears here."
+        "video": "No video yet. Import a file in a project and it appears here.",
+        "audio": "No sound yet. Import one below, or generate a voice-over, and it appears here."
       },
       "empty_filtered": "No file matches these filters.",
       "more": "Load more",
@@ -3080,7 +3086,21 @@
         "use_in": "Use in a project",
         "use_timeline": "In which timeline",
         "use": "Use",
-        "used": "Added to the project. No copy was made."
+        "used": "Added to the project. No copy was made.",
+        "trash": "Move to the trash of {project}",
+        "trashed": "Moved to the trash."
+      },
+      "sound": {
+        "waveform": "Waveform of {name}",
+        "player": "Play {name}",
+        "no_waveform": "No waveform for this file.",
+        "import_title": "Import a sound",
+        "import_project": "Project",
+        "import_choose": "Choose a project",
+        "import_path": "Path of the file on this computer",
+        "import_submit": "Import",
+        "import_started": "The file is being prepared. It appears in the list when it is ready; press Apply to read the list again.",
+        "import_no_project": "Create a project first: a sound is imported into one."
       }
     },
     "write": {

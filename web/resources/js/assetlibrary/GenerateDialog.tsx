@@ -34,8 +34,8 @@ import type {
 } from "../editor/api/types";
 import type { ProjectSummary } from "../types";
 
-// The "Generate" dialog of the two sections of the asset library (SDD-016 section 10, epics 10 and 11): an image
-// in Visual Assets, a narration or a video clip in Video Assets. The dialog asks for the project, the connection, the model and
+// The "Generate" dialog of the sections of the asset library (SDD-016 section 10, epics 10, 11 and 58): an image
+// in Visual Assets, a video clip in Video Assets, a narration in Sound Assets. The dialog asks for the project, the connection, the model and
 // what to make, shows the estimate the service made (a dry run) before anything is submitted, then follows the
 // job until it ends and tells the grid to reload. It computes nothing: the estimate, the limits, the waiting
 // for a person and the stored files are the service's.

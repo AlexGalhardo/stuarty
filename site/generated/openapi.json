@@ -14984,7 +14984,7 @@
             }
           },
           {
-            "description": "visual (image, lut) or video (video, audio): the two sections of the library.",
+            "description": "visual (image, lut), video (video) or audio (audio): the three sections of the library.",
             "in": "query",
             "name": "section",
             "schema": {

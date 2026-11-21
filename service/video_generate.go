@@ -74,7 +74,8 @@ func (s *svc) VideoGenerate(ctx context.Context, req VideoGenerateRequest) (*Job
 
 func (s *svc) videoGenerateKind() ApprovableKind {
 	return ApprovableKind{
-		Name: JobVideoGenerate, Scope: ScopeEdit, Prepare: s.prepareVideo, Run: s.runVideo, Abandon: s.abandonVideo,
+		Name: JobVideoGenerate, Scope: ScopeEdit, ProjectWide: true, Prepare: s.prepareVideo, Run: s.runVideo,
+		Abandon: s.abandonVideo,
 	}
 }
 

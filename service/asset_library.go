@@ -17,7 +17,7 @@ import (
 type AssetListRequest struct {
 	// Kind keeps only "image", "video", "audio" or "lut" files; empty lists every kind.
 	Kind string `json:"kind,omitempty"`
-	// Section keeps the kinds of a section of the library: "visual" (image, lut) or "video" (video, audio).
+	// Section keeps the kinds of a section of the library: "visual" (image, lut), "video" (video) or "audio" (audio).
 	Section string `json:"section,omitempty"`
 	// Tag keeps the files that carry the tag.
 	Tag string `json:"tag,omitempty"`
