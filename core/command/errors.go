@@ -100,12 +100,12 @@ func quoted(args []any) []any {
 
 	for i, a := range args {
 		s, ok := a.(string)
-		if !ok || len(s) <= quotedMax {
+		if !ok {
 			continue
 		}
 
-		r := []rune(s)
-		if len(r) <= quotedMax {
+		short := Shortened(s)
+		if short == s {
 			continue
 		}
 
@@ -113,7 +113,7 @@ func quoted(args []any) []any {
 			out = slices.Clone(args)
 		}
 
-		out[i] = string(r[:quotedMax]) + "... (" + strconv.Itoa(len(r)) + " characters)"
+		out[i] = short
 	}
 
 	if out == nil {
@@ -121,6 +121,20 @@ func quoted(args []any) []any {
 	}
 
 	return out
+}
+
+// Shortened is s as a message quotes it: its first runes and the mark of the cut when it is longer than quotedMax.
+func Shortened(s string) string {
+	if len(s) <= quotedMax {
+		return s
+	}
+
+	r := []rune(s)
+	if len(r) <= quotedMax {
+		return s
+	}
+
+	return string(r[:quotedMax]) + "... (" + strconv.Itoa(len(r)) + " characters)"
 }
 
 // WithHint sets the hint.
