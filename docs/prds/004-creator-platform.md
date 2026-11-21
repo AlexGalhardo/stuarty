@@ -41,7 +41,7 @@ It is done when the author has published ten real videos using only Stuarty, not
 | ID | Requirement |
 | --- | --- |
 | RF-310 | The application opens on a dashboard with a sidebar on the left |
-| RF-311 | The sidebar has these sections: Projects, Edit Video, Edit Image, Write, Visual Assets, Video Assets, Publish, Skills, Prompts, Memory, Connections, the logged-in profile and a light and dark theme toggle |
+| RF-311 | The sidebar has these sections: Projects, Edit Video, Edit Image, Write, Visual Assets, Video Assets, Sound Assets, Publish, Skills, Prompts, Memory, Connections, the logged-in profile and a light and dark theme toggle |
 | RF-312 | Every section is the same page in the browser and in the desktop application (ADR-0041), in English and in Brazilian Portuguese |
 | RF-313 | The dashboard has an agent chat panel that is available from every section and knows which project is open |
 
