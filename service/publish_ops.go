@@ -574,11 +574,20 @@ func (s *svc) generatedAsset(ctx context.Context, c Caller, exportJob string) (b
 	// all its active timelines count, whichever one the export came from (SDD-020 section 20).
 	ids := []string{*row.ProjectID}
 
-	if refs, rerr := s.store.Productions().ActiveTimelines(ctx, s.projectOf(ctx, *row.ProjectID)); rerr == nil {
-		for i := range refs {
-			if !slices.Contains(ids, refs[i].TimelineID) {
-				ids = append(ids, refs[i].TimelineID)
-			}
+	owner, oerr := costProject(ctx, s.store, *row.ProjectID)
+	if oerr != nil {
+		return false, asError(oerr)
+	}
+
+	// A failed read refuses the post: going on would describe it as having no generated asset.
+	refs, rerr := s.store.Productions().ActiveTimelines(ctx, owner)
+	if rerr != nil {
+		return false, asError(rerr)
+	}
+
+	for i := range refs {
+		if !slices.Contains(ids, refs[i].TimelineID) {
+			ids = append(ids, refs[i].TimelineID)
 		}
 	}
 

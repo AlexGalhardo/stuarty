@@ -46,6 +46,15 @@ func newPubEnv(t *testing.T) *pubEnv {
 func newPubEnvWith(t *testing.T, n *fakeNet, conn *fake.Connector, reg *social.Registry) *pubEnv {
 	t.Helper()
 
+	return newPubEnvWrapped(t, n, conn, reg, nil)
+}
+
+// newPubEnvWrapped is newPubEnvWith with the store the service reads through wrapped, to fail one read.
+func newPubEnvWrapped(
+	t *testing.T, n *fakeNet, conn *fake.Connector, reg *social.Registry, wrap func(service.Store) service.Store,
+) *pubEnv {
+	t.Helper()
+
 	lazy := &lazyRunner{}
 
 	withQueue := func(o *service.Options) {
@@ -55,6 +64,10 @@ func newPubEnvWith(t *testing.T, n *fakeNet, conn *fake.Connector, reg *social.R
 		}
 
 		o.Enqueue = jobs.Dispatcher{Queue: q}
+
+		if wrap != nil {
+			o.Store = wrap(o.Store)
+		}
 	}
 
 	var e *socialEnv
