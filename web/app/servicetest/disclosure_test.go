@@ -45,6 +45,26 @@ func (p *pubEnv) seedAsset(project, hash string, kind asset.OriginKind) {
 	}
 }
 
+// RF-407, SDD-020 section 20: the rule counts every asset the project holds, so the export of the second timeline of
+// a project whose first timeline holds a generated asset carries the flag too (VV-315).
+func TestDisclosure_AnExportOfASecondTimelineCountsTheWholeProject(t *testing.T) {
+	p := newPubEnv(t)
+	_, second := p.addSecondTimeline()
+	p.seedAsset(p.project, generatedHash, asset.Generated)
+	exp := p.seedExport(second, "job_0000000961", ".mp4", []byte("fake mp4 bytes"))
+
+	args := p.args(exp)
+	args.AIDisclosure = false
+
+	check, err := p.pub.PublishValidate(
+		p.as(token),
+		service.PublishValidateRequest{ProjectID: p.project, PublishArgs: args},
+	)
+	if err != nil || !strings.Contains(check.Summary, "AI disclosure: set (a generated asset is used)") {
+		t.Fatalf("validate = %+v, %v", check, err)
+	}
+}
+
 // RF-407, acceptance criterion 4 of epic 19: a post whose video uses a generated asset carries the flag
 // where the network takes one, whatever the arguments said, and the summary a person approves says so.
 func TestDisclosure_AGeneratedAssetSetsTheFlagAndTheSummarySaysSo(t *testing.T) {
