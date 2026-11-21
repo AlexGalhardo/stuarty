@@ -437,6 +437,21 @@ func TestEventIDIsStableAndTheTestOneIsNot(t *testing.T) {
 		t.Error("two tests share an id")
 	}
 
+	// A retried target fails under a new approval request: that is a new event, and the same failure seen twice is not.
+	failed := PublicationFailedData{TargetID: "tgt_1", ApprovalID: "apr_1"}
+	if EventID(failed) != EventID(PublicationFailedData{TargetID: "tgt_1", ApprovalID: "apr_1", ErrorKind: "quota"}) {
+		t.Error("the same failure has two ids")
+	}
+
+	if EventID(failed) == EventID(PublicationFailedData{TargetID: "tgt_1", ApprovalID: "apr_2"}) {
+		t.Error("the failure of a retry has the id of the first failure, so it would never be delivered")
+	}
+
+	body, _, err := Build(failed, time.Unix(0, 0), "wsp_x")
+	if err != nil || strings.Contains(string(body), "apr_1") {
+		t.Errorf("the approval id is in the body: %s, %v", body, err)
+	}
+
 	if WorkspaceID("/a") == WorkspaceID("/b") || len(WorkspaceID("/a")) != len("wsp_")+10 {
 		t.Error("the workspace id is not stable and distinct")
 	}

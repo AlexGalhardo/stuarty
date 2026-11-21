@@ -60,10 +60,19 @@ func (s *svc) emitJob(ctx context.Context, j *JobRow) {
 	}
 
 	if j.AssetHash == nil {
+		// No project has a stream for it, and a webhook still hears that the job ended (SDD-022 section 3).
+		s.fanWebhooks(ev)
+
 		return
 	}
 
 	refs := s.referrers(ctx, *j.AssetHash)
+	if len(refs) == 0 {
+		s.fanWebhooks(ev)
+
+		return
+	}
+
 	for i := range refs {
 		ev.ProjectID, ev.AssetID = refs[i].ProjectID, refs[i].AssetID
 		s.emit(ev)
