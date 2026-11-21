@@ -62,6 +62,13 @@ func renderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig, 
 
 	start, base := 0, (*image.RGBA)(nil)
 	if chain != nil {
+		// What the cache keeps was drawn from files the caller could read then, not necessarily now: an asset the
+		// caller lost access to must not stay in the picture because it is cached (the export, with no cache, reads
+		// every file).
+		if err := verifyAccess(cfg, live); err != nil {
+			return nil, err
+		}
+
 		start, base = cfg.Cache.nearest(cfg.CacheScope, chain)
 		// with no layer to draw there is nothing cached (nearest starts at one layer): the canvas is drawn below
 		if base != nil && start == len(live) {
@@ -80,6 +87,9 @@ func renderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig, 
 	// (SDD-021 section 13.2); the cancellation is kept by checking the context between the layers and by
 	// not waiting for the work in flight (SDD-021 section 6.2).
 	run := &imageRun{ctx: ctx, cfg: cfg, plan: fp, raster: rasterize.NewCache(fonts, 0), bands: bands}
+	if chain != nil {
+		run.cache = cfg.Cache
+	}
 
 	for _, stop := range stops {
 		img, err := run.stage(base, live[start:stop])
@@ -101,6 +111,47 @@ func renderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig, 
 	return base, nil
 }
 
+// / verifyAccess asks for the file of every image and lookup table the layers name, without reading it, so that a
+// render that starts from the cache refuses what the export would refuse.
+func verifyAccess(cfg ImageConfig, layers []plan.Layer) error {
+	seen := map[string]bool{}
+
+	for i := range layers {
+		l := &layers[i]
+
+		if l.Kind == plan.Media && !seen[l.AssetID] {
+			seen[l.AssetID] = true
+
+			if cfg.AssetPath == nil {
+				return errors.New("no image files are available")
+			}
+
+			if _, err := cfg.AssetPath(l.AssetID); err != nil {
+				return fmt.Errorf("layer %s: %w", l.ItemID, err)
+			}
+		}
+
+		if l.Lut != nil && !seen["lut:"+l.Lut.Asset] {
+			seen["lut:"+l.Lut.Asset] = true
+
+			if cfg.LUTPath == nil {
+				return exportErr(ReasonRender, "No lookup table files are available.", errors.New("no lut source"), "")
+			}
+
+			if _, err := cfg.LUTPath("sha256:" + l.Lut.Asset); err != nil {
+				return exportErr(
+					ReasonRender,
+					"A lookup table of the image is not available.",
+					fmt.Errorf("layer %s: %w", l.ItemID, err),
+					"",
+				)
+			}
+		}
+	}
+
+	return nil
+}
+
 // prefixItem is the id of the texture that holds the picture of the layers already drawn (SDD-021 section 6.1).
 const prefixItem = "stuarty-prefix"
 
@@ -112,6 +163,8 @@ type imageRun struct {
 	plan   plan.FramePlan
 	raster *rasterize.Cache
 	bands  int
+	// cache keeps the prepared layers, when the render may use one (SDD-021 section 6.2).
+	cache *ImageCache
 }
 
 // withoutLostClips drops the layers whose mask source did not make it to the renderer (a text with no pixels, an

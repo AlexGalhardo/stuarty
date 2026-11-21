@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/engine/renderhost"
 )
 
 // DefaultImageCacheBytes is the memory the pictures of an ImageCache may hold: six pictures of a 4,000 by 4,000
@@ -29,6 +30,10 @@ type ImageCache struct {
 	entries map[cacheKey]*list.Element
 	hits    int
 	misses  int
+
+	prepared, preparedBytes int
+	preparedHits            int
+	preparedMisses          int
 }
 
 type cacheKey struct {
@@ -38,7 +43,16 @@ type cacheKey struct {
 
 type cacheEntry struct {
 	key cacheKey
-	img *image.RGBA
+	img *image.RGBA         // a picture of the canvas, or
+	pic renderhost.Prepared // a prepared layer (SDD-021 section 6.2)
+}
+
+func (e *cacheEntry) size() int64 {
+	if e.img != nil {
+		return int64(len(e.img.Pix))
+	}
+
+	return int64(e.pic.Bytes())
 }
 
 // NewImageCache makes a cache that holds at most limit bytes of pixels; a limit of zero or less is the default.
@@ -50,12 +64,19 @@ func NewImageCache(limit int64) *ImageCache {
 	return &ImageCache{limit: limit, order: list.New(), entries: map[cacheKey]*list.Element{}}
 }
 
-// ImageCacheStats is what a cache holds and how often a render found its start in it.
+// / ImageCacheStats is what a cache holds and how often a render found its start in it. Pictures, Bytes, Hits
+// and Misses are the pictures of the canvas; the prepared layers (SDD-021 section 6.2) are counted apart and
+// share the limit.
 type ImageCacheStats struct {
 	Pictures int
 	Bytes    int64
 	Hits     int
 	Misses   int
+
+	PreparedLayers int
+	PreparedBytes  int64
+	PreparedHits   int
+	PreparedMisses int
 }
 
 // Stats reports the state of the cache.
@@ -63,7 +84,11 @@ func (c *ImageCache) Stats() ImageCacheStats {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	return ImageCacheStats{Pictures: len(c.entries), Bytes: c.used, Hits: c.hits, Misses: c.misses}
+	return ImageCacheStats{
+		Pictures: len(c.entries) - c.prepared, Bytes: c.used - int64(c.preparedBytes), Hits: c.hits, Misses: c.misses,
+		PreparedLayers: c.prepared, PreparedBytes: int64(c.preparedBytes),
+		PreparedHits: c.preparedHits, PreparedMisses: c.preparedMisses,
+	}
 }
 
 // nearest gives the picture of the most layers that the cache holds for this chain, and how many layers it has
@@ -116,15 +141,70 @@ func (c *ImageCache) put(scope string, digest [sha256.Size]byte, img *image.RGBA
 	c.entries[key] = c.order.PushFront(&cacheEntry{key: key, img: img})
 	c.used += size
 
+	c.evict()
+}
+
+// evict drops the least recently used entries until the cache is within its limit. The caller holds the lock.
+func (c *ImageCache) evict() {
 	for c.used > c.limit && c.order.Len() > 0 {
 		last := c.order.Back()
 		c.order.Remove(last)
 
 		if e, ok := last.Value.(*cacheEntry); ok {
 			delete(c.entries, e.key)
-			c.used -= int64(len(e.img.Pix))
+			c.used -= e.size()
+
+			if e.img == nil {
+				c.prepared--
+				c.preparedBytes -= e.pic.Bytes()
+			}
 		}
 	}
+}
+
+// getPrepared gives the prepared layer kept under the key of the scope. The block is read only.
+func (c *ImageCache) getPrepared(scope string, digest [sha256.Size]byte) (renderhost.Prepared, bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if el, ok := c.entries[cacheKey{scope, digest}]; ok {
+		if e, ok := el.Value.(*cacheEntry); ok && e.img == nil {
+			c.order.MoveToFront(el)
+			c.preparedHits++
+
+			return e.pic, true
+		}
+	}
+
+	c.preparedMisses++
+
+	return renderhost.Prepared{}, false
+}
+
+// putPrepared keeps a prepared layer. One larger than the whole cache is not kept.
+func (c *ImageCache) putPrepared(scope string, digest [sha256.Size]byte, p renderhost.Prepared) {
+	size := int64(p.Bytes())
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	key := cacheKey{scope, digest}
+	if el, ok := c.entries[key]; ok {
+		c.order.MoveToFront(el)
+
+		return
+	}
+
+	if size > c.limit {
+		return
+	}
+
+	c.entries[key] = c.order.PushFront(&cacheEntry{key: key, pic: p})
+	c.used += size
+	c.prepared++
+	c.preparedBytes += p.Bytes()
+
+	c.evict()
 }
 
 // layerChain is the digest of the first k layers of a plan, for every k, and whether the first k layers can be
