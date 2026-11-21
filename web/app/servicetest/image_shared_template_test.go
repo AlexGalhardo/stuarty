@@ -66,3 +66,52 @@ func TestSharedImageTemplatesInNetworkMode(t *testing.T) {
 		t.Fatalf("a user changed a shared template: %v", err)
 	}
 }
+
+// VV-300: a template of the product that a person edited in local mode is no longer the one that ships, so serving
+// the same workspace in network mode does not publish the edited version.
+func TestEditedImageTemplateIsNotSharedInNetworkMode(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+
+	images, err := templates.Images()
+	if err != nil || len(images) == 0 {
+		t.Fatalf("the templates: %d %v", len(images), err)
+	}
+
+	set := make([]service.BuiltInTemplate, 0, len(images))
+	for _, im := range images {
+		set = append(set, service.BuiltInTemplate{ID: im.ID, Document: im.Document})
+	}
+
+	if _, err := service.SeedBuiltInImageTemplates(t.Context(), e.store, 1, set); err != nil {
+		t.Fatal(err)
+	}
+
+	local := service.WithCaller(t.Context(), service.Caller{Actor: "local:me", Scopes: service.RoleScopes(service.RoleAdmin)})
+	if _, err := e.svc.ImageEdit(local, service.ImageEditRequest{
+		ImageID:      images[0].ID,
+		BaseRevision: 1,
+		Operations: []command.Operation{
+			{Op: "layer.transform", Args: json.RawMessage(`{"layer_id":"lyr_0000000001","x":3}`)},
+		},
+	}); err != nil {
+		t.Fatalf("the local edit of a template: %v", err)
+	}
+
+	bob := service.WithCaller(t.Context(), service.Caller{
+		Actor: "user:bob", Scopes: service.RoleScopes(service.RoleMember), OwnerUserID: "bob",
+	})
+
+	if _, err := e.svc.ImageDescribe(bob, service.ImageDescribeRequest{ImageID: images[0].ID}); code(err) != "E_NOT_FOUND" {
+		t.Fatalf("a user read the edited template: %v", err)
+	}
+
+	if len(images) < 2 {
+		return
+	}
+
+	if _, err := e.svc.ImageDescribe(bob, service.ImageDescribeRequest{ImageID: images[1].ID}); err != nil {
+		t.Fatalf("an untouched template stopped being shared: %v", err)
+	}
+}

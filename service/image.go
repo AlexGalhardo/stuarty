@@ -154,9 +154,11 @@ func imageAuthorize(ctx context.Context, method string) (Caller, error) {
 
 // SharedImageTemplate reports whether a row is a template that ships with the product (VV-291, SDD-021): in
 // network mode it belongs to no user and every user may read it and make a document from it, but none may change
-// it. The starter actor made it and it has no owner.
+// it. The starter actor made it and it has no owner, and it is still the document that ships: the seed writes
+// revision 1, so a template that a person edited in local mode (revision 2 or later) stays private to the
+// workspace and is not published by serving it in network mode (VV-300).
 func SharedImageTemplate(h ImageHead) bool {
-	return h.Template && h.OwnerUserID == nil && h.CreatedBy == StarterActor
+	return h.Template && h.OwnerUserID == nil && h.CreatedBy == StarterActor && h.Revision == 1
 }
 
 // loadImage reads a document the caller may see and change. A shared template is refused to a writer with
