@@ -58,7 +58,7 @@ const SYMBOLS: Record<string, string> = { cmd: "$ ", prompt: "> ", tool: "● ",
 						Copy
 					</button>
 				</div>
-				<pre tabindex="0" aria-label={`${tab.label} example: ${tab.lines.map((l) => l.text).join(" ")}`} class="m-0 min-h-[24rem] px-4 py-3"><code aria-hidden="true">{tab.lines.map((line) => (
+				<pre tabindex="0" role="group" aria-label={`${tab.label} example: ${tab.lines.map((l) => l.text).join(" ")}`} class="m-0 min-h-[24rem] px-4 py-3"><code aria-hidden="true">{tab.lines.map((line) => (
 					<span class="block" data-row={line.kind}>{SYMBOLS[line.kind] ? <span class:list={["select-none", line.kind === "out" || line.kind === "more" ? "t-out" : "t-prompt"]}>{SYMBOLS[line.kind]}</span> : null}<span class:list={[(line.kind === "out" || line.kind === "more") && "t-out", line.kind === "note" && "t-note", line.kind === "tool" && "t-tool"]} data-type>{line.text}</span></span>
 				))}</code></pre>
 			</div>
