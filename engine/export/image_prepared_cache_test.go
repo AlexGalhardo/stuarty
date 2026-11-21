@@ -126,6 +126,48 @@ func TestImageCachePreparedLayersAreBoundedByTheSameLimit(t *testing.T) {
 	}
 }
 
+// TestImageCacheKeepsPreparedLayersThroughEditsOfTheTopLayer: an edit of the top layer reads no prepared layer below
+// it and adds a picture of the canvas, so by age alone those pictures would push out the layers the next edit of a
+// layer further down needs. The cache holds exactly the prepared layers and two pictures.
+func TestImageCacheKeepsPreparedLayersThroughEditsOfTheTopLayer(t *testing.T) {
+	base := lookBase()
+	photo := firstLayerOfKind(base, coreimage.KindImage)
+	// No mask from another layer: such a document has no picture below its top layer to start from.
+	d := applyLook(
+		t,
+		base,
+		lookOp("layer.filter_add", fmt.Sprintf(`{"layer_id": %q, "kind": "blur", "radius": 6}`, photo)),
+		lookOp("layer.filter_add", fmt.Sprintf(`{"layer_id": %q, "kind": "glow", "radius": 5}`, lyr('c'))),
+	)
+	ids := layerIDs(d)
+
+	probe := NewImageCache(1 << 30)
+	renderWith(t, d, cachedConfig(t, probe, "u1"))
+
+	cache := NewImageCache(probe.Stats().PreparedBytes + 2*int64(d.Width*d.Height*4))
+	cfg := cachedConfig(t, cache, "u1")
+
+	renderWith(t, d, cfg)
+
+	top := ids[len(ids)-1]
+	for pct := 40; pct < 46; pct++ {
+		renderWith(t, withOpacity(t, d, top, pct), cfg)
+	}
+
+	before := cache.Stats()
+	edited := withOpacity(t, d, lyr('c'), 40)
+
+	got := renderWith(t, edited, cfg)
+
+	if after := cache.Stats(); after.PreparedMisses != before.PreparedMisses {
+		t.Fatalf("%d layers prepared again after edits of the top layer", after.PreparedMisses-before.PreparedMisses)
+	}
+
+	if want := renderWith(t, edited, ImageConfig{AssetPath: cfg.AssetPath}); !bytes.Equal(got.Pix, want.Pix) {
+		t.Fatalf("the picture differs from the full render in %d bytes", differingBytes(got.Pix, want.Pix))
+	}
+}
+
 // TestImageCacheRefusesAnAssetTheCallerLostWhileItIsCached: what is cached was drawn from files the caller could
 // read then; the render asks for the files again, so a lost asset is as missing as it is to the export.
 func TestImageCacheRefusesAnAssetTheCallerLostWhileItIsCached(t *testing.T) {

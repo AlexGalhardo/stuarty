@@ -144,10 +144,14 @@ func (c *ImageCache) put(scope string, digest [sha256.Size]byte, img *image.RGBA
 	c.evict()
 }
 
-// evict drops the least recently used entries until the cache is within its limit. The caller holds the lock.
+// keptPictures is how many pictures of the canvas stay ahead of the prepared layers when the cache is full: the
+// picture below the top layer and the whole picture, which an edit of the top layer and a new layer start from.
+const keptPictures = 2
+
+// evict drops entries until the cache is within its limit. The caller holds the lock.
 func (c *ImageCache) evict() {
 	for c.used > c.limit && c.order.Len() > 0 {
-		last := c.order.Back()
+		last := c.victim()
 		c.order.Remove(last)
 
 		if e, ok := last.Value.(*cacheEntry); ok {
@@ -162,21 +166,65 @@ func (c *ImageCache) evict() {
 	}
 }
 
+// victim is the entry to drop: the least recently used picture of the canvas past the newest keptPictures, and
+// otherwise the least recently used entry. A picture costs one draw over the prepared layers, and a prepared
+// layer costs its looks again. An edit of the top layer touches no prepared layer below it, so by age alone the
+// pictures of those edits would push out the very layers the next edit needs.
+func (c *ImageCache) victim() *list.Element {
+	var older *list.Element
+
+	pictures := 0
+
+	for el := c.order.Front(); el != nil; el = el.Next() {
+		if e, ok := el.Value.(*cacheEntry); ok && e.img != nil {
+			pictures++
+
+			if pictures > keptPictures {
+				older = el
+			}
+		}
+	}
+
+	if older != nil {
+		return older
+	}
+
+	return c.order.Back()
+}
+
 // getPrepared gives the prepared layer kept under the key of the scope. The block is read only.
 func (c *ImageCache) getPrepared(scope string, digest [sha256.Size]byte) (renderhost.Prepared, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	if p, ok := c.findPrepared(scope, digest); ok {
+		c.preparedHits++
+
+		return p, true
+	}
+
+	c.preparedMisses++
+
+	return renderhost.Prepared{}, false
+}
+
+// peekPrepared is getPrepared for a second look at a key that was already counted as a miss.
+func (c *ImageCache) peekPrepared(scope string, digest [sha256.Size]byte) (renderhost.Prepared, bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	return c.findPrepared(scope, digest)
+}
+
+// findPrepared finds a prepared layer and marks it as recently used. The caller holds the lock.
+func (c *ImageCache) findPrepared(scope string, digest [sha256.Size]byte) (renderhost.Prepared, bool) {
 	if el, ok := c.entries[cacheKey{scope, digest}]; ok {
 		if e, ok := el.Value.(*cacheEntry); ok && e.img == nil {
 			c.order.MoveToFront(el)
-			c.preparedHits++
 
 			return e.pic, true
 		}
 	}
-
-	c.preparedMisses++
 
 	return renderhost.Prepared{}, false
 }
