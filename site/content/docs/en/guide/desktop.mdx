@@ -31,7 +31,7 @@ cd desktop/shell/app && go build -ldflags "-H windowsgui" -o ../../../dist/stuar
 
 Put the two files in one folder and double-click `stuarty-desktop.exe`. To use a server program in another place, start it as `stuarty-desktop -binary <path to stuarty>`. The first start can take tens of seconds while the window component starts; later starts are faster.
 
-The workspace is `~/.stuarty`, or the folder in `STUARTY_HOME` if you set it before you start the application. You can still run the same server with `stuarty serve` and open it in a browser with `stuarty open`; the two are the same data.
+The workspace is `~/.stuarty`, or the folder in `STUARTY_HOME` if you set it before you start the application. You can still run the same server with `stuarty serve` and open it in a browser with `stuarty open`; the two are the same data. The browser window is not a person's session, though: there the buttons that need a person (approve or reject, the rules and the ceilings, set a price, keep a memory note, mark a skill as read) are shown disabled with the reason, and you do those in the desktop app (see [Approvals](/docs/guide/approvals)).
 
 ## Automate the window
 
