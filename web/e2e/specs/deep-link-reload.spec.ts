@@ -51,7 +51,9 @@ test.describe("deep-link-reload", () => {
 		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
 		const streams: string[] = [];
 		context.on("request", (r) => {
-			if (r.url().includes("/events")) streams.push(r.url());
+			// Only the stream of the project: the bundle has a chunk named events-<hash>.js too.
+			if (/\/api\/v1\/projects\/[^/]+\/events(\?|$)/.test(r.url()))
+				streams.push(r.url());
 		});
 		await page.goto(`/editor/${seeded.id}`);
 		await expect(page.locator("[data-item-id]")).toHaveCount(1);

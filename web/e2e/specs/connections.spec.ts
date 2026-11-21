@@ -1,6 +1,12 @@
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
+import type { Locator, Page } from "@playwright/test";
 import { caller, expect, test } from "./helpers";
+
+// The section that adds a connection; the Blog section has a Name field of its own.
+function newConnection(page: Page): Locator {
+	return page.locator('section[aria-labelledby="connections-new"]');
+}
 
 // RF-220 (epic 04, SDD-014): the Connections page lists every destination with what it may
 // receive and when it was last used, tests one, and removes one with its credential. The
@@ -83,7 +89,7 @@ test.describe("connections", () => {
 				),
 			).toBeVisible();
 
-			await page.getByLabel("Name", { exact: true }).fill(label);
+			await newConnection(page).getByLabel("Name", { exact: true }).fill(label);
 			await page.getByLabel("Address (https)").fill(dest.url);
 			await page.getByLabel("Credential").fill(SECRET);
 			await page.getByRole("button", { name: "Connect" }).click();
@@ -187,7 +193,7 @@ test.describe("connections", () => {
 		const label = uniqueLabel("Plain");
 		const api = await caller(request);
 		await page.goto("/connections");
-		await page.getByLabel("Name", { exact: true }).fill(label);
+		await newConnection(page).getByLabel("Name", { exact: true }).fill(label);
 		await page.getByLabel("Address (https)").fill("http://example.com/x");
 		await page.getByLabel("Credential").fill(SECRET);
 		await page.getByRole("button", { name: "Connect" }).click();
