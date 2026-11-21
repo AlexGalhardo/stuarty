@@ -15,12 +15,14 @@ nightly BenchmarkComposeBlur8Bands   x_realtime min 0.73
 nightly BenchmarkSampleRotatedFullFrame8Bands ns/op max 25100000
 nightly BenchmarkCopyFullFrame       ns/op max 1700000
 
-# The caption rasterizer: 7.35 ms miss, 17 us hit.
-pr      BenchmarkCaptionMiss         ns/op max 8800000
+# The caption rasterizer: 17 us hit. The miss was 7.35 ms on the Go rasterizer and measured 9.17 ms on the Rust
+# one under wazero (CI, 2026-11-21); the limit of 11 ms is that value worsened by the 20% of SDD-008 section 7.
+pr      BenchmarkCaptionMiss         ns/op max 11000000
 pr      BenchmarkCaptionHit          ns/op max 20600
 
-# NFR-001, commit round trip p95: 13.7 ms and 16.5 ms (limit 50 ms).
-pr      BenchmarkCommit200Items      p95-ms max 16.4
+# NFR-001, commit round trip p95: 13.7 ms and 16.5 ms (limit 50 ms). Commit200Items does real moves since
+# f988fd94d and measured 23.9 ms (CI, 2026-11-21); its limit is the 25 ms of SDD-005 section 18 check 12.
+pr      BenchmarkCommit200Items      p95-ms max 25
 nightly BenchmarkRoundTrip200Items   p95-ms max 19.8
 
 # NFR-006 and NFR-007 (60 s export, 500 MB), NFR-009 project: 1.407 times real time, 122 MB.
