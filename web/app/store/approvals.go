@@ -411,10 +411,15 @@ func (r approvalRepo) Spent(ctx context.Context, q approval.SpentQuery) (int64, 
 }
 
 func (r approvalRepo) Totals(ctx context.Context, fromDay string) ([]approval.Total, error) {
-	rows, err := r.ex.QueryContext(ctx, `SELECT day, connection_id, project_id, currency,
- SUM(CASE WHEN state = 'settled' THEN COALESCE(actual_micros, 0) ELSE estimate_micros END)
- FROM cost_ledger WHERE day >= ? AND state IN ('reserved','settled')
- GROUP BY day, connection_id, project_id, currency ORDER BY day DESC, connection_id, project_id, currency`, fromDay)
+	// An entry carries the id of the timeline its job is kept on; the total is by the project that holds it, as the
+	// ceiling sums it (VV-367). An id that is no timeline of a project (the empty one, a project id) stays as it is.
+	rows, err := r.ex.QueryContext(ctx, `SELECT day, connection_id, owner, currency, SUM(micros) FROM (
+ SELECT day, connection_id, currency,
+  COALESCE((SELECT i.project_id FROM project_items i WHERE i.kind = 'timeline' AND i.ref = cost_ledger.project_id),
+   project_id) AS owner,
+  CASE WHEN state = 'settled' THEN COALESCE(actual_micros, 0) ELSE estimate_micros END AS micros
+ FROM cost_ledger WHERE day >= ? AND state IN ('reserved','settled'))
+ GROUP BY day, connection_id, owner, currency ORDER BY day DESC, connection_id, owner, currency`, fromDay)
 	if err != nil {
 		return nil, err
 	}
