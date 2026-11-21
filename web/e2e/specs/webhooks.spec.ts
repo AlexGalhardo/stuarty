@@ -118,6 +118,28 @@ test.describe("webhooks", () => {
 			await expect.poll(() => target.got.length).toBe(2);
 			expect(verifies(secret, target.got[1])).toBe(true);
 
+			// Rotating cannot be undone, so it asks first, and cancelling keeps the secret.
+			await row.getByRole("button", { name: "Rotate secret" }).click();
+			const ask = page.getByRole("alertdialog");
+			await expect(ask).toContainText("refuses every call");
+			await ask.getByRole("button", { name: "Cancel" }).click();
+			await expect(ask).toHaveCount(0);
+			await expect(note.locator("[data-webhook-secret]")).toHaveText(secret);
+
+			// Confirmed, it shows a new secret, and the next call verifies with that one and not with the old.
+			await row.getByRole("button", { name: "Rotate secret" }).click();
+			await ask.getByRole("button", { name: "Rotate secret" }).click();
+			await expect(note.locator("[data-webhook-secret]")).not.toHaveText(
+				secret,
+			);
+			const rotated = (await note
+				.locator("[data-webhook-secret]")
+				.textContent()) as string;
+			await row.getByRole("button", { name: "Send test" }).click();
+			await expect.poll(() => target.got.length).toBe(3);
+			expect(verifies(rotated, target.got[2])).toBe(true);
+			expect(verifies(secret, target.got[2])).toBe(false);
+
 			// Closing the note forgets the secret; no answer of the API holds it, and no answer body is kept.
 			await note.getByRole("button", { name: "I saved it" }).click();
 			await expect(note).toHaveCount(0);
@@ -130,11 +152,20 @@ test.describe("webhooks", () => {
 			const deliveries = JSON.stringify(
 				await api("GET", `/webhooks/${mine?.id}/deliveries`),
 			);
-			expect(list).not.toContain(secret);
-			expect(deliveries).not.toContain(secret);
+			for (const shown of [secret, rotated]) {
+				expect(list).not.toContain(shown);
+				expect(deliveries).not.toContain(shown);
+			}
 			expect(deliveries).not.toContain("ANSWER-CANARY");
 
+			// Removing asks first too: cancelling keeps the webhook.
 			await row.getByRole("button", { name: "Remove" }).click();
+			await ask.getByRole("button", { name: "Cancel" }).click();
+			await expect(ask).toHaveCount(0);
+			await expect(row).toHaveCount(1);
+
+			await row.getByRole("button", { name: "Remove" }).click();
+			await ask.getByRole("button", { name: "Remove" }).click();
 			await expect(row).toHaveCount(0);
 		} finally {
 			const rows = (await api("GET", "/webhooks")) as {

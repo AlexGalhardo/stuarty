@@ -2581,6 +2581,11 @@
       "copy": "Copy",
       "copied": "Copied",
       "secret_saved": "I saved it",
+      "cancel": "Cancel",
+      "confirm_remove_title": "Remove {name}?",
+      "confirm_remove_body": "Its signing secret and its deliveries are deleted, and this cannot be undone.",
+      "confirm_rotate_title": "Rotate the secret of {name}?",
+      "confirm_rotate_body": "A new secret replaces this one now, and your receiver refuses every call until it holds the new one.",
       "state": {
         "pending": "Waiting",
         "succeeded": "Delivered",
