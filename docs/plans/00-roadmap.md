@@ -69,8 +69,8 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [52](52-live-composition-groups-in-the-browser.md) | Live composition groups in the browser preview | M | 32, 26 | DONE (2026-11-20, `43b11f50e`..`5332706c1`, merge `7cb81c176`; Firefox and WebKit not run) |
 | [53](53-constant-speed-for-compositions.md) | Constant speed for compositions | M | 32 | DONE (2026-11-20, 38369a110..6dc199452, merge 425c9bf14; the audio keeps the pitch through atempo, no nested bus) |
 | [54](54-image-pipeline-performance.md) | Image pipeline performance (NFR-061) | L | 27, 29, 36, 49, 50 | DONE (2026-11-20, `bb6d11435`..`9df22287f`; the rest of NFR-061 moved to epic 55 by D-118) |
-| [55](55-image-renderer-performance.md) | Image renderer performance (NFR-061, the renderer half) | L | 54 | IN PROGRESS (tasks 1 to 4 reviewed and merged in v0.46.0 on 2026-11-21; task 5, the measurement on the idle machine, is owed) |
-| [56](56-projects-page-and-project-context.md) | The projects page and the project context | L | 06, 16, 39 | IN PROGRESS |
+| [55](55-image-renderer-performance.md) | Image renderer performance (NFR-061, the renderer half) | L | 54 | IN PROGRESS (tasks 1 to 4 reviewed and merged in v0.46.0 on 2026-11-21; task 5 measured on 2026-11-21: `compose_ms` 51 passes, `s_export` 2.50 s misses the 2 s limit) |
+| [56](56-projects-page-and-project-context.md) | The projects page and the project context | L | 06, 16, 39 | DONE (2026-11-21, in v0.46.0, the last two e2e commits in v0.47.0; a bundle of a project with no timeline and the context of template and bundle projects are open issues) |
 | [57](57-local-account-and-encrypted-workspace.md) | A local account and an encrypted workspace | XL | 04, 05, 07 | IN PROGRESS |
 | [58](58-sound-assets.md) | Sound assets | M | 08, 21 | DONE (2026-11-21, in v0.46.0; peaks of a sound over 1 GiB of WAV wait for a peaks job, VV-335) |
 | [59](59-outbound-webhooks.md) | Outbound webhooks | L | 04, 05, 30 | IN PROGRESS |
