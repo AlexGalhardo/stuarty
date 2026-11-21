@@ -205,6 +205,12 @@ import { withBase } from "@/lib/site";
 		}
 	}
 
+	/* The hero sits close to the navbar. */
+	html.takes-on #studio {
+		align-items: flex-start;
+		padding-top: clamp(1.5rem, 4vh, 3rem);
+	}
+
 	/* The first take keeps the bottom free for the scroll hint; on short windows the hero tightens so its buttons
 	   stay above it. */
 	html.takes-on #studio {
