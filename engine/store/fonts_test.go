@@ -125,6 +125,10 @@ func TestSecurity_T21_FontValidation(t *testing.T) {
 		"wrong magic, body": append([]byte("wOFF"), anton[4:]...),
 	}
 
+	// The service compiles the renderer module at start (go rasterize.Warm()); the deadline is
+	// the time to refuse a font, not the one-off compile, which takes 7 to 11 s under -race on CI.
+	rasterize.Warm()
+
 	for name, data := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
