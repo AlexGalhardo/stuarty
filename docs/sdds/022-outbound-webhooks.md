@@ -143,7 +143,7 @@ The CLI flag that names the address is `--endpoint`, as in `connection:add`: it 
 
 ## 9. The page
 
-The Webhooks page (`/webhooks`, an entry in the sidebar) lists the webhooks with their state and last delivery, creates one with a name, an address and a checklist of the events, each with the sentence the server gives, shows the secret once with a copy button and a warning that it is not shown again, sends a test, rotates the secret (and shows the new one once), disables and removes. A webhook opens to its deliveries, each with its event, state, attempts and status, and a "send again" button. The page draws what the service answers and computes no result.
+The Webhooks page (`/webhooks`, an entry in the sidebar) lists the webhooks with their state and last delivery, creates one with a name, an address and a checklist of the events, each with the sentence the server gives, shows the secret once with a copy button and a warning that it is not shown again, sends a test, rotates the secret (and shows the new one once), disables and removes. Rotating and removing cannot be undone, so each asks for a confirmation first. A webhook opens to its deliveries, each with its event, state, attempts and status, and a "send again" button. The page draws what the service answers and computes no result.
 
 ## 10. Tests
 

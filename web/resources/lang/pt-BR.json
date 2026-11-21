@@ -2581,6 +2581,11 @@
       "copy": "Copiar",
       "copied": "Copiado",
       "secret_saved": "Já guardei",
+      "cancel": "Cancelar",
+      "confirm_remove_title": "Remover {name}?",
+      "confirm_remove_body": "O segredo de assinatura e as entregas são apagados, e isso não pode ser desfeito.",
+      "confirm_rotate_title": "Trocar o segredo de {name}?",
+      "confirm_rotate_body": "Um novo segredo substitui este agora, e o seu receptor recusa toda chamada até ter o novo.",
       "state": {
         "pending": "Aguardando",
         "succeeded": "Entregue",

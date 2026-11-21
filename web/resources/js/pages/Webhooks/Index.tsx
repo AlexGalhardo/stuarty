@@ -9,6 +9,16 @@ import {
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import UntrustedText from "@/components/UntrustedText";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -88,6 +98,54 @@ export function SecretNote({
 	);
 }
 
+// An action that cannot be undone: removing deletes the secret and the history, and rotating makes the receiver refuse
+// every call until it holds the new secret. Both ask first.
+export interface PendingAction {
+	kind: "remove" | "rotate";
+	id: string;
+	name: string;
+}
+
+export function ConfirmAction({
+	action,
+	onCancel,
+	onConfirm,
+}: {
+	action: PendingAction | null;
+	onCancel(): void;
+	onConfirm(): void;
+}): ReactNode {
+	const t = useT();
+	const kind = action?.kind ?? "remove";
+	return (
+		<AlertDialog
+			open={action !== null}
+			onOpenChange={(next) => {
+				if (!next) onCancel();
+			}}
+		>
+			<AlertDialogContent>
+				<AlertDialogHeader>
+					<AlertDialogTitle>
+						{t(`ui.webhooks.confirm_${kind}_title`, {
+							name: action?.name ?? "",
+						})}
+					</AlertDialogTitle>
+					<AlertDialogDescription>
+						{t(`ui.webhooks.confirm_${kind}_body`)}
+					</AlertDialogDescription>
+				</AlertDialogHeader>
+				<AlertDialogFooter>
+					<AlertDialogCancel>{t("ui.webhooks.cancel")}</AlertDialogCancel>
+					<AlertDialogAction variant="destructive" onClick={onConfirm}>
+						{t(`ui.webhooks.${kind}`)}
+					</AlertDialogAction>
+				</AlertDialogFooter>
+			</AlertDialogContent>
+		</AlertDialog>
+	);
+}
+
 export function DeliveryRow({
 	delivery,
 	onRedeliver,
@@ -160,6 +218,7 @@ export default function Webhooks(): ReactNode {
 	const [url, setUrl] = useState("");
 	const [chosen, setChosen] = useState<string[]>([]);
 	const [busy, setBusy] = useState(false);
+	const [confirming, setConfirming] = useState<PendingAction | null>(null);
 
 	const load = useCallback(async (): Promise<void> => {
 		try {
@@ -213,6 +272,21 @@ export default function Webhooks(): ReactNode {
 		} catch (error) {
 			setFailure(failureOf(error));
 		}
+	}
+
+	function confirmed(): void {
+		const action = confirming;
+		setConfirming(null);
+		if (action === null) return;
+		void act(async () => {
+			if (action.kind === "remove") {
+				await api().removeWebhook(action.id);
+				if (open === action.id) setOpen(null);
+				return;
+			}
+			const made = await api().rotateWebhookSecret(action.id);
+			setRevealed({ id: made.id, name: made.name, secret: made.secret });
+		});
 	}
 
 	async function show(id: string): Promise<void> {
@@ -338,15 +412,10 @@ export default function Webhooks(): ReactNode {
 													type="button"
 													variant="outline"
 													onClick={() =>
-														void act(async () => {
-															const made = await api().rotateWebhookSecret(
-																w.id,
-															);
-															setRevealed({
-																id: made.id,
-																name: made.name,
-																secret: made.secret,
-															});
+														setConfirming({
+															kind: "rotate",
+															id: w.id,
+															name: w.name,
 														})
 													}
 												>
@@ -360,9 +429,10 @@ export default function Webhooks(): ReactNode {
 													type="button"
 													variant="outline"
 													onClick={() =>
-														void act(async () => {
-															await api().removeWebhook(w.id);
-															if (open === w.id) setOpen(null);
+														setConfirming({
+															kind: "remove",
+															id: w.id,
+															name: w.name,
 														})
 													}
 												>
@@ -484,6 +554,11 @@ export default function Webhooks(): ReactNode {
 					</form>
 				</section>
 			</div>
+			<ConfirmAction
+				action={confirming}
+				onCancel={() => setConfirming(null)}
+				onConfirm={confirmed}
+			/>
 		</>
 	);
 }
