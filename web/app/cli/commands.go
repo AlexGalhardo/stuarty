@@ -482,7 +482,12 @@ var lintCmd = &spec{
 				return nil, err
 			}
 
-			return &output{value: chk, text: chk.Text}, nil
+			out := &output{value: chk, text: chk.Text}
+			if c.args.boolean("strict") && chk.Errors > 0 {
+				out.exit = ExitFailure
+			}
+
+			return out, nil
 		}
 
 		if c.args.str("start") != "" || c.args.str("end") != "" {
