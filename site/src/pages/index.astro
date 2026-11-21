@@ -13,7 +13,7 @@ import Shot from "../components/landing/Shot.astro";
 import SplitTitle from "../components/landing/SplitTitle.astro";
 import StageCanvas from "../components/landing/StageCanvas.astro";
 import TimelineEditor from "../components/landing/TimelineEditor.astro";
-import { credits, hero, homeTimeline, shots, trust } from "@/lib/landing-pages";
+import { credits, hero, homeTimeline, homeYours, shots } from "@/lib/landing-pages";
 import { withBase } from "@/lib/site";
 
 ---
@@ -54,7 +54,7 @@ import { withBase } from "@/lib/site";
 					</div>
 				</div>
 				<div class="mt-10 lg:mt-12" data-hero-item>
-					<LandingActions idPrefix="hero" align="center" />
+					<LandingActions idPrefix="hero" align="center" beta={false} />
 				</div>
 			</div>
 		</section>
@@ -68,8 +68,7 @@ import { withBase } from "@/lib/site";
 		<!-- Take 3: agents drive it too -->
 		<section id="agents" class="take" aria-labelledby="agents-title" data-take>
 			<div class="site-container">
-				<p class="eyebrow" data-in>Agents</p>
-				<h2 id="agents-title" tabindex="-1" class="display-title mt-4 max-w-3xl text-fg" data-in>Agents drive it too.</h2>
+				<h2 id="agents-title" tabindex="-1" class="display-title max-w-3xl text-fg" data-in>Agents drive it too.</h2>
 				<p class="lead mt-4 max-w-2xl" data-in>The editor, the CLI, the HTTP API and MCP are thin doors to one command core, tested for parity.</p>
 				<div data-in>
 					<DriveTabs idPrefix="viewport" class="mt-8" />
@@ -80,24 +79,27 @@ import { withBase } from "@/lib/site";
 		<!-- Take 4: open source, on your machine -->
 		<section id="yours" class="take" aria-labelledby="yours-title" data-take>
 			<div class="site-container text-center">
-				<p class="eyebrow" data-in>{trust.eyebrow}</p>
-				<h2 id="yours-title" tabindex="-1" class="display-title mx-auto mt-4 max-w-3xl text-fg" data-in>{trust.title}</h2>
-				<ul class="mx-auto mt-8 flex max-w-4xl flex-wrap justify-center gap-2" data-in>
-					{trust.points.map((p) => (
-						<li class="rounded-full border border-fg/12 bg-bg/70 px-4 py-2 text-sm text-fg backdrop-blur" title={p.text}>{p.title}</li>
-					))}
-				</ul>
-				<div class="mt-9" data-in>
-					<LandingActions idPrefix="take" align="center" />
+				<h2 id="yours-title" tabindex="-1" class="yours-lines mx-auto text-fg" data-in>
+					{homeYours.lines.map((line) => <span class="block">{line}</span>)}
+				</h2>
+				<div class="mt-10" data-in>
+					<LandingActions idPrefix="take" align="center" beta={false} />
 				</div>
 				<p class="take-credits mt-8 text-xs text-muted" data-in>{credits}</p>
 			</div>
 		</section>
 	</main>
-	<LandingFooter />
+	<LandingFooter beta={false} />
 </Base>
 
 <style is:global>
+	/* The five closing lines, one each, sized so the take fits a 720 px high window. */
+	main[data-page="viewport"] .yours-lines {
+		font-size: clamp(1.75rem, 1.2rem + 2vw, 3rem);
+		font-weight: 600;
+		line-height: 1.1;
+		letter-spacing: -0.03em;
+	}
 	/* Takes mode: one take fills the viewport, the others wait off stage (no scrollbar). */
 	html.takes-on,
 	html.takes-on body {

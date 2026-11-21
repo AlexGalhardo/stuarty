@@ -8,10 +8,12 @@ interface Props {
 	/** Distinguishes the ids of the hero and the footer copies. */
 	idPrefix: string;
 	align?: "start" | "center";
+	/** Shows the beta notice above the downloads. */
+	beta?: boolean;
 	class?: string;
 }
 
-const { idPrefix, align = "start", class: className } = Astro.props;
+const { idPrefix, align = "start", beta = true, class: className } = Astro.props;
 const release = await latestRelease();
 const version = `v${release.version}`;
 
@@ -36,11 +38,18 @@ const docsIcon =
 			<span class="btn-sub text-xs font-normal text-muted">Read Documentation</span>
 		</span>
 	</a>
-	<div class="landing-downloads" role="group" aria-labelledby={`${idPrefix}-downloads`}>
-		<p id={`${idPrefix}-downloads`} class="landing-beta">
-			<span class="landing-beta-badge">Beta</span>
-			<span>Stuarty is in beta: expect rough edges.</span>
-		</p>
+	<div
+		class="landing-downloads"
+		role="group"
+		aria-labelledby={beta ? `${idPrefix}-downloads` : undefined}
+		aria-label={beta ? undefined : "Downloads (beta)"}
+	>
+		{beta ? (
+			<p id={`${idPrefix}-downloads`} class="landing-beta">
+				<span class="landing-beta-badge">Beta</span>
+				<span>Stuarty is in beta: expect rough edges.</span>
+			</p>
+		) : null}
 		<ul class="landing-download-list">
 			{release.downloads.map((d) => (
 				<li>
