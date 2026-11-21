@@ -182,7 +182,7 @@ function Profile({
 	);
 }
 
-// The dashboard sidebar (SDD-012 section 23.2): the twelve sections, then the
+// The dashboard sidebar (SDD-012 section 23.2): the thirteen sections, then the
 // profile and the controls. It computes nothing: the current section comes from
 // the url.
 export default function Sidebar({
