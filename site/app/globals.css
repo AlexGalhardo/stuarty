@@ -54,8 +54,9 @@
   --duration-reveal: 500ms;
   --duration-hover: 150ms;
   --header-h: 3.5rem;
-  /* The width of .site-container: change this one line to narrow or widen the whole site. */
-  --site-container: calc(90rem * 0.8);
+  /* The width of .site-container: change this one line to narrow or widen the whole site. In pixels, because the
+     docs set the root font to 125% and the landing to 100%: a rem width would make the two containers differ. */
+  --site-container: 1440px;
   color-scheme: light;
 }
 
@@ -89,7 +90,7 @@
 }
 @media (min-width: 40rem) {
   .site-container {
-    padding-inline: 1.5rem;
+    padding-inline: 30px;
   }
 }
 
