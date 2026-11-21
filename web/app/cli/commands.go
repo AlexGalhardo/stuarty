@@ -455,9 +455,10 @@ var lintCmd = &spec{
 	name:     "lint",
 	timeline: true,
 	summary:  "check a project against every lint rule (an edit result runs only the fast rules, lint_scope fast)",
-	usage:    []string{"stuarty lint --project <id> [--severity error|warning] [--cursor c] [--limit n] [--strict]"},
-	example:  "stuarty lint --project prj_7k2m9x4q1b --json",
-	project:  true,
+	usage: []string{"stuarty lint --project <id> [--severity error|warning] [--cursor c] [--limit n] [--strict]",
+		"stuarty lint --project <id> --preset <id> [--start t] [--end t]"},
+	example: "stuarty lint --project prj_7k2m9x4q1b --json",
+	project: true,
 	flags: append([]flagDef{
 		{
 			Name:    "severity",
@@ -466,8 +467,28 @@ var lintCmd = &spec{
 			Usage:   "error lists only errors; warning lists everything",
 		},
 		{Name: "strict", Kind: kindBool, Default: "false", Usage: "exit 1 when there is at least one error finding"},
+		{Name: "preset", Kind: kindString, Usage: "the fit check of an export preset instead of the lint, as export:check"},
+		{Name: "start", Kind: kindString, Usage: "with --preset: first time of the range to check"},
+		{Name: "end", Kind: kindString, Usage: "with --preset: end of the range to check"},
 	}, pageFlags("25")...),
 	run: func(ctx context.Context, c *call) (*output, error) {
+		// The lint tool of MCP takes a preset as the fit check; the CLI takes the same (SDD-003 section 4).
+		if c.args.str("preset") != "" {
+			chk, err := c.svc.ExportCheck(ctx, service.ExportCheckRequest{
+				ProjectID: c.projectID, TimelineID: c.timelineID, Preset: c.args.str("preset"),
+				Start: c.args.str("start"), End: c.args.str("end"),
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			return &output{value: chk, text: chk.Text}, nil
+		}
+
+		if c.args.str("start") != "" || c.args.str("end") != "" {
+			return nil, validation("start", "--start and --end are the range of the fit check: they need --preset.")
+		}
+
 		res, err := c.svc.Lint(ctx, service.LintRequest{
 			ProjectID: c.projectID, TimelineID: c.timelineID, Severity: c.args.str("severity"), Page: page(c.args),
 		})

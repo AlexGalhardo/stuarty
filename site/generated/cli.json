@@ -403,7 +403,8 @@
       "domain": "video",
       "summary": "check a project against every lint rule (an edit result runs only the fast rules, lint_scope fast)",
       "usage": [
-        "stuarty lint --project <id> [--severity error|warning] [--cursor c] [--limit n] [--strict]"
+        "stuarty lint --project <id> [--severity error|warning] [--cursor c] [--limit n] [--strict]",
+        "stuarty lint --project <id> --preset <id> [--start t] [--end t]"
       ],
       "example": "stuarty lint --project prj_7k2m9x4q1b --json",
       "flags": [
@@ -418,6 +419,21 @@
           "type": "boolean",
           "default": "false",
           "usage": "exit 1 when there is at least one error finding"
+        },
+        {
+          "name": "preset",
+          "type": "string",
+          "usage": "the fit check of an export preset instead of the lint, as export:check"
+        },
+        {
+          "name": "start",
+          "type": "string",
+          "usage": "with --preset: first time of the range to check"
+        },
+        {
+          "name": "end",
+          "type": "string",
+          "usage": "with --preset: end of the range to check"
         },
         {
           "name": "cursor",

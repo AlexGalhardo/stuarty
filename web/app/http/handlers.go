@@ -291,6 +291,17 @@ func (h *apiHandler) registerAll() {
 	h.registerHistoryOps()
 	h.registerImageHistoryOps()
 	register(h, "projects.lint", func(c *web.Ctx, in lintIn) (service.LintResult, error) {
+		// The fit check of a preset is its own route; a query that asks for it here is refused, not ignored.
+		for _, name := range []string{"preset", "start", "end"} {
+			if c.Query(name) != "" {
+				return service.LintResult{}, &service.Error{
+					Code: command.CodeValidation, Path: name,
+					Message: name + " is not a parameter of the lint.",
+					Hint:    "the fit check of an export preset is GET /api/v1/projects/{id}/export-check with preset, start and end",
+				}
+			}
+		}
+
 		res, err := h.Service.Lint(
 			c.Context(),
 			service.LintRequest{

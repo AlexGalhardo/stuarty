@@ -244,12 +244,16 @@ Check a project against every lint rule (an edit result runs only the fast rules
 
 ```text
 stuarty lint --project <id> [--severity error|warning] [--cursor c] [--limit n] [--strict]
+stuarty lint --project <id> --preset <id> [--start t] [--end t]
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `--severity` | string | `warning` | error lists only errors; warning lists everything |
 | `--strict` | boolean | `false` | exit 1 when there is at least one error finding |
+| `--preset` | string |  | the fit check of an export preset instead of the lint, as export:check |
+| `--start` | string |  | with --preset: first time of the range to check |
+| `--end` | string |  | with --preset: end of the range to check |
 | `--cursor` | string |  | continue a list from this cursor |
 | `--limit` | integer | `25` | items per page |
 
