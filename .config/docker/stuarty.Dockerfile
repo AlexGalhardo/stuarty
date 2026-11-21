@@ -12,7 +12,7 @@
 # No web server runs here: the Go binary serves HTTP. The product bundles and
 # links no GPL component: .config/ffmpeg.env pins the FFmpeg, the BtbN lgpl build or the own one (ADR-0011);
 # the packages of the Debian base are listed with their licences.
-ARG BUN_IMAGE=oven/bun:1.4.4-alpine@sha256:4cf82f5686b196504fe119db3fcd9185b191f82ece82c40680e597228ec6070a
+ARG BUN_IMAGE=oven/bun:1.4.5-alpine@sha256:da816670775f4c2b4e990b6b1847cf5540dcdc721a42033dd331ce7a88ba6a3b
 ARG GO_IMAGE=golang:1.27.4@sha256:5e8afd493a7124a8586e134d9b532731161d4b9becf9dee5a5956b107426f93d
 ARG RUNTIME_IMAGE=debian:13.7-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2
 
