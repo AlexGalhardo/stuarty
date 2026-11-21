@@ -20,7 +20,7 @@ func TestSessionCOverHTTP(t *testing.T) {
 	h := newHarness(t)
 
 	created := h.do(req{
-		method: http.MethodPost, path: "/api/v1/projects", body: `{"name":"Launch teaser"}`,
+		method: http.MethodPost, path: "/api/v1/projects", body: projectJSON("Launch teaser"),
 		headers: map[string]string{"Stuarty-Client": "curl-demo"},
 	})
 	if created.status != http.StatusCreated {
@@ -42,7 +42,7 @@ func TestSessionCOverHTTP(t *testing.T) {
 		t.Errorf("Cache-Control = %q on an API response", created.header.Get("Cache-Control"))
 	}
 
-	dry := h.post("/api/v1/projects?dry_run=true", `{"name":"x"}`)
+	dry := h.post("/api/v1/projects?dry_run=true", projectJSON("dry run"))
 	if dry.status != http.StatusOK || dry.json(t)["created"] != false {
 		t.Errorf("dry run = %d %s", dry.status, dry.body)
 	}
@@ -57,6 +57,13 @@ func TestSessionCOverHTTP(t *testing.T) {
 			method: http.MethodPost, path: "/api/v1/projects/" + id + "/edit", headers: hd,
 			body: fmt.Sprintf(`{"base_revision":%d,"operations":%s}`, base, ops),
 		})
+	}
+
+	if added := h.post(
+		"/api/v1/projects/"+id+"/items",
+		`{"kind":"timeline","title":"Launch teaser"}`,
+	); added.status != http.StatusCreated {
+		t.Fatalf("add timeline = %d %s", added.status, added.body)
 	}
 
 	first := edit(0, `[{"op":"track.add","args":{"kind":"visual","name":"Video","id":"trk_f6g7h8j9k0"}},`+
@@ -476,7 +483,10 @@ func TestProjectCreateRefusesAnUnknownField(t *testing.T) {
 		t.Fatalf("an unknown field = %d %s, want a 4xx that names the field", res.status, res.body)
 	}
 
-	if res := h.post("/api/v1/projects", `{"name":"ok","preset":"16:9"}`); res.status != http.StatusCreated {
+	if res := h.post(
+		"/api/v1/projects",
+		strings.TrimSuffix(projectJSON("ok project"), "}")+`,"preset":"16:9"}`,
+	); res.status != http.StatusCreated {
 		t.Fatalf("a known body = %d %s", res.status, res.body)
 	}
 }

@@ -269,6 +269,26 @@ func (c *Client) ProjectCreate(
 	return post[service.ProjectCreateResult](ctx, c, "/projects", req)
 }
 
+// ProjectUpdate implements service.Service.
+func (c *Client) ProjectUpdate(
+	ctx context.Context,
+	req service.ProjectUpdateRequest,
+) (*service.ProjectUpdateResult, error) {
+	body := struct {
+		Name        *string              `json:"name,omitempty"`
+		Description *string              `json:"description,omitempty"`
+		Goal        *service.ProjectGoal `json:"goal,omitempty"`
+		DryRun      bool                 `json:"dry_run,omitempty"`
+	}{req.Name, req.Description, req.Goal, req.DryRun}
+
+	out := new(service.ProjectUpdateResult)
+	if err := c.do(ctx, http.MethodPatch, projectPath(req.ProjectID, ""), nil, body, out); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
 // ProjectGet implements service.Service.
 func (c *Client) ProjectGet(ctx context.Context, req service.ProjectGetRequest) (*service.ProjectGetResult, error) {
 	ctx = withTimeline(ctx, req.TimelineID)

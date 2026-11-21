@@ -549,7 +549,11 @@ func checkRecordedSum(t *testing.T, scenario, got string) {
 
 func TestErrorScenarioCarriesTheSameCodeEverywhere(t *testing.T) {
 	steps := []step{
-		{Call: "ProjectCreate", Args: json.RawMessage(`{"id":"prj_7k2m9x4q1b","name":"A"}`)},
+		{Call: "ProjectCreate", Args: json.RawMessage(projectCreateJSON("prj_7k2m9x4q1b", "Alpha"))},
+		{
+			Call: "ProjectItemAdd",
+			Args: json.RawMessage(`{"project_id":"prj_7k2m9x4q1b","kind":"timeline","title":"A"}`),
+		},
 		{
 			Call: "Edit", ExpectError: &struct {
 				Code string `json:"code"`
@@ -638,7 +642,7 @@ func TestConflictScenario(t *testing.T) {
 	drivers, outcomes := runEverywhere(t, steps, fixtures, testenv.Options{})
 
 	var doc service.ErrorDocument
-	if err := json.Unmarshal([]byte(outcomes[3].fail), &doc); err != nil {
+	if err := json.Unmarshal([]byte(outcomes[4].fail), &doc); err != nil {
 		t.Fatal(err)
 	}
 

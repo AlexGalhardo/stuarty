@@ -12,7 +12,7 @@ func TestHistoryRevertDiffAndCheckpoints(t *testing.T) {
 	t.Parallel()
 
 	cs := connect(t, newService(t), Options{}, "claude-code")
-	project, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{"name": "Cut"})))["project_id"].(string)
+	project := createProject(t, cs, "Cut")
 
 	track := ""
 	base := 0
@@ -105,7 +105,7 @@ func TestHistoryRefusesMembersOfOtherActions(t *testing.T) {
 	t.Parallel()
 
 	cs := connect(t, newService(t), Options{}, "claude-code")
-	project, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{"name": "Cut"})))["project_id"].(string)
+	project := createProject(t, cs, "Cut")
 
 	for name, args := range map[string]map[string]any{
 		"revert with limit":        {"project_id": project, "action": "revert", "revision": 1, "limit": 3},

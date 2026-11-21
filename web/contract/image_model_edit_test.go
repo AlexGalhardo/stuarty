@@ -13,6 +13,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/providers"
 	"github.com/AlexGalhardo/stuarty/service/providers/openai"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
 )
 
@@ -52,7 +53,7 @@ func TestImageModelEdit_EverySurfaceStartsTheSameJobAndSendsNothing(t *testing.T
 				t.Fatal(err)
 			}
 
-			project, err := svc.ProjectCreate(callerCtx(), service.ProjectCreateRequest{Name: "edited"})
+			project, err := testproject.CreateWithTimeline(callerCtx(), svc, "edited")
 			if err != nil {
 				t.Fatal(err)
 			}

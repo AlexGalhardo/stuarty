@@ -171,11 +171,11 @@ func TestPages(t *testing.T) {
 	}
 
 	create := h.do(req{
-		method: http.MethodPost, path: "/projects", body: `{"name":"From the form","preset":"16:9"}`, noAuth: true,
+		method: http.MethodPost, path: "/projects", body: projectJSON("From the form"), noAuth: true,
 		headers: map[string]string{"Cookie": ck, "X-Inertia": "true", "Origin": h.srv.URL},
 	})
 	if create.status != http.StatusConflict ||
-		!strings.HasPrefix(create.header.Get("X-Inertia-Location"), "/editor/prj_") {
+		!strings.HasPrefix(create.header.Get("X-Inertia-Location"), "/projects/prj_") {
 		t.Errorf("create = %d, location %q\n%s", create.status, create.header.Get("X-Inertia-Location"), create.body)
 	}
 }

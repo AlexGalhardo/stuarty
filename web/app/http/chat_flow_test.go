@@ -190,12 +190,19 @@ func (c *chatHarness) person(t *testing.T, headers map[string]string, method, pa
 func (c *chatHarness) createProject(t *testing.T, name string) string {
 	t.Helper()
 
-	res := c.post("/api/v1/projects", `{"name":"`+name+`"}`)
+	res := c.post("/api/v1/projects", projectJSON(name))
 	if res.status != http.StatusCreated {
 		t.Fatalf("create project = %d %s", res.status, res.body)
 	}
 
 	id, _ := res.json(t)["project_id"].(string)
+
+	if added := c.post(
+		"/api/v1/projects/"+id+"/items",
+		`{"kind":"timeline","title":`+quoted(name)+`}`,
+	); added.status != http.StatusCreated {
+		t.Fatalf("add timeline = %d %s", added.status, added.body)
+	}
 
 	return id
 }

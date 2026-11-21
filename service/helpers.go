@@ -68,6 +68,10 @@ func summarize(doc *timeline.Document) DocSummary {
 }
 
 func fpsString(num, den int) string {
+	if num == 0 || den == 0 {
+		return "" // a project with no timeline has no frame rate
+	}
+
 	if den == 1 {
 		return strconv.Itoa(num)
 	}
@@ -76,6 +80,10 @@ func fpsString(num, den int) string {
 }
 
 func timeValue(fps timeline.Rational, frame int64) TimeValue {
+	if fps.Num == 0 || fps.Den == 0 {
+		return TimeValue{Frame: frame}
+	}
+
 	f := timeval.FPS{Num: int64(fps.Num), Den: int64(fps.Den)}
 	return TimeValue{Frame: frame, Seconds: round3(f.Seconds(frame))}
 }
@@ -172,6 +180,7 @@ func productionSummary(h *ProductionHead) ProjectSummary {
 		Duration: timeValue(fps, t.Summary.DurationFrames),
 		Tracks:   t.Summary.Tracks, Items: t.Summary.Items, Assets: t.Summary.Assets,
 		TimelineID: t.ID, Timelines: h.Timelines, UpdatedAt: msTime(h.UpdatedMs),
+		Complete: contextOf(h).Complete,
 	}
 }
 

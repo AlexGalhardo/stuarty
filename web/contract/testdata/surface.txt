@@ -97,6 +97,7 @@ command project:list
 command project:restore
 command project:show
 command project:trash
+command project:update
 command prompt:list
 command prompt:render
 command prompt:show
@@ -250,6 +251,7 @@ route GET /templates/{}/file
 route GET /texts
 route GET /users
 route PATCH /images/{}/checkpoints/{}
+route PATCH /projects/{}
 route PATCH /projects/{}/checkpoints/{}
 route PATCH /users/{}
 route POST /approval-rules

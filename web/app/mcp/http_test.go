@@ -75,7 +75,7 @@ func TestMCPCallerPropagation(t *testing.T) {
 	alice := httpClient(t, srv, "key:alice")
 	bob := httpClient(t, srv, "key:bob")
 
-	id, _ := structured(t, ok(t, call(t, alice, "project_create", map[string]any{"name": "Shared"})))["project_id"].(string)
+	id := createProject(t, alice, "Shared")
 
 	edit := func(cs *sdk.ClientSession, base int) map[string]any {
 		return structured(t, ok(t, call(t, cs, "edit", map[string]any{

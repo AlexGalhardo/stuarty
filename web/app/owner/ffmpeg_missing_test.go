@@ -17,6 +17,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
@@ -148,7 +149,7 @@ func TestProjectCreateAndIngestWhenFFprobeIsAbsent(t *testing.T) {
 
 	ctx := service.WithCaller(context.Background(), service.Caller{Actor: "local:cli", Scopes: service.AllScopes})
 
-	created, err := ow.Service.ProjectCreate(ctx, service.ProjectCreateRequest{Name: "spot"})
+	created, err := testproject.CreateWithTimeline(ctx, ow.Service, "spot")
 	if se, ok := errors.AsType[*service.Error](err); ok && se.Code == command.CodeInternal {
 		t.Fatalf("ProjectCreate = %v, want success without FFmpeg", err)
 	}

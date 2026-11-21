@@ -12,6 +12,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 )
 
 // templateProject is a project with a required text slot "title" and a required
@@ -243,7 +244,7 @@ func TestTemplateFillRefusesAnotherOwnersAsset(t *testing.T) {
 	})
 
 	mk := func(c context.Context, name string) string {
-		res, err := m.svc.ProjectCreate(c, service.ProjectCreateRequest{Name: name})
+		res, err := testproject.CreateWithTimeline(c, m.svc, name)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -386,7 +387,7 @@ func TestTemplatesBelongToTheirOwner(t *testing.T) {
 		Actor: "user:bob", OwnerUserID: "bob", Scopes: service.AllScopes,
 	})
 
-	res, err := m.svc.ProjectCreate(alice, service.ProjectCreateRequest{Name: "src"})
+	res, err := testproject.CreateWithTimeline(alice, m.svc, "src")
 	if err != nil {
 		t.Fatal(err)
 	}

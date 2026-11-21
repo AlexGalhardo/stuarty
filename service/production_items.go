@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"slices"
+	"strings"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/project"
@@ -127,7 +128,11 @@ func (s *svc) checkItemAdd(req *ProjectItemAddRequest) (*timeline.Document, erro
 			return nil, writingViolation(v)
 		}
 	case project.Timeline:
-		doc, verr := s.newDocument(ProjectCreateRequest{Name: req.Title, Preset: req.Preset, FPS: req.FPS})
+		// The id is a placeholder that passes the check: the first timeline of a project takes the id of the project
+		// and any other draws its own when the item is written, so that a first timeline draws no identifier.
+		doc, verr := s.newDocument(ProjectCreateRequest{
+			Name: req.Title, Preset: req.Preset, FPS: req.FPS, ID: "prj_0000000000",
+		})
 		if verr != nil {
 			return nil, verr
 		}
@@ -164,7 +169,10 @@ func (s *svc) ProjectItemAdd(ctx context.Context, req ProjectItemAddRequest) (*P
 			}
 
 			now := s.nowMs()
-			it := s.newItem(head.ID, req.Kind, req.Title, len(rows), c.Actor, now)
+			firstTimeline := project.Kind(req.Kind) == project.Timeline &&
+				!slices.ContainsFunc(rows, func(r ItemRow) bool { return r.Kind == string(project.Timeline) })
+
+			it := s.itemRowFor(head, rows, &req, c, now, firstTimeline)
 
 			switch project.Kind(req.Kind) {
 			case project.Text:
@@ -175,6 +183,15 @@ func (s *svc) ProjectItemAdd(ctx context.Context, req ProjectItemAddRequest) (*P
 					it.TextKind = string(writing.DefaultKind)
 				}
 			case project.Timeline:
+				// The first timeline of a project has the id of the project (SDD-005 section 5.12), also when it
+				// is added after the project was made (epic 56): the rows, the URLs and the logs that name a
+				// timeline by the id of its project keep working.
+				if firstTimeline {
+					doc.ID = head.ID
+				} else {
+					doc.ID = s.newIDs(timeline.PrefixProject)
+				}
+
 				it.Ref = doc.ID
 			case project.Output:
 				job, jerr := s.outputJob(ctx, tx, rows, req.JobID)
@@ -523,4 +540,30 @@ func (s *svc) writeBrief(
 	}
 
 	return briefResult(&head, change.rows), nil
+}
+
+// firstTimelineItemID is the id of the item of the first timeline of a project: it takes the characters of the id of
+// the project, as it always did, so that the item that gives the project its id is known without a draw.
+func (s *svc) firstTimelineItemID(projectID string) string {
+	if rest, ok := strings.CutPrefix(projectID, timeline.PrefixProject+"_"); ok &&
+		timeline.ValidID(timeline.PrefixProject, projectID) {
+		return project.PrefixItem + "_" + rest
+	}
+
+	return s.newIDs(project.PrefixItem)
+}
+
+// itemRowFor is the row of the item that ProjectItemAdd writes. The item of the first timeline of a project takes
+// the characters of the id of the project and draws nothing.
+func (s *svc) itemRowFor(
+	head *ProductionHead, rows []ItemRow, req *ProjectItemAddRequest, c Caller, now int64, firstTimeline bool,
+) ItemRow {
+	if !firstTimeline {
+		return s.newItem(head.ID, req.Kind, req.Title, len(rows), c.Actor, now)
+	}
+
+	return ItemRow{
+		ID: s.firstTimelineItemID(head.ID), ProjectID: head.ID, Kind: req.Kind, Title: req.Title,
+		Position: len(rows), State: ProjectActive, CreatedMs: now, UpdatedMs: now, CreatedBy: c.Actor,
+	}
 }

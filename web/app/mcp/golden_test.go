@@ -45,9 +45,7 @@ func TestInspectionTextGolden(t *testing.T) {
 	at := time.Date(2026, 11, 14, 12, 0, 0, 0, time.UTC)
 	env := testenv.New(t, testenv.Options{Clock: func() time.Time { return at }})
 	cs := connect(t, env.Service, Options{}, "claude-code")
-	project, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{
-		"name": "Golden", "id": "prj_7k2m9x4q1b",
-	})))["project_id"].(string)
+	project := createProjectWith(t, cs, "Golden")
 
 	imported := ok(t, call(t, cs, "media_import", map[string]any{
 		"project_id": project, "paths": []any{env.WriteFile(t, "clip.mov", strings.Repeat("x", 64))},
@@ -91,9 +89,7 @@ func TestInspectionMetadataGolden(t *testing.T) {
 
 	env := testenv.New(t, testenv.Options{})
 	cs := connect(t, env.Service, Options{}, "claude-code")
-	project, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{
-		"name": "Golden", "id": "prj_7k2m9x4q1b",
-	})))["project_id"].(string)
+	project := createProjectWith(t, cs, "Golden")
 
 	clip := env.WriteFile(t, "clip.mov", testenv.FakeMediaTags(2, 320, 240, metadataGoldenTags))
 	ok(t, call(t, cs, "media_import", map[string]any{
@@ -113,7 +109,7 @@ func TestMediaListPaging(t *testing.T) {
 
 	env := testenv.New(t, testenv.Options{})
 	cs := connect(t, env.Service, Options{}, "claude-code")
-	project, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{"name": "Paged"})))["project_id"].(string)
+	project := createProject(t, cs, "Paged")
 
 	const total = 7
 
@@ -175,7 +171,7 @@ func TestProjectViewCursorGoesStale(t *testing.T) {
 	t.Parallel()
 
 	cs := connect(t, newService(t), Options{}, "claude-code")
-	id, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{"name": "Big"})))["project_id"].(string)
+	id := createProject(t, cs, "Big")
 
 	ops := []any{map[string]any{
 		"op": "track.add", "args": map[string]any{"kind": "visual", "name": "Text", "id": "trk_0000000099"},

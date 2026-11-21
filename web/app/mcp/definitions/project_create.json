@@ -1,32 +1,20 @@
 {
  "name": "project_create",
- "description": "An empty project (no tracks; add with edit); returns its id, revision 0. preset is the frame size: 9:16 is 1080x1920 (default), 1:1, 16:9, 4:5. from (a project id) copies that project.",
+ "description": "A project, no timeline yet (project_item add timeline). name 4-32 letters/digits, description 64-1024, goal: SMART parts 16-280 each + due YYYY-MM-DD; all required, agents read them first. from copies a project. preset, fps: deprecated, ignored.",
  "inputSchema": {
   "type": "object",
   "properties": {
    "name": {
-    "type": "string",
-    "minLength": 1,
-    "maxLength": 120
+    "type": "string"
    },
-   "preset": {
-    "enum": [
-     "9:16",
-     "1:1",
-     "16:9",
-     "4:5"
-    ],
-    "default": "9:16"
+   "description": {
+    "type": "string"
    },
-   "fps": {
-    "type": [
-     "string",
-     "integer"
-    ],
-    "pattern": "^[0-9]+(/1001)?$",
-    "minimum": 1,
-    "default": "30"
+   "goal": {
+    "type": "object"
    },
+   "preset": {},
+   "fps": {},
    "id": {
     "type": "string",
     "pattern": "^prj_[0-9a-hjkmnp-tv-z]{10}$"
@@ -50,15 +38,6 @@
    },
    "revision": {
     "type": "integer"
-   },
-   "width": {
-    "type": "integer"
-   },
-   "height": {
-    "type": "integer"
-   },
-   "fps": {
-    "type": "string"
    }
   },
   "required": [

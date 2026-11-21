@@ -16,7 +16,7 @@ func TestUntrustedText(t *testing.T) {
 
 	env := testenv.New(t, testenv.Options{})
 	cs := connect(t, env.Service, Options{}, "claude-code")
-	project, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{"name": "Hostile"})))["project_id"].(string)
+	project := createProject(t, cs, "Hostile")
 
 	names := testenv.HostileNames(t, "testdata/untrusted/names.json")
 	paths := make([]any, 0, len(names))

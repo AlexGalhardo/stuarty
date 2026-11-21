@@ -42,9 +42,11 @@ type ProjectSummary struct {
 	Height    int       `json:"height"`
 	FPS       string    `json:"fps"`      // "30" or "30000/1001"
 	Duration  TimeValue `json:"duration"` // end of the last item
-	Tracks    int       `json:"tracks"`
-	Items     int       `json:"items"`
-	Assets    int       `json:"assets"`
+	// Complete is false for a project made before epic 56, which has no description and no goal yet.
+	Complete bool `json:"complete"`
+	Tracks   int  `json:"tracks"`
+	Items    int  `json:"items"`
+	Assets   int  `json:"assets"`
 	// TimelineID is the first active timeline, the one the other members are about; Timelines is how many the
 	// project holds.
 	TimelineID string    `json:"timeline_id,omitempty"`
@@ -66,12 +68,16 @@ type ProjectListResult struct {
 	Text       string           `json:"text"`
 }
 
-// ProjectCreateRequest creates an empty project.
+// ProjectCreateRequest creates a project with its context and no timeline (SDD-005 section 5.12.2).
 type ProjectCreateRequest struct {
-	Name   string `json:"name"`             // 1 to 120 characters
-	Preset string `json:"preset,omitempty"` // default "9:16"; "1:1" | "16:9" | "4:5"
-	FPS    string `json:"fps,omitempty"`    // default "30"; "<n>" or "<n>/1001"
-	ID     string `json:"id,omitempty"`     // optional caller-chosen id; E_ID_EXISTS if taken
+	Name        string      `json:"name"`        // 4 to 32 characters
+	Description string      `json:"description"` // 64 to 1024 characters
+	Goal        ProjectGoal `json:"goal"`        // the five parts 16 to 280 characters each, and a due date
+	// Preset and FPS are deprecated and create nothing: a video asks for them when it is added (ProjectItemAdd).
+	// They are removed in release 1.0.0. Preset is "9:16", "1:1", "16:9" or "4:5"; FPS is "<n>" or "<n>/1001".
+	Preset string `json:"preset,omitempty"`
+	FPS    string `json:"fps,omitempty"`
+	ID     string `json:"id,omitempty"` // optional caller-chosen id; E_ID_EXISTS if taken
 	DryRun bool   `json:"dry_run,omitempty"`
 }
 
@@ -107,8 +113,12 @@ type ProjectCounts struct {
 // ProjectGetResult is the head of a project and, by detail, its text or document.
 type ProjectGetResult struct {
 	Envelope
-	ProjectID      string        `json:"project_id"`
-	Name           string        `json:"name"            untrusted:"true"`
+	ProjectID string `json:"project_id"`
+	Name      string `json:"name"       untrusted:"true"`
+	// The description and the goal come right after the name: an agent reads them first.
+	Description    string        `json:"description"     untrusted:"true"`
+	Goal           ProjectGoal   `json:"goal"`
+	Complete       bool          `json:"complete"` // false for a project made before epic 56 that nobody completed
 	Revision       int64         `json:"revision"`
 	State          string        `json:"state"`
 	Width          int           `json:"width"`

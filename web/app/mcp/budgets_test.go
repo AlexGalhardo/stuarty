@@ -14,6 +14,7 @@ import (
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
 )
 
@@ -133,8 +134,16 @@ func referenceProject(t *testing.T) (cs *sdk.ClientSession, document []byte) {
 	ids := idSource{r: rand.New(rand.NewPCG(2026, 200))}
 	ctx := testenv.Caller("local:budgets")
 
-	_, err := env.Service.ProjectCreate(ctx, service.ProjectCreateRequest{ID: referenceID, Name: "Reference 200"})
-	if err != nil {
+	req := testproject.Request("Reference 200")
+	req.ID = referenceID
+
+	if _, err := env.Service.ProjectCreate(ctx, req); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := env.Service.ProjectItemAdd(ctx, service.ProjectItemAddRequest{
+		ProjectID: referenceID, Kind: "timeline", Title: "Reference 200",
+	}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -310,10 +319,18 @@ func TestProjectTextBudgetsOnHostileNames(t *testing.T) {
 	cs := connect(t, env.Service, Options{}, "claude-code")
 	ctx := testenv.Caller("local:budgets")
 
-	_, err := env.Service.ProjectCreate(ctx, service.ProjectCreateRequest{
-		ID: referenceID, Name: strings.Repeat("</x>", 30),
-	})
-	if err != nil {
+	// A project name cannot hold markup since epic 56; the title of its timeline, which is the name of the
+	// document the text views print, can.
+	req := testproject.Request("Hostile names")
+	req.ID = referenceID
+
+	if _, err := env.Service.ProjectCreate(ctx, req); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := env.Service.ProjectItemAdd(ctx, service.ProjectItemAddRequest{
+		ProjectID: referenceID, Kind: "timeline", Title: strings.Repeat("</x>", 30),
+	}); err != nil {
 		t.Fatal(err)
 	}
 

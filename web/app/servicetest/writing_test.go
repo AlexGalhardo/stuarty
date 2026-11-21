@@ -11,6 +11,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/writing"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 )
 
 func (e *env) writeText(projectID string, req service.TextWriteRequest) *service.TextWriteResult {
@@ -401,7 +402,7 @@ func TestSecurity_TextsStayWithTheirOwnerAndTheKeyProject(t *testing.T) {
 	e := newEnv(t)
 
 	mk := func(owner, name string) string {
-		res, err := e.svc.ProjectCreate(network("user:"+owner, owner), service.ProjectCreateRequest{Name: name})
+		res, err := testproject.CreateWithTimeline(network("user:"+owner, owner), e.svc, name)
 		if err != nil {
 			t.Fatal(err)
 		}

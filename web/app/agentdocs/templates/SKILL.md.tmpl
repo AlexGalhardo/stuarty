@@ -25,7 +25,7 @@ Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). `--json` for JSON.
 - Ids (`prj_`, `ast_`, `trk_`, `itm_`, `job_`) are never positions. List first.
 - The top track draws over the others (`top`, `bottom`).
 - `--base`: your last `revision` (default: current).
-- Give your own `id` to what you use later.
+- Own `id` for what you reuse; network mode: omit --id.
 
 ## Command reference
 
@@ -34,8 +34,6 @@ Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). `--json` for JSON.
 {{range .Ops}}- `{{.Namespace}}`: {{.Names}}
 {{end}}
 ## CLI cheat sheet
-
-Prefix: `stuarty`.
 
 {{range .CLI}}{{if not .Pending}}- `{{.Usage}}`
 {{end}}{{end}}

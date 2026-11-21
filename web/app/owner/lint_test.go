@@ -10,6 +10,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
@@ -40,7 +41,7 @@ func TestServiceLintUsesTheRasterizerMeasurer(t *testing.T) {
 
 	t.Cleanup(func() { _ = o.Close() })
 
-	created, serr := o.Service.ProjectCreate(ctx, service.ProjectCreateRequest{Name: "lint"})
+	created, serr := testproject.CreateWithTimeline(ctx, o.Service, "lint")
 	if serr != nil {
 		t.Fatal(serr)
 	}

@@ -38,7 +38,7 @@ func spoken(texts []string, every int) []transcribe.RawWord {
 func transcribed(t *testing.T, cs *mcp.ClientSession, env *testenv.Env) (project, asset string) {
 	t.Helper()
 
-	project, _ = structured(t, ok(t, call(t, cs, "project_create", map[string]any{"name": "Talk"})))["project_id"].(string)
+	project = createProject(t, cs, "Talk")
 	imported := ok(t, call(t, cs, "media_import", map[string]any{
 		"project_id": project, "paths": []any{env.WriteFile(t, "talk.mov", strings.Repeat("x", 64))}, "wait_ms": 20000,
 	}))

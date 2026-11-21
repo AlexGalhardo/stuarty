@@ -52,6 +52,7 @@ func CallerFrom(ctx context.Context) (Caller, bool) {
 var Scopes = map[string]string{
 	"ProjectList":         ScopeRead,
 	"ProjectCreate":       ScopeEdit,
+	"ProjectUpdate":       ScopeEdit,
 	"ProjectGet":          ScopeRead,
 	"ProjectTrash":        ScopeEdit,
 	"ProjectRestore":      ScopeEdit,

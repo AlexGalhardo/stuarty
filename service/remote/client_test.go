@@ -13,6 +13,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 )
 
 type seen struct {
@@ -91,10 +92,21 @@ func TestRequestsMatchTheRoutes(t *testing.T) {
 			_, err := c.ProjectList(ctx, service.ProjectListRequest{State: "all", Cursor: "c1", Limit: 5})
 			return err
 		}, "GET", "/api/v1/projects", "cursor=c1&limit=5&state=all", "", `{"projects":[]}`, true},
-		{"create", func(c *Client) error {
-			_, err := c.ProjectCreate(ctx, service.ProjectCreateRequest{Name: "A", Preset: "9:16", FPS: "30", DryRun: true})
+		{
+			"create", func(c *Client) error {
+				_, err := c.ProjectCreate(ctx, service.ProjectCreateRequest{
+					Name: "Aaaa", Description: "d", Goal: service.ProjectGoal{Specific: "s", Due: "2030-01-01"}, DryRun: true,
+				})
+				return err
+			}, "POST", "/api/v1/projects", "",
+			`{"name":"Aaaa","description":"d","goal":{"specific":"s","measurable":"","achievable":"","relevant":"","time_bound":"","due":"2030-01-01"},"dry_run":true}`,
+			`{"project_id":"prj_a"}`, false,
+		},
+		{"update", func(c *Client) error {
+			name := "Bbbb"
+			_, err := c.ProjectUpdate(ctx, service.ProjectUpdateRequest{ProjectID: "prj_a", Name: &name, DryRun: true})
 			return err
-		}, "POST", "/api/v1/projects", "", `{"name":"A","preset":"9:16","fps":"30","dry_run":true}`, `{"project_id":"prj_a"}`, false},
+		}, "PATCH", "/api/v1/projects/prj_a", "", `{"name":"Bbbb","dry_run":true}`, `{"project_id":"prj_a"}`, false},
 		{"get", func(c *Client) error {
 			_, err := c.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: "prj_a", Detail: "full"})
 			return err
@@ -233,7 +245,7 @@ func TestResultsDecode(t *testing.T) {
 
 	c := server(t, 201, `{"project_id":"prj_a","name":"A","revision":0,"created":true,"text":"created prj_a"}`, &got)
 
-	res, err := c.ProjectCreate(asCLI("cli"), service.ProjectCreateRequest{Name: "A"})
+	res, err := testproject.Create(asCLI("cli"), c, "A")
 	if err != nil || res.ProjectID != "prj_a" || !res.Created || res.Text != "created prj_a" {
 		t.Fatalf("res = %+v, err = %v", res, err)
 	}

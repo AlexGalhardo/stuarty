@@ -360,7 +360,7 @@ func TestRolesAndOwnership(t *testing.T) {
 		t.Errorf("an admin reading the audit = %d %s, want 200", res.status, res.body)
 	}
 
-	created := h.send(t, http.MethodPost, "/api/v1/projects", `{"name":"mine"}`, ana, nil)
+	created := h.send(t, http.MethodPost, "/api/v1/projects", projectJSON("mine"), ana, nil)
 	if created.status != http.StatusCreated {
 		t.Fatalf("create = %d %s", created.status, created.body)
 	}
@@ -406,7 +406,7 @@ func TestSessionCookieNeedsOriginForStateChanges(t *testing.T) {
 
 	id := h.session(t, "ana@example.com")
 
-	res := h.send(t, http.MethodPost, "/api/v1/projects", `{"name":"x"}`, id, map[string]string{"Origin": ""})
+	res := h.send(t, http.MethodPost, "/api/v1/projects", projectJSON("x"), id, map[string]string{"Origin": ""})
 	if res.status != http.StatusForbidden {
 		t.Errorf("a state change with no Origin = %d, want 403", res.status)
 	}

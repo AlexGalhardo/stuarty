@@ -61,7 +61,7 @@ func TestConciseViewOfAnItemHeavyProjectFitsTwoPages(t *testing.T) {
 
 	cs := connect(t, newService(t), Options{}, "x")
 
-	id, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{"name": "Big"})))["project_id"].(string)
+	id := createProject(t, cs, "Big")
 
 	ops := []any{
 		map[string]any{

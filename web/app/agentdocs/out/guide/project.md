@@ -11,6 +11,7 @@ CLI: `stuarty project` lists the commands of the domain and `stuarty project <ve
 
 - `project:list`: list the projects of the workspace
 - `project:create`: create a project
+- `project:update`: change the name, the description or the goal of a project
 - `project:show`: show a project
 - `project:trash`: move a project to the trash
 - `project:restore`: restore a trashed project

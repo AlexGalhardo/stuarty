@@ -12,6 +12,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 )
 
 // SDD-007 T-05.
@@ -23,7 +24,11 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 
 	checks := map[string]func() error{
 		"ProjectList":   func() error { _, err := e.svc.ProjectList(ctx, service.ProjectListRequest{}); return err },
-		"ProjectCreate": func() error { _, err := e.svc.ProjectCreate(ctx, service.ProjectCreateRequest{Name: "x"}); return err },
+		"ProjectCreate": func() error { _, err := testproject.CreateWithTimeline(ctx, e.svc, "x"); return err },
+		"ProjectUpdate": func() error {
+			_, err := e.svc.ProjectUpdate(ctx, service.ProjectUpdateRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
 		"ProjectGet": func() error {
 			_, err := e.svc.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: "prj_0000000001"})
 			return err
@@ -831,50 +836,64 @@ func TestProjectCreateListGetAndTrash(t *testing.T) {
 	e := newEnv(t)
 	ctx := e.as(ui)
 
+	// The preset and the frame rate are deprecated: accepted, ignored, and the project has no timeline.
 	res, err := e.svc.ProjectCreate(
 		ctx,
-		service.ProjectCreateRequest{Name: "Launch \"teaser\"", Preset: "16:9", FPS: "30000/1001"},
+		testproject.Fill(service.ProjectCreateRequest{Name: "Launch teaser", Preset: "16:9", FPS: "30000/1001"}),
 	)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if res.Width != 1920 || res.Height != 1080 || res.FPS != "30000/1001" || res.Revision != 0 || !res.Created {
+	if res.Width != 0 || res.Height != 0 || res.FPS != "" || res.Revision != 0 || !res.Created {
 		t.Errorf("created = %+v", res)
 	}
 
-	if !strings.Contains(res.Text, `"Launch \"teaser\""`) || !strings.HasPrefix(res.Text, "note:") {
+	if !strings.Contains(res.Text, `"Launch teaser"`) || !strings.HasPrefix(res.Text, "note:") {
 		t.Errorf("text = %s", res.Text)
 	}
 
 	// A dry run creates nothing.
-	dry, err := e.svc.ProjectCreate(ctx, service.ProjectCreateRequest{Name: "dry", DryRun: true})
+	dry, err := e.svc.ProjectCreate(ctx, testproject.Fill(service.ProjectCreateRequest{Name: "dry run", DryRun: true}))
 	if err != nil || dry.Created {
 		t.Fatalf("dry run = %+v, %v", dry, err)
 	}
 
 	for name, req := range map[string]service.ProjectCreateRequest{
-		"empty name":   {Name: ""},
-		"long name":    {Name: strings.Repeat("n", 121)},
-		"bad preset":   {Name: "x", Preset: "2:1"},
-		"bad fps":      {Name: "x", FPS: "29.97"},
-		"bad den":      {Name: "x", FPS: "30/2"},
-		"bad id":       {Name: "x", ID: "prj_short"},
-		"too fast fps": {Name: "x", FPS: "240"},
+		"empty name": {Name: ""},
+		"long name":  {Name: strings.Repeat("n", 33)},
+		"bad id":     {Name: "name ok", ID: "prj_short"},
 	} {
-		if _, err := e.svc.ProjectCreate(ctx, req); code(err) != command.CodeValidation {
+		if _, err := e.svc.ProjectCreate(ctx, testproject.Fill(req)); code(err) != command.CodeValidation {
 			t.Errorf("%s: err = %v, want E_VALIDATION", name, err)
 		}
 	}
 
-	again, err := e.svc.ProjectCreate(ctx, service.ProjectCreateRequest{Name: "same id", ID: res.ProjectID})
+	again, err := e.svc.ProjectCreate(
+		ctx,
+		testproject.Fill(service.ProjectCreateRequest{Name: "same id", ID: res.ProjectID}),
+	)
 	if code(err) != command.CodeIDExists || again != nil {
 		t.Errorf("a taken id = %v, want E_ID_EXISTS", err)
 	}
 
+	// A project with no timeline has no size, and the list says so.
+	empty, err := e.svc.ProjectList(ctx, service.ProjectListRequest{})
+	if err != nil || len(empty.Projects) != 1 || empty.Projects[0].Timelines != 0 || empty.Projects[0].FPS != "" ||
+		!strings.Contains(empty.Text, "no timeline") {
+		t.Fatalf("list of a project with no timeline = %+v, %v", empty, err)
+	}
+
+	// A video asks for the size when it is added, and the first timeline has the id of its project.
+	if _, err := e.svc.ProjectItemAdd(ctx, service.ProjectItemAddRequest{
+		ProjectID: res.ProjectID, Kind: "timeline", Title: "Video", Preset: "16:9", FPS: "30000/1001",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
 	list, err := e.svc.ProjectList(ctx, service.ProjectListRequest{})
 	if err != nil || len(list.Projects) != 1 || list.Projects[0].ID != res.ProjectID ||
-		list.Projects[0].FPS != "30000/1001" {
+		list.Projects[0].FPS != "30000/1001" || list.Projects[0].Width != 1920 || list.Projects[0].TimelineID != res.ProjectID {
 		t.Fatalf("list = %+v, %v", list, err)
 	}
 
@@ -928,8 +947,8 @@ func TestProjectCreateListGetAndTrash(t *testing.T) {
 	}
 
 	audit, err := e.store.Audit().List(context.Background(), res.ProjectID, 0, 10)
-	if err != nil || len(audit) != 3 {
-		t.Fatalf("audit = %+v, %v; want project.create, project.trash, project.restore", audit, err)
+	if err != nil || len(audit) != 4 {
+		t.Fatalf("audit = %+v, %v; want project.create, project.item.add, project.trash, project.restore", audit, err)
 	}
 
 	if _, err := e.svc.ProjectList(
@@ -1070,7 +1089,7 @@ func TestNetworkModeOwnersSeeOnlyTheirProjects(t *testing.T) {
 		service.Caller{Actor: "user:usr_b", Scopes: service.AllScopes, OwnerUserID: "usr_b"},
 	)
 
-	res, err := e.svc.ProjectCreate(alice, service.ProjectCreateRequest{Name: "alice's"})
+	res, err := testproject.CreateWithTimeline(alice, e.svc, "alice's")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1140,7 +1159,7 @@ func TestSecurity_T06_ProjectLimitedKeyConfined(t *testing.T) {
 	var ids []string
 
 	for _, n := range []string{"one", "two", "three"} {
-		res, err := e.svc.ProjectCreate(owner, service.ProjectCreateRequest{Name: n})
+		res, err := testproject.CreateWithTimeline(owner, e.svc, n)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1163,7 +1182,7 @@ func TestSecurity_T06_ProjectLimitedKeyConfined(t *testing.T) {
 
 	if _, err := e.svc.ProjectCreate(
 		key,
-		service.ProjectCreateRequest{Name: "more"},
+		testproject.Request("more"),
 	); code(
 		err,
 	) != service.CodeForbidden {
@@ -1189,7 +1208,7 @@ func TestSecurity_T06_ListAndCountAreScopedToTheOwner(t *testing.T) {
 	for i := range 5 {
 		if _, err := e.svc.ProjectCreate(
 			bob,
-			service.ProjectCreateRequest{Name: fmt.Sprintf("bob %d", i)},
+			testproject.Request(fmt.Sprintf("bob %d", i)),
 		); err != nil {
 			t.Fatal(err)
 		}
@@ -1197,7 +1216,7 @@ func TestSecurity_T06_ListAndCountAreScopedToTheOwner(t *testing.T) {
 		e.clock.advance(time.Second)
 	}
 
-	mine, err := e.svc.ProjectCreate(alice, service.ProjectCreateRequest{Name: "alice"})
+	mine, err := testproject.CreateWithTimeline(alice, e.svc, "alice")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1229,13 +1248,16 @@ func TestSecurity_T06_ProjectIDIsNotAnExistenceOracle(t *testing.T) {
 	e := newEnv(t)
 	alice, bob := network("user:usr_a", "usr_a"), network("user:usr_b", "usr_b")
 
-	theirs, err := e.svc.ProjectCreate(alice, service.ProjectCreateRequest{Name: "alice"})
+	theirs, err := testproject.CreateWithTimeline(alice, e.svc, "alice")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, taken := e.svc.ProjectCreate(bob, service.ProjectCreateRequest{Name: "x", ID: theirs.ProjectID})
-	_, free := e.svc.ProjectCreate(bob, service.ProjectCreateRequest{Name: "x", ID: "prj_00000zzzzz"})
+	takenReq, freeReq := testproject.Request("xxxx"), testproject.Request("xxxx")
+	takenReq.ID, freeReq.ID = theirs.ProjectID, "prj_00000zzzzz"
+
+	_, taken := e.svc.ProjectCreate(bob, takenReq)
+	_, free := e.svc.ProjectCreate(bob, freeReq)
 
 	if code(taken) != command.CodeValidation || code(free) != command.CodeValidation {
 		t.Fatalf("taken = %v, free = %v: network mode must refuse a client id the same way", taken, free)
@@ -1248,7 +1270,7 @@ func TestSecurity_T06_ProjectIDIsNotAnExistenceOracle(t *testing.T) {
 	// Local mode keeps the client-chosen id (and E_ID_EXISTS), there is no other owner.
 	if _, err := e.svc.ProjectCreate(
 		e.as(ui),
-		service.ProjectCreateRequest{Name: "l", ID: "prj_00000aaaaa"},
+		testproject.Fill(service.ProjectCreateRequest{Name: "llll", ID: "prj_00000aaaaa"}),
 	); err != nil {
 		t.Errorf("local create with an id: %v", err)
 	}

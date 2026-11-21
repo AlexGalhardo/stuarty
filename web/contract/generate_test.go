@@ -14,6 +14,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/providers"
 	"github.com/AlexGalhardo/stuarty/service/providers/openai"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
 )
 
@@ -188,7 +189,7 @@ func testGenerationIn(
 				t.Fatal(err)
 			}
 
-			project, err := svc.ProjectCreate(callerCtx(), service.ProjectCreateRequest{Name: "generated"})
+			project, err := testproject.CreateWithTimeline(callerCtx(), svc, "generated")
 			if err != nil {
 				t.Fatal(err)
 			}

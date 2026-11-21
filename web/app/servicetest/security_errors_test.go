@@ -15,6 +15,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/engine/ingest"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/pathguard"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 )
 
 // leakMarkers are fragments that only a path, a SQL statement, a stack trace or
@@ -180,7 +181,7 @@ func TestSecurity_T29_NoExistenceOracleOutsideRoots(t *testing.T) {
 		Actor: "user:alice", Scopes: service.RoleScopes(service.RoleMember), OwnerUserID: "alice",
 	})
 
-	project, err := m.svc.ProjectCreate(alice, service.ProjectCreateRequest{Name: "p"})
+	project, err := testproject.CreateWithTimeline(alice, m.svc, "p")
 	if err != nil {
 		t.Fatal(err)
 	}

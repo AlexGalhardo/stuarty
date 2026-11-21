@@ -9,6 +9,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 	"github.com/AlexGalhardo/stuarty/web/app/cli"
 )
@@ -85,7 +86,7 @@ func TestInProcessConnectionCanExport(t *testing.T) {
 
 	ctx := service.WithCaller(context.Background(), service.Caller{Actor: "cli", Scopes: service.AllScopes})
 
-	p, err := conn.Service.ProjectCreate(ctx, service.ProjectCreateRequest{Name: "export"})
+	p, err := testproject.CreateWithTimeline(ctx, conn.Service, "export")
 	if err != nil {
 		t.Fatal(err)
 	}

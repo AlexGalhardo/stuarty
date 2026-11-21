@@ -34,8 +34,13 @@ func ProjectList(lines []ProjectLine, total int, state string) string {
 	fmt.Fprintf(&b, "projects (%d of %d, %s)", len(lines), total, state)
 
 	for _, l := range lines {
-		fmt.Fprintf(&b, "\n%s %s r%d %dx%d %sfps %s items=%d", l.ID, Quote(l.Name, 60), l.Revision,
-			l.Width, l.Height, l.FPS, Cell(l.FPS, l.DurationFrame), l.Items)
+		if l.FPS.Num == 0 {
+			// A project made since epic 56 has no timeline until one is added: it has no size and no duration.
+			fmt.Fprintf(&b, "\n%s %s no timeline", l.ID, Quote(l.Name, 60))
+		} else {
+			fmt.Fprintf(&b, "\n%s %s r%d %dx%d %sfps %s items=%d", l.ID, Quote(l.Name, 60), l.Revision,
+				l.Width, l.Height, l.FPS, Cell(l.FPS, l.DurationFrame), l.Items)
+		}
 
 		if l.Timelines > 1 {
 			fmt.Fprintf(&b, " timelines=%d", l.Timelines)
@@ -55,8 +60,15 @@ func FitProjectList(lines []ProjectLine) int {
 	n := 0
 
 	for _, l := range lines {
-		cost := runeLen(fmt.Sprintf("\n%s %s r%d %dx%d %sfps %s items=%d trashed", l.ID, Quote(l.Name, 60), l.Revision,
-			l.Width, l.Height, l.FPS, Cell(l.FPS, l.DurationFrame), l.Items)) + len(" timelines=99")
+		cost := runeLen(fmt.Sprintf("\n%s %s no timeline trashed", l.ID, Quote(l.Name, 60)))
+		if l.FPS.Num != 0 {
+			cost = runeLen(
+				fmt.Sprintf("\n%s %s r%d %dx%d %sfps %s items=%d trashed", l.ID, Quote(l.Name, 60), l.Revision,
+					l.Width, l.Height, l.FPS, Cell(l.FPS, l.DurationFrame), l.Items),
+			)
+		}
+
+		cost += len(" timelines=99")
 		if n > 0 && used+cost > CapProjectList {
 			break
 		}
@@ -79,6 +91,27 @@ func Created(id, name string, width, height int, fps timeval.FPS) string {
 		height,
 		fps,
 	)
+}
+
+// CreatedProject is the text of a created project, which has no timeline until one is added (SDD-005 section
+// 5.12.2).
+func CreatedProject(id, name string) string {
+	return fmt.Sprintf(
+		"%s\ncreated %s %s; it has no timeline yet: add one with project_item action add kind timeline",
+		Note,
+		id,
+		Quote(name, 60),
+	)
+}
+
+// UpdatedProject is the text of a project whose name, description or goal changed.
+func UpdatedProject(id, name string, complete bool) string {
+	state := "complete"
+	if !complete {
+		state = "incomplete: the description and the goal are not all set"
+	}
+
+	return fmt.Sprintf("%s\nupdated %s %s; context %s", Note, id, Quote(name, 60), state)
 }
 
 // HistoryLine is one step of the history.

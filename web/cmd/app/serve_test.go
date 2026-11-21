@@ -17,6 +17,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/internal/outbound"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
 	"github.com/AlexGalhardo/stuarty/web/app/cli"
@@ -150,7 +151,7 @@ func TestServeIsTheOwnerAndTheCLIUsesIt(t *testing.T) {
 
 	ctx := service.WithCaller(context.Background(), service.Caller{Actor: "cli", Scopes: service.AllScopes})
 
-	created, err := conn.Service.ProjectCreate(ctx, service.ProjectCreateRequest{Name: "over http"})
+	created, err := testproject.CreateWithTimeline(ctx, conn.Service, "over http")
 	if err != nil {
 		t.Fatal(err)
 	}

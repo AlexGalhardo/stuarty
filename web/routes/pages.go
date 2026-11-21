@@ -270,7 +270,10 @@ func projectPageShow(c *web.Ctx, d *httpapi.Deps) error {
 	}
 
 	return inertia.Render(c, "Projects/Show", inertia.Props{
-		"project":    map[string]any{"id": desc.ProjectID, "name": desc.Name, "state": desc.State},
+		"project": map[string]any{
+			"id": desc.ProjectID, "name": desc.Name, "state": desc.State,
+			"description": desc.Description, "goal": desc.Goal, "complete": desc.Complete,
+		},
 		"production": desc.Production, "items": nonNil(desc.Items), "brief": brief, "briefing": briefing,
 	})
 }
@@ -284,16 +287,34 @@ func projectCreate(c *web.Ctx, d *httpapi.Deps) error {
 		return err
 	}
 
-	name, _ := in["name"].(string)
-	preset, _ := in["preset"].(string)
+	text := func(m map[string]any, k string) string {
+		v, _ := m[k].(string)
+		return v
+	}
 
-	res, err := d.Service.ProjectCreate(c.Context(), service.ProjectCreateRequest{Name: name, Preset: preset})
+	goal, _ := in["goal"].(map[string]any)
+
+	res, err := d.Service.ProjectCreate(c.Context(), service.ProjectCreateRequest{
+		Name: text(in, "name"), Description: text(in, "description"),
+		Goal: service.ProjectGoal{
+			Specific: text(
+				goal,
+				"specific",
+			),
+			Measurable: text(goal, "measurable"),
+			Achievable: text(goal, "achievable"),
+			Relevant:   text(goal, "relevant"),
+			TimeBound:  text(goal, "time_bound"),
+			Due:        text(goal, "due"),
+		},
+	})
 	if err != nil {
 		return err
 	}
 
-	// The editor is not an Inertia page: a full visit, not an XHR navigation.
-	return inertia.Location(c, "/editor/"+res.ProjectID)
+	// A new project has no timeline: its page asks for the size when a video is added (epic 56). The page is
+	// not an editor, but it is a full visit as well, so that the location is the same kind of answer.
+	return inertia.Location(c, "/projects/"+res.ProjectID)
 }
 
 func editorPage(c *web.Ctx, d *httpapi.Deps, app *vukem.App) error {

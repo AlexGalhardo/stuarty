@@ -86,7 +86,25 @@ func (r *realRuntime) do(args ...string) (int, map[string]any) {
 func TestSessionAWithoutMedia(t *testing.T) {
 	r := newRealRuntime(t)
 
-	code, created := r.do("project:create", "--name", "Launch teaser")
+	code, created := r.do(
+		"project:create",
+		"--name",
+		"Launch teaser",
+		"--description",
+		ctxDescription,
+		"--specific",
+		ctxSpecific,
+		"--measurable",
+		ctxMeasurable,
+		"--achievable",
+		ctxAchievable,
+		"--relevant",
+		ctxRelevant,
+		"--time-bound",
+		ctxTimeBound,
+		"--due",
+		ctxDue,
+	)
 	if code != 0 || created["revision"] != float64(0) || created["created"] != true {
 		t.Fatalf("project:create: exit %d, %v", code, created)
 	}
@@ -94,6 +112,10 @@ func TestSessionAWithoutMedia(t *testing.T) {
 	id, _ := created["project_id"].(string)
 	if !strings.HasPrefix(id, "prj_") {
 		t.Fatalf("project id = %v", created["project_id"])
+	}
+
+	if code, added := r.do("item:add", "--project", id, "--kind", "timeline", "--title", "Launch teaser"); code != 0 {
+		t.Fatalf("item:add: exit %d, %v", code, added)
 	}
 
 	r.stdin = `[{"op":"track.add","args":{"kind":"visual","name":"Video"}},{"op":"track.add","args":{"kind":"visual","name":"Captions"}}]`
@@ -180,7 +202,30 @@ func TestHumanSessionPrintsTheInProcessNote(t *testing.T) {
 
 	r.rt.Stdin = strings.NewReader("")
 
-	code := r.rt.Execute(context.Background(), "project:create", []string{"--name", "x", "--workspace", r.ws})
+	code := r.rt.Execute(
+		context.Background(),
+		"project:create",
+		[]string{
+			"--name",
+			"Project x",
+			"--description",
+			ctxDescription,
+			"--specific",
+			ctxSpecific,
+			"--measurable",
+			ctxMeasurable,
+			"--achievable",
+			ctxAchievable,
+			"--relevant",
+			ctxRelevant,
+			"--time-bound",
+			ctxTimeBound,
+			"--due",
+			ctxDue,
+			"--workspace",
+			r.ws,
+		},
+	)
 	if code != 0 {
 		t.Fatalf("exit %d: %s", code, r.stderr.String())
 	}
@@ -222,7 +267,25 @@ func BenchmarkCLIRead(b *testing.B) {
 		return rt.Execute(context.Background(), args[0], append(args[1:], "--json", "--actor", "bench"))
 	}
 
-	if run("project:create", "--name", "Bench") != 0 {
+	if run(
+		"project:create",
+		"--name",
+		"Bench",
+		"--description",
+		ctxDescription,
+		"--specific",
+		ctxSpecific,
+		"--measurable",
+		ctxMeasurable,
+		"--achievable",
+		ctxAchievable,
+		"--relevant",
+		ctxRelevant,
+		"--time-bound",
+		ctxTimeBound,
+		"--due",
+		ctxDue,
+	) != 0 {
 		b.Fatalf("project:create: %s", stdout.String())
 	}
 

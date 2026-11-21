@@ -13,6 +13,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/providers"
 	"github.com/AlexGalhardo/stuarty/service/providers/openai"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
 )
 
@@ -102,7 +103,7 @@ func TestTextGenerate_EverySurfaceStartsAJobThatCompletesAndStoresTheText(t *tes
 				t.Fatal(err)
 			}
 
-			project, err := svc.ProjectCreate(callerCtx(), service.ProjectCreateRequest{Name: "text"})
+			project, err := testproject.CreateWithTimeline(callerCtx(), svc, "text")
 			if err != nil {
 				t.Fatal(err)
 			}

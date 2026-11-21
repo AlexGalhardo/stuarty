@@ -18,9 +18,7 @@ func TestLintArtifactRulesGolden(t *testing.T) {
 
 	env := testenv.New(t, testenv.Options{})
 	cs := connect(t, env.Service, Options{}, "claude-code")
-	project, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{
-		"name": "Rules", "id": "prj_7k2m9x4q1b",
-	})))["project_id"].(string)
+	project := createProjectWith(t, cs, "Rules")
 	imported := ok(t, call(t, cs, "media_import", map[string]any{
 		"project_id": project, "paths": []any{env.WriteFile(t, "speech.mov", strings.Repeat("x", 64))},
 		"asset_ids": []any{"ast_3c5v8n2w6d"}, "wait_ms": 20000,
@@ -129,9 +127,7 @@ func TestInspectTranscriptUnavailableGolden(t *testing.T) {
 
 	env := testenv.New(t, testenv.Options{})
 	cs := connect(t, env.Service, Options{}, "claude-code")
-	project, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{
-		"name": "Silent", "id": "prj_7k2m9x4q1b",
-	})))["project_id"].(string)
+	project := createProjectWith(t, cs, "Silent")
 	ok(t, call(t, cs, "media_import", map[string]any{
 		"project_id": project, "paths": []any{env.WriteFile(t, "clip.mov", strings.Repeat("x", 64))},
 		"asset_ids": []any{"ast_3c5v8n2w6d"}, "wait_ms": 20000,

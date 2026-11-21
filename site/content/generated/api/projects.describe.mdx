@@ -37,6 +37,9 @@ Content type `application/json`. Schema: [`ProjectDescribeResult`](/docs/api/sch
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
+| `complete` | `boolean` | no |  |
+| `description` | `string` | no |  |
+| `goal` | [`ProjectGoal`](/docs/api/schemas#projectgoal) | no |  |
 | `items` | array of [`ProjectItem`](/docs/api/schemas#projectitem) | no |  |
 | `name` | `string` | no |  |
 | `production` | [`Production`](/docs/api/schemas#production) | no |  |
@@ -226,6 +229,16 @@ puts "#{response.code} #{response.body}"
 
 ```json title="200"
 {
+  "complete": false,
+  "description": "string",
+  "goal": {
+    "achievable": "string",
+    "due": "string",
+    "measurable": "string",
+    "relevant": "string",
+    "specific": "string",
+    "time_bound": "string"
+  },
   "items": [
     {
       "format": "string",

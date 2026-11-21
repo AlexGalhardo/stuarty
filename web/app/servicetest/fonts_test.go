@@ -14,6 +14,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 )
 
 func bundledFontFile(t *testing.T, name string) []byte {
@@ -246,7 +247,7 @@ func TestSecurity_T21_FontAddCannotNameAnotherUsersFont(t *testing.T) {
 	add := op("font.add", fmt.Sprintf(`{"family":"Mine","files":[{"weight":400,"hash":"sha256:%s"}]}`, anton))
 
 	newProject := func(ctx context.Context) string {
-		res, err := net.svc.ProjectCreate(ctx, service.ProjectCreateRequest{Name: "p"})
+		res, err := testproject.CreateWithTimeline(ctx, net.svc, "p")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -331,7 +332,7 @@ func TestSecurity_T21_FontAddOwnershipScanIsBoundedPerBatch(t *testing.T) {
 
 	bob := memberCtx("bob")
 	create := func() string {
-		res, err := m.svc.ProjectCreate(bob, service.ProjectCreateRequest{Name: "p"})
+		res, err := testproject.CreateWithTimeline(bob, m.svc, "p")
 		if err != nil {
 			t.Fatal(err)
 		}

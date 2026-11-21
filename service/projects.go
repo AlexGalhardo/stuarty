@@ -12,6 +12,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/project"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/core/timeval"
 	"github.com/AlexGalhardo/stuarty/service/textview"
@@ -78,46 +79,51 @@ func (s *svc) ProjectCreate(ctx context.Context, req ProjectCreateRequest) (*Pro
 			withPath("id").withHint("leave id out")
 	}
 
-	doc, verr := s.newDocument(req)
-	if verr != nil {
+	// The preset and the frame rate are deprecated and create nothing: a video asks for them when it is added.
+	ctxIn := project.Context{Name: req.Name, Description: req.Description, Goal: project.Goal(req.Goal)}
+	if verr := checkContextError(
+		project.CheckContext(ctxIn, project.CheckOptions{Today: s.today(), CheckDue: true}),
+	); verr != nil {
 		return nil, verr
 	}
 
+	id := req.ID
+	if id == "" {
+		id = s.newIDs(timeline.PrefixProject)
+	} else if !timeline.ValidID(timeline.PrefixProject, id) {
+		return nil, newError(command.CodeValidation, "the id %q is not a valid project identifier.", id).
+			withPath("id").withHint("use prj_ followed by 10 characters of 0-9 a-z without i, l, o, u")
+	}
+
 	res := &ProjectCreateResult{
-		UntrustedNotice: UntrustedNotice,
-		ProjectID:       doc.ID, Name: doc.Name, Width: doc.Settings.Width, Height: doc.Settings.Height,
-		FPS: fpsString(doc.Settings.FPS.Num, doc.Settings.FPS.Den),
-		Text: textview.Created(doc.ID, doc.Name, doc.Settings.Width, doc.Settings.Height,
-			timeval.FPS{Num: int64(doc.Settings.FPS.Num), Den: int64(doc.Settings.FPS.Den)}),
+		UntrustedNotice: UntrustedNotice, ProjectID: id, Name: req.Name, Text: textview.CreatedProject(id, req.Name),
 	}
 
 	if req.DryRun {
 		return res, nil
 	}
 
-	canon := timeline.Canonical(doc)
 	now := s.nowMs()
-	row := ProjectRow{
-		ID: doc.ID, Name: doc.Name, State: ProjectActive, SchemaVersion: doc.SchemaVersion,
-		Summary: summarize(doc), CreatedMs: now, UpdatedMs: now, CreatedBy: c.Actor,
-		Document: canon, DocSHA256: sha256Hex(canon),
+	head := ProductionHead{
+		ID: id, Name: req.Name, State: ProjectActive, CreatedMs: now, UpdatedMs: now, CreatedBy: c.Actor,
+		Description: req.Description, Goal: ctxIn.Goal,
 	}
 
 	if c.OwnerUserID != "" {
 		owner := c.OwnerUserID
-		row.OwnerUserID = &owner
+		head.OwnerUserID = &owner
 	}
 
 	err = s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
-		if err := s.putProduction(ctx, tx, &row); err != nil {
+		if err := tx.Productions().Create(ctx, head); err != nil {
 			return err
 		}
 
-		return tx.Audit().Append(ctx, AuditRow{AtMs: now, Actor: c.Actor, Action: "project.create", ProjectID: &doc.ID})
+		return tx.Audit().Append(ctx, AuditRow{AtMs: now, Actor: c.Actor, Action: "project.create", ProjectID: &id})
 	})
 	if err != nil {
 		if errors.Is(err, ErrExists) {
-			return nil, newError(command.CodeIDExists, "a project with the identifier %s already exists.", doc.ID).
+			return nil, newError(command.CodeIDExists, "a project with the identifier %s already exists.", id).
 				withHint("choose another id or leave it out").withPath("id")
 		}
 
@@ -129,7 +135,8 @@ func (s *svc) ProjectCreate(ctx context.Context, req ProjectCreateRequest) (*Pro
 	return res, nil
 }
 
-// newDocument builds the empty document of a new project.
+// newDocument builds the empty document of a new timeline: its name is a title of 1 to 120 characters, not the
+// name of a project (SDD-005 section 5.12.2).
 func (s *svc) newDocument(req ProjectCreateRequest) (*timeline.Document, *Error) {
 	if n := utf8.RuneCountInString(req.Name); n < 1 || n > maxProjectName {
 		return nil, newError(
@@ -327,12 +334,12 @@ func encodeViewCursor(c viewCursor) string {
 	return base64.RawURLEncoding.EncodeToString(b)
 }
 
-func decodeViewCursor(s, project string, revision int64) (viewCursor, error) {
+func decodeViewCursor(s, projectID string, revision int64) (viewCursor, error) {
 	raw, err := base64.RawURLEncoding.DecodeString(s)
 
 	var c viewCursor
 
-	if err != nil || json.Unmarshal(raw, &c) != nil || c.V != 1 || c.P != project || c.N < 2 {
+	if err != nil || json.Unmarshal(raw, &c) != nil || c.V != 1 || c.P != projectID || c.N < 2 {
 		return c, newError(command.CodeValidation, "the cursor is not valid.").withPath("cursor").
 			withHint("repeat the call without cursor")
 	}
@@ -428,7 +435,10 @@ func (s *svc) ProjectGet(ctx context.Context, req ProjectGetRequest) (*ProjectGe
 		UntrustedNotice: UntrustedNotice,
 		ProjectID:       head.ID,
 		TimelineID:      row.ID,
-		Name:            row.Name,
+		Name:            head.Name,
+		Description:     head.Description,
+		Goal:            ProjectGoal(head.Goal),
+		Complete:        contextOf(&head).Complete,
 		Revision:        row.Revision,
 		State:           stateString(head.State),
 		Width:           doc.Settings.Width,
@@ -505,13 +515,24 @@ func (s *svc) projectOverview(
 	fps := timeline.Rational{Num: t.Summary.FPSNum, Den: t.Summary.FPSDen}
 
 	return &ProjectGetResult{
-		UntrustedNotice: UntrustedNotice, ProjectID: head.ID, TimelineID: t.ID, Name: head.Name, Revision: t.Revision,
-		State: stateString(head.State), Width: t.Summary.Width, Height: t.Summary.Height,
-		FPS: fpsString(fps.Num, fps.Den), DurationFrames: t.Summary.DurationFrames,
-		Duration: timeValue(fps, t.Summary.DurationFrames),
-		Counts:   ProjectCounts{Tracks: t.Summary.Tracks, Items: t.Summary.Items, Assets: t.Summary.Assets},
-		Items:    itemViews(rows), Production: production,
-		Text: s.describeText(ctx, head, rows, production, 0),
+		UntrustedNotice: UntrustedNotice,
+		ProjectID:       head.ID,
+		TimelineID:      t.ID,
+		Name:            head.Name,
+		Revision:        t.Revision,
+		Description:     head.Description,
+		Goal:            ProjectGoal(head.Goal),
+		Complete:        contextOf(head).Complete,
+		State:           stateString(head.State),
+		Width:           t.Summary.Width,
+		Height:          t.Summary.Height,
+		FPS:             fpsString(fps.Num, fps.Den),
+		DurationFrames:  t.Summary.DurationFrames,
+		Duration:        timeValue(fps, t.Summary.DurationFrames),
+		Counts:          ProjectCounts{Tracks: t.Summary.Tracks, Items: t.Summary.Items, Assets: t.Summary.Assets},
+		Items:           itemViews(rows),
+		Production:      production,
+		Text:            s.describeText(ctx, head, rows, production, 0),
 	}, nil
 }
 

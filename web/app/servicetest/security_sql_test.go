@@ -11,6 +11,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 )
 
 // sqlPayloads are the classic injection strings, plus a NUL, a lookalike quote
@@ -90,13 +91,27 @@ func TestSecurity_T23_SQLInjectionPayloads(t *testing.T) {
 
 	before := tableCounts(t, m.env)
 
+	var created []string
+
 	for i, p := range sqlPayloads {
 		name := fmt.Sprintf("%d%s", i, p)
 		if len(name) > 120 {
 			name = name[:120]
 		}
 
-		_, _ = m.svc.ProjectCreate(ctx, service.ProjectCreateRequest{Name: name})
+		// A project name cannot hold a payload since epic 56; its description and the title of a timeline can.
+		req := testproject.Request("sql payload")
+		req.Description = name + " " + testproject.Description
+
+		if made, cerr := m.svc.ProjectCreate(ctx, req); cerr == nil {
+			created = append(created, made.ProjectID)
+
+			_, _ = m.svc.ProjectItemAdd(
+				ctx,
+				service.ProjectItemAddRequest{ProjectID: made.ProjectID, Kind: "timeline", Title: name},
+			)
+		}
+
 		_, _ = m.svc.ProjectList(ctx, service.ProjectListRequest{State: p, Cursor: p})
 		_, _ = m.svc.ProjectList(ctx, service.ProjectListRequest{Cursor: p})
 		_, _ = m.svc.HistoryList(
@@ -157,21 +172,21 @@ func TestSecurity_T23_SQLInjectionPayloads(t *testing.T) {
 	}
 
 	// The payloads were stored as data: the proof that they reached the database.
-	list, err := m.svc.ProjectList(ctx, service.ProjectListRequest{Limit: 100})
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	stored := 0
 
-	for _, p := range list.Projects {
-		if strings.Contains(p.Name, "DROP TABLE projects") {
+	for _, id := range created {
+		got, gerr := m.svc.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: id})
+		if gerr != nil {
+			t.Fatal(gerr)
+		}
+
+		if strings.Contains(got.Description, "DROP TABLE projects") {
 			stored++
 		}
 	}
 
 	if stored == 0 {
-		t.Error("no project kept its hostile name: the payload never reached a query")
+		t.Error("no project kept its hostile description: the payload never reached a query")
 	}
 
 	if !strings.Contains(string(m.document(project)), "DROP TABLE") {

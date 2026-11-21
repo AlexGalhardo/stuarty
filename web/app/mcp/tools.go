@@ -99,11 +99,13 @@ func (f *fpsArg) UnmarshalJSON(b []byte) error {
 
 func projectCreate(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
-		Name   string `json:"name"`
-		Preset string `json:"preset"`
-		FPS    fpsArg `json:"fps"`
-		ID     string `json:"id"`
-		From   string `json:"from"`
+		Name        string              `json:"name"`
+		Description string              `json:"description"`
+		Goal        service.ProjectGoal `json:"goal"`
+		Preset      string              `json:"preset"`
+		FPS         fpsArg              `json:"fps"`
+		ID          string              `json:"id"`
+		From        string              `json:"from"`
 	}](raw)
 	if err != nil {
 		return nil, err
@@ -120,7 +122,14 @@ func projectCreate(ctx context.Context, svc service.Service, raw json.RawMessage
 
 	res, err := svc.ProjectCreate(
 		ctx,
-		service.ProjectCreateRequest{Name: in.Name, Preset: in.Preset, FPS: string(in.FPS), ID: in.ID},
+		service.ProjectCreateRequest{
+			Name:        in.Name,
+			Description: in.Description,
+			Goal:        in.Goal,
+			Preset:      in.Preset,
+			FPS:         string(in.FPS),
+			ID:          in.ID,
+		},
 	)
 	if err != nil {
 		return nil, err
@@ -886,6 +895,8 @@ type itemArgs struct {
 	// ProductionKind is the set of questions of the briefing (SDD-018 section 17): `kind` stays the kind of an
 	// item, so one member never means two things (VV-289).
 	ProductionKind string `json:"production_kind"`
+	// The goal of the project, for the action update (epic 56); the name is title and the description is text.
+	Goal *service.ProjectGoal `json:"goal"`
 }
 
 // projectItem is the operations on the items of a production behind one tool (SDD-003 section 4.1): add, move,
@@ -902,6 +913,17 @@ func projectItem(ctx context.Context, svc service.Service, raw json.RawMessage) 
 
 	if isWritingAction(in.Action) {
 		return writingItem(ctx, svc, &in)
+	}
+
+	if in.Action == "update" {
+		upd, uerr := svc.ProjectUpdate(ctx, service.ProjectUpdateRequest{
+			ProjectID: in.ProjectID, Name: nonEmpty(in.Title), Description: in.Text, Goal: in.Goal,
+		})
+		if uerr != nil {
+			return nil, uerr
+		}
+
+		return &toolOutput{value: upd, text: upd.Text}, nil
 	}
 
 	if in.Action == "brief" {
@@ -1020,4 +1042,13 @@ func briefTextOf(res *service.BriefResult) string {
 		res.Text,
 		0,
 	)
+}
+
+// nonEmpty is a pointer to s, or nil when s is empty: a member that is left out is kept by ProjectUpdate.
+func nonEmpty(s string) *string {
+	if s == "" {
+		return nil
+	}
+
+	return &s
 }

@@ -6,6 +6,7 @@ package cli
 import (
 	"context"
 	"encoding/json"
+	"slices"
 
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
@@ -17,6 +18,7 @@ func registry() []*spec {
 	return append([]*spec{
 		projectList,
 		projectCreate,
+		projectUpdate,
 		projectShow,
 		projectTrash,
 		projectRestore,
@@ -186,29 +188,125 @@ var projectCreate = &spec{
 	name:    "project:create",
 	summary: "create a project",
 	usage: []string{
-		"stuarty project:create --name <name> [--preset 9:16|1:1|16:9|4:5] [--fps 30] [--id prj_...]",
+		"stuarty project:create --name <n> --description <t> --specific|--measurable|--achievable|--relevant|" +
+			"--time-bound <t> --due <date>",
 	},
-	example: `stuarty project:create --name "Launch teaser" --json`,
+	example: `stuarty project:create --name "Launch teaser" --description "A 30 second vertical teaser for the launch of ` +
+		`my course, for people who follow me on short video, with captions and a thumbnail." ` +
+		`--specific "Publish one teaser that explains the course in one sentence" ` +
+		`--measurable "At least 1000 views and 50 sign-ups in the first week" ` +
+		`--achievable "I already have the footage and edit one video a day" ` +
+		`--relevant "The launch needs an audience before the doors open" ` +
+		`--time-bound "Script on Monday, edit on Tuesday, publish on Wednesday" --due 2027-03-31 --json`,
 	globals: []string{"dry-run"},
 	write:   true,
 	flags: []flagDef{
-		{Name: "name", Kind: kindString, Usage: "project name (required)"},
-		{Name: "preset", Kind: kindString, Default: "9:16", Usage: "9:16, 1:1, 16:9 or 4:5"},
-		{Name: "fps", Kind: kindString, Default: "30", Usage: "frames per second, for example 30 or 30000/1001"},
+		{Name: "name", Kind: kindString, Usage: "project name: 4 to 32 letters, digits and single spaces (required)"},
+		{
+			Name:  "description",
+			Kind:  kindString,
+			Usage: "what the project is, for whom, what it makes: 64 to 1024 characters (required)",
+		},
+		{
+			Name:  "specific",
+			Kind:  kindString,
+			Usage: "goal: what exactly it will achieve, 16 to 280 characters (required)",
+		},
+		{Name: "measurable", Kind: kindString, Usage: "goal: how success is counted, 16 to 280 characters (required)"},
+		{
+			Name:  "achievable",
+			Kind:  kindString,
+			Usage: "goal: why it can be done with what you have, 16 to 280 characters (required)",
+		},
+		{Name: "relevant", Kind: kindString, Usage: "goal: why it matters, 16 to 280 characters (required)"},
+		{
+			Name:  "time-bound",
+			Kind:  kindString,
+			Usage: "goal: the schedule and the milestones, 16 to 280 characters (required)",
+		},
+		{Name: "due", Kind: kindString, Usage: "goal: the due date YYYY-MM-DD, today or later (required)"},
+		{
+			Name:  "preset",
+			Kind:  kindString,
+			Usage: "deprecated, creates nothing: the size is asked when a video is added",
+		},
+		{
+			Name:  "fps",
+			Kind:  kindString,
+			Usage: "deprecated, creates nothing: the frame rate is asked when a video is added",
+		},
 		{
 			Name: "id", Kind: kindString,
 			Usage: "identifier for the project (omit it in network mode: the server chooses)",
 		},
 	},
 	run: func(ctx context.Context, c *call) (*output, error) {
-		if !c.args.has("name") {
-			return nil, validation("name", "--name is required.")
-		}
-
 		res, err := c.svc.ProjectCreate(ctx, service.ProjectCreateRequest{
-			Name: c.args.str("name"), Preset: c.args.str("preset"), FPS: c.args.str("fps"),
+			Name: c.args.str("name"), Description: c.args.str("description"),
+			Goal: service.ProjectGoal{
+				Specific: c.args.str("specific"), Measurable: c.args.str("measurable"),
+				Achievable: c.args.str("achievable"), Relevant: c.args.str("relevant"),
+				TimeBound: c.args.str("time-bound"), Due: c.args.str("due"),
+			},
+			Preset: c.args.str("preset"), FPS: c.args.str("fps"),
 			ID: c.args.str("id"), DryRun: c.args.boolean("dry-run"),
 		})
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: res.Text}, nil
+	},
+}
+
+var projectUpdate = &spec{
+	name:    "project:update",
+	summary: "change the name, the description or the goal of a project",
+	usage: []string{
+		"stuarty project:update <id> [any flag of project:create]",
+	},
+	example:           `stuarty project:update prj_7k2m9x4q1b --name "Launch teaser v2"`,
+	project:           true,
+	projectPositional: true,
+	globals:           []string{"dry-run"},
+	write:             true,
+	flags: []flagDef{
+		{Name: "name", Kind: kindString, Usage: "project name: 4 to 32 letters, digits and single spaces"},
+		{Name: "description", Kind: kindString, Usage: "64 to 1024 characters"},
+		{
+			Name:  "specific",
+			Kind:  kindString,
+			Usage: "goal: 16 to 280 characters (a goal is sent whole: give all six goal flags)",
+		},
+		{Name: "measurable", Kind: kindString, Usage: "goal: 16 to 280 characters"},
+		{Name: "achievable", Kind: kindString, Usage: "goal: 16 to 280 characters"},
+		{Name: "relevant", Kind: kindString, Usage: "goal: 16 to 280 characters"},
+		{Name: "time-bound", Kind: kindString, Usage: "goal: 16 to 280 characters"},
+		{Name: "due", Kind: kindString, Usage: "goal: the due date YYYY-MM-DD"},
+	},
+	run: func(ctx context.Context, c *call) (*output, error) {
+		req := service.ProjectUpdateRequest{ProjectID: c.projectID, DryRun: c.args.boolean("dry-run")}
+
+		if c.args.has("name") {
+			v := c.args.str("name")
+			req.Name = &v
+		}
+
+		if c.args.has("description") {
+			v := c.args.str("description")
+			req.Description = &v
+		}
+
+		goalFlags := []string{"specific", "measurable", "achievable", "relevant", "time-bound", "due"}
+		if slices.ContainsFunc(goalFlags, c.args.has) {
+			req.Goal = &service.ProjectGoal{
+				Specific: c.args.str("specific"), Measurable: c.args.str("measurable"),
+				Achievable: c.args.str("achievable"), Relevant: c.args.str("relevant"),
+				TimeBound: c.args.str("time-bound"), Due: c.args.str("due"),
+			}
+		}
+
+		res, err := c.svc.ProjectUpdate(ctx, req)
 		if err != nil {
 			return nil, err
 		}

@@ -10,6 +10,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/project"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 )
 
 func (e *env) prod() service.ProductionService {
@@ -733,13 +734,13 @@ func TestProjectDuplicate(t *testing.T) {
 		t.Errorf("a blank name: %v", err)
 	}
 
-	// A copy of a long name is still a valid name.
+	// A copy of a long name is still a valid name (at most 32 characters for a project with a complete context).
 	long := strings.Repeat("n", 120)
 	big := e.newProject(long)
 
 	if cp, err := e.prod().
 		ProjectDuplicate(ctx, service.ProjectDuplicateRequest{ProjectID: big}); err != nil ||
-		len([]rune(cp.Name)) != 120 {
+		len([]rune(cp.Name)) > 32 || !strings.HasSuffix(cp.Name, " copy") {
 		t.Fatalf("copy of a long name: %+v %v", cp, err)
 	}
 
@@ -823,7 +824,7 @@ func TestProjectTimelinesRespectOwnership(t *testing.T) {
 		service.Caller{Actor: "user:bob", OwnerUserID: "bob", Scopes: service.AllScopes},
 	)
 
-	made, err := e.svc.ProjectCreate(alice, service.ProjectCreateRequest{Name: "Alice"})
+	made, err := testproject.CreateWithTimeline(alice, e.svc, "Alice")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -945,8 +946,9 @@ func TestProjectLimitedKeyAndTimelines(t *testing.T) {
 	}
 }
 
-// A timeline that is renamed through the command renames the project that has its id.
-func TestProjectNameFollowsTheFirstTimeline(t *testing.T) {
+// Since epic 56 the name of a project is its own (SDD-005 section 5.12.2): renaming a timeline document through the
+// command changes the document, never the project.
+func TestProjectNameDoesNotFollowTheFirstTimeline(t *testing.T) {
 	t.Parallel()
 
 	e := newEnv(t)
@@ -972,12 +974,12 @@ func TestProjectNameFollowsTheFirstTimeline(t *testing.T) {
 	}
 
 	got := e.get(id, "", "")
-	if got.Name != "After" {
+	if got.Name != "Before" {
 		t.Fatalf("the project is named %q", got.Name)
 	}
 
 	list, _ := e.svc.ProjectList(ctx, service.ProjectListRequest{})
-	if len(list.Projects) != 1 || list.Projects[0].Name != "After" {
+	if len(list.Projects) != 1 || list.Projects[0].Name != "Before" {
 		t.Fatalf("list = %+v", list.Projects)
 	}
 }

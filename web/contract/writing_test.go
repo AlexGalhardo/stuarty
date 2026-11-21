@@ -12,6 +12,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/providers"
 	"github.com/AlexGalhardo/stuarty/service/providers/openai"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
 )
 
@@ -23,7 +24,7 @@ func TestWritingScenarioIsEqualOnEverySurface(t *testing.T) {
 	const project = `"project_id":"prj_7k2m9x4q1b"`
 
 	steps := []step{
-		libraryStepOf("ProjectCreate", `{"id":"prj_7k2m9x4q1b","name":"Series pilot"}`, ""),
+		libraryStepOf("ProjectCreate", projectCreateJSON("prj_7k2m9x4q1b", "Series pilot"), ""),
 		libraryStepOf("TextWrite", `{`+project+`,"title":"Hook script","text_kind":"script",`+
 			`"text":"# Hook\nVO: Did you know bread is alive?\n\nON SCREEN: ALIVE\n"}`, ""),
 		libraryStepOf("TextWrite", `{`+project+`,"title":"Post caption","text_kind":"caption",`+
@@ -60,7 +61,7 @@ func TestWritingScenarioIsEqualOnEverySurface(t *testing.T) {
 			"E_VALIDATION"),
 		libraryStepOf("TextWrite", `{`+project+`,"title":"A post","text_kind":"post","text":"---\ntitle: A post\n`+
 			`slug: a-post\n---\nHello *world*.\n"}`, ""),
-		libraryStepOf("PostCheck", `{`+project+`,"item_id":"$item:5"}`, ""),
+		libraryStepOf("PostCheck", `{`+project+`,"item_id":"$item:4"}`, ""),
 	}
 
 	_, outcomes := runEverywhere(t, steps, nil, testenv.Options{})
@@ -112,7 +113,7 @@ func TestWritingBodyIsDelimitedOnEverySurface(t *testing.T) {
 	}
 
 	steps := []step{
-		libraryStepOf("ProjectCreate", `{"id":"prj_7k2m9x4q1b","name":"p"}`, ""),
+		libraryStepOf("ProjectCreate", projectCreateJSON("prj_7k2m9x4q1b", "Series pilot"), ""),
 		libraryStepOf("TextWrite", string(body), ""),
 		libraryStepOf("TextGet", `{"project_id":"prj_7k2m9x4q1b","item_id":"$item:0"}`, ""),
 	}
@@ -188,7 +189,7 @@ func TestTextDraft_EverySurfaceStartsADraftThatBecomesARevision(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			project, err := svc.ProjectCreate(callerCtx(), service.ProjectCreateRequest{Name: "draft"})
+			project, err := testproject.CreateWithTimeline(callerCtx(), svc, "draft")
 			if err != nil {
 				t.Fatal(err)
 			}

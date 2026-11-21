@@ -34,6 +34,10 @@ func (s stub) ProjectCreate(context.Context, service.ProjectCreateRequest) (*ser
 	return reply[service.ProjectCreateResult](s.err)
 }
 
+func (s stub) ProjectUpdate(context.Context, service.ProjectUpdateRequest) (*service.ProjectUpdateResult, error) {
+	return reply[service.ProjectUpdateResult](s.err)
+}
+
 func (s stub) ProjectGet(context.Context, service.ProjectGetRequest) (*service.ProjectGetResult, error) {
 	return reply[service.ProjectGetResult](s.err)
 }

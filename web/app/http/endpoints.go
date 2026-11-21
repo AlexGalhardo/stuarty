@@ -72,6 +72,11 @@ var Endpoints = []Endpoint{
 		Summary: "Create a project",
 	},
 	{
+		ID: "projects.update", Method: http.MethodPatch, Path: "/projects/{id}",
+		Scope: service.ScopeEdit, Service: "ProjectUpdate", Status: 200,
+		Summary: "Change the name, the description or the goal of a project",
+	},
+	{
 		ID:      "projects.get",
 		Method:  http.MethodGet,
 		Path:    "/projects/{id}",

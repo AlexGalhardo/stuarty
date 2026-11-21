@@ -50,7 +50,26 @@ func TestUntrustedText(t *testing.T) {
 		return code, stdout.String()
 	}
 
-	_, created := run("project:create", "--name", "Hostile", "--json")
+	_, created := run(
+		"project:create",
+		"--name",
+		"Hostile",
+		"--description",
+		ctxDescription,
+		"--specific",
+		ctxSpecific,
+		"--measurable",
+		ctxMeasurable,
+		"--achievable",
+		ctxAchievable,
+		"--relevant",
+		ctxRelevant,
+		"--time-bound",
+		ctxTimeBound,
+		"--due",
+		ctxDue,
+		"--json",
+	)
 
 	var made struct {
 		ProjectID string `json:"project_id"`
@@ -59,6 +78,8 @@ func TestUntrustedText(t *testing.T) {
 	if err := json.Unmarshal([]byte(created), &made); err != nil {
 		t.Fatal(err)
 	}
+
+	run("item:add", "--project", made.ProjectID, "--kind", "timeline", "--title", "Hostile")
 
 	args := []string{"media:import"}
 	for i, n := range names {
@@ -167,7 +188,31 @@ func TestInspectMetadataThroughTheCLI(t *testing.T) {
 		ProjectID string `json:"project_id"`
 	}
 
-	if err := json.Unmarshal([]byte(run("project:create", "--name", "Golden", "--json")), &made); err != nil {
+	if err := json.Unmarshal(
+		[]byte(
+			run(
+				"project:create",
+				"--name",
+				"Golden",
+				"--description",
+				ctxDescription,
+				"--specific",
+				ctxSpecific,
+				"--measurable",
+				ctxMeasurable,
+				"--achievable",
+				ctxAchievable,
+				"--relevant",
+				ctxRelevant,
+				"--time-bound",
+				ctxTimeBound,
+				"--due",
+				ctxDue,
+				"--json",
+			),
+		),
+		&made,
+	); err != nil {
 		t.Fatal(err)
 	}
 
@@ -175,6 +220,8 @@ func TestInspectMetadataThroughTheCLI(t *testing.T) {
 		"artist": "Jane Roe", "comment": "shot on a phone", "creation_time": "2026-11-14T12:00:00Z",
 		"encoder": "Lavf61.7.100", "title": "Beach day",
 	}
+	run("item:add", "--project", made.ProjectID, "--kind", "timeline", "--title", "Golden")
+
 	clip := env.WriteFile(t, "clip.mov", testenv.FakeMediaTags(2, 320, 240, tags))
 	run("media:import", clip, "--project", made.ProjectID, "--asset-id", "ast_3c5v8n2w6d")
 

@@ -80,9 +80,20 @@ func (s *svc) resolveTimeline(ctx context.Context, c Caller, projectID, timeline
 		return "", asError(err)
 	}
 
+	// A project made since epic 56 has no timeline until one is added: an operation on a document says so, to
+	// a caller who may see the project, instead of answering that nothing is there.
+	if len(tls) == 0 {
+		if head, gerr := repo.Get(ctx, projectID); gerr == nil && visible(c, head.OwnerUserID) {
+			return "", newError(command.CodeInvalidState, "the project %s has no timeline yet.", head.ID).
+				withHint("add one with project_item action add kind timeline, which asks for the size")
+		}
+
+		return projectID, nil
+	}
+
 	// The usual case, a project whose one timeline has its id, needs no other read: the operation checks the
 	// row of that id as it always did.
-	if len(tls) == 0 || (len(tls) == 1 && tls[0].TimelineID == projectID) {
+	if len(tls) == 1 && tls[0].TimelineID == projectID {
 		return projectID, nil
 	}
 
@@ -428,8 +439,15 @@ func (s *svc) ProjectDescribe(ctx context.Context, req ProjectDescribeRequest) (
 	rows = s.withPublications(ctx, head.ID, rows)
 
 	res := &ProjectDescribeResult{
-		UntrustedNotice: UntrustedNotice, ProjectID: head.ID, Name: head.Name, State: stateString(head.State),
-		Production: productionOf(rows), Items: itemViews(rows),
+		UntrustedNotice: UntrustedNotice,
+		ProjectID:       head.ID,
+		Name:            head.Name,
+		State:           stateString(head.State),
+		Description:     head.Description,
+		Goal:            ProjectGoal(head.Goal),
+		Complete:        contextOf(&head).Complete,
+		Production:      productionOf(rows),
+		Items:           itemViews(rows),
 	}
 	res.Text = s.describeText(ctx, &head, rows, res.Production, req.MaxTokens)
 
@@ -446,6 +464,7 @@ func (s *svc) describeText(
 	v := textview.ProductionView{
 		ID: head.ID, Name: head.Name, State: stateString(head.State), HasBrief: p.HasBrief, HasScript: p.HasScript,
 		Texts: p.Texts, Timelines: p.Timelines, Outputs: p.Outputs, Pending: p.PendingApprovals, Published: p.Published,
+		Context: contextText(head),
 	}
 
 	if b := briefOf(rows); b != nil {
@@ -526,7 +545,7 @@ func (s *svc) ProjectDuplicate(ctx context.Context, req ProjectDuplicateRequest)
 
 		name := req.Name
 		if name == "" {
-			name = copyName(src.Name)
+			name = copyName(src.Name, contextOf(&src).Complete)
 		}
 
 		plan, perr := s.planDuplicate(ctx, tx, c, &src, rows, name)
@@ -534,13 +553,17 @@ func (s *svc) ProjectDuplicate(ctx context.Context, req ProjectDuplicateRequest)
 			return perr
 		}
 
-		first := plan.timelines[0]
 		res = &ProjectCreateResult{
-			UntrustedNotice: UntrustedNotice, ProjectID: first.ID, Name: first.Name,
-			Width: first.Summary.Width, Height: first.Summary.Height,
-			FPS: fpsString(first.Summary.FPSNum, first.Summary.FPSDen),
-			Text: textview.Created(first.ID, first.Name, first.Summary.Width, first.Summary.Height,
-				timeval.FPS{Num: int64(first.Summary.FPSNum), Den: int64(first.Summary.FPSDen)}),
+			UntrustedNotice: UntrustedNotice, ProjectID: plan.projectID, Name: plan.name,
+			Text: textview.CreatedProject(plan.projectID, plan.name),
+		}
+
+		if len(plan.timelines) > 0 {
+			first := plan.timelines[0]
+			res.Width, res.Height = first.Summary.Width, first.Summary.Height
+			res.FPS = fpsString(first.Summary.FPSNum, first.Summary.FPSDen)
+			res.Text = textview.Created(first.ID, first.Name, first.Summary.Width, first.Summary.Height,
+				timeval.FPS{Num: int64(first.Summary.FPSNum), Den: int64(first.Summary.FPSDen)})
 		}
 
 		if req.DryRun {
@@ -562,17 +585,24 @@ func (s *svc) ProjectDuplicate(ctx context.Context, req ProjectDuplicateRequest)
 	return res, nil
 }
 
-// copyName is the default name of a copy: the name and " copy", cut so that the result is a valid name.
-func copyName(name string) string {
+// copyName is the default name of a copy: the name and " copy", cut so that the result is a valid name. The
+// name of a project whose context is complete follows the rule of epic 56 (at most project.NameMax characters
+// and no space left at the cut); that of an older one keeps the limit of a title.
+func copyName(name string, complete bool) string {
 	const suffix = " copy"
 
-	if utf8.RuneCountInString(name)+len(suffix) <= maxProjectName {
+	limit := maxProjectName
+	if complete {
+		limit = project.NameMax
+	}
+
+	if utf8.RuneCountInString(name)+len(suffix) <= limit {
 		return name + suffix
 	}
 
 	runes := []rune(name)
 
-	return string(runes[:maxProjectName-len(suffix)]) + suffix
+	return strings.TrimRight(string(runes[:limit-len(suffix)]), " ") + suffix
 }
 
 // readableForCopy loads a project the caller may see, with its items. A project in the trash may be copied: the
@@ -595,6 +625,8 @@ func (s *svc) readableForCopy(
 
 // duplicatePlan is a copy ready to be written.
 type duplicatePlan struct {
+	projectID string
+	name      string
 	timelines []ProjectRow
 	items     []ItemRow
 	assets    []ProjectAssetRow
@@ -603,10 +635,10 @@ type duplicatePlan struct {
 // planDuplicate builds the rows of the copy of the project src; nothing is written. The first active timeline
 // of the copy has the id of the copy, as a new project always does.
 func (s *svc) planDuplicate(
-	ctx context.Context, tx Tx, c Caller, src *ProductionHead, rows []ItemRow, name string,
+	ctx context.Context, tx Tx, c Caller, _ *ProductionHead, rows []ItemRow, name string,
 ) (*duplicatePlan, error) {
 	now := s.nowMs()
-	plan := &duplicatePlan{}
+	plan := &duplicatePlan{name: name}
 
 	var owner *string
 
@@ -616,6 +648,7 @@ func (s *svc) planDuplicate(
 	}
 
 	newProject := s.newIDs(timeline.PrefixProject)
+	plan.projectID = newProject
 
 	// The copies are written once every timeline has its new id, so that a composition of the copy names the
 	// copy of its timeline and not the timeline of the original (SDD-001 §3.5.1).
@@ -685,19 +718,19 @@ func (s *svc) planDuplicate(
 		plan.timelines = append(plan.timelines, s.timelineRow(doc, c, owner, now))
 	}
 
-	if len(plan.timelines) == 0 {
-		return nil, newError(command.CodeInvalidState, "the project %s has no active timeline to copy.", src.ID).
-			withHint("restore a timeline first")
-	}
-
 	return plan, nil
 }
 
 func (s *svc) writeDuplicate(ctx context.Context, tx Tx, c Caller, src *ProductionHead, plan *duplicatePlan) error {
-	first := plan.timelines[0]
+	now := s.nowMs()
 	head := ProductionHead{
-		ID: first.ID, Name: first.Name, State: ProjectActive, CreatedMs: first.CreatedMs, UpdatedMs: first.UpdatedMs,
-		CreatedBy: c.Actor, OwnerUserID: first.OwnerUserID,
+		ID: plan.projectID, Name: plan.name, State: ProjectActive, CreatedMs: now, UpdatedMs: now,
+		CreatedBy: c.Actor, Description: src.Description, Goal: src.Goal,
+	}
+
+	if c.OwnerUserID != "" {
+		owner := c.OwnerUserID
+		head.OwnerUserID = &owner
 	}
 
 	if err := tx.Productions().Create(ctx, head); err != nil {
@@ -734,9 +767,9 @@ func (s *svc) writeDuplicate(ctx context.Context, tx Tx, c Caller, src *Producti
 		}
 	}
 
-	if err := appendAudit(ctx, tx, first.CreatedMs, c.Actor, "project.create", first.ID, ""); err != nil {
+	if err := appendAudit(ctx, tx, now, c.Actor, "project.create", head.ID, ""); err != nil {
 		return err
 	}
 
-	return appendAudit(ctx, tx, first.CreatedMs, c.Actor, "project.duplicate", first.ID, src.ID)
+	return appendAudit(ctx, tx, now, c.Actor, "project.duplicate", head.ID, src.ID)
 }

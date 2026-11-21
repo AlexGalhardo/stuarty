@@ -98,7 +98,7 @@ func TestEditAndHistoryRouteByDomain(t *testing.T) {
 
 	cs := connect(t, newService(t), Options{}, "claude-code")
 
-	project, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{"name": "P"})))["project_id"].(string)
+	project := createProject(t, cs, "P")
 	img, _ := structured(t, ok(t, call(t, cs, "image", map[string]any{
 		"action": "create", "preset": "video_thumbnail", "name": "Cover",
 	})))["image_id"].(string)

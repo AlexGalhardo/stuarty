@@ -148,7 +148,7 @@ func TestSecurity_T01_SameSiteDifferentPortRefused(t *testing.T) {
 
 	// A page on another port of localhost is same-site: only the exact Origin keeps it out.
 	res := h.do(req{
-		method: http.MethodPost, path: "/api/v1/projects", body: `{"name":"x"}`,
+		method: http.MethodPost, path: "/api/v1/projects", body: projectJSON("x"),
 		headers: map[string]string{"Origin": "http://localhost:" + otherPort(h.port), "Sec-Fetch-Site": "same-site"},
 	})
 	if res.status != http.StatusForbidden {
@@ -158,7 +158,7 @@ func TestSecurity_T01_SameSiteDifferentPortRefused(t *testing.T) {
 	cookie := h.session(t)
 
 	res = h.do(req{
-		method: http.MethodPost, path: "/api/v1/projects", body: `{"name":"x"}`, noAuth: true,
+		method: http.MethodPost, path: "/api/v1/projects", body: projectJSON("x"), noAuth: true,
 		headers: map[string]string{"Cookie": cookie, "Origin": "http://localhost:" + otherPort(h.port)},
 	})
 	if res.status != http.StatusForbidden {

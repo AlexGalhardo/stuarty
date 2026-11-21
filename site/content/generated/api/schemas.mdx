@@ -2203,6 +2203,9 @@ The types named in the tables of the operations. The arguments of each editing c
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
+| `complete` | `boolean` | no |  |
+| `description` | `string` | no |  |
+| `goal` | [`ProjectGoal`](/docs/api/schemas#projectgoal) | no |  |
 | `items` | array of [`ProjectItem`](/docs/api/schemas#projectitem) | no |  |
 | `name` | `string` | no |  |
 | `production` | [`Production`](/docs/api/schemas#production) | no |  |
@@ -2221,11 +2224,14 @@ The types named in the tables of the operations. The arguments of each editing c
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
+| `complete` | `boolean` | no |  |
 | `counts` | [`ProjectCounts`](/docs/api/schemas#projectcounts) | no |  |
+| `description` | `string` | no |  |
 | `document` | [`Document`](/docs/api/schemas#document) or `any` or `null` or `null` | no |  |
 | `duration` | [`TimeValue`](/docs/api/schemas#timevalue) | no |  |
 | `duration_frames` | `integer (int64)` | no |  |
 | `fps` | `string` | no |  |
+| `goal` | [`ProjectGoal`](/docs/api/schemas#projectgoal) | no |  |
 | `height` | `integer` | no |  |
 | `items` | array of [`ProjectItem`](/docs/api/schemas#projectitem) | no |  |
 | `name` | `string` | no |  |
@@ -2238,6 +2244,17 @@ The types named in the tables of the operations. The arguments of each editing c
 | `timeline_id` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
 | `width` | `integer` | no |  |
+
+### ProjectGoal
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `achievable` | `string` | no |  |
+| `due` | `string` | no |  |
+| `measurable` | `string` | no |  |
+| `relevant` | `string` | no |  |
+| `specific` | `string` | no |  |
+| `time_bound` | `string` | no |  |
 
 ### ProjectItem
 
@@ -2315,6 +2332,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `assets` | `integer` | no |  |
+| `complete` | `boolean` | no |  |
 | `duration` | [`TimeValue`](/docs/api/schemas#timevalue) | no |  |
 | `fps` | `string` | no |  |
 | `height` | `integer` | no |  |
@@ -2329,6 +2347,19 @@ The types named in the tables of the operations. The arguments of each editing c
 | `tracks` | `integer` | no |  |
 | `updated_at` | `string (date-time)` | no |  |
 | `width` | `integer` | no |  |
+
+### ProjectUpdateResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `complete` | `boolean` | no |  |
+| `description` | `string` | no |  |
+| `goal` | [`ProjectGoal`](/docs/api/schemas#projectgoal) | no |  |
+| `name` | `string` | no |  |
+| `project_id` | `string` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+| `updated` | `boolean` | no |  |
 
 ### PromptGetResult
 

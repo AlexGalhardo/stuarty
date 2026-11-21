@@ -13,7 +13,7 @@ func TestTemplateToolSavesListsAndInstantiates(t *testing.T) {
 	t.Parallel()
 
 	cs := connect(t, newService(t), Options{}, "claude-code")
-	project, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{"name": "Base"})))["project_id"].(string)
+	project := createProject(t, cs, "Base")
 
 	saved := structured(t, ok(t, call(t, cs, "template", map[string]any{
 		"action": "save", "project_id": project, "name": "Spring sale",
@@ -74,7 +74,7 @@ func TestTemplateToolExportsAndImports(t *testing.T) {
 	t.Parallel()
 
 	cs := connect(t, testenv.New(t, testenv.Options{}).Service, Options{}, "claude-code")
-	project, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{"name": "Base"})))["project_id"].(string)
+	project := createProject(t, cs, "Base")
 
 	saved := structured(t, ok(t, call(t, cs, "template", map[string]any{
 		"action": "save", "project_id": project, "name": "Round trip",

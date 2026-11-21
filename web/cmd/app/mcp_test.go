@@ -15,6 +15,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/internal/outbound"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
@@ -45,7 +46,7 @@ func TestStdioOwnerIsReachedByTheCLIAndOpen(t *testing.T) {
 
 	created, err := cs.CallTool(
 		t.Context(),
-		&sdk.CallToolParams{Name: "project_create", Arguments: map[string]any{"name": "Agent project"}},
+		&sdk.CallToolParams{Name: "project_create", Arguments: testproject.Args("Agent project")},
 	)
 	if err != nil || created.IsError {
 		t.Fatalf("project_create: %v %+v", err, created)

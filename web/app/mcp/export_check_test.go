@@ -12,7 +12,7 @@ func TestLintWithAPresetChecksTheRange(t *testing.T) {
 	t.Parallel()
 
 	cs := connect(t, newService(t), Options{}, "claude-code")
-	id, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{"name": "Long"})))["project_id"].(string)
+	id := createProject(t, cs, "Long")
 
 	ok(t, call(t, cs, "edit", map[string]any{"project_id": id, "base_revision": 0, "operations": []any{
 		map[string]any{"op": "track.add", "args": map[string]any{"kind": "visual", "id": "trk_0000000099"}},

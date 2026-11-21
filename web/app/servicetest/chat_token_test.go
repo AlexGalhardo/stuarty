@@ -8,6 +8,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/agenthost"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 	"github.com/AlexGalhardo/stuarty/web/app/auth"
 )
 
@@ -108,7 +109,7 @@ func TestScopedTokenAnotherProjectIsRefused(t *testing.T) {
 			return err
 		},
 		"ProjectCreate": func() error {
-			_, err := e.svc.ProjectCreate(agentCall, service.ProjectCreateRequest{Name: "x"})
+			_, err := testproject.CreateWithTimeline(agentCall, e.svc, "x")
 			return err
 		},
 	}

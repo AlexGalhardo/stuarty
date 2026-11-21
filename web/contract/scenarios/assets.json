@@ -3,8 +3,10 @@
 	"actor": "contract",
 	"fixtures": {"clip": "a reaction clip, only bytes the fake ingest accepts"},
 	"steps": [
-		{"call": "ProjectCreate", "args": {"id": "prj_7k2m9x4q1b", "name": "Teaser"}},
-		{"call": "ProjectCreate", "args": {"id": "prj_8m3q6w9e2r", "name": "Trailer"}},
+		{"call": "ProjectCreate", "args": {"id": "prj_7k2m9x4q1b", "name": "Teaser", "description": "A short vertical video made for tests: it has a script, some footage and captions, and it is made for the people who follow the channel.", "goal": {"specific": "Publish one short video that explains the idea", "measurable": "At least one hundred views in the first week", "achievable": "The footage and the script already exist", "relevant": "It brings the first audience to the channel", "time_bound": "Edit on Monday and publish on Tuesday", "due": "2999-12-31"}}},
+		{"call": "ProjectItemAdd", "args": {"project_id": "prj_7k2m9x4q1b", "kind": "timeline", "title": "Teaser"}},
+		{"call": "ProjectCreate", "args": {"id": "prj_8m3q6w9e2r", "name": "Trailer", "description": "A short vertical video made for tests: it has a script, some footage and captions, and it is made for the people who follow the channel.", "goal": {"specific": "Publish one short video that explains the idea", "measurable": "At least one hundred views in the first week", "achievable": "The footage and the script already exist", "relevant": "It brings the first audience to the channel", "time_bound": "Edit on Monday and publish on Tuesday", "due": "2999-12-31"}}},
+		{"call": "ProjectItemAdd", "args": {"project_id": "prj_8m3q6w9e2r", "kind": "timeline", "title": "Trailer"}},
 		{"call": "MediaImport", "args": {"project_id": "prj_7k2m9x4q1b", "files": [{"path": "$clip", "asset_id": "ast_3c5v8n2w6d"}], "wait_ms": 20000,
 			"origin": {"kind": "fetched_by_agent", "source": "https://example.test/reaction"}}, "expect_error": {"code": "E_VALIDATION"}},
 		{"call": "MediaImport", "args": {"project_id": "prj_7k2m9x4q1b", "files": [{"path": "$clip", "asset_id": "ast_3c5v8n2w6d"}], "wait_ms": 20000,

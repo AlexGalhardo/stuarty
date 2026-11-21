@@ -3,7 +3,11 @@
 	"scenario": "conflict",
 	"steps": [
 		{
-			"cmd": "project:create --name \"Shared\" --id prj_7k2m9x4q1b",
+			"cmd": "project:create --name \"Shared\" --description \"A short vertical video for tests, with a script, footage and captions for the channel.\" --specific \"Publish one video now\" --measurable \"100 views in a week\" --achievable \"The footage exists\" --relevant \"Grows the channel\" --time-bound \"Done by next Tuesday\" --due 2999-12-31 --id prj_7k2m9x4q1b",
+			"hidden": true
+		},
+		{
+			"cmd": "item:add --project prj_7k2m9x4q1b --kind timeline --title \"Shared\"",
 			"hidden": true
 		},
 		{

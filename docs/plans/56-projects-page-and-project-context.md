@@ -36,7 +36,7 @@ Everything a creator makes in Stuarty lives inside a project they create with a 
 
 - [x] 1. SDD-000, SDD-005 and SDD-012 first: the fields, the rules, `ProjectUpdate`, the deprecated preset arguments. Verify: `task lint:md` exits 0.
 - [x] 2. The core fields and rules with `vukem/z`, the migration, the JSON Schema export. Verify: `go test ./core/project/... ./service/...` passes, with tests for every boundary (3/4/32/33 characters, accents, two spaces, 63/64/1024/1025, 15/16/280/281, a past due date).
-- [ ] 3. `ProjectCreate` and `ProjectUpdate` on HTTP, MCP and CLI with parity tests; no timeline at creation. Verify: `go test ./web/...` passes and `go run ./internal/tools/surfacebudget` exits 0.
+- [x] 3. `ProjectCreate` and `ProjectUpdate` on HTTP, MCP and CLI with parity tests; no timeline at creation. Verify: `go test ./web/...` passes and `go run ./internal/tools/surfacebudget` exits 0.
 - [ ] 4. The agent context: chat and `ProjectDescribe`/`project_get`, and the agent docs. Verify: a service test that the chat context of a project holds its description and goal inside the user-data envelope.
 - [ ] 5. `zod` (exact stable version) in `web/`, the schema generated from the core, the projects page and the edit form with tooltips and placeholders, the "Complete the project" notice. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n`, Vitest and a Playwright spec (button disabled until valid, each error under its field, create, edit an old project).
 - [ ] 6. The user docs of projects and the en and pt-BR strings. Verify: `task lint` exits 0.

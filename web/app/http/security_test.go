@@ -144,7 +144,7 @@ func TestLaunchFlowGivesACookieSession(t *testing.T) {
 
 	if got := local(
 		map[string]string{"Origin": "http://localhost:" + h.port},
-		`{"name":"c"}`,
+		projectJSON("Cookie project"),
 	); got != http.StatusCreated {
 		t.Errorf("cookie POST with Origin and JSON = %d, want 201", got)
 	}
