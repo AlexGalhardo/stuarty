@@ -390,12 +390,12 @@ func (a *adapter) handle(d *definition, call callFunc) sdk.ToolHandler {
 
 		args, err := parseArguments(d, req.Params.Arguments)
 		if err != nil {
-			return errorResult(err), nil
+			return errorResult(withoutCallerKeys(err, req.Params.Arguments)), nil
 		}
 
 		out, err := call(service.WithCaller(ctx, caller), a.svc, args)
 		if err != nil {
-			return errorResult(err), nil
+			return errorResult(withoutCallerKeys(err, req.Params.Arguments)), nil
 		}
 
 		return successResult(out, bulk)
