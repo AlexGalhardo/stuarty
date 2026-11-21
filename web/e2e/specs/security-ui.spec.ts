@@ -49,6 +49,26 @@ function hostileAsset(): string {
 	return out;
 }
 
+// The rule of a project name keeps this text out of a project made with the form (SDD-005 section 5.12.2), but a
+// project made from a template, or before the rule, still holds it: the list is checked with one of those.
+async function hostileNamedProject(
+	call: Awaited<ReturnType<typeof caller>>,
+): Promise<string> {
+	const source = (await makeProject(call, "Template source")) as {
+		project_id: string;
+	};
+	const saved = (await call("POST", "/templates", {
+		project_id: source.project_id,
+		name: `Hostile ${Date.now()}`,
+	})) as { template: { template_id: string } };
+	const made = (await call(
+		"POST",
+		`/templates/${saved.template.template_id}/instantiate`,
+		{ name: PAYLOAD },
+	)) as { project_id: string };
+	return made.project_id;
+}
+
 test.describe("security-ui", () => {
 	test("hostile names and texts render as text in every view", async ({
 		page,
@@ -139,6 +159,7 @@ test.describe("security-ui", () => {
 			expect(await page.locator("body img[src='x']").count(), view).toBe(0);
 		};
 
+		await hostileNamedProject(call);
 		await page.goto("/projects");
 		await expect(page.getByText(PAYLOAD).first()).toBeVisible();
 		await clean("projects page");
@@ -275,10 +296,8 @@ test.describe("security-ui", () => {
 		await page.getByLabel("Name of colour 1").fill(PAYLOAD);
 		await clean("brand kit page");
 
-		const trashed = (await makeProject(call, PAYLOAD)) as {
-			project_id: string;
-		};
-		await call("POST", `/projects/${trashed.project_id}/trash`, {});
+		const trashed = await hostileNamedProject(call);
+		await call("POST", `/projects/${trashed}/trash`, {});
 		await page.goto("/projects");
 		await expect(page.getByText(PAYLOAD).first()).toBeVisible();
 		await clean("projects page: list, trash and templates");
