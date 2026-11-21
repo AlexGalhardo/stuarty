@@ -7,6 +7,82 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.44.0] - 2026-11-21
+
+### Added
+
+- **ui:** Set the dashboard text one and a half times larger, outside the editors ([0258cbc](https://github.com/AlexGalhardo/stuarty/commit/0258cbcb82d135681c6fbc4d9e4fd1b205a2130e))
+- **site:** Add real product screenshots for the landing pages ([50cc553](https://github.com/AlexGalhardo/stuarty/commit/50cc553a3c5eabc6b0ff0d1d0c6d1e76cfdb1640))
+- **site:** Add the brand tokens of the refreshed identity ([4e98494](https://github.com/AlexGalhardo/stuarty/commit/4e9849401f94659d7eff67660ff39b11d3e79fd3))
+- **site:** Add a translucent landing variant of the documentation header ([33b73b9](https://github.com/AlexGalhardo/stuarty/commit/33b73b9c641bba01029fc1978e62e14fca12ebd5))
+- **site:** Add the shared 3D stage, motion and components of the landing pages ([84a45be](https://github.com/AlexGalhardo/stuarty/commit/84a45be737c737c049c55839eee03de6cfe1b4c8))
+- **site:** Add the classic long-scroll landing candidate ([ad00a4c](https://github.com/AlexGalhardo/stuarty/commit/ad00a4ceec174e8cf07181a0136e21a498bef1c3))
+- **site:** Add the six-takes viewport landing candidate ([5003ab5](https://github.com/AlexGalhardo/stuarty/commit/5003ab553184c071559d3501bbb22a88354093e5))
+- **site:** Add the timeline creative landing candidate ([55333f6](https://github.com/AlexGalhardo/stuarty/commit/55333f6d7f806c9f6acb822f8a34a62853aa41f5))
+- **ui:** Apply the brand tokens to the product ([eb96bb7](https://github.com/AlexGalhardo/stuarty/commit/eb96bb7c1b48a514cacc2fc7ccf5adb45cf53239))
+- **site:** Align the landing content with the navbar container ([5eddc11](https://github.com/AlexGalhardo/stuarty/commit/5eddc11c8516b22188839cfe4b5602abbb711fa9))
+- **site:** Make the viewport landing container 20% narrower ([d91fd4e](https://github.com/AlexGalhardo/stuarty/commit/d91fd4eb3d74e05c115528a17400a171cbd063da))
+- **site:** Read the latest release at build time for the download buttons ([2ded0ba](https://github.com/AlexGalhardo/stuarty/commit/2ded0ba5e987e97e22f17a43086b080a62ea5c59))
+- **site:** Put Getting Started and the three downloads in the landing hero and footer ([a424370](https://github.com/AlexGalhardo/stuarty/commit/a42437029bac8427e10dc2e48f143bca091c9e57))
+- **site:** Use the official title on the three landing versions ([c2291d7](https://github.com/AlexGalhardo/stuarty/commit/c2291d74bdbf532b5b9a5035a5cdcff3c653763d))
+- **site:** Retake the landing screenshots with the new logo lockup ([b91f485](https://github.com/AlexGalhardo/stuarty/commit/b91f48527b71e29205cc98bc0dfe1fb14faae7bf))
+- **site:** Show BETA Release with the version on the download buttons ([f2d571a](https://github.com/AlexGalhardo/stuarty/commit/f2d571ae96bef79e634bc9bd84a6613964870065))
+- **site:** Rework the viewport landing after the author's review ([778c058](https://github.com/AlexGalhardo/stuarty/commit/778c058993bb73ffd5f71f693aa552c73bf30580))
+- **site:** Narrow the container of the whole site by 20% ([342a66a](https://github.com/AlexGalhardo/stuarty/commit/342a66a68ab62faad221a295e7c246e55541c92f))
+- **site:** Show Claude Code driving Stuarty in the four agent tabs ([1213261](https://github.com/AlexGalhardo/stuarty/commit/12132611aa6642226592ccd8e123da1ed579ede8))
+- **site:** Give the four landing actions a travelling border light and depth ([571a2e6](https://github.com/AlexGalhardo/stuarty/commit/571a2e666ff28b2989c63863d6e132b492607984))
+- **site:** Make the viewport landing the home page ([a02e0b6](https://github.com/AlexGalhardo/stuarty/commit/a02e0b6fec11c36e6994e3594419c7ceb5ac25e7))
+- **site:** Keep the backup landings out of search engines ([2bf46f1](https://github.com/AlexGalhardo/stuarty/commit/2bf46f1bb9d7a252749a45d51a5a207d02a29c7a))
+- **site:** Set the home title the author chose and size it to its column ([6c6cee0](https://github.com/AlexGalhardo/stuarty/commit/6c6cee08e2ae0e96f872c0b086aec47133671bba))
+- **site:** Capture every main screen of the dashboard for the home timeline ([033b8de](https://github.com/AlexGalhardo/stuarty/commit/033b8de77827d7c5b0575bc8302e135bfe3f4a5e))
+- **site:** Rename three trust points of the landing ([e5db296](https://github.com/AlexGalhardo/stuarty/commit/e5db29646ff3dfa6c1c0ea2b21fc1daefb934e6a))
+- **site:** Go from the timeline straight to the agents section ([df05474](https://github.com/AlexGalhardo/stuarty/commit/df05474859adb855d7ddfb78ffda33cf03dadf14))
+- **site:** Remove the take labels from the home ([a262cb1](https://github.com/AlexGalhardo/stuarty/commit/a262cb1f544370711d2a4297e4e5bcdbdc9803e4))
+- **site:** Tell the real Stuarty flow on the home timeline ([03328e5](https://github.com/AlexGalhardo/stuarty/commit/03328e584a32fac71ab6cb83fe7849619951ca43))
+- **site:** Give the home screenshots almost square corners ([8bb1ee5](https://github.com/AlexGalhardo/stuarty/commit/8bb1ee5b39adff93adee864b7b63839fc21a3b9b))
+- **site:** Make the scroll hint of the home stand out ([f79c764](https://github.com/AlexGalhardo/stuarty/commit/f79c7642059fc6c6cba1fa9e2057b778be5976cc))
+- **site:** Give the macOS download button a hot pink colour ([5f34df0](https://github.com/AlexGalhardo/stuarty/commit/5f34df0d27d414f9c53670f4c055b7581936156d))
+- **site:** Add a book mark and a subtitle to Getting Started ([e5e6f18](https://github.com/AlexGalhardo/stuarty/commit/e5e6f18f0ae80149b115ae577c455c63298b29d3))
+- **site:** Widen the documentation content column ([670de09](https://github.com/AlexGalhardo/stuarty/commit/670de09cdfb2d70a6df84a587f560c797e0ce841))
+- **site:** Close the home with the author's five lines ([335ff66](https://github.com/AlexGalhardo/stuarty/commit/335ff66869cd89605ccbbc3acb25cf670d0587a6))
+- **site:** Capture every screen of the home at 16:10 in both themes ([5461e68](https://github.com/AlexGalhardo/stuarty/commit/5461e68de4ea9b8dab0c74bc849c50e1d30c99f3))
+- **site:** Give each screen of the home timeline its features and its own transition ([fee0d1e](https://github.com/AlexGalhardo/stuarty/commit/fee0d1e5cfe492dd1fad630fc15b793f9af3e6f0))
+- **site:** Bring the hero closer to the navbar ([53359af](https://github.com/AlexGalhardo/stuarty/commit/53359af1fcebd85f9b13c3a69b33287a56c820d0))
+- **site:** Lay the agents section out in two columns ([ad57672](https://github.com/AlexGalhardo/stuarty/commit/ad57672f21f0b707881cf6bee6f55356ff063a51))
+- **site:** Set the closing lines of the home in three larger lines ([2e4c177](https://github.com/AlexGalhardo/stuarty/commit/2e4c1778fd0e361bc50550bbc945a77228227474))
+- **site:** Set the documentation text a size smaller ([e147250](https://github.com/AlexGalhardo/stuarty/commit/e1472507559c7a0a8ee402c7b8bdf892f9ff981c))
+
+### Fixed
+
+- **web:** Show names, not internal ids, in the pickers, the cost lines and the approval summary ([3692c83](https://github.com/AlexGalhardo/stuarty/commit/3692c839adcb3e9dd8276dcc7fbb18cd6c6ebd15))
+- **web:** Mark the kids question the core says is missing, focus it and bring the error into view ([f1f64d7](https://github.com/AlexGalhardo/stuarty/commit/f1f64d7d0442fa0dc7e6ea9a0d93908f3b11a83c))
+- **web:** Memory scope is a choice and the brand colour name says its rule before saving ([f3cd3d5](https://github.com/AlexGalhardo/stuarty/commit/f3cd3d5fa8b062b25ec65f7977d64bdede70abbb))
+- **service:** A failed sign-in keeps a connection that another sign-in waits for or finished ([8c83629](https://github.com/AlexGalhardo/stuarty/commit/8c8362994acabd0b84d9289331c05c16967bccb6))
+- **web:** Disable turning a rule off and removing it in a session that is not a person ([357e45e](https://github.com/AlexGalhardo/stuarty/commit/357e45ead886c18b75cda871630b0871e60dcf3b))
+- **web:** The person-only note says where to do any of its actions, not only to approve ([38c83b4](https://github.com/AlexGalhardo/stuarty/commit/38c83b47c6ab714c391745a9045e39a95ab6b66d))
+- **http:** Refuse a member of a JSON body that the route does not have ([15acb8e](https://github.com/AlexGalhardo/stuarty/commit/15acb8e6c6e19f05076cb564b6a546816a43fb73))
+- **service:** Answer a dry run of a job kind without a job id ([4576424](https://github.com/AlexGalhardo/stuarty/commit/4576424f1f7d835a5eb95bf43aa5809d53c1e188))
+- **mcp:** Say in job_start that every field of a kind goes inside args ([6575b0e](https://github.com/AlexGalhardo/stuarty/commit/6575b0eea9730e4aada9ee181c8dc7e5d6e12611))
+- **service:** Refuse an approval rule for a kind no action has ([3b9c273](https://github.com/AlexGalhardo/stuarty/commit/3b9c27385f3c23093a1a9d26f9253f139df1ac29))
+- **service:** Name the path and not the kind in the refusal of an unknown rule kind ([2784e1c](https://github.com/AlexGalhardo/stuarty/commit/2784e1ce0bb14efc79bdfd81249c29417f1c8fff))
+- **ui:** Give the rule form an example kind that an action has ([2e89d47](https://github.com/AlexGalhardo/stuarty/commit/2e89d4769374974529801a5bd8f41408faccd788))
+- **remote:** Send a text write only the members of the route it takes ([202fbf0](https://github.com/AlexGalhardo/stuarty/commit/202fbf044e184b3c04c65aed1d14e7868f4eb58d))
+- **ui:** Keep the default text size on phone widths so the dashboard reflows at 320 px ([9008a6f](https://github.com/AlexGalhardo/stuarty/commit/9008a6f5548e7b307a25604f06f4a96a66a2d9a8))
+- **release:** Go on with the cut when gh merged the release but exited with an error ([4c84505](https://github.com/AlexGalhardo/stuarty/commit/4c8450577214bd5cd8c0bd19362760d2d247bd73))
+- **repo:** Serve the feed of the newest release that has one, not of the newest release ([4add0de](https://github.com/AlexGalhardo/stuarty/commit/4add0de1c1f7ba2a87ac61aeadaa82c090b1c842))
+- **site:** Move the focus to each take heading and keep the mascot off the text ([48d0470](https://github.com/AlexGalhardo/stuarty/commit/48d047085b04ba57423e9c94c91557d949843e53))
+- **site:** Hide the still mascot after the hero under reduced motion ([71be452](https://github.com/AlexGalhardo/stuarty/commit/71be45264dfd9350e435e2c375758ffc2d83142f))
+- **site:** Keep the fallback still mascot to the first screen ([358cc9e](https://github.com/AlexGalhardo/stuarty/commit/358cc9e5ea97bee43d7203a07352bf187da2dcb2))
+- **site:** Fit the last take of the viewport version in one screen ([2d94d00](https://github.com/AlexGalhardo/stuarty/commit/2d94d0041bcec92f00ea1af50829cb8d6c1bf850))
+- **site:** Retake the video editor screenshots without the onboarding tour ([b1894f1](https://github.com/AlexGalhardo/stuarty/commit/b1894f19a069fc509740661dc33f9d1cb86a2c67))
+- **site:** Type every agents terminal line by line and show the MCP tab ([27bf84d](https://github.com/AlexGalhardo/stuarty/commit/27bf84d6856d138aa685a287433a7ae7ce429428))
+- **site:** Give the home and the docs the same container width ([7a08cf8](https://github.com/AlexGalhardo/stuarty/commit/7a08cf8fd8be2b2b69627d1a253feb56629651bc))
+- **site:** Remove the blank export screen at the end of the home timeline ([ace34dc](https://github.com/AlexGalhardo/stuarty/commit/ace34dc8e2e19b3d5aad75ce2aa38efdce905a92))
+- **site:** Make the home navbar identical to the docs navbar ([327904e](https://github.com/AlexGalhardo/stuarty/commit/327904edc9b0d402b51ebc16fdeab15ff106befd))
+- **site:** Keep the scroll hint clear of the hero buttons on short windows ([2d8c00e](https://github.com/AlexGalhardo/stuarty/commit/2d8c00e370f13a4c9f2f3a991c628e7bbed51d7d))
+- **site:** Stop the fade and the copy button from covering reference samples ([7d8635b](https://github.com/AlexGalhardo/stuarty/commit/7d8635b13d375333536b201ca2e300c7a40af869))
+- **site:** Declare the redirectTo prop of the base layout again ([2a60c28](https://github.com/AlexGalhardo/stuarty/commit/2a60c28fa13df4fed2cfe389c77356c66055eb0f))
+
 ## [0.43.0] - 2026-11-21
 
 ### Added
@@ -2018,7 +2094,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.43.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.44.0...HEAD
+[0.44.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.43.0...v0.44.0
 [0.43.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.42.0...v0.43.0
 [0.42.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.41.0...v0.42.0
 [0.41.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.40.0...v0.41.0
