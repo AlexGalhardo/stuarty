@@ -33,6 +33,7 @@ const APIVersion = 3
 // exports are the functions the module must export, and the only ones (SDD-013 section 4.2).
 var exports = []string{
 	"vr_api_version", "vr_alloc", "vr_free", "vr_init", "vr_put_texture", "vr_put_bitmap", "vr_put_lut", "vr_release",
+	"vr_prepare", "vr_prepared_ptr", "vr_prepared_len", "vr_prepared_clear", "vr_put_prepared",
 	"vr_render", "vr_error",
 	"vr_text_font_put", "vr_text_run", "vr_text_validate_font", "vr_text_result_ptr", "vr_text_result_len",
 	"vr_text_result_clear",

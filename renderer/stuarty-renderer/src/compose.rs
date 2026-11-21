@@ -44,6 +44,18 @@ pub enum Source<'a> {
 		center_dx: f64,
 		center_dy: f64,
 	},
+	/// A layer already prepared (SDD-013 section 4.2.2): its pixels hold every look, so only the mask, the
+	/// wipe, the opacity and the blend mode are applied when it is drawn. `grown_w` and `grown_h` are the size of
+	/// the rectangle that draws them, `off_x` and `off_y` the offset of the centre a bitmap's metrics give, and
+	/// `scale` the output scale it was prepared at.
+	Prepared {
+		image: &'a Image,
+		grown_w: f64,
+		grown_h: f64,
+		off_x: f64,
+		off_y: f64,
+		scale: f64,
+	},
 }
 
 /// One layer of the frame plan, in project pixels, with its pixels.
@@ -326,12 +338,18 @@ pub struct Prepared<'a> {
 
 /// Steps 1 to 5 of SDD-013 section 3.3 for one layer; `None` when the layer draws nothing.
 pub fn prepare_layer<'a>(l: &Layer<'a>, out_scale: f64) -> Option<Prepared<'a>> {
+	prepare_layer_offset(l, out_scale).map(|(p, _, _)| p)
+}
+
+/// [`prepare_layer`] and the offset of the centre that a bitmap's metrics gave the placement (0 and 0 for a
+/// media layer), which a prepared layer keeps to be placed again (SDD-013 section 4.2.2).
+pub fn prepare_layer_offset<'a>(l: &Layer<'a>, out_scale: f64) -> Option<(Prepared<'a>, f64, f64)> {
 	let op = layer_opacity(l.opacity);
 	if op == 0 {
 		return None;
 	}
 
-	let (image, p, is_bitmap) = match l.source {
+	let (image, p, is_bitmap, off) = match l.source {
 		Source::Media(img) => {
 			let p = Placement {
 				cx: l.cx * out_scale,
@@ -340,7 +358,45 @@ pub fn prepare_layer<'a>(l: &Layer<'a>, out_scale: f64) -> Option<Prepared<'a>> 
 				h: l.h * out_scale,
 				rot: l.rotation,
 			};
-			(img, p, false)
+			(img, p, false, (0.0, 0.0))
+		}
+		Source::Prepared {
+			image,
+			grown_w,
+			grown_h,
+			off_x,
+			off_y,
+			..
+		} => {
+			let p = Placement {
+				cx: (l.cx - off_x) * out_scale,
+				cy: (l.cy - off_y) * out_scale,
+				w: l.w * out_scale,
+				h: l.h * out_scale,
+				rot: l.rotation,
+			};
+			if !(p.w > 0.0 && p.h > 0.0) {
+				return None;
+			}
+			let wipe = l.transition.filter(|t| t.kind == TransitionKind::Wipe);
+			let mask = (l.mask.is_some() || wipe.is_some())
+				.then(|| MaskState::new(l.mask.as_ref(), wipe.as_ref(), &p, out_scale));
+			let placement = Placement {
+				w: grown_w,
+				h: grown_h,
+				..p
+			};
+			return Some((
+				Prepared {
+					image: Cow::Borrowed(image),
+					placement,
+					op,
+					blend: l.blend,
+					mask,
+				},
+				off_x,
+				off_y,
+			));
 		}
 		Source::Bitmap {
 			image,
@@ -355,14 +411,15 @@ pub fn prepare_layer<'a>(l: &Layer<'a>, out_scale: f64) -> Option<Prepared<'a>> 
 			} else {
 				1.0
 			};
+			let off = (mul(center_dx, sc), mul(center_dy, sc));
 			let p = Placement {
-				cx: (l.cx - mul(center_dx, sc)) * out_scale,
-				cy: (l.cy - mul(center_dy, sc)) * out_scale,
+				cx: (l.cx - off.0) * out_scale,
+				cy: (l.cy - off.1) * out_scale,
 				w: l.w * out_scale,
 				h: l.h * out_scale,
 				rot: l.rotation,
 			};
-			(image, p, true)
+			(image, p, true, off)
 		}
 	};
 
@@ -445,13 +502,17 @@ pub fn prepare_layer<'a>(l: &Layer<'a>, out_scale: f64) -> Option<Prepared<'a>> 
 		src = Cow::Owned(img);
 		p = grown;
 	}
-	Some(Prepared {
-		image: src,
-		placement: p,
-		op,
-		blend: l.blend,
-		mask,
-	})
+	Some((
+		Prepared {
+			image: src,
+			placement: p,
+			op,
+			blend: l.blend,
+			mask,
+		},
+		off.0,
+		off.1,
+	))
 }
 
 /// `src` mirrored across its vertical axis, its horizontal axis or both: an exact permutation of
