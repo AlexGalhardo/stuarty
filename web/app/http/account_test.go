@@ -391,11 +391,11 @@ func TestAccountRoutesAreNotInNetworkMode(t *testing.T) {
 	}
 }
 
-// TestSecurity_T110_OnlyThePasswordMakesAPerson: a session from a launch code (`stuarty open`, a launch that
+// TestSecurity_T117_OnlyThePasswordMakesAPerson: a session from a launch code (`stuarty open`, a launch that
 // proves the launcher secret, the desktop shell), the local token and an agent are never a person, and the
 // operations of a person answer E_PRIVILEGED_SESSION to them; the session of the password is one
 // (SDD-007 section 3.9 item 5).
-func TestSecurity_T110_OnlyThePasswordMakesAPerson(t *testing.T) {
+func TestSecurity_T117_OnlyThePasswordMakesAPerson(t *testing.T) {
 	t.Parallel()
 
 	a := newAccountHarness(t)
