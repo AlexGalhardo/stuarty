@@ -13,7 +13,7 @@ import Shot from "../components/landing/Shot.astro";
 import SplitTitle from "../components/landing/SplitTitle.astro";
 import StageCanvas from "../components/landing/StageCanvas.astro";
 import TimelineEditor from "../components/landing/TimelineEditor.astro";
-import { credits, hero, shots, trust } from "@/lib/landing-pages";
+import { credits, hero, homeTimeline, shots, trust } from "@/lib/landing-pages";
 import { withBase } from "@/lib/site";
 
 ---
@@ -40,16 +40,16 @@ import { withBase } from "@/lib/site";
 		<!-- Take 1: one place -->
 		<section id="studio" class="take" aria-labelledby="studio-title" data-take>
 			<div class="site-container">
-				<div class="grid items-center gap-10 lg:grid-cols-12">
-					<div class="lg:col-span-6">
+				<div class="grid items-center gap-10 lg:grid-cols-5">
+					<div class="lg:col-span-2">
 						<p class="eyebrow" data-hero-item>{hero.eyebrow}</p>
 						<SplitTitle text={hero.homeTitle} id="studio-title" tabindex="-1" class="display-home mt-5 text-fg" />
 						<p class="lead mt-6 max-w-xl" data-hero-item>{hero.lead}</p>
 					</div>
-					<div class="lg:col-span-6" data-hero-frame>
+					<div class="lg:col-span-3" data-hero-frame>
 						<figure class="showcase theme-swap m-0" aria-label="The Stuarty home, in the light and the dark theme">
-							<Shot shot={shots.dashboardLight} eager sizes="(min-width: 64rem) 34rem, 100vw" class="shot-light" />
-							<Shot shot={shots.dashboard} sizes="(min-width: 64rem) 34rem, 100vw" class="shot-dark" />
+							<Shot shot={shots.dashboardLight} eager sizes="(min-width: 64rem) 52rem, 100vw" class="shot-light" />
+							<Shot shot={shots.dashboard} sizes="(min-width: 64rem) 52rem, 100vw" class="shot-dark" />
 						</figure>
 					</div>
 				</div>
@@ -61,8 +61,8 @@ import { withBase } from "@/lib/site";
 
 		<!-- Take 2: the timeline (the scroll, the wheel or the arrows move the playhead) -->
 		<section id="timeline" class="take take-timeline" aria-labelledby="timeline-title" data-take data-editor>
-			<h2 id="timeline-title" tabindex="-1" class="site-container eyebrow pt-5">The studio, clip by clip</h2>
-			<TimelineEditor headingLevel="h3" />
+			<h2 id="timeline-title" tabindex="-1" class="sr-only">The studio, clip by clip</h2>
+			<TimelineEditor headingLevel="h3" clips={homeTimeline} log={null} labels={false} captionClip="edit" trimClip="edit" />
 		</section>
 
 		<!-- Take 3: agents drive it too -->

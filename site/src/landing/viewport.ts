@@ -78,6 +78,8 @@ export function start(): void {
 		}
 	};
 	render?.(0);
+	// The run of the playhead is the first 88% of the progress (the export takes the rest).
+	const clipStep = 0.88 / Math.max(1, root.querySelectorAll("[data-clip]").length);
 
 	const splits = new Map<HTMLElement, gsap.core.Timeline>();
 	const show = (i: number, opts: { focus: boolean; instant?: boolean }): void => {
@@ -220,9 +222,9 @@ export function start(): void {
 		if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
 		if (t?.closest("input, textarea, select, [role='tablist'], [role='dialog'], [contenteditable='true']")) return;
 		const space = e.key === " " && !t?.closest("a, button");
-		// One clip of the timeline per key press (six clips).
-		if (e.key === "ArrowDown" || e.key === "PageDown" || (space && !e.shiftKey)) step(1, 1 / 6, true);
-		else if (e.key === "ArrowUp" || e.key === "PageUp" || (space && e.shiftKey)) step(-1, 1 / 6, true);
+		// One clip of the timeline per key press.
+		if (e.key === "ArrowDown" || e.key === "PageDown" || (space && !e.shiftKey)) step(1, clipStep, true);
+		else if (e.key === "ArrowUp" || e.key === "PageUp" || (space && e.shiftKey)) step(-1, clipStep, true);
 		else if (e.key === "Home") go(0, true);
 		else if (e.key === "End") go(takes.length - 1, true);
 		else return;

@@ -8,17 +8,25 @@ import Shot from "./Shot.astro";
 import { features, shots, type Shot as ShotData } from "@/lib/landing-pages";
 import { withBase } from "@/lib/site";
 
+type Clip = { id: string; tc?: string; label: string; title: string; text: string; shot?: ShotData; clip?: string };
+type LogEntry = { at: number; text: string };
+
 interface Props {
 	/** The heading level of each clip: h2 on a page, h3 inside a section that has its own h2. */
 	headingLevel?: "h2" | "h3";
+	/** The clips, in order; the default is the story of the creative version. */
+	clips?: Clip[];
+	/** The MCP log of the agent; null hides the panel. */
+	log?: LogEntry[] | null;
+	/** Shows the time code and the file name above each clip title. */
+	labels?: boolean;
+	/** The clip the agent captions and the clip it trims. */
+	captionClip?: string;
+	trimClip?: string;
 }
 
-const { headingLevel: H = "h2" } = Astro.props;
-
-type Clip = { id: string; tc: string; label: string; title: string; text: string; shot?: ShotData; clip?: string };
-
 const byId = Object.fromEntries(features.map((f) => [f.id, f]));
-const clips: Clip[] = [
+const creativeClips: Clip[] = [
 	{ id: "brief", tc: "00:00", label: "brief.md", title: "It starts with a brief.", text: "Answer a few questions; the answers become the brief of the production, and your agent reads them.", clip: "The guided briefing, 6 s" },
 	{ id: "script", tc: "00:10", label: "script.md", title: byId.create.title + ".", text: byId.create.text, shot: shots.writing },
 	{ id: "cut", tc: "00:20", label: "launch-teaser.mp4", title: byId.edit.title + ".", text: byId.edit.text, shot: shots.videoEditor },
@@ -26,8 +34,7 @@ const clips: Clip[] = [
 	{ id: "agent", tc: "00:40", label: "agent", title: "Your agent, on the same timeline.", text: "Connect the agent you already use. Its calls are the same commands you run, and every change is attributed and undoable.", shot: shots.agentChat },
 	{ id: "publish", tc: "00:50", label: "publish", title: byId.publish.title + ".", text: byId.publish.text, shot: shots.calendar },
 ];
-
-const log = [
+const creativeLog: LogEntry[] = [
 	{ at: 0.18, text: "project_get  prj_6jzec0m2nn  rev 4" },
 	{ at: 0.36, text: "edit  caption.add  rev 5" },
 	{ at: 0.52, text: "edit  item.trim  rev 6" },
@@ -35,15 +42,30 @@ const log = [
 	{ at: 0.8, text: "job_start  kind=export" },
 	{ at: 0.94, text: "job_get  succeeded  1080x1920" },
 ];
+
+const {
+	headingLevel: H = "h2",
+	clips = creativeClips,
+	log = creativeLog,
+	labels = true,
+	captionClip = "cut",
+	trimClip = "cut",
+} = Astro.props;
+const n = clips.length;
+const w = 100 / n;
+const captionIndex = Math.max(0, clips.findIndex((c) => c.id === captionClip));
+const trimIndex = Math.max(0, clips.findIndex((c) => c.id === trimClip));
+// About 430 px of lane per clip.
+const laneWidth = `${n * 430}px`;
 ---
 
 <div class="editor-frame" data-editor-pin>
-	<div class="editor-top site-container">
+	<div class:list={["editor-top site-container", log === null && "editor-top-solo"]}>
 		<div class="editor-preview" data-preview>
 			{clips.map((c, i) => (
 				<article class="preview-item" data-preview-item={i} aria-labelledby={`clip-${c.id}`}>
 					<div class="preview-text">
-						<p class="font-mono text-xs text-brand-text">{c.tc} &middot; {c.label}</p>
+						{labels ? <p class="font-mono text-xs text-brand-text">{c.tc} &middot; {c.label}</p> : null}
 						<H id={`clip-${c.id}`} class="display-title mt-3 text-fg">{c.title}</H>
 						<p class="lead mt-4">{c.text}</p>
 					</div>
@@ -57,16 +79,16 @@ const log = [
 				</article>
 			))}
 		</div>
-		<div class="editor-log" aria-hidden="true">
+		{log === null ? null : (<div class="editor-log" aria-hidden="true">
 			<p class="flex items-center gap-2 border-b border-white/10 px-3 py-2 font-sans text-[0.6875rem] font-medium tracking-wider text-white/70 uppercase">
 				<img src={withBase("/logo.png")} alt="" width="16" height="16" class="size-4" /> local:claude &middot; MCP
 			</p>
 			<ol class="px-3 py-2">
-				{log.map((l) => (
+				{(log ?? []).map((l) => (
 					<li data-log-at={l.at}><span class="text-white/40">&rsaquo;</span> {l.text}</li>
 				))}
 			</ol>
-		</div>
+		</div>)}
 	</div>
 
 	<div class="editor-bottom" aria-hidden="true">
@@ -78,16 +100,16 @@ const log = [
 		<div class="editor-lanes">
 			<div class="editor-playhead" data-playhead><span></span></div>
 			<div class="editor-lane-3d">
-				<div class="editor-lane" data-lane>
+				<div class="editor-lane" data-lane style={`width: ${laneWidth}`}>
 					<div class="ruler">
 						{Array.from({ length: 13 }, (_, i) => <span>{`00:${String(i * 5).padStart(2, "0")}`}</span>)}
 					</div>
 					<div class="track"><span class="track-name">Captions</span>
-						<span class="clip clip-caption" style="left: 33%; width: 12%" data-caption-clip>One studio for everything you make</span>
+						<span class="clip clip-caption" style={`left: ${captionIndex * w}%; width: ${w * 0.8}%`} data-caption-clip data-at={captionIndex / n}>One studio for everything you make</span>
 					</div>
 					<div class="track"><span class="track-name">Video</span>
 						{clips.map((c, i) => (
-							<span class="clip clip-video" style={`left: ${i * (100 / 6)}%; width: calc(${100 / 6}% - 6px)`} data-clip={i}>{c.label}</span>
+							<span class="clip clip-video" style={`left: ${i * w}%; width: calc(${w}% - 6px)`} data-clip={i} data-trim={i === trimIndex ? "" : undefined} data-at={i === trimIndex ? (i + 0.5) / n : undefined}>{c.label}</span>
 						))}
 					</div>
 					<div class="track track-audio"><span class="track-name">Music</span>
@@ -127,7 +149,7 @@ const log = [
 	}
 	@media (min-width: 48rem) {
 		.preview-item {
-grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
 		}
 	}
 	.editor-log,
@@ -149,6 +171,9 @@ grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
 		grid-template-columns: minmax(0, 1fr) 17rem;
 		gap: 1.5rem;
 		padding-block: 1.5rem 1rem;
+	}
+	html.timeline-on .editor-top-solo {
+		grid-template-columns: minmax(0, 1fr);
 	}
 	html.timeline-on .editor-preview {
 		position: relative;
@@ -231,7 +256,6 @@ transform 300ms var(--ease-out-expo);
 		position: absolute;
 		top: 0.5rem;
 		left: 30vw;
-		width: 2600px;
 		will-change: transform;
 	}
 	.ruler {

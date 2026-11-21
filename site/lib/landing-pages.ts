@@ -62,6 +62,60 @@ export const shots = {
 		width: 1600,
 		height: 780,
 	},
+	projects: {
+		src: "/landing/projects",
+		alt: "The Projects page: a form to create a project with its size (9:16, 1:1, 16:9 or 4:5) and the list of your projects.",
+		width: 1600,
+		height: 780,
+	},
+	projectBrief: {
+		src: "/landing/project-brief",
+		alt: "The guided briefing of a project: who the video is for, its goal, the platform, the format, the length and the tone.",
+		width: 1600,
+		height: 780,
+	},
+	visualAssets: {
+		src: "/landing/visual-assets",
+		alt: "Visual Assets: the images of the workspace with where each came from, filters by origin and tag.",
+		width: 1600,
+		height: 780,
+	},
+	videoAssets: {
+		src: "/landing/video-assets",
+		alt: "Video Assets: the footage, music and voice-overs of the workspace, ready to reuse in any project.",
+		width: 1600,
+		height: 780,
+	},
+	skills: {
+		src: "/landing/skills",
+		alt: "Skills: reviewed procedures an agent follows, such as captions for shorts, with their full text and lint.",
+		width: 1600,
+		height: 780,
+	},
+	prompts: {
+		src: "/landing/prompts",
+		alt: "Prompts: reusable texts with variables, such as five hook lines for a short video.",
+		width: 1600,
+		height: 780,
+	},
+	memory: {
+		src: "/landing/memory",
+		alt: "Memory: one fact per note that your agents read before they plan, kept only after a person approves it.",
+		width: 1600,
+		height: 780,
+	},
+	connections: {
+		src: "/landing/connections",
+		alt: "Connections: the AI providers and social accounts Stuarty may reach, each connected with your own key.",
+		width: 1600,
+		height: 780,
+	},
+	approvals: {
+		src: "/landing/approvals",
+		alt: "Approvals: what waits for your yes, the rules that approve without asking and the cost ceilings.",
+		width: 1600,
+		height: 780,
+	},
 } satisfies Record<string, Shot>;
 
 export const hero = {
@@ -254,3 +308,24 @@ export const takes = [
 	{ id: "agents", name: "Agents" },
 	{ id: "yours", name: "Yours" },
 ] as const;
+
+export type TimelineClip = { id: string; label: string; title: string; text: string; shot: Shot };
+
+/** The home timeline: the real flow of Stuarty, step by step, with every main screen of the dashboard. */
+export const homeTimeline: TimelineClip[] = [
+	{ id: "project", label: "new project", title: "Create a project.", text: "Name it and pick its size: vertical, square, landscape or portrait. A project holds everything of one production.", shot: shots.projects },
+	{ id: "brief", label: "brief.md", title: "Answer the brief.", text: "Who it is for, what it should achieve, where it goes, how long, in which tone. The answers become the brief your agent reads.", shot: shots.projectBrief },
+	{ id: "choose", label: "home", title: "Choose what to make.", text: "A video, an image or a text: every editor of the studio is one click away from the home.", shot: shots.dashboard },
+	{ id: "write", label: "script.md", title: "Write the script.", text: "Scripts, copy and blog posts with revisions you can go back to, and how long the script takes read aloud.", shot: shots.writing },
+	{ id: "media", label: "footage", title: "Bring in the footage.", text: "Video, music and voice-overs live in the workspace library, with where each came from, ready for any project.", shot: shots.videoAssets },
+	{ id: "edit", label: "launch-teaser.mp4", title: "Cut it and add captions.", text: "Trim, split, transitions, colour and keyframes, with captions timed to every word.", shot: shots.videoEditor },
+	{ id: "thumbnail", label: "thumbnail.png", title: "Make the thumbnail.", text: "Layers, text, masks and templates in the image editor, with the same undo and history.", shot: shots.imageEditor },
+	{ id: "images", label: "images", title: "Keep your images.", text: "Photos, logos and generated art stay in the library, tagged and reusable across projects.", shot: shots.visualAssets },
+	{ id: "agent", label: "agent", title: "Bring your agent.", text: "Claude Code, Codex, OpenCode or Gemini CLI, with your own sign-in, working on the same project as you.", shot: shots.agentChat },
+	{ id: "skills", label: "skills", title: "Teach it your way.", text: "Skills are procedures your agent follows, reviewed by you before any agent may use them.", shot: shots.skills },
+	{ id: "prompts", label: "prompts", title: "Reuse your prompts.", text: "Texts with variables you fill in when you use them, for you and for your agents.", shot: shots.prompts },
+	{ id: "memory", label: "memory", title: "Let it remember.", text: "One fact per note, read by your agents before they plan; a note an agent writes waits until you keep it.", shot: shots.memory },
+	{ id: "approve", label: "approvals", title: "Approve it.", text: "An agent can prepare a post or a paid generation. It waits here until you say yes.", shot: shots.approvals },
+	{ id: "publish", label: "publish", title: "Publish on the calendar.", text: "Plan each post for your own accounts and pick its time. Nothing goes out before your approval.", shot: shots.calendar },
+	{ id: "connect", label: "connections", title: "Connect your services.", text: "Your AI keys and your social accounts, through your own developer apps, stored in a local vault.", shot: shots.connections },
+];
