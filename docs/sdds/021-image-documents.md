@@ -183,7 +183,7 @@ The plan is the same on every machine: it holds numbers rounded to three decimal
 
 | Format | Encoder | Notes |
 | --- | --- | --- |
-| `png` | Go standard library `image/png`, `BestSpeed` (NFR-061) | Straight alpha; lossless; deterministic. The fastest level is specified: a 4,000 by 4,000 picture encodes in under a second where the best level took fourteen, at about a third more bytes |
+| `png` | `engine/export` `encodePNGParallel` (NFR-061, epic 55): rows filtered with Sub and deflated at the fastest level in pieces of 128 rows on every CPU, joined into one zlib stream | Straight alpha, RGB when nothing is transparent; lossless; deterministic, and the same bytes whatever the CPU count (the piece size is part of the format). A 4,000 by 4,000 picture encodes in about 40 ms where the standard encoder at its fastest level took half a second and at its best level fourteen seconds; the file is a little larger than the standard one, and any PNG decoder reads it |
 | `jpeg` | Go standard library `image/jpeg`, `quality` 1 to 100 (default 90) | Flattened on white; 4:2:0 |
 | `webp` | `FFmpegWebP` of `engine/export` (`service.Options.WebP`): FFmpeg with `libwebp`, a separate process (ADR-0003), through the builder `ffargs.WebPStill`; lossless (default) or `quality` 1 to 100 | Straight alpha kept; deterministic on one machine. The PNG of the picture goes to a run directory and the `.webp` comes back from it; a `.webp` past `STUARTY_MAX_EXPORT_BYTES` is refused with `size_limit` before it is read, and the run directory is removed on every path. A build with no `libwebp`, or no FFmpeg, fails with `E_EXPORT_FAILED`, `details.reason` `webp_unavailable`, and PNG and JPEG still work |
 
