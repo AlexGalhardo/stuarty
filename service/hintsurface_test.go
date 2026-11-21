@@ -49,3 +49,29 @@ func TestHintNamesTheCommandsOfTheSurface(t *testing.T) {
 		t.Errorf("text = %q", got)
 	}
 }
+
+// A hint that lists names the command, the route or the tool of the surface that answered, and never a Go
+// function (VV-310).
+func TestListHintsNameTheSurface(t *testing.T) {
+	t.Parallel()
+
+	const h = "list the jobs of the project with job_list, or the texts with text_list"
+
+	for s, want := range map[Surface]string{
+		SurfaceCLI:  "list the jobs of the project with job:list, or the texts with text:list",
+		SurfaceHTTP: "list the jobs of the project with GET /api/v1/projects/{id}/jobs, or the texts with GET /api/v1/texts",
+		SurfaceMCP:  "list the jobs of the project with job_get, or the texts with project_item with action text",
+	} {
+		if got := hintFor(s, h); got != want {
+			t.Errorf("surface %d: %q, want %q", s, got, want)
+		}
+	}
+
+	if got := CanonicalHint(hintFor(SurfaceHTTP, h)); got != h {
+		t.Errorf("CanonicalHint(HTTP) = %q, want %q", got, h)
+	}
+
+	if e := jobNotFound("job_x"); strings.Contains(e.Hint, "TextList") || e.Hint != "list the jobs of the project with job_list" {
+		t.Errorf("jobNotFound hint = %q", e.Hint)
+	}
+}

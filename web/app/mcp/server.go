@@ -495,7 +495,7 @@ func SanitizeLabel(name string) string {
 // asServiceError turns what a tool returned into the *service.Error it reports.
 func asServiceError(err error) *service.Error {
 	if se, ok := errors.AsType[*service.Error](err); ok {
-		return se
+		return se.ForSurface(service.SurfaceMCP)
 	}
 
 	if ce, ok := errors.AsType[*command.Error](err); ok {
