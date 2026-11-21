@@ -1,6 +1,7 @@
 package export
 
 import (
+	"cmp"
 	"context"
 	"crypto/sha256"
 	"encoding/json"
@@ -204,7 +205,17 @@ func (r *imageRun) prepareAll(layers []plan.Layer) ([]drawLayer, error) {
 		}()
 	}()
 
-	err := fanOut(r.ctx, workers, len(layers), func(i int) error {
+	// The costliest layers first, so that the last one a worker takes is a small one and not a photo with a
+	// sharpen that every other worker waits for.
+	order := make([]int, len(layers))
+	for i := range order {
+		order[i] = i
+	}
+
+	slices.SortStableFunc(order, func(a, b int) int { return cmp.Compare(prepareCost(&layers[b]), prepareCost(&layers[a])) })
+
+	err := fanOut(r.ctx, workers, len(layers), func(n int) error {
+		i := order[n]
 		w := <-pool
 		defer func() { pool <- w }()
 
@@ -226,6 +237,22 @@ func (r *imageRun) prepareAll(layers []plan.Layer) ([]drawLayer, error) {
 	}
 
 	return kept, nil
+}
+
+// / prepareCost is a measure of how long a layer takes to prepare, for ordering only: its pixels, once for the
+// picture and once for each look that walks them.
+func prepareCost(l *plan.Layer) int64 {
+	px := int64(math.Max(l.W, 1) * math.Max(l.H, 1))
+	if l.Kind == plan.Media {
+		px = max(px, int64(math.Max(l.Crop.W, 1)*math.Max(l.Crop.H, 1)))
+	}
+
+	looks := int64(1 + len(l.Filters) + len(l.Effects))
+	if l.Tone != nil || l.ColorMatrix != nil || l.Blur > 0 || l.Shadow != nil || l.Outline != nil {
+		looks++
+	}
+
+	return px * looks
 }
 
 // prepWorker is an instance of the module that prepares layers, and the tables it holds.
