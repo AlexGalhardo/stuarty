@@ -1,6 +1,6 @@
 # ADR-0011: FFmpeg distribution and codec policy
 
-- Status: Accepted (2026-11-14)
+- Status: Accepted (2026-11-14); item 8 is scoped to the product by author decision D-126 (2026-11-21)
 - Deciders: author (D-006, D-017), architect
 - Links: author decision D-006, licensing, spikes, SDD-004, SDD-007, SDD-009
 
@@ -17,7 +17,7 @@ The product is MIT and is distributed as a binary and a Docker image. x264 and x
 5. **H.264 encoder selection**, first that works on the machine: `h264_videotoolbox` (macOS); `h264_nvenc`, `h264_qsv`, `h264_amf` (matching GPU); `h264_mf` (Windows); `h264_vaapi` (Linux with a supported GPU); `libopenh264`; `libx264` only when the user's own FFmpeg provides it and the user enabled it. Detection is by a real test encode at start-up, cached. If none works, export fails with an error that says how to fix it.
 6. Only filters present in the pinned LGPL build are used. The GPL-only filters (`eq`, `boxblur`, `hqdn3d` and others) are never referenced; colour adjustment and blur use LGPL filters or our own code.
 7. Reference tests compare composed frames before encoding, with the software path, because hardware encoders are not bit-exact across machines.
-8. No dependency on Remotion, GSAP or `@ffmpeg/core`.
+8. No dependency on Remotion, GSAP or `@ffmpeg/core` in the product (the editor, the renderer and the export). The documentation site may use GSAP and three.js for its landing page; they never enter the binary (author decision D-126, 2026-11-21).
 
 ## Evidence from the spike
 
