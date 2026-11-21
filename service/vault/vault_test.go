@@ -481,3 +481,40 @@ func TestVerifyReportsABadKeyBeforeTheVaultExists(t *testing.T) {
 		t.Errorf("an absent key = %v, want nil", err)
 	}
 }
+
+// Forget wipes the key the Vault cached, and the provider is asked again (ADR-0049: the studio locks).
+func TestForgetZeroesTheCachedKeyAndAsksTheProviderAgain(t *testing.T) {
+	t.Parallel()
+
+	key := bytes.Repeat([]byte{7}, KeySize)
+	prov := NewMemoryProvider(key)
+	v := Open(filepath.Join(t.TempDir(), "vault.json"), prov)
+
+	if err := v.Put("conn.one", []byte("secret")); err != nil {
+		t.Fatal(err)
+	}
+
+	cached := v.key
+	if len(cached) == 0 {
+		t.Fatal("the vault holds no key after a Put")
+	}
+
+	v.Forget()
+
+	if !bytes.Equal(cached, make([]byte, KeySize)) {
+		t.Error("the cached key was not zeroed")
+	}
+
+	if v.key != nil {
+		t.Error("the key reference was kept")
+	}
+
+	// The provider has lost the key (the studio is locked): the vault cannot open.
+	if err := prov.Save(nil); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := v.Get("conn.one"); err == nil {
+		t.Fatal("a vault opened with no key")
+	}
+}

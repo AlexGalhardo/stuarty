@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	core "github.com/AlexGalhardo/stuarty/core/library"
+	"github.com/AlexGalhardo/stuarty/service/account"
 	"github.com/AlexGalhardo/stuarty/service/library"
 
 	"github.com/AlexGalhardo/vukem/database"
@@ -89,6 +90,12 @@ func (r libraryRepo) Put(ctx context.Context, e library.Entry, body string) erro
 
 	if _, err := r.ex.ExecContext(ctx, `DELETE FROM library_fts WHERE key = ?`, e.Key); err != nil {
 		return err
+	}
+
+	// With an account the index keeps no body: the search matches names, descriptions and tags only (ADR-0049,
+	// SDD-005 section 5.16.2). A body in the full-text index would be clear text in db.sqlite.
+	if account.Sealing(sealerOf(r.ex)) {
+		body = ""
 	}
 
 	_, err = r.ex.ExecContext(ctx,

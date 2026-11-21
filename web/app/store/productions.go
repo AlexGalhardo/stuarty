@@ -7,6 +7,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/project"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/account"
 
 	"github.com/AlexGalhardo/vukem/database"
 )
@@ -354,7 +355,7 @@ func (r productionRepo) Delete(ctx context.Context, id string) error {
 
 const itemColumns = `id, project_id, kind, title, position, state, ref, body, format, created_ms, updated_ms, created_by, trashed_ms, text_kind`
 
-func scanItem(sc scanner) (service.ItemRow, error) {
+func scanItem(sc scanner, sl account.Sealer) (service.ItemRow, error) {
 	var (
 		it        service.ItemRow
 		ref, form sql.NullString
@@ -370,6 +371,10 @@ func scanItem(sc scanner) (service.ItemRow, error) {
 
 	it.Ref, it.Format, it.TrashedMs, it.TextKind = ref.String, form.String, ptrInt64(trashed), textKind.String
 
+	if it.Body, err = openField(sl, "project_items", "body", it.ID, it.Body); err != nil {
+		return service.ItemRow{}, err
+	}
+
 	return it, nil
 }
 
@@ -384,7 +389,7 @@ func (r productionRepo) Items(ctx context.Context, projectID string) ([]service.
 	var out []service.ItemRow
 
 	for rows.Next() {
-		it, err := scanItem(rows)
+		it, err := scanItem(rows, sealerOf(r.ex))
 		if err != nil {
 			return nil, err
 		}
@@ -396,7 +401,9 @@ func (r productionRepo) Items(ctx context.Context, projectID string) ([]service.
 }
 
 func (r productionRepo) Item(ctx context.Context, itemID string) (service.ItemRow, error) {
-	it, err := scanItem(r.ex.QueryRowContext(ctx, "SELECT "+itemColumns+" FROM project_items WHERE id = ?", itemID))
+	it, err := scanItem(
+		r.ex.QueryRowContext(ctx, "SELECT "+itemColumns+" FROM project_items WHERE id = ?", itemID), sealerOf(r.ex),
+	)
 
 	return it, mapNoRows(err)
 }
@@ -406,11 +413,18 @@ func (r productionRepo) CreateItem(ctx context.Context, it service.ItemRow) erro
 		it.TextKind = "copy"
 	}
 
-	_, err := r.ex.ExecContext(ctx, `INSERT INTO project_items
+	plain := it.Body
+
+	body, err := sealField(sealerOf(r.ex), "project_items", "body", it.ID, plain)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.ex.ExecContext(ctx, `INSERT INTO project_items
  (id, project_id, kind, title, position, state, ref, body, format, created_ms, updated_ms, created_by, trashed_ms,
  text_kind)
  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		it.ID, it.ProjectID, it.Kind, it.Title, it.Position, stateOrActive(it.State), nullString(it.Ref), it.Body,
+		it.ID, it.ProjectID, it.Kind, it.Title, it.Position, stateOrActive(it.State), nullString(it.Ref), body,
 		nullString(it.Format), it.CreatedMs, it.UpdatedMs, it.CreatedBy, it.TrashedMs, nullString(it.TextKind))
 	if isUnique(r.ex, err) {
 		return service.ErrExists
@@ -421,16 +435,26 @@ func (r productionRepo) CreateItem(ctx context.Context, it service.ItemRow) erro
 	}
 
 	// A text item never exists without a revision: its first one is the body it was made with (SDD-019 section 3).
+	first, err := sealField(sealerOf(r.ex), "text_revisions", "body", revKey(it.ID, 1), plain)
+	if err != nil {
+		return err
+	}
+
 	_, err = r.ex.ExecContext(ctx, `INSERT INTO text_revisions (item_id, revision, body, actor, source, created_ms)
- VALUES (?, 1, ?, ?, 'created', ?)`, it.ID, it.Body, it.CreatedBy, it.CreatedMs)
+ VALUES (?, 1, ?, ?, 'created', ?)`, it.ID, first, it.CreatedBy, it.CreatedMs)
 
 	return err
 }
 
 func (r productionRepo) UpdateItem(ctx context.Context, it service.ItemRow) error {
+	body, err := sealField(sealerOf(r.ex), "project_items", "body", it.ID, it.Body)
+	if err != nil {
+		return err
+	}
+
 	n, err := rowsAffected(r.ex.ExecContext(ctx,
 		"UPDATE project_items SET title = ?, body = ?, state = ?, trashed_ms = ?, updated_ms = ? WHERE id = ?",
-		it.Title, it.Body, stateOrActive(it.State), it.TrashedMs, it.UpdatedMs, it.ID))
+		it.Title, body, stateOrActive(it.State), it.TrashedMs, it.UpdatedMs, it.ID))
 	if err != nil {
 		return err
 	}
@@ -494,7 +518,7 @@ const (
 	maxTextLimit     = 100
 )
 
-func scanRevision(sc scanner, withBody bool) (service.TextRevisionRow, error) {
+func scanRevision(sc scanner, withBody bool, sl account.Sealer) (service.TextRevisionRow, error) {
 	var (
 		r                                service.TextRevisionRow
 		reverted, cost                   sql.NullInt64
@@ -512,6 +536,13 @@ func scanRevision(sc scanner, withBody bool) (service.TextRevisionRow, error) {
 
 	if err := sc.Scan(dest...); err != nil {
 		return service.TextRevisionRow{}, err
+	}
+
+	if withBody {
+		var err error
+		if body, err = openField(sl, "text_revisions", "body", revKey(r.ItemID, r.Revision), body); err != nil {
+			return service.TextRevisionRow{}, err
+		}
 	}
 
 	r.Body, r.RevertedTo, r.CostMicros = body, ptrInt(reverted), ptrInt64(cost)
@@ -545,7 +576,7 @@ func (r productionRepo) TextRevisions(
 	var out []service.TextRevisionRow
 
 	for rows.Next() {
-		rev, err := scanRevision(rows, false)
+		rev, err := scanRevision(rows, false, sealerOf(r.ex))
 		if err != nil {
 			return nil, err
 		}
@@ -562,23 +593,35 @@ func (r productionRepo) TextRevision(
 	revision int,
 ) (service.TextRevisionRow, error) {
 	rev, err := scanRevision(r.ex.QueryRowContext(ctx, "SELECT "+revisionWithBody+
-		" FROM text_revisions WHERE item_id = ? AND revision = ?", itemID, revision), true)
+		" FROM text_revisions WHERE item_id = ? AND revision = ?", itemID, revision), true, sealerOf(r.ex))
 
 	return rev, mapNoRows(err)
 }
 
 func (r productionRepo) TextLatest(ctx context.Context, itemID string) (service.TextRevisionRow, error) {
 	rev, err := scanRevision(r.ex.QueryRowContext(ctx, "SELECT "+revisionWithBody+
-		" FROM text_revisions WHERE item_id = ? ORDER BY revision DESC LIMIT 1", itemID), true)
+		" FROM text_revisions WHERE item_id = ? ORDER BY revision DESC LIMIT 1", itemID), true, sealerOf(r.ex))
 
 	return rev, mapNoRows(err)
 }
 
 func (r productionRepo) AddTextRevision(ctx context.Context, rev service.TextRevisionRow, pruneBefore int) error {
-	_, err := r.ex.ExecContext(ctx, `INSERT INTO text_revisions
+	sl := sealerOf(r.ex)
+
+	revBody, err := sealField(sl, "text_revisions", "body", revKey(rev.ItemID, rev.Revision), rev.Body)
+	if err != nil {
+		return err
+	}
+
+	itemBody, err := sealField(sl, "project_items", "body", rev.ItemID, rev.Body)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.ex.ExecContext(ctx, `INSERT INTO text_revisions
  (item_id, revision, body, actor, source, reverted_to, provider, model, cost_micros, currency, job_id, created_ms)
  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		rev.ItemID, rev.Revision, rev.Body, rev.Actor, rev.Source, rev.RevertedTo, nullString(rev.Provider),
+		rev.ItemID, rev.Revision, revBody, rev.Actor, rev.Source, rev.RevertedTo, nullString(rev.Provider),
 		nullString(rev.Model), rev.CostMicros, nullString(rev.Currency), nullString(rev.JobID), rev.CreatedMs)
 	if isUnique(r.ex, err) {
 		return service.ErrExists
@@ -596,7 +639,7 @@ func (r productionRepo) AddTextRevision(ctx context.Context, rev service.TextRev
 	}
 
 	n, err := rowsAffected(r.ex.ExecContext(ctx, "UPDATE project_items SET body = ?, updated_ms = ? WHERE id = ?",
-		rev.Body, rev.CreatedMs, rev.ItemID))
+		itemBody, rev.CreatedMs, rev.ItemID))
 	if err != nil {
 		return err
 	}
@@ -679,6 +722,11 @@ func (r productionRepo) TextItems(ctx context.Context, q service.TextQuery) ([]s
 		}
 
 		it.Ref, it.Format, it.TrashedMs, it.TextKind = ref.String, form.String, ptrInt64(trashed), kind.String
+
+		if it.Body, err = openField(sealerOf(r.ex), "project_items", "body", it.ID, it.Body); err != nil {
+			return nil, "", err
+		}
+
 		h.ProjectOwner = ptrString(owner)
 		out = append(out, h)
 	}
