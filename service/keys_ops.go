@@ -139,13 +139,6 @@ func (s *svc) KeyCreate(ctx context.Context, req KeyCreateRequest) (*KeyCreateRe
 		if perr != nil || !visible(c, head.OwnerUserID) {
 			return nil, projectNotFound(req.ProjectID, perr)
 		}
-
-		// The row of a key names a timeline row (the table was a table of timelines when it was made), so a
-		// project made since epic 56 needs its first timeline before a key can be limited to it.
-		if head.Timelines == 0 {
-			return nil, newError(command.CodeInvalidState, "the project %s has no timeline yet.", head.ID).
-				withHint("add a timeline with project_item action add kind timeline, then limit the key to the project")
-		}
 	}
 
 	now := s.now()

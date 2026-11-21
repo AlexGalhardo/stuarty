@@ -189,7 +189,7 @@ func testGenerationIn(
 				t.Fatal(err)
 			}
 
-			project, err := testproject.CreateWithTimeline(callerCtx(), svc, "generated")
+			project, err := testproject.Create(callerCtx(), svc, "generated")
 			if err != nil {
 				t.Fatal(err)
 			}

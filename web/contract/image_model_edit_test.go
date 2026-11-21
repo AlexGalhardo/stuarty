@@ -53,7 +53,7 @@ func TestImageModelEdit_EverySurfaceStartsTheSameJobAndSendsNothing(t *testing.T
 				t.Fatal(err)
 			}
 
-			project, err := testproject.CreateWithTimeline(callerCtx(), svc, "edited")
+			project, err := testproject.Create(callerCtx(), svc, "edited")
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -289,6 +289,16 @@ func (m *memStore) Library() library.Index { return nil }
 
 func (m *memStore) Projects() ProjectRepo { return m.projects }
 func (m *memStore) Assets() AssetRepo     { return m.assets }
+
+// Productions has no project: the images of this store belong to none.
+func (m *memStore) Productions() ProductionRepo { return noProductions{} }
+
+type noProductions struct{ ProductionRepo }
+
+func (noProductions) List(context.Context, ProductionQuery) ([]ProductionHead, string, error) {
+	return nil, "", nil
+}
+
 func (m *memStore) Write(ctx context.Context, fn func(context.Context, Tx) error) error {
 	return fn(ctx, memTx{st: m})
 }

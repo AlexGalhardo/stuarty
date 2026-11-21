@@ -104,6 +104,57 @@ func (s *svc) libraryScan(ctx context.Context, c Caller) (map[string]*libraryEnt
 		after = next
 	}
 
+	return s.libraryScanProjectsWithNoTimeline(ctx, c, byHash)
+}
+
+// libraryScanProjectsWithNoTimeline adds the files that a generation attached to a project that has no timeline
+// yet (SDD-005 section 5.12.3): they wait in the project, as pending, for the first video.
+func (s *svc) libraryScanProjectsWithNoTimeline(
+	ctx context.Context, c Caller, byHash map[string]*libraryEntry,
+) (map[string]*libraryEntry, error) {
+	var after string
+
+	for scanned := 0; scanned < maxFontOwnerScan; {
+		heads, next, lerr := s.store.Productions().List(ctx, ProductionQuery{
+			OwnerUserID: c.OwnerUserID, ProjectID: c.ProjectID, After: after, Limit: 200,
+		})
+		if lerr != nil {
+			return nil, asError(lerr)
+		}
+
+		for i := range heads {
+			scanned++
+
+			if heads[i].Timelines != 0 {
+				continue
+			}
+
+			for _, state := range []ProjectAssetState{ProjectAssetActive, ProjectAssetPending} {
+				rows, perr := s.store.Assets().ListProjectAssets(ctx, heads[i].ID, state)
+				if perr != nil {
+					return nil, asError(perr)
+				}
+
+				for j := range rows {
+					e, ok := byHash[rows[j].AssetHash]
+					if !ok {
+						e = &libraryEntry{name: rows[j].Name}
+						byHash[rows[j].AssetHash] = e
+					}
+
+					e.projects++
+					e.holdings = append(e.holdings, asset.Holding{TimelineID: heads[i].ID, AssetID: rows[j].AssetID})
+				}
+			}
+		}
+
+		if next == "" {
+			break
+		}
+
+		after = next
+	}
+
 	return byHash, nil
 }
 

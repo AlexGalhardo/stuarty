@@ -477,7 +477,7 @@ func (s *svc) storeGenerated(
 		return GeneratedItem{}, internalError()
 	}
 
-	row, err := s.store.Projects().Get(ctx, run.ProjectID)
+	row, err := s.scopeRow(ctx, run.ProjectID)
 	if err != nil {
 		return GeneratedItem{}, asErr(projectNotFound(run.ProjectID, err))
 	}
@@ -551,7 +551,7 @@ const ingestWait = 60 * time.Second
 // awaitIngest waits for the ingest of the files of a generation and writes the state the files reached into the
 // items; a file the ingest refused is said in a note, since it is stored and paid for.
 func (s *svc) awaitIngest(ctx context.Context, projectID string, out *GeneratedResult) {
-	row, err := s.store.Projects().Get(ctx, projectID)
+	row, err := s.scopeRow(ctx, projectID)
 	if err != nil {
 		return
 	}

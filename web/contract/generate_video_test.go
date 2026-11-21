@@ -93,7 +93,7 @@ func TestVideoGenerate_EverySurfaceStartsAJobThatWaitsForAPersonAndStoresTheClip
 				t.Fatal(err)
 			}
 
-			project, err := testproject.CreateWithTimeline(callerCtx(), svc, "clips")
+			project, err := testproject.Create(callerCtx(), svc, "clips")
 			if err != nil {
 				t.Fatal(err)
 			}
