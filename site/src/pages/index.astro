@@ -90,6 +90,12 @@ import { withBase } from "@/lib/site";
 			</div>
 		</section>
 	</main>
+	<dialog class="shot-zoom" aria-label="Enlarged screenshot" data-zoom-dialog>
+		<button type="button" class="shot-zoom-close" aria-label="Close the enlarged screenshot" data-zoom-close>
+			<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+		</button>
+		<div class="shot-zoom-stage" data-zoom-stage></div>
+	</dialog>
 	<LandingFooter beta={false} />
 </Base>
 
@@ -196,6 +202,87 @@ import { withBase } from "@/lib/site";
 	}
 	html.timeline-on main[data-page="viewport"] .preview-item {
 		column-gap: 2.5rem;
+	}
+
+	/* A product picture opens enlarged (src/landing/zoom.ts): it shows that it can be clicked. */
+	main[data-page="viewport"] .showcase[data-zoomable] {
+		cursor: zoom-in;
+	}
+	main[data-page="viewport"] .showcase[data-zoomable]:focus-visible {
+		outline: 2px solid var(--brand-text);
+		outline-offset: 4px;
+	}
+	html:has(.shot-zoom[open]) {
+		overflow: hidden;
+	}
+	.shot-zoom {
+		position: fixed;
+		inset: 0;
+		width: fit-content;
+		height: fit-content;
+		margin: auto;
+		max-width: none;
+		max-height: none;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		overflow: visible;
+	}
+	.shot-zoom::backdrop {
+		background: oklch(0.12 0.02 272 / 82%);
+	}
+	.shot-zoom-stage img {
+		display: block;
+		width: min(94vw, 1600px, calc((100dvh - 4rem) * 1.6));
+		height: auto;
+		aspect-ratio: 16 / 10;
+		border-radius: 6px;
+		box-shadow: 0 30px 80px -20px oklch(0 0 0 / 60%);
+	}
+	.shot-zoom-close {
+		position: absolute;
+		top: 0.75rem;
+		right: 0.75rem;
+		z-index: 1;
+		display: grid;
+		place-items: center;
+		width: 2.75rem;
+		height: 2.75rem;
+		border: 1px solid oklch(1 0 0 / 25%);
+		border-radius: 999px;
+		background: oklch(0.2 0 0 / 70%);
+		color: oklch(1 0 0);
+		cursor: pointer;
+	}
+	.shot-zoom-close:hover {
+		background: oklch(0.3 0 0 / 85%);
+	}
+	.shot-zoom-close:focus-visible {
+		outline: 2px solid oklch(1 0 0);
+		outline-offset: 3px;
+	}
+	.shot-zoom[open] {
+		animation: shot-zoom-in 0.32s var(--ease-out-expo) both;
+	}
+	.shot-zoom[open]::backdrop {
+		animation: shot-zoom-fade 0.32s ease-out both;
+	}
+	@keyframes shot-zoom-in {
+		from {
+			opacity: 0;
+			transform: scale(0.9);
+		}
+	}
+	@keyframes shot-zoom-fade {
+		from {
+			opacity: 0;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.shot-zoom[open],
+		.shot-zoom[open]::backdrop {
+			animation: none;
+		}
 	}
 
 	/* The features of each screen of the timeline: a short list under the lead. */
@@ -404,5 +491,7 @@ import { withBase } from "@/lib/site";
 
 <script>
 	import { start } from "../landing/viewport";
+	import { mountZoom } from "../landing/zoom";
 	start();
+	mountZoom();
 </script>

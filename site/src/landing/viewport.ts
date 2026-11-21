@@ -179,7 +179,7 @@ export function start(): void {
 	window.addEventListener(
 		"wheel",
 		(e) => {
-			if ((e.target as Element | null)?.closest("[role='dialog']")) return;
+			if ((e.target as Element | null)?.closest("[role='dialog'], dialog")) return;
 			e.preventDefault();
 			acc += e.deltaY;
 			clearTimeout(wheelTimer);
@@ -207,7 +207,7 @@ export function start(): void {
 	window.addEventListener(
 		"touchend",
 		(e) => {
-			if (touchY === null) return;
+			if (touchY === null || document.querySelector("dialog[open]")) return;
 			const dy = touchY - (e.changedTouches[0]?.clientY ?? touchY);
 			if (Math.abs(dy) > 50) step(Math.sign(dy), Math.abs(dy) / 600, false);
 			touchY = null;
@@ -219,7 +219,7 @@ export function start(): void {
 	window.addEventListener("keydown", (e) => {
 		const t = e.target as HTMLElement | null;
 		if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
-		if (t?.closest("input, textarea, select, [role='tablist'], [role='dialog'], [contenteditable='true']")) return;
+		if (t?.closest("input, textarea, select, [role='tablist'], [role='dialog'], dialog, [contenteditable='true']")) return;
 		const space = e.key === " " && !t?.closest("a, button");
 		// One clip of the timeline per key press.
 		if (e.key === "ArrowDown" || e.key === "PageDown" || (space && !e.shiftKey)) step(1, clipStep, true);
