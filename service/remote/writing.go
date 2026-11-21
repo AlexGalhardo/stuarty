@@ -40,17 +40,25 @@ func (c *Client) TextGet(ctx context.Context, req service.TextGetRequest) (*serv
 
 // TextWrite implements service.Service.
 func (c *Client) TextWrite(ctx context.Context, req service.TextWriteRequest) (*service.TextWriteResult, error) {
+	// Each route refuses a member it does not have (VV-302): the kind goes only to the route that makes a
+	// text and the base revision only to the one that saves a revision, which the Service ignores elsewhere.
+	if req.ItemID == "" {
+		body := struct {
+			Title    string `json:"title,omitempty"`
+			TextKind string `json:"text_kind,omitempty"`
+			Text     string `json:"text"`
+			DryRun   bool   `json:"dry_run,omitempty"`
+		}{req.Title, req.TextKind, req.Text, req.DryRun}
+
+		return post[service.TextWriteResult](ctx, c, projectPath(req.ProjectID, "/texts"), body)
+	}
+
 	body := struct {
 		Title        string `json:"title,omitempty"`
-		TextKind     string `json:"text_kind,omitempty"`
 		Text         string `json:"text"`
 		BaseRevision *int   `json:"base_revision,omitempty"`
 		DryRun       bool   `json:"dry_run,omitempty"`
-	}{req.Title, req.TextKind, req.Text, req.BaseRevision, req.DryRun}
-
-	if req.ItemID == "" {
-		return post[service.TextWriteResult](ctx, c, projectPath(req.ProjectID, "/texts"), body)
-	}
+	}{req.Title, req.Text, req.BaseRevision, req.DryRun}
 
 	return put[service.TextWriteResult](ctx, c, textPath(req.ProjectID, req.ItemID, ""), body)
 }
