@@ -16,6 +16,28 @@ function timecode(progress: number): string {
 }
 
 /** Mounts the timeline found under `root`; returns its render function, or null when its markup is missing. */
+type Vars = Record<string, string | number>;
+/** How the picture of a clip comes in, one per clip on the home (data-fx): transforms, clip paths and one blur, all
+ * composited on the GPU. Under reduced motion every clip only fades. */
+const MEDIA_FX: Record<string, [Vars, Vars]> = {
+	swing: [{ rotateY: -18, z: -160, transformPerspective: 1400 }, { rotateY: 0, z: 0 }],
+	fade: [{}, {}],
+	"slide-left": [{ x: 120 }, { x: 0 }],
+	"slide-up": [{ y: 90 }, { y: 0 }],
+	"zoom-in": [{ scale: 0.82 }, { scale: 1 }],
+	"zoom-out": [{ scale: 1.18 }, { scale: 1 }],
+	"wipe-right": [{ clipPath: "inset(0% 100% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)" }],
+	"wipe-up": [{ clipPath: "inset(100% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)" }],
+	circle: [{ clipPath: "circle(0% at 50% 50%)" }, { clipPath: "circle(75% at 50% 50%)" }],
+	"flip-y": [{ rotateY: 90, transformPerspective: 1600 }, { rotateY: 0 }],
+	"flip-x": [{ rotateX: -80, transformPerspective: 1600, transformOrigin: "50% 0%" }, { rotateX: 0 }],
+	blur: [{ filter: "blur(18px)", scale: 1.04 }, { filter: "blur(0px)", scale: 1 }],
+	diagonal: [{ clipPath: "polygon(0% 0%, 0% 0%, 0% 0%, 0% 0%)" }, { clipPath: "polygon(0% 0%, 200% 0%, 0% 200%, 0% 0%)" }],
+	skew: [{ x: -100, skewX: 12 }, { x: 0, skewX: 0 }],
+	iris: [{ clipPath: "inset(50% 50% 50% 50% round 12px)" }, { clipPath: "inset(0% 0% 0% 0% round 5px)" }],
+	"tilt-down": [{ y: -80, rotateZ: -4 }, { y: 0, rotateZ: 0 }],
+};
+
 export function mountTimeline(
 	root: ParentNode,
 	options: {
@@ -59,11 +81,14 @@ export function mountTimeline(
 		if (next) {
 			next.setAttribute("data-active", "");
 			gsap.fromTo(next.querySelector(".preview-text"), { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, duration: 0.8, ease: "expo.out", delay: 0.15 });
-			gsap.fromTo(
-				next.querySelector(".preview-media"),
-				{ autoAlpha: 0, rotateY: -18, z: -160, transformPerspective: 1400 },
-				{ autoAlpha: 1, rotateY: 0, z: 0, duration: 1, ease: "expo.out", delay: 0.2 },
-			);
+			const media = next.querySelector(".preview-media");
+			if (reduced) {
+				gsap.fromTo(media, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.25, ease: "none" });
+			} else {
+				const [from, to] = MEDIA_FX[next.dataset.fx ?? ""] ?? MEDIA_FX.swing;
+				gsap.set(media, { clearProps: "transform,clipPath,filter" });
+				gsap.fromTo(media, { autoAlpha: 0, ...from }, { autoAlpha: 1, ...to, duration: 1, ease: "expo.out", delay: 0.2, clearProps: "transform,clipPath,filter" });
+			}
 			gsap.set(next, { autoAlpha: 1, y: 0 });
 		}
 		options.stage?.()?.blink();
