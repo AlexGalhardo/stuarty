@@ -1,0 +1,45 @@
+---
+title: "Your account and your recovery key"
+description: "The first time you open Stuarty you create a local account with a password. Your projects, texts and credentials are encrypted with a key that exists only while you are signed in."
+---
+
+## You will learn
+
+- what the account is, and what it is not;
+- what is encrypted, what is not, and what happens when Stuarty is locked;
+- how to save the recovery key, and what to do if you forget your password.
+
+## The account is on your machine
+
+The first time you open Stuarty it asks you to create an account: a username (4 to 16 lowercase letters), an e-mail address and a password (8 to 32 characters, with an uppercase letter, a lowercase letter, a digit and a special character). The e-mail address is only checked for its shape, on your machine. Nothing is sent to it, and there is no Stuarty service that knows about the account.
+
+The password is never stored. Stuarty keeps a value that can check it, and a key, wrapped by the password, that encrypts your content.
+
+## The recovery key
+
+When the account is created Stuarty shows a **recovery key** once. It opens your data if you forget your password. Write it down or keep it in a password manager before you go on: the page does not let you continue until you tick that you saved it.
+
+If you forget your password and you do not have the recovery key, your data cannot be recovered. Nobody can do it for you, not even us.
+
+To use the key, choose **I forgot my password** on the sign-in page, type the key and a new password. Your data stays as it is.
+
+## What is encrypted
+
+- the texts and their earlier versions, the briefs and the captions;
+- the messages of the chats with your agent;
+- the texts of your publications;
+- the credentials of your connections (the vault).
+
+The names of projects, the file names, the dates and the sizes are not encrypted, and neither are your media files, your memory notes, your prompts and your skills. Settings, Account tells you the rest.
+
+## Locked and unlocked
+
+You are signed in when you have typed the password. While you are, the key is in the memory of Stuarty and nowhere else. **Logout** wipes it, and so does closing Stuarty and the idle lock you can set in **Settings**.
+
+While Stuarty is locked nothing and nobody reads your data: a page, a command, an agent or a script that asks for it gets the error `E_LOCKED` and the words "unlock Stuarty with your password". An agent that runs while you are away stops until you unlock. Scheduled publications wait for you, too.
+
+Only a session opened with your password can approve a publication or set a price. A link from `stuarty open`, an API key and an agent cannot.
+
+## An existing workspace
+
+If you used Stuarty before accounts existed, creating the account encrypts what is already there. Stuarty first makes a copy, encrypts, reads everything back to check it, and only then deletes the copy. If anything fails, it puts the copy back and tells you.

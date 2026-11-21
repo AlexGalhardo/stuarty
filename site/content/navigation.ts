@@ -79,6 +79,7 @@ export const navigation: NavCategory[] = [
 			"install-docker",
 			"install-server",
 			"quick-start",
+			"account",
 			"workspace",
 			"projects",
 			"migration",
