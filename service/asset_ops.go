@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"slices"
 
 	"github.com/AlexGalhardo/stuarty/core/asset"
 	"github.com/AlexGalhardo/stuarty/core/command"
@@ -258,39 +260,59 @@ func (s *svc) AssetRename(ctx context.Context, req AssetRenameRequest) (*AssetRe
 		return nil, ferr
 	}
 
-	name, bad := asset.RenameTo(h.Name, req.Name)
-	if bad != nil {
-		return nil, ruleError(bad)
+	targets, terr := s.renameTargets(ctx, c, &h)
+	if terr != nil {
+		return nil, terr
 	}
 
 	names := s.useNames(ctx, &h)
 
-	var entry LibraryAsset
+	var (
+		entry   LibraryAsset
+		changed []ProjectAssetRow
+	)
 
 	werr := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
-		for _, hd := range h.Holdings {
+		changed = nil
+
+		rows := make([]ProjectAssetRow, len(targets))
+		current := make([]string, len(targets))
+
+		for i, hd := range targets {
 			row, gerr := tx.Assets().GetProjectAsset(ctx, hd.TimelineID, hd.AssetID)
 			if gerr != nil {
 				return gerr
 			}
 
-			if row.Name == name {
+			rows[i], current[i] = row, row.Name
+		}
+
+		renamed, bad := asset.RenameAll(current, req.Name)
+		if bad != nil {
+			return bad
+		}
+
+		for i := range rows {
+			if rows[i].Name == renamed[i] {
 				continue
 			}
 
-			row.Name = name
-			row.Snapshot = renamedSnapshot(row.Snapshot, name)
+			rows[i].Name = renamed[i]
+			rows[i].Snapshot = renamedSnapshot(rows[i].Snapshot, renamed[i])
 
-			if perr := tx.Assets().PutProjectAsset(ctx, row); perr != nil {
+			if perr := tx.Assets().PutProjectAsset(ctx, rows[i]); perr != nil {
 				return perr
 			}
+
+			changed = append(changed, rows[i])
 		}
 
 		if rerr := tx.AssetLibrary().Reindex(ctx, c.OwnerUserID, h.Hash); rerr != nil {
 			return rerr
 		}
 
-		h.Name = name
+		// The holdings come first among the targets, and the entry is named after the first of them.
+		h.Name = renamed[0]
 
 		lib := assets.Library{Store: tx.AssetLibrary(), Owner: c.OwnerUserID}
 
@@ -304,7 +326,75 @@ func (s *svc) AssetRename(ctx context.Context, req AssetRenameRequest) (*AssetRe
 		return nil, ruleError(werr)
 	}
 
+	s.emitRenamed(ctx, h.Hash, changed)
+
 	return s.assetResult(&entry), nil
+}
+
+// renameTargets is every row of the caller's timelines that holds the file: the holdings of the library first, then
+// the rows in a trash (of a file or of a whole project), so that a restore brings the file back under the name it
+// has now. A timeline the caller may not see is never read.
+func (s *svc) renameTargets(ctx context.Context, c Caller, h *assets.Held) ([]asset.Holding, error) {
+	out := slices.Clone(h.Holdings)
+
+	seen := make(map[asset.Holding]bool, len(out))
+	for _, hd := range out {
+		seen[asset.Holding{TimelineID: hd.TimelineID, AssetID: hd.AssetID}] = true
+	}
+
+	var after string
+
+	for scanned := 0; scanned < maxFontOwnerScan; {
+		items, next, lerr := s.store.Projects().List(ctx, ProjectQuery{
+			OwnerUserID: c.OwnerUserID, ProjectID: c.ProjectID, IncludeTrashed: true, After: after, Limit: 200,
+		})
+		if lerr != nil {
+			return nil, asError(lerr)
+		}
+
+		for i := range items {
+			scanned++
+
+			row, ferr := s.store.Assets().FindProjectAssetByHash(ctx, items[i].ID, h.Hash)
+			if errors.Is(ferr, ErrNotFound) {
+				continue
+			}
+
+			if ferr != nil {
+				return nil, asError(ferr)
+			}
+
+			key := asset.Holding{TimelineID: items[i].ID, AssetID: row.AssetID}
+			if !seen[key] {
+				seen[key] = true
+
+				out = append(out, key)
+			}
+		}
+
+		if next == "" {
+			break
+		}
+
+		after = next
+	}
+
+	return out, nil
+}
+
+// emitRenamed tells the open editors of the renamed rows to read their list again: asset.updated with the state the
+// file already has, which is what makes a client fetch the entry.
+func (s *svc) emitRenamed(ctx context.Context, hash string, rows []ProjectAssetRow) {
+	ar, err := s.store.Assets().Get(ctx, hash)
+	if err != nil {
+		return
+	}
+
+	for i := range rows {
+		if rows[i].State == ProjectAssetActive {
+			s.emitAssetFor(rows[i].ProjectID, rows[i].AssetID, ar.IngestState, ar.Progress, nil)
+		}
+	}
 }
 
 // renamedSnapshot is the kept Asset object of a use with its name replaced, so that a restore after a trash
