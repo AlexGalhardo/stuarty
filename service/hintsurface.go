@@ -23,13 +23,13 @@ const (
 var (
 	toolName = regexp.MustCompile(
 		`\b(project_list|project_create|project_get|project_trash|command_help|media_import|media_inspect|` +
-			`job_start|job_get|job_cancel|font_import)\b`)
+			`job_start|job_get|job_list|job_cancel|text_list|font_import)\b`)
 
 	cliNames = map[string]string{
 		"project_list": "project:list", "project_create": "project:create", "project_get": "project:show",
 		"project_trash": "project:trash", "command_help": "command:help", "media_import": "media:import",
 		"media_inspect": "media:inspect", "job_start": "export", "job_get": "job:show", "job_cancel": "job:cancel",
-		"font_import": "font:import",
+		"font_import": "font:import", "job_list": "job:list", "text_list": "text:list",
 	}
 
 	httpNames = map[string]string{
@@ -38,7 +38,8 @@ var (
 		"command_help": "GET /api/v1/commands", "media_import": "POST /api/v1/projects/{id}/media",
 		"media_inspect": "GET /api/v1/projects/{id}/media", "job_start": "POST /api/v1/projects/{id}/jobs",
 		"job_get": "GET /api/v1/jobs/{id}", "job_cancel": "POST /api/v1/jobs/{id}/cancel",
-		"font_import": "POST /api/v1/fonts",
+		"font_import": "POST /api/v1/fonts", "job_list": "GET /api/v1/projects/{id}/jobs",
+		"text_list": "GET /api/v1/texts",
 	}
 )
 
@@ -56,6 +57,11 @@ func hintFor(s Surface, hint string) string {
 			"go back to the projects page to see them")
 
 		return toolName.ReplaceAllStringFunc(hint, func(n string) string { return strings.ReplaceAll(n, "_", " ") })
+	case SurfaceMCP:
+		// The tools that list have no name of their own: job_get lists with a project and project_item lists the texts.
+		hint = strings.ReplaceAll(hint, "job_list", "job_get")
+
+		return strings.ReplaceAll(hint, "text_list", "project_item with action text")
 	default:
 		return hint
 	}

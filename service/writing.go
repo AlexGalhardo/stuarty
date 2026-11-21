@@ -70,7 +70,7 @@ func textOf(rows []ItemRow, id string) (*ItemRow, error) {
 func checkIsText(it *ItemRow) (*ItemRow, error) {
 	if it.Kind != string(project.Text) {
 		return nil, newError(command.CodeInvalidState, "the item %s is a %s, not a text.", it.ID, it.Kind).
-			withPath("item_id").withHint("list the texts of the project with TextList")
+			withPath("item_id").withHint("list the texts of the project with text_list")
 	}
 
 	return it, nil
@@ -689,7 +689,7 @@ func (s *svc) textSource(
 
 	if it.TextKind != string(want) {
 		return "", newError(command.CodeValidation, "the text %s is a %s, not a %s.", it.ID, it.TextKind, want).
-			withPath("item_id").withHint("list the texts with TextList and pick a %s", want)
+			withPath("item_id").withHint("list the texts with text_list and pick a %s", want)
 	}
 
 	return it.Body, nil

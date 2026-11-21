@@ -533,7 +533,7 @@ func jobNotFound(id string) *Error {
 		command.CodeNotFound,
 		"there is no job %s.",
 		id,
-	).withHint("list the jobs of the project with job_get")
+	).withHint("list the jobs of the project with job_list")
 }
 
 func (s *svc) JobGet(ctx context.Context, req JobGetRequest) (*Job, error) {
