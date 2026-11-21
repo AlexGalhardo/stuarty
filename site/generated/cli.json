@@ -2340,7 +2340,7 @@
       "domain": "provider",
       "summary": "set or remove a cost ceiling (for a person in the app; the local token is refused)",
       "usage": [
-        "stuarty cost:ceiling --currency USD"
+        "stuarty cost:ceiling --currency USD [--project id] [--per-item n] [--per-day n]"
       ],
       "example": "stuarty cost:ceiling --currency USD --per-day 5000000",
       "flags": [
