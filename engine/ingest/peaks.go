@@ -2,6 +2,7 @@ package ingest
 
 import (
 	"bufio"
+	"context"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -271,6 +272,26 @@ func (p *Peaks) Check(min16, max16 int16) error {
 
 // PeaksOfFile reads a WAV file and builds its peaks.
 func PeaksOfFile(path string) (*Peaks, error) {
+	return PeaksOfFileContext(context.Background(), path)
+}
+
+// ctxReader stops a long read as soon as its context ends.
+type ctxReader struct {
+	ctx context.Context //nolint:containedctx // the reader lives for one call
+	r   io.Reader
+}
+
+func (c ctxReader) Read(p []byte) (int, error) {
+	if err := c.ctx.Err(); err != nil {
+		return 0, err
+	}
+
+	return c.r.Read(p)
+}
+
+// PeaksOfFileContext is PeaksOfFile that stops, with the error of ctx, when ctx ends: a request that computes
+// the peaks of a long file gives the work up when its client goes away (SDD-011 section 6.5).
+func PeaksOfFileContext(ctx context.Context, path string) (*Peaks, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -286,5 +307,5 @@ func PeaksOfFile(path string) (*Peaks, error) {
 	if _, err := f.Seek(w.DataOffset, io.SeekStart); err != nil {
 		return nil, err
 	}
-	return ComputePeaks(io.LimitReader(f, w.DataSize), w.Channels, w.SampleRate)
+	return ComputePeaks(ctxReader{ctx: ctx, r: io.LimitReader(f, w.DataSize)}, w.Channels, w.SampleRate)
 }

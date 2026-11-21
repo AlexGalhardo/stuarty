@@ -2,7 +2,9 @@ package ingest
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -173,5 +175,24 @@ func TestPeaksOfFileSizeFor60Seconds(t *testing.T) {
 		if len(l) != want[i] {
 			t.Errorf("level %d: %d, want %d", i, len(l), want[i])
 		}
+	}
+}
+
+// A request that computes peaks gives the work up when its client goes away (SDD-011 6.5).
+func TestPeaksOfFileContextStopsWhenTheContextEnds(t *testing.T) {
+	p := filepath.Join(t.TempDir(), "a.wav")
+	if err := os.WriteFile(p, wavBytes(ramp(48000*2), false), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+
+	if pk, err := PeaksOfFileContext(ctx, p); !errors.Is(err, context.Canceled) {
+		t.Fatalf("PeaksOfFileContext with an ended context = %v, %v; want context.Canceled", pk, err)
+	}
+
+	if _, err := PeaksOfFileContext(t.Context(), p); err != nil {
+		t.Fatalf("PeaksOfFileContext: %v", err)
 	}
 }

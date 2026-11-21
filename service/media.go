@@ -1460,16 +1460,41 @@ func (s *svc) OpenFile(ctx context.Context, ref FileRef) (*File, error) {
 	return f, nil
 }
 
-// maxPeaksWAV is the largest normalized WAV whose peaks a request computes (SDD-011 section 6.5): about six
-// hours of 48 kHz stereo 16-bit audio; a longer file is the work of an ingest job, not of a held request.
+// maxPeaksWAV is the largest normalized WAV whose peaks a request computes (SDD-011 section 6.5, SDD-007 section
+// 9): about 93 minutes of 48 kHz stereo 16-bit audio, which is 690 MB an hour.
 const maxPeaksWAV = 1 << 30
+
+func hasPeaks(arts []ArtifactRow) bool {
+	return slices.ContainsFunc(arts, func(a ArtifactRow) bool { return a.Kind == "peaks" && a.Ext == "bin" })
+}
 
 // ensurePeaks makes sure that an audio asset asked for its peaks has the artifact: when it has none, the server
 // computes it (SDD-011 section 6.5). Any other request gets the rows back unchanged.
 func (s *svc) ensurePeaks(ctx context.Context, kind string, ar AssetRow, arts []ArtifactRow) ([]ArtifactRow, error) {
-	if kind != "peaks" || ar.Kind != string(timeline.AssetAudio) ||
-		slices.ContainsFunc(arts, func(a ArtifactRow) bool { return a.Kind == "peaks" && a.Ext == "bin" }) {
+	if kind != "peaks" || ar.Kind != string(timeline.AssetAudio) || hasPeaks(arts) {
 		return arts, nil
+	}
+
+	// One computation at a time in the workspace: a page of sounds asks for every waveform at once, and the
+	// requests that wait find the artifact the first one wrote instead of computing it again.
+	if s.peaksGate != nil {
+		select {
+		case s.peaksGate <- struct{}{}:
+			defer func() { <-s.peaksGate }()
+		case <-ctx.Done():
+			return nil, asError(ctx.Err())
+		}
+
+		fresh, err := s.store.Assets().Artifacts(ctx, ar.Hash)
+		if err != nil {
+			return nil, asError(err)
+		}
+
+		if hasPeaks(fresh) {
+			return fresh, nil
+		}
+
+		arts = fresh
 	}
 
 	return s.computePeaks(ctx, ar.Hash, arts)
@@ -1491,13 +1516,20 @@ func (s *svc) computePeaks(ctx context.Context, hash string, arts []ArtifactRow)
 		return nil, internalError()
 	}
 
+	// Not E_ASSET_NOT_READY: the asset is ready and that code is retryable, so a client would ask forever for
+	// peaks that no request computes.
 	if arts[i].SizeBytes > maxPeaksWAV {
-		return nil, newError("E_ASSET_NOT_READY", "the audio is too long to compute its peaks in a request.").
-			withHint("start an ingest job for the peaks step of the asset")
+		return nil, newError("E_LIMIT_EXCEEDED", "the audio is too long to compute its peaks in a request.").
+			withHint("the file still plays and can be used; it has no waveform").
+			withLimit("peaks_bytes", arts[i].SizeBytes, maxPeaksWAV)
 	}
 
-	pk, err := ingest.PeaksOfFile(src)
+	pk, err := ingest.PeaksOfFileContext(ctx, src)
 	if err != nil {
+		if ctx.Err() != nil {
+			return nil, asError(ctx.Err())
+		}
+
 		return nil, internalError()
 	}
 

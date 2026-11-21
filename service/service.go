@@ -430,6 +430,8 @@ type svc struct {
 	fonts    *enginestore.Fonts // user fonts of the workspace; nil without one
 	snaps    snapCache
 	sems     map[string]chan struct{}
+	// peaksGate admits one computation of peaks on request at a time (SDD-011 section 6.5).
+	peaksGate chan struct{}
 
 	// defaultIngest is true when New installed ingest.Run. A substitute ingester
 	// does not touch the runner, so a nil runner is not a missing tool.
@@ -523,6 +525,7 @@ func New(o Options) (Service, error) {
 		JobExport:     make(chan struct{}, s.limits.MaxExports),
 		JobTranscribe: make(chan struct{}, s.limits.MaxTranscribes),
 	}
+	s.peaksGate = make(chan struct{}, 1)
 
 	if s.media.Ingest == nil {
 		s.media.Ingest = ingest.Run
