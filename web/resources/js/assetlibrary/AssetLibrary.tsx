@@ -5,6 +5,7 @@ import {
 	useCallback,
 	useEffect,
 	useId,
+	useRef,
 	useState,
 } from "react";
 
@@ -167,6 +168,10 @@ export function AssetDetail({
 		[],
 	);
 	const [timeline, setTimeline] = useState("");
+	// Use waits while the timelines of the chosen project are being read, and an answer about a project the
+	// person has already left is dropped: either would send the file with no timeline, or to the wrong one.
+	const [readingTimelines, setReadingTimelines] = useState(false);
+	const chosenProject = useRef("");
 	const [said, setSaid] = useState<string | null>(null);
 
 	// The text boxes take the service's text when the file is opened and after Save; a tag or the reuse mark
@@ -219,12 +224,15 @@ export function AssetDetail({
 	}
 
 	async function chooseProject(projectId: string): Promise<void> {
+		chosenProject.current = projectId;
 		setTarget(projectId);
 		setTimeline("");
 		setTimelines([]);
 		setFailure(null);
+		setReadingTimelines(true);
 		try {
 			const described = await api().describeProject(projectId);
+			if (chosenProject.current !== projectId) return;
 			const found = described.items
 				.filter((item) => item.kind === "timeline" && item.state === "active")
 				.map((item) => ({
@@ -233,15 +241,22 @@ export function AssetDetail({
 				}));
 			setTimelines(found.length > 1 ? found : []);
 		} catch (error) {
-			setFailure(failureOf(error));
+			if (chosenProject.current === projectId) setFailure(failureOf(error));
+		} finally {
+			if (chosenProject.current === projectId) setReadingTimelines(false);
 		}
 	}
+
+	const cannotUse =
+		target === "" ||
+		readingTimelines ||
+		(timelines.length > 0 && timeline === "");
 
 	async function addToProject(
 		event: FormEvent<HTMLFormElement>,
 	): Promise<void> {
 		event.preventDefault();
-		if (target === "" || (timelines.length > 0 && timeline === "")) return;
+		if (cannotUse) return;
 		setFailure(null);
 		setSaid(null);
 		try {
@@ -539,13 +554,7 @@ export function AssetDetail({
 								</fieldset>
 							)}
 							<div>
-								<Button
-									type="submit"
-									variant="outline"
-									disabled={
-										target === "" || (timelines.length > 0 && timeline === "")
-									}
-								>
+								<Button type="submit" variant="outline" disabled={cannotUse}>
 									{t("ui.assets.detail.use")}
 								</Button>
 							</div>
