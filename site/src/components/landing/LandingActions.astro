@@ -1,6 +1,6 @@
 ---
 // The actions of the landing: Getting Started, the two Docker guides and a download button per system, with the
-// latest release read at build time (lib/releases.ts). The backups show the beta notice above the downloads; the
+// latest release read at build time (lib/releases.ts). The backups show the release-stage notice (alpha) above the downloads; the
 // home shows them in the second row of its navbar (compact), where narrow windows use the short labels.
 import { latestRelease, type Os } from "@/lib/releases";
 import { withBase } from "@/lib/site";
@@ -9,7 +9,7 @@ interface Props {
 	/** Distinguishes the ids of each copy on a page. */
 	idPrefix: string;
 	align?: "start" | "center";
-	/** Shows the beta notice above the downloads. */
+	/** Shows the release-stage notice (alpha) above the downloads. */
 	beta?: boolean;
 	/** The small buttons of the home navbar row. */
 	compact?: boolean;
@@ -40,8 +40,8 @@ const docsIcon =
 	"M2 5c3.5-.6 6.6 0 9 1.6V20c-2.4-1.5-5.5-2.1-9-1.5zM13 6.6C15.4 5 18.5 4.4 22 5v13.5c-3.5-.6-6.6 0-9 1.5zM4 8.4c1.9-.2 3.6.1 5 .9v1.1c-1.4-.8-3.1-1.1-5-.9zM4 11.6c1.9-.2 3.6.1 5 .9v1.1c-1.4-.8-3.1-1.1-5-.9zM15 9.3c1.4-.8 3.1-1.1 5-.9v1.1c-1.9-.2-3.6.1-5 .9zM15 12.5c1.4-.8 3.1-1.1 5-.9v1.1c-1.9-.2-3.6.1-5 .9z";
 const guides = [
 	{ kind: "docs", href: "/docs/introduction/", label: "Getting Started", short: "Get Started", sub: "Read Documentation", icon: docsIcon },
-	{ kind: "local", href: "/docs/self-hosting/docker/", label: "Setup Docker Local", short: "Docker Local", sub: `BETA Release ${version}`, icon: containerIcon },
-	{ kind: "vps", href: "/docs/self-hosting/vps/", label: "Setup Docker VPS", short: "Docker VPS", sub: `BETA Release ${version}`, icon: serverIcon },
+	{ kind: "local", href: "/docs/self-hosting/docker/", label: "Setup Docker Local", short: "Docker Local", sub: `ALPHA Release ${version}`, icon: containerIcon },
+	{ kind: "vps", href: "/docs/self-hosting/vps/", label: "Setup Docker VPS", short: "Docker VPS", sub: `ALPHA Release ${version}`, icon: serverIcon },
 ];
 ---
 
@@ -59,22 +59,22 @@ const guides = [
 		class="landing-downloads"
 		role="group"
 		aria-labelledby={beta ? `${idPrefix}-downloads` : undefined}
-		aria-label={beta ? undefined : "Downloads (beta)"}
+		aria-label={beta ? undefined : "Downloads (alpha)"}
 	>
 		{beta ? (
 			<p id={`${idPrefix}-downloads`} class="landing-beta">
-				<span class="landing-beta-badge">Beta</span>
-				<span>Stuarty is in beta: expect rough edges.</span>
+				<span class="landing-beta-badge">Alpha</span>
+				<span>Stuarty is in alpha: expect rough edges.</span>
 			</p>
 		) : null}
 		<ul class="landing-download-list">
 			{release.downloads.map((d) => (
 				<li>
-					<a class="btn btn-glow btn-download" data-os={d.os} href={d.href} rel="noreferrer" aria-label={compact ? `${d.label}, BETA Release ${version}` : undefined}>
+					<a class="btn btn-glow btn-download" data-os={d.os} href={d.href} rel="noreferrer" aria-label={compact ? `${d.label}, ALPHA Release ${version}` : undefined}>
 						<svg viewBox="0 0 24 24" class="size-5 shrink-0" fill="currentColor" aria-hidden="true"><path d={icons[d.os]}></path></svg>
 						<span class="flex flex-col items-start leading-tight">
 							<span class="btn-label"><span class="lbl-full">{d.label}</span>{compact ? <span class="lbl-short">{SHORT[d.os]}</span> : null}</span>
-							<span class="btn-sub text-xs font-normal text-muted">BETA Release {version}</span>
+							<span class="btn-sub text-xs font-normal text-muted">ALPHA Release {version}</span>
 						</span>
 					</a>
 				</li>
