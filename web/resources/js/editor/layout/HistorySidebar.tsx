@@ -23,6 +23,7 @@ export default function HistorySidebar(): ReactNode {
 	return (
 		<aside
 			aria-label={t("ui.editor.history.sidebar")}
+			data-landmark="2.5"
 			data-open={open}
 			className="flex min-h-0 min-w-0 border-l border-border bg-ed-panel"
 		>

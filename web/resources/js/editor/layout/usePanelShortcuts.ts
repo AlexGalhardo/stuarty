@@ -27,14 +27,21 @@ export function usePanelShortcuts(): void {
 				return;
 			event.preventDefault();
 			const { uiWriter } = runtime;
+			// The list goes away with the sidebar: the focus inside it moves to the button that opens it again.
+			const inHistory =
+				document.activeElement?.closest('[data-landmark="2.5"]') != null;
 			if (row === "panel_inspector") uiWriter.toggleInspector();
 			else if (row === "panel_library") uiWriter.toggleLeftRegion();
 			else uiWriter.toggleHistory();
-			if (row === "panel_history" && runtime.ui.getState().panels.history) {
+			if (row !== "panel_history") return;
+			const target = runtime.ui.getState().panels.history
+				? "[data-revision] button"
+				: inHistory
+					? "[data-history-toggle]"
+					: null;
+			if (target !== null) {
 				requestAnimationFrame(() =>
-					document
-						.querySelector<HTMLElement>("[data-revision] button")
-						?.focus(),
+					document.querySelector<HTMLElement>(target)?.focus(),
 				);
 			}
 		};

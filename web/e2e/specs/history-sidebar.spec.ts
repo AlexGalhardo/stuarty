@@ -93,4 +93,62 @@ test.describe("history sidebar", () => {
 		await page.reload();
 		await expect(list).toBeVisible();
 	});
+
+	test("F6 visits it, and Alt+3 leaves the focus on its button when it closes", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
+		await page.goto(`/editor/${seeded.id}`);
+		const sidebar = page.getByRole("complementary", {
+			name: "History sidebar",
+		});
+		await expect(sidebar).toBeVisible();
+
+		const library = page.locator("aside[data-landmark='2']");
+		for (let i = 0; i < 6; i++) {
+			await page.keyboard.press("F6");
+			if (await library.evaluate((el) => el === document.activeElement)) break;
+		}
+		await expect(library).toBeFocused();
+		await page.keyboard.press("F6");
+		await expect(sidebar).toBeFocused();
+		await page.keyboard.press("F6");
+		await expect(page.locator("main[data-landmark='3']")).toBeFocused();
+
+		await page.keyboard.press("Alt+3");
+		const row = sidebar.locator("[data-revision] button").first();
+		await expect(row).toBeFocused();
+		await page.keyboard.press("Alt+3");
+		await expect(row).toHaveCount(0);
+		await expect(
+			sidebar.getByRole("button", { name: "Show history" }),
+		).toBeFocused();
+	});
+
+	test("at the narrowest width both sidebars keep a usable width", async ({
+		page,
+		request,
+	}) => {
+		await page.setViewportSize({ width: 1024, height: 768 });
+		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
+		await page.goto(`/editor/${seeded.id}`);
+		const sidebar = page.getByRole("complementary", {
+			name: "History sidebar",
+		});
+		await sidebar.getByRole("button", { name: "Show history" }).click();
+		await expect(
+			sidebar.getByRole("region", { name: "History" }),
+		).toBeVisible();
+
+		const library = await page
+			.locator("aside[data-landmark='2']")
+			.boundingBox();
+		const history = await sidebar.boundingBox();
+		expect(library?.width ?? 0).toBeGreaterThanOrEqual(192);
+		expect(history?.width ?? 0).toBeGreaterThanOrEqual(192);
+		expect(
+			await page.evaluate(() => document.documentElement.scrollWidth),
+		).toBeLessThanOrEqual(1024);
+	});
 });

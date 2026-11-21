@@ -24,4 +24,12 @@ describe("panelSizes", () => {
 			}
 		}
 	});
+
+	test("with the history open neither sidebar is a sliver at the narrowest width", () => {
+		for (const width of [1024, 1100, 1200, 1279]) {
+			const sizes = panelSizes(width, true);
+			expect(sizes.library).toBeGreaterThanOrEqual(192);
+			expect(sizes.history).toBeGreaterThanOrEqual(192);
+		}
+	});
 });
