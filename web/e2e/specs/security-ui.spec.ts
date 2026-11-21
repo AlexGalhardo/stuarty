@@ -2,7 +2,14 @@ import { copyFileSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { cspViolations } from "../support/browsers";
-import { caller, expect, seedProject, test, testClip } from "./helpers";
+import {
+	caller,
+	expect,
+	makeProject,
+	seedProject,
+	test,
+	testClip,
+} from "./helpers";
 
 // P2-SEC-005 (SDD-007 section 8.5, threat T-22): text written by an agent or
 // read from a file is shown as text. Every view that shows it is opened with
@@ -268,7 +275,7 @@ test.describe("security-ui", () => {
 		await page.getByLabel("Name of colour 1").fill(PAYLOAD);
 		await clean("brand kit page");
 
-		const trashed = (await call("POST", "/projects", { name: PAYLOAD })) as {
+		const trashed = (await makeProject(call, PAYLOAD)) as {
 			project_id: string;
 		};
 		await call("POST", `/projects/${trashed.project_id}/trash`, {});

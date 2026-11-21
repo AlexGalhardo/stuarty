@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { caller, expect, listProjects, test } from "./helpers";
+import { caller, expect, listProjects, makeProject, test } from "./helpers";
 
 // Epic 06 (SDD-012 section 2.1, SDD-005 section 16.1): the project is a production. Its overview shows the brief
 // and the items, a project can hold two timelines, and the card menu duplicates a project (VV-225).
@@ -10,7 +10,7 @@ test.describe("project overview", () => {
 	}) => {
 		const call = await caller(request);
 		const label = `Overview ${Date.now()}`;
-		const created = await call("POST", "/projects", { name: label });
+		const created = await makeProject(call, label);
 		const id = created.project_id as string;
 
 		// The save is held until the spec has seen the button disabled, so a read that did not wait for the
@@ -79,7 +79,7 @@ test.describe("project overview", () => {
 	}) => {
 		const call = await caller(request);
 		const label = `Original ${Date.now()}`;
-		const created = await call("POST", "/projects", { name: label });
+		const created = await makeProject(call, label);
 		const id = created.project_id as string;
 		await call("POST", `/projects/${id}/items`, {
 			kind: "timeline",

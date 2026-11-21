@@ -7,7 +7,7 @@ import { crc32, deflateSync } from "node:zlib";
 import type { Page } from "@playwright/test";
 
 import { LAUNCHER_SECRET } from "../support/launcher";
-import { caller, home } from "./helpers";
+import { caller, home, makeProject } from "./helpers";
 import {
 	editImage,
 	expect,
@@ -223,7 +223,7 @@ test.describe("image operations with a model", () => {
 					})
 				).id,
 			);
-			await api("POST", "/projects", { name: project });
+			await makeProject(api, project);
 			await signInAsPerson(page);
 			await setImagePrice(page, label, model);
 

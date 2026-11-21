@@ -225,6 +225,56 @@
         "exporting": "Exporting bundle…",
         "ready": "Bundle ready:",
         "download": "Download"
+      },
+      "context": {
+        "title": "Context",
+        "name": "Name",
+        "description": "Description",
+        "specific": "Specific",
+        "measurable": "Measurable",
+        "achievable": "Achievable",
+        "relevant": "Relevant",
+        "time_bound": "Time-bound",
+        "due": "Due date"
+      },
+      "help": {
+        "name": "The name of the project, 4 to 32 letters, digits and single spaces. It is how you and your agents find it, so say what it is.",
+        "description": "What the project is, who it is for and what it makes, in 64 to 1,024 characters. Every agent that works here reads this first, so write it the way you would brief a new teammate.",
+        "specific": "What exactly will the project achieve? One concrete result. A vague goal gives vague work.",
+        "measurable": "How will you know it worked? Name a number or a check, so that you and your agents can tell when it is done.",
+        "achievable": "Why is this realistic with what you have: time, footage, tools? It stops agents from planning what you cannot do.",
+        "relevant": "Why does it matter to you or your audience? It lets agents choose between two good options.",
+        "time_bound": "The schedule and the milestones: what happens first, what next. It lets agents order the work.",
+        "due": "The day the goal is due. It must be today or later, so agents can plan back from it."
+      },
+      "example": {
+        "name": "Launch teaser",
+        "description": "A 30 second vertical teaser for the launch of my course, for people who follow me on short video, with captions and a thumbnail.",
+        "specific": "Publish one teaser that explains the course in one sentence",
+        "measurable": "At least 1000 views and 50 sign-ups in the first week",
+        "achievable": "I already have the footage and edit one video a day",
+        "relevant": "The launch needs an audience before the doors open",
+        "time_bound": "Script on Monday, edit on Tuesday, publish on Wednesday",
+        "due": "YYYY-MM-DD"
+      },
+      "help_for": "What to write here",
+      "counter": "{count} characters, {min} to {max}",
+      "errors": {
+        "too_short": "Write at least {min} characters.",
+        "too_long": "Write at most {max} characters.",
+        "name_pattern": "Use only letters, digits and single spaces, with no space at either end.",
+        "date": "Choose a real date.",
+        "date_past": "The due date cannot be before today."
+      },
+      "complete": {
+        "title": "Complete the project",
+        "body": "This project was made before projects had a description and a goal. Write them so that you and your agents know what it is for.",
+        "action": "Complete the project"
+      },
+      "edit": {
+        "open": "Edit the project",
+        "title": "Edit the project",
+        "save": "Save the project"
       }
     },
     "settings": {

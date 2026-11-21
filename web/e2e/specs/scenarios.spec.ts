@@ -3,7 +3,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { skipWithoutWebAudio } from "../support/browsers";
-import { caller, expect, seedProject, test, testClip } from "./helpers";
+import {
+	caller,
+	createThroughTheForm,
+	expect,
+	seedProject,
+	test,
+	testClip,
+} from "./helpers";
 
 // Scenarios of SDD-012 section 20.1 that run against the real server: 1, 2
 // (the undo half), 4, 7, 8 and 11.
@@ -240,10 +247,8 @@ test.describe("prototype-reference", () => {
 		await skipWithoutWebAudio(page, (condition, reason) =>
 			test.skip(condition, reason),
 		);
-		await page.getByLabel("Name").fill(name);
-		await page.getByRole("button", { name: "Create project" }).click();
+		const id = await createThroughTheForm(page, name);
 		await expect(page).toHaveURL(/\/editor\/prj_/);
-		const id = page.url().split("/").pop() ?? "";
 
 		// 1. Import by path, see the card.
 		await page.getByLabel("Path of a file to import").fill(testClip(0));

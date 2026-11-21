@@ -24,18 +24,132 @@ import { HttpTransport } from "../../editor/api/http";
 import type {
 	BriefingQuestionsResult,
 	BriefResult,
+	ProjectContextInput,
+	ProjectGoal,
 	ProjectItem,
 } from "../../editor/api/types";
 import { Briefing } from "./Briefing";
+import ProjectContextForm from "./ProjectContextForm";
 
 const TITLE_MAX = 120;
 
 interface ShowProps {
-	project: { id: string; name: string; state: string };
+	project: {
+		id: string;
+		name: string;
+		state: string;
+		description: string;
+		goal: ProjectGoal;
+		complete: boolean;
+	};
 	items: ProjectItem[];
 	brief: BriefResult;
 	briefing: BriefingQuestionsResult;
 	[key: string]: unknown;
+}
+
+// What the creator wrote about the project, and the way to write it: a project made before epic 56 has neither, and
+// opens with a notice that leads to the same form as an edit (ProjectUpdate).
+function ContextPanel({
+	project,
+	onFailure,
+}: {
+	project: ShowProps["project"];
+	onFailure: (failure: Failure) => void;
+}) {
+	const t = useT();
+	const [open, setOpen] = useState(false);
+	const [busy, setBusy] = useState(false);
+
+	const save = async (values: ProjectContextInput): Promise<void> => {
+		setBusy(true);
+		try {
+			await api().updateProject(project.id, values);
+			setOpen(false);
+			router.reload();
+		} catch (error) {
+			onFailure(failureOf(error));
+		} finally {
+			setBusy(false);
+		}
+	};
+
+	return (
+		<section aria-labelledby="context-title" className="flex flex-col gap-3">
+			<h2 id="context-title" className="text-lg font-semibold">
+				{t("ui.projects.context.title")}
+			</h2>
+			{project.complete ? (
+				<div className="flex flex-col gap-2 text-sm">
+					<p>
+						<UntrustedText>{project.description}</UntrustedText>
+					</p>
+					<dl className="flex flex-col gap-2">
+						{(
+							[
+								"specific",
+								"measurable",
+								"achievable",
+								"relevant",
+								"time_bound",
+								"due",
+							] as const
+						).map((key) => (
+							<div key={key}>
+								<dt className="font-medium">
+									{t(`ui.projects.context.${key}`)}
+								</dt>
+								<dd>
+									<UntrustedText>{project.goal[key]}</UntrustedText>
+								</dd>
+							</div>
+						))}
+					</dl>
+				</div>
+			) : (
+				<div
+					role="note"
+					className="rounded-lg border border-dashed p-4 text-sm"
+					data-testid="complete-notice"
+				>
+					<p className="font-medium">{t("ui.projects.complete.title")}</p>
+					<p className="mt-1 text-muted-foreground">
+						{t("ui.projects.complete.body")}
+					</p>
+				</div>
+			)}
+			<div>
+				<Button type="button" variant="outline" onClick={() => setOpen(true)}>
+					{project.complete
+						? t("ui.projects.edit.open")
+						: t("ui.projects.complete.action")}
+				</Button>
+			</div>
+			<Dialog open={open} onOpenChange={setOpen}>
+				<DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+					<DialogHeader>
+						<DialogTitle>
+							{project.complete
+								? t("ui.projects.edit.title")
+								: t("ui.projects.complete.title")}
+						</DialogTitle>
+					</DialogHeader>
+					<ProjectContextForm
+						initial={{
+							name: project.name,
+							description: project.description,
+							goal: project.goal,
+						}}
+						keepDue={project.goal.due}
+						submitLabel={t("ui.projects.edit.save")}
+						busy={busy}
+						onSubmit={(values) => void save(values)}
+						onCancel={() => setOpen(false)}
+					/>
+				</DialogContent>
+			</Dialog>
+		</section>
+	);
 }
 
 function api() {
@@ -382,6 +496,8 @@ export default function ProjectShow() {
 					</h1>
 				</div>
 				<FailureNote failure={failure} />
+
+				<ContextPanel project={project} onFailure={setFailure} />
 
 				<Briefing
 					projectId={project.id}

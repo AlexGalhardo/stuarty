@@ -129,7 +129,7 @@ function Thumbnail({ project }: { project: ProjectSummary }): ReactNode {
 
 // One project of the grid (SDD-012 section 2.1): the picture, the name, the size
 // and the last edit, the way into the editor, and a menu with Rename and Delete.
-// Rename is the `project.rename` command; Delete moves the project to the trash
+// Rename is `ProjectUpdate`; Delete moves the project to the trash
 // after a confirmation and can be undone from the trash. Project actions are
 // the project endpoints of the service, not timeline commands.
 export default function ProjectCard({
@@ -173,11 +173,11 @@ export default function ProjectCard({
 		setBusy(true);
 		setFailure(null);
 		try {
-			await createClient(new HttpTransport("/api/v1")).edit(project.id, {
-				operations: [{ op: "project.rename", args: { name: next } }],
-				base_revision: project.revision,
-				idempotency_key: crypto.randomUUID(),
-			});
+			// The name of a project is its own since epic 56: ProjectUpdate changes it, with the rule of the name.
+			await createClient(new HttpTransport("/api/v1")).updateProject(
+				project.id,
+				{ name: next },
+			);
 			setRenaming(false);
 			onChanged();
 		} catch (error) {
