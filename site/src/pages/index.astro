@@ -132,6 +132,13 @@ import { withBase } from "@/lib/site";
 		display: none;
 	}
 
+	/* The product screenshots of the home keep almost square corners (frame and image together), so the corners of
+	   the UI inside them are not cut off. */
+	main[data-page="viewport"] .showcase,
+	main[data-page="viewport"] .showcase img {
+		border-radius: 5px;
+	}
+
 	/* The timeline take fills the screen under the header: its title, then the editor. */
 	html.takes-on .take-timeline {
 		display: flex;
