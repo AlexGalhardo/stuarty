@@ -66,7 +66,7 @@ type textInput struct {
 // connection (SDD-015 section 5, SDD-016 section 6).
 func (s *svc) textGenerateKind() ApprovableKind {
 	return ApprovableKind{
-		Name: JobTextGenerate, Scope: ScopeEdit, Prepare: s.prepareText, Run: s.runText,
+		Name: JobTextGenerate, Scope: ScopeEdit, ProjectWide: true, Prepare: s.prepareText, Run: s.runText,
 	}
 }
 

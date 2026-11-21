@@ -71,6 +71,10 @@ type ApprovableKind struct {
 	Name string
 	// Scope is the scope needed to submit the kind; render when empty.
 	Scope string
+	// ProjectWide marks a kind whose work belongs to the project and not to one of its timelines (a generation, a
+	// draft): with no timeline_id the job is kept under the first active timeline, whatever the number of
+	// timelines, and the caller is never asked which (SDD-016 section 6, SDD-003 section 1.7).
+	ProjectWide bool
 	// Prepare checks the arguments and describes the action. It makes no outbound call.
 	Prepare func(ctx context.Context, req JobStartRequest) (Prepared, error)
 	// Run is the job once approved. It reaches the network only through connections.Manager.With.

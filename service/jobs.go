@@ -62,6 +62,34 @@ func (s *svc) authorizeStart(ctx context.Context, req *JobStartRequest, approvab
 	return c, s.requireCovers(ctx, c, req.ProjectID)
 }
 
+// useAnchorTimeline is useTimeline for work that belongs to the project (a generation, VV-330): the job is kept
+// under the first active timeline, since a job row still names a timeline, and the caller is not asked which of
+// several. A project with no active timeline cannot hold the job yet.
+func (s *svc) useAnchorTimeline(ctx context.Context, c Caller, id *string) error {
+	if *id == "" {
+		return nil
+	}
+
+	head, err := s.loadProduction(ctx, s.store.Productions(), c, *id)
+	if err != nil {
+		return err
+	}
+
+	tls, err := s.store.Productions().ActiveTimelines(ctx, head.ID)
+	if err != nil {
+		return asError(err)
+	}
+
+	if len(tls) == 0 {
+		return newError(command.CodeInvalidState, "the project %s has no timeline to hold the job.", head.ID).
+			withHint("add a video to the project first, or restore a timeline")
+	}
+
+	*id = tls[0].TimelineID
+
+	return nil
+}
+
 func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 	// A kind that needs approval waits for a person or a rule (SDD-015 section 5); it has its own scope.
 	approvable := s.kinds[req.Kind]
@@ -75,7 +103,13 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		return nil, err
 	}
 
-	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
+	if approvable != nil && approvable.ProjectWide && req.TimelineID == "" {
+		err = s.useAnchorTimeline(ctx, c, &req.ProjectID)
+	} else {
+		err = s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID)
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
