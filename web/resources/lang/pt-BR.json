@@ -2,7 +2,7 @@
   "ui": {
     "session": {
       "person_only": {
-        "local": "Só uma pessoa no aplicativo desktop do Stuarty pode fazer isto. Aprove por lá.",
+        "local": "Só uma pessoa no aplicativo desktop do Stuarty pode fazer isto. Faça por lá, ou entre com a sua senha num servidor em modo de rede.",
         "network": "Só uma pessoa que entra com a senha pode fazer isto. Entre com a sua senha."
       }
     },
