@@ -30,10 +30,9 @@ on:
       - "CHANGELOG.md"
       - ".github/workflows/site.yml"
       - "scripts/update-feed.sh"
+  # The release train dispatches this workflow on main after it publishes a release (release-train.sh), so
+  # the landing download buttons read the new release at build time.
   workflow_dispatch:
-  # A published release rebuilds the site: the landing download buttons read the latest release at build time.
-  release:
-    types: [published]
 
 permissions:
   contents: read
