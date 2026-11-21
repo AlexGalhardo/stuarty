@@ -36,7 +36,48 @@ const productionColumns = `p.id, p.name, p.state, p.created_ms, p.updated_ms, p.
 
 const productionFrom = ` FROM projects p LEFT JOIN timelines t ON t.id = ` + firstTimeline
 
-func scanProduction(sc scanner) (service.ProductionHead, error) {
+// projectSealedColumns are the sealed columns of projects (SDD-005 section 5.16.2), keyed by the id of the row:
+// the description and the five written parts of the goal. The name and the due date are not sealed.
+var projectSealedColumns = []string{
+	"description", "goal_specific", "goal_measurable", "goal_achievable", "goal_relevant", "goal_time_bound",
+}
+
+// sealContext returns the sealed form of the six sealed fields of a project, in the order of projectSealedColumns.
+func sealContext(sl account.Sealer, id, description string, g project.Goal) ([]string, error) {
+	plain := []string{description, g.Specific, g.Measurable, g.Achievable, g.Relevant, g.TimeBound}
+	out := make([]string, len(plain))
+
+	for i, p := range plain {
+		s, err := sealField(sl, "projects", projectSealedColumns[i], id, p)
+		if err != nil {
+			return nil, err
+		}
+
+		out[i] = s
+	}
+
+	return out, nil
+}
+
+// openContext opens the six sealed fields of a project head in place.
+func openContext(sl account.Sealer, h *service.ProductionHead) error {
+	fields := []*string{
+		&h.Description, &h.Goal.Specific, &h.Goal.Measurable, &h.Goal.Achievable, &h.Goal.Relevant, &h.Goal.TimeBound,
+	}
+
+	for i, f := range fields {
+		plain, err := openField(sl, "projects", projectSealedColumns[i], h.ID, *f)
+		if err != nil {
+			return err
+		}
+
+		*f = plain
+	}
+
+	return nil
+}
+
+func scanProduction(sc scanner, sl account.Sealer) (service.ProductionHead, error) {
 	var (
 		h                       service.ProductionHead
 		owner, trashedBy        sql.NullString
@@ -90,6 +131,10 @@ func scanProduction(sc scanner) (service.ProductionHead, error) {
 		&tResync,
 	)
 	if err != nil {
+		return service.ProductionHead{}, err
+	}
+
+	if err := openContext(sl, &h); err != nil {
 		return service.ProductionHead{}, err
 	}
 
@@ -175,7 +220,7 @@ func (r productionRepo) List(ctx context.Context, q service.ProductionQuery) ([]
 	var out []service.ProductionHead
 
 	for rows.Next() {
-		h, err := scanProduction(rows)
+		h, err := scanProduction(rows, sealerOf(r.ex))
 		if err != nil {
 			return nil, "", err
 		}
@@ -216,13 +261,19 @@ func (r productionRepo) Count(ctx context.Context, q service.ProductionQuery) (i
 func (r productionRepo) Get(ctx context.Context, id string) (service.ProductionHead, error) {
 	h, err := scanProduction(
 		r.ex.QueryRowContext(ctx, "SELECT "+productionColumns+productionFrom+" WHERE p.id = ?", id),
+		sealerOf(r.ex),
 	)
 
 	return h, mapNoRows(err)
 }
 
 func (r productionRepo) Create(ctx context.Context, h service.ProductionHead) error {
-	_, err := r.ex.ExecContext(
+	sealed, err := sealContext(sealerOf(r.ex), h.ID, h.Description, h.Goal)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.ex.ExecContext(
 		ctx,
 		`INSERT INTO projects
  (id, name, state, created_ms, updated_ms, created_by, owner_user_id, trashed_ms, trashed_by, description,
@@ -237,12 +288,12 @@ func (r productionRepo) Create(ctx context.Context, h service.ProductionHead) er
 		h.OwnerUserID,
 		h.TrashedMs,
 		h.TrashedBy,
-		h.Description,
-		h.Goal.Specific,
-		h.Goal.Measurable,
-		h.Goal.Achievable,
-		h.Goal.Relevant,
-		h.Goal.TimeBound,
+		sealed[0],
+		sealed[1],
+		sealed[2],
+		sealed[3],
+		sealed[4],
+		sealed[5],
 		h.Goal.Due,
 	)
 	if isUnique(r.ex, err) {
@@ -292,11 +343,15 @@ func (r productionRepo) SetState(ctx context.Context, id string, st service.Proj
 }
 
 func (r productionRepo) SetContext(ctx context.Context, id string, c project.Context, atMs int64) error {
+	s, err := sealContext(sealerOf(r.ex), id, c.Description, c.Goal)
+	if err != nil {
+		return err
+	}
+
 	n, err := rowsAffected(r.ex.ExecContext(ctx,
 		`UPDATE projects SET name = ?, description = ?, goal_specific = ?, goal_measurable = ?, goal_achievable = ?,
  goal_relevant = ?, goal_time_bound = ?, goal_due = ?, updated_ms = ? WHERE id = ?`,
-		c.Name, c.Description, c.Goal.Specific, c.Goal.Measurable, c.Goal.Achievable, c.Goal.Relevant,
-		c.Goal.TimeBound, c.Goal.Due, atMs, id))
+		c.Name, s[0], s[1], s[2], s[3], s[4], s[5], c.Goal.Due, atMs, id))
 	if err != nil {
 		return err
 	}

@@ -27,6 +27,12 @@ var sealedCells = []cell{
 	{"publications", "text", []string{"id"}},
 	{"publication_targets", "fields", []string{"id"}},
 	{"publication_targets", "snapshot", []string{"id"}},
+	{"projects", "description", []string{"id"}},
+	{"projects", "goal_specific", []string{"id"}},
+	{"projects", "goal_measurable", []string{"id"}},
+	{"projects", "goal_achievable", []string{"id"}},
+	{"projects", "goal_relevant", []string{"id"}},
+	{"projects", "goal_time_bound", []string{"id"}},
 }
 
 type cellRow struct {

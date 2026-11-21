@@ -11,6 +11,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/chat"
 	core "github.com/AlexGalhardo/stuarty/core/library"
+	"github.com/AlexGalhardo/stuarty/core/project"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/account"
 	"github.com/AlexGalhardo/stuarty/service/agenthost"
@@ -20,13 +21,15 @@ import (
 
 // The words of the person, each unique, so a scan of the file finds exactly what leaked.
 const (
-	wordsItem     = "CANARY-ITEM-body-of-my-script"
-	wordsRevision = "CANARY-REVISION-second-draft"
-	wordsChat     = "CANARY-CHAT-message-to-the-agent"
-	wordsPubText  = "CANARY-PUBTEXT-caption-for-the-video"
-	wordsField    = "CANARY-FIELD-title-on-youtube"
-	wordsSnapshot = "CANARY-SNAPSHOT-approved-post"
-	wordsLibrary  = "CANARY-LIBRARY-body-of-a-memory-note"
+	wordsItem        = "CANARY-ITEM-body-of-my-script"
+	wordsRevision    = "CANARY-REVISION-second-draft"
+	wordsChat        = "CANARY-CHAT-message-to-the-agent"
+	wordsPubText     = "CANARY-PUBTEXT-caption-for-the-video"
+	wordsField       = "CANARY-FIELD-title-on-youtube"
+	wordsSnapshot    = "CANARY-SNAPSHOT-approved-post"
+	wordsLibrary     = "CANARY-LIBRARY-body-of-a-memory-note"
+	wordsDescription = "CANARY-DESCRIPTION-what-the-project-is"
+	wordsGoal        = "CANARY-GOAL-specific-measurable-parts"
 )
 
 type locker struct {
@@ -57,6 +60,11 @@ func writeEverything(t *testing.T, s *Store) {
 
 	if err := s.Productions().Create(ctx, service.ProductionHead{
 		ID: "prj_1", Name: "p", State: service.ProjectActive, CreatedMs: 10, UpdatedMs: 10, CreatedBy: "local:ui",
+		Description: wordsDescription,
+		Goal: project.Goal{
+			Specific: wordsGoal + "-1", Measurable: wordsGoal + "-2", Achievable: wordsGoal + "-3",
+			Relevant: wordsGoal + "-4", TimeBound: wordsGoal + "-5", Due: "2027-01-31",
+		},
 	}); err != nil {
 		t.Fatalf("project: %v", err)
 	}
@@ -123,6 +131,12 @@ func writeEverything(t *testing.T, s *Store) {
 func readBack(t *testing.T, s *Store) {
 	t.Helper()
 
+	prj, err := s.Productions().Get(ctx, "prj_1")
+	if err != nil || prj.Description != wordsDescription || prj.Goal.Specific != wordsGoal+"-1" ||
+		prj.Goal.TimeBound != wordsGoal+"-5" || prj.Goal.Due != "2027-01-31" {
+		t.Fatalf("project %+v %v", prj, err)
+	}
+
 	it, err := s.Productions().Item(ctx, "pit_1")
 	if err != nil || it.Body != wordsRevision {
 		t.Fatalf("item %q %v", it.Body, err)
@@ -171,7 +185,10 @@ func bytesOfTheWorkspace(t *testing.T, s *Store, dir string) []byte {
 }
 
 func TestSecurity_T108_SealedColumnsHoldNoPlaintextInTheDatabaseFile(t *testing.T) {
-	canaries := []string{wordsItem, wordsRevision, wordsChat, wordsPubText, wordsField, wordsSnapshot}
+	canaries := []string{
+		wordsItem, wordsRevision, wordsChat, wordsPubText, wordsField, wordsSnapshot, wordsDescription,
+		wordsGoal + "-1", wordsGoal + "-2", wordsGoal + "-3", wordsGoal + "-4", wordsGoal + "-5",
+	}
 
 	// The control: with no account the same scan finds every word, so the scan can see what it looks for.
 	dir := newDir(t)
@@ -215,6 +232,10 @@ func TestSecurity_T108_SealedColumnsHoldNoPlaintextInTheDatabaseFile(t *testing.
 
 	if _, err := st.Productions().Item(ctx, "pit_1"); !errors.Is(err, account.ErrLocked) {
 		t.Errorf("an item read while locked: %v", err)
+	}
+
+	if _, err := st.Productions().Get(ctx, "prj_1"); !errors.Is(err, account.ErrLocked) {
+		t.Errorf("a project read while locked: %v", err)
 	}
 
 	if _, err := st.Chat().EventList(ctx, "cht_1", 0, 10); !errors.Is(err, account.ErrLocked) {

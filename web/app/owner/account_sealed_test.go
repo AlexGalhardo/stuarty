@@ -17,7 +17,29 @@ const (
 	canaryBrief  = "CANARY-BRIEF-who-is-this-video-for"
 	canaryNote   = "CANARY-NOTE-body-of-a-memory-note"
 	canaryToken  = "CANARY-TOKEN-an-oauth-refresh-token"
+	// The context of a project (epic 56) is the creator's own words too: 64 characters at least for the description,
+	// 16 for each part of the goal.
+	canaryDescription = "CANARY-DESCRIPTION-what-this-launch-video-is-about-and-for-whom-it-is-made"
+	canaryGoal        = "CANARY-GOAL-part"
 )
+
+// canaryProject is a valid ProjectCreate request whose description and goal carry the canaries.
+func canaryProject() service.ProjectCreateRequest {
+	return service.ProjectCreateRequest{
+		Name: "Launch", Description: canaryDescription,
+		Goal: service.ProjectGoal{
+			Specific: canaryGoal + "-specific", Measurable: canaryGoal + "-measurable",
+			Achievable: canaryGoal + "-achievable", Relevant: canaryGoal + "-relevant",
+			TimeBound: canaryGoal + "-timebound", Due: "2030-12-31",
+		},
+	}
+}
+
+// canaryWords is every word of the person that the files must not hold in clear.
+var canaryWords = []string{
+	canaryScript, canaryBrief, canaryNote, canaryToken, canaryDescription, canaryGoal + "-specific",
+	canaryGoal + "-measurable", canaryGoal + "-achievable", canaryGoal + "-relevant", canaryGoal + "-timebound",
+}
 
 func accountEnv(t *testing.T) func(string) string {
 	t.Helper()
@@ -66,7 +88,7 @@ func TestSecurity_T108_TheDatabaseAndTheVaultOfAnAccountHoldNoPlaintext(t *testi
 
 	as := service.WithCaller(ctx, service.Caller{Actor: "local:ui", Scopes: service.AllScopes, Browser: true})
 
-	project, err := o.Service.ProjectCreate(as, service.ProjectCreateRequest{Name: "Launch"})
+	project, err := o.Service.ProjectCreate(as, canaryProject())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -121,7 +143,7 @@ func TestSecurity_T108_TheDatabaseAndTheVaultOfAnAccountHoldNoPlaintext(t *testi
 		t.Fatalf("nothing to scan: db %d bytes, vault %d bytes", len(db), len(vaultFile))
 	}
 
-	for _, w := range []string{canaryScript, canaryBrief, canaryNote, canaryToken} {
+	for _, w := range canaryWords {
 		if bytes.Contains(db, []byte(w)) {
 			t.Errorf("db.sqlite holds %q in clear", w)
 		}

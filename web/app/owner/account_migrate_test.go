@@ -32,7 +32,7 @@ func existingWorkspace(t *testing.T, getenv func(string) string) (*Owner, contex
 
 	as := service.WithCaller(ctx, service.Caller{Actor: "local:ui", Scopes: service.AllScopes, Browser: true})
 
-	project, err := o.Service.ProjectCreate(as, service.ProjectCreateRequest{Name: "Launch"})
+	project, err := o.Service.ProjectCreate(as, canaryProject())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -110,13 +110,17 @@ func TestSecurity_T109_AnExistingWorkspaceMigratesWithoutLoss(t *testing.T) {
 		t.Fatal("the control does not see the script in the database: the scan is blind")
 	}
 
+	if !bytes.Contains(scan(t, home, "db.sqlite"), []byte(canaryDescription)) {
+		t.Fatal("the control does not see the project description in the database: the scan is blind")
+	}
+
 	if _, err := o.Account.Create(ctx, migrateInput, o.createAccount); err != nil {
 		t.Fatal(err)
 	}
 
 	checkpoint(t, o)
 
-	for _, w := range []string{canaryScript, canaryBrief, canaryNote, canaryToken} {
+	for _, w := range canaryWords {
 		if bytes.Contains(scan(t, home, "db.sqlite", "db.sqlite-wal", "vault.json"), []byte(w)) {
 			t.Errorf("%q is still in clear after the migration", w)
 		}
@@ -149,6 +153,12 @@ func TestSecurity_T109_AnExistingWorkspaceMigratesWithoutLoss(t *testing.T) {
 	got, err := o.Service.TextGet(as, service.TextGetRequest{ProjectID: project, ItemID: texts.Texts[0].ID})
 	if err != nil || got.Body != canaryScript {
 		t.Fatalf("the script after the migration: %+v %v", got, err)
+	}
+
+	proj, err := o.Service.ProjectGet(as, service.ProjectGetRequest{ProjectID: project})
+	if err != nil || proj.Description != canaryDescription || proj.Goal.Specific != canaryGoal+"-specific" ||
+		proj.Goal.TimeBound != canaryGoal+"-timebound" || proj.Goal.Due != "2030-12-31" {
+		t.Fatalf("the project context after the migration: %+v %v", proj, err)
 	}
 
 	if secret, err := o.vault.Get("conn.one"); err != nil || string(secret) != canaryToken {
