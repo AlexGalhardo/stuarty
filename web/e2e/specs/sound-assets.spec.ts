@@ -1,3 +1,5 @@
+import AxeBuilder from "@axe-core/playwright";
+
 import { audioClip, caller, expect, test } from "./helpers";
 
 // Epic 58 (SDD-011 section 14.6, D-121): a sound is imported from the Sound Assets page, plays with its waveform
@@ -75,6 +77,13 @@ test.describe("Sound Assets", () => {
 				);
 			expect(duration).toBeGreaterThan(0);
 		}
+
+		// The row with its player, its waveform and the import form pass axe (the route scans of the a11y specs
+		// see an empty library).
+		const { violations } = await new AxeBuilder({ page })
+			.withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+			.analyze();
+		expect(violations.map((v) => v.id)).toEqual([]);
 
 		await page.goto("/video-assets");
 		await expect(page.locator(`[data-asset-hash="${hash}"]`)).toHaveCount(0);

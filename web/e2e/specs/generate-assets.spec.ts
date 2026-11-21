@@ -9,7 +9,7 @@ import { LAUNCHER_SECRET } from "../support/launcher";
 import { caller, expect, home, test } from "./helpers";
 
 // RF-361 (epic 10, SDD-016 sections 6.1 and 10): a creator asks for a picture in Visual Assets and for a
-// narration in Video Assets, sees the estimate before anything is submitted, approves the job, and finds
+// narration in Sound Assets, sees the estimate before anything is submitted, approves the job, and finds
 // the files in the grid with their origin. The provider is a server of this spec on loopback that records
 // what it receives; no real provider is called and nothing is paid.
 test.describe.configure({ mode: "serial", timeout: 180_000 });
@@ -190,7 +190,7 @@ async function approve(page: Page, approvalId: string): Promise<void> {
 }
 
 test.describe("Generate images and voice", () => {
-	test("an image in Visual Assets and a narration in Video Assets: the estimate first, then approval, then the files with their origin", async ({
+	test("an image in Visual Assets and a narration in Sound Assets: the estimate first, then approval, then the files with their origin", async ({
 		page,
 		request,
 		browserName,
