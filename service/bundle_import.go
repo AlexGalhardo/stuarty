@@ -330,12 +330,14 @@ func (s *svc) writeImportedProject(
 		return err
 	}
 
+	names := manifestNames(&p.manifest)
+
 	for _, t := range p.timelines() {
 		if err := s.writeImportedTimeline(ctx, tx, c, t, asNew, now); err != nil {
 			return err
 		}
 
-		if err := s.linkBundleAssets(ctx, tx, c, t.doc, sizes, now); err != nil {
+		if err := s.linkBundleAssets(ctx, tx, c, t.doc, names, sizes, now); err != nil {
 			return err
 		}
 	}
@@ -477,13 +479,30 @@ func (s *svc) writeImportedTimeline(
 	return tx.Operations().CloseAllOpen(ctx, id, last)
 }
 
+// manifestNames is the display name of each file of a manifest, by hash: the name the file had when it was exported
+// (SDD-011 section 14.8), which the document does not carry. A manifest is untrusted, so each name is read the way
+// an import reads a file name.
+func manifestNames(m *BundleManifest) map[string]string {
+	names := make(map[string]string, len(m.Media))
+
+	for i := range m.Media {
+		if name := displayName(m.Media[i].Name); name != "" {
+			names[m.Media[i].Hash] = name
+		}
+	}
+
+	return names
+}
+
 // linkBundleAssets inserts the assets rows of new hashes as pending, the project_assets rows as
-// active (the document already holds them) and an ingest job for each hash without artifacts.
+// active (the document already holds them) under the name of the manifest, and an ingest job for
+// each hash without artifacts.
 func (s *svc) linkBundleAssets(
 	ctx context.Context,
 	tx Tx,
 	c Caller,
 	doc *timeline.Document,
+	names map[string]string,
 	sizes map[string]int64,
 	now int64,
 ) error {
@@ -491,6 +510,11 @@ func (s *svc) linkBundleAssets(
 
 	for _, assetID := range sortedKeys(doc.Assets) {
 		a := doc.Assets[assetID]
+
+		shown := a.Name
+		if name := names[a.Hash]; name != "" {
+			shown = name
+		}
 
 		ar, _, err := tx.Assets().Upsert(ctx, AssetRow{
 			Hash: a.Hash, SizeBytes: sizes[a.Hash], OriginalName: a.Name, IngestState: IngestPending,
@@ -509,7 +533,7 @@ func (s *svc) linkBundleAssets(
 		}
 
 		err = tx.Assets().PutProjectAsset(ctx, ProjectAssetRow{
-			ProjectID: id, AssetID: a.ID, AssetHash: a.Hash, State: ProjectAssetActive, Name: a.Name,
+			ProjectID: id, AssetID: a.ID, AssetHash: a.Hash, State: ProjectAssetActive, Name: shown,
 			ImportedBy: c.Actor, ImportedMs: now,
 		})
 		if err != nil {
