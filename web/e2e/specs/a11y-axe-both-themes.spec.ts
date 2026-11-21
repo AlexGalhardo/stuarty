@@ -303,6 +303,7 @@ const ROUTES = [
 	"/write",
 	"/visual-assets",
 	"/video-assets",
+	"/sound-assets",
 	"/publish",
 	"/approvals",
 	"/skills",

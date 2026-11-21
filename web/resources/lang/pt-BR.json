@@ -32,6 +32,7 @@
         "write": "Escrever",
         "visual-assets": "Recursos visuais",
         "video-assets": "Recursos de vídeo",
+        "sound-assets": "Recursos de som",
         "publish": "Publicar",
         "skills": "Habilidades",
         "prompts": "Instruções",
@@ -71,7 +72,10 @@
           "holds": "Imagens, logotipos e arte gerada que você reutiliza entre projetos."
         },
         "video-assets": {
-          "holds": "Gravações, clipes, músicas e locuções que você reutiliza entre projetos."
+          "holds": "Gravações e clipes que você reutiliza entre projetos."
+        },
+        "sound-assets": {
+          "holds": "Músicas, efeitos, narrações e vozes que você reutiliza entre projetos."
         },
         "publish": {
           "holds": "O calendário do que vai ao ar e a fila de aprovação que espera por você."
@@ -2497,8 +2501,8 @@
     "generate": {
       "open": {
         "visual": "Gerar uma imagem",
-        "video": "Gerar uma locução",
-        "clip": "Gerar um clipe de vídeo"
+        "video": "Gerar um clipe de vídeo",
+        "audio": "Gerar uma locução"
       },
       "title": {
         "image": "Gerar uma imagem",
@@ -3026,7 +3030,8 @@
     "assets": {
       "intro": {
         "visual": "As imagens e tabelas de cor do seu espaço de trabalho, com a origem de cada uma e onde é usada.",
-        "video": "Os vídeos e áudios do seu espaço de trabalho, com a origem de cada um e onde é usado."
+        "video": "Os vídeos do seu espaço de trabalho, com a origem de cada um e onde é usado.",
+        "audio": "Os sons do seu espaço de trabalho (músicas, efeitos, narrações e vozes geradas), com a origem de cada um e onde é usado."
       },
       "filter": {
         "text": "Buscar",
@@ -3053,7 +3058,8 @@
       "count": "{count} arquivos",
       "empty": {
         "visual": "Nenhuma imagem ainda. Importe um arquivo em um projeto e ele aparece aqui.",
-        "video": "Nenhum vídeo ou áudio ainda. Importe um arquivo em um projeto e ele aparece aqui."
+        "video": "Nenhum vídeo ainda. Importe um arquivo em um projeto e ele aparece aqui.",
+        "audio": "Nenhum som ainda. Importe um abaixo, ou gere uma locução, e ele aparece aqui."
       },
       "empty_filtered": "Nenhum arquivo corresponde a esses filtros.",
       "more": "Carregar mais",
@@ -3080,7 +3086,21 @@
         "use_in": "Usar em um projeto",
         "use_timeline": "Em qual linha do tempo",
         "use": "Usar",
-        "used": "Adicionado ao projeto. Nenhuma cópia foi feita."
+        "used": "Adicionado ao projeto. Nenhuma cópia foi feita.",
+        "trash": "Mover para a lixeira de {project}",
+        "trashed": "Movido para a lixeira."
+      },
+      "sound": {
+        "waveform": "Forma de onda de {name}",
+        "player": "Tocar {name}",
+        "no_waveform": "Este arquivo não tem forma de onda.",
+        "import_title": "Importar um som",
+        "import_project": "Projeto",
+        "import_choose": "Escolha um projeto",
+        "import_path": "Caminho do arquivo neste computador",
+        "import_submit": "Importar",
+        "import_started": "O arquivo está sendo preparado. Ele aparece na lista quando estiver pronto; use Aplicar para ler a lista de novo.",
+        "import_no_project": "Crie um projeto antes: um som é importado em um projeto."
       }
     },
     "write": {

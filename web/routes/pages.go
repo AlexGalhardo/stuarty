@@ -100,14 +100,17 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 			return inertia.Render(c, "Approvals/Index", inertia.Props{})
 		}).Name("approvals.index")
 
-		// The asset library (epic 08, SDD-011 section 14.6): two sections over one library; the pages read and
-		// change it through /api/v1/assets.
+		// The asset library (epic 08, SDD-011 section 14.6): three sections over one library (visual, video and
+		// sound, D-121); the pages read and change it through /api/v1/assets.
 		r.Get("/visual-assets", func(c *web.Ctx) error {
 			return inertia.Render(c, "VisualAssets/Index", inertia.Props{})
 		}).Name("dashboard.visual-assets")
 		r.Get("/video-assets", func(c *web.Ctx) error {
 			return inertia.Render(c, "VideoAssets/Index", inertia.Props{})
 		}).Name("dashboard.video-assets")
+		r.Get("/sound-assets", func(c *web.Ctx) error {
+			return inertia.Render(c, "SoundAssets/Index", inertia.Props{})
+		}).Name("dashboard.sound-assets")
 
 		// The brand kit is read and saved by the page through /api/v1/brand-kit.
 		r.Get("/settings/brand-kit", func(c *web.Ctx) error {

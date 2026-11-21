@@ -37,7 +37,7 @@ A price has a unit. A text is priced per million tokens (input and output). An i
 
 OpenAI makes images (`POST /images/generations`) and speech (`POST /audio/speech`). Anthropic has neither, so it stays a text provider. Both are jobs, like a text: they show an estimate, wait for you, and cost what the price you saw says.
 
-- **An image or a voice-over lands in your library.** It is a file like any other, kept once by its content, and it remembers where it came from: the provider, the model, the prompt, what it cost and who asked. You find it with the origin filter **Generated** of Visual Assets and Video Assets, and you use it in a project like any file.
+- **An image or a voice-over lands in your library.** It is a file like any other, kept once by its content, and it remembers where it came from: the provider, the model, the prompt, what it cost and who asked. You find it with the origin filter **Generated** of Visual Assets, Video Assets and Sound Assets (a voice-over is a sound), and you use it in a project like any file.
 - **The Generate dialog** in both sections asks for the connection, the model, the prompt (or the text to read and the voice), and shows the estimate before anything is submitted.
 - **The files are checked.** A result that is not a PNG, a JPEG or a WebP (or not the audio format you asked for) is not kept. A result that the provider hands over as a link is fetched only from a host the connection lists.
 - **A refused prompt, a rate limit and a request that took too long** are three different errors. A batch of images that only partly arrives keeps what arrived and costs what arrived.

@@ -32,7 +32,7 @@ function draw(
 }
 
 describe("Sidebar", () => {
-	test("is a navigation landmark with the eleven sections in order", () => {
+	test("is a navigation landmark with the twelve sections in order", () => {
 		const html = draw("/", null);
 		expect(html).toContain('<nav aria-label="Main navigation"');
 		const labels = [
@@ -47,6 +47,7 @@ describe("Sidebar", () => {
 			"Write",
 			"Visual Assets",
 			"Video Assets",
+			"Sound Assets",
 			"Publish",
 			"Skills",
 			"Prompts",

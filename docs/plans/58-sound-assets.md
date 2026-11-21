@@ -33,7 +33,7 @@ A creator finds, listens to and reuses every sound of their library (music, effe
 
 - [x] 1. SDD-011 and SDD-012: the page, the filter, the waveform source. Verify: `task lint:md` exits 0.
 - [x] 2. The audio filter and the peaks on request in the service, with tests on HTTP, MCP and CLI parity. Verify: `go test ./service/... ./web/...` passes.
-- [ ] 3. The page, the player with the waveform and the sidebar entry. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n`, Vitest and a Playwright spec (import a sound, play it, use it in a project with two timelines).
+- [x] 3. The page, the player with the waveform and the sidebar entry. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n`, Vitest and a Playwright spec (import a sound, play it, use it in a project with two timelines).
 
 ## Acceptance criteria
 

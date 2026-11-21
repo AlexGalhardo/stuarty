@@ -12,6 +12,7 @@ const PAGES = [
 	"/write",
 	"/visual-assets",
 	"/video-assets",
+	"/sound-assets",
 	"/publish",
 	"/skills",
 	"/prompts",
