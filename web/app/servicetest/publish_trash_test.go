@@ -82,7 +82,7 @@ func TestPublication_ATimelineTrashedAfterApprovalIsNotSent(t *testing.T) {
 	c.tick()
 
 	if got := c.state(p, id); got != corepub.TargetWaitingApproval || c.net.count() != before {
-		t.Errorf("a retry after the restore = %s, %d requests; want it to ask a person again", got, c.net.count()-before)
+		t.Errorf("a retry after the restore = %s, %d requests; want a person asked", got, c.net.count()-before)
 	}
 }
 

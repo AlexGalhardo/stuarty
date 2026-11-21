@@ -544,7 +544,7 @@ func TestBundleImport_ALaterTimelineCannotTakeTheIDOfAProject(t *testing.T) {
 	}
 
 	if victim.ProjectID == project || victim.ProjectID == second {
-		t.Fatalf("the fixture needs ids that differ: victim %s, project %s, second %s", victim.ProjectID, project, second)
+		t.Fatalf("the ids must differ: victim %s, project %s, second %s", victim.ProjectID, project, second)
 	}
 
 	entries := bundleEntries(t, path)
