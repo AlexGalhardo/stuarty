@@ -29,8 +29,8 @@ func withShownNames(doc *timeline.Document, names map[string]string) *timeline.D
 	shown := *doc
 	shown.Assets = maps.Clone(doc.Assets)
 
-	for id, a := range shown.Assets {
-		if name := names[id]; name != "" {
+	for id, name := range names {
+		if a, ok := shown.Assets[id]; ok && name != "" {
 			a.Name = name
 			shown.Assets[id] = a
 		}

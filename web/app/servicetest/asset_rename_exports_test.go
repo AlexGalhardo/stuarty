@@ -88,7 +88,8 @@ func TestAssetRenameIsInTheProjectView(t *testing.T) {
 
 	before := bytes.Clone(m.document(project))
 
-	if _, err := m.svc.AssetRename(ctx, service.AssetRenameRequest{Hash: list.Assets[0].Hash, Name: "Beach"}); err != nil {
+	renamed := service.AssetRenameRequest{Hash: list.Assets[0].Hash, Name: "Beach"}
+	if _, err := m.svc.AssetRename(ctx, renamed); err != nil {
 		t.Fatal(err)
 	}
 
