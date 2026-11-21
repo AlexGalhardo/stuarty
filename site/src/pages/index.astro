@@ -82,10 +82,10 @@ import { withBase } from "@/lib/site";
 				<h2 id="yours-title" tabindex="-1" class="yours-lines mx-auto text-fg" data-in>
 					{homeYours.lines.map((line, i) => <span class:list={["block", i === homeYours.lines.length - 1 && "yours-free"]} data-split-skip={i === homeYours.lines.length - 1 ? "" : undefined}>{line}</span>)}
 				</h2>
-				<div class="mt-10" data-in>
+				<div class="take-actions" data-in>
 					<LandingActions idPrefix="take" align="center" beta={false} />
 				</div>
-				<p class="take-credits mt-8 text-xs text-muted" data-in>{credits}</p>
+				<p class="take-credits text-xs text-muted" data-in>{credits}</p>
 			</div>
 		</section>
 	</main>
@@ -115,17 +115,34 @@ import { withBase } from "@/lib/site";
 		margin-top: 0.75em;
 	}
 	/* The closing take: the lines close to the navbar, the credit at the bottom edge of the window. */
-	html.takes-on #yours {
+	/* The four buttons sit in the middle of the space between the lines and the bottom of the window; the credit is
+	   laid over that bottom edge, so it does not count in the centring. */
+	#yours {
 		align-items: stretch;
-		padding-block: clamp(1.5rem, 5vh, 3.5rem) 0.75rem;
+		padding-bottom: 0;
 	}
-	html.takes-on #yours > .site-container {
+	html.takes-on #yours {
+		padding-top: clamp(1.5rem, 5vh, 3.5rem);
+	}
+	#yours > .site-container {
 		display: flex;
 		flex-direction: column;
 	}
-	html.takes-on #yours .take-credits {
-		margin-top: auto;
-		padding-top: 1.5rem;
+	#yours .take-actions {
+		margin-block: auto;
+		padding-block: 3rem;
+	}
+	/* Below 24rem the credit wraps to two lines: more room under the buttons, the same above to stay centred. */
+	@media (max-width: 24rem) {
+		#yours .take-actions {
+			padding-block: 3.75rem;
+		}
+	}
+	#yours .take-credits {
+		position: absolute;
+		inset-inline: 1rem;
+		bottom: 0.75rem;
+		margin: 0;
 	}
 	/* "Free. Forever.": orange to pink text, darker stops on the light page (3.6:1 and 5.1:1 on white), brighter on
 	   the dark one (8.5:1 and 5.5:1), with a slow shimmer that stops under reduced motion. */
