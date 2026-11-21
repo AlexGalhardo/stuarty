@@ -50,6 +50,9 @@ export function RuleRow({
 	const locale = useLocale();
 	const perItem = limit(rule.per_item_micros, rule.currency, locale);
 	const perDay = limit(rule.per_day_micros, rule.currency, locale);
+	// Turning a rule off and removing it need a person, as writing one does (VV-319).
+	const { privileged } = useSession();
+	const reason = privileged ? undefined : "rules-person-only";
 	return (
 		<li
 			className="flex items-start justify-between gap-4 p-4"
@@ -87,7 +90,13 @@ export function RuleRow({
 				</p>
 			</div>
 			<div className="flex shrink-0 gap-2">
-				<Button type="button" variant="outline" onClick={onToggle}>
+				<Button
+					type="button"
+					variant="outline"
+					disabled={!privileged}
+					aria-describedby={reason}
+					onClick={onToggle}
+				>
 					{rule.enabled
 						? t("ui.approvals.rules.disable")
 						: t("ui.approvals.rules.enable")}
@@ -96,7 +105,13 @@ export function RuleRow({
 						<UntrustedText>{rule.kind}</UntrustedText>
 					</span>
 				</Button>
-				<Button type="button" variant="outline" onClick={onRemove}>
+				<Button
+					type="button"
+					variant="outline"
+					disabled={!privileged}
+					aria-describedby={reason}
+					onClick={onRemove}
+				>
 					{t("ui.approvals.rules.remove")}
 					<span className="sr-only">
 						{" "}
