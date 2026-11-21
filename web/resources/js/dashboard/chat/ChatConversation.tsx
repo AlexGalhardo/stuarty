@@ -49,6 +49,8 @@ export default function ChatConversation({
 	const chosen =
 		profile !== "" && names.includes(profile) ? profile : (names[0] ?? "");
 	const live = session?.live === true;
+	// What drives a chat is refused to a session that is not a person's; reading and exporting it are not.
+	const personOnly = privileged ? undefined : `${ids}-person-only`;
 
 	// follow the conversation while the person is at the bottom of it
 	// biome-ignore lint/correctness/useExhaustiveDependencies: scroll after every new event
@@ -119,7 +121,7 @@ export default function ChatConversation({
 					disabled={
 						!privileged || chat.busy || chat.projectId === null || chosen === ""
 					}
-					aria-describedby={privileged ? undefined : `${ids}-person-only`}
+					aria-describedby={personOnly}
 					onClick={() => void chat.start(chosen)}
 				>
 					{live ? t("ui.chat.new_session") : t("ui.chat.start")}
@@ -128,7 +130,8 @@ export default function ChatConversation({
 					<Button
 						size="sm"
 						variant="outline"
-						disabled={chat.busy}
+						disabled={!privileged || chat.busy}
+						aria-describedby={personOnly}
 						onClick={() => void chat.cancel(false)}
 					>
 						{t("ui.chat.stop")}
@@ -138,7 +141,8 @@ export default function ChatConversation({
 					<Button
 						size="sm"
 						variant="ghost"
-						disabled={chat.busy}
+						disabled={!privileged || chat.busy}
+						aria-describedby={personOnly}
 						onClick={() => void chat.cancel(true)}
 					>
 						{t("ui.chat.end_session")}
@@ -158,7 +162,8 @@ export default function ChatConversation({
 							<Button
 								size="sm"
 								variant="destructive"
-								disabled={chat.busy}
+								disabled={!privileged || chat.busy}
+								aria-describedby={personOnly}
 								onClick={() => {
 									setConfirmDelete(false);
 									void chat.removeSession();
@@ -170,7 +175,8 @@ export default function ChatConversation({
 							<Button
 								size="sm"
 								variant="ghost"
-								disabled={chat.busy}
+								disabled={!privileged || chat.busy}
+								aria-describedby={personOnly}
 								onClick={() => setConfirmDelete(true)}
 							>
 								{t("ui.chat.delete")}
@@ -224,6 +230,7 @@ export default function ChatConversation({
 						event={event}
 						open={waiting.has(event.permission?.request_id ?? "")}
 						busy={chat.busy}
+						personOnly={personOnly}
 						onAnswer={(id, answer) => void chat.answer(id, answer)}
 					/>
 				))}
@@ -241,7 +248,7 @@ export default function ChatConversation({
 					value={text}
 					maxLength={20000}
 					disabled={!privileged || !canSend(state)}
-					aria-describedby={privileged ? undefined : `${ids}-person-only`}
+					aria-describedby={personOnly}
 					onChange={(event) => setText(event.target.value)}
 					onKeyDown={onKey}
 					className="min-h-16"
@@ -256,6 +263,7 @@ export default function ChatConversation({
 						disabled={
 							!privileged || !canSend(state) || chat.busy || text.trim() === ""
 						}
+						aria-describedby={personOnly}
 					>
 						{t("ui.chat.send")}
 					</Button>
