@@ -120,6 +120,9 @@ func TestPoolClosesItsInstancesWhenNoneIsTakenForItsTTL(t *testing.T) {
 	ctx := context.Background()
 	p := NewPool(Config{Uncancellable: true}, 2, 1<<30, 20*time.Millisecond)
 
+	drained := make(chan struct{})
+	p.drained = func() { close(drained) }
+
 	h, err := p.Get(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -127,12 +130,13 @@ func TestPoolClosesItsInstancesWhenNoneIsTakenForItsTTL(t *testing.T) {
 
 	p.Put(h)
 
-	deadline := time.Now().Add(10 * time.Second)
-	for p.Idle() != 0 {
-		if time.Now().After(deadline) {
-			t.Fatal("the idle instance was never closed")
-		}
+	select {
+	case <-drained:
+	case <-time.After(10 * time.Second):
+		t.Fatal("the idle instance was never closed")
+	}
 
-		time.Sleep(10 * time.Millisecond)
+	if n := p.Idle(); n != 0 {
+		t.Fatalf("the pool still holds %d instances after its TTL", n)
 	}
 }

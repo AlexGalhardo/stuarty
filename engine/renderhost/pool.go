@@ -23,6 +23,9 @@ type Pool struct {
 	mu    sync.Mutex
 	idle  []*Host
 	timer *time.Timer
+
+	// drained, set by a test before the first Put, runs after a Drain: the timer gives a test nothing else to wait on.
+	drained func()
 }
 
 // NewPool makes a pool of instances made with cfg.
@@ -93,6 +96,10 @@ func (p *Pool) Drain() {
 
 	for _, h := range idle {
 		_ = h.Close(context.Background())
+	}
+
+	if p.drained != nil {
+		p.drained()
 	}
 }
 
