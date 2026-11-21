@@ -111,7 +111,7 @@ func importBlocks(rawOrigin, rawInfo json.RawMessage) (*asset.Origin, *service.A
 }
 
 // libraryEdit is media_import with a hash and no paths: the description, the rights note and the reuse mark are
-// set, then the tags are added and removed.
+// set, then the tags are added and removed, then the file is renamed when info.name is given.
 func libraryEdit(ctx context.Context, svc service.Service, hash string, rawInfo json.RawMessage) (*toolOutput, error) {
 	var in struct {
 		Tags       []string `json:"tags"`
@@ -119,6 +119,7 @@ func libraryEdit(ctx context.Context, svc service.Service, hash string, rawInfo 
 		Reusable   *bool    `json:"reusable"`
 		Desc       *string  `json:"description"`
 		RightsNote *string  `json:"rights_note"`
+		Name       *string  `json:"name"`
 	}
 
 	if err := strict(rawInfo, "info", &in); err != nil {
@@ -147,10 +148,19 @@ func libraryEdit(ctx context.Context, svc service.Service, hash string, rawInfo 
 		}
 	}
 
+	if in.Name != nil {
+		var err error
+
+		res, err = svc.AssetRename(ctx, service.AssetRenameRequest{Hash: hash, Name: *in.Name})
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	if res == nil {
 		return nil, &service.Error{
 			Code: command.CodeValidation, Path: "info",
-			Message: "info has nothing to change: give tags, remove_tags, reusable, description or rights_note.",
+			Message: "info has nothing to change: give tags, remove_tags, reusable, description, rights_note or name.",
 		}
 	}
 

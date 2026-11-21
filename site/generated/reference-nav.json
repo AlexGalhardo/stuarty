@@ -54,6 +54,7 @@
         "assets.list",
         "assets.get",
         "assets.set",
+        "assets.rename",
         "assets.tag",
         "assets.uses",
         "media.list",

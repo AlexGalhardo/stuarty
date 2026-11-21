@@ -818,3 +818,83 @@ func TestAssetLibraryReuseByHashKeepsTheCallersName(t *testing.T) {
 		t.Errorf("bob finds the file by alice's name: %+v", found)
 	}
 }
+
+func TestAssetRenameChangesTheNameEverywhereTheCallerHoldsTheFile(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	ctx := m.as(ui)
+	p1, p2 := m.newProject("one"), m.newProject("two")
+
+	hash := m.importOne(p1, m.write("IMG_0421.mp4", clipBytes)).Assets[0].Hash
+
+	if _, err := m.svc.MediaImport(ctx, service.MediaImportRequest{
+		ProjectID: p2, Files: []service.ImportFile{{Hash: hash}},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := m.svc.AssetRename(ctx, service.AssetRenameRequest{Hash: hash, Name: "  Beach day "})
+	if err != nil || got.Name != "Beach day.mp4" || got.Hash != hash {
+		t.Fatalf("rename = %+v, %v", got, err)
+	}
+
+	for _, p := range []string{p1, p2} {
+		list, lerr := m.svc.MediaList(ctx, service.MediaListRequest{ProjectID: p})
+		if lerr != nil || len(list.Assets) != 1 || list.Assets[0].Name != "Beach day.mp4" {
+			t.Errorf("media of %s = %+v, %v", p, list, lerr)
+		}
+	}
+
+	found, err := m.svc.AssetList(ctx, service.AssetListRequest{Text: "beach"})
+	if err != nil || len(found.Assets) != 1 || found.Assets[0].Name != "Beach day.mp4" {
+		t.Errorf("a search for the new name = %+v, %v", found, err)
+	}
+
+	if old, _ := m.svc.AssetList(ctx, service.AssetListRequest{Text: "IMG_0421"}); old == nil || len(old.Assets) != 0 {
+		t.Errorf("the old name still finds the file: %+v", old)
+	}
+
+	if len(storeFiles(t, m.ws)) != 1 {
+		t.Errorf("the stored file changed: %v", storeFiles(t, m.ws))
+	}
+
+	for _, bad := range []string{"", "a/b.mp4", `a\b.mp4`, "a\x00b", strings.Repeat("x", 121)} {
+		_, rerr := m.svc.AssetRename(ctx, service.AssetRenameRequest{Hash: hash, Name: bad})
+
+		e := serviceErr(rerr)
+		if e == nil || e.Code != command.CodeValidation || e.Path != "name" || e.Details["reason"] != "name_invalid" {
+			t.Errorf("rename to %q = %+v", bad, rerr)
+		}
+	}
+}
+
+func TestAssetRenameIsRefusedForAFileOfAnotherUser(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	as := func(user string) context.Context {
+		return service.WithCaller(context.Background(), service.Caller{
+			Actor: "user:" + user, Scopes: service.AllScopes, OwnerUserID: user,
+		})
+	}
+	alice, bob := as("alice"), as("bob")
+
+	res, err := testproject.CreateWithTimeline(alice, m.svc, "Alice clips")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	first, err := m.svc.MediaImport(alice, service.MediaImportRequest{
+		ProjectID: res.ProjectID, Files: []service.ImportFile{{Path: m.write("private.mp4", clipBytes)}},
+	})
+	if err != nil || first.Failed != 0 {
+		t.Fatalf("import = %+v, %v", first, err)
+	}
+
+	_, err = m.svc.AssetRename(bob, service.AssetRenameRequest{Hash: first.Assets[0].Hash, Name: "mine"})
+	if e := serviceErr(err); e == nil || e.Code != command.CodeNotFound {
+		t.Fatalf("bob's rename = %v, want E_NOT_FOUND", err)
+	}
+
+	list, err := m.svc.MediaList(alice, service.MediaListRequest{ProjectID: res.ProjectID})
+	if err != nil || list.Assets[0].Name != "private.mp4" {
+		t.Errorf("alice's name changed: %+v, %v", list, err)
+	}
+}

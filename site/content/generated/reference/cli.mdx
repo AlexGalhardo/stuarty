@@ -2408,6 +2408,26 @@ Example:
 stuarty asset:tag sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --add logo,brand
 ```
 
+## `asset:rename`
+
+Rename a file of the library; the stored file keeps its hash
+
+```text
+stuarty asset:rename <hash> --name <name>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--name` | string |  | the new name, 1 to 120 characters, with no path separator; the extension is kept |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty asset:rename sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --name Beach-day
+```
+
 ## `motion:brief`
 
 What a render by an external motion engine must fit: size, rate, length, safe area, brand kit, captions

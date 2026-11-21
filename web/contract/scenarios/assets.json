@@ -23,6 +23,9 @@
 		{"call": "AssetList", "args": {"project": "prj_8m3q6w9e2r"}},
 		{"call": "AssetList", "args": {"section": "audio"}},
 		{"call": "AssetList", "args": {"section": "sounds"}, "expect_error": {"code": "E_VALIDATION"}},
-		{"call": "AssetList", "args": {"reusable": true}}
+		{"call": "AssetList", "args": {"reusable": true}},
+		{"call": "AssetRename", "args": {"hash": "sha256:926740d102dff40b0c0afdd2d37465ac2574348af2d4734e2e4e0878e762e76e", "name": "a/b"}, "expect_error": {"code": "E_VALIDATION"}},
+		{"call": "AssetRename", "args": {"hash": "sha256:926740d102dff40b0c0afdd2d37465ac2574348af2d4734e2e4e0878e762e76e", "name": "Reaction cat"}},
+		{"call": "AssetGet", "args": {"hash": "sha256:926740d102dff40b0c0afdd2d37465ac2574348af2d4734e2e4e0878e762e76e"}}
 	]
 }

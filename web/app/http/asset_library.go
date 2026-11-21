@@ -31,6 +31,11 @@ type assetTagIn struct {
 	Remove []string `json:"remove,omitempty" doc:"Tags to take off."`
 }
 
+type assetRenameIn struct {
+	assetRefIn
+	Name string `json:"name" validate:"required" doc:"The new name, 1 to 120 characters, with no path separator; the extension of the file is kept."`
+}
+
 // parseReusable reads the query reusable: absent keeps every file, true and false filter.
 func parseReusable(raw string) (*bool, error) {
 	switch raw {
@@ -66,6 +71,12 @@ func (h *apiHandler) assetSet(c *web.Ctx, in assetSetIn) (service.AssetResult, e
 	res, err := h.Service.AssetSetInfo(c.Context(), service.AssetSetInfoRequest{
 		Hash: in.Hash, Description: in.Description, RightsNote: in.RightsNote, Reusable: in.Reusable,
 	})
+
+	return deref(res), err
+}
+
+func (h *apiHandler) assetRename(c *web.Ctx, in assetRenameIn) (service.AssetResult, error) {
+	res, err := h.Service.AssetRename(c.Context(), service.AssetRenameRequest{Hash: in.Hash, Name: in.Name})
 
 	return deref(res), err
 }

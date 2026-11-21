@@ -15506,6 +15506,85 @@
         "summary": "Set the description, the rights note and the reuse mark of a file"
       }
     },
+    "/api/v1/assets/{hash}/rename": {
+      "post": {
+        "operationId": "assets.rename",
+        "parameters": [
+          {
+            "description": "sha256: and 64 hex digits, as the library lists it.",
+            "in": "path",
+            "name": "hash",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "name": {
+                    "description": "The new name, 1 to 120 characters, with no path separator; the extension of the file is kept.",
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Rename a file of the library; the stored file keeps its hash"
+      }
+    },
     "/api/v1/assets/{hash}/tags": {
       "post": {
         "operationId": "assets.tag",

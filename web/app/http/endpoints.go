@@ -412,6 +412,10 @@ var Endpoints = []Endpoint{
 		Service: "AssetTag", Status: 200, Summary: "Add and remove the tags of a file",
 	},
 	{
+		ID: "assets.rename", Method: http.MethodPost, Path: "/assets/{hash}/rename", Scope: service.ScopeMedia,
+		Service: "AssetRename", Status: 200, Summary: "Rename a file of the library; the stored file keeps its hash",
+	},
+	{
 		ID: "fonts.list", Method: http.MethodGet, Path: "/fonts", Scope: service.ScopeRead,
 		Service: "FontList", Status: 200, Summary: "List the bundled font families and weights",
 	},

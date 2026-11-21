@@ -259,3 +259,35 @@ var assetTagCmd = &spec{
 		return &output{value: res, text: res.Text}, nil
 	},
 }
+
+var assetRenameCmd = &spec{
+	name:       "asset:rename",
+	summary:    "rename a file of the library; the stored file keeps its hash",
+	usage:      []string{"stuarty asset:rename <hash> --name <name>"},
+	example:    "stuarty asset:rename sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b --name Beach-day",
+	positional: true,
+	write:      true,
+	flags: []flagDef{
+		{
+			Name: "name", Kind: kindString,
+			Usage: "the new name, 1 to 120 characters, with no path separator; the extension is kept",
+		},
+	},
+	run: func(ctx context.Context, c *call) (*output, error) {
+		hash, err := assetHash(c, "asset:rename")
+		if err != nil {
+			return nil, err
+		}
+
+		if !c.args.has("name") {
+			return nil, validation("", "asset:rename needs --name.")
+		}
+
+		res, err := c.svc.AssetRename(ctx, service.AssetRenameRequest{Hash: hash, Name: c.args.str("name")})
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: res.Text}, nil
+	},
+}

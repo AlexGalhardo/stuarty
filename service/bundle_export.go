@@ -195,11 +195,14 @@ type bundleLog struct {
 
 // bundleSnapshot is one timeline as the export read it: its row, and its log in a temporary file.
 type bundleSnapshot struct {
-	key  string
-	row  ProjectRow
-	doc  *timeline.Document
-	logf *os.File
-	log  bundleLog
+	key string
+	row ProjectRow
+	doc *timeline.Document
+	// names is the display name of each asset of the timeline, by asset id (SDD-011 section 14.8): the manifest
+	// carries it, not the name the document was written with.
+	names map[string]string
+	logf  *os.File
+	log   bundleLog
 }
 
 func closeSnapshots(snaps []*bundleSnapshot) {
@@ -220,7 +223,17 @@ func snapshotTimeline(
 		return nil, err
 	}
 
-	sn := &bundleSnapshot{row: row}
+	sn := &bundleSnapshot{row: row, names: map[string]string{}}
+
+	rows, err := tx.Assets().ListProjectAssets(ctx, id, ProjectAssetActive)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range rows {
+		sn.names[rows[i].AssetID] = rows[i].Name
+	}
+
 	if !includeLog {
 		return sn, nil
 	}
@@ -455,7 +468,7 @@ func (s *svc) bundleManifest(
 	seen := map[string]bool{}
 
 	for _, sn := range snaps {
-		more, err := s.addDocumentFiles(m, sn.doc, index, seen)
+		more, err := s.addDocumentFiles(m, sn.doc, sn.names, index, seen)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -473,7 +486,7 @@ func (s *svc) bundleManifest(
 // addDocumentFiles adds the media and fonts of one document to the manifest, once each, and returns the files
 // that go into the zip.
 func (s *svc) addDocumentFiles(
-	m *BundleManifest, doc *timeline.Document, index map[string]int, seen map[string]bool,
+	m *BundleManifest, doc *timeline.Document, names map[string]string, index map[string]int, seen map[string]bool,
 ) ([]bundleFile, *Error) {
 	var files []bundleFile
 
@@ -493,9 +506,14 @@ func (s *svc) addDocumentFiles(
 			return nil, err
 		}
 
+		name := a.Name
+		if shown, ok := names[a.ID]; ok && shown != "" {
+			name = shown
+		}
+
 		index[a.Hash] = len(m.Media)
 		m.Media = append(m.Media,
-			BundleMedia{Hash: a.Hash, Kind: string(a.Kind), Name: a.Name, Bytes: size, AssetIDs: []string{a.ID}})
+			BundleMedia{Hash: a.Hash, Kind: string(a.Kind), Name: name, Bytes: size, AssetIDs: []string{a.ID}})
 		files = append(files, bundleFile{entry: bundleMediaEntry(a.Hash), hash: a.Hash, size: size})
 	}
 
