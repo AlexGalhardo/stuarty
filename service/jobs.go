@@ -62,6 +62,16 @@ func (s *svc) authorizeStart(ctx context.Context, req *JobStartRequest, approvab
 	return c, s.requireCovers(ctx, c, req.ProjectID)
 }
 
+// useStartTimeline resolves the timeline a job is kept under: the one the request names, or for a kind of work that
+// belongs to the project (ProjectWide) the first active one.
+func (s *svc) useStartTimeline(ctx context.Context, c Caller, req *JobStartRequest, k *ApprovableKind) error {
+	if k != nil && k.ProjectWide && req.TimelineID == "" {
+		return s.useAnchorTimeline(ctx, c, &req.ProjectID)
+	}
+
+	return s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID)
+}
+
 // useAnchorTimeline is useTimeline for work that belongs to the project (a generation, VV-330): the job is kept
 // under the first active timeline, since a job row still names a timeline, and the caller is not asked which of
 // several. A project with no active timeline cannot hold the job yet.
@@ -103,13 +113,7 @@ func (s *svc) JobStart(ctx context.Context, req JobStartRequest) (*Job, error) {
 		return nil, err
 	}
 
-	if approvable != nil && approvable.ProjectWide && req.TimelineID == "" {
-		err = s.useAnchorTimeline(ctx, c, &req.ProjectID)
-	} else {
-		err = s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID)
-	}
-
-	if err != nil {
+	if err := s.useStartTimeline(ctx, c, &req, approvable); err != nil {
 		return nil, err
 	}
 
