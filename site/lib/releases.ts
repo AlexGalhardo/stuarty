@@ -18,7 +18,7 @@ const REPO = "AlexGalhardo/stuarty";
 const LATEST_PAGE = `https://github.com/${REPO}/releases/latest`;
 
 /** The committed default: the newest release when this file was last changed. */
-export const FALLBACK_TAG = "v0.42.0";
+export const FALLBACK_TAG = "v0.43.0";
 
 type Asset = { name: string; browser_download_url: string };
 
