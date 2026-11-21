@@ -51,16 +51,20 @@ type PublicationFailedData struct {
 	Network       string `json:"network"`
 	ConnectionID  string `json:"connection_id"`
 	ErrorKind     string `json:"error_kind,omitempty"`
+	// ApprovalID is the request of the send that failed; it makes the id of the event and is not in the body. A target
+	// that is retried gets a new request, so its next failure is a new event and not a duplicate of the first.
+	ApprovalID string `json:"-"`
 }
 
 // EventName implements Data.
 func (PublicationFailedData) EventName() string { return PublicationFailed }
-func (d PublicationFailedData) key() string     { return d.TargetID }
+func (d PublicationFailedData) key() string     { return d.TargetID + "\x00" + d.ApprovalID }
 
 // ExportReadyData is the data of export.ready.
 type ExportReadyData struct {
-	JobID     string `json:"job_id"`
-	ProjectID string `json:"project_id"`
+	JobID string `json:"job_id"`
+	// ProjectID is empty for the export of an image, which belongs to no project.
+	ProjectID string `json:"project_id,omitempty"`
 	Kind      string `json:"kind"`
 	Format    string `json:"format,omitempty"`
 	Bytes     int64  `json:"bytes"`

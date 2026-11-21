@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+	"encoding/json"
 	"strings"
 	"testing"
 	"time"
@@ -9,6 +11,7 @@ import (
 	core "github.com/AlexGalhardo/stuarty/core/webhook"
 	"github.com/AlexGalhardo/stuarty/service/approval"
 	pub "github.com/AlexGalhardo/stuarty/service/publish"
+	"github.com/AlexGalhardo/stuarty/service/webhooks"
 )
 
 // The events of the bus that become events of a webhook, and the text of the product that must not go with them.
@@ -50,6 +53,52 @@ func TestWebhookEventCarriesTheAddressOfAPublicPostOnly(t *testing.T) {
 		if want == "" && strings.Contains(string(body), "youtu.be") {
 			t.Errorf("visibility %q: the body holds the address: %s", visibility, body)
 		}
+	}
+}
+
+// hookStore keeps what the dispatcher stores for one webhook that chose every event.
+type hookStore struct {
+	webhooks.Store
+
+	got []webhooks.Delivery
+}
+
+func (h *hookStore) List(context.Context) ([]webhooks.Row, error) {
+	return []webhooks.Row{{
+		ID: "whk_aaaaaaaaaa", Enabled: true, Events: []string{core.JobFailed, core.ExportReady},
+	}}, nil
+}
+
+func (h *hookStore) Enqueue(_ context.Context, d webhooks.Delivery) (bool, error) {
+	h.got = append(h.got, d)
+
+	return true, nil
+}
+
+// A job with no project and no file has no stream to publish on, and a webhook that chose job.failed still hears it.
+func TestWebhookHearsTheFailureOfAJobWithNoProject(t *testing.T) {
+	t.Parallel()
+
+	now := time.Date(2026, 11, 20, 12, 0, 0, 0, time.UTC)
+	st := &hookStore{}
+	s := &svc{now: func() time.Time { return now }}
+	s.hooks = webhooks.New(webhooks.Options{
+		Store: st, Secrets: webhookSecrets{s}, NewID: func(p string) string { return p + "_aaaaaaaaaa" },
+		Clock: svcClock{now: s.now},
+	})
+
+	s.emitJob(context.Background(), &JobRow{
+		ID: "job_aaaaaaaaaa", Kind: JobImageGenerate, State: JobFailed,
+		Error: json.RawMessage(`{"code":"E_PROVIDER","message":"A MESSAGE WITH A PROMPT"}`),
+	})
+
+	if len(st.got) != 1 || st.got[0].Event != core.JobFailed {
+		t.Fatalf("deliveries = %+v", st.got)
+	}
+
+	body := string(st.got[0].Body)
+	if !strings.Contains(body, "E_PROVIDER") || strings.Contains(body, "PROMPT") || strings.Contains(body, "project_id") {
+		t.Fatalf("body = %s", body)
 	}
 }
 
@@ -119,6 +168,15 @@ func TestWebhookEventsFromTheBus(t *testing.T) {
 				Result: &JobResult{
 					Export: &ExportResult{Format: "mp4", Bytes: 5, Width: 1080, Height: 1920, Path: "/home/a/out.mp4"},
 				},
+			},
+			[]string{core.ExportReady},
+		},
+		"image export": {
+			Event{
+				Type: "job.updated", Kind: JobImageExport, State: JobSucceeded, JobID: job,
+				Result: &JobResult{Image: &ImageExportResult{
+					Format: "png", Bytes: 5, Width: 1080, Height: 1920, Path: "/home/a/out.png", Text: "A DESCRIPTION",
+				}},
 			},
 			[]string{core.ExportReady},
 		},

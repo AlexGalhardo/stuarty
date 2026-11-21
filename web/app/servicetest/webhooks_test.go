@@ -558,6 +558,42 @@ func TestWebhookOnlyReceivesTheEventsItChoseWhileEnabled(t *testing.T) {
 	}
 }
 
+// The export of an image is an export: its job is born finished and on no stream, and a webhook still hears it.
+func TestWebhookHearsTheExportOfAnImage(t *testing.T) {
+	h := newHookEnv(t)
+	rc := newReceiver(t)
+	w := h.create(rc.srv.URL, core.ExportReady)
+	ctx := h.as(ui)
+
+	created, err := h.svc.ImageCreate(ctx, service.ImageCreateRequest{Preset: "video_thumbnail", Name: "SECRET TITLE"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	out, err := h.svc.ImageExport(ctx, service.ImageExportRequest{ImageID: created.ImageID, Format: "jpeg"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	h.disp.RunOnce(context.Background())
+
+	got := rc.all()
+	if len(got) != 1 || got[0].header.Get("Stuarty-Event") != core.ExportReady {
+		t.Fatalf("the receiver got %d request(s)", len(got))
+	}
+
+	body := string(got[0].body)
+	if !strings.Contains(body, out.JobID) || !strings.Contains(body, `"kind":"image.export"`) ||
+		strings.Contains(body, "SECRET TITLE") || strings.Contains(body, "exports") ||
+		strings.Contains(body, "project_id") {
+		t.Fatalf("body = %s", body)
+	}
+
+	if ds := h.deliveries(w.ID); len(ds) != 1 || ds[0].State != core.StateSucceeded {
+		t.Fatalf("deliveries = %+v", ds)
+	}
+}
+
 // Acceptance criterion 1: with no webhook registered nothing is written for an event and nothing is dialled, and with
 // every webhook removed the same.
 func TestWebhookNoneRegisteredOpensNoConnection(t *testing.T) {

@@ -50,9 +50,9 @@ At most 20 webhooks per workspace (`E_LIMIT_EXCEEDED`). The secret has the form 
 | --- | --- | --- |
 | `publication.published` | a target of a publication went out (`published`) | `publication_id`, `target_id`, `project_id`, `network`, `connection_id`, `url` (the address of the post, only when the visibility of the target is `public`, `https`, and at most 2048 characters: the link of an unlisted post is what keeps it private, and a target that names no visibility is private), `published_at` |
 | `publication.failed` | a target of a publication failed for good (`failed`) | `publication_id`, `target_id`, `project_id`, `network`, `connection_id`, `error_kind` (the kind of SDD-020 section 11, never its text) |
-| `export.ready` | an export job succeeded | `job_id`, `project_id`, `kind`, `format`, `bytes`, `width`, `height` |
+| `export.ready` | an export job succeeded: of a timeline (`export`), or of an image (`image.export`), which has no project and so no `project_id` | `job_id`, `project_id`, `kind`, `format`, `bytes`, `width`, `height` |
 | `approval.requested` | a request waits for a person | `approval_id`, `kind`, `project_id`, `job_id`, `connection_id`, `expires_at`; never its summary |
-| `job.failed` | a job ended in `failed` | `job_id`, `project_id`, `kind`, `state`, `error_code` |
+| `job.failed` | a job ended in `failed`, with no `project_id` when it belongs to no project | `job_id`, `project_id`, `kind`, `state`, `error_code` |
 | `webhook.test` | the person pressed "send test"; it cannot be chosen as an event | `webhook_id` |
 
 The body of a delivery is one JSON object:
@@ -61,7 +61,7 @@ The body of a delivery is one JSON object:
 {"event":"export.ready","id":"evt_3f9c0a71b2d4e5a60718","occurred_at":"2026-11-20T12:00:00Z","workspace":"wsp_4c1e0d92ab","data":{"job_id":"job_...","project_id":"prj_...","kind":"export","format":"mp4","bytes":1048576,"width":1080,"height":1920}}
 ```
 
-- `id` is `evt_` and 20 hexadecimal characters of the SHA-256 of the event name and the subject (for example `export.ready` and the job id), so the same event is the same id on every delivery and on a redelivery, and a receiver can drop a duplicate. `webhook.test` takes a random id.
+- `id` is `evt_` and 20 hexadecimal characters of the SHA-256 of the event name and the subject (for example `export.ready` and the job id), so the same event is the same id on every delivery and on a redelivery, and a receiver can drop a duplicate. The subject of `publication.failed` is the target and its approval request: a retry makes a new request, so a target that fails again is a new event. `webhook.test` takes a random id.
 - `workspace` is `wsp_` and 10 hexadecimal characters of the SHA-256 of the workspace path: stable, opaque, and it does not reveal the path.
 - `data` holds only the members of the table, built from an allow-list in `core/webhook`. A text the product holds (a title, a caption, a summary, a prompt, an error message) is not a member of any event. The body is at most 8 KiB; larger is a defect.
 - An event is built once, when it happens, and stored with its delivery, so a redelivery sends the same body with a new signature.

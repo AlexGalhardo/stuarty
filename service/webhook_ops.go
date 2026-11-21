@@ -592,6 +592,12 @@ func (s *svc) webhookEvents(e Event) []core.Data {
 				JobID: e.JobID, ProjectID: e.ProjectID, Kind: e.Kind, Format: x.Format, Bytes: x.Bytes, Width: x.Width,
 				Height: x.Height,
 			}}
+		case e.State == JobSucceeded && e.Kind == JobImageExport && e.Result != nil && e.Result.Image != nil:
+			x := e.Result.Image
+
+			return []core.Data{core.ExportReadyData{
+				JobID: e.JobID, Kind: e.Kind, Format: x.Format, Bytes: x.Bytes, Width: x.Width, Height: x.Height,
+			}}
 		case e.State == JobFailed:
 			d := core.JobFailedData{JobID: e.JobID, ProjectID: e.ProjectID, Kind: e.Kind, State: e.State}
 			if e.Error != nil {
@@ -629,6 +635,7 @@ func (s *svc) publicationWebhookEvents(e Event) []core.Data {
 				ProjectID:     p.ProjectID,
 				Network:       t.Network,
 				ConnectionID:  t.ConnectionID,
+				ApprovalID:    t.ApprovalID,
 			}
 			if t.Error != nil {
 				d.ErrorKind = t.Error.Kind

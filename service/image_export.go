@@ -183,6 +183,12 @@ func (s *svc) recordImageExport(ctx context.Context, c Caller, res *ImageExportR
 
 	res.JobID = id
 
+	// The job is born finished and no stream follows it, so the event of a webhook is made here (SDD-022 section 3).
+	s.fanWebhooks(Event{
+		Type: "job.updated", JobID: id, Kind: JobImageExport, State: JobSucceeded, Result: &JobResult{Image: &stored},
+		At: s.now(),
+	})
+
 	return nil
 }
 
