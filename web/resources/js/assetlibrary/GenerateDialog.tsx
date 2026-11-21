@@ -95,6 +95,18 @@ export function choicesOf(
 	});
 }
 
+// The library of a production is the library of its timeline, and a production with several names none: the
+// first active timeline stands for it. A production with no timeline keeps its own id (VV-334).
+export function libraryOf(
+	productionId: string,
+	items: { id: string; kind: string; state: string; timeline_id?: string }[],
+): string {
+	const first = items.find(
+		(item) => item.kind === "timeline" && item.state === "active",
+	);
+	return first === undefined ? productionId : (first.timeline_id ?? first.id);
+}
+
 // Whether a provider of the product has the capability at all, connected or not: with none (no provider makes
 // video yet, SDD-016 section 2.3) there is nothing to connect, so the dialog does not send the person to look.
 export function anyMaker(providers: ProviderView[], kind: Kind): boolean {
@@ -194,7 +206,8 @@ export function GenerateDialog({
 		setFirstFrame("");
 		void (async () => {
 			try {
-				const list = await api().listMedia(project);
+				const described = await api().describeProject(project);
+				const list = await api().listMedia(libraryOf(project, described.items));
 				if (!alive) return;
 				setFrames(
 					list.assets.filter(
