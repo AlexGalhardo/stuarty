@@ -18,7 +18,6 @@ import (
 var resultSchemas = map[string]string{
 	"ProjectList":    "ProjectListResult",
 	"ProjectCreate":  "ProjectCreateResult",
-	"ProjectUpdate":  "ProjectUpdateResult",
 	"ProjectItemAdd": "ProjectItemResult",
 	"ProjectGet":     "ProjectGetResult",
 	"Edit":           "EditResult",

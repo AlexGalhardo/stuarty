@@ -143,6 +143,8 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.TemplateExport)
 	case "TemplateImport":
 		return invoke(ctx, s, svc.TemplateImport)
+	case "ProjectUpdate":
+		return invoke(ctx, s, svc.ProjectUpdate)
 	case "ProjectTrash":
 		return invoke(ctx, s, svc.ProjectTrash)
 	case "ProjectRestore":
@@ -636,6 +638,25 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		args["action"] = "import"
 
 		return "template", args, nil
+	case "ProjectUpdate":
+		// ProjectUpdate is the action update of project_item: the name is the title and the description the text.
+		delete(args, "dry_run")
+
+		args["action"] = "update"
+
+		if v, ok := args["name"]; ok {
+			args["title"] = v
+
+			delete(args, "name")
+		}
+
+		if v, ok := args["description"]; ok {
+			args["text"] = v
+
+			delete(args, "description")
+		}
+
+		return "project_item", args, nil
 	case "ProjectTrash", "ProjectRestore":
 		delete(args, "dry_run")
 
@@ -1139,6 +1160,18 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		}
 
 		return "otio:import", argv, "", nil
+	case "ProjectUpdate":
+		argv = append(argv, a.ProjectID)
+		argv = append(argv, flag("name", a.Name)...)
+		argv = append(argv, flag("description", a.Description)...)
+		argv = append(argv, flag("specific", a.Goal.Specific)...)
+		argv = append(argv, flag("measurable", a.Goal.Measurable)...)
+		argv = append(argv, flag("achievable", a.Goal.Achievable)...)
+		argv = append(argv, flag("relevant", a.Goal.Relevant)...)
+		argv = append(argv, flag("time-bound", a.Goal.TimeBound)...)
+		argv = append(argv, flag("due", a.Goal.Due)...)
+
+		return "project:update", argv, "", nil
 	case "ProjectTrash":
 		return "project:trash", []string{a.ProjectID}, "", nil
 	case "ProjectRestore":

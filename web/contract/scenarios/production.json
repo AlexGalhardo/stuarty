@@ -21,6 +21,7 @@
 		{"call": "ProjectDescribe", "args": {"project_id": "prj_7k2m9x4q1b"}},
 		{"call": "ProjectItemRename", "args": {"project_id": "prj_7k2m9x4q1b", "item_id": "pit_7k2m9x4q1b", "title": "Main cut"}},
 		{"call": "ProjectItemMove", "args": {"project_id": "prj_7k2m9x4q1b", "item_id": "pit_7k2m9x4q1b", "position": 3}},
+		{"call": "ProjectUpdate", "args": {"project_id": "prj_7k2m9x4q1b", "name": "Series pilot two", "description": "A short vertical video made for tests, rewritten: it has a script, some footage and captions, for the people who follow the channel.", "goal": {"specific": "Publish one short video that explains the idea", "measurable": "At least one hundred views in the first week", "achievable": "The footage and the script already exist", "relevant": "It brings the first audience to the channel", "time_bound": "Edit on Monday and publish on Tuesday", "due": "2999-12-31"}}},
 		{"call": "ProjectDuplicate", "args": {"project_id": "prj_7k2m9x4q1b", "name": "Series pilot, alt"}},
 		{"call": "ProjectList", "args": {}}
 	]
