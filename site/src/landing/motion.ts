@@ -26,7 +26,10 @@ export function letters(el: Element, options: { delay?: number; y?: number } = {
 		tl.fromTo(el, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.15 });
 		return tl;
 	}
-	const split = SplitText.create(el, { type: "words,chars", wordsClass: "split-word", aria: "auto" });
+	// A [data-split-skip] part stays whole: its text is painted by background-clip: text, which does not reach the
+	// per-letter boxes SplitText makes, so split it would vanish. It comes in as one piece after the letters.
+	const skip = [...el.querySelectorAll("[data-split-skip]")];
+	const split = SplitText.create(el, { type: "words,chars", wordsClass: "split-word", aria: "auto", ignore: skip });
 	tl.set(el, { autoAlpha: 1 });
 	tl.from(split.chars, {
 		yPercent: options.y ?? 110,
@@ -37,6 +40,7 @@ export function letters(el: Element, options: { delay?: number; y?: number } = {
 		stagger: 0.022,
 		transformOrigin: "50% 100%",
 	});
+	if (skip.length) tl.from(skip, { opacity: 0, y: 24, duration: 0.9, ease: EASE_OUT_EXPO, clearProps: "transform" }, "-=0.6");
 	return tl;
 }
 
