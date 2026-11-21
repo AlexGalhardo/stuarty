@@ -1,6 +1,7 @@
 package mcp
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 )
@@ -27,9 +28,15 @@ func TestJobStartDescriptionSaysWhereTheGenerationFieldsGo(t *testing.T) {
 		t.Errorf("the description still reads as if connection_id and model were top-level members")
 	}
 
-	raw := string(marshal(t, tool.InputSchema))
-	for _, top := range []string{`"connection_id"`, `"model"`} {
-		if strings.Contains(strings.SplitN(raw, `"args"`, 2)[0], top) {
+	var schema struct {
+		Properties map[string]json.RawMessage `json:"properties"`
+	}
+	if err := json.Unmarshal(marshal(t, tool.InputSchema), &schema); err != nil || schema.Properties["args"] == nil {
+		t.Fatalf("the input schema of job_start = %v, want properties with args", err)
+	}
+
+	for _, top := range []string{"connection_id", "model"} {
+		if _, ok := schema.Properties[top]; ok {
 			t.Errorf("job_start declares %s at the top level: the description says it goes in args", top)
 		}
 	}
