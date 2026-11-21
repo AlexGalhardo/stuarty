@@ -328,8 +328,13 @@ func (s *svc) auditApproval(
 // namesAProject refuses a rule or a ceiling written for a timeline that is not the first of its project: both apply
 // to a project and all its timelines, so one written for a timeline would never match, and reading it as its
 // project would widen what the person wrote.
-func (s *svc) namesAProject(ctx context.Context, id string) *Error {
-	if id == "" || s.projectOf(ctx, id) == id {
+func (s *svc) namesAProject(ctx context.Context, id string) error {
+	owner, err := costProject(ctx, s.store, id)
+	if err != nil {
+		return asError(err)
+	}
+
+	if owner == id {
 		return nil
 	}
 
@@ -538,9 +543,12 @@ func (s *svc) approve(ctx context.Context, tx Tx, row *approval.Row, decidedBy, 
 		}
 	}
 
-	action := core.Action{
-		Kind: row.Kind, Connection: row.ConnectionID, Project: costProject(ctx, tx, row.ProjectID), Cost: row.Estimate,
+	owner, oerr := costProject(ctx, tx, row.ProjectID)
+	if oerr != nil {
+		return oerr
 	}
+
+	action := core.Action{Kind: row.Kind, Connection: row.ConnectionID, Project: owner, Cost: row.Estimate}
 
 	out, err := approval.Evaluate(ctx, tx.Approvals(), action, time.UnixMilli(now))
 	if err != nil {
