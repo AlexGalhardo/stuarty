@@ -550,6 +550,11 @@ func TestJobApproval_DryRunStartsNothing(t *testing.T) {
 		t.Fatalf("dry run = %+v, %v", job, err)
 	}
 
+	// VV-303: no id of a job that does not exist, and no instruction to wait for an approval that has none.
+	if !job.DryRun || job.JobID != "" || job.ApprovalID != "" || strings.Contains(job.Text, "waiting for approval") {
+		t.Errorf("a dry run answered like a created job: %+v", job)
+	}
+
 	if list, err := e.svc.ApprovalList(
 		e.as(token),
 		service.ApprovalListRequest{State: "all"},

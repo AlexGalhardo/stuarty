@@ -78,6 +78,15 @@ func TestTranscribeJobSucceedsAndIsReused(t *testing.T) {
 		}
 	}
 
+	// VV-303: a dry run names no job, because none was created, and runs nothing.
+	dryReq := m.transcribeArgs(asset)
+	dryReq.ProjectID, dryReq.DryRun = project, true
+
+	dry, err := m.svc.JobStart(m.as(ui), dryReq)
+	if err != nil || !dry.DryRun || dry.JobID != "" || prov.transcribes.Load() != 0 {
+		t.Fatalf("a transcribe dry run = %+v, %v; the provider ran %d times", dry, err, prov.transcribes.Load())
+	}
+
 	job, err := m.startTranscribe(m.as(ui), project, asset)
 	if err != nil || job.State != service.JobSucceeded || job.Result == nil || job.Result.Transcribe == nil ||
 		job.Result.Transcribe.Words != 3 || job.Result.Transcribe.Language != "en" {
