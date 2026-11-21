@@ -124,6 +124,7 @@ export const hero = {
 	eyebrow: "Open source studio for creators",
 	title: "Create, edit, manage and publish in one place.",
 	lead: "Script, cut, caption, thumbnail and post from one studio on your own machine. Your AI agent works beside you, through the same commands you use.",
+	homeLead: "Plan, describe, cut, caption, thumbnail, post texts, images and videos from one studio on your own machine. Your AI agent works for and beside you, all integrated.",
 	primary: { label: "Make your first short", href: "/docs/guide/first-short-video/" },
 	secondary: { label: "Read the docs", href: "/docs/introduction/" },
 };

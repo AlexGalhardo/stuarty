@@ -43,8 +43,8 @@ import { withBase } from "@/lib/site";
 				<div class="grid items-center gap-10 lg:grid-cols-5">
 					<div class="lg:col-span-2">
 						<p class="eyebrow" data-hero-item>{hero.eyebrow}</p>
-						<SplitTitle text={hero.homeTitle} id="studio-title" tabindex="-1" class="display-home mt-5 text-fg" />
-						<p class="lead mt-6 max-w-xl" data-hero-item>{hero.lead}</p>
+						<SplitTitle text={hero.homeTitle} accent="in one place" id="studio-title" tabindex="-1" class="display-home mt-5 text-fg" />
+						<p class="lead mt-6 max-w-xl" data-hero-item>{hero.homeLead}</p>
 					</div>
 					<div class="lg:col-span-3" data-hero-frame>
 						<figure class="showcase theme-swap m-0" aria-label="The Stuarty home, in the light and the dark theme">
@@ -333,6 +333,23 @@ import { withBase } from "@/lib/site";
 	html.takes-on #studio {
 		align-items: stretch;
 		padding-top: clamp(1.5rem, 4vh, 3rem);
+	}
+	/* "in one place": a vivid orange with a soft glow, 3.3:1 on the light page and 6.9:1 on the dark one (large text). */
+	main[data-page="viewport"] .split-accent {
+		color: #ee5500;
+		text-shadow: 0 0 18px color-mix(in oklab, #ff6a00 35%, transparent);
+	}
+	.dark main[data-page="viewport"] .split-accent {
+		color: #ff6a00;
+		text-shadow:
+			0 0 14px color-mix(in oklab, #ff6a00 60%, transparent),
+			0 0 36px color-mix(in oklab, #ff6a00 35%, transparent);
+	}
+	@media (forced-colors: active) {
+		main[data-page="viewport"] .split-accent {
+			color: CanvasText;
+			text-shadow: none;
+		}
 	}
 	/* The four buttons sit in the middle of the space between the text and picture above and the scroll hint. */
 	html.takes-on #studio > .site-container {
