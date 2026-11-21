@@ -138,3 +138,44 @@ func TestApprovalRule_StoredOnALaterTimelineNeverAutoApproves(t *testing.T) {
 		t.Fatalf("a rule written for the project did not cover its second timeline: %+v, %v", job, err)
 	}
 }
+
+// VV-367: the summary reports the spending the ceiling sums, by project: the spending of a second timeline is on
+// the line of its project, not on a line named by the id of the timeline.
+func TestCostSummary_GroupsTheSpendingOfEveryTimelineByProject(t *testing.T) {
+	t.Parallel()
+
+	p := &probe{estimate: usd(300_000)}
+	e := newJobEnv(t, p)
+	project, second := e.staleOnLaterTimelines(1_000_000, 1_000_000)
+
+	for _, timeline := range []string{project, second} {
+		job, err := e.svc.JobStart(e.as(token), service.JobStartRequest{
+			ProjectID: project, TimelineID: timeline, Kind: testKind,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if err := e.approve(job.ApprovalID); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	sum, err := e.svc.CostSummary(e.as(token), service.CostSummaryRequest{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := []service.CostLine{
+		{Scope: "project", ProjectID: project, Currency: "USD", Micros: 600_000},
+		{Scope: "workspace", Currency: "USD", Micros: 600_000},
+	}
+
+	if len(sum.Today) != 2 || sum.Today[0] != want[0] || sum.Today[1] != want[1] {
+		t.Errorf("today = %+v, want %+v", sum.Today, want)
+	}
+
+	if len(sum.Days) != 1 || sum.Days[0].ProjectID != project || sum.Days[0].Micros != 600_000 {
+		t.Errorf("days = %+v, want one line of %s at 600000", sum.Days, project)
+	}
+}
