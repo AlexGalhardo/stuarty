@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import type { Page } from "@playwright/test";
+import { ensureAccount, signInWithPassword } from "../support/account";
 import {
 	caller,
 	expect,
@@ -12,7 +13,6 @@ import {
 	testClip,
 	validName,
 } from "./helpers";
-import { ensureAccount, signInWithPassword } from "../support/account";
 
 // RF-361 (epic 11, SDD-016 sections 2.3, 6.4 and 10): a creator asks for a clip in Video Assets, sees the
 // estimate, learns that a video always waits for a person, approves, and finds the clip in the library with its
