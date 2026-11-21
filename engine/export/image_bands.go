@@ -2,6 +2,8 @@ package export
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"image"
 	"math"
@@ -240,6 +242,17 @@ func (r *imageRun) prepareOne(w *prepWorker, l *plan.Layer) (drawLayer, error) {
 	// The instance is not stopped by the context of the render, so that what it finishes is kept.
 	ctx := context.WithoutCancel(r.ctx)
 
+	key, keyed := [sha256.Size]byte{}, false
+	if r.cache != nil {
+		key, keyed = preparedKey(r.plan, l)
+	}
+
+	if keyed {
+		if pic, ok := r.cache.getPrepared(r.cfg.CacheScope, key); ok {
+			return r.layerFor(l, pic), nil
+		}
+	}
+
 	if w.host == nil {
 		h, err := renderhost.New(ctx, renderhost.Config{Uncancellable: true})
 		if err != nil {
@@ -299,15 +312,54 @@ func (r *imageRun) prepareOne(w *prepWorker, l *plan.Layer) (drawLayer, error) {
 		return drawLayer{}, rendererError(err)
 	}
 
+	if keyed {
+		r.cache.putPrepared(r.cfg.CacheScope, key, pic)
+	}
+
+	return r.layerFor(l, pic), nil
+}
+
+// layerFor is the layer to draw from the prepared picture of l; a picture that draws nothing makes an empty one.
+func (r *imageRun) layerFor(l *plan.Layer, pic renderhost.Prepared) drawLayer {
 	if pic.Empty() {
-		return drawLayer{}, nil
+		return drawLayer{}
 	}
 
 	d := drawLayer{layer: preparedLayer(l), pic: pic}
 	d.y0, d.y1 = rowsOf(&d.layer, pic.Size(), r.plan.Height)
 
-	return d, nil
+	return d
 }
+
+// preparedKey is the key of the prepared picture of l in an ImageCache: a digest of the canvas size and of the
+// plan layer without what the preparation does not read, that is its opacity, blend mode, mask, clip and
+// position (SDD-021 section 6.2). A centre that is not a multiple of half a pixel stays in the key, because the
+// rectangle that draws the picture is then not the same sum.
+func preparedKey(fp plan.FramePlan, l *plan.Layer) ([sha256.Size]byte, bool) {
+	one := *l
+	one.Opacity, one.Blend, one.Mask, one.Clip, one.Stencil = 0, "", nil, nil, false
+
+	if isHalfPixel(l.CX) && isHalfPixel(l.CY) {
+		one.CX, one.CY = 0, 0
+	}
+
+	body, err := json.Marshal(&one)
+	if err != nil {
+		return [sha256.Size]byte{}, false
+	}
+
+	h := sha256.New()
+	_, _ = fmt.Fprintf(h, "stuarty prepared layer v1 %d %d %d ", fp.Width, fp.Height, fp.Frame)
+	_, _ = h.Write(body)
+
+	var sum [sha256.Size]byte
+
+	h.Sum(sum[:0])
+
+	return sum, true
+}
+
+func isHalfPixel(v float64) bool { return v*2 == math.Round(v*2) }
 
 // drawBands draws the prepared layers over base, or over the background when base is nil, in bands of rows on
 // instances of their own, and joins them. Only the rows the layers reach are drawn when there is a base; the
