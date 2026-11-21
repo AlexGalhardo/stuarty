@@ -40,11 +40,11 @@ function SearchLauncher() {
 					setOpened(true);
 					setOpen(true);
 				}}
-				className="flex h-8 items-center gap-2 rounded-lg text-sm text-faint transition-colors hover:text-fg max-sm:w-8 max-sm:justify-center sm:w-64 lg:w-48 xl:w-64 sm:border sm:border-border sm:bg-subtle sm:pr-1.5 sm:pl-2.5 sm:hover:border-border-strong"
+				className="flex h-8 items-center gap-2 rounded-lg text-sm text-faint transition-colors hover:text-fg max-sm:w-8 max-sm:justify-center sm:w-36 lg:w-48 xl:w-64 sm:border sm:border-border sm:bg-subtle sm:pr-1.5 sm:pl-2.5 sm:hover:border-border-strong"
 			>
 				<Search aria-hidden className="size-4 shrink-0" />
 				<span className="hidden flex-1 text-left sm:inline">{t.searchButton}</span>
-				<kbd className="hidden rounded border border-border bg-bg px-1.5 py-0.5 font-sans text-[0.6875rem] font-medium text-faint sm:inline">
+				<kbd className="hidden rounded border border-border bg-bg px-1.5 py-0.5 font-sans text-[0.6875rem] font-medium whitespace-nowrap text-faint lg:inline">
 					{isMac ? "⌘K" : "Ctrl K"}
 				</kbd>
 			</button>
