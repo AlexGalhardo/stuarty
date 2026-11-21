@@ -25,6 +25,7 @@ export default function ProjectsIndex() {
 	// reads again; the list above is reloaded from the controller.
 	const [trashVersion, setTrashVersion] = useState(0);
 	const [failure, setFailure] = useState<Failure | null>(null);
+	const [createFailure, setCreateFailure] = useState<Failure | null>(null);
 	const [creating, setCreating] = useState(false);
 
 	const moveToTrash = async (id: string): Promise<void> => {
@@ -42,7 +43,7 @@ export default function ProjectsIndex() {
 	// visit, which the browser logs as a console error (VV-059). A new project has
 	// no timeline, so its page opens, where a video is added with its size.
 	const submit = async (values: ProjectContextInput): Promise<void> => {
-		setFailure(null);
+		setCreateFailure(null);
 		setCreating(true);
 		try {
 			const created = await createClient(
@@ -50,7 +51,7 @@ export default function ProjectsIndex() {
 			).createProject(values);
 			location.assign(`/projects/${created.project_id}`);
 		} catch (error) {
-			setFailure(failureOf(error));
+			setCreateFailure(failureOf(error));
 			setCreating(false);
 		}
 	};
@@ -69,6 +70,8 @@ export default function ProjectsIndex() {
 							initial={emptyContext()}
 							submitLabel={t("ui.projects.create")}
 							busy={creating}
+							failure={createFailure}
+							onEdited={() => setCreateFailure(null)}
 							onSubmit={(values) => void submit(values)}
 						/>
 					</div>
