@@ -571,7 +571,7 @@ func TestPublishNow_TrashingTheTimelineOfTheExportEndsThePost(t *testing.T) {
 		}
 
 		if job.ProjectID == nil || *job.ProjectID != second {
-			t.Fatalf("named %v: the post is kept on %v, want the timeline of its export %s", named, job.ProjectID, second)
+			t.Fatalf("named %v: the post is kept on %v, want its export's timeline %s", named, job.ProjectID, second)
 		}
 
 		before := p.net.count()

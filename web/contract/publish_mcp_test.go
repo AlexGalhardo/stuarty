@@ -226,7 +226,7 @@ func TestPublishOfATwoTimelineProjectOnEverySurface(t *testing.T) {
 			}
 
 			if job.ProjectID == nil || *job.ProjectID != second {
-				t.Errorf("%s: the post is kept on %v, want the timeline of its export %s", fx.d.name(), job.ProjectID, second)
+				t.Errorf("%s: the post is kept on %v, want %s", fx.d.name(), job.ProjectID, second)
 			}
 
 			if n := fx.uploads.Load(); n != before {

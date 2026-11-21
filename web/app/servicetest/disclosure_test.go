@@ -50,7 +50,7 @@ func (p *pubEnv) seedAsset(project, hash string, kind asset.OriginKind) {
 func TestDisclosure_AnExportOfASecondTimelineCountsTheWholeProject(t *testing.T) {
 	p := newPubEnv(t)
 	_, second := p.addSecondTimeline()
-	p.seedAsset(p.project, generatedHash, asset.Generated)
+	p.seedAsset(p.project, "sha256:"+strings.Repeat("cd", 32), asset.Generated)
 	exp := p.seedExport(second, "job_0000000961", ".mp4", []byte("fake mp4 bytes"))
 
 	args := p.args(exp)
