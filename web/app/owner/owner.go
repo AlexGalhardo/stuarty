@@ -93,8 +93,14 @@ type Owner struct {
 	Account *account.Manager
 	gate    service.Gate
 	vault   *vault.Vault
-	Queue   *queue.Queue
-	Token   string
+	// legacyKeys is the provider the environment, the file or the keychain named: it opens a vault that exists
+	// before the account does (ADR-0049).
+	legacyKeys vault.KeyProvider
+	// accountFault is the seam of a test: it may fail a stage of the creation of the account.
+	accountFault func(stage string) error
+	log          *slog.Logger
+	Queue        *queue.Queue
+	Token        string
 	// runtimeSecret is the per-run secret of network mode, the key of its handshake.
 	runtimeSecret string
 	Events        *events.Events
@@ -160,7 +166,7 @@ func Open(ctx context.Context, cfg Config) (*Owner, error) {
 		cfg.Version = agentdocs.Version
 	}
 
-	o := &Owner{version: cfg.Version, now: cfg.Now, mode: cfg.Resolved.Mode}
+	o := &Owner{version: cfg.Version, now: cfg.Now, mode: cfg.Resolved.Mode, log: cfg.Log}
 
 	if err := o.take(cfg); err != nil {
 		return nil, err
@@ -193,7 +199,16 @@ func (o *Owner) setupAccount(ctx context.Context, st *store.Store, now func() ti
 	st.SetSealer(o.Account.Sealer())
 	o.gate = o.Account
 
-	return nil
+	return o.recoverAccountBackup(ctx)
+}
+
+// accountApply is the creation of the account for the HTTP adapter; none in network mode.
+func (o *Owner) accountApply() account.Apply {
+	if o.Account == nil {
+		return nil
+	}
+
+	return o.createAccount
 }
 
 // take is steps 1 and 2 of SDD-005 section 6.3, or the session that a command
@@ -398,7 +413,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		RuntimeSecret: o.runtimeSecret, LauncherSecret: launcherSecret,
 		Sessions: auth.NewSessions(cfg.Now), Launch: auth.NewLaunch(cfg.Now), Now: cfg.Now,
 		Events: o.Events, Version: o.version, Network: o.network, Auth: o.netAuth, RateLimits: rates,
-		Chat: o.chatStreams(), AgentTokens: o.agentLookup(), Account: o.Account,
+		Chat: o.chatStreams(), AgentTokens: o.agentLookup(), Account: o.Account, AccountApply: o.accountApply(),
 	}
 
 	if aerr := o.attachHandlers(cfg, st.DB(), out.conns); aerr != nil {
@@ -816,6 +831,8 @@ func (o *Owner) connections(
 
 	// With an account the vault master key is the one wrapped by the data key (ADR-0049); the key of the
 	// environment, the file or the keychain only opens a vault that exists before the account does.
+	o.legacyKeys = keys
+
 	if o.Account != nil {
 		keys = accountKeys{m: o.Account, fallback: keys}
 	}
