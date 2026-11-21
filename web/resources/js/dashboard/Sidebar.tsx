@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 
-import LocaleSwitcher from "@/components/LocaleSwitcher";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +18,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
-import type { User as Account } from "@/types";
+import type { User as Account, LocalAccount } from "@/types";
 import { createClient } from "../editor/api/client";
 import { HttpTransport } from "../editor/api/http";
 import { activeSection, pathOf, SECTIONS } from "./sections";
@@ -109,16 +108,18 @@ function Item({
 // of it. POST /auth/logout clears the cookie; the next page is the login.
 function Profile({
 	user,
+	account,
 	url,
 	collapsed,
 }: {
 	user: Account | null;
+	account: LocalAccount | null;
 	url: string;
 	collapsed: boolean;
 }): ReactNode {
 	const t = useT();
 	const path = pathOf(url);
-	const name = user?.email ?? t("ui.nav.local");
+	const name = user?.email ?? account?.username ?? t("ui.nav.local");
 	return (
 		<section
 			aria-label={t("ui.nav.profile")}
@@ -141,6 +142,27 @@ function Profile({
 				label={t("ui.nav.settings")}
 				collapsed={collapsed}
 			/>
+			{account?.state === "unlocked" && (
+				<Button
+					type="button"
+					variant="ghost"
+					size="sm"
+					className={cn("justify-start", collapsed && "justify-center")}
+					aria-label={collapsed ? t("ui.account.logout") : undefined}
+					data-testid="account-logout"
+					onClick={() =>
+						void createClient(new HttpTransport(""))
+							.accountLogout()
+							.catch(() => undefined)
+							.then(() => window.location.assign("/account/signin"))
+					}
+				>
+					<LogOut aria-hidden="true" />
+					<span className={cn(collapsed && "sr-only")}>
+						{t("ui.account.logout")}
+					</span>
+				</Button>
+			)}
 			{user != null && (
 				<>
 					<Item
@@ -181,10 +203,12 @@ export default function Sidebar({
 	url,
 	appName,
 	user,
+	account = null,
 }: {
 	url: string;
 	appName: string;
 	user: Account | null;
+	account?: LocalAccount | null;
 }): ReactNode {
 	const t = useT();
 	const { state, toggle } = useSidebar();
@@ -259,19 +283,13 @@ export default function Sidebar({
 					))}
 				</ul>
 			</nav>
-			<Profile user={user} url={url} collapsed={collapsed} />
+			<Profile user={user} account={account} url={url} collapsed={collapsed} />
 			<div
 				className={cn(
 					"flex items-center gap-1",
 					collapsed ? "flex-col max-md:flex-row" : "justify-between",
 				)}
 			>
-				<LocaleSwitcher
-					className={cn(
-						collapsed &&
-							"w-10 justify-center px-1 [&>[data-slot=select-value]]:sr-only",
-					)}
-				/>
 				<ThemeToggle />
 				<Tooltip>
 					<TooltipTrigger asChild>

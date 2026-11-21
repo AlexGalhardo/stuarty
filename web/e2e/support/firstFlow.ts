@@ -1,10 +1,10 @@
 import { type ChildProcess, execFileSync, spawn } from "node:child_process";
 import { existsSync, mkdirSync, openSync, rmSync } from "node:fs";
-import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Page } from "@playwright/test";
 import { expect, home, pointAtServerHome } from "../specs/helpers";
+import { ensureAccount, signInWithPassword } from "./account";
 
 // The launcher secret of this server (not the one of the shared e2e server), so a spec can sign in as a person.
 export const LAUNCHER_SECRET = "first-flow-launcher-secret-not-a-credential";
@@ -147,16 +147,10 @@ export async function uploads(socialUrl: string): Promise<Upload[]> {
 	return ((await response.json()) as { uploads: Upload[] }).uploads;
 }
 
-// A person decides in the desktop app, whose launch code carries the launcher secret (SDD-007 section 3.4
-// item 7); the approval queue refuses the local token an agent holds.
+// A person decides, and a person is a session opened with the password (ADR-0049, SDD-007 section 3.9 item 5): a
+// launch code no longer makes one. The approval queue refuses the local token an agent holds.
 export async function signInAsPerson(page: Page): Promise<void> {
-	const launch = await page.request.post("/api/v1/system/launch", {
-		headers: {
-			Authorization: `Bearer ${(await readFile(join(home, "token"), "utf8")).trim()}`,
-			"Stuarty-Launcher": LAUNCHER_SECRET,
-		},
-	});
-	expect(launch.ok()).toBe(true);
-	const { url } = (await launch.json()) as { url: string };
-	await page.goto(url);
+	await ensureAccount(page.request, home);
+	await signInWithPassword(page.request);
+	await page.goto("/");
 }

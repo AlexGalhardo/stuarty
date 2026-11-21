@@ -9,7 +9,7 @@ test.describe("the language select and the content security policy", () => {
 	test("focusing and opening the select of a page reports no violation", async ({
 		page,
 	}) => {
-		await page.goto("/projects");
+		await page.goto("/settings");
 		const select = page.getByRole("combobox", { name: "Language" });
 		await select.focus();
 		await expect(select).toBeFocused();

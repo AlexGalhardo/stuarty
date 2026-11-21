@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"testing/fstest"
 	"time"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
@@ -38,7 +39,7 @@ type accountHarness struct {
 	acc *account.Manager
 }
 
-func newAccountHarness(tb testing.TB) *accountHarness {
+func newAccountHarness(tb testing.TB, extra ...vukem.Option) *accountHarness {
 	tb.Helper()
 
 	dir, err := workspace.Resolve(func(string) string { return filepath.Join(tb.TempDir(), "ws") })
@@ -86,7 +87,7 @@ func newAccountHarness(tb testing.TB) *accountHarness {
 	}
 
 	h.app = vukemtest.New(tb, func(opts ...vukem.Option) (*vukem.App, error) {
-		app, err := bootstrap.NewWith(deps, opts...)
+		app, err := bootstrap.NewWith(deps, append(opts, extra...)...)
 		h.vapp = app
 
 		return app, err
@@ -438,5 +439,76 @@ func TestSecurity_T110_OnlyThePasswordMakesAPerson(t *testing.T) {
 	// The studio is still open for the person after the refusals above.
 	if a.acc.State() != account.StateUnlocked {
 		t.Fatal("a refused logout locked the studio")
+	}
+}
+
+// The pages follow the account (SDD-012 section 2.1.1): a new workspace sends the browser to the page that
+// creates the account, a locked studio to the sign-in, and an unlocked one draws the dashboard.
+func TestAccountPagesFollowTheStateOfTheAccount(t *testing.T) {
+	t.Parallel()
+
+	built := fstest.MapFS{"build/.vite/manifest.json": {Data: []byte(manifest)}}
+	a := newAccountHarness(t, vukem.WithVite(built))
+
+	page := func(path, cookie string) resp {
+		headers := map[string]string{"Accept": "text/html"}
+		if cookie != "" {
+			headers["Cookie"] = cookie
+		}
+
+		return a.do(req{path: path, noAuth: true, headers: headers})
+	}
+
+	location := func(r resp) string { return r.header.Get("Location") }
+
+	launched := a.sessionWith(t, "")
+
+	// No account yet: the dashboard is the create page, the create page is drawn, the sign-in has nothing to open.
+	if res := page("/", launched); res.status != http.StatusSeeOther || location(res) != "/account/create" {
+		t.Fatalf("/ with no account = %d %s", res.status, location(res))
+	}
+
+	if res := page(
+		"/account/create",
+		"",
+	); res.status != http.StatusOK ||
+		!strings.Contains(unescaped(res.body), "Account/Create") {
+		t.Fatalf("/account/create = %d", res.status)
+	}
+
+	if res := page("/account/signin", ""); res.status != http.StatusSeeOther || location(res) != "/account/create" {
+		t.Fatalf("/account/signin with no account = %d %s", res.status, location(res))
+	}
+
+	a.create()
+
+	// Locked: every page but the account ones is the sign-in, with a session or without one.
+	for _, c := range []string{launched, ""} {
+		if res := page("/projects", c); res.status != http.StatusSeeOther || location(res) != "/account/signin" {
+			t.Fatalf("/projects while locked (cookie %q) = %d %s", c, res.status, location(res))
+		}
+	}
+
+	if res := page(
+		"/account/signin",
+		"",
+	); res.status != http.StatusOK ||
+		!strings.Contains(unescaped(res.body), "Account/SignIn") {
+		t.Fatalf("/account/signin = %d", res.status)
+	}
+
+	if res := page("/account/create", ""); res.status != http.StatusSeeOther || location(res) != "/" {
+		t.Fatalf("/account/create with an account = %d %s", res.status, location(res))
+	}
+
+	cookie, _ := a.signIn(accPassword)
+
+	if res := page("/projects", cookie); res.status != http.StatusOK {
+		t.Fatalf("/projects when unlocked = %d", res.status)
+	}
+
+	// Unlocked but no session in this browser: the sign-in page, not the instructions of `stuarty open`.
+	if res := page("/projects", ""); res.status != http.StatusSeeOther || location(res) != "/account/signin" {
+		t.Fatalf("/projects with no session = %d %s", res.status, location(res))
 	}
 }

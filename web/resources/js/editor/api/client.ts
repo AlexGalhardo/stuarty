@@ -2,6 +2,9 @@ import { fromResponse, networkError } from "./errors";
 import { type RetryDeps, withRetry } from "./retry";
 import { type Transport, TransportError } from "./transport";
 import type {
+	AccountCreated,
+	AccountCreateRequest,
+	AccountState,
 	AgentProfile,
 	AgentProfileListResult,
 	ApprovalListResult,
@@ -396,6 +399,23 @@ export interface ApiClient {
 	// for them is built on a transport with an empty base.
 	login(email: string, password: string): Promise<SessionResult>;
 	logout(): Promise<void>;
+	// The local account (ADR-0049): root routes too, so a client on a transport with an empty base.
+	accountState(): Promise<AccountState>;
+	createAccount(request: AccountCreateRequest): Promise<AccountCreated>;
+	accountLogin(identity: string, password: string): Promise<AccountState>;
+	accountLogout(): Promise<AccountState>;
+	accountRecover(
+		recoveryKey: string,
+		password: string,
+		confirmation: string,
+	): Promise<AccountState>;
+	accountChangePassword(
+		current: string,
+		password: string,
+		confirmation: string,
+	): Promise<AccountState>;
+	accountSettings(): Promise<AccountState>;
+	setAccountIdleLock(minutes: number): Promise<AccountState>;
 	listTemplates(): Promise<TemplateListResult>;
 	instantiateTemplate(
 		templateId: string,
@@ -935,6 +955,34 @@ export function createClient(
 		logout: async () => {
 			await call("POST", "/auth/logout", EDIT_TIMEOUT_MS, {});
 		},
+		accountState: () => call("GET", "/auth/account", READ_TIMEOUT_MS),
+		createAccount: (request) =>
+			call("POST", "/auth/account/create", EDIT_TIMEOUT_MS, request),
+		accountLogin: (identity, password) =>
+			call("POST", "/auth/account/login", EDIT_TIMEOUT_MS, {
+				identity,
+				password,
+			}),
+		accountLogout: () =>
+			call("POST", "/auth/account/logout", EDIT_TIMEOUT_MS, {}),
+		accountRecover: (recoveryKey, password, confirmation) =>
+			call("POST", "/auth/account/recover", EDIT_TIMEOUT_MS, {
+				recovery_key: recoveryKey,
+				password,
+				confirmation,
+			}),
+		accountChangePassword: (current, password, confirmation) =>
+			call("POST", "/auth/account/password", EDIT_TIMEOUT_MS, {
+				current,
+				password,
+				confirmation,
+			}),
+		accountSettings: () =>
+			call("GET", "/auth/account/settings", READ_TIMEOUT_MS),
+		setAccountIdleLock: (minutes) =>
+			call("PUT", "/auth/account/settings", EDIT_TIMEOUT_MS, {
+				idle_lock_minutes: minutes,
+			}),
 		listTemplates: () => call("GET", "/templates", READ_TIMEOUT_MS),
 		instantiateTemplate: (templateId, request) =>
 			call(

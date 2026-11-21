@@ -1,9 +1,8 @@
 import { randomBytes, randomInt } from "node:crypto";
-import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import type { Page } from "@playwright/test";
-import { LAUNCHER_SECRET } from "../support/launcher";
+import { ensureAccount, signInWithPassword } from "../support/account";
 import { caller, expect, home, test } from "./helpers";
 
 // ADR-0032, epic 05 (SDD-015): the queue shows what waits for a person with where it goes, what it
@@ -76,18 +75,11 @@ async function connect(
 	return String(made.id);
 }
 
-// A person decides in the desktop app, whose launch code carries the launcher secret (SDD-007
-// section 3.4 item 7); the server of this suite is started with the secret of LAUNCHER_SECRET.
+// A person decides, and a person is a session opened with the password (ADR-0049, SDD-007 section 3.9 item 5).
 async function signInAsPerson(page: Page): Promise<void> {
-	const launch = await page.request.post("/api/v1/system/launch", {
-		headers: {
-			Authorization: `Bearer ${(await readFile(join(home, "token"), "utf8")).trim()}`,
-			"Stuarty-Launcher": LAUNCHER_SECRET,
-		},
-	});
-	expect(launch.ok()).toBe(true);
-	const { url } = (await launch.json()) as { url: string };
-	await page.goto(url);
+	await ensureAccount(page.request, home);
+	await signInWithPassword(page.request);
+	await page.goto("/");
 }
 
 async function openQueue(page: Page): Promise<void> {

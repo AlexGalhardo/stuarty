@@ -35,6 +35,11 @@ export interface User {
 	role: string;
 }
 
+export interface LocalAccount {
+	state: "none" | "locked" | "unlocked";
+	username: string;
+}
+
 export interface SharedProps {
 	appName: string;
 	errors: Record<string, string>;
@@ -42,5 +47,7 @@ export interface SharedProps {
 	auth?: { user: User | null };
 	// What the server says of the session: whether it is a person's (VV-319).
 	session?: { privileged: boolean; mode: "local" | "network" };
+	// Present in local mode: the state of the local account and the username (ADR-0049).
+	account?: LocalAccount;
 	[key: string]: unknown;
 }

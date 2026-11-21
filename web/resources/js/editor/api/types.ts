@@ -1561,6 +1561,32 @@ export interface SessionResult {
 	scopes: string[];
 }
 
+// The local account (ADR-0049, SDD-007 section 3.9). The state is what the server says; the page computes
+// nothing about the rules: a refused field comes back as `details.fields`.
+export type AccountStateName = "none" | "locked" | "unlocked";
+
+export interface AccountState {
+	state: AccountStateName;
+	username?: string;
+	idle_lock_minutes?: number;
+}
+
+export interface AccountCreateRequest {
+	username: string;
+	email: string;
+	password: string;
+	confirmation: string;
+}
+
+export interface AccountCreated {
+	recovery_key: string;
+}
+
+export interface AccountFieldProblem {
+	field: string;
+	reason: string;
+}
+
 // The brand kit and the font import (SDD-005 section 5.11, SDD-007 section 7.7).
 export interface BrandFontFile {
 	weight: number;

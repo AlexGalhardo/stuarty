@@ -43,7 +43,7 @@ The first time a creator opens Stuarty they create an account with a password, a
 - [x] 4. Field encryption in the store and the vault key wrapped by the data key. Verify: a test that reads the SQLite file directly and finds no plaintext of a text, a memory note or a credential.
 - [x] 5. The migration of an existing workspace with backup, verification and restore. Verify: tests for success and for a failure in the middle.
 - [x] 6. Remove Google sign-in; the person session for a password sign-in. Verify: `go test -run TestSecurity_ ./...` passes and a test that the `stuarty open` session stays unprivileged.
-- [ ] 7. The UI: create account (the eye on both password fields, errors under each field), recovery key, sign in, Settings, Logout, the sidebar footer. Verify: `bun run typecheck`, `check:thin-client`, `check:i18n`, Vitest and Playwright specs of the whole first run and of Logout.
+- [x] 7. The UI: create account (the eye on both password fields, errors under each field), recovery key, sign in, Settings, Logout, the sidebar footer. Verify: `bun run typecheck`, `check:thin-client`, `check:i18n`, Vitest and Playwright specs of the whole first run and of Logout.
 - [ ] 8. After epic 56 is integrated: add the project description and goal to the encrypted fields. Verify: the plaintext test of task 4 covers them.
 
 ## Acceptance criteria

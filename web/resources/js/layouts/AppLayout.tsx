@@ -37,7 +37,10 @@ function Shell({ children }: { children: ReactNode }) {
 
 	// The login has no session and no sections to lead to: a plain header, no
 	// sidebar. Every other page is drawn by the dashboard (SDD-012 section 23.2).
-	if (page.component.startsWith("Auth/")) {
+	if (
+		page.component.startsWith("Auth/") ||
+		page.component.startsWith("Account/")
+	) {
 		return (
 			<TooltipProvider>
 				<header className="flex min-h-14 flex-wrap items-center gap-x-4 gap-y-1 border-b px-4 py-2 md:px-6">

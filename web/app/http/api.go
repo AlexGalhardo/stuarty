@@ -168,6 +168,10 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 			return
 		}
 
+		if h.accountPageAnswered(w, r, next) {
+			return
+		}
+
 		var (
 			caller     service.Caller
 			valid      bool
@@ -196,43 +200,110 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 
 			caller = service.Caller{Actor: "local:" + auth.UILabel, Scopes: service.AllScopes, Browser: privileged}
 		} else {
-			// The consent screen of a social network sends the browser back to the sign-in page by a
-			// cross-site navigation, which carries no SameSite=Strict session cookie. The page is drawn
-			// with no caller: it holds no data, calls no operation, and hands the state and the code to
-			// POST /api/v1/social/complete, a same-origin call that does carry the cookie and is
-			// authenticated as every other one (SDD-007 section 3.7, SDD-020 section 6).
-			if r.Method == http.MethodGet && isSignInCallbackPath(r.URL.Path) {
-				next.ServeHTTP(w, r)
-
-				return
-			}
-
-			// A browser that opens a page with no session is told how to get in (VV-157):
-			// the page is plain HTML and carries no secret, since the launch code is
-			// issued only to a caller that proves the token (SDD-007 section 3.4).
-			if isPageNavigation(r) {
-				w.Header().Set("WWW-Authenticate", "Bearer")
-				writeSignInPage(w)
-
-				return
-			}
-
-			h.unauthorized(w, r, &service.Error{
-				Code: service.CodeUnauthorized, Message: "the request carries no credentials.",
-				Hint: signInHint,
-			})
+			h.noCredentials(w, r, next)
 
 			return
 		}
 
-		// A locked studio answers nothing but the sign-in: the Service refuses each operation, and this refusal
-		// covers the routes that never reach one (the streams, the bytes). A page is drawn: it holds no data.
 		if h.refuseWhileLocked(w, r) {
 			return
 		}
 
 		next.ServeHTTP(w, r.WithContext(service.WithCaller(r.Context(), caller)))
 	})
+}
+
+// accountPageAnswered answers a page navigation of a server that has an account: the account pages are drawn
+// with no session, and any other page goes to the sign-in while the studio is locked. It reports whether it
+// answered; false lets the authentication go on.
+func (h *apiHandler) accountPageAnswered(w http.ResponseWriter, r *http.Request, next http.Handler) bool {
+	if h.Account == nil || !isPageNavigation(r) {
+		return false
+	}
+
+	to, serve := h.accountPage(r)
+
+	switch {
+	case to != "":
+		http.Redirect(w, r, to, http.StatusSeeOther)
+	case serve:
+		next.ServeHTTP(w, r)
+	default:
+		return false
+	}
+
+	return true
+}
+
+// noCredentials answers a local request that carries a valid credential of no kind.
+func (h *apiHandler) noCredentials(w http.ResponseWriter, r *http.Request, next http.Handler) {
+	// The consent screen of a social network sends the browser back to the sign-in page by a cross-site
+	// navigation, which carries no SameSite=Strict session cookie. The page is drawn with no caller: it holds
+	// no data, calls no operation, and hands the state and the code to POST /api/v1/social/complete, a
+	// same-origin call that does carry the cookie and is authenticated as every other one (SDD-007 section
+	// 3.7, SDD-020 section 6).
+	if r.Method == http.MethodGet && isSignInCallbackPath(r.URL.Path) {
+		next.ServeHTTP(w, r)
+
+		return
+	}
+
+	// A browser that opens a page with no session is told how to get in (VV-157): the page is plain HTML and
+	// carries no secret, since the launch code is issued only to a caller that proves the token (SDD-007
+	// section 3.4).
+	if isPageNavigation(r) {
+		// With an account, a browser that has no session goes to the sign-in page; with none yet, it is told
+		// how to open Stuarty.
+		if h.Account != nil && h.Account.State() != account.StateNone {
+			http.Redirect(w, r, AccountSignInPath, http.StatusSeeOther)
+
+			return
+		}
+
+		w.Header().Set("WWW-Authenticate", "Bearer")
+		writeSignInPage(w)
+
+		return
+	}
+
+	h.unauthorized(w, r, &service.Error{
+		Code: service.CodeUnauthorized, Message: "the request carries no credentials.", Hint: signInHint,
+	})
+}
+
+// The pages of the local account (SDD-012 section 2.1.1).
+const (
+	AccountCreatePath  = "/account/create"
+	AccountSignInPath  = "/account/signin"
+	AccountRecoverPath = "/account/recover"
+)
+
+// accountPage decides a page navigation of a server that has an account manager: a redirect target, or
+// whether the page is one of the account pages, which are drawn with no session (they hold no data). Any other
+// page goes on to the authentication, after a locked studio has sent the browser to the sign-in.
+func (h *apiHandler) accountPage(r *http.Request) (to string, serve bool) {
+	state := h.Account.State()
+
+	switch r.URL.Path {
+	case AccountCreatePath:
+		if state != account.StateNone {
+			return "/", false
+		}
+
+		return "", true
+	case AccountSignInPath, AccountRecoverPath:
+		if state == account.StateNone {
+			return AccountCreatePath, false
+		}
+
+		return "", true
+	}
+
+	if state == account.StateLocked {
+		return AccountSignInPath, false
+	}
+
+	return "", false
 }
 
 // refuseWhileLocked answers E_LOCKED to a request that is not a page and not an account route while the studio
@@ -244,6 +315,13 @@ func (h *apiHandler) refuseWhileLocked(w http.ResponseWriter, r *http.Request) b
 
 	if h.Account.Check() != nil && !isPageNavigation(r) && !strings.HasPrefix(r.URL.Path, BasePathAuth+"/account") {
 		web.Fail(w, r, accountError(account.ErrLocked))
+
+		return true
+	}
+
+	// A new workspace shows the page that creates the account before anything else (SDD-012 section 2.1.1).
+	if h.Account.State() == account.StateNone && isPageNavigation(r) {
+		http.Redirect(w, r, AccountCreatePath, http.StatusSeeOther)
 
 		return true
 	}

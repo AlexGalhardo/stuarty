@@ -1,10 +1,9 @@
 import { randomInt } from "node:crypto";
-import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import type { Page } from "@playwright/test";
-import { expect, home } from "../specs/helpers";
-import { LAUNCHER_SECRET } from "./launcher";
+import { home } from "../specs/helpers";
+import { ensureAccount, signInWithPassword } from "./account";
 
 const ALPHABET = "0123456789abcdefghjkmnpqrstvwxyz";
 
@@ -38,17 +37,10 @@ export function seedApprovals(summaries: string[]): string[] {
 	}
 }
 
-// A person decides in the desktop app, whose launch code carries the launcher
-// secret (SDD-007 section 3.4 item 7); the server of the suite is started with
-// the secret of LAUNCHER_SECRET.
+// A person decides, and a person is a session opened with the password (ADR-0049, SDD-007 section 3.9 item 5): a
+// launch code no longer makes one. The approval queue refuses the local token an agent holds.
 export async function signInAsPerson(page: Page): Promise<void> {
-	const launch = await page.request.post("/api/v1/system/launch", {
-		headers: {
-			Authorization: `Bearer ${(await readFile(join(home, "token"), "utf8")).trim()}`,
-			"Stuarty-Launcher": LAUNCHER_SECRET,
-		},
-	});
-	expect(launch.ok()).toBe(true);
-	const { url } = (await launch.json()) as { url: string };
-	await page.goto(url);
+	await ensureAccount(page.request, home);
+	await signInWithPassword(page.request);
+	await page.goto("/");
 }

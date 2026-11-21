@@ -67,6 +67,22 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 			return inertia.Render(c, "Settings/Index", inertia.Props{})
 		}).Name("settings.index")
 
+		// The pages of the local account (ADR-0049, SDD-012 section 2.1.1): drawn with no session, since they hold
+		// no data; the guard sends the browser to the right one. They exist in local mode only.
+		for path, page := range map[string]string{
+			httpapi.AccountCreatePath:  "Account/Create",
+			httpapi.AccountSignInPath:  "Account/SignIn",
+			httpapi.AccountRecoverPath: "Account/Recover",
+		} {
+			r.Get(path, func(c *web.Ctx) error {
+				if d.Account == nil {
+					return errs.ErrNotFound
+				}
+
+				return inertia.Render(c, page, inertia.Props{})
+			}).Name("account.page." + strings.TrimPrefix(path, "/account/"))
+		}
+
 		// The Connections section (epic 04, SDD-014): the page reads and changes the connections
 		// through /api/v1/connections.
 		r.Get("/connections", func(c *web.Ctx) error {
@@ -175,6 +191,12 @@ func sharedProps(d *httpapi.Deps) func(http.Handler) http.Handler {
 
 			person, _ := service.CallerFrom(ctx)
 			inertia.Share(ctx, "session", map[string]any{"privileged": person.Browser, "mode": mode})
+
+			if d.Account != nil {
+				inertia.Share(ctx, "account", map[string]any{
+					"state": string(d.Account.State()), "username": d.Account.Username(),
+				})
+			}
 
 			if d.Network != nil && d.Auth != nil {
 				var user *sharedUser

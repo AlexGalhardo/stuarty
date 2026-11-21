@@ -934,6 +934,7 @@
         "E_NETWORK": "Network error",
         "E_UNAUTHORIZED": "Session ended",
         "E_FORBIDDEN": "Not allowed",
+        "E_LOCKED": "Stuarty is locked",
         "E_PRIVILEGED_SESSION": "Only you in the app can do this",
         "E_AGENT_NOT_FOUND": "No such agent",
         "E_CHAT_NOT_FOUND": "No such conversation",
@@ -2479,6 +2480,73 @@
         "invalid_until": "Enter a time such as 12s, 90f or 00:00:12.",
         "cancel": "Cancel",
         "confirm": "Repeat"
+      }
+    },
+    "account": {
+      "show": "Show password",
+      "hide": "Hide password",
+      "logout": "Logout",
+      "username": "Username",
+      "username_rule": "4 to 16 lowercase letters, a to z, no digits or spaces.",
+      "email": "E-mail",
+      "email_rule": "12 to 48 characters. It is only checked on this machine; nothing is sent to it.",
+      "password": "Password",
+      "password_rule": "8 to 32 characters, with an uppercase letter, a lowercase letter, a digit and a special character, and no spaces.",
+      "confirmation": "Confirm the password",
+      "identity": "Username or e-mail",
+      "create": {
+        "title": "Create your account",
+        "intro": "Your projects, texts and credentials are encrypted with a key that is only in memory while you are signed in. Nobody, and no agent, reads them while Stuarty is locked.",
+        "submit": "Create account"
+      },
+      "recovery": {
+        "title": "Save your recovery key",
+        "intro": "This key opens your data if you forget your password. It is shown once, here, and Stuarty does not keep it.",
+        "warning": "If you forget your password and you do not have this key, your data cannot be recovered. Nobody can do it for you, not even us. Write the key down or keep it in a password manager before you go on.",
+        "copy": "Copy the key",
+        "copied": "Copied.",
+        "saved": "I saved my recovery key",
+        "continue": "Continue to sign in"
+      },
+      "signin": {
+        "title": "Sign in to Stuarty",
+        "submit": "Sign in",
+        "forgot": "I forgot my password"
+      },
+      "recover": {
+        "title": "Recover with the recovery key",
+        "intro": "Type the recovery key you saved and choose a new password. Your data stays as it is.",
+        "key": "Recovery key",
+        "new_password": "New password",
+        "submit": "Set the new password"
+      },
+      "reason": {
+        "too_short": "It is too short.",
+        "too_long": "It is too long.",
+        "not_lowercase_letters": "Use lowercase letters from a to z only.",
+        "invalid_format": "This is not a valid address.",
+        "no_uppercase": "Add an uppercase letter.",
+        "no_lowercase": "Add a lowercase letter.",
+        "no_digit": "Add a digit.",
+        "no_special": "Add a special character, such as ! or #.",
+        "has_space_or_control": "Remove the spaces.",
+        "mismatch": "The two passwords are not the same.",
+        "out_of_range": "This value is out of range."
+      },
+      "settings": {
+        "title": "Account",
+        "signed_in": "Signed in as",
+        "need_password": "To change the password or the lock, sign in with your password.",
+        "idle": "Lock after being idle",
+        "idle_off": "Never",
+        "idle_minutes": "{n} minutes",
+        "idle_hint": "When Stuarty locks, agents and the command line need you to unlock it again.",
+        "change": "Change password",
+        "current": "Current password",
+        "new": "New password",
+        "change_submit": "Change password",
+        "idle_saved": "The lock was saved.",
+        "password_saved": "The password was changed."
       }
     },
     "login": {

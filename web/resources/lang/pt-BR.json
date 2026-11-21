@@ -934,6 +934,7 @@
         "E_NETWORK": "Erro de rede",
         "E_UNAUTHORIZED": "Sessão encerrada",
         "E_FORBIDDEN": "Não permitido",
+        "E_LOCKED": "O Stuarty está trancado",
         "E_PRIVILEGED_SESSION": "Só você, no aplicativo, pode fazer isso",
         "E_AGENT_NOT_FOUND": "Agente não encontrado",
         "E_CHAT_NOT_FOUND": "Conversa não encontrada",
@@ -2479,6 +2480,73 @@
         "invalid_until": "Digite um tempo como 12s, 90f ou 00:00:12.",
         "cancel": "Cancelar",
         "confirm": "Repetir"
+      }
+    },
+    "account": {
+      "show": "Mostrar a senha",
+      "hide": "Ocultar a senha",
+      "logout": "Sair",
+      "username": "Nome de usuário",
+      "username_rule": "De 4 a 16 letras minúsculas, de a a z, sem números nem espaços.",
+      "email": "Endereço de e-mail",
+      "email_rule": "De 12 a 48 caracteres. Só é conferido nesta máquina; nada é enviado a ele.",
+      "password": "Senha",
+      "password_rule": "De 8 a 32 caracteres, com uma letra maiúscula, uma minúscula, um número e um caractere especial, sem espaços.",
+      "confirmation": "Confirme a senha",
+      "identity": "Usuário ou e-mail",
+      "create": {
+        "title": "Crie a sua conta",
+        "intro": "Seus projetos, textos e credenciais são cifrados com uma chave que só fica na memória enquanto você está conectado. Ninguém, nem um agente, lê isso com o Stuarty trancado.",
+        "submit": "Criar conta"
+      },
+      "recovery": {
+        "title": "Guarde a sua chave de recuperação",
+        "intro": "Esta chave abre os seus dados se você esquecer a senha. Ela aparece uma vez, aqui, e o Stuarty não a guarda.",
+        "warning": "Se você esquecer a senha e não tiver esta chave, os seus dados não podem ser recuperados. Ninguém pode fazer isso por você, nem nós. Anote a chave ou guarde-a num gerenciador de senhas antes de continuar.",
+        "copy": "Copiar a chave",
+        "copied": "Copiada.",
+        "saved": "Guardei a minha chave de recuperação",
+        "continue": "Continuar para entrar"
+      },
+      "signin": {
+        "title": "Entrar no Stuarty",
+        "submit": "Entrar",
+        "forgot": "Esqueci a minha senha"
+      },
+      "recover": {
+        "title": "Recuperar com a chave de recuperação",
+        "intro": "Digite a chave de recuperação que você guardou e escolha uma senha nova. Os seus dados ficam como estão.",
+        "key": "Chave de recuperação",
+        "new_password": "Senha nova",
+        "submit": "Definir a senha nova"
+      },
+      "reason": {
+        "too_short": "Está curto demais.",
+        "too_long": "Está longo demais.",
+        "not_lowercase_letters": "Use só letras minúsculas de a a z.",
+        "invalid_format": "Este não é um endereço válido.",
+        "no_uppercase": "Acrescente uma letra maiúscula.",
+        "no_lowercase": "Acrescente uma letra minúscula.",
+        "no_digit": "Acrescente um número.",
+        "no_special": "Acrescente um caractere especial, como ! ou #.",
+        "has_space_or_control": "Tire os espaços.",
+        "mismatch": "As duas senhas não são iguais.",
+        "out_of_range": "Este valor está fora do limite."
+      },
+      "settings": {
+        "title": "Conta",
+        "signed_in": "Conectado como",
+        "need_password": "Para trocar a senha ou o bloqueio, entre com a sua senha.",
+        "idle": "Trancar depois de ficar parado",
+        "idle_off": "Nunca",
+        "idle_minutes": "{n} minutos",
+        "idle_hint": "Quando o Stuarty trancar, os agentes e a linha de comando precisam que você o destranque de novo.",
+        "change": "Trocar a senha",
+        "current": "Senha atual",
+        "new": "Senha nova",
+        "change_submit": "Trocar a senha",
+        "idle_saved": "O bloqueio foi salvo.",
+        "password_saved": "A senha foi trocada."
       }
     },
     "login": {
