@@ -5,6 +5,8 @@ import {
 	fillProjectForm,
 	GOAL,
 	listProjects,
+	makeProject,
+	openProjectForm,
 	test,
 } from "./helpers";
 
@@ -15,6 +17,7 @@ test.describe("projects-page", () => {
 		page,
 	}) => {
 		await page.goto("/projects");
+		await openProjectForm(page);
 		const create = page.getByRole("button", { name: "Create project" });
 		await expect(create).toBeDisabled();
 
@@ -55,6 +58,7 @@ test.describe("projects-page", () => {
 		page,
 	}) => {
 		await page.goto("/projects");
+		await openProjectForm(page);
 		await expect(page.getByPlaceholder("Launch teaser")).toBeVisible();
 		await expect(
 			page.getByPlaceholder("Publish one teaser that explains the course"),
@@ -73,6 +77,21 @@ test.describe("projects-page", () => {
 		await expect(
 			page.getByRole("button", { name: "What to write in Due date" }),
 		).toHaveCount(1);
+	});
+
+	test("with projects in the list the form waits behind a button and the list is above the fold", async ({
+		page,
+		request,
+	}) => {
+		await makeProject(await caller(request), `E2E fold ${Date.now()}`);
+		await page.setViewportSize({ width: 1280, height: 720 });
+		await page.goto("/projects");
+		await expect(page.getByLabel("Name", { exact: true })).toHaveCount(0);
+		const list = page.getByRole("heading", { name: "Your projects" });
+		const box = await list.boundingBox();
+		expect(box?.y ?? Number.POSITIVE_INFINITY).toBeLessThan(720);
+		await page.getByRole("button", { name: "Start a new project" }).click();
+		await expect(page.getByLabel("Name", { exact: true })).toBeVisible();
 	});
 
 	test("creating a project makes a project with no timeline, and a video asks for the size", async ({
