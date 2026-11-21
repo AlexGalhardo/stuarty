@@ -101,6 +101,12 @@ export const TimelineItem = memo(function TimelineItem({
 	const asset = useDocumentState((s) =>
 		item?.asset === undefined ? undefined : selectAsset(s, item.asset),
 	);
+	// The name the library shows the file under: a rename changes it, not the document (SDD-011 section 14.8).
+	const shownName = useStore(runtime.library, (s) =>
+		item?.asset === undefined
+			? undefined
+			: s.entries.find((entry) => entry.asset_id === item.asset)?.name,
+	);
 	const selected = useUiState((s) => s.selection.items.includes(id));
 	const tabStop = useUiState((s) => s.focusedItem === id);
 	// Outlined for a moment when it blocked a move (SDD-012 section 8.4).
@@ -112,7 +118,11 @@ export const TimelineItem = memo(function TimelineItem({
 
 	const typeName = t(`ui.editor.item.${item.type}`);
 	const label =
-		item.name ?? asset?.name ?? item.text?.split("\n")[0] ?? typeName;
+		item.name ??
+		shownName ??
+		asset?.name ??
+		item.text?.split("\n")[0] ??
+		typeName;
 
 	return (
 		// biome-ignore lint/a11y/useSemanticElements: the cell sits in a CSS-positioned grid (SDD-012 section 7.1).

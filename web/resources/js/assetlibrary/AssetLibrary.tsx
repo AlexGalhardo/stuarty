@@ -10,8 +10,15 @@ import {
 } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import RenameAssetDialog from "@/components/RenameAssetDialog";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
+import {
+	ContextMenu,
+	ContextMenuContent,
+	ContextMenuItem,
+	ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -73,57 +80,79 @@ export function AssetCard({
 	asset,
 	selected,
 	onOpen,
+	onRenamed,
 }: {
 	asset: LibraryAsset;
 	selected: boolean;
 	onOpen(): void;
+	// The file was renamed: the page reads the list again, which the service orders by name.
+	onRenamed?(): void;
 }): ReactNode {
 	const t = useT();
+	const [renaming, setRenaming] = useState(false);
 	return (
-		<li>
-			<button
-				type="button"
-				onClick={onOpen}
-				aria-pressed={selected}
-				data-asset-hash={asset.hash}
-				className="flex w-full flex-col gap-2 rounded-xl border bg-card p-2 text-left text-card-foreground hover:bg-muted focus-visible:outline-2 aria-pressed:border-primary"
-			>
-				<span className="flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-muted text-xs text-muted-foreground">
-					{hasPicture(asset) && asset.poster !== undefined ? (
-						<img
-							src={thumbnailUrl(
-								asset.poster.timeline_id,
-								asset.poster.asset_id,
-								POSTER_WIDTH,
+		<ContextMenu>
+			<ContextMenuTrigger asChild>
+				<li>
+					<button
+						type="button"
+						onClick={onOpen}
+						aria-pressed={selected}
+						data-asset-hash={asset.hash}
+						className="flex w-full flex-col gap-2 rounded-xl border bg-card p-2 text-left text-card-foreground hover:bg-muted focus-visible:outline-2 aria-pressed:border-primary"
+					>
+						<span className="flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-muted text-xs text-muted-foreground">
+							{hasPicture(asset) && asset.poster !== undefined ? (
+								<img
+									src={thumbnailUrl(
+										asset.poster.timeline_id,
+										asset.poster.asset_id,
+										POSTER_WIDTH,
+									)}
+									alt=""
+									loading="lazy"
+									className="size-full object-cover"
+								/>
+							) : (
+								t(`ui.assets.kind.${asset.kind}`)
 							)}
-							alt=""
-							loading="lazy"
-							className="size-full object-cover"
-						/>
-					) : (
-						t(`ui.assets.kind.${asset.kind}`)
-					)}
-				</span>
-				<span className="truncate text-sm font-medium">
-					<UntrustedText>{asset.name}</UntrustedText>
-				</span>
-				<span className="flex flex-wrap gap-1 text-xs text-muted-foreground">
-					<span>
-						{t(`ui.assets.origin.${asset.origin?.kind ?? "imported"}`)}
-					</span>
-					{asset.reusable === true && (
-						<span className="rounded bg-primary/10 px-1 text-primary">
-							{t("ui.assets.reusable_badge")}
 						</span>
-					)}
-					{(asset.tags ?? []).map((tag) => (
-						<span key={tag} className="rounded bg-muted px-1">
-							<UntrustedText>{tag}</UntrustedText>
+						<span className="truncate text-sm font-medium">
+							<UntrustedText>{asset.name}</UntrustedText>
 						</span>
-					))}
-				</span>
-			</button>
-		</li>
+						<span className="flex flex-wrap gap-1 text-xs text-muted-foreground">
+							<span>
+								{t(`ui.assets.origin.${asset.origin?.kind ?? "imported"}`)}
+							</span>
+							{asset.reusable === true && (
+								<span className="rounded bg-primary/10 px-1 text-primary">
+									{t("ui.assets.reusable_badge")}
+								</span>
+							)}
+							{(asset.tags ?? []).map((tag) => (
+								<span key={tag} className="rounded bg-muted px-1">
+									<UntrustedText>{tag}</UntrustedText>
+								</span>
+							))}
+						</span>
+					</button>
+				</li>
+			</ContextMenuTrigger>
+			<ContextMenuContent aria-label={t("ui.editor.library.rename.menu")}>
+				<ContextMenuItem onSelect={() => setRenaming(true)}>
+					{t("ui.editor.library.rename.action")}
+				</ContextMenuItem>
+			</ContextMenuContent>
+			<RenameAssetDialog
+				open={renaming}
+				onOpenChange={setRenaming}
+				name={asset.name}
+				rename={async (name) => {
+					await api().renameAsset(asset.hash, name);
+					onRenamed?.();
+				}}
+			/>
+		</ContextMenu>
 	);
 }
 
@@ -812,6 +841,7 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 										asset={asset}
 										selected={open === asset.hash}
 										onOpen={() => setOpen(asset.hash)}
+										onRenamed={() => void load(applied)}
 									/>
 								))}
 							</ul>

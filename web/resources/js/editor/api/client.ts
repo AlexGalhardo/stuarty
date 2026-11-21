@@ -245,6 +245,8 @@ export interface ApiClient {
 	getAsset(hash: string): Promise<AssetResult>;
 	setAssetInfo(hash: string, info: AssetInfoBody): Promise<AssetResult>;
 	tagAsset(hash: string, add: string[], remove: string[]): Promise<AssetResult>;
+	// Changes the name a file is shown under; the service applies the rules of the name (SDD-011 section 14.8).
+	renameAsset(hash: string, name: string): Promise<AssetResult>;
 	// Uses a file of the library in a project: no copy, no ingest (SDD-011 section 14.3).
 	// `timelineId` names the timeline of a project that holds several; the service refuses the call without it.
 	useAsset(
@@ -678,6 +680,13 @@ export function createClient(
 					add,
 					remove,
 				},
+			),
+		renameAsset: (hash, name) =>
+			call(
+				"POST",
+				`/assets/${encodeURIComponent(hash)}/rename`,
+				EDIT_TIMEOUT_MS,
+				{ name },
 			),
 		useAsset: (id, hash, timelineId) =>
 			call("POST", `${project(id)}/media`, EDIT_TIMEOUT_MS, {

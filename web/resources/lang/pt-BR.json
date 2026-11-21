@@ -999,6 +999,15 @@
         "retry": "Tentar de novo",
         "dismiss": "Dispensar",
         "menu": "Ações de {name}",
+        "rename": {
+          "action": "Renomear",
+          "title": "Renomear este arquivo",
+          "label": "Nome do arquivo",
+          "hint": "A extensão é mantida. No máximo 120 caracteres, sem barras.",
+          "submit": "Renomear",
+          "cancel": "Cancelar",
+          "menu": "Ações do arquivo"
+        },
         "inspect": "Inspecionar",
         "hash": "Hash do conteúdo (o logotipo do kit de marca usa este):",
         "inspect_loading": "Lendo a mídia.",
