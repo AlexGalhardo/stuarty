@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -84,8 +85,8 @@ func (s *svc) TrashEmpty(ctx context.Context, req TrashEmptyRequest) (*TrashEmpt
 	}
 
 	for _, id := range targets {
-		for _, tl := range s.timelineIDs(ctx, id) {
-			s.stopProjectJobs(ctx, tl)
+		for _, scope := range jobScopes(id, s.timelineIDs(ctx, id)) {
+			s.stopProjectJobs(ctx, scope)
 		}
 	}
 
@@ -183,6 +184,17 @@ func (s *svc) timelineIDs(ctx context.Context, projectID string) []string {
 	return ids
 }
 
+// jobScopes are the ids a job of a project names: each of its timelines, and the project itself, which holds the
+// generations of a project with no timeline (SDD-005 section 5.12.3). The first timeline usually has the id of
+// the project, so it is listed once.
+func jobScopes(projectID string, timelines []string) []string {
+	if slices.Contains(timelines, projectID) {
+		return timelines
+	}
+
+	return append(slices.Clip(timelines), projectID)
+}
+
 // stopProjectJobs asks the queued and running jobs of a project to stop and
 // waits for them, up to jobWait.
 func (s *svc) stopProjectJobs(ctx context.Context, projectID string) {
@@ -208,13 +220,13 @@ func (s *svc) deleteProduction(ctx context.Context, tx Tx, id string) (timelines
 	}
 
 	for i := range items {
-		if items[i].Kind != "timeline" {
-			continue
+		if items[i].Kind == "timeline" {
+			timelines = append(timelines, items[i].Ref)
 		}
+	}
 
-		timelines = append(timelines, items[i].Ref)
-
-		active, lerr := tx.Jobs().List(ctx, items[i].Ref, []string{JobQueued, JobRunning}, 1)
+	for _, scope := range jobScopes(id, timelines) {
+		active, lerr := tx.Jobs().List(ctx, scope, []string{JobQueued, JobRunning}, 1)
 		if lerr != nil {
 			return nil, false, lerr
 		}
