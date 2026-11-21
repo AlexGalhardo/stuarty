@@ -68,7 +68,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [51](51-processed-audio-preview-on-the-timeline.md) | Processed audio preview on the timeline | M | 34 | DONE (2026-11-20, `e1729a0bf`..`8778074ef`, merge `74a429def`; the latency budget on an idle machine not measured) |
 | [52](52-live-composition-groups-in-the-browser.md) | Live composition groups in the browser preview | M | 32, 26 | DONE (2026-11-20, `43b11f50e`..`5332706c1`, merge `7cb81c176`; Firefox and WebKit not run) |
 | [53](53-constant-speed-for-compositions.md) | Constant speed for compositions | M | 32 | DONE (2026-11-20, 38369a110..6dc199452, merge 425c9bf14; the audio keeps the pitch through atempo, no nested bus) |
-| [54](54-image-pipeline-performance.md) | Image pipeline performance (NFR-061) | L | 27, 29, 36, 49, 50 | IN REVIEW (the rest of NFR-061 moved to epic 55 by D-118) |
+| [54](54-image-pipeline-performance.md) | Image pipeline performance (NFR-061) | L | 27, 29, 36, 49, 50 | DONE (2026-11-20, `bb6d11435`..`9df22287f`; the rest of NFR-061 moved to epic 55 by D-118) |
 | [55](55-image-renderer-performance.md) | Image renderer performance (NFR-061, the renderer half) | L | 54 | TODO |
 
 ### 1.4 Closing (after the tracks)
