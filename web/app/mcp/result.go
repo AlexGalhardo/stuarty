@@ -79,6 +79,11 @@ func validationFailure(err error) error {
 		loc := slices.Concat(leaf.InstanceLocation, req.Missing[:1])
 		path = formatPath(loc)
 	}
+	// An unknown member is reported on its parent object; name the member.
+	if extra, isExtra := leaf.ErrorKind.(*kind.AdditionalProperties); isExtra && len(extra.Properties) > 0 {
+		path = formatPath(slices.Concat(leaf.InstanceLocation, extra.Properties[:1]))
+	}
+
 	constraint := "schema"
 
 	if kp := leaf.ErrorKind.KeywordPath(); len(kp) > 0 {
@@ -107,6 +112,8 @@ func validationFailure(err error) error {
 // never repeats the value that was sent (SDD-003 section 1.2 rule 9).
 func expectation(k jsonschema.ErrorKind) string {
 	switch k := k.(type) {
+	case *kind.AdditionalProperties:
+		return ": it is not an argument of this tool"
 	case *kind.Required:
 		return ": the argument is required (missing: " + strings.Join(k.Missing, ", ") + ")"
 	case *kind.Enum:
