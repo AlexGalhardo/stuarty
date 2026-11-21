@@ -58,17 +58,18 @@ const plain = (p: Segment[]): string => p.map((s) => s.text).join("");
 			opacity: 0;
 		}
 	}
-	/* The three accents, large text: AA 3:1 at least on both themes. */
+	/* The three accents: darker on the light page so they read as body text would (4.5:1 or more on the light hero
+	   background), the bright tones on the dark page. */
 	.typer-orange {
-		color: #ee5500;
+		color: #b83d00;
 		text-shadow: 0 0 18px color-mix(in oklab, #ff6a00 35%, transparent);
 	}
 	.typer-pink {
-		color: #ff1f8e;
+		color: #c2006a;
 		text-shadow: 0 0 18px color-mix(in oklab, #ff1f8e 35%, transparent);
 	}
 	.typer-green {
-		color: #009a1f;
+		color: #00781a;
 		text-shadow: 0 0 18px color-mix(in oklab, #22d34a 30%, transparent);
 	}
 	.dark .typer-orange {
@@ -78,6 +79,7 @@ const plain = (p: Segment[]): string => p.map((s) => s.text).join("");
 			0 0 36px color-mix(in oklab, #ff6a00 35%, transparent);
 	}
 	.dark .typer-pink {
+		color: #ff1f8e;
 		text-shadow:
 			0 0 14px color-mix(in oklab, #ff1f8e 60%, transparent),
 			0 0 36px color-mix(in oklab, #ff1f8e 35%, transparent);
