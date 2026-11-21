@@ -139,8 +139,10 @@ jobs:
           - { os: ubuntu-latest, shard: service-1, named_n: 3 }
           - { os: ubuntu-latest, shard: service-2, named_n: 3 }
           - { os: ubuntu-latest, shard: service-3, named_n: 3 }
-          - { os: ubuntu-latest, shard: contract-1, named_n: 2 }
-          - { os: ubuntu-latest, shard: contract-2, named_n: 2 }
+          - { os: ubuntu-latest, shard: contract-1, named_n: 4 }
+          - { os: ubuntu-latest, shard: contract-2, named_n: 4 }
+          - { os: ubuntu-latest, shard: contract-3, named_n: 4 }
+          - { os: ubuntu-latest, shard: contract-4, named_n: 4 }
           - { os: windows-latest, shard: export-1, export_n: 5 }
           - { os: windows-latest, shard: export-2, export_n: 5 }
           - { os: windows-latest, shard: export-3, export_n: 5 }
@@ -152,9 +154,11 @@ jobs:
           - { os: windows-latest, shard: service-2, named_n: 4 }
           - { os: windows-latest, shard: service-3, named_n: 4 }
           - { os: windows-latest, shard: service-4, named_n: 4 }
-          - { os: windows-latest, shard: contract-1, named_n: 3 }
-          - { os: windows-latest, shard: contract-2, named_n: 3 }
-          - { os: windows-latest, shard: contract-3, named_n: 3 }
+          - { os: windows-latest, shard: contract-1, named_n: 5 }
+          - { os: windows-latest, shard: contract-2, named_n: 5 }
+          - { os: windows-latest, shard: contract-3, named_n: 5 }
+          - { os: windows-latest, shard: contract-4, named_n: 5 }
+          - { os: windows-latest, shard: contract-5, named_n: 5 }
           - { os: macos-latest, shard: export-1, export_n: 3 }
           - { os: macos-latest, shard: export-2, export_n: 3 }
           - { os: macos-latest, shard: export-3, export_n: 3 }
@@ -163,8 +167,10 @@ jobs:
           - { os: macos-latest, shard: service-1, named_n: 3 }
           - { os: macos-latest, shard: service-2, named_n: 3 }
           - { os: macos-latest, shard: service-3, named_n: 3 }
-          - { os: macos-latest, shard: contract-1, named_n: 2 }
-          - { os: macos-latest, shard: contract-2, named_n: 2 }
+          - { os: macos-latest, shard: contract-1, named_n: 4 }
+          - { os: macos-latest, shard: contract-2, named_n: 4 }
+          - { os: macos-latest, shard: contract-3, named_n: 4 }
+          - { os: macos-latest, shard: contract-4, named_n: 4 }
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     env:
@@ -307,9 +313,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-latest, shards: 10 }
-          - { os: windows-latest, shards: 14 }
-          - { os: macos-latest, shards: 10 }
+          - { os: ubuntu-latest, shards: 12 }
+          - { os: windows-latest, shards: 16 }
+          - { os: macos-latest, shards: 12 }
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
