@@ -26,6 +26,25 @@ export interface LibraryWriter {
 	setImportError(error: LibraryState["importError"]): void;
 }
 
+const namesOf = new WeakMap<
+	readonly MediaEntry[],
+	ReadonlyMap<string, string>
+>();
+
+// The name the library shows each file under, by asset id: a rename changes it and
+// not the document (SDD-011 section 14.8). One map per list, so that a timeline of
+// many clips does not walk the list for each of them.
+export function shownNames(
+	entries: readonly MediaEntry[],
+): ReadonlyMap<string, string> {
+	let names = namesOf.get(entries);
+	if (names === undefined) {
+		names = new Map(entries.map((entry) => [entry.asset_id, entry.name]));
+		namesOf.set(entries, names);
+	}
+	return names;
+}
+
 export function createLibraryStore(): {
 	store: ReadStore<LibraryState>;
 	writer: LibraryWriter;

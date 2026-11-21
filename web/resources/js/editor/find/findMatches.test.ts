@@ -43,6 +43,14 @@ describe("findMatches", () => {
 		);
 	});
 
+	test("a renamed file is found by the name the library shows, not the old one", () => {
+		const shown = new Map([["a1", "Renamed shot.mp4"]]);
+		expect(findMatches(doc, "renamed shot", shown)).toEqual([
+			{ itemId: "i1", kind: "name", label: "Renamed shot.mp4", frame: 0 },
+		]);
+		expect(findMatches(doc, "Beach", shown)).toEqual([]);
+	});
+
 	test("ignores case and accents", () => {
 		expect(findMatches(doc, "acao")).toEqual([
 			{ itemId: "i2", kind: "text", label: "Ação no mar", frame: 30 },

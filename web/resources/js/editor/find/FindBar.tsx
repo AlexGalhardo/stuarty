@@ -13,7 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useT } from "@/lib/i18n";
 import { isRowKey } from "../commands/keymapStore";
+import { useStore } from "../state/createStore";
 import { useDocumentState, useRuntime } from "../state/EditorContext";
+import { shownNames } from "../state/libraryStore";
 import { revealItem } from "../timeline/revealItem";
 import { type FindMatch, findMatches, stepIndex } from "./findMatches";
 
@@ -51,9 +53,10 @@ export default function FindBar(): ReactNode {
 	const root = useRef<HTMLElement>(null);
 	const returnTo = useRef<HTMLElement | null>(null);
 
+	const shown = useStore(runtime.library, (s) => shownNames(s.entries));
 	const matches = useMemo(
-		() => (open ? findMatches(document_, query) : []),
-		[open, document_, query],
+		() => (open ? findMatches(document_, query, shown) : []),
+		[open, document_, query, shown],
 	);
 	const at = current < matches.length ? current : -1;
 

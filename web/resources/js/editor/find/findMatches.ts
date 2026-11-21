@@ -28,12 +28,18 @@ export function foldText(value: string): string {
 export function findMatches(
 	document: DeepReadonly<ProjectDocument> | null,
 	query: string,
+	// The names the library shows, by asset id: a rename changes them and not the document.
+	shown?: ReadonlyMap<string, string>,
 ): FindMatch[] {
 	const needle = foldText(query.trim());
 	if (document === null || needle === "") return [];
 	const found: FindMatch[] = [];
 	for (const item of Object.values(document.items)) {
-		const names = [item.name, document.assets[item.asset ?? ""]?.name];
+		const asset = item.asset ?? "";
+		const names = [
+			item.name,
+			shown?.get(asset) ?? document.assets[asset]?.name,
+		];
 		for (const name of names) {
 			if (name !== undefined && foldText(name).includes(needle)) {
 				found.push({
