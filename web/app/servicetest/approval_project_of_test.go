@@ -91,6 +91,37 @@ func TestCeiling_AProjectKeepsItsLimitsWhenATimelineCarriesItsID(t *testing.T) {
 	}
 }
 
+// VV-315: a post is kept on the timeline of its export, and the queue of its project still shows it; the id of the
+// timeline lists that timeline alone.
+func TestApprovalList_AProjectListsTheRequestsOfEveryTimeline(t *testing.T) {
+	p := newPubEnv(t)
+	_, second := p.addSecondTimeline()
+	exp := p.seedExport(second, "job_0000000974", ".mp4", []byte("fake mp4 bytes"))
+
+	job, err := p.pub.PublishNow(p.as(token), service.PublishNowRequest{ProjectID: p.project, PublishArgs: p.args(exp)})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for name, id := range map[string]string{"the project": p.project, "the timeline": second} {
+		list, err := p.svc.ApprovalList(p.as(token), service.ApprovalListRequest{ProjectID: id})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if list.Total != 1 || list.Requests[0].ID != job.ApprovalID {
+			t.Errorf("the queue of %s = %+v, want the post %s", name, list.Requests, job.ApprovalID)
+		}
+	}
+
+	other := p.newProject("other")
+
+	list, err := p.svc.ApprovalList(p.as(token), service.ApprovalListRequest{ProjectID: other})
+	if err != nil || list.Total != 0 {
+		t.Errorf("the queue of another project = %+v, %v; want it empty", list, err)
+	}
+}
+
 // VV-367: what a ceiling counts for a project is what the summary reports for it, with history written before the
 // migration, a timeline in the trash, a project with no timeline, an id no project holds, and a timeline that carries
 // the id of another project.
