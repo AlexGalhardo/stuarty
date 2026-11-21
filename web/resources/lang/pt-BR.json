@@ -2866,7 +2866,7 @@
         "intro": "Uma regra deixa um tipo de ação passar sem perguntar. Só você pode escrever uma; nenhum agente pode.",
         "empty": "Sem regras: tudo espera por você.",
         "new": "Nova regra",
-        "kind": "Tipo de ação (por exemplo publish.post)",
+        "kind": "Tipo de ação (por exemplo publish.upload)",
         "destination": "Destino",
         "project": "Id do projeto (opcional)",
         "any_destination": "Qualquer destino",

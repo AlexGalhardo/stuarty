@@ -2866,7 +2866,7 @@
         "intro": "A rule lets a kind of action go without asking. Only you can write one; no agent can.",
         "empty": "No rules: everything waits for you.",
         "new": "New rule",
-        "kind": "Kind of action (for example publish.post)",
+        "kind": "Kind of action (for example publish.upload)",
         "destination": "Destination",
         "project": "Project id (optional)",
         "any_destination": "Any destination",
