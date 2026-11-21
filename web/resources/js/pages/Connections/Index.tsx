@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatDateTime } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
+import { PersonOnlyNote, useSession } from "@/lib/session";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
 import type {
@@ -46,14 +47,20 @@ export function ConnectionRow({
 	onTest,
 	onRemove,
 	result,
+	signedIn = false,
 }: {
 	connection: Connection;
 	onTest(): void;
 	onRemove(): void;
 	result: ConnectionTestResult | null;
+	// The server lists it as made by a sign-in, which only a person removes (SDD-014 section 13, T-75).
+	signedIn?: boolean;
 }): ReactNode {
 	const t = useT();
 	const locale = useLocale();
+	const { privileged } = useSession();
+	const removeRefused = signedIn && !privileged;
+	const reasonId = `remove-person-only-${connection.id}`;
 	return (
 		<li className="flex flex-col gap-3 p-4" data-connection-id={connection.id}>
 			<div className="flex items-start justify-between gap-4">
@@ -93,7 +100,13 @@ export function ConnectionRow({
 							<UntrustedText>{connection.label}</UntrustedText>
 						</span>
 					</Button>
-					<Button type="button" variant="outline" onClick={onRemove}>
+					<Button
+						type="button"
+						variant="outline"
+						disabled={removeRefused}
+						aria-describedby={removeRefused ? reasonId : undefined}
+						onClick={onRemove}
+					>
 						{t("ui.connections.remove")}
 						<span className="sr-only">
 							{" "}
@@ -102,6 +115,7 @@ export function ConnectionRow({
 					</Button>
 				</div>
 			</div>
+			{removeRefused && <PersonOnlyNote id={reasonId} />}
 			{result !== null && (
 				<div
 					role="status"
@@ -256,6 +270,9 @@ export default function Connections(): ReactNode {
 										key={connection.id}
 										connection={connection}
 										result={results[connection.id] ?? null}
+										signedIn={signIns.some(
+											(s) => s.connection_id === connection.id,
+										)}
 										onTest={() => void test(connection.id)}
 										onRemove={() => void remove(connection.id)}
 									/>

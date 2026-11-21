@@ -2,6 +2,7 @@ import { renderToString } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 
 import { I18nProvider } from "@/lib/i18n";
+import { SessionProvider } from "@/lib/session";
 import type {
 	Connection,
 	CostSummary,
@@ -306,6 +307,7 @@ describe("the sign-in of a provider", () => {
 		"ui.providers.signin_needs": "Needs sign-in",
 		"ui.providers.signin_needs_help": "Nothing was deleted: sign in again.",
 		"ui.providers.signin_again": "Sign in again",
+		"ui.session.person_only.local": "Only a person in the app can do this.",
 	};
 	const withSignIn: ProviderView = {
 		...provider,
@@ -404,5 +406,53 @@ describe("the sign-in of a provider", () => {
 		);
 		expect(html).not.toContain("data-signin-state");
 		expect(html).not.toContain("Sign in again");
+	});
+
+	describe("in a session that is not a person's (VV-331)", () => {
+		const cards = (privileged: boolean): string =>
+			render(
+				<SessionProvider session={{ privileged, mode: "local" }}>
+					<ProviderCards
+						providers={[withSignIn]}
+						connections={[connection]}
+						signIns={[
+							{
+								connection_id: "con_1",
+								provider: "openai",
+								label: "ChatGPT",
+								state: "needs_sign_in",
+							},
+						]}
+						cost={null}
+						onChanged={() => undefined}
+					/>
+				</SessionProvider>,
+			);
+		const buttonWith = (html: string, label: string): string =>
+			(html.match(/<button[^>]*>[\s\S]*?<\/button>/g) ?? [])
+				.find((button) => button.includes(label))
+				?.split(">")[0] ?? "";
+
+		test("both sign-ins are disabled and described by the reason; the key form and the check are not", () => {
+			const html = cards(false);
+			const first = buttonWith(html, "Sign in with ChatGPT");
+			const again = buttonWith(html, "Sign in again");
+			expect(first).toContain('disabled=""');
+			expect(first).toContain('aria-describedby="signin-person-only-openai"');
+			expect(again).toContain('disabled=""');
+			expect(again).toContain('aria-describedby="signin-person-only-con_1"');
+			expect(html).toContain('id="signin-person-only-openai"');
+			expect(html).toContain('id="signin-person-only-con_1"');
+			expect(buttonWith(html, "Check the key")).not.toContain('disabled=""');
+		});
+
+		test("a person has both, and no reason", () => {
+			const html = cards(true);
+			expect(buttonWith(html, "Sign in with ChatGPT")).not.toContain(
+				'disabled=""',
+			);
+			expect(buttonWith(html, "Sign in again")).not.toContain('disabled=""');
+			expect(html).not.toContain("person-only");
+		});
 	});
 });
