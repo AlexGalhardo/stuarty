@@ -40,6 +40,10 @@ test("the projects page draws every picture with at most two frame requests in f
 
 	await page.goto("/projects");
 	await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+	// The form of a project (epic 56) is taller than the viewport, and a card asks for its picture only near it.
+	await page
+		.locator("#project-list")
+		.evaluate((el) => el.scrollIntoView({ block: "start" }));
 	await expect
 		.poll(() => drawn, { timeout: 30_000 })
 		.toBeGreaterThanOrEqual(PROJECTS);

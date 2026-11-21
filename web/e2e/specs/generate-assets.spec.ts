@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { crc32, deflateSync } from "node:zlib";
 import type { Page } from "@playwright/test";
 import { LAUNCHER_SECRET } from "../support/launcher";
-import { caller, expect, home, makeProject, test } from "./helpers";
+import { caller, expect, home, makeProject, test, validName } from "./helpers";
 
 // RF-361 (epic 10, SDD-016 sections 6.1 and 10): a creator asks for a picture in Visual Assets and for a
 // narration in Sound Assets, sees the estimate before anything is submitted, approves the job, and finds
@@ -200,7 +200,7 @@ test.describe("Generate images and voice", () => {
 		const voiceModel = `tts-${tag}`;
 		const fake = await fakeProvider(imageModel, voiceModel);
 		const label = `OpenAI media ${tag}`;
-		const project = `Generated ${tag}`;
+		const project = validName(`Generated ${tag}`);
 		try {
 			const api = await caller(request);
 			const connectionId = String(

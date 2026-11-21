@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "./helpers";
+import { expect, fillProjectForm, test } from "./helpers";
 
 // Epic 37 review (VV-224, the axe spec of the export dialog failed only when
 // the pointer was left on a button): a primary button under the pointer keeps
@@ -13,8 +13,10 @@ for (const theme of ["light", "dark"] as const) {
 			localStorage.setItem("theme", value);
 		}, theme);
 		await page.goto("/projects");
+		// The button is enabled, and so takes the pointer, once the form is valid (epic 56).
+		await fillProjectForm(page, "Hover contrast");
 		const button = page.getByRole("button", { name: "Create project" }).first();
-		await expect(button).toBeVisible();
+		await expect(button).toBeEnabled();
 		const background = (): Promise<string> =>
 			button.evaluate((el) => getComputedStyle(el).backgroundColor);
 		const resting = await background();

@@ -5,7 +5,15 @@ import type { AddressInfo } from "node:net";
 import { join } from "node:path";
 import type { Page } from "@playwright/test";
 import { LAUNCHER_SECRET } from "../support/launcher";
-import { caller, expect, home, makeProject, test, testClip } from "./helpers";
+import {
+	caller,
+	expect,
+	home,
+	makeProject,
+	test,
+	testClip,
+	validName,
+} from "./helpers";
 
 // RF-361 (epic 11, SDD-016 sections 2.3, 6.4 and 10): a creator asks for a clip in Video Assets, sees the
 // estimate, learns that a video always waits for a person, approves, and finds the clip in the library with its
@@ -164,7 +172,7 @@ test.describe("Generate a video clip", () => {
 		const modelId = `${OMNI}-${tag}`;
 		const fake = await fakeGemini(await readFile(testClip(0)), modelId);
 		const label = `Google video ${tag}`;
-		const projectName = `Clips ${tag}`;
+		const projectName = validName(`Clips ${tag}`);
 		try {
 			const api = await caller(request);
 			const connectionId = String(
