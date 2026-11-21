@@ -127,16 +127,38 @@ func (s *svc) person(ctx context.Context, method string) (Caller, error) {
 	}
 
 	if err := approval.CheckPrivileged(approvalCaller(c)); err != nil {
-		return Caller{}, privilegedError()
+		return Caller{}, privilegedError(method)
 	}
 
 	return authorize(ctx, method, "")
 }
 
-func privilegedError() *Error {
-	return newError(CodePrivilegedSession, "only a person in the app can do this.").
-		withHint("a person decides in the Approvals page of the Stuarty desktop app, or of a server with login; the local " +
-			"token, API keys and the agent surfaces cannot approve, write a rule or set a ceiling")
+// privilegedHints say where a person does what an agent was refused; the method not listed is about approvals.
+var privilegedHints = map[string]string{
+	"SocialConnectComplete": "a person completes the connection in the Connections page of the Stuarty app; the local " +
+		"token, API keys and the agent surfaces cannot finish a sign-in",
+	"SocialAccountSelect": "a person chooses the account in the Connections page of the Stuarty app; the local " +
+		"token, API keys and the agent surfaces cannot choose it",
+	"SocialPriceSet": "a person sets the price in the Connections page of the Stuarty app; the local " +
+		"token, API keys and the agent surfaces cannot set it",
+	"ConnectionRemove": "a person removes a sign-in in the Connections page of the Stuarty app; the local " +
+		"token, API keys and the agent surfaces cannot remove it",
+	"ProviderPriceSet": "a person sets the price in the Providers page of the Stuarty app; the local " +
+		"token, API keys and the agent surfaces cannot set it",
+	"ProviderSignInBegin": "a person signs in in the Connections page of the Stuarty app; the local " +
+		"token, API keys and the agent surfaces cannot start a sign-in",
+	"ProviderSignInComplete": "a person signs in in the Connections page of the Stuarty app; the local " +
+		"token, API keys and the agent surfaces cannot finish a sign-in",
+}
+
+func privilegedError(method string) *Error {
+	hint, ok := privilegedHints[method]
+	if !ok {
+		hint = "a person decides in the Approvals page of the Stuarty desktop app, or of a server with login; the local " +
+			"token, API keys and the agent surfaces cannot approve, write a rule or set a ceiling"
+	}
+
+	return newError(CodePrivilegedSession, "only a person in the app can do this.").withHint("%s", hint)
 }
 
 // approvalFilter narrows a list to what the caller may read: a key limited to one project reads the requests of

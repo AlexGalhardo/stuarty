@@ -75,3 +75,19 @@ func TestListHintsNameTheSurface(t *testing.T) {
 		t.Errorf("jobNotFound hint = %q", e.Hint)
 	}
 }
+
+// A refusal for a person-only operation says where the person does it, not the Approvals page (VV-312).
+func TestPrivilegedHintsNameTheRightPage(t *testing.T) {
+	t.Parallel()
+
+	for method, want := range map[string]string{
+		"SocialConnectComplete": "Connections page",
+		"SocialPriceSet":        "Connections page",
+		"ProviderPriceSet":      "Providers page",
+		"ApprovalDecide":        "Approvals page",
+	} {
+		if h := privilegedError(method).Hint; !strings.Contains(h, want) {
+			t.Errorf("%s: hint %q, want %q", method, h, want)
+		}
+	}
+}

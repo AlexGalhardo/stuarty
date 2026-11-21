@@ -231,7 +231,7 @@ func (s *svc) ConnectionRemove(ctx context.Context, req ConnectionRef) (*connect
 	// A sign-in is made and removed by a person in the browser: an agent, the CLI and the local token read
 	// that it exists and cannot take it away (SDD-014 section 13, T-75).
 	if !c.Browser && s.isSignIn(ctx, row.ID) {
-		return nil, privilegedError()
+		return nil, privilegedError("ConnectionRemove")
 	}
 
 	if err := s.conns.DeleteSecret(row.SecretRef); err != nil {
