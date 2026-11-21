@@ -19,7 +19,12 @@ A video file of a person speaking, `talk.mp4`. Transcription runs on your comput
 A long video has its own questions: the topic, the audience, the goal, the speakers, the platform, the format, the duration of the edited video (120 to 14,400 seconds) and the cut style (`tight`, `natural` or `relaxed`). Optional: the chapters you expect, what must stay even if it is a repeat or a pause, whether to extract a short, the tone, references and a deadline. Write them as a Markdown file that starts with `# Brief`, one `## <question>` heading for each answer, and store it:
 
 ```bash
-stuarty project:create --name "A year of videos" --preset 16:9
+stuarty project:create --name "A year of videos" \
+  --description "A long horizontal talking video on how a creator plans a year of weekly videos, with chapters." \
+  --specific "Publish one long video about planning a year" --measurable "Five hundred views and fifty comments" \
+  --achievable "The talk is recorded and the outline exists" --relevant "Viewers ask how the weekly plan is made" \
+  --time-bound "Outline this week, edit next week, then publish" --due 2027-03-31
+stuarty item:add --project prj_7k2m9x4q1b --kind timeline --title "A year of videos" --preset 16:9
 stuarty brief:set --project prj_7k2m9x4q1b --text brief.md
 ```
 

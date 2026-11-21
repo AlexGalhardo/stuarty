@@ -16,10 +16,15 @@ A video file with speech, `talk.mp4`, and a music file, `song.mp3`. Transcriptio
 
 ## Steps
 
-1. Create the project. The default preset is 9:16 at 30 frames per second, which is the format of a short.
+1. Create the project with its description and its goal, then add its video. The default preset of a video is 9:16 at 30 frames per second, which is the format of a short.
 
    ```bash
-   stuarty project:create --name "Short 01" --id prj_7k2m9x4q1b
+   stuarty project:create --name "Short 01" --id prj_7k2m9x4q1b \
+     --description "A vertical short of a talk with a song under it, captioned, for the people who follow the channel." \
+     --specific "Publish one captioned short of the talk" --measurable "A thousand views in the first week" \
+     --achievable "The talk and the song are already recorded" --relevant "Short videos bring new viewers" \
+     --time-bound "Edit today and publish tomorrow morning" --due 2027-03-31
+   stuarty item:add --project prj_7k2m9x4q1b --kind timeline --title "Short 01"
    ```
 
 2. Import the two files and wait until they are ready.

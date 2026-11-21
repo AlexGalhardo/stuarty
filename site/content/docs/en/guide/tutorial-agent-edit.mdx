@@ -31,7 +31,8 @@ The agent uses the same commands you do. Through MCP it calls tools such as `edi
 
    | Step | MCP tool | CLI |
    | --- | --- | --- |
-   | create the project | `project_create` | `stuarty project:create --name "Interview" --id prj_7k2m9x4q1b` |
+   | create the project, with its description and its goal | `project_create` | `stuarty project:create --name "Interview" --id prj_7k2m9x4q1b --description <text> --specific <text> --measurable <text> --achievable <text> --relevant <text> --time-bound <text> --due <date>` |
+   | add the video, with its size | `project_item` with `"action": "add", "kind": "timeline"` | `stuarty item:add --project prj_7k2m9x4q1b --kind timeline --title "Interview" --preset 9:16` |
    | import the media | `media_import` | `stuarty media:import interview.mp4 --project prj_7k2m9x4q1b --asset-id ast_3c5v8n2w6d` |
    | learn the operations | `command_help` | `stuarty command:help clip.add` |
    | edit in one batch | `edit` | `stuarty edit --project prj_7k2m9x4q1b --ops -` |

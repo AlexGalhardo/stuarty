@@ -22,7 +22,12 @@ A commercial has its own questions, apart from the ones of a short video. The re
 Write the answers in a Markdown file whose first line is `# Brief`, with one `## <question>` heading for each answer, and store it:
 
 ```bash
-stuarty project:create --name "Keep mug" --preset 9:16
+stuarty project:create --name "Keep mug" \
+  --description "A fifteen second vertical commercial for Keep, a steel mug that holds heat for eight hours." \
+  --specific "Publish one commercial for the Keep mug" --measurable "Two hundred clicks to the shop in a week" \
+  --achievable "The product shots and the voice exist" --relevant "The mug launches in the shop this month" \
+  --time-bound "Brief today, edit tomorrow, publish on Friday" --due 2027-03-31
+stuarty item:add --project prj_7k2m9x4q1b --kind timeline --title "Keep mug" --preset 9:16
 stuarty brief:set --project prj_7k2m9x4q1b --text brief.md
 ```
 
