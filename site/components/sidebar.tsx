@@ -18,7 +18,7 @@ function Item({ item, active, onNavigate }: { item: NavItem; active: boolean; on
 				href={item.href}
 				onClick={onNavigate}
 				aria-current={active ? "page" : undefined}
-				className={`flex items-baseline gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors ${
+				className={`flex items-baseline gap-2 rounded-lg px-2.5 py-1.5 text-[0.8125rem] transition-colors ${
 					active ? "bg-accent-soft font-medium text-accent" : "text-muted hover:bg-hover hover:text-fg"
 				}`}
 			>
@@ -105,12 +105,12 @@ export function Sidebar({
 	}
 
 	return (
-		<nav ref={nav} aria-label={t.documentation} className="space-y-1 text-sm">
+		<nav ref={nav} aria-label={t.documentation} className="space-y-1 text-[0.8125rem]">
 			{groups.map((group) => {
 				const key = keyOf(group);
 				return (
 					<Collapsible.Root key={key} open={open.includes(key)} onOpenChange={(next) => toggle(key, next)}>
-						<Collapsible.Trigger className="group flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-1.5 text-left text-xs font-semibold tracking-wide text-fg hover:bg-hover focus-visible:outline-2 focus-visible:outline-accent">
+						<Collapsible.Trigger className="group flex w-full cursor-pointer items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs font-semibold tracking-wide text-fg hover:bg-hover focus-visible:outline-2 focus-visible:outline-accent">
 							{group.title}
 							<ChevronRight
 								aria-hidden

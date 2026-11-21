@@ -14,7 +14,7 @@ export async function ChangelogPage(): Promise<React.ReactElement> {
 	return (
 		// Same frame as the docs (DocsFrame): the release index sits where the docs sidebar does.
 		<div className="site-container flex">
-			<aside className="sticky top-(--header-h) hidden h-[calc(100dvh-var(--header-h))] w-64 shrink-0 overflow-y-auto py-8 pr-6 scroll-slim lg:block">
+			<aside className="sticky top-(--header-h) hidden h-[calc(100dvh-var(--header-h))] w-52 shrink-0 overflow-y-auto py-8 pr-4 scroll-slim lg:block">
 				<Toc headings={releases} label={t.releases} />
 			</aside>
 			<main id="content" className="min-w-0 flex-1 py-10 lg:pl-8 xl:max-w-4xl">

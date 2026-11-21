@@ -79,7 +79,7 @@ export function Header({ groups, variant = "docs" }: { groups: NavGroup[]; varia
 		<Providers>
 			<header className={HEADER_CLASS[variant]} data-variant={variant}>
 				{/* Same container as app/docs/layout.tsx; the left column matches the sidebar width. */}
-				<div className="site-container flex h-full items-center gap-2 sm:gap-3 lg:grid lg:grid-cols-[16rem_1fr_auto] lg:gap-0">
+				<div className="site-container flex h-full items-center gap-2 sm:gap-3 lg:grid lg:grid-cols-[13rem_minmax(0,1fr)_auto] lg:gap-0">
 					<div className="flex items-center gap-2 sm:gap-3">
 						<MobileNav groups={groups} />
 						<Logo />
@@ -104,13 +104,13 @@ export function Header({ groups, variant = "docs" }: { groups: NavGroup[]; varia
 						</a>
 						<Link
 							href="/docs/api/overview"
-							className="hidden h-8 items-center rounded-lg px-2.5 text-sm font-medium whitespace-nowrap text-muted transition-colors hover:bg-hover hover:text-fg lg:inline-flex"
+							className="hidden h-8 items-center rounded-lg px-2.5 text-sm font-medium whitespace-nowrap text-muted transition-colors hover:bg-hover hover:text-fg xl:inline-flex"
 						>
 							{t.apiReference}
 						</Link>
 						<Link
 							href="/docs/mcp/overview"
-							className="hidden h-8 items-center rounded-lg px-2.5 text-sm font-medium text-muted transition-colors hover:bg-hover hover:text-fg lg:inline-flex"
+							className="hidden h-8 items-center rounded-lg px-2.5 text-sm font-medium text-muted transition-colors hover:bg-hover hover:text-fg xl:inline-flex"
 						>
 							{t.mcp}
 						</Link>

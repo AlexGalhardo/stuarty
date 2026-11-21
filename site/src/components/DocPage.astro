@@ -20,7 +20,7 @@ const groups = getNavGroups(doc.section);
 	<div class="site-container flex">
 		<aside
 			aria-label={ui.documentation}
-			class="sticky top-(--header-h) hidden h-[calc(100dvh-var(--header-h))] w-64 shrink-0 overflow-y-auto py-8 pr-6 scroll-slim lg:block"
+			class="sticky top-(--header-h) hidden h-[calc(100dvh-var(--header-h))] w-52 shrink-0 overflow-y-auto py-8 pr-4 scroll-slim lg:block"
 		>
 			<Sidebar client:load groups={groups} pathname={doc.href} />
 		</aside>
