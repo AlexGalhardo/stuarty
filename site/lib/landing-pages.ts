@@ -232,9 +232,9 @@ export const trust = {
 		{ title: "Open source", text: "MIT licensed. Read it, build it, change it." },
 		{ title: "Self-hosted", text: "Web and desktop. Files, tokens and credentials stay with you." },
 		{ title: "No telemetry", text: "With nothing connected, nothing leaves your machine." },
-		{ title: "A person approves", text: "An agent can prepare a post. Only you can send it." },
-		{ title: "A local vault", text: "Credentials live in the vault, and no tool ever returns one." },
-		{ title: "Bring your own access", text: "Your AI keys, Sign in with ChatGPT, OpenRouter or your local agent." },
+		{ title: "You Approve", text: "An agent can prepare a post. Only you can send it." },
+		{ title: "A local vault for your keys and tokens", text: "Credentials live in the vault, and no tool ever returns one." },
+		{ title: "Connect to External Services and APIs", text: "Your AI keys, Sign in with ChatGPT, OpenRouter or your local agent." },
 	],
 };
 
