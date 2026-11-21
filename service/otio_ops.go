@@ -137,7 +137,12 @@ func (s *svc) ProjectOtioExport(ctx context.Context, req ProjectOtioExportReques
 		return nil, derr
 	}
 
-	data, lost, xerr := otio.Export(doc)
+	names, nerr := s.shownAssetNames(ctx, row.ID)
+	if nerr != nil {
+		return nil, nerr
+	}
+
+	data, lost, xerr := otio.Export(withShownNames(doc, names))
 	if xerr != nil {
 		return nil, internalError()
 	}
@@ -198,7 +203,12 @@ func (s *svc) ProjectOtioImport(ctx context.Context, req ProjectOtioImportReques
 			withPath("path").withHint("set the frame rate of the project to the one of the file, then import again")
 	}
 
-	assets, unresolved, matched := matchOtioMedia(doc, im.Media)
+	names, nerr := s.shownAssetNames(ctx, row.ID)
+	if nerr != nil {
+		return nil, nerr
+	}
+
+	assets, unresolved, matched := matchOtioMedia(doc, names, im.Media)
 
 	for family := range doc.Fonts {
 		im.KnownFonts = append(im.KnownFonts, family)
@@ -352,8 +362,12 @@ func (s *svc) readOtio(path string) (*otio.Import, error) {
 
 // matchOtioMedia maps each candidate reference to the asset of the document with that name: the
 // reference as written or its last path segment, in the form displayName gives an imported file.
-// The lowest id wins when two assets share a name. A reference with no asset is unresolved.
-func matchOtioMedia(doc *timeline.Document, media []otio.Media) (map[string]string, []otio.Media, []otioMatch) {
+// The lowest id wins when two assets share a name. The name of an asset is its display name (shown, by asset id) and
+// also the one the document holds, so a file written before a rename still finds its asset; a display name wins
+// over a document name. A reference with no asset is unresolved.
+func matchOtioMedia(
+	doc *timeline.Document, shown map[string]string, media []otio.Media,
+) (map[string]string, []otio.Media, []otioMatch) {
 	ids := make([]string, 0, len(doc.Assets))
 	for id := range doc.Assets {
 		ids = append(ids, id)
@@ -362,6 +376,14 @@ func matchOtioMedia(doc *timeline.Document, media []otio.Media) (map[string]stri
 	slices.Sort(ids)
 
 	byName := make(map[string]string, len(ids))
+
+	for _, id := range ids {
+		if name := shown[id]; name != "" {
+			if _, ok := byName[name]; !ok {
+				byName[name] = id
+			}
+		}
+	}
 
 	for _, id := range ids {
 		if _, ok := byName[doc.Assets[id].Name]; !ok {

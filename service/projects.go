@@ -480,7 +480,12 @@ func (s *svc) ProjectGet(ctx context.Context, req ProjectGetRequest) (*ProjectGe
 		opts.After, opts.Page = cur.K, cur.N
 	}
 
-	text, next := textview.Project(doc, opts)
+	names, nerr := s.shownAssetNames(ctx, row.ID)
+	if nerr != nil {
+		return nil, nerr
+	}
+
+	text, next := textview.Project(withShownNames(doc, names), opts)
 	res.Text = text
 
 	if next != "" {

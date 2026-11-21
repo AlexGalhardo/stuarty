@@ -87,7 +87,7 @@ func TestOtioMediaIsMatchedByNameNeverOpened(t *testing.T) {
 		"ast_cccccccccc": {ID: "ast_cccccccccc", Name: "other.wav"},
 	}}
 
-	assets, unresolved, matched := matchOtioMedia(doc, []otio.Media{
+	assets, unresolved, matched := matchOtioMedia(doc, nil, []otio.Media{
 		{Ref: "clip.mp4", Status: otio.Candidate},
 		{Ref: `C:\footage\other.wav`, Status: otio.Candidate},
 		{Ref: "missing.mov", Status: otio.Candidate},
