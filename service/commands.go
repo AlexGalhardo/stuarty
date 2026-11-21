@@ -156,7 +156,7 @@ func commandList(reg *command.Registry, textCap int) *CommandHelpResult {
 		}
 
 		text := strings.Join(append(slices.Clone(lines[:keep]),
-			"More, without a summary (command_help with the name reads one): "+strings.Join(names, ", ")), "\n")
+			"More, without a summary (ask for one by its name): "+strings.Join(names, ", ")), "\n")
 		if len(text) <= textCap || keep == 0 {
 			res.Text = text
 
