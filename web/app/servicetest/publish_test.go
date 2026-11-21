@@ -494,3 +494,25 @@ func TestPublishNow_AnExportOfATimelineOfTheProjectIsAccepted(t *testing.T) {
 		t.Errorf("the export of another project = %v, want E_VALIDATION", err)
 	}
 }
+
+// A post belongs to the project, so a project of two timelines does not ask which one the post is kept on
+// (VV-315): publish:now accepts what publish:validate and publication:create already accept.
+func TestPublishNow_ATwoTimelineProjectDoesNotAskForTheTimeline(t *testing.T) {
+	p := newPubEnv(t)
+
+	if _, err := p.svc.ProjectItemAdd(
+		p.as(ui),
+		service.ProjectItemAddRequest{ProjectID: p.project, Kind: "timeline", Title: "Second cut"},
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	exp := p.seedExport(p.project, "job_0000000931", ".mp4", []byte("fake mp4 bytes"))
+
+	job, err := p.pub.PublishNow(p.as(token), service.PublishNowRequest{
+		ProjectID: p.project, PublishArgs: p.args(exp),
+	})
+	if err != nil || job.State != service.JobWaitingApproval {
+		t.Fatalf("publish without a timeline = %+v, %v", job, err)
+	}
+}

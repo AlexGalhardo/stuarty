@@ -148,7 +148,9 @@ func (s *svc) registerPublishKind() {
 	}
 
 	s.kinds[JobPublishUpload] = &ApprovableKind{
-		Name: JobPublishUpload, Scope: ScopeRender, Prepare: s.preparePublish, Run: s.runPublish,
+		// A post belongs to the project, as its export does, so no timeline is asked for (VV-315).
+		Name: JobPublishUpload, Scope: ScopeRender, ProjectWide: true,
+		Prepare: s.preparePublish, Run: s.runPublish,
 	}
 }
 
