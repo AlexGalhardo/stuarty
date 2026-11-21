@@ -119,6 +119,7 @@ Which epic delivers each requirement is in the traceability table of `plans/00-r
 | 015 | the approval queue, rules and cost ceilings: the decision, the requests, the jobs that wait, the ledger | ADR-0032, ADR-0018 |
 | 020 | publishing: the connector frame, the sign-in with the user's own app and the YouTube connector | ADR-0032, ADR-0035 |
 | 021 | image documents: the document, the catalogue of layer operations, the plan, export, templates, lint, storage | ADR-0038 |
+| 022 | outbound webhooks: the record, the events and their metadata payload, signature, delivery and retries, the address rules | ADR-0032, ADR-0033 |
 | 018 | memory, skills and prompts: the files, front matter, review, the skill lint, import and export, the index and search | ADR-0040 |
 | 017 | the hosted agent chat: the protocol, profiles, the process, sessions, permission requests, streaming, transcripts | ADR-0037, ADR-0036 |
 
