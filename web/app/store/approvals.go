@@ -84,8 +84,14 @@ func (r approvalRepo) ListRequests(ctx context.Context, f approval.Filter) ([]ap
 		where, args = append(where, "state = ?"), append(args, f.State)
 	}
 
+	// A request carries the id of the timeline its job is kept on, so asking for a project lists all of them; the id
+	// of a later timeline lists that timeline alone.
 	if f.ProjectID != "" {
-		where, args = append(where, "project_id = ?"), append(args, f.ProjectID)
+		where = append(
+			where,
+			"(project_id = ? OR project_id IN (SELECT i.ref FROM project_items i WHERE i.kind = 'timeline' AND i.project_id = ?))",
+		)
+		args = append(args, f.ProjectID, f.ProjectID)
 	}
 
 	if f.KeyProjectID != "" {
