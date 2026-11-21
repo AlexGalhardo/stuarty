@@ -244,14 +244,23 @@ import { withBase } from "@/lib/site";
 
 	/* The hero sits close to the navbar. */
 	html.takes-on #studio {
-		align-items: flex-start;
+		align-items: stretch;
 		padding-top: clamp(1.5rem, 4vh, 3rem);
+	}
+	/* The four buttons sit in the middle of the space between the text and picture above and the scroll hint. */
+	html.takes-on #studio > .site-container {
+		display: flex;
+		flex-direction: column;
+	}
+	html.takes-on #studio > .site-container > [data-hero-item]:has(.landing-actions) {
+		margin-block: auto;
+		padding-block: 1.25rem;
 	}
 
 	/* The first take keeps the bottom free for the scroll hint; on short windows the hero tightens so its buttons
 	   stay above it. */
 	html.takes-on #studio {
-		padding-bottom: 4rem;
+		padding-bottom: 3.5rem;
 	}
 	@media (max-height: 52rem) {
 		html.takes-on #studio .display-home {
@@ -259,9 +268,6 @@ import { withBase } from "@/lib/site";
 		}
 		html.takes-on #studio .lead {
 			margin-top: 1rem;
-		}
-		html.takes-on #studio [data-hero-item]:has(.landing-actions) {
-			margin-top: 1.5rem;
 		}
 	}
 	html:not(.takes-on) .take-hint,
