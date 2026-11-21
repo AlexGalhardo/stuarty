@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"strconv"
 	"strings"
+
+	"github.com/AlexGalhardo/stuarty/core/project"
 )
 
 // The container of a project bundle (SDD-005 section 16.1): a zip with the extension .vvbundle and
@@ -53,8 +55,12 @@ type BundleManifest struct {
 
 // BundleProduction is the project around its timelines.
 type BundleProduction struct {
-	Name  string       `json:"name"`
-	Items []BundleItem `json:"items"`
+	Name string `json:"name"`
+	// Description and Goal are the context of the project (SDD-005 section 5.12.2); a project with none, and a
+	// bundle made before epic 56, leave them out.
+	Description string        `json:"description,omitempty"`
+	Goal        *project.Goal `json:"goal,omitempty"`
+	Items       []BundleItem  `json:"items"`
 }
 
 // BundleItem is an active item of the project. Timeline names the timeline by its key in the bundle ("main",

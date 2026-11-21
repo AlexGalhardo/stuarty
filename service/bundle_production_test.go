@@ -3,6 +3,8 @@ package service
 import (
 	"strings"
 	"testing"
+
+	"github.com/AlexGalhardo/stuarty/core/project"
 )
 
 func v2Manifest() *BundleManifest {
@@ -62,7 +64,12 @@ func TestBundleProductionManifestRules(t *testing.T) {
 		"a text on an output": func(m *BundleManifest) {
 			m.Production.Items[3].Text = &BundleDocument{SHA256: strings.Repeat("a", 64), Bytes: 1}
 		},
-		"a long format": func(m *BundleManifest) { m.Production.Items[3].Format = strings.Repeat("a", 17) },
+		"a long format":       func(m *BundleManifest) { m.Production.Items[3].Format = strings.Repeat("a", 17) },
+		"a short description": func(m *BundleManifest) { m.Production.Description = "too short" },
+		"a goal with a short part": func(m *BundleManifest) {
+			m.Production.Goal = &project.Goal{Specific: "short", Due: "2027-01-01"}
+		},
+		"a project name with a control character": func(m *BundleManifest) { m.Production.Name = "a\x00b" },
 		"too many items": func(m *BundleManifest) {
 			for range bundleItemsMax {
 				m.Production.Items = append(m.Production.Items, BundleItem{Kind: "text", Title: "t"})

@@ -52,6 +52,12 @@ func (s *svc) resolveBundleSource(
 	}
 
 	if len(tls) == 0 {
+		// A bundle is built around a first document (SDD-005 section 16.1), which a new project does not have.
+		if head, gerr := s.store.Productions().Get(ctx, req.ProjectID); gerr == nil && visible(c, head.OwnerUserID) {
+			return false, nil, newError(command.CodeInvalidState, "the project %s has no timeline to export yet.", head.ID).
+				withHint("add one with project_item action add kind timeline, then export the project")
+		}
+
 		return false, nil, nil
 	}
 
@@ -232,7 +238,7 @@ func snapshotTimeline(
 // ones with the items of the project. The caller closes the snapshots it gets, also on an error.
 func (s *svc) snapshotBundle(
 	ctx context.Context, job *JobRow, dir string, in *exportInput,
-) (snaps []*bundleSnapshot, items []ItemRow, err error) {
+) (snaps []*bundleSnapshot, items []ItemRow, head *ProductionHead, err error) {
 	includeLog := in.IncludeLog == nil || *in.IncludeLog
 
 	err = s.store.WriteProject(ctx, *job.ProjectID, func(ctx context.Context, tx ProjectTx) error {
@@ -255,6 +261,13 @@ func (s *svc) snapshotBundle(
 			return err
 		}
 
+		h, err := tx.Productions().Get(ctx, owner)
+		if err != nil {
+			return err
+		}
+
+		head = &h
+
 		for i := range items {
 			it := &items[i]
 			if it.Kind != string(project.Timeline) || it.State != ProjectActive || it.Ref == *job.ProjectID {
@@ -275,7 +288,7 @@ func (s *svc) snapshotBundle(
 		return nil
 	})
 
-	return snaps, items, err
+	return snaps, items, head, err
 }
 
 // runBundleExport writes exports/<project id>/bundle-r<R>-<job id>.vvbundle (SDD-005 section 16.2).
@@ -294,7 +307,7 @@ func (s *svc) runBundleExport(ctx context.Context, job *JobRow, pw *progress, in
 	}
 
 	// The snapshot: the rows and their logs are read in one transaction and nothing else is.
-	snaps, items, err := s.snapshotBundle(ctx, job, dir, &in)
+	snaps, items, head, err := s.snapshotBundle(ctx, job, dir, &in)
 	defer closeSnapshots(snaps)
 
 	if err != nil {
@@ -314,7 +327,7 @@ func (s *svc) runBundleExport(ctx context.Context, job *JobRow, pw *progress, in
 		sn.doc = doc
 	}
 
-	manifest, files, ferr := s.bundleManifest(snaps, items, in.Whole)
+	manifest, files, ferr := s.bundleManifest(snaps, items, head, in.Whole)
 	if ferr != nil {
 		return nil, ferr
 	}
@@ -420,7 +433,7 @@ func writeOperationsLog(
 // is in the store (missing_media). The first snapshot is the main timeline; the others, and the items, are
 // described when the bundle is of a whole project.
 func (s *svc) bundleManifest(
-	snaps []*bundleSnapshot, items []ItemRow, whole bool,
+	snaps []*bundleSnapshot, items []ItemRow, head *ProductionHead, whole bool,
 ) (*BundleManifest, []bundleFile, *Error) {
 	row := &snaps[0].row
 	docSum := sha256.Sum256(row.Document)
@@ -451,7 +464,7 @@ func (s *svc) bundleManifest(
 	}
 
 	if whole {
-		describeProduction(m, snaps, items)
+		describeProduction(m, snaps, items, head)
 	}
 
 	return m, files, nil
@@ -512,7 +525,7 @@ func (s *svc) addDocumentFiles(
 
 // describeProduction writes the members of version 2: the timelines after the first, and the active items of
 // the project in order with their timelines named by key.
-func describeProduction(m *BundleManifest, snaps []*bundleSnapshot, items []ItemRow) {
+func describeProduction(m *BundleManifest, snaps []*bundleSnapshot, items []ItemRow, head *ProductionHead) {
 	keys := map[string]string{} // timeline id to key
 
 	for _, sn := range snaps {
@@ -537,6 +550,15 @@ func describeProduction(m *BundleManifest, snaps []*bundleSnapshot, items []Item
 	}
 
 	p := &BundleProduction{Name: snaps[0].row.Name, Items: []BundleItem{}}
+
+	if head != nil {
+		p.Name, p.Description = head.Name, head.Description
+
+		if head.Goal != (project.Goal{}) {
+			goal := head.Goal
+			p.Goal = &goal
+		}
+	}
 
 	for i := range items {
 		it := &items[i]

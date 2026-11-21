@@ -358,8 +358,18 @@ func (s *svc) putImportedProduction(ctx context.Context, tx Tx, p *bundleParts) 
 
 	head := ProductionHead{
 		ID: row.ID, Name: row.Name, State: ProjectActive, CreatedMs: row.CreatedMs, UpdatedMs: row.UpdatedMs,
-		CreatedBy: row.CreatedBy, OwnerUserID: row.OwnerUserID,
+		CreatedBy: row.CreatedBy, OwnerUserID: row.OwnerUserID, Description: p.manifest.Production.Description,
 	}
+
+	// The name of a project is its own and may differ from that of its first timeline (SDD-005 section 5.12).
+	if p.manifest.Production.Name != "" {
+		head.Name = p.manifest.Production.Name
+	}
+
+	if g := p.manifest.Production.Goal; g != nil {
+		head.Goal = *g
+	}
+
 	if err := tx.Productions().Create(ctx, head); err != nil {
 		return err
 	}
@@ -797,6 +807,28 @@ const (
 
 var bundleKeyRe = regexp.MustCompile(`^t\d{1,3}$`)
 
+// checkBundleContext holds the name, the description and the goal a bundle brings to the rules of a project: a
+// bundle is a file from anywhere, and what it says becomes what every agent of the project reads first. What it
+// leaves out is a project that nobody completed. A due date in the past is kept: it was valid when it was set.
+func checkBundleContext(p *BundleProduction) *Error {
+	if p.Name != "" && project.CheckTitle(p.Name) != nil {
+		return bundleRefused("manifest.json names the project with a name that is not valid")
+	}
+
+	c := project.Context{Name: "Name", Description: p.Description}
+	if p.Goal != nil {
+		c.Goal = *p.Goal
+	}
+
+	for _, e := range project.CheckContext(c, project.CheckOptions{}) {
+		if (e.Path == "description" && p.Description != "") || (strings.HasPrefix(e.Path, "goal") && p.Goal != nil) {
+			return bundleRefused("manifest.json holds a description or a goal that is not valid")
+		}
+	}
+
+	return nil
+}
+
 // checkBundleProduction judges the members of version 2 of the manifest before any entry is read: every key and
 // id is of the right form and once, every timeline is named by exactly one item, and the items obey the rules of
 // core/project.
@@ -812,6 +844,10 @@ func checkBundleProduction(m *BundleManifest) *Error {
 	if len(m.Timelines) >= bundleTimelinesMax || len(m.Production.Items) > bundleItemsMax {
 		return bundleOverLimit("bundle_items", "it holds too many timelines or items",
 			uint64(len(m.Timelines)+len(m.Production.Items)), bundleTimelinesMax+bundleItemsMax)
+	}
+
+	if e := checkBundleContext(m.Production); e != nil {
+		return e
 	}
 
 	keys := map[string]bool{bundleMainKey: true}
