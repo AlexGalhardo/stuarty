@@ -193,44 +193,60 @@ import { withBase } from "@/lib/site";
 		outline: none;
 	}
 
+	/* The way on: larger, bold, in the brand text colour (8.4:1 light, 10.1:1 dark), with the arrow key bouncing in
+	   a soft brand glow; still under reduced motion. */
 	.take-hint {
 		position: fixed;
-		bottom: 1.5rem;
+		bottom: 1.25rem;
 		left: 50%;
 		z-index: 30;
+		display: flex;
+		align-items: center;
+		gap: 0.625rem;
 		transform: translateX(-50%);
-		font-size: 0.75rem;
-		letter-spacing: 0.12em;
+		font-size: 0.9375rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
 		text-transform: uppercase;
-		color: var(--muted);
+		color: var(--brand-text);
 		transition: opacity 400ms;
 	}
 	.take-hint kbd {
+		display: inline-grid;
+		place-items: center;
+		width: 2rem;
+		height: 2rem;
 		font-family: var(--font-mono);
-		padding: 0.05rem 0.35rem;
-		border: 1px solid var(--border-strong);
-		border-radius: 4px;
+		font-size: 1rem;
+		border: 1.5px solid var(--brand-text);
+		border-radius: 8px;
+		background: var(--bg);
+		animation:
+			hint-bounce 1.6s var(--ease-out-expo) infinite,
+			hint-glow 1.6s ease-in-out infinite;
 	}
-	.approval-card {
-		position: absolute;
-		left: -1.5rem;
-		bottom: -2rem;
-		z-index: 10;
-		margin: 0;
-		width: min(18rem, 70%);
-		padding: 1rem 1.125rem;
-		border-radius: 1rem;
-		border: 1px solid color-mix(in oklab, var(--fg) 14%, transparent);
-		background: color-mix(in oklab, var(--bg) 88%, transparent);
-		backdrop-filter: blur(16px);
-		box-shadow: 0 24px 60px -24px rgb(0 0 0 / 55%);
+	@keyframes hint-bounce {
+		0%,
+		100% {
+			transform: translateY(0);
+		}
+		40% {
+			transform: translateY(5px);
+		}
 	}
-	@media (max-width: 63.99rem) {
-		.approval-card {
-			position: relative;
-			left: 0;
-			bottom: 0;
-			margin-top: 1rem;
+	@keyframes hint-glow {
+		0%,
+		100% {
+			box-shadow: 0 0 0 0 color-mix(in oklab, var(--brand-accent) 0%, transparent);
+		}
+		50% {
+			box-shadow: 0 0 0 6px color-mix(in oklab, var(--brand-accent) 28%, transparent);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.take-hint kbd {
+			animation: none !important;
+			box-shadow: 0 0 0 4px color-mix(in oklab, var(--brand-accent) 24%, transparent);
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {
