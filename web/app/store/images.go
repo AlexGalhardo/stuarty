@@ -71,8 +71,12 @@ func (r imageRepo) List(ctx context.Context, q service.ImageQuery) ([]service.Im
 	where, args := []string{"1 = 1"}, []any{}
 
 	if q.OwnerUserID != "" {
-		// A template that ships with the product has no owner and is every user's (service.SharedImageTemplate).
-		where = append(where, "(owner_user_id = ? OR (template = 1 AND owner_user_id IS NULL AND created_by = ?))")
+		// A template that ships with the product has no owner and is every user's while it is still the document
+		// that shipped, at revision 1: this is service.SharedImageTemplate in SQL (VV-300).
+		where = append(
+			where,
+			"(owner_user_id = ? OR (template = 1 AND owner_user_id IS NULL AND created_by = ? AND revision = 1))",
+		)
 		args = append(args, q.OwnerUserID, service.StarterActor)
 	}
 
