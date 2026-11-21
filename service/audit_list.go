@@ -54,7 +54,7 @@ func (s *svc) AuditList(ctx context.Context, req AuditListRequest) (*AuditListRe
 	}
 
 	if project != "" {
-		if _, lerr := s.loadProject(ctx, c, project); lerr != nil {
+		if _, lerr := s.loadProjectScope(ctx, c, project); lerr != nil {
 			return nil, lerr
 		}
 	}
@@ -123,7 +123,7 @@ func (s *svc) auditVisible(ctx context.Context, c Caller, r *AuditRow, memo map[
 		return v
 	}
 
-	h, err := s.store.Projects().Head(ctx, *r.ProjectID)
+	h, err := s.scopeRow(ctx, *r.ProjectID)
 	v := err == nil && visible(c, h.OwnerUserID)
 	memo[*r.ProjectID] = v
 

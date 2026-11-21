@@ -133,7 +133,7 @@ func (s *svc) publicationOf(ctx context.Context, op, id string) (Caller, *Public
 		return Caller{}, nil, publicationError(pub.ErrNotFound)
 	}
 
-	row, lerr := s.loadProject(ctx, c, p.ProjectID)
+	row, lerr := s.loadProjectScope(ctx, c, p.ProjectID)
 	if lerr != nil {
 		return Caller{}, nil, publicationError(pub.ErrNotFound)
 	}
@@ -153,7 +153,8 @@ func (s *svc) PublicationCreate(ctx context.Context, req PublicationCreateReques
 		return nil, err
 	}
 
-	row, lerr := s.loadProject(ctx, c, req.ProjectID)
+	// A publication belongs to the project, which may have no timeline yet (SDD-005 section 5.12.2).
+	row, lerr := s.loadProjectScope(ctx, c, req.ProjectID)
 	if lerr != nil {
 		return nil, lerr
 	}

@@ -755,7 +755,7 @@ func (s *svc) PublishValidate(ctx context.Context, req PublishValidateRequest) (
 		return nil, err
 	}
 
-	if _, lerr := s.loadProject(ctx, c, req.ProjectID); lerr != nil {
+	if _, lerr := s.loadProjectScope(ctx, c, req.ProjectID); lerr != nil {
 		return nil, lerr
 	}
 
