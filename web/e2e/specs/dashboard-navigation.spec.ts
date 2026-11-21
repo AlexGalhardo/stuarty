@@ -20,6 +20,7 @@ const SECTIONS = [
 	"write",
 	"visual-assets",
 	"video-assets",
+	"sound-assets",
 	"publish",
 	"skills",
 	"prompts",
@@ -35,6 +36,7 @@ const LABELS = {
 		"Write",
 		"Visual Assets",
 		"Video Assets",
+		"Sound Assets",
 		"Publish",
 		"Skills",
 		"Prompts",
@@ -48,6 +50,7 @@ const LABELS = {
 		"Escrever",
 		"Recursos visuais",
 		"Recursos de vídeo",
+		"Recursos de som",
 		"Publicar",
 		"Habilidades",
 		"Instruções",
@@ -57,7 +60,7 @@ const LABELS = {
 } as const;
 
 test.describe("dashboard-navigation", () => {
-	test("the application opens on the dashboard with the eleven sections, the profile and the theme toggle", async ({
+	test("the application opens on the dashboard with the twelve sections, the profile and the theme toggle", async ({
 		page,
 	}) => {
 		await page.goto("/");

@@ -284,7 +284,7 @@ test.describe("Generate images and voice", () => {
 			).toContainText("Generated");
 
 			// A narration.
-			await page.goto("/video-assets");
+			await page.goto("/sound-assets");
 			await page.getByRole("button", { name: "Generate a voice-over" }).click();
 			const voice = page.getByRole("dialog");
 			await voice.getByLabel("Project").selectOption({ label: project });
