@@ -1211,6 +1211,20 @@ The product keeps section 2.13. The expressive register adds:
 - A 12-column grid from `lg`; sections separated by 128 px (`py-32`) from `lg`, 80 px below.
 - One idea per section: an eyebrow, a title, a lead of at most two lines, then the proof (a clip, a code sample, a card grid).
 
+**The documentation layout.** The site container is 1440 px (`--site-container`, 30 px gutters from `sm`), shared by the home and the documentation. The documentation root font is 125% (20 px), so 1 rem is 20 px there. Inside the container:
+
+| Part | Width | Source |
+| --- | --- | --- |
+| Left sidebar | `w-52` (13 rem, 260 px), `pr-4`, items 0.8125 rem (16.25 px) with `px-2.5` | `src/components/DocPage.astro`, `components/sidebar.tsx`, `components/changelog-page.tsx` |
+| Header left column | 13 rem, the same as the sidebar, so the search starts above the content | `components/header.tsx` (`lg:grid-cols-[13rem_minmax(0,1fr)_auto]`) |
+| Gap before the content | `lg:pl-6` (30 px) | `components/doc-article.tsx` |
+| Content column | the rest: 704 px at 1024, 720 px at 1280, 880 px at 1440 and above | `components/doc-article.tsx` |
+| Gap before the table of contents | `gap-8` (40 px) | `components/doc-article.tsx` |
+| On this page (table of contents) | `w-40` (10 rem, 200 px), from `xl` (1280 px) | `components/doc-article.tsx` |
+| Reference samples (wide pages, no table of contents) | `minmax(0, 26rem)` from `xl` | `components/mdx/reference.tsx` |
+
+Prose (paragraphs, lists, quotes, headings, steps) is capped at `75ch` (`.prose` in `app/globals.css`); measured lines run 57 to 58 characters at 1024 and 1280 px and 72 at 1440 and 1920 px. Code blocks and tables use the whole content column, and a table wider than it scrolls inside its own frame, never the page. A name in the first column of a table does not break at its hyphens. The API Reference and MCP links of the header appear from `xl`; between `lg` and `xl` they stay in the sidebar, so the header never overflows at 1024 px.
+
 ### 11.11 Marketing components
 
 | Component | Built from | Notes |

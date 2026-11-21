@@ -168,6 +168,16 @@ body {
   line-height: 1.75;
 }
 
+/* Prose keeps a readable line (about 75 characters); code blocks, tables and the reference samples use the whole
+   column. */
+.prose > :where(p, ul, ol, blockquote, h2, h3, h4, details, dl, .steps) {
+  max-width: 75ch;
+}
+/* A flag or a name in the first column of a table never breaks at its hyphens. */
+.prose td:first-child code {
+  white-space: nowrap;
+}
+
 .prose > * + * {
   margin-top: 1.25rem;
 }

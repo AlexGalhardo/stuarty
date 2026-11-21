@@ -18,8 +18,8 @@ export async function DocArticle({ doc }: { doc: Doc }): Promise<React.ReactElem
 	return (
 		// The article takes every column the TOC leaves free, so wide tables and code blocks are not squeezed;
 		// justify-between pins the TOC to the container's right edge, aligned with the header actions.
-		<div className="flex justify-between gap-12">
-			<main id="content" className="min-w-0 flex-1 py-10 lg:pl-8">
+		<div className="flex justify-between gap-8">
+			<main id="content" className="min-w-0 flex-1 py-10 lg:pl-6">
 				<header className="mb-10">
 					<p className="mb-2 text-sm font-medium text-accent">{doc.category}</p>
 					<div>
@@ -80,7 +80,7 @@ export async function DocArticle({ doc }: { doc: Doc }): Promise<React.ReactElem
 			</main>
 
 			{doc.wide ? null : (
-				<aside className="sticky top-(--header-h) hidden h-[calc(100dvh-var(--header-h))] w-56 shrink-0 overflow-y-auto py-10 scroll-slim xl:block">
+				<aside className="sticky top-(--header-h) hidden h-[calc(100dvh-var(--header-h))] w-40 shrink-0 overflow-y-auto py-10 scroll-slim xl:block">
 					<Toc headings={doc.headings} />
 				</aside>
 			)}
