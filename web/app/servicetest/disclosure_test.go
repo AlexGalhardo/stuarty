@@ -2,7 +2,9 @@ package servicetest
 
 import (
 	"context"
+	"errors"
 	"strings"
+	"sync/atomic"
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/core/asset"
@@ -42,6 +44,57 @@ func (p *pubEnv) seedAsset(project, hash string, kind asset.OriginKind) {
 	})
 	if err != nil {
 		p.t.Fatal(err)
+	}
+}
+
+// activeTimelinesFail makes the read of the active timelines of a project fail while on is set.
+type activeTimelinesFail struct {
+	service.Store
+
+	on *atomic.Bool
+}
+
+func (a activeTimelinesFail) Productions() service.ProductionRepo {
+	return activeTimelinesRepo{ProductionRepo: a.Store.Productions(), on: a.on}
+}
+
+type activeTimelinesRepo struct {
+	service.ProductionRepo
+
+	on *atomic.Bool
+}
+
+func (r activeTimelinesRepo) ActiveTimelines(ctx context.Context, id string) ([]service.TimelineRef, error) {
+	if r.on.Load() {
+		return nil, errors.New("database is locked")
+	}
+
+	return r.ProductionRepo.ActiveTimelines(ctx, id)
+}
+
+// RF-407: the disclosure is the mistake that must not be made quietly. When the timelines of the project cannot be
+// read, the post is refused instead of being described as having no generated asset.
+func TestDisclosure_AFailedReadRefusesThePost(t *testing.T) {
+	var fail atomic.Bool
+
+	p := newPubEnvWrapped(t, nil, nil, nil, func(s service.Store) service.Store {
+		return activeTimelinesFail{Store: s, on: &fail}
+	})
+	_, second := p.addSecondTimeline()
+	p.seedAsset(p.project, "sha256:"+strings.Repeat("ef", 32), asset.Generated)
+	exp := p.seedExport(second, "job_0000000962", ".mp4", []byte("fake mp4 bytes"))
+
+	args := p.args(exp)
+	args.AIDisclosure = false
+
+	fail.Store(true)
+
+	check, err := p.pub.PublishValidate(
+		p.as(token),
+		service.PublishValidateRequest{ProjectID: p.project, PublishArgs: args},
+	)
+	if err == nil {
+		t.Fatalf("a post whose assets could not be read was accepted: %+v", check)
 	}
 }
 
