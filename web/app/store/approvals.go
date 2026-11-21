@@ -382,7 +382,19 @@ func (r approvalRepo) Spent(ctx context.Context, q approval.SpentQuery) (int64, 
 	args := []any{q.Day, q.Currency}
 
 	var querySb311 strings.Builder
-	for _, f := range []struct{ col, v string }{{"project_id", q.Project}, {"kind", q.Kind}, {"connection_id", q.Connection}} {
+
+	// An entry carries the id of the timeline its job is kept on, and the spending of a project is that of all of
+	// its timelines (SDD-015 section 6).
+	if q.Project != "" {
+		querySb311.WriteString(
+			" AND (project_id = ? OR project_id IN (SELECT i.ref FROM project_items i" +
+				" WHERE i.kind = 'timeline' AND i.project_id = ?))",
+		)
+
+		args = append(args, q.Project, q.Project)
+	}
+
+	for _, f := range []struct{ col, v string }{{"kind", q.Kind}, {"connection_id", q.Connection}} {
 		if f.v != "" {
 			querySb311.WriteString(" AND " + f.col + " = ?")
 

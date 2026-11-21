@@ -304,3 +304,83 @@ func TestCostSummaryShowsWhatWasSpent(t *testing.T) {
 		t.Errorf("days = %+v, want %+v", sum.Days, wantDay)
 	}
 }
+
+// VV-315: the ceiling of a project holds for every timeline of it and the spending of all of them counts together,
+// while the request still carries the timeline its job is kept on.
+func TestCeiling_ProjectCoversEveryTimeline(t *testing.T) {
+	t.Parallel()
+
+	p := &probe{estimate: usd(300_000)}
+	e := newJobEnv(t, p)
+	project := e.newProject("p")
+
+	added, err := e.svc.ProjectItemAdd(
+		e.as(ui),
+		service.ProjectItemAddRequest{ProjectID: project, Kind: "timeline", Title: "Second"},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	second := added.Item.TimelineID
+	e.setCeiling(project, 0, 500_000)
+
+	first, err := e.svc.JobStart(e.as(token), service.JobStartRequest{ProjectID: project, TimelineID: second, Kind: testKind})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := e.approve(first.ApprovalID); err != nil {
+		t.Fatal(err)
+	}
+
+	req, err := e.svc.ApprovalGet(e.as(token), service.ApprovalRef{ID: first.ApprovalID})
+	if err != nil || req.ProjectID == nil || *req.ProjectID != second {
+		t.Fatalf("the request carries %+v, %v; want the timeline %s", req, err, second)
+	}
+
+	_, err = e.svc.JobStart(e.as(token), service.JobStartRequest{ProjectID: project, Kind: testKind, TimelineID: project})
+
+	var se *service.Error
+	if !errors.As(err, &se) || se.Code != service.CodeCostCeiling {
+		t.Fatalf("over the ceiling of the project on its other timeline = %v, want E_COST_CEILING", err)
+	}
+}
+
+// A rule or a ceiling is written for a project: an id of a later timeline would never match, so it is refused.
+func TestCeilingAndRule_RefuseATimelineID(t *testing.T) {
+	t.Parallel()
+
+	e := newJobEnv(t, &probe{estimate: usd(1)})
+	project := e.newProject("p")
+
+	added, err := e.svc.ProjectItemAdd(
+		e.as(ui),
+		service.ProjectItemAddRequest{ProjectID: project, Kind: "timeline", Title: "Second"},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	limit := int64(1000)
+
+	_, err = e.svc.CostCeilingSet(e.asPerson(), service.CostCeilingSetRequest{
+		ProjectID: added.Item.TimelineID, Currency: "USD", PerItemMicros: &limit,
+	})
+	if code(err) != "E_VALIDATION" {
+		t.Errorf("a ceiling on a timeline id = %v, want E_VALIDATION", err)
+	}
+
+	_, err = e.svc.ApprovalRuleSet(e.asPerson(), service.ApprovalRuleSetRequest{
+		Kind: testKind, ProjectID: added.Item.TimelineID, Currency: "USD", PerItemMicros: &limit,
+	})
+	if code(err) != "E_VALIDATION" {
+		t.Errorf("a rule on a timeline id = %v, want E_VALIDATION", err)
+	}
+
+	if _, err := e.svc.CostCeilingSet(e.asPerson(), service.CostCeilingSetRequest{
+		ProjectID: project, Currency: "USD", PerItemMicros: &limit,
+	}); err != nil {
+		t.Errorf("a ceiling on the project = %v", err)
+	}
+}

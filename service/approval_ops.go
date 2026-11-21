@@ -325,6 +325,18 @@ func (s *svc) auditApproval(
 	return tx.Audit().Append(ctx, row)
 }
 
+// namesAProject refuses a rule or a ceiling written for a timeline that is not the first of its project: both apply
+// to a project and all its timelines, so one written for a timeline would never match, and reading it as its
+// project would widen what the person wrote.
+func (s *svc) namesAProject(ctx context.Context, id string) *Error {
+	if id == "" || s.projectOf(ctx, id) == id {
+		return nil
+	}
+
+	return newError(command.CodeValidation, "that id is a timeline, and a rule or a ceiling is written for a project.").
+		withPath("project_id").withHint("use the id of its project")
+}
+
 // ApprovalList returns the requests of the queue.
 func (s *svc) ApprovalList(ctx context.Context, req ApprovalListRequest) (*ApprovalListResult, error) {
 	c, err := s.authorizeProject(ctx, "ApprovalList", req.ProjectID)
@@ -526,7 +538,9 @@ func (s *svc) approve(ctx context.Context, tx Tx, row *approval.Row, decidedBy, 
 		}
 	}
 
-	action := core.Action{Kind: row.Kind, Connection: row.ConnectionID, Project: row.ProjectID, Cost: row.Estimate}
+	action := core.Action{
+		Kind: row.Kind, Connection: row.ConnectionID, Project: costProject(ctx, tx, row.ProjectID), Cost: row.Estimate,
+	}
 
 	out, err := approval.Evaluate(ctx, tx.Approvals(), action, time.UnixMilli(now))
 	if err != nil {
@@ -647,6 +661,10 @@ func (s *svc) ApprovalRuleSet(ctx context.Context, req ApprovalRuleSetRequest) (
 
 	if kerr := s.ruleKindKnown(rule.Kind); kerr != nil {
 		return nil, kerr
+	}
+
+	if perr := s.namesAProject(ctx, rule.Project); perr != nil {
+		return nil, perr
 	}
 
 	var view approval.RuleView
@@ -836,6 +854,10 @@ func (s *svc) CostCeilingSet(ctx context.Context, req CostCeilingSetRequest) (*C
 	})
 	if ferr != nil {
 		return nil, newError(command.CodeValidation, "%s", ferr.Message).withPath(ferr.Path)
+	}
+
+	if perr := s.namesAProject(ctx, ceiling.Project); perr != nil {
+		return nil, perr
 	}
 
 	werr := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {

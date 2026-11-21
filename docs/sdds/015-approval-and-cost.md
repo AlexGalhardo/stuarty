@@ -106,6 +106,8 @@ A request is `expired` when it is pending at `expires_at`; the service marks it 
 
 **An approval rule** (`approval_rules`): `id`, `kind`, `connection_id` (empty means any), `project_id` (empty means any), `currency`, `per_item_micros`, `per_day_micros` (null when not set), `enabled`, `created_by`, `created_at`. At most 100 rules (`E_LIMIT_EXCEEDED`). `kind` is 1 to 80 characters of `[a-z0-9_.:-]`. A rule is created and changed only from a privileged session.
 
+**The project of an action** is the production, whichever of its timelines the job is kept on: the request and the ledger entry carry the id of that timeline, and a rule or a ceiling is matched against the project that holds it, so a rule or a ceiling of a project covers every timeline of it and the spending of all of them counts together (VV-315). A rule or a ceiling written with the id of a later timeline is refused with `E_VALIDATION` at `project_id`.
+
 **A ceiling** (`cost_ceilings`): `project_id` (empty is the workspace), `currency`, `per_item_micros`, `per_day_micros`, `updated_by`, `updated_at`; one row per project and currency. These are the workspace settings of ADR-0032 item 5. With no row there is no ceiling in that scope and currency: a fresh workspace spends nothing, because every costly action still waits for a person.
 
 **A ledger entry** (`cost_ledger`): `id`, `request_id`, `job_id`, `connection_id`, `project_id`, `kind`, `currency`, `estimate_micros`, `actual_micros` (null until the job ends), `state` (`reserved`, `settled` or `released`), `day` (the UTC date of the reservation, `YYYY-MM-DD`), `created_at`, `settled_at`.
