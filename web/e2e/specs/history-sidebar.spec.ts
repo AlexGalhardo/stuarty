@@ -147,6 +147,13 @@ test.describe("history sidebar", () => {
 		const history = await sidebar.boundingBox();
 		expect(library?.width ?? 0).toBeGreaterThanOrEqual(192);
 		expect(history?.width ?? 0).toBeGreaterThanOrEqual(192);
+		// Nothing in it runs past its edge: the checkpoint form and rows wrap.
+		await expect(sidebar.locator("[data-revision]").first()).toBeVisible();
+		expect(
+			await sidebar
+				.locator("div.overflow-auto")
+				.evaluate((el) => el.scrollWidth - el.clientWidth),
+		).toBeLessThanOrEqual(0);
 		expect(
 			await page.evaluate(() => document.documentElement.scrollWidth),
 		).toBeLessThanOrEqual(1024);

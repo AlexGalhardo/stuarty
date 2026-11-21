@@ -87,8 +87,8 @@ export default function CheckpointsSection({
 			<h3 className="text-sm font-semibold">
 				{t("ui.editor.history.checkpoints_title")}
 			</h3>
-			<form className="flex items-end gap-2" onSubmit={add}>
-				<div className="flex min-w-0 flex-1 flex-col gap-1">
+			<form className="flex flex-wrap items-end gap-2" onSubmit={add}>
+				<div className="flex min-w-28 flex-1 flex-col gap-1">
 					<Label htmlFor="checkpoint-name" className="text-xs">
 						{t("ui.editor.history.checkpoint_label")}
 					</Label>
@@ -124,7 +124,7 @@ export default function CheckpointsSection({
 						<li
 							key={cp.name}
 							data-checkpoint={cp.name}
-							className="flex items-center gap-2 py-1"
+							className="flex flex-wrap items-center gap-2 py-1"
 						>
 							<span className="font-mono text-xs text-muted-foreground tabular-nums">
 								{t("ui.editor.history.revision", { revision: cp.revision })}
