@@ -543,7 +543,7 @@ export const homeTimeline: TimelineClip[] = [
 		shot: shots.connections,
 		fx: "diagonal",
 		features: [
-			"Nothing leaves your computer until you connect something",
+			"No telemetry; nothing leaves until you connect something",
 			"Your own API key for each AI provider",
 			"Sign in with ChatGPT or OpenRouter, with no key",
 			"Credentials encrypted on this machine; no agent reads them",
