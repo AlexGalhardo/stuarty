@@ -55,7 +55,7 @@ func TestUnknownBodyMembersAreRefused(t *testing.T) {
 	}
 
 	// query parameters stay free, and known members still work
-	if res := h.post("/api/v1/projects?unknown=1", `{"name":"ok"}`); res.status != http.StatusCreated {
+	if res := h.post("/api/v1/projects?unknown=1", projectJSON("ok")); res.status != http.StatusCreated {
 		t.Errorf("create with a query extra = %d %s", res.status, res.body)
 	}
 }
