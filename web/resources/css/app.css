@@ -353,6 +353,18 @@
 	html.dark {
 		color-scheme: dark;
 	}
+
+	/*
+	 * The list of a native select is drawn by the browser from the colours of
+	 * its options, not from the select: a select with a translucent background
+	 * opened a light list under light text in the dark theme (epic 60, D-125).
+	 * The options take the popover tokens, like every portal menu.
+	 */
+	select option,
+	select optgroup {
+		background-color: var(--popover);
+		color: var(--popover-foreground);
+	}
 }
 
 /*

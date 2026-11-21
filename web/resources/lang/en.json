@@ -1060,7 +1060,6 @@
         "tour": "Take the tour"
       },
       "edit": {
-        "label": "Editing",
         "split": "Split",
         "trim_start": "Trim start",
         "trim_end": "Trim end",
@@ -1074,7 +1073,6 @@
         "close_gap": "Close gap",
         "item_menu": "Item actions",
         "gap_menu": "Gap actions",
-        "shape": "Add shape",
         "text": "Add text",
         "split_caption": "Split caption here",
         "merge_captions": "Merge captions",

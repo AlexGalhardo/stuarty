@@ -13,7 +13,6 @@ import {
 import UndoRedo from "../history/UndoRedo";
 import { EditorProvider } from "../state/EditorContext";
 import { createRuntime } from "../state/runtime";
-import EditToolbar from "../timeline/EditToolbar";
 import TrashedBanner from "./TrashedBanner";
 
 // The attribute, not the disabled: variants of the Tailwind classes.
@@ -44,7 +43,6 @@ function render(runtime: Awaited<ReturnType<typeof started>>): string {
 				<TooltipProvider>
 					<TrashedBanner />
 					<UndoRedo />
-					<EditToolbar captionOpen={false} onCaptionOpenChange={() => {}} />
 				</TooltipProvider>
 			</EditorProvider>
 		</I18nProvider>,
@@ -52,7 +50,7 @@ function render(runtime: Awaited<ReturnType<typeof started>>): string {
 }
 
 describe("a trashed project", () => {
-	test("shows the banner and disables Undo, Redo and Add caption", async () => {
+	test("shows the banner and disables Undo and Redo", async () => {
 		const html = render(await started("trashed"));
 		expect(html).toContain("This project is in the trash");
 		const buttons = html.match(/<button[^>]*>/g) ?? [];

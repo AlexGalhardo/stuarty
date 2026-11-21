@@ -1060,7 +1060,6 @@
         "tour": "Fazer o tour"
       },
       "edit": {
-        "label": "Edição",
         "split": "Dividir",
         "trim_start": "Aparar o início",
         "trim_end": "Aparar o fim",
@@ -1074,7 +1073,6 @@
         "close_gap": "Fechar o espaço",
         "item_menu": "Ações do item",
         "gap_menu": "Ações do espaço",
-        "shape": "Adicionar forma",
         "text": "Adicionar texto",
         "split_caption": "Dividir a legenda aqui",
         "merge_captions": "Mesclar legendas",

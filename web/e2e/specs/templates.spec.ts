@@ -237,7 +237,7 @@ test.describe("templates", () => {
 		await rows.first().getByLabel("Name").fill("From a template");
 		await rows.first().getByRole("button", { name: "Create project" }).click();
 		await expect(page).toHaveURL(/\/editor\/prj_/);
-		await expect(page.getByRole("toolbar", { name: "Editing" })).toBeVisible();
+		await expect(page.getByRole("main", { name: "Preview" })).toBeVisible();
 	});
 
 	// VV-054: in the desktop window the native dialog fills the template path;

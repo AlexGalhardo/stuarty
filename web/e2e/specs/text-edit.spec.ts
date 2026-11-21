@@ -65,9 +65,10 @@ test.describe("text-edit", () => {
 			if (r.url().includes("/bitmaps/")) bitmaps.push(r.url());
 		});
 		await page.goto(`/editor/${seeded.id}?debug=1`);
-		await expect(page.getByRole("toolbar", { name: "Editing" })).toBeVisible();
+		await expect(page.getByRole("main", { name: "Preview" })).toBeVisible();
 		const posted = recordEdits(page);
 
+		await page.getByRole("tab", { name: "Text" }).click();
 		await page.getByRole("button", { name: "Add text" }).click();
 		await expect.poll(() => posted.length).toBe(1);
 		expect(posted[0]?.operations).toEqual([
@@ -96,9 +97,10 @@ test.describe("text-edit", () => {
 	}) => {
 		const seeded = await seedProject(request, { tracks: 0 });
 		await page.goto(`/editor/${seeded.id}?debug=1`);
-		await expect(page.getByRole("toolbar", { name: "Editing" })).toBeVisible();
+		await expect(page.getByRole("main", { name: "Preview" })).toBeVisible();
 		const posted = recordEdits(page);
 
+		await page.getByRole("tab", { name: "Text" }).click();
 		await page.getByRole("button", { name: "Add text" }).click();
 		await expect.poll(() => posted.length).toBe(1);
 		expect(posted[0]?.operations.map((o) => o.op)).toEqual(["text.add"]);

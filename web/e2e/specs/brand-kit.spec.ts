@@ -95,7 +95,7 @@ test.describe("brand-kit", () => {
 		})) as { created: string[] };
 
 		await page.goto(`/editor/${seeded.id}?debug=1`);
-		await expect(page.getByRole("toolbar", { name: "Editing" })).toBeVisible();
+		await expect(page.getByRole("main", { name: "Preview" })).toBeVisible();
 
 		// VV-183: with the text selected, the font select says where the brand
 		// kit families come from while the project does not hold them.
@@ -201,7 +201,7 @@ test.describe("brand-kit", () => {
 		const seeded = await seedProject(request, { tracks: 1, perTrack: 0 });
 
 		await page.goto(`/editor/${seeded.id}?debug=1`);
-		await expect(page.getByRole("toolbar", { name: "Editing" })).toBeVisible();
+		await expect(page.getByRole("main", { name: "Preview" })).toBeVisible();
 		await openSection(page, "Fonts");
 		const pick = page.getByLabel("Imported font file");
 		await expect(pick.locator(`option[value='${stored.hash}']`)).toHaveCount(1);
