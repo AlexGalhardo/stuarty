@@ -404,7 +404,7 @@ func TestSecurity_T117_OnlyThePasswordMakesAPerson(t *testing.T) {
 	person, _ := a.signIn(accPassword)
 
 	persons := []req{
-		{method: http.MethodPost, path: "/api/v1/approval-rules", body: `{"kind":"publish.post"}`},
+		{method: http.MethodPost, path: "/api/v1/approval-rules", body: `{"kind":"publish.scheduled"}`},
 		{method: http.MethodPut, path: "/api/v1/cost/ceilings", body: `{"currency":"USD","per_day_micros":1}`},
 		{method: http.MethodPost, path: "/auth/account/logout", body: `{}`},
 	}
