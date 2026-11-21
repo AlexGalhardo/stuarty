@@ -230,6 +230,36 @@ export function start(): void {
 		e.preventDefault();
 	});
 
+	// Tab past the last control of a take brings in the next take and focuses its heading; Shift+Tab before the first
+	// control (or from the heading) brings in the previous take and focuses its last control. The takes off stage
+	// are inert, so without this the Tab key could never leave the first take.
+	const tabbables = (take: HTMLElement): HTMLElement[] =>
+		[...take.querySelectorAll<HTMLElement>("a[href], button:not([disabled]), input, select, textarea, [tabindex]")].filter(
+			(el) => el.tabIndex >= 0 && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== "hidden",
+		);
+	window.addEventListener("keydown", (e) => {
+		if (e.key !== "Tab" || e.altKey || e.ctrlKey || e.metaKey || document.querySelector("dialog[open]")) return;
+		const take = takes[current];
+		const active = document.activeElement;
+		if (!take || !(active instanceof HTMLElement) || !take.contains(active)) return;
+		const list = tabbables(take);
+		const i = list.indexOf(active);
+		const onHeading = i < 0 && active.matches("h1, h2");
+		if (!e.shiftKey && current < takes.length - 1 && (i === list.length - 1 || (onHeading && list.length === 0))) {
+			e.preventDefault();
+			locked = false;
+			go(current + 1, true);
+		} else if (e.shiftKey && current > 0 && (i === 0 || onHeading)) {
+			e.preventDefault();
+			locked = false;
+			go(current - 1, false);
+			const prev = takes[current];
+			requestAnimationFrame(() =>
+				requestAnimationFrame(() => (tabbables(prev).at(-1) ?? prev.querySelector<HTMLElement>("h1, h2"))?.focus({ preventScroll: true })),
+			);
+		}
+	});
+
 	// Every in-page link to a take.
 	root.addEventListener("click", (e) => {
 		const a = (e.target as Element | null)?.closest<HTMLAnchorElement>("a[href^='#']");
