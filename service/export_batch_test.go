@@ -235,6 +235,11 @@ func (batchProductions) ActiveTimelines(context.Context, string) ([]TimelineRef,
 	return nil, nil
 }
 
+// Get finds no production: the project of this store is a timeline row only.
+func (batchProductions) Get(context.Context, string) (ProductionHead, error) {
+	return ProductionHead{}, ErrNotFound
+}
+
 func (b *batchStore) Jobs() JobRepo         { return b.jobs }
 func (b *batchStore) Audit() AuditRepo      { return batchAudit{} }
 func (b *batchStore) Projects() ProjectRepo { return b.projects }

@@ -21,6 +21,7 @@ import (
 	pub "github.com/AlexGalhardo/stuarty/service/publish"
 	"github.com/AlexGalhardo/stuarty/service/social"
 	"github.com/AlexGalhardo/stuarty/service/social/fake"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
 )
 
@@ -262,7 +263,7 @@ func TestPublicationOperationsAreTheSameOnEverySurface(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			project, err := svc.ProjectCreate(callerCtx(), service.ProjectCreateRequest{Name: "calendar"})
+			project, err := testproject.CreateWithTimeline(callerCtx(), svc, "calendar")
 			if err != nil {
 				t.Fatal(err)
 			}

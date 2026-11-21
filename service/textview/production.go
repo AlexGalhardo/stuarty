@@ -35,7 +35,10 @@ type ProductionView struct {
 	Published int
 	// Brief is the Markdown of the brief, cut to what the budget leaves.
 	Brief string
-	Lines []ProductionLine
+	// Context is the description and the goal of the project, one line each (SDD-005 section 5.12.2). It is
+	// printed first, as data of the creator, and empty for a project made before epic 56.
+	Context string
+	Lines   []ProductionLine
 }
 
 func yesNo(b bool) string {
@@ -57,6 +60,20 @@ func Production(v *ProductionView, maxTokens int) string {
 
 	head.WriteString(Note + "\n")
 	fmt.Fprintf(&head, "project %s %s %s\n", v.ID, Quote(v.Name, 60), v.State)
+
+	// What the creator says the project is for comes before everything else, the way a repository tells its
+	// agents to read AGENTS.md first; it is data, in the envelope of SDD-017, never an instruction.
+	if v.Context == "" {
+		head.WriteString(
+			"context: not written yet (a project made before descriptions and goals); ask the person to complete it\n",
+		)
+	} else {
+		head.WriteString("context (read it first):\n")
+		head.WriteString(untrusted.Block(untrusted.SourceProjectText,
+			untrusted.Attrs{"project": v.ID, "item": "context"}, v.Context, max(limit/4, 250)))
+		head.WriteString("\n")
+	}
+
 	fmt.Fprintf(
 		&head,
 		"production: brief %s, script %s, texts %d, timelines %d, outputs %d, pending approvals %d, published %d",

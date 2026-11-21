@@ -6,6 +6,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 )
 
 // projectCalls is one call of every operation that names a project (or a job
@@ -159,7 +160,7 @@ func TestSecurity_T06_CrossUserProjectIsNotFound(t *testing.T) {
 	m := newMediaEnv(t, mediaCfg{noQueue: true, exporter: goodExporter()})
 	alice, bob := network("user:alice", "alice"), network("user:bob", "bob")
 
-	res, err := m.svc.ProjectCreate(bob, service.ProjectCreateRequest{Name: "theirs"})
+	res, err := testproject.CreateWithTimeline(bob, m.svc, "theirs")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -263,7 +264,7 @@ func TestAuthzLimitedKeyDoesNotLearnAboutAnotherUsersJob(t *testing.T) {
 	alice, bob := network("user:alice", "alice"), network("user:bob", "bob")
 
 	mk := func(c context.Context) (project string) {
-		res, err := m.svc.ProjectCreate(c, service.ProjectCreateRequest{Name: "p"})
+		res, err := testproject.CreateWithTimeline(c, m.svc, "p")
 		if err != nil {
 			t.Fatal(err)
 		}

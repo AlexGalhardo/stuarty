@@ -171,7 +171,7 @@ func TestResponsesMatchTheDocument(t *testing.T) {
 		}
 	}
 
-	created := h.post("/api/v1/projects", `{"name":"doc"}`)
+	created := h.post("/api/v1/projects", projectJSON("doc"))
 	check("POST", "/api/v1/projects", created)
 
 	id, _ := created.json(t)["project_id"].(string)
@@ -275,7 +275,7 @@ func TestOpenAPIDeclaresTheRealStatuses(t *testing.T) {
 		t.Errorf("POST /api/v1/projects responses = %v, want 400", responses)
 	}
 
-	if res := h.post("/api/v1/projects", `{"name":""}`); res.status != http.StatusBadRequest {
+	if res := h.post("/api/v1/projects", projectJSON("")); res.status != http.StatusBadRequest {
 		t.Errorf("empty name = %d, want 400", res.status)
 	}
 }
@@ -315,7 +315,7 @@ func TestOpenAPIGivesTheFormats(t *testing.T) {
 	}
 
 	for _, fps := range []string{`60`, `"30000/1001"`} {
-		res := h.post("/api/v1/projects", `{"name":"f","fps":`+fps+`}`)
+		res := h.post("/api/v1/projects", strings.TrimSuffix(projectJSON("fps project"), "}")+`,"fps":`+fps+`}`)
 		if res.status != http.StatusCreated {
 			t.Errorf("fps %s = %d %.200s", fps, res.status, res.body)
 		}

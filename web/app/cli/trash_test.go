@@ -48,7 +48,32 @@ func trashedInList(t *testing.T, listed map[string]any, asset string) bool {
 func TestCLITrashNeverDeletes(t *testing.T) {
 	s := newSession(t)
 
-	project := str(t, s.ok("", "project:create", "--name", "Trash"), "project_id")
+	project := str(
+		t,
+		s.ok(
+			"",
+			"project:create",
+			"--name",
+			"Trash",
+			"--description",
+			ctxDescription,
+			"--specific",
+			ctxSpecific,
+			"--measurable",
+			ctxMeasurable,
+			"--achievable",
+			ctxAchievable,
+			"--relevant",
+			ctxRelevant,
+			"--time-bound",
+			ctxTimeBound,
+			"--due",
+			ctxDue,
+		),
+		"project_id",
+	)
+	s.ok("", "item:add", "--project", project, "--kind", "timeline", "--title", "Trash")
+
 	imported := s.ok("", "media:import", s.clip(), "--project", project)
 	assets, _ := imported["assets"].([]any)
 

@@ -12,7 +12,7 @@ func TestBriefingTakesTheKindOfProductionApartFromTheKindOfAnItem(t *testing.T) 
 	t.Parallel()
 
 	cs := connect(t, newService(t), Options{}, "claude-code")
-	project, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{"name": "Ad"})))["project_id"].(string)
+	project := createProject(t, cs, "Ad")
 
 	questions := func(res map[string]any) string {
 		list, _ := res["questions"].([]any)

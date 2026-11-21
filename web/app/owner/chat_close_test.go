@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
@@ -73,7 +74,7 @@ func TestClosingTheServerLeavesNoAgentProcess(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	project, err := o.Service.ProjectCreate(person, service.ProjectCreateRequest{Name: "Close"})
+	project, err := testproject.CreateWithTimeline(person, o.Service, "Close")
 	if err != nil {
 		t.Fatal(err)
 	}

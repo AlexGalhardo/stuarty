@@ -19,6 +19,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/remote"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 	"github.com/AlexGalhardo/stuarty/web/app/auth"
 	"github.com/AlexGalhardo/stuarty/web/app/cli"
 	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
@@ -945,20 +946,21 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		} `json:"args"`
 		BaseRevision *int64 `json:"base_revision"`
 
-		TemplateID  string          `json:"template_id"`
-		Description string          `json:"description"`
-		Fill        json.RawMessage `json:"fill"`
-		Path        string          `json:"path"`
-		At          string          `json:"at"`
-		From        string          `json:"from"`
-		Until       string          `json:"until"`
-		TrackID     string          `json:"track_id"`
-		RenderKey   string          `json:"render_key"`
-		IncludeLog  *bool           `json:"include_log"`
-		AsNew       bool            `json:"as_new"`
-		DryRun      bool            `json:"dry_run"`
-		BrandColors []string        `json:"brand_colors"`
-		BrandFonts  []string        `json:"brand_fonts"`
+		Goal        service.ProjectGoal `json:"goal"`
+		TemplateID  string              `json:"template_id"`
+		Description string              `json:"description"`
+		Fill        json.RawMessage     `json:"fill"`
+		Path        string              `json:"path"`
+		At          string              `json:"at"`
+		From        string              `json:"from"`
+		Until       string              `json:"until"`
+		TrackID     string              `json:"track_id"`
+		RenderKey   string              `json:"render_key"`
+		IncludeLog  *bool               `json:"include_log"`
+		AsNew       bool                `json:"as_new"`
+		DryRun      bool                `json:"dry_run"`
+		BrandColors []string            `json:"brand_colors"`
+		BrandFonts  []string            `json:"brand_fonts"`
 
 		// ImageModelEdit (epic 30)
 		ImageID   string `json:"image_id"`
@@ -1024,8 +1026,13 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		return "project:list", nil, "", nil
 	case "ProjectCreate":
 		argv = append(argv, flag("name", a.Name)...)
-		argv = append(argv, flag("preset", a.Preset)...)
-		argv = append(argv, flag("fps", a.FPS)...)
+		argv = append(argv, flag("description", a.Description)...)
+		argv = append(argv, flag("specific", a.Goal.Specific)...)
+		argv = append(argv, flag("measurable", a.Goal.Measurable)...)
+		argv = append(argv, flag("achievable", a.Goal.Achievable)...)
+		argv = append(argv, flag("relevant", a.Goal.Relevant)...)
+		argv = append(argv, flag("time-bound", a.Goal.TimeBound)...)
+		argv = append(argv, flag("due", a.Goal.Due)...)
 
 		return "project:create", append(argv, flag("id", a.ID)...), "", nil
 	case "ProjectGet":
@@ -1705,6 +1712,19 @@ func withoutKey(args json.RawMessage, key string) string {
 	raw, err := json.Marshal(m)
 	if err != nil {
 		return ""
+	}
+
+	return string(raw)
+}
+
+// projectCreateJSON is the argument object of a valid ProjectCreate step for id and name (epic 56: the description
+// and the goal are required).
+func projectCreateJSON(id, name string) string {
+	raw, err := json.Marshal(map[string]any{
+		"id": id, "name": testproject.ValidName(name), "description": testproject.Description, "goal": testproject.Goal,
+	})
+	if err != nil {
+		panic(err)
 	}
 
 	return string(raw)

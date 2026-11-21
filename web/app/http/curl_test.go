@@ -49,7 +49,7 @@ func TestSessionCWithCurl(t *testing.T) {
 
 	api := h.srv.URL + "/api/v1"
 
-	created := run("-i", "-d", `{"name":"Launch teaser"}`, api+"/projects")
+	created := run("-i", "-d", projectJSON("Launch teaser"), api+"/projects")
 	if !strings.HasPrefix(created, "HTTP/1.1 201") || !strings.Contains(created, "Location: /api/v1/projects/prj_") {
 		t.Fatalf("create:\n%s", created)
 	}
@@ -64,6 +64,17 @@ func TestSessionCWithCurl(t *testing.T) {
 	}
 
 	project := api + "/projects/" + body.ProjectID
+
+	if added := run(
+		"-d",
+		`{"kind":"timeline","title":"Launch teaser"}`,
+		project+"/items",
+	); !strings.Contains(
+		added,
+		"timeline",
+	) {
+		t.Fatalf("add timeline: %s", added)
+	}
 
 	edit1 := run(
 		"-d",

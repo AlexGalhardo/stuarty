@@ -10,6 +10,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 	"github.com/AlexGalhardo/stuarty/engine/ingest"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 )
 
 func networkCaller(actor, owner string, scopes []string) context.Context {
@@ -49,7 +50,7 @@ func TestLimitErrorsHideTheVariableFromNonAdmins(t *testing.T) {
 	admin := networkCaller("user:root", "root", service.AllScopes)
 
 	for name, who := range map[string]context.Context{"member": member, "admin": admin} {
-		created, err := m.svc.ProjectCreate(who, service.ProjectCreateRequest{Name: name})
+		created, err := testproject.CreateWithTimeline(who, m.svc, name)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -126,7 +127,7 @@ func TestFailedIngestLimitIsTheSameOnTheAssetAndTheJob(t *testing.T) {
 	for name, who := range map[string]context.Context{"member": member, "admin": admin} {
 		m := newMediaEnv(t, mediaCfg{ingest: limitErr})
 
-		created, err := m.svc.ProjectCreate(who, service.ProjectCreateRequest{Name: name})
+		created, err := testproject.CreateWithTimeline(who, m.svc, name)
 		if err != nil {
 			t.Fatal(err)
 		}

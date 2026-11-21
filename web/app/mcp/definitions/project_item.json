@@ -1,6 +1,6 @@
 {
  "name": "project_item",
- "description": "Project items. add: timeline (id is timeline_id), text or output (export job_id); move, rename, trash, restore: item_id; brief: read, or write text (empty clears); briefing: questions, or answers {id: text} write the brief; production_kind short (default), commercial, long. Texts: text lists, reads (item_id) or writes (text; title, text_kind make one); revisions (revision, until: compare); revert (revision); check: caption (network), script (wpm) or post.",
+ "description": "Project items. add: timeline (id is timeline_id), text or output (export job_id); move, rename, trash, restore: item_id; brief: read, or write text (empty clears); briefing: questions, or answers {id: text}; production_kind short (default), commercial, long. Texts: text lists, reads (item_id) or writes (text; title, text_kind); revisions (revision, until); revert (revision); check: caption (network), script (wpm) or post. update: title=name, text=description, goal.",
  "inputSchema": {
   "type": "object",
   "properties": {
@@ -16,7 +16,8 @@
      "text",
      "revisions",
      "revert",
-     "check"
+     "check",
+     "update"
     ]
    },
    "project_id": {
@@ -77,6 +78,9 @@
      "commercial",
      "long"
     ]
+   },
+   "goal": {
+    "type": "object"
    }
   },
   "required": [

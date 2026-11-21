@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Project items. add: timeline (id is timeline_id), text or output (export job_id); move, rename, trash, restore: item_id; brief: read, or write text (empty clears); briefing: questions, or answers \{id: text\} write the brief; production_kind short (default), commercial, long. Texts: text lists, reads (item_id) or writes (text; title, text_kind make one); revisions (revision, until: compare); revert (revision); check: caption (network), script (wpm) or post.
+Project items. add: timeline (id is timeline_id), text or output (export job_id); move, rename, trash, restore: item_id; brief: read, or write text (empty clears); briefing: questions, or answers \{id: text\}; production_kind short (default), commercial, long. Texts: text lists, reads (item_id) or writes (text; title, text_kind); revisions (revision, until); revert (revision); check: caption (network), script (wpm) or post. update: title=name, text=description, goal.
 
 ## Behaviour
 
@@ -27,7 +27,7 @@ These are the annotations of the tool definition, the hints a client uses to dec
 
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `action` | `string`, one of 11 values | yes |  |
+| `action` | `string`, one of 12 values | yes |  |
 | `project_id` | `string` | yes | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |
 | `item_id` | `string` | no | pattern `^pit_[0-9a-hjkmnp-tv-z]{10}$` |
 | `kind` | `text`, `timeline`, `output` | no |  |
@@ -44,6 +44,7 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | `wpm` | `integer` | no |  |
 | `until` | `integer` | no |  |
 | `production_kind` | `short`, `commercial`, `long` | no |  |
+| `goal` | `object` | no |  |
 
 ## Output
 

@@ -8,6 +8,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/pathguard"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 )
 
 // VV-062: a refused import names the import roots only for the caller who may see server paths.
@@ -30,7 +31,7 @@ func TestRefusedImportShowsTheRootsOnlyToAnAdministrator(t *testing.T) {
 
 	ctx := service.WithCaller(t.Context(), member)
 
-	created, err := m.svc.ProjectCreate(ctx, service.ProjectCreateRequest{Name: "p"})
+	created, err := testproject.CreateWithTimeline(ctx, m.svc, "p")
 	if err != nil {
 		t.Fatal(err)
 	}

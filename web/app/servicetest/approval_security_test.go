@@ -10,6 +10,7 @@ import (
 
 	core "github.com/AlexGalhardo/stuarty/core/approval"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 	"github.com/AlexGalhardo/stuarty/web/app/jobs"
 
 	"github.com/AlexGalhardo/vukem/queue"
@@ -49,7 +50,7 @@ func TestSecurity_T51_OneSubmitterCannotFillTheQueue(t *testing.T) {
 	mine, theirs := "usr_0000000001", "usr_0000000002"
 
 	own := func(user string) string {
-		res, err := e.svc.ProjectCreate(asUserKey("key_0000000009", user), service.ProjectCreateRequest{Name: user})
+		res, err := testproject.CreateWithTimeline(asUserKey("key_0000000009", user), e.svc, user)
 		if err != nil {
 			t.Fatal(err)
 		}

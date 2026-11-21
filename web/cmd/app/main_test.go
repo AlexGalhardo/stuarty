@@ -15,6 +15,8 @@ import (
 	"time"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
+
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 )
 
 // buildBinary compiles the real binary once for the test.
@@ -77,7 +79,29 @@ func TestProductCommandsThroughTheBinary(t *testing.T) {
 		t.Fatalf("no arguments: exit %d, %q, %q", code, stdout, stderr)
 	}
 
-	stdout, stderr, code = runBinary(t, bin, home, "project:create", "--name", "Launch teaser", "--json")
+	stdout, stderr, code = runBinary(
+		t,
+		bin,
+		home,
+		"project:create",
+		"--name",
+		"Launch teaser",
+		"--description",
+		ctxDescription,
+		"--specific",
+		ctxSpecific,
+		"--measurable",
+		ctxMeasurable,
+		"--achievable",
+		ctxAchievable,
+		"--relevant",
+		ctxRelevant,
+		"--time-bound",
+		ctxTimeBound,
+		"--due",
+		ctxDue,
+		"--json",
+	)
 	if code != 0 || stderr != "" {
 		t.Fatalf("project:create: exit %d, stderr %q", code, stderr)
 	}
@@ -190,7 +214,7 @@ func TestMCPOverStdioThroughTheBinary(t *testing.T) {
 
 	created, err := cs.CallTool(
 		t.Context(),
-		&sdk.CallToolParams{Name: "project_create", Arguments: map[string]any{"name": "Over stdio"}},
+		&sdk.CallToolParams{Name: "project_create", Arguments: testproject.Args("Over stdio")},
 	)
 	if err != nil || created.IsError {
 		t.Fatalf("project_create: %v %+v", err, created)
@@ -198,6 +222,12 @@ func TestMCPOverStdioThroughTheBinary(t *testing.T) {
 
 	sc, _ := created.StructuredContent.(map[string]any)
 	id, _ := sc["project_id"].(string)
+
+	if added, aerr := cs.CallTool(t.Context(), &sdk.CallToolParams{Name: "project_item", Arguments: map[string]any{
+		"action": "add", "project_id": id, "kind": "timeline", "title": "Over stdio",
+	}}); aerr != nil || added.IsError {
+		t.Fatalf("project_item: %v %+v", aerr, added)
+	}
 
 	edited, err := cs.CallTool(t.Context(), &sdk.CallToolParams{Name: "edit", Arguments: map[string]any{
 		"project_id": id, "base_revision": 0,

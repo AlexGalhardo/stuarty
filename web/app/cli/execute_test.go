@@ -34,7 +34,26 @@ func TestProjectCreateJSONIsOneDocumentAndStderrIsEmpty(t *testing.T) {
 	h := newHarness(t)
 	h.res.inProcess = true
 
-	if code := h.run("project:create", "--name", "Launch teaser", "--json"); code != 0 {
+	if code := h.run(
+		"project:create",
+		"--name",
+		"Launch teaser",
+		"--description",
+		ctxDescription,
+		"--specific",
+		ctxSpecific,
+		"--measurable",
+		ctxMeasurable,
+		"--achievable",
+		ctxAchievable,
+		"--relevant",
+		ctxRelevant,
+		"--time-bound",
+		ctxTimeBound,
+		"--due",
+		ctxDue,
+		"--json",
+	); code != 0 {
 		t.Fatalf("exit %d, stderr %q", code, h.stderr.String())
 	}
 
@@ -47,8 +66,10 @@ func TestProjectCreateJSONIsOneDocumentAndStderrIsEmpty(t *testing.T) {
 		t.Fatalf("stderr must be empty in --json mode, got %q", h.stderr.String())
 	}
 
-	if got := h.svc.createReq; got.Preset != "9:16" || got.FPS != "30" || got.Name != "Launch teaser" {
-		t.Fatalf("defaults of SDD-003 5.4 not applied: %+v", got)
+	got := h.svc.createReq
+	if got.Name != "Launch teaser" || got.Description != ctxDescription || got.Goal.Due != ctxDue ||
+		got.Goal.TimeBound != ctxTimeBound || got.Preset != "" || got.FPS != "" {
+		t.Fatalf("the context flags of SDD-003 5.4 are not passed, or a deprecated default is: %+v", got)
 	}
 }
 
@@ -58,7 +79,25 @@ func TestHumanOutputIsTheTextAndTheInProcessNoteGoesToStderr(t *testing.T) {
 	h := newHarness(t)
 	h.res.inProcess = true
 
-	if code := h.run("project:create", "--name", "x"); code != 0 {
+	if code := h.run(
+		"project:create",
+		"--name",
+		"Project x",
+		"--description",
+		ctxDescription,
+		"--specific",
+		ctxSpecific,
+		"--measurable",
+		ctxMeasurable,
+		"--achievable",
+		ctxAchievable,
+		"--relevant",
+		ctxRelevant,
+		"--time-bound",
+		ctxTimeBound,
+		"--due",
+		ctxDue,
+	); code != 0 {
 		t.Fatalf("exit %d", code)
 	}
 
@@ -72,7 +111,25 @@ func TestHumanOutputIsTheTextAndTheInProcessNoteGoesToStderr(t *testing.T) {
 
 	h.res.inProcess = false
 
-	h.run("project:create", "--name", "x")
+	h.run(
+		"project:create",
+		"--name",
+		"Project x",
+		"--description",
+		ctxDescription,
+		"--specific",
+		ctxSpecific,
+		"--measurable",
+		ctxMeasurable,
+		"--achievable",
+		ctxAchievable,
+		"--relevant",
+		ctxRelevant,
+		"--time-bound",
+		ctxTimeBound,
+		"--due",
+		ctxDue,
+	)
 
 	if h.stderr.Len() != 0 {
 		t.Fatalf("no note in client mode, got %q", h.stderr.String())

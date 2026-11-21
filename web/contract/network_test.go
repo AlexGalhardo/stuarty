@@ -18,6 +18,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/config"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 	"github.com/AlexGalhardo/stuarty/web/app/auth"
 	"github.com/AlexGalhardo/stuarty/web/app/cli"
 	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
@@ -256,7 +257,7 @@ func TestMCPPrincipalPropagation(t *testing.T) {
 	bobSecret, bobID := n.key(t, []string{"read", "edit"}, "")
 	ana, bob := n.mcpSession(t, anaSecret), n.mcpSession(t, bobSecret)
 
-	project, _ := structuredOf(t, callTool(t, ana, "project_create", map[string]any{"name": "Shared"}))["project_id"].(string)
+	project := networkProject(t, ana, "Shared")
 
 	first := addTrack(t, ana, project, 0, "trk_f6g7h8j9k0")
 	second := addTrack(t, bob, project, 1, "trk_m1n2p3q4r5")
@@ -301,8 +302,8 @@ func TestAuthNetwork(t *testing.T) {
 	full, _ := n.key(t, []string{"read", "edit"}, "")
 	owner := n.mcpSession(t, full)
 
-	a, _ := structuredOf(t, callTool(t, owner, "project_create", map[string]any{"name": "A"}))["project_id"].(string)
-	b, _ := structuredOf(t, callTool(t, owner, "project_create", map[string]any{"name": "B"}))["project_id"].(string)
+	a := networkProject(t, owner, "A")
+	b := networkProject(t, owner, "B")
 
 	reader, _ := n.key(t, []string{"read"}, "")
 	limited, _ := n.key(t, []string{"read", "edit"}, a)
@@ -371,7 +372,7 @@ func TestNoTokenLeak(t *testing.T) {
 	record := func(parts ...string) { seen.WriteString(strings.Join(parts, "\n") + "\n") }
 
 	owner := n.mcpSession(t, full)
-	project, _ := structuredOf(t, callTool(t, owner, "project_create", map[string]any{"name": "Leaky"}))["project_id"].(string)
+	project := networkProject(t, owner, "Leaky")
 
 	record(resultText(addTrack(t, owner, project, 0, "trk_f6g7h8j9k0")))
 	record(resultText(addTrack(t, n.mcpSession(t, reader), project, 1, "trk_m1n2p3q4r5")))
@@ -410,4 +411,24 @@ func TestNoTokenLeak(t *testing.T) {
 	if len(n.requests) == 0 {
 		t.Fatal("the server saw no request")
 	}
+}
+
+// networkProject makes a project through the tool, with the description and the goal that epic 56 requires, and
+// gives it one timeline.
+func networkProject(t *testing.T, cs *sdk.ClientSession, name string) string {
+	t.Helper()
+
+	args := map[string]any{
+		"name": testproject.ValidName(name), "description": testproject.Description, "goal": testproject.Goal,
+	}
+
+	id, _ := structuredOf(t, callTool(t, cs, "project_create", args))["project_id"].(string)
+	callTool(
+		t,
+		cs,
+		"project_item",
+		map[string]any{"action": "add", "project_id": id, "kind": "timeline", "title": name},
+	)
+
+	return id
 }

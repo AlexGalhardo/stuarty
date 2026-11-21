@@ -14,7 +14,7 @@
 | --- | --- | --- | --- | --- |
 | `ProjectList` | `project_list` | `project:list` | `GET /projects` | read |
 | `ProjectCreate` | `project_create` | `project:create` | `POST /projects` | edit |
-| `ProjectUpdate` | none (epic 56: the 20-tool budget of NFR-020 has no room for a twenty-first tool; an agent edits the context of a project through the HTTP API or the CLI until the budget is revised) | `project:update` | `PATCH /projects/{id}` | edit |
+| `ProjectUpdate` | `project_item` (`action` `update`: `title` is the name, `text` the description, `goal` the goal; epic 56, NFR-020 keeps the catalogue at 20 tools) | `project:update` | `PATCH /projects/{id}` | edit |
 | `ProjectGet` | `project_get` | `project:show` | `GET /projects/{id}` | read |
 | `ProjectTrash`, `ProjectRestore` | `project_trash` | `project:trash`, `project:restore` | `POST /projects/{id}/trash`, `POST /projects/{id}/restore` | edit |
 | `Edit` | `edit` | `edit` | `POST /projects/{id}/edit` | edit (or media, per command) |

@@ -34,12 +34,15 @@ type ProjectDescribeRequest struct {
 // ProjectDescribeResult is the production as text, with its structure.
 type ProjectDescribeResult struct {
 	Envelope
-	ProjectID  string          `json:"project_id"`
-	Name       string          `json:"name"       untrusted:"true"`
-	State      string          `json:"state"`
-	Production ProductionState `json:"production"`
-	Items      []ProjectItem   `json:"items"`
-	Text       string          `json:"text"`
+	ProjectID   string          `json:"project_id"`
+	Name        string          `json:"name"        untrusted:"true"`
+	State       string          `json:"state"`
+	Description string          `json:"description" untrusted:"true"`
+	Goal        ProjectGoal     `json:"goal"`
+	Complete    bool            `json:"complete"` // false for a project made before epic 56 that nobody completed
+	Production  ProductionState `json:"production"`
+	Items       []ProjectItem   `json:"items"`
+	Text        string          `json:"text"`
 }
 
 // ProjectDuplicateRequest copies a project.

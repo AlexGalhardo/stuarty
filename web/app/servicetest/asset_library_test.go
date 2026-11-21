@@ -9,6 +9,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/asset"
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 )
 
 func assetIDs(res *service.AssetListResult) []string {
@@ -308,7 +309,7 @@ func TestAssetLibraryHidesOtherUsersFiles(t *testing.T) {
 		)
 	}
 	mk := func(c context.Context, name string) string {
-		res, err := m.svc.ProjectCreate(c, service.ProjectCreateRequest{Name: name})
+		res, err := testproject.CreateWithTimeline(c, m.svc, name)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -521,7 +522,7 @@ func TestSecurity_T06_AssetLibraryRecordIsPerOwner(t *testing.T) {
 		)
 	}
 	mk := func(c context.Context, name string) string {
-		res, err := m.svc.ProjectCreate(c, service.ProjectCreateRequest{Name: name})
+		res, err := testproject.CreateWithTimeline(c, m.svc, name)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -665,7 +666,7 @@ func TestAssetLibraryFindsAFileCopiedToAnotherOwner(t *testing.T) {
 	local := m.as(ui)
 
 	mk := func(c context.Context, name string) string {
-		res, err := m.svc.ProjectCreate(c, service.ProjectCreateRequest{Name: name})
+		res, err := testproject.CreateWithTimeline(c, m.svc, name)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -776,7 +777,7 @@ func TestAssetLibraryReuseByHashKeepsTheCallersName(t *testing.T) {
 		})
 	}
 	mk := func(c context.Context, name string) string {
-		res, err := m.svc.ProjectCreate(c, service.ProjectCreateRequest{Name: name})
+		res, err := testproject.CreateWithTimeline(c, m.svc, name)
 		if err != nil {
 			t.Fatal(err)
 		}

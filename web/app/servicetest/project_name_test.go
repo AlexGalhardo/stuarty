@@ -4,32 +4,47 @@ import (
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
-	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 )
 
-// VV-049: one name rule for the desktop and the network mode.
+// VV-049 and epic 56: one name rule for the desktop and the network mode, and it names the field.
 func TestProjectCreateNameRule(t *testing.T) {
 	t.Parallel()
 
 	e := newEnv(t)
 
 	for name, n := range map[string]string{
-		"nul":          "a\x00b",
-		"rtl override": "a\u202eb",
-		"isolate":      "a\u2067b",
-		"newline":      "a\nb",
-		"spaces only":  "   ",
-		"tab only":     "\t",
-		"zero width":   "\u200b",
-		"empty":        "",
+		"nul":                "ab\x00cd",
+		"rtl override":       "ab\u202ecd",
+		"isolate":            "ab\u2067cd",
+		"newline":            "ab\ncd",
+		"spaces only":        "     ",
+		"tab only":           "\t\t\t\t",
+		"zero width":         "\u200b\u200b\u200b\u200b",
+		"empty":              "",
+		"three characters":   "abc",
+		"thirty-three":       "abcdefghijklmnopqrstuvwxyzabcdefg",
+		"two spaces":         "Launch  teaser",
+		"leading space":      " Launch teaser",
+		"trailing space":     "Launch teaser ",
+		"punctuation":        "Launch, teaser",
+		"no-break space":     "Launch\u00a0teaser",
+		"an emoji":           "Launch teaser \U0001F680",
+		"slash":              "Launch/teaser",
+		"only a single char": "x",
 	} {
-		_, err := e.svc.ProjectCreate(e.as(ui), service.ProjectCreateRequest{Name: n})
+		req := testproject.Request("Launch teaser")
+		req.Name = n
+
+		_, err := e.svc.ProjectCreate(e.as(ui), req)
 		if code(err) != command.CodeValidation {
 			t.Errorf("%s: code = %q (%v), want E_VALIDATION", name, code(err), err)
 		}
 	}
 
-	if _, err := e.svc.ProjectCreate(e.as(ui), service.ProjectCreateRequest{Name: "Café 日本語 ok"}); err != nil {
-		t.Errorf("a plain name was refused: %v", err)
+	for _, n := range []string{"Café 日本語 ok", "Vídeo ação", "Take 2", "abcd"} {
+		if _, err := testproject.Create(e.as(ui), e.svc, n); err != nil {
+			t.Errorf("%q was refused: %v", n, err)
+		}
 	}
 }

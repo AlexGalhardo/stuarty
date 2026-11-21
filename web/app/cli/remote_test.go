@@ -139,12 +139,35 @@ func TestClientModeAgainstARunningOwner(t *testing.T) {
 		return code, oneJSONDocument(t, stdout.String())
 	}
 
-	code, created := do("", "project:create", "--name", "Launch teaser")
+	code, created := do(
+		"",
+		"project:create",
+		"--name",
+		"Launch teaser",
+		"--description",
+		ctxDescription,
+		"--specific",
+		ctxSpecific,
+		"--measurable",
+		ctxMeasurable,
+		"--achievable",
+		ctxAchievable,
+		"--relevant",
+		ctxRelevant,
+		"--time-bound",
+		ctxTimeBound,
+		"--due",
+		ctxDue,
+	)
 	if code != 0 || created["created"] != true {
 		t.Fatalf("project:create: exit %d, %v", code, created)
 	}
 
 	id, _ := created["project_id"].(string)
+
+	if code, added := do("", "item:add", "--project", id, "--kind", "timeline", "--title", "Launch teaser"); code != 0 {
+		t.Fatalf("item:add: exit %d, %v", code, added)
+	}
 
 	code, edited := do(
 		`[{"op":"track.add","args":{"kind":"visual","name":"Video"}}]`,
@@ -199,7 +222,24 @@ func TestClientModeAgainstARunningOwner(t *testing.T) {
 	if code := rt.Execute(
 		context.Background(),
 		"project:create",
-		[]string{"--name", "Second"},
+		[]string{
+			"--name",
+			"Second",
+			"--description",
+			ctxDescription,
+			"--specific",
+			ctxSpecific,
+			"--measurable",
+			ctxMeasurable,
+			"--achievable",
+			ctxAchievable,
+			"--relevant",
+			ctxRelevant,
+			"--time-bound",
+			ctxTimeBound,
+			"--due",
+			ctxDue,
+		},
 	); code != 0 ||
 		stderr.Len() != 0 {
 		t.Fatalf("human write: exit %d, stderr %q", code, stderr.String())

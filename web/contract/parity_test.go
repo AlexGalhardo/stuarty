@@ -36,6 +36,7 @@ type row struct {
 var parity = []row{
 	{method: "ProjectList", tool: "project_list", command: "project:list", route: "GET /projects"},
 	{method: "ProjectCreate", tool: "project_create", command: "project:create", route: "POST /projects"},
+	{method: "ProjectUpdate", tool: "project_item", command: "project:update", route: "PATCH /projects/{}"},
 	{method: "ProjectGet", tool: "project_get", command: "project:show", route: "GET /projects/{}"},
 	{method: "ProjectTrash", tool: "project_trash", command: "project:trash", route: "POST /projects/{}/trash"},
 	{method: "ProjectRestore", tool: "project_trash", command: "project:restore", route: "POST /projects/{}/restore"},

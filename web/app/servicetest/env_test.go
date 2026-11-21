@@ -17,6 +17,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 	"github.com/AlexGalhardo/stuarty/web/app/store"
 )
@@ -135,7 +136,7 @@ func (e *env) as(actor string) context.Context {
 func (e *env) newProject(name string) string {
 	e.t.Helper()
 
-	res, err := e.svc.ProjectCreate(e.as(ui), service.ProjectCreateRequest{Name: name})
+	res, err := testproject.CreateWithTimeline(e.as(ui), e.svc, name)
 	if err != nil {
 		e.t.Fatal(err)
 	}

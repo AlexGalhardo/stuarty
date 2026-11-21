@@ -55,14 +55,21 @@ stuarty project:list --json
 Create a project
 
 ```text
-stuarty project:create --name <name> [--preset 9:16|1:1|16:9|4:5] [--fps 30] [--id prj_...]
+stuarty project:create --name <n> --description <t> --specific|--measurable|--achievable|--relevant|--time-bound <t> --due <date>
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `--name` | string |  | project name (required) |
-| `--preset` | string | `9:16` | 9:16, 1:1, 16:9 or 4:5 |
-| `--fps` | string | `30` | frames per second, for example 30 or 30000/1001 |
+| `--name` | string |  | project name: 4 to 32 letters, digits and single spaces (required) |
+| `--description` | string |  | what the project is, for whom, what it makes: 64 to 1024 characters (required) |
+| `--specific` | string |  | goal: what exactly it will achieve, 16 to 280 characters (required) |
+| `--measurable` | string |  | goal: how success is counted, 16 to 280 characters (required) |
+| `--achievable` | string |  | goal: why it can be done with what you have, 16 to 280 characters (required) |
+| `--relevant` | string |  | goal: why it matters, 16 to 280 characters (required) |
+| `--time-bound` | string |  | goal: the schedule and the milestones, 16 to 280 characters (required) |
+| `--due` | string |  | goal: the due date YYYY-MM-DD, today or later (required) |
+| `--preset` | string |  | deprecated, creates nothing: the size is asked when a video is added |
+| `--fps` | string |  | deprecated, creates nothing: the frame rate is asked when a video is added |
 | `--id` | string |  | identifier for the project (omit it in network mode: the server chooses) |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--dry-run`.
@@ -70,7 +77,34 @@ Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--dry-run`.
 Example:
 
 ```bash
-stuarty project:create --name "Launch teaser" --json
+stuarty project:create --name "Launch teaser" --description "A 30 second vertical teaser for the launch of my course, for people who follow me on short video, with captions and a thumbnail." --specific "Publish one teaser that explains the course in one sentence" --measurable "At least 1000 views and 50 sign-ups in the first week" --achievable "I already have the footage and edit one video a day" --relevant "The launch needs an audience before the doors open" --time-bound "Script on Monday, edit on Tuesday, publish on Wednesday" --due 2027-03-31 --json
+```
+
+## `project:update`
+
+Change the name, the description or the goal of a project
+
+```text
+stuarty project:update <id> [any flag of project:create]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--name` | string |  | project name: 4 to 32 letters, digits and single spaces |
+| `--description` | string |  | 64 to 1024 characters |
+| `--specific` | string |  | goal: 16 to 280 characters (a goal is sent whole: give all six goal flags) |
+| `--measurable` | string |  | goal: 16 to 280 characters |
+| `--achievable` | string |  | goal: 16 to 280 characters |
+| `--relevant` | string |  | goal: 16 to 280 characters |
+| `--time-bound` | string |  | goal: 16 to 280 characters |
+| `--due` | string |  | goal: the due date YYYY-MM-DD |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty project:update prj_7k2m9x4q1b --name "Launch teaser v2"
 ```
 
 ## `project:show`

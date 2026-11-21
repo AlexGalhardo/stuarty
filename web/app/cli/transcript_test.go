@@ -56,9 +56,35 @@ func TestInspectSectionsThroughTheCLI(t *testing.T) {
 		ProjectID string `json:"project_id"`
 	}
 
-	if err := json.Unmarshal([]byte(run("project:create", "--name", "Talk", "--json")), &project); err != nil {
+	if err := json.Unmarshal(
+		[]byte(
+			run(
+				"project:create",
+				"--name",
+				"Talk",
+				"--description",
+				ctxDescription,
+				"--specific",
+				ctxSpecific,
+				"--measurable",
+				ctxMeasurable,
+				"--achievable",
+				ctxAchievable,
+				"--relevant",
+				ctxRelevant,
+				"--time-bound",
+				ctxTimeBound,
+				"--due",
+				ctxDue,
+				"--json",
+			),
+		),
+		&project,
+	); err != nil {
 		t.Fatal(err)
 	}
+
+	run("item:add", "--project", project.ProjectID, "--kind", "timeline", "--title", "Talk")
 
 	var imported struct {
 		Assets []struct {

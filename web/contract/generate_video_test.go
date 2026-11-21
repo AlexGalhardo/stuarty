@@ -13,6 +13,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/providers"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
 )
 
@@ -92,7 +93,7 @@ func TestVideoGenerate_EverySurfaceStartsAJobThatWaitsForAPersonAndStoresTheClip
 				t.Fatal(err)
 			}
 
-			project, err := svc.ProjectCreate(callerCtx(), service.ProjectCreateRequest{Name: "clips"})
+			project, err := testproject.CreateWithTimeline(callerCtx(), svc, "clips")
 			if err != nil {
 				t.Fatal(err)
 			}

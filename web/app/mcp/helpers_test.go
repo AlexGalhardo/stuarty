@@ -13,6 +13,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 	"github.com/AlexGalhardo/stuarty/web/app/store"
 )
@@ -148,4 +149,46 @@ func marshal(tb testing.TB, v any) []byte {
 	}
 
 	return raw
+}
+
+// projectArgs are the arguments of a valid project_create for name: the description and the goal are required
+// (epic 56).
+func projectArgs(name string) map[string]any {
+	return map[string]any{
+		"name":        testproject.ValidName(name),
+		"description": testproject.Description,
+		"goal": map[string]any{
+			"specific": testproject.Goal.Specific, "measurable": testproject.Goal.Measurable,
+			"achievable": testproject.Goal.Achievable, "relevant": testproject.Goal.Relevant,
+			"time_bound": testproject.Goal.TimeBound, "due": testproject.Goal.Due,
+		},
+	}
+}
+
+// createProject makes a project through the tool and gives it one timeline, as every test of the editor tools
+// needs; it returns the project id.
+func createProject(tb testing.TB, cs *sdk.ClientSession, name string) string {
+	tb.Helper()
+
+	id, _ := structured(tb, ok(tb, call(tb, cs, "project_create", projectArgs(name))))["project_id"].(string)
+	ok(tb, call(tb, cs, "project_item", map[string]any{
+		"action": "add", "project_id": id, "kind": "timeline", "title": name,
+	}))
+
+	return id
+}
+
+// createProjectWith is createProject for the project of the golden files, whose id the test fixes, so that a golden file can name it.
+func createProjectWith(tb testing.TB, cs *sdk.ClientSession, name string) string {
+	tb.Helper()
+
+	args := projectArgs(name)
+	args["id"] = "prj_7k2m9x4q1b"
+
+	got, _ := structured(tb, ok(tb, call(tb, cs, "project_create", args)))["project_id"].(string)
+	ok(tb, call(tb, cs, "project_item", map[string]any{
+		"action": "add", "project_id": got, "kind": "timeline", "title": name,
+	}))
+
+	return got
 }

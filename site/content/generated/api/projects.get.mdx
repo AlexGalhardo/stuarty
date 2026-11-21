@@ -40,11 +40,14 @@ Content type `application/json`. Schema: [`ProjectGetResult`](/docs/api/schemas#
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
+| `complete` | `boolean` | no |  |
 | `counts` | [`ProjectCounts`](/docs/api/schemas#projectcounts) | no |  |
+| `description` | `string` | no |  |
 | `document` | [`Document`](/docs/api/schemas#document) or `any` or `null` or `null` | no |  |
 | `duration` | [`TimeValue`](/docs/api/schemas#timevalue) | no |  |
 | `duration_frames` | `integer (int64)` | no |  |
 | `fps` | `string` | no |  |
+| `goal` | [`ProjectGoal`](/docs/api/schemas#projectgoal) | no |  |
 | `height` | `integer` | no |  |
 | `items` | array of [`ProjectItem`](/docs/api/schemas#projectitem) | no |  |
 | `name` | `string` | no |  |
@@ -238,12 +241,14 @@ puts "#{response.code} #{response.body}"
 
 ```json title="200"
 {
+  "complete": false,
   "counts": {
     "assets": 0,
     "caption_words": 0,
     "items": 0,
     "tracks": 0
   },
+  "description": "string",
   "document": {
     "assets": {},
     "fonts": {},
@@ -274,6 +279,14 @@ puts "#{response.code} #{response.body}"
   },
   "duration_frames": 0,
   "fps": "string",
+  "goal": {
+    "achievable": "string",
+    "due": "string",
+    "measurable": "string",
+    "relevant": "string",
+    "specific": "string",
+    "time_bound": "string"
+  },
   "height": 0,
   "items": [
     {

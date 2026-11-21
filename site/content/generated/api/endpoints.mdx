@@ -15,6 +15,7 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/projects` | [`projects.list`](/docs/api/projects.list) | List projects |
 | `POST` | `/api/v1/projects` | [`projects.create`](/docs/api/projects.create) | Create a project |
 | `GET` | `/api/v1/projects/{id}` | [`projects.get`](/docs/api/projects.get) | Read a project |
+| `PATCH` | `/api/v1/projects/{id}` | [`projects.update`](/docs/api/projects.update) | Change the name, the description or the goal of a project |
 | `GET` | `/api/v1/projects/{id}/audio-measure` | [`audio.measure`](/docs/api/audio.measure) | Measure the sound with and without the audio processors |
 | `GET` | `/api/v1/projects/{id}/audio-previews/{key}` | [`audio_previews.get`](/docs/api/audio_previews.get) | Download the processed sound of an item, or start rendering it |
 | `GET` | `/api/v1/projects/{id}/bitmaps/{key}` | [`bitmaps.get`](/docs/api/bitmaps.get) | Download a rasterized text or shape |

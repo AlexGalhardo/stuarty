@@ -18,6 +18,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/engine/rasterize"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 	"github.com/AlexGalhardo/stuarty/web/app/store"
 )
@@ -183,7 +184,7 @@ func op(name, args string) command.Operation {
 // seed makes the projects and the documents the script works on.
 func (d *driver) seed(ctx context.Context) error {
 	for i := range 3 {
-		p, err := d.svc.ProjectCreate(ctx, service.ProjectCreateRequest{Name: fmt.Sprintf("soak video %d", i)})
+		p, err := testproject.CreateWithTimeline(ctx, d.svc, fmt.Sprintf("soak video %d", i))
 		if err != nil {
 			return err
 		}

@@ -67,7 +67,7 @@ func TestImageEventsInNetworkModeAreTheOwners(t *testing.T) {
 	}
 
 	// a key of the owner limited to one project reaches no image
-	project := h.send(t, http.MethodPost, "/api/v1/projects", `{"name":"p"}`, ana, nil)
+	project := h.send(t, http.MethodPost, "/api/v1/projects", projectJSON("p"), ana, nil)
 	if project.status != http.StatusCreated {
 		t.Fatalf("project = %d %s", project.status, project.body)
 	}
@@ -77,6 +77,8 @@ func TestImageEventsInNetworkModeAreTheOwners(t *testing.T) {
 	}
 
 	_ = json.Unmarshal(project.body, &p)
+
+	addFirstTimeline(t, h, ana, p.ProjectID)
 
 	key := h.makeKey(t, ana, `{"name":"a","scopes":["read","edit"],"project_id":"`+p.ProjectID+`"}`)
 	if limited := h.asKey(t, key.Secret, http.MethodGet, path, ""); limited.status != http.StatusForbidden ||

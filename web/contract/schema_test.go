@@ -16,20 +16,22 @@ import (
 // result of each Service operation the scenario calls: the document a command
 // prints with --json is the HTTP body of the same operation (SDD-003 section 5).
 var resultSchemas = map[string]string{
-	"ProjectList":   "ProjectListResult",
-	"ProjectCreate": "ProjectCreateResult",
-	"ProjectGet":    "ProjectGetResult",
-	"Edit":          "EditResult",
-	"HistoryList":   "HistoryListResult",
-	"Undo":          "UndoResult",
-	"Redo":          "UndoResult",
-	"Lint":          "LintResult",
-	"MediaImport":   "MediaImportResult",
-	"MediaList":     "MediaListResult",
-	"MediaInspect":  "MediaInspectResult",
-	"JobStart":      "Job",
-	"JobGet":        "Job",
-	"JobList":       "JobListResult",
+	"ProjectList":    "ProjectListResult",
+	"ProjectCreate":  "ProjectCreateResult",
+	"ProjectUpdate":  "ProjectUpdateResult",
+	"ProjectItemAdd": "ProjectItemResult",
+	"ProjectGet":     "ProjectGetResult",
+	"Edit":           "EditResult",
+	"HistoryList":    "HistoryListResult",
+	"Undo":           "UndoResult",
+	"Redo":           "UndoResult",
+	"Lint":           "LintResult",
+	"MediaImport":    "MediaImportResult",
+	"MediaList":      "MediaListResult",
+	"MediaInspect":   "MediaInspectResult",
+	"JobStart":       "Job",
+	"JobGet":         "Job",
+	"JobList":        "JobListResult",
 }
 
 // schemaDriver checks every successful result of the driver it wraps against

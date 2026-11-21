@@ -18,9 +18,7 @@ func TestLintReportGolden(t *testing.T) {
 	at := time.Date(2026, 11, 14, 12, 0, 0, 0, time.UTC)
 	env := testenv.New(t, testenv.Options{Clock: func() time.Time { return at }, DurationMS: 300000})
 	cs := connect(t, env.Service, Options{}, "claude-code")
-	project, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{
-		"name": "Lint", "id": "prj_7k2m9x4q1b",
-	})))["project_id"].(string)
+	project := createProjectWith(t, cs, "Lint")
 	imported := ok(t, call(t, cs, "media_import", map[string]any{
 		"project_id": project, "paths": []any{env.WriteFile(t, "clip.mov", strings.Repeat("x", 64))},
 		"asset_ids": []any{"ast_3c5v8n2w6d"}, "wait_ms": 20000,

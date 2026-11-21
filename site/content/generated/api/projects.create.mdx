@@ -23,12 +23,14 @@ Content type `application/json`.
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
+| `description` | `string` | no | 64 to 1024 characters: what the project is, for whom, and what it makes. |
 | `dry_run` | `boolean` | no |  |
-| `fps` | `integer` or `string` | no | 30 (default); n or n/1001, as text or as a number. |
+| `fps` | `integer` or `string` | no | Deprecated, creates nothing: the frame rate is asked when a video is added. |
+| `goal` | `any` | no | The SMART goal: specific, measurable, achievable, relevant and time_bound (16 to 280 characters each) and due (YYYY-MM-DD, today or later). |
 | `height` | `integer` or `null` | no | Not accepted: the size comes from preset. |
 | `id` | `string` | no | An id of your own; E_ID_EXISTS when taken.. pattern `^prj_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
-| `name` | `string` | yes | 1 to 120 characters.. min length 1 |
-| `preset` | `string` | no | 9:16 (default), 1:1, 16:9 or 4:5. |
+| `name` | `string` | no | 4 to 32 letters, digits and single spaces. |
+| `preset` | `string` | no | Deprecated, creates nothing: the size is asked when a video is added. |
 | `width` | `integer` or `null` | no | Not accepted: the size comes from preset. |
 
 ## Responses

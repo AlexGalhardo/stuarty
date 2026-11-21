@@ -34,12 +34,16 @@ type listIn struct {
 	pageIn
 }
 
+// createIn is the body of POST /projects. The members of the context are checked by the core, which names the
+// field and says what to send (SDD-005 section 5.12.2), so none of them is marked required here.
 type createIn struct {
-	Name   string  `json:"name"              validate:"required" doc:"1 to 120 characters."`
-	Preset string  `json:"preset,omitempty"                      doc:"9:16 (default), 1:1, 16:9 or 4:5."`
-	FPS    fpsText `json:"fps,omitempty"                         doc:"30 (default); n or n/1001, as text or as a number."`
-	ID     string  `json:"id,omitempty"                          doc:"An id of your own; E_ID_EXISTS when taken."`
-	DryRun any     `json:"dry_run,omitempty"`
+	Name        string              `json:"name"              doc:"4 to 32 letters, digits and single spaces."`
+	Description string              `json:"description"       doc:"64 to 1024 characters: what the project is, for whom, and what it makes."`
+	Goal        service.ProjectGoal `json:"goal"              doc:"The SMART goal: specific, measurable, achievable, relevant and time_bound (16 to 280 characters each) and due (YYYY-MM-DD, today or later)."`
+	Preset      string              `json:"preset,omitempty"  doc:"Deprecated, creates nothing: the size is asked when a video is added."`
+	FPS         fpsText             `json:"fps,omitempty"     doc:"Deprecated, creates nothing: the frame rate is asked when a video is added."`
+	ID          string              `json:"id,omitempty"      doc:"An id of your own; E_ID_EXISTS when taken."`
+	DryRun      any                 `json:"dry_run,omitempty"`
 
 	// Width and Height are not accepted: a project takes its size from preset. They are members so that a
 	// request that sends them is refused instead of silently made 9:16 (VV-086).
@@ -231,6 +235,7 @@ func (h *apiHandler) registerAll() {
 	register(h, "users.update", h.usersUpdate)
 	register(h, "projects.list", h.projectsList)
 	register(h, "projects.create", h.projectsCreate)
+	register(h, "projects.update", h.projectsUpdate)
 	register(h, "projects.get", h.projectsGet)
 	register(h, "projects.trash", func(c *web.Ctx, in stateIn) (service.ProjectStateResult, error) {
 		dryRun, err := readDryRun(c, in.DryRun)
@@ -617,7 +622,8 @@ func (h *apiHandler) projectsCreate(c *web.Ctx, in createIn) (service.ProjectCre
 	}
 
 	res, err := h.Service.ProjectCreate(c.Context(), service.ProjectCreateRequest{
-		Name: in.Name, Preset: in.Preset, FPS: string(in.FPS), ID: in.ID, DryRun: dryRun,
+		Name: in.Name, Description: in.Description, Goal: in.Goal, Preset: in.Preset, FPS: string(in.FPS), ID: in.ID,
+		DryRun: dryRun,
 	})
 	if err != nil {
 		return service.ProjectCreateResult{}, err
@@ -632,6 +638,28 @@ func (h *apiHandler) projectsCreate(c *web.Ctx, in createIn) (service.ProjectCre
 	c.SetHeader("Location", BasePath+"/projects/"+url.PathEscape(res.ProjectID))
 
 	return service.ProjectCreateResult{}, c.JSON(http.StatusCreated, res)
+}
+
+// updateIn is the body of PATCH /projects/{id}: a member that is left out is kept.
+type updateIn struct {
+	ID          string               `json:"id"                    validate:"required"`
+	Name        *string              `json:"name,omitempty"                            doc:"4 to 32 letters, digits and single spaces."`
+	Description *string              `json:"description,omitempty"                     doc:"64 to 1024 characters."`
+	Goal        *service.ProjectGoal `json:"goal,omitempty"                            doc:"The whole SMART goal; its parts are 16 to 280 characters and due is YYYY-MM-DD."`
+	DryRun      any                  `json:"dry_run,omitempty"`
+}
+
+func (h *apiHandler) projectsUpdate(c *web.Ctx, in updateIn) (service.ProjectUpdateResult, error) {
+	dryRun, err := readDryRun(c, in.DryRun)
+	if err != nil {
+		return service.ProjectUpdateResult{}, err
+	}
+
+	res, err := h.Service.ProjectUpdate(c.Context(), service.ProjectUpdateRequest{
+		ProjectID: in.ID, Name: in.Name, Description: in.Description, Goal: in.Goal, DryRun: dryRun,
+	})
+
+	return deref(res), err
 }
 
 func (h *apiHandler) projectsGet(c *web.Ctx, in getIn) (service.ProjectGetResult, error) {

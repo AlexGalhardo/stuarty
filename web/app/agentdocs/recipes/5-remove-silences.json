@@ -2,10 +2,30 @@
 	"title": "Remove silences",
 	"scenario": "captions",
 	"steps": [
-		{"cmd": "project:create --name \"Talk\" --id prj_7k2m9x4q1b", "hidden": true},
-		{"cmd": "media:import clip.mp4 --project prj_7k2m9x4q1b --asset-id ast_3c5v8n2w6d", "hidden": true},
-		{"cmd": "edit --project prj_7k2m9x4q1b --ops -", "hidden": true, "stdin": "[{\"op\":\"track.add\",\"args\":{\"kind\":\"visual\",\"name\":\"Video\",\"id\":\"trk_f6g7h8j9k0\"}},\n {\"op\":\"clip.add\",\"args\":{\"track_id\":\"trk_f6g7h8j9k0\",\"asset_id\":\"ast_3c5v8n2w6d\",\"start\":\"0s\",\"duration\":\"2s\",\"id\":\"itm_m1n2p3q4r5\"}}]"},
-		{"cmd": "transcribe --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --language en --wait", "hidden": true},
-		{"cmd": "edit --project prj_7k2m9x4q1b clip.remove_silences item_id=itm_m1n2p3q4r5 new_ids:='[\"itm_s1s2s3s4s5\",\"itm_s6s7s8s9s0\"]'", "note": "one new id per piece; media:inspect --sections silences lists them"}
+		{
+			"cmd": "project:create --name \"Talk\" --description \"A short vertical video for tests, with a script, footage and captions for the channel.\" --specific \"Publish one video now\" --measurable \"100 views in a week\" --achievable \"The footage exists\" --relevant \"Grows the channel\" --time-bound \"Done by next Tuesday\" --due 2999-12-31 --id prj_7k2m9x4q1b",
+			"hidden": true
+		},
+		{
+			"cmd": "item:add --project prj_7k2m9x4q1b --kind timeline --title \"Talk\"",
+			"hidden": true
+		},
+		{
+			"cmd": "media:import clip.mp4 --project prj_7k2m9x4q1b --asset-id ast_3c5v8n2w6d",
+			"hidden": true
+		},
+		{
+			"cmd": "edit --project prj_7k2m9x4q1b --ops -",
+			"hidden": true,
+			"stdin": "[{\"op\":\"track.add\",\"args\":{\"kind\":\"visual\",\"name\":\"Video\",\"id\":\"trk_f6g7h8j9k0\"}},\n {\"op\":\"clip.add\",\"args\":{\"track_id\":\"trk_f6g7h8j9k0\",\"asset_id\":\"ast_3c5v8n2w6d\",\"start\":\"0s\",\"duration\":\"2s\",\"id\":\"itm_m1n2p3q4r5\"}}]"
+		},
+		{
+			"cmd": "transcribe --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d --language en --wait",
+			"hidden": true
+		},
+		{
+			"cmd": "edit --project prj_7k2m9x4q1b clip.remove_silences item_id=itm_m1n2p3q4r5 new_ids:='[\"itm_s1s2s3s4s5\",\"itm_s6s7s8s9s0\"]'",
+			"note": "one new id per piece; media:inspect --sections silences lists them"
+		}
 	]
 }

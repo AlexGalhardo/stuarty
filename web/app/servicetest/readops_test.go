@@ -12,6 +12,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/plan"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 )
 
 func callerOf(actor, owner string, scopes ...string) context.Context {
@@ -240,7 +241,7 @@ func TestAuditList(t *testing.T) {
 
 	alice := callerOf("user:alice", "alice", service.AllScopes...)
 
-	mine, err := e.svc.ProjectCreate(alice, service.ProjectCreateRequest{Name: "alice project"})
+	mine, err := testproject.CreateWithTimeline(alice, e.svc, "alice project")
 	if err != nil {
 		t.Fatal(err)
 	}

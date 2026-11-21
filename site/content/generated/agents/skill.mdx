@@ -26,7 +26,7 @@ Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). `--json` for JSON.
 - Ids (`prj_`, `ast_`, `trk_`, `itm_`, `job_`) are never positions. List first.
 - The top track draws over the others (`top`, `bottom`).
 - `--base`: your last `revision` (default: current).
-- Give your own `id` to what you use later.
+- Own `id` for what you reuse; network mode: omit --id.
 
 ## Command reference
 
@@ -53,10 +53,9 @@ Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). `--json` for JSON.
 
 ## CLI cheat sheet
 
-Prefix: `stuarty`.
-
 - `project:list [--state active|trashed|all] [--cursor c] [--limit n]`
-- `project:create --name <name> [--preset 9:16|1:1|16:9|4:5] [--fps 30] [--id prj_...]`
+- `project:create --name <n> --description <t> --specific|--measurable|--achievable|--relevant|--time-bound <t> --due <date>`
+- `project:update <id> [any flag of project:create]`
 - `project:show [<project id>] [--detail concise|full|document] [--cursor c] [--limit n]`
 - `project:trash <project id>`
 - `project:restore <project id>`
@@ -211,8 +210,6 @@ Exit: 0 ok; 1 failure, do not retry; 2 retryable or `--wait` timeout.
 Import, cut, caption and export:
 
 ```text
-# network mode: omit --id
-stuarty project:create --name "Teaser" --id prj_7k2m9x4q1b
 stuarty media:import clip.mp4 --project prj_7k2m9x4q1b --asset-id ast_3c5v8n2w6d
 stuarty edit --project prj_7k2m9x4q1b --ops - <<'EOF'
 [{"op":"track.add","args":{"kind":"visual","name":"Video","id":"trk_f6g7h8j9k0"}},

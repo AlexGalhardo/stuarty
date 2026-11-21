@@ -6412,6 +6412,16 @@
       },
       "ProjectDescribeResult": {
         "properties": {
+          "complete": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "goal": {
+            "$ref": "#/components/schemas/ProjectGoal"
+          },
           "items": {
             "items": {
               "$ref": "#/components/schemas/ProjectItem"
@@ -6453,8 +6463,15 @@
       },
       "ProjectGetResult": {
         "properties": {
+          "complete": {
+            "type": "boolean"
+          },
           "counts": {
             "$ref": "#/components/schemas/ProjectCounts"
+          },
+          "description": {
+            "type": "string",
+            "x-untrusted": true
           },
           "document": {
             "anyOf": [
@@ -6475,6 +6492,9 @@
           },
           "fps": {
             "type": "string"
+          },
+          "goal": {
+            "$ref": "#/components/schemas/ProjectGoal"
           },
           "height": {
             "type": "integer"
@@ -6519,6 +6539,34 @@
           },
           "width": {
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ProjectGoal": {
+        "properties": {
+          "achievable": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "due": {
+            "type": "string"
+          },
+          "measurable": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "relevant": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "specific": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "time_bound": {
+            "type": "string",
+            "x-untrusted": true
           }
         },
         "type": "object"
@@ -6715,6 +6763,9 @@
           "assets": {
             "type": "integer"
           },
+          "complete": {
+            "type": "boolean"
+          },
           "duration": {
             "$ref": "#/components/schemas/TimeValue"
           },
@@ -6759,6 +6810,37 @@
           },
           "width": {
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ProjectUpdateResult": {
+        "properties": {
+          "complete": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "goal": {
+            "$ref": "#/components/schemas/ProjectGoal"
+          },
+          "name": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "updated": {
+            "type": "boolean"
           }
         },
         "type": "object"
@@ -20319,11 +20401,15 @@
             "application/json": {
               "schema": {
                 "properties": {
+                  "description": {
+                    "description": "64 to 1024 characters: what the project is, for whom, and what it makes.",
+                    "type": "string"
+                  },
                   "dry_run": {
                     "type": "boolean"
                   },
                   "fps": {
-                    "description": "30 (default); n or n/1001, as text or as a number.",
+                    "description": "Deprecated, creates nothing: the frame rate is asked when a video is added.",
                     "oneOf": [
                       {
                         "maximum": 999999,
@@ -20335,6 +20421,14 @@
                         "type": "string"
                       }
                     ]
+                  },
+                  "goal": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/ProjectGoal"
+                      }
+                    ],
+                    "description": "The SMART goal: specific, measurable, achievable, relevant and time_bound (16 to 280 characters each) and due (YYYY-MM-DD, today or later)."
                   },
                   "height": {
                     "description": "Not accepted: the size comes from preset.",
@@ -20349,12 +20443,11 @@
                     "type": "string"
                   },
                   "name": {
-                    "description": "1 to 120 characters.",
-                    "minLength": 1,
+                    "description": "4 to 32 letters, digits and single spaces.",
                     "type": "string"
                   },
                   "preset": {
-                    "description": "9:16 (default), 1:1, 16:9 or 4:5.",
+                    "description": "Deprecated, creates nothing: the size is asked when a video is added.",
                     "type": "string"
                   },
                   "width": {
@@ -20365,9 +20458,6 @@
                     ]
                   }
                 },
-                "required": [
-                  "name"
-                ],
                 "type": "object"
               }
             }
@@ -20572,6 +20662,96 @@
           }
         ],
         "summary": "Read a project"
+      },
+      "patch": {
+        "operationId": "projects.update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "description": {
+                    "description": "64 to 1024 characters.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "goal": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/ProjectGoal"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The whole SMART goal; its parts are 16 to 280 characters and due is YYYY-MM-DD."
+                  },
+                  "name": {
+                    "description": "4 to 32 letters, digits and single spaces.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectUpdateResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change the name, the description or the goal of a project"
       }
     },
     "/api/v1/projects/{id}/audio-measure": {

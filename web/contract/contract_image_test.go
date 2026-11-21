@@ -63,12 +63,12 @@ func TestAssetLibraryScenarioSaysWhatItShould(t *testing.T) {
 	got := run(t, newDirect(t), steps, fixtures)
 
 	// step 2: fetched_by_agent without a rights note
-	if got[2].fail == "" || !strings.Contains(got[2].fail, "rights_note_required") {
-		t.Errorf("a fetched file without a rights note: %q", got[2].fail)
+	if got[4].fail == "" || !strings.Contains(got[4].fail, "rights_note_required") {
+		t.Errorf("a fetched file without a rights note: %q", got[4].fail)
 	}
 
 	// step 4: the tag and the reuse mark find the file; step 5: so does the text
-	for _, i := range []int{4, 5} {
+	for _, i := range []int{6, 7} {
 		if !strings.Contains(got[i].result, `"name":"clip.mov"`) ||
 			!strings.Contains(got[i].result, `"reusable":true`) {
 			t.Errorf("step %d (%s) did not find the file: %s", i, steps[i].Call, got[i].result)
@@ -76,8 +76,8 @@ func TestAssetLibraryScenarioSaysWhatItShould(t *testing.T) {
 	}
 
 	// step 10: the PUT body reaches the Service with every member it names, the reuse mark included
-	if !strings.Contains(got[10].result, `"reusable":true`) || !strings.Contains(got[10].result, "checked") {
-		t.Errorf("AssetSetInfo did not apply its members: %s", got[10].result)
+	if !strings.Contains(got[12].result, `"reusable":true`) || !strings.Contains(got[12].result, "checked") {
+		t.Errorf("AssetSetInfo did not apply its members: %s", got[12].result)
 	}
 
 	// the last step lists the reusable files: the mark set in step 10 keeps the file in
@@ -85,7 +85,7 @@ func TestAssetLibraryScenarioSaysWhatItShould(t *testing.T) {
 		t.Errorf("the reusable filter lost the file: %s", got[len(got)-1].result)
 	}
 
-	if strings.Contains(got[6].result, `"name":`) {
+	if strings.Contains(got[8].result, `"name":`) {
 		t.Errorf("the visual section holds a video: %s", got[6].result)
 	}
 
@@ -96,11 +96,11 @@ func TestAssetLibraryScenarioSaysWhatItShould(t *testing.T) {
 	}
 
 	// step 11: the detail names both projects
-	if !strings.Contains(got[11].result, "Teaser") || !strings.Contains(got[11].result, "Trailer") {
-		t.Errorf("the detail does not name both projects: %s", got[11].result)
+	if !strings.Contains(got[13].result, "Teaser") || !strings.Contains(got[13].result, "Trailer") {
+		t.Errorf("the detail does not name both projects: %s", got[13].result)
 	}
 
-	if !strings.Contains(got[11].text, `<untrusted_media_text source="metadata" field="rights_note"`) {
-		t.Errorf("the rights note is not delimited: %s", got[11].text)
+	if !strings.Contains(got[13].text, `<untrusted_media_text source="metadata" field="rights_note"`) {
+		t.Errorf("the rights note is not delimited: %s", got[13].text)
 	}
 }

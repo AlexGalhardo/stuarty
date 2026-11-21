@@ -8,6 +8,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 )
 
 // T-24: a key replayed with different operations is E_IDEMPOTENCY_MISMATCH and
@@ -116,7 +117,7 @@ func TestSecurity_T06_AssetByHashNeedsMembership(t *testing.T) {
 func mustCreate(ctx context.Context, t *testing.T, m *mediaEnv, name string) string {
 	t.Helper()
 
-	res, err := m.svc.ProjectCreate(ctx, service.ProjectCreateRequest{Name: name})
+	res, err := testproject.CreateWithTimeline(ctx, m.svc, name)
 	if err != nil {
 		t.Fatal(err)
 	}

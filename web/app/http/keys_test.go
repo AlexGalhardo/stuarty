@@ -128,7 +128,7 @@ func TestKeyWithReadScopeReadsAndCannotWrite(t *testing.T) {
 		t.Errorf("GET /projects = %d %s", res.status, res.body)
 	}
 
-	res := h.asKey(t, key.Secret, http.MethodPost, "/api/v1/projects", `{"name":"x"}`)
+	res := h.asKey(t, key.Secret, http.MethodPost, "/api/v1/projects", projectJSON("x"))
 	if res.status != http.StatusForbidden || res.code() != service.CodeForbidden {
 		t.Errorf("POST /projects = %d %s, want E_FORBIDDEN", res.status, res.body)
 	}
@@ -251,7 +251,7 @@ func TestKeyValidation(t *testing.T) {
 	h.user(t, "root@example.com", service.RoleAdmin)
 	root := h.session(t, "root@example.com")
 
-	project := h.send(t, http.MethodPost, "/api/v1/projects", `{"name":"p"}`, root, nil)
+	project := h.send(t, http.MethodPost, "/api/v1/projects", projectJSON("p"), root, nil)
 	if project.status != http.StatusCreated {
 		t.Fatalf("project = %d %s", project.status, project.body)
 	}
@@ -261,6 +261,8 @@ func TestKeyValidation(t *testing.T) {
 	}
 
 	_ = json.Unmarshal(project.body, &p)
+
+	addFirstTimeline(t, h, root, p.ProjectID)
 
 	for _, c := range []struct {
 		name, body string
@@ -400,7 +402,7 @@ func TestKeyLimitedToAProject(t *testing.T) {
 	ids := make([]string, 2)
 
 	for i := range ids {
-		res := h.send(t, http.MethodPost, "/api/v1/projects", `{"name":"p"}`, ana, nil)
+		res := h.send(t, http.MethodPost, "/api/v1/projects", projectJSON("p"), ana, nil)
 
 		var p struct {
 			ProjectID string `json:"project_id"`
@@ -408,6 +410,8 @@ func TestKeyLimitedToAProject(t *testing.T) {
 
 		_ = json.Unmarshal(res.body, &p)
 		ids[i] = p.ProjectID
+
+		addFirstTimeline(t, h, ana, p.ProjectID)
 	}
 
 	key := h.makeKey(t, ana, `{"name":"a","scopes":["read","edit"],"project_id":"`+ids[0]+`"}`)
@@ -436,13 +440,15 @@ func TestSecurity_T06_KeyIsNotLimitedToATimelineID(t *testing.T) {
 	ana := h.session(t, "ana@example.com")
 	bob := h.session(t, "bob@example.com")
 
-	res := h.send(t, http.MethodPost, "/api/v1/projects", `{"name":"p"}`, ana, nil)
+	res := h.send(t, http.MethodPost, "/api/v1/projects", projectJSON("p"), ana, nil)
 
 	var p struct {
 		ProjectID string `json:"project_id"`
 	}
 
 	_ = json.Unmarshal(res.body, &p)
+
+	addFirstTimeline(t, h, ana, p.ProjectID)
 
 	res = h.send(
 		t, http.MethodPost, "/api/v1/projects/"+p.ProjectID+"/items",
@@ -499,7 +505,7 @@ func TestSecurity_T06_NetworkKeyDoesNotCrossProductionsByTimeline(t *testing.T) 
 	bob := h.session(t, "bob@example.com")
 
 	project := func(session string) string {
-		res := h.send(t, http.MethodPost, "/api/v1/projects", `{"name":"p"}`, session, nil)
+		res := h.send(t, http.MethodPost, "/api/v1/projects", projectJSON("p"), session, nil)
 
 		var p struct {
 			ProjectID string `json:"project_id"`
@@ -508,6 +514,16 @@ func TestSecurity_T06_NetworkKeyDoesNotCrossProductionsByTimeline(t *testing.T) 
 		if err := json.Unmarshal(res.body, &p); err != nil || p.ProjectID == "" {
 			t.Fatalf("ProjectCreate = %d %s", res.status, res.body)
 		}
+
+		// The first timeline has the id of the project; the helper below adds a second one with an id of its own.
+		h.send(
+			t,
+			http.MethodPost,
+			"/api/v1/projects/"+p.ProjectID+"/items",
+			`{"kind":"timeline","title":"First"}`,
+			session,
+			nil,
+		)
 
 		return p.ProjectID
 	}

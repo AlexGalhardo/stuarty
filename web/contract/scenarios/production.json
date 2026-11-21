@@ -2,7 +2,8 @@
 	"name": "production",
 	"actor": "contract",
 	"steps": [
-		{"call": "ProjectCreate", "args": {"id": "prj_7k2m9x4q1b", "name": "Series pilot"}},
+		{"call": "ProjectCreate", "args": {"id": "prj_7k2m9x4q1b", "name": "Series pilot", "description": "A short vertical video made for tests: it has a script, some footage and captions, and it is made for the people who follow the channel.", "goal": {"specific": "Publish one short video that explains the idea", "measurable": "At least one hundred views in the first week", "achievable": "The footage and the script already exist", "relevant": "It brings the first audience to the channel", "time_bound": "Edit on Monday and publish on Tuesday", "due": "2999-12-31"}}},
+		{"call": "ProjectItemAdd", "args": {"project_id": "prj_7k2m9x4q1b", "kind": "timeline", "title": "Series pilot"}},
 		{"call": "BriefGet", "args": {"project_id": "prj_7k2m9x4q1b"}},
 		{"call": "BriefSet", "args": {"project_id": "prj_7k2m9x4q1b", "text": "# Brief\n\nA short vertical video for makers.\n"}},
 		{"call": "BriefGet", "args": {"project_id": "prj_7k2m9x4q1b"}},
@@ -12,11 +13,11 @@
 			{"op": "track.add", "args": {"kind": "visual", "name": "V", "id": "trk_f6g7h8j9k0"}}]}, "expect_error": {"code": "E_VALIDATION"}},
 		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "timeline_id": "prj_7k2m9x4q1b", "base_revision": 0, "operations": [
 			{"op": "track.add", "args": {"kind": "visual", "name": "Vertical", "id": "trk_f6g7h8j9k0"}}]}},
-		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "timeline_id": "$timeline:0", "base_revision": 0, "operations": [
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "timeline_id": "$timeline:1", "base_revision": 0, "operations": [
 			{"op": "track.add", "args": {"kind": "visual", "name": "Wide", "id": "trk_m1n2p3q4r5"}}]}},
-		{"call": "HistoryList", "args": {"project_id": "prj_7k2m9x4q1b", "timeline_id": "$timeline:0"}},
+		{"call": "HistoryList", "args": {"project_id": "prj_7k2m9x4q1b", "timeline_id": "$timeline:1"}},
 		{"call": "ProjectGet", "args": {"project_id": "prj_7k2m9x4q1b", "detail": "concise"}},
-		{"call": "ProjectGet", "args": {"project_id": "prj_7k2m9x4q1b", "timeline_id": "$timeline:0", "detail": "concise"}},
+		{"call": "ProjectGet", "args": {"project_id": "prj_7k2m9x4q1b", "timeline_id": "$timeline:1", "detail": "concise"}},
 		{"call": "ProjectDescribe", "args": {"project_id": "prj_7k2m9x4q1b"}},
 		{"call": "ProjectItemRename", "args": {"project_id": "prj_7k2m9x4q1b", "item_id": "pit_7k2m9x4q1b", "title": "Main cut"}},
 		{"call": "ProjectItemMove", "args": {"project_id": "prj_7k2m9x4q1b", "item_id": "pit_7k2m9x4q1b", "position": 3}},

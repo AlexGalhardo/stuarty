@@ -158,8 +158,28 @@ func str(t *testing.T, doc map[string]any, key string) string {
 func (s *sessionRun) teaser() (project string) {
 	s.t.Helper()
 
-	created := s.ok("", "project:create", "--name", "Launch teaser")
+	created := s.ok(
+		"",
+		"project:create",
+		"--name",
+		"Launch teaser",
+		"--description",
+		ctxDescription,
+		"--specific",
+		ctxSpecific,
+		"--measurable",
+		ctxMeasurable,
+		"--achievable",
+		ctxAchievable,
+		"--relevant",
+		ctxRelevant,
+		"--time-bound",
+		ctxTimeBound,
+		"--due",
+		ctxDue,
+	)
 	project = str(s.t, created, "project_id")
+	s.ok("", "item:add", "--project", project, "--kind", "timeline", "--title", "Launch teaser")
 
 	imported := s.ok("", "media:import", s.clip(), "--project", project)
 	assets, _ := imported["assets"].([]any)
@@ -288,7 +308,30 @@ func TestSessionBBlockedExport(t *testing.T) {
 		t.Fatalf("the retry must be a replay: %v", again)
 	}
 
-	empty := s.ok("", "project:create", "--name", "Empty")
+	empty := s.ok(
+		"",
+		"project:create",
+		"--name",
+		"Empty",
+		"--description",
+		ctxDescription,
+		"--specific",
+		ctxSpecific,
+		"--measurable",
+		ctxMeasurable,
+		"--achievable",
+		ctxAchievable,
+		"--relevant",
+		ctxRelevant,
+		"--time-bound",
+		ctxTimeBound,
+		"--due",
+		ctxDue,
+	)
+
+	// A project with a timeline and nothing on it: the lint blocks the export. (With no timeline at all the export
+	// is E_INVALID_STATE, since epic 56.)
+	s.ok("", "item:add", "--project", str(t, empty, "project_id"), "--kind", "timeline", "--title", "Empty")
 
 	code, refused := s.do("", "export", "--project", str(t, empty, "project_id"), "--wait")
 	if code != cli.ExitFailure || refused["code"] != service.CodeLintBlocking || refused["retryable"] != false {

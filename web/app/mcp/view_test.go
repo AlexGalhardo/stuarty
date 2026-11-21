@@ -15,7 +15,7 @@ import (
 func textProject(tb testing.TB, cs *sdk.ClientSession) string {
 	tb.Helper()
 
-	project, _ := structured(tb, ok(tb, call(tb, cs, "project_create", map[string]any{"name": "V"})))["project_id"].(string)
+	project := createProject(tb, cs, "V")
 
 	tr := ok(tb, call(tb, cs, "edit", map[string]any{
 		"project_id": project, "base_revision": 0,

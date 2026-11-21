@@ -12,6 +12,7 @@ import (
 	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/pathguard"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 )
 
 type fontImporter interface {
@@ -235,7 +236,7 @@ func TestSecurity_T21_BundleExportRefusesAFontTheCallerDoesNotOwn(t *testing.T) 
 		t.Fatal(err)
 	}
 
-	created, err := m.svc.ProjectCreate(alice, service.ProjectCreateRequest{Name: "p"})
+	created, err := testproject.CreateWithTimeline(alice, m.svc, "p")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -271,7 +272,7 @@ func TestSecurity_T21_BundleExportRefusesAFontTheCallerDoesNotOwn(t *testing.T) 
 
 	add := op("font.add", `{"family":"Mine","files":[{"weight":400,"hash":"sha256:`+hash+`"}]}`)
 
-	bobProject, err := m.svc.ProjectCreate(bob, service.ProjectCreateRequest{Name: "b"})
+	bobProject, err := testproject.CreateWithTimeline(bob, m.svc, "b")
 	if err != nil {
 		t.Fatal(err)
 	}

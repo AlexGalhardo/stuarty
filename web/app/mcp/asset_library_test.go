@@ -15,7 +15,7 @@ func TestMediaToolsReachTheLibrary(t *testing.T) {
 	env := testenv.New(t, testenv.Options{})
 	cs := connect(t, env.Service, Options{}, "claude-code")
 	mk := func(name string) string {
-		id, _ := structured(t, ok(t, call(t, cs, "project_create", map[string]any{"name": name})))["project_id"].(string)
+		id := createProject(t, cs, name)
 
 		return id
 	}

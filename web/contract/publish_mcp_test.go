@@ -15,6 +15,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/social"
 	"github.com/AlexGalhardo/stuarty/service/social/fake"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
 )
 
@@ -76,7 +77,7 @@ func newPublishFixture(t *testing.T, newDriver func(*testing.T, testenv.Options)
 		t.Fatal(err)
 	}
 
-	project, err := svc.ProjectCreate(callerCtx(), service.ProjectCreateRequest{Name: "launch"})
+	project, err := testproject.CreateWithTimeline(callerCtx(), svc, "launch")
 	if err != nil {
 		t.Fatal(err)
 	}

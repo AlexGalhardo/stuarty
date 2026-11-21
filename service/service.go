@@ -49,6 +49,7 @@ type Service interface {
 
 	ProjectList(ctx context.Context, req ProjectListRequest) (*ProjectListResult, error)
 	ProjectCreate(ctx context.Context, req ProjectCreateRequest) (*ProjectCreateResult, error)
+	ProjectUpdate(ctx context.Context, req ProjectUpdateRequest) (*ProjectUpdateResult, error)
 	ProjectGet(ctx context.Context, req ProjectGetRequest) (*ProjectGetResult, error)
 	ProjectTrash(ctx context.Context, req ProjectTrashRequest) (*ProjectStateResult, error)
 	ProjectRestore(ctx context.Context, req ProjectTrashRequest) (*ProjectStateResult, error)

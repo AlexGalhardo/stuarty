@@ -15,6 +15,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 	"github.com/AlexGalhardo/stuarty/web/app/auth"
 	"github.com/AlexGalhardo/stuarty/web/app/events"
@@ -282,12 +283,58 @@ func (h *harness) post(path, body string) resp {
 func (h *harness) newProject(name string) string {
 	h.t.Helper()
 
-	res := h.post("/api/v1/projects", `{"name":"`+name+`"}`)
+	res := h.post("/api/v1/projects", projectJSON(name))
 	if res.status != http.StatusCreated {
 		h.t.Fatalf("create = %d %s", res.status, res.body)
 	}
 
 	id, _ := res.json(h.t)["project_id"].(string)
 
+	// The editor tests work on the timeline that a video makes; the first one has the id of the project.
+	if added := h.post(
+		"/api/v1/projects/"+id+"/items",
+		`{"kind":"timeline","title":`+quoted(name)+`}`,
+	); added.status != http.StatusCreated {
+		h.t.Fatalf("add timeline = %d %s", added.status, added.body)
+	}
+
 	return id
+}
+
+// projectJSON is the body of a valid POST /projects for name: the description and the goal are required (epic 56).
+func projectJSON(name string) string {
+	raw, err := json.Marshal(map[string]any{
+		"name": testproject.ValidName(name), "description": testproject.Description, "goal": testproject.Goal,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	return string(raw)
+}
+
+func quoted(s string) string {
+	raw, err := json.Marshal(s)
+	if err != nil {
+		panic(err)
+	}
+
+	return string(raw)
+}
+
+// addFirstTimeline adds the first timeline of a project, which has the id of the project. A project has no timeline
+// until one is added (epic 56), and a key can be limited only to a project that has one.
+func addFirstTimeline(t *testing.T, h *networkHarness, session, projectID string) {
+	t.Helper()
+
+	if res := h.send(
+		t,
+		http.MethodPost,
+		"/api/v1/projects/"+projectID+"/items",
+		`{"kind":"timeline","title":"First"}`,
+		session,
+		nil,
+	); res.status != http.StatusCreated {
+		t.Fatalf("add the first timeline = %d %s", res.status, res.body)
+	}
 }

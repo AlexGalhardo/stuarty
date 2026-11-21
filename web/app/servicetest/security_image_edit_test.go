@@ -10,6 +10,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/provider"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 )
 
 // SDD-007 T-96: a picture leaves the machine only after the person agreed, and only to the connection chosen.
@@ -208,10 +209,7 @@ func TestSecurity_T98_JobCannotEditAnImageItsCallerCannot(t *testing.T) {
 	alice := service.Caller{Actor: "user:alice", Scopes: service.AllScopes, OwnerUserID: "alice"}
 	bob := service.Caller{Actor: "user:bob", Scopes: service.AllScopes, OwnerUserID: "bob"}
 
-	proj, err := e.svc.ProjectCreate(
-		service.WithCaller(context.Background(), bob),
-		service.ProjectCreateRequest{Name: "bobs"},
-	)
+	proj, err := testproject.CreateWithTimeline(service.WithCaller(context.Background(), bob), e.svc, "bobs")
 	if err != nil {
 		t.Fatal(err)
 	}

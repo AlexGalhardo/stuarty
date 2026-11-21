@@ -9,6 +9,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 	"github.com/AlexGalhardo/stuarty/web/resources/templates"
 )
 
@@ -143,7 +144,7 @@ func TestSecurity_T89_SharedImageTemplateIsReadOnlyAndShowsNothingElse(t *testin
 
 	for _, who := range []context.Context{alice, bob} {
 		// The image.edit job starts in a project of the caller.
-		prj, perr := e.svc.ProjectCreate(who, service.ProjectCreateRequest{Name: "Covers"})
+		prj, perr := testproject.CreateWithTimeline(who, e.svc, "Covers")
 		if perr != nil {
 			t.Fatal(perr)
 		}

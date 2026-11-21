@@ -2,7 +2,8 @@
 	"name": "template",
 	"actor": "contract",
 	"steps": [
-		{"call": "ProjectCreate", "args": {"id": "prj_7k2m9x4q1b", "name": "Template base"}},
+		{"call": "ProjectCreate", "args": {"id": "prj_7k2m9x4q1b", "name": "Template base", "description": "A short vertical video made for tests: it has a script, some footage and captions, and it is made for the people who follow the channel.", "goal": {"specific": "Publish one short video that explains the idea", "measurable": "At least one hundred views in the first week", "achievable": "The footage and the script already exist", "relevant": "It brings the first audience to the channel", "time_bound": "Edit on Monday and publish on Tuesday", "due": "2999-12-31"}}},
+		{"call": "ProjectItemAdd", "args": {"project_id": "prj_7k2m9x4q1b", "kind": "timeline", "title": "Template base"}},
 		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 0, "operations": [
 			{"op": "track.add", "args": {"kind": "visual", "name": "Text", "id": "trk_f6g7h8j9k0"}},
 			{"op": "text.add", "args": {"track_id": "trk_f6g7h8j9k0", "start": "0s", "duration": "1s", "text": "Headline", "id": "itm_t1t2t3t4t5"}}]}},

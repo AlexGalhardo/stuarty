@@ -8,6 +8,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/agenthost"
 	"github.com/AlexGalhardo/stuarty/service/approval"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 )
 
 // chatCallers are the callers that are not a person in a browser: each must be refused every
@@ -128,7 +129,7 @@ func TestSecurity_T72_SessionTokenIsNotAPersonAndNotAdmin(t *testing.T) {
 			return err
 		},
 		"ProjectCreate": func() error {
-			_, err := w.svc.ProjectCreate(agent, service.ProjectCreateRequest{Name: "x"})
+			_, err := testproject.CreateWithTimeline(agent, w.svc, "x")
 			return err
 		},
 	}

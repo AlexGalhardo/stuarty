@@ -19,6 +19,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 	"github.com/AlexGalhardo/stuarty/engine/ingest"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 
 	"github.com/AlexGalhardo/vukem/queue"
 )
@@ -1086,7 +1087,7 @@ func TestJobCancelOfASharedIngestSparesTheOtherProjects(t *testing.T) {
 	var projects [2]string
 
 	for i, c := range []context.Context{alice, bob} {
-		res, err := m.svc.ProjectCreate(c, service.ProjectCreateRequest{Name: "p"})
+		res, err := testproject.CreateWithTimeline(c, m.svc, "p")
 		if err != nil {
 			t.Fatal(err)
 		}
