@@ -1,4 +1,7 @@
 import { randomBytes } from "node:crypto";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 import { zipEntry } from "../support/zip";
 import {
@@ -9,6 +12,7 @@ import {
 	solidClip,
 	test,
 } from "./helpers";
+import { openInspectorTab } from "./sections";
 
 // Epic 60 (D-125, SDD-011 section 14.8, SDD-012 section 6.4): an imported file is
 // renamed by a right click or the context-menu key, in the editor and in the
@@ -63,13 +67,19 @@ test.describe("asset rename", () => {
 		);
 
 		// The library lists it under the new name, and finds it by it.
+		// The workspace is shared and kept between runs, so the file is told by its project.
+		const own = (await call("GET", `/assets?project=${seeded.id}`)) as {
+			assets: { hash: string }[];
+		};
+		const hash = own.assets[0]?.hash ?? "";
 		const listed = (await call(
 			"GET",
-			"/assets?text=" + encodeURIComponent("Beach day"),
+			`/assets?text=${encodeURIComponent("Beach day")}&limit=200`,
 		)) as { assets: { name: string; hash: string }[] };
-		const mine = listed.assets.find((a) => a.name === "Beach day.mp4");
-		expect(mine, "the library lists the renamed file").toBeDefined();
-		const hash = mine?.hash ?? "";
+		expect(
+			listed.assets.find((a) => a.hash === hash)?.name,
+			"the library finds the renamed file by its new name",
+		).toBe("Beach day.mp4");
 
 		// A bundle export carries the new name.
 		const job = (await call("POST", `/projects/${seeded.id}/bundle`, {})) as {
@@ -221,6 +231,42 @@ test.describe("asset rename", () => {
 			.getByRole("searchbox");
 		await find.fill("Told by");
 		await expect(page.getByText("1 matches", { exact: false })).toBeVisible();
+	});
+
+	test("the picker of a colour table lists it by its new name", async ({
+		page,
+		request,
+	}) => {
+		const clip = colour();
+		const dir = join(tmpdir(), "stuarty-e2e-media");
+		mkdirSync(dir, { recursive: true });
+		const cube = join(dir, `rename-${clip}.cube`);
+		writeFileSync(
+			cube,
+			`TITLE "${clip}"\nLUT_3D_SIZE 2\n0 0 0\n1 0 0\n0 1 0\n1 1 0\n0 0 1\n1 0 1\n0 1 1\n1 1 1\n`,
+		);
+		const seeded = await seedProject(request, {
+			tracks: 1,
+			perTrack: 1,
+			files: [solidClip(clip), cube],
+		});
+		const call = await caller(request);
+		const found = (await call(
+			"GET",
+			`/assets?project=${seeded.id}&kind=lut`,
+		)) as {
+			assets: { hash: string }[];
+		};
+		await call("POST", `/assets/${found.assets[0]?.hash}/rename`, {
+			name: "Warm grade",
+		});
+
+		await page.goto(`/editor/${seeded.id}`);
+		await page.locator("[data-item-id]").first().click();
+		await openInspectorTab(page, "Adjust");
+		const picker = page.getByLabel("Lookup table (LUT)");
+		await expect(picker).toContainText("Warm grade.cube");
+		await expect(picker).not.toContainText(`rename-${clip}`);
 	});
 
 	test("a sound is renamed from its row, and its player keeps the browser menu", async ({

@@ -15,7 +15,13 @@ import {
 } from "../../commands/builders";
 import { registryRange } from "../../commands/registryLimits";
 import { useCanEdit } from "../../commands/useActions";
-import { useDocumentState, useUiState } from "../../state/EditorContext";
+import { useStore } from "../../state/createStore";
+import {
+	useDocumentState,
+	useRuntime,
+	useUiState,
+} from "../../state/EditorContext";
+import { shownNames } from "../../state/libraryStore";
 import SelectField from "../fields/SelectField";
 import SliderField from "../fields/SliderField";
 import Section from "../Section";
@@ -51,6 +57,7 @@ export default function ColorSection({
 	const item = useDocumentState((s) => s.document?.items[itemId]);
 	const playhead = useUiState((s) => s.playheadFrame);
 	const assets = useDocumentState((s) => s.document?.assets);
+	const shown = useStore(useRuntime().library, (s) => shownNames(s.entries));
 	if (item === undefined) return null;
 	const luts = Object.values(assets ?? {}).filter(
 		(asset) => asset.kind === "lut",
@@ -144,7 +151,10 @@ export default function ColorSection({
 						disabled={!canEdit}
 						options={[
 							{ value: NO_LUT, label: t("ui.editor.clip.lut_none") },
-							...luts.map((asset) => ({ value: asset.id, label: asset.name })),
+							...luts.map((asset) => ({
+								value: asset.id,
+								label: shown.get(asset.id) ?? asset.name,
+							})),
 						]}
 						commit={(value) =>
 							send(
