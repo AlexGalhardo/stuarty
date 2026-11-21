@@ -1,0 +1,55 @@
+---
+// "Pause animations" (WCAG 2.2.2 Pause, Stop, Hide; D-126): a small button fixed in the bottom-right corner of the
+// landing pages. It sets html[data-motion="paused"] (CSS stops every animation) and tells the scripts (the typer, the
+// WebGL stage) through an event. The choice is kept in localStorage. Under reduced motion everything is already
+// still, so the button shows as paused and is disabled.
+---
+
+<script is:inline>
+	(function () {
+		try {
+			if (localStorage.getItem("stuarty-motion") === "paused") document.documentElement.dataset.motion = "paused";
+		} catch (e) {}
+	})();
+</script>
+<button type="button" class="motion-toggle" data-motion-toggle aria-pressed="false" aria-label="Pause animations" title="Pause animations">
+	<svg class="motion-icon-pause" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+		<rect x="6" y="5" width="4" height="14" rx="1"></rect>
+		<rect x="14" y="5" width="4" height="14" rx="1"></rect>
+	</svg>
+	<svg class="motion-icon-play" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+		<path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"></path>
+	</svg>
+</button>
+
+<script>
+	import { MOTION_EVENT, MOTION_KEY, reducedMotion } from "../../landing/boot";
+
+	const button = document.querySelector<HTMLButtonElement>("[data-motion-toggle]");
+	if (button) {
+		const root = document.documentElement;
+		const reduced = reducedMotion();
+		const sync = (): void => {
+			const paused = reduced || root.dataset.motion === "paused";
+			const label = paused ? "Play animations" : "Pause animations";
+			button.setAttribute("aria-pressed", String(paused));
+			button.setAttribute("aria-label", label);
+			button.title = reduced ? "Animations are off in your system settings" : label;
+			button.disabled = reduced;
+		};
+		sync();
+		button.addEventListener("click", () => {
+			const paused = root.dataset.motion !== "paused";
+			if (paused) root.dataset.motion = "paused";
+			else delete root.dataset.motion;
+			try {
+				if (paused) localStorage.setItem(MOTION_KEY, "paused");
+				else localStorage.removeItem(MOTION_KEY);
+			} catch {
+				// Storage can be blocked: the choice then lasts for this visit only.
+			}
+			sync();
+			document.dispatchEvent(new Event(MOTION_EVENT));
+		});
+	}
+</script>
