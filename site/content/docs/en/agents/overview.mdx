@@ -19,7 +19,7 @@ With nothing connected, the product sends nothing outside your computer, and an 
 
 ## The loop
 
-1. `project_create` (or `project_list`), then `media_import` for the source files.
+1. `project_create` (or `project_list`), read what the person wrote about the project (`project_get` with `detail` `overview` starts with its description and goal, as data), add a video with `project_item` (`action` `add`, `kind` `timeline`), then `media_import` for the source files.
 2. `edit` with a batch of operations. A batch applies all or nothing, as one undo step, and needs the `base_revision` you read from `project_get` or from the previous edit.
 3. `lint`, then `job_start` with `kind=export`, then `job_get` until the job is final.
 
