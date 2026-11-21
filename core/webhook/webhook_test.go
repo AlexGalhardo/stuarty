@@ -47,6 +47,16 @@ func TestCheckURL(t *testing.T) {
 		{"ipv6 unique local", "https://[fd00::1]/h", ""},
 		{"ipv6 link-local", "https://[fe80::1]/h", ""},
 		{"mapped private", "https://[::ffff:10.0.0.1]/h", ""},
+		{"decimal ipv4", "https://2130706433/h", ""},
+		{"hexadecimal ipv4", "https://0x7f.0.0.1/h", ""},
+		{"hexadecimal whole", "https://0x7f000001/h", ""},
+		{"octal ipv4", "https://0177.0.0.1/h", ""},
+		{"short ipv4", "https://127.1/h", ""},
+		{"short private ipv4", "https://10.1/h", ""},
+		{"out of range ipv4", "https://1.2.3.256/h", ""},
+		{"a name with digits", "https://hook1.example2.com/h", HostPublic},
+		{"a name that starts with a number", "https://1.example.com/h", HostPublic},
+		{"a name with a hex-like label", "https://0xcafe.example.com/h", HostPublic},
 		{"dot localhost name", "https://app.localhost/h", ""},
 		{"dot internal name", "https://db.internal/h", ""},
 		{"dot local name", "https://printer.local/h", ""},
@@ -87,6 +97,10 @@ func TestSafeURLKeepsNoPathQueryOrPort(t *testing.T) {
 		"https://hooks.example.com:8443/services/T0/B0/secret?token=abc",
 	); got != "https://hooks.example.com" {
 		t.Fatalf("SafeURL = %q", got)
+	}
+
+	if got := SafeURL("http://[::1]:9000/hook?token=abc"); got != "http://[::1]" {
+		t.Fatalf("SafeURL of an IPv6 host = %q", got)
 	}
 }
 
