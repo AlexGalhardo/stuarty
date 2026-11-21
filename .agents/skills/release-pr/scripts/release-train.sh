@@ -181,6 +181,8 @@ publish_notes() {
 	gh workflow enable release
 	rm -f "$notes"
 	echo "published the GitHub release v$v"
+	# The site reads the latest release at build time (the landing buttons): rebuild and publish it now.
+	gh workflow run site.yml --ref main || echo "release-train: the site workflow was not dispatched" >&2
 }
 
 # Opens the pull request of the release branch when it has commits and none is open.
