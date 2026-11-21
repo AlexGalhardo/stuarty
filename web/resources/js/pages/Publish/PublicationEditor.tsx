@@ -283,9 +283,9 @@ export function PublicationEditor({
 		if (project === "") return;
 		let active = true;
 		createClient(new HttpTransport("/api/v1"))
-			.listJobs(project)
-			.then((res) => {
-				if (active) setJobs(res.jobs);
+			.listProjectJobs(project)
+			.then((list) => {
+				if (active) setJobs(list);
 			})
 			.catch((error: unknown) => {
 				if (active) setFailure(failureOf(error));

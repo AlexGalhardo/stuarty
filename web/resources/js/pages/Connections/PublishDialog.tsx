@@ -113,7 +113,7 @@ export function PublishDialog({
 		setJobs([]);
 		if (id === "") return;
 		try {
-			setJobs((await api().listJobs(id)).jobs);
+			setJobs(await api().listProjectJobs(id));
 		} catch (error) {
 			setFailure(failureOf(error));
 		}

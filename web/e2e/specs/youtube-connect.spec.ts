@@ -287,6 +287,87 @@ test.describe("youtube connect and publish @chromium-only", () => {
 		}
 	});
 
+	// VV-315: the dialog offers the exports of every timeline, asks for none, and the person still decides.
+	test("a project of two timelines posts the export of its second timeline", async ({
+		page,
+		request,
+	}) => {
+		const network = await fakeNetwork();
+		try {
+			await signInAsPerson(page);
+			await page.goto("/connections");
+			await page.getByRole("button", { name: "Set up Fake network" }).click();
+			await page.getByLabel("Client id").fill("e2e-client-id");
+			await page.getByLabel("Client secret").fill(CLIENT_SECRET);
+			await page.getByRole("button", { name: "Save and sign in" }).click();
+			await expect(page.locator("[data-signed-in]")).toContainText(
+				"E2E channel",
+			);
+			await page.getByRole("link", { name: "Back to Connections" }).click();
+			const row = page.locator("[data-social-account]").first();
+			await expect(row).toContainText("E2E channel");
+
+			const api = await caller(request);
+			const made = (await api("POST", "/projects", {
+				name: "Two timelines e2e",
+				preset: "9:16",
+			})) as { project_id: string };
+			const added = (await api("POST", `/projects/${made.project_id}/items`, {
+				kind: "timeline",
+				title: "Second cut",
+				preset: "16:9",
+			})) as { item: { timeline_id: string } };
+			const second = added.item.timeline_id;
+			seedExport(made.project_id);
+			const exportJob = seedExport(second);
+			const sent = () =>
+				network.received.filter((r) => r.includes("/videos")).length;
+			const before = sent();
+
+			await row.getByRole("button", { name: "Publish now" }).click();
+			const dialog = page.getByRole("dialog");
+			await dialog.getByLabel("Project").selectOption(made.project_id);
+			await dialog.getByLabel("Exported video").selectOption(exportJob);
+			await dialog.getByLabel("Title", { exact: true }).fill("Second cut post");
+			await dialog.getByLabel("No", { exact: true }).check();
+			await dialog.getByRole("button", { name: "Send for approval" }).click();
+			await expect(dialog.locator("[data-waiting]")).toContainText(
+				"Nothing has been sent yet",
+			);
+			expect(sent()).toBe(before);
+
+			const jobs = (await api(
+				"GET",
+				`/projects/${made.project_id}/jobs?timeline_id=${second}`,
+			)) as { jobs: { job_id: string; kind: string; state: string }[] };
+			expect(jobs.jobs.find((j) => j.kind === "publish.upload")?.state).toBe(
+				"waiting_approval",
+			);
+
+			await dialog.getByRole("link", { name: "Open Approvals" }).click();
+			const item = page
+				.locator("[data-approval-id]")
+				.filter({ hasText: "Second cut post" });
+			await expect(item.getByTestId("approval-summary")).toContainText(
+				`${exportJob}.mp4`,
+			);
+			await item.getByRole("button", { name: "Approve" }).click();
+			await expect(item).toHaveCount(0);
+			await expect.poll(sent).toBe(before + 1);
+		} finally {
+			const api = await caller(request);
+			const list = (await api("GET", "/connections")) as {
+				connections: { id: string; kind: string }[];
+			};
+			for (const connection of list.connections.filter(
+				(c) => c.kind === "fake",
+			)) {
+				await api("DELETE", `/connections/${connection.id}`);
+			}
+			await network.close();
+		}
+	});
+
 	test("the state and the code leave the address before the exchange ends", async ({
 		page,
 		request,

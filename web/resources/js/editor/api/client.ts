@@ -179,6 +179,9 @@ export interface ApiClient {
 	getJob(jobId: string): Promise<Job>;
 	cancelJob(jobId: string): Promise<Job>;
 	listJobs(projectId: string): Promise<JobListResult>;
+	// The jobs of every active timeline, for a screen that is about the project: a post may name the export of any of
+	// them, and the job list of a project of several timelines asks which one (SDD-003 section 1.7).
+	listProjectJobs(projectId: string): Promise<Job[]>;
 	getProject(projectId: string): Promise<ProjectGetResult>;
 	edit(projectId: string, request: EditRequest): Promise<EditResult>;
 	undo(projectId: string): Promise<EditResult>;
@@ -545,6 +548,34 @@ export function createClient(
 				{},
 			),
 		listJobs: (id) => call("GET", `${project(id)}/jobs`, READ_TIMEOUT_MS),
+		listProjectJobs: async (id) => {
+			const head = await call<ProjectGetResult>(
+				"GET",
+				project(id),
+				READ_TIMEOUT_MS,
+			);
+			const timelines = (head.items ?? []).filter(
+				(item) => item.kind === "timeline" && item.state === "active",
+			);
+			if (timelines.length < 2) {
+				const one = await call<JobListResult>(
+					"GET",
+					`${project(id)}/jobs`,
+					READ_TIMEOUT_MS,
+				);
+				return one.jobs;
+			}
+			const lists = await Promise.all(
+				timelines.map((item) =>
+					call<JobListResult>(
+						"GET",
+						`${project(id)}/jobs${query({ timeline_id: item.timeline_id })}`,
+						READ_TIMEOUT_MS,
+					),
+				),
+			);
+			return lists.flatMap((list) => list.jobs);
+		},
 		getProject: (id) =>
 			call("GET", `${project(id)}?detail=document`, READ_TIMEOUT_MS),
 		edit: (id, request) =>
