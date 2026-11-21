@@ -1065,6 +1065,85 @@ export interface ConnectionListResult {
 	connections: Connection[];
 }
 
+// The outbound webhooks (SDD-022). A webhook never carries its signing secret; the creation and the rotation answer
+// with it once.
+export interface WebhookEvent {
+	name: string;
+	description: string;
+}
+
+export interface WebhookEventListResult {
+	events: WebhookEvent[];
+}
+
+export interface WebhookLastDelivery {
+	id: string;
+	state: string;
+	status: number;
+	at: string;
+}
+
+export interface Webhook {
+	id: string;
+	name: string;
+	url: string;
+	events: string[];
+	enabled: boolean;
+	secret_set: boolean;
+	created_at: string;
+	updated_at: string;
+	last_delivery: WebhookLastDelivery | null;
+}
+
+export interface WebhookListResult {
+	webhooks: Webhook[];
+}
+
+export interface WebhookSecretResult extends Webhook {
+	secret: string;
+}
+
+export interface WebhookCreateRequest {
+	name: string;
+	url: string;
+	events: string[];
+	enabled?: boolean;
+}
+
+export interface WebhookUpdateRequest {
+	name?: string;
+	url?: string;
+	events?: string[];
+	enabled?: boolean;
+}
+
+export interface WebhookAttempt {
+	n: number;
+	status: number;
+	duration_ms: number;
+	error?: string;
+	response_bytes: number;
+}
+
+export interface WebhookDelivery {
+	id: string;
+	webhook_id: string;
+	event: string;
+	event_id: string;
+	kind: string;
+	state: string;
+	attempts: number;
+	max_attempts: number;
+	last_status: number;
+	last_error?: string;
+	at: string;
+	attempt_log: WebhookAttempt[];
+}
+
+export interface WebhookDeliveryListResult {
+	deliveries: WebhookDelivery[];
+}
+
 export interface ConnectionCreateRequest {
 	kind: string;
 	label: string;

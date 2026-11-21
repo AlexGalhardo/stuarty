@@ -1,0 +1,60 @@
+---
+title: "Webhooks: tell your other tools what happened"
+description: "Register an address that Stuarty calls when a post goes out, an export is ready, an approval waits or a job fails, check its signature, and send a delivery again."
+---
+
+## You will learn
+
+- how to register a webhook and choose its events;
+- what a delivery carries, and what it never carries;
+- how your receiver checks that a call came from your Stuarty;
+- how to see the deliveries, send a test and send one again.
+
+## The idea
+
+A **webhook** is an address of yours that Stuarty calls when something happens: Zapier, n8n, Make, a Discord channel, or your own server. Webhooks are outbound only: Stuarty receives none. With no webhook registered, nothing leaves your computer. A webhook is a destination you typed, so it is listed among [the ways out](/docs/getting-started/what-leaves-your-machine).
+
+| Event | When it fires |
+| --- | --- |
+| `publication.published` | a post went out; it carries the address of the post when it is public |
+| `publication.failed` | a post failed for good |
+| `export.ready` | an export finished |
+| `approval.requested` | something waits for you to approve it |
+| `job.failed` | a job failed |
+
+Each delivery is a JSON body with `event`, `id`, `occurred_at`, `workspace` and a `data` member that holds only identifiers, states, counts and sizes. It never holds a credential, a token, a file, a path, a text of yours or a prompt.
+
+## Register one
+
+In the app, open **Webhooks** in the sidebar, press **Add**, give it a name, the address and the events you want. The address is `https`, or `http` for `localhost` when your receiver runs on this machine. An address on a private network, a link-local address or a cloud metadata address is refused, and so is a name that turns into one when Stuarty connects.
+
+```text
+stuarty webhook:add --name n8n --endpoint https://hooks.example.com/stuarty --events export.ready,job.failed
+```
+
+The **signing secret** is shown once, with a copy button. Keep it in your receiver: Stuarty keeps it in the vault and cannot show it again. **Rotate secret** makes a new one and the old one stops verifying.
+
+## Check a delivery
+
+Every call is a `POST` with `Content-Type: application/json` and a header `Stuarty-Signature: t=<unix seconds>,v1=<hex>`. The value `v1` is the HMAC-SHA256, with your secret as the key, of the text `<t>.<body>` (the digits of `t`, a dot, the exact bytes of the body). Your receiver recomputes it, compares in constant time, and refuses a `t` more than 5 minutes from its clock. The `id` of an event is the same on a redelivery, so you may drop one you have already seen.
+
+## Deliveries, tests and retries
+
+A call that fails on the network, times out after 10 seconds, or answers `408`, `429` or `5xx` is tried again up to five times, waiting 10 s, 30 s, 90 s, 270 s and 810 s. An answer such as `403` is final, and a redirect is never followed, so give the final address. Open a webhook to see each delivery with its status, its attempts and how long each took; Stuarty keeps the size of the answer and never its text. **Send test** delivers a `webhook.test` event once, and **Send again** repeats a delivery with a fresh signature. If the vault is locked, deliveries wait and are sent after you unlock it.
+
+## Common mistakes
+
+- `E_VALIDATION` on `url`: the address is not `https`, is on a private network, or has a user name in it.
+- A receiver that rejects every call: it is checking the signature against the parsed JSON. Use the exact bytes of the body.
+- A delivery stuck as pending: the vault is locked, or the webhook is turned off.
+
+## What never leaves your computer
+
+- Only the events you chose, to the one address of that webhook, and only metadata.
+- The signing secret lives in the vault, is shown once, and is returned by no tool, command or endpoint.
+- An agent can read the list of webhooks with the host of each address, and cannot register one.
+
+## Next steps
+
+- [What leaves your machine](/docs/getting-started/what-leaves-your-machine)
+- [Approvals](/docs/guide/approvals)

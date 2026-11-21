@@ -53,6 +53,7 @@ describe("Sidebar", () => {
 			"Prompts",
 			"Memory",
 			"Connections",
+			"Webhooks",
 		]);
 	});
 

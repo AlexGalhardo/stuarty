@@ -111,6 +111,14 @@ import type {
 	VideoGenerateRequest,
 	VoiceGenerateRequest,
 	VoiceListResult,
+	Webhook,
+	WebhookCreateRequest,
+	WebhookDelivery,
+	WebhookDeliveryListResult,
+	WebhookEventListResult,
+	WebhookListResult,
+	WebhookSecretResult,
+	WebhookUpdateRequest,
 } from "./types";
 
 // Timeouts of SDD-012 section 4.3 item 4.
@@ -270,6 +278,16 @@ export interface ApiClient {
 	createConnection(request: ConnectionCreateRequest): Promise<Connection>;
 	removeConnection(id: string): Promise<Connection>;
 	testConnection(id: string): Promise<ConnectionTestResult>;
+	// The outbound webhooks (SDD-022). The signing secret is in the answer of the creation and of the rotation, once.
+	listWebhookEvents(): Promise<WebhookEventListResult>;
+	listWebhooks(): Promise<WebhookListResult>;
+	createWebhook(request: WebhookCreateRequest): Promise<WebhookSecretResult>;
+	updateWebhook(id: string, request: WebhookUpdateRequest): Promise<Webhook>;
+	removeWebhook(id: string): Promise<Webhook>;
+	rotateWebhookSecret(id: string): Promise<WebhookSecretResult>;
+	testWebhook(id: string): Promise<WebhookDelivery>;
+	listWebhookDeliveries(id: string): Promise<WebhookDeliveryListResult>;
+	redeliverWebhook(id: string, deliveryId: string): Promise<WebhookDelivery>;
 	// The AI providers (SDD-016). Setting a price is for a person in a browser session; any other
 	// caller gets E_PRIVILEGED_SESSION.
 	listProviders(): Promise<ProviderListResult>;
@@ -680,6 +698,46 @@ export function createClient(
 			call(
 				"POST",
 				`/connections/${encodeURIComponent(id)}/test`,
+				EDIT_TIMEOUT_MS,
+				{},
+			),
+		listWebhookEvents: () => call("GET", "/webhook-events", READ_TIMEOUT_MS),
+		listWebhooks: () => call("GET", "/webhooks", READ_TIMEOUT_MS),
+		createWebhook: (request) =>
+			call("POST", "/webhooks", EDIT_TIMEOUT_MS, request),
+		updateWebhook: (id, request) =>
+			call(
+				"PATCH",
+				`/webhooks/${encodeURIComponent(id)}`,
+				EDIT_TIMEOUT_MS,
+				request,
+			),
+		removeWebhook: (id) =>
+			call("DELETE", `/webhooks/${encodeURIComponent(id)}`, EDIT_TIMEOUT_MS),
+		rotateWebhookSecret: (id) =>
+			call(
+				"POST",
+				`/webhooks/${encodeURIComponent(id)}/rotate-secret`,
+				EDIT_TIMEOUT_MS,
+				{},
+			),
+		testWebhook: (id) =>
+			call(
+				"POST",
+				`/webhooks/${encodeURIComponent(id)}/test`,
+				EDIT_TIMEOUT_MS,
+				{},
+			),
+		listWebhookDeliveries: (id) =>
+			call(
+				"GET",
+				`/webhooks/${encodeURIComponent(id)}/deliveries`,
+				READ_TIMEOUT_MS,
+			),
+		redeliverWebhook: (id, deliveryId) =>
+			call(
+				"POST",
+				`/webhooks/${encodeURIComponent(id)}/deliveries/${encodeURIComponent(deliveryId)}/redeliver`,
 				EDIT_TIMEOUT_MS,
 				{},
 			),

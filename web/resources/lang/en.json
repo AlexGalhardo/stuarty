@@ -37,7 +37,8 @@
         "skills": "Skills",
         "prompts": "Prompts",
         "memory": "Memory",
-        "connections": "Connections"
+        "connections": "Connections",
+        "webhooks": "Webhooks"
       },
       "sidebar": {
         "title": "Sidebar",
@@ -2548,6 +2549,51 @@
       "secret_missing": "No credential: connect it again",
       "test_ok": "The destination answered {status}.",
       "test_failed": "The destination did not answer well (status {status})."
+    },
+    "webhooks": {
+      "title": "Webhooks",
+      "intro": "Tell your other tools what happened: Stuarty calls the address you register when a post goes out, an export is ready, an approval waits or a job fails. Only identifiers and states are sent, never a file or a text.",
+      "list": "Your webhooks",
+      "empty": "No webhook yet. Nothing leaves this computer until you register one.",
+      "new": "Add a webhook",
+      "name": "Name",
+      "url": "Address",
+      "url_hint": "https, or http for localhost. Addresses on a private network are refused.",
+      "events_legend": "Events to receive",
+      "add": "Add webhook",
+      "on": "On",
+      "off": "Off",
+      "turn_on": "Turn on",
+      "turn_off": "Turn off",
+      "test": "Send test",
+      "rotate": "Rotate secret",
+      "remove": "Remove",
+      "deliveries": "Deliveries",
+      "no_deliveries": "No delivery yet.",
+      "no_delivery": "No delivery yet",
+      "last_delivery": "Last delivery: {state}, {date}",
+      "redeliver": "Send again",
+      "attempts": "attempt {n} of {max}",
+      "status": "status {status}",
+      "attempt_line": "Attempt {n}: status {status}, {ms} ms {error}",
+      "secret_title": "Signing secret of {name}",
+      "secret_warning": "Copy it now and keep it in your receiver. It is shown once and Stuarty cannot show it again.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "secret_saved": "I saved it",
+      "state": {
+        "pending": "Waiting",
+        "succeeded": "Delivered",
+        "failed": "Failed"
+      },
+      "event": {
+        "publication_published": "A post went out",
+        "publication_failed": "A post failed",
+        "export_ready": "An export is ready",
+        "approval_requested": "An approval is waiting",
+        "job_failed": "A job failed",
+        "webhook_test": "Test"
+      }
     },
     "generate": {
       "open": {

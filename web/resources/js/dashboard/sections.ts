@@ -12,6 +12,7 @@ import {
 	Plug,
 	Send,
 	Sparkles,
+	Webhook,
 } from "lucide-react";
 
 // The sections of the dashboard sidebar, in the order of RF-311 (PRD-004) and
@@ -30,6 +31,7 @@ export const SECTION_KEYS = [
 	"prompts",
 	"memory",
 	"connections",
+	"webhooks",
 ] as const;
 
 export type SectionKey = (typeof SECTION_KEYS)[number];
@@ -53,6 +55,7 @@ const ICONS: Record<SectionKey, LucideIcon> = {
 	prompts: MessageSquareText,
 	memory: Brain,
 	connections: Plug,
+	webhooks: Webhook,
 };
 
 export const SECTIONS: readonly Section[] = SECTION_KEYS.map((key) => ({
