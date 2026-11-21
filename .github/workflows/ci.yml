@@ -112,15 +112,16 @@ jobs:
   # SDD-009 section 13.4. Together the shards of one system cover `./...`:
   #   export-K  every Nth test of engine/export by sorted name (N = export_n), no race
   #   engine    the rest of engine/
-  #   rest      everything outside engine/ (and outside web/contract when `contract`
-  #             is a shard of the system)
-  #   contract  web/contract, split out where `rest` ran past 13 minutes (Windows)
+  #   rest      everything outside engine/, web/app/servicetest and web/contract
+  #   service-K every Nth test of web/app/servicetest by sorted name (N = named_n), with -race
+  #   contract-K every Nth test of web/contract by sorted name (N = named_n), with -race
+  #             (`rest` ran past 20 minutes on all three systems: run 44880268307)
   # The layout differs per system on purpose. The pinned LGPL FFmpeg is installed on
   # Linux and Windows only while FFMPEG_SOURCE is "btbn". With FFMPEG_SOURCE="own" (D-017)
   # macOS installs the own build too, so its export tests run and macOS has three export
   # shards (a public repository runs five macOS jobs at a time, and the runs of two
   # release branches share that limit). Windows runs the export tests the slowest, so it
-  # has five export shards and a separate `contract` shard.
+  # has five export shards.
   # The `Test (<os>)` job below keeps the name the ruleset requires, checks that every
   # shard of its system passed (`shards` must equal the count here), merges the
   # coverage profiles and runs the gate.
@@ -135,19 +136,35 @@ jobs:
           - { os: ubuntu-latest, shard: export-3, export_n: 3 }
           - { os: ubuntu-latest, shard: engine }
           - { os: ubuntu-latest, shard: rest }
+          - { os: ubuntu-latest, shard: service-1, named_n: 3 }
+          - { os: ubuntu-latest, shard: service-2, named_n: 3 }
+          - { os: ubuntu-latest, shard: service-3, named_n: 3 }
+          - { os: ubuntu-latest, shard: contract-1, named_n: 2 }
+          - { os: ubuntu-latest, shard: contract-2, named_n: 2 }
           - { os: windows-latest, shard: export-1, export_n: 5 }
           - { os: windows-latest, shard: export-2, export_n: 5 }
           - { os: windows-latest, shard: export-3, export_n: 5 }
           - { os: windows-latest, shard: export-4, export_n: 5 }
           - { os: windows-latest, shard: export-5, export_n: 5 }
           - { os: windows-latest, shard: engine }
-          - { os: windows-latest, shard: rest, split_contract: "1" }
-          - { os: windows-latest, shard: contract }
+          - { os: windows-latest, shard: rest }
+          - { os: windows-latest, shard: service-1, named_n: 4 }
+          - { os: windows-latest, shard: service-2, named_n: 4 }
+          - { os: windows-latest, shard: service-3, named_n: 4 }
+          - { os: windows-latest, shard: service-4, named_n: 4 }
+          - { os: windows-latest, shard: contract-1, named_n: 3 }
+          - { os: windows-latest, shard: contract-2, named_n: 3 }
+          - { os: windows-latest, shard: contract-3, named_n: 3 }
           - { os: macos-latest, shard: export-1, export_n: 3 }
           - { os: macos-latest, shard: export-2, export_n: 3 }
           - { os: macos-latest, shard: export-3, export_n: 3 }
           - { os: macos-latest, shard: engine }
           - { os: macos-latest, shard: rest }
+          - { os: macos-latest, shard: service-1, named_n: 3 }
+          - { os: macos-latest, shard: service-2, named_n: 3 }
+          - { os: macos-latest, shard: service-3, named_n: 3 }
+          - { os: macos-latest, shard: contract-1, named_n: 2 }
+          - { os: macos-latest, shard: contract-2, named_n: 2 }
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     env:
@@ -155,7 +172,7 @@ jobs:
       # Frames that differ from a golden are written here and uploaded on failure.
       STUARTY_TEST_ARTIFACTS_DIR: ${{ github.workspace }}/golden-mismatch
       EXPORT_N: ${{ matrix.export_n }}
-      SPLIT_CONTRACT: ${{ matrix.split_contract }}
+      NAMED_N: ${{ matrix.named_n }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -213,11 +230,19 @@ jobs:
               exit
               ;;
             engine) pkgs="$(go list ./engine/... | grep -vE '/engine/export$')" ;;
-            rest)
-              pkgs="$(go list ./... | grep -vE '/engine(/|$)')"
-              if [ -n "$SPLIT_CONTRACT" ]; then pkgs="$(printf '%s\n' "$pkgs" | grep -vE '/web/contract(/|$)')"; fi
+            service-* | contract-*)
+              # The two packages that dominate `rest`: every test builds a store with every migration
+              # (about a second under -race) and web/contract starts real servers. 637 and 78 tests,
+              # sharded by sorted name like the export shards, with -race as before.
+              case "$SHARD" in
+                service-*) pkg=./web/app/servicetest/ ;;
+                contract-*) pkg=./web/contract/ ;;
+              esac
+              names="$(go test -list '^Test' "$pkg" | grep '^Test' | awk -v k="${SHARD##*-}" -v n="$NAMED_N" 'NR % n == k % n' | paste -sd'|' -)"
+              go test -race -count=1 -timeout=17m -coverpkg=./... -coverprofile=coverage.out -run "^(${names})"'$' "$pkg"
+              exit
               ;;
-            contract) pkgs="$(go list ./web/contract/...)" ;;
+            rest) pkgs="$(go list ./... | grep -vE '/engine(/|$)|/web/app/servicetest$|/web/contract$')" ;;
           esac
           # shellcheck disable=SC2086
           go test -race -count=1 -timeout=17m -coverpkg=./... -coverprofile=coverage.out $pkgs
@@ -282,9 +307,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-latest, shards: 5 }
-          - { os: windows-latest, shards: 8 }
-          - { os: macos-latest, shards: 5 }
+          - { os: ubuntu-latest, shards: 10 }
+          - { os: windows-latest, shards: 14 }
+          - { os: macos-latest, shards: 10 }
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
