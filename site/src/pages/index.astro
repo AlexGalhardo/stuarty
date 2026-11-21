@@ -341,6 +341,12 @@ import { withBase } from "@/lib/site";
 	}
 
 	/* On short windows the text of a clip tightens so it stays above the tracks. */
+	/* Short and narrow windows hold the buttons in two rows: the hero title gives up a little size. */
+	@media (max-height: 52rem) and (max-width: 79.99rem) {
+		html main[data-page="viewport"] .display-typer {
+			font-size: clamp(1.75rem, 4.6vh, 3rem);
+		}
+	}
 	@media (max-height: 52rem) {
 		html.timeline-on main[data-page="viewport"] .preview-text .display-title {
 			font-size: clamp(1.625rem, 4.6vh, 2.25rem);

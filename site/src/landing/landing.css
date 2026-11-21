@@ -212,6 +212,15 @@ main[data-expressive] .btn-glow:focus-visible {
   outline: 2px solid var(--c-edge);
   outline-offset: 3px;
 }
+/* The VPS guide button: the blue the Windows button had (white label 5.97:1 on the fill). */
+.btn-glow[data-kind="vps"] {
+  --c: oklch(0.5 0.17 252);
+  --c-edge: oklch(0.5 0.17 252);
+  --c-on: oklch(1 0 0);
+}
+.dark .btn-glow[data-kind="vps"] {
+  --c-edge: oklch(0.65 0.15 250);
+}
 /* Emerald, apart from the blue of the VPS button and the lime of the hero accent: white on the fill is 5.48:1. */
 .btn-glow[data-os="windows"] {
   --c: #047857;
@@ -273,6 +282,23 @@ main[data-expressive] .btn-glow:focus-visible {
 }
 .landing-actions-center {
   justify-content: center;
+}
+/* Without the beta notice the five buttons are one flat row that wraps as a whole (3 + 2 when five do not fit);
+   the downloads keep their group and list for assistive technology. */
+.landing-actions-flat {
+  align-items: center;
+  row-gap: 0.75rem;
+}
+/* Five do not fit in one row below 80rem: three per row, then two, centred. */
+@media (min-width: 40rem) and (max-width: 79.99rem) {
+  .landing-actions-flat {
+    max-width: 46rem;
+    margin-inline: auto;
+  }
+}
+.landing-actions-flat .landing-downloads,
+.landing-actions-flat .landing-download-list {
+  display: contents;
 }
 .landing-actions-center .landing-beta {
   justify-content: center;
