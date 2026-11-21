@@ -15,8 +15,8 @@ import { LIBRARY_TABS } from "./libraryTabs";
 
 // The material region of SDD-012 sections 6.1 and 6.4: a vertical rail of 40 px
 // with one icon tab per panel, and the panel of the selected tab beside it.
-// Alt+1 hides the panel and keeps the rail (docs/design-system.md 3.4.4); Alt+3
-// shows the History tab.
+// Alt+1 hides the panel and keeps the rail (docs/design-system.md 3.4.4). The
+// history is a sidebar of its own beside this region (HistorySidebar).
 export default function LeftPanel(): ReactNode {
 	const t = useT();
 	const runtime = useRuntime();

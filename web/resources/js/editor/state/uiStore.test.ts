@@ -59,6 +59,7 @@ describe("row heights", () => {
 		expect(store.getState().rowPx).toEqual({ visual: 160, audio: 32 });
 		expect(JSON.parse(saved.get("vv.layout") ?? "null")).toEqual({
 			rows: { visual: 160, audio: 32 },
+			historyOpen: false,
 		});
 		expect(createUiStore().store.getState().rowPx).toEqual({
 			visual: 160,
@@ -99,5 +100,27 @@ describe("in and out points", () => {
 		writer.setRangeIn(10);
 		writer.clearRange();
 		expect(store.getState().range).toEqual({ in: null, out: null });
+	});
+});
+
+describe("the history sidebar", () => {
+	test("toggles and keeps the library region apart", () => {
+		vi.stubGlobal("localStorage", {
+			getItem: () => null,
+			setItem: () => undefined,
+		});
+		const { store, writer } = createUiStore();
+		expect(store.getState().panels.history).toBe(false);
+		writer.toggleHistory();
+		expect(store.getState().panels).toEqual({
+			left: true,
+			inspector: true,
+			history: true,
+		});
+		writer.toggleLeftRegion();
+		expect(store.getState().panels.left).toBe(false);
+		expect(store.getState().panels.history).toBe(true);
+		writer.toggleHistory();
+		expect(store.getState().panels.history).toBe(false);
 	});
 });

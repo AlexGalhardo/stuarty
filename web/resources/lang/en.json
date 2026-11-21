@@ -2075,6 +2075,9 @@
       },
       "history": {
         "tab": "History",
+        "show": "Show history",
+        "hide": "Hide history",
+        "sidebar": "History sidebar",
         "revision": "r{revision}",
         "title": "History",
         "you": "You",

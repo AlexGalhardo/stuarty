@@ -22,7 +22,7 @@ test.describe("library tab rail", () => {
 		await expect(tabs.first()).toHaveAttribute("aria-selected", "true");
 		await expect(page.getByRole("region", { name: "Media" })).toBeVisible();
 		const last = tabs.last();
-		await expect(last).toHaveAccessibleName("History");
+		await expect(last).toHaveAccessibleName("Templates");
 
 		await tabs.first().focus();
 		await page.keyboard.press("ArrowDown");
@@ -33,7 +33,7 @@ test.describe("library tab rail", () => {
 		await page.keyboard.press("End");
 		await expect(last).toBeFocused();
 		await expect(last).toHaveAttribute("aria-selected", "true");
-		await expect(page.getByRole("region", { name: "History" })).toBeVisible();
+		await expect(page.getByRole("region", { name: "Templates" })).toBeVisible();
 		await page.keyboard.press("Home");
 		await expect(tabs.first()).toBeFocused();
 		// A rail tab is one tab stop: the others are not in the tab order.
@@ -54,10 +54,14 @@ test.describe("library tab rail", () => {
 		await expect(page.getByRole("tab", { name: "Media" })).toBeVisible();
 		await expect.poll(async () => (await aside.boundingBox())?.width).toBe(40);
 		// A click on a tab brings the panel back.
-		await page.getByRole("tab", { name: "History" }).click();
-		await expect(page.getByRole("region", { name: "History" })).toBeVisible();
+		await page.getByRole("tab", { name: "Templates" }).click();
+		await expect(page.getByRole("region", { name: "Templates" })).toBeVisible();
 		await page.keyboard.press("Alt+1");
-		await expect(page.getByRole("region", { name: "Media" })).toBeVisible();
+		await expect(page.getByRole("region", { name: "Templates" })).toHaveCount(
+			0,
+		);
+		await page.keyboard.press("Alt+1");
+		await expect(page.getByRole("region", { name: "Templates" })).toBeVisible();
 	});
 
 	test("a tab whose command is not in the registry is not drawn", async ({
@@ -79,7 +83,7 @@ test.describe("library tab rail", () => {
 			});
 		});
 		await page.goto(`/editor/${seeded.id}`);
-		await expect(page.getByRole("tab", { name: "History" })).toBeVisible();
+		await expect(page.getByRole("tab", { name: "Templates" })).toBeVisible();
 		await expect(page.getByRole("tab", { name: "Media" })).toHaveCount(0);
 		await page.unrouteAll({ behavior: "ignoreErrors" });
 	});
@@ -103,7 +107,7 @@ test.describe("library tab rail", () => {
 				// Every panel of the rail, one after the other.
 				const tabs = page.locator("[data-rail-tab]");
 				// The rail fills in when the registry answers.
-				await expect(tabs).toHaveCount(9);
+				await expect(tabs).toHaveCount(8);
 				const count = await tabs.count();
 				for (let i = 0; i < count; i++) {
 					await tabs.nth(i).click();

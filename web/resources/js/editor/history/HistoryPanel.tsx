@@ -75,7 +75,7 @@ function Row({
 		<li
 			data-revision={row.revision}
 			data-actor={row.actor}
-			className="flex items-start gap-1"
+			className="flex flex-wrap items-start gap-1"
 		>
 			{!row.provisional && (
 				<Checkbox
@@ -90,7 +90,7 @@ function Row({
 			<button
 				type="button"
 				aria-expanded={expanded}
-				className="grid min-w-0 flex-1 grid-cols-[auto_1fr_auto] items-center gap-x-2 gap-y-0.5 px-1 py-1.5 text-left hover:bg-accent"
+				className="grid min-w-36 flex-1 grid-cols-[auto_1fr_auto] items-center gap-x-2 gap-y-0.5 px-1 py-1.5 text-left hover:bg-accent"
 				onClick={onToggle}
 			>
 				<span className="font-mono text-xs text-muted-foreground tabular-nums">

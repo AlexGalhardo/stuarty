@@ -21,6 +21,7 @@ import RepeatDialog from "../timeline/RepeatDialog";
 import Timeline from "../timeline/Timeline";
 import { useShortcuts } from "../timeline/useShortcuts";
 import { FailureView } from "../ui/FailureView";
+import HistorySidebar from "./HistorySidebar";
 import InUseHost from "./InUseHost";
 import LeftPanel from "./LeftPanel";
 import PlayerRatioSelect from "./PlayerRatioSelect";
@@ -37,6 +38,7 @@ const RAIL_PX = 40;
 // of the later phases are not built yet, so the compact sizes apply.
 export interface PanelSizes {
 	library: number;
+	history: number;
 	inspector: number;
 	timeline: number;
 }
@@ -45,14 +47,22 @@ export interface PanelSizes {
 // preview still has PREVIEW_MIN_PX beside the open panels.
 const PREVIEW_MIN_PX = 360;
 
-export function panelSizes(viewportWidth: number): PanelSizes {
+// The history sidebar is a rail of RAIL_PX collapsed and this wide open; the
+// library gives way to it before the preview does.
+const HISTORY_OPEN_PX = 320;
+
+export function panelSizes(
+	viewportWidth: number,
+	historyOpen = false,
+): PanelSizes {
 	const wide = viewportWidth >= 1600;
 	const inspector = wide ? 360 : 280;
+	const history = historyOpen ? HISTORY_OPEN_PX : RAIL_PX;
 	const library = Math.min(
 		wide ? 640 : 480,
-		Math.max(RAIL_PX, viewportWidth - inspector - PREVIEW_MIN_PX),
+		Math.max(RAIL_PX, viewportWidth - inspector - history - PREVIEW_MIN_PX),
 	);
-	return { library, inspector, timeline: wide ? 300 : 240 };
+	return { library, history, inspector, timeline: wide ? 300 : 240 };
 }
 
 // The keys of the player (play, pause, shuttle) are rows of the registry.
@@ -87,7 +97,7 @@ export default function EditorShell({
 	const loadError = useDocumentState((s) => s.loadError);
 	const viewport = useViewportWidth();
 	const panels = useUiState((s) => s.panels);
-	const full = panelSizes(viewport);
+	const full = panelSizes(viewport, panels.history);
 	const sizes = {
 		...full,
 		library: panels.left ? full.library : RAIL_PX,
@@ -117,7 +127,7 @@ export default function EditorShell({
 			className="grid h-dvh min-h-0 bg-ed-bg text-foreground"
 			style={{
 				gridTemplateRows: `auto minmax(0, 1fr) ${sizes.timeline}px`,
-				gridTemplateColumns: `${sizes.library}px minmax(0, 1fr) ${sizes.inspector}px`,
+				gridTemplateColumns: `${sizes.library}px ${sizes.history}px minmax(0, 1fr) ${sizes.inspector}px`,
 			}}
 		>
 			<div className="col-span-full">
@@ -148,6 +158,7 @@ export default function EditorShell({
 				)}
 			</div>
 			<LeftPanel />
+			<HistorySidebar />
 			<main
 				aria-label={t("ui.editor.panels.preview")}
 				data-landmark="3"
