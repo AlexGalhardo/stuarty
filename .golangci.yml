@@ -89,6 +89,8 @@ linters:
           # The deny prefix of vukem also matches the module path stuarty.
           allow:
             - github.com/AlexGalhardo/stuarty/core
+            # The validation package of vukem, pure and standard library only (D-124).
+            - github.com/AlexGalhardo/vukem/z
           deny:
             - pkg: github.com/AlexGalhardo/stuarty/engine
               desc: core never imports engine (ADR-0001 rule 1)
