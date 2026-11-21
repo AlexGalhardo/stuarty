@@ -96,7 +96,7 @@ type imageEditInput struct {
 
 func (s *svc) registerImageEditKind() {
 	s.kinds[JobImageEdit] = &ApprovableKind{
-		Name: JobImageEdit, Scope: ScopeEdit, Prepare: s.prepareImageEdit, Run: s.runImageEdit,
+		Name: JobImageEdit, Scope: ScopeEdit, ProjectWide: true, Prepare: s.prepareImageEdit, Run: s.runImageEdit,
 	}
 }
 
