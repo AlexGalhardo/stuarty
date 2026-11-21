@@ -422,7 +422,12 @@ func describeImageFileImport(doc *openapi.Document) {
 			}
 
 			str := func(name, desc string) openapi.Parameter {
-				return openapi.Parameter{Name: name, In: "query", Description: desc, Schema: openapi.Schema{"type": "string"}}
+				return openapi.Parameter{
+					Name:        name,
+					In:          "query",
+					Description: desc,
+					Schema:      openapi.Schema{"type": "string"},
+				}
 			}
 			num := func(name, desc string) openapi.Parameter {
 				return openapi.Parameter{
@@ -437,9 +442,15 @@ func describeImageFileImport(doc *openapi.Document) {
 				str("image_id", "Import as a layer of this image document instead of a new one."),
 				num("width", "Width in pixels of the new document."),
 				num("height", "Height in pixels of the new document."),
-				num("base_revision", "The revision of the image the layer is added to; a stale one is E_STALE_REVISION."),
+				num(
+					"base_revision",
+					"The revision of the image the layer is added to; a stale one is E_STALE_REVISION.",
+				),
 				num("wait_ms", "Wait up to this many milliseconds for the import to finish."),
-				str("idempotency_key", "Makes a retry return the first answer; the Idempotency-Key header does the same."),
+				str(
+					"idempotency_key",
+					"Makes a retry return the first answer; the Idempotency-Key header does the same.",
+				),
 				{
 					Name: "dry_run", In: "query", Description: "Validate and report, change nothing.",
 					Schema: openapi.Schema{"type": "boolean"},

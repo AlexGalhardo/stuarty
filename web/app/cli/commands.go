@@ -455,8 +455,10 @@ var lintCmd = &spec{
 	name:     "lint",
 	timeline: true,
 	summary:  "check a project against every lint rule (an edit result runs only the fast rules, lint_scope fast)",
-	usage: []string{"stuarty lint --project <id> [--severity error|warning] [--cursor c] [--limit n] [--strict]",
-		"stuarty lint --project <id> --preset <id> [--start t] [--end t]"},
+	usage: []string{
+		"stuarty lint --project <id> [--severity error|warning] [--cursor c] [--limit n] [--strict]",
+		"stuarty lint --project <id> --preset <id> [--start t] [--end t]",
+	},
 	example: "stuarty lint --project prj_7k2m9x4q1b --json",
 	project: true,
 	flags: append([]flagDef{
@@ -467,7 +469,11 @@ var lintCmd = &spec{
 			Usage:   "error lists only errors; warning lists everything",
 		},
 		{Name: "strict", Kind: kindBool, Default: "false", Usage: "exit 1 when there is at least one error finding"},
-		{Name: "preset", Kind: kindString, Usage: "the fit check of an export preset instead of the lint, as export:check"},
+		{
+			Name:  "preset",
+			Kind:  kindString,
+			Usage: "the fit check of an export preset instead of the lint, as export:check",
+		},
 		{Name: "start", Kind: kindString, Usage: "with --preset: first time of the range to check"},
 		{Name: "end", Kind: kindString, Usage: "with --preset: end of the range to check"},
 	}, pageFlags("25")...),

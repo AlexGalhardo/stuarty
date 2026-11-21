@@ -34,9 +34,9 @@ func TestCommandHelpStaysInsideItsCaps(t *testing.T) {
 		t.Errorf("the hint is %d characters", got)
 	}
 
-	close := unknownCommand(reg, "", "track.ad")
-	if !strings.Contains(close.Hint, "track.add") {
-		t.Errorf("the closest names of track.ad are missing track.add: %q", close.Hint)
+	near := unknownCommand(reg, "", "track.ad")
+	if !strings.Contains(near.Hint, "track.add") {
+		t.Errorf("the closest names of track.ad are missing track.add: %q", near.Hint)
 	}
 }
 
