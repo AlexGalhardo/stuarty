@@ -270,6 +270,54 @@ func authorize(ctx context.Context, method, projectID string) (Caller, error) {
 	return authorizeScope(ctx, scope, projectID)
 }
 
+// LockedAllowed are the operations that answer while the studio is locked: they read no content of the user
+// (SDD-007 section 3.9 item 6). Every other operation of the Service answers E_LOCKED first.
+var LockedAllowed = map[string]bool{
+	"CommandHelp": true, "ExportPresetList": true, "ToolsStatus": true, "Doctor": true,
+}
+
+// Gate says whether the studio is open. The account manager is the one implementation; with none, the
+// Service is always open (a workspace with no account, a test, a network server).
+type Gate interface {
+	// Check returns nil when operations may read and write, and an error while the studio is locked.
+	Check() error
+}
+
+// locked is the first step of every operation: E_LOCKED while the gate is closed, before the caller or the
+// request is looked at, so a locked studio tells a stranger nothing.
+func (s *svc) locked(method string) error {
+	if s.gate == nil || LockedAllowed[method] {
+		return nil
+	}
+
+	if s.gate.Check() == nil {
+		return nil
+	}
+
+	return newError(CodeLocked, "Stuarty is locked: unlock Stuarty with your password.").
+		withHint("unlock Stuarty with your password").
+		withDetail("reason", "locked")
+}
+
+// authorize is the method form of authorize: the gate first, then the caller.
+func (s *svc) authorize(ctx context.Context, method, projectID string) (Caller, error) {
+	if err := s.locked(method); err != nil {
+		return Caller{}, err
+	}
+
+	return authorize(ctx, method, projectID)
+}
+
+// authorizeScope is the method form of authorizeScope: the gate first, then the caller. An operation that
+// takes its scope from the request has no entry in LockedAllowed, so it is always gated.
+func (s *svc) authorizeScope(ctx context.Context, scope, projectID string) (Caller, error) {
+	if err := s.locked(""); err != nil {
+		return Caller{}, err
+	}
+
+	return authorizeScope(ctx, scope, projectID)
+}
+
 // authorizeScope is authorize for a method whose scope depends on the request:
 // JobStart needs render for an export and media for a transcription. An empty
 // scope is one that no caller holds.
@@ -301,12 +349,12 @@ func authorizeScope(ctx context.Context, scope, projectID string) (Caller, error
 // its project before it is held to the key, and before anything of that project is read. A timeline of another
 // project and an id of nothing are refused alike, with the refusal authorize gives a project outside the key.
 func (s *svc) authorizeProject(ctx context.Context, method, id string) (Caller, error) {
-	return authorize(ctx, method, s.keyProjectOf(ctx, id))
+	return s.authorize(ctx, method, s.keyProjectOf(ctx, id))
 }
 
 // authorizeProjectScope is authorizeProject for a method whose scope depends on the request.
 func (s *svc) authorizeProjectScope(ctx context.Context, scope, id string) (Caller, error) {
-	return authorizeScope(ctx, scope, s.keyProjectOf(ctx, id))
+	return s.authorizeScope(ctx, scope, s.keyProjectOf(ctx, id))
 }
 
 // keyProjectOf is the project an id stands for, as a key limited to one project is held to it: the project of a

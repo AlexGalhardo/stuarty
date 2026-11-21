@@ -12,6 +12,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/account"
 	"github.com/AlexGalhardo/stuarty/service/agenthost"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 	"github.com/AlexGalhardo/stuarty/web/app/auth"
@@ -46,6 +47,12 @@ type Deps struct {
 	// Auth is the credential side of network mode: users, the session guard and
 	// the keys. It is required with Network and unused without it.
 	Auth *auth.Network
+	// Account is the local account (ADR-0049); nil in network mode, where its routes answer E_NOT_FOUND. With
+	// it, a launch code never privileges a session: only the password does (SDD-007 section 3.9 item 5).
+	Account *account.Manager
+	// AccountApply creates the account in a workspace that holds data (SDD-005 section 5.16.3); nil only stores
+	// the record.
+	AccountApply account.Apply
 	// Google is the optional Google sign-in of network mode (SDD-007 section 4.7); nil leaves its routes
 	// answering E_NOT_FOUND, as in local mode.
 	Google *auth.Google
@@ -96,6 +103,11 @@ func Routes(d *Deps) func(r *router.Router, app *vukem.App) error {
 
 		if d.Now == nil {
 			d.Now = time.Now
+		}
+
+		if d.Account != nil {
+			// A locked studio has no session left (SDD-007 section 3.9 item 4).
+			d.Account.OnLock(d.Sessions.Clear)
 		}
 
 		installErrors(r.Services())
@@ -154,7 +166,7 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		if slices.Contains(openPaths, r.URL.Path) {
+		if slices.Contains(openPaths, r.URL.Path) || (h.Account != nil && accountOpen(r)) {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -216,8 +228,32 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 			return
 		}
 
+		// A locked studio answers nothing but the sign-in: the Service refuses each operation, and this refusal
+		// covers the routes that never reach one (the streams, the bytes). A page is drawn: it holds no data.
+		if h.refuseWhileLocked(w, r) {
+			return
+		}
+
 		next.ServeHTTP(w, r.WithContext(service.WithCaller(r.Context(), caller)))
 	})
+}
+
+// refuseWhileLocked answers E_LOCKED to a request that is not a page and not an account route while the studio
+// is locked, and records the activity the idle lock counts from otherwise. It reports whether it answered.
+func (h *apiHandler) refuseWhileLocked(w http.ResponseWriter, r *http.Request) bool {
+	if h.Account == nil {
+		return false
+	}
+
+	if h.Account.Check() != nil && !isPageNavigation(r) && !strings.HasPrefix(r.URL.Path, BasePathAuth+"/account") {
+		web.Fail(w, r, accountError(account.ErrLocked))
+
+		return true
+	}
+
+	h.Account.Touch()
+
+	return false
 }
 
 // bearerCaller is the caller of an Authorization header in local mode: the session token of a hosted

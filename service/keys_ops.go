@@ -104,7 +104,7 @@ type KeyRevokeRequest struct {
 // logged in, in network mode. A key can never manage keys (T-33), and local
 // mode has no users, so there is nothing to find there.
 func (s *svc) keyCaller(ctx context.Context, method string) (Caller, error) {
-	c, err := authorize(ctx, method, "")
+	c, err := s.authorize(ctx, method, "")
 	if err != nil {
 		return Caller{}, err
 	}

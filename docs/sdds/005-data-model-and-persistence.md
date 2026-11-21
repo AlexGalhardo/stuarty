@@ -1417,7 +1417,7 @@ CREATE TABLE webhook_attempts (
 
 ### 5.17 `accounts` and the encrypted fields (ADR-0049, SDD-007 section 3.9)
 
-Migration `20261120140000_create_accounts_table`. One row, at most: `CHECK (id = 1)`.
+Migration `20261121200000_create_accounts_table`. One row, at most: `CHECK (id = 1)`.
 
 ```sql
 CREATE TABLE accounts (

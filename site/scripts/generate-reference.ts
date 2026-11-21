@@ -158,6 +158,7 @@ const STATUS_NUMBERS: Record<string, number> = {
 	StatusNotFound: 404,
 	StatusMethodNotAllowed: 405,
 	StatusConflict: 409,
+	StatusLocked: 423,
 	StatusRequestEntityTooLarge: 413,
 	StatusUnprocessableEntity: 422,
 	StatusTooManyRequests: 429,

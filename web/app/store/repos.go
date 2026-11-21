@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/account"
 	"github.com/AlexGalhardo/stuarty/service/agenthost"
 	"github.com/AlexGalhardo/stuarty/service/approval"
 	"github.com/AlexGalhardo/stuarty/service/assets"
@@ -43,6 +44,7 @@ func (r repos) Publications() publish.Store              { return publicationRep
 func (r repos) Blog() destinations.Store                 { return blogRepo(r) }
 func (r repos) Chat() agenthost.Store                    { return chatRepo(r) }
 func (r repos) Webhooks() webhooks.Store                 { return webhookRepo(r) }
+func (r repos) Accounts() account.Store                  { return accountRepo(r) }
 
 // nullJSON stores an empty raw message as NULL.
 func nullJSON(m json.RawMessage) any {

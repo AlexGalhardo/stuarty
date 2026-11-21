@@ -856,7 +856,7 @@ func uploadKey(in *publishInput) string {
 
 // PublishValidate checks a post and says what a person would be asked to approve. It sends nothing.
 func (s *svc) PublishValidate(ctx context.Context, req PublishValidateRequest) (*PublishValidateResult, error) {
-	c, err := authorize(ctx, "PublishValidate", req.ProjectID)
+	c, err := s.authorize(ctx, "PublishValidate", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}

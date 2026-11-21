@@ -113,7 +113,7 @@ func (s *svc) assetResult(a *LibraryAsset) *AssetResult {
 
 // AssetGet is the entry of one file, with its origin and the projects that use it (RF-321).
 func (s *svc) AssetGet(ctx context.Context, req AssetRef) (*AssetResult, error) {
-	c, err := authorize(ctx, "AssetGet", "")
+	c, err := s.authorize(ctx, "AssetGet", "")
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +135,7 @@ func (s *svc) AssetGet(ctx context.Context, req AssetRef) (*AssetResult, error) 
 
 // AssetUses lists the projects that use a file.
 func (s *svc) AssetUses(ctx context.Context, req AssetUsesRequest) (*AssetUsesResult, error) {
-	c, err := authorize(ctx, "AssetUses", "")
+	c, err := s.authorize(ctx, "AssetUses", "")
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func (s *svc) AssetUses(ctx context.Context, req AssetUsesRequest) (*AssetUsesRe
 
 // AssetSetInfo sets the description, the rights note and the reuse mark of a file.
 func (s *svc) AssetSetInfo(ctx context.Context, req AssetSetInfoRequest) (*AssetResult, error) {
-	c, err := authorize(ctx, "AssetSetInfo", "")
+	c, err := s.authorize(ctx, "AssetSetInfo", "")
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +216,7 @@ func (s *svc) AssetSetInfo(ctx context.Context, req AssetSetInfoRequest) (*Asset
 
 // AssetTag adds and removes tags of a file.
 func (s *svc) AssetTag(ctx context.Context, req AssetTagRequest) (*AssetResult, error) {
-	c, err := authorize(ctx, "AssetTag", "")
+	c, err := s.authorize(ctx, "AssetTag", "")
 	if err != nil {
 		return nil, err
 	}

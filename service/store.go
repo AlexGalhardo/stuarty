@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/AlexGalhardo/stuarty/core/project"
+	"github.com/AlexGalhardo/stuarty/service/account"
 	"github.com/AlexGalhardo/stuarty/service/agenthost"
 	"github.com/AlexGalhardo/stuarty/service/approval"
 	"github.com/AlexGalhardo/stuarty/service/assets"
@@ -81,6 +82,8 @@ type Repos interface {
 	Images() ImageRepo
 	Connections() connections.Store
 	Approvals() approval.Store
+	// Accounts is the one local account of the workspace (SDD-005 section 5.16).
+	Accounts() account.Store
 	Library() library.Index
 	AssetLibrary() assets.Store
 	Publications() publish.Store

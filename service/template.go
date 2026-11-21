@@ -250,7 +250,7 @@ func templateLine(t *TemplateSummary) string {
 
 // TemplateList pages the library, newest first.
 func (s *svc) TemplateList(ctx context.Context, req TemplateListRequest) (*TemplateListResult, error) {
-	c, err := authorize(ctx, "TemplateList", "")
+	c, err := s.authorize(ctx, "TemplateList", "")
 	if err != nil {
 		return nil, err
 	}
@@ -428,7 +428,7 @@ func (s *svc) TemplateInstantiate(
 	ctx context.Context,
 	req TemplateInstantiateRequest,
 ) (*TemplateInstantiateResult, error) {
-	c, err := authorize(ctx, "TemplateInstantiate", "")
+	c, err := s.authorize(ctx, "TemplateInstantiate", "")
 	if err != nil {
 		return nil, err
 	}

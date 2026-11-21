@@ -67,7 +67,7 @@ func templateFileName(id string) string { return id + ".stuarty-template.zip" }
 // TemplateExport writes the template file of a template and says where to get
 // it (SDD-005 section 15): manifest.json and template.json with flat names.
 func (s *svc) TemplateExport(ctx context.Context, req TemplateRef) (*FileResult, error) {
-	c, err := authorize(ctx, "TemplateExport", "")
+	c, err := s.authorize(ctx, "TemplateExport", "")
 	if err != nil {
 		return nil, err
 	}
@@ -199,7 +199,7 @@ func (s *svc) openTemplateFile(ctx context.Context, c Caller, id string) (*File,
 // TemplateImport reads a template file under the archive policy of SDD-007
 // section 7.6 and stores its template. Nothing is written for a refused file.
 func (s *svc) TemplateImport(ctx context.Context, req TemplateImportRequest) (*TemplateResult, error) {
-	c, err := authorize(ctx, "TemplateImport", "")
+	c, err := s.authorize(ctx, "TemplateImport", "")
 	if err != nil {
 		return nil, err
 	}

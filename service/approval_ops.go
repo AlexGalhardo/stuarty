@@ -120,6 +120,10 @@ func approvalCaller(c Caller) approval.Caller {
 // missing caller is E_UNAUTHORIZED; anyone who is not a privileged browser session is
 // E_PRIVILEGED_SESSION, whatever scope it holds, so an agent learns one thing; then the scope.
 func (s *svc) person(ctx context.Context, method string) (Caller, error) {
+	if err := s.locked(method); err != nil {
+		return Caller{}, err
+	}
+
 	c, ok := CallerFrom(ctx)
 	if !ok {
 		return Caller{}, newError(CodeUnauthorized, "the request carries no credentials.").
@@ -130,7 +134,7 @@ func (s *svc) person(ctx context.Context, method string) (Caller, error) {
 		return Caller{}, privilegedError(method)
 	}
 
-	return authorize(ctx, method, "")
+	return s.authorize(ctx, method, "")
 }
 
 // privilegedHints say where a person does what an agent was refused; the method not listed is about approvals.
@@ -414,7 +418,7 @@ func (s *svc) ApprovalList(ctx context.Context, req ApprovalListRequest) (*Appro
 
 // ApprovalGet returns one request.
 func (s *svc) ApprovalGet(ctx context.Context, req ApprovalRef) (*approval.Request, error) {
-	c, err := authorize(ctx, "ApprovalGet", "")
+	c, err := s.authorize(ctx, "ApprovalGet", "")
 	if err != nil {
 		return nil, err
 	}
@@ -606,7 +610,7 @@ func (s *svc) approve(ctx context.Context, tx Tx, row *approval.Row, decidedBy, 
 
 // ApprovalRuleList returns every rule.
 func (s *svc) ApprovalRuleList(ctx context.Context, _ ApprovalRuleListRequest) (*ApprovalRuleListResult, error) {
-	c, err := authorize(ctx, "ApprovalRuleList", "")
+	c, err := s.authorize(ctx, "ApprovalRuleList", "")
 	if err != nil {
 		return nil, err
 	}
@@ -849,7 +853,7 @@ func (x *sight) actor(by string) string {
 // workspace and of their own projects, and the spending of their own projects: the workspace line adds up everyone's
 // spending, so it is for an administrator (VV-372).
 func (s *svc) CostSummary(ctx context.Context, _ CostSummaryRequest) (*CostSummaryResult, error) {
-	c, err := authorize(ctx, "CostSummary", "")
+	c, err := s.authorize(ctx, "CostSummary", "")
 	if err != nil {
 		return nil, err
 	}

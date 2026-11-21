@@ -22,6 +22,9 @@ const (
 	CodeLintBlocking     = "E_LINT_BLOCKING"
 	CodeClientClosed     = "E_CLIENT_CLOSED"
 	CodeMethodNotAllowed = "E_METHOD_NOT_ALLOWED"
+	// CodeLocked is an account that exists with nobody signed in: nothing of the user's content is read or
+	// written (ADR-0049, SDD-007 section 3.9).
+	CodeLocked = "E_LOCKED"
 
 	// CodeConnectionNotFound, CodeConnectionDestination and CodeVaultLocked are the codes of SDD-014 section 7.
 	CodeConnectionNotFound    = "E_CONNECTION_NOT_FOUND"
@@ -97,6 +100,8 @@ func (e *Error) HTTPStatus() int {
 		return http.StatusBadGateway
 	case CodeQueueFull, CodeRateLimited:
 		return http.StatusTooManyRequests
+	case CodeLocked:
+		return http.StatusLocked
 	case CodeClientClosed:
 		return StatusClientClosed
 	case CodePublish:

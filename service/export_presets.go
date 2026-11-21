@@ -79,7 +79,7 @@ type CodecReporter interface {
 
 // ExportPresetList returns the presets, and with Codecs the codecs this machine offers.
 func (s *svc) ExportPresetList(ctx context.Context, req ExportPresetListRequest) (*ExportPresetListResult, error) {
-	if _, err := authorize(ctx, "ExportPresetList", ""); err != nil {
+	if _, err := s.authorize(ctx, "ExportPresetList", ""); err != nil {
 		return nil, err
 	}
 

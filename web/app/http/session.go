@@ -24,6 +24,13 @@ func (h *apiHandler) launch(c *web.Ctx) error {
 	}
 
 	privileged, ok := h.Launch.Redeem(c.Query("code"))
+
+	// With an account, only the password makes a person: a launch code, whoever asked for it, does not
+	// (ADR-0049, SDD-007 section 3.9 item 5).
+	if h.Account != nil {
+		privileged = false
+	}
+
 	if !ok {
 		return &service.Error{
 			Code: service.CodeUnauthorized, Message: "the launch code is not valid.",
@@ -36,23 +43,29 @@ func (h *apiHandler) launch(c *web.Ctx) error {
 		return err
 	}
 
-	// Secure only over TLS: loopback is plain HTTP and Safari drops a Secure cookie there (SDD-007 section 3.5).
-	c.SetCookie(&http.Cookie{ //nolint:gosec // see above
-		Name: auth.LocalCookieName(
-			browserPort(c.Request()),
-		),
-		Value:    id,
-		Path:     "/",
-		HttpOnly: true,
-		SameSite: http.SameSiteStrictMode,
-		MaxAge:   auth.SessionMaxAge,
-		Secure:   c.Request().TLS != nil,
-	})
+	h.setSessionCookie(c, id, auth.SessionMaxAge)
 	c.SetHeader("Cache-Control", "no-store")
 	c.SetHeader("Referrer-Policy", "no-referrer")
 
 	return c.RedirectStatus(http.StatusSeeOther, "/")
 }
+
+// setSessionCookie writes the cookie of the browser session of local mode. Secure only over TLS: loopback is
+// plain HTTP and Safari drops a Secure cookie there (SDD-007 section 3.5). A negative maxAge clears it.
+func (h *apiHandler) setSessionCookie(c *web.Ctx, id string, maxAge int) {
+	c.SetCookie(&http.Cookie{ //nolint:gosec // see above
+		Name:     auth.LocalCookieName(browserPort(c.Request())),
+		Value:    id,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   maxAge,
+		Secure:   c.Request().TLS != nil,
+	})
+}
+
+// clearSessionCookie ends the cookie of this browser.
+func (h *apiHandler) clearSessionCookie(c *web.Ctx) { h.setSessionCookie(c, "", -1) }
 
 // systemLaunch is POST /api/v1/system/launch: a new launch code (SDD-007 section 3.4 item 3). The
 // bearer token alone cannot tell the desktop shell from an agent, so only a request that also
@@ -63,7 +76,7 @@ func (h *apiHandler) systemLaunch(c *web.Ctx, _ noIn) (launchOut, error) {
 		return launchOut{}, err
 	}
 
-	privileged := auth.IsLauncher(h.LauncherSecret, c.Request().Header.Get(auth.LauncherHeader))
+	privileged := h.Account == nil && auth.IsLauncher(h.LauncherSecret, c.Request().Header.Get(auth.LauncherHeader))
 
 	code, err := h.Launch.Issue(privileged)
 	if err != nil {

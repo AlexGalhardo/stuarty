@@ -1030,6 +1030,39 @@ var Endpoints = []Endpoint{
 		ID: "auth.logout", Method: http.MethodPost, Path: "/auth/logout", Root: true, Status: 200,
 		Summary: "End the browser session (network mode)",
 	},
+	// The local account (ADR-0049, SDD-007 section 3.9): local mode only.
+	{
+		ID: "account.state", Method: http.MethodGet, Path: "/auth/account", Root: true, Status: 200,
+		Summary: "Whether an account exists and whether the studio is locked (local mode)",
+	},
+	{
+		ID: "account.create", Method: http.MethodPost, Path: "/auth/account/create", Root: true, Status: 200,
+		Summary: "Create the account and get the recovery key, once (local mode)",
+	},
+	{
+		ID: "account.login", Method: http.MethodPost, Path: "/auth/account/login", Root: true, Status: 200,
+		Summary: "Unlock the studio with the username or the e-mail and the password (local mode)",
+	},
+	{
+		ID: "account.logout", Method: http.MethodPost, Path: "/auth/account/logout", Root: true, Status: 200,
+		Summary: "Lock the studio and end every session (a person only; local mode)",
+	},
+	{
+		ID: "account.recover", Method: http.MethodPost, Path: "/auth/account/recover", Root: true, Status: 200,
+		Summary: "Set a new password with the recovery key and unlock the studio (local mode)",
+	},
+	{
+		ID: "account.password", Method: http.MethodPost, Path: "/auth/account/password", Root: true, Status: 200,
+		Summary: "Change the password (a person only; local mode)",
+	},
+	{
+		ID: "account.settings", Method: http.MethodPut, Path: "/auth/account/settings", Root: true, Status: 200,
+		Summary: "Set the idle lock (a person only; local mode)",
+	},
+	{
+		ID: "account.settings.get", Method: http.MethodGet, Path: "/auth/account/settings", Root: true, Status: 200,
+		Summary: "Read the idle lock (a person only; local mode)",
+	},
 	// The optional Google sign-in of network mode (SDD-007 section 4.7, SDD-014 section 12).
 	{
 		ID: "google.status", Method: http.MethodGet, Path: "/auth/google", Root: true, Status: 200,

@@ -32,6 +32,10 @@ func chatPersonError() *Error {
 // chatPerson is the check of the operations of a person: the caller class first, so that an
 // agent learns one thing, then the scope and the project.
 func (s *svc) chatPerson(ctx context.Context, method, projectID string) (Caller, error) {
+	if err := s.locked(method); err != nil {
+		return Caller{}, err
+	}
+
 	c, ok := CallerFrom(ctx)
 	if !ok {
 		return Caller{}, newError(CodeUnauthorized, "the request carries no credentials.").
@@ -63,7 +67,7 @@ func (s *svc) chatProject(ctx context.Context, c Caller, projectID string) (*Pro
 // chatSession loads a session the caller may see. A session of another project, and one of a
 // project the caller may not see, are as missing as an id that does not exist.
 func (s *svc) chatSession(ctx context.Context, method, id string) (Caller, *agenthost.Session, error) {
-	c, err := authorizeScope(ctx, Scopes[method], "")
+	c, err := s.authorizeScope(ctx, Scopes[method], "")
 	if err != nil {
 		return Caller{}, nil, err
 	}
@@ -95,6 +99,10 @@ func (s *svc) chatSession(ctx context.Context, method, id string) (Caller, *agen
 
 // chatPersonSession is chatSession for the operations of a person.
 func (s *svc) chatPersonSession(ctx context.Context, method, id string) (Caller, *agenthost.Session, error) {
+	if err := s.locked(method); err != nil {
+		return Caller{}, nil, err
+	}
+
 	c, ok := CallerFrom(ctx)
 	if !ok {
 		return Caller{}, nil, newError(CodeUnauthorized, "the request carries no credentials.").
@@ -168,7 +176,7 @@ func (s *svc) chatAudit(ctx context.Context, actor, action, projectID, subject s
 // ---- profiles ----
 
 func (s *svc) AgentProfileList(ctx context.Context, _ AgentProfileListRequest) (*AgentProfileListResult, error) {
-	c, err := authorize(ctx, "AgentProfileList", "")
+	c, err := s.authorize(ctx, "AgentProfileList", "")
 	if err != nil {
 		return nil, err
 	}

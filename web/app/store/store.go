@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/account"
 	"github.com/AlexGalhardo/stuarty/service/agenthost"
 	"github.com/AlexGalhardo/stuarty/service/approval"
 	"github.com/AlexGalhardo/stuarty/service/assets"
@@ -119,6 +120,7 @@ func (p *projectTx) Publications() publish.Store              { return p.tx.Publ
 func (p *projectTx) Blog() destinations.Store                 { return p.tx.Blog() }
 func (p *projectTx) Chat() agenthost.Store                    { return p.tx.Chat() }
 func (p *projectTx) Webhooks() webhooks.Store                 { return p.tx.Webhooks() }
+func (p *projectTx) Accounts() account.Store                  { return p.tx.Accounts() }
 func (p *projectTx) AfterCommit(fn func())                    { p.tx.AfterCommit(fn) }
 func (p *projectTx) Project() service.ProjectRow              { return p.row }
 func (p *projectTx) Executor() database.Executor              { return p.tx.Executor() }

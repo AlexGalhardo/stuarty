@@ -76,7 +76,7 @@ type AudioMeter interface {
 
 // AudioMeasure renders the range through the mixer of the export, with and without the processors, and measures both.
 func (s *svc) AudioMeasure(ctx context.Context, req AudioMeasureRequest) (*AudioMeasureResult, error) {
-	c, err := authorize(ctx, "AudioMeasure", req.ProjectID)
+	c, err := s.authorize(ctx, "AudioMeasure", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}

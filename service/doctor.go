@@ -179,7 +179,7 @@ func (s *svc) environ() []string {
 }
 
 func (s *svc) Doctor(ctx context.Context, req DoctorRequest) (*DoctorResult, error) {
-	c, err := authorize(ctx, "Doctor", "")
+	c, err := s.authorize(ctx, "Doctor", "")
 	if err != nil {
 		return nil, err
 	}

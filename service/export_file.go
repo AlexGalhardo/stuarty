@@ -21,7 +21,7 @@ type ExportFileRequest struct {
 // and a job of another project of a limited key is forbidden, exactly like JobGet.
 // The path is relative to the workspace; the caller serves it with Range support.
 func (s *svc) ExportFile(ctx context.Context, req ExportFileRequest) (*File, error) {
-	c, err := authorize(ctx, "ExportFile", "")
+	c, err := s.authorize(ctx, "ExportFile", "")
 	if err != nil {
 		return nil, err
 	}
