@@ -187,6 +187,55 @@ func TestPublishAndApprovalsAreTheSameOnEverySurface(t *testing.T) {
 	}
 }
 
+// VV-315: in a project of two timelines a post names no timeline on any surface: it waits for a person, kept on the
+// timeline of its export, and nothing leaves the machine.
+func TestPublishOfATwoTimelineProjectOnEverySurface(t *testing.T) {
+	for name, newDriver := range map[string]func(*testing.T, testenv.Options) driver{
+		"in-process": newDirectWith, "http": newHTTPWith, "cli": newCLIWith, "mcp": newMCPWith,
+	} {
+		t.Run(name, func(t *testing.T) {
+			fx := newPublishFixture(t, newDriver)
+
+			added, err := fx.d.service().ProjectItemAdd(callerCtx(), service.ProjectItemAddRequest{
+				ProjectID: fx.project, Kind: "timeline", Title: "Second cut",
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			second, export := added.Item.TimelineID, "job_0000000903"
+			seedPublishedExport(t, fx.d.env(), second, export)
+
+			before, kids := fx.uploads.Load(), false
+
+			args, err := json.Marshal(service.PublishNowRequest{
+				ProjectID: fx.project, ConnectionID: fx.connection, Export: export, Title: "Launch", MadeForKids: &kids,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			now, _, fail := fx.d.do(t, step{Call: "PublishNow", Args: args})
+			if fail != nil {
+				t.Fatalf("%s PublishNow: %+v", fx.d.name(), fail)
+			}
+
+			var job service.Job
+			if jerr := json.Unmarshal(now, &job); jerr != nil || job.State != service.JobWaitingApproval {
+				t.Fatalf("%s: the job = %s (%v), want one waiting for approval", fx.d.name(), now, jerr)
+			}
+
+			if job.ProjectID == nil || *job.ProjectID != second {
+				t.Errorf("%s: the post is kept on %v, want the timeline of its export %s", fx.d.name(), job.ProjectID, second)
+			}
+
+			if n := fx.uploads.Load(); n != before {
+				t.Errorf("%s: %d requests left the machine before a person approved", fx.d.name(), n-before)
+			}
+		})
+	}
+}
+
 // D-093: reading the queue and starting a publication on MCP cannot decide. With a real request waiting for a
 // person, no tool and no member of job_get or job_start approves, rejects or publishes it: the input schemas
 // refuse every guess, the reads change nothing, the request stays pending, the job stays waiting_approval and
