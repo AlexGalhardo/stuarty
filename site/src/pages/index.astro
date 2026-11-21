@@ -81,7 +81,7 @@ import { withBase } from "@/lib/site";
 		<section id="yours" class="take" aria-labelledby="yours-title" data-take>
 			<div class="site-container text-center">
 				<h2 id="yours-title" tabindex="-1" class="yours-lines mx-auto text-fg" data-in>
-					{homeYours.lines.map((line, i) => <span class:list={["block", i === homeYours.lines.length - 1 && "yours-free"]}>{line}</span>)}
+					{homeYours.lines.map((line, i) => <span class:list={["block", i === homeYours.lines.length - 1 && "yours-free"]} data-split-skip={i === homeYours.lines.length - 1 ? "" : undefined}>{line}</span>)}
 				</h2>
 				<div class="mt-10" data-in>
 					<LandingActions idPrefix="take" align="center" beta={false} />
