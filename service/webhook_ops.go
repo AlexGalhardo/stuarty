@@ -224,20 +224,6 @@ func (s *svc) WebhookCreate(ctx context.Context, req WebhookCreateRequest) (*Web
 		return nil, webhookField(ferr)
 	}
 
-	count, err := s.store.Webhooks().Count(ctx)
-	if err != nil {
-		return nil, asError(err)
-	}
-
-	if count >= core.MaxWebhooks {
-		return nil, newError(
-			"E_LIMIT_EXCEEDED",
-			"the workspace has the most webhooks it may have (%d).",
-			core.MaxWebhooks,
-		).
-			withHint("remove a webhook first")
-	}
-
 	secret, err := core.NewSecret(rand.Reader)
 	if err != nil {
 		return nil, asError(err)
@@ -253,7 +239,22 @@ func (s *svc) WebhookCreate(ctx context.Context, req WebhookCreateRequest) (*Web
 		return nil, connectionError(err)
 	}
 
+	// The limit is counted in the transaction: two creations at once cannot both take the last place.
 	werr := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
+		count, err := tx.Webhooks().Count(ctx)
+		if err != nil {
+			return err
+		}
+
+		if count >= core.MaxWebhooks {
+			return newError(
+				"E_LIMIT_EXCEEDED",
+				"the workspace has the most webhooks it may have (%d).",
+				core.MaxWebhooks,
+			).
+				withHint("remove a webhook first")
+		}
+
 		if err := tx.Webhooks().Insert(ctx, row); err != nil {
 			return err
 		}
@@ -280,50 +281,74 @@ func (s *svc) WebhookUpdate(ctx context.Context, req WebhookUpdateRequest) (*Web
 		return nil, err
 	}
 
-	row, err := s.store.Webhooks().Get(ctx, req.ID)
-	if err != nil {
+	if _, err := s.store.Webhooks().Get(ctx, req.ID); err != nil {
 		return nil, webhookError(err)
 	}
 
+	var name string
+
 	if req.Name != nil {
-		name, ferr := core.NormalizeName(*req.Name)
+		n, ferr := core.NormalizeName(*req.Name)
 		if ferr != nil {
 			return nil, webhookField(ferr)
 		}
 
-		row.Name = name
+		name = n
 	}
 
 	if req.URL != nil {
 		if _, ferr := core.CheckURL(*req.URL, outbound.NotPublicAddr); ferr != nil {
 			return nil, webhookField(ferr)
 		}
-
-		row.URL = *req.URL
 	}
 
+	var events []string
+
 	if req.Events != nil {
-		events, ferr := core.NormalizeEvents(*req.Events)
+		list, ferr := core.NormalizeEvents(*req.Events)
 		if ferr != nil {
 			return nil, webhookField(ferr)
 		}
 
-		row.Events = events
-	}
-
-	if req.Enabled != nil {
-		row.Enabled = *req.Enabled
+		events = list
 	}
 
 	now := s.nowMs()
-	row.UpdatedMs = now
 
+	var row webhooks.Row
+
+	// The row is read in the transaction: an update that changes the name cannot put back an address another one
+	// has just replaced.
 	werr := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
-		if err := tx.Webhooks().Update(ctx, row); err != nil {
+		cur, err := tx.Webhooks().Get(ctx, req.ID)
+		if err != nil {
 			return err
 		}
 
-		return appendAudit(ctx, tx, now, c.Actor, "webhook.update", "", row.ID)
+		if req.Name != nil {
+			cur.Name = name
+		}
+
+		if req.URL != nil {
+			cur.URL = *req.URL
+		}
+
+		if req.Events != nil {
+			cur.Events = events
+		}
+
+		if req.Enabled != nil {
+			cur.Enabled = *req.Enabled
+		}
+
+		cur.UpdatedMs = now
+		row = cur
+
+		if err := tx.Webhooks().Update(ctx, cur); err != nil {
+			return err
+		}
+
+		return appendAudit(ctx, tx, now, c.Actor, "webhook.update", "", cur.ID)
 	})
 	if werr != nil {
 		return nil, webhookError(werr)

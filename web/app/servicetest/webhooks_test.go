@@ -786,6 +786,68 @@ func TestWebhookCreateValidatesAndLimits(t *testing.T) {
 	}
 }
 
+// Updates at once do not undo each other, and creations at once do not pass the limit.
+func TestWebhookWritesAtOnceKeepEachChangeAndTheLimit(t *testing.T) {
+	h := newHookEnv(t)
+	rc := newReceiver(t)
+	w := h.create(rc.srv.URL)
+	ctx := h.as(ui)
+
+	var wg sync.WaitGroup
+
+	for i := range 8 {
+		wg.Add(2)
+
+		address := rc.srv.URL + "/moved"
+		name := "renamed"
+
+		go func() {
+			defer wg.Done()
+
+			if _, err := h.svc.WebhookUpdate(ctx, service.WebhookUpdateRequest{ID: w.ID, Name: &name}); err != nil {
+				t.Errorf("update %d of the name: %v", i, err)
+			}
+		}()
+
+		go func() {
+			defer wg.Done()
+
+			if _, err := h.svc.WebhookUpdate(ctx, service.WebhookUpdateRequest{ID: w.ID, URL: &address}); err != nil {
+				t.Errorf("update %d of the address: %v", i, err)
+			}
+		}()
+	}
+
+	wg.Wait()
+
+	got, err := h.svc.WebhookGet(ctx, service.WebhookRef{ID: w.ID})
+	if err != nil || got.Name != "renamed" || got.URL != rc.srv.URL+"/moved" {
+		t.Fatalf("after the updates: %+v, %v", got, err)
+	}
+
+	for range core.MaxWebhooks + 6 {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+
+			_, err := h.svc.WebhookCreate(ctx, service.WebhookCreateRequest{
+				Name: "ok", URL: "https://hooks.example.com/h", Events: []string{core.ExportReady},
+			})
+			if err != nil && !isCode(err, "E_LIMIT_EXCEEDED") {
+				t.Errorf("WebhookCreate: %v", err)
+			}
+		}()
+	}
+
+	wg.Wait()
+
+	list, err := h.svc.WebhookList(ctx, service.WebhookListRequest{})
+	if err != nil || len(list.Webhooks) != core.MaxWebhooks {
+		t.Fatalf("%d webhooks after creations at once, %v", len(list.Webhooks), err)
+	}
+}
+
 // T-116: a webhook is a destination, so only an administrator makes one: a caller without the scope, and a key limited to
 // one project, are refused for every operation.
 func TestSecurity_T116_WebhooksNeedTheAdminScopeAndNoProjectLimit(t *testing.T) {
