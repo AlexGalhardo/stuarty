@@ -796,26 +796,20 @@ func TestWebhookWritesAtOnceKeepEachChangeAndTheLimit(t *testing.T) {
 	var wg sync.WaitGroup
 
 	for i := range 8 {
-		wg.Add(2)
-
 		address := rc.srv.URL + "/moved"
 		name := "renamed"
 
-		go func() {
-			defer wg.Done()
-
+		wg.Go(func() {
 			if _, err := h.svc.WebhookUpdate(ctx, service.WebhookUpdateRequest{ID: w.ID, Name: &name}); err != nil {
 				t.Errorf("update %d of the name: %v", i, err)
 			}
-		}()
+		})
 
-		go func() {
-			defer wg.Done()
-
+		wg.Go(func() {
 			if _, err := h.svc.WebhookUpdate(ctx, service.WebhookUpdateRequest{ID: w.ID, URL: &address}); err != nil {
 				t.Errorf("update %d of the address: %v", i, err)
 			}
-		}()
+		})
 	}
 
 	wg.Wait()
@@ -826,18 +820,14 @@ func TestWebhookWritesAtOnceKeepEachChangeAndTheLimit(t *testing.T) {
 	}
 
 	for range core.MaxWebhooks + 6 {
-		wg.Add(1)
-
-		go func() {
-			defer wg.Done()
-
+		wg.Go(func() {
 			_, err := h.svc.WebhookCreate(ctx, service.WebhookCreateRequest{
 				Name: "ok", URL: "https://hooks.example.com/h", Events: []string{core.ExportReady},
 			})
 			if err != nil && !isCode(err, "E_LIMIT_EXCEEDED") {
 				t.Errorf("WebhookCreate: %v", err)
 			}
-		}()
+		})
 	}
 
 	wg.Wait()

@@ -173,8 +173,10 @@ func TestAStaleRowIsNotSentAgain(t *testing.T) {
 	st.listed = &stale
 	st.del.State, st.del.Attempts = core.StateSucceeded, 1
 
-	if d.RunOnce(context.Background()); doer.count() != 0 {
-		t.Fatalf("a finished delivery was sent again: %d", doer.count())
+	d.RunOnce(context.Background())
+
+	if n := doer.count(); n != 0 {
+		t.Fatalf("a finished delivery was sent again: %d", n)
 	}
 }
 
@@ -214,7 +216,9 @@ func TestSendWhoseCallerLeftIsStillRecorded(t *testing.T) {
 		t.Fatalf("Send = %+v, %v", got, err)
 	}
 
-	if d.RunOnce(context.Background()); doer.count() != 1 {
-		t.Fatalf("the test was sent %d times", doer.count())
+	d.RunOnce(context.Background())
+
+	if n := doer.count(); n != 1 {
+		t.Fatalf("the test was sent %d times", n)
 	}
 }
