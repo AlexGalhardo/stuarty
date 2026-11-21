@@ -81,7 +81,7 @@ import { withBase } from "@/lib/site";
 		<section id="yours" class="take" aria-labelledby="yours-title" data-take>
 			<div class="site-container text-center">
 				<h2 id="yours-title" tabindex="-1" class="yours-lines mx-auto text-fg" data-in>
-					{homeYours.lines.map((line) => <span class="block">{line}</span>)}
+					{homeYours.lines.map((line, i) => <span class:list={["block", i === homeYours.lines.length - 1 && "yours-free"]}>{line}</span>)}
 				</h2>
 				<div class="mt-10" data-in>
 					<LandingActions idPrefix="take" align="center" beta={false} />
@@ -95,11 +95,47 @@ import { withBase } from "@/lib/site";
 
 <style is:global>
 	/* The five closing lines, one each, sized so the take fits a 720 px high window. */
+	/* The closing lines at about twice the size of the earlier version (88 px against 48 px at 1440), held by the
+	   width and the height of the window so they never overflow from 320 px up; each group stays on one line from
+	   1280 px. */
 	main[data-page="viewport"] .yours-lines {
-		font-size: clamp(1.75rem, 1.2rem + 2vw, 3rem);
-		font-weight: 600;
-		line-height: 1.1;
-		letter-spacing: -0.03em;
+		font-size: clamp(2.25rem, min(0.5rem + 5.6vw, 11vh), 5.5rem);
+		font-weight: 650;
+		line-height: 1.04;
+		letter-spacing: -0.035em;
+		text-wrap: balance;
+		overflow-wrap: anywhere;
+	}
+	/* "Free. Forever.": orange to pink text, darker stops on the light page (3.6:1 and 5.1:1 on white), brighter on
+	   the dark one (8.5:1 and 5.5:1), with a slow shimmer that stops under reduced motion. */
+	main[data-page="viewport"] .yours-free {
+		--free-a: #e85600;
+		--free-b: #d6006f;
+		background: linear-gradient(100deg, var(--free-a) 0%, var(--free-b) 45%, var(--free-a) 90%) 0 0 / 200% 100%;
+		-webkit-background-clip: text;
+		background-clip: text;
+		color: transparent;
+		animation: free-shimmer 6s ease-in-out infinite alternate;
+	}
+	.dark main[data-page="viewport"] .yours-free {
+		--free-a: #ff8c1e;
+		--free-b: #ff1f8e;
+	}
+	@keyframes free-shimmer {
+		to {
+			background-position: 100% 0;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		main[data-page="viewport"] .yours-free {
+			animation: none;
+		}
+	}
+	@media (forced-colors: active) {
+		main[data-page="viewport"] .yours-free {
+			background: none;
+			color: CanvasText;
+		}
 	}
 	/* Takes mode: one take fills the viewport, the others wait off stage (no scrollbar). */
 	html.takes-on,
