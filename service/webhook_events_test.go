@@ -97,7 +97,8 @@ func TestWebhookHearsTheFailureOfAJobWithNoProject(t *testing.T) {
 	}
 
 	body := string(st.got[0].Body)
-	if !strings.Contains(body, "E_PROVIDER") || strings.Contains(body, "PROMPT") || strings.Contains(body, "project_id") {
+	if !strings.Contains(body, "E_PROVIDER") || strings.Contains(body, "PROMPT") ||
+		strings.Contains(body, "project_id") {
 		t.Fatalf("body = %s", body)
 	}
 }
