@@ -113,7 +113,7 @@ These pages talk to the Go controllers through Inertia props and form posts, as 
 
 ### 2.2 The editor route
 
-**Decision of this SDD: the editor is a hand-written route, not an Inertia page.** `GET /editor/{project_id}` is registered in `routes/web.go` with the same middleware stack as the Inertia pages (`DefaultMiddleware`, locale, session or local token), and its handler renders the view `resources/views/editor.html` through `c.Render`. The view is a copy of `app.html` that loads the Vite entry `resources/js/editor.tsx` instead of `app.tsx` and has no `{{.Inertia}}`.
+**Decision of this SDD: the editor is a hand-written route, not an Inertia page.** `GET /editor/{project_id}` is registered in `routes/web.go` with the same middleware stack as the Inertia pages (`DefaultMiddleware`, locale, session or local token), and its handler renders the view `resources/views/editor.html` through `c.Render`. A project with no timeline (SDD-005 section 5.12.2) has no document to open, so the route redirects to `/projects/{id}`, where a video is added. The view is a copy of `app.html` that loads the Vite entry `resources/js/editor.tsx` instead of `app.tsx` and has no `{{.Inertia}}`.
 
 Why a hand-written route and not an Inertia page that mounts the editor:
 

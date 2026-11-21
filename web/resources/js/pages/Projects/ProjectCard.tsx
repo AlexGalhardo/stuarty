@@ -249,10 +249,16 @@ export default function ProjectCard({
 				</div>
 				{/* The editor is another document, so this is a plain link, not an Inertia visit (SDD-012 section 2.2).
 				    It opens the first active timeline, the one the card draws: the timeline with the id of the project
-				    may be in the trash of the project. */}
+				    may be in the trash of the project. A project with no timeline opens its page, where a video is added. */}
 				<div className="mt-auto flex flex-wrap gap-2">
 					<Button asChild variant="outline">
-						<a href={`/editor/${project.timeline_id || project.id}`}>
+						<a
+							href={
+								project.timeline_id
+									? `/editor/${project.timeline_id}`
+									: `/projects/${project.id}`
+							}
+						>
 							{t("ui.projects.open")}
 							<span className="sr-only">
 								{" "}
