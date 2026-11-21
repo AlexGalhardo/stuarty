@@ -559,9 +559,9 @@ Copied from vukem (`package.json:6-14`) and extended:
 
 | Script | Command | Role |
 | --- | --- | --- |
-| `dev` | `astro dev` | local preview at `http://localhost:3000` |
-| `build` | `astro build` | static export to `out/` |
-| `lint` | `eslint .` | |
+| `dev` | `bun --bun astro dev` | local preview at `http://localhost:3000` |
+| `build` | `bun --bun astro build` | static export to `out/` |
+| `lint` | `bun --bun eslint .` | `--bun` because the `eslint` command otherwise runs on Node through its shebang |
 | `check:mdx` | `bun scripts/check-mdx.ts` | MDX compiles, components exist, `/docs/` links resolve, no bare braces; extended: every nav slug has a file, every file is listed, every section title is non-empty |
 | `last-updated` | `bun scripts/last-updated.ts` | refresh `content/last-updated.json` |
 | `check:last-updated` | `bun scripts/check-last-updated.ts` | every page has a date at least as new as its last commit |
