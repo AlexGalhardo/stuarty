@@ -59,6 +59,10 @@
 | `BriefingQuestions`, `BriefingAnswer` | `project_item` (`action` `briefing`, with `production_kind`; given `answers`, it answers) | `briefing:questions`, `briefing:answer` | `GET /briefing/questions`, `PUT /projects/{id}/briefing` | read, edit (SDD-005 §5.12.1) |
 | `ConnectionList`, `ConnectionGet` | `connection` (list, or one by id) | `connection:list`, `connection:show` | `GET /connections`, `GET /connections/{id}` | read |
 | `ConnectionCreate`, `ConnectionRemove`, `ConnectionTest` | none | `connection:add`, `connection:remove`, `connection:test` | `POST /connections`, `DELETE /connections/{id}`, `POST /connections/{id}/test` | admin (SDD-014) |
+| `WebhookEventList` | none | `webhook:events` | `GET /webhook-events` | read (SDD-022) |
+| `WebhookList`, `WebhookGet` | `connection` with `webhooks` true (host only, no path or secret) | `webhook:list`, `webhook:show` | `GET /webhooks`, `GET /webhooks/{id}` | admin (SDD-022) |
+| `WebhookCreate`, `WebhookUpdate`, `WebhookRemove`, `WebhookRotateSecret`, `WebhookTest` | none | `webhook:add`, `webhook:update`, `webhook:remove`, `webhook:rotate-secret`, `webhook:test` | `POST /webhooks`, `PATCH /webhooks/{id}`, `DELETE /webhooks/{id}`, `POST /webhooks/{id}/rotate-secret`, `POST /webhooks/{id}/test` | admin (SDD-022) |
+| `WebhookDeliveryList`, `WebhookRedeliver` | none | `webhook:deliveries`, `webhook:redeliver` | `GET /webhooks/{id}/deliveries`, `POST /webhooks/{id}/deliveries/{delivery_id}/redeliver` | admin (SDD-022) |
 | `ImageCreate` | `image` (`action` create) | `image:create` | `POST /images` | edit |
 | `ImageList` | `image` (`action` list) | `image:list` | `GET /images` | read |
 | `ImageDescribe` | `image` (`action` show) | `image:show` | `GET /images/{id}` | read |
@@ -155,7 +159,7 @@ Every operation belongs to one **domain**. The domain names are fixed here; a ne
 | `publish` | publications and their approval | `Approval*` (the queue that gates a publication and a costly generation, SDD-015), `Social*` (the networks and the accounts a publication goes to), `Publish*` (validate, publish now, status; SDD-020), `Publication*` (the calendar: create, list, edit, schedule, send now, retry, cancel; SDD-020 §23 to §31) |
 | `provider` | AI providers and generation | `Provider*` (the providers, their models and the price table, SDD-016), `TextGenerate`, `ImageGenerate`, `VoiceGenerate`, `VoiceList`, `VideoGenerate`, `ImageModelEdit`, `Cost*` (the spend on providers and its ceilings) |
 | `memory` | the library: notes, skills, prompts, search | `Memory*`, `Skill*`, `Prompt*`, `Library*` |
-| `workspace` | the installation: help, connections, brand kit, health, keys, audit, trash, helpers, the hosted agent chat | `CommandHelp`, `Connection*`, `BrandKit*`, `Doctor`, `AuditList`, `TrashEmpty`, `Tools*`, `Key*`, `AgentProfile*`, `Chat*` (SDD-017) |
+| `workspace` | the installation: help, connections, brand kit, health, keys, audit, trash, helpers, the hosted agent chat | `CommandHelp`, `Connection*`, `BrandKit*`, `Doctor`, `AuditList`, `TrashEmpty`, `Tools*`, `Key*`, `AgentProfile*`, `Chat*` (SDD-017), `Webhook*` (SDD-022) |
 
 Rules: a command (an operation of a registry in `core/command`) takes its domain from the registry that holds it (`command.NewRegistry(domain)`); the registry refuses a command whose own `Domain` differs, and a registry with no domain. The timeline registry is `video`, the image registry `image`. A Service operation has its domain in the table `service.OperationDomains`, and `TestOperationDomains` fails when a Service method has none. The `domain` argument of an MCP tool (SDD-003 section 4.8) takes these names; a missing one means `video`.
 
@@ -182,6 +186,8 @@ Rules: a command (an operation of a registry in `core/command`) takes its domain
 | `tgt_` | target of a publication: one account, one time (SDD-020 §23) | SDD-020 |
 | `cht_` | hosted agent chat session (SDD-017) | SDD-017 |
 | `cpr_` | permission request of a hosted agent (SDD-017 §7) | SDD-017 |
+| `whk_` | outbound webhook (SDD-022) | SDD-022 |
+| `wdl_` | delivery of an outbound webhook (SDD-022 §4) | SDD-022 |
 
 All have the form `<prefix>_<10 lower-case Crockford base32 characters>`.
 
@@ -249,6 +255,7 @@ Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, `text.generate
 | `image_documents`, `image_operations` | image documents, and their append-only log of batches | SDD-005 §5.13, SDD-021 |
 | `library_entries`, `library_fts` | the index of memory, skills and prompts for search and lists; rebuilt from the files, holds no content that the files lack | SDD-018 §9 |
 | `asset_info`, `asset_tags`, `asset_search` | the library side of an asset by hash: origin, rights note, description, the reuse mark, the tags and the full-text index over them | SDD-005 §5.5.1, SDD-011 §14 |
+| `webhooks`, `webhook_deliveries`, `webhook_attempts` | the outbound webhooks (name, address, events, enabled), their deliveries with the stored metadata body, and the attempts with status, duration and error code; no secret (it is in the vault) and no answer body | SDD-022 §4, SDD-005 §5.16 |
 | `agent_profiles`, `chat_sessions`, `chat_events` | the agents the user may host (a name, an executable and its arguments), and the transcripts of the chat sessions per project; no credential, no environment | SDD-017 §3, §9 |
 | vukem's own tables for sessions (`sessions`) and tokens (`access_tokens`) | network mode | vukem |
 
@@ -296,9 +303,10 @@ The core's codes are in SDD-002 §A.8. The service adds:
 | `E_PRICE_UNKNOWN` | no price is known for the model of a generation, so no estimate can be made; `details` hold `provider` and `model` (SDD-016 §4.2) | no |
 | `E_AGENT_NOT_FOUND` | the agent profile does not exist (SDD-017 §11) | no |
 | `E_CHAT_NOT_FOUND` | the chat session does not exist, or the caller may not see its project (SDD-017 §11) | no |
+| `E_WEBHOOK_NOT_FOUND` | the webhook or the delivery does not exist (SDD-022 §8) | no |
 | `E_AGENT_UNAVAILABLE` | the hosted agent could not be started or opened; `details.reason` `not_found`, `start_failed`, `exited`, `timeout`, `protocol`, `protocol_version`, `no_http_mcp`, `sign_in_required`, `limit` (SDD-017 §11) | no |
 
-HTTP status mapping: `E_VALIDATION`, `E_INVALID_TIME`, `E_UNKNOWN_COMMAND` 400; `E_UNAUTHORIZED` 401; `E_FORBIDDEN`, `E_PATH_NOT_ALLOWED`, `E_CONNECTION_DESTINATION`, `E_PRIVILEGED_SESSION` 403; `E_NOT_FOUND`, `E_FILE_NOT_FOUND`, `E_CONNECTION_NOT_FOUND`, `E_APPROVAL_NOT_FOUND`, `E_AGENT_NOT_FOUND`, `E_CHAT_NOT_FOUND` 404; `E_REVISION_CONFLICT`, `E_IDEMPOTENCY_MISMATCH`, `E_OVERLAP`, `E_INVALID_STATE`, `E_IN_USE`, `E_NOT_EMPTY`, `E_ID_EXISTS`, `E_ASSET_NOT_READY` 409; `E_PAYLOAD_TOO_LARGE` 413; `E_METHOD_NOT_ALLOWED` 405; `E_LIMIT`, `E_LIMIT_EXCEEDED`, `E_UNSUPPORTED_MEDIA`, `E_TYPE_MISMATCH`, `E_OUT_OF_SOURCE`, `E_FONT_UNKNOWN`, `E_SLOT`, `E_LINT_BLOCKING`, `E_COST_CEILING`, `E_PRICE_UNKNOWN` 422; `E_QUEUE_FULL`, `E_RATE_LIMITED` 429; `E_NOTHING_TO_UNDO`, `E_NOTHING_TO_REDO`, `E_APPROVAL_EXPIRED` 409; `E_CLIENT_CLOSED` 499; `E_WORKSPACE_LOCKED`, `E_TRANSCRIBE_UNAVAILABLE`, `E_FFMPEG_MISSING`, `E_NO_ENCODER`, `E_VAULT_LOCKED`, `E_AGENT_UNAVAILABLE` 503; `E_PUBLISH`, `E_PROVIDER` 502; `E_INTERNAL` and everything else 500. The job codes `E_INGEST_FAILED`, `E_EXPORT_FAILED`, `E_VERIFY_FAILED`, `E_TRANSCRIBE_FAILED` and `E_CANCELLED` normally travel inside a job object in a 200 answer; they are 500 only when a call itself raises them.
+HTTP status mapping: `E_VALIDATION`, `E_INVALID_TIME`, `E_UNKNOWN_COMMAND` 400; `E_UNAUTHORIZED` 401; `E_FORBIDDEN`, `E_PATH_NOT_ALLOWED`, `E_CONNECTION_DESTINATION`, `E_PRIVILEGED_SESSION` 403; `E_NOT_FOUND`, `E_FILE_NOT_FOUND`, `E_CONNECTION_NOT_FOUND`, `E_APPROVAL_NOT_FOUND`, `E_AGENT_NOT_FOUND`, `E_CHAT_NOT_FOUND`, `E_WEBHOOK_NOT_FOUND` 404; `E_REVISION_CONFLICT`, `E_IDEMPOTENCY_MISMATCH`, `E_OVERLAP`, `E_INVALID_STATE`, `E_IN_USE`, `E_NOT_EMPTY`, `E_ID_EXISTS`, `E_ASSET_NOT_READY` 409; `E_PAYLOAD_TOO_LARGE` 413; `E_METHOD_NOT_ALLOWED` 405; `E_LIMIT`, `E_LIMIT_EXCEEDED`, `E_UNSUPPORTED_MEDIA`, `E_TYPE_MISMATCH`, `E_OUT_OF_SOURCE`, `E_FONT_UNKNOWN`, `E_SLOT`, `E_LINT_BLOCKING`, `E_COST_CEILING`, `E_PRICE_UNKNOWN` 422; `E_QUEUE_FULL`, `E_RATE_LIMITED` 429; `E_NOTHING_TO_UNDO`, `E_NOTHING_TO_REDO`, `E_APPROVAL_EXPIRED` 409; `E_CLIENT_CLOSED` 499; `E_WORKSPACE_LOCKED`, `E_TRANSCRIBE_UNAVAILABLE`, `E_FFMPEG_MISSING`, `E_NO_ENCODER`, `E_VAULT_LOCKED`, `E_AGENT_UNAVAILABLE` 503; `E_PUBLISH`, `E_PROVIDER` 502; `E_INTERNAL` and everything else 500. The job codes `E_INGEST_FAILED`, `E_EXPORT_FAILED`, `E_VERIFY_FAILED`, `E_TRANSCRIBE_FAILED` and `E_CANCELLED` normally travel inside a job object in a 200 answer; they are 500 only when a call itself raises them.
 
 CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the rest.
 

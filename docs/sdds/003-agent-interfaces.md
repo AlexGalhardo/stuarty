@@ -4303,6 +4303,13 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `ConnectionCreate` | none (exception E-5: it carries a credential) | `connection:add` | `POST /connections` |
 | `ConnectionRemove` | none (exception E-5) | `connection:remove` | `DELETE /connections/{id}` |
 | `ConnectionTest` | none (exception E-5: it reaches the network) | `connection:test` | `POST /connections/{id}/test` |
+| `WebhookEventList` | none (exception E-3) | `webhook:events` | `GET /webhook-events` |
+| `WebhookList`, `WebhookGet` | `connection` (`webhooks` true, with or without `id`; the host only, never the path, the query or a secret) | `webhook:list`, `webhook:show` | `GET /webhooks`, `GET /webhooks/{id}` |
+| `WebhookCreate` | none (exception E-5: it registers a destination and carries a secret once) | `webhook:add` | `POST /webhooks` |
+| `WebhookUpdate`, `WebhookRemove` | none (exception E-5) | `webhook:update`, `webhook:remove` | `PATCH /webhooks/{id}`, `DELETE /webhooks/{id}` |
+| `WebhookRotateSecret` | none (exception E-5: it carries a secret once) | `webhook:rotate-secret` | `POST /webhooks/{id}/rotate-secret` |
+| `WebhookTest`, `WebhookRedeliver` | none (exception E-5: they reach the network) | `webhook:test`, `webhook:redeliver` | `POST /webhooks/{id}/test`, `POST /webhooks/{id}/deliveries/{delivery_id}/redeliver` |
+| `WebhookDeliveryList` | none (exception E-3) | `webhook:deliveries` | `GET /webhooks/{id}/deliveries` |
 | `ApprovalList` | `job_get` (`approvals`, optional `project_id`) | `approval:list` | `GET /approvals` |
 | `ApprovalGet` | `job_get` (`approval_id`) | `approval:show` | `GET /approvals/{id}` |
 | `ApprovalDecide` | none (exception E-6: a person decides) | `approval:decide` | `POST /approvals/{id}/decide` |
