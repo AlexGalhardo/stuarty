@@ -100,6 +100,9 @@ export interface EditorRuntime {
 	reloadLibrary(): Promise<void>;
 	// "Move to trash" and "Restore" of a card (SDD-012 section 13.2).
 	setAssetTrashed(assetId: string, trashed: boolean): Promise<void>;
+	// Renames a file by its hash (SDD-011 section 14.8) and reloads the list; a refusal of the service is thrown
+	// as an ApiError, for the dialog to show.
+	renameAsset(hash: string, name: string): Promise<void>;
 	sync: Sync;
 	edits: EditQueue;
 	// Called on visibilitychange to visible and on online (SDD-012 5.5 step 7).
@@ -346,6 +349,10 @@ export function createRuntime(options: RuntimeOptions): EditorRuntime {
 					hint: error.hint,
 				});
 			}
+			await loadLibrary();
+		},
+		async renameAsset(hash, name) {
+			await client.renameAsset(hash, name);
 			await loadLibrary();
 		},
 		sync,

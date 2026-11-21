@@ -999,6 +999,15 @@
         "retry": "Try again",
         "dismiss": "Dismiss",
         "menu": "Actions for {name}",
+        "rename": {
+          "action": "Rename",
+          "title": "Rename this file",
+          "label": "File name",
+          "hint": "The extension is kept. At most 120 characters, no slashes.",
+          "submit": "Rename",
+          "cancel": "Cancel",
+          "menu": "Actions for the file"
+        },
         "inspect": "Inspect",
         "hash": "Content hash (the brand kit logo takes this):",
         "inspect_loading": "Reading the media.",
