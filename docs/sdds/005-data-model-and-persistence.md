@@ -1415,6 +1415,59 @@ CREATE TABLE webhook_attempts (
 
 `Repos` gains `Webhooks() webhooks.Store` (the package `service/webhooks`). Down drops the three tables.
 
+### 5.17 `accounts` and the encrypted fields (ADR-0049, SDD-007 section 3.9)
+
+Migration `20261120140000_create_accounts_table`. One row, at most: `CHECK (id = 1)`.
+
+```sql
+CREATE TABLE accounts (
+  id                  INTEGER NOT NULL CHECK (id = 1),
+  username            TEXT    NOT NULL,
+  email               TEXT    NOT NULL,
+  kdf                 TEXT    NOT NULL,   -- JSON: algorithm, time, memory_kib, threads, salt (base64)
+  verifier            BLOB    NOT NULL,   -- 32 bytes, HKDF of the Argon2id output; never the password
+  key_by_password     BLOB    NOT NULL,   -- nonce || AES-256-GCM of the data key
+  key_by_recovery     BLOB    NOT NULL,
+  vault_key           BLOB    NOT NULL,   -- the vault master key sealed by the data key
+  idle_lock_minutes   INTEGER NOT NULL DEFAULT 0 CHECK (idle_lock_minutes BETWEEN 0 AND 1440),
+  created_ms          INTEGER NOT NULL,
+  updated_ms          INTEGER NOT NULL,
+  PRIMARY KEY (id)
+);
+```
+
+`Repos` gains `Accounts() account.Store` (the package `service/account`): `Get`, `Create` (fails with `ErrExists` when the row is there), `Update`. The username and the e-mail are clear: the sign-in finds the row with them while the studio is locked.
+
+#### 5.17.1 The sealed field
+
+A sealed field is a text column whose value is `s1.` followed by the unpadded base64url of `nonce (12 bytes) || ciphertext || tag`: AES-256-GCM under the data key, a fresh random nonce for every write, and the associated data `stuarty/field/v1`, a zero byte, `<table>.<column>`, a zero byte, and the row key (the id of the row, or the pair that is its key joined with `/`). A value cut from one row and put in another, or in another column, does not open. The store seals on write and opens on read inside its repositories, so a caller above `service.Store` never sees a sealed value, and the SQL never needs one: no `WHERE`, `ORDER BY` or index uses a sealed column.
+
+While no account exists the columns hold clear text and a read returns it as it is. With an account, a value without the `s1.` prefix is an error (`ErrUnsealed`), never clear text, except during the migration of 5.17.3. While the studio is locked, a read or a write of a sealed column is `ErrLocked`, which the service maps to `E_LOCKED`.
+
+#### 5.17.2 The sealed columns
+
+| Table | Columns | Row key |
+| --- | --- | --- |
+| `project_items` | `body` (the body of a text, a brief or a caption) | `id` |
+| `text_revisions` | `body` | `item_id/revision` |
+| `chat_events` | `body_json` | `session_id/seq` |
+| `publications` | `text` | `id` |
+| `publication_targets` | `fields`, `snapshot` | `id` |
+
+The project description and goal join the list when epic 56 lands (task 8 of epic 57). The files of the library of memory, skills and prompts, and their index `library_fts`, are not sealed by this epic (ADR-0049, consequences). The vault is sealed by its own format (SDD-014 section 3), under the master key of 5.17 above.
+
+#### 5.17.3 Creating the account in a workspace that has data
+
+The account creation is the migration, in this order, under the writer lock of the store:
+
+1. Copy `db.sqlite` (after a WAL checkpoint) and `vault.json` into `backups/account-<time>/`.
+2. In one transaction, seal every sealed column of every row.
+3. Re-seal the vault under the new vault key (`Vault.Rotate`), when a vault file exists.
+4. Read every sealed column back through the same repositories and compare it with what was there before.
+5. Insert the `accounts` row, commit, and only then delete the copy.
+
+A failure at any step rolls the transaction back, puts the copy of `vault.json` back, deletes the copy and returns the error; the account is not created and the workspace is as it was. A crash between steps leaves the folder `backups/account-<time>/`: the next start finds it with no account row and restores from it before it opens the store.
+
 ## 6. Workspace ownership
 
 ADR-0008 decides that one process owns a workspace. This section fixes how.
