@@ -313,21 +313,25 @@
 
 	/* The dashboard reads at one and a half times the default text size (D-123);
 	   the video and image editors keep the default, their panels are dense by
-	   design. Set on <html> so the dialogs and menus portaled to body follow. */
-	html[data-text-scale="dashboard"] {
-		--text-xs: 1.125rem;
-		--text-sm: 1.3125rem;
-		--text-base: 1.5rem;
-		--text-lg: 1.6875rem;
-		--text-xl: 1.875rem;
-		--text-2xl: 2.25rem;
-		--text-3xl: 2.8125rem;
-		--text-4xl: 3.375rem;
-		--text-5xl: 4.5rem;
-	}
+	   design. Set on <html> so the dialogs and menus portaled to body follow.
+	   Phone widths keep the default size: at 320 CSS px the larger text cannot
+	   reflow without a horizontal scroll (WCAG 1.4.10, SDD-012 section 18.10). */
+	@media (min-width: 48rem) {
+		html[data-text-scale="dashboard"] {
+			--text-xs: 1.125rem;
+			--text-sm: 1.3125rem;
+			--text-base: 1.5rem;
+			--text-lg: 1.6875rem;
+			--text-xl: 1.875rem;
+			--text-2xl: 2.25rem;
+			--text-3xl: 2.8125rem;
+			--text-4xl: 3.375rem;
+			--text-5xl: 4.5rem;
+		}
 
-	html[data-text-scale="dashboard"] body {
-		font-size: var(--text-base);
+		html[data-text-scale="dashboard"] body {
+			font-size: var(--text-base);
+		}
 	}
 
 	html {
