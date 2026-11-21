@@ -88,7 +88,9 @@ func TestEditedImageTemplateIsNotSharedInNetworkMode(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	local := service.WithCaller(t.Context(), service.Caller{Actor: "local:me", Scopes: service.RoleScopes(service.RoleAdmin)})
+	local := service.WithCaller(t.Context(), service.Caller{
+		Actor: "local:me", Scopes: service.RoleScopes(service.RoleAdmin),
+	})
 	if _, err := e.svc.ImageEdit(local, service.ImageEditRequest{
 		ImageID:      images[0].ID,
 		BaseRevision: 1,
@@ -103,7 +105,8 @@ func TestEditedImageTemplateIsNotSharedInNetworkMode(t *testing.T) {
 		Actor: "user:bob", Scopes: service.RoleScopes(service.RoleMember), OwnerUserID: "bob",
 	})
 
-	if _, err := e.svc.ImageDescribe(bob, service.ImageDescribeRequest{ImageID: images[0].ID}); code(err) != "E_NOT_FOUND" {
+	_, err = e.svc.ImageDescribe(bob, service.ImageDescribeRequest{ImageID: images[0].ID})
+	if code(err) != "E_NOT_FOUND" {
 		t.Fatalf("a user read the edited template: %v", err)
 	}
 
@@ -127,11 +130,13 @@ func TestEditedImageTemplateIsNotSharedInNetworkMode(t *testing.T) {
 			t.Errorf("%s: a user lists %d templates, want the %d not edited", when, len(list.Images), len(images)-1)
 		}
 
-		if _, err := e.svc.ImageCreate(bob, service.ImageCreateRequest{TemplateID: images[0].ID}); code(err) != "E_NOT_FOUND" {
+		_, err = e.svc.ImageCreate(bob, service.ImageCreateRequest{TemplateID: images[0].ID})
+		if code(err) != "E_NOT_FOUND" {
 			t.Errorf("%s: a user made a document from the edited template: %v", when, err)
 		}
 
-		if _, err := e.svc.ImageHistory(bob, service.ImageHistoryRequest{ImageID: images[0].ID}); code(err) != "E_NOT_FOUND" {
+		_, err = e.svc.ImageHistory(bob, service.ImageHistoryRequest{ImageID: images[0].ID})
+		if code(err) != "E_NOT_FOUND" {
 			t.Errorf("%s: a user read the history of the edited template: %v", when, err)
 		}
 	}
