@@ -3,7 +3,7 @@
 // Starts at the documentation entry, follows every internal link of the pages under /docs/, and reports
 // each link that does not answer 200 and each #fragment with no matching id.
 // Links to pages outside the doc tree (home, changelog) are fetched but not crawled further.
-// External links are listed, never fetched: the site must not depend on them. Node strips the types.
+// External links are listed, never fetched: the site must not depend on them. Bun runs the TypeScript directly.
 const DEFAULT_SITE = "https://stuarty.com";
 
 export interface PageLink {

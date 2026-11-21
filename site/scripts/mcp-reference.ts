@@ -2,7 +2,7 @@
 // per editing operation. The tools are read from web/app/mcp/definitions/*.json in the order of web/app/mcp/
 // definitions.go, and the operations from core/schema/commands.json, so no tool or argument is written by hand.
 // The calls and prompts in EXAMPLES are the only hand-written part; each call is checked against the input
-// schema of its tool before a page is written. Node strips the types.
+// schema of its tool before a page is written. Bun runs the TypeScript directly.
 import fs from "node:fs";
 import path from "node:path";
 import { code, esc, fence, page, sentence, table } from "./reference-md.ts";

@@ -1,7 +1,8 @@
 // The API reference pages (docs/api/): one page per operation of site/generated/openapi.json, an endpoint index
 // and a schema page. Everything on a page is read from the OpenAPI document, from the route table of
 // web/app/http/endpoints.go (the scope of each route) and from the command registry (the example of an edit);
-// nothing is written by hand per operation. Node strips the types.
+// nothing is written by hand per operation. Bun runs the TypeScript directly; api-reference.test.ts imports this
+// file under Node, so it must keep to syntax Node can strip.
 import fs from "node:fs";
 import path from "node:path";
 import GithubSlugger from "github-slugger";
