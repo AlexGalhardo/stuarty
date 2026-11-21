@@ -197,8 +197,11 @@ func TestImageExportHidesTheServerPathInNetworkMode(t *testing.T) {
 		t.Errorf("another user read the file: %v", err)
 	}
 
-	for _, name := range []string{res.Path, "../" + path.Base(res.Path), `..\` + path.Base(res.Path), "../../stuarty.db"} {
-		if _, err := s.ImageFile(alice, ImageFileRequest{ImageID: created.ImageID, Name: name}); codeOf(err) != "E_NOT_FOUND" {
+	base := path.Base(res.Path)
+
+	for _, name := range []string{res.Path, "../" + base, `..\` + base, "../../stuarty.db"} {
+		_, err := s.ImageFile(alice, ImageFileRequest{ImageID: created.ImageID, Name: name})
+		if codeOf(err) != "E_NOT_FOUND" {
 			t.Errorf("the name %q = %v, want E_NOT_FOUND", name, err)
 		}
 	}
