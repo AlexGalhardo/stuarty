@@ -8,7 +8,9 @@ import { useT } from "@/lib/i18n";
 import type { LintFinding } from "../../api/types";
 import { type SlotFill, slotFillOperations } from "../../commands/builders";
 import { useActions, useCanEdit } from "../../commands/useActions";
+import { useStore } from "../../state/createStore";
 import { useDocumentState, useRuntime } from "../../state/EditorContext";
+import { shownNames } from "../../state/libraryStore";
 import Section from "../Section";
 
 interface Row {
@@ -24,6 +26,7 @@ function SlotRow({ row }: { row: Row }): ReactNode {
 	const actions = useActions();
 	const canEdit = useCanEdit();
 	const assets = useDocumentState((s) => s.document?.assets);
+	const shown = useStore(useRuntime().library, (s) => shownNames(s.entries));
 	const [draft, setDraft] = useState("");
 	const id = `slot-${row.itemId}`;
 
@@ -72,7 +75,7 @@ function SlotRow({ row }: { row: Row }): ReactNode {
 								<option value="">{t("ui.editor.slots.choose")}</option>
 								{Object.values(assets ?? {}).map((asset) => (
 									<option key={asset.id} value={asset.id}>
-										{asset.name}
+										{shown.get(asset.id) ?? asset.name}
 									</option>
 								))}
 							</select>
