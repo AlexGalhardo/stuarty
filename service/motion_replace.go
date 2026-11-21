@@ -1,6 +1,7 @@
 package service
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -102,12 +103,19 @@ func (s *svc) renderOffers(ctx context.Context, owner, projectID, newAsset, key 
 
 	earlier := earlierRenders(origins, key, newAsset)
 
+	names, nerr := s.shownAssetNames(ctx, projectID)
+	if nerr != nil {
+		return nil
+	}
+
 	var offers []RenderOffer
 
 	for id := range earlier {
 		items := motion.Targets(doc, map[string]bool{id: true}, newAsset)
 		if len(items) > 0 {
-			offers = append(offers, RenderOffer{AssetID: id, Name: doc.Assets[id].Name, ItemIDs: items})
+			offers = append(offers, RenderOffer{
+				AssetID: id, Name: cmp.Or(names[id], doc.Assets[id].Name), ItemIDs: items,
+			})
 		}
 	}
 

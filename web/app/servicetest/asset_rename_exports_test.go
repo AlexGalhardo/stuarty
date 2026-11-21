@@ -75,6 +75,25 @@ func TestAssetRenameSurvivesABundle(t *testing.T) {
 	}
 }
 
+// The check of a render names the file as the library does.
+func TestAssetRenameIsInTheMotionCheck(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	ctx := m.as(ui)
+	project, upper, _ := m.motionFit()
+	in := m.importOne(project, m.write("clip.mp4", clipBytes)).Assets[0]
+
+	if _, err := m.svc.AssetRename(ctx, service.AssetRenameRequest{Hash: in.Hash, Name: "Render"}); err != nil {
+		t.Fatal(err)
+	}
+
+	res, err := m.svc.MotionCheck(ctx, service.MotionCheckRequest{
+		ProjectID: project, AssetID: in.AssetID, Until: "1s", TrackID: upper,
+	})
+	if err != nil || res.AssetName != "Render.mp4" {
+		t.Fatalf("check = %+v, %v", res, err)
+	}
+}
+
 // What an agent reads of a project names the file as the library does; the document keeps what it was written with.
 func TestAssetRenameIsInTheProjectView(t *testing.T) {
 	m := newMediaEnv(t, mediaCfg{})
