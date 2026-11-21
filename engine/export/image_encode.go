@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"image"
 	"image/jpeg"
-	"image/png"
 	"slices"
 
 	coreimage "github.com/AlexGalhardo/stuarty/core/image"
@@ -162,14 +161,12 @@ func resample(img *image.RGBA, w, h int) (*image.RGBA, error) {
 // same pixels give the same bytes, and a 4,000 by 4,000 picture takes a second instead of fourteen (SDD-021
 // section 6).
 func encodePNG(img *image.RGBA) ([]byte, error) {
-	var buf bytes.Buffer
-
-	enc := png.Encoder{CompressionLevel: png.BestSpeed}
-	if err := enc.Encode(&buf, img); err != nil {
+	out, err := encodePNGParallel(img)
+	if err != nil {
 		return nil, exportErr(ReasonRender, "The image could not be encoded.", err, "")
 	}
 
-	return buf.Bytes(), nil
+	return out, nil
 }
 
 // encodeJPEG flattens the picture on white, since a JPEG has no alpha, and encodes it.
