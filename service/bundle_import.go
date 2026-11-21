@@ -287,6 +287,13 @@ func (s *svc) numberImportedTimelines(ctx context.Context, p *bundleParts, asNew
 				withHint("import it with as_new to get a new id")
 		} else if !isNotFound(err) {
 			return asError(err)
+		} else if _, err := s.store.Productions().Get(ctx, id); err == nil {
+			// A project with no timeline yet has no row above, and a timeline with its id would make that id
+			// resolve to the project of the bundle.
+			return newError(command.CodeIDExists, "a project with the identifier %s already exists.", id).
+				withHint("import it with as_new to get a new id")
+		} else if !isNotFound(err) {
+			return asError(err)
 		}
 
 		t.doc.ID = id
