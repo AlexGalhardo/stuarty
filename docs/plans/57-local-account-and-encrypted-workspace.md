@@ -38,7 +38,7 @@ The first time a creator opens Stuarty they create an account with a password, a
 ## Tasks
 
 - [x] 1. The ADR (amends D-117, ADR-0032 and ADR-0033 on the person session and the vault key) and SDD-000, SDD-007, SDD-005, SDD-012, the threat model entries. Verify: `task lint:md` and `go run ./internal/tools/threatcheck` exit 0.
-- [ ] 2. The account, the rules and the keys (Argon2id, wrap, recovery key, change password), with tests of every boundary of the rules and of a wrong password. Verify: `go test ./core/... ./service/...` passes.
+- [x] 2. The account, the rules and the keys (Argon2id, wrap, recovery key, change password), with tests of every boundary of the rules and of a wrong password. Verify: `go test ./core/... ./service/...` passes.
 - [ ] 3. Lock and unlock in the server, `E_LOCKED` on every data route, CLI command and MCP tool, the idle timeout. Verify: a test that walks every registered operation while locked and expects `E_LOCKED`, except the allowed list.
 - [ ] 4. Field encryption in the store and the vault key wrapped by the data key. Verify: a test that reads the SQLite file directly and finds no plaintext of a text, a memory note or a credential.
 - [ ] 5. The migration of an existing workspace with backup, verification and restore. Verify: tests for success and for a failure in the middle.
