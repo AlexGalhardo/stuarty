@@ -1,0 +1,73 @@
+{
+  "properties": {
+    "description": {
+      "description": "What the project is, for whom, and what it makes.",
+      "maxLength": 1024,
+      "minLength": 64,
+      "type": "string"
+    },
+    "goal": {
+      "properties": {
+        "achievable": {
+          "description": "Why it can be done with what the creator has.",
+          "maxLength": 280,
+          "minLength": 16,
+          "type": "string"
+        },
+        "due": {
+          "description": "The date the goal is due, YYYY-MM-DD.",
+          "format": "date",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "type": "string",
+          "x-not-before": "today"
+        },
+        "measurable": {
+          "description": "How progress and success are counted.",
+          "maxLength": 280,
+          "minLength": 16,
+          "type": "string"
+        },
+        "relevant": {
+          "description": "Why it matters to the creator or the audience.",
+          "maxLength": 280,
+          "minLength": 16,
+          "type": "string"
+        },
+        "specific": {
+          "description": "What exactly the project will achieve.",
+          "maxLength": 280,
+          "minLength": 16,
+          "type": "string"
+        },
+        "time_bound": {
+          "description": "The schedule and the milestones.",
+          "maxLength": 280,
+          "minLength": 16,
+          "type": "string"
+        }
+      },
+      "required": [
+        "achievable",
+        "due",
+        "measurable",
+        "relevant",
+        "specific",
+        "time_bound"
+      ],
+      "type": "object"
+    },
+    "name": {
+      "description": "The name of the project.",
+      "maxLength": 32,
+      "minLength": 4,
+      "pattern": "^[\\p{L}\\p{M}\\p{N}]+( [\\p{L}\\p{M}\\p{N}]+)*$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "description",
+    "goal",
+    "name"
+  ],
+  "type": "object"
+}

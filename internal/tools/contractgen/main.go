@@ -16,6 +16,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 	coreimage "github.com/AlexGalhardo/stuarty/core/image"
 	"github.com/AlexGalhardo/stuarty/core/lint"
+	"github.com/AlexGalhardo/stuarty/core/project"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
@@ -73,6 +74,10 @@ func run(out string) error {
 		return err
 	}
 	if err := write(filepath.Join(out, "lint-rules.json"), lintRules()); err != nil {
+		return err
+	}
+	// The rules of the context of a project, exported by z, from which the web form builds its zod schema.
+	if err := write(filepath.Join(out, "project.v1.schema.json"), project.Schema()); err != nil {
 		return err
 	}
 	return write(filepath.Join(out, "limits.json"), map[string]any{

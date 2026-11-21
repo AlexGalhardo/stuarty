@@ -232,11 +232,12 @@ func (r projectRepo) Commit(ctx context.Context, id string, expected int64, u se
 	if n == 0 {
 		return service.ErrStale
 	}
-	// The project that holds this timeline rises in the list, and takes the name of the timeline that shares its
-	// id (SDD-005 section 5.12). A timeline without a project, as the store tests make, changes nothing here.
-	_, err = r.ex.ExecContext(ctx, `UPDATE projects SET updated_ms = ?, name = CASE WHEN id = ? THEN ? ELSE name END
+	// The project that holds this timeline rises in the list. Its name is its own, changed by ProjectUpdate and
+	// never by a commit of a timeline (SDD-005 section 5.12.2). A timeline without a project, as the store tests
+	// make, changes nothing here.
+	_, err = r.ex.ExecContext(ctx, `UPDATE projects SET updated_ms = ?
  WHERE id = (SELECT project_id FROM project_items WHERE kind = 'timeline' AND ref = ?)`,
-		u.UpdatedMs, id, u.Name, id)
+		u.UpdatedMs, id)
 	return err
 }
 

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"strings"
 
+	"github.com/AlexGalhardo/stuarty/core/project"
 	"github.com/AlexGalhardo/stuarty/service"
 
 	"github.com/AlexGalhardo/vukem/database"
@@ -17,7 +18,8 @@ const firstTimeline = `(SELECT i.ref FROM project_items i
  WHERE i.project_id = p.id AND i.kind = 'timeline' AND i.state = 'active' ORDER BY i.position, i.id LIMIT 1)`
 
 const productionColumns = `p.id, p.name, p.state, p.created_ms, p.updated_ms, p.created_by, p.owner_user_id,
- p.trashed_ms, p.trashed_by,
+ p.trashed_ms, p.trashed_by, p.description, p.goal_specific, p.goal_measurable, p.goal_achievable, p.goal_relevant,
+ p.goal_time_bound, p.goal_due,
  (SELECT count(*) FROM project_items i WHERE i.project_id = p.id AND i.kind = 'timeline' AND i.state = 'active'),
  t.id, t.name, t.state, t.revision, t.schema_version, t.width, t.height, t.fps_num, t.fps_den,
  t.duration_frames, t.track_count, t.item_count, t.asset_count, t.created_ms, t.updated_ms, t.created_by,
@@ -39,9 +41,45 @@ func scanProduction(sc scanner) (service.ProductionHead, error) {
 		tTrashedMs, tResync     sql.NullInt64
 	)
 
-	err := sc.Scan(&h.ID, &h.Name, &h.State, &h.CreatedMs, &h.UpdatedMs, &h.CreatedBy, &owner, &trashedMs, &trashedBy,
-		&h.Timelines, &tID, &tName, &tState, &tRev, &tSchema, &tW, &tH, &tFN, &tFD, &tDur, &tTracks, &tItems,
-		&tAssets, &tCreated, &tUpd, &tBy, &tOwner, &tTrashedMs, &tTrashedBy, &tResync)
+	err := sc.Scan(
+		&h.ID,
+		&h.Name,
+		&h.State,
+		&h.CreatedMs,
+		&h.UpdatedMs,
+		&h.CreatedBy,
+		&owner,
+		&trashedMs,
+		&trashedBy,
+		&h.Description,
+		&h.Goal.Specific,
+		&h.Goal.Measurable,
+		&h.Goal.Achievable,
+		&h.Goal.Relevant,
+		&h.Goal.TimeBound,
+		&h.Goal.Due,
+		&h.Timelines,
+		&tID,
+		&tName,
+		&tState,
+		&tRev,
+		&tSchema,
+		&tW,
+		&tH,
+		&tFN,
+		&tFD,
+		&tDur,
+		&tTracks,
+		&tItems,
+		&tAssets,
+		&tCreated,
+		&tUpd,
+		&tBy,
+		&tOwner,
+		&tTrashedMs,
+		&tTrashedBy,
+		&tResync,
+	)
 	if err != nil {
 		return service.ProductionHead{}, err
 	}
@@ -178,8 +216,9 @@ func (r productionRepo) Create(ctx context.Context, h service.ProductionHead) er
 	_, err := r.ex.ExecContext(
 		ctx,
 		`INSERT INTO projects
- (id, name, state, created_ms, updated_ms, created_by, owner_user_id, trashed_ms, trashed_by)
- VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+ (id, name, state, created_ms, updated_ms, created_by, owner_user_id, trashed_ms, trashed_by, description,
+ goal_specific, goal_measurable, goal_achievable, goal_relevant, goal_time_bound, goal_due)
+ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		h.ID,
 		h.Name,
 		stateOrActive(h.State),
@@ -189,6 +228,13 @@ func (r productionRepo) Create(ctx context.Context, h service.ProductionHead) er
 		h.OwnerUserID,
 		h.TrashedMs,
 		h.TrashedBy,
+		h.Description,
+		h.Goal.Specific,
+		h.Goal.Measurable,
+		h.Goal.Achievable,
+		h.Goal.Relevant,
+		h.Goal.TimeBound,
+		h.Goal.Due,
 	)
 	if isUnique(r.ex, err) {
 		return service.ErrExists
@@ -233,6 +279,23 @@ func (r productionRepo) SetState(ctx context.Context, id string, st service.Proj
 		append(args, id)...)
 
 	return err
+}
+
+func (r productionRepo) SetContext(ctx context.Context, id string, c project.Context, atMs int64) error {
+	n, err := rowsAffected(r.ex.ExecContext(ctx,
+		`UPDATE projects SET name = ?, description = ?, goal_specific = ?, goal_measurable = ?, goal_achievable = ?,
+ goal_relevant = ?, goal_time_bound = ?, goal_due = ?, updated_ms = ? WHERE id = ?`,
+		c.Name, c.Description, c.Goal.Specific, c.Goal.Measurable, c.Goal.Achievable, c.Goal.Relevant,
+		c.Goal.TimeBound, c.Goal.Due, atMs, id))
+	if err != nil {
+		return err
+	}
+
+	if n == 0 {
+		return service.ErrNotFound
+	}
+
+	return nil
 }
 
 func (r productionRepo) Touch(ctx context.Context, id string, atMs int64) error {
