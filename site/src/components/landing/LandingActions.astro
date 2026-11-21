@@ -1,21 +1,25 @@
 ---
-// The four actions of the landing hero and footer: Getting Started (the one orange button, design-system 11.6) and
-// a download button per system, with the latest release read at build time (lib/releases.ts) and the beta notice.
+// The actions of the landing: Getting Started, the two Docker guides and a download button per system, with the
+// latest release read at build time (lib/releases.ts). The backups show the beta notice above the downloads; the
+// home shows them in the second row of its navbar (compact), where narrow windows use the short labels.
 import { latestRelease, type Os } from "@/lib/releases";
 import { withBase } from "@/lib/site";
 
 interface Props {
-	/** Distinguishes the ids of the hero and the footer copies. */
+	/** Distinguishes the ids of each copy on a page. */
 	idPrefix: string;
 	align?: "start" | "center";
 	/** Shows the beta notice above the downloads. */
 	beta?: boolean;
+	/** The small buttons of the home navbar row. */
+	compact?: boolean;
 	class?: string;
 }
 
-const { idPrefix, align = "start", beta = true, class: className } = Astro.props;
+const { idPrefix, align = "start", beta = true, compact = false, class: className } = Astro.props;
 const release = await latestRelease();
 const version = `v${release.version}`;
+const SHORT: Record<Os, string> = { windows: "Windows", macos: "macOS", linux: "Linux" };
 
 // Simple single-colour marks; the text of each button names the system.
 const icons: Record<Os, string> = {
@@ -28,26 +32,29 @@ const icons: Record<Os, string> = {
 // Two stacked server units with their lights cut out: a generic server, no trademark.
 const serverIcon =
 	"M3 4.5A1.5 1.5 0 0 1 4.5 3h15A1.5 1.5 0 0 1 21 4.5v5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 9.5zM3 14.5A1.5 1.5 0 0 1 4.5 13h15a1.5 1.5 0 0 1 1.5 1.5v5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19.5zM6 6.25h1.5v1.5H6zM9 6.25h1.5v1.5H9zM6 16.25h1.5v1.5H6zM9 16.25h1.5v1.5H9z";
+// A shipping container with its ribs cut out: the Docker guide for your own machine, no trademark.
+const containerIcon =
+	"M3 6.5A1.5 1.5 0 0 1 4.5 5h15A1.5 1.5 0 0 1 21 6.5v11a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5zM6 8h1.5v8H6zM9.5 8H11v8H9.5zM13 8h1.5v8H13zM16.5 8H18v8h-1.5z";
 // An open book with lines of text cut out of its pages, filled like the marks of the systems.
 const docsIcon =
 	"M2 5c3.5-.6 6.6 0 9 1.6V20c-2.4-1.5-5.5-2.1-9-1.5zM13 6.6C15.4 5 18.5 4.4 22 5v13.5c-3.5-.6-6.6 0-9 1.5zM4 8.4c1.9-.2 3.6.1 5 .9v1.1c-1.4-.8-3.1-1.1-5-.9zM4 11.6c1.9-.2 3.6.1 5 .9v1.1c-1.4-.8-3.1-1.1-5-.9zM15 9.3c1.4-.8 3.1-1.1 5-.9v1.1c-1.9-.2-3.6.1-5 .9zM15 12.5c1.4-.8 3.1-1.1 5-.9v1.1c-1.9-.2-3.6.1-5 .9z";
+const guides = [
+	{ kind: "docs", href: "/docs/introduction/", label: "Getting Started", short: "Get Started", sub: "Read Documentation", icon: docsIcon },
+	{ kind: "local", href: "/docs/self-hosting/docker/", label: "Setup Docker Local", short: "Docker Local", sub: `BETA Release ${version}`, icon: containerIcon },
+	{ kind: "vps", href: "/docs/self-hosting/vps/", label: "Setup Docker VPS", short: "Docker VPS", sub: `BETA Release ${version}`, icon: serverIcon },
+];
 ---
 
-<div class:list={["landing-actions", align === "center" && "landing-actions-center", !beta && "landing-actions-flat", className]}>
-	<a class="btn btn-glow btn-download" href={withBase("/docs/introduction/")}>
-		<svg viewBox="0 0 24 24" class="size-5 shrink-0" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d={docsIcon}></path></svg>
-		<span class="flex flex-col items-start leading-tight">
-			<span>Getting Started</span>
-			<span class="btn-sub text-xs font-normal text-muted">Read Documentation</span>
-		</span>
-	</a>
-	<a class="btn btn-glow btn-download" data-kind="vps" href={withBase("/docs/self-hosting/vps/")}>
-		<svg viewBox="0 0 24 24" class="size-5 shrink-0" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d={serverIcon}></path></svg>
-		<span class="flex flex-col items-start leading-tight">
-			<span>Setup Docker VPS</span>
-			<span class="btn-sub text-xs font-normal text-muted">BETA Release {version}</span>
-		</span>
-	</a>
+<div class:list={["landing-actions", align === "center" && "landing-actions-center", !beta && "landing-actions-flat", compact && "landing-actions-compact", className]}>
+	{guides.map((g) => (
+		<a class="btn btn-glow btn-download" data-kind={g.kind === "docs" ? undefined : g.kind} href={withBase(g.href)} aria-label={compact ? `${g.label}, ${g.sub}` : undefined}>
+			<svg viewBox="0 0 24 24" class="size-5 shrink-0" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d={g.icon}></path></svg>
+			<span class="flex flex-col items-start leading-tight">
+				<span class="btn-label"><span class="lbl-full">{g.label}</span>{compact ? <span class="lbl-short">{g.short}</span> : null}</span>
+				<span class="btn-sub text-xs font-normal text-muted">{g.sub}</span>
+			</span>
+		</a>
+	))}
 	<div
 		class="landing-downloads"
 		role="group"
@@ -63,10 +70,10 @@ const docsIcon =
 		<ul class="landing-download-list">
 			{release.downloads.map((d) => (
 				<li>
-					<a class="btn btn-glow btn-download" data-os={d.os} href={d.href} rel="noreferrer">
+					<a class="btn btn-glow btn-download" data-os={d.os} href={d.href} rel="noreferrer" aria-label={compact ? `${d.label}, BETA Release ${version}` : undefined}>
 						<svg viewBox="0 0 24 24" class="size-5 shrink-0" fill="currentColor" aria-hidden="true"><path d={icons[d.os]}></path></svg>
 						<span class="flex flex-col items-start leading-tight">
-							<span>{d.label}</span>
+							<span class="btn-label"><span class="lbl-full">{d.label}</span>{compact ? <span class="lbl-short">{SHORT[d.os]}</span> : null}</span>
 							<span class="btn-sub text-xs font-normal text-muted">BETA Release {version}</span>
 						</span>
 					</a>

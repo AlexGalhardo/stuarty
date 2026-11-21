@@ -212,6 +212,19 @@ main[data-expressive] .btn-glow:focus-visible {
   outline: 2px solid var(--c-edge);
   outline-offset: 3px;
 }
+/* The local Docker guide button: grape (#A21CAF, white label 6.32:1 on the fill), apart from the navbar violet and
+   the macOS pink. */
+.btn-glow[data-kind="local"] {
+  --c: #a21caf;
+  --c-edge: #a21caf;
+  --c-on: oklch(1 0 0);
+}
+.dark .btn-glow[data-kind="local"] {
+  --c-edge: #e879f9;
+}
+.lbl-short {
+  display: none;
+}
 /* The VPS guide button: the blue the Windows button had (white label 5.97:1 on the fill). */
 .btn-glow[data-kind="vps"] {
   --c: oklch(0.5 0.17 252);
