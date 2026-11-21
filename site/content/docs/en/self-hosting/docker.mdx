@@ -61,7 +61,12 @@ The container has no files of yours and the CLI needs a key, so three more steps
    ```bash
    export STUARTY_KEY="vvk_<the secret from step 2>"
    vv() { docker exec -i -e STUARTY_KEY stuarty stuarty "$@"; }
-   vv project:create --name "First export" --json     # prints project_id
+   vv project:create --name "First export" --json \
+     --description "The first export of this server: one clip, cut and exported as a video, to check the install." \
+     --specific "Export the first video of this server" --measurable "The file plays from start to end" \
+     --achievable "One clip in the import folder is enough" --relevant "It proves the server can export" \
+     --time-bound "Done within the next ten minutes" --due 2027-03-31   # prints project_id
+   vv item:add --project <project id> --kind timeline --title "First export"
    vv media:import /media/clip.mp4 --project <project id> --json   # prints asset_id
    vv edit --project <project id> --ops - <<'EOF'
    [{"op":"track.add","args":{"kind":"visual","name":"Video","id":"trk_f6g7h8j9k0"}},
