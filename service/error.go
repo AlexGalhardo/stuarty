@@ -27,6 +27,7 @@ const (
 	CodeConnectionNotFound    = "E_CONNECTION_NOT_FOUND"
 	CodeConnectionDestination = "E_CONNECTION_DESTINATION"
 	CodeVaultLocked           = "E_VAULT_LOCKED"
+	// CodeWebhookNotFound is declared in webhook_ops.go (SDD-022 section 8).
 	// CodePrivilegedSession, CodeApprovalNotFound, CodeCostCeiling and CodeApprovalExpired are the codes of SDD-015 section 8.
 	CodePrivilegedSession = "E_PRIVILEGED_SESSION"
 	CodeApprovalNotFound  = "E_APPROVAL_NOT_FOUND"
@@ -71,7 +72,7 @@ func (e *Error) HTTPStatus() int {
 	case CodeForbidden, "E_PATH_NOT_ALLOWED", CodeConnectionDestination, CodePrivilegedSession:
 		return http.StatusForbidden
 	case command.CodeNotFound, "E_FILE_NOT_FOUND", CodeConnectionNotFound, CodeApprovalNotFound, CodeAgentNotFound,
-		CodeChatNotFound:
+		CodeChatNotFound, CodeWebhookNotFound:
 		return http.StatusNotFound
 	case command.CodeRevisionConflict, command.CodeIdempotencyMismatch, command.CodeOverlap, command.CodeInvalidState,
 		command.CodeInUse, command.CodeNotEmpty, command.CodeIDExists, "E_ASSET_NOT_READY", CodeNothingToUndo, CodeNothingToRedo,

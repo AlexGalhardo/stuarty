@@ -237,6 +237,17 @@ func (m *Manager) secretSet(r *Row) bool {
 // PutSecret keeps the credential of a connection in the vault.
 func (m *Manager) PutSecret(ref string, secret []byte) error { return m.vault.Put(ref, secret) }
 
+// Secret reads a secret the service keeps in the vault for its own use, such as the signing secret of a webhook
+// (SDD-022). It is for the service only: no result, tool, command or endpoint returns what it reads.
+func (m *Manager) Secret(ref string) ([]byte, error) {
+	b, err := m.vault.Get(ref)
+	if errors.Is(err, vault.ErrNotFound) {
+		return nil, ErrNoSecret
+	}
+
+	return b, err
+}
+
 // DeleteSecret removes the credential of a connection from the vault.
 func (m *Manager) DeleteSecret(ref string) error { return m.vault.Delete(ref) }
 

@@ -412,6 +412,46 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.ConnectionTest(ctx, service.ConnectionRef{ID: "con_0000000001"})
 			return err
 		},
+		"WebhookEventList": func() error {
+			_, err := e.svc.WebhookEventList(ctx, service.WebhookEventListRequest{})
+			return err
+		},
+		"WebhookList": func() error {
+			_, err := e.svc.WebhookList(ctx, service.WebhookListRequest{})
+			return err
+		},
+		"WebhookGet": func() error {
+			_, err := e.svc.WebhookGet(ctx, service.WebhookRef{ID: "whk_0000000001"})
+			return err
+		},
+		"WebhookCreate": func() error {
+			_, err := e.svc.WebhookCreate(ctx, service.WebhookCreateRequest{})
+			return err
+		},
+		"WebhookUpdate": func() error {
+			_, err := e.svc.WebhookUpdate(ctx, service.WebhookUpdateRequest{ID: "whk_0000000001"})
+			return err
+		},
+		"WebhookRemove": func() error {
+			_, err := e.svc.WebhookRemove(ctx, service.WebhookRef{ID: "whk_0000000001"})
+			return err
+		},
+		"WebhookRotateSecret": func() error {
+			_, err := e.svc.WebhookRotateSecret(ctx, service.WebhookRef{ID: "whk_0000000001"})
+			return err
+		},
+		"WebhookTest": func() error {
+			_, err := e.svc.WebhookTest(ctx, service.WebhookRef{ID: "whk_0000000001"})
+			return err
+		},
+		"WebhookDeliveryList": func() error {
+			_, err := e.svc.WebhookDeliveryList(ctx, service.WebhookDeliveriesRequest{ID: "whk_0000000001"})
+			return err
+		},
+		"WebhookRedeliver": func() error {
+			_, err := e.svc.WebhookRedeliver(ctx, service.WebhookRedeliverRequest{ID: "whk_0000000001", DeliveryID: "wdl_0000000001"})
+			return err
+		},
 		"ApprovalList": func() error {
 			_, err := e.svc.ApprovalList(ctx, service.ApprovalListRequest{})
 			return err

@@ -1382,6 +1382,7 @@ CREATE TABLE webhook_deliveries (
   webhook_id    TEXT    NOT NULL,
   event         TEXT    NOT NULL,
   event_id      TEXT    NOT NULL,                -- evt_, the id inside the body
+  kind          TEXT    NOT NULL CHECK (kind IN ('event','test','redelivery')),
   body          TEXT    NOT NULL,                -- the stored JSON body, metadata only
   state         TEXT    NOT NULL CHECK (state IN ('pending','succeeded','failed')),
   max_attempts  INTEGER NOT NULL,
@@ -1396,7 +1397,7 @@ CREATE TABLE webhook_deliveries (
 );
 CREATE INDEX webhook_deliveries_due_index ON webhook_deliveries (state, next_ms);
 CREATE INDEX webhook_deliveries_webhook_index ON webhook_deliveries (webhook_id, created_ms);
-CREATE UNIQUE INDEX webhook_deliveries_event_unique ON webhook_deliveries (webhook_id, event_id) WHERE event != 'webhook.test';
+CREATE UNIQUE INDEX webhook_deliveries_event_unique ON webhook_deliveries (webhook_id, event_id) WHERE kind = 'event';
 CREATE TABLE webhook_attempts (
   delivery_id   TEXT    NOT NULL,
   n             INTEGER NOT NULL,
