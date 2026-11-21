@@ -293,7 +293,7 @@ const MENU_ACTIONS: Readonly<Record<string, (deps: MenuDeps) => void>> = {
 	"surface.toggle_panel.inspector": ({ runtime }) =>
 		runtime.uiWriter.toggleInspector(),
 	"surface.toggle_panel.history": ({ runtime }) =>
-		runtime.uiWriter.toggleLeftTab("history"),
+		runtime.uiWriter.toggleHistory(),
 	"surface.cheat_sheet": () => requestSurface("cheat_sheet"),
 	"surface.tour": () => startTour(),
 };

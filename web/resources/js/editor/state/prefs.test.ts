@@ -102,3 +102,38 @@ describe("language preference", () => {
 		expect(readLocale()).toBeNull();
 	});
 });
+
+describe("history sidebar preference", () => {
+	test("is closed until opened, then reads what was written, beside the rows", () => {
+		vi.stubGlobal("localStorage", storage());
+		expect(readLayout().historyOpen).toBe(false);
+		writeLayout({ historyOpen: true });
+		expect(readLayout().historyOpen).toBe(true);
+		expect(readLayout().rows).toEqual({ visual: 64, audio: 48 });
+		writeLayout({ rows: { visual: 70, audio: 50 } });
+		expect(readLayout()).toEqual({
+			rows: { visual: 70, audio: 50 },
+			historyOpen: true,
+		});
+		writeLayout({ historyOpen: false });
+		expect(readLayout().historyOpen).toBe(false);
+	});
+
+	test("anything but true reads as closed, and blocked storage does not throw", () => {
+		vi.stubGlobal(
+			"localStorage",
+			storage({ "vv.layout": JSON.stringify({ historyOpen: "yes" }) }),
+		);
+		expect(readLayout().historyOpen).toBe(false);
+		vi.stubGlobal("localStorage", {
+			getItem: () => {
+				throw new Error("blocked");
+			},
+			setItem: () => {
+				throw new Error("blocked");
+			},
+		});
+		expect(readLayout().historyOpen).toBe(false);
+		expect(() => writeLayout({ historyOpen: true })).not.toThrow();
+	});
+});

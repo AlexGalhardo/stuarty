@@ -108,6 +108,9 @@ export function writeShortcutsSeen(): void {
 // bounds reads as the default of that kind.
 export interface LayoutPrefs {
 	rows: { visual: number; audio: number };
+	// Whether the history sidebar is open (SDD-012 section 15): the choice of the
+	// person at this browser, closed until they open it.
+	historyOpen: boolean;
 }
 
 export const ROW_BOUNDS = { min: 32, max: 160 } as const;
@@ -123,30 +126,40 @@ function validRow(value: unknown, fallback: number): number {
 }
 
 export function readLayout(): LayoutPrefs {
-	const defaults = { rows: { ...DEFAULT_ROWS } };
+	const defaults = { rows: { ...DEFAULT_ROWS }, historyOpen: false };
 	try {
 		const parsed: unknown = JSON.parse(
 			localStorage.getItem("vv.layout") ?? "null",
 		);
 		if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed))
 			return defaults;
-		const rows = (parsed as { rows?: unknown }).rows;
-		if (typeof rows !== "object" || rows === null) return defaults;
+		const { rows, historyOpen } = parsed as {
+			rows?: unknown;
+			historyOpen?: unknown;
+		};
+		const open = historyOpen === true;
+		if (typeof rows !== "object" || rows === null)
+			return { ...defaults, historyOpen: open };
 		const { visual, audio } = rows as { visual?: unknown; audio?: unknown };
 		return {
 			rows: {
 				visual: validRow(visual, DEFAULT_ROWS.visual),
 				audio: validRow(audio, DEFAULT_ROWS.audio),
 			},
+			historyOpen: open,
 		};
 	} catch {
 		return defaults;
 	}
 }
 
-export function writeLayout(layout: LayoutPrefs): void {
+// Writes what is given and keeps the rest of what was stored.
+export function writeLayout(patch: Partial<LayoutPrefs>): void {
 	try {
-		localStorage.setItem("vv.layout", JSON.stringify(layout));
+		localStorage.setItem(
+			"vv.layout",
+			JSON.stringify({ ...readLayout(), ...patch }),
+		);
 	} catch {
 		// Storage can be blocked: the heights last for this page only.
 	}

@@ -3,7 +3,6 @@ import {
 	AudioLines,
 	Captions,
 	Film,
-	History,
 	LayoutTemplate,
 	type LucideIcon,
 	SlidersHorizontal,
@@ -12,7 +11,6 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 
-import HistoryPanel from "../history/HistoryPanel";
 import type { AssetDragStart } from "../library/AssetCard";
 import AudioPanel from "../library/AudioPanel";
 import EffectsPanel from "../library/EffectsPanel";
@@ -103,13 +101,5 @@ export const LIBRARY_TABS: readonly LibraryTabDef[] = [
 		commands: ["slot.mark"],
 		bodyClass: "*:flex-1",
 		render: () => <TemplatesTab />,
-	},
-	{
-		id: "history",
-		labelKey: "ui.editor.history.tab",
-		icon: History,
-		commands: [],
-		bodyClass: "overflow-auto p-3",
-		render: () => <HistoryPanel />,
 	},
 ];

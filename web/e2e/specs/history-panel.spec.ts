@@ -1,6 +1,6 @@
 import { caller, expect, seedProject, test } from "./helpers";
 
-// P2-UI-006 (SDD-012 section 15): the History tab lists the steps newest first
+// P2-UI-006 (SDD-012 section 15): the History sidebar lists the steps newest first
 // with the actor of each, prepends a new step from its event before the page is
 // refetched, and undo reverts only the step of the actor that presses it.
 test.describe("history-panel", () => {
@@ -86,12 +86,13 @@ test.describe("history-panel", () => {
 		)) as { document: { items: Record<string, { name?: string }> } };
 		expect(Object.values(doc.document.items)[0]?.name).toBe("Again");
 
-		// Alt+1 shows the library again, Alt+3 again hides the panel.
-		await page.keyboard.press("Alt+1");
+		// Alt+3 collapses the sidebar and leaves the library as it is; Alt+1 hides the library.
 		await expect(page.getByRole("tab", { name: "Media" })).toHaveAttribute(
 			"aria-selected",
 			"true",
 		);
+		await page.keyboard.press("Alt+3");
+		await expect(list).toHaveCount(0);
 		await page.keyboard.press("Alt+1");
 		// The panel is hidden and the rail stays (docs/design-system.md 3.4.4).
 		await expect(page.getByRole("tab", { name: "Media" })).toHaveAttribute(

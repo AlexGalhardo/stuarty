@@ -68,7 +68,7 @@ export interface UiState {
 	// The tab of the left panel and which panels are shown (SDD-012 sections
 	// 6.1 and 18.2: Alt+1, Alt+2 and Alt+3).
 	activePanelTab: LeftTab;
-	panels: { left: boolean; inspector: boolean };
+	panels: { left: boolean; inspector: boolean; history: boolean };
 	inspectorTab: InspectorTab;
 }
 
@@ -81,8 +81,7 @@ export type LeftTab =
 	| "effects"
 	| "transitions"
 	| "filters"
-	| "templates"
-	| "history";
+	| "templates";
 
 // The tab strip of the inspector (SDD-012 section 6.4). It is remembered across
 // selections; a selection that lacks the tab shows its first one.
@@ -121,14 +120,12 @@ export interface UiWriter {
 	setPreviewVolume(volume: number): void;
 	togglePreviewMuted(): void;
 	blockHistory(kind: "undo" | "redo", revision: number): void;
-	// Show a tab of the left panel; when it is already the shown one, hide the
-	// panel (a toggle).
-	toggleLeftTab(tab: LeftTab): void;
+	// Alt+3: open or collapse the history sidebar; the choice is remembered.
+	toggleHistory(): void;
 	toggleInspector(): void;
 	showInspectorTab(tab: InspectorTab): void;
 	showLeftTab(tab: LeftTab): void;
-	// Alt+1: show or hide the whole left region (the rail stays). Showing it from
-	// History goes back to Media; otherwise the last tab comes back.
+	// Alt+1: show or hide the whole left region (the rail stays); the last tab comes back.
 	toggleLeftRegion(): void;
 }
 
@@ -157,7 +154,7 @@ export function createUiStore(initialZoom = 1): {
 		previewMuted: false,
 		historyBlocked: { undo: null, redo: null },
 		activePanelTab: "library",
-		panels: { left: true, inspector: true },
+		panels: { left: true, inspector: true, history: readLayout().historyOpen },
 		inspectorTab: "video",
 	});
 	return {
@@ -277,27 +274,16 @@ export function createUiStore(initialZoom = 1): {
 					...s,
 					historyBlocked: { ...s.historyBlocked, [kind]: revision },
 				})),
-			toggleLeftTab: (tab) =>
-				store.setState((s) =>
-					s.panels.left && s.activePanelTab === tab
-						? { ...s, panels: { ...s.panels, left: false } }
-						: {
-								...s,
-								activePanelTab: tab,
-								panels: { ...s.panels, left: true },
-							},
-				),
+			toggleHistory: () => {
+				const history = !store.getState().panels.history;
+				store.setState((s) => ({ ...s, panels: { ...s.panels, history } }));
+				writeLayout({ historyOpen: history });
+			},
 			toggleLeftRegion: () =>
-				store.setState((s) =>
-					s.panels.left && s.activePanelTab !== "history"
-						? { ...s, panels: { ...s.panels, left: false } }
-						: {
-								...s,
-								activePanelTab:
-									s.activePanelTab === "history" ? "library" : s.activePanelTab,
-								panels: { ...s.panels, left: true },
-							},
-				),
+				store.setState((s) => ({
+					...s,
+					panels: { ...s.panels, left: !s.panels.left },
+				})),
 			showLeftTab: (tab) =>
 				store.setState((s) => ({
 					...s,

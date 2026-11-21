@@ -37,7 +37,7 @@ A creator editing a video reads every menu in the dark theme, has room in the le
 - [x] 2. The rename operation with its rules and parity tests. Verify: `go test ./core/... ./service/... ./web/...` passes and `go run ./internal/tools/surfacebudget` exits 0.
 - [x] 3. Dark menus, the wider sidebar, the strip removed. Verify: `bun run typecheck`, `check:thin-client`, `check:contrast`, Vitest, and a Playwright spec that opens each editor menu in the dark theme and checks the computed background and text colors.
 - [x] 4. Rename in the editor and the library by right-click and keyboard. Verify: a Playwright spec (rename, see the new name in the library and in an export file name).
-- [ ] 5. The history sidebar. Verify: a Playwright spec (open, collapse, newest first after an edit).
+- [x] 5. The history sidebar. Verify: a Playwright spec (open, collapse, newest first after an edit).
 
 ## Acceptance criteria
 

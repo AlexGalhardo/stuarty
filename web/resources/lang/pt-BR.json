@@ -2075,6 +2075,9 @@
       },
       "history": {
         "tab": "Histórico",
+        "show": "Mostrar histórico",
+        "hide": "Ocultar histórico",
+        "sidebar": "Barra do histórico",
         "revision": "rev {revision}",
         "title": "Histórico",
         "you": "Você",
