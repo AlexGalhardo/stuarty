@@ -486,13 +486,15 @@ func (s *svc) generatedAsset(ctx context.Context, c Caller, exportJob string) (b
 		return false, nil //nolint:nilerr // publishFile checked the job: no project means no assets to read
 	}
 
-	// The export of a timeline is kept under the id of the timeline; one kept under a project is a project of
-	// timelines, whose active timelines are read.
+	// The export of a timeline is kept under the id of the timeline, so the project is read from it: the assets of
+	// all its active timelines count, whichever one the export came from (SDD-020 section 20).
 	ids := []string{*row.ProjectID}
 
-	if refs, rerr := s.store.Productions().ActiveTimelines(ctx, *row.ProjectID); rerr == nil {
+	if refs, rerr := s.store.Productions().ActiveTimelines(ctx, s.projectOf(ctx, *row.ProjectID)); rerr == nil {
 		for i := range refs {
-			ids = append(ids, refs[i].TimelineID)
+			if !slices.Contains(ids, refs[i].TimelineID) {
+				ids = append(ids, refs[i].TimelineID)
+			}
 		}
 	}
 
