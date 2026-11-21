@@ -600,7 +600,8 @@ func (s *svc) ruleKindKnown(kind string) error {
 	known := append(slices.Sorted(maps.Keys(s.kinds)), KindPublishScheduled)
 	slices.Sort(known)
 
-	return newError(command.CodeValidation, "no action has the kind %q, so the rule would never apply.", kind).
+	// The message names the path and not the kind given (SDD-003 section 1 item 9).
+	return newError(command.CodeValidation, "no action has this kind, so the rule would never apply.").
 		withPath("kind").
 		withHint("use one of: %s", strings.Join(known, ", "))
 }

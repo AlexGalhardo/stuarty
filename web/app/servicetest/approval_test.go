@@ -614,4 +614,9 @@ func TestApprovalRuleRefusesAKindNoActionHas(t *testing.T) {
 	if !ok || se.Code != "E_VALIDATION" || se.Path != "kind" || !strings.Contains(se.Hint, "publish.scheduled") {
 		t.Fatalf("a rule for publish.post = %v, want E_VALIDATION on kind naming the kinds there are", err)
 	}
+
+	// SDD-003 section 1 item 9: a validation message names the path, never the value it was given.
+	if strings.Contains(se.Message, "publish.post") || strings.Contains(se.Hint, "publish.post") {
+		t.Errorf("the refusal quotes the kind it was given: %q, hint %q", se.Message, se.Hint)
+	}
 }
