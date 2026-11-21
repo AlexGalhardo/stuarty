@@ -129,6 +129,22 @@ import { withBase } from "@/lib/site";
 		min-height: 100svh;
 		padding-block: calc(var(--header-h) + 3rem) 4rem;
 	}
+	/* The first take keeps the bottom free for the scroll hint; on short windows the hero tightens so its buttons
+	   stay above it. */
+	html.takes-on #studio {
+		padding-bottom: 4rem;
+	}
+	@media (max-height: 52rem) {
+		html.takes-on #studio .display-home {
+			font-size: clamp(2rem, 6.2vh, 3.5rem);
+		}
+		html.takes-on #studio .lead {
+			margin-top: 1rem;
+		}
+		html.takes-on #studio [data-hero-item]:has(.landing-actions) {
+			margin-top: 1.5rem;
+		}
+	}
 	html:not(.takes-on) .take-hint,
 	html:not(.takes-on) .take-credits {
 		display: none;
