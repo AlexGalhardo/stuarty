@@ -879,7 +879,7 @@ type webhookItem struct {
 func webhookItemOf(w *service.Webhook) webhookItem {
 	return webhookItem{
 		ID:           w.ID,
-		Name:         w.Name,
+		Name:         untrusted.Value(w.Name, core.MaxNameRunes),
 		Host:         core.SafeURL(w.URL),
 		Events:       w.Events,
 		Enabled:      w.Enabled,
@@ -903,7 +903,10 @@ func webhookView(ctx context.Context, svc service.Service) (*toolOutput, error) 
 		lines = append(lines, fmt.Sprintf("%s %s %v", item.ID, item.Host, item.Events))
 	}
 
-	return &toolOutput{value: map[string]any{"webhooks": items}, text: strings.Join(lines, "\n")}, nil
+	return &toolOutput{
+		value: map[string]any{"untrusted_notice": untrusted.Notice, "webhooks": items},
+		text:  strings.Join(lines, "\n"),
+	}, nil
 }
 
 // projectDescribe is project_get with detail overview: the description of the whole production (SDD-003 section
