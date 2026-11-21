@@ -22,6 +22,7 @@ export default function RenameAssetDialog({
 	onOpenChange,
 	name,
 	rename,
+	returnFocus,
 }: {
 	open: boolean;
 	onOpenChange(open: boolean): void;
@@ -29,6 +30,9 @@ export default function RenameAssetDialog({
 	name: string;
 	// Sends the new name; a refusal of the service is an ApiError.
 	rename(name: string): Promise<void>;
+	// The element that takes the focus when the dialog closes: a context menu that
+	// opened it is gone by then, and a keyboard user must not land on the page.
+	returnFocus(): HTMLElement | null;
 }): ReactNode {
 	const t = useT();
 	const [value, setValue] = useState(name);
@@ -59,7 +63,7 @@ export default function RenameAssetDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent>
+			<DialogContent finalFocus={() => returnFocus()}>
 				<DialogHeader>
 					<DialogTitle>{t("ui.editor.library.rename.title")}</DialogTitle>
 				</DialogHeader>
