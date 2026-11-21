@@ -253,6 +253,8 @@ A project-limited key may use the operations that name its project and is refuse
 
 `Run` runs after the approval, through `Manager.With`: it resolves the files again and refuses with `E_INVALID_STATE` a file whose size or digest differs from what the person was shown, calls `Publish` and returns the remote id, the URL and the state as the result of the job. The cost is none; the quota of the network is not money and is not in the ledger.
 
+**A video in the trash is never sent.** An export is in the trash when its timeline is (a project in the trash puts its timelines there), or when it is shown by output items of the project and all of them are. Validating, creating or scheduling a post of such an export is refused with `E_INVALID_STATE`, and the check runs again immediately before a post is sent, for `publish.upload` and for a scheduled target (section 26), because an approved post can wait for its time while the timeline goes to the trash. The target then fails as an integrity error; after the timeline is restored, a retry asks a person again.
+
 ## 11. Errors
 
 Added to SDD-000 section 8: `E_PUBLISH` (a network refused or failed a publication; `details.kind` is `quota`, `not_eligible`, `auth`, `invalid`, `rejected` or `unavailable`, `details.network`, `details.retryable` and, for a quota, `details.retry_after` as a time; the hint says what to do). `E_VALIDATION` covers the post (`details.issues`). `E_CONNECTION_NOT_FOUND` is a connection that does not exist. `E_VAULT_LOCKED` is as in SDD-014.

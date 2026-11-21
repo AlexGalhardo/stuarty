@@ -16,6 +16,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/approval"
 	"github.com/AlexGalhardo/stuarty/core/asset"
 	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/project"
 	"github.com/AlexGalhardo/stuarty/core/publish"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/social"
@@ -376,6 +377,10 @@ func (s *svc) publishFile(ctx context.Context, c Caller, projectID, path, jobID 
 		return nil, validationAt(path, "that job is not a succeeded export.").withHint("wait for the export to succeed")
 	}
 
+	if terr := s.refuseTrashedExport(ctx, path, &row); terr != nil {
+		return nil, terr
+	}
+
 	f, ferr := s.ExportFile(ctx, ExportFileRequest{JobID: jobID})
 	if ferr != nil {
 		return nil, ferr
@@ -415,6 +420,85 @@ func (s *svc) publishFile(ctx context.Context, c Caller, projectID, path, jobID 
 	}
 
 	return out, nil
+}
+
+// refuseTrashedExport refuses a video a person threw away (SDD-020 section 10): when a post is made, and again just
+// before it is sent, since an approved post can wait for its time while the timeline goes to the trash.
+func (s *svc) refuseTrashedExport(ctx context.Context, path string, job *JobRow) error {
+	trashed, err := s.exportInTrash(ctx, job)
+	if err != nil {
+		return asError(err)
+	}
+
+	if !trashed {
+		return nil
+	}
+
+	return newError(command.CodeInvalidState, "that export is in the trash.").withPath(path).
+		withHint("restore its timeline or its output item, or export again")
+}
+
+// exportInTrash says whether the timeline of an export is in the trash (a project in the trash puts its timelines
+// there), or every output item that shows this export is.
+func (s *svc) exportInTrash(ctx context.Context, job *JobRow) (bool, error) {
+	if job.ProjectID == nil {
+		return false, nil
+	}
+
+	head, err := s.store.Projects().Head(ctx, *job.ProjectID)
+	if err != nil && !isNotFound(err) {
+		return false, err
+	}
+
+	if err == nil && head.State == ProjectTrashed {
+		return true, nil
+	}
+
+	owner, err := costProject(ctx, s.store, *job.ProjectID)
+	if err != nil {
+		return false, err
+	}
+
+	items, err := s.store.Productions().Items(ctx, owner)
+	if err != nil {
+		return false, err
+	}
+
+	shown, active := false, false
+
+	for i := range items {
+		if items[i].Kind == string(project.Output) && items[i].Ref == job.ID {
+			shown = true
+			active = active || items[i].State != ProjectTrashed
+		}
+	}
+
+	return shown && !active, nil
+}
+
+// checkNotTrashed is the last check of a post before it leaves: the files it names are not in the trash. A job that
+// no longer exists is left to approvedFile, which refuses a file that is gone.
+func (s *svc) checkNotTrashed(ctx context.Context, in *publishInput) error {
+	for _, f := range []struct{ path, id string }{{"export", in.Args.Export}, {"thumbnail", in.Args.Thumbnail}} {
+		if f.id == "" {
+			continue
+		}
+
+		row, err := s.store.Jobs().Get(ctx, f.id)
+		if isNotFound(err) {
+			continue
+		}
+
+		if err != nil {
+			return asError(err)
+		}
+
+		if terr := s.refuseTrashedExport(ctx, f.path, &row); terr != nil {
+			return terr
+		}
+	}
+
+	return nil
 }
 
 // publishImageFile is the file of an image.export job taken as the thumbnail of a publication (D-111). An image
@@ -659,6 +743,10 @@ func (s *svc) sendPost(
 	conn, cerr := reg.Get(in.Network)
 	if cerr != nil {
 		return social.Published{}, newError(command.CodeNotFound, "the network is not built into this server.")
+	}
+
+	if terr := s.checkNotTrashed(ctx, in); terr != nil {
+		return social.Published{}, terr
 	}
 
 	full, ferr := s.approvedFile(in.Output)
