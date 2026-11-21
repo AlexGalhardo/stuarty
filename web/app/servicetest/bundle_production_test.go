@@ -3,6 +3,8 @@ package servicetest
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -13,6 +15,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 )
 
 // exportBundleRequest runs the bundle export of the request to the end and returns the path of the file.
@@ -516,5 +519,61 @@ func TestBundleLongTextsRoundTrip(t *testing.T) {
 		if got[k] != w {
 			t.Errorf("the text of %s differs: %d bytes, want %d", k, len(got[k]), len(w))
 		}
+	}
+}
+
+// A later timeline of a bundle cannot take the id of a project that exists: that project may have no timeline yet, so
+// the timelines table does not show the clash, and every id that resolves through the timeline would then name the
+// project of the bundle instead (SDD-015 section 3).
+func TestBundleImport_ALaterTimelineCannotTakeTheIDOfAProject(t *testing.T) {
+	src := newMediaEnv(t, mediaCfg{})
+
+	// The ids of a test workspace are a sequence: this keeps the bundle's project off the id of the victim below.
+	if _, err := testproject.Create(src.as(ui), src.svc, "First project"); err != nil {
+		t.Fatal(err)
+	}
+
+	project, second := src.productionProject()
+	path := src.exportBundleRequest(service.ProjectBundleExportRequest{ProjectID: project})
+
+	dst := newMediaEnv(t, mediaCfg{})
+
+	victim, err := testproject.Create(dst.as(ui), dst.svc, "Victim project")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if victim.ProjectID == project || victim.ProjectID == second {
+		t.Fatalf("the fixture needs ids that differ: victim %s, project %s, second %s", victim.ProjectID, project, second)
+	}
+
+	entries := bundleEntries(t, path)
+	doc := entryIndex(entries, "timeline.t1.json")
+	entries[doc].body = bytes.ReplaceAll(entries[doc].body, []byte(second), []byte(victim.ProjectID))
+	body := entries[doc].body
+	sum := sha256.Sum256(body)
+
+	withManifest(t, entries, func(m *service.BundleManifest) {
+		m.Timelines[0].ID = victim.ProjectID
+		m.Timelines[0].Document.SHA256 = hex.EncodeToString(sum[:])
+		m.Timelines[0].Document.Bytes = int64(len(body))
+		m.Timelines[0].Operations = nil
+	})
+
+	log := entryIndex(entries, "timeline.t1.ndjson")
+	entries = append(entries[:log], entries[log+1:]...)
+
+	crafted := writeBundleEntries(t, t.TempDir(), "crafted.vvbundle", entries)
+
+	if _, err := dst.importBundle(crafted, false); code(err) != "E_ID_EXISTS" {
+		t.Fatalf("a timeline with the id of a project = %v, want E_ID_EXISTS", err)
+	}
+
+	if owner, err := dst.store.Productions().ProjectOfTimeline(context.Background(), victim.ProjectID); err == nil {
+		t.Errorf("the id of the project now names a timeline of %s", owner)
+	}
+
+	if got, err := dst.importBundle(crafted, true); err != nil || got.ProjectID == victim.ProjectID {
+		t.Fatalf("as a copy = %+v, %v; want a new project", got, err)
 	}
 }
