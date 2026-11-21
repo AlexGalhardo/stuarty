@@ -84,7 +84,9 @@ func TestTablesMatchSDD005Section5(t *testing.T) {
 		"projects": {
 			"id TEXT 1 - 1", "name TEXT 1 - 0", "state TEXT 1 'active' 0", "created_ms INTEGER 1 - 0",
 			"updated_ms INTEGER 1 - 0", "created_by TEXT 1 - 0", "owner_user_id TEXT 0 - 0",
-			"trashed_ms INTEGER 0 - 0", "trashed_by TEXT 0 - 0",
+			"trashed_ms INTEGER 0 - 0", "trashed_by TEXT 0 - 0", "description TEXT 1 '' 0", "goal_specific TEXT 1 '' 0",
+			"goal_measurable TEXT 1 '' 0", "goal_achievable TEXT 1 '' 0", "goal_relevant TEXT 1 '' 0",
+			"goal_time_bound TEXT 1 '' 0", "goal_due TEXT 1 '' 0",
 		},
 		"project_items": {
 			"id TEXT 1 - 1", "project_id TEXT 1 - 0", "kind TEXT 1 - 0", "title TEXT 1 - 0",

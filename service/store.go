@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/AlexGalhardo/stuarty/core/project"
 	"github.com/AlexGalhardo/stuarty/service/agenthost"
 	"github.com/AlexGalhardo/stuarty/service/approval"
 	"github.com/AlexGalhardo/stuarty/service/assets"
@@ -196,6 +197,10 @@ type ProductionHead struct {
 	OwnerUserID *string // network mode only (SDD-007 4.1)
 	TrashedMs   *int64
 	TrashedBy   *string
+	// Context is the description and the goal of the project (SDD-005 section 5.12.2); Name is also its name.
+	// Empty text for a project made before epic 56.
+	Description string
+	Goal        project.Goal
 	// Timelines counts the active timeline items.
 	Timelines int
 	// Timeline is the head of the first active timeline by position; its ID is empty when there is none.
@@ -241,6 +246,9 @@ type ProductionRepo interface {
 	SetState(ctx context.Context, id string, st ProjectState, by string, atMs int64) error
 	// Touch sets updated_ms.
 	Touch(ctx context.Context, id string, atMs int64) error
+	// SetContext writes the name, the description and the goal and sets updated_ms. ErrNotFound when there is no
+	// such project.
+	SetContext(ctx context.Context, id string, c project.Context, atMs int64) error
 	// Delete is a hard delete that cascades the items; the timeline rows are the business of the caller. Only
 	// TrashEmpty calls it.
 	Delete(ctx context.Context, id string) error
