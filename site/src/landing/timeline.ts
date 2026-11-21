@@ -18,7 +18,14 @@ function timecode(progress: number): string {
 /** Mounts the timeline found under `root`; returns its render function, or null when its markup is missing. */
 export function mountTimeline(
 	root: ParentNode,
-	options: { reduced: boolean; stage?: () => Stage | null; /** The export folds the editor into the 3D mascot. */ mascot?: boolean },
+	options: {
+		reduced: boolean;
+		stage?: () => Stage | null;
+		/** The export folds the editor into the 3D mascot. */
+		mascot?: boolean;
+		/** False: no export at the end; the playhead runs over the whole progress (the home has no outro). */
+		exportEnd?: boolean;
+	},
 ): ((p: number) => void) | null {
 	const { reduced } = options;
 	const lane = root.querySelector<HTMLElement>("[data-lane]");
@@ -65,7 +72,8 @@ export function mountTimeline(
 	const laneWidth = (): number => lane.offsetWidth;
 
 	const render = (p: number): void => {
-		const run = Math.min(1, p / 0.88);
+		const fold = options.exportEnd !== false;
+		const run = fold ? Math.min(1, p / 0.88) : Math.min(1, p);
 		gsap.set(lane, { x: -run * laneWidth() });
 		if (tc) tc.textContent = timecode(run);
 		setActive(Math.min(previews.length - 1, Math.floor(run * previews.length)));
@@ -95,11 +103,11 @@ export function mountTimeline(
 		}
 
 		// The export: past 88% the editor folds into the mascot and the outro shows.
-		const out = gsap.utils.clamp(0, 1, (p - 0.88) / 0.1);
+		const out = fold ? gsap.utils.clamp(0, 1, (p - 0.88) / 0.1) : 0;
 		gsap.set(bottom, { autoAlpha: 1 - out, scaleY: 1 - out * 0.6, transformOrigin: "50% 100%" });
 		gsap.set(top, { autoAlpha: 1 - out, scale: 1 - out * 0.12 });
 		if (exportBtn) exportBtn.textContent = out > 0 ? "Exported" : "Export";
-		gsap.set(outro, { autoAlpha: gsap.utils.clamp(0, 1, (out - 0.5) / 0.5) });
+		if (outro) gsap.set(outro, { autoAlpha: gsap.utils.clamp(0, 1, (out - 0.5) / 0.5) });
 		const stage = options.stage?.() ?? null;
 		if (stage && p > 0) {
 			stage.setMood(run);
