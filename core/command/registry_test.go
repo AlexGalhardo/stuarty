@@ -503,3 +503,14 @@ func TestHelpCarriesTheSchemaAndTheShapeOfListItems(t *testing.T) {
 		}
 	}
 }
+
+// A summary is what an agent reads to choose an operation: a single word says nothing (VV-308).
+func TestEverySummaryIsMoreThanOneWord(t *testing.T) {
+	t.Parallel()
+
+	for _, c := range Default().List() {
+		if len(strings.Fields(c.Summary)) < 2 {
+			t.Errorf("%s: the summary %q is a single word", c.Name, c.Summary)
+		}
+	}
+}

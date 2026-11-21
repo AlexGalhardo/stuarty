@@ -354,7 +354,7 @@
 		"internal": false,
 		"name": "audio.apply_preset",
 		"scope": "edit",
-		"summary": "Preset"
+		"summary": "Replaces a chain with a preset."
 	},
 	{
 		"args_schema": {
@@ -860,7 +860,7 @@
 		"internal": false,
 		"name": "audio.processor_add",
 		"scope": "edit",
-		"summary": "Add"
+		"summary": "Adds an audio processor to a chain."
 	},
 	{
 		"args_schema": {
@@ -909,7 +909,7 @@
 		"internal": false,
 		"name": "audio.processor_move",
 		"scope": "edit",
-		"summary": "Move"
+		"summary": "Moves an audio processor in its chain."
 	},
 	{
 		"args_schema": {
@@ -951,7 +951,7 @@
 		"internal": false,
 		"name": "audio.processor_remove",
 		"scope": "edit",
-		"summary": "Remove"
+		"summary": "Removes an audio processor."
 	},
 	{
 		"args_schema": {
@@ -1315,7 +1315,7 @@
 		"internal": false,
 		"name": "audio.processor_set",
 		"scope": "edit",
-		"summary": "Set"
+		"summary": "Changes one audio processor."
 	},
 	{
 		"args_schema": {

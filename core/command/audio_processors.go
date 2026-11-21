@@ -15,7 +15,7 @@ var processorErrors = []string{CodeValidation, CodeNotFound, CodeTypeMismatch}
 func init() {
 	Register(Define(Spec{
 		Name:    "audio.processor_add",
-		Summary: "Add",
+		Summary: "Adds an audio processor to a chain.",
 		Description: "Adds an audio processor to the chain of a clip or audio item (item_id) or of a track (track_id). " +
 			"kind is eq, compressor, limiter, gate, deesser or noise_reduction; params are the values that differ from " +
 			"the default of the kind (units and ranges in SDD-004 7.1). The chain runs in order, so index matters; a " +
@@ -26,7 +26,7 @@ func init() {
 	}, applyProcessorAdd))
 	Register(Define(Spec{
 		Name:    "audio.processor_set",
-		Summary: "Set",
+		Summary: "Changes one audio processor.",
 		Description: "Changes one processor of the chain of an item or a track. index is the 0-based place in the chain. " +
 			"params are merged with the current ones; enabled false keeps the processor but skips it.",
 		Example: `{"track_id": "trk_m1n2p3q4r5", "index": 0, "enabled": false}`,
@@ -35,7 +35,7 @@ func init() {
 	}, applyProcessorSet))
 	Register(Define(Spec{
 		Name:    "audio.processor_move",
-		Summary: "Move",
+		Summary: "Moves an audio processor in its chain.",
 		Description: "Moves a processor to another place in the chain of an item or a track. index and to are 0-based " +
 			"places in the chain; the order changes the sound.",
 		Example: `{"item_id": "itm_m1n2p3q4r5", "index": 0, "to": 2}`,
@@ -44,7 +44,7 @@ func init() {
 	}, applyProcessorMove))
 	Register(Define(Spec{
 		Name:    "audio.processor_remove",
-		Summary: "Remove",
+		Summary: "Removes an audio processor.",
 		Description: "Removes a processor from the chain of an item or a track. index is the 0-based place in the chain; " +
 			"later processors move one place earlier.",
 		Example: `{"item_id": "itm_m1n2p3q4r5", "index": 1}`,
@@ -53,7 +53,7 @@ func init() {
 	}, applyProcessorRemove))
 	Register(Define(Spec{
 		Name:    "audio.apply_preset",
-		Summary: "Preset",
+		Summary: "Replaces a chain with a preset.",
 		Description: "Replaces the chain of an item or a track with a preset: voice, voice_with_music, podcast or " +
 			"clean_noisy_room. The chain becomes exactly the preset; change any processor afterwards with " +
 			"audio.processor_set. voice_with_music has no noise reduction.",
