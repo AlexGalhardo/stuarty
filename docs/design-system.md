@@ -1173,10 +1173,10 @@ Contrast (WCAG 2.x): `--cta-foreground` on `--cta` 6.91:1, on the light hover 5.
 | --- | --- | --- | --- | --- |
 | Getting Started | `--cta` `oklch(0.7 0.2 48)` `#FC6D00` | `--cta` / `--cta` | `oklch(0.145 0 0)` | 6.91:1 |
 | Windows | `oklch(0.5 0.17 252)` `#0062BF` | `oklch(0.5 0.17 252)` / `oklch(0.65 0.15 250)` | white | 5.97:1 |
-| macOS | `oklch(0.82 0.01 260)` `#C0C4CB` | `oklch(0.62 0.01 260)` / `oklch(0.82 0.01 260)` | `oklch(0.145 0 0)` | 11.34:1 |
+| macOS | hot pink `#FF1F8E` (about `oklch(0.65 0.26 0)`) | `#FF1F8E` / `#FF1F8E` | `oklch(0.145 0 0)` | 5.50:1 |
 | Linux | `oklch(0.84 0.15 85)` `#F7C243` | `oklch(0.72 0.15 75)` / `oklch(0.84 0.15 85)` | `oklch(0.145 0 0)` | 12.01:1 |
 
-At rest the label is `--fg` on `--bg` (above 15:1 in both themes) and the version line `--muted` on `--bg` (7.9:1 light, 7.7:1 dark); on hover the version line takes the label colour. The border is decorative: the label identifies the control.
+At rest the label is `--fg` on `--bg` (above 15:1 in both themes) and the version line `--muted` on `--bg` (7.9:1 light, 7.7:1 dark); on hover the version line takes the label colour. The border is decorative: the label identifies the control. The macOS pink takes near-black text on its fill because white on `#FF1F8E` is only 3.60:1; its border is 3.60:1 against the white page and 5.50:1 against the dark one.
 
 ### 11.7 Radii, borders and shadows
 
