@@ -292,6 +292,11 @@ export const trust = {
 	],
 };
 
+/** The closing take of the home, in the author's words, one line each. */
+export const homeYours = {
+	lines: ["On your machine.", "On your terms.", "No subscriptions.", "No pay once.", "Free. Forever."],
+};
+
 export const cta = {
 	title: "Make the next one in one place.",
 	lead: "Free and open source. Runs on Windows, macOS, Linux and your own server.",
@@ -299,7 +304,7 @@ export const cta = {
 	secondary: { label: "View on GitHub" },
 };
 
-export const credits = "Footage: Big Buck Bunny, (c) Blender Foundation, CC BY 3.0. Photo: CC0. Clips are placeholders until the real recordings arrive.";
+export const credits = "Footage: Big Buck Bunny, (c) Blender Foundation, CC BY 3.0. Photo: CC0.";
 
 /** The six takes of the viewport version (brainstorming section 5.1). */
 export const takes = [

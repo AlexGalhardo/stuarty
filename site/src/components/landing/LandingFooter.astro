@@ -3,11 +3,18 @@
 // the CC BY footage in the screenshots requires.
 import LandingActions from "./LandingActions.astro";
 import { credits } from "@/lib/landing-pages";
+
+interface Props {
+	/** Shows the beta notice above the downloads; the home has none. */
+	beta?: boolean;
+}
+
+const { beta = true } = Astro.props;
 ---
 
 <footer class="landing-footer relative border-t border-fg/10 bg-bg">
 	<div class="site-container py-14">
-		<LandingActions idPrefix="footer" align="center" />
+		<LandingActions idPrefix="footer" align="center" beta={beta} />
 		<p class="mt-10 text-center text-xs text-muted">{credits}</p>
 	</div>
 </footer>
