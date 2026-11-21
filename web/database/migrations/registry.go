@@ -51,5 +51,6 @@ func All() []schema.Migration {
 		m20261121100000ProjectScopedJobs(),
 		m20261121110000CreateWebhookTables(),
 		m20261121184500CeilingsToProject(),
+		m20261121200000CreateAccountsTable(),
 	}
 }

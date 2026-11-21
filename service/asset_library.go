@@ -238,7 +238,7 @@ func libraryRefusal(err error) error {
 // offer the image of a brand logo without asking for a hash (VV-117), and a person or an agent can find a file
 // of a past production (RF-320). A key limited to one project lists that project's files only.
 func (s *svc) AssetList(ctx context.Context, req AssetListRequest) (*AssetListResult, error) {
-	c, err := authorize(ctx, "AssetList", "")
+	c, err := s.authorize(ctx, "AssetList", "")
 	if err != nil {
 		return nil, err
 	}

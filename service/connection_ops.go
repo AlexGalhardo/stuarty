@@ -49,7 +49,7 @@ type ConnectionTestResult struct {
 // connectionCaller is what the five operations share: the scope of the method,
 // and no project-limited key, since a connection belongs to the workspace.
 func (s *svc) connectionCaller(ctx context.Context, method string) (Caller, error) {
-	c, err := authorize(ctx, method, "")
+	c, err := s.authorize(ctx, method, "")
 	if err != nil {
 		return Caller{}, err
 	}

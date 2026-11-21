@@ -27,6 +27,7 @@ import (
 	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
 	"github.com/AlexGalhardo/stuarty/internal/ffmpegpins"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/account"
 	"github.com/AlexGalhardo/stuarty/service/agenthost"
 	"github.com/AlexGalhardo/stuarty/service/config"
 	"github.com/AlexGalhardo/stuarty/service/connections"
@@ -75,6 +76,9 @@ type Config struct {
 	Inline bool
 }
 
+// idleCheckEvery is how often the idle lock of the account is looked at.
+const idleCheckEvery = 10 * time.Second
+
 // ShutdownTimeout is how long the workers wait for running jobs before they
 // are interrupted and requeued (SDD-005 section 6.3 step 6).
 const ShutdownTimeout = 15 * time.Second
@@ -85,6 +89,8 @@ type Owner struct {
 	Store   *store.Store
 	Service service.Service
 	Runner  service.JobRunner
+	// Account is the local account of the workspace (ADR-0049); nil in network mode, which has its own users.
+	Account *account.Manager
 	Queue   *queue.Queue
 	Token   string
 	// runtimeSecret is the per-run secret of network mode, the key of its handshake.
@@ -167,6 +173,22 @@ func Open(ctx context.Context, cfg Config) (*Owner, error) {
 	}
 
 	return o, nil
+}
+
+// accountGate makes the account of a local workspace and returns it as the gate of the Service; network mode
+// has none and no gate.
+func (o *Owner) accountGate(ctx context.Context, st service.Store, now func() time.Time) (service.Gate, error) {
+	if o.mode == config.ModeNetwork {
+		return nil, nil
+	}
+
+	o.Account = account.NewManager(account.Options{Store: st.Accounts(), Now: now})
+
+	if err := o.Account.Load(ctx); err != nil {
+		return nil, err
+	}
+
+	return o.Account, nil
 }
 
 // take is steps 1 and 2 of SDD-005 section 6.3, or the session that a command
@@ -305,15 +327,39 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		heavy = service.HeavyPerMinute
 	}
 
+	// A local workspace has an account (ADR-0049): while it exists and nobody is signed in, the Service is
+	// closed. Network mode has its own users and no account.
+	gate, err := o.accountGate(ctx, st, cfg.Now)
+	if err != nil {
+		return err
+	}
+
 	o.Service, err = service.New(service.Options{
-		Keys: o.keyStore(), Connections: out.conns, Providers: out.provs, Social: out.socials, HeavyPerMinute: heavy,
-		SignIns: out.signInSet,
-		Agents:  o.Agents, WebP: o.webp,
-		Heavy: middleware.ServiceLimiter{L: ratelimit.NewMemory(heavy, time.Minute)},
-		Store: st, Registry: command.Default(), Now: cfg.Now, Workspace: string(o.Dir), Media: media,
-		Exporter: exp, Enqueue: jobs.Dispatcher{Queue: o.Queue}, Limits: limits, Publish: publish, Version: o.version,
-		BuiltInSkills: skills.FS(), Transcriber: transcriber, Tools: tools, Log: cfg.Log,
-		Lint: lint.Env{Measurer: lintMeasurer{workspace: string(o.Dir)}},
+		Gate:           gate,
+		Keys:           o.keyStore(),
+		Connections:    out.conns,
+		Providers:      out.provs,
+		Social:         out.socials,
+		HeavyPerMinute: heavy,
+		SignIns:        out.signInSet,
+		Agents:         o.Agents,
+		WebP:           o.webp,
+		Heavy:          middleware.ServiceLimiter{L: ratelimit.NewMemory(heavy, time.Minute)},
+		Store:          st,
+		Registry:       command.Default(),
+		Now:            cfg.Now,
+		Workspace:      string(o.Dir),
+		Media:          media,
+		Exporter:       exp,
+		Enqueue:        jobs.Dispatcher{Queue: o.Queue},
+		Limits:         limits,
+		Publish:        publish,
+		Version:        o.version,
+		BuiltInSkills:  skills.FS(),
+		Transcriber:    transcriber,
+		Tools:          tools,
+		Log:            cfg.Log,
+		Lint:           lint.Env{Measurer: lintMeasurer{workspace: string(o.Dir)}},
 		Doctor: service.DoctorOptions{
 			Mode: o.mode, StartedAt: o.now().UTC(), Child: o.child, FFmpegPins: ffmpegpins.Current(),
 			GPURenderer: o.gpuRenderer,
@@ -348,7 +394,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		RuntimeSecret: o.runtimeSecret, LauncherSecret: launcherSecret,
 		Sessions: auth.NewSessions(cfg.Now), Launch: auth.NewLaunch(cfg.Now), Now: cfg.Now,
 		Events: o.Events, Version: o.version, Network: o.network, Auth: o.netAuth, RateLimits: rates,
-		Chat: o.chatStreams(), AgentTokens: o.agentLookup(),
+		Chat: o.chatStreams(), AgentTokens: o.agentLookup(), Account: o.Account,
 	}
 
 	if aerr := o.attachHandlers(cfg, st.DB(), out.conns); aerr != nil {
@@ -364,6 +410,12 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		return nil
 	}
 
+	return o.recoverStartup(ctx, cfg)
+}
+
+// recoverStartup is steps 7 and 8 of the start-up order: what a dead owner left running, and what an
+// interrupted emptying left behind.
+func (o *Owner) recoverStartup(ctx context.Context, cfg Config) error {
 	// Jobs found running belong to an owner that is gone (SDD-005 section 14.5).
 	if err := o.Runner.Recover(ctx); err != nil {
 		return err
@@ -522,6 +574,23 @@ func (o *Owner) Announce(addr string) error {
 // 14.5), so none is lost to a shutdown. The publication scheduler runs beside them for as long as the server
 // does (SDD-020 section 27); keeping it alive with the window closed is the desktop service of epic 21.
 func (o *Owner) Work(ctx context.Context) error {
+	if o.Account != nil {
+		// The idle lock (SDD-007 section 3.9 item 4) is checked on a short timer.
+		go func() {
+			tick := time.NewTicker(idleCheckEvery)
+			defer tick.Stop()
+
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-tick.C:
+					o.Account.Tick()
+				}
+			}
+		}()
+	}
+
 	if sched, ok := service.SchedulerOf(o.Service); ok {
 		done := make(chan struct{})
 
@@ -573,6 +642,11 @@ func (o *Owner) Close() error {
 	// No agent process is left behind: every tree is killed before the store closes (SDD-017 section 4).
 	if o.Agents != nil {
 		o.Agents.Shutdown()
+	}
+
+	// The keys of the account are wiped before anything else of the process goes (SDD-007 section 3.9).
+	if o.Account != nil {
+		o.Account.Close()
 	}
 
 	if o.announce || o.runtimeSecret != "" {

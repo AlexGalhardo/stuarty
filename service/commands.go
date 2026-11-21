@@ -56,7 +56,7 @@ type CommandHelpResult struct {
 // internal command is as unknown as a name that does not exist (SDD-007
 // section 5.4 rule 1).
 func (s *svc) CommandHelp(ctx context.Context, req CommandHelpRequest) (*CommandHelpResult, error) {
-	if _, err := authorize(ctx, "CommandHelp", ""); err != nil {
+	if _, err := s.authorize(ctx, "CommandHelp", ""); err != nil {
 		return nil, err
 	}
 

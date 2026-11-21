@@ -138,7 +138,7 @@ func (s *svc) SnapPoints(ctx context.Context, req SnapPointsRequest) (*SnapPoint
 }
 
 func (s *svc) FontList(ctx context.Context, _ FontListRequest) (*FontListResult, error) {
-	c, err := authorize(ctx, "FontList", "")
+	c, err := s.authorize(ctx, "FontList", "")
 	if err != nil {
 		return nil, err
 	}

@@ -173,7 +173,7 @@ func listText(kind string, rows []library.Entry, entries []LibraryEntry) string 
 
 // libraryPrep is what every library operation starts with: the caller with the scope, and the manager.
 func (s *svc) libraryPrep(ctx context.Context, method string) (Caller, *library.Manager, error) {
-	c, err := authorize(ctx, method, "")
+	c, err := s.authorize(ctx, method, "")
 	if err != nil {
 		return Caller{}, nil, err
 	}

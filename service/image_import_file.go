@@ -29,7 +29,7 @@ type ImageImportFileRequest struct {
 // content store by hash and are decoded only by the ingest, with every limit of an import and the one of a file
 // that comes in a request, before a document is made.
 func (s *svc) ImageImportFile(ctx context.Context, req ImageImportFileRequest) (*ImageImportResult, error) {
-	c, err := imageAuthorize(ctx, "ImageImportFile")
+	c, err := s.imageAuthorize(ctx, "ImageImportFile")
 	if err != nil {
 		return nil, err
 	}

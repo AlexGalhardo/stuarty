@@ -138,8 +138,8 @@ func (s *svc) imageAssetAccess(ctx context.Context, c Caller) func(hash string) 
 
 // imageAuthorize is authorize for the image operations: a key limited to one project reaches no image, since an
 // image belongs to no project until the production exists (SDD-021 section 10).
-func imageAuthorize(ctx context.Context, method string) (Caller, error) {
-	c, err := authorize(ctx, method, "")
+func (s *svc) imageAuthorize(ctx context.Context, method string) (Caller, error) {
+	c, err := s.authorize(ctx, method, "")
 	if err != nil {
 		return Caller{}, err
 	}
@@ -223,7 +223,7 @@ func imageUpdate(doc *coreimage.Document, now int64) ImageUpdate {
 }
 
 func (s *svc) ImageCreate(ctx context.Context, req ImageCreateRequest) (*ImageCreateResult, error) {
-	c, err := imageAuthorize(ctx, "ImageCreate")
+	c, err := s.imageAuthorize(ctx, "ImageCreate")
 	if err != nil {
 		return nil, err
 	}
@@ -386,7 +386,7 @@ func (s *svc) newImageDocument(
 func validImageID(id string) bool { return timeline.ValidID(coreimage.PrefixImage, id) }
 
 func (s *svc) ImageList(ctx context.Context, req ImageListRequest) (*ImageListResult, error) {
-	c, err := imageAuthorize(ctx, "ImageList")
+	c, err := s.imageAuthorize(ctx, "ImageList")
 	if err != nil {
 		return nil, err
 	}
@@ -457,7 +457,7 @@ func (s *svc) ImageList(ctx context.Context, req ImageListRequest) (*ImageListRe
 }
 
 func (s *svc) ImageDescribe(ctx context.Context, req ImageDescribeRequest) (*ImageDescribeResult, error) {
-	c, err := imageAuthorize(ctx, "ImageDescribe")
+	c, err := s.imageAuthorize(ctx, "ImageDescribe")
 	if err != nil {
 		return nil, err
 	}
@@ -504,7 +504,7 @@ func newFindings(before, after []lint.Finding) []lint.Finding {
 }
 
 func (s *svc) ImageEdit(ctx context.Context, req ImageEditRequest) (*ImageEditResult, error) {
-	c, err := imageAuthorize(ctx, "ImageEdit")
+	c, err := s.imageAuthorize(ctx, "ImageEdit")
 	if err != nil {
 		return nil, err
 	}
@@ -917,7 +917,7 @@ func (s *svc) ImageRedo(ctx context.Context, req ImageStepRequest) (*ImageStepRe
 
 // imageStep is ImageUndo and ImageRedo: the transaction of an edit with the differences of SDD-005 section 12.2.
 func (s *svc) imageStep(ctx context.Context, method string, req ImageStepRequest, redo bool) (*ImageStepResult, error) {
-	c, err := imageAuthorize(ctx, method)
+	c, err := s.imageAuthorize(ctx, method)
 	if err != nil {
 		return nil, err
 	}

@@ -61,7 +61,7 @@ func visible(c Caller, owner *string) bool {
 }
 
 func (s *svc) ProjectCreate(ctx context.Context, req ProjectCreateRequest) (*ProjectCreateResult, error) {
-	c, err := authorize(ctx, "ProjectCreate", "")
+	c, err := s.authorize(ctx, "ProjectCreate", "")
 	if err != nil {
 		return nil, err
 	}
@@ -209,7 +209,7 @@ func (s *svc) newDocument(req ProjectCreateRequest) (*timeline.Document, *Error)
 }
 
 func (s *svc) ProjectList(ctx context.Context, req ProjectListRequest) (*ProjectListResult, error) {
-	c, err := authorize(ctx, "ProjectList", "")
+	c, err := s.authorize(ctx, "ProjectList", "")
 	if err != nil {
 		return nil, err
 	}

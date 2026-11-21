@@ -74,7 +74,7 @@ func brandKitRefused(c Caller) error {
 
 // BrandKitGet returns the brand kit of the caller, empty when none was set.
 func (s *svc) BrandKitGet(ctx context.Context, _ BrandKitGetRequest) (*BrandKit, error) {
-	c, err := authorize(ctx, "BrandKitGet", "")
+	c, err := s.authorize(ctx, "BrandKitGet", "")
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +125,7 @@ func brandKitView(k *BrandKit) *BrandKit {
 
 // BrandKitSet validates the kit and replaces the stored one.
 func (s *svc) BrandKitSet(ctx context.Context, req BrandKitSetRequest) (*BrandKit, error) {
-	c, err := authorize(ctx, "BrandKitSet", "")
+	c, err := s.authorize(ctx, "BrandKitSet", "")
 	if err != nil {
 		return nil, err
 	}

@@ -24,7 +24,7 @@ var imageExtensions = map[string]string{export.ImagePNG: "png", export.ImageJPEG
 // ImageExport renders the current revision of a document to a file in the workspace (SDD-021 section 6): the
 // lint first (an error that blocks refuses the export), then the Rust renderer on its CPU path, then the encoder.
 func (s *svc) ImageExport(ctx context.Context, req ImageExportRequest) (*ImageExportResult, error) {
-	c, err := imageAuthorize(ctx, "ImageExport")
+	c, err := s.imageAuthorize(ctx, "ImageExport")
 	if err != nil {
 		return nil, err
 	}

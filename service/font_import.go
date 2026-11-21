@@ -450,7 +450,7 @@ type FontImportResult struct {
 // FontImport validates a font file and stores it by content hash in the font store. The same bytes
 // twice store one file; in network mode the caller is recorded as an owner either way.
 func (s *svc) FontImport(ctx context.Context, req FontImportRequest) (*FontImportResult, error) {
-	c, err := authorizeScope(ctx, ScopeMedia, "")
+	c, err := s.authorizeScope(ctx, ScopeMedia, "")
 	if err != nil {
 		return nil, err
 	}

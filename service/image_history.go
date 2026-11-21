@@ -16,7 +16,7 @@ const imageRevertOp = "image.revert"
 // ImageRevert takes an image back to the document it had at a revision, as one new revision of the caller
 // (SDD-021 section 4, SDD-005 section 12.4). The log is never rewritten.
 func (s *svc) ImageRevert(ctx context.Context, req ImageRevertRequest) (*ImageRevertResult, error) {
-	c, err := imageAuthorize(ctx, "ImageRevert")
+	c, err := s.imageAuthorize(ctx, "ImageRevert")
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +100,7 @@ func (s *svc) ImageRevert(ctx context.Context, req ImageRevertRequest) (*ImageRe
 // ImageDiff returns the difference between two revisions of an image (SDD-003 section 2.5.1). It compares the
 // two documents rebuilt from the log, never the log itself, so it is right across undo and redo.
 func (s *svc) ImageDiff(ctx context.Context, req ImageDiffRequest) (*ImageDiffResult, error) {
-	c, err := imageAuthorize(ctx, "ImageDiff")
+	c, err := s.imageAuthorize(ctx, "ImageDiff")
 	if err != nil {
 		return nil, err
 	}
@@ -277,7 +277,7 @@ func (s *svc) imageAt(
 // imageCheckpointScope is what every checkpoint operation of an image starts with: the caller scope, and the
 // revision of the image it may see.
 func (s *svc) imageCheckpointScope(ctx context.Context, method, id string) (Caller, int64, error) {
-	c, err := imageAuthorize(ctx, method)
+	c, err := s.imageAuthorize(ctx, method)
 	if err != nil {
 		return Caller{}, 0, err
 	}

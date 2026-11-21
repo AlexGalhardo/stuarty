@@ -310,6 +310,9 @@ const EventImageUpdated = "image.updated"
 // Options configure New. Store is required.
 type Options struct {
 	Store Store
+	// Gate closes every operation but the ones of LockedAllowed while the studio is locked (ADR-0049); nil
+	// leaves the Service always open.
+	Gate Gate
 	// Registry is the command registry of the build; default command.Default().
 	Registry *command.Registry
 	// Now is the service clock (SDD-005 section 2 item 2); default time.Now.
@@ -392,6 +395,7 @@ type Options struct {
 
 type svc struct {
 	store       Store
+	gate        Gate
 	reg         *command.Registry
 	now         func() time.Time
 	newIDs      func(string) string
@@ -487,6 +491,7 @@ func New(o Options) (Service, error) {
 		tools:       o.Tools,
 		doctor:      o.Doctor,
 		keys:        o.Keys,
+		gate:        o.Gate,
 		conns:       o.Connections,
 		social:      o.Social,
 		blog:        o.Blog,

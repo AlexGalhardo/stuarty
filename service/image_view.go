@@ -45,7 +45,7 @@ type ImageFrameResult struct {
 // ImageFrame renders the current revision at screen size. It runs the same renderer as ImageExport and writes no
 // file; unlike an export it is not stopped by a finding, so an image with an empty slot can still be seen.
 func (s *svc) ImageFrame(ctx context.Context, req ImageFrameRequest) (*ImageFrameResult, error) {
-	c, err := imageAuthorize(ctx, "ImageFrame")
+	c, err := s.imageAuthorize(ctx, "ImageFrame")
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +125,7 @@ type ImageHistoryResult struct {
 
 // ImageHistory reads the log of a document: who did what, newest first.
 func (s *svc) ImageHistory(ctx context.Context, req ImageHistoryRequest) (*ImageHistoryResult, error) {
-	c, err := imageAuthorize(ctx, "ImageHistory")
+	c, err := s.imageAuthorize(ctx, "ImageHistory")
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +207,7 @@ type ImageFileRequest struct {
 // ImageExport gives, and the path is built from the id of a document the caller may see, never from the request
 // alone. The path is relative to the workspace; the caller serves it.
 func (s *svc) ImageFile(ctx context.Context, req ImageFileRequest) (*File, error) {
-	c, err := imageAuthorize(ctx, "ImageFile")
+	c, err := s.imageAuthorize(ctx, "ImageFile")
 	if err != nil {
 		return nil, err
 	}

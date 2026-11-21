@@ -29,7 +29,7 @@ type imageSource struct {
 
 // ImageImport brings an image file into an image document (SDD-021 section 10.1).
 func (s *svc) ImageImport(ctx context.Context, req ImageImportRequest) (*ImageImportResult, error) {
-	c, err := imageAuthorize(ctx, "ImageImport")
+	c, err := s.imageAuthorize(ctx, "ImageImport")
 	if err != nil {
 		return nil, err
 	}

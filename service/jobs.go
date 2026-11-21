@@ -48,11 +48,11 @@ func (s *svc) authorizeStart(ctx context.Context, req *JobStartRequest, approvab
 
 	switch {
 	case approvable != nil:
-		c, err = authorizeScope(ctx, approvable.Scope, "")
+		c, err = s.authorizeScope(ctx, approvable.Scope, "")
 	case req.Kind == JobTranscribe:
-		c, err = authorizeScope(ctx, ScopeMedia, "")
+		c, err = s.authorizeScope(ctx, ScopeMedia, "")
 	default:
-		c, err = authorize(ctx, "JobStart", "")
+		c, err = s.authorize(ctx, "JobStart", "")
 	}
 
 	if err != nil {
@@ -552,7 +552,7 @@ func jobNotFound(id string) *Error {
 }
 
 func (s *svc) JobGet(ctx context.Context, req JobGetRequest) (*Job, error) {
-	c, err := authorize(ctx, "JobGet", "")
+	c, err := s.authorize(ctx, "JobGet", "")
 	if err != nil {
 		return nil, err
 	}
@@ -601,7 +601,7 @@ func (s *svc) waitJob(ctx context.Context, id string, d time.Duration) {
 }
 
 func (s *svc) JobList(ctx context.Context, req JobListRequest) (*JobListResult, error) {
-	c, err := authorize(ctx, "JobList", "")
+	c, err := s.authorize(ctx, "JobList", "")
 	if err != nil {
 		return nil, err
 	}
@@ -734,6 +734,10 @@ const cancelWait = 2 * time.Second
 // returned in its final state, and a second call changes nothing. The scope is
 // render; media is enough for the caller's own ingest job (SDD-007 section 5.2).
 func (s *svc) JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error) {
+	if err := s.locked("JobCancel"); err != nil {
+		return nil, err
+	}
+
 	c, ok := CallerFrom(ctx)
 	if !ok {
 		return nil, newError(CodeUnauthorized, "the request carries no credentials.").

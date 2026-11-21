@@ -163,7 +163,7 @@ func (s *svc) auditInstall(ctx context.Context, actor, name string) {
 // background. It refuses every caller that is not a person (browser session,
 // admin key, or the operator at the terminal).
 func (s *svc) ToolsInstall(ctx context.Context, req ToolsInstallRequest) (*ToolsInstallResult, error) {
-	c, err := authorizeScope(ctx, ScopeAdmin, "")
+	c, err := s.authorizeScope(ctx, ScopeAdmin, "")
 	if err != nil {
 		return nil, err
 	}
@@ -267,7 +267,7 @@ func (s *svc) allInstalled(entries []transcribe.ManifestEntry) bool {
 // It only reads, so any caller that may read may ask: an agent needs to know whether the helper is
 // installed before it asks for a transcript (VV-080). Only the install is for a person.
 func (s *svc) ToolsStatus(ctx context.Context, _ ToolsStatusRequest) (*ToolsStatusResult, error) {
-	if _, err := authorize(ctx, "ToolsStatus", ""); err != nil {
+	if _, err := s.authorize(ctx, "ToolsStatus", ""); err != nil {
 		return nil, err
 	}
 

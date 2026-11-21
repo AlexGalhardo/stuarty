@@ -119,7 +119,7 @@ func publicationError(err error) error {
 // publicationOf reads a publication the caller may see. A missing one, one of another project than the key's
 // and one of a project the caller may not see look the same.
 func (s *svc) publicationOf(ctx context.Context, op, id string) (Caller, *Publication, error) {
-	c, err := authorize(ctx, op, "")
+	c, err := s.authorize(ctx, op, "")
 	if err != nil {
 		return Caller{}, nil, err
 	}
@@ -148,7 +148,7 @@ func (s *svc) publicationOf(ctx context.Context, op, id string) (Caller, *Public
 
 // PublicationCreate plans a publication.
 func (s *svc) PublicationCreate(ctx context.Context, req PublicationCreateRequest) (*Publication, error) {
-	c, err := authorize(ctx, "PublicationCreate", req.ProjectID)
+	c, err := s.authorize(ctx, "PublicationCreate", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +183,7 @@ func (s *svc) PublicationGet(ctx context.Context, req PublicationGetRequest) (*P
 
 // PublicationList lists publications.
 func (s *svc) PublicationList(ctx context.Context, req PublicationListRequest) (*PublicationListResult, error) {
-	c, err := authorize(ctx, "PublicationList", req.ProjectID)
+	c, err := s.authorize(ctx, "PublicationList", req.ProjectID)
 	if err != nil {
 		return nil, err
 	}

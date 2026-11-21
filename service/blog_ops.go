@@ -384,7 +384,7 @@ func etagOf(v any) string {
 }
 
 func (s *svc) postsCaller(ctx context.Context, method string) (Caller, error) {
-	return authorize(ctx, method, "")
+	return s.authorize(ctx, method, "")
 }
 
 func (s *svc) PublishedPostList(ctx context.Context, req PublishedPostListRequest) (*PublishedPostListResult, error) {

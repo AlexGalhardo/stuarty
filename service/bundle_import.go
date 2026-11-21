@@ -92,12 +92,12 @@ type bundleParts struct {
 
 // ProjectBundleImport reads a bundle, checks all of it and then stores the project in one transaction.
 func (s *svc) ProjectBundleImport(ctx context.Context, req ProjectBundleImportRequest) (*ProjectCreateResult, error) {
-	c, err := authorizeScope(ctx, ScopeEdit, "")
+	c, err := s.authorizeScope(ctx, ScopeEdit, "")
 	if err != nil {
 		return nil, err
 	}
 
-	if _, err = authorizeScope(ctx, ScopeMedia, ""); err != nil {
+	if _, err = s.authorizeScope(ctx, ScopeMedia, ""); err != nil {
 		return nil, err
 	}
 
