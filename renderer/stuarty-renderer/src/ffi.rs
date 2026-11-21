@@ -18,6 +18,7 @@ use crate::rasterhost::TextHost;
 thread_local! {
 	static RENDERER: RefCell<Renderer> = RefCell::new(Renderer::new(Limits::default()));
 	static TEXT: RefCell<TextHost> = RefCell::new(TextHost::new());
+	static PREPARED: RefCell<Vec<u8>> = const { RefCell::new(Vec::new()) };
 	static LAST_ERROR: RefCell<String> = const { RefCell::new(String::new()) };
 }
 
@@ -270,4 +271,46 @@ pub extern "C" fn vr_text_result_len() -> u32 {
 #[unsafe(no_mangle)]
 pub extern "C" fn vr_text_result_clear() {
 	TEXT.with(|t| t.borrow_mut().clear_result());
+}
+
+/// Prepares the one layer of a render input (SDD-013 section 4.2.2); the block is read with
+/// `vr_prepared_ptr` and `vr_prepared_len`.
+#[unsafe(no_mangle)]
+pub extern "C" fn vr_prepare(in_ptr: u32, in_len: u32) -> i32 {
+	// SAFETY: a block of the host, valid for the call.
+	let input = unsafe { block(in_ptr, in_len) };
+	status(RENDERER.with(|r| {
+		let block = r.borrow().prepare(input)?;
+		PREPARED.with(|p| *p.borrow_mut() = block);
+		Ok(())
+	}))
+}
+
+/// The offset of the block of the last `vr_prepare`; valid until the next call.
+#[unsafe(no_mangle)]
+pub extern "C" fn vr_prepared_ptr() -> u32 {
+	PREPARED.with(|p| p.borrow().as_ptr() as usize as u32)
+}
+
+/// The byte length of the block of the last `vr_prepare`, 0 when the layer draws nothing.
+#[unsafe(no_mangle)]
+pub extern "C" fn vr_prepared_len() -> u32 {
+	PREPARED.with(|p| p.borrow().len() as u32)
+}
+
+/// Releases the block of the last `vr_prepare`.
+#[unsafe(no_mangle)]
+pub extern "C" fn vr_prepared_clear() {
+	PREPARED.with(|p| *p.borrow_mut() = Vec::new());
+}
+
+/// Stores a block of `vr_prepare` as the texture of an item id.
+#[unsafe(no_mangle)]
+pub extern "C" fn vr_put_prepared(id_ptr: u32, id_len: u32, blk_ptr: u32, blk_len: u32) -> i32 {
+	status((|| {
+		let id = text(id_ptr, id_len)?;
+		// SAFETY: a block of the host, valid for the call.
+		let blk = unsafe { block(blk_ptr, blk_len) };
+		RENDERER.with(|r| r.borrow_mut().put_prepared(id, blk))
+	})())
 }

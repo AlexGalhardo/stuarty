@@ -6,6 +6,7 @@ use std::collections::BTreeMap;
 
 use crate::compose::{
 	Layer, LayerExt, Source, Target, compose, frame_fill, layer_opacity, premultiply,
+	prepare_layer_offset,
 };
 use crate::error::{Error, Reason};
 use crate::image::Image;
@@ -47,6 +48,20 @@ pub struct BitmapMetrics {
 	pub center_dy: f64,
 }
 
+/// What a prepared layer keeps beside its pixels (SDD-013 section 4.2.2).
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct PreparedMeta {
+	grown_w: f64,
+	grown_h: f64,
+	off_x: f64,
+	off_y: f64,
+	scale: f64,
+}
+
+/// The bytes before the pixels of a prepared block: width, height, flags and a zero (4 x `u32`), then the
+/// five `f64` of [`PreparedMeta`].
+const PREPARED_HEADER: usize = 16 + 40;
+
 struct StoredBitmap {
 	image: Image,
 	metrics: BitmapMetrics,
@@ -56,6 +71,8 @@ struct StoredBitmap {
 pub struct Renderer {
 	limits: Limits,
 	textures: BTreeMap<String, Image>,
+	/// The textures that are prepared layers (`vr_put_prepared`), with what places them again.
+	prepared: BTreeMap<String, PreparedMeta>,
 	bitmaps: BTreeMap<String, StoredBitmap>,
 	luts: BTreeMap<String, Lut>,
 	texture_bytes: usize,
@@ -68,6 +85,7 @@ impl Renderer {
 		Self {
 			limits,
 			textures: BTreeMap::new(),
+			prepared: BTreeMap::new(),
 			bitmaps: BTreeMap::new(),
 			luts: BTreeMap::new(),
 			texture_bytes: 0,
@@ -99,6 +117,85 @@ impl Renderer {
 		};
 		self.texture_bytes = self.texture_bytes - old + n;
 		self.textures.insert(id.to_string(), image);
+		self.prepared.remove(id);
+		Ok(())
+	}
+
+	/// Prepares the one layer of the render input (steps 1 to 5 of SDD-004 section 3.3 at opacity 1) and gives
+	/// the block `put_prepared` stores: `width`, `height`, flags (bit 0: opaque) and 0 as `u32`, then the grown
+	/// width and height, the offset of the centre and the scale as `f64`, then the pixels, all little endian.
+	/// The block is empty when the layer draws nothing.
+	pub fn prepare(&self, input: &[u8]) -> Result<Vec<u8>, Error> {
+		let mut r = decode(input)?;
+		if r.layers.len() != 1 {
+			return Err(Error::new(
+				Reason::InvalidPlan,
+				"a prepare takes exactly one layer",
+			));
+		}
+		r.layers[0].opacity = 1.0;
+		r.layers[0].clip = None;
+		let layers = self.layers(&r)?;
+		let scale = r.output.scale;
+		let Some((p, off_x, off_y)) = prepare_layer_offset(&layers[0], scale) else {
+			return Ok(Vec::new());
+		};
+		let img = &*p.image;
+		let mut block = Vec::with_capacity(PREPARED_HEADER + img.pix.len());
+		for v in [img.w as u32, img.h as u32, u32::from(img.opaque), 0] {
+			block.extend_from_slice(&v.to_le_bytes());
+		}
+		for v in [p.placement.w, p.placement.h, off_x, off_y, scale] {
+			block.extend_from_slice(&v.to_le_bytes());
+		}
+		block.extend_from_slice(&img.pix);
+		Ok(block)
+	}
+
+	/// Stores a block of [`Renderer::prepare`] as the texture of `id`: a media layer that names `id` is then
+	/// drawn from it with no look (SDD-013 section 4.2.2).
+	pub fn put_prepared(&mut self, id: &str, block: &[u8]) -> Result<(), Error> {
+		check_id(id)?;
+		let bad = |d: &str| Error::new(Reason::InvalidArgument, d.to_string());
+		if block.len() < PREPARED_HEADER {
+			return Err(bad("a prepared block is shorter than its header"));
+		}
+		let u = |i: usize| u32::from_le_bytes(block[i..i + 4].try_into().unwrap_or([0; 4]));
+		let f = |i: usize| f64::from_le_bytes(block[i..i + 8].try_into().unwrap_or([0; 8]));
+		let (w, h, flags) = (u(0) as usize, u(4) as usize, u(8));
+		let meta = PreparedMeta {
+			grown_w: f(16),
+			grown_h: f(24),
+			off_x: f(32),
+			off_y: f(40),
+			scale: f(48),
+		};
+		let finite = [
+			meta.grown_w,
+			meta.grown_h,
+			meta.off_x,
+			meta.off_y,
+			meta.scale,
+		]
+		.iter()
+		.all(|v| v.is_finite());
+		if !finite || !(meta.grown_w > 0.0 && meta.grown_h > 0.0) || flags > 1 {
+			return Err(bad(
+				"a prepared block has a size or a flag that is not valid",
+			));
+		}
+		let n = check_pixels(w, h, &block[PREPARED_HEADER..])?;
+		if block.len() != PREPARED_HEADER + n {
+			return Err(bad("a prepared block is longer than its pixels"));
+		}
+		self.put_texture(
+			id,
+			w,
+			h,
+			&block[PREPARED_HEADER..PREPARED_HEADER + n],
+			flags == 1,
+		)?;
+		self.prepared.insert(id.to_string(), meta);
 		Ok(())
 	}
 
@@ -144,6 +241,7 @@ impl Renderer {
 	/// Forgets the texture, the bitmap or the lookup table with this id or key; an unknown one is not an error.
 	pub fn release(&mut self, id: &str) {
 		self.luts.remove(id);
+		self.prepared.remove(id);
 		if let Some(t) = self.textures.remove(id) {
 			self.texture_bytes -= t.pix.len();
 		}
@@ -193,9 +291,22 @@ impl Renderer {
 				continue;
 			}
 			let source = match &l.pixels {
-				Pixels::Media(id) => match self.textures.get(id) {
-					Some(img) => Source::Media(img),
-					None => return Err(Error::new(Reason::MissingTexture, id.clone())),
+				Pixels::Media(id) => match (self.textures.get(id), self.prepared.get(id)) {
+					(Some(img), Some(m)) => {
+						if m.scale != r.output.scale {
+							return Err(Error::new(Reason::InvalidPlan, "prepared_scale"));
+						}
+						Source::Prepared {
+							image: img,
+							grown_w: m.grown_w,
+							grown_h: m.grown_h,
+							off_x: m.off_x,
+							off_y: m.off_y,
+							scale: m.scale,
+						}
+					}
+					(Some(img), None) => Source::Media(img),
+					(None, _) => return Err(Error::new(Reason::MissingTexture, id.clone())),
 				},
 				Pixels::Bitmap(key) => match self.bitmaps.get(key) {
 					Some(b) => Source::Bitmap {
@@ -390,6 +501,118 @@ mod tests {
 		assert_eq!(
 			r.put_bitmap("k", 2, 2, &white(2, 2), m).unwrap_err().detail,
 			"render_bitmap_bytes"
+		);
+	}
+
+	fn bitmap_renderer() -> Renderer {
+		let mut r = Renderer::new(Limits::default());
+		let mut px = vec![0_u8; 10 * 6 * 4];
+		for (i, p) in px.chunks_mut(4).enumerate() {
+			p.copy_from_slice(&[
+				200,
+				(i % 10 * 20) as u8,
+				90,
+				if i % 7 == 0 { 120 } else { 255 },
+			]);
+		}
+		let m = BitmapMetrics {
+			natural_w: 8.0,
+			natural_h: 4.0,
+			center_dx: 1.5,
+			center_dy: -0.5,
+		};
+		r.put_bitmap("k", 10, 6, &px, m).unwrap();
+		r
+	}
+
+	/// A bitmap layer with a shadow and a blur whose centre its metrics move, at `(cx, cy)`; the same layer as a
+	/// media layer of item `t` when `prepared`.
+	fn bitmap_input(cx: f64, cy: f64, prepared: bool) -> String {
+		let pixels = if prepared {
+			r#""kind":"media","item":"t""#
+		} else {
+			r#""kind":"bitmap","item":"t","bitmap":{"kind":"shape"},"bitmap_key":"k""#
+		};
+		format!(
+			r##"{{"version":1,"output":{{"width":40,"height":30,"scale":1}},"plan":{{"background":"#204060","layers":[{{{pixels},"cx":{cx},"cy":{cy},"w":16,"h":8,"rotation":7,"opacity":0.6,"blend":"soft_light","blur":0.8,"filters":[{{"kind":"shadow","color":"#000000","opacity":0.6,"dx":2,"dy":3,"blur":2}},{{"kind":"outer_glow","color":"#FFAA00","radius":2,"amount":1.5}}],"mask":{{"shape":"rounded_rect","x":0,"y":0,"width":1,"height":1,"radius":3}}}}]}}}}"##
+		)
+	}
+
+	#[test]
+	fn a_prepared_bitmap_is_the_bitmap_drawn_whole_wherever_it_is() {
+		let mut r = bitmap_renderer();
+		let block = r
+			.prepare(bitmap_input(20.0, 15.0, false).as_bytes())
+			.unwrap();
+		assert!(block.len() > PREPARED_HEADER);
+		let whole = bitmap_renderer();
+		r.put_prepared("t", &block).unwrap();
+		for (cx, cy) in [(20.0, 15.0), (14.5, 11.0), (27.0, 19.5)] {
+			let (mut a, mut b) = (vec![0_u8; 40 * 30 * 4], vec![0_u8; 40 * 30 * 4]);
+			whole
+				.render(bitmap_input(cx, cy, false).as_bytes(), &mut a)
+				.unwrap();
+			r.render(bitmap_input(cx, cy, true).as_bytes(), &mut b)
+				.unwrap();
+			assert!(a == b, "moved to {cx},{cy}");
+			assert!(
+				a.chunks(4).any(|p| p[..3] != [32, 64, 96]),
+				"something is drawn"
+			);
+		}
+	}
+
+	#[test]
+	fn a_prepared_layer_refuses_another_scale_and_a_bad_block() {
+		let mut r = bitmap_renderer();
+		let block = r
+			.prepare(bitmap_input(20.0, 15.0, false).as_bytes())
+			.unwrap();
+		r.put_prepared("t", &block).unwrap();
+		let mut out = vec![0_u8; 40 * 30 * 4];
+		let half = bitmap_input(20.0, 15.0, true).replace("\"scale\":1", "\"scale\":0.5");
+		assert_eq!(
+			r.render(half.as_bytes(), &mut out).unwrap_err(),
+			Error::new(Reason::InvalidPlan, "prepared_scale")
+		);
+		assert_eq!(
+			r.put_prepared("u", &block[..PREPARED_HEADER - 1])
+				.unwrap_err()
+				.reason,
+			Reason::InvalidArgument
+		);
+		assert_eq!(
+			r.put_prepared("u", &block[..block.len() - 1])
+				.unwrap_err()
+				.reason,
+			Reason::InvalidArgument
+		);
+		let mut long = block.clone();
+		long.push(0);
+		assert_eq!(
+			r.put_prepared("u", &long).unwrap_err().reason,
+			Reason::InvalidArgument
+		);
+		let mut nan = block;
+		nan[16..24].copy_from_slice(&f64::NAN.to_le_bytes());
+		assert_eq!(
+			r.put_prepared("u", &nan).unwrap_err().reason,
+			Reason::InvalidArgument
+		);
+	}
+
+	#[test]
+	fn a_layer_that_draws_nothing_prepares_to_an_empty_block() {
+		let r = bitmap_renderer();
+		let none = bitmap_input(20.0, 15.0, false).replace("\"w\":16", "\"w\":0");
+		assert!(r.prepare(none.as_bytes()).unwrap().is_empty());
+		let two = bitmap_input(20.0, 15.0, false).replace(
+			"\"layers\":[",
+			"\"layers\":[{\"kind\":\"bitmap\",\"item\":\"s\",\"bitmap\":{\"kind\":\"shape\"},\"bitmap_key\":\"k\",\"cx\":1,\"cy\":1,\"w\":2,\"h\":2},",
+		);
+		assert_eq!(
+			r.prepare(two.as_bytes()).unwrap_err().reason,
+			Reason::InvalidPlan
 		);
 	}
 }
