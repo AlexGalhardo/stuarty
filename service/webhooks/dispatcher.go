@@ -25,6 +25,15 @@ const (
 	KindRedelivery = "redelivery"
 )
 
+const (
+	// minPass is the shortest wait between two passes of the loop, so a delivery that is due and cannot move (its row
+	// cannot be written) never makes the loop spin.
+	minPass = 100 * time.Millisecond
+	// unrecordedWait is how long a delivery is left alone after an attempt whose result could not be stored. Its row
+	// still says it is due, and without this wait the receiver would be called again at once, with no retry limit.
+	unrecordedWait = 30 * time.Second
+)
+
 // Options configure a Dispatcher. Store, Secrets and NewID are required.
 type Options struct {
 	Store   Store
@@ -54,6 +63,8 @@ type Dispatcher struct {
 	sem   chan struct{}
 	mu    sync.Mutex
 	times map[string]struct{}
+	// held is the deliveries whose last result could not be stored, and when they may be tried again.
+	held map[string]time.Time
 }
 
 // New makes a dispatcher.
@@ -80,6 +91,7 @@ func New(o Options) *Dispatcher {
 
 	d := &Dispatcher{
 		o: o, wake: make(chan struct{}, 1), sem: make(chan struct{}, o.Parallel), times: map[string]struct{}{},
+		held: map[string]time.Time{},
 	}
 
 	if o.Client == nil {
@@ -114,6 +126,8 @@ func (d *Dispatcher) Run(ctx context.Context) error {
 			wait = time.Second
 		}
 
+		wait = max(wait, minPass)
+
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
@@ -145,15 +159,23 @@ func (d *Dispatcher) RunOnce(ctx context.Context) int {
 			break
 		}
 
+		select {
+		case d.sem <- struct{}{}:
+		case <-ctx.Done():
+			wg.Wait()
+
+			return taken
+		}
+
 		if !d.claim(del.ID) {
+			<-d.sem
+
 			continue
 		}
 
 		taken++
 
 		wg.Add(1)
-
-		d.sem <- struct{}{}
 
 		go func() {
 			defer func() {
@@ -179,9 +201,24 @@ func (d *Dispatcher) claim(id string) bool {
 		return false
 	}
 
+	if until, ok := d.held[id]; ok {
+		if d.o.Clock.Now().Before(until) {
+			return false
+		}
+
+		delete(d.held, id)
+	}
+
 	d.times[id] = struct{}{}
 
 	return true
+}
+
+func (d *Dispatcher) hold(id string, until time.Time) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	d.held[id] = until
 }
 
 func (d *Dispatcher) release(id string) {
@@ -264,17 +301,26 @@ func (d *Dispatcher) Redeliver(ctx context.Context, src Delivery) (Delivery, err
 }
 
 // Send makes the attempt of one delivery now and answers the delivery as it is after it. It is for the test send,
-// where the person waits for the answer; the loop is not involved.
+// where the person waits for the answer; the loop is not involved, and it takes one of the slots of the loop, so the
+// limit of sends at once holds for it too. A caller that leaves does not stop the attempt, which ends at the timeout:
+// its result is recorded, and a test is never left pending for the loop to send a second time.
 func (d *Dispatcher) Send(ctx context.Context, webhookID, deliveryID string) (Delivery, error) {
 	del, err := d.o.Store.GetDelivery(ctx, webhookID, deliveryID)
 	if err != nil {
 		return Delivery{}, err
 	}
 
+	select {
+	case d.sem <- struct{}{}:
+		defer func() { <-d.sem }()
+	case <-ctx.Done():
+		return Delivery{}, ctx.Err()
+	}
+
 	if d.claim(del.ID) {
 		defer d.release(del.ID)
 
-		d.attempt(ctx, del)
+		d.attempt(context.WithoutCancel(ctx), del)
 	}
 
 	del, err = d.o.Store.GetDelivery(ctx, webhookID, deliveryID)
@@ -285,6 +331,22 @@ func (d *Dispatcher) Send(ctx context.Context, webhookID, deliveryID string) (De
 
 // attempt makes one attempt of a delivery and records it.
 func (d *Dispatcher) attempt(ctx context.Context, del Delivery) {
+	// The row may have moved since it was listed (the test send takes it too): what was sent is not sent again.
+	cur, err := d.o.Store.GetDelivery(ctx, del.WebhookID, del.ID)
+	if err != nil {
+		if !errors.Is(err, ErrNotFound) {
+			d.o.Log.WarnContext(ctx, "a webhook delivery could not be read", "delivery", del.ID, "error", err)
+		}
+
+		return
+	}
+
+	if cur.State != core.StatePending || cur.Attempts != del.Attempts {
+		return
+	}
+
+	del = cur
+
 	w, err := d.o.Store.Get(ctx, del.WebhookID)
 	if err != nil {
 		if !errors.Is(err, ErrNotFound) {
@@ -346,7 +408,8 @@ func (d *Dispatcher) attempt(ctx context.Context, del Delivery) {
 		ResponseBytes: answered,
 	}
 
-	// A write that fails here is logged and the delivery is tried again: it is still pending in the table.
+	// A write that fails here is logged and the delivery is tried again later: it is still pending in the table, and
+	// the wait keeps a receiver from being called in a loop for as long as the database cannot be written.
 	if err := d.o.Store.Record(
 		context.WithoutCancel(ctx),
 		del,
@@ -354,6 +417,7 @@ func (d *Dispatcher) attempt(ctx context.Context, del Delivery) {
 		now.Add(-core.KeepFinished).UnixMilli(),
 	); err != nil {
 		d.o.Log.WarnContext(ctx, "a webhook attempt could not be recorded", "delivery", del.ID, "error", err)
+		d.hold(del.ID, now.Add(unrecordedWait))
 	}
 }
 
