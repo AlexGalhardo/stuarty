@@ -163,7 +163,7 @@ Codes of the core (service codes are in SDD-003):
 
 | Code | Meaning | Retryable |
 | --- | --- | --- |
-| `E_UNKNOWN_COMMAND` | no such command; `details.known` lists the names | no |
+| `E_UNKNOWN_COMMAND` | no such command; `details.known` lists the names (the closest 20, or the groups, when the domain has more than 20, so the error stays inside its cap) | no |
 | `E_VALIDATION` | `args` does not match the schema; `path` points at the value | no |
 | `E_INVALID_TIME` | a time string is malformed or negative; a length is shorter than one frame where that is not allowed; an item would end after frame 108,000; or a time addresses a frame outside the item it refers to | no |
 | `E_NOT_FOUND` | an identifier or a word index in `args` does not exist; `details.kind` (`item`, `track`, `asset`, `word`, `keyframe`) and `details.id` | no |

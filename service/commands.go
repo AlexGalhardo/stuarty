@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
@@ -68,7 +69,7 @@ func (s *svc) CommandHelp(ctx context.Context, req CommandHelpRequest) (*Command
 			return Discovery(s.reg), nil
 		}
 
-		res := commandList(reg)
+		res := commandList(reg, commandListCap)
 		if len(res.Commands) == 0 {
 			res.Text = "No edit operations in the domain " + reg.Domain() + " yet."
 		}
@@ -122,10 +123,14 @@ func (s *svc) CommandHelp(ctx context.Context, req CommandHelpRequest) (*Command
 	return &CommandHelpResult{Command: detail, Text: text}, nil
 }
 
-func commandList(reg *command.Registry) *CommandHelpResult {
-	res := &CommandHelpResult{Commands: []CommandSummary{}}
+// commandListCap is the cap of the text of the list of one domain (SDD-003 section 3.10, "command help, list").
+const commandListCap = 6400
 
-	var b strings.Builder
+// commandList lists the public commands of a registry, one line each. With a cap above zero, the text keeps the lines
+// that fit and gives the names of the others on a last line, so every operation is still found (RF-116).
+func commandList(reg *command.Registry, textCap int) *CommandHelpResult {
+	res := &CommandHelpResult{Commands: []CommandSummary{}}
+	lines := []string{}
 
 	for _, c := range reg.List() {
 		if c.Internal {
@@ -134,10 +139,29 @@ func commandList(reg *command.Registry) *CommandHelpResult {
 
 		sum := summaryOf(c)
 		res.Commands = append(res.Commands, sum)
-		fmt.Fprintf(&b, "%s [%s] %s\n", sum.Name, sum.Scope, sum.Summary)
+		lines = append(lines, fmt.Sprintf("%s [%s] %s", sum.Name, sum.Scope, sum.Summary))
 	}
 
-	res.Text = strings.TrimRight(b.String(), "\n")
+	res.Text = strings.Join(lines, "\n")
+
+	if textCap <= 0 || len(res.Text) <= textCap {
+		return res
+	}
+
+	for keep := len(lines) - 1; keep >= 0; keep-- {
+		names := make([]string, 0, len(lines)-keep)
+		for _, sum := range res.Commands[keep:] {
+			names = append(names, sum.Name)
+		}
+
+		text := strings.Join(append(slices.Clone(lines[:keep]),
+			"More, without a summary (command_help with the name reads one): "+strings.Join(names, ", ")), "\n")
+		if len(text) <= textCap || keep == 0 {
+			res.Text = text
+
+			break
+		}
+	}
 
 	return res
 }
@@ -191,19 +215,79 @@ func unknownCommand(reg *command.Registry, domain, name string) *Error {
 	}
 
 	hint := "use one of the known commands: " + strings.Join(known, ", ")
+	shown := known
+
+	if len(known) > maxKnownListed {
+		// The whole list is the list of command_help; an error that repeated it would pass its cap (SDD-003 section 3.10).
+		shown = closestNames(known, name, maxKnownListed)
+		hint = "command_help with no name lists every operation"
+
+		if len(shown) > 0 {
+			hint = "the closest names are " + strings.Join(shown, ", ") + "; " + hint
+		} else {
+			shown = nameGroups(known)
+			hint += "; the groups are " + strings.Join(shown, ", ")
+		}
+	}
+
 	if domain == "" {
 		hint += "; the operations of another domain are listed with the domain parameter (for example domain=image)"
 	}
 
 	return newError(command.CodeUnknownCommand, "there is no command named %q.", name).
-		withHint("%s", hint).withDetail("known", known)
+		withHint("%s", hint).withDetail("known", shown)
+}
+
+// maxKnownListed is the most names an unknown-command error repeats.
+const maxKnownListed = 20
+
+// closestNames are the names that share the group of the asked name (the part before the dot), or that contain what
+// follows its dot, at most limit of them.
+func closestNames(known []string, asked string, limit int) []string {
+	group, rest, _ := strings.Cut(asked, ".")
+	out := []string{}
+
+	for _, k := range known {
+		kg, kr, _ := strings.Cut(k, ".")
+
+		if (group != "" && kg == group) || (rest != "" && strings.Contains(kr, rest)) ||
+			(rest == "" && group != "" && strings.Contains(k, group)) {
+			out = append(out, k)
+
+			if len(out) == limit {
+				break
+			}
+		}
+	}
+
+	return out
+}
+
+// nameGroups are the groups of the names ("track.*"), each once.
+func nameGroups(known []string) []string {
+	out := []string{}
+
+	for _, k := range known {
+		g, _, ok := strings.Cut(k, ".")
+		if !ok {
+			g = k
+		} else {
+			g += ".*"
+		}
+
+		if !slices.Contains(out, g) {
+			out = append(out, g)
+		}
+	}
+
+	return out
 }
 
 // Discovery is the first discovery call: command_help with no name and no domain. It lists the operations of the
 // timeline registry, then one line per domain and the structured member (SDD-003 section 4.8). It needs no store, so
 // the budget check of NFR-020 measures it without a workspace.
 func Discovery(video *command.Registry) *CommandHelpResult {
-	res := commandList(video)
+	res := commandList(video, 0)
 
 	var b strings.Builder
 
