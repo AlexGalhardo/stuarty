@@ -268,7 +268,7 @@ main[data-expressive] .btn-glow:focus-visible {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 1.25rem 1.5rem;
+  gap: 1.25rem 0.75rem;
 }
 .landing-actions-center {
   justify-content: center;
@@ -302,7 +302,7 @@ main[data-expressive] .btn-glow:focus-visible {
 .landing-download-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.75rem;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -312,11 +312,44 @@ main[data-expressive] .btn-glow:focus-visible {
 }
 .btn-download {
   height: auto;
-  min-height: 3rem;
-  padding-block: 0.375rem;
-  padding-inline: 0.875rem 1rem;
-  gap: 0.625rem;
-  font-size: 0.875rem;
+  min-height: 3.5rem;
+  padding-block: 0.5rem;
+  padding-inline: 1.125rem 1.375rem;
+  gap: 0.75rem;
+  font-size: 0.9375rem;
+}
+.btn-download .btn-sub {
+  font-size: 0.8125rem;
+}
+.btn-download > svg {
+  width: 1.375rem;
+  height: 1.375rem;
+}
+/* Phones: one button per row, centred, all four the same width. */
+@media (max-width: 39.99rem) {
+  .landing-actions,
+  .landing-downloads,
+  .landing-download-list {
+    flex-direction: column;
+    align-items: center;
+  }
+  .landing-actions,
+  .landing-download-list {
+    gap: 0.75rem;
+  }
+  .landing-downloads,
+  .landing-download-list,
+  .landing-download-list li {
+    width: 100%;
+  }
+  .landing-actions .btn-download {
+    width: min(100%, 19rem);
+    justify-content: flex-start;
+    margin-inline: auto;
+  }
+  .landing-download-list li {
+    display: flex;
+  }
 }
 
 /* The 2px focus outline of section 2.10, in the brand text colour so it reads on the scene. */
