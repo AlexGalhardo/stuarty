@@ -144,6 +144,15 @@ func TestRequestsMatchTheRoutes(t *testing.T) {
 			_, err := c.JobList(ctx, service.JobListRequest{ProjectID: "prj_a", State: "all"})
 			return err
 		}, "GET", "/api/v1/projects/prj_a/jobs", "state=all", "", `{"jobs":[]}`, true},
+		{
+			"otio import", func(c *Client) error {
+				_, err := c.ProjectOtioImport(ctx, service.ProjectOtioImportRequest{
+					ProjectID: "prj_a", TimelineID: "prj_b", BaseRevision: 3, Path: "/m/a.otio", AllowPartial: true,
+				})
+				return err
+			}, "POST", "/api/v1/projects/prj_a/otio", "timeline_id=prj_b",
+			`{"base_revision":3,"path":"/m/a.otio","allow_partial":true}`, `{"revision":4}`, false,
+		},
 		{"escapes the id", func(c *Client) error {
 			_, err := c.ProjectGet(ctx, service.ProjectGetRequest{ProjectID: "a/b c"})
 			return err

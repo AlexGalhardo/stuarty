@@ -834,7 +834,8 @@ func (c *Client) ProjectOtioImport(
 		BaseRevision int64  `json:"base_revision"`
 		Path         string `json:"path"`
 		DryRun       bool   `json:"dry_run,omitempty"`
-	}{req.BaseRevision, req.Path, req.DryRun}
+		AllowPartial bool   `json:"allow_partial,omitempty"`
+	}{req.BaseRevision, req.Path, req.DryRun, req.AllowPartial}
 
 	return post[service.ProjectOtioImportResult](ctx, c, projectPath(req.ProjectID, "/otio"), body)
 }
