@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.45.0] - 2026-11-21
+
+### Added
+
+- **site:** Center the hero buttons between the content and the scroll hint ([1d2b2b3](https://github.com/AlexGalhardo/stuarty/commit/1d2b2b3a17564eee6088b52ea167cd9a3f80ce1d))
+- **site:** Open the product pictures of the home enlarged ([b1f67bc](https://github.com/AlexGalhardo/stuarty/commit/b1f67bc85d4dc8e5b744cce821e8d5df7d951abe))
+- **site:** Light up in one place in the hero title and rewrite the lead ([d59579a](https://github.com/AlexGalhardo/stuarty/commit/d59579ac6c3ff8a0033b84d67e24e2d05f1f278b))
+- **site:** Space the closing lines and pin the credit to the bottom ([1c15ce7](https://github.com/AlexGalhardo/stuarty/commit/1c15ce71521c1c675399f388a9f16d4d82d85939))
+- **site:** Turn the navbar links violet on hover and focus ([818379f](https://github.com/AlexGalhardo/stuarty/commit/818379ff71dc77c9e3d2e753ad8d501cf09fe109))
+- **site:** Enlarge the four main buttons and stack them on phones ([d345d33](https://github.com/AlexGalhardo/stuarty/commit/d345d336e14fb773ba097b181cba8fe18af76d97))
+- **site:** Type the three hero phrases in turn ([89cada0](https://github.com/AlexGalhardo/stuarty/commit/89cada0a052dc8a2fc5d3c4b50ff6db0e8fe973a))
+- **site:** Center the closing buttons between the lines and the window bottom ([60296ed](https://github.com/AlexGalhardo/stuarty/commit/60296ed8726c97d22e98079b63c84390b3493a7d))
+- **site:** Give the Windows download button an emerald colour ([6a37edf](https://github.com/AlexGalhardo/stuarty/commit/6a37edfc93ebdf38c0185626a469c455c270c756))
+- **site:** Add a Setup Docker VPS button next to Getting Started ([6edd434](https://github.com/AlexGalhardo/stuarty/commit/6edd434c5af094881b422b4253cfd99a4ae0003f))
+- **site:** Give the home a flat, editor-like timeline ([ca14b74](https://github.com/AlexGalhardo/stuarty/commit/ca14b74ac07ff7224f86ebc12ed5e4130cfbe0c4))
+- **site:** Add a Setup Docker Local button ([1f080c5](https://github.com/AlexGalhardo/stuarty/commit/1f080c547b98b0a03ede85cc16ceb31c80e9a960))
+- **site:** Move the home actions into a second navbar row ([f95e76e](https://github.com/AlexGalhardo/stuarty/commit/f95e76e467e4410aba82c763fb9c19ec2a5d2d32))
+- **site:** Close the home with What are you waiting? ([f91950e](https://github.com/AlexGalhardo/stuarty/commit/f91950ea0c5bce6a91b307b57d650f379186b1bd))
+- **site:** Call the release stage alpha on the landing buttons ([bc4ab34](https://github.com/AlexGalhardo/stuarty/commit/bc4ab342b0ee56bdc495da75421c9cd36c44f509))
+- **site:** Add a pause animations control to the home and its backups (WCAG 2.2.2) ([1d90d31](https://github.com/AlexGalhardo/stuarty/commit/1d90d316ff267fd5e5654b0b755684791d244b05))
+
+### Removed
+
+- **site:** Bring the home actions back into the page ([8925d71](https://github.com/AlexGalhardo/stuarty/commit/8925d7127cc560510ce6ea5dc98bd7421d8e3ab2))
+
+### Fixed
+
+- **site:** Keep Free. Forever. visible when the closing take comes in ([4848fbf](https://github.com/AlexGalhardo/stuarty/commit/4848fbfa0f9392e3cc660a8ad17a23bc3be1b15a))
+- **site:** Show one set of buttons at the end of the home ([facca88](https://github.com/AlexGalhardo/stuarty/commit/facca8886db985bff2f182ceb1edb629642a433a))
+- **site:** Darken the hero accents on the light theme ([fe96052](https://github.com/AlexGalhardo/stuarty/commit/fe960523638a7848779ed07a5771ca151d3fe3dc))
+- **site:** Show the navbar mark alone on tablet widths ([7acd7dc](https://github.com/AlexGalhardo/stuarty/commit/7acd7dc7a0ad87629a3b41c939b00f22442a4ab3))
+- **site:** Let the Tab key move between the takes of the home ([52c535e](https://github.com/AlexGalhardo/stuarty/commit/52c535ef3f786002ae15dfb70e0b1a0d8d985d00))
+- **site:** Give the agents terminal sample a role that may carry its name ([be22d84](https://github.com/AlexGalhardo/stuarty/commit/be22d84860008db1bb39dbd75ab277ccc565f406))
+- **site:** Fall back to v0.43.0, the newest release, on the landing buttons ([ea71cd1](https://github.com/AlexGalhardo/stuarty/commit/ea71cd14f80581209caa4abe582a3533ebafe90a))
+- **site:** Say no telemetry on the home, as SDD-010 asks of the landing page ([f648125](https://github.com/AlexGalhardo/stuarty/commit/f648125a354be5d9b1c94c9666b778e6db7ddc6d))
+- **release:** Read the changelog through a process substitution so the cut does not stop silently ([e99e912](https://github.com/AlexGalhardo/stuarty/commit/e99e9127245830f84009a7ff09ea3685c69a0ff3))
+
 ## [0.44.0] - 2026-11-21
 
 ### Added
@@ -2094,7 +2131,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.44.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.45.0...HEAD
+[0.45.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.44.0...v0.45.0
 [0.44.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.43.0...v0.44.0
 [0.43.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.42.0...v0.43.0
 [0.42.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.41.0...v0.42.0
