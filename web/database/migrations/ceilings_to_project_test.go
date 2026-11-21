@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"testing"
 
+	"github.com/AlexGalhardo/vukem/database"
 	"github.com/AlexGalhardo/vukem/schema"
 )
 
@@ -16,9 +17,7 @@ var none sql.NullInt64
 
 func limit(v int64) sql.NullInt64 { return sql.NullInt64{Int64: v, Valid: true} }
 
-func ceilings(t *testing.T, db interface {
-	QueryContext(context.Context, string, ...any) (*sql.Rows, error)
-}) map[string]ceilingRow {
+func ceilings(t *testing.T, db *database.DB) map[string]ceilingRow {
 	t.Helper()
 
 	rows, err := db.QueryContext(context.Background(),
