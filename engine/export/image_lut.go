@@ -11,16 +11,14 @@ import (
 	"github.com/AlexGalhardo/stuarty/engine/renderhost"
 )
 
-// putImageLUT uploads the table a layer names before the layer is drawn (SDD-004 section 3.6), once per table:
-// the layer is never drawn without it. A layer with no table asks for nothing.
-func putImageLUT(
-	ctx context.Context, host *renderhost.Host, l *plan.Layer, uploaded map[string]bool, cfg ImageConfig,
-) error {
-	if l.Lut == nil || uploaded[l.Lut.Asset] {
+// putLUT uploads the table a layer names before the layer is prepared (SDD-004 section 3.6): the layer is never
+// drawn without it. A layer with no table asks for nothing.
+func (r *imageRun) putLUT(ctx context.Context, host *renderhost.Host, l *plan.Layer) error {
+	if l.Lut == nil {
 		return nil
 	}
 
-	t, err := imageLUT(l, cfg)
+	t, err := r.lutTable(l)
 	if err != nil {
 		return err
 	}
@@ -29,9 +27,30 @@ func putImageLUT(
 		return rendererError(err)
 	}
 
-	uploaded[l.Lut.Asset] = true
-
 	return nil
+}
+
+// lutTable is the parsed table of a layer, read once per render whichever worker asks first.
+func (r *imageRun) lutTable(l *plan.Layer) (*lut.Table, error) {
+	r.lutMu.Lock()
+	defer r.lutMu.Unlock()
+
+	if t, ok := r.luts[l.Lut.Asset]; ok {
+		return t, nil
+	}
+
+	t, err := imageLUT(l, r.cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	if r.luts == nil {
+		r.luts = map[string]*lut.Table{}
+	}
+
+	r.luts[l.Lut.Asset] = t
+
+	return t, nil
 }
 
 // imageLUT is the table a layer of an image document names (SDD-021 section 3.1): the normalized .cube file of

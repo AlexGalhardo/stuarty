@@ -157,9 +157,8 @@ func resample(img *image.RGBA, w, h int) (*image.RGBA, error) {
 	return &image.RGBA{Pix: out.Pix, Stride: w * 4, Rect: image.Rect(0, 0, w, h)}, nil
 }
 
-// encodePNG writes the picture at the fastest level of the standard encoder: the file stays lossless and the
-// same pixels give the same bytes, and a 4,000 by 4,000 picture takes a second instead of fourteen (SDD-021
-// section 6).
+// encodePNG writes the picture with encodePNGParallel, at the fastest level of deflate: the file stays lossless
+// and the same pixels give the same bytes (SDD-021 section 6).
 func encodePNG(img *image.RGBA) ([]byte, error) {
 	out, err := encodePNGParallel(img)
 	if err != nil {
