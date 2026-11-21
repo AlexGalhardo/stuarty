@@ -115,10 +115,11 @@ if [ "$pull" -eq 1 ]; then
 fi
 
 app_key="$(openssl rand -base64 32)"
-docker run -d --name "$name" -p "127.0.0.1:$port:7878" \
+docker run -d --name "$name" -p "127.0.0.1:$port:$port" \
 	-v "$data:/data" -v "$media:/media" \
 	-e STUARTY_IMPORT_ROOTS=/media \
 	-e APP_KEY="$app_key" \
+	-e PORT="$port" -e APP_URL="$app" \
 	-e STUARTY_ADMIN_EMAIL=admin@example.com \
 	-e STUARTY_ADMIN_PASSWORD="choose-a-long-password" \
 	"$image" >/dev/null
