@@ -37,6 +37,8 @@ type fakeNet struct {
 	badCode  bool
 	// videoURL, when set, is the address of a video the network answers.
 	videoURL string
+	// posted holds the path of the file of every video that was sent.
+	posted []string
 }
 
 func newFakeNet(t *testing.T) *fakeNet {
@@ -68,6 +70,13 @@ func newFakeNet(t *testing.T) *fakeNet {
 		case r.URL.Path == "/account":
 			_, _ = w.Write([]byte(`{"id":"UC-FAKE","title":"Fake channel"}`))
 		case r.URL.Path == "/videos" && r.Method == http.MethodPost:
+			var sent struct {
+				Path string `json:"path"`
+			}
+
+			_ = json.NewDecoder(r.Body).Decode(&sent)
+			n.posted = append(n.posted, sent.Path)
+
 			id := "vid" + string(rune('a'+len(n.videos)))
 			n.videos[id] = "published"
 
