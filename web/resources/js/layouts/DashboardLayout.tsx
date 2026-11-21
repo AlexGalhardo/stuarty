@@ -28,6 +28,17 @@ export default function DashboardLayout({
 		if (lastPath !== null && lastPath !== path) main.current?.focus();
 		lastPath = path;
 	}, [path]);
+	// The image editor keeps the default text size; every other page of the
+	// dashboard reads larger (D-123, app.css).
+	const scaled = page.component !== "EditImage/Show";
+	useEffect(() => {
+		const root = document.documentElement;
+		if (scaled) root.dataset.textScale = "dashboard";
+		else delete root.dataset.textScale;
+		return () => {
+			delete root.dataset.textScale;
+		};
+	}, [scaled]);
 	const message = page.flash?.success ?? page.flash?.status;
 	// The shared prop can arrive empty; the link keeps a name (axe link-name).
 	const appName = page.props.appName || "Stuarty";
