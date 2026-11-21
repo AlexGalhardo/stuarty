@@ -57,6 +57,7 @@ export default function DashboardLayout({
 				url={page.url}
 				appName={appName}
 				user={page.props.auth?.user ?? null}
+				account={page.props.account ?? null}
 			/>
 			<ReleaseMark />
 			<main

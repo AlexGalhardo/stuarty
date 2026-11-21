@@ -63,6 +63,13 @@ export class HttpTransport implements Transport {
 			} catch {
 				// An empty or non-JSON body (a proxy page) is reported as null.
 			}
+			// A locked studio (E_LOCKED, 423) has one way on: the sign-in page (ADR-0049).
+			if (
+				response.status === 423 &&
+				!window.location.pathname.startsWith("/account/")
+			) {
+				window.location.assign("/account/signin");
+			}
 			return { status: response.status, body };
 		} catch (error) {
 			if (timedOut) throw new TransportError("timeout", "request timed out");

@@ -116,8 +116,11 @@ test.describe("i18n-switch", () => {
 		await expect(
 			page.getByRole("heading", { name: "Projects", level: 1 }),
 		).toBeVisible();
+		// The language is chosen in Settings (the sidebar has no dropdown any more, ADR-0049).
+		await page.goto("/settings");
 		await page.getByRole("combobox", { name: "Language" }).click();
 		await page.getByRole("option", { name: "Português (Brasil)" }).click();
+		await page.goto("/projects");
 		await expect(
 			page.getByRole("heading", { name: "Projetos", level: 1 }),
 		).toBeVisible();

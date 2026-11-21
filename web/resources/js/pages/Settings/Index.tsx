@@ -13,6 +13,7 @@ import {
 	type TimeUnit,
 	writeTimeUnit,
 } from "../../editor/state/prefs";
+import AccountSettings from "./Account";
 import Background from "./Background";
 import Transcription from "./Transcription";
 
@@ -108,6 +109,7 @@ export default function SettingsIndex() {
 						</Button>
 					</div>
 				</section>
+				<AccountSettings />
 				<Background />
 				<Transcription />
 				<section

@@ -1,6 +1,5 @@
 import { randomBytes } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
-import { readFile } from "node:fs/promises";
 import {
 	createServer,
 	type IncomingMessage,
@@ -10,7 +9,7 @@ import {
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import type { Page } from "@playwright/test";
-import { LAUNCHER_SECRET } from "../support/launcher";
+import { ensureAccount, signInWithPassword } from "../support/account";
 import { listenWhenFree, SOCIAL_PORT } from "../support/social";
 import { caller, expect, home, test } from "./helpers";
 
@@ -151,15 +150,9 @@ function seedExport(project: string): string {
 }
 
 async function signInAsPerson(page: Page): Promise<void> {
-	const launch = await page.request.post("/api/v1/system/launch", {
-		headers: {
-			Authorization: `Bearer ${(await readFile(join(home, "token"), "utf8")).trim()}`,
-			"Stuarty-Launcher": LAUNCHER_SECRET,
-		},
-	});
-	expect(launch.ok()).toBe(true);
-	const { url } = (await launch.json()) as { url: string };
-	await page.goto(url);
+	await ensureAccount(page.request, home);
+	await signInWithPassword(page.request);
+	await page.goto("/");
 }
 
 // @chromium-only: the fake network listens on the one port the server of the suite is told about, so two

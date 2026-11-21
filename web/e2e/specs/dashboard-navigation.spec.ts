@@ -75,7 +75,7 @@ test.describe("dashboard-navigation", () => {
 		const nav = page.getByRole("navigation", { name: "Main navigation" });
 		await expect(nav.getByRole("link")).toHaveText(LABELS.en);
 
-		await expect(page.getByTestId("profile-name")).toHaveText("Local");
+		await expect(page.getByTestId("profile-name")).toHaveText("stuart");
 		await expect(page.getByRole("link", { name: "Settings" })).toBeVisible();
 		await expect(
 			page.getByRole("button", { name: /Switch to (light|dark) theme/ }),

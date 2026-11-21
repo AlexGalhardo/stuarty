@@ -8,7 +8,7 @@ import {
 } from "node:http";
 import { join } from "node:path";
 import type { APIRequestContext, Page } from "@playwright/test";
-import { LAUNCHER_SECRET } from "../support/launcher";
+import { ensureAccount, signInWithPassword } from "../support/account";
 import { SIGNIN_PORT } from "../support/network";
 import { caller, expect, home, test } from "./helpers";
 
@@ -203,15 +203,9 @@ async function fakeProvider(): Promise<FakeProvider> {
 }
 
 async function signInAsPerson(page: Page): Promise<void> {
-	const launch = await page.request.post("/api/v1/system/launch", {
-		headers: {
-			Authorization: `Bearer ${(await readFile(join(home, "token"), "utf8")).trim()}`,
-			"Stuarty-Launcher": LAUNCHER_SECRET,
-		},
-	});
-	expect(launch.ok()).toBe(true);
-	const { url } = (await launch.json()) as { url: string };
-	await page.goto(url);
+	await ensureAccount(page.request, home);
+	await signInWithPassword(page.request);
+	await page.goto("/");
 }
 
 // Leave the workspace as it was found: the connections spec expects it to hold none. A sign-in is removed by a

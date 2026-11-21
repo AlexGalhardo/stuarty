@@ -7,6 +7,7 @@ export type UiErrorCode =
 	| ErrorCode
 	| "E_NETWORK"
 	| "E_UNAUTHORIZED"
+	| "E_LOCKED"
 	| "E_FORBIDDEN";
 
 export class ApiError extends Error {

@@ -8,6 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "@playwright/test";
+import { failStatePath, mainStatePath } from "./support/accountTargets";
 import { CHROMIUM_ONLY, NOT_IN_MATRIX } from "./support/browsers";
 import { LAUNCHER_SECRET } from "./support/launcher";
 import {
@@ -134,6 +135,11 @@ const needsApp =
 
 const home = process.env.STUARTY_E2E_HOME ?? join(tmpdir(), "stuarty-e2e-home");
 
+// A fourth local server with no account, for the first-run spec (ADR-0049): every other local server has its
+// account and its signed-in session made by the global setup (support/globalSetup.ts).
+const accountPort = port + 7;
+const accountHome = `${home}-account`;
+
 // A second server whose encoder cannot work, for scenario 9 (export-failure).
 // Its workspace follows the main one, so two runs with their own homes (two
 // checkouts, two agents) never open the same workspace.
@@ -146,6 +152,8 @@ const networkHome = `${home}-network`;
 
 export default defineConfig({
 	testDir: "./specs",
+	// The account of every local server and the session of its person (ADR-0049).
+	globalSetup: "./support/globalSetup.ts",
 	fullyParallel: true,
 	// Never retry: a test that passes on a second try is a flaky test, which is a defect (REVIEW.md).
 	retries: 0,
@@ -162,6 +170,7 @@ export default defineConfig({
 			testIgnore: NOT_IN_MATRIX,
 			use: {
 				browserName: "chromium",
+				storageState: mainStatePath,
 				launchOptions: {
 					args: ["--disable-gpu-vsync", "--disable-frame-rate-limit"],
 				},
@@ -175,6 +184,7 @@ export default defineConfig({
 			grepInvert: new RegExp(CHROMIUM_ONLY),
 			use: {
 				browserName: "firefox",
+				storageState: mainStatePath,
 				// Headless Firefox on Linux has no WebGL ("Exhausted GL driver
 				// options"), so the preview falls back to a Canvas2D renderer that
 				// skips every filter (masks, blur, color) and the golden specs cannot
@@ -187,7 +197,7 @@ export default defineConfig({
 			name: "webkit",
 			testIgnore: NOT_IN_MATRIX,
 			grepInvert: new RegExp(CHROMIUM_ONLY),
-			use: { browserName: "webkit" },
+			use: { browserName: "webkit", storageState: mainStatePath },
 		},
 		// The budgets of SDD-012 section 19 are those of the reference machine. They
 		// depend on the load and on a real GPU, so they run only when asked for
@@ -229,6 +239,18 @@ export default defineConfig({
 			use: {
 				browserName: "chromium",
 				baseURL: `http://127.0.0.1:${failPort}`,
+				storageState: failStatePath,
+			},
+		},
+		// The first run and Logout (ADR-0049): a server whose workspace has no account, so the page that creates
+		// it is the first thing a person sees. No session is kept for it.
+		{
+			name: "account",
+			testMatch: /account-first-run\.spec\.ts/,
+			metadata: { home: accountHome },
+			use: {
+				browserName: "chromium",
+				baseURL: `http://127.0.0.1:${accountPort}`,
 			},
 		},
 		// The feature-detection page of desktop/detect (SDD-012 section 21.2).
@@ -301,6 +323,22 @@ export default defineConfig({
 				// Only this encoder is tried and it is never replaced (ADR-0011).
 				STUARTY_ENCODER: "no_such_encoder",
 				...ffmpegEnv(),
+			},
+		},
+		{
+			command: serveCommand,
+			cwd: "../..",
+			url: `http://127.0.0.1:${accountPort}/up`,
+			reuseExistingServer: !process.env.CI,
+			timeout: 180_000,
+			env: {
+				APP_KEY: `base64:${Buffer.alloc(32, "e2e").toString("base64")}`,
+				HOST: "127.0.0.1",
+				PORT: String(accountPort),
+				STUARTY_HOME: accountHome,
+				STUARTY_MASTER_KEY_FILE: `${accountHome}.master.key`,
+				STUARTY_RATE_LIMIT_PER_MINUTE: "100000",
+				STUARTY_RATE_LIMIT_SESSION_PER_MINUTE: "100000",
 			},
 		},
 		{

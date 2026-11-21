@@ -1,13 +1,11 @@
 import { randomBytes } from "node:crypto";
-import { readFile } from "node:fs/promises";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { join } from "node:path";
 import { crc32, deflateSync } from "node:zlib";
 import type { Page } from "@playwright/test";
 
-import { LAUNCHER_SECRET } from "../support/launcher";
 import { caller, home, makeProject, validName } from "./helpers";
+import { ensureAccount, signInWithPassword } from "../support/account";
 import {
 	editImage,
 	expect,
@@ -132,17 +130,11 @@ async function fakeProvider(model: string): Promise<FakeProvider> {
 	return fake;
 }
 
-// A person decides in the desktop app, whose launch code carries the launcher secret (SDD-007 section 3.4).
+// A person decides, and a person is a session opened with the password (ADR-0049, SDD-007 section 3.9 item 5; SDD-007 section 3.4).
 async function signInAsPerson(page: Page): Promise<void> {
-	const launch = await page.request.post("/api/v1/system/launch", {
-		headers: {
-			Authorization: `Bearer ${(await readFile(join(home, "token"), "utf8")).trim()}`,
-			"Stuarty-Launcher": LAUNCHER_SECRET,
-		},
-	});
-	expect(launch.ok()).toBe(true);
-	const { url } = (await launch.json()) as { url: string };
-	await page.goto(url);
+	await ensureAccount(page.request, home);
+	await signInWithPassword(page.request);
+	await page.goto("/");
 }
 
 async function removeConnection(page: Page, label: string): Promise<void> {
