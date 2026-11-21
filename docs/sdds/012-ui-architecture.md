@@ -111,6 +111,19 @@ In network mode a browser that opens any other page with no session gets `303` t
 
 These pages talk to the Go controllers through Inertia props and form posts, as the existing Studio does. A controller of these pages calls the same `service.Service` operations as the HTTP API (ADR-0008) and passes the result as props.
 
+### 2.1.1 The local account pages (ADR-0049, SDD-007 section 3.9)
+
+In local mode the interface asks the server for the state of the account (`GET /auth/account`: `none`, `locked`, `unlocked`) before it draws anything else, and every page of the product is reachable only in the state `unlocked`: a visit to any other page is answered with the page of the state, so a new workspace shows the create-account page first, and a locked one shows the sign-in page. These pages hold no data and no secret, are Inertia pages like the others, and send JSON to the account routes; the interface computes none of the rules (it shows the `details.fields` of an `E_VALIDATION`, each reason under its own field, in the language of the person).
+
+| Route | Page | Purpose |
+| --- | --- | --- |
+| `GET /account/create` | `pages/Account/Create.tsx` | username, e-mail, password and confirmation (each password field has a show/hide eye); the rules are stated once, in words, and each error appears under its field |
+| `GET /account/recovery-key` | `pages/Account/RecoveryKey.tsx` | the recovery key, shown once, with a copy button and a plain statement that a forgotten password with no recovery key loses the work; the button to go on is enabled only after the person ticks that the key was saved; the key is held in the memory of the page only and is gone when the page is left |
+| `GET /account/signin` | `pages/Account/SignIn.tsx` | username or e-mail and password, with the show/hide eye, and a link to the recovery by key |
+| `GET /account/recover` | `pages/Account/Recover.tsx` | the recovery key, a new password and its confirmation |
+
+The sidebar loses its language dropdown. Its footer holds **Settings** (language, the signed-in user, change password with the current password and the new one with its confirmation, the light and dark theme, the idle lock in minutes with an "off" choice) and **Logout** (`POST /auth/account/logout`, then the sign-in page). The settings page of 2.1 is that page. The language and the theme are choices of the browser (the interface remembers them); the idle lock is the account's (`PUT /auth/account/settings`).
+
 ### 2.2 The editor route
 
 **Decision of this SDD: the editor is a hand-written route, not an Inertia page.** `GET /editor/{project_id}` is registered in `routes/web.go` with the same middleware stack as the Inertia pages (`DefaultMiddleware`, locale, session or local token), and its handler renders the view `resources/views/editor.html` through `c.Render`. A project with no timeline (SDD-005 section 5.12.2) has no document to open, so the route redirects to `/projects/{id}`, where a video is added. The view is a copy of `app.html` that loads the Vite entry `resources/js/editor.tsx` instead of `app.tsx` and has no `{{.Inertia}}`.
