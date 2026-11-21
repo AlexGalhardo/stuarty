@@ -9,6 +9,8 @@
 
 <br/>
 
+<br/>
+
 <a href="https://github.com/AlexGalhardo/stuarty/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/AlexGalhardo/stuarty/ci.yml?branch=main&label=tests" alt="Tests"></a>
 <a href="https://app.codecov.io/gh/AlexGalhardo/stuarty"><img src="https://img.shields.io/codecov/c/github/AlexGalhardo/stuarty?logo=codecov&label=codecov" alt="Codecov"></a>
 <a href="https://github.com/AlexGalhardo/stuarty/actions/workflows/release.yml"><img src="https://img.shields.io/github/actions/workflow/status/AlexGalhardo/stuarty/release.yml?label=ci%2Fcd" alt="CI/CD"></a>
@@ -17,7 +19,7 @@
 <a href="LICENSE.md"><img src="https://img.shields.io/github/license/AlexGalhardo/stuarty" alt="License"></a>
 <a href="https://scorecard.dev/viewer/?uri=github.com/AlexGalhardo/stuarty"><img src="https://img.shields.io/ossf-scorecard/github.com/AlexGalhardo/stuarty?label=openssf%20scorecard" alt="OpenSSF Scorecard"></a>
 
-## Create, edit, manage and publish your audiovisual and text content in one place
+### Create, edit, manage and publish your audiovisual and text content in one place
 
 <br/>
 
@@ -27,7 +29,7 @@
 
 ## Introduction
 
-Why use so many tools to create your content, when you can focus on one tool and connect to other tools and services when needed? This is why Stuarty exists.
+**Why use so many tools to create your content, when you can focus on one tool and connect to other tools and services when needed? This is why Stuarty exists.**
 
 Stuarty is an open source (MIT), self-hosted studio for independent creators, on the web and on the desktop. It is built around the problems that eat a creator's week:
 
