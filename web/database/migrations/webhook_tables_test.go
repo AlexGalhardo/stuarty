@@ -66,7 +66,9 @@ func TestWebhookTablesUpAndDown(t *testing.T) {
 	const delivery = `INSERT INTO webhook_deliveries (id, webhook_id, event, event_id, kind, body, state, max_attempts, next_ms,
  created_ms) VALUES `
 
-	execAll(t, db,
+	execAll(
+		t,
+		db,
 		`INSERT INTO webhooks (id, name, url, events, created_by, created_ms, updated_ms)
  VALUES ('whk_0000000001', 'n', 'https://hooks.example.com/h', '["job.failed"]', 'u', 1, 1)`,
 		delivery+`('wdl_0000000001', 'whk_0000000001', 'job.failed', 'evt_1', 'event', '{}', 'pending', 6, 1, 1)`,
@@ -82,9 +84,11 @@ func TestWebhookTablesUpAndDown(t *testing.T) {
 
 	execAll(t, db, `DELETE FROM webhooks WHERE id = 'whk_0000000001'`)
 
-	if d, a := count(`SELECT count(*) FROM webhook_deliveries`), count(`SELECT count(*) FROM webhook_attempts`); d != 0 ||
-		a != 0 {
-		t.Fatalf("a removed webhook left %d deliveries and %d attempts", d, a)
+	deliveries := count(`SELECT count(*) FROM webhook_deliveries`)
+	attempts := count(`SELECT count(*) FROM webhook_attempts`)
+
+	if deliveries != 0 || attempts != 0 {
+		t.Fatalf("a removed webhook left %d deliveries and %d attempts", deliveries, attempts)
 	}
 
 	// Down of this migration and of every one made after it, newest first.
