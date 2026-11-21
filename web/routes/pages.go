@@ -74,6 +74,12 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 			return inertia.Render(c, "Connections/Index", inertia.Props{})
 		}).Name("connections.index")
 
+		// The Webhooks page (epic 59, SDD-022): the page reads and changes the outbound webhooks through
+		// /api/v1/webhooks.
+		r.Get("/webhooks", func(c *web.Ctx) error {
+			return inertia.Render(c, "Webhooks/Index", inertia.Props{})
+		}).Name("webhooks.index")
+
 		// The redirect address of the sign-in to a social network (epic 18, SDD-020 section 13): the page
 		// hands the state and the code to POST /api/v1/social/complete with the session of the browser.
 		r.Get("/social/callback", func(c *web.Ctx) error {

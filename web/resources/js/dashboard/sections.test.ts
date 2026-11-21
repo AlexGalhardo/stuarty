@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 import { activeSection, isSectionKey, pathOf, SECTIONS } from "./sections";
 
 describe("SECTIONS", () => {
-	test("are the twelve sections of RF-311 in order", () => {
+	test("are the twelve sections of RF-311 in order, then the webhooks of epic 59", () => {
 		expect(SECTIONS.map((s) => s.key)).toEqual([
 			"projects",
 			"edit-video",
@@ -17,11 +17,12 @@ describe("SECTIONS", () => {
 			"prompts",
 			"memory",
 			"connections",
+			"webhooks",
 		]);
 	});
 
 	test("each has its own path and icon", () => {
-		expect(new Set(SECTIONS.map((s) => s.path)).size).toBe(12);
+		expect(new Set(SECTIONS.map((s) => s.path)).size).toBe(13);
 		for (const s of SECTIONS) {
 			expect(s.path).toBe(`/${s.key}`);
 			expect(s.icon).toBeTruthy();

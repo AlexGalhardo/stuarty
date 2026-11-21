@@ -143,7 +143,7 @@ export const navigation: NavCategory[] = [
 	{
 		dir: "guide",
 		title: "Publishing",
-		pages: ["approvals", "publishing-calendar", "blog-posts"],
+		pages: ["approvals", "publishing-calendar", "blog-posts", "webhooks"],
 	},
 	{
 		dir: "publish",

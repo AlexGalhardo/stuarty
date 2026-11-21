@@ -26,6 +26,7 @@ const SECTIONS = [
 	"prompts",
 	"memory",
 	"connections",
+	"webhooks",
 ] as const;
 
 const LABELS = {
@@ -42,6 +43,7 @@ const LABELS = {
 		"Prompts",
 		"Memory",
 		"Connections",
+		"Webhooks",
 	],
 	"pt-BR": [
 		"Projetos",
@@ -56,11 +58,12 @@ const LABELS = {
 		"Instruções",
 		"Memória",
 		"Conexões",
+		"Webhooks de saída",
 	],
 } as const;
 
 test.describe("dashboard-navigation", () => {
-	test("the application opens on the dashboard with the twelve sections, the profile and the theme toggle", async ({
+	test("the application opens on the dashboard with the thirteen sections, the profile and the theme toggle", async ({
 		page,
 	}) => {
 		await page.goto("/");
@@ -181,9 +184,9 @@ test.describe("dashboard-navigation", () => {
 		}
 		expect(seen).toEqual(SECTIONS.map((key) => `nav-${key}`));
 
-		// Enter on the focused item (Connections, the last) opens it.
+		// Enter on the focused item (Webhooks, the last) opens it.
 		await page.keyboard.press("Enter");
-		await expect(page).toHaveURL(/\/connections$/);
+		await expect(page).toHaveURL(/\/webhooks$/);
 	});
 
 	test("the theme toggle of the sidebar flips and remembers the theme", async ({

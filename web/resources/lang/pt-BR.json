@@ -37,7 +37,8 @@
         "skills": "Habilidades",
         "prompts": "Instruções",
         "memory": "Memória",
-        "connections": "Conexões"
+        "connections": "Conexões",
+        "webhooks": "Webhooks de saída"
       },
       "sidebar": {
         "title": "Barra lateral",
@@ -2548,6 +2549,51 @@
       "secret_missing": "Sem credencial: conecte de novo",
       "test_ok": "O destino respondeu {status}.",
       "test_failed": "O destino não respondeu bem (status {status})."
+    },
+    "webhooks": {
+      "title": "Webhooks de saída",
+      "intro": "Avise suas outras ferramentas do que aconteceu: o Stuarty chama o endereço que você cadastrar quando uma publicação sai, uma exportação fica pronta, uma aprovação espera ou um trabalho falha. Só identificadores e estados são enviados, nunca um arquivo ou um texto.",
+      "list": "Seus webhooks",
+      "empty": "Nenhum webhook ainda. Nada sai deste computador até você cadastrar um.",
+      "new": "Adicionar um webhook",
+      "name": "Nome",
+      "url": "Endereço",
+      "url_hint": "https, ou http para localhost. Endereços de uma rede privada são recusados.",
+      "events_legend": "Eventos a receber",
+      "add": "Adicionar webhook",
+      "on": "Ligado",
+      "off": "Desligado",
+      "turn_on": "Ligar",
+      "turn_off": "Desligar",
+      "test": "Enviar teste",
+      "rotate": "Trocar o segredo",
+      "remove": "Remover",
+      "deliveries": "Entregas",
+      "no_deliveries": "Nenhuma entrega ainda.",
+      "no_delivery": "Nenhuma entrega ainda",
+      "last_delivery": "Última entrega: {state}, {date}",
+      "redeliver": "Enviar de novo",
+      "attempts": "tentativa {n} de {max}",
+      "status": "situação {status}",
+      "attempt_line": "Tentativa {n}: status {status}, {ms} ms {error}",
+      "secret_title": "Segredo de assinatura de {name}",
+      "secret_warning": "Copie agora e guarde no seu receptor. Ele aparece uma vez e o Stuarty não consegue mostrá-lo de novo.",
+      "copy": "Copiar",
+      "copied": "Copiado",
+      "secret_saved": "Já guardei",
+      "state": {
+        "pending": "Aguardando",
+        "succeeded": "Entregue",
+        "failed": "Falhou"
+      },
+      "event": {
+        "publication_published": "Uma publicação saiu",
+        "publication_failed": "Uma publicação falhou",
+        "export_ready": "Uma exportação ficou pronta",
+        "approval_requested": "Uma aprovação está esperando",
+        "job_failed": "Um trabalho falhou",
+        "webhook_test": "Teste"
+      }
     },
     "generate": {
       "open": {
