@@ -1363,7 +1363,7 @@ CREATE TABLE blog_remote_posts (
 
 ### 5.16 The webhook tables (epic 59, SDD-022)
 
-Migration `20261120140000_create_webhook_tables`. No table holds the signing secret (it is in the vault under the id of the webhook) and none holds the body of an answer.
+Migration `20261121110000_create_webhook_tables`. No table holds the signing secret (it is in the vault under the id of the webhook) and none holds the body of an answer.
 
 ```sql
 CREATE TABLE webhooks (
