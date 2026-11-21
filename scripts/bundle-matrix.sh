@@ -69,7 +69,13 @@ if [ "$mode" = export ]; then
 	# Bit-exact: no encoder tag, no metadata, so the bytes (and the hash) are the same on every system.
 	ffmpeg -v error -y -f lavfi -i sine=frequency=440:duration=2 -c:a pcm_s16le -bitexact -fflags +bitexact \
 		-map_metadata -1 "$work/reference.wav"
-	vv "$home" project:create --name "Reference" --id "$project" >/dev/null
+	# A project has a description and a SMART goal, and no timeline until one is added (SDD-005 section 5.12.2).
+	vv "$home" project:create --name "Reference" --id "$project" \
+		--description "The reference project of the bundle matrix: one audio track, exported as a bundle to compare." \
+		--specific "Export one bundle of the reference" --measurable "The hash of the bundle is the same" \
+		--achievable "One generated tone is the only media" --relevant "It proves bundles open across releases" \
+		--time-bound "Done within the run of this script" --due 2999-12-31 >/dev/null
+	vv "$home" item:add --project "$project" --kind timeline --title "Reference" >/dev/null
 	vv "$home" media:import "$work/reference.wav" --project "$project" --asset-id ast_3c5v8n2w6d >/dev/null
 	vv "$home" edit --project "$project" --ops - >/dev/null <<'JSON'
 [{"op":"track.add","args":{"kind":"audio","name":"Music","id":"trk_m1n2p3q4r5"}},

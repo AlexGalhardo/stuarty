@@ -45,8 +45,14 @@ frames() { stuarty project:show "$1" --json | number duration_frames; }
 # ---- 1. the brief --------------------------------------------------------------------------------------------
 
 step "1. a project, and the brief of the long video"
-created="$(stuarty project:create --name "A year of videos" --preset 16:9 --json)"
+# A project has a description and a SMART goal, and no timeline until one is added (SDD-005 section 5.12.2).
+created="$(stuarty project:create --name "A year of videos" --json \
+	--description "A long horizontal talking video on how a creator plans a year of weekly videos, with chapters." \
+	--specific "Publish one long video about planning a year" --measurable "Five hundred views and fifty comments" \
+	--achievable "The talk is recorded and the outline exists" --relevant "Viewers ask how the weekly plan is made" \
+	--time-bound "Outline this week, edit next week, then publish" --due 2999-12-31)"
 P="$(need project_id "$(printf '%s' "$created" | field project_id)" "$created")"
+stuarty item:add --project "$P" --kind timeline --title "A year of videos" --preset 16:9 >/dev/null
 cat >"$WORK/brief.md" <<'EOF'
 # Brief
 

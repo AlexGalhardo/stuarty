@@ -59,9 +59,15 @@ docker run --rm --entrypoint sh "$img" -c "ldconfig -p | grep -q libgomp.so.1"
 # RF-206: with no network at all, the product still runs the part of the
 # Prototype scenario that needs no media, through the CLI in the container.
 net=(--rm --network none -v "$vol:/data")
-created="$(docker run "${net[@]}" "$img" project:create --name smoke --json)"
+# A project has a description and a SMART goal, and no timeline until one is added (SDD-005 section 5.12.2).
+created="$(docker run "${net[@]}" "$img" project:create --name smoke --json \
+	--description "A project made by the smoke test of the image with no network, to prove the CLI works offline." \
+	--specific "Edit and lint one project offline" --measurable "Every command answers with no network" \
+	--achievable "The image holds everything it needs" --relevant "It proves the image runs offline" \
+	--time-bound "Done within the run of this script" --due 2999-12-31)"
 id="$(printf "%s" "$created" | grep -o "\"project_id\":\"[^\"]*\"" | head -n 1 | cut -d\" -f4)"
 test -n "$id"
+docker run "${net[@]}" "$img" item:add --project "$id" --kind timeline --title smoke --json | grep -q "\"project_id\":\"$id\""
 docker run "${net[@]}" "$img" edit --project "$id" --json track.add kind=visual name=Video | grep -q "\"applied\":true"
 docker run "${net[@]}" "$img" lint --project "$id" --json | grep -q "\"project_id\":\"$id\""
 docker run "${net[@]}" "$img" history --project "$id" --json | grep -q "\"entries\""

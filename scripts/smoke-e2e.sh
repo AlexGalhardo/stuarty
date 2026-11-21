@@ -93,7 +93,13 @@ step() {
 }
 
 prj=prj_5m0k3t1e2s
-step project stuarty project:create --name "Smoke" --id "$prj"
+# A project has a description and a SMART goal, and no timeline until one is added (SDD-005 section 5.12.2).
+step project stuarty project:create --name "Smoke" --id "$prj" \
+	--description "A short video made by the smoke test of the release, with one clip and one title, to prove the build." \
+	--specific "Export one short video with a title" --measurable "The export finishes and the file plays" \
+	--achievable "One generated clip and one title are enough" --relevant "It proves that the build works end to end" \
+	--time-bound "Done within the run of this script" --due 2999-12-31
+step timeline stuarty item:add --project "$prj" --kind timeline --title "Smoke"
 step import stuarty media:import clip.mp4 --project "$prj" --asset-id ast_5m0k3c7a2p
 step edit stuarty edit --project "$prj" --ops - <<'JSON'
 [{"op":"track.add","args":{"kind":"visual","name":"Video","id":"trk_5m0k3v1d2e"}},

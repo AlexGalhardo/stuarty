@@ -186,8 +186,10 @@ revision() { stuarty project:show "$P" --json | number revision; }
 # ---- 1. a project, and the briefing ------------------------------------------------------------------------
 
 step "1. create the project and answer the briefing (MCP)"
-created="$(mcp project_create '{"name":"Sourdough short","preset":"9:16"}')"
+# A project has a description and a SMART goal, and no timeline until a video is added (SDD-005 section 5.12.2).
+created="$(mcp project_create '{"name":"Sourdough short","description":"A ten second vertical short on baking a first sourdough loaf, for home bakers, with captions and a cover.","goal":{"specific":"Publish one short on the first sourdough loaf","measurable":"A thousand views and twenty saves in a week","achievable":"The footage and the recipe already exist","relevant":"Home bakers ask how to start with sourdough","time_bound":"Script today, edit tomorrow, publish this week","due":"2999-12-31"}}')"
 P="$(need project_id "$(printf '%s' "$created" | field project_id)" "$created")"
+mcp project_item "{\"action\":\"add\",\"project_id\":\"$P\",\"kind\":\"timeline\",\"title\":\"Sourdough short\",\"preset\":\"9:16\"}" >/dev/null
 mcp project_item "{\"action\":\"briefing\",\"project_id\":\"$P\",\"answers\":{\"audience\":\"Home bakers who want a first sourdough loaf\",\"goal\":\"Watch to the end and try the recipe\",\"platform\":\"youtube-shorts\",\"format\":\"vertical-9x16\",\"duration\":\"10\",\"tone\":\"warm\"}}" >/dev/null
 stuarty brief:show --project "$P" --json | grep -q 'first sourdough loaf' || die "the brief does not hold the answers"
 
