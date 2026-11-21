@@ -148,9 +148,13 @@ func (s *svc) startApprovable(ctx context.Context, c Caller, req JobStartRequest
 	}
 
 	projectID := row.ID
-	action := core.Action{
-		Kind: k.Name, Connection: prep.ConnectionID, Project: costProject(ctx, s.store, projectID), Cost: prep.Estimate,
+
+	owner, oerr := costProject(ctx, s.store, projectID)
+	if oerr != nil {
+		return nil, asError(oerr)
 	}
+
+	action := core.Action{Kind: k.Name, Connection: prep.ConnectionID, Project: owner, Cost: prep.Estimate}
 
 	job := JobRow{
 		ID: s.newIDs(
@@ -383,11 +387,13 @@ func (s *svc) ensureReserved(ctx context.Context, job *JobRow) error {
 			return err
 		}
 
-		now := s.nowMs()
-		action := core.Action{
-			Kind: req.Kind, Connection: req.ConnectionID,
-			Project: costProject(ctx, tx, req.ProjectID), Cost: req.Estimate,
+		owner, err := costProject(ctx, tx, req.ProjectID)
+		if err != nil {
+			return err
 		}
+
+		now := s.nowMs()
+		action := core.Action{Kind: req.Kind, Connection: req.ConnectionID, Project: owner, Cost: req.Estimate}
 
 		out, err := approval.Evaluate(ctx, st, action, time.UnixMilli(now))
 		if err != nil {
@@ -404,13 +410,27 @@ func (s *svc) ensureReserved(ctx context.Context, job *JobRow) error {
 
 // costProject is the project a rule and a ceiling are matched against: they are written for a project, while a
 // request and a ledger entry carry the id of the timeline the job is kept on, so a job on a second timeline does not
-// leave the ceiling of its project (VV-315, SDD-015 section 3).
-func costProject(ctx context.Context, r interface{ Productions() ProductionRepo }, id string) string {
-	if owner, err := r.Productions().ProjectOfTimeline(ctx, id); err == nil {
-		return owner
+// leave the ceiling of its project (VV-315, SDD-015 section 3). An id that names a project is that project, even if
+// a timeline of another project carries it, so that a limit never crosses to another owner. The store sums the ledger
+// by the same rule (ledgerOwner). A failed read is an error: answering with the id would skip the ceiling of the
+// project and let a rule stored with a timeline id match.
+func costProject(ctx context.Context, r interface{ Productions() ProductionRepo }, id string) (string, error) {
+	if id == "" {
+		return "", nil
 	}
 
-	return id
+	if _, err := r.Productions().Get(ctx, id); err == nil {
+		return id, nil
+	} else if !errors.Is(err, ErrNotFound) {
+		return "", err
+	}
+
+	owner, err := r.Productions().ProjectOfTimeline(ctx, id)
+	if errors.Is(err, ErrNotFound) {
+		return id, nil
+	}
+
+	return owner, err
 }
 
 func (s *svc) ledgerEntry(req *approval.Row, estimate, now int64) *approval.Entry {

@@ -386,12 +386,9 @@ func (r approvalRepo) Spent(ctx context.Context, q approval.SpentQuery) (int64, 
 	// An entry carries the id of the timeline its job is kept on, and the spending of a project is that of all of
 	// its timelines (SDD-015 section 6).
 	if q.Project != "" {
-		querySb311.WriteString(
-			" AND (project_id = ? OR project_id IN (SELECT i.ref FROM project_items i" +
-				" WHERE i.kind = 'timeline' AND i.project_id = ?))",
-		)
+		querySb311.WriteString(" AND " + ledgerOwner + " = ?")
 
-		args = append(args, q.Project, q.Project)
+		args = append(args, q.Project)
 	}
 
 	for _, f := range []struct{ col, v string }{{"kind", q.Kind}, {"connection_id", q.Connection}} {
@@ -410,13 +407,16 @@ func (r approvalRepo) Spent(ctx context.Context, q approval.SpentQuery) (int64, 
 	return n, err
 }
 
+// ledgerOwner is the project an entry of the ledger counts for, by the rule of service.costProject: an id that names
+// a project is that project, the id of a timeline is the project that holds it, and any other id (the empty one, one
+// of an emptied project) is its own. A ceiling and the summary both read it, so they cannot disagree (VV-367).
+const ledgerOwner = `COALESCE((SELECT p.id FROM projects p WHERE p.id = cost_ledger.project_id),
+  (SELECT i.project_id FROM project_items i WHERE i.kind = 'timeline' AND i.ref = cost_ledger.project_id),
+  cost_ledger.project_id)`
+
 func (r approvalRepo) Totals(ctx context.Context, fromDay string) ([]approval.Total, error) {
-	// An entry carries the id of the timeline its job is kept on; the total is by the project that holds it, as the
-	// ceiling sums it (VV-367). An id that is no timeline of a project (the empty one, a project id) stays as it is.
 	rows, err := r.ex.QueryContext(ctx, `SELECT day, connection_id, owner, currency, SUM(micros) FROM (
- SELECT day, connection_id, currency,
-  COALESCE((SELECT i.project_id FROM project_items i WHERE i.kind = 'timeline' AND i.ref = cost_ledger.project_id),
-   project_id) AS owner,
+ SELECT day, connection_id, currency, `+ledgerOwner+` AS owner,
   CASE WHEN state = 'settled' THEN COALESCE(actual_micros, 0) ELSE estimate_micros END AS micros
  FROM cost_ledger WHERE day >= ? AND state IN ('reserved','settled'))
  GROUP BY day, connection_id, owner, currency ORDER BY day DESC, connection_id, owner, currency`, fromDay)

@@ -423,11 +423,13 @@ func (t *pubTx) Ask(ctx context.Context, a pub.Ask) error {
 		return err
 	}
 
-	estimate := core.Money{Micros: a.CostMicros, Currency: a.Currency}
-	action := core.Action{
-		Kind: KindPublishScheduled, Connection: a.ConnectionID,
-		Project: costProject(ctx, t.tx, a.ProjectID), Cost: estimate,
+	owner, oerr := costProject(ctx, t.tx, a.ProjectID)
+	if oerr != nil {
+		return oerr
 	}
+
+	estimate := core.Money{Micros: a.CostMicros, Currency: a.Currency}
+	action := core.Action{Kind: KindPublishScheduled, Connection: a.ConnectionID, Project: owner, Cost: estimate}
 
 	out, err := approval.Evaluate(ctx, st, action, time.UnixMilli(now))
 	if err != nil {
