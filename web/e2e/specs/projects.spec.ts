@@ -60,12 +60,19 @@ test.describe("projects-page", () => {
 			page.getByPlaceholder("Publish one teaser that explains the course"),
 		).toBeVisible();
 
-		const tip = page.getByRole("button", { name: "What to write here" }).nth(2); // Specific
+		// Each tip is a button named after its field, so a screen reader tells the eight apart.
+		const tip = page.getByRole("button", {
+			name: "What to write in Specific",
+			exact: true,
+		});
 		await tip.focus();
 		await expect(page.getByText("One concrete result")).toBeVisible();
 		await expect(
-			page.getByRole("button", { name: "What to write here" }),
+			page.getByRole("button", { name: /^What to write in / }),
 		).toHaveCount(8);
+		await expect(
+			page.getByRole("button", { name: "What to write in Due date" }),
+		).toHaveCount(1);
 	});
 
 	test("creating a project makes a project with no timeline, and a video asks for the size", async ({
@@ -113,7 +120,8 @@ test.describe("projects-page", () => {
 		const templates = (await call("GET", "/templates")) as {
 			templates: { template_id: string }[];
 		};
-		const label = `Old ${Date.now()}`;
+		// A name of before epic 56 may break the rule of today (here a comma): the form says so at once.
+		const label = `Old, ${Date.now()}`;
 		const made = (await call(
 			"POST",
 			`/templates/${templates.templates[0].template_id}/instantiate`,
@@ -125,6 +133,12 @@ test.describe("projects-page", () => {
 
 		await page.getByRole("button", { name: "Complete the project" }).click();
 		const dialog = page.getByRole("dialog");
+		await expect(
+			dialog.getByRole("alert").filter({ hasText: "single spaces" }),
+		).toBeVisible();
+		await expect(
+			dialog.getByRole("button", { name: "Save the project" }),
+		).toBeDisabled();
 		await dialog.getByLabel("Name", { exact: true }).fill(`Done ${Date.now()}`);
 		await fillProjectFormIn(dialog);
 		await dialog.getByRole("button", { name: "Save the project" }).click();

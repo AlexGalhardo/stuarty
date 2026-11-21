@@ -257,7 +257,7 @@
         "time_bound": "Script on Monday, edit on Tuesday, publish on Wednesday",
         "due": "YYYY-MM-DD"
       },
-      "help_for": "What to write here",
+      "help_for": "What to write in {field}",
       "counter": "{count} characters, {min} to {max}",
       "errors": {
         "too_short": "Write at least {min} characters.",

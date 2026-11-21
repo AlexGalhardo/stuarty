@@ -257,7 +257,7 @@
         "time_bound": "Roteiro na segunda, edição na terça, publicação na quarta",
         "due": "AAAA-MM-DD"
       },
-      "help_for": "O que escrever aqui",
+      "help_for": "O que escrever em {field}",
       "counter": "{count} caracteres, de {min} a {max}",
       "errors": {
         "too_short": "Escreva pelo menos {min} caracteres.",
