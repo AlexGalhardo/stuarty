@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -164,5 +165,59 @@ func TestImageExportHidesTheServerPathInNetworkMode(t *testing.T) {
 	want := "exports/images/" + created.ImageID + "/"
 	if filepath.IsAbs(res.Path) || !strings.HasPrefix(res.Path, want) || strings.Contains(res.Text, s.workspace) {
 		t.Errorf("network path = %q, text = %q: want a path under %q and no absolute path", res.Path, res.Text, want)
+	}
+
+	if text := ImageExportText(res); strings.Contains(text, s.workspace) {
+		t.Errorf("the text of the CLI and of MCP names the workspace: %q", text)
+	}
+
+	job, err := s.JobGet(alice, JobGetRequest{JobID: res.JobID})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	raw, err := json.Marshal(job)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if strings.Contains(string(raw), filepath.ToSlash(s.workspace)) ||
+		strings.Contains(strings.ReplaceAll(string(raw), `\\`, `\`), s.workspace) {
+		t.Errorf("the job names the workspace: %s", raw)
+	}
+
+	// The last part of the path is the name the download route takes, and the route takes nothing but such a name.
+	if _, err := s.ImageFile(alice, ImageFileRequest{ImageID: created.ImageID, Name: path.Base(res.Path)}); err != nil {
+		t.Errorf("the file by the name in the path: %v", err)
+	}
+
+	if _, err := s.ImageFile(
+		networkUser("bob"), ImageFileRequest{ImageID: created.ImageID, Name: path.Base(res.Path)},
+	); codeOf(err) != "E_NOT_FOUND" {
+		t.Errorf("another user read the file: %v", err)
+	}
+
+	for _, name := range []string{res.Path, "../" + path.Base(res.Path), `..\` + path.Base(res.Path), "../../stuarty.db"} {
+		if _, err := s.ImageFile(alice, ImageFileRequest{ImageID: created.ImageID, Name: name}); codeOf(err) != "E_NOT_FOUND" {
+			t.Errorf("the name %q = %v, want E_NOT_FOUND", name, err)
+		}
+	}
+
+	local := WithCaller(context.Background(), Caller{
+		Actor: "local:me", Scopes: []string{ScopeRead, ScopeEdit, ScopeMedia, ScopeRender},
+	})
+
+	mine, err := s.ImageCreate(local, ImageCreateRequest{Width: 64, Height: 48})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	here, err := s.ImageExport(local, ImageExportRequest{ImageID: mine.ImageID})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !filepath.IsAbs(here.Path) {
+		t.Errorf("the local path = %q, want the absolute one", here.Path)
 	}
 }
