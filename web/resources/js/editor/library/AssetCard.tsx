@@ -193,6 +193,7 @@ export default function AssetCard({
 									type="button"
 									size="icon-sm"
 									variant="ghost"
+									data-asset-menu=""
 									aria-label={t("ui.editor.library.menu", { name: entry.name })}
 								>
 									<MoreHorizontal aria-hidden="true" />
@@ -243,22 +244,6 @@ export default function AssetCard({
 							</DropdownMenuContent>
 						</DropdownMenu>
 					</div>
-					<AssetDetails
-						assetId={entry.asset_id}
-						name={entry.name}
-						open={inspecting}
-						onOpenChange={setInspecting}
-					/>
-					<RenameAssetDialog
-						open={renaming}
-						onOpenChange={setRenaming}
-						name={entry.name}
-						rename={(name) =>
-							hash === undefined
-								? Promise.resolve()
-								: runtime.renameAsset(hash, name)
-						}
-					/>
 				</li>
 			</ContextMenuTrigger>
 			<ContextMenuContent aria-label={t("ui.editor.library.rename.menu")}>
@@ -269,6 +254,28 @@ export default function AssetCard({
 					{t("ui.editor.library.rename.action")}
 				</ContextMenuItem>
 			</ContextMenuContent>
+			{/* Outside the trigger: React bubbles a right click out of a portal, and it would open this menu over the dialog. */}
+			<AssetDetails
+				assetId={entry.asset_id}
+				name={entry.name}
+				open={inspecting}
+				onOpenChange={setInspecting}
+			/>
+			<RenameAssetDialog
+				open={renaming}
+				onOpenChange={setRenaming}
+				name={entry.name}
+				rename={(name) =>
+					hash === undefined
+						? Promise.resolve()
+						: runtime.renameAsset(hash, name)
+				}
+				returnFocus={() =>
+					document.querySelector<HTMLElement>(
+						`[data-asset-id="${CSS.escape(entry.asset_id)}"] [data-asset-menu]`,
+					)
+				}
+			/>
 		</ContextMenu>
 	);
 }

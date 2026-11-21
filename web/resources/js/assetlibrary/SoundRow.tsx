@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
+import RenameMenu from "@/components/RenameMenu";
 import UntrustedText from "@/components/UntrustedText";
 import { sizeText } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
@@ -96,14 +97,48 @@ export function SoundRow({
 	asset,
 	selected,
 	onOpen,
+	rename,
 }: {
 	asset: LibraryAsset;
 	selected: boolean;
 	onOpen(): void;
+	// Sends a new name; without it the row has no context menu.
+	rename?(name: string): Promise<void>;
 }): ReactNode {
 	const t = useT();
 	const locale = useLocale();
 	const poster = asset.poster;
+	const header = (
+		<div className="flex flex-wrap items-center justify-between gap-2">
+			<button
+				type="button"
+				onClick={onOpen}
+				aria-pressed={selected}
+				className="min-w-0 truncate text-left text-sm font-medium underline-offset-2 hover:underline focus-visible:outline-2"
+			>
+				<UntrustedText>{asset.name}</UntrustedText>
+			</button>
+			<span className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+				{asset.duration_ms !== undefined && (
+					<span data-testid="sound-duration">
+						{formatSeconds(asset.duration_ms / 1000, "timecode")}
+					</span>
+				)}
+				<span>{sizeText(asset.bytes, locale)}</span>
+				<span>{t(`ui.assets.origin.${asset.origin?.kind ?? "imported"}`)}</span>
+				{asset.reusable === true && (
+					<span className="rounded bg-primary/10 px-1 text-primary">
+						{t("ui.assets.reusable_badge")}
+					</span>
+				)}
+				{(asset.tags ?? []).map((tag) => (
+					<span key={tag} className="rounded bg-muted px-1">
+						<UntrustedText>{tag}</UntrustedText>
+					</span>
+				))}
+			</span>
+		</div>
+	);
 	return (
 		<li
 			className="flex flex-col gap-2 rounded-xl border bg-card p-3 text-card-foreground aria-[current=true]:border-primary"
@@ -111,37 +146,22 @@ export function SoundRow({
 			data-asset-hash={asset.hash}
 			data-testid="sound-row"
 		>
-			<div className="flex flex-wrap items-center justify-between gap-2">
-				<button
-					type="button"
-					onClick={onOpen}
-					aria-pressed={selected}
-					className="min-w-0 truncate text-left text-sm font-medium underline-offset-2 hover:underline focus-visible:outline-2"
+			{/* The menu is on the header only: the player keeps the context menu of the browser. */}
+			{rename === undefined ? (
+				header
+			) : (
+				<RenameMenu
+					name={asset.name}
+					rename={rename}
+					returnFocus={() =>
+						document.querySelector<HTMLElement>(
+							`li[data-asset-hash="${CSS.escape(asset.hash)}"] button`,
+						)
+					}
 				>
-					<UntrustedText>{asset.name}</UntrustedText>
-				</button>
-				<span className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-					{asset.duration_ms !== undefined && (
-						<span data-testid="sound-duration">
-							{formatSeconds(asset.duration_ms / 1000, "timecode")}
-						</span>
-					)}
-					<span>{sizeText(asset.bytes, locale)}</span>
-					<span>
-						{t(`ui.assets.origin.${asset.origin?.kind ?? "imported"}`)}
-					</span>
-					{asset.reusable === true && (
-						<span className="rounded bg-primary/10 px-1 text-primary">
-							{t("ui.assets.reusable_badge")}
-						</span>
-					)}
-					{(asset.tags ?? []).map((tag) => (
-						<span key={tag} className="rounded bg-muted px-1">
-							<UntrustedText>{tag}</UntrustedText>
-						</span>
-					))}
-				</span>
-			</div>
+					{header}
+				</RenameMenu>
+			)}
 			{poster !== undefined && (
 				<>
 					<Waveform
