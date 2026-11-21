@@ -255,7 +255,14 @@ impl Renderer {
 	pub fn render(&self, input: &[u8], out: &mut [u8]) -> Result<(), Error> {
 		let r = decode(input)?;
 		let (width, height) = (r.output.width, r.output.height);
-		if out.len() != width * height * 4 {
+		// A buffer is the whole frame, or only the rows of the band (SDD-013 section 4.2).
+		let band = r
+			.output
+			.rows
+			.end
+			.min(height)
+			.saturating_sub(r.output.rows.start);
+		if out.len() != width * height * 4 && !(band > 0 && out.len() == width * band * 4) {
 			return Err(Error::new(
 				Reason::InvalidArgument,
 				"out_len is not the frame size",

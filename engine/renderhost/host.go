@@ -98,6 +98,9 @@ type Host struct {
 	dead error
 
 	out struct{ ptr, len uint32 }
+
+	// maxTex and maxBM are the budgets given to vr_init, kept for Reset.
+	maxTex, maxBM uint32
 }
 
 // New instantiates the embedded module, compiled once per process. The module is refused unless its
@@ -139,6 +142,8 @@ func New(ctx context.Context, cfg Config) (*Host, error) {
 	if maxBM == 0 {
 		maxBM = DefaultMaxBitmapBytes
 	}
+
+	h.maxTex, h.maxBM = maxTex, maxBM
 
 	if err := h.status(ctx, "vr_init", uint64(maxTex), uint64(maxBM)); err != nil {
 		_ = mod.Close(ctx)
@@ -386,10 +391,21 @@ func (h *Host) Release(ctx context.Context, id string) error {
 }
 
 // Render draws the frame into dst: RGBA, no stride padding, exactly Output.Width by Output.Height. With a band
-// (Output.Y1 > Output.Y0) only those rows of dst are written.
+// (Output.Y1 > Output.Y0) only those rows of dst are written. A band may also be drawn into a view of its rows
+// alone (dst.SubImage of the rectangle from (0, Y0) to (Width, Y1) of the frame): the instance then holds only
+// those rows, not the frame (SDD-013 section 4.2).
 func (h *Host) Render(ctx context.Context, in RenderInput, dst *image.RGBA) error {
 	w, ht := in.Output.Width, in.Output.Height
-	if dst.Rect.Min != (image.Point{}) || dst.Rect.Dx() != w || dst.Rect.Dy() != ht || dst.Stride != 4*w {
+
+	y0, y1 := 0, ht
+	if in.Output.Y1 > in.Output.Y0 {
+		y0, y1 = in.Output.Y0, in.Output.Y1
+	}
+
+	whole := dst.Rect.Min == (image.Point{}) && dst.Rect.Dx() == w && dst.Rect.Dy() == ht && dst.Stride == 4*w
+	rows := y1 > y0 && y1 <= ht && dst.Rect == image.Rect(0, y0, w, y1) && dst.Stride == 4*w
+
+	if !whole && !rows {
 		return &Error{InvalidArgument, "dst is not the output size"}
 	}
 
@@ -398,18 +414,22 @@ func (h *Host) Render(ctx context.Context, in RenderInput, dst *image.RGBA) erro
 		return fmt.Errorf("renderhost: encoding the render input: %w", err)
 	}
 
-	y0, y1 := 0, ht
-	if in.Output.Y1 > in.Output.Y0 {
-		y0, y1 = in.Output.Y0, in.Output.Y1
+	if whole {
+		return h.renderText(ctx, text, dst, y0, y1)
 	}
 
-	return h.renderText(ctx, text, dst, y0, y1)
+	// The rows of the band alone: the module draws into a buffer of their size and the view takes it as it is.
+	return h.renderRows(ctx, text, dst, w, y1-y0, 0, y1-y0)
 }
 
 // renderText runs vr_render on an encoded render input and copies rows [y0, y1) of the frame into dst.
 func (h *Host) renderText(ctx context.Context, text []byte, dst *image.RGBA, y0, y1 int) error {
-	w, ht := dst.Rect.Dx(), dst.Rect.Dy()
+	return h.renderRows(ctx, text, dst, dst.Rect.Dx(), dst.Rect.Dy(), y0, y1)
+}
 
+// renderRows runs vr_render into a block of w by ht pixels and copies its rows [y0, y1) into dst.Pix at the same
+// place.
+func (h *Host) renderRows(ctx context.Context, text []byte, dst *image.RGBA, w, ht, y0, y1 int) error {
 	if w > maxOutputSide || ht > maxOutputSide {
 		return &Error{LimitExceeded, "render_frame_side"}
 	}

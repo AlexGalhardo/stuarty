@@ -163,6 +163,27 @@ fn every_case_prepared_equals_its_golden_frame() {
 			"{}: six bands of the prepared frame differ",
 			case.display()
 		);
+
+		// A buffer of only the rows of the band holds the same rows as the whole frame.
+		let rows = h / 6;
+		for b in 0..6 {
+			let t = text.replacen(
+				"\"scale\":1}",
+				&format!(
+					"\"scale\":1,\"y0\":{},\"y1\":{}}}",
+					b * rows,
+					(b + 1) * rows
+				),
+				1,
+			);
+			let mut compact = vec![0_u8; w * rows * 4];
+			r.render(t.as_bytes(), &mut compact).unwrap();
+			assert!(
+				compact == want[b * rows * w * 4..(b + 1) * rows * w * 4],
+				"{}: band {b} in a buffer of its own rows differs",
+				case.display()
+			);
+		}
 	}
 	assert!(prepared_layers >= 40, "{prepared_layers} layers prepared");
 }

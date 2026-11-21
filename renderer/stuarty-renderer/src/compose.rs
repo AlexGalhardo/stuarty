@@ -206,14 +206,31 @@ pub struct Target<'a> {
 	pub rows: Range<usize>,
 }
 
+impl Target<'_> {
+	/// The first row `pix` holds: 0 for a whole frame, and `rows.start` for a buffer that holds only the rows of
+	/// the band (`width x rows x 4` bytes, SDD-013 section 4.2), so that an instance that draws a band does not
+	/// hold the frame.
+	fn origin(&self) -> usize {
+		if self.pix.len() >= self.width * self.height * 4 {
+			0
+		} else {
+			self.rows.start
+		}
+	}
+}
+
 /// Draws one frame plan into `dst`, scaling every position and size by `out_scale`. The rows of
 /// `dst` are filled with `background` first, which is opaque unless the plan is transparent.
 pub fn compose(dst: &mut Target<'_>, background: [u8; 4], layers: &[Layer<'_>], out_scale: f64) {
 	dst.rows = dst.rows.start.min(dst.height)..dst.rows.end.min(dst.height);
-	if dst.pix.len() < dst.width * dst.height * 4 || dst.rows.is_empty() {
+	if dst.rows.is_empty() || dst.pix.len() < (dst.rows.end - dst.origin()) * dst.width * 4 {
 		return;
 	}
-	let (a, b) = (dst.rows.start * dst.width * 4, dst.rows.end * dst.width * 4);
+	let origin = dst.origin();
+	let (a, b) = (
+		(dst.rows.start - origin) * dst.width * 4,
+		(dst.rows.end - origin) * dst.width * 4,
+	);
 	for px in dst.pix[a..b].as_chunks_mut::<4>().0.iter_mut() {
 		px.copy_from_slice(&background);
 	}
@@ -910,7 +927,7 @@ fn blit(
 	mode: BlendMode,
 	mask: Option<&MaskState>,
 ) {
-	let dw = dst.width;
+	let (dw, origin) = (dst.width, dst.origin());
 	let cx0 = x0.max(0);
 	let cx1 = x0.saturating_add(src.w as i64).min(dw as i64);
 	let cy0 = y0.max(dst.rows.start as i64);
@@ -922,7 +939,7 @@ fn blit(
 
 	for y in cy0..cy1 {
 		let so = ((y - y0) as usize * src.w + (cx0 - x0) as usize) * 4;
-		let d = (y as usize * dw + cx0 as usize) * 4;
+		let d = ((y as usize - origin) * dw + cx0 as usize) * 4;
 		if let Some(m) = mask {
 			masked_row(
 				&mut dst.pix[d..d + n],
@@ -1015,7 +1032,7 @@ pub fn sample(
 	mask: Option<&MaskState>,
 ) {
 	let (sin, cos) = sincos(mul(p.rot, core::f64::consts::PI / 180.0));
-	let dw = dst.width;
+	let (dw, origin) = (dst.width, dst.origin());
 
 	let (hw, hh) = (p.w / 2.0, p.h / 2.0);
 	let ex = mul(hw, cos.abs()) + mul(hh, sin.abs());
@@ -1049,7 +1066,7 @@ pub fn sample(
 	for y in by0..by1 {
 		let row_x = bxx.wrapping_mul(y).wrapping_add(ox);
 		let row_y = byy.wrapping_mul(y).wrapping_add(oy);
-		let mut d = (y as usize * dw + bx0 as usize) * 4;
+		let mut d = ((y as usize - origin) * dw + bx0 as usize) * 4;
 		for x in bx0..bx1 {
 			let sx = row_x.wrapping_add(ax.wrapping_mul(x));
 			let sy = row_y.wrapping_add(ay.wrapping_mul(x));
