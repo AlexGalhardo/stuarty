@@ -213,10 +213,6 @@ jobs:
             echo "STUARTY_TEST_TOOLS_DIR=${home}/tools" >> "$GITHUB_ENV"
           fi
       - name: go test
-        # Non-blocking for the export shards while the golden frames diverge on the runners
-        # (CPU-dependent bytes, under investigation): the author asked on 2026-11-16 to keep the
-        # recurring failures from blocking releases v0.21.0 to v0.23.0. The failures stay in the log.
-        continue-on-error: ${{ startsWith(matrix.shard, 'export') }}
         shell: bash # PowerShell would split -coverprofile=coverage.out at the dot
         # -coverpkg=./... credits a package with what the tests of the others
         # execute: the wiring packages of web/ (bootstrap, routes, seeders) are
@@ -331,17 +327,11 @@ jobs:
           EXPECTED_SHARDS: ${{ matrix.shards }}
         run: |
           jobs="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/attempts/${GITHUB_RUN_ATTEMPT}/jobs" \
-            --jq ".jobs[] | select(.name | startswith(\"Go tests (\") and endswith(\", ${RUNNER_OS_NAME})\")) | .name + \" \" + (if .conclusion == \"cancelled\" and (.runner_id // 0) == 0 then \"no-runner\" else (.conclusion // \"running\") end)")"
+            --jq ".jobs[] | select(.name | startswith(\"Go tests (\") and endswith(\", ${RUNNER_OS_NAME})\")) | .name + \" \" + (.conclusion // \"running\")")"
           echo "$jobs"
           test "$(grep -c . <<<"$jobs")" -eq "$EXPECTED_SHARDS"
-          # macOS shards are often cancelled before a runner picks them up (5 concurrent macOS jobs
-          # for a public repository): such a shard is reported, not failed (2026-11-16). A shard that
-          # had a runner and was cancelled hit its timeout (run 44880268307, `rest`) and fails, and so
-          # does a macOS run in which no shard ran at all (the list is then empty).
-          if [ "${RUNNER_OS_NAME}" = macos-latest ] && grep -q ' no-runner$' <<<"$jobs"; then
-            echo "::warning::a macOS Go test shard got no runner; not blocking"
-            jobs="$(grep -v ' no-runner$' <<<"$jobs" || true)"
-          fi
+          # On every system each shard must be a success: a timeout concludes `cancelled` too
+          # (`rest` on macOS, run 44880268307), so a cancelled shard is a suite that did not finish.
           if grep -qv ' success$' <<<"$jobs"; then
             echo "::error::a Go test shard of ${RUNNER_OS_NAME} did not pass"
             exit 1
