@@ -2,6 +2,7 @@ package migrations
 
 import (
 	"context"
+	"slices"
 	"testing"
 
 	"github.com/AlexGalhardo/vukem/schema"
@@ -87,9 +88,18 @@ func TestProjectScopedJobsMigrationUpAndDown(t *testing.T) {
 		t.Error("a job of a kind that needs a project was accepted with none")
 	}
 
-	rolled, err := full.Rollback(ctx, 1)
-	if err != nil || len(rolled) != 1 {
-		t.Fatalf("Rollback = %v, %v", rolled, err)
+	// Down of this migration and of every one made after it, newest first.
+	var want []string
+
+	for _, m := range allMigrations() {
+		if m.ID >= "20261121100000_project_scoped_jobs" {
+			want = append([]string{m.ID}, want...)
+		}
+	}
+
+	rolled, err := full.Rollback(ctx, len(want))
+	if err != nil || !slices.Equal(rolled, want) {
+		t.Fatalf("Rollback = %v, %v; want %v", rolled, err, want)
 	}
 
 	for table, q := range map[string]string{
