@@ -124,16 +124,12 @@ func (s *svc) edit(ctx context.Context, req EditRequest, allowInternal bool) (*E
 
 		graph := newProductionGraph(ctx, tx, row.ID)
 
-		out, aerr := s.applyChecked(graph, doc, req.Operations, &ids)
+		out, aerr := s.applyEdit(ctx, tx, graph, &row, doc, req.Operations, &ids)
 		if aerr != nil {
 			return aerr
 		}
 
 		crashpoint.Hit("commit.after_apply")
-
-		if verr := checkFollowedName(ctx, tx, &row, out.Doc.Name); verr != nil {
-			return verr
-		}
 
 		res = s.editResult(c.Actor, &req, row.Revision, doc, &out, &ids)
 		if out.NoOp() {

@@ -9,6 +9,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/project"
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/service/textview"
 )
 
@@ -205,20 +206,46 @@ func (s *svc) renameFirstTimeline(ctx context.Context, id string, base int64, na
 		ProjectID: id, TimelineID: id, BaseRevision: base,
 		Operations: []command.Operation{{Op: "project.rename", Args: args}},
 	}); err != nil {
-		slog.WarnContext(ctx, "the first timeline did not take the new name of its project", "project", id, "error", err)
+		slog.WarnContext(ctx, "the first timeline kept its name", "project", id, "error", err)
 	}
+}
+
+// applyEdit applies a batch and holds a rename that reaches the project to the rule of a project name.
+func (s *svc) applyEdit(
+	ctx context.Context,
+	tx Tx,
+	g *productionGraph,
+	row *ProjectRow,
+	doc *timeline.Document,
+	ops []command.Operation,
+	ids *idRecorder,
+) (command.BatchResult, error) {
+	out, err := s.applyChecked(g, doc, ops, ids)
+	if err != nil {
+		return out, err
+	}
+
+	return out, checkFollowedName(ctx, tx, row, out.Doc.Name)
 }
 
 // checkFollowedName holds a rename to the rule of a project name when it renames the project too: the timeline is
 // the first of its project (it has its id) and carries its name. Any other timeline name is a label of 1 to 120
 // characters, which the core already checked.
-func checkFollowedName(ctx context.Context, tx Tx, row *ProjectRow, next string) *Error {
+func checkFollowedName(ctx context.Context, tx Tx, row *ProjectRow, next string) error {
 	if next == row.Name {
 		return nil
 	}
 
 	head, err := tx.Productions().Get(ctx, row.ID)
-	if err != nil || head.Name != row.Name {
+	if errors.Is(err, ErrNotFound) {
+		return nil // a later timeline: its id names no project
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if head.Name != row.Name {
 		return nil
 	}
 
