@@ -1,6 +1,7 @@
 package service
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"strings"
@@ -67,9 +68,15 @@ func (s *svc) MotionCheck(ctx context.Context, req MotionCheckRequest) (*MotionC
 		return nil, s.motionAssetMissing(ctx, v.row.ID, req.AssetID)
 	}
 
+	names, nerr := s.shownAssetNames(ctx, v.row.ID)
+	if nerr != nil {
+		return nil, nerr
+	}
+
 	res := &MotionCheckResult{
 		UntrustedNotice: UntrustedNotice, ProjectID: v.row.ID, Revision: v.row.Revision,
-		AssetID: a.ID, AssetName: a.Name, Mismatches: motion.Check(b, a), Width: b.Width, Height: b.Height,
+		AssetID: a.ID, AssetName: cmp.Or(names[a.ID], a.Name), Mismatches: motion.Check(b, a),
+		Width: b.Width, Height: b.Height,
 		FrameRate: b.FrameRate, DurationFrames: b.DurationFrames, NeedsAlpha: b.NeedsAlpha,
 	}
 	res.OK = len(res.Mismatches) == 0
