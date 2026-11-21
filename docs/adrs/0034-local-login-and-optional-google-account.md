@@ -3,6 +3,7 @@
 - Status: Accepted (2026-11-18)
 - Deciders: author
 - Amends: ADR-0019 item 3 (no social login)
+- Amended by: ADR-0049 (item 1: local mode has a sign-in; item 3: Google as the login of a server is removed; item 2, a Google connection with the user's own client, stands for YouTube)
 - Links: author decisions D-057, D-012; ADR-0019, ADR-0033, ADR-0035
 
 ## Context

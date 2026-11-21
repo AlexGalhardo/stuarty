@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-// PurposeWebhook is a delivery to an outbound webhook the user registered (SDD-022, SDD-007 section 10.1 path 9).
+// PurposeWebhook is a delivery to an outbound webhook the user registered (SDD-022, SDD-007 section 10.1 path 8).
 const PurposeWebhook Purpose = "webhook"
 
 // ErrWebhookURL is an address a webhook may not have.

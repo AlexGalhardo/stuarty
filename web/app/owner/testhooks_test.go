@@ -14,8 +14,8 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
-// TestSecurity_T67_TestAddressesAreHonouredOnlyUnderTheTestEnvironment: the variables that point a connector,
-// a sign-in or the Google sign-in at an address of the environment take effect only with APP_ENV=test; set
+// TestSecurity_T67_TestAddressesAreHonouredOnlyUnderTheTestEnvironment: the variables that point a connector
+// or a sign-in at an address of the environment take effect only with APP_ENV=test; set
 // under any other environment the server refuses to start and names the variable, so a product binary never
 // sends a token to an address it was handed.
 func TestSecurity_T67_TestAddressesAreHonouredOnlyUnderTheTestEnvironment(t *testing.T) {
@@ -38,11 +38,6 @@ func TestSecurity_T67_TestAddressesAreHonouredOnlyUnderTheTestEnvironment(t *tes
 		"sign-in": {EnvTestSignInURL, ErrTestSignIn, func(g func(string) string) error {
 			o := &Owner{Dir: workspace.Dir(t.TempDir()), mode: config.ModeLocal}
 			_, err := o.signIns(g, nil)
-
-			return err
-		}},
-		"google": {EnvTestGoogleURL, ErrTestGoogle, func(g func(string) string) error {
-			_, err := googleEndpoints(g)
 
 			return err
 		}},
@@ -78,8 +73,7 @@ func TestSecurity_T67_TestAddressesAreHonouredOnlyUnderTheTestEnvironment(t *tes
 }
 
 // openRefusesBeforeTheWorkspace is the start itself: each variable outside APP_ENV=test stops Open in local
-// mode before the workspace folder exists, the Google one too although local mode never reads it, and the
-// message names the variable and not its value.
+// mode before the workspace folder exists, and the message names the variable and not its value.
 func openRefusesBeforeTheWorkspace(t *testing.T, addr string) {
 	t.Helper()
 
@@ -101,18 +95,5 @@ func openRefusesBeforeTheWorkspace(t *testing.T, addr string) {
 		if _, serr := os.Stat(ws); !errors.Is(serr, fs.ErrNotExist) {
 			t.Errorf("Open refused %s after it made the workspace: %v", v.name, serr)
 		}
-	}
-
-	vars := map[string]string{
-		workspace.EnvHome: filepath.Join(t.TempDir(), "ws"), EnvTestGoogleURL: addr, envAppEnv: appEnvTesting,
-	}
-
-	o, err := Open(ctx, Config{Getenv: env(vars), Inline: true})
-	if err != nil {
-		t.Fatalf("Open with %s under APP_ENV=test: %v", EnvTestGoogleURL, err)
-	}
-
-	if err := o.Close(); err != nil {
-		t.Fatal(err)
 	}
 }

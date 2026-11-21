@@ -389,3 +389,54 @@ func TestAccountRoutesAreNotInNetworkMode(t *testing.T) {
 		}
 	}
 }
+
+// TestSecurity_T110_OnlyThePasswordMakesAPerson: a session from a launch code (`stuarty open`, a launch that
+// proves the launcher secret, the desktop shell), the local token and an agent are never a person, and the
+// operations of a person answer E_PRIVILEGED_SESSION to them; the session of the password is one
+// (SDD-007 section 3.9 item 5).
+func TestSecurity_T110_OnlyThePasswordMakesAPerson(t *testing.T) {
+	t.Parallel()
+
+	a := newAccountHarness(t)
+	a.create()
+
+	person, _ := a.signIn(accPassword)
+
+	persons := []req{
+		{method: http.MethodPost, path: "/api/v1/approval-rules", body: `{"kind":"publish.post"}`},
+		{method: http.MethodPut, path: "/api/v1/cost/ceilings", body: `{"currency":"USD","per_day_micros":1}`},
+		{method: http.MethodPost, path: "/auth/account/logout", body: `{}`},
+	}
+
+	for name, secret := range map[string]string{"a plain launch": "", "a launch with the launcher secret": launcherSecret} {
+		launched := a.sessionWith(t, secret)
+
+		// The launch session works as the editor.
+		if res := a.browser(http.MethodGet, "/api/v1/projects", "", launched); res.status != http.StatusOK {
+			t.Fatalf("%s: the editor read = %d %s", name, res.status, res.body)
+		}
+
+		for _, r := range persons {
+			res := a.browser(r.method, r.path, r.body, launched)
+			if res.status != http.StatusForbidden || res.json(t)["code"] != "E_PRIVILEGED_SESSION" {
+				t.Errorf("%s: %s %s = %d %s, want E_PRIVILEGED_SESSION", name, r.method, r.path, res.status, res.body)
+			}
+		}
+	}
+
+	for _, r := range persons[:2] {
+		if res := a.do(req{method: r.method, path: r.path, body: r.body}); res.status != http.StatusForbidden ||
+			res.json(t)["code"] != "E_PRIVILEGED_SESSION" {
+			t.Errorf("the local token: %s %s = %d %s", r.method, r.path, res.status, res.body)
+		}
+
+		if res := a.browser(r.method, r.path, r.body, person); res.status != http.StatusOK {
+			t.Errorf("the password session: %s %s = %d %s, want 200", r.method, r.path, res.status, res.body)
+		}
+	}
+
+	// The studio is still open for the person after the refusals above.
+	if a.acc.State() != account.StateUnlocked {
+		t.Fatal("a refused logout locked the studio")
+	}
+}

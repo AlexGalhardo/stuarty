@@ -41,6 +41,7 @@ import (
 	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
 	"github.com/AlexGalhardo/stuarty/web/app/http/middleware"
 	"github.com/AlexGalhardo/stuarty/web/app/jobs"
+	"github.com/AlexGalhardo/stuarty/web/app/mcp"
 	"github.com/AlexGalhardo/stuarty/web/app/store"
 	"github.com/AlexGalhardo/stuarty/web/resources/skills"
 
@@ -416,8 +417,8 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		Chat: o.chatStreams(), AgentTokens: o.agentLookup(), Account: o.Account, AccountApply: o.accountApply(),
 	}
 
-	if aerr := o.attachHandlers(cfg, st.DB(), out.conns); aerr != nil {
-		return aerr
+	if o.deps.MCP, err = mcp.Handler(o.Service, mcp.Options{Version: o.version}); err != nil {
+		return err
 	}
 
 	// The library of a new workspace holds the starter templates; later starts add nothing.

@@ -53,9 +53,6 @@ type Deps struct {
 	// AccountApply creates the account in a workspace that holds data (SDD-005 section 5.16.3); nil only stores
 	// the record.
 	AccountApply account.Apply
-	// Google is the optional Google sign-in of network mode (SDD-007 section 4.7); nil leaves its routes
-	// answering E_NOT_FOUND, as in local mode.
-	Google *auth.Google
 	// LoginLimits replaces the limits of the login route; nil is the defaults.
 	LoginLimits *LoginLimits
 	// RateLimits are the per-credential limits of SDD-007 section 4.4.
@@ -299,7 +296,7 @@ func (h *apiHandler) agentGrant(token string, ok bool) (agenthost.Grant, bool) {
 // login is 401, which the start-up log says.
 func (h *apiHandler) authenticateNetwork(w http.ResponseWriter, r *http.Request, next http.Handler) {
 	if r.URL.Path == healthPath || r.URL.Path == "/auth/login" || r.URL.Path == "/auth/logout" ||
-		(r.URL.Path == LoginPath && r.Method == http.MethodGet) || googleOpen(r) ||
+		(r.URL.Path == LoginPath && r.Method == http.MethodGet) ||
 		(r.URL.Path == handshakePath && h.RuntimeSecret != "") {
 		next.ServeHTTP(w, r)
 		return

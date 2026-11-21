@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/AlexGalhardo/stuarty/service"
-	"github.com/AlexGalhardo/stuarty/web/app/auth"
 
 	"github.com/AlexGalhardo/vukem/errs"
 	"github.com/AlexGalhardo/vukem/web"
@@ -220,19 +219,8 @@ func signInRedirect(r *http.Request) bool {
 		r.Header.Get("Sec-Fetch-Mode") == "navigate" && r.Header.Get("Sec-Fetch-Dest") == "document"
 }
 
-// googleRedirect is signInRedirect for the last cross-site page, which exists in network mode
-// only: where Google sends the browser back after "Sign in with Google" (SDD-007 section 3.6 item 4 and
-// 4.7, T-82). Same shape, no wider: a GET navigation that loads a document, to that one path.
-func googleRedirect(r *http.Request) bool {
-	return r.Method == http.MethodGet && r.URL.Path == auth.GoogleCallbackPath &&
-		r.Header.Get("Sec-Fetch-Mode") == "navigate" && r.Header.Get("Sec-Fetch-Dest") == "document"
-}
-
-func fetchSiteAllowed(r *http.Request) bool { return fetchSiteAllowedIn(r, false) }
-
-// fetchSiteAllowedIn is step 4 of SDD-007 section 3.6; network is true in network mode, which has the
-// callback page of the Google sign-in as a second exception.
-func fetchSiteAllowedIn(r *http.Request, network bool) bool {
+// fetchSiteAllowed is step 4 of SDD-007 section 3.6.
+func fetchSiteAllowed(r *http.Request) bool {
 	site, present := r.Header["Sec-Fetch-Site"]
 	if !present {
 		return true
@@ -246,7 +234,7 @@ func fetchSiteAllowedIn(r *http.Request, network bool) bool {
 	case "same-origin", "none":
 		return true
 	case "same-site", "cross-site":
-		return signInRedirect(r) || (network && googleRedirect(r))
+		return signInRedirect(r)
 	}
 
 	return false
