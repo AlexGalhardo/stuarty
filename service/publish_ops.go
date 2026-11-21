@@ -47,7 +47,7 @@ type PublishArgs struct {
 // PublishNowRequest starts the publication of one post.
 type PublishNowRequest struct {
 	ProjectID string `json:"project_id"`
-	// TimelineID anchors the job on one timeline, as every job does; needed when the project has several.
+	// TimelineID is optional and must be a timeline of the project: the job is kept on the timeline of its export.
 	TimelineID string `json:"timeline_id,omitempty"`
 	PublishArgs
 	WaitMS int  `json:"wait_ms,omitempty"`
@@ -148,10 +148,28 @@ func (s *svc) registerPublishKind() {
 	}
 
 	s.kinds[JobPublishUpload] = &ApprovableKind{
-		// A post belongs to the project, as its export does, so no timeline is asked for (VV-315).
-		Name: JobPublishUpload, Scope: ScopeRender, ProjectWide: true,
+		// A post belongs to the project, as its export does, so no timeline is asked for (VV-315), and it is kept
+		// on the timeline of its export: trashing that timeline ends the post, and trashing another does not.
+		Name: JobPublishUpload, Scope: ScopeRender, ProjectWide: true, Anchor: s.anchorPublish,
 		Prepare: s.preparePublish, Run: s.runPublish,
 	}
+}
+
+// anchorPublish is the timeline of the export a post names. An export the caller may not use, or not of this
+// project, has none here: Prepare refuses it with its own error.
+func (s *svc) anchorPublish(ctx context.Context, c Caller, req *JobStartRequest) string {
+	a, err := decodePublishArgs(req.Args)
+	if err != nil || a.Export == "" {
+		return ""
+	}
+
+	row, gerr := s.store.Jobs().Get(ctx, a.Export)
+	if gerr != nil || row.Kind != JobExport || row.ProjectID == nil || !s.canSee(ctx, c, &row) ||
+		!s.inProject(ctx, *row.ProjectID, req.ProjectID) {
+		return ""
+	}
+
+	return *row.ProjectID
 }
 
 func decodePublishArgs(raw json.RawMessage) (PublishArgs, error) {

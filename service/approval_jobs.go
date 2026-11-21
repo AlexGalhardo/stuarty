@@ -75,6 +75,10 @@ type ApprovableKind struct {
 	// draft): with no timeline_id the job is kept under the first active timeline, whatever the number of
 	// timelines, and the caller is never asked which (SDD-016 section 6, SDD-003 section 1.7).
 	ProjectWide bool
+	// Anchor is optional: the timeline the job must be kept under because its work is made from that timeline (a
+	// post, from the timeline of its export), so that trashing that timeline and no other ends the job. An empty
+	// answer leaves the job where ProjectWide or the request put it.
+	Anchor func(ctx context.Context, c Caller, req *JobStartRequest) string
 	// Prepare checks the arguments and describes the action. It makes no outbound call.
 	Prepare func(ctx context.Context, req JobStartRequest) (Prepared, error)
 	// Run is the job once approved. It reaches the network only through connections.Manager.With.

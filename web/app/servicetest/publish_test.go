@@ -516,3 +516,139 @@ func TestPublishNow_ATwoTimelineProjectDoesNotAskForTheTimeline(t *testing.T) {
 		t.Fatalf("publish without a timeline = %+v, %v", job, err)
 	}
 }
+
+// addSecondTimeline adds a timeline to the project and returns its item and its timeline id.
+func (p *pubEnv) addSecondTimeline() (item, timeline string) {
+	p.t.Helper()
+
+	added, err := p.svc.ProjectItemAdd(
+		p.as(ui),
+		service.ProjectItemAddRequest{ProjectID: p.project, Kind: "timeline", Title: "Second cut"},
+	)
+	if err != nil {
+		p.t.Fatal(err)
+	}
+
+	return added.Item.ID, added.Item.TimelineID
+}
+
+// firstTimelineItem is the item of the timeline that has the id of the project.
+func (p *pubEnv) firstTimelineItem() string {
+	p.t.Helper()
+
+	got, err := p.svc.ProjectGet(p.as(ui), service.ProjectGetRequest{ProjectID: p.project})
+	if err != nil {
+		p.t.Fatal(err)
+	}
+
+	for i := range got.Items {
+		if got.Items[i].Kind == "timeline" && got.Items[i].TimelineID == p.project {
+			return got.Items[i].ID
+		}
+	}
+
+	p.t.Fatal("the project has no first timeline")
+
+	return ""
+}
+
+// VV-315: a post is kept on the timeline of its export, whichever timeline the request named. Trashing that
+// timeline ends the post, so a video a person threw away is not sent after a later approval.
+func TestPublishNow_TrashingTheTimelineOfTheExportEndsThePost(t *testing.T) {
+	for _, named := range []bool{false, true} {
+		p := newPubEnv(t)
+		item, second := p.addSecondTimeline()
+		exp := p.seedExport(second, "job_0000000941", ".mp4", []byte("fake mp4 bytes"))
+
+		req := service.PublishNowRequest{ProjectID: p.project, PublishArgs: p.args(exp)}
+		if named {
+			req.TimelineID = p.project
+		}
+
+		job, err := p.pub.PublishNow(p.as(token), req)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if job.ProjectID == nil || *job.ProjectID != second {
+			t.Fatalf("named %v: the post is kept on %v, want the timeline of its export %s", named, job.ProjectID, second)
+		}
+
+		before := p.net.count()
+
+		if _, err := p.svc.ProjectItemTrash(
+			p.as(ui),
+			service.ProjectItemTrashRequest{ProjectID: p.project, ItemID: item},
+		); err != nil {
+			t.Fatal(err)
+		}
+
+		if got := p.job(job.JobID); got.State != service.JobCancelled {
+			t.Errorf("named %v: after the timeline of the export went to the trash the post is %s", named, got.State)
+		}
+
+		if _, err := p.svc.ApprovalDecide(
+			p.browser(ui),
+			service.ApprovalDecideRequest{ID: job.ApprovalID, Decision: "approve"},
+		); err == nil {
+			t.Errorf("named %v: the post of a trashed timeline was approved", named)
+		}
+
+		if p.net.count() != before {
+			t.Errorf("named %v: the video of a trashed timeline was sent", named)
+		}
+	}
+}
+
+// VV-315: trashing a timeline the post was not made from leaves the post waiting for its person, and it publishes
+// the export it named.
+func TestPublishNow_TrashingAnotherTimelineKeepsThePost(t *testing.T) {
+	p := newPubEnv(t)
+	_, second := p.addSecondTimeline()
+	exp := p.seedExport(second, "job_0000000942", ".mp4", []byte("fake mp4 bytes"))
+
+	job, err := p.pub.PublishNow(p.as(token), service.PublishNowRequest{ProjectID: p.project, PublishArgs: p.args(exp)})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := p.svc.ProjectItemTrash(
+		p.as(ui),
+		service.ProjectItemTrashRequest{ProjectID: p.project, ItemID: p.firstTimelineItem()},
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	if got := p.job(job.JobID); got.State != service.JobWaitingApproval {
+		t.Fatalf("trashing the other timeline left the post %s", got.State)
+	}
+
+	before := p.net.count()
+
+	p.decide(job, "approve")
+
+	if got := p.job(job.JobID); got.State != service.JobSucceeded || p.net.count() == before {
+		t.Errorf("the approved post = %s, %d requests", got.State, p.net.count()-before)
+	}
+}
+
+// VV-315: the export of a timeline that is already in the trash is refused, named by its project.
+func TestPublishNow_AnExportOfATrashedTimelineIsRefused(t *testing.T) {
+	p := newPubEnv(t)
+	item, second := p.addSecondTimeline()
+	exp := p.seedExport(second, "job_0000000943", ".mp4", []byte("fake mp4 bytes"))
+
+	if _, err := p.svc.ProjectItemTrash(
+		p.as(ui),
+		service.ProjectItemTrashRequest{ProjectID: p.project, ItemID: item},
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := p.pub.PublishNow(
+		p.as(token),
+		service.PublishNowRequest{ProjectID: p.project, PublishArgs: p.args(exp)},
+	); !isCode(err, "E_INVALID_STATE") {
+		t.Errorf("the export of a trashed timeline = %v, want E_INVALID_STATE", err)
+	}
+}

@@ -142,6 +142,11 @@ A job kind that needs approval is registered at start-up in `service.Options.Job
 type ApprovableKind struct {
 	Name  string
 	Scope string // the scope needed to submit it; render when empty
+	// ProjectWide: the work belongs to the project, so no timeline is asked for (SDD-003 section 1.7 rule 6).
+	ProjectWide bool
+	// Anchor is optional: the timeline the job is kept under because its work is made from it (a post, from the
+	// timeline of its export), so that trashing that timeline ends the job and trashing another does not.
+	Anchor func(ctx context.Context, c Caller, req *JobStartRequest) string
 	// Prepare checks the arguments and describes the action: the summary, the destination
 	// connection, the project, the estimate. It makes no outbound call and opens nothing.
 	Prepare func(ctx context.Context, req JobStartRequest) (Prepared, error)
