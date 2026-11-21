@@ -4286,6 +4286,7 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `AssetList`, `AssetGet` | `media_inspect` (called with `library` or a `hash`, SDD-011 §14.5) | `asset:list`, `asset:show` | `GET /assets`, `GET /assets/{hash}` |
 | `AssetUses` | none (the entry of `AssetGet` carries its uses) | `asset:uses` | `GET /assets/{hash}/uses` |
 | `AssetSetInfo`, `AssetTag` | `media_import` (called with a `hash` and no `paths`) | `asset:set`, `asset:tag` | `PUT /assets/{hash}`, `POST /assets/{hash}/tags` |
+| `AssetRename` | `media_import` (called with a `hash`, no `paths` and `info.name`) | `asset:rename` | `POST /assets/{hash}/rename` |
 | `AuditList` | none (exception E-3) | `audit` | `GET /audit` (scope `admin`) |
 | `TrashEmpty` | none (exception E-4) | none (exception E-4) | `POST /trash/empty` |
 | `KeyCreate`, `KeyList`, `KeyRevoke` | none (exception E-4) | none | `POST /keys`, `GET /keys`, `DELETE /keys/{key_id}` |
