@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.46.0] - 2026-11-21
+
+### Added
+
+- **service:** Add the audio library section and compute missing peaks on request ([90148ea](https://github.com/AlexGalhardo/stuarty/commit/90148ea80fc39d84314b937703c6cee7704399df))
+- **ui:** Add the Sound Assets page with a player, a waveform and the sidebar entry ([3e78f8f](https://github.com/AlexGalhardo/stuarty/commit/3e78f8f135f21072b84eade45eea61a3080f46cc))
+- **renderer:** Prepare a layer once and draw it from the prepared picture ([db29d8c](https://github.com/AlexGalhardo/stuarty/commit/db29d8caa6682bff7545ef7157121e96d503ad6e))
+- **core:** Add the context of a project, its rules and its migration ([0248495](https://github.com/AlexGalhardo/stuarty/commit/02484956c2af6ea8bc7f9fc8d392efc4eaf0c767))
+- **projects:** Create and update a project with its context on every surface ([f3756ce](https://github.com/AlexGalhardo/stuarty/commit/f3756ce40137aef3cb1abb2509ba17f83bb6d0b7))
+- **service:** Put the description and the goal in the context of every chat of a project ([11b7061](https://github.com/AlexGalhardo/stuarty/commit/11b7061c48fcfdf8b9dc8fa88bf6fa0731ce317c))
+- **ui:** Add the projects form with tips, the zod schema and the complete-the-project notice ([d368385](https://github.com/AlexGalhardo/stuarty/commit/d36838576a166a5421f5cd4c6a3321cc5976af98))
+- **ui:** Generate the project schema for the web form ([aeb7993](https://github.com/AlexGalhardo/stuarty/commit/aeb7993493f2eda45b466bff49cf9bf7faaa243a))
+- **service:** Let a project with no timeline hold its generations, files and keys ([38f768f](https://github.com/AlexGalhardo/stuarty/commit/38f768f59c53c70d0d6d96c2e377832a343685ea))
+
+### Fixed
+
+- **service:** Keep a generation job under the project, whatever its timelines ([eac665c](https://github.com/AlexGalhardo/stuarty/commit/eac665c191102a6823d90144b71b1c8dd627d348))
+- **service:** Keep a generation named by a timeline id under that timeline ([4038b80](https://github.com/AlexGalhardo/stuarty/commit/4038b8087f408da54a4f24ec3131c07796a0e9b4))
+- **service:** Compute missing peaks one at a time and refuse a long sound as a limit ([d55fc8c](https://github.com/AlexGalhardo/stuarty/commit/d55fc8c3463ee0a4beb584380917a0ab4d9b5a39))
+- **site:** Run ESLint on Bun instead of through its Node shebang ([dec1fbb](https://github.com/AlexGalhardo/stuarty/commit/dec1fbb43918d302b301c3fc474a6efb393cc880))
+- **renderer:** Store a prepared layer that a look grew past a texture side ([4fe37e3](https://github.com/AlexGalhardo/stuarty/commit/4fe37e35f5c809e6c157c0b4457457c212a77c2a))
+- **export:** Keep prepared layers ahead of older canvas pictures in the cache ([3afcfc7](https://github.com/AlexGalhardo/stuarty/commit/3afcfc78c70b5f77bfd225417d1401c468e45632))
+- **export:** Bound the memory of a band render and keep every mask source ([4eb6516](https://github.com/AlexGalhardo/stuarty/commit/4eb6516c65256cc48d6c43ea33c41ee9ca1553a0))
+- **engine:** Warm the renderer module before timing the font refusal ([4aa317b](https://github.com/AlexGalhardo/stuarty/commit/4aa317bf6ef1a57b7edc44b8e003b6d08ca0f91f))
+- **engine:** Accept the Windows-only filters missing from the Linux build in the listing test ([cc4cba4](https://github.com/AlexGalhardo/stuarty/commit/cc4cba47536e2d9c63dbeb7c27433d4fa3fa9899))
+- **repo:** Copy the renderer module and its digest into the image assets stage ([e5600d1](https://github.com/AlexGalhardo/stuarty/commit/e5600d1007430c037e5a6c009a3dd06a076d20ef))
+- **desktop:** Use the pid of an exited process as the stale runtime owner ([c455fef](https://github.com/AlexGalhardo/stuarty/commit/c455fef413e699c8163fdfdd08898916d97f4e73))
+- **repo:** Let the soak wait for the renderer compile before it takes its baseline ([b39f3b5](https://github.com/AlexGalhardo/stuarty/commit/b39f3b5e4d0a7233773e602098f4f5d40af75719))
+- **ui:** Make the scrollable setup region of the chat panel keyboard reachable ([ba9f04e](https://github.com/AlexGalhardo/stuarty/commit/ba9f04e430d35ac3dda1ebefd055c672459f76ff))
+- **repo:** Make the PORT override of first-export-timing.sh work in image mode ([7f9f47b](https://github.com/AlexGalhardo/stuarty/commit/7f9f47b45eb7c1ec7ce904155d7a8df4fbbfce01))
+- **desktop:** Create the Run key in the installer smoke test on a clean runner ([ee686d3](https://github.com/AlexGalhardo/stuarty/commit/ee686d3098f3270327171f71e12c6a9c97f6be9f))
+- **ci:** Keep the fuzz seed corpus in the shards split by test name ([f59ec4b](https://github.com/AlexGalhardo/stuarty/commit/f59ec4b5f8ae4d7d5e1b1484c4e363ee1e96a990))
+- **ci:** Make the required aggregators fail on a shard that did not pass ([b335601](https://github.com/AlexGalhardo/stuarty/commit/b3356015107ece19156acc17e1360ffce25a5d60))
+- **ci:** Let no failed or cancelled Go shard pass its required check ([73afccc](https://github.com/AlexGalhardo/stuarty/commit/73afccc4faf5325055e4e4adbc6b0427a364284c))
+- **service:** Stop and keep the generations of a trashed project with no timeline ([85bcbcd](https://github.com/AlexGalhardo/stuarty/commit/85bcbcdd611249960235d9775d1234f91477e2d8))
+- **ui:** Count the characters of a project field as the core does ([fdd0fa1](https://github.com/AlexGalhardo/stuarty/commit/fdd0fa1a337884c07b82b04276faf8b370f3f994))
+- **ui:** Name each tip of the project form and show the error of a stored value ([49d994e](https://github.com/AlexGalhardo/stuarty/commit/49d994ef7c49c611a8760412d1e2bcff06761bf9))
+- **scripts:** Give script projects a description, a goal and a timeline ([171a862](https://github.com/AlexGalhardo/stuarty/commit/171a8626eff172d16d0ab2e98dc2d4e74a66e207))
+- **service:** Refuse a project id that a timeline already holds ([0403c7f](https://github.com/AlexGalhardo/stuarty/commit/0403c7fb9066f7c3e8b7a56b90ade2c15c0ab1b7))
+- **service:** Keep a project and its first timeline under one name ([99ad77f](https://github.com/AlexGalhardo/stuarty/commit/99ad77f9a4c41cb64b3d76f72326986efe8eb5b7))
+- **ui:** Show what the core refuses inside the project form ([f2f0f21](https://github.com/AlexGalhardo/stuarty/commit/f2f0f21f2ef9589b00b0d9edc5c2e4a41acd2a47))
+- **service:** Answer for a project with no timeline in audit and publications ([d92bf91](https://github.com/AlexGalhardo/stuarty/commit/d92bf91017598ffa9ee6457761eeaf4e30346f5f))
+- **service:** Hold a copy to the name rule and keep the whole context ([9867782](https://github.com/AlexGalhardo/stuarty/commit/98677829c47724109acce433e3d8e36269d11671))
+- **service:** Carry the project context in a bundle ([2e260cb](https://github.com/AlexGalhardo/stuarty/commit/2e260cb065647b8a0beabe23eab82f785ecfa4e6))
+- **ui:** Open the project page for a project with no timeline ([108ad0e](https://github.com/AlexGalhardo/stuarty/commit/108ad0ed458a9ff791f87df72c65d6c1fac7a615))
+- **service:** Report a failed read when a rename reaches the project ([d26ab82](https://github.com/AlexGalhardo/stuarty/commit/d26ab82701459af815feb73107f26aad0c4ddafb))
+
 ## [0.45.0] - 2026-11-21
 
 ### Added
@@ -2131,7 +2178,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.45.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.46.0...HEAD
+[0.46.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.45.0...v0.46.0
 [0.45.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.44.0...v0.45.0
 [0.44.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.43.0...v0.44.0
 [0.43.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.42.0...v0.43.0
