@@ -86,6 +86,15 @@ export type LintCode = ${lintRules.map((r) => JSON.stringify(r.code)).join(" | "
 		`export const LINT_RULES: LintRule[] = ${JSON.stringify(lintRules, null, "	")};
 `,
 );
+// project-schema.ts: the JSON Schema of the context of a project, exported by z from core/project; the project
+// form builds its zod schema from it, so the two never drift (epic 56).
+const projectSchema = await readJSON("project.v1.schema.json");
+await writeFile(
+	join(outDir, "project-schema.ts"),
+	`${banner}
+export const PROJECT_SCHEMA = ${JSON.stringify(projectSchema, null, "	")} as const;
+`,
+);
 const limits = await readJSON("limits.json");
 await writeFile(
 	join(outDir, "limits.ts"),
