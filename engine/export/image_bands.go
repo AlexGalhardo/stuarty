@@ -212,7 +212,10 @@ func (r *imageRun) prepareAll(layers []plan.Layer) ([]drawLayer, error) {
 		order[i] = i
 	}
 
-	slices.SortStableFunc(order, func(a, b int) int { return cmp.Compare(prepareCost(&layers[b]), prepareCost(&layers[a])) })
+	slices.SortStableFunc(
+		order,
+		func(a, b int) int { return cmp.Compare(prepareCost(&layers[b]), prepareCost(&layers[a])) },
+	)
 
 	err := fanOut(r.ctx, workers, len(layers), func(n int) error {
 		i := order[n]
@@ -465,7 +468,14 @@ func (r *imageRun) drawBand(base *image.RGBA, drawn []drawLayer, dst *image.RGBA
 		rows := y1 - y0
 		stride := base.Stride
 
-		if err := host.PutTexture(ctx, prefixItem, fp.Width, rows, base.Pix[y0*stride:y1*stride], !fp.Transparent); err != nil {
+		if err := host.PutTexture(
+			ctx,
+			prefixItem,
+			fp.Width,
+			rows,
+			base.Pix[y0*stride:y1*stride],
+			!fp.Transparent,
+		); err != nil {
 			return rendererError(err)
 		}
 
