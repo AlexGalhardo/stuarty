@@ -142,6 +142,9 @@ func TestValidateFontRefusesCraftedFonts(t *testing.T) {
 		{"right structure, junk tables", craftFont("\x00\x01\x00\x00", junkTables()), FontParseFailed},
 	}
 
+	// The service warms the module at start; the deadline is for refusing a font, not for the compile.
+	Warm()
+
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
