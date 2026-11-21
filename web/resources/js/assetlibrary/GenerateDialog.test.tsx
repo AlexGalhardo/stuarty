@@ -1,9 +1,11 @@
 import { describe, expect, test } from "vitest";
 
+import type { Transport } from "../editor/api/transport";
 import type { ModelView, ProviderView } from "../editor/api/types";
 import {
 	anyMaker,
 	choicesOf,
+	firstFrames,
 	libraryOf,
 	orderedModels,
 } from "./GenerateDialog";
@@ -122,12 +124,112 @@ describe("the library the first frame is listed from (VV-334)", () => {
 			{ id: "itm_3", kind: "timeline", state: "active", timeline_id: "tl_1" },
 			{ id: "itm_4", kind: "timeline", state: "active", timeline_id: "tl_2" },
 		];
-		expect(libraryOf("prj_x", items)).toBe("tl_1");
+		expect(libraryOf(items)).toBe("tl_1");
 	});
 
-	test("keeps the production id when it has no timeline", () => {
+	test("is none for a production with no timeline, whose images only the library lists", () => {
 		expect(
-			libraryOf("prj_x", [{ id: "itm_1", kind: "brief", state: "active" }]),
-		).toBe("prj_x");
+			libraryOf([{ id: "itm_1", kind: "brief", state: "active" }]),
+		).toBeNull();
+	});
+});
+
+describe("the first frames of a production (VV-334)", () => {
+	const timelineItem = (timeline_id: string, state = "active") => ({
+		id: `pit_${timeline_id}`,
+		kind: "timeline",
+		title: timeline_id,
+		state,
+		timeline_id,
+	});
+	const media = (asset_id: string, extra: object = {}) => ({
+		asset_id,
+		kind: "image",
+		state: "ready",
+		trashed: false,
+		...extra,
+	});
+
+	// A server of the requests the dialog makes: it answers by path and records them.
+	function server(answers: Record<string, unknown>): {
+		transport: Transport;
+		paths: string[];
+	} {
+		const paths: string[] = [];
+		return {
+			paths,
+			transport: {
+				send: async ({ path }) => {
+					paths.push(path);
+					const body = answers[path];
+					if (body === undefined) throw new Error(`unexpected ${path}`);
+					return { status: 200, body };
+				},
+				openStream: () => ({ close: () => {} }),
+			},
+		};
+	}
+
+	test("with two timelines the first is named, since it has the id of the production", async () => {
+		const { transport, paths } = server({
+			"/projects/prj_x/describe": {
+				items: [timelineItem("prj_x"), timelineItem("prj_y")],
+			},
+			"/projects/prj_x/media?timeline_id=prj_x": {
+				assets: [
+					media("ast_ready"),
+					media("ast_video", { kind: "video" }),
+					media("ast_busy", { state: "pending" }),
+					media("ast_gone", { trashed: true }),
+				],
+			},
+		});
+		expect(await firstFrames(transport, "prj_x")).toEqual(["ast_ready"]);
+		expect(paths).toContain("/projects/prj_x/media?timeline_id=prj_x");
+	});
+
+	test("with the first in the trash, the next one is the library", async () => {
+		const { transport } = server({
+			"/projects/prj_x/describe": {
+				items: [timelineItem("prj_x", "trashed"), timelineItem("prj_y")],
+			},
+			"/projects/prj_y/media?timeline_id=prj_y": {
+				assets: [media("ast_second")],
+			},
+		});
+		expect(await firstFrames(transport, "prj_x")).toEqual(["ast_second"]);
+	});
+
+	test("with no timeline they come from the library, by the id each has in this production", async () => {
+		const { transport, paths } = server({
+			"/projects/prj_x/describe": { items: [] },
+			"/assets?kind=image&project=prj_x": {
+				assets: [
+					{
+						hash: "sha256:a",
+						poster: { timeline_id: "prj_x", asset_id: "ast_here" },
+					},
+					{
+						hash: "sha256:b",
+						poster: { timeline_id: "prj_a", asset_id: "ast_of_another" },
+					},
+				],
+			},
+			"/assets/sha256%3Ab": {
+				uses: [
+					{
+						project_id: "prj_a",
+						timelines: ["prj_a"],
+						asset_id: "ast_of_another",
+					},
+					{ project_id: "prj_x", timelines: ["prj_x"], asset_id: "ast_shared" },
+				],
+			},
+		});
+		expect(await firstFrames(transport, "prj_x")).toEqual([
+			"ast_here",
+			"ast_shared",
+		]);
+		expect(paths.some((path) => path.includes("/media"))).toBe(false);
 	});
 });

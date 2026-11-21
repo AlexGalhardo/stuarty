@@ -23,11 +23,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useLocale, useT } from "@/lib/i18n";
 import { formatMoney } from "../dashboard/approval/money";
-import { createClient } from "../editor/api/client";
+import { type ApiClient, createClient } from "../editor/api/client";
 import { HttpTransport } from "../editor/api/http";
+import { scopedToTimeline, type Transport } from "../editor/api/transport";
 import type {
 	Job,
-	MediaEntry,
 	ModelView,
 	ProviderView,
 	VoiceView,
@@ -95,16 +95,56 @@ export function choicesOf(
 	});
 }
 
-// The library of a production is the library of its timeline, and a production with several names none: the
-// first active timeline stands for it. A production with no timeline keeps its own id (VV-334).
+// The timeline whose files a clip of this production may start from: the service keeps a generation under the
+// first active timeline, by position (SDD-003 section 1.7 rule 6), and the items come in that order. A production
+// with no timeline has none (VV-334).
 export function libraryOf(
-	productionId: string,
 	items: { id: string; kind: string; state: string; timeline_id?: string }[],
-): string {
+): string | null {
 	const first = items.find(
 		(item) => item.kind === "timeline" && item.state === "active",
 	);
-	return first === undefined ? productionId : (first.timeline_id ?? first.id);
+	return first === undefined ? null : (first.timeline_id ?? first.id);
+}
+
+// The images a generation left in a production with no timeline, which wait in it for the first video (SDD-005
+// section 5.12.3): only the library lists them. The identifier of a file is the one it has in this production, and
+// the poster of an entry may be another production's, so that one is read from the uses of the file.
+async function imagesWaitingIn(
+	client: ApiClient,
+	production: string,
+): Promise<string[]> {
+	const found = await client.queryAssets({
+		kind: "image",
+		project: production,
+	});
+	const ids = await Promise.all(
+		found.assets.map(async (entry) => {
+			if (entry.poster?.timeline_id === production) {
+				return entry.poster.asset_id;
+			}
+			const full = await client.getAsset(entry.hash);
+			return full.uses?.find((use) => use.project_id === production)?.asset_id;
+		}),
+	);
+	return ids.filter((id) => id !== undefined);
+}
+
+// The images a clip of this production may start from, as the service will look for them. The first timeline has
+// the id of its project, so with two of them only `timeline_id` says which one is listed (VV-334).
+export async function firstFrames(
+	transport: Transport,
+	production: string,
+): Promise<string[]> {
+	const client = createClient(transport);
+	const timeline = libraryOf((await client.describeProject(production)).items);
+	if (timeline === null) return imagesWaitingIn(client, production);
+	const { assets } = await createClient(
+		scopedToTimeline(transport, timeline),
+	).listMedia(timeline);
+	return assets
+		.filter((a) => a.kind === "image" && a.state === "ready" && !a.trashed)
+		.map((a) => a.asset_id);
 }
 
 // Whether a provider of the product has the capability at all, connected or not: with none (no provider makes
@@ -151,7 +191,7 @@ export function GenerateDialog({
 	const [seconds, setSeconds] = useState("5");
 	const [aspect, setAspect] = useState<string>("16:9");
 	const [firstFrame, setFirstFrame] = useState("");
-	const [frames, setFrames] = useState<MediaEntry[]>([]);
+	const [frames, setFrames] = useState<string[]>([]);
 	const [estimate, setEstimate] = useState<Job | null>(null);
 	const [job, setJob] = useState<Job | null>(null);
 	const [failure, setFailure] = useState<Failure | null>(null);
@@ -204,16 +244,12 @@ export function GenerateDialog({
 		if (!open || kind !== "video" || project === "") return;
 		let alive = true;
 		setFirstFrame("");
+		setFrames([]);
 		void (async () => {
 			try {
-				const described = await api().describeProject(project);
-				const list = await api().listMedia(libraryOf(project, described.items));
+				const ids = await firstFrames(new HttpTransport("/api/v1"), project);
 				if (!alive) return;
-				setFrames(
-					list.assets.filter(
-						(a) => a.kind === "image" && a.state === "ready" && !a.trashed,
-					),
-				);
+				setFrames(ids);
 			} catch {
 				// The first frame is optional: a list that cannot be read leaves the clip without one.
 				if (alive) setFrames([]);
@@ -560,9 +596,9 @@ export function GenerateDialog({
 										className="h-8 max-w-56 rounded-lg border border-input bg-background px-2 text-sm"
 									>
 										<option value="">{t("ui.generate.no_first_frame")}</option>
-										{frames.map((f) => (
-											<option key={f.asset_id} value={f.asset_id}>
-												{f.asset_id}
+										{frames.map((id) => (
+											<option key={id} value={id}>
+												{id}
 											</option>
 										))}
 									</select>
