@@ -132,6 +132,11 @@ export function validate(
 	return out;
 }
 
+// charCount is the length of a value as the core and zod count it: characters (code points), so an emoji is one.
+export function charCount(value: string): number {
+	return [...value].length;
+}
+
 export function emptyContext(): ProjectContextInput {
 	return {
 		name: "",

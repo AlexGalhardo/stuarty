@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import type { ProjectContextInput } from "../../editor/api/types";
-import { emptyContext, validate } from "./projectSchema";
+import { charCount, emptyContext, validate } from "./projectSchema";
 
 const valid = (): ProjectContextInput => ({
 	name: "Launch teaser",
@@ -69,6 +69,21 @@ describe("the schema built from the one the core exports", () => {
 			v.description = "d".repeat(n);
 			expect("description" in validate(v, options)).toBe(!ok);
 		}
+	});
+
+	// The core counts characters (runes), not UTF-16 units: an emoji is one character, as it is for the core.
+	test("a length counts an emoji as one character, as the core does", () => {
+		const v = valid();
+		v.description = `${"d".repeat(1004)}${"🎬".repeat(20)}`;
+		expect(validate(v, options)).toEqual({});
+		v.description = `${"d".repeat(62)}🎬`;
+		expect(validate(v, options).description?.key).toBe(
+			"ui.projects.errors.too_short",
+		);
+		v.description = valid().description;
+		v.name = "𝒜".repeat(20);
+		expect(validate(v, options)).toEqual({});
+		expect(charCount("🎬 teaser")).toBe(8);
 	});
 
 	test("a goal part: 15 and 281 are refused, 16 and 280 are not", () => {
