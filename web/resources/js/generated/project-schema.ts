@@ -19,7 +19,7 @@ export const PROJECT_SCHEMA = {
 				"due": {
 					"description": "The date the goal is due, YYYY-MM-DD.",
 					"format": "date",
-					"pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+					"pattern": "^\\d{4}-\\d{2}-\\d{2}$",
 					"type": "string",
 					"x-not-before": "today"
 				},
