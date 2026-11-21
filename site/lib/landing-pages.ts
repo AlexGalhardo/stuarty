@@ -309,7 +309,7 @@ export const trust = {
 
 /** The closing take of the home, in the author's words, one line each. */
 export const homeYours = {
-	lines: ["On your machine. On your terms.", "No subscriptions. No pay once.", "Free. Forever."],
+	lines: ["On your machine. On your terms.", "No subscriptions. No pay once.", "Open Source"],
 };
 
 export const cta = {
