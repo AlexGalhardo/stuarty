@@ -279,6 +279,11 @@ func TestJobStartGates(t *testing.T) {
 		t.Fatalf("dry run = %+v, %v", dry, err)
 	}
 
+	// VV-303: the answer says it was a simulation and names no job, because none was created.
+	if !dry.DryRun || dry.JobID != "" || !strings.Contains(dry.Text, "Nothing was created") {
+		t.Errorf("an export dry run answered like a created job: %+v", dry)
+	}
+
 	if rows, _ := m.store.Jobs().List(context.Background(), project, nil, 10); len(rows) != 0 {
 		t.Errorf("a dry run queued %d jobs", len(rows))
 	}
