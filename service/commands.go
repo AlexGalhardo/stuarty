@@ -1,6 +1,7 @@
 package service
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -222,6 +223,11 @@ func unknownCommand(reg *command.Registry, domain, name string) *Error {
 		shown = closestNames(known, name, maxKnownListed)
 		hint = "command_help with no name lists every operation"
 
+		// With no domain, command_help lists the timeline operations, not the ones of the domain that was asked.
+		if domain != "" {
+			hint = "command_help with domain=" + domain + " and no name lists every operation"
+		}
+
 		if len(shown) > 0 {
 			hint = "the closest names are " + strings.Join(shown, ", ") + "; " + hint
 		} else {
@@ -242,7 +248,8 @@ func unknownCommand(reg *command.Registry, domain, name string) *Error {
 const maxKnownListed = 20
 
 // closestNames are the names that share the group of the asked name (the part before the dot), or that contain what
-// follows its dot, at most limit of them.
+// follows its dot: at most limit of them, those that start most like the asked name first, so that a group larger
+// than the limit does not lose the name that was meant.
 func closestNames(known []string, asked string, limit int) []string {
 	group, rest, _ := strings.Cut(asked, ".")
 	out := []string{}
@@ -253,14 +260,24 @@ func closestNames(known []string, asked string, limit int) []string {
 		if (group != "" && kg == group) || (rest != "" && strings.Contains(kr, rest)) ||
 			(rest == "" && group != "" && strings.Contains(k, group)) {
 			out = append(out, k)
-
-			if len(out) == limit {
-				break
-			}
 		}
 	}
 
-	return out
+	slices.SortStableFunc(out, func(a, b string) int {
+		return cmp.Compare(sharedPrefix(b, asked), sharedPrefix(a, asked))
+	})
+
+	return out[:min(limit, len(out))]
+}
+
+// sharedPrefix is how many bytes a and b have in common from their start.
+func sharedPrefix(a, b string) int {
+	n := 0
+	for n < len(a) && n < len(b) && a[n] == b[n] {
+		n++
+	}
+
+	return n
 }
 
 // nameGroups are the groups of the names ("track.*"), each once.

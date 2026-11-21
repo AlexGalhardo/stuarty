@@ -1,6 +1,7 @@
 package service
 
 import (
+	"slices"
 	"strings"
 	"testing"
 
@@ -36,5 +37,38 @@ func TestCommandHelpStaysInsideItsCaps(t *testing.T) {
 	close := unknownCommand(reg, "", "track.ad")
 	if !strings.Contains(close.Hint, "track.add") {
 		t.Errorf("the closest names of track.ad are missing track.add: %q", close.Hint)
+	}
+}
+
+// A typo of any operation suggests that operation, also in a group with more names than the error lists.
+func TestUnknownNameSuggestsTheNameMeant(t *testing.T) {
+	t.Parallel()
+
+	reg := command.Default()
+
+	for _, c := range reg.List() {
+		if c.Internal {
+			continue
+		}
+
+		typo := c.Name[:len(c.Name)-1]
+		if _, exists := reg.Get(typo); exists {
+			continue
+		}
+
+		if e := unknownCommand(reg, "", typo); !slices.Contains(strings.FieldsFunc(e.Hint, func(r rune) bool {
+			return r == ' ' || r == ',' || r == ';'
+		}), c.Name) {
+			t.Errorf("%q does not suggest %s: %q", typo, c.Name, e.Hint)
+		}
+	}
+}
+
+// The list an error points at is the list of the domain that was asked.
+func TestUnknownNameInADomainPointsAtThatDomain(t *testing.T) {
+	t.Parallel()
+
+	if e := unknownCommand(command.Default(), "image", "nope.op"); !strings.Contains(e.Hint, "domain=image") {
+		t.Errorf("hint = %q, want the list of domain=image", e.Hint)
 	}
 }
