@@ -31,6 +31,16 @@ CLI: `stuarty workspace` lists the commands of the domain and `stuarty workspace
 - `connection:add`: connect a destination; the secret is read from standard input or a file, never from an argument
 - `connection:remove`: remove a connection and its credential
 - `connection:test`: make one request through a connection and show how the destination answered
+- `webhook:events`: list the events a webhook may choose and what each one carries
+- `webhook:list`: list the outbound webhooks
+- `webhook:show`: show one webhook
+- `webhook:add`: register a webhook; the signing secret is printed once and cannot be shown again
+- `webhook:update`: change the name, the address, the events or the state of a webhook
+- `webhook:remove`: remove a webhook, its deliveries and its secret
+- `webhook:rotate-secret`: make a new signing secret; it is printed once and the old one stops verifying
+- `webhook:test`: send a webhook.test event now, one attempt, and show how the receiver answered
+- `webhook:deliveries`: list the deliveries of a webhook, newest first, with their attempts
+- `webhook:redeliver`: send the stored body of a delivery again, with a fresh signature
 - `agent:profiles`: list the agents the chat may host, with their full command, and the known agents found on this machine
 - `chat:sessions`: list the chat sessions of a project, newest first
 - `chat:session`: show one chat session: its agent, its state and how many events it holds

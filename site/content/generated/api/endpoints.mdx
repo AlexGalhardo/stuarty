@@ -176,6 +176,21 @@ Every operation has its own page with the parameters, the body, the responses an
 | `POST` | `/api/v1/connections/{id}/test` | [`connections.test`](/docs/api/connections.test) | Make one request through a connection |
 | `GET` | `/api/v1/connections/{id}/voices` | [`voice.list`](/docs/api/voice.list) | List the voices of the provider of a connection |
 
+## Webhooks
+
+| Method | Path | Operation | Summary |
+| --- | --- | --- | --- |
+| `GET` | `/api/v1/webhook-events` | [`webhooks.events`](/docs/api/webhooks.events) | List the events a webhook may choose, each with what it carries |
+| `GET` | `/api/v1/webhooks` | [`webhooks.list`](/docs/api/webhooks.list) | List the outbound webhooks (never a secret) |
+| `POST` | `/api/v1/webhooks` | [`webhooks.create`](/docs/api/webhooks.create) | Register a webhook; the signing secret is in this answer once and in no other |
+| `GET` | `/api/v1/webhooks/{id}` | [`webhooks.get`](/docs/api/webhooks.get) | Read one webhook (never a secret) |
+| `PATCH` | `/api/v1/webhooks/{id}` | [`webhooks.update`](/docs/api/webhooks.update) | Change the name, the address, the events or the state of a webhook |
+| `DELETE` | `/api/v1/webhooks/{id}` | [`webhooks.remove`](/docs/api/webhooks.remove) | Remove a webhook, its deliveries and its secret |
+| `GET` | `/api/v1/webhooks/{id}/deliveries` | [`webhooks.deliveries`](/docs/api/webhooks.deliveries) | List the deliveries of a webhook with their attempts |
+| `POST` | `/api/v1/webhooks/{id}/deliveries/{delivery_id}/redeliver` | [`webhooks.redeliver`](/docs/api/webhooks.redeliver) | Send the stored body of a delivery again, with a fresh signature |
+| `POST` | `/api/v1/webhooks/{id}/rotate-secret` | [`webhooks.rotate`](/docs/api/webhooks.rotate) | Make a new signing secret; it is in this answer once |
+| `POST` | `/api/v1/webhooks/{id}/test` | [`webhooks.test`](/docs/api/webhooks.test) | Send a webhook.test event now, one attempt |
+
 ## AI providers
 
 | Method | Path | Operation | Summary |

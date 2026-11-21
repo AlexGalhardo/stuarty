@@ -159,6 +159,21 @@ var parity = []row{
 	{method: "ConnectionCreate", command: "connection:add", route: "POST /connections"},
 	{method: "ConnectionRemove", command: "connection:remove", route: "DELETE /connections/{}"},
 	{method: "ConnectionTest", command: "connection:test", route: "POST /connections/{}/test"},
+	// The outbound webhooks (SDD-022): the read-only connection tool lists or reads them with webhooks true, host only;
+	// registering one is a person's action, so the writes have no tool.
+	{method: "WebhookEventList", command: "webhook:events", route: "GET /webhook-events"},
+	{method: "WebhookList", tool: "connection", command: "webhook:list", route: "GET /webhooks"},
+	{method: "WebhookGet", command: "webhook:show", route: "GET /webhooks/{}"},
+	{method: "WebhookCreate", command: "webhook:add", route: "POST /webhooks"},
+	{method: "WebhookUpdate", command: "webhook:update", route: "PATCH /webhooks/{}"},
+	{method: "WebhookRemove", command: "webhook:remove", route: "DELETE /webhooks/{}"},
+	{method: "WebhookRotateSecret", command: "webhook:rotate-secret", route: "POST /webhooks/{}/rotate-secret"},
+	{method: "WebhookTest", command: "webhook:test", route: "POST /webhooks/{}/test"},
+	{method: "WebhookDeliveryList", command: "webhook:deliveries", route: "GET /webhooks/{}/deliveries"},
+	{
+		method: "WebhookRedeliver", command: "webhook:redeliver",
+		route: "POST /webhooks/{}/deliveries/{}/redeliver",
+	},
 	// The image documents of SDD-021: one MCP tool with an action per operation.
 	{method: "ImageCreate", tool: "image", command: "image:create", route: "POST /images"},
 	{method: "ImageList", tool: "image", command: "image:list", route: "GET /images"},

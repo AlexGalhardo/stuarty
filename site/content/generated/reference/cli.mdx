@@ -1455,6 +1455,186 @@ Example:
 stuarty connection:test con_0123456789
 ```
 
+## `webhook:events`
+
+List the events a webhook may choose and what each one carries
+
+```text
+stuarty webhook:events
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty webhook:events --json
+```
+
+## `webhook:list`
+
+List the outbound webhooks
+
+```text
+stuarty webhook:list
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty webhook:list --json
+```
+
+## `webhook:show`
+
+Show one webhook
+
+```text
+stuarty webhook:show <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty webhook:show whk_0123456789
+```
+
+## `webhook:add`
+
+Register a webhook; the signing secret is printed once and cannot be shown again
+
+```text
+stuarty webhook:add --name <t> --endpoint <url> --events <list> [--disable]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--name` | string |  | a name for the person, 1 to 60 characters (required) |
+| `--endpoint` | string |  | where the events are sent: https, or http for localhost (required) |
+| `--events` | string |  | a comma list of the events to receive (required); see webhook:events |
+| `--disable` | boolean | `false` | register it turned off |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty webhook:add --name n8n --endpoint https://hooks.example.com/stuarty --events export.ready,job.failed
+```
+
+## `webhook:update`
+
+Change the name, the address, the events or the state of a webhook
+
+```text
+stuarty webhook:update <id> [--name <t>] [--endpoint <url>] [--events <list>] [--enable|--disable]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--name` | string |  | the new name |
+| `--endpoint` | string |  | the new address |
+| `--events` | string |  | the new comma list of events |
+| `--enable` | boolean | `false` | turn the webhook on |
+| `--disable` | boolean | `false` | turn the webhook off |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty webhook:update whk_0123456789 --disable
+```
+
+## `webhook:remove`
+
+Remove a webhook, its deliveries and its secret
+
+```text
+stuarty webhook:remove <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty webhook:remove whk_0123456789
+```
+
+## `webhook:rotate-secret`
+
+Make a new signing secret; it is printed once and the old one stops verifying
+
+```text
+stuarty webhook:rotate-secret <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty webhook:rotate-secret whk_0123456789
+```
+
+## `webhook:test`
+
+Send a webhook.test event now, one attempt, and show how the receiver answered
+
+```text
+stuarty webhook:test <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty webhook:test whk_0123456789
+```
+
+## `webhook:deliveries`
+
+List the deliveries of a webhook, newest first, with their attempts
+
+```text
+stuarty webhook:deliveries <id> [--limit n] [--offset n]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--limit` | integer | `50` | deliveries in the page, 1 to 100 |
+| `--offset` | integer | `0` | deliveries to skip |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty webhook:deliveries whk_0123456789 --json
+```
+
+## `webhook:redeliver`
+
+Send the stored body of a delivery again, with a fresh signature
+
+```text
+stuarty webhook:redeliver <webhook id> <delivery id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty webhook:redeliver whk_0123456789 wdl_0123456789
+```
+
 ## `approval:list`
 
 List the approval queue: what waits for a person (pending by default)

@@ -170,6 +170,21 @@
       ]
     },
     {
+      "tag": "Webhooks",
+      "pages": [
+        "webhooks.events",
+        "webhooks.list",
+        "webhooks.create",
+        "webhooks.get",
+        "webhooks.update",
+        "webhooks.remove",
+        "webhooks.deliveries",
+        "webhooks.redeliver",
+        "webhooks.rotate",
+        "webhooks.test"
+      ]
+    },
+    {
       "tag": "AI providers",
       "pages": [
         "image.generate",

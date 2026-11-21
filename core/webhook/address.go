@@ -34,7 +34,7 @@ func IsLoopbackHost(host string) bool {
 // the ranges live in one place, internal/outbound, which also judges the address at dial time. A name is not
 // resolved here.
 func CheckURL(raw string, notPublic func(netip.Addr) bool) (string, *FieldError) {
-	if len(raw) == 0 || len(raw) > MaxURLBytes {
+	if raw == "" || len(raw) > MaxURLBytes {
 		return "", bad("url", "the address is 1 to %d characters.", MaxURLBytes)
 	}
 

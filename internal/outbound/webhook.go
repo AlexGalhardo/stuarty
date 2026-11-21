@@ -72,8 +72,15 @@ func Webhook(rawURL string, timeout time.Duration, test *TestOptions) (*http.Cli
 	return &http.Client{
 		Timeout: timeout,
 		Transport: &webhookTransport{
-			scheme: u.Scheme, host: host, port: effectivePort(u),
-			base: &http.Transport{Proxy: nil, DialContext: dial, DisableKeepAlives: true, TLSClientConfig: testTLS(test)},
+			scheme: u.Scheme,
+			host:   host,
+			port:   effectivePort(u),
+			base: &http.Transport{
+				Proxy:             nil,
+				DialContext:       dial,
+				DisableKeepAlives: true,
+				TLSClientConfig:   testTLS(test),
+			},
 		},
 		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
 	}, nil

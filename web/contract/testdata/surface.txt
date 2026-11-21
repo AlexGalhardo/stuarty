@@ -149,6 +149,16 @@ command video:generate
 command view
 command voice:generate
 command voice:list
+command webhook:add
+command webhook:deliveries
+command webhook:events
+command webhook:list
+command webhook:redeliver
+command webhook:remove
+command webhook:rotate-secret
+command webhook:show
+command webhook:test
+command webhook:update
 route DELETE /agents/profiles/{}
 route DELETE /approval-rules/{}
 route DELETE /chat/sessions/{}
@@ -157,6 +167,7 @@ route DELETE /images/{}/checkpoints/{}
 route DELETE /keys/{}
 route DELETE /library/memory/{}
 route DELETE /projects/{}/checkpoints/{}
+route DELETE /webhooks/{}
 route GET /agents/profiles
 route GET /approval-rules
 route GET /approvals
@@ -250,10 +261,15 @@ route GET /templates
 route GET /templates/{}/file
 route GET /texts
 route GET /users
+route GET /webhook-events
+route GET /webhooks
+route GET /webhooks/{}
+route GET /webhooks/{}/deliveries
 route PATCH /images/{}/checkpoints/{}
 route PATCH /projects/{}
 route PATCH /projects/{}/checkpoints/{}
 route PATCH /users/{}
+route PATCH /webhooks/{}
 route POST /approval-rules
 route POST /approvals/{}/decide
 route POST /assets/{}/tags
@@ -336,6 +352,10 @@ route POST /trash/empty
 route POST /users
 route POST /video/generate
 route POST /voice/generate
+route POST /webhooks
+route POST /webhooks/{}/deliveries/{}/redeliver
+route POST /webhooks/{}/rotate-secret
+route POST /webhooks/{}/test
 route PUT /agents/profiles/{}
 route PUT /assets/{}
 route PUT /brand-kit

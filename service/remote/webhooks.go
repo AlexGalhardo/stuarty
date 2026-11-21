@@ -54,7 +54,10 @@ func (c *Client) WebhookRemove(ctx context.Context, req service.WebhookRef) (*se
 }
 
 // WebhookRotateSecret implements service.Service.
-func (c *Client) WebhookRotateSecret(ctx context.Context, req service.WebhookRef) (*service.WebhookSecretResult, error) {
+func (c *Client) WebhookRotateSecret(
+	ctx context.Context,
+	req service.WebhookRef,
+) (*service.WebhookSecretResult, error) {
 	return post[service.WebhookSecretResult](ctx, c, "/webhooks/"+url.PathEscape(req.ID)+"/rotate-secret", struct{}{})
 }
 
@@ -84,5 +87,9 @@ func (c *Client) WebhookRedeliver(
 	ctx context.Context, req service.WebhookRedeliverRequest,
 ) (*service.WebhookDelivery, error) {
 	return post[service.WebhookDelivery](
-		ctx, c, "/webhooks/"+url.PathEscape(req.ID)+"/deliveries/"+url.PathEscape(req.DeliveryID)+"/redeliver", struct{}{})
+		ctx,
+		c,
+		"/webhooks/"+url.PathEscape(req.ID)+"/deliveries/"+url.PathEscape(req.DeliveryID)+"/redeliver",
+		struct{}{},
+	)
 }

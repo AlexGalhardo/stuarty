@@ -2165,6 +2165,222 @@
       ]
     },
     {
+      "name": "webhook:events",
+      "domain": "workspace",
+      "summary": "list the events a webhook may choose and what each one carries",
+      "usage": [
+        "stuarty webhook:events"
+      ],
+      "example": "stuarty webhook:events --json",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "webhook:list",
+      "domain": "workspace",
+      "summary": "list the outbound webhooks",
+      "usage": [
+        "stuarty webhook:list"
+      ],
+      "example": "stuarty webhook:list --json",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "webhook:show",
+      "domain": "workspace",
+      "summary": "show one webhook",
+      "usage": [
+        "stuarty webhook:show <id>"
+      ],
+      "example": "stuarty webhook:show whk_0123456789",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "webhook:add",
+      "domain": "workspace",
+      "summary": "register a webhook; the signing secret is printed once and cannot be shown again",
+      "usage": [
+        "stuarty webhook:add --name <t> --endpoint <url> --events <list> [--disable]"
+      ],
+      "example": "stuarty webhook:add --name n8n --endpoint https://hooks.example.com/stuarty --events export.ready,job.failed",
+      "flags": [
+        {
+          "name": "name",
+          "type": "string",
+          "usage": "a name for the person, 1 to 60 characters (required)"
+        },
+        {
+          "name": "endpoint",
+          "type": "string",
+          "usage": "where the events are sent: https, or http for localhost (required)"
+        },
+        {
+          "name": "events",
+          "type": "string",
+          "usage": "a comma list of the events to receive (required); see webhook:events"
+        },
+        {
+          "name": "disable",
+          "type": "boolean",
+          "default": "false",
+          "usage": "register it turned off"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "webhook:update",
+      "domain": "workspace",
+      "summary": "change the name, the address, the events or the state of a webhook",
+      "usage": [
+        "stuarty webhook:update <id> [--name <t>] [--endpoint <url>] [--events <list>] [--enable|--disable]"
+      ],
+      "example": "stuarty webhook:update whk_0123456789 --disable",
+      "flags": [
+        {
+          "name": "name",
+          "type": "string",
+          "usage": "the new name"
+        },
+        {
+          "name": "endpoint",
+          "type": "string",
+          "usage": "the new address"
+        },
+        {
+          "name": "events",
+          "type": "string",
+          "usage": "the new comma list of events"
+        },
+        {
+          "name": "enable",
+          "type": "boolean",
+          "default": "false",
+          "usage": "turn the webhook on"
+        },
+        {
+          "name": "disable",
+          "type": "boolean",
+          "default": "false",
+          "usage": "turn the webhook off"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "webhook:remove",
+      "domain": "workspace",
+      "summary": "remove a webhook, its deliveries and its secret",
+      "usage": [
+        "stuarty webhook:remove <id>"
+      ],
+      "example": "stuarty webhook:remove whk_0123456789",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "webhook:rotate-secret",
+      "domain": "workspace",
+      "summary": "make a new signing secret; it is printed once and the old one stops verifying",
+      "usage": [
+        "stuarty webhook:rotate-secret <id>"
+      ],
+      "example": "stuarty webhook:rotate-secret whk_0123456789",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "webhook:test",
+      "domain": "workspace",
+      "summary": "send a webhook.test event now, one attempt, and show how the receiver answered",
+      "usage": [
+        "stuarty webhook:test <id>"
+      ],
+      "example": "stuarty webhook:test whk_0123456789",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "webhook:deliveries",
+      "domain": "workspace",
+      "summary": "list the deliveries of a webhook, newest first, with their attempts",
+      "usage": [
+        "stuarty webhook:deliveries <id> [--limit n] [--offset n]"
+      ],
+      "example": "stuarty webhook:deliveries whk_0123456789 --json",
+      "flags": [
+        {
+          "name": "limit",
+          "type": "integer",
+          "default": "50",
+          "usage": "deliveries in the page, 1 to 100"
+        },
+        {
+          "name": "offset",
+          "type": "integer",
+          "default": "0",
+          "usage": "deliveries to skip"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "webhook:redeliver",
+      "domain": "workspace",
+      "summary": "send the stored body of a delivery again, with a fresh signature",
+      "usage": [
+        "stuarty webhook:redeliver <webhook id> <delivery id>"
+      ],
+      "example": "stuarty webhook:redeliver whk_0123456789 wdl_0123456789",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
       "name": "approval:list",
       "domain": "publish",
       "summary": "list the approval queue: what waits for a person (pending by default)",

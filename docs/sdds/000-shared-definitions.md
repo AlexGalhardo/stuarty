@@ -60,7 +60,8 @@
 | `ConnectionList`, `ConnectionGet` | `connection` (list, or one by id) | `connection:list`, `connection:show` | `GET /connections`, `GET /connections/{id}` | read |
 | `ConnectionCreate`, `ConnectionRemove`, `ConnectionTest` | none | `connection:add`, `connection:remove`, `connection:test` | `POST /connections`, `DELETE /connections/{id}`, `POST /connections/{id}/test` | admin (SDD-014) |
 | `WebhookEventList` | none | `webhook:events` | `GET /webhook-events` | read (SDD-022) |
-| `WebhookList`, `WebhookGet` | `connection` with `webhooks` true (host only, no path or secret) | `webhook:list`, `webhook:show` | `GET /webhooks`, `GET /webhooks/{id}` | admin (SDD-022) |
+| `WebhookList` | `connection` with `webhooks` true (host only, no path or secret) | `webhook:list` | `GET /webhooks` | admin (SDD-022) |
+| `WebhookGet` | none | `webhook:show` | `GET /webhooks/{id}` | admin (SDD-022) |
 | `WebhookCreate`, `WebhookUpdate`, `WebhookRemove`, `WebhookRotateSecret`, `WebhookTest` | none | `webhook:add`, `webhook:update`, `webhook:remove`, `webhook:rotate-secret`, `webhook:test` | `POST /webhooks`, `PATCH /webhooks/{id}`, `DELETE /webhooks/{id}`, `POST /webhooks/{id}/rotate-secret`, `POST /webhooks/{id}/test` | admin (SDD-022) |
 | `WebhookDeliveryList`, `WebhookRedeliver` | none | `webhook:deliveries`, `webhook:redeliver` | `GET /webhooks/{id}/deliveries`, `POST /webhooks/{id}/deliveries/{delivery_id}/redeliver` | admin (SDD-022) |
 | `ImageCreate` | `image` (`action` create) | `image:create` | `POST /images` | edit |

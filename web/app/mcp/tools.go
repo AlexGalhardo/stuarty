@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
+	core "github.com/AlexGalhardo/stuarty/core/webhook"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/textview"
 	"github.com/AlexGalhardo/stuarty/service/untrusted"
@@ -831,10 +832,15 @@ func fontImport(ctx context.Context, svc service.Service, raw json.RawMessage) (
 // connection lists the destinations the user connected, or reads one. It never carries a credential.
 func connection(ctx context.Context, svc service.Service, raw json.RawMessage) (*toolOutput, error) {
 	in, err := decode[struct {
-		ID string `json:"id"`
+		ID       string `json:"id"`
+		Webhooks bool   `json:"webhooks"`
 	}](raw)
 	if err != nil {
 		return nil, err
+	}
+
+	if in.Webhooks {
+		return webhookView(ctx, svc)
 	}
 
 	if in.ID != "" {
@@ -857,6 +863,47 @@ func connection(ctx context.Context, svc service.Service, raw json.RawMessage) (
 	}
 
 	return &toolOutput{value: res, text: strings.Join(lines, "\n")}, nil
+}
+
+// webhookItem is a webhook as an agent reads it: the host and never the path or the query of the address, which is
+// often the token of the receiver, and never a secret (SDD-022 section 7).
+type webhookItem struct {
+	ID           string                       `json:"id"`
+	Name         string                       `json:"name"          untrusted:"true"`
+	Host         string                       `json:"host"`
+	Events       []string                     `json:"events"`
+	Enabled      bool                         `json:"enabled"`
+	LastDelivery *service.WebhookLastDelivery `json:"last_delivery"`
+}
+
+func webhookItemOf(w *service.Webhook) webhookItem {
+	return webhookItem{
+		ID:           w.ID,
+		Name:         w.Name,
+		Host:         core.SafeURL(w.URL),
+		Events:       w.Events,
+		Enabled:      w.Enabled,
+		LastDelivery: w.LastDelivery,
+	}
+}
+
+// webhookView lists the outbound webhooks for an agent. It writes nothing: only a person registers one.
+func webhookView(ctx context.Context, svc service.Service) (*toolOutput, error) {
+	res, err := svc.WebhookList(ctx, service.WebhookListRequest{})
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]webhookItem, 0, len(res.Webhooks))
+	lines := []string{fmt.Sprintf("%d webhook(s)", len(res.Webhooks))}
+
+	for i := range res.Webhooks {
+		item := webhookItemOf(&res.Webhooks[i])
+		items = append(items, item)
+		lines = append(lines, fmt.Sprintf("%s %s %v", item.ID, item.Host, item.Events))
+	}
+
+	return &toolOutput{value: map[string]any{"webhooks": items}, text: strings.Join(lines, "\n")}, nil
 }
 
 // projectDescribe is project_get with detail overview: the description of the whole production (SDD-003 section
