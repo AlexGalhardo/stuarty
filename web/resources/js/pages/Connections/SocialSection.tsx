@@ -103,6 +103,7 @@ export function PriceEditor({
 }): ReactNode {
 	const t = useT();
 	const locale = useLocale();
+	const { privileged } = useSession();
 	const price = account.price;
 	const [post, setPost] = useState(microsToInput(price?.post_micros ?? 0));
 	const [link, setLink] = useState(microsToInput(price?.link_micros ?? 0));
@@ -158,7 +159,14 @@ export function PriceEditor({
 				<Button
 					type="button"
 					variant="outline"
-					disabled={busy || postMicros === null || linkMicros === null}
+					disabled={
+						!privileged || busy || postMicros === null || linkMicros === null
+					}
+					aria-describedby={
+						privileged
+							? undefined
+							: `social-price-person-only-${account.connection_id}`
+					}
 					onClick={() =>
 						postMicros !== null &&
 						linkMicros !== null &&
@@ -168,6 +176,9 @@ export function PriceEditor({
 					{t("ui.social.price_save")}
 				</Button>
 			</div>
+			<PersonOnlyNote
+				id={`social-price-person-only-${account.connection_id}`}
+			/>
 		</fieldset>
 	);
 }

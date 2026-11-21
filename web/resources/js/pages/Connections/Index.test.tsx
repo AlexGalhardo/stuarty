@@ -2,6 +2,7 @@ import { renderToString } from "react-dom/server";
 import { describe, expect, test, vi } from "vitest";
 
 import { I18nProvider } from "@/lib/i18n";
+import { SessionProvider } from "@/lib/session";
 import type { Connection, ConnectionTestResult } from "../../editor/api/types";
 import { ConnectionRow } from "./Index";
 
@@ -10,6 +11,7 @@ vi.mock("@inertiajs/react", () => ({ Head: () => null, Link: () => null }));
 const PAYLOAD = "<img src=x onerror=window.__pwned=1>";
 
 const messages = {
+	"ui.session.person_only.local": "Only a person in the app can do this.",
 	"ui.connections.destinations": "Reaches: {hosts}",
 	"ui.connections.accepts": "May receive: {list}",
 	"ui.connections.accept.text": "Text",
@@ -90,5 +92,41 @@ describe("a connection row", () => {
 		const html = markup(connection({ secret_set: false }));
 		expect(html).toContain("Never used");
 		expect(html).toContain("No credential");
+	});
+
+	const row = (signedIn: boolean, privileged: boolean): string =>
+		renderToString(
+			<I18nProvider messages={messages} locale="en" locales={["en"]}>
+				<SessionProvider session={{ privileged, mode: "local" }}>
+					<ul>
+						<ConnectionRow
+							connection={connection()}
+							result={null}
+							signedIn={signedIn}
+							onTest={() => undefined}
+							onRemove={() => undefined}
+						/>
+					</ul>
+				</SessionProvider>
+			</I18nProvider>,
+		);
+	const removeButton = (html: string): string =>
+		(html.match(/<button[^>]*>/g) ?? [])[1] ?? "";
+
+	test("a sign-in in a session that is not a person's cannot be removed, and says why (VV-331)", () => {
+		const html = row(true, false);
+		expect(removeButton(html)).toContain('disabled=""');
+		expect(removeButton(html)).toContain(
+			'aria-describedby="remove-person-only-con_1"',
+		);
+		expect(html).toContain('id="remove-person-only-con_1"');
+		expect(html).toContain("Only a person");
+	});
+
+	test("a person removes a sign-in, and anyone removes a connection with a key", () => {
+		for (const html of [row(true, true), row(false, false)]) {
+			expect(removeButton(html)).not.toContain('disabled=""');
+			expect(html).not.toContain("remove-person-only");
+		}
 	});
 });

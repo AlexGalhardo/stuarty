@@ -5,7 +5,7 @@ import { I18nProvider } from "@/lib/i18n";
 import { SessionProvider } from "@/lib/session";
 import type { SocialAccount, SocialNetwork } from "../../editor/api/types";
 import { SetupGuide } from "./SetupGuide";
-import { AccountPicker, AccountRow } from "./SocialSection";
+import { AccountPicker, AccountRow, PriceEditor } from "./SocialSection";
 
 vi.mock("@inertiajs/react", () => ({ Head: () => null, Link: () => null }));
 
@@ -152,6 +152,64 @@ describe("the price of a post", () => {
 		);
 		expect(html).not.toContain("data-price-editor");
 	});
+
+	const saved = (html: string): string =>
+		html.match(/<button[^>]*>\s*(?:<!-- -->)?ui\.social\.price_save/)?.[0] ??
+		"";
+
+	test("a session that is not a person's cannot save it, and says why", () => {
+		const html = wrap(
+			<PriceEditor account={priced} busy={false} onSave={() => undefined} />,
+		);
+		expect(saved(html)).toContain('disabled=""');
+		expect(saved(html)).toContain(
+			`aria-describedby="social-price-person-only-${priced.connection_id}"`,
+		);
+		expect(html).toContain("Only a person");
+	});
+
+	test("a person saves it", () => {
+		const html = wrap(
+			<SessionProvider session={{ privileged: true, mode: "local" }}>
+				<PriceEditor account={priced} busy={false} onSave={() => undefined} />
+			</SessionProvider>,
+		);
+		expect(saved(html)).not.toBe("");
+		expect(saved(html)).not.toContain('disabled=""');
+		expect(html).not.toContain("person-only");
+	});
+});
+
+describe("the sign-in of a network in a session that is not a person's (VV-331)", () => {
+	const guide = (session?: { privileged: boolean; mode: "local" }): string =>
+		wrap(
+			<SessionProvider session={session}>
+				<SetupGuide
+					network={network}
+					redirectPath="/social/callback"
+					connectionId="con_1"
+					origin="http://127.0.0.1:1"
+					onClose={() => undefined}
+					navigate={() => undefined}
+				/>
+			</SessionProvider>,
+		);
+	const submit = (html: string): string =>
+		html.match(/<button[^>]*type="submit"[^>]*>/)?.[0] ?? "";
+
+	test("the button is disabled and described by the reason", () => {
+		const html = guide();
+		expect(submit(html)).toContain('disabled=""');
+		expect(submit(html)).toContain('aria-describedby="social-person-only"');
+		expect(html).toContain('id="social-person-only"');
+	});
+
+	test("a person signs in", () => {
+		const html = guide({ privileged: true, mode: "local" });
+		expect(submit(html)).not.toBe("");
+		expect(submit(html)).not.toContain('disabled=""');
+		expect(html).not.toContain("social-person-only");
+	});
 });
 
 describe("the accounts of the social networks", () => {
@@ -186,7 +244,7 @@ describe("the accounts of the social networks", () => {
 			</ul>,
 		);
 		expect(html).toContain("Not signed in yet");
-		expect(html).toMatch(/<button[^>]*disabled[^>]*>\s*Publish now/);
+		expect(html).toMatch(/<button[^>]*\sdisabled=""[^>]*>\s*Publish now/);
 		expect(html).toContain("Sign in again");
 	});
 
@@ -218,8 +276,8 @@ describe("the accounts of the social networks", () => {
 		expect(html).not.toContain(PAYLOAD);
 		expect(html).toContain("&lt;img");
 		// Nothing is chosen for the person: the confirm button and the publish button wait.
-		expect(html).toMatch(/<button[^>]*disabled[^>]*>\s*Use this account/);
-		expect(html).toMatch(/<button[^>]*disabled[^>]*>\s*Publish now/);
+		expect(html).toMatch(/<button[^>]*\sdisabled=""[^>]*>\s*Use this account/);
+		expect(html).toMatch(/<button[^>]*\sdisabled=""[^>]*>\s*Publish now/);
 		expect(html).not.toMatch(/type="radio"[^>]*checked/);
 	});
 
@@ -260,7 +318,10 @@ describe("the accounts of the social networks", () => {
 				onSelect={() => undefined}
 			/>,
 		);
-		expect(html).toMatch(/<button[^>]*disabled[^>]*>\s*Use this account/);
+		expect(html).toMatch(/<button[^>]*\sdisabled=""[^>]*>\s*Use this account/);
+		expect(html).toMatch(
+			/<button[^>]*aria-describedby="pick-person-only-con_9"[^>]*>\s*Use this account/,
+		);
 		expect(html).toContain('id="pick-person-only-con_9"');
 		expect(html).toContain("Only a person");
 	});
