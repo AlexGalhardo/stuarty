@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/AlexGalhardo/stuarty/core/publish"
 )
 
 // notPublic is a stand-in for the ranges of internal/outbound, which the tests of that package cover.
@@ -401,7 +403,7 @@ func TestCheckRefusesWhatIsNotMetadata(t *testing.T) {
 func TestPublicPostURL(t *testing.T) {
 	t.Parallel()
 
-	if PublicPostURL("https://youtu.be/abc") != "https://youtu.be/abc" {
+	if PublicPostURL("https://youtu.be/abc", publish.Public) != "https://youtu.be/abc" {
 		t.Error("a public address was dropped")
 	}
 
@@ -409,8 +411,15 @@ func TestPublicPostURL(t *testing.T) {
 		"http://youtu.be/abc", "https://u:p@x.example/a", "https://127.0.0.1/a", "https://localhost/a", "javascript:alert(1)",
 		"", "https://x.example/" + strings.Repeat("a", MaxPostURLBytes), "https://x.example/a\nb",
 	} {
-		if got := PublicPostURL(raw); got != "" {
+		if got := PublicPostURL(raw, publish.Public); got != "" {
 			t.Errorf("PublicPostURL(%q) = %q", raw, got)
+		}
+	}
+
+	// The link of an unlisted post is what keeps it private, and a post that names no visibility is private.
+	for _, v := range []publish.Visibility{publish.Unlisted, publish.Private, ""} {
+		if got := PublicPostURL("https://youtu.be/abc", v); got != "" {
+			t.Errorf("a post of visibility %q gave its address: %q", v, got)
 		}
 	}
 }
