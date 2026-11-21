@@ -87,9 +87,14 @@ func validationFailure(err error) error {
 	if extra, isExtra := leaf.ErrorKind.(*kind.AdditionalProperties); isExtra {
 		unknown = "an unknown argument"
 
-		if len(extra.Properties) > 0 && identifier.MatchString(extra.Properties[0]) {
-			path = formatPath(slices.Concat(leaf.InstanceLocation, extra.Properties[:1]))
-			unknown = ""
+		// The validator lists the members in map order: the first plain one in sorted order keeps the answer the same.
+		for _, name := range slices.Sorted(slices.Values(extra.Properties)) {
+			if identifier.MatchString(name) {
+				path = formatPath(slices.Concat(leaf.InstanceLocation, []string{name}))
+				unknown = ""
+
+				break
+			}
 		}
 	}
 
@@ -112,7 +117,11 @@ func validationFailure(err error) error {
 	)
 
 	if unknown != "" {
-		message = fmt.Sprintf("%s (under %q) breaks the constraint %q%s.", unknown, path, constraint, expectation(leaf.ErrorKind))
+		if path != "" {
+			unknown += fmt.Sprintf(" (under %q)", path)
+		}
+
+		message = fmt.Sprintf("%s breaks the constraint %q%s.", unknown, constraint, expectation(leaf.ErrorKind))
 	}
 
 	return &service.Error{

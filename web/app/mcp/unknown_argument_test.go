@@ -33,6 +33,23 @@ func TestUnknownArgumentIsNamed(t *testing.T) {
 	}
 }
 
+// Several unknown members give one answer: the validator lists them in map order, and the same call must not name a
+// different argument each time.
+func TestUnknownArgumentAnswerIsStable(t *testing.T) {
+	t.Parallel()
+
+	svc := newService(t)
+	cs := connect(t, svc, Options{}, "unknown-argument-stable")
+
+	for range 20 {
+		text := textOf(t, call(t, cs, "project_list", map[string]any{"zeta": 1, "alpha": 2, "mid": 3, "x\ny": 4}))
+
+		if !strings.Contains(text, `the argument "alpha" breaks`) {
+			t.Fatalf("want the first plain name in sorted order: %s", text)
+		}
+	}
+}
+
 // The key of an unknown argument is chosen by the caller and the error goes to a model: a key that is not a plain
 // identifier is never repeated, so it cannot carry a line break or a forged hint (VV-304, ADR-0033).
 func TestUnknownArgumentKeyIsNotEchoedUnlessPlain(t *testing.T) {
