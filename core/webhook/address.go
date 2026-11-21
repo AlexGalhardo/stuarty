@@ -72,8 +72,13 @@ func CheckURL(raw string, notPublic func(netip.Addr) bool) (string, *FieldError)
 		return HostLoopback, nil
 	}
 
-	if ip, perr := netip.ParseAddr(host); perr == nil && notPublic != nil && notPublic(ip) {
+	ip, perr := netip.ParseAddr(host)
+	if perr == nil && notPublic != nil && notPublic(ip) {
 		return "", bad("url", "the address is on a private or internal network, which a webhook may not reach.")
+	}
+
+	if perr != nil && endsInNumber(host) {
+		return "", bad("url", "the address is a number and not a name: write the host in full.")
 	}
 
 	for _, suffix := range []string{".localhost", ".internal", ".local"} {
@@ -85,6 +90,18 @@ func CheckURL(raw string, notPublic func(netip.Addr) bool) (string, *FieldError)
 	return HostPublic, nil
 }
 
+// endsInNumber reports whether the last label of a host is a number, decimal, octal or 0x hexadecimal. No public name
+// ends so, and a resolver or a browser reads such a host as an IPv4 address (2130706433, 0x7f.1, 127.1, 0177.0.0.1),
+// so it is one of the forms of an address the range check would not see when the webhook is saved.
+func endsInNumber(host string) bool {
+	last := host[strings.LastIndexByte(host, '.')+1:]
+	if digits, ok := strings.CutPrefix(last, "0x"); ok {
+		return !strings.ContainsFunc(digits, func(r rune) bool { return !strings.ContainsRune("0123456789abcdef", r) })
+	}
+
+	return last != "" && !strings.ContainsFunc(last, func(r rune) bool { return r < '0' || r > '9' })
+}
+
 // SafeURL is the scheme and the host of an address, with no path, query or port: the path and the query of a
 // receiver often are its token, so a surface that is not the admin one shows this form.
 func SafeURL(raw string) string {
@@ -93,5 +110,10 @@ func SafeURL(raw string) string {
 		return ""
 	}
 
-	return u.Scheme + "://" + u.Hostname()
+	host := u.Hostname()
+	if strings.Contains(host, ":") {
+		host = "[" + host + "]"
+	}
+
+	return u.Scheme + "://" + host
 }
