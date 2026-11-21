@@ -65,11 +65,22 @@ func (s *svc) authorizeStart(ctx context.Context, req *JobStartRequest, approvab
 // useStartTimeline resolves the timeline a job is kept under: the one the request names, or for a kind of work that
 // belongs to the project (ProjectWide) the first active one.
 func (s *svc) useStartTimeline(ctx context.Context, c Caller, req *JobStartRequest, k *ApprovableKind) error {
+	var err error
 	if k != nil && k.ProjectWide && req.TimelineID == "" {
-		return s.useAnchorTimeline(ctx, c, &req.ProjectID)
+		err = s.useAnchorTimeline(ctx, c, &req.ProjectID)
+	} else {
+		err = s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID)
 	}
 
-	return s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID)
+	if err != nil || k == nil || k.Anchor == nil {
+		return err
+	}
+
+	if id := k.Anchor(ctx, c, req); id != "" {
+		req.ProjectID = id
+	}
+
+	return nil
 }
 
 // useAnchorTimeline is useTimeline for work that belongs to the project (a generation, VV-330): the job is kept
