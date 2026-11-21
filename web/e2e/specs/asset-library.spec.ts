@@ -165,6 +165,81 @@ test.describe("asset-library", () => {
 		await expect(detail.getByRole("status")).toContainText("No copy was made");
 	});
 
+	// VV-321: while the page asks which timelines a project holds, Use waits; an answer about a project the person
+	// has left is dropped, and the file goes into the timeline the person picked.
+	test("Use waits for the timelines of the chosen project and keeps only the last choice", async ({
+		page,
+		request,
+	}) => {
+		const call = await caller(request);
+		const stamp = Date.now();
+		const create = async (name: string): Promise<string> =>
+			((await call("POST", "/projects", { name })) as { project_id: string })
+				.project_id;
+		const one = await create(`Library single ${stamp}`);
+		const two = await create(`Library pair ${stamp}`);
+		const added = (await call("POST", `/projects/${two}/items`, {
+			kind: "timeline",
+			title: "Wide cut",
+			preset: "16:9",
+		})) as { item: { timeline_id: string } };
+		const second = added.item.timeline_id;
+		const imported = (await call("POST", `/projects/${one}/media`, {
+			files: [{ path: testClip(9) }],
+			wait_ms: 20_000,
+		})) as { assets: { hash: string }[] };
+		const hash = imported.assets[0]?.hash;
+		expect(hash).toMatch(/^sha256:[0-9a-f]{64}$/);
+
+		// The answer about the project of two is held until the test lets it go.
+		let release: () => void = () => undefined;
+		const held = new Promise<void>((resolve) => {
+			release = resolve;
+		});
+		const describePair = `**/api/v1/projects/${two}/describe**`;
+		await page.route(describePair, async (route) => {
+			await held;
+			await route.continue();
+		});
+
+		await page.goto("/video-assets");
+		await page.locator(`[data-asset-hash="${hash}"]`).click();
+		const detail = page.getByTestId("asset-detail");
+		const use = detail.getByRole("button", { name: "Use" });
+		const timelines = detail.getByTestId("asset-use-timelines");
+
+		await detail.getByLabel(`Library pair ${stamp}`).check();
+		await expect(use).toBeDisabled();
+
+		// The person moves to the project of one timeline before the first answer comes.
+		await detail.getByLabel(`Library single ${stamp}`).check();
+		await expect(use).toBeEnabled();
+		const late = page.waitForResponse((r) =>
+			r.url().includes(`/api/v1/projects/${two}/describe`),
+		);
+		release();
+		await late;
+		await expect(timelines).toHaveCount(0);
+		await expect(use).toBeEnabled();
+
+		await page.unroute(describePair);
+		await detail.getByLabel(`Library pair ${stamp}`).check();
+		await timelines.getByLabel("Wide cut").check();
+		await use.click();
+		await expect(detail.getByRole("status")).toContainText("No copy was made");
+
+		// Both timelines started empty: the file is in the one the person picked, and only there.
+		const mediaOf = async (timeline: string): Promise<number> =>
+			(
+				(await call(
+					"GET",
+					`/projects/${two}/media?timeline_id=${timeline}`,
+				)) as { assets: unknown[] }
+			).assets.length;
+		expect(await mediaOf(second)).toBe(1);
+		expect(await mediaOf(two)).toBe(0);
+	});
+
 	test("the sections speak Portuguese", async ({ page }) => {
 		await page.addInitScript(() => localStorage.setItem("vv.lang", "pt-BR"));
 		await page.goto("/visual-assets");
