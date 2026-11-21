@@ -148,7 +148,9 @@ func (s *svc) startApprovable(ctx context.Context, c Caller, req JobStartRequest
 	}
 
 	projectID := row.ID
-	action := core.Action{Kind: k.Name, Connection: prep.ConnectionID, Project: projectID, Cost: prep.Estimate}
+	action := core.Action{
+		Kind: k.Name, Connection: prep.ConnectionID, Project: costProject(ctx, s.store, projectID), Cost: prep.Estimate,
+	}
 
 	job := JobRow{
 		ID: s.newIDs(
@@ -382,7 +384,9 @@ func (s *svc) ensureReserved(ctx context.Context, job *JobRow) error {
 		}
 
 		now := s.nowMs()
-		action := core.Action{Kind: req.Kind, Connection: req.ConnectionID, Project: req.ProjectID, Cost: req.Estimate}
+		action := core.Action{
+			Kind: req.Kind, Connection: req.ConnectionID, Project: costProject(ctx, tx, req.ProjectID), Cost: req.Estimate,
+		}
 
 		out, err := approval.Evaluate(ctx, st, action, time.UnixMilli(now))
 		if err != nil {
@@ -395,6 +399,17 @@ func (s *svc) ensureReserved(ctx context.Context, job *JobRow) error {
 
 		return st.Reserve(ctx, s.ledgerEntry(&req, req.Estimate.Micros, now))
 	})
+}
+
+// costProject is the project a rule and a ceiling are matched against: they are written for a project, while a
+// request and a ledger entry carry the id of the timeline the job is kept on, so a job on a second timeline does not
+// leave the ceiling of its project (VV-315, SDD-015 section 3).
+func costProject(ctx context.Context, r interface{ Productions() ProductionRepo }, id string) string {
+	if owner, err := r.Productions().ProjectOfTimeline(ctx, id); err == nil {
+		return owner
+	}
+
+	return id
 }
 
 func (s *svc) ledgerEntry(req *approval.Row, estimate, now int64) *approval.Entry {
@@ -562,7 +577,7 @@ func (s *svc) submit(ctx context.Context, tx Tx, sub *submission) error {
 		Kind:         sub.k.Name,
 		Summary:      prep.Summary,
 		ConnectionID: prep.ConnectionID,
-		ProjectID:    sub.action.Project,
+		ProjectID:    *job.ProjectID,
 		JobID:        job.ID,
 		PayloadRef:   "job:" + job.ID,
 		Estimate:     prep.Estimate,
