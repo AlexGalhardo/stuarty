@@ -331,18 +331,18 @@ jobs:
           EXPECTED_SHARDS: ${{ matrix.shards }}
         run: |
           jobs="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/attempts/${GITHUB_RUN_ATTEMPT}/jobs" \
-            --jq ".jobs[] | select(.name | startswith(\"Go tests (\") and endswith(\", ${RUNNER_OS_NAME})\")) | .name + \" \" + (.conclusion // \"running\")")"
+            --jq ".jobs[] | select(.name | startswith(\"Go tests (\") and endswith(\", ${RUNNER_OS_NAME})\")) | .name + \" \" + (if .conclusion == \"cancelled\" and (.runner_id // 0) == 0 then \"no-runner\" else (.conclusion // \"running\") end)")"
           echo "$jobs"
-          if [ "${RUNNER_OS_NAME}" != macos-latest ]; then
-            test "$(printf '%s\n' "$jobs" | grep -c .)" -eq "$EXPECTED_SHARDS"
-          fi
+          test "$(grep -c . <<<"$jobs")" -eq "$EXPECTED_SHARDS"
           # macOS shards are often cancelled before a runner picks them up (5 concurrent macOS jobs
-          # for a public repository): a cancelled macOS shard is reported, not failed (2026-11-16).
-          if [ "${RUNNER_OS_NAME}" = macos-latest ] && printf '%s\n' "$jobs" | grep -q ' cancelled$'; then
-            echo "::warning::a macOS Go test shard was cancelled (no runner); not blocking"
-            jobs="$(printf '%s\n' "$jobs" | grep -v ' cancelled$')"
+          # for a public repository): such a shard is reported, not failed (2026-11-16). A shard that
+          # had a runner and was cancelled hit its timeout (run 44880268307, `rest`) and fails, and so
+          # does a macOS run in which no shard ran at all (the list is then empty).
+          if [ "${RUNNER_OS_NAME}" = macos-latest ] && grep -q ' no-runner$' <<<"$jobs"; then
+            echo "::warning::a macOS Go test shard got no runner; not blocking"
+            jobs="$(grep -v ' no-runner$' <<<"$jobs" || true)"
           fi
-          if printf '%s\n' "$jobs" | grep -q . && printf '%s\n' "$jobs" | grep -qv ' success$'; then
+          if grep -qv ' success$' <<<"$jobs"; then
             echo "::error::a Go test shard of ${RUNNER_OS_NAME} did not pass"
             exit 1
           fi
@@ -494,13 +494,26 @@ jobs:
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
     steps:
+      # Read per shard, like `Test (<os>)`: a timed-out shard concludes `cancelled`, and the six must
+      # each be there and be a success.
       - name: Every Chromium shard passed
+        shell: bash
         env:
-          RESULT: ${{ needs.browser.result }}
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHARDS: 6
         run: |
-          echo "shards: ${RESULT}"
-          test "${RESULT}" = success
+          jobs="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/attempts/${GITHUB_RUN_ATTEMPT}/jobs" \
+            --jq '.jobs[] | select(.name | startswith("Browser tests (Playwright, ")) | .name + " " + (.conclusion // "running")')"
+          echo "$jobs"
+          test "$(grep -c . <<<"$jobs")" -eq "$EXPECTED_SHARDS"
+          if grep -qv ' success$' <<<"$jobs"; then
+            echo "::error::a Chromium shard did not pass"
+            exit 1
+          fi
 
   # SDD-012 section 21.1, ADR-0023 item 5: every spec not tagged CHROMIUM_ONLY runs on Firefox and on
   # WebKit, in parallel with the Chromium job (P3-REL-005). The browser is the one of the pinned
