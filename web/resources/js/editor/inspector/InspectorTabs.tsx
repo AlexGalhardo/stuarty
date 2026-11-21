@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useLayoutEffect, useRef } from "react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useT } from "@/lib/i18n";
@@ -26,6 +26,26 @@ export default function InspectorTabs({
 	const active = tabs.some((tab) => tab.id === chosen)
 		? chosen
 		: (tabs[0]?.id ?? chosen);
+	const strip = useRef<HTMLDivElement>(null);
+	// The strip scrolls by itself when the labels do not fit; the chosen tab is
+	// kept whole in view, and a strip with room left starts at its first tab
+	// instead of at a scroll the browser left (VV-328).
+	// biome-ignore lint/correctness/useExhaustiveDependencies: the tabs drawn change the widths the effect reads
+	useLayoutEffect(() => {
+		const list = strip.current;
+		const tab = list?.querySelector<HTMLElement>(
+			`[data-inspector-tab="${active}"]`,
+		);
+		if (!list || !tab) return;
+		const box = list.getBoundingClientRect();
+		const at = tab.getBoundingClientRect();
+		const left = at.left - box.left + list.scrollLeft;
+		if (left < list.scrollLeft) {
+			list.scrollLeft = left;
+		} else if (left + at.width > list.scrollLeft + list.clientWidth) {
+			list.scrollLeft = left + at.width - list.clientWidth;
+		}
+	}, [active, tabs.length]);
 	return (
 		<Tabs
 			value={active}
@@ -35,6 +55,7 @@ export default function InspectorTabs({
 			className="gap-3"
 		>
 			<TabsList
+				ref={strip}
 				variant="line"
 				aria-label={t("ui.editor.inspector.tabs")}
 				className="h-9 w-full justify-start overflow-x-auto border-b border-border p-0"
