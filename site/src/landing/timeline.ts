@@ -52,7 +52,7 @@ export function mountTimeline(
 	const { reduced } = options;
 	const lane = root.querySelector<HTMLElement>("[data-lane]");
 	const lanes = root.querySelector<HTMLElement>(".editor-lanes");
-	const tc = root.querySelector<HTMLElement>("[data-timecode]");
+	const tcs = [...root.querySelectorAll<HTMLElement>("[data-timecode]")];
 	const previews = [...root.querySelectorAll<HTMLElement>("[data-preview-item]")];
 	const clipEls = [...root.querySelectorAll<HTMLElement>("[data-clip]")];
 	const logs = [...root.querySelectorAll<HTMLElement>("[data-log-at]")];
@@ -100,7 +100,7 @@ export function mountTimeline(
 		const fold = options.exportEnd !== false;
 		const run = fold ? Math.min(1, p / 0.88) : Math.min(1, p);
 		gsap.set(lane, { x: -run * laneWidth() });
-		if (tc) tc.textContent = timecode(run);
+		for (const tc of tcs) tc.textContent = timecode(run);
 		setActive(Math.min(previews.length - 1, Math.floor(run * previews.length)));
 		for (const l of logs) l.toggleAttribute("data-on", run >= Number(l.dataset.logAt));
 
