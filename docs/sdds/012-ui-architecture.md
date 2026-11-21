@@ -552,7 +552,7 @@ The response to an edit and the event of the same revision both reach the UI (AD
 flowchart LR
   subgraph Shell[EditorShell: CSS grid]
     TB[TopBar]
-    LB[Library tab and History tab]
+    LB[Library and History sidebar]
     PV[Preview and transport]
     IN[Inspector]
     TL[Timeline]
@@ -583,12 +583,12 @@ CSS grid of the shell: rows `48px 1fr var(--timeline-h)`, columns `var(--library
 
 ### 6.3 Responsive behaviour
 
-The editor is a desktop tool. The supported minimum is 1280 by 720 CSS pixels. Defaults and rules:
+The editor is a desktop tool. The supported minimum is 1280 by 720 CSS pixels. The library is twice the width it had before epic 60 (D-125), so the panels in it have room; it is capped so that the preview keeps at least 360 px, and it still collapses to its rail. Defaults and rules:
 
 | Viewport width | Library | Inspector | Notes |
 | --- | --- | --- | --- |
-| 1600 and wider | 320 px open | 360 px open | timeline height default 300 px |
-| 1280 to 1599 | 240 px open | 280 px open | timeline height default 240 px |
+| 1600 and wider | 640 px open | 360 px open | timeline height default 300 px |
+| 1280 to 1599 | 480 px open | 280 px open | timeline height default 240 px |
 | 1024 to 1279 | drawer (`Sheet`) opened by a top-bar button | drawer, opens by itself when a selection is made | tolerated, not supported: a notice "best used at 1280 pixels or wider" is shown once per session |
 | below 1024 | not supported: a full-screen notice with a link back to the projects list | | |
 
@@ -666,12 +666,19 @@ Both call the same actions, the shell through `onMenuAction`. An item is drawn o
 | Edit | Undo, Redo, Cut, Copy, Paste, Select all, Delete, Duplicate | `undo`, `redo`, `surface.clipboard`, `surface.select_all`, `deleteSelection`, `duplicateSelection` |
 | Clip | Split, Trim start, Trim end, Speed, Rename and, when they exist, Reverse, Freeze frame, Group, Disable | `splitAtPlayhead`, `trimToPlayhead`, `surface.open_inspector_tab("speed")`, `renameItem` |
 | Timeline | Add track, Snap, Add caption, Add text, Add shape and, when they exist, the magnet and the markers | `addTrack`, `surface.toggle_snap`, `addCaption`, `addText`, `addShape` |
-| View | Library, Inspector and History panels, Zoom in, out and fit, Full screen preview, Theme, Language | `surface.toggle_panel`, `surface.zoom`, `surface.preview_fullscreen` |
+| View | Library, History and Inspector panels, Zoom in, out and fit, Full screen preview, Theme, Language | `surface.toggle_panel`, `surface.zoom`, `surface.preview_fullscreen` |
 | Help | Keyboard shortcuts, Take the tour, Documentation, About (the version) | `surface.cheat_sheet`, `surface.tour`, `surface.about` |
 
 The context menu of a clip repeats the Clip menu and adds Copy, Cut, Paste, Duplicate, Delete and Ripple delete (§8).
 
 #### Accessibility and tests
+
+**Epic 60 (D-125).** Four changes of this layout, all in `web/resources/js/editor/`:
+
+- **The edit strip is gone.** The strip of the "Add text" and "Add shape" buttons above the preview is removed: the same actions are in the Text tab of the left panel (and the keys `T` and `C` stay). The Add caption dialog is still opened by the key and by the timeline.
+- **The history is a sidebar.** It is not a tab of the rail any more: it is a region of its own (`aside`, `aria-label` "History") placed right next to the library, between it and the preview, with a button in the top bar and `Alt+3` that open and collapse it, like the library. It lists the newest step first. Its open state is remembered per person (`vv.layout`). Section 15 describes what it holds.
+- **Menus follow the theme.** Every dropdown, context menu, popover and native `select` of the editor is drawn with the popover tokens (`bg-popover text-popover-foreground`), so the dark theme shows a dark surface and light text, and a native `select` takes `color-scheme: dark` in the dark theme. `check:contrast` and `web/e2e/specs/editor-menus-dark.spec.ts` check the computed colours.
+- **Rename.** An imported file, in the library of the editor and in the library pages, has a context menu (right click, the context-menu key or `Shift+F10`) with "Rename". It opens an inline field; Enter sends `AssetRename` (SDD-011 §14.8), Esc leaves it. The page shows the name the answer carries and checks nothing itself.
 
 The tab rail and the tab strips follow the tabs pattern with roving `tabindex`; `F6` visits the regions in the order top bar, library, preview, timeline, inspector (§18.2). Every new region keeps its landmark and its `aria-label` (§18.1). Each screen or panel has an e2e test of its controls and an `axe` check in both themes and both languages; the strings are in the catalogues (§16) and checked by `check:i18n`. A control tied to a command that does not exist yet has no test and is not drawn.
 
@@ -680,7 +687,7 @@ The tab rail and the tab strips follow the tabs pattern with roving `tabindex`; 
 TASK-0296 walked CapCut 9.8.0.4213 with the window on screen. The build kept the calls below. They are Vukem's choices where the walk found a difference, and none of them copies a CapCut asset, colour or label. A surface whose contents were not on screen is marked Different, and its items are not guessed:
 
 - **Inspector tabs.** Adjust holds Color, Filters, Chroma key and Effects (the sections that change how the picture looks); Text holds Auto captions beside Text, Shape and Caption words. Several kinds of item show no tab strip when one tab would hold everything. The Transitions panel has no length field: the length is a field of the item's Transitions section.
-- **Timeline toolbar.** Select and Blade are two buttons with `aria-pressed`, not a `ToggleGroup`. Undo and Redo moved from the top bar into the toolbar, with one instance of each. "Add text" and "Add shape" stay in the editing strip above the timeline and in the Text tab, not in the toolbar. Magnet and Link are drawn because `track.update` and `item.link` exist; the zoom slider is drawn. A text button keeps its label from 1536 px up and collapses to its icon below, keeping its name for assistive technology.
+- **Timeline toolbar.** Select and Blade are two buttons with `aria-pressed`, not a `ToggleGroup`. Undo and Redo moved from the top bar into the toolbar, with one instance of each. "Add text" and "Add shape" are in the Text tab, not in the toolbar (the strip above the preview that repeated them was removed by epic 60). Magnet and Link are drawn because `track.update` and `item.link` exist; the zoom slider is drawn. A text button keeps its label from 1536 px up and collapses to its icon below, keeping its name for assistive technology.
 - **Player row.** Time at the left, transport in the centre, and at the right the ratio, the preview size (Fit, 50%, 100%), the safe area, mute and volume, and Full screen. The ratio is a native `select` (it sits on the dark surround, where a portal menu would not follow the theme). The row wraps when the preview region is narrow.
 - **Release mark.** Every screen, the projects pages and the editor included, draws the version `GET /system` reports, fixed at the bottom right, under the chat button (`vX.Y.Z`). It does not take pointer events, and the open chat panel covers it. Settings still lists the same version.
 - **Menu.** The items without an action are not drawn: New project (the projects page creates), Quit (the shell has its own), Zoom, Full screen preview, Theme and Language (they have top bar controls and the shortcuts dialog), Documentation, About (the version is in the shortcuts dialog), Group, Reverse and the Add shape submenu. Cut, Copy and Paste are not native accelerators either; only Undo, Redo and Select all show a key in the native bar (§21.3 item 4).
@@ -1347,7 +1354,7 @@ The **codec** select offers Automatic (the first codec of the preset that this m
 
 ## 15. History panel
 
-A tab beside the library (A). It lists `getHistory(id, page)` newest first, 50 per page with "Load more":
+A sidebar next to the library (§6.1, epic 60), collapsible with its own button and `Alt+3`; its open state is remembered per person. It lists `getHistory(id, page)` newest first, 50 per page with "Load more":
 
 ```ts
 export interface HistoryStep {           // mirrors SDD-003
