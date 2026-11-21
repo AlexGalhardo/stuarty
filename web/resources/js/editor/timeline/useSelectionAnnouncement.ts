@@ -3,7 +3,13 @@ import { useEffect, useRef } from "react";
 import { useT } from "@/lib/i18n";
 import { announce } from "../a11y/announce";
 import { displayEnd, displayStart } from "../commands/units";
-import { useDocumentState, useUiState } from "../state/EditorContext";
+import { useStore } from "../state/createStore";
+import {
+	useDocumentState,
+	useRuntime,
+	useUiState,
+} from "../state/EditorContext";
+import { shownNames } from "../state/libraryStore";
 import { readTimeDisplay } from "../state/prefs";
 import { selectFps, selectOrderedTrackIds } from "../state/selectors";
 import { trackLabel } from "../ui/trackLabel";
@@ -20,8 +26,9 @@ export function useSelectionAnnouncement(): void {
 	const assets = useDocumentState((s) => s.document?.assets);
 	const order = useDocumentState(selectOrderedTrackIds);
 	const fps: Fps = useDocumentState(selectFps) ?? DEFAULT_FPS;
-	const latest = useRef({ items, tracks, assets, order, fps, t });
-	latest.current = { items, tracks, assets, order, fps, t };
+	const shown = useStore(useRuntime().library, (s) => shownNames(s.entries));
+	const latest = useRef({ items, tracks, assets, shown, order, fps, t });
+	latest.current = { items, tracks, assets, shown, order, fps, t };
 	const key = selection.join(",");
 	const first = useRef(true);
 	const previous = useRef<readonly string[]>(selection);
@@ -65,7 +72,12 @@ export function useSelectionAnnouncement(): void {
 			only.asset === undefined ? undefined : now.assets?.[only.asset];
 		const mode = readTimeDisplay();
 		announce("ui.editor.announce.selected_one", {
-			name: only.name ?? asset?.name ?? only.text?.split("\n")[0] ?? type,
+			name:
+				only.name ??
+				now.shown.get(only.asset ?? "") ??
+				asset?.name ??
+				only.text?.split("\n")[0] ??
+				type,
 			type,
 			start: displayStart(only, now.fps, mode),
 			end: displayEnd(only, now.fps, mode),

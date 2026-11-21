@@ -12,6 +12,7 @@ import {
 	useRuntime,
 	useUiState,
 } from "../../state/EditorContext";
+import { shownNames } from "../../state/libraryStore";
 import { countRender } from "../../state/renderCount";
 import { selectAsset, selectItem } from "../../state/selectors";
 import { frameInItem } from "../geometry";
@@ -105,7 +106,7 @@ export const TimelineItem = memo(function TimelineItem({
 	const shownName = useStore(runtime.library, (s) =>
 		item?.asset === undefined
 			? undefined
-			: s.entries.find((entry) => entry.asset_id === item.asset)?.name,
+			: shownNames(s.entries).get(item.asset),
 	);
 	const selected = useUiState((s) => s.selection.items.includes(id));
 	const tabStop = useUiState((s) => s.focusedItem === id);

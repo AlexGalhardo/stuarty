@@ -17,11 +17,13 @@ import {
 	displayStart,
 	startsAtOrAfter,
 } from "../commands/units";
+import { useStore } from "../state/createStore";
 import {
 	useDocumentState,
 	useRuntime,
 	useUiState,
 } from "../state/EditorContext";
+import { shownNames } from "../state/libraryStore";
 import { readTimeDisplay } from "../state/prefs";
 import { selectFps, selectOrderedTrackIds } from "../state/selectors";
 import { trackLabel } from "../ui/trackLabel";
@@ -42,6 +44,7 @@ export function TimelineRows({
 	const tracks = useDocumentState((s) => s.document?.tracks);
 	const items = useDocumentState((s) => s.document?.items);
 	const assets = useDocumentState((s) => s.document?.assets);
+	const shown = useStore(runtime.library, (s) => shownNames(s.entries));
 	const selection = useUiState((s) => s.selection.items);
 	const mode = readTimeDisplay();
 	const kindOf = (id: string): "audio" | "visual" =>
@@ -68,7 +71,11 @@ export function TimelineRows({
 				const asset =
 					item.asset === undefined ? undefined : assets?.[item.asset];
 				const label =
-					item.name ?? asset?.name ?? item.text?.split("\n")[0] ?? typeName;
+					item.name ??
+					shown.get(item.asset ?? "") ??
+					asset?.name ??
+					item.text?.split("\n")[0] ??
+					typeName;
 				return { item, trackName, typeName, label };
 			});
 	});
