@@ -230,25 +230,45 @@ test.describe("approval queue", () => {
 	test("a person writes a rule and a ceiling in the app", async ({
 		page,
 		request,
-		browserName,
 	}) => {
-		const tag = unique(browserName).replace("-", ".");
+		// A rule names a kind an action has (VV-307); the project id, which need not exist, tells
+		// this run's rule from the rule of another browser.
+		const alphabet = "0123456789abcdefghjkmnpqrstvwxyz";
+		const project = `prj_${Array.from(randomBytes(10), (b) => alphabet[b % 32]).join("")}`;
 		await openQueue(page);
 
-		await page.getByLabel("Kind of action").fill(`e2e.${tag}`);
+		// A kind no action has would never apply, so the form shows the refusal and its hint.
+		await page.getByLabel("Kind of action").fill("publish.post");
+		await page.getByRole("button", { name: "Add rule" }).click();
+		await expect(page.getByText("no action has this kind")).toBeVisible();
+		await expect(
+			page.getByText("publish.scheduled, publish.upload"),
+		).toBeVisible();
+
+		// The example of the label is a kind an action has.
+		await page
+			.getByLabel("Kind of action (for example publish.upload)")
+			.fill("text.generate");
+		// The rule form comes before the ceiling form, which has a project field too.
+		await page.getByLabel("Project id").first().fill(project);
 		await page.getByLabel("Most per item").first().fill("2.5");
 		await page.getByRole("button", { name: "Add rule" }).click();
 
-		const rule = page
-			.locator("[data-rule-id]")
-			.filter({ hasText: `e2e.${tag}` });
+		const rule = page.locator("[data-rule-id]").filter({ hasText: project });
+		await expect(rule).toContainText("text.generate");
 		await expect(rule).toContainText("Most per item: $2.50");
 
 		const api = await caller(request);
 		const listed = (await api("GET", "/approval-rules")) as {
-			rules: { id: string; kind: string; per_item_micros: number | null }[];
+			rules: {
+				id: string;
+				kind: string;
+				project_id: string | null;
+				per_item_micros: number | null;
+			}[];
 		};
-		const stored = listed.rules.find((r) => r.kind === `e2e.${tag}`);
+		const stored = listed.rules.find((r) => r.project_id === project);
+		expect(stored?.kind).toBe("text.generate");
 		expect(stored?.per_item_micros).toBe(2_500_000);
 
 		await rule.getByRole("button", { name: "Remove" }).click();
