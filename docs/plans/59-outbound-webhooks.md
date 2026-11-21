@@ -38,7 +38,7 @@ A creator connects Stuarty to the tools they already use (Zapier, n8n, Make, Dis
 - [x] 1. The SDD and SDD-000 (operations, events, payload, signature, retries), the threat model. Verify: `task lint:md` and `go run ./internal/tools/threatcheck` exit 0.
 - [x] 2. The core rules and the store, with tests (URL rules, SSRF ranges, payload never carries a secret or a body). Verify: `go test ./core/... ./service/...` passes.
 - [x] 3. Delivery, signature, retries, history and the test send, against a local test receiver. Verify: tests for success, 5xx retry, timeout, no redirect, signature verifiable with the shown secret.
-- [ ] 4. HTTP, MCP and CLI with parity tests. Verify: `go test ./web/...` passes and `go run ./internal/tools/surfacebudget` exits 0.
+- [x] 4. HTTP, MCP and CLI with parity tests. Verify: `go test ./web/...` passes and `go run ./internal/tools/surfacebudget` exits 0.
 - [ ] 5. The page and the sidebar entry. Verify: `bun run typecheck`, `check:thin-client`, `check:i18n`, Vitest and a Playwright spec (create, test send to a local receiver, see the delivery, redeliver).
 
 ## Acceptance criteria

@@ -44,12 +44,21 @@ func Events() []EventInfo {
 	return []EventInfo{
 		{PublicationPublished, "A post went out to a network or a blog. It carries the publication, the network, the " +
 			"account connection and, when the post is public, its address."},
-		{PublicationFailed, "A post failed for good and will not be tried again by itself. It carries the publication, " +
-			"the network and the kind of failure, never the text of the error."},
-		{ExportReady, "An export finished. It carries the job, the project, the format, the size and the picture size, " +
-			"never the file or its path."},
-		{ApprovalRequested, "Something waits for a person to approve it. It carries the request, its kind and when it " +
-			"expires, never what it says."},
+		{
+			PublicationFailed,
+			"A post failed for good and will not be tried again by itself. It carries the publication, " +
+				"the network and the kind of failure, never the text of the error.",
+		},
+		{
+			ExportReady,
+			"An export finished. It carries the job, the project, the format, the size and the picture size, " +
+				"never the file or its path.",
+		},
+		{
+			ApprovalRequested,
+			"Something waits for a person to approve it. It carries the request, its kind and when it " +
+				"expires, never what it says.",
+		},
 		{JobFailed, "A job failed. It carries the job, the project, the kind and the error code, never the message."},
 	}
 }

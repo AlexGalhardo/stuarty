@@ -1,6 +1,6 @@
 ---
 title: "connection"
-description: "Connections. The user's connected destinations (id, kind, label, hosts, what each accepts, last use), or one by id."
+description: "Connections. The user's connected destinations (kind, label, hosts, last use), or one by id; webhooks true lists outbound webhooks, host only."
 wide: true
 ---
 
@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-The user's connected destinations (id, kind, label, hosts, what each accepts, last use), or one by id. Never returns a credential. Only a person adds, removes or tests one.
+The user's connected destinations (kind, label, hosts, last use), or one by id; webhooks true lists outbound webhooks, host only. No credential. Only a person adds, removes or tests.
 
 ## Behaviour
 
@@ -28,6 +28,7 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | Argument | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `id` | `string` | no | pattern `^con_[0-9a-hjkmnp-tv-z]{10}$` |
+| `webhooks` | `boolean` | no |  |
 
 ## Output
 

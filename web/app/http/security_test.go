@@ -251,7 +251,7 @@ func TestSecurity_T05_EveryOperationHasScope(t *testing.T) {
 		"GET /edit-image", "GET /edit-image/{image_id}",
 		// The empty-state pages of the dashboard sections (web/routes/dashboard.go).
 		"GET /edit-video", "GET /write", "GET /visual-assets", "GET /video-assets", "GET /sound-assets",
-		"GET /publish", "GET /skills", "GET /prompts", "GET /memory", "GET /connections",
+		"GET /publish", "GET /skills", "GET /prompts", "GET /memory", "GET /connections", "GET /webhooks",
 		// The approval page (epic 05): it reads the queue through /api/v1/approvals.
 		"GET /approvals",
 		// The redirect address of the sign-in to a social network (epic 18): a page that posts to /api/v1/social/complete.

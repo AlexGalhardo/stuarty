@@ -130,7 +130,7 @@ Creating a webhook is a person's action: the MCP surface has no write operation 
 | `WebhookDeliveryList` | `webhook:deliveries` | `GET /webhooks/{id}/deliveries` |
 | `WebhookRedeliver` | `webhook:redeliver` | `POST /webhooks/{id}/deliveries/{delivery_id}/redeliver` |
 
-The reads of an agent go through the `connection` tool: with `webhooks` true it lists the webhooks (name, host, events, enabled, last delivery; never the path, the query or a secret), or one by `id`. The tool count and the size of `tools/list` are held by the budget of SDD-003 section 4.8, so no tool is added. The CLI shows the secret of `webhook:add` and `webhook:rotate-secret` once, on standard output, and a flag `--json` carries it in the member `secret`.
+The read of an agent goes through the `connection` tool: with `webhooks` true it lists the webhooks (name, host, events, enabled, last delivery; never the path, the query or a secret). One webhook is read with `webhook:show` or `GET /webhooks/{id}`. The tool count and the size of `tools/list` are held by the budget of SDD-003 section 4.8, so no tool is added. The CLI shows the secret of `webhook:add` and `webhook:rotate-secret` once, on standard output, and a flag `--json` carries it in the member `secret`.
 
 The CLI flag that names the address is `--endpoint`, as in `connection:add`: it registers a destination, it does not name where a command sends data at run time.
 

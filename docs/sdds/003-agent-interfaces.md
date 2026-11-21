@@ -1663,7 +1663,7 @@ Tool and Service mapping, scope and annotations (annotations are hints and clien
 | `job_cancel` | `JobCancel` | render, or media for the caller's own `transcribe` or `ingest` job | false | false | true | false |
 | `template` | `TemplateList`, `TemplateSave`, `TemplateInstantiate`, `TemplateExport`, `TemplateImport` | read (list, export), edit (the others) | false | false | false | false |
 | `font_import` | `FontImport` | media | false | false | true | false |
-| `connection` | `ConnectionList` (without `id`), `ConnectionGet` (with `id`) | read | true | n/a | true | false |
+| `connection` | `ConnectionList` (without `id`), `ConnectionGet` (with `id`), `WebhookList` (`webhooks` true) | read (admin for `webhooks`) | true | n/a | true | false |
 | `image` | `ImageCreate`, `ImageList`, `ImageDescribe`, `ImageEdit`, `ImageUndo`, `ImageRedo`, `ImageExport`, `ImageImport` (SDD-021) | read (list, show), edit (the others) | false | false | false | false |
 | `project_item` | `ProjectItemAdd`, `ProjectItemMove`, `ProjectItemRename`, `ProjectItemTrash`, `ProjectItemRestore`, `BriefGet`, `BriefSet`, `BriefingQuestions`, `BriefingAnswer`, and the texts of SDD-019: `TextList`, `TextGet`, `TextWrite`, `TextRevisions`, `TextRevert`, `CaptionValidate`, `ScriptEstimate` (argument `action`: `text`, `revisions`, `revert`, `check`) | edit (read for `brief` without `text`, for `briefing` without `answers`, and for the actions `revisions` and `check` and the action `text` without `text`) | false | false | false | false |
 | `library` | `LibrarySearch`, `MemoryList`, `SkillList`, `PromptList`, `MemoryGet`, `SkillGet`, `PromptGet`, `MemoryWrite`, `SkillWrite`, `PromptWrite`, `PromptRender`, `SkillLint` | read (search, list, get, render, lint), edit (write) | false | false | false | false |
@@ -3200,11 +3200,12 @@ The `outputSchema` and the `title` are minimal, to stay under the budget of §4.
 ```json
 {
   "name":"connection",
-  "description":"The user's connected destinations (id, kind, label, hosts, what each accepts, last use), or one by id. Never returns a credential. Only a person adds, removes or tests one.",
+  "description":"The user's connected destinations (kind, label, hosts, last use), or one by id; webhooks true lists outbound webhooks, host only. No credential. Only a person adds, removes or tests.",
   "inputSchema":{
     "type":"object",
     "properties":{
-      "id":{"type":"string","pattern":"^con_[0-9a-hjkmnp-tv-z]{10}$"}
+      "id":{"type":"string","pattern":"^con_[0-9a-hjkmnp-tv-z]{10}$"},
+      "webhooks":{"type":"boolean"}
     },
     "additionalProperties":false
   },
@@ -3219,7 +3220,7 @@ The `outputSchema` and the `title` are minimal, to stay under the budget of §4.
 }
 ```
 
-The only tool of the connections domain (ADR-0043 item 3: an intent no other tool expresses, the question "where may this product send data?"; about 560 bytes, 175 tokens). It reads the registry and nothing else: it has no argument that names a destination, and creating, removing and testing a connection take a credential or reach the network, so they have a CLI command and a route and no tool (SDD-014 section 10). The result is a `ConnectionListResult` or a `Connection` in `structuredContent`; the label is delimited as untrusted text in the text part (SDD-007 section 8). It never carries a secret, only `secret_set`.
+The only tool of the connections domain (ADR-0043 item 3: an intent no other tool expresses, the question "where may this product send data?"; about 560 bytes, 175 tokens). It reads the registry and nothing else: it has no argument that names a destination, and creating, removing and testing a connection take a credential or reach the network, so they have a CLI command and a route and no tool (SDD-014 section 10). The result is a `ConnectionListResult` or a `Connection` in `structuredContent`; the label is delimited as untrusted text in the text part (SDD-007 section 8). It never carries a secret, only `secret_set`. With `webhooks` true (epic 59, SDD-022) it lists the outbound webhooks, as the host of each address with no path or query (a receiver often keeps its token there), the events, the state and the last delivery; the scope of `WebhookList` is `admin`, so a key without it is refused. Registering, changing, testing and removing a webhook have a command and a route and no tool.
 
 #### `image`
 
@@ -4304,7 +4305,8 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `ConnectionRemove` | none (exception E-5) | `connection:remove` | `DELETE /connections/{id}` |
 | `ConnectionTest` | none (exception E-5: it reaches the network) | `connection:test` | `POST /connections/{id}/test` |
 | `WebhookEventList` | none (exception E-3) | `webhook:events` | `GET /webhook-events` |
-| `WebhookList`, `WebhookGet` | `connection` (`webhooks` true, with or without `id`; the host only, never the path, the query or a secret) | `webhook:list`, `webhook:show` | `GET /webhooks`, `GET /webhooks/{id}` |
+| `WebhookList` | `connection` (`webhooks` true; the host only, never the path, the query or a secret) | `webhook:list` | `GET /webhooks` |
+| `WebhookGet` | none (exception E-3) | `webhook:show` | `GET /webhooks/{id}` |
 | `WebhookCreate` | none (exception E-5: it registers a destination and carries a secret once) | `webhook:add` | `POST /webhooks` |
 | `WebhookUpdate`, `WebhookRemove` | none (exception E-5) | `webhook:update`, `webhook:remove` | `PATCH /webhooks/{id}`, `DELETE /webhooks/{id}` |
 | `WebhookRotateSecret` | none (exception E-5: it carries a secret once) | `webhook:rotate-secret` | `POST /webhooks/{id}/rotate-secret` |

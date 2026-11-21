@@ -195,6 +195,26 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ConnectionRemove)
 	case "ConnectionTest":
 		return invoke(ctx, s, svc.ConnectionTest)
+	case "WebhookEventList":
+		return invoke(ctx, s, svc.WebhookEventList)
+	case "WebhookList":
+		return invoke(ctx, s, svc.WebhookList)
+	case "WebhookGet":
+		return invoke(ctx, s, svc.WebhookGet)
+	case "WebhookCreate":
+		return invoke(ctx, s, svc.WebhookCreate)
+	case "WebhookUpdate":
+		return invoke(ctx, s, svc.WebhookUpdate)
+	case "WebhookRemove":
+		return invoke(ctx, s, svc.WebhookRemove)
+	case "WebhookRotateSecret":
+		return invoke(ctx, s, svc.WebhookRotateSecret)
+	case "WebhookTest":
+		return invoke(ctx, s, svc.WebhookTest)
+	case "WebhookDeliveryList":
+		return invoke(ctx, s, svc.WebhookDeliveryList)
+	case "WebhookRedeliver":
+		return invoke(ctx, s, svc.WebhookRedeliver)
 	case "AgentProfileList":
 		return invoke(ctx, s, svc.AgentProfileList)
 	case "ChatSessionList":
@@ -564,6 +584,10 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 	case "FontImport":
 		return "font_import", args, nil
 	case "ConnectionList", "ConnectionGet":
+		return "connection", args, nil
+	case "WebhookList":
+		args["webhooks"] = true
+
 		return "connection", args, nil
 	case "ApprovalList":
 		// the queue is read with job_get (D-093): the state is the approvals member
@@ -1249,6 +1273,62 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		return "connection:remove", []string{a.ID}, "", nil
 	case "ConnectionTest":
 		return "connection:test", []string{a.ID}, "", nil
+	case "WebhookEventList":
+		return "webhook:events", nil, "", nil
+	case "WebhookList":
+		return "webhook:list", nil, "", nil
+	case "WebhookGet":
+		return "webhook:show", []string{a.ID}, "", nil
+	case "WebhookRemove":
+		return "webhook:remove", []string{a.ID}, "", nil
+	case "WebhookRotateSecret":
+		return "webhook:rotate-secret", []string{a.ID}, "", nil
+	case "WebhookTest":
+		return "webhook:test", []string{a.ID}, "", nil
+	case "WebhookDeliveryList":
+		return "webhook:deliveries", []string{a.ID}, "", nil
+	case "WebhookRedeliver":
+		var w service.WebhookRedeliverRequest
+		if err := json.Unmarshal(s.Args, &w); err != nil {
+			return "", nil, "", err
+		}
+
+		return "webhook:redeliver", []string{w.ID, w.DeliveryID}, "", nil
+	case "WebhookCreate":
+		var w service.WebhookCreateRequest
+		if err := json.Unmarshal(s.Args, &w); err != nil {
+			return "", nil, "", err
+		}
+
+		return "webhook:add", []string{
+			"--name", w.Name, "--endpoint", w.URL, "--events", strings.Join(w.Events, ","),
+		}, "", nil
+	case "WebhookUpdate":
+		var w service.WebhookUpdateRequest
+		if err := json.Unmarshal(s.Args, &w); err != nil {
+			return "", nil, "", err
+		}
+
+		argv := []string{w.ID}
+		if w.Name != nil {
+			argv = append(argv, "--name", *w.Name)
+		}
+
+		if w.URL != nil {
+			argv = append(argv, "--endpoint", *w.URL)
+		}
+
+		if w.Events != nil {
+			argv = append(argv, "--events", strings.Join(*w.Events, ","))
+		}
+
+		if w.Enabled != nil && *w.Enabled {
+			argv = append(argv, "--enable")
+		} else if w.Enabled != nil {
+			argv = append(argv, "--disable")
+		}
+
+		return "webhook:update", argv, "", nil
 	case "ConnectionCreate":
 		var c service.ConnectionCreateRequest
 		if err := json.Unmarshal(s.Args, &c); err != nil {

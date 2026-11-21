@@ -127,6 +127,16 @@ The types named in the tables of the operations. The arguments of each editing c
 | `untrusted_notice` | `string` | no |  |
 | `uses` | array of [`Use`](/docs/api/schemas#use) | no |  |
 
+### Attempt
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `duration_ms` | `integer (int64)` | no |  |
+| `error` | `string` | no |  |
+| `n` | `integer` | no |  |
+| `response_bytes` | `integer` | no |  |
+| `status` | `integer` | no |  |
+
 ### AudioLevels
 
 | Name | Type | Required | Description |
@@ -685,6 +695,13 @@ The types named in the tables of the operations. The arguments of each editing c
 | `state` | [`StateInfo`](/docs/api/schemas#stateinfo) or `any` or `null` or `null` | no |  |
 | `text` | `string` | no |  |
 | `tool` | [`Tool`](/docs/api/schemas#tool) or `any` or `null` or `null` | no |  |
+
+### EventInfo
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `description` | `string` | no |  |
+| `name` | `string` | no |  |
 
 ### export.Finding
 
@@ -3347,6 +3364,79 @@ The types named in the tables of the operations. The arguments of each editing c
 | `language` | `string` | no |  |
 | `name` | `string` | no |  |
 | `source` | `string` | no |  |
+
+### Webhook
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `created_at` | `string (date-time)` | no |  |
+| `enabled` | `boolean` | no |  |
+| `events` | array of `string` | no |  |
+| `id` | `string` | no |  |
+| `last_delivery` | [`WebhookLastDelivery`](/docs/api/schemas#webhooklastdelivery) or `any` or `null` or `null` | no |  |
+| `name` | `string` | no |  |
+| `secret_set` | `boolean` | no |  |
+| `updated_at` | `string (date-time)` | no |  |
+| `url` | `string` | no |  |
+
+### WebhookDeliveriesResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `deliveries` | array of [`WebhookDelivery`](/docs/api/schemas#webhookdelivery) | no |  |
+
+### WebhookDelivery
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `at` | `string (date-time)` | no |  |
+| `attempt_log` | array of [`Attempt`](/docs/api/schemas#attempt) | no |  |
+| `attempts` | `integer` | no |  |
+| `event` | `string` | no |  |
+| `event_id` | `string` | no |  |
+| `id` | `string` | no |  |
+| `kind` | `string` | no |  |
+| `last_error` | `string` | no |  |
+| `last_status` | `integer` | no |  |
+| `max_attempts` | `integer` | no |  |
+| `state` | `string` | no |  |
+| `webhook_id` | `string` | no |  |
+
+### WebhookEventListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `events` | array of [`EventInfo`](/docs/api/schemas#eventinfo) | no |  |
+
+### WebhookLastDelivery
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `at` | `string (date-time)` | no |  |
+| `id` | `string` | no |  |
+| `state` | `string` | no |  |
+| `status` | `integer` | no |  |
+
+### WebhookListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `webhooks` | array of [`Webhook`](/docs/api/schemas#webhook) | no |  |
+
+### WebhookSecretResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `created_at` | `string (date-time)` | no |  |
+| `enabled` | `boolean` | no |  |
+| `events` | array of `string` | no |  |
+| `id` | `string` | no |  |
+| `last_delivery` | [`WebhookLastDelivery`](/docs/api/schemas#webhooklastdelivery) or `any` or `null` or `null` | no |  |
+| `name` | `string` | no |  |
+| `secret` | `string` | no |  |
+| `secret_set` | `boolean` | no |  |
+| `updated_at` | `string (date-time)` | no |  |
+| `url` | `string` | no |  |
 
 ### Wheel
 

@@ -22,14 +22,40 @@ func TestWebhookEventsFromTheBus(t *testing.T) {
 	recent, old := now.Add(-time.Minute), now.Add(-time.Hour)
 
 	p := &pub.Publication{
-		ID: "pub_aaaaaaaaaa", ProjectID: prj, Title: "A TITLE THAT IS NOT METADATA", Text: "A CAPTION THAT IS NOT METADATA",
+		ID:        "pub_aaaaaaaaaa",
+		ProjectID: prj,
+		Title:     "A TITLE THAT IS NOT METADATA",
+		Text:      "A CAPTION THAT IS NOT METADATA",
 		Targets: []pub.Target{
-			{ID: "tgt_aaaaaaaaa1", Network: "youtube", ConnectionID: con, State: corepub.TargetPublished, PublishedAt: &recent, URL: "https://youtu.be/x"},
-			{ID: "tgt_aaaaaaaaa2", Network: "x", ConnectionID: con, State: corepub.TargetFailed, UpdatedAt: recent,
-				Error: &pub.TargetError{Kind: "quota", Message: "THE ERROR TEXT", Hint: "A HINT"}},
-			{ID: "tgt_aaaaaaaaa3", Network: "x", ConnectionID: con, State: corepub.TargetPublished, PublishedAt: &old, URL: "https://x.example/old"},
+			{
+				ID:           "tgt_aaaaaaaaa1",
+				Network:      "youtube",
+				ConnectionID: con,
+				State:        corepub.TargetPublished,
+				PublishedAt:  &recent,
+				URL:          "https://youtu.be/x",
+			},
+			{
+				ID: "tgt_aaaaaaaaa2", Network: "x", ConnectionID: con, State: corepub.TargetFailed, UpdatedAt: recent,
+				Error: &pub.TargetError{Kind: "quota", Message: "THE ERROR TEXT", Hint: "A HINT"},
+			},
+			{
+				ID:           "tgt_aaaaaaaaa3",
+				Network:      "x",
+				ConnectionID: con,
+				State:        corepub.TargetPublished,
+				PublishedAt:  &old,
+				URL:          "https://x.example/old",
+			},
 			{ID: "tgt_aaaaaaaaa4", Network: "x", ConnectionID: con, State: corepub.TargetScheduled},
-			{ID: "tgt_aaaaaaaaa5", Network: "x", ConnectionID: con, State: corepub.TargetPublished, PublishedAt: &recent, URL: "http://127.0.0.1/local"},
+			{
+				ID:           "tgt_aaaaaaaaa5",
+				Network:      "x",
+				ConnectionID: con,
+				State:        corepub.TargetPublished,
+				PublishedAt:  &recent,
+				URL:          "http://127.0.0.1/local",
+			},
 		},
 	}
 
@@ -43,22 +69,35 @@ func TestWebhookEventsFromTheBus(t *testing.T) {
 		},
 		"export": {
 			Event{
-				Type: "job.updated", Kind: JobExport, State: JobSucceeded, JobID: job, ProjectID: prj,
-				Result: &JobResult{Export: &ExportResult{Format: "mp4", Bytes: 5, Width: 1080, Height: 1920, Path: "/home/a/out.mp4"}},
+				Type:      "job.updated",
+				Kind:      JobExport,
+				State:     JobSucceeded,
+				JobID:     job,
+				ProjectID: prj,
+				Result: &JobResult{
+					Export: &ExportResult{Format: "mp4", Bytes: 5, Width: 1080, Height: 1920, Path: "/home/a/out.mp4"},
+				},
 			},
 			[]string{core.ExportReady},
 		},
 		"export still running": {Event{Type: "job.updated", Kind: JobExport, State: JobRunning, JobID: job}, nil},
 		"job failed": {
-			Event{Type: "job.updated", Kind: "transcribe", State: JobFailed, JobID: job, ProjectID: prj,
-				Error: &Error{Code: "E_TRANSCRIBE_FAILED", Message: "A MESSAGE WITH A PROMPT"}},
+			Event{
+				Type: "job.updated", Kind: "transcribe", State: JobFailed, JobID: job, ProjectID: prj,
+				Error: &Error{Code: "E_TRANSCRIBE_FAILED", Message: "A MESSAGE WITH A PROMPT"},
+			},
 			[]string{core.JobFailed},
 		},
 		"job cancelled": {Event{Type: "job.updated", Kind: JobExport, State: JobCancelled, JobID: job}, nil},
 		"approval": {
 			Event{Type: EventApprovalRequested, Approval: &approval.Request{
-				ID: "apr_aaaaaaaaaa", Kind: "publish", Summary: "A SUMMARY THAT IS NOT METADATA", ProjectID: &prj, JobID: &job,
-				ConnectionID: &con, ExpiresAt: now.Add(24 * time.Hour),
+				ID:           "apr_aaaaaaaaaa",
+				Kind:         "publish",
+				Summary:      "A SUMMARY THAT IS NOT METADATA",
+				ProjectID:    &prj,
+				JobID:        &job,
+				ConnectionID: &con,
+				ExpiresAt:    now.Add(24 * time.Hour),
 			}},
 			[]string{core.ApprovalRequested},
 		},

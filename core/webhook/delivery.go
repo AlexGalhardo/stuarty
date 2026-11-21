@@ -88,12 +88,12 @@ func Classify(status int) Outcome {
 }
 
 // Next says what follows an attempt: the state of the delivery and, when it stays pending, the wait before the
-// next one. attempts counts the attempt that just ended; max is the most the delivery may make.
-func Next(outcome Outcome, attempts, max int) (state string, wait time.Duration) {
+// next one. attempts counts the attempt that just ended; limit is the most the delivery may make.
+func Next(outcome Outcome, attempts, limit int) (state string, wait time.Duration) {
 	switch {
 	case outcome == OutcomeDelivered:
 		return StateSucceeded, 0
-	case outcome == OutcomeRetry && attempts < max:
+	case outcome == OutcomeRetry && attempts < limit:
 		return StatePending, Backoff(attempts)
 	}
 
@@ -146,7 +146,7 @@ func Verify(secret, header string, body []byte, now time.Time, tolerance time.Du
 		ok  bool
 	)
 
-	for _, part := range strings.Split(header, ",") {
+	for part := range strings.SplitSeq(header, ",") {
 		k, v, found := strings.Cut(strings.TrimSpace(part), "=")
 		switch {
 		case !found:

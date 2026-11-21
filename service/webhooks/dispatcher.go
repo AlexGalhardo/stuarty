@@ -128,7 +128,7 @@ func (d *Dispatcher) Run(ctx context.Context) error {
 func (d *Dispatcher) RunOnce(ctx context.Context) int {
 	due, err := d.o.Store.Due(ctx, d.o.Clock.Now().UnixMilli(), 100)
 	if err != nil {
-		d.o.Log.Warn("the due webhook deliveries could not be read", "error", err)
+		d.o.Log.WarnContext(ctx, "the due webhook deliveries could not be read", "error", err)
 
 		return 0
 	}
@@ -138,7 +138,9 @@ func (d *Dispatcher) RunOnce(ctx context.Context) int {
 		taken int
 	)
 
-	for _, del := range due {
+	for i := range due {
+		del := due[i]
+
 		if ctx.Err() != nil {
 			break
 		}
@@ -196,7 +198,7 @@ func (d *Dispatcher) Publish(ctx context.Context, data core.Data, at time.Time) 
 
 	rows, err := d.o.Store.List(ctx)
 	if err != nil {
-		d.o.Log.Warn("the webhooks could not be read", "error", err)
+		d.o.Log.WarnContext(ctx, "the webhooks could not be read", "error", err)
 
 		return
 	}
@@ -209,7 +211,7 @@ func (d *Dispatcher) Publish(ctx context.Context, data core.Data, at time.Time) 
 		}
 
 		if _, ok, err := d.Enqueue(ctx, rows[i], data, at, KindEvent); err != nil {
-			d.o.Log.Warn("a webhook delivery could not be stored", "webhook", rows[i].ID, "error", err)
+			d.o.Log.WarnContext(ctx, "a webhook delivery could not be stored", "webhook", rows[i].ID, "error", err)
 		} else if ok {
 			queued = true
 		}
@@ -286,7 +288,7 @@ func (d *Dispatcher) attempt(ctx context.Context, del Delivery) {
 	w, err := d.o.Store.Get(ctx, del.WebhookID)
 	if err != nil {
 		if !errors.Is(err, ErrNotFound) {
-			d.o.Log.Warn("a webhook could not be read", "webhook", del.WebhookID, "error", err)
+			d.o.Log.WarnContext(ctx, "a webhook could not be read", "webhook", del.WebhookID, "error", err)
 		}
 
 		return
@@ -295,9 +297,14 @@ func (d *Dispatcher) attempt(ctx context.Context, del Delivery) {
 	secret, err := d.o.Secrets.Secret(ctx, w.ID)
 	if err != nil {
 		// Not an attempt: the delivery waits and is sent after the unlock.
-		d.o.Log.Info("a webhook delivery waits for the vault", "webhook", w.ID)
+		d.o.Log.InfoContext(ctx, "a webhook delivery waits for the vault", "webhook", w.ID)
 
-		_ = d.o.Store.Reschedule(ctx, del.ID, d.o.Clock.Now().Add(core.VaultLockedWait).UnixMilli(), core.ErrCodeVaultLocked)
+		_ = d.o.Store.Reschedule(
+			ctx,
+			del.ID,
+			d.o.Clock.Now().Add(core.VaultLockedWait).UnixMilli(),
+			core.ErrCodeVaultLocked,
+		)
 
 		return
 	}
@@ -340,8 +347,13 @@ func (d *Dispatcher) attempt(ctx context.Context, del Delivery) {
 	}
 
 	// A write that fails here is logged and the delivery is tried again: it is still pending in the table.
-	if err := d.o.Store.Record(context.WithoutCancel(ctx), del, att, now.Add(-core.KeepFinished).UnixMilli()); err != nil {
-		d.o.Log.Warn("a webhook attempt could not be recorded", "delivery", del.ID, "error", err)
+	if err := d.o.Store.Record(
+		context.WithoutCancel(ctx),
+		del,
+		att,
+		now.Add(-core.KeepFinished).UnixMilli(),
+	); err != nil {
+		d.o.Log.WarnContext(ctx, "a webhook attempt could not be recorded", "delivery", del.ID, "error", err)
 	}
 }
 

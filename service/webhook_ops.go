@@ -23,7 +23,7 @@ const recentEvent = 10 * time.Minute
 // Webhook is a webhook as a surface sees it (SDD-022 section 2). It never carries the signing secret.
 type Webhook struct {
 	ID           string               `json:"id"`
-	Name         string               `json:"name"         untrusted:"true"`
+	Name         string               `json:"name"          untrusted:"true"`
 	URL          string               `json:"url"`
 	Events       []string             `json:"events"`
 	Enabled      bool                 `json:"enabled"`
@@ -230,7 +230,11 @@ func (s *svc) WebhookCreate(ctx context.Context, req WebhookCreateRequest) (*Web
 	}
 
 	if count >= core.MaxWebhooks {
-		return nil, newError("E_LIMIT_EXCEEDED", "the workspace has the most webhooks it may have (%d).", core.MaxWebhooks).
+		return nil, newError(
+			"E_LIMIT_EXCEEDED",
+			"the workspace has the most webhooks it may have (%d).",
+			core.MaxWebhooks,
+		).
 			withHint("remove a webhook first")
 	}
 
@@ -420,7 +424,13 @@ func (s *svc) WebhookTest(ctx context.Context, req WebhookRef) (*WebhookDelivery
 		clear(b)
 	}
 
-	del, _, err := s.hooks.Enqueue(ctx, row, core.TestData{WebhookID: row.ID, Nonce: s.newIDs("tst")}, s.now(), webhooks.KindTest)
+	del, _, err := s.hooks.Enqueue(
+		ctx,
+		row,
+		core.TestData{WebhookID: row.ID, Nonce: s.newIDs("tst")},
+		s.now(),
+		webhooks.KindTest,
+	)
 	if err != nil {
 		return nil, asError(err)
 	}
@@ -475,8 +485,8 @@ func (s *svc) WebhookDeliveryList(ctx context.Context, req WebhookDeliveriesRequ
 
 	out := &WebhookDeliveriesResult{Deliveries: make([]WebhookDelivery, 0, len(list))}
 
-	for _, d := range list {
-		v, err := s.deliveryView(ctx, d)
+	for i := range list {
+		v, err := s.deliveryView(ctx, list[i])
 		if err != nil {
 			return nil, err
 		}
@@ -555,7 +565,11 @@ func (s *svc) webhookEvents(e Event) []core.Data {
 			return nil
 		}
 
-		d := core.ApprovalRequestedData{ApprovalID: a.ID, Kind: a.Kind, ExpiresAt: a.ExpiresAt.UTC().Format(time.RFC3339)}
+		d := core.ApprovalRequestedData{
+			ApprovalID: a.ID,
+			Kind:       a.Kind,
+			ExpiresAt:  a.ExpiresAt.UTC().Format(time.RFC3339),
+		}
 		if a.ProjectID != nil {
 			d.ProjectID = *a.ProjectID
 		}
@@ -600,24 +614,21 @@ func (s *svc) publicationWebhookEvents(e Event) []core.Data {
 	for i := range p.Targets {
 		t := &p.Targets[i]
 
-		switch t.State {
-		case corepub.TargetPublished:
-			if t.PublishedAt == nil || now.Sub(*t.PublishedAt) > recentEvent {
-				continue
-			}
-
+		if t.State == corepub.TargetPublished && t.PublishedAt != nil && now.Sub(*t.PublishedAt) <= recentEvent {
 			out = append(out, core.PublicationPublishedData{
 				PublicationID: p.ID, TargetID: t.ID, ProjectID: p.ProjectID, Network: t.Network,
 				ConnectionID: t.ConnectionID, URL: core.PublicPostURL(t.URL),
 				PublishedAt: t.PublishedAt.UTC().Format(time.RFC3339),
 			})
-		case corepub.TargetFailed:
-			if now.Sub(t.UpdatedAt) > recentEvent {
-				continue
-			}
+		}
 
+		if t.State == corepub.TargetFailed && now.Sub(t.UpdatedAt) <= recentEvent {
 			d := core.PublicationFailedData{
-				PublicationID: p.ID, TargetID: t.ID, ProjectID: p.ProjectID, Network: t.Network, ConnectionID: t.ConnectionID,
+				PublicationID: p.ID,
+				TargetID:      t.ID,
+				ProjectID:     p.ProjectID,
+				Network:       t.Network,
+				ConnectionID:  t.ConnectionID,
 			}
 			if t.Error != nil {
 				d.ErrorKind = t.Error.Kind

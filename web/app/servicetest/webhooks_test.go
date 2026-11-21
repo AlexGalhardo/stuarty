@@ -1,8 +1,8 @@
 package servicetest
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -117,7 +117,15 @@ func (h *hookEnv) create(url string, events ...string) *service.WebhookSecretRes
 }
 
 func exportReady(job string) core.Data {
-	return core.ExportReadyData{JobID: job, ProjectID: "prj_0000000001", Kind: "export", Format: "mp4", Bytes: 99, Width: 1080, Height: 1920}
+	return core.ExportReadyData{
+		JobID:     job,
+		ProjectID: "prj_0000000001",
+		Kind:      "export",
+		Format:    "mp4",
+		Bytes:     99,
+		Width:     1080,
+		Height:    1920,
+	}
 }
 
 func (h *hookEnv) deliveries(id string) []service.WebhookDelivery {
@@ -153,11 +161,23 @@ func TestWebhookDeliveryIsSignedAndVerifiesWithTheShownSecret(t *testing.T) {
 		t.Fatalf("headers = %v", r.header)
 	}
 
-	if err := core.Verify(w.Secret, r.header.Get(core.HeaderSignature), r.body, h.clock.now(), core.ReplayWindow); err != nil {
+	if err := core.Verify(
+		w.Secret,
+		r.header.Get(core.HeaderSignature),
+		r.body,
+		h.clock.now(),
+		core.ReplayWindow,
+	); err != nil {
 		t.Fatalf("the signature does not verify with the secret the person was shown: %v", err)
 	}
 
-	if err := core.Verify("whsec_not-the-secret", r.header.Get(core.HeaderSignature), r.body, h.clock.now(), core.ReplayWindow); err == nil {
+	if err := core.Verify(
+		"whsec_not-the-secret",
+		r.header.Get(core.HeaderSignature),
+		r.body,
+		h.clock.now(),
+		core.ReplayWindow,
+	); err == nil {
 		t.Fatal("the signature verifies with another secret")
 	}
 
@@ -208,7 +228,7 @@ func TestWebhookRetriesOn5xxWithBackoffAndKeepsTheSameBody(t *testing.T) {
 		t.Fatalf("the receiver got %d requests, want 3", len(got))
 	}
 
-	if string(got[0].body) != string(got[2].body) {
+	if !bytes.Equal(got[0].body, got[2].body) {
 		t.Error("a retry changed the body")
 	}
 
@@ -217,7 +237,8 @@ func TestWebhookRetriesOn5xxWithBackoffAndKeepsTheSameBody(t *testing.T) {
 		t.Fatalf("deliveries = %+v", ds)
 	}
 
-	if l := ds[0].AttemptLog; len(l) != 3 || l[0].Status != 502 || l[0].Error != core.ErrCodeStatus || l[2].Status != 200 {
+	if l := ds[0].AttemptLog; len(l) != 3 || l[0].Status != 502 || l[0].Error != core.ErrCodeStatus ||
+		l[2].Status != 200 {
 		t.Fatalf("attempt log = %+v", l)
 	}
 }
@@ -347,16 +368,16 @@ func TestSecurity_T115_WebhookAnswerBodyIsNeverKept(t *testing.T) {
 		t.Fatalf("attempt log = %+v", l)
 	}
 
-	raw, _ := json.Marshal(ds)
+	raw := mustJSON(t, ds)
 
 	audit, err := h.svc.AuditList(h.as(ui), service.AuditListRequest{})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	auditRaw, _ := json.Marshal(audit)
+	auditRaw := mustJSON(t, audit)
 
-	if strings.Contains(string(raw), "ANSWER-CANARY") || strings.Contains(string(auditRaw), "ANSWER-CANARY") {
+	if strings.Contains(raw, "ANSWER-CANARY") || strings.Contains(auditRaw, "ANSWER-CANARY") {
 		t.Fatal("the answer of the receiver was kept")
 	}
 }
@@ -420,7 +441,13 @@ func TestWebhookTestSendIsOneAttempt(t *testing.T) {
 		t.Fatalf("receiver got %v", got)
 	}
 
-	if err := core.Verify(w.Secret, got[0].header.Get(core.HeaderSignature), got[0].body, h.clock.now(), core.ReplayWindow); err != nil {
+	if err := core.Verify(
+		w.Secret,
+		got[0].header.Get(core.HeaderSignature),
+		got[0].body,
+		h.clock.now(),
+		core.ReplayWindow,
+	); err != nil {
 		t.Fatal(err)
 	}
 
@@ -464,16 +491,28 @@ func TestWebhookRedeliverSendsTheStoredBodyAgainWithAFreshSignature(t *testing.T
 	h.disp.RunOnce(ctx)
 
 	got := rc.all()
-	if len(got) != 2 || string(got[0].body) != string(got[1].body) ||
+	if len(got) != 2 || !bytes.Equal(got[0].body, got[1].body) ||
 		got[0].header.Get(core.HeaderSignature) == got[1].header.Get(core.HeaderSignature) {
 		t.Fatalf("receiver got %d request(s), same body or same signature", len(got))
 	}
 
-	if err := core.Verify(w.Secret, got[1].header.Get(core.HeaderSignature), got[1].body, h.clock.now(), core.ReplayWindow); err != nil {
+	if err := core.Verify(
+		w.Secret,
+		got[1].header.Get(core.HeaderSignature),
+		got[1].body,
+		h.clock.now(),
+		core.ReplayWindow,
+	); err != nil {
 		t.Fatal(err)
 	}
 
-	if _, err := h.svc.WebhookRedeliver(h.as(ui), service.WebhookRedeliverRequest{ID: w.ID, DeliveryID: "wdl_9999999999"}); !isCode(err, service.CodeWebhookNotFound) {
+	if _, err := h.svc.WebhookRedeliver(
+		h.as(ui),
+		service.WebhookRedeliverRequest{ID: w.ID, DeliveryID: "wdl_9999999999"},
+	); !isCode(
+		err,
+		service.CodeWebhookNotFound,
+	) {
 		t.Fatalf("an unknown delivery: %v", err)
 	}
 }
@@ -590,12 +629,12 @@ func TestSecurity_T113_WebhookSecretIsShownOnce(t *testing.T) {
 		"list": list, "get": get, "update": upd, "test": test, "deliveries": dels, "events": events, "audit": audit,
 		"error": notFound,
 	} {
-		raw, _ := json.Marshal(v)
+		raw := mustJSON(t, v)
 		if notFound != nil && name == "error" {
-			raw = []byte(notFound.Error())
+			raw = notFound.Error()
 		}
 
-		if strings.Contains(string(raw), w.Secret) || strings.Contains(string(raw), `"secret"`) {
+		if strings.Contains(raw, w.Secret) || strings.Contains(raw, `"secret"`) {
 			t.Errorf("%s carries the secret: %s", name, raw)
 		}
 	}
@@ -613,11 +652,23 @@ func TestSecurity_T113_WebhookSecretIsShownOnce(t *testing.T) {
 	got := rc.all()
 	last := got[len(got)-1]
 
-	if core.Verify(w.Secret, last.header.Get(core.HeaderSignature), last.body, h.clock.now(), core.ReplayWindow) == nil {
+	if core.Verify(
+		w.Secret,
+		last.header.Get(core.HeaderSignature),
+		last.body,
+		h.clock.now(),
+		core.ReplayWindow,
+	) == nil {
 		t.Error("the old secret still verifies after a rotation")
 	}
 
-	if err := core.Verify(rot.Secret, last.header.Get(core.HeaderSignature), last.body, h.clock.now(), core.ReplayWindow); err != nil {
+	if err := core.Verify(
+		rot.Secret,
+		last.header.Get(core.HeaderSignature),
+		last.body,
+		h.clock.now(),
+		core.ReplayWindow,
+	); err != nil {
 		t.Errorf("the new secret does not verify: %v", err)
 	}
 
@@ -638,7 +689,10 @@ func TestSecurity_T110_WebhookCreateRefusesInternalAddresses(t *testing.T) {
 		"https://100.100.100.200/", "https://[fd00::1]/h", "https://[::ffff:10.0.0.1]/h", "https://db.internal/h",
 		"https://user:pw@hooks.example.com/h", "ftp://hooks.example.com/h", "https://hooks.example.com/h#frag", "file:///etc/passwd",
 	} {
-		_, err := h.svc.WebhookCreate(h.as(ui), service.WebhookCreateRequest{Name: "x", URL: url, Events: []string{core.ExportReady}})
+		_, err := h.svc.WebhookCreate(
+			h.as(ui),
+			service.WebhookCreateRequest{Name: "x", URL: url, Events: []string{core.ExportReady}},
+		)
 
 		var se *service.Error
 		if !errors.As(err, &se) || se.Code != "E_VALIDATION" || se.Path != "url" {
@@ -703,7 +757,10 @@ func TestSecurity_T116_WebhooksNeedTheAdminScopeAndNoProjectLimit(t *testing.T) 
 	rc := newReceiver(t)
 	w := h.create(rc.srv.URL)
 
-	readOnly := service.WithCaller(context.Background(), service.Caller{Actor: "key:key_0000000001", Scopes: []string{service.ScopeRead}})
+	readOnly := service.WithCaller(
+		context.Background(),
+		service.Caller{Actor: "key:key_0000000001", Scopes: []string{service.ScopeRead}},
+	)
 	limited := service.WithCaller(context.Background(), service.Caller{
 		Actor: "key:key_0000000002", Scopes: service.AllScopes, ProjectID: "prj_0000000001",
 	})
@@ -718,7 +775,10 @@ func TestSecurity_T116_WebhooksNeedTheAdminScopeAndNoProjectLimit(t *testing.T) 
 			return err
 		},
 		"create": func(ctx context.Context) error {
-			_, err := h.svc.WebhookCreate(ctx, service.WebhookCreateRequest{Name: "x", URL: rc.srv.URL, Events: []string{core.ExportReady}})
+			_, err := h.svc.WebhookCreate(
+				ctx,
+				service.WebhookCreateRequest{Name: "x", URL: rc.srv.URL, Events: []string{core.ExportReady}},
+			)
 			return err
 		},
 		"update": func(ctx context.Context) error {
@@ -742,7 +802,10 @@ func TestSecurity_T116_WebhooksNeedTheAdminScopeAndNoProjectLimit(t *testing.T) 
 			return err
 		},
 		"redeliver": func(ctx context.Context) error {
-			_, err := h.svc.WebhookRedeliver(ctx, service.WebhookRedeliverRequest{ID: w.ID, DeliveryID: "wdl_0000000001"})
+			_, err := h.svc.WebhookRedeliver(
+				ctx,
+				service.WebhookRedeliverRequest{ID: w.ID, DeliveryID: "wdl_0000000001"},
+			)
 			return err
 		},
 	}

@@ -235,9 +235,11 @@ func (r webhookRepo) Deliveries(ctx context.Context, webhookID string, limit, of
 }
 
 func (r webhookRepo) Latest(ctx context.Context, webhookID string) (webhooks.Delivery, error) {
-	d, err := scanDelivery(r.ex.QueryRowContext(ctx,
+	d, err := scanDelivery(r.ex.QueryRowContext(
+		ctx,
 		`SELECT `+deliveryColumns+` FROM webhook_deliveries WHERE webhook_id = ? ORDER BY created_ms DESC, id DESC LIMIT 1`,
-		webhookID))
+		webhookID,
+	))
 	if errors.Is(err, sql.ErrNoRows) {
 		return d, webhooks.ErrNotFound
 	}
@@ -246,9 +248,11 @@ func (r webhookRepo) Latest(ctx context.Context, webhookID string) (webhooks.Del
 }
 
 func (r webhookRepo) Attempts(ctx context.Context, deliveryID string) ([]webhooks.Attempt, error) {
-	rows, err := r.ex.QueryContext(ctx,
+	rows, err := r.ex.QueryContext(
+		ctx,
 		`SELECT n, at_ms, status, duration_ms, error, response_bytes FROM webhook_attempts WHERE delivery_id = ? ORDER BY n`,
-		deliveryID)
+		deliveryID,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -298,8 +302,13 @@ func (r webhookRepo) Record(ctx context.Context, d webhooks.Delivery, a webhooks
 }
 
 func (r webhookRepo) Reschedule(ctx context.Context, id string, nextMs int64, reason string) error {
-	_, err := r.ex.ExecContext(ctx,
-		`UPDATE webhook_deliveries SET next_ms = ?, last_error = ? WHERE id = ? AND state = 'pending'`, nextMs, reason, id)
+	_, err := r.ex.ExecContext(
+		ctx,
+		`UPDATE webhook_deliveries SET next_ms = ?, last_error = ? WHERE id = ? AND state = 'pending'`,
+		nextMs,
+		reason,
+		id,
+	)
 
 	return err
 }

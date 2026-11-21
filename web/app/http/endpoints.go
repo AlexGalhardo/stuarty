@@ -448,6 +448,48 @@ var Endpoints = []Endpoint{
 		Service: "ConnectionTest", Status: 200, Summary: "Make one request through a connection",
 	},
 	{
+		ID: "webhooks.events", Method: http.MethodGet, Path: "/webhook-events", Scope: service.ScopeRead,
+		Service: "WebhookEventList", Status: 200, Summary: "List the events a webhook may choose, each with what it carries",
+	},
+	{
+		ID: "webhooks.list", Method: http.MethodGet, Path: "/webhooks", Scope: service.ScopeAdmin,
+		Service: "WebhookList", Status: 200, Summary: "List the outbound webhooks (never a secret)",
+	},
+	{
+		ID: "webhooks.get", Method: http.MethodGet, Path: "/webhooks/{id}", Scope: service.ScopeAdmin,
+		Service: "WebhookGet", Status: 200, Summary: "Read one webhook (never a secret)",
+	},
+	{
+		ID: "webhooks.create", Method: http.MethodPost, Path: "/webhooks", Scope: service.ScopeAdmin,
+		Service: "WebhookCreate", Status: 201,
+		Summary: "Register a webhook; the signing secret is in this answer once and in no other",
+	},
+	{
+		ID: "webhooks.update", Method: http.MethodPatch, Path: "/webhooks/{id}", Scope: service.ScopeAdmin,
+		Service: "WebhookUpdate", Status: 200, Summary: "Change the name, the address, the events or the state of a webhook",
+	},
+	{
+		ID: "webhooks.remove", Method: http.MethodDelete, Path: "/webhooks/{id}", Scope: service.ScopeAdmin,
+		Service: "WebhookRemove", Status: 200, Summary: "Remove a webhook, its deliveries and its secret",
+	},
+	{
+		ID: "webhooks.rotate", Method: http.MethodPost, Path: "/webhooks/{id}/rotate-secret", Scope: service.ScopeAdmin,
+		Service: "WebhookRotateSecret", Status: 200, Summary: "Make a new signing secret; it is in this answer once",
+	},
+	{
+		ID: "webhooks.test", Method: http.MethodPost, Path: "/webhooks/{id}/test", Scope: service.ScopeAdmin,
+		Service: "WebhookTest", Status: 200, Summary: "Send a webhook.test event now, one attempt",
+	},
+	{
+		ID: "webhooks.deliveries", Method: http.MethodGet, Path: "/webhooks/{id}/deliveries", Scope: service.ScopeAdmin,
+		Service: "WebhookDeliveryList", Status: 200, Summary: "List the deliveries of a webhook with their attempts",
+	},
+	{
+		ID: "webhooks.redeliver", Method: http.MethodPost, Path: "/webhooks/{id}/deliveries/{delivery_id}/redeliver",
+		Scope: service.ScopeAdmin, Service: "WebhookRedeliver", Status: 200,
+		Summary: "Send the stored body of a delivery again, with a fresh signature",
+	},
+	{
 		ID: "approvals.list", Method: http.MethodGet, Path: "/approvals", Scope: service.ScopeRead,
 		Service: "ApprovalList", Status: 200, Summary: "List the approval queue (pending requests by default)",
 	},

@@ -81,7 +81,9 @@ func TestCheckURL(t *testing.T) {
 func TestSafeURLKeepsNoPathQueryOrPort(t *testing.T) {
 	t.Parallel()
 
-	if got := SafeURL("https://hooks.example.com:8443/services/T0/B0/secret?token=abc"); got != "https://hooks.example.com" {
+	if got := SafeURL(
+		"https://hooks.example.com:8443/services/T0/B0/secret?token=abc",
+	); got != "https://hooks.example.com" {
 		t.Fatalf("SafeURL = %q", got)
 	}
 }
@@ -252,23 +254,37 @@ func TestSignatureKnownVector(t *testing.T) {
 func every() []Data {
 	return []Data{
 		PublicationPublishedData{
-			PublicationID: "pub_aaaaaaaaaa", TargetID: "tgt_aaaaaaaaaa", ProjectID: "prj_aaaaaaaaaa", Network: "youtube",
-			ConnectionID: "con_aaaaaaaaaa", URL: "https://youtu.be/abc", PublishedAt: "2026-11-20T12:00:00Z",
+			PublicationID: "pub_aaaaaaaaaa",
+			TargetID:      "tgt_aaaaaaaaaa",
+			ProjectID:     "prj_aaaaaaaaaa",
+			Network:       "youtube",
+			ConnectionID:  "con_aaaaaaaaaa",
+			URL:           "https://youtu.be/abc",
+			PublishedAt:   "2026-11-20T12:00:00Z",
 		},
 		PublicationFailedData{
 			PublicationID: "pub_aaaaaaaaaa", TargetID: "tgt_aaaaaaaaaa", ProjectID: "prj_aaaaaaaaaa", Network: "x",
 			ConnectionID: "con_aaaaaaaaaa", ErrorKind: "quota",
 		},
 		ExportReadyData{
-			JobID: "job_aaaaaaaaaa", ProjectID: "prj_aaaaaaaaaa", Kind: "export", Format: "mp4", Bytes: 1 << 20, Width: 1080,
-			Height: 1920,
+			JobID:     "job_aaaaaaaaaa",
+			ProjectID: "prj_aaaaaaaaaa",
+			Kind:      "export",
+			Format:    "mp4",
+			Bytes:     1 << 20,
+			Width:     1080,
+			Height:    1920,
 		},
 		ApprovalRequestedData{
 			ApprovalID: "apr_aaaaaaaaaa", Kind: "publish", ProjectID: "prj_aaaaaaaaaa", JobID: "job_aaaaaaaaaa",
 			ConnectionID: "con_aaaaaaaaaa", ExpiresAt: "2026-11-27T12:00:00Z",
 		},
 		JobFailedData{
-			JobID: "job_aaaaaaaaaa", ProjectID: "prj_aaaaaaaaaa", Kind: "export", State: "failed", ErrorCode: "E_EXPORT_FAILED",
+			JobID:     "job_aaaaaaaaaa",
+			ProjectID: "prj_aaaaaaaaaa",
+			Kind:      "export",
+			State:     "failed",
+			ErrorCode: "E_EXPORT_FAILED",
 		},
 		TestData{WebhookID: "whk_aaaaaaaaaa", Nonce: "n"},
 	}
@@ -335,9 +351,8 @@ func TestAllowListMatchesTheStructs(t *testing.T) {
 	for _, d := range every() {
 		var tags []string
 
-		rt := reflect.TypeOf(d)
-		for i := range rt.NumField() {
-			tag, _, _ := strings.Cut(rt.Field(i).Tag.Get("json"), ",")
+		for field := range reflect.TypeOf(d).Fields() {
+			tag, _, _ := strings.Cut(field.Tag.Get("json"), ",")
 			if tag != "-" {
 				tags = append(tags, tag)
 			}
@@ -369,8 +384,11 @@ func TestCheckRefusesWhatIsNotMetadata(t *testing.T) {
 		"private key":    `{"event":"export.ready","id":"e","occurred_at":"x","workspace":"w","data":{"job_id":"x -----BEGIN PRIVATE KEY----- y"}}`,
 		"control":        "{\"event\":\"export.ready\",\"id\":\"e\",\"occurred_at\":\"x\",\"workspace\":\"w\",\"data\":{\"job_id\":\"a\\nb\"}}",
 		"not json":       `nope`,
-		"too big":        `{"event":"export.ready","id":"e","occurred_at":"x","workspace":"w","data":{"job_id":"` + strings.Repeat("a", MaxBodyBytes) + `"}}`,
-		"empty":          ``,
+		"too big": `{"event":"export.ready","id":"e","occurred_at":"x","workspace":"w","data":{"job_id":"` + strings.Repeat(
+			"a",
+			MaxBodyBytes,
+		) + `"}}`,
+		"empty": ``,
 	}
 
 	for name, body := range bodies {
@@ -401,7 +419,8 @@ func TestEventIDIsStableAndTheTestOneIsNot(t *testing.T) {
 	t.Parallel()
 
 	a := ExportReadyData{JobID: "job_1"}
-	if EventID(a) != EventID(ExportReadyData{JobID: "job_1", Bytes: 5}) || EventID(a) == EventID(ExportReadyData{JobID: "job_2"}) {
+	if EventID(a) != EventID(ExportReadyData{JobID: "job_1", Bytes: 5}) ||
+		EventID(a) == EventID(ExportReadyData{JobID: "job_2"}) {
 		t.Error("the id of an event is not the id of its subject")
 	}
 
