@@ -94,6 +94,43 @@ test.describe("projects-page", () => {
 		await expect(page.getByLabel("Name", { exact: true })).toBeVisible();
 	});
 
+	test("the button hands the focus to the first field, and the form opens when the last project leaves", async ({
+		page,
+		request,
+	}) => {
+		const made = await makeProject(await caller(request), `Fold ${Date.now()}`);
+		await page.goto("/projects");
+		const open = page.getByRole("button", { name: "Start a new project" });
+		await open.focus();
+		await page.keyboard.press("Enter");
+		await expect(page.getByLabel("Name", { exact: true })).toBeFocused();
+
+		await page.goto("/projects");
+		await expect(open).toBeVisible();
+		// The server of the specs is shared and never has an empty list, so the reload after the delete answers one.
+		await page.route("**/projects", async (route) => {
+			if (!route.request().headers()["x-inertia-partial-data"]) {
+				await route.continue();
+				return;
+			}
+			const response = await route.fetch();
+			const body = await response.json();
+			await route.fulfill({
+				response,
+				json: { ...body, props: { ...body.props, projects: [] } },
+			});
+		});
+		const card = page.locator(`[data-project-card='${made.project_id}']`);
+		await card.getByRole("button", { name: /Actions for project/ }).click();
+		await page.getByRole("menuitem", { name: "Delete" }).click();
+		await page
+			.getByRole("alertdialog")
+			.getByRole("button", { name: "Move to trash" })
+			.click();
+		await expect(page.getByLabel("Name", { exact: true })).toBeVisible();
+		await expect(open).toHaveCount(0);
+	});
+
 	test("creating a project makes a project with no timeline, and a video asks for the size", async ({
 		page,
 		request,

@@ -1,5 +1,6 @@
 import { Head, router, usePage } from "@inertiajs/react";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import { Button } from "@/components/ui/button";
 import { useLocale, useT } from "@/lib/i18n";
@@ -29,6 +30,18 @@ export default function ProjectsIndex() {
 	const [creating, setCreating] = useState(false);
 	// With projects to show, the form waits behind a button so the list is the first thing on the page (VV-364).
 	const [formOpen, setFormOpen] = useState(projects.length === 0);
+	// The last project went to the trash, so the page asks for a new one. It stays open after a restore, which would
+	// otherwise throw away what was typed.
+	if (projects.length === 0 && !formOpen) {
+		setFormOpen(true);
+	}
+	const formBox = useRef<HTMLDivElement>(null);
+
+	// The button that held the focus is gone once the form is drawn, so the focus moves to its first field.
+	const openForm = (): void => {
+		flushSync(() => setFormOpen(true));
+		formBox.current?.querySelector<HTMLElement>("input, textarea")?.focus();
+	};
 
 	const moveToTrash = async (id: string): Promise<void> => {
 		setFailure(null);
@@ -68,7 +81,7 @@ export default function ProjectsIndex() {
 						{t("ui.projects.new")}
 					</h2>
 					{formOpen ? (
-						<div id="new-project-form" className="mt-4">
+						<div ref={formBox} id="new-project-form" className="mt-4">
 							<ProjectContextForm
 								initial={emptyContext()}
 								submitLabel={t("ui.projects.create")}
@@ -84,7 +97,7 @@ export default function ProjectsIndex() {
 							className="mt-4"
 							aria-expanded={false}
 							aria-controls="new-project-form"
-							onClick={() => setFormOpen(true)}
+							onClick={openForm}
 						>
 							{t("ui.projects.new_open")}
 						</Button>
