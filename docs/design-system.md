@@ -1223,7 +1223,20 @@ The product keeps section 2.13. The expressive register adds:
 | On this page (table of contents) | `w-40` (10 rem, 200 px), from `xl` (1280 px) | `components/doc-article.tsx` |
 | Reference samples (wide pages, no table of contents) | `minmax(0, 26rem)` from `xl` | `components/mdx/reference.tsx` |
 
-Prose (paragraphs, lists, quotes, headings, steps) is capped at `75ch` (`.prose` in `app/globals.css`); measured lines run 57 to 58 characters at 1024 and 1280 px and 72 at 1440 and 1920 px. Code blocks and tables use the whole content column, and a table wider than it scrolls inside its own frame, never the page. A name in the first column of a table does not break at its hyphens. The API Reference and MCP links of the header appear from `xl`; between `lg` and `xl` they stay in the sidebar, so the header never overflows at 1024 px.
+Type sizes of the documentation (1 rem = 20 px):
+
+| Text | Size | Source |
+| --- | --- | --- |
+| Body (`.prose`) | 0.875 rem (17.5 px), line height 1.75 | `app/globals.css` |
+| Headings h2 / h3 / h4 | 1.3 rem / 1 rem / 0.875 rem | `app/globals.css` |
+| Tables | 0.75 rem (15 px), line height 1.6 | `app/globals.css` |
+| Code blocks (Shiki) | 0.75 rem (15 px), line height 1.7; inline code 0.82 em | `app/globals.css` |
+| Sidebar items, On this page | 0.8125 rem (16.25 px) | `components/sidebar.tsx`, `components/toc.tsx` |
+| Language tabs of a code sample | 0.75 rem mono (`text-xs`), `px-1.5` | `components/mdx/tabs-client.tsx` |
+
+The colours do not change, so every pair keeps its contrast (body `--muted` on `--bg` above 7:1 in both themes). The samples column of a reference page scrolls on its own with no edge fade (`.scroll-nofade`), and the language tabs scroll sideways without a scrollbar and stop before the copy button.
+
+Prose (paragraphs, lists, quotes, headings, steps) is capped at `75ch` (`.prose` in `app/globals.css`); measured lines run 61 to 62 characters at 1024 and 1280 px and reach the 75-character cap at 1440 and 1920 px. Code blocks and tables use the whole content column, and a table wider than it scrolls inside its own frame, never the page. A name in the first column of a table does not break at its hyphens. The API Reference and MCP links of the header appear from `xl`; between `lg` and `xl` they stay in the sidebar, so the header never overflows at 1024 px.
 
 ### 11.11 Marketing components
 
