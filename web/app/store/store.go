@@ -28,12 +28,15 @@ type Store struct {
 	repos
 	db    *database.DB
 	locks *projectLocks
+	ref   *sealRef
 }
 
 var _ service.Store = (*Store)(nil)
 
 func newStore(db *database.DB) *Store {
-	return &Store{ex: db, db: db, locks: newProjectLocks()}
+	ref := &sealRef{}
+
+	return &Store{ex: sealedExec{Executor: db, ref: ref}, db: db, locks: newProjectLocks(), ref: ref}
 }
 
 // DB returns the underlying database, for the migrator and for vukem's queue.
@@ -49,7 +52,7 @@ func (s *Store) Close() error {
 // Write runs fn in one write transaction.
 func (s *Store) Write(ctx context.Context, fn func(ctx context.Context, tx service.Tx) error) error {
 	return s.db.Tx(ctx, func(dtx *database.Tx) error {
-		return fn(ctx, newTx(dtx))
+		return fn(ctx, newTx(dtx, s.ref))
 	})
 }
 
@@ -69,7 +72,7 @@ func (s *Store) WriteProject(
 	defer release()
 
 	return s.db.Tx(ctx, func(dtx *database.Tx) error {
-		t := newTx(dtx)
+		t := newTx(dtx, s.ref)
 		row, err := t.Projects().Get(ctx, projectID)
 		if err != nil {
 			return err
@@ -83,7 +86,9 @@ type tx struct {
 	dtx *database.Tx
 }
 
-func newTx(dtx *database.Tx) *tx { return &tx{ex: dtx, dtx: dtx} }
+func newTx(dtx *database.Tx, ref *sealRef) *tx {
+	return &tx{ex: sealedExec{Executor: dtx, ref: ref}, dtx: dtx}
+}
 
 // Executor is the transaction as vukem's executor, for the queue to insert its
 // message in the same transaction as the job row (SDD-005 section 14.1).

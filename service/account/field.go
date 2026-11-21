@@ -35,6 +35,18 @@ func (Passthrough) Seal(_, _, _, plain string) (string, error) { return plain, n
 // Open implements Sealer.
 func (Passthrough) Open(_, _, _, stored string) (string, error) { return stored, nil }
 
+// Sealing reports whether a Sealer seals the fields, as opposed to leaving them as clear text: it is false for
+// a workspace with no account.
+func Sealing(s Sealer) bool {
+	if sealing, ok := s.(interface{ Sealing() bool }); ok {
+		return sealing.Sealing()
+	}
+
+	_, plain := s.(Passthrough)
+
+	return !plain
+}
+
 // KeySealer seals with one data key. It is what the migration uses and what the Manager uses while
 // unlocked; the key buffer belongs to the caller, who wipes it.
 type KeySealer struct {

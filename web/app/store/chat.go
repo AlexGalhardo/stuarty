@@ -291,11 +291,16 @@ func (r chatRepo) EventUpsert(ctx context.Context, sessionID string, e chat.Even
 		return err
 	}
 
+	sealed, err := sealField(sealerOf(r.ex), "chat_events", "body_json", eventKey(sessionID, e.Seq), string(body))
+	if err != nil {
+		return err
+	}
+
 	_, err = r.ex.ExecContext(ctx,
 		`INSERT INTO chat_events (session_id, seq, kind, at_ms, body_json) VALUES (?, ?, ?, ?, ?)
  ON CONFLICT (session_id, seq) DO UPDATE SET kind = excluded.kind, at_ms = excluded.at_ms,
    body_json = excluded.body_json`,
-		sessionID, e.Seq, string(e.Kind), e.At.UnixMilli(), string(body))
+		sessionID, e.Seq, string(e.Kind), e.At.UnixMilli(), sealed)
 
 	return err
 }
@@ -324,7 +329,12 @@ func (r chatRepo) EventList(ctx context.Context, sessionID string, after int64, 
 			return nil, err
 		}
 
-		if err := json.Unmarshal([]byte(body), &b); err != nil {
+		plain, err := openField(sealerOf(r.ex), "chat_events", "body_json", eventKey(sessionID, e.Seq), body)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := json.Unmarshal([]byte(plain), &b); err != nil {
 			return nil, err
 		}
 

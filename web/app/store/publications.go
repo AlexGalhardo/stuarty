@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/AlexGalhardo/stuarty/service/account"
 	pub "github.com/AlexGalhardo/stuarty/service/publish"
 
 	"github.com/AlexGalhardo/vukem/database"
@@ -40,7 +41,7 @@ func timeMs(t *time.Time) any {
 	return t.UnixMilli()
 }
 
-func scanPublication(sc scanner) (pub.Publication, error) {
+func scanPublication(sc scanner, sl account.Sealer) (pub.Publication, error) {
 	var (
 		p              pub.Publication
 		owner          sql.NullString
@@ -64,6 +65,11 @@ func scanPublication(sc scanner) (pub.Publication, error) {
 		return p, err
 	}
 
+	var err error
+	if p.Text, err = openField(sl, "publications", "text", p.ID, p.Text); err != nil {
+		return p, err
+	}
+
 	p.ProjectID, p.Thumbnail, p.OwnerUserID = project, thumb, owner.String
 	p.CreatedAt, p.UpdatedAt = time.UnixMilli(created).UTC(), time.UnixMilli(upd).UTC()
 	p.Targets = []pub.Target{}
@@ -71,7 +77,7 @@ func scanPublication(sc scanner) (pub.Publication, error) {
 	return p, nil
 }
 
-func scanTarget(sc scanner) (pub.Target, error) {
+func scanTarget(sc scanner, sl account.Sealer) (pub.Target, error) {
 	var (
 		t                                                                      pub.Target
 		fields, state                                                          string
@@ -86,6 +92,11 @@ func scanTarget(sc scanner) (pub.Target, error) {
 		&t.LateWindowMinutes, &sendNow, &approval, &snapshot, &sha, &t.Attempts, &next, &leaseOwner, &leaseUntil,
 		&remoteID, &url, &remoteState, &errJS, &published, &created, &updated,
 	); err != nil {
+		return t, err
+	}
+
+	fields, err := openField(sl, "publication_targets", "fields", t.ID, fields)
+	if err != nil {
 		return t, err
 	}
 
@@ -108,7 +119,12 @@ func scanTarget(sc scanner) (pub.Target, error) {
 	t.CreatedAt, t.UpdatedAt = time.UnixMilli(created).UTC(), time.UnixMilli(updated).UTC()
 
 	if snapshot.Valid {
-		t.Snapshot = json.RawMessage(snapshot.String)
+		plain, err := openField(sl, "publication_targets", "snapshot", t.ID, snapshot.String)
+		if err != nil {
+			return t, err
+		}
+
+		t.Snapshot = json.RawMessage(plain)
 	}
 
 	if errJS.Valid {
@@ -122,9 +138,24 @@ func scanTarget(sc scanner) (pub.Target, error) {
 }
 
 func (r publicationRepo) insertTarget(ctx context.Context, t *pub.Target) error {
-	fields, err := json.Marshal(t.Fields)
+	rawFields, err := json.Marshal(t.Fields)
 	if err != nil {
 		return err
+	}
+
+	sl := sealerOf(r.ex)
+
+	fields, err := sealField(sl, "publication_targets", "fields", t.ID, string(rawFields))
+	if err != nil {
+		return err
+	}
+
+	var snapshot any
+
+	if len(t.Snapshot) > 0 {
+		if snapshot, err = sealField(sl, "publication_targets", "snapshot", t.ID, string(t.Snapshot)); err != nil {
+			return err
+		}
 	}
 
 	var errJS any
@@ -155,16 +186,14 @@ func (r publicationRepo) insertTarget(ctx context.Context, t *pub.Target) error 
 		t.Position,
 		t.ConnectionID,
 		t.Network,
-		string(fields),
+		fields,
 		string(t.State),
 		timeMs(t.ScheduledAt),
 		t.Zone,
 		t.LateWindowMinutes,
 		boolInt(t.SendNow),
 		nullString(t.ApprovalID),
-		nullJSON(
-			t.Snapshot,
-		),
+		snapshot,
 		nullString(t.PayloadSHA256),
 		t.Attempts,
 		timeMs(t.NextAttemptAt),
@@ -183,9 +212,14 @@ func (r publicationRepo) insertTarget(ctx context.Context, t *pub.Target) error 
 }
 
 func (r publicationRepo) Insert(ctx context.Context, p *pub.Publication) error {
+	text, err := sealField(sealerOf(r.ex), "publications", "text", p.ID, p.Text)
+	if err != nil {
+		return err
+	}
+
 	if _, err := r.ex.ExecContext(ctx, `INSERT INTO publications (`+publicationColumns+`)
  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		p.ID, p.ProjectID, p.Title, p.Text, p.Export, p.Thumbnail, p.CreatedAt.UnixMilli(), p.UpdatedAt.UnixMilli(),
+		p.ID, p.ProjectID, p.Title, text, p.Export, p.Thumbnail, p.CreatedAt.UnixMilli(), p.UpdatedAt.UnixMilli(),
 		p.CreatedBy, nullString(p.OwnerUserID), p.Post); err != nil {
 		return err
 	}
@@ -201,7 +235,7 @@ func (r publicationRepo) Insert(ctx context.Context, p *pub.Publication) error {
 
 func (r publicationRepo) Get(ctx context.Context, id string) (pub.Publication, error) {
 	p, err := scanPublication(
-		r.ex.QueryRowContext(ctx, `SELECT `+publicationColumns+` FROM publications WHERE id = ?`, id),
+		r.ex.QueryRowContext(ctx, `SELECT `+publicationColumns+` FROM publications WHERE id = ?`, id), sealerOf(r.ex),
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		return p, pub.ErrNotFound
@@ -262,7 +296,7 @@ func (r publicationRepo) targetsOf(ctx context.Context, ids []string) (map[strin
 	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
-		t, err := scanTarget(rows)
+		t, err := scanTarget(rows, sealerOf(r.ex))
 		if err != nil {
 			return nil, err
 		}
@@ -274,8 +308,13 @@ func (r publicationRepo) targetsOf(ctx context.Context, ids []string) (map[strin
 }
 
 func (r publicationRepo) Save(ctx context.Context, p *pub.Publication) error {
+	text, err := sealField(sealerOf(r.ex), "publications", "text", p.ID, p.Text)
+	if err != nil {
+		return err
+	}
+
 	n, err := rowsAffected(r.ex.ExecContext(ctx, `UPDATE publications SET title = ?, text = ?, export_job = ?,
- thumbnail_job = ?, post_item_id = ?, updated_ms = ? WHERE id = ?`, p.Title, p.Text, p.Export, p.Thumbnail, p.Post,
+ thumbnail_job = ?, post_item_id = ?, updated_ms = ? WHERE id = ?`, p.Title, text, p.Export, p.Thumbnail, p.Post,
 		p.UpdatedAt.UnixMilli(), p.ID))
 	if err != nil {
 		return err
@@ -380,7 +419,7 @@ func (r publicationRepo) List(ctx context.Context, f pub.Filter) ([]pub.Publicat
 	)
 
 	for rows.Next() {
-		p, err := scanPublication(rows)
+		p, err := scanPublication(rows, sealerOf(r.ex))
 		if err != nil {
 			return nil, 0, err
 		}
@@ -435,7 +474,7 @@ func (r publicationRepo) Open(ctx context.Context) ([]pub.Target, error) {
 	var out []pub.Target
 
 	for rows.Next() {
-		t, err := scanTarget(rows)
+		t, err := scanTarget(rows, sealerOf(r.ex))
 		if err != nil {
 			return nil, err
 		}

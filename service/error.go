@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/service/account"
 )
 
 // Codes the service adds to those of the core (SDD-000 section 8).
@@ -233,6 +234,10 @@ func asError(err error) error {
 		return newError(command.CodeIDExists, "an object with that identifier already exists.")
 	case errors.Is(err, ErrStale):
 		return internalError()
+	case errors.Is(err, account.ErrLocked):
+		// The studio locked between the gate and a read of a sealed field (ADR-0049).
+		return newError(CodeLocked, "Stuarty is locked: unlock Stuarty with your password.").
+			withHint("unlock Stuarty with your password").withDetail("reason", "locked")
 	}
 
 	if full, ok := errors.AsType[*QueueFullError](err); ok {

@@ -91,6 +91,8 @@ type Owner struct {
 	Runner  service.JobRunner
 	// Account is the local account of the workspace (ADR-0049); nil in network mode, which has its own users.
 	Account *account.Manager
+	gate    service.Gate
+	vault   *vault.Vault
 	Queue   *queue.Queue
 	Token   string
 	// runtimeSecret is the per-run secret of network mode, the key of its handshake.
@@ -175,20 +177,23 @@ func Open(ctx context.Context, cfg Config) (*Owner, error) {
 	return o, nil
 }
 
-// accountGate makes the account of a local workspace and returns it as the gate of the Service; network mode
-// has none and no gate.
-func (o *Owner) accountGate(ctx context.Context, st service.Store, now func() time.Time) (service.Gate, error) {
+// setupAccount makes the account of a local workspace, the gate of the Service and the sealer of the store;
+// network mode has none of them (ADR-0049).
+func (o *Owner) setupAccount(ctx context.Context, st *store.Store, now func() time.Time) error {
 	if o.mode == config.ModeNetwork {
-		return nil, nil
+		return nil
 	}
 
 	o.Account = account.NewManager(account.Options{Store: st.Accounts(), Now: now})
 
 	if err := o.Account.Load(ctx); err != nil {
-		return nil, err
+		return err
 	}
 
-	return o.Account, nil
+	st.SetSealer(o.Account.Sealer())
+	o.gate = o.Account
+
+	return nil
 }
 
 // take is steps 1 and 2 of SDD-005 section 6.3, or the session that a command
@@ -234,6 +239,12 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 	}
 
 	o.Store = st
+
+	// A local workspace has an account (ADR-0049): while it exists and nobody is signed in, the Service is
+	// closed. Network mode has its own users and no account.
+	if err := o.setupAccount(ctx, st, cfg.Now); err != nil {
+		return err
+	}
 
 	// Step 5 of the start-up order (SDD-005 section 7): documents below the current schema.
 	migrated, err := service.MigrateStoredDocuments(ctx, st, service.MigrateOptions{NowMs: cfg.Now().UnixMilli()})
@@ -327,15 +338,8 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		heavy = service.HeavyPerMinute
 	}
 
-	// A local workspace has an account (ADR-0049): while it exists and nobody is signed in, the Service is
-	// closed. Network mode has its own users and no account.
-	gate, err := o.accountGate(ctx, st, cfg.Now)
-	if err != nil {
-		return err
-	}
-
 	o.Service, err = service.New(service.Options{
-		Gate:           gate,
+		Gate:           o.gate,
 		Keys:           o.keyStore(),
 		Connections:    out.conns,
 		Providers:      out.provs,
@@ -810,10 +814,19 @@ func (o *Owner) connections(
 		}
 	}
 
-	return connections.NewManager(connections.Options{
-		Store: st.Connections(), Now: now,
-		Vault: vault.Open(filepath.Join(string(o.Dir), connections.VaultFile), keys),
-	}), nil
+	// With an account the vault master key is the one wrapped by the data key (ADR-0049); the key of the
+	// environment, the file or the keychain only opens a vault that exists before the account does.
+	if o.Account != nil {
+		keys = accountKeys{m: o.Account, fallback: keys}
+	}
+
+	o.vault = vault.Open(filepath.Join(string(o.Dir), connections.VaultFile), keys)
+
+	if o.Account != nil {
+		o.Account.OnLock(o.vault.Forget)
+	}
+
+	return connections.NewManager(connections.Options{Store: st.Connections(), Now: now, Vault: o.vault}), nil
 }
 
 // keyStore is the API key store of network mode; local mode has none.

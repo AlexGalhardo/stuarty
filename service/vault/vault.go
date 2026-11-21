@@ -106,6 +106,16 @@ func Open(path string, keys KeyProvider) *Vault {
 	return &Vault{path: path, keys: keys}
 }
 
+// Forget zeroes the master key this Vault holds in memory and drops it; the next use asks the provider again.
+// The account manager calls it when the studio locks (ADR-0049).
+func (v *Vault) Forget() {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+
+	clear(v.key)
+	v.key = nil
+}
+
 // Path is the vault file.
 func (v *Vault) Path() string { return v.path }
 

@@ -196,6 +196,9 @@ func (s managerSealer) with(fn func(Sealer) (string, error)) (string, error) {
 	return fn(s.m.sealer)
 }
 
+// Sealing implements the optional method of Sealing: only a workspace with no account leaves clear text.
+func (s managerSealer) Sealing() bool { return s.m.State() != StateNone }
+
 func (s managerSealer) Seal(table, column, rowKey, plain string) (string, error) {
 	return s.with(func(k Sealer) (string, error) { return k.Seal(table, column, rowKey, plain) })
 }

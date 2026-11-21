@@ -11,6 +11,7 @@ import (
 	"time"
 
 	core "github.com/AlexGalhardo/stuarty/core/publish"
+	"github.com/AlexGalhardo/stuarty/service/account"
 )
 
 // Clock is the time the scheduler reads and waits on; tests move it.
@@ -387,7 +388,9 @@ func (s *Scheduler) Run(ctx context.Context) error {
 	defer s.Wait()
 
 	for {
-		if _, err := s.Tick(ctx); err != nil && ctx.Err() == nil {
+		// A locked studio has no key to read the texts with: the calendar waits for the next sign-in, and a
+		// target whose time passes meanwhile is handled by the rules of its late window (ADR-0049).
+		if _, err := s.Tick(ctx); err != nil && ctx.Err() == nil && !errors.Is(err, account.ErrLocked) {
 			s.log.ErrorContext(ctx, "the scheduler could not read the calendar", "error", err.Error())
 		}
 

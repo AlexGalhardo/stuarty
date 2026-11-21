@@ -1454,7 +1454,7 @@ While no account exists the columns hold clear text and a read returns it as it 
 | `publications` | `text` | `id` |
 | `publication_targets` | `fields`, `snapshot` | `id` |
 
-The project description and goal join the list when epic 56 lands (task 8 of epic 57). The files of the library of memory, skills and prompts, and their index `library_fts`, are not sealed by this epic (ADR-0049, consequences). The vault is sealed by its own format (SDD-014 section 3), under the master key of 5.17 above.
+The project description and goal join the list when epic 56 lands (task 8 of epic 57). The files of the library of memory, skills and prompts are not sealed by this epic (ADR-0049, consequences); their index keeps no body once an account exists (`library_fts.body` is written empty, so a note is not clear text in `db.sqlite`, and the search matches names, descriptions and tags). The vault is sealed by its own format (SDD-014 section 3), under the master key of 5.16 above.
 
 #### 5.17.3 Creating the account in a workspace that has data
 
