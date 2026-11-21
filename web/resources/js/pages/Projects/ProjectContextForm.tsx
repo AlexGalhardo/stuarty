@@ -1,6 +1,7 @@
 import { CircleHelp } from "lucide-react";
 import { type FormEvent, useId, useState } from "react";
 
+import { type Failure, FailureNote } from "@/components/Failure";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,6 +63,9 @@ interface Props {
 	busy: boolean;
 	// An edit of a project that has a due date accepts it again when it did not change.
 	keepDue?: string;
+	// What the core answered to the last submit: under the field it names, or above the buttons.
+	failure?: Failure | null;
+	onEdited?: () => void;
 	onSubmit: (values: ProjectContextInput) => void;
 	onCancel?: () => void;
 }
@@ -75,6 +79,8 @@ export default function ProjectContextForm({
 	submitLabel,
 	busy,
 	keepDue,
+	failure = null,
+	onEdited,
 	onSubmit,
 	onCancel,
 }: Props) {
@@ -93,6 +99,7 @@ export default function ProjectContextForm({
 		checkDue: values.goal.due !== (keepDue ?? ""),
 	});
 	const valid = Object.keys(errors).length === 0;
+	const aboutAField = FIELDS.some((field) => pathOf(field) === failure?.path);
 
 	const touch = (field: FieldId): void =>
 		setTouched((was) => new Set(was).add(field));
@@ -133,6 +140,8 @@ export default function ProjectContextForm({
 				{FIELDS.map((field) => {
 					const id = `${prefix}-${field}`;
 					const error = touched.has(field) ? errors[pathOf(field)] : undefined;
+					const refused =
+						!error && failure?.path === pathOf(field) ? failure : null;
 					const label = t(`ui.projects.context.${field}`);
 					const common = {
 						id,
@@ -140,13 +149,14 @@ export default function ProjectContextForm({
 						value: fieldValue(values, field),
 						autoComplete: "off",
 						placeholder: t(`ui.projects.example.${field}`),
-						"aria-invalid": error ? true : undefined,
-						"aria-describedby": error ? `${id}-error` : undefined,
+						"aria-invalid": error || refused ? true : undefined,
+						"aria-describedby": error || refused ? `${id}-error` : undefined,
 						onBlur: () => touch(field),
 						onChange: (
 							e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
 						) => {
 							touch(field);
+							onEdited?.();
 							setValues((was) => withValue(was, field, e.target.value));
 						},
 					};
@@ -194,9 +204,11 @@ export default function ProjectContextForm({
 									{t(error.key, error.params)}
 								</p>
 							)}
+							<FailureNote failure={refused} id={`${id}-error`} />
 						</div>
 					);
 				})}
+				{!aboutAField && <FailureNote failure={failure} />}
 				<div className="flex gap-2">
 					<Button type="submit" disabled={!valid || busy}>
 						{submitLabel}

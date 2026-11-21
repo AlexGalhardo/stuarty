@@ -50,25 +50,22 @@ interface ShowProps {
 
 // What the creator wrote about the project, and the way to write it: a project made before epic 56 has neither, and
 // opens with a notice that leads to the same form as an edit (ProjectUpdate).
-function ContextPanel({
-	project,
-	onFailure,
-}: {
-	project: ShowProps["project"];
-	onFailure: (failure: Failure) => void;
-}) {
+function ContextPanel({ project }: { project: ShowProps["project"] }) {
 	const t = useT();
 	const [open, setOpen] = useState(false);
 	const [busy, setBusy] = useState(false);
+	// Kept here and shown in the form: a note on the page would sit behind the dialog.
+	const [failure, setFailure] = useState<Failure | null>(null);
 
 	const save = async (values: ProjectContextInput): Promise<void> => {
 		setBusy(true);
+		setFailure(null);
 		try {
 			await api().updateProject(project.id, values);
 			setOpen(false);
 			router.reload();
 		} catch (error) {
-			onFailure(failureOf(error));
+			setFailure(failureOf(error));
 		} finally {
 			setBusy(false);
 		}
@@ -125,7 +122,13 @@ function ContextPanel({
 						: t("ui.projects.complete.action")}
 				</Button>
 			</div>
-			<Dialog open={open} onOpenChange={setOpen}>
+			<Dialog
+				open={open}
+				onOpenChange={(next) => {
+					setOpen(next);
+					setFailure(null);
+				}}
+			>
 				<DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
 					<DialogHeader>
 						<DialogTitle>
@@ -143,8 +146,13 @@ function ContextPanel({
 						keepDue={project.goal.due}
 						submitLabel={t("ui.projects.edit.save")}
 						busy={busy}
+						failure={failure}
+						onEdited={() => setFailure(null)}
 						onSubmit={(values) => void save(values)}
-						onCancel={() => setOpen(false)}
+						onCancel={() => {
+							setOpen(false);
+							setFailure(null);
+						}}
 					/>
 				</DialogContent>
 			</Dialog>
@@ -497,7 +505,7 @@ export default function ProjectShow() {
 				</div>
 				<FailureNote failure={failure} />
 
-				<ContextPanel project={project} onFailure={setFailure} />
+				<ContextPanel project={project} />
 
 				<Briefing
 					projectId={project.id}
