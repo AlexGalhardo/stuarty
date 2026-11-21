@@ -64,7 +64,7 @@ func NewImageCache(limit int64) *ImageCache {
 	return &ImageCache{limit: limit, order: list.New(), entries: map[cacheKey]*list.Element{}}
 }
 
-// / ImageCacheStats is what a cache holds and how often a render found its start in it. Pictures, Bytes, Hits
+// ImageCacheStats is what a cache holds and how often a render found its start in it. Pictures, Bytes, Hits
 // and Misses are the pictures of the canvas; the prepared layers (SDD-021 section 6.2) are counted apart and
 // share the limit.
 type ImageCacheStats struct {

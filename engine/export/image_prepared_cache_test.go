@@ -30,12 +30,29 @@ func TestImageCacheKeepsThePreparedLayer(t *testing.T) {
 
 	photo := firstLayerOfKind(d, coreimage.KindImage)
 	edits := map[string]*coreimage.Document{
-		"opacity of the bottom layer":  withOpacity(t, d, ids[0], 40),
-		"opacity of the bar":           withOpacity(t, d, lyr('c'), 40),
-		"position of the photo":        applyLook(t, d, lookOp("layer.transform", fmt.Sprintf(`{"layer_id": %q, "x": 33, "y": 21}`, photo))),
-		"blend mode of the bar":        applyLook(t, d, lookOp("layer.blend", fmt.Sprintf(`{"layer_id": %q, "mode": "multiply"}`, lyr('c')))),
-		"mask of the photo":            applyLook(t, d, lookOp("layer.mask_set", fmt.Sprintf(`{"layer_id": %q, "kind": "ellipse"}`, photo))),
-		"opacity and position at once": withOpacity(t, applyLook(t, d, lookOp("layer.transform", fmt.Sprintf(`{"layer_id": %q, "x": 5}`, photo))), photo, 70),
+		"opacity of the bottom layer": withOpacity(t, d, ids[0], 40),
+		"opacity of the bar":          withOpacity(t, d, lyr('c'), 40),
+		"position of the photo": applyLook(
+			t,
+			d,
+			lookOp("layer.transform", fmt.Sprintf(`{"layer_id": %q, "x": 33, "y": 21}`, photo)),
+		),
+		"blend mode of the bar": applyLook(
+			t,
+			d,
+			lookOp("layer.blend", fmt.Sprintf(`{"layer_id": %q, "mode": "multiply"}`, lyr('c'))),
+		),
+		"mask of the photo": applyLook(
+			t,
+			d,
+			lookOp("layer.mask_set", fmt.Sprintf(`{"layer_id": %q, "kind": "ellipse"}`, photo)),
+		),
+		"opacity and position at once": withOpacity(
+			t,
+			applyLook(t, d, lookOp("layer.transform", fmt.Sprintf(`{"layer_id": %q, "x": 5}`, photo))),
+			photo,
+			70,
+		),
 	}
 
 	for name, edited := range edits {
@@ -44,12 +61,16 @@ func TestImageCacheKeepsThePreparedLayer(t *testing.T) {
 
 			got := renderWith(t, edited, cfg)
 
-			if after := cache.Stats(); after.PreparedMisses != before.PreparedMisses || after.PreparedHits == before.PreparedHits {
+			if after := cache.Stats(); after.PreparedMisses != before.PreparedMisses ||
+				after.PreparedHits == before.PreparedHits {
 				t.Fatalf("an edit that no look reads prepared a layer again: before %+v, after %+v", before, after)
 			}
 
 			if want := renderWith(t, edited, plain); !bytes.Equal(got.Pix, want.Pix) {
-				t.Fatalf("the picture from kept layers differs from the full render in %d bytes", differingBytes(got.Pix, want.Pix))
+				t.Fatalf(
+					"the picture from kept layers differs from the full render in %d bytes",
+					differingBytes(got.Pix, want.Pix),
+				)
 			}
 		})
 	}
@@ -95,7 +116,12 @@ func TestImageCachePreparedLayersAreBoundedByTheSameLimit(t *testing.T) {
 		renderWith(t, withOpacity(t, d, id, 10+i), cfg)
 
 		if s := cache.Stats(); s.Bytes+s.PreparedBytes > limit {
-			t.Fatalf("after %d renders the cache holds %d bytes, over its limit of %d", i+1, s.Bytes+s.PreparedBytes, limit)
+			t.Fatalf(
+				"after %d renders the cache holds %d bytes, over its limit of %d",
+				i+1,
+				s.Bytes+s.PreparedBytes,
+				limit,
+			)
 		}
 	}
 }

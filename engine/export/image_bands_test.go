@@ -45,7 +45,11 @@ func TestImageBandsEqualTheWholeRender(t *testing.T) {
 
 			for _, bands := range []int{2, 3, 7, 16} {
 				if got := renderBands(t, d, cfg, bands); !bytes.Equal(got.Pix, whole.Pix) {
-					t.Fatalf("%d bands differ from the whole picture in %d bytes", bands, differingBytes(got.Pix, whole.Pix))
+					t.Fatalf(
+						"%d bands differ from the whole picture in %d bytes",
+						bands,
+						differingBytes(got.Pix, whole.Pix),
+					)
 				}
 			}
 		})
@@ -191,7 +195,10 @@ func TestWorkerCountIsBoundedByCPUsAndByTheLargestLayer(t *testing.T) {
 		t.Fatalf("workers for no layer: %d", n)
 	}
 
-	small := []plan.Layer{{Kind: plan.Bitmap, W: 100, H: 100}, {Kind: plan.Media, W: 50, H: 50, Crop: plan.Rect{W: 64, H: 64}}}
+	small := []plan.Layer{
+		{Kind: plan.Bitmap, W: 100, H: 100},
+		{Kind: plan.Media, W: 50, H: 50, Crop: plan.Rect{W: 64, H: 64}},
+	}
 	if n := workerCount(small); n != workerCount(nil) {
 		t.Fatalf("small layers: %d workers, want as many as with none", n)
 	}

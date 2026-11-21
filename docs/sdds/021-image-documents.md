@@ -349,6 +349,19 @@ What epic 54 changed, measured on the same loaded machine with `BenchmarkImageRe
 
 The edit that remains, 0.5 s, is the top layer itself: alone on a blank canvas it takes 0.36 s (its glow and its rounded mask, 0.1 s each, and the plain draw of 1.7 million pixels 0.07 s), and the rest is the instance, the upload of the picture below it and the two copies of 64 MB. The cold export is the sum of the looks. Both are the arithmetic of the module under `wazero` (a native release build draws one 1,200 by 900 layer with one filter in 16 to 143 ms), so the levers left are in `renderer/`: skipping the preparation of a layer (blur, sharpen, glow) when the band that is drawn does not touch it, which would let the export draw bands on several instances, and keeping the prepared image of a layer so that an edit of its opacity or position does not prepare it again. Those levers and the measurement against the budget on the idle machine are epic 55 (D-118).
 
+
+### 13.3 After epic 55
+
+Measured on the same Windows machine (16 logical CPUs, an AMD Ryzen 7 5700X3D) **with other agents running**, so the numbers are for the shares and the direction, never the budget: the idle numbers are the orchestrator's, in `docs/perf/`. `BenchmarkImageReference`, `-benchtime 5x`:
+
+| | Before epic 55 | After |
+| --- | --- | --- |
+| Cold export (`s_export`), loaded machine | 16 s (11 s on a quieter one) | 3.5 to 5 s |
+| Edit of the top layer (`compose_ms`), loaded machine | 440 ms | 50 to 70 ms |
+| CPU time of one cold export | not measured | about 15 s over 8 workers: preparing 11 s, drawing 4 s, PNG 0.3 s |
+| PNG encode | 0.5 s on one core | 40 ms |
+
+What each step took out, in order: the layers prepared on 8 instances at once and drawn in bands (the looks are no longer one core's work); the instances kept in a pool (a fresh instance faulted in every page of its memory, which took longer than the draw once eight did it together); a band drawn into a buffer of its own rows; the prepared picture kept across an edit of an opacity or a position; the box blur on the channels that can be non-zero, by reciprocal and row by row (0.18 s to 0.08 s for a 2,000 by 2,000 picture, native); the draw reading four pixels instead of sixteen values (a rotated layer, 39 ms to 24 ms, native); the PNG compressed in pieces. A single rotated 2,000 by 2,000 photo with tone, colour matrix and sharpen still prepares in about 0.43 s in the module (0.17 s native), which is the longest task of the export.
 ## 14. Decisions of this SDD
 
 1. **A separate registry, shared code.** The image operations are registered in their own registry so that the video registry, its tests and its surfaces do not change; the decoder, the schema generator and the types are shared.
