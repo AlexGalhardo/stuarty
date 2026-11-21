@@ -509,6 +509,11 @@ body {
   mask-image: linear-gradient(to bottom, transparent 0, #000 1.25rem, #000 calc(100% - 2rem), transparent 100%);
   scroll-padding-block: 1.25rem 2rem;
 }
+/* The samples column of a reference page holds content, not navigation: no fade over its text. */
+.scroll-nofade {
+  mask-image: none;
+  scroll-padding-block: 0;
+}
 /* Chromium ignores ::-webkit-scrollbar (and draws arrows) once the standard properties are set,
    so only browsers without the pseudo-elements (Firefox) get them. */
 @supports not selector(::-webkit-scrollbar) {

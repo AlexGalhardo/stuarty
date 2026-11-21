@@ -12,7 +12,7 @@ export function RefMain({ children }: { children: React.ReactNode }): React.Reac
 
 export function RefAside({ children }: { children: React.ReactNode }): React.ReactElement {
 	return (
-		<div className="prose min-w-0 max-xl:order-first xl:sticky xl:top-[calc(var(--header-h)+1rem)] xl:max-h-[calc(100dvh-var(--header-h)-2rem)] xl:self-start xl:overflow-y-auto xl:pr-1 scroll-slim">
+		<div className="prose min-w-0 max-xl:order-first xl:sticky xl:top-[calc(var(--header-h)+1rem)] xl:max-h-[calc(100dvh-var(--header-h)-2rem)] xl:self-start xl:overflow-y-auto xl:pr-3 scroll-slim scroll-nofade">
 			{children}
 		</div>
 	);
