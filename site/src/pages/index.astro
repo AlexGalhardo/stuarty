@@ -68,10 +68,11 @@ import { withBase } from "@/lib/site";
 		<!-- Take 3: agents drive it too -->
 		<section id="agents" class="take" aria-labelledby="agents-title" data-take>
 			<div class="site-container">
-				<h2 id="agents-title" tabindex="-1" class="display-title max-w-3xl text-fg" data-in>Agents drive it too.</h2>
-				<p class="lead mt-4 max-w-2xl" data-in>The editor, the CLI, the HTTP API and MCP are thin doors to one command core, tested for parity.</p>
 				<div data-in>
-					<DriveTabs idPrefix="viewport" class="mt-8" />
+					<DriveTabs idPrefix="viewport" split>
+						<h2 id="agents-title" tabindex="-1" class="display-title text-fg">Agents drive it too.</h2>
+						<p class="lead mt-4">The editor, the CLI, the HTTP API and MCP are thin doors to one command core, tested for parity.</p>
+					</DriveTabs>
 				</div>
 			</div>
 		</section>
