@@ -142,7 +142,7 @@ body {
   background: transparent !important;
   margin: 0;
   padding: 1rem 1.125rem;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   line-height: 1.7;
   tab-size: 4;
 }
@@ -164,7 +164,7 @@ body {
 
 .prose {
   color: var(--muted);
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   line-height: 1.75;
 }
 
@@ -200,18 +200,18 @@ body {
 }
 
 .prose h2 {
-  font-size: 1.375rem;
+  font-size: 1.3rem;
   line-height: 1.35;
   margin-top: 3rem;
 }
 
 .prose h3 {
-  font-size: 1.0625rem;
+  font-size: 1rem;
   margin-top: 2.25rem;
 }
 
 .prose h4 {
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   margin-top: 1.75rem;
 }
 
@@ -368,7 +368,7 @@ body {
 .prose table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   line-height: 1.6;
 }
 

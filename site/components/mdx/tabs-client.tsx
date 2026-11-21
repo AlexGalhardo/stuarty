@@ -27,7 +27,7 @@ export function TabsClient({ items, variant = "default" }: { items: TabItem[]; v
 						role="tab"
 						data-tab={i}
 						aria-selected={i === 0}
-						className={`relative cursor-pointer ${code ? "px-2" : "px-2.5"} whitespace-nowrap text-muted transition-colors outline-none hover:text-fg focus-visible:text-fg focus-visible:underline aria-selected:text-fg ${
+						className={`relative cursor-pointer ${code ? "px-1.5" : "px-2.5"} whitespace-nowrap text-muted transition-colors outline-none hover:text-fg focus-visible:text-fg focus-visible:underline aria-selected:text-fg ${
 							code ? "font-mono text-xs" : "py-3 text-sm font-medium"
 						}`}
 					>
