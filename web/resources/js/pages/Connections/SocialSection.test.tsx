@@ -2,6 +2,7 @@ import { renderToString } from "react-dom/server";
 import { describe, expect, test, vi } from "vitest";
 
 import { I18nProvider } from "@/lib/i18n";
+import { SessionProvider } from "@/lib/session";
 import type { SocialAccount, SocialNetwork } from "../../editor/api/types";
 import { SetupGuide } from "./SetupGuide";
 import { AccountPicker, AccountRow } from "./SocialSection";
@@ -11,6 +12,7 @@ vi.mock("@inertiajs/react", () => ({ Head: () => null, Link: () => null }));
 const PAYLOAD = "<img src=x onerror=window.__pwned=1>";
 
 const messages = {
+	"ui.session.person_only.local": "Only a person in the app can do this.",
 	"ui.social.signed_in_as": "Signed in as",
 	"ui.social.needs_sign_in": "Not signed in yet",
 	"ui.social.sign_in_again": "Sign in again",
@@ -247,6 +249,34 @@ describe("the accounts of the social networks", () => {
 		);
 		expect(html).toContain('name="social-account-con_9"');
 		expect(html).toContain('data-account-picker="con_9"');
+	});
+
+	test("a session that is not a person's sees the choice disabled, with the reason (VV-331)", () => {
+		const html = wrap(
+			<AccountPicker
+				connectionId="con_9"
+				choices={[{ id: "P1", title: "Page" }]}
+				busy={false}
+				onSelect={() => undefined}
+			/>,
+		);
+		expect(html).toMatch(/<button[^>]*disabled[^>]*>\s*Use this account/);
+		expect(html).toContain('id="pick-person-only-con_9"');
+		expect(html).toContain("Only a person");
+	});
+
+	test("a person's session sees it enabled and no reason (VV-331)", () => {
+		const html = wrap(
+			<SessionProvider session={{ privileged: true, mode: "local" }}>
+				<AccountPicker
+					connectionId="con_9"
+					choices={[{ id: "P1", title: "Page" }]}
+					busy={false}
+					onSelect={() => undefined}
+				/>
+			</SessionProvider>,
+		);
+		expect(html).not.toContain("person-only");
 	});
 });
 

@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
+import { PersonOnlyNote, useSession } from "@/lib/session";
 import ChatEventView from "./ChatEventView";
 import { canSend, isBusy, isVisible, openRequests } from "./chatState";
 import type { ChatPanelState } from "./useChat";
@@ -31,6 +32,7 @@ export default function ChatConversation({
 	composerRef: React.RefObject<HTMLTextAreaElement | null>;
 }): ReactNode {
 	const t = useT();
+	const { privileged } = useSession();
 	const ids = useId();
 	const [text, setText] = useState("");
 	const [profile, setProfile] = useState("");
@@ -114,7 +116,10 @@ export default function ChatConversation({
 			<div className="flex flex-wrap items-center gap-2">
 				<Button
 					size="sm"
-					disabled={chat.busy || chat.projectId === null || chosen === ""}
+					disabled={
+						!privileged || chat.busy || chat.projectId === null || chosen === ""
+					}
+					aria-describedby={privileged ? undefined : `${ids}-person-only`}
 					onClick={() => void chat.start(chosen)}
 				>
 					{live ? t("ui.chat.new_session") : t("ui.chat.start")}
@@ -235,7 +240,8 @@ export default function ChatConversation({
 					ref={composerRef}
 					value={text}
 					maxLength={20000}
-					disabled={!canSend(state)}
+					disabled={!privileged || !canSend(state)}
+					aria-describedby={privileged ? undefined : `${ids}-person-only`}
 					onChange={(event) => setText(event.target.value)}
 					onKeyDown={onKey}
 					className="min-h-16"
@@ -247,11 +253,14 @@ export default function ChatConversation({
 					<Button
 						type="submit"
 						size="sm"
-						disabled={!canSend(state) || chat.busy || text.trim() === ""}
+						disabled={
+							!privileged || !canSend(state) || chat.busy || text.trim() === ""
+						}
 					>
 						{t("ui.chat.send")}
 					</Button>
 				</div>
+				<PersonOnlyNote id={`${ids}-person-only`} />
 			</form>
 		</div>
 	);
