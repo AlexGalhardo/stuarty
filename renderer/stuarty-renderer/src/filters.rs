@@ -121,7 +121,10 @@ fn sharpen(src: &Image, p: &Placement, amount: f64, radius: f64, out_scale: f64)
 		return None;
 	}
 	let soft = blurred_replicate(src, rx, ry);
-	let ap = round_half_away(mul(held(amount, 0.0, 3.0), 1000.0));
+	// amount is at most 3, so ap is at most 3000 and a difference of two channels times it fits 32 bits: the
+	// division by 1000 is then a multiplication, where a 64-bit division is a call-free but slow instruction in
+	// WebAssembly.
+	let ap = round_half_away(mul(held(amount, 0.0, 3.0), 1000.0)) as i32;
 	let mut out = Image {
 		pix: vec![0; src.pix.len()],
 		w: src.w,
@@ -136,15 +139,12 @@ fn sharpen(src: &Image, p: &Placement, amount: f64, radius: f64, out_scale: f64)
 		.zip(src.pix.as_chunks::<4>().0)
 		.zip(soft.pix.as_chunks::<4>().0)
 	{
-		let a = i64::from(s[3]);
+		let a = i32::from(s[3]);
 		for k in 0..3 {
-			let (c, b) = (i64::from(s[k]), i64::from(u[k]));
+			let (c, b) = (i32::from(s[k]), i32::from(u[k]));
 			let delta = (c - b) * ap;
-			let q = if delta >= 0 {
-				(delta + 500) / 1000
-			} else {
-				-((-delta + 500) / 1000)
-			};
+			let mag = ((delta.unsigned_abs() + 500) / 1000) as i32;
+			let q = if delta >= 0 { mag } else { -mag };
 			o[k] = (c + q).clamp(0, a) as u8;
 		}
 		o[3] = s[3];
