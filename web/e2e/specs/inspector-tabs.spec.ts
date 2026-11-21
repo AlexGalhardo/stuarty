@@ -99,6 +99,29 @@ test.describe("inspector tabs on a laptop screen", () => {
 			)
 			.toBe(true);
 	});
+
+	test("the chosen tab stays whole when the panel gets narrower", async ({
+		page,
+		request,
+	}) => {
+		const s = await seedMixed(request);
+		await page.setViewportSize({ width: 1600, height: 850 });
+		await page.goto(`/editor/${s.id}`);
+		await page.locator(`[data-item-id="${s.clip}"]`).click();
+		const strip = page.getByRole("tablist", { name: "Properties" });
+		await strip.getByRole("tab", { name: "Text" }).click();
+		await page.setViewportSize({ width: 1300, height: 850 });
+		await expect
+			.poll(() =>
+				strip.evaluate((el) => {
+					const tab = el.querySelector('[aria-selected="true"]');
+					const box = el.getBoundingClientRect();
+					const at = tab?.getBoundingClientRect();
+					return !!at && at.left >= box.left - 1 && at.right <= box.right + 1;
+				}),
+			)
+			.toBe(true);
+	});
 });
 
 test.describe("inspector tabs", () => {

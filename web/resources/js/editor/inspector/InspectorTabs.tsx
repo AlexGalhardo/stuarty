@@ -28,23 +28,31 @@ export default function InspectorTabs({
 		: (tabs[0]?.id ?? chosen);
 	const strip = useRef<HTMLDivElement>(null);
 	// The strip scrolls by itself when the labels do not fit; the chosen tab is
-	// kept whole in view, and a strip with room left starts at its first tab
-	// instead of at a scroll the browser left (VV-328).
+	// kept whole in view, also when the panel gets narrower, and a strip with
+	// room left starts at its first tab instead of at a scroll the browser left
+	// (VV-328).
 	// biome-ignore lint/correctness/useExhaustiveDependencies: the tabs drawn change the widths the effect reads
 	useLayoutEffect(() => {
 		const list = strip.current;
-		const tab = list?.querySelector<HTMLElement>(
-			`[data-inspector-tab="${active}"]`,
-		);
-		if (!list || !tab) return;
-		const box = list.getBoundingClientRect();
-		const at = tab.getBoundingClientRect();
-		const left = at.left - box.left + list.scrollLeft;
-		if (left < list.scrollLeft) {
-			list.scrollLeft = left;
-		} else if (left + at.width > list.scrollLeft + list.clientWidth) {
-			list.scrollLeft = left + at.width - list.clientWidth;
-		}
+		if (!list) return;
+		const reveal = (): void => {
+			const tab = list.querySelector<HTMLElement>(
+				`[data-inspector-tab="${active}"]`,
+			);
+			if (!tab) return;
+			const box = list.getBoundingClientRect();
+			const at = tab.getBoundingClientRect();
+			const left = at.left - box.left + list.scrollLeft;
+			if (left < list.scrollLeft) {
+				list.scrollLeft = left;
+			} else if (left + at.width > list.scrollLeft + list.clientWidth) {
+				list.scrollLeft = left + at.width - list.clientWidth;
+			}
+		};
+		reveal();
+		const resized = new ResizeObserver(reveal);
+		resized.observe(list);
+		return () => resized.disconnect();
 	}, [active, tabs.length]);
 	return (
 		<Tabs
