@@ -26,6 +26,12 @@ import { withBase } from "@/lib/site";
 			if (!matchMedia("(prefers-reduced-motion: reduce)").matches) document.documentElement.classList.add("motion-ok");
 		})();
 	</script>
+	<!-- The second row of the navbar, on the home only: the six actions, fixed with the navbar. -->
+	<nav class="nav-actions" aria-label="Get Stuarty">
+		<div class="site-container nav-actions-inner">
+			<LandingActions idPrefix="nav" beta={false} compact />
+		</div>
+	</nav>
 	<main id="content" data-expressive data-page="viewport" class="relative isolate">
 		<a href={withBase("/docs/introduction/")} class="sr-only focus:not-sr-only focus:fixed focus:top-[calc(var(--header-h)+0.75rem)] focus:left-4 focus:z-50 focus:rounded-lg focus:bg-bg focus:px-4 focus:py-2 focus:text-sm focus:font-medium">Skip to the docs</a>
 
@@ -51,9 +57,6 @@ import { withBase } from "@/lib/site";
 							<Shot shot={shots.dashboard} sizes="(min-width: 64rem) 52rem, 100vw" class="shot-dark" />
 						</figure>
 					</div>
-				</div>
-				<div class="mt-10 lg:mt-12" data-hero-item>
-					<LandingActions idPrefix="hero" align="center" beta={false} />
 				</div>
 			</div>
 		</section>
@@ -378,14 +381,29 @@ import { withBase } from "@/lib/site";
 		letter-spacing: -0.03em;
 		text-wrap: pretty;
 	}
-	/* The four buttons sit in the middle of the space between the text and picture above and the scroll hint. */
-	html.takes-on #studio > .site-container {
-		display: flex;
-		flex-direction: column;
+	/* The home navbar has a second row with the six actions: the header offset of every take counts both rows. */
+	html:has(main[data-page="viewport"][data-expressive]) {
+		--nav1-h: 70px;
+		--nav2-h: 3.5rem;
+		--header-h: calc(var(--nav1-h) + var(--nav2-h));
 	}
-	html.takes-on #studio > .site-container > [data-hero-item]:has(.landing-actions) {
-		margin-block: auto;
-		padding-block: 1.25rem;
+	@media (max-width: 767px) {
+		html:has(main[data-page="viewport"][data-expressive]) {
+			--nav1-h: 52.5px;
+		}
+	}
+	.nav-actions {
+		position: fixed;
+		top: var(--nav1-h);
+		inset-inline: 0;
+		z-index: 39;
+		height: var(--nav2-h);
+		border-bottom: 1px solid color-mix(in oklab, var(--fg) 10%, transparent);
+		background: color-mix(in oklab, var(--bg) 70%, transparent);
+		backdrop-filter: blur(24px);
+	}
+	.nav-actions-inner {
+		height: 100%;
 	}
 
 	/* The first take keeps the bottom free for the scroll hint; on short windows the hero tightens so its buttons
