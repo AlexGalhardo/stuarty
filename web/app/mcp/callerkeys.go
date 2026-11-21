@@ -44,7 +44,7 @@ type keyRedactor struct {
 }
 
 // cutMark is what command.Shortened leaves where it cut a text.
-var cutMark = regexp.MustCompile(`\.\.\. \(\d+ characters\)`)
+var cutMark = regexp.MustCompile(`\.{3} \(\d+ characters\)`)
 
 // newKeyRedactor is nil when the arguments have no unsafe key.
 func newKeyRedactor(raw json.RawMessage) *keyRedactor {
@@ -95,9 +95,8 @@ func newKeyRedactor(raw json.RawMessage) *keyRedactor {
 func (k *keyRedactor) Replace(s string) string {
 	s = k.exact.Replace(s)
 
-	locs := cutMark.FindAllStringIndex(s, -1)
-	for i := len(locs) - 1; i >= 0; i-- {
-		start, end := locs[i][0], locs[i][1]
+	for _, loc := range slices.Backward(cutMark.FindAllStringIndex(s, -1)) {
+		start, end := loc[0], loc[1]
 		if n := k.keyTail(s[:start]); n > 0 {
 			s = s[:start-n] + "?" + s[end:]
 		}

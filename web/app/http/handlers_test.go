@@ -695,7 +695,8 @@ func TestLintRefusesTheFitCheckQuery(t *testing.T) {
 		res := h.get("/api/v1/projects/prj_0000000000/lint?" + q)
 		env := res.json(t)
 
-		if res.status != http.StatusBadRequest || env["code"] != "E_VALIDATION" || !strings.Contains(string(res.body), "export-check") {
+		if res.status != http.StatusBadRequest || env["code"] != "E_VALIDATION" ||
+			!strings.Contains(string(res.body), "export-check") {
 			t.Errorf("%s = %d %s, want E_VALIDATION naming export-check", q, res.status, res.body)
 		}
 	}

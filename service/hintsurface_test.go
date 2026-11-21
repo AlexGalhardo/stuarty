@@ -71,7 +71,10 @@ func TestListHintsNameTheSurface(t *testing.T) {
 		t.Errorf("CanonicalHint(HTTP) = %q, want %q", got, h)
 	}
 
-	if e := jobNotFound("job_x"); strings.Contains(e.Hint, "TextList") || e.Hint != "list the jobs of the project with job_list" {
+	if e := jobNotFound(
+		"job_x",
+	); strings.Contains(e.Hint, "TextList") ||
+		e.Hint != "list the jobs of the project with job_list" {
 		t.Errorf("jobNotFound hint = %q", e.Hint)
 	}
 }

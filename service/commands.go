@@ -149,7 +149,7 @@ func commandList(reg *command.Registry, textCap int) *CommandHelpResult {
 		return res
 	}
 
-	for keep := len(lines) - 1; keep >= 0; keep-- {
+	for keep := range slices.Backward(lines) {
 		names := make([]string, 0, len(lines)-keep)
 		for _, sum := range res.Commands[keep:] {
 			names = append(names, sum.Name)

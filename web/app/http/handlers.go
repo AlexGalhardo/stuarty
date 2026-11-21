@@ -295,7 +295,8 @@ func (h *apiHandler) registerAll() {
 		for _, name := range []string{"preset", "start", "end"} {
 			if c.Query(name) != "" {
 				return service.LintResult{}, &service.Error{
-					Code: command.CodeValidation, Path: name,
+					Code:    command.CodeValidation,
+					Path:    name,
 					Message: name + " is not a parameter of the lint.",
 					Hint:    "the fit check of an export preset is GET /api/v1/projects/{id}/export-check with preset, start and end",
 				}
