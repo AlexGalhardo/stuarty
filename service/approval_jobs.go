@@ -385,7 +385,8 @@ func (s *svc) ensureReserved(ctx context.Context, job *JobRow) error {
 
 		now := s.nowMs()
 		action := core.Action{
-			Kind: req.Kind, Connection: req.ConnectionID, Project: costProject(ctx, tx, req.ProjectID), Cost: req.Estimate,
+			Kind: req.Kind, Connection: req.ConnectionID,
+			Project: costProject(ctx, tx, req.ProjectID), Cost: req.Estimate,
 		}
 
 		out, err := approval.Evaluate(ctx, st, action, time.UnixMilli(now))

@@ -425,7 +425,8 @@ func (t *pubTx) Ask(ctx context.Context, a pub.Ask) error {
 
 	estimate := core.Money{Micros: a.CostMicros, Currency: a.Currency}
 	action := core.Action{
-		Kind: KindPublishScheduled, Connection: a.ConnectionID, Project: costProject(ctx, t.tx, a.ProjectID), Cost: estimate,
+		Kind: KindPublishScheduled, Connection: a.ConnectionID,
+		Project: costProject(ctx, t.tx, a.ProjectID), Cost: estimate,
 	}
 
 	out, err := approval.Evaluate(ctx, st, action, time.UnixMilli(now))

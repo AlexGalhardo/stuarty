@@ -325,7 +325,9 @@ func TestCeiling_ProjectCoversEveryTimeline(t *testing.T) {
 	second := added.Item.TimelineID
 	e.setCeiling(project, 0, 500_000)
 
-	first, err := e.svc.JobStart(e.as(token), service.JobStartRequest{ProjectID: project, TimelineID: second, Kind: testKind})
+	first, err := e.svc.JobStart(e.as(token), service.JobStartRequest{
+		ProjectID: project, TimelineID: second, Kind: testKind,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -339,7 +341,9 @@ func TestCeiling_ProjectCoversEveryTimeline(t *testing.T) {
 		t.Fatalf("the request carries %+v, %v; want the timeline %s", req, err, second)
 	}
 
-	_, err = e.svc.JobStart(e.as(token), service.JobStartRequest{ProjectID: project, Kind: testKind, TimelineID: project})
+	_, err = e.svc.JobStart(e.as(token), service.JobStartRequest{
+		ProjectID: project, Kind: testKind, TimelineID: project,
+	})
 
 	var se *service.Error
 	if !errors.As(err, &se) || se.Code != service.CodeCostCeiling {
