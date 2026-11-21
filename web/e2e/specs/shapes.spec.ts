@@ -16,10 +16,48 @@ function recordEdits(page: Page): Posted[] {
 	return posted;
 }
 
-// P2-UI-026 (SDD-012 sections 8.2 and 12.1): shapes are added from the toolbar
-// menu and edited in the inspector, one command each, and the preview draws
-// them through a bitmap layer of the plan.
+// P2-UI-026 (SDD-012 sections 8.2 and 12.1): shapes are added from the Text tab
+// and edited in the inspector, one command each, and the preview draws them
+// through a bitmap layer of the plan.
 test.describe("shapes", () => {
+	// VV-160, after the strip above the preview went away (epic 60): adding a text
+	// and a shape keeps a path with the keyboard alone, through the tab rail.
+	test("the Text tab adds a text and a shape from the keyboard", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, { tracks: 1, perTrack: 0 });
+		await page.goto(`/editor/${seeded.id}`);
+		await expect(page.getByRole("main", { name: "Preview" })).toBeVisible();
+		const posted = recordEdits(page);
+
+		await page.getByRole("tab", { name: "Media" }).focus();
+		await expect(page.getByRole("tab", { name: "Media" })).toBeFocused();
+		const text = page.getByRole("tab", { name: "Text" });
+		for (let i = 0; i < 8; i++) {
+			if (await text.evaluate((el) => el === document.activeElement)) break;
+			await page.keyboard.press("ArrowDown");
+		}
+		await expect(text).toBeFocused();
+		await page.keyboard.press("Enter");
+
+		const addText = page.getByRole("button", { name: "Add text" });
+		await addText.focus();
+		await page.keyboard.press("Enter");
+		await expect.poll(() => posted.length).toBe(1);
+		expect(posted[0]?.operations[0]?.op).toBe("text.add");
+
+		const rectangle = page.getByRole("button", {
+			name: "Rectangle",
+			exact: true,
+		});
+		await rectangle.focus();
+		await page.keyboard.press("Enter");
+		await expect.poll(() => posted.length).toBe(2);
+		expect(posted[1]?.operations[0]?.op).toBe("shape.add");
+		expect(posted[1]?.operations[0]?.args.shape).toBe("rect");
+	});
+
 	test("add a shape and edit its fields, one command each; the preview loads a plan bitmap", async ({
 		page,
 		request,
