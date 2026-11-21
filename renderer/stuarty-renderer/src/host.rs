@@ -105,12 +105,25 @@ impl Renderer {
 	) -> Result<(), Error> {
 		check_id(id)?;
 		let n = check_pixels(w, h, rgba)?;
+		self.store_texture(id, w, h, &rgba[..n], opaque)
+	}
+
+	/// Keeps `pix`, exactly `w x h x 4` bytes, as the texture of `id`, within the budget of textures.
+	fn store_texture(
+		&mut self,
+		id: &str,
+		w: usize,
+		h: usize,
+		pix: &[u8],
+		opaque: bool,
+	) -> Result<(), Error> {
+		let n = pix.len();
 		let old = self.textures.get(id).map_or(0, |t| t.pix.len());
 		if self.texture_bytes - old + n > self.limits.max_texture_bytes {
 			return Err(Error::new(Reason::LimitExceeded, "render_texture_bytes"));
 		}
 		let image = Image {
-			pix: rgba[..n].to_vec(),
+			pix: pix.to_vec(),
 			w,
 			h,
 			opaque,
@@ -184,17 +197,14 @@ impl Renderer {
 				"a prepared block has a size or a flag that is not valid",
 			));
 		}
-		let n = check_pixels(w, h, &block[PREPARED_HEADER..])?;
-		if block.len() != PREPARED_HEADER + n {
-			return Err(bad("a prepared block is longer than its pixels"));
+		// No limit on a side: a look grows a layer past the side of a texture, and the draw of that layer takes it
+		// when the render is whole. The bytes are bounded by the block and by the budget of textures.
+		let pixels = &block[PREPARED_HEADER..];
+		let n = w.checked_mul(h).and_then(|p| p.checked_mul(4));
+		if n != Some(pixels.len()) || pixels.is_empty() {
+			return Err(bad("a prepared block is not the size of its pixels"));
 		}
-		self.put_texture(
-			id,
-			w,
-			h,
-			&block[PREPARED_HEADER..PREPARED_HEADER + n],
-			flags == 1,
-		)?;
+		self.store_texture(id, w, h, pixels, flags == 1)?;
 		self.prepared.insert(id.to_string(), meta);
 		Ok(())
 	}
@@ -604,6 +614,51 @@ mod tests {
 		nan[16..24].copy_from_slice(&f64::NAN.to_le_bytes());
 		assert_eq!(
 			r.put_prepared("u", &nan).unwrap_err().reason,
+			Reason::InvalidArgument
+		);
+	}
+
+	/// A block of `w x h` opaque pixels drawn in a rectangle of the same size.
+	fn prepared_block(w: u32, h: u32, pixels: usize) -> Vec<u8> {
+		let mut b = Vec::with_capacity(PREPARED_HEADER + pixels);
+		for v in [w, h, 1, 0] {
+			b.extend_from_slice(&v.to_le_bytes());
+		}
+		for v in [f64::from(w), f64::from(h), 0.0, 0.0, 1.0] {
+			b.extend_from_slice(&v.to_le_bytes());
+		}
+		b.resize(PREPARED_HEADER + pixels, 255);
+		b
+	}
+
+	#[test]
+	fn a_prepared_layer_may_be_wider_than_a_texture_and_stays_in_the_budget() {
+		let w = MAX_TEXTURE_SIDE as u32 + 100;
+		let mut r = Renderer::new(Limits::default());
+		r.put_prepared("wide", &prepared_block(w, 2, w as usize * 2 * 4))
+			.unwrap();
+		let mut tight = Renderer::new(Limits {
+			max_texture_bytes: 1000,
+			..Limits::default()
+		});
+		assert_eq!(
+			tight
+				.put_prepared("wide", &prepared_block(w, 2, w as usize * 2 * 4))
+				.unwrap_err()
+				.detail,
+			"render_texture_bytes"
+		);
+		// A size whose bytes do not fit the address space of the module is refused, never wrapped around.
+		assert_eq!(
+			r.put_prepared("big", &prepared_block(u32::MAX, u32::MAX, 16))
+				.unwrap_err()
+				.reason,
+			Reason::InvalidArgument
+		);
+		assert_eq!(
+			r.put_prepared("none", &prepared_block(0, 5, 0))
+				.unwrap_err()
+				.reason,
 			Reason::InvalidArgument
 		);
 	}
