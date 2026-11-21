@@ -337,6 +337,11 @@ func editorPage(c *web.Ctx, d *httpapi.Deps, app *vukem.App) error {
 		})
 	}
 
+	// A project with no timeline has no document to open: its page is where a video is added (epic 56).
+	if head.TimelineID == "" {
+		return c.Redirect("/projects/" + head.ProjectID)
+	}
+
 	locale := i18n.Locale(c.Context())
 	if locale == "" {
 		locale = app.I18n.Default()
