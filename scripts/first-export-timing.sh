@@ -149,8 +149,14 @@ clip=/media/clip.mp4
 has_export() { docker exec "$name" sh -c "test -s /data/exports/$1/$2.mp4"; }
 fi
 
-project="$(vv project:create --name "First export" --json | field project_id)"
+# A project has a description and a SMART goal, and no timeline until one is added (SDD-005 section 5.12.2).
+project="$(vv project:create --name "First export" --json \
+	--description "The first export of a new user, timed from the install: one clip, cut and exported as a video." \
+	--specific "Export the first video of a new user" --measurable "The time from install to the file" \
+	--achievable "One clip made by FFmpeg is enough" --relevant "It is the first thing a person tries" \
+	--time-bound "Done within the run of this script" --due 2999-12-31 | field project_id)"
 [ -n "$project" ] || fail "no project id"
+vv item:add --project "$project" --kind timeline --title "First export" >/dev/null
 asset="$(vv media:import "$clip" --project "$project" --json | field asset_id)"
 [ -n "$asset" ] || fail "no asset id"
 mark "create a project and import the clip"

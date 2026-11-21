@@ -20,8 +20,14 @@ recipe_start
 # ---- 1. the brief ----------------------------------------------------------------------------------------------
 
 step "1. a project, and the brief of the commercial"
-created="$(stuarty project:create --name "Keep mug commercial" --preset 9:16 --json)"
+# A project has a description and a SMART goal, and no timeline until one is added (SDD-005 section 5.12.2).
+created="$(stuarty project:create --name "Keep mug commercial" --json \
+	--description "A fifteen second vertical commercial for Keep, a steel mug that holds heat for eight hours." \
+	--specific "Publish one commercial for the Keep mug" --measurable "Two hundred clicks to the shop in a week" \
+	--achievable "The product shots and the voice exist" --relevant "The mug launches in the shop this month" \
+	--time-bound "Brief today, edit tomorrow, publish on Friday" --due 2999-12-31)"
 P="$(need project_id "$(printf '%s' "$created" | field project_id)" "$created")"
+stuarty item:add --project "$P" --kind timeline --title "Keep mug commercial" --preset 9:16 >/dev/null
 cat >"$WORK/brief.md" <<'EOF'
 # Brief
 

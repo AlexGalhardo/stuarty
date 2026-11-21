@@ -81,6 +81,13 @@ export STUARTY_HOME="$work/home"
 mkdir -p "$STUARTY_HOME" "$work/traces"
 port="${NOEGRESS_PORT:-$((20000 + RANDOM % 20000))}"
 project=prj_7k2m9x4q1b
+# A project has a description and a SMART goal, and no timeline until one is added (SDD-005 section 5.12.2).
+context=(
+	--description "A short video made by the no-egress check, with one clip, to prove that nothing leaves the machine."
+	--specific "Run the reference session of the check" --measurable "No socket outside the loopback interface"
+	--achievable "Every step runs on this machine alone" --relevant "It proves the promise of no telemetry"
+	--time-bound "Done within the run of this script" --due 2999-12-31
+)
 
 # traced <label> <command...>: runs the command under strace; the trace goes to traces/<label>.log.
 traced() {
@@ -132,7 +139,8 @@ done
 log "CLI session: create, import, edit, export, view"
 ffmpeg -v error -f lavfi -i testsrc2=size=320x180:rate=30:duration=2 -f lavfi -i sine=frequency=220:duration=2 \
 	-c:v mpeg4 -c:a aac -shortest "$work/clip.mp4"
-vv cli-create project:create --name "No egress" --id "$project"
+vv cli-create project:create --name "No egress" --id "$project" "${context[@]}"
+vv cli-timeline item:add --project "$project" --kind timeline --title "No egress"
 vv cli-import media:import "$work/clip.mp4" --project "$project" --asset-id ast_3c5v8n2w6d
 vv cli-edit edit --project "$project" --ops - <<'JSON'
 [{"op":"track.add","args":{"kind":"visual","name":"Video","id":"trk_m1n2p3q4r5"}},
@@ -150,7 +158,8 @@ vv cli-export-png export --project "$project" --format png --at 1s --wait --time
 log "CLI session: OTIO export and import"
 project2=prj_8d3f6g1h4j
 vv cli-otio-export otio:export --project "$project" --out "$work/cut.otio"
-vv cli-otio-create project:create --name "From OTIO" --id "$project2"
+vv cli-otio-create project:create --name "From OTIO" --id "$project2" "${context[@]}"
+vv cli-otio-timeline item:add --project "$project2" --kind timeline --title "From OTIO"
 vv cli-otio-media media:import "$work/clip.mp4" --project "$project2" --asset-id ast_9w8x7y6z5a
 vv cli-otio-import otio:import "$work/cut.otio" --project "$project2"
 
@@ -163,7 +172,8 @@ vv cli-font-import font:import "$root/renderer/fonts/Anton-Regular.ttf" --json
 font_hash="$(json_field hash "$work/cli-font-import.out")"
 [ -n "$font_hash" ] || die "font:import printed no hash"
 # A template carries no media, so it comes from an empty project.
-vv cli-template-project project:create --name "Template source" --id prj_2c4e6g8j0k
+vv cli-template-project project:create --name "Template source" --id prj_2c4e6g8j0k "${context[@]}"
+vv cli-template-timeline item:add --project prj_2c4e6g8j0k --kind timeline --title "Template source"
 vv cli-template-save template:save --project prj_2c4e6g8j0k --name "No egress" --json
 template_id="$(json_field template_id "$work/cli-template-save.out")"
 [ -n "$template_id" ] || die "template:save printed no id"
