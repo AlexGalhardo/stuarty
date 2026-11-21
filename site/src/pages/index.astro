@@ -105,12 +105,29 @@ import { withBase } from "@/lib/site";
 	   width and the height of the window so they never overflow from 320 px up; each group stays on one line from
 	   1280 px. */
 	main[data-page="viewport"] .yours-lines {
-		font-size: clamp(2.25rem, min(0.5rem + 5.6vw, 11vh), 5.5rem);
+		font-size: clamp(2.25rem, min(0.5rem + 5.6vw, 9vh), 5.5rem);
 		font-weight: 650;
 		line-height: 1.04;
 		letter-spacing: -0.035em;
 		text-wrap: balance;
 		overflow-wrap: anywhere;
+	}
+	/* A blank line between the three lines, as a margin so the heading stays one sentence-like run of text. */
+	main[data-page="viewport"] .yours-lines > .block + .block {
+		margin-top: 0.75em;
+	}
+	/* The closing take: the lines close to the navbar, the credit at the bottom edge of the window. */
+	html.takes-on #yours {
+		align-items: stretch;
+		padding-block: clamp(1.5rem, 5vh, 3.5rem) 0.75rem;
+	}
+	html.takes-on #yours > .site-container {
+		display: flex;
+		flex-direction: column;
+	}
+	html.takes-on #yours .take-credits {
+		margin-top: auto;
+		padding-top: 1.5rem;
 	}
 	/* "Free. Forever.": orange to pink text, darker stops on the light page (3.6:1 and 5.1:1 on white), brighter on
 	   the dark one (8.5:1 and 5.5:1), with a slow shimmer that stops under reduced motion. */
