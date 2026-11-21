@@ -3,7 +3,12 @@ import { existsSync, mkdirSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { type APIRequestContext, test as base, expect } from "@playwright/test";
+import {
+	type APIRequestContext,
+	test as base,
+	expect,
+	type Page,
+} from "@playwright/test";
 import { cspViolations } from "../support/browsers";
 
 // The workspace the server of playwright.config.ts runs on.
@@ -386,7 +391,11 @@ export async function caller(
 		Authorization: `Bearer ${await token()}`,
 		"Stuarty-Client": label,
 	};
-	return async (method, path, data) => {
+	const send = async (
+		method: string,
+		path: string,
+		data?: unknown,
+	): Promise<Record<string, unknown>> => {
 		const response = await request.fetch(`/api/v1${path}`, {
 			method,
 			data,
@@ -399,9 +408,105 @@ export async function caller(
 		}
 		return (await response.json()) as Record<string, unknown>;
 	};
+	return async (method, path, data) => {
+		// A project needs a description and a goal since epic 56, and no timeline exists until a video is
+		// added. A spec that only names the project gets both here: the context, and one timeline with the
+		// label as its title (the first timeline has the id of the project).
+		const body = data as { name?: string; description?: string } | undefined;
+		if (
+			method === "POST" &&
+			path === "/projects" &&
+			body?.name !== undefined &&
+			body.description === undefined
+		) {
+			const created = await send(method, path, {
+				...(data as object),
+				...projectBody(body.name),
+			});
+			await send("POST", `/projects/${created.project_id as string}/items`, {
+				kind: "timeline",
+				title: body.name,
+			});
+			return created;
+		}
+		return send(method, path, data);
+	};
 }
 
 // seedProject creates a project through the API with the test clip imported,
+export const GOAL = {
+	specific: "Publish one short video that explains the idea",
+	measurable: "At least one hundred views in the first week",
+	achievable: "The footage and the script already exist",
+	relevant: "It brings the first audience to the channel",
+	time_bound: "Edit on Monday and publish on Tuesday",
+	due: "2999-12-31",
+};
+export const DESCRIPTION =
+	"A short vertical video made for the end to end tests: it has a script, some footage and captions, for the people who follow the channel.";
+
+// A name the core accepts (4 to 32 letters, digits and single spaces) from any label.
+export function validName(label: string): string {
+	const clean = label
+		.replace(/[^\p{L}\p{M}\p{N}]+/gu, " ")
+		.trim()
+		.slice(0, 32)
+		.trim();
+	return clean.length >= 4 ? clean : `Project ${clean}`.trim();
+}
+
+// The body of a valid POST /projects: the description and the goal are required (epic 56).
+export function projectBody(name: string): Record<string, unknown> {
+	return { name: validName(name), description: DESCRIPTION, goal: GOAL };
+}
+
+// fillProjectForm fills the create form of the projects page with a valid context (epic 56).
+export async function fillProjectForm(page: Page, name: string): Promise<void> {
+	await page.getByLabel("Name", { exact: true }).fill(validName(name));
+	await page.getByLabel("Description", { exact: true }).fill(DESCRIPTION);
+	await page.getByLabel("Specific", { exact: true }).fill(GOAL.specific);
+	await page.getByLabel("Measurable", { exact: true }).fill(GOAL.measurable);
+	await page.getByLabel("Achievable", { exact: true }).fill(GOAL.achievable);
+	await page.getByLabel("Relevant", { exact: true }).fill(GOAL.relevant);
+	await page.getByLabel("Time-bound", { exact: true }).fill(GOAL.time_bound);
+	await page.getByLabel("Due date", { exact: true }).fill(GOAL.due);
+}
+
+// createThroughTheForm makes a project with the form, adds its timeline on the page of the project (the size is
+// asked there) and opens the editor; it returns the id of the project.
+export async function createThroughTheForm(
+	page: Page,
+	name: string,
+): Promise<string> {
+	await page.goto("/projects");
+	await fillProjectForm(page, name);
+	await page.getByRole("button", { name: "Create project" }).click();
+	await page.waitForURL(/\/projects\/prj_[0-9a-hjkmnp-tv-z]{10}$/);
+	const id = page.url().split("/").pop() ?? "";
+	await page.getByLabel("Title", { exact: true }).fill(name);
+	await page.getByRole("button", { name: "Add item" }).click();
+	await page.goto(`/editor/${id}`);
+	return id;
+}
+
+// A project through the API, with one timeline named after the label, as the editor specs need; the first
+// timeline of a project has the id of the project.
+export async function makeProject(
+	call: (
+		method: "GET" | "POST" | "PUT" | "DELETE",
+		path: string,
+		data?: unknown,
+	) => Promise<Record<string, unknown>>,
+	label: string,
+): Promise<Record<string, unknown>> {
+	const created = await call("POST", "/projects", projectBody(label));
+	await call("POST", `/projects/${created.project_id as string}/items`, {
+		kind: "timeline",
+		title: label,
+	});
+	return created;
+}
+
 // `tracks` visual tracks and `perTrack` one-second clips on each, end to end.
 export async function seedProject(
 	request: APIRequestContext,
@@ -417,9 +522,7 @@ export async function seedProject(
 	} = {},
 ): Promise<Seeded> {
 	const call = await caller(request);
-	const created = await call("POST", "/projects", {
-		name: options.name ?? `E2E ${Date.now()}`,
-	});
+	const created = await makeProject(call, options.name ?? `E2E ${Date.now()}`);
 	const id = created.project_id as string;
 
 	const imported = (await call("POST", `/projects/${id}/media`, {

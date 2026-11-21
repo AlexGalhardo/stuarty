@@ -1,24 +1,18 @@
-import { Head, router, useForm, usePage } from "@inertiajs/react";
-import { type FormEvent, useState } from "react";
+import { Head, router, usePage } from "@inertiajs/react";
+import { useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useLocale, useT } from "@/lib/i18n";
-import {
-	type ProjectsIndexProps,
-	SIZE_PRESETS,
-	type SizePreset,
-} from "@/types";
+import type { ProjectsIndexProps } from "@/types";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
+import type { ProjectContextInput } from "../../editor/api/types";
 import { BundleImport } from "./Bundles";
 import ProjectCard from "./ProjectCard";
+import ProjectContextForm from "./ProjectContextForm";
+import { emptyContext } from "./projectSchema";
 import Templates from "./Templates";
 import Trash from "./Trash";
-
-const NAME_MAX = 120;
 
 // The list and the create form of the editor (SDD-012 section 2.1). The
 // controller answers from service.Service; this page only draws the result
@@ -32,10 +26,6 @@ export default function ProjectsIndex() {
 	const [trashVersion, setTrashVersion] = useState(0);
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [creating, setCreating] = useState(false);
-	const form = useForm<{ name: string; preset: SizePreset }>({
-		name: "",
-		preset: "9:16",
-	});
 
 	const moveToTrash = async (id: string): Promise<void> => {
 		setFailure(null);
@@ -49,16 +39,16 @@ export default function ProjectsIndex() {
 	};
 
 	// The JSON API, not the Inertia form: the form answers with a 409 location
-	// visit, which the browser logs as a console error (VV-059).
-	const submit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
-		event.preventDefault();
+	// visit, which the browser logs as a console error (VV-059). A new project has
+	// no timeline, so its page opens, where a video is added with its size.
+	const submit = async (values: ProjectContextInput): Promise<void> => {
 		setFailure(null);
 		setCreating(true);
 		try {
 			const created = await createClient(
 				new HttpTransport("/api/v1"),
-			).createProject(form.data.name, form.data.preset);
-			location.assign(`/editor/${created.project_id}`);
+			).createProject(values);
+			location.assign(`/projects/${created.project_id}`);
 		} catch (error) {
 			setFailure(failureOf(error));
 			setCreating(false);
@@ -74,74 +64,14 @@ export default function ProjectsIndex() {
 					<h2 id="new-project" className="text-lg font-semibold">
 						{t("ui.projects.new")}
 					</h2>
-					<form
-						onSubmit={(event) => void submit(event)}
-						className="mt-4 flex flex-col gap-5 rounded-xl border bg-card p-5 text-card-foreground"
-					>
-						<div className="flex flex-col gap-2">
-							<Label htmlFor="project-name">{t("ui.projects.name")}</Label>
-							<Input
-								id="project-name"
-								name="name"
-								required
-								maxLength={NAME_MAX}
-								autoComplete="off"
-								value={form.data.name}
-								onChange={(e) => form.setData("name", e.target.value)}
-								aria-invalid={form.errors.name ? true : undefined}
-								aria-describedby={
-									form.errors.name ? "project-name-error" : undefined
-								}
-							/>
-							{form.errors.name && (
-								<p
-									id="project-name-error"
-									role="alert"
-									className="text-sm text-destructive"
-								>
-									{form.errors.name}
-								</p>
-							)}
-						</div>
-						<fieldset className="flex flex-col gap-2">
-							<legend className="text-sm font-medium">
-								{t("ui.projects.size")}
-							</legend>
-							<div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-								{SIZE_PRESETS.map((preset) => (
-									<label
-										key={preset}
-										className="flex cursor-pointer flex-col gap-0.5 rounded-lg border p-3 text-sm has-checked:border-primary has-checked:bg-muted has-focus-visible:ring-3 has-focus-visible:ring-ring/50"
-									>
-										<span className="flex items-center gap-2 font-medium">
-											<input
-												type="radio"
-												name="preset"
-												value={preset}
-												checked={form.data.preset === preset}
-												onChange={() => form.setData("preset", preset)}
-												className="accent-primary"
-											/>
-											{preset}
-										</span>
-										<span className="text-xs text-muted-foreground">
-											{t(`ui.projects.presets.${preset}`)}
-										</span>
-									</label>
-								))}
-							</div>
-							{form.errors.preset && (
-								<p role="alert" className="text-sm text-destructive">
-									{form.errors.preset}
-								</p>
-							)}
-						</fieldset>
-						<div>
-							<Button type="submit" disabled={creating}>
-								{t("ui.projects.create")}
-							</Button>
-						</div>
-					</form>
+					<div className="mt-4">
+						<ProjectContextForm
+							initial={emptyContext()}
+							submitLabel={t("ui.projects.create")}
+							busy={creating}
+							onSubmit={(values) => void submit(values)}
+						/>
+					</div>
 				</section>
 
 				<section aria-labelledby="project-list">

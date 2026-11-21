@@ -3,7 +3,7 @@
 // real endpoints and the fixtures of the tests are interchangeable.
 
 export interface TransportRequest {
-	method: "GET" | "POST" | "PUT" | "DELETE";
+	method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 	// Relative to the API base, starting with "/": "/projects/prj_x".
 	path: string;
 	body?: unknown;

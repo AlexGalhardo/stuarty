@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { caller, expect, test } from "./helpers";
+import { caller, expect, makeProject, test } from "./helpers";
 
 // VV-197: the library never asks for the thumbnail of an asset whose import
 // failed; the card shows the error instead.
@@ -15,7 +15,7 @@ test.describe("failed asset card", () => {
 		const fake = join(dir, "fake.mp4");
 		writeFileSync(fake, "this is not a video");
 		const call = await caller(request);
-		const created = await call("POST", "/projects", { name: "Failed asset" });
+		const created = await makeProject(call, "Failed asset");
 		const id = created.project_id as string;
 		await call("POST", `/projects/${id}/media`, {
 			files: [{ path: fake }],

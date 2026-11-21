@@ -12,7 +12,7 @@ import {
 	pointerEvents,
 	tabTo,
 } from "../support/keyboard";
-import { caller, expect, test, testClip } from "./helpers";
+import { caller, DESCRIPTION, expect, GOAL, test, testClip } from "./helpers";
 
 // Epic 41 task 8, acceptance criterion 2 (SDD-012 section 18.10, item K): the first flow of the product, from the
 // briefing to the approval of the publication, made in the UI with the keyboard alone: no pointer event reaches
@@ -103,10 +103,28 @@ test.describe("a11y-first-flow-keyboard @chromium-only", () => {
 
 		await test.step("create the project", async () => {
 			await page.goto("/projects");
-			await type(page, page.getByLabel("Name"), name);
+			const fields: [string, string][] = [
+				["Name", name],
+				["Description", DESCRIPTION],
+				["Specific", GOAL.specific],
+				["Measurable", GOAL.measurable],
+				["Achievable", GOAL.achievable],
+				["Relevant", GOAL.relevant],
+				["Time-bound", GOAL.time_bound],
+			];
+			for (const [label, value] of fields) {
+				await type(page, page.getByLabel(label, { exact: true }), value);
+			}
+			await tabTo(page, page.getByLabel("Due date", { exact: true }));
+			await page.keyboard.type("12312999");
 			await page.keyboard.press("Enter");
-			await expect(page).toHaveURL(/\/editor\/prj_[0-9a-hjkmnp-tv-z]{10}$/);
+			await page.waitForURL(/\/projects\/prj_[0-9a-hjkmnp-tv-z]{10}$/);
 			projectId = page.url().split("/").pop() ?? "";
+			await type(page, page.getByLabel("Title", { exact: true }), name);
+			await page.keyboard.press("Enter");
+			await expect(page.getByText(name).first()).toBeVisible();
+			await page.goto(`/editor/${projectId}`);
+			await expect(page).toHaveURL(/\/editor\/prj_[0-9a-hjkmnp-tv-z]{10}$/);
 		});
 
 		await test.step("answer the briefing", async () => {

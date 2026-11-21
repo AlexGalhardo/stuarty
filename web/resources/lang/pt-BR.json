@@ -225,6 +225,56 @@
         "exporting": "Exportando o pacote…",
         "ready": "Pacote pronto:",
         "download": "Baixar"
+      },
+      "context": {
+        "title": "Contexto",
+        "name": "Nome",
+        "description": "Descrição",
+        "specific": "Específica",
+        "measurable": "Mensurável",
+        "achievable": "Alcançável",
+        "relevant": "Relevante",
+        "time_bound": "Com prazo",
+        "due": "Data limite"
+      },
+      "help": {
+        "name": "O nome do projeto, de 4 a 32 letras, dígitos e espaços simples. É como você e seus agentes o encontram, então diga o que ele é.",
+        "description": "O que é o projeto, para quem é e o que ele produz, em 64 a 1.024 caracteres. Todo agente que trabalha aqui lê isto primeiro, então escreva como se fosse explicar a um colega novo.",
+        "specific": "O que exatamente o projeto vai conseguir? Um resultado concreto. Uma meta vaga gera trabalho vago.",
+        "measurable": "Como você vai saber que deu certo? Dê um número ou uma verificação, para que você e os agentes saibam quando acabou.",
+        "achievable": "Por que isso é realista com o que você tem: tempo, filmagens, ferramentas? Evita que agentes planejem o que você não pode fazer.",
+        "relevant": "Por que isso importa para você ou para o seu público? Ajuda os agentes a escolher entre duas boas opções.",
+        "time_bound": "O cronograma e as etapas: o que vem primeiro, o que vem depois. Ajuda os agentes a ordenar o trabalho.",
+        "due": "O dia em que a meta vence. Deve ser hoje ou depois, para que os agentes planejem de trás para frente."
+      },
+      "example": {
+        "name": "Teaser de lançamento",
+        "description": "Um teaser vertical de 30 segundos para o lançamento do meu curso, para quem me segue nos vídeos curtos, com legendas e uma miniatura.",
+        "specific": "Publicar um teaser que explica o curso em uma frase",
+        "measurable": "Pelo menos 1000 visualizações e 50 inscrições na primeira semana",
+        "achievable": "Já tenho as filmagens e edito um vídeo por dia",
+        "relevant": "O lançamento precisa de público antes de abrir as vagas",
+        "time_bound": "Roteiro na segunda, edição na terça, publicação na quarta",
+        "due": "AAAA-MM-DD"
+      },
+      "help_for": "O que escrever aqui",
+      "counter": "{count} caracteres, de {min} a {max}",
+      "errors": {
+        "too_short": "Escreva pelo menos {min} caracteres.",
+        "too_long": "Escreva no máximo {max} caracteres.",
+        "name_pattern": "Use só letras, dígitos e espaços simples, sem espaço nas pontas.",
+        "date": "Escolha uma data real.",
+        "date_past": "A data limite não pode ser antes de hoje."
+      },
+      "complete": {
+        "title": "Complete o projeto",
+        "body": "Este projeto foi feito antes de os projetos terem descrição e meta. Escreva-as para que você e seus agentes saibam para que ele serve.",
+        "action": "Completar o projeto"
+      },
+      "edit": {
+        "open": "Editar o projeto",
+        "title": "Editar o projeto",
+        "save": "Salvar o projeto"
       }
     },
     "settings": {

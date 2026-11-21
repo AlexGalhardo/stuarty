@@ -1369,6 +1369,33 @@ export interface ProjectListResult {
 	text: string;
 }
 
+// The SMART goal of a project and its context (SDD-005 section 5.12.2); the core owns the rules.
+export interface ProjectGoal {
+	specific: string;
+	measurable: string;
+	achievable: string;
+	relevant: string;
+	time_bound: string;
+	due: string;
+}
+
+export interface ProjectContextInput {
+	name: string;
+	description: string;
+	goal: ProjectGoal;
+}
+
+// PATCH /projects/{id}: a member that is left out is kept.
+export interface ProjectUpdateResult {
+	project_id: string;
+	name: string;
+	description: string;
+	goal: ProjectGoal;
+	complete: boolean;
+	updated: boolean;
+	text: string;
+}
+
 // POST /projects.
 export interface ProjectCreateResult {
 	project_id: string;

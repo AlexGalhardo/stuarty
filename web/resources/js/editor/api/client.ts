@@ -67,6 +67,7 @@ import type {
 	MediaStateResult,
 	PlanWindow,
 	PlanWindowHead,
+	ProjectContextInput,
 	ProjectCreateResult,
 	ProjectDescribeResult,
 	ProjectGetResult,
@@ -74,6 +75,7 @@ import type {
 	ProjectItemResult,
 	ProjectListResult,
 	ProjectStateResult,
+	ProjectUpdateResult,
 	ProviderListResult,
 	ProviderModelsResult,
 	ProviderPriceSetRequest,
@@ -333,7 +335,11 @@ export interface ApiClient {
 	listUsers(): Promise<UserListResult>;
 	listTrashedProjects(): Promise<ProjectListResult>;
 	listProjects(): Promise<ProjectListResult>;
-	createProject(name: string, preset: string): Promise<ProjectCreateResult>;
+	createProject(input: ProjectContextInput): Promise<ProjectCreateResult>;
+	updateProject(
+		projectId: string,
+		input: Partial<ProjectContextInput>,
+	): Promise<ProjectUpdateResult>;
 	duplicateProject(
 		projectId: string,
 		name?: string,
@@ -401,7 +407,7 @@ export function createClient(
 	deps: RetryDeps = defaultDeps,
 ): ApiClient {
 	async function call<T>(
-		method: "GET" | "POST" | "PUT" | "DELETE",
+		method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
 		path: string,
 		timeoutMs: number,
 		body?: unknown,
@@ -792,8 +798,9 @@ export function createClient(
 		listProjects: () => call("GET", "/projects", READ_TIMEOUT_MS),
 		listTrashedProjects: () =>
 			call("GET", "/projects?state=trashed", READ_TIMEOUT_MS),
-		createProject: (name, preset) =>
-			call("POST", "/projects", EDIT_TIMEOUT_MS, { name, preset }),
+		createProject: (input) => call("POST", "/projects", EDIT_TIMEOUT_MS, input),
+		updateProject: (id, input) =>
+			call("PATCH", project(id), EDIT_TIMEOUT_MS, input),
 		duplicateProject: (id, name) =>
 			call(
 				"POST",

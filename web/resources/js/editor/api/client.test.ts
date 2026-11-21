@@ -286,15 +286,35 @@ describe("brand kit, fonts, export options and bundles", () => {
 	});
 });
 
-describe("createProject", () => {
-	test("posts the name and the preset to the JSON API", async () => {
+describe("createProject and updateProject", () => {
+	const goal = {
+		specific: "Publish one short video",
+		measurable: "A hundred views",
+		achievable: "The footage exists",
+		relevant: "It brings an audience",
+		time_bound: "Publish on Tuesday",
+		due: "2999-12-31",
+	};
+
+	test("posts the name, the description and the goal to the JSON API", async () => {
 		const { transport, requests } = fake(ok({ project_id: "prj_a" }));
-		const result = await createClient(transport).createProject("Ad", "9:16");
+		const input = { name: "Launch teaser", description: "d".repeat(64), goal };
+		const result = await createClient(transport).createProject(input);
 		expect(result.project_id).toBe("prj_a");
 		expect(requests[0]).toMatchObject({
 			method: "POST",
 			path: "/projects",
-			body: { name: "Ad", preset: "9:16" },
+			body: input,
+		});
+	});
+
+	test("patches only the members that change", async () => {
+		const { transport, requests } = fake(ok({ project_id: "prj_a" }));
+		await createClient(transport).updateProject("prj_a", { name: "New name" });
+		expect(requests[0]).toMatchObject({
+			method: "PATCH",
+			path: "/projects/prj_a",
+			body: { name: "New name" },
 		});
 	});
 });

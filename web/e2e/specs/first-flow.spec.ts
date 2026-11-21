@@ -5,7 +5,13 @@ import {
 	startFirstFlow,
 	uploads,
 } from "../support/firstFlow";
-import { caller, expect, test, testClip } from "./helpers";
+import {
+	caller,
+	createThroughTheForm,
+	expect,
+	test,
+	testClip,
+} from "./helpers";
 
 // ADR-0031, PRD-004 section 3, epic 38: a creator goes from an idea to a published short vertical video with
 // captions and a thumbnail without leaving Stuarty, and this is the same flow as scripts/first-flow.sh, made
@@ -51,11 +57,8 @@ test.describe("first complete flow @chromium-only", () => {
 		const name = `Sourdough short ${Date.now()}`;
 
 		await test.step("create the project with the vertical preset", async () => {
-			await page.goto("/projects");
-			await page.getByLabel("Name").fill(name);
-			await page.getByRole("button", { name: "Create project" }).click();
+			projectId = await createThroughTheForm(page, name);
 			await expect(page).toHaveURL(/\/editor\/prj_[0-9a-hjkmnp-tv-z]{10}$/);
-			projectId = page.url().split("/").pop() ?? "";
 		});
 
 		await test.step("answer the briefing", async () => {
