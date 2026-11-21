@@ -26,12 +26,6 @@ import { withBase } from "@/lib/site";
 			if (!matchMedia("(prefers-reduced-motion: reduce)").matches) document.documentElement.classList.add("motion-ok");
 		})();
 	</script>
-	<!-- The second row of the navbar, on the home only: the six actions, fixed with the navbar. -->
-	<nav class="nav-actions" aria-label="Get Stuarty">
-		<div class="site-container nav-actions-inner">
-			<LandingActions idPrefix="nav" beta={false} compact />
-		</div>
-	</nav>
 	<main id="content" data-expressive data-page="viewport" class="relative isolate">
 		<a href={withBase("/docs/introduction/")} class="sr-only focus:not-sr-only focus:fixed focus:top-[calc(var(--header-h)+0.75rem)] focus:left-4 focus:z-50 focus:rounded-lg focus:bg-bg focus:px-4 focus:py-2 focus:text-sm focus:font-medium">Skip to the docs</a>
 
@@ -57,6 +51,9 @@ import { withBase } from "@/lib/site";
 							<Shot shot={shots.dashboard} sizes="(min-width: 64rem) 52rem, 100vw" class="shot-dark" />
 						</figure>
 					</div>
+				</div>
+				<div class="mt-10 lg:mt-12" data-hero-item>
+					<LandingActions idPrefix="hero" align="center" beta={false} />
 				</div>
 			</div>
 		</section>
@@ -85,7 +82,10 @@ import { withBase } from "@/lib/site";
 				<h2 id="yours-title" tabindex="-1" class="yours-lines mx-auto text-fg" data-in>
 					{homeYours.lines.map((line, i) => <span class:list={["block", i === homeYours.lines.length - 1 && "yours-free"]} data-split-skip={i === homeYours.lines.length - 1 ? "" : undefined}>{line}</span>)}
 				</h2>
-				<p class="yours-ask text-fg" data-in>What are you waiting?</p>
+				<div class="yours-cta" data-in>
+					<p class="yours-ask text-fg">What are you waiting?</p>
+					<LandingActions idPrefix="take" align="center" beta={false} />
+				</div>
 				<p class="take-credits text-xs text-muted" data-in>{credits}</p>
 			</div>
 		</section>
@@ -104,7 +104,7 @@ import { withBase } from "@/lib/site";
 	   width and the height of the window so they never overflow from 320 px up; each group stays on one line from
 	   1280 px. */
 	main[data-page="viewport"] .yours-lines {
-		font-size: clamp(2.25rem, min(0.5rem + 5.6vw, 9vh), 5.5rem);
+		font-size: clamp(2.25rem, min(0.5rem + 5.6vw, 8vh), 5.5rem);
 		font-weight: 650;
 		line-height: 1.04;
 		letter-spacing: -0.035em;
@@ -128,12 +128,15 @@ import { withBase } from "@/lib/site";
 		display: flex;
 		flex-direction: column;
 	}
-	/* The question that closes the page, in the middle of the space between the lines and the bottom of the window,
-	   at the size of the lines; the actions are in the navbar row. */
-	#yours .yours-ask {
+	/* The call to action that closes the page: the question right above the buttons, together in the middle of the
+	   space between the lines and the bottom of the window. */
+	#yours .yours-cta {
 		margin-block: auto;
-		padding-block: 2.5rem 3.25rem;
-		font-size: clamp(2.25rem, min(0.5rem + 5.6vw, 9vh), 5.5rem);
+		padding-block: 1.5rem 3rem;
+	}
+	#yours .yours-ask {
+		margin-bottom: 1.5rem;
+		font-size: clamp(1.75rem, min(0.5rem + 3.2vw, 6vh), 3.5rem);
 		font-weight: 650;
 		line-height: 1.04;
 		letter-spacing: -0.035em;
@@ -343,7 +346,7 @@ import { withBase } from "@/lib/site";
 
 	/* On short windows the text of a clip tightens so it stays above the tracks. */
 	/* Short and narrow windows hold the buttons in two rows: the hero title gives up a little size. */
-	@media (max-height: 52rem) and (max-width: 79.99rem) {
+	@media (max-height: 52rem) and (max-width: 89.99rem) {
 		html main[data-page="viewport"] .display-typer {
 			font-size: clamp(1.75rem, 4.6vh, 3rem);
 		}
@@ -379,29 +382,14 @@ import { withBase } from "@/lib/site";
 		letter-spacing: -0.03em;
 		text-wrap: pretty;
 	}
-	/* The home navbar has a second row with the six actions: the header offset of every take counts both rows. */
-	html:has(main[data-page="viewport"][data-expressive]) {
-		--nav1-h: 70px;
-		--nav2-h: 3.5rem;
-		--header-h: calc(var(--nav1-h) + var(--nav2-h));
+	/* The four buttons sit in the middle of the space between the text and picture above and the scroll hint. */
+	html.takes-on #studio > .site-container {
+		display: flex;
+		flex-direction: column;
 	}
-	@media (max-width: 767px) {
-		html:has(main[data-page="viewport"][data-expressive]) {
-			--nav1-h: 52.5px;
-		}
-	}
-	.nav-actions {
-		position: fixed;
-		top: var(--nav1-h);
-		inset-inline: 0;
-		z-index: 39;
-		height: var(--nav2-h);
-		border-bottom: 1px solid color-mix(in oklab, var(--fg) 10%, transparent);
-		background: color-mix(in oklab, var(--bg) 70%, transparent);
-		backdrop-filter: blur(24px);
-	}
-	.nav-actions-inner {
-		height: 100%;
+	html.takes-on #studio > .site-container > [data-hero-item]:has(.landing-actions) {
+		margin-block: auto;
+		padding-block: 1.25rem;
 	}
 
 	/* The first take keeps the bottom free for the scroll hint; on short windows the hero tightens so its buttons
