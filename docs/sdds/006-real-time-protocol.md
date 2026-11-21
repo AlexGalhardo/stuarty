@@ -208,6 +208,8 @@ data: {"project_id":"prj_7k2m9x4q1b","asset_id":"ast_9d2f4h6k8m","state":"failed
 
 When ingest finishes, the asset enters the document through an `asset.add` batch, which arrives as a `batch.committed` event; `asset.updated` with `ready` and that batch are not ordered relative to each other.
 
+`AssetRename` (SDD-011 §14.8) publishes this event too, on the stream of each project of the caller whose name changed, with the state and progress the file already has. The event carries no name: a client reads the media list again when `state` is `ready`, as it does for an ingest that finished.
+
 ### 3.5 `job.updated`
 
 The state or progress of a job of this project changed (SDD-005 §14). `queued`, `running`, `succeeded`, `failed`, `cancelled`. An ingest job belongs to the file, not to a project (`project_id` is null in the job object of SDD-003 §2.8), so its `job.updated` is published on the stream of every project that references the file, like `asset.updated` (SDD-005 §14.3).
