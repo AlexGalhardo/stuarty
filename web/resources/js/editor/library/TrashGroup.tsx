@@ -18,7 +18,7 @@ export default function TrashGroup({
 			<summary className="cursor-pointer text-xs font-medium text-muted-foreground">
 				{t("ui.editor.library.trash_group", { count: entries.length })}
 			</summary>
-			<ul className="mt-2 flex flex-col gap-2">
+			<ul className="mt-2 grid grid-cols-[repeat(auto-fill,minmax(min(100%,16rem),1fr))] gap-2">
 				{entries.map((entry) => (
 					<AssetCard key={entry.asset_id} entry={entry} />
 				))}

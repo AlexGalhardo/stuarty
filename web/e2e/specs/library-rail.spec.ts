@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 
-import { expect, seedProject, test } from "./helpers";
+import { expect, seedProject, solidClip, test } from "./helpers";
 
 // TASK-0285 (SDD-012 section 6.4): the material region has a vertical rail of
 // 40 px with one icon tab per panel; a tab is drawn only when its command is in
@@ -62,6 +62,27 @@ test.describe("library tab rail", () => {
 		);
 		await page.keyboard.press("Alt+1");
 		await expect(page.getByRole("region", { name: "Templates" })).toBeVisible();
+	});
+
+	test("the wide library puts the cards side by side", async ({
+		page,
+		request,
+	}) => {
+		const seeded = await seedProject(request, {
+			tracks: 0,
+			files: [solidClip("0x334455"), solidClip("0x556677")],
+		});
+		await page.goto(`/editor/${seeded.id}`);
+		const cards = page.locator("[data-asset-id]");
+		await expect(cards).toHaveCount(2);
+		const [first, second] = [
+			await cards.nth(0).boundingBox(),
+			await cards.nth(1).boundingBox(),
+		];
+		expect(second?.y).toBeCloseTo(first?.y ?? -1, 0);
+		expect(second?.x ?? 0).toBeGreaterThan(
+			(first?.x ?? 0) + (first?.width ?? 0) - 1,
+		);
 	});
 
 	test("a tab whose command is not in the registry is not drawn", async ({
