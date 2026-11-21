@@ -18,7 +18,7 @@ import (
 // ./web/cmd/gen-agent-docs); every release build also stamps it with
 // -X github.com/AlexGalhardo/stuarty/web/app/agentdocs.Version=<X.Y.Z>, so a
 // binary never reports another version than the tag it was built from.
-var Version = "0.29.0"
+var Version = "0.43.0"
 
 // The three artifacts of SDD-003 section 8.1.
 const (
