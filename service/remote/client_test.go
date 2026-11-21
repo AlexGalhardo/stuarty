@@ -44,6 +44,35 @@ func asCLI(label string) context.Context {
 	return service.WithCaller(context.Background(), service.Caller{Actor: "local:" + label, Scopes: service.AllScopes})
 }
 
+// VV-302: the server refuses a member its route does not have, so a text write sends the members of the
+// route it takes: the kind only to the route that makes a text, the base revision only to the one that saves.
+func TestTextWriteSendsOnlyTheMembersOfItsRoute(t *testing.T) {
+	t.Parallel()
+
+	base := 3
+
+	for _, tc := range []struct{ item, method, path, body string }{
+		{"", "POST", "/api/v1/projects/prj_a/texts", `{"title":"T","text_kind":"post","text":"a","dry_run":true}`},
+		{"pit_b", "PUT", "/api/v1/projects/prj_a/texts/pit_b", `{"title":"T","text":"a","base_revision":3,"dry_run":true}`},
+	} {
+		var got seen
+
+		c := server(t, 200, `{}`, &got)
+
+		req := service.TextWriteRequest{ProjectID: "prj_a", ItemID: tc.item, Title: "T", TextKind: "post", Text: "a"}
+		req.BaseRevision, req.DryRun = &base, true
+
+		if _, err := c.TextWrite(asCLI("cli"), req); err != nil {
+			t.Fatal(err)
+		}
+
+		if got.method != tc.method || got.path != tc.path || got.body != tc.body {
+			t.Errorf("item %q: got %s %s %s, want %s %s %s",
+				tc.item, got.method, got.path, got.body, tc.method, tc.path, tc.body)
+		}
+	}
+}
+
 func TestRequestsMatchTheRoutes(t *testing.T) {
 	t.Parallel()
 
