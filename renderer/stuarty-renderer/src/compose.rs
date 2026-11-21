@@ -1061,7 +1061,7 @@ pub fn sample(
 	let (lim_x, lim_y) = ((src.w as i64) << FIX, (src.h as i64) << FIX);
 	let half = 1_i64 << (FIX - 1);
 	let (max_x, max_y) = (src.w as i64 - 1, src.h as i64 - 1);
-	let stride = src.w * 4;
+	let w = src.w;
 
 	for y in by0..by1 {
 		let row_x = bxx.wrapping_mul(y).wrapping_add(ox);
@@ -1080,18 +1080,20 @@ pub fn sample(
 			let (wx, wy) = (frac8(fx), frac8(fy));
 			let (x1, y1) = ((x0 + 1).min(max_x) as usize, (y0 + 1).min(max_y) as usize);
 			let (x0, y0) = (x0.max(0) as usize, y0.max(0) as usize);
-			let o00 = y0 * stride + x0 * 4;
-			let o10 = y0 * stride + x1 * 4;
-			let o01 = y1 * stride + x0 * 4;
-			let o11 = y1 * stride + x1 * 4;
-
+			// The four weights add up to 65536, and each channel is the same integer sum as the two
+			// interpolations in a row (nothing is rounded between them): four pixel reads, not sixteen.
+			let (w00, w10) = ((256 - wx) * (256 - wy), wx * (256 - wy));
+			let (w01, w11) = ((256 - wx) * wy, wx * wy);
+			let (p00, p10) = (px_at(&src.pix, y0 * w + x0), px_at(&src.pix, y0 * w + x1));
+			let (p01, p11) = (px_at(&src.pix, y1 * w + x0), px_at(&src.pix, y1 * w + x1));
 			let mut px = [0_u32; 4];
 			for (k, v) in px.iter_mut().enumerate() {
-				let top =
-					u32::from(src.pix[o00 + k]) * (256 - wx) + u32::from(src.pix[o10 + k]) * wx;
-				let bot =
-					u32::from(src.pix[o01 + k]) * (256 - wx) + u32::from(src.pix[o11 + k]) * wx;
-				*v = (top * (256 - wy) + bot * wy + 32768) >> 16;
+				*v = (u32::from(p00[k]) * w00
+					+ u32::from(p10[k]) * w10
+					+ u32::from(p01[k]) * w01
+					+ u32::from(p11[k]) * w11
+					+ 32768)
+					>> 16;
 			}
 			if let Some(m) = mask {
 				scale(&mut px, m.sample_cov(x, y));
@@ -1106,9 +1108,25 @@ pub fn sample(
 			if a == 0 {
 				continue;
 			}
+			if a == 255 && mode == BlendMode::Normal {
+				// source-over of an opaque pixel is the pixel
+				dst.pix[here..here + 4].copy_from_slice(&[
+					px[0] as u8,
+					px[1] as u8,
+					px[2] as u8,
+					255,
+				]);
+				continue;
+			}
 			mix_pixel(&mut dst.pix[here..here + 4], px[0], px[1], px[2], a, mode);
 		}
 	}
+}
+
+/// The pixel number `i` of a premultiplied RGBA buffer.
+#[inline(always)]
+fn px_at(pix: &[u8], i: usize) -> [u8; 4] {
+	pix.as_chunks::<4>().0[i]
 }
 
 /// The 8 bits of weight of a 32.32 coordinate, the 8 bits under the integer part.
