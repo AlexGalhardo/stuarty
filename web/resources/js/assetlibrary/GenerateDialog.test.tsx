@@ -1,7 +1,12 @@
 import { describe, expect, test } from "vitest";
 
 import type { ModelView, ProviderView } from "../editor/api/types";
-import { anyMaker, choicesOf, orderedModels } from "./GenerateDialog";
+import {
+	anyMaker,
+	choicesOf,
+	libraryOf,
+	orderedModels,
+} from "./GenerateDialog";
 
 const provider = (
 	id: string,
@@ -106,5 +111,23 @@ describe("the choices of the Generate dialog", () => {
 		const later = [...today, provider("clips", ["video"], [])];
 		expect(anyMaker(later, "video")).toBe(true);
 		expect(choicesOf(later, "video")).toEqual([]);
+	});
+});
+
+describe("the library the first frame is listed from (VV-334)", () => {
+	test("is the first active timeline of a production that has two, never the production id", () => {
+		const items = [
+			{ id: "itm_1", kind: "brief", state: "active" },
+			{ id: "itm_2", kind: "timeline", state: "trashed", timeline_id: "tl_0" },
+			{ id: "itm_3", kind: "timeline", state: "active", timeline_id: "tl_1" },
+			{ id: "itm_4", kind: "timeline", state: "active", timeline_id: "tl_2" },
+		];
+		expect(libraryOf("prj_x", items)).toBe("tl_1");
+	});
+
+	test("keeps the production id when it has no timeline", () => {
+		expect(
+			libraryOf("prj_x", [{ id: "itm_1", kind: "brief", state: "active" }]),
+		).toBe("prj_x");
 	});
 });
