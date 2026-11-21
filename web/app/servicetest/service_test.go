@@ -449,7 +449,10 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			return err
 		},
 		"WebhookRedeliver": func() error {
-			_, err := e.svc.WebhookRedeliver(ctx, service.WebhookRedeliverRequest{ID: "whk_0000000001", DeliveryID: "wdl_0000000001"})
+			_, err := e.svc.WebhookRedeliver(
+				ctx,
+				service.WebhookRedeliverRequest{ID: "whk_0000000001", DeliveryID: "wdl_0000000001"},
+			)
 			return err
 		},
 		"ApprovalList": func() error {

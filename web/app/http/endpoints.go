@@ -448,8 +448,13 @@ var Endpoints = []Endpoint{
 		Service: "ConnectionTest", Status: 200, Summary: "Make one request through a connection",
 	},
 	{
-		ID: "webhooks.events", Method: http.MethodGet, Path: "/webhook-events", Scope: service.ScopeRead,
-		Service: "WebhookEventList", Status: 200, Summary: "List the events a webhook may choose, each with what it carries",
+		ID:      "webhooks.events",
+		Method:  http.MethodGet,
+		Path:    "/webhook-events",
+		Scope:   service.ScopeRead,
+		Service: "WebhookEventList",
+		Status:  200,
+		Summary: "List the events a webhook may choose, each with what it carries",
 	},
 	{
 		ID: "webhooks.list", Method: http.MethodGet, Path: "/webhooks", Scope: service.ScopeAdmin,
@@ -465,8 +470,13 @@ var Endpoints = []Endpoint{
 		Summary: "Register a webhook; the signing secret is in this answer once and in no other",
 	},
 	{
-		ID: "webhooks.update", Method: http.MethodPatch, Path: "/webhooks/{id}", Scope: service.ScopeAdmin,
-		Service: "WebhookUpdate", Status: 200, Summary: "Change the name, the address, the events or the state of a webhook",
+		ID:      "webhooks.update",
+		Method:  http.MethodPatch,
+		Path:    "/webhooks/{id}",
+		Scope:   service.ScopeAdmin,
+		Service: "WebhookUpdate",
+		Status:  200,
+		Summary: "Change the name, the address, the events or the state of a webhook",
 	},
 	{
 		ID: "webhooks.remove", Method: http.MethodDelete, Path: "/webhooks/{id}", Scope: service.ScopeAdmin,
