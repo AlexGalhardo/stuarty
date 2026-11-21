@@ -129,7 +129,9 @@ pr_body() { # $1 version, $2 file to write
 		echo
 		echo "Approved work is added here as it is finished; the release is cut, rebase-merged and the next release pull request opened when it holds about 90 commits."
 		echo
-		git show HEAD:CHANGELOG.md | awk -v v="$v" 'index($0, "## [" v "]") == 1 { on = 1; print; next } on && /^## \[/ { exit } on'
+		# awk stops at the next section; reading from a process substitution keeps the early exit from
+		# killing git show with SIGPIPE, which pipefail and set -e turned into a silent stop of the cut.
+		awk -v v="$v" 'index($0, "## [" v "]") == 1 { on = 1; print; next } on && /^## \[/ { exit } on' <(git show HEAD:CHANGELOG.md)
 	} >"$2"
 }
 
@@ -178,7 +180,7 @@ cut_release() {
 publish_notes() {
 	local v=$1 notes
 	notes=$(mktemp)
-	git show origin/main:CHANGELOG.md | awk -v v="$v" 'index($0, "## [" v "]") == 1 { on = 1; next } on && /^## \[/ { exit } on' >"$notes"
+	awk -v v="$v" 'index($0, "## [" v "]") == 1 { on = 1; next } on && /^## \[/ { exit } on' <(git show origin/main:CHANGELOG.md) >"$notes"
 	gh workflow disable release
 	gh release create "v$v" --target "$(git rev-parse origin/main)" --title "v$v" --notes-file "$notes" >/dev/null || echo "release-train: the GitHub release v$v was not created" >&2
 	gh workflow enable release
