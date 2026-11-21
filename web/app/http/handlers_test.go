@@ -684,3 +684,19 @@ func TestDryRunTextDoesNotApplyTheWrite(t *testing.T) {
 		}
 	}
 }
+
+// VV-317: the fit check is its own route, so a lint that asks for it is refused and not answered as a plain lint.
+func TestLintRefusesTheFitCheckQuery(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+
+	for _, q := range []string{"preset=tiktok", "start=1", "end=2"} {
+		res := h.get("/api/v1/projects/prj_0000000000/lint?" + q)
+		env := res.json(t)
+
+		if res.status != http.StatusBadRequest || env["code"] != "E_VALIDATION" || !strings.Contains(string(res.body), "export-check") {
+			t.Errorf("%s = %d %s, want E_VALIDATION naming export-check", q, res.status, res.body)
+		}
+	}
+}

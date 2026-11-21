@@ -4265,7 +4265,7 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `JobStart` (`export`) | `job_start` (`kind` `export`) | `export` | `POST /projects/{id}/jobs` |
 | `JobStart` (`transcribe`) | `job_start` (`kind` `transcribe`) | `transcribe` | `POST /projects/{id}/jobs` |
 | `ExportPresetList` | `command_help` (`domain` `export`: the presets and the codecs of this machine) | `export:presets [--codecs]` | `GET /export-presets` |
-| `ExportCheck` | `lint` (with `preset`, and `start` and `end` for a range: the fit check instead of the lint) | `export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]` | `GET /projects/{id}/export-check` |
+| `ExportCheck` | `lint` (with `preset`, and `start` and `end` for a range: the fit check instead of the lint) | `export:check --project <id> --preset <id> [--start t] [--end t] [--codec c]`; `lint` takes `--preset`, `--start` and `--end` too | `GET /projects/{id}/export-check`; `GET /projects/{id}/lint` refuses `preset`, `start` and `end` with `E_VALIDATION` naming this route |
 | `AudioMeasure` | `view` (`mode` `audio`, with `item_id`, and `from` and `until` for a range: the measurement of the sound, no image; `item_id` in mode frame or sheet is `E_VALIDATION`, as `--item` is in the CLI) | `view --project <id> --mode audio [--item id] [--from t] [--until t]` | `GET /projects/{id}/audio-measure` |
 | `ExportBatch` | `job_start` (`kind` `export_batch`) | `export:batch --project <id> --preset <id> [--preset <id> ...] \| --items <json>` | `POST /projects/{id}/export-batches` |
 | `JobGet` | `job_get` (with `job_id`) | `job:show` | `GET /jobs/{job_id}` |
