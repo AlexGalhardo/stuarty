@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 	"unicode"
+
+	"github.com/AlexGalhardo/stuarty/core/publish"
 )
 
 // Data is the subject of an event: only the members of its struct reach the body, and each struct holds
@@ -177,9 +179,15 @@ func Build(d Data, at time.Time, workspace string) (body []byte, id string, err 
 	return body, id, nil
 }
 
-// PublicPostURL returns the address of a post when it is one a receiver may be given: https, a host, no user name
-// and at most 2048 characters. Anything else is the empty string, so no member is sent.
-func PublicPostURL(raw string) string {
+// PublicPostURL returns the address of a post when it is one a receiver may be given: the post is public, and the
+// address is https, with a host, no user name and at most 2048 characters. Anything else is the empty string, so no
+// member is sent. The link of an unlisted post is what keeps it private, so it is never handed to a third party, and
+// a post that names no visibility is private (core/publish).
+func PublicPostURL(raw string, visibility publish.Visibility) string {
+	if visibility != publish.Public {
+		return ""
+	}
+
 	u, err := url.Parse(raw)
 	if err != nil || u.Scheme != "https" || u.Hostname() == "" || u.User != nil || len(raw) > MaxPostURLBytes ||
 		strings.ContainsFunc(raw, unicode.IsControl) {

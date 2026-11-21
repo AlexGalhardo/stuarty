@@ -617,7 +617,7 @@ func (s *svc) publicationWebhookEvents(e Event) []core.Data {
 		if t.State == corepub.TargetPublished && t.PublishedAt != nil && now.Sub(*t.PublishedAt) <= recentEvent {
 			out = append(out, core.PublicationPublishedData{
 				PublicationID: p.ID, TargetID: t.ID, ProjectID: p.ProjectID, Network: t.Network,
-				ConnectionID: t.ConnectionID, URL: core.PublicPostURL(t.URL),
+				ConnectionID: t.ConnectionID, URL: core.PublicPostURL(t.URL, corepub.Visibility(t.Fields.Visibility)),
 				PublishedAt: t.PublishedAt.UTC().Format(time.RFC3339),
 			})
 		}

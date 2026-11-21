@@ -12,6 +12,47 @@ import (
 )
 
 // The events of the bus that become events of a webhook, and the text of the product that must not go with them.
+// The link of an unlisted or private post is what keeps it private: the event says the post went out, and only a
+// public post gives its address.
+func TestWebhookEventCarriesTheAddressOfAPublicPostOnly(t *testing.T) {
+	t.Parallel()
+
+	now := time.Date(2026, 11, 20, 12, 0, 0, 0, time.UTC)
+	s := &svc{now: func() time.Time { return now }}
+
+	for visibility, want := range map[string]string{
+		string(corepub.Public):   "https://youtu.be/abc",
+		string(corepub.Unlisted): "",
+		string(corepub.Private):  "",
+		"":                       "",
+	} {
+		got := s.webhookEvents(Event{Type: EventPublicationUpdated, Publication: &pub.Publication{
+			ID: "pub_aaaaaaaaaa", ProjectID: "prj_aaaaaaaaaa", Targets: []pub.Target{{
+				ID: "tgt_aaaaaaaaa1", Network: "youtube", ConnectionID: "con_aaaaaaaaaa",
+				State: corepub.TargetPublished, PublishedAt: &now, URL: "https://youtu.be/abc",
+				Fields: pub.Fields{Visibility: visibility},
+			}},
+		}})
+		if len(got) != 1 {
+			t.Fatalf("visibility %q: %d events", visibility, len(got))
+		}
+
+		d, ok := got[0].(core.PublicationPublishedData)
+		if !ok || d.URL != want {
+			t.Errorf("visibility %q: url %q, want %q", visibility, d.URL, want)
+		}
+
+		body, _, err := core.Build(got[0], now, "wsp_x")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if want == "" && strings.Contains(string(body), "youtu.be") {
+			t.Errorf("visibility %q: the body holds the address: %s", visibility, body)
+		}
+	}
+}
+
 func TestWebhookEventsFromTheBus(t *testing.T) {
 	t.Parallel()
 
@@ -34,6 +75,7 @@ func TestWebhookEventsFromTheBus(t *testing.T) {
 				State:        corepub.TargetPublished,
 				PublishedAt:  &recent,
 				URL:          "https://youtu.be/x",
+				Fields:       pub.Fields{Visibility: string(corepub.Public)},
 			},
 			{
 				ID: "tgt_aaaaaaaaa2", Network: "x", ConnectionID: con, State: corepub.TargetFailed, UpdatedAt: recent,

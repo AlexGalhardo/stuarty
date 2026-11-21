@@ -48,7 +48,7 @@ At most 20 webhooks per workspace (`E_LIMIT_EXCEEDED`). The secret has the form 
 
 | Event | When | `data` members |
 | --- | --- | --- |
-| `publication.published` | a target of a publication went out (`published`) | `publication_id`, `target_id`, `project_id`, `network`, `connection_id`, `url` (the address of the post, only when it is public, `https`, and at most 2048 characters), `published_at` |
+| `publication.published` | a target of a publication went out (`published`) | `publication_id`, `target_id`, `project_id`, `network`, `connection_id`, `url` (the address of the post, only when the visibility of the target is `public`, `https`, and at most 2048 characters: the link of an unlisted post is what keeps it private, and a target that names no visibility is private), `published_at` |
 | `publication.failed` | a target of a publication failed for good (`failed`) | `publication_id`, `target_id`, `project_id`, `network`, `connection_id`, `error_kind` (the kind of SDD-020 section 11, never its text) |
 | `export.ready` | an export job succeeded | `job_id`, `project_id`, `kind`, `format`, `bytes`, `width`, `height` |
 | `approval.requested` | a request waits for a person | `approval_id`, `kind`, `project_id`, `job_id`, `connection_id`, `expires_at`; never its summary |
