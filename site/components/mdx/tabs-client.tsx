@@ -13,9 +13,11 @@ export function TabsClient({ items, variant = "default" }: { items: TabItem[]; v
 				code ? "overflow-hidden rounded-xl border border-border bg-code-bg" : "rounded-xl border border-border"
 			}
 		>
+			{/* Code tabs scroll sideways without a scrollbar and end before the copy button, which never covers a tab. */}
+			<div className={code ? "border-b border-border pr-10" : "contents"}>
 			<div
 				role="tablist"
-				className={`relative flex overflow-x-auto border-b border-border px-1.5 ${code ? "h-10 pr-10" : "gap-1"}`}
+				className={`relative flex overflow-x-auto px-1.5 ${code ? "h-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" : "gap-1 border-b border-border"}`}
 				aria-label={code ? "Code examples" : "Tabs"}
 			>
 				{items.map((item, i) => (
@@ -32,6 +34,7 @@ export function TabsClient({ items, variant = "default" }: { items: TabItem[]; v
 						{item.label}
 					</button>
 				))}
+			</div>
 			</div>
 			{items.map((item, i) => (
 				<div
