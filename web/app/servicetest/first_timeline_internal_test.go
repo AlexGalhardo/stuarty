@@ -12,18 +12,15 @@ import (
 // ambiguous once the production holds a second timeline (SDD-003 section 1.7). Each operation below works on the
 // first timeline of a production of two, named by its timeline_id, as it does on a project of one.
 
-// addSecondTimeline gives the project a second timeline and returns its id.
-func (m *mediaEnv) addSecondTimeline(project string) string {
+// addSecondTimeline gives the project a second timeline.
+func (m *mediaEnv) addSecondTimeline(project string) {
 	m.t.Helper()
 
-	added, err := m.prod().ProjectItemAdd(
+	if _, err := m.prod().ProjectItemAdd(
 		m.as(ui), service.ProjectItemAddRequest{ProjectID: project, Kind: "timeline", Title: "Second", Preset: "16:9"},
-	)
-	if err != nil {
+	); err != nil {
 		m.t.Fatal(err)
 	}
-
-	return added.Item.TimelineID
 }
 
 func TestOtioImportIntoTheFirstOfTwoTimelines(t *testing.T) {
