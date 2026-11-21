@@ -920,6 +920,7 @@ Defaults are consistent with SDD-000 §10 (`STUARTY_MAX_EXPORTS` 2, `STUARTY_MAX
 | Bundle  | 1,024 entries; 32 GiB in all; an entry within its cap (manifest 1 MiB, document 64 MiB, operations 2 GiB, a media file the import limit, a font 16 MiB); a line of the log 64 MiB; a compression ratio of at most 1,000 above 64 KiB; free disk for the declared total plus 10% | per call | fixed | `E_LIMIT_EXCEEDED` (`details.limit` is `bundle_entries`, `bundle_total_bytes`, `bundle_entry_bytes`, `bundle_ratio` or `bundle_line_bytes`), judged from the central directory before any byte is read; the disk case is `free_bytes` |
 | OpenTimelineIO file  | 16 MiB; a batch of at most 200 operations | per call | fixed | `E_PAYLOAD_TOO_LARGE` (`details.limit = "otio_bytes"` or `"batch_operations"`) |
 | Cached frames in flight | 2 per caller | per caller | fixed | `E_QUEUE_FULL` (429, `details.limit = "frames"`) |
+| Peaks computed on request (SDD-011 §6.5) | one at a time, the others wait; a normalized WAV of at most 1 GiB | workspace; per asset | fixed | `E_LIMIT_EXCEEDED` (`details.limit = "peaks_bytes"`) over the size |
 | Document | 50 tracks, 500 items, 200 assets, 5,000 caption words | per project | fixed by SDD-001 §4 | `E_LIMIT` |
 | JSON request body | 1 MiB (edit: batch limit plus envelope); template import and import by path carry only a path | per request | fixed | `E_PAYLOAD_TOO_LARGE` |
 | Event streams | 32 per project, 128 per process, 16 per key in network mode | | fixed | `E_QUEUE_FULL` with `details.limit = "streams"`, `value` and `ceiling` |
