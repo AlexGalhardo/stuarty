@@ -194,7 +194,7 @@ export default function Library({
 					)}
 				/>
 			) : (
-				<ul className="flex flex-col gap-2">
+				<ul className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,16rem),1fr))] gap-2">
 					{visible.map((entry) => (
 						<AssetCard
 							key={entry.asset_id}

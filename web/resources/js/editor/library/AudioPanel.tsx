@@ -56,7 +56,7 @@ export default function AudioPanel({
 					{t("ui.editor.library.audio_empty")}
 				</p>
 			) : (
-				<ul className="flex flex-col gap-2">
+				<ul className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,16rem),1fr))] gap-2">
 					{audio.map((entry) => (
 						<AssetCard
 							key={entry.asset_id}

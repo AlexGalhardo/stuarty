@@ -359,12 +359,13 @@ For the implementer (senior-e), in one place. Nothing here is implemented by thi
 
 ### 3.1 Editor regions
 
-The editor shell is the CSS grid of SDD-012 §6.1: rows `48px 1fr var(--timeline-h)`, columns `var(--library-w) 1fr var(--inspector-w)`; the top bar and the timeline span all columns.
+The editor shell is the CSS grid of SDD-012 §6.1: rows `48px 1fr var(--timeline-h)`, columns `var(--library-w) var(--history-w) 1fr var(--inspector-w)`; the top bar and the timeline span all columns.
 
 | Region | Landmark | Surface | Contents | Size |
 | --- | --- | --- | --- | --- |
 | Top bar | `header` | `--ed-panel`, bottom `--border` | back, project name, revision and connection state, Undo and Redo, activity indicator, palette button, theme, language, jobs chip, Export (SDD-012 §6.2) | 48 px high, padding `px-3`, groups separated by `gap-2`, the primary action (Export) at the far right |
-| Library (tabs Library and History) | `aside` with `aria-label` | `--ed-panel`, right `--border` | import bar, asset cards, trash group; History tab | default 320 or 240 px (section 3.2); minimum 200 px; collapsible (`Alt+1`) |
+| Library | `aside` with `aria-label` | `--ed-panel`, right `--border` | tab rail, import bar, asset cards, trash group | default 640 or 480 px (section 3.2), so that the preview keeps 360 px; collapsible to its rail (`Alt+1`) |
+| History sidebar | `aside` named "History sidebar" | `--ed-panel`, left `--border` | its button on a 40 px rail, then the history rows, newest on top (section 4.3.16) | 40 px collapsed, 320 px open; below 1280 px it and the library share the room, at least 192 px each; collapsible (`Alt+3`); open state remembered |
 | Preview | inside `main` | `--ed-preview-surround` | canvas box (16 px padding), overlays, transport row (40 px) | the remaining width; minimum 240 px high |
 | Inspector | `aside` with `aria-label` | `--ed-panel`, left `--border` | panel for the selection (SDD-012 §12.1) | default 360 or 280 px; minimum 200 px; collapsible (`Alt+2`) |
 | Timeline | inside `main` | toolbar `--ed-panel` (40 px), body `--ed-timeline` | toolbar, ruler (28 px), track headers (176 px), rows | default 300 or 240 px high; minimum 160 px; resized by its splitter |
@@ -380,8 +381,8 @@ Web, editor (from SDD-012 §6.3):
 
 | Viewport width | Library | Inspector | Timeline height | Behaviour |
 | --- | --- | --- | --- | --- |
-| 1600 px and wider | 320 px | 360 px | 300 px | supported |
-| 1280 to 1599 px | 240 px | 280 px | 240 px | supported; the minimum supported size is 1280 by 720 |
+| 1600 px and wider | 640 px | 360 px | 300 px | supported |
+| 1280 to 1599 px | 480 px | 280 px | 240 px | supported; the minimum supported size is 1280 by 720 |
 | 1024 to 1279 px | `Sheet` drawer from a top-bar button | `Sheet` drawer, opens on selection | 240 px | tolerated: a notice "best used at 1280 pixels or wider" once per session (`--warning` tone, dismissible) |
 | below 1024 px | | | | not supported: a full-screen empty state with a link back to the projects list |
 
@@ -453,7 +454,7 @@ There is no separate settings window and no second browser window: the export an
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-The grid, sizes and breakpoints are those of sections 3.1 and 3.2; this layout keeps them. At 1600 px wide the library is 320 px (40 px rail and a 280 px panel), the inspector 360 px and the timeline 300 px high; at 1280 px they are 240 (40 and 200), 280 and 240 px. The player is wider than in the reference layout on purpose: a wider player serves vertical video, and the panels are resizable (SDD-012 §6.5 row 1).
+The grid, sizes and breakpoints are those of sections 3.1 and 3.2; this layout keeps them. At 1600 px wide the library is 640 px (40 px rail and a 600 px panel), the inspector 360 px and the timeline 300 px high; at 1280 px they are 480 (40 and 440), 280 and 240 px. The history sidebar sits between the library and the player: a 40 px rail, 320 px open. The player is wider than in the reference layout on purpose: a wider player serves vertical video, and the panels are resizable (SDD-012 §6.5 row 1).
 
 | Region | Surface | Border | Text tokens on it |
 | --- | --- | --- | --- |
@@ -473,7 +474,7 @@ The menu (`DropdownMenu`, level 1 elevation) has the groups and actions of SDD-0
 
 #### 3.4.4 Library: tab rail and panel
 
-- **Tab rail**, 40 px wide, at the left edge of the library region: `role="tablist"`, `aria-orientation="vertical"`, one `IconButton` `icon` (32 px) per tab with `aria-label` and a tooltip from `t()`, roving `tabindex` with `Up`, `Down`, `Home` and `End`. Tabs in this order, each drawn only when its command exists (SDD-012 §6.4): Media (`Film`), Audio (`AudioLines`), Text (`Type`), Captions (`Captions`), Effects (`Sparkles`), Transitions (`ArrowLeftRight`), Filters (`SlidersHorizontal`), Templates (`LayoutTemplate`), History (`History`).
+- **Tab rail**, 40 px wide, at the left edge of the library region: `role="tablist"`, `aria-orientation="vertical"`, one `IconButton` `icon` (32 px) per tab with `aria-label` and a tooltip from `t()`, roving `tabindex` with `Up`, `Down`, `Home` and `End`. Tabs in this order, each drawn only when its command exists (SDD-012 §6.4): Media (`Film`), Audio (`AudioLines`), Text (`Type`), Captions (`Captions`), Effects (`Sparkles`), Transitions (`ArrowLeftRight`), Filters (`SlidersHorizontal`), Templates (`LayoutTemplate`). The history is not a tab: it is its own sidebar (section 3.1).
 - **Selected tab:** `bg-accent`, icon `--foreground`, and a 2 px leading bar in `--ring` at the rail's left edge, with `aria-selected="true"`. The bar, not the fill, carries the state (3:1 rule for state indicators, section 7.6).
 - **Panel:** `ui/Panel` (section 4.3.2) with the tab's name as the header title. Bodies:
 
@@ -485,7 +486,6 @@ The menu (`DropdownMenu`, level 1 elevation) has the groups and actions of SDD-0
 | Captions | "Generate captions", "Import subtitles", caption styles, track style |
 | Effects, Transitions, Filters | a grid of cards (two columns at 280 px, one at 200 px): name, optional thumbnail from the same frame request as the player, and an amount `Slider` for filters. With nothing selected the cards are `aria-disabled` with the reason "Select a clip first" |
 | Templates | slots of the project and the template info |
-| History | history rows (section 4.3.16) |
 
 `Alt+1` toggles the whole region; the collapsed region keeps the rail visible, so the tabs stay one click away.
 
@@ -691,7 +691,7 @@ Keyboard: the grid keys of SDD-012 §7.10 (one tab stop, roving `tabindex`), the
 
 - Import bar: `Input` (`font-mono`, placeholder an example path for the platform, `aria-label` "File path") and `Button` `secondary` "Import"; `Enter` submits. In the desktop shell, a `Button` `outline` "Choose files" appears only when `window.vukemDesktop?.pickFiles` exists (SDD-012 §13.1).
 - Drop target: when a drag enters the library, a 2 px dashed `--ring` outline and the label "Drop to import" (desktop) or the message "A browser page cannot see the path of a file. Paste the path into the field." (browser, SDD-012 §13.1 item 1).
-- Asset card (grid of two columns at 320 px, one at 240 px): thumbnail box `aspect-video`, `object-contain` on `--ed-preview-surround`, `rounded-sm`; name (`UntrustedText`, one line, tooltip with the full name); meta line `text-xs tabular-nums text-muted-foreground`: "00:05.000 · 1080×1920 · 12 MB"; state badge with text (Pending, Ingesting, Ready, Failed); `Progress` (4 px) while ingesting; actions: "Add to timeline" (`Button` `sm` `secondary`, enabled only when ready and present in the read model) and a menu.
+- Asset card (a grid of as many columns of at least 16rem as the panel holds: two in the 640 px library, one in the 480 px one): thumbnail box `aspect-video`, `object-contain` on `--ed-preview-surround`, `rounded-sm`; name (`UntrustedText`, one line, tooltip with the full name); meta line `text-xs tabular-nums text-muted-foreground`: "00:05.000 · 1080×1920 · 12 MB"; state badge with text (Pending, Ingesting, Ready, Failed); `Progress` (4 px) while ingesting; actions: "Add to timeline" (`Button` `sm` `secondary`, enabled only when ready and present in the read model) and a menu.
 - Failed card: the error block of section 4.3.12 inside the card, with "Try again" and "Dismiss".
 - Keyboard: each card is a group with its buttons in tab order; the menu opens with `Shift+F10` and the context-menu key as well as its button.
 
