@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -92,6 +93,14 @@ func TestAllowlistsAreInsideTheBuildSnapshots(t *testing.T) {
 	}
 }
 
+// windowsOnlyFilters are the filters the snapshot (read on the Windows build) has because that build links
+// Direct3D 11/12, AMD AMF and the Windows desktop capture APIs; the Linux build of the same pin lacks them.
+// Any other difference still fails on every system.
+var windowsOnlyFilters = map[string]bool{
+	"ddagrab": true, "gfxcapture": true, "scale_d3d11": true, "scale_d3d12": true,
+	"deinterlace_d3d12": true, "mestimate_d3d12": true, "frc_amf": true,
+}
+
 // The snapshots are the listings of the pinned build, name for name. A pin bump that adds or drops a demuxer
 // or a filter fails here until the new names are read against FF-04 and FF-10 and the snapshot is rewritten
 // from "ffmpeg -demuxers" and "ffmpeg -filters".
@@ -106,7 +115,7 @@ func TestSnapshotsAreTheListingsOfThePinnedBuild(t *testing.T) {
 		}
 
 		for n := range want {
-			if !got[n] {
+			if !got[n] && !(c.flag == "-filters" && runtime.GOOS != "windows" && windowsOnlyFilters[n]) {
 				t.Errorf("%s: %s is in the snapshot and gone from the pinned build", c.flag, n)
 			}
 		}
