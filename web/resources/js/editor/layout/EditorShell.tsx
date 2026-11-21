@@ -51,17 +51,21 @@ const PREVIEW_MIN_PX = 360;
 // library gives way to it before the preview does.
 const HISTORY_OPEN_PX = 320;
 
+// When the two sidebars do not both fit (below 1280 px, where the editor is
+// tolerated, SDD-012 section 6.3) each keeps this much, so neither is a sliver.
+const SIDEBAR_MIN_PX = 192;
+
 export function panelSizes(
 	viewportWidth: number,
 	historyOpen = false,
 ): PanelSizes {
 	const wide = viewportWidth >= 1600;
 	const inspector = wide ? 360 : 280;
-	const history = historyOpen ? HISTORY_OPEN_PX : RAIL_PX;
-	const library = Math.min(
-		wide ? 640 : 480,
-		Math.max(RAIL_PX, viewportWidth - inspector - history - PREVIEW_MIN_PX),
-	);
+	const room = viewportWidth - inspector - PREVIEW_MIN_PX;
+	const history = historyOpen
+		? Math.min(HISTORY_OPEN_PX, Math.max(SIDEBAR_MIN_PX, room - SIDEBAR_MIN_PX))
+		: RAIL_PX;
+	const library = Math.min(wide ? 640 : 480, Math.max(RAIL_PX, room - history));
 	return { library, history, inspector, timeline: wide ? 300 : 240 };
 }
 
