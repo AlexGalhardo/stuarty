@@ -2,6 +2,7 @@ package routes
 
 import (
 	"net/http"
+	"strings"
 
 	vukem "github.com/AlexGalhardo/vukem"
 	"github.com/AlexGalhardo/vukem/i18n"
@@ -29,6 +30,22 @@ const LangHeader = "Stuarty-Lang"
 // middleware reads; without it the browser's own Accept-Language applies.
 func langHeader(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// The API answers in English whatever the client asks for (SDD-003 section 1): leave the locale
+		// middleware nothing to pick, or Content-Language would name a language the body is not in (VV-314).
+		if strings.HasPrefix(r.URL.Path, "/api/v1/") || r.URL.Path == "/openapi.json" {
+			r.Header.Del("Accept-Language")
+			r.Header.Del(LangHeader)
+
+			if q := r.URL.Query(); q.Has("lang") {
+				q.Del("lang")
+				r.URL.RawQuery = q.Encode()
+			}
+
+			next.ServeHTTP(w, r)
+
+			return
+		}
+
 		if v := r.Header.Get(LangHeader); v != "" {
 			r.Header.Set("Accept-Language", v)
 		}
