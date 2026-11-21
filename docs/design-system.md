@@ -1178,6 +1178,8 @@ Contrast (WCAG 2.x): `--cta-foreground` on `--cta` 6.91:1, on the light hover 5.
 
 At rest the label is `--fg` on `--bg` (above 15:1 in both themes) and the version line `--muted` on `--bg` (7.9:1 light, 7.7:1 dark); on hover the version line takes the label colour. The border is decorative: the label identifies the control. The macOS pink takes near-black text on its fill because white on `#FF1F8E` is only 3.60:1; its border is 3.60:1 against the white page and 5.50:1 against the dark one.
 
+**Navbar hover (docs and landing).** The links and buttons of the main navbar take `--nav-hover` under the pointer and on keyboard focus, a vivid violet that says the item can be clicked: light `#8A00D4` (6.93:1 on white, 6.35:1 on the `--hover` fill), dark `#C060FF` (5.99:1 on the dark page, 5.27:1 on the `--hover` fill), both above 4.5:1 for normal text. The rule is one selector in `site/app/globals.css` (`header[data-variant] :is(a, button):is(:hover, :focus-visible)`), so the home and the docs share it.
+
 ### 11.7 Radii, borders and shadows
 
 - Radii: `--radius` (10 px) and its scale (section 2.9) stay. The expressive register adds `rounded-3xl` (24 px) for large showcase frames (the product window of the hero) and `rounded-full` for pills.

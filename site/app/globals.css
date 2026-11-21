@@ -50,6 +50,7 @@
   --cta: oklch(0.7 0.2 48);
   --cta-foreground: oklch(0.145 0 0);
   --cta-hover: oklch(0.64 0.2 45);
+  --nav-hover: #8a00d4;
   --duration-scene: 700ms;
   --duration-reveal: 500ms;
   --duration-hover: 150ms;
@@ -78,6 +79,7 @@
   --brand-subtle: oklch(0.29 0.13 272 / 40%);
   --brand-text: oklch(0.8 0.13 281);
   --cta-hover: oklch(0.76 0.18 55);
+  --nav-hover: #c060ff;
   color-scheme: dark;
 }
 
@@ -555,3 +557,11 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* The links and buttons of the main navbar (docs and landing) turn a vivid violet under the pointer or the keyboard
+   focus, so it is plain that they can be clicked (design-system section 11.6): 6.9:1 on the light page, 6.0:1 on the
+   dark one. */
+header[data-variant] :is(a, button):is(:hover, :focus-visible) {
+  color: var(--nav-hover);
+}
+
