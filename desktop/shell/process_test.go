@@ -156,12 +156,30 @@ func TestPortInUseIsReported(t *testing.T) {
 func TestStaleRuntimeIsNotTakenForTheChild(t *testing.T) {
 	cfg := newConfig(t, "never-ready")
 	cfg.ReadyTimeout = 600 * time.Millisecond
-	stale := workspace.Runtime{PID: 1, Addr: "127.0.0.1:9", Mode: workspace.ModeLocal}
+	stale := workspace.Runtime{PID: deadPID(t), Addr: "127.0.0.1:9", Mode: workspace.ModeLocal}
 	if err := cfg.Workspace.WriteRuntime(stale); err != nil {
 		t.Fatal(err)
 	}
 	_, err := Start(context.Background(), cfg)
 	assertReason(t, err, ReasonTimeout)
+}
+
+// deadPID returns the pid of a process that has exited. A fixed number such as 1 is not dead: on Linux and
+// macOS pid 1 is init, which is alive, so the runtime was taken for a live server (reason workspace-in-use).
+func deadPID(t *testing.T) int {
+	t.Helper()
+
+	exe, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cmd := exec.CommandContext(context.Background(), exe, "-test.run=^$")
+	if err := cmd.Run(); err != nil {
+		t.Fatal(err)
+	}
+
+	return cmd.ProcessState.Pid()
 }
 
 func assertReason(t *testing.T, err error, want Reason) {
