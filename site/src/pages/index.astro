@@ -13,10 +13,9 @@ import Shot from "../components/landing/Shot.astro";
 import SplitTitle from "../components/landing/SplitTitle.astro";
 import StageCanvas from "../components/landing/StageCanvas.astro";
 import TimelineEditor from "../components/landing/TimelineEditor.astro";
-import { credits, hero, shots, takes, trust } from "@/lib/landing-pages";
+import { credits, hero, shots, trust } from "@/lib/landing-pages";
 import { withBase } from "@/lib/site";
 
-const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).padStart(2, "0");
 ---
 
 <Base title={landing.title} description={landing.description} canonical="/" headerVariant="landing">
@@ -62,14 +61,14 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 
 		<!-- Take 2: the timeline (the scroll, the wheel or the arrows move the playhead) -->
 		<section id="timeline" class="take take-timeline" aria-labelledby="timeline-title" data-take data-editor>
-			<h2 id="timeline-title" tabindex="-1" class="site-container eyebrow pt-5">Take {number("timeline")} &middot; The studio, clip by clip</h2>
+			<h2 id="timeline-title" tabindex="-1" class="site-container eyebrow pt-5">The studio, clip by clip</h2>
 			<TimelineEditor headingLevel="h3" />
 		</section>
 
 		<!-- Take 3: agents drive it too -->
 		<section id="agents" class="take" aria-labelledby="agents-title" data-take>
 			<div class="site-container">
-				<p class="eyebrow" data-in>Take {number("agents")} &middot; Agents</p>
+				<p class="eyebrow" data-in>Agents</p>
 				<h2 id="agents-title" tabindex="-1" class="display-title mt-4 max-w-3xl text-fg" data-in>Agents drive it too.</h2>
 				<p class="lead mt-4 max-w-2xl" data-in>The editor, the CLI, the HTTP API and MCP are thin doors to one command core, tested for parity.</p>
 				<div data-in>
@@ -81,7 +80,7 @@ const number = (id: string) => String(takes.findIndex((t) => t.id === id) + 1).p
 		<!-- Take 4: open source, on your machine -->
 		<section id="yours" class="take" aria-labelledby="yours-title" data-take>
 			<div class="site-container text-center">
-				<p class="eyebrow" data-in>Take {number("yours")} &middot; {trust.eyebrow}</p>
+				<p class="eyebrow" data-in>{trust.eyebrow}</p>
 				<h2 id="yours-title" tabindex="-1" class="display-title mx-auto mt-4 max-w-3xl text-fg" data-in>{trust.title}</h2>
 				<ul class="mx-auto mt-8 flex max-w-4xl flex-wrap justify-center gap-2" data-in>
 					{trust.points.map((p) => (
