@@ -30,11 +30,11 @@ test.describe("shapes", () => {
 			if (r.url().includes("/bitmaps/")) bitmaps.push(r.url());
 		});
 		await page.goto(`/editor/${seeded.id}?debug=1`);
-		await expect(page.getByRole("toolbar", { name: "Editing" })).toBeVisible();
+		await expect(page.getByRole("main", { name: "Preview" })).toBeVisible();
 		const posted = recordEdits(page);
 
-		await page.getByRole("button", { name: "Add shape" }).click();
-		await page.getByRole("menuitem", { name: "Rounded rectangle" }).click();
+		await page.getByRole("tab", { name: "Text" }).click();
+		await page.getByRole("button", { name: "Rounded rectangle" }).click();
 		await expect.poll(() => posted.length).toBe(1);
 		expect(posted[0]?.operations).toEqual([
 			{
@@ -54,7 +54,9 @@ test.describe("shapes", () => {
 		await expect.poll(() => bitmaps.length).toBeGreaterThan(0);
 
 		await item.click();
-		await expect(page.getByRole("heading", { name: /^Shape/ })).toBeVisible();
+		await expect(
+			page.getByRole("heading", { name: "Shape", exact: true }),
+		).toBeVisible();
 		const itemId = (await item.getAttribute("data-item-id")) ?? "";
 
 		await openInspectorTab(page, "Text");

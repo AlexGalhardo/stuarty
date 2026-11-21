@@ -48,7 +48,7 @@ test.describe("library tab rail", () => {
 		await page.goto(`/editor/${seeded.id}`);
 		const aside = page.locator("aside[data-landmark='2']");
 		await expect(aside).toBeVisible();
-		expect((await aside.boundingBox())?.width).toBeCloseTo(320, 0);
+		expect((await aside.boundingBox())?.width).toBeCloseTo(640, 0);
 		await page.keyboard.press("Alt+1");
 		await expect(page.getByRole("region", { name: "Media" })).toHaveCount(0);
 		await expect(page.getByRole("tab", { name: "Media" })).toBeVisible();

@@ -152,9 +152,7 @@ for (const theme of ["dark", "light"] as const) {
 		}) => {
 			const { id, clip } = await seedEditor(request);
 			await page.goto(`/editor/${id}`);
-			await expect(
-				page.getByRole("toolbar", { name: "Editing" }),
-			).toBeVisible();
+			await expect(page.getByRole("main", { name: "Preview" })).toBeVisible();
 			const found: string[] = [];
 			const scan = async (state: string): Promise<void> => {
 				for (const small of await undersizedTargets(page, EQUIVALENT))
@@ -196,9 +194,7 @@ for (const theme of ["dark", "light"] as const) {
 				await walk(path, 25);
 			}
 			await page.goto(`/editor/${id}`);
-			await expect(
-				page.getByRole("toolbar", { name: "Editing" }),
-			).toBeVisible();
+			await expect(page.getByRole("main", { name: "Preview" })).toBeVisible();
 			await walk("editor", 60);
 			expect(found, "focus hidden by content").toEqual([]);
 		});

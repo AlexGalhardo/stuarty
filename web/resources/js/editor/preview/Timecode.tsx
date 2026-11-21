@@ -78,7 +78,7 @@ export function LiveTimecode({
 			spellCheck={false}
 			autoComplete="off"
 			size={12}
-			className="w-24 rounded bg-transparent px-1 text-xs [font-variant-numeric:tabular-nums] aria-invalid:ring-1 aria-invalid:ring-destructive"
+			className="h-6 w-24 rounded bg-transparent px-1 text-xs [font-variant-numeric:tabular-nums] aria-invalid:ring-1 aria-invalid:ring-destructive"
 			onKeyDown={(event) => {
 				// The keys of the editor (space, J/K/L, arrows) are not for a field.
 				event.stopPropagation();

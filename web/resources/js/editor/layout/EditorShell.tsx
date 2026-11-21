@@ -14,7 +14,7 @@ import Inspector from "../inspector/Inspector";
 import Preview from "../preview/Preview";
 import { useDocumentState, useUiState } from "../state/EditorContext";
 import { selectFps } from "../state/selectors";
-import EditToolbar from "../timeline/EditToolbar";
+import AddCaptionDialog from "../timeline/AddCaptionDialog";
 import { useCanvasPort } from "../timeline/gestures/transformDrag";
 import Notices from "../timeline/Notices";
 import RepeatDialog from "../timeline/RepeatDialog";
@@ -30,6 +30,9 @@ import Tour from "./tour/Tour";
 import { useDesktopMenu } from "./useDesktopMenu";
 import { usePanelShortcuts } from "./usePanelShortcuts";
 
+// The collapsed material region keeps its tab rail (docs/design-system.md 3.4.4).
+const RAIL_PX = 40;
+
 // Panel sizes by viewport width (SDD-012 section 6.3); below 1280 the drawers
 // of the later phases are not built yet, so the compact sizes apply.
 export interface PanelSizes {
@@ -38,10 +41,18 @@ export interface PanelSizes {
 	timeline: number;
 }
 
+// The library is twice the width it had before epic 60 (D-125), kept so that the
+// preview still has PREVIEW_MIN_PX beside the open panels.
+const PREVIEW_MIN_PX = 360;
+
 export function panelSizes(viewportWidth: number): PanelSizes {
-	if (viewportWidth >= 1600)
-		return { library: 320, inspector: 360, timeline: 300 };
-	return { library: 240, inspector: 280, timeline: 240 };
+	const wide = viewportWidth >= 1600;
+	const inspector = wide ? 360 : 280;
+	const library = Math.min(
+		wide ? 640 : 480,
+		Math.max(RAIL_PX, viewportWidth - inspector - PREVIEW_MIN_PX),
+	);
+	return { library, inspector, timeline: wide ? 300 : 240 };
 }
 
 // The keys of the player (play, pause, shuttle) are rows of the registry.
@@ -49,8 +60,6 @@ const previewShortcutRow = (event: KeyboardEvent): string | null =>
 	rowFor(event, ["preview"]);
 
 const MIN_SUPPORTED_WIDTH = 1024;
-// The collapsed material region keeps its tab rail (docs/design-system.md 3.4.4).
-const RAIL_PX = 40;
 
 function useViewportWidth(): number {
 	const [width, setWidth] = useState(() => window.innerWidth);
@@ -114,16 +123,6 @@ export default function EditorShell({
 			<div className="col-span-full">
 				<TopBar onLocaleChange={onLocaleChange} />
 				<TrashedBanner />
-				{/* A landmark, so the toolbar is not content outside regions (axe region). */}
-				<section
-					aria-label={t("ui.editor.edit.label")}
-					className="border-b border-ed-track-line bg-ed-panel px-3 py-1"
-				>
-					<EditToolbar
-						captionOpen={captionOpen}
-						onCaptionOpenChange={setCaptionOpen}
-					/>
-				</section>
 				{status === "failed" && (
 					<div
 						role="alert"
@@ -176,6 +175,7 @@ export default function EditorShell({
 					undoRedo={<UndoRedo />}
 				/>
 			</div>
+			<AddCaptionDialog open={captionOpen} onOpenChange={setCaptionOpen} />
 			<ReleaseMark />
 			<Notices />
 			<FindBar />

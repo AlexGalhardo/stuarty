@@ -85,13 +85,13 @@ async function scan(
 // The names the test looks up, in each language (resources/lang).
 const NAMES = {
 	en: {
-		editing: "Editing",
+		preview: "Preview",
 		exportOpen: "Export",
 		history: "History",
 		start: "Start export",
 	},
 	"pt-BR": {
-		editing: "Edição",
+		preview: "Pré-visualização",
 		exportOpen: "Exportar",
 		history: "Histórico",
 		start: "Iniciar exportação",
@@ -201,7 +201,7 @@ for (const lang of ["en", "pt-BR"] as const) {
 
 				await page.goto(`/editor/${empty.id}`);
 				await expect(
-					page.getByRole("toolbar", { name: names.editing }),
+					page.getByRole("main", { name: names.preview }),
 				).toBeVisible();
 				await check();
 				await scan(page, "empty project", found);
