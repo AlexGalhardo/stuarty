@@ -23,6 +23,8 @@ interface Props {
 	/** The clip the agent captions and the clip it trims. */
 	captionClip?: string;
 	trimClip?: string;
+	/** Ends with the export screen ("That was the whole studio."). */
+	outro?: boolean;
 }
 
 const byId = Object.fromEntries(features.map((f) => [f.id, f]));
@@ -50,6 +52,7 @@ const {
 	labels = true,
 	captionClip = "cut",
 	trimClip = "cut",
+	outro = true,
 } = Astro.props;
 const n = clips.length;
 const w = 100 / n;
@@ -124,10 +127,10 @@ const laneWidth = `${n * 430}px`;
 		</div>
 	</div>
 
-	<div class="editor-outro" data-outro>
+	{outro ? (<div class="editor-outro" data-outro>
 		<p class="eyebrow">Exported &middot; 1080&times;1920 &middot; 22 s</p>
 		<p class="display-title mt-3 text-fg">That was the whole studio.</p>
-	</div>
+	</div>) : null}
 </div>
 
 <style is:global>

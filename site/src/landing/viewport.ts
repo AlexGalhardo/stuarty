@@ -59,7 +59,7 @@ export function start(): void {
 
 	// The timeline take: one progress value from 0 to 1, eased towards its target.
 	const timelineTake = takes.findIndex((t) => t.id === "timeline");
-	const render = mountTimeline(root, { reduced, stage: () => stage, mascot: false });
+	const render = mountTimeline(root, { reduced, stage: () => stage, mascot: false, exportEnd: false });
 	const playhead = { p: 0 };
 	let target = 0;
 	const seek = (p: number): void => {
@@ -78,8 +78,7 @@ export function start(): void {
 		}
 	};
 	render?.(0);
-	// The run of the playhead is the first 88% of the progress (the export takes the rest).
-	const clipStep = 0.88 / Math.max(1, root.querySelectorAll("[data-clip]").length);
+	const clipStep = 1 / Math.max(1, root.querySelectorAll("[data-clip]").length);
 
 	const splits = new Map<HTMLElement, gsap.core.Timeline>();
 	const show = (i: number, opts: { focus: boolean; instant?: boolean }): void => {
