@@ -37,6 +37,7 @@ export interface ProjectGetResult {
 	next_cursor: string | null;
 	document?: ProjectDocument;
 	text?: string;
+	items?: readonly ProjectItem[];
 }
 
 export type JsonValue =

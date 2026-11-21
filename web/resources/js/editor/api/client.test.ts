@@ -27,6 +27,51 @@ function fake(response: TransportResponse): {
 
 const ok = (body: unknown): TransportResponse => ({ status: 200, body });
 
+describe("the jobs of a whole project (VV-315)", () => {
+	const answering = (items: unknown[]) => {
+		const requests: string[] = [];
+		const transport = {
+			send: async (request: TransportRequest) => {
+				requests.push(request.path);
+				if (request.path.includes("/jobs")) {
+					const of = new URL(request.path, "http://x").searchParams;
+					return ok({ jobs: [{ job_id: of.get("timeline_id") ?? "one" }] });
+				}
+				return ok({ items });
+			},
+		} as unknown as Transport;
+		return { client: createClient(transport), requests };
+	};
+	const timeline = (id: string, state = "active") => ({
+		id: `itm_${id}`,
+		kind: "timeline",
+		state,
+		timeline_id: id,
+	});
+
+	test("one timeline reads the list of the project", async () => {
+		const { client, requests } = answering([timeline("prj_a")]);
+		expect(
+			(await client.listProjectJobs("prj_a")).map((j) => j.job_id),
+		).toEqual(["one"]);
+		expect(requests).toEqual(["/projects/prj_a", "/projects/prj_a/jobs"]);
+	});
+
+	test("several timelines read each active one and never the list that asks which", async () => {
+		const { client, requests } = answering([
+			timeline("prj_a"),
+			timeline("prj_b"),
+			timeline("prj_c", "trashed"),
+			{ id: "itm_text", kind: "text", state: "active" },
+		]);
+		expect(
+			(await client.listProjectJobs("prj_a")).map((j) => j.job_id).sort(),
+		).toEqual(["prj_a", "prj_b"]);
+		expect(requests).not.toContain("/projects/prj_a/jobs");
+		expect(requests.some((path) => path.includes("prj_c"))).toBe(false);
+	});
+});
+
 describe("ALPHA reads and media state", () => {
 	test("getCommands and getCommand", async () => {
 		const { transport, requests } = fake(ok({ commands: [], text: "" }));
