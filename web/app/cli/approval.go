@@ -217,7 +217,7 @@ var costCeilingCmd = &spec{
 	person:  true,
 	name:    "cost:ceiling",
 	summary: "set or remove a cost ceiling (for a person in the app; the local token is refused)",
-	usage:   []string{"stuarty cost:ceiling --currency USD"},
+	usage:   []string{"stuarty cost:ceiling --currency USD [--project id] [--per-item n] [--per-day n]"},
 	example: "stuarty cost:ceiling --currency USD --per-day 5000000",
 	write:   true,
 	flags: []flagDef{
