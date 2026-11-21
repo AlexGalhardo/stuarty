@@ -298,3 +298,19 @@ func TestPagesLanguageIsPerBrowser(t *testing.T) {
 		t.Error("a response set a cookie for the language")
 	}
 }
+
+// VV-314: the API speaks English whatever language the client asks for, so it never says another language in
+// Content-Language over an English body.
+func TestAPIAnswersInEnglishWhateverTheClientAsks(t *testing.T) {
+	h := pagesHarness(t)
+
+	for name, r := range map[string]req{
+		"accept-language": {path: "/api/v1/projects/prj_0000000000", headers: map[string]string{"Accept-Language": "pt-BR"}},
+		"stuarty-lang":    {path: "/api/v1/projects/prj_0000000000", headers: map[string]string{"Stuarty-Lang": "pt-BR"}},
+		"query":           {path: "/api/v1/projects/prj_0000000000?lang=pt-BR"},
+	} {
+		if got := h.do(r).header.Get("Content-Language"); got != "en" {
+			t.Errorf("%s: Content-Language = %q, want en", name, got)
+		}
+	}
+}
