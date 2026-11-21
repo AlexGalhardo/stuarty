@@ -89,6 +89,16 @@ func AgentDocsInputs() agentdocs.Inputs {
 		inLibrary[s.name] = true
 	}
 
+	// The webhooks (epic 59, SDD-022) are a person's setting: an agent only reads them through the connection tool of
+	// MCP (D-127). Their commands are in the guide of the workspace domain, not in the editor skill, which is at its
+	// cap (12,400 characters, D-094).
+	for _, s := range []*spec{
+		webhookEventsCmd, webhookListCmd, webhookShowCmd, webhookAddCmd, webhookUpdateCmd, webhookRemoveCmd,
+		webhookRotateCmd, webhookTestCmd, webhookDeliveriesCmd, webhookRedeliverCmd,
+	} {
+		inLibrary[s.name] = true
+	}
+
 	for i := range commands {
 		c := &commands[i]
 		if c.Person {
