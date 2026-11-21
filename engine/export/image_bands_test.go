@@ -6,13 +6,20 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"image"
+	"image/color"
+	"image/png"
+	"os"
+	"path/filepath"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
 
 	coreimage "github.com/AlexGalhardo/stuarty/core/image"
 	"github.com/AlexGalhardo/stuarty/core/plan"
+	"github.com/AlexGalhardo/stuarty/engine/rasterize"
 )
 
 func renderBands(t *testing.T, d *coreimage.Document, cfg ImageConfig, bands int) *image.RGBA {
@@ -116,6 +123,193 @@ func TestImageReferencePixelsAreTheOnesOfBeforeEpic55(t *testing.T) {
 	sum := sha256.Sum256(img.Pix)
 	if got := hex.EncodeToString(sum[:]); got != want {
 		t.Fatalf("the reference document renders to %s, want %s", got, want)
+	}
+}
+
+// TestImageBandsInvertedMaskOfASourceOffTheCanvas: a layer masked by the inverse of a layer that reaches no row of
+// the canvas shows whole. The source is in the draw even with no row of its own: left out, the masked layer
+// would be dropped as one whose source is lost.
+func TestImageBandsInvertedMaskOfASourceOffTheCanvas(t *testing.T) {
+	src := sourcePNG(t)
+	cfg := ImageConfig{AssetPath: func(string) (string, error) { return src, nil }}
+	base := lookBase()
+	photo, stencil := firstLayerOfKind(base, coreimage.KindImage), lyr('p')
+
+	moved := applyLook(t, base, lookOp("layer.transform", fmt.Sprintf(`{"layer_id": %q, "y": -3000}`, stencil)))
+	masked := applyLook(t, moved, lookOp(
+		"layer.mask_set",
+		fmt.Sprintf(`{"layer_id": %q, "kind": "layer", "source": %q, "invert": true}`, photo, stencil),
+	))
+
+	want := renderBands(t, moved, cfg, 1)
+
+	for _, bands := range []int{0, 1, 3} {
+		if got := renderBands(t, masked, cfg, bands); !bytes.Equal(got.Pix, want.Pix) {
+			t.Fatalf("%d bands: the masked layer differs in %d bytes", bands, differingBytes(got.Pix, want.Pix))
+		}
+	}
+
+	cached := cachedConfig(t, NewImageCache(0), "u1")
+	if got := renderWith(t, masked, cached); !bytes.Equal(got.Pix, want.Pix) {
+		t.Fatalf("from the cache: the masked layer differs in %d bytes", differingBytes(got.Pix, want.Pix))
+	}
+}
+
+// TestImageLayerGrownPastTheSideOfATexture: a look may grow a layer past the 8,192 pixels of a texture. The
+// digest was taken from the render before epic 55, which drew such a layer whole.
+func TestImageLayerGrownPastTheSideOfATexture(t *testing.T) {
+	const (
+		w, h = 8150, 16
+		want = "5f1085aeea79b8d220e7f5145e7631c0c26b5723216531cf920a52e460edfc34"
+	)
+
+	img := image.NewNRGBA(image.Rect(0, 0, w, h))
+	for y := range h {
+		for x := range w {
+			img.SetNRGBA(x, y, color.NRGBA{R: uint8(x), G: uint8(y * 9), B: 90, A: 255})
+		}
+	}
+
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, img); err != nil {
+		t.Fatal(err)
+	}
+
+	path := filepath.Join(t.TempDir(), "wide.png")
+	if err := os.WriteFile(path, buf.Bytes(), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	d := &coreimage.Document{
+		SchemaVersion: coreimage.SchemaVersion, ID: "img_aaaaaaaaaa", Name: "wide", Width: 400, Height: 200,
+		Background: "#101820",
+		Assets:     map[string]coreimage.AssetRef{testHash: {Hash: testHash, Name: "w.png", Width: w, Height: h}},
+		Layers: []coreimage.Layer{{
+			ID: lyr('a'), Kind: coreimage.KindImage, Name: "w", Visible: true, Opacity: 100, X: -3000, Y: 80, W: w,
+			H: h, Rotation: 1, Asset: testHash,
+		}},
+	}
+	coreimage.ReorderAll(d)
+
+	d = applyLook(t, d, lookOp("layer.filter_add", `{"layer_id": "`+lyr('a')+`", "kind": "blur", "radius": 40}`))
+
+	got := renderBands(t, d, ImageConfig{AssetPath: func(string) (string, error) { return path, nil }}, 0)
+
+	sum := sha256.Sum256(got.Pix)
+	if hex.EncodeToString(sum[:]) != want {
+		t.Fatalf("the layer renders to %x, want %s", sum, want)
+	}
+}
+
+// TestImageLayerLimitIsTheSameInAnyNumberOfBands: the limit of 64 layers of the module is on the draw. Counted per
+// band, a document would be drawn on a machine with many CPUs and refused on one with few.
+func TestImageLayerLimitIsTheSameInAnyNumberOfBands(t *testing.T) {
+	d := &coreimage.Document{
+		SchemaVersion: coreimage.SchemaVersion, ID: "img_aaaaaaaaaa", Name: "many", Width: 320, Height: 640,
+		Background: "#101820",
+	}
+
+	for i := range maxPlanLayers + 1 {
+		d.Layers = append(d.Layers, coreimage.Layer{
+			ID: fmt.Sprintf("lyr_%010d", i), Kind: coreimage.KindShape, Shape: coreimage.ShapeRect, Name: "s",
+			Visible: true, Opacity: 100, X: 4, Y: i * 9, W: 100, H: 8, Fill: "#C0805A",
+		})
+	}
+
+	coreimage.ReorderAll(d)
+
+	for _, bands := range []int{0, 1, 8} {
+		_, err := renderImage(context.Background(), d, ImageConfig{}, bands)
+		if err == nil || !strings.Contains(err.Error(), "render_layers") {
+			t.Fatalf("%d bands: err = %v, want the limit of layers", bands, err)
+		}
+	}
+}
+
+// preparedRun prepares the layers of a document on a run with the given limit of prepared bytes.
+func preparedRun(t *testing.T, d *coreimage.Document, limit int64) ([]drawLayer, plan.FramePlan, error) {
+	t.Helper()
+
+	src := sourcePNG(t)
+	fonts := rasterize.Bundled()
+	fp := coreimage.Plan(d, plan.Options{Measure: rasterize.Measure(fonts), OutputScale: 1})
+	run := &imageRun{
+		ctx: context.Background(), plan: fp, raster: rasterize.NewCache(fonts, 0), preparedLimit: limit,
+		cfg: ImageConfig{AssetPath: func(string) (string, error) { return src, nil }},
+	}
+
+	drawn, err := run.prepareAll(fp.Layers)
+
+	return drawn, fp, err
+}
+
+// TestImagePreparedPicturesOfARenderAreBounded: the prepared pictures are all in memory until the draw, and a
+// document may have 500 large layers, so a render that would hold more than its limit is refused.
+func TestImagePreparedPicturesOfARenderAreBounded(t *testing.T) {
+	d := lookBase()
+
+	drawn, _, err := preparedRun(t, d, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var total int64
+	for i := range drawn {
+		total += int64(drawn[i].pic.Bytes())
+	}
+
+	if _, _, err := preparedRun(t, d, total); err != nil {
+		t.Fatalf("a render that fits its limit exactly: %v", err)
+	}
+
+	_, _, err = preparedRun(t, d, total-1)
+	if err == nil || !strings.Contains(err.Error(), "render_texture_bytes") {
+		t.Fatalf("err = %v, want the limit of the prepared pictures", err)
+	}
+}
+
+// TestImageBandCountBoundsWhatTheInstancesHold: every band holds the pictures that reach it, so the bands of a
+// stack of large layers are fewer than the CPUs allow.
+func TestImageBandCountBoundsWhatTheInstancesHold(t *testing.T) {
+	drawn, fp, err := preparedRun(t, lookBase(), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if n := bandCount(drawn, 0, fp.Height, 8, 1<<40); n != 8 {
+		t.Fatalf("with memory to spare: %d bands, want 8", n)
+	}
+
+	if n := bandCount(drawn, 0, fp.Height, 8, 0); n != 1 {
+		t.Fatalf("with no memory to spare: %d bands, want 1", n)
+	}
+
+	budget := bandsHold(drawn, 0, fp.Height, 3)
+
+	n := bandCount(drawn, 0, fp.Height, 8, budget)
+	if n < 3 || bandsHold(drawn, 0, fp.Height, n) > budget {
+		t.Fatalf("%d bands hold %d bytes, over the budget of %d", n, bandsHold(drawn, 0, fp.Height, n), budget)
+	}
+}
+
+// TestImageSlotIsGivenUpWithTheContext: with every instance of the process at work, a render whose frame was
+// replaced stops waiting at once.
+func TestImageSlotIsGivenUpWithTheContext(t *testing.T) {
+	for range cap(imageSlots) {
+		imageSlots <- struct{}{}
+	}
+
+	defer func() {
+		for range cap(imageSlots) {
+			<-imageSlots
+		}
+	}()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	if _, err := (&imageRun{ctx: ctx}).acquireSlot(); !errors.Is(err, context.Canceled) {
+		t.Fatalf("err = %v, want the error of the context", err)
 	}
 }
 

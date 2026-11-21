@@ -25,9 +25,17 @@ import (
 const (
 	// maxImageWorkers bounds the instances that prepare or draw at once.
 	maxImageWorkers = 8
-	// imageWorkMemory is the memory the layers being prepared together may take, estimated at eight times the
-	// pixels of the largest layer (the picture, its looks and their intermediate copies).
+	// imageWorkMemory bounds the memory of a render: the layers being prepared together, estimated at eight times
+	// the pixels of the largest layer (the picture, its looks and their intermediate copies); the prepared
+	// pictures the render holds; and what the instances of its bands hold of them.
 	imageWorkMemory = 2 << 30
+	// imageTextureBytes is the textures one instance may hold. A prepared layer is larger than its source when a
+	// look grew it, and a bitmap counts as a texture once prepared, so the budget of a plain instance would refuse
+	// a document that a render drawn from the sources accepts. It stays under the 1 GiB of the module, which also
+	// holds the copy of the block being stored.
+	imageTextureBytes = 800 << 20
+	// maxPlanLayers is the layers of one plan the module draws (`render_layers`, SDD-013 section 7.2).
+	maxPlanLayers = 64
 	// minBandRows is the fewest rows worth an instance of their own.
 	minBandRows = 64
 	// rowMargin is the rows added on each side of the rows a layer is computed to reach: the module rounds its
@@ -35,9 +43,29 @@ const (
 	rowMargin = 2
 )
 
-// / imagePool keeps the instances that prepare and draw an image document for the next render (SDD-021 section
+// imagePool keeps the instances that prepare and draw an image document for the next render (SDD-021 section
 // 6.2): up to maxImageWorkers of them, a gigabyte of their memory, for half a minute.
-var imagePool = renderhost.NewPool(renderhost.Config{Uncancellable: true}, maxImageWorkers, 1<<30, 30*time.Second)
+var imagePool = renderhost.NewPool(
+	renderhost.Config{Uncancellable: true, MaxTextureBytes: imageTextureBytes},
+	maxImageWorkers,
+	1<<30,
+	30*time.Second,
+)
+
+// imageSlots bounds the instances at work in the process, whatever the number of renders: a frame given up by a
+// fast edit keeps working until its layer is done, and without a bound each edit would add its workers to the
+// ones it replaced. A slot is held for one layer or one band, so a holder never waits for another slot.
+var imageSlots = make(chan struct{}, maxImageWorkers)
+
+// acquireSlot waits for a slot, or for the end of the context of the render.
+func (r *imageRun) acquireSlot() (func(), error) {
+	select {
+	case imageSlots <- struct{}{}:
+		return func() { <-imageSlots }, nil
+	case <-r.ctx.Done():
+		return nil, r.ctx.Err()
+	}
+}
 
 // drawLayer is a layer ready for the draw: the plan layer as a media layer of its prepared picture, the
 // picture, and the rows of the canvas that its draw can touch.
@@ -184,26 +212,10 @@ func (r *imageRun) prepareAll(layers []plan.Layer) ([]drawLayer, error) {
 	out := make([]drawLayer, len(layers))
 	workers := workerCount(layers)
 
-	// Each goroutine of fanOut takes the next layer; the instance a worker owns is made for the first one it
-	// takes and closed when the stage ends.
-	hosts := make([]*prepWorker, workers)
-	pool := make(chan *prepWorker, workers)
-
-	for i := range hosts {
-		hosts[i] = &prepWorker{}
-		pool <- hosts[i]
+	limit := r.preparedLimit
+	if limit <= 0 {
+		limit = imageWorkMemory
 	}
-
-	defer func() {
-		// The instances are closed once no worker holds one: those of an abandoned stage are closed by the
-		// goroutine that returns them last.
-		go func() {
-			for range workers {
-				w := <-pool
-				w.close()
-			}
-		}()
-	}()
 
 	// The costliest layers first, so that the last one a worker takes is a small one and not a photo with a
 	// sharpen that every other worker waits for.
@@ -217,15 +229,25 @@ func (r *imageRun) prepareAll(layers []plan.Layer) ([]drawLayer, error) {
 		func(a, b int) int { return cmp.Compare(prepareCost(&layers[b]), prepareCost(&layers[a])) },
 	)
 
+	// The prepared pictures stay in memory until the draw, so what they add up to is bounded here: a document has
+	// up to 500 layers and a picture can be hundreds of megabytes.
+	var held atomic.Int64
+
 	err := fanOut(r.ctx, workers, len(layers), func(n int) error {
 		i := order[n]
-		w := <-pool
-		defer func() { pool <- w }()
 
-		d, err := r.prepareOne(w, &layers[i])
+		d, err := r.prepareOne(&layers[i])
+		if err != nil {
+			return err
+		}
+
+		if held.Add(int64(d.pic.Bytes())) > limit {
+			return rendererError(&renderhost.Error{Reason: renderhost.LimitExceeded, Detail: "render_texture_bytes"})
+		}
+
 		out[i] = d
 
-		return err
+		return nil
 	})
 	if err != nil {
 		return nil, err
@@ -242,7 +264,7 @@ func (r *imageRun) prepareAll(layers []plan.Layer) ([]drawLayer, error) {
 	return kept, nil
 }
 
-// / prepareCost is a measure of how long a layer takes to prepare, for ordering only: its pixels, once for the
+// prepareCost is a measure of how long a layer takes to prepare, for ordering only: its pixels, once for the
 // picture and once for each look that walks them.
 func prepareCost(l *plan.Layer) int64 {
 	px := int64(math.Max(l.W, 1) * math.Max(l.H, 1))
@@ -258,22 +280,10 @@ func prepareCost(l *plan.Layer) int64 {
 	return px * looks
 }
 
-// prepWorker is an instance of the module that prepares layers, and the tables it holds.
-type prepWorker struct {
-	host   *renderhost.Host
-	tables map[string]bool
-}
-
-func (w *prepWorker) close() {
-	if w.host != nil {
-		imagePool.Put(w.host)
-		w.host = nil
-	}
-}
-
-// prepareOne makes the prepared picture of one layer on the instance of w: the pixels of the layer, uploaded
-// and released, and the preparation of the module.
-func (r *imageRun) prepareOne(w *prepWorker, l *plan.Layer) (drawLayer, error) {
+// prepareOne makes the prepared picture of one layer on an instance of the pool: the pixels of the layer,
+// uploaded, and the preparation of the module. The instance goes back cleared, so a layer never sees what
+// another one stored.
+func (r *imageRun) prepareOne(l *plan.Layer) (drawLayer, error) {
 	// The instance is not stopped by the context of the render, so that what it finishes is kept.
 	ctx := context.WithoutCancel(r.ctx)
 
@@ -288,18 +298,26 @@ func (r *imageRun) prepareOne(w *prepWorker, l *plan.Layer) (drawLayer, error) {
 		}
 	}
 
-	if w.host == nil {
-		h, err := imagePool.Get(ctx)
-		if err != nil {
-			return drawLayer{}, rendererError(err)
-		}
-
-		w.host, w.tables = h, map[string]bool{}
+	release, err := r.acquireSlot()
+	if err != nil {
+		return drawLayer{}, err
 	}
 
-	host := w.host
+	defer release()
 
-	var release string
+	// While this waited for a slot, the frame this one replaced may have finished the same layer.
+	if keyed {
+		if pic, ok := r.cache.peekPrepared(r.cfg.CacheScope, key); ok {
+			return r.layerFor(l, pic), nil
+		}
+	}
+
+	host, err := imagePool.Get(ctx)
+	if err != nil {
+		return drawLayer{}, rendererError(err)
+	}
+
+	defer imagePool.Put(host)
 
 	switch l.Kind {
 	case plan.Media:
@@ -311,8 +329,6 @@ func (r *imageRun) prepareOne(w *prepWorker, l *plan.Layer) (drawLayer, error) {
 		if err := host.PutTexture(ctx, l.ItemID, img.W, img.H, img.Pix, img.Opaque); err != nil {
 			return drawLayer{}, rendererError(err)
 		}
-
-		release = l.ItemID
 	case plan.Bitmap:
 		bm, err := r.raster.Get(*l.Bitmap)
 		if err != nil {
@@ -326,24 +342,17 @@ func (r *imageRun) prepareOne(w *prepWorker, l *plan.Layer) (drawLayer, error) {
 		if err := host.PutBitmap(ctx, l.Bitmap.Key(), bm); err != nil {
 			return drawLayer{}, rendererError(err)
 		}
-
-		release = l.Bitmap.Key()
 	default:
 		return drawLayer{}, fmt.Errorf("layer %s: %w: an image has no group", l.ItemID, compositor.ErrSource)
 	}
 
 	// A table is in the module before the layer that names it is prepared: a layer is never drawn without it.
-	if err := putImageLUT(ctx, host, l, w.tables, r.cfg); err != nil {
+	if err := r.putLUT(ctx, host, l); err != nil {
 		return drawLayer{}, err
 	}
 
 	pic, err := host.Prepare(ctx, preparationInput(r.plan, l))
 	if err != nil {
-		return drawLayer{}, rendererError(err)
-	}
-
-	// The instance goes on to the next layer: what this one uploaded is not needed again.
-	if err := host.Release(ctx, release); err != nil {
 		return drawLayer{}, rendererError(err)
 	}
 
@@ -403,6 +412,17 @@ func (r *imageRun) drawBands(base *image.RGBA, drawn []drawLayer) (*image.RGBA, 
 	fp := r.plan
 	lo, hi := 0, fp.Height
 
+	// The limit of the module is on the draw, not on a band: counted per band, whether a document can be drawn
+	// would depend on how many CPUs cut it.
+	count := len(drawn)
+	if base != nil {
+		count++
+	}
+
+	if count > maxPlanLayers {
+		return nil, rendererError(&renderhost.Error{Reason: renderhost.LimitExceeded, Detail: "render_layers"})
+	}
+
 	if base != nil {
 		lo, hi = fp.Height, 0
 
@@ -422,13 +442,17 @@ func (r *imageRun) drawBands(base *image.RGBA, drawn []drawLayer) (*image.RGBA, 
 		dst = image.NewRGBA(image.Rect(0, 0, fp.Width, fp.Height))
 	}
 
-	// A mask taken from another layer needs that layer in the same draw: one band holds them all.
 	bands := r.bands
 	if bands <= 0 {
-		bands = min(maxImageWorkers, runtime.GOMAXPROCS(0), max((hi-lo)/minBandRows, 1))
+		want := min(maxImageWorkers, runtime.GOMAXPROCS(0), max((hi-lo)/minBandRows, 1))
+		bands = bandCount(drawn, lo, hi, want, imageWorkMemory)
 	}
 
-	if slices.ContainsFunc(drawn, func(d drawLayer) bool { return d.layer.Clip != nil || d.layer.Stencil }) {
+	// A mask taken from another layer needs that layer in the same draw: one band holds them all, the source
+	// included when it reaches no row (a source off the canvas still masks, and an inverted mask then shows the
+	// whole layer).
+	clipped := slices.ContainsFunc(drawn, func(d drawLayer) bool { return d.layer.Clip != nil || d.layer.Stencil })
+	if clipped {
 		bands = 1
 	}
 
@@ -440,7 +464,7 @@ func (r *imageRun) drawBands(base *image.RGBA, drawn []drawLayer) (*image.RGBA, 
 			return nil
 		}
 
-		return r.drawBand(base, drawn, dst, y0, y1)
+		return r.drawBand(base, drawn, dst, y0, y1, clipped)
 	})
 	if err != nil {
 		return nil, err
@@ -449,11 +473,51 @@ func (r *imageRun) drawBands(base *image.RGBA, drawn []drawLayer) (*image.RGBA, 
 	return dst, nil
 }
 
+// bandCount is the most bands, up to want, whose instances together hold at most budget bytes of prepared
+// pictures: each instance holds every picture that reaches its rows, so a stack of large layers would otherwise
+// be held once per band.
+func bandCount(drawn []drawLayer, lo, hi, want int, budget int64) int {
+	for n := want; n > 1; n-- {
+		if bandsHold(drawn, lo, hi, n) <= budget {
+			return n
+		}
+	}
+
+	return 1
+}
+
+// bandsHold is the bytes of prepared pictures that n bands of the rows [lo, hi) hold together.
+func bandsHold(drawn []drawLayer, lo, hi, n int) int64 {
+	step := (hi - lo + n - 1) / n
+
+	var held int64
+
+	for b := range n {
+		y0, y1 := lo+b*step, min(lo+(b+1)*step, hi)
+
+		for i := range drawn {
+			if drawn[i].y0 < y1 && drawn[i].y1 > y0 {
+				held += int64(drawn[i].pic.Bytes())
+			}
+		}
+	}
+
+	return held
+}
+
 // drawBand draws the rows [y0, y1) of dst on an instance of its own: the rows of base, when there is one, as a
-// texture of that band alone, and the prepared pictures of the layers that reach the band.
-func (r *imageRun) drawBand(base *image.RGBA, drawn []drawLayer, dst *image.RGBA, y0, y1 int) error {
+// texture of that band alone, and the prepared pictures of the layers that reach the band, or of all of them
+// when keepAll says that a layer may need another one as its mask.
+func (r *imageRun) drawBand(base *image.RGBA, drawn []drawLayer, dst *image.RGBA, y0, y1 int, keepAll bool) error {
 	ctx := context.WithoutCancel(r.ctx)
 	fp := r.plan
+
+	release, err := r.acquireSlot()
+	if err != nil {
+		return err
+	}
+
+	defer release()
 
 	host, err := imagePool.Get(ctx)
 	if err != nil {
@@ -488,7 +552,7 @@ func (r *imageRun) drawBand(base *image.RGBA, drawn []drawLayer, dst *image.RGBA
 
 	for i := range drawn {
 		d := &drawn[i]
-		if d.y1 <= y0 || d.y0 >= y1 {
+		if !keepAll && (d.y1 <= y0 || d.y0 >= y1) {
 			continue
 		}
 

@@ -5,10 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"image"
+	"sync"
 
 	coreimage "github.com/AlexGalhardo/stuarty/core/image"
 	"github.com/AlexGalhardo/stuarty/core/plan"
 	"github.com/AlexGalhardo/stuarty/engine/compositor"
+	"github.com/AlexGalhardo/stuarty/engine/lut"
 	"github.com/AlexGalhardo/stuarty/engine/rasterize"
 )
 
@@ -111,7 +113,7 @@ func renderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig, 
 	return base, nil
 }
 
-// / verifyAccess asks for the file of every image and lookup table the layers name, without reading it, so that a
+// verifyAccess asks for the file of every image and lookup table the layers name, without reading it, so that a
 // render that starts from the cache refuses what the export would refuse.
 func verifyAccess(cfg ImageConfig, layers []plan.Layer) error {
 	seen := map[string]bool{}
@@ -165,6 +167,11 @@ type imageRun struct {
 	bands  int
 	// cache keeps the prepared layers, when the render may use one (SDD-021 section 6.2).
 	cache *ImageCache
+	// preparedLimit bounds the bytes of the prepared pictures the render holds; 0 is imageWorkMemory.
+	preparedLimit int64
+
+	lutMu sync.Mutex
+	luts  map[string]*lut.Table
 }
 
 // withoutLostClips drops the layers whose mask source did not make it to the renderer (a text with no pixels, an
