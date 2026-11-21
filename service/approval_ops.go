@@ -143,7 +143,7 @@ var privilegedHints = map[string]string{
 		"token, API keys and the agent surfaces cannot set it",
 	"ConnectionRemove": "a person removes a sign-in in the Connections page of the Stuarty app; the local " +
 		"token, API keys and the agent surfaces cannot remove it",
-	"ProviderPriceSet": "a person sets the price in the Providers page of the Stuarty app; the local " +
+	"ProviderPriceSet": "a person sets the price in the Connections page of the Stuarty app; the local " +
 		"token, API keys and the agent surfaces cannot set it",
 	"ProviderSignInBegin": "a person signs in in the Connections page of the Stuarty app; the local " +
 		"token, API keys and the agent surfaces cannot start a sign-in",

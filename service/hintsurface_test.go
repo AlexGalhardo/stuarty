@@ -83,7 +83,7 @@ func TestPrivilegedHintsNameTheRightPage(t *testing.T) {
 	for method, want := range map[string]string{
 		"SocialConnectComplete": "Connections page",
 		"SocialPriceSet":        "Connections page",
-		"ProviderPriceSet":      "Providers page",
+		"ProviderPriceSet":      "Connections page",
 		"ApprovalDecide":        "Approvals page",
 	} {
 		if h := privilegedError(method).Hint; !strings.Contains(h, want) {
