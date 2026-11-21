@@ -123,14 +123,15 @@ func TestTheRealModelParses(t *testing.T) {
 	// T-60 and T-61 are the Meta threats of epic 19; T-62 to T-66 are the threats of a file sent from the
 	// browser into an image, epic 48; T-67 is the test address variables (D-093); T-68, T-69 and T-79 are the
 	// X and TikTok threats of epic 22; T-70 to T-74 are the hosted agent threats of epic 14; T-75 to T-78 are
-	// the AI provider sign-in threats of epic 12; T-80 to T-85 are the Google sign-in threats of epic 24; T-86
+	// the AI provider sign-in threats of epic 12; T-80 to T-85, the Google sign-in threats of epic 24, were removed with it (ADR-0049); T-86
 	// to T-88, T-95 and T-99 are the blog threats of epic 23; T-90 and T-91 are the processed-sound threats of
 	// epic 51; T-92 to T-94 are the lookup table threats of an image, epic 49; T-96 to T-98 are the image edit
 	// threats of epic 30; T-89 is the shared image templates of network mode (VV-291), T-100 and
 	// T-101 the quality campaigns of epic 42, T-102 the chapter file of an export (VV-290); T-110 to T-116 are
-	// the outbound webhook threats of epic 59.
-	if len(threats) != 109 {
-		t.Errorf("the model has %d threats, want 109 (T-89, T-100 to T-102, T-110 to T-116)", len(threats))
+	// the outbound webhook threats of epic 59; T-103 to T-109 and T-117 are the local account threats of epic 57
+	// (ADR-0049). 109 + 8 - 6 removed = 111.
+	if len(threats) != 111 {
+		t.Errorf("the model has %d threats, want 111 (T-89, T-100 to T-117)", len(threats))
 	}
 }
 
