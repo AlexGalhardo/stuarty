@@ -432,6 +432,7 @@ Scopes: `read`, `edit`, `media`, `render`, `admin` (SDD-000 §4). They are indep
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `ProjectList` | `GET /projects` | R | - | - | - | - | A project-limited key sees only its project; a user sees only own projects |
 | `ProjectCreate` | `POST /projects` | - | R | - | - | - | Refused for a project-limited key (`E_FORBIDDEN`); sets `owner_user_id` |
+| `ProjectUpdate` | `PATCH /projects/{id}` | - | R | - | - | - | Project and ownership check; the same field rules as `ProjectCreate` (epic 56) |
 | `ProjectGet` | `GET /projects/{id}` | R | - | - | - | - | Project and ownership check |
 | `ProjectTrash`, `ProjectRestore` | `POST /projects/{id}/trash`, `/restore` | - | R | - | - | - | Reversible |
 | `Edit` | `POST /projects/{id}/edit` | - | R | R when the batch has a `media` command | - | - | The scope set is the union over the batch (5.3). `dry_run` needs the same scopes |
