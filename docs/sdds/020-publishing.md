@@ -223,7 +223,7 @@ It does not call a host that is not in its connection; it does not follow a redi
 
 ### 7.6 Account state
 
-`SocialAccountList` gives each connection of a social kind with `state`: `ready` (a refresh token is in the vault), `needs_sign_in` (no refresh token yet, or the network refused it at the last use; the last refusal is kept in `last_error` as a stable kind) and the account title. The Connections page shows the button to sign in again. A sign-in that fails (the person cancelled, the network refused the code) removes the connection that this very sign-in made, so each attempt does not leave one more with no account (VV-323); a connection that existed before the sign-in began is never removed by it.
+`SocialAccountList` gives each connection of a social kind with `state`: `ready` (a refresh token is in the vault), `needs_sign_in` (no refresh token yet, or the network refused it at the last use; the last refusal is kept in `last_error` as a stable kind) and the account title. The Connections page shows the button to sign in again. A sign-in that fails (the person cancelled, the network refused the code) removes the connection that this very sign-in made, so each attempt does not leave one more with no account (VV-323); a connection that existed before the sign-in began is never removed by it, nor is one that another sign-in begun on it still waits for or has finished (its secret then holds an account, or the accounts to choose from).
 
 ## 8. The setup guide
 
