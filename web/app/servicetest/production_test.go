@@ -946,9 +946,9 @@ func TestProjectLimitedKeyAndTimelines(t *testing.T) {
 	}
 }
 
-// Since epic 56 the name of a project is its own (SDD-005 section 5.12.2): renaming a timeline document through the
-// command changes the document, never the project.
-func TestProjectNameDoesNotFollowTheFirstTimeline(t *testing.T) {
+// A timeline that is renamed through the command renames the project that has its id, while the two carry one name
+// (SDD-005 section 5.12); a later timeline is a label of its own.
+func TestProjectNameFollowsTheFirstTimeline(t *testing.T) {
 	t.Parallel()
 
 	e := newEnv(t)
@@ -974,13 +974,70 @@ func TestProjectNameDoesNotFollowTheFirstTimeline(t *testing.T) {
 	}
 
 	got := e.get(id, "", "")
-	if got.Name != "Before" {
+	if got.Name != "After" {
 		t.Fatalf("the project is named %q", got.Name)
 	}
 
 	list, _ := e.svc.ProjectList(ctx, service.ProjectListRequest{})
-	if len(list.Projects) != 1 || list.Projects[0].Name != "Before" {
+	if len(list.Projects) != 1 || list.Projects[0].Name != "After" {
 		t.Fatalf("list = %+v", list.Projects)
+	}
+}
+
+// The name of a project and that of its first timeline stay one: a rename on either side reaches the other, an
+// undo brings both back, and a rename the rule of a project name refuses changes nothing.
+func TestProjectNameAndFirstTimelineStayInStep(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+	id := e.newProject("Before")
+	ctx := e.as(ui)
+
+	name := "Renamed by update"
+	if _, err := e.svc.ProjectUpdate(ctx, service.ProjectUpdateRequest{ProjectID: id, Name: &name}); err != nil {
+		t.Fatal(err)
+	}
+
+	doc := e.get(id, id, "document")
+	if doc.Name != name || doc.Document.Name != name {
+		t.Fatalf("project %q, timeline %q, want both %q", doc.Name, doc.Document.Name, name)
+	}
+
+	if _, err := e.svc.Undo(ctx, service.UndoRequest{ProjectID: id}); err != nil {
+		t.Fatal(err)
+	}
+
+	if got := e.get(id, id, "document"); got.Name != "Before" || got.Document.Name != "Before" {
+		t.Fatalf("after undo: project %q, timeline %q", got.Name, got.Document.Name)
+	}
+
+	_, err := e.svc.Edit(ctx, service.EditRequest{
+		ProjectID: id, Operations: []command.Operation{op("project.rename", `{"name":"no"}`)},
+	})
+	if code(err) != command.CodeValidation || serviceError(t, err).Path != "name" {
+		t.Fatalf("a name the rule refuses: %v", err)
+	}
+
+	if got := e.get(id, id, "document"); got.Name != "Before" || got.Document.Name != "Before" {
+		t.Fatalf("the refused rename changed something: %q, %q", got.Name, got.Document.Name)
+	}
+
+	// A first timeline with a title of its own is a label: renaming it leaves the project alone.
+	made, err := testproject.Create(ctx, e.svc, "Own title")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	e.addTimeline(made.ProjectID, "Main cut")
+
+	if _, err := e.svc.Edit(ctx, service.EditRequest{
+		ProjectID: made.ProjectID, Operations: []command.Operation{op("project.rename", `{"name":"x"}`)},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if got := e.get(made.ProjectID, made.ProjectID, "document"); got.Name != "Own title" || got.Document.Name != "x" {
+		t.Fatalf("project %q, timeline %q", got.Name, got.Document.Name)
 	}
 }
 

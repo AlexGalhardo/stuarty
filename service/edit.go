@@ -131,6 +131,10 @@ func (s *svc) edit(ctx context.Context, req EditRequest, allowInternal bool) (*E
 
 		crashpoint.Hit("commit.after_apply")
 
+		if verr := checkFollowedName(ctx, tx, &row, out.Doc.Name); verr != nil {
+			return verr
+		}
+
 		res = s.editResult(c.Actor, &req, row.Revision, doc, &out, &ids)
 		if out.NoOp() {
 			// Nothing changed: no revision, no undo step, no event and no stored key (VV-050).

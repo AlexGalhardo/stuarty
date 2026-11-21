@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"log/slog"
 	"strings"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
@@ -114,7 +116,11 @@ func (s *svc) ProjectUpdate(ctx context.Context, req ProjectUpdateRequest) (*Pro
 			withPath("name").withHint("send name, description or goal")
 	}
 
-	var res *ProjectUpdateResult
+	var (
+		res       *ProjectUpdateResult
+		renameDoc bool
+		base      int64
+	)
 
 	err = s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
 		head, _, werr := s.writableProduction(ctx, tx, c, req.ProjectID)
@@ -165,6 +171,10 @@ func (s *svc) ProjectUpdate(ctx context.Context, req ProjectUpdateRequest) (*Pro
 
 		res.Updated = true
 
+		if next.Name != head.Name && head.Timeline.ID == head.ID && head.Timeline.Name == head.Name {
+			renameDoc, base = true, head.Timeline.Revision
+		}
+
 		return nil
 	})
 	if err != nil {
@@ -175,7 +185,48 @@ func (s *svc) ProjectUpdate(ctx context.Context, req ProjectUpdateRequest) (*Pro
 		return nil, projectNotFound(req.ProjectID, err)
 	}
 
+	if renameDoc {
+		s.renameFirstTimeline(ctx, res.ProjectID, base, res.Name)
+	}
+
 	return res, nil
+}
+
+// renameFirstTimeline gives the first timeline the new name of its project, as an edit, so that the editor shows
+// it and an undo brings both back. The project is already renamed: a timeline that cannot take the name (a
+// concurrent change) keeps its own, which is a label, and the rename of the project stands.
+func (s *svc) renameFirstTimeline(ctx context.Context, id string, base int64, name string) {
+	args, err := json.Marshal(map[string]string{"name": name})
+	if err != nil {
+		return
+	}
+
+	if _, err := s.Edit(ctx, EditRequest{
+		ProjectID: id, TimelineID: id, BaseRevision: base,
+		Operations: []command.Operation{{Op: "project.rename", Args: args}},
+	}); err != nil {
+		slog.WarnContext(ctx, "the first timeline did not take the new name of its project", "project", id, "error", err)
+	}
+}
+
+// checkFollowedName holds a rename to the rule of a project name when it renames the project too: the timeline is
+// the first of its project (it has its id) and carries its name. Any other timeline name is a label of 1 to 120
+// characters, which the core already checked.
+func checkFollowedName(ctx context.Context, tx Tx, row *ProjectRow, next string) *Error {
+	if next == row.Name {
+		return nil
+	}
+
+	head, err := tx.Productions().Get(ctx, row.ID)
+	if err != nil || head.Name != row.Name {
+		return nil
+	}
+
+	if e := project.CheckName(next); e != nil {
+		return checkContextError([]*project.RuleError{e})
+	}
+
+	return nil
 }
 
 // changedProblems are the broken rules of the members the request sends: a project made before epic 56 can be

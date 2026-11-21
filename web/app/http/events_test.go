@@ -561,7 +561,7 @@ func TestEventsLatencyFromCommitToClient(t *testing.T) {
 			ProjectID:    id,
 			BaseRevision: rev,
 			Operations: []command.Operation{
-				{Op: "project.rename", Args: json.RawMessage(fmt.Sprintf(`{"name":"n%d"}`, i))},
+				{Op: "project.rename", Args: json.RawMessage(fmt.Sprintf(`{"name":"Name %d"}`, i))},
 			},
 		})
 		if err != nil {

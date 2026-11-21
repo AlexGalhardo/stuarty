@@ -139,6 +139,17 @@ func fieldOrder(path string) int {
 	return len(fieldNames)
 }
 
+// CheckName applies the rule of the name alone, for a change that sets only the name.
+func CheckName(name string) *RuleError {
+	for _, e := range CheckContext(Context{Name: name}, CheckOptions{}) {
+		if e.Path == "name" {
+			return e
+		}
+	}
+
+	return nil
+}
+
 // CheckContext applies every rule and returns every broken one, one per field, in the order of the fields. It
 // returns nil when the context is valid.
 func CheckContext(c Context, o CheckOptions) []*RuleError {

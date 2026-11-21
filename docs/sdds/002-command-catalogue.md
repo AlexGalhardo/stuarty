@@ -518,7 +518,7 @@ Sets the project name.
 
 **Preconditions.**
 
-1. `name` is a string of 1 to 120 characters (`E_VALIDATION`).
+1. `name` is a string of 1 to 120 characters (`E_VALIDATION`). On the first timeline of a project that carries the project's name, the service also holds it to the rule of a project name, because the rename reaches the project (SDD-005 section 5.12).
 
 **Postconditions.**
 

@@ -249,6 +249,9 @@ type ProductionRepo interface {
 	// SetContext writes the name, the description and the goal and sets updated_ms. ErrNotFound when there is no
 	// such project.
 	SetContext(ctx context.Context, id string, c project.Context, atMs int64) error
+	// FollowName renames the project id from one name to another, and does nothing when the project is not named
+	// from (SDD-005 section 5.12): a rename of its first timeline, while the two carry one name.
+	FollowName(ctx context.Context, id, from, to string) error
 	// Delete is a hard delete that cascades the items; the timeline rows are the business of the caller. Only
 	// TrashEmpty calls it.
 	Delete(ctx context.Context, id string) error
