@@ -109,6 +109,14 @@ func (s *svc) commit(ctx context.Context, tx ProjectTx, b *batch) (int64, error)
 		return 0, err // ErrStale here is a bug in the lock discipline: asError makes it E_INTERNAL
 	}
 
+	// The first timeline of a project has its id: while the two carry one name, a rename, its undo and its redo
+	// rename the project too (SDD-005 section 5.12).
+	if b.after.Name != row.Name {
+		if err := tx.Productions().FollowName(ctx, row.ID, row.Name, b.after.Name); err != nil {
+			return 0, err
+		}
+	}
+
 	crashpoint.Hit("commit.after_project_commit")
 
 	if err := s.syncAssets(ctx, tx, row.ID, b, now); err != nil {

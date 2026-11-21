@@ -298,6 +298,12 @@ func (r productionRepo) SetContext(ctx context.Context, id string, c project.Con
 	return nil
 }
 
+func (r productionRepo) FollowName(ctx context.Context, id, from, to string) error {
+	_, err := r.ex.ExecContext(ctx, "UPDATE projects SET name = ? WHERE id = ? AND name = ?", to, id, from)
+
+	return err
+}
+
 func (r productionRepo) Touch(ctx context.Context, id string, atMs int64) error {
 	n, err := rowsAffected(r.ex.ExecContext(ctx, "UPDATE projects SET updated_ms = ? WHERE id = ?", atMs, id))
 	if err != nil {
