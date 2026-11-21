@@ -1,6 +1,6 @@
 # ADR-0001: Repository layout and Go module
 
-- Status: Accepted (2026-11-14); the product name is amended by [ADR-0031](0031-stuarty-product-scope-and-domains.md) and the module path and binary name by [ADR-0044](0044-rename-to-stuarty.md) (2026-11-18)
+- Status: Accepted (2026-11-14); the product name is amended by [ADR-0031](0031-stuarty-product-scope-and-domains.md) and the module path and binary name by [ADR-0044](0044-rename-to-stuarty.md) (2026-11-18); rule 1 admits vukem's `z` package by author decision D-124 (2026-11-20)
 - Deciders: author (D-002, D-005, D-007, D-008, D-020, D-021), architect
 - Links: author decision D-002, D-005, D-007, vukem practices, existing Studio
 
@@ -41,7 +41,7 @@ video/                       repository root (product root)
 
 Rules:
 
-1. `core/` imports only the Go standard library and small pure libraries. It never imports `engine/`, `service/`, `web/` or vukem.
+1. `core/` imports only the Go standard library and small pure libraries. It never imports `engine/`, `service/`, `web/` or vukem, with one exception: vukem's validation package `z`, which imports only the standard library (author decision D-124, 2026-11-20; `internal/tools/importcheck` lists it in `CoreLibraries`).
 2. `engine/` may import `core/`. It never imports `web/` or vukem's HTTP packages. It may use vukem's `contrib/engine` to run processes.
 3. `service/` imports `core/` and `engine/` and defines interfaces for persistence that `web/` implements.
 4. `web/` is the only place that imports vukem's application packages.

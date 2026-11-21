@@ -44,6 +44,8 @@ func TestRules(t *testing.T) {
 		{"plan imports timeline", "core/plan/a.go", mod + "/core/timeline", ""},
 		{"core imports engine", "core/plan/a.go", mod + "/engine/ffmpeg", "core/ imports only"},
 		{"core imports vukem", "core/plan/a.go", VukemModule + "/errs", "core/ imports only"},
+		{"core imports vukem z", "core/project/a.go", VukemModule + "/z", ""},
+		{"core imports a package beside z", "core/project/a.go", VukemModule + "/zz", "core/ imports only"},
 		{"core imports cgo", "core/plan/a.go", "C", "core/ imports only"},
 		{"core test file", "core/plan/a_test.go", VukemModule + "/vukemtest", "core/ imports only"},
 		{"engine imports core", "engine/export/a.go", mod + "/core/plan", ""},
