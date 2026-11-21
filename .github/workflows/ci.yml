@@ -409,10 +409,17 @@ jobs:
           git diff --exit-code -- "${paths[@]}"
           test -z "$(git status --porcelain -- "${paths[@]}")"
 
+  # The Chromium specs grew to 786 tests; one job reached 533 of them in the 20 minute budget, and the heaviest specs are clustered in one part of the order
+  # (run 44880268307), so they run in six shards of the same Playwright run. `Browser tests
+  # (Playwright)` below keeps the name of the required check and passes only when every shard did.
   browser:
-    name: Browser tests (Playwright)
+    name: Browser tests (Playwright, ${{ matrix.shard }}/6)
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -435,28 +442,48 @@ jobs:
       - run: bunx playwright install --with-deps chromium
         working-directory: web
       # The projects that need only Chromium; firefox and webkit have their own jobs below.
-      - run: bun run e2e -- --project=chromium --project=failing-encoder --project=desktop-detect
+      - run: bun run e2e -- --project=chromium --project=failing-encoder --project=desktop-detect --shard="$SHARD"/6
         working-directory: web
+        env:
+          SHARD: ${{ matrix.shard }}
       - name: Upload traces
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: playwright-traces-chromium
+          name: playwright-traces-chromium-${{ matrix.shard }}
           path: web/e2e/test-results/
           if-no-files-found: ignore
+
+  # The required check of the ruleset keeps its name: it fails when a shard failed, was cancelled or
+  # did not run (a skipped job would otherwise count as a pass).
+  browser-gate:
+    name: Browser tests (Playwright)
+    needs: browser
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Every Chromium shard passed
+        env:
+          RESULT: ${{ needs.browser.result }}
+        run: |
+          echo "shards: ${RESULT}"
+          test "${RESULT}" = success
 
   # SDD-012 section 21.1, ADR-0023 item 5: every spec not tagged CHROMIUM_ONLY runs on Firefox and on
   # WebKit, in parallel with the Chromium job (P3-REL-005). The browser is the one of the pinned
   # @playwright/test version, installed from the lockfile.
   browser-engines:
-    name: Browser tests (${{ matrix.browser }}, ${{ matrix.shard }}/2)
+    name: Browser tests (${{ matrix.browser }}, ${{ matrix.shard }}/6)
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # Two shards were not enough: the second of each engine reached 188 and 213 of its 379 tests in the
+    # 20 minute budget (run 44880268307).
     strategy:
       fail-fast: false
       matrix:
         browser: [firefox, webkit]
-        shard: [1, 2]
+        shard: [1, 2, 3, 4, 5, 6]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -485,9 +512,9 @@ jobs:
       # display has WebGL2 on Mesa (web/e2e/playwright.config.ts).
       - run: |
           if [ "$BROWSER" = firefox ]; then
-            STUARTY_FIREFOX_HEADED=1 xvfb-run -a bunx playwright test -c e2e/playwright.config.ts --project=firefox --shard="$SHARD"/2
+            STUARTY_FIREFOX_HEADED=1 xvfb-run -a bunx playwright test -c e2e/playwright.config.ts --project=firefox --shard="$SHARD"/6
           else
-            bunx playwright test -c e2e/playwright.config.ts --project="$BROWSER" --shard="$SHARD"/2
+            bunx playwright test -c e2e/playwright.config.ts --project="$BROWSER" --shard="$SHARD"/6
           fi
         working-directory: web
         env:
