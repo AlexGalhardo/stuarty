@@ -38,7 +38,7 @@ A creator editing a large image document (4,000 by 4,000 pixels, 30 layers) sees
 ## Tasks
 
 - [x] 1. Specify bands and prepared layers in SDD-021 first. Verify: `task lint:md` exits 0.
-- [ ] 2. Layer preparation limited to a band, and the export drawn in parallel bands. Verify: the Rust gate of `.agents/rules/rust.md` and `go test ./engine/export/... -run 'TestImage'` pass, golden files unchanged.
+- [x] 2. Layer preparation limited to a band, and the export drawn in parallel bands. Verify: the Rust gate of `.agents/rules/rust.md` and `go test ./engine/export/... -run 'TestImage'` pass, golden files unchanged.
 - [ ] 3. The prepared picture of a layer kept across an edit of its opacity or position. Verify: a test that such an edit prepares nothing again, and the cache tests pass.
 - [ ] 4. The editor frame of an edit without a full-frame upload. Verify: `go test ./service/ -run Image` passes and `BenchmarkImageReference` reports `compose_ms` ≤ 100.
 - [ ] 5. Measure on the idle machine (all agents stopped). Verify: `go run ./internal/tools/perfreport -write -absolute -gated -only NFR-061` exits 0.

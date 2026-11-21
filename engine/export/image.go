@@ -34,6 +34,12 @@ type ImageConfig struct {
 // shape, decodes each image layer, uploads them and takes the pixels. The same document and the same files
 // always give the same pixels. The result is premultiplied RGBA, as image.RGBA is.
 func RenderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig) (*image.RGBA, error) {
+	return renderImage(ctx, doc, cfg, 0)
+}
+
+// renderImage is RenderImage with the number of bands the canvas is drawn in; 0 is as many as the work and the
+// machine allow (SDD-021 section 6.2). The pixels never depend on it.
+func renderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig, bands int) (*image.RGBA, error) {
 	fonts := cfg.Fonts
 	if fonts == nil {
 		fonts = rasterize.Bundled()
@@ -71,23 +77,10 @@ func RenderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig) 
 		stops = []int{len(live) - 1, len(live)}
 	}
 
-	// The instance that does not test the context at every loop back edge draws about three times faster
+	// The instances that do not test the context at every loop back edge draw about three times faster
 	// (SDD-021 section 13.2); the cancellation is kept by checking the context between the layers and by
-	// not waiting for the draw itself (renderDetached).
-	host, err := renderhost.New(ctx, renderhost.Config{Uncancellable: true})
-	if err != nil {
-		return nil, rendererError(err)
-	}
-
-	run := &imageRun{
-		ctx: ctx, cfg: cfg, host: host, plan: fp, raster: rasterize.NewCache(fonts, 0), tables: map[string]bool{},
-	}
-
-	defer func() {
-		if !run.abandoned {
-			_ = host.Close(context.WithoutCancel(ctx))
-		}
-	}()
+	// not waiting for the work in flight (SDD-021 section 6.2).
+	run := &imageRun{ctx: ctx, cfg: cfg, plan: fp, raster: rasterize.NewCache(fonts, 0), bands: bands}
 
 	for _, stop := range stops {
 		img, err := run.stage(base, live[start:stop])
@@ -112,93 +105,14 @@ func RenderImage(ctx context.Context, doc *coreimage.Document, cfg ImageConfig) 
 // prefixItem is the id of the texture that holds the picture of the layers already drawn (SDD-021 section 6.1).
 const prefixItem = "stuarty-prefix"
 
-// imageRun is one render of a document on one instance of the module.
+// imageRun is one render of a document: the plan, the rasterizer cache and the context; the instances of the
+// module that prepare and draw it are made by the stages (image_bands.go).
 type imageRun struct {
-	ctx       context.Context
-	cfg       ImageConfig
-	host      *renderhost.Host
-	plan      plan.FramePlan
-	raster    *rasterize.Cache
-	tables    map[string]bool
-	abandoned bool
-}
-
-// stage draws the layers over base, the picture of the layers below them, or over the background when base is
-// nil, and gives the pixels. A picture drawn first and the layers over it are the same pixels as the layers
-// drawn in one pass: the draw is a source-over of integers onto the frame, in order.
-func (r *imageRun) stage(base *image.RGBA, layers []plan.Layer) (*image.RGBA, error) {
-	ctx, host, fp := r.ctx, r.host, r.plan
-	kept := make([]plan.Layer, 0, len(layers)+1)
-
-	if base != nil {
-		b := base.Rect
-		if err := host.PutTexture(ctx, prefixItem, b.Dx(), b.Dy(), base.Pix, !fp.Transparent); err != nil {
-			return nil, rendererError(err)
-		}
-
-		kept = append(kept, plan.Layer{
-			ItemID: prefixItem, Kind: plan.Media, AssetID: prefixItem, AssetKind: "image",
-			Crop: plan.Rect{W: float64(b.Dx()), H: float64(b.Dy())}, CX: float64(b.Dx()) / 2, CY: float64(b.Dy()) / 2,
-			W: float64(b.Dx()), H: float64(b.Dy()), Scale: 1, Opacity: 1,
-		})
-	}
-
-	// Each layer is uploaded as soon as it is drawn, so the process never holds the pixels of every layer at
-	// once: a document of many large layers is bounded by the memory of the renderer module (out_of_memory),
-	// not by the memory of the machine.
-	for i := range layers {
-		if err := ctx.Err(); err != nil {
-			return nil, err
-		}
-
-		l := layers[i]
-
-		switch l.Kind {
-		case plan.Media:
-			img, err := imageTexture(&l, r.cfg)
-			if err != nil {
-				return nil, fmt.Errorf("layer %s: %w", l.ItemID, err)
-			}
-
-			if err := host.PutTexture(ctx, l.ItemID, img.W, img.H, img.Pix, img.Opaque); err != nil {
-				return nil, rendererError(err)
-			}
-		case plan.Bitmap:
-			bm, err := r.raster.Get(*l.Bitmap)
-			if err != nil {
-				return nil, fmt.Errorf("layer %s: %w", l.ItemID, err)
-			}
-
-			if bm.Width <= 0 || bm.Height <= 0 {
-				continue
-			}
-
-			if err := host.PutBitmap(ctx, l.Bitmap.Key(), bm); err != nil {
-				return nil, rendererError(err)
-			}
-		case plan.Group:
-			// An image document has layers of its own kinds; a group is the plan of nested timelines (SDD-004 §3.16).
-			return nil, fmt.Errorf("layer %s: %w: an image has no group", l.ItemID, compositor.ErrSource)
-		}
-
-		// A table is in the module before the layer that names it is drawn: a layer is never drawn without it.
-		if err := putImageLUT(ctx, host, &l, r.tables, r.cfg); err != nil {
-			return nil, err
-		}
-
-		kept = append(kept, l)
-	}
-
-	fp.Layers = withoutLostClips(kept)
-
-	dst := image.NewRGBA(image.Rect(0, 0, fp.Width, fp.Height))
-	out := renderhost.Output{Width: fp.Width, Height: fp.Height, Scale: 1}
-
-	if err := renderDetached(ctx, host, renderhost.RenderInput{Output: out, Plan: fp}, dst, &r.abandoned); err != nil {
-		return nil, err
-	}
-
-	return dst, nil
+	ctx    context.Context
+	cfg    ImageConfig
+	plan   plan.FramePlan
+	raster *rasterize.Cache
+	bands  int
 }
 
 // renderDetached runs the draw on an instance that cannot be interrupted and gives up waiting when the context
