@@ -8,7 +8,17 @@ import Shot from "./Shot.astro";
 import { features, shots, type Shot as ShotData } from "@/lib/landing-pages";
 import { withBase } from "@/lib/site";
 
-type Clip = { id: string; tc?: string; label: string; title: string; text: string; shot?: ShotData; clip?: string };
+type Clip = {
+	id: string;
+	tc?: string;
+	label: string;
+	title: string;
+	text: string;
+	shot?: ShotData;
+	clip?: string;
+	features?: string[];
+	fx?: string;
+};
 type LogEntry = { at: number; text: string };
 
 interface Props {
@@ -25,6 +35,8 @@ interface Props {
 	trimClip?: string;
 	/** Ends with the export screen ("That was the whole studio."). */
 	outro?: boolean;
+	/** Each picture crossfades between its light and dark capture (`<src>-light`), like the home hero. */
+	themeSwap?: boolean;
 }
 
 const byId = Object.fromEntries(features.map((f) => [f.id, f]));
@@ -53,7 +65,9 @@ const {
 	captionClip = "cut",
 	trimClip = "cut",
 	outro = true,
+	themeSwap = false,
 } = Astro.props;
+const light = (s: ShotData): ShotData => ({ ...s, src: `${s.src}-light` });
 const n = clips.length;
 const w = 100 / n;
 const captionIndex = Math.max(0, clips.findIndex((c) => c.id === captionClip));
@@ -66,15 +80,27 @@ const laneWidth = `${n * 430}px`;
 	<div class:list={["editor-top site-container", log === null && "editor-top-solo"]}>
 		<div class="editor-preview" data-preview>
 			{clips.map((c, i) => (
-				<article class="preview-item" data-preview-item={i} aria-labelledby={`clip-${c.id}`}>
+				<article class="preview-item" data-preview-item={i} data-fx={c.fx} aria-labelledby={`clip-${c.id}`}>
 					<div class="preview-text">
 						{labels ? <p class="font-mono text-xs text-brand-text">{c.tc} &middot; {c.label}</p> : null}
 						<H id={`clip-${c.id}`} class="display-title mt-3 text-fg">{c.title}</H>
 						<p class="lead mt-4">{c.text}</p>
+						{c.features?.length ? (
+							<ul class="preview-features">
+								{c.features.map((f) => <li>{f}</li>)}
+							</ul>
+						) : null}
 					</div>
 					<div class="preview-media">
 						{c.shot ? (
-							<div class="showcase"><Shot shot={c.shot} sizes="(min-width: 64rem) 36rem, 100vw" /></div>
+							(themeSwap ? (
+								<figure class="showcase theme-swap m-0">
+									<Shot shot={light(c.shot)} sizes="(min-width: 64rem) 46rem, 100vw" class="shot-light" />
+									<Shot shot={{ ...c.shot, alt: "" }} sizes="(min-width: 64rem) 46rem, 100vw" class="shot-dark" />
+								</figure>
+							) : (
+								<div class="showcase"><Shot shot={c.shot} sizes="(min-width: 64rem) 36rem, 100vw" /></div>
+							))
 						) : (
 							<Placeholder label={c.clip ?? c.title} aspect="16 / 10" class="showcase rounded-3xl" />
 						)}
