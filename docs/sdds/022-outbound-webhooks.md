@@ -24,7 +24,7 @@ A webhook tells another tool that something happened in Stuarty: a post went out
 
 Four rules carry the design:
 
-1. **With no webhook registered, nothing leaves the machine.** The dispatcher has nothing to send and opens no socket (ADR-0032). A webhook is a destination the person typed, so it is a connection in the sense of ADR-0032 and is listed as path 9 of SDD-007 section 10.1.
+1. **With no webhook registered, nothing leaves the machine.** The dispatcher has nothing to send and opens no socket (ADR-0032). A webhook is a destination the person typed, so it is a connection in the sense of ADR-0032 and is listed as path 8 of SDD-007 section 10.1.
 2. **The payload is metadata.** Identifiers, states, counts and the public address of a published post. Never a credential, a token, a file, a text body, a prompt or a path (section 3).
 3. **The secret is shown once.** The server generates the signing secret, puts it in the vault (SDD-014) under the id of the webhook, and returns it in the answer of the creation and of the rotation, and nowhere else (ADR-0033).
 4. **Delivery never runs in a request.** A bounded worker sends, retries and records; the operations only write rows and wake it.

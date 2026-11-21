@@ -66,7 +66,7 @@ Which epic delivers each requirement is in the traceability table of `plans/00-r
 | 0016 | CLI on vukem commands, JSON output, exit codes 0, 1, 2 |
 | 0017 | HTTP API under `/api/v1` and server-sent events |
 | 0018 | jobs: own table over the vukem queue, with progress and cancellation (amended by 0046) |
-| 0019 | authentication: local trust on loopback, login and scoped keys on the network (amended by 0034) |
+| 0019 | authentication: local trust on loopback, login and scoped keys on the network (amended by 0034 and 0049) |
 | 0020 | agent safety: trash, limits, marked untrusted text (item 1, no outbound capability, superseded by 0032) |
 | 0021 | transcription behind a provider interface; whisper.cpp local by default (part of 0036) |
 | 0022 | templates are parameterized projects |
@@ -81,7 +81,7 @@ Which epic delivers each requirement is in the traceability table of `plans/00-r
 | 0031 | Stuarty is one product with several domains over one service; work is a queue of epics |
 | 0032 | outbound only to connected destinations; publishing and costly generation wait for a person |
 | 0033 | secrets in an encrypted file opened by a master key |
-| 0034 | login stays local; a Google account is an optional connection with the user's own client |
+| 0034 | login stays local; a Google account is an optional connection with the user's own client (amended by 0049: no Google sign-in) |
 | 0035 | social networks through the user's own developer apps; the order of the networks |
 | 0036 | one AI provider layer with four ways to connect; what is never done |
 | 0037 | the chat hosts the user's own agent over ACP; no built-in agent |

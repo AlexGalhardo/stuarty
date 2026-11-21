@@ -189,7 +189,6 @@ export const navigation: NavCategory[] = [
 			"docker",
 			"vps",
 			"network-mode",
-			"google-sign-in",
 			"api-keys",
 			"caddy",
 			"backups-and-upgrades",

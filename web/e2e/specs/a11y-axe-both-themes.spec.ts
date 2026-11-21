@@ -368,7 +368,7 @@ test.describe("a11y-axe-network-pages", () => {
 			await page.getByLabel("Email").fill(NETWORK_ADMIN.email);
 			await page.getByLabel("Password").fill(NETWORK_ADMIN.password);
 			await page.getByRole("button", { name: /^Log in$/ }).click();
-			for (const path of ["/settings/keys", "/settings/google"]) {
+			for (const path of ["/settings/keys"]) {
 				await page.goto(`${NETWORK_URL}${path}`);
 				await expect(
 					page.getByRole("heading", { level: 1 }).first(),

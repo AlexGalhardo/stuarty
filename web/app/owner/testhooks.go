@@ -13,12 +13,11 @@ var testAddresses = []struct {
 }{
 	{EnvTestSocialURL, ErrTestSocial},
 	{EnvTestSignInURL, ErrTestSignIn},
-	{EnvTestGoogleURL, ErrTestGoogle},
 }
 
 // refuseTestAddresses is the start-up check of T-67, run before the workspace is taken so that a refused
-// start leaves nothing behind. It covers every mode, also where the build would not read the variable (the
-// Google one in local mode), because the specification promises the refusal whatever the mode.
+// start leaves nothing behind. It covers every mode, also where the build would not read the variable,
+// because the specification promises the refusal whatever the mode.
 func refuseTestAddresses(getenv func(string) string) error {
 	for _, v := range testAddresses {
 		if strings.TrimSpace(getenv(v.name)) == "" {
