@@ -127,6 +127,12 @@ func (s *svc) ImageExport(ctx context.Context, req ImageExportRequest) (*ImageEx
 		return nil, jerr
 	}
 
+	// The absolute path of the server is for the person at the machine; a user of the network gets the file under
+	// the workspace, which the download route serves by name (VV-301).
+	if c.OwnerUserID != "" {
+		res.Path = path.Join("exports", "images", res.ImageID, name)
+	}
+
 	return res, nil
 }
 

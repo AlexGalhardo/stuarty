@@ -280,7 +280,7 @@ Seven operations are added to `service.Service`, each with exactly one MCP actio
 | `ImageDescribe` | the text view of section 9 and the structured tree, at the current revision |
 | `ImageEdit` | a batch of image operations with `base_revision`, `idempotency_key` and `dry_run`; returns the revision, the diff, the effective values, the findings the batch introduced and a description |
 | `ImageUndo`, `ImageRedo` | the actor's last step undone or done again, with the skipped primitives |
-| `ImageExport` | renders and writes a file (section 6), after the lint; returns the path, bytes, digest and size |
+| `ImageExport` | renders and writes a file (section 6), after the lint; returns the path (the absolute one only to a local caller; in network mode the path under the workspace, `exports/images/<id>/<file>`), bytes, digest and size |
 | `ImageImport` | an image file (a `path` on the server, or a library `hash`) becomes a new document with one image layer, or one more layer of `image_id` (section 10.1); returns the id, the revision, the layer and the text view |
 
 Epic 50 adds six operations of the same kind, one MCP action (of `history`, with `domain` `image`), one CLI command and one HTTP route each (SDD-000 section 1): `ImageRevert`, `ImageDiff`, `ImageCheckpointCreate`, `ImageCheckpointList`, `ImageCheckpointRename` and `ImageCheckpointRemove`. They take the scopes of the timeline's (`read` for the diff and the list, `edit` for the others), the access of section 10 and the requests of SDD-003 section 2.5.1 with `image_id` in place of `project_id`; an image checkpoint lives in `image_checkpoints` (SDD-005 section 5.14.1) and `base_revision` is CLI and HTTP only.
