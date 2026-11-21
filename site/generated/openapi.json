@@ -17408,6 +17408,103 @@
     "/api/v1/images/import/file": {
       "post": {
         "operationId": "images.import_file",
+        "parameters": [
+          {
+            "description": "Name of the new image document.",
+            "in": "query",
+            "name": "name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "File name of the upload, used for the name and the format when name is not sent.",
+            "in": "query",
+            "name": "file_name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Size preset of the new document.",
+            "in": "query",
+            "name": "preset",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Import as a layer of this image document instead of a new one.",
+            "in": "query",
+            "name": "image_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Width in pixels of the new document.",
+            "in": "query",
+            "name": "width",
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Height in pixels of the new document.",
+            "in": "query",
+            "name": "height",
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The revision of the image the layer is added to; a stale one is E_STALE_REVISION.",
+            "in": "query",
+            "name": "base_revision",
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Wait up to this many milliseconds for the import to finish.",
+            "in": "query",
+            "name": "wait_ms",
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Makes a retry return the first answer; the Idempotency-Key header does the same.",
+            "in": "query",
+            "name": "idempotency_key",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Validate and report, change nothing.",
+            "in": "query",
+            "name": "dry_run",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {

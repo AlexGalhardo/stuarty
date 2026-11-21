@@ -97,6 +97,7 @@ func (h *apiHandler) completeOpenAPI(doc *openapi.Document) {
 	describeIDFormats(doc)
 	describeHeavyOperations(doc)
 	describeStepBodies(doc)
+	describeImageFileImport(doc)
 
 	op, ok := doc.Components.Schemas["Operation"]
 	if !ok {
@@ -400,6 +401,50 @@ func markUntrusted(doc *openapi.Document) {
 	for m := range reflect.TypeFor[service.Service]().Methods() {
 		for out := range m.Type.Outs() {
 			walk(out)
+		}
+	}
+}
+
+// describeImageFileImport documents what the handler reads: the file is the whole body, with any content type, and
+// every other member is a query parameter (SDD-021 section 10.2, VV-313).
+func describeImageFileImport(doc *openapi.Document) {
+	for _, item := range doc.Paths {
+		for _, op := range item {
+			if op == nil || op.OperationID != "images.import_file" {
+				continue
+			}
+
+			op.RequestBody = &openapi.RequestBody{
+				Required: true,
+				Content: map[string]openapi.MediaType{
+					"application/octet-stream": {Schema: openapi.Schema{"type": "string", "format": "binary"}},
+				},
+			}
+
+			str := func(name, desc string) openapi.Parameter {
+				return openapi.Parameter{Name: name, In: "query", Description: desc, Schema: openapi.Schema{"type": "string"}}
+			}
+			num := func(name, desc string) openapi.Parameter {
+				return openapi.Parameter{
+					Name: name, In: "query", Description: desc, Schema: openapi.Schema{"type": "integer", "minimum": 0},
+				}
+			}
+
+			op.Parameters = []openapi.Parameter{
+				str("name", "Name of the new image document."),
+				str("file_name", "File name of the upload, used for the name and the format when name is not sent."),
+				str("preset", "Size preset of the new document."),
+				str("image_id", "Import as a layer of this image document instead of a new one."),
+				num("width", "Width in pixels of the new document."),
+				num("height", "Height in pixels of the new document."),
+				num("base_revision", "The revision of the image the layer is added to; a stale one is E_STALE_REVISION."),
+				num("wait_ms", "Wait up to this many milliseconds for the import to finish."),
+				str("idempotency_key", "Makes a retry return the first answer; the Idempotency-Key header does the same."),
+				{
+					Name: "dry_run", In: "query", Description: "Validate and report, change nothing.",
+					Schema: openapi.Schema{"type": "boolean"},
+				},
+			}
 		}
 	}
 }

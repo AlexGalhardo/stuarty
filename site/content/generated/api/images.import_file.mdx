@@ -17,6 +17,21 @@ wide: true
 
 Send the secret in the header `Authorization: Bearer <secret>`: the local token in local mode, an [API key](/docs/self-hosting/api-keys) in network mode. An API key needs the `edit` scope; the local token has every scope. See the [API overview](/docs/api/overview) for both modes.
 
+## Query parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | no | Name of the new image document. |
+| `file_name` | `string` | no | File name of the upload, used for the name and the format when name is not sent. |
+| `preset` | `string` | no | Size preset of the new document. |
+| `image_id` | `string` | no | Import as a layer of this image document instead of a new one. |
+| `width` | `integer` | no | Width in pixels of the new document.. min 0 |
+| `height` | `integer` | no | Height in pixels of the new document.. min 0 |
+| `base_revision` | `integer` | no | The revision of the image the layer is added to; a stale one is E_STALE_REVISION.. min 0 |
+| `wait_ms` | `integer` | no | Wait up to this many milliseconds for the import to finish.. min 0 |
+| `idempotency_key` | `string` | no | Makes a retry return the first answer; the Idempotency-Key header does the same. |
+| `dry_run` | `boolean` | no | Validate and report, change nothing. |
+
 ## Responses
 
 ### 200 OK

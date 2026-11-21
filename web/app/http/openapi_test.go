@@ -466,3 +466,38 @@ func TestOpenAPIDeclaresDryRunAndRevisionStatuses(t *testing.T) {
 		}
 	}
 }
+
+// VV-313: the import of an image file takes the file as the body and every other member from the query; the document
+// says so.
+func TestOpenAPIDescribesTheImageFileImport(t *testing.T) {
+	t.Parallel()
+
+	doc := newHarness(t).openapi()
+	paths, _ := doc["paths"].(map[string]any)
+	item, _ := paths["/api/v1/images/import/file"].(map[string]any)
+	post, _ := item["post"].(map[string]any)
+
+	body, _ := post["requestBody"].(map[string]any)
+	content, _ := body["content"].(map[string]any)
+
+	if _, ok := content["application/octet-stream"]; !ok || body["required"] != true {
+		t.Errorf("requestBody = %v, want a required application/octet-stream body", body)
+	}
+
+	got := map[string]bool{}
+
+	params, _ := post["parameters"].([]any)
+	for _, raw := range params {
+		p, _ := raw.(map[string]any)
+		name, _ := p["name"].(string)
+		got[name] = p["in"] == "query"
+	}
+
+	for _, name := range []string{
+		"name", "file_name", "preset", "image_id", "base_revision", "idempotency_key", "width", "height", "wait_ms", "dry_run",
+	} {
+		if !got[name] {
+			t.Errorf("query parameter %q is not described (have %v)", name, got)
+		}
+	}
+}
