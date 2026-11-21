@@ -479,8 +479,10 @@ func TestAPIKeysCascadeWithProject(t *testing.T) {
 		t.Fatal(err)
 	}
 	var n int
-	if err := db.QueryRowContext(ctx, "SELECT count(*) FROM api_keys").Scan(&n); err != nil || n != 0 {
-		t.Errorf("api_keys after the cascade = %d, %v", n, err)
+	// Since epic 56 the key names a project or a timeline with no foreign key (migration project_scoped_jobs):
+	// the store deletes what an emptied project held, so the table itself keeps the row.
+	if err := db.QueryRowContext(ctx, "SELECT count(*) FROM api_keys").Scan(&n); err != nil || n != 1 {
+		t.Errorf("api_keys after the delete = %d, %v", n, err)
 	}
 }
 

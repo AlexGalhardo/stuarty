@@ -48,5 +48,6 @@ func All() []schema.Migration {
 		m20261120120000CreateImageCheckpoints(),
 		m20261120130000JobsImageExportKind(),
 		m20261120140000ProjectContext(),
+		m20261121100000ProjectScopedJobs(),
 	}
 }

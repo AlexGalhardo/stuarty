@@ -74,7 +74,7 @@ func (s *svc) useStartTimeline(ctx context.Context, c Caller, req *JobStartReque
 
 // useAnchorTimeline is useTimeline for work that belongs to the project (a generation, VV-330): the job is kept
 // under the first active timeline, since a job row still names a timeline, and the caller is not asked which of
-// several. A project with no active timeline cannot hold the job yet.
+// several. A project with no active timeline holds the job under its own id.
 //
 // A timeline id in the place of the project id still names that timeline (SDD-003 section 1.7 rule 2): the job,
 // and the files a generation links, stay with it, and one in the trash is refused by the caller of this.
@@ -97,9 +97,12 @@ func (s *svc) useAnchorTimeline(ctx context.Context, c Caller, id *string) error
 		return asError(err)
 	}
 
+	// The job names the project when it has no timeline yet (SDD-005 section 5.12.3); the first timeline has the id
+	// of the project, so the job is the same row before and after a video is added.
 	if len(tls) == 0 {
-		return newError(command.CodeInvalidState, "the project %s has no timeline to hold the job.", head.ID).
-			withHint("add a video to the project first, or restore a timeline")
+		*id = head.ID
+
+		return nil
 	}
 
 	*id = tls[0].TimelineID
@@ -446,7 +449,7 @@ func exportRange(doc *timeline.Document, a ExportArgs) (start, end int64, err *E
 // is disclosed.
 func (s *svc) refuseJob(ctx context.Context, c Caller, j *JobRow, id string) *Error {
 	if c.ProjectID != "" && j != nil && j.ProjectID != nil && !s.covers(ctx, c, *j.ProjectID) {
-		if h, err := s.store.Projects().Head(ctx, *j.ProjectID); err == nil && visible(c, h.OwnerUserID) {
+		if h, err := s.scopeRow(ctx, *j.ProjectID); err == nil && visible(c, h.OwnerUserID) {
 			return limitedElsewhere()
 		}
 	}
@@ -502,7 +505,7 @@ func (s *svc) canSee(ctx context.Context, c Caller, j *JobRow) bool {
 			return false
 		}
 
-		row, err := s.store.Projects().Get(ctx, *j.ProjectID)
+		row, err := s.scopeRow(ctx, *j.ProjectID)
 
 		return err == nil && visible(c, row.OwnerUserID)
 	}
@@ -517,7 +520,7 @@ func (s *svc) canSee(ctx context.Context, c Caller, j *JobRow) bool {
 			continue
 		}
 
-		if row, err := s.store.Projects().Get(ctx, refs[i].ProjectID); err == nil && visible(c, row.OwnerUserID) {
+		if row, err := s.scopeRow(ctx, refs[i].ProjectID); err == nil && visible(c, row.OwnerUserID) {
 			return true
 		}
 	}
@@ -592,11 +595,12 @@ func (s *svc) JobList(ctx context.Context, req JobListRequest) (*JobListResult, 
 		return nil, err
 	}
 
-	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
+	// The jobs of a project that has no timeline yet are listed under the project (SDD-005 section 5.12.3).
+	if err := s.useTimelineOrProject(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
 		return nil, err
 	}
 
-	row, lerr := s.loadProject(ctx, c, req.ProjectID)
+	row, lerr := s.loadProjectScope(ctx, c, req.ProjectID)
 	if lerr != nil {
 		return nil, lerr
 	}
@@ -842,7 +846,7 @@ func (s *svc) decideSharedIngest(ctx context.Context, tx Tx, c Caller, job *JobR
 
 		live++
 
-		owner, gerr := tx.Projects().Get(ctx, id)
+		owner, gerr := projectScopeRow(ctx, tx.Projects(), tx.Productions(), id)
 		if gerr != nil {
 			return JobRow{}, false, gerr
 		}

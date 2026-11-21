@@ -312,6 +312,10 @@ func (r productionRepo) Touch(ctx context.Context, id string, atMs int64) error 
 }
 
 func (r productionRepo) Delete(ctx context.Context, id string) error {
+	if err := deleteProjectScoped(ctx, r.ex, id); err != nil {
+		return err
+	}
+
 	n, err := rowsAffected(r.ex.ExecContext(ctx, "DELETE FROM projects WHERE id = ?", id))
 	if err != nil {
 		return err
@@ -665,4 +669,21 @@ func (r productionRepo) TextItems(ctx context.Context, q service.TextQuery) ([]s
 	}
 
 	return out, next, nil
+}
+
+// deleteProjectScoped deletes the rows that name a project or a timeline by id with no foreign key: the jobs, the
+// links to the files and the keys limited to it (SDD-005 section 5.12.3). Emptying a project does it for the
+// project and for each of its timelines, as the cascade of the foreign keys did before epic 56.
+func deleteProjectScoped(ctx context.Context, ex database.Executor, id string) error {
+	for _, q := range []string{
+		"DELETE FROM jobs WHERE project_id = ?",
+		"DELETE FROM project_assets WHERE project_id = ?",
+		"DELETE FROM api_keys WHERE project_id = ?",
+	} {
+		if _, err := ex.ExecContext(ctx, q, id); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

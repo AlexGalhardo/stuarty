@@ -103,7 +103,7 @@ func TestTextGenerate_EverySurfaceStartsAJobThatCompletesAndStoresTheText(t *tes
 				t.Fatal(err)
 			}
 
-			project, err := testproject.CreateWithTimeline(callerCtx(), svc, "text")
+			project, err := testproject.Create(callerCtx(), svc, "text")
 			if err != nil {
 				t.Fatal(err)
 			}

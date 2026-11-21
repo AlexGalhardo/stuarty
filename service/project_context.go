@@ -194,3 +194,59 @@ func (s *svc) changedProblems(next project.Context, req *ProjectUpdateRequest, c
 
 	return out
 }
+
+// projectScopeRow is the row of a project for work that belongs to the project and not to a timeline document (a
+// generation and the file it attaches, SDD-005 section 5.12.3): the timeline row that has the id when there is
+// one, and a row with no document for a project that has no timeline yet. The id names a project or a timeline.
+func projectScopeRow(
+	ctx context.Context,
+	timelines ProjectRepo,
+	projects ProductionRepo,
+	id string,
+) (ProjectRow, error) {
+	row, err := timelines.Get(ctx, id)
+	if !errors.Is(err, ErrNotFound) {
+		return row, err
+	}
+
+	head, perr := projects.Get(ctx, id)
+	if perr != nil {
+		return ProjectRow{}, err
+	}
+
+	var synth ProjectRow
+
+	synth.ID, synth.Name, synth.State = head.ID, head.Name, head.State
+	synth.CreatedMs, synth.UpdatedMs, synth.CreatedBy = head.CreatedMs, head.UpdatedMs, head.CreatedBy
+	synth.OwnerUserID, synth.TrashedMs, synth.TrashedBy = head.OwnerUserID, head.TrashedMs, head.TrashedBy
+
+	return synth, nil
+}
+
+func (s *svc) scopeRow(ctx context.Context, id string) (ProjectRow, error) {
+	return projectScopeRow(ctx, s.store.Projects(), s.store.Productions(), id)
+}
+
+// loadProjectScope is loadProject for work that belongs to the project: it also finds a project with no timeline.
+func (s *svc) loadProjectScope(ctx context.Context, c Caller, id string) (ProjectRow, error) {
+	row, err := s.scopeRow(ctx, id)
+	if err != nil || !visible(c, row.OwnerUserID) {
+		return ProjectRow{}, projectNotFound(id, err)
+	}
+
+	return row, nil
+}
+
+// useTimelineOrProject is useTimeline for an operation that is about the project and its jobs: a project that has
+// no active timeline keeps its own id instead of being refused.
+func (s *svc) useTimelineOrProject(ctx context.Context, c Caller, id *string, timelineID string) error {
+	if timelineID == "" && *id != "" {
+		if tls, err := s.store.Productions().ActiveTimelines(ctx, *id); err == nil && len(tls) == 0 {
+			if head, gerr := s.store.Productions().Get(ctx, *id); gerr == nil && visible(c, head.OwnerUserID) {
+				return nil
+			}
+		}
+	}
+
+	return s.useTimeline(ctx, c, id, timelineID)
+}

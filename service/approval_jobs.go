@@ -118,7 +118,7 @@ func registerKinds(list []ApprovableKind) (map[string]*ApprovableKind, error) {
 // startApprovable is JobStart for a registered kind (SDD-015 section 5), after JobStart authorized the
 // caller with the scope of the kind and applied the heavy-operation limit.
 func (s *svc) startApprovable(ctx context.Context, c Caller, req JobStartRequest, k *ApprovableKind) (*Job, error) {
-	row, lerr := s.loadProject(ctx, c, req.ProjectID)
+	row, lerr := s.loadProjectScope(ctx, c, req.ProjectID)
 	if lerr != nil {
 		return nil, lerr
 	}

@@ -189,7 +189,7 @@ func TestTextDraft_EverySurfaceStartsADraftThatBecomesARevision(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			project, err := testproject.CreateWithTimeline(callerCtx(), svc, "draft")
+			project, err := testproject.Create(callerCtx(), svc, "draft")
 			if err != nil {
 				t.Fatal(err)
 			}

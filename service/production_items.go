@@ -231,6 +231,9 @@ func (s *svc) ProjectItemAdd(ctx context.Context, req ProjectItemAddRequest) (*P
 		return nil, err
 	}
 
+	// The files a generation attached to the project before it had a timeline wait for it (SDD-005 section 5.12.3).
+	s.reconcileFirstTimeline(ctx, &req, head.ID)
+
 	return s.itemResult(&head, change.rows, change.itemID), nil
 }
 
@@ -565,5 +568,13 @@ func (s *svc) itemRowFor(
 	return ItemRow{
 		ID: s.firstTimelineItemID(head.ID), ProjectID: head.ID, Kind: req.Kind, Title: req.Title,
 		Position: len(rows), State: ProjectActive, CreatedMs: now, UpdatedMs: now, CreatedBy: c.Actor,
+	}
+}
+
+// reconcileFirstTimeline puts the files that a generation attached to the project before it had a timeline into the
+// document of the video just added.
+func (s *svc) reconcileFirstTimeline(ctx context.Context, req *ProjectItemAddRequest, projectID string) {
+	if req.Kind == string(project.Timeline) && !req.DryRun {
+		s.reconcilePending(ctx, projectID)
 	}
 }

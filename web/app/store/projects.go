@@ -280,6 +280,10 @@ func (r projectRepo) Delete(ctx context.Context, id string) error {
 	); err != nil {
 		return err
 	}
+	if err := deleteProjectScoped(ctx, r.ex, id); err != nil {
+		return err
+	}
+
 	n, err := rowsAffected(r.ex.ExecContext(ctx, "DELETE FROM timelines WHERE id = ?", id))
 	if err != nil {
 		return err
