@@ -11,6 +11,7 @@ import (
 	"slices"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/AlexGalhardo/stuarty/core/plan"
 	"github.com/AlexGalhardo/stuarty/engine/compositor"
@@ -32,6 +33,10 @@ const (
 	// own rectangle with its own sine and cosine.
 	rowMargin = 2
 )
+
+// / imagePool keeps the instances that prepare and draw an image document for the next render (SDD-021 section
+// 6.2): up to maxImageWorkers of them, a gigabyte of their memory, for half a minute.
+var imagePool = renderhost.NewPool(renderhost.Config{Uncancellable: true}, maxImageWorkers, 1<<30, 30*time.Second)
 
 // drawLayer is a layer ready for the draw: the plan layer as a media layer of its prepared picture, the
 // picture, and the rows of the canvas that its draw can touch.
@@ -231,7 +236,7 @@ type prepWorker struct {
 
 func (w *prepWorker) close() {
 	if w.host != nil {
-		_ = w.host.Close(context.Background())
+		imagePool.Put(w.host)
 		w.host = nil
 	}
 }
@@ -254,7 +259,7 @@ func (r *imageRun) prepareOne(w *prepWorker, l *plan.Layer) (drawLayer, error) {
 	}
 
 	if w.host == nil {
-		h, err := renderhost.New(ctx, renderhost.Config{Uncancellable: true})
+		h, err := imagePool.Get(ctx)
 		if err != nil {
 			return drawLayer{}, rendererError(err)
 		}
@@ -420,12 +425,12 @@ func (r *imageRun) drawBand(base *image.RGBA, drawn []drawLayer, dst *image.RGBA
 	ctx := context.WithoutCancel(r.ctx)
 	fp := r.plan
 
-	host, err := renderhost.New(ctx, renderhost.Config{Uncancellable: true})
+	host, err := imagePool.Get(ctx)
 	if err != nil {
 		return rendererError(err)
 	}
 
-	defer func() { _ = host.Close(ctx) }()
+	defer imagePool.Put(host)
 
 	kept := make([]plan.Layer, 0, len(drawn)+1)
 
@@ -460,8 +465,14 @@ func (r *imageRun) drawBand(base *image.RGBA, drawn []drawLayer, dst *image.RGBA
 	in := fp
 	in.Layers = withoutLostClips(kept)
 
+	// The instance draws into a view of the rows of its band, so it holds those rows and not the frame.
+	view, ok := dst.SubImage(image.Rect(0, y0, fp.Width, y1)).(*image.RGBA)
+	if !ok {
+		return rendererError(&renderhost.Error{Reason: renderhost.InvalidArgument, Detail: "the band is not a view"})
+	}
+
 	out := renderhost.Output{Width: fp.Width, Height: fp.Height, Scale: 1, Y0: y0, Y1: y1}
-	if err := host.Render(ctx, renderhost.RenderInput{Output: out, Plan: in}, dst); err != nil {
+	if err := host.Render(ctx, renderhost.RenderInput{Output: out, Plan: in}, view); err != nil {
 		return rendererError(err)
 	}
 
