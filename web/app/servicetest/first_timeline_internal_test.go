@@ -97,3 +97,16 @@ func TestMotionReplaceInTheFirstOfTwoTimelines(t *testing.T) {
 		t.Fatalf("replacement in the first timeline = %+v, %v", res, err)
 	}
 }
+
+func TestMotionBriefFramesOfTheFirstOfTwoTimelines(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{noQueue: true, realExport: true})
+	project, _, _ := m.motionProject()
+	m.addSecondTimeline(project)
+
+	res, err := m.svc.MotionBrief(m.as(ui), service.MotionBriefRequest{
+		ProjectID: project, TimelineID: project, From: "0.5s", Until: "2.5s",
+	})
+	if err != nil || len(res.Frames) != 2 {
+		t.Fatalf("brief of the first timeline = %+v, %v", res, err)
+	}
+}
