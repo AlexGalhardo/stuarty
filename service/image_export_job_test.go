@@ -144,3 +144,25 @@ func mustCaller(ctx context.Context, t *testing.T) Caller {
 
 	return c
 }
+
+// VV-301: in network mode the result of image:export holds the name of the file under the workspace and never the
+// absolute path of the server; in local mode the absolute path stays.
+func TestImageExportHidesTheServerPathInNetworkMode(t *testing.T) {
+	s, _ := newImageService(t)
+	alice := networkUser("alice")
+
+	created, err := s.ImageCreate(alice, ImageCreateRequest{Width: 64, Height: 48})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res, err := s.ImageExport(alice, ImageExportRequest{ImageID: created.ImageID})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := "exports/images/" + created.ImageID + "/"
+	if filepath.IsAbs(res.Path) || !strings.HasPrefix(res.Path, want) || strings.Contains(res.Text, s.workspace) {
+		t.Errorf("network path = %q, text = %q: want a path under %q and no absolute path", res.Path, res.Text, want)
+	}
+}
