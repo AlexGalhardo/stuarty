@@ -410,8 +410,7 @@ An approvable kind of scope `edit`, registered like `image.generate` and passing
 
 ### 6.6 A generation belongs to the project (VV-330)
 
-`image.generate`, `voice.generate`, `text.generate`, `video.generate`, `image.edit` and `text.draft` take no `timeline_id` on any surface: the result is a file or a text of the project, never a place on a timeline. They therefore never ask which timeline of a project: with one, two or many the job is started, and SDD-003 §1.7 rule 3 does not apply. The job is stored under the first active timeline of the project (an `ApprovableKind` with `ProjectWide` set; `JobStart` resolves it instead of `useTimeline`). A project with no active timeline is refused with `E_INVALID_STATE` until the jobs table can hold a job with no timeline.
-
+`image.generate`, `voice.generate`, `text.generate`, `video.generate`, `image.edit` and `text.draft` take no `timeline_id` on any surface: the result is a file or a text of the project, never a place on a timeline. They therefore never ask which timeline of a project: with one, two or many the job is started, and SDD-003 §1.7 rule 3 does not apply. The job is stored under the first active timeline of the project (an `ApprovableKind` with `ProjectWide` set; `JobStart` resolves it instead of `useTimeline`), and the files the job keeps are linked to that timeline's document, where `video.generate` also looks for its `first_frame`. A timeline id in the place of `project_id` still names that timeline (SDD-003 §1.7 rule 2): the job and its files stay with it, and a timeline in the trash is refused with `E_INVALID_STATE`. A project with no active timeline is refused with `E_INVALID_STATE` until the jobs table can hold a job with no timeline.
 
 ## 7. Service operations and who may call them
 
