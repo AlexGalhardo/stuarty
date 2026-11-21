@@ -118,7 +118,12 @@ export default function ChatDock(): ReactNode {
 					{t("ui.chat.loading")}
 				</p>
 			) : showSetup ? (
-				<div className="min-h-0 flex-1 overflow-y-auto">
+				<section
+					aria-label={t("ui.chat.manage")}
+					// biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region must be reachable by keyboard
+					tabIndex={0}
+					className="min-h-0 flex-1 overflow-y-auto focus-visible:ring-3 focus-visible:ring-ring/50"
+				>
 					<ProfileSetup
 						profiles={chat.profiles ?? NO_PROFILES}
 						busy={chat.busy}
@@ -126,7 +131,7 @@ export default function ChatDock(): ReactNode {
 						onSave={chat.saveProfile}
 						onRemove={(name) => void chat.removeProfile(name)}
 					/>
-				</div>
+				</section>
 			) : (
 				<ChatConversation chat={chat} composerRef={composer} />
 			)}
