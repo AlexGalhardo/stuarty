@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.43.0] - 2026-11-21
+
+### Added
+
+- **repo:** Measure the image document, the CLI read and the budgets in tests with perfreport ([b6ccdfd](https://github.com/AlexGalhardo/stuarty/commit/b6ccdfd18ca9f19f41972ebd36d8ef053ce10233))
+- **repo:** Add the soak tool with the bounds of SDD-008 section 13.4 ([3506ac1](https://github.com/AlexGalhardo/stuarty/commit/3506ac14d384fe65a5d72e4a907d42e62d882dda))
+- **ui:** Use the Stuarty logo lockup in the docs, README and dashboard ([ef31b80](https://github.com/AlexGalhardo/stuarty/commit/ef31b80a97f856a9cfded89c0b255116748a1a31))
+- **site:** Send every missing page to the landing page ([f1ac43e](https://github.com/AlexGalhardo/stuarty/commit/f1ac43eee3516d02c64d5bce213d3c65d1c6e4bd))
+- **service:** Add the Google adapter for video through the Gemini API ([f477aca](https://github.com/AlexGalhardo/stuarty/commit/f477aca5dd70e17eaf1e89d9cc93162c8b30f32c))
+- **web:** Unlinking the Google account ends the other sessions of the user ([28c0b47](https://github.com/AlexGalhardo/stuarty/commit/28c0b4749470d5066c4a2781c2e92803ee2014e8))
+- **service:** An image export is a job that a publication takes as its thumbnail ([4be92db](https://github.com/AlexGalhardo/stuarty/commit/4be92db22d95a20b88cf8597ec9c8978ba89ebe6))
+- **web:** Show the export job of an image and take it as a publication thumbnail ([794d713](https://github.com/AlexGalhardo/stuarty/commit/794d7130306cd68f54b34ae5ab95b9731ca85c81))
+- **site:** Set the official title and description of the site ([bf0cd28](https://github.com/AlexGalhardo/stuarty/commit/bf0cd28c51ad654efbd1be84ad51efa4b6f0f4bf))
+
+### Fixed
+
+- **repo:** Keep cutting when the release body cannot be edited ([5862b00](https://github.com/AlexGalhardo/stuarty/commit/5862b00a609dd1b258cd90541bc256b1890be003))
+- **export:** Keep the size limit as the cause when the encoder ends on its own ([5012476](https://github.com/AlexGalhardo/stuarty/commit/5012476199a5a38effe5748864b1c03cf055d61c))
+- **repo:** Let perfreport measure alone a requirement whose budgets live only in tests ([91fe11f](https://github.com/AlexGalhardo/stuarty/commit/91fe11f4e8679b870873901b6dba31af48c439cb))
+- **repo:** Stamp the release version into the agent docs at each cut ([633564c](https://github.com/AlexGalhardo/stuarty/commit/633564cac252ee08c6d9ec9be7a59811deb8fa51))
+- **service:** Record the estimate of a video task the provider may have billed ([40de738](https://github.com/AlexGalhardo/stuarty/commit/40de738c582230e50a7ee881cf40b62b41afd8e9))
+- **site:** Keep the AI providers guide building and current for video ([123d2db](https://github.com/AlexGalhardo/stuarty/commit/123d2db49d38d0bf7c69db43e15810f68f8e496d))
+- **service:** An image export job is reached only by the user who exported it ([4ccf64b](https://github.com/AlexGalhardo/stuarty/commit/4ccf64b57c1a56e85ae193ecaaadbb4cec9ea9c0))
+- **cli:** Say that --thumbnail takes the job of an image export ([60561d7](https://github.com/AlexGalhardo/stuarty/commit/60561d7a43cdb9166619b70470a9efa34b94bf6a))
+- **export:** Draw a document with no layer to draw when a cache is set ([5af4732](https://github.com/AlexGalhardo/stuarty/commit/5af4732d7854fd535b39fe1fbda22fbe27cbb6da))
+- **http:** Pass timeline_id to the OpenTimelineIO export ([fcbcecf](https://github.com/AlexGalhardo/stuarty/commit/fcbcecf0424ed1ba346aea4e594cac66b9767594))
+- **service:** Name the timeline in the internal edits of a file import ([a394107](https://github.com/AlexGalhardo/stuarty/commit/a394107421fabc28aaee0602b4bdc3cba1233bbd))
+- **ui:** Let the person choose the timeline when using a library file ([34b308a](https://github.com/AlexGalhardo/stuarty/commit/34b308a7fc414c478d24eb39cfb67dd62408ff95))
+- **service:** Name the timeline in the frames of a motion brief ([8bbe263](https://github.com/AlexGalhardo/stuarty/commit/8bbe26379f528c95cd660339659d4a78d72303de))
+- **ui:** Hold Use until the timelines of the chosen project are known ([5ba5c69](https://github.com/AlexGalhardo/stuarty/commit/5ba5c69df2cd701a2a6c6f5e19e4914d53479a90))
+- **ui:** Leave timeline_id out of useAsset when no timeline is given ([927fd19](https://github.com/AlexGalhardo/stuarty/commit/927fd197250501f440f2e26f1da5f46086bc7740))
+- **remote:** Send allow_partial with the OpenTimelineIO import ([ee03175](https://github.com/AlexGalhardo/stuarty/commit/ee03175dbb0009ea309d930af44debd6b1ac62ca))
+- **web:** Ask before unsaved text in Write, Prompts, Memory and the brief is discarded ([de10b39](https://github.com/AlexGalhardo/stuarty/commit/de10b3998a744fc894c25569894b9a981f524375))
+- **web:** Disable the controls that need a person, with the reason, in a session that is not one ([48e9029](https://github.com/AlexGalhardo/stuarty/commit/48e9029b223ee97057d8eb04082be0beb032321a))
+- **web:** The memory panel shows a kept note as kept and stops blaming an agent ([913ffed](https://github.com/AlexGalhardo/stuarty/commit/913ffed82646be29fbfb2a9a1a1b321439b05656))
+- **service:** Give the UI the text of a connection test, not the envelope meant for a model ([46b1017](https://github.com/AlexGalhardo/stuarty/commit/46b10176dc1e8eb9dbc01380e214ecd479cc2875))
+- **service:** A failed social sign-in leaves no half-made connection and says request ([32d583b](https://github.com/AlexGalhardo/stuarty/commit/32d583bef9cc82ed321ed84da95d5afd07e7a94c))
+- **core:** A post counts the words of its body in the list as in the panel ([f549154](https://github.com/AlexGalhardo/stuarty/commit/f54915405125733654898df7d47ee2effe0bec66))
+
+### Security
+
+- **security:** Cap the Retry-After of a webhook receiver as seconds, not as a duration ([45502d2](https://github.com/AlexGalhardo/stuarty/commit/45502d2da11b5a728921c9a0c6272ad3dadcad21))
+- **security:** Read the lifetime of an OAuth token as seconds that fit a duration ([bd0787a](https://github.com/AlexGalhardo/stuarty/commit/bd0787abdd8d78b91087dcb74d49a5e9461cdb30))
+
 ## [0.42.0] - 2026-11-20
 
 ### Added
@@ -1974,7 +2018,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.42.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.43.0...HEAD
+[0.43.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.42.0...v0.43.0
 [0.42.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.41.0...v0.42.0
 [0.41.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.40.0...v0.41.0
 [0.40.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.39.0...v0.40.0
