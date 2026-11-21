@@ -464,6 +464,62 @@ func TestSocialFailedSignInLeavesNoConnection(t *testing.T) {
 	}
 }
 
+// VV-323: two sign-ins on the same connection. The first one made it; a second one, begun from that connection
+// ("Sign in again"), signs in. The first one failing afterwards must not remove a connection that now holds an
+// account.
+func TestSocialFailedSignInKeepsAConnectionAnotherSignInFinished(t *testing.T) {
+	e := newSocialEnv(t)
+	person := e.browser(ui)
+
+	first := e.begin(person)
+
+	second, err := e.ops.SocialConnectBegin(person, service.SocialConnectBeginRequest{
+		Network: fake.Network, ConnectionID: first.ConnectionID, RedirectURI: redirect,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := e.ops.SocialConnectComplete(
+		person, service.SocialConnectCompleteRequest{State: stateOf(t, second.AuthorizeURL), Code: "c"},
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := e.ops.SocialConnectComplete(
+		person, service.SocialConnectCompleteRequest{State: stateOf(t, first.AuthorizeURL), Error: "access_denied"},
+	); err == nil {
+		t.Fatal("a cancelled consent was accepted")
+	}
+
+	list, err := e.ops.SocialAccountList(person, service.SocialAccountListRequest{})
+	if err != nil || len(list.Accounts) != 1 || list.Accounts[0].State != service.AccountReady {
+		t.Fatalf("the signed-in connection is gone or changed: %+v, %v", list, err)
+	}
+
+	// The same while the second sign-in is still open: the first one failing leaves the connection for it.
+	third := e.begin(person)
+
+	fourth, err := e.ops.SocialConnectBegin(person, service.SocialConnectBeginRequest{
+		Network: fake.Network, ConnectionID: third.ConnectionID, RedirectURI: redirect,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := e.ops.SocialConnectComplete(
+		person, service.SocialConnectCompleteRequest{State: stateOf(t, third.AuthorizeURL), Error: "access_denied"},
+	); err == nil {
+		t.Fatal("a cancelled consent was accepted")
+	}
+
+	if _, err := e.ops.SocialConnectComplete(
+		person, service.SocialConnectCompleteRequest{State: stateOf(t, fourth.AuthorizeURL), Code: "c"},
+	); err != nil {
+		t.Fatalf("the open sign-in lost its connection: %v", err)
+	}
+}
+
 func TestSocialBeginValidatesTheRequest(t *testing.T) {
 	e := newSocialEnv(t)
 	person := e.browser(ui)

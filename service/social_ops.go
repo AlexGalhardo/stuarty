@@ -306,7 +306,7 @@ func (s *svc) SocialConnectComplete(ctx context.Context, req SocialConnectComple
 	}
 
 	if req.Error != "" || req.Code == "" {
-		s.dropUnfinished(ctx, c, p)
+		s.dropUnfinished(ctx, c, reg, p)
 
 		return nil, validationAt("code", "the network did not give a code: the sign-in was refused or cancelled.").
 			withHint("start the sign-in again and accept the permissions")
@@ -327,7 +327,7 @@ func (s *svc) SocialConnectComplete(ctx context.Context, req SocialConnectComple
 		return xerr
 	})
 	if werr != nil {
-		s.dropUnfinished(ctx, c, p)
+		s.dropUnfinished(ctx, c, reg, p)
 
 		return nil, s.socialError(werr)
 	}
@@ -361,8 +361,26 @@ func (s *svc) SocialConnectComplete(ctx context.Context, req SocialConnectComple
 // "Fake network" with no account for every attempt (VV-323). A connection that was there before the sign-in
 // began, and so may hold an account, is never touched. The failure the person reads is the sign-in's, so an
 // error here is not added to it.
-func (s *svc) dropUnfinished(ctx context.Context, c Caller, p oauth.Pending) {
-	if !p.Created {
+//
+// The connection is also kept when another sign-in began on it ("Sign in again" while this one was open) and is
+// still pending, or has finished: a sign-in of its own, or the accounts to choose from, are in its secret now.
+func (s *svc) dropUnfinished(ctx context.Context, c Caller, reg *social.Registry, p oauth.Pending) {
+	if !p.Created || s.flows.PendingFor(p.ConnectionID) {
+		return
+	}
+
+	conn, cerr := reg.Get(p.Network)
+	if cerr != nil {
+		return
+	}
+
+	var state SocialAccount
+
+	if s.conns.With(ctx, p.ConnectionID, func(cred connections.Credential) error {
+		describeAccount(conn, cred.Secret, &state)
+
+		return nil
+	}) != nil || state.State != AccountNeedsSignIn {
 		return
 	}
 

@@ -115,6 +115,22 @@ func (f *Flows) Begin(p Pending) (state, challenge string) {
 	return p.State, Challenge(p.Verifier)
 }
 
+// PendingFor says whether a flow that has not expired is still open on the connection.
+func (f *Flows) PendingFor(connectionID string) bool {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	f.sweepLocked()
+
+	for _, p := range f.pending {
+		if p.ConnectionID == connectionID {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (f *Flows) sweepLocked() {
 	now := f.now()
 	kept := f.order[:0]
