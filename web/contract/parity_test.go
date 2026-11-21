@@ -93,6 +93,7 @@ var parity = []row{
 	{method: "AssetUses", command: "asset:uses", route: "GET /assets/{}/uses"},
 	{method: "AssetSetInfo", tool: "media_import", command: "asset:set", route: "PUT /assets/{}"},
 	{method: "AssetTag", tool: "media_import", command: "asset:tag", route: "POST /assets/{}/tags"},
+	{method: "AssetRename", tool: "media_import", command: "asset:rename", route: "POST /assets/{}/rename"},
 	{method: "AuditList", command: "audit", route: "GET /audit"},
 	{method: "ExportFile", route: "GET /jobs/{}/file", httpOnly: true},
 	// The CLI command tools:install is for the person at the terminal and has

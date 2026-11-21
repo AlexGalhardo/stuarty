@@ -125,6 +125,8 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.AssetSetInfo)
 	case "AssetTag":
 		return invoke(ctx, s, svc.AssetTag)
+	case "AssetRename":
+		return invoke(ctx, s, svc.AssetRename)
 	case "MediaInspect":
 		return invoke(ctx, s, svc.MediaInspect)
 	case "JobStart":
@@ -522,7 +524,7 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 	}
 
 	switch s.Call {
-	case "AssetList", "AssetGet", "AssetUses", "AssetSetInfo", "AssetTag":
+	case "AssetList", "AssetGet", "AssetUses", "AssetSetInfo", "AssetTag", "AssetRename":
 		return assetToolCall(s.Call, args)
 	case "ImageCreate", "ImageList", "ImageDescribe", "ImageEdit", "ImageUndo", "ImageRedo", "ImageExport",
 		"ImageImport":
@@ -1060,7 +1062,7 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 	}
 
 	switch s.Call {
-	case "AssetList", "AssetGet", "AssetUses", "AssetSetInfo", "AssetTag":
+	case "AssetList", "AssetGet", "AssetUses", "AssetSetInfo", "AssetTag", "AssetRename":
 		name, argv, err = assetArgv(s.Call, s.Args)
 
 		return name, argv, "", err

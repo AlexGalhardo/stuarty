@@ -15,6 +15,7 @@ type assetFake struct {
 	list   service.AssetListRequest
 	set    service.AssetSetInfoRequest
 	tag    service.AssetTagRequest
+	rename service.AssetRenameRequest
 	get    service.AssetRef
 	uses   service.AssetUsesRequest
 	upload service.MediaImportRequest
@@ -48,6 +49,12 @@ func (f *assetFake) AssetTag(_ context.Context, r service.AssetTagRequest) (*ser
 	f.tag = r
 
 	return &service.AssetResult{Text: "tag"}, nil
+}
+
+func (f *assetFake) AssetRename(_ context.Context, r service.AssetRenameRequest) (*service.AssetResult, error) {
+	f.rename = r
+
+	return &service.AssetResult{Text: "renamed"}, nil
 }
 
 func (f *assetFake) MediaImport(_ context.Context, r service.MediaImportRequest) (*service.MediaImportResult, error) {
@@ -105,7 +112,14 @@ func TestAssetCommandsSendWhatTheFlagsSay(t *testing.T) {
 		t.Errorf("asset:tag: %+v", f.tag)
 	}
 
-	for _, args := range [][]string{{"asset:show"}, {"asset:set", hash}, {"asset:tag", hash}, {"asset:show", "a", "b"}} {
+	if code := h.run("asset:rename", hash, "--name", "Beach day"); code != ExitOK ||
+		f.rename.Hash != hash || f.rename.Name != "Beach day" {
+		t.Errorf("asset:rename: %+v", f.rename)
+	}
+
+	for _, args := range [][]string{
+		{"asset:show"}, {"asset:set", hash}, {"asset:tag", hash}, {"asset:show", "a", "b"}, {"asset:rename", hash},
+	} {
 		if code := h.run(args...); code != ExitFailure {
 			t.Errorf("%v: exit %d, want 1", args, code)
 		}

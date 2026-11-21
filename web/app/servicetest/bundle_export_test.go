@@ -382,3 +382,38 @@ func TestBundleExportMemory(t *testing.T) {
 		t.Errorf("the process held %d MB while exporting 3 GiB, want under 500 MB", peak.Load()>>20)
 	}
 }
+
+func TestBundleExportCarriesTheRenamedFileName(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	project, hashes := m.bundleProject()
+
+	renamed := service.AssetRenameRequest{Hash: hashes[0], Name: "Opening shot"}
+	if _, err := m.svc.AssetRename(m.as(ui), renamed); err != nil {
+		t.Fatal(err)
+	}
+
+	job := m.exportBundle(project, nil)
+	if job.State != service.JobSucceeded || job.Result == nil || job.Result.Export == nil {
+		t.Fatalf("job = %+v", job)
+	}
+
+	_, files := readZip(t, job.Result.Export.Path)
+
+	var man service.BundleManifest
+	if err := json.Unmarshal(files["manifest.json"], &man); err != nil {
+		t.Fatal(err)
+	}
+
+	names := map[string]string{}
+	for _, md := range man.Media {
+		names[md.Hash] = md.Name
+	}
+
+	if names[hashes[0]] != "Opening shot.mp4" {
+		t.Errorf("the manifest names the renamed file %q, want %q", names[hashes[0]], "Opening shot.mp4")
+	}
+
+	if other := names[hashes[1]]; other != "a.mp4" && other != "b.mp4" {
+		t.Errorf("the other file lost its name: %q", other)
+	}
+}

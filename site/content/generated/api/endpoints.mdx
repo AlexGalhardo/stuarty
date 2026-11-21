@@ -62,6 +62,7 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/assets` | [`assets.list`](/docs/api/assets.list) | List the files of the library by content hash, with origin, tags and reuse |
 | `GET` | `/api/v1/assets/{hash}` | [`assets.get`](/docs/api/assets.get) | Read one file of the library with its origin and the projects that use it |
 | `PUT` | `/api/v1/assets/{hash}` | [`assets.set`](/docs/api/assets.set) | Set the description, the rights note and the reuse mark of a file |
+| `POST` | `/api/v1/assets/{hash}/rename` | [`assets.rename`](/docs/api/assets.rename) | Rename a file of the library; the stored file keeps its hash |
 | `POST` | `/api/v1/assets/{hash}/tags` | [`assets.tag`](/docs/api/assets.tag) | Add and remove the tags of a file |
 | `GET` | `/api/v1/assets/{hash}/uses` | [`assets.uses`](/docs/api/assets.uses) | List the projects that use a file of the library |
 | `GET` | `/api/v1/projects/{id}/media` | [`media.list`](/docs/api/media.list) | List the assets of a project |

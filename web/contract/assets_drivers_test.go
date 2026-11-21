@@ -52,6 +52,8 @@ func assetToolCall(call string, args map[string]any) (string, map[string]any, er
 		}
 
 		return "media_import", map[string]any{"hash": args["hash"], "info": info}, nil
+	case "AssetRename":
+		return "media_import", map[string]any{"hash": args["hash"], "info": map[string]any{"name": args["name"]}}, nil
 	}
 
 	return "", nil, errors.New("the library has no tool for " + call)
@@ -138,6 +140,8 @@ func assetArgv(call string, raw json.RawMessage) (string, []string, error) {
 		list("remove")
 
 		return "asset:tag", argv, nil
+	case "AssetRename":
+		return "asset:rename", []string{str("hash"), "--name", str("name")}, nil
 	}
 
 	return "", nil, errors.New("the library has no command for " + call)

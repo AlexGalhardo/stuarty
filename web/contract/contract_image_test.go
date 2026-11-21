@@ -81,8 +81,8 @@ func TestAssetLibraryScenarioSaysWhatItShould(t *testing.T) {
 	}
 
 	// the last step lists the reusable files: the mark set in step 10 keeps the file in
-	if !strings.Contains(got[len(got)-1].result, `"name":"clip.mov"`) {
-		t.Errorf("the reusable filter lost the file: %s", got[len(got)-1].result)
+	if !strings.Contains(got[17].result, `"name":"clip.mov"`) {
+		t.Errorf("the reusable filter lost the file: %s", got[17].result)
 	}
 
 	if strings.Contains(got[8].result, `"name":`) {
@@ -90,7 +90,7 @@ func TestAssetLibraryScenarioSaysWhatItShould(t *testing.T) {
 	}
 
 	// the clip is a video: the audio section, listed on every surface, holds no entry of it
-	audio := len(got) - 3
+	audio := 15
 	if strings.Contains(got[audio].result, `"name":`) {
 		t.Errorf("the audio section holds a video: %s", got[audio].result)
 	}
@@ -102,5 +102,12 @@ func TestAssetLibraryScenarioSaysWhatItShould(t *testing.T) {
 
 	if !strings.Contains(got[13].text, `<untrusted_media_text source="metadata" field="rights_note"`) {
 		t.Errorf("the rights note is not delimited: %s", got[13].text)
+	}
+
+	// steps 18 to 20 (epic 60): a name with a path separator is refused, a good one is kept with the extension and
+	// the entry of the file reads it back
+	if !strings.Contains(got[19].result, `"name":"Reaction cat.mov"`) ||
+		!strings.Contains(got[20].result, `"name":"Reaction cat.mov"`) {
+		t.Errorf("the renamed entry: %s / %s", got[19].result, got[20].result)
 	}
 }

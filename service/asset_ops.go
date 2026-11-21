@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 
+	"github.com/AlexGalhardo/stuarty/core/asset"
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service/assets"
 )
@@ -14,6 +16,7 @@ type AssetLibraryService interface {
 	AssetUses(ctx context.Context, req AssetUsesRequest) (*AssetUsesResult, error)
 	AssetSetInfo(ctx context.Context, req AssetSetInfoRequest) (*AssetResult, error)
 	AssetTag(ctx context.Context, req AssetTagRequest) (*AssetResult, error)
+	AssetRename(ctx context.Context, req AssetRenameRequest) (*AssetResult, error)
 }
 
 // AssetRef names a file of the library by its content hash.
@@ -57,6 +60,13 @@ type AssetTagRequest struct {
 	Hash   string   `json:"hash"`
 	Add    []string `json:"add,omitempty"`
 	Remove []string `json:"remove,omitempty"`
+}
+
+// AssetRenameRequest changes the name a file is shown under (SDD-011 section 14.8); the stored file is never
+// renamed.
+type AssetRenameRequest struct {
+	Hash string `json:"hash"`
+	Name string `json:"name"`
 }
 
 // heldFile is the file with this hash among those the caller may see. A hash nobody holds and a hash held only
@@ -232,4 +242,94 @@ func (s *svc) AssetTag(ctx context.Context, req AssetTagRequest) (*AssetResult, 
 	}
 
 	return s.assetResult(&entry), nil
+}
+
+// AssetRename changes the display name of a file in every project of the caller that holds it (SDD-011 section
+// 14.8). The name is the row of project_assets, so no revision of any document is written and the file in the
+// store keeps its hash.
+func (s *svc) AssetRename(ctx context.Context, req AssetRenameRequest) (*AssetResult, error) {
+	c, err := authorize(ctx, "AssetRename", "")
+	if err != nil {
+		return nil, err
+	}
+
+	h, _, ferr := s.heldFile(ctx, c, req.Hash)
+	if ferr != nil {
+		return nil, ferr
+	}
+
+	name, bad := asset.RenameTo(h.Name, req.Name)
+	if bad != nil {
+		return nil, ruleError(bad)
+	}
+
+	names := s.useNames(ctx, &h)
+
+	var entry LibraryAsset
+
+	werr := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
+		for _, hd := range h.Holdings {
+			row, gerr := tx.Assets().GetProjectAsset(ctx, hd.TimelineID, hd.AssetID)
+			if gerr != nil {
+				return gerr
+			}
+
+			if row.Name == name {
+				continue
+			}
+
+			row.Name = name
+			row.Snapshot = renamedSnapshot(row.Snapshot, name)
+
+			if perr := tx.Assets().PutProjectAsset(ctx, row); perr != nil {
+				return perr
+			}
+		}
+
+		if rerr := tx.AssetLibrary().Reindex(ctx, c.OwnerUserID, h.Hash); rerr != nil {
+			return rerr
+		}
+
+		h.Name = name
+
+		lib := assets.Library{Store: tx.AssetLibrary(), Owner: c.OwnerUserID}
+
+		var uerr error
+
+		entry, uerr = lib.Get(ctx, &h, names)
+
+		return uerr
+	})
+	if werr != nil {
+		return nil, ruleError(werr)
+	}
+
+	return s.assetResult(&entry), nil
+}
+
+// renamedSnapshot is the kept Asset object of a use with its name replaced, so that a restore after a trash
+// brings the file back under the name it has now. A snapshot that is absent or not an object stays as it is.
+func renamedSnapshot(snap json.RawMessage, name string) json.RawMessage {
+	if len(snap) == 0 {
+		return snap
+	}
+
+	var obj map[string]json.RawMessage
+	if json.Unmarshal(snap, &obj) != nil || obj == nil {
+		return snap
+	}
+
+	raw, err := json.Marshal(name)
+	if err != nil {
+		return snap
+	}
+
+	obj["name"] = raw
+
+	out, err := json.Marshal(obj)
+	if err != nil {
+		return snap
+	}
+
+	return out
 }

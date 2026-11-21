@@ -92,6 +92,7 @@ var commandDomains = map[string]string{
 	"asset:uses":    command.DomainAsset,
 	"asset:set":     command.DomainAsset,
 	"asset:tag":     command.DomainAsset,
+	"asset:rename":  command.DomainAsset,
 
 	"motion:brief":   command.DomainVideo,
 	"motion:check":   command.DomainVideo,

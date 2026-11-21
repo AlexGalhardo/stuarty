@@ -362,6 +362,10 @@ func (s stub) AssetTag(context.Context, service.AssetTagRequest) (*service.Asset
 	return reply[service.AssetResult](s.err)
 }
 
+func (s stub) AssetRename(context.Context, service.AssetRenameRequest) (*service.AssetResult, error) {
+	return reply[service.AssetResult](s.err)
+}
+
 func (s stub) BriefingQuestions(
 	context.Context,
 	service.BriefingQuestionsRequest,
