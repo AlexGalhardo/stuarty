@@ -7,15 +7,18 @@ import { withBase } from "@/lib/site";
 interface Props {
 	idPrefix: string;
 	class?: string;
+	/** Two columns from lg: the slot, the tabs and the text in 2/5, the terminal centred in 3/5. */
+	split?: boolean;
 }
 
-const { idPrefix, class: className } = Astro.props;
+const { idPrefix, class: className, split = false } = Astro.props;
 
 // What Claude Code prints before each kind of line: the shell prompt, its own prompt, a tool call and its result.
 const SYMBOLS: Record<string, string> = { cmd: "$ ", prompt: "> ", tool: "● ", out: "  ⎿  ", more: "     " };
 ---
 
-<div data-tabs data-drive class={className}>
+<div data-tabs data-drive class:list={[className, split && "drive-split"]}>
+	{split ? <div class="drive-intro"><slot /></div> : null}
 	<div role="tablist" aria-label="Four ways to drive Stuarty" class="inline-flex flex-wrap gap-1 rounded-full border border-fg/10 bg-bg/60 p-1 backdrop-blur">
 		{drive.map((tab, i) => (
 			<button
@@ -41,7 +44,7 @@ const SYMBOLS: Record<string, string> = { cmd: "$ ", prompt: "> ", tool: "● ",
 			hidden={i !== 0}
 			class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start"
 		>
-			<div>
+			<div class="drive-text">
 				<h3 class="text-xl font-semibold tracking-tight text-fg">{tab.title}</h3>
 				<p class="mt-2 text-base leading-relaxed text-(--lead)">{tab.text}</p>
 				<a href={withBase(tab.doc.href)} class="mt-4 inline-flex items-center gap-1 text-sm font-medium text-brand-text underline-offset-4 hover:underline">
@@ -62,3 +65,38 @@ const SYMBOLS: Record<string, string> = { cmd: "$ ", prompt: "> ", tool: "● ",
 		</div>
 	))}
 </div>
+
+<style is:global>
+	@media (min-width: 64rem) {
+		.drive-split {
+			display: grid;
+			grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+			grid-template-rows: auto auto 1fr;
+			column-gap: 3rem;
+		}
+		.drive-split > .drive-intro {
+			grid-column: 1;
+			grid-row: 1;
+		}
+		.drive-split > [role="tablist"] {
+			grid-column: 1;
+			grid-row: 2;
+			justify-self: start;
+			margin-top: 2rem;
+		}
+		.drive-split > [role="tabpanel"]:not([hidden]) {
+			display: contents;
+		}
+		.drive-split .drive-text {
+			grid-column: 1;
+			grid-row: 3;
+			margin-top: 1.5rem;
+		}
+		.drive-split .terminal {
+			grid-column: 2;
+			grid-row: 1 / span 3;
+			align-self: center;
+			width: 100%;
+		}
+	}
+</style>
