@@ -192,7 +192,12 @@ func TestListFiltersAgreeWithTheEntries(t *testing.T) {
 		{
 			"video section",
 			assets.Query{Filter: asset.Filter{Section: asset.SectionVideo}},
-			[]string{"sha256:b", "sha256:c"},
+			[]string{"sha256:b"},
+		},
+		{
+			"audio section",
+			assets.Query{Filter: asset.Filter{Section: asset.SectionAudio}},
+			[]string{"sha256:c"},
 		},
 		{"origin", assets.Query{Filter: asset.Filter{Origin: asset.FetchedByAgent}}, []string{"sha256:c"}},
 		{

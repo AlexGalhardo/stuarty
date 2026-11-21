@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -1415,6 +1417,10 @@ func (s *svc) OpenFile(ctx context.Context, ref FileRef) (*File, error) {
 		return nil, newError(command.CodeValidation, "the file kind %q is not served here.", ref.Kind).withPath("kind")
 	}
 
+	if arts, err = s.ensurePeaks(ctx, ref.Kind, ar, arts); err != nil {
+		return nil, err
+	}
+
 	i := slices.IndexFunc(arts, func(a ArtifactRow) bool {
 		return a.Kind == kind && a.Variant == variant &&
 			(ext == "" || a.Ext == ext || (kind == "thumbnails" && isThumbExt(a.Ext)))
@@ -1452,6 +1458,77 @@ func (s *svc) OpenFile(ctx context.Context, ref FileRef) (*File, error) {
 	}
 
 	return f, nil
+}
+
+// maxPeaksWAV is the largest normalized WAV whose peaks a request computes (SDD-011 section 6.5): about six
+// hours of 48 kHz stereo 16-bit audio; a longer file is the work of an ingest job, not of a held request.
+const maxPeaksWAV = 1 << 30
+
+// ensurePeaks makes sure that an audio asset asked for its peaks has the artifact: when it has none, the server
+// computes it (SDD-011 section 6.5). Any other request gets the rows back unchanged.
+func (s *svc) ensurePeaks(ctx context.Context, kind string, ar AssetRow, arts []ArtifactRow) ([]ArtifactRow, error) {
+	if kind != "peaks" || ar.Kind != string(timeline.AssetAudio) ||
+		slices.ContainsFunc(arts, func(a ArtifactRow) bool { return a.Kind == "peaks" && a.Ext == "bin" }) {
+		return arts, nil
+	}
+
+	return s.computePeaks(ctx, ar.Hash, arts)
+}
+
+// computePeaks builds the peaks of an audio asset that has none from its stored normalized WAV, with the
+// function ingest uses (SDD-011 section 4.6), registers the artifact and returns the new list of rows.
+func (s *svc) computePeaks(ctx context.Context, hash string, arts []ArtifactRow) ([]ArtifactRow, error) {
+	i := slices.IndexFunc(arts, func(a ArtifactRow) bool {
+		return a.Kind == "normalized" && a.Ext == "wav"
+	})
+	if i < 0 {
+		return nil, newError(command.CodeNotFound, "the asset has no peaks file.").
+			withHint("an asset without audio has no such file")
+	}
+
+	src, ok := s.artifactPath(arts[i].RelPath)
+	if !ok {
+		return nil, internalError()
+	}
+
+	if arts[i].SizeBytes > maxPeaksWAV {
+		return nil, newError("E_ASSET_NOT_READY", "the audio is too long to compute its peaks in a request.").
+			withHint("start an ingest job for the peaks step of the asset")
+	}
+
+	pk, err := ingest.PeaksOfFile(src)
+	if err != nil {
+		return nil, internalError()
+	}
+
+	body := pk.Marshal()
+	rel := "artifacts/" + strings.TrimPrefix(hash, "sha256:") + "/" +
+		ingest.ArtifactName("peaks", ingest.ProfilePeaks, "", "bin")
+
+	dst, ok := s.artifactPath(rel)
+	if !ok {
+		return nil, internalError()
+	}
+
+	if err := writeFileAtomic(dst, body); err != nil {
+		return nil, internalError()
+	}
+
+	sum := sha256.Sum256(body)
+
+	if err := s.store.Assets().PutArtifact(ctx, ArtifactRow{
+		AssetHash: hash, Kind: "peaks", Profile: ingest.ProfilePeaks, Ext: "bin", RelPath: rel,
+		SizeBytes: int64(len(body)), SHA256: hex.EncodeToString(sum[:]), CreatedMs: s.nowMs(),
+	}); err != nil {
+		return nil, asError(err)
+	}
+
+	rows, err := s.store.Assets().Artifacts(ctx, hash)
+	if err != nil {
+		return nil, asError(err)
+	}
+
+	return rows, nil
 }
 
 func proxyContentType(ext, assetKind string) string {

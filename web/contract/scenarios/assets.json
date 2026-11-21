@@ -19,6 +19,8 @@
 		{"call": "AssetSetInfo", "args": {"hash": "sha256:926740d102dff40b0c0afdd2d37465ac2574348af2d4734e2e4e0878e762e76e", "rights_note": "CC0 per the page, checked", "reusable": true}},
 		{"call": "AssetGet", "args": {"hash": "sha256:926740d102dff40b0c0afdd2d37465ac2574348af2d4734e2e4e0878e762e76e"}},
 		{"call": "AssetList", "args": {"project": "prj_8m3q6w9e2r"}},
+		{"call": "AssetList", "args": {"section": "audio"}},
+		{"call": "AssetList", "args": {"section": "sounds"}, "expect_error": {"code": "E_VALIDATION"}},
 		{"call": "AssetList", "args": {"reusable": true}}
 	]
 }

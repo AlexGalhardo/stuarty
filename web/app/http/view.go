@@ -217,7 +217,7 @@ func (h *apiHandler) fontList(c *web.Ctx, _ noIn) (service.FontListResult, error
 type assetListIn struct {
 	pageIn
 	Kind     string `json:"kind,omitempty"     doc:"image, video, audio or lut; omit it for every kind."`
-	Section  string `json:"section,omitempty"  doc:"visual (image, lut) or video (video, audio): the two sections of the library."`
+	Section  string `json:"section,omitempty"  doc:"visual (image, lut), video (video) or audio (audio): the three sections of the library."`
 	Tag      string `json:"tag,omitempty"      doc:"Keep the files that carry this tag."`
 	Project  string `json:"project,omitempty"  doc:"Keep the files a project, or one of its timelines, uses."`
 	Origin   string `json:"origin,omitempty"   doc:"imported, generated, fetched_by_agent or rendered_externally."`
