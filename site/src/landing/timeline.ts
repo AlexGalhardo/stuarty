@@ -71,19 +71,25 @@ export function mountTimeline(
 		setActive(Math.min(previews.length - 1, Math.floor(run * previews.length)));
 		for (const l of logs) l.toggleAttribute("data-on", run >= Number(l.dataset.logAt));
 
-		// The agent adds a caption between 30% and 40% of the run, and trims the third clip around 50%.
-		if (caption) gsap.set(caption, { scaleX: gsap.utils.clamp(0, 1, (run - 0.3) / 0.08) });
-		const trim = gsap.utils.clamp(0, 1, (run - 0.46) / 0.06);
-		if (clipEls[2]) gsap.set(clipEls[2], { scaleX: 1 - trim * 0.18 });
+		// The agent adds a caption while the playhead crosses the clip under it, then trims the clip marked
+		// data-trim. Their places on the run come from the markup (the fraction of the lane where each starts).
+		const captionAt = Number(caption?.dataset.at ?? 0.3);
+		const trimEl = root.querySelector<HTMLElement>("[data-trim]");
+		const trimAt = Number(trimEl?.dataset.at ?? 0.46);
+		if (caption) gsap.set(caption, { scaleX: gsap.utils.clamp(0, 1, (run - captionAt) / 0.08) });
+		const trim = gsap.utils.clamp(0, 1, (run - trimAt) / 0.06);
+		if (trimEl) gsap.set(trimEl, { scaleX: 1 - trim * 0.18 });
 
-		// The cursor follows its work: the caption, then the trim edge, then the export button.
+		// The cursor follows its work: the caption, then the trim edge, then the clip under the playhead.
 		const lanesBox = lanes.getBoundingClientRect();
 		let target: HTMLElement | null = clipEls[Math.min(clipEls.length - 1, Math.floor(run * clipEls.length))] ?? null;
-		if (run > 0.28 && run < 0.42) target = caption;
-		if (run >= 0.42 && run < 0.56) target = clipEls[2] ?? null;
+		const onCaption = run > captionAt - 0.02 && run < captionAt + 0.12;
+		const onTrim = run >= trimAt - 0.04 && run < trimAt + 0.1;
+		if (onCaption) target = caption;
+		if (onTrim) target = trimEl;
 		if (target) {
 			const r = target.getBoundingClientRect();
-			const edge = run >= 0.42 && run < 0.56 ? r.right - 8 : r.left + r.width * 0.3;
+			const edge = onTrim ? r.right - 8 : r.left + r.width * 0.3;
 			moveCursorX(Math.max(16, Math.min(lanesBox.width - 140, edge - lanesBox.left)));
 			moveCursorY(r.top - lanesBox.top - 14);
 		}
