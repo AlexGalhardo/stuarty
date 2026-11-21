@@ -627,7 +627,7 @@ export function createClient(
 		useAsset: (id, hash, timelineId) =>
 			call("POST", `${project(id)}/media`, EDIT_TIMEOUT_MS, {
 				files: [{ hash }],
-				timeline_id: timelineId,
+				...(timelineId === undefined ? {} : { timeline_id: timelineId }),
 			}),
 		importFont: (path) => call("POST", "/fonts", EDIT_TIMEOUT_MS, { path }),
 		getBrandKit: () => call("GET", "/brand-kit", READ_TIMEOUT_MS),

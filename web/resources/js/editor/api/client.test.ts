@@ -99,7 +99,9 @@ describe("ALPHA reads and media state", () => {
 		const client = createClient(transport);
 		await client.useAsset("prj_a", "sha256:x");
 		await client.useAsset("prj_a", "sha256:x", "prj_b");
-		expect(requests.map((r) => [r.method, r.path, r.body])).toEqual([
+		// Strict: a timeline_id member that is present but undefined would stop scopedToTimeline from naming the
+		// timeline of the editor, so it must be absent.
+		expect(requests.map((r) => [r.method, r.path, r.body])).toStrictEqual([
 			["POST", "/projects/prj_a/media", { files: [{ hash: "sha256:x" }] }],
 			[
 				"POST",
