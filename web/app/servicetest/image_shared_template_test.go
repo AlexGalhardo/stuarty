@@ -107,6 +107,43 @@ func TestEditedImageTemplateIsNotSharedInNetworkMode(t *testing.T) {
 		t.Fatalf("a user read the edited template: %v", err)
 	}
 
+	// Every other way to reach it: the list, a copy and its history, and after the edit was undone, since an undo is
+	// one more revision of a document a person changed.
+	assertHidden := func(when string) {
+		t.Helper()
+
+		list, err := e.svc.ImageList(bob, service.ImageListRequest{Limit: 100, Templates: "only"})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		for i := range list.Images {
+			if list.Images[i].ImageID == images[0].ID {
+				t.Errorf("%s: a user lists the edited template", when)
+			}
+		}
+
+		if len(list.Images) != len(images)-1 {
+			t.Errorf("%s: a user lists %d templates, want the %d not edited", when, len(list.Images), len(images)-1)
+		}
+
+		if _, err := e.svc.ImageCreate(bob, service.ImageCreateRequest{TemplateID: images[0].ID}); code(err) != "E_NOT_FOUND" {
+			t.Errorf("%s: a user made a document from the edited template: %v", when, err)
+		}
+
+		if _, err := e.svc.ImageHistory(bob, service.ImageHistoryRequest{ImageID: images[0].ID}); code(err) != "E_NOT_FOUND" {
+			t.Errorf("%s: a user read the history of the edited template: %v", when, err)
+		}
+	}
+
+	assertHidden("after the edit")
+
+	if _, err := e.svc.ImageUndo(local, service.ImageStepRequest{ImageID: images[0].ID}); err != nil {
+		t.Fatalf("the local undo: %v", err)
+	}
+
+	assertHidden("after the undo")
+
 	if len(images) < 2 {
 		return
 	}
