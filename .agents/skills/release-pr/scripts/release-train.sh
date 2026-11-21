@@ -155,7 +155,10 @@ cut_release() {
 		gh pr edit "$pr" --title "chore(release): v$v" --body-file "$body" >/dev/null ||
 			echo "release-train: the body of #$pr was not updated" >&2
 	fi
-	gh pr merge "$pr" --rebase --admin
+	# gh can merge and still exit non-zero (for example on the cleanup of a local branch): trust the state.
+	gh pr merge "$pr" --rebase --admin ||
+		[ "$(gh pr view "$pr" --json state --jq .state)" = MERGED ] ||
+		die "the rebase-merge of #$pr failed"
 	until git fetch -q origin main && [ "$(git rev-parse 'origin/main^{tree}')" = "$(git rev-parse 'HEAD^{tree}')" ]; do sleep 5; done
 	echo "released v$v: #$pr merged into main ($(git rev-parse --short origin/main))"
 	publish_notes "$v"
