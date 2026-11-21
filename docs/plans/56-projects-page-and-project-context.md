@@ -39,7 +39,7 @@ Everything a creator makes in Stuarty lives inside a project they create with a 
 - [x] 3. `ProjectCreate` and `ProjectUpdate` on HTTP, MCP and CLI with parity tests; no timeline at creation. Verify: `go test ./web/...` passes and `go run ./internal/tools/surfacebudget` exits 0.
 - [x] 4. The agent context: chat and `ProjectDescribe`/`project_get`, and the agent docs. Verify: a service test that the chat context of a project holds its description and goal inside the user-data envelope.
 - [x] 5. `zod` (exact stable version) in `web/`, the schema generated from the core, the projects page and the edit form with tooltips and placeholders, the "Complete the project" notice. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n`, Vitest and a Playwright spec (button disabled until valid, each error under its field, create, edit an old project).
-- [ ] 6. The user docs of projects and the en and pt-BR strings. Verify: `task lint` exits 0.
+- [x] 6. The user docs of projects and the en and pt-BR strings. Verify: `task lint` exits 0.
 
 - [ ] 7. Jobs and generated files belong to the project (SDD-005 section 5.12.3, found by VV-330): a migration so that `jobs.project_id` and the generated files attach to the project, not to a timeline row, and the project-wide kinds (image, voice, text, video, image edit, text draft) use it; the timeline-bound kinds stay as they are. Verify: a service test and a contract scenario that a generation in a project with no timeline succeeds on every surface.
 

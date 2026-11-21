@@ -20,10 +20,11 @@ Each step has the path in the editor and the command that does the same. An agen
 
 ## The steps
 
-1. **Create the project.** In the editor, open **Projects** and choose **New project**: name it and keep the 9:16 preset. With the command line:
+1. **Create the project.** In the editor, open **Projects** and choose **New project**: name it, describe it and write its goal (the tips next to each field say what to write), then add a video to the project and keep the 9:16 size. With the command line:
 
    ```bash
-   stuarty project:create --name "Sourdough short" --id prj_5k2m9x4q1b
+   stuarty project:create --name "Sourdough short" --description "A 30 second vertical video for people who follow the channel, with captions and a thumbnail." --specific "Publish one video that explains the idea" --measurable "One hundred views in the first week" --achievable "The footage and the script exist" --relevant "It brings the first audience" --time-bound "Edit on Monday, publish on Tuesday" --due 2027-03-31 --id prj_5k2m9x4q1b
+   stuarty item:add --project prj_5k2m9x4q1b --kind timeline --title "Sourdough short" --preset 9:16
    ```
 
 2. **Answer the briefing.** The brief is what the project is for: who it is for, the goal, the platform, the tone. In the editor it is the questions of the project. With the command line:

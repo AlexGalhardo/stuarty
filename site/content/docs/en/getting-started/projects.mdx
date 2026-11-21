@@ -15,13 +15,34 @@ A project is one production: a short video, a series of thumbnails, a post. It h
 
 `stuarty project:describe <id>` prints the brief, the items and the state as text, which is what an agent reads first. `stuarty project:duplicate <id>` copies a project with its brief, texts and timelines.
 
+## The context of a project
+
+Every project has a **name**, a **description** and a **goal**, and they are required. They are what a person, or an agent that works with you, reads first, the way an engineer reads the `AGENTS.md` of a repository, so write them for a new teammate.
+
+| Field | What to write | Size |
+| --- | --- | --- |
+| Name | what the project is, with letters, digits and single spaces | 4 to 32 characters |
+| Description | what the project is, who it is for and what it makes | 64 to 1,024 characters |
+| Specific | exactly what the project will achieve | 16 to 280 characters |
+| Measurable | how you will know it worked, with a number or a check | 16 to 280 characters |
+| Achievable | why it is realistic with what you have | 16 to 280 characters |
+| Relevant | why it matters to you or to your audience | 16 to 280 characters |
+| Time-bound | the schedule and the milestones | 16 to 280 characters |
+| Due date | the day the goal is due, today or later | `YYYY-MM-DD` |
+
+In the app, **Projects** shows one form with a tip and a worked example next to every field; the button is enabled when every field is valid, and an error shows under its field. A project made before this existed opens with a **Complete the project** notice that leads to the same form; change the name, the description or the goal at any time with **Edit the project**.
+
+A new project has **no timeline**: the size (`9:16`, `1:1`, `16:9` or `4:5`) and the <Term id="frame-rate">frame rate</Term> are asked when you add a video to it, and the first timeline has the id of the project. The `--preset` and `--fps` arguments of `project:create` and `project_create` are deprecated: they are accepted, they create nothing, and they are removed in release 1.0.0.
+
 ## Quick start
 
 <Tabs>
 <Tab title="CLI">
 
 ```bash
-stuarty project:create --name "Launch teaser" --preset 9:16 --json
+stuarty project:create --name "Launch teaser"   --description "A 30 second vertical teaser for the launch of my course, for people who follow me on short video."   --specific "Publish one teaser that explains the course in one sentence"   --measurable "At least 1000 views and 50 sign-ups in the first week"   --achievable "I already have the footage and edit one video a day"   --relevant "The launch needs an audience before the doors open"   --time-bound "Script on Monday, edit on Tuesday, publish on Wednesday" --due 2027-03-31 --json
+stuarty item:add --project prj_7k2m9x4q1b --kind timeline --title "Launch teaser" --preset 9:16
+stuarty project:update prj_7k2m9x4q1b --name "Launch teaser v2"
 stuarty project:list --json
 stuarty project:show prj_7k2m9x4q1b
 ```
@@ -29,17 +50,17 @@ stuarty project:show prj_7k2m9x4q1b
 </Tab>
 <Tab title="MCP">
 
-Call `project_create` with `{"name": "Launch teaser", "preset": "9:16"}`, then `project_list` and `project_get`.
+Call `project_create` with `name`, `description` and `goal` (`specific`, `measurable`, `achievable`, `relevant`, `time_bound`, `due`), then `project_item` with `action` `add` and `kind` `timeline` to add the video. `project_item` with `action` `update` changes the name (`title`), the description (`text`) or the whole `goal`. Then `project_list` and `project_get`; `project_get` with `detail` `overview` starts with the description and the goal.
 
 </Tab>
 <Tab title="HTTP">
 
-`POST /api/v1/projects` with `{"name": "Launch teaser"}`, then `GET /api/v1/projects` and `GET /api/v1/projects/{id}`.
+`POST /api/v1/projects` with `name`, `description` and `goal`, `POST /api/v1/projects/{id}/items` with `{"kind": "timeline", "title": "Launch teaser", "preset": "9:16"}`, `PATCH /api/v1/projects/{id}` to change the context, then `GET /api/v1/projects` and `GET /api/v1/projects/{id}`.
 
 </Tab>
 </Tabs>
 
-The presets are `9:16` (the default, for short vertical video), `1:1`, `16:9` and `4:5`. The <Term id="frame-rate">frame rate</Term> defaults to 30 and can be `30000/1001`. A new project is at revision 0.
+A field that is not valid is `E_VALIDATION` with the `path` of the field (`name`, `description`, `goal.specific`, ..., `goal.due`) and a hint; `details.fields` lists every invalid field. The presets are `9:16` (the default, for short vertical video), `1:1`, `16:9` and `4:5`. The frame rate defaults to 30 and can be `30000/1001`. A new timeline is at revision 0.
 
 ## Change the frame, the rate or the name later
 

@@ -24,7 +24,7 @@ With `--json` an error is one JSON document with `code`, `message`, `hint` and `
 ## Quick start
 
 ```bash
-stuarty project:create --name "Launch teaser" --json --actor claude-code
+stuarty project:create --name "Launch teaser" --description "A 30 second vertical video for people who follow the channel, with captions and a thumbnail." --specific "Publish one video that explains the idea" --measurable "One hundred views in the first week" --achievable "The footage and the script exist" --relevant "It brings the first audience" --time-bound "Edit on Monday, publish on Tuesday" --due 2027-03-31 --json --actor claude-code
 stuarty edit --project prj_7k2m9x4q1b --ops - --json < batch.json
 stuarty export --project prj_7k2m9x4q1b --json
 ```
