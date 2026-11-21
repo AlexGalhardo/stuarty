@@ -225,64 +225,6 @@ main[data-expressive] .btn-glow:focus-visible {
 .lbl-short {
   display: none;
 }
-/* The compact row of the home navbar: six small buttons spread across the bar; short labels below 80rem; a strip
-   that scrolls sideways below 64rem. */
-.landing-actions.landing-actions-compact {
-  flex-wrap: nowrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.5rem;
-  height: 100%;
-  max-width: none;
-  margin-inline: 0;
-}
-.landing-actions-compact li {
-  display: contents;
-}
-.landing-actions-compact .btn-download {
-  min-height: 2.5rem;
-  padding-block: 0.25rem;
-  padding-inline: 0.625rem 0.875rem;
-  gap: 0.5rem;
-  border-radius: 8px;
-  font-size: 0.8125rem;
-}
-.landing-actions-compact .btn-download .btn-sub {
-  font-size: 0.6875rem;
-}
-.landing-actions-compact .btn-download > svg {
-  width: 1.125rem;
-  height: 1.125rem;
-}
-@media (max-width: 79.99rem) {
-  .landing-actions-compact .lbl-full {
-    display: none;
-  }
-  .landing-actions-compact .lbl-short {
-    display: inline;
-  }
-  /* The version stays in the accessible name of each button. */
-  .landing-actions-compact .btn-sub {
-    display: none;
-  }
-}
-@media (max-width: 63.99rem) {
-  .landing-actions.landing-actions-compact {
-    justify-content: flex-start;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scroll-snap-type: x proximity;
-    scrollbar-width: none;
-    padding-inline: 0.125rem;
-  }
-  .landing-actions-compact::-webkit-scrollbar {
-    display: none;
-  }
-  .landing-actions-compact .btn-download {
-    flex: 0 0 auto;
-    scroll-snap-align: start;
-  }
-}
 /* The VPS guide button: the blue the Windows button had (white label 5.97:1 on the fill). */
 .btn-glow[data-kind="vps"] {
   --c: oklch(0.5 0.17 252);
@@ -354,16 +296,20 @@ main[data-expressive] .btn-glow:focus-visible {
 .landing-actions-center {
   justify-content: center;
 }
-/* Without the beta notice the five buttons are one flat row that wraps as a whole (3 + 2 when five do not fit);
+/* Without the beta notice the six buttons are one flat row that wraps as a whole (three per row when six do not fit);
    the downloads keep their group and list for assistive technology. */
 .landing-actions-flat {
   align-items: center;
+  justify-content: space-between;
   row-gap: 0.75rem;
 }
-/* Five do not fit in one row below 80rem: three per row, then two, centred. */
-@media (min-width: 40rem) and (max-width: 79.99rem) {
+.landing-actions-flat .btn-download {
+  padding-inline: 0.875rem 1rem;
+}
+/* Six fit one row from 90rem; below it, three per row, spread the same way. */
+@media (min-width: 40rem) and (max-width: 89.99rem) {
   .landing-actions-flat {
-    max-width: 46rem;
+    max-width: 48rem;
     margin-inline: auto;
   }
 }
@@ -425,27 +371,27 @@ main[data-expressive] .btn-glow:focus-visible {
 }
 /* Phones: one button per row, centred, all four the same width. */
 @media (max-width: 39.99rem) {
-  .landing-actions:not(.landing-actions-compact),
-  .landing-actions:not(.landing-actions-compact) .landing-downloads,
-  .landing-actions:not(.landing-actions-compact) .landing-download-list {
+  .landing-actions,
+  .landing-downloads,
+  .landing-download-list {
     flex-direction: column;
     align-items: center;
   }
-  .landing-actions:not(.landing-actions-compact),
-  .landing-actions:not(.landing-actions-compact) .landing-download-list {
+  .landing-actions,
+  .landing-download-list {
     gap: 0.75rem;
   }
-  .landing-actions:not(.landing-actions-compact) .landing-downloads,
-  .landing-actions:not(.landing-actions-compact) .landing-download-list,
-  .landing-actions:not(.landing-actions-compact) .landing-download-list li {
+  .landing-downloads,
+  .landing-download-list,
+  .landing-download-list li {
     width: 100%;
   }
-  .landing-actions:not(.landing-actions-compact) .btn-download {
+  .landing-actions .btn-download {
     width: min(100%, 19rem);
     justify-content: flex-start;
     margin-inline: auto;
   }
-  .landing-actions:not(.landing-actions-compact) .landing-download-list li {
+  .landing-download-list li {
     display: flex;
   }
 }
