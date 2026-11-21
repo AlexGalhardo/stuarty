@@ -21,7 +21,7 @@ const messages = flat(en.ui, "ui.");
 
 const PAYLOAD = "<img src=x onerror=window.__pwned=1>";
 
-function draw(event: ChatEvent, open = false): string {
+function draw(event: ChatEvent, open = false, personOnly?: string): string {
 	return renderToString(
 		<I18nProvider messages={messages} locale="en" locales={["en", "pt-BR"]}>
 			<ol>
@@ -29,6 +29,7 @@ function draw(event: ChatEvent, open = false): string {
 					event={event}
 					open={open}
 					busy={false}
+					personOnly={personOnly}
 					onAnswer={() => {}}
 				/>
 			</ol>
@@ -37,6 +38,35 @@ function draw(event: ChatEvent, open = false): string {
 }
 
 const at = "2026-11-19T12:00:00Z";
+
+describe("ChatEventView: a permission request in a session that is not a person's (VV-331)", () => {
+	const request: ChatEvent = {
+		seq: 9,
+		kind: "permission_request",
+		at,
+		permission: { request_id: "r1", title: "Run a tool" },
+	} as ChatEvent;
+	const buttons = (html: string): string[] =>
+		html.match(/<button[^>]*>/g) ?? [];
+
+	test("its three answers are disabled and described by the reason", () => {
+		const found = buttons(draw(request, true, "why"));
+		expect(found).toHaveLength(3);
+		for (const button of found) {
+			expect(button).toContain('disabled=""');
+			expect(button).toContain('aria-describedby="why"');
+		}
+	});
+
+	test("a person can answer", () => {
+		const found = buttons(draw(request, true));
+		expect(found).toHaveLength(3);
+		for (const button of found) {
+			expect(button).not.toContain("disabled=");
+			expect(button).not.toContain("aria-describedby");
+		}
+	});
+});
 
 describe("ChatEventView: what an agent writes is text", () => {
 	test("a message with markup shows the markup, it does not make an element", () => {

@@ -12,16 +12,20 @@ export default function ChatEventView({
 	event,
 	open,
 	busy,
+	personOnly,
 	onAnswer,
 }: {
 	event: ChatEvent;
 	// the permission request is still waiting for a person
 	open: boolean;
 	busy: boolean;
+	// the id of the note that says why, in a session that is not a person's: the server refuses its answer
+	personOnly?: string;
 	onAnswer(requestId: string, answer: "allow" | "reject" | "cancel"): void;
 }): ReactNode {
 	const t = useT();
 	const body = "whitespace-pre-wrap break-words text-sm";
+	const cannotAnswer = busy || personOnly !== undefined;
 
 	switch (event.kind) {
 		case "user_message":
@@ -115,7 +119,8 @@ export default function ChatEventView({
 						<div className="mt-2 flex flex-wrap items-center gap-2">
 							<Button
 								size="sm"
-								disabled={busy}
+								disabled={cannotAnswer}
+								aria-describedby={personOnly}
 								onClick={() =>
 									onAnswer(event.permission?.request_id ?? "", "allow")
 								}
@@ -125,7 +130,8 @@ export default function ChatEventView({
 							<Button
 								size="sm"
 								variant="outline"
-								disabled={busy}
+								disabled={cannotAnswer}
+								aria-describedby={personOnly}
 								onClick={() =>
 									onAnswer(event.permission?.request_id ?? "", "reject")
 								}
@@ -135,7 +141,8 @@ export default function ChatEventView({
 							<Button
 								size="sm"
 								variant="ghost"
-								disabled={busy}
+								disabled={cannotAnswer}
+								aria-describedby={personOnly}
 								onClick={() =>
 									onAnswer(event.permission?.request_id ?? "", "cancel")
 								}

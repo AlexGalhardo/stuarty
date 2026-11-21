@@ -2,6 +2,7 @@ import { renderToString } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 
 import { I18nProvider } from "@/lib/i18n";
+import { SessionProvider } from "@/lib/session";
 import en from "../../../lang/en.json";
 import type { AgentProfileListResult } from "../../editor/api/types";
 import ProfileSetup from "./ProfileSetup";
@@ -29,22 +30,27 @@ const suggestion = {
 	found_path: "/usr/bin/opencode",
 };
 
-function draw(result: Partial<AgentProfileListResult>): string {
+function draw(
+	result: Partial<AgentProfileListResult>,
+	privileged = true,
+): string {
 	return renderToString(
 		<I18nProvider messages={messages} locale="en" locales={["en", "pt-BR"]}>
-			<ProfileSetup
-				profiles={{
-					profiles: [],
-					suggestions: [suggestion],
-					can_write: false,
-					available: true,
-					...result,
-				}}
-				busy={false}
-				failure={null}
-				onSave={async () => true}
-				onRemove={() => {}}
-			/>
+			<SessionProvider session={{ privileged, mode: "local" }}>
+				<ProfileSetup
+					profiles={{
+						profiles: [],
+						suggestions: [suggestion],
+						can_write: false,
+						available: true,
+						...result,
+					}}
+					busy={false}
+					failure={null}
+					onSave={async () => true}
+					onRemove={() => {}}
+				/>
+			</SessionProvider>
 		</I18nProvider>,
 	);
 }
@@ -79,8 +85,15 @@ describe("ProfileSetup", () => {
 	});
 
 	test("a person who may not write a profile is sent to the administrator", () => {
-		const html = draw({ can_write: false });
+		const html = draw({ can_write: false }, true);
 		expect(html).toContain("Ask the administrator");
+		expect(html).not.toContain('data-testid="chat-profile-form"');
+	});
+
+	test("a session that is not a person's is told where to do it, not sent to an administrator (VV-331)", () => {
+		const html = draw({ can_write: false }, false);
+		expect(html).toContain("Only a person in the Stuarty desktop app");
+		expect(html).not.toContain("Ask the administrator");
 		expect(html).not.toContain('data-testid="chat-profile-form"');
 	});
 

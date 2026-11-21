@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
+import { PersonOnlyNote, useSession } from "@/lib/session";
 import type {
 	AgentProfile,
 	AgentProfileListResult,
@@ -32,6 +33,7 @@ export default function ProfileSetup({
 	onRemove(name: string): void;
 }): ReactNode {
 	const t = useT();
+	const { privileged } = useSession();
 	const [name, setName] = useState("");
 	const [command, setCommand] = useState("");
 	const [args, setArgs] = useState("");
@@ -181,13 +183,15 @@ export default function ProfileSetup({
 						{t("ui.chat.save_profile")}
 					</Button>
 				</form>
-			) : (
+			) : privileged ? (
 				<p
 					className="text-sm text-muted-foreground"
 					data-testid="chat-ask-admin"
 				>
 					{t("ui.chat.ask_admin")}
 				</p>
+			) : (
+				<PersonOnlyNote id="chat-profile-person-only" />
 			)}
 		</div>
 	);
