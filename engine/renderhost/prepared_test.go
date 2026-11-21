@@ -77,6 +77,7 @@ func TestPreparedLayersEqualTheGoldenFramesOnOtherInstances(t *testing.T) {
 			}
 
 			banded := image.NewRGBA(image.Rect(0, 0, in.Output.Width, in.Output.Height))
+			compact := image.NewRGBA(banded.Rect) // the same bands, each drawn into a view of its own rows
 			rows := in.Output.Height / 6
 
 			for b := range 6 {
@@ -98,11 +99,21 @@ func TestPreparedLayersEqualTheGoldenFramesOnOtherInstances(t *testing.T) {
 					t.Fatal(err)
 				}
 
+				view := compact.SubImage(image.Rect(0, b*rows, in.Output.Width, (b+1)*rows)).(*image.RGBA)
+				if err := inst.Render(ctx, bin, view); err != nil {
+					t.Fatal(err)
+				}
+
 				_ = inst.Close(ctx)
 			}
 
 			if !bytes.Equal(banded.Pix, golden) {
 				t.Fatalf("the prepared bands differ from the golden frame in %d bytes", differing(banded.Pix, golden))
+			}
+
+			if !bytes.Equal(compact.Pix[:6*rows*in.Output.Width*4], golden[:6*rows*in.Output.Width*4]) {
+				t.Fatalf("the bands drawn into views of their rows differ from the golden frame in %d bytes",
+					differing(compact.Pix[:6*rows*in.Output.Width*4], golden[:6*rows*in.Output.Width*4]))
 			}
 		})
 	}

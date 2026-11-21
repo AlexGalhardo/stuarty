@@ -132,3 +132,18 @@ func (h *Host) PutPrepared(ctx context.Context, item string, p Prepared) error {
 
 	return h.status(ctx, "vr_put_prepared", uint64(id.ptr), uint64(id.n), uint64(blk.ptr), uint64(blk.n))
 }
+
+// Reset forgets every texture, bitmap and lookup table the instance holds, as vr_init does, and keeps the memory
+// the instance has grown to.
+func (h *Host) Reset(ctx context.Context) error {
+	return h.status(ctx, "vr_init", uint64(h.maxTex), uint64(h.maxBM))
+}
+
+// MemoryBytes is the memory the instance holds; 0 once it is closed.
+func (h *Host) MemoryBytes() int64 {
+	if h.dead != nil {
+		return 0
+	}
+
+	return int64(h.mem.Size())
+}
