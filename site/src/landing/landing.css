@@ -586,3 +586,67 @@ html.motion-ok [data-hero-frame] {
 .split-title {
   perspective: 600px;
 }
+
+/* The pause control (design-system section 11.8): small, fixed in the bottom-right corner, with a focus ring. */
+.motion-toggle {
+  position: fixed;
+  z-index: 40;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--fg) 25%, transparent);
+  background: color-mix(in oklab, var(--bg) 85%, transparent);
+  color: var(--fg);
+  cursor: pointer;
+  opacity: 0.75;
+  transition:
+    opacity var(--duration-hover),
+    border-color var(--duration-hover);
+}
+.motion-toggle:hover,
+.motion-toggle:focus-visible {
+  opacity: 1;
+  border-color: var(--fg);
+}
+.motion-toggle:focus-visible {
+  outline: 2px solid var(--brand-text, var(--fg));
+  outline-offset: 3px;
+}
+.motion-toggle:disabled {
+  cursor: default;
+}
+.motion-toggle .motion-icon-play,
+.motion-toggle[aria-pressed="true"] .motion-icon-pause {
+  display: none;
+}
+.motion-toggle[aria-pressed="true"] .motion-icon-play {
+  display: block;
+}
+@media (forced-colors: active) {
+  .motion-toggle {
+    border-color: ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+  }
+}
+
+/* Paused: no animation runs. An entrance animation ends in its final state (animation: none shows it), the light of
+   the buttons rests at a fixed angle, and the two product pictures stop on the one of the current theme. */
+html[data-motion="paused"] *,
+html[data-motion="paused"] *::before,
+html[data-motion="paused"] *::after {
+  animation: none !important;
+}
+html[data-motion="paused"] .btn-glow {
+  --glow-angle: 45deg;
+}
+html[data-motion="paused"] .theme-swap .shot-dark {
+  opacity: 0;
+}
+html[data-motion="paused"].dark .theme-swap .shot-dark {
+  opacity: 1;
+}

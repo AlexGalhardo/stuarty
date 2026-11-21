@@ -1,6 +1,6 @@
 // The typewriter of the hero title (src/components/landing/HeroTyper.astro). Types each phrase, holds it 3 s, erases
 // it and types the next, forever. Under reduced motion it does nothing: the first phrase stays as it is.
-import { reducedMotion } from "./boot";
+import { motionPaused, onMotionChange, reducedMotion } from "./boot";
 
 type Segment = { text: string; tone?: "orange" | "pink" | "green" };
 
@@ -50,15 +50,16 @@ export function mountTyper(): void {
 	let phase: "hold" | "erase" | "gap" | "type" = "hold";
 	let since = performance.now();
 	let shown = -1;
-	title.classList.add("is-typing");
+	let running = false;
+	let raf = 0;
 	const show = (n: number): void => {
 		if (n === shown) return;
 		shown = n;
 		draw(live, phrases[index] ?? [], n);
 	};
-	show(lengths[0] ?? 0);
 
 	const frame = (now: number): void => {
+		if (!running) return;
 		const len = lengths[index] ?? 0;
 		const t = now - since;
 		if (phase === "hold") {
@@ -78,7 +79,30 @@ export function mountTyper(): void {
 			show(n);
 			if (n >= (lengths[index] ?? 0)) [phase, since] = ["hold", now];
 		}
-		requestAnimationFrame(frame);
+		raf = requestAnimationFrame(frame);
 	};
-	requestAnimationFrame(frame);
+	// Paused (the pause control of the page): phrase 1 complete, no caret blink, nothing changes until it resumes.
+	const sync = (): void => {
+		if (motionPaused()) {
+			running = false;
+			cancelAnimationFrame(raf);
+			index = 0;
+			phase = "hold";
+			shown = -1;
+			title.classList.add("is-typing");
+			show(lengths[0] ?? 0);
+		} else if (!running) {
+			running = true;
+			index = 0;
+			phase = "hold";
+			since = performance.now();
+			shown = -1;
+			title.classList.add("is-typing");
+			show(lengths[0] ?? 0);
+			raf = requestAnimationFrame(frame);
+		}
+	};
+	onMotionChange(sync);
+	if (motionPaused()) title.classList.remove("is-typing");
+	else sync();
 }

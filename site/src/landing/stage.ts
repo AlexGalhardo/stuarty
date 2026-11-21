@@ -23,6 +23,7 @@ import {
 	WebGLRenderer,
 	type Uniform,
 } from "three";
+import { MOTION_EVENT, motionPaused } from "./boot";
 
 /** Where the mascot stands and how it looks, in normalised stage units (x and y from -1 to 1 of the viewport). */
 export type MascotPose = {
@@ -228,6 +229,8 @@ export function createStage(canvas: HTMLCanvasElement, options: { showMascot?: b
 	renderer.autoClear = false;
 
 	const reduced = prefersReducedMotion();
+	// Reduced motion, or the visitor paused the animations: no loop, no clap, no blink; the last frame stays.
+	const frozen = (): boolean => reduced || motionPaused();
 	const pose: MascotPose = { x: 0, y: 0, scale: 1, turn: 0, opacity: options.showMascot === false ? 0 : 1 };
 
 	// Background: a full-screen triangle pair in clip space.
@@ -357,7 +360,7 @@ export function createStage(canvas: HTMLCanvasElement, options: { showMascot?: b
 	};
 
 	const start = (): void => {
-		if (running || reduced || !onScreen || document.hidden) return;
+		if (running || frozen() || !onScreen || document.hidden) return;
 		running = true;
 		last = performance.now();
 		raf = requestAnimationFrame(step);
@@ -388,6 +391,8 @@ export function createStage(canvas: HTMLCanvasElement, options: { showMascot?: b
 	});
 	io.observe(canvas);
 
+	const onMotion = (): void => (frozen() ? stop() : start());
+	document.addEventListener(MOTION_EVENT, onMotion);
 	window.addEventListener("pointermove", onPointer, { passive: true });
 	document.addEventListener("visibilitychange", onVisibility);
 	window.addEventListener("resize", onResize);
@@ -401,15 +406,15 @@ export function createStage(canvas: HTMLCanvasElement, options: { showMascot?: b
 	return {
 		pose,
 		clap() {
-			if (reduced) return;
+			if (frozen()) return;
 			clapStart = time;
 		},
 		blink() {
-			if (reduced) return;
+			if (frozen()) return;
 			blinkStart = time;
 		},
 		stir(amount: number) {
-			if (reduced) return;
+			if (frozen()) return;
 			stir = Math.min(1, Math.max(stir, amount));
 		},
 		setMood(value: number) {
@@ -425,6 +430,7 @@ export function createStage(canvas: HTMLCanvasElement, options: { showMascot?: b
 			themeObserver.disconnect();
 			window.removeEventListener("pointermove", onPointer);
 			document.removeEventListener("visibilitychange", onVisibility);
+			document.removeEventListener(MOTION_EVENT, onMotion);
 			window.removeEventListener("resize", onResize);
 			bgGeometry.dispose();
 			bgMaterial.dispose();

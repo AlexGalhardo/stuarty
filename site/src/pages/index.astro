@@ -6,6 +6,7 @@ import "@/src/landing/landing.css";
 import Base from "../layouts/Base.astro";
 import { landing } from "@/lib/landing";
 import FontPreload from "../components/landing/FontPreload.astro";
+import MotionToggle from "../components/landing/MotionToggle.astro";
 import DriveTabs from "../components/landing/DriveTabs.astro";
 import LandingActions from "../components/landing/LandingActions.astro";
 import Shot from "../components/landing/Shot.astro";
@@ -26,6 +27,7 @@ import { withBase } from "@/lib/site";
 			if (!matchMedia("(prefers-reduced-motion: reduce)").matches) document.documentElement.classList.add("motion-ok");
 		})();
 	</script>
+	<MotionToggle />
 	<main id="content" data-expressive data-page="viewport" class="relative isolate">
 		<a href={withBase("/docs/introduction/")} class="sr-only focus:not-sr-only focus:fixed focus:top-[calc(var(--header-h)+0.75rem)] focus:left-4 focus:z-50 focus:rounded-lg focus:bg-bg focus:px-4 focus:py-2 focus:text-sm focus:font-medium">Skip to the docs</a>
 
@@ -147,6 +149,8 @@ import { withBase } from "@/lib/site";
 		inset-inline: 1rem;
 		bottom: 0.75rem;
 		margin: 0;
+		/* Clear of the pause control in the corner. */
+		padding-inline-end: 3rem;
 	}
 	/* "Free. Forever.": orange to pink text, darker stops on the light page (3.6:1 and 5.1:1 on white), brighter on
 	   the dark one (8.5:1 and 5.5:1), with a slow shimmer that stops under reduced motion. */

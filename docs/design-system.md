@@ -1202,6 +1202,8 @@ The product keeps section 2.13. The expressive register adds:
 
 `prefers-reduced-motion: reduce` turns every entrance and scene change into a 150 ms crossfade, stops the camera and the background on their first frame, and disables scroll-linked effects. Motion never carries information alone.
 
+**The pause control (WCAG 2.2.2, D-126).** The home and its two backups carry one small round button fixed in the bottom-right corner (`MotionToggle.astro`; 36 px, an icon, `aria-pressed`, accessible name "Pause animations" or "Play animations", a 2 px focus ring). Pressing it sets `html[data-motion="paused"]`: CSS then runs no animation (`animation: none !important`, so an entrance ends in its final state, the light of the buttons rests at a fixed angle, the two product pictures stop on the one of the current theme), the hero typer shows phrase 1 complete, and the WebGL stage stops its loop and keeps the last frame. Pressing it again resumes. The choice is kept in `localStorage` (`stuarty-motion`, reads and writes in try/catch) and applies on the next visit before the first paint. Under `prefers-reduced-motion` the button shows as paused and is disabled. Docs pages do not have it.
+
 ### 11.9 3D and the living background (expressive register only)
 
 - three.js 0.187.0 (r187, the current stable release), one renderer per page, `devicePixelRatio` capped at 2 (1.5 on small screens), the render loop paused when the tab is hidden or the canvas is off screen, loaded as a client-only island after the text has painted.
