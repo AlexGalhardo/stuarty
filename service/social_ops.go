@@ -290,7 +290,7 @@ func (s *svc) SocialConnectComplete(ctx context.Context, req SocialConnectComple
 	}
 
 	if !c.Browser {
-		return nil, privilegedError()
+		return nil, privilegedError("SocialConnectComplete")
 	}
 
 	reg, err := s.socialRegistry()
@@ -439,7 +439,7 @@ func (s *svc) SocialAccountSelect(ctx context.Context, req SocialAccountSelectRe
 	}
 
 	if !c.Browser {
-		return nil, privilegedError()
+		return nil, privilegedError("SocialAccountSelect")
 	}
 
 	reg, err := s.socialRegistry()
@@ -513,7 +513,7 @@ func (s *svc) SocialPriceSet(ctx context.Context, req SocialPriceSetRequest) (*S
 	}
 
 	if !c.Browser {
-		return nil, privilegedError()
+		return nil, privilegedError("SocialPriceSet")
 	}
 
 	reg, err := s.socialRegistry()
