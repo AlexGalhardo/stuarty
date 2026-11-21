@@ -10,7 +10,6 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/plan"
 	"github.com/AlexGalhardo/stuarty/engine/compositor"
 	"github.com/AlexGalhardo/stuarty/engine/rasterize"
-	"github.com/AlexGalhardo/stuarty/engine/renderhost"
 )
 
 // ImageConfig is what the render of an image document needs from the machine (SDD-021 section 6).
@@ -113,41 +112,6 @@ type imageRun struct {
 	plan   plan.FramePlan
 	raster *rasterize.Cache
 	bands  int
-}
-
-// renderDetached runs the draw on an instance that cannot be interrupted and gives up waiting when the context
-// ends: the caller gets the context error at once, and the goroutine closes the instance when the draw, which
-// the limits of the document bound, is over. abandoned tells the caller not to close the instance itself.
-func renderDetached(
-	ctx context.Context, host *renderhost.Host, in renderhost.RenderInput, dst *image.RGBA, abandoned *bool,
-) error {
-	done := make(chan error, 1)
-
-	go func() {
-		done <- host.Render(context.WithoutCancel(ctx), in, dst)
-
-		close(done)
-	}()
-
-	select {
-	case err := <-done:
-		if err != nil {
-			return rendererError(err)
-		}
-
-		return nil
-	case <-ctx.Done():
-		*abandoned = true
-
-		go func() {
-			for range done { // the draw has returned when the channel is closed
-			}
-
-			_ = host.Close(context.WithoutCancel(ctx))
-		}()
-
-		return ctx.Err()
-	}
 }
 
 // withoutLostClips drops the layers whose mask source did not make it to the renderer (a text with no pixels, an
