@@ -124,6 +124,20 @@ export const hero = {
 	eyebrow: "Open source studio for creators",
 	title: "Create, edit, manage and publish in one place.",
 	lead: "Script, cut, caption, thumbnail and post from one studio on your own machine. Your AI agent works beside you, through the same commands you use.",
+	/** The three phrases the hero title types, in the author's words; the first is the accessible name. */
+	homeTitles: [
+		[{ text: "Create, edit, manage and publish your audiovisual and text content " }, { text: "in one place", tone: "orange" }],
+		[
+			{ text: "Why use so many tools to create your content, when you can focus on " },
+			{ text: "Stuarty", tone: "pink" },
+			{ text: " and connect to other tools and services?" },
+		],
+		[
+			{ text: "Open source, self-hosted studio content creation for the web and on the desktop " },
+			{ text: "using agents", tone: "green" },
+			{ text: " and your favorite AI providers" },
+		],
+	] as { text: string; tone?: "orange" | "pink" | "green" }[][],
 	homeLead: "Plan, describe, cut, caption, thumbnail, post texts, images and videos from one studio on your own machine. Your AI agent works for and beside you, all integrated.",
 	primary: { label: "Make your first short", href: "/docs/guide/first-short-video/" },
 	secondary: { label: "Read the docs", href: "/docs/introduction/" },

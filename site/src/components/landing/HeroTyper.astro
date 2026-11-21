@@ -1,0 +1,99 @@
+---
+// The hero title of the home, typed (src/landing/typer.ts): it types a phrase, holds it 3 s, erases it and types the
+// next, with a blinking caret. Every phrase is also laid out, invisible, in the same grid cell, so the heading always
+// has the height of the longest one and nothing below it moves. The accessible name is the first phrase; the typing
+// is aria-hidden. Without script, and under reduced motion, the first phrase stays as it is.
+export type Segment = { text: string; tone?: "orange" | "pink" | "green" };
+
+interface Props {
+	phrases: Segment[][];
+	id?: string;
+	class?: string;
+	tabindex?: string;
+}
+
+const { phrases, id, class: className, tabindex } = Astro.props;
+const plain = (p: Segment[]): string => p.map((s) => s.text).join("");
+---
+
+<h1 id={id} class:list={["typer", className]} tabindex={tabindex} aria-label={plain(phrases[0] ?? [])} data-typer={JSON.stringify(phrases)}>
+	<span class="typer-grid" aria-hidden="true">
+		{phrases.map((p, i) => (
+			<span class:list={["typer-phrase", i > 0 && "typer-sizer"]}>
+				{p.map((s) => (s.tone ? <span class={`typer-${s.tone}`}>{s.text}</span> : s.text))}
+			</span>
+		))}
+		<span class="typer-live" data-typer-live></span>
+	</span>
+</h1>
+
+<style is:global>
+	.typer-grid {
+		display: grid;
+	}
+	.typer-grid > * {
+		grid-area: 1 / 1;
+	}
+	.typer-sizer,
+	.typer-live {
+		visibility: hidden;
+	}
+	.typer.is-typing .typer-phrase {
+		visibility: hidden;
+	}
+	.typer.is-typing .typer-live {
+		visibility: visible;
+	}
+	.typer-caret {
+		display: inline-block;
+		width: 0.08em;
+		height: 0.9em;
+		margin-inline-start: 0.06em;
+		vertical-align: -0.08em;
+		background: currentColor;
+		animation: typer-blink 1s steps(1) infinite;
+	}
+	@keyframes typer-blink {
+		50% {
+			opacity: 0;
+		}
+	}
+	/* The three accents, large text: AA 3:1 at least on both themes. */
+	.typer-orange {
+		color: #ee5500;
+		text-shadow: 0 0 18px color-mix(in oklab, #ff6a00 35%, transparent);
+	}
+	.typer-pink {
+		color: #ff1f8e;
+		text-shadow: 0 0 18px color-mix(in oklab, #ff1f8e 35%, transparent);
+	}
+	.typer-green {
+		color: #009a1f;
+		text-shadow: 0 0 18px color-mix(in oklab, #22d34a 30%, transparent);
+	}
+	.dark .typer-orange {
+		color: #ff6a00;
+		text-shadow:
+			0 0 14px color-mix(in oklab, #ff6a00 60%, transparent),
+			0 0 36px color-mix(in oklab, #ff6a00 35%, transparent);
+	}
+	.dark .typer-pink {
+		text-shadow:
+			0 0 14px color-mix(in oklab, #ff1f8e 60%, transparent),
+			0 0 36px color-mix(in oklab, #ff1f8e 35%, transparent);
+	}
+	.dark .typer-green {
+		color: #39ff14;
+		text-shadow:
+			0 0 14px color-mix(in oklab, #39ff14 50%, transparent),
+			0 0 36px color-mix(in oklab, #39ff14 30%, transparent);
+	}
+	@media (forced-colors: active) {
+		.typer-orange,
+		.typer-pink,
+		.typer-green {
+			color: CanvasText;
+			text-shadow: none;
+		}
+	}
+</style>

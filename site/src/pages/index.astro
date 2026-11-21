@@ -10,7 +10,7 @@ import DriveTabs from "../components/landing/DriveTabs.astro";
 import LandingFooter from "../components/landing/LandingFooter.astro";
 import LandingActions from "../components/landing/LandingActions.astro";
 import Shot from "../components/landing/Shot.astro";
-import SplitTitle from "../components/landing/SplitTitle.astro";
+import HeroTyper from "../components/landing/HeroTyper.astro";
 import StageCanvas from "../components/landing/StageCanvas.astro";
 import TimelineEditor from "../components/landing/TimelineEditor.astro";
 import { credits, hero, homeTimeline, homeYours, shots } from "@/lib/landing-pages";
@@ -43,7 +43,7 @@ import { withBase } from "@/lib/site";
 				<div class="grid items-center gap-10 lg:grid-cols-5">
 					<div class="lg:col-span-2">
 						<p class="eyebrow" data-hero-item>{hero.eyebrow}</p>
-						<SplitTitle text={hero.homeTitle} accent="in one place" id="studio-title" tabindex="-1" class="display-home mt-5 text-fg" />
+						<HeroTyper phrases={hero.homeTitles} id="studio-title" tabindex="-1" class="display-typer mt-5 text-fg" />
 						<p class="lead mt-6 max-w-xl" data-hero-item>{hero.homeLead}</p>
 					</div>
 					<div class="lg:col-span-3" data-hero-frame>
@@ -351,22 +351,14 @@ import { withBase } from "@/lib/site";
 		align-items: stretch;
 		padding-top: clamp(1.5rem, 4vh, 3rem);
 	}
-	/* "in one place": a vivid orange with a soft glow, 3.3:1 on the light page and 6.9:1 on the dark one (large text). */
-	main[data-page="viewport"] .split-accent {
-		color: #ee5500;
-		text-shadow: 0 0 18px color-mix(in oklab, #ff6a00 35%, transparent);
-	}
-	.dark main[data-page="viewport"] .split-accent {
-		color: #ff6a00;
-		text-shadow:
-			0 0 14px color-mix(in oklab, #ff6a00 60%, transparent),
-			0 0 36px color-mix(in oklab, #ff6a00 35%, transparent);
-	}
-	@media (forced-colors: active) {
-		main[data-page="viewport"] .split-accent {
-			color: CanvasText;
-			text-shadow: none;
-		}
+	/* The typed hero title: its height is the longest of the three phrases, so it is sized a step below the earlier
+	   title, and held by the window height on short screens. */
+	main[data-page="viewport"] .display-typer {
+		font-size: clamp(1.75rem, min(0.9rem + 2.3vw, 5.6vh), 3rem);
+		line-height: 1.08;
+		font-weight: 600;
+		letter-spacing: -0.03em;
+		text-wrap: pretty;
 	}
 	/* The four buttons sit in the middle of the space between the text and picture above and the scroll hint. */
 	html.takes-on #studio > .site-container {
@@ -384,9 +376,6 @@ import { withBase } from "@/lib/site";
 		padding-bottom: 3.5rem;
 	}
 	@media (max-height: 52rem) {
-		html.takes-on #studio .display-home {
-			font-size: clamp(2rem, 6.2vh, 3.5rem);
-		}
 		html.takes-on #studio .lead {
 			margin-top: 1rem;
 		}
@@ -525,7 +514,9 @@ import { withBase } from "@/lib/site";
 
 <script>
 	import { start } from "../landing/viewport";
+	import { mountTyper } from "../landing/typer";
 	import { mountZoom } from "../landing/zoom";
 	start();
 	mountZoom();
+	mountTyper();
 </script>
