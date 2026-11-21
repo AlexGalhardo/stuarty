@@ -256,11 +256,14 @@ func (s *svc) motionFrames(ctx context.Context, v *motionView, req *MotionBriefR
 			continue
 		}
 
+		// req.ProjectID is the timeline beginMotion resolved; the first timeline of a production has the id of the
+		// project, so it is named again as the timeline (SDD-003 section 1.7).
 		shot, err := s.ViewFrame(ctx, ViewFrameRequest{
-			ProjectID: req.ProjectID,
-			At:        strconv.Itoa(at.frame) + "f",
-			MaxTokens: motionFrameBudget,
-			Pin:       v.row.Revision,
+			ProjectID:  req.ProjectID,
+			TimelineID: req.ProjectID,
+			At:         strconv.Itoa(at.frame) + "f",
+			MaxTokens:  motionFrameBudget,
+			Pin:        v.row.Revision,
 		})
 		if err != nil {
 			return err
