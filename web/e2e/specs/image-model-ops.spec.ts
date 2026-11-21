@@ -7,7 +7,7 @@ import { crc32, deflateSync } from "node:zlib";
 import type { Page } from "@playwright/test";
 
 import { LAUNCHER_SECRET } from "../support/launcher";
-import { caller, home, makeProject } from "./helpers";
+import { caller, home, makeProject, validName } from "./helpers";
 import {
 	editImage,
 	expect,
@@ -209,7 +209,7 @@ test.describe("image operations with a model", () => {
 		const model = `gpt-image-${tag}`;
 		const fake = await fakeProvider(model);
 		const label = `OpenAI pictures ${tag}`;
-		const project = `Edited ${tag}`;
+		const project = validName(`Edited ${tag}`);
 		try {
 			const api = await caller(request);
 			const connectionId = String(
