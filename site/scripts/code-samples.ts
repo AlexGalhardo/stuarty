@@ -1,6 +1,7 @@
 // Request samples for the API reference: one template per language, filled from an operation of the OpenAPI
 // document. Every sample sends the secret as `Authorization: Bearer <secret>` (the local token in local mode,
-// an API key in network mode) and reads it from the environment variable STUARTY_KEY. Node strips the types.
+// an API key in network mode) and reads it from the environment variable STUARTY_KEY. Bun runs the TypeScript
+// directly; api-reference.test.ts imports this file under Node, so it must keep to syntax Node can strip.
 
 export type SampleRequest = {
 	method: string;

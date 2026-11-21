@@ -2,8 +2,8 @@
 // it names exists (P2-DOC-003). Run from site/:
 //   bun run check:command-mentions
 // A page passes when it mentions at least one real operation, CLI command or MCP tool,
-// and mentions no operation, CLI command or MCP tool that does not exist. Node strips
-// the types (no build step).
+// and mentions no operation, CLI command or MCP tool that does not exist. Bun runs
+// the TypeScript directly (no build step).
 import fs from "node:fs";
 import path from "node:path";
 

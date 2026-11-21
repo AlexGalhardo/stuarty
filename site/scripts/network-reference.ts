@@ -1,7 +1,7 @@
 // The limits of the social networks (epic 40, SDD-010 section 15.3). Read from generated/networks.json, which
 // `go run ./internal/tools/clidoc -networks` writes from the data the product validates a post against, so the
 // numbers on the site are the numbers PublishValidate enforces, each with the official page and the date it was
-// read. Node strips the types.
+// read. Bun runs the TypeScript directly.
 import fs from "node:fs";
 import path from "node:path";
 import { esc, page, table } from "./reference-md.ts";

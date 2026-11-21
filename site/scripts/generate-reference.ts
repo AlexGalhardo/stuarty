@@ -6,7 +6,7 @@
 // The API reference (content/generated/api/) comes from site/generated/openapi.json, which `UPDATE_OPENAPI=1 go test
 // ./web/contract/ -run OpenAPI` writes from the running API. The MCP reference (content/generated/mcp/) comes from
 // web/app/mcp/definitions/ and from the command registry. Both write generated/reference-nav.json, the order of
-// their sidebar groups. Node strips the types.
+// their sidebar groups. Bun runs the TypeScript directly.
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";

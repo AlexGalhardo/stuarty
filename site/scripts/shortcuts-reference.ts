@@ -1,8 +1,8 @@
 // The keyboard shortcuts page (TASK-0237), generated from the editor's own keymap so it cannot drift: the rows are
 // SHORTCUTS of web/resources/js/editor/commands/keymap.ts (imported as it is: the file only has type imports, which
-// Node strips) and their labels are ui.editor.shortcuts.rows of web/resources/lang/en.json, the text of the
+// Bun strips) and their labels are ui.editor.shortcuts.rows of web/resources/lang/en.json, the text of the
 // in-editor cheat sheet. A row the keymap gains shows up on the next `bun run reference`; one that no group below
-// names lands in "More shortcuts". Called by generate-reference.ts. Node strips the types.
+// names lands in "More shortcuts". Called by generate-reference.ts. Bun runs the TypeScript directly.
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
