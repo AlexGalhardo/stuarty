@@ -16,6 +16,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/engine/rasterize"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 	"github.com/AlexGalhardo/stuarty/web/app/store"
@@ -417,6 +418,11 @@ func Run(ctx context.Context, cfg Config) (Report, error) {
 	if err != nil {
 		return Report{}, err
 	}
+
+	// service.New compiles the renderer module in the background; the compile holds about 20 MB of
+	// heap until it ends (8 s under -race), which a short run would take for the baseline. The run
+	// measures the steady state, so it starts after the compile.
+	rasterize.Warm()
 
 	c := caller()
 	if err := d.seed(c); err != nil {
