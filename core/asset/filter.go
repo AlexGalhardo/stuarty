@@ -15,10 +15,11 @@ const (
 	KindLUT   = "lut"
 )
 
-// The two sections over the library (SDD-011 section 14.6).
+// The three sections over the library (SDD-011 section 14.6).
 const (
 	SectionVisual = "visual"
 	SectionVideo  = "video"
+	SectionAudio  = "audio"
 )
 
 // SectionKinds are the media kinds of a section; nil for a name that is not a section.
@@ -27,7 +28,9 @@ func SectionKinds(section string) []string {
 	case SectionVisual:
 		return []string{KindImage, KindLUT}
 	case SectionVideo:
-		return []string{KindVideo, KindAudio}
+		return []string{KindVideo}
+	case SectionAudio:
+		return []string{KindAudio}
 	}
 
 	return nil
@@ -46,7 +49,7 @@ type Entry struct {
 // Filter picks files out of the library. A zero member does not filter.
 type Filter struct {
 	Kind     string // image, video, audio or lut
-	Section  string // visual or video
+	Section  string // visual, video or audio
 	Tag      string
 	Project  string // a production or a timeline identifier
 	Origin   OriginKind
@@ -67,7 +70,7 @@ func (f *Filter) Validate() *RuleError {
 		return &RuleError{
 			Path:   "section",
 			Reason: "section_unknown",
-			Detail: fmt.Sprintf("the section %q is not known; use visual or video", f.Section),
+			Detail: fmt.Sprintf("the section %q is not known; use visual, video or audio", f.Section),
 		}
 	}
 

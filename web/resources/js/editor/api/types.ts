@@ -920,7 +920,7 @@ export interface AssetListResult {
 
 // The filters of GET /assets (SDD-011 section 14.4).
 export interface AssetQuery {
-	section?: "visual" | "video";
+	section?: "visual" | "video" | "audio";
 	kind?: "image" | "video" | "audio" | "lut";
 	tag?: string;
 	origin?: OriginKind;
