@@ -251,9 +251,6 @@ export const credits = "Footage: Big Buck Bunny, (c) Blender Foundation, CC BY 3
 export const takes = [
 	{ id: "studio", name: "One place" },
 	{ id: "timeline", name: "The timeline" },
-	{ id: "video", name: "Edit video" },
-	{ id: "images", name: "Images and writing" },
-	{ id: "publish", name: "Publish" },
 	{ id: "agents", name: "Agents" },
 	{ id: "yours", name: "Yours" },
 ] as const;
