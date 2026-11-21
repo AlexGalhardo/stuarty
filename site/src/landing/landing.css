@@ -6,6 +6,37 @@ html:has(main[data-expressive]) {
   scroll-padding-top: var(--header-h);
 }
 
+/* One navbar for the whole site, measured on the docs: the header is laid out in rem, and the docs root is 125%
+   (93.75% on phones) where the landing's is 100%, so the landing header is zoomed to the docs size: 70 px high
+   (52.5 px on phones), the same buttons, and the same 1440 px container with 30 px padding inside it. */
+html:has(main[data-expressive]) {
+  --header-h: 70px;
+}
+html:has(main[data-expressive]) header[data-variant="landing"] {
+  zoom: 1.25;
+}
+html:has(main[data-expressive]) header[data-variant="landing"] .site-container {
+  max-width: calc(var(--site-container) / 1.25);
+}
+@media (min-width: 40rem) {
+  html:has(main[data-expressive]) header[data-variant="landing"] .site-container {
+    padding-inline: 24px;
+  }
+}
+@media (max-width: 767px) {
+  html:has(main[data-expressive]) {
+    --header-h: 52.5px;
+  }
+  html:has(main[data-expressive]) header[data-variant="landing"] {
+    zoom: 0.9375;
+  }
+}
+@media (min-width: 40rem) and (max-width: 767px) {
+  html:has(main[data-expressive]) header[data-variant="landing"] .site-container {
+    padding-inline: 32px;
+  }
+}
+
 main[data-expressive] {
   /* Lead text sits over the moving background: one step stronger than --muted so it keeps 4.5:1 on the brightest
      part of the flow. */

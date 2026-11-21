@@ -71,7 +71,7 @@ export type HeaderVariant = "docs" | "landing";
 const HEADER_CLASS: Record<HeaderVariant, string> = {
 	docs: "sticky top-0 z-40 h-(--header-h) border-b border-border bg-bg/80 backdrop-blur-md supports-[backdrop-filter]:bg-bg/70",
 	landing:
-		"fixed inset-x-0 top-0 z-40 h-(--header-h) border-b border-fg/10 bg-bg/70 backdrop-blur-xl supports-[backdrop-filter]:bg-bg/55",
+		"fixed inset-x-0 top-0 z-40 h-14 border-b border-fg/10 bg-bg/70 backdrop-blur-xl supports-[backdrop-filter]:bg-bg/55",
 };
 
 export function Header({ groups, variant = "docs" }: { groups: NavGroup[]; variant?: HeaderVariant }) {
@@ -82,7 +82,7 @@ export function Header({ groups, variant = "docs" }: { groups: NavGroup[]; varia
 				<div className="site-container flex h-full items-center gap-2 sm:gap-3 lg:grid lg:grid-cols-[16rem_1fr_auto] lg:gap-0">
 					<div className="flex items-center gap-2 sm:gap-3">
 						<MobileNav groups={groups} />
-						<Logo size={variant === "landing" ? "lg" : "md"} />
+						<Logo />
 					</div>
 					<div className="flex flex-1 justify-end sm:justify-center">
 						<SearchLauncher />
