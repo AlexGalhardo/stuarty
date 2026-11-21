@@ -220,13 +220,11 @@ main[data-expressive] .btn-glow:focus-visible {
 .dark .btn-glow[data-os="windows"] {
   --c-edge: oklch(0.65 0.15 250);
 }
+/* Hot pink (#FF1F8E): white text on it is only 3.6:1, so the filled face takes near-black text (5.5:1). */
 .btn-glow[data-os="macos"] {
-  --c: oklch(0.82 0.01 260);
-  --c-edge: oklch(0.62 0.01 260);
+  --c: #ff1f8e;
+  --c-edge: #ff1f8e;
   --c-on: oklch(0.145 0 0);
-}
-.dark .btn-glow[data-os="macos"] {
-  --c-edge: oklch(0.82 0.01 260);
 }
 .btn-glow[data-os="linux"] {
   --c: oklch(0.84 0.15 85);
