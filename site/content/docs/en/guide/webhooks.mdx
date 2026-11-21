@@ -29,7 +29,7 @@ Each delivery is a JSON body with `event`, `id`, `occurred_at`, `workspace` and 
 In the app, open **Webhooks** in the sidebar, press **Add**, give it a name, the address and the events you want. The address is `https`, or `http` for `localhost` when your receiver runs on this machine. An address on a private network, a link-local address or a cloud metadata address is refused, and so is a name that turns into one when Stuarty connects.
 
 ```text
-stuarty webhook:add --name n8n --endpoint https://hooks.example.com/stuarty --events export.ready,job.failed
+stuarty webhook:add --name n8n --endpoint https://stuarty.example.com/hooks --events export.ready,job.failed
 ```
 
 The **signing secret** is shown once, with a copy button. Keep it in your receiver: Stuarty keeps it in the vault and cannot show it again. **Rotate secret** makes a new one and the old one stops verifying.
