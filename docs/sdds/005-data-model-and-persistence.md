@@ -1080,6 +1080,13 @@ CREATE TABLE projects (
   owner_user_id TEXT,                              -- network mode (SDD-007 4.1); NULL in local mode
   trashed_ms    INTEGER,
   trashed_by    TEXT,
+  description   TEXT    NOT NULL DEFAULT '',       -- epic 56, migration `20261120100000_project_context`; '' for a project made before it
+  goal_specific TEXT    NOT NULL DEFAULT '',       -- the SMART goal, one column per part (section 5.12.2)
+  goal_measurable TEXT  NOT NULL DEFAULT '',
+  goal_achievable TEXT  NOT NULL DEFAULT '',
+  goal_relevant TEXT    NOT NULL DEFAULT '',
+  goal_time_bound TEXT  NOT NULL DEFAULT '',
+  goal_due      TEXT    NOT NULL DEFAULT '',       -- YYYY-MM-DD
   PRIMARY KEY (id)
 );
 CREATE INDEX projects_state_updated_ms_index ON projects (state, updated_ms);
@@ -1128,6 +1135,21 @@ CREATE TABLE text_revisions (                      -- SDD-019 section 3: one row
 - **Outputs.** An `output` item is added with the id of a succeeded export job of the same project and records its destination format; the file is read through the job, so an item never holds a path.
 - **Migration.** Backup first: `Open` copies the database with `VACUUM INTO` before a migration runs (section 7 step 3). Then, in one transaction: `ALTER TABLE projects RENAME TO timelines` (SQLite rewrites the foreign keys that name it), rename the index, create the two tables, and for every row of `timelines` insert one `projects` row with the same `id`, `name`, `state`, times, actor, owner and trash columns, and one `project_items` row (kind `timeline`, title = name, position 0, `ref` = the id, the `pit_` id with the characters of the project id, state `active`: the trash of a former project is that of the project, and its restore brings the timeline back through the mirror of the trash rule of this section). Every id a surface exposed is kept. **Down** deletes the items and productions, drops them, and renames `timelines` back to `projects`; a timeline that is not the first of its project (its id differs from its project's) is deleted with its log, which is why the backup comes first. Tests run both directions over fixtures of the workspaces of releases 0.2.0, 0.17.0 and 0.29.0.
 - **Document backups.** `document_backups.owner_kind` stays `project`; `owner_id` is a timeline id.
+
+### 5.12.2 The context of a project (epic 56, D-119)
+
+A project has a name, a description and a goal that every agent reads first, as an engineer reads the `AGENTS.md` of a repository. The pure rules are in `core/project` (`context.go`), written with the vukem validation package `z`; the same schema, exported as JSON Schema by `z`, is generated into `core/schema/project.v1.schema.json` and `web/resources/js/generated/project-schema.ts` by `task codegen`, and the web form builds its `zod` schema from it.
+
+| Field | Rule |
+| --- | --- |
+| `name` | 4 to 32 characters; Unicode letters, marks, digits and single spaces; no leading or trailing space and no two spaces in a row; the control and direction characters of VV-049 are refused |
+| `description` | 64 to 1,024 characters; newlines are allowed |
+| `goal.specific`, `goal.measurable`, `goal.achievable`, `goal.relevant`, `goal.time_bound` | 16 to 280 characters each |
+| `goal.due` | a date `YYYY-MM-DD`; on `ProjectCreate`, today or later (the clock of the service); on `ProjectUpdate`, today or later only when it differs from the stored one |
+
+Lengths count characters (runes), not bytes. A text is stored as sent, without trimming. An invalid request is `E_VALIDATION` with the `path` of the first invalid field and `details.fields`, the list of `{path, message}` of every invalid field. The context is complete when the description and the five goal parts are set (`Complete`, in `core`); a project made before the migration has empty columns, no default is invented for it, and the surfaces report it as `complete: false` so that the UI shows "Complete the project" and an agent can ask the person to fill it. `ProjectUpdate` writes the columns and the name of the production in one transaction, with one audit row `project.update`; a project that is trashed refuses it with `E_INVALID_STATE`. Epic 57 encrypts these columns after this epic is integrated.
+
+A project is created with no timeline: `ProjectCreate` writes the `projects` row only, and the first timeline is added with `ProjectItemAdd` of kind `timeline`, which asks for the preset and the frame rate. The first timeline of a project made this way has its own `prj_` id, so the rule of section 5.12 that the first timeline has the id of the project holds only for projects made before epic 56.
 
 ### 5.12.1 The guided briefing and the brief schema (RF-301, RF-302)
 
