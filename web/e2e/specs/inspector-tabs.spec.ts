@@ -59,6 +59,48 @@ async function seedMixed(request: Parameters<typeof seedProject>[0]) {
 	return { id: seeded.id, clip, text, tone };
 }
 
+test.describe("inspector tabs on a laptop screen", () => {
+	test.use({ viewport: { width: 1366, height: 850 } });
+
+	// VV-328: the strip starts at its first tab, and no label of it is cut at the left edge.
+	test("the strip of a clip starts at its first tab and cuts no label", async ({
+		page,
+		request,
+	}) => {
+		const s = await seedMixed(request);
+		await page.goto(`/editor/${s.id}`);
+		await page.locator(`[data-item-id="${s.clip}"]`).click();
+		const strip = page.getByRole("tablist", { name: "Properties" });
+		await expect(strip.getByRole("tab", { name: "Video" })).toBeVisible();
+		const geometry = await strip.evaluate((el) => ({
+			scrollLeft: el.scrollLeft,
+			left: el.getBoundingClientRect().left,
+			tabs: Array.from(el.querySelectorAll('[role="tab"]')).map((tab) => ({
+				text: tab.textContent,
+				left: tab.getBoundingClientRect().left,
+				fits: tab.scrollWidth <= tab.clientWidth + 1,
+			})),
+		}));
+		expect(geometry.scrollLeft).toBe(0);
+		expect(geometry.tabs[0].left).toBeGreaterThanOrEqual(geometry.left);
+		for (const tab of geometry.tabs) {
+			expect(tab.fits, tab.text ?? "").toBe(true);
+		}
+		const text = strip.getByRole("tab", { name: "Text" });
+		await text.click();
+		await expect
+			.poll(() =>
+				strip.evaluate((el) => {
+					const tab = el.querySelector('[aria-selected="true"]');
+					const box = el.getBoundingClientRect();
+					const at = tab?.getBoundingClientRect();
+					return !!at && at.left >= box.left - 1 && at.right <= box.right + 1;
+				}),
+			)
+			.toBe(true);
+	});
+});
+
 test.describe("inspector tabs", () => {
 	test.use({ viewport: { width: 1600, height: 900 } });
 
