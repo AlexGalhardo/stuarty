@@ -74,6 +74,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [57](57-local-account-and-encrypted-workspace.md) | A local account and an encrypted workspace | XL | 04, 05, 07 | IN PROGRESS |
 | [58](58-sound-assets.md) | Sound assets | M | 08, 21 | IN PROGRESS |
 | [59](59-outbound-webhooks.md) | Outbound webhooks | L | 04, 05, 30 | IN PROGRESS |
+| [60](60-video-editor-polish.md) | Video editor polish: dark menus, a wider sidebar, rename, the history sidebar | M | 08, 21 | TODO |
 
 ### 1.4 Closing (after the tracks)
 
