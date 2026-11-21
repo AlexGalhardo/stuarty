@@ -41,7 +41,10 @@ type draftInput struct {
 // textDraftKind is the approvable kind of a draft: text.generate with a prompt that core/writing built and a text to
 // put the answer in, under the same estimate, ceilings and approval (SDD-015 section 5, SDD-016 section 6).
 func (s *svc) textDraftKind() ApprovableKind {
-	return ApprovableKind{Name: JobTextDraft, Scope: ScopeEdit, ProjectWide: true, Prepare: s.prepareDraft, Run: s.runDraft}
+	return ApprovableKind{
+		Name: JobTextDraft, Scope: ScopeEdit, ProjectWide: true,
+		Prepare: s.prepareDraft, Run: s.runDraft,
+	}
 }
 
 // TextDraft asks a model for a draft of a text. It starts a text.draft job that shows its estimate and waits for a
