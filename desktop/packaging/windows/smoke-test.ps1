@@ -40,6 +40,8 @@ try {
 	# never does. It is written here the way the application writes it, to prove the uninstaller removes it.
 	$run = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
 	$command = '"' + (Join-Path $app 'stuarty-desktop.exe') + '" --background'
+	# A clean CI runner has no Run key. Never New-Item -Force here: on an existing key it erases every other value.
+	if (-not (Test-Path $run)) { New-Item -Path $run | Out-Null }
 	New-ItemProperty -Path $run -Name 'StuartyDesktop' -PropertyType String -Value $command -Force | Out-Null
 
 	$u = Start-Process -FilePath (Join-Path $app 'unins000.exe') -Wait -PassThru -ArgumentList @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART')
