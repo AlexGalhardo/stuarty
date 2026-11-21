@@ -14,6 +14,7 @@ import {
 import { useT } from "@/lib/i18n";
 import type { ProjectContextInput } from "../../editor/api/types";
 import {
+	charCount,
 	type FieldError,
 	type GoalKey,
 	goalKeys,
@@ -80,7 +81,11 @@ export default function ProjectContextForm({
 	const t = useT();
 	const prefix = useId();
 	const [values, setValues] = useState<ProjectContextInput>(initial);
-	const [touched, setTouched] = useState<ReadonlySet<FieldId>>(new Set());
+	// A field that opens with a value shows its error at once: the name of a project made before epic 56 may break
+	// the rule of today, and the button would wait with no word of why.
+	const [touched, setTouched] = useState<ReadonlySet<FieldId>>(
+		() => new Set(FIELDS.filter((field) => fieldValue(initial, field) !== "")),
+	);
 	const [day] = useState(today);
 
 	const errors: Record<string, FieldError> = validate(values, {
@@ -156,7 +161,7 @@ export default function ProjectContextForm({
 								<Tooltip>
 									<TooltipTrigger
 										type="button"
-										aria-label={t("ui.projects.help_for")}
+										aria-label={t("ui.projects.help_for", { field: label })}
 										className="rounded-full text-muted-foreground hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
 									>
 										<CircleHelp className="size-4" aria-hidden="true" />
@@ -174,7 +179,7 @@ export default function ProjectContextForm({
 							{min !== undefined && max !== undefined && (
 								<p className="text-xs text-muted-foreground">
 									{t("ui.projects.counter", {
-										count: fieldValue(values, field).length,
+										count: charCount(fieldValue(values, field)),
 										min,
 										max,
 									})}

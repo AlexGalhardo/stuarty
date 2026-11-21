@@ -60,6 +60,17 @@ func TestCheckContextBoundaries(t *testing.T) {
 		{"description 1025", func(c *Context) { c.Description = strings.Repeat("d", 1025) }, "description"},
 		{"description counts characters", func(c *Context) { c.Description = strings.Repeat("ç", 64) }, ""},
 		{
+			"description emoji count one each",
+			func(c *Context) { c.Description = strings.Repeat("d", 1004) + strings.Repeat("🎬", 20) },
+			"",
+		},
+		{
+			"description 63 with an emoji",
+			func(c *Context) { c.Description = strings.Repeat("d", 62) + "🎬" },
+			"description",
+		},
+		{"name 20 letters outside the BMP", func(c *Context) { c.Name = strings.Repeat("𝒜", 20) }, ""},
+		{
 			"description newline",
 			func(c *Context) { c.Description = strings.Repeat("d", 40) + "\n" + strings.Repeat("d", 40) },
 			"",
