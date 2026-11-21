@@ -125,7 +125,7 @@ Five operations on `service.Service`, in `service/connection_ops.go`:
 | `ConnectionGet` | read | one record; `E_CONNECTION_NOT_FOUND` for an unknown id |
 | `ConnectionCreate` | admin | the record created. The request carries `kind`, `label`, `endpoint`, `hosts` (optional), `accepts` and `secret` (1 to 16384 bytes); the secret goes into the vault and is not in the result |
 | `ConnectionRemove` | admin | the record removed. Deletes the vault entry first, then the row; the next request through the connection fails |
-| `ConnectionTest` | admin | `ok`, `status` and a `message` made of the response body as untrusted text (SDD-007 section 8); the request goes through the gate |
+| `ConnectionTest` | admin | `ok`, `status` and a `message` made of the response body as untrusted text (SDD-007 section 8); the request goes through the gate. A session of the UI (a person at the browser, or the local session opened without the launcher secret, actor `local:ui`) gets the cleaned text with no `untrusted_media_text` envelope, because the page draws it as text; every other caller (the CLI token, a key) gets the block (VV-322) |
 
 `ConnectionCreate` and `ConnectionRemove` are audited (SDD-005 table `audit`) with the actor, the id, the kind and the label; the secret is never an audit field. `ConnectionTest` records `last_used_at`.
 
