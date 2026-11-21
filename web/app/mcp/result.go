@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -80,8 +81,16 @@ func validationFailure(err error) error {
 		path = formatPath(loc)
 	}
 	// An unknown member is reported on its parent object; name the member.
-	if extra, isExtra := leaf.ErrorKind.(*kind.AdditionalProperties); isExtra && len(extra.Properties) > 0 {
-		path = formatPath(slices.Concat(leaf.InstanceLocation, extra.Properties[:1]))
+	// The key is caller-controlled and the text goes to a model: only a plain identifier is echoed (ADR-0033).
+	unknown := ""
+
+	if extra, isExtra := leaf.ErrorKind.(*kind.AdditionalProperties); isExtra {
+		unknown = "an unknown argument"
+
+		if len(extra.Properties) > 0 && identifier.MatchString(extra.Properties[0]) {
+			path = formatPath(slices.Concat(leaf.InstanceLocation, extra.Properties[:1]))
+			unknown = ""
+		}
 	}
 
 	constraint := "schema"
@@ -95,16 +104,22 @@ func validationFailure(err error) error {
 		code = command.CodeUnknownCommand
 	}
 
+	message := fmt.Sprintf(
+		"the argument %q breaks the constraint %q%s.",
+		path,
+		constraint,
+		expectation(leaf.ErrorKind),
+	)
+
+	if unknown != "" {
+		message = fmt.Sprintf("%s (under %q) breaks the constraint %q%s.", unknown, path, constraint, expectation(leaf.ErrorKind))
+	}
+
 	return &service.Error{
-		Code: code,
-		Path: path,
-		Message: fmt.Sprintf(
-			"the argument %q breaks the constraint %q%s.",
-			path,
-			constraint,
-			expectation(leaf.ErrorKind),
-		),
-		Hint: "check the tool definition; command_help lists the operations",
+		Code:    code,
+		Path:    path,
+		Message: message,
+		Hint:    "check the tool definition; command_help lists the operations",
 	}
 }
 
@@ -157,7 +172,11 @@ func expectation(k jsonschema.ErrorKind) string {
 	return ""
 }
 
-// formatPath writes an instance location as operations[2].op.
+// identifier is the only shape of a caller-chosen key that an error may repeat.
+var identifier = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]{0,63}$`)
+
+// formatPath writes an instance location as operations[2].op. A segment that is a caller-chosen key and not a plain
+// identifier is written as "?", so a path never carries a control character or a forged line.
 func formatPath(loc []string) string {
 	var b strings.Builder
 
@@ -170,6 +189,10 @@ func formatPath(loc []string) string {
 
 		if i > 0 {
 			b.WriteByte('.')
+		}
+
+		if !identifier.MatchString(p) {
+			p = "?"
 		}
 
 		b.WriteString(p)
