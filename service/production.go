@@ -543,6 +543,14 @@ func (s *svc) ProjectDuplicate(ctx context.Context, req ProjectDuplicateRequest)
 			return werr
 		}
 
+		// A copy of a project with a context is such a project, so a name given to it obeys the rule of the name.
+		// A copy of an older one keeps the limit of a title until somebody completes it.
+		if req.Name != "" && contextOf(&src).Complete {
+			if e := project.CheckName(req.Name); e != nil {
+				return checkContextError([]*project.RuleError{e})
+			}
+		}
+
 		name := req.Name
 		if name == "" {
 			name = copyName(src.Name, contextOf(&src).Complete)

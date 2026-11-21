@@ -722,8 +722,8 @@ func TestProjectDuplicate(t *testing.T) {
 		t.Fatalf("the brief of the copy: %q", b.Text)
 	}
 
-	named, err := e.prod().ProjectDuplicate(ctx, service.ProjectDuplicateRequest{ProjectID: src, Name: "Alt"})
-	if err != nil || named.Name != "Alt" {
+	named, err := e.prod().ProjectDuplicate(ctx, service.ProjectDuplicateRequest{ProjectID: src, Name: "Alt cut"})
+	if err != nil || named.Name != "Alt cut" {
 		t.Fatalf("named copy: %+v %v", named, err)
 	}
 
