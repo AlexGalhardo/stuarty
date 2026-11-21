@@ -36,10 +36,12 @@ const EngineException = VukemModule + "/contrib/engine"
 // import path prefixes. A library enters this list only together with the
 // author's approval of the dependency (ADR-0014 names the JSON Schema validator;
 // D-094 approves the Unicode normalization of the Go team, for the caption counts
-// of core/writing).
+// of core/writing; D-124 approves the validation package z of vukem, which imports
+// only the standard library, for the rules of the project context).
 var CoreLibraries = []string{
 	"github.com/santhosh-tekuri/jsonschema",
 	"golang.org/x/text/unicode/norm",
+	VukemModule + "/z",
 }
 
 // Violation is one forbidden import.
