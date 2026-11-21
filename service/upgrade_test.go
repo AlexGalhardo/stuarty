@@ -745,7 +745,11 @@ func TestUpgradeOlderBinaryRefusesCandidate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_ = jsonOf(t, candidate, made, "project:create", "--name", "Candidate", "--id", "prj_2000000001")
+	_ = jsonOf(t, candidate, made, "project:create", "--name", "Candidate", "--id", "prj_2000000001",
+		"--description", "A short video made by the upgrade test, to prove that an older binary refuses this workspace.",
+		"--specific", "Create one project with this build", "--measurable", "The older binary exits with code one",
+		"--achievable", "One project is enough for the check", "--relevant", "It protects a workspace from a downgrade",
+		"--time-bound", "Done within the run of this test", "--due", "2999-12-31")
 	ours := migrationsIn(t, made)
 
 	for _, version := range versions {
