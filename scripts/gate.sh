@@ -55,7 +55,7 @@ if command -v betterleaks >/dev/null; then
 else
 	echo "leaks: betterleaks not installed, skipped"
 fi
-step site bash -c "cd site && npm run check:last-updated && npm run check:mdx && npm run test:scripts && npm run build && npm run check:built && npm run reference:check && npm run check:command-mentions"
+step site bash -c "cd site && bun run check:last-updated && bun run check:mdx && bun run test:scripts && bun run build && bun run check:built && bun run reference:check && bun run check:command-mentions"
 step commits bash .agents/skills/ci-preflight/scripts/check-commits.sh .
 
 echo "GATE_FAIL=$fail"

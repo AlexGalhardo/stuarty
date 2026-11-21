@@ -12,11 +12,11 @@ go vet ./...
 [ -d site ] || exit 0
 cd site
 if [ ! -d node_modules ]; then
-	echo "pre-push: run npm ci in site/ so the doc dates can be refreshed" >&2
+	echo "pre-push: run bun install in site/ so the doc dates can be refreshed" >&2
 	exit 1
 fi
 
-npm run -s last-updated >/dev/null
+bun run --silent last-updated >/dev/null
 if git diff --quiet -- content/last-updated.json; then
 	exit 0
 fi
