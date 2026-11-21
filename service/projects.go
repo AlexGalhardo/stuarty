@@ -115,6 +115,14 @@ func (s *svc) ProjectCreate(ctx context.Context, req ProjectCreateRequest) (*Pro
 	}
 
 	err = s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
+		// A timeline id stands in the place of a project id on every surface (SDD-003 section 1.7), so a project
+		// cannot take the id of a timeline of another project: that would answer for it.
+		if _, herr := tx.Projects().Head(ctx, id); herr == nil {
+			return ErrExists
+		} else if !errors.Is(herr, ErrNotFound) {
+			return herr
+		}
+
 		if err := tx.Productions().Create(ctx, head); err != nil {
 			return err
 		}
