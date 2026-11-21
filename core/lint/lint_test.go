@@ -820,3 +820,18 @@ func TestCatalogAgreesWithTheRules(t *testing.T) {
 		}
 	}
 }
+
+// A severity filter lists fewer findings than the document has, and the header still counts the document (VV-316).
+func TestReportHeaderCountsTheDocumentNotTheList(t *testing.T) {
+	t.Parallel()
+
+	text, _ := Report(Header{Revision: 4, ProjectID: "prj_x", Totals: &Count{Errors: 0, Warnings: 3}}, nil, 0)
+	if !strings.Contains(text, "errors=0 warnings=3") {
+		t.Errorf("header = %q, want errors=0 warnings=3", text)
+	}
+
+	plain, _ := Report(Header{Revision: 4, ProjectID: "prj_x"}, []Finding{{Severity: SeverityWarning}}, 0)
+	if !strings.Contains(plain, "errors=0 warnings=1") {
+		t.Errorf("header = %q, want the counts of the findings given", plain)
+	}
+}

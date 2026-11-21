@@ -523,7 +523,9 @@ func (s *svc) Lint(ctx context.Context, req LintRequest) (*LintResult, error) {
 	fps := timeval.FPS{Num: int64(doc.Settings.FPS.Num), Den: int64(doc.Settings.FPS.Den)}
 	limit := clampLimit(req.Limit, defaultLintLimit, maxLintLimit)
 	text, next := lint.Report(
-		lint.Header{Revision: row.Revision, ProjectID: row.ID, FPS: fps, Limit: limit},
+		lint.Header{
+			Revision: row.Revision, ProjectID: row.ID, FPS: fps, Limit: limit, Totals: &lint.Count{Errors: errs, Warnings: warns},
+		},
 		listed,
 		from,
 	)
