@@ -231,7 +231,7 @@ jobs:
               # 17 min (run 43924786343), and the race scope of the project is core,
               # service and web/app (task test:race); -covermode=atomic keeps the
               # profiles mergeable with the race shards.
-              names="$(go test -list '^Test' ./engine/export/ | grep '^Test' | awk -v k="${SHARD#export-}" -v n="$EXPORT_N" 'NR % n == k % n' | paste -sd'|' -)"
+              names="$(go test -list '^(Test|Fuzz|Example)' ./engine/export/ | grep -E '^(Test|Fuzz|Example)' | awk -v k="${SHARD#export-}" -v n="$EXPORT_N" 'NR % n == k % n' | paste -sd'|' -)"
               go test -count=1 -timeout=17m -covermode=atomic -coverpkg=./... -coverprofile=coverage.out -run "^(${names})"'$' ./engine/export/
               exit
               ;;
@@ -244,7 +244,8 @@ jobs:
                 service-*) pkg=./web/app/servicetest/ ;;
                 contract-*) pkg=./web/contract/ ;;
               esac
-              names="$(go test -list '^Test' "$pkg" | grep '^Test' | awk -v k="${SHARD##*-}" -v n="$NAMED_N" 'NR % n == k % n' | paste -sd'|' -)"
+              # Fuzz targets too: without -fuzz they run their seed corpus (FuzzBundleArchive, SDD-007 T-20).
+              names="$(go test -list '^(Test|Fuzz|Example)' "$pkg" | grep -E '^(Test|Fuzz|Example)' | awk -v k="${SHARD##*-}" -v n="$NAMED_N" 'NR % n == k % n' | paste -sd'|' -)"
               go test -race -count=1 -timeout=17m -coverpkg=./... -coverprofile=coverage.out -run "^(${names})"'$' "$pkg"
               exit
               ;;
