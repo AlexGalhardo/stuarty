@@ -115,7 +115,9 @@ func TestSnapshotsAreTheListingsOfThePinnedBuild(t *testing.T) {
 		}
 
 		for n := range want {
-			if !got[n] && !(c.flag == "-filters" && runtime.GOOS != "windows" && windowsOnlyFilters[n]) {
+			windowsOnly := c.flag == "-filters" && runtime.GOOS != "windows" && windowsOnlyFilters[n]
+
+			if !got[n] && !windowsOnly {
 				t.Errorf("%s: %s is in the snapshot and gone from the pinned build", c.flag, n)
 			}
 		}
