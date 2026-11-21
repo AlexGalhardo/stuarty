@@ -122,8 +122,8 @@ func (f *Flows) PendingFor(connectionID string) bool {
 
 	f.sweepLocked()
 
-	for _, p := range f.pending {
-		if p.ConnectionID == connectionID {
+	for _, s := range f.order {
+		if f.pending[s].ConnectionID == connectionID {
 			return true
 		}
 	}
