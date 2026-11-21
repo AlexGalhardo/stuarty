@@ -18,7 +18,13 @@ type Header struct {
 	FPS       timeval.FPS
 	// Limit is the most findings on a page; 0 means as many as the cap allows.
 	Limit int
+	// Totals are the counts of every finding of the document when the findings passed to Report are only some of
+	// them (a severity filter): the header counts the document, not the list. Nil counts the findings given.
+	Totals *Count
 }
+
+// Count is a pair of totals.
+type Count struct{ Errors, Warnings int }
 
 // cursorReserve is room kept for the "next_cursor: ..." line the caller appends.
 const cursorReserve = 160
@@ -31,6 +37,10 @@ const cursorReserve = 160
 // and owns the cursor format (SDD-003 §1.5).
 func Report(h Header, findings []Finding, from int) (text string, next int) {
 	errs, warns := Totals(findings)
+	if h.Totals != nil {
+		errs, warns = h.Totals.Errors, h.Totals.Warnings
+	}
+
 	head := fmt.Sprintf("lint r%d %s: errors=%d warnings=%d", h.Revision, h.ProjectID, errs, warns)
 
 	if len(findings) == 0 {
