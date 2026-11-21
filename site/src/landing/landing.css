@@ -212,13 +212,14 @@ main[data-expressive] .btn-glow:focus-visible {
   outline: 2px solid var(--c-edge);
   outline-offset: 3px;
 }
+/* Emerald, apart from the blue of the VPS button and the lime of the hero accent: white on the fill is 5.48:1. */
 .btn-glow[data-os="windows"] {
-  --c: oklch(0.5 0.17 252);
-  --c-edge: oklch(0.5 0.17 252);
+  --c: #047857;
+  --c-edge: #047857;
   --c-on: oklch(1 0 0);
 }
 .dark .btn-glow[data-os="windows"] {
-  --c-edge: oklch(0.65 0.15 250);
+  --c-edge: #34d399;
 }
 /* Hot pink (#FF1F8E): white text on it is only 3.6:1, so the filled face takes near-black text (5.5:1). */
 .btn-glow[data-os="macos"] {

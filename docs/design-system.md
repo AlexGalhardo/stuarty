@@ -1172,7 +1172,7 @@ Contrast (WCAG 2.x): `--cta-foreground` on `--cta` 6.91:1, on the light hover 5.
 | Button | Fill on hover (`--c`) | Border light / dark (`--c-edge`) | Label on the fill (`--c-on`) | Label on the fill |
 | --- | --- | --- | --- | --- |
 | Getting Started | `--cta` `oklch(0.7 0.2 48)` `#FC6D00` | `--cta` / `--cta` | `oklch(0.145 0 0)` | 6.91:1 |
-| Windows | `oklch(0.5 0.17 252)` `#0062BF` | `oklch(0.5 0.17 252)` / `oklch(0.65 0.15 250)` | white | 5.97:1 |
+| Windows | emerald `#047857` | `#047857` / `#34D399` | white | 5.48:1 |
 | macOS | hot pink `#FF1F8E` (about `oklch(0.65 0.26 0)`) | `#FF1F8E` / `#FF1F8E` | `oklch(0.145 0 0)` | 5.50:1 |
 | Linux | `oklch(0.84 0.15 85)` `#F7C243` | `oklch(0.72 0.15 75)` / `oklch(0.84 0.15 85)` | `oklch(0.145 0 0)` | 12.01:1 |
 
