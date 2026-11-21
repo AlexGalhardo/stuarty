@@ -29,7 +29,11 @@ func TestDashboardSectionsMatchTheSidebar(t *testing.T) {
 	}
 
 	if len(keys) != 13 {
-		t.Fatalf("the sidebar lists %d sections, want the twelve of RF-311 and the webhooks of epic 59: %v", len(keys), keys)
+		t.Fatalf(
+			"the sidebar lists %d sections, want the twelve of RF-311 and the webhooks of epic 59: %v",
+			len(keys),
+			keys,
+		)
 	}
 
 	// The sections with a page of their own, served by Pages.
