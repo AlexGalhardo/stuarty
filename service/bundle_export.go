@@ -54,7 +54,7 @@ func (s *svc) resolveBundleSource(
 	if len(tls) == 0 {
 		// A bundle is built around a first document (SDD-005 section 16.1), which a new project does not have.
 		if head, gerr := s.store.Productions().Get(ctx, req.ProjectID); gerr == nil && visible(c, head.OwnerUserID) {
-			return false, nil, newError(command.CodeInvalidState, "the project %s has no timeline to export yet.", head.ID).
+			return false, nil, newError(command.CodeInvalidState, "the project %s has no timeline yet.", head.ID).
 				withHint("add one with project_item action add kind timeline, then export the project")
 		}
 
