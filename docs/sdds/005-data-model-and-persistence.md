@@ -1453,8 +1453,11 @@ While no account exists the columns hold clear text and a read returns it as it 
 | `chat_events` | `body_json` | `session_id/seq` |
 | `publications` | `text` | `id` |
 | `publication_targets` | `fields`, `snapshot` | `id` |
+| `projects` | `description`, `goal_specific`, `goal_measurable`, `goal_achievable`, `goal_relevant`, `goal_time_bound` (epic 56, SDD-005 section 5.12.2) | `id` |
 
-The project description and goal join the list when epic 56 lands (task 8 of epic 57). The files of the library of memory, skills and prompts are not sealed by this epic (ADR-0049, consequences); their index keeps no body once an account exists (`library_fts.body` is written empty, so a note is not clear text in `db.sqlite`, and the search matches names, descriptions and tags). The vault is sealed by its own format (SDD-014 section 3), under the master key of 5.16 above.
+The description and the five written parts of the goal of a project are the creator's words and are sealed; an empty one is sealed too. A project made before epic 56 holds sealed empty text after the migration. The files of the library of memory, skills and prompts are not sealed by this epic (ADR-0049, consequences); their index keeps no body once an account exists (`library_fts.body` is written empty, so a note is not clear text in `db.sqlite`, and the search matches names, descriptions and tags). The vault is sealed by its own format (SDD-014 section 3), under the master key of 5.16 above.
+
+**What is not sealed, and why.** A column is left readable when it holds an id, a state, a number or a time, when a query orders, filters or joins by it, or when it is a short label of a row that the lists show. Named so that no new column is left out by silence: `projects.name`, `projects.goal_due` (a date, `YYYY-MM-DD`, that the listing and the reminders compare) and every `title` and `name` (of a project, an item, a template, a connection, a publication); the documents of timelines and images, the templates and the brand kits (structured documents that the engine reads and hashes; a text layer in them is the open limit of ADR-0049); `asset_info.prompt`, `description` and `rights_note`; `approval_requests.summary`; the `note` of a checkpoint; the `title` and `summary` of `published_posts` and `blog_remote_posts`; the error text of a job. A column that holds free text and is added later must be sealed or named here in the same change.
 
 #### 5.17.3 Creating the account in a workspace that has data
 
