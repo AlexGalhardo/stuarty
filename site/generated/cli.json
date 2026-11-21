@@ -2216,7 +2216,7 @@
       "usage": [
         "stuarty webhook:add --name <t> --endpoint <url> --events <list> [--disable]"
       ],
-      "example": "stuarty webhook:add --name n8n --endpoint https://hooks.example.com/stuarty --events export.ready,job.failed",
+      "example": "stuarty webhook:add --name n8n --endpoint https://stuarty.example.com/hooks --events export.ready,job.failed",
       "flags": [
         {
           "name": "name",

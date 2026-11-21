@@ -90,7 +90,7 @@ var webhookAddCmd = &spec{
 	name:    "webhook:add",
 	summary: "register a webhook; the signing secret is printed once and cannot be shown again",
 	usage:   []string{"stuarty webhook:add --name <t> --endpoint <url> --events <list> [--disable]"},
-	example: "stuarty webhook:add --name n8n --endpoint https://hooks.example.com/stuarty --events export.ready,job.failed",
+	example: "stuarty webhook:add --name n8n --endpoint https://stuarty.example.com/hooks --events export.ready,job.failed",
 	write:   true,
 	flags: []flagDef{
 		{Name: "name", Kind: kindString, Usage: "a name for the person, 1 to 60 characters (required)"},
