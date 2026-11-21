@@ -1,7 +1,7 @@
 import { Head, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
-
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { Button } from "@/components/ui/button";
 import { useLocale, useT } from "@/lib/i18n";
 import type { ProjectsIndexProps } from "@/types";
 import { createClient } from "../../editor/api/client";
@@ -27,6 +27,8 @@ export default function ProjectsIndex() {
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [createFailure, setCreateFailure] = useState<Failure | null>(null);
 	const [creating, setCreating] = useState(false);
+	// With projects to show, the form waits behind a button so the list is the first thing on the page (VV-364).
+	const [formOpen, setFormOpen] = useState(projects.length === 0);
 
 	const moveToTrash = async (id: string): Promise<void> => {
 		setFailure(null);
@@ -65,16 +67,28 @@ export default function ProjectsIndex() {
 					<h2 id="new-project" className="text-lg font-semibold">
 						{t("ui.projects.new")}
 					</h2>
-					<div className="mt-4">
-						<ProjectContextForm
-							initial={emptyContext()}
-							submitLabel={t("ui.projects.create")}
-							busy={creating}
-							failure={createFailure}
-							onEdited={() => setCreateFailure(null)}
-							onSubmit={(values) => void submit(values)}
-						/>
-					</div>
+					{formOpen ? (
+						<div id="new-project-form" className="mt-4">
+							<ProjectContextForm
+								initial={emptyContext()}
+								submitLabel={t("ui.projects.create")}
+								busy={creating}
+								failure={createFailure}
+								onEdited={() => setCreateFailure(null)}
+								onSubmit={(values) => void submit(values)}
+							/>
+						</div>
+					) : (
+						<Button
+							type="button"
+							className="mt-4"
+							aria-expanded={false}
+							aria-controls="new-project-form"
+							onClick={() => setFormOpen(true)}
+						>
+							{t("ui.projects.new_open")}
+						</Button>
+					)}
 				</section>
 
 				<section aria-labelledby="project-list">

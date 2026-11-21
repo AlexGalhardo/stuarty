@@ -103,6 +103,17 @@ test.describe("a11y-first-flow-keyboard @chromium-only", () => {
 
 		await test.step("create the project", async () => {
 			await page.goto("/projects");
+			// With projects in the list the form waits behind a button (VV-364).
+			const openForm = page.getByRole("button", {
+				name: "Start a new project",
+			});
+			await expect(
+				openForm.or(page.getByLabel("Name", { exact: true })),
+			).toBeVisible();
+			if (await openForm.isVisible()) {
+				await openForm.focus();
+				await page.keyboard.press("Enter");
+			}
 			const fields: [string, string][] = [
 				["Name", name],
 				["Description", DESCRIPTION],

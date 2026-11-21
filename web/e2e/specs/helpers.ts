@@ -460,8 +460,21 @@ export function projectBody(name: string): Record<string, unknown> {
 	return { name: validName(name), description: DESCRIPTION, goal: GOAL };
 }
 
+export async function openProjectForm(page: Page): Promise<void> {
+	// With projects in the list the form waits behind a button (VV-364); the page may still be drawing.
+	const open = page.getByRole("button", { name: "Start a new project" });
+	const name = page.getByLabel("Name", { exact: true });
+	await expect(open.or(name)).toBeVisible();
+	if (await open.isVisible()) {
+		// The keyboard, so the field tips that open on a keyboard focus still do.
+		await open.focus();
+		await page.keyboard.press("Enter");
+	}
+}
+
 // fillProjectForm fills the create form of the projects page with a valid context (epic 56).
 export async function fillProjectForm(page: Page, name: string): Promise<void> {
+	await openProjectForm(page);
 	await page.getByLabel("Name", { exact: true }).fill(validName(name));
 	await page.getByLabel("Description", { exact: true }).fill(DESCRIPTION);
 	await page.getByLabel("Specific", { exact: true }).fill(GOAL.specific);

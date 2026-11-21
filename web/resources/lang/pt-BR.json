@@ -105,6 +105,7 @@
     "projects": {
       "title": "Projetos",
       "new": "Novo projeto",
+      "new_open": "Começar um novo projeto",
       "name": "Nome",
       "size": "Tamanho",
       "create": "Criar projeto",
