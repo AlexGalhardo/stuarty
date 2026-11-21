@@ -363,6 +363,16 @@ jobs:
         with:
           name: coverage
           path: coverage.out
+      # The report feeds the README badge; covergate above stays the check. A pull request from a fork has no
+      # token, and an outage of Codecov must not turn the required check red.
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-latest'
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.out
+          disable_search: true
+          fail_ci_if_error: false
 
   # P1-QA-001, Prototype exit criteria 1 and 2: the reference scenario driven by the
   # CLI process, MCP over stdio and MCP over HTTP against a real `serve`, each
