@@ -7,7 +7,6 @@ import Base from "../layouts/Base.astro";
 import { landing } from "@/lib/landing";
 import FontPreload from "../components/landing/FontPreload.astro";
 import DriveTabs from "../components/landing/DriveTabs.astro";
-import LandingFooter from "../components/landing/LandingFooter.astro";
 import LandingActions from "../components/landing/LandingActions.astro";
 import Shot from "../components/landing/Shot.astro";
 import HeroTyper from "../components/landing/HeroTyper.astro";
@@ -96,7 +95,6 @@ import { withBase } from "@/lib/site";
 		</button>
 		<div class="shot-zoom-stage" data-zoom-stage></div>
 	</dialog>
-	<LandingFooter beta={false} />
 </Base>
 
 <style is:global>
@@ -166,9 +164,6 @@ import { withBase } from "@/lib/site";
 		height: 100%;
 		overflow: hidden;
 		overscroll-behavior: none;
-	}
-	html.takes-on .landing-footer {
-		display: none;
 	}
 	html.takes-on .take {
 		position: fixed;
@@ -380,8 +375,7 @@ import { withBase } from "@/lib/site";
 			margin-top: 1rem;
 		}
 	}
-	html:not(.takes-on) .take-hint,
-	html:not(.takes-on) .take-credits {
+	html:not(.takes-on) .take-hint {
 		display: none;
 	}
 
