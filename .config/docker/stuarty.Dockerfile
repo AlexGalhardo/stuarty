@@ -24,6 +24,9 @@ COPY web/package.json web/bun.lock ./
 # versions the repository tracks.
 RUN bun install --frozen-lockfile
 COPY web/ ./
+# The editor imports the renderer module and its digest from engine/renderhost/ (module.ts): the build
+# resolves them at ../engine/renderhost relative to web/, so they are copied to the same place.
+COPY engine/renderhost/renderer.wasm engine/renderhost/renderer.wasm.sha256 /src/engine/renderhost/
 RUN bun run build \
 	&& find resources/public/build -type f -name "*.js" | grep -q .
 
