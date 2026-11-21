@@ -48,13 +48,17 @@ pages)
 	command -v gh >/dev/null 2>&1 || die "gh is required"
 	command -v jq >/dev/null 2>&1 || die "jq is required"
 	out="$2/updates"
-	tag="$(gh release list -R "$repo" --exclude-pre-releases --limit 1 --json tagName --jq '.[0].tagName // empty')"
+	# The newest stable release that carries a feed: a release without installers (a release train cut)
+	# must not take the published feed away from the desktop applications that poll it.
+	tag=""
+	for t in $(gh release list -R "$repo" --exclude-pre-releases --limit 100 --json tagName --jq '.[].tagName'); do
+		if gh release view "$t" -R "$repo" --json assets --jq '.assets[].name' | grep -qx feed.json; then
+			tag="$t"
+			break
+		fi
+	done
 	if [ -z "$tag" ]; then
-		echo "update-feed: no stable release yet, no updates directory"
-		exit 0
-	fi
-	if ! gh release view "$tag" -R "$repo" --json assets --jq '.assets[].name' | grep -qx feed.json; then
-		echo "update-feed: $tag has no feed.json (it predates the desktop update), no updates directory"
+		echo "update-feed: no stable release has a feed.json yet, no updates directory"
 		exit 0
 	fi
 	mkdir -p "$out"
