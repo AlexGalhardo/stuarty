@@ -112,10 +112,6 @@ func (h *Host) PutPrepared(ctx context.Context, item string, p Prepared) error {
 		return &Error{InvalidArgument, "PutPrepared"}
 	}
 
-	if sz := p.Size(); sz.W > maxTextureSide || sz.H > maxTextureSide {
-		return &Error{LimitExceeded, "render_texture_side"}
-	}
-
 	id, err := h.put(ctx, []byte(item))
 	if err != nil {
 		return err
