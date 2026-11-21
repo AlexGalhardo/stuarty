@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
+import { PersonOnlyNote, useSession } from "@/lib/session";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
 import type { SocialNetwork } from "../../editor/api/types";
@@ -42,6 +43,7 @@ export function SetupGuide({
 	navigate(address: string): void;
 }): ReactNode {
 	const t = useT();
+	const { privileged } = useSession();
 	const [clientId, setClientId] = useState("");
 	const [clientSecret, setClientSecret] = useState("");
 	const [label, setLabel] = useState("");
@@ -182,13 +184,16 @@ export function SetupGuide({
 					</>
 				)}
 				<FailureNote id="setup-error" failure={failure} />
+				<PersonOnlyNote id="social-person-only" />
 				<div className="flex gap-2">
 					<Button
 						type="submit"
 						disabled={
+							!privileged ||
 							busy ||
 							(!again && (clientId.trim() === "" || clientSecret === ""))
 						}
+						aria-describedby={privileged ? undefined : "social-person-only"}
 					>
 						{again
 							? t("ui.social.sign_in_again")

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLocale, useT } from "@/lib/i18n";
+import { PersonOnlyNote, useSession } from "@/lib/session";
 import {
 	formatMoney,
 	microsToInput,
@@ -45,6 +46,7 @@ export function AccountPicker({
 	onSelect(accountId: string): void;
 }): ReactNode {
 	const t = useT();
+	const { privileged } = useSession();
 	const [picked, setPicked] = useState("");
 	return (
 		<fieldset
@@ -73,11 +75,15 @@ export function AccountPicker({
 			<div>
 				<Button
 					type="button"
-					disabled={busy || picked === ""}
+					disabled={!privileged || busy || picked === ""}
+					aria-describedby={
+						privileged ? undefined : `pick-person-only-${connectionId}`
+					}
 					onClick={() => onSelect(picked)}
 				>
 					{t("ui.social.pick_use")}
 				</Button>
+				<PersonOnlyNote id={`pick-person-only-${connectionId}`} />
 			</div>
 		</fieldset>
 	);

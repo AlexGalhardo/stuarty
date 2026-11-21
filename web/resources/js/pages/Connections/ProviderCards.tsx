@@ -270,6 +270,7 @@ function ProviderConnection({
 }): ReactNode {
 	const t = useT();
 	const locale = useLocale();
+	const { privileged } = useSession();
 	const [models, setModels] = useState<ProviderModelsResult | null>(null);
 	const [status, setStatus] = useState<string | null>(null);
 	const [failure, setFailure] = useState<Failure | null>(null);
@@ -377,12 +378,19 @@ function ProviderConnection({
 							)}
 						</p>
 					)}
+					{signIn !== undefined && (
+						<PersonOnlyNote id={`signin-person-only-${connection.id}`} />
+					)}
 				</div>
 				<div className="flex shrink-0 gap-2">
 					{signIn !== undefined && (
 						<Button
 							type="button"
 							variant={signIn.state === "ready" ? "outline" : "default"}
+							disabled={!privileged}
+							aria-describedby={
+								privileged ? undefined : `signin-person-only-${connection.id}`
+							}
 							onClick={() => void signInAgain()}
 						>
 							{t("ui.providers.signin_again")}
@@ -458,6 +466,7 @@ export function ProviderCard({
 	onChanged(): void;
 }): ReactNode {
 	const t = useT();
+	const { privileged } = useSession();
 	const canSignIn = provider.credential_kinds.includes("oauth");
 	const signInText = SIGN_IN_TEXTS.includes(provider.id)
 		? provider.id
@@ -546,6 +555,10 @@ export function ProviderCard({
 						<Button
 							type="button"
 							data-provider-signin={provider.id}
+							disabled={!privileged}
+							aria-describedby={
+								privileged ? undefined : `signin-person-only-${provider.id}`
+							}
 							onClick={() => void startSignIn()}
 						>
 							{t(`ui.providers.signin.${signInText}`, {
@@ -553,6 +566,7 @@ export function ProviderCard({
 							})}
 						</Button>
 					</div>
+					<PersonOnlyNote id={`signin-person-only-${provider.id}`} />
 				</div>
 			)}
 			<form
