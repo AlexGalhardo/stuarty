@@ -19,6 +19,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
 	event "github.com/AlexGalhardo/stuarty/service/events"
+	"github.com/AlexGalhardo/stuarty/service/remote"
 )
 
 // EventsQuery is what the stream of a project is opened with.
@@ -207,7 +208,7 @@ type doer interface {
 // httpEvents is the EventOpener over the HTTP API of a server.
 func httpEvents(base, token string, hc doer) EventOpener {
 	return func(ctx context.Context, q EventsQuery) (io.ReadCloser, error) {
-		u := strings.TrimRight(base, "/") + "/api/v1/projects/" + url.PathEscape(q.ProjectID) + "/events"
+		u := strings.TrimRight(base, "/") + "/api/v1/projects/" + remote.Segment(q.ProjectID) + "/events"
 		if q.Since != "" {
 			u += "?" + url.Values{"since": {q.Since}}.Encode()
 		}

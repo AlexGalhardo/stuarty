@@ -158,4 +158,16 @@ func TestHTTPEventsSendsTheCredentialAndTheResumePoint(t *testing.T) {
 		!strings.Contains(err.Error(), "E_NOT_FOUND") {
 		t.Errorf("a 404 must be the server error, got %v", err)
 	}
+
+	// A dot segment stays in the id instead of moving the request to another route (VV-369).
+	dots, err := open(t.Context(), EventsQuery{ProjectID: ".."})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_ = dots.Close()
+
+	if got := req.URL.EscapedPath(); got != "/api/v1/projects/%2E%2E/events" {
+		t.Errorf("the path of the id .. is %q", got)
+	}
 }
