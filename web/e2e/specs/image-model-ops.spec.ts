@@ -149,6 +149,10 @@ async function removeConnection(page: Page, label: string): Promise<void> {
 	await page.goto("/connections");
 	const row = page.locator("[data-connection-id]").filter({ hasText: label });
 	await row.getByRole("button", { name: "Remove" }).click();
+	await page
+		.getByRole("alertdialog")
+		.getByRole("button", { name: "Remove" })
+		.click();
 	await expect(row).toHaveCount(0);
 }
 

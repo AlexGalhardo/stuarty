@@ -120,7 +120,16 @@ test.describe("connections", () => {
 				SECRET,
 			);
 
+			// Removing asks first: cancelling keeps the connection and its credential.
+			const ask = page.getByRole("alertdialog");
 			await row.getByRole("button", { name: "Remove" }).click();
+			await ask.getByRole("button", { name: "Cancel" }).click();
+			await expect(ask).toHaveCount(0);
+			await expect(row).toHaveCount(1);
+			expect(await labelled(api, label)).toBe(1);
+
+			await row.getByRole("button", { name: "Remove" }).click();
+			await ask.getByRole("button", { name: "Remove" }).click();
 			await expect(row).toHaveCount(0);
 			expect(await labelled(api, label)).toBe(0);
 			expect(dest.received).toHaveLength(1);
@@ -178,6 +187,10 @@ test.describe("connections", () => {
 			await expect(row).toContainText("Usada pela última vez em");
 
 			await row.getByRole("button", { name: "Remover" }).click();
+			await page
+				.getByRole("alertdialog")
+				.getByRole("button", { name: "Remover" })
+				.click();
 			await expect(row).toHaveCount(0);
 			expect(await labelled(api, label)).toBe(0);
 		} finally {
