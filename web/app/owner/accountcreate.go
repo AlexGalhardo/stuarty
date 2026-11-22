@@ -1,6 +1,7 @@
 package owner
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -60,7 +61,7 @@ func (o *Owner) createAccount(ctx context.Context, rec account.Record, fields ac
 	undo := func(cause error) error {
 		if hadVault {
 			// If this fails the copy stays where it is, and the next start or the next creation puts it back.
-			if _, rerr := copyFileAtomic(filepath.Join(backupDir, connections.VaultFile), vaultPath); rerr != nil {
+			if rerr := restoreVault(filepath.Join(backupDir, connections.VaultFile), vaultPath); rerr != nil {
 				return errors.Join(cause, fmt.Errorf("restoring the vault: %w", rerr))
 			}
 		}
@@ -210,15 +211,12 @@ func (o *Owner) recoverAccountBackup(ctx context.Context) error {
 			continue
 		}
 
-		if !restored {
-			saved := filepath.Join(dir, connections.VaultFile)
-
-			had, err := copyFileAtomic(saved, filepath.Join(string(o.Dir), connections.VaultFile))
-			if err != nil {
+		if saved := filepath.Join(dir, connections.VaultFile); !restored && fileExists(saved) {
+			if err := restoreVault(saved, filepath.Join(string(o.Dir), connections.VaultFile)); err != nil {
 				return err
 			}
 
-			restored = had
+			restored = true
 		}
 
 		if err := os.RemoveAll(dir); err != nil {
@@ -227,6 +225,29 @@ func (o *Owner) recoverAccountBackup(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+
+	return err == nil
+}
+
+// restoreVault puts the copy of the vault back. A vault that is already the copy is left alone: the re-seal that
+// failed may have failed because the file cannot be written, and then a restore would fail for the same reason.
+func restoreVault(saved, vaultPath string) error {
+	want, err := os.ReadFile(saved)
+	if err != nil {
+		return err
+	}
+
+	if have, rerr := os.ReadFile(vaultPath); rerr == nil && bytes.Equal(have, want) {
+		return nil
+	}
+
+	_, err = copyFileAtomic(saved, vaultPath)
+
+	return err
 }
 
 // copyFileAtomic copies a file, mode 0600, and reports whether it existed. The destination appears whole or not
