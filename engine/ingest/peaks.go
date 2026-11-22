@@ -292,6 +292,36 @@ func (c ctxReader) Read(p []byte) (int, error) {
 // PeaksOfFileContext is PeaksOfFile that stops, with the error of ctx, when ctx ends: a request that computes
 // the peaks of a long file gives the work up when its client goes away (SDD-011 section 6.5).
 func PeaksOfFileContext(ctx context.Context, path string) (*Peaks, error) {
+	return PeaksOfFileProgress(ctx, path, nil)
+}
+
+// countReader reports how many bytes were read, at most once per mebibyte-sized step, so a job of a long
+// file shows progress without a call for every read.
+type countReader struct {
+	r      io.Reader
+	read   int64
+	total  int64
+	last   int64
+	report func(done, total int64)
+}
+
+const progressStepBytes = 8 << 20
+
+func (c *countReader) Read(p []byte) (int, error) {
+	n, err := c.r.Read(p)
+	c.read += int64(n)
+
+	if c.read-c.last >= progressStepBytes {
+		c.last = c.read
+		c.report(c.read, c.total)
+	}
+
+	return n, err
+}
+
+// PeaksOfFileProgress is PeaksOfFileContext that tells how far it is: onProgress gets the bytes of the data
+// chunk read and its size, every few mebibytes (SDD-011 section 6.3.1). A nil onProgress is allowed.
+func PeaksOfFileProgress(ctx context.Context, path string, onProgress func(done, total int64)) (*Peaks, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -307,5 +337,9 @@ func PeaksOfFileContext(ctx context.Context, path string) (*Peaks, error) {
 	if _, err := f.Seek(w.DataOffset, io.SeekStart); err != nil {
 		return nil, err
 	}
-	return ComputePeaks(ctxReader{ctx: ctx, r: io.LimitReader(f, w.DataSize)}, w.Channels, w.SampleRate)
+	var r io.Reader = ctxReader{ctx: ctx, r: io.LimitReader(f, w.DataSize)}
+	if onProgress != nil {
+		r = &countReader{r: r, total: w.DataSize, report: onProgress}
+	}
+	return ComputePeaks(r, w.Channels, w.SampleRate)
 }

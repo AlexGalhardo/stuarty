@@ -506,6 +506,18 @@ func isExists(err error) bool { return errors.Is(err, ErrExists) }
 // enqueues one. The partial unique index of SDD-005 section 5.6 makes one
 // active job per file a database fact.
 func (s *svc) ensureIngestJob(ctx context.Context, tx Tx, hash, actor string, now int64) (string, error) {
+	return s.ensureIngestJobFor(ctx, tx, hash, actor, now, map[string]any{"asset_hash": hash, "reason": "import"})
+}
+
+// ensureIngestJobFor is ensureIngestJob for a job whose input is given: an import, or the profile upgrade of
+// SDD-011 section 6.3.
+func (s *svc) ensureIngestJobFor(
+	ctx context.Context,
+	tx Tx,
+	hash, actor string,
+	now int64,
+	in map[string]any,
+) (string, error) {
 	active, err := tx.Jobs().ActiveIngestForHash(ctx, hash)
 	if err == nil {
 		return active.ID, nil
@@ -515,7 +527,7 @@ func (s *svc) ensureIngestJob(ctx context.Context, tx Tx, hash, actor string, no
 		return "", err
 	}
 
-	input := marshalOrNull(map[string]string{"asset_hash": hash, "reason": "import"})
+	input := marshalOrNull(in)
 	h := hash
 	job := JobRow{
 		ID: s.newIDs("job"), Kind: JobIngest, AssetHash: &h, Actor: actor, State: JobQueued, Input: input,
@@ -1497,12 +1509,14 @@ func (s *svc) ensurePeaks(ctx context.Context, kind string, ar AssetRow, arts []
 		arts = fresh
 	}
 
-	return s.computePeaks(ctx, ar.Hash, arts)
+	return s.computePeaks(ctx, ar, arts)
 }
 
 // computePeaks builds the peaks of an audio asset that has none from its stored normalized WAV, with the
 // function ingest uses (SDD-011 section 4.6), registers the artifact and returns the new list of rows.
-func (s *svc) computePeaks(ctx context.Context, hash string, arts []ArtifactRow) ([]ArtifactRow, error) {
+func (s *svc) computePeaks(ctx context.Context, ar AssetRow, arts []ArtifactRow) ([]ArtifactRow, error) {
+	hash := ar.Hash
+
 	i := slices.IndexFunc(arts, func(a ArtifactRow) bool {
 		return a.Kind == "normalized" && a.Ext == "wav"
 	})
@@ -1516,12 +1530,9 @@ func (s *svc) computePeaks(ctx context.Context, hash string, arts []ArtifactRow)
 		return nil, internalError()
 	}
 
-	// Not E_ASSET_NOT_READY: the asset is ready and that code is retryable, so a client would ask forever for
-	// peaks that no request computes.
+	// A long file is the work of a job, not of a request (SDD-011 section 6.3.1).
 	if arts[i].SizeBytes > maxPeaksWAV {
-		return nil, newError("E_LIMIT_EXCEEDED", "the audio is too long to compute its peaks in a request.").
-			withHint("the file still plays and can be used; it has no waveform").
-			withLimit("peaks_bytes", arts[i].SizeBytes, maxPeaksWAV)
+		return nil, s.peaksUpgradePending(ctx, ar, arts[i].SizeBytes)
 	}
 
 	pk, err := ingest.PeaksOfFileContext(ctx, src)
@@ -1533,6 +1544,11 @@ func (s *svc) computePeaks(ctx context.Context, hash string, arts []ArtifactRow)
 		return nil, internalError()
 	}
 
+	return s.storePeaks(ctx, hash, pk)
+}
+
+// storePeaks writes the peaks file of an asset, registers it as an artifact and returns the new list of rows.
+func (s *svc) storePeaks(ctx context.Context, hash string, pk *ingest.Peaks) ([]ArtifactRow, error) {
 	body := pk.Marshal()
 	rel := "artifacts/" + strings.TrimPrefix(hash, "sha256:") + "/" +
 		ingest.ArtifactName("peaks", ingest.ProfilePeaks, "", "bin")

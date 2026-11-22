@@ -1,6 +1,12 @@
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 
-import { columnPeaks, parsePeaks } from "./waveform";
+import {
+	clearPeaksCache,
+	columnPeaks,
+	isPeaksPending,
+	loadPeaks,
+	parsePeaks,
+} from "./waveform";
 
 // A peaks file of version 1 with two levels (4 and 16 samples per peak) over 64
 // samples at 48 kHz: the first half is quiet (+-1000), the second loud (+-20000).
@@ -85,5 +91,37 @@ describe("waveform", () => {
 		});
 		expect(bars[1]).toBeCloseTo(1000 / 32768);
 		expect(bars[3]).toBeCloseTo(20000 / 32768);
+	});
+});
+
+describe("loadPeaks of a long sound", () => {
+	afterEach(() => {
+		vi.unstubAllGlobals();
+		clearPeaksCache();
+	});
+
+	test("a 409 means the server is computing them: no peaks yet, asked again later", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn().mockResolvedValue(new Response("{}", { status: 409 })),
+		);
+		expect(await loadPeaks("prj_a", "ast_1")).toBeNull();
+		expect(isPeaksPending("prj_a", "ast_1")).toBe(true);
+
+		vi.stubGlobal(
+			"fetch",
+			vi.fn().mockResolvedValue(new Response(file(), { status: 200 })),
+		);
+		expect(await loadPeaks("prj_a", "ast_1")).not.toBeNull();
+		expect(isPeaksPending("prj_a", "ast_1")).toBe(false);
+	});
+
+	test("any other failure is final", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn().mockResolvedValue(new Response("{}", { status: 422 })),
+		);
+		expect(await loadPeaks("prj_b", "ast_2")).toBeNull();
+		expect(isPeaksPending("prj_b", "ast_2")).toBe(false);
 	});
 });
