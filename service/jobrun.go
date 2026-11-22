@@ -127,7 +127,7 @@ func (p *progress) report(ctx context.Context, v float64, msg string) {
 	cur.State, cur.Progress, cur.Message = JobRunning, v, msg
 	p.s.emitJob(ctx, &cur)
 
-	if p.job.Kind == JobIngest && p.job.AssetHash != nil {
+	if ingestsAsset(p.job) {
 		if p.s.store.Assets().SetIngest(ctx, *p.job.AssetHash, IngestIngesting, v, nil, p.s.nowMs()) == nil {
 			p.s.emitAsset(ctx, *p.job.AssetHash, IngestIngesting, v, nil)
 		}
@@ -210,7 +210,7 @@ func (s *svc) RunJob(ctx context.Context, jobID string) (err error) {
 
 	s.logJob(ctx, slog.LevelInfo, "job started", &job)
 
-	if job.Kind == JobIngest && job.AssetHash != nil {
+	if ingestsAsset(&job) {
 		if s.store.Assets().SetIngest(ctx, *job.AssetHash, IngestIngesting, 0, nil, s.nowMs()) == nil {
 			s.emitAsset(ctx, *job.AssetHash, IngestIngesting, 0, nil)
 		}
@@ -225,6 +225,12 @@ func (s *svc) RunJob(ctx context.Context, jobID string) (err error) {
 
 	switch job.Kind {
 	case JobIngest:
+		if isProfileUpgrade(&job) {
+			result, herr = s.runPeaksUpgrade(jctx, &job, pw)
+
+			break
+		}
+
 		result, herr = s.runIngest(jctx, &job, pw)
 	case JobExport:
 		result, herr = s.runExport(jctx, &job, pw)
@@ -338,7 +344,11 @@ func (s *svc) finishFailed(ctx context.Context, job *JobRow, state string, e *Er
 		return err
 	}
 
-	if ok && job.Kind == JobIngest && job.AssetHash != nil {
+	if ok {
+		s.noteUpgradeEnded(job, state)
+	}
+
+	if ok && ingestsAsset(job) {
 		if aerr := s.store.Assets().SetIngest(ctx, *job.AssetHash, IngestFailed, 0, ej, s.nowMs()); aerr == nil {
 			s.emitAsset(ctx, *job.AssetHash, IngestFailed, 0, e)
 		}
@@ -365,7 +375,7 @@ func (s *svc) requeueInterrupted(ctx context.Context, job *JobRow) {
 
 	s.logJob(ctx, slog.LevelWarn, "job requeued", job)
 
-	if job.Kind == JobIngest && job.AssetHash != nil {
+	if ingestsAsset(job) {
 		if s.store.Assets().SetIngest(ctx, *job.AssetHash, IngestPending, 0, nil, s.nowMs()) == nil {
 			s.emitAsset(ctx, *job.AssetHash, IngestPending, 0, nil)
 		}
@@ -976,7 +986,7 @@ func (s *svc) recoverRunning(ctx context.Context, tx Tx, now int64) ([]JobRow, e
 
 		j.State, j.Message = JobQueued, msgRestarted
 
-		if j.Kind == JobIngest && j.AssetHash != nil {
+		if ingestsAsset(&j) {
 			if err := tx.Assets().SetIngest(ctx, *j.AssetHash, IngestPending, 0, nil, now); err != nil {
 				return nil, err
 			}
@@ -1048,7 +1058,7 @@ func (s *svc) failInterrupted(ctx context.Context, tx Tx, j *JobRow, now int64) 
 	j.State, j.Error = JobFailed, ej
 	s.logJob(ctx, slog.LevelError, "job failed", j, slog.String("code", e.Code), slog.String("reason", "interrupted"))
 
-	if j.Kind == JobIngest && j.AssetHash != nil {
+	if ingestsAsset(j) {
 		return tx.Assets().SetIngest(ctx, *j.AssetHash, IngestFailed, 0, ej, now)
 	}
 

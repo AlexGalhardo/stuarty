@@ -3,7 +3,7 @@
 // into one min and max per pixel column for the visible part of the item. A
 // decoration: it reads `source_in`, `speed`, `start` and `duration`, is never
 // shown as a time and is never sent to the core.
-import { fetchPeaks } from "../../api/peaks";
+import { fetchPeaks, PeaksPendingError } from "../../api/peaks";
 import { Lru } from "../../preview/lru";
 
 export interface PeakLevel {
@@ -111,6 +111,13 @@ export function columnPeaks(peaks: Peaks, p: WaveformParams): Float32Array {
 // the cache so the next draw may try again.
 const cache = new Lru<string, Promise<Peaks | null>>(50);
 
+// The assets whose last read was answered "being computed": the page asks again for them.
+const pendingKeys = new Set<string>();
+
+export function isPeaksPending(projectId: string, assetId: string): boolean {
+	return pendingKeys.has(`${projectId}/${assetId}`);
+}
+
 export function loadPeaks(
 	projectId: string,
 	assetId: string,
@@ -119,9 +126,14 @@ export function loadPeaks(
 	const cached = cache.get(key);
 	if (cached !== undefined) return cached;
 	const pending = fetchPeaks(projectId, assetId)
-		.then(parsePeaks)
-		.catch(() => {
+		.then((raw) => {
+			pendingKeys.delete(key);
+			return parsePeaks(raw);
+		})
+		.catch((error: unknown) => {
 			cache.delete(key);
+			if (error instanceof PeaksPendingError) pendingKeys.add(key);
+			else pendingKeys.delete(key);
 			return null;
 		});
 	cache.set(key, pending);

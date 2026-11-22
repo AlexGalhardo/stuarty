@@ -7,6 +7,7 @@ import type { LibraryAsset } from "../editor/api/types";
 import { proxyUrl } from "../editor/api/urls";
 import {
 	columnPeaks,
+	isPeaksPending,
 	loadPeaks,
 	type Peaks,
 } from "../editor/timeline/items/waveform";
@@ -14,6 +15,7 @@ import { formatSeconds } from "../editor/ui/timeFormat";
 
 const WAVE_WIDTH = 480;
 const WAVE_HEIGHT = 48;
+const PEAKS_RETRY_MS = 5000;
 
 // The whole file as one min and max per pixel column, from the peaks the server serves (SDD-011 section 4.6).
 // One "frame" here is one sample, so a column spans sampleCount / WAVE_WIDTH samples.
@@ -45,12 +47,20 @@ export function Waveform({
 		"loading",
 	);
 
+	// A long sound's peaks are computed by a job: the page asks again while the server says so.
+	const [attempt, setAttempt] = useState(0);
+
 	useEffect(() => {
 		let live = true;
+		let timer: ReturnType<typeof setTimeout> | undefined;
 		setState("loading");
 		void loadPeaks(timelineId, assetId).then((peaks) => {
 			if (!live) return;
 			const ctx = canvas.current?.getContext("2d");
+			if (peaks === null && isPeaksPending(timelineId, assetId)) {
+				timer = setTimeout(() => setAttempt((n) => n + 1), PEAKS_RETRY_MS);
+				return;
+			}
 			if (peaks === null || ctx === null || ctx === undefined) {
 				setState("missing");
 				return;
@@ -69,8 +79,9 @@ export function Waveform({
 		});
 		return () => {
 			live = false;
+			clearTimeout(timer);
 		};
-	}, [timelineId, assetId]);
+	}, [timelineId, assetId, attempt]);
 
 	return (
 		<div className="flex flex-col gap-1">

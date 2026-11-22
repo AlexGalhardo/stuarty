@@ -768,7 +768,7 @@ func (s *svc) JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error)
 			withHint("use a key that covers this project")
 	}
 
-	if row.Kind == JobIngest && row.AssetHash != nil && !JobFinal(row.State) {
+	if ingestsAsset(&row) && !JobFinal(row.State) {
 		done, cerr := s.cancelSharedIngest(ctx, c, &row)
 		if cerr != nil {
 			return nil, asError(cerr)
@@ -949,7 +949,9 @@ func (s *svc) cancelJob(ctx context.Context, id string) error {
 
 // afterQueuedCancel closes what a job cancelled before it ran leaves open.
 func (s *svc) afterQueuedCancel(ctx context.Context, j *JobRow) {
-	if j.Kind == JobIngest && j.AssetHash != nil {
+	s.noteUpgradeEnded(j, JobCancelled)
+
+	if ingestsAsset(j) {
 		e := newError(CodeCancelled, "the job was cancelled.")
 		if err := s.store.Assets().SetIngest(ctx, *j.AssetHash, IngestFailed, 0, errorJSON(e), s.nowMs()); err == nil {
 			s.emitAsset(ctx, *j.AssetHash, IngestFailed, 0, e)

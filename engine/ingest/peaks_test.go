@@ -196,3 +196,72 @@ func TestPeaksOfFileContextStopsWhenTheContextEnds(t *testing.T) {
 		t.Fatalf("PeaksOfFileContext: %v", err)
 	}
 }
+
+// A long file reports how far it is, in growing steps that end within the size of its data (SDD-011 6.3.1).
+func TestPeaksOfFileProgressReportsGrowingSteps(t *testing.T) {
+	p := filepath.Join(t.TempDir(), "a.wav")
+	if err := os.WriteFile(p, wavBytes(ramp(48000*60), false), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	var seen []int64
+
+	var total int64
+
+	pk, err := PeaksOfFileProgress(t.Context(), p, func(done, size int64) {
+		seen, total = append(seen, done), size
+	})
+	if err != nil || pk.SampleCount != 48000*60 {
+		t.Fatalf("PeaksOfFileProgress = %v, %v", pk, err)
+	}
+
+	if len(seen) == 0 || total != 48000*60*4 {
+		t.Fatalf("progress reports %v for a data chunk of %d bytes", seen, total)
+	}
+
+	for i, v := range seen {
+		if v > total || (i > 0 && v <= seen[i-1]) {
+			t.Errorf("report %d = %d: not growing or past %d", i, v, total)
+		}
+	}
+}
+
+// The peaks of a WAV over 1 GiB (the size a request refuses, SDD-011 6.5) are computed by streaming the file,
+// without holding it in memory. The file is a header and a hole (sparse where the system allows it) and is
+// deleted when the test ends.
+func TestPeaksOfFileOverOneGiB(t *testing.T) {
+	if testing.Short() {
+		t.Skip("reads more than 1 GiB")
+	}
+
+	const dataSize = 1<<30 + 4<<20
+
+	head := wavBytes(nil, false)
+	at := bytes.Index(head, []byte("data")) + 4
+	binary.LittleEndian.PutUint32(head[at:], dataSize)
+
+	p := filepath.Join(t.TempDir(), "long.wav")
+
+	f, err := os.Create(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Cleanup(func() { _ = os.Remove(p) })
+
+	_, werr := f.Write(head)
+	if werr == nil {
+		werr = f.Truncate(int64(len(head)) + dataSize)
+	}
+
+	if cerr := f.Close(); werr != nil || cerr != nil {
+		t.Fatalf("writing the file: %v, %v", werr, cerr)
+	}
+
+	var last int64
+
+	pk, err := PeaksOfFileProgress(t.Context(), p, func(done, _ int64) { last = done })
+	if err != nil || pk.SampleCount != dataSize/4 || last < dataSize-progressStepBytes {
+		t.Fatalf("peaks of a 1 GiB file = %v, %v; last report %d", pk, err, last)
+	}
+}

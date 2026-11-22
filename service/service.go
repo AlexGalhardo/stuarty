@@ -451,6 +451,8 @@ type svc struct {
 	sems     map[string]chan struct{}
 	// peaksGate admits one computation of peaks on request at a time (SDD-011 section 6.5).
 	peaksGate chan struct{}
+	// peaksGaveUp holds the hashes whose peaks job was cancelled or failed in this process (SDD-011 section 6.3.1).
+	peaksGaveUp sync.Map
 
 	// defaultIngest is true when New installed ingest.Run. A substitute ingester
 	// does not touch the runner, so a nil runner is not a missing tool.
