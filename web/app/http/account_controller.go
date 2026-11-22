@@ -131,6 +131,12 @@ func (h *apiHandler) accountCreate(c *web.Ctx, in accountCreateIn) (accountCreat
 		}
 	}
 
+	// On a large workspace the creation outlasts the write timeout of the server, and its answer is the recovery
+	// key, which exists nowhere else: it must reach the person whatever the time.
+	rc := http.NewResponseController(c.Writer())
+	_ = rc.SetReadDeadline(time.Time{})
+	_ = rc.SetWriteDeadline(time.Time{})
+
 	recovery, err := m.Create(c.Context(), rules.Input{
 		Username: in.Username, Email: in.Email, Password: in.Password, Confirmation: in.Confirmation,
 	}, h.AccountApply)
