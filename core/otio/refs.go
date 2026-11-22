@@ -2,7 +2,9 @@ package otio
 
 import (
 	"fmt"
+	"maps"
 	"slices"
+	"strings"
 	"unicode/utf8"
 
 	"github.com/AlexGalhardo/stuarty/core/timeline"
@@ -156,8 +158,9 @@ type itemRefs struct {
 
 // readRefs reads the labels of the vukem metadata of an item. A label that is not valid is reported and
 // ignored. Labels are file-local: the first item with a label owns it, and a second one with the same label
-// loses it.
-func (r *reader) readRefs(v map[string]any, name string) itemRefs {
+// loses it. A caption has no link group and only a caption follows a clip, so the label of the other kind means
+// nothing on the item: it is reported and dropped.
+func (r *reader) readRefs(v map[string]any, name string, caption bool) itemRefs {
 	var out itemRefs
 
 	for _, f := range []struct {
@@ -174,6 +177,18 @@ func (r *reader) readRefs(v map[string]any, name string) itemRefs {
 		} else {
 			r.lose("vukem property " + f.key + " of " + name + " is not a valid value")
 		}
+	}
+
+	if caption && out.link != "" {
+		r.lose("vukem property link of " + name + " is not valid on a caption")
+
+		out.link = ""
+	}
+
+	if !caption && out.linked != "" {
+		r.lose("vukem property linked_item of " + name + " is valid only on a caption")
+
+		out.linked = ""
 	}
 
 	if out.id != "" {
@@ -218,18 +233,19 @@ func (b *batch) linkGroups() [][]string {
 	return out
 }
 
-// reserve gives the items that carry an id label their new ids before any item is added, so that a caption
-// can follow an item that comes later in the file. An item that will not be added (a clip whose reference has
-// no asset) gets none, and what points at it is reported when it is read.
+// reserve gives the clips that carry an id label their new ids before any item is added, so that a caption can
+// follow a clip that comes later in the file. Only a clip that will be added gets one: a caption follows a clip,
+// so a label on a text, a shape or a caption (itself, or another one in a cycle) names nothing, and what points
+// at it is reported when it is read.
 func (b *batch) reserve(tracks []importTrack) {
 	for i := range tracks {
 		for j := range tracks[i].entries {
 			e := &tracks[i].entries[j]
-			if e.refs.id == "" {
+			if e.refs.id == "" || !e.clip {
 				continue
 			}
 
-			if _, has := b.assets[e.ref]; e.clip && !has {
+			if _, has := b.assets[e.ref]; !has {
 				continue
 			}
 
@@ -260,10 +276,14 @@ func (b *batch) itemID(e *entry) string {
 // templateSpec is the template information of a file: the description and the named colours.
 type templateSpec struct {
 	description *string
-	colors      map[string]any
+	colors      map[string]string
 }
 
-const maxTemplateDescription = 500
+const (
+	maxTemplateDescription = 500
+	// maxTemplateColours bounds what one file can add to a document; template.set_info has no ceiling of its own.
+	maxTemplateColours = 256
+)
 
 // templateInfo reads the template of the vukem metadata of the timeline.
 func (r *reader) templateInfo(root map[string]any) {
@@ -281,7 +301,7 @@ func (r *reader) templateInfo(root map[string]any) {
 		return
 	}
 
-	spec := &templateSpec{colors: map[string]any{}}
+	spec := &templateSpec{colors: map[string]string{}}
 
 	if d, has := obj["description"]; has {
 		s, isStr := d.(string)
@@ -298,8 +318,15 @@ func (r *reader) templateInfo(root map[string]any) {
 			r.lose("vukem property template colors is not a valid value")
 		}
 
-		for name, val := range list {
-			s, isStr := val.(string)
+		names := slices.Sorted(maps.Keys(list))
+		if len(names) > maxTemplateColours {
+			r.lose("template colours over the limit of 256")
+
+			names = names[:maxTemplateColours]
+		}
+
+		for _, name := range names {
+			s, isStr := list[name].(string)
 			if !slotNameRe.MatchString(name) || !isStr || !hexColourRe.MatchString(s) {
 				r.lose("template colour " + clipRunes(name, 40) + " is not a valid value")
 
@@ -315,20 +342,46 @@ func (r *reader) templateInfo(root map[string]any) {
 	}
 }
 
-// template pushes the template information first, so that the styles that name a colour as "$name" find it.
-func (b *batch) template(t *templateSpec) {
+// template pushes the template information first, so that the styles that name a colour as "$name" find it. It
+// adds what the project does not have: a description or a colour the project already holds with another value
+// stays, and the file's is reported, because the items of the project may use that colour by name.
+func (b *batch) template(t *templateSpec, project *timeline.TemplateInfo) {
 	if t == nil {
 		return
 	}
 
 	args := map[string]any{}
-	if t.description != nil {
-		args["description"] = *t.description
+
+	if d := t.description; d != nil {
+		switch {
+		case project == nil || project.Description == "" && *d != "":
+			args["description"] = *d
+		case *d != "" && *d != project.Description:
+			b.lost = append(b.lost, Lost{Feature: "template description (the project keeps its own)"})
+		}
 	}
 
-	if len(t.colors) > 0 {
-		args["colors"] = t.colors
+	colours := map[string]any{}
+
+	for _, name := range slices.Sorted(maps.Keys(t.colors)) {
+		if project != nil {
+			if have, ok := project.Colors[name]; ok {
+				if !strings.EqualFold(string(have), t.colors[name]) {
+					b.lost = append(b.lost, Lost{Feature: "template colour " + name + " (the project keeps its own)"})
+				}
+
+				continue
+			}
+		}
+
+		colours[name] = t.colors[name]
 	}
 
-	b.push("template.set_info", args)
+	if len(colours) > 0 {
+		args["colors"] = colours
+	}
+
+	if len(args) > 0 {
+		b.push("template.set_info", args)
+	}
 }
