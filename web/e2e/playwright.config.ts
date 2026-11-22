@@ -137,7 +137,7 @@ const home = process.env.STUARTY_E2E_HOME ?? join(tmpdir(), "stuarty-e2e-home");
 
 // A fourth local server with no account, for the first-run spec (ADR-0049): every other local server has its
 // account and its signed-in session made by the global setup (support/globalSetup.ts).
-const accountPort = port + 7;
+const accountPort = port + 8;
 const accountHome = `${home}-account`;
 
 // A second server whose encoder cannot work, for scenario 9 (export-failure).
