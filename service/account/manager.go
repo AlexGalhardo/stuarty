@@ -40,7 +40,7 @@ type RateLimitedError struct{ RetryAfter time.Duration }
 
 func (e *RateLimitedError) Error() string { return "account: too many failed attempts" }
 
-// Apply creates the account in a workspace that may hold data (SDD-005 section 5.16.3). It receives the
+// Apply creates the account in a workspace that may hold data (SDD-005 section 5.17.3). It receives the
 // record to insert, a sealer over the new data key and the new vault master key; it makes the copy, seals the
 // existing fields, re-seals the vault, verifies, inserts the record and removes the copy, or restores the copy
 // and returns an error. Nothing it is given may outlive the call.

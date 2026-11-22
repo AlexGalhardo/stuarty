@@ -2,7 +2,7 @@ package migrations
 
 import "github.com/AlexGalhardo/vukem/schema"
 
-// The local account (ADR-0049, SDD-005 section 5.16): one row, at most. It holds the username and the e-mail in
+// The local account (ADR-0049, SDD-005 section 5.17): one row, at most. It holds the username and the e-mail in
 // clear, the Argon2id parameters and salt, the verifier of the password and the keys, each wrapped; never the
 // password, the recovery key or a clear key.
 func m20261121200000CreateAccountsTable() schema.Migration {

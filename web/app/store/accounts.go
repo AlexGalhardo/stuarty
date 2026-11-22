@@ -11,7 +11,7 @@ import (
 	"github.com/AlexGalhardo/vukem/database"
 )
 
-// accountRepo is account.Store over the table accounts (SDD-005 section 5.16). The row holds only wrapped keys
+// accountRepo is account.Store over the table accounts (SDD-005 section 5.17). The row holds only wrapped keys
 // and a verifier: nothing here is sealed by the field sealer, since the keys that would seal it live in it.
 type accountRepo struct{ ex database.Executor }
 
