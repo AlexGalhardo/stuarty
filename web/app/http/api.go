@@ -323,7 +323,8 @@ func (h *apiHandler) refuseWhileLocked(w http.ResponseWriter, r *http.Request) b
 		return false
 	}
 
-	if h.Account.Check() != nil && !isPageNavigation(r) && !strings.HasPrefix(r.URL.Path, BasePathAuth+"/account") {
+	if h.Account.Check() != nil && !isPageNavigation(r) && !strings.HasPrefix(r.URL.Path, BasePathAuth+"/account") &&
+		!launchRequest(r) {
 		web.Fail(w, r, accountError(account.ErrLocked))
 
 		return true
@@ -339,6 +340,13 @@ func (h *apiHandler) refuseWhileLocked(w http.ResponseWriter, r *http.Request) b
 	h.Account.Touch()
 
 	return false
+}
+
+// launchRequest is POST /api/v1/system/launch, which answers while the studio is locked: the desktop shell and
+// `stuarty open` ask for it to open their window, and that window is the sign-in page. A launch code reads nothing
+// and is never a person (SDD-007 section 3.9 items 5 and 6).
+func launchRequest(r *http.Request) bool {
+	return r.Method == http.MethodPost && r.URL.Path == BasePath+"/system/launch"
 }
 
 // bearerCaller is the caller of an Authorization header in local mode: the session token of a hosted

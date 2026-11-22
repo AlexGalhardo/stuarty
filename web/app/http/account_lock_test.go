@@ -57,6 +57,32 @@ func TestAccountCreateLiftsTheWriteDeadline(t *testing.T) {
 	}
 }
 
+// The desktop shell asks for a launch code when it starts, and it starts with the studio locked: refused, the
+// window would never open. The code leads to the sign-in page and reads nothing.
+func TestAccountLaunchOpensTheSignInWhileLocked(t *testing.T) {
+	t.Parallel()
+
+	a := newAccountHarness(t)
+	a.create()
+
+	launched := a.sessionWith(t, launcherSecret)
+
+	page := a.do(req{path: "/", noAuth: true, headers: map[string]string{
+		"Accept": "text/html", "Cookie": launched, "Sec-Fetch-Site": "none",
+	}})
+	if page.status != http.StatusSeeOther || page.header.Get("Location") != "/account/signin" {
+		t.Fatalf("the window of the shell = %d %s", page.status, page.header.Get("Location"))
+	}
+
+	if res := a.browser(http.MethodGet, "/api/v1/projects", "", launched); res.status != http.StatusLocked {
+		t.Fatalf("a launch session while locked = %d %s", res.status, res.body)
+	}
+
+	if res := a.get("/api/v1/projects"); res.status != http.StatusLocked {
+		t.Fatalf("the token while locked = %d", res.status)
+	}
+}
+
 type agentTokens map[string]agenthost.Grant
 
 func (t agentTokens) Lookup(secret string) (agenthost.Grant, bool) {
