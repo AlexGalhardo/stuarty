@@ -262,6 +262,9 @@ func segment(v string) string {
 	}
 }
 
+// Segment is segment for the one request the client of this package does not make: the event stream of the CLI.
+func Segment(v string) string { return segment(v) }
+
 func projectPath(id, suffix string) string {
 	return "/projects/" + segment(id) + suffix
 }
