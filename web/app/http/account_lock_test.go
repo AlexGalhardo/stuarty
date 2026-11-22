@@ -4,12 +4,55 @@ import (
 	"bufio"
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/AlexGalhardo/stuarty/service/account"
 	"github.com/AlexGalhardo/stuarty/service/agenthost"
+	"github.com/AlexGalhardo/stuarty/web/app/auth"
 )
+
+// deadlineWriter records the deadlines a handler sets on the connection.
+type deadlineWriter struct {
+	http.ResponseWriter
+	write []time.Time
+}
+
+func (w *deadlineWriter) SetWriteDeadline(d time.Time) error {
+	w.write = append(w.write, d)
+
+	return nil
+}
+
+func (w *deadlineWriter) SetReadDeadline(time.Time) error { return nil }
+
+// The migration of a large workspace can last longer than the write timeout of the server. The answer holds the
+// recovery key, which exists nowhere else, so the deadline is lifted before the work starts.
+func TestAccountCreateLiftsTheWriteDeadline(t *testing.T) {
+	t.Parallel()
+
+	a := newAccountHarness(t)
+
+	r := httptest.NewRequest(http.MethodPost, "/auth/account/create", strings.NewReader(createBody))
+	r.Header.Set("Authorization", "Bearer "+canary)
+	r.Header.Set("Content-Type", "application/json")
+	r.Header.Set(auth.ClientHeader, "test")
+
+	rec := httptest.NewRecorder()
+	w := &deadlineWriter{ResponseWriter: rec}
+
+	a.app.Handler().ServeHTTP(w, r)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("create = %d %s", rec.Code, rec.Body)
+	}
+
+	if len(w.write) == 0 || !w.write[len(w.write)-1].IsZero() {
+		t.Fatalf("the write deadline was not lifted: %v", w.write)
+	}
+}
 
 type agentTokens map[string]agenthost.Grant
 
