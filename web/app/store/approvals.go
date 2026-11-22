@@ -77,7 +77,7 @@ func (r approvalRepo) RequestOfJob(ctx context.Context, jobID string) (approval.
 // timelinesOf selects the ids of the timelines of the project given as the next argument. A row that carries the id of
 // another project is no timeline of this one: an id that names a project is that project (VV-373, ledgerOwner).
 const timelinesOf = `SELECT i.ref FROM project_items i WHERE i.kind = 'timeline' AND i.project_id = ?
- AND (i.ref = i.project_id OR NOT EXISTS (SELECT 1 FROM projects p WHERE p.id = i.ref))`
+ AND ` + ownTimeline
 
 func (r approvalRepo) ListRequests(ctx context.Context, f approval.Filter) ([]approval.Row, int, error) {
 	var (

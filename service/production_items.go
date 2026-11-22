@@ -214,7 +214,22 @@ func (s *svc) ProjectItemAdd(ctx context.Context, req ProjectItemAddRequest) (*P
 
 			return &productionChange{rows: rows, itemID: it.ID, write: func(ctx context.Context, tx Tx) error {
 				if doc != nil {
-					if err := tx.Projects().Create(ctx, s.timelineRow(doc, c, head.OwnerUserID, now)); err != nil {
+					err := tx.Projects().Create(ctx, s.timelineRow(doc, c, head.OwnerUserID, now))
+
+					// A row of another project can hold the id of this one (VV-373): the project is not left without
+					// a timeline for it, and takes an id of its own.
+					if firstTimeline && errors.Is(err, ErrExists) {
+						doc.ID = s.newIDs(timeline.PrefixProject)
+						it.Ref = doc.ID
+
+						if shown := findItem(rows, it.ID); shown != nil {
+							shown.Ref = doc.ID
+						}
+
+						err = tx.Projects().Create(ctx, s.timelineRow(doc, c, head.OwnerUserID, now))
+					}
+
+					if err != nil {
 						return err
 					}
 				}
