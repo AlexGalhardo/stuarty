@@ -369,7 +369,9 @@ func (s *svc) applyBrandKit(
 	}
 
 	if vs := timeline.Validate(doc); len(vs) > 0 {
-		return newError(command.CodeValidation, "the brand kit does not fit the template: %s", violationLine(vs[0])).
+		return newError(
+			command.CodeValidation, "the brand kit does not fit the template: %s", violationLine(doc, vs[0]),
+		).
 			withHint("check the weights of the brand fonts against the styles of the template")
 	}
 

@@ -166,7 +166,7 @@ func templateDocument(doc *timeline.Document, name, description string) (*timeli
 	}
 
 	if vs := timeline.Validate(t); len(vs) > 0 {
-		return nil, newError(command.CodeValidation, "the template document is not valid: %s", violationLine(vs[0])).
+		return nil, newError(command.CodeValidation, "the template document is not valid: %s", violationLine(t, vs[0])).
 			withHint("fix the project and save again")
 	}
 

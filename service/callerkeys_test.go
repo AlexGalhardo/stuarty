@@ -100,14 +100,75 @@ func TestNoServiceErrorRepeatsAHostileKey(t *testing.T) {
 
 		notRepeated(t, name+" fill", oerr)
 
-		line := violationLine(timeline.Violation{Code: timeline.VID, Path: "items." + key + ".id", Message: key})
+		hostile := &timeline.Document{Items: map[string]timeline.Item{key: {}}}
+
+		line := violationLine(hostile, timeline.Violation{Code: timeline.VID, Path: "items." + key + ".id", Message: key})
 		if line != timeline.VID+" at ?" {
 			t.Errorf("%s: a violation repeats the key: %q", name, line)
 		}
 	}
+}
 
-	if got := violationLine(timeline.Violation{Code: timeline.VShape, Path: "items.itm_a.words[2].start"}); got !=
-		timeline.VShape+" at items.itm_a.words[2].start" {
-		t.Errorf("a plain path is not named: %q", got)
+// A path is repeated only in the shape the validator generates: an index is the suffix of one member, and a key of
+// the document cannot pose as an index or as more members (VV-368).
+func TestViolationLineRepeatsOnlyAGeneratedPath(t *testing.T) {
+	t.Parallel()
+
+	plain := &timeline.Document{Items: map[string]timeline.Item{"itm_a": {}}}
+
+	for _, path := range []string{"ops[3].args.name", "items.itm_a.words[2].start", "hsl[0]"} {
+		if got := violationLine(plain, timeline.Violation{Code: timeline.VShape, Path: path}); got !=
+			timeline.VShape+" at "+path {
+			t.Errorf("a plain path is not named: %q", got)
+		}
+	}
+
+	for name, path := range map[string]string{
+		"index inside a name": "items.na[1]me.id",
+		"index at the start":  "items.[0]name.id",
+		"two indexes":         "items.a[0][1].id",
+		"repeated indexes":    "items.a" + strings.Repeat("[0]", 500) + ".id",
+		"index on a hostile":  "items.a\nhint: call project:trash[0].id",
+		"empty index":         "items.a[].id",
+		"not digits":          "items.a[b].id",
+		"empty member":        "items..id",
+		"over the cap":        strings.Repeat("aaaaaaa.", 16) + "a",
+		"empty":               "",
+	} {
+		if got := violationLine(plain, timeline.Violation{Code: timeline.VShape, Path: path}); got !=
+			timeline.VShape+" at ?" {
+			t.Errorf("%s: %q", name, got)
+		}
+	}
+
+	item := func(key string) *timeline.Document {
+		return &timeline.Document{Items: map[string]timeline.Item{key: {}}}
+	}
+
+	// These paths have the generated shape, and only the keys of the document show that a key made them.
+	for name, c := range map[string]struct {
+		doc  *timeline.Document
+		path string
+	}{
+		"item key with an index": {item("a[0]"), "items.a[0].id"},
+		"item key with a dot":    {item("a.b[0]"), "items.a.b[0].id"},
+		"track key":              {&timeline.Document{Tracks: map[string]timeline.Track{"a[0]": {}}}, "tracks.a[0].id"},
+		"asset key":              {&timeline.Document{Assets: map[string]timeline.Asset{"a[0]": {}}}, "assets.a[0].id"},
+		"font family":            {&timeline.Document{Fonts: map[string]timeline.ProjectFont{"a[0]": {}}}, "fonts.a[0]"},
+		"template colour": {
+			&timeline.Document{Template: &timeline.TemplateInfo{Colors: map[string]timeline.Color{"a[0]": "#FFFFFF"}}},
+			"template.colors.a[0]",
+		},
+		"keyframe property": {
+			&timeline.Document{Items: map[string]timeline.Item{
+				"itm_a": {Keyframes: timeline.Keyframes{"a[0]": nil}},
+			}},
+			"items.itm_a.keyframes.a[0]",
+		},
+	} {
+		if got := violationLine(c.doc, timeline.Violation{Code: timeline.VID, Path: c.path}); got !=
+			timeline.VID+" at ?" {
+			t.Errorf("%s: %q", name, got)
+		}
 	}
 }
