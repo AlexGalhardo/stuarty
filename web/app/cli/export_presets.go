@@ -130,7 +130,7 @@ func batchItems(p *parsed) ([]service.ExportBatchItem, error) {
 
 		var items []service.ExportBatchItem
 		if err := json.Unmarshal([]byte(p.str("items")), &items); err != nil {
-			return nil, validation("items", "--items is not a JSON array of exports: %v.", err)
+			return nil, validation("items", "--items is not a JSON array of exports: %s.", jsonProblem(err))
 		}
 
 		return items, nil

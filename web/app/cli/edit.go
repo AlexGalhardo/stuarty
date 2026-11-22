@@ -181,7 +181,9 @@ func shorthandOperation(words []string) (command.Operation, error) {
 		}
 
 		if _, dup := args[key]; dup {
-			return command.Operation{}, validation("args."+key, "the argument %q is given twice.", key)
+			safe := command.SafeKey(key)
+
+			return command.Operation{}, validation("args."+safe, "the argument %q is given twice.", safe)
 		}
 
 		args[key] = raw
@@ -198,7 +200,9 @@ func shorthandOperation(words []string) (command.Operation, error) {
 func splitAssignment(word string) (string, json.RawMessage, error) {
 	if key, lit, ok := strings.Cut(word, ":="); ok && key != "" && !strings.Contains(key, "=") {
 		if !json.Valid([]byte(lit)) {
-			return "", nil, validation("args."+key, "the value of %s is not valid JSON.", key)
+			safe := command.SafeKey(key)
+
+			return "", nil, validation("args."+safe, "the value of %s is not valid JSON.", safe)
 		}
 
 		return key, json.RawMessage(lit), nil
@@ -206,7 +210,7 @@ func splitAssignment(word string) (string, json.RawMessage, error) {
 
 	key, val, ok := strings.Cut(word, "=")
 	if !ok || key == "" {
-		return "", nil, validation("", "an operation argument is key=value or key:=json, got %q.", word)
+		return "", nil, validation("", "an operation argument is key=value or key:=json.")
 	}
 
 	raw, err := json.Marshal(val)

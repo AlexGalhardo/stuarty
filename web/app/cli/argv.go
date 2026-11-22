@@ -133,7 +133,7 @@ func (p *parsed) readFlag(body string, rest []string) (int, error) {
 			return 0, nil
 		}
 
-		return 0, validation("", "unknown flag --%s", name)
+		return 0, validation("", "unknown flag --%s", command.SafeKey(name))
 	}
 
 	consumed := 0

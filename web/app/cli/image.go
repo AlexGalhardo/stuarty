@@ -73,7 +73,7 @@ var imageCreate = &spec{
 			}
 
 			if err := json.Unmarshal(raw, &req.Values); err != nil {
-				return nil, validation("values", "the values are not a JSON object of slot values: %v.", err)
+				return nil, validation("values", "the values are not a JSON object of slot values: %s.", jsonProblem(err))
 			}
 		}
 
