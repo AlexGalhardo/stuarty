@@ -3,6 +3,7 @@ package httpapi
 import (
 	"errors"
 	"net/http"
+	"slices"
 	"time"
 
 	rules "github.com/AlexGalhardo/stuarty/core/account"
@@ -121,6 +122,15 @@ func (h *apiHandler) accountCreate(c *web.Ctx, in accountCreateIn) (accountCreat
 		return accountCreateOut{}, err
 	}
 
+	// A hosted agent holds a project and no admin scope: it must not set the password of the studio and sign in
+	// as a person with it.
+	if caller, ok := service.CallerFrom(c.Context()); !ok || !slices.Contains(caller.Scopes, service.ScopeAdmin) {
+		return accountCreateOut{}, &service.Error{
+			Code: service.CodeForbidden, Message: "only a person opening Stuarty can create the account.",
+			Hint: "open Stuarty and create the account there",
+		}
+	}
+
 	recovery, err := m.Create(c.Context(), rules.Input{
 		Username: in.Username, Email: in.Email, Password: in.Password, Confirmation: in.Confirmation,
 	}, h.AccountApply)
@@ -163,6 +173,9 @@ func (h *apiHandler) accountRecover(c *web.Ctx, in accountRecoverIn) (accountSta
 	if err := m.Recover(c.Context(), in.RecoveryKey, in.Password, in.Confirmation); err != nil {
 		return accountStateOut{}, accountError(err)
 	}
+
+	// A new password ends the sessions the old one opened, as a change does.
+	h.Sessions.Clear()
 
 	if err := h.startPersonSession(c); err != nil {
 		m.Lock()

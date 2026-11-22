@@ -79,6 +79,8 @@ type apiHandler struct {
 	r             *router.Router
 	loginThrottle loginThrottles
 	limits        *limits
+	// streams ends the requests in progress when the studio locks.
+	streams *lockScope
 }
 
 // Routes installs the guard, the error envelope and every route of Endpoints.
@@ -122,7 +124,11 @@ func Routes(d *Deps) func(r *router.Router, app *vukem.App) error {
 
 		h := &apiHandler{
 			Deps: *d, app: app, r: r, loginThrottle: newLoginThrottles(d.LoginLimits),
-			limits: newLimits(d.RateLimits, d.Now),
+			limits: newLimits(d.RateLimits, d.Now), streams: newLockScope(),
+		}
+
+		if d.Account != nil {
+			d.Account.OnLock(h.streams.end)
 		}
 
 		r.Use(h.preAuthLimit, h.authenticate, middleware.AccessLog, h.credentialLimit)
@@ -205,11 +211,15 @@ func (h *apiHandler) authenticate(next http.Handler) http.Handler {
 			return
 		}
 
+		// Bound before the check, so a lock that lands between them ends this request.
+		ctx, release := h.boundToLock(r)
+		defer release()
+
 		if h.refuseWhileLocked(w, r) {
 			return
 		}
 
-		next.ServeHTTP(w, r.WithContext(service.WithCaller(r.Context(), caller)))
+		next.ServeHTTP(w, r.WithContext(service.WithCaller(ctx, caller)))
 	})
 }
 

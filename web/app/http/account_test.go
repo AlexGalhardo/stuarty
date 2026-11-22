@@ -42,6 +42,13 @@ type accountHarness struct {
 func newAccountHarness(tb testing.TB, extra ...vukem.Option) *accountHarness {
 	tb.Helper()
 
+	return newAccountHarnessWith(tb, nil, extra...)
+}
+
+// newAccountHarnessWith is the harness with the registry of the session tokens of hosted agents.
+func newAccountHarnessWith(tb testing.TB, tokens auth.AgentTokens, extra ...vukem.Option) *accountHarness {
+	tb.Helper()
+
 	dir, err := workspace.Resolve(func(string) string { return filepath.Join(tb.TempDir(), "ws") })
 	if err != nil {
 		tb.Fatal(err)
@@ -83,7 +90,7 @@ func newAccountHarness(tb testing.TB, extra ...vukem.Option) *accountHarness {
 	deps := &httpapi.Deps{
 		MCP: mcpHandler, Events: hub, Service: svc, Registry: command.Default(), Workspace: dir, Token: canary,
 		Sessions: auth.NewSessions(clk.now), Launch: auth.NewLaunch(clk.now), LauncherSecret: launcherSecret,
-		Now: clk.now, Account: acc,
+		Now: clk.now, Account: acc, AgentTokens: tokens,
 	}
 
 	h.app = vukemtest.New(tb, func(opts ...vukem.Option) (*vukem.App, error) {

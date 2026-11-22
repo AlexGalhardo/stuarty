@@ -60,7 +60,7 @@ type Manager struct {
 	now    func() time.Time
 	params Params
 
-	// derive lets one Argon2id run at a time: each uses 64 MiB.
+	// derive lets one Argon2id run at a time, since each uses 256 MiB. It also serializes what rewrites the record.
 	derive sync.Mutex
 
 	mu    sync.Mutex
