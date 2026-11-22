@@ -8,7 +8,12 @@ import {
 } from "../../state/EditorContext";
 import { selectFps } from "../../state/selectors";
 import MarkerTicks from "./MarkerTicks";
-import { columnPeaks, loadPeaks, type Peaks } from "./waveform";
+import {
+	columnPeaks,
+	PEAKS_RETRY_MS,
+	type Peaks,
+	watchPeaks,
+} from "./waveform";
 
 // Columns drawn beyond each edge of the viewport, so a short scroll shows
 // drawn pixels before the next redraw.
@@ -35,13 +40,7 @@ export default function AudioItem({ id }: { id: string }): ReactNode {
 
 	useEffect(() => {
 		if (assetId === undefined || assetId === "ast_placeholder") return;
-		let live = true;
-		void loadPeaks(runtime.projectId, assetId).then((loaded) => {
-			if (live) setPeaks(loaded);
-		});
-		return () => {
-			live = false;
-		};
+		return watchPeaks(runtime.projectId, assetId, PEAKS_RETRY_MS, setPeaks);
 	}, [runtime.projectId, assetId]);
 
 	useEffect(() => {
