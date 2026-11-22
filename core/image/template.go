@@ -24,8 +24,10 @@ const (
 )
 
 func slotError(reason, slot, format string, a ...any) *command.Error {
+	key := command.SafeKey(slot)
+
 	return command.Errorf(command.CodeSlot, format, a...).
-		WithDetail("reason", reason).WithDetail("slot", slot).WithPath("values." + slot)
+		WithDetail("reason", reason).WithDetail("slot", key).WithPath("values." + key)
 }
 
 // empty reports whether a slot layer has no content: a text that is blank or an image that has no file.
@@ -74,7 +76,7 @@ func FromTemplate(t *Document, values map[string]SlotValue, id string, env Env) 
 	for _, name := range names {
 		src, ok := slots[name]
 		if !ok {
-			return nil, slotError(SlotUnknown, name, "The template has no slot named %q.", name).
+			return nil, slotError(SlotUnknown, name, "The template has no slot named %q.", command.SafeKey(name)).
 				WithHint("The slots are: %s.", slotList(slots)).WithDetail("slots", slices.Sorted(maps.Keys(slots)))
 		}
 

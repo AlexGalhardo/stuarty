@@ -4,9 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/AlexGalhardo/stuarty/core/command"
 )
 
 // Prompt is a reusable text with variables (SDD-018 section 6).
@@ -92,11 +95,11 @@ func (p *Prompt) Validate() error {
 
 	for k, v := range p.Defaults {
 		if !variableName.MatchString(k) {
-			return fieldError("defaults", fmt.Errorf("%q is not a variable name", k))
+			return fieldError("defaults", fmt.Errorf("%q is not a variable name", command.SafeKey(k)))
 		}
 
 		if !used[k] {
-			return fieldError("defaults", fmt.Errorf("the text does not use the variable %q", k))
+			return fieldError("defaults", fmt.Errorf("the text does not use the variable %q", command.SafeKey(k)))
 		}
 
 		if len(v) > MaxValueLength {
@@ -164,7 +167,9 @@ func Render(p *Prompt, values map[string]string) (string, error) {
 
 	for k, v := range values {
 		if !isUsed[k] {
-			rerr.Unknown = append(rerr.Unknown, k)
+			if key := command.SafeKey(k); !slices.Contains(rerr.Unknown, key) {
+				rerr.Unknown = append(rerr.Unknown, key)
+			}
 
 			continue
 		}
