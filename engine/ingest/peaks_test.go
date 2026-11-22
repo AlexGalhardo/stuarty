@@ -230,10 +230,6 @@ func TestPeaksOfFileProgressReportsGrowingSteps(t *testing.T) {
 // without holding it in memory. The file is a header and a hole (sparse where the system allows it) and is
 // deleted when the test ends.
 func TestPeaksOfFileOverOneGiB(t *testing.T) {
-	if testing.Short() {
-		t.Skip("reads more than 1 GiB")
-	}
-
 	const dataSize = 1<<30 + 4<<20
 
 	head := wavBytes(nil, false)
