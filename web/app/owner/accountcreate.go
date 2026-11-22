@@ -19,7 +19,7 @@ import (
 const accountBackupPrefix = "account-"
 
 // createAccount is the Apply of the account manager: it makes the account in a workspace that may hold data
-// (SDD-005 section 5.16.3). It copies the database and the vault, re-seals the vault under the new key, seals
+// (SDD-005 section 5.17.3). It copies the database and the vault, re-seals the vault under the new key, seals
 // every sealed column and inserts the record in one transaction, reads everything back, and only then deletes
 // the copy; on any failure the copy of the vault is put back, the transaction is rolled back and the error is
 // returned. The workspace is then as it was.

@@ -11,7 +11,7 @@ import (
 
 // sealRef holds the sealer of a store. The store is opened before the account manager exists (the manager reads
 // the account from the store), so the sealer is set afterwards; until then the fields are clear text, as they
-// are in a workspace with no account (SDD-005 section 5.16.1).
+// are in a workspace with no account (SDD-005 section 5.17.1).
 type sealRef struct {
 	mu sync.RWMutex
 	s  account.Sealer
@@ -53,7 +53,7 @@ func sealerOf(ex database.Executor) account.Sealer {
 	return account.Passthrough{}
 }
 
-// sealField seals a value of a sealed column (SDD-005 section 5.16.2); the row key binds it to its row.
+// sealField seals a value of a sealed column (SDD-005 section 5.17.2); the row key binds it to its row.
 func sealField(sl account.Sealer, table, column, rowKey, plain string) (string, error) {
 	return sl.Seal(table, column, rowKey, plain)
 }

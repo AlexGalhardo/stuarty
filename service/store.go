@@ -82,7 +82,7 @@ type Repos interface {
 	Images() ImageRepo
 	Connections() connections.Store
 	Approvals() approval.Store
-	// Accounts is the one local account of the workspace (SDD-005 section 5.16).
+	// Accounts is the one local account of the workspace (SDD-005 section 5.17).
 	Accounts() account.Store
 	Library() library.Index
 	AssetLibrary() assets.Store

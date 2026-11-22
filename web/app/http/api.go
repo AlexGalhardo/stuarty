@@ -50,7 +50,7 @@ type Deps struct {
 	// Account is the local account (ADR-0049); nil in network mode, where its routes answer E_NOT_FOUND. With
 	// it, a launch code never privileges a session: only the password does (SDD-007 section 3.9 item 5).
 	Account *account.Manager
-	// AccountApply creates the account in a workspace that holds data (SDD-005 section 5.16.3); nil only stores
+	// AccountApply creates the account in a workspace that holds data (SDD-005 section 5.17.3); nil only stores
 	// the record.
 	AccountApply account.Apply
 	// LoginLimits replaces the limits of the login route; nil is the defaults.

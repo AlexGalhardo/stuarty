@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// The account table (SDD-005 section 5.16): one row at most, and an idle lock inside its range.
+// The account table (SDD-005 section 5.17): one row at most, and an idle lock inside its range.
 func TestAccountsTable(t *testing.T) {
 	db := openMigrated(t)
 	ctx := context.Background()

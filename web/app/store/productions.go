@@ -36,7 +36,7 @@ const productionColumns = `p.id, p.name, p.state, p.created_ms, p.updated_ms, p.
 
 const productionFrom = ` FROM projects p LEFT JOIN timelines t ON t.id = ` + firstTimeline
 
-// projectSealedColumns are the sealed columns of projects (SDD-005 section 5.16.2), keyed by the id of the row:
+// projectSealedColumns are the sealed columns of projects (SDD-005 section 5.17.2), keyed by the id of the row:
 // the description and the five written parts of the goal. The name and the due date are not sealed.
 var projectSealedColumns = []string{
 	"description", "goal_specific", "goal_measurable", "goal_achievable", "goal_relevant", "goal_time_bound",

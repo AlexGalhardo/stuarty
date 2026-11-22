@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Prefix marks a sealed field (SDD-005 section 5.16.1).
+// Prefix marks a sealed field (SDD-005 section 5.17.1).
 const Prefix = "s1."
 
 // The errors of a sealed field.
@@ -18,7 +18,7 @@ var (
 	ErrUnsealed = errors.New("account: a stored field is not sealed with the key of this account")
 )
 
-// Sealer seals and opens the user's fields (SDD-005 section 5.16). The store calls it inside its
+// Sealer seals and opens the user's fields (SDD-005 section 5.17). The store calls it inside its
 // repositories; table, column and rowKey say where the value lives and are bound into the ciphertext, so a
 // value moved to another cell does not open.
 type Sealer interface {
