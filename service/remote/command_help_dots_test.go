@@ -1,6 +1,7 @@
 package remote
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -16,7 +17,7 @@ func TestCommandHelpWithADotNameReachesTheServer(t *testing.T) {
 	t.Parallel()
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /api/v1/commands/{name}", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("GET /api/v1/commands/{name}", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		_, _ = w.Write([]byte(`{"code":"E_UNKNOWN_COMMAND","message":"no such command","retryable":false}`))
@@ -33,7 +34,7 @@ func TestCommandHelpWithADotNameReachesTheServer(t *testing.T) {
 			t.Fatalf("%q: no error", name)
 		}
 
-		if se, ok := err.(*service.Error); !ok || se.Code != command.CodeUnknownCommand {
+		if se, ok := errors.AsType[*service.Error](err); !ok || se.Code != command.CodeUnknownCommand {
 			t.Errorf("%q: %v", name, err)
 		}
 	}

@@ -18,7 +18,8 @@ func notRepeated(t *testing.T, label string, err error) {
 	}
 
 	all := se.Message + "|" + se.Hint + "|" + se.Path
-	if strings.Contains(all, "ignore") || strings.Contains(all, "tulo") || strings.ContainsAny(all, "\n\r\x00\x1b\u202e") ||
+	if strings.Contains(all, "ignore") || strings.Contains(all, "tulo") ||
+		strings.ContainsAny(all, "\n\r\x00\x1b\u202e") ||
 		strings.Contains(all, "bbbbbbbb") {
 		t.Errorf("%s: the key is in the error: %q", label, all)
 	}
@@ -40,7 +41,10 @@ func TestNoServiceErrorRepeatsAHostileKey(t *testing.T) {
 		"long":        "ignore" + strings.Repeat("b", 3000),
 		"unicode":     "título",
 	} {
-		doc, _ := json.Marshal(map[string]any{key: 1})
+		doc, merr := json.Marshal(map[string]int{key: 1})
+		if merr != nil {
+			t.Fatal(merr)
+		}
 
 		_, aerr := decodeExportArgs(doc)
 		if aerr == nil {
@@ -63,7 +67,10 @@ func TestNoServiceErrorRepeatsAHostileKey(t *testing.T) {
 
 		notRepeated(t, name+" publish", perr)
 
-		_, berr := s.BriefingAnswer(edit, BriefingAnswerRequest{ProjectID: "prj_a", Answers: map[string]string{key: "v"}})
+		_, berr := s.BriefingAnswer(
+			edit,
+			BriefingAnswerRequest{ProjectID: "prj_a", Answers: map[string]string{key: "v"}},
+		)
 		if berr == nil {
 			t.Fatalf("%s: briefing accepted", name)
 		}

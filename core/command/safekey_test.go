@@ -43,7 +43,10 @@ func TestDecodeArgsDoesNotRepeatAHostileKey(t *testing.T) {
 	t.Parallel()
 
 	for name, key := range hostileKeys {
-		doc, _ := json.Marshal(key)
+		doc, merr := json.Marshal(key)
+		if merr != nil {
+			t.Fatal(merr)
+		}
 
 		for label, args := range map[string]string{
 			"unknown member": `{"name":"ab",` + string(doc) + `:1}`,
@@ -60,8 +63,10 @@ func TestDecodeArgsDoesNotRepeatAHostileKey(t *testing.T) {
 			}
 
 			all := ce.Message + "|" + ce.Hint + "|" + ce.Path
-			if strings.Contains(all, "ignore") || strings.Contains(all, "tulo") || strings.ContainsAny(all, "\r\x00\x1b\u202e") ||
-				strings.Contains(all, "bbbbbbbb") || strings.Count(all, "\n") > 0 {
+			if strings.Contains(all, "ignore") || strings.Contains(all, "tulo") ||
+				strings.ContainsAny(all, "\r\x00\x1b\u202e") ||
+				strings.Contains(all, "bbbbbbbb") ||
+				strings.Count(all, "\n") > 0 {
 				t.Errorf("%s %s: the key is in the error: %q", name, label, all)
 			}
 		}
@@ -76,7 +81,10 @@ func TestJSONProblemDoesNotRepeatAHostileKey(t *testing.T) {
 	}
 
 	for name, key := range hostileKeys {
-		doc, _ := json.Marshal(key)
+		doc, merr := json.Marshal(key)
+		if merr != nil {
+			t.Fatal(merr)
+		}
 
 		dec := json.NewDecoder(strings.NewReader(`{` + string(doc) + `:1}`))
 		dec.DisallowUnknownFields()
@@ -89,7 +97,8 @@ func TestJSONProblemDoesNotRepeatAHostileKey(t *testing.T) {
 		}
 
 		got := JSONProblem(err)
-		if strings.Contains(got, "ignore") || strings.Contains(got, "tulo") || strings.ContainsAny(got, "\n\r\x00\x1b\u202e") ||
+		if strings.Contains(got, "ignore") || strings.Contains(got, "tulo") ||
+			strings.ContainsAny(got, "\n\r\x00\x1b\u202e") ||
 			strings.Contains(got, "bbbbbbbb") {
 			t.Errorf("%s: %q", name, got)
 		}
