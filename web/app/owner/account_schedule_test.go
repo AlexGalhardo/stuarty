@@ -14,7 +14,7 @@ import (
 
 // A post whose time comes while the studio is locked is neither sent nor lost: the scheduler cannot read it, and
 // the row is as it was when the person signs in again.
-func TestSecurity_T116_ALockedStudioNeitherSendsNorLosesAScheduledPost(t *testing.T) {
+func TestSecurity_T107_ALockedStudioNeitherSendsNorLosesAScheduledPost(t *testing.T) {
 	ctx := context.Background()
 
 	o, _, project := existingWorkspace(t, accountEnv(t))
