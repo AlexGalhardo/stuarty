@@ -127,6 +127,12 @@ func (s *svc) runPeaksUpgrade(ctx context.Context, job *JobRow, pw *progress) (j
 			withDetail("reason", "decode_failed").withDetail("step", "peaks")
 	}
 
+	// A header that declares no audio gives an empty result, which must not be registered as the waveform.
+	if cerr := pk.Check(pk.Min, pk.Max); cerr != nil {
+		return nil, newError(CodeIngestFailed, "the normalized audio holds no samples to read its peaks from.").
+			withDetail("reason", "decode_failed").withDetail("step", "peaks")
+	}
+
 	if _, err := s.storePeaks(ctx, hash, pk); err != nil {
 		return nil, err
 	}

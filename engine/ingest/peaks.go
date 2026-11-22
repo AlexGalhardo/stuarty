@@ -22,9 +22,16 @@ type WAV struct {
 
 var errWAV = errors.New("not a PCM WAV file")
 
+// The header is a number of the file, so its walk and what it allocates are bounded: a real WAV has a handful of
+// chunks before its data, and the normalized audio has at most two channels.
+const (
+	maxWAVChunks    = 1024
+	maxPeakChannels = 64
+)
+
 // ReadWAV walks the RIFF or RF64 chunks to the fmt and data chunks, so the 80 bytes of header
 // that a muxer wrote are not assumed (SDD-011 4.6). A data size of 0xFFFFFFFF is taken from
-// the ds64 chunk, or from the end of the file.
+// the ds64 chunk, or from the end of the file; a declared size never reaches past the file.
 func ReadWAV(f io.ReadSeeker) (WAV, error) {
 	var hdr [12]byte
 	if _, err := io.ReadFull(f, hdr[:]); err != nil {
@@ -42,7 +49,10 @@ func ReadWAV(f io.ReadSeeker) (WAV, error) {
 	var w WAV
 	var ds64Data int64 = -1
 	gotFmt := false
-	for pos+8 <= end {
+	for chunks := 0; pos+8 <= end; chunks++ {
+		if chunks >= maxWAVChunks {
+			return WAV{}, fmt.Errorf("%w: more than %d chunks before the data", errWAV, maxWAVChunks)
+		}
 		if _, err := f.Seek(pos, io.SeekStart); err != nil {
 			return WAV{}, err
 		}
@@ -78,7 +88,7 @@ func ReadWAV(f io.ReadSeeker) (WAV, error) {
 			w.DataOffset = body
 			switch {
 			case size == 0xFFFFFFFF && ds64Data >= 0:
-				w.DataSize = ds64Data
+				w.DataSize = min(ds64Data, end-body)
 			case size == 0xFFFFFFFF:
 				w.DataSize = end - body
 			default:
@@ -122,8 +132,8 @@ type Peaks struct {
 // SDD-011 4.6. Each peak covers both channels together; level 0 groups PeakLevels[0] sample
 // frames and each higher level is the min and max of four consecutive peaks below it.
 func ComputePeaks(r io.Reader, channels, sampleRate int) (*Peaks, error) {
-	if channels < 1 {
-		return nil, errors.New("peaks: no channels")
+	if channels < 1 || channels > maxPeakChannels {
+		return nil, fmt.Errorf("peaks: %d channels", channels)
 	}
 	p := &Peaks{SampleRate: sampleRate, Min: 0, Max: 0}
 	br := bufio.NewReaderSize(r, 1<<20)
@@ -333,6 +343,9 @@ func PeaksOfFileProgress(ctx context.Context, path string, onProgress func(done,
 	}
 	if w.Bits != 16 {
 		return nil, fmt.Errorf("peaks: %d-bit samples", w.Bits)
+	}
+	if w.SampleRate < 1 {
+		return nil, errors.New("peaks: no sample rate")
 	}
 	if _, err := f.Seek(w.DataOffset, io.SeekStart); err != nil {
 		return nil, err
