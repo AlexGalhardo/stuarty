@@ -3,6 +3,7 @@ package owner
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"errors"
 	"io/fs"
 	"os"
@@ -130,8 +131,28 @@ func TestSecurity_T109_AKillAfterTheCommitIsCleanedAtTheNextStart(t *testing.T) 
 		t.Fatalf("a failure after the commit must not fail the creation: %v", err)
 	}
 
-	if len(backupsLeft(t, home)) != 1 {
+	left := backupsLeft(t, home)
+	if len(left) != 1 {
 		t.Fatal("the copy is the mark of the unfinished work and must still be there")
+	}
+
+	// The copy can be restored by hand: the database is whole, and the old key opens its vault.
+	copied, err := sql.Open("sqlite", filepath.Join(left[0], "db.sqlite"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var integrity string
+	if err := copied.QueryRowContext(ctx, "PRAGMA integrity_check").Scan(&integrity); err != nil || integrity != "ok" {
+		t.Errorf("the copy of the database: %q %v", integrity, err)
+	}
+
+	_ = copied.Close()
+
+	oldKey := vault.FileProvider{Path: getenv("STUARTY_MASTER_KEY_FILE")}
+	if secret, err := vault.Open(filepath.Join(left[0], "vault.json"), oldKey).Get("conn.one"); err != nil ||
+		string(secret) != canaryToken {
+		t.Errorf("the copy of the vault: %q %v", secret, err)
 	}
 
 	if err := o.Close(); err != nil {
