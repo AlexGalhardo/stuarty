@@ -130,7 +130,7 @@ func webhookError(err error) error {
 
 // webhookCaller is the scope of the method and no project-limited key: a webhook belongs to the workspace.
 func (s *svc) webhookCaller(ctx context.Context, method string) (Caller, error) {
-	c, err := authorize(ctx, method, "")
+	c, err := s.authorize(ctx, method, "")
 	if err != nil {
 		return Caller{}, err
 	}
@@ -160,7 +160,7 @@ func (s *svc) webhookView(ctx context.Context, r webhooks.Row) Webhook {
 
 // WebhookEventList returns the events a webhook may choose.
 func (s *svc) WebhookEventList(ctx context.Context, _ WebhookEventListRequest) (*WebhookEventListResult, error) {
-	if _, err := authorize(ctx, "WebhookEventList", ""); err != nil {
+	if _, err := s.authorize(ctx, "WebhookEventList", ""); err != nil {
 		return nil, err
 	}
 
