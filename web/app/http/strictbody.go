@@ -98,9 +98,10 @@ func unknownMember(t reflect.Type, raw []byte, prefix string) (string, bool) {
 		fields := memberTypes(t)
 
 		for _, name := range slices.Sorted(maps.Keys(members)) {
-			path := name
+			// The member is the caller's text: the path and the message name it only in the plain shape.
+			path := command.SafeKey(name)
 			if prefix != "" {
-				path = prefix + "." + name
+				path = prefix + "." + path
 			}
 
 			ft, ok := fields[name]

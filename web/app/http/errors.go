@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"slices"
 	"strconv"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
@@ -95,6 +96,8 @@ func decorate(_ *web.Ctx, p *web.Problem) {
 		}
 
 		if len(p.Issues) > 0 {
+			withoutCallerKeys(p)
+
 			message = "the request is not valid: " + p.Issues[0].Message
 			p.Extensions["path"] = p.Issues[0].Path
 		}
@@ -116,6 +119,35 @@ func decorate(_ *web.Ctx, p *web.Problem) {
 	if msg, ok := p.Extensions["message"].(string); ok {
 		p.Detail = msg
 	}
+}
+
+// issueWithKey is the text of a validation issue whose path holds a key that an error may not repeat.
+const issueWithKey = "a value of the request is not valid."
+
+// withoutCallerKeys takes the caller's keys out of the issues vukem wrote: for a member of a map, its issue path is the
+// key and its message repeats it (SDD-003 section 1.2 rule 9).
+func withoutCallerKeys(p *web.Problem) {
+	for i := range p.Issues {
+		if path := p.Issues[i].Path; path != "" && !command.IsSafeKey(path) {
+			p.Issues[i].Path, p.Issues[i].Message = "?", issueWithKey
+		}
+	}
+
+	if len(p.Errors) == 0 {
+		return
+	}
+
+	clean := make(map[string][]string, len(p.Errors))
+
+	for path, messages := range p.Errors {
+		if path == "" || command.IsSafeKey(path) {
+			clean[path] = messages
+		} else if !slices.Contains(clean["?"], issueWithKey) {
+			clean["?"] = append(clean["?"], issueWithKey)
+		}
+	}
+
+	p.Errors = clean
 }
 
 // codeOf is the code of a problem that no service method produced.
