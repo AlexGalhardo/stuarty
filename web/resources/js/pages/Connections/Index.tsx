@@ -72,6 +72,10 @@ export function ConnectionRow({
 	const { privileged } = useSession();
 	const removeRefused = signedIn && !privileged;
 	const reasonId = `remove-person-only-${connection.id}`;
+	// The label is text an agent may have written: it is isolated inside the question, as it is in the row.
+	const [titleBefore, titleAfter] = t("ui.connections.confirm_remove_title", {
+		name: "\u0000",
+	}).split("\u0000");
 	return (
 		<li className="flex flex-col gap-3 p-4" data-connection-id={connection.id}>
 			<div className="flex items-start justify-between gap-4">
@@ -128,13 +132,15 @@ export function ConnectionRow({
 			</div>
 			{removeRefused && <PersonOnlyNote id={reasonId} />}
 			{/* Removing deletes the credential from the vault and cannot be undone: it asks first. */}
-			<AlertDialog open={asking} onOpenChange={setAsking}>
+			<AlertDialog open={asking && !removeRefused} onOpenChange={setAsking}>
 				<AlertDialogContent>
 					<AlertDialogHeader>
 						<AlertDialogTitle>
-							{t("ui.connections.confirm_remove_title", {
-								name: connection.label,
-							})}
+							{titleBefore}
+							<UntrustedText className="[overflow-wrap:anywhere]">
+								{connection.label}
+							</UntrustedText>
+							{titleAfter}
 						</AlertDialogTitle>
 						<AlertDialogDescription>
 							{t("ui.connections.confirm_remove_body")}
