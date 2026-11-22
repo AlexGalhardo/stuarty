@@ -1497,8 +1497,8 @@ func TestRoundTripKeepsEveryTransitionKind(t *testing.T) {
 	}
 }
 
-// VV-025: the lock, the solo flag and the volume of a track come back, and what the file still
-// cannot carry (a link, the template information) is reported on export.
+// VV-025: the lock, the solo flag and the volume of a track come back, and a link whose group is not whole
+// in the file is reported on export (a whole group and the template information are carried, refs_test.go).
 func TestRoundTripKeepsTrackLockSoloVolumeAndReportsTheRest(t *testing.T) {
 	d := sampleDoc()
 
@@ -1523,10 +1523,12 @@ func TestRoundTripKeepsTrackLockSoloVolumeAndReportsTheRest(t *testing.T) {
 		features[l.Feature] = true
 	}
 
-	for _, want := range []string{"link", "template information of the project"} {
-		if !features[want] {
-			t.Errorf("export did not report %q: %+v", want, lost)
-		}
+	if !features["link to an item that is not in the file"] {
+		t.Errorf("export did not report the lonely link: %+v", lost)
+	}
+
+	if features["template information of the project"] {
+		t.Errorf("the template information is carried, not lost: %+v", lost)
 	}
 
 	im, err := Parse(first)
