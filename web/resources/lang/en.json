@@ -92,6 +92,9 @@
         },
         "connections": {
           "holds": "Your social networks and AI providers, and the access you gave each one."
+        },
+        "webhooks": {
+          "holds": "The addresses Stuarty calls to tell your other tools what happened."
         }
       }
     },
