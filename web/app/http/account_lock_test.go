@@ -150,7 +150,7 @@ func TestSecurity_T107_TheLockEndsAnOpenStream(t *testing.T) {
 
 	cookie, _ := a.signIn(accPassword)
 
-	stream, err := http.NewRequest(http.MethodGet, a.srv.URL+"/api/v1/publications/events", nil)
+	stream, err := http.NewRequest(http.MethodGet, a.srv.URL+"/api/v1/publications/events", http.NoBody)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -159,7 +159,7 @@ func TestSecurity_T107_TheLockEndsAnOpenStream(t *testing.T) {
 	stream.Header.Set("Accept", "text/event-stream")
 	stream.Header.Set("Sec-Fetch-Site", "same-origin")
 
-	res, err := http.DefaultClient.Do(stream)
+	res, err := a.srv.Client().Do(stream)
 	if err != nil {
 		t.Fatal(err)
 	}

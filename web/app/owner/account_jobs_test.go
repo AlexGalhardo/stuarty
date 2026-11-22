@@ -52,9 +52,9 @@ func TestSecurity_T109_TheWordsInJobsApprovalsAndPublishedPostsAreSealed(t *test
 		t.Fatalf("finish: %v %v", ok, err)
 	}
 
-	clear := json.RawMessage(`{"preset":"youtube"}`)
+	options := json.RawMessage(`{"preset":"youtube"}`)
 	if err := jobs.CreateLimited(ctx, service.JobRow{
-		ID: "job_clear", Kind: service.JobExport, ProjectID: &project, Actor: "local:ui", Input: clear,
+		ID: "job_clear", Kind: service.JobExport, ProjectID: &project, Actor: "local:ui", Input: options,
 		CreatedMs: 1, UpdatedMs: 1,
 	}, nil); err != nil {
 		t.Fatal(err)
@@ -104,7 +104,7 @@ func TestSecurity_T109_TheWordsInJobsApprovalsAndPublishedPostsAreSealed(t *test
 		t.Fatalf("a sealed job while locked holds its words: %+v", locked)
 	}
 
-	if row, err := jobs.Get(ctx, "job_clear"); err != nil || row.InputLocked || !bytes.Equal(row.Input, clear) {
+	if row, err := jobs.Get(ctx, "job_clear"); err != nil || row.InputLocked || !bytes.Equal(row.Input, options) {
 		t.Fatalf("an export keeps its input in clear: %+v %v", row, err)
 	}
 
