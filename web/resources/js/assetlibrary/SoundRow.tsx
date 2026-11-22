@@ -7,9 +7,8 @@ import type { LibraryAsset } from "../editor/api/types";
 import { proxyUrl } from "../editor/api/urls";
 import {
 	columnPeaks,
-	isPeaksPending,
-	loadPeaks,
 	type Peaks,
+	watchPeaks,
 } from "../editor/timeline/items/waveform";
 import { formatSeconds } from "../editor/ui/timeFormat";
 
@@ -48,20 +47,10 @@ export function Waveform({
 	);
 
 	useEffect(() => {
-		let live = true;
-		let timer: ReturnType<typeof setTimeout> | undefined;
 		setState("loading");
 		// A long sound's peaks are computed by a job: the page asks again while the server says so.
-		const load = (): void => {
-			void loadPeaks(timelineId, assetId).then(draw);
-		};
-		const draw = (peaks: Peaks | null): void => {
-			if (!live) return;
+		return watchPeaks(timelineId, assetId, PEAKS_RETRY_MS, (peaks) => {
 			const ctx = canvas.current?.getContext("2d");
-			if (peaks === null && isPeaksPending(timelineId, assetId)) {
-				timer = setTimeout(load, PEAKS_RETRY_MS);
-				return;
-			}
 			if (peaks === null || ctx === null || ctx === undefined) {
 				setState("missing");
 				return;
@@ -77,12 +66,7 @@ export function Waveform({
 				ctx.fillRect(x, top, 1, Math.max(1, mid - lo * mid - top));
 			}
 			setState("ready");
-		};
-		load();
-		return () => {
-			live = false;
-			clearTimeout(timer);
-		};
+		});
 	}, [timelineId, assetId]);
 
 	return (

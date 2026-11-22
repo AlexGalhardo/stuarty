@@ -140,6 +140,34 @@ export function loadPeaks(
 	return pending;
 }
 
+// Reads the peaks and, while the server says they are being computed, reads them again every retryMs. onResult gets
+// the peaks, or null for a final failure, once. The function it returns stops asking.
+export function watchPeaks(
+	projectId: string,
+	assetId: string,
+	retryMs: number,
+	onResult: (peaks: Peaks | null) => void,
+): () => void {
+	let live = true;
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	const load = (): void => {
+		void loadPeaks(projectId, assetId).then((peaks) => {
+			if (!live) return;
+			if (peaks === null && isPeaksPending(projectId, assetId)) {
+				timer = setTimeout(load, retryMs);
+				return;
+			}
+			onResult(peaks);
+		});
+	};
+	load();
+	return () => {
+		live = false;
+		clearTimeout(timer);
+	};
+}
+
 export function clearPeaksCache(): void {
 	cache.clear();
+	pendingKeys.clear();
 }
