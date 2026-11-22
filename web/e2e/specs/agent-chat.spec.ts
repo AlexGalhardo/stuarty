@@ -488,6 +488,31 @@ test.describe("agent chat", () => {
 		}
 	});
 
+	test("the log keeps its list and passes axe once it holds events", async ({
+		page,
+		request,
+		browserName,
+	}) => {
+		test.skip(browserName === "webkit", "axe runs on Chromium and Firefox"); // verify:env-skip axe is not run on WebKit
+		const api = await caller(request);
+		const project = await makeProject(api, `Log ${unique(browserName)}`);
+		await signInAsPerson(page);
+		await openPanel(page);
+		await connect(page, "echo", "echo");
+		await startWith(page, project, "echo");
+		await say(page, "hello");
+		await expect(page.getByTestId("chat-agent").last()).toContainText("echo:");
+		const log = page.getByRole("log", { name: /conversation|conversa/i });
+		await expect(log).toBeVisible();
+		await expect(log.getByRole("list")).toBeVisible();
+		await expect(log.getByRole("listitem").first()).toBeVisible();
+		const results = await new AxeBuilder({ page })
+			.include("#chat-panel")
+			.withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+			.analyze();
+		expect(results.violations).toEqual([]);
+	});
+
 	test("the panel passes axe, in English and in Portuguese, and has labels for a screen reader", async ({
 		page,
 		browserName,
