@@ -1,6 +1,7 @@
 package command
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"regexp"
@@ -121,6 +122,71 @@ func quoted(args []any) []any {
 	}
 
 	return out
+}
+
+// safeKeyShape is the shape of an argument key that an error may repeat: it cannot break a line, close a quote,
+// reorder the text or fill the error block.
+var safeKeyShape = regexp.MustCompile(`^[A-Za-z0-9_.-]{1,64}$`)
+
+// IsSafeKey says whether a key chosen by the caller may be repeated in an error (SDD-003 section 1.2 rule 9).
+func IsSafeKey(k string) bool { return safeKeyShape.MatchString(k) }
+
+// SafeKey is k when an error may repeat it and "?" when it may not. Every message that names a key the caller chose
+// (an argument, a style key, a briefing answer) goes through it, so no surface echoes raw caller text as a key.
+func SafeKey(k string) string {
+	if IsSafeKey(k) {
+		return k
+	}
+
+	return "?"
+}
+
+// SafePath is a dotted path of members with every segment that an error may not repeat taken out.
+func SafePath(p string) string {
+	parts := strings.Split(p, ".")
+	for i, s := range parts {
+		parts[i] = SafeKey(s)
+	}
+
+	return strings.Join(parts, ".")
+}
+
+// UnknownMember is the name a decoder refused with DisallowUnknownFields, quoted and safe to repeat, and whether
+// err is that refusal.
+func UnknownMember(err error) (string, bool) {
+	quotedName, found := strings.CutPrefix(err.Error(), "json: unknown field ")
+	if !found {
+		return "", false
+	}
+
+	name, uerr := strconv.Unquote(quotedName)
+	if uerr != nil {
+		return `"?"`, true
+	}
+
+	return strconv.Quote(SafeKey(name)), true
+}
+
+// JSONProblem says in a few words what is wrong with a decoded JSON argument, without repeating a key the caller
+// chose: the decoder's own message quotes the member names.
+func JSONProblem(err error) string {
+	if ute, ok := errors.AsType[*json.UnmarshalTypeError](err); ok {
+		if ute.Field != "" {
+			return "the member " + SafePath(ute.Field) + " has the wrong type"
+		}
+
+		return "a value has the wrong type"
+	}
+
+	if name, ok := UnknownMember(err); ok {
+		return "the member " + name + " is not known"
+	}
+
+	if se, ok := errors.AsType[*json.SyntaxError](err); ok {
+		return fmt.Sprintf("it is not valid JSON (at byte %d)", se.Offset)
+	}
+
+	return "they are not valid JSON"
 }
 
 // Shortened is s as a message quotes it: its first runes and the mark of the cut when it is longer than quotedMax.

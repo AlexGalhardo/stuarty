@@ -8,6 +8,8 @@ import (
 	"time"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/AlexGalhardo/stuarty/core/command"
 )
 
 // AnswerKind is the shape of the answer to a briefing question.
@@ -126,10 +128,10 @@ func checkAnswers(set []Question, answers map[string]string) (map[string]string,
 	for id := range answers {
 		if _, ok := known[id]; !ok {
 			return nil, validation(
-				"answers."+id,
+				"answers."+command.SafeKey(id),
 				"send only the ids of BriefingQuestions",
 				"%q is not a question of the briefing",
-				id,
+				command.SafeKey(id),
 			)
 		}
 	}

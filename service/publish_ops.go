@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math"
 	"os"
@@ -180,22 +179,10 @@ func decodePublishArgs(raw json.RawMessage) (PublishArgs, error) {
 	dec.DisallowUnknownFields()
 
 	if err := dec.Decode(&a); err != nil {
-		return a, validationAt("args", "the arguments of a publication are not valid: %s.", jsonErrorText(err))
+		return a, validationAt("args", "the arguments of a publication are not valid: %s.", command.JSONProblem(err))
 	}
 
 	return a, nil
-}
-
-func jsonErrorText(err error) string {
-	if te, ok := errors.AsType[*json.UnmarshalTypeError](err); ok {
-		return "the member " + te.Field + " has the wrong type"
-	}
-
-	if strings.HasPrefix(err.Error(), "json: unknown field") {
-		return strings.TrimPrefix(err.Error(), "json: ")
-	}
-
-	return "they are not a JSON object"
 }
 
 // publishTarget is what Prepare and PublishValidate learn about a post before anything is sent.

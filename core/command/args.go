@@ -254,7 +254,7 @@ func decodeStructArg(v reflect.Value, src any, path string) *Error {
 	slices.Sort(known)
 	for _, k := range sortedMapKeys(m) {
 		if !slices.Contains(known, k) {
-			return invalidArg(path+"."+k, "%s.%s is not an argument of this command.", path, k).
+			return invalidArg(path+"."+SafeKey(k), "%s.%s is not an argument of this command.", path, SafeKey(k)).
 				WithHint("The arguments are: %s.", strings.Join(known, ", ")).
 				WithDetail("allowed", known)
 		}
@@ -289,7 +289,7 @@ func decodeMapArg(v reflect.Value, src any, path string) *Error {
 	out := reflect.MakeMapWithSize(v.Type(), len(m))
 	for _, k := range sortedMapKeys(m) {
 		e := reflect.New(v.Type().Elem()).Elem()
-		if err := decodeArg(e, m[k], path+"."+k); err != nil {
+		if err := decodeArg(e, m[k], path+"."+SafeKey(k)); err != nil {
 			return err
 		}
 		out.SetMapIndex(reflect.ValueOf(k), e)

@@ -12,10 +12,6 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 )
 
-// safeKey is the shape of an argument key that an error may repeat: it cannot break a line, close a quote, reorder the
-// text or fill the error block.
-var safeKey = regexp.MustCompile(`^[A-Za-z0-9_.-]{1,64}$`)
-
 // withoutCallerKeys takes out of an error every key of the arguments that is not safeKey. The keys are chosen by the
 // caller, the error text goes to a model, and many layers repeat a key they refuse (the arguments of an operation, a
 // style, a slot, a briefing answer): this is the one place all of them pass through, so a new one cannot forge a
@@ -56,7 +52,7 @@ func newKeyRedactor(raw json.RawMessage) *keyRedactor {
 	forms := make([]string, 0, 2*len(found))
 
 	for k := range found {
-		if k == "" || safeKey.MatchString(k) {
+		if k == "" || command.IsSafeKey(k) {
 			continue
 		}
 

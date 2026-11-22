@@ -181,7 +181,7 @@ func (c *Context) validateStyle(style map[string]any, caption, allowNull bool) *
 	}
 	slices.Sort(given)
 	for _, k := range given {
-		kp := path + "." + k
+		kp := path + "." + SafeKey(k)
 		if !slices.Contains(keys, k) {
 			return Errorf(CodeValidation, "%s is not a style key.", kp).
 				WithHint("The style keys are: %s.", strings.Join(keys, ", ")).WithDetail("allowed", keys).WithPath(kp)

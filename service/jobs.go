@@ -327,8 +327,8 @@ func decodeExportArgs(raw json.RawMessage) (ExportArgs, *Error) {
 
 	for name := range probe {
 		if name != "start" && name != "end" && name != "format" && name != "at" && name != "preset" && name != "codec" {
-			return a, newError(command.CodeValidation, "the export does not take the argument %q.", name).
-				withPath("args." + name).
+			return a, newError(command.CodeValidation, "the export does not take the argument %q.", command.SafeKey(name)).
+				withPath("args." + command.SafeKey(name)).
 				withHint("use start, end, format, at, preset and codec, all optional; at is for format png; " +
 					"preset and codec are for format mp4")
 		}

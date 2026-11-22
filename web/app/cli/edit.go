@@ -141,7 +141,7 @@ func decodeBatch(raw []byte, req *batchRequest) error {
 
 	if len(trimmed) > 0 && trimmed[0] == '[' {
 		if err := json.Unmarshal(trimmed, &req.Operations); err != nil {
-			return validation("ops", "the batch is not a JSON array of operations: %v.", err)
+			return validation("ops", "the batch is not a JSON array of operations: %s.", command.JSONProblem(err))
 		}
 
 		return nil
@@ -153,7 +153,7 @@ func decodeBatch(raw []byte, req *batchRequest) error {
 	dec.DisallowUnknownFields()
 
 	if err := dec.Decode(&obj); err != nil {
-		return validation("ops", "the batch is neither a JSON array nor an object with operations: %v.", err)
+		return validation("ops", "the batch is neither a JSON array nor an object with operations: %s.", command.JSONProblem(err))
 	}
 
 	req.Operations, req.IdempotencyKey, req.DryRun = obj.Operations, obj.IdempotencyKey, obj.DryRun
