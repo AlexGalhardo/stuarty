@@ -67,6 +67,11 @@ type Import struct {
 	// second import of a file into one project applies instead of failing on its first marker.
 	MarkedFrames []int `json:"-"`
 
+	// ProjectTemplate is the template of the project the batch applies to; the caller sets it before Operations.
+	// The file adds what the project does not have and never changes what it has: the items of the project may
+	// use a colour by name.
+	ProjectTemplate *timeline.TemplateInfo `json:"-"`
+
 	tracks   []importTrack
 	markers  []timeline.Marker
 	template *templateSpec
@@ -386,8 +391,7 @@ func (r *reader) clip(c map[string]any, cursor int, kind string) (entry, bool) {
 
 		spec := itemOps(props, mode, cursor, dur, r.slots, func(f string) { r.lose(f + " of clip " + name) })
 		e.props, e.speed, e.curve, e.reverse, e.slot = spec.ops, spec.speed, spec.curve, spec.reverse, spec.slot
-		e.refs = r.readRefs(v, name)
-		e.refs.linked = ""
+		e.refs = r.readRefs(v, name, false)
 	}
 
 	return e, true
@@ -459,8 +463,7 @@ func (r *reader) shapeItem(c, v map[string]any, cursor, dur int) (entry, bool) {
 	props, _ := v["properties"].(map[string]any)
 	spec := itemOps(props, modeText, cursor, dur, r.slots, lose)
 	e.props = spec.ops
-	e.refs = r.readRefs(v, name)
-	e.refs.linked = ""
+	e.refs = r.readRefs(v, name, false)
 
 	return e, true
 }
@@ -479,8 +482,7 @@ func (r *reader) captionItem(c, v map[string]any, cursor, dur int) (entry, bool)
 	props, _ := v["properties"].(map[string]any)
 	ops := itemOps(props, modeText, cursor, dur, r.slots, lose)
 	e.props = ops.ops
-	e.refs = r.readRefs(v, name)
-	e.refs.link = ""
+	e.refs = r.readRefs(v, name, true)
 
 	return e, true
 }
@@ -507,8 +509,7 @@ func (r *reader) textItem(c, v map[string]any, cursor, dur int) (entry, bool) {
 	props, _ := v["properties"].(map[string]any)
 	spec := itemOps(props, modeText, cursor, dur, r.slots, lose)
 	e.props, e.slot = spec.ops, spec.slot
-	e.refs = r.readRefs(v, name)
-	e.refs.linked = ""
+	e.refs = r.readRefs(v, name, false)
 
 	return e, true
 }
@@ -558,7 +559,7 @@ func (im *Import) Operations(assets map[string]string, newID func(prefix string)
 		b.known[f] = true
 	}
 
-	b.template(im.template)
+	b.template(im.template, im.ProjectTemplate)
 	b.reserve(im.tracks)
 
 	taken := len(im.MarkedFrames)
@@ -844,7 +845,7 @@ func (b *batch) caption(trackID string, e *entry) *placed {
 		if to, ok := b.pre[e.refs.linked]; ok {
 			args["linked_item"] = to
 		} else {
-			b.lost = append(b.lost, Lost{Name: e.name, Feature: "caption link to an item that is not in the file"})
+			b.lost = append(b.lost, Lost{Name: e.name, Feature: "caption link to an item that is not a clip of the file"})
 		}
 	}
 

@@ -329,7 +329,8 @@ func playbackMetadata(it *timeline.Item, props object) {
 	}
 
 	if l := it.Lut; l != nil {
-		props["lut"] = object{"asset": l.Asset, "intensity": l.Intensity}
+		// The asset is an id of this document: it names nothing in another project and never leaves in a file.
+		props["lut"] = object{"intensity": l.Intensity}
 	}
 
 	if len(it.Effects) > 0 {
