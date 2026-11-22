@@ -70,6 +70,21 @@ func (r jobRepo) CreateLimited(ctx context.Context, j service.JobRow, lim *servi
 				return &service.QueueFullError{Running: ids, Kind: lim.Kind, Ceiling: lim.MaxPerActor, PerActor: true}
 			}
 		}
+		if lim.Reason != "" && lim.MaxPerReason > 0 {
+			ids, err := r.activeIDs(
+				ctx,
+				`SELECT id FROM jobs WHERE kind = ? AND state IN ('queued','running')
+ AND CASE WHEN json_valid(input) THEN json_extract(input, '$.reason') END = ? ORDER BY created_ms, id`,
+				lim.Kind,
+				lim.Reason,
+			)
+			if err != nil {
+				return err
+			}
+			if len(ids) >= lim.MaxPerReason {
+				return &service.QueueFullError{Running: ids, Kind: lim.Kind, Ceiling: lim.MaxPerReason, PerReason: true}
+			}
+		}
 	}
 
 	_, err := r.ex.ExecContext(ctx, `INSERT INTO jobs

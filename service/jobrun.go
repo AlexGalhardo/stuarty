@@ -1058,6 +1058,9 @@ func (s *svc) failInterrupted(ctx context.Context, tx Tx, j *JobRow, now int64) 
 	j.State, j.Error = JobFailed, ej
 	s.logJob(ctx, slog.LevelError, "job failed", j, slog.String("code", e.Code), slog.String("reason", "interrupted"))
 
+	ended := *j
+	tx.AfterCommit(func() { s.noteUpgradeEnded(&ended, JobFailed) })
+
 	if ingestsAsset(j) {
 		return tx.Assets().SetIngest(ctx, *j.AssetHash, IngestFailed, 0, ej, now)
 	}

@@ -535,6 +535,10 @@ func (s *svc) ensureIngestJobFor(
 	}
 
 	lim := &JobLimit{Kind: JobIngest, Max: s.limits.MaxQueuedIngests + s.limits.MaxIngests}
+	if in["reason"] == reasonProfileUpgrade {
+		lim.Reason, lim.MaxPerReason = reasonProfileUpgrade, maxActiveProfileUpgrades
+	}
+
 	if err := tx.Jobs().CreateLimited(ctx, job, lim); err != nil {
 		return "", err
 	}

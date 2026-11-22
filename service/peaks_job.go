@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"slices"
 
 	"github.com/AlexGalhardo/stuarty/engine/ingest"
@@ -38,19 +39,45 @@ func ingestsAsset(j *JobRow) bool {
 	return j.Kind == JobIngest && j.AssetHash != nil && !isProfileUpgrade(j)
 }
 
+// maxActiveProfileUpgrades is how many profile upgrades may be queued or running in a workspace. Reads queue them,
+// so a page of long sounds must not take the ingest queue from the imports (SDD-011 section 6.3.1).
+const maxActiveProfileUpgrades = 1
+
+// peaksPending is the answer of a read while the peaks are computed. id is empty for a file that waits for its
+// turn: no job exists for it yet, and a later read queues it.
+func peaksPending(id string, progress float64) *Error {
+	hint := "ask again in a few seconds"
+	if id != "" {
+		hint += "; the job " + id + " shows the progress"
+	}
+
+	e := newError("E_ASSET_NOT_READY", "the waveform of the asset is being computed in the background.").
+		withHint("%s", hint).withDetail("reason", "peaks_pending").withDetail("progress", progress)
+	if id != "" {
+		_ = e.withDetail("job_id", id)
+	}
+
+	return e
+}
+
 // peaksUpgradePending queues the peaks job of a long sound, or finds the one that is running, and returns what
-// the read of the peaks answers meanwhile: E_ASSET_NOT_READY, retryable, with the job to follow. A file whose
-// job was cancelled or failed in this process gets the limit error instead (SDD-011 section 6.3.1).
+// the read of the peaks answers meanwhile: E_ASSET_NOT_READY, retryable, with the job to follow. A read that finds
+// the job takes no write transaction, because a page asks again every few seconds. A caller whose cancel stopped
+// the job, and anyone after it failed, gets the limit error instead (SDD-011 section 6.3.1).
 func (s *svc) peaksUpgradePending(ctx context.Context, ar AssetRow, size int64) error {
-	if _, gaveUp := s.peaksGaveUp.Load(ar.Hash); gaveUp {
+	actor, owner := "system", ""
+	if c, ok := CallerFrom(ctx); ok {
+		actor, owner = c.Actor, c.OwnerUserID
+	}
+
+	if s.peaksGivenUp(ar.Hash, owner) {
 		return newError("E_LIMIT_EXCEEDED", "the audio is too long to compute its peaks in a request.").
 			withHint("the file still plays and can be used; it has no waveform").
 			withLimit("peaks_bytes", size, maxPeaksWAV)
 	}
 
-	actor := "system"
-	if c, ok := CallerFrom(ctx); ok {
-		actor = c.Actor
+	if j, jerr := s.store.Jobs().ActiveIngestForHash(ctx, ar.Hash); jerr == nil {
+		return peaksPending(j.ID, j.Progress)
 	}
 
 	var id string
@@ -64,19 +91,38 @@ func (s *svc) peaksUpgradePending(ctx context.Context, ar AssetRow, size int64) 
 
 		return jerr
 	})
+	if full, isFull := errors.AsType[*QueueFullError](err); isFull && full.PerReason {
+		return peaksPending("", 0)
+	}
+
 	if err != nil {
 		return asError(err)
 	}
 
-	e := newError("E_ASSET_NOT_READY", "the waveform of the asset is being computed in the background.").
-		withHint("ask again in a few seconds; the job %s shows the progress", id).
-		withDetail("reason", "peaks_pending").withDetail("job_id", id).withDetail("progress", 0.0)
+	return peaksPending(id, 0)
+}
 
-	if j, gerr := s.store.Jobs().Get(ctx, id); gerr == nil {
-		e.Details["progress"] = j.Progress
+// gaveUpEveryone is the owner of the record of a job that failed: nobody gets it queued again.
+const gaveUpEveryone = "\x00"
+
+func gaveUpKey(hash, owner string) string { return hash + "\x00" + owner }
+
+func (s *svc) peaksGivenUp(hash, owner string) bool {
+	if _, ok := s.peaksGaveUp.Load(gaveUpKey(hash, gaveUpEveryone)); ok {
+		return true
 	}
 
-	return e
+	_, ok := s.peaksGaveUp.Load(gaveUpKey(hash, owner))
+
+	return ok
+}
+
+// notePeaksCancelled remembers who stopped the peaks job of a file, so that their open page does not queue it
+// again. The record is theirs alone: another user of the same file still gets its waveform.
+func (s *svc) notePeaksCancelled(job *JobRow, owner string) {
+	if job.AssetHash != nil && isProfileUpgrade(job) {
+		s.peaksGaveUp.Store(gaveUpKey(*job.AssetHash, owner), struct{}{})
+	}
 }
 
 // runPeaksUpgrade is the job of 6.3.1: the peaks of a long sound, read from its normalized WAV in blocks with
@@ -140,10 +186,10 @@ func (s *svc) runPeaksUpgrade(ctx context.Context, job *JobRow, pw *progress) (j
 	return marshalOrNull(map[string]any{"steps": []string{"peaks"}}), nil
 }
 
-// noteUpgradeEnded remembers that a profile upgrade of a file ended cancelled or failed, so that a read does
-// not queue it again in this process (SDD-011 section 6.3.1).
+// noteUpgradeEnded remembers that a profile upgrade of a file failed, so that no read queues it again in this
+// process (SDD-011 section 6.3.1). A cancel is recorded for the one who made it, by notePeaksCancelled.
 func (s *svc) noteUpgradeEnded(job *JobRow, state string) {
-	if job.AssetHash != nil && state != JobSucceeded && isProfileUpgrade(job) {
-		s.peaksGaveUp.Store(*job.AssetHash, struct{}{})
+	if job.AssetHash != nil && state == JobFailed && isProfileUpgrade(job) {
+		s.peaksGaveUp.Store(gaveUpKey(*job.AssetHash, gaveUpEveryone), struct{}{})
 	}
 }

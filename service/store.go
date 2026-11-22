@@ -29,10 +29,11 @@ var (
 // QueueFullError is returned by JobRepo.CreateLimited: the jobs that hold the slots (their ids), the
 // kind that is full, the ceiling that was reached and whether it is the one of a single actor.
 type QueueFullError struct {
-	Running  []string
-	Kind     string
-	Ceiling  int
-	PerActor bool
+	Running   []string
+	Kind      string
+	Ceiling   int
+	PerActor  bool
+	PerReason bool // the ceiling of the jobs of the kind with one reason (JobLimit.Reason)
 }
 
 func (e *QueueFullError) Error() string { return "service: job limit reached" }
@@ -604,6 +605,9 @@ type JobLimit struct {
 	Max         int    // concurrent queued+running jobs of this kind
 	Actor       string // when set, MaxPerActor is applied to this actor's jobs of the kind
 	MaxPerActor int
+	// Reason, when set, applies MaxPerReason to the jobs of the kind whose input has this reason.
+	Reason       string
+	MaxPerReason int
 }
 
 // JobRepo stores jobs. Claim, Progress, Finish and Requeue are single
