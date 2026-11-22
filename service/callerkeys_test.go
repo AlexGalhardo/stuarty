@@ -6,6 +6,8 @@ import (
 	"errors"
 	"strings"
 	"testing"
+
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // notRepeated fails when an error repeats a key the caller chose, or can break its line (VV-368).
@@ -76,5 +78,36 @@ func TestNoServiceErrorRepeatsAHostileKey(t *testing.T) {
 		}
 
 		notRepeated(t, name+" briefing", berr)
+
+		_, cerr := normalizeBrandKit(&BrandKitSetRequest{Colors: map[string]string{key: "#FF0000"}})
+		if cerr == nil {
+			t.Fatalf("%s: brand colour accepted", name)
+		}
+
+		notRepeated(t, name+" brand colour", cerr)
+
+		_, ferr := normalizeBrandKit(&BrandKitSetRequest{Fonts: map[string]BrandFont{key: {}}})
+		if ferr == nil {
+			t.Fatalf("%s: brand font accepted", name)
+		}
+
+		notRepeated(t, name+" brand font", ferr)
+
+		_, oerr := s.fillOps(edit, Caller{}, map[string]SlotValue{key: {}})
+		if oerr == nil {
+			t.Fatalf("%s: fill accepted", name)
+		}
+
+		notRepeated(t, name+" fill", oerr)
+
+		line := violationLine(timeline.Violation{Code: timeline.VID, Path: "items." + key + ".id", Message: key})
+		if line != timeline.VID+" at ?" {
+			t.Errorf("%s: a violation repeats the key: %q", name, line)
+		}
+	}
+
+	if got := violationLine(timeline.Violation{Code: timeline.VShape, Path: "items.itm_a.words[2].start"}); got !=
+		timeline.VShape+" at items.itm_a.words[2].start" {
+		t.Errorf("a plain path is not named: %q", got)
 	}
 }

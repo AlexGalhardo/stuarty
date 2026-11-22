@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"regexp"
 	"slices"
 	"strconv"
 	"time"
@@ -37,6 +38,19 @@ func decodeRow(row *ProjectRow) (*timeline.Document, error) {
 	}
 
 	return doc, nil
+}
+
+var violationIndex = regexp.MustCompile(`\[\d+\]`)
+
+// violationLine is a violation of a document as an error may repeat it: its code and its path. A bundle or a template
+// file chooses the keys of its maps and a violation repeats them, so the message is left out and a path that is not
+// plain is written "?" (SDD-003 section 1.2 rule 9).
+func violationLine(v timeline.Violation) string {
+	if command.IsSafeKey(violationIndex.ReplaceAllString(v.Path, "")) {
+		return v.Code + " at " + v.Path
+	}
+
+	return v.Code + " at ?"
 }
 
 func sha256Hex(b []byte) string {

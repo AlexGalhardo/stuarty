@@ -205,7 +205,8 @@ func normalizeBrandKit(req *BrandKitSetRequest) (*BrandKit, *Error) {
 		switch {
 		case !brandColorName.MatchString(name):
 			return nil, newError(
-				command.CodeValidation, "colors %q is not a valid name; it must match [a-z][a-z0-9_]{0,39}.", name,
+				command.CodeValidation, "colors %q is not a valid name; it must match [a-z][a-z0-9_]{0,39}.",
+				command.SafeKey(name),
 			).withPath("colors").withHint("use lower case letters, digits and underscores")
 		case !brandColorValue.MatchString(value):
 			return nil, newError(command.CodeValidation, "colors.%s is not a colour.", name).
@@ -236,18 +237,20 @@ func normalizeBrandKit(req *BrandKitSetRequest) (*BrandKit, *Error) {
 }
 
 func normalizeBrandFont(family string, f BrandFont) ([]BrandFontFile, *Error) {
-	path := "fonts." + family
+	// A family may hold spaces, so a valid one can still read as a sentence: errors name it only in the plain shape.
+	key := command.SafeKey(family)
+	path := "fonts." + key
 
 	switch {
 	case !brandFamilyForm.MatchString(family):
-		return nil, newError(command.CodeValidation, "fonts %q is not a valid family name.", family).
+		return nil, newError(command.CodeValidation, "fonts %q is not a valid family name.", key).
 			withPath("fonts").withHint("use 1 to 60 letters, digits, spaces, dots, hyphens or underscores")
 	case slices.Contains(timeline.BundledFamilies, family):
-		return nil, newError(command.CodeValidation, "fonts %q is a bundled family.", family).
+		return nil, newError(command.CodeValidation, "fonts %q is a bundled family.", key).
 			withPath(path).withHint("choose another name for the family")
 	case len(f.Files) < 1 || len(f.Files) > maxBrandWeight:
 		return nil, newError(
-			command.CodeValidation, "fonts.%s has %d files; it needs 1 to %d.", family, len(f.Files), maxBrandWeight,
+			command.CodeValidation, "fonts.%s has %d files; it needs 1 to %d.", key, len(f.Files), maxBrandWeight,
 		).withPath(path + ".files")
 	}
 
@@ -366,7 +369,7 @@ func (s *svc) applyBrandKit(
 	}
 
 	if vs := timeline.Validate(doc); len(vs) > 0 {
-		return newError(command.CodeValidation, "the brand kit does not fit the template: %s", vs[0].String()).
+		return newError(command.CodeValidation, "the brand kit does not fit the template: %s", violationLine(vs[0])).
 			withHint("check the weights of the brand fonts against the styles of the template")
 	}
 
