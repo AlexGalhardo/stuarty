@@ -157,7 +157,11 @@ func (o *Owner) reseal(ctx context.Context, vaultPath string, vaultKey []byte) e
 		return nil
 	}
 
-	err := vault.Open(vaultPath, o.legacyKeys).Rotate(vaultKey)
+	// A vault of its own, forgotten at once: it would keep a copy of the new key in memory.
+	legacy := vault.Open(vaultPath, o.legacyKeys)
+	defer legacy.Forget()
+
+	err := legacy.Rotate(vaultKey)
 
 	switch {
 	case err == nil:
