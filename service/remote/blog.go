@@ -34,7 +34,7 @@ func (c *Client) PublishedPostList(
 func (c *Client) PublishedPostGet(
 	ctx context.Context, req service.PublishedPostGetRequest,
 ) (*service.PublishedPostResult, error) {
-	return get[service.PublishedPostResult](ctx, c, "/posts/"+url.PathEscape(req.Slug), nil)
+	return get[service.PublishedPostResult](ctx, c, "/posts/"+segment(req.Slug), nil)
 }
 
 // PublishedPostMedia implements service.Service. The bytes of an image are read from its route; a path in the

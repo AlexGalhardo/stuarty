@@ -9,7 +9,7 @@ import (
 )
 
 func textPath(projectID, itemID, suffix string) string {
-	return projectPath(projectID, "/texts/"+url.PathEscape(itemID)+suffix)
+	return projectPath(projectID, "/texts/"+segment(itemID)+suffix)
 }
 
 func setInt(q url.Values, key string, n int) {

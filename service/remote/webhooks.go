@@ -23,7 +23,7 @@ func (c *Client) WebhookList(ctx context.Context, _ service.WebhookListRequest) 
 
 // WebhookGet implements service.Service.
 func (c *Client) WebhookGet(ctx context.Context, req service.WebhookRef) (*service.Webhook, error) {
-	return get[service.Webhook](ctx, c, "/webhooks/"+url.PathEscape(req.ID), nil)
+	return get[service.Webhook](ctx, c, "/webhooks/"+segment(req.ID), nil)
 }
 
 // WebhookCreate implements service.Service.
@@ -36,7 +36,7 @@ func (c *Client) WebhookCreate(
 // WebhookUpdate implements service.Service.
 func (c *Client) WebhookUpdate(ctx context.Context, req service.WebhookUpdateRequest) (*service.Webhook, error) {
 	out := new(service.Webhook)
-	if err := c.do(ctx, http.MethodPatch, "/webhooks/"+url.PathEscape(req.ID), nil, req, out); err != nil {
+	if err := c.do(ctx, http.MethodPatch, "/webhooks/"+segment(req.ID), nil, req, out); err != nil {
 		return nil, err
 	}
 
@@ -46,7 +46,7 @@ func (c *Client) WebhookUpdate(ctx context.Context, req service.WebhookUpdateReq
 // WebhookRemove implements service.Service.
 func (c *Client) WebhookRemove(ctx context.Context, req service.WebhookRef) (*service.Webhook, error) {
 	out := new(service.Webhook)
-	if err := c.do(ctx, http.MethodDelete, "/webhooks/"+url.PathEscape(req.ID), nil, nil, out); err != nil {
+	if err := c.do(ctx, http.MethodDelete, "/webhooks/"+segment(req.ID), nil, nil, out); err != nil {
 		return nil, err
 	}
 
@@ -58,12 +58,12 @@ func (c *Client) WebhookRotateSecret(
 	ctx context.Context,
 	req service.WebhookRef,
 ) (*service.WebhookSecretResult, error) {
-	return post[service.WebhookSecretResult](ctx, c, "/webhooks/"+url.PathEscape(req.ID)+"/rotate-secret", struct{}{})
+	return post[service.WebhookSecretResult](ctx, c, "/webhooks/"+segment(req.ID)+"/rotate-secret", struct{}{})
 }
 
 // WebhookTest implements service.Service.
 func (c *Client) WebhookTest(ctx context.Context, req service.WebhookRef) (*service.WebhookDelivery, error) {
-	return post[service.WebhookDelivery](ctx, c, "/webhooks/"+url.PathEscape(req.ID)+"/test", struct{}{})
+	return post[service.WebhookDelivery](ctx, c, "/webhooks/"+segment(req.ID)+"/test", struct{}{})
 }
 
 // WebhookDeliveryList implements service.Service.
@@ -79,7 +79,7 @@ func (c *Client) WebhookDeliveryList(
 		q.Set("offset", strconv.Itoa(req.Offset))
 	}
 
-	return get[service.WebhookDeliveriesResult](ctx, c, "/webhooks/"+url.PathEscape(req.ID)+"/deliveries", q)
+	return get[service.WebhookDeliveriesResult](ctx, c, "/webhooks/"+segment(req.ID)+"/deliveries", q)
 }
 
 // WebhookRedeliver implements service.Service.
@@ -89,7 +89,7 @@ func (c *Client) WebhookRedeliver(
 	return post[service.WebhookDelivery](
 		ctx,
 		c,
-		"/webhooks/"+url.PathEscape(req.ID)+"/deliveries/"+url.PathEscape(req.DeliveryID)+"/redeliver",
+		"/webhooks/"+segment(req.ID)+"/deliveries/"+segment(req.DeliveryID)+"/redeliver",
 		struct{}{},
 	)
 }

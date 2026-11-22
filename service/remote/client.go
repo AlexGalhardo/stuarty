@@ -249,8 +249,21 @@ func setIf(q url.Values, key, value string) {
 	}
 }
 
+// segment is a value as one segment of a request path. url.PathEscape leaves "." and ".." as they are, and a URL
+// path normalises them away (a redirect, or another route), so they are written escaped (VV-369).
+func segment(v string) string {
+	switch v {
+	case ".":
+		return "%2E"
+	case "..":
+		return "%2E%2E"
+	default:
+		return url.PathEscape(v)
+	}
+}
+
 func projectPath(id, suffix string) string {
-	return "/projects/" + url.PathEscape(id) + suffix
+	return "/projects/" + segment(id) + suffix
 }
 
 // ProjectList implements service.Service.
@@ -347,7 +360,7 @@ func (c *Client) CommandHelp(ctx context.Context, req service.CommandHelpRequest
 		return get[service.CommandHelpResult](ctx, c, "/commands", q)
 	}
 
-	return get[service.CommandHelpResult](ctx, c, "/commands/"+url.PathEscape(req.Name), q)
+	return get[service.CommandHelpResult](ctx, c, "/commands/"+segment(req.Name), q)
 }
 
 // HistoryList implements service.Service.
@@ -410,7 +423,7 @@ func (c *Client) MediaInspect(
 	setIf(q, "sections", strings.Join(req.Sections, ","))
 	setIf(q, "min_silence", req.MinSilence)
 
-	path := projectPath(req.ProjectID, "/media/"+url.PathEscape(req.AssetID))
+	path := projectPath(req.ProjectID, "/media/"+segment(req.AssetID))
 
 	return get[service.MediaInspectResult](ctx, c, path, pageQuery(q, req.Page))
 }
@@ -419,7 +432,7 @@ func (c *Client) MediaInspect(
 func (c *Client) MediaTrash(ctx context.Context, req service.MediaTrashRequest) (*service.MediaStateResult, error) {
 	ctx = withTimeline(ctx, req.TimelineID)
 	return post[service.MediaStateResult](
-		ctx, c, projectPath(req.ProjectID, "/media/"+url.PathEscape(req.AssetID)+"/trash"), dryBody{req.DryRun},
+		ctx, c, projectPath(req.ProjectID, "/media/"+segment(req.AssetID)+"/trash"), dryBody{req.DryRun},
 	)
 }
 
@@ -427,7 +440,7 @@ func (c *Client) MediaTrash(ctx context.Context, req service.MediaTrashRequest) 
 func (c *Client) MediaRestore(ctx context.Context, req service.MediaTrashRequest) (*service.MediaStateResult, error) {
 	ctx = withTimeline(ctx, req.TimelineID)
 	return post[service.MediaStateResult](
-		ctx, c, projectPath(req.ProjectID, "/media/"+url.PathEscape(req.AssetID)+"/restore"), dryBody{req.DryRun},
+		ctx, c, projectPath(req.ProjectID, "/media/"+segment(req.AssetID)+"/restore"), dryBody{req.DryRun},
 	)
 }
 
@@ -514,12 +527,12 @@ func (c *Client) JobGet(ctx context.Context, req service.JobGetRequest) (*servic
 		q.Set("wait_ms", strconv.Itoa(req.WaitMS))
 	}
 
-	return jobText(get[service.Job](ctx, c, "/jobs/"+url.PathEscape(req.JobID), q))
+	return jobText(get[service.Job](ctx, c, "/jobs/"+segment(req.JobID), q))
 }
 
 // JobCancel implements service.Service.
 func (c *Client) JobCancel(ctx context.Context, req service.JobCancelRequest) (*service.Job, error) {
-	return jobText(post[service.Job](ctx, c, "/jobs/"+url.PathEscape(req.JobID)+"/cancel", struct{}{}))
+	return jobText(post[service.Job](ctx, c, "/jobs/"+segment(req.JobID)+"/cancel", struct{}{}))
 }
 
 // TemplateList implements service.Service.
@@ -551,13 +564,13 @@ func (c *Client) TemplateInstantiate(
 	}{req.Name, req.Fill, req.ID, req.DryRun, req.BrandColors, req.BrandFonts}
 
 	return post[service.TemplateInstantiateResult](
-		ctx, c, "/templates/"+url.PathEscape(req.TemplateID)+"/instantiate", body,
+		ctx, c, "/templates/"+segment(req.TemplateID)+"/instantiate", body,
 	)
 }
 
 // TemplateExport implements service.Service.
 func (c *Client) TemplateExport(ctx context.Context, req service.TemplateRef) (*service.FileResult, error) {
-	return post[service.FileResult](ctx, c, "/templates/"+url.PathEscape(req.TemplateID)+"/export", struct{}{})
+	return post[service.FileResult](ctx, c, "/templates/"+segment(req.TemplateID)+"/export", struct{}{})
 }
 
 // TemplateImport implements service.Service.
@@ -711,7 +724,7 @@ func (c *Client) AssetList(ctx context.Context, req service.AssetListRequest) (*
 	)
 }
 
-func assetPath(hash, suffix string) string { return "/assets/" + url.PathEscape(hash) + suffix }
+func assetPath(hash, suffix string) string { return "/assets/" + segment(hash) + suffix }
 
 // AssetGet implements service.Service.
 func (c *Client) AssetGet(ctx context.Context, req service.AssetRef) (*service.AssetResult, error) {
@@ -786,7 +799,7 @@ func (c *Client) KeyList(ctx context.Context, _ service.KeyListRequest) (*servic
 // KeyRevoke implements service.Service.
 func (c *Client) KeyRevoke(ctx context.Context, req service.KeyRevokeRequest) (*service.Key, error) {
 	out := new(service.Key)
-	if err := c.do(ctx, http.MethodDelete, "/keys/"+url.PathEscape(req.KeyID), nil, nil, out); err != nil {
+	if err := c.do(ctx, http.MethodDelete, "/keys/"+segment(req.KeyID), nil, nil, out); err != nil {
 		return nil, err
 	}
 
@@ -878,7 +891,7 @@ func (c *Client) ConnectionList(
 
 // ConnectionGet implements service.Service.
 func (c *Client) ConnectionGet(ctx context.Context, req service.ConnectionRef) (*connections.Connection, error) {
-	return get[connections.Connection](ctx, c, "/connections/"+url.PathEscape(req.ID), nil)
+	return get[connections.Connection](ctx, c, "/connections/"+segment(req.ID), nil)
 }
 
 // ConnectionCreate implements service.Service.
@@ -891,7 +904,7 @@ func (c *Client) ConnectionCreate(
 // ConnectionRemove implements service.Service.
 func (c *Client) ConnectionRemove(ctx context.Context, req service.ConnectionRef) (*connections.Connection, error) {
 	out := new(connections.Connection)
-	if err := c.do(ctx, http.MethodDelete, "/connections/"+url.PathEscape(req.ID), nil, nil, out); err != nil {
+	if err := c.do(ctx, http.MethodDelete, "/connections/"+segment(req.ID), nil, nil, out); err != nil {
 		return nil, err
 	}
 
@@ -900,5 +913,5 @@ func (c *Client) ConnectionRemove(ctx context.Context, req service.ConnectionRef
 
 // ConnectionTest implements service.Service.
 func (c *Client) ConnectionTest(ctx context.Context, req service.ConnectionRef) (*service.ConnectionTestResult, error) {
-	return post[service.ConnectionTestResult](ctx, c, "/connections/"+url.PathEscape(req.ID)+"/test", struct{}{})
+	return post[service.ConnectionTestResult](ctx, c, "/connections/"+segment(req.ID)+"/test", struct{}{})
 }

@@ -15,7 +15,7 @@ import (
 func libraryPath(kind, name, suffix string) string {
 	p := "/library/" + kind
 	if name != "" {
-		p += "/" + url.PathEscape(name)
+		p += "/" + segment(name)
 	}
 
 	return p + suffix

@@ -31,7 +31,7 @@ func (c *Client) AgentProfileSet(
 	}{req.Command, req.Args}
 
 	out := new(agenthost.Profile)
-	if err := c.do(ctx, http.MethodPut, "/agents/profiles/"+url.PathEscape(req.Name), nil, body, out); err != nil {
+	if err := c.do(ctx, http.MethodPut, "/agents/profiles/"+segment(req.Name), nil, body, out); err != nil {
 		return nil, err
 	}
 
@@ -43,7 +43,7 @@ func (c *Client) AgentProfileRemove(
 	ctx context.Context, req service.AgentProfileRemoveRequest,
 ) (*agenthost.Profile, error) {
 	out := new(agenthost.Profile)
-	if err := c.do(ctx, http.MethodDelete, "/agents/profiles/"+url.PathEscape(req.Name), nil, nil, out); err != nil {
+	if err := c.do(ctx, http.MethodDelete, "/agents/profiles/"+segment(req.Name), nil, nil, out); err != nil {
 		return nil, err
 	}
 
@@ -59,7 +59,7 @@ func (c *Client) ChatSessionStart(
 		Profile string `json:"profile"`
 	}{req.Profile}
 
-	return post[service.ChatSession](ctx, c, "/projects/"+url.PathEscape(req.ProjectID)+"/chat/sessions", body)
+	return post[service.ChatSession](ctx, c, "/projects/"+segment(req.ProjectID)+"/chat/sessions", body)
 }
 
 // ChatSend implements service.Service.
@@ -68,7 +68,7 @@ func (c *Client) ChatSend(ctx context.Context, req service.ChatSendRequest) (*se
 		Text string `json:"text"`
 	}{req.Text}
 
-	return post[service.ChatSession](ctx, c, "/chat/sessions/"+url.PathEscape(req.SessionID)+"/messages", body)
+	return post[service.ChatSession](ctx, c, "/chat/sessions/"+segment(req.SessionID)+"/messages", body)
 }
 
 // ChatCancel implements service.Service.
@@ -77,7 +77,7 @@ func (c *Client) ChatCancel(ctx context.Context, req service.ChatCancelRequest) 
 		End bool `json:"end"`
 	}{req.End}
 
-	return post[service.ChatSession](ctx, c, "/chat/sessions/"+url.PathEscape(req.SessionID)+"/cancel", body)
+	return post[service.ChatSession](ctx, c, "/chat/sessions/"+segment(req.SessionID)+"/cancel", body)
 }
 
 // ChatAnswerPermission implements service.Service.
@@ -89,19 +89,19 @@ func (c *Client) ChatAnswerPermission(
 	}{req.Answer}
 
 	return post[service.ChatSession](ctx, c,
-		"/chat/sessions/"+url.PathEscape(req.SessionID)+"/permissions/"+url.PathEscape(req.RequestID), body)
+		"/chat/sessions/"+segment(req.SessionID)+"/permissions/"+segment(req.RequestID), body)
 }
 
 // ChatSessionList implements service.Service.
 func (c *Client) ChatSessionList(
 	ctx context.Context, req service.ChatSessionListRequest,
 ) (*service.ChatSessionListResult, error) {
-	return get[service.ChatSessionListResult](ctx, c, "/projects/"+url.PathEscape(req.ProjectID)+"/chat/sessions", nil)
+	return get[service.ChatSessionListResult](ctx, c, "/projects/"+segment(req.ProjectID)+"/chat/sessions", nil)
 }
 
 // ChatSessionGet implements service.Service.
 func (c *Client) ChatSessionGet(ctx context.Context, req service.ChatRef) (*service.ChatSession, error) {
-	return get[service.ChatSession](ctx, c, "/chat/sessions/"+url.PathEscape(req.SessionID), nil)
+	return get[service.ChatSession](ctx, c, "/chat/sessions/"+segment(req.SessionID), nil)
 }
 
 // ChatTranscriptGet implements service.Service.
@@ -119,13 +119,13 @@ func (c *Client) ChatTranscriptGet(
 		q.Set("limit", strconv.Itoa(req.Limit))
 	}
 
-	return get[service.ChatTranscriptResult](ctx, c, "/chat/sessions/"+url.PathEscape(req.SessionID)+"/transcript", q)
+	return get[service.ChatTranscriptResult](ctx, c, "/chat/sessions/"+segment(req.SessionID)+"/transcript", q)
 }
 
 // ChatSessionDelete implements service.Service.
 func (c *Client) ChatSessionDelete(ctx context.Context, req service.ChatRef) (*service.ChatSession, error) {
 	out := new(service.ChatSession)
-	if err := c.do(ctx, http.MethodDelete, "/chat/sessions/"+url.PathEscape(req.SessionID), nil, nil, out); err != nil {
+	if err := c.do(ctx, http.MethodDelete, "/chat/sessions/"+segment(req.SessionID), nil, nil, out); err != nil {
 		return nil, err
 	}
 

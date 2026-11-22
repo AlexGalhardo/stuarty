@@ -10,7 +10,7 @@ import (
 )
 
 func publicationPath(id, suffix string) string {
-	return "/publications/" + url.PathEscape(id) + suffix
+	return "/publications/" + segment(id) + suffix
 }
 
 // PublicationCreate implements service.Service.

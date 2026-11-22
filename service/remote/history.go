@@ -102,5 +102,5 @@ func (c *Client) CheckpointRemove(
 }
 
 func checkpointPath(project, name string) string {
-	return projectPath(project, "/checkpoints/"+url.PathEscape(name))
+	return projectPath(project, "/checkpoints/"+segment(name))
 }
