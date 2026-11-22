@@ -43,7 +43,7 @@ Raised around the commands: sign-in, imports, exports, jobs and limits. They app
 | `E_AGENT_UNAVAILABLE` | 500 | no | the hosted agent could not be started or opened; `details.reason` `not_found`, `start_failed`, `exited`, `timeout`, `protocol`, `protocol_version`, `no_http_mcp`, `sign_in_required`, `limit` (SDD-017 §11) |
 | `E_APPROVAL_EXPIRED` | 409 | no | in the error of a job whose approval request expired before a person answered (SDD-015 §3) |
 | `E_APPROVAL_NOT_FOUND` | 404 | no | the approval request or the approval rule does not exist (SDD-015 §8) |
-| `E_ASSET_NOT_READY` | 409 | yes | the asset is still ingesting; `details` has `asset_id`, `state` and `progress` (0 to 1) when an edit names it |
+| `E_ASSET_NOT_READY` | 409 | yes | the asset is still ingesting; `details` has `asset_id`, `state` and `progress` (0 to 1) when an edit names it; the read of the peaks of a long sound waiting for its job has `details.reason` `peaks_pending`, `job_id` and `progress` (SDD-011 §6.3.1) |
 | `E_CANCELLED` | 500 | no | the job was cancelled |
 | `E_CHAT_NOT_FOUND` | 500 | no | the chat session does not exist, or the caller may not see its project (SDD-017 §11) |
 | `E_CLIENT_CLOSED` | 499 | no | the caller closed the request (or its deadline passed) before the answer; status 499, logged below error level, never a server fault |
