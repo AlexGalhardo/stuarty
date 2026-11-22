@@ -26,7 +26,7 @@ type costView struct {
 	workspaceSpent               *int64
 }
 
-func (e *env) costView(t *testing.T, who context.Context) costView {
+func (e *env) costView(who context.Context, t *testing.T) costView {
 	t.Helper()
 
 	sum, err := e.svc.CostSummary(who, service.CostSummaryRequest{})
@@ -53,8 +53,8 @@ func (e *env) costView(t *testing.T, who context.Context) costView {
 		v.ceilings = append(v.ceilings, name(c.ProjectID))
 	}
 
-	for _, r := range rules.Rules {
-		v.rules = append(v.rules, name(r.ProjectID))
+	for i := range rules.Rules {
+		v.rules = append(v.rules, name(rules.Rules[i].ProjectID))
 	}
 
 	for _, l := range sum.Today {
@@ -108,7 +108,8 @@ func TestSecurity_T06_CostAndRulesAreScopedToTheOwner(t *testing.T) {
 		if _, err := e.store.DB().ExecContext(ctx, `INSERT INTO cost_ledger (id, request_id, job_id, connection_id,
  project_id, kind, currency, estimate_micros, actual_micros, state, day, created_ms, settled_ms)
  VALUES (?, 'apr_h', ?, '', ?, 'text.generate', 'USD', ?, ?, 'settled', ?, 1, 1)`,
-			fmt.Sprintf("led_isolate00%d", i), fmt.Sprintf("job_h%d", i), l.project, l.micros, l.micros, day); err != nil {
+			fmt.Sprintf("led_isolate00%d", i), fmt.Sprintf("job_h%d", i), l.project, l.micros, l.micros,
+			day); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -132,12 +133,12 @@ func TestSecurity_T06_CostAndRulesAreScopedToTheOwner(t *testing.T) {
 	own := []string{"", mine.ProjectID}
 	slices.Sort(own)
 
-	got := e.costView(t, anaCtx)
+	got := e.costView(anaCtx, t)
 	if !slices.Equal(got.ceilings, own) || !slices.Equal(got.rules, own) {
 		t.Errorf("a member reads the ceilings %v and the rules %v, want %v", got.ceilings, got.rules, own)
 	}
 
-	want := []string{fmt.Sprintf("%s=100", mine.ProjectID)}
+	want := []string{mine.ProjectID + "=100"}
 	if !slices.Equal(got.today, want) || !slices.Equal(got.days, want) {
 		t.Errorf("a member reads the spending %v and %v, want %v", got.today, got.days, want)
 	}
@@ -146,7 +147,7 @@ func TestSecurity_T06_CostAndRulesAreScopedToTheOwner(t *testing.T) {
 		t.Errorf("a member reads the spending of the workspace, %d", *got.workspaceSpent)
 	}
 
-	all := e.costView(t, adminCtx)
+	all := e.costView(adminCtx, t)
 	if len(all.ceilings) != 3 || len(all.rules) != 3 || len(all.today) != 2 {
 		t.Errorf("an administrator reads %+v, want every ceiling, rule and project", all)
 	}
@@ -156,13 +157,13 @@ func TestSecurity_T06_CostAndRulesAreScopedToTheOwner(t *testing.T) {
 	}
 
 	// Another user's view is the mirror of it.
-	other := e.costView(t, bobCtx)
-	if len(other.today) != 1 || other.today[0] != fmt.Sprintf("%s=7000", theirs.ProjectID) {
+	other := e.costView(bobCtx, t)
+	if len(other.today) != 1 || other.today[0] != theirs.ProjectID+"=7000" {
 		t.Errorf("the other member reads %v, want only their project", other.today)
 	}
 
 	// Local mode has no owner: every caller reads everything.
-	local := e.costView(t, e.as(token))
+	local := e.costView(e.as(token), t)
 	if len(local.today) != 2 || local.workspaceSpent == nil {
 		t.Errorf("a local caller reads %+v, want everything", local)
 	}
