@@ -261,3 +261,97 @@ func TestPeaksOfFileOverOneGiB(t *testing.T) {
 		t.Fatalf("peaks of a 1 GiB file = %v, %v; last report %d", pk, err, last)
 	}
 }
+
+// wavHeader is a RIFF WAV with the given format and a data chunk that declares declared bytes and holds body.
+func wavHeader(channels uint16, rate, declared uint32, body []byte) []byte {
+	var b bytes.Buffer
+	le := func(v any) { _ = binary.Write(&b, binary.LittleEndian, v) }
+	b.WriteString("RIFF")
+	le(uint32(0))
+	b.WriteString("WAVEfmt ")
+	le(uint32(16))
+	le(uint16(1))
+	le(channels)
+	le(rate)
+	le(rate * uint32(channels) * 2)
+	le(channels * 2)
+	le(uint16(16))
+	b.WriteString("data")
+	le(declared)
+	b.Write(body)
+
+	return b.Bytes()
+}
+
+func peaksOfBytes(t *testing.T, data []byte) (*Peaks, error) {
+	t.Helper()
+
+	p := filepath.Join(t.TempDir(), "bad.wav")
+	if err := os.WriteFile(p, data, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	return PeaksOfFileProgress(t.Context(), p, func(int64, int64) {})
+}
+
+// A header nobody vouches for never crashes or hangs the read: a size past the end is cut to the file, and a format
+// that cannot be peaks is an error before anything is allocated from it.
+func TestPeaksOfAMalformedWAVHeader(t *testing.T) {
+	body := make([]byte, 4096)
+
+	t.Run("declared past the end", func(t *testing.T) {
+		pk, err := peaksOfBytes(t, wavHeader(2, 48000, 0xFFFFFFF0, body))
+		if err != nil || pk.SampleCount != int64(len(body)/4) {
+			t.Fatalf("peaks = %+v, %v", pk, err)
+		}
+	})
+
+	t.Run("declared zero", func(t *testing.T) {
+		pk, err := peaksOfBytes(t, wavHeader(2, 48000, 0, body))
+		if err != nil || pk.SampleCount != 0 {
+			t.Fatalf("peaks = %+v, %v", pk, err)
+		}
+	})
+
+	for name, f := range map[string]struct {
+		channels uint16
+		rate     uint32
+	}{"no channels": {0, 48000}, "65535 channels": {65535, 48000}, "no sample rate": {2, 0}} {
+		t.Run(name, func(t *testing.T) {
+			if _, err := peaksOfBytes(t, wavHeader(f.channels, f.rate, uint32(len(body)), body)); err == nil {
+				t.Fatal("a format that cannot be peaks was accepted")
+			}
+		})
+	}
+}
+
+// The data size of a ds64 chunk is a number of the file too: past the end it is cut to the file.
+func TestReadWAVCutsAnRF64SizePastTheEnd(t *testing.T) {
+	data := wavBytes(ramp(1000), true)
+	at := bytes.Index(data, []byte("ds64")) + 8 + 8
+	binary.LittleEndian.PutUint64(data[at:], 1<<62)
+
+	w, err := ReadWAV(bytes.NewReader(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if want := int64(1000 * 4); w.DataSize != want {
+		t.Errorf("DataSize = %d, want %d", w.DataSize, want)
+	}
+}
+
+// A file of empty chunks ends the walk of its header at once instead of a read for every eight bytes.
+func TestReadWAVStopsOnAFileOfEmptyChunks(t *testing.T) {
+	var b bytes.Buffer
+
+	b.WriteString("RIFF\x00\x00\x00\x00WAVE")
+
+	for range maxWAVChunks + 10 {
+		b.WriteString("JUNK\x00\x00\x00\x00")
+	}
+
+	if _, err := ReadWAV(bytes.NewReader(b.Bytes())); !errors.Is(err, errWAV) {
+		t.Fatalf("err = %v, want errWAV", err)
+	}
+}
