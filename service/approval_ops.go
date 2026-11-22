@@ -490,7 +490,7 @@ func (s *svc) ApprovalDecide(ctx context.Context, req ApprovalDecideRequest) (*a
 		return nil
 	})
 	if werr != nil {
-		return nil, approvalError(werr)
+		return nil, callerError(c, approvalError(werr))
 	}
 
 	return &out, nil
@@ -628,7 +628,9 @@ func (s *svc) ApprovalRuleList(ctx context.Context, _ ApprovalRuleListRequest) (
 			continue
 		}
 
-		res.Rules = append(res.Rules, rules[i].ViewOf())
+		view := rules[i].ViewOf()
+		view.CreatedBy = seen.actor(view.CreatedBy)
+		res.Rules = append(res.Rules, view)
 	}
 
 	if seen.err != nil {
@@ -833,6 +835,16 @@ func (x *sight) ofLimit(project string) bool {
 	return project == "" || x.ofProject(project)
 }
 
+// actor is who wrote a limit, as the caller reads it: only an administrator reads the users of the server, so a
+// member reads a limit and not the id of the person who set it.
+func (x *sight) actor(by string) string {
+	if x.all {
+		return by
+	}
+
+	return ""
+}
+
 // CostSummary returns the ceilings and what was spent. A member of a network server reads the ceilings of the
 // workspace and of their own projects, and the spending of their own projects: the workspace line adds up everyone's
 // spending, so it is for an administrator (VV-372).
@@ -867,7 +879,9 @@ func (s *svc) CostSummary(ctx context.Context, _ CostSummaryRequest) (*CostSumma
 
 	for i := range ceilings {
 		if seen.ofLimit(ceilings[i].Project) {
-			res.Ceilings = append(res.Ceilings, ceilings[i].ViewOf())
+			view := ceilings[i].ViewOf()
+			view.UpdatedBy = seen.actor(view.UpdatedBy)
+			res.Ceilings = append(res.Ceilings, view)
 		}
 	}
 

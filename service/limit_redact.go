@@ -4,6 +4,8 @@ import (
 	"maps"
 	"regexp"
 	"slices"
+
+	core "github.com/AlexGalhardo/stuarty/core/approval"
 )
 
 var (
@@ -14,6 +16,8 @@ var (
 		`[;,]? the person running the server can \w+ STUARTY_[A-Z_]+(?: or STUARTY_[A-Z_]+)*`,
 	)
 	anyVariable = regexp.MustCompile(`STUARTY_[A-Z_]+`)
+	// workspaceSpent is the " with 1.000000 USD already spent today" of a refusal by a daily ceiling.
+	workspaceSpent = regexp.MustCompile(` with \d+\.\d{6} \S+ already spent today`)
 )
 
 // hidesVariables is true for a caller of network mode (it has an owner user)
@@ -38,6 +42,14 @@ func forCaller(c Caller, e *Error) *Error {
 	if _, ok := e.Details["variable"]; ok {
 		out.Details = maps.Clone(e.Details)
 		delete(out.Details, "variable")
+	}
+
+	// What the workspace spent today adds up the other users' spending, which a member does not read (SDD-015
+	// section 4, VV-372). The refusal keeps the limit and the estimate, which are enough to act on it.
+	if e.Code == CodeCostCeiling && e.Details["scope"] == string(core.ScopeWorkspace) {
+		out.Message = workspaceSpent.ReplaceAllString(out.Message, "")
+		out.Details = maps.Clone(out.Details)
+		delete(out.Details, "spent_micros")
 	}
 
 	return &out

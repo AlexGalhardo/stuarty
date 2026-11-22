@@ -174,7 +174,7 @@ func (s *svc) startApprovable(ctx context.Context, c Caller, req JobStartRequest
 		}
 
 		if out.Verdict == core.Refused {
-			return nil, costCeilingError(out.Refusal)
+			return nil, forCaller(c, costCeilingError(out.Refusal))
 		}
 
 		if out.Verdict == core.AutoApproved {
