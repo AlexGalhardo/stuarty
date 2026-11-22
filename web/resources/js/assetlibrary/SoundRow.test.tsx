@@ -6,9 +6,8 @@ import type { LibraryAsset } from "../editor/api/types";
 import { SoundRow } from "./SoundRow";
 
 vi.mock("../editor/timeline/items/waveform", () => ({
-	loadPeaks: () => new Promise(() => undefined),
+	watchPeaks: () => () => undefined,
 	columnPeaks: () => new Float32Array(0),
-	isPeaksPending: () => false,
 }));
 
 const PAYLOAD = "<img src=x onerror=window.__pwned=1>";

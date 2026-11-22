@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import {
 	clearPeaksCache,
@@ -6,7 +6,20 @@ import {
 	isPeaksPending,
 	loadPeaks,
 	parsePeaks,
+	watchPeaks,
 } from "./waveform";
+
+// The answer of the server while the job of a long sound runs (SDD-011 section 6.5).
+const computing = (): Response =>
+	Response.json(
+		{
+			code: "E_ASSET_NOT_READY",
+			message: "the waveform of the asset is being computed in the background.",
+			retryable: true,
+			details: { reason: "peaks_pending", job_id: "job_1", progress: 0.5 },
+		},
+		{ status: 409 },
+	);
 
 // A peaks file of version 1 with two levels (4 and 16 samples per peak) over 64
 // samples at 48 kHz: the first half is quiet (+-1000), the second loud (+-20000).
@@ -100,11 +113,8 @@ describe("loadPeaks of a long sound", () => {
 		clearPeaksCache();
 	});
 
-	test("a 409 means the server is computing them: no peaks yet, asked again later", async () => {
-		vi.stubGlobal(
-			"fetch",
-			vi.fn().mockResolvedValue(new Response("{}", { status: 409 })),
-		);
+	test("a 409 with peaks_pending means the server is computing them: no peaks yet, asked again later", async () => {
+		vi.stubGlobal("fetch", vi.fn().mockResolvedValue(computing()));
 		expect(await loadPeaks("prj_a", "ast_1")).toBeNull();
 		expect(isPeaksPending("prj_a", "ast_1")).toBe(true);
 
@@ -123,5 +133,103 @@ describe("loadPeaks of a long sound", () => {
 		);
 		expect(await loadPeaks("prj_b", "ast_2")).toBeNull();
 		expect(isPeaksPending("prj_b", "ast_2")).toBe(false);
+	});
+
+	test("the 409 of an asset whose ingest failed is final: no wait fixes it", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn().mockResolvedValue(
+				Response.json(
+					{
+						code: "E_ASSET_NOT_READY",
+						message: "the asset is failed; its files are not ready.",
+						retryable: true,
+					},
+					{ status: 409 },
+				),
+			),
+		);
+		expect(await loadPeaks("prj_c", "ast_3")).toBeNull();
+		expect(isPeaksPending("prj_c", "ast_3")).toBe(false);
+	});
+});
+
+describe("watchPeaks", () => {
+	beforeEach(() => {
+		vi.useFakeTimers();
+	});
+
+	afterEach(() => {
+		vi.useRealTimers();
+		vi.unstubAllGlobals();
+		clearPeaksCache();
+	});
+
+	test("asks again while the job runs and gives the peaks once", async () => {
+		const fetcher = vi
+			.fn()
+			.mockImplementationOnce(() => Promise.resolve(computing()))
+			.mockImplementationOnce(() => Promise.resolve(computing()))
+			.mockImplementation(() =>
+				Promise.resolve(new Response(file(), { status: 200 })),
+			);
+		vi.stubGlobal("fetch", fetcher);
+		const results: unknown[] = [];
+
+		watchPeaks("prj_w", "ast_1", 5000, (p) => results.push(p));
+		await vi.advanceTimersByTimeAsync(0);
+		expect(fetcher).toHaveBeenCalledTimes(1);
+		expect(results).toEqual([]);
+
+		await vi.advanceTimersByTimeAsync(5000);
+		expect(fetcher).toHaveBeenCalledTimes(2);
+
+		await vi.advanceTimersByTimeAsync(5000);
+		expect(fetcher).toHaveBeenCalledTimes(3);
+		expect(results).toHaveLength(1);
+		expect(results[0]).not.toBeNull();
+
+		await vi.advanceTimersByTimeAsync(60000);
+		expect(fetcher).toHaveBeenCalledTimes(3);
+	});
+
+	test("stops when the sound leaves the page", async () => {
+		const fetcher = vi
+			.fn()
+			.mockImplementation(() => Promise.resolve(computing()));
+		vi.stubGlobal("fetch", fetcher);
+		const results: unknown[] = [];
+
+		const stop = watchPeaks("prj_w", "ast_2", 5000, (p) => results.push(p));
+		await vi.advanceTimersByTimeAsync(5000);
+		expect(fetcher).toHaveBeenCalledTimes(2);
+
+		stop();
+		await vi.advanceTimersByTimeAsync(60000);
+		expect(fetcher).toHaveBeenCalledTimes(2);
+		expect(results).toEqual([]);
+	});
+
+	test("stops on a final error and says so once", async () => {
+		const fetcher = vi
+			.fn()
+			.mockImplementationOnce(() => Promise.resolve(computing()))
+			.mockImplementation(() =>
+				Promise.resolve(
+					Response.json(
+						{ code: "E_LIMIT_EXCEEDED", message: "too long" },
+						{ status: 422 },
+					),
+				),
+			);
+		vi.stubGlobal("fetch", fetcher);
+		const results: unknown[] = [];
+
+		watchPeaks("prj_w", "ast_3", 5000, (p) => results.push(p));
+		await vi.advanceTimersByTimeAsync(5000);
+		expect(results).toEqual([null]);
+
+		await vi.advanceTimersByTimeAsync(60000);
+		expect(fetcher).toHaveBeenCalledTimes(2);
 	});
 });
