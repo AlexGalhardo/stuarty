@@ -102,8 +102,8 @@ func TestNoServiceErrorRepeatsAHostileKey(t *testing.T) {
 
 		hostile := &timeline.Document{Items: map[string]timeline.Item{key: {}}}
 
-		line := violationLine(hostile, timeline.Violation{Code: timeline.VID, Path: "items." + key + ".id", Message: key})
-		if line != timeline.VID+" at ?" {
+		bad := timeline.Violation{Code: timeline.VID, Path: "items." + key + ".id", Message: key}
+		if line := violationLine(hostile, bad); line != timeline.VID+" at ?" {
 			t.Errorf("%s: a violation repeats the key: %q", name, line)
 		}
 	}
