@@ -116,7 +116,7 @@ func TestSecurity_T117_AHostedAgentCannotCreateTheAccount(t *testing.T) {
 }
 
 // A recovery sets a new password: a session the old password opened does not survive it.
-func TestSecurity_T116_ARecoveryEndsTheOtherSessions(t *testing.T) {
+func TestSecurity_T117_ARecoveryEndsTheOtherSessions(t *testing.T) {
 	t.Parallel()
 
 	a := newAccountHarness(t)
@@ -142,7 +142,7 @@ func TestSecurity_T116_ARecoveryEndsTheOtherSessions(t *testing.T) {
 
 // An open event stream was authorized before the lock, and is asked again only once a minute: it must end with the
 // lock, or a browser that logged out would go on receiving.
-func TestSecurity_T116_TheLockEndsAnOpenStream(t *testing.T) {
+func TestSecurity_T107_TheLockEndsAnOpenStream(t *testing.T) {
 	t.Parallel()
 
 	a := newAccountHarness(t)
