@@ -172,10 +172,8 @@ func (s *svc) PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindo
 		return nil, err
 	}
 
-	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
-		return nil, err
-	}
-
+	// The window is checked before the id is resolved, so an incomplete request answers alike for a project of another
+	// user and for an id of nothing (T-06).
 	if req.Until == 0 {
 		return nil, newError(command.CodeValidation,
 			"until is required: the end of the window in whole frames, at most %d after from.", plan.MaxWindow).
@@ -186,6 +184,10 @@ func (s *svc) PlanWindow(ctx context.Context, req PlanWindowRequest) (*PlanWindo
 	if req.From < 0 || req.Until <= req.From || req.Until-req.From > plan.MaxWindow {
 		return nil, newError(command.CodeValidation, "the window %d to %d is not 1 to %d frames from frame 0.",
 			req.From, req.Until, plan.MaxWindow).withPath("until")
+	}
+
+	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
+		return nil, err
 	}
 
 	row, lerr := s.loadProject(ctx, c, req.ProjectID)

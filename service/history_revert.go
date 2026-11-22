@@ -257,13 +257,15 @@ func (s *svc) HistoryDiff(ctx context.Context, req HistoryDiffRequest) (*History
 		return nil, err
 	}
 
-	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
-		return nil, err
-	}
-
+	// The request is checked before the id is resolved, so an incomplete one answers alike for a project of another
+	// user and for an id of nothing (T-06).
 	if (req.From != 0) == (req.FromCheckpoint != "") {
 		return nil, newError(command.CodeValidation, "name where the diff starts: from or from_checkpoint.").
 			withPath("from").withHint("send from with a revision, or from_checkpoint with the name of a checkpoint")
+	}
+
+	if err := s.useTimeline(ctx, c, &req.ProjectID, req.TimelineID); err != nil {
+		return nil, err
 	}
 
 	row, err := s.store.Projects().Get(ctx, req.ProjectID)
