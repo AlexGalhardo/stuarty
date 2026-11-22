@@ -424,7 +424,7 @@ func (d *Dispatcher) attempt(ctx context.Context, del Delivery) {
 // send makes the request. It answers the HTTP status (0 when there was none), the short code of an error, the size of
 // the answer and the time the request took. The body of the answer is read only to count it and is dropped.
 func (d *Dispatcher) send(ctx context.Context, w Row, del Delivery, secret string) (int, string, int, time.Duration) {
-	if _, ferr := core.CheckURL(w.URL, outbound.NotPublicAddr); ferr != nil {
+	if _, ferr := core.CheckURL(w.URL, outbound.NotWebhookAddr); ferr != nil {
 		return 0, core.ErrCodeInvalidURL, 0, 0
 	}
 

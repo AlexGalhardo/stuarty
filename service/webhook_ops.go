@@ -215,7 +215,7 @@ func (s *svc) WebhookCreate(ctx context.Context, req WebhookCreateRequest) (*Web
 		return nil, webhookField(ferr)
 	}
 
-	if _, ferr = core.CheckURL(req.URL, outbound.NotPublicAddr); ferr != nil {
+	if _, ferr = core.CheckURL(req.URL, outbound.NotWebhookAddr); ferr != nil {
 		return nil, webhookField(ferr)
 	}
 
@@ -297,7 +297,7 @@ func (s *svc) WebhookUpdate(ctx context.Context, req WebhookUpdateRequest) (*Web
 	}
 
 	if req.URL != nil {
-		if _, ferr := core.CheckURL(*req.URL, outbound.NotPublicAddr); ferr != nil {
+		if _, ferr := core.CheckURL(*req.URL, outbound.NotWebhookAddr); ferr != nil {
 			return nil, webhookField(ferr)
 		}
 	}
