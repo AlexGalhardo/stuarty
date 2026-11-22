@@ -37,4 +37,6 @@ Negative: agents that run unattended stop while the studio is locked (`E_LOCKED`
 
 Negative: the library of memory, prompts and skills is files with a search index (ADR-0040). The index holds the bodies and the search is full text; encrypting it needs a decision that this ADR does not take (see the open question of epic 57). Until then those files stay as they are, and the SDD says so.
 
+Negative: the documents of timelines and images are not sealed, and neither is the edit log that repeats them. The engine reads them, their digests are compared and the start-up migrates them with no key, so sealing them is a design of its own. Until it is decided, the captions on a video, its text layers and the text of an image document are readable in `db.sqlite`, and the user documentation says so.
+
 Negative: the memory of a Go process cannot be wiped with certainty; the key buffers are zeroed on lock, and the residual risk is in SDD-007 section 14.
