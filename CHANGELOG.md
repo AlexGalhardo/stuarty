@@ -7,6 +7,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.47.0] - 2026-11-22
+
+### Added
+
+- **service:** Add outbound webhooks with signed deliveries, retries and history ([3560dc7](https://github.com/AlexGalhardo/stuarty/commit/3560dc7e229c844c4fde954a5810b0d41fc678f0))
+- **api:** Expose webhooks on HTTP, the CLI and the read-only connection tool ([b9b57d5](https://github.com/AlexGalhardo/stuarty/commit/b9b57d594fae70961bf85dff231cb723d5ae3fe3))
+- **ui:** Add the Webhooks page and its entry in the sidebar ([e510134](https://github.com/AlexGalhardo/stuarty/commit/e510134ed1dd2cb0a19dd7e05ae14a37c20f9a09))
+- **ui:** Show the release at the bottom right, under the chat button ([80441e8](https://github.com/AlexGalhardo/stuarty/commit/80441e8e65a270475849d0011744f8d52064ee83))
+
+### Fixed
+
+- **web:** List the first frames of a clip from the timeline library, not the production id ([a6ccb10](https://github.com/AlexGalhardo/stuarty/commit/a6ccb10a5b6e1549662fcd0fc1434aca995edaa9))
+- **web:** Disable chat and sign-in controls in a session that is not a person's ([daeeefd](https://github.com/AlexGalhardo/stuarty/commit/daeeefd0b01b39afd107848bc0923b6616f6a56d))
+- **web:** List first frames by timeline_id, and from the library with no timeline ([fb80614](https://github.com/AlexGalhardo/stuarty/commit/fb80614b320be35a42921b4a9f672e7c0dfbc2b4))
+- **web:** Disable every chat control the server refuses to a non-person session ([1fe96a8](https://github.com/AlexGalhardo/stuarty/commit/1fe96a81a70e93f8fa15229f0959003f9c84c9d7))
+- **web:** Disable removing a sign-in and the social price in a non-person session ([5d10a3b](https://github.com/AlexGalhardo/stuarty/commit/5d10a3bc07a82a9349dab9a8fe2d9fed089ab4b3))
+- **service:** Keep the server path out of image:export in network mode ([d6cf2f9](https://github.com/AlexGalhardo/stuarty/commit/d6cf2f9545a4636ef7e88872ad816d6714f9165f))
+- **service:** Share only the unedited image templates in network mode ([010c569](https://github.com/AlexGalhardo/stuarty/commit/010c56916411feab4c609811a23bce69605c36c2))
+- **ui:** Keep the new project form behind a button when projects exist ([4bff383](https://github.com/AlexGalhardo/stuarty/commit/4bff383bf9b086d597498c2f8f7e2927a9cc01f6))
+- **ui:** Start the inspector tab strip at its first tab on a laptop screen ([14b1ada](https://github.com/AlexGalhardo/stuarty/commit/14b1ada9c86befc5fb47d22f3049bb5308f28fde))
+- **store:** Keep an edited image template out of the list of a user ([3aa649a](https://github.com/AlexGalhardo/stuarty/commit/3aa649aa166830c1ab6022681c2a1c03a6478b3d))
+- **ui:** Hand the focus to the form and open it when no project is left ([940ecf9](https://github.com/AlexGalhardo/stuarty/commit/940ecf9b268d70548845a2b208116354455b0588))
+- **ui:** Keep the chosen inspector tab whole when the panel narrows ([e3f9078](https://github.com/AlexGalhardo/stuarty/commit/e3f907821ee4f47376ea5d6efa39e9083f58e817))
+- **mcp:** Name the unknown argument in the validation error ([d85aa5f](https://github.com/AlexGalhardo/stuarty/commit/d85aa5fcf56cb3a7c957f2ca95e30feeae71ac99))
+- **mcp:** Echo an unknown argument only when it is a plain identifier ([233b5e2](https://github.com/AlexGalhardo/stuarty/commit/233b5e2a6c005982fa2e5456d17250b759ca0122))
+- **service:** Name the list command of the surface in the not-found hints ([c3012e0](https://github.com/AlexGalhardo/stuarty/commit/c3012e07c11f5f8edca84952e24aea011f8e1f28))
+- **service:** Say where a person does what the privileged-session refusal blocks ([679bcfd](https://github.com/AlexGalhardo/stuarty/commit/679bcfd529700940be1a943193e587f095babd18))
+- **http:** Describe the body and the query of the image file import in the OpenAPI ([b2f8e90](https://github.com/AlexGalhardo/stuarty/commit/b2f8e9005e0a2beb911f65da0f56fe51aa5ae876))
+- **http:** Answer the API in English whatever language the client asks for ([d10faf9](https://github.com/AlexGalhardo/stuarty/commit/d10faf915a2958fc849e6ea9ba429696477b40b9))
+- **cli:** Show every flag in the usage line of cost:ceiling ([83d4467](https://github.com/AlexGalhardo/stuarty/commit/83d4467b9c69c1b3ce4c7d490e4e683425fc0210))
+- **core:** Give the audio processor operations a summary that says what they do ([9b82258](https://github.com/AlexGalhardo/stuarty/commit/9b822581c053bd4a16069f25d11cdcb40347c58d))
+- **service:** Keep command_help lists and unknown-name errors inside their caps ([57630ce](https://github.com/AlexGalhardo/stuarty/commit/57630cec9c327d02684e1931fe8ab91fc7753b10))
+- **core:** Count the whole document in the header of a filtered lint report ([321118e](https://github.com/AlexGalhardo/stuarty/commit/321118e3c989006058eacc442a82e2b3a3ee77df))
+- **cli:** Take the fit-check preset in lint and refuse it explicitly over HTTP ([7d2e788](https://github.com/AlexGalhardo/stuarty/commit/7d2e788d553145b532c51493cf0c50f141d68325))
+- **mcp:** Name the same unknown argument on every call ([dbbde54](https://github.com/AlexGalhardo/stuarty/commit/dbbde54bcf300011a94b438cbb6bd1049da2c2d7))
+- **mcp:** Take a caller-chosen key out of every error an agent reads ([6367784](https://github.com/AlexGalhardo/stuarty/commit/6367784879a5373efe2c60838e4ca53dbdc4f499))
+- **service:** Send the provider price refusal to the page that has it ([7c6ed2b](https://github.com/AlexGalhardo/stuarty/commit/7c6ed2b5e1459c990f89d99675aa37636daa0243))
+- **service:** Suggest the name meant in a group larger than the error lists ([263c6b5](https://github.com/AlexGalhardo/stuarty/commit/263c6b5dbf0e6cec673639c1579c74c1748b1b21))
+- **cli:** Fail lint --preset --strict when the fit check has an error ([3105f72](https://github.com/AlexGalhardo/stuarty/commit/3105f72bc9745d00f3b0634490153fb7ce2ba483))
+- **service:** Word the end of a capped command list for every surface ([4df139c](https://github.com/AlexGalhardo/stuarty/commit/4df139c836f30ae3a623527693b9f1b2f76036d6))
+- **cli:** Keep the webhook commands out of the agent skill, in the workspace guide ([746f4ee](https://github.com/AlexGalhardo/stuarty/commit/746f4eea023d14e23fe5a3b320669ac072d2f6bb))
+- **core:** Send a webhook the address of a post only when the post is public ([2474aff](https://github.com/AlexGalhardo/stuarty/commit/2474aff51fcb285a3e0d4f2dd207892582295a23))
+- **service:** Tell a webhook of a retried failure and of jobs with no project ([11f12c8](https://github.com/AlexGalhardo/stuarty/commit/11f12c8e289584df15f56cbc5b83a623086b284e))
+- **service:** Keep a webhook delivery from being sent in a loop or twice ([a66082c](https://github.com/AlexGalhardo/stuarty/commit/a66082c33e24465ec62f7cf7d58d5fa7ee9565c2))
+- **service:** Read a webhook in the transaction that changes it ([34cbb59](https://github.com/AlexGalhardo/stuarty/commit/34cbb59ee249d0fc9b43495e5b3275ecb3defde8))
+- **core:** Refuse a webhook host that is a number in disguise ([65cdd2a](https://github.com/AlexGalhardo/stuarty/commit/65cdd2a04410dc29ebeeaddce4bd196e47c98495))
+- **mcp:** Delimit the name of a webhook in the connection tool ([3cd7c56](https://github.com/AlexGalhardo/stuarty/commit/3cd7c566aa69e458bfc21c2cc8f50caebcbf32c3))
+- **ui:** Ask before rotating a webhook secret or removing a webhook ([4fe8547](https://github.com/AlexGalhardo/stuarty/commit/4fe8547d3f2a3970a5fe504a2b2306698bb836ac))
+- **service:** Start a post without asking which timeline of the project ([a8dcfd8](https://github.com/AlexGalhardo/stuarty/commit/a8dcfd8c10a2053eca7dca2f6b1926bff122aed0))
+- **service:** Keep a post on the timeline of its export ([4e76e7e](https://github.com/AlexGalhardo/stuarty/commit/4e76e7ea5657b9a750103cb4db9c35dc58344099))
+- **service:** Hold the ceiling of a project on all its timelines ([a03aec6](https://github.com/AlexGalhardo/stuarty/commit/a03aec676af9603586664a79dad4f521f98dbd71))
+- **service:** Count the whole project for the AI disclosure of a post ([d554a6f](https://github.com/AlexGalhardo/stuarty/commit/d554a6fab0e15b94115e6b32be9a595a69a39f48))
+- **ui:** Offer the exports of every timeline when publishing ([30f403e](https://github.com/AlexGalhardo/stuarty/commit/30f403e86bec5cff75f51bef7452532774de8d72))
+- **store:** Move the ceilings of a later timeline to its project ([89a7d1f](https://github.com/AlexGalhardo/stuarty/commit/89a7d1f107b24cf90f6d955b03f723143f18221e))
+- **store:** Report the spending of a project on one line ([bf9bd42](https://github.com/AlexGalhardo/stuarty/commit/bf9bd42a7127be45117b4c54fcaad67d45aae4dd))
+- **service:** Match a cost with its project and never with a failed read ([114802f](https://github.com/AlexGalhardo/stuarty/commit/114802f78367af24c67c839ef25f33382189dbb0))
+- **store:** List the requests of every timeline of a project ([3d67307](https://github.com/AlexGalhardo/stuarty/commit/3d673077f7ffb4e2c63ba4521891bcdc3c3359af))
+- **service:** Never send an export that is in the trash ([1651261](https://github.com/AlexGalhardo/stuarty/commit/16512618a85d07d2b0a35af0b1b5ecdbd1fb0ebb))
+- **service:** Refuse a bundle timeline with the id of a project ([b842cbb](https://github.com/AlexGalhardo/stuarty/commit/b842cbbebdd01eb1fc2f1c006cdb32cb38174e2c))
+- **service:** Refuse a post when its AI disclosure cannot be worked out ([f6c1ab1](https://github.com/AlexGalhardo/stuarty/commit/f6c1ab1e332f9259063d34c98735281668db614d))
+- **ui:** Add the missing text of the webhooks card on the home ([2a69164](https://github.com/AlexGalhardo/stuarty/commit/2a6916432cd27245df194a9a7c69cb99df856308))
+
+### Security
+
+- **security:** Refuse the reserved address blocks for a webhook ([e2ff1f9](https://github.com/AlexGalhardo/stuarty/commit/e2ff1f959a4a4146efaf6da33483a358dfd077bb))
+
 ## [0.46.0] - 2026-11-21
 
 ### Added
@@ -2178,7 +2244,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.46.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.47.0...HEAD
+[0.47.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.46.0...v0.47.0
 [0.46.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.45.0...v0.46.0
 [0.45.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.44.0...v0.45.0
 [0.44.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.43.0...v0.44.0
