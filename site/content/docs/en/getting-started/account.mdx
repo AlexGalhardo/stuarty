@@ -28,7 +28,8 @@ To use the key, choose **I forgot my password** on the sign-in page, type the ke
 - the texts and their earlier versions, the briefs and the captions;
 - the description and the goal of each project;
 - the messages of the chats with your agent;
-- the texts of your publications;
+- the texts of your publications and of the posts you published to your blog;
+- what you asked an AI model to make and what it answered, including the excerpt shown in an approval;
 - the credentials of your connections (the vault).
 
 The names of projects, the file names, the dates and the sizes are not encrypted, and neither are your media files, your memory notes, your prompts and your skills. Settings, Account tells you the rest.
@@ -43,4 +44,4 @@ Only a session opened with your password can approve a publication or set a pric
 
 ## An existing workspace
 
-If you used Stuarty before accounts existed, creating the account encrypts what is already there. Stuarty first makes a copy, encrypts, reads everything back to check it, and only then deletes the copy. If anything fails, it puts the copy back and tells you.
+If you used Stuarty before accounts existed, creating the account encrypts what is already there. Stuarty first makes a copy, encrypts, reads everything back to check it, and only then deletes the copy. If anything fails, it puts the copy back and tells you. Once the encryption is verified it also deletes the older database backups it kept in `backups/`, because they hold your words in clear.
