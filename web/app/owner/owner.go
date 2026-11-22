@@ -77,6 +77,13 @@ type Config struct {
 	Inline bool
 }
 
+// ErrAccountInNetworkMode refuses to open, in network mode, a workspace whose fields are sealed by a local account
+// (ADR-0049 item 6).
+var ErrAccountInNetworkMode = errors.New(
+	"this workspace has a local account and its content is encrypted: network mode cannot open it; " +
+		"start it in local mode",
+)
+
 // idleCheckEvery is how often the idle lock of the account is looked at.
 const idleCheckEvery = 10 * time.Second
 
@@ -188,7 +195,15 @@ func Open(ctx context.Context, cfg Config) (*Owner, error) {
 // network mode has none of them (ADR-0049).
 func (o *Owner) setupAccount(ctx context.Context, st *store.Store, now func() time.Time) error {
 	if o.mode == config.ModeNetwork {
-		return nil
+		// Network mode holds no key: it would show the sealed values as text and write clear text over them.
+		switch _, err := st.Accounts().Get(ctx); {
+		case err == nil:
+			return ErrAccountInNetworkMode
+		case errors.Is(err, account.ErrNoAccount):
+			return nil
+		default:
+			return err
+		}
 	}
 
 	o.Account = account.NewManager(account.Options{Store: st.Accounts(), Now: now})
