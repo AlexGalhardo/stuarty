@@ -216,4 +216,99 @@ test.describe("connections", () => {
 		).toHaveCount(0);
 		expect(await labelled(api, label)).toBe(0);
 	});
+
+	test("the question of a removal works from the keyboard, isolates the label and keeps the credential when refused", async ({
+		page,
+		request,
+	}) => {
+		const dest = await destination();
+		const label = uniqueLabel("Keys");
+		const api = await caller(request);
+		try {
+			await api("POST", "/connections", {
+				kind: "test",
+				label,
+				endpoint: dest.url,
+				accepts: ["text"],
+				secret: SECRET,
+			});
+			await page.goto("/connections");
+			const row = page
+				.locator("[data-connection-id]")
+				.filter({ hasText: label });
+			const remove = row.getByRole("button", { name: "Remove" });
+			const ask = page.getByRole("alertdialog");
+
+			await remove.focus();
+			await page.keyboard.press("Enter");
+			await expect(ask).toBeVisible();
+			await expect(ask.locator('[dir="auto"]')).toHaveText(label);
+			const focusInside = (): Promise<boolean> =>
+				page.evaluate(
+					() => document.activeElement?.closest('[role="alertdialog"]') != null,
+				);
+			await expect.poll(focusInside).toBe(true);
+			for (let i = 0; i < 4; i++) {
+				await page.keyboard.press("Tab");
+				expect(await focusInside()).toBe(true);
+			}
+
+			await page.keyboard.press("Escape");
+			await expect(ask).toHaveCount(0);
+			await expect(remove).toBeFocused();
+			expect(await labelled(api, label)).toBe(1);
+
+			// The credential survived the refusal: the destination still receives it.
+			await row.getByRole("button", { name: "Test" }).click();
+			await expect(row.locator("[data-test-result]")).toContainText(
+				"The destination answered 200.",
+			);
+			expect(dest.received).toEqual([`Bearer ${SECRET}`]);
+
+			await remove.focus();
+			await page.keyboard.press("Enter");
+			await ask.getByRole("button", { name: "Remove" }).focus();
+			await page.keyboard.press("Enter");
+			await expect(row).toHaveCount(0);
+			expect(await labelled(api, label)).toBe(0);
+		} finally {
+			await removeByLabel(api, label);
+			await dest.close();
+		}
+	});
+
+	test("a session that is not a person's cannot open the question for a sign-in (D-117)", async ({
+		page,
+		request,
+	}) => {
+		const dest = await destination();
+		const label = uniqueLabel("Signed");
+		const api = await caller(request);
+		try {
+			const made = (await api("POST", "/connections", {
+				kind: "test",
+				label,
+				endpoint: dest.url,
+				accepts: ["text"],
+				secret: SECRET,
+			})) as { id: string };
+			await page.route("**/api/v1/providers/sign-ins", (route) =>
+				route.fulfill({
+					json: { sign_ins: [{ connection_id: made.id, provider: "test" }] },
+				}),
+			);
+			await page.goto("/connections");
+			const row = page
+				.locator("[data-connection-id]")
+				.filter({ hasText: label });
+			const remove = row.getByRole("button", { name: "Remove" });
+			await expect(remove).toBeDisabled();
+			await remove.click({ force: true });
+			await expect(page.getByRole("alertdialog")).toHaveCount(0);
+			expect(await labelled(api, label)).toBe(1);
+		} finally {
+			await removeByLabel(api, label);
+			await dest.close();
+		}
+	});
 });
