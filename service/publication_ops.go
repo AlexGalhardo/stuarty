@@ -437,7 +437,7 @@ func (t *pubTx) Ask(ctx context.Context, a pub.Ask) error {
 	}
 
 	if out.Verdict == core.Refused {
-		return costCeilingError(out.Refusal)
+		return forCaller(c, costCeilingError(out.Refusal))
 	}
 
 	if err := s.checkQueueShare(ctx, st, &c); err != nil {

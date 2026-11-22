@@ -147,6 +147,35 @@ func TestSecurity_T06_CostAndRulesAreScopedToTheOwner(t *testing.T) {
 		t.Errorf("a member reads the spending of the workspace, %d", *got.workspaceSpent)
 	}
 
+	// Who wrote a limit is the id of another user, which a member does not read.
+	for who, want := range map[context.Context]bool{anaCtx: false, adminCtx: true} {
+		sum, err := e.svc.CostSummary(who, service.CostSummaryRequest{})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		rules, err := e.svc.ApprovalRuleList(who, service.ApprovalRuleListRequest{})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(sum.Ceilings) == 0 || len(rules.Rules) == 0 {
+			t.Fatalf("no limit to read: %+v, %+v", sum.Ceilings, rules.Rules)
+		}
+
+		for i := range sum.Ceilings {
+			if (sum.Ceilings[i].UpdatedBy != "") != want {
+				t.Errorf("the ceiling names its author as %q (an administrator: %v)", sum.Ceilings[i].UpdatedBy, want)
+			}
+		}
+
+		for i := range rules.Rules {
+			if (rules.Rules[i].CreatedBy != "") != want {
+				t.Errorf("the rule names its author as %q (an administrator: %v)", rules.Rules[i].CreatedBy, want)
+			}
+		}
+	}
+
 	all := e.costView(adminCtx, t)
 	if len(all.ceilings) != 3 || len(all.rules) != 3 || len(all.today) != 2 {
 		t.Errorf("an administrator reads %+v, want every ceiling, rule and project", all)
