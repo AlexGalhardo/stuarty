@@ -2,6 +2,7 @@ package httpapi_test
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -35,7 +36,9 @@ func TestAccountCreateLiftsTheWriteDeadline(t *testing.T) {
 
 	a := newAccountHarness(t)
 
-	r := httptest.NewRequest(http.MethodPost, "/auth/account/create", strings.NewReader(createBody))
+	r := httptest.NewRequest(http.MethodPost, a.srv.URL+"/auth/account/create", strings.NewReader(createBody))
+	r = r.WithContext(context.WithValue(r.Context(), http.LocalAddrContextKey, a.srv.Listener.Addr()))
+	r.RemoteAddr = "127.0.0.1:50000"
 	r.Header.Set("Authorization", "Bearer "+canary)
 	r.Header.Set("Content-Type", "application/json")
 	r.Header.Set(auth.ClientHeader, "test")
