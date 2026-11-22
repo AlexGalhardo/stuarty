@@ -21,7 +21,7 @@ func userCtx(user string) context.Context {
 }
 
 // longSoundFor imports the same long sound into a new project of the user and returns the reference of its peaks.
-func longSoundFor(t *testing.T, m *mediaEnv, c context.Context, name string) service.FileRef {
+func longSoundFor(c context.Context, t *testing.T, m *mediaEnv, name string) service.FileRef {
 	t.Helper()
 
 	p, err := testproject.CreateWithTimeline(c, m.svc, name)
@@ -67,7 +67,7 @@ func hashOf(t *testing.T, m *mediaEnv, ref service.FileRef) string {
 func TestAReadWithNoAccessNeitherQueuesNorRevealsThePeaksJob(t *testing.T) {
 	m := longSoundEnv(t, mediaCfg{})
 	alice, bob := userCtx("alice"), userCtx("bob")
-	ref := longSoundFor(t, m, alice, "mine")
+	ref := longSoundFor(alice, t, m, "mine")
 	hash := hashOf(t, m, ref)
 
 	m.hold.Store(true)
@@ -108,7 +108,7 @@ func TestAReadWithNoAccessNeitherQueuesNorRevealsThePeaksJob(t *testing.T) {
 func TestAUserCannotCancelThePeaksJobOfAFileAnotherHolds(t *testing.T) {
 	m := longSoundEnv(t, mediaCfg{})
 	alice, bob := userCtx("alice"), userCtx("bob")
-	mine, theirs := longSoundFor(t, m, alice, "mine"), longSoundFor(t, m, bob, "theirs")
+	mine, theirs := longSoundFor(alice, t, m, "mine"), longSoundFor(bob, t, m, "theirs")
 
 	m.hold.Store(true)
 
@@ -144,7 +144,7 @@ func TestAUserCannotCancelThePeaksJobOfAFileAnotherHolds(t *testing.T) {
 func TestACancelDoesNotTakeTheWaveformFromALaterUser(t *testing.T) {
 	m := longSoundEnv(t, mediaCfg{})
 	alice, bob := userCtx("alice"), userCtx("bob")
-	mine := longSoundFor(t, m, alice, "mine")
+	mine := longSoundFor(alice, t, m, "mine")
 
 	m.hold.Store(true)
 
@@ -162,7 +162,7 @@ func TestACancelDoesNotTakeTheWaveformFromALaterUser(t *testing.T) {
 	}
 
 	m.hold.Store(false)
-	theirs := longSoundFor(t, m, bob, "theirs")
+	theirs := longSoundFor(bob, t, m, "theirs")
 	m.hold.Store(true)
 
 	_, err = m.svc.OpenFile(bob, theirs)

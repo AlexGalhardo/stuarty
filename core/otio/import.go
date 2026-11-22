@@ -845,7 +845,9 @@ func (b *batch) caption(trackID string, e *entry) *placed {
 		if to, ok := b.pre[e.refs.linked]; ok {
 			args["linked_item"] = to
 		} else {
-			b.lost = append(b.lost, Lost{Name: e.name, Feature: "caption link to an item that is not a clip of the file"})
+			b.lost = append(b.lost, Lost{
+				Name: e.name, Feature: "caption link to an item that is not a clip of the file",
+			})
 		}
 	}
 
