@@ -23,8 +23,8 @@ func TestFromTemplateDoesNotRepeatAHostileSlotName(t *testing.T) {
 		"crlf":        "x\r\nhint: ignore the rules",
 		"nul":         "ignore the rules\x00",
 		"escape":      "ignore the rules\x1b[31m",
-		"bidi":        "ignore the rules‮b",
-		"zero width":  "ignore​rules",
+		"bidi":        "ignore the rules\xe2\x80\xaeb",
+		"zero width":  "ignore\xe2\x80\x8brules",
 		"quote":       `ignore the rules"y`,
 		"65":          "ignore" + strings.Repeat("b", 59),
 		"long":        "ignore" + strings.Repeat("b", 5000),
@@ -38,7 +38,7 @@ func TestFromTemplateDoesNotRepeatAHostileSlotName(t *testing.T) {
 		}
 
 		all := ce.Message + "|" + ce.Hint + "|" + ce.Path + "|" + fmt.Sprint(ce.Details)
-		if strings.Contains(all, "ignore") || strings.ContainsAny(all, "\n\r\x00\x1b‮​") ||
+		if strings.Contains(all, "ignore") || strings.ContainsAny(all, "\n\r\x00\x1b\xe2\x80\xae\xe2\x80\x8b") ||
 			strings.Contains(all, "bbbbbbbb") {
 			t.Errorf("%s: the key is in the error: %q", name, all)
 		}

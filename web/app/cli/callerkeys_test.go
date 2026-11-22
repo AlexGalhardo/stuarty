@@ -45,7 +45,7 @@ func TestBatchReaderDoesNotRepeatAHostileKey(t *testing.T) {
 		}
 
 		got := jsonProblem(json.Unmarshal([]byte(`{"values":{`+string(doc)+`:1}}`), &values))
-		if strings.Contains(got, "ignore") || strings.ContainsAny(got, "\n\r\x00\x1b‮") ||
+		if strings.Contains(got, "ignore") || strings.ContainsAny(got, "\n\r\x00\x1b\xe2\x80\xae") ||
 			strings.Contains(got, "bbbbbbbb") {
 			t.Errorf("%s: jsonProblem repeats the key: %q", name, got)
 		}
@@ -55,7 +55,7 @@ func TestBatchReaderDoesNotRepeatAHostileKey(t *testing.T) {
 			t.Fatalf("%s: unknown flag accepted", name)
 		}
 
-		if all := ferr.Error(); strings.Contains(all, "ignore") || strings.ContainsAny(all, "\n\r\x00\x1b‮") ||
+		if all := ferr.Error(); strings.Contains(all, "ignore") || strings.ContainsAny(all, "\n\r\x00\x1b\xe2\x80\xae") ||
 			strings.Contains(all, "bbbbbbbb") {
 			t.Errorf("%s: the flag is in the error: %q", name, all)
 		}
@@ -65,7 +65,7 @@ func TestBatchReaderDoesNotRepeatAHostileKey(t *testing.T) {
 			t.Fatalf("%s: assignment accepted", name)
 		}
 
-		if all := aerr.Error(); strings.Contains(all, "ignore") || strings.ContainsAny(all, "\n\r\x00\x1b‮") ||
+		if all := aerr.Error(); strings.Contains(all, "ignore") || strings.ContainsAny(all, "\n\r\x00\x1b\xe2\x80\xae") ||
 			strings.Contains(all, "bbbbbbbb") {
 			t.Errorf("%s: the assignment repeats the key: %q", name, all)
 		}

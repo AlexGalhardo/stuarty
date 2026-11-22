@@ -101,7 +101,7 @@ func TestMapKeysAreNotRepeated(t *testing.T) {
 
 		all := err.Message + "|" + err.Hint + "|" + err.Path
 		if strings.Contains(all, "ignore") || strings.Contains(all, "tulo") ||
-			strings.ContainsAny(all, "\n\r\x00\x1b‮") || strings.Contains(all, "bbbbbbbb") {
+			strings.ContainsAny(all, "\n\r\x00\x1b\xe2\x80\xae") || strings.Contains(all, "bbbbbbbb") {
 			t.Errorf("%s %s: the key is in the error: %q", name, label, all)
 		}
 	}
