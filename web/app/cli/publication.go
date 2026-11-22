@@ -123,7 +123,7 @@ func targetsOf(c *call) ([]pub.TargetInput, error) {
 
 		var list []pub.TargetInput
 		if err := json.Unmarshal([]byte(c.args.str("targets")), &list); err != nil {
-			return nil, validation("targets", "--targets is a JSON list of targets: %v", err)
+			return nil, validation("targets", "--targets is a JSON list of targets: %s", jsonProblem(err))
 		}
 
 		return list, nil
@@ -316,7 +316,7 @@ var publicationUpdateCmd = &spec{
 
 		if c.args.has("targets") {
 			if err := json.Unmarshal([]byte(c.args.str("targets")), &req.Targets); err != nil {
-				return nil, validation("targets", "--targets is a JSON list of targets: %v", err)
+				return nil, validation("targets", "--targets is a JSON list of targets: %s", jsonProblem(err))
 			}
 		}
 
