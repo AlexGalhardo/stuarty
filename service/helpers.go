@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
@@ -40,17 +41,71 @@ func decodeRow(row *ProjectRow) (*timeline.Document, error) {
 	return doc, nil
 }
 
-var violationIndex = regexp.MustCompile(`\[\d+\]`)
+// maxViolationPath is the longest path of a violation an error repeats: a plain key of 64 characters with the members
+// and the indexes around it.
+const maxViolationPath = 128
 
-// violationLine is a violation of a document as an error may repeat it: its code and its path. A bundle or a template
-// file chooses the keys of its maps and a violation repeats them, so the message is left out and a path that is not
-// plain is written "?" (SDD-003 section 1.2 rule 9).
-func violationLine(v timeline.Violation) string {
-	if command.IsSafeKey(violationIndex.ReplaceAllString(v.Path, "")) {
+var (
+	// violationSegment is one member of a generated path: a name, and at most one index as its suffix.
+	violationSegment = regexp.MustCompile(`^[A-Za-z0-9_-]+(\[\d{1,6}\])?$`)
+	// plainDocKey is a key of a document map that a path may hold. It has no dot and no bracket, so it cannot pose as
+	// more members or as an index of the path.
+	plainDocKey = regexp.MustCompile(`^[A-Za-z0-9_-]{1,64}$`)
+)
+
+// violationLine is a violation of doc as an error may repeat it: its code and its path. A bundle or a template file
+// chooses the keys of its maps and a violation repeats them, so the message is left out, and the path is written only
+// when every key of the document is plain and the path has the shape the validator generates (SDD-003 section 1.2
+// rule 9). A path alone cannot tell a key "a[0]" from the index 0 of a member "a", which is why the keys are read.
+func violationLine(doc *timeline.Document, v timeline.Violation) string {
+	if docKeysArePlain(doc) && isViolationPath(v.Path) {
 		return v.Code + " at " + v.Path
 	}
 
 	return v.Code + " at ?"
+}
+
+func isViolationPath(p string) bool {
+	if p == "" || len(p) > maxViolationPath {
+		return false
+	}
+
+	for segment := range strings.SplitSeq(p, ".") {
+		if !violationSegment.MatchString(segment) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// docKeysArePlain checks every map of the document whose keys the validator writes into a path.
+func docKeysArePlain(doc *timeline.Document) bool {
+	if !plainKeys(doc.Items) || !plainKeys(doc.Tracks) || !plainKeys(doc.Assets) || !plainKeys(doc.Fonts) {
+		return false
+	}
+
+	if doc.Template != nil && !plainKeys(doc.Template.Colors) {
+		return false
+	}
+
+	for id := range doc.Items {
+		if !plainKeys(doc.Items[id].Keyframes) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func plainKeys[V any](m map[string]V) bool {
+	for k := range m {
+		if !plainDocKey.MatchString(k) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func sha256Hex(b []byte) string {

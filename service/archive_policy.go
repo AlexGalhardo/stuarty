@@ -395,7 +395,7 @@ func migrateTemplateDocument(data []byte) (*timeline.Document, *Error) {
 	}
 
 	if vs := timeline.Validate(doc); len(vs) > 0 {
-		return nil, newError(command.CodeValidation, "template.json is not valid: %s", violationLine(vs[0])).
+		return nil, newError(command.CodeValidation, "template.json is not valid: %s", violationLine(doc, vs[0])).
 			withDetail("code", vs[0].Code)
 	}
 
