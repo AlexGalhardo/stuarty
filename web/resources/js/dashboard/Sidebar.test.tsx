@@ -32,6 +32,24 @@ function draw(
 }
 
 describe("Sidebar", () => {
+	test("offers Logout to a person only: a launch link cannot lock the studio", () => {
+		const account = { state: "unlocked", username: "stuart" } as const;
+		const of = (person: boolean) =>
+			renderToString(
+				<I18nProvider messages={messages} locale="en" locales={["en"]}>
+					<Sidebar
+						url="/"
+						appName="Stuarty"
+						user={null}
+						account={account}
+						person={person}
+					/>
+				</I18nProvider>,
+			);
+		expect(of(true)).toContain('data-testid="account-logout"');
+		expect(of(false)).not.toContain('data-testid="account-logout"');
+	});
+
 	test("is a navigation landmark with the thirteen sections in order", () => {
 		const html = draw("/", null);
 		expect(html).toContain('<nav aria-label="Main navigation"');

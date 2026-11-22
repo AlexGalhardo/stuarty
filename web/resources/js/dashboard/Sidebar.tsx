@@ -20,6 +20,7 @@ import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
 import type { User as Account, LocalAccount } from "@/types";
 import { createClient } from "../editor/api/client";
+import { ApiError } from "../editor/api/errors";
 import { HttpTransport } from "../editor/api/http";
 import { activeSection, pathOf, SECTIONS } from "./sections";
 import {
@@ -109,16 +110,34 @@ function Item({
 function Profile({
 	user,
 	account,
+	person,
 	url,
 	collapsed,
 }: {
 	user: Account | null;
 	account: LocalAccount | null;
+	person: boolean;
 	url: string;
 	collapsed: boolean;
 }): ReactNode {
 	const t = useT();
 	const path = pathOf(url);
+
+	// The studio is locked only when the server said so, or when this session had already ended: on any other
+	// failure the page stays, because leaving it would say the studio is closed while it is open.
+	async function logout(): Promise<void> {
+		try {
+			await createClient(new HttpTransport("")).accountLogout();
+		} catch (error) {
+			if (
+				!(error instanceof ApiError) ||
+				(error.code !== "E_LOCKED" && error.code !== "E_UNAUTHORIZED")
+			)
+				return;
+		}
+		window.location.assign("/account/signin");
+	}
+
 	const name = user?.email ?? account?.username ?? t("ui.nav.local");
 	return (
 		<section
@@ -142,7 +161,8 @@ function Profile({
 				label={t("ui.nav.settings")}
 				collapsed={collapsed}
 			/>
-			{account?.state === "unlocked" && (
+			{/* Only a person can lock the studio: a launch link is refused, and the button would seem to work. */}
+			{account?.state === "unlocked" && person && (
 				<Button
 					type="button"
 					variant="ghost"
@@ -150,12 +170,7 @@ function Profile({
 					className={cn("justify-start", collapsed && "justify-center")}
 					aria-label={collapsed ? t("ui.account.logout") : undefined}
 					data-testid="account-logout"
-					onClick={() =>
-						void createClient(new HttpTransport(""))
-							.accountLogout()
-							.catch(() => undefined)
-							.then(() => window.location.assign("/account/signin"))
-					}
+					onClick={() => void logout()}
 				>
 					<LogOut aria-hidden="true" />
 					<span className={cn(collapsed && "sr-only")}>
@@ -204,11 +219,14 @@ export default function Sidebar({
 	appName,
 	user,
 	account = null,
+	person = false,
 }: {
 	url: string;
 	appName: string;
 	user: Account | null;
 	account?: LocalAccount | null;
+	// Whether this session was opened with the password (the shared prop session.privileged).
+	person?: boolean;
 }): ReactNode {
 	const t = useT();
 	const { state, toggle } = useSidebar();
@@ -283,7 +301,13 @@ export default function Sidebar({
 					))}
 				</ul>
 			</nav>
-			<Profile user={user} account={account} url={url} collapsed={collapsed} />
+			<Profile
+				user={user}
+				account={account}
+				person={person}
+				url={url}
+				collapsed={collapsed}
+			/>
 			<div
 				className={cn(
 					"flex items-center gap-1",
