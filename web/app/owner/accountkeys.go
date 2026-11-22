@@ -40,7 +40,12 @@ func (k accountKeys) Load() ([]byte, error) {
 
 // Save implements vault.KeyProvider: the key of an account is made with the account and never saved here.
 func (k accountKeys) Save(key []byte) error {
-	if k.m.State() == account.StateNone {
+	// Asked of VaultKey and not of the state: while the account is being made the state is still none, and a key
+	// saved then would seal a vault the account cannot open.
+	own, err := k.m.VaultKey()
+	clear(own)
+
+	if errors.Is(err, account.ErrNoAccount) {
 		return k.fallback.Save(key)
 	}
 
