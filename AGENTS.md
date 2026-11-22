@@ -60,7 +60,7 @@ Seven agents, defined in `.claude/agents/`.
 | Orchestrator | the main session | chosen with the author | picks the next epics, writes the briefings, dispatches, consolidates, merges approved epics into the integration branch, marks the roadmap, decides when the author is needed |
 | Senior | `senior-a` to `senior-e` | Claude Sonnet, medium | implements one epic at a time, from the first task to the hand-off: features, fixes, migrations, tests, the specification of its domain |
 | Intern | `intern` | Claude Haiku | mechanical, checkable work: running tests and reporting, reports, small lookups, i18n, fixtures |
-| Specialist | `specialist` | Claude Opus, high | reviews each delivery with no prior context, fixes the bugs it finds and approves |
+| Specialist | `specialist` | Claude Opus, medium | reviews each delivery with no prior context, fixes the bugs it finds and approves |
 
 - **A senior owns one epic at a time**, not a folder. Two epics that touch the same modules are never in progress together; the roadmap says which epics can run side by side.
 - **Two tracks run in parallel**: the editor (two seniors) and the platform (three seniors), after a short sequential foundation (ADR-0045).
