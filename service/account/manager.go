@@ -63,8 +63,11 @@ type Manager struct {
 	// derive lets one Argon2id run at a time: each uses 64 MiB.
 	derive sync.Mutex
 
-	mu         sync.Mutex
-	state      State
+	mu    sync.Mutex
+	state State
+	// creating closes the studio while the account is being made: the state is still none, but a write now
+	// would land in clear text in a column that is being sealed.
+	creating   bool
 	username   string
 	email      string
 	idleLock   int
@@ -153,7 +156,7 @@ func (m *Manager) Check() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	if m.state == StateLocked {
+	if m.state == StateLocked || m.creating {
 		return ErrLocked
 	}
 
@@ -185,6 +188,10 @@ func (s managerSealer) with(fn func(Sealer) (string, error)) (string, error) {
 	s.m.mu.Lock()
 	defer s.m.mu.Unlock()
 
+	if s.m.creating {
+		return "", ErrLocked
+	}
+
 	switch s.m.state {
 	case StateNone:
 		return fn(Passthrough{})
@@ -197,7 +204,12 @@ func (s managerSealer) with(fn func(Sealer) (string, error)) (string, error) {
 }
 
 // Sealing implements the optional method of Sealing: only a workspace with no account leaves clear text.
-func (s managerSealer) Sealing() bool { return s.m.State() != StateNone }
+func (s managerSealer) Sealing() bool {
+	s.m.mu.Lock()
+	defer s.m.mu.Unlock()
+
+	return s.m.state != StateNone || s.m.creating
+}
 
 func (s managerSealer) Seal(table, column, rowKey, plain string) (string, error) {
 	return s.with(func(k Sealer) (string, error) { return k.Seal(table, column, rowKey, plain) })
@@ -212,6 +224,10 @@ func (s managerSealer) Open(table, column, rowKey, stored string) (string, error
 func (m *Manager) VaultKey() ([]byte, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
+	if m.creating {
+		return nil, ErrLocked
+	}
 
 	switch m.state {
 	case StateNone:
@@ -232,12 +248,15 @@ func (m *Manager) Create(ctx context.Context, in rules.Input, apply Apply) (stri
 		return "", &ValidationError{Problems: problems}
 	}
 
-	if m.State() != StateNone {
-		return "", ErrExists
-	}
-
+	// The check is under the derive lock: a second request that waited for the first must see its account.
 	m.derive.Lock()
 	defer m.derive.Unlock()
+
+	if err := m.beginCreate(); err != nil {
+		return "", err
+	}
+
+	defer m.endCreate()
 
 	rec, keys, recovery, err := seal(in.Username, strings.TrimSpace(in.Email), in.Password, m.params)
 	if err != nil {
@@ -256,13 +275,21 @@ func (m *Manager) Create(ctx context.Context, in rules.Input, apply Apply) (stri
 
 	defer fields.Close()
 
+	// Once started the creation runs to its end: a browser that closes must not leave it half done.
+	done := context.WithoutCancel(ctx)
+
 	if apply == nil {
-		err = m.store.Create(ctx, rec)
+		err = m.store.Create(done, rec)
 	} else {
-		err = apply(ctx, rec, fields, keys.Vault)
+		err = apply(done, rec, fields, keys.Vault)
 	}
 
 	if err != nil {
+		// The state must follow the table: with the row there, a state of none would write clear text.
+		if lerr := m.Load(done); lerr != nil {
+			return "", errors.Join(err, lerr)
+		}
+
 		return "", err
 	}
 
@@ -273,15 +300,36 @@ func (m *Manager) Create(ctx context.Context, in rules.Input, apply Apply) (stri
 	return recovery, nil
 }
 
+// beginCreate closes the studio for the creation of the account.
+func (m *Manager) beginCreate() error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.state != StateNone || m.creating {
+		return ErrExists
+	}
+
+	m.creating = true
+
+	return nil
+}
+
+func (m *Manager) endCreate() {
+	m.mu.Lock()
+	m.creating = false
+	m.mu.Unlock()
+}
+
 // Login opens the account with a username or an e-mail address and the password. An unknown name and a wrong
 // password cost the same and are the same error (ErrWrongPassword).
 func (m *Manager) Login(ctx context.Context, identity, password string) error {
+	// The limit is read after waiting for the derivation: read before, every request of a burst would pass it.
+	m.derive.Lock()
+	defer m.derive.Unlock()
+
 	if err := m.throttle(); err != nil {
 		return err
 	}
-
-	m.derive.Lock()
-	defer m.derive.Unlock()
 
 	rec, err := m.store.Get(ctx)
 	if errors.Is(err, ErrNoAccount) {
@@ -323,12 +371,12 @@ func (m *Manager) Recover(ctx context.Context, recoveryKey, newPassword, confirm
 		return &ValidationError{Problems: problems}
 	}
 
+	m.derive.Lock()
+	defer m.derive.Unlock()
+
 	if err := m.throttle(); err != nil {
 		return err
 	}
-
-	m.derive.Lock()
-	defer m.derive.Unlock()
 
 	rec, err := m.store.Get(ctx)
 	if errors.Is(err, ErrNoAccount) {
@@ -382,12 +430,12 @@ func (m *Manager) ChangePassword(ctx context.Context, current, newPassword, conf
 		return ErrNoAccount
 	}
 
+	m.derive.Lock()
+	defer m.derive.Unlock()
+
 	if err := m.throttle(); err != nil {
 		return err
 	}
-
-	m.derive.Lock()
-	defer m.derive.Unlock()
 
 	rec, err := m.store.Get(ctx)
 	if err != nil {
@@ -428,6 +476,10 @@ func (m *Manager) SetIdleLock(ctx context.Context, minutes int) error {
 		return ErrLocked
 	case StateUnlocked:
 	}
+
+	// The update writes the whole record: under this lock it cannot put back the keys of a password just changed.
+	m.derive.Lock()
+	defer m.derive.Unlock()
 
 	rec, err := m.store.Get(ctx)
 	if err != nil {
