@@ -110,14 +110,15 @@ func TestCreate_RunsToItsEndWhenTheCallerLeaves(t *testing.T) {
 func TestCreate_StateFollowsTheTableAfterAFailure(t *testing.T) {
 	m, _, _ := newManager(t)
 
-	_, err := m.Create(context.Background(), goodInput(), func(c context.Context, rec Record, _ Sealer, _ []byte) error {
+	apply := func(c context.Context, rec Record, _ Sealer, _ []byte) error {
 		if err := m.store.Create(c, rec); err != nil {
 			return err
 		}
 
 		return errors.New("failed after the commit")
-	})
-	if err == nil {
+	}
+
+	if _, err := m.Create(context.Background(), goodInput(), apply); err == nil {
 		t.Fatal("Create returned no error")
 	}
 

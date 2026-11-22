@@ -96,14 +96,16 @@ func (o *Owner) createAccount(ctx context.Context, rec account.Record, fields ac
 // a failure is logged and the next start tries again; the copy of the creation is the mark that it must, and goes
 // last, once the checkpoint has made the commit durable.
 func (o *Owner) finishAccount(ctx context.Context, copies ...string) {
+	const notRemoved = "the clear text of the workspace was not removed; the next start tries again"
+
 	if err := o.fault("finish"); err != nil {
-		o.log.WarnContext(ctx, "the clear text of the workspace was not removed; the next start tries again", "error", err)
+		o.log.WarnContext(ctx, notRemoved, "error", err)
 
 		return
 	}
 
 	if err := o.Store.CompactSealed(ctx); err != nil {
-		o.log.WarnContext(ctx, "the clear text of the workspace was not removed; the next start tries again", "error", err)
+		o.log.WarnContext(ctx, notRemoved, "error", err)
 
 		return
 	}
