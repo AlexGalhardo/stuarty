@@ -153,10 +153,10 @@ test.describe("keyboard-only-edit", () => {
 		);
 		expect(log.filter((text) => text !== "")).toHaveLength(1);
 
-		// F6 visits the regions in order: top bar, library, preview, timeline.
+		// F6 visits the regions in order: top bar, library, history, preview, timeline, inspector.
 		await page.locator("body").focus();
 		const visited: string[] = [];
-		for (let i = 0; i < 5; i++) {
+		for (let i = 0; i < 6; i++) {
 			await page.keyboard.press("F6");
 			visited.push(
 				await page.evaluate(
@@ -165,7 +165,13 @@ test.describe("keyboard-only-edit", () => {
 				),
 			);
 		}
-		expect(visited.slice(0, 4)).toEqual(["HEADER", "ASIDE", "MAIN", "SECTION"]);
-		expect(visited[4]).toBe("ASIDE");
+		expect(visited.slice(0, 5)).toEqual([
+			"HEADER",
+			"ASIDE",
+			"ASIDE",
+			"MAIN",
+			"SECTION",
+		]);
+		expect(visited[5]).toBe("ASIDE");
 	});
 });
