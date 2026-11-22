@@ -13,14 +13,22 @@ import (
 
 type productionRepo struct{ ex database.Executor }
 
+// ownTimeline holds for a timeline item i that is a timeline of its project. An id that names a project is that
+// project (SDD-015 section 3, VV-373): a row a forged bundle could write under the id of another project is no
+// timeline of its holder, or the jobs, files and keys kept under that id would be read, copied and deleted as the
+// holder's.
+const ownTimeline = `(i.ref = i.project_id OR NOT EXISTS (SELECT 1 FROM projects named WHERE named.id = i.ref))`
+
 // firstTimeline is the ref of the first active timeline item of the project p.
 const firstTimeline = `(SELECT i.ref FROM project_items i
- WHERE i.project_id = p.id AND i.kind = 'timeline' AND i.state = 'active' ORDER BY i.position, i.id LIMIT 1)`
+ WHERE i.project_id = p.id AND i.kind = 'timeline' AND i.state = 'active' AND ` + ownTimeline + `
+ ORDER BY i.position, i.id LIMIT 1)`
 
 const productionColumns = `p.id, p.name, p.state, p.created_ms, p.updated_ms, p.created_by, p.owner_user_id,
  p.trashed_ms, p.trashed_by, p.description, p.goal_specific, p.goal_measurable, p.goal_achievable, p.goal_relevant,
  p.goal_time_bound, p.goal_due,
- (SELECT count(*) FROM project_items i WHERE i.project_id = p.id AND i.kind = 'timeline' AND i.state = 'active'),
+ (SELECT count(*) FROM project_items i WHERE i.project_id = p.id AND i.kind = 'timeline' AND i.state = 'active'
+  AND ` + ownTimeline + `),
  t.id, t.name, t.state, t.revision, t.schema_version, t.width, t.height, t.fps_num, t.fps_den,
  t.duration_frames, t.track_count, t.item_count, t.asset_count, t.created_ms, t.updated_ms, t.created_by,
  t.owner_user_id, t.trashed_ms, t.trashed_by, t.resync_floor`
@@ -275,7 +283,8 @@ func (r productionRepo) SetState(ctx context.Context, id string, st service.Proj
 
 	_, err = r.ex.ExecContext(
 		ctx,
-		mirr+" WHERE id IN (SELECT ref FROM project_items WHERE project_id = ? AND kind = 'timeline' AND state = 'active')",
+		mirr+" WHERE id IN (SELECT i.ref FROM project_items i WHERE i.project_id = ? AND i.kind = 'timeline'"+
+			" AND i.state = 'active' AND "+ownTimeline+")",
 		append(args, id)...)
 
 	return err
@@ -322,6 +331,15 @@ func (r productionRepo) Delete(ctx context.Context, id string) error {
 		return err
 	}
 
+	// The document a carried row names goes with its holder, alone: the jobs, files and keys under that id are the
+	// other project's (ownTimeline).
+	if _, err := r.ex.ExecContext(ctx, `DELETE FROM timelines WHERE id IN (SELECT i.ref FROM project_items i
+ JOIN projects h ON h.id = i.project_id JOIN timelines d ON d.id = i.ref
+ WHERE i.project_id = ? AND i.kind = 'timeline' AND NOT `+ownTimeline+`
+ AND (d.owner_user_id = h.owner_user_id OR (d.owner_user_id IS NULL AND h.owner_user_id IS NULL)))`, id); err != nil {
+		return err
+	}
+
 	n, err := rowsAffected(r.ex.ExecContext(ctx, "DELETE FROM projects WHERE id = ?", id))
 	if err != nil {
 		return err
@@ -356,8 +374,8 @@ func scanItem(sc scanner) (service.ItemRow, error) {
 }
 
 func (r productionRepo) Items(ctx context.Context, projectID string) ([]service.ItemRow, error) {
-	rows, err := r.ex.QueryContext(ctx,
-		"SELECT "+itemColumns+" FROM project_items WHERE project_id = ? ORDER BY position, id", projectID)
+	rows, err := r.ex.QueryContext(ctx, "SELECT "+itemColumns+" FROM project_items i WHERE i.project_id = ?"+
+		" AND (i.kind <> 'timeline' OR "+ownTimeline+") ORDER BY position, id", projectID)
 	if err != nil {
 		return nil, err
 	}
@@ -440,16 +458,16 @@ func (r productionRepo) ProjectOfTimeline(ctx context.Context, timelineID string
 
 	// An id that names a project is that project, even when the timeline of another project carries it (a row a
 	// bundle could write before its import refused it), so every resolver reads the id as costProject does (VV-373).
-	err := r.ex.QueryRowContext(ctx,
-		`SELECT project_id FROM project_items WHERE kind = 'timeline' AND ref = ?
- AND (project_id = ref OR NOT EXISTS (SELECT 1 FROM projects p WHERE p.id = ref))`, timelineID).Scan(&id)
+	err := r.ex.QueryRowContext(ctx, `SELECT i.project_id FROM project_items i WHERE i.kind = 'timeline' AND i.ref = ?
+ AND `+ownTimeline, timelineID).Scan(&id)
 
 	return id, mapNoRows(err)
 }
 
 func (r productionRepo) ActiveTimelines(ctx context.Context, projectID string) ([]service.TimelineRef, error) {
-	rows, err := r.ex.QueryContext(ctx, `SELECT id, ref, title FROM project_items
- WHERE project_id = ? AND kind = 'timeline' AND state = 'active' ORDER BY position, id`, projectID)
+	rows, err := r.ex.QueryContext(ctx, `SELECT i.id, i.ref, i.title FROM project_items i
+ WHERE i.project_id = ? AND i.kind = 'timeline' AND i.state = 'active' AND `+ownTimeline+`
+ ORDER BY i.position, i.id`, projectID)
 	if err != nil {
 		return nil, err
 	}

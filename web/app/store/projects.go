@@ -42,11 +42,17 @@ func scanProjectHead(sc scanner, extra ...any) (service.ProjectHead, error) {
 
 const defaultProjectLimit, maxProjectLimit = 50, 200
 
+// notCarried holds for a timeline row that no project keeps under the id of another project. Such a row, which a forged
+// bundle could write, is not read as a timeline: its id names that other project, whose owner would otherwise be
+// refused their own project and whose jobs and files would be answered to the holder (VV-373, ownTimeline).
+const notCarried = `NOT EXISTS (SELECT 1 FROM project_items i WHERE i.kind = 'timeline' AND i.ref = timelines.id
+ AND NOT ` + ownTimeline + `)`
+
 // projectFilter is the WHERE of a listing without its cursor: the state, the
 // owner and the single project, all in SQL so that pages and totals agree.
 func projectFilter(q service.ProjectQuery) ([]string, []any) {
 	var (
-		where []string
+		where = []string{notCarried}
 		args  []any
 	)
 	switch {
@@ -62,8 +68,7 @@ func projectFilter(q service.ProjectQuery) ([]string, []any) {
 	if q.ProjectID != "" {
 		// A key limited to one project reaches every timeline of it (SDD-003 section 1.7 rule 4), not only the
 		// one whose id is the project's.
-		where = append(where,
-			"(id = ? OR id IN (SELECT i.ref FROM project_items i WHERE i.kind = 'timeline' AND i.project_id = ?))")
+		where = append(where, "(id = ? OR id IN ("+timelinesOf+"))")
 		args = append(args, q.ProjectID, q.ProjectID)
 	}
 	return where, args
@@ -155,7 +160,7 @@ func decodeCursor(c string) (int64, string, error) {
 
 func (r projectRepo) Head(ctx context.Context, id string) (service.ProjectHead, error) {
 	h, err := scanProjectHead(
-		r.ex.QueryRowContext(ctx, "SELECT "+projectHeadColumns+" FROM timelines WHERE id = ?", id),
+		r.ex.QueryRowContext(ctx, "SELECT "+projectHeadColumns+" FROM timelines WHERE id = ? AND "+notCarried, id),
 	)
 	return h, mapNoRows(err)
 }
@@ -163,7 +168,7 @@ func (r projectRepo) Head(ctx context.Context, id string) (service.ProjectHead, 
 func (r projectRepo) Get(ctx context.Context, id string) (service.ProjectRow, error) {
 	var doc, sha string
 	h, err := scanProjectHead(r.ex.QueryRowContext(ctx,
-		"SELECT "+projectHeadColumns+", document, doc_sha256 FROM timelines WHERE id = ?", id), &doc, &sha)
+		"SELECT "+projectHeadColumns+", document, doc_sha256 FROM timelines WHERE id = ? AND "+notCarried, id), &doc, &sha)
 	if err != nil {
 		return service.ProjectRow{}, mapNoRows(err)
 	}
@@ -236,7 +241,7 @@ func (r projectRepo) Commit(ctx context.Context, id string, expected int64, u se
 	// it when its first timeline is renamed while the two carry one name (SDD-005 section 5.12). A timeline
 	// without a project, as the store tests make, changes nothing here.
 	_, err = r.ex.ExecContext(ctx, `UPDATE projects SET updated_ms = ?
- WHERE id = (SELECT project_id FROM project_items WHERE kind = 'timeline' AND ref = ?)`,
+ WHERE id = (SELECT i.project_id FROM project_items i WHERE i.kind = 'timeline' AND i.ref = ? AND `+ownTimeline+`)`,
 		u.UpdatedMs, id)
 	return err
 }
