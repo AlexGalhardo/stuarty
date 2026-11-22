@@ -11,15 +11,15 @@ export function releaseLabel(version: string): string {
 	return bare.startsWith("v") ? bare : `v${bare}`;
 }
 
-// Fixed at the bottom left of every screen, so a build is identifiable
-// without opening Settings.
+// Fixed at the bottom right of every screen, under the chat button, so a build
+// is identifiable without opening Settings.
 export function ReleaseMarkView({ version }: { version: string }): ReactNode {
 	const label = releaseLabel(version);
 	if (label === "") return null;
 	return (
 		<p
 			data-testid="release-mark"
-			className="pointer-events-none fixed bottom-1 left-2 z-40 rounded bg-background/80 px-1.5 py-0.5 font-mono text-xs text-muted-foreground"
+			className="pointer-events-none fixed right-[max(1rem,env(safe-area-inset-right,0px))] bottom-[max(0.25rem,env(safe-area-inset-bottom,0px))] z-40 rounded bg-background/80 px-1.5 py-0.5 font-mono text-xs text-muted-foreground"
 		>
 			{label}
 		</p>
