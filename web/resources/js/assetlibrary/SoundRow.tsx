@@ -7,6 +7,7 @@ import type { LibraryAsset } from "../editor/api/types";
 import { proxyUrl } from "../editor/api/urls";
 import {
 	columnPeaks,
+	PEAKS_RETRY_MS,
 	type Peaks,
 	watchPeaks,
 } from "../editor/timeline/items/waveform";
@@ -14,7 +15,6 @@ import { formatSeconds } from "../editor/ui/timeFormat";
 
 const WAVE_WIDTH = 480;
 const WAVE_HEIGHT = 48;
-const PEAKS_RETRY_MS = 5000;
 
 // The whole file as one min and max per pixel column, from the peaks the server serves (SDD-011 section 4.6).
 // One "frame" here is one sample, so a column spans sampleCount / WAVE_WIDTH samples.

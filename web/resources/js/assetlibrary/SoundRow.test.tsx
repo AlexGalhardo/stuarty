@@ -6,6 +6,7 @@ import type { LibraryAsset } from "../editor/api/types";
 import { SoundRow } from "./SoundRow";
 
 vi.mock("../editor/timeline/items/waveform", () => ({
+	PEAKS_RETRY_MS: 5000,
 	watchPeaks: () => () => undefined,
 	columnPeaks: () => new Float32Array(0),
 }));

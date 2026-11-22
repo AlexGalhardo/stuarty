@@ -140,6 +140,9 @@ export function loadPeaks(
 	return pending;
 }
 
+// How often a page asks again for peaks that a job is computing (SDD-011 section 6.3.1).
+export const PEAKS_RETRY_MS = 5000;
+
 // Reads the peaks and, while the server says they are being computed, reads them again every retryMs. onResult gets
 // the peaks, or null for a final failure, once. The function it returns stops asking.
 export function watchPeaks(
