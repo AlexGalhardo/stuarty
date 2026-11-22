@@ -46,7 +46,7 @@ type parsed struct {
 func jsonProblem(err error) string {
 	if ute, ok := errors.AsType[*json.UnmarshalTypeError](err); ok {
 		if ute.Field != "" {
-			return fmt.Sprintf("%s must be %s, not %s", ute.Field, jsonKind(ute.Type), ute.Value)
+			return fmt.Sprintf("%s must be %s, not %s", command.SafePath(ute.Field), jsonKind(ute.Type), ute.Value)
 		}
 
 		return fmt.Sprintf("a value must be %s, not %s", jsonKind(ute.Type), ute.Value)
@@ -56,7 +56,7 @@ func jsonProblem(err error) string {
 		return fmt.Sprintf("it is not valid JSON (at byte %d)", se.Offset)
 	}
 
-	if name, found := strings.CutPrefix(err.Error(), "json: unknown field "); found {
+	if name, found := command.UnknownMember(err); found {
 		return "the member " + name + " is not known"
 	}
 
