@@ -153,12 +153,14 @@ export function readLayout(): LayoutPrefs {
 	}
 }
 
-// Writes what is given and keeps the rest of what was stored.
+// Writes what is given and keeps the rest of what was stored. A closed history is
+// the default and is not stored, so the record of the row heights stays as it was.
 export function writeLayout(patch: Partial<LayoutPrefs>): void {
 	try {
+		const { historyOpen, ...rest } = { ...readLayout(), ...patch };
 		localStorage.setItem(
 			"vv.layout",
-			JSON.stringify({ ...readLayout(), ...patch }),
+			JSON.stringify(historyOpen ? { ...rest, historyOpen } : rest),
 		);
 	} catch {
 		// Storage can be blocked: the heights last for this page only.

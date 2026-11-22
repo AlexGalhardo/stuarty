@@ -59,7 +59,6 @@ describe("row heights", () => {
 		expect(store.getState().rowPx).toEqual({ visual: 160, audio: 32 });
 		expect(JSON.parse(saved.get("vv.layout") ?? "null")).toEqual({
 			rows: { visual: 160, audio: 32 },
-			historyOpen: false,
 		});
 		expect(createUiStore().store.getState().rowPx).toEqual({
 			visual: 160,
