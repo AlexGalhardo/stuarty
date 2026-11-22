@@ -23,7 +23,7 @@ func (c *Client) ApprovalList(
 
 // ApprovalGet implements service.Service.
 func (c *Client) ApprovalGet(ctx context.Context, req service.ApprovalRef) (*approval.Request, error) {
-	return get[approval.Request](ctx, c, "/approvals/"+url.PathEscape(req.ID), nil)
+	return get[approval.Request](ctx, c, "/approvals/"+segment(req.ID), nil)
 }
 
 // ApprovalDecide implements service.Service.
@@ -33,7 +33,7 @@ func (c *Client) ApprovalDecide(ctx context.Context, req service.ApprovalDecideR
 		Reason   string `json:"reason,omitempty"`
 	}{req.Decision, req.Reason}
 
-	return post[approval.Request](ctx, c, "/approvals/"+url.PathEscape(req.ID)+"/decide", body)
+	return post[approval.Request](ctx, c, "/approvals/"+segment(req.ID)+"/decide", body)
 }
 
 // ApprovalRuleList implements service.Service.
@@ -53,7 +53,7 @@ func (c *Client) ApprovalRuleSet(
 // ApprovalRuleRemove implements service.Service.
 func (c *Client) ApprovalRuleRemove(ctx context.Context, req service.ApprovalRef) (*approval.RuleView, error) {
 	out := new(approval.RuleView)
-	if err := c.do(ctx, http.MethodDelete, "/approval-rules/"+url.PathEscape(req.ID), nil, nil, out); err != nil {
+	if err := c.do(ctx, http.MethodDelete, "/approval-rules/"+segment(req.ID), nil, nil, out); err != nil {
 		return nil, err
 	}
 

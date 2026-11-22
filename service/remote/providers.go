@@ -23,7 +23,7 @@ func (c *Client) ProviderModels(
 		q.Set("refresh", "true")
 	}
 
-	return get[service.ProviderModelsResult](ctx, c, "/connections/"+url.PathEscape(req.ConnectionID)+"/models", q)
+	return get[service.ProviderModelsResult](ctx, c, "/connections/"+segment(req.ConnectionID)+"/models", q)
 }
 
 // ProviderPriceSet implements service.Service.
@@ -82,5 +82,5 @@ func (c *Client) ImageModelEdit(ctx context.Context, req service.ImageModelEditR
 
 // VoiceList implements service.Service.
 func (c *Client) VoiceList(ctx context.Context, req service.VoiceListRequest) (*service.VoiceListResult, error) {
-	return get[service.VoiceListResult](ctx, c, "/connections/"+url.PathEscape(req.ConnectionID)+"/voices", nil)
+	return get[service.VoiceListResult](ctx, c, "/connections/"+segment(req.ConnectionID)+"/voices", nil)
 }

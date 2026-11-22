@@ -56,7 +56,7 @@ func (c *Client) ProjectItemAdd(
 }
 
 func itemPath(projectID, itemID, suffix string) string {
-	return projectPath(projectID, "/items/"+url.PathEscape(itemID)+suffix)
+	return projectPath(projectID, "/items/"+segment(itemID)+suffix)
 }
 
 // ProjectItemMove implements service.Service.

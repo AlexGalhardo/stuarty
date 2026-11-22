@@ -12,7 +12,7 @@ import (
 
 // The image operations of SDD-021 section 11 over HTTP.
 
-func imagePath(id, suffix string) string { return "/images/" + url.PathEscape(id) + suffix }
+func imagePath(id, suffix string) string { return "/images/" + segment(id) + suffix }
 
 // ImageCreate implements service.Service.
 func (c *Client) ImageCreate(ctx context.Context, req service.ImageCreateRequest) (*service.ImageCreateResult, error) {
@@ -56,7 +56,7 @@ func (c *Client) ImageRedo(ctx context.Context, req service.ImageStepRequest) (*
 }
 
 func imageCheckpointPath(id, name string) string {
-	return imagePath(id, "/checkpoints/"+url.PathEscape(name))
+	return imagePath(id, "/checkpoints/"+segment(name))
 }
 
 // ImageRevert implements service.Service.

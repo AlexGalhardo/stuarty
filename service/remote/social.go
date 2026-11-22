@@ -2,7 +2,6 @@ package remote
 
 import (
 	"context"
-	"net/url"
 
 	"github.com/AlexGalhardo/stuarty/service"
 )
@@ -65,5 +64,5 @@ func (c *Client) PublishNow(ctx context.Context, req service.PublishNowRequest) 
 func (c *Client) PublishStatus(
 	ctx context.Context, req service.PublishStatusRequest,
 ) (*service.PublishStatusResult, error) {
-	return get[service.PublishStatusResult](ctx, c, "/publish/"+url.PathEscape(req.JobID), nil)
+	return get[service.PublishStatusResult](ctx, c, "/publish/"+segment(req.JobID), nil)
 }
