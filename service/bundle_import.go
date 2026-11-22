@@ -1000,7 +1000,7 @@ func migrateBundleDocument(data []byte) (*timeline.Document, int, *Error) {
 	if vs := timeline.Validate(doc); len(vs) > 0 {
 		lines := make([]string, len(vs))
 		for i := range vs {
-			lines[i] = vs[i].String()
+			lines[i] = violationLine(vs[i])
 		}
 
 		return nil, 0, newError(command.CodeValidation, "document.json is not valid: %s", strings.Join(lines, "; ")).

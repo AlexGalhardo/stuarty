@@ -166,7 +166,7 @@ func templateDocument(doc *timeline.Document, name, description string) (*timeli
 	}
 
 	if vs := timeline.Validate(t); len(vs) > 0 {
-		return nil, newError(command.CodeValidation, "the template document is not valid: %s", vs[0].String()).
+		return nil, newError(command.CodeValidation, "the template document is not valid: %s", violationLine(vs[0])).
 			withHint("fix the project and save again")
 	}
 
@@ -320,7 +320,7 @@ func (s *svc) fillOps(ctx context.Context, c Caller, fill map[string]SlotValue) 
 
 	for _, name := range sortedKeys(fill) {
 		v := fill[name]
-		path := "fill." + name
+		path := "fill." + command.SafeKey(name)
 
 		given := 0
 		if v.AssetID != "" {
@@ -339,7 +339,7 @@ func (s *svc) fillOps(ctx context.Context, c Caller, fill map[string]SlotValue) 
 			return nil, newError(
 				command.CodeValidation,
 				"the value of slot %q must give exactly one of asset_id, text or words.",
-				name,
+				command.SafeKey(name),
 			).
 				withPath(path)
 		}
