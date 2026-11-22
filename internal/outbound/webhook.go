@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/netip"
 	"net/url"
+	"slices"
 	"strings"
 	"syscall"
 	"time"
@@ -104,11 +105,39 @@ func webhookDialCheck(loopbackHost bool, address string) error {
 		return nil
 	}
 
-	if NotPublicAddr(ip) {
+	if NotWebhookAddr(ip) {
 		return ErrNotPublic
 	}
 
 	return nil
+}
+
+// reservedForWebhook are the blocks no public receiver is on and NotPublicAddr does not name, because the other
+// purposes have no need to: "this network", IETF assignments, benchmarking, the reserved class E with the broadcast
+// address, and the deprecated IPv6 site-local block, which legacy networks still route inside.
+var reservedForWebhook = []netip.Prefix{
+	netip.MustParsePrefix("0.0.0.0/8"),
+	netip.MustParsePrefix("192.0.0.0/24"),
+	netip.MustParsePrefix("198.18.0.0/15"),
+	netip.MustParsePrefix("240.0.0.0/4"),
+	netip.MustParsePrefix("fec0::/10"),
+}
+
+// NotWebhookAddr says whether an address is one a webhook whose host is not loopback may never reach: every address
+// of NotPublicAddr and the reserved blocks, also when an IPv6 form carries one (SDD-022 section 5).
+func NotWebhookAddr(addr netip.Addr) bool {
+	ip := addr.Unmap().WithZone("")
+	if NotPublicAddr(ip) {
+		return true
+	}
+
+	if ip.Is6() {
+		if v4, ok := embeddedIPv4(ip); ok {
+			ip = v4
+		}
+	}
+
+	return slices.ContainsFunc(reservedForWebhook, func(p netip.Prefix) bool { return p.Contains(ip) })
 }
 
 func effectivePort(u *url.URL) string {

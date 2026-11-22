@@ -52,7 +52,7 @@ A call that fails on the network, times out after 10 seconds, or answers `408`, 
 
 - Only the events you chose, to the one address of that webhook, and only metadata.
 - The signing secret lives in the vault, is shown once, and is returned by no tool, command or endpoint.
-- An agent can read the list of webhooks with the host of each address, and cannot register one.
+- Through MCP an agent can read the list of webhooks, with the host of each address, and cannot register one. The CLI and the HTTP API register one with the `admin` scope, so keep that scope, and the local token that holds it, for yourself.
 
 ## Next steps
 

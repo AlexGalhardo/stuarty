@@ -37,7 +37,7 @@ Four rules carry the design:
 | `name` | string | 1 to 60 characters, no control character; text a person typed, so a surface that shows it to an agent delimits it as untrusted text |
 | `url` | string | `https`, or `http` for a loopback host chosen explicitly (section 5); at most 2048 characters; no userinfo and no fragment. The path and the query are kept: many receivers put their token there, so the URL is shown only to a caller with the `admin` scope and the MCP tool shows the host only |
 | `events` | list of strings | one to five of the events of section 3; no duplicate |
-| `enabled` | boolean | a disabled webhook receives nothing; its pending deliveries stay and are sent when it is enabled again (up to the retry limit) |
+| `enabled` | boolean | a disabled webhook receives no event; its pending deliveries stay and are sent when it is enabled again (up to the retry limit). "Send test" still reaches it, because a person asked for that one call |
 | `secret_set` | boolean | always true; the secret itself is in no result but the creation and the rotation |
 | `created_at`, `updated_at` | time | RFC 3339, UTC |
 | `last_delivery` | object or null | `state`, `at` and `status` of the newest delivery |
@@ -93,8 +93,8 @@ The client has a timeout of 10 seconds for the whole request, uses no proxy, ver
 
 1. The scheme is `https`. `http` is accepted only when the host is `localhost` or an IP address of the loopback block, which the person typed on purpose (a receiver on the same machine, a test).
 2. No userinfo, no fragment, a host, at most 2048 characters, no control character.
-3. A host that is an IP literal in a private, link-local, shared (RFC 6598), unspecified, multicast or metadata range, or an IPv6 form that carries one (SDD-014 section 6), is refused when the webhook is saved. So is a host whose last label is a number (decimal, octal or `0x` hexadecimal, as in `2130706433`, `0x7f.1` or `127.1`): no public name ends so, and a resolver reads it as an IPv4 address. The loopback block is refused unless rule 1 allows it. A name is not resolved when the webhook is saved (a lookup is a packet).
-4. **At connect time** the client of the purpose `webhook` (`internal/outbound`) checks the address it is about to dial, after the name was resolved: a webhook whose host is not loopback refuses every address that is loopback, private, link-local, shared, unspecified, multicast or a named metadata address; a webhook whose host is loopback accepts loopback addresses only. A name that resolved to a public address when it was saved and to an internal one when it is dialled (DNS rebinding) reaches nothing. The host of the request must be the host of the webhook, at every request.
+3. A host that is an IP literal in a private, link-local, shared (RFC 6598), unspecified, multicast, metadata or reserved range (`0.0.0.0/8`, `192.0.0.0/24`, `198.18.0.0/15`, `240.0.0.0/4`, the IPv6 site-local `fec0::/10`), or an IPv6 form that carries one (SDD-014 section 6), is refused when the webhook is saved. So is a host whose last label is a number (decimal, octal or `0x` hexadecimal, as in `2130706433`, `0x7f.1` or `127.1`): no public name ends so, and a resolver reads it as an IPv4 address. The loopback block is refused unless rule 1 allows it. A name is not resolved when the webhook is saved (a lookup is a packet).
+4. **At connect time** the client of the purpose `webhook` (`internal/outbound`) checks the address it is about to dial, after the name was resolved: a webhook whose host is not loopback refuses every address that is loopback, private, link-local, shared, unspecified, multicast, reserved or a named metadata address; a webhook whose host is loopback accepts loopback addresses only. A name that resolved to a public address when it was saved and to an internal one when it is dialled (DNS rebinding) reaches nothing. The host of the request must be the host of the webhook, at every request.
 5. No redirect is followed, so a public address cannot send the request to an internal one.
 
 ## 6. Service operations and scopes
@@ -113,7 +113,7 @@ Defined in SDD-000 section 1. Every operation is for the whole workspace: a key 
 | `WebhookDeliveryList` | admin | the deliveries of a webhook, newest first, with their attempts, 50 per page |
 | `WebhookRedeliver` | admin | section 4 |
 
-Creating a webhook is a person's action: the MCP surface has no write operation for it, and an agent cannot register an address. Every write is audited (`webhook.create`, `webhook.update`, `webhook.remove`, `webhook.rotate_secret`, `webhook.test`, `webhook.redeliver`), with no address and no secret.
+Creating a webhook is a person's action (D-127): the MCP surface has no write operation for it, and the session token of a hosted agent has no `admin` scope, so neither registers an address. The CLI and the HTTP API write with the `admin` scope; the local token and a key with that scope hold it, so whoever is given one can register a webhook, as with a connection. Every write is audited (`webhook.create`, `webhook.update`, `webhook.remove`, `webhook.rotate_secret`, `webhook.test`, `webhook.redeliver`), with no address and no secret.
 
 ## 7. Surfaces
 
