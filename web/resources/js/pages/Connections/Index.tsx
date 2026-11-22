@@ -9,6 +9,16 @@ import {
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import UntrustedText from "@/components/UntrustedText";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,6 +68,7 @@ export function ConnectionRow({
 }): ReactNode {
 	const t = useT();
 	const locale = useLocale();
+	const [asking, setAsking] = useState(false);
 	const { privileged } = useSession();
 	const removeRefused = signedIn && !privileged;
 	const reasonId = `remove-person-only-${connection.id}`;
@@ -105,7 +116,7 @@ export function ConnectionRow({
 						variant="outline"
 						disabled={removeRefused}
 						aria-describedby={removeRefused ? reasonId : undefined}
-						onClick={onRemove}
+						onClick={() => setAsking(true)}
 					>
 						{t("ui.connections.remove")}
 						<span className="sr-only">
@@ -116,6 +127,29 @@ export function ConnectionRow({
 				</div>
 			</div>
 			{removeRefused && <PersonOnlyNote id={reasonId} />}
+			{/* Removing deletes the credential from the vault and cannot be undone: it asks first. */}
+			<AlertDialog open={asking} onOpenChange={setAsking}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>
+							{t("ui.connections.confirm_remove_title", {
+								name: connection.label,
+							})}
+						</AlertDialogTitle>
+						<AlertDialogDescription>
+							{t("ui.connections.confirm_remove_body")}
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>
+							{t("ui.connections.remove_cancel")}
+						</AlertDialogCancel>
+						<AlertDialogAction variant="destructive" onClick={onRemove}>
+							{t("ui.connections.remove")}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 			{result !== null && (
 				<div
 					role="status"
