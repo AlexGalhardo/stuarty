@@ -47,18 +47,19 @@ export function Waveform({
 		"loading",
 	);
 
-	// A long sound's peaks are computed by a job: the page asks again while the server says so.
-	const [attempt, setAttempt] = useState(0);
-
 	useEffect(() => {
 		let live = true;
 		let timer: ReturnType<typeof setTimeout> | undefined;
 		setState("loading");
-		void loadPeaks(timelineId, assetId).then((peaks) => {
+		// A long sound's peaks are computed by a job: the page asks again while the server says so.
+		const load = (): void => {
+			void loadPeaks(timelineId, assetId).then(draw);
+		};
+		const draw = (peaks: Peaks | null): void => {
 			if (!live) return;
 			const ctx = canvas.current?.getContext("2d");
 			if (peaks === null && isPeaksPending(timelineId, assetId)) {
-				timer = setTimeout(() => setAttempt((n) => n + 1), PEAKS_RETRY_MS);
+				timer = setTimeout(load, PEAKS_RETRY_MS);
 				return;
 			}
 			if (peaks === null || ctx === null || ctx === undefined) {
@@ -76,12 +77,13 @@ export function Waveform({
 				ctx.fillRect(x, top, 1, Math.max(1, mid - lo * mid - top));
 			}
 			setState("ready");
-		});
+		};
+		load();
 		return () => {
 			live = false;
 			clearTimeout(timer);
 		};
-	}, [timelineId, assetId, attempt]);
+	}, [timelineId, assetId]);
 
 	return (
 		<div className="flex flex-col gap-1">
