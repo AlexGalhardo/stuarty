@@ -86,19 +86,24 @@ func ReadWAV(f io.ReadSeeker) (WAV, error) {
 				return WAV{}, errWAV
 			}
 			w.DataOffset = body
-			switch {
-			case size == 0xFFFFFFFF && ds64Data >= 0:
-				w.DataSize = min(ds64Data, end-body)
-			case size == 0xFFFFFFFF:
-				w.DataSize = end - body
-			default:
-				w.DataSize = min(size, end-body)
-			}
+			w.DataSize = wavDataSize(size, ds64Data, end-body)
 			return w, nil
 		}
 		pos = body + size + size%2
 	}
 	return WAV{}, errWAV
+}
+
+// wavDataSize is the size of the data chunk, never past the bytes the file has after its header.
+func wavDataSize(declared, ds64, available int64) int64 {
+	switch {
+	case declared == 0xFFFFFFFF && ds64 >= 0:
+		return min(ds64, available)
+	case declared == 0xFFFFFFFF:
+		return available
+	default:
+		return min(declared, available)
+	}
 }
 
 // rdI64 reads a little-endian 64-bit value that a valid file keeps below 2^63.
