@@ -34,7 +34,8 @@ func TestSecurity_T06_ATimelineCarryingAProjectIDDoesNotWidenAKey(t *testing.T) 
 
 	e.timelineCarrying(holder.ProjectID, victim.ProjectID)
 
-	if _, err := e.store.Productions().ProjectOfTimeline(context.Background(), victim.ProjectID); !errors.Is(err, service.ErrNotFound) {
+	_, err = e.store.Productions().ProjectOfTimeline(context.Background(), victim.ProjectID)
+	if !errors.Is(err, service.ErrNotFound) {
 		t.Errorf("the project of a timeline that carries the id of a project = %v, want ErrNotFound", err)
 	}
 
