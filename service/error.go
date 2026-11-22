@@ -236,8 +236,7 @@ func asError(err error) error {
 		return internalError()
 	case errors.Is(err, account.ErrLocked):
 		// The studio locked between the gate and a read of a sealed field (ADR-0049).
-		return newError(CodeLocked, "Stuarty is locked: unlock Stuarty with your password.").
-			withHint("unlock Stuarty with your password").withDetail("reason", "locked")
+		return lockedError()
 	}
 
 	if full, ok := errors.AsType[*QueueFullError](err); ok {

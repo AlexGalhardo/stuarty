@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/AlexGalhardo/stuarty/core/writing"
+	"github.com/AlexGalhardo/stuarty/service/account"
 	"github.com/AlexGalhardo/stuarty/service/publish/destinations"
 
 	"github.com/AlexGalhardo/vukem/database"
@@ -92,6 +93,19 @@ func (r blogRepo) PutPublished(ctx context.Context, p destinations.PublishedPost
 		first = prevFirst.Int64
 	}
 
+	// The text of the post is the creator's words (SDD-005 section 5.17.2); the row key is the slug.
+	sl := sealerOf(r.ex)
+
+	markdown, err := sealField(sl, "published_posts", "markdown", p.Slug, p.Markdown)
+	if err != nil {
+		return err
+	}
+
+	html, err := sealField(sl, "published_posts", "html", p.Slug, p.HTML)
+	if err != nil {
+		return err
+	}
+
 	if _, err := r.ex.ExecContext(
 		ctx,
 		`DELETE FROM published_posts WHERE post_item_id = ? AND connection_id = ?`,
@@ -117,8 +131,8 @@ func (r blogRepo) PutPublished(ctx context.Context, p destinations.PublishedPost
 		p.Meta.Language,
 		p.Meta.Canonical,
 		p.Status,
-		p.Markdown,
-		p.HTML,
+		markdown,
+		html,
 		string(images),
 		first,
 		p.UpdatedAt.UnixMilli(),
@@ -130,7 +144,7 @@ func (r blogRepo) PutPublished(ctx context.Context, p destinations.PublishedPost
 const publishedColumns = `slug, post_item_id, project_id, connection_id, owner_user_id, title, summary, tags, language,
  canonical, status, markdown, html, images, published_ms, updated_ms`
 
-func scanPublished(sc scanner) (destinations.PublishedPost, error) {
+func scanPublished(sc scanner, sl account.Sealer) (destinations.PublishedPost, error) {
 	var (
 		p                       destinations.PublishedPost
 		owner                   sql.NullString
@@ -141,6 +155,15 @@ func scanPublished(sc scanner) (destinations.PublishedPost, error) {
 
 	if err := sc.Scan(&p.Slug, &p.PostItemID, &p.ProjectID, &p.ConnectionID, &owner, &title, &summary, &tags, &lang,
 		&c, &p.Status, &p.Markdown, &p.HTML, &images, &publishedMs, &updatedMs); err != nil {
+		return p, err
+	}
+
+	var err error
+	if p.Markdown, err = openField(sl, "published_posts", "markdown", p.Slug, p.Markdown); err != nil {
+		return p, err
+	}
+
+	if p.HTML, err = openField(sl, "published_posts", "html", p.Slug, p.HTML); err != nil {
 		return p, err
 	}
 
@@ -171,6 +194,7 @@ func scanPublished(sc scanner) (destinations.PublishedPost, error) {
 func (r blogRepo) Published(ctx context.Context, slug string) (destinations.PublishedPost, error) {
 	p, err := scanPublished(
 		r.ex.QueryRowContext(ctx, `SELECT `+publishedColumns+` FROM published_posts WHERE slug = ?`, slug),
+		sealerOf(r.ex),
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		return p, destinations.ErrNotFound
@@ -212,7 +236,7 @@ func (r blogRepo) ListPublished(ctx context.Context, f destinations.ListFilter) 
 	var out []destinations.PublishedPost
 
 	for rows.Next() {
-		p, serr := scanPublished(rows)
+		p, serr := scanPublished(rows, sealerOf(r.ex))
 		if serr != nil {
 			return nil, serr
 		}

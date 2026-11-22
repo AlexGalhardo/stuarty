@@ -4,9 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
+	"slices"
 	"strings"
 
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/account"
 
 	"github.com/AlexGalhardo/vukem/database"
 )
@@ -16,7 +19,56 @@ type jobRepo struct{ ex database.Executor }
 const jobColumns = `id, kind, project_id, asset_hash, actor, state, progress, message, input, result, error,
  cancel_requested, attempts, created_ms, updated_ms, started_ms, finished_ms, approval_id`
 
-func scanJob(sc scanner) (service.JobRow, error) {
+// jobKindsInClear are the kinds whose input and result hold only ids, paths and options. Every other kind (a
+// generation, a draft, a transcription, a publication) keeps the words of the person there, or what a model wrote,
+// so its two columns are sealed (SDD-005 section 5.17.2). A new kind is sealed unless it is added here.
+var jobKindsInClear = []string{"ingest", "export", "export_batch", "frame", "image.export"}
+
+func jobSealed(kind string) bool { return !slices.Contains(jobKindsInClear, kind) }
+
+// jobClearFilter is the SQL form of jobSealed, for the migration.
+func jobClearFilter() string {
+	return "kind NOT IN ('" + strings.Join(jobKindsInClear, "', '") + "')"
+}
+
+// openJobField opens the input or the result of a job. While the studio is locked a sealed value is not an error:
+// the recovery at start-up and the listings read these rows with no key, and only RunJob needs the input, which it
+// asks for by InputLocked.
+func openJobField(sl account.Sealer, kind, column, id, stored string) (json.RawMessage, bool, error) {
+	if !jobSealed(kind) || stored == "" {
+		return json.RawMessage(stored), false, nil
+	}
+
+	plain, err := openField(sl, "jobs", column, id, stored)
+	if errors.Is(err, account.ErrLocked) {
+		return nil, true, nil
+	}
+
+	if err != nil {
+		return nil, false, err
+	}
+
+	return json.RawMessage(plain), false, nil
+}
+
+// sealJobField seals the input or the result of a job of a sealed kind.
+func sealJobField(sl account.Sealer, kind, column, id string, raw json.RawMessage) (string, error) {
+	if !jobSealed(kind) {
+		return string(raw), nil
+	}
+
+	return sealField(sl, "jobs", column, id, string(raw))
+}
+
+func (r jobRepo) kindOf(ctx context.Context, id string) (string, error) {
+	var kind string
+
+	err := r.ex.QueryRowContext(ctx, "SELECT kind FROM jobs WHERE id = ?", id).Scan(&kind)
+
+	return kind, mapNoRows(err)
+}
+
+func scanJob(sc scanner, sl account.Sealer) (service.JobRow, error) {
 	var (
 		j                 service.JobRow
 		project, asset    sql.NullString
@@ -33,7 +85,15 @@ func scanJob(sc scanner) (service.JobRow, error) {
 	}
 	j.ApprovalID = approvalID.String
 	j.ProjectID, j.AssetHash = ptrString(project), ptrString(asset)
-	j.Input, j.Result, j.Error = json.RawMessage(input), rawJSON(result), rawJSON(errJSON)
+	if j.Input, j.InputLocked, err = openJobField(sl, j.Kind, "input", j.ID, input); err != nil {
+		return service.JobRow{}, err
+	}
+	if result.Valid {
+		if j.Result, _, err = openJobField(sl, j.Kind, "result", j.ID, result.String); err != nil {
+			return service.JobRow{}, err
+		}
+	}
+	j.Error = rawJSON(errJSON)
 	j.CancelRequested = cancel != 0
 	j.StartedMs, j.FinishedMs = ptrInt64(started), ptrInt64(finished)
 	return j, nil
@@ -87,10 +147,15 @@ func (r jobRepo) CreateLimited(ctx context.Context, j service.JobRow, lim *servi
 		}
 	}
 
-	_, err := r.ex.ExecContext(ctx, `INSERT INTO jobs
+	input, err := sealJobField(sealerOf(r.ex), j.Kind, "input", j.ID, j.Input)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.ex.ExecContext(ctx, `INSERT INTO jobs
  (id, kind, project_id, asset_hash, actor, state, progress, message, input, created_ms, updated_ms)
  VALUES (?, ?, ?, ?, ?, 'queued', 0, ?, ?, ?, ?)`,
-		j.ID, j.Kind, j.ProjectID, j.AssetHash, j.Actor, j.Message, string(j.Input), j.CreatedMs, j.UpdatedMs)
+		j.ID, j.Kind, j.ProjectID, j.AssetHash, j.Actor, j.Message, input, j.CreatedMs, j.UpdatedMs)
 	if isUnique(r.ex, err) {
 		return service.ErrExists
 	}
@@ -116,7 +181,7 @@ func (r jobRepo) activeIDs(ctx context.Context, query string, args ...any) ([]st
 }
 
 func (r jobRepo) Get(ctx context.Context, id string) (service.JobRow, error) {
-	j, err := scanJob(r.ex.QueryRowContext(ctx, "SELECT "+jobColumns+" FROM jobs WHERE id = ?", id))
+	j, err := scanJob(r.ex.QueryRowContext(ctx, "SELECT "+jobColumns+" FROM jobs WHERE id = ?", id), sealerOf(r.ex))
 	return j, mapNoRows(err)
 }
 
@@ -148,7 +213,7 @@ func (r jobRepo) query(ctx context.Context, query string, args ...any) ([]servic
 
 	var out []service.JobRow
 	for rows.Next() {
-		j, err := scanJob(rows)
+		j, err := scanJob(rows, sealerOf(r.ex))
 		if err != nil {
 			return nil, err
 		}
@@ -159,7 +224,7 @@ func (r jobRepo) query(ctx context.Context, query string, args ...any) ([]servic
 
 func (r jobRepo) ActiveIngestForHash(ctx context.Context, hash string) (service.JobRow, error) {
 	j, err := scanJob(r.ex.QueryRowContext(ctx, `SELECT `+jobColumns+` FROM jobs
- WHERE asset_hash = ? AND kind = 'ingest' AND state IN ('queued','running') LIMIT 1`, hash))
+ WHERE asset_hash = ? AND kind = 'ingest' AND state IN ('queued','running') LIMIT 1`, hash), sealerOf(r.ex))
 	return j, mapNoRows(err)
 }
 
@@ -191,17 +256,40 @@ func (r jobRepo) Finish(
 	result, errJSON json.RawMessage,
 	nowMs int64,
 ) (bool, error) {
+	stored := nullJSON(result)
+
+	if len(result) > 0 {
+		kind, err := r.kindOf(ctx, id)
+		if err != nil {
+			return false, err
+		}
+
+		if stored, err = sealJobField(sealerOf(r.ex), kind, "result", id, result); err != nil {
+			return false, err
+		}
+	}
+
 	// A job that succeeded is complete; the others keep the progress they reached.
 	n, err := rowsAffected(r.ex.ExecContext(ctx, `UPDATE jobs SET state = ?,
  progress = CASE WHEN ? = 'succeeded' THEN 1 ELSE progress END,
  result = ?, error = ?, finished_ms = ?, updated_ms = ?
- WHERE id = ? AND state = 'running'`, state, state, nullJSON(result), nullJSON(errJSON), nowMs, nowMs, id))
+ WHERE id = ? AND state = 'running'`, state, state, stored, nullJSON(errJSON), nowMs, nowMs, id))
 	return n == 1, err
 }
 
 func (r jobRepo) SaveInput(ctx context.Context, id string, input json.RawMessage, nowMs int64) (bool, error) {
+	kind, err := r.kindOf(ctx, id)
+	if err != nil {
+		return false, err
+	}
+
+	stored, err := sealJobField(sealerOf(r.ex), kind, "input", id, input)
+	if err != nil {
+		return false, err
+	}
+
 	n, err := rowsAffected(r.ex.ExecContext(
-		ctx, "UPDATE jobs SET input = ?, updated_ms = ? WHERE id = ? AND state = 'running'", string(input), nowMs, id,
+		ctx, "UPDATE jobs SET input = ?, updated_ms = ? WHERE id = ? AND state = 'running'", stored, nowMs, id,
 	))
 	return n == 1, err
 }
@@ -253,10 +341,15 @@ func (r jobRepo) QueuedBefore(ctx context.Context, createdBeforeMs int64) ([]ser
 
 // CreateWaiting inserts a job that waits for approval (SDD-015 section 5).
 func (r jobRepo) CreateWaiting(ctx context.Context, j service.JobRow) error {
-	_, err := r.ex.ExecContext(ctx, `INSERT INTO jobs
+	input, err := sealJobField(sealerOf(r.ex), j.Kind, "input", j.ID, j.Input)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.ex.ExecContext(ctx, `INSERT INTO jobs
  (id, kind, project_id, asset_hash, actor, state, progress, message, input, created_ms, updated_ms, approval_id)
  VALUES (?, ?, ?, ?, ?, 'waiting_approval', 0, ?, ?, ?, ?, ?)`,
-		j.ID, j.Kind, j.ProjectID, j.AssetHash, j.Actor, j.Message, string(j.Input), j.CreatedMs, j.UpdatedMs,
+		j.ID, j.Kind, j.ProjectID, j.AssetHash, j.Actor, j.Message, input, j.CreatedMs, j.UpdatedMs,
 		nullString(j.ApprovalID))
 	if isUnique(r.ex, err) {
 		return service.ErrExists

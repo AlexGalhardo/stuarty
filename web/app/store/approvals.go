@@ -6,6 +6,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/AlexGalhardo/stuarty/service/account"
 	"github.com/AlexGalhardo/stuarty/service/approval"
 
 	"github.com/AlexGalhardo/vukem/database"
@@ -17,7 +18,19 @@ type approvalRepo struct{ ex database.Executor }
 const requestColumns = `id, actor, owner_user_id, kind, summary, connection_id, project_id, job_id, payload_ref,
  estimate_micros, currency, state, decided_by, rule_id, reason, created_ms, decided_ms, expires_ms`
 
-func scanRequest(sc scanner) (approval.Row, error) {
+// openSummary opens the summary of a request, which can quote the prompt of a generation (SDD-005 section 5.17.2).
+// While the studio is locked it reads as empty: the sweep that expires requests reads these rows with no key, and
+// no surface can show them.
+func openSummary(sl account.Sealer, id, stored string) (string, error) {
+	plain, err := openField(sl, "approval_requests", "summary", id, stored)
+	if errors.Is(err, account.ErrLocked) {
+		return "", nil
+	}
+
+	return plain, err
+}
+
+func scanRequest(sc scanner, sl account.Sealer) (approval.Row, error) {
 	var (
 		r                                        approval.Row
 		owner, conn, project, job, decider, rule sql.NullString
@@ -36,13 +49,22 @@ func scanRequest(sc scanner) (approval.Row, error) {
 	r.OwnerUserID, r.ConnectionID, r.ProjectID = owner.String, conn.String, project.String
 	r.JobID, r.DecidedBy, r.RuleID, r.DecidedMs = job.String, decider.String, rule.String, ptrInt64(decidedMs)
 
+	if r.Summary, err = openSummary(sl, r.ID, r.Summary); err != nil {
+		return r, err
+	}
+
 	return r, nil
 }
 
 func (r approvalRepo) InsertRequest(ctx context.Context, row *approval.Row) error {
-	_, err := r.ex.ExecContext(ctx, `INSERT INTO approval_requests (`+requestColumns+`)
+	summary, err := sealField(sealerOf(r.ex), "approval_requests", "summary", row.ID, row.Summary)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.ex.ExecContext(ctx, `INSERT INTO approval_requests (`+requestColumns+`)
  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		row.ID, row.Actor, nullString(row.OwnerUserID), row.Kind, row.Summary, nullString(row.ConnectionID),
+		row.ID, row.Actor, nullString(row.OwnerUserID), row.Kind, summary, nullString(row.ConnectionID),
 		nullString(row.ProjectID), nullString(row.JobID), row.PayloadRef, row.Estimate.Micros, row.Estimate.Currency,
 		row.State, nullString(row.DecidedBy), nullString(row.RuleID), row.Reason, row.CreatedMs, row.DecidedMs,
 		row.ExpiresMs)
@@ -53,6 +75,7 @@ func (r approvalRepo) InsertRequest(ctx context.Context, row *approval.Row) erro
 func (r approvalRepo) GetRequest(ctx context.Context, id string) (approval.Row, error) {
 	row, err := scanRequest(
 		r.ex.QueryRowContext(ctx, `SELECT `+requestColumns+` FROM approval_requests WHERE id = ?`, id),
+		sealerOf(r.ex),
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		return row, approval.ErrNotFound
@@ -66,7 +89,7 @@ func (r approvalRepo) RequestOfJob(ctx context.Context, jobID string) (approval.
 		ctx,
 		`SELECT `+requestColumns+` FROM approval_requests WHERE job_id = ? ORDER BY created_ms DESC LIMIT 1`,
 		jobID,
-	))
+	), sealerOf(r.ex))
 	if errors.Is(err, sql.ErrNoRows) {
 		return row, approval.ErrNotFound
 	}
@@ -142,7 +165,7 @@ func (r approvalRepo) ListRequests(ctx context.Context, f approval.Filter) ([]ap
 	var out []approval.Row
 
 	for rows.Next() {
-		row, err := scanRequest(rows)
+		row, err := scanRequest(rows, sealerOf(r.ex))
 		if err != nil {
 			return nil, 0, err
 		}
@@ -177,7 +200,7 @@ func (r approvalRepo) Due(ctx context.Context, nowMs int64) ([]approval.Row, err
 	var out []approval.Row
 
 	for rows.Next() {
-		row, err := scanRequest(rows)
+		row, err := scanRequest(rows, sealerOf(r.ex))
 		if err != nil {
 			return nil, err
 		}

@@ -582,15 +582,17 @@ type AssetRepo interface {
 
 // JobRow is a job of the editor (ADR-0018), not a vukem queue row.
 type JobRow struct {
-	ID              string
-	Kind            string  // ingest, transcribe, export, frame
-	ProjectID       *string // nil for ingest
-	AssetHash       *string // ingest and transcribe
-	Actor           string
-	State           string // queued, running, succeeded, failed, cancelled
-	Progress        float64
-	Message         string
-	Input           json.RawMessage
+	ID        string
+	Kind      string  // ingest, transcribe, export, frame
+	ProjectID *string // nil for ingest
+	AssetHash *string // ingest and transcribe
+	Actor     string
+	State     string // queued, running, succeeded, failed, cancelled
+	Progress  float64
+	Message   string
+	Input     json.RawMessage
+	// InputLocked says the input is sealed and the studio is locked, so Input is empty (SDD-005 section 5.17.2).
+	InputLocked     bool
 	Result          json.RawMessage
 	Error           json.RawMessage // typed error object (SDD-002 A.8)
 	CancelRequested bool
