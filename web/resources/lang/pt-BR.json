@@ -92,6 +92,9 @@
         },
         "connections": {
           "holds": "Suas redes sociais e provedores de IA, e o acesso que você deu a cada um."
+        },
+        "webhooks": {
+          "holds": "Os endereços que o Stuarty chama para avisar suas outras ferramentas do que aconteceu."
         }
       }
     },
