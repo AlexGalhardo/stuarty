@@ -222,3 +222,51 @@ func TestSendWhoseCallerLeftIsStillRecorded(t *testing.T) {
 		t.Fatalf("the test was sent %d times", n)
 	}
 }
+
+type countingSecrets struct {
+	mu sync.Mutex
+	n  int
+}
+
+func (c *countingSecrets) Secret(context.Context, string) ([]byte, error) {
+	c.mu.Lock()
+	c.n++
+	c.mu.Unlock()
+
+	return []byte("whsec_test"), nil
+}
+
+// While the studio is locked the address of a webhook cannot be opened and nothing may leave: the dispatcher takes no
+// delivery, reads no secret, lists no webhook (the embedded Store of oneStore is nil: a call would panic) and sends
+// nothing, and after the unlock the same delivery goes out.
+func TestALockedStudioSendsNothingAndReadsNoSecret(t *testing.T) {
+	t.Parallel()
+
+	d, _, doer, _ := newOne(t, 4)
+	secrets := &countingSecrets{}
+	locked := true
+	d.o.Secrets = secrets
+	d.o.Locked = func() bool { return locked }
+
+	ctx := context.Background()
+
+	if n := d.RunOnce(ctx); n != 0 {
+		t.Fatalf("RunOnce took %d deliveries while locked", n)
+	}
+
+	d.Publish(ctx, core.Data(nil), time.Now())
+
+	if got, err := d.Send(ctx, "whk_a", "wdl_a"); err != nil || got.Attempts != 0 {
+		t.Fatalf("Send while locked = %+v, %v", got, err)
+	}
+
+	if doer.count() != 0 || secrets.n != 0 {
+		t.Fatalf("while locked: %d requests, %d secret reads", doer.count(), secrets.n)
+	}
+
+	locked = false
+
+	if n := d.RunOnce(ctx); n != 1 || doer.count() != 1 || secrets.n != 1 {
+		t.Fatalf("after the unlock: took %d, %d requests, %d secret reads", n, doer.count(), secrets.n)
+	}
+}

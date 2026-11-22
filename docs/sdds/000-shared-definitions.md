@@ -245,7 +245,7 @@ Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, `text.generate
 | `audit` | append-only record of actions outside a document batch (trash, restore, emptying, imports, jobs, keys), with their actor | SDD-005 |
 | `api_keys` | network mode: maps a `key_` identifier to its vukem token, owner and optional project | SDD-005, SDD-007 |
 | `queue_jobs`, `queue_failed_jobs` | vukem's queue | vukem |
-| `accounts` | local mode: the one local account (ADR-0049): username, e-mail, the Argon2id parameters and salt, the verifier of the password, the data key wrapped by the password and by the recovery key, the vault master key wrapped by the data key, the idle lock in minutes; no password, no recovery key, no clear key | SDD-005 §5.16, SDD-007 §3.9 |
+| `accounts` | local mode: the one local account (ADR-0049): username, e-mail, the Argon2id parameters and salt, the verifier of the password, the data key wrapped by the password and by the recovery key, the vault master key wrapped by the data key, the idle lock in minutes; no password, no recovery key, no clear key | SDD-005 §5.17, SDD-007 §3.9 |
 | `users` | network mode: email, argon2id password hash, role (`admin` or `member`), session version | SDD-007 |
 | `brand_kits` | the brand kit: logo, named colours and fonts, one row per owner  | SDD-005 §5.11 |
 | `font_owners` | which user imported or brought each stored font file, network mode  | SDD-005 §5.11, SDD-007 §7.7 |
@@ -338,7 +338,7 @@ CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the re
 ├── tools/                   installed helpers (whisper.cpp, models); tools/.download/ holds downloads in progress
 ├── chat/                    the working directory of a hosted agent, one folder per project: chat/<project id>/, mode 0700 (SDD-017 §4)
 ├── tmp/                     one directory per running child process: tmp/<job id>/ (SDD-007 §6.4)
-├── backups/                 copies of db.sqlite made before a migration (SDD-005 §7); `backups/account-<time>/` holds the copy of `db.sqlite` and `vault.json` that the account creation of an existing workspace keeps until it has verified the encrypted fields (SDD-005 §5.16)
+├── backups/                 copies of db.sqlite made before a migration (SDD-005 §7); `backups/account-<time>/` holds the copy of `db.sqlite` and `vault.json` that the account creation of an existing workspace keeps until it has verified the encrypted fields (SDD-005 §5.17)
 ├── logs/                    rotating log files
 └── trash/                   nothing lives here: trash is a database state, files are kept in place
 ```

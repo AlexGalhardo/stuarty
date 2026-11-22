@@ -17,6 +17,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/agenthost"
 	"github.com/AlexGalhardo/stuarty/service/library"
 	pub "github.com/AlexGalhardo/stuarty/service/publish"
+	"github.com/AlexGalhardo/stuarty/service/webhooks"
 )
 
 // The words of the person, each unique, so a scan of the file finds exactly what leaked.
@@ -30,6 +31,7 @@ const (
 	wordsLibrary     = "CANARY-LIBRARY-body-of-a-memory-note"
 	wordsDescription = "CANARY-DESCRIPTION-what-the-project-is"
 	wordsGoal        = "CANARY-GOAL-specific-measurable-parts"
+	wordsHookToken   = "CANARY-HOOKTOKEN-in-the-path"
 )
 
 type locker struct {
@@ -57,6 +59,13 @@ func (l *locker) Sealing() bool { return true }
 
 func writeEverything(t *testing.T, s *Store) {
 	t.Helper()
+
+	if err := s.Webhooks().Insert(ctx, webhooks.Row{
+		ID: "whk_1", Name: "receiver", URL: "https://hooks.example.com/" + wordsHookToken + "?k=1",
+		Events: []string{"export.ready"}, Enabled: true, CreatedBy: "local:ui", CreatedMs: 9, UpdatedMs: 9,
+	}); err != nil {
+		t.Fatalf("webhook: %v", err)
+	}
 
 	if err := s.Productions().Create(ctx, service.ProductionHead{
 		ID: "prj_1", Name: "p", State: service.ProjectActive, CreatedMs: 10, UpdatedMs: 10, CreatedBy: "local:ui",
@@ -131,6 +140,12 @@ func writeEverything(t *testing.T, s *Store) {
 func readBack(t *testing.T, s *Store) {
 	t.Helper()
 
+	hook, err := s.Webhooks().Get(ctx, "whk_1")
+	if err != nil || hook.Name != "receiver" ||
+		hook.URL != "https://hooks.example.com/"+wordsHookToken+"?k=1" {
+		t.Fatalf("webhook %+v %v", hook, err)
+	}
+
 	prj, err := s.Productions().Get(ctx, "prj_1")
 	if err != nil || prj.Description != wordsDescription || prj.Goal.Specific != wordsGoal+"-1" ||
 		prj.Goal.TimeBound != wordsGoal+"-5" || prj.Goal.Due != "2027-01-31" {
@@ -188,6 +203,7 @@ func TestSecurity_T108_SealedColumnsHoldNoPlaintextInTheDatabaseFile(t *testing.
 	canaries := []string{
 		wordsItem, wordsRevision, wordsChat, wordsPubText, wordsField, wordsSnapshot, wordsDescription,
 		wordsGoal + "-1", wordsGoal + "-2", wordsGoal + "-3", wordsGoal + "-4", wordsGoal + "-5",
+		wordsHookToken,
 	}
 
 	// The control: with no account the same scan finds every word, so the scan can see what it looks for.
@@ -246,6 +262,14 @@ func TestSecurity_T108_SealedColumnsHoldNoPlaintextInTheDatabaseFile(t *testing.
 		t.Errorf("a publication read while locked: %v", err)
 	}
 
+	if _, err := st.Webhooks().Get(ctx, "whk_1"); !errors.Is(err, account.ErrLocked) {
+		t.Errorf("a webhook read while locked: %v", err)
+	}
+
+	if _, err := st.Webhooks().List(ctx); !errors.Is(err, account.ErrLocked) {
+		t.Errorf("the webhook list read while locked: %v", err)
+	}
+
 	if err := st.Productions().
 		UpdateItem(ctx, service.ItemRow{ID: "pit_1", Body: "x"}); !errors.Is(
 		err,
@@ -263,7 +287,7 @@ func TestSecurity_T108_SealedColumnsHoldNoPlaintextInTheDatabaseFile(t *testing.
 		}
 	}
 
-	// Ids, states and sizes stay readable for the queries (SDD-005 section 5.16).
+	// Ids, states and sizes stay readable for the queries (SDD-005 section 5.17).
 	for _, readable := range []string{"pit_1", "prj_1", "pub_1"} {
 		if !bytes.Contains(raw, []byte(readable)) {
 			t.Errorf("%q is not readable in the file: the queries need it", readable)

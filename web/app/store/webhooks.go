@@ -7,6 +7,7 @@ import (
 	"errors"
 
 	core "github.com/AlexGalhardo/stuarty/core/webhook"
+	"github.com/AlexGalhardo/stuarty/service/account"
 	"github.com/AlexGalhardo/stuarty/service/webhooks"
 
 	"github.com/AlexGalhardo/vukem/database"
@@ -22,7 +23,9 @@ const (
  next_ms, created_ms, finished_ms`
 )
 
-func scanWebhook(sc interface{ Scan(...any) error }) (webhooks.Row, error) {
+// scanWebhook reads a webhook and opens its address, the sealed column (SDD-005 section 5.17.2): an address can
+// carry a token in its path or its query. The name is a short label that the lists show and stays readable.
+func scanWebhook(sc interface{ Scan(...any) error }, sl account.Sealer) (webhooks.Row, error) {
 	var (
 		r       webhooks.Row
 		events  string
@@ -34,6 +37,12 @@ func scanWebhook(sc interface{ Scan(...any) error }) (webhooks.Row, error) {
 	}
 
 	r.Enabled = enabled != 0
+
+	var err error
+
+	if r.URL, err = openField(sl, "webhooks", "url", r.ID, r.URL); err != nil {
+		return r, err
+	}
 
 	return r, json.Unmarshal([]byte(events), &r.Events)
 }
@@ -57,7 +66,7 @@ func (r webhookRepo) List(ctx context.Context) ([]webhooks.Row, error) {
 	var out []webhooks.Row
 
 	for rows.Next() {
-		row, err := scanWebhook(rows)
+		row, err := scanWebhook(rows, sealerOf(r.ex))
 		if err != nil {
 			return nil, err
 		}
@@ -69,7 +78,8 @@ func (r webhookRepo) List(ctx context.Context) ([]webhooks.Row, error) {
 }
 
 func (r webhookRepo) Get(ctx context.Context, id string) (webhooks.Row, error) {
-	row, err := scanWebhook(r.ex.QueryRowContext(ctx, `SELECT `+webhookColumns+` FROM webhooks WHERE id = ?`, id))
+	row, err := scanWebhook(
+		r.ex.QueryRowContext(ctx, `SELECT `+webhookColumns+` FROM webhooks WHERE id = ?`, id), sealerOf(r.ex))
 	if errors.Is(err, sql.ErrNoRows) {
 		return row, webhooks.ErrNotFound
 	}
@@ -83,9 +93,14 @@ func (r webhookRepo) Insert(ctx context.Context, w webhooks.Row) error {
 		return err
 	}
 
+	url, err := sealField(sealerOf(r.ex), "webhooks", "url", w.ID, w.URL)
+	if err != nil {
+		return err
+	}
+
 	_, err = r.ex.ExecContext(ctx,
 		`INSERT INTO webhooks (`+webhookColumns+`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-		w.ID, w.Name, w.URL, string(events), boolInt(w.Enabled), w.CreatedBy, w.CreatedMs, w.UpdatedMs)
+		w.ID, w.Name, url, string(events), boolInt(w.Enabled), w.CreatedBy, w.CreatedMs, w.UpdatedMs)
 
 	return err
 }
@@ -96,9 +111,14 @@ func (r webhookRepo) Update(ctx context.Context, w webhooks.Row) error {
 		return err
 	}
 
+	url, err := sealField(sealerOf(r.ex), "webhooks", "url", w.ID, w.URL)
+	if err != nil {
+		return err
+	}
+
 	res, err := r.ex.ExecContext(ctx,
 		`UPDATE webhooks SET name = ?, url = ?, events = ?, enabled = ?, updated_ms = ? WHERE id = ?`,
-		w.Name, w.URL, string(events), boolInt(w.Enabled), w.UpdatedMs, w.ID)
+		w.Name, url, string(events), boolInt(w.Enabled), w.UpdatedMs, w.ID)
 	if err != nil {
 		return err
 	}

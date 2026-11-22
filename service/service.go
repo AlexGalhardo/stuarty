@@ -611,6 +611,7 @@ func New(o Options) (Service, error) {
 		s.hooks = webhooks.New(webhooks.Options{
 			Store: st, Secrets: webhookSecrets{s}, NewID: s.newIDs, Workspace: s.workspace,
 			Clock: svcClock{now: s.now}, Log: s.log, Timeout: o.WebhookTimeout,
+			Locked: func() bool { return s.gate != nil && s.gate.Check() != nil },
 		})
 	}
 
