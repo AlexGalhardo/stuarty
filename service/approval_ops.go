@@ -620,9 +620,19 @@ func (s *svc) ApprovalRuleList(ctx context.Context, _ ApprovalRuleListRequest) (
 		return nil, asError(lerr)
 	}
 
+	seen := s.projectSight(ctx, c)
 	res := &ApprovalRuleListResult{Rules: make([]approval.RuleView, 0, len(rules))}
+
 	for i := range rules {
+		if !seen.ofLimit(rules[i].Project) {
+			continue
+		}
+
 		res.Rules = append(res.Rules, rules[i].ViewOf())
+	}
+
+	if seen.err != nil {
+		return nil, asError(seen.err)
 	}
 
 	return res, nil
@@ -772,7 +782,60 @@ func auditRule(ctx context.Context, tx Tx, now int64, actor, action string, r *a
 	return tx.Audit().Append(ctx, AuditRow{AtMs: now, Actor: actor, Action: action, SubjectID: &r.ID, Details: raw})
 }
 
-// CostSummary returns the ceilings and what was spent.
+// sight is what a caller may read of the projects named by the rules, the ceilings and the ledger (SDD-015
+// section 4). In local mode and for an administrator it is everything; a member of a network server reads only the
+// projects of their own user, and no workspace-wide spending. A project is looked up once.
+type sight struct {
+	ctx   context.Context
+	svc   *svc
+	c     Caller
+	all   bool
+	known map[string]bool
+	err   error
+}
+
+func (s *svc) projectSight(ctx context.Context, c Caller) *sight {
+	return &sight{
+		ctx: ctx, svc: s, c: c, known: map[string]bool{},
+		all: c.OwnerUserID == "" || slices.Contains(c.Scopes, ScopeAdmin),
+	}
+}
+
+// ofProject reports whether the caller reads the project; an id no project holds is nobody's, and a failed read
+// is kept in err, so the caller answers with it instead of with a list that left something out by accident.
+func (x *sight) ofProject(id string) bool {
+	if x.all {
+		return true
+	}
+
+	if id == "" {
+		return false
+	}
+
+	if v, ok := x.known[id]; ok {
+		return v
+	}
+
+	head, err := x.svc.store.Productions().Get(x.ctx, id)
+	if err != nil && !errors.Is(err, ErrNotFound) && x.err == nil {
+		x.err = err
+	}
+
+	v := err == nil && visible(x.c, head.OwnerUserID)
+	x.known[id] = v
+
+	return v
+}
+
+// ofLimit is ofProject for a rule or a ceiling, where no project means the whole workspace: a limit every caller
+// is held to, which names nobody's project and spending.
+func (x *sight) ofLimit(project string) bool {
+	return project == "" || x.ofProject(project)
+}
+
+// CostSummary returns the ceilings and what was spent. A member of a network server reads the ceilings of the
+// workspace and of their own projects, and the spending of their own projects: the workspace line adds up everyone's
+// spending, so it is for an administrator (VV-372).
 func (s *svc) CostSummary(ctx context.Context, _ CostSummaryRequest) (*CostSummaryResult, error) {
 	c, err := authorize(ctx, "CostSummary", "")
 	if err != nil {
@@ -796,25 +859,35 @@ func (s *svc) CostSummary(ctx context.Context, _ CostSummaryRequest) (*CostSumma
 		return nil, asError(terr)
 	}
 
+	seen := s.projectSight(ctx, c)
 	res := &CostSummaryResult{
-		Ceilings: make([]approval.CeilingView, 0, len(ceilings)), Today: []CostLine{}, Day: today, Days: totals,
-	}
-
-	if res.Days == nil {
-		res.Days = []approval.Total{}
+		Ceilings: make([]approval.CeilingView, 0, len(ceilings)), Today: []CostLine{}, Day: today,
+		Days: make([]approval.Total, 0, len(totals)),
 	}
 
 	for i := range ceilings {
-		res.Ceilings = append(res.Ceilings, ceilings[i].ViewOf())
+		if seen.ofLimit(ceilings[i].Project) {
+			res.Ceilings = append(res.Ceilings, ceilings[i].ViewOf())
+		}
 	}
 
-	res.Today = costToday(totals, today)
+	for i := range totals {
+		if seen.ofProject(totals[i].ProjectID) {
+			res.Days = append(res.Days, totals[i])
+		}
+	}
+
+	if seen.err != nil {
+		return nil, asError(seen.err)
+	}
+
+	res.Today = costToday(res.Days, today, seen.all)
 
 	return res, nil
 }
 
 // costToday adds the lines of today: the workspace per currency and each project per currency.
-func costToday(totals []approval.Total, today string) []CostLine {
+func costToday(totals []approval.Total, today string, workspace bool) []CostLine {
 	type key struct{ project, currency string }
 
 	sums := map[key]int64{}
@@ -835,8 +908,10 @@ func costToday(totals []approval.Total, today string) []CostLine {
 
 	out := []CostLine{}
 
-	for cur, m := range work {
-		out = append(out, CostLine{Scope: "workspace", Currency: cur, Micros: m})
+	if workspace {
+		for cur, m := range work {
+			out = append(out, CostLine{Scope: "workspace", Currency: cur, Micros: m})
+		}
 	}
 
 	for k, m := range sums {
