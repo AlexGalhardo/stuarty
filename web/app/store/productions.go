@@ -438,8 +438,11 @@ func (r productionRepo) SetPositions(ctx context.Context, projectID string, ids 
 func (r productionRepo) ProjectOfTimeline(ctx context.Context, timelineID string) (string, error) {
 	var id string
 
+	// An id that names a project is that project, even when the timeline of another project carries it (a row a
+	// bundle could write before its import refused it), so every resolver reads the id as costProject does (VV-373).
 	err := r.ex.QueryRowContext(ctx,
-		"SELECT project_id FROM project_items WHERE kind = 'timeline' AND ref = ?", timelineID).Scan(&id)
+		`SELECT project_id FROM project_items WHERE kind = 'timeline' AND ref = ?
+ AND (project_id = ref OR NOT EXISTS (SELECT 1 FROM projects p WHERE p.id = ref))`, timelineID).Scan(&id)
 
 	return id, mapNoRows(err)
 }
