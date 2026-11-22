@@ -37,7 +37,7 @@ export default function ChatConversation({
 	const [text, setText] = useState("");
 	const [profile, setProfile] = useState("");
 	const [confirmDelete, setConfirmDelete] = useState(false);
-	const log = useRef<HTMLOListElement | null>(null);
+	const log = useRef<HTMLDivElement | null>(null);
 	const stuck = useRef(true);
 
 	const { session, events, profiles } = chat;
@@ -209,7 +209,7 @@ export default function ChatConversation({
 				)}
 			</p>
 			<FailureNote failure={chat.failure} />
-			<ol
+			<div
 				ref={log}
 				role="log"
 				aria-label={t("ui.chat.conversation")}
@@ -221,20 +221,22 @@ export default function ChatConversation({
 					const el = event.currentTarget;
 					stuck.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
 				}}
-				className="flex min-h-40 flex-1 flex-col gap-2 overflow-y-auto rounded-lg border p-2 focus-visible:ring-3 focus-visible:ring-ring/50"
+				className="min-h-40 flex-1 overflow-y-auto rounded-lg border p-2 focus-visible:ring-3 focus-visible:ring-ring/50"
 				data-testid="chat-log"
 			>
-				{events.filter(isVisible).map((event) => (
-					<ChatEventView
-						key={event.seq}
-						event={event}
-						open={waiting.has(event.permission?.request_id ?? "")}
-						busy={chat.busy}
-						personOnly={personOnly}
-						onAnswer={(id, answer) => void chat.answer(id, answer)}
-					/>
-				))}
-			</ol>
+				<ol className="flex flex-col gap-2">
+					{events.filter(isVisible).map((event) => (
+						<ChatEventView
+							key={event.seq}
+							event={event}
+							open={waiting.has(event.permission?.request_id ?? "")}
+							busy={chat.busy}
+							personOnly={personOnly}
+							onAnswer={(id, answer) => void chat.answer(id, answer)}
+						/>
+					))}
+				</ol>
+			</div>
 			<form
 				onSubmit={(event) => void submit(event)}
 				className="flex flex-col gap-2"
