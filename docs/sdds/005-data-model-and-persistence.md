@@ -1462,15 +1462,14 @@ The description and the five written parts of the goal of a project are the crea
 
 #### 5.17.3 Creating the account in a workspace that has data
 
-The account creation is the migration, in this order, under the writer lock of the store:
+The account creation is the migration. The studio is closed from its first step to its last: every operation answers `E_LOCKED` and a sealed column can be neither read nor written, so no write lands in clear text in a column being sealed. Two creations at once make one account. A client that leaves does not stop it. In this order:
 
-1. Copy `db.sqlite` (after a WAL checkpoint) and `vault.json` into `backups/account-<time>/`.
-2. In one transaction, seal every sealed column of every row.
-3. Re-seal the vault under the new vault key (`Vault.Rotate`), when a vault file exists.
-4. Read every sealed column back through the same repositories and compare it with what was there before.
-5. Insert the `accounts` row, commit, and only then delete the copy.
+1. Copy `db.sqlite` (after a WAL checkpoint) and `vault.json` into `backups/account-<time>/`. Each copy is written to a temporary name and renamed, so a process killed in the middle never leaves a partial file under the real name.
+2. Re-seal the vault under the new vault key (`Vault.Rotate`), when a vault file exists. A vault that its old key cannot open (a lost key) is moved to `backups/vault-unreadable-<time>.json`, the log says so, and the account starts with an empty vault (ADR-0033 item 4).
+3. In one transaction, seal every sealed column of every row, empty the body of `library_fts` and rebuild the index (an FTS5 update alone leaves the old terms in its segments), insert the `accounts` row, read every sealed column back and compare it with what was there before, and commit.
+4. Remove what is left in clear: a `VACUUM`, then a `wal_checkpoint(TRUNCATE)` (the old pages stay in `db.sqlite` until that checkpoint, and it is also what makes the commit durable), then the copies `backups/db-*.sqlite` that the schema migrations of section 7 made before the account existed, and last the folder `backups/account-<time>/`.
 
-A failure at any step rolls the transaction back, puts the copy of `vault.json` back, deletes the copy and returns the error; the account is not created and the workspace is as it was. A crash between steps leaves the folder `backups/account-<time>/`: the next start finds it with no account row and restores from it before it opens the store.
+A failure before the commit rolls the transaction back, puts the copy of `vault.json` back, deletes the folder and returns the error; the account is not created and the workspace is as it was. After the commit nothing fails the creation: what step 4 could not do is logged, the folder stays as the mark of it, and the next start does it. The next start also finishes a crash, whatever the step: with no account row it puts the copy of `vault.json` back (the transaction was rolled back by SQLite), with the row it runs step 4; then it removes the folder. A workspace with an account does not open in network mode, which holds no key (ADR-0049 item 6).
 
 ## 6. Workspace ownership
 

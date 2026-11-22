@@ -20,10 +20,17 @@ const accountBackupPrefix = "account-"
 
 // createAccount is the Apply of the account manager: it makes the account in a workspace that may hold data
 // (SDD-005 section 5.17.3). It copies the database and the vault, re-seals the vault under the new key, seals
-// every sealed column and inserts the record in one transaction, reads everything back, and only then deletes
-// the copy; on any failure the copy of the vault is put back, the transaction is rolled back and the error is
-// returned. The workspace is then as it was.
+// every sealed column and inserts the record in one transaction, reads everything back, and only then removes
+// what is left in clear; on any failure the copy of the vault is put back, the transaction is rolled back and the
+// error is returned. The workspace is then as it was. After the commit nothing can fail the creation: the account
+// exists, and what could not be cleaned is finished by the next start.
 func (o *Owner) createAccount(ctx context.Context, rec account.Record, fields account.Sealer, vaultKey []byte) error {
+	// A creation that failed earlier and could not put the vault back is finished first: the vault it left is
+	// sealed by a key that no longer exists.
+	if err := o.recoverAccountBackup(ctx); err != nil {
+		return err
+	}
+
 	backupDir := filepath.Join(o.Dir.Path("backups"), accountBackupPrefix+o.now().UTC().Format("20060102T150405.000Z"))
 	vaultPath := filepath.Join(string(o.Dir), connections.VaultFile)
 
@@ -37,13 +44,13 @@ func (o *Owner) createAccount(ctx context.Context, rec account.Record, fields ac
 		return err
 	}
 
-	if err := copyIfExists(o.Dir.Path("db.sqlite"), filepath.Join(backupDir, "db.sqlite")); err != nil {
+	if _, err := copyFileAtomic(o.Dir.Path("db.sqlite"), filepath.Join(backupDir, "db.sqlite")); err != nil {
 		_ = os.RemoveAll(backupDir)
 
 		return err
 	}
 
-	hadVault, err := copyIfExistsReport(vaultPath, filepath.Join(backupDir, connections.VaultFile))
+	hadVault, err := copyFileAtomic(vaultPath, filepath.Join(backupDir, connections.VaultFile))
 	if err != nil {
 		_ = os.RemoveAll(backupDir)
 
@@ -52,7 +59,8 @@ func (o *Owner) createAccount(ctx context.Context, rec account.Record, fields ac
 
 	undo := func(cause error) error {
 		if hadVault {
-			if rerr := copyIfExists(filepath.Join(backupDir, connections.VaultFile), vaultPath); rerr != nil {
+			// If this fails the copy stays where it is, and the next start or the next creation puts it back.
+			if _, rerr := copyFileAtomic(filepath.Join(backupDir, connections.VaultFile), vaultPath); rerr != nil {
 				return errors.Join(cause, fmt.Errorf("restoring the vault: %w", rerr))
 			}
 		}
@@ -62,7 +70,7 @@ func (o *Owner) createAccount(ctx context.Context, rec account.Record, fields ac
 		return errors.Join(cause, os.RemoveAll(backupDir))
 	}
 
-	if err := o.reseal(vaultPath, vaultKey); err != nil {
+	if err := o.reseal(ctx, vaultPath, vaultKey); err != nil {
 		return undo(err)
 	}
 
@@ -77,14 +85,59 @@ func (o *Owner) createAccount(ctx context.Context, rec account.Record, fields ac
 	// The vault this process holds still has the old key in memory: the next use asks the account.
 	o.vault.Forget()
 
-	// What the sealing replaced is still in the free space of the file, and in the index of the library. A
-	// VACUUM rewrites the file without it. If it fails the account stands, and the residue stays in the file
-	// until the next VACUUM; the person is told by the log, not by a failed creation.
-	if _, err := o.Store.DB().ExecContext(ctx, "VACUUM"); err != nil {
-		o.log.WarnContext(ctx, "the database could not be compacted after the account was created", "error", err)
+	o.finishAccount(ctx, backupDir)
+
+	return nil
+}
+
+// finishAccount removes what the sealing left in clear: the old pages of db.sqlite and of its log, the copies that
+// the schema migrations keep in backups/ and the copy of this creation. The account is committed when it runs, so
+// a failure is logged and the next start tries again; the copy of the creation is the mark that it must, and goes
+// last, once the checkpoint has made the commit durable.
+func (o *Owner) finishAccount(ctx context.Context, copies ...string) {
+	if err := o.fault("finish"); err != nil {
+		o.log.WarnContext(ctx, "the clear text of the workspace was not removed; the next start tries again", "error", err)
+
+		return
 	}
 
-	return os.RemoveAll(backupDir)
+	if err := o.Store.CompactSealed(ctx); err != nil {
+		o.log.WarnContext(ctx, "the clear text of the workspace was not removed; the next start tries again", "error", err)
+
+		return
+	}
+
+	if err := removeClearBackups(o.Dir.Path("backups")); err != nil {
+		o.log.WarnContext(ctx, "an old copy of the database was not removed; the next start tries again", "error", err)
+
+		return
+	}
+
+	for _, dir := range copies {
+		if err := os.RemoveAll(dir); err != nil {
+			o.log.WarnContext(ctx, "the copy of the account creation was not removed; the next start tries again",
+				"error", err)
+		}
+	}
+}
+
+// removeClearBackups deletes the copies of the database that the schema migrations made before the account
+// existed (SDD-005 section 7): they hold every word of the person in clear.
+func removeClearBackups(dir string) error {
+	names, err := filepath.Glob(filepath.Join(dir, "db-*.sqlite"))
+	if err != nil {
+		return err
+	}
+
+	var errs []error
+
+	for _, name := range names {
+		if err := os.Remove(name); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			errs = append(errs, err)
+		}
+	}
+
+	return errors.Join(errs...)
 }
 
 // fault is the seam of a test: it returns the error the test asks for at a stage of the creation.
@@ -99,7 +152,7 @@ func (o *Owner) fault(stage string) error {
 // reseal re-seals the vault file under the new key. The old key is the one of the environment, the file or the
 // keychain. A vault that the old key does not open (a lost key) is set aside in backups/ and the account starts
 // with an empty vault: the connections are made again, and nothing else is lost (ADR-0033 item 4).
-func (o *Owner) reseal(vaultPath string, vaultKey []byte) error {
+func (o *Owner) reseal(ctx context.Context, vaultPath string, vaultKey []byte) error {
 	if _, err := os.Stat(vaultPath); errors.Is(err, fs.ErrNotExist) {
 		return nil
 	}
@@ -115,15 +168,18 @@ func (o *Owner) reseal(vaultPath string, vaultKey []byte) error {
 			"vault-unreadable-"+o.now().UTC().Format("20060102T150405.000Z")+".json",
 		)
 
+		o.log.WarnContext(ctx, "the vault cannot be opened with its key: it is set aside and the connections must be "+
+			"made again", "file", aside, "error", err)
+
 		return os.Rename(vaultPath, aside)
 	}
 
 	return err
 }
 
-// recoverAccountBackup finishes what a crash left in the middle of an account creation: the database changes
-// are one transaction, so the account row says whether it committed. With no row, the vault copy goes back;
-// either way the copy is removed.
+// recoverAccountBackup finishes what a crash left in the middle of an account creation. The database changes are
+// one transaction, so the account row says whether it committed: with no row, the copy of the vault goes back; with
+// the row, what is left in clear is removed. Either way the copy goes.
 func (o *Owner) recoverAccountBackup(ctx context.Context) error {
 	dirs, err := filepath.Glob(filepath.Join(o.Dir.Path("backups"), accountBackupPrefix+"*"))
 	if err != nil || len(dirs) == 0 {
@@ -131,22 +187,34 @@ func (o *Owner) recoverAccountBackup(ctx context.Context) error {
 	}
 
 	_, accErr := o.Store.Accounts().Get(ctx)
-	committed := accErr == nil
 
-	if accErr != nil && !errors.Is(accErr, account.ErrNoAccount) {
+	if accErr == nil {
+		o.finishAccount(ctx, dirs...)
+
+		return nil
+	}
+
+	if !errors.Is(accErr, account.ErrNoAccount) {
 		return accErr
 	}
+
+	// The names sort by time. The oldest copy holds the vault as it was before the first attempt.
+	restored := false
 
 	for _, dir := range dirs {
 		if !strings.HasPrefix(filepath.Base(dir), accountBackupPrefix) {
 			continue
 		}
 
-		if !committed {
+		if !restored {
 			saved := filepath.Join(dir, connections.VaultFile)
-			if err := copyIfExists(saved, filepath.Join(string(o.Dir), connections.VaultFile)); err != nil {
+
+			had, err := copyFileAtomic(saved, filepath.Join(string(o.Dir), connections.VaultFile))
+			if err != nil {
 				return err
 			}
+
+			restored = had
 		}
 
 		if err := os.RemoveAll(dir); err != nil {
@@ -157,14 +225,9 @@ func (o *Owner) recoverAccountBackup(ctx context.Context) error {
 	return nil
 }
 
-func copyIfExists(from, to string) error {
-	_, err := copyIfExistsReport(from, to)
-
-	return err
-}
-
-// copyIfExistsReport copies a file, mode 0600, and reports whether it existed.
-func copyIfExistsReport(from, to string) (bool, error) {
+// copyFileAtomic copies a file, mode 0600, and reports whether it existed. The destination appears whole or not
+// at all: a process killed in the middle leaves it as it was, so a half-written copy is never taken for the file.
+func copyFileAtomic(from, to string) (bool, error) {
 	in, err := os.Open(from)
 	if errors.Is(err, fs.ErrNotExist) {
 		return false, nil
@@ -176,22 +239,46 @@ func copyIfExistsReport(from, to string) (bool, error) {
 
 	defer func() { _ = in.Close() }()
 
-	out, err := os.OpenFile(to, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
+	out, err := os.CreateTemp(filepath.Dir(to), filepath.Base(to)+".*.tmp")
 	if err != nil {
 		return false, err
 	}
 
+	name := out.Name()
+
+	if err := writeCopy(out, in); err != nil {
+		_ = os.Remove(name)
+
+		return false, err
+	}
+
+	if err := os.Chmod(name, 0o600); err != nil {
+		_ = os.Remove(name)
+
+		return false, err
+	}
+
+	if err := os.Rename(name, to); err != nil {
+		_ = os.Remove(name)
+
+		return false, err
+	}
+
+	return true, nil
+}
+
+func writeCopy(out *os.File, in io.Reader) error {
 	if _, err := io.Copy(out, in); err != nil {
 		_ = out.Close()
 
-		return false, err
+		return err
 	}
 
 	if err := out.Sync(); err != nil {
 		_ = out.Close()
 
-		return false, err
+		return err
 	}
 
-	return true, out.Close()
+	return out.Close()
 }

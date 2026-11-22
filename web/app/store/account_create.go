@@ -141,6 +141,11 @@ func (s *Store) CreateAccount(
 			return err
 		}
 
+		// An update of an FTS5 table leaves the old terms in its segments until a merge: the rebuild drops them.
+		if _, err := dtx.ExecContext(ctx, `INSERT INTO library_fts (library_fts) VALUES ('rebuild')`); err != nil {
+			return err
+		}
+
 		if err := (accountRepo{ex: dtx}).Create(ctx, rec); err != nil {
 			return err
 		}
@@ -151,6 +156,30 @@ func (s *Store) CreateAccount(
 
 		return verifySealed(ctx, dtx, sl, sums)
 	})
+}
+
+// CompactSealed takes out of the file what the sealing replaced (SDD-005 section 5.17.3). The old pages of a
+// sealed column stay in the free space of db.sqlite, and a VACUUM in WAL mode writes the new file to the log, so
+// only the checkpoint after it leaves db.sqlite without them and empties the log. The checkpoint is also what
+// makes the commit of the account durable; a checkpoint that could not finish is an error.
+func (s *Store) CompactSealed(ctx context.Context) error {
+	if _, err := s.db.ExecContext(ctx, "VACUUM"); err != nil {
+		return fmt.Errorf("store: compact the database: %w", err)
+	}
+
+	var busy, logged, moved int
+
+	// On the write connection: the read pool is read-only, and a checkpoint from it is an I/O error.
+	err := s.db.QueryRowWriteContext(ctx, "PRAGMA wal_checkpoint(TRUNCATE)").Scan(&busy, &logged, &moved)
+	if err != nil {
+		return fmt.Errorf("store: checkpoint the database: %w", err)
+	}
+
+	if busy != 0 {
+		return errors.New("store: the write-ahead log is in use and could not be emptied")
+	}
+
+	return nil
 }
 
 // verifySealed reads every sealed column back and opens it: each value must open and be what it was before.
