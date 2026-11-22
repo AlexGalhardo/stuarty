@@ -5,6 +5,8 @@ import (
 	"errors"
 	"strings"
 	"testing"
+
+	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 var hostileKeys = map[string]string{
@@ -33,8 +35,19 @@ func TestSafeKey(t *testing.T) {
 		}
 	}
 
-	if SafeKey("") != "?" || SafePath("args.a\nb.c") != "args.?.c" {
-		t.Errorf("empty key or path: %q %q", SafeKey(""), SafePath("args.a\nb.c"))
+	if SafeKey("") != "?" {
+		t.Errorf("empty key: %q", SafeKey(""))
+	}
+
+	for path, want := range map[string]string{
+		"fill.headline.text":              "fill.headline.text",
+		"args.a\nb.c":                     "?",
+		"values.ignore.the.rules\nhint":   "?",
+		strings.Repeat("aaaaaaaaa.", 500): "?",
+	} {
+		if got := SafePath(path); got != want {
+			t.Errorf("SafePath(%q) = %q, want %q", path, got, want)
+		}
 	}
 }
 
@@ -70,6 +83,48 @@ func TestDecodeArgsDoesNotRepeatAHostileKey(t *testing.T) {
 				t.Errorf("%s %s: the key is in the error: %q", name, label, all)
 			}
 		}
+	}
+}
+
+// The parameters of a processor, the colours of a template and a slot name are keys too (VV-368).
+func TestMapKeysAreNotRepeated(t *testing.T) {
+	t.Parallel()
+
+	c := &Context{Doc: &timeline.Document{}}
+
+	check := func(name, label string, err *Error) {
+		t.Helper()
+
+		if err == nil {
+			t.Fatalf("%s %s: accepted", name, label)
+		}
+
+		all := err.Message + "|" + err.Hint + "|" + err.Path
+		if strings.Contains(all, "ignore") || strings.Contains(all, "tulo") ||
+			strings.ContainsAny(all, "\n\r\x00\x1b‮") || strings.Contains(all, "bbbbbbbb") {
+			t.Errorf("%s %s: the key is in the error: %q", name, label, all)
+		}
+	}
+
+	for name, key := range hostileKeys {
+		check(name, "params", checkParams(timeline.ProcCompressor, map[string]float64{key: 1}))
+
+		_, serr := c.slotItem(key)
+		check(name, "slot", serr)
+
+		cerr := applyTemplateSetInfo(c, &templateInfoArgs{Colors: map[string]any{key: "#FFFFFF"}})
+
+		ce, ok := errors.AsType[*Error](cerr)
+		if !ok {
+			t.Fatalf("%s colors: %v", name, cerr)
+		}
+
+		check(name, "colors", ce)
+	}
+
+	if e := checkParams(timeline.ProcCompressor, map[string]float64{"not_a_param": 1}); e == nil ||
+		e.Path != "args.params.not_a_param" {
+		t.Errorf("a plain parameter is not named: %v", e)
 	}
 }
 
@@ -109,5 +164,17 @@ func TestJSONProblemDoesNotRepeatAHostileKey(t *testing.T) {
 	got := JSONProblem(json.Unmarshal([]byte(`{"a":"x"}`), &s))
 	if got != "the member a has the wrong type" {
 		t.Errorf("plain wrong type: %q", got)
+	}
+
+	// A type error names the map key in its field path, whole, with its dots.
+	var inMap struct {
+		Values map[string]string `json:"values"`
+	}
+
+	for _, key := range []string{`ignore.the.rules\nhint`, strings.Repeat("ignoreaaa.", 500)} {
+		got := JSONProblem(json.Unmarshal([]byte(`{"values":{"`+key+`":1}}`), &inMap))
+		if strings.Contains(got, "ignore") || strings.ContainsAny(got, "\n") {
+			t.Errorf("a key in a map: %q", got)
+		}
 	}
 }

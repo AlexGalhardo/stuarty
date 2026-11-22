@@ -141,15 +141,10 @@ func SafeKey(k string) string {
 	return "?"
 }
 
-// SafePath is a dotted path of members with every segment that an error may not repeat taken out.
-func SafePath(p string) string {
-	parts := strings.Split(p, ".")
-	for i, s := range parts {
-		parts[i] = SafeKey(s)
-	}
-
-	return strings.Join(parts, ".")
-}
+// SafePath is a dotted path of members when an error may repeat it whole, and "?" when it may not. A key can hold
+// dots, so a path cannot be cleaned segment by segment: that would repeat the pieces of a hostile key, and a key of
+// any length made of short dotted pieces would pass.
+func SafePath(p string) string { return SafeKey(p) }
 
 // UnknownMember is the name a decoder refused with DisallowUnknownFields, quoted and safe to repeat, and whether
 // err is that refusal.

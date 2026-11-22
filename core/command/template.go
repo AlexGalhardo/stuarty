@@ -83,7 +83,7 @@ func applyTemplateSetInfo(c *Context, a *templateInfoArgs) error {
 			return Errorf(
 				CodeValidation,
 				"args.colors %q is not a valid name; it must match [a-z][a-z0-9_]{0,39}.",
-				name,
+				SafeKey(name),
 			).
 				WithHint("Use lower case letters, digits and underscores, for example \"brand\".").
 				WithPath("args.colors")

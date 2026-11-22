@@ -148,7 +148,8 @@ func CheckProcessor(p Processor) string {
 	for _, name := range slices.Sorted(maps.Keys(p.Params)) {
 		spec, ok := paramSpec(p.Kind, name)
 		if !ok {
-			return fmt.Sprintf("%s has no parameter %q", p.Kind, name)
+			// The name is a key the document's author chose: the message does not repeat it (SDD-003 section 1.2 rule 9).
+			return p.Kind + " has a parameter it does not define"
 		}
 		if msg := spec.Check(p.Params[name]); msg != "" {
 			return msg

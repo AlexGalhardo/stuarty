@@ -8,6 +8,8 @@ import (
 	"sort"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/AlexGalhardo/stuarty/core/command"
 )
 
 // FormatError is a front matter the parser refuses (SDD-018 section 3).
@@ -277,7 +279,7 @@ func ParseFrontMatter(front string) (*FrontMatter, error) {
 		}
 
 		if fm.Has(key) {
-			return nil, &FormatError{Line: lineNo, Msg: "the key " + key + " appears twice"}
+			return nil, &FormatError{Line: lineNo, Msg: "the key " + command.SafeKey(key) + " appears twice"}
 		}
 
 		val, next, err := parseValue(lines, i, strings.TrimSpace(rest))
@@ -430,7 +432,7 @@ func parseBlockMap(lines []string, start int) (Value, int, error) {
 		}
 
 		if _, dup := v.Map[k]; dup {
-			return Value{}, 0, &FormatError{Line: j + 2, Msg: "the key " + k + " appears twice"}
+			return Value{}, 0, &FormatError{Line: j + 2, Msg: "the key " + command.SafeKey(k) + " appears twice"}
 		}
 
 		rest = strings.TrimSpace(rest)
@@ -717,12 +719,12 @@ func (f *FrontMatter) Render() (string, error) {
 
 			for _, mk := range keys {
 				if !mapKey.MatchString(mk) {
-					return "", fmt.Errorf("%s: the key %q is not a valid map key", k, mk)
+					return "", fmt.Errorf("%s: the key %q is not a valid map key", k, command.SafeKey(mk))
 				}
 
 				s, err := renderScalar(v.Map[mk], false)
 				if err != nil {
-					return "", fmt.Errorf("%s.%s: %w", k, mk, err)
+					return "", fmt.Errorf("%s.%s: %w", k, command.SafeKey(mk), err)
 				}
 
 				b.WriteString("  " + mk + ": " + s + "\n")

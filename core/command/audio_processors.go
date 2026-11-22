@@ -165,7 +165,8 @@ func checkParams(kind string, params map[string]float64) *Error {
 			for _, s := range timeline.ProcessorParams(kind) {
 				names = append(names, s.Name)
 			}
-			return invalidArg("args.params."+name, "args.params.%s is not a parameter of %s.", name, kind).
+			key := SafeKey(name)
+			return invalidArg("args.params."+key, "args.params.%s is not a parameter of %s.", key, kind).
 				WithHint("The parameters of %s are %s.", kind, strings.Join(names, ", "))
 		}
 		if msg := spec.Check(params[name]); msg != "" {

@@ -190,7 +190,7 @@ func (c *Context) slotItem(name string) (timeline.Item, *Error) {
 	if names == nil {
 		names = []string{}
 	}
-	return timeline.Item{}, Errorf(CodeSlot, "Slot %q does not exist.", name).
+	return timeline.Item{}, Errorf(CodeSlot, "Slot %q does not exist.", SafeKey(name)).
 		WithHint("Use one of the slots: %s.", strings.Join(names, ", ")).
 		WithDetail("available", names).WithPath("args.name")
 }
