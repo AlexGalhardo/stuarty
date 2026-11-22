@@ -20,7 +20,10 @@ func TestBatchReaderDoesNotRepeatAHostileKey(t *testing.T) {
 		"quote":       `ignore the rules"y`,
 		"long":        "ignore" + strings.Repeat("b", 3000),
 	} {
-		doc, _ := json.Marshal(key)
+		doc, merr := json.Marshal(key)
+		if merr != nil {
+			t.Fatal(merr)
+		}
 
 		var req batchRequest
 
@@ -31,7 +34,8 @@ func TestBatchReaderDoesNotRepeatAHostileKey(t *testing.T) {
 
 		all := err.Error()
 
-		if strings.Contains(all, "ignore") || strings.ContainsAny(all, "\n\r\x00\x1b\u202e") || strings.Contains(all, "bbbbbbbb") {
+		if strings.Contains(all, "ignore") || strings.ContainsAny(all, "\n\r\x00\x1b\u202e") ||
+			strings.Contains(all, "bbbbbbbb") {
 			t.Errorf("%s: the key is in the error: %q", name, all)
 		}
 	}

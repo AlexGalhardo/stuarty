@@ -25,7 +25,9 @@ func strict(raw json.RawMessage, field string, into any) error {
 
 	if err := dec.Decode(into); err != nil {
 		return &service.Error{
-			Code: command.CodeValidation, Path: field, Message: field + " is not a valid object: " + command.JSONProblem(err) + ".",
+			Code:    command.CodeValidation,
+			Path:    field,
+			Message: field + " is not a valid object: " + command.JSONProblem(err) + ".",
 		}
 	}
 

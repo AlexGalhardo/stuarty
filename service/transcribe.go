@@ -63,7 +63,11 @@ func decodeTranscribeArgs(raw json.RawMessage) (TranscribeArgs, *Error) {
 	}
 
 	if err := dec.Decode(&a); err != nil {
-		return a, newError(command.CodeValidation, "the arguments of a transcription are not valid: %s.", command.JSONProblem(err)).
+		return a, newError(
+			command.CodeValidation,
+			"the arguments of a transcription are not valid: %s.",
+			command.JSONProblem(err),
+		).
 			withPath("args")
 	}
 
