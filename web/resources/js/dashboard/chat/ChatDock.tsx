@@ -64,7 +64,7 @@ export default function ChatDock(): ReactNode {
 				aria-expanded={false}
 				aria-controls="chat-panel"
 				onClick={() => setOpen(true)}
-				className="fixed right-4 bottom-4 z-40 shadow-lg"
+				className="fixed right-[max(1rem,env(safe-area-inset-right,0px))] bottom-[calc(max(0.25rem,env(safe-area-inset-bottom,0px))+1.75rem)] z-40 shadow-lg"
 				data-testid="chat-toggle"
 			>
 				<MessagesSquare aria-hidden="true" />
@@ -81,7 +81,7 @@ export default function ChatDock(): ReactNode {
 			onKeyDown={(event) => {
 				if (event.key === "Escape") close();
 			}}
-			className="flex h-dvh w-full flex-col gap-3 border-s bg-background p-3 max-md:fixed max-md:inset-0 max-md:z-50 md:sticky md:top-0 md:w-96"
+			className="flex h-dvh w-full flex-col gap-3 border-s bg-background p-3 z-50 max-md:fixed max-md:inset-0 md:sticky md:top-0 md:w-96"
 		>
 			<header className="flex items-center justify-between gap-2">
 				<h2 ref={heading} tabIndex={-1} className="text-base font-semibold">

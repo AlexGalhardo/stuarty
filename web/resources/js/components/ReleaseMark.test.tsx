@@ -12,12 +12,12 @@ describe("releaseLabel", () => {
 });
 
 describe("ReleaseMarkView", () => {
-	test("draws the release at the bottom left", () => {
+	test("draws the release at the bottom right", () => {
 		const html = renderToString(<ReleaseMarkView version="0.28.0" />);
 		expect(html).toContain('data-testid="release-mark"');
 		expect(html).toContain("v0.28.0");
-		expect(html).toContain("bottom-1");
-		expect(html).toContain("left-2");
+		expect(html).toContain("bottom-[max(0.25rem");
+		expect(html).toContain("right-[max(1rem");
 	});
 
 	test("draws nothing until the server answers", () => {
