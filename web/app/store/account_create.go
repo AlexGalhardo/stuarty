@@ -18,22 +18,29 @@ import (
 type cell struct {
 	table, column string
 	keys          []string
+	// filter limits the cell to some rows of its table: the jobs whose kind keeps words.
+	filter string
 }
 
 var sealedCells = []cell{
-	{"project_items", "body", []string{"id"}},
-	{"text_revisions", "body", []string{"item_id", "revision"}},
-	{"chat_events", "body_json", []string{"session_id", "seq"}},
-	{"publications", "text", []string{"id"}},
-	{"publication_targets", "fields", []string{"id"}},
-	{"publication_targets", "snapshot", []string{"id"}},
-	{"projects", "description", []string{"id"}},
-	{"projects", "goal_specific", []string{"id"}},
-	{"projects", "goal_measurable", []string{"id"}},
-	{"projects", "goal_achievable", []string{"id"}},
-	{"projects", "goal_relevant", []string{"id"}},
-	{"projects", "goal_time_bound", []string{"id"}},
-	{"webhooks", "url", []string{"id"}},
+	{table: "project_items", column: "body", keys: []string{"id"}},
+	{table: "text_revisions", column: "body", keys: []string{"item_id", "revision"}},
+	{table: "chat_events", column: "body_json", keys: []string{"session_id", "seq"}},
+	{table: "publications", column: "text", keys: []string{"id"}},
+	{table: "publication_targets", column: "fields", keys: []string{"id"}},
+	{table: "publication_targets", column: "snapshot", keys: []string{"id"}},
+	{table: "projects", column: "description", keys: []string{"id"}},
+	{table: "projects", column: "goal_specific", keys: []string{"id"}},
+	{table: "projects", column: "goal_measurable", keys: []string{"id"}},
+	{table: "projects", column: "goal_achievable", keys: []string{"id"}},
+	{table: "projects", column: "goal_relevant", keys: []string{"id"}},
+	{table: "projects", column: "goal_time_bound", keys: []string{"id"}},
+	{table: "webhooks", column: "url", keys: []string{"id"}},
+	{table: "published_posts", column: "markdown", keys: []string{"slug"}},
+	{table: "published_posts", column: "html", keys: []string{"slug"}},
+	{table: "approval_requests", column: "summary", keys: []string{"id"}},
+	{table: "jobs", column: "input", keys: []string{"id"}, filter: jobClearFilter()},
+	{table: "jobs", column: "result", keys: []string{"id"}, filter: jobClearFilter()},
 }
 
 type cellRow struct {
@@ -43,8 +50,13 @@ type cellRow struct {
 }
 
 func (c cell) read(ctx context.Context, ex database.Executor) ([]cellRow, error) {
+	where := c.column + " IS NOT NULL"
+	if c.filter != "" {
+		where += " AND " + c.filter
+	}
+
 	rows, err := ex.QueryContext(ctx, "SELECT "+strings.Join(c.keys, ", ")+", "+c.column+" FROM "+c.table+
-		" WHERE "+c.column+" IS NOT NULL")
+		" WHERE "+where)
 	if err != nil {
 		return nil, err
 	}

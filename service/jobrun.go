@@ -23,6 +23,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 	"github.com/AlexGalhardo/stuarty/engine/ingest"
+	"github.com/AlexGalhardo/stuarty/service/account"
 	"github.com/AlexGalhardo/stuarty/service/logging"
 )
 
@@ -195,6 +196,15 @@ func (s *svc) RunJob(ctx context.Context, jobID string) (err error) {
 
 	job = fresh
 
+	// The input of this kind holds the words of the person and the studio is locked: the job cannot run, and a
+	// person starts it again after signing in (SDD-007 section 3.9 item 4).
+	if job.InputLocked {
+		fctx, fcancel := context.WithTimeout(context.WithoutCancel(ctx), finishTimeout)
+		defer fcancel()
+
+		return s.finishFailed(fctx, &job, JobFailed, lockedError())
+	}
+
 	jctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -308,6 +318,12 @@ func (s *svc) settle(parent, jctx context.Context, job *JobRow, result json.RawM
 		if err == nil && ok {
 			s.logJob(ctx, slog.LevelInfo, "job succeeded", job)
 			s.emitCurrent(ctx, job.ID)
+		}
+
+		// The studio locked while the job ran: its result cannot be sealed, and a row left running would hold
+		// its slot until the next start.
+		if errors.Is(err, account.ErrLocked) {
+			return s.finishFailed(ctx, job, JobFailed, lockedError())
 		}
 
 		return err

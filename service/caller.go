@@ -294,6 +294,11 @@ func (s *svc) locked(method string) error {
 		return nil
 	}
 
+	return lockedError()
+}
+
+// lockedError is the answer of a locked studio (ADR-0049).
+func lockedError() *Error {
 	return newError(CodeLocked, "Stuarty is locked: unlock Stuarty with your password.").
 		withHint("unlock Stuarty with your password").
 		withDetail("reason", "locked")
