@@ -513,6 +513,54 @@ test.describe("agent chat", () => {
 		expect(results.violations).toEqual([]);
 	});
 
+	test("the log stays a polite live region, scrolls by keyboard, and follows only a reader at the bottom", async ({
+		page,
+		request,
+		browserName,
+	}) => {
+		const api = await caller(request);
+		const project = await makeProject(api, `Scroll ${unique(browserName)}`);
+		await page.setViewportSize({ width: 1280, height: 560 });
+		await signInAsPerson(page);
+		await openPanel(page);
+		await connect(page, "echo", "echo");
+		await startWith(page, project, "echo");
+		const agent = page.getByTestId("chat-agent");
+		const sayAndWait = async (text: string): Promise<void> => {
+			const before = await agent.count();
+			await say(page, text);
+			await expect(agent).toHaveCount(before + 1);
+		};
+		for (let i = 0; i < 8; i++) await sayAndWait(`line ${i}`);
+
+		const log = page.getByTestId("chat-log");
+		await expect(log).toHaveAttribute("role", "log");
+		await expect(log).toHaveAttribute("aria-live", "polite");
+		await expect(log).toHaveAttribute("tabindex", "0");
+		const gap = (): Promise<number> =>
+			log.evaluate((el) => el.scrollHeight - el.scrollTop - el.clientHeight);
+		const top = (): Promise<number> => log.evaluate((el) => el.scrollTop);
+		expect(await log.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(
+			true,
+		);
+		await expect.poll(gap).toBeLessThan(48);
+
+		await log.focus();
+		await expect(log).toBeFocused();
+		await page.keyboard.press("Home");
+		await expect.poll(top).toBe(0);
+
+		// A person reading the history is not pulled away by a new message.
+		await sayAndWait("while reading");
+		expect(await top()).toBe(0);
+
+		await log.focus();
+		await page.keyboard.press("End");
+		await expect.poll(gap).toBeLessThan(48);
+		await sayAndWait("at the bottom");
+		await expect.poll(gap).toBeLessThan(48);
+	});
+
 	test("the panel passes axe, in English and in Portuguese, and has labels for a screen reader", async ({
 		page,
 		browserName,

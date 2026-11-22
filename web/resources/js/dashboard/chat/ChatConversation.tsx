@@ -39,6 +39,7 @@ export default function ChatConversation({
 	const [confirmDelete, setConfirmDelete] = useState(false);
 	const log = useRef<HTMLDivElement | null>(null);
 	const stuck = useRef(true);
+	const lastTop = useRef(0);
 
 	const { session, events, profiles } = chat;
 	const state = session?.state ?? null;
@@ -219,7 +220,14 @@ export default function ChatConversation({
 				tabIndex={0}
 				onScroll={(event) => {
 					const el = event.currentTarget;
-					stuck.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
+					// A scroll event can arrive after more content did, far from the new bottom: only a move up
+					// means the person left it.
+					if (el.scrollHeight - el.scrollTop - el.clientHeight < 48) {
+						stuck.current = true;
+					} else if (el.scrollTop < lastTop.current) {
+						stuck.current = false;
+					}
+					lastTop.current = el.scrollTop;
 				}}
 				className="min-h-40 flex-1 overflow-y-auto rounded-lg border p-2 focus-visible:ring-3 focus-visible:ring-ring/50"
 				data-testid="chat-log"
