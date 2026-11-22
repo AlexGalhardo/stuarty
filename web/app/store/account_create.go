@@ -13,7 +13,7 @@ import (
 	"github.com/AlexGalhardo/vukem/database"
 )
 
-// cell is a sealed column and the columns that make the key of its row (SDD-005 section 5.16.2). The repositories
+// cell is a sealed column and the columns that make the key of its row (SDD-005 section 5.17.2). The repositories
 // bind a value to its cell the same way, through the row key they pass to the sealer.
 type cell struct {
 	table, column string
@@ -33,6 +33,7 @@ var sealedCells = []cell{
 	{"projects", "goal_achievable", []string{"id"}},
 	{"projects", "goal_relevant", []string{"id"}},
 	{"projects", "goal_time_bound", []string{"id"}},
+	{"webhooks", "url", []string{"id"}},
 }
 
 type cellRow struct {
@@ -98,7 +99,7 @@ func (c cell) update(ctx context.Context, ex database.Executor, row cellRow, val
 	return nil
 }
 
-// CreateAccount makes the account in a workspace that may hold data (SDD-005 section 5.16.3): in one
+// CreateAccount makes the account in a workspace that may hold data (SDD-005 section 5.17.3): in one
 // transaction it seals every sealed column, empties the body of the library index, inserts the record and reads
 // every sealed value back against what it was. Any failure rolls the transaction back and the workspace is as
 // it was. hook, when set, is called after each stage and may fail it (a test uses it to stop in the middle).

@@ -21,6 +21,10 @@ const (
 	// 16 for each part of the goal.
 	canaryDescription = "CANARY-DESCRIPTION-what-this-launch-video-is-about-and-for-whom-it-is-made"
 	canaryGoal        = "CANARY-GOAL-part"
+	// A webhook (epic 59): its address can carry a token in the path, and its signing secret is in the vault.
+	canaryHookToken  = "CANARY-HOOKTOKEN-in-the-path"
+	canaryHookSecret = "CANARY-HOOKSECRET-the-signing-secret"
+	canaryHookURL    = "https://hooks.example.com/" + canaryHookToken + "?k=1"
 )
 
 // canaryProject is a valid ProjectCreate request whose description and goal carry the canaries.
@@ -39,6 +43,7 @@ func canaryProject() service.ProjectCreateRequest {
 var canaryWords = []string{
 	canaryScript, canaryBrief, canaryNote, canaryToken, canaryDescription, canaryGoal + "-specific",
 	canaryGoal + "-measurable", canaryGoal + "-achievable", canaryGoal + "-relevant", canaryGoal + "-timebound",
+	canaryHookToken, canaryHookSecret,
 }
 
 func accountEnv(t *testing.T) func(string) string {
@@ -63,7 +68,7 @@ func accountEnv(t *testing.T) func(string) string {
 
 // TestSecurity_T108_TheDatabaseAndTheVaultOfAnAccountHoldNoPlaintext: with an account, a text, a brief, a
 // memory note and a credential leave no clear text in db.sqlite, its log or vault.json, and the vault opens
-// only while a person is signed in (SDD-005 section 5.16, SDD-007 section 3.9 item 10).
+// only while a person is signed in (SDD-005 section 5.17, SDD-007 section 3.9 item 10).
 func TestSecurity_T108_TheDatabaseAndTheVaultOfAnAccountHoldNoPlaintext(t *testing.T) {
 	getenv := accountEnv(t)
 	home := getenv(workspace.EnvHome)

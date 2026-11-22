@@ -28,6 +28,7 @@ Four rules carry the design:
 2. **The payload is metadata.** Identifiers, states, counts and the public address of a published post. Never a credential, a token, a file, a text body, a prompt or a path (section 3).
 3. **The secret is shown once.** The server generates the signing secret, puts it in the vault (SDD-014) under the id of the webhook, and returns it in the answer of the creation and of the rotation, and nowhere else (ADR-0033).
 4. **Delivery never runs in a request.** A bounded worker sends, retries and records; the operations only write rows and wake it.
+5. **A locked studio sends nothing.** With a local account (ADR-0049) the address of a webhook is a sealed column (SDD-005 section 5.17.2: it can carry a token), and the signing secret is in the vault. While the studio is locked every webhook operation answers `E_LOCKED` like every other operation, and the dispatcher reads no webhook and no secret, takes no delivery, queues none and opens no socket; an event that happens while it is locked is not queued. The pending deliveries wait in their table and are taken after the sign-in. A workspace that already has webhooks enters the account in the verified transaction of SDD-005 section 5.17.3: the address is sealed with the rest and the secret goes with the vault.
 
 ## 2. The webhook record
 

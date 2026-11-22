@@ -11,6 +11,7 @@ import (
 	rules "github.com/AlexGalhardo/stuarty/core/account"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/vault"
+	"github.com/AlexGalhardo/stuarty/service/webhooks"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
@@ -57,6 +58,17 @@ func existingWorkspace(t *testing.T, getenv func(string) string) (*Owner, contex
 	}
 
 	if err := o.vault.Put("conn.one", []byte(canaryToken)); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := o.Store.Webhooks().Insert(ctx, webhooks.Row{
+		ID: "whk_migrated", Name: "receiver", URL: canaryHookURL, Events: []string{"export.ready"}, Enabled: true,
+		CreatedBy: "local:ui", CreatedMs: 1, UpdatedMs: 1,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := o.vault.Put("whk_migrated", []byte(canaryHookSecret)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -163,6 +175,16 @@ func TestSecurity_T109_AnExistingWorkspaceMigratesWithoutLoss(t *testing.T) {
 
 	if secret, err := o.vault.Get("conn.one"); err != nil || string(secret) != canaryToken {
 		t.Fatalf("the credential after the migration: %q %v", secret, err)
+	}
+
+	// A webhook crosses into the account whole: its address opens, and its secret is still in the vault.
+	hook, err := o.Service.WebhookGet(as, service.WebhookRef{ID: "whk_migrated"})
+	if err != nil || hook.Name != "receiver" || hook.URL != canaryHookURL || !hook.SecretSet {
+		t.Fatalf("the webhook after the migration: %+v %v", hook, err)
+	}
+
+	if secret, err := o.vault.Get("whk_migrated"); err != nil || string(secret) != canaryHookSecret {
+		t.Fatalf("the webhook secret after the migration: %q %v", secret, err)
 	}
 
 	if err := o.Close(); err != nil {

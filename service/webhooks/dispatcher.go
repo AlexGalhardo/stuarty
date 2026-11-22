@@ -53,6 +53,10 @@ type Options struct {
 	Trust *outbound.TestOptions
 	// Client builds the client of an address; default outbound.Webhook. Tests replace it.
 	Client func(rawURL string) (Doer, error)
+	// Locked says the studio is locked (ADR-0049): the address and the name of a webhook are sealed, so while it is
+	// true the dispatcher reads no webhook and no secret, takes no delivery and queues none. A nil Locked is never
+	// locked.
+	Locked func() bool
 }
 
 // Dispatcher turns events into deliveries and sends them (SDD-022 section 4). It never sends in the call of a person:
@@ -140,6 +144,10 @@ func (d *Dispatcher) Run(ctx context.Context) error {
 // RunOnce sends every delivery that is due now, at most Parallel at once, and returns when they have all ended. It
 // answers how many it took.
 func (d *Dispatcher) RunOnce(ctx context.Context) int {
+	if d.locked() {
+		return 0
+	}
+
 	due, err := d.o.Store.Due(ctx, d.o.Clock.Now().UnixMilli(), 100)
 	if err != nil {
 		d.o.Log.WarnContext(ctx, "the due webhook deliveries could not be read", "error", err)
@@ -228,9 +236,15 @@ func (d *Dispatcher) release(id string) {
 	delete(d.times, id)
 }
 
+func (d *Dispatcher) locked() bool { return d.o.Locked != nil && d.o.Locked() }
+
 // Publish makes a delivery of the event for every enabled webhook that chose it, and wakes the loop. It writes rows
 // and sends nothing. With no webhook it reads one empty list and does no more.
 func (d *Dispatcher) Publish(ctx context.Context, data core.Data, at time.Time) {
+	if d.locked() {
+		return
+	}
+
 	ctx = context.WithoutCancel(ctx)
 
 	rows, err := d.o.Store.List(ctx)
@@ -331,6 +345,11 @@ func (d *Dispatcher) Send(ctx context.Context, webhookID, deliveryID string) (De
 
 // attempt makes one attempt of a delivery and records it.
 func (d *Dispatcher) attempt(ctx context.Context, del Delivery) {
+	// The studio may lock between the listing and here: the row stays pending and is taken after the unlock.
+	if d.locked() {
+		return
+	}
+
 	// The row may have moved since it was listed (the test send takes it too): what was sent is not sent again.
 	cur, err := d.o.Store.GetDelivery(ctx, del.WebhookID, del.ID)
 	if err != nil {
