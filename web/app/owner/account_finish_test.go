@@ -210,6 +210,43 @@ func TestSecurity_T109_AHalfWrittenCopyIsNeverPutBack(t *testing.T) {
 	}
 }
 
+// A vault that is already the copy needs no restore: writing it may be what failed, and a copy left behind holds
+// the whole database in clear.
+func TestRestoreVaultLeavesAnIdenticalFileAlone(t *testing.T) {
+	dir := t.TempDir()
+	saved, live := filepath.Join(dir, "saved"), filepath.Join(dir, "vault.json")
+
+	if err := os.WriteFile(saved, []byte("same"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(live, []byte("same"), 0o400); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Cleanup(func() { _ = os.Chmod(live, 0o600) })
+
+	if err := restoreVault(saved, live); err != nil {
+		t.Fatalf("a read-only vault with the same content: %v", err)
+	}
+
+	if err := os.Chmod(live, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(live, []byte("changed"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := restoreVault(saved, live); err != nil {
+		t.Fatal(err)
+	}
+
+	if got, _ := os.ReadFile(live); string(got) != "same" {
+		t.Errorf("the vault holds %q", got)
+	}
+}
+
 func TestCopyFileAtomic(t *testing.T) {
 	dir := t.TempDir()
 	from, to := filepath.Join(dir, "from"), filepath.Join(dir, "to")
