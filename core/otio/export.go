@@ -29,8 +29,8 @@ func Export(doc *timeline.Document) ([]byte, []Lost, error) {
 
 	var lost []Lost
 
-	if doc.Template != nil {
-		lost = append(lost, Lost{Name: doc.Name, Feature: "template information of the project"})
+	if doc.Template != nil && doc.Template.Instance {
+		lost = append(lost, Lost{Name: doc.Name, Feature: "template instance state of the project"})
 	}
 
 	ids := make([]string, 0, len(doc.Tracks))
@@ -46,6 +46,18 @@ func Export(doc *timeline.Document) ([]byte, []Lost, error) {
 		byTrack[it.Track] = append(byTrack[it.Track], it)
 	}
 
+	var order []string
+
+	for _, id := range ids {
+		items := byTrack[id]
+		sort.Slice(items, func(i, j int) bool { return items[i].Start < items[j].Start })
+
+		for i := range items {
+			order = append(order, items[i].ID)
+		}
+	}
+
+	rf := newRefs(doc, order)
 	children := make([]any, 0, len(ids))
 
 	for _, id := range ids {
@@ -62,7 +74,7 @@ func Export(doc *timeline.Document) ([]byte, []Lost, error) {
 		items := byTrack[id]
 		sort.Slice(items, func(i, j int) bool { return items[i].Start < items[j].Start })
 
-		kids, itemLost := trackChildren(doc, items, rate)
+		kids, itemLost := trackChildren(doc, items, rate, rf)
 		lost = append(lost, itemLost...)
 
 		kind := kindVid
@@ -98,7 +110,7 @@ func Export(doc *timeline.Document) ([]byte, []Lost, error) {
 
 // trackChildren writes the items of one track, sorted by start, as OTIO children and reports what
 // they lose.
-func trackChildren(doc *timeline.Document, items []timeline.Item, rate float64) ([]any, []Lost) {
+func trackChildren(doc *timeline.Document, items []timeline.Item, rate float64, rf *refs) ([]any, []Lost) {
 	var lost []Lost
 
 	kids := []any{}
@@ -113,6 +125,8 @@ func trackChildren(doc *timeline.Document, items []timeline.Item, rate float64) 
 			if meta == nil {
 				continue
 			}
+
+			lost = append(lost, rf.attach(meta, it)...)
 
 			// A text, caption or shape item is a gap that carries the item in the vukem metadata: other
 			// tools see the time, Vukem gets the item back.
@@ -144,7 +158,11 @@ func trackChildren(doc *timeline.Document, items []timeline.Item, rate float64) 
 			kids = append(kids, transition(0, d, rate))
 		}
 
-		kids = append(kids, clip(it, &a, rate))
+		c := clip(it, &a, rate)
+		if meta, isObject := c["metadata"].(object); isObject {
+			lost = append(lost, rf.attach(meta, it)...)
+		}
+		kids = append(kids, c)
 
 		if d, ok := fade(it.TransitionOut); ok {
 			kids = append(kids, transition(d, 0, rate))
@@ -196,12 +214,37 @@ func clip(it *timeline.Item, a *timeline.Asset, rate float64) object {
 // in the vukem namespace. The same markers are also written as the native markers of the stack, so
 // that other tools see them; Import reads the vukem ones first because they are exact.
 func timelineMetadata(doc *timeline.Document) object {
-	if len(doc.Markers) == 0 {
+	v := object{}
+
+	if t := doc.Template; t != nil {
+		tpl := object{"description": t.Description}
+
+		if len(t.Colors) > 0 {
+			colours := object{}
+			for name, c := range t.Colors {
+				colours[name] = string(c)
+			}
+
+			tpl["colors"] = colours
+		}
+
+		v["template"] = tpl
+	}
+
+	if len(doc.Markers) > 0 {
+		v["markers"] = markerList(doc.Markers)
+	}
+
+	if len(v) == 0 {
 		return object{}
 	}
 
-	list := make([]any, 0, len(doc.Markers))
-	for _, m := range doc.Markers {
+	return object{metaNamespace: v}
+}
+
+func markerList(markers []timeline.Marker) []any {
+	list := make([]any, 0, len(markers))
+	for _, m := range markers {
 		e := object{"frame": m.Frame}
 		if m.Label != "" {
 			e["label"] = m.Label
@@ -210,7 +253,7 @@ func timelineMetadata(doc *timeline.Document) object {
 		list = append(list, e)
 	}
 
-	return object{metaNamespace: object{"markers": list}}
+	return list
 }
 
 func timelineMarkers(marks []timeline.Marker, rate float64) []any {
@@ -553,8 +596,6 @@ func lostTextProperties(it *timeline.Item) []Lost {
 		feature string
 	}{
 		{len(it.Markers) > 0, "markers of a " + string(it.Type) + " item"},
-		{it.Link != "", "link of a " + string(it.Type) + " item"},
-		{it.LinkedItem != "", "caption link to a clip"},
 	} {
 		if f.on {
 			out = append(out, Lost{ID: it.ID, Name: it.Name, Feature: f.feature})
@@ -605,7 +646,6 @@ func lostProperties(it *timeline.Item) []Lost {
 		{it.Speed.Num != it.Speed.Den || len(it.SpeedCurve) > 0, "speed"},
 		{it.Reverse, "reverse"},
 		{len(it.Effects) > 0, "effects"},
-		{it.Link != "", "link"},
 		{it.Brightness != 0 || it.Contrast != 1 || it.Saturation != 1 || it.Temperature != 0 || it.Tint != 0 || it.Hue != 0, "colour adjustment"},
 		{(it.Filter != "none" && it.Filter != "") || it.Blur != 0, "filter and blur"},
 		{it.ChromaKey != nil, "chroma key"},

@@ -204,6 +204,10 @@ func (s *svc) ProjectOtioImport(ctx context.Context, req ProjectOtioImportReques
 		im.KnownFonts = append(im.KnownFonts, family)
 	}
 
+	for _, m := range doc.Markers {
+		im.MarkedFrames = append(im.MarkedFrames, m.Frame)
+	}
+
 	if len(unresolved) > 0 && !req.AllowPartial && !req.DryRun && req.BaseRevision <= row.Revision {
 		// The names are in details, cleaned and tagged as untrusted; the message carries none of them.
 		return nil, newError(command.CodeInvalidState,

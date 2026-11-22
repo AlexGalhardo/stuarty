@@ -34,6 +34,7 @@ type entry struct {
 	reverse  bool
 	slot     *slotSpec
 	markers  []timeline.Marker // clips only: the markers of the item, in frames of the item
+	refs     itemRefs          // the labels of the file that tie this item to others of the same file
 	body     string            // texts only
 	style    map[string]any    // texts only
 }
@@ -61,8 +62,14 @@ type Import struct {
 	// style may use them besides the bundled fonts. The caller sets it before Operations.
 	KnownFonts []string `json:"-"`
 
-	tracks  []importTrack
-	markers []timeline.Marker
+	// MarkedFrames are the frames that already hold a timeline marker in the project the batch applies to; the
+	// caller sets it before Operations. A marker of the file at one of them is reported and left out, so a
+	// second import of a file into one project applies instead of failing on its first marker.
+	MarkedFrames []int `json:"-"`
+
+	tracks   []importTrack
+	markers  []timeline.Marker
+	template *templateSpec
 }
 
 type reader struct {
@@ -70,6 +77,7 @@ type reader struct {
 	fps   timeline.Rational
 	seen  map[string]bool
 	slots map[string]bool
+	ids   map[string]bool // the id labels taken in the file
 }
 
 // Parse reads an OTIO file. It never opens a media reference: each target_url is
@@ -91,7 +99,7 @@ func Parse(data []byte) (*Import, error) {
 
 	name, _ := root["name"].(string)
 	im := &Import{Name: name, Media: []Media{}, Lost: []Lost{}}
-	r := &reader{im: im, seen: map[string]bool{}, slots: map[string]bool{}}
+	r := &reader{im: im, seen: map[string]bool{}, slots: map[string]bool{}, ids: map[string]bool{}}
 
 	if err := checkDepth(stack, 1); err != nil {
 		return nil, err
@@ -101,6 +109,7 @@ func Parse(data []byte) (*Import, error) {
 	im.FPS = r.fps
 
 	r.timelineMarkers(root, stack)
+	r.templateInfo(root)
 
 	kids, _ := stack["children"].([]any)
 	for _, k := range kids {
@@ -377,6 +386,8 @@ func (r *reader) clip(c map[string]any, cursor int, kind string) (entry, bool) {
 
 		spec := itemOps(props, mode, cursor, dur, r.slots, func(f string) { r.lose(f + " of clip " + name) })
 		e.props, e.speed, e.curve, e.reverse, e.slot = spec.ops, spec.speed, spec.curve, spec.reverse, spec.slot
+		e.refs = r.readRefs(v, name)
+		e.refs.linked = ""
 	}
 
 	return e, true
@@ -448,6 +459,8 @@ func (r *reader) shapeItem(c, v map[string]any, cursor, dur int) (entry, bool) {
 	props, _ := v["properties"].(map[string]any)
 	spec := itemOps(props, modeText, cursor, dur, r.slots, lose)
 	e.props = spec.ops
+	e.refs = r.readRefs(v, name)
+	e.refs.linked = ""
 
 	return e, true
 }
@@ -466,6 +479,8 @@ func (r *reader) captionItem(c, v map[string]any, cursor, dur int) (entry, bool)
 	props, _ := v["properties"].(map[string]any)
 	ops := itemOps(props, modeText, cursor, dur, r.slots, lose)
 	e.props = ops.ops
+	e.refs = r.readRefs(v, name)
+	e.refs.link = ""
 
 	return e, true
 }
@@ -492,6 +507,8 @@ func (r *reader) textItem(c, v map[string]any, cursor, dur int) (entry, bool) {
 	props, _ := v["properties"].(map[string]any)
 	spec := itemOps(props, modeText, cursor, dur, r.slots, lose)
 	e.props, e.slot = spec.ops, spec.slot
+	e.refs = r.readRefs(v, name)
+	e.refs.linked = ""
 
 	return e, true
 }
@@ -533,12 +550,33 @@ func textStyle(raw any, caption bool, lose func(string)) map[string]any {
 // reported. newID supplies the identifiers (SDD-001 §2 item 6). The batch applies
 // to a project that has the file's FPS and those assets.
 func (im *Import) Operations(assets map[string]string, newID func(prefix string) string) ([]command.Operation, []Lost) {
-	b := &batch{assets: assets, newID: newID, known: map[string]bool{}}
+	b := &batch{
+		assets: assets, newID: newID, known: map[string]bool{},
+		pre: map[string]string{}, links: map[string][]string{}, linkOrder: map[string]int{},
+	}
 	for _, f := range im.KnownFonts {
 		b.known[f] = true
 	}
 
+	b.template(im.template)
+	b.reserve(im.tracks)
+
+	taken := len(im.MarkedFrames)
+
 	for _, m := range im.markers {
+		switch {
+		case slices.Contains(im.MarkedFrames, m.Frame):
+			b.lost = append(b.lost, Lost{Feature: "timeline marker at a frame the project already marks"})
+
+			continue
+		case taken >= timeline.MaxMarkers:
+			b.lost = append(b.lost, Lost{Feature: "timeline markers over the limit of 200 of the project"})
+
+			continue
+		}
+
+		taken++
+
 		args := map[string]any{"at": frameTime(m.Frame)}
 		if m.Label != "" {
 			args["label"] = m.Label
@@ -549,6 +587,10 @@ func (im *Import) Operations(assets map[string]string, newID func(prefix string)
 
 	for i := range im.tracks {
 		b.track(&im.tracks[i])
+	}
+
+	for _, ids := range b.linkGroups() {
+		b.push("item.link", map[string]any{"item_ids": ids})
 	}
 
 	return append(b.ops, b.pending...), b.lost
@@ -567,6 +609,10 @@ type batch struct {
 	ops     []command.Operation
 	pending []command.Operation // transitions, after every clip exists
 	lost    []Lost
+
+	pre       map[string]string   // id label of the file -> the new id reserved for the item
+	links     map[string][]string // link label -> the new ids of its items
+	linkOrder map[string]int
 }
 
 func (b *batch) push(op string, args any) {
@@ -694,7 +740,7 @@ func (b *batch) clip(trackID string, audio bool, e *entry) *placed {
 		return nil
 	}
 
-	id := b.newID(timeline.PrefixItem)
+	id := b.itemID(e)
 	op := "clip.add"
 
 	if audio {
@@ -753,7 +799,7 @@ func (b *batch) clip(trackID string, audio bool, e *entry) *placed {
 
 // text adds one text item and what its metadata asks for.
 func (b *batch) text(trackID string, e *entry) *placed {
-	id := b.newID(timeline.PrefixItem)
+	id := b.itemID(e)
 	args := map[string]any{
 		"track_id": trackID, "id": id, "start": frameTime(e.start), "duration": frameTime(e.duration), "text": e.body,
 	}
@@ -770,7 +816,7 @@ func (b *batch) text(trackID string, e *entry) *placed {
 
 // shape adds one shape item and what its metadata asks for.
 func (b *batch) shape(trackID string, e *entry) *placed {
-	id := b.newID(timeline.PrefixItem)
+	id := b.itemID(e)
 	args := map[string]any{
 		"track_id": trackID, "id": id, "start": frameTime(e.start), "duration": frameTime(e.duration),
 	}
@@ -785,16 +831,24 @@ func (b *batch) shape(trackID string, e *entry) *placed {
 // caption adds one caption item, trims it to the length of the item in the file when the words end
 // before it, and sets its line breaks and style override.
 func (b *batch) caption(trackID string, e *entry) *placed {
-	id := b.newID(timeline.PrefixItem)
+	id := b.itemID(e)
 	words := make([]any, len(e.caption.words))
 
 	for i, w := range e.caption.words {
 		words[i] = w
 	}
 
-	b.push("caption.add", map[string]any{
-		"track_id": trackID, "id": id, "start": frameTime(e.start), "words": words,
-	})
+	args := map[string]any{"track_id": trackID, "id": id, "start": frameTime(e.start), "words": words}
+
+	if e.refs.linked != "" {
+		if to, ok := b.pre[e.refs.linked]; ok {
+			args["linked_item"] = to
+		} else {
+			b.lost = append(b.lost, Lost{Name: e.name, Feature: "caption link to an item that is not in the file"})
+		}
+	}
+
+	b.push("caption.add", args)
 
 	if e.caption.last < e.duration {
 		b.push("item.trim", map[string]any{"item_id": id, "edge": "end", "to": frameTime(e.start + e.duration)})

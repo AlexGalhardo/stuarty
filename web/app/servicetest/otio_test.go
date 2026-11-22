@@ -287,3 +287,71 @@ func TestOtioOperationsNeedTheirScopes(t *testing.T) {
 		t.Errorf("a key limited to another project exported")
 	}
 }
+
+// VV-025: the link of items and the template information survive an export and an import, and the same file
+// imported twice into one project applies both times with a link group of its own.
+func TestOtioImportKeepsLinksAndTemplateAndAcceptsTheSameFileTwice(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	source := m.otioSource()
+
+	srcDoc, derr := timeline.Decode(m.document(source))
+	if derr != nil {
+		t.Fatal(derr)
+	}
+
+	ids := make([]string, 0, len(srcDoc.Items))
+	for id := range srcDoc.Items {
+		ids = append(ids, id)
+	}
+
+	m.mustEdit(ui, source, m.head(source).Revision,
+		op("item.link", fmt.Sprintf(`{"item_ids":[%q,%q]}`, ids[0], ids[1])),
+		op("marker.add", `{"at":"1s","label":"hit"}`),
+		op("template.set_info", `{"description":"Teaser","colors":{"brand":"#FF3366"}}`),
+	)
+
+	exported := m.otioExport(source)
+	for _, l := range exported.Lost {
+		if strings.Contains(l.Feature, "link") || strings.Contains(l.Feature, "template") {
+			t.Errorf("a link or the template is reported as lost although the file carries it: %+v", l)
+		}
+	}
+
+	file := m.write("linked.otio", exported.Content)
+
+	target := m.newProject("target")
+	m.importOne(target, m.write("clip.mp4", clipBytes))
+
+	for range 2 {
+		if _, err := m.otioImport(target, m.head(target).Revision, file); err != nil {
+			t.Fatalf("an import of the same file: %v", err)
+		}
+	}
+
+	doc, derr := timeline.Decode(m.document(target))
+	if derr != nil {
+		t.Fatal(derr)
+	}
+
+	groups := map[string]int{}
+
+	for id := range doc.Items {
+		if l := doc.Items[id].Link; l != "" {
+			groups[l]++
+		}
+	}
+
+	if len(groups) != 2 {
+		t.Errorf("link groups = %v, want two groups of two", groups)
+	}
+
+	for l, n := range groups {
+		if n != 2 {
+			t.Errorf("group %s has %d items, want 2", l, n)
+		}
+	}
+
+	if doc.Template == nil || doc.Template.Description != "Teaser" || doc.Template.Colors["brand"] != "#FF3366" {
+		t.Errorf("template = %+v", doc.Template)
+	}
+}
