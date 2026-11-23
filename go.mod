@@ -3,7 +3,7 @@ module github.com/AlexGalhardo/stuarty
 go 1.27.4
 
 require (
-	github.com/AlexGalhardo/vukem v0.46.0
+	github.com/AlexGalhardo/vukem v0.49.0
 	github.com/AlexGalhardo/vukem/contrib/engine v0.2.1-0.20261117155947-c84bd713f586
 	github.com/AlexGalhardo/vukem/drivers/otel v0.4.5
 	github.com/modelcontextprotocol/go-sdk v1.8.0

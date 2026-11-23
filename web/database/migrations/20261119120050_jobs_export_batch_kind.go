@@ -8,8 +8,9 @@ const (
 )
 
 // The parent of an export batch is a job of kind export_batch (SDD-000 section 6, SDD-004 section 8.4,
-// RF-088). The kind is a check of the table, so the table is rebuilt: the indexes are recreated by Rebuild,
-// and the migration owns its transaction because Rebuild turns foreign keys off around it.
+// RF-088). The kind is a check of the table, so the table is rebuilt: the indexes are written out again after
+// the Rebuild, and the migration owns its transaction because Rebuild turns foreign keys off around it.
+// AnyOrder: the migration may run after later ones by design (see below), and vukem refuses that otherwise.
 //
 // The ID sorts before the rebuild of jobs of the approval queue (epic 05), which drops the closed list of kinds
 // (so it needs no export_batch) and adds the column approval_id and the state waiting_approval, which this
@@ -21,6 +22,7 @@ func m20261119120050JobsExportBatchKind() schema.Migration {
 	return schema.Migration{
 		ID:            "20261119120050_jobs_export_batch_kind",
 		NoTransaction: true,
+		AnyOrder:      true,
 		Up:            func(s *schema.Schema) error { return rebuildJobsForBatch(s, exportBatchKindsAfter) },
 		Down:          func(s *schema.Schema) error { return rebuildJobsForBatch(s, exportBatchKindsBefore) },
 	}
@@ -93,5 +95,5 @@ func rebuildJobsTableForBatch(s *schema.Schema, kindCheck, parent string) error 
 			"jobs_owner_check",
 			`(kind = 'ingest' AND asset_hash IS NOT NULL) OR (kind <> 'ingest' AND project_id IS NOT NULL)`,
 		)
-	})
+	}, schema.DropIndexes("jobs_active_ingest_unique", "jobs_kind_state_index", "jobs_project_id_created_ms_index"))
 }

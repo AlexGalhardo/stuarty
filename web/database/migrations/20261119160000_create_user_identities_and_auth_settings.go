@@ -10,6 +10,8 @@ import "github.com/AlexGalhardo/vukem/schema"
 func m20261119160000CreateUserIdentitiesAndAuthSettings() schema.Migration {
 	return schema.Migration{
 		ID: "20261119160000_create_user_identities_and_auth_settings",
+		// Depends on users only, and a workspace may have applied later migrations first.
+		AnyOrder: true,
 		Up: func(s *schema.Schema) error {
 			if err := s.Raw(`CREATE TABLE user_identities (
   provider   TEXT    NOT NULL,
