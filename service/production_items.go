@@ -1,6 +1,7 @@
 package service
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
@@ -162,6 +163,8 @@ func (s *svc) ProjectItemAdd(ctx context.Context, req ProjectItemAddRequest) (*P
 		return nil, err
 	}
 
+	var pendingIn string
+
 	head, change, err := s.changeProduction(ctx, c, "project.item.add", req.ProjectID, req.DryRun,
 		func(ctx context.Context, tx Tx, head *ProductionHead, rows []ItemRow) (*productionChange, error) {
 			if v := project.CheckRoom(coreItems(rows), project.Kind(req.Kind)); v != nil {
@@ -217,6 +220,10 @@ func (s *svc) ProjectItemAdd(ctx context.Context, req ProjectItemAddRequest) (*P
 					if err := s.createTimeline(ctx, tx, doc, &it, rows, firstTimeline, c, head, now); err != nil {
 						return err
 					}
+
+					if firstTimeline {
+						pendingIn = doc.ID
+					}
 				}
 
 				it.Position = slices.Index(ids, it.ID)
@@ -232,7 +239,7 @@ func (s *svc) ProjectItemAdd(ctx context.Context, req ProjectItemAddRequest) (*P
 	}
 
 	// The files a generation attached to the project before it had a timeline wait for it (SDD-005 section 5.12.3).
-	s.reconcileFirstTimeline(ctx, &req, head.ID)
+	s.reconcileFirstTimeline(ctx, &req, cmp.Or(pendingIn, head.ID))
 
 	return s.itemResult(&head, change.rows, change.itemID), nil
 }
@@ -255,7 +262,12 @@ func (s *svc) createTimeline(
 		shown.Ref = doc.ID
 	}
 
-	return tx.Projects().Create(ctx, s.timelineRow(doc, c, head.OwnerUserID, now))
+	if err := tx.Projects().Create(ctx, s.timelineRow(doc, c, head.OwnerUserID, now)); err != nil {
+		return err
+	}
+
+	// The files waiting for the first timeline wait under the id of the project, which this one could not take.
+	return tx.Assets().MovePendingProjectAssets(ctx, head.ID, doc.ID)
 }
 
 // timelineRow is the row of a new timeline document.

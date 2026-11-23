@@ -339,6 +339,13 @@ func (r assetRepo) PendingForHash(ctx context.Context, hash string) ([]service.P
 	)
 }
 
+func (r assetRepo) MovePendingProjectAssets(ctx context.Context, fromID, toID string) error {
+	_, err := r.ex.ExecContext(ctx,
+		"UPDATE project_assets SET project_id = ? WHERE project_id = ? AND state = 'pending'", toID, fromID)
+
+	return err
+}
+
 func (r assetRepo) DeleteTrashedProjectAssets(ctx context.Context, projectID string) (int64, error) {
 	return rowsAffected(
 		r.ex.ExecContext(ctx, "DELETE FROM project_assets WHERE project_id = ? AND state = 'trashed'", projectID),
