@@ -167,8 +167,11 @@ func (r projectRepo) Head(ctx context.Context, id string) (service.ProjectHead, 
 
 func (r projectRepo) Get(ctx context.Context, id string) (service.ProjectRow, error) {
 	var doc, sha string
-	h, err := scanProjectHead(r.ex.QueryRowContext(ctx,
-		"SELECT "+projectHeadColumns+", document, doc_sha256 FROM timelines WHERE id = ? AND "+notCarried, id), &doc, &sha)
+	h, err := scanProjectHead(r.ex.QueryRowContext(
+		ctx,
+		"SELECT "+projectHeadColumns+", document, doc_sha256 FROM timelines WHERE id = ? AND "+notCarried,
+		id,
+	), &doc, &sha)
 	if err != nil {
 		return service.ProjectRow{}, mapNoRows(err)
 	}
