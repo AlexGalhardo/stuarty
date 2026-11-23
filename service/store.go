@@ -566,6 +566,8 @@ type AssetRepo interface {
 	) error
 	ProjectsReferencing(ctx context.Context, hash string) ([]string, error) // project ids, any state
 	PendingForHash(ctx context.Context, hash string) ([]ProjectAssetRow, error)
+	// MovePendingProjectAssets hands the files still waiting under one id to the timeline that will hold them.
+	MovePendingProjectAssets(ctx context.Context, fromID, toID string) error
 
 	// For TrashEmpty.
 	DeleteTrashedProjectAssets(ctx context.Context, projectID string) (int64, error)

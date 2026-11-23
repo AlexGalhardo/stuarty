@@ -288,6 +288,54 @@ func TestSecurity_T06_ACarriedTimelineReachesNothingOfTheOtherProject(t *testing
 	})
 }
 
+// VV-373: a file a generation attached to the project before it had a timeline reaches the first timeline, also when
+// that timeline had to take an id of its own because a row of another project holds the id of the project.
+func TestCarriedTimeline_ThePendingFilesReachTheFirstTimeline(t *testing.T) {
+	c := newCarried(t)
+	ctx := context.Background()
+
+	const (
+		hash    = "sha256:aaaa000000000000000000000000000000000000000000000000000000000000"
+		assetID = "ast_pnd0000001"
+	)
+
+	for _, q := range []struct {
+		sql  string
+		args []any
+	}{
+		{`INSERT INTO assets (id, kind, size_bytes, original_name, ingest_state, width, height, has_audio, created_ms,
+ updated_ms) VALUES (?, 'image', 1, 'bob.png', 'ready', 64, 64, 0, 1, 1)`, []any{hash}},
+		{`INSERT INTO project_assets (project_id, asset_id, asset_hash, state, name, imported_by, imported_ms)
+ VALUES (?, ?, ?, 'pending', 'bob.png', 'user:bob', 1)`, []any{c.victim, assetID, hash}},
+	} {
+		if _, err := c.e.store.DB().ExecContext(ctx, q.sql, q.args...); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if _, err := c.e.svc.ProjectItemAdd(c.bob, service.ProjectItemAddRequest{
+		ProjectID: c.victim, Kind: "timeline", Title: "Bob timeline",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	tls, err := c.e.store.Productions().ActiveTimelines(ctx, c.victim)
+	if err != nil || len(tls) != 1 {
+		t.Fatalf("the timelines of the project = %+v, %v", tls, err)
+	}
+
+	row, err := c.e.store.Assets().GetProjectAsset(ctx, tls[0].TimelineID, assetID)
+	if err != nil {
+		t.Fatalf("the file did not reach the first timeline: %v", err)
+	}
+
+	if row.State != service.ProjectAssetActive {
+		t.Errorf("the file on the first timeline is %q, want active", row.State)
+	}
+
+	c.victimIntact(t)
+}
+
 // A project whose first timeline carries the id of the project is the usual project, and of a workspace made before
 // timelines had ids of their own: it keeps every timeline.
 func TestCarriedTimeline_TheUsualProjectKeepsItsTimelines(t *testing.T) {
