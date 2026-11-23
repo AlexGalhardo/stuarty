@@ -1,0 +1,6 @@
+{
+  "code": "E_LIMIT",
+  "message": "Cutting would make 501 items; the limit is 500.",
+  "hint": "Delete unused items first.",
+  "retryable": false
+}

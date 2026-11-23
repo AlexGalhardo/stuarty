@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.to_word is 1, before args.from_word 2.",
+  "hint": "Send the first word, then the last, both inclusive.",
+  "retryable": false,
+  "path": "args.to_word"
+}

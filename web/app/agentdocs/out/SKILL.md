@@ -49,6 +49,7 @@ Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). `--json` for JSON.
 - `text`: add, apply_preset, set
 - `timeline`: close_gap
 - `track`: add, move, remove, set_caption_style, update
+- `transcript`: delete_range
 
 ## CLI cheat sheet
 

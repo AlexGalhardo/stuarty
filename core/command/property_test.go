@@ -283,6 +283,20 @@ func (p *docPick) silences() string {
 	return `{"silences":[` + strings.Join(parts, ",") + `]}`
 }
 
+// lateOps are generators that are not in alphaOps on purpose: the mixed run draws its commands from the
+// sorted names of alphaOps, so one more name there reshuffles it, and commands that only the mixed run
+// reaches (composition.expand needs a composition that the starting documents lack) stop succeeding.
+// A command listed here gets its own seeded stream, which is enough to check that it keeps the document
+// valid and that its inverse restores it.
+var lateOps = map[string]func(p *docPick) string{
+	"transcript.delete_range": func(p *docPick) string {
+		from := p.n(5)
+
+		return fmt.Sprintf(`{"asset_id":%q,"from_word":%d,"to_word":%d,"resolved":%s}`,
+			p.asset(), from, from+p.n(3), p.resolvedWords())
+	},
+}
+
 // alphaOps are the generators of the later commands, one per command.
 var alphaOps = map[string]func(p *docPick) string{
 	"settings.set_fps": func(p *docPick) string {
@@ -822,6 +836,10 @@ func TestRandomBatches(t *testing.T) {
 		}
 
 		gen, known := alphaOps[c.Name]
+		if !known {
+			gen, known = lateOps[c.Name]
+		}
+
 		if !known {
 			t.Errorf("%s never succeeded in the random sequences and has no generator", c.Name)
 

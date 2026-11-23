@@ -1,0 +1,39 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_h2j3k4m5n6",
+    "set": {
+      "linked_item": "itm_m1n2p3q4r5"
+    }
+  },
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "duration": 300
+    }
+  },
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_p7q8r9s0t1",
+    "set": {
+      "linked_item": "itm_m1n2p3q4r5"
+    }
+  },
+  {
+    "type": "remove",
+    "collection": "items",
+    "id": "itm_s6t7v8w9x0"
+  },
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_v2w3x4y5z6",
+    "set": {
+      "start": 330
+    }
+  }
+]

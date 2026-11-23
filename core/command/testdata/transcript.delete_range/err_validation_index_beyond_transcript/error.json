@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.to_word is 9 but the transcript has 4 words.",
+  "hint": "Use indices from the transcript view of the asset.",
+  "retryable": false,
+  "path": "args.to_word"
+}

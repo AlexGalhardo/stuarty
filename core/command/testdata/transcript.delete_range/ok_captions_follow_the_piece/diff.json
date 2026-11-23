@@ -1,0 +1,69 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_h2j3k4m5n6",
+    "changes": {
+      "linked_item": [
+        "itm_m1n2p3q4r5",
+        "itm_s6t7v8w9x0"
+      ]
+    }
+  },
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "duration": [
+        300,
+        12
+      ]
+    }
+  },
+  {
+    "kind": "item.updated",
+    "id": "itm_p7q8r9s0t1",
+    "changes": {
+      "linked_item": [
+        "itm_m1n2p3q4r5",
+        "itm_s6t7v8w9x0"
+      ]
+    }
+  },
+  {
+    "kind": "item.added",
+    "id": "itm_s6t7v8w9x0",
+    "object": {
+      "asset": "ast_3c5v8n2w6d",
+      "contrast": 1,
+      "duration": 280,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
+      "id": "itm_s6t7v8w9x0",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "source_in": 80,
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
+      "start": 42,
+      "stroke_color": "#000000",
+      "track": "trk_f6g7h8j9k0",
+      "type": "clip",
+      "volume": 1
+    }
+  },
+  {
+    "kind": "item.updated",
+    "id": "itm_v2w3x4y5z6",
+    "changes": {
+      "start": [
+        330,
+        322
+      ]
+    }
+  }
+]
