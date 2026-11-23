@@ -317,3 +317,29 @@ func TestPollingThePeaksOfALongSoundWritesNothing(t *testing.T) {
 		t.Errorf("five polls took %d write transactions", n)
 	}
 }
+
+// A peaks job adds no asset to a project, so a reference whose add was refused is not shown as still ingesting
+// behind it, and the import does not wait for it.
+func TestAPeaksJobIsNotTakenForTheImportOfAPendingReference(t *testing.T) {
+	m, project, ref, _ := longSound(t, mediaCfg{})
+
+	_, err := m.svc.OpenFile(m.as(ui), ref)
+	id := pendingJob(t, err)
+
+	if err := m.store.Assets().SetProjectAssetState(
+		context.Background(), project, ref.ID, service.ProjectAssetPending, "user:ui", 1, nil,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	res, err := m.svc.MediaImport(m.as(ui), service.MediaImportRequest{
+		ProjectID: project, Files: []service.ImportFile{{Path: m.write("podcast.wav", clipBytes)}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if a := res.Assets[0]; a.State != string(service.IngestReady) || a.JobID == id {
+		t.Errorf("the reference = state %q, job %q; want ready, not the peaks job %s", a.State, a.JobID, id)
+	}
+}

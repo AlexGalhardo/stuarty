@@ -657,7 +657,7 @@ func (s *svc) waitAssets(ctx context.Context, project *ProjectRow, assets []Impo
 			// that commits it, so the wait ends with the job at the latest
 			// (a refused add leaves the row pending and is only a warning).
 			if ar.IngestState == IngestReady && pa.State == ProjectAssetPending {
-				if _, jerr := s.store.Jobs().ActiveIngestForHash(ctx, pa.AssetHash); jerr == nil {
+				if _, importing := s.activeImportJob(ctx, pa.AssetHash); importing {
 					done = false
 				}
 			}
@@ -699,7 +699,7 @@ func (s *svc) refreshImported(ctx context.Context, c Caller, project *ProjectRow
 	// which the ingest job does last. Until then the asset is not usable: an
 	// immediate clip.add would answer E_NOT_FOUND.
 	if ar.IngestState == IngestReady && pa.State == ProjectAssetPending {
-		if active, jerr := s.store.Jobs().ActiveIngestForHash(ctx, pa.AssetHash); jerr == nil {
+		if active, importing := s.activeImportJob(ctx, pa.AssetHash); importing {
 			a.State, a.Progress = string(IngestIngesting), math.Min(ar.Progress, 0.99)
 			if a.JobID == "" {
 				a.JobID = active.ID

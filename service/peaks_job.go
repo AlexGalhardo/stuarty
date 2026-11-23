@@ -39,6 +39,17 @@ func ingestsAsset(j *JobRow) bool {
 	return j.Kind == JobIngest && j.AssetHash != nil && !isProfileUpgrade(j)
 }
 
+// activeImportJob is the active ingest job of a file that will add it to the projects waiting for it. A profile
+// upgrade is active on the same index and adds nothing, so it does not count.
+func (s *svc) activeImportJob(ctx context.Context, hash string) (JobRow, bool) {
+	j, err := s.store.Jobs().ActiveIngestForHash(ctx, hash)
+	if err != nil || isProfileUpgrade(&j) {
+		return JobRow{}, false
+	}
+
+	return j, true
+}
+
 // maxActiveProfileUpgrades is how many profile upgrades may be queued or running in a workspace. Reads queue them,
 // so a page of long sounds must not take the ingest queue from the imports (SDD-011 section 6.3.1).
 const maxActiveProfileUpgrades = 1
