@@ -117,13 +117,15 @@ type BundleLog struct {
 	SHA256 string `json:"sha256"`
 }
 
-// BundleMedia is one original file of the bundle, with every asset id that points at it.
+// BundleMedia is one original file of the bundle, with every asset id that points at it. Name is the display name of
+// the first asset id; Names holds, by asset id, the display name of any other that differs from its document.
 type BundleMedia struct {
-	Hash     string   `json:"hash"`
-	Kind     string   `json:"kind"`
-	Name     string   `json:"name"`
-	Bytes    int64    `json:"bytes"`
-	AssetIDs []string `json:"asset_ids"`
+	Hash     string            `json:"hash"`
+	Kind     string            `json:"kind"`
+	Name     string            `json:"name"`
+	Bytes    int64             `json:"bytes"`
+	AssetIDs []string          `json:"asset_ids"`
+	Names    map[string]string `json:"names,omitempty"`
 }
 
 // BundleFontFile is one weight of a user font.

@@ -3,6 +3,7 @@ package service
 import (
 	"archive/zip"
 	"bufio"
+	"cmp"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -492,10 +493,20 @@ func (s *svc) addDocumentFiles(
 
 	for _, id := range sortedKeys(doc.Assets) {
 		a := doc.Assets[id]
+		name := cmp.Or(names[a.ID], a.Name)
 
 		if i, ok := index[a.Hash]; ok {
-			if !slices.Contains(m.Media[i].AssetIDs, a.ID) {
-				m.Media[i].AssetIDs = append(m.Media[i].AssetIDs, a.ID)
+			md := &m.Media[i]
+			if !slices.Contains(md.AssetIDs, a.ID) {
+				md.AssetIDs = append(md.AssetIDs, a.ID)
+			}
+
+			if name != a.Name && a.ID != md.AssetIDs[0] {
+				if md.Names == nil {
+					md.Names = map[string]string{}
+				}
+
+				md.Names[a.ID] = name
 			}
 
 			continue
@@ -504,11 +515,6 @@ func (s *svc) addDocumentFiles(
 		size, err := s.storedSize(a.Hash)
 		if err != nil {
 			return nil, err
-		}
-
-		name := a.Name
-		if shown, ok := names[a.ID]; ok && shown != "" {
-			name = shown
 		}
 
 		index[a.Hash] = len(m.Media)
