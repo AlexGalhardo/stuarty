@@ -1337,6 +1337,12 @@ What is specific to ingest is which fields carry untrusted text and how they are
 
 Cleaning (`CleanText`, a pure function of `engine/ingest`, applied to tags and to transcript text before they are stored): invalid UTF-8 is replaced with U+FFFD; control characters (U+0000 to U+001F, U+007F to U+009F), the line and paragraph separators U+2028 and U+2029 and the bidirectional controls (U+202A to U+202E, U+2066 to U+2069, U+200E, U+200F) are removed. Escaping of `<` and `&`, truncation to a budget and the surrounding block are done when a value is shown, by the layer that renders it (SDD-007 §8.2), so the stored text is complete and clean. The structured results mark these fields `x-untrusted` (SDD-003 §1.3). Caption words created from a transcript are stored in the document as they are (SDD-001 §3.7 already marks them untrusted); they are capped at 80 characters per word by the schema.
 
+### 10.8 Reading the transcript to edit by text (epic 69, SDD-023)
+
+The transcript artifact (10.5) is read, never changed, by the edit-by-text operations. `TranscriptView` and `TranscriptDetectFillers` read the newest `transcript` artifact of the asset (the same choice as `resolveWords`), convert its milliseconds to asset frames with the rule of 10.6 for the mapping to the timeline, and give the words their index in the `words` array. The filler detector reads the milliseconds directly (`core/transcript`). Neither starts a job, and neither changes an artifact.
+
+**What the pinned helper does with a filler.** whisper.cpp tends to drop or smooth hesitations, so what it keeps was measured on a labelled pt-BR and English speech fixture before SDD-023 promised anything; the method, the numbers and the thresholds that follow from them are in `docs/perf/2026-11-23-transcript-fillers.md`. Word timing is measured against the onsets reported by the synthesizer that made the fixture, after the post-processing of 10.4.
+
 ## 11. Test fixtures
 
 ### 11.1 Policy
