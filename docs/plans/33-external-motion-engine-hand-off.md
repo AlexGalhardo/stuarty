@@ -43,7 +43,7 @@ When a video needs an animation the editor cannot make, a creator's agent builds
 - [x] 4. Implement `MotionCheck`. Verify: `go test ./service/... -run TestMotionCheck` passes.
 - [x] 5. Implement `clip.replace_media` with golden cases, and the replace-by-`render_key` batch. Verify: `go test ./core/command/... ./service/... -run "TestReplaceMedia|TestRenderKey"` passes.
 - [x] 6. Write the skill, read the licence of its source, add the notice. Verify: `go test ./web/resources/skills/...` passes (lint and registry check) and `task notices:check` exits 0.
-- [x] 7. One real round with HyperFrames on the author's machine (brief, render, import, replace), or marked as not verified. Verify: the result or the note is in the hand-off. Marked as not verified (the engine is not installed here and the product downloads nothing); `TestRenderKeyScenarioWithAFakeEngine` runs the same round with a fake engine on the agent's side.
+- [x] 7. One real round with HyperFrames on the author's machine (brief, render, import, replace), or marked as not verified. Verify: the result or the note is in the hand-off. Marked as not verified at the time (the engine was not installed and the product downloads nothing); `TestRenderKeyScenarioWithAFakeEngine` runs the same round with a fake engine on the agent's side. Verified later by epic 73 with the real engine: npm `hyperframes` 0.9.86 (Apache-2.0), a 1080x1920 30 fps MOV with alpha, imported with its origin, `MotionCheck` with no mismatch, composed over video in an export, and replaced by `render_key` in one undoable batch.
 
 ## Test strategy
 
