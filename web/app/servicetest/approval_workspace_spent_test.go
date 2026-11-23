@@ -75,7 +75,11 @@ func TestSecurity_T06_ACeilingRefusalHidesWhatTheWorkspaceSpent(t *testing.T) {
 
 	_, err = e.svc.JobStart(admin, service.JobStartRequest{ProjectID: theirs.ProjectID, Kind: testKind})
 	if got := serviceError(t, err); got.Details["spent_micros"] != spentByOther {
-		t.Errorf("an administrator reads the workspace spending as %v, want %d", got.Details["spent_micros"], spentByOther)
+		t.Errorf(
+			"an administrator reads the workspace spending as %v, want %d",
+			got.Details["spent_micros"],
+			spentByOther,
+		)
 	}
 
 	e.setCeiling("", 0, 10*limit)
@@ -121,7 +125,8 @@ func TestCostSummary_AMemberReadsWhatTheCeilingCounts(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(sum.Today) != 1 || sum.Today[0].ProjectID != p.ProjectID || sum.Today[0].Micros != counted || counted != 120 {
+	if len(sum.Today) != 1 || sum.Today[0].ProjectID != p.ProjectID || sum.Today[0].Micros != counted ||
+		counted != 120 {
 		t.Errorf("the member reads %+v, the ceiling counts %d, want one line of 120", sum.Today, counted)
 	}
 }

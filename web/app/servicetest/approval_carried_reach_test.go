@@ -64,9 +64,11 @@ func newCarried(t *testing.T) *carried {
  SELECT ?, name, state, revision, schema_version, document, doc_sha256, width, height, fps_num, fps_den,
  duration_frames, track_count, item_count, asset_count, resync_floor, created_ms, updated_ms, created_by, owner_user_id
  FROM timelines WHERE id = ?`, []any{victim.ProjectID, holder.ProjectID}},
-		{`INSERT INTO project_items (id, project_id, kind, title, position, state, ref, created_ms, updated_ms, created_by)
+		{
+			`INSERT INTO project_items (id, project_id, kind, title, position, state, ref, created_ms, updated_ms, created_by)
  VALUES ('pit_carried002', ?, 'timeline', 'carried', -1, 'active', ?, 1, 1, 'u')`,
-			[]any{holder.ProjectID, victim.ProjectID}},
+			[]any{holder.ProjectID, victim.ProjectID},
+		},
 	} {
 		if _, err := e.store.DB().ExecContext(ctx, q.sql, q.args...); err != nil {
 			t.Fatal(err)
