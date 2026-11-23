@@ -67,6 +67,10 @@ type Import struct {
 	// second import of a file into one project applies instead of failing on its first marker.
 	MarkedFrames []int `json:"-"`
 
+	// ProjectSlots are the slot names the project already uses; the caller sets it before Operations. A slot name
+	// is unique in a project, so a slot of the file with one of them is reported and the item stays without it.
+	ProjectSlots []string `json:"-"`
+
 	// ProjectTemplate is the template of the project the batch applies to; the caller sets it before Operations.
 	// The file adds what the project does not have and never changes what it has: the items of the project may
 	// use a colour by name.
@@ -554,6 +558,7 @@ func (im *Import) Operations(assets map[string]string, newID func(prefix string)
 	b := &batch{
 		assets: assets, newID: newID, known: map[string]bool{},
 		pre: map[string]string{}, links: map[string][]string{}, linkOrder: map[string]int{},
+		projectSlots: im.ProjectSlots,
 	}
 	for _, f := range im.KnownFonts {
 		b.known[f] = true
@@ -614,6 +619,8 @@ type batch struct {
 	pre       map[string]string   // id label of the file -> the new id reserved for the item
 	links     map[string][]string // link label -> the new ids of its items
 	linkOrder map[string]int
+
+	projectSlots []string // the slot names the project already uses
 }
 
 func (b *batch) push(op string, args any) {
@@ -887,6 +894,12 @@ func (b *batch) after(id string, e *entry, asset string) {
 
 	s := e.slot
 	if s == nil {
+		return
+	}
+
+	if slices.Contains(b.projectSlots, s.name) {
+		b.lost = append(b.lost, Lost{Name: e.name, Feature: "slot " + s.name + " (the project already uses the name)"})
+
 		return
 	}
 
