@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "asset_id": {
+      "description": "A video asset with audio, or an audio asset, that was transcribed.",
+      "pattern": "^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "from_word": {
+      "description": "Index of the first word to remove, in the transcript of the asset.",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "new_ids": {
+      "description": "Ids for the new pieces, in order of cut.",
+      "items": {
+        "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "to_word": {
+      "description": "Index of the last word to remove, inclusive.",
+      "minimum": 0,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "asset_id",
+    "from_word",
+    "to_word"
+  ],
+  "type": "object"
+}

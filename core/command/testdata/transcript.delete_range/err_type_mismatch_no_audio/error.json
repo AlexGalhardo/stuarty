@@ -1,0 +1,7 @@
+{
+  "code": "E_TYPE_MISMATCH",
+  "message": "Asset ast_3c5v8n2w6d has no audio; there is no transcript to cut.",
+  "hint": "Choose an asset whose audio was transcribed.",
+  "retryable": false,
+  "path": "args.asset_id"
+}

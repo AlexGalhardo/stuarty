@@ -1,0 +1,20 @@
+{
+  "cuts": [
+    {
+      "item_id": "itm_m1n2p3q4r5",
+      "pieces": [],
+      "removed": 40,
+      "track_id": "trk_f6g7h8j9k0"
+    }
+  ],
+  "new_ids": [],
+  "range": {
+    "end": 358,
+    "start": 62
+  },
+  "removed": {
+    "frames": 40,
+    "seconds": 1.333
+  },
+  "unused_ids": []
+}

@@ -57,8 +57,8 @@ Names are proposals until task 1 writes them to SDD-000 and SDD-002.
 
 - [x] 1. SDD-000, SDD-002, SDD-011 and SDD-023. Verify: `task lint:md` exits 0 and `task codegen` leaves no unexpected diff.
 - [ ] 2. Measure word timing and filler recall of the pinned whisper.cpp on a labelled pt-BR and English fixture. Verify: a report with precision and recall in `docs/perf/`.
-- [ ] 3. The word-to-range mapping, including multi-clip timelines and speed changes. Verify: `go test ./core/...` passes.
-- [ ] 4. `transcript.delete_range`, undoable. Verify: `go test ./core/...` passes.
+- [x] 3. The word-to-range mapping, including multi-clip timelines and speed changes. Verify: `go test ./core/...` passes.
+- [x] 4. `transcript.delete_range`, undoable. Verify: `go test ./core/...` passes.
 - [ ] 5. Filler and repetition detection. Verify: `go test ./core/...` on the labelled fixture.
 - [ ] 6. Adapters with parity. Verify: `go test ./web/...` and `go run ./internal/tools/surfacebudget` pass.
 - [ ] 7. The transcript panel with review before removal. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n`, `task test:web` and `bun run e2e` pass.

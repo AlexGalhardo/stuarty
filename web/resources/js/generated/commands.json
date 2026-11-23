@@ -6472,5 +6472,61 @@
 		"name": "track.update",
 		"scope": "edit",
 		"summary": "Sets the name, hidden, muted, locked, solo or magnet flag or the volume of a track."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
+				"asset_id": {
+					"description": "A video asset with audio, or an audio asset, that was transcribed.",
+					"pattern": "^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				},
+				"from_word": {
+					"description": "Index of the first word to remove, in the transcript of the asset.",
+					"minimum": 0,
+					"type": "integer"
+				},
+				"new_ids": {
+					"description": "Ids for the new pieces, in order of cut.",
+					"items": {
+						"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+						"type": "string"
+					},
+					"type": "array"
+				},
+				"to_word": {
+					"description": "Index of the last word to remove, inclusive.",
+					"minimum": 0,
+					"type": "integer"
+				}
+			},
+			"required": [
+				"asset_id",
+				"from_word",
+				"to_word"
+			],
+			"type": "object"
+		},
+		"description": "Cuts the source range of the words from_word to to_word (inclusive indices into the transcript of the asset) out of every clip and audio item that shows the asset, so the video clip and its linked sound are cut together. The pieces close up from the start of each item and the later items of the same track move earlier. Captions linked to a cut clip move their link to the piece that holds their first word; caption.retime_from_clip re-syncs them. The words come from the transcript of the asset and are supplied by the service in resolved; the command never starts a job.",
+		"domain": "video",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH",
+			"E_INVALID_STATE",
+			"E_ID_EXISTS",
+			"E_LIMIT"
+		],
+		"example": {
+			"asset_id": "ast_3c5v8n2w6d",
+			"from_word": 4,
+			"to_word": 9
+		},
+		"internal": false,
+		"name": "transcript.delete_range",
+		"scope": "edit",
+		"summary": "Removes the media of a range of transcript words from the timeline and closes the gap."
 	}
 ]

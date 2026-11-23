@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_STATE",
+  "message": "No clip or audio item shows source frames 62 to 69 of asset ast_3c5v8n2w6d.",
+  "hint": "Check the indices against the transcript view; words already cut have no range.",
+  "retryable": false,
+  "path": "args.from_word"
+}

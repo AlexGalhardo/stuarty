@@ -54,8 +54,8 @@ func TestRegistrySnapshotShape(t *testing.T) {
 		}
 	}
 
-	if len(cmds) != 86 {
-		t.Errorf("%d commands, want 86", len(cmds))
+	if len(cmds) != 87 {
+		t.Errorf("%d commands, want 87", len(cmds))
 	}
 }
 
@@ -111,8 +111,8 @@ func TestPartCSectionsMatchTheRegistry(t *testing.T) {
 		got[c.Name] = true
 	}
 
-	if len(want) != 86 {
-		t.Fatalf("Part C has %d sections, want 86", len(want))
+	if len(want) != 87 {
+		t.Fatalf("Part C has %d sections, want 87", len(want))
 	}
 
 	if len(sections) != len(want) {

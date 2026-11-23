@@ -423,7 +423,8 @@
       "track.move",
       "track.remove",
       "track.set_caption_style",
-      "track.update"
+      "track.update",
+      "transcript.delete_range"
     ]
   }
 }

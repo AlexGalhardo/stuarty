@@ -1,0 +1,8 @@
+{
+  "op": "transcript.delete_range",
+  "args": {
+    "asset_id": "ast_3c5v8n2w6d",
+    "from_word": 0,
+    "to_word": 1
+  }
+}
