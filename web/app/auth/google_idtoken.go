@@ -51,8 +51,8 @@ type IDTokenConfig struct {
 const maxKeySetBytes = 1 << 20
 
 // gatedKeys is the key set of the issuer, fetched once through the gated client of the connection and
-// kept for the one verification it was made for. vukem's RemoteJWKS needs an *http.Client of its own,
-// which the product may not build (SDD-007 section 10.2); this one asks the gate for every request.
+// kept for the one verification it was made for. vukem's RemoteJWKS accepts a Doer but keeps the set across
+// verifications and refreshes it by itself; this one asks the gate for every request (SDD-007 section 10.2).
 type gatedKeys struct {
 	client Doer
 	url    string
