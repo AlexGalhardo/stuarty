@@ -1,0 +1,26 @@
+[package]
+name = "capture-windows-spike"
+version = "0.0.0"
+edition = "2024"
+publish = false
+description = "Disposable spike of epic 61 task 1: Windows Graphics Capture into fragmented MP4 through FFmpeg. Never promoted to product code."
+
+[workspace]
+
+[dependencies]
+windows-capture = "=2.0.1"
+# Already in the graph of windows-capture at this exact version; used directly only to create the
+# synthetic test window and to read process CPU times. No feature outside windows-capture's own set.
+windows = { version = "=0.62.2", features = [
+	"Win32_Foundation",
+	"Win32_Graphics_Dwm",
+	"Win32_Graphics_Gdi",
+	"Win32_System_LibraryLoader",
+	"Win32_System_Threading",
+	"Win32_UI_HiDpi",
+	"Win32_UI_WindowsAndMessaging",
+] }
+
+[profile.release]
+opt-level = 3
+debug = false
