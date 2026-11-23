@@ -377,7 +377,8 @@ func TestOtioImportOfTheSameFileTwiceKeepsTheFirstSlot(t *testing.T) {
 		}
 	}
 
-	m.mustEdit(ui, source, m.head(source).Revision, op("slot.mark", fmt.Sprintf(`{"item_id":%q,"name":"hero"}`, clipID)))
+	mark := op("slot.mark", fmt.Sprintf(`{"item_id":%q,"name":"hero"}`, clipID))
+	m.mustEdit(ui, source, m.head(source).Revision, mark)
 
 	file := m.write("slot.otio", m.otioExport(source).Content)
 	target := m.newProject("target")
