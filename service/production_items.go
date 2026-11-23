@@ -1,7 +1,6 @@
 package service
 
 import (
-	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
@@ -163,8 +162,6 @@ func (s *svc) ProjectItemAdd(ctx context.Context, req ProjectItemAddRequest) (*P
 		return nil, err
 	}
 
-	var pendingIn string
-
 	head, change, err := s.changeProduction(ctx, c, "project.item.add", req.ProjectID, req.DryRun,
 		func(ctx context.Context, tx Tx, head *ProductionHead, rows []ItemRow) (*productionChange, error) {
 			if v := project.CheckRoom(coreItems(rows), project.Kind(req.Kind)); v != nil {
@@ -220,10 +217,6 @@ func (s *svc) ProjectItemAdd(ctx context.Context, req ProjectItemAddRequest) (*P
 					if err := s.createTimeline(ctx, tx, doc, &it, rows, firstTimeline, c, head, now); err != nil {
 						return err
 					}
-
-					if firstTimeline {
-						pendingIn = doc.ID
-					}
 				}
 
 				it.Position = slices.Index(ids, it.ID)
@@ -239,7 +232,7 @@ func (s *svc) ProjectItemAdd(ctx context.Context, req ProjectItemAddRequest) (*P
 	}
 
 	// The files a generation attached to the project before it had a timeline wait for it (SDD-005 section 5.12.3).
-	s.reconcileFirstTimeline(ctx, &req, cmp.Or(pendingIn, head.ID))
+	s.reconcileFirstTimeline(ctx, &req, head.ID, findItem(change.rows, change.itemID))
 
 	return s.itemResult(&head, change.rows, change.itemID), nil
 }
@@ -605,9 +598,17 @@ func (s *svc) itemRowFor(
 }
 
 // reconcileFirstTimeline puts the files that a generation attached to the project before it had a timeline into the
-// document of the video just added.
-func (s *svc) reconcileFirstTimeline(ctx context.Context, req *ProjectItemAddRequest, projectID string) {
-	if req.Kind == string(project.Timeline) && !req.DryRun {
-		s.reconcilePending(ctx, projectID)
+// document of the video just added, which is under the id of the project or, when another row holds that id, its own.
+func (s *svc) reconcileFirstTimeline(
+	ctx context.Context, req *ProjectItemAddRequest, projectID string, added *ItemRow,
+) {
+	if req.Kind != string(project.Timeline) || req.DryRun {
+		return
+	}
+
+	s.reconcilePending(ctx, projectID)
+
+	if added != nil && added.Ref != projectID {
+		s.reconcilePending(ctx, added.Ref)
 	}
 }
