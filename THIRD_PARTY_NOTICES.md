@@ -10,7 +10,7 @@ Linked into the `stuarty` binary, collected for the six release targets.
 
 | Name | Version | Licence | Copyright | Licence text | Notes |
 | --- | --- | --- | --- | --- | --- |
-| github.com/AlexGalhardo/vukem | v0.46.0 | MIT | Copyright (c) 2026 Alex Galhardo | [LICENSE](<licenses/go-modules/github.com/AlexGalhardo/vukem@v0.46.0/LICENSE>) | - |
+| github.com/AlexGalhardo/vukem | v0.49.0 | MIT | Copyright (c) 2026 Alex Galhardo | [LICENSE](<licenses/go-modules/github.com/AlexGalhardo/vukem@v0.49.0/LICENSE>) | - |
 | github.com/AlexGalhardo/vukem/contrib/engine | v0.2.1-0.20261117155947-c84bd713f586 | MIT | Copyright (c) 2026 Alex Galhardo | [LICENSE](<licenses/go-modules/github.com/AlexGalhardo/vukem/contrib/engine@v0.2.1-0.20261117155947-c84bd713f586/LICENSE>) | - |
 | github.com/AlexGalhardo/vukem/drivers/otel | v0.4.5 | MIT | Copyright (c) 2026 Alex Galhardo | [LICENSE](<licenses/go-modules/github.com/AlexGalhardo/vukem/drivers/otel@v0.4.5/LICENSE>) | - |
 | github.com/cenkalti/backoff/v5 | v5.0.3 | MIT | Copyright (c) 2014 Cenk Altı | [LICENSE](<licenses/go-modules/github.com/cenkalti/backoff/v5@v5.0.3/LICENSE>) | - |
@@ -104,6 +104,7 @@ The production dependency closure of `web/package.json` (`dependencies`, transit
 | tiny-lru | 11.4.7 | BSD-3-Clause | Copyright (c) 2026, Jason Mulligan | [LICENSE](<licenses/npm/tiny-lru@11.4.7/LICENSE>) | - |
 | tw-animate-css | 1.4.0 | MIT | Copyright (c) 2025 Wombosvideo | [LICENSE](<licenses/npm/tw-animate-css@1.4.0/LICENSE>) | - |
 | use-sync-external-store | 1.7.0 | MIT | Copyright (c) Meta Platforms, Inc. and affiliates. | [LICENSE](<licenses/npm/use-sync-external-store@1.7.0/LICENSE>) | - |
+| zod | 4.6.7 | MIT | Copyright (c) 2025 Colin McDonnell | [LICENSE](<licenses/npm/zod@4.6.7/LICENSE>) | - |
 | zustand | 5.1.0 | MIT | Copyright (c) 2019 Paul Henschel | [LICENSE](<licenses/npm/zustand@5.1.0/LICENSE>) | - |
 
 ## Rust crates
