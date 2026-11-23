@@ -98,6 +98,26 @@ Written so that they can start the day their condition is met. They do not hold 
 | [46](46-own-ffmpeg-build.md) | The own FFmpeg build, signed and adopted | L | a release to carry the assets (the H.264 question is settled: author decision D-087) | BLOCKED (no release yet) |
 | [47](47-one-renderer-everywhere.md) | One renderer everywhere: remove the Go compositor and PixiJS | M | 26, 43 | BLOCKED (three-system proof) |
 
+### 1.6 Screen recording and local AI
+
+The order, the critical path and the groups are in `docs/planning/screen-recording/roadmap.md`. These epics reserve SDD-023 (recording) and SDD-024 (local AI). ADR-0049, ADR-0050 and ADR-0051 are proposed.
+
+| Epic | Title | Size | Depends on | Status |
+| --- | --- | --- | --- | --- |
+| [61](61-recording-foundation-windows-capture.md) | Recording foundation and Windows screen capture | XL | 57, the redesign choice (its spike needs neither) | IN PROGRESS (senior-a, 2026-11-23, task 1 only) |
+| [62](62-windows-recording-audio-webcam-events.md) | Windows recording: audio, webcam, pause, cursor and click events | L | 61 | TODO |
+| [63](63-basic-web-recording.md) | Basic web recording | M | 61 | TODO |
+| [64](64-agent-operation-of-recording.md) | Agents in the recording flow | L | 61, 62 | TODO |
+| [65](65-auto-zoom-smooth-cursor-click-highlight.md) | Automatic zoom, smooth cursor and click highlight | L | 62 | TODO |
+| [66](66-recording-layouts-backgrounds-teleprompter.md) | Recording layouts, backgrounds and teleprompter | M | 62 | TODO |
+| [67](67-macos-capture.md) | Recording on macOS | L | 62, 43, the signing decision | TODO |
+| [68](68-linux-capture.md) | Recording on Linux | L | 62, 43 | TODO |
+| [69](69-edit-by-text-and-filler-words.md) | Edit by text, filler words and repetitions | L | the transcription of today | IN PROGRESS (senior-b, 2026-11-23) |
+| [70](70-local-ai-helper-and-vertical-cuts.md) | Local AI helper and face-aware vertical cuts | XL | ADR-0050, 69 | TODO |
+| [71](71-caption-styles-blur-studio-voice.md) | Caption styles, sensitive-data blur and studio voice | M | — | TODO |
+| [72](72-optional-local-models.md) | Optional local models: background removal and depth | L | 70, the BEN2 licence decision | TODO |
+| [73](73-hyperframes-end-to-end-round.md) | A real end-to-end round with HyperFrames | S | 33 | IN PROGRESS (senior-c, 2026-11-23) |
+
 ## 2. Dependency graph
 
 ```text
