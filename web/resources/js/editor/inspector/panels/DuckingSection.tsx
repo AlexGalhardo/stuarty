@@ -11,7 +11,9 @@ import {
 } from "../../commands/builders";
 import { useActions, useCanEdit } from "../../commands/useActions";
 import { useCommandsExposed } from "../../commands/useExposedCommands";
-import { useDocumentState } from "../../state/EditorContext";
+import { useStore } from "../../state/createStore";
+import { useDocumentState, useRuntime } from "../../state/EditorContext";
+import { shownNames } from "../../state/libraryStore";
 import NumberField from "../fields/NumberField";
 import TimeCommitField from "../fields/TimeCommitField";
 import Section from "../Section";
@@ -31,6 +33,7 @@ export default function DuckingSection({
 	const exposed = useCommandsExposed("audio.duck");
 	const items = useDocumentState((s) => s.document?.items);
 	const assets = useDocumentState((s) => s.document?.assets);
+	const shown = useStore(useRuntime().library, (s) => shownNames(s.entries));
 	const [speech, setSpeech] = useState<readonly string[]>([]);
 	const [gain, setGain] = useState(DEFAULT_GAIN_DB);
 	const [attack, setAttack] = useState(DEFAULT_ATTACK);
@@ -66,6 +69,7 @@ export default function DuckingSection({
 						/>
 						<UntrustedText>
 							{other.name ??
+								shown.get(other.asset ?? "") ??
 								assets?.[other.asset ?? ""]?.name ??
 								t(`ui.editor.item.${other.type}`)}
 						</UntrustedText>

@@ -146,7 +146,7 @@ function Row({
 	);
 }
 
-// The History tab of SDD-012 section 15 and docs/design/alpha-editor.md
+// The list of the history sidebar, SDD-012 section 15 and docs/design/alpha-editor.md
 // section 4.2: newest first, 50 rows per page with "Load more", the actor of
 // each step, undone steps struck through. New rows come from the events; the
 // refetch that follows replaces them with the page of the core.

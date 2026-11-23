@@ -148,6 +148,12 @@ test.describe("asset rename", () => {
 		await page.goto("/video-assets");
 		const card = page.locator(`[data-asset-hash="${hash}"]`);
 		await expect(card).toBeVisible();
+		// The file is open in the detail panel, whose title follows the rename.
+		await card.click();
+		const detail = page.getByTestId("asset-detail");
+		await expect(detail.getByRole("heading").first()).toContainText(
+			`solid-${clip}.mp4`,
+		);
 		await card.click({ button: "right" });
 		await page.getByRole("menuitem", { name: "Rename" }).click();
 		await page
@@ -156,6 +162,9 @@ test.describe("asset rename", () => {
 			.fill("From the library");
 		await page.keyboard.press("Enter");
 		await expect(page.locator(`[data-asset-hash="${hash}"]`)).toContainText(
+			"From the library.mp4",
+		);
+		await expect(detail.getByRole("heading").first()).toContainText(
 			"From the library.mp4",
 		);
 		// The focus comes back to the file, not to the page.
@@ -267,6 +276,55 @@ test.describe("asset rename", () => {
 		const picker = page.getByLabel("Lookup table (LUT)");
 		await expect(picker).toContainText("Warm grade.cube");
 		await expect(picker).not.toContainText(`rename-${clip}`);
+	});
+
+	test("the speech list of the ducking names a clip by its new name", async ({
+		page,
+		request,
+	}) => {
+		const clip = colour();
+		const seeded = await seedProject(request, {
+			files: [solidClip(clip), audioClip(62)],
+			tracks: 1,
+			perTrack: 1,
+			audioTracks: 1,
+		});
+		const call = await caller(request);
+		const head = (await call(
+			"GET",
+			`/projects/${seeded.id}?detail=document`,
+		)) as { revision: number };
+		const added = (await call("POST", `/projects/${seeded.id}/edit`, {
+			base_revision: head.revision,
+			operations: [
+				{
+					op: "audio.add",
+					args: {
+						track_id: seeded.audioTrackIds[0],
+						asset_id: seeded.assetIds[1],
+						start: "0s",
+					},
+				},
+			],
+		})) as { created: string[] };
+		const found = (await call(
+			"GET",
+			`/assets?project=${seeded.id}&kind=video`,
+		)) as { assets: { hash: string }[] };
+		await call("POST", `/assets/${found.assets[0]?.hash}/rename`, {
+			name: "Interview",
+		});
+
+		await page.goto(`/editor/${seeded.id}`);
+		await page.locator(`[data-item-id="${added.created[0]}"]`).click();
+		await openInspectorTab(page, "Audio");
+		const section = page.getByRole("button", { name: "Ducking", exact: true });
+		if ((await section.getAttribute("aria-expanded")) === "false") {
+			await section.click();
+		}
+		const speech = page.getByRole("group", { name: "Speech items" });
+		await expect(speech).toContainText("Interview.mp4");
+		await expect(speech).not.toContainText(`solid-${clip}`);
 	});
 
 	test("a sound is renamed from its row, and its player keeps the browser menu", async ({

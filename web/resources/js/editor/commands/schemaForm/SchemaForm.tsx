@@ -3,7 +3,9 @@ import { type ReactNode, useId, useMemo, useState } from "react";
 import { useLocale, useT } from "@/lib/i18n";
 import type { ApiError } from "../../api/errors";
 import type { CommandDetail } from "../../api/types";
-import { useDocumentState } from "../../state/EditorContext";
+import { useStore } from "../../state/createStore";
+import { useDocumentState, useRuntime } from "../../state/EditorContext";
+import { shownNames } from "../../state/libraryStore";
 import { readTimeUnit } from "../../state/prefs";
 import type { FormSlot, FormSlotProps } from "../palette/formSlot";
 import { classify, type IdKind, type Schema } from "./classify";
@@ -17,6 +19,7 @@ const NO_OPTIONS: readonly IdOption[] = [];
 // id). Free text stays possible: the core checks the id.
 function useIdOptions(): Record<IdKind, readonly IdOption[]> {
 	const document = useDocumentState((s) => s.document);
+	const shown = useStore(useRuntime().library, (s) => shownNames(s.entries));
 	return useMemo(() => {
 		if (document === null)
 			return { asset: NO_OPTIONS, track: NO_OPTIONS, item: NO_OPTIONS };
@@ -25,7 +28,7 @@ function useIdOptions(): Record<IdKind, readonly IdOption[]> {
 		return {
 			asset: Object.values(document.assets).map((a) => ({
 				id: a.id,
-				label: label(a.id, a.name),
+				label: label(a.id, shown.get(a.id) ?? a.name),
 			})),
 			track: Object.values(document.tracks).map((tr) => ({
 				id: tr.id,
@@ -36,7 +39,7 @@ function useIdOptions(): Record<IdKind, readonly IdOption[]> {
 				label: label(it.id, it.name),
 			})),
 		};
-	}, [document]);
+	}, [document, shown]);
 }
 
 // Where an error `path` (`args.words[0].start`) lands in a schema: the form

@@ -165,10 +165,13 @@ function Field({
 // things a person can change. Every change is a call; the panel shows what the call answered.
 export function AssetDetail({
 	hash,
+	renames = 0,
 	onChanged,
 	onClose,
 }: {
 	hash: string;
+	// Counts the renames made from the list while this file is open: the title reads the name again.
+	renames?: number;
 	onChanged(): void;
 	onClose(): void;
 }): ReactNode {
@@ -226,6 +229,23 @@ export function AssetDetail({
 			live = false;
 		};
 	}, [hash, show]);
+
+	// Keeps what the person is typing in the description and the rights note.
+	useEffect(() => {
+		if (renames === 0) return;
+		let live = true;
+		void api()
+			.getAsset(hash)
+			.then((result) => {
+				if (live) show(result, false);
+			})
+			.catch((error: unknown) => {
+				if (live) setFailure(failureOf(error));
+			});
+		return () => {
+			live = false;
+		};
+	}, [renames, hash, show]);
 
 	async function change(
 		call: () => Promise<AssetResult>,
@@ -628,6 +648,7 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 	const [reusable, setReusable] = useState(false);
 	const [applied, setApplied] = useState<AssetQuery>({});
 	const [open, setOpen] = useState<string | null>(null);
+	const [renames, setRenames] = useState(0);
 	// The dialog stays mounted so that it closes the way a dialog does; each opening is a new one (a new key),
 	// so a second generation starts from an empty form.
 	const [generating, setGenerating] = useState<{
@@ -816,6 +837,7 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 										onOpen={() => setOpen(asset.hash)}
 										rename={async (name) => {
 											await api().renameAsset(asset.hash, name);
+											setRenames((n) => n + 1);
 											void load(applied);
 										}}
 									/>
@@ -833,7 +855,10 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 										asset={asset}
 										selected={open === asset.hash}
 										onOpen={() => setOpen(asset.hash)}
-										onRenamed={() => void load(applied)}
+										onRenamed={() => {
+											setRenames((n) => n + 1);
+											void load(applied);
+										}}
 									/>
 								))}
 							</ul>
@@ -853,6 +878,7 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 					{open !== null && (
 						<AssetDetail
 							hash={open}
+							renames={renames}
 							onChanged={() => void load(applied)}
 							onClose={() => setOpen(null)}
 						/>

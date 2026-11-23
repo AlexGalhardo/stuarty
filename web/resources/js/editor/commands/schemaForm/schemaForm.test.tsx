@@ -262,6 +262,47 @@ describe("SchemaForm", () => {
 		expect(html).toMatch(/<datalist/);
 	});
 
+	test("an asset is offered by the name the library shows", async () => {
+		const h = await startHarness();
+		const asset = Object.values(
+			h.runtime.documents.getState().document?.assets ?? {},
+		)[0];
+		if (asset === undefined) throw new Error("the fixture has no asset");
+		h.runtime.libraryWriter.setEntries([
+			{
+				asset_id: asset.id,
+				name: "Renamed shot.mp4",
+				kind: "video",
+				state: "ready",
+				progress: 1,
+				duration_frames: null,
+				duration_seconds: null,
+				has_audio: false,
+				trashed: false,
+			},
+		]);
+		const command = {
+			...(registry[0] as CommandDetail),
+			args_schema: obj({
+				asset_id: { type: "string", "x-vv-kind": "asset_id" },
+			}),
+		} as CommandDetail;
+		const html = renderToString(
+			<I18nProvider messages={devFixture(1).bootstrap.messages} locale="en">
+				<EditorProvider runtime={h.runtime}>
+					<SchemaForm
+						command={command}
+						value={{}}
+						revision={0}
+						onChange={() => undefined}
+						error={null}
+					/>
+				</EditorProvider>
+			</I18nProvider>,
+		);
+		expect(html).toContain("Renamed shot.mp4");
+	});
+
 	test("a nullable field has a Remove toggle that is checked for null", async () => {
 		const h = await startHarness();
 		const command = {
