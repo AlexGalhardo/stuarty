@@ -479,15 +479,28 @@ func (s *svc) writeImportedTimeline(
 	return tx.Operations().CloseAllOpen(ctx, id, last)
 }
 
-// manifestNames is the display name of each file of a manifest, by hash: the name the file had when it was exported
-// (SDD-011 section 14.8), which the document does not carry. A manifest is untrusted, so each name is read the way
-// an import reads a file name.
-func manifestNames(m *BundleManifest) map[string]string {
-	names := make(map[string]string, len(m.Media))
+// bundleHolding is one asset id of one file of a manifest.
+type bundleHolding struct{ hash, assetID string }
+
+// manifestNames is the display name of each holding of a manifest: the name it had when it was exported (SDD-011
+// section 14.8), which the document does not carry. The entry's name belongs to its first asset id, and any other
+// id is in names only when its name differs from its document, so one file held under two names keeps both. A
+// manifest is untrusted, so each name is read the way an import reads a file name, and reaches only the file it is
+// listed under.
+func manifestNames(m *BundleManifest) map[bundleHolding]string {
+	names := make(map[bundleHolding]string, len(m.Media))
 
 	for i := range m.Media {
-		if name := displayName(m.Media[i].Name); name != "" {
-			names[m.Media[i].Hash] = name
+		md := &m.Media[i]
+
+		if name := displayName(md.Name); name != "" && len(md.AssetIDs) > 0 {
+			names[bundleHolding{md.Hash, md.AssetIDs[0]}] = name
+		}
+
+		for id, raw := range md.Names {
+			if name := displayName(raw); name != "" {
+				names[bundleHolding{md.Hash, id}] = name
+			}
 		}
 	}
 
@@ -502,7 +515,7 @@ func (s *svc) linkBundleAssets(
 	tx Tx,
 	c Caller,
 	doc *timeline.Document,
-	names map[string]string,
+	names map[bundleHolding]string,
 	sizes map[string]int64,
 	now int64,
 ) error {
@@ -512,7 +525,7 @@ func (s *svc) linkBundleAssets(
 		a := doc.Assets[assetID]
 
 		shown := a.Name
-		if name := names[a.Hash]; name != "" {
+		if name := names[bundleHolding{a.Hash, a.ID}]; name != "" {
 			shown = name
 		}
 

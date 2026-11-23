@@ -2,6 +2,7 @@ package servicetest
 
 import (
 	"bytes"
+	"slices"
 	"strings"
 	"testing"
 
@@ -123,5 +124,64 @@ func TestAssetRenameIsInTheProjectView(t *testing.T) {
 
 	if !bytes.Equal(before, m.document(project)) {
 		t.Errorf("a rename wrote the document")
+	}
+}
+
+// One file held under two names by two timelines of a project keeps both through a bundle, renamed or not: the
+// manifest has one entry per file, and the name of that entry is not the name of every holding.
+func TestBundleKeepsTheNameOfEachHolding(t *testing.T) {
+	for _, tc := range []struct {
+		name, rename, first, second string
+	}{
+		{name: "never renamed", first: "a.mp4", second: "take.mov"},
+		{name: "renamed", rename: "Beach", first: "Beach.mp4", second: "Beach.mov"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			src := newMediaEnv(t, mediaCfg{})
+			project, second := src.productionProject()
+			held := src.importOne(second, src.write("take.mov", clipBytes+"a.mp4")).Assets[0]
+
+			if tc.rename != "" {
+				if _, err := src.svc.AssetRename(src.as(ui), service.AssetRenameRequest{
+					Hash: held.Hash, Name: tc.rename,
+				}); err != nil {
+					t.Fatal(err)
+				}
+			}
+
+			path := src.exportBundleRequest(service.ProjectBundleExportRequest{ProjectID: project})
+			dst := newMediaEnv(t, mediaCfg{})
+
+			if _, err := dst.importBundle(path, false); err != nil {
+				t.Fatal(err)
+			}
+
+			names := func(timeline string) []string {
+				list, err := dst.svc.MediaList(dst.as(ui), service.MediaListRequest{
+					ProjectID: project, TimelineID: timeline,
+				})
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				var out []string
+
+				for _, a := range list.Assets {
+					if a.AssetID == held.AssetID || a.Name == tc.first {
+						out = append(out, a.Name)
+					}
+				}
+
+				return out
+			}
+
+			if got := names(project); !slices.Contains(got, tc.first) {
+				t.Errorf("the first timeline holds %q, want %q", got, tc.first)
+			}
+
+			if got := names(second); !slices.Equal(got, []string{tc.second}) {
+				t.Errorf("the second timeline holds %q, want %q", got, tc.second)
+			}
+		})
 	}
 }

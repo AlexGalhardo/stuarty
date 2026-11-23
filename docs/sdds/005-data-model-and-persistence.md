@@ -2003,6 +2003,8 @@ A zip file with extension `.vvbundle`, deflate-compressed (the `media.*` and `fo
 }
 ```
 
+The `name` of a `media` entry is the display name (SDD-011 §14.8) of its first asset id. One file can be held under different names by several assets: the optional member `names` maps any other asset id whose display name differs from its document to that name, and an asset id in neither keeps the name of its document. An import reads each of them as an imported file name.
+
 A line of `operations.ndjson` is the `operations` row as JSON with the parsed columns (`ops`, `inverse`, `diff`, `skipped` embedded as JSON values, not strings), without `project_id`. Derived artifacts (proxies, thumbnails, peaks, transcripts) are not included; import regenerates them through ingest. Trashed assets, `idempotency_keys`, `jobs`, exports and caches are not included. `include_log: false` is for sharing without history (actors, edit intent).
 
 ### 16.1.1 Bundles with a production (`bundle_version` 2)
