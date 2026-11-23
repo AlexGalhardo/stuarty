@@ -214,22 +214,7 @@ func (s *svc) ProjectItemAdd(ctx context.Context, req ProjectItemAddRequest) (*P
 
 			return &productionChange{rows: rows, itemID: it.ID, write: func(ctx context.Context, tx Tx) error {
 				if doc != nil {
-					err := tx.Projects().Create(ctx, s.timelineRow(doc, c, head.OwnerUserID, now))
-
-					// A row of another project can hold the id of this one (VV-373): the project is not left without
-					// a timeline for it, and takes an id of its own.
-					if firstTimeline && errors.Is(err, ErrExists) {
-						doc.ID = s.newIDs(timeline.PrefixProject)
-						it.Ref = doc.ID
-
-						if shown := findItem(rows, it.ID); shown != nil {
-							shown.Ref = doc.ID
-						}
-
-						err = tx.Projects().Create(ctx, s.timelineRow(doc, c, head.OwnerUserID, now))
-					}
-
-					if err != nil {
+					if err := s.createTimeline(ctx, tx, doc, &it, rows, firstTimeline, c, head, now); err != nil {
 						return err
 					}
 				}
@@ -250,6 +235,27 @@ func (s *svc) ProjectItemAdd(ctx context.Context, req ProjectItemAddRequest) (*P
 	s.reconcileFirstTimeline(ctx, &req, head.ID)
 
 	return s.itemResult(&head, change.rows, change.itemID), nil
+}
+
+// createTimeline writes the document of a new timeline. A row of another project can hold the id a first timeline
+// takes from its project (VV-373): the project is not left without a timeline for it, and takes an id of its own.
+func (s *svc) createTimeline(
+	ctx context.Context, tx Tx, doc *timeline.Document, it *ItemRow, rows []ItemRow, first bool,
+	c Caller, head *ProductionHead, now int64,
+) error {
+	err := tx.Projects().Create(ctx, s.timelineRow(doc, c, head.OwnerUserID, now))
+	if !first || !errors.Is(err, ErrExists) {
+		return err
+	}
+
+	doc.ID = s.newIDs(timeline.PrefixProject)
+	it.Ref = doc.ID
+
+	if shown := findItem(rows, it.ID); shown != nil {
+		shown.Ref = doc.ID
+	}
+
+	return tx.Projects().Create(ctx, s.timelineRow(doc, c, head.OwnerUserID, now))
 }
 
 // timelineRow is the row of a new timeline document.
