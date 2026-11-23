@@ -208,6 +208,12 @@ func (s *svc) ProjectOtioImport(ctx context.Context, req ProjectOtioImportReques
 		im.MarkedFrames = append(im.MarkedFrames, m.Frame)
 	}
 
+	for id := range doc.Items {
+		if slot := doc.Items[id].Slot; slot != nil {
+			im.ProjectSlots = append(im.ProjectSlots, slot.Name)
+		}
+	}
+
 	im.ProjectTemplate = doc.Template
 
 	if len(unresolved) > 0 && !req.AllowPartial && !req.DryRun && req.BaseRevision <= row.Revision {

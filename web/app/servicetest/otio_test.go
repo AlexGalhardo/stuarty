@@ -355,3 +355,67 @@ func TestOtioImportKeepsLinksAndTemplateAndAcceptsTheSameFileTwice(t *testing.T)
 		t.Errorf("template = %+v", doc.Template)
 	}
 }
+
+// VV-025: a slot name is unique in a project, so the second import of a file with a slot keeps the slot of the first
+// and reports the other, instead of failing the whole batch.
+func TestOtioImportOfTheSameFileTwiceKeepsTheFirstSlot(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	source := m.otioSource()
+
+	srcDoc, derr := timeline.Decode(m.document(source))
+	if derr != nil {
+		t.Fatal(derr)
+	}
+
+	var clipID string
+
+	for id := range srcDoc.Items {
+		if srcDoc.Items[id].Type == timeline.ItemClip {
+			clipID = id
+
+			break
+		}
+	}
+
+	m.mustEdit(ui, source, m.head(source).Revision, op("slot.mark", fmt.Sprintf(`{"item_id":%q,"name":"hero"}`, clipID)))
+
+	file := m.write("slot.otio", m.otioExport(source).Content)
+	target := m.newProject("target")
+	m.importOne(target, m.write("clip.mp4", clipBytes))
+
+	if _, err := m.otioImport(target, m.head(target).Revision, file); err != nil {
+		t.Fatalf("the first import: %v", err)
+	}
+
+	second, err := m.otioImport(target, m.head(target).Revision, file)
+	if err != nil {
+		t.Fatalf("the second import of the same file: %v", err)
+	}
+
+	reported := false
+
+	for _, l := range second.Lost {
+		reported = reported || strings.Contains(l.Feature, "slot hero")
+	}
+
+	if !reported {
+		t.Errorf("the slot left out is not reported: %+v", second.Lost)
+	}
+
+	doc, derr := timeline.Decode(m.document(target))
+	if derr != nil {
+		t.Fatal(derr)
+	}
+
+	slots := 0
+
+	for id := range doc.Items {
+		if s := doc.Items[id].Slot; s != nil && s.Name == "hero" {
+			slots++
+		}
+	}
+
+	if slots != 1 {
+		t.Errorf("items with the slot = %d, want 1", slots)
+	}
+}
