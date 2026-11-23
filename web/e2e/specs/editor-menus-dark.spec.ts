@@ -13,11 +13,21 @@ test.describe("editor menus in the dark theme", () => {
 		text: string;
 	}
 
+	// A menu that is being placed can be out of the document for a moment, and the
+	// style of such an element is empty: it would read as black, so a dark
+	// background would pass unseen. The read waits for real colours.
 	async function coloursOf(target: Locator): Promise<Colours> {
-		return target.evaluate((el) => {
-			const style = getComputedStyle(el);
-			return { background: style.backgroundColor, text: style.color };
-		});
+		let seen: Colours = { background: "", text: "" };
+		await expect
+			.poll(async () => {
+				seen = await target.evaluate((el) => {
+					const style = getComputedStyle(el);
+					return { background: style.backgroundColor, text: style.color };
+				});
+				return seen.background !== "" && seen.text !== "";
+			})
+			.toBe(true);
+		return seen;
 	}
 
 	// getComputedStyle returns rgb(...) or rgba(...) for sRGB and color(srgb ...)
