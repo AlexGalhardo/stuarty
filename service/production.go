@@ -97,9 +97,15 @@ func (s *svc) resolveTimeline(ctx context.Context, c Caller, projectID, timeline
 		return projectID, nil
 	}
 
-	// A project the caller may not see does not tell its timelines.
-	if head, gerr := repo.Get(ctx, projectID); gerr != nil || !visible(c, head.OwnerUserID) {
+	// A project the caller may not see does not tell its timelines, and is not refused here either: the operation
+	// checks its request and then answers as for an id of nothing, so the order of the two says nothing (T-06).
+	head, gerr := repo.Get(ctx, projectID)
+	if gerr != nil {
 		return "", projectNotFound(projectID, gerr)
+	}
+
+	if !visible(c, head.OwnerUserID) {
+		return projectID, nil
 	}
 
 	if len(tls) == 1 {
