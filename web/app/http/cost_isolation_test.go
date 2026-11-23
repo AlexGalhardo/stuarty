@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -13,7 +14,7 @@ import (
 )
 
 // hostDoer sends a request of the CLI client to the test listener under the host the server is configured for.
-type hostDoer struct{ c *http.Client }
+type hostDoer struct{ c remote.Doer }
 
 func (d hostDoer) Do(r *http.Request) (*http.Response, error) {
 	r.Host = netHost
@@ -65,19 +66,19 @@ func TestSecurity_T06_CostOverHTTPAndCLIIsTheOwners(t *testing.T) {
 		}
 	}
 
-	if res := h.send(t, http.MethodGet, "/api/v1/cost", "", root, nil); !strings.Contains(string(res.body), bobProject) ||
-		!strings.Contains(string(res.body), fmt.Sprint(anaMicros)) {
-		t.Fatalf("the administrator does not read every line, so the fixture proves nothing: %s", res.body)
+	all := h.send(t, http.MethodGet, "/api/v1/cost", "", root, nil)
+	if !strings.Contains(string(all.body), bobProject) || !strings.Contains(string(all.body), strconv.Itoa(anaMicros)) {
+		t.Fatalf("the administrator does not read every line, so the fixture proves nothing: %s", all.body)
 	}
 
 	check := func(surface, body string) {
 		t.Helper()
 
-		if !strings.Contains(body, anaProject) || !strings.Contains(body, fmt.Sprint(anaMicros)) {
+		if !strings.Contains(body, anaProject) || !strings.Contains(body, strconv.Itoa(anaMicros)) {
 			t.Errorf("%s: the member lost their own spending: %s", surface, body)
 		}
 
-		for _, leak := range []string{bobProject, fmt.Sprint(bobMicros), fmt.Sprint(bobMicros + 1), `"workspace"`} {
+		for _, leak := range []string{bobProject, strconv.Itoa(bobMicros), strconv.Itoa(bobMicros + 1), `"workspace"`} {
 			if strings.Contains(body, leak) {
 				t.Errorf("%s: the member reads %s of another member: %s", surface, leak, body)
 			}
