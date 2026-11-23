@@ -92,6 +92,50 @@ func TestSecurity_T06_ACeilingRefusalHidesWhatTheWorkspaceSpent(t *testing.T) {
 	}
 }
 
+// VV-372: a job stopped by the ceiling of the workspace when it was about to run keeps that refusal, and its owner reads
+// it without the figure. The calls are the ones the MCP tool job_get makes, which also read no request of another user.
+func TestSecurity_T06_AStoredRefusalAndTheQueueStayTheOwners(t *testing.T) {
+	e := newProjectWideEnv(t, &probe{estimate: usd(1)})
+	ana := networkPerson("usr_0000000001", memberScopes, false)
+	bob := networkPerson("usr_0000000002", memberScopes, false)
+
+	p, err := testproject.CreateWithTimeline(ana, e.svc, "Ana project")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	job, err := e.svc.JobStart(ana, service.JobStartRequest{ProjectID: p.ProjectID, Kind: testKind})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := e.svc.ApprovalGet(bob, service.ApprovalRef{ID: job.ApprovalID}); err == nil {
+		t.Error("another member reads the request")
+	}
+
+	if list, err := e.svc.ApprovalList(bob, service.ApprovalListRequest{}); err != nil || list.Total != 0 {
+		t.Errorf("the queue of another member = %+v, %v; want it empty", list, err)
+	}
+
+	const stored = `{"code":"E_COST_CEILING","message":"the estimate of 1.000000 USD with 7.654321 USD already spent today` +
+		` is over the daily limit of the workspace (8.000000 USD).","details":{"scope":"workspace","reason":"per_day",` +
+		`"limit_micros":8000000,"spent_micros":7654321,"estimate_micros":1000000,"currency":"USD"}}`
+
+	if _, err := e.store.DB().ExecContext(context.Background(),
+		`UPDATE jobs SET state = 'failed', error = ? WHERE id = ?`, stored, job.JobID); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := e.svc.JobGet(ana, service.JobGetRequest{JobID: job.JobID})
+	if err != nil || got.Error == nil {
+		t.Fatalf("the job = %+v, %v", got, err)
+	}
+
+	if _, leaked := got.Error.Details["spent_micros"]; leaked || strings.Contains(got.Error.Message, "7.654321") {
+		t.Errorf("the owner reads what the workspace spent: %q %v", got.Error.Message, got.Error.Details)
+	}
+}
+
 // D-132: the figure a member reads for their project is the figure its ceiling counts, the spending of every timeline
 // of it on one line.
 func TestCostSummary_AMemberReadsWhatTheCeilingCounts(t *testing.T) {
