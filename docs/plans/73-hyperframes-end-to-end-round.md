@@ -53,10 +53,10 @@ No new command. The round uses the existing operations of epic 33 and `clip.repl
 
 ## Tasks
 
-- [ ] 1. Record the environment: exact versions of `hyperframes`, Node, Chrome and FFmpeg, and the FFmpeg licence flags. Verify: `ffmpeg -version` in the hand-off shows no `--enable-gpl` or `--enable-nonfree`.
-- [ ] 2. The real round of the technical design on a 9:16 project, with one clip with transparency. Verify: `MotionCheck` reports no mismatch, and a frame from the export shows the animation over the video.
-- [ ] 3. Render again and replace by `render_key`. Verify: one batch replaces every use, keyframes stay, and one undo restores the former clip.
-- [ ] 4. Update the skill with the tested version and any corrected step, and the note of epic 33 task 7. Verify: `go test ./web/resources/skills/...` and `task notices:check` exit 0.
+- [x] 1. Record the environment: exact versions of `hyperframes`, Node, Chrome and FFmpeg, and the FFmpeg licence flags. Verify: `ffmpeg -version` in the hand-off shows no `--enable-gpl` or `--enable-nonfree`.
+- [x] 2. The real round of the technical design on a 9:16 project, with one clip with transparency. Verify: `MotionCheck` reports no mismatch, and a frame from the export shows the animation over the video.
+- [x] 3. Render again and replace by `render_key`. Verify: one batch replaces every use, keyframes stay, and one undo restores the former clip.
+- [x] 4. Update the skill with the tested version and any corrected step, and the note of epic 33 task 7. Verify: `go test ./web/resources/skills/...` and `task notices:check` exit 0.
 - [ ] 5. Prove the product gained nothing. Verify: `bash scripts/no-egress.sh` passes on Linux or is reported as not run, and `git diff` shows no new dependency.
 
 ## Test strategy
