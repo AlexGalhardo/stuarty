@@ -2355,7 +2355,7 @@ The structured result of `undo` is an `UndoResult` (§2.5: the `EditResult` memb
 ```json
 {
   "name": "media_import",
-  "description": "Import files into a project. paths: absolute media paths, or library hashes sha256:... (no copy). Waits up to wait_ms; use assets once ready. origin={kind,source,provider,model,prompt,rights_note}: generated needs provider,model; fetched_by_agent source,rights_note; rendered_externally source. info={tags,reusable,description}; hash without paths edits that entry.",
+  "description": "Import files into a project. paths: absolute media paths, or library hashes sha256:... (no copy). Waits up to wait_ms; use assets once ready. origin={kind,source,provider,model,prompt,rights_note}: generated needs provider,model; fetched_by_agent source,rights_note; rendered_externally source. info={tags,reusable,description}; hash without paths edits that entry; info.name renames it.",
   "inputSchema": {
     "type": "object",
     "properties": {
