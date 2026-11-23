@@ -70,6 +70,15 @@ func TestRenameAll(t *testing.T) {
 	}
 }
 
+// Cutting the extension of one holding can leave a space at the end of the name of a holding with no extension, a
+// name Windows cannot keep.
+func TestRenameAllRefusesANameThatWouldEndWithASpace(t *testing.T) {
+	got, bad := RenameAll([]string{"clip.mp4", "notes"}, "Beach .mp4")
+	if bad == nil || bad.Reason != "name_invalid" || !strings.Contains(bad.Detail, "ends with a space") {
+		t.Fatalf("RenameAll = %q, %v; want a name_invalid refusal about the space", got, bad)
+	}
+}
+
 // The same bytes can be held under names with different extensions: each holding keeps its own, whichever of them
 // the person was looking at when they typed.
 func TestRenameAllKeepsTheExtensionOfEachHolding(t *testing.T) {

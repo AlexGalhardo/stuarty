@@ -68,6 +68,10 @@ func RenameAll(current []string, requested string) ([]string, *RuleError) {
 			return refuse("the name ends with a dot")
 		}
 
+		if strings.HasSuffix(name, " ") {
+			return refuse("the name ends with a space")
+		}
+
 		if base, _, _ := strings.Cut(name, "."); deviceNames[strings.ToUpper(strings.TrimRight(base, " "))] {
 			return refuse("the name is a device name of Windows")
 		}
