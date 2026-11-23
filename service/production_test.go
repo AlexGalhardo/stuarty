@@ -98,12 +98,12 @@ func TestProjectResolveTimeline(t *testing.T) {
 		{"the first in both places", local, "prj_two", "prj_two", "prj_two", "", ""},
 		{"a timeline of another project", local, "prj_one", "prj_2b", "", "E_NOT_FOUND", ""},
 		{"a timeline that does not exist", local, "", "prj_zzz", "", "E_NOT_FOUND", ""},
-		{"a project of another user, ambiguous", alice, "prj_bob", "", "", "E_NOT_FOUND", ""},
+		{"a project of another user, ambiguous, is left to the operation", alice, "prj_bob", "", "prj_bob", "", ""},
 		{"a limited key, its own second timeline", limited, "", "prj_2b", "prj_2b", "", ""},
 		{"a limited key, another project", limited, "", "prj_a", "", "E_FORBIDDEN", ""},
 		{"three choices are all listed", local, "prj_all", "", "", "E_VALIDATION", "prj_b"},
 		{"a timeline of a project of another user", alice, "", "prj_bob2", "", "E_NOT_FOUND", ""},
-		{"a project of another user whose one timeline has another id", alice, "prj_bob1", "", "", "E_NOT_FOUND", ""},
+		{"a project of another user whose one timeline has another id", alice, "prj_bob1", "", "prj_bob1", "", ""},
 		{"a limited key, a timeline that does not exist", limited, "", "prj_zzz", "", "E_FORBIDDEN", ""},
 		{"a limited key, its own project and a missing timeline", limited, "prj_two", "prj_zzz", "", "E_FORBIDDEN", ""},
 	}
@@ -173,8 +173,12 @@ func TestProjectResolveTimelineTellsNoExistence(t *testing.T) {
 		t.Errorf("limited key, another project's timeline: %q; a missing one: %q", got, want)
 	}
 
-	if got := answer(alice, "prj_bob1", ""); strings.Contains(got, "prj_bob1b") {
-		t.Errorf("the answer names the timeline of a project alice may not see: %q", got)
+	// A project alice may not see is answered as an id of nothing is: the id comes back as it went, naming no timeline
+	// of it, and the operation refuses it after checking its request.
+	for _, id := range []string{"prj_bob", "prj_bob1", "prj_nobodyy"} {
+		if got, err := s.resolveTimeline(ctx, alice, id, ""); err != nil || got != id {
+			t.Errorf("%s: got %q, %v; want the id unchanged", id, got, err)
+		}
 	}
 }
 
