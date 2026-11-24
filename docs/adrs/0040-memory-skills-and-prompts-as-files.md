@@ -1,6 +1,6 @@
 # ADR-0040: Memory, skills and prompts are files in the workspace, with an index
 
-- Status: Accepted (2026-11-18)
+- Status: Accepted (2026-11-18); items 1 and 2 amended by ADR-0053 for a workspace with an account (sealed files, index in memory)
 - Deciders: author
 - Links: author decisions D-063, D-071, D-042 and D-043 (absorbed); ADR-0009, ADR-0031, ADR-0037; PRD-004
 

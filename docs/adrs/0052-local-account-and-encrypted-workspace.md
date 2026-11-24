@@ -1,6 +1,6 @@
 # ADR-0052: A local account with a password opens the studio, and its key encrypts the user's content
 
-- Status: Accepted (2026-11-20)
+- Status: Accepted (2026-11-20); consequences 2 and 3 and item 7 amended by ADR-0053
 - Deciders: author
 - Amends: ADR-0032 item 4 (what makes a session a person), ADR-0033 items 2 and 4 (where the vault key lives, and what a lost key loses), ADR-0034 items 1 and 3 (local mode has a sign-in, and Google sign-in is removed), ADR-0019 item 1 (local mode has no login)
 - Links: author decisions D-120, D-117; ADR-0019, ADR-0032, ADR-0033, ADR-0034, ADR-0040; SDD-005, SDD-007, SDD-012; epic 57

@@ -112,7 +112,7 @@ It is done when the author has published ten real videos using only Stuarty, not
 | RF-388 | A third-party skill is never enabled before the user has seen its text, and never reaches a credential |
 | RF-389 | The product ships a curated set of skills, among them the briefing, scripts for short and long video, ad copy, a blog post, captions per network, a thumbnail and a review of machine-sounding text |
 | RF-390 | Prompts are reusable texts of the user, with variables, kept as files and usable from the UI and by agents |
-| RF-391 | Memory, skills and prompts can be searched, and every change made outside the product is picked up |
+| RF-391 | Memory, skills and prompts can be searched, and every change made outside the product is picked up (with an account the files are sealed, ADR-0053: a clear file put in the folder is picked up and sealed; a sealed file cannot be edited outside the product, so a person exports a skill to get a plain file) |
 
 ### 4.9 Connections and publishing
 
