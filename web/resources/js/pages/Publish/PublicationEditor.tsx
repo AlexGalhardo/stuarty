@@ -35,6 +35,11 @@ import { type TextItem, writingClient } from "../Write/client";
 import type { PublishApi } from "./api";
 import { useBackgroundAsk } from "./BackgroundAsk";
 import { browserZone } from "./calendar";
+import {
+	type ContentKind,
+	type Destination,
+	destinationsFor,
+} from "./destinations";
 import { exportLabel } from "./exportLabel";
 import { TargetResult } from "./ListView";
 import { actionsOf } from "./publicationState";
@@ -45,6 +50,16 @@ const VISIBILITIES = ["private", "unlisted", "public"] as const;
 // A post is a draft (private) or published (public) at its destination.
 const POST_VISIBILITIES = ["private", "public"] as const;
 const STILLS = ["png", "jpg", "jpeg"];
+// The words of what a destination takes that have a translation; any other the service names is drawn as it is.
+const TAKES_WORDS = [
+	"text",
+	"image",
+	"video",
+	"audio",
+	"metadata",
+	"document",
+	"thumbnail",
+];
 const SELECT =
 	"h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2 text-sm";
 
@@ -277,7 +292,6 @@ export function PublicationEditor({
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [busy, setBusy] = useState(false);
 	const backgroundAsk = useBackgroundAsk();
-	const ready = accounts.filter((a) => a.state === "ready");
 	const isNew = current === null;
 
 	useEffect(() => {
@@ -397,14 +411,27 @@ export function PublicationEditor({
 		title.trim() !== "" &&
 		(isPost ? post !== "" : video !== "") &&
 		(current !== null || project !== "");
-	// Where a target can go: the signed-in accounts of the networks for a video, the blog destinations for a post.
-	const destinations: { id: string; label: string; network: string }[] = isPost
-		? blogs.map((b) => ({ id: b.id, label: b.label, network: b.kind }))
-		: ready.map((a) => ({
-				id: a.connection_id,
-				label: a.label,
-				network: a.network,
-			}));
+	// Every destination, the ones that take this content first; the others stay, disabled, with the reason the
+	// service's own list of what each takes gives (epic 82).
+	const contentKind: ContentKind = isPost ? "text" : "video";
+	const destinations = destinationsFor(contentKind, accounts, networks, blogs);
+	const firstUsable = destinations.find((d) => d.usable);
+	const takesWords = (takes: readonly string[]): string =>
+		takes.length === 0
+			? t("ui.publish.editor.takes_nothing")
+			: takes
+					.map((word) =>
+						TAKES_WORDS.includes(word)
+							? t(`ui.publish.editor.takes_word.${word}`)
+							: word,
+					)
+					.join(", ");
+	const reasonOf = (d: Destination): string =>
+		t("ui.publish.editor.cannot_take", {
+			takes: takesWords(d.takes),
+			kind: t(`ui.publish.editor.takes_word.${contentKind}`),
+		});
+	const blocked = destinations.filter((d) => !d.usable);
 
 	return (
 		<Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -604,17 +631,36 @@ export function PublicationEditor({
 											id={`${d.key}-account`}
 											className={SELECT}
 											value={d.connection}
+											aria-describedby={
+												blocked.length === 0 ? undefined : `${d.key}-blocked`
+											}
 											onChange={(event) =>
 												patch(d.key, { connection: event.target.value })
 											}
 										>
 											<option value="">{t("ui.social.choose")}</option>
 											{destinations.map((a) => (
-												<option key={a.id} value={a.id}>
+												<option key={a.id} value={a.id} disabled={!a.usable}>
 													{a.label} ({a.network})
+													{a.usable ? "" : ` – ${reasonOf(a)}`}
 												</option>
 											))}
 										</select>
+										{blocked.length > 0 && (
+											<ul
+												id={`${d.key}-blocked`}
+												className="text-xs text-muted-foreground"
+												data-testid="destination-reasons"
+											>
+												{blocked.map((a) => (
+													<li key={a.id} data-destination-id={a.id}>
+														<UntrustedText>{a.label}</UntrustedText>
+														{": "}
+														{reasonOf(a)}
+													</li>
+												))}
+											</ul>
+										)}
 									</div>
 									<div className="flex flex-col gap-1">
 										<Label htmlFor={`${d.key}-visibility`}>
@@ -874,7 +920,7 @@ export function PublicationEditor({
 							onClick={() =>
 								setDrafts((was) => [
 									...was,
-									blankDraft(destinations[0]?.id ?? "", zone),
+									blankDraft(firstUsable?.id ?? "", zone),
 								])
 							}
 						>

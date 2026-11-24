@@ -3642,6 +3642,17 @@
         "caption": "Legenda",
         "targets": "Contas",
         "no_targets": "Nenhuma conta ainda. Adicione uma para planejar para onde isto vai.",
+        "cannot_take": "aceita {takes}, não {kind}",
+        "takes_nothing": "nada que tenha informado ao Stuarty",
+        "takes_word": {
+          "text": "texto",
+          "image": "imagens",
+          "video": "vídeo",
+          "audio": "áudio",
+          "metadata": "metadados",
+          "document": "documentos",
+          "thumbnail": "miniaturas"
+        },
         "target": "Conta {number}",
         "account": "Conta",
         "at": "Data e hora",
