@@ -138,6 +138,17 @@ describe("SceneBar variants", () => {
 		expect(html).toMatch(/<button[^>]*disabled[^>]*data-testid="scene-allow"/);
 		expect(html).toMatch(/<button[^>]*disabled[^>]*data-testid="scene-deny"/);
 		expect(html).toContain("aria-describedby=");
+		// the reason takes a line of its own, so the bar may grow past one row
+		expect(html).toContain("basis-full");
+		expect(html).not.toContain("md:flex-nowrap");
+	});
+
+	test("waiting, for a person: one row of 56 px, with no full-width line to crush the actions", () => {
+		const html = draw(
+			sceneOf(session({ state: "awaiting_permission" }), events(ask)),
+		);
+		expect(html).toContain("md:h-14 md:flex-nowrap");
+		expect(html).not.toContain("basis-full");
 	});
 
 	test("denied: says so and offers no action on a request", () => {
