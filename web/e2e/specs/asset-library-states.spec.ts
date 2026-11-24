@@ -38,13 +38,14 @@ async function shoot(
 }
 
 async function noViolation(page: import("@playwright/test").Page) {
+	// A fade that is halfway reads as low contrast: wait for the finite animations to end.
 	await page.evaluate(() =>
-		Promise.race([
-			Promise.all(
-				document.getAnimations().map((a) => a.finished.catch(() => undefined)),
-			),
-			new Promise((resolve) => setTimeout(resolve, 3000)),
-		]),
+		Promise.all(
+			document
+				.getAnimations()
+				.filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+				.map((a) => a.finished.catch(() => undefined)),
+		),
 	);
 	const { violations } = await new AxeBuilder({ page })
 		.withTags(TAGS)
