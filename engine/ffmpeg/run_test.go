@@ -305,12 +305,14 @@ func TestRunDeadlineKillsTheRun(t *testing.T) {
 	}
 }
 
-// TestRunIsNotCutByTheToolTimeout (VV-391): contrib/engine ends a run whose context has no deadline after
-// Config.Timeout (5 minutes by default). The deadline of the run is the one of its kind, so a run that is
-// still inside it must not be ended by that default: the tool here has a 400 ms default, the run a 3 s
-// deadline, and the child outlives both, so only the deadline of the run may end it.
-func TestRunIsNotCutByTheToolTimeout(t *testing.T) {
+// TestRunInAJobContextIsNotCutByTheToolTimeout (VV-391): contrib/engine ends a run whose context has no deadline
+// after Config.Timeout (5 minutes by default). Every job runs inside a queue attempt whose context has the
+// deadline of its kind (web/app/jobs, queue.Timeout), so the default never applies to it: the tool here has a
+// 400 ms default, the context a 20 s deadline and the run a 3 s deadline, and only the run's own deadline ends it.
+func TestRunInAJobContextIsNotCutByTheToolTimeout(t *testing.T) {
 	r, dir, _ := helperRunner(t)
+	jobCtx, cancelJob := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancelJob()
 	short, err := engine.Find(context.Background(), engine.Config{
 		Name:        "helper",
 		Path:        os.Args[0],
@@ -322,7 +324,7 @@ func TestRunIsNotCutByTheToolTimeout(t *testing.T) {
 	}
 	start := time.Now()
 	_, err = r.exec(
-		context.Background(),
+		jobCtx,
 		execSpec{
 			tool:     short,
 			dir:      dir.Dir(),
