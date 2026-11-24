@@ -399,7 +399,7 @@ func TestDropForgetsTheIndexAndTheReviewKey(t *testing.T) {
 // of the unlock: the index is built by one scan over sealed files (ADR-0053).
 func TestLibraryOfTheMaximumSizeIsReadyWithinTwoSecondsOfTheUnlock(t *testing.T) {
 	if testing.Short() {
-		t.Skip("builds 3,000 sealed files")
+		t.Skip("builds 3,000 sealed files") // verify:env-skip short mode: a minute of file writes on a slow disk
 	}
 
 	m, _, dir := newSealed(t)

@@ -48,7 +48,7 @@ func openSealing(t testing.TB, dir workspace.Dir) *store.Store {
 // TestCrashSealDocumentsChild is the body of the child of TestCrashSealDocuments.
 func TestCrashSealDocumentsChild(t *testing.T) {
 	if os.Getenv(roleEnv) != "seal-documents-child" {
-		t.Skip("only runs as the child of a crash test")
+		t.Skip("only runs as the child of a crash test") // verify:env-skip the body of the child process of the crash test
 	}
 
 	st := openSealing(t, workspace.Dir(os.Getenv(workspace.EnvHome)))
