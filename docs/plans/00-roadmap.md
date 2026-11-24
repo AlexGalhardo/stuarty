@@ -112,7 +112,7 @@ The order, the critical path and the groups are in `docs/planning/screen-recordi
 | [66](66-recording-layouts-backgrounds-teleprompter.md) | Recording layouts, backgrounds and teleprompter | M | 62 | TODO |
 | [67](67-macos-capture.md) | Recording on macOS | L | 62, 43, the signing decision | TODO |
 | [68](68-linux-capture.md) | Recording on Linux | L | 62, 43 | TODO |
-| [69](69-edit-by-text-and-filler-words.md) | Edit by text, filler words and repetitions | L | the transcription of today | IN PROGRESS (senior-b, 2026-11-23) |
+| [69](69-edit-by-text-and-filler-words.md) | Edit by text, filler words and repetitions | L | the transcription of today | DONE (2026-11-24, `55e5e49fd`..`a003450b9`) |
 | [70](70-local-ai-helper-and-vertical-cuts.md) | Local AI helper and face-aware vertical cuts | XL | ADR-0050, 69 | TODO |
 | [71](71-caption-styles-blur-studio-voice.md) | Caption styles, sensitive-data blur and studio voice | M | — | TODO |
 | [72](72-optional-local-models.md) | Optional local models: background removal and depth | L | 70, the BEN2 licence decision | TODO |
