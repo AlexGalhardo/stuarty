@@ -260,7 +260,7 @@ export function AssetDetail({
 	return (
 		<aside
 			aria-labelledby={`${id}-title`}
-			className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-4 text-text lg:sticky lg:top-4 lg:self-start"
+			className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-4 text-text"
 			data-testid="asset-detail"
 		>
 			<div className="flex items-start justify-between gap-2">
@@ -483,7 +483,10 @@ export function AssetDetail({
 								data-testid="asset-uses"
 							>
 								{(asset.uses ?? []).map((use) => (
-									<li key={use.project_id} className="flex items-center gap-2">
+									<li
+										key={use.project_id}
+										className="flex flex-wrap items-center gap-2"
+									>
 										<Link
 											href={`/projects/${use.project_id}`}
 											className="underline"
@@ -494,6 +497,7 @@ export function AssetDetail({
 											<Button
 												type="button"
 												variant="outline"
+												className="h-auto max-w-full whitespace-normal py-1 text-left"
 												onClick={() => void trash(use.project_id, use.asset_id)}
 											>
 												{t("ui.assets.detail.trash", { project: use.name })}
@@ -652,7 +656,7 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 			)}
 			<LibraryFilters section={section} onApply={setApplied} />
 			<FailureNote failure={failure} />
-			<div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
+			<div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
 				<section aria-labelledby={`files-${section}`}>
 					<h2
 						id={`files-${section}`}
