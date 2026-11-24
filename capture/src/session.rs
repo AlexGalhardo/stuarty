@@ -113,6 +113,7 @@ fn abandon(src: Box<dyn source::RunningSource>, extra: Extra, stop: &AtomicBool)
 pub fn run(req: &StartRequest, emit: &dyn Fn(String), ctl: &Control) {
 	#[cfg(windows)]
 	crate::win32::timer_1ms();
+	crate::clock::raise_this_thread();
 	let (stop, clock) = (&ctl.stop, &ctl.clock);
 	let mailbox = Mailbox::new();
 	let src = match source::open(req, &mailbox) {
@@ -296,6 +297,10 @@ pub fn run(req: &StartRequest, emit: &dyn Fn(String), ctl: &Control) {
 		}
 	}
 
+	// A grid that a busy machine held up writes the slots it owes before the file is closed.
+	if source_error.is_none() && reason == "stopped" {
+		let _ = grid.catch_up(clock);
+	}
 	src.stop();
 	// The other tracks end at the same moment as the screen.
 	stop.store(true, Ordering::Relaxed);
@@ -602,7 +607,8 @@ mod tests {
 		);
 		let bytes = std::fs::metadata(dir.join("camera.raw")).unwrap().len();
 		assert_eq!(bytes % (160 * 90 * 4), 0, "whole frames of 160 by 90");
-		assert_eq!(bytes / (160 * 90 * 4), cam * 30 / 1000);
+		// the duration is the frames over the rate, cut to whole milliseconds, so it can read one frame short
+		assert!((bytes / (160 * 90 * 4)).abs_diff(cam * 30 / 1000) <= 1);
 		std::fs::remove_dir_all(dir).unwrap();
 	}
 

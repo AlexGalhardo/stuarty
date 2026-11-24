@@ -122,6 +122,7 @@ pub fn spawn(
 	let fps = req.fps;
 	let path = output.to_path_buf();
 	let handle = std::thread::spawn(move || {
+		crate::clock::raise_this_thread();
 		let mut out = Outcome::default();
 		let mut grid = Grid::new(mailbox, sink, w, h, fps);
 		while !clock.started() {
@@ -148,6 +149,9 @@ pub fn spawn(
 					break;
 				}
 			}
+		}
+		if !out.lost && clock.started() {
+			let _ = grid.catch_up(&clock);
 		}
 		src.stop();
 		out.frames = grid.frames;

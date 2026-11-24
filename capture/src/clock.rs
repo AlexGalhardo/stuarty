@@ -10,6 +10,13 @@ use std::time::Instant;
 
 const NS_PER_MS: i64 = 1_000_000;
 
+/// Called first by every thread that stamps data on the clock (the screen grid, the camera, the sound, the
+/// pointer): on Windows it raises the thread above normal so a busy machine does not delay it.
+pub fn raise_this_thread() {
+	#[cfg(windows)]
+	crate::win32::raise_this_thread();
+}
+
 #[derive(Default)]
 struct Inner {
 	origin: Option<Instant>,

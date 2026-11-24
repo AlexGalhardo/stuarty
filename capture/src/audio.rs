@@ -263,6 +263,7 @@ pub fn spawn(
 	let peak = Arc::new(AtomicU32::new(0));
 	let p2 = Arc::clone(&peak);
 	let handle = std::thread::spawn(move || {
+		crate::clock::raise_this_thread();
 		let input = match open_input(&kind, &clock) {
 			Ok(i) => i,
 			Err(e) => {

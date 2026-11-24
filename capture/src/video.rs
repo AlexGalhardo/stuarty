@@ -64,7 +64,28 @@ impl Grid {
 		if left > 0 {
 			return Step::Wait(Duration::from_nanos(left.unsigned_abs()).min(MAX_WAIT));
 		}
+		self.write_slot()
+	}
 
+	/// Writes the slots that were due and not written, for a grid that was held up by a busy machine, so the file
+	/// ends at the length of the clock (frozen by a pause) and not where the thread happened to be. Called once,
+	/// at the end.
+	pub fn catch_up(&mut self, clock: &Clock) -> std::io::Result<()> {
+		let now = clock.active_ns();
+		loop {
+			let due = i64::try_from(self.next_slot * 1_000_000_000 / self.fps).unwrap_or(i64::MAX);
+			if due > now {
+				return Ok(());
+			}
+			match self.write_slot() {
+				Step::Failed(e) => return Err(e),
+				Step::Closed(_) => return Ok(()),
+				Step::Wrote | Step::Wait(_) => {}
+			}
+		}
+	}
+
+	fn write_slot(&mut self) -> Step {
 		let slot = self.mailbox.take();
 		if slot.closed && !slot.fresh {
 			return Step::Closed(slot.error);
@@ -89,5 +110,75 @@ impl Grid {
 	/// The length of the file the grid has made.
 	pub fn duration_ms(&self) -> u64 {
 		self.frames * 1000 / self.fps
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use crate::frame::Frame;
+	use std::sync::atomic::{AtomicU64, Ordering};
+
+	struct Count(Arc<AtomicU64>);
+
+	impl Sink for Count {
+		fn write_frame(&mut self, _bytes: &[u8]) -> std::io::Result<()> {
+			self.0.fetch_add(1, Ordering::Relaxed);
+			Ok(())
+		}
+
+		fn finish(self: Box<Self>) -> Result<(), String> {
+			Ok(())
+		}
+	}
+
+	// A thread that was held up owes the slots it missed: at the end the file has the length of the clock.
+	#[test]
+	fn a_grid_that_was_held_up_writes_what_it_owes_at_the_end() {
+		let mailbox = Mailbox::new();
+		mailbox.push(Frame {
+			width: 2,
+			height: 2,
+			data: vec![7; 16],
+		});
+		let written = Arc::new(AtomicU64::new(1));
+		let mut grid = Grid::new(mailbox, Box::new(Count(Arc::clone(&written))), 2, 2, 60);
+		let clock = Clock::new();
+		clock.start(0);
+		std::thread::sleep(Duration::from_millis(500));
+		// nothing ran during that half second: 30 slots are owed, and the first one is slot 1
+		grid.catch_up(&clock).unwrap();
+		let slots = written.load(Ordering::Relaxed);
+		assert!(
+			(30..=33).contains(&slots),
+			"{slots} slots for 0.5 s at 60 fps"
+		);
+		assert!(
+			grid.duration_ms().abs_diff(500) <= 40,
+			"{} ms",
+			grid.duration_ms()
+		);
+		// a second call owes nothing
+		let before = written.load(Ordering::Relaxed);
+		grid.catch_up(&clock).unwrap();
+		assert!(written.load(Ordering::Relaxed) - before <= 1);
+	}
+
+	#[test]
+	fn a_paused_grid_owes_nothing() {
+		let mailbox = Mailbox::new();
+		mailbox.push(Frame {
+			width: 2,
+			height: 2,
+			data: vec![7; 16],
+		});
+		let written = Arc::new(AtomicU64::new(0));
+		let mut grid = Grid::new(mailbox, Box::new(Count(Arc::clone(&written))), 2, 2, 60);
+		let clock = Clock::new();
+		clock.start(0);
+		clock.pause().unwrap();
+		std::thread::sleep(Duration::from_millis(300));
+		grid.catch_up(&clock).unwrap();
+		assert!(written.load(Ordering::Relaxed) <= 1);
 	}
 }

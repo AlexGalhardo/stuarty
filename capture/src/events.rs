@@ -185,6 +185,7 @@ pub fn spawn(
 	let file = std::fs::File::create(&path).map_err(io)?;
 	let mut rec = Recorder::new(std::io::BufWriter::new(file), width, height).map_err(io)?;
 	let handle = std::thread::spawn(move || {
+		crate::clock::raise_this_thread();
 		let mut out = Outcome::default();
 		while !clock.started() && !stop.load(Ordering::Relaxed) {
 			std::thread::sleep(Duration::from_millis(2));

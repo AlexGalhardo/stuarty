@@ -129,6 +129,21 @@ pub fn per_monitor_dpi() {
 	let _ = unsafe { SetProcessDpiAwarenessContext(-4) };
 }
 
+unsafe extern "system" {
+	fn GetCurrentThread() -> isize;
+	fn SetThreadPriority(thread: isize, priority: i32) -> i32;
+}
+
+/// Raises the calling thread one step above normal, so a thread that stamps a frame, a sound packet or a pointer
+/// sample is not left waiting behind the work of other programs for a hundred milliseconds. A failure leaves the
+/// normal priority.
+pub fn raise_this_thread() {
+	const THREAD_PRIORITY_ABOVE_NORMAL: i32 = 1;
+	// SAFETY: GetCurrentThread returns a pseudo handle that needs no closing, and SetThreadPriority takes it with
+	// a number.
+	let _ = unsafe { SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL) };
+}
+
 /// Asks Windows for a 1 ms timer, so a sleep of a few milliseconds is not stretched to the default 15.6 ms and
 /// the frame grid and the pointer sampler keep their time. It lasts for the life of the process.
 pub fn timer_1ms() {
