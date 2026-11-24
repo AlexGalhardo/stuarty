@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { CircleAlert, X } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { FailureNote } from "@/components/Failure";
@@ -17,15 +17,21 @@ export default function ErrorBar(): ReactNode {
 	return (
 		<div
 			data-testid="image-error"
-			className="flex items-start justify-between gap-2 border-b bg-destructive/10 px-3 py-1"
+			className="flex items-start gap-2 border-b border-border bg-destructive/10 px-3 py-1"
 		>
-			<FailureNote
-				failure={{
-					code: error.code,
-					message: error.message,
-					hint: error.hint,
-				}}
+			<CircleAlert
+				aria-hidden="true"
+				className="mt-2.5 size-4 shrink-0 text-destructive"
 			/>
+			<div className="min-w-0 flex-1">
+				<FailureNote
+					failure={{
+						code: error.code,
+						message: error.message,
+						hint: error.hint,
+					}}
+				/>
+			</div>
 			<Button
 				type="button"
 				variant="ghost"

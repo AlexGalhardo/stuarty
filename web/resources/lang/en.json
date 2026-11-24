@@ -1102,6 +1102,7 @@
       },
       "template": {
         "title": "New from template",
+        "none_title": "No templates yet",
         "none": "There are no image templates yet. Make an image a template and it is listed here.",
         "pick": "Template",
         "choose": "Choose a template",
