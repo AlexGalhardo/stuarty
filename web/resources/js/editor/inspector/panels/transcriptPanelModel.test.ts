@@ -1,12 +1,13 @@
 import { describe, expect, test } from "vitest";
 
-import type { TranscriptSuggestion } from "../../api/types";
+import type { EditResult, TranscriptSuggestion } from "../../api/types";
 import {
 	checkedRanges,
 	extendSelection,
 	initialChecked,
 	isSelected,
 	selectedRange,
+	snapSummary,
 	toggled,
 } from "./transcriptPanelModel";
 
@@ -77,5 +78,42 @@ describe("the review before removal", () => {
 		expect([...on].sort()).toEqual([0, 1]);
 		expect([...first]).toEqual([1]);
 		expect([...toggled(on, 1)]).toEqual([0]);
+	});
+});
+
+describe("what the service says about the edges of a cut", () => {
+	const edit = (
+		effective: { op: string; effective: Record<string, unknown> }[],
+	): EditResult =>
+		({
+			effective: effective.map((e, index) => ({ index, ...e })),
+		}) as unknown as EditResult;
+	const cut = (start: string, end: string, analysis = "read") => ({
+		op: "transcript.delete_range",
+		effective: {
+			snap: { analysis, start: { result: start }, end: { result: end } },
+		},
+	});
+
+	test("it adds up the edges of every cut of the batch", () => {
+		expect(
+			snapSummary(edit([cut("moved", "none"), cut("inside", "moved")])),
+		).toEqual({ missing: false, moved: 2, inside: 1, none: 1 });
+	});
+
+	test("a cut made with no silence analysis is called out", () => {
+		expect(snapSummary(edit([cut("none", "none", "missing")]))).toEqual({
+			missing: true,
+			moved: 0,
+			inside: 0,
+			none: 2,
+		});
+	});
+
+	test("a batch with no snap to report has no summary", () => {
+		expect(snapSummary(edit([]))).toBeNull();
+		expect(
+			snapSummary(edit([{ op: "transcript.delete_range", effective: {} }])),
+		).toBeNull();
 	});
 });

@@ -439,6 +439,21 @@ describe("transcript builders", () => {
 		]);
 		expect(transcriptDeleteOperations("ast_a", [])).toEqual([]);
 	});
+
+	test("the snap is the core's default, and only turning it off sends an argument", () => {
+		const range = [{ from: 2, to: 3 }];
+		expect(transcriptDeleteOperations("ast_a", range, { snap: true })).toEqual(
+			transcriptDeleteOperations("ast_a", range),
+		);
+		expect(transcriptDeleteOperations("ast_a", range, { snap: false })).toEqual(
+			[
+				{
+					op: "transcript.delete_range",
+					args: { asset_id: "ast_a", from_word: 2, to_word: 3, snap: "0s" },
+				},
+			],
+		);
+	});
 });
 
 describe("keyframe builders", () => {

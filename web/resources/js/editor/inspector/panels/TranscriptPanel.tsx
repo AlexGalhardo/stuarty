@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,9 @@ import {
 	extendSelection,
 	initialChecked,
 	isSelected,
+	type SnapSummary,
 	selectedRange,
+	snapSummary,
 	toggled,
 	type WordSelection,
 } from "./transcriptPanelModel";
@@ -50,6 +52,14 @@ export default function TranscriptPanel({
 	const [fillers, setFillers] = useState<TranscriptFillersResult | null>(null);
 	const [checked, setChecked] = useState<ReadonlySet<number>>(new Set());
 	const [busy, setBusy] = useState(false);
+	// Cut the edges at the word times when off; the core snaps them to the silence beside them when on (SDD-023 3.1).
+	const [snap, setSnap] = useState(true);
+	const snapId = useId();
+	// Where the edges of the last cut went, as the service reported it, and the revision that cut made.
+	const [snapped, setSnapped] = useState<{
+		revision: number;
+		summary: SnapSummary;
+	} | null>(null);
 	// `t` is a new function on every render: the effect below must not depend on it, or it would read the
 	// transcript again on every render and clear the selection.
 	const translate = useRef(t);
@@ -88,14 +98,24 @@ export default function TranscriptPanel({
 	const range = selectedRange(selection);
 	const count = range === null ? 0 : range.to - range.from + 1;
 
-	async function deleteSelected(): Promise<void> {
-		if (range === null || assetId === undefined) return;
+	async function runCut(ranges: { from: number; to: number }[]): Promise<void> {
+		if (assetId === undefined) return;
 		setBusy(true);
 		try {
-			await actions.runOperations(transcriptDeleteOperations(assetId, [range]));
+			const outcome = await actions.runOperations(
+				transcriptDeleteOperations(assetId, ranges, { snap }),
+			);
+			const summary = outcome?.ok === true ? snapSummary(outcome.result) : null;
+			if (outcome?.ok === true && summary !== null) {
+				setSnapped({ revision: outcome.result.revision, summary });
+			}
 		} finally {
 			setBusy(false);
 		}
+	}
+
+	async function deleteSelected(): Promise<void> {
+		if (range !== null) await runCut([range]);
 	}
 
 	async function find(): Promise<void> {
@@ -124,12 +144,7 @@ export default function TranscriptPanel({
 		if (fillers === null || assetId === undefined) return;
 		const ranges = checkedRanges(fillers.suggestions, checked);
 		if (ranges.length === 0) return;
-		setBusy(true);
-		try {
-			await actions.runOperations(transcriptDeleteOperations(assetId, ranges));
-		} finally {
-			setBusy(false);
-		}
+		await runCut(ranges);
 	}
 
 	return (
@@ -187,6 +202,29 @@ export default function TranscriptPanel({
 							{t("ui.editor.transcript.selected", { count })}
 						</span>
 					</div>
+					<div className="flex items-center gap-2 text-xs">
+						<Checkbox
+							id={snapId}
+							checked={snap}
+							onCheckedChange={(on) => setSnap(on === true)}
+						/>
+						<label htmlFor={snapId}>{t("ui.editor.transcript.snap")}</label>
+					</div>
+					{snapped !== null && snapped.revision === revision && (
+						<p
+							className="text-xs text-muted-foreground"
+							data-snap-result
+							aria-live="polite"
+						>
+							{snapped.summary.missing
+								? t("ui.editor.transcript.snap_missing")
+								: t("ui.editor.transcript.snap_result", {
+										moved: snapped.summary.moved,
+										inside: snapped.summary.inside,
+										none: snapped.summary.none,
+									})}
+						</p>
+					)}
 					<Button
 						type="button"
 						variant="outline"
