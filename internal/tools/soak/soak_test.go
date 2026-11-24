@@ -38,6 +38,33 @@ func TestCheckJudgesEveryBound(t *testing.T) {
 	}
 }
 
+// Threads the runtime starts under load add handles that are not a leak (VV-363); the same growth with no new
+// thread is still one.
+func TestCheckAllowsTheHandlesOfNewThreadsOnly(t *testing.T) {
+	t.Parallel()
+
+	bounds := Bounds{HeapGrowth: 1.25, Goroutines: 10, Handles: 10, HandlesPerThread: 6, DBBytesPerCommit: 2048}
+	base := Sample{Commits: 100, HeapInuse: 100 << 20, Goroutines: 40, Threads: 20, Handles: 168}
+	last := base
+	last.Commits, last.Handles = 1100, 180
+
+	if bad := (Report{Samples: []Sample{base, last}}).Check(bounds); len(bad) != 1 {
+		t.Fatalf("12 more handles with no new thread passed or failed another bound: %v", bad)
+	}
+
+	last.Threads = 22
+
+	if bad := (Report{Samples: []Sample{base, last}}).Check(bounds); len(bad) != 0 {
+		t.Fatalf("12 more handles with 2 new threads failed: %v", bad)
+	}
+
+	last.Handles = 168 + 10 + 12 + 1
+
+	if bad := (Report{Samples: []Sample{base, last}}).Check(bounds); len(bad) != 1 {
+		t.Fatalf("a growth beyond the allowance of the new threads passed: %v", bad)
+	}
+}
+
 // The smoke run: a few seconds of the real script on a real store, with the bounds of the full run.
 func TestSmokeRunStaysBounded(t *testing.T) {
 	var out, errb bytes.Buffer
