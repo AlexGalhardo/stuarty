@@ -58,7 +58,7 @@ export function ThemeToggle() {
 				type="button"
 				aria-label={`${t.colorTheme}: ${t[current.label]}`}
 				onClick={() => setTheme(next.value)}
-				className="inline-flex size-11 items-center justify-center rounded-lg text-muted transition-colors hover:bg-hover hover:text-fg sm:hidden"
+				className="inline-flex size-[44px] items-center justify-center rounded-lg text-muted transition-colors hover:bg-hover hover:text-fg sm:hidden"
 			>
 				<CurrentIcon aria-hidden className="size-4.5" />
 			</button>

@@ -41,7 +41,7 @@ function SearchLauncher() {
 					setOpened(true);
 					setOpen(true);
 				}}
-				className="flex items-center gap-2 rounded-lg text-sm text-faint transition-colors hover:text-fg max-sm:size-11 max-sm:justify-center sm:h-9 sm:w-36 lg:w-48 xl:w-64 sm:border sm:border-border-strong sm:bg-subtle sm:pr-1.5 sm:pl-2.5"
+				className="flex items-center gap-2 rounded-lg text-sm text-faint transition-colors hover:text-fg max-sm:size-[44px] max-sm:justify-center sm:h-9 sm:w-36 lg:w-48 xl:w-64 sm:border sm:border-border-strong sm:bg-subtle sm:pr-1.5 sm:pl-2.5"
 			>
 				<Search aria-hidden className="size-4 shrink-0" />
 				<span className="hidden flex-1 text-left sm:inline">{t.searchButton}</span>
@@ -130,7 +130,7 @@ export function Header({ groups, version, variant = "docs" }: { groups: NavGroup
 								target="_blank"
 								rel="noreferrer"
 								aria-label={t.githubLabel}
-								className="inline-flex size-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-hover hover:text-fg max-sm:size-11 max-[380px]:hidden"
+								className="inline-flex size-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-hover hover:text-fg max-sm:size-[44px] max-[380px]:hidden"
 							>
 								<GitHubIcon className="size-4" />
 							</a>
