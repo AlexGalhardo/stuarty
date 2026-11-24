@@ -215,14 +215,7 @@ func (c *Compositor) layer(dst *image.RGBA, l *plan.Layer, fp *plan.FramePlan, o
 		hq: clamped(mul(p.h, 256), maskLimit),
 	}
 
-	if l.Blur > 0 {
-		if l.Mask != nil {
-			// A masked layer is a region of the picture: the edge pixels repeat past it (SDD-004 section 3.6).
-			src, p = c.blurredClamped(src, p, mul(l.Blur, outScale))
-		} else {
-			src, p = c.blurred(src, p, mul(l.Blur, outScale))
-		}
-	}
+	src, p = c.layerBlur(src, p, l, outScale)
 	// The flip mirrors the layer's own pixels; the mask above keeps the item's frame (SDD-004 section 3.10).
 	src = c.flipped(src, l.FlipX, l.FlipY)
 	// The effects and the pixels of a transition come after the flip, so a direction is a direction on the
@@ -232,6 +225,20 @@ func (c *Compositor) layer(dst *image.RGBA, l *plan.Layer, fp *plan.FramePlan, o
 	src, p = c.shadowed(src, p, l, outScale)
 	c.draw(dst, src, p, op, blendOf(l.Blend), mask)
 	return nil
+}
+
+// layerBlur blurs the layer when it has a blur. A masked layer is a region of the picture, so the edge pixels
+// repeat past it (SDD-004 section 3.6, "Blur at the edge"); any other layer counts the outside as transparent.
+func (c *Compositor) layerBlur(src Image, p placement, l *plan.Layer, outScale float64) (Image, placement) {
+	if !(l.Blur > 0) {
+		return src, p
+	}
+
+	if l.Mask != nil {
+		return c.blurredClamped(src, p, mul(l.Blur, outScale))
+	}
+
+	return c.blurred(src, p, mul(l.Blur, outScale))
 }
 
 // windowDrawable says a windowed source can be copied as it is: the layer is drawn at the size of the
