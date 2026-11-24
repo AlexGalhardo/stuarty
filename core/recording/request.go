@@ -26,7 +26,18 @@ type StartSpec struct {
 	SourceKind string
 	SourceID   string
 	FPS        int
+	// Microphone is a device id from RecordingSources, DefaultMicrophone for the default one, or empty for none.
+	Microphone string
+	// SystemAudio asks for the mix the computer plays.
+	SystemAudio bool
+	// Camera is a device id from RecordingSources, or empty for none.
+	Camera string
+	// Events asks for the pointer and click file (SDD-025 section 16.6).
+	Events bool
 }
+
+// DefaultMicrophone is the id that means the default capture endpoint of the system.
+const DefaultMicrophone = "default"
 
 // FieldError is one refused field of a request.
 type FieldError struct {
@@ -55,6 +66,14 @@ func ValidateStart(s StartSpec) []FieldError {
 
 	if s.FPS != 0 && !slices.Contains(FrameRates, s.FPS) {
 		out = append(out, FieldError{"fps", "not_allowed"})
+	}
+
+	if s.Microphone != "" && s.Microphone != DefaultMicrophone && !validSourceID(s.Microphone) {
+		out = append(out, FieldError{"microphone", "invalid_format"})
+	}
+
+	if s.Camera != "" && !validSourceID(s.Camera) {
+		out = append(out, FieldError{"camera", "invalid_format"})
 	}
 
 	return out
