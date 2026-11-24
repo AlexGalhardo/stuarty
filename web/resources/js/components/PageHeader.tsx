@@ -24,7 +24,8 @@ export function PageHeader({
 				className,
 			)}
 		>
-			<div className="min-w-0 flex-1">
+			{/* basis-64 keeps a readable column: below it the actions wrap under the text (WCAG 1.4.10) */}
+			<div className="min-w-0 flex-1 basis-64">
 				<h1 className="text-3xl font-semibold text-text">{title}</h1>
 				{description ? (
 					<p className="mt-1 text-base text-text-muted">{description}</p>

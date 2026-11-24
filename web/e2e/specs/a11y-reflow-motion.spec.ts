@@ -73,6 +73,28 @@ for (const theme of ["dark", "light"] as const) {
 			expect(found, "pages that scroll in two dimensions").toEqual([]);
 		});
 
+		test("the title and the description of a page header keep a readable column at 320 CSS px", async ({
+			page,
+			request,
+		}) => {
+			await page.setViewportSize({ width: 320, height: 256 });
+			const found: string[] = [];
+			await visit(page, request, async (path) => {
+				// The actions wrap below the text instead of squeezing it (VV-397).
+				const widths = await page
+					.locator('[data-slot="page-header"] h1')
+					.evaluateAll((titles) =>
+						titles.map(
+							(h1) => h1.parentElement?.getBoundingClientRect().width ?? 0,
+						),
+					);
+				for (const width of widths)
+					if (width < 240)
+						found.push(`${path}: the text block is ${width} px wide`);
+			});
+			expect(found, "headers whose text is squeezed").toEqual([]);
+		});
+
 		test("every page keeps its text under the text spacing of the criterion", async ({
 			page,
 			request,
