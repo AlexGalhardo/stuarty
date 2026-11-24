@@ -381,11 +381,14 @@ func TestDeadlineKeepsTheTimeEarnedWhilePeersWereRunning(t *testing.T) {
 }
 
 // TestDeadlineBudgetStopsAtTheWallClockCeiling (VV-219): a run that hangs while many peers stay in flight
-// earns its base slowly, and the ceiling still ends it on the wall clock. With 4 in flight for the whole
-// run the budget of 200 ms would last 800 ms; the ceiling of 400 ms ends it first.
+// earns its base slowly, and the ceiling still ends it on the wall clock. With 8 in flight for the whole
+// run the budget of 200 ms would last 1.6 s; the ceiling of 400 ms ends it first.
 func TestDeadlineBudgetStopsAtTheWallClockCeiling(t *testing.T) {
 	const base, ceiling = 200 * time.Millisecond, 400 * time.Millisecond
-	ends := []func(){beginFlight(), beginFlight(), beginFlight(), beginFlight()}
+	ends := make([]func(), 8)
+	for i := range ends {
+		ends[i] = beginFlight()
+	}
 	t.Cleanup(func() {
 		for _, end := range ends {
 			end()
@@ -397,7 +400,7 @@ func TestDeadlineBudgetStopsAtTheWallClockCeiling(t *testing.T) {
 
 	select {
 	case at := <-killed:
-		if at < ceiling || at >= 700*time.Millisecond {
+		if at < ceiling || at >= 1200*time.Millisecond {
 			t.Errorf("ended at %s, want at the %s ceiling", at, ceiling)
 		}
 	case <-time.After(5 * time.Second):
