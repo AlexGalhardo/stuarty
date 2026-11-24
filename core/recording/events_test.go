@@ -16,7 +16,7 @@ func TestReadEventsKeepsClicksAndMoves(t *testing.T) {
 		`{"k":"move","t":10,"x":5,"y":6}`,
 		`{"k":"down","t":20,"b":"left","x":100,"y":200}`,
 		`{"k":"up","t":120,"b":"left","x":101,"y":200}`,
-		`{"k":"move","t":130,"x":1919,"y":1080}`,
+		`{"k":"move","t":130,"x":1919,"y":1079}`,
 	)
 
 	all, err := ReadEvents(strings.NewReader(data), EventsQuery{})
@@ -68,6 +68,8 @@ func TestReadEventsDiscardsEverythingThatIsNotThePointer(t *testing.T) {
 		`{"k":"move","t":-1,"x":1,"y":1}`,
 		`{"k":"move","t":10,"x":-1,"y":1}`,
 		`{"k":"move","t":10,"x":1921,"y":1}`,
+		`{"k":"move","t":10,"x":1920,"y":1}`,
+		`{"k":"up","t":10,"b":"left","x":1,"y":1080}`,
 		`{"k":"move","t":99999999999,"x":1,"y":1}`,
 		`{"k":"move","x":1,"y":1}`,
 		`{"k":"move","t":10,"x":1}`,
