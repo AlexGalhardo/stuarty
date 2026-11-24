@@ -2,6 +2,7 @@ package testpublish
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"path/filepath"
@@ -103,7 +104,7 @@ func Open(ctx context.Context, o Options) (*Env, error) {
 	if !ok {
 		_ = st.Close()
 
-		return nil, fmt.Errorf("the service has no scheduler")
+		return nil, errors.New("the service has no scheduler")
 	}
 
 	return &Env{Dir: dir, Store: st, Svc: svc, Sched: sched}, nil
@@ -149,7 +150,7 @@ type signInOps interface {
 func (e *Env) SignIn(network string) (string, error) {
 	ops, ok := e.Svc.(signInOps)
 	if !ok {
-		return "", fmt.Errorf("the service has no sign-in operations")
+		return "", errors.New("the service has no sign-in operations")
 	}
 
 	person := Person()
@@ -162,8 +163,12 @@ func (e *Env) SignIn(network string) (string, error) {
 	}
 
 	u, err := url.Parse(begun.AuthorizeURL)
-	if err != nil || u.Query().Get("state") == "" {
-		return "", fmt.Errorf("authorize address %q: %v", begun.AuthorizeURL, err)
+	if err != nil {
+		return "", fmt.Errorf("authorize address %q: %w", begun.AuthorizeURL, err)
+	}
+
+	if u.Query().Get("state") == "" {
+		return "", fmt.Errorf("authorize address %q has no state", begun.AuthorizeURL)
 	}
 
 	if _, err := ops.SocialConnectComplete(
@@ -220,11 +225,6 @@ func (e *Env) ScheduleAndApprove(project, exportID, connectionID string, after t
 	if _, err := e.Svc.ApprovalDecide(
 		Person(), service.ApprovalDecideRequest{ID: t.ApprovalID, Decision: "approve"},
 	); err != nil {
-		return Scheduled{}, err
-	}
-
-	got, err = e.Svc.PublicationGet(agent, service.PublicationGetRequest{ID: created.ID})
-	if err != nil {
 		return Scheduled{}, err
 	}
 

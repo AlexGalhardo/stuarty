@@ -3,7 +3,6 @@ package testpublish
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -147,9 +146,7 @@ func (y *FakeYouTube) serve(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.URL.Path == "/token":
 		_ = r.ParseForm()
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"access_token": "at-1", "refresh_token": RefreshCanary, "expires_in": 3600,
-		})
+		answer(w, tokenAnswer{AccessToken: "at-1", RefreshToken: RefreshCanary, ExpiresIn: 3600})
 	case r.URL.Path == "/youtube/v3/channels":
 		_, _ = w.Write([]byte(`{"items":[{"id":"UC-FAKE","snippet":{"title":"Fake channel"}}]}`))
 	case r.URL.Path == "/upload/youtube/v3/videos" && r.Method == http.MethodPost:
@@ -199,7 +196,7 @@ func (y *FakeYouTube) put(w http.ResponseWriter, r *http.Request) {
 	rng := r.Header.Get("Content-Range")
 
 	if done {
-		_ = json.NewEncoder(w).Encode(map[string]string{"id": videoID})
+		answer(w, map[string]string{"id": videoID})
 
 		return
 	}
@@ -238,7 +235,7 @@ func (y *FakeYouTube) put(w http.ResponseWriter, r *http.Request) {
 	id := s.videoID
 	y.mu.Unlock()
 
-	_ = json.NewEncoder(w).Encode(map[string]string{"id": id})
+	answer(w, map[string]string{"id": id})
 }
 
 // readFile reads the body of a PUT into the session. It returns false when the request was dropped (the

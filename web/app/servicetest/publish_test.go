@@ -50,7 +50,11 @@ func newPubEnvWith(t *testing.T, n *testpublish.FakeNet, conn *fake.Connector, r
 
 // newPubEnvWrapped is newPubEnvWith with the store the service reads through wrapped, to fail one read.
 func newPubEnvWrapped(
-	t *testing.T, n *testpublish.FakeNet, conn *fake.Connector, reg *social.Registry, wrap func(service.Store) service.Store,
+	t *testing.T,
+	n *testpublish.FakeNet,
+	conn *fake.Connector,
+	reg *social.Registry,
+	wrap func(service.Store) service.Store,
 ) *pubEnv {
 	t.Helper()
 
