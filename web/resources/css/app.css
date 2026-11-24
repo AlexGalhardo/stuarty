@@ -392,6 +392,7 @@
 	--secondary-foreground: var(--color-text);
 	--muted: var(--color-surface-sunken);
 	--muted-foreground: var(--color-text-muted);
+	--accent: var(--color-accent);
 	--accent-foreground: var(--color-text-on-accent);
 	/* destructive is used as text and as a tint, so it takes the text variant of danger */
 	--destructive: var(--color-danger-text);
