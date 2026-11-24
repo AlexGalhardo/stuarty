@@ -271,6 +271,24 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ApprovalRuleSet)
 	case "ApprovalRuleRemove":
 		return invoke(ctx, s, svc.ApprovalRuleRemove)
+	case "RecordingSources":
+		return invoke(ctx, s, svc.RecordingSources)
+	case "RecordingStart":
+		return invoke(ctx, s, svc.RecordingStart)
+	case "RecordingStop":
+		return invoke(ctx, s, svc.RecordingStop)
+	case "RecordingCancel":
+		return invoke(ctx, s, svc.RecordingCancel)
+	case "RecordingGet":
+		return invoke(ctx, s, svc.RecordingGet)
+	case "RecordingList":
+		return invoke(ctx, s, svc.RecordingList)
+	case "RecordingConfirm":
+		return invoke(ctx, s, svc.RecordingConfirm)
+	case "RecordingDismiss":
+		return invoke(ctx, s, svc.RecordingDismiss)
+	case "RecordingPlace":
+		return invoke(ctx, s, svc.RecordingPlace)
 	case "CostSummary":
 		return invoke(ctx, s, svc.CostSummary)
 	case "CostCeilingSet":
@@ -530,6 +548,10 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 	}
 
 	switch s.Call {
+	case "RecordingGet":
+		return "job_get", map[string]any{"job_id": args["recording_id"]}, nil
+	case "RecordingStop":
+		return "job_cancel", map[string]any{"job_id": args["recording_id"]}, nil
 	case "AssetList", "AssetGet", "AssetUses", "AssetSetInfo", "AssetTag", "AssetRename":
 		return assetToolCall(s.Call, args)
 	case "ImageCreate", "ImageList", "ImageDescribe", "ImageEdit", "ImageUndo", "ImageRedo", "ImageExport",
@@ -971,6 +993,10 @@ func command2argv(s step) (name string, argv []string, stdin string, err error) 
 }
 
 func commandOf(s step) (name string, argv []string, stdin string, err error) {
+	if name, argv, ok, err := recordingCommand(s); ok {
+		return name, argv, "", err
+	}
+
 	// The writing steps first: their from is a revision number, which the time of a motion range below refuses.
 	if name, argv, stdin, ok, err := writingCommand(s); ok {
 		return name, argv, stdin, err

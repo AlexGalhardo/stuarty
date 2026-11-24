@@ -96,6 +96,14 @@ func AgentDocsInputs() agentdocs.Inputs {
 		inLibrary[s.name] = true
 	}
 
+	// The screen recording commands (epic 61, SDD-023) are in the guide of the video domain: the skill is at its cap
+	// (12,400 characters, D-094), and an agent reads a recording and stops it through job_get and job_cancel.
+	for _, s := range []*spec{
+		recordingSourcesCmd, recordingStopCmd, recordingCancelCmd, recordingShowCmd, recordingListCmd, recordingPlaceCmd,
+	} {
+		inLibrary[s.name] = true
+	}
+
 	// The webhooks (epic 59, SDD-022) are a person's setting: an agent only reads them through the connection tool of
 	// MCP (D-127). Their commands are in the guide of the workspace domain, not in the editor skill, which is at its
 	// cap (12,400 characters, D-094).
