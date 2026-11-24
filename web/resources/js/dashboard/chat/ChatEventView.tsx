@@ -169,6 +169,16 @@ export default function ChatEventView({
 					<UntrustedText>{event.permission?.title}</UntrustedText>
 				</li>
 			);
+		case "skill_loaded":
+			return (
+				<li
+					data-testid="chat-skill"
+					className="px-3 text-sm text-muted-foreground"
+				>
+					{t("ui.chat.skill_loaded")}:{" "}
+					<UntrustedText>{event.skill?.name}</UntrustedText>
+				</li>
+			);
 		case "notice":
 			return (
 				<li

@@ -25,6 +25,7 @@ import type {
 	BrandKitBody,
 	BriefResult,
 	BundleImportResult,
+	ChatActivity,
 	ChatSession,
 	ChatSessionListResult,
 	ChatTranscriptResult,
@@ -365,6 +366,7 @@ export interface ApiClient {
 		options?: { after?: number; format?: "json" | "markdown" },
 	): Promise<ChatTranscriptResult>;
 	deleteChatSession(sessionId: string): Promise<ChatSession>;
+	getChatActivity(sessionId: string): Promise<ChatActivity>;
 	// An administrator session; any other caller gets E_FORBIDDEN.
 	listUsers(): Promise<UserListResult>;
 	listTrashedProjects(): Promise<ProjectListResult>;
@@ -865,6 +867,12 @@ export function createClient(
 				"DELETE",
 				`/chat/sessions/${encodeURIComponent(sessionId)}`,
 				EDIT_TIMEOUT_MS,
+			),
+		getChatActivity: (sessionId) =>
+			call(
+				"GET",
+				`/chat/sessions/${encodeURIComponent(sessionId)}/activity`,
+				READ_TIMEOUT_MS,
 			),
 		listProviders: () => call("GET", "/providers", READ_TIMEOUT_MS),
 		listProviderModels: (connectionId, refresh) =>

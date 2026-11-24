@@ -10,7 +10,7 @@ export default function ConnectedSceneBar(): ReactNode {
 	const { chat, openChat } = useShell();
 	return (
 		<SceneBar
-			model={sceneOf(chat.session, chat.events)}
+			model={sceneOf(chat.session, chat.events, chat.activity)}
 			project={projectNameOf(chat.session, chat.projects)}
 			connected={
 				chat.profiles === null ? null : chat.profiles.profiles.length > 0

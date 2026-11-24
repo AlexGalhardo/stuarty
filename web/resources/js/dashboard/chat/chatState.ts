@@ -82,3 +82,18 @@ export function canSend(state: ChatState | null): boolean {
 export function isBusy(state: ChatState | null): boolean {
 	return state === "running" || state === "awaiting_permission";
 }
+
+// A value that changes when the activity of the session may have changed: a skill was read, or the last tool
+// call is another one or moved on. It only says when to ask the service again; what the activity is, the
+// service tells (SDD-017 section 8.1).
+export function activityStamp(events: readonly ChatEvent[]): string {
+	let skills = 0;
+	let tool = "";
+	for (const e of events) {
+		if (e.kind === "skill_loaded") skills++;
+		if (e.kind === "tool_call" && e.tool !== undefined) {
+			tool = `${e.seq}|${e.tool.status}|${e.tool.title}|${e.tool.action ?? ""}`;
+		}
+	}
+	return `${skills}#${tool}`;
+}

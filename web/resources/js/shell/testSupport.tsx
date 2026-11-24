@@ -5,6 +5,7 @@ import type { ChatPanelState } from "@/dashboard/chat/useChat";
 import { I18nProvider } from "@/lib/i18n";
 import { SessionProvider } from "@/lib/session";
 import en from "../../lang/en.json";
+import type { ChatActivity } from "../editor/api/types";
 import { ShellProvider } from "./ShellContext";
 
 // The catalogue the server sends is the flattened "ui." tree; the tests of the shell read the English one.
@@ -32,6 +33,7 @@ export function fakeChat(over: Partial<ChatPanelState> = {}): ChatPanelState {
 		projectId: null,
 		session: null,
 		events: [],
+		activity: null,
 		live: false,
 		failure: null,
 		busy: false,
@@ -45,6 +47,20 @@ export function fakeChat(over: Partial<ChatPanelState> = {}): ChatPanelState {
 		removeSession: nothing,
 		saveProfile: async () => true,
 		removeProfile: nothing,
+		...over,
+	};
+}
+
+// What the service answers for the activity of a session: the tests change what they need.
+export function activity(over: Partial<ChatActivity> = {}): ChatActivity {
+	return {
+		session_id: "chs_1",
+		state: "running",
+		skill: { name: "", state: "none" },
+		skills_loaded: [],
+		tool: null,
+		updated_at: "",
+		untrusted_notice: "",
 		...over,
 	};
 }

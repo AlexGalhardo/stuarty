@@ -1,10 +1,10 @@
 import { openRequests } from "../dashboard/chat/chatState";
-import type { ChatEvent, ChatSession } from "../editor/api/types";
+import type { ChatActivity, ChatEvent, ChatSession } from "../editor/api/types";
 
 // How the scene bar tells a session (SDD-012 section 23.4). Every variant is a word and an icon in the
-// component; this file only maps what the service reported to a variant. It adds no fact: the agent, the
-// tool and the request are the service's, and the skill, a next step and a cost are not drawn at all
-// until the server reports them (epic 76).
+// component; this file only maps what the service reported to a variant. It adds no fact: the agent and the
+// request are the service's, and so are the skill and the tool, which come from the activity read model of the
+// service (SDD-017 section 8.1, epic 76). A next step and a cost are not drawn at all.
 export type SceneVariant =
 	| "none"
 	| "idle"
@@ -18,6 +18,18 @@ export interface SceneTool {
 	// untrusted text: the agent wrote it
 	title: string;
 	status: "pending" | "in_progress" | "completed" | "failed";
+	// for a tool of Stuarty: its name and the message key of its plain description; null when only the agent's
+	// own title is known
+	technicalName: string | null;
+	descriptionKey: string | null;
+	fromAgent: boolean;
+}
+
+export interface SceneSkill {
+	// untrusted text: the name of a skill of the library; empty unless the state is loaded
+	name: string;
+	// loaded: read in this session; available: a reviewed skill exists and none was read; none
+	state: "loaded" | "available" | "none";
 }
 
 export interface SceneRequest {
@@ -33,6 +45,10 @@ export interface SceneModel {
 	// the state the session reports (ui.chat.state_*), for the word under the agent
 	state: ChatSession["state"] | null;
 	endReason: string | null;
+	// whether the service has told the activity of this session: with no answer the bar says "not reported"
+	// instead of guessing
+	reported: boolean;
+	skill: SceneSkill | null;
 	tool: SceneTool | null;
 	// the permission request that waits for a person, if any
 	request: SceneRequest | null;
@@ -41,14 +57,18 @@ export interface SceneModel {
 // A session that ended for a reason the person or Stuarty chose is done; any other reason is a failure.
 const DONE_REASONS: ReadonlySet<string> = new Set(["user", "idle", "shutdown"]);
 
-export function lastTool(events: readonly ChatEvent[]): SceneTool | null {
-	for (let i = events.length - 1; i >= 0; i--) {
-		const e = events[i];
-		if (e?.kind === "tool_call" && e.tool !== undefined) {
-			return { title: e.tool.title, status: e.tool.status };
-		}
-	}
-	return null;
+// The skill and the tool as the service reported them; nothing is derived from the events here.
+export function reportedTool(activity: ChatActivity): SceneTool | null {
+	const t = activity.tool;
+	if (t === null) return null;
+	const known = t.technical_name !== undefined && !t.from_agent;
+	return {
+		title: t.title,
+		status: t.status,
+		technicalName: known ? (t.technical_name ?? null) : null,
+		descriptionKey: known ? (t.description_key ?? null) : null,
+		fromAgent: !known,
+	};
 }
 
 // The last answer of the turn in course, when it was a refusal. A turn starts at the last message of the
@@ -77,6 +97,7 @@ export function projectNameOf(
 export function sceneOf(
 	session: ChatSession | null,
 	events: readonly ChatEvent[],
+	activity: ChatActivity | null = null,
 ): SceneModel {
 	if (session === null) {
 		return {
@@ -84,6 +105,8 @@ export function sceneOf(
 			agent: null,
 			state: null,
 			endReason: null,
+			reported: false,
+			skill: null,
 			tool: null,
 			request: null,
 		};
@@ -97,7 +120,9 @@ export function sceneOf(
 		agent: session.profile,
 		state: session.state,
 		endReason: session.end_reason ?? null,
-		tool: lastTool(events),
+		reported: activity !== null,
+		skill: activity?.skill ?? null,
+		tool: activity === null ? null : reportedTool(activity),
 		request,
 	};
 	switch (session.state) {

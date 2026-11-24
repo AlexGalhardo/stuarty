@@ -72,16 +72,25 @@ function Slot({
 		>
 			<Icon aria-hidden="true" className="size-4 shrink-0 text-icon" />
 			<div className="min-w-0">
-				<p className="truncate text-xs text-muted-foreground">{label}</p>
+				<p className="truncate text-sm text-muted-foreground">{label}</p>
 				<p className="truncate text-sm font-medium">{children}</p>
 			</div>
 		</div>
 	);
 }
 
+// The line above the tool: its technical name (or that the title is the agent's own text) and its status.
+function toolLabel(model: SceneModel, t: (key: string) => string): string {
+	const { tool } = model;
+	if (tool === null) return t("ui.shell.scene.tool");
+	const who = tool.technicalName ?? t("ui.shell.scene.tool_from_agent");
+	return `${t("ui.shell.scene.tool")} · ${who} · ${t(`ui.chat.tool_status_${tool.status}`)}`;
+}
+
 // The scene bar (SDD-012 section 23.4): the agent, the state of its session, the skill, the tool and, for an
-// open permission request, Allow and Deny. It reports what the service says and nothing more: the skill is
-// "Not reported" until the server reports one, and there is no next step, no cost and no "always allow".
+// open permission request, Allow and Deny. It reports what the service says and nothing more: the skill and
+// the tool come from the activity of the session and are "Not reported" until the server answers, a skill is
+// "loaded in this session" and never "in use", and there is no next step, no cost and no "always allow".
 export default function SceneBar({
 	model,
 	project = null,
@@ -181,29 +190,46 @@ export default function SceneBar({
 				<>
 					<Slot
 						icon={Sparkles}
-						label={t("ui.shell.scene.skill")}
+						label={
+							model.skill === null
+								? t("ui.shell.scene.skill")
+								: `${t("ui.shell.scene.skill")} · ${t(`ui.shell.scene.skill_state.${model.skill.state}`)}`
+						}
 						testId="scene-skill"
 						className="max-md:hidden"
 					>
-						<span className="text-muted-foreground">
-							{t("ui.shell.scene.not_reported")}
-						</span>
+						{model.skill === null ? (
+							<span className="text-muted-foreground">
+								{t("ui.shell.scene.not_reported")}
+							</span>
+						) : model.skill.state === "loaded" ? (
+							<UntrustedText>{model.skill.name}</UntrustedText>
+						) : (
+							<span className="text-muted-foreground">
+								{t(
+									model.skill.state === "available"
+										? "ui.shell.scene.skill_available"
+										: "ui.shell.scene.skill_none",
+								)}
+							</span>
+						)}
 					</Slot>
 					<Slot
 						icon={SquareTerminal}
-						label={
-							model.tool === null
-								? t("ui.shell.scene.tool")
-								: `${t("ui.shell.scene.tool")} · ${t(`ui.chat.tool_status_${model.tool.status}`)}`
-						}
+						label={toolLabel(model, t)}
 						testId="scene-tool"
 						// 7 rem at least: squeezed beside a long agent line it goes to a line of its own
 						className="min-w-28 flex-1"
 					>
 						{model.tool === null ? (
 							<span className="text-muted-foreground">
-								{t("ui.shell.scene.no_tool")}
+								{model.reported
+									? t("ui.shell.scene.no_tool")
+									: t("ui.shell.scene.not_reported")}
 							</span>
+						) : model.tool.descriptionKey !== null ? (
+							// the plain description of a tool of Stuarty, in words a person can judge
+							t(model.tool.descriptionKey)
 						) : (
 							<UntrustedText>{model.tool.title}</UntrustedText>
 						)}

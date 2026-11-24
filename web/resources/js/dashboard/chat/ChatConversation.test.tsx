@@ -56,6 +56,7 @@ const chat = {
 	projectId: "prj_1",
 	session,
 	events,
+	activity: null,
 	live: true,
 	failure: null,
 	busy: false,
