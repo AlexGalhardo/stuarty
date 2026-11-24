@@ -6965,7 +6965,7 @@ The copy is made as `item.split` would make the piece of the range, so speed, fr
 
 **Minimum and default radius.** With `s` the shorter side of the project in pixels, the least radius is `min_radius = min(100, ceil(0.015 x s))` and the default `radius = min(100, ceil(0.04 x s))` (17 and 44 at 1080). A radius below `min_radius` is `E_VALIDATION`: a lighter blur can be reversed.
 
-**Frame edge.** The blur counts the pixels outside the picture as transparent (SDD-004 section 3.6), so within about 2 radii of an edge of the picture the blurred copy is partly transparent (an alpha of 84% at 1 radius from the edge, 98% at 2 radii) and part of the sharp picture shows through. A region that touches an edge is therefore less hidden near that edge; `effective.near_edge` says so (true when the region comes closer than 2 radii to an edge of the frame, taken as the project size times the scale of the clip), and the editor warns. A larger region or radius does not cure it, because the pixels at the edge stay about half covered; text that touches an edge is hidden completely only by an opaque item over it, such as a shape (`shape.add`). Drawing the pixels outside the picture as the nearest edge pixel would cure it, and is a feature of the renderer that this command does not add (epic 71, STOP condition).
+**Frame edge (VV-392).** A layer that has a blur and a mask is blurred with the pixels beyond the picture repeating the nearest edge pixel, and keeps its size (SDD-004 section 3.6, "Blur at the edge"), so a region that touches an edge of the picture is hidden as much as one in the middle: the blurred copy is opaque up to the edge. The first version counted the outside as transparent and let about half of the sharp picture through at the edge itself. What is still soft at an edge is the feather: its soft border is centred on the border of the region, so half of it lies outside the picture. `effective.near_edge` is true when the feather is above 0 and the region comes closer than half the feather to an edge of the frame (the project size times the scale of the clip, in project pixels); with no feather it is always false. Use `feather` 0 on a region that touches an edge.
 
 **Arguments**
 
@@ -7018,7 +7018,8 @@ The copy is made as `item.split` would make the piece of the range, so speed, fr
 - `ok_given_track`
 - `ok_radius_and_feather`
 - `ok_sped_up_clip`
-- `ok_near_edge_is_reported`
+- `ok_at_the_edge_is_not_near_edge`
+- `ok_near_edge_with_a_feather_is_reported`
 - `ok_image_clip`
 - `err_validation_region_outside`
 - `err_validation_radius_below_minimum`

@@ -131,7 +131,7 @@ for (const theme of ["dark", "light"] as const) {
 					await serious(page, '[data-testid="caption-style-gallery"]'),
 				).toEqual([]);
 
-				// The blur form of the clip: a region at the top edge is blurred and the editor says it is near the edge.
+				// The blur form of the clip: a region at the top edge is blurred.
 				await page.locator(`[data-item-id="${s.clip}"]`).click();
 				const strip = page.getByRole("tablist", { name: "Properties" });
 				await strip.getByRole("tab", { name: "Adjust" }).click();
@@ -143,9 +143,16 @@ for (const theme of ["dark", "light"] as const) {
 				const apply = blur.getByRole("button", { name: "Blur this region" });
 				await tabTo(page, apply);
 				await page.keyboard.press("Enter");
-				await expect(blur.getByRole("status")).toContainText(
-					"close to an edge",
-				);
+				// The blur repeats the edge pixels (VV-392), so an edge region is blurred like any other and the
+				// editor has nothing to warn about.
+				await expect
+					.poll(async () =>
+						JSON.stringify(
+							await s.call("GET", `/projects/${s.id}?detail=document`),
+						),
+					)
+					.toContain("Blur region");
+				await expect(blur.getByRole("status")).toHaveCount(0);
 				await blur.scrollIntoViewIfNeeded();
 				await shot("blur-region", blur);
 				expect(await serious(page, '[data-section="blur-region"]')).toEqual([]);

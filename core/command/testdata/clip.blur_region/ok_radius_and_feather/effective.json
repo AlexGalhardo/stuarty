@@ -11,7 +11,7 @@
     "y": 0.4
   },
   "min_radius": 17,
-  "near_edge": true,
+  "near_edge": false,
   "new_id": "itm_s6t7v8w9x0",
   "new_track_id": "trk_b2c3d4e5f6",
   "radius": 60,

@@ -30,7 +30,6 @@ export default function BlurRegionSection({
 	const [duration, setDuration] = useState<string | undefined>(undefined);
 	const [radius, setRadius] = useState<number | undefined>(undefined);
 	const [busy, setBusy] = useState(false);
-	const [nearEdge, setNearEdge] = useState(false);
 	if (!exposed) return null;
 	const share = (label: string, key: keyof typeof START_REGION): ReactNode => (
 		<NumberField
@@ -96,9 +95,8 @@ export default function BlurRegionSection({
 				disabled={!canEdit || busy}
 				onClick={async () => {
 					setBusy(true);
-					setNearEdge(false);
 					try {
-						const outcome = await actions.runOperations(
+						await actions.runOperations(
 							blurRegionOperations(itemId, {
 								...region,
 								start,
@@ -106,10 +104,6 @@ export default function BlurRegionSection({
 								radius,
 							}),
 						);
-						if (outcome?.ok === true) {
-							const first = outcome.result.effective[0]?.effective;
-							setNearEdge(first?.near_edge === true);
-						}
 					} finally {
 						setBusy(false);
 					}
@@ -117,11 +111,6 @@ export default function BlurRegionSection({
 			>
 				{t("ui.editor.blur_region.apply")}
 			</Button>
-			{nearEdge && (
-				<p role="status" className="text-xs text-muted-foreground">
-					{t("ui.editor.blur_region.near_edge")}
-				</p>
-			)}
 		</Section>
 	);
 }

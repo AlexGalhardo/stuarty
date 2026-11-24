@@ -2306,8 +2306,7 @@
         "duration": "Por",
         "radius": "Força do borrão",
         "radius_default": "Padrão forte",
-        "apply": "Borrar esta região",
-        "near_edge": "A região está perto de uma borda da imagem, onde o desfoque é mais fraco e parte da imagem nítida pode aparecer. Para esconder por completo um texto na borda, cubra-o com uma forma."
+        "apply": "Borrar esta região"
       },
       "voice_preset": {
         "hint": "Uma ação para uma voz limpa e uniforme. A exportação leva o som à meta de volume do projeto.",
