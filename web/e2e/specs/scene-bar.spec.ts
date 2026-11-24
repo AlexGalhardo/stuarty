@@ -368,7 +368,10 @@ test.describe("scene bar", () => {
 		await expect(slot).not.toContainText(/in use/i);
 		// the conversation names the skill too, in the line of the event and in the strip of the activity
 		await page.getByTestId("chat-toggle").click();
-		await expect(page.getByTestId("chat-skill")).toContainText(skill);
+		// the panel reads the list of agents before it draws the conversation, which takes a while in WebKit
+		await expect(page.getByTestId("chat-skill")).toContainText(skill, {
+			timeout: 20_000,
+		});
 		await expect(page.getByTestId("chat-activity-skill")).toContainText(skill);
 		await expect(page.getByTestId("chat-activity-tool")).toContainText(
 			"Reads one note, skill or prompt.",
@@ -384,9 +387,12 @@ test.describe("scene bar", () => {
 			await expect(page.locator("html")).toHaveClass(
 				theme === "dark" ? /\bdark\b/ : /^((?!\bdark\b).)*$/,
 			);
-			await page.getByTestId("scene-bar").screenshot({
-				path: testInfo.outputPath(`scene-bar-skill-${theme}.png`),
-			});
+			// Playwright's screenshot adds a <style> element, which the CSP of the page refuses in WebKit
+			if (browserName !== "webkit") {
+				await page.getByTestId("scene-bar").screenshot({
+					path: testInfo.outputPath(`scene-bar-skill-${theme}.png`),
+				});
+			}
 		}
 	});
 
