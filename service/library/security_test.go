@@ -306,6 +306,39 @@ func TestSecurity_T46_AgentCannotOverwriteAKeptNote(t *testing.T) {
 	}
 }
 
+// SDD-007 T-46: a caller that is not a person neither rewrites nor removes the pending note of another author.
+func TestSecurity_T46_AgentCannotTouchAnotherAuthorsPendingNote(t *testing.T) {
+	t.Parallel()
+
+	m, _, _ := newManager(t)
+	ctx := context.Background()
+	other := Caller{Actor: "local:codex-p4q7z1"}
+
+	if _, _, err := m.SaveMemory(
+		ctx,
+		other,
+		MemoryInput{Name: "pending", Description: "P", Body: "Original.\n"},
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, _, err := m.SaveMemory(
+		ctx,
+		agent,
+		MemoryInput{Name: "pending", Description: "x", Body: "Hijacked."},
+	); !errors.Is(err, ErrPersonOnly) {
+		t.Fatalf("%v", err)
+	}
+
+	if err := m.DeleteMemory(ctx, agent, "pending"); !errors.Is(err, ErrPersonOnly) {
+		t.Fatalf("%v", err)
+	}
+
+	if mem, _, err := m.ReadMemory(ctx, "pending"); err != nil || mem.Body != "Original.\n" || mem.Actor != other.Actor {
+		t.Fatalf("%v %+v", err, mem)
+	}
+}
+
 // SDD-007 T-47: a name is never a path, and an archive cannot write outside the skill folder.
 func TestSecurity_T47_NameIsNeverAPath(t *testing.T) {
 	t.Parallel()
