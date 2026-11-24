@@ -8,6 +8,7 @@ use std::time::{Duration, Instant};
 use crate::audio::{self, Kind, RATE};
 use crate::camera;
 use crate::clock::Clock;
+use crate::events;
 use crate::frame::Mailbox;
 use crate::protocol::{self, Finish, StartRequest, TrackEnd, TrackStart};
 use crate::sink::{FfmpegSink, FileSink, Sink};
@@ -55,12 +56,21 @@ struct Sound {
 struct Extra {
 	sounds: Vec<Sound>,
 	camera: Option<camera::Track>,
+	pointer: Option<events::Track>,
 }
 
 impl Extra {
 	/// Ends every track at once, which makes each finish its file, and reports how each ended. The stop flag must
-	/// be set by the caller.
-	fn join(self, ends: &mut Vec<TrackEnd>) {
+	/// be set by the caller. It returns the number of pointer events written.
+	fn join(self, ends: &mut Vec<TrackEnd>) -> u64 {
+		let mut pointer_events = 0;
+		if let Some(p) = self.pointer {
+			let o = p.join();
+			if let Some(e) = &o.error {
+				eprintln!("the pointer track: {e}");
+			}
+			pointer_events = o.events;
+		}
 		for s in self.sounds {
 			let o = s.track.join();
 			if let Some(e) = &o.error {
@@ -87,19 +97,22 @@ impl Extra {
 				lost: o.lost,
 			});
 		}
+		pointer_events
 	}
 }
 
 /// Ends the tracks and the screen source of a start that did not get to run.
 fn abandon(src: Box<dyn source::RunningSource>, extra: Extra, stop: &AtomicBool) {
 	stop.store(true, Ordering::Relaxed);
-	extra.join(&mut Vec::new());
+	let _ = extra.join(&mut Vec::new());
 	src.stop();
 }
 
 /// Runs a recording to its end and reports every step through emit. It returns when the files are complete or
 /// the recording failed; `ctl.stop` asks for a graceful end.
 pub fn run(req: &StartRequest, emit: &dyn Fn(String), ctl: &Control) {
+	#[cfg(windows)]
+	crate::win32::timer_1ms();
 	let (stop, clock) = (&ctl.stop, &ctl.clock);
 	let mailbox = Mailbox::new();
 	let src = match source::open(req, &mailbox) {
@@ -166,6 +179,21 @@ pub fn run(req: &StartRequest, emit: &dyn Fn(String), ctl: &Control) {
 			"the size of the source is outside the supported range",
 		));
 		return;
+	}
+
+	// The pointer file has the size of the screen file in its header, so it starts here, still before the origin.
+	if let Some(path) = &req.extras.out_events {
+		let track = events::open_pointer(req, w, h).and_then(|p| {
+			events::spawn(p, path.clone(), w, h, Arc::clone(clock), Arc::clone(stop))
+		});
+		match track {
+			Ok(t) => extra.pointer = Some(t),
+			Err(e) => {
+				abandon(src, extra, stop);
+				emit(protocol::error(e.code, &e.message));
+				return;
+			}
+		}
 	}
 
 	let sink: Result<Box<dyn Sink>, String> = if req.encoder == "raw" {
@@ -258,7 +286,7 @@ pub fn run(req: &StartRequest, emit: &dyn Fn(String), ctl: &Control) {
 			Step::Failed(e) => {
 				src.stop();
 				stop.store(true, Ordering::Relaxed);
-				extra.join(&mut Vec::new());
+				let _ = extra.join(&mut Vec::new());
 				emit(protocol::error(
 					"encoder_failed",
 					&finish_message(grid.sink, &e.to_string()),
@@ -279,7 +307,7 @@ pub fn run(req: &StartRequest, emit: &dyn Fn(String), ctl: &Control) {
 		bytes: 0,
 		lost: false,
 	}];
-	extra.join(&mut ends);
+	let pointer_events = extra.join(&mut ends);
 
 	if let Err(m) = grid.sink.finish() {
 		emit(protocol::error("encoder_failed", &m));
@@ -299,7 +327,7 @@ pub fn run(req: &StartRequest, emit: &dyn Fn(String), ctl: &Control) {
 		bytes: ends.iter().map(|t| t.bytes).sum(),
 		tracks: &ends,
 		pauses: &pauses,
-		pointer_events: 0,
+		pointer_events,
 	}));
 }
 
@@ -573,8 +601,8 @@ mod tests {
 			"screen {screen} ms, camera {cam} ms"
 		);
 		let bytes = std::fs::metadata(dir.join("camera.raw")).unwrap().len();
-		assert_eq!(bytes % (640 * 360 * 4), 0, "whole frames of 640 by 360");
-		assert_eq!(bytes / (640 * 360 * 4), cam * 30 / 1000);
+		assert_eq!(bytes % (160 * 90 * 4), 0, "whole frames of 160 by 90");
+		assert_eq!(bytes / (160 * 90 * 4), cam * 30 / 1000);
 		std::fs::remove_dir_all(dir).unwrap();
 	}
 

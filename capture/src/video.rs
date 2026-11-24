@@ -8,7 +8,8 @@ use crate::clock::Clock;
 use crate::frame::Mailbox;
 use crate::sink::Sink;
 
-const MAX_WAIT: Duration = Duration::from_millis(10);
+/// How long one wait for a slot may be: short, so a slot is taken within a few milliseconds of its time.
+const MAX_WAIT: Duration = Duration::from_millis(2);
 
 /// What a call of `Grid::step` found.
 pub enum Step {
