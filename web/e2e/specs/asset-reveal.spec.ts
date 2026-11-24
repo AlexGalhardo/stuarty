@@ -86,10 +86,7 @@ test.describe("show in folder and copy path", () => {
 		context,
 		browserName,
 	}) => {
-		test.skip(
-			browserName !== "chromium",
-			"the clipboard permissions of the test are a Chromium feature",
-		);
+		test.skip(browserName !== "chromium", "clipboard permissions: Chromium"); // verify:env-skip a Chromium-only feature
 		await context.grantPermissions(["clipboard-read", "clipboard-write"]);
 		const { hash } = await seededFile(request);
 		await signInAsPerson(page);
