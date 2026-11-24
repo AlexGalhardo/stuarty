@@ -19,11 +19,11 @@ Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). `--json` for JSON.
 5. Look: `view --at 1s`, then `view --mode sheet`.
 6. `export --project <id>`; check the job `checks`.
 
-## Rules that prevent mistakes
+## Rules
 
 - Times need a unit: `12.5s` or `375f`.
 - Ids (`prj_`, `ast_`, `trk_`, `itm_`, `job_`) are never positions. List first.
-- The top track draws over the others (`top`, `bottom`).
+- The top track draws over the others.
 - `--base`: your last `revision` (default: current).
 - Own `id` for what you reuse; network mode: omit --id.
 
