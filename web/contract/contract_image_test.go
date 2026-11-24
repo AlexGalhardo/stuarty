@@ -111,17 +111,17 @@ func TestAssetLibraryScenarioSaysWhatItShould(t *testing.T) {
 		t.Errorf("the renamed entry: %s / %s", got[19].result, got[20].result)
 	}
 
-	// steps 21 to 25 (epic 94): a blank name, a name with a bidirectional override and a name over 120 characters
-	// are refused as E_VALIDATION name_invalid, the same on every surface (the scenario compares them); the name
-	// the file already has is accepted and the entry reads back the same.
-	for _, i := range []int{21, 22, 23} {
+	// steps 21 to 26 (epic 94, VV-396): a blank name, a name with a bidirectional override, a name with a control
+	// character and a name over 120 characters are refused as E_VALIDATION name_invalid, the same on every surface
+	// (the scenario compares them); the name the file already has is accepted and the entry reads back the same.
+	for _, i := range []int{21, 22, 23, 24} {
 		if !strings.Contains(got[i].fail, "name_invalid") {
 			t.Errorf("step %d (%s) was not refused as name_invalid: %+v", i, steps[i].Call, got[i])
 		}
 	}
 
-	if !strings.Contains(got[24].result, `"name":"Reaction cat.mov"`) ||
-		!strings.Contains(got[25].result, `"name":"Reaction cat.mov"`) {
-		t.Errorf("the rename to the current name: %s / %s", got[24].result, got[25].result)
+	if !strings.Contains(got[25].result, `"name":"Reaction cat.mov"`) ||
+		!strings.Contains(got[26].result, `"name":"Reaction cat.mov"`) {
+		t.Errorf("the rename to the current name: %s / %s", got[25].result, got[26].result)
 	}
 }
