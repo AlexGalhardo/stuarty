@@ -3355,6 +3355,7 @@
       "no_approval": "No key approves a publication. That stays with a person.",
       "secret_title": "Copy this secret now",
       "secret_copy": "Copy the secret",
+      "secret_copied": "Secret copied",
       "name": "Name",
       "scopes": "Scopes",
       "project": "Limit to a project (optional)",

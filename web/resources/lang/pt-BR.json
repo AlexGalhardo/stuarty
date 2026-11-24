@@ -3355,6 +3355,7 @@
       "no_approval": "Nenhuma chave aprova uma publicação. Isso fica com uma pessoa.",
       "secret_title": "Copie este segredo agora",
       "secret_copy": "Copiar o segredo",
+      "secret_copied": "Segredo copiado",
       "name": "Nome",
       "scopes": "Escopos",
       "project": "Limitar a um projeto (opcional)",
