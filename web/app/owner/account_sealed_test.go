@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	rules "github.com/AlexGalhardo/stuarty/core/account"
+	"github.com/AlexGalhardo/stuarty/internal/testfs"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
@@ -49,8 +50,8 @@ var canaryWords = []string{
 func accountEnv(t *testing.T) func(string) string {
 	t.Helper()
 
-	home := filepath.Join(t.TempDir(), "ws")
-	keyFile := filepath.Join(t.TempDir(), "master.key")
+	home := filepath.Join(testfs.TempDir(t), "ws")
+	keyFile := filepath.Join(testfs.TempDir(t), "master.key")
 
 	return func(k string) string {
 		switch k {
