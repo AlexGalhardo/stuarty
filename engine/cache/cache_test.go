@@ -9,11 +9,13 @@ import (
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/AlexGalhardo/stuarty/internal/testfs"
 )
 
 func open(t *testing.T, limit int64) *Store {
 	t.Helper()
-	s, err := Open(filepath.Join(t.TempDir(), "cache"), limit)
+	s, err := Open(filepath.Join(testfs.TempDir(t), "cache"), limit)
 	if err != nil {
 		t.Fatal(err)
 	}

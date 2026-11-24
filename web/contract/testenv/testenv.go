@@ -32,6 +32,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/engine/ingest"
 	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
 	"github.com/AlexGalhardo/stuarty/engine/transcribe"
+	"github.com/AlexGalhardo/stuarty/internal/testfs"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/pathguard"
@@ -108,7 +109,7 @@ type Env struct {
 func New(tb testing.TB, o Options) *Env {
 	tb.Helper()
 
-	e := &Env{Files: tb.TempDir(), durationMS: o.DurationMS, silence: `{"start":24000,"end":48000}`}
+	e := &Env{Files: testfs.TempDir(tb), durationMS: o.DurationMS, silence: `{"start":24000,"end":48000}`}
 	if o.SilenceBlocks {
 		e.silence = `{"start":24576,"end":48128}`
 	}
@@ -117,7 +118,7 @@ func New(tb testing.TB, o Options) *Env {
 		e.durationMS = 2000
 	}
 
-	dir, err := workspace.Resolve(func(string) string { return filepath.Join(tb.TempDir(), "ws") })
+	dir, err := workspace.Resolve(func(string) string { return filepath.Join(testfs.TempDir(tb), "ws") })
 	if err != nil {
 		tb.Fatal(err)
 	}

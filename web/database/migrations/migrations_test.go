@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/AlexGalhardo/stuarty/internal/testfs"
 	"github.com/AlexGalhardo/vukem/database"
 	"github.com/AlexGalhardo/vukem/queue"
 	"github.com/AlexGalhardo/vukem/schema"
@@ -17,7 +18,7 @@ import (
 func openMigrated(t *testing.T) *database.DB {
 	t.Helper()
 	ctx := context.Background()
-	db, err := database.Open(ctx, "file:"+filepath.ToSlash(filepath.Join(t.TempDir(), "db.sqlite")))
+	db, err := database.Open(ctx, "file:"+filepath.ToSlash(filepath.Join(testfs.TempDir(t), "db.sqlite")))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -602,7 +603,7 @@ func TestJobsAcceptWaitingApprovalAndRegisteredKinds(t *testing.T) {
 // values, and brings the state and the kinds along; Down puts the table back for the old kinds.
 func TestJobsRebuildKeepsTheRowsOfAnExistingWorkspace(t *testing.T) {
 	ctx := context.Background()
-	db, err := database.Open(ctx, "file:"+filepath.ToSlash(filepath.Join(t.TempDir(), "db.sqlite")))
+	db, err := database.Open(ctx, "file:"+filepath.ToSlash(filepath.Join(testfs.TempDir(t), "db.sqlite")))
 	if err != nil {
 		t.Fatal(err)
 	}

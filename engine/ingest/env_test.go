@@ -13,6 +13,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/engine/ffmpeg/ffargs"
 	"github.com/AlexGalhardo/stuarty/engine/ingest/mediagen"
 	"github.com/AlexGalhardo/stuarty/engine/store"
+	"github.com/AlexGalhardo/stuarty/internal/testfs"
 )
 
 const envTestFFmpegDir = "STUARTY_TEST_FFMPEG_DIR"
@@ -98,12 +99,12 @@ type env struct {
 func newEnv(tb testing.TB) *env {
 	tb.Helper()
 	in, caps := pinnedInstall(tb)
-	ws := tb.TempDir()
+	ws := testfs.TempDir(tb)
 	r, err := ffmpeg.NewRunner(in, ws)
 	if err != nil {
 		tb.Fatal(err)
 	}
-	genDir := tb.TempDir()
+	genDir := testfs.TempDir(tb)
 	return &env{t: tb, r: r, caps: caps, store: store.New(ws), ws: ws, gen: mediagen.Gen{
 		Dir: genDir,
 		Run: func(ctx context.Context, dir string, args ...string) (string, error) {

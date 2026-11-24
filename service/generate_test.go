@@ -15,6 +15,7 @@ import (
 	core "github.com/AlexGalhardo/stuarty/core/approval"
 	"github.com/AlexGalhardo/stuarty/core/provider"
 	"github.com/AlexGalhardo/stuarty/internal/outbound"
+	"github.com/AlexGalhardo/stuarty/internal/testfs"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/connections/connectionstest"
 	"github.com/AlexGalhardo/stuarty/service/providers"
@@ -99,7 +100,7 @@ func newGenerateRig(t *testing.T, caps ...string) *generateRig {
 
 	m := &maker{id: "maker", caps: caps}
 	h := connectionstest.New(t, m.id, "http://127.0.0.1:1/v1", "sk-test-0123456789")
-	book := providers.NewPriceBook(filepath.Join(t.TempDir(), providers.PriceFile))
+	book := providers.NewPriceBook(filepath.Join(testfs.TempDir(t), providers.PriceFile))
 	reg := providers.NewRegistry(h.Manager, book, time.Now)
 
 	if err := reg.Register(m); err != nil {
