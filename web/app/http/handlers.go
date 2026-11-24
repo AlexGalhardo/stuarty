@@ -220,6 +220,7 @@ func (h *apiHandler) registerAll() {
 	register(h, "account.logout", h.accountLogout)
 	register(h, "account.recover", h.accountRecover)
 	register(h, "account.password", h.accountPassword)
+	register(h, "account.recovery_key", h.accountRecoveryKey)
 	register(h, "account.settings", h.accountSettings)
 	register(h, "account.settings.get", h.accountSettingsGet)
 	register(h, "keys.create", h.keysCreate)

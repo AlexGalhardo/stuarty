@@ -425,3 +425,30 @@ func rewrap(rec Record, dataKey []byte, newPassword string, p Params) (Record, e
 
 	return rec, nil
 }
+
+// rewrapRecovery returns rec with the data key wrapped by a new recovery key, and that key to show. The password
+// record and the sealed fields do not change, and the old recovery key opens nothing any more.
+func rewrapRecovery(rec Record, dataKey []byte) (Record, string, error) {
+	raw, err := random(KeySize)
+	if err != nil {
+		return Record{}, "", err
+	}
+
+	defer wipe(raw)
+
+	rkek, err := recoveryKEK(raw)
+	if err != nil {
+		return Record{}, "", err
+	}
+
+	defer wipe(rkek)
+
+	wrapped, err := wrap(rkek, wrapAAD("data-by-recovery"), dataKey)
+	if err != nil {
+		return Record{}, "", err
+	}
+
+	rec.KeyByRecovery = wrapped
+
+	return rec, FormatRecoveryKey(raw), nil
+}

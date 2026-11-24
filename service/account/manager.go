@@ -487,6 +487,56 @@ func (m *Manager) ChangePassword(ctx context.Context, current, newPassword, conf
 	return m.store.Update(ctx, next)
 }
 
+// NewRecoveryKey makes another recovery key for a signed-in account and returns it, to be shown once (VV-382). The
+// answer that carried the first one can be lost, and the key exists nowhere else. The password is asked again, as for
+// a change of it; the data key is re-wrapped under the new key, so the old key opens nothing any more, and nothing
+// is re-encrypted.
+func (m *Manager) NewRecoveryKey(ctx context.Context, password string) (string, error) {
+	if err := m.Check(); err != nil {
+		return "", err
+	}
+
+	if m.State() != StateUnlocked {
+		return "", ErrNoAccount
+	}
+
+	m.derive.Lock()
+	defer m.derive.Unlock()
+
+	if err := m.throttle(); err != nil {
+		return "", err
+	}
+
+	rec, err := m.store.Get(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	keys, err := OpenWithPassword(rec, password)
+	if err != nil {
+		if errors.Is(err, ErrWrongPassword) {
+			m.fail()
+		}
+
+		return "", err
+	}
+
+	defer keys.Wipe()
+
+	next, recovery, err := rewrapRecovery(rec, keys.Data)
+	if err != nil {
+		return "", err
+	}
+
+	next.UpdatedMs = m.now().UnixMilli()
+
+	if err := m.store.Update(ctx, next); err != nil {
+		return "", err
+	}
+
+	return recovery, nil
+}
+
 // SetIdleLock stores the idle lock, in minutes (0 turns it off).
 func (m *Manager) SetIdleLock(ctx context.Context, minutes int) error {
 	if problems := rules.IdleMinutes(minutes); len(problems) > 0 {

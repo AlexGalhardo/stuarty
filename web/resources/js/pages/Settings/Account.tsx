@@ -3,6 +3,7 @@ import { type FormEvent, type ReactNode, useEffect, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import PasswordField from "@/components/PasswordField";
+import RecoveryKeyBox from "@/components/RecoveryKeyBox";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
@@ -29,6 +30,8 @@ export default function AccountSettings(): ReactNode {
 	const [problems, setProblems] = useState<AccountFieldProblem[]>([]);
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [saved, setSaved] = useState<"idle" | "password" | null>(null);
+	const [keyPassword, setKeyPassword] = useState("");
+	const [newKey, setNewKey] = useState<string | null>(null);
 
 	useEffect(() => {
 		if (account?.state !== "unlocked") return;
@@ -88,6 +91,25 @@ export default function AccountSettings(): ReactNode {
 			const fields = fieldProblems(error);
 			if (fields.length > 0) setProblems(fields);
 			else setFailure(failureOf(error));
+		}
+	}
+
+	// The recovery key shown at the creation exists nowhere else: a person who lost it makes another with the
+	// password (VV-382). The old one stops working, and the key is held in this page only.
+	async function makeRecoveryKey(
+		event: FormEvent<HTMLFormElement>,
+	): Promise<void> {
+		event.preventDefault();
+		setFailure(null);
+		setNewKey(null);
+		try {
+			const made = await createClient(
+				new HttpTransport(""),
+			).accountNewRecoveryKey(keyPassword);
+			setKeyPassword("");
+			setNewKey(made.recovery_key);
+		} catch (error) {
+			setFailure(failureOf(error));
 		}
 	}
 
@@ -180,6 +202,42 @@ export default function AccountSettings(): ReactNode {
 							</Button>
 						</div>
 					</form>
+					<form
+						onSubmit={(event) => void makeRecoveryKey(event)}
+						noValidate
+						className="flex flex-col gap-4"
+						data-testid="settings-recovery-key"
+					>
+						<h3 className="text-base font-medium">
+							{t("ui.account.settings.recovery_title")}
+						</h3>
+						<p className="text-sm text-muted-foreground">
+							{t("ui.account.settings.recovery_hint")}
+						</p>
+						<PasswordField
+							id="settings-recovery-password"
+							label={t("ui.account.settings.current")}
+							value={keyPassword}
+							onChange={setKeyPassword}
+							autoComplete="current-password"
+						/>
+						<div>
+							<Button type="submit">
+								{t("ui.account.settings.recovery_submit")}
+							</Button>
+						</div>
+					</form>
+					{newKey !== null && (
+						<div className="flex flex-col gap-4">
+							<p
+								role="note"
+								className="rounded-lg border border-destructive p-3 text-sm"
+							>
+								{t("ui.account.settings.recovery_made")}
+							</p>
+							<RecoveryKeyBox value={newKey} />
+						</div>
+					)}
 				</>
 			)}
 			<FailureNote id="settings-account-error" failure={failure} />

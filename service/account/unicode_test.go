@@ -1,6 +1,7 @@
 package account
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"testing"
@@ -127,5 +128,69 @@ func TestChangePassword_TheNewPasswordIsKeptInItsComposedForm(t *testing.T) {
 
 	if _, legacy, err := openWithPassword(rec, pwComposed); err != nil || legacy {
 		t.Fatalf("the composed form must open the new password in the ordinary way: legacy %v, %v", legacy, err)
+	}
+}
+
+// VV-382: a new recovery key is made with the password; the old one stops opening the account, the password and
+// the data stay as they are.
+func TestNewRecoveryKey_ReplacesTheKeyAndKeepsThePasswordAndTheData(t *testing.T) {
+	m, st, _, first := created(t)
+	ctx := context.Background()
+
+	if _, err := m.NewRecoveryKey(ctx, goodPassword); !errors.Is(err, ErrLocked) {
+		t.Fatalf("NewRecoveryKey while locked = %v, want ErrLocked", err)
+	}
+
+	if err := m.Login(ctx, "stuart", goodPassword); err != nil {
+		t.Fatal(err)
+	}
+
+	before, err := st.Get(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := m.NewRecoveryKey(ctx, otherPass); !errors.Is(err, ErrWrongPassword) {
+		t.Fatalf("NewRecoveryKey with a wrong password = %v, want ErrWrongPassword", err)
+	}
+
+	second, err := m.NewRecoveryKey(ctx, goodPassword)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if second == "" || second == first {
+		t.Fatalf("the new key %q must be new", second)
+	}
+
+	rec, err := st.Get(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := OpenWithRecoveryKey(rec, first); !errors.Is(err, ErrWrongRecoveryKey) {
+		t.Errorf("the old recovery key = %v, want ErrWrongRecoveryKey", err)
+	}
+
+	keys, err := OpenWithRecoveryKey(rec, second)
+	if err != nil {
+		t.Fatalf("the new recovery key does not open: %v", err)
+	}
+
+	oldKeys, err := OpenWithPassword(before, goodPassword)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Equal(keys.Data, oldKeys.Data) || !bytes.Equal(keys.Vault, oldKeys.Vault) {
+		t.Error("the data key changed: what is sealed would not open")
+	}
+
+	if _, err := OpenWithPassword(rec, goodPassword); err != nil {
+		t.Errorf("the password no longer opens: %v", err)
+	}
+
+	if string(rec.Verifier) != string(before.Verifier) || string(rec.KeyByPassword) != string(before.KeyByPassword) {
+		t.Error("the password record changed")
 	}
 }
