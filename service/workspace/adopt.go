@@ -523,3 +523,28 @@ func adoptFormer(former, current string) error {
 
 	return nil
 }
+
+// FormerCopy is the former folder that a workspace adopted by copy left behind, with every file of it in clear
+// text, or "" when the workspace was not adopted by copy or the folder is gone. Stuarty never deletes it (see
+// AdoptFormer), so once the account exists the person is told where it is (VV-379).
+func (d Dir) FormerCopy() string {
+	if d == "" {
+		return ""
+	}
+
+	raw, err := os.ReadFile(d.Path(AdoptionRecord))
+	if err != nil {
+		return ""
+	}
+
+	var rec AdoptionRecordFile
+	if json.Unmarshal(raw, &rec) != nil || rec.Method != AdoptedByCopy || rec.From == "" {
+		return ""
+	}
+
+	if fi, err := os.Stat(rec.From); err != nil || !fi.IsDir() {
+		return ""
+	}
+
+	return rec.From
+}

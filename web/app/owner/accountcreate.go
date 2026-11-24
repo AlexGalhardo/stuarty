@@ -132,10 +132,17 @@ func removeClearBackups(dir string) error {
 		return err
 	}
 
+	// The backup that the adoption of the former folder made (service/workspace, backups/adopt-<time>/) holds the
+	// database the same way (VV-379).
+	adopted, err := filepath.Glob(filepath.Join(dir, "adopt-*"))
+	if err != nil {
+		return err
+	}
+
 	var errs []error
 
-	for _, name := range names {
-		if err := os.Remove(name); err != nil && !errors.Is(err, fs.ErrNotExist) {
+	for _, name := range append(names, adopted...) {
+		if err := os.RemoveAll(name); err != nil && !errors.Is(err, fs.ErrNotExist) {
 			errs = append(errs, err)
 		}
 	}

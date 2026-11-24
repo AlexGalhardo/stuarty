@@ -320,3 +320,41 @@ func TestNetworkModeRefusesAWorkspaceWithAnAccount(t *testing.T) {
 		t.Fatalf("network mode on a workspace with an account: %v", err)
 	}
 }
+
+// VV-379: the backup that the adoption of the former folder made, backups/adopt-<time>/, holds the whole database
+// in clear. It is the same kind of copy as the ones of the schema migrations and goes with them.
+func TestSecurity_T109_TheCopyOfTheAdoptionIsRemovedWithTheAccount(t *testing.T) {
+	getenv := accountEnv(t)
+	home := getenv(workspace.EnvHome)
+	ctx := context.Background()
+
+	o, _, _ := existingWorkspace(t, getenv)
+
+	defer func() { _ = o.Close() }()
+
+	schemaCopy := plantSchemaBackup(t, o, home)
+
+	raw, err := os.ReadFile(schemaCopy)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	adopted := filepath.Join(home, "backups", "adopt-20261121T000000Z")
+	if err := os.MkdirAll(adopted, 0o700); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(filepath.Join(adopted, "db.sqlite"), raw, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := o.Account.Create(ctx, migrateInput, o.createAccount); err != nil {
+		t.Fatal(err)
+	}
+
+	assertNoClearWord(t, home)
+
+	if _, err := os.Stat(adopted); !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("the backup of the adoption, with every word in clear, is still there: %v", err)
+	}
+}

@@ -6,12 +6,15 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/AlexGalhardo/stuarty/service/account"
 	"github.com/AlexGalhardo/stuarty/service/agenthost"
+	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
 
 // deadlineWriter records the deadlines a handler sets on the connection.
@@ -210,5 +213,33 @@ func TestSecurity_T107_TheLockEndsAnOpenStream(t *testing.T) {
 	case <-ended:
 	case <-time.After(20 * time.Second):
 		t.Fatal("the stream is still open after the lock")
+	}
+}
+
+// VV-379: a workspace adopted by copy leaves the former folder in clear text outside the workspace. The answer of
+// the creation names it, so the page can tell the person; with no such folder it says nothing.
+func TestAccountCreateNamesTheFolderAnAdoptionLeftBehind(t *testing.T) {
+	t.Parallel()
+
+	a := newAccountHarness(t)
+	former := t.TempDir()
+
+	record := `{"from":` + strconv.Quote(former) + `,"to":"x","method":"copy","backup":"","adopted_at":"2026-11-18T12:30:00Z"}`
+	if err := os.WriteFile(a.dir.Path(workspace.AdoptionRecord), []byte(record), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	res := a.createFrom(a.sessionWith(t, ""), createBody)
+	if res.status != http.StatusOK {
+		t.Fatalf("create = %d %s", res.status, res.body)
+	}
+
+	if got, _ := res.json(t)["former_folder"].(string); got != former {
+		t.Errorf("former_folder = %q, want %q", got, former)
+	}
+
+	plain := newAccountHarness(t)
+	if res := plain.createFrom(plain.sessionWith(t, ""), createBody); strings.Contains(string(res.body), "former_folder") {
+		t.Errorf("a workspace that was not adopted by copy names a folder: %s", res.body)
 	}
 }

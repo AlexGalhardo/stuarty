@@ -2592,6 +2592,7 @@
         "title": "Save your recovery key",
         "intro": "This key opens your data if you forget your password. It is shown once, here, and Stuarty does not keep it.",
         "warning": "If you forget your password and you do not have this key, your data cannot be recovered. Nobody can do it for you, not even us. Write the key down or keep it in a password manager before you go on.",
+        "formerFolder": "A copy of your workspace from before Stuarty was renamed is still in {path}, in clear text. Stuarty never deletes it: delete that folder yourself once you have checked that everything is here.",
         "copy": "Copy the key",
         "copied": "Copied.",
         "saved": "I saved my recovery key",
