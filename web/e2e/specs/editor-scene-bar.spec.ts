@@ -17,13 +17,12 @@ import { expect, home, seedProject, test } from "./helpers";
 
 // Epic 85 task 5 (SDD-012 section 23.4): the scene bar of the dashboard under the timeline of the editor, so a
 // person answers the agent without leaving. The agent is the fake agent of the tests (service/agenthost/fakeagent)
-// and the server is the real one. The bar is drawn when the page of the editor carries the session the server
-// shares with every other page, and the catalogue of the bar; the page below is patched with exactly that.
+// and the server is the real one: the page of the editor carries the session the server shares with every other
+// page, and the catalogue of the bar.
 test.describe.configure({ mode: "serial" });
 test.use({ viewport: { width: 1440, height: 900 } });
 
 const root = fileURLToPath(new URL("../../..", import.meta.url));
-const lang = join(root, "web", "resources", "lang", "en.json");
 
 let fakeAgent = "";
 
@@ -124,58 +123,13 @@ async function clearProfiles(page: Page): Promise<void> {
 	}
 }
 
-function flatten(
-	node: unknown,
-	prefix: string,
-	out: Record<string, unknown>,
-): void {
-	if (typeof node === "object" && node !== null && !Array.isArray(node)) {
-		const entries = Object.entries(node as Record<string, unknown>);
-		// a plural message is an object of its own forms
-		if (
-			entries.length > 0 &&
-			entries.every(([k]) => k === "one" || k === "other")
-		) {
-			out[prefix] = node;
-			return;
-		}
-		for (const [key, value] of entries) {
-			flatten(value, prefix === "" ? key : `${prefix}.${key}`, out);
-		}
-		return;
-	}
-	out[prefix] = node;
-}
-
-// The page of the editor as the server will send it: the bootstrap also carries the session of the caller and the
-// messages of the bar.
-async function serveEditorWithBar(page: Page): Promise<void> {
-	const all: Record<string, unknown> = {};
-	flatten(JSON.parse(readFileSync(lang, "utf8")), "", all);
-	const scene = Object.fromEntries(
-		Object.entries(all).filter(([key]) =>
-			/^ui\.(shell\.scene|chat|agent_activity|session)\./.test(key),
-		),
-	);
-	await page.route(/\/editor\/prj_/, async (route) => {
-		const response = await route.fetch();
-		const html = await response.text();
-		const patched = html.replace(
-			/(<script type="application\/json" id="vv-bootstrap"[^>]*>)([\s\S]*?)(<\/script>)/,
-			(_all, open: string, body: string, close: string) => {
-				const boot = JSON.parse(body) as {
-					messages: Record<string, unknown>;
-				};
-				boot.messages = { ...boot.messages, ...scene };
-				const json = JSON.stringify({
-					...boot,
-					session: { privileged: true },
-				}).replace(/</g, "\\u003c");
-				return `${open}${json}${close}`;
-			},
-		);
-		await route.fulfill({ response, body: patched });
-	});
+// The bootstrap the server wrote into the page of the editor.
+async function bootstrapOf(page: Page): Promise<{
+	session?: { privileged?: unknown };
+	messages: Record<string, unknown>;
+}> {
+	const text = await page.locator("script#vv-bootstrap").textContent();
+	return JSON.parse(text ?? "{}");
 }
 
 test.describe("the scene bar in the editor", () => {
@@ -196,8 +150,9 @@ test.describe("the scene bar in the editor", () => {
 			`/projects/${seeded.id}/chat/sessions`,
 			{ profile: "editorial" },
 		)) as { id: string };
-		await serveEditorWithBar(page);
 		await page.goto(`/editor/${seeded.id}`);
+		// the server, not the test, says this session is a person's
+		expect((await bootstrapOf(page)).session).toEqual({ privileged: true });
 
 		const bar = page.getByTestId("scene-bar");
 		await expect(bar).toHaveAttribute("data-variant", "idle");
@@ -235,15 +190,27 @@ test.describe("the scene bar in the editor", () => {
 		});
 	});
 
-	test("without the session in the page, no bar is drawn and the editor is as before", async ({
+	test("the page carries the catalogue of the bar, which is drawn in the words of the locale", async ({
 		page,
 		request,
 	}) => {
 		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
+		await signInAsPerson(page);
 		await page.goto(`/editor/${seeded.id}`);
+		const { messages } = await bootstrapOf(page);
+		for (const key of [
+			"ui.shell.scene.allow",
+			"ui.shell.scene.deny",
+			"ui.shell.scene.label",
+		]) {
+			expect(messages[key], key).toEqual(expect.any(String));
+		}
 		await expect(
 			page.getByRole("tablist", { name: "Material panels" }),
 		).toBeVisible();
-		await expect(page.getByTestId("scene-bar")).toHaveCount(0);
+		const bar = page.getByTestId("scene-bar");
+		await expect(bar).toBeVisible();
+		// no raw message key is drawn
+		await expect(bar).not.toContainText("ui.");
 	});
 });
