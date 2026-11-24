@@ -3,8 +3,9 @@ package ffmpeg
 import "time"
 
 // Timeouts and limits of SDD-007 6.5 (defaults; the multipliers may change after the
-// ALPHA measurements). Every run gets a context deadline from this table, so the 5 minute
-// default of contrib/engine never widens it.
+// ALPHA measurements). The watchdog of each run enforces them (watchDeadline); the 5 minute
+// default of contrib/engine applies only to a context with no deadline, and every long run has
+// the deadline of its queue attempt (VV-391).
 const (
 	ProbeTimeout     = 30 * time.Second
 	FrameTimeout     = 30 * time.Second
