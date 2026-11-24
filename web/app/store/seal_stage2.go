@@ -140,7 +140,11 @@ func (s *Store) SealStageTwo(ctx context.Context, sl account.Sealer, hook func(s
 	crashpoint.Hit("seal_documents.before_version")
 
 	err = s.db.Tx(ctx, func(dtx *database.Tx) error {
-		if _, err := dtx.ExecContext(ctx, `UPDATE accounts SET seal_version = ? WHERE id = 1`, account.SealedAll); err != nil {
+		if _, err := dtx.ExecContext(
+			ctx,
+			`UPDATE accounts SET seal_version = ? WHERE id = 1`,
+			account.SealedAll,
+		); err != nil {
 			return err
 		}
 
@@ -173,64 +177,93 @@ func (s *Store) sealBatch(ctx context.Context, sl account.Sealer, c cell, after 
 
 	err := s.db.Tx(ctx, func(dtx *database.Tx) error {
 		return withLogOpen(ctx, dtx, func() error {
-			rows, ids, err := c.readFrom(ctx, dtx, after, stageTwoBatch)
-			if err != nil {
-				return err
-			}
+			var err error
 
-			n = len(rows)
+			n, last, err = sealRows(ctx, dtx, sl, c, after)
 
-			if n > 0 {
-				last = ids[n-1]
-			}
-
-			sums := map[string][sha256.Size]byte{}
-
-			for i, row := range rows {
-				// A clear value is the exception during this migration, and a sealed value that opens is the rule of
-				// a workspace that was resumed.
-				if sealedOpens(sl, c, row) {
-					continue
-				}
-
-				sealed, err := sl.Seal(c.table, c.column, row.key, row.plain)
-				if err != nil {
-					return err
-				}
-
-				sums[fmt.Sprint(ids[i])] = sha256.Sum256([]byte(row.plain))
-
-				if err := c.update(ctx, dtx, row, sealed); err != nil {
-					return err
-				}
-			}
-
-			// Read back what this batch wrote, in the same transaction: each value opens and is what it was.
-			back, _, err := c.readFrom(ctx, dtx, after, stageTwoBatch)
-			if err != nil {
-				return err
-			}
-
-			if len(back) != len(rows) {
-				return fmt.Errorf("%d values were read back, %d were sealed", len(back), len(rows))
-			}
-
-			for i, row := range back {
-				plain, err := sl.Open(c.table, c.column, row.key, row.plain)
-				if err != nil {
-					return fmt.Errorf("%s.%s of %s did not read back: %w", c.table, c.column, row.key, err)
-				}
-
-				if want, ok := sums[fmt.Sprint(ids[i])]; ok && sha256.Sum256([]byte(plain)) != want {
-					return errors.New("a value is not what it was before it was sealed: " + c.table + "." + c.column)
-				}
-			}
-
-			return nil
+			return err
 		})
 	})
 
 	return n, last, err
+}
+
+// sealRows is the body of a batch: it seals what is clear in the next rows of the cell and reads them all back.
+func sealRows(
+	ctx context.Context, ex database.Executor, sl account.Sealer, c cell, after int64,
+) (int, int64, error) {
+	rows, ids, err := c.readFrom(ctx, ex, after, stageTwoBatch)
+	if err != nil {
+		return 0, after, err
+	}
+
+	last := after
+	if len(ids) > 0 {
+		last = ids[len(ids)-1]
+	}
+
+	sums, err := sealClear(ctx, ex, sl, c, rows, ids)
+	if err != nil {
+		return 0, after, err
+	}
+
+	return len(rows), last, readBackBatch(ctx, ex, sl, c, after, len(rows), sums)
+}
+
+// sealClear seals the rows that are not sealed yet and returns the digest of what each was, by rowid. A sealed value
+// that opens is the rule of a workspace that was resumed, and is left alone.
+func sealClear(
+	ctx context.Context, ex database.Executor, sl account.Sealer, c cell, rows []cellRow, ids []int64,
+) (map[int64][sha256.Size]byte, error) {
+	sums := map[int64][sha256.Size]byte{}
+
+	for i, row := range rows {
+		if sealedOpens(sl, c, row) {
+			continue
+		}
+
+		sealed, err := sl.Seal(c.table, c.column, row.key, row.plain)
+		if err != nil {
+			return nil, err
+		}
+
+		sums[ids[i]] = sha256.Sum256([]byte(row.plain))
+
+		if err := c.update(ctx, ex, row, sealed); err != nil {
+			return nil, err
+		}
+	}
+
+	return sums, nil
+}
+
+// readBackBatch reads the batch again in the same transaction: every value opens, and each one sealed here is what it
+// was before.
+func readBackBatch(
+	ctx context.Context, ex database.Executor, sl account.Sealer, c cell, after int64, want int,
+	sums map[int64][sha256.Size]byte,
+) error {
+	back, ids, err := c.readFrom(ctx, ex, after, stageTwoBatch)
+	if err != nil {
+		return err
+	}
+
+	if len(back) != want {
+		return fmt.Errorf("%d values were read back, %d were sealed", len(back), want)
+	}
+
+	for i, row := range back {
+		plain, err := sl.Open(c.table, c.column, row.key, row.plain)
+		if err != nil {
+			return fmt.Errorf("%s.%s of %s did not read back: %w", c.table, c.column, row.key, err)
+		}
+
+		if digest, ok := sums[ids[i]]; ok && sha256.Sum256([]byte(plain)) != digest {
+			return errors.New("a value is not what it was before it was sealed: " + c.table + "." + c.column)
+		}
+	}
+
+	return nil
 }
 
 // verifyStageTwo is the last read of the migration: every value of every second-stage column opens.
@@ -250,7 +283,12 @@ func (s *Store) verifyStageTwo(ctx context.Context, sl account.Sealer) error {
 
 			for _, row := range rows {
 				if !sealedOpens(sl, c, row) {
-					return fmt.Errorf("store: %s.%s of %s is not sealed after the migration", c.table, c.column, row.key)
+					return fmt.Errorf(
+						"store: %s.%s of %s is not sealed after the migration",
+						c.table,
+						c.column,
+						row.key,
+					)
 				}
 			}
 

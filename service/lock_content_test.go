@@ -66,8 +66,12 @@ func TestSecurity_T134_NoIndexAndNoCacheOutlivesTheLock(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := os.WriteFile(mem, []byte("---\nname: note\ndescription: a note\nscope: workspace\nactor: local:ui\nkept: true\n"+
-		"created: 2026-11-19T10:00:00Z\nupdated: 2026-11-19T10:00:00Z\n---\nbody\n"), 0o600); err != nil {
+	if err := os.WriteFile(
+		mem,
+		[]byte("---\nname: note\ndescription: a note\nscope: workspace\nactor: local:ui\nkept: true\n"+
+			"created: 2026-11-19T10:00:00Z\nupdated: 2026-11-19T10:00:00Z\n---\nbody\n"),
+		0o600,
+	); err != nil {
 		t.Fatal(err)
 	}
 

@@ -135,11 +135,11 @@ func TestLibrarySealAtTheFirstUnlockOfAnEarlierAccount(t *testing.T) {
 	}
 
 	// An older version left clear files: put one back, and a skill folder with a nested file.
-	clear := filepath.Join(home, "library", "memory", "from-before.md")
+	plainFile := filepath.Join(home, "library", "memory", "from-before.md")
 	body := "---\nname: from-before\ndescription: made by an older version\nscope: workspace\nactor: local:ui\nkept: true\n" +
 		"created: 2026-11-19T10:00:00Z\nupdated: 2026-11-19T10:00:00Z\n---\n" + canaryNote + "-before\n"
 
-	if err := os.WriteFile(clear, []byte(body), 0o600); err != nil {
+	if err := os.WriteFile(plainFile, []byte(body), 0o600); err != nil {
 		t.Fatal(err)
 	}
 

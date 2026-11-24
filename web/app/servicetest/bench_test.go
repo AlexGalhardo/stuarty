@@ -123,12 +123,12 @@ func BenchmarkCommit200ItemsSealed(b *testing.B) {
 	benchCommit200Items(b, 0)
 }
 
-func benchSealer(b testing.TB) account.Sealer {
-	b.Helper()
+func benchSealer(tb testing.TB) account.Sealer {
+	tb.Helper()
 
 	keys, err := account.NewKeySealer(bytes.Repeat([]byte{3}, account.KeySize))
 	if err != nil {
-		b.Fatal(err)
+		tb.Fatal(err)
 	}
 
 	return keys

@@ -282,22 +282,9 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		return err
 	}
 
-	// An account made before ADR-0053 holds its documents, edit log and asset notes in clear text until the first
-	// unlock seals them (SDD-005 section 5.17.4): that comes before anything reads a document.
-	if o.Account != nil {
-		o.Account.OnUnlock(func() { o.sealStageTwo(context.WithoutCancel(ctx), cfg) })
-	}
-
-	// Step 5 of the start-up order (SDD-005 section 7): documents below the current schema. With an account the
-	// documents are sealed and no key is in memory yet, so the step runs at the unlock (ADR-0053 item 6); every
-	// operation is E_LOCKED until then, so nothing reads an older document in between.
-	if o.Account != nil && o.Account.State() != account.StateNone {
-		o.Account.OnUnlock(func() {
-			if err := o.migrateDocuments(context.WithoutCancel(ctx), cfg); err != nil {
-				cfg.Log.ErrorContext(ctx, "the documents could not be migrated at the unlock", "error", err)
-			}
-		})
-	} else if err := o.migrateDocuments(ctx, cfg); err != nil {
+	// Step 5 of the start-up order (SDD-005 section 7), and the sealing of an earlier account: at the start, or at
+	// the unlock when the documents are sealed and no key is in memory yet.
+	if err := o.documentsAtStart(ctx, cfg); err != nil {
 		return err
 	}
 
@@ -479,13 +466,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 
 	// The library of a new workspace holds the starter templates; later starts add nothing. The templates are
 	// documents: with an account they are sealed, so a locked start seeds them at the unlock (ADR-0053 item 6).
-	if o.Account != nil && o.Account.State() != account.StateNone {
-		o.Account.OnUnlock(func() {
-			if serr := o.seedTemplates(context.WithoutCancel(ctx), st); serr != nil {
-				cfg.Log.ErrorContext(ctx, "the templates of the product could not be seeded at the unlock", "error", serr)
-			}
-		})
-	} else if serr := o.seedTemplates(ctx, st); serr != nil {
+	if serr := o.seedAtStart(ctx, cfg, st); serr != nil {
 		return serr
 	}
 

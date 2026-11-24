@@ -102,3 +102,45 @@ func (o *Owner) copyForSealing(ctx context.Context, dir string) error {
 
 	return nil
 }
+
+// locked says whether the studio holds an account and nobody is signed in or may be: the documents are sealed and no
+// key is in memory, so what reads a document waits for the unlock (ADR-0053 item 6).
+func (o *Owner) locked() bool {
+	return o.Account != nil && o.Account.State() != account.StateNone
+}
+
+// documentsAtStart is the sealing of an account made before ADR-0053 and step 5 of the start-up order. With an
+// account both run at the unlock, in that order, while the gate of the Service is closed; every operation is
+// E_LOCKED until then, so nothing reads an older document in between. With none, the migration runs now.
+func (o *Owner) documentsAtStart(ctx context.Context, cfg Config) error {
+	if o.Account != nil {
+		o.Account.OnUnlock(func() { o.sealStageTwo(context.WithoutCancel(ctx), cfg) })
+	}
+
+	if !o.locked() {
+		return o.migrateDocuments(ctx, cfg)
+	}
+
+	o.Account.OnUnlock(func() {
+		if err := o.migrateDocuments(context.WithoutCancel(ctx), cfg); err != nil {
+			cfg.Log.ErrorContext(ctx, "the documents could not be migrated at the unlock", "error", err)
+		}
+	})
+
+	return nil
+}
+
+// seedAtStart puts the templates of the product in the library: now, or at the unlock when they are sealed.
+func (o *Owner) seedAtStart(ctx context.Context, cfg Config, st service.Store) error {
+	if !o.locked() {
+		return o.seedTemplates(ctx, st)
+	}
+
+	o.Account.OnUnlock(func() {
+		if err := o.seedTemplates(context.WithoutCancel(ctx), st); err != nil {
+			cfg.Log.ErrorContext(ctx, "the templates of the product could not be seeded at the unlock", "error", err)
+		}
+	})
+
+	return nil
+}

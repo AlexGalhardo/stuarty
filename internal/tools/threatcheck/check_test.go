@@ -130,9 +130,10 @@ func TestTheRealModelParses(t *testing.T) {
 	// T-101 the quality campaigns of epic 42, T-102 the chapter file of an export (VV-290); T-110 to T-116 are
 	// the outbound webhook threats of epic 59; T-103 to T-109 and T-117 are the local account threats of epic 57
 	// (ADR-0052); T-118 to T-122 are the screen capture threats of epic 61; T-123 and T-124 are the path of a
-	// stored file and the reveal of the desktop shell, epic 94. 109 + 15 - 6 removed = 118.
-	if len(threats) != 118 {
-		t.Errorf("the model has %d threats, want 118 (T-89, T-100 to T-124)", len(threats))
+	// stored file and the reveal of the desktop shell, epic 94; T-130 to T-136 are the threats of the sealed library,
+	// documents, edit log and asset notes of epic 92 (ADR-0053). 109 + 15 - 6 removed + 7 = 125.
+	if len(threats) != 125 {
+		t.Errorf("the model has %d threats, want 125 (T-89, T-100 to T-124, T-130 to T-136)", len(threats))
 	}
 }
 

@@ -33,32 +33,15 @@ func TestSealDocumentsAtTheFirstUnlockOfAnEarlierAccount(t *testing.T) {
 	// version 0, a library file in clear.
 	sl := o.Account.Sealer()
 
-	rows, err := o.Store.DB().QueryContext(ctx, `SELECT id, document FROM templates`)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	type tpl struct{ id, doc string }
-
-	var all []tpl
-
-	for rows.Next() {
-		var x tpl
-		if err := rows.Scan(&x.id, &x.doc); err != nil {
-			t.Fatal(err)
-		}
-
-		all = append(all, x)
-	}
-
-	_ = rows.Close()
+	all := readTemplates(t, o)
 
 	if len(all) == 0 {
 		t.Fatal("the workspace has no template to make clear")
 	}
 
 	for _, event := range []string{"insert", "update"} {
-		if _, err := o.Store.DB().ExecContext(ctx, "DROP TRIGGER IF EXISTS sealed_guard_templates_document_"+event); err != nil {
+		if _, err := o.Store.DB().
+			ExecContext(ctx, "DROP TRIGGER IF EXISTS sealed_guard_templates_document_"+event); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -73,7 +56,8 @@ func TestSealDocumentsAtTheFirstUnlockOfAnEarlierAccount(t *testing.T) {
 
 		plain[x.id] = p
 
-		if _, err := o.Store.DB().ExecContext(ctx, `UPDATE templates SET document = ? WHERE id = ?`, p, x.id); err != nil {
+		if _, err := o.Store.DB().
+			ExecContext(ctx, `UPDATE templates SET document = ? WHERE id = ?`, p, x.id); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -83,8 +67,12 @@ func TestSealDocumentsAtTheFirstUnlockOfAnEarlierAccount(t *testing.T) {
 	}
 
 	clearFile := filepath.Join(home, "library", "memory", "from-before.md")
-	if err := os.WriteFile(clearFile, []byte("---\nname: from-before\ndescription: d\nscope: workspace\nactor: local:ui\nkept: true\n"+
-		"created: 2026-11-19T10:00:00Z\nupdated: 2026-11-19T10:00:00Z\n---\n"+canaryNote+"-before\n"), 0o600); err != nil {
+	if err := os.WriteFile(
+		clearFile,
+		[]byte("---\nname: from-before\ndescription: d\nscope: workspace\nactor: local:ui\nkept: true\n"+
+			"created: 2026-11-19T10:00:00Z\nupdated: 2026-11-19T10:00:00Z\n---\n"+canaryNote+"-before\n"),
+		0o600,
+	); err != nil {
 		t.Fatal(err)
 	}
 
@@ -102,7 +90,9 @@ func TestSealDocumentsAtTheFirstUnlockOfAnEarlierAccount(t *testing.T) {
 
 	stored := func(id string) string {
 		var doc string
-		if err := o2.Store.DB().QueryRowContext(ctx, `SELECT document FROM templates WHERE id = ?`, id).Scan(&doc); err != nil {
+		if err := o2.Store.DB().
+			QueryRowContext(ctx, `SELECT document FROM templates WHERE id = ?`, id).
+			Scan(&doc); err != nil {
 			t.Fatal(err)
 		}
 
@@ -141,7 +131,10 @@ func TestSealDocumentsAtTheFirstUnlockOfAnEarlierAccount(t *testing.T) {
 	}
 
 	var version int
-	if err := o2.Store.DB().QueryRowContext(ctx, `SELECT seal_version FROM accounts`).Scan(&version); err != nil || version != 1 {
+	if err := o2.Store.DB().
+		QueryRowContext(ctx, `SELECT seal_version FROM accounts`).
+		Scan(&version); err != nil ||
+		version != 1 {
 		t.Fatalf("seal version %d (%v), want 1", version, err)
 	}
 
@@ -152,4 +145,35 @@ func TestSealDocumentsAtTheFirstUnlockOfAnEarlierAccount(t *testing.T) {
 	if left, _ := filepath.Glob(filepath.Join(home, "backups", sealBackupPrefix+"*")); len(left) != 0 {
 		t.Errorf("the copy of the sealing was not removed: %v", left)
 	}
+}
+
+type storedTemplate struct{ id, doc string }
+
+// readTemplates is the id and the stored document of every template, as the database holds them.
+func readTemplates(t *testing.T, o *Owner) []storedTemplate {
+	t.Helper()
+
+	rows, err := o.Store.DB().QueryContext(context.Background(), `SELECT id, document FROM templates`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = rows.Close() }()
+
+	var all []storedTemplate
+
+	for rows.Next() {
+		var x storedTemplate
+		if err := rows.Scan(&x.id, &x.doc); err != nil {
+			t.Fatal(err)
+		}
+
+		all = append(all, x)
+	}
+
+	if err := rows.Err(); err != nil {
+		t.Fatal(err)
+	}
+
+	return all
 }
