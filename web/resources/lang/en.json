@@ -2692,6 +2692,7 @@
       "signin": {
         "title": "Sign in to Stuarty",
         "intro": "Stuarty is locked until you sign in. No page, command or agent reads your data before that.",
+        "intro_open": "Sign in with your password to work in Stuarty as yourself.",
         "submit": "Sign in",
         "forgot": "I forgot my password"
       },

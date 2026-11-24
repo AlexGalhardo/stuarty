@@ -8,8 +8,17 @@ import Create, { RecoveryKey } from "./Create";
 import Recover from "./Recover";
 import SignIn from "./SignIn";
 
-// Head needs the Inertia app; the page content does not.
-vi.mock("@inertiajs/react", () => ({ Head: () => null }));
+// Head needs the Inertia app; the page content does not. The sign-in reads the account state the server shares.
+const shared = vi.hoisted(() => ({
+	account: { state: "locked", username: "ana" } as {
+		state: string;
+		username: string;
+	},
+}));
+vi.mock("@inertiajs/react", () => ({
+	Head: () => null,
+	usePage: () => ({ props: { account: shared.account } }),
+}));
 
 const messages = {
 	"ui.account.show": "Show password",
@@ -132,6 +141,30 @@ describe("the sign-in and recovery pages", () => {
 		expect(html).toContain('autoComplete="current-password"');
 		expect(html).toContain('data-testid="signin-password-eye"');
 		expect(html).toContain('href="/account/recover"');
+	});
+
+	test("the sign-in says the studio is locked only when the server says so", () => {
+		const withIntro = (node: React.ReactNode): string =>
+			renderToString(
+				<I18nProvider
+					messages={{
+						...messages,
+						"ui.account.signin.intro": "Locked until you sign in.",
+						"ui.account.signin.intro_open": "Sign in as yourself.",
+					}}
+					locale="en"
+					locales={["en"]}
+				>
+					{node}
+				</I18nProvider>,
+			);
+		const locked = withIntro(<SignIn />);
+		expect(locked).toContain("Locked until you sign in.");
+		shared.account = { state: "unlocked", username: "ana" };
+		const open = withIntro(<SignIn />);
+		shared.account = { state: "locked", username: "ana" };
+		expect(open).toContain("Sign in as yourself.");
+		expect(open).not.toContain("Locked until");
 	});
 
 	test("the recovery asks for the key and a new password twice, with an eye on each", () => {

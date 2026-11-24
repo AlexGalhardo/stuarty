@@ -1,4 +1,4 @@
-import { Head } from "@inertiajs/react";
+import { Head, usePage } from "@inertiajs/react";
 import { LockOpen } from "lucide-react";
 import { type FormEvent, type ReactNode, useState } from "react";
 
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
+import type { SharedProps } from "@/types";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
 
@@ -16,6 +17,9 @@ import { HttpTransport } from "../../editor/api/http";
 // e-mail and the password unlock the studio. The password goes to the server and nowhere else.
 export default function SignIn(): ReactNode {
 	const t = useT();
+	// The page is also served while the studio is open, to a browser with no session or a session that is not a
+	// person's (the link of the account settings); only the server's state may say the studio is locked.
+	const locked = usePage<SharedProps>().props.account?.state === "locked";
 	const [identity, setIdentity] = useState("");
 	const [password, setPassword] = useState("");
 	const [failure, setFailure] = useState<Failure | null>(null);
@@ -44,7 +48,11 @@ export default function SignIn(): ReactNode {
 			<Head title={t("ui.account.signin.title")} />
 			<AuthCard
 				title={t("ui.account.signin.title")}
-				description={t("ui.account.signin.intro")}
+				description={
+					locked
+						? t("ui.account.signin.intro")
+						: t("ui.account.signin.intro_open")
+				}
 				footer={t("ui.account.footer")}
 			>
 				<form
