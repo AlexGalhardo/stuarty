@@ -340,7 +340,7 @@ func (m *Manager) Login(ctx context.Context, identity, password string) error {
 		return err
 	}
 
-	keys, err := OpenWithPassword(rec, password)
+	keys, legacy, err := openWithPassword(rec, password)
 	if err == nil && !sameIdentity(rec, identity) {
 		keys.Wipe()
 
@@ -353,6 +353,19 @@ func (m *Manager) Login(ctx context.Context, identity, password string) error {
 		}
 
 		return err
+	}
+
+	// An account made before the normalization (VV-380) opened with the bytes as typed: the verifier is rewritten
+	// from the composed form, so the next sign-in is the ordinary one. A failure here changes nothing for this
+	// sign-in and is tried again at the next.
+	if legacy {
+		if next, rerr := rewrap(rec, keys.Data, password, m.params); rerr == nil {
+			next.UpdatedMs = m.now().UnixMilli()
+
+			if m.store.Update(ctx, next) == nil {
+				rec = next
+			}
+		}
 	}
 
 	return m.unlock(rec, keys)
