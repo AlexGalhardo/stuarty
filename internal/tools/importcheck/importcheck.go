@@ -10,7 +10,8 @@
 //   - service/ never imports web/ or vukem.
 //   - every package outside web/ never imports vukem (rule 4).
 //   - service/vault, which can return a credential, is imported only by service/connections, by the
-//     owner that wires it and by the test environment of the contract tests (ADR-0033 item 3, SDD-014 section 3); tests may import it.
+//     owner that wires it and by the two test environments, of the contract tests and of the publishing tests
+//     (web/app/testpublish) (ADR-0033 item 3, SDD-014 section 3); tests may import it.
 //   - only internal/outbound opens a connection to a host ([CheckOutbound]).
 package importcheck
 
