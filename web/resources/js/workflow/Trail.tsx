@@ -21,7 +21,7 @@ export function Trail({
 			data-kind={workflow.kind}
 			aria-label={t("ui.workflow.label")}
 			className={cn(
-				"grid gap-3 sm:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))]",
+				"grid gap-x-4 gap-y-3 sm:grid-cols-[repeat(auto-fill,minmax(14rem,1fr))]",
 				className,
 			)}
 		>
