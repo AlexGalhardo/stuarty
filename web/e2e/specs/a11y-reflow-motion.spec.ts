@@ -192,7 +192,10 @@ test.describe("a11y-reflow-motion reduced motion", () => {
 		await page.goto("/");
 		await page.getByTestId("chat-toggle").click();
 		await expect(page.getByTestId("chat-panel")).toBeVisible();
-		await page.getByRole("button", { name: /^Collapse/ }).click();
+		// at 1280 px the sidebar is a rail by default: the button expands it, at any width it moves the sidebar
+		await page
+			.getByRole("button", { name: /^(Collapse|Expand) sidebar/ })
+			.click();
 		expect(await longest(page)).toBeLessThanOrEqual(1);
 	});
 });

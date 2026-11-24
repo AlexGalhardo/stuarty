@@ -94,7 +94,6 @@ export default function TopBar({
 				aria-controls="chat-panel"
 				onClick={openChat}
 				data-testid="chat-toggle"
-				className={cn(chatOpen && "invisible")}
 			>
 				<MessagesSquare aria-hidden="true" />
 				{t("ui.shell.chat")}

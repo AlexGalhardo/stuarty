@@ -74,10 +74,10 @@ test.describe("a11y-keyboard-dashboard", () => {
 		await countPointerEvents(page);
 		await page.goto("/projects");
 		await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-		// The chat button is the last control of the page: Shift+Tab reaches it in a few presses, where Tab
-		// walks every project card first (too many for Firefox and WebKit in time on a workspace of hundreds).
+		// The Chat button is in the top bar, after the sidebar and the breadcrumb and before the page: Tab
+		// reaches it in a few presses, before it walks any project card.
 		const toggle = page.getByTestId("chat-toggle");
-		await tabTo(page, toggle, 40, "Shift+Tab");
+		await tabTo(page, toggle, 40, "Tab");
 		await page.keyboard.press("Enter");
 		const panel = page.getByTestId("chat-panel");
 		await expect(panel).toBeVisible();
