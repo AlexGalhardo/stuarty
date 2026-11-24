@@ -76,7 +76,7 @@ export function SoundImport({ onImported }: { onImported(): void }): ReactNode {
 	return (
 		<form
 			onSubmit={(event) => void submit(event)}
-			className="flex flex-wrap items-end gap-3 rounded-xl border bg-card p-4"
+			className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-surface p-4"
 			aria-labelledby={`${id}-title`}
 			data-testid="sound-import"
 		>
@@ -89,7 +89,7 @@ export function SoundImport({ onImported }: { onImported(): void }): ReactNode {
 				</Label>
 				<select
 					id={`${id}-project`}
-					className="h-9 w-full max-w-full rounded-md border bg-background px-2 text-sm"
+					className="h-9 w-full max-w-full rounded-md border border-border-strong bg-surface px-2 text-sm text-text"
 					value={project}
 					onChange={(event) => setProject(event.target.value)}
 				>
@@ -119,13 +119,13 @@ export function SoundImport({ onImported }: { onImported(): void }): ReactNode {
 			<div className="w-full">
 				<FailureNote failure={failure} />
 				{said !== null && (
-					<p role="status" className="text-sm text-muted-foreground">
+					<p role="status" className="text-sm text-text-muted">
 						{said}
 					</p>
 				)}
 			</div>
 			{projects.length === 0 && (
-				<p className="w-full text-xs text-muted-foreground">
+				<p className="w-full text-sm text-text-muted">
 					{t("ui.assets.sound.import_no_project")}
 				</p>
 			)}
