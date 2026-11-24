@@ -1304,6 +1304,15 @@ var Endpoints = []Endpoint{
 		Summary: "Read the transcript of a session as events or as Markdown",
 	},
 	{
+		ID: "inbox.list", Method: http.MethodGet, Path: "/inbox", Scope: service.ScopeRead, Service: "InboxList",
+		Status:  200,
+		Summary: "List what waits for a person: the permission requests of the chat and the approvals, with what will happen, where, the cost and whether it can be undone",
+	},
+	{
+		ID: "inbox.events", Method: http.MethodGet, Path: "/inbox/events", Scope: service.ScopeRead, Uncounted: true,
+		Status: 200, Summary: "Stream the list of what waits for a person, again each time it changes",
+	},
+	{
 		ID: "chat.sessions.activity", Method: http.MethodGet, Path: "/chat/sessions/{id}/activity",
 		Scope: service.ScopeRead, Service: "ChatActivityGet", Status: 200,
 		Summary: "Read which skill a session loaded and which tool it is calling, with a plain description",

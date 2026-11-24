@@ -46,6 +46,7 @@ type Service interface {
 	BriefingService
 	AssetLibraryService
 	ChatService
+	InboxService
 	MotionService
 
 	ProjectList(ctx context.Context, req ProjectListRequest) (*ProjectListResult, error)

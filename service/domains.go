@@ -226,6 +226,7 @@ var OperationDomains = map[string]string{
 	"ChatSessionGet":       command.DomainWorkspace,
 	"ChatTranscriptGet":    command.DomainWorkspace,
 	"ChatActivityGet":      command.DomainWorkspace,
+	"InboxList":            command.DomainWorkspace,
 }
 
 // OperationDomain is the domain of a Service method.

@@ -158,6 +158,7 @@ var Scopes = map[string]string{
 	"ChatSessionGet":       ScopeRead,
 	"ChatTranscriptGet":    ScopeRead,
 	"ChatActivityGet":      ScopeRead,
+	"InboxList":            ScopeRead,
 
 	"ProjectDescribe":       ScopeRead,
 	"ProjectDuplicate":      ScopeEdit,

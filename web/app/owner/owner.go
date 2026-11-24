@@ -353,7 +353,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		o.agentTokens = agenthost.NewTokens(cfg.Now)
 		o.Agents = agenthost.New(agenthost.Options{
 			Store: st.Chat(), Tokens: o.agentTokens, MCPURL: o.MCPURL, Workspace: string(o.Dir), Now: cfg.Now,
-			Version: o.version, Log: cfg.Log,
+			Version: o.version, Log: cfg.Log, OnRequestChange: o.Events.PublishInbox,
 		})
 
 		// A session whose tools would all answer E_LOCKED ends when the studio locks, and its transcript is
