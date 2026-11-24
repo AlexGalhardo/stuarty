@@ -41,10 +41,10 @@ function SearchLauncher() {
 					setOpened(true);
 					setOpen(true);
 				}}
-				className="flex items-center gap-2 rounded-lg text-sm text-faint transition-colors hover:text-fg max-sm:size-[44px] max-sm:justify-center sm:h-9 sm:w-36 lg:w-48 xl:w-64 sm:border sm:border-border-strong sm:bg-subtle sm:pr-1.5 sm:pl-2.5"
+				className="flex min-w-0 items-center gap-2 rounded-lg text-sm text-faint transition-colors hover:text-fg max-sm:size-[44px] max-sm:justify-center sm:h-9 sm:w-36 lg:w-48 xl:w-64 sm:border sm:border-border-strong sm:bg-subtle sm:pr-1.5 sm:pl-2.5"
 			>
 				<Search aria-hidden className="size-4 shrink-0" />
-				<span className="hidden flex-1 text-left sm:inline">{t.searchButton}</span>
+				<span className="hidden min-w-0 flex-1 truncate text-left sm:inline">{t.searchButton}</span>
 				<kbd className="hidden rounded border border-border-strong bg-bg px-1.5 py-0.5 font-sans text-[0.6875rem] font-medium whitespace-nowrap text-faint lg:inline">
 					{isMac ? "⌘K" : "Ctrl K"}
 				</kbd>
@@ -80,7 +80,7 @@ export function Header({ groups, version, variant = "docs" }: { groups: NavGroup
 		<Providers>
 			<header className={HEADER_CLASS[variant]} data-variant={variant}>
 				{/* Same container as app/docs/layout.tsx; the left column matches the sidebar width. */}
-				<div className="site-container flex h-full items-center gap-2 sm:gap-3 lg:grid lg:grid-cols-[14rem_minmax(0,1fr)_auto] lg:gap-0">
+				<div className="site-container flex h-full items-center gap-2 sm:gap-3 lg:grid lg:grid-cols-[minmax(14rem,auto)_minmax(0,1fr)_auto] lg:gap-x-3">
 					<div className="flex items-center gap-1 sm:gap-3">
 						<MobileNav groups={groups} />
 						<div className="flex min-w-0 flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-2.5">
@@ -88,7 +88,7 @@ export function Header({ groups, version, variant = "docs" }: { groups: NavGroup
 							<ReleaseBadge version={version} />
 						</div>
 					</div>
-					<div className="flex flex-1 justify-end sm:justify-center">
+					<div className="flex min-w-0 flex-1 justify-end sm:justify-center">
 						<SearchLauncher />
 					</div>
 					<div className="flex items-center justify-end gap-0 sm:gap-1.5">
