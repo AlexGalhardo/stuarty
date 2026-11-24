@@ -1,8 +1,8 @@
 ---
 // A screen of the product that is not captured yet. It takes the image of the real screen (the path under public/,
 // without the size suffix and the extension) and its alt text. With no image it draws a clearly named slot, so the
-// layout is final and nothing is invented: the screens of epic 79 (home, projects and briefing) are not merged,
-// so the page passes no `src` yet; the change that captures them passes it and the slot becomes the picture.
+// layout is final and nothing is invented. The screens of epic 79 (home, projects and briefing) are captured, so the
+// page passes their `src` and `srcDark` from `screenSlots` in src/landing/content.ts.
 import { screenSlots, type ScreenSlotId } from "@/src/landing/content";
 import { withBase } from "@/lib/site";
 

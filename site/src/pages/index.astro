@@ -8,7 +8,7 @@ import "@/src/landing/home.css";
 import Base from "../layouts/Base.astro";
 import { landing } from "@/lib/landing";
 import { shots } from "@/lib/landing-pages";
-import { agents, areas, capturedNote, credits, downloads, hero, path, privacy, roadmap, textProject, transparency } from "@/src/landing/content";
+import { agents, areas, capturedNote, credits, downloads, hero, path, privacy, roadmap, screenSlots, textProject, transparency } from "@/src/landing/content";
 import DriveTabs from "../components/landing/DriveTabs.astro";
 import LandingActions from "../components/landing/LandingActions.astro";
 import ScreenSlot from "../components/landing/ScreenSlot.astro";
@@ -63,7 +63,7 @@ const stepShots = { writing: shots.writing, videoEditor: shots.videoEditor, imag
 								{s.screen.kind === "shot" ? (
 									<ThemedShot shot={stepShots[s.screen.shot]} sizes="(min-width: 64rem) 36rem, 100vw" />
 								) : (
-									<ScreenSlot slot={s.screen.slot} />
+									<ScreenSlot slot={s.screen.slot} src={screenSlots[s.screen.slot].src} srcDark={screenSlots[s.screen.slot].srcDark} />
 								)}
 							</figure>
 						</li>
@@ -120,7 +120,7 @@ const stepShots = { writing: shots.writing, videoEditor: shots.videoEditor, imag
 					<h2 id="areas-title" class="display-title mt-4 text-fg">{areas.title}</h2>
 				</div>
 				<figure class="showcase home-frame home-wide m-0">
-					<ScreenSlot slot="home" />
+					<ScreenSlot slot="home" src={screenSlots.home.src} srcDark={screenSlots.home.srcDark} />
 				</figure>
 				<ul class="home-cards">
 					{areas.items.map((a) => (

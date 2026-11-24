@@ -1,11 +1,32 @@
-Screenshots of Stuarty, captured headless from a demo workspace on 2026-11-20.
+Screenshots of Stuarty v0.52.0, captured on 2026-11-24 with a headless Chromium from a local `stuarty serve` of the
+repository (release branch v0.53.0), on a throwaway demo workspace made for the capture (epic 88 task 3).
 
-Media shown inside the screenshots:
-- Big Buck Bunny, (c) Blender Foundation, peach.blender.org, CC BY 3.0 (the video editor frames).
-- "Mountain glacier" photo, CC0, from Wikimedia Commons via the project's test assets (the image editor).
-- Waveforms of "Sinfonia 3" by Kevin MacLeod (CC BY 3.0) and a LibriVox reading of John Adams (CC0).
+Every image is a capture of the released user interface at 1600 x 1000 px, in the dark theme (name.*) and in the light
+theme (name-light.*), as .webp and .avif at 1600 px and, with the suffix -960, at 960 px. The 960 px files are the
+1600 px capture scaled down. Nothing is drawn or composed: no design file, render or mock-up.
 
-Status of the captures (epic 88 task 3, open): every screenshot above predates the redesigned shell, assets and settings
-screens, and the screens of epic 79 (home, projects, briefing) are not captured: the landing shows named slots for them.
-All screens are to be captured again, in one pass, from the released UI once epic 79 is merged. Nothing from outside
-the repository is used by the landing page: no external fonts, images, scripts or trackers.
+Media shown inside the screenshots: none from outside the repository. The clips, pictures and sounds of the demo
+workspace were generated for the capture (gradients and sine tones made with the project's own FFmpeg). The demo
+content (a text project, a video project, an image project, a project not decided yet, and a few skills, prompts and
+memory notes about an invented community garden) is invented: it names no real person, brand or number, and it holds
+no logo, testimonial or metric. The agent profiles and the home folder shown are the defaults of the machine that
+captured them; no account, key or token of any user appears.
+
+Image (the six steps of the path and the areas)        Screen                                  Captured
+dashboard                  Home                         /                                       2026-11-24
+projects                   Projects                     /projects                               2026-11-24
+project-brief              Briefing of a new project    /projects, New project, video, Continue 2026-11-24
+writing                    Write, a script selected     /write                                  2026-11-24
+video-editor               Video editor, a clip selected /editor/<project>                      2026-11-24
+image-editor               Image editor, a layer selected /edit-image/<image>                   2026-11-24
+publish-calendar           Publish, month calendar      /publish                                2026-11-24
+agent-chat                 Agent chat panel on a project /projects/<project>, Chat              2026-11-24
+visual-assets              Visual Assets                /visual-assets                          2026-11-24
+video-assets               Video Assets                 /video-assets                           2026-11-24
+skills                     Skills, one selected         /skills                                 2026-11-24
+prompts                    Prompts, one selected        /prompts                                2026-11-24
+memory                     Memory, one note selected    /memory                                 2026-11-24
+connections                Connections                  /connections                            2026-11-24
+approvals                  Approvals                    /approvals                              2026-11-24
+
+Nothing from outside the repository is used by the landing page: no external fonts, images, scripts or trackers.
