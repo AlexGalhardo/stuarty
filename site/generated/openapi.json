@@ -7890,7 +7890,8 @@
             "type": "string"
           },
           "agent": {
-            "type": "string"
+            "type": "string",
+            "x-untrusted": true
           },
           "answered_at": {
             "format": "date-time",
@@ -7914,13 +7915,15 @@
             "type": "string"
           },
           "destination": {
-            "type": "string"
+            "type": "string",
+            "x-untrusted": true
           },
           "id": {
             "type": "string"
           },
           "item": {
-            "type": "string"
+            "type": "string",
+            "x-untrusted": true
           },
           "project_id": {
             "type": "string"
@@ -7929,7 +7932,8 @@
             "type": "string"
           },
           "skill": {
-            "type": "string"
+            "type": "string",
+            "x-untrusted": true
           },
           "source": {
             "type": "string"
@@ -7941,13 +7945,15 @@
             "type": "string"
           },
           "summary": {
-            "type": "string"
+            "type": "string",
+            "x-untrusted": true
           },
           "tool": {
-            "type": "string"
+            "type": "string",
+            "x-untrusted": true
           },
-          "undoable": {
-            "type": "boolean"
+          "undo": {
+            "type": "string"
           }
         },
         "type": "object"

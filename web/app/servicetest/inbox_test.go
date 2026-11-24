@@ -78,7 +78,7 @@ func TestInboxListsAChatPermissionAndAnApprovalWithTheirSource(t *testing.T) {
 	}
 
 	listed := apr.Source == inbox.SourceApproval && apr.State == inbox.StateWaiting && apr.SourceID == req.ID
-	described := apr.Tool == "publish.post" && apr.Summary == "Post the launch video" && !apr.Undoable
+	described := apr.Tool == "publish.post" && apr.Summary == "Post the launch video" && apr.Undo == inbox.UndoCannot
 
 	if !listed || !described {
 		t.Fatalf("the approval is not listed as a waiting approval row: %+v", res.Rows)
@@ -88,11 +88,35 @@ func TestInboxListsAChatPermissionAndAnApprovalWithTheirSource(t *testing.T) {
 		t.Errorf("waiting = %d, rows = %d, notice %q", res.Waiting, len(res.Rows), res.UntrustedNotice)
 	}
 
-	// The tool is Stuarty's: what the call acts on and where come from the allowlist, and the only operation
-	// it names is a command of the editor registry, so the call is one undo step.
+	// The tool is Stuarty's by its title: what the call acts on and where come from the allowlist. That it can be
+	// undone is only the agent's claim, so the row says it is not verified (D-140).
 	if chatRow.Item != "ast_3c5v8n2w6d" || chatRow.Destination != "prj_a4k9m2x7bq" ||
-		chatRow.ActionKey != "ui.agent_activity.tool.edit" || !chatRow.Undoable {
+		chatRow.ActionKey != "ui.agent_activity.tool.edit" || chatRow.Undo != inbox.UndoNotVerified {
 		t.Errorf("chat row = %+v", chatRow)
+	}
+}
+
+// D-140: the fake agent titles its call mcp__stuarty__edit and names a command of the editor registry. Stuarty
+// cannot prove the call is that edit, so the row never says it can be undone, on the service or over JSON.
+func TestInboxAnAgentClaimedEditIsNotVerified(t *testing.T) {
+	t.Parallel()
+
+	w := newChatWorld(t)
+	project := w.newProject("Launch video")
+
+	_, ask := w.ask(person(), t, project, "permission-stuarty")
+
+	r := rowOf(w.inbox(w.as(ui), t), "chat:"+ask.Permission.RequestID)
+	if r == nil {
+		t.Fatal("the permission is not listed")
+	}
+
+	if r.Undo != inbox.UndoNotVerified {
+		t.Errorf("undo of an agent-claimed edit = %q, want %q", r.Undo, inbox.UndoNotVerified)
+	}
+
+	if raw := mustJSON(t, r); !strings.Contains(raw, `"undo":"not_verified"`) || strings.Contains(raw, `"undo":"can"`) {
+		t.Errorf("the row as JSON = %s", raw)
 	}
 }
 
@@ -152,7 +176,8 @@ func TestInboxANotStuartyToolReportsNothingBeyondItsTitle(t *testing.T) {
 		t.Fatal("the permission is not listed")
 	}
 
-	if r.Tool != "Run shell command" || r.Item != "" || r.Destination != "" || r.ActionKey != "" || r.Undoable {
+	if r.Tool != "Run shell command" || r.Item != "" || r.Destination != "" || r.ActionKey != "" ||
+		r.Undo != inbox.UndoNotVerified {
 		t.Errorf("row = %+v, want only the title", r)
 	}
 

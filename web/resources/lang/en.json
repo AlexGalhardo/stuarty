@@ -259,8 +259,9 @@
         "undo": "Undo",
         "undo_yes": "Can be undone",
         "undo_no": "Cannot be undone",
+        "undo_not_verified": "Not verified",
         "asked": "Asked",
-        "agent_reported": "What, where and undo are as the agent described the call; Stuarty cannot check them.",
+        "agent_reported": "What and where are as the agent described the call; Stuarty cannot check them.",
         "state": {
           "waiting": "Waiting for you",
           "allowed": "Allowed",

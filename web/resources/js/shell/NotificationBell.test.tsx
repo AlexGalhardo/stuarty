@@ -20,6 +20,7 @@ const approval = inboxRow({
 	summary: "Publish to Instagram",
 	destination: "con_aaaaaaaaaa / prj_aaaaaaaaaa",
 	cost: { micros: 1_500_000, currency: "USD" },
+	undo: "cannot",
 	project_id: "prj_aaaaaaaaaa",
 });
 
@@ -111,17 +112,14 @@ describe("CenterBody", () => {
 		expect(html).not.toMatch(/always/i);
 	});
 
-	test("a permission of a tool outside Stuarty says Not reported for the item, the place and the undo", () => {
+	test("a permission of a tool outside Stuarty says Not reported for the item and the place, and Not verified for the undo", () => {
 		const html = body([permission]);
-		for (const id of [
-			"notification-item",
-			"notification-destination",
-			"notification-undo",
-		]) {
+		for (const id of ["notification-item", "notification-destination"]) {
 			expect(html).toMatch(
 				new RegExp(`data-testid="${id}"[^>]*>Not reported<`),
 			);
 		}
+		expect(html).toMatch(/data-testid="notification-undo"[^>]*>Not verified</);
 		expect(html).toMatch(/data-testid="notification-cost"[^>]*>No cost</);
 		expect(html).toMatch(
 			/data-testid="notification-skill"[^>]*>.*caption-style/,
@@ -136,14 +134,32 @@ describe("CenterBody", () => {
 				action_key: "ui.agent_activity.tool.edit",
 				item: "ast_3c5v8n2w6d",
 				destination: "prj_aaaaaaaaaa",
-				undoable: true,
+				undo: "not_verified",
 			}),
 		]);
 		expect(html).toContain("Changes a project or an image.");
 		expect(html).toContain("mcp__stuarty__edit");
 		expect(html).toContain("ast_3c5v8n2w6d");
-		expect(html).toMatch(/data-testid="notification-undo"[^>]*>Can be undone</);
+		// D-140: an edit the agent names is the agent's claim, so the undo is not verified
+		expect(html).toMatch(/data-testid="notification-undo"[^>]*>Not verified</);
+		expect(html).not.toContain("Can be undone");
 		expect(html).toContain("as the agent described the call");
+	});
+
+	test("the undo line draws the word of the service and nothing else", () => {
+		expect(body([inboxRow({ undo: "can" })])).toMatch(
+			/data-testid="notification-undo"[^>]*>Can be undone</,
+		);
+		expect(body([inboxRow({ undo: "cannot" })])).toMatch(
+			/data-testid="notification-undo"[^>]*>Cannot be undone</,
+		);
+		// a word the client does not know is never a yes
+		const unknown = inboxRow({
+			undo: "maybe" as unknown as Notification["undo"],
+		});
+		expect(body([unknown])).toMatch(
+			/data-testid="notification-undo"[^>]*>Not verified</,
+		);
 	});
 
 	test("the title of the request is text, never markup", () => {

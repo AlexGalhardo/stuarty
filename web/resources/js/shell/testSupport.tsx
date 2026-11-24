@@ -92,7 +92,7 @@ export function inboxRow(over: Partial<InboxRow> = {}): InboxRow {
 		item: "",
 		destination: "",
 		cost: null,
-		undoable: false,
+		undo: "not_verified",
 		project_id: "prj_aaaaaaaaaa",
 		session_id: "cht_aaaaaaaaaa",
 		created_at: "2026-01-01T10:00:00Z",
