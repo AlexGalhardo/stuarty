@@ -5,6 +5,7 @@
 //! with it. This is a reviewed boundary module (rule .agents/rules/rust.md 4): every `unsafe` block says why.
 #![allow(unsafe_code)]
 
+use std::marker::PhantomData;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
@@ -20,7 +21,9 @@ use windows::Win32::Media::MediaFoundation::{
 	MFCreateAttributes, MFCreateMediaType, MFCreateSourceReaderFromMediaSource,
 	MFEnumDeviceSources, MFMediaType_Video, MFShutdown, MFStartup, MFVideoFormat_RGB32,
 };
-use windows::Win32::System::Com::{COINIT_MULTITHREADED, CoInitializeEx, CoTaskMemFree};
+use windows::Win32::System::Com::{
+	COINIT_MULTITHREADED, CoInitializeEx, CoTaskMemFree, CoUninitialize,
+};
 use windows::core::GUID;
 
 use crate::audio::device_id;
@@ -42,25 +45,44 @@ struct Entry {
 	activate: IMFActivate,
 }
 
-/// Starts COM and Media Foundation on the calling thread for as long as the guard lives.
-struct Runtime;
+/// Starts COM and Media Foundation on the calling thread for as long as the guard lives. Every Media Foundation
+/// object made under it must be dropped before it is.
+struct Runtime {
+	/// Whether this guard's CoInitializeEx succeeded (S_OK or S_FALSE), so it owes one CoUninitialize.
+	com: bool,
+	/// COM and Media Foundation are counted per thread: the guard must not move to another one.
+	_thread: PhantomData<*const ()>,
+}
 
 impl Runtime {
 	fn start() -> Result<Self, String> {
-		// SAFETY: plain calls with constants. A thread that already has COM in another mode gets an error code,
-		// which is fine: Media Foundation works in either.
-		unsafe {
-			let _ = CoInitializeEx(None, COINIT_MULTITHREADED);
-			MFStartup(MF_VERSION, 0).map_err(|e| e.to_string())?;
+		// SAFETY: a plain call with constants. A thread that already has COM in another mode gets
+		// RPC_E_CHANGED_MODE, which is fine (Media Foundation works in either) and owes no CoUninitialize.
+		let com = unsafe { CoInitializeEx(None, COINIT_MULTITHREADED) }.is_ok();
+		// SAFETY: a plain call with constants; on failure the COM count taken above is given back here, since no
+		// guard exists yet to do it.
+		if let Err(e) = unsafe { MFStartup(MF_VERSION, 0) } {
+			if com {
+				// SAFETY: balances the successful CoInitializeEx above on this same thread.
+				unsafe { CoUninitialize() };
+			}
+			return Err(e.to_string());
 		}
-		Ok(Self)
+		Ok(Self {
+			com,
+			_thread: PhantomData,
+		})
 	}
 }
 
 impl Drop for Runtime {
 	fn drop(&mut self) {
-		// SAFETY: balances the MFStartup of `start`.
+		// SAFETY: balances the MFStartup of `start`, on the thread that called it (the guard is not Send).
 		let _ = unsafe { MFShutdown() };
+		if self.com {
+			// SAFETY: balances the successful CoInitializeEx of `start` on the same thread.
+			unsafe { CoUninitialize() };
+		}
 	}
 }
 
@@ -175,18 +197,30 @@ fn open_reader(id: &str) -> Result<(IMFSourceReader, Shape), SourceError> {
 	// SAFETY: every pointer is to a live local; the reader and the media types are reference counted objects
 	// that this function owns; the stream index constant is the documented -4 as an unsigned number.
 	unsafe {
-		let source: IMFMediaSource = entry
-			.activate
-			.ActivateObject()
-			.map_err(|e| unavailable(format!("the camera could not be opened: {e}")))?;
+		// The attributes come first, so nothing can fail between opening the camera and handing it to the reader
+		// but the reader itself.
 		let mut attrs: Option<IMFAttributes> = None;
 		MFCreateAttributes(&mut attrs, 1).map_err(|e| unavailable(e.to_string()))?;
 		let attrs = attrs.ok_or_else(|| unavailable("no attributes".into()))?;
 		attrs
 			.SetUINT32(&MF_SOURCE_READER_ENABLE_VIDEO_PROCESSING, 1)
 			.map_err(|e| unavailable(e.to_string()))?;
-		let reader = MFCreateSourceReaderFromMediaSource(&source, &attrs)
-			.map_err(|e| unavailable(format!("the camera reader could not be made: {e}")))?;
+		let source: IMFMediaSource = entry
+			.activate
+			.ActivateObject()
+			.map_err(|e| unavailable(format!("the camera could not be opened: {e}")))?;
+		// From here the reader owns the source and shuts it down when it is released (the default of
+		// MF_SOURCE_READER_DISCONNECT_MEDIASOURCE_ON_SHUTDOWN), so every later error path releases the camera.
+		let reader = match MFCreateSourceReaderFromMediaSource(&source, &attrs) {
+			Ok(r) => r,
+			Err(e) => {
+				// No reader took the source: shut it down here, or the camera stays in use (and its light on).
+				let _ = source.Shutdown();
+				return Err(unavailable(format!(
+					"the camera reader could not be made: {e}"
+				)));
+			}
+		};
 		let stream = MF_SOURCE_READER_FIRST_VIDEO_STREAM.0 as u32;
 
 		// The largest native picture that fits in 1280 by 720; a camera with only larger ones gets the smallest.
@@ -320,16 +354,42 @@ impl RunningSource for Running {
 
 /// Opens the camera with that id and starts reading it into the mailbox on a thread of its own.
 pub fn open(id: &str, mailbox: &Arc<Mailbox>) -> Result<Box<dyn RunningSource>, SourceError> {
+	let (id, mailbox) = (id.to_string(), Arc::clone(mailbox));
+	let end = Arc::clone(&mailbox);
+	let running = run_reader(
+		move || {
+			Runtime::start()
+				.map_err(|e| SourceError::new("device_unavailable", printable(&e)))
+				.and_then(|rt| open_reader(&id).map(|r| (r, rt)))
+		},
+		// The runtime is the last member of the tuple, and a tuple drops its members in order: the reader is
+		// released before Media Foundation shuts down.
+		move |((reader, shape), _rt)| read_one(reader, shape, &mailbox),
+		move |error| end.close(error),
+		OPEN_WAIT,
+	)?;
+	Ok(Box::new(running))
+}
+
+/// How long a start waits for the camera to open.
+const OPEN_WAIT: Duration = Duration::from_secs(10);
+
+/// The thread of a camera: `open` runs on it (COM and Media Foundation belong to the thread that starts them),
+/// then `read` until it says the stream ended, fails, or a stop is asked; `end` gets the reason. A camera that
+/// opens only after `wait` has run out is closed at once without one read: the start was already refused.
+fn run_reader<T: 'static>(
+	open: impl FnOnce() -> Result<T, SourceError> + Send + 'static,
+	mut read: impl FnMut(&T) -> Result<bool, String> + Send + 'static,
+	end: impl FnOnce(Option<String>) + Send + 'static,
+	wait: Duration,
+) -> Result<Running, SourceError> {
 	let (ready_tx, ready_rx) = mpsc::channel::<Result<(), SourceError>>();
 	let (done_tx, done_rx) = mpsc::channel::<()>();
 	let stop = Arc::new(AtomicBool::new(false));
-	let (id, mailbox, flag) = (id.to_string(), Arc::clone(mailbox), Arc::clone(&stop));
+	let flag = Arc::clone(&stop);
 	std::thread::spawn(move || {
 		crate::clock::raise_this_thread();
-		let opened = Runtime::start()
-			.map_err(|e| SourceError::new("device_unavailable", printable(&e)))
-			.and_then(|rt| open_reader(&id).map(|r| (rt, r)));
-		let (_rt, (reader, shape)) = match opened {
+		let opened = match open() {
 			Ok(x) => {
 				let _ = ready_tx.send(Ok(()));
 				x
@@ -342,7 +402,7 @@ pub fn open(id: &str, mailbox: &Arc<Mailbox>) -> Result<Box<dyn RunningSource>, 
 		};
 		let mut error = None;
 		while !flag.load(Ordering::Relaxed) {
-			match read_one(&reader, &shape, &mailbox) {
+			match read(&opened) {
 				Ok(true) => {}
 				Ok(false) => break,
 				Err(e) => {
@@ -351,19 +411,25 @@ pub fn open(id: &str, mailbox: &Arc<Mailbox>) -> Result<Box<dyn RunningSource>, 
 				}
 			}
 		}
-		mailbox.close(error);
+		drop(opened);
+		end(error);
 		let _ = done_tx.send(());
 	});
-	match ready_rx.recv_timeout(Duration::from_secs(10)) {
-		Ok(Ok(())) => Ok(Box::new(Running {
+	match ready_rx.recv_timeout(wait) {
+		Ok(Ok(())) => Ok(Running {
 			stop,
 			done: done_rx,
-		})),
+		}),
 		Ok(Err(e)) => Err(e),
-		Err(_) => Err(SourceError::new(
-			"device_unavailable",
-			"the camera did not open in time",
-		)),
+		Err(_) => {
+			// The thread may still open the camera after this answer: the flag makes it close the camera at once
+			// instead of reading it, with its light on, for a recording that was refused.
+			stop.store(true, Ordering::Relaxed);
+			Err(SourceError::new(
+				"device_unavailable",
+				"the camera did not open in time",
+			))
+		}
 	}
 }
 
@@ -414,6 +480,66 @@ mod tests {
 				c.id
 			);
 		}
+	}
+
+	/// A camera that opens after the start gave up on it is closed without one read, so it does not stay in use
+	/// (with its light on) behind a refused recording.
+	#[test]
+	fn a_camera_that_opens_too_late_is_closed_without_a_read() {
+		let reads = Arc::new(std::sync::atomic::AtomicU64::new(0));
+		let (ended_tx, ended_rx) = mpsc::channel::<Option<String>>();
+		let counted = Arc::clone(&reads);
+		let got = run_reader(
+			|| {
+				std::thread::sleep(Duration::from_millis(300));
+				Ok(())
+			},
+			move |_| {
+				counted.fetch_add(1, Ordering::Relaxed);
+				std::thread::sleep(Duration::from_millis(5));
+				Ok(true)
+			},
+			move |e| {
+				let _ = ended_tx.send(e);
+			},
+			Duration::from_millis(20),
+		);
+		assert!(got.is_err(), "the start must be refused");
+		let ended = ended_rx.recv_timeout(Duration::from_secs(5));
+		assert_eq!(ended, Ok(None), "the late camera must be closed");
+		assert_eq!(
+			reads.load(Ordering::Relaxed),
+			0,
+			"a refused camera was read"
+		);
+	}
+
+	/// A camera that opens in time is read until a stop, and the stop returns.
+	#[test]
+	fn a_camera_is_read_until_it_is_stopped() {
+		let reads = Arc::new(std::sync::atomic::AtomicU64::new(0));
+		let counted = Arc::clone(&reads);
+		let running = run_reader(
+			|| Ok(()),
+			move |_| {
+				counted.fetch_add(1, Ordering::Relaxed);
+				std::thread::sleep(Duration::from_millis(2));
+				Ok(true)
+			},
+			|_| {},
+			Duration::from_secs(5),
+		)
+		.expect("the camera opens");
+		std::thread::sleep(Duration::from_millis(50));
+		Box::new(running).stop();
+		let after = reads.load(Ordering::Relaxed);
+		assert!(after > 0, "the camera was never read");
+		std::thread::sleep(Duration::from_millis(30));
+		assert_eq!(
+			reads.load(Ordering::Relaxed),
+			after,
+			"reads went on after the stop"
+		);
 	}
 
 	/// verify:env-skip needs a camera and STUARTY_TEST_REAL_CAMERA=1: it OPENS the first camera of the machine
