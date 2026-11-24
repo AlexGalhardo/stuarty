@@ -140,8 +140,11 @@ test.describe("library tab rail", () => {
 								.map((a) => a.finished.catch(() => undefined)),
 						),
 					);
+					// The specimen of a caption style is incidental text (WCAG 1.4.3) and axe takes the outline of a
+					// style for its colour; caption-styles-blur-voice.spec.ts leaves it out for the same reason.
 					const { violations } = await new AxeBuilder({ page })
 						.include("aside[data-landmark='2']")
+						.exclude("[data-caption-sample]")
 						.withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
 						.analyze();
 					expect(violations.map((v) => v.id)).toEqual([]);
