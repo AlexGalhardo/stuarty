@@ -27,6 +27,7 @@ var sealedCells = []cell{
 	{table: "text_revisions", column: "body", keys: []string{"item_id", "revision"}},
 	{table: "chat_events", column: "body_json", keys: []string{"session_id", "seq"}},
 	{table: "chat_sessions", column: "title", keys: []string{"id"}},
+	{table: "asset_info", column: "prompt", keys: []string{"owner_user_id", "asset_hash"}},
 	{table: "publications", column: "text", keys: []string{"id"}},
 	{table: "publication_targets", column: "fields", keys: []string{"id"}},
 	{table: "publication_targets", column: "snapshot", keys: []string{"id"}},
@@ -156,6 +157,19 @@ func (s *Store) CreateAccount(
 
 		// An update of an FTS5 table leaves the old terms in its segments until a merge: the rebuild drops them.
 		if _, err := dtx.ExecContext(ctx, `INSERT INTO library_fts (library_fts) VALUES ('rebuild')`); err != nil {
+			return err
+		}
+
+		// The search index of the files repeats the prompt in its origin column: it is written again without it.
+		if _, err := dtx.ExecContext(ctx, `UPDATE asset_search SET origin = COALESCE((
+  SELECT TRIM(COALESCE(i.source, '') || ' ' || COALESCE(i.provider, '') || ' ' || COALESCE(i.model, '') || ' ' ||
+              COALESCE(i.engine, '') || ' ' || COALESCE(i.engine_version, ''))
+  FROM asset_info i
+  WHERE i.asset_hash = asset_search.asset_hash AND i.owner_user_id = asset_search.owner_user_id), '')`); err != nil {
+			return err
+		}
+
+		if _, err := dtx.ExecContext(ctx, `INSERT INTO asset_search (asset_search) VALUES ('rebuild')`); err != nil {
 			return err
 		}
 
