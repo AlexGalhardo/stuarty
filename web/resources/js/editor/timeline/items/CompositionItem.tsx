@@ -39,7 +39,7 @@ export default function CompositionItem({ id }: { id: string }): ReactNode {
 			<UntrustedText
 				// The cell already carries the name; the text would be read twice.
 				aria-hidden="true"
-				className="relative z-10 truncate rounded bg-background/70 px-1"
+				className="relative z-10 truncate rounded bg-background/70 px-1 text-foreground"
 			>
 				{label}
 			</UntrustedText>
