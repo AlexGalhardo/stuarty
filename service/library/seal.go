@@ -49,7 +49,7 @@ func (f *inFlight) enter() (leave func()) {
 func sealClearFile(root *vroot, rel string) (bool, error) {
 	// A folder with no account, and a locked one, have nothing to seal: the scan does not run while locked.
 	if !root.sealing() || root.ready() != nil {
-		return false, nil //nolint:nilerr // locked is not a failure of the file
+		return false, nil
 	}
 
 	info, err := root.Lstat(rel)
