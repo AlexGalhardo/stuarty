@@ -6,6 +6,8 @@ mod audio;
 #[cfg(windows)]
 mod audio_wasapi;
 mod camera;
+#[cfg(windows)]
+mod camera_mf;
 mod clock;
 mod events;
 mod frame;
@@ -87,7 +89,7 @@ fn serve(policy: Policy) {
 			display,
 			window,
 			audio: audio::can_capture() || test,
-			camera: test,
+			camera: camera::can_capture() || test,
 			events: cfg!(windows) || test,
 		},
 	));

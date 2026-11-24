@@ -20,6 +20,9 @@ all = { level = "deny", priority = -1 }
 windows-capture = "=2.0.1"
 # wasapi is the second approved crate (ADR-0049 item 7): the microphone and the loopback of the system mix.
 wasapi = "=0.27.0"
+# windows is the third approved crate (D-142, ADR-0049 item 7), for the Media Foundation webcam in src/camera_mf.rs.
+# It is the version already locked under windows-capture and wasapi, with only the features that module needs.
+windows = { version = "=0.62.2", features = ["Win32_Media_MediaFoundation", "Win32_System_Com"] }
 
 [profile.release]
 opt-level = 3

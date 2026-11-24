@@ -21,7 +21,7 @@ Capture APIs differ by system: Windows Graphics Capture and WASAPI, ScreenCaptur
 4. Control messages are versioned JSON on stdin and stdout. Frames reach FFmpeg through a pipe, and audio and events go to their own files on one shared clock.
 5. Output is fragmented MP4, so an interrupted recording stays decodable.
 6. The server remains free of cgo. Rust rules 2 to 4, 7 and 8 of `.agents/rules/rust.md` apply to `capture/`. Rules about bit-exact pixels and WebAssembly do not, because the helper composes nothing.
-7. Approved crates (D-133), at exact versions, with licences read from their repositories: `windows-capture` (MIT), `wasapi` (MIT), `cpal` (Apache-2.0). `scap` (MIT) is approved only if the spike of epic 61 proves it necessary. The main Cap code (AGPLv3) is excluded.
+7. Approved crates (D-133), at exact versions, with licences read from their repositories: `windows-capture` (MIT), `wasapi` (MIT), `cpal` (Apache-2.0). `scap` (MIT) is approved only if the spike of epic 61 proves it necessary. The main Cap code (AGPLv3) is excluded. Added by D-142 (2026-11-24): the `windows` crate (MIT OR Apache-2.0, Microsoft) as a direct dependency of `capture/` only, at the exact version already locked under `windows-capture` and `wasapi` (0.62.2), with only the features Media Foundation needs, for the Windows webcam; it adds no code to the dependency tree.
 
 ## 3. Alternatives
 
@@ -36,7 +36,7 @@ Capture APIs differ by system: Windows Graphics Capture and WASAPI, ScreenCaptur
 ## 4. Consequences
 
 - A new executable to build, ship, list in the notices and keep in the release assets.
-- An unsigned helper that captures the screen may alarm antivirus software [to validate in the spike of epic 61].
+- An unsigned helper that captures the screen may alarm antivirus software [to validate in the spike of epic 61]. The helper also polls the mouse buttons with `GetAsyncKeyState` (virtual keys 1, 2 and 4 only, never a keyboard key), which some antivirus heuristics may flag.
 - macOS permission attribution depends on signing, which is unsigned today (author decision D-033). **Epic 67 stops there until the author decides.**
 - On Wayland, global click data has no generic solution. Epic 68 states the limit and promises no parity.
 

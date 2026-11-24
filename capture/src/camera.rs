@@ -1,7 +1,7 @@
 //! The webcam: a video track of its own, on its own file, written on the grid of the shared clock (SDD-025
-//! section 16.5). The device sits behind the same mailbox as the screen. Windows has no camera backend yet (it
-//! needs a crate ADR-0049 does not list), so only the test camera exists and the helper lists no camera on
-//! Windows; the track, its file and its clock are the real ones and are tested with the test camera.
+//! section 16.5). The device sits behind the same mailbox as the screen. On Windows the device is Media
+//! Foundation (camera_mf.rs, D-142); the test camera of `--allow-test-source` makes the same track without a
+//! device, which is how the file and the clock are tested.
 
 use std::path::Path;
 use std::sync::Arc;
@@ -46,17 +46,25 @@ impl Track {
 
 /// The cameras that can be recorded. Only the test camera exists, with the test flag.
 pub fn list(allow_test: bool) -> Vec<SourceInfo> {
+	#[cfg(windows)]
+	let mut out = crate::camera_mf::list();
+	#[cfg(not(windows))]
+	let mut out = Vec::new();
 	if allow_test {
-		vec![SourceInfo {
+		out.push(SourceInfo {
 			id: "fake".into(),
 			name: "Test camera".into(),
 			width: 0,
 			height: 0,
-			default: true,
-		}]
-	} else {
-		Vec::new()
+			default: out.is_empty(),
+		});
 	}
+	out
+}
+
+/// Whether this system can record a camera at all.
+pub fn can_capture() -> bool {
+	cfg!(windows)
 }
 
 fn open(id: &str, mailbox: &Arc<Mailbox>) -> Result<Box<dyn RunningSource>, SourceError> {
@@ -67,6 +75,9 @@ fn open(id: &str, mailbox: &Arc<Mailbox>) -> Result<Box<dyn RunningSource>, Sour
 			let spec = format!("160x90r120p{}w{}", t.period_ms, t.width_ms);
 			source::open_fake(&spec, mailbox)
 		}
+		#[cfg(windows)]
+		None => crate::camera_mf::open(id, mailbox),
+		#[cfg(not(windows))]
 		None => Err(SourceError::new(
 			"unsupported",
 			"there is no camera backend on this system yet",
