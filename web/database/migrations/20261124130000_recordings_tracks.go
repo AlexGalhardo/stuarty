@@ -3,84 +3,67 @@ package migrations
 import "github.com/AlexGalhardo/vukem/schema"
 
 // The tracks, the pauses and the pointer events of a recording (SDD-025 section 16, SDD-005 section 5.18). SQLite
-// cannot change a CHECK, and the state list gains `paused`, so the table is made again beside the old one, the rows
-// are copied and the old one is dropped. Three columns are added: the JSON lists of tracks and pauses, and the
-// number of pointer events. None holds a device name or a pointer position.
+// cannot change a CHECK, and the state list gains `paused`, so the table is rebuilt (Schema.Rebuild keeps the rows
+// and, with KeepIndexes, the two indexes); the migration owns its transaction because Rebuild turns foreign keys
+// off around it. Three columns are added: the JSON lists of tracks and pauses, and the number of pointer events.
+// None holds a device name or a pointer position.
 func m20261124130000RecordingsTracks() schema.Migration {
-	const columns = `id, project_id, state, review, source_kind, source_label, width, height, fps, encoder, started_ms,
- ended_ms, duration_ms, frames, dropped, bytes, stop_reason, error_code, error_message, asset_hash, asset_id, actor,
- created_ms`
+	const (
+		statesBefore = `state IN ('prepared','recording','finishing','ready','failed','cancelled')`
+		statesAfter  = `state IN ('prepared','recording','paused','finishing','ready','failed','cancelled')`
+	)
 
-	table := func(name, states, extra string) string {
-		return `CREATE TABLE ` + name + ` (
-  id             TEXT    NOT NULL,
-  project_id     TEXT    NOT NULL,
-  state          TEXT    NOT NULL CHECK (state IN (` + states + `)),
-  review         TEXT    NOT NULL DEFAULT '' CHECK (review IN ('','pending','added','dismissed')),
-  source_kind    TEXT    NOT NULL,
-  source_label   TEXT    NOT NULL DEFAULT '',
-  width          INTEGER NOT NULL DEFAULT 0,
-  height         INTEGER NOT NULL DEFAULT 0,
-  fps            INTEGER NOT NULL,
-  encoder        TEXT    NOT NULL DEFAULT '',
-  started_ms     INTEGER NOT NULL DEFAULT 0,
-  ended_ms       INTEGER NOT NULL DEFAULT 0,
-  duration_ms    INTEGER NOT NULL DEFAULT 0,
-  frames         INTEGER NOT NULL DEFAULT 0,
-  dropped        INTEGER NOT NULL DEFAULT 0,
-  bytes          INTEGER NOT NULL DEFAULT 0,
-  stop_reason    TEXT    NOT NULL DEFAULT '',
-  error_code     TEXT    NOT NULL DEFAULT '',
-  error_message  TEXT    NOT NULL DEFAULT '',
-  asset_hash     TEXT    NOT NULL DEFAULT '',
-  asset_id       TEXT    NOT NULL DEFAULT '',
-  actor          TEXT    NOT NULL,
-  created_ms     INTEGER NOT NULL` + extra + `,
-  PRIMARY KEY (id)
-)`
-	}
+	recordings := func(states string, withTracks bool) func(t *schema.Table) {
+		return func(t *schema.Table) {
+			t.Text("id").Primary()
+			t.Text("project_id")
+			t.Text("state")
+			t.Text("review").Default("")
+			t.Text("source_kind")
+			t.Text("source_label").Default("")
+			t.Integer("width").Default(0)
+			t.Integer("height").Default(0)
+			t.Integer("fps")
+			t.Text("encoder").Default("")
+			t.Integer("started_ms").Default(0)
+			t.Integer("ended_ms").Default(0)
+			t.Integer("duration_ms").Default(0)
+			t.Integer("frames").Default(0)
+			t.Integer("dropped").Default(0)
+			t.Integer("bytes").Default(0)
+			t.Text("stop_reason").Default("")
+			t.Text("error_code").Default("")
+			t.Text("error_message").Default("")
+			t.Text("asset_hash").Default("")
+			t.Text("asset_id").Default("")
+			t.Text("actor")
+			t.Integer("created_ms")
 
-	indexes := []string{
-		`CREATE INDEX recordings_project_index ON recordings (project_id, created_ms)`,
-		`CREATE INDEX recordings_state_index ON recordings (state)`,
-	}
-
-	rebuild := func(s *schema.Schema, states, extra, copyCols, selectCols string) error {
-		stmts := []string{
-			table("recordings_next", states, extra),
-			`INSERT INTO recordings_next (` + copyCols + `) SELECT ` + selectCols + ` FROM recordings`,
-			`DROP TABLE recordings`,
-			`ALTER TABLE recordings_next RENAME TO recordings`,
-		}
-		stmts = append(stmts, indexes...)
-
-		for _, q := range stmts {
-			if err := s.Raw(q); err != nil {
-				return err
+			if withTracks {
+				t.Text("tracks").Default("[]")
+				t.Text("pauses").Default("[]")
+				t.Integer("events_count").Default(0)
 			}
-		}
 
-		return nil
+			t.Check("recordings_state_check", states)
+			t.Check("recordings_review_check", `review IN ('','pending','added','dismissed')`)
+		}
 	}
 
 	return schema.Migration{
-		ID: "20261124130000_recordings_tracks",
+		ID:            "20261124130000_recordings_tracks",
+		NoTransaction: true,
 		Up: func(s *schema.Schema) error {
-			return rebuild(s,
-				`'prepared','recording','paused','finishing','ready','failed','cancelled'`,
-				`,
-  tracks         TEXT    NOT NULL DEFAULT '[]',
-  pauses         TEXT    NOT NULL DEFAULT '[]',
-  events_count   INTEGER NOT NULL DEFAULT 0`,
-				columns, columns)
+			return s.Rebuild("recordings", recordings(statesAfter, true), schema.KeepIndexes())
 		},
 		Down: func(s *schema.Schema) error {
-			// A paused recording goes back to being a recording; the three columns are dropped with the table.
-			return rebuild(s,
-				`'prepared','recording','finishing','ready','failed','cancelled'`, ``,
-				columns, `id, project_id, CASE WHEN state = 'paused' THEN 'recording' ELSE state END, review,
- source_kind, source_label, width, height, fps, encoder, started_ms, ended_ms, duration_ms, frames, dropped, bytes,
- stop_reason, error_code, error_message, asset_hash, asset_id, actor, created_ms`)
+			// A paused recording goes back to being a recording; the three columns are dropped with the rebuild.
+			if err := s.Raw(`UPDATE recordings SET state = 'recording' WHERE state = 'paused'`); err != nil {
+				return err
+			}
+
+			return s.Rebuild("recordings", recordings(statesBefore, false), schema.KeepIndexes(),
+				schema.DropColumns("tracks", "pauses", "events_count"))
 		},
 	}
 }
