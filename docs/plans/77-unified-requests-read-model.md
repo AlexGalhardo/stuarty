@@ -47,10 +47,10 @@ Names are proposals until task 1 writes them to SDD-000.
 
 ## Technical design
 
-- **A row** is `{id, source: chat|approval, source_id, state, agent, skill, tool, action_key, item, destination, cost, undoable, created_at}`. `id` encodes the source; the row never carries a credential.
+- **A row** is `{id, source: chat|approval, source_id, state, agent, skill, tool, action_key, item, destination, cost, undo, created_at}`. `id` encodes the source; the row never carries a credential.
 - **Decisions.** The client calls the endpoint of the row's source. The read model has no write path, so the privileged checks stay where they are.
 - **Permission detail.** `chat.Permission` holds only a title and a kind today. For tools of Stuarty's own MCP server, the host keeps an allowlist of input fields from the protocol's raw input (the project, the item, the operation names). Any other tool keeps its title, and its unknown fields read "Not reported". Text from the agent stays untrusted.
-- **Undo** is `true` only for an operation the command registry marks undoable. A publication, a paid generation or an unknown tool is `false` or absent, never presumed.
+- **Undo** is one of `can`, `cannot` or `not_verified` (author decision D-140). A row says `can` only when Stuarty can prove it, never on the agent's word: a chat permission is asked before its call runs, by the title the agent gives it, so every chat row is `not_verified`. An approval is `cannot`.
 - **Cost** comes from the approval's estimate; a chat permission has none.
 - **Skill** comes from the activity of epic 76 at the moment of the request.
 
@@ -73,13 +73,13 @@ Merge tables, isolation tests with two members, a hostile tool input fixture, th
 2. **Given** a row, **when** a person decides it, **then** the request goes through `chat.sessions.answer` or `ApprovalDecide`, and no decision endpoint was added (`git diff` of the endpoints shows only reads).
 3. **Given** a session token, **when** it calls `InboxList`, **then** it is refused.
 4. **Given** two members, **when** one lists, **then** no row of the other appears (`go test -run TestSecurity_ ./...`).
-5. **Given** a tool outside Stuarty, **when** it asks for permission, **then** item, destination and undo are "Not reported".
+5. **Given** a tool outside Stuarty, **when** it asks for permission, **then** item and destination are "Not reported" and undo is "Not verified" (D-140).
 6. `task lint`, `task test` and `task test:web` pass, and `tools/list` is unchanged.
 
 ## Risks and mitigation
 
 - Raw tool input can carry secrets: an allowlist, the scrubber of the recorder, and a test.
-- A wrong "can be undone" would mislead a decision: only the registry can say yes.
+- A wrong "can be undone" would mislead a decision: Stuarty says yes only when it can prove it (D-140).
 - **STOP** if a row needs a decision path, or if the protocol does not provide the raw input for Stuarty's tools.
 
 ## Size
