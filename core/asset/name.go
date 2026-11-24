@@ -12,6 +12,10 @@ import (
 // MaxName is the longest display name of a file, in characters (SDD-011 section 14.8).
 const MaxName = 120
 
+// HiddenInNameReason is why a name with a control or invisible character is refused. The HTTP binder refuses such a
+// character in any text before the rules run, and answers with this sentence so every surface says the same (VV-396).
+const HiddenInNameReason = "the name has a control or invisible character"
+
 // forbiddenInName are the characters Windows does not allow in a file name. The display name is the name a file
 // leaves Stuarty under, so it must be one on every system the product runs on.
 const forbiddenInName = `<>:"|?*`
@@ -101,7 +105,7 @@ func nameProblem(typed string) string {
 		case r == '/' || r == '\\':
 			return "the name has a path separator"
 		case hiddenInName(r):
-			return "the name has a control or invisible character"
+			return HiddenInNameReason
 		case strings.ContainsRune(forbiddenInName, r):
 			return fmt.Sprintf("the name has the character %q, which a file name cannot have", r)
 		}

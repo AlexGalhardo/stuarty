@@ -29,6 +29,7 @@
 		{"call": "AssetGet", "args": {"hash": "sha256:926740d102dff40b0c0afdd2d37465ac2574348af2d4734e2e4e0878e762e76e"}},
 		{"call": "AssetRename", "args": {"hash": "sha256:926740d102dff40b0c0afdd2d37465ac2574348af2d4734e2e4e0878e762e76e", "name": "   "}, "expect_error": {"code": "E_VALIDATION"}},
 		{"call": "AssetRename", "args": {"hash": "sha256:926740d102dff40b0c0afdd2d37465ac2574348af2d4734e2e4e0878e762e76e", "name": "Holiday\u202Efdp.exe"}, "expect_error": {"code": "E_VALIDATION"}},
+		{"call": "AssetRename", "args": {"hash": "sha256:926740d102dff40b0c0afdd2d37465ac2574348af2d4734e2e4e0878e762e76e", "name": "Beep\u0007cat"}, "expect_error": {"code": "E_VALIDATION"}},
 		{"call": "AssetRename", "args": {"hash": "sha256:926740d102dff40b0c0afdd2d37465ac2574348af2d4734e2e4e0878e762e76e", "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}, "expect_error": {"code": "E_VALIDATION"}},
 		{"call": "AssetRename", "args": {"hash": "sha256:926740d102dff40b0c0afdd2d37465ac2574348af2d4734e2e4e0878e762e76e", "name": "Reaction cat"}},
 		{"call": "AssetGet", "args": {"hash": "sha256:926740d102dff40b0c0afdd2d37465ac2574348af2d4734e2e4e0878e762e76e"}}

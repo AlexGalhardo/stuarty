@@ -238,6 +238,14 @@ func ruleError(err error) error {
 	return asError(err)
 }
 
+// AssetNameHiddenCharacterError is the error of AssetRename for a name with a control or invisible character, for
+// a surface that refuses the character before the Service runs (the HTTP binder): the same error the rules give.
+func AssetNameHiddenCharacterError() *Error {
+	return newError(command.CodeValidation, "%s", asset.HiddenInNameReason).
+		withPath("name").
+		withDetail("reason", "name_invalid")
+}
+
 // libraryRefusal is the error of a transaction that wrote the library side of a file: a refusal of the rules
 // is the caller's E_VALIDATION, anything else goes on as it is.
 func libraryRefusal(err error) error {
