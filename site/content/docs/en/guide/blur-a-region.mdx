@@ -7,7 +7,7 @@ description: "Hide an e-mail, a key or an address on screen with a strong blur o
 
 - how a blurred region is made and why the clip itself is not changed;
 - how to choose the region, the time and the strength;
-- the one place where a blur is weaker, and what to do there.
+- how a region at the edge of the picture behaves, and the one case where it is softer.
 
 ## The idea
 
@@ -32,9 +32,9 @@ The product does not find private data for you: you choose the region.
 
 Select a clip and open the **Adjust** tab of the inspector. In **Blur a region**, give **Left**, **Top**, **Width** and **Height** as shares of the picture (you can type percentages), and optionally **From** and **For** (empty blurs the whole clip) and **Blur strength** (empty uses the strong default). Choose **Blur this region**.
 
-## Near an edge of the picture
+## At an edge of the picture
 
-The blur treats what lies outside the picture as transparent, so within about two radii of an edge of the picture the blurred copy lets part of the sharp picture through; at the edge itself about half of it shows. A larger region or a larger radius does not cure this. When the region comes that close to an edge, the result says `near_edge: true` and the editor shows a warning. To hide text that touches an edge completely, cover it with a [shape](/docs/guide/shapes) instead (`shape.add`), which is opaque.
+A region that touches an edge of the picture is blurred as much as one in the middle, so you can hide the address bar or the status bar of a screen recording: the blur repeats the outermost row of pixels past the edge, so nothing of the sharp picture shows through there. The one thing that is soft at an edge is the `feather`: its soft border is centred on the border of the region, so half of it lies outside the picture. A region with a feather that comes closer to an edge than half of it says `near_edge: true`; use a feather of `0` on a region that touches an edge. If you need a block that nothing shows through at all, cover the text with a [shape](/docs/guide/shapes) (`shape.add`), which is opaque.
 
 ## Quick start
 
