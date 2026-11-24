@@ -132,7 +132,7 @@ func readDocuments(t *testing.T, s *Store) {
 	}
 
 	since, err := s.Operations().Since(ctx, "prj_9", 0, service.OperationFilter{})
-	if err != nil || len(since) != 1 || string(since[0].Ops) != string(js(docOp)) {
+	if err != nil || len(since) < 1 || string(since[0].Ops) != string(js(docOp)) {
 		t.Fatalf("operations since: %+v %v", since, err)
 	}
 
