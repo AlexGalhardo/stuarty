@@ -40,12 +40,12 @@ function Fact({
 	children: string;
 }): ReactNode {
 	return (
-		<div className="flex min-w-0 items-start gap-2">
-			<Icon aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-icon" />
-			<div className="min-w-0">
-				<dt className="text-xs text-text-subtle">{label}</dt>
-				<dd className="break-words text-sm text-text">{children}</dd>
-			</div>
+		<div className="min-w-0">
+			<dt className="flex items-center gap-1.5 text-xs text-text-subtle">
+				<Icon aria-hidden="true" className="size-3.5 shrink-0 text-icon" />
+				{label}
+			</dt>
+			<dd className="break-words text-sm text-text">{children}</dd>
 		</div>
 	);
 }

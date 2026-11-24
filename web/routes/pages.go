@@ -288,7 +288,9 @@ func projectPageShow(c *web.Ctx, d *httpapi.Deps) error {
 		"project": map[string]any{
 			"id": desc.ProjectID, "name": desc.Name, "state": desc.State,
 			"description": desc.Description, "goal": desc.Goal, "complete": desc.Complete,
+			"kind": desc.Kind,
 		},
+		"workflow":   desc.Workflow,
 		"production": desc.Production, "items": nonNil(desc.Items), "brief": brief, "briefing": briefing,
 	})
 }

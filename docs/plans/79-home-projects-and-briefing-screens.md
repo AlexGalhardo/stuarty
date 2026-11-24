@@ -55,7 +55,7 @@ None new. It uses `ProjectCreate`, `ProjectGet`, `ProjectList` and `ProjectStepS
 - [x] 3. Projects list with both card types. Verify: `cd web && bun run test -- Projects` passes.
 - [x] 4. New project with the four kinds. Verify: new spec `new-project-kinds` passes, and a text project creates no timeline.
 - [x] 5. Briefing for each kind, with errors under each field. Verify: `cd web && bun run test -- Briefing` passes.
-- [ ] 6. The project detail with the workflow, skip and "Add media". Verify: new spec `project-workflow` passes.
+- [x] 6. The project detail with the workflow, skip and "Add media". Verify: new spec `project-workflow` passes.
 - [ ] 7. Brand kit on the new components. Verify: `cd web && bun run test -- BrandKit` passes.
 - [ ] 8. Check 1440, 1280 and 390 px in both themes with axe. Verify: `cd web && bun run e2e -- a11y` passes.
 

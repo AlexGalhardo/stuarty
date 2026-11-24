@@ -77,9 +77,9 @@ test.describe("first complete flow @chromium-only", () => {
 			await page
 				.getByRole("button", { name: "Save the answers as the brief" })
 				.click();
-			await expect(page.getByRole("status")).toHaveText(
-				"The brief was saved from your answers.",
-			);
+			await expect(
+				page.getByRole("status").filter({ hasText: "saved" }),
+			).toHaveText("The brief was saved from your answers.");
 		});
 
 		let scriptId = "";

@@ -11,6 +11,7 @@ test.describe("guided briefing", () => {
 		const call = await caller(request);
 		const created = await call("POST", "/projects", {
 			name: `Briefing ${Date.now()}`,
+			kind: "video",
 		});
 		const id = created.project_id as string;
 
@@ -34,9 +35,9 @@ test.describe("guided briefing", () => {
 		await page
 			.getByRole("button", { name: "Save the answers as the brief" })
 			.click();
-		await expect(page.getByRole("status")).toHaveText(
-			"The brief was saved from your answers.",
-		);
+		await expect(
+			page.getByRole("status").filter({ hasText: "saved" }),
+		).toHaveText("The brief was saved from your answers.");
 
 		const brief = (await call("GET", `/projects/${id}/brief`)) as {
 			text: string;
@@ -77,6 +78,7 @@ test.describe("guided briefing", () => {
 		const call = await caller(request);
 		const created = await call("POST", "/projects", {
 			name: `Refused ${Date.now()}`,
+			kind: "video",
 		});
 		const id = created.project_id as string;
 
@@ -107,6 +109,7 @@ test.describe("guided briefing", () => {
 		const call = await caller(request);
 		const created = await call("POST", "/projects", {
 			name: `By hand ${Date.now()}`,
+			kind: "video",
 		});
 		const id = created.project_id as string;
 		await call("PUT", `/projects/${id}/brief`, { text: "My own plan." });
@@ -134,7 +137,9 @@ test.describe("guided briefing", () => {
 
 		await page.getByLabel("Replace the brief I wrote").check();
 		await save.click();
-		await expect(page.getByRole("status")).toBeVisible();
+		await expect(
+			page.getByRole("status").filter({ hasText: "saved" }),
+		).toBeVisible();
 		expect(
 			((await call("GET", `/projects/${id}/brief`)) as { text: string }).text,
 		).toContain("# Brief");
@@ -148,6 +153,7 @@ test.describe("guided briefing", () => {
 		const call = await caller(request);
 		const created = await call("POST", "/projects", {
 			name: `Briefing pt ${Date.now()}`,
+			kind: "video",
 		});
 
 		await page.goto(`/projects/${created.project_id as string}`);
@@ -171,6 +177,7 @@ test.describe("guided briefing", () => {
 			const call = await caller(request);
 			const created = await call("POST", "/projects", {
 				name: `Axe briefing ${Date.now()}`,
+				kind: "video",
 			});
 			await page.goto(`/projects/${created.project_id as string}`);
 			await expect(

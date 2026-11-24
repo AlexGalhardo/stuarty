@@ -3,6 +3,7 @@ import { ArrowDown, ArrowUp } from "lucide-react";
 import { type FormEvent, type ReactNode, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { StatusBadge } from "@/components/StatusBadge";
 import UntrustedText from "@/components/UntrustedText";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,8 +29,10 @@ import type {
 	ProjectGoal,
 	ProjectItem,
 } from "../../editor/api/types";
+import type { ProjectKind, Workflow } from "../../workflow/types";
 import { Briefing } from "./Briefing";
 import ProjectContextForm from "./ProjectContextForm";
+import WorkflowSection from "./WorkflowSection";
 
 const TITLE_MAX = 120;
 
@@ -41,7 +44,9 @@ interface ShowProps {
 		description: string;
 		goal: ProjectGoal;
 		complete: boolean;
+		kind: ProjectKind;
 	};
+	workflow: Workflow;
 	items: ProjectItem[];
 	brief: BriefResult;
 	briefing: BriefingQuestionsResult;
@@ -456,7 +461,8 @@ function AddItem({
 // page draws what the service says and sends commands; the rules of the production are the core's.
 export default function ProjectShow() {
 	const t = useT();
-	const { project, items, brief, briefing } = usePage<ShowProps>().props;
+	const { project, workflow, items, brief, briefing } =
+		usePage<ShowProps>().props;
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [draft, setDraft] = useState(brief.text);
 	const [saving, setSaving] = useState(false);
@@ -499,22 +505,39 @@ export default function ProjectShow() {
 					>
 						{t("ui.error.back")}
 					</Link>
-					<h1 className="text-2xl font-semibold">
-						<UntrustedText>{project.name}</UntrustedText>
-					</h1>
+					<div className="flex flex-wrap items-center gap-3">
+						<h1 className="min-w-0 text-3xl font-semibold text-text">
+							<UntrustedText>{project.name}</UntrustedText>
+						</h1>
+						<StatusBadge status="neutral">
+							{t(`ui.projects.kind.${project.kind}`)}
+						</StatusBadge>
+					</div>
 				</div>
 				<FailureNote failure={failure} />
 
+				<WorkflowSection
+					projectId={project.id}
+					projectName={project.name}
+					workflow={workflow}
+					onChanged={changed}
+				/>
+
 				<ContextPanel project={project} />
 
-				<Briefing
-					projectId={project.id}
-					briefing={briefing}
-					onSaved={(text) => {
-						setDraft(text);
-						router.reload();
-					}}
-				/>
+				{/* The guided questions are the core's, and every set of them is about a video (short, commercial or
+				    long): they are asked when the workflow has the steps of a video. A text, an image or a project
+				    not decided yet writes its brief below instead. */}
+				{workflow.steps.some((step) => step.id === "script") && (
+					<Briefing
+						projectId={project.id}
+						briefing={briefing}
+						onSaved={(text) => {
+							setDraft(text);
+							router.reload();
+						}}
+					/>
+				)}
 
 				<section aria-labelledby="brief-title" className="flex flex-col gap-3">
 					<h2 id="brief-title" className="text-lg font-semibold">

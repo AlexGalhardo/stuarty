@@ -405,6 +405,13 @@
         "image": "Image",
         "undecided": "Not decided yet"
       },
+      "add_media": {
+        "open": "Add media",
+        "title": "Add a video",
+        "description": "The video is added to this project. The steps of a video join the path, and what is done stays done.",
+        "name": "Name of the video",
+        "submit": "Add the video"
+      },
       "new_project": {
         "title": "New project",
         "description": "Choose what you want to create. You can add the others later.",
