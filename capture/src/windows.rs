@@ -177,6 +177,7 @@ pub fn list() -> (Vec<SourceInfo>, Vec<SourceInfo>) {
 				name: m.name().unwrap_or_else(|_| format!("Display {index}")),
 				width: m.width().ok()?,
 				height: m.height().ok()?,
+				default: false,
 			})
 		})
 		.collect();
@@ -194,6 +195,7 @@ pub fn list() -> (Vec<SourceInfo>, Vec<SourceInfo>) {
 				name: title.chars().take(200).collect(),
 				width,
 				height,
+				default: false,
 			})
 		})
 		.collect();

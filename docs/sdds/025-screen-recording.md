@@ -238,7 +238,7 @@ Version 2 adds fields and messages; the server refuses a helper that answers ano
 | Direction | Message | New fields |
 | --- | --- | --- |
 | helper to host | `ready` | `v` 2, and `audio`, `camera`, `events` (booleans) |
-| helper to host | `sources` | `microphones` (`id`, `name`, `default`), `cameras` (`id`, `name`, `width`, `height`), `system_audio` (boolean) |
+| helper to host | `sources` | `microphones` (`id`, `name`, `default`), `cameras` (`id`, `name`, `default`), `system_audio` (boolean) |
 | host to helper | `start` | `microphone` (a device id or `default`), `system_audio` (boolean), `camera` (a device id), `events` (boolean), and `outputs`: absolute paths in the folder of `output`, ending `.wav` for `microphone` and `system`, `.mp4` for `camera`, `.jsonl` for `events`; a path is required for exactly each track that was asked for |
 | helper to host | `started` | `tracks`: the list of `{kind, start_ms}` that is recording |
 | host to helper | `pause`, `resume` | none |

@@ -8,6 +8,7 @@ use std::time::{Duration, Instant};
 
 use crate::frame::{Frame, Mailbox};
 use crate::protocol::{SourceInfo, StartRequest};
+use crate::testsrc;
 
 #[derive(Debug)]
 pub struct SourceError {
@@ -80,6 +81,9 @@ struct FakeSpec {
 	height: u32,
 	rate: u32,
 	limit: Option<u64>,
+	/// `p<ms>` and `w<ms>`: a flash (every byte 255, otherwise 10) for the first `w` ms of every `p` ms of the
+	/// shared test epoch, which is when the fake microphone makes its tone burst.
+	pulse: Option<testsrc::Tags>,
 }
 
 fn parse_fake(id: &str) -> Option<FakeSpec> {
@@ -89,11 +93,13 @@ fn parse_fake(id: &str) -> Option<FakeSpec> {
 		height: 0,
 		rate: 60,
 		limit: None,
+		pulse: None,
 	};
 	let digits = |s: &str| s.chars().take_while(char::is_ascii_digit).count();
 	let n = digits(rest);
 	spec.height = rest[..n].parse().ok()?;
 	let mut tail = &rest[n..];
+	let mut pulse = testsrc::Tags::default();
 	while !tail.is_empty() {
 		let (tag, after) = tail.split_at(1);
 		let n = digits(after);
@@ -101,9 +107,27 @@ fn parse_fake(id: &str) -> Option<FakeSpec> {
 		match tag {
 			"r" => spec.rate = u32::try_from(v).ok().filter(|r| (1..=240).contains(r))?,
 			"n" => spec.limit = Some(v),
+			"p" => {
+				pulse.period_ms = v;
+				spec.pulse = Some(pulse);
+			}
+			"w" => {
+				pulse.width_ms = v;
+				spec.pulse = Some(pulse);
+			}
 			_ => return None,
 		}
 		tail = &after[n..];
+	}
+	if let Some(p) = spec.pulse {
+		let ok = (100..=60_000).contains(&p.period_ms)
+			&& (10..=10_000).contains(&p.width_ms)
+			&& p.width_ms < p.period_ms;
+		if !ok {
+			return None;
+		}
+		// The epoch is the instant the first test source is made.
+		let _ = testsrc::epoch();
 	}
 	(spec.width >= 2 && spec.width <= 4096 && spec.height >= 2 && spec.height <= 4096)
 		.then_some(spec)
@@ -123,7 +147,11 @@ impl Fake {
 					m.close(None);
 					return;
 				}
-				let value = (n % 251) as u8;
+				let value = match &spec.pulse {
+					Some(p) if testsrc::pulse_on(p, testsrc::ns_since_epoch(Instant::now())) => 255,
+					Some(_) => 10,
+					None => (n % 251) as u8,
+				};
 				m.push(Frame {
 					width: spec.width,
 					height: spec.height,

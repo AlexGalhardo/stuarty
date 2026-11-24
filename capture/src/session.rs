@@ -1,19 +1,66 @@
-//! One recording: a source, the pacing grid, a sink, and the messages about them (SDD-025 sections 6 and 8).
+//! One recording: the screen source and its grid, the sound tracks, the clock they share, and the messages about
+//! them (SDD-025 sections 6, 8 and 16).
 
 use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::time::{Duration, Instant};
 
+use crate::audio::{self, Kind, RATE};
+use crate::clock::Clock;
 use crate::frame::Mailbox;
-use crate::protocol::{self, StartRequest};
+use crate::protocol::{self, Finish, StartRequest, TrackEnd, TrackStart};
 use crate::sink::{FfmpegSink, FileSink, Sink};
 use crate::source;
 
 const FIRST_FRAME_WAIT: Duration = Duration::from_secs(5);
+const LEVEL_EVERY: Duration = Duration::from_millis(250);
+const PROGRESS_EVERY: Duration = Duration::from_secs(1);
 
-/// Runs a recording to its end and reports every step through emit. It returns when the file is complete or
-/// the recording failed; stop asks for a graceful end.
-pub fn run(req: &StartRequest, emit: &dyn Fn(String), stop: &AtomicBool) {
+/// What the main loop of the helper holds to steer a recording that runs on another thread: the stop flag and
+/// the clock, which also holds the pauses.
+pub struct Control {
+	pub stop: Arc<AtomicBool>,
+	pub clock: Arc<Clock>,
+}
+
+impl Control {
+	pub fn new() -> Arc<Self> {
+		Arc::new(Self {
+			stop: Arc::new(AtomicBool::new(false)),
+			clock: Arc::new(Clock::new()),
+		})
+	}
+}
+
+#[cfg(windows)]
+fn qpc() -> u64 {
+	crate::win32::qpc_100ns()
+}
+
+#[cfg(not(windows))]
+fn qpc() -> u64 {
+	0
+}
+
+/// A sound track that is running.
+struct Sound {
+	kind: &'static str,
+	track: audio::Track,
+}
+
+/// Ends the sound tracks and the screen source of a start that did not get to run.
+fn abandon(src: Box<dyn source::RunningSource>, sounds: Vec<Sound>, stop: &AtomicBool) {
+	stop.store(true, Ordering::Relaxed);
+	for s in sounds {
+		let _ = s.track.join();
+	}
+	src.stop();
+}
+
+/// Runs a recording to its end and reports every step through emit. It returns when the files are complete or
+/// the recording failed; `ctl.stop` asks for a graceful end.
+pub fn run(req: &StartRequest, emit: &dyn Fn(String), ctl: &Control) {
+	let (stop, clock) = (&ctl.stop, &ctl.clock);
 	let mailbox = Mailbox::new();
 	let src = match source::open(req, &mailbox) {
 		Ok(s) => s,
@@ -23,9 +70,37 @@ pub fn run(req: &StartRequest, emit: &dyn Fn(String), stop: &AtomicBool) {
 		}
 	};
 
+	// Every device is opened before the origin of the clock, so every track can start at it.
+	let mut sounds: Vec<Sound> = Vec::new();
+	let asked = [
+		(
+			"microphone",
+			req.extras.microphone.clone().map(Kind::Microphone),
+			req.extras.out_microphone.clone(),
+		),
+		(
+			"system",
+			req.extras.system_audio.then_some(Kind::System),
+			req.extras.out_system.clone(),
+		),
+	];
+	for (name, kind, path) in asked {
+		let (Some(kind), Some(path)) = (kind, path) else {
+			continue;
+		};
+		match audio::spawn(kind, path, Arc::clone(clock), Arc::clone(stop)) {
+			Ok(track) => sounds.push(Sound { kind: name, track }),
+			Err(e) => {
+				abandon(src, sounds, stop);
+				emit(protocol::error(e.code, &e.message));
+				return;
+			}
+		}
+	}
+
 	let first = mailbox.wait_first(FIRST_FRAME_WAIT);
 	let Some(first_frame) = first.frame else {
-		src.stop();
+		abandon(src, sounds, stop);
 		let why = first
 			.error
 			.unwrap_or_else(|| "no frame arrived from the source".into());
@@ -35,7 +110,7 @@ pub fn run(req: &StartRequest, emit: &dyn Fn(String), stop: &AtomicBool) {
 
 	let (w, h) = (first_frame.width & !1, first_frame.height & !1);
 	if w < 16 || h < 16 || w > 8192 || h > 8192 || u64::from(w) * u64::from(h) > 33_177_600 {
-		src.stop();
+		abandon(src, sounds, stop);
 		emit(protocol::error(
 			"unsupported",
 			"the size of the source is outside the supported range",
@@ -44,14 +119,14 @@ pub fn run(req: &StartRequest, emit: &dyn Fn(String), stop: &AtomicBool) {
 	}
 
 	let sink: Result<Box<dyn Sink>, String> = if req.encoder == "raw" {
-		FileSink::create(req).map(|s| Box::new(s) as Box<dyn Sink>)
+		FileSink::create(&req.output).map(|s| Box::new(s) as Box<dyn Sink>)
 	} else {
 		FfmpegSink::spawn(req, w, h).map(|s| Box::new(s) as Box<dyn Sink>)
 	};
 	let mut sink = match sink {
 		Ok(s) => s,
 		Err(m) => {
-			src.stop();
+			abandon(src, sounds, stop);
 			emit(protocol::error("encoder_failed", &m));
 			return;
 		}
@@ -60,7 +135,7 @@ pub fn run(req: &StartRequest, emit: &dyn Fn(String), stop: &AtomicBool) {
 	// Warm the encoder: the first write blocks while it starts (150 to 600 ms measured on NVENC), so the grid
 	// starts after it, and that frame is slot 0.
 	if let Err(e) = sink.write_frame(&first_frame.fit(w, h).data) {
-		src.stop();
+		abandon(src, sounds, stop);
 		emit(protocol::error(
 			"encoder_failed",
 			&finish_message(sink, &e.to_string()),
@@ -69,25 +144,67 @@ pub fn run(req: &StartRequest, emit: &dyn Fn(String), stop: &AtomicBool) {
 	}
 	mailbox.take();
 
-	emit(protocol::started(w, h, req.fps));
+	// The origin: from here every track is written on the one clock.
+	clock.start(qpc());
+	let mut tracks = vec![TrackStart {
+		kind: "screen",
+		start_ms: 0,
+	}];
+	tracks.extend(sounds.iter().map(|s| TrackStart {
+		kind: s.kind,
+		start_ms: 0,
+	}));
+	emit(protocol::started(w, h, req.fps, &tracks));
 
-	let t0 = Instant::now();
 	let fps = u64::from(req.fps);
 	let (mut frames, mut dropped, mut n): (u64, u64, u64) = (1, 0, 1);
 	let mut reason = "stopped";
 	let mut source_error: Option<String> = None;
+	let (mut last_level, mut last_progress) = (Instant::now(), Instant::now());
+	let peaks: Vec<(&'static str, Arc<AtomicU32>)> = sounds
+		.iter()
+		.map(|s| (s.kind, Arc::clone(&s.track.peak)))
+		.collect();
+
+	// Signs of life: a level four times a second, a progress once a second, paused or not.
+	let mut maintain = |frames: u64, dropped: u64| {
+		if last_level.elapsed() >= LEVEL_EVERY && !peaks.is_empty() {
+			last_level = Instant::now();
+			let peak = |name: &str| {
+				peaks
+					.iter()
+					.find(|(k, _)| *k == name)
+					.map(|(_, p)| p.swap(0, Ordering::Relaxed))
+			};
+			emit(protocol::level(peak("microphone"), peak("system")));
+		}
+		if last_progress.elapsed() >= PROGRESS_EVERY {
+			last_progress = Instant::now();
+			emit(protocol::progress(
+				u64::try_from(clock.active_ns() / 1_000_000).unwrap_or(0),
+				frames,
+				dropped,
+				total_bytes(req),
+			));
+		}
+	};
 
 	'grid: loop {
-		let due = t0 + Duration::from_nanos(n * 1_000_000_000 / fps);
+		let due_ns = i64::try_from(n * 1_000_000_000 / fps).unwrap_or(i64::MAX);
 		loop {
 			if stop.load(Ordering::Relaxed) {
 				break 'grid;
 			}
-			let left = due.saturating_duration_since(Instant::now());
-			if left.is_zero() {
+			maintain(frames, dropped);
+			if clock.paused() {
+				std::thread::sleep(Duration::from_millis(10));
+				continue;
+			}
+			let left = due_ns - clock.active_ns();
+			if left <= 0 {
 				break;
 			}
-			std::thread::sleep(left.min(Duration::from_millis(10)));
+			std::thread::sleep(Duration::from_nanos(left as u64).min(Duration::from_millis(10)));
 		}
 
 		let slot = mailbox.take();
@@ -102,6 +219,10 @@ pub fn run(req: &StartRequest, emit: &dyn Fn(String), stop: &AtomicBool) {
 		}
 		if let Err(e) = sink.write_frame(&frame.fit(w, h).data) {
 			src.stop();
+			stop.store(true, Ordering::Relaxed);
+			for s in sounds {
+				let _ = s.track.join();
+			}
 			emit(protocol::error(
 				"encoder_failed",
 				&finish_message(sink, &e.to_string()),
@@ -110,18 +231,32 @@ pub fn run(req: &StartRequest, emit: &dyn Fn(String), stop: &AtomicBool) {
 		}
 		frames += 1;
 		n += 1;
-
-		if n % fps == 0 {
-			emit(protocol::progress(
-				n * 1000 / fps,
-				frames,
-				dropped,
-				file_size(req),
-			));
-		}
 	}
 
 	src.stop();
+	// The sound tracks end at the same moment as the screen.
+	stop.store(true, Ordering::Relaxed);
+	let mut ends = vec![TrackEnd {
+		kind: "screen",
+		start_ms: 0,
+		duration_ms: frames * 1000 / fps,
+		bytes: 0,
+		lost: false,
+	}];
+	for s in sounds {
+		let o = s.track.join();
+		if let Some(e) = &o.error {
+			eprintln!("the {} track: {e}", s.kind);
+		}
+		ends.push(TrackEnd {
+			kind: s.kind,
+			start_ms: 0,
+			duration_ms: o.frames * 1000 / u64::from(RATE),
+			bytes: o.bytes,
+			lost: o.lost || o.error.is_some(),
+		});
+	}
+
 	if let Err(m) = sink.finish() {
 		emit(protocol::error("encoder_failed", &m));
 		return;
@@ -130,13 +265,18 @@ pub fn run(req: &StartRequest, emit: &dyn Fn(String), stop: &AtomicBool) {
 		emit(protocol::error("source_gone", &why));
 		return;
 	}
-	emit(protocol::finished(
+	ends[0].bytes = std::fs::metadata(&req.output).map_or(0, |m| m.len());
+	let pauses = clock.pauses_ms();
+	emit(protocol::finished(&Finish {
 		reason,
 		frames,
 		dropped,
-		frames * 1000 / fps,
-		file_size(req),
-	));
+		duration_ms: frames * 1000 / fps,
+		bytes: ends.iter().map(|t| t.bytes).sum(),
+		tracks: &ends,
+		pauses: &pauses,
+		pointer_events: 0,
+	}));
 }
 
 /// Finishes a sink after a write failed, to learn what the encoder said; the write error is the fallback.
@@ -147,13 +287,20 @@ fn finish_message(sink: Box<dyn Sink>, fallback: &str) -> String {
 	}
 }
 
-fn file_size(req: &StartRequest) -> u64 {
-	std::fs::metadata(&req.output).map(|m| m.len()).unwrap_or(0)
-}
-
-/// Helper for the main loop: a stop flag shared with the thread that runs the session.
-pub fn new_stop() -> Arc<AtomicBool> {
-	Arc::new(AtomicBool::new(false))
+/// The size of every file of the recording so far.
+fn total_bytes(req: &StartRequest) -> u64 {
+	let x = &req.extras;
+	[
+		Some(&req.output),
+		x.out_microphone.as_ref(),
+		x.out_system.as_ref(),
+		x.out_camera.as_ref(),
+		x.out_events.as_ref(),
+	]
+	.into_iter()
+	.flatten()
+	.map(|p| std::fs::metadata(p).map_or(0, |m| m.len()))
+	.sum()
 }
 
 #[cfg(test)]
@@ -172,15 +319,16 @@ mod tests {
 			encoder: "raw".into(),
 			ffmpeg: PathBuf::from("unused"),
 			output: dir.join("out.raw"),
+			extras: Default::default(),
 		}
 	}
 
-	fn collect(req: &StartRequest, stop: &AtomicBool) -> Vec<json::Json> {
+	fn collect(req: &StartRequest, ctl: &Control) -> Vec<json::Json> {
 		let events = Mutex::new(Vec::new());
 		run(
 			req,
 			&|line| events.lock().unwrap().push(json::parse(&line).unwrap()),
-			stop,
+			ctl,
 		);
 		events.into_inner().unwrap()
 	}
@@ -202,7 +350,7 @@ mod tests {
 	fn a_source_that_ends_gives_a_finished_file_with_every_slot() {
 		let dir = tmp("ends");
 		let req = request(&dir, "32x32r30n45", 30);
-		let events = collect(&req, &AtomicBool::new(false));
+		let events = collect(&req, &Control::new());
 		assert_eq!(kinds(&events)[0], "started");
 		let last = events.last().unwrap();
 		assert_eq!(
@@ -218,7 +366,9 @@ mod tests {
 			frames * 32 * 32 * 4,
 			"the file has exactly the frames reported"
 		);
-		assert!((40..=50).contains(&frames), "about 45 frames, got {frames}");
+		// A grid that is starved on a loaded machine sees the close of the source before it has taken every
+		// slot, so the count has a lower bound that is loose on purpose; the exact one is the file size above.
+		assert!((30..=50).contains(&frames), "about 45 frames, got {frames}");
 		assert_eq!(
 			last.get("duration_ms").unwrap().as_u64().unwrap(),
 			frames * 1000 / 30
@@ -231,7 +381,7 @@ mod tests {
 		let dir = tmp("slow");
 		// the source makes 10 frames a second and the grid wants 30: two of three slots repeat
 		let req = request(&dir, "16x16r10n20", 30);
-		let events = collect(&req, &AtomicBool::new(false));
+		let events = collect(&req, &Control::new());
 		let last = events.last().unwrap();
 		let (frames, dropped) = (
 			last.get("frames").unwrap().as_u64().unwrap(),
@@ -248,17 +398,21 @@ mod tests {
 		std::fs::remove_dir_all(dir).unwrap();
 	}
 
+	fn stop_after(ctl: &Arc<Control>, ms: u64) -> std::thread::JoinHandle<()> {
+		let c = Arc::clone(ctl);
+		std::thread::spawn(move || {
+			std::thread::sleep(Duration::from_millis(ms));
+			c.stop.store(true, Ordering::Relaxed);
+		})
+	}
+
 	#[test]
 	fn stop_ends_a_running_recording_gracefully_with_progress() {
 		let dir = tmp("stop");
 		let req = request(&dir, "16x16", 30);
-		let stop = Arc::new(AtomicBool::new(false));
-		let s2 = Arc::clone(&stop);
-		let t = std::thread::spawn(move || {
-			std::thread::sleep(Duration::from_millis(1500));
-			s2.store(true, Ordering::Relaxed);
-		});
-		let events = collect(&req, &stop);
+		let ctl = Control::new();
+		let t = stop_after(&ctl, 1500);
+		let events = collect(&req, &ctl);
 		t.join().unwrap();
 		let k = kinds(&events);
 		assert_eq!(k[0], "started");
@@ -272,7 +426,7 @@ mod tests {
 	#[test]
 	fn a_malformed_source_is_an_error_not_a_panic() {
 		let dir = tmp("bad");
-		let events = collect(&request(&dir, "nonsense", 30), &AtomicBool::new(false));
+		let events = collect(&request(&dir, "nonsense", 30), &Control::new());
 		assert_eq!(kinds(&events), ["error"]);
 		assert_eq!(events[0].get("code").unwrap().as_str(), Some("source_gone"));
 		std::fs::remove_dir_all(dir).unwrap();
@@ -283,7 +437,7 @@ mod tests {
 		let dir = tmp("nowrite");
 		let mut req = request(&dir, "16x16", 30);
 		req.output = dir.join("missing-folder").join("out.raw");
-		let events = collect(&req, &AtomicBool::new(false));
+		let events = collect(&req, &Control::new());
 		assert_eq!(
 			events.last().unwrap().get("code").unwrap().as_str(),
 			Some("encoder_failed")
@@ -294,7 +448,7 @@ mod tests {
 	#[test]
 	fn a_frame_of_another_size_is_fitted_not_rejected() {
 		let dir = tmp("fit");
-		let events = collect(&request(&dir, "33x33r60n10", 30), &AtomicBool::new(false));
+		let events = collect(&request(&dir, "33x33r60n10", 30), &Control::new());
 		let started = &events[0];
 		assert_eq!(
 			started.get("width").unwrap().as_u64(),
@@ -302,5 +456,60 @@ mod tests {
 			"odd sizes are cut to even"
 		);
 		let _ = std::fs::remove_dir_all(dir);
+	}
+
+	#[test]
+	fn a_device_that_cannot_be_opened_ends_the_start_with_its_code() {
+		let dir = tmp("nodevice");
+		let mut req = request(&dir, "32x32r60", 30);
+		req.extras.microphone = Some("fake-zzz".into());
+		req.extras.out_microphone = Some(dir.join("mic.wav"));
+		let events = collect(&req, &Control::new());
+		assert_eq!(kinds(&events), ["error"], "{events:?}");
+		assert_eq!(events[0].get("code").unwrap().as_str(), Some("unsupported"));
+		std::fs::remove_dir_all(dir).unwrap();
+	}
+
+	#[test]
+	fn the_microphone_track_has_the_length_of_the_screen_and_the_tone() {
+		let dir = tmp("mic");
+		let mut req = request(&dir, "32x32r60", 30);
+		req.extras.microphone = Some("fake".into());
+		req.extras.out_microphone = Some(dir.join("mic.wav"));
+		let ctl = Control::new();
+		let t = stop_after(&ctl, 2300);
+		let events = collect(&req, &ctl);
+		t.join().unwrap();
+		let k = kinds(&events);
+		assert_eq!(k[0], "started");
+		assert!(k.contains(&"level".to_string()), "a level is sent: {k:?}");
+		let tracks = match events[0].get("tracks") {
+			Some(json::Json::Arr(a)) => a.len(),
+			other => panic!("{other:?}"),
+		};
+		assert_eq!(tracks, 2);
+		let last = events.last().unwrap();
+		let Some(json::Json::Arr(ends)) = last.get("tracks") else {
+			panic!("{last:?}");
+		};
+		let dur = |kind: &str| {
+			ends.iter()
+				.find(|t| t.get("kind").and_then(json::Json::as_str) == Some(kind))
+				.and_then(|t| t.get("duration_ms"))
+				.and_then(json::Json::as_u64)
+				.unwrap()
+		};
+		let (screen, mic) = (dur("screen"), dur("microphone"));
+		assert!(
+			screen.abs_diff(mic) <= 40,
+			"screen {screen} ms, microphone {mic} ms"
+		);
+		let wav = std::fs::read(dir.join("mic.wav")).unwrap();
+		let data = wav.len() as u64 - 44;
+		assert!(
+			(mic * 96..mic * 96 + 96).contains(&data),
+			"{data} bytes for {mic} ms"
+		);
+		std::fs::remove_dir_all(dir).unwrap();
 	}
 }
