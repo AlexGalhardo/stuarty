@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"os"
 	"path"
 	"slices"
 	"strings"
@@ -14,6 +13,7 @@ import (
 	"unicode/utf8"
 
 	core "github.com/AlexGalhardo/stuarty/core/library"
+	"github.com/AlexGalhardo/stuarty/service/account"
 )
 
 // Manager owns the files of the library of one workspace and keeps the index in
@@ -32,12 +32,38 @@ type Manager struct {
 
 // New returns the manager of the library folder dir (the library/ folder of the
 // workspace). now is the clock; nil is time.Now.
-func New(dir string, idx Index, now func() time.Time) *Manager {
+func New(dir string, idx Index, now func() time.Time, opts ...Option) *Manager {
 	if now == nil {
 		now = time.Now
 	}
 
-	return &Manager{files: files{dir: dir}, idx: idx, now: now, exportDir: exportDirOf(dir)}
+	m := &Manager{files: files{dir: dir}, idx: idx, now: now, exportDir: exportDirOf(dir)}
+	for _, o := range opts {
+		o(m)
+	}
+
+	return m
+}
+
+// Option configures a Manager.
+type Option func(*Manager)
+
+// WithFiles sets how the files are stored: sealed with an account, clear text with none (ADR-0053). Without it the
+// files are clear text.
+func WithFiles(s account.FileSealer) Option { return func(m *Manager) { m.files.seal = s } }
+
+// Drop forgets what the key made readable: the index and the review key held in memory. It runs at lock, so no
+// index and no key outlives the data key (ADR-0053).
+func (m *Manager) Drop(ctx context.Context) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	m.keyMu.Lock()
+	clear(m.key)
+	m.key = nil
+	m.keyMu.Unlock()
+
+	return m.idx.Clear(ctx)
 }
 
 // Stats says what a scan or a rebuild found.
@@ -73,6 +99,11 @@ func (m *Manager) Reindex(ctx context.Context) (Stats, error) {
 
 func (m *Manager) scan(ctx context.Context, rebuild bool) (Stats, error) {
 	st := Stats{Rebuilt: rebuild}
+
+	// Locked, the scan does not run: a sealed file cannot be read and a clear one is left alone.
+	if err := m.files.ready(); err != nil {
+		return st, err
+	}
 
 	if rebuild {
 		if err := m.idx.Clear(ctx); err != nil {
@@ -172,7 +203,7 @@ func printable(s string) string {
 
 func (m *Manager) scanFlat(
 	ctx context.Context,
-	root *os.Root,
+	root *vroot,
 	kind core.Kind,
 	dir string,
 	have map[string]Entry,
@@ -223,6 +254,10 @@ func (m *Manager) scanFlat(
 
 		st.Examined++
 
+		if _, err := sealClearFile(root, path.Join(dir, file)); err != nil {
+			return err
+		}
+
 		entry, body := m.loadFlat(root, kind, name)
 		if err := m.idx.Put(ctx, entry, body); err != nil {
 			return err
@@ -234,7 +269,7 @@ func (m *Manager) scanFlat(
 
 func (m *Manager) scanSkills(
 	ctx context.Context,
-	root *os.Root,
+	root *vroot,
 	have map[string]Entry,
 	seen map[string]bool,
 	st *Stats,
@@ -267,6 +302,10 @@ func (m *Manager) scanSkills(
 
 		st.Examined++
 
+		if _, err := sealClearTree(root, path.Join(skillDir, name)); err != nil {
+			return err
+		}
+
 		entry, body := m.loadSkillEntry(root, name)
 		if err := m.idx.Put(ctx, entry, body); err != nil {
 			return err
@@ -278,7 +317,7 @@ func (m *Manager) scanSkills(
 
 // loadFlat reads and checks a note or a prompt file and builds its row and its
 // searchable text. A file that does not pass is an invalid row, never skipped.
-func (m *Manager) loadFlat(root *os.Root, kind core.Kind, name string) (Entry, string) {
+func (m *Manager) loadFlat(root *vroot, kind core.Kind, name string) (Entry, string) {
 	rel := entryPath(kind, name)
 	entry := Entry{Key: core.Key(kind, name), Kind: kind, Name: name, Path: rel, State: StateOK}
 
@@ -363,7 +402,7 @@ func timesOf(created, updated string, mtime int64) (createdMs, updatedMs int64) 
 }
 
 // loadSkillEntry reads a skill folder and builds its row and its searchable text.
-func (m *Manager) loadSkillEntry(root *os.Root, name string) (Entry, string) {
+func (m *Manager) loadSkillEntry(root *vroot, name string) (Entry, string) {
 	entry, body, _ := m.loadSkill(root, name)
 
 	return entry, body
@@ -372,7 +411,7 @@ func (m *Manager) loadSkillEntry(root *os.Root, name string) (Entry, string) {
 // loadSkill reads a skill folder: its row, its searchable text, the skill and
 // its files. The row is an invalid one, and the skill empty, when the folder
 // cannot be read as a skill.
-func (m *Manager) loadSkill(root *os.Root, name string) (Entry, string, core.Skill) {
+func (m *Manager) loadSkill(root *vroot, name string) (Entry, string, core.Skill) {
 	rel := entryPath(core.KindSkill, name)
 	entry := Entry{Key: core.Key(core.KindSkill, name), Kind: core.KindSkill, Name: name, Path: rel, State: StateOK}
 
@@ -550,7 +589,7 @@ func (m *Manager) Entry(ctx context.Context, kind core.Kind, name string) (Entry
 
 // putRow reads the entry that was just written and records it in the index.
 // The caller holds the lock.
-func (m *Manager) putRow(ctx context.Context, root *os.Root, kind core.Kind, name string) error {
+func (m *Manager) putRow(ctx context.Context, root *vroot, kind core.Kind, name string) error {
 	var (
 		entry Entry
 		body  string

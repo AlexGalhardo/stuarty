@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/fs"
 	"maps"
-	"os"
 	"path"
 
 	core "github.com/AlexGalhardo/stuarty/core/library"
@@ -36,7 +35,7 @@ type BuiltInReport struct {
 
 // readBuiltIn reads the record of the library. A missing or damaged file is an empty record: no skill then
 // reads as built-in, which is the safe side, and the next install repairs it.
-func readBuiltIn(root *os.Root) map[string]BuiltInRecord {
+func readBuiltIn(root *vroot) map[string]BuiltInRecord {
 	data, _, err := readSmall(root, builtInFile, 256<<10)
 	if err != nil {
 		return map[string]BuiltInRecord{}
@@ -51,9 +50,9 @@ func readBuiltIn(root *os.Root) map[string]BuiltInRecord {
 }
 
 // builtInHash is the content hash the product recorded for the skill, or "".
-func builtInHash(root *os.Root, name string) string { return readBuiltIn(root)[name].Hash }
+func builtInHash(root *vroot, name string) string { return readBuiltIn(root)[name].Hash }
 
-func writeBuiltIn(root *os.Root, rec map[string]BuiltInRecord) error {
+func writeBuiltIn(root *vroot, rec map[string]BuiltInRecord) error {
 	data, err := json.MarshalIndent(rec, "", "  ")
 	if err != nil {
 		return err

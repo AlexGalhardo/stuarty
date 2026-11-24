@@ -61,12 +61,15 @@ func (m *Manager) ExportSkills(ctx context.Context, names []string) (ExportResul
 		return ExportResult{}, err
 	}
 
-	root, err := os.OpenRoot(m.exportDir)
+	osRoot, err := os.OpenRoot(m.exportDir)
 	if err != nil {
 		return ExportResult{}, err
 	}
 
-	defer func() { _ = root.Close() }()
+	defer func() { _ = osRoot.Close() }()
+
+	// An export is the plain file a person asked for: never sealed (SDD-018 section 2).
+	root := plainRoot(osRoot)
 
 	for i := range skills {
 		s := skills[i]
