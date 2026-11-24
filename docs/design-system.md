@@ -865,6 +865,8 @@ Data-free components under `web/resources/js/components/`, built on the tokens o
 | `ListRow` | an optional leading icon or thumbnail, a title, a sentence, a meta line, trailing actions; an `li` | the selected row has `aria-current="true"`, `bg-surface-selected` and a 2 px bar on its left edge |
 | `StatusBadge` | an icon and a word, in the tone of the status: `neutral`, `info`, `agent`, `waiting`, `success` or `danger` | the word is the name; the icon is `aria-hidden`; always icon and word |
 | `LoadingState` | a static skeleton of three lines and one sentence, no spinner | `role="status"`; the skeleton is `aria-hidden` |
+| `Notice` | an icon, a title, a sentence and optional actions, in a `-soft` surface of its tone: `info`, `success`, `warning` or `danger` (added by epic 84) | `role` is the caller's (`note` when it is always there, `status` or `alert` when it appears); the icon is `aria-hidden` and the title carries the tone |
+| `AuthCard` | the frame of the pages before the studio opens: an optional line of three `NumberedStep`, the one `h1`, a card and a closing line (added by epic 84) | the steps are a labelled ordered list, the current one `aria-current="step"` |
 
 ## 5. Iconography, illustration and the product mark
 

@@ -135,7 +135,9 @@ describe("DataRow", () => {
 		expect(html).toContain("<dl");
 		expect(html).toMatch(/<dt[^>]*>Format<\/dt>/);
 		expect(html).toMatch(/<dd[^>]*>9:16<\/dd>/);
-		expect(html).toContain("Set at creation");
+		expect(html).toMatch(/<dd[^>]*>Set at creation<\/dd>/);
+		// The row holds only dt and dd, as a description list allows (axe dlitem).
+		expect(html).not.toMatch(/<div[^>]*data-slot="data-row"[^>]*><div/);
 	});
 });
 
