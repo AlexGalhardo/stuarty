@@ -29,17 +29,14 @@ func init() {
 	apply("ok_replaces_the_track_style", args(capTr, "bold_pop", ""), func() *B {
 		return base().with(func(d *timeline.Document) {
 			t := d.Tracks[capTr]
-			t.CaptionStyle = &timeline.CaptionStyle{
-				Position:  ptr("top"),
-				TextStyle: timeline.TextStyle{Size: ptr(30.0), Align: ptr("left")},
-			}
+			t.CaptionStyle = &timeline.CaptionStyle{Position: new("top"), Size: new(30.0), Align: new("left")}
 			d.Tracks[capTr] = t
 		})
 	})
 	apply("ok_scales_with_a_wide_project", args(capTr, "thick_outline", ""), func() *B {
 		return base().with(func(d *timeline.Document) { d.Settings.Width, d.Settings.Height = 1280, 720 })
 	})
-	override := func(it *timeline.Item) { it.Style = &timeline.CaptionStyle{Position: ptr("top")} }
+	override := func(it *timeline.Item) { it.Style = &timeline.CaptionStyle{Position: new("top")} }
 	apply("ok_reports_item_overrides", args(capTr, "soft_box", ""), withCaption(override))
 	apply("ok_reset_overrides", args(capTr, "soft_box", `"reset_overrides": true`), withCaption(override))
 	apply("ok_same_style_noop", args(capTr, "clean_white", ""), func() *B {

@@ -5,6 +5,7 @@ import InspectorTabs from "../InspectorTabs";
 import AudioProcessors from "./AudioProcessors";
 import AudioSection from "./AudioSection";
 import AutoCaptions from "./AutoCaptions";
+import BlurRegionSection from "./BlurRegionSection";
 import ChromaKeySection from "./ChromaKeySection";
 import ColorSection from "./ColorSection";
 import EffectsSection from "./EffectsSection";
@@ -77,6 +78,7 @@ export default function ClipPanel({ itemId }: { itemId: string }): ReactNode {
 						<>
 							<ColorSection itemId={itemId} />
 							<FiltersSection itemId={itemId} />
+							<BlurRegionSection itemId={itemId} />
 							<ChromaKeySection itemId={itemId} />
 							<EffectsSection itemId={itemId} />
 						</>

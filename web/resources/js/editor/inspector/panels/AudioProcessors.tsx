@@ -32,6 +32,7 @@ import SelectField from "../fields/SelectField";
 import ToggleField from "../fields/ToggleField";
 import Section from "../Section";
 import { useFieldCommit } from "../useFieldCommit";
+import VoicePreset from "./VoicePreset";
 
 const BAND = /^b(\d)_(hz|gain_db|q)$/;
 const UNITLESS = new Set(["ratio", "Q", "fraction"]);
@@ -432,6 +433,7 @@ export default function AudioProcessors({
 	return (
 		<Section title={t("ui.editor.processors.title")} name="audio-processors">
 			<div className="flex flex-col gap-2">
+				<VoicePreset target={target} />
 				<SelectField
 					label={t("ui.editor.processors.preset_label")}
 					stored={preset}

@@ -1316,6 +1316,9 @@
           "apply_preset": {
             "title": "Apply an audio preset"
           },
+          "apply_voice_preset": {
+            "title": "Apply a studio voice"
+          },
           "duck": {
             "title": "Duck music under speech"
           },
@@ -1339,6 +1342,9 @@
           "add": {
             "title": "Add caption"
           },
+          "apply_style": {
+            "title": "Apply a caption style"
+          },
           "edit_word": {
             "title": "Edit caption word"
           },
@@ -1347,6 +1353,9 @@
           },
           "import_subtitles": {
             "title": "Import subtitles (SRT, VTT)"
+          },
+          "list_styles": {
+            "title": "List the caption styles"
           },
           "merge": {
             "title": "Merge captions"
@@ -1373,6 +1382,9 @@
           },
           "add_composition": {
             "title": "Add a timeline as a clip"
+          },
+          "blur_region": {
+            "title": "Blur a region of a clip"
           },
           "set_blur": {
             "title": "Set clip blur"
@@ -1827,6 +1839,52 @@
           "other": "{count} markers"
         },
         "beats_apply": "Mark beats"
+      },
+      "caption_gallery": {
+        "hint": "Pick a look for every caption of this track. You can still change any field below.",
+        "apply": "Use the {name} style",
+        "sample": "Aa Caption",
+        "reset_overrides": "Also clear the style set on single captions",
+        "styles": {
+          "clean_white": "Clean white",
+          "bold_pop": "Bold pop",
+          "marker_yellow": "Marker yellow",
+          "soft_box": "Soft box",
+          "neon_night": "Neon night",
+          "editorial": "Editorial",
+          "mono_code": "Mono code",
+          "karaoke_pill": "Karaoke pill",
+          "thick_outline": "Thick outline",
+          "warm_glow": "Warm glow",
+          "lower_bar": "Lower bar",
+          "big_center": "Big centre",
+          "top_headline": "Top headline",
+          "ink_paper": "Ink on paper"
+        }
+      },
+      "blur_region": {
+        "title": "Blur a region",
+        "hint": "Hide an e-mail, a key or an address. The region is a share of the picture; leave the time empty to blur the whole clip. The clip itself is not changed: the blur is an item on a Blur track above it.",
+        "x": "Left",
+        "y": "Top",
+        "width": "Width",
+        "height": "Height",
+        "start": "From",
+        "duration": "For",
+        "radius": "Blur strength",
+        "radius_default": "Strong default",
+        "apply": "Blur this region",
+        "near_edge": "The region is close to an edge of the picture, where part of the sharp picture can show through. Move it inwards or make it larger."
+      },
+      "voice_preset": {
+        "hint": "One action for a clean, even voice. The export brings the sound to the loudness target of the project.",
+        "label": "Studio voice",
+        "apply": "Apply studio voice",
+        "presets": {
+          "studio": "Studio: natural and clean",
+          "broadcast": "Broadcast: tight and present",
+          "room_rescue": "Room rescue: strong noise reduction"
+        }
       },
       "processors": {
         "title": "Audio processors",

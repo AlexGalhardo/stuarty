@@ -1,25 +1,7 @@
 {
   "code": "E_VALIDATION",
-  "message": "args.style is \"fancy\", which is not one of the accepted values.",
-  "hint": "Use one of: clean_white, bold_pop, marker_yellow, soft_box, neon_night, editorial, mono_code, karaoke_pill, thick_outline, warm_glow, lower_bar, big_center, top_headline, ink_paper.",
+  "message": "args.style \"fancy\" is not a caption style.",
+  "hint": "Use clean_white, bold_pop, marker_yellow, soft_box, neon_night, editorial, mono_code, karaoke_pill, thick_outline, warm_glow, lower_bar, big_center, top_headline, ink_paper; caption.list_styles describes them.",
   "retryable": false,
-  "path": "args.style",
-  "details": {
-    "allowed": [
-      "clean_white",
-      "bold_pop",
-      "marker_yellow",
-      "soft_box",
-      "neon_night",
-      "editorial",
-      "mono_code",
-      "karaoke_pill",
-      "thick_outline",
-      "warm_glow",
-      "lower_bar",
-      "big_center",
-      "top_headline",
-      "ink_paper"
-    ]
-  }
+  "path": "args.style"
 }

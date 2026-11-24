@@ -22,6 +22,7 @@ var namedSchemas = map[string]func() map[string]any{
 	"template_colors":            templateColorsSchema,
 	"processor_params":           processorParamsSchema,
 	"chroma_color":               chromaColorSchema,
+	"caption_style_id":           captionStyleIDSchema,
 }
 
 const (

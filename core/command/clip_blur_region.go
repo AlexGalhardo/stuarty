@@ -14,9 +14,10 @@ import (
 // above it; the source is not changed.
 
 const (
-	// BlurTrackName and BlurItemName are the names of the track and of the item the command makes (SDD-000 section 17).
+	// BlurTrackName is the name of the visual track that clip.blur_region makes (SDD-000 section 17).
 	BlurTrackName = "Blur"
-	BlurItemName  = "Blur region"
+	// BlurItemName is the name of the clip item that clip.blur_region adds.
+	BlurItemName = "Blur region"
 
 	minBlurShare     = 0.015 // of the shorter side of the project: the least radius, below which text can be read
 	defaultBlurShare = 0.04  // of the shorter side of the project: the default radius

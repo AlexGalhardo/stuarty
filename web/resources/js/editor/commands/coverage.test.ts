@@ -7,6 +7,8 @@ import {
 	audioOperations,
 	blendOperations,
 	blurOperations,
+	blurRegionOperations,
+	captionApplyStyleOperations,
 	captionBreaksOperations,
 	captionEditWordOperations,
 	captionFromTranscriptOperations,
@@ -92,6 +94,7 @@ import {
 import { ACTIONS, ANY_COMMAND, COVERAGE, type EntryPoint } from "./coverage";
 import {
 	applyPresetOperations,
+	applyVoicePresetOperations,
 	processorAddOperations,
 	processorMoveOperations,
 	processorRemoveOperations,
@@ -149,7 +152,7 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 	test("every non-internal command has a key", () => {
 		const keys = commands.filter((c) => !c.internal).map((c) => c.name);
 		expect(Object.keys(COVERAGE).sort()).toEqual(keys.sort());
-		expect(keys).toHaveLength(86);
+		expect(keys).toHaveLength(90);
 	});
 
 	test("every command has a palette entry, and the commands with an inspector control keep it", () => {
@@ -548,6 +551,23 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 			"timeline.track_remove": trackRemoveOperations("trk_a", true).map(
 				(o) => o.op,
 			),
+			"inspector.caption_gallery": captionApplyStyleOperations(
+				"trk_a",
+				"bold_pop",
+				true,
+			).map((o) => o.op),
+			"inspector.blur_region": blurRegionOperations("itm_a", {
+				x: 0.1,
+				y: 0.6,
+				width: 0.8,
+				height: 0.1,
+				start: "1s",
+				radius: 40,
+			}).map((o) => o.op),
+			"inspector.voice_preset": applyVoicePresetOperations(
+				{ itemId: "itm_a" },
+				"studio",
+			).map((o) => o.op),
 			"inspector.track_caption_style": trackCaptionStyleOperations(
 				"trk_a",
 				{ size: 90 },

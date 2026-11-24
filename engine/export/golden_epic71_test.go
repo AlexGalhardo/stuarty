@@ -107,11 +107,15 @@ func blurRegionCase() alphaCase {
 
 	// The ids of the case builder carry an i, which the command refuses in an id; the clip gets a valid one.
 	const clipID = "itm_c000000001"
-	for id, it := range doc.Items {
-		delete(doc.Items, id)
-		it.ID = clipID
-		doc.Items[clipID] = it
+	var oldID string
+	for id := range doc.Items {
+		oldID = id
 	}
+
+	it := doc.Items[oldID]
+	delete(doc.Items, oldID)
+	it.ID = clipID
+	doc.Items[clipID] = it
 
 	args := fmt.Sprintf(
 		`{"item_id": %q, "x": 0, "y": 0.02, "width": 0.95, "height": 0.1, "start": "20f", "duration": "20f",`+
