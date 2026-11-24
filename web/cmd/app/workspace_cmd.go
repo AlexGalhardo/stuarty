@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
 	"github.com/AlexGalhardo/stuarty/web/app/owner"
@@ -89,17 +88,6 @@ func runBackup(ctx context.Context, folder string, w workspaceIO) int {
 	out, err := filepath.Abs(folder)
 	if err != nil {
 		return workspaceFail(w, err)
-	}
-
-	// The command is a process with no password: a workspace that has an account is locked for it, and nothing is
-	// copied out of a locked studio (SDD-007 section 3.9 item 6).
-	if hasAccount, err := store.DatabaseHasAccount(ctx, dir.Path("db.sqlite")); err != nil {
-		return workspaceFail(w, err)
-	} else if hasAccount {
-		le := service.NewLockedError()
-		_, _ = fmt.Fprintf(w.Err, "stuarty: %s: %s %s\n", le.Code, le.Message, le.Hint)
-
-		return 1
 	}
 
 	m, err := workspace.Backup(ctx, workspace.BackupOptions{
