@@ -101,6 +101,16 @@ func TestEpic71CaptionStylesLookDifferent(t *testing.T) {
 // frame 20 for 20 frames; the document is the one the command makes, drawn by the export compositor. The listed
 // frames are the last one before the range, its first and last, and the first one after it.
 func blurRegionCase() alphaCase {
+	return blurRegionCaseAt(`"x": 0, "y": 0.02, "width": 0.95, "height": 0.1`)
+}
+
+// blurRegionEdgeCase blurs the same time code with a region that touches the top, the left and the right edge of
+// the picture: the status bar of a screen recording (VV-392).
+func blurRegionEdgeCase() alphaCase {
+	return blurRegionCaseAt(`"x": 0, "y": 0, "width": 1, "height": 0.1`)
+}
+
+func blurRegionCaseAt(region string) alphaCase {
 	b := newCase("blurred region", rate(30, 1))
 	b.backdrop(60)
 	doc := b.doc
@@ -118,9 +128,9 @@ func blurRegionCase() alphaCase {
 	doc.Items[clipID] = it
 
 	args := fmt.Sprintf(
-		`{"item_id": %q, "x": 0, "y": 0.02, "width": 0.95, "height": 0.1, "start": "20f", "duration": "20f",`+
+		`{"item_id": %q, %s, "start": "20f", "duration": "20f",`+
 			` "new_id": "itm_b000000001", "new_track_id": "trk_b000000001"}`,
-		clipID,
+		clipID, region,
 	)
 	res, err := command.Default().Apply(doc, command.Operation{Op: "clip.blur_region", Args: json.RawMessage(args)},
 		command.Env{})
@@ -215,6 +225,57 @@ func TestEpic71BlurRegionExport(t *testing.T) {
 				if !bytes.Equal(got[i][o:o+4], src[i][o:o+4]) {
 					t.Fatalf("frame %d: pixel %d,%d is outside the region and differs from the source", f, x, y)
 				}
+			}
+		}
+	}
+}
+
+// VV-392: a region that touches the edge of the picture is as unreadable as one in the middle. The burned-in time
+// code sits on the top edge; with the outside of the picture counted as transparent half of the sharp picture
+// showed through there. The blur repeats the nearest pixel past the edge, so the gradient inside the region is as
+// low as the one of the region in the middle (TestEpic71BlurRegionExport).
+func TestEpic71BlurRegionAtTheEdge(t *testing.T) {
+	setup(t)
+
+	const name = "blur-region-edge"
+	dir := epic71Dir(name)
+	if *update {
+		writeCaseAt(t, dir, name, blurRegionEdgeCase())
+	}
+
+	blurred := loadDir(t, dir)
+	frames := readFrames(t, dir)
+
+	plain := timeline.Clone(blurred)
+	for id, it := range plain.Items {
+		if it.Name == command.BlurItemName {
+			delete(plain.Items, id)
+		}
+	}
+
+	got := renderDoc(t, blurred, name+"-blurred", 0, frames)
+	src := renderDoc(t, plain, name+"-source", 0, frames)
+	w := blurred.Settings.Width
+
+	for i, f := range frames {
+		want := readPNG(t, framePNG(dir, f))
+		if sum(got[i]) != sum(want) {
+			t.Errorf("frame %d: %s, reference %s", f, sum(got[i]), sum(want))
+			saveMismatch(t, name, f, w, blurred.Settings.Height, got[i])
+		}
+
+		if f < 20 || f >= 40 {
+			continue
+		}
+
+		// The time code is on the first rows and the first columns of the picture: the pixels the edge made weak.
+		for _, r := range [][4]int{{0, 0, 100, 14}, {0, 0, 6, 30}, {w - 6, 0, w, 30}} {
+			before := gradientEnergy(src[i], w, r[0], r[1], r[2], r[3])
+			after := gradientEnergy(got[i], w, r[0], r[1], r[2], r[3])
+			t.Logf("frame %d: gradient of %v from %d to %d", f, r, before, after)
+
+			if before > 0 && after*5 > before {
+				t.Errorf("frame %d: the gradient of %v went from %d to %d, want at most a fifth", f, r, before, after)
 			}
 		}
 	}
