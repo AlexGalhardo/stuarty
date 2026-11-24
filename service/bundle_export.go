@@ -250,7 +250,9 @@ func snapshotTimeline(
 
 // snapshotBare reads the head and the items of a project that has no active timeline, and says whether id is such a
 // project: an id that names no project (the first timeline of one) is not.
-func (s *svc) snapshotBare(ctx context.Context, id string) (bare bool, items []ItemRow, head *ProductionHead, err error) {
+func (s *svc) snapshotBare(
+	ctx context.Context, id string,
+) (bare bool, items []ItemRow, head *ProductionHead, err error) {
 	err = s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
 		tls, err := tx.Productions().ActiveTimelines(ctx, id)
 		if err != nil || len(tls) > 0 {
