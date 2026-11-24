@@ -35,10 +35,20 @@ test.describe("write text flow", () => {
 			text: words(401),
 		})) as { item: { id: string } };
 		const itemId = created.item.id;
+		// A second text: the summary of the project is about one of the two, and each still shows its own time.
+		const other = (await api("POST", `/projects/${projectId}/texts`, {
+			title: `Second copy ${tag}`,
+			text_kind: "copy",
+			text: words(201),
+		})) as { item: { id: string; reading_minutes: number } };
+		expect(other.item.reading_minutes).toBe(2);
 
 		await page.goto("/write");
-		await page.locator(`[data-text-id="${itemId}"]`).click();
 		const meta = page.getByTestId("text-meta");
+		await page.locator(`[data-text-id="${other.item.id}"]`).click();
+		await expect(meta).toContainText("201 words");
+		await expect(meta).toContainText("2 min read");
+		await page.locator(`[data-text-id="${itemId}"]`).click();
 		await expect(meta).toContainText("401 words");
 		// The service says 401 words take 3 minutes: the page does not do that sum.
 		await expect(meta).toContainText("3 min read");

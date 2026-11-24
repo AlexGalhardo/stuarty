@@ -2,15 +2,9 @@ import { renderToString } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 
 import { Frame } from "../../shell/testSupport";
-import type { FlowStep, ProjectFlow, TextItem, WriteProject } from "./client";
+import type { FlowStep, ProjectFlow } from "./client";
 import FlowPath from "./FlowPath";
-import {
-	isTextOnly,
-	pathSteps,
-	primaryAction,
-	readingMinutes,
-	stepAfterReview,
-} from "./meta";
+import { isTextOnly, pathSteps, primaryAction, stepAfterReview } from "./meta";
 
 function step(
 	id: FlowStep["id"],
@@ -18,20 +12,6 @@ function step(
 	over: Partial<FlowStep> = {},
 ): FlowStep {
 	return { id, state, optional: false, actor: "both", ...over };
-}
-
-function item(over: Partial<TextItem> = {}): TextItem {
-	return {
-		id: "itm_1",
-		project_id: "prj_1",
-		title: "Post",
-		text_kind: "post",
-		state: "active",
-		words: 400,
-		revision: 2,
-		updated_at: "2026-11-24T10:00:00Z",
-		...over,
-	};
 }
 
 const textFlow: ProjectFlow = {
@@ -46,41 +26,6 @@ const textFlow: ProjectFlow = {
 	current: "writing",
 	next: "review",
 };
-
-describe("the reading time of a text", () => {
-	test("is the one the service put on the text", () => {
-		expect(readingMinutes(item({ reading_minutes: 3 }), undefined)).toBe(3);
-	});
-
-	test("is the one of the project summary when it is about this text", () => {
-		const project: WriteProject = {
-			id: "prj_1",
-			name: "P",
-			text_summary: {
-				item_id: "itm_1",
-				text_kind: "post",
-				words: 400,
-				reading_minutes: 2,
-			},
-		};
-		expect(readingMinutes(item(), project)).toBe(2);
-	});
-
-	test("is not invented when the summary is about another text", () => {
-		const project: WriteProject = {
-			id: "prj_1",
-			name: "P",
-			text_summary: {
-				item_id: "other",
-				text_kind: "post",
-				words: 400,
-				reading_minutes: 2,
-			},
-		};
-		expect(readingMinutes(item(), project)).toBeUndefined();
-		expect(readingMinutes(item(), undefined)).toBeUndefined();
-	});
-});
 
 describe("the kind of the project", () => {
 	test("a text, an undecided and an unread project are drawn as text", () => {

@@ -617,3 +617,52 @@ func TestPostWordsAreTheSameInTheListAndInThePanel(t *testing.T) {
 		t.Errorf("list says %d words, panel says %d, want 6 in both", item.Words, check.Words)
 	}
 }
+
+// Epic 80, criterion 1: every text the service answers carries its reading time, from the rule of the core, so the
+// editor never computes it and never depends on the project summary being about the open text.
+func TestTextItemCarriesItsReadingMinutes(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+	prj := e.newProject("Bread")
+	long := strings.TrimSpace(strings.Repeat("word ", 401))
+
+	// Two texts, so the summary of the project is about only one of them.
+	first := e.newText(prj, "Long", "copy", long)
+	e.newText(prj, "Other", "copy", "a b c")
+
+	if first.Words != 401 || first.ReadingMinutes != writing.ReadingMinutes(401) || first.ReadingMinutes != 3 {
+		t.Fatalf("a new text of 401 words: %+v", first)
+	}
+
+	got, err := e.svc.TextGet(e.as(ui), service.TextGetRequest{ProjectID: prj, ItemID: first.ID})
+	if err != nil || got.Item.ReadingMinutes != 3 {
+		t.Fatalf("TextGet: %+v, %v", got, err)
+	}
+
+	edited := e.writeText(prj, service.TextWriteRequest{ItemID: first.ID, Text: "one two three four"})
+	if edited.Item.Words != 4 || edited.Item.ReadingMinutes != 1 {
+		t.Fatalf("an edit of 4 words: %+v", edited.Item)
+	}
+
+	empty := e.writeText(prj, service.TextWriteRequest{ItemID: first.ID, Text: ""})
+	if empty.Item.Words != 0 || empty.Item.ReadingMinutes != 0 {
+		t.Fatalf("an empty text takes no time: %+v", empty.Item)
+	}
+
+	back, err := e.svc.TextRevert(e.as(ui), service.TextRevertRequest{ProjectID: prj, ItemID: first.ID, Revision: 1})
+	if err != nil || back.Item.ReadingMinutes != 3 {
+		t.Fatalf("TextRevert to 401 words: %+v, %v", back, err)
+	}
+
+	list, err := e.svc.TextList(e.as(ui), service.TextListRequest{ProjectID: prj})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, it := range list.Texts {
+		if it.ReadingMinutes != writing.ReadingMinutes(it.Words) || it.Words > 0 && it.ReadingMinutes == 0 {
+			t.Errorf("TextList: %s has %d words and %d minutes", it.Title, it.Words, it.ReadingMinutes)
+		}
+	}
+}

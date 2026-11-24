@@ -17,16 +17,11 @@ import { useT } from "@/lib/i18n";
 import { useUnsavedGuard } from "@/lib/unsaved";
 import AgentPanel from "./AgentPanel";
 import CaptionPanel from "./CaptionPanel";
-import type {
-	ProjectFlow,
-	TextGetResult,
-	WriteProject,
-	WritingClient,
-} from "./client";
+import type { ProjectFlow, TextGetResult, WritingClient } from "./client";
 import EditorState from "./EditorState";
 import EndPanel, { type EndStatus } from "./EndPanel";
 import FlowPath from "./FlowPath";
-import { endOf, exportName, primaryAction, readingMinutes } from "./meta";
+import { endOf, exportName, primaryAction } from "./meta";
 import PostPanel from "./PostPanel";
 import MarkdownPreview from "./Preview";
 import RevisionsPanel from "./RevisionsPanel";
@@ -40,13 +35,11 @@ export default function TextEditor({
 	client,
 	projectId,
 	itemId,
-	project,
 	onChanged,
 }: {
 	client: WritingClient;
 	projectId: string;
 	itemId: string;
-	project: WriteProject | undefined;
 	onChanged: () => void;
 }): ReactNode {
 	const t = useT();
@@ -217,7 +210,6 @@ export default function TextEditor({
 	}
 
 	const kind = loaded.item.text_kind;
-	const minutes = readingMinutes(loaded.item, project);
 	const primary = primaryAction({ dirty, reviewed });
 
 	return (
@@ -234,8 +226,7 @@ export default function TextEditor({
 							{t("ui.write.meta.words", {
 								count: loaded.item.words,
 							})}
-							{minutes !== undefined &&
-								` · ${t("ui.write.meta.reading", { minutes: String(minutes) })}`}
+							{` · ${t("ui.write.meta.reading", { minutes: String(loaded.item.reading_minutes) })}`}
 							{` · ${t("ui.write.meta.revision", { revision: String(loaded.item.revision) })}`}
 						</p>
 					</div>

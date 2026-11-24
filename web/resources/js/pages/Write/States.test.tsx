@@ -16,6 +16,7 @@ function item(over: Partial<TextItem> = {}): TextItem {
 		text_kind: "copy",
 		state: "active",
 		words: 40,
+		reading_minutes: 1,
 		revision: 3,
 		updated_at: "2026-11-24T10:00:00Z",
 		...over,

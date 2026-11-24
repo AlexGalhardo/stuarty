@@ -24,16 +24,18 @@ type WritingService interface {
 
 // TextItem is a text of a production without its body.
 type TextItem struct {
-	ID          string    `json:"id"`
-	ProjectID   string    `json:"project_id"`
-	ProjectName string    `json:"project_name,omitempty" untrusted:"true"`
-	Title       string    `json:"title"                  untrusted:"true"`
-	TextKind    string    `json:"text_kind"` // "script" | "copy" | "caption"
-	State       string    `json:"state"`     // "active" | "trashed"
-	Words       int       `json:"words"`
-	Revision    int       `json:"revision"` // the latest revision
-	UpdatedBy   string    `json:"updated_by,omitempty"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID          string `json:"id"`
+	ProjectID   string `json:"project_id"`
+	ProjectName string `json:"project_name,omitempty" untrusted:"true"`
+	Title       string `json:"title"                  untrusted:"true"`
+	TextKind    string `json:"text_kind"` // "script" | "copy" | "caption"
+	State       string `json:"state"`     // "active" | "trashed"
+	Words       int    `json:"words"`
+	// ReadingMinutes is the minutes to read the text, from writing.ReadingMinutes (SDD-005 section 5.12.4).
+	ReadingMinutes int       `json:"reading_minutes"`
+	Revision       int       `json:"revision"` // the latest revision
+	UpdatedBy      string    `json:"updated_by,omitempty"`
+	UpdatedAt      time.Time `json:"updated_at"`
 }
 
 // TextRevision is one revision of a text, without its body.

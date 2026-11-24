@@ -38,9 +38,12 @@ func revisionNotFound(itemID string, n int) *Error {
 }
 
 func textItemView(r *ItemRow, revision int, by string) TextItem {
+	words := writing.TextWords(r.TextKind, r.Body)
+
 	return TextItem{
 		ID: r.ID, ProjectID: r.ProjectID, Title: r.Title, TextKind: r.TextKind, State: stateString(r.State),
-		Words: writing.TextWords(r.TextKind, r.Body), Revision: revision, UpdatedBy: by, UpdatedAt: msTime(r.UpdatedMs),
+		Words: words, ReadingMinutes: writing.ReadingMinutes(words), Revision: revision, UpdatedBy: by,
+		UpdatedAt: msTime(r.UpdatedMs),
 	}
 }
 

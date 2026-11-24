@@ -115,10 +115,6 @@ export default function WritePage(): ReactNode {
 	}
 
 	const filtered = project !== "" || kind !== "";
-	const open =
-		selected === null
-			? undefined
-			: projects.find((p) => p.id === selected.projectId);
 
 	return (
 		<div className="flex flex-col gap-6 p-4 md:p-6">
@@ -215,7 +211,6 @@ export default function WritePage(): ReactNode {
 							client={client}
 							projectId={selected.projectId}
 							itemId={selected.itemId}
-							project={open}
 							onChanged={() => {
 								void reload();
 								void readProjects();

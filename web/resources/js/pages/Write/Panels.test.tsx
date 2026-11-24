@@ -20,6 +20,7 @@ const item: TextItem = {
 	text_kind: "copy",
 	state: "active",
 	words: 12,
+	reading_minutes: 1,
 	revision: 1,
 	updated_at: "2026-11-24T10:00:00Z",
 };
