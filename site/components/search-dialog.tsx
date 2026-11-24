@@ -124,6 +124,7 @@ export function SearchDialog({
 			<Dialog.Portal>
 				<Dialog.Backdrop className="fixed inset-0 z-50 bg-black/25 backdrop-blur-[2px] transition-opacity data-ending-style:opacity-0 data-starting-style:opacity-0 dark:bg-black/60" />
 				<Dialog.Popup
+					data-site-chrome
 					initialFocus={() => document.getElementById("docs-search-input")}
 					className="fixed top-[12vh] left-1/2 z-50 flex max-h-[70vh] w-[min(40rem,calc(100vw-2rem))] -translate-x-1/2 flex-col overflow-hidden rounded-2xl border border-border bg-bg shadow-2xl shadow-black/10 transition-all duration-150 data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-starting-style:scale-[0.98] data-starting-style:opacity-0"
 				>

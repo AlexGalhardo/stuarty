@@ -35,6 +35,19 @@
 }
 
 :root {
+  --duration-scene: 700ms;
+  --duration-reveal: 500ms;
+  --duration-hover: 150ms;
+  --header-h: 3.5rem;
+  /* The width of .site-container: change this one line to narrow or widen the whole site. In pixels, because the
+     docs set the root font to 125% and the landing to 100%: a rem width would make the two containers differ. */
+  --site-container: 1440px;
+}
+
+/* [data-site-chrome] marks the header and the popups it opens in a portal: on a landing page they keep these tokens
+   while the page itself stays on the previous palette below. */
+:root,
+[data-site-chrome] {
   /* The tokens of the final redesign (Trilha), light theme: warm paper, indigo accent. */
   --bg: #faf9f5;
   --fg: #1e1d18;
@@ -60,17 +73,11 @@
   --cta-foreground: oklch(0.145 0 0);
   --cta-hover: oklch(0.64 0.2 45);
   --nav-hover: #4339cc;
-  --duration-scene: 700ms;
-  --duration-reveal: 500ms;
-  --duration-hover: 150ms;
-  --header-h: 3.5rem;
-  /* The width of .site-container: change this one line to narrow or widen the whole site. In pixels, because the
-     docs set the root font to 125% and the landing to 100%: a rem width would make the two containers differ. */
-  --site-container: 1440px;
   color-scheme: light;
 }
 
-.dark {
+.dark,
+.dark [data-site-chrome] {
   --bg: #15161c;
   --fg: #eeeff4;
   --muted: #bcbfcd;
@@ -94,6 +101,43 @@
   --cta-hover: oklch(0.76 0.18 55);
   --nav-hover: #b3b5ff;
   color-scheme: dark;
+}
+
+[data-site-chrome] {
+  color: var(--fg);
+}
+
+/* The landing pages keep their palette until the new landing ships in its own epic. */
+:root[data-surface="landing"] {
+  --bg: #ffffff;
+  --fg: #0a0a0a;
+  --muted: #525252;
+  --faint: #6b6b6b;
+  --subtle: #fafafa;
+  --hover: #f4f4f5;
+  --border: #ececec;
+  --border-strong: #dcdcdc;
+  --accent: #5b3fd6;
+  --accent-soft: #f3f0ff;
+  --focus: #5b3fd6;
+  --code-bg: #fbfbfb;
+  --nav-hover: #8a00d4;
+}
+
+:root[data-surface="landing"].dark {
+  --bg: #08090c;
+  --fg: #ededed;
+  --muted: #a1a1a1;
+  --faint: #8a8a8a;
+  --subtle: #0c0c0c;
+  --hover: #151515;
+  --border: #1c1c1c;
+  --border-strong: #2a2a2a;
+  --accent: #a594ff;
+  --accent-soft: #15112b;
+  --focus: #a594ff;
+  --code-bg: #0a0a0a;
+  --nav-hover: #c060ff;
 }
 
 /* The one horizontal container of the header and of the landing sections: the content lines up with the navbar. */

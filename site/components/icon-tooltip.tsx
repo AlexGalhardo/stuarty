@@ -9,7 +9,7 @@ export function IconTooltip({ label, children }: { label: string; children: Reac
 			<Tooltip.Trigger render={children} />
 			<Tooltip.Portal>
 				<Tooltip.Positioner sideOffset={8}>
-					<Tooltip.Popup className="rounded-md border border-border bg-bg px-2 py-1 text-xs text-fg shadow-sm transition-opacity data-ending-style:opacity-0 data-starting-style:opacity-0">
+					<Tooltip.Popup data-site-chrome className="rounded-md border border-border bg-bg px-2 py-1 text-xs text-fg shadow-sm transition-opacity data-ending-style:opacity-0 data-starting-style:opacity-0">
 						{label}
 					</Tooltip.Popup>
 				</Tooltip.Positioner>

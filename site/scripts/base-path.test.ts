@@ -52,6 +52,10 @@ test("on a custom domain the base is the root and no page carries the project ba
 		const leaks = pages.filter((f) => /\b(?:href|src)\s*=\s*"\/stuarty[/"]/.test(fs.readFileSync(f, "utf8")));
 		assert.deepEqual(leaks, []);
 		assert.deepEqual(problems(dir, pages, ""), []);
+		// The landing pages keep their palette; only the docs adopt the tokens of the redesign.
+		const surface = (page: string) => /<html[^>]*\bdata-surface="landing"/.test(fs.readFileSync(path.join(dir, page), "utf8"));
+		for (const page of ["index.html", "landing/classic/index.html", "landing/creative/index.html"]) assert.ok(surface(page), page);
+		for (const page of ["docs/introduction/index.html", "changelog/index.html"]) assert.ok(!surface(page), page);
 	} finally {
 		fs.rmSync(dir, { recursive: true, force: true });
 	}

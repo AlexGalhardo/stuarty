@@ -52,7 +52,7 @@ const { version } = await latestRelease();
 ---
 
 <!doctype html>
-<html lang="en" data-copied={t.copied}>
+<html lang="en" data-copied={t.copied} data-surface={headerVariant === "landing" ? "landing" : undefined}>
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -70,8 +70,8 @@ const { version } = await latestRelease();
 		<meta property="og:title" content={title} />
 		<meta property="og:description" content={description} />
 		<meta name="twitter:card" content="summary" />
-		<meta name="theme-color" media="(prefers-color-scheme: light)" content="#faf9f5" />
-		<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#15161c" />
+		<meta name="theme-color" media="(prefers-color-scheme: light)" content={headerVariant === "landing" ? "#ffffff" : "#faf9f5"} />
+		<meta name="theme-color" media="(prefers-color-scheme: dark)" content={headerVariant === "landing" ? "#08090c" : "#15161c"} />
 		<slot name="head" />
 		<script is:inline>
 			(function () {
