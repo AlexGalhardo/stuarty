@@ -333,10 +333,17 @@ func (r *Runner) exec(ctx context.Context, s execSpec) (engine.Result, error) {
 
 	runCtx, cancel := context.WithCancelCause(ctx)
 	defer cancel(nil)
-	dctx, dcancel := context.WithCancelCause(runCtx)
-	defer dcancel(nil)
 	started := time.Now()
-	go watchDeadline(dctx, started, s.deadline, deadlineCeiling(s.deadline, s.ceiling), func() {
+	ceiling := deadlineCeiling(s.deadline, s.ceiling)
+	// The context carries the hard end of the run, the ceiling of its kind. Without a deadline in the
+	// context contrib/engine bounds the run by its own Config.Timeout (5 minutes by default), which
+	// ended every export, ingest or transcription longer than that before its deadline (VV-391).
+	// watchDeadline still decides the real end, at most the ceiling.
+	hard, hcancel := context.WithDeadlineCause(runCtx, started.Add(max(ceiling, s.deadline)), ErrDeadline)
+	defer hcancel()
+	dctx, dcancel := context.WithCancelCause(hard)
+	defer dcancel(nil)
+	go watchDeadline(dctx, started, s.deadline, ceiling, func() {
 		dcancel(ErrDeadline)
 	})
 
