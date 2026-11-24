@@ -278,9 +278,9 @@ func TestChatActivityOfAnEndedSessionIsReadFromTheTranscript(t *testing.T) {
 	}
 }
 
-// Acceptance criterion 5 of epic 76 (SDD-007): a member asking for the activity of another member's session gets
-// the answer of an id that does not exist, and so does a key limited to another project.
-func TestSecurity_T71_ChatActivityOfAnotherMembersSessionIsNotFound(t *testing.T) {
+// Acceptance criterion 5 of epic 76 (SDD-007 T-06): a member asking for the activity of another member's session
+// gets the answer of an id that does not exist, and so does a key limited to another project.
+func TestSecurity_T06_ChatActivityOfAnotherMembersSessionIsNotFound(t *testing.T) {
 	t.Parallel()
 
 	w := newActivityWorld(t)
