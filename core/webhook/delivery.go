@@ -39,7 +39,8 @@ const (
 	// KeepFinished is how long a finished delivery is kept.
 	KeepFinished = 30 * 24 * time.Hour
 	// MaxPending is how many deliveries made by events a webhook may hold in the `pending` state (SDD-022 section 4):
-	// a studio that stays locked, or a receiver that stays down, cannot make the table grow without end. At most 8 KiB
+	// a vault that stays closed (a delivery waits for it without counting an attempt) cannot make the table grow
+	// without end; a locked studio queues nothing, and a disabled webhook takes no new event. At most 8 KiB
 	// each, so 4 MiB a webhook.
 	MaxPending = 500
 	// KindEvent is the kind of a delivery made by an event, the only one the ceiling counts.
