@@ -1,0 +1,34 @@
+# The licence allowlist is the one of internal/tools/notices (SDD-009 section 12.2), the same as renderer/deny.toml
+# (rule .agents/rules/rust.md 3). Never add a licence to one list without the other.
+
+[graph]
+targets = ["x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu", "aarch64-apple-darwin"]
+
+[licenses]
+allow = [
+	"MIT",
+	"Apache-2.0",
+	"BSD-2-Clause",
+	"BSD-3-Clause",
+	"ISC",
+	"Zlib",
+	"0BSD",
+]
+confidence-threshold = 0.93
+unused-allowed-license = "allow"
+exceptions = [{ allow = ["Unicode-3.0"], crate = "unicode-ident" }]
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+
+[advisories]
+unmaintained = "workspace"
+
+# unicode-ident (a build-time dependency of the windows crates through proc-macro2) carries the Unicode-3.0 data
+# licence next to MIT OR Apache-2.0. Same exception as renderer/deny.toml and internal/tools/notices/spdx.go.

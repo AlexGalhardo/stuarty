@@ -109,7 +109,7 @@ Version 1. One JSON object per line (UTF-8, at most 65,536 bytes) on standard in
 | helper to host | `finished` | `reason` (`stopped`, `source_closed`), `frames`, `dropped`, `duration_ms`, `bytes` |
 | helper to host | `error` | `code` (`bad_request`, `source_gone`, `unsupported`, `encoder_failed`, `io`, `internal`), `message` (printable, at most 200 characters) |
 
-End of input is a stop. The `encoder` is one of a closed list (`h264_nvenc`, `h264_qsv`, `h264_amf`, `h264_mf`, `libopenh264`); the helper owns the FFmpeg argument template of each, so no user text reaches an FFmpeg argument. The `output` must be absolute, end in `.mp4` and lie in a directory that exists. The host chose the encoder with `engine/ffmpeg` (`EncoderForSize`, so the capability test of an export applies).
+End of input is a stop. The helper serves one recording and exits when it ends (a process that only lists sources exits when its input closes); it takes no command-line argument. The JSON is read and written by hand over the standard library, because ADR-0049 approves no JSON crate. The `encoder` is one of a closed list (`h264_nvenc`, `h264_qsv`, `h264_amf`, `h264_mf`, `libopenh264`); the helper owns the FFmpeg argument template of each, so no user text reaches an FFmpeg argument. The `output` must be absolute, end in `.mp4` and lie in a directory that exists. The host chose the encoder with `engine/ffmpeg` (`EncoderForSize`, so the capability test of an export applies).
 
 ## 7. The host
 
