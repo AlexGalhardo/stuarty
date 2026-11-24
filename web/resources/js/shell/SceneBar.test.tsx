@@ -160,6 +160,30 @@ describe("SceneBar variants", () => {
 		expect(html).not.toContain("text from the agent");
 	});
 
+	test("a tool claimed by its title still shows the title the agent wrote, as untrusted text", () => {
+		// an agent can give a call of any tool the title of a tool of Stuarty: the description is then a claim, so the
+		// person also sees the title as written, isolated and never interpreted
+		const html = draw(
+			sceneOf(
+				session({ state: "running" }),
+				[],
+				activity({
+					tool: {
+						title: "mcp__stuarty__project_list <b>rm -rf</b>",
+						technical_name: "project_list",
+						description_key: "ui.agent_activity.tool.project_list",
+						status: "in_progress",
+						from_agent: false,
+					},
+				}),
+			),
+		);
+		expect(html).toMatch(
+			/data-testid="scene-tool".*Lists your projects\..*dir="auto"[^>]*>mcp__stuarty__project_list &lt;b&gt;rm -rf&lt;\/b&gt;/s,
+		);
+		expect(html).not.toContain("<b>");
+	});
+
 	test("working: any other tool shows the title of the call as text from the agent", () => {
 		const html = draw(
 			sceneOf(

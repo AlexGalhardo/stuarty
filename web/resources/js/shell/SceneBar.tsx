@@ -228,8 +228,16 @@ export default function SceneBar({
 									: t("ui.shell.scene.not_reported")}
 							</span>
 						) : model.tool.descriptionKey !== null ? (
-							// the plain description of a tool of Stuarty, in words a person can judge
-							t(model.tool.descriptionKey)
+							// the plain description of a tool of Stuarty, in words a person can judge, and the title the agent
+							// gave the call: the tool is recognised from that title, so an agent can claim the name of a tool
+							// of Stuarty, and the person sees what it wrote
+							<>
+								{t(model.tool.descriptionKey)}
+								<span className="font-normal text-muted-foreground">
+									{" · "}
+									<UntrustedText>{model.tool.title}</UntrustedText>
+								</span>
+							</>
 						) : (
 							<UntrustedText>{model.tool.title}</UntrustedText>
 						)}

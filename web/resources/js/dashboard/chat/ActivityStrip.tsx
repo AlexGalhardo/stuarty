@@ -66,6 +66,13 @@ export default function ActivityStrip({
 						<span className="text-muted-foreground">
 							{` · ${tool.technicalName ?? t("ui.shell.scene.tool_from_agent")} · ${t(`ui.chat.tool_status_${tool.status}`)}`}
 						</span>
+						{tool.descriptionKey !== null && (
+							// the tool is recognised from the title the agent gave the call, which the person sees as written
+							<span className="block text-muted-foreground">
+								{`${t("ui.shell.scene.tool_from_agent")}: `}
+								<UntrustedText>{tool.title}</UntrustedText>
+							</span>
+						)}
 					</>
 				)}
 			</dd>
