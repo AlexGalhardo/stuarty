@@ -4,7 +4,7 @@ import { describe, expect, test, vi } from "vitest";
 import { I18nProvider } from "@/lib/i18n";
 import { ApiError } from "../../editor/api/errors";
 import type { ApiKey } from "../../editor/api/types";
-import SettingsKeys, { KeyRow, reportOrLogin } from "./Keys";
+import SettingsKeys, { copyText, KeyRow, reportOrLogin } from "./Keys";
 
 vi.mock("@inertiajs/react", () => ({ Head: () => null }));
 
@@ -113,5 +113,27 @@ describe("the state of a key", () => {
 			</I18nProvider>,
 		);
 		expect(html).not.toContain("data-key-secret");
+	});
+});
+
+describe("the copy of a new secret", () => {
+	test("says it copied when the clipboard took the text", async () => {
+		const writeText = vi.fn(async () => undefined);
+		vi.stubGlobal("navigator", { clipboard: { writeText } });
+		try {
+			expect(await copyText("sk_secret")).toBe(true);
+			expect(writeText).toHaveBeenCalledWith("sk_secret");
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+
+	test("does not throw on a page with no clipboard (plain HTTP from another machine)", async () => {
+		vi.stubGlobal("navigator", {});
+		try {
+			expect(await copyText("sk_secret")).toBe(false);
+		} finally {
+			vi.unstubAllGlobals();
+		}
 	});
 });

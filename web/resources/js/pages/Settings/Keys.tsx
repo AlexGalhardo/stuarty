@@ -101,6 +101,17 @@ export function KeyRow({
 	);
 }
 
+// copyText puts the text on the clipboard and says whether it did. A page served over plain HTTP from another
+// machine (network mode) has no clipboard at all: the secret stays on the page to be selected, and nothing throws.
+export async function copyText(value: string): Promise<boolean> {
+	try {
+		await navigator.clipboard.writeText(value);
+		return true;
+	} catch {
+		return false;
+	}
+}
+
 // The API keys page of network mode (SDD-012 section 2.1, SDD-007): create a key
 // with a name, scopes and an optional project, and revoke one. The secret of a
 // new key is shown once, in the state of this page only: it is never written to
@@ -110,6 +121,7 @@ export default function SettingsKeys(): ReactNode {
 	const [keys, setKeys] = useState<ApiKey[] | null>(null);
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [secret, setSecret] = useState<string | null>(null);
+	const [copied, setCopied] = useState(false);
 	const [name, setName] = useState("");
 	const [scopes, setScopes] = useState<string[]>(["read"]);
 	const [projectId, setProjectId] = useState("");
@@ -140,6 +152,7 @@ export default function SettingsKeys(): ReactNode {
 				...(projectId.trim() === "" ? {} : { project_id: projectId.trim() }),
 			});
 			setSecret(made.secret);
+			setCopied(false);
 			setName("");
 			await load();
 		} catch (error) {
@@ -147,6 +160,10 @@ export default function SettingsKeys(): ReactNode {
 		} finally {
 			setBusy(false);
 		}
+	}
+
+	async function copySecret(value: string): Promise<void> {
+		setCopied(await copyText(value));
 	}
 
 	async function revoke(keyId: string): Promise<void> {
@@ -186,10 +203,12 @@ export default function SettingsKeys(): ReactNode {
 								<Button
 									type="button"
 									variant="outline"
-									onClick={() => void navigator.clipboard.writeText(secret)}
+									onClick={() => void copySecret(secret)}
 								>
 									<Copy aria-hidden="true" />
-									{t("ui.keys.secret_copy")}
+									{copied
+										? t("ui.keys.secret_copied")
+										: t("ui.keys.secret_copy")}
 								</Button>
 								<Button
 									type="button"
