@@ -643,6 +643,11 @@ func TestStartFailures(t *testing.T) {
 		if !errors.Is(err, ErrUnavailable) || !strings.Contains(err.Error(), want) {
 			t.Errorf("%s: err = %v", mode, err)
 		}
+
+		// Only a helper of another version is ErrProtocolVersion, which the person is told by its own reason.
+		if errors.Is(err, ErrProtocolVersion) != (mode == "badversion") {
+			t.Errorf("%s: ErrProtocolVersion = %v", mode, errors.Is(err, ErrProtocolVersion))
+		}
 	}
 
 	e := newEnv(t, "ok")

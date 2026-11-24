@@ -49,6 +49,9 @@ var (
 	ErrLost = errors.New("capturehost: the helper ended or went silent")
 	// ErrBadRequest means the request was refused before anything was sent.
 	ErrBadRequest = errors.New("capturehost: bad request")
+	// ErrProtocolVersion means the helper answered with another version of the protocol; it is also
+	// ErrUnavailable.
+	ErrProtocolVersion = fmt.Errorf("%w: the helper speaks another protocol version", ErrUnavailable)
 )
 
 // HelperError is an error message of the helper (code and a printable message).
@@ -308,7 +311,7 @@ func Start(ctx context.Context, r *ffmpeg.Runner, cfg Config) (*Helper, error) {
 		case err != nil:
 			return nil, fmt.Errorf("%w: no ready message: %w", ErrUnavailable, err)
 		case ready.Type == "ready":
-			return nil, fmt.Errorf("%w: protocol version %d, want %d", ErrUnavailable, ready.V, ProtocolVersion)
+			return nil, fmt.Errorf("%w: protocol version %d, want %d", ErrProtocolVersion, ready.V, ProtocolVersion)
 		default:
 			return nil, fmt.Errorf("%w: the first message was %q", ErrUnavailable, clean(ready.Type))
 		}

@@ -1,8 +1,10 @@
 package service
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/core/recording"
@@ -76,5 +78,22 @@ func TestSettledTracksCountsTheEventsOfAFileWithNoReport(t *testing.T) {
 
 	if _, _, n := settledTracks(recordings.Row{}, t.TempDir(), nil); n != 0 {
 		t.Errorf("a folder with no file has %d events", n)
+	}
+}
+
+// A helper of another version is refused with its own reason and a sentence that says so (SDD-025 section 16.7);
+// a helper that cannot start at all stays helper_missing.
+func TestCaptureErrorNamesAHelperOfAnotherVersion(t *testing.T) {
+	old := fmt.Errorf("%w: protocol version 1, want 2", capturehost.ErrProtocolVersion)
+
+	e := captureError(old)
+	if e.Code != CodeCaptureUnavailable || e.Details["reason"] != "protocol_version" ||
+		!strings.Contains(e.Message, "another version of Stuarty") {
+		t.Errorf("a v1 helper: %+v", e)
+	}
+
+	e = captureError(fmt.Errorf("%w: no ready message", capturehost.ErrUnavailable))
+	if e.Details["reason"] != "helper_missing" {
+		t.Errorf("a helper that did not start: %+v", e)
 	}
 }
