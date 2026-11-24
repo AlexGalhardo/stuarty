@@ -273,6 +273,20 @@ Every operation has its own page with the parameters, the body, the responses an
 | `POST` | `/api/v1/social/price` | [`social.price`](/docs/api/social.price) | Correct the price of a post on a network that charges for one (a person in the browser only) |
 | `POST` | `/api/v1/social/select` | [`social.select`](/docs/api/social.select) | Choose the Page or Instagram account a sign-in reached (a person in the browser only) |
 
+## Recordings
+
+| Method | Path | Operation | Summary |
+| --- | --- | --- | --- |
+| `GET` | `/api/v1/projects/{id}/recordings` | [`projects.recordings`](/docs/api/projects.recordings) | List the recordings of a project |
+| `GET` | `/api/v1/recording/sources` | [`recording.sources`](/docs/api/recording.sources) | List the displays and windows that can be captured |
+| `POST` | `/api/v1/recordings` | [`recordings.start`](/docs/api/recordings.start) | Start recording a display or a window (a person in the browser only; the local token and keys get 403) |
+| `GET` | `/api/v1/recordings/{id}` | [`recordings.get`](/docs/api/recordings.get) | Read one recording |
+| `POST` | `/api/v1/recordings/{id}/cancel` | [`recordings.cancel`](/docs/api/recordings.cancel) | Discard a recording in progress; delete a finished one (a person in the browser only) |
+| `POST` | `/api/v1/recordings/{id}/confirm` | [`recordings.confirm`](/docs/api/recordings.confirm) | Add a finished recording to the project (a person in the browser only; agents can then read it) |
+| `POST` | `/api/v1/recordings/{id}/dismiss` | [`recordings.dismiss`](/docs/api/recordings.dismiss) | Not now: keep a recording out of the project and out of sight of agents (a person in the browser only) |
+| `POST` | `/api/v1/recordings/{id}/place` | [`recordings.place`](/docs/api/recordings.place) | Place a recording the person added on the timeline, as one batch |
+| `POST` | `/api/v1/recordings/{id}/stop` | [`recordings.stop`](/docs/api/recordings.stop) | Stop a recording and keep what was written (anyone with media) |
+
 ## Agent chat
 
 | Method | Path | Operation | Summary |

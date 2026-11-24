@@ -91,6 +91,9 @@ test("a route belongs to the group of its resource", () => {
 	assert.equal(tagOf("/api/v1/projects/{id}/jobs"), "Jobs");
 	assert.equal(tagOf("/api/v1/jobs/{job_id}"), "Jobs");
 	assert.equal(tagOf("/api/v1/projects/{id}/events"), "Events");
+	assert.equal(tagOf("/api/v1/projects/{id}/recordings"), "Recordings");
+	assert.equal(tagOf("/api/v1/recording/sources"), "Recordings");
+	assert.equal(tagOf("/api/v1/recordings/{id}/stop"), "Recordings");
 	assert.equal(tagOf("/api/v1/handshake"), "System");
 	assert.equal(tagOf("/api/v1/keys/{key_id}"), "API keys");
 	assert.throws(() => tagOf("/api/v1/unknown"));

@@ -2615,6 +2615,70 @@ The types named in the tables of the operations. The arguments of each editing c
 | `den` | `integer` | no |  |
 | `num` | `integer` | no |  |
 
+### Recording
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actor` | `string` | no |  |
+| `asset_id` | `string` | no |  |
+| `bytes` | `integer (int64)` | no |  |
+| `created_at` | `string (date-time)` | no |  |
+| `dropped` | `integer (int64)` | no |  |
+| `duration_ms` | `integer (int64)` | no |  |
+| `encoder` | `string` | no |  |
+| `ended_at` | `string (date-time)` or `null` | no |  |
+| `error` | [`Error`](/docs/api/schemas#error) or `any` or `null` or `null` | no |  |
+| `fps` | `integer` | no |  |
+| `frames` | `integer (int64)` | no |  |
+| `height` | `integer` | no |  |
+| `project_id` | `string` | no |  |
+| `recording_id` | `string` | no |  |
+| `review` | `string` | no |  |
+| `source` | [`RecordingSource`](/docs/api/schemas#recordingsource) | no |  |
+| `started_at` | `string (date-time)` or `null` | no |  |
+| `state` | `string` | no |  |
+| `stop_reason` | `string` | no |  |
+| `text` | `string` | no |  |
+| `width` | `integer` | no |  |
+
+### RecordingListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `recordings` | array of [`Recording`](/docs/api/schemas#recording) | no |  |
+
+### RecordingSource
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | `string` | no |  |
+| `kind` | `string` | no |  |
+| `name` | `string` | no |  |
+
+### recordingSourceIn
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | `string` | yes | An id from GET /recording/sources.. min length 1 |
+| `kind` | `string` | yes | display or window.. min length 1 |
+| `name` | `string` | no | The title the person saw in the picker; optional, plain text. |
+
+### RecordingSourceInfo
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `height` | `integer` | no |  |
+| `id` | `string` | no |  |
+| `name` | `string` | no |  |
+| `width` | `integer` | no |  |
+
+### RecordingSourcesResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `displays` | array of [`RecordingSourceInfo`](/docs/api/schemas#recordingsourceinfo) | no |  |
+| `windows` | array of [`RecordingSourceInfo`](/docs/api/schemas#recordingsourceinfo) | no |  |
+
 ### Rect
 
 | Name | Type | Required | Description |
