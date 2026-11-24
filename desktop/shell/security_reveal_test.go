@@ -3,6 +3,7 @@ package shell
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/internal/testfs"
@@ -27,16 +28,16 @@ func TestSecurity_T124_TheShellChecksTheRevealPathItself(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := os.WriteFile(filepath.Join(evil, "aabb"), []byte("s"), 0o600); err != nil {
+	if err := os.WriteFile(filepath.Join(evil, storedHash), []byte("s"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
 	// A link inside the media folder that leads out of it.
-	linked := filepath.Join(root, "bb")
+	linked := filepath.Join(root, "cd")
 	testLinked := false
 
 	outside := t.TempDir()
-	if err := os.WriteFile(filepath.Join(outside, "ccdd"), []byte("s"), 0o600); err != nil {
+	if err := os.WriteFile(filepath.Join(outside, otherHash), []byte("s"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -54,21 +55,21 @@ func TestSecurity_T124_TheShellChecksTheRevealPathItself(t *testing.T) {
 
 	hostile := []string{
 		secret,
-		filepath.Join(evil, "aabb"),
-		filepath.Join(root, "..", "store-evil", "aabb"),
-		filepath.Join(root, "aa", "..", "..", filepath.Base(secret)),
+		filepath.Join(evil, storedHash),
+		filepath.Join(root, "..", "store-evil", storedHash),
+		filepath.Join(root, "ab", "..", "..", filepath.Base(secret)),
 		root,
 		filepath.Dir(file),
-		"aa/aabb",
-		`\\attacker\share\aabb`,
-		"//attacker/share/aabb",
+		"ab/" + storedHash,
+		`\attacker\share\` + storedHash,
+		"//attacker/share/" + storedHash,
 		file + "\x00.txt",
 		"",
 		"C:",
 	}
 
 	if testLinked {
-		hostile = append(hostile, filepath.Join(linked, "ccdd"))
+		hostile = append(hostile, filepath.Join(linked, otherHash))
 	}
 
 	for _, p := range hostile {
@@ -83,5 +84,27 @@ func TestSecurity_T124_TheShellChecksTheRevealPathItself(t *testing.T) {
 
 	if err := r.Reveal(file); err != nil || len(fm.started) != 1 {
 		t.Errorf("the stored file itself: %v, started %q", err, fm.started)
+	}
+}
+
+// T-124: a path on another host is refused from its text, before the disk is asked: on Windows a stat of a UNC
+// path is an SMB connection to that host, which offers it the credentials of the person. The refusal says the file
+// is outside the media folder, not that it does not exist, which is what a stat would have answered.
+func TestSecurity_T124_ARemotePathIsRefusedBeforeTheDiskIsAsked(t *testing.T) {
+	root, _ := mediaFile(t)
+
+	for _, p := range []string{
+		`\attacker.invalid\share\ab\` + storedHash,
+		`\?\UNC\attacker.invalid\share\ab\` + storedHash,
+		"//attacker.invalid/share/ab/" + storedHash,
+	} {
+		if !filepath.IsAbs(p) {
+			continue // not a path of this system
+		}
+
+		err := CheckRevealUnder(root, p)
+		if err == nil || !strings.Contains(err.Error(), "outside the media folder") {
+			t.Errorf("CheckRevealUnder(%q) = %v, want the refusal of a path outside the media folder", p, err)
+		}
 	}
 }
