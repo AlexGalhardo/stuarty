@@ -495,13 +495,14 @@ func (s *svc) bundleManifest(
 	snaps []*bundleSnapshot, items []ItemRow, head *ProductionHead, whole bool,
 ) (*BundleManifest, []bundleFile, *Error) {
 	m := &BundleManifest{
-		Format: BundleFormat, BundleVersion: BundleVersion, AppVersion: s.version,
+		Format: BundleFormat, BundleVersion: bundleVersionWhole, AppVersion: s.version,
 		CreatedAt: s.now().UTC().Format("2006-01-02T15:04:05Z"),
 		Media:     []BundleMedia{}, Fonts: []BundleFontFile{},
 	}
 
 	if len(snaps) == 0 {
 		// A project with no timeline: no document, no log, and the id of the project itself.
+		m.BundleVersion = BundleVersion
 		m.Project = BundleProject{
 			ID: head.ID, Name: head.Name, SchemaVersion: timeline.CurrentSchemaVersion, Revision: 0,
 		}

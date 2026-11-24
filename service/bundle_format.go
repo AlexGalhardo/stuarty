@@ -17,8 +17,13 @@ const (
 	// still imported.
 	formerBundleFormat = "vukem-video-bundle"
 	// BundleVersion is the layout of the container; an importer refuses a higher one. Version 2 adds the
-	// production and the timelines after the first (SDD-005 section 16.1.1); version 1 is still read.
-	BundleVersion = 2
+	// production and the timelines after the first (SDD-005 section 16.1.1); version 1 is still read. Version 3
+	// is version 2 with no first document, the bundle of a project with no timeline (section 16.1.2): only that
+	// bundle carries it, so that a build that reads up to version 2 asks to be updated instead of calling the
+	// bundle damaged, and every other bundle stays readable by such a build.
+	BundleVersion = 3
+	// bundleVersionWhole is the version of the bundle of a whole project that has a timeline.
+	bundleVersionWhole = 2
 
 	bundleManifestEntry  = "manifest.json"
 	bundleDocumentEntry  = "document.json"

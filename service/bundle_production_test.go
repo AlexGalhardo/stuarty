@@ -71,6 +71,7 @@ func TestBundleProductionManifestRules(t *testing.T) {
 			m.Production.Goal = &project.Goal{Specific: "short", Due: "2027-01-01"}
 		},
 		"a project name with a control character": func(m *BundleManifest) { m.Production.Name = "a\x00b" },
+		"a document in version 3":                 func(m *BundleManifest) { m.BundleVersion = 3 },
 		"too many items": func(m *BundleManifest) {
 			for range bundleItemsMax {
 				m.Production.Items = append(m.Production.Items, BundleItem{Kind: "text", Title: "t"})
@@ -94,7 +95,7 @@ func TestBundleWithNoDocumentManifestRules(t *testing.T) {
 
 	bare := func() *BundleManifest {
 		return &BundleManifest{
-			Format: BundleFormat, BundleVersion: 2, Project: BundleProject{ID: "prj_0000000001"},
+			Format: BundleFormat, BundleVersion: 3, Project: BundleProject{ID: "prj_0000000001"},
 			Production: &BundleProduction{Items: []BundleItem{{Kind: "text", Title: "Post"}}},
 		}
 	}
@@ -105,6 +106,7 @@ func TestBundleWithNoDocumentManifestRules(t *testing.T) {
 
 	bad := map[string]func(m *BundleManifest){
 		"version 1":        func(m *BundleManifest) { m.BundleVersion = 1 },
+		"version 2":        func(m *BundleManifest) { m.BundleVersion = 2 },
 		"no production":    func(m *BundleManifest) { m.Production = nil },
 		"a timeline":       func(m *BundleManifest) { m.Timelines = v2Manifest().Timelines },
 		"a log":            func(m *BundleManifest) { m.Operations = &BundleLog{Count: 1, SHA256: strings.Repeat("a", 64)} },

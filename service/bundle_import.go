@@ -958,10 +958,10 @@ func checkBundleContext(p *BundleProduction) *Error {
 }
 
 // checkBareManifest judges a manifest with no document (SDD-005 section 16.1.2): the bundle of a project that
-// has no timeline. It is version 2, it has a production and nothing that belongs to a timeline.
+// has no timeline. It is version 3, it has a production and nothing that belongs to a timeline.
 func checkBareManifest(m *BundleManifest) *Error {
-	if m.BundleVersion < 2 || m.Production == nil {
-		return bundleRefused("a bundle with no document must be of version 2 and describe a production")
+	if m.BundleVersion != BundleVersion || m.Production == nil {
+		return bundleRefused("a bundle with no document must be of version 3 and describe a production")
 	}
 
 	if len(m.Timelines) > 0 || m.Operations != nil || len(m.Media) > 0 || len(m.Fonts) > 0 {
@@ -985,6 +985,8 @@ func checkBundleProduction(m *BundleManifest) *Error {
 		if e := checkBareManifest(m); e != nil {
 			return e
 		}
+	} else if m.BundleVersion > bundleVersionWhole {
+		return bundleRefused("a bundle of version 3 holds no document")
 	}
 
 	if m.Production == nil {
