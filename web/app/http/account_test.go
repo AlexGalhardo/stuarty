@@ -12,6 +12,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/internal/testfs"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/account"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
@@ -49,7 +50,7 @@ func newAccountHarness(tb testing.TB, extra ...vukem.Option) *accountHarness {
 func newAccountHarnessWith(tb testing.TB, tokens auth.AgentTokens, extra ...vukem.Option) *accountHarness {
 	tb.Helper()
 
-	dir, err := workspace.Resolve(func(string) string { return filepath.Join(tb.TempDir(), "ws") })
+	dir, err := workspace.Resolve(func(string) string { return filepath.Join(testfs.TempDir(tb), "ws") })
 	if err != nil {
 		tb.Fatal(err)
 	}

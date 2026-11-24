@@ -19,6 +19,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/chat"
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/internal/testfs"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/agenthost"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
@@ -98,7 +99,7 @@ type chatHarness struct {
 func newChatHarness(t *testing.T) *chatHarness {
 	t.Helper()
 
-	dir, err := workspace.Resolve(func(string) string { return filepath.Join(t.TempDir(), "ws") })
+	dir, err := workspace.Resolve(func(string) string { return filepath.Join(testfs.TempDir(t), "ws") })
 	if err != nil {
 		t.Fatal(err)
 	}

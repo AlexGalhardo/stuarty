@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/internal/testfs"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 	"github.com/AlexGalhardo/stuarty/web/app/auth"
@@ -25,7 +26,7 @@ const canary = "c4n4ry-admin-password-0123456789"
 func newUsers(t *testing.T) *auth.Users {
 	t.Helper()
 
-	dir, err := workspace.Resolve(func(string) string { return filepath.Join(t.TempDir(), "ws") })
+	dir, err := workspace.Resolve(func(string) string { return filepath.Join(testfs.TempDir(t), "ws") })
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -27,7 +27,7 @@ func (closedGate) Check() error { return errors.New("locked") }
 func TestSecurity_T107_EveryToolOfALockedStudioAnswersELocked(t *testing.T) {
 	t.Parallel()
 
-	dir, err := workspace.Resolve(func(string) string { return filepath.Join(t.TempDir(), "ws") })
+	dir, err := workspace.Resolve(func(string) string { return filepath.Join(testfs.TempDir(t), "ws") })
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,11 +41,7 @@ func TestSecurity_T107_EveryToolOfALockedStudioAnswersELocked(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	t.Cleanup(func() {
-		_ = st.Close()
-
-		testfs.Released(t, dir.Path("db.sqlite"))
-	})
+	t.Cleanup(func() { _ = st.Close() })
 
 	var n atomic.Int64
 

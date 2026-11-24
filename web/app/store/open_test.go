@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/AlexGalhardo/stuarty/internal/testfs"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 
 	"github.com/AlexGalhardo/vukem/database"
@@ -17,7 +18,7 @@ import (
 
 func newDir(t *testing.T) workspace.Dir {
 	t.Helper()
-	d, err := workspace.Resolve(func(string) string { return filepath.Join(t.TempDir(), "ws") })
+	d, err := workspace.Resolve(func(string) string { return filepath.Join(testfs.TempDir(t), "ws") })
 	if err != nil {
 		t.Fatal(err)
 	}

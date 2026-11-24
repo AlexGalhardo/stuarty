@@ -64,7 +64,7 @@ func (c *clock) advance(d time.Duration) {
 func newDir(tb testing.TB) workspace.Dir {
 	tb.Helper()
 
-	d, err := workspace.Resolve(func(string) string { return filepath.Join(tb.TempDir(), "ws") })
+	d, err := workspace.Resolve(func(string) string { return filepath.Join(testfs.TempDir(tb), "ws") })
 	if err != nil {
 		tb.Fatal(err)
 	}
@@ -94,11 +94,7 @@ func newEnvWith(tb testing.TB, with func(e *env, o *service.Options)) *env {
 		tb.Fatal(err)
 	}
 
-	tb.Cleanup(func() {
-		_ = st.Close()
-
-		testfs.Released(tb, e.dir.Path("db.sqlite"))
-	})
+	tb.Cleanup(func() { _ = st.Close() })
 
 	e.store = st
 
