@@ -104,7 +104,7 @@ export default function TimelineToolbar({
 					variant={blade ? "ghost" : "secondary"}
 					size="sm"
 					aria-pressed={!blade}
-					title={t("ui.editor.timeline.select_hint")}
+					title={tip(t("ui.editor.timeline.select_hint"), "tool_select")}
 					onClick={() => runtime.uiWriter.setTool("select")}
 				>
 					<MousePointer2 aria-hidden="true" />
@@ -115,7 +115,7 @@ export default function TimelineToolbar({
 					variant={blade ? "secondary" : "ghost"}
 					size="sm"
 					aria-pressed={blade}
-					title={t("ui.editor.timeline.blade_hint")}
+					title={tip(t("ui.editor.timeline.blade_hint"), "tool_blade")}
 					onClick={() => runtime.uiWriter.setTool(blade ? "select" : "blade")}
 				>
 					<Slice aria-hidden="true" />
@@ -213,7 +213,7 @@ export default function TimelineToolbar({
 					variant={magnetOn ? "secondary" : "ghost"}
 					size="sm"
 					aria-pressed={magnetOn}
-					title={t("ui.editor.timeline.magnet_hint")}
+					title={tip(t("ui.editor.timeline.magnet_hint"), "toggle_magnet")}
 					disabled={!canEdit}
 					onClick={() => void actions.toggleMagnet()}
 				>
