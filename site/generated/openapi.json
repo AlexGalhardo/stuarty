@@ -15458,6 +15458,11 @@
             },
             "type": "array"
           },
+          "snap": {
+            "description": "A length, 0 to 2s; the farthest an edge of the cut may move into a silence beside it. Default \"0.3s\"; \"0s\" cuts at the word times.",
+            "type": "string",
+            "x-vv-kind": "time"
+          },
           "to_word": {
             "description": "Index of the last word to remove, inclusive.",
             "minimum": 0,
