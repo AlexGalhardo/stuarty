@@ -35,7 +35,7 @@ export function ModelEditTools(): ReactNode {
 	const off = doc === null || busy || running;
 
 	return (
-		<ToolGroup>
+		<ToolGroup label={t("ui.image.toolbar.model")}>
 			<ToolButton
 				icon={Eraser}
 				label={

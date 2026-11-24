@@ -86,17 +86,30 @@ export function Toolbar({
 			aria-label={label}
 			data-testid="image-toolbar"
 			onKeyDown={onKeyDown}
-			className="flex flex-wrap items-center gap-1 border-b bg-background px-2 py-1"
+			className="flex flex-wrap items-center gap-1 border-b border-border bg-ed-panel px-2 py-1"
 		>
 			{children}
 		</div>
 	);
 }
 
-export function ToolGroup({ children }: { children: ReactNode }): ReactNode {
+// A named run of buttons of the toolbar: the name is what a reader says on entering it, and the rule after
+// it is what separates it from the next run.
+export function ToolGroup({
+	label,
+	children,
+}: {
+	label: string;
+	children: ReactNode;
+}): ReactNode {
 	return (
 		<>
-			<div className="flex items-center gap-0.5">{children}</div>
+			<fieldset
+				aria-label={label}
+				className="m-0 flex min-w-0 items-center gap-0.5 border-0 p-0"
+			>
+				{children}
+			</fieldset>
 			<span aria-hidden="true" className="mx-1 h-5 w-px bg-border" />
 		</>
 	);
@@ -110,11 +123,11 @@ export function ViewTools(): ReactNode {
 	const off = doc === null;
 
 	return (
-		<ToolGroup>
+		<ToolGroup label={t("ui.image.toolbar.view")}>
 			<ToolButton
 				icon={Minus}
 				label={t("ui.image.view.zoom_out")}
-				shortcut="-"
+				shortcut="zoomOut"
 				disabled={off}
 				onClick={() => store.getState().zoomBy(1 / ZOOM_STEP)}
 				testId="image-zoom-out"
@@ -122,7 +135,7 @@ export function ViewTools(): ReactNode {
 			<ToolButton
 				icon={Plus}
 				label={t("ui.image.view.zoom_in")}
-				shortcut="+"
+				shortcut="zoomIn"
 				disabled={off}
 				onClick={() => store.getState().zoomBy(ZOOM_STEP)}
 				testId="image-zoom-in"
@@ -130,7 +143,7 @@ export function ViewTools(): ReactNode {
 			<ToolButton
 				icon={Maximize}
 				label={t("ui.image.view.fit")}
-				shortcut="0"
+				shortcut="fit"
 				disabled={off}
 				onClick={() => store.getState().fitView()}
 				testId="image-zoom-fit"
@@ -138,7 +151,7 @@ export function ViewTools(): ReactNode {
 			<ToolButton
 				icon={ScanSearch}
 				label={t("ui.image.view.actual")}
-				shortcut="1"
+				shortcut="actual"
 				disabled={off}
 				onClick={() => store.getState().actualSize()}
 				testId="image-zoom-100"

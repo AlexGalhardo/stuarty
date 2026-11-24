@@ -713,7 +713,8 @@
         "failed": "Não foi possível abrir a imagem.",
         "back": "Voltar para Editar imagem",
         "size": "{w} × {h} px",
-        "revision": "revisão {revision}"
+        "revision": "revisão {revision}",
+        "saved_auto": "Salvo automaticamente: {time}"
       },
       "canvas": {
         "label": "Tela da imagem",
@@ -1056,7 +1057,13 @@
         "exporting": "Exportando…"
       },
       "toolbar": {
-        "label": "Ferramentas da imagem"
+        "label": "Ferramentas da imagem",
+        "history": "Desfazer e refazer",
+        "add": "Adicionar à imagem",
+        "arrange": "Organizar camadas",
+        "model": "Editar com um modelo",
+        "view": "Visualização",
+        "export": "Exportar"
       },
       "error": {
         "dismiss": "Dispensar o erro"

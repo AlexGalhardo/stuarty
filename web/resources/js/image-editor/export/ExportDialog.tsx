@@ -49,7 +49,7 @@ export function ExportTool(): ReactNode {
 	const [open, setOpen] = useState(false);
 
 	return (
-		<ToolGroup>
+		<ToolGroup label={t("ui.image.toolbar.export")}>
 			<ToolButton
 				icon={Download}
 				label={t("ui.image.export.open")}

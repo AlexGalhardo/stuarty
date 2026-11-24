@@ -7,9 +7,11 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { SHORTCUTS, type ShortcutRow } from "./shortcuts";
 
 // One icon button of the toolbar (design system 4.3.1): an icon, an accessible name and a tooltip with the same
-// words, and the key it has when it has one. The toolbar makes one of them the tab stop (Toolbar.tsx).
+// words, and the key it has when it has one, read from the table of shortcuts. The toolbar makes one of them
+// the tab stop (Toolbar.tsx).
 export default function ToolButton({
 	icon: Icon,
 	label,
@@ -24,9 +26,10 @@ export default function ToolButton({
 	onClick: () => void;
 	disabled?: boolean;
 	pressed?: boolean;
-	shortcut?: string;
+	shortcut?: ShortcutRow;
 	testId?: string;
 }): ReactNode {
+	const keys = shortcut === undefined ? undefined : SHORTCUTS[shortcut];
 	return (
 		<Tooltip>
 			<TooltipTrigger asChild>
@@ -35,7 +38,7 @@ export default function ToolButton({
 					variant="ghost"
 					size="icon-sm"
 					aria-label={label}
-					aria-keyshortcuts={shortcut}
+					aria-keyshortcuts={keys}
 					aria-pressed={pressed}
 					disabled={disabled}
 					data-tool=""
@@ -47,8 +50,10 @@ export default function ToolButton({
 			</TooltipTrigger>
 			<TooltipContent>
 				{label}
-				{shortcut !== undefined && (
-					<span className="ml-2 text-muted-foreground">{shortcut}</span>
+				{keys !== undefined && (
+					<kbd className="ml-2 rounded-sm border border-border px-1 font-sans text-xs text-muted-foreground">
+						{keys}
+					</kbd>
 				)}
 			</TooltipContent>
 		</Tooltip>

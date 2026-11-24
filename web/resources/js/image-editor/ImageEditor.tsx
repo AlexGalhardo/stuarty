@@ -1,5 +1,4 @@
 import { Link } from "@inertiajs/react";
-import { ArrowLeft } from "lucide-react";
 import { type ReactNode, useEffect, useMemo } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
@@ -22,6 +21,7 @@ import { ModelJobStrip } from "./modeledit/ModelJobStrip";
 import { ImageEditorProvider, useImage } from "./state/context";
 import { LibraryProvider } from "./state/library";
 import { createImageStore } from "./state/store";
+import TopBar from "./TopBar";
 import { AddTools } from "./toolbar/AddTools";
 import { ArrangeTools, HistoryTools } from "./toolbar/ArrangeTools";
 import { Toolbar, ViewTools } from "./toolbar/Toolbar";
@@ -154,29 +154,9 @@ function Shell(): ReactNode {
 			aria-labelledby="image-title"
 			data-testid="image-editor"
 			onKeyDown={onKeys}
-			className="flex h-[calc(100dvh-3rem)] min-h-[28rem] flex-col overflow-hidden rounded-lg border"
+			className="flex h-[calc(100dvh-3rem)] min-h-[28rem] flex-col overflow-hidden rounded-lg border border-border bg-ed-bg"
 		>
-			<header className="flex items-center gap-2 border-b px-2 py-1">
-				<Button asChild variant="ghost" size="icon-sm">
-					<Link href="/edit-image" aria-label={t("ui.image.editor.back")}>
-						<ArrowLeft aria-hidden="true" />
-					</Link>
-				</Button>
-				<h1 id="image-title" className="min-w-0 truncate text-sm font-medium">
-					{doc === null ? (
-						t("ui.image.editor.loading")
-					) : (
-						<UntrustedText>{doc.name}</UntrustedText>
-					)}
-				</h1>
-				{doc !== null && (
-					<span className="ml-auto text-xs text-muted-foreground tabular-nums">
-						{t("ui.image.editor.size", { w: doc.width, h: doc.height })}
-						{" · "}
-						{t("ui.image.editor.revision", { revision: doc.revision })}
-					</span>
-				)}
-			</header>
+			<TopBar doc={doc} />
 			<Toolbar label={t("ui.image.toolbar.label")}>
 				<HistoryTools />
 				<AddTools />
@@ -191,7 +171,7 @@ function Shell(): ReactNode {
 			<div className="flex min-h-0 flex-1">
 				<aside
 					aria-label={t("ui.image.layers.title")}
-					className="flex w-64 shrink-0 flex-col border-r"
+					className="flex w-56 shrink-0 flex-col border-r border-border bg-ed-panel xl:w-64"
 				>
 					<h2 className="border-b px-3 py-2 text-sm font-semibold">
 						{t("ui.image.layers.title")}
@@ -203,7 +183,7 @@ function Shell(): ReactNode {
 				</div>
 				<aside
 					aria-label={t("ui.image.inspector.title")}
-					className="flex w-80 shrink-0 flex-col border-l"
+					className="flex w-72 shrink-0 flex-col border-l border-border bg-ed-panel xl:w-80"
 				>
 					<h2 className="border-b px-3 py-2 text-sm font-semibold">
 						{t("ui.image.inspector.title")}
