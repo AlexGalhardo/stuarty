@@ -477,3 +477,40 @@ func TestLibraryOfTheMaximumSizeIsReadyWithinTwoSecondsOfTheUnlock(t *testing.T)
 		t.Errorf("the library of the maximum size took %v to be ready; the limit is %v", took, limit)
 	}
 }
+
+// The scan reads scanWorkers skills side by side and seals the files of each one after the other, so no more than
+// scanWorkers files are ever in memory at once; a file larger than any entry is sealed alone (epic 92 review: a pool
+// inside each job held up to scanWorkers squared files).
+func TestScanSealsAtMostScanWorkersFilesAtOnce(t *testing.T) {
+	m, _, dir := newSealed(t)
+
+	for i := range 2 * scanWorkers {
+		n := fmt.Sprintf("skill-%03d", i)
+		write(t, filepath.Join(dir, "skills", n, "SKILL.md"), "---\nname: "+n+"\ndescription: A skill.\n---\nBody\n")
+
+		for j := range scanWorkers {
+			write(t, filepath.Join(dir, "skills", n, "references", fmt.Sprintf("r%02d.md", j)), "a reference\n")
+		}
+	}
+
+	big := strings.Repeat("x", largeSealFile+1)
+	for i := range 4 {
+		write(t, filepath.Join(dir, "memory", fmt.Sprintf("big-%d.md", i)), big)
+	}
+
+	sealsInFlight.peak.Store(0)
+
+	if _, err := m.Reindex(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	if peak := sealsInFlight.peak.Load(); peak > scanWorkers {
+		t.Errorf("%d files were sealed at once; the bound is %d", peak, scanWorkers)
+	}
+
+	for rel, raw := range everyFile(t, dir) {
+		if !account.IsSealedFile(raw) {
+			t.Errorf("%s is still clear after the scan", rel)
+		}
+	}
+}

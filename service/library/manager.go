@@ -327,7 +327,7 @@ func (m *Manager) scanSkills(
 
 			examined.Add(1)
 
-			if _, err := sealClearTree(root, path.Join(skillDir, name)); err != nil {
+			if _, err := sealClearTreeSerial(root, path.Join(skillDir, name)); err != nil {
 				return err
 			}
 

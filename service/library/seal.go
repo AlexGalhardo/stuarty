@@ -6,7 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"path"
+	"sync"
+	"sync/atomic"
 
+	core "github.com/AlexGalhardo/stuarty/core/library"
 	"github.com/AlexGalhardo/stuarty/service/account"
 	"github.com/AlexGalhardo/stuarty/service/crashpoint"
 )
@@ -14,6 +17,31 @@ import (
 // maxSealFile is the largest clear file the product seals in place; a larger one is no entry of the library (the
 // limits of SDD-018 section 12 are far lower) and is left for the scan to list as invalid.
 const maxSealFile = 64 << 20
+
+// largeSealFile is the largest file the scan reads as part of an entry (a file of a skill, read up to twice
+// core.MaxSkillFile); a larger one waits for largeSeal.
+const largeSealFile = 2 * core.MaxSkillFile
+
+var largeSeal sync.Mutex
+
+// sealsInFlight counts the files being sealed at once, and the most there were; a test reads the peak to check the
+// bound on memory.
+var sealsInFlight inFlight
+
+type inFlight struct{ now, peak atomic.Int64 }
+
+func (f *inFlight) enter() (leave func()) {
+	n := f.now.Add(1)
+
+	for {
+		p := f.peak.Load()
+		if n <= p || f.peak.CompareAndSwap(p, n) {
+			break
+		}
+	}
+
+	return func() { f.now.Add(-1) }
+}
 
 // sealClearFile seals one clear file of the library: the sealed copy is written by an atomic rename, read back and
 // compared with what the file held, and only then is the clear one gone (the rename replaces it). A sealed file, a
@@ -36,6 +64,15 @@ func sealClearFile(root *vroot, rel string) (bool, error) {
 	if !info.Mode().IsRegular() || info.Size() > maxSealFile {
 		return false, nil
 	}
+
+	// A file larger than any entry the scan reads is sealed one at a time: the clear text, the sealed copy and the
+	// read back are each in memory, and scanWorkers of them at maxSealFile would be gigabytes.
+	if info.Size() > largeSealFile {
+		largeSeal.Lock()
+		defer largeSeal.Unlock()
+	}
+
+	defer sealsInFlight.enter()()
 
 	raw, err := root.ReadFile(rel)
 	if err != nil {
@@ -77,6 +114,55 @@ func sealClearFile(root *vroot, rel string) (bool, error) {
 
 // sealClearTree seals every clear file under dir, a few at a time, and returns how many it sealed.
 func sealClearTree(root *vroot, dir string) (int, error) {
+	files, err := clearTreeFiles(root, dir)
+	if err != nil {
+		return 0, err
+	}
+
+	jobs, sealed := newPool(), counter{}
+
+	for _, rel := range files {
+		jobs.do(func() error {
+			did, err := sealClearFile(root, rel)
+			if did {
+				sealed.add()
+			}
+
+			return err
+		})
+	}
+
+	err = jobs.wait()
+
+	return sealed.get(), err
+}
+
+// sealClearTreeSerial is sealClearTree one file after the other. A job of the scan calls it: the scan already reads
+// scanWorkers skills side by side, and a pool inside each would hold scanWorkers times as many files in memory.
+func sealClearTreeSerial(root *vroot, dir string) (int, error) {
+	files, err := clearTreeFiles(root, dir)
+	if err != nil {
+		return 0, err
+	}
+
+	sealed := 0
+
+	for _, rel := range files {
+		did, err := sealClearFile(root, rel)
+		if err != nil {
+			return sealed, err
+		}
+
+		if did {
+			sealed++
+		}
+	}
+
+	return sealed, nil
+}
+
+// clearTreeFiles lists the regular files under dir.
+func clearTreeFiles(root *vroot, dir string) ([]string, error) {
 	var files []string
 
 	var walk func(rel string, depth int) error
@@ -108,25 +194,10 @@ func sealClearTree(root *vroot, dir string) (int, error) {
 	}
 
 	if err := walk(dir, 0); err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	jobs, sealed := newPool(), counter{}
-
-	for _, rel := range files {
-		jobs.do(func() error {
-			did, err := sealClearFile(root, rel)
-			if did {
-				sealed.add()
-			}
-
-			return err
-		})
-	}
-
-	err := jobs.wait()
-
-	return sealed.get(), err
+	return files, nil
 }
 
 // SealAll seals every clear file of library/, whatever it is (an entry, the review key, the record of the built-in
