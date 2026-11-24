@@ -52,6 +52,7 @@ func All() []schema.Migration {
 		m20261121110000CreateWebhookTables(),
 		m20261121184500CeilingsToProject(),
 		m20261121200000CreateAccountsTable(),
+		m20261124110000ProjectKind(),
 		m20261124120000CreateRecordingsTable(),
 	}
 }
