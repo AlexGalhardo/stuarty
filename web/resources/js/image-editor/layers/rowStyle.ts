@@ -1,8 +1,9 @@
 import { cn } from "@/lib/cn";
 import type { Drop } from "./tree";
 
-// The look of one row of the layer panel, in the language of the rows of the video editor: a quiet hover, a
-// selection tint with a bar at the start edge (so selection is not colour alone), a dimmed row for a hidden
+// The look of one row of the layer panel, in the language of the rows of the dashboard lists (ListRow): a quiet
+// hover, the selected tint with an accent bar at the start edge (so selection is not colour alone; the
+// `--ed-selection` token is white in the light theme and would not show), a dimmed row for a hidden
 // layer and the drop marks of a drag. The row is a `group`, so its toggles can show on hover and on focus.
 export function rowClass({
 	selected,
@@ -16,7 +17,7 @@ export function rowClass({
 	return cn(
 		"group relative flex h-8 scroll-mt-12 cursor-default items-center gap-1 rounded-md pr-1 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring",
 		selected
-			? "bg-ed-selection/15 text-foreground shadow-[inset_2px_0_0_var(--color-ed-selection)]"
+			? "bg-surface-selected text-foreground shadow-[inset_2px_0_0_var(--color-accent)]"
 			: "hover:bg-surface-hover",
 		mark === "inside" && "ring-2 ring-ed-handle",
 		mark === "above" && "border-t-2 border-ed-handle",
