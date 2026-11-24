@@ -2,6 +2,8 @@ package migrations
 
 import (
 	"context"
+	"slices"
+	"strings"
 	"testing"
 
 	"github.com/AlexGalhardo/vukem/schema"
@@ -13,7 +15,7 @@ func TestRecordingsTableUpAndDown(t *testing.T) {
 	ctx := context.Background()
 	db := openDB(t)
 
-	const id = "20261124100000_create_recordings_table"
+	const id = "20261124120000_create_recordings_table"
 
 	var upTo []schema.Migration
 
@@ -74,5 +76,60 @@ func TestRecordingsTableUpAndDown(t *testing.T) {
 
 	if _, err := db.ExecContext(ctx, `SELECT 1 FROM recordings`); err == nil {
 		t.Error("Down must drop the table")
+	}
+}
+
+// Epic 78 adds 20261124110000_project_kind. The migrator refuses a pending migration that sorts before an applied
+// one, so a workspace that ran epic 78 first must still take the recordings table: its id sorts after.
+func TestRecordingsTableComesAfterTheProjectKind(t *testing.T) {
+	ctx := context.Background()
+	db := openDB(t)
+
+	const projectKind = "20261124110000_project_kind"
+
+	stand := schema.Migration{
+		ID:   projectKind,
+		Up:   func(*schema.Schema) error { return nil },
+		Down: func(*schema.Schema) error { return nil },
+	}
+
+	var applied, all []schema.Migration
+
+	for _, m := range allMigrations() {
+		if m.ID == projectKind {
+			stand = m
+			continue
+		}
+
+		if m.ID < projectKind {
+			applied = append(applied, m)
+		}
+
+		all = append(all, m)
+	}
+
+	first, err := schema.NewMigrator(db, append(applied, stand))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := first.Up(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	all = append(all, stand)
+	slices.SortFunc(all, func(a, b schema.Migration) int { return strings.Compare(a.ID, b.ID) })
+
+	later, err := schema.NewMigrator(db, all)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := later.Up(ctx); err != nil {
+		t.Fatalf("the recordings table after the project kind: %v", err)
+	}
+
+	if _, err := db.ExecContext(ctx, `SELECT 1 FROM recordings`); err != nil {
+		t.Errorf("the recordings table is missing: %v", err)
 	}
 }
