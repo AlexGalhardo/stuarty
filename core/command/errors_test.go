@@ -146,3 +146,39 @@ func TestErrorfDoesNotEchoALongValue(t *testing.T) {
 		t.Errorf("short message = %q", short.Message)
 	}
 }
+
+// VV-376: a message may repeat a value the caller sent only escaped by %q and cut at quotedMax (SDD-003 section 1.2
+// rule 9), so a value cannot forge a line, reorder the text around it or come back whole.
+func TestQuotedCallerValueComesBackEscapedAndCut(t *testing.T) {
+	hostile := []string{
+		"line one\nE_FORGED: second line",
+		"evil‮fdp⁦",
+		"nul\x00byte\r\x1b[31m",
+		strings.Repeat("‮", 5000),
+	}
+
+	unknown := NewRegistry("test").unknown
+	fontAdd := func(v string) *Error {
+		e, _ := errors.AsType[*Error](applyFontAdd(nil, &fontAddArgs{Family: v}))
+		return e
+	}
+
+	for _, v := range hostile {
+		for name, e := range map[string]*Error{"unknown command": unknown(v), "font.add family": fontAdd(v)} {
+			if e == nil {
+				t.Fatalf("%s: no error for %q", name, v[:min(len(v), 20)])
+			}
+
+			for _, r := range e.Message {
+				if r == '\n' || r == '\r' || r == 0 || r == 0x1b || (r >= 0x202A && r <= 0x202E) || (r >= 0x2066 && r <= 0x2069) {
+					t.Errorf("%s: the message has the raw character %U: %.80q", name, r, e.Message)
+					break
+				}
+			}
+
+			if len(e.Message) > 2000 {
+				t.Errorf("%s: the message is %d bytes long", name, len(e.Message))
+			}
+		}
+	}
+}
