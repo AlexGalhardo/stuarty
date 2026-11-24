@@ -50,6 +50,7 @@ Content type `application/json`. Schema: [`ProjectGetResult`](/docs/api/schemas#
 | `goal` | [`ProjectGoal`](/docs/api/schemas#projectgoal) | no |  |
 | `height` | `integer` | no |  |
 | `items` | array of [`ProjectItem`](/docs/api/schemas#projectitem) | no |  |
+| `kind` | `string` | no |  |
 | `name` | `string` | no |  |
 | `next_cursor` | `string` or `null` | no |  |
 | `production` | [`Production`](/docs/api/schemas#production) | no |  |
@@ -60,6 +61,7 @@ Content type `application/json`. Schema: [`ProjectGetResult`](/docs/api/schemas#
 | `timeline_id` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
 | `width` | `integer` | no |  |
+| `workflow` | [`Workflow`](/docs/api/schemas#workflow) | no |  |
 
 ### 400
 
@@ -304,6 +306,7 @@ puts "#{response.code} #{response.body}"
       "updated_at": "2006-01-02T15:04:05Z"
     }
   ],
+  "kind": "string",
   "name": "string",
   "next_cursor": "string",
   "production": {
@@ -321,7 +324,15 @@ puts "#{response.code} #{response.body}"
   "text": "string",
   "timeline_id": "string",
   "untrusted_notice": "string",
-  "width": 0
+  "width": 0,
+  "workflow": {
+    "current": "string",
+    "kind": "string",
+    "next": "string",
+    "steps": [
+      {}
+    ]
+  }
 }
 ```
 

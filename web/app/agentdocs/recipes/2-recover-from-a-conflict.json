@@ -21,15 +21,13 @@
 		},
 		{
 			"cmd": "edit --project prj_7k2m9x4q1b --base 1 track.update track_id=trk_f6g7h8j9k0 name=Mine",
-			"exit": 2,
-			"note": "conflict, exit 2"
+			"exit": 2
 		},
 		{
 			"cmd": "project:show prj_7k2m9x4q1b"
 		},
 		{
-			"cmd": "edit --project prj_7k2m9x4q1b --base 2 track.update track_id=trk_f6g7h8j9k0 name=Mine",
-			"note": "retry"
+			"cmd": "edit --project prj_7k2m9x4q1b --base 2 track.update track_id=trk_f6g7h8j9k0 name=Mine"
 		}
 	]
 }

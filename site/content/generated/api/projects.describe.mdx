@@ -41,12 +41,14 @@ Content type `application/json`. Schema: [`ProjectDescribeResult`](/docs/api/sch
 | `description` | `string` | no |  |
 | `goal` | [`ProjectGoal`](/docs/api/schemas#projectgoal) | no |  |
 | `items` | array of [`ProjectItem`](/docs/api/schemas#projectitem) | no |  |
+| `kind` | `string` | no |  |
 | `name` | `string` | no |  |
 | `production` | [`Production`](/docs/api/schemas#production) | no |  |
 | `project_id` | `string` | no |  |
 | `state` | `string` | no |  |
 | `text` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
+| `workflow` | [`Workflow`](/docs/api/schemas#workflow) | no |  |
 
 ### 400
 
@@ -255,6 +257,7 @@ puts "#{response.code} #{response.body}"
       "updated_at": "2006-01-02T15:04:05Z"
     }
   ],
+  "kind": "string",
   "name": "string",
   "production": {
     "has_brief": false,
@@ -268,7 +271,15 @@ puts "#{response.code} #{response.body}"
   "project_id": "string",
   "state": "string",
   "text": "string",
-  "untrusted_notice": "string"
+  "untrusted_notice": "string",
+  "workflow": {
+    "current": "string",
+    "kind": "string",
+    "next": "string",
+    "steps": [
+      {}
+    ]
+  }
 }
 ```
 

@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-A project, no timeline yet (project_item add timeline). name 4-32 letters/digits, description 64-1024, goal: SMART parts 16-280 each + due YYYY-MM-DD; all required, agents read them first. from copies a project. preset, fps: deprecated, ignored.
+A project, no timeline yet (project_item add timeline). name 4-32 letters/digits, description 64-1024, goal: SMART parts 16-280 each + due YYYY-MM-DD; all required, agents read them first. from copies one. preset, fps: ignored.
 
 ## Behaviour
 
@@ -30,6 +30,7 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | `name` | `string` | no |  |
 | `description` | `string` | no |  |
 | `goal` | `object` | no |  |
+| `kind` | `text`, `video`, `image` | no |  |
 | `preset` | `any` | no |  |
 | `fps` | `any` | no |  |
 | `id` | `string` | no | pattern `^prj_[0-9a-hjkmnp-tv-z]{10}$` |

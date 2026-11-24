@@ -26,7 +26,10 @@ type DomainInfo struct {
 const MaxDomainSummary = 160
 
 var domains = []DomainInfo{
-	{DomainProject, "Productions: projects, their timelines and images as items, the brief, bundles."},
+	{
+		DomainProject,
+		"Productions: projects of a kind (text, video, image) with their workflow steps, timelines and images as items, the brief, bundles.",
+	},
 	{
 		DomainVideo,
 		"The timeline: edit operations, history, lint, frames and sheets, export and transcribe jobs, templates.",

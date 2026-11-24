@@ -67,7 +67,7 @@ Names are proposals until task 1 writes them to SDD-000.
 - [x] 5. The service operations with member isolation. Verify: `go test ./service/... -run "ProjectKind|Workflow"` and `go test -run TestSecurity_ ./...` pass.
 - [x] 6. HTTP and CLI. Verify: `go test ./web/contract/...` passes.
 - [x] 7. MCP within the budget. Verify: `go run ./internal/tools/surfacebudget` passes and `go test ./web/app/mcp/...` passes.
-- [ ] 8. Agent docs and the generated reference. Verify: `task codegen` leaves no diff and `task lint` exits 0.
+- [x] 8. Agent docs and the generated reference. Verify: `task codegen` leaves no diff and `task lint` exits 0.
 
 ## Test strategy
 
