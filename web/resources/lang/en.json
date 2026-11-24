@@ -177,15 +177,15 @@
       "next": {
         "not_found": {
           "title": "What to do next",
-          "body": "The address may have changed, or the project may be in the trash of the projects page, where it can be restored. Your files are still on this computer."
+          "body": "The address may have changed, or the project may be in the trash of the projects page, where it can be restored."
         },
         "forbidden": {
           "title": "What to do next",
-          "body": "This needs a person who is signed in. Sign in, or do it in the Stuarty app, and try again."
+          "body": "This session is not allowed to open it. Sign in with an account that has access, then try again."
         },
         "server": {
           "title": "What to do next",
-          "body": "Something stopped on this computer. Try again in a moment. Your files are not changed by an error page."
+          "body": "Stuarty could not finish this. Try again in a moment, or go back to the projects."
         },
         "other": {
           "title": "What to do next",
