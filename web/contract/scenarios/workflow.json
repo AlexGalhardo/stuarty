@@ -1,0 +1,22 @@
+{
+	"name": "workflow",
+	"actor": "contract",
+	"steps": [
+		{"call": "ProjectCreate", "args": {"id": "prj_7k2m9x4q1b", "kind": "text", "name": "Blog post", "description": "A short vertical video made for tests: it has a script, some footage and captions, and it is made for the people who follow the channel.", "goal": {"specific": "Publish one short video that explains the idea", "measurable": "At least one hundred views in the first week", "achievable": "The footage and the script already exist", "relevant": "It brings the first audience to the channel", "time_bound": "Edit on Monday and publish on Tuesday", "due": "2999-12-31"}}},
+		{"call": "ProjectGet", "args": {"project_id": "prj_7k2m9x4q1b"}},
+		{"call": "ProjectDescribe", "args": {"project_id": "prj_7k2m9x4q1b"}},
+		{"call": "ProjectStepSkip", "args": {"project_id": "prj_7k2m9x4q1b", "step": "publication"}},
+		{"call": "ProjectGet", "args": {"project_id": "prj_7k2m9x4q1b"}},
+		{"call": "ProjectStepSkip", "args": {"project_id": "prj_7k2m9x4q1b", "step": "publication", "restore": true}},
+		{"call": "ProjectStepSkip", "args": {"project_id": "prj_7k2m9x4q1b", "step": "briefing"}, "expect_error": {"code": "E_VALIDATION"}},
+		{"call": "ProjectStepSkip", "args": {"project_id": "prj_7k2m9x4q1b", "step": "recording"}, "expect_error": {"code": "E_VALIDATION"}},
+		{"call": "ProjectItemAdd", "args": {"project_id": "prj_7k2m9x4q1b", "kind": "text", "title": "Post", "text": "The words of the post.", "text_kind": "post"}},
+		{"call": "ProjectItemAdd", "args": {"project_id": "prj_7k2m9x4q1b", "kind": "timeline", "title": "Teaser", "preset": "9:16"}},
+		{"call": "ProjectDescribe", "args": {"project_id": "prj_7k2m9x4q1b"}},
+		{"call": "ProjectStepSkip", "args": {"project_id": "prj_7k2m9x4q1b", "step": "recording"}},
+		{"call": "ProjectDescribe", "args": {"project_id": "prj_7k2m9x4q1b"}},
+		{"call": "ProjectCreate", "args": {"id": "prj_2x5c8d1f4g", "name": "Teaser video", "description": "A short vertical video made for tests: it has a script, some footage and captions, and it is made for the people who follow the channel.", "goal": {"specific": "Publish one short video that explains the idea", "measurable": "At least one hundred views in the first week", "achievable": "The footage and the script already exist", "relevant": "It brings the first audience to the channel", "time_bound": "Edit on Monday and publish on Tuesday", "due": "2999-12-31"}}},
+		{"call": "ProjectDescribe", "args": {"project_id": "prj_2x5c8d1f4g"}},
+		{"call": "ProjectList", "args": {}}
+	]
+}

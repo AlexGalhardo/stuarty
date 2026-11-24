@@ -1,6 +1,6 @@
 {
  "name": "project_get",
- "description": "Read a project as text: revision, settings, tracks top to bottom (top draws over the rest), items per track, times in seconds and frames. Use first, and for edit's revision. detail=concise: a line per item; full: every non-default field; document: whole JSON, unpaged, unbounded (tens of thousands of tokens if long: prefer concise/full); overview: whole project (brief, items, what is missing). Long projects give next_cursor.",
+ "description": "A project as text: revision, settings, tracks top to bottom (top draws over the rest), items per track, times in seconds and frames. Use first, for edit's revision. detail=concise: a line per item; full: every non-default field; document: whole JSON, unpaged, unbounded (many tokens if long: prefer concise/full); overview: whole project (brief, items, workflow, what is missing). Long: next_cursor.",
  "inputSchema": {
   "type": "object",
   "properties": {

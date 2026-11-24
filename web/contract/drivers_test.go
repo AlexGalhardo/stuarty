@@ -353,6 +353,8 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ProjectItemTrash)
 	case "ProjectItemRestore":
 		return invoke(ctx, s, svc.ProjectItemRestore)
+	case "ProjectStepSkip":
+		return invoke(ctx, s, svc.ProjectStepSkip)
 	case "BriefGet":
 		return invoke(ctx, s, svc.BriefGet)
 	case "BriefSet":
@@ -856,6 +858,22 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 		args["action"] = strings.ToLower(strings.TrimPrefix(s.Call, "ProjectItem"))
 
 		return "project_item", args, nil
+	case "ProjectStepSkip":
+		// The step is the title, as the name is for the update of a project; restore is the action unskip.
+		delete(args, "dry_run")
+
+		args["title"] = args["step"]
+		delete(args, "step")
+
+		args["action"] = "skip"
+
+		if restore, _ := args["restore"].(bool); restore {
+			args["action"] = "unskip"
+		}
+
+		delete(args, "restore")
+
+		return "project_item", args, nil
 	case "BriefGet":
 		args["action"] = "brief"
 
@@ -1023,6 +1041,8 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		State     string               `json:"state"`
 		Sections  []string             `json:"sections"`
 		Kind      string               `json:"kind"`
+		Step      string               `json:"step"`
+		Restore   bool                 `json:"restore"`
 		Files     []service.ImportFile `json:"files"`
 		WaitMS    int                  `json:"wait_ms"`
 		Items     []struct {
@@ -1123,7 +1143,7 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		argv = append(argv, flag("time-bound", a.Goal.TimeBound)...)
 		argv = append(argv, flag("due", a.Goal.Due)...)
 
-		return "project:create", append(argv, flag("id", a.ID)...), "", nil
+		return "project:create", slices.Concat(argv, flag("id", a.ID), flag("kind", a.Kind)), "", nil
 	case "ProjectGet":
 		return "project:show", append(proj, flag("detail", a.Detail)...), "", nil
 	case "Edit":
@@ -1598,6 +1618,14 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		return "item:trash", append([]string{a.ItemID}, proj...), "", nil
 	case "ProjectItemRestore":
 		return "item:restore", append([]string{a.ItemID}, proj...), "", nil
+	case "ProjectStepSkip":
+		argv = []string{a.ProjectID, a.Step}
+
+		if a.Restore {
+			argv = append(argv, "--restore")
+		}
+
+		return "project:step", argv, "", nil
 	case "BriefGet":
 		return "brief:show", proj, "", nil
 	case "BriefSet":

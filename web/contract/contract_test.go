@@ -976,6 +976,14 @@ func TestProductionScenarioIsTheSameThroughEverySurface(t *testing.T) {
 	sameThroughEverySurface(t, "production")
 }
 
+// TestWorkflowScenarioIsTheSameThroughEverySurface (epic 78): a text project and an undecided one are made, read,
+// described and listed, an optional step is skipped and restored, a required step and a step of another kind are
+// refused, and a text project that gets a timeline gains the video steps. The kind and the workflow are the same
+// on the four surfaces.
+func TestWorkflowScenarioIsTheSameThroughEverySurface(t *testing.T) {
+	sameThroughEverySurface(t, "workflow")
+}
+
 // TestCompositionSpeedScenarioIsTheSameThroughEverySurface (epic 53): a composition is placed and takes a
 // constant speed through clip.set_speed, and a curve and a reverse on it are refused with E_VALIDATION, the same
 // on the four surfaces.

@@ -107,6 +107,7 @@ func projectCreate(ctx context.Context, svc service.Service, raw json.RawMessage
 		FPS         fpsArg              `json:"fps"`
 		ID          string              `json:"id"`
 		From        string              `json:"from"`
+		Kind        string              `json:"kind"`
 	}](raw)
 	if err != nil {
 		return nil, err
@@ -130,6 +131,7 @@ func projectCreate(ctx context.Context, svc service.Service, raw json.RawMessage
 			Preset:      in.Preset,
 			FPS:         string(in.FPS),
 			ID:          in.ID,
+			Kind:        in.Kind,
 		},
 	)
 	if err != nil {
@@ -974,6 +976,18 @@ func projectItem(ctx context.Context, svc service.Service, raw json.RawMessage) 
 		}
 
 		return &toolOutput{value: upd, text: upd.Text}, nil
+	}
+
+	if in.Action == "skip" || in.Action == "unskip" {
+		// The step is the title, as the name is for update: the tool keeps its members (NFR-020).
+		step, serr := svc.ProjectStepSkip(ctx, service.ProjectStepSkipRequest{
+			ProjectID: in.ProjectID, Step: in.Title, Restore: in.Action == "unskip",
+		})
+		if serr != nil {
+			return nil, serr
+		}
+
+		return &toolOutput{value: step, text: step.Text}, nil
 	}
 
 	if in.Action == "brief" {

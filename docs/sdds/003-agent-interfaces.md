@@ -1776,7 +1776,7 @@ prj_2x5c8d1f4g "Coffee ad" r17 1080x1920 30fps 21.5s/645f items=48
 ```json
 {
   "name": "project_create",
-  "description": "A project, no timeline yet (project_item add timeline). name 4-32 letters/digits, description 64-1024, goal: SMART parts 16-280 each + due YYYY-MM-DD; all required, agents read them first. from copies a project. preset, fps: deprecated, ignored.",
+  "description": "A project, no timeline yet (project_item add timeline). name 4-32 letters/digits, description 64-1024, goal: SMART parts 16-280 each + due YYYY-MM-DD; all required, agents read them first. from copies one. preset, fps: ignored.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -1788,6 +1788,13 @@ prj_2x5c8d1f4g "Coffee ad" r17 1080x1920 30fps 21.5s/645f items=48
       },
       "goal": {
         "type": "object"
+      },
+      "kind": {
+        "enum": [
+          "text",
+          "video",
+          "image"
+        ]
       },
       "preset": {},
       "fps": {},
@@ -1853,7 +1860,7 @@ created prj_7k2m9x4q1b "Launch teaser"; it has no timeline yet: add one with pro
 ```json
 {
   "name": "project_get",
-  "description": "Read a project as text: revision, settings, tracks top to bottom (top draws over the rest), items per track, times in seconds and frames. Use first, and for edit's revision. detail=concise: a line per item; full: every non-default field; document: whole JSON, unpaged, unbounded (tens of thousands of tokens if long: prefer concise/full); overview: whole project (brief, items, what is missing). Long projects give next_cursor.",
+  "description": "A project as text: revision, settings, tracks top to bottom (top draws over the rest), items per track, times in seconds and frames. Use first, for edit's revision. detail=concise: a line per item; full: every non-default field; document: whole JSON, unpaged, unbounded (many tokens if long: prefer concise/full); overview: whole project (brief, items, workflow, what is missing). Long: next_cursor.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -3387,7 +3394,7 @@ The `image` tool is the image documents of SDD-021 behind one tool, as `template
 ```json
 {
   "name": "project_item",
-  "description": "Project items. add: timeline (id is timeline_id), text or output (export job_id); move, rename, trash, restore: item_id; brief: read, or write text (empty clears); briefing: questions, or answers {id: text}; production_kind short (default), commercial, long. Texts: text lists, reads (item_id) or writes (text; title, text_kind); revisions (revision, until); revert (revision); check: caption (network), script (wpm) or post. update: title=name, text=description, goal.",
+  "description": "Items. add: timeline (id: timeline_id), text, output (export job_id); move, rename, trash, restore: item_id; brief: read, or write text (empty clears); briefing: questions, or answers {id: text}, production_kind (default short); text: list, read (item_id) or write (text, title, text_kind); revisions (revision, until); revert (revision); check: caption (network), script (wpm), post; update: title=name, text=description, goal; skip/unskip: title=step.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -3404,7 +3411,9 @@ The `image` tool is the image documents of SDD-021 behind one tool, as `template
           "revisions",
           "revert",
           "check",
-          "update"
+          "update",
+          "skip",
+          "unskip"
         ]
       },
       "project_id": {
