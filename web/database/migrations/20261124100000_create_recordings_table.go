@@ -2,7 +2,7 @@ package migrations
 
 import "github.com/AlexGalhardo/vukem/schema"
 
-// The screen recordings (SDD-023, SDD-005 section 5.18): one row per recording, with its state and the decision of a
+// The screen recordings (SDD-025, SDD-005 section 5.18): one row per recording, with its state and the decision of a
 // person about it. The title of a captured window is sealed (SDD-005 section 5.17.2). No frame is stored here.
 func m20261124100000CreateRecordingsTable() schema.Migration {
 	return schema.Migration{

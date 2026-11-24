@@ -19,7 +19,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/recordings"
 )
 
-// The error codes of SDD-023 (SDD-000 section 8).
+// The error codes of SDD-025 (SDD-000 section 8).
 const (
 	CodeCaptureUnavailable = "E_CAPTURE_UNAVAILABLE"
 	CodeCaptureFailed      = "E_CAPTURE_FAILED"
@@ -58,7 +58,7 @@ type RecordingSource struct {
 	Name string `json:"name,omitempty" untrusted:"true"`
 }
 
-// RecordingStartRequest is SDD-023 section 9.1. FPS 0 is 30.
+// RecordingStartRequest is SDD-025 section 9.1. FPS 0 is 30.
 type RecordingStartRequest struct {
 	ProjectID string          `json:"project_id"`
 	Source    RecordingSource `json:"source"`
@@ -86,7 +86,7 @@ type RecordingPlaceRequest struct {
 	TimelineID string `json:"timeline_id,omitempty"`
 }
 
-// Recording is a recording as a surface sees it (SDD-023 section 9.2).
+// Recording is a recording as a surface sees it (SDD-025 section 9.2).
 type Recording struct {
 	ID         string          `json:"recording_id"`
 	ProjectID  string          `json:"project_id"`
@@ -566,7 +566,7 @@ func (s *svc) stopSession(ctx context.Context, id string, sess *recSession, reas
 }
 
 // recordingFor loads a recording a caller may see: one of a project the caller covers, and not a dismissed one
-// unless the caller is a person (SDD-023 section 4).
+// unless the caller is a person (SDD-025 section 4).
 func (s *svc) recordingFor(ctx context.Context, c Caller, id string) (recordings.Row, error) {
 	if !timeline.ValidID("rec", id) {
 		return recordings.Row{}, recordingNotFound()
@@ -996,7 +996,7 @@ func recordingText(v *Recording) string {
 	return "Recording " + v.ID + " was cancelled."
 }
 
-// recordingJobState is the job state an MCP caller sees for a recording (SDD-023 section 11).
+// recordingJobState is the job state an MCP caller sees for a recording (SDD-025 section 11).
 func recordingJobState(st recording.State) string {
 	switch st {
 	case recording.Prepared:
@@ -1014,7 +1014,7 @@ func recordingJobState(st recording.State) string {
 }
 
 // recordingJobStop is job_cancel of a recording: handled is true when the id is one. It is RecordingStop, so it
-// keeps what was written (SDD-023 section 11).
+// keeps what was written (SDD-025 section 11).
 func (s *svc) recordingJobStop(ctx context.Context, id string) (job *Job, handled bool, err error) {
 	if !strings.HasPrefix(id, "rec_") {
 		return nil, false, nil
@@ -1042,7 +1042,7 @@ func (s *svc) recordingJob(v *Recording) *Job {
 	return j
 }
 
-// recoverRecordings settles every recording the last process left open (SDD-023 section 10). It runs at start-up,
+// recoverRecordings settles every recording the last process left open (SDD-025 section 10). It runs at start-up,
 // before requests: no session of this process exists yet.
 func (s *svc) recoverRecordings(ctx context.Context) error {
 	rows, err := s.store.Recordings().Open(ctx)

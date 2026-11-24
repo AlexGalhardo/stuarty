@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Builds the native capture helper stuarty-capture of capture/ (ADR-0049, SDD-023, rule .agents/rules/rust.md):
+# Builds the native capture helper stuarty-capture of capture/ (ADR-0049, SDD-025, rule .agents/rules/rust.md):
 #   bash scripts/build-capture.sh        build it for this machine and copy it to capture/dist/ with its SHA-256
 #   bash scripts/build-capture.sh gate   the Rust gate of capture/: fmt, clippy, tests and cargo deny
 # An archive or an installer for Windows carries stuarty-capture.exe next to the server executable (or in
-# libexec/stuarty/): the server looks for it there (SDD-023 section 7). The helper exists on Windows only in this
+# libexec/stuarty/): the server looks for it there (SDD-025 section 7). The helper exists on Windows only in this
 # version; on another system the build works but the server answers E_CAPTURE_UNAVAILABLE.
 # Reproducible: the toolchain is the one of rust-toolchain.toml, dependencies come from Cargo.lock (--locked), the build
 # path is fixed (capture/target), SOURCE_DATE_EPOCH defaults to the commit time of HEAD and --remap-path-prefix hides the

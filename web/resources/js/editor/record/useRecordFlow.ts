@@ -31,7 +31,7 @@ export interface RecordFlow {
 	reset(): void;
 }
 
-// One recording at a time (SDD-023 section 9.1). On opening, the dialog asks the service for the sources and for
+// One recording at a time (SDD-025 section 9.1). On opening, the dialog asks the service for the sources and for
 // the recordings of the project: one still running, or one finished and waiting for a person, is picked up again,
 // so closing the dialog never loses a take. While a recording runs it asks again every second; the clock it shows
 // is the one the service reports.

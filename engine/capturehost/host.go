@@ -1,8 +1,8 @@
-// Package capturehost drives the native capture helper stuarty-capture (ADR-0049, SDD-023). The helper
+// Package capturehost drives the native capture helper stuarty-capture (ADR-0049, SDD-025). The helper
 // captures the screen and writes a fragmented MP4 through an FFmpeg child of its own; this package starts it
 // under the process policy of FFmpeg (SDD-007 6.10 and 6.11: absolute path, minimal environment, a run
 // directory, a deadline, the kill of the whole process tree) and speaks version 1 of its JSON protocol
-// (SDD-023 section 6). It decides nothing about a recording: the rules are in core/recording.
+// (SDD-025 section 6). It decides nothing about a recording: the rules are in core/recording.
 package capturehost
 
 import (

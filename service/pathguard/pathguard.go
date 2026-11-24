@@ -275,7 +275,7 @@ func (g *Guard) OpenExported(path string) (*os.File, error) {
 	return g.open(path, ownDirs)
 }
 
-// recordingDirs is the folder where the capture helper writes a screen recording (SDD-023). It holds no secret.
+// recordingDirs is the folder where the capture helper writes a screen recording (SDD-025). It holds no secret.
 var recordingDirs = []string{"recordings"}
 
 // OpenRecording is OpenImport for the file of a recording that a person confirmed: it also accepts a file

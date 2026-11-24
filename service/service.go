@@ -233,7 +233,7 @@ type Service interface {
 	WebhookDeliveryList(ctx context.Context, req WebhookDeliveriesRequest) (*WebhookDeliveriesResult, error)
 	WebhookRedeliver(ctx context.Context, req WebhookRedeliverRequest) (*WebhookDelivery, error)
 
-	// Screen recording (SDD-023). RecordingStart, RecordingConfirm and RecordingDismiss are for a person in a
+	// Screen recording (SDD-025). RecordingStart, RecordingConfirm and RecordingDismiss are for a person in a
 	// privileged browser session and answer E_PRIVILEGED_SESSION to everyone else; stopping is always allowed.
 	RecordingSources(ctx context.Context, req RecordingSourcesRequest) (*RecordingSourcesResult, error)
 	RecordingStart(ctx context.Context, req RecordingStartRequest) (*Recording, error)
@@ -408,7 +408,7 @@ type Options struct {
 	Agents *agenthost.Host
 	// WebhookTimeout is how long one delivery of an outbound webhook may take; zero is 10 s (SDD-022). Tests shorten it.
 	WebhookTimeout time.Duration
-	// Capture is the native capture helper (SDD-023); nil where capture does not exist, and then CaptureReason
+	// Capture is the native capture helper (SDD-025); nil where capture does not exist, and then CaptureReason
 	// says why (platform, web, network_mode or helper_missing) in E_CAPTURE_UNAVAILABLE.
 	Capture       Capturer
 	CaptureReason string
@@ -456,7 +456,7 @@ type svc struct {
 	doctorMu    sync.Mutex
 	doctorCaps  *ffmpeg.Capabilities
 
-	// The screen recordings of this process (SDD-023): the helper, the reason it is missing, the longest recording
+	// The screen recordings of this process (SDD-025): the helper, the reason it is missing, the longest recording
 	// and the sessions that are running.
 	capture       Capturer
 	captureReason string

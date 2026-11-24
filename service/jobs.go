@@ -552,7 +552,7 @@ func jobNotFound(id string) *Error {
 }
 
 func (s *svc) JobGet(ctx context.Context, req JobGetRequest) (*Job, error) {
-	// A recording is read as a job of kind capture, so the MCP tool list does not grow (SDD-023 section 11).
+	// A recording is read as a job of kind capture, so the MCP tool list does not grow (SDD-025 section 11).
 	if strings.HasPrefix(req.JobID, "rec_") {
 		v, err := s.RecordingGet(ctx, RecordingRef{ID: req.JobID})
 		if err != nil {
@@ -744,7 +744,7 @@ const cancelWait = 2 * time.Second
 // returned in its final state, and a second call changes nothing. The scope is
 // render; media is enough for the caller's own ingest job (SDD-007 section 5.2).
 func (s *svc) JobCancel(ctx context.Context, req JobCancelRequest) (*Job, error) {
-	// job_cancel of a recording is RecordingStop: it keeps what was written (SDD-023 section 11).
+	// job_cancel of a recording is RecordingStop: it keeps what was written (SDD-025 section 11).
 	if job, handled, err := s.recordingJobStop(ctx, req.JobID); handled {
 		return job, err
 	}

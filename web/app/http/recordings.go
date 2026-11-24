@@ -6,7 +6,7 @@ import (
 	"github.com/AlexGalhardo/vukem/web"
 )
 
-// The routes of the screen recording (SDD-023). They carry no rule: the Service decides who may start a capture
+// The routes of the screen recording (SDD-025). They carry no rule: the Service decides who may start a capture
 // (a person in a privileged browser session) and core/recording holds the states and the limits (ADR-0008).
 
 type recordingSourceIn struct {

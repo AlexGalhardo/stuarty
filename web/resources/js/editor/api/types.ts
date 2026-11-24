@@ -1346,7 +1346,7 @@ export interface ApprovalRequest {
 	expires_at: string;
 }
 
-// The screen recording of SDD-023. The dialog draws these members and sends commands; the states, the limits and
+// The screen recording of SDD-025. The dialog draws these members and sends commands; the states, the limits and
 // who may start a capture are the service's.
 export type RecordingState =
 	| "prepared"

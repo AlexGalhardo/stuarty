@@ -6,7 +6,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/engine/capturehost"
 )
 
-// Capturer is the native capture helper as the service sees it (SDD-023 section 7). The product's one
+// Capturer is the native capture helper as the service sees it (SDD-025 section 7). The product's one
 // implementation is capturehost.Live; a test supplies a fake. The service never starts a helper without having
 // checked that the caller is a person first.
 type Capturer interface {

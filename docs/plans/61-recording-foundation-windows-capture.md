@@ -20,7 +20,7 @@ A creator on Windows records the screen from Stuarty and finds the recording on 
 
 ## Scope
 
-- Modules: `spikes/capture-windows/`, `capture/` (new, the helper), `core/recording/` (new), `engine/capturehost/` (new), `service/`, the store and a migration, the HTTP, MCP and CLI adapters, a minimal record dialog in `web/resources/js/`, `desktop/` packaging of the helper, PRD-001, PRD-004, SDD-000, SDD-007, SDD-023 (new).
+- Modules: `spikes/capture-windows/`, `capture/` (new, the helper), `core/recording/` (new), `engine/capturehost/` (new), `service/`, the store and a migration, the HTTP, MCP and CLI adapters, a minimal record dialog in `web/resources/js/`, `desktop/` packaging of the helper, PRD-001, PRD-004, SDD-000, SDD-007, SDD-025 (new).
 - Video only, one display or one window, on Windows.
 - Must not touch: `renderer/`, the export pipeline, the vault.
 
@@ -67,7 +67,7 @@ Names are proposals until task 2 writes them to SDD-000.
 ## Tasks
 
 - [x] 1. Spike in `spikes/capture-windows/`: capture 1920x1080 at 60 fps for 10 minutes into fragmented MP4 through the pinned LGPL FFmpeg, and kill it once mid-way. Record dropped frames, CPU and the recovered duration on the reference machine. Verify: `ffprobe` opens both files, and the numbers are in the spike's report.
-- [x] 2. Amend PRD-001 section 7, add RF-430 to RF-442 and NFR-067, NFR-068 to PRD-004, write SDD-023 and the names in SDD-000, add the threats to SDD-007. Verify: `task lint:md` and `go run ./internal/tools/threatcheck` exit 0.
+- [x] 2. Amend PRD-001 section 7, add RF-430 to RF-442 and NFR-067, NFR-068 to PRD-004, write SDD-025 and the names in SDD-000, add the threats to SDD-007. Verify: `task lint:md` and `go run ./internal/tools/threatcheck` exit 0.
 - [x] 3. `core/recording`: the state machine and its limits, pure, with tests of every transition. Verify: `go test ./core/recording/...` passes.
 - [x] 4. The helper protocol and `capture/` with a fake source. Verify: `cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test && cargo deny check` in `capture/`.
 - [x] 5. `engine/capturehost` under the process policy, with a fake helper: start, stop, kill, timeout, malformed message. Verify: `go test ./engine/capturehost/...` passes.

@@ -15,7 +15,7 @@ import {
 } from "./recordFlow";
 import type { RecordFlow } from "./useRecordFlow";
 
-// The screens of the record dialog (SDD-023 section 12). It draws what the service said and sends the commands of
+// The screens of the record dialog (SDD-025 section 12). It draws what the service said and sends the commands of
 // the person; the state of a recording, the elapsed time and what a capture may do are the service's.
 export default function RecordPanel({
 	flow,
