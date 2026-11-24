@@ -136,3 +136,8 @@ func (c *Client) ChatSessionDelete(ctx context.Context, req service.ChatRef) (*s
 
 	return out, nil
 }
+
+// InboxList implements service.Service.
+func (c *Client) InboxList(ctx context.Context, _ service.InboxListRequest) (*service.InboxListResult, error) {
+	return get[service.InboxListResult](ctx, c, "/inbox", nil)
+}

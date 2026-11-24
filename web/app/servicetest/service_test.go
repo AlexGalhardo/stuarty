@@ -802,6 +802,10 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.ChatActivityGet(ctx, service.ChatRef{SessionID: "cht_0000000001"})
 			return err
 		},
+		"InboxList": func() error {
+			_, err := e.svc.InboxList(ctx, service.InboxListRequest{})
+			return err
+		},
 		"ChatSessionDelete": func() error {
 			_, err := e.svc.ChatSessionDelete(ctx, service.ChatRef{SessionID: "cht_0000000001"})
 			return err

@@ -37,6 +37,7 @@ func (e *Events) publishApproval(ev *service.Event) {
 	ctx := context.Background()
 
 	_ = e.hub.Publish(ctx, approvalsTopic, frame)
+	e.PublishInbox()
 
 	if ev.Owner != "" {
 		_ = e.hub.Publish(ctx, approvalsTopicOf(ev.Owner), frame)
