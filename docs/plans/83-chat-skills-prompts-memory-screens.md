@@ -51,8 +51,8 @@ None new.
 - [x] 1. The conversation: messages, tool lines and composer. Verify: `cd web && bun run test -- ChatConversation ChatEventView` passes.
 - [x] 2. The permission card with allow and reject once. Verify: `cd web && bun run e2e -- agent-chat` passes.
 - [x] 3. Agent setup and its states. Verify: `cd web && bun run test -- ProfileSetup` passes.
-- [ ] 4. Skills. Verify: `cd web && bun run test -- Library` passes.
-- [ ] 5. Prompts and memory. Verify: `cd web && bun run typecheck && bun run check:i18n` pass.
+- [x] 4. Skills. Verify: `cd web && bun run test -- Library` passes.
+- [x] 5. Prompts and memory. Verify: `cd web && bun run typecheck && bun run check:i18n` pass.
 - [ ] 6. Check 1440, 1280 and 390 px in both themes. Verify: `cd web && bun run e2e -- a11y` passes.
 
 ## Test strategy

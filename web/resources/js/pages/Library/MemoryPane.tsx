@@ -1,6 +1,7 @@
 import { type FormEvent, type ReactNode, useEffect, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { Notice } from "@/components/Notice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -111,8 +112,8 @@ export default function MemoryPane({
 		};
 	}, [client, name]);
 
-	async function save(event: FormEvent<HTMLFormElement>): Promise<void> {
-		event.preventDefault();
+	async function save(event?: FormEvent<HTMLFormElement>): Promise<void> {
+		event?.preventDefault();
 		setBusy(true);
 		setFailure(null);
 		setSaved(false);
@@ -164,9 +165,35 @@ export default function MemoryPane({
 				</div>
 			)}
 			{entry !== null && !entry.kept && (
-				<p role="status" className="text-sm text-muted-foreground">
-					{t("ui.library.memory.pending_hint")}
-				</p>
+				<Notice
+					tone="warning"
+					role="status"
+					title={t("ui.library.memory.pending_title")}
+					data-testid="memory-pending"
+					actions={
+						<>
+							<Button
+								type="button"
+								variant="outline"
+								disabled={busy}
+								onClick={() => void remove()}
+							>
+								{t("ui.library.memory.reject")}
+							</Button>
+							<Button
+								type="button"
+								disabled={busy || !privileged}
+								aria-describedby={privileged ? undefined : "keep-person-only"}
+								onClick={() => void save()}
+							>
+								{t("ui.library.memory.keep")}
+							</Button>
+						</>
+					}
+				>
+					<p>{t("ui.library.memory.pending_hint")}</p>
+					<p>{t("ui.library.memory.reject_hint")}</p>
+				</Notice>
 			)}
 			<Tabs defaultValue="edit">
 				<TabsList>
@@ -188,7 +215,7 @@ export default function MemoryPane({
 									maxLength={64}
 									onChange={(e) => setNewName(e.target.value)}
 								/>
-								<p className="text-xs text-muted-foreground">
+								<p className="text-xs text-text-muted">
 									{t("ui.library.field.name_hint")}
 								</p>
 							</div>
@@ -236,10 +263,7 @@ export default function MemoryPane({
 										</option>
 									))}
 								</select>
-								<p
-									id="memory-scope-hint"
-									className="text-xs text-muted-foreground"
-								>
+								<p id="memory-scope-hint" className="text-xs text-text-muted">
 									{t("ui.library.scope.hint")}
 								</p>
 							</div>
@@ -255,19 +279,14 @@ export default function MemoryPane({
 							</div>
 						</div>
 						<div className="flex flex-wrap gap-2">
-							<Button
-								type="submit"
-								disabled={busy || (pending && !privileged)}
-								aria-describedby={
-									pending && !privileged ? "keep-person-only" : undefined
-								}
-							>
-								{pending
-									? t("ui.library.memory.keep")
-									: t("ui.library.action.save")}
-							</Button>
+							{/* a note that waits is kept (with these fields) or rejected from the notice above */}
+							{!pending && (
+								<Button type="submit" disabled={busy}>
+									{t("ui.library.action.save")}
+								</Button>
+							)}
 							{pending && <PersonOnlyNote id="keep-person-only" />}
-							{name !== null && (
+							{name !== null && !pending && (
 								<Button
 									type="button"
 									variant="outline"

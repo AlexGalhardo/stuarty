@@ -1,6 +1,7 @@
 import { type FormEvent, type ReactNode, useEffect, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -127,7 +128,22 @@ export default function PromptPane({
 	return (
 		<div className="flex flex-col gap-3" data-testid="prompt-pane">
 			{entry !== null && (
-				<h2 className="text-lg font-semibold">{entry.name}</h2>
+				<div className="flex flex-col gap-1">
+					<h2 className="text-lg font-semibold break-all">{entry.name}</h2>
+					{variables.length > 0 && (
+						<p
+							className="flex flex-wrap items-center gap-1 text-sm text-text-muted"
+							data-testid="prompt-variables"
+						>
+							{t("ui.library.prompt.variables")}
+							{variables.map((variable) => (
+								<StatusBadge key={variable} status="neutral">
+									{`{{${variable}}}`}
+								</StatusBadge>
+							))}
+						</p>
+					)}
+				</div>
 			)}
 			<Tabs defaultValue="edit">
 				<TabsList>
@@ -150,7 +166,7 @@ export default function PromptPane({
 									required
 									onChange={(e) => setNewName(e.target.value)}
 								/>
-								<p className="text-xs text-muted-foreground">
+								<p className="text-xs text-text-muted">
 									{t("ui.library.field.name_hint")}
 								</p>
 							</div>
@@ -176,7 +192,7 @@ export default function PromptPane({
 								required
 								onChange={(e) => setBody(e.target.value)}
 							/>
-							<p className="text-xs text-muted-foreground">
+							<p className="text-xs text-text-muted">
 								{t("ui.library.prompt.variables_hint")}
 							</p>
 						</div>
@@ -203,13 +219,13 @@ export default function PromptPane({
 				</TabsContent>
 				<TabsContent value="preview">
 					{name === null ? (
-						<p className="text-sm text-muted-foreground">
+						<p className="text-sm text-text-muted">
 							{t("ui.library.prompt.save_first")}
 						</p>
 					) : (
 						<div className="flex flex-col gap-3">
 							{variables.length === 0 && (
-								<p className="text-sm text-muted-foreground">
+								<p className="text-sm text-text-muted">
 									{t("ui.library.prompt.no_variables")}
 								</p>
 							)}
