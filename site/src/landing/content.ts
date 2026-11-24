@@ -229,13 +229,6 @@ export const roadmap = {
 			epics: [64],
 		},
 		{
-			id: "screens",
-			title: "More redesigned screens",
-			text: "The publishing and approvals screens, redrawn on the same design as the home, the projects, the writing screens and both editors.",
-			state: "planned",
-			epics: [82],
-		},
-		{
 			id: "metrics",
 			title: "Metrics of published posts",
 			text: "How each published post performs, read from your own accounts.",
