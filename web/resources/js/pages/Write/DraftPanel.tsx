@@ -18,6 +18,7 @@ import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
 import type { Connection, ModelView } from "../../editor/api/types";
 import type { DraftJob, TextItem, WritingClient } from "./client";
+import { aiTextConnections } from "./draftConnections";
 
 // How often a job that waits or runs is read again.
 export const POLL_MS = 1500;
@@ -53,13 +54,10 @@ export default function DraftPanel({
 
 	useEffect(() => {
 		let live = true;
-		api
-			.listConnections()
-			.then((result) => {
+		Promise.all([api.listProviders(), api.listConnections()])
+			.then(([providers, result]) => {
 				if (!live) return;
-				const text = result.connections.filter((c) =>
-					c.accepts.includes("text"),
-				);
+				const text = aiTextConnections(providers.providers, result.connections);
 				setConnections(text);
 				setConnection((current) => current || (text[0]?.id ?? ""));
 			})
