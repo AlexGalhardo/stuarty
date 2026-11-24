@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.51.0] - 2026-11-24
+
+### Added
+
+- **command:** Add caption.apply_style and caption.list_styles ([3af9f51](https://github.com/AlexGalhardo/stuarty/commit/3af9f51d83466ad30f11182dff04d491625e65b5))
+- **command:** Add clip.blur_region ([7e03e73](https://github.com/AlexGalhardo/stuarty/commit/7e03e732dce44e470da443f4c79054281fe049c1))
+- **command:** Add audio.apply_voice_preset ([8e80c4f](https://github.com/AlexGalhardo/stuarty/commit/8e80c4f476977bd6492dba8c754500329a132c47))
+- **ui:** Add the caption style gallery, the blur region tool and the studio voice action ([4e08f85](https://github.com/AlexGalhardo/stuarty/commit/4e08f859d04fd9867ea1f5df8694d027f9a5cb85))
+- **ui:** Redesign the connections page and its setup guides ([ab16d2c](https://github.com/AlexGalhardo/stuarty/commit/ab16d2ce6d8ac852bf5ca2c869dd25b5edacabe7))
+- **ui:** Redesign the settings page into sections ([8e3d5c9](https://github.com/AlexGalhardo/stuarty/commit/8e3d5c924ad6b91285cfdbff41632474d40dbaa2))
+- **ui:** Redesign the API keys page ([ae41691](https://github.com/AlexGalhardo/stuarty/commit/ae41691a04eae5fe31a7ef44b73acc851231b21e))
+- **ui:** Redesign the webhooks page ([ab3ded8](https://github.com/AlexGalhardo/stuarty/commit/ab3ded8bb7de8b79686cd368dec11226b84ede10))
+- **ui:** Redesign create account, recovery key, sign in and recover ([df2ea08](https://github.com/AlexGalhardo/stuarty/commit/df2ea08414c93cd68db5ff9b2c7b67feccd1a27b))
+- **ui:** Redesign the error page with the next step ([93b3d63](https://github.com/AlexGalhardo/stuarty/commit/93b3d63d88225452ae9b1c096194d2d481e86cd3))
+
+### Removed
+
+- **ffmpeg:** Drop the hard context deadline, a job context already has one ([d8204dc](https://github.com/AlexGalhardo/stuarty/commit/d8204dca284852e99af3d8b6ee2ba19c1a93e1a2))
+
+### Fixed
+
+- **ui:** Show caption specimens on the dark canvas and say what hides an edge ([64aebee](https://github.com/AlexGalhardo/stuarty/commit/64aebee5765cff689cec03e1610d630ba86cb865))
+- **cli:** Give back the agent skill lines the epic cut to fit ([8ad2488](https://github.com/AlexGalhardo/stuarty/commit/8ad24888ed5b76363d8e9f48f65ff856297af75f))
+- **site:** Read the error codes of every file of service when mapping statuses ([9001371](https://github.com/AlexGalhardo/stuarty/commit/90013715fa37f4c1a35fe09b92f7cdb2e37094e7))
+- **ui:** Isolate the webhook name in the confirmation and secret titles ([a11fdc9](https://github.com/AlexGalhardo/stuarty/commit/a11fdc95b4bbec5ae1c716de5dc242dfdbc1a65c))
+- **ingest:** Wait a bounded time for a closed file before removing artifacts ([010b719](https://github.com/AlexGalhardo/stuarty/commit/010b719cf27cb1d018305c7dd9e3e8f02e9a46a5))
+- **service:** Cap the pending event deliveries of a webhook ([8b50e1e](https://github.com/AlexGalhardo/stuarty/commit/8b50e1eced22216e91dfd409c4a14817e5f5c399))
+- **ingest:** Name the windows error codes as the linter asks ([48bcbcc](https://github.com/AlexGalhardo/stuarty/commit/48bcbccee1a54ec74080e6f0d9255b259f1ff14a))
+- **timeline:** Refuse a project font family that font.add would refuse ([19669c6](https://github.com/AlexGalhardo/stuarty/commit/19669c61db3fced0f461439113e98efebb7ea09c))
+- **ingest:** Wait for a held artifact on windows only ([ea8016b](https://github.com/AlexGalhardo/stuarty/commit/ea8016b44cc51e93a10785669eaaa06e53f008dc))
+- **ffmpeg:** Give every run the hard end of its own kind of work ([7bb3036](https://github.com/AlexGalhardo/stuarty/commit/7bb30361fce630700a9f4965f909842e8f5970de))
+- **ffmpeg:** Keep the deadline earned while other runs shared the machine ([7a37331](https://github.com/AlexGalhardo/stuarty/commit/7a373319a275997a1100932305a2c5974f94df10))
+- **ui:** Keep a long value of a data row inside its card ([7dcccb7](https://github.com/AlexGalhardo/stuarty/commit/7dcccb7645bb8ba3550019ace9fe8082b02cfbac))
+- **ui:** Say on the error page only what holds in both modes ([808b52f](https://github.com/AlexGalhardo/stuarty/commit/808b52ff1d0a0c91f7b5469b7c2a0687de1005a7))
+- **ui:** Title the connection list as every connection and word the vault note by ADR-0033 ([ca55bbd](https://github.com/AlexGalhardo/stuarty/commit/ca55bbd2cf44947ebd9240df16764aa3ecc96693))
+- **ui:** Keep the empty webhooks and keys lists from repeating their titles ([a56c582](https://github.com/AlexGalhardo/stuarty/commit/a56c582ee76cfdb64c1cb6c842d94ba7a7cd5201))
+- **ui:** Say the studio is locked on the sign-in page only when it is ([f45bee3](https://github.com/AlexGalhardo/stuarty/commit/f45bee38563d8479ae1aa5f3dee0faf03b25b132))
+- **ui:** Wrap the settings section list on a phone instead of scrolling it ([61a589c](https://github.com/AlexGalhardo/stuarty/commit/61a589c59924d1d513f4438aacec096ae3d8dfd1))
+- **ui:** Copy a new API key secret without throwing where there is no clipboard ([f9085a2](https://github.com/AlexGalhardo/stuarty/commit/f9085a2822dec6ca858a926ce91946e505e00c57))
+- **ui:** Wrap the transcription model and install row at 320 px ([d6bb7b3](https://github.com/AlexGalhardo/stuarty/commit/d6bb7b3b7d47d3c5e70ee5f4ef69ea7fc2bcbf69))
+- **ui:** Keep the sections of connections, keys and webhooks to the window width ([8a373f9](https://github.com/AlexGalhardo/stuarty/commit/8a373f9938dd14d79c946f181b80bbff377f912a))
+
 ## [0.50.0] - 2026-11-24
 
 ### Added
@@ -2413,7 +2455,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.50.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.51.0...HEAD
+[0.51.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.50.0...v0.51.0
 [0.50.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.49.0...v0.50.0
 [0.49.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.48.0...v0.49.0
 [0.48.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.47.0...v0.48.0
