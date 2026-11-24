@@ -7,6 +7,7 @@ import CaptionPanel from "./CaptionPanel";
 import type { FlowStep, ProjectFlow, TextItem, WritingClient } from "./client";
 import { PRESETS } from "./DraftPanel";
 import PostPanel from "./PostPanel";
+import { CompareView } from "./RevisionsPanel";
 import ScriptPanel from "./ScriptPanel";
 
 // The panels read the service in effects, which a server render does not run: what is drawn here is the first
@@ -101,5 +102,38 @@ describe("the panels share one frame", () => {
 		expect(html).toContain("Write some narration to see how long it takes.");
 		expect(html).toContain("Write the caption to see the counters.");
 		expect(html).toContain("Save the post to see its check.");
+	});
+});
+
+describe("the comparison of two revisions", () => {
+	test("draws a revision of hostile markup as text, on both sides", () => {
+		const html = renderToString(
+			<Frame>
+				<CompareView
+					comparison={{
+						from: 1,
+						to: 2,
+						coarse: false,
+						hunks: [
+							{ op: "equal", text: "<b>stays</b>" },
+							{ op: "removed", text: '<img src=x onerror="alert(1)">' },
+							{ op: "added", text: "<script>alert(2)</script>" },
+						],
+					}}
+					latest={2}
+					busy={false}
+					onRestore={() => {}}
+				/>
+			</Frame>,
+		);
+		expect(html).not.toContain("<img");
+		expect(html).not.toContain("<script");
+		expect(html).not.toContain("<b>");
+		expect(html).toContain("&lt;img src=x onerror=&quot;alert(1)&quot;&gt;");
+		expect(html).toContain("&lt;script&gt;alert(2)&lt;/script&gt;");
+		expect(html.match(/&lt;b&gt;stays&lt;\/b&gt;/g)?.length).toBe(2);
+		// Only the older revision can be restored; restoring makes a new revision.
+		expect(html).toContain("Restore revision 1");
+		expect(html).not.toContain("Restore revision 2");
 	});
 });
