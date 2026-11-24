@@ -3642,6 +3642,17 @@
         "caption": "Caption",
         "targets": "Accounts",
         "no_targets": "No account yet. Add one to plan where this goes.",
+        "cannot_take": "takes {takes}, not {kind}",
+        "takes_nothing": "nothing it has told Stuarty about",
+        "takes_word": {
+          "text": "text",
+          "image": "images",
+          "video": "video",
+          "audio": "audio",
+          "metadata": "metadata",
+          "document": "documents",
+          "thumbnail": "thumbnails"
+        },
         "target": "Account {number}",
         "account": "Account",
         "at": "Date and time",
