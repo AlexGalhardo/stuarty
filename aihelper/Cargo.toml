@@ -1,0 +1,26 @@
+[package]
+name = "stuarty-aihelper"
+version = "0.0.0"
+edition = "2024"
+license = "MIT"
+publish = false
+description = "The local AI helper of Stuarty: runs ONNX models over raw frames (ADR-0050)."
+
+[lints.rust]
+unsafe_code = "deny"
+
+[lints.clippy]
+all = { level = "deny", priority = -1 }
+
+# `ort` is the one approved crate (D-139, .agents/rules/rust.md item 2). It is used in its
+# load-dynamic mode: the official ONNX Runtime library is loaded from a path the server passes, so
+# nothing is downloaded at build time.
+[dependencies]
+ort = { version = "=2.0.0-rc.15", default-features = false, features = ["std", "load-dynamic", "directml"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = "debuginfo"

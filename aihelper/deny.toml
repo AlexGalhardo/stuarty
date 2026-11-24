@@ -1,0 +1,27 @@
+# The licence allowlist is the one of internal/tools/notices (SDD-009 section 12.2), as in
+# renderer/deny.toml (rule .agents/rules/rust.md 3). A Go test of internal/tools/notices keeps the lists
+# consistent: never add a licence to one without the other.
+
+[graph]
+targets = ["x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
+
+[licenses]
+allow = [
+	"MIT",
+	"Apache-2.0",
+	"BSD-2-Clause",
+	"BSD-3-Clause",
+	"ISC",
+	"Zlib",
+	"0BSD",
+]
+confidence-threshold = 0.93
+unused-allowed-license = "allow"
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

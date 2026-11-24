@@ -65,6 +65,7 @@ spikes/**/models/
 
 # Rust renderer build output (ADR-0029)
 /renderer/target/
+/aihelper/target/
 /renderer/dist/
 /capture/target/
 /capture/dist/
