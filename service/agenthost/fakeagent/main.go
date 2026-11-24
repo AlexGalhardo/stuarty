@@ -412,6 +412,21 @@ func callMCP(text string) string {
 		args = fields[2]
 	}
 
+	// Like a real agent, announce the call before it is made and finish it after: the title names the
+	// server and the tool, and the arguments carry the action.
+	var in struct {
+		Action string `json:"action"`
+	}
+
+	_ = json.Unmarshal([]byte(args), &in)
+
+	update(map[string]any{
+		"sessionUpdate": "tool_call", "toolCallId": "mcp_call", "title": "mcp__stuarty__" + fields[1], "kind": "other",
+		"status": "in_progress", "rawInput": map[string]any{"action": in.Action},
+	})
+
+	defer update(map[string]any{"sessionUpdate": "tool_call_update", "toolCallId": "mcp_call", "status": "completed"})
+
 	body := `{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":` + strconv.Quote(fields[1]) +
 		`,"arguments":` + args + `}}`
 

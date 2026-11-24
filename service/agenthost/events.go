@@ -384,6 +384,10 @@ func (r *recorder) Tool(u Update) bool {
 			ev.Tool.Kind = r.scrub(u.Tool.Kind)
 		}
 
+		if u.HasTool["action"] {
+			ev.Tool.Action = r.scrub(u.Tool.Action)
+		}
+
 		if u.HasTool["status"] {
 			ev.Tool.Status = u.Tool.Status
 		}
@@ -400,6 +404,7 @@ func (r *recorder) Tool(u Update) bool {
 
 	tool := *u.Tool
 	tool.Title, tool.Kind, tool.Output = r.scrub(tool.Title), r.scrub(tool.Kind), r.scrub(tool.Output)
+	tool.Action = r.scrub(tool.Action)
 	ev := chat.Event{Kind: chat.KindToolCall, Tool: &tool}
 
 	if !r.next(&ev) {

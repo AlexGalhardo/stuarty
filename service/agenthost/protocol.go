@@ -188,6 +188,7 @@ func ParseUpdate(params json.RawMessage) (Update, bool) {
 			Title      *string         `json:"title"`
 			ToolKind   *string         `json:"kind"`
 			Status     *string         `json:"status"`
+			RawInput   json.RawMessage `json:"rawInput"`
 			Entries    []struct {
 				Content  string `json:"content"`
 				Priority string `json:"priority"`
@@ -243,6 +244,16 @@ func ParseUpdate(params json.RawMessage) (Update, bool) {
 
 		if p.Update.ToolKind != nil {
 			u.Tool.Kind, u.HasTool["kind"] = clean(*p.Update.ToolKind, 32), true
+		}
+
+		// The arguments of a call are kept for one thing: the action member, a short word that tells which
+		// of its actions a tool of Stuarty runs (SDD-017 section 8.1). The rest is never stored.
+		var args struct {
+			Action string `json:"action"`
+		}
+
+		if json.Unmarshal(p.Update.RawInput, &args) == nil && args.Action != "" && len(args.Action) <= 32 {
+			u.Tool.Action, u.HasTool["action"] = clean(args.Action, 32), true
 		}
 
 		u.Tool.Status = chat.ToolPending
