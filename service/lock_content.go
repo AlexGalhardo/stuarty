@@ -91,3 +91,32 @@ func (p *audioPreviews) reset() {
 
 	p.known, p.order = nil, nil
 }
+
+// sealCheck is the doctor line for the encryption of the workspace (ADR-0053, SDD-005 section 5.17.4): whether an
+// account exists and whether everything it covers is sealed. It reads no content.
+func (s *svc) sealCheck(ctx context.Context) DoctorCheck {
+	check := DoctorCheck{Name: "workspace.seal", OK: true}
+
+	// Without a gate there is no account manager in this process (network mode, a test): nothing is sealed.
+	if s.gate == nil || s.store == nil {
+		check.Detail = "no account in this process: nothing is sealed"
+
+		return check
+	}
+
+	rec, err := s.store.Accounts().Get(ctx)
+
+	switch {
+	case errors.Is(err, account.ErrNoAccount):
+		check.Detail = "no account: nothing is sealed"
+	case err != nil:
+		check.OK, check.Detail = false, "the account record cannot be read"
+	case rec.SealVersion >= account.SealedAll:
+		check.Detail = "everything the account covers is sealed (version 1)"
+	default:
+		check.Detail = "the documents, the edit log and the asset notes are not sealed yet (version 0)"
+		check.Hint = "they are sealed at the next unlock"
+	}
+
+	return check
+}

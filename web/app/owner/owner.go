@@ -109,9 +109,11 @@ type Owner struct {
 	legacyKeys vault.KeyProvider
 	// accountFault is the seam of a test: it may fail a stage of the creation of the account.
 	accountFault func(stage string) error
-	log          *slog.Logger
-	Queue        *queue.Queue
-	Token        string
+	// migrateWith is the seam of a test: the chain that migrates a document, in place of timeline.Migrate.
+	migrateWith func(timeline.RawDoc) (timeline.RawDoc, error)
+	log         *slog.Logger
+	Queue       *queue.Queue
+	Token       string
 	// runtimeSecret is the per-run secret of network mode, the key of its handshake.
 	runtimeSecret string
 	Events        *events.Events
@@ -280,14 +282,23 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		return err
 	}
 
-	// Step 5 of the start-up order (SDD-005 section 7): documents below the current schema.
-	migrated, err := service.MigrateStoredDocuments(ctx, st, service.MigrateOptions{NowMs: cfg.Now().UnixMilli()})
-	if err != nil {
-		return err
+	// An account made before ADR-0053 holds its documents, edit log and asset notes in clear text until the first
+	// unlock seals them (SDD-005 section 5.17.4): that comes before anything reads a document.
+	if o.Account != nil {
+		o.Account.OnUnlock(func() { o.sealStageTwo(context.WithoutCancel(ctx), cfg) })
 	}
 
-	if migrated != (service.MigrateResult{}) {
-		cfg.Log.InfoContext(ctx, "documents migrated", "projects", migrated.Projects, "templates", migrated.Templates)
+	// Step 5 of the start-up order (SDD-005 section 7): documents below the current schema. With an account the
+	// documents are sealed and no key is in memory yet, so the step runs at the unlock (ADR-0053 item 6); every
+	// operation is E_LOCKED until then, so nothing reads an older document in between.
+	if o.Account != nil && o.Account.State() != account.StateNone {
+		o.Account.OnUnlock(func() {
+			if err := o.migrateDocuments(context.WithoutCancel(ctx), cfg); err != nil {
+				cfg.Log.ErrorContext(ctx, "the documents could not be migrated at the unlock", "error", err)
+			}
+		})
+	} else if err := o.migrateDocuments(ctx, cfg); err != nil {
+		return err
 	}
 
 	if err := o.authSetup(ctx, cfg); err != nil {
@@ -466,8 +477,15 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		return err
 	}
 
-	// The library of a new workspace holds the starter templates; later starts add nothing.
-	if serr := o.seedTemplates(ctx, st); serr != nil {
+	// The library of a new workspace holds the starter templates; later starts add nothing. The templates are
+	// documents: with an account they are sealed, so a locked start seeds them at the unlock (ADR-0053 item 6).
+	if o.Account != nil && o.Account.State() != account.StateNone {
+		o.Account.OnUnlock(func() {
+			if serr := o.seedTemplates(context.WithoutCancel(ctx), st); serr != nil {
+				cfg.Log.ErrorContext(ctx, "the templates of the product could not be seeded at the unlock", "error", serr)
+			}
+		})
+	} else if serr := o.seedTemplates(ctx, st); serr != nil {
 		return serr
 	}
 

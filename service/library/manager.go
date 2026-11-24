@@ -53,6 +53,13 @@ type Option func(*Manager)
 // files are clear text.
 func WithFiles(s account.FileSealer) Option { return func(m *Manager) { m.files.seal = s } }
 
+// IndexSize is how many entries the index holds: zero after Drop, until the next scan.
+func (m *Manager) IndexSize(ctx context.Context) (int, error) {
+	rows, err := m.idx.All(ctx)
+
+	return len(rows), err
+}
+
 // Drop forgets what the key made readable: the index and the review key held in memory. It runs at lock, so no
 // index and no key outlives the data key (ADR-0053).
 func (m *Manager) Drop(ctx context.Context) error {
