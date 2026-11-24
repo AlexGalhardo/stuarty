@@ -7,6 +7,7 @@ import {
 } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { Notice } from "@/components/Notice";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -22,6 +23,8 @@ import type { DraftJob, TextItem, WritingClient } from "./client";
 export const POLL_MS = 1500;
 const FINAL = new Set(["succeeded", "failed", "cancelled"]);
 const NETWORKS = ["youtube", "instagram", "facebook", "x", "tiktok"];
+// The text actions the panel starts from: they fill the instruction, and the person can change it before asking.
+export const PRESETS = ["draft", "rewrite", "shorten"] as const;
 
 // The draft with a model (SDD-019 sections 6 and 11): the person picks a connection and a model, says what to write
 // and sees the estimate before anything is asked. The job waits in the approval queue like any costly generation;
@@ -157,10 +160,10 @@ export default function DraftPanel({
 	return (
 		<section
 			aria-labelledby="draft-heading"
-			className="flex flex-col gap-2"
+			className="flex flex-col gap-3 border-t border-border pt-4"
 			data-testid="draft-panel"
 		>
-			<h3 id="draft-heading" className="font-medium">
+			<h3 id="draft-heading" className="text-base font-semibold text-text">
 				{t("ui.write.draft.heading")}
 			</h3>
 			<p className="text-sm text-muted-foreground">
@@ -231,6 +234,22 @@ export default function DraftPanel({
 							</select>
 						</div>
 					)}
+					<fieldset className="flex min-w-0 flex-wrap items-center gap-2">
+						<legend className="sr-only">{t("ui.write.draft.presets")}</legend>
+						{PRESETS.map((id) => (
+							<Button
+								key={id}
+								type="button"
+								variant="outline"
+								size="sm"
+								onClick={() =>
+									setInstruction(t(`ui.write.draft.preset_text.${id}`))
+								}
+							>
+								{t(`ui.write.draft.preset.${id}`)}
+							</Button>
+						))}
+					</fieldset>
 					<div className="flex min-w-0 max-w-full flex-col gap-1">
 						<Label htmlFor="draft-instruction">
 							{t("ui.write.draft.instruction")}
@@ -280,12 +299,18 @@ export default function DraftPanel({
 					</p>
 				)}
 				{waiting && (
-					<p data-testid="draft-waiting">
-						{t("ui.write.draft.waiting")}{" "}
-						<a className="underline" href="/approvals">
-							{t("ui.write.draft.open_approvals")}
-						</a>
-					</p>
+					<Notice
+						tone="warning"
+						title={t("ui.write.draft.waiting")}
+						data-testid="draft-waiting"
+						actions={
+							<a className="underline" href="/approvals">
+								{t("ui.write.draft.open_approvals")}
+							</a>
+						}
+					>
+						{t("ui.write.draft.waiting_body")}
+					</Notice>
 				)}
 				{running && <p>{t("ui.write.draft.running")}</p>}
 				{job?.state === "succeeded" && text !== undefined && (

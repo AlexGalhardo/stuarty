@@ -4138,6 +4138,19 @@
         "diff_none": "No paragraph changed.",
         "diff_coarse": "The texts are too long to compare paragraph by paragraph; all of one is shown against all of the other."
       },
+      "agent": {
+        "heading": "The agent",
+        "intro": "What the agent is doing in this project. Anything that costs money or publishes waits for your approval.",
+        "text_only": "This project is text only",
+        "text_only_body": "The agent offers text actions here: draft, rewrite and shorten. Cut, video caption and export do not apply.",
+        "reading": "Reading what the agent is doing.",
+        "no_session": "No agent session has started in this project yet.",
+        "failed": "What the agent is doing could not be read.",
+        "retry": "Try again",
+        "refresh": "Read again",
+        "step": "Now in the path: {step}. {actor}.",
+        "step_tool": "operation {tool}"
+      },
       "draft": {
         "heading": "Draft with a model",
         "intro": "A model writes a draft as a new revision. You see the estimated cost first, and the draft waits for your approval.",
@@ -4150,6 +4163,18 @@
         "start": "Ask for the draft",
         "estimated": "Estimated cost: {cost}.",
         "waiting": "Waiting for your approval.",
+        "waiting_body": "The model writes nothing until you approve this request.",
+        "presets": "Start from",
+        "preset": {
+          "draft": "Draft",
+          "rewrite": "Rewrite",
+          "shorten": "Shorten"
+        },
+        "preset_text": {
+          "draft": "Write a first draft of this text from the brief of the project.",
+          "rewrite": "Rewrite the text in a clearer and more direct voice, keeping its meaning.",
+          "shorten": "Shorten the text by a third, keeping the points that matter."
+        },
         "open_approvals": "Open the approval queue",
         "running": "The model is writing.",
         "done": "The draft is revision {revision}. It cost {cost}.",

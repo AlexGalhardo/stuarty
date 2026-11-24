@@ -4138,8 +4138,21 @@
         "diff_none": "Nenhum parágrafo mudou.",
         "diff_coarse": "Os textos são longos demais para comparar parágrafo a parágrafo; um aparece inteiro contra o outro inteiro."
       },
+      "agent": {
+        "heading": "O agente",
+        "intro": "O que o agente está fazendo neste projeto. Tudo o que custa dinheiro ou publica espera a sua aprovação.",
+        "text_only": "Este projeto é só de texto",
+        "text_only_body": "O agente oferece aqui ações de texto: rascunhar, reescrever e encurtar. Corte, legenda de vídeo e exportação não se aplicam.",
+        "reading": "Lendo o que o agente está fazendo.",
+        "no_session": "Nenhuma sessão do agente começou neste projeto ainda.",
+        "failed": "Não foi possível ler o que o agente está fazendo.",
+        "retry": "Tentar de novo",
+        "refresh": "Ler de novo",
+        "step": "Agora no caminho: {step}. {actor}.",
+        "step_tool": "operação {tool}"
+      },
       "draft": {
-        "heading": "Rascunho com um modelo",
+        "heading":"Rascunho com um modelo",
         "intro": "Um modelo escreve um rascunho como uma nova revisão. Você vê o custo estimado antes, e o rascunho espera a sua aprovação.",
         "connection": "Conexão",
         "model": "Modelo",
@@ -4150,6 +4163,18 @@
         "start": "Pedir o rascunho",
         "estimated": "Custo estimado: {cost}.",
         "waiting": "Esperando a sua aprovação.",
+        "waiting_body": "O modelo não escreve nada até você aprovar este pedido.",
+        "presets": "Começar de",
+        "preset": {
+          "draft": "Rascunhar",
+          "rewrite": "Reescrever",
+          "shorten": "Encurtar"
+        },
+        "preset_text": {
+          "draft": "Escreva um primeiro rascunho deste texto a partir do briefing do projeto.",
+          "rewrite": "Reescreva o texto com uma voz mais clara e direta, mantendo o sentido.",
+          "shorten": "Encurte o texto em um terço, mantendo os pontos que importam."
+        },
         "open_approvals": "Abrir a fila de aprovações",
         "running": "O modelo está escrevendo.",
         "done": "O rascunho é a revisão {revision}. Custou {cost}.",

@@ -1,5 +1,9 @@
 import { fromResponse, networkError } from "../../editor/api/errors";
 import { type Transport, TransportError } from "../../editor/api/transport";
+import type {
+	ChatActivity,
+	ChatSessionListResult,
+} from "../../editor/api/types";
 
 // The client of the writing operations (SDD-019 section 7): the scripts, the copy and the captions of a
 // production. The page computes nothing: the counts, the problems, the estimates and the differences are the
@@ -267,6 +271,8 @@ export interface WritingClient {
 	checkPost(projectId: string, itemId: string): Promise<PostCheckResult>;
 	projects(): Promise<WriteProject[]>;
 	flow(projectId: string): Promise<ProjectFlow>;
+	// What the latest agent session of the project is doing, as the service reports it; null when none was started.
+	activity(projectId: string): Promise<ChatActivity | null>;
 }
 
 export function writingClient(transport: Transport): WritingClient {
@@ -361,6 +367,20 @@ export function writingClient(transport: Transport): WritingClient {
 				current: result.workflow?.current,
 				next: result.workflow?.next,
 			};
+		},
+		activity: async (projectId) => {
+			const list = await call<ChatSessionListResult>(
+				"GET",
+				`/projects/${one(projectId)}/chat/sessions`,
+			);
+			const latest = [...list.sessions].sort((a, b) =>
+				b.updated_at.localeCompare(a.updated_at),
+			)[0];
+			if (latest === undefined) return null;
+			return call<ChatActivity>(
+				"GET",
+				`/chat/sessions/${one(latest.id)}/activity`,
+			);
 		},
 	};
 }

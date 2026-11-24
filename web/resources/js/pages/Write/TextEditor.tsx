@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
 import { useUnsavedGuard } from "@/lib/unsaved";
+import AgentPanel from "./AgentPanel";
 import CaptionPanel from "./CaptionPanel";
 import type {
 	ProjectFlow,
@@ -23,7 +24,6 @@ import type {
 	WriteProject,
 	WritingClient,
 } from "./client";
-import DraftPanel from "./DraftPanel";
 import FlowPath from "./FlowPath";
 import { primaryAction, readingMinutes } from "./meta";
 import PostPanel from "./PostPanel";
@@ -309,7 +309,12 @@ export default function TextEditor({
 					dirty={dirty}
 				/>
 			)}
-			<DraftPanel client={client} item={loaded.item} onDone={drafted} />
+			<AgentPanel
+				client={client}
+				item={loaded.item}
+				flow={flow}
+				onDone={drafted}
+			/>
 			<RevisionsPanel
 				client={client}
 				projectId={projectId}
