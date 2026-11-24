@@ -19,12 +19,15 @@ export default function Section({
 	const bodyId = useId();
 	const Chevron = open ? ChevronDown : ChevronRight;
 	return (
-		<section data-section={name} className="flex flex-col gap-2">
+		<section
+			data-section={name}
+			className="flex flex-col gap-2 border-b border-border pb-3 last:border-b-0 last:pb-0"
+		>
 			<button
 				type="button"
 				aria-expanded={open}
 				aria-controls={bodyId}
-				className="flex h-8 items-center gap-1 text-left text-sm font-semibold"
+				className="flex h-8 w-full items-center gap-1 rounded-sm text-left text-sm font-semibold hover:bg-surface-hover"
 				onClick={() => setOpen((was) => !was)}
 			>
 				<Chevron aria-hidden="true" className="size-4" />
