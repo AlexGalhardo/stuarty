@@ -1,4 +1,5 @@
 import { Head } from "@inertiajs/react";
+import { PenLine } from "lucide-react";
 import {
 	type FormEvent,
 	type ReactNode,
@@ -8,7 +9,12 @@ import {
 	useState,
 } from "react";
 
+import { EmptyState } from "@/components/EmptyState";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { ListRow } from "@/components/ListRow";
+import { LoadingState } from "@/components/LoadingState";
+import { Notice } from "@/components/Notice";
+import { PageHeader } from "@/components/PageHeader";
 import UntrustedText from "@/components/UntrustedText";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,20 +22,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
 import { confirmDiscard } from "@/lib/unsaved";
-import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
-import type { ProjectListResult } from "../../editor/api/types";
 import {
 	type TextItem,
 	type TextKind,
+	type WriteProject,
 	type WritingClient,
 	writingClient,
 } from "./client";
 import TextEditor from "./TextEditor";
 
-type ProjectSummary = ProjectListResult["projects"][number];
-
 const KINDS: readonly TextKind[] = ["script", "copy", "caption", "post"];
+
+const FIELD =
+	"h-8 max-w-full rounded-lg border border-input bg-background px-2 text-sm max-md:h-11";
 
 type Loaded =
 	| { state: "loading" }
@@ -49,8 +55,7 @@ export default function WritePage(): ReactNode {
 		() => writingClient(new HttpTransport("/api/v1")),
 		[],
 	);
-	const api = useMemo(() => createClient(new HttpTransport("/api/v1")), []);
-	const [projects, setProjects] = useState<readonly ProjectSummary[]>([]);
+	const [projects, setProjects] = useState<readonly WriteProject[]>([]);
 	const [project, setProject] = useState("");
 	const [kind, setKind] = useState<"" | TextKind>("");
 	const [loaded, setLoaded] = useState<Loaded>({ state: "loading" });
@@ -67,20 +72,17 @@ export default function WritePage(): ReactNode {
 		}
 	}, []);
 
+	const readProjects = useCallback(async (): Promise<void> => {
+		try {
+			setProjects(await client.projects());
+		} catch {
+			setProjects([]);
+		}
+	}, [client]);
+
 	useEffect(() => {
-		let live = true;
-		api
-			.listProjects()
-			.then((result) => {
-				if (live) setProjects(result.projects);
-			})
-			.catch(() => {
-				if (live) setProjects([]);
-			});
-		return () => {
-			live = false;
-		};
-	}, [api]);
+		void readProjects();
+	}, [readProjects]);
 
 	const reload = useCallback(async (): Promise<void> => {
 		try {
@@ -99,6 +101,7 @@ export default function WritePage(): ReactNode {
 	}, [client, project, kind]);
 
 	useEffect(() => {
+		setLoaded({ state: "loading" });
 		void reload();
 	}, [reload]);
 
@@ -120,13 +123,28 @@ export default function WritePage(): ReactNode {
 		}
 	}
 
+	const filtered = project !== "" || kind !== "";
+	const open =
+		selected === null
+			? undefined
+			: projects.find((p) => p.id === selected.projectId);
+
 	return (
-		<div className="flex flex-col gap-4 p-4">
+		<div className="flex flex-col gap-6 p-4 md:p-6">
 			<Head title={t("ui.write.title")} />
-			<header className="flex flex-col gap-1">
-				<h1 className="text-2xl font-semibold">{t("ui.write.title")}</h1>
-				<p className="text-sm text-muted-foreground">{t("ui.write.intro")}</p>
-			</header>
+			<PageHeader
+				title={t("ui.write.title")}
+				description={t("ui.write.intro")}
+				actions={
+					<Button
+						type="button"
+						variant={selected === null ? "default" : "outline"}
+						onClick={() => setCreating((shown) => !shown)}
+					>
+						{t("ui.write.new")}
+					</Button>
+				}
+			/>
 			<div className="flex flex-wrap items-end gap-3">
 				<div className="flex min-w-0 max-w-full flex-col gap-1">
 					<Label htmlFor="write-project">{t("ui.write.filter.project")}</Label>
@@ -134,7 +152,7 @@ export default function WritePage(): ReactNode {
 						id="write-project"
 						value={project}
 						onChange={(event) => setProject(event.target.value)}
-						className="h-8 max-w-full rounded-lg border border-input bg-background px-2 text-sm"
+						className={FIELD}
 					>
 						<option value="">{t("ui.write.filter.all_projects")}</option>
 						{projects.map((p) => (
@@ -150,7 +168,7 @@ export default function WritePage(): ReactNode {
 						id="write-kind"
 						value={kind}
 						onChange={(event) => setKind(event.target.value as "" | TextKind)}
-						className="h-8 max-w-full rounded-lg border border-input bg-background px-2 text-sm"
+						className={FIELD}
 					>
 						<option value="">{t("ui.write.filter.all_kinds")}</option>
 						{KINDS.map((k) => (
@@ -160,9 +178,6 @@ export default function WritePage(): ReactNode {
 						))}
 					</select>
 				</div>
-				<Button type="button" onClick={() => setCreating((open) => !open)}>
-					{t("ui.write.new")}
-				</Button>
 			</div>
 			{creating && (
 				<NewText
@@ -174,74 +189,93 @@ export default function WritePage(): ReactNode {
 						setCreating(false);
 						setSelected({ projectId: item.project_id, itemId: item.id });
 						void reload();
+						void readProjects();
 					}}
 				/>
 			)}
-			<div className="grid gap-4 lg:grid-cols-[20rem_1fr]">
+			<div className="grid gap-6 lg:grid-cols-[20rem_minmax(0,1fr)]">
 				<nav
 					aria-label={t("ui.write.list.label")}
-					className="flex flex-col gap-2"
+					className="flex min-w-0 flex-col gap-2"
 				>
 					{loaded.state === "loading" && (
-						<p role="status" className="text-sm text-muted-foreground">
-							{t("ui.write.list.loading")}
-						</p>
+						<LoadingState message={t("ui.write.list.loading")} />
 					)}
 					{loaded.state === "failed" && (
-						<p role="alert" className="text-sm text-destructive">
-							{t("ui.write.list.failed")}
-						</p>
+						<Notice
+							tone="danger"
+							role="alert"
+							title={t("ui.write.list.failed")}
+							actions={
+								<Button
+									type="button"
+									variant="outline"
+									size="sm"
+									onClick={() => {
+										setLoaded({ state: "loading" });
+										void reload();
+									}}
+								>
+									{t("ui.write.list.retry")}
+								</Button>
+							}
+						/>
 					)}
 					{loaded.state === "ready" && loaded.texts.length === 0 && (
-						<p className="text-sm text-muted-foreground">
-							{t("ui.write.list.empty")}
-						</p>
+						<EmptyState
+							icon={PenLine}
+							level={3}
+							title={t(
+								filtered ? "ui.write.list.no_match" : "ui.write.list.empty",
+							)}
+							description={t(
+								filtered
+									? "ui.write.list.no_match_hint"
+									: "ui.write.list.empty_hint",
+							)}
+						>
+							{!filtered && (
+								<Button type="button" onClick={() => setCreating(true)}>
+									{t("ui.write.new")}
+								</Button>
+							)}
+						</EmptyState>
 					)}
-					{loaded.state === "ready" && (
-						<ul className="flex flex-col gap-1">
+					{loaded.state === "ready" && loaded.texts.length > 0 && (
+						<ul className="flex flex-col divide-y divide-border rounded-lg border border-border bg-surface">
 							{loaded.texts.map((text) => {
 								const current = selected?.itemId === text.id;
 								return (
-									<li key={text.id}>
-										<button
-											type="button"
-											data-text-id={text.id}
-											aria-current={current ? "true" : undefined}
-											onClick={() => {
-												if (current) return;
-												if (!confirmDiscard(t("ui.unsaved.leave"))) return;
-												setSelected({
-													projectId: text.project_id,
-													itemId: text.id,
-												});
-											}}
-											className={`flex w-full flex-col gap-1 rounded-lg border p-2 text-left text-sm hover:bg-muted ${current ? "bg-muted" : ""}`}
-										>
-											<span className="flex flex-wrap items-center gap-2">
-												<span className="font-medium">
+									<ListRow
+										key={text.id}
+										selected={current}
+										title={
+											<button
+												type="button"
+												data-text-id={text.id}
+												onClick={() => {
+													if (current) return;
+													if (!confirmDiscard(t("ui.unsaved.leave"))) return;
+													setSelected({
+														projectId: text.project_id,
+														itemId: text.id,
+													});
+												}}
+												className="flex w-full min-w-0 items-center gap-2 text-left"
+											>
+												<span className="min-w-0 flex-1 truncate">
 													<UntrustedText>{text.title}</UntrustedText>
 												</span>
 												<Badge variant="outline">
 													{t(`ui.write.kind.${text.text_kind}`)}
 												</Badge>
-											</span>
-											<span className="text-muted-foreground">
-												{t("ui.write.list.row", {
-													revision: String(text.revision),
-													words: String(text.words),
-												})}
-											</span>
-											{text.project_name !== undefined && (
-												<span className="text-muted-foreground">
-													<UntrustedText>
-														{t("ui.write.list.in_project", {
-															project: text.project_name,
-														})}
-													</UntrustedText>
-												</span>
-											)}
-										</button>
-									</li>
+											</button>
+										}
+										description={t("ui.write.list.row", {
+											revision: String(text.revision),
+											words: String(text.words),
+										})}
+									/>
 								);
 							})}
 						</ul>
@@ -255,16 +289,23 @@ export default function WritePage(): ReactNode {
 				{/* A div, not a second main: the layout's main is the only one (SDD-012 section 18.10, the skip link). */}
 				<div className="min-w-0">
 					{selected === null ? (
-						<p className="text-sm text-muted-foreground">
-							{t("ui.write.pick")}
-						</p>
+						<EmptyState
+							icon={PenLine}
+							level={2}
+							title={t("ui.write.pick")}
+							description={t("ui.write.pick_hint")}
+						/>
 					) : (
 						<TextEditor
 							key={selected.itemId}
 							client={client}
 							projectId={selected.projectId}
 							itemId={selected.itemId}
-							onChanged={() => void reload()}
+							project={open}
+							onChanged={() => {
+								void reload();
+								void readProjects();
+							}}
 						/>
 					)}
 				</div>
@@ -282,7 +323,7 @@ function NewText({
 	onCreated,
 }: {
 	client: WritingClient;
-	projects: readonly ProjectSummary[];
+	projects: readonly WriteProject[];
 	defaultProject: string;
 	onCancel: () => void;
 	onCreated: (item: TextItem) => void;
@@ -321,7 +362,7 @@ function NewText({
 
 	return (
 		<form
-			className="flex flex-col gap-3 rounded-lg border p-3"
+			className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4"
 			onSubmit={create}
 			aria-label={t("ui.write.new_form.title")}
 		>
@@ -332,7 +373,7 @@ function NewText({
 						id="new-project"
 						value={project}
 						onChange={(event) => setProject(event.target.value)}
-						className="h-8 max-w-full rounded-lg border border-input bg-background px-2 text-sm"
+						className={FIELD}
 					>
 						{projects.map((p) => (
 							<option key={p.id} value={p.id}>
@@ -357,7 +398,7 @@ function NewText({
 						id="new-kind"
 						value={kind}
 						onChange={(event) => setKind(event.target.value as TextKind)}
-						className="h-8 max-w-full rounded-lg border border-input bg-background px-2 text-sm"
+						className={FIELD}
 					>
 						{KINDS.map((k) => (
 							<option key={k} value={k}>

@@ -3973,7 +3973,44 @@
     },
     "write": {
       "title": "Write",
-      "intro": "Scripts, copy, captions and blog posts of your productions, written by you or with a model. Every save is a revision you can go back to.",
+      "intro": "Copy, blog posts, scripts and captions of your projects, written by you or with a model. Every save is a revision you can go back to.",
+      "meta": {
+        "words": {
+          "one": "{count} word",
+          "other": "{count} words"
+        },
+        "reading": "{minutes} min read",
+        "revision": "revision {revision}"
+      },
+      "flow": {
+        "label": "Path of this project",
+        "optional": "optional",
+        "step": {
+          "briefing": "Brief",
+          "choice": "Choose",
+          "script": "Script",
+          "writing": "Write",
+          "recording": "Record",
+          "editing": "Edit",
+          "finishing": "Finish",
+          "review": "Review",
+          "approval": "Approve",
+          "publication": "Publish"
+        },
+        "actor": {
+          "person": "You do it",
+          "agent": "The agent does it",
+          "both": "You or the agent"
+        },
+        "state": {
+          "done": "done",
+          "current": "now",
+          "waiting": "waits for you",
+          "upcoming": "next",
+          "skipped": "skipped",
+          "unknown": "not known"
+        }
+      },
       "filter": {
         "project": "Project",
         "kind": "Kind",
@@ -4001,12 +4038,18 @@
         "loading": "Loading.",
         "failed": "The texts could not be loaded.",
         "empty": "No texts yet.",
+        "empty_hint": "A text is a post, a copy, a script or a caption. Make one to start writing.",
+        "no_match": "No text matches.",
+        "no_match_hint": "Change the project or the kind above to see more.",
+        "retry": "Try again",
         "row": "Revision {revision}, {words} words",
         "more": "More",
         "in_project": "in {project}"
       },
       "pick": "Choose a text, or make a new one.",
+      "pick_hint": "The text opens here, with its revisions, its checks and what the agent may do.",
       "editor": {
+        "review": "Review",
         "title": "Title",
         "body": "Text (Markdown)",
         "tab_edit": "Write",

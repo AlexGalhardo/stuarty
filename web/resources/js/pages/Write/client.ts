@@ -48,9 +48,56 @@ export interface TextItem {
 	text_kind: TextKind;
 	state: "active" | "trashed";
 	words: number;
+	// The minutes to read it, when the service says so on the text itself (SDD-005 section 5.12.4 says it on the
+	// text of a project; this member is read when the service adds it here).
+	reading_minutes?: number;
 	revision: number;
 	updated_by?: string;
 	updated_at: string;
+}
+
+// What the page reads of a project: its name, its kind and the summary of its text, all as the service computed them.
+export interface WriteProject {
+	id: string;
+	name: string;
+	kind?: ProjectKind;
+	text_summary?: {
+		item_id: string;
+		text_kind: TextKind;
+		words: number;
+		reading_minutes: number;
+	};
+}
+
+export type ProjectKind = "undecided" | "text" | "video" | "image";
+
+// The step ids of a workflow (SDD-000 section 1) and the part of a step the writing screens draw.
+export type StepId =
+	| "briefing"
+	| "choice"
+	| "script"
+	| "writing"
+	| "recording"
+	| "editing"
+	| "finishing"
+	| "review"
+	| "approval"
+	| "publication";
+
+export interface FlowStep {
+	id: StepId;
+	state: "done" | "current" | "waiting" | "upcoming" | "skipped" | "unknown";
+	optional: boolean;
+	actor: "person" | "agent" | "both";
+	tool?: string;
+}
+
+// The kind and the workflow of a project, as GET /projects/{id}/describe answers. The next step is the service's.
+export interface ProjectFlow {
+	kind: ProjectKind;
+	steps: FlowStep[];
+	current?: StepId;
+	next?: StepId;
 }
 
 export interface TextRevision {
@@ -218,6 +265,8 @@ export interface WritingClient {
 		wordsPerMinute?: number,
 	): Promise<ScriptEstimateResult>;
 	checkPost(projectId: string, itemId: string): Promise<PostCheckResult>;
+	projects(): Promise<WriteProject[]>;
+	flow(projectId: string): Promise<ProjectFlow>;
 }
 
 export function writingClient(transport: Transport): WritingClient {
@@ -288,5 +337,30 @@ export function writingClient(transport: Transport): WritingClient {
 			}),
 		checkPost: (projectId, itemId) =>
 			call("GET", path(projectId, itemId, "/post")),
+		projects: async () => {
+			const result = await call<{
+				projects: (Omit<WriteProject, "id"> & {
+					id: string;
+					project_id?: string;
+				})[];
+			}>("GET", "/projects");
+			return result.projects;
+		},
+		flow: async (projectId) => {
+			const result = await call<{
+				kind: ProjectKind;
+				workflow?: {
+					steps: FlowStep[];
+					current?: StepId;
+					next?: StepId;
+				};
+			}>("GET", `/projects/${one(projectId)}/describe`);
+			return {
+				kind: result.kind,
+				steps: result.workflow?.steps ?? [],
+				current: result.workflow?.current,
+				next: result.workflow?.next,
+			};
+		},
 	};
 }
