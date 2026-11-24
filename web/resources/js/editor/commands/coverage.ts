@@ -128,6 +128,8 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"inspector.caption_gallery": ["caption.apply_style"],
 	"inspector.blur_region": ["clip.blur_region"],
 	"inspector.voice_preset": ["audio.apply_voice_preset"],
+	// The proposals of the Vertical cuts section carry their own batch, which ends with clip.face_frame.
+	"inspector.vertical_cuts": ["clip.face_frame"],
 	"palette.run": [ANY_COMMAND],
 };
 
@@ -153,6 +155,10 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 	],
 	"audio.apply_preset": [
 		{ kind: "inspector", action: "inspector.audio_processors" },
+		palette,
+	],
+	"clip.face_frame": [
+		{ kind: "inspector", action: "inspector.vertical_cuts" },
 		palette,
 	],
 	"audio.apply_voice_preset": [

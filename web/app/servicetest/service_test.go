@@ -300,6 +300,10 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.TranscriptDetectFillers(ctx, service.TranscriptDetectRequest{ProjectID: "prj_0000000001"})
 			return err
 		},
+		"CutsPropose": func() error {
+			_, err := e.svc.CutsPropose(ctx, service.CutsProposeRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
 		"FontList": func() error {
 			_, err := e.svc.FontList(ctx, service.FontListRequest{})
 			return err
