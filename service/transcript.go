@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
@@ -244,8 +246,23 @@ func (s *svc) TranscriptDetectFillers(
 		return nil, err
 	}
 
-	found := transcript.Detect(
+	// Only the words the timeline still shows can be cut: a suggestion for a word already cut would make the
+	// whole batch of the review fail.
+	words := make([]transcript.Word, len(src.frames))
+	for i, w := range src.frames {
+		words[i] = transcript.Word{Text: w.Text, Start: w.Start, End: w.End}
+	}
+
+	placed := transcript.Map(src.doc, req.AssetID, words)
+	shown := make([]bool, len(placed.Words))
+
+	for i := range placed.Words {
+		shown[i] = len(placed.Words[i].Ranges) > 0
+	}
+
+	found := transcript.DetectShown(
 		src.spoken,
+		shown,
 		transcript.Options{Language: src.language, RepeatWindowMS: req.RepeatWindowMS},
 	)
 	res := &TranscriptDetectResult{
@@ -288,9 +305,168 @@ func safeLanguage(s string) string {
 	return s
 }
 
-// inspectWords answers the sections words and fillers of media_inspect (SDD-023): the words and the suggestions go
-// under `untrusted`, because their text comes from the media, and the summaries carry the revision, the language
-// and the rule.
+// The caps of the text of a word and of a suggestion on the agent surfaces (SDD-023 section 5). A word of a caption is
+// capped at the same 80 characters by its schema; a suggestion holds at most a few words.
+const (
+	agentWordChars       = 80
+	agentSuggestionChars = 200
+)
+
+func wordLine(w *TranscriptWord) string {
+	mark := ""
+	if len(w.Ranges) == 0 {
+		mark = "~"
+	}
+
+	return fmt.Sprintf("%d%s:%s", w.Index, mark, oneLine(w.Text, agentWordChars, false))
+}
+
+func suggestionLine(f *TranscriptSuggestion) string {
+	return fmt.Sprintf("%d-%d %s %s: %s", f.FromWord, f.ToWord, f.Kind, f.Strength,
+		oneLine(f.Text, agentSuggestionChars, false))
+}
+
+// fitLines takes lines from start while their escaped length fits the budget (0 is no budget), always at least one,
+// and returns them with the index after the last.
+func fitLines(n, start, budget int, line func(int) string) (lines []string, next int) {
+	used := 0
+
+	for next = start; next < n; next++ {
+		l := line(next)
+		cost := len(untrusted.Escape(l)) + 1
+
+		if budget > 0 && used+cost > budget && len(lines) > 0 {
+			break
+		}
+
+		used += cost
+
+		lines = append(lines, l)
+	}
+
+	return lines, next
+}
+
+func agentWords(words []TranscriptWord) []TranscriptWord {
+	out := make([]TranscriptWord, len(words))
+	for i := range words {
+		out[i] = words[i]
+		out[i].Text = untrusted.Value(strings.Join(strings.Fields(words[i].Text), " "), agentWordChars)
+	}
+
+	return out
+}
+
+func agentSuggestions(found []TranscriptSuggestion) []TranscriptSuggestion {
+	out := make([]TranscriptSuggestion, len(found))
+	for i := range found {
+		out[i] = found[i]
+		out[i].Text = untrusted.Value(strings.Join(strings.Fields(found[i].Text), " "), agentSuggestionChars)
+	}
+
+	return out
+}
+
+// ForAgent is the view for a surface an agent reads (the CLI): the text of each word is escaped and capped, and the
+// text of the result lists the words inside an untrusted block, each with the index transcript.delete_range names.
+func (r *TranscriptViewResult) ForAgent() *TranscriptViewResult {
+	out := *r
+	out.Words = agentWords(r.Words)
+
+	lines, _ := fitLines(len(r.Words), 0, 0, func(i int) string { return wordLine(&r.Words[i]) })
+	if len(lines) > 0 {
+		out.Text = r.Text + "\nwords (index:text, ~ is not on the timeline):\n" + untrusted.Block(
+			untrusted.SourceTranscript, untrusted.Attrs{"asset": r.AssetID}, strings.Join(lines, "\n"), 0,
+		)
+	}
+
+	return &out
+}
+
+// ForAgent is the list of suggestions for a surface an agent reads, as TranscriptViewResult.ForAgent.
+func (r *TranscriptDetectResult) ForAgent() *TranscriptDetectResult {
+	out := *r
+	out.Suggestions = agentSuggestions(r.Suggestions)
+
+	lines, _ := fitLines(len(r.Suggestions), 0, 0, func(i int) string { return suggestionLine(&r.Suggestions[i]) })
+	if len(lines) > 0 {
+		out.Text = r.Text + "\nsuggestions (from-to kind strength: text):\n" + untrusted.Block(
+			untrusted.SourceTranscript, untrusted.Attrs{"asset": r.AssetID}, strings.Join(lines, "\n"), 0,
+		)
+	}
+
+	return &out
+}
+
+// inspectPaging says which section of a media_inspect call the cursor pages (the transcript, else the words, else the
+// fillers) and the characters each of the sections words and fillers may use, so that the whole text stays within its
+// cap of 12,800 (SDD-003 section 3.10).
+func inspectPaging(sections []string) (owner string, budget int) {
+	switch {
+	case slices.Contains(sections, "transcript"):
+		return "transcript", 1500
+	case slices.Contains(sections, "words") && slices.Contains(sections, "fillers"):
+		return "words", untrusted.TranscriptConcise / 2
+	case slices.Contains(sections, "words"):
+		return "words", untrusted.TranscriptConcise
+	}
+
+	return "fillers", untrusted.TranscriptConcise
+}
+
+// inspectPage writes one page of a list of the sections words and fillers, in an untrusted block, and returns the
+// bounds of the page. Only the section that owns the cursor reads it and sets next_cursor.
+func inspectPage(
+	req *MediaInspectRequest,
+	assetID, section, legend string,
+	n int,
+	owned bool,
+	budget int,
+	line func(int) string,
+	res *MediaInspectResult,
+	text *strings.Builder,
+) (start, next int, err error) {
+	kind := section + "-" + strconv.Itoa(n)
+
+	if owned && req.Cursor != "" {
+		off, cerr := decodeOffset(req.Cursor, kind, assetID)
+		if cerr != nil {
+			return 0, 0, cerr.withDetail("reason", "stale").withHint("repeat the call without a cursor")
+		}
+
+		if off > n {
+			return 0, 0, newError(command.CodeValidation, "the cursor is past the end of the list.").
+				withPath("cursor").withDetail("reason", "stale").withHint("repeat the call without a cursor")
+		}
+
+		start = off
+	}
+
+	lines, next := fitLines(n, start, budget, line)
+
+	fmt.Fprintf(text, "\n%s %d to %d of %d (%s)", section, min(start+1, next), next, n, legend)
+
+	if next < n {
+		if owned {
+			cur := offsetCursor(kind, assetID, next)
+			res.NextCursor = &cur
+		} else {
+			text.WriteString("; ask for this section alone to page the rest")
+		}
+	}
+
+	if len(lines) > 0 {
+		text.WriteString(":\n" + untrusted.Block(
+			untrusted.SourceTranscript, untrusted.Attrs{"asset": assetID}, strings.Join(lines, "\n"), 0,
+		))
+	}
+
+	return start, next, nil
+}
+
+// inspectWords answers the sections words and fillers of media_inspect (SDD-023): one page of the words or the
+// suggestions, escaped and capped, under `untrusted` and in an untrusted block of the text, because their text comes
+// from the media. The summaries carry the revision, the language and the rule.
 func (s *svc) inspectWords(
 	ctx context.Context,
 	req *MediaInspectRequest,
@@ -298,6 +474,8 @@ func (s *svc) inspectWords(
 	res *MediaInspectResult,
 	text *strings.Builder,
 ) error {
+	owner, budget := inspectPaging(req.Sections)
+
 	if section == "words" {
 		view, err := s.TranscriptView(ctx, TranscriptViewRequest{
 			ProjectID: req.ProjectID, TimelineID: req.TimelineID, AssetID: assetID,
@@ -306,12 +484,18 @@ func (s *svc) inspectWords(
 			return err
 		}
 
-		res.Untrusted.Words = view.Words
+		text.WriteString("\n" + strings.TrimPrefix(view.Text, textview.Note+"\n"))
+
+		start, next, err := inspectPage(req, assetID, section, "index:text, ~ is not on the timeline", len(view.Words),
+			owner == section, budget, func(i int) string { return wordLine(&view.Words[i]) }, res, text)
+		if err != nil {
+			return err
+		}
+
+		res.Untrusted.Words = agentWords(view.Words[start:next])
 		summary := *view
 		summary.Words = []TranscriptWord{}
 		res.Words = &summary
-
-		text.WriteString("\n" + strings.TrimPrefix(view.Text, textview.Note+"\n"))
 	} else {
 		found, err := s.TranscriptDetectFillers(ctx, TranscriptDetectRequest{
 			ProjectID: req.ProjectID, TimelineID: req.TimelineID, AssetID: assetID,
@@ -320,12 +504,18 @@ func (s *svc) inspectWords(
 			return err
 		}
 
-		res.Untrusted.Suggestions = found.Suggestions
+		text.WriteString("\n" + strings.TrimPrefix(found.Text, textview.Note+"\n"))
+
+		start, next, err := inspectPage(req, assetID, section, "from-to kind strength: text", len(found.Suggestions),
+			owner == section, budget, func(i int) string { return suggestionLine(&found.Suggestions[i]) }, res, text)
+		if err != nil {
+			return err
+		}
+
+		res.Untrusted.Suggestions = agentSuggestions(found.Suggestions[start:next])
 		summary := *found
 		summary.Suggestions = []TranscriptSuggestion{}
 		res.Fillers = &summary
-
-		text.WriteString("\n" + strings.TrimPrefix(found.Text, textview.Note+"\n"))
 	}
 
 	res.Available = append(res.Available, section)
