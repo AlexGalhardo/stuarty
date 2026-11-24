@@ -1,6 +1,7 @@
 import { type FormEvent, type ReactNode, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { NumberedStep } from "@/components/NumberedStep";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -83,26 +84,28 @@ export function SetupGuide({
 	return (
 		<section
 			aria-labelledby="social-guide-title"
-			className="mt-4 flex flex-col gap-4 rounded-xl border bg-card p-5 text-card-foreground"
+			className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5 text-text"
 		>
-			<h3 id="social-guide-title" className="text-base font-semibold">
+			<h3 id="social-guide-title" className="text-lg font-semibold">
 				{again
 					? t("ui.social.guide_again_title", { name: network.name })
 					: t("ui.social.guide_title", { name: network.name })}
 			</h3>
 			{!again && (
 				<>
-					<p className="text-sm text-muted-foreground">
+					<p className="text-sm text-text-muted">
 						{t("ui.social.guide_intro", { name: network.name })}
 					</p>
-					<ol className="list-decimal space-y-2 pl-5 text-sm">
-						{STEPS.map((step) => (
-							<li key={step}>
-								{t(`${prefix}.step.${step}`, {
+					<ol className="grid gap-3">
+						{STEPS.map((step, index) => (
+							<NumberedStep
+								key={step}
+								number={index + 1}
+								title={t(`${prefix}.step.${step}`, {
 									redirect,
 									scopes: network.scopes.join(", "),
 								})}
-							</li>
+							/>
 						))}
 					</ol>
 					<div>
@@ -110,13 +113,16 @@ export function SetupGuide({
 							{t("ui.social.redirect_label")}
 						</p>
 						<code
-							className="mt-1 block break-all rounded-lg bg-muted p-2 text-xs"
+							className="mt-1 block break-all rounded-lg bg-surface-sunken p-2 font-mono text-sm"
 							data-redirect-address=""
 						>
 							{redirect}
 						</code>
 					</div>
-					<p className="rounded-lg border p-3 text-sm" data-research-note="">
+					<p
+						className="rounded-lg border border-border p-3 text-sm"
+						data-research-note=""
+					>
 						{t(`${prefix}.research`, {
 							read: network.guide_read,
 						})}{" "}
@@ -165,7 +171,7 @@ export function SetupGuide({
 								value={clientSecret}
 								onChange={(event) => setClientSecret(event.target.value)}
 							/>
-							<p className="text-xs text-muted-foreground">
+							<p className="text-xs text-text-muted">
 								{t("ui.connections.secret_hint")}
 							</p>
 						</div>

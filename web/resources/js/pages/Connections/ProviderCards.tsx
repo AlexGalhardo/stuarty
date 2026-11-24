@@ -1,6 +1,8 @@
 import { type FormEvent, type ReactNode, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { SectionTitle } from "@/components/SectionTitle";
+import { StatusBadge } from "@/components/StatusBadge";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -104,12 +106,12 @@ export function ModelRow({
 				<div className="min-w-0">
 					<p className="truncate font-mono text-sm">{model.id}</p>
 					{model.name !== "" && model.name !== model.id && (
-						<p className="truncate text-xs text-muted-foreground">
+						<p className="truncate text-xs text-text-muted">
 							<UntrustedText>{model.name}</UntrustedText>
 						</p>
 					)}
 					{model.context_tokens > 0 && (
-						<p className="text-xs text-muted-foreground">
+						<p className="text-xs text-text-muted">
 							{t("ui.providers.limits", {
 								context: model.context_tokens.toLocaleString(locale),
 								output: model.output_tokens.toLocaleString(locale),
@@ -163,7 +165,7 @@ export function ModelRow({
 			</div>
 			{open && (
 				<form
-					className="flex flex-wrap items-end gap-3 rounded-lg border bg-muted p-3"
+					className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-surface-sunken p-3"
 					onSubmit={(event) => {
 						event.preventDefault();
 						if (unit !== undefined) {
@@ -345,7 +347,7 @@ function ProviderConnection({
 					<p className="truncate font-medium">
 						<UntrustedText>{connection.label}</UntrustedText>
 					</p>
-					<p className="text-xs text-muted-foreground">
+					<p className="text-xs text-text-muted">
 						{today.length === 0
 							? t("ui.providers.spend_none")
 							: t("ui.providers.spend", {
@@ -430,7 +432,7 @@ function ProviderConnection({
 			<FailureNote failure={failure} />
 			{models !== null && (
 				<div>
-					<p className="text-xs text-muted-foreground">
+					<p className="text-xs text-text-muted">
 						{t("ui.providers.fetched", {
 							date: formatDateTime(models.fetched_at, locale),
 						})}
@@ -511,11 +513,18 @@ export function ProviderCard({
 
 	return (
 		<li
-			className="flex flex-col rounded-xl border bg-card text-card-foreground"
+			className="flex flex-col rounded-lg border border-border bg-surface text-text"
 			data-provider={provider.id}
 		>
-			<div className="flex flex-wrap items-baseline justify-between gap-2 p-4">
-				<h3 className="text-base font-semibold">{provider.name}</h3>
+			<div className="flex flex-wrap items-center justify-between gap-2 p-4">
+				<div className="flex flex-wrap items-center gap-3">
+					<h3 className="text-lg font-semibold">{provider.name}</h3>
+					<StatusBadge status={mine.length > 0 ? "success" : "neutral"}>
+						{mine.length > 0
+							? t("ui.providers.status_connected")
+							: t("ui.providers.status_none")}
+					</StatusBadge>
+				</div>
 				<a
 					href={provider.docs_url}
 					target="_blank"
@@ -526,11 +535,9 @@ export function ProviderCard({
 				</a>
 			</div>
 			{mine.length === 0 ? (
-				<p className="px-4 text-sm text-muted-foreground">
-					{t("ui.providers.none")}
-				</p>
+				<p className="px-4 text-sm text-text-muted">{t("ui.providers.none")}</p>
 			) : (
-				<div className="divide-y border-t">
+				<div className="divide-y divide-border border-t border-border">
 					{mine.map((connection) => (
 						<ProviderConnection
 							key={connection.id}
@@ -543,11 +550,11 @@ export function ProviderCard({
 				</div>
 			)}
 			{canSignIn && (
-				<div className="flex flex-col gap-2 border-t p-4">
+				<div className="flex flex-col gap-2 border-t border-border p-4">
 					<p className="text-sm font-medium">
 						{t("ui.providers.signin_title")}
 					</p>
-					<p className="text-xs text-muted-foreground">
+					<p className="text-xs text-text-muted">
 						{t(`ui.providers.signin_hint.${signInText}`)}
 					</p>
 					<FailureNote failure={signInFailure} />
@@ -614,7 +621,7 @@ export function ProviderCard({
 						value={secret}
 						onChange={(event) => setSecret(event.target.value)}
 					/>
-					<p className="text-xs text-muted-foreground">
+					<p className="text-xs text-text-muted">
 						{t("ui.providers.connect_hint")}
 					</p>
 				</div>
@@ -655,14 +662,12 @@ export default function ProviderCards({
 	const t = useT();
 
 	return (
-		<section aria-labelledby="providers-title">
-			<h2 id="providers-title" className="text-lg font-semibold">
-				{t("ui.providers.title")}
-			</h2>
-			<p className="mt-1 text-sm text-muted-foreground">
-				{t("ui.providers.intro")}
-			</p>
-			<ul className="mt-4 flex flex-col gap-4">
+		<section aria-label={t("ui.providers.title")} className="grid gap-4">
+			<SectionTitle
+				title={t("ui.providers.title")}
+				description={t("ui.providers.intro")}
+			/>
+			<ul className="flex flex-col gap-4">
 				{providers.map((provider) => (
 					<ProviderCard
 						key={provider.id}

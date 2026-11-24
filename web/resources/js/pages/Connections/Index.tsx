@@ -1,4 +1,5 @@
 import { Head, Link } from "@inertiajs/react";
+import { Plug, Plus, ShieldCheck } from "lucide-react";
 import {
 	type FormEvent,
 	type ReactNode,
@@ -7,7 +8,12 @@ import {
 	useState,
 } from "react";
 
+import { EmptyState } from "@/components/EmptyState";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { Notice } from "@/components/Notice";
+import { PageHeader } from "@/components/PageHeader";
+import { SectionTitle } from "@/components/SectionTitle";
+import { StatusBadge } from "@/components/StatusBadge";
 import UntrustedText from "@/components/UntrustedText";
 import {
 	AlertDialog,
@@ -80,32 +86,36 @@ export function ConnectionRow({
 		<li className="flex flex-col gap-3 p-4" data-connection-id={connection.id}>
 			<div className="flex items-start justify-between gap-4">
 				<div className="min-w-0">
-					<p className="truncate font-medium">
+					<p className="truncate text-base font-medium text-text">
 						<UntrustedText>{connection.label}</UntrustedText>
 					</p>
-					<p className="text-xs text-muted-foreground">
+					<p className="text-sm text-text-muted">
 						{t("ui.connections.destinations", {
 							hosts: connection.hosts.join(", "),
 						})}
 					</p>
-					<p className="text-xs text-muted-foreground">
+					<p className="text-sm text-text-muted">
 						{t("ui.connections.accepts", {
 							list: connection.accepts
 								.map((a) => t(`ui.connections.accept.${a}`))
 								.join(", "),
 						})}
 					</p>
-					<p className="text-xs text-muted-foreground">
+					<p className="text-sm text-text-subtle">
 						{connection.last_used_at === null
 							? t("ui.connections.never_used")
 							: t("ui.connections.last_used", {
 									date: formatDateTime(connection.last_used_at, locale),
 								})}
-						{" · "}
+					</p>
+					<StatusBadge
+						status={connection.secret_set ? "success" : "waiting"}
+						className="mt-1"
+					>
 						{connection.secret_set
 							? t("ui.connections.secret_set")
 							: t("ui.connections.secret_missing")}
-					</p>
+					</StatusBadge>
 				</div>
 				<div className="flex shrink-0 gap-2">
 					<Button type="button" variant="outline" onClick={onTest}>
@@ -159,7 +169,7 @@ export function ConnectionRow({
 			{result !== null && (
 				<div
 					role="status"
-					className="rounded-lg border bg-muted p-3 text-xs"
+					className="rounded-lg border border-border bg-surface-sunken p-3 text-sm"
 					data-test-result=""
 				>
 					<p className="font-medium">
@@ -279,32 +289,68 @@ export default function Connections(): ReactNode {
 	return (
 		<>
 			<Head title={t("ui.connections.title")} />
-			<div className="mx-auto flex max-w-3xl flex-col gap-8">
-				<div>
-					<h1 className="text-2xl font-semibold">
-						{t("ui.connections.title")}
-					</h1>
-					<p className="mt-1 text-sm text-muted-foreground">
-						{t("ui.connections.intro")}
-					</p>
-					<p className="mt-2 text-sm">
-						<Link href="/approvals" className="underline underline-offset-4">
-							{t("ui.connections.approvals_link")}
-						</Link>
-					</p>
-				</div>
-				<section aria-labelledby="connections-list">
-					<h2 id="connections-list" className="text-lg font-semibold">
-						{t("ui.connections.list")}
-					</h2>
-					<FailureNote failure={failure} />
+			<div className="mx-auto flex max-w-5xl flex-col gap-8">
+				<PageHeader
+					title={t("ui.connections.title")}
+					description={t("ui.connections.intro")}
+					actions={
+						<>
+							<Button asChild variant="outline">
+								<Link href="/approvals">
+									<ShieldCheck aria-hidden="true" />
+									{t("ui.connections.approvals_link")}
+								</Link>
+							</Button>
+							<Button asChild>
+								<a href="#connections-new">
+									<Plus aria-hidden="true" />
+									{t("ui.connections.add_action")}
+								</a>
+							</Button>
+						</>
+					}
+				/>
+				<Notice
+					tone="success"
+					title={t("ui.connections.vault_title")}
+					data-testid="connections-vault-note"
+				>
+					{t("ui.connections.vault_body")}
+				</Notice>
+				<FailureNote failure={failure} />
+				{providers.length > 0 && (
+					<ProviderCards
+						providers={providers}
+						connections={items ?? []}
+						signIns={signIns}
+						cost={cost}
+						onChanged={() => void load()}
+					/>
+				)}
+				<SocialSection />
+				<BlogSection onChanged={() => void load()} />
+				<section aria-label={t("ui.connections.list")} className="grid gap-4">
+					<SectionTitle
+						title={t("ui.connections.list")}
+						description={t("ui.connections.list_hint")}
+					/>
 					{items !== null &&
 						(items.length === 0 ? (
-							<p className="mt-4 text-sm text-muted-foreground">
-								{t("ui.connections.empty")}
-							</p>
+							<EmptyState
+								icon={Plug}
+								level={3}
+								title={t("ui.connections.empty_title")}
+								description={t("ui.connections.empty")}
+							>
+								<Button asChild>
+									<a href="#connections-new">
+										<Plus aria-hidden="true" />
+										{t("ui.connections.add_action")}
+									</a>
+								</Button>
+							</EmptyState>
 						) : (
-							<ul className="mt-4 divide-y rounded-xl border bg-card text-card-foreground">
+							<ul className="divide-y divide-border rounded-lg border border-border bg-surface text-text">
 								{items.map((connection) => (
 									<ConnectionRow
 										key={connection.id}
@@ -320,24 +366,15 @@ export default function Connections(): ReactNode {
 							</ul>
 						))}
 				</section>
-				{providers.length > 0 && (
-					<ProviderCards
-						providers={providers}
-						connections={items ?? []}
-						signIns={signIns}
-						cost={cost}
-						onChanged={() => void load()}
-					/>
-				)}
-				<SocialSection />
-				<BlogSection onChanged={() => void load()} />
-				<section aria-labelledby="connections-new">
-					<h2 id="connections-new" className="text-lg font-semibold">
-						{t("ui.connections.new")}
-					</h2>
+				<section
+					id="connections-new"
+					aria-label={t("ui.connections.new")}
+					className="grid scroll-mt-4 gap-4"
+				>
+					<SectionTitle title={t("ui.connections.new")} />
 					<form
 						onSubmit={(event) => void create(event)}
-						className="mt-4 flex flex-col gap-4 rounded-xl border bg-card p-5 text-card-foreground"
+						className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5 text-text"
 					>
 						<div className="flex flex-col gap-2">
 							<Label htmlFor="connection-label">
@@ -410,7 +447,7 @@ export default function Connections(): ReactNode {
 								value={secret}
 								onChange={(event) => setSecret(event.target.value)}
 							/>
-							<p className="text-xs text-muted-foreground">
+							<p className="text-sm text-text-subtle">
 								{t("ui.connections.secret_hint")}
 							</p>
 						</div>
