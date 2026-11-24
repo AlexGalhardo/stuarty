@@ -97,7 +97,7 @@ var groupTitles = []struct{ group, title, intro string }{
 	{
 		groupCrates,
 		"Rust crates",
-		"Compiled into the WebAssembly renderer of `renderer/` (`Cargo.lock`, normal dependencies of the wasm32 target; build-time proc macros are not shipped).",
+		"Compiled into the WebAssembly renderer and the native GPU host of `renderer/`, and into the capture helper of `capture/` (`Cargo.lock`, normal dependencies; build-time proc macros are not shipped).",
 	},
 	{groupFonts, "Fonts", "Embedded in the binary; the rasterizer reads no other font."},
 	{groupVendored, "Vendored code", "Source copied into this repository."},
