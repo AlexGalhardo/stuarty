@@ -39,6 +39,7 @@ import type {
 	ConnectionTestResult,
 	CostCeilingSetRequest,
 	CostSummary,
+	CutsProposeResult,
 	EditRequest,
 	EditResult,
 	ExportBatchItem,
@@ -191,6 +192,17 @@ export interface ApiClient {
 	// A transcription of one asset (SDD-012 section 12.4); E_TRANSCRIBE_UNAVAILABLE
 	// answers at once when no provider can run.
 	startTranscribe(projectId: string, assetId: string): Promise<Job>;
+	// A face track of one asset (SDD-024 section 6); E_TRANSCRIBE_UNAVAILABLE with tool "face" answers at once
+	// when the face set is not installed, and nothing is downloaded.
+	startFaceTrack(projectId: string, assetId: string): Promise<Job>;
+	// The vertical cuts the service proposes for an asset (SDD-024 section 8). It changes nothing.
+	getCuts(projectId: string, assetId: string): Promise<CutsProposeResult>;
+	// Sends a batch to one timeline of a project, which `edit` cannot name.
+	editTimeline(
+		projectId: string,
+		timelineId: string,
+		request: EditRequest,
+	): Promise<EditResult>;
 	// The platform presets, and with `codecs` which codecs this machine writes.
 	getExportPresets(codecs?: boolean): Promise<ExportPresetListResult>;
 	// What does not fit a preset, before anything is encoded.
@@ -604,6 +616,24 @@ export function createClient(
 				kind: "transcribe",
 				args: { asset_id: assetId },
 			}),
+		startFaceTrack: (id, assetId) =>
+			call("POST", `${project(id)}/jobs`, READ_TIMEOUT_MS, {
+				kind: "face_track",
+				args: { asset_id: assetId },
+			}),
+		getCuts: (id, assetId) =>
+			call(
+				"GET",
+				`${project(id)}/cuts${query({ asset_id: assetId })}`,
+				READ_TIMEOUT_MS,
+			),
+		editTimeline: (id, timelineId, request) =>
+			call(
+				"POST",
+				`${project(id)}/edit${query({ timeline_id: timelineId })}`,
+				EDIT_TIMEOUT_MS,
+				request,
+			),
 		getExportPresets: (codecs) =>
 			call(
 				"GET",

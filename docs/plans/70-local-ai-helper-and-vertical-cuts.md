@@ -65,7 +65,7 @@ Names are proposals until task 1 writes them to SDD-000.
 - [x] 5. The tracking and framing rules. Verify: `go test ./core/...` with golden tracks.
 - [x] 6. The `face_track` job and the cut proposals. Verify: `go test ./service/...` passes.
 - [x] 7. Adapters with parity. Verify: `go test ./web/...` and `go run ./internal/tools/surfacebudget` pass.
-- [ ] 8. The UI: install prompt, progress, proposal review. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n`, `task test:web` and `bun run e2e` pass.
+- [x] 8. The UI: install prompt, progress, proposal review. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n`, `task test:web` and `bun run e2e` pass.
 
 ## Test strategy
 

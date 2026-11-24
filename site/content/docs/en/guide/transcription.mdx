@@ -62,6 +62,12 @@ Once an asset has a transcript, the **Transcript** section of the Captions tab s
 
 What it can find depends on what the transcription wrote. In a measurement on synthetic speech, repetitions were found in both languages, English fillers that the transcription kept were found, and Portuguese hesitations were mostly written as the words "um" and "é", which are never flagged. A word inside a run of speech starts a few tenths of a second off the audible start, so a cut inside a sentence can clip a neighbouring word; a sentence that starts after a pause is usually cut within about a tenth of a second of its start. Look at the result before you export.
 
+## Vertical cuts of a long talk
+
+For a video of someone talking to the camera, the **Text** tab of a clip also has **Vertical cuts**. It finds the stretches of 20 to 60 seconds that start and end at the end of a sentence and in which the speaker is on screen, and proposes up to five. Each one you keep becomes a new 9:16 timeline of the project, with the clip trimmed to the range and its crop moving to keep the face in frame. Nothing is created until you choose cuts and press **Create timelines**.
+
+Finding the face runs on your computer, with a small helper, the ONNX Runtime library and the YuNet face model. They are not installed with the product: the first time you press **Find vertical cuts** the editor shows what would be downloaded, its size, the host it comes from, its licences and the dataset the model was trained on, and downloads nothing until you press **Install**. In a terminal the same step is `stuarty tools:install face`. The asset also needs a transcript (see above); the face job (`job_start` with `"kind": "face_track"`) and the proposals (`GET /projects/{id}/cuts?asset_id=`) work without the editor. The framing itself is the command `clip.face_frame`.
+
 ## Common mistakes
 
 - Running `caption.from_transcript` before the transcript exists. Start the transcription job and wait for it first.

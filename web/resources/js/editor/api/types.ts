@@ -650,6 +650,13 @@ export interface Job {
 		export?: ExportResult;
 		batch?: BatchResult;
 		transcribe?: { asset_id: string; language: string; words: number };
+		face_track?: {
+			asset_id: string;
+			samples: number;
+			faces: number;
+			provider: string;
+			fps: number;
+		};
 		generated?: GeneratedResult;
 		publish?: PublishResult;
 	};
@@ -1157,8 +1164,48 @@ export interface InstalledTool {
 	path: string;
 }
 
+// An install set the person may choose, with what it costs and its licences, shown before anything is
+// downloaded (SDD-024 section 3).
+export interface ToolFile {
+	name: string;
+	bytes: number;
+	host: string;
+	license?: string;
+}
+
+export interface ToolOffer {
+	name: string;
+	files: ToolFile[];
+	download_bytes: number;
+	dataset?: string;
+	published: boolean;
+	installed: boolean;
+}
+
+// GET /projects/{id}/cuts (SDD-024 section 8): proposals only; nothing is changed until a person sends a batch.
+export interface CutsProposal {
+	n: number;
+	start_ms: number;
+	end_ms: number;
+	words: number;
+	face_share: number;
+	score: number;
+	title: string;
+	batch: EditRequest["operations"];
+}
+
+export interface CutsProposeResult {
+	untrusted_notice?: string;
+	project_id: string;
+	revision: number;
+	asset_id: string;
+	proposals: CutsProposal[];
+	text: string;
+}
+
 export interface ToolsStatusResult {
 	installed: InstalledTool[];
+	offers: ToolOffer[];
 	state: "idle" | "running" | "failed";
 	done_bytes: number;
 	total_bytes: number;
@@ -1173,7 +1220,7 @@ export interface InstallToolRequest {
 
 export interface InstallToolResult {
 	state: string;
-	files: { name: string; bytes: number; host: string }[];
+	files: ToolFile[];
 	download_bytes: number;
 	text: string;
 }
