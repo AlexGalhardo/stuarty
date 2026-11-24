@@ -1,6 +1,7 @@
 import { type FormEvent, type ReactNode, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { SectionTitle } from "@/components/SectionTitle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -133,7 +134,7 @@ function ready(form: BlogForm): boolean {
 }
 
 const SELECT =
-	"h-8 w-full min-w-0 rounded-lg border border-input bg-background px-2 text-sm";
+	"h-8 w-full min-w-0 rounded-lg border border-border-strong bg-surface-sunken px-2 text-sm text-text max-md:h-11";
 
 export default function BlogSection({
 	onChanged,
@@ -169,16 +170,18 @@ export default function BlogSection({
 	}
 
 	return (
-		<section aria-labelledby="connections-blog" data-testid="blog-section">
-			<h2 id="connections-blog" className="text-lg font-semibold">
-				{t("ui.connections.blog.title")}
-			</h2>
-			<p className="mt-1 text-sm text-muted-foreground">
-				{t("ui.connections.blog.intro")}
-			</p>
+		<section
+			aria-label={t("ui.connections.blog.title")}
+			data-testid="blog-section"
+			className="grid gap-4"
+		>
+			<SectionTitle
+				title={t("ui.connections.blog.title")}
+				description={t("ui.connections.blog.intro")}
+			/>
 			<form
 				onSubmit={(event) => void create(event)}
-				className="mt-4 flex flex-col gap-4 rounded-xl border bg-card p-5 text-card-foreground"
+				className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5 text-text"
 				aria-label={t("ui.connections.blog.form")}
 			>
 				<div className="grid gap-4 sm:grid-cols-2">
@@ -212,7 +215,7 @@ export default function BlogSection({
 				</div>
 				<p
 					id="blog-about"
-					className="text-xs text-muted-foreground"
+					className="text-xs text-text-muted"
 					data-testid="blog-about"
 				>
 					{t(`ui.connections.blog.about.${form.kind}`)}
@@ -230,10 +233,7 @@ export default function BlogSection({
 								value={form.folder}
 								onChange={(event) => set("folder", event.target.value)}
 							/>
-							<p
-								id="blog-folder-hint"
-								className="text-xs text-muted-foreground"
-							>
+							<p id="blog-folder-hint" className="text-xs text-text-muted">
 								{t("ui.connections.blog.folder_hint")}
 							</p>
 						</div>
@@ -274,7 +274,7 @@ export default function BlogSection({
 								/>
 								<p
 									id="blog-front-matter-hint"
-									className="text-xs text-muted-foreground"
+									className="text-xs text-text-muted"
 								>
 									{t("ui.connections.blog.front_matter_hint")}
 								</p>
@@ -331,10 +331,7 @@ export default function BlogSection({
 								/>
 							</div>
 						</div>
-						<p
-							id="blog-wordpress-hint"
-							className="text-xs text-muted-foreground"
-						>
+						<p id="blog-wordpress-hint" className="text-xs text-text-muted">
 							{t("ui.connections.blog.wordpress_hint")}
 						</p>
 					</>
@@ -379,7 +376,7 @@ export default function BlogSection({
 								/>
 							</div>
 						</div>
-						<p id="blog-signing-hint" className="text-xs text-muted-foreground">
+						<p id="blog-signing-hint" className="text-xs text-text-muted">
 							{t("ui.connections.blog.signing_hint")}
 						</p>
 					</>

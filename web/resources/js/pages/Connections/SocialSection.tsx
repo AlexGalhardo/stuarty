@@ -1,6 +1,7 @@
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { SectionTitle } from "@/components/SectionTitle";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,9 +57,7 @@ export function AccountPicker({
 			<legend className="text-sm font-medium">
 				{t("ui.social.pick_title")}
 			</legend>
-			<p className="text-xs text-muted-foreground">
-				{t("ui.social.pick_hint")}
-			</p>
+			<p className="text-xs text-text-muted">{t("ui.social.pick_hint")}</p>
 			{choices.map((choice) => (
 				<label key={choice.id} className="flex items-center gap-2 text-sm">
 					<input
@@ -118,7 +117,7 @@ export function PriceEditor({
 			<legend className="text-sm font-medium">
 				{t("ui.social.price_title")}
 			</legend>
-			<p className="text-xs text-muted-foreground" data-testid="account-price">
+			<p className="text-xs text-text-muted" data-testid="account-price">
 				{t("ui.social.price_now", {
 					post: formatMoney(
 						{ micros: price.post_micros, currency: price.currency },
@@ -215,7 +214,7 @@ export function AccountRow({
 				<p className="truncate font-medium">
 					{networkName} · <UntrustedText>{account.label}</UntrustedText>
 				</p>
-				<p className="text-xs text-muted-foreground">
+				<p className="text-xs text-text-muted">
 					{ready ? (
 						<>
 							{t("ui.social.signed_in_as")}{" "}
@@ -335,15 +334,13 @@ export default function SocialSection(): ReactNode {
 		networks.find((n) => n.network === id)?.name ?? id;
 
 	return (
-		<section aria-labelledby="social-title">
-			<h2 id="social-title" className="text-lg font-semibold">
-				{t("ui.social.title")}
-			</h2>
-			<p className="mt-1 text-sm text-muted-foreground">
-				{t("ui.social.intro")}
-			</p>
+		<section aria-label={t("ui.social.title")} className="grid gap-4">
+			<SectionTitle
+				title={t("ui.social.title")}
+				description={t("ui.social.intro")}
+			/>
 			<FailureNote failure={failure} />
-			<div className="mt-4 flex flex-wrap gap-2">
+			<div className="flex flex-wrap gap-2">
 				{networks.map((network) => (
 					<Button
 						key={network.network}
@@ -366,7 +363,7 @@ export default function SocialSection(): ReactNode {
 				/>
 			)}
 			{accounts.length > 0 && (
-				<ul className="mt-4 divide-y rounded-xl border bg-card text-card-foreground">
+				<ul className="divide-y divide-border rounded-lg border border-border bg-surface text-text">
 					{accounts.map((account) => (
 						<AccountRow
 							key={account.connection_id}

@@ -5,7 +5,7 @@ import { caller, expect, test } from "./helpers";
 
 // The section that adds a connection; the Blog section has a Name field of its own.
 function newConnection(page: Page): Locator {
-	return page.locator('section[aria-labelledby="connections-new"]');
+	return page.locator("section#connections-new");
 }
 
 // RF-220 (epic 04, SDD-014): the Connections page lists every destination with what it may

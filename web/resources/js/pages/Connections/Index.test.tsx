@@ -88,6 +88,17 @@ describe("a connection row", () => {
 		expect(html).not.toContain("Never used");
 	});
 
+	test("tells the state of the credential with a word and an icon, and never shows the credential", () => {
+		const stored = markup(connection());
+		expect(stored).toContain('data-status="success"');
+		expect(stored).toContain("Credential stored");
+		expect(stored).not.toContain("secret");
+		const missing = markup(connection({ secret_set: false }));
+		expect(missing).toContain('data-status="waiting"');
+		expect(missing).toContain("No credential");
+		expect(missing).toContain("<svg");
+	});
+
 	test("says so when it was never used or has no credential", () => {
 		const html = markup(connection({ secret_set: false }));
 		expect(html).toContain("Never used");

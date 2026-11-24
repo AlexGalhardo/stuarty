@@ -201,7 +201,7 @@ export function PublishDialog({
 							<Label htmlFor="publish-project">{t("ui.social.project")}</Label>
 							<select
 								id="publish-project"
-								className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm"
+								className="h-8 rounded-lg border border-border-strong bg-surface-sunken px-2 text-sm text-text max-md:h-11"
 								value={project}
 								onChange={(event) => void pick(event.target.value)}
 							>
@@ -217,7 +217,7 @@ export function PublishDialog({
 							<Label htmlFor="publish-video">{t("ui.social.video")}</Label>
 							<select
 								id="publish-video"
-								className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm"
+								className="h-8 rounded-lg border border-border-strong bg-surface-sunken px-2 text-sm text-text max-md:h-11"
 								value={video}
 								onChange={(event) => setVideo(event.target.value)}
 							>
@@ -236,7 +236,7 @@ export function PublishDialog({
 								</Label>
 								<select
 									id="publish-still"
-									className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm"
+									className="h-8 rounded-lg border border-border-strong bg-surface-sunken px-2 text-sm text-text max-md:h-11"
 									value={still}
 									onChange={(event) => setStill(event.target.value)}
 								>
@@ -284,7 +284,7 @@ export function PublishDialog({
 							</Label>
 							<select
 								id="publish-visibility"
-								className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm"
+								className="h-8 rounded-lg border border-border-strong bg-surface-sunken px-2 text-sm text-text max-md:h-11"
 								value={visibility}
 								onChange={(event) => setVisibility(event.target.value)}
 							>
@@ -321,7 +321,7 @@ export function PublishDialog({
 									))}
 								</div>
 								{kidsMissing && (
-									<p className="text-sm text-destructive">
+									<p className="text-sm text-danger-text">
 										{t("ui.social.kids_required")}
 									</p>
 								)}
@@ -340,7 +340,7 @@ export function PublishDialog({
 						{checked !== null && (
 							<div
 								role="status"
-								className="rounded-lg border bg-muted p-3 text-sm"
+								className="rounded-lg border border-border bg-surface-sunken p-3 text-sm"
 								data-checked=""
 							>
 								{checked.state === "prepared" ? (
