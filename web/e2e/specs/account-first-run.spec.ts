@@ -177,12 +177,12 @@ test("Settings makes a new recovery key and the old one stops working (VV-382)",
 	await page.goto("/settings");
 	const form = page.getByTestId("settings-recovery-key");
 
-	await form.getByLabel("Current password").fill(PASSWORD);
+	await form.getByLabel("Your password, to make the key").fill(PASSWORD);
 	await form.getByRole("button", { name: "Make a new recovery key" }).click();
-	await expect(page.getByTestId("settings-account-error")).toBeVisible();
+	await expect(page.locator("#settings-account-error")).toBeVisible();
 	await expect(page.getByTestId("recovery-key")).toHaveCount(0);
 
-	await form.getByLabel("Current password").fill(NEW_PASSWORD);
+	await form.getByLabel("Your password, to make the key").fill(NEW_PASSWORD);
 	await form.getByRole("button", { name: "Make a new recovery key" }).click();
 	const made = (await page.getByTestId("recovery-key").textContent()) ?? "";
 	expect(made).toMatch(/^([0-9A-Z]{4}-){12}[0-9A-Z]{1,4}$/);

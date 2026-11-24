@@ -216,7 +216,7 @@ export default function AccountSettings(): ReactNode {
 						</p>
 						<PasswordField
 							id="settings-recovery-password"
-							label={t("ui.account.settings.current")}
+							label={t("ui.account.settings.recovery_password")}
 							value={keyPassword}
 							onChange={setKeyPassword}
 							autoComplete="current-password"

@@ -2639,6 +2639,7 @@
         "password_saved": "The password was changed.",
         "recovery_title": "Make a new recovery key",
         "recovery_hint": "Lost the recovery key from when you made the account? Type your password to make another. The old key stops working.",
+        "recovery_password": "Your password, to make the key",
         "recovery_submit": "Make a new recovery key",
         "recovery_made": "This is your new recovery key. It is shown once, here, and Stuarty does not keep it: write it down or keep it in a password manager now. The old key no longer opens your data."
       }
