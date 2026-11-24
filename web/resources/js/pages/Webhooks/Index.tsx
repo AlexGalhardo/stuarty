@@ -77,7 +77,10 @@ export function SecretNote({
 			data-webhook-secret-note=""
 		>
 			<p className="font-medium">
-				{t("ui.webhooks.secret_title", { name: revealed.name })}
+				<NamedTitle
+					messageKey="ui.webhooks.secret_title"
+					name={revealed.name}
+				/>
 			</p>
 			<p className="text-sm">{t("ui.webhooks.secret_warning")}</p>
 			<code
@@ -100,6 +103,26 @@ export function SecretNote({
 
 // An action that cannot be undone: removing deletes the secret and the history, and rotating makes the receiver refuse
 // every call until it holds the new secret. Both ask first.
+// The name of a webhook is text the caller wrote: inside a sentence it is isolated, as the rows of the page do, so
+// bidirectional controls cannot reorder what the person reads or confirms (SDD-007 section 8.5 item 3).
+export function NamedTitle({
+	messageKey,
+	name,
+}: {
+	messageKey: string;
+	name: string;
+}): ReactNode {
+	const t = useT();
+	const [before, after] = t(messageKey, { name: "\u0000" }).split("\u0000");
+	return (
+		<>
+			{before}
+			<UntrustedText className="[overflow-wrap:anywhere]">{name}</UntrustedText>
+			{after}
+		</>
+	);
+}
+
 export interface PendingAction {
 	kind: "remove" | "rotate";
 	id: string;
@@ -127,9 +150,10 @@ export function ConfirmAction({
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<AlertDialogTitle>
-						{t(`ui.webhooks.confirm_${kind}_title`, {
-							name: action?.name ?? "",
-						})}
+						<NamedTitle
+							messageKey={`ui.webhooks.confirm_${kind}_title`}
+							name={action?.name ?? ""}
+						/>
 					</AlertDialogTitle>
 					<AlertDialogDescription>
 						{t(`ui.webhooks.confirm_${kind}_body`)}
