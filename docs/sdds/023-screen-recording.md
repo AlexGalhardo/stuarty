@@ -177,7 +177,7 @@ The threats of this domain, with their tests, are rows T-118 to T-122 of SDD-007
 
 ## 14. Measures
 
-NFR-067 is measured by `scripts/measure-capture.ps1`, one command: it opens a 1920 by 1080 test window, records it for 10 minutes at 60 fps through the real helper and host, and prints the dropped frames, the CPU of the helper and of FFmpeg, and the system load. The number is valid only on an idle machine. NFR-068 is measured by killing the helper and FFmpeg together and reading the file with `ffprobe` (`spikes/capture-windows/README.md` has the first numbers).
+NFR-067 is measured by `scripts/measure-capture.ps1`, one command: it opens a 1920 by 1080 test window, records it for 10 minutes at 60 fps through the real helper and host, and prints the dropped frames, the CPU of the helper and of FFmpeg, and the system load. The test window paints at every refresh of the display, so the source has frames for every slot; a display that shows a still desktop sends no new frame, and its repeated slots count as dropped too (the dialog says "repeated" for that reason). The script runs `TestCaptureNFR067` (`web/app/servicetest`), which uses the same service, host and helper as the dialog, and prints the average load of the machine next to the result. The number is valid only on an idle machine. NFR-068 is measured by killing the helper and FFmpeg together and reading the file with `ffprobe` (`spikes/capture-windows/README.md` has the first numbers).
 
 ## 15. Tests
 
