@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.50.0] - 2026-11-24
+
+### Added
+
+- **core:** Map transcript words to timeline ranges ([55e5e49](https://github.com/AlexGalhardo/stuarty/commit/55e5e49fdd21fef562fe58d10be1bfd38a108263))
+- **command:** Add transcript.delete_range to cut by word range ([ff37138](https://github.com/AlexGalhardo/stuarty/commit/ff3713839ecf8d4b6dbad2617d1eb75f90485741))
+- **core:** Detect filler words and repetitions in a transcript ([50a2896](https://github.com/AlexGalhardo/stuarty/commit/50a2896ead96ecc926ddfacbc20308c2d959cf95))
+- **api:** Read the transcript view and the fillers on HTTP, the CLI and media_inspect ([9d4e7e4](https://github.com/AlexGalhardo/stuarty/commit/9d4e7e455d6a6c45dde3cba0a2ec6065cf6e21ec))
+- **ui:** Add the transcript panel with review before removal ([dfabe75](https://github.com/AlexGalhardo/stuarty/commit/dfabe75e2424f733e9e16ebd530772801f4d466d))
+- **ui:** Group the sidebar and give it a full, a rail and a drawer form ([ca7fa02](https://github.com/AlexGalhardo/stuarty/commit/ca7fa02d63cfaf163062dfae5c7a9a53b68a9cdb))
+- **ui:** Add the top bar with a breadcrumb and the chat button ([bdd66d9](https://github.com/AlexGalhardo/stuarty/commit/bdd66d9d7a8317e15ae6e50501c2add366fa7def))
+- **ui:** Add the scene bar with its seven variants over the chat state ([d017c99](https://github.com/AlexGalhardo/stuarty/commit/d017c9943aaef18c0d3c66dec8c084626ab289df))
+- **ui:** Add the bell, the notification center and the scene bar answers ([809c96e](https://github.com/AlexGalhardo/stuarty/commit/809c96e3a555856ac2965801255e92bd1edfe811))
+- **ui:** Mount the shell in the dashboard layout and move the specs to it ([f795cfb](https://github.com/AlexGalhardo/stuarty/commit/f795cfbf2a5b987e8aa81f314d235b9c9cf78b9a))
+- **web:** One frame and one media card for the asset libraries ([cd0c959](https://github.com/AlexGalhardo/stuarty/commit/cd0c959b7b28dfaa40bc28b0af07b6e91b67926f))
+- **web:** Restyle the file detail and say rights and reuse in words ([4defde3](https://github.com/AlexGalhardo/stuarty/commit/4defde388a24671ef0c9b0b5763f949856219e7f))
+- **web:** Sound rows and import form on the library tokens ([d45bd83](https://github.com/AlexGalhardo/stuarty/commit/d45bd837a31130fb426c400413ff7302b368769b))
+- **web:** Empty, loading and error states for the asset libraries ([6e26507](https://github.com/AlexGalhardo/stuarty/commit/6e26507888ac603fc1b47524d23dadcf18673377))
+
+### Fixed
+
+- **cli:** Keep the agent skill under its size limit with the transcript namespace ([c67a5c1](https://github.com/AlexGalhardo/stuarty/commit/c67a5c19b2052cb99b1935e3f5a0f2dbf5c6d7dc))
+- **core:** Detect fillers only over the words the timeline shows ([77c2e43](https://github.com/AlexGalhardo/stuarty/commit/77c2e43db1b9dc7f19f3a789b1354dadf9f7bb31))
+- **service:** Escape, cap and page the transcript words agents read ([6d890ce](https://github.com/AlexGalhardo/stuarty/commit/6d890cea172e74a8331444218628c9ff699d1106))
+- **ui:** Show a failed filler search instead of an unhandled rejection ([a83ae4c](https://github.com/AlexGalhardo/stuarty/commit/a83ae4ce0c28ea0af19e429844702f7cf80ffe0f))
+- **command:** Cut the frames that show a word range at any speed ([85dddff](https://github.com/AlexGalhardo/stuarty/commit/85dddffa79744a810a10f9f93f8845741a0a535c))
+- **ui:** Say what the filler search checked in the language of the person ([fd4f0cf](https://github.com/AlexGalhardo/stuarty/commit/fd4f0cff5a278544712a1fe36d5b3629126e11f1))
+- **service:** Export and import a project with no timeline as a bundle ([9428a8d](https://github.com/AlexGalhardo/stuarty/commit/9428a8d0406281b36aea09cc3ed9b919b198d32a))
+- **service:** Write the bundle of a project with no timeline as version 3 ([452b9ae](https://github.com/AlexGalhardo/stuarty/commit/452b9aeac67bab91234b0a9bb09fe8e1107490f8))
+- **service:** Name the download of a bundle with no timeline after its project ([6f32aec](https://github.com/AlexGalhardo/stuarty/commit/6f32aecc27ab453cf937049abc5526426d8f05df))
+- **service:** Hold the name of a bundle with no timeline to the rule of a title ([02453dc](https://github.com/AlexGalhardo/stuarty/commit/02453dc9e47733cb2f4b53ab13e27e99482ba5a1))
+- **ui:** Fit every sidebar item in a 900 px window ([ee81b4d](https://github.com/AlexGalhardo/stuarty/commit/ee81b4dbe1e7bb18252531a8c8478689ebbb8a29))
+- **ui:** Follow the project of the page and name it on the scene bar ([f57e3de](https://github.com/AlexGalhardo/stuarty/commit/f57e3de34856d3fa767127cd12a7b3178f74e832))
+- **ui:** Let go of the shell streams in a tab that is not on the screen ([dd08936](https://github.com/AlexGalhardo/stuarty/commit/dd08936bf66f4448839758b8b2ba8ff371cb2228))
+- **ui:** Keep Allow and Deny inside the scene bar on a wide window ([ce817f9](https://github.com/AlexGalhardo/stuarty/commit/ce817f934b33a216335d0e036e6c4463bc090f3a))
+- **ui:** Keep the scene bar out of the way in a short window ([f740867](https://github.com/AlexGalhardo/stuarty/commit/f74086736692abd07b4902bec75fb911fb9845d8))
+- **ui:** Keep the shell from scrolling sideways on a phone ([f71c1ac](https://github.com/AlexGalhardo/stuarty/commit/f71c1ac60b5f90090e01f664aca27d7c212771ce))
+- **events:** Open an empty stream for a project with no timeline ([05dc99a](https://github.com/AlexGalhardo/stuarty/commit/05dc99a0310d18d20a5d40986db887315514f415))
+- **ui:** Label the recovery key password apart from the change form ([2b4a97b](https://github.com/AlexGalhardo/stuarty/commit/2b4a97b0b01cd561acdc98450dbd43da2d1caa3a))
+- **repo:** Give the go test step of verify a 40 minute limit it can change ([c1aca59](https://github.com/AlexGalhardo/stuarty/commit/c1aca592bb34b77967c2b71fd225192e17b31efa))
+- **web:** Draw the length on a media card with theme tokens ([9cf5548](https://github.com/AlexGalhardo/stuarty/commit/9cf55489e47b4e8eb6c7fb94ff7fa0e16aa286ed))
+- **web:** Make each origin filter a 32 px target ([3e5fbdd](https://github.com/AlexGalhardo/stuarty/commit/3e5fbdd14f8ca4e8db69622ef13211697f26e163))
+
+### Security
+
+- **security:** Make only the opened browser able to create the account ([b9c3c7d](https://github.com/AlexGalhardo/stuarty/commit/b9c3c7d4f267f3743842ef78b056175264b4a360))
+- **security:** Refuse a clear write that races the account creation ([53cf653](https://github.com/AlexGalhardo/stuarty/commit/53cf6533be92a7079cac70b0292577a789e9a33b))
+- **security:** Read the password in its composed Unicode form ([96b7e2e](https://github.com/AlexGalhardo/stuarty/commit/96b7e2e32955e13061d040827ffdefed31c6722f))
+- **security:** Remove the adoption backup and name the former folder ([30729f2](https://github.com/AlexGalhardo/stuarty/commit/30729f2cdca00311ecaafb3a2a25ebdf15629510))
+- **security:** Refuse a backup and a token rotation of a locked studio ([2103122](https://github.com/AlexGalhardo/stuarty/commit/2103122798f2ab1b057f22c06a536ea05cdd8afc))
+- **security:** End a hosted agent session and save it when the studio locks ([f720cc2](https://github.com/AlexGalhardo/stuarty/commit/f720cc22ec0509164c095048ab815c81fcc31741))
+- **security:** Make another recovery key with the password ([71471ec](https://github.com/AlexGalhardo/stuarty/commit/71471ecb11796968cecaa5dd5939af4244c93d1a))
+- **security:** Format and lint the account fixes ([12a0815](https://github.com/AlexGalhardo/stuarty/commit/12a0815abece8c59b1817b6a8e999f5006148261))
+- **security:** Let a locked workspace be backed up and its token rotated ([7ec397f](https://github.com/AlexGalhardo/stuarty/commit/7ec397f2912df0f8f7c9cdb0f9026c5952133618))
+- **security:** Prove a backup of a locked account workspace holds no clear text ([e925bdc](https://github.com/AlexGalhardo/stuarty/commit/e925bdcfea9cfe8a63cbc8e53bd5b61a802962b4))
+- **security:** Put the seal guards back at every open of an account workspace ([a240ee3](https://github.com/AlexGalhardo/stuarty/commit/a240ee3e38b844dbe776cfeaa0f58f4b29a72f29))
+
 ## [0.49.0] - 2026-11-24
 
 ### Added
@@ -2356,7 +2413,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.49.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.50.0...HEAD
+[0.50.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.49.0...v0.50.0
 [0.49.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.48.0...v0.49.0
 [0.48.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.47.0...v0.48.0
 [0.47.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.46.0...v0.47.0
