@@ -49,10 +49,21 @@ func init() {
 	blur("ok_sped_up_clip", withIDs(newTrack+`, "start": "30f", "duration": "30f"`), clipA(func(it *timeline.Item) {
 		it.Speed, it.SourceIn = rate2, 60
 	}))
+	// VV-392: the blur repeats the edge pixels, so a region at the edge is not reported as weak.
 	blur(
-		"ok_near_edge_is_reported",
+		"ok_at_the_edge_is_not_near_edge",
 		fmt.Sprintf(
 			`{"item_id": %q, "x": 0, "y": 0.9, "width": 1, "height": 0.1, "new_id": %q, %s}`,
+			itemA,
+			itemC,
+			newTrack,
+		),
+		clipA(),
+	)
+	blur(
+		"ok_near_edge_with_a_feather_is_reported",
+		fmt.Sprintf(
+			`{"item_id": %q, "x": 0, "y": 0.9, "width": 1, "height": 0.1, "feather": 12, "new_id": %q, %s}`,
 			itemA,
 			itemC,
 			newTrack,

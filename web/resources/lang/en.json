@@ -2306,8 +2306,7 @@
         "duration": "For",
         "radius": "Blur strength",
         "radius_default": "Strong default",
-        "apply": "Blur this region",
-        "near_edge": "The region is close to an edge of the picture, where the blur is weaker and part of the sharp picture can show through. To hide text at the edge completely, cover it with a shape instead."
+        "apply": "Blur this region"
       },
       "voice_preset": {
         "hint": "One action for a clean, even voice. The export brings the sound to the loudness target of the project.",

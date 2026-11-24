@@ -31,8 +31,10 @@ func init() {
 		Description: "Hides part of the picture (an e-mail, a key, an address): adds a copy of the clip, limited to " +
 			"start and duration, on a Blur track above the clip, with a blur of radius and a rectangular mask of the " +
 			"region. x, y, width and height are fractions of the picture. The radius has a minimum, 1.5% of the " +
-			"shorter side of the project, and a default of 4%, so that the text cannot be read. Within 2 radii of an " +
-			"edge of the picture the blur is weaker and effective.near_edge is true: cover text there with a shape. " +
+			"shorter side of the project, and a default of 4%, so that the text cannot be read. A region that touches " +
+			"an edge of the picture is blurred as much as one in the middle. A feather is soft on both sides of " +
+			"the border of the region, so within half of it of an edge of the picture a little of the sharp " +
+			"picture shows and effective.near_edge is true: use feather 0 there. " +
 			"The clip is not changed; edit or delete the item named Blur region to change it.",
 		Example: `{"item_id": "itm_m1n2p3q4r5", "x": 0.1, "y": 0.62, "width": 0.8, "height": 0.08, "start": "1s", "duration": "2s"}`,
 		Errors: []string{
@@ -156,9 +158,11 @@ func applyClipBlurRegion(c *Context, a *clipBlurRegionArgs) error {
 	c.Doc.Items[id] = piece
 
 	w, h := float64(c.Doc.Settings.Width)*src.Scale, float64(c.Doc.Settings.Height)*src.Scale
-	reach := 2 * radius
-	near := mask.X*w < reach || mask.Y*h < reach ||
-		(1-mask.X-mask.Width)*w < reach || (1-mask.Y-mask.Height)*h < reach
+	// The blur repeats the edge pixels of the picture, so an edge is as unreadable as the middle (VV-392); only
+	// a feather is soft there, centred on the border of the region, half of it outside the picture.
+	reach := float64(mask.Feather) / 2
+	near := reach > 0 && (mask.X*w < reach || mask.Y*h < reach ||
+		(1-mask.X-mask.Width)*w < reach || (1-mask.Y-mask.Height)*h < reach)
 
 	c.SetEffective("new_id", id)
 	c.SetEffective("track_id", trackID)
