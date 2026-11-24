@@ -123,7 +123,10 @@ func TestRecordingEndToEndWithTheRealHelper(t *testing.T) {
 	}
 
 	if len(pg.Document.Items) != 1 {
-		t.Fatalf("the timeline has %d items after placing, want one clip (revision %d)", len(pg.Document.Items), placed.Revision)
+		t.Fatalf(
+			"the timeline has %d items after placing, want one clip (revision %d)",
+			len(pg.Document.Items), placed.Revision,
+		)
 	}
 
 	fps := float64(pg.Document.Settings.FPS.Num) / float64(pg.Document.Settings.FPS.Den)
