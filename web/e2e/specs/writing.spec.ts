@@ -333,9 +333,25 @@ test.describe("writing", () => {
 				secret: KEY,
 			});
 
+			// A destination that also accepts text is not an AI provider, so the panel must not offer it (VV-403).
+			const siteLabel = `Blog ${tag}`;
+			await agent("POST", "/connections", {
+				kind: "test",
+				label: siteLabel,
+				endpoint: "http://127.0.0.1:9/health",
+				accepts: ["text"],
+				secret: KEY,
+			});
+
 			await page.goto("/write");
 			await page.locator(`[data-text-id="${created.item.id}"]`).click();
 			const draft = page.getByTestId("draft-panel");
+			await expect(draft.getByLabel("Connection")).toBeVisible();
+			await expect(
+				draft
+					.getByLabel("Connection")
+					.locator("option", { hasText: siteLabel }),
+			).toHaveCount(0);
 			await draft.getByLabel("Connection").selectOption({ label });
 			await expect(draft.getByLabel("Model")).toHaveValue(modelId);
 			await draft.getByLabel("Network").selectOption("instagram");
