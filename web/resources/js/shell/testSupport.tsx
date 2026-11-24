@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import type { ApprovalQueueState } from "@/dashboard/approval/useApprovalQueue";
 import type { ChatPanelState } from "@/dashboard/chat/useChat";
 import { I18nProvider } from "@/lib/i18n";
 import { SessionProvider } from "@/lib/session";
@@ -35,6 +36,7 @@ export function fakeChat(over: Partial<ChatPanelState> = {}): ChatPanelState {
 		failure: null,
 		busy: false,
 		selectProject: () => undefined,
+		needProfiles: () => undefined,
 		start: nothing,
 		send: nothing,
 		cancel: nothing,
@@ -47,19 +49,37 @@ export function fakeChat(over: Partial<ChatPanelState> = {}): ChatPanelState {
 	};
 }
 
+// A queue that has read nothing.
+export function fakeApprovals(
+	over: Partial<ApprovalQueueState> = {},
+): ApprovalQueueState {
+	return {
+		requests: null,
+		live: false,
+		failure: null,
+		busyId: null,
+		decide: nothing,
+		...over,
+	};
+}
+
 export function Frame({
 	children,
 	chat = fakeChat(),
+	approvals = fakeApprovals(),
 	privileged = true,
 }: {
 	children: ReactNode;
 	chat?: ChatPanelState;
+	approvals?: ApprovalQueueState;
 	privileged?: boolean;
 }): ReactNode {
 	return (
 		<I18nProvider messages={messages} locale="en" locales={["en", "pt-BR"]}>
 			<SessionProvider session={{ privileged, mode: "local" }}>
-				<ShellProvider chat={chat}>{children}</ShellProvider>
+				<ShellProvider chat={chat} approvals={approvals}>
+					{children}
+				</ShellProvider>
 			</SessionProvider>
 		</I18nProvider>
 	);

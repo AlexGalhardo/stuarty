@@ -1,13 +1,14 @@
 import { usePage } from "@inertiajs/react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
-
+import { useApprovalQueue } from "@/dashboard/approval/useApprovalQueue";
 import ChatDock from "@/dashboard/chat/ChatDock";
 import { useChat } from "@/dashboard/chat/useChat";
 import Sidebar, { useSidebar } from "@/dashboard/Sidebar";
 import { useT } from "@/lib/i18n";
 import type { SharedProps } from "@/types";
 import ConnectedSceneBar from "../shell/ConnectedSceneBar";
-import { projectInUrl, ShellProvider } from "../shell/ShellContext";
+import NotificationBell from "../shell/NotificationBell";
+import { projectInUrl, ShellProvider, useShell } from "../shell/ShellContext";
 import TopBar from "../shell/TopBar";
 
 // The path of the page the person was on: a change of page moves the focus to the main region, so a
@@ -26,8 +27,9 @@ export default function DashboardLayout({
 	const page = usePage<SharedProps>();
 	// One read of the agent session for the whole frame: the scene bar and the panel show the same one.
 	const chat = useChat(true, projectInUrl(page.url));
+	const approvals = useApprovalQueue();
 	return (
-		<ShellProvider chat={chat}>
+		<ShellProvider chat={chat} approvals={approvals}>
 			<Frame>{children}</Frame>
 		</ShellProvider>
 	);
@@ -38,6 +40,7 @@ function Frame({ children }: { children: ReactNode }): ReactNode {
 	const page = usePage<SharedProps>();
 	const main = useRef<HTMLElement>(null);
 	const sidebar = useSidebar();
+	const { approvals } = useShell();
 	const [menuOpen, setMenuOpen] = useState(false);
 	const path = page.url.split(/[?#]/)[0] ?? page.url;
 	useEffect(() => {
@@ -79,6 +82,7 @@ function Frame({ children }: { children: ReactNode }): ReactNode {
 				user={page.props.auth?.user ?? null}
 				account={page.props.account ?? null}
 				person={page.props.session?.privileged ?? false}
+				pendingApprovals={approvals.requests?.length ?? 0}
 				drawerOpen={menuOpen}
 				onDrawerOpenChange={setMenuOpen}
 			/>
@@ -88,7 +92,9 @@ function Frame({ children }: { children: ReactNode }): ReactNode {
 					drawer={sidebar.form === "drawer"}
 					menuOpen={menuOpen}
 					onOpenMenu={() => setMenuOpen(true)}
-				/>
+				>
+					<NotificationBell />
+				</TopBar>
 				<main
 					ref={main}
 					id="main"

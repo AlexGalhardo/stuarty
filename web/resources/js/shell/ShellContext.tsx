@@ -9,6 +9,7 @@ import {
 	useState,
 } from "react";
 
+import type { ApprovalQueueState } from "../dashboard/approval/useApprovalQueue";
 import type { ChatPanelState } from "../dashboard/chat/useChat";
 
 // What the parts of the shell share: the chat the dock talks to (one read of the session and its events,
@@ -16,6 +17,8 @@ import type { ChatPanelState } from "../dashboard/chat/useChat";
 // open and the button that opens it, which gets the focus back when the panel closes.
 export interface ShellState {
 	chat: ChatPanelState;
+	// the approvals that wait, kept live by the queue stream
+	approvals: ApprovalQueueState;
 	chatOpen: boolean;
 	setChatOpen(open: boolean): void;
 	openChat(): void;
@@ -33,17 +36,19 @@ export function projectInUrl(url: string): string | null {
 
 export function ShellProvider({
 	chat,
+	approvals,
 	children,
 }: {
 	chat: ChatPanelState;
+	approvals: ApprovalQueueState;
 	children: ReactNode;
 }): ReactNode {
 	const [chatOpen, setChatOpen] = useState(false);
 	const chatButton = useRef<HTMLButtonElement | null>(null);
 	const openChat = useCallback(() => setChatOpen(true), []);
 	const value = useMemo(
-		() => ({ chat, chatOpen, setChatOpen, openChat, chatButton }),
-		[chat, chatOpen, openChat],
+		() => ({ chat, approvals, chatOpen, setChatOpen, openChat, chatButton }),
+		[chat, approvals, chatOpen, openChat],
 	);
 	return (
 		<ShellContext.Provider value={value}>{children}</ShellContext.Provider>

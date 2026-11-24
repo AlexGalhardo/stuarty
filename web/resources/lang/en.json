@@ -89,6 +89,24 @@
           "failed": "Failed"
         }
       },
+      "notify": {
+        "title": "Notifications",
+        "bell": "Notifications",
+        "bell_waiting": "Notifications, {count} waiting for you",
+        "scope": "The permission requests of the agent conversation of this project and the approvals waiting in the queue.",
+        "empty": "Nothing waits for you.",
+        "open_chat": "Open the conversation",
+        "review": "Review in Approvals",
+        "state": {
+          "waiting": "Waiting for you",
+          "allowed": "Allowed",
+          "denied": "Denied"
+        },
+        "kind": {
+          "permission": "Agent permission",
+          "approval": "Approval"
+        }
+      },
       "drawer": {
         "title": "Navigation",
         "description": "The sections of the studio."
