@@ -3124,7 +3124,7 @@
         "not_encrypted_title": "What is not encrypted",
         "title": "Create your account",
         "intro": "Your texts, briefs, chats, publications and credentials are encrypted with a key that is only in memory while you are signed in. While Stuarty is locked, no page, command or agent reads them.",
-        "not_encrypted": "Not encrypted: your media files, and the names of projects, files and notes. Anyone who can open this folder on the disk can read those. Everything you wrote is encrypted: texts, captions and the words inside a timeline or an image, the edit history, descriptions and rights notes, and your memory notes, prompts and skills. To edit a skill with another tool, export it first.",
+        "not_encrypted": "Not encrypted: your media files, the names, titles and tags of projects, files, notes and templates, and the description of a template. Anyone who can open this folder on the disk can read those. Encrypted: texts, captions and the words inside a timeline or an image, the edit history, the descriptions of projects and files and their rights notes, and your memory notes, prompts and skills. To edit a skill with another tool, export it first.",
         "submit": "Create account"
       },
       "recovery": {
