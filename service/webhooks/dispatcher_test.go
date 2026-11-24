@@ -1,9 +1,12 @@
 package webhooks
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -268,5 +271,51 @@ func TestALockedStudioSendsNothingAndReadsNoSecret(t *testing.T) {
 
 	if n := d.RunOnce(ctx); n != 1 || doer.count() != 1 || secrets.n != 1 {
 		t.Fatalf("after the unlock: took %d, %d requests, %d secret reads", n, doer.count(), secrets.n)
+	}
+}
+
+// fullStore has one webhook that chose export.ready and already holds core.MaxPending pending deliveries.
+type fullStore struct {
+	Store
+
+	enqueued int
+}
+
+func (*fullStore) List(context.Context) ([]Row, error) {
+	return []Row{{
+		ID: "whk_full", URL: "https://hooks.example.com/secret-path", Events: []string{core.ExportReady}, Enabled: true,
+	}}, nil
+}
+
+func (s *fullStore) Enqueue(context.Context, Delivery) (bool, error) {
+	s.enqueued++
+
+	return false, ErrQueueFull
+}
+
+// VV-370: an event past the ceiling is not stored, and that is not silent: the log names the webhook and the reason,
+// and not the address or the body (SDD-022 section 4). Nothing is woken for it.
+func TestAnEventPastTheCeilingIsLoggedWithoutTheAddress(t *testing.T) {
+	t.Parallel()
+
+	var buf bytes.Buffer
+
+	st := &fullStore{}
+	d := New(Options{
+		Store: st, Secrets: oneSecret{}, NewID: func(p string) string { return p + "_x" },
+		Clock: &testClock{at: time.Date(2026, 11, 21, 12, 0, 0, 0, time.UTC)},
+		Log:   slog.New(slog.NewTextHandler(&buf, nil)),
+	})
+
+	d.Publish(context.Background(), core.ExportReadyData{JobID: "job_a", Kind: "video"}, time.Now())
+
+	log := buf.String()
+	if st.enqueued != 1 || !strings.Contains(log, "level=WARN") || !strings.Contains(log, "whk_full") ||
+		!strings.Contains(log, ErrQueueFull.Error()) {
+		t.Fatalf("enqueued %d, log %q", st.enqueued, log)
+	}
+
+	if strings.Contains(log, "secret-path") || strings.Contains(log, "job_a") {
+		t.Fatalf("the log holds the address or the body: %q", log)
 	}
 }
