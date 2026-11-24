@@ -14,6 +14,10 @@
   --color-border-strong: var(--border-strong);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
+  --color-focus: var(--focus);
+  --color-agent: var(--agent);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-text: var(--warning-text);
   --color-code-bg: var(--code-bg);
   /* Brand tokens of design-system section 11.3: indigo in the light theme, lilac in the dark one. */
   --color-brand: var(--brand);
@@ -31,17 +35,22 @@
 }
 
 :root {
-  --bg: #ffffff;
-  --fg: #0a0a0a;
-  --muted: #525252;
-  --faint: #6b6b6b;
-  --subtle: #fafafa;
-  --hover: #f4f4f5;
-  --border: #ececec;
-  --border-strong: #dcdcdc;
-  --accent: #5b3fd6;
-  --accent-soft: #f3f0ff;
-  --code-bg: #fbfbfb;
+  /* The tokens of the final redesign (Trilha), light theme: warm paper, indigo accent. */
+  --bg: #faf9f5;
+  --fg: #1e1d18;
+  --muted: #4e4c3f;
+  --faint: #66634f;
+  --subtle: #f3f1ea;
+  --hover: #eae7dd;
+  --border: #dcd8cb;
+  --border-strong: #85816f;
+  --accent: #4339cc;
+  --accent-soft: #e9e8fc;
+  --focus: #4339cc;
+  --code-bg: #f3f1ea;
+  --agent: #0f6f67;
+  --warning-soft: #fbefd2;
+  --warning-text: #855700;
   --brand: oklch(0.442 0.222 272.9);
   --brand-foreground: oklch(0.994 0 0);
   --brand-accent: oklch(0.645 0.189 282.5);
@@ -50,7 +59,7 @@
   --cta: oklch(0.7 0.2 48);
   --cta-foreground: oklch(0.145 0 0);
   --cta-hover: oklch(0.64 0.2 45);
-  --nav-hover: #8a00d4;
+  --nav-hover: #4339cc;
   --duration-scene: 700ms;
   --duration-reveal: 500ms;
   --duration-hover: 150ms;
@@ -62,24 +71,28 @@
 }
 
 .dark {
-  --bg: #08090c;
-  --fg: #ededed;
-  --muted: #a1a1a1;
-  --faint: #8a8a8a;
-  --subtle: #0c0c0c;
-  --hover: #151515;
-  --border: #1c1c1c;
-  --border-strong: #2a2a2a;
-  --accent: #a594ff;
-  --accent-soft: #15112b;
-  --code-bg: #0a0a0a;
+  --bg: #15161c;
+  --fg: #eeeff4;
+  --muted: #bcbfcd;
+  --faint: #9a9eb1;
+  --subtle: #0f1015;
+  --hover: #2a2c37;
+  --border: #363947;
+  --border-strong: #747a8f;
+  --accent: #b3b5ff;
+  --accent-soft: #1c1c45;
+  --focus: #b3b5ff;
+  --code-bg: #0f1015;
+  --agent: #3ddcc8;
+  --warning-soft: #2e2410;
+  --warning-text: #f6cc7c;
   --brand: oklch(0.645 0.189 282.5);
   --brand-foreground: oklch(0.145 0 0);
   --brand-accent: oklch(0.72 0.17 282);
   --brand-subtle: oklch(0.29 0.13 272 / 40%);
   --brand-text: oklch(0.8 0.13 281);
   --cta-hover: oklch(0.76 0.18 55);
-  --nav-hover: #c060ff;
+  --nav-hover: #b3b5ff;
   color-scheme: dark;
 }
 
@@ -123,7 +136,7 @@ body {
 
 @layer base {
   :focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--focus);
     outline-offset: 2px;
   }
 }
