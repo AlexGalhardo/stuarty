@@ -25,6 +25,9 @@ struct Inner {
 	/// Closed pauses as (from, to) in wall nanoseconds since the origin, in order.
 	pauses: Vec<(i64, i64)>,
 	open_pause: Option<i64>,
+	/// The wall moment the recording was asked to end, once it was: every track ends there, however late its
+	/// thread notices the stop.
+	end: Option<i64>,
 }
 
 #[derive(Default)]
@@ -90,11 +93,24 @@ impl Clock {
 		self.lock().open_pause.is_some()
 	}
 
-	/// Active nanoseconds now. While paused it stays at the value of the moment the pause began.
+	/// Active nanoseconds now. While paused it stays at the value of the moment the pause began, and once the
+	/// recording ended at the value of its end.
 	pub fn active_ns(&self) -> i64 {
-		let wall = self.wall_ns();
+		let now = self.wall_ns();
 		let i = self.lock();
+		let wall = i.end.map_or(now, |e| e.min(now));
 		active_of(&i, wall).unwrap_or_else(|| open_pause_active(&i))
+	}
+
+	/// Fixes the end of the recording now. A stop reaches the threads of the tracks at different moments, and a
+	/// busy machine can hold one of them for a few hundred milliseconds; with the end fixed, each pads or
+	/// catches up to the same instant, so every file has the same length. A second call keeps the first end.
+	pub fn end(&self) {
+		let now = self.wall_ns();
+		let mut i = self.lock();
+		if i.origin.is_some() && i.end.is_none() {
+			i.end = Some(now);
+		}
 	}
 
 	/// Active time of a wall moment; None inside a pause. A moment before the origin is returned as it is
@@ -145,7 +161,7 @@ impl Clock {
 		let i = self.lock();
 		let mut out: Vec<(i64, i64)> = i.pauses.clone();
 		if let Some(from) = i.open_pause {
-			out.push((from, wall.max(from + 1)));
+			out.push((from, i.end.unwrap_or(wall).max(from + 1)));
 		}
 		out.into_iter()
 			.map(|(a, b)| {
@@ -176,6 +192,12 @@ impl Clock {
 		let mut cuts: Vec<(i64, i64)> = i.pauses.clone();
 		if let Some(from) = i.open_pause {
 			cuts.push((from, i64::MAX));
+		}
+		// Sound stamped after the end is not part of the recording.
+		if let Some(end) = i.end
+			&& i.open_pause.is_none()
+		{
+			cuts.push((end, i64::MAX));
 		}
 
 		let mut out = Vec::new();
@@ -270,6 +292,33 @@ mod tests {
 		assert_eq!(c.active_of_wall(5000 * MS), Some(3500 * MS));
 		assert_eq!(c.active_of_wall(-5 * MS), Some(-5 * MS));
 		assert_eq!(c.pauses_ms(), vec![(1000, 1500), (3000, 4000)]);
+	}
+
+	/// Every track ends at the instant the stop was asked for, not when its thread noticed it.
+	#[test]
+	fn the_end_fixes_active_time_and_cuts_later_sound() {
+		let c = clock();
+		std::thread::sleep(std::time::Duration::from_millis(30));
+		c.end();
+		let a = c.active_ns();
+		std::thread::sleep(std::time::Duration::from_millis(40));
+		assert_eq!(c.active_ns(), a, "active time moved after the end");
+		c.end();
+		assert_eq!(c.active_ns(), a, "a second end moved it");
+		// a 10 ms packet that starts 5 ms before the end keeps only its first 5 ms (240 frames at 48 kHz)
+		let segs = c.segments(a - 5 * MS, 480, 48_000);
+		assert_eq!(segs.len(), 1, "{segs:?}");
+		assert_eq!((segs[0].first_frame, segs[0].frames), (0, 240));
+		assert!(c.segments(a + MS, 480, 48_000).is_empty());
+	}
+
+	#[test]
+	fn an_end_before_the_origin_is_ignored() {
+		let c = Clock::new();
+		c.end();
+		c.start(0);
+		std::thread::sleep(std::time::Duration::from_millis(20));
+		assert!(c.active_ns() >= 15 * MS);
 	}
 
 	#[test]
