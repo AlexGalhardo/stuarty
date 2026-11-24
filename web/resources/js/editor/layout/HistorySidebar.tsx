@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useT } from "@/lib/i18n";
 import HistoryPanel from "../history/HistoryPanel";
+import { PanelTitle } from "../library/PanelFrame";
 import { useRuntime, useUiState } from "../state/EditorContext";
 
 // The history sidebar (SDD-012 sections 6.1 and 15, epic 60): a region of its own
@@ -46,7 +47,8 @@ export default function HistorySidebar(): ReactNode {
 				</Tooltip>
 			</div>
 			{open && (
-				<div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto p-3">
+				<div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 overflow-auto p-3">
+					<PanelTitle>{t("ui.editor.history.title")}</PanelTitle>
 					<HistoryPanel />
 				</div>
 			)}
