@@ -28,6 +28,7 @@ import {
 	waitingCount,
 } from "./notifications";
 import { useShell } from "./ShellContext";
+import { projectNameOf } from "./sceneState";
 
 const STATE: Record<NotificationState, { icon: LucideIcon; tone: string }> = {
 	waiting: { icon: Hourglass, tone: "text-warning-text" },
@@ -40,6 +41,7 @@ const STATE: Record<NotificationState, { icon: LucideIcon; tone: string }> = {
 // its own page, which the row links to.
 function Row({
 	item,
+	project,
 	busy,
 	disabledBy,
 	onAnswer,
@@ -47,6 +49,8 @@ function Row({
 	onNavigate,
 }: {
 	item: Notification;
+	// the project of the chat session (untrusted text), named on a permission row
+	project: string | null;
 	busy: boolean;
 	disabledBy: string | undefined;
 	onAnswer(requestId: string, answer: "allow" | "reject"): void;
@@ -76,6 +80,13 @@ function Row({
 			<div className="min-w-0">
 				<p className="truncate text-xs text-muted-foreground">
 					<UntrustedText>{item.agent}</UntrustedText>
+					{item.kind === "permission" && project !== null && (
+						<span data-testid="notification-project">
+							{" · "}
+							<span className="sr-only">{t("ui.shell.scene.project")} </span>
+							<UntrustedText>{project}</UntrustedText>
+						</span>
+					)}
 				</p>
 				<p className="text-sm font-medium break-words">
 					<UntrustedText>{item.title}</UntrustedText>
@@ -133,6 +144,7 @@ function Row({
 // reason a session that is not a person's cannot answer.
 export function CenterBody({
 	items,
+	project = null,
 	failure,
 	busy,
 	personOnlyId,
@@ -142,6 +154,7 @@ export function CenterBody({
 	onNavigate,
 }: {
 	items: readonly Notification[];
+	project?: string | null;
 	failure: Failure | null;
 	busy: boolean;
 	personOnlyId: string;
@@ -167,6 +180,7 @@ export function CenterBody({
 						<Row
 							key={`${item.kind}-${item.id}`}
 							item={item}
+							project={project}
 							busy={busy}
 							disabledBy={privileged ? undefined : personOnlyId}
 							onAnswer={onAnswer}
@@ -245,6 +259,7 @@ export default function NotificationBell(): ReactNode {
 					</SheetHeader>
 					<CenterBody
 						items={items}
+						project={projectNameOf(chat.session, chat.projects)}
 						failure={approvals.failure}
 						busy={chat.busy}
 						personOnlyId={`${ids}-person-only`}

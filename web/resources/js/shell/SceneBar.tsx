@@ -84,12 +84,15 @@ function Slot({
 // "Not reported" until the server reports one, and there is no next step, no cost and no "always allow".
 export default function SceneBar({
 	model,
+	project = null,
 	connected,
 	busy,
 	onAnswer,
 	onOpenChat,
 }: {
 	model: SceneModel;
+	// the name of the project of the session (untrusted text): the page may be about another one, or none
+	project?: string | null;
 	// whether an agent profile exists: null until the list was read
 	connected: boolean | null;
 	busy: boolean;
@@ -112,7 +115,7 @@ export default function SceneBar({
 	// Said to a reader only when a person is needed: a running agent changes tool all the time.
 	const announcement =
 		variant === "waiting" || variant === "failed"
-			? `${model.agent ?? ""}: ${t(`ui.shell.scene.state.${variant}`)}${reason}${
+			? `${model.agent ?? ""}${project === null ? "" : ` (${project})`}: ${t(`ui.shell.scene.state.${variant}`)}${reason}${
 					request?.title ? `: ${request.title}` : ""
 				}`
 			: "";
@@ -145,6 +148,16 @@ export default function SceneBar({
 							t("ui.shell.scene.none")
 						) : (
 							<UntrustedText>{model.agent}</UntrustedText>
+						)}
+						{model.agent !== null && project !== null && (
+							<span
+								data-testid="scene-project"
+								className="font-normal text-muted-foreground"
+							>
+								{" · "}
+								<span className="sr-only">{t("ui.shell.scene.project")} </span>
+								<UntrustedText>{project}</UntrustedText>
+							</span>
 						)}
 					</p>
 					<p

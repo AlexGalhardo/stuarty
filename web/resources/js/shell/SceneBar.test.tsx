@@ -220,6 +220,35 @@ describe("SceneBar variants", () => {
 		}
 	});
 
+	test("names the project of the session, as untrusted text, on the bar and to a reader", () => {
+		const html = renderToString(
+			<Frame>
+				<SceneBar
+					model={sceneOf(
+						session({ state: "awaiting_permission" }),
+						events(ask),
+					)}
+					project="<b>Launch</b>"
+					connected
+					busy={false}
+					onAnswer={() => undefined}
+					onOpenChat={() => undefined}
+				/>
+			</Frame>,
+		);
+		expect(html).toContain('data-testid="scene-project"');
+		expect(html).toContain("&lt;b&gt;Launch&lt;/b&gt;");
+		expect(html).not.toContain("<b>Launch");
+		expect(html).toContain(
+			"Claude Code (&lt;b&gt;Launch&lt;/b&gt;): Asks your permission",
+		);
+	});
+
+	test("with no project name it names none", () => {
+		const html = draw(sceneOf(session(), []));
+		expect(html).not.toContain("scene-project");
+	});
+
 	test("is a labelled region", () => {
 		expect(draw(sceneOf(null, []))).toMatch(
 			/<section aria-label="Agent status" data-testid="scene-bar"/,
