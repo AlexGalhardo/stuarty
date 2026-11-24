@@ -129,7 +129,9 @@ export default function SceneBar({
 			data-testid="scene-bar"
 			data-variant={variant}
 			className={cn(
-				"sticky bottom-0 z-20 flex shrink-0 flex-wrap items-center gap-x-6 gap-y-2 border-t px-4 py-2",
+				// A window under 30 rem high (a phone on its side, 400 % zoom) keeps the bar at the end of the page:
+				// stuck to the bottom, its card would hide most of what is left between it and the top bar.
+				"sticky bottom-0 z-20 flex shrink-0 flex-wrap items-center gap-x-6 gap-y-2 border-t px-4 py-2 [@media(max-height:30rem)]:static",
 				note ? "md:min-h-14" : "md:h-14 md:flex-nowrap md:py-0",
 				look.tone,
 			)}
@@ -147,7 +149,8 @@ export default function SceneBar({
 					)}
 				/>
 				<div className="min-w-0">
-					<p className="truncate text-sm font-medium">
+					{/* relative: the sr-only word of the project is absolute, and would escape the clip of a static line */}
+					<p className="relative truncate text-sm font-medium">
 						{model.agent === null ? (
 							t("ui.shell.scene.none")
 						) : (
