@@ -1,62 +1,43 @@
 import { renderToString } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 
-import type { ChatEvent, ChatSession } from "../editor/api/types";
 import NotificationBell, { CenterBody } from "./NotificationBell";
-import { type Notification, notificationsOf } from "./notifications";
-import { Frame, fakeApprovals, fakeChat } from "./testSupport";
+import type { Notification } from "./notifications";
+import { Frame, fakeInbox, inboxRow } from "./testSupport";
 
-const session: ChatSession = {
-	id: "chs_1",
-	project_id: "prj_1",
-	profile: "Claude Code",
-	state: "awaiting_permission",
-	title: "",
-	created_at: "",
-	updated_at: "",
-	event_count: 0,
-	live: true,
-};
+const permission = inboxRow({
+	tool: "Remove <b>12</b> silences",
+	skill: "caption-style",
+});
 
-const asked: ChatEvent = {
-	seq: 1,
-	kind: "permission_request",
-	at: "2026-01-01T10:00:00Z",
-	permission: {
-		request_id: "r1",
-		title: "Remove <b>12</b> silences",
-		options: [
-			{ option_id: "a", name: "Always allow", kind: "allow_always" },
-			{ option_id: "b", name: "Allow once", kind: "allow_once" },
-		],
-	},
-};
-
-const pending = {
-	id: "apr_1",
-	actor: "agent:claude",
-	kind: "publish.post",
+const approval = inboxRow({
+	id: "approval:apr_aaaaaaaaaa",
+	source: "approval",
+	source_id: "apr_aaaaaaaaaa",
+	session_id: "",
+	agent: "agent:claude",
+	tool: "publish.upload",
 	summary: "Publish to Instagram",
-	connection_id: null,
-	project_id: null,
-	job_id: null,
-	payload_ref: "",
-	estimate: { micros: 0, currency: "" },
-	state: "pending",
-	decided_by: null,
-	rule_id: null,
-	created_at: "2026-01-01T11:00:00Z",
-	decided_at: null,
-	expires_at: "",
-} as never;
+	destination: "con_aaaaaaaaaa / prj_aaaaaaaaaa",
+	cost: { micros: 1_500_000, currency: "USD" },
+	project_id: "prj_aaaaaaaaaa",
+});
 
-function body(items: Notification[], privileged = true): string {
+function body(
+	items: Notification[],
+	over: {
+		privileged?: boolean;
+		projectName?: (id: string) => string | null;
+	} = {},
+): string {
+	const privileged = over.privileged ?? true;
 	return renderToString(
 		<Frame privileged={privileged}>
 			<CenterBody
 				items={items}
+				projectName={over.projectName}
 				failure={null}
-				busy={false}
+				busyId={null}
 				personOnlyId="why"
 				privileged={privileged}
 				onAnswer={() => undefined}
@@ -79,11 +60,16 @@ describe("NotificationBell", () => {
 		expect(html).not.toContain("bell-count");
 	});
 
-	test("the count is the open permissions plus the pending approvals, and a word for a reader", () => {
+	test("the count is every row that waits, from either source, and a word for a reader", () => {
 		const html = renderToString(
 			<Frame
-				chat={fakeChat({ session, events: [asked] })}
-				approvals={fakeApprovals({ requests: [pending] })}
+				inbox={fakeInbox({
+					rows: [
+						permission,
+						approval,
+						inboxRow({ id: "chat:cpr_z", state: "rejected" }),
+					],
+				})}
 			>
 				<NotificationBell />
 			</Frame>,
@@ -100,70 +86,97 @@ describe("CenterBody", () => {
 		expect(body([])).toContain("Nothing waits for you.");
 	});
 
-	test("a pending approval is listed and its action leads to Approvals", () => {
-		const html = body(notificationsOf(null, [], [pending]));
+	test("a pending approval is listed with its cost and where, and its action leads to Approvals", () => {
+		const html = body([approval]);
 		expect(html).toContain('data-kind="approval"');
 		expect(html).toContain("Publish to Instagram");
+		expect(html).toContain("publish.upload");
+		expect(html).toMatch(/data-testid="notification-cost"[^>]*>\$1\.50</);
+		expect(html).toContain("con_aaaaaaaaaa / prj_aaaaaaaaaa");
 		expect(html).toMatch(
 			/href="\/approvals"[^>]*data-testid="notification-review"|data-testid="notification-review"[^>]*href="\/approvals"/,
 		);
 		expect(html).toContain("Review in Approvals");
+		expect(html).toMatch(
+			/data-testid="notification-undo"[^>]*>Cannot be undone</,
+		);
+		expect(html).not.toContain("notification-allow");
 	});
 
 	test("a chat permission is answered with Allow once and Deny, never always", () => {
-		const html = body(notificationsOf(session, [asked], null));
+		const html = body([permission]);
 		expect(html).toContain('data-testid="notification-allow"');
 		expect(html).toContain('data-testid="notification-deny"');
 		expect(html).toContain("Allow once");
 		expect(html).not.toMatch(/always/i);
 	});
 
+	test("a permission of a tool outside Stuarty says Not reported for the item, the place and the undo", () => {
+		const html = body([permission]);
+		for (const id of [
+			"notification-item",
+			"notification-destination",
+			"notification-undo",
+		]) {
+			expect(html).toMatch(
+				new RegExp(`data-testid="${id}"[^>]*>Not reported<`),
+			);
+		}
+		expect(html).toMatch(/data-testid="notification-cost"[^>]*>No cost</);
+		expect(html).toMatch(
+			/data-testid="notification-skill"[^>]*>.*caption-style/,
+		);
+		expect(html).not.toContain("Can be undone");
+	});
+
+	test("a permission of a tool of Stuarty says what it does in plain words, beside the title the agent wrote", () => {
+		const html = body([
+			inboxRow({
+				tool: "mcp__stuarty__edit",
+				action_key: "ui.agent_activity.tool.edit",
+				item: "ast_3c5v8n2w6d",
+				destination: "prj_aaaaaaaaaa",
+				undoable: true,
+			}),
+		]);
+		expect(html).toContain("Changes a project or an image.");
+		expect(html).toContain("mcp__stuarty__edit");
+		expect(html).toContain("ast_3c5v8n2w6d");
+		expect(html).toMatch(/data-testid="notification-undo"[^>]*>Can be undone</);
+		expect(html).toContain("as the agent described the call");
+	});
+
 	test("the title of the request is text, never markup", () => {
-		const html = body(notificationsOf(session, [asked], null));
+		const html = body([permission]);
 		expect(html).toContain("Remove &lt;b&gt;12&lt;/b&gt; silences");
 		expect(html).not.toContain("<b>12</b>");
 	});
 
-	test("every row says its state in a word", () => {
-		const answered: ChatEvent[] = [
-			asked,
-			{
-				seq: 2,
-				kind: "permission_answer",
-				at: "2026-01-01T10:05:00Z",
-				permission: { request_id: "r1", answer: "reject" },
-			},
-		];
-		const html = body(
-			notificationsOf({ ...session, state: "idle" }, answered, null),
-		);
+	test("every row says its state in a word, the answer of a person included", () => {
+		const html = body([
+			inboxRow({ state: "rejected" }),
+			inboxRow({ id: "chat:cpr_c", state: "approved" }),
+			{ ...approval, id: "approval:apr_b", state: "expired" },
+			{ ...approval, id: "approval:apr_c", state: "approved" },
+		]);
 		expect(html).toContain('data-state="denied"');
 		expect(html).toContain("Denied");
+		expect(html).toContain('data-state="allowed"');
+		expect(html).toContain('data-state="expired"');
+		expect(html).toContain('data-state="approved"');
 		expect(html).not.toContain("notification-allow");
 	});
 
 	test("a permission row names the project of its session, as text", () => {
-		const html = renderToString(
-			<Frame>
-				<CenterBody
-					items={notificationsOf(session, [asked], null)}
-					project="<i>Launch</i>"
-					failure={null}
-					busy={false}
-					personOnlyId="why"
-					privileged
-					onAnswer={() => undefined}
-					onOpenChat={() => undefined}
-					onNavigate={() => undefined}
-				/>
-			</Frame>,
-		);
+		const html = body([permission], {
+			projectName: () => "<i>Launch</i>",
+		});
 		expect(html).toContain('data-testid="notification-project"');
 		expect(html).toContain("&lt;i&gt;Launch&lt;/i&gt;");
 	});
 
 	test("a session that is not a person sees the actions disabled with the reason", () => {
-		const html = body(notificationsOf(session, [asked], null), false);
+		const html = body([permission], { privileged: false });
 		expect(html).toMatch(
 			/<button[^>]*disabled[^>]*data-testid="notification-allow"/,
 		);

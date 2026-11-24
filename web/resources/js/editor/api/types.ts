@@ -2075,6 +2075,49 @@ export interface ChatActivity {
 	untrusted_notice: string;
 }
 
+export type InboxSource = "chat" | "approval";
+export type InboxState =
+	| "waiting"
+	| "approved"
+	| "rejected"
+	| "expired"
+	| "cancelled";
+
+// One request that waits for a person, or one answered last, from the chat or from the approval queue
+// (GET /inbox, SDD-015 section 4.1). The UI draws it and decides nothing from it: a row is answered where
+// its source is answered. agent, skill, tool, summary, item and destination are text an agent wrote.
+export interface InboxRow {
+	id: string;
+	source: InboxSource;
+	source_id: string;
+	state: InboxState;
+	agent: string;
+	skill: string;
+	tool: string;
+	summary: string;
+	// the message key of the plain description of a tool of Stuarty; empty for any other
+	action_key: string;
+	item: string;
+	destination: string;
+	// the estimate of an approval; null for a permission, which has none
+	cost: Money | null;
+	undoable: boolean;
+	project_id: string;
+	// the chat session that holds the request; empty for an approval
+	session_id: string;
+	created_at: string;
+	answered_at: string | null;
+}
+
+export interface InboxList {
+	rows: InboxRow[];
+	waiting: number;
+	untrusted_notice?: string;
+}
+
+// The event of GET /inbox/events: the data is the whole list as the caller reads it.
+export const INBOX_EVENT_NAMES = ["inbox.snapshot"] as const;
+
 export interface ChatTranscriptResult {
 	session: ChatSession;
 	events?: ChatEvent[];

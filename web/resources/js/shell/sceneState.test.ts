@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import type { ChatEvent, ChatSession } from "../editor/api/types";
 import { projectNameOf, sceneOf } from "./sceneState";
-import { activity } from "./testSupport";
+import { activity, inboxRow } from "./testSupport";
 
 function session(over: Partial<ChatSession> = {}): ChatSession {
 	return {
@@ -208,5 +208,51 @@ describe("the skill and the tool", () => {
 		expect(m.reported).toBe(true);
 		expect(m.tool).toBeNull();
 		expect(m.skill).toEqual({ name: "", state: "none" });
+	});
+
+	// The one list of what waits for a person (epic 77) decides which request the bar asks about.
+	describe("with the list of what waits", () => {
+		const waiting = inboxRow({
+			source_id: "cpr_row",
+			session_id: "chs_1",
+			tool: "Run a command",
+		});
+
+		test("the request is the row of this session, whatever the events say", () => {
+			const m = sceneOf(
+				session({ state: "awaiting_permission" }),
+				[ask("from_events", "Another title")],
+				null,
+				[waiting],
+			);
+			expect(m.request).toEqual({
+				requestId: "cpr_row",
+				title: "Run a command",
+			});
+		});
+
+		test("a list with no row for this session means no request, even when the events hold one", () => {
+			const m = sceneOf(
+				session({ state: "awaiting_permission" }),
+				[ask("from_events")],
+				null,
+				[
+					inboxRow({ session_id: "chs_other" }),
+					inboxRow({ source: "approval", session_id: "" }),
+				],
+			);
+			expect(m.variant).toBe("waiting");
+			expect(m.request).toBeNull();
+		});
+
+		test("a list not read yet leaves the events in charge", () => {
+			const m = sceneOf(
+				session({ state: "awaiting_permission" }),
+				[ask("from_events", "Title")],
+				null,
+				null,
+			);
+			expect(m.request).toEqual({ requestId: "from_events", title: "Title" });
+		});
 	});
 });

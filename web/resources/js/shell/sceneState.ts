@@ -1,5 +1,11 @@
 import { openRequests } from "../dashboard/chat/chatState";
-import type { ChatActivity, ChatEvent, ChatSession } from "../editor/api/types";
+import type {
+	ChatActivity,
+	ChatEvent,
+	ChatSession,
+	InboxRow,
+} from "../editor/api/types";
+import { waitingChatRequest } from "./notifications";
 
 // How the scene bar tells a session (SDD-012 section 23.4). Every variant is a word and an icon in the
 // component; this file only maps what the service reported to a variant. It adds no fact: the agent and the
@@ -94,10 +100,31 @@ export function projectNameOf(
 	return projects.find((p) => p.id === session.project_id)?.name ?? null;
 }
 
+// The permission request the bar asks about: the one the list holds for this session or, before the list was
+// read, the first one open in the events.
+function requestOf(
+	session: ChatSession,
+	events: readonly ChatEvent[],
+	inbox: readonly InboxRow[] | null,
+): SceneRequest | null {
+	if (inbox !== null) {
+		const row = waitingChatRequest(inbox, session.id);
+		return row === null ? null : { requestId: row.source_id, title: row.tool };
+	}
+	const open = openRequests(events)[0]?.permission;
+	return open === undefined
+		? null
+		: { requestId: open.request_id, title: open.title ?? "" };
+}
+
+// `inbox` is the one list of what waits for a person (epic 77): once the service has answered it, it alone says
+// which permission request the bar asks about. Until then (null) the bar reads the events of the session, as it
+// did before the list existed, so a slow first answer never hides a request.
 export function sceneOf(
 	session: ChatSession | null,
 	events: readonly ChatEvent[],
 	activity: ChatActivity | null = null,
+	inbox: readonly InboxRow[] | null = null,
 ): SceneModel {
 	if (session === null) {
 		return {
@@ -111,11 +138,7 @@ export function sceneOf(
 			request: null,
 		};
 	}
-	const open = openRequests(events)[0]?.permission;
-	const request: SceneRequest | null =
-		open === undefined
-			? null
-			: { requestId: open.request_id, title: open.title ?? "" };
+	const request = requestOf(session, events, inbox);
 	const base = {
 		agent: session.profile,
 		state: session.state,

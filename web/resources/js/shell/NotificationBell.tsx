@@ -3,6 +3,8 @@ import {
 	Ban,
 	Bell,
 	CircleCheck,
+	CircleSlash,
+	Clock,
 	Hourglass,
 	type LucideIcon,
 } from "lucide-react";
@@ -19,26 +21,66 @@ import {
 	SheetTitle,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/cn";
-import { useT } from "@/lib/i18n";
+import { formatDateTime } from "@/lib/format";
+import { useLocale, useT } from "@/lib/i18n";
 import { PersonOnlyNote, useSession } from "@/lib/session";
-import {
-	type Notification,
-	type NotificationState,
-	notificationsOf,
-	waitingCount,
-} from "./notifications";
+import { formatMoney } from "../dashboard/approval/money";
+import { type Notification, waitingCount } from "./notifications";
 import { useShell } from "./ShellContext";
-import { projectNameOf } from "./sceneState";
 
-const STATE: Record<NotificationState, { icon: LucideIcon; tone: string }> = {
+// How a row says its state: a word and an icon, never colour alone. A permission of the chat is "allowed" or
+// "denied"; an approval is "approved" or "rejected"; the others are the same for both.
+type StateWord =
+	| "waiting"
+	| "allowed"
+	| "denied"
+	| "approved"
+	| "rejected"
+	| "expired"
+	| "cancelled";
+
+const STATE: Record<StateWord, { icon: LucideIcon; tone: string }> = {
 	waiting: { icon: Hourglass, tone: "text-warning-text" },
 	allowed: { icon: CircleCheck, tone: "text-success-text" },
 	denied: { icon: Ban, tone: "text-danger-text" },
+	approved: { icon: CircleCheck, tone: "text-success-text" },
+	rejected: { icon: Ban, tone: "text-danger-text" },
+	expired: { icon: Clock, tone: "text-muted-foreground" },
+	cancelled: { icon: CircleSlash, tone: "text-muted-foreground" },
 };
 
-// One request in the center. The agent and the title are text an agent or a job kind wrote. A permission is
-// answered here with the same two choices as on the scene bar (never "always"); an approval is decided on
-// its own page, which the row links to.
+function stateWord(item: Notification): StateWord {
+	if (item.source === "chat") {
+		if (item.state === "approved") return "allowed";
+		if (item.state === "rejected") return "denied";
+	}
+	return item.state;
+}
+
+// One line of the facts of a request: the label, and the value or "Not reported". Nothing is guessed.
+function Fact({
+	label,
+	testId,
+	children,
+}: {
+	label: string;
+	testId: string;
+	children: ReactNode;
+}): ReactNode {
+	return (
+		<>
+			<dt className="text-muted-foreground">{label}</dt>
+			<dd data-testid={testId} className="min-w-0 break-words">
+				{children}
+			</dd>
+		</>
+	);
+}
+
+// One request in the center. Every text but the state, the cost and the dates is something an agent or a job
+// kind wrote and is shown as text. A permission is answered here with the same two choices as on the scene bar
+// (never "always"); an approval is decided on its own page, which the row links to. The row decides nothing
+// itself: it calls the endpoint of its source.
 function Row({
 	item,
 	project,
@@ -49,22 +91,42 @@ function Row({
 	onNavigate,
 }: {
 	item: Notification;
-	// the project of the chat session (untrusted text), named on a permission row
+	// the name of the project of the request (untrusted text), when the project list holds it
 	project: string | null;
 	busy: boolean;
 	disabledBy: string | undefined;
-	onAnswer(requestId: string, answer: "allow" | "reject"): void;
+	onAnswer(row: Notification, answer: "allow" | "reject"): void;
 	onOpenChat(): void;
 	onNavigate(): void;
 }): ReactNode {
 	const t = useT();
-	const { icon: Icon, tone } = STATE[item.state];
+	const locale = useLocale();
+	const word = stateWord(item);
+	const { icon: Icon, tone } = STATE[word];
 	const waiting = item.state === "waiting";
+	const chat = item.source === "chat";
+	const notReported = <>{t("ui.shell.scene.not_reported")}</>;
+	const text = (s: string): ReactNode =>
+		s === "" ? notReported : <UntrustedText>{s}</UntrustedText>;
+	// what will happen, in plain words when the service knows the tool; the title the agent wrote stays beside
+	// it, because the recognition reads only that title
+	const what =
+		item.action_key !== "" ? (
+			<>
+				{t(item.action_key)}{" "}
+				<span className="font-normal text-muted-foreground">
+					(<UntrustedText>{item.tool}</UntrustedText>)
+				</span>
+			</>
+		) : (
+			text(item.tool)
+		);
 	return (
 		<li
 			data-testid="notification"
-			data-kind={item.kind}
-			data-state={item.state}
+			data-kind={chat ? "permission" : "approval"}
+			data-source={item.source}
+			data-state={word}
 			className={cn(
 				"flex flex-col gap-2 rounded-lg border p-3",
 				waiting ? "border-warning bg-warning-soft" : "bg-surface",
@@ -72,15 +134,15 @@ function Row({
 		>
 			<p className={cn("flex items-center gap-1.5 text-xs font-medium", tone)}>
 				<Icon aria-hidden="true" className="size-4 shrink-0" />
-				{t(`ui.shell.notify.state.${item.state}`)}
+				{t(`ui.shell.notify.state.${word}`)}
 				<span className="text-muted-foreground">
-					· {t(`ui.shell.notify.kind.${item.kind}`)}
+					· {t(`ui.shell.notify.kind.${chat ? "permission" : "approval"}`)}
 				</span>
 			</p>
 			<div className="min-w-0">
 				<p className="relative truncate text-xs text-muted-foreground">
 					<UntrustedText>{item.agent}</UntrustedText>
-					{item.kind === "permission" && project !== null && (
+					{chat && project !== null && (
 						<span data-testid="notification-project">
 							{" · "}
 							<span className="sr-only">{t("ui.shell.scene.project")} </span>
@@ -88,11 +150,59 @@ function Row({
 						</span>
 					)}
 				</p>
-				<p className="text-sm font-medium break-words">
-					<UntrustedText>{item.title}</UntrustedText>
+				<p
+					data-testid="notification-what"
+					className="text-sm font-medium break-words"
+				>
+					{what}
 				</p>
 			</div>
-			{waiting && item.kind === "permission" && (
+			<dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+				<Fact label={t("ui.shell.notify.item")} testId="notification-item">
+					{text(chat ? item.item : item.summary)}
+				</Fact>
+				<Fact
+					label={t("ui.shell.notify.where")}
+					testId="notification-destination"
+				>
+					{text(item.destination)}
+				</Fact>
+				<Fact label={t("ui.shell.notify.cost")} testId="notification-cost">
+					{item.cost === null
+						? t("ui.shell.notify.no_cost")
+						: formatMoney(item.cost, locale)}
+				</Fact>
+				<Fact label={t("ui.shell.notify.undo")} testId="notification-undo">
+					{item.undoable
+						? t("ui.shell.notify.undo_yes")
+						: chat
+							? notReported
+							: t("ui.shell.notify.undo_no")}
+				</Fact>
+				{chat && (
+					<Fact label={t("ui.shell.scene.skill")} testId="notification-skill">
+						{item.skill === "" ? (
+							t("ui.shell.scene.skill_state.none")
+						) : (
+							<>
+								<UntrustedText>{item.skill}</UntrustedText>{" "}
+								<span className="text-muted-foreground">
+									({t("ui.shell.scene.skill_state.loaded")})
+								</span>
+							</>
+						)}
+					</Fact>
+				)}
+				<Fact label={t("ui.shell.notify.asked")} testId="notification-asked">
+					{formatDateTime(item.created_at, locale)}
+				</Fact>
+			</dl>
+			{chat && item.action_key !== "" && (
+				<p className="text-xs text-muted-foreground">
+					{t("ui.shell.notify.agent_reported")}
+				</p>
+			)}
+			{waiting && chat && (
 				<div className="flex flex-wrap items-center gap-2">
 					<Button
 						type="button"
@@ -100,7 +210,7 @@ function Row({
 						variant="outline"
 						disabled={busy || disabledBy !== undefined}
 						aria-describedby={disabledBy}
-						onClick={() => onAnswer(item.id, "reject")}
+						onClick={() => onAnswer(item, "reject")}
 						data-testid="notification-deny"
 					>
 						{t("ui.shell.scene.deny")}
@@ -110,7 +220,7 @@ function Row({
 						size="sm"
 						disabled={busy || disabledBy !== undefined}
 						aria-describedby={disabledBy}
-						onClick={() => onAnswer(item.id, "allow")}
+						onClick={() => onAnswer(item, "allow")}
 						data-testid="notification-allow"
 					>
 						{t("ui.shell.scene.allow")}
@@ -126,7 +236,7 @@ function Row({
 					</Button>
 				</div>
 			)}
-			{waiting && item.kind === "approval" && (
+			{waiting && !chat && (
 				<Link
 					href="/approvals"
 					onClick={onNavigate}
@@ -140,13 +250,13 @@ function Row({
 	);
 }
 
-// What the center holds under its title: the failure of the queue, the rows or the empty state, and the
+// What the center holds under its title: the failure of the read, the rows or the empty state, and the
 // reason a session that is not a person's cannot answer.
 export function CenterBody({
 	items,
-	project = null,
+	projectName = () => null,
 	failure,
-	busy,
+	busyId,
 	personOnlyId,
 	privileged,
 	onAnswer,
@@ -154,12 +264,13 @@ export function CenterBody({
 	onNavigate,
 }: {
 	items: readonly Notification[];
-	project?: string | null;
+	// the name of a project by its id (untrusted text); null when the list does not hold it
+	projectName?(id: string): string | null;
 	failure: Failure | null;
-	busy: boolean;
+	busyId: string | null;
 	personOnlyId: string;
 	privileged: boolean;
-	onAnswer(requestId: string, answer: "allow" | "reject"): void;
+	onAnswer(row: Notification, answer: "allow" | "reject"): void;
 	onOpenChat(): void;
 	onNavigate(): void;
 }): ReactNode {
@@ -178,10 +289,10 @@ export function CenterBody({
 				<ul className="flex flex-col gap-2">
 					{items.map((item) => (
 						<Row
-							key={`${item.kind}-${item.id}`}
+							key={item.id}
 							item={item}
-							project={project}
-							busy={busy}
+							project={projectName(item.project_id)}
+							busy={busyId !== null}
 							disabledBy={privileged ? undefined : personOnlyId}
 							onAnswer={onAnswer}
 							onOpenChat={onOpenChat}
@@ -196,14 +307,14 @@ export function CenterBody({
 }
 
 // The bell of the top bar and the center it opens (SDD-012 section 23.4). The count is what waits for a
-// person: the open permission requests of the chat session the shell reads plus the pending approvals.
+// person: the rows of the one list the service builds from the chat permissions and the approvals.
 export default function NotificationBell(): ReactNode {
 	const t = useT();
 	const { privileged } = useSession();
 	const ids = useId();
-	const { chat, approvals, openChat } = useShell();
+	const { chat, inbox, openChat } = useShell();
 	const [open, setOpen] = useState(false);
-	const items = notificationsOf(chat.session, chat.events, approvals.requests);
+	const items = inbox.rows ?? [];
 	const waiting = waitingCount(items);
 
 	return (
@@ -259,14 +370,14 @@ export default function NotificationBell(): ReactNode {
 					</SheetHeader>
 					<CenterBody
 						items={items}
-						project={projectNameOf(chat.session, chat.projects)}
-						failure={approvals.failure}
-						busy={chat.busy}
+						projectName={(id) =>
+							chat.projects.find((p) => p.id === id)?.name ?? null
+						}
+						failure={inbox.failure}
+						busyId={inbox.busyId}
 						personOnlyId={`${ids}-person-only`}
 						privileged={privileged}
-						onAnswer={(requestId, answer) =>
-							void chat.answer(requestId, answer)
-						}
+						onAnswer={(row, answer) => void inbox.answer(row, answer)}
 						onOpenChat={() => {
 							setOpen(false);
 							openChat();

@@ -52,6 +52,7 @@ import type {
 	HistoryQuery,
 	HistoryRevertResult,
 	ImageGenerateRequest,
+	InboxList,
 	InstallToolRequest,
 	InstallToolResult,
 	Job,
@@ -412,6 +413,8 @@ export interface ApiClient {
 	): Promise<ChatTranscriptResult>;
 	deleteChatSession(sessionId: string): Promise<ChatSession>;
 	getChatActivity(sessionId: string): Promise<ChatActivity>;
+	// What waits for a person, from the chat and from the approvals; a read, decided elsewhere (SDD-015 section 4.1).
+	listInbox(): Promise<InboxList>;
 	// An administrator session; any other caller gets E_FORBIDDEN.
 	listUsers(): Promise<UserListResult>;
 	listTrashedProjects(): Promise<ProjectListResult>;
@@ -970,6 +973,7 @@ export function createClient(
 				`/chat/sessions/${encodeURIComponent(sessionId)}/activity`,
 				READ_TIMEOUT_MS,
 			),
+		listInbox: () => call("GET", "/inbox", READ_TIMEOUT_MS),
 		listProviders: () => call("GET", "/providers", READ_TIMEOUT_MS),
 		listProviderModels: (connectionId, refresh) =>
 			call(
