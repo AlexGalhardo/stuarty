@@ -3923,12 +3923,12 @@
       "saved": "Saved.",
       "preview_label": "Text of the entry",
       "badge": {
-        "invalid": "Invalid file",
-        "reviewed": "Reviewed",
-        "unreviewed": "Not reviewed",
+        "invalid": "Invalid file: not offered to agents",
+        "reviewed": "Reviewed: offered to agents",
+        "unreviewed": "Not reviewed: not offered to agents",
         "scripts": "Has scripts",
-        "kept": "Kept",
-        "pending": "Pending"
+        "kept": "Kept: offered to agents",
+        "pending": "Waiting for you: not offered to agents"
       },
       "origin": {
         "built-in": "Built in",
@@ -3961,7 +3961,10 @@
       "memory": {
         "description": "The fact, in one line",
         "keep": "Keep this note",
-        "pending_hint": "This note was not written by a person in the app (an agent wrote it, or it came from a window that is not a person's session). Agents are not offered it until you keep it."
+        "pending_hint": "This note was not written by a person in the app (an agent wrote it, or it came from a window that is not a person's session). Agents are not offered it until you keep it.",
+        "pending_title": "Waiting for your approval",
+        "reject": "Reject this note",
+        "reject_hint": "Rejecting removes the note: it is never kept and no agent is offered it."
       },
       "prompt": {
         "variables_hint": "Write {{variable}} where a value goes.",
@@ -3969,7 +3972,8 @@
         "no_variables": "This prompt has no variables.",
         "value": "Value of {name}",
         "render": "Render",
-        "rendered": "Rendered text"
+        "rendered": "Rendered text",
+        "variables": "Variables"
       },
       "skill": {
         "origin": "Origin",
@@ -3984,7 +3988,10 @@
         "bytes": "size: {count} bytes",
         "script": "Script: stored, never run",
         "lint": "Lint",
-        "instructions": "Instructions"
+        "instructions": "Instructions",
+        "offered_title": "Offered to agents",
+        "offered_text": "A person read this skill, so agents may read it. Any change to it takes the mark away.",
+        "not_offered_title": "Not offered to agents"
       },
       "lint": {
         "none": "No findings.",
@@ -4004,6 +4011,15 @@
         "button": "Export reviewed skills",
         "done": "{count} skills written to {path}.",
         "none": "No reviewed skill to export."
+      },
+      "group": {
+        "pending": "Waiting for your approval",
+        "kept": "Kept"
+      },
+      "empty_text": {
+        "memory": "When you or an agent write a note, it appears here. A note an agent wrote waits for you to keep it.",
+        "skill": "Make a skill, or import one you downloaded. No agent is offered a skill until you have read it.",
+        "prompt": "Save a text you use often, with {{variable}} for the parts that change."
       }
     }
   }

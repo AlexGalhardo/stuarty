@@ -77,6 +77,16 @@ test.describe("library", () => {
 		const row = page.locator(`[data-entry='${name}']`);
 		await expect(row).toContainText("Not reviewed");
 		await expect(row).toContainText("Imported");
+		// the list and the pane say in words that no agent is offered it
+		await expect(row).toContainText("not offered to agents");
+		await expect(page.getByTestId("skill-not-offered")).toContainText(
+			"Not offered to agents",
+		);
+		// the list and the pane say in words that no agent is offered it
+		await expect(row).toContainText("not offered to agents");
+		await expect(page.getByTestId("skill-not-offered")).toContainText(
+			"Not offered to agents",
+		);
 
 		const pane = page.getByTestId("skill-pane");
 		await expect(pane.getByRole("heading", { name })).toBeVisible();
@@ -125,7 +135,8 @@ test.describe("library", () => {
 		await page.getByRole("button", { name: "Search" }).click();
 		await expect(page.locator(`[data-entry='${name}']`)).toBeVisible();
 
-		await page.getByRole("button", { name: "Remove" }).click();
+		// this session is not a person's, so the note waits: removing it is rejecting it
+		await page.getByRole("button", { name: "Reject this note" }).click();
 		await expect(page.locator(`[data-entry='${name}']`)).toHaveCount(0);
 	});
 });

@@ -1,4 +1,5 @@
 import { Head } from "@inertiajs/react";
+import { Brain, FileText, Sparkles } from "lucide-react";
 import {
 	type FormEvent,
 	type ReactNode,
@@ -8,7 +9,10 @@ import {
 	useState,
 } from "react";
 
+import { EmptyState } from "@/components/EmptyState";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { Notice } from "@/components/Notice";
+import { PageHeader } from "@/components/PageHeader";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -26,8 +30,14 @@ import {
 } from "./client";
 import MemoryPane from "./MemoryPane";
 import PromptPane from "./PromptPane";
-import { EntryBadges } from "./parts";
+import { EntryBadges, groupEntries } from "./parts";
 import SkillPane from "./SkillPane";
+
+const EMPTY_ICON = {
+	memory: Brain,
+	skill: Sparkles,
+	prompt: FileText,
+} as const;
 
 const SECTION: { [kind in LibraryKind]: string } = {
 	memory: "memory",
@@ -120,6 +130,12 @@ export default function LibraryPage({
 	const rows: readonly LibraryEntry[] =
 		hits ?? (loaded.state === "ready" ? loaded.entries : []);
 	const section = SECTION[kind];
+	// Memory shows the notes that wait for a person first (the service says which are kept); the other lists keep
+	// the order of the service.
+	const groups = groupEntries(kind, rows, {
+		pending: t("ui.library.group.pending"),
+		kept: t("ui.library.group.kept"),
+	});
 	const pane = creating || selected !== null;
 	const name = creating ? null : selected;
 
@@ -127,18 +143,36 @@ export default function LibraryPage({
 		<>
 			<Head title={t(`ui.nav.section.${section}`)} />
 			<section
-				aria-labelledby="library-title"
+				aria-label={t(`ui.nav.section.${section}`)}
 				className="flex flex-col gap-4"
 				data-testid={`library-${kind}`}
 			>
-				<header className="flex flex-col gap-1">
-					<h1 id="library-title" className="text-2xl font-semibold">
-						{t(`ui.nav.section.${section}`)}
-					</h1>
-					<p className="text-sm text-muted-foreground">
-						{t(`ui.library.intro.${kind}`)}
-					</p>
-				</header>
+				<PageHeader
+					title={t(`ui.nav.section.${section}`)}
+					description={t(`ui.library.intro.${kind}`)}
+					actions={
+						<>
+							<Button
+								type="button"
+								onClick={() => {
+									if (!confirmDiscard(t("ui.unsaved.leave"))) return;
+									setCreating(true);
+									setSelected(null);
+									setPaneKey((k) => k + 1);
+								}}
+							>
+								{t("ui.library.new")}
+							</Button>
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => void rescan()}
+							>
+								{t("ui.library.rescan")}
+							</Button>
+						</>
+					}
+				/>
 				<div className="flex flex-wrap items-end gap-2">
 					<search className="flex-1">
 						<form className="flex flex-wrap items-end gap-2" onSubmit={search}>
@@ -159,26 +193,8 @@ export default function LibraryPage({
 							</Button>
 						</form>
 					</search>
-					<Button
-						type="button"
-						onClick={() => {
-							if (!confirmDiscard(t("ui.unsaved.leave"))) return;
-							setCreating(true);
-							setSelected(null);
-							setPaneKey((k) => k + 1);
-						}}
-					>
-						{t("ui.library.new")}
-					</Button>
-					<Button type="button" variant="outline" onClick={() => void rescan()}>
-						{t("ui.library.rescan")}
-					</Button>
 				</div>
-				{notice !== null && (
-					<p role="status" className="text-sm">
-						{notice}
-					</p>
-				)}
+				{notice !== null && <Notice tone="info" role="status" title={notice} />}
 				<FailureNote failure={failure} />
 				{kind === "skill" && (
 					<SkillTools
@@ -194,66 +210,94 @@ export default function LibraryPage({
 				<div className="grid gap-4 md:grid-cols-[minmax(14rem,22rem)_1fr]">
 					<nav aria-label={t(`ui.library.list.${kind}`)}>
 						{loaded.state === "loading" && (
-							<p className="text-sm text-muted-foreground">
+							<p className="text-sm text-text-muted">
 								{t("ui.library.loading")}
 							</p>
 						)}
 						{loaded.state === "failed" && (
-							<p role="alert" className="text-sm text-destructive">
-								{t("ui.library.load_failed")}
+							<Notice
+								tone="danger"
+								role="alert"
+								title={t("ui.library.load_failed")}
+							/>
+						)}
+						{loaded.state === "ready" && rows.length === 0 && hits !== null && (
+							<p className="text-sm text-text-muted">
+								{t("ui.library.no_match")}
 							</p>
 						)}
-						{loaded.state === "ready" && rows.length === 0 && (
-							<p className="text-sm text-muted-foreground">
-								{hits === null
-									? t("ui.library.empty")
-									: t("ui.library.no_match")}
-							</p>
+						{loaded.state === "ready" && rows.length === 0 && hits === null && (
+							<EmptyState
+								icon={EMPTY_ICON[kind]}
+								level={2}
+								title={t("ui.library.empty")}
+								description={t(`ui.library.empty_text.${kind}`)}
+							/>
 						)}
-						<ul className="flex flex-col gap-1">
-							{rows.map((entry) => (
-								<li key={entry.name}>
-									<button
-										type="button"
-										data-entry={entry.name}
-										aria-current={
-											!creating && selected === entry.name ? "true" : undefined
-										}
-										className="flex w-full flex-col gap-1 rounded-lg border px-3 py-2 text-left hover:bg-muted aria-[current=true]:border-ring aria-[current=true]:bg-muted"
-										onClick={() => {
-											if (!creating && selected === entry.name) return;
-											if (!confirmDiscard(t("ui.unsaved.leave"))) return;
-											setCreating(false);
-											setSelected(entry.name);
-											setPaneKey((k) => k + 1);
-										}}
-									>
-										<span className="flex flex-wrap items-center gap-2">
-											<span className="font-medium">{entry.name}</span>
-											<EntryBadges entry={entry} />
-										</span>
-										<span className="text-sm text-muted-foreground">
-											<UntrustedText>
-												{"snippet" in entry
-													? String((entry as LibraryHit).snippet)
-													: entry.description}
-											</UntrustedText>
-										</span>
-										{entry.state === "invalid" && entry.error !== undefined && (
-											<span className="text-xs text-destructive" lang="en">
-												<UntrustedText>{entry.error}</UntrustedText>
-											</span>
-										)}
-									</button>
-								</li>
-							))}
-						</ul>
+						{groups.map((group) => (
+							<section
+								key={group.key}
+								className="mb-3 flex flex-col gap-1"
+								aria-label={group.label ?? undefined}
+								data-group={group.key}
+							>
+								{group.label !== null && (
+									<h2 className="px-1 text-xs font-semibold text-text-muted">
+										{group.label}
+									</h2>
+								)}
+								<ul className="flex flex-col gap-1">
+									{group.entries.map((entry) => (
+										<li key={entry.name}>
+											<button
+												type="button"
+												data-entry={entry.name}
+												aria-current={
+													!creating && selected === entry.name
+														? "true"
+														: undefined
+												}
+												className="flex w-full flex-col gap-1 rounded-lg border border-border bg-surface px-3 py-2 text-start hover:bg-surface-hover aria-[current=true]:border-accent aria-[current=true]:bg-surface-selected"
+												onClick={() => {
+													if (!creating && selected === entry.name) return;
+													if (!confirmDiscard(t("ui.unsaved.leave"))) return;
+													setCreating(false);
+													setSelected(entry.name);
+													setPaneKey((k) => k + 1);
+												}}
+											>
+												<span className="flex flex-wrap items-center gap-2">
+													<span className="font-medium text-text break-all">
+														{entry.name}
+													</span>
+													<EntryBadges entry={entry} />
+												</span>
+												<span className="text-sm text-text-muted">
+													<UntrustedText>
+														{"snippet" in entry
+															? String((entry as LibraryHit).snippet)
+															: entry.description}
+													</UntrustedText>
+												</span>
+												{entry.state === "invalid" &&
+													entry.error !== undefined && (
+														<span
+															className="text-xs text-danger-text"
+															lang="en"
+														>
+															<UntrustedText>{entry.error}</UntrustedText>
+														</span>
+													)}
+											</button>
+										</li>
+									))}
+								</ul>
+							</section>
+						))}
 					</nav>
 					<div>
 						{!pane && (
-							<p className="text-sm text-muted-foreground">
-								{t("ui.library.pick")}
-							</p>
+							<p className="text-sm text-text-muted">{t("ui.library.pick")}</p>
 						)}
 						{pane && kind === "memory" && (
 							<MemoryPane
@@ -350,9 +394,7 @@ function SkillTools({
 				{t("ui.library.import.heading")}
 			</summary>
 			<form className="mt-3 flex flex-col gap-3" onSubmit={importIt}>
-				<p className="text-sm text-muted-foreground">
-					{t("ui.library.import.hint")}
-				</p>
+				<p className="text-sm text-text-muted">{t("ui.library.import.hint")}</p>
 				<div className="flex flex-col gap-1">
 					<Label htmlFor="import-path">{t("ui.library.import.path")}</Label>
 					<Input
