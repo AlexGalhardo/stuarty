@@ -1,8 +1,9 @@
 // Package capturehost drives the native capture helper stuarty-capture (ADR-0049, SDD-025). The helper
-// captures the screen and writes a fragmented MP4 through an FFmpeg child of its own; this package starts it
-// under the process policy of FFmpeg (SDD-007 6.10 and 6.11: absolute path, minimal environment, a run
-// directory, a deadline, the kill of the whole process tree) and speaks version 1 of its JSON protocol
-// (SDD-025 section 6). It decides nothing about a recording: the rules are in core/recording.
+// captures the screen and writes a fragmented MP4 through an FFmpeg child of its own, and the sound, the camera
+// and the pointer to files of their own on one clock; this package starts it under the process policy of FFmpeg
+// (SDD-007 6.10 and 6.11: absolute path, minimal environment, a run directory, a deadline, the kill of the
+// whole process tree) and speaks version 2 of its JSON protocol (SDD-025 sections 6 and 16.7). It decides
+// nothing about a recording: the rules are in core/recording.
 package capturehost
 
 import (
@@ -22,7 +23,7 @@ import (
 )
 
 // ProtocolVersion is the version of the protocol this host speaks.
-const ProtocolVersion = 1
+const ProtocolVersion = 2
 
 const (
 	maxLine        = 65536
@@ -80,13 +81,24 @@ type Source struct {
 	Height int    `json:"height"`
 }
 
-// Sources is the answer to a sources command.
-type Sources struct {
-	Displays []Source `json:"displays"`
-	Windows  []Source `json:"windows"`
+// Device is a microphone or a camera the helper lists. The name is untrusted text.
+type Device struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Default bool   `json:"default"`
 }
 
-// StartRequest is what the host asks the helper to record.
+// Sources is the answer to a sources command.
+type Sources struct {
+	Displays    []Source `json:"displays"`
+	Windows     []Source `json:"windows"`
+	Microphones []Device `json:"microphones"`
+	Cameras     []Device `json:"cameras"`
+	SystemAudio bool     `json:"system_audio"`
+}
+
+// StartRequest is what the host asks the helper to record. A track beyond the screen is asked for with its
+// device (or SystemAudio, or Events) and needs its Output path, in the folder of Output.
 type StartRequest struct {
 	Recording string
 	Kind      string
@@ -95,21 +107,70 @@ type StartRequest struct {
 	Encoder   string
 	FFmpeg    string
 	Output    string
+
+	Microphone       string
+	MicrophoneOutput string
+	SystemAudio      bool
+	SystemOutput     string
+	Camera           string
+	CameraOutput     string
+	Events           bool
+	EventsOutput     string
+}
+
+// TrackStart is a track that is recording.
+type TrackStart struct {
+	Kind    string `json:"kind"`
+	StartMS int64  `json:"start_ms"`
+}
+
+// TrackResult is a track at the end of the recording.
+type TrackResult struct {
+	Kind       string `json:"kind"`
+	StartMS    int64  `json:"start_ms"`
+	DurationMS int64  `json:"duration_ms"`
+	Bytes      int64  `json:"bytes"`
+	Lost       bool   `json:"lost"`
+}
+
+// PauseSpan is a pause on the helper's wall clock, in ms since the origin.
+type PauseSpan struct {
+	FromMS int64 `json:"from_ms"`
+	ToMS   int64 `json:"to_ms"`
 }
 
 // Started is what the helper says when the first frame is in.
-type Started struct{ Width, Height, FPS int }
+type Started struct {
+	Width, Height, FPS int
+	Tracks             []TrackStart
+}
 
-// Event is one thing that happens during a recording: a Progress, a Finished, a Failed or a Lost.
+// Event is one thing that happens during a recording: a Progress, a Level, a Paused, a Resumed, a Rejected, or
+// the terminal Finished, Failed or Lost.
 type Event interface{ isEvent() }
 
-// Progress is sent about once a second.
+// Progress is sent about once a second, paused or not. ElapsedMS is active time.
 type Progress struct{ ElapsedMS, Frames, Dropped, Bytes int64 }
 
-// Finished ends a recording whose file is complete. Reason is stopped or source_closed.
+// Level is the peak of each sound track over the last interval, 0 to 1000; a track the recording has not has 0.
+type Level struct{ Microphone, System int }
+
+// Paused confirms a pause; ElapsedMS is active time.
+type Paused struct{ ElapsedMS int64 }
+
+// Resumed confirms a resume; ElapsedMS is active time.
+type Resumed struct{ ElapsedMS int64 }
+
+// Rejected is a command the helper refused without ending the recording (a pause that was not possible).
+type Rejected struct{ Message string }
+
+// Finished ends a recording whose files are complete. Reason is stopped or source_closed.
 type Finished struct {
 	Reason                             string
 	Frames, Dropped, DurationMS, Bytes int64
+	Tracks                             []TrackResult
+	Pauses                             []PauseSpan
+	PointerEvents                      int64
 }
 
 // Failed is an error message of the helper; the stream ends after it.
@@ -120,30 +181,54 @@ type Failed struct{ Code, Message string }
 type Lost struct{ Err error }
 
 func (Progress) isEvent() {}
+func (Level) isEvent()    {}
+func (Paused) isEvent()   {}
+func (Resumed) isEvent()  {}
+func (Rejected) isEvent() {}
 func (Finished) isEvent() {}
 func (Failed) isEvent()   {}
 func (Lost) isEvent()     {}
 
 // message is every field of every message of the helper, the ones a message lacks left empty.
 type message struct {
-	Type       string   `json:"type"`
-	V          int      `json:"v"`
-	Helper     string   `json:"helper"`
-	Display    bool     `json:"display"`
-	Window     bool     `json:"window"`
-	Displays   []Source `json:"displays"`
-	Windows    []Source `json:"windows"`
-	Width      int      `json:"width"`
-	Height     int      `json:"height"`
-	FPS        int      `json:"fps"`
-	ElapsedMS  int64    `json:"elapsed_ms"`
-	Frames     int64    `json:"frames"`
-	Dropped    int64    `json:"dropped"`
-	Bytes      int64    `json:"bytes"`
-	DurationMS int64    `json:"duration_ms"`
-	Reason     string   `json:"reason"`
-	Code       string   `json:"code"`
-	Message    string   `json:"message"`
+	Type          string      `json:"type"`
+	V             int         `json:"v"`
+	Helper        string      `json:"helper"`
+	Display       bool        `json:"display"`
+	Window        bool        `json:"window"`
+	Audio         bool        `json:"audio"`
+	Camera        bool        `json:"camera"`
+	Events        bool        `json:"events"`
+	Displays      []Source    `json:"displays"`
+	Windows       []Source    `json:"windows"`
+	Microphones   []Device    `json:"microphones"`
+	Cameras       []Device    `json:"cameras"`
+	SystemAudio   bool        `json:"system_audio"`
+	Width         int         `json:"width"`
+	Height        int         `json:"height"`
+	FPS           int         `json:"fps"`
+	ElapsedMS     int64       `json:"elapsed_ms"`
+	Frames        int64       `json:"frames"`
+	Dropped       int64       `json:"dropped"`
+	Bytes         int64       `json:"bytes"`
+	DurationMS    int64       `json:"duration_ms"`
+	Reason        string      `json:"reason"`
+	Code          string      `json:"code"`
+	Message       string      `json:"message"`
+	Tracks        []trackMsg  `json:"tracks"`
+	Pauses        []PauseSpan `json:"pauses"`
+	PointerEvents int64       `json:"pointer_events"`
+	Microphone    int         `json:"microphone"`
+	System        int         `json:"system"`
+}
+
+// trackMsg is a member of the tracks list of a started or a finished message.
+type trackMsg struct {
+	Kind       string `json:"kind"`
+	StartMS    int64  `json:"start_ms"`
+	DurationMS int64  `json:"duration_ms"`
+	Bytes      int64  `json:"bytes"`
+	Lost       bool   `json:"lost"`
 }
 
 // Helper is a running stuarty-capture.
@@ -160,8 +245,8 @@ type Helper struct {
 	runErr error
 	stderr string
 
-	// Platform of the helper: whether it can capture a display and a window.
-	Display, Window bool
+	// Platform of the helper: whether it can capture a display and a window, sound, a camera, the pointer.
+	Display, Window, Audio, Camera, Events bool
 }
 
 type msgOrErr struct {
@@ -229,7 +314,8 @@ func Start(ctx context.Context, r *ffmpeg.Runner, cfg Config) (*Helper, error) {
 		}
 	}
 
-	h.Display, h.Window = ready.Display, ready.Window
+	h.Display, h.Window, h.Audio, h.Camera, h.Events = ready.Display, ready.Window, ready.Audio, ready.Camera,
+		ready.Events
 
 	return h, nil
 }
@@ -344,7 +430,10 @@ func (h *Helper) Sources(ctx context.Context) (Sources, error) {
 		return Sources{}, h.unexpected(m)
 	}
 
-	return Sources{Displays: cleanSources(m.Displays), Windows: cleanSources(m.Windows)}, nil
+	return Sources{
+		Displays: cleanSources(m.Displays), Windows: cleanSources(m.Windows),
+		Microphones: cleanDevices(m.Microphones), Cameras: cleanDevices(m.Cameras), SystemAudio: m.SystemAudio,
+	}, nil
 }
 
 // Begin asks the helper to record and waits for its started message. A refusal of the helper is a
@@ -354,11 +443,35 @@ func (h *Helper) Begin(ctx context.Context, req StartRequest) (Started, <-chan E
 		return Started{}, nil, err
 	}
 
-	err := h.send(map[string]any{
+	msg := map[string]any{
 		"type": "start", "recording": req.Recording,
 		"source": map[string]any{"kind": req.Kind, "id": req.SourceID},
 		"fps":    req.FPS, "encoder": req.Encoder, "ffmpeg": req.FFmpeg, "output": req.Output,
-	})
+	}
+
+	outputs := map[string]string{}
+
+	if req.Microphone != "" {
+		msg["microphone"], outputs["microphone"] = req.Microphone, req.MicrophoneOutput
+	}
+
+	if req.SystemAudio {
+		msg["system_audio"], outputs["system"] = true, req.SystemOutput
+	}
+
+	if req.Camera != "" {
+		msg["camera"], outputs["camera"] = req.Camera, req.CameraOutput
+	}
+
+	if req.Events {
+		msg["events"], outputs["events"] = true, req.EventsOutput
+	}
+
+	if len(outputs) > 0 {
+		msg["outputs"] = outputs
+	}
+
+	err := h.send(msg)
 	if err != nil {
 		return Started{}, nil, fmt.Errorf("%w: %w", ErrLost, err)
 	}
@@ -386,7 +499,12 @@ func (h *Helper) Begin(ctx context.Context, req StartRequest) (Started, <-chan E
 
 	go h.pump(events)
 
-	return Started{Width: m.Width, Height: m.Height, FPS: m.FPS}, events, nil
+	tracks := make([]TrackStart, 0, len(m.Tracks))
+	for _, t := range m.Tracks {
+		tracks = append(tracks, TrackStart{Kind: clean(t.Kind), StartMS: t.StartMS})
+	}
+
+	return Started{Width: m.Width, Height: m.Height, FPS: m.FPS, Tracks: tracks}, events, nil
 }
 
 func (h *Helper) unexpected(m message) error {
@@ -431,14 +549,24 @@ func (h *Helper) pump(events chan<- Event) {
 			switch m.m.Type {
 			case "progress":
 				events <- Progress{ElapsedMS: m.m.ElapsedMS, Frames: m.m.Frames, Dropped: m.m.Dropped, Bytes: m.m.Bytes}
+			case "level":
+				events <- Level{Microphone: m.m.Microphone, System: m.m.System}
+			case "paused":
+				events <- Paused{ElapsedMS: m.m.ElapsedMS}
+			case "resumed":
+				events <- Resumed{ElapsedMS: m.m.ElapsedMS}
 			case "finished":
-				events <- Finished{
-					Reason: clean(m.m.Reason), Frames: m.m.Frames, Dropped: m.m.Dropped,
-					DurationMS: m.m.DurationMS, Bytes: m.m.Bytes,
-				}
+				events <- finishedEvent(m.m)
 
 				return
 			case "error":
+				// A refused command (a pause that cannot be done) leaves the recording running.
+				if clean(m.m.Code) == "bad_request" {
+					events <- Rejected{Message: clean(m.m.Message)}
+
+					continue
+				}
+
 				events <- Failed{Code: clean(m.m.Code), Message: clean(m.m.Message)}
 
 				return
@@ -466,6 +594,36 @@ func (h *Helper) Stop() error {
 	}
 
 	return nil
+}
+
+// Pause asks the helper to stop writing every track and freeze the clock; the Paused event confirms it. A pause
+// that cannot be done comes back as a Rejected event.
+func (h *Helper) Pause() error { return h.command("pause") }
+
+// Resume asks the helper to write again; the Resumed event confirms it.
+func (h *Helper) Resume() error { return h.command("resume") }
+
+func (h *Helper) command(name string) error {
+	if err := h.send(map[string]any{"type": name}); err != nil {
+		return fmt.Errorf("%w: %w", ErrLost, err)
+	}
+
+	return nil
+}
+
+func finishedEvent(m message) Finished {
+	f := Finished{
+		Reason: clean(m.Reason), Frames: m.Frames, Dropped: m.Dropped, DurationMS: m.DurationMS, Bytes: m.Bytes,
+		Pauses: m.Pauses, PointerEvents: m.PointerEvents,
+	}
+
+	for _, t := range m.Tracks {
+		f.Tracks = append(f.Tracks, TrackResult{
+			Kind: clean(t.Kind), StartMS: t.StartMS, DurationMS: t.DurationMS, Bytes: t.Bytes, Lost: t.Lost,
+		})
+	}
+
+	return f
 }
 
 // Kill ends the helper and its whole process tree at once.
@@ -533,7 +691,80 @@ func checkRequest(r StartRequest) error {
 		return bad("output path")
 	}
 
+	return checkTracks(r, bad)
+}
+
+// validDeviceID is what the helper makes of a device: ASCII letters, digits, dash and underscore.
+func validDeviceID(id string) bool {
+	if id == "" || len(id) > 64 || strings.HasPrefix(id, "fake") {
+		return false
+	}
+
+	for _, c := range id {
+		ok := c == '-' || c == '_' || (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+		if !ok {
+			return false
+		}
+	}
+
+	return true
+}
+
+// checkTracks refuses a track whose device is not an id, and a track and its file that do not go together: a
+// file is given for exactly each track asked for, in the folder of the screen file, with the extension of its
+// kind.
+func checkTracks(r StartRequest, bad func(string) error) error {
+	folder := filepath.Dir(r.Output)
+
+	file := func(asked bool, path, ext, name string) error {
+		switch {
+		case !asked && path != "":
+			return bad(name + " file without the track")
+		case !asked:
+			return nil
+		case !filepath.IsAbs(path) || !strings.EqualFold(filepath.Ext(path), ext) || filepath.Dir(path) != folder:
+			return bad(name + " file")
+		}
+
+		return nil
+	}
+
+	if r.Microphone != "" && !validDeviceID(r.Microphone) {
+		return bad("microphone id")
+	}
+
+	if r.Camera != "" && !validDeviceID(r.Camera) {
+		return bad("camera id")
+	}
+
+	for _, c := range []struct {
+		asked bool
+		path  string
+		ext   string
+		name  string
+	}{
+		{r.Microphone != "", r.MicrophoneOutput, ".wav", "microphone"},
+		{r.SystemAudio, r.SystemOutput, ".wav", "system"},
+		{r.Camera != "", r.CameraOutput, ".mp4", "camera"},
+		{r.Events, r.EventsOutput, ".jsonl", "events"},
+	} {
+		if err := file(c.asked, c.path, c.ext, c.name); err != nil {
+			return err
+		}
+	}
+
 	return nil
+}
+
+func cleanDevices(in []Device) []Device {
+	out := make([]Device, 0, len(in))
+
+	for _, d := range in {
+		d.ID, d.Name = clean(d.ID), clean(d.Name)
+		out = append(out, d)
+	}
+
+	return out
 }
 
 func cleanSources(in []Source) []Source {

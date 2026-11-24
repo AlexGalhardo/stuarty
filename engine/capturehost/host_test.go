@@ -48,7 +48,7 @@ func fakeChild() {
 
 		return
 	case "badversion":
-		say(`{"type":"ready","v":2,"helper":"x","os":"windows","display":true,"window":true}`)
+		say(`{"type":"ready","v":1,"helper":"x","os":"windows","display":true,"window":true}`)
 		hang()
 
 		return
@@ -59,7 +59,8 @@ func fakeChild() {
 		return
 	}
 
-	say(`{"type":"ready","v":1,"helper":"fake","os":"windows","display":true,"window":true}`)
+	say(`{"type":"ready","v":2,"helper":"fake","os":"windows","display":true,"window":true,` +
+		`"audio":true,"camera":false,"events":true}`)
 
 	in := bufio.NewReader(os.Stdin)
 
@@ -75,8 +76,12 @@ func fakeChild() {
 				strings.Join(os.Environ(), "|")))
 		case strings.Contains(line, `"sources"`):
 			say(`{"type":"sources","displays":[{"id":"d1","name":"Display 1","width":1920,"height":1080}],` +
-				`"windows":[{"id":"w2","name":"Bad\u001b[31m title\nline","width":800,"height":600}]}`)
+				`"windows":[{"id":"w2","name":"Bad\u001b[31m title\nline","width":800,"height":600}],` +
+				`"microphones":[{"id":"m0123456789abcdef","name":"Mic\u001b[31m one","default":true}],` +
+				`"cameras":[],"system_audio":true}`)
 		case strings.Contains(line, `"start"`):
+			_ = os.WriteFile(filepath.Join(filepath.Dir(os.Args[0]), "start.json"), []byte(line), 0o600)
+
 			start(mode, in)
 
 			return
@@ -103,7 +108,8 @@ func start(mode string, in *bufio.Reader) {
 		return
 	}
 
-	say(`{"type":"started","width":1920,"height":1080,"fps":30}`)
+	say(`{"type":"started","width":1920,"height":1080,"fps":30,"tracks":[{"kind":"screen","start_ms":0},` +
+		`{"kind":"microphone","start_ms":2}]}`)
 
 	switch mode {
 	case "malformed":
@@ -132,12 +138,31 @@ func start(mode string, in *bufio.Reader) {
 			)
 		}
 
+		say(`{"type":"level","microphone":420}`)
+
+		paused := false
+
 		for {
 			line, err := in.ReadString('\n')
-			if err != nil || strings.Contains(line, `"stop"`) {
-				say(`{"type":"finished","reason":"stopped","frames":9,"dropped":1,"duration_ms":300,"bytes":9000}`)
+
+			switch {
+			case err != nil || strings.Contains(line, `"stop"`):
+				say(`{"type":"finished","reason":"stopped","frames":9,"dropped":1,"duration_ms":300,"bytes":9000,` +
+					`"tracks":[{"kind":"screen","start_ms":0,"duration_ms":300,"bytes":9000,"lost":false},` +
+					`{"kind":"microphone","start_ms":2,"duration_ms":310,"bytes":3000,"lost":true}],` +
+					`"pauses":[{"from_ms":100,"to_ms":250}],"pointer_events":4}`)
 
 				return
+			case strings.Contains(line, `"pause"`) && !paused:
+				paused = true
+
+				say(`{"type":"paused","elapsed_ms":120}`)
+			case strings.Contains(line, `"resume"`) && paused:
+				paused = false
+
+				say(`{"type":"resumed","elapsed_ms":120}`)
+			case strings.Contains(line, `"pause"`) || strings.Contains(line, `"resume"`):
+				say(`{"type":"error","code":"bad_request","message":"the recording is not in that state"}`)
 			}
 		}
 	}
@@ -314,8 +339,192 @@ func TestSourcesAreListedAndCleaned(t *testing.T) {
 		t.Errorf("windows = %+v: control characters must not pass", s.Windows)
 	}
 
+	if len(s.Microphones) != 1 || s.Microphones[0].Name != "Mic?[31m one" || !s.Microphones[0].Default ||
+		s.Microphones[0].ID != "m0123456789abcdef" {
+		t.Errorf("microphones = %+v: control characters must not pass", s.Microphones)
+	}
+
+	if len(s.Cameras) != 0 || !s.SystemAudio {
+		t.Errorf("cameras %+v, system audio %v", s.Cameras, s.SystemAudio)
+	}
+
+	if !h.Audio || h.Camera || !h.Events {
+		t.Errorf("capabilities audio %v camera %v events %v", h.Audio, h.Camera, h.Events)
+	}
+
 	if err := h.Close(); err != nil {
 		t.Errorf("Close = %v", err)
+	}
+}
+
+// events reads a recording's events until the terminal one, keeping every one in order.
+func events(t *testing.T, ev <-chan Event) []Event {
+	t.Helper()
+
+	var all []Event
+
+	timeout := time.After(30 * time.Second)
+
+	for {
+		select {
+		case e, ok := <-ev:
+			if !ok {
+				return all
+			}
+
+			all = append(all, e)
+		case <-timeout:
+			t.Fatal("the event stream did not end")
+		}
+	}
+}
+
+// next waits for the first event of the wanted type and returns it.
+func next[T Event](t *testing.T, ev <-chan Event) T {
+	t.Helper()
+
+	timeout := time.After(30 * time.Second)
+
+	for {
+		select {
+		case e, ok := <-ev:
+			if !ok {
+				t.Fatalf("the stream ended before a %T", *new(T))
+			}
+
+			if v, is := e.(T); is {
+				return v
+			}
+		case <-timeout:
+			t.Fatalf("no %T in 30 s", *new(T))
+		}
+	}
+}
+
+func TestPauseAndResumeAreConfirmedAndTheRecordingGoesOn(t *testing.T) {
+	h := mustStart(t, "ok", Config{})
+
+	st, ev, err := h.Begin(context.Background(), request(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(st.Tracks) != 2 || st.Tracks[0].Kind != "screen" || st.Tracks[1].Kind != "microphone" ||
+		st.Tracks[1].StartMS != 2 {
+		t.Errorf("started tracks = %+v", st.Tracks)
+	}
+
+	if lv := next[Level](t, ev); lv.Microphone != 420 || lv.System != 0 {
+		t.Errorf("level = %+v", lv)
+	}
+
+	if err := h.Pause(); err != nil {
+		t.Fatal(err)
+	}
+
+	if p := next[Paused](t, ev); p.ElapsedMS != 120 {
+		t.Errorf("paused = %+v", p)
+	}
+
+	// A second pause is refused by the helper; the refusal must not end the recording.
+	if err := h.Pause(); err != nil {
+		t.Fatal(err)
+	}
+
+	if r := next[Rejected](t, ev); !strings.Contains(r.Message, "not in that state") {
+		t.Errorf("rejected = %+v", r)
+	}
+
+	if err := h.Resume(); err != nil {
+		t.Fatal(err)
+	}
+
+	next[Resumed](t, ev)
+
+	if err := h.Stop(); err != nil {
+		t.Fatal(err)
+	}
+
+	all := events(t, ev)
+
+	fin, ok := all[len(all)-1].(Finished)
+	if !ok {
+		t.Fatalf("the last event = %#v", all[len(all)-1])
+	}
+
+	if len(fin.Tracks) != 2 || fin.Tracks[1] != (TrackResult{
+		Kind: "microphone", StartMS: 2, DurationMS: 310, Bytes: 3000, Lost: true,
+	}) {
+		t.Errorf("finished tracks = %+v", fin.Tracks)
+	}
+
+	if len(fin.Pauses) != 1 || fin.Pauses[0] != (PauseSpan{FromMS: 100, ToMS: 250}) || fin.PointerEvents != 4 {
+		t.Errorf("pauses %+v, pointer events %d", fin.Pauses, fin.PointerEvents)
+	}
+
+	if err := h.Close(); err != nil {
+		t.Errorf("Close = %v", err)
+	}
+}
+
+func TestTheTracksAreAskedWithTheirFiles(t *testing.T) {
+	e := newEnv(t, "ok")
+
+	h, err := e.start(t, Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Cleanup(func() { _ = h.Close() })
+
+	good := request(t)
+	folder := filepath.Dir(good.Output)
+	good.Microphone, good.MicrophoneOutput = "default", filepath.Join(folder, "microphone.wav")
+	good.SystemAudio, good.SystemOutput = true, filepath.Join(folder, "system.wav")
+	good.Camera, good.CameraOutput = "c0123456789abcdef", filepath.Join(folder, "camera.mp4")
+	good.Events, good.EventsOutput = true, filepath.Join(folder, "events.jsonl")
+
+	for name, mutate := range map[string]func(*StartRequest){
+		"microphone without a file":  func(r *StartRequest) { r.MicrophoneOutput = "" },
+		"system without a file":      func(r *StartRequest) { r.SystemOutput = "" },
+		"a file for no track":        func(r *StartRequest) { r.Camera = "" },
+		"events without a file":      func(r *StartRequest) { r.EventsOutput = "" },
+		"another folder":             func(r *StartRequest) { r.CameraOutput = filepath.Join(t.TempDir(), "camera.mp4") },
+		"a relative file":            func(r *StartRequest) { r.MicrophoneOutput = "microphone.wav" },
+		"the wrong extension":        func(r *StartRequest) { r.SystemOutput = filepath.Join(folder, "system.mp3") },
+		"a test microphone":          func(r *StartRequest) { r.Microphone = "fake" },
+		"a microphone with a brace":  func(r *StartRequest) { r.Microphone = "{0.0.1}" },
+		"a camera with a space":      func(r *StartRequest) { r.Camera = "a b" },
+		"events with a media file":   func(r *StartRequest) { r.EventsOutput = filepath.Join(folder, "events.mp4") },
+		"a camera named by the host": func(r *StartRequest) { r.Camera = "default-camera/../x" },
+	} {
+		r := good
+		mutate(&r)
+
+		if _, _, err := h.Begin(context.Background(), r); !errors.Is(err, ErrBadRequest) {
+			t.Errorf("%s: err = %v", name, err)
+		}
+	}
+
+	if _, ev, err := h.Begin(context.Background(), good); err != nil {
+		t.Fatalf("a good request: %v", err)
+	} else {
+		_ = h.Stop()
+		_ = events(t, ev)
+	}
+
+	sent, err := os.ReadFile(filepath.Join(filepath.Dir(e.path), "start.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, want := range []string{
+		`"microphone":"default"`, `"system_audio":true`, `"camera":"c0123456789abcdef"`, `"events":true`,
+		`"outputs":{`, `"system":`, `"events":`,
+	} {
+		if !strings.Contains(string(sent), want) {
+			t.Errorf("the start message lacks %s: %s", want, sent)
+		}
 	}
 }
 
@@ -428,7 +637,7 @@ func TestAHelperErrorIsReturnedCleaned(t *testing.T) {
 
 func TestStartFailures(t *testing.T) {
 	for mode, want := range map[string]string{
-		"noready": "no ready message", "badversion": "protocol version 2", "garbageready": "no ready message",
+		"noready": "no ready message", "badversion": "protocol version 1", "garbageready": "no ready message",
 	} {
 		_, err := newEnv(t, mode).start(t, Config{ReadyTimeout: 700 * time.Millisecond})
 		if !errors.Is(err, ErrUnavailable) || !strings.Contains(err.Error(), want) {
