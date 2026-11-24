@@ -7,6 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.52.0] - 2026-11-24
+
+### Added
+
+- **core:** Add the skill_loaded event and the agent activity reducer ([64032bd](https://github.com/AlexGalhardo/stuarty/commit/64032bd71fd9ce1f09e310740e951c798b9531d9))
+- **service:** Record a skill read with the session of the token that read it ([f8202a4](https://github.com/AlexGalhardo/stuarty/commit/f8202a4aafbb7e08b3731275f3c678145ffea426))
+- **mcp:** Describe each tool of Stuarty in plain words and keep the action of a call ([a20dc4c](https://github.com/AlexGalhardo/stuarty/commit/a20dc4c9c493340c414f763f3c4c01e9c7f773d2))
+- **service:** Add ChatActivityGet with the project check of the session ([6192498](https://github.com/AlexGalhardo/stuarty/commit/619249875293283e21bc450352cd96aa34b21ed6))
+- **api:** Add the activity endpoint and the chat:activity command ([ae5c74b](https://github.com/AlexGalhardo/stuarty/commit/ae5c74bfd432670e47397208c4f84cdfb19f355d))
+- **ui:** Show the skill and the tool from the activity read model in the scene bar and the chat ([a9c6d6a](https://github.com/AlexGalhardo/stuarty/commit/a9c6d6a3f54b77242094a22c34e634f92768a080))
+- Measure Windows capture into fragmented MP4 ([ddb10a3](https://github.com/AlexGalhardo/stuarty/commit/ddb10a3f6bb3caede2c928ca5ca2c8e16b07e30b))
+- **core:** Add the recording state machine, review and limits ([d34697a](https://github.com/AlexGalhardo/stuarty/commit/d34697a486758769d0f61f4a92cd558e182a526c))
+- **engine:** Add the capture helper protocol and its fake source ([529e164](https://github.com/AlexGalhardo/stuarty/commit/529e1648ab17fd33301fde3bd5faa9967e4223a7))
+- **engine:** Add the capture host under the process policy ([a0dd158](https://github.com/AlexGalhardo/stuarty/commit/a0dd15842a18a010dc3097b56d95e77606ebf7ab))
+- **engine:** Capture a display or a window with Windows Graphics Capture ([da6c86f](https://github.com/AlexGalhardo/stuarty/commit/da6c86f56b4570211fa9e029183920cec2d755cf))
+- **service:** Add the recording operations, store, migration and recovery ([c42e915](https://github.com/AlexGalhardo/stuarty/commit/c42e915470a8b3717b32d3ae438694c9006e4b26))
+- **api:** Add the recording routes, CLI commands and parity rows ([6f68525](https://github.com/AlexGalhardo/stuarty/commit/6f68525b3d9a7005ad0e2ee50f5b3e300d38b896))
+- **ui:** Add the record dialog and package the capture helper ([c96c9b2](https://github.com/AlexGalhardo/stuarty/commit/c96c9b20b3b865b40e42ec87d5619f681e5b446b))
+- **core:** Derive the kind of a project and compute its workflow ([a646a1f](https://github.com/AlexGalhardo/stuarty/commit/a646a1f6ff5b46faeb44e3c2dbbb650974547cfa))
+- **core:** Count the reading time and cut the excerpt of a text ([6d943de](https://github.com/AlexGalhardo/stuarty/commit/6d943de8325cffc12922573249027c7884888bb6))
+- **store:** Add the kind and the skipped steps to projects ([3f4280c](https://github.com/AlexGalhardo/stuarty/commit/3f4280c7d74f6243c18d059ad71bcaa3ea47ca13))
+- **service:** Read the kind and the workflow of a project and skip an optional step ([d2474bb](https://github.com/AlexGalhardo/stuarty/commit/d2474bbd1a53e66c99ab0e4b24aebb9f1fd18440))
+- **http:** Create a project with a kind and skip a step on HTTP and the command line ([cc26d48](https://github.com/AlexGalhardo/stuarty/commit/cc26d48390318e19fe34b6d8972a3e7786178840))
+- **mcp:** Take the kind on project_create and skip a step through project_item ([592a6c7](https://github.com/AlexGalhardo/stuarty/commit/592a6c71755ff3d9f54f5e9f460785d7a6bbb3cb))
+- **core:** Add the pure rule that snaps cut edges to silences ([06378da](https://github.com/AlexGalhardo/stuarty/commit/06378dad7e622f9b2fab2d458ca185c25c8ee568))
+- **command:** Snap the edges of transcript.delete_range to silences ([e223c44](https://github.com/AlexGalhardo/stuarty/commit/e223c4445af7469a1bf43ab68a852dc4fd1c48fa))
+- **service:** Read the silences for a text cut and say where its edges went ([ee99a36](https://github.com/AlexGalhardo/stuarty/commit/ee99a36a8e5b4c9a3f6d88b155f7c27478072e06))
+- **ui:** Cut transcript words in the silence beside them and say where the edges went ([15188f7](https://github.com/AlexGalhardo/stuarty/commit/15188f7f7def7e77edb3b6a362219b7c941836f1))
+
+### Fixed
+
+- **ui:** Let the chat panel scroll so its composer stays reachable in a short window ([93790e9](https://github.com/AlexGalhardo/stuarty/commit/93790e9e58b1a5ebb70da6e242d8d6dc64daa857))
+- **ui:** Show the title the agent gave a call beside the plain description of a tool ([5943d72](https://github.com/AlexGalhardo/stuarty/commit/5943d72942470149f43d16da848f1b05dab231ef))
+- **cli:** Print the title of a recognised tool in chat:activity ([9d577fa](https://github.com/AlexGalhardo/stuarty/commit/9d577fa2ff9f31b13bd8146cfc1be8d37b660c3c))
+- **service:** Show the clock of the helper while a recording runs ([acf93e1](https://github.com/AlexGalhardo/stuarty/commit/acf93e132a8667f5820bd03d2be8ad22196a7665))
+- **engine:** Bound a helper run by its own deadline and let Inspect read a recording ([aeea077](https://github.com/AlexGalhardo/stuarty/commit/aeea07781832cb5fa95f72e5ba2c8d33a433f12e))
+- **engine:** Skip a frame the capture cannot read instead of ending the recording ([546de89](https://github.com/AlexGalhardo/stuarty/commit/546de890a655b0ad77155c6c1b89c833588af4c9))
+- **api:** List and place a recording have no MCP tool of their own ([6377fdd](https://github.com/AlexGalhardo/stuarty/commit/6377fdd7c36757d0a9d297a88de1aa82926d087a))
+- **site:** Give the recording routes a Recordings tag in the API reference ([e3571ef](https://github.com/AlexGalhardo/stuarty/commit/e3571efdb77dc6770c06577d8aaf5c428705caaf))
+- **store:** Number the recordings migration after the project kind of epic 78 ([d8956f8](https://github.com/AlexGalhardo/stuarty/commit/d8956f87d913d3687adbb8be4e2fb27de8c3234a))
+- **service:** Settle a recording while the studio is locked and keep what recovery cannot read ([2b3a1e7](https://github.com/AlexGalhardo/stuarty/commit/2b3a1e76e425ace623102b76b123664d885d3561))
+- **ui:** List the recordings set aside with Not now so a person can still add or delete them ([42297b5](https://github.com/AlexGalhardo/stuarty/commit/42297b5eebcfe107c0e8ae91631cd33c6f3f01ff))
+- **cli:** Mark window titles as untrusted in recording:sources ([2f45849](https://github.com/AlexGalhardo/stuarty/commit/2f45849dbed3cd9aaa207ab8aa1a6e6a30b7ee81))
+- **core:** Keep image editing unknown and let a skipped publication take its approval ([8ba8aa5](https://github.com/AlexGalhardo/stuarty/commit/8ba8aa57d382717a73404f6bc82a4bba438e9018))
+- **cli:** Name the kind in the usage of project:create and keep the conflict note of the skill ([fb87e94](https://github.com/AlexGalhardo/stuarty/commit/fb87e94c4a4d063ea8d5fa515f1e742dd864c5f3))
+- **web:** Word the agent skill tighter so the kind fits under its limit ([cb7af1d](https://github.com/AlexGalhardo/stuarty/commit/cb7af1d980dc33d204c27eadc051c61b1ae33b70))
+- **core:** Let a script text decide no kind of project ([1adb1c9](https://github.com/AlexGalhardo/stuarty/commit/1adb1c967afbc05dfa93298cc3fb34996afaa980))
+- **core:** Describe the skip and unskip actions of project_item ([2547273](https://github.com/AlexGalhardo/stuarty/commit/2547273321129c0bd11b5f21bf55158d83677ea1))
+- **core:** Satisfy the linters on the snap rule and its tests ([f3de42f](https://github.com/AlexGalhardo/stuarty/commit/f3de42ffc1689d9915721076f0db02fd8cc3a400))
+- **service:** Say 1 frame, not 1 frames, where a cut edge moved ([3ed7978](https://github.com/AlexGalhardo/stuarty/commit/3ed79781131544432578b606b5a50b1c69993890))
+
+### Security
+
+- **security:** File the chat activity isolation test under T-06, which threatcheck requires ([fde5a2b](https://github.com/AlexGalhardo/stuarty/commit/fde5a2b425e519e1895c40fdcc19a4242c6768c2))
+
 ## [0.51.0] - 2026-11-24
 
 ### Added
@@ -2455,7 +2510,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.51.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.52.0...HEAD
+[0.52.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.51.0...v0.52.0
 [0.51.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.50.0...v0.51.0
 [0.50.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.49.0...v0.50.0
 [0.49.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.48.0...v0.49.0
