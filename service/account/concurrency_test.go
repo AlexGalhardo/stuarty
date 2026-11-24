@@ -213,3 +213,39 @@ func TestSetIdleLock_DoesNotUndoAPasswordChange(t *testing.T) {
 		current, next = next, current
 	}
 }
+
+// Something that must be saved with the keys (a hosted agent's transcript is sealed) runs before they are wiped.
+func TestLock_RunsTheBeforeLockHooksWhileTheKeysAreStillThere(t *testing.T) {
+	m, _, _, _ := created(t)
+	ctx := context.Background()
+
+	if err := m.Login(ctx, "stuart", goodPassword); err != nil {
+		t.Fatal(err)
+	}
+
+	var (
+		sealedBefore bool
+		stateBefore  State
+		after        bool
+	)
+
+	m.BeforeLock(func() {
+		_, err := m.Sealer().Seal("project_items", "body", "pit_1", "words")
+		sealedBefore, stateBefore = err == nil, m.State()
+	})
+	m.OnLock(func() { after = true })
+
+	m.Lock()
+
+	if !sealedBefore || stateBefore != StateUnlocked {
+		t.Errorf("in the hook: sealed %v, state %s; want sealing and unlocked", sealedBefore, stateBefore)
+	}
+
+	if !after || m.State() != StateLocked {
+		t.Errorf("after the lock: OnLock ran %v, state %s", after, m.State())
+	}
+
+	if _, err := m.Sealer().Seal("project_items", "body", "pit_1", "words"); !errors.Is(err, ErrLocked) {
+		t.Errorf("Seal after the lock = %v, want ErrLocked", err)
+	}
+}

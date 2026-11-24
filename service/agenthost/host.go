@@ -276,6 +276,27 @@ func (h *Host) Subscribe(ctx context.Context, id string, after int64) (*Subscrip
 	return s.rec.Subscribe(ctx, after)
 }
 
+// EndAll ends every live session for a reason and returns when their process trees are gone. Unlike Shutdown it
+// leaves the host open: the studio locking ends the sessions, and the person starts new ones after signing in.
+func (h *Host) EndAll(reason chat.EndReason) {
+	h.mu.Lock()
+
+	sessions := make([]*liveSession, 0, len(h.live))
+	for _, s := range h.live {
+		sessions = append(sessions, s)
+	}
+
+	h.mu.Unlock()
+
+	var wg sync.WaitGroup
+
+	for _, s := range sessions {
+		wg.Go(func() { s.end(reason) })
+	}
+
+	wg.Wait()
+}
+
 // Shutdown ends every session and returns when no child of the host is left running.
 func (h *Host) Shutdown() {
 	h.mu.Lock()

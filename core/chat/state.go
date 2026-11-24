@@ -40,12 +40,14 @@ const (
 	EndFlood       EndReason = "flood"
 	EndShutdown    EndReason = "shutdown"
 	EndStartFailed EndReason = "start_failed"
+	// EndLocked is a session ended because the studio was locked (ADR-0052): its tools would answer E_LOCKED.
+	EndLocked EndReason = "locked"
 )
 
 // Valid reports whether r is a reason; the empty reason is valid for a live session.
 func (r EndReason) Valid() bool {
 	switch r {
-	case "", EndUser, EndExited, EndProtocol, EndTimeout, EndIdle, EndFlood, EndShutdown, EndStartFailed:
+	case "", EndUser, EndExited, EndProtocol, EndTimeout, EndIdle, EndFlood, EndShutdown, EndStartFailed, EndLocked:
 		return true
 	}
 

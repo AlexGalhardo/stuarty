@@ -97,7 +97,9 @@ A session is one conversation of one project with one profile; its id is `cht_` 
 | `idle` | the agent waits for a message | a message (`running`), an end (`ended`) |
 | `running` | a turn is in progress | the turn ends (`idle`), a permission request arrives (`awaiting_permission`), a cancel (`idle` after the agent confirms, or `ended` when it does not), an end |
 | `awaiting_permission` | the agent asked before a tool call and waits | an answer (`running`), a cancel, an end |
-| `ended` | the process is gone; the transcript stays; `end_reason` is one of `user`, `exited`, `protocol`, `timeout`, `idle`, `flood`, `shutdown`, `start_failed` | nothing |
+| `ended` | the process is gone; the transcript stays; `end_reason` is one of `user`, `exited`, `protocol`, `timeout`, `idle`, `flood`, `shutdown`, `start_failed`, `locked` | nothing |
+
+**The lock ends the sessions** (ADR-0052, SDD-007 section 3.9 item 4). When the studio locks (Logout or the idle lock) every live session ends with the reason `locked`: the account runs the end of the sessions before it wipes the keys (`Manager.BeforeLock`), so the transcript, which is sealed, is written while the key is still in memory, the process tree is stopped and the token revoked. A session is never left alive with every tool answering `E_LOCKED`; the person starts a new one after signing in.
 
 A message sent while the state is not `idle` is `E_INVALID_STATE` with `details.reason` `busy` (or `ended`). The transitions are one pure function, `chat.Next`, with a table test.
 
