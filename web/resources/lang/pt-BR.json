@@ -1509,6 +1509,11 @@
             "title": "Atualizar faixa"
           }
         },
+        "transcript": {
+          "delete_range": {
+            "title": "Apagar palavras da transcrição"
+          }
+        },
         "marker": {
           "add": {
             "title": "Adicionar marcador"
@@ -2187,6 +2192,21 @@
           "forbidden": "Esta sessão não pode instalar arquivos. Rode o comando abaixo em um terminal.",
           "copy_details": "Copiar detalhes"
         }
+      },
+      "transcript": {
+        "title": "Transcrição",
+        "hint": "Clique numa palavra, ou clique numa e clique com Shift em outra, e apague as palavras para cortar o vídeo ali. As palavras riscadas já foram cortadas.",
+        "words": "Palavras da transcrição",
+        "delete_selected": "Apagar as palavras selecionadas",
+        "selected": "{count} palavras selecionadas",
+        "find": "Encontrar vícios de fala e repetições",
+        "review": "Nada é removido até você marcar o que remover e confirmar.",
+        "none_found": "Nada encontrado. Verificado: {rule}.",
+        "kind_filler": "Vício de fala",
+        "kind_repetition": "Repetição",
+        "weak": "talvez",
+        "remove_checked": "Remover {count} marcados",
+        "failed": "Não foi possível ler a transcrição."
       },
       "subtitles": {
         "title": "Importar legendas",

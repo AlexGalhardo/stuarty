@@ -105,6 +105,8 @@ import type {
 	TemplateResult,
 	TemplateSaveRequest,
 	ToolsStatusResult,
+	TranscriptFillersResult,
+	TranscriptViewResult,
 	UserListResult,
 	VideoGenerateRequest,
 	VoiceGenerateRequest,
@@ -233,6 +235,16 @@ export interface ApiClient {
 		projectId: string,
 		query?: SnapPointsQuery,
 	): Promise<SnapPointsResult>;
+	// The words of an asset with the timeline range of each, and the filler words and repetitions to review
+	// (SDD-023). Neither changes the project.
+	getTranscript(
+		projectId: string,
+		assetId: string,
+	): Promise<TranscriptViewResult>;
+	getTranscriptFillers(
+		projectId: string,
+		assetId: string,
+	): Promise<TranscriptFillersResult>;
 	getFonts(): Promise<FontListResult>;
 	// The ready files of the workspace by content hash (VV-117); `kind` keeps one kind.
 	listAssets(
@@ -659,6 +671,18 @@ export function createClient(
 			call(
 				"GET",
 				`${project(id)}/snap-points${query({ rev: q.revision, words: q.words === undefined ? undefined : q.words ? 1 : 0 })}`,
+				READ_TIMEOUT_MS,
+			),
+		getTranscript: (id, asset) =>
+			call(
+				"GET",
+				`${project(id)}/transcript${query({ asset_id: asset })}`,
+				READ_TIMEOUT_MS,
+			),
+		getTranscriptFillers: (id, asset) =>
+			call(
+				"GET",
+				`${project(id)}/transcript/fillers${query({ asset_id: asset })}`,
 				READ_TIMEOUT_MS,
 			),
 		getFonts: () => call("GET", "/fonts", READ_TIMEOUT_MS),

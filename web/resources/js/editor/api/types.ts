@@ -845,6 +845,60 @@ export interface SnapPointsQuery {
 	words?: boolean;
 }
 
+// Where an item of the timeline shows a word, in frames of the timeline, the end exclusive.
+export interface TranscriptRange {
+	item_id: string;
+	track_id: string;
+	start: number;
+	end: number;
+}
+
+// A word of the transcript (SDD-023 section 5). `start` and `end` are frames of the asset; a word with no
+// range was cut or lies outside every item.
+export interface TranscriptWord {
+	index: number;
+	text: string;
+	start: number;
+	end: number;
+	ranges: TranscriptRange[];
+}
+
+// GET /projects/{id}/transcript?asset_id=
+export interface TranscriptViewResult {
+	untrusted_notice?: string;
+	project_id: string;
+	revision: number;
+	asset_id: string;
+	language: string;
+	words: TranscriptWord[];
+	skipped_items: string[];
+	text: string;
+}
+
+// A range of words a person may remove; asking for it removes nothing.
+export interface TranscriptSuggestion {
+	kind: "filler" | "repetition";
+	strength: "strong" | "weak";
+	from_word: number;
+	to_word: number;
+	text: string;
+	start_ms: number;
+	end_ms: number;
+}
+
+// GET /projects/{id}/transcript/fillers?asset_id=
+export interface TranscriptFillersResult {
+	untrusted_notice?: string;
+	project_id: string;
+	revision: number;
+	asset_id: string;
+	language: string;
+	suggestions: TranscriptSuggestion[];
+	// What was checked, so that an empty list is not read as "no fillers".
+	rule: string;
+	text: string;
+}
+
 // GET /fonts: the bundled families and their weights.
 export interface FontFamily {
 	family: string;

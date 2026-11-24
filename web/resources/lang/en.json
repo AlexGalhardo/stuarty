@@ -1509,6 +1509,11 @@
             "title": "Update track"
           }
         },
+        "transcript": {
+          "delete_range": {
+            "title": "Delete transcript words"
+          }
+        },
         "marker": {
           "add": {
             "title": "Add marker"
@@ -2187,6 +2192,21 @@
           "forbidden": "This session cannot install files. Run the command below in a terminal.",
           "copy_details": "Copy details"
         }
+      },
+      "transcript": {
+        "title": "Transcript",
+        "hint": "Click a word, or click one and Shift-click another, then delete the words to cut the video there. Struck-through words are already cut.",
+        "words": "Words of the transcript",
+        "delete_selected": "Delete selected words",
+        "selected": "{count} words selected",
+        "find": "Find fillers and repetitions",
+        "review": "Nothing is removed until you check the ones to remove and confirm.",
+        "none_found": "Nothing found. Checked: {rule}.",
+        "kind_filler": "Filler",
+        "kind_repetition": "Repetition",
+        "weak": "maybe",
+        "remove_checked": "Remove {count} checked",
+        "failed": "The transcript could not be read."
       },
       "subtitles": {
         "title": "Import subtitles",
