@@ -135,6 +135,7 @@ export default function LibraryPage({
 	const groups = groupEntries(kind, rows, {
 		pending: t("ui.library.group.pending"),
 		kept: t("ui.library.group.kept"),
+		invalid: t("ui.library.group.invalid"),
 	});
 	const pane = creating || selected !== null;
 	const name = creating ? null : selected;

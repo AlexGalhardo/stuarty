@@ -126,16 +126,26 @@ export interface EntryGroup {
 }
 
 // Memory shows the notes that wait for a person first: which are kept is the service's word, this only sets the
-// order and the headings. The other lists keep the order of the service, with no heading.
+// order and the headings. A file that cannot be read is neither: it goes last, under its own heading, so it is never
+// listed as kept. The other lists keep the order of the service, with no heading.
 export function groupEntries(
 	kind: LibraryKind,
 	rows: readonly LibraryEntry[],
-	labels: { pending: string; kept: string },
+	labels: { pending: string; kept: string; invalid: string },
 ): EntryGroup[] {
 	if (kind !== "memory") return [{ key: "all", label: null, entries: rows }];
-	const waits = (e: LibraryEntry): boolean => e.state === "ok" && !e.kept;
+	const ok = rows.filter((e) => e.state === "ok");
 	return [
-		{ key: "pending", label: labels.pending, entries: rows.filter(waits) },
-		{ key: "kept", label: labels.kept, entries: rows.filter((e) => !waits(e)) },
+		{
+			key: "pending",
+			label: labels.pending,
+			entries: ok.filter((e) => !e.kept),
+		},
+		{ key: "kept", label: labels.kept, entries: ok.filter((e) => e.kept) },
+		{
+			key: "invalid",
+			label: labels.invalid,
+			entries: rows.filter((e) => e.state !== "ok"),
+		},
 	].filter((g) => g.entries.length > 0);
 }
