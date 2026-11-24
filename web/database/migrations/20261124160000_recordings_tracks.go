@@ -7,7 +7,7 @@ import "github.com/AlexGalhardo/vukem/schema"
 // and, with KeepIndexes, the two indexes); the migration owns its transaction because Rebuild turns foreign keys
 // off around it. Three columns are added: the JSON lists of tracks and pauses, and the number of pointer events.
 // None holds a device name or a pointer position.
-func m20261124130000RecordingsTracks() schema.Migration {
+func m20261124160000RecordingsTracks() schema.Migration {
 	const (
 		statesBefore = `state IN ('prepared','recording','finishing','ready','failed','cancelled')`
 		statesAfter  = `state IN ('prepared','recording','paused','finishing','ready','failed','cancelled')`
@@ -51,7 +51,7 @@ func m20261124130000RecordingsTracks() schema.Migration {
 	}
 
 	return schema.Migration{
-		ID:            "20261124130000_recordings_tracks",
+		ID:            "20261124160000_recordings_tracks",
 		NoTransaction: true,
 		Up: func(s *schema.Schema) error {
 			return s.Rebuild("recordings", recordings(statesAfter, true), schema.KeepIndexes())

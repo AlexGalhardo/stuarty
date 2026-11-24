@@ -13,7 +13,7 @@ func TestRecordingsTracksUpAndDown(t *testing.T) {
 	ctx := context.Background()
 	db := openDB(t)
 
-	const id = "20261124130000_recordings_tracks"
+	const id = "20261124160000_recordings_tracks"
 
 	var upTo []schema.Migration
 
