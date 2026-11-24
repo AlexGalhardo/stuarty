@@ -28,12 +28,12 @@ func init() {
 }
 
 type transcriptDeleteArgs struct {
-	AssetID  string       `json:"asset_id"           desc:"A video asset with audio, or an audio asset, that was transcribed."              pattern:"^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
-	FromWord int          `json:"from_word"          desc:"Index of the first word to remove, in the transcript of the asset."                                                                     min:"0"`
-	ToWord   int          `json:"to_word"            desc:"Index of the last word to remove, inclusive."                                                                                           min:"0"`
+	AssetID  string       `json:"asset_id"           desc:"A video asset with audio, or an audio asset, that was transcribed."                                                                     pattern:"^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	FromWord int          `json:"from_word"          desc:"Index of the first word to remove, in the transcript of the asset."                                                                                                                            min:"0"`
+	ToWord   int          `json:"to_word"            desc:"Index of the last word to remove, inclusive."                                                                                                                                                  min:"0"`
 	Snap     Time         `json:"snap,omitempty"     desc:"A length, 0 to 2s; the farthest an edge of the cut may move into a silence beside it. Default \"0.3s\"; \"0s\" cuts at the word times."`
-	NewIDs   []string     `json:"new_ids,omitempty"  desc:"Ids for the new pieces, in order of cut."                                        pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
-	Resolved *ResolvedCut `json:"resolved,omitempty" desc:"Filled by the service from the transcript and the silences of the asset; never sent by a caller."                                              internal:"true"`
+	NewIDs   []string     `json:"new_ids,omitempty"  desc:"Ids for the new pieces, in order of cut."                                                                                               pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Resolved *ResolvedCut `json:"resolved,omitempty" desc:"Filled by the service from the transcript and the silences of the asset; never sent by a caller."                                                                                                      internal:"true"`
 }
 
 // Silence analysis states of ResolvedCut.

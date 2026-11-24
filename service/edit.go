@@ -654,17 +654,19 @@ func (s *svc) editResult(
 // describeWithSnaps adds one line per transcript cut that tried to snap, so that a person and an agent read where the
 // edges of the cut went (SDD-023 section 3.1).
 func describeWithSnaps(description string, effective []OpEffect) string {
+	lines := []string{description}
+
 	for i := range effective {
 		if effective[i].Op != "transcript.delete_range" {
 			continue
 		}
 
 		if line := snapLine(effective[i].Effective); line != "" {
-			description += "\n" + line
+			lines = append(lines, line)
 		}
 	}
 
-	return description
+	return strings.Join(lines, "\n")
 }
 
 func snapLine(eff map[string]any) string {
