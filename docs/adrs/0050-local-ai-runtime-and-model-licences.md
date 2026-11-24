@@ -25,7 +25,7 @@ Transcription already runs locally through whisper.cpp as a separate process, wi
 | Tool | Code | Weights | Decision |
 | --- | --- | --- | --- |
 | whisper.cpp | MIT | MIT | Keep |
-| YuNet | MIT | MIT per the README; training data origin [to validate] | Accept, after recording that check |
+| YuNet | MIT | MIT (`LICENSE` of opencv_zoo at commit `48b10fa505aeb51fbd127fc60a5c660040e823b7`, Copyright (c) 2020 Shiqi Yu); origin recorded below | Accept (checked by epic 70 on 2026-11-24) |
 | Depth-Anything-V2 Small | Apache-2.0 | Apache-2.0 | Optional |
 | Depth-Anything-V2 Base, Large, Giant | Apache-2.0 | CC-BY-NC-4.0 | Refused |
 | BEN2 base | MIT | No separate licence text [to validate] | Blocked until confirmed |
@@ -53,3 +53,11 @@ Transcription already runs locally through whisper.cpp as a separate process, wi
 1. BEN2 base stays out until its weights licence exists in writing or in a licence file.
 2. The residual risk of the YuNet training data is accepted; epic 70 records its origin and stops if a licence forbids this use.
 3. Execution stays with DirectML, CoreML and CPU.
+
+## 7. Origin of the YuNet weights (recorded by epic 70, 2026-11-24)
+
+- File: `face_detection_yunet_2023mar.onnx`, 232,589 bytes, SHA-256 `8f2383e4dd3cfbb4553ea8718107fc0423210dc964f9f4280604804ed2552fa4`, from `https://github.com/opencv/opencv_zoo` at commit `48b10fa505aeb51fbd127fc60a5c660040e823b7`, folder `models/face_detection_yunet/`.
+- Licence: MIT, in `LICENSE` of that folder (Copyright (c) 2020 Shiqi Yu); the README of the folder says all its files are licensed under it.
+- Origin: the README names the model source as the `libfacedetection.train` project of Shiqi Yu (`tasks/task1/onnx/yunet.onnx`) and reports its accuracy on the WIDER Face validation set. The training set of that project is, per the upstream project, WIDER Face; the terms of that dataset are not the MIT licence of the weights, and this record has not verified them against the dataset's own page.
+- **Residual risk, accepted by the author (D-133):** the weights are MIT-licensed by their author, while the licence of the data they were trained on is separate and not restated by the weights licence. The product shows this to the person before the download (SDD-024 section 3 item 2) and never bundles the file. The epic stops if a licence forbids this use; none was found.
+- Runtime: ONNX Runtime 1.24.4 DirectML build from `Microsoft.ML.OnnxRuntime.DirectML` on nuget.org, MIT (SDD-024 section 4). The `ort` crate is `=2.0.0-rc.15`: the project has published no stable 2.x release, which `.agents/rules/rust.md` item 2 records.
