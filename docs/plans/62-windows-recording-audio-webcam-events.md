@@ -7,7 +7,7 @@ A creator on Windows records a complete tutorial: screen, microphone, computer s
 ## Context and related decisions
 
 - Author decision (2026-11-23): the recording MVP is screen, microphone, system audio, webcam on its own track, pause, cursor and click events saved, and direct placement on the timeline.
-- ADR-0049, SDD-023 (epic 61), `docs/planning/screen-recording/research.md` section 3.
+- ADR-0049, SDD-025 (epic 61), `docs/planning/screen-recording/research.md` section 3.
 
 ## User stories
 
@@ -18,7 +18,7 @@ A creator on Windows records a complete tutorial: screen, microphone, computer s
 
 ## Scope
 
-- Modules: `capture/`, `core/recording/`, `engine/capturehost/`, `service/` recording, the adapters, the record dialog, SDD-023.
+- Modules: `capture/`, `core/recording/`, `engine/capturehost/`, `service/` recording, the adapters, the record dialog, SDD-025.
 - Must not touch: the timeline schema, `renderer/`.
 
 ## Out of scope
@@ -61,7 +61,7 @@ Names are proposals until task 1 writes them to SDD-000.
 
 ## Tasks
 
-- [ ] 1. SDD-023 and SDD-000: tracks, the shared clock, the event format and its privacy rule. Verify: `task lint:md` exits 0.
+- [ ] 1. SDD-025 and SDD-000: tracks, the shared clock, the event format and its privacy rule. Verify: `task lint:md` exits 0.
 - [ ] 2. Core rules: tracks, pause segments, event validation and limits. Verify: `go test ./core/recording/...` passes.
 - [ ] 3. Microphone and system audio in the helper. Verify: the Rust gate in `capture/`, and an integration test that records a known tone and finds it in the output.
 - [ ] 4. Webcam on its own file. Verify: an integration test with a virtual or real camera, skipped with a stated reason when no camera exists.

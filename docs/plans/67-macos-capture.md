@@ -17,7 +17,7 @@ A creator on a Mac records with the same flow as on Windows, with the system per
 
 ## Scope
 
-- Modules: `capture/` macOS backend, `desktop/packaging/macos/`, the permission onboarding in the dialog, SDD-023, user docs.
+- Modules: `capture/` macOS backend, `desktop/packaging/macos/`, the permission onboarding in the dialog, SDD-025, user docs.
 - Must not touch: the core rules and the protocol, which stay common.
 
 ## Out of scope

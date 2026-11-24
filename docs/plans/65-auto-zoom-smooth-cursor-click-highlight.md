@@ -18,7 +18,7 @@ A plain screen recording looks produced: the view follows the clicks, the cursor
 
 ## Scope
 
-- Modules: `core/` (the zoom planner, the cursor track, new commands), the timeline schema and SDD-001, the frame plan, `renderer/` if a cursor layer needs it, the inspector UI, SDD-002, SDD-013, SDD-023.
+- Modules: `core/` (the zoom planner, the cursor track, new commands), the timeline schema and SDD-001, the frame plan, `renderer/` if a cursor layer needs it, the inspector UI, SDD-002, SDD-013, SDD-025.
 - Must not touch: `capture/`.
 
 ## Out of scope
@@ -71,7 +71,7 @@ Golden tests on event fixtures, renderer parity, one end-to-end export.
 ## Acceptance criteria
 
 1. **Given** the same events and options, **when** `recording.auto_zoom` runs twice, **then** the keyframes are identical.
-2. **Given** a fixture with five separated clicks, **when** it runs, **then** five zooms are created, each within the limits of SDD-023.
+2. **Given** a fixture with five separated clicks, **when** it runs, **then** five zooms are created, each within the limits of SDD-025.
 3. **Given** a generated zoom, **when** undo runs, **then** the timeline revision content returns to the previous state.
 4. **Given** the preview and the export of one frame, **when** compared, **then** they pass the parity gate.
 5. **Given** a recording with no events, **when** the command runs, **then** it fails with a code from SDD-000 and changes nothing.
