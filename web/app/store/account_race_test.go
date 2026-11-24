@@ -1,8 +1,10 @@
 package store
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"strings"
 	"testing"
 
 	rules "github.com/AlexGalhardo/stuarty/core/account"
@@ -83,5 +85,51 @@ func TestSecurity_T109_AWriteRacingTheCreationNeverLandsInClearText(t *testing.T
 
 	if !errors.Is(err, account.ErrLocked) {
 		t.Fatalf("the write that lost the race = %v, want ErrLocked", err)
+	}
+}
+
+// A schema migration that rebuilds a sealed table drops its triggers, and an account made before the guards has
+// none: the next open of the store puts every guard back.
+func TestSealGuardsComeBackAtTheNextOpen(t *testing.T) {
+	dir := newDir(t)
+	st := openStore(t, dir, Options{})
+
+	keys, err := account.NewKeySealer(bytes.Repeat([]byte{9}, account.KeySize))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := st.CreateAccount(ctx, accountRecord(), keys, nil); err != nil {
+		t.Fatal(err)
+	}
+
+	guards := "SELECT count(*) FROM sqlite_master WHERE type = 'trigger' AND name LIKE 'sealed_guard_%'"
+
+	want := scalar[int](t, st, guards)
+	if want != 2*len(sealedCells) {
+		t.Fatalf("%d guards after the creation, want %d", want, 2*len(sealedCells))
+	}
+
+	// What a rebuild of the table does to its triggers.
+	for _, event := range []string{"insert", "update"} {
+		if _, err := st.db.ExecContext(ctx, "DROP TRIGGER sealed_guard_webhooks_url_"+event); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := st.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	again := openStore(t, dir, Options{})
+
+	if got := scalar[int](t, again, guards); got != want {
+		t.Fatalf("%d guards after the next open, want %d", got, want)
+	}
+
+	if _, err := again.db.ExecContext(ctx, `INSERT INTO webhooks (id, name, url, events, enabled, created_by,
+ created_ms, updated_ms) VALUES ('whk_2', 'r', 'https://clear.example.com/', '[]', 1, 'local:ui', 1, 1)`); err == nil ||
+		!strings.Contains(err.Error(), guardMessage) {
+		t.Fatalf("a clear address after the next open = %v, want the guard", err)
 	}
 }

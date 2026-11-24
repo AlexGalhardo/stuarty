@@ -135,7 +135,7 @@ func (s *Store) start(ctx context.Context, dir workspace.Dir, migs []schema.Migr
 	if _, err := m.Up(ctx); err != nil {
 		return err
 	}
-	return nil
+	return s.guardSealedColumns(ctx)
 }
 
 func (s *Store) assertPragmas(ctx context.Context) error {
