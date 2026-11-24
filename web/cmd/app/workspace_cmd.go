@@ -104,12 +104,31 @@ func runBackup(ctx context.Context, folder string, w workspaceIO) int {
 
 	_, _ = fmt.Fprintf(w.Out, "backup of %s written to %s: %d files, %d bytes, checksums in %s and %s\n",
 		dir, out, len(m.Files), size, workspace.ManifestFile, workspace.SumsFile)
+
+	hasAccount, err := store.DatabaseHasAccount(ctx, filepath.Join(out, "db.sqlite"))
+	if err != nil {
+		return workspaceFail(w, err)
+	}
+
+	if hasAccount {
+		_, _ = fmt.Fprintln(w.Out, "This workspace has a local account: its texts and its vault stay encrypted in "+
+			"this backup and open again only with your password or your recovery key. Keep the recovery key. "+
+			"The files of memory, prompts and skills are not encrypted, and neither are media files.")
+
+		return 0
+	}
+
 	_, _ = fmt.Fprintln(w.Out, "The master key is NOT in this backup: keep it where you keep your other secrets "+
 		"(the file named by STUARTY_MASTER_KEY_FILE, or STUARTY_MASTER_KEY). Without it the connected accounts "+
 		"of a restored vault cannot be opened.")
 
 	return 0
 }
+
+// errReplaceAccount refuses --replace over a workspace that has a local account: the command runs with no password,
+// so it would let anyone who can run it swap a locked studio for another (ADR-0052).
+var errReplaceAccount = errors.New("this workspace has a local account and --replace would change it without the " +
+	"password: restore into an empty workspace, or move this folder away yourself first")
 
 func runRestore(ctx context.Context, folder string, replace, withoutVault bool, w workspaceIO) int {
 	sess, err := workspace.Open(ctx, workspace.Options{Force: workspace.InProcess, Getenv: w.Getenv})
@@ -124,9 +143,33 @@ func runRestore(ctx context.Context, folder string, replace, withoutVault bool, 
 		return workspaceFail(w, err)
 	}
 
+	if replace {
+		hasAccount, aerr := store.DatabaseHasAccount(ctx, sess.Dir.Path("db.sqlite"))
+		if aerr != nil {
+			return workspaceFail(w, aerr)
+		}
+
+		if hasAccount {
+			return workspaceFail(w, errReplaceAccount)
+		}
+	}
+
+	// The vault of a backup that has an account is sealed by a key only the password or the recovery key opens,
+	// and the key of this machine has no part in it: the checksums of the manifest are what can be checked now.
+	backupHasAccount, err := store.DatabaseHasAccount(ctx, filepath.Join(from, "db.sqlite"))
+	if err != nil {
+		return workspaceFail(w, err)
+	}
+
 	res, err := workspace.Restore(ctx, workspace.RestoreOptions{
 		Dir: sess.Dir, From: from, Replace: replace, WithoutVault: withoutVault,
-		VerifyVault: func(vaultPath string) error { return owner.VerifyVault(w.Getenv, string(sess.Dir), vaultPath) },
+		VerifyVault: func(vaultPath string) error {
+			if backupHasAccount {
+				return nil
+			}
+
+			return owner.VerifyVault(w.Getenv, string(sess.Dir), vaultPath)
+		},
 	})
 	if err != nil {
 		if errors.Is(err, workspace.ErrVaultKey) {

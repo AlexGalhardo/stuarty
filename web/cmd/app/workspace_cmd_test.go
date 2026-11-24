@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/service/account"
 	"github.com/AlexGalhardo/stuarty/service/vault"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 	"github.com/AlexGalhardo/stuarty/web/app/auth"
@@ -160,6 +161,111 @@ func TestWorkspaceBackupCommandsRoundTripAndKeepTheKeyOut(t *testing.T) {
 	got, err := vault.Open(filepath.Join(fresh, "vault.json"), vault.FileProvider{Path: key}).Get("youtube")
 	if err != nil || string(got) != "secret" {
 		t.Errorf("the restored vault: %q, %v", got, err)
+	}
+}
+
+// addAccount gives a seeded workspace a local account whose vault key is not the key of the machine.
+func addAccount(t *testing.T, home string) {
+	t.Helper()
+
+	dir, err := workspace.Resolve(func(string) string { return home })
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	st, err := store.Open(t.Context(), dir, store.Options{SchemaVersion: timeline.CurrentSchemaVersion})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = st.Close() }()
+
+	if err := st.Accounts().Create(t.Context(), account.Record{
+		Username: "stuart", Email: "stuart@example.com",
+		KDF:      account.KDF{Alg: "argon2id", Time: 1, MemoryKiB: 64, Threads: 1, Salt: bytes.Repeat([]byte{1}, 16)},
+		Verifier: bytes.Repeat([]byte{2}, 32), KeyByPassword: bytes.Repeat([]byte{3}, 60),
+		KeyByRecovery: bytes.Repeat([]byte{4}, 60), VaultKey: bytes.Repeat([]byte{5}, 60),
+		CreatedMs: 10, UpdatedMs: 10,
+	}); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// With an account the vault is sealed by a key the password opens, so the key of the machine must not be asked for.
+func TestWorkspaceBackupCommandsRestoreAnAccountWithItsVault(t *testing.T) {
+	key := newKeyFile(t)
+	home := seedWorkspace(t, key)
+	addAccount(t, home)
+
+	want, err := os.ReadFile(filepath.Join(home, "vault.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	backup := filepath.Join(t.TempDir(), "backup")
+
+	var r wsRun
+	if code := r.run(t, home, key, "workspace:backup", backup); code != 0 {
+		t.Fatalf("backup exit %d: %s", code, r.err.String())
+	}
+
+	if out := r.out.String(); strings.Contains(out, "master key is NOT") || !strings.Contains(out, "recovery key") {
+		t.Errorf("the backup of an account says: %q", out)
+	}
+
+	fresh := filepath.Join(t.TempDir(), "fresh")
+
+	var rr wsRun
+	if code := rr.run(t, fresh, newKeyFile(t), "workspace:restore", backup); code != 0 {
+		t.Fatalf("restore exit %d: %s", code, rr.err.String())
+	}
+
+	got, err := os.ReadFile(filepath.Join(fresh, "vault.json"))
+	if err != nil || !bytes.Equal(got, want) {
+		t.Fatalf("the restored vault differs: %v", err)
+	}
+
+	has, err := store.DatabaseHasAccount(t.Context(), filepath.Join(fresh, "db.sqlite"))
+	if err != nil || !has {
+		t.Fatalf("the restored workspace has no account: %v %v", has, err)
+	}
+}
+
+// A restore runs with no password, so it cannot be the way to swap a locked studio for another.
+func TestSecurity_T107_ARestoreDoesNotReplaceALockedStudio(t *testing.T) {
+	key := newKeyFile(t)
+	other := seedWorkspace(t, key)
+	backup := filepath.Join(t.TempDir(), "backup")
+
+	var b wsRun
+	if code := b.run(t, other, key, "workspace:backup", backup); code != 0 {
+		t.Fatalf("backup exit %d: %s", code, b.err.String())
+	}
+
+	home := seedWorkspace(t, key)
+	addAccount(t, home)
+
+	before, err := os.ReadFile(filepath.Join(home, "db.sqlite"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var r wsRun
+	if code := r.run(t, home, key, "workspace:restore", backup, "--replace"); code == 0 {
+		t.Fatal("a restore replaced a workspace that has an account")
+	}
+
+	if !strings.Contains(r.err.String(), "local account") {
+		t.Errorf("the refusal says: %q", r.err.String())
+	}
+
+	after, err := os.ReadFile(filepath.Join(home, "db.sqlite"))
+	if err != nil || !bytes.Equal(before, after) {
+		t.Fatalf("the workspace changed: %v", err)
+	}
+
+	if left, _ := filepath.Glob(filepath.Join(home, "replaced-*")); len(left) != 0 {
+		t.Errorf("the data was moved aside: %v", left)
 	}
 }
 
