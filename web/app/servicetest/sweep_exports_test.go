@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -151,4 +153,146 @@ func TestSweepRemovesWhatAKilledExportLeft(t *testing.T) {
 	if res.IncomingFiles != 3 || res.ExportDirs != 1 {
 		t.Errorf("sweep = %+v, want 3 incoming files and 1 export directory", res)
 	}
+}
+
+// seedSweepJob writes an export job of the project in a state: queued, running or succeeded.
+func seedSweepJob(t *testing.T, e *env, id, project, state string) {
+	t.Helper()
+
+	if err := e.store.Write(context.Background(), func(ctx context.Context, tx service.Tx) error {
+		row := service.JobRow{
+			ID: id, Kind: service.JobExport, ProjectID: &project, Actor: ui,
+			State: service.JobQueued, Input: json.RawMessage(`{}`),
+		}
+		if err := tx.Jobs().CreateLimited(ctx, row, nil); err != nil || state == service.JobQueued {
+			return err
+		}
+
+		if _, err := tx.Jobs().Claim(ctx, id, e.clock.now().UnixMilli()); err != nil || state == service.JobRunning {
+			return err
+		}
+
+		_, err := tx.Jobs().Finish(ctx, id, state, json.RawMessage(`{}`), nil, e.clock.now().UnixMilli())
+
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// The folder of a child process of an export, tmp/<job id>-c<n>/, belongs to its job: it stays while the job
+// runs, in this process or another one on the workspace. A folder named like a job with no row (an audio measure
+// or preview names its own so) stays while it is young, since another process may be running it.
+func TestSweepKeepsTheRunFoldersInUse(t *testing.T) {
+	e := newEnvWith(t, func(e *env, o *service.Options) { o.Workspace = string(e.dir) })
+	project := e.newProject("runs")
+
+	seedSweepJob(t, e, "job_0000000911", project, service.JobRunning)
+	seedSweepJob(t, e, "job_0000000912", project, service.JobSucceeded)
+
+	old, young := e.clock.now().Add(-time.Hour), e.clock.now().Add(-time.Minute)
+
+	dirs := map[string]struct {
+		mtime time.Time
+		stays bool
+	}{
+		"job_0000000911-c1": {old, true},   // a child of a running job
+		"job_0000000911":    {old, true},   // the running job
+		"job_0000000912-c2": {old, false},  // a child of a finished job
+		"job_0000000913":    {young, true}, // no row, young: maybe another process's measure
+		"job_0000000914-c1": {old, false},  // no row, old
+	}
+
+	for name, d := range dirs {
+		path := filepath.Join(string(e.dir), "tmp", name)
+		if err := os.MkdirAll(path, 0o750); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := os.Chtimes(path, d.mtime, d.mtime); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	sweeper, ok := service.SweeperOf(e.svc)
+	if !ok {
+		t.Fatal("the service has no sweeper")
+	}
+
+	if _, err := sweeper.Sweep(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	for name, d := range dirs {
+		if _, serr := os.Stat(filepath.Join(string(e.dir), "tmp", name)); (serr == nil) != d.stays {
+			t.Errorf("tmp/%s exists = %v, want %v", name, serr == nil, d.stays)
+		}
+	}
+}
+
+// A folder of the workspace that the sweep reads and that is a link (a symbolic link, or a junction on Windows)
+// leads out of the workspace: the sweep leaves what is behind it alone.
+func TestSweepDoesNotFollowALinkOutOfTheWorkspace(t *testing.T) {
+	e := newEnvWith(t, func(e *env, o *service.Options) { o.Workspace = string(e.dir) })
+	outside := t.TempDir()
+
+	for _, rel := range []string{"victim", filepath.Join("victim", "keep.txt"), "img_gone"} {
+		path := filepath.Join(outside, rel)
+		if filepath.Ext(rel) == "" {
+			if err := os.MkdirAll(path, 0o750); err != nil {
+				t.Fatal(err)
+			}
+
+			continue
+		}
+
+		if err := os.WriteFile(path, []byte("mine"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	exports := filepath.Join(string(e.dir), "exports")
+	if err := os.MkdirAll(exports, 0o750); err != nil {
+		t.Fatal(err)
+	}
+
+	if !makeSweepLink(t, filepath.Join(exports, "images"), outside) {
+		t.Skip("this machine cannot make a directory link") // verify:env-skip a link needs a privilege or mklink
+	}
+
+	sweeper, ok := service.SweeperOf(e.svc)
+	if !ok {
+		t.Fatal("the service has no sweeper")
+	}
+
+	if _, err := sweeper.Sweep(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, rel := range []string{filepath.Join("victim", "keep.txt"), "img_gone"} {
+		if _, err := os.Stat(filepath.Join(outside, rel)); err != nil {
+			t.Errorf("the sweep removed %s behind the link exports/images: %v", rel, err)
+		}
+	}
+}
+
+// makeSweepLink makes link a directory link to target: a junction on Windows, which needs no privilege, a
+// symbolic link elsewhere.
+func makeSweepLink(t *testing.T, link, target string) bool {
+	t.Helper()
+
+	if runtime.GOOS == "windows" {
+		out, err := exec.CommandContext(t.Context(), "cmd", "/c", "mklink", "/J", link, target).CombinedOutput()
+		if err != nil {
+			t.Logf("mklink /J: %v: %s", err, out)
+
+			return false
+		}
+
+		t.Cleanup(func() { _ = os.Remove(link) })
+
+		return true
+	}
+
+	return os.Symlink(target, link) == nil
 }
