@@ -25,7 +25,6 @@ mod win32;
 mod windows;
 
 use std::io::{BufReader, Write};
-use std::sync::atomic::Ordering;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 
@@ -132,7 +131,7 @@ fn serve(policy: Policy) {
 				}
 				Ok(Command::Stop) => {
 					if let Some(c) = &control {
-						c.stop.store(true, Ordering::Relaxed);
+						c.request_stop();
 					}
 				}
 				Ok(Command::Pause) => match control.as_ref().map(|c| c.clock.pause()) {
@@ -164,7 +163,7 @@ fn serve(policy: Policy) {
 			},
 			Msg::Eof => {
 				if let Some(c) = &control {
-					c.stop.store(true, Ordering::Relaxed);
+					c.request_stop();
 				}
 				if let Some(t) = running.take() {
 					let _ = t.join();

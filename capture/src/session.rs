@@ -33,6 +33,13 @@ impl Control {
 			clock: Arc::new(Clock::new()),
 		})
 	}
+
+	/// Asks the recording to end now: the end is fixed on the clock first, so every track ends at this instant
+	/// however late its thread sees the flag.
+	pub fn request_stop(&self) {
+		self.clock.end();
+		self.stop.store(true, Ordering::Relaxed);
+	}
 }
 
 #[cfg(windows)]
@@ -297,6 +304,8 @@ pub fn run(req: &StartRequest, emit: &dyn Fn(String), ctl: &Control) {
 		}
 	}
 
+	// The end of every track is here, unless a stop request fixed it earlier.
+	clock.end();
 	// A grid that a busy machine held up writes the slots it owes before the file is closed.
 	if source_error.is_none() && reason == "stopped" {
 		let _ = grid.catch_up(clock);
