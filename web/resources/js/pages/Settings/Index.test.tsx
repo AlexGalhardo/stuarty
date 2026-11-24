@@ -55,6 +55,12 @@ describe("the settings page", () => {
 		for (const id of targets) expect(html).toContain(`id="${id}`);
 	});
 
+	test("wraps the list of sections instead of hiding some of them in a sideways scroll", () => {
+		const nav = markup().match(/<nav[^>]*>/)?.[0] ?? "";
+		expect(nav).toContain("flex-wrap");
+		expect(nav).not.toContain("overflow-x");
+	});
+
 	test("has one h1", () => {
 		expect(markup().match(/<h1/g)).toHaveLength(1);
 	});

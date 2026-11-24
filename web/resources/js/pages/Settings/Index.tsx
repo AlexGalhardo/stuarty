@@ -101,7 +101,7 @@ export default function SettingsIndex() {
 				<div className="grid gap-6 lg:grid-cols-[12rem_minmax(0,1fr)] xl:grid-cols-[12rem_minmax(0,1fr)_18rem]">
 					<nav
 						aria-label={t("ui.settings.sections")}
-						className="flex gap-1 overflow-x-auto lg:flex-col lg:self-start"
+						className="flex flex-wrap gap-1 lg:flex-col lg:flex-nowrap lg:self-start"
 					>
 						{sections.map((section) => (
 							<a

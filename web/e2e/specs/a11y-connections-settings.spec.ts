@@ -63,6 +63,20 @@ test.describe("a11y-connections-settings", () => {
 					for (const small of await undersizedTargets(page)) {
 						found.push(`${path}: ${small.target} ${small.size}`);
 					}
+					if (path === "/settings") {
+						// Every section of the list is on the screen: none hides in a sideways scroll on a phone.
+						const links = page
+							.getByRole("navigation", { name: "Sections of the settings" })
+							.getByRole("link");
+						for (const link of await links.all()) {
+							const box = await link.boundingBox();
+							if (box === null || box.x < 0 || box.x + box.width > size.width) {
+								found.push(
+									`${path}: ${await link.textContent()} off the screen`,
+								);
+							}
+						}
+					}
 				}
 				expect(found).toEqual([]);
 			});
