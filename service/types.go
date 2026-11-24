@@ -6,6 +6,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/lint"
+	"github.com/AlexGalhardo/stuarty/core/project"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/service/untrusted"
 )
@@ -44,9 +45,13 @@ type ProjectSummary struct {
 	Duration  TimeValue `json:"duration"` // end of the last item
 	// Complete is false for a project made before epic 56, which has no description and no goal yet.
 	Complete bool `json:"complete"`
-	Tracks   int  `json:"tracks"`
-	Items    int  `json:"items"`
-	Assets   int  `json:"assets"`
+	// Kind is the effective kind of the project and TextSummary says what its text is like, when it holds one
+	// (SDD-005 section 5.12.4).
+	Kind        string       `json:"kind"`
+	TextSummary *TextSummary `json:"text_summary,omitempty"`
+	Tracks      int          `json:"tracks"`
+	Items       int          `json:"items"`
+	Assets      int          `json:"assets"`
 	// TimelineID is the first active timeline, the one the other members are about; Timelines is how many the
 	// project holds.
 	TimelineID string    `json:"timeline_id,omitempty"`
@@ -79,12 +84,16 @@ type ProjectCreateRequest struct {
 	FPS    string `json:"fps,omitempty"`
 	ID     string `json:"id,omitempty"` // optional caller-chosen id; E_ID_EXISTS if taken
 	DryRun bool   `json:"dry_run,omitempty"`
+	// Kind is what the project is meant to become: "text", "video", "image" or "undecided" (the default). It
+	// creates no timeline, format or media (SDD-005 section 5.12.4).
+	Kind string `json:"kind,omitempty"`
 }
 
 // ProjectCreateResult is the created project.
 type ProjectCreateResult struct {
 	Envelope
 	ProjectID string `json:"project_id"`
+	Kind      string `json:"kind"` // the effective kind
 	Name      string `json:"name"       untrusted:"true"`
 	Revision  int64  `json:"revision"` // 0: a new project has an empty document and no batch yet
 	Width     int    `json:"width"`
@@ -119,6 +128,7 @@ type ProjectGetResult struct {
 	Description    string        `json:"description"     untrusted:"true"`
 	Goal           ProjectGoal   `json:"goal"`
 	Complete       bool          `json:"complete"` // false for a project made before epic 56 that nobody completed
+	Kind           string        `json:"kind"`     // the effective kind (SDD-005 section 5.12.4)
 	Revision       int64         `json:"revision"`
 	State          string        `json:"state"`
 	Width          int           `json:"width"`
@@ -131,6 +141,7 @@ type ProjectGetResult struct {
 	TimelineID string             `json:"timeline_id,omitempty"`
 	Items      []ProjectItem      `json:"items"`
 	Production ProductionState    `json:"production"`
+	Workflow   project.Workflow   `json:"workflow"`
 	NextCursor *string            `json:"next_cursor"`
 	Document   *timeline.Document `json:"document,omitempty"    bulk:"true"`
 	Text       string             `json:"text,omitempty"`

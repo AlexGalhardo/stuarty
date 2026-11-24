@@ -37,6 +37,9 @@ type ProductionView struct {
 	Outputs   int
 	Pending   int
 	Published int
+	// Workflow is the line that says where the project stands (SDD-005 section 5.12.4), printed after the
+	// production state; empty prints nothing.
+	Workflow string
 	// Brief is the Markdown of the brief, cut to what the budget leaves.
 	Brief string
 	// Context is the description and the goal of the project, one line each (SDD-005 section 5.12.2). It is
@@ -96,6 +99,10 @@ func Production(v *ProductionView, maxTokens int) string {
 		v.Pending,
 		v.Published,
 	)
+
+	if v.Workflow != "" {
+		head.WriteString("\n" + v.Workflow)
+	}
 
 	var items strings.Builder
 

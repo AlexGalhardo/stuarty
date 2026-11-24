@@ -179,7 +179,8 @@ func (s *svc) ProjectBundleImport(ctx context.Context, req ProjectBundleImportRe
 
 	res := &ProjectCreateResult{
 		UntrustedNotice: UntrustedNotice,
-		ProjectID:       projectID, Name: doc.Name, Revision: revision, Width: doc.Settings.Width,
+		ProjectID:       projectID, Name: doc.Name, Kind: bundleKind(&parts.manifest), Revision: revision,
+		Width:  doc.Settings.Width,
 		Height: doc.Settings.Height, FPS: fpsString(doc.Settings.FPS.Num, doc.Settings.FPS.Den),
 		Text: textview.Created(projectID, doc.Name, doc.Settings.Width, doc.Settings.Height,
 			timeval.FPS{Num: int64(doc.Settings.FPS.Num), Den: int64(doc.Settings.FPS.Den)}),
@@ -254,7 +255,8 @@ func (s *svc) importBareBundle(
 
 	name := cmp.Or(p.manifest.Production.Name, p.manifest.Project.Name)
 	res := &ProjectCreateResult{
-		UntrustedNotice: UntrustedNotice, ProjectID: id, Name: name, Text: textview.CreatedProject(id, name),
+		UntrustedNotice: UntrustedNotice, ProjectID: id, Name: name, Kind: bundleKind(&p.manifest),
+		Text: textview.CreatedProject(id, name),
 	}
 
 	if req.DryRun {
@@ -460,6 +462,9 @@ func (s *svc) putImportedProduction(ctx context.Context, tx Tx, p *bundleParts, 
 	if g := p.manifest.Production.Goal; g != nil {
 		head.Goal = *g
 	}
+
+	// checkBundleContext refused a kind that is not one, and a bundle that has none imports as undecided.
+	head.Kind, _ = project.ParseKind(p.manifest.Production.Kind)
 
 	if err := tx.Productions().Create(ctx, head); err != nil {
 		return err
@@ -935,12 +940,34 @@ const (
 
 var bundleKeyRe = regexp.MustCompile(`^t\d{1,3}$`)
 
+// bundleKind is the effective kind of the project a bundle makes (SDD-005 section 5.12.4): the kind it stores, or
+// what its items say. A bundle that has a document and no production is a project with one timeline.
+func bundleKind(m *BundleManifest) string {
+	if m.Production == nil {
+		return string(project.KindVideo)
+	}
+
+	stored, _ := project.ParseKind(m.Production.Kind) // checkBundleContext refused a kind that is not one
+	items := make([]project.Item, len(m.Production.Items))
+
+	for i := range m.Production.Items {
+		it := &m.Production.Items[i]
+		items[i] = project.Item{Kind: project.Kind(it.Kind), TextKind: it.TextKind}
+	}
+
+	return string(project.EffectiveKind(stored, items))
+}
+
 // checkBundleContext holds the name, the description and the goal a bundle brings to the rules of a project: a
 // bundle is a file from anywhere, and what it says becomes what every agent of the project reads first. What it
 // leaves out is a project that nobody completed. A due date in the past is kept: it was valid when it was set.
 func checkBundleContext(p *BundleProduction) *Error {
 	if p.Name != "" && project.CheckTitle(p.Name) != nil {
 		return bundleRefused("manifest.json names the project with a name that is not valid")
+	}
+
+	if _, kerr := project.ParseKind(p.Kind); kerr != nil {
+		return bundleRefused("manifest.json names a kind of project that is not known")
 	}
 
 	c := project.Context{Name: "Name", Description: p.Description}

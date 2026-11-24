@@ -378,6 +378,10 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.ProjectItemRestore(ctx, service.ProjectItemTrashRequest{ProjectID: "prj_0000000001"})
 			return err
 		},
+		"ProjectStepSkip": func() error {
+			_, err := e.svc.ProjectStepSkip(ctx, service.ProjectStepSkipRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
 		"BriefGet": func() error {
 			_, err := e.svc.BriefGet(ctx, service.BriefGetRequest{ProjectID: "prj_0000000001"})
 			return err

@@ -67,7 +67,10 @@ type BundleProduction struct {
 	// bundle made before epic 56, leave them out.
 	Description string        `json:"description,omitempty"`
 	Goal        *project.Goal `json:"goal,omitempty"`
-	Items       []BundleItem  `json:"items"`
+	// Kind is the stored kind of the project (SDD-005 section 5.12.4); left out for undecided, and by a bundle made
+	// before epic 78, which imports as undecided and reads its kind from its items.
+	Kind  string       `json:"kind,omitempty"`
+	Items []BundleItem `json:"items"`
 }
 
 // BundleItem is an active item of the project. Timeline names the timeline by its key in the bundle ("main",

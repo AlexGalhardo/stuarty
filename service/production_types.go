@@ -34,15 +34,44 @@ type ProjectDescribeRequest struct {
 // ProjectDescribeResult is the production as text, with its structure.
 type ProjectDescribeResult struct {
 	Envelope
-	ProjectID   string          `json:"project_id"`
-	Name        string          `json:"name"        untrusted:"true"`
-	State       string          `json:"state"`
-	Description string          `json:"description" untrusted:"true"`
-	Goal        ProjectGoal     `json:"goal"`
-	Complete    bool            `json:"complete"` // false for a project made before epic 56 that nobody completed
-	Production  ProductionState `json:"production"`
-	Items       []ProjectItem   `json:"items"`
-	Text        string          `json:"text"`
+	ProjectID   string           `json:"project_id"`
+	Name        string           `json:"name"        untrusted:"true"`
+	State       string           `json:"state"`
+	Description string           `json:"description" untrusted:"true"`
+	Goal        ProjectGoal      `json:"goal"`
+	Complete    bool             `json:"complete"` // false for a project made before epic 56 that nobody completed
+	Kind        string           `json:"kind"`     // the effective kind (SDD-005 section 5.12.4)
+	Production  ProductionState  `json:"production"`
+	Workflow    project.Workflow `json:"workflow"`
+	Items       []ProjectItem    `json:"items"`
+	Text        string           `json:"text"`
+}
+
+// TextSummary is what a list of projects says about the text of a project: its kind, its words, how long it takes
+// to read and its first characters (SDD-005 section 5.12.4).
+type TextSummary struct {
+	ItemID         string `json:"item_id"`
+	TextKind       string `json:"text_kind"`
+	Words          int    `json:"words"`
+	ReadingMinutes int    `json:"reading_minutes"`                  // the words divided by 200, rounded up
+	Excerpt        string `json:"excerpt"         untrusted:"true"` // the first 160 characters, without the front matter of a post
+}
+
+// ProjectStepSkipRequest skips an optional step of the workflow of a project, or with Restore puts it back.
+type ProjectStepSkipRequest struct {
+	ProjectID string `json:"project_id"`
+	Step      string `json:"step"`              // a step id of SDD-000 section 1
+	Restore   bool   `json:"restore,omitempty"` // put a skipped step back
+	DryRun    bool   `json:"dry_run,omitempty"`
+}
+
+// ProjectStepSkipResult is the workflow after the change.
+type ProjectStepSkipResult struct {
+	Envelope
+	ProjectID string           `json:"project_id"`
+	Workflow  project.Workflow `json:"workflow"`
+	Changed   bool             `json:"changed"` // false on a dry run and when nothing changed
+	Text      string           `json:"text"`
 }
 
 // ProjectDuplicateRequest copies a project.

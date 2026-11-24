@@ -101,6 +101,24 @@ func (c *Client) ProjectItemRestore(
 	return post[service.ProjectItemResult](ctx, c, itemPath(req.ProjectID, req.ItemID, "/restore"), dryBody{req.DryRun})
 }
 
+// ProjectStepSkip implements service.Service.
+func (c *Client) ProjectStepSkip(
+	ctx context.Context,
+	req service.ProjectStepSkipRequest,
+) (*service.ProjectStepSkipResult, error) {
+	body := struct {
+		Restore bool `json:"restore,omitempty"`
+		DryRun  bool `json:"dry_run,omitempty"`
+	}{req.Restore, req.DryRun}
+
+	return post[service.ProjectStepSkipResult](
+		ctx,
+		c,
+		projectPath(req.ProjectID, "/steps/"+segment(req.Step)+"/skip"),
+		body,
+	)
+}
+
 // BriefGet implements service.Service.
 func (c *Client) BriefGet(ctx context.Context, req service.BriefGetRequest) (*service.BriefResult, error) {
 	return get[service.BriefResult](ctx, c, projectPath(req.ProjectID, "/brief"), nil)

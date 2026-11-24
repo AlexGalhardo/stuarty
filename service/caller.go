@@ -166,6 +166,7 @@ var Scopes = map[string]string{
 	"ProjectItemRename":     ScopeEdit,
 	"ProjectItemTrash":      ScopeEdit,
 	"ProjectItemRestore":    ScopeEdit,
+	"ProjectStepSkip":       ScopeEdit,
 	"BriefGet":              ScopeRead,
 	"BriefSet":              ScopeEdit,
 	"BriefingQuestions":     ScopeRead,

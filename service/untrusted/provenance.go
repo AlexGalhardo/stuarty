@@ -37,6 +37,7 @@ var Provenance = map[string]string{
 	"service.ProjectOtioExportResult.FileName":  SourceProjectText,
 	"service.ProjectItem.Title":                 SourceProjectText,
 	"service.ProjectItem.Text":                  SourceProjectText,
+	"service.TextSummary.Excerpt":               SourceProjectText,
 	"service.ProjectDescribeResult.Name":        SourceProjectText,
 	"service.BriefResult.Text":                  SourceProjectText,
 	"service.BriefingAnswer.Value":              SourceProjectText,

@@ -12,6 +12,7 @@ type ProductionService interface {
 	ProjectItemRename(ctx context.Context, req ProjectItemRenameRequest) (*ProjectItemResult, error)
 	ProjectItemTrash(ctx context.Context, req ProjectItemTrashRequest) (*ProjectItemResult, error)
 	ProjectItemRestore(ctx context.Context, req ProjectItemTrashRequest) (*ProjectItemResult, error)
+	ProjectStepSkip(ctx context.Context, req ProjectStepSkipRequest) (*ProjectStepSkipResult, error)
 	BriefGet(ctx context.Context, req BriefGetRequest) (*BriefResult, error)
 	BriefSet(ctx context.Context, req BriefSetRequest) (*BriefResult, error)
 }
