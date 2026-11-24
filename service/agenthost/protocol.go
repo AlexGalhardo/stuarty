@@ -324,7 +324,10 @@ type PermissionRequest struct {
 	CallID    string
 	Title     string
 	ToolKind  string
-	Options   []chat.Option
+	// Detail is the allowlisted part of the input of the call (chat.ReadDetail); nil when the tool is not
+	// Stuarty's or the agent sent no input.
+	Detail  *chat.PermissionDetail
+	Options []chat.Option
 }
 
 // ParsePermission reads the params of a session/request_permission.
@@ -332,9 +335,10 @@ func ParsePermission(params json.RawMessage) (PermissionRequest, error) {
 	var p struct {
 		SessionID string `json:"sessionId"`
 		ToolCall  struct {
-			ID    string `json:"toolCallId"`
-			Title string `json:"title"`
-			Kind  string `json:"kind"`
+			ID       string          `json:"toolCallId"`
+			Title    string          `json:"title"`
+			Kind     string          `json:"kind"`
+			RawInput json.RawMessage `json:"rawInput"`
 		} `json:"toolCall"`
 		Options []struct {
 			ID   string `json:"optionId"`
@@ -351,6 +355,10 @@ func ParsePermission(params json.RawMessage) (PermissionRequest, error) {
 		SessionID: p.SessionID, CallID: clean(p.ToolCall.ID, 128), Title: clean(p.ToolCall.Title, 500),
 		ToolKind: clean(p.ToolCall.Kind, 32),
 	}
+
+	// The input of the call is read for the allowlist and for nothing else (SDD-017 section 7.1); the
+	// title the allowlist is chosen by is the cleaned one.
+	req.Detail = chat.ReadDetail(req.Title, p.ToolCall.RawInput)
 
 	for _, o := range p.Options {
 		req.Options = append(req.Options, chat.Option{ID: o.ID, Name: o.Name, Kind: chat.OptionKind(o.Kind)})

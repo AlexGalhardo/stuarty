@@ -67,6 +67,9 @@ type Options struct {
 	Limits  Limits
 	// NewID makes ids; default timeline.NewID (cryptographic).
 	NewID func(prefix string) string
+	// OnRequestChange is called, with no lock held, when a permission request is asked or settled: the
+	// unified read of what waits for a person follows it (epic 77). It must not block.
+	OnRequestChange func()
 }
 
 // StartRequest is what a session is started from.
@@ -191,13 +194,15 @@ func (h *Host) get(id string) (*liveSession, error) {
 
 func (h *Host) remove(s *liveSession) {
 	h.mu.Lock()
-	defer h.mu.Unlock()
-
 	delete(h.live, s.req.SessionID)
 
 	if h.project[s.req.ProjectID] == s.req.SessionID {
 		delete(h.project, s.req.ProjectID)
 	}
+	h.mu.Unlock()
+
+	// The requests of a session that is gone leave the unified read.
+	h.changed()
 }
 
 // Live reports whether a session has a process.
@@ -286,6 +291,34 @@ func (h *Host) ActivityEvents(id string) ([]chat.Event, bool) {
 	}
 
 	return s.rec.ActivityEvents(), true
+}
+
+// Permissions are the permission requests of every live session, those that wait and those already
+// answered, in no order. It reads memory only and is the one source of the chat half of the unified
+// read (SDD-015 section 4.1); the service filters it to what the caller may see.
+func (h *Host) Permissions() []Permission {
+	h.mu.Lock()
+	live := make([]*liveSession, 0, len(h.live))
+
+	for _, s := range h.live {
+		live = append(live, s)
+	}
+	h.mu.Unlock()
+
+	var out []Permission
+
+	for _, s := range live {
+		out = append(out, s.permissions()...)
+	}
+
+	return out
+}
+
+// changed tells the owner of the host that a permission request was asked or settled.
+func (h *Host) changed() {
+	if h.o.OnRequestChange != nil {
+		h.o.OnRequestChange()
+	}
 }
 
 // Subscribe follows a live session after the event numbered after.
