@@ -26,9 +26,14 @@ type BoxErr = Box<dyn std::error::Error + Send + Sync>;
 /// interval only has to stay under one frame.
 const MIN_UPDATE: Duration = Duration::from_millis(8);
 
+/// A frame that cannot be read is skipped: the slot of the grid repeats the last one and counts as dropped. Only a
+/// run of this many in a row ends the recording, so one hiccup of the graphics driver does not lose a take.
+const MAX_UNREADABLE_IN_A_ROW: u32 = 120;
+
 struct Handler {
 	mailbox: Arc<Mailbox>,
 	scratch: Vec<u8>,
+	unreadable: u32,
 }
 
 impl GraphicsCaptureApiHandler for Handler {
@@ -39,6 +44,7 @@ impl GraphicsCaptureApiHandler for Handler {
 		Ok(Self {
 			mailbox: ctx.flags,
 			scratch: Vec::new(),
+			unreadable: 0,
 		})
 	}
 
@@ -53,6 +59,7 @@ impl GraphicsCaptureApiHandler for Handler {
 			.map(|fb| fb.as_nopadding_buffer(&mut self.scratch).to_vec());
 		match result {
 			Ok(data) => {
+				self.unreadable = 0;
 				self.mailbox.push(Frame {
 					width,
 					height,
@@ -61,9 +68,18 @@ impl GraphicsCaptureApiHandler for Handler {
 				Ok(())
 			}
 			Err(e) => {
-				self.mailbox
-					.close(Some(format!("a frame could not be read: {e}")));
-				Err(e.into())
+				self.unreadable += 1;
+				if self.unreadable == 1 {
+					eprintln!("a frame could not be read: {e}");
+				}
+				if self.unreadable >= MAX_UNREADABLE_IN_A_ROW {
+					self.mailbox.close(Some(format!(
+						"{} frames in a row could not be read: {e}",
+						self.unreadable
+					)));
+					return Err(e.into());
+				}
+				Ok(())
 			}
 		}
 	}
