@@ -114,7 +114,7 @@ func TestBundleWithNoDocumentManifestRules(t *testing.T) {
 		"a bad project id": func(m *BundleManifest) { m.Project.ID = "tl_1" },
 		"no name":          func(m *BundleManifest) { m.Production.Name, m.Project.Name = "", "" },
 		"a bad name in project": func(m *BundleManifest) {
-			m.Production.Name, m.Project.Name = "", "a‮b"
+			m.Production.Name, m.Project.Name = "", "a"+string(rune(0x202e))+"b"
 		},
 		"a long name in project": func(m *BundleManifest) {
 			m.Production.Name, m.Project.Name = "", strings.Repeat("a", 121)
