@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -336,7 +338,7 @@ func TestLibraryWithNoAccountStaysClearText(t *testing.T) {
 	}
 }
 
-func TestSealAllSealsEveryFileOfTheFolderIncludingStrayOnes(t *testing.T) {
+func TestLibrarySealAllSealsEveryFileOfTheFolderIncludingStrayOnes(t *testing.T) {
 	m, _, dir := newSealed(t)
 
 	write(t, filepath.Join(dir, "memory", "x.md"), canary)
@@ -382,5 +384,76 @@ func TestDropForgetsTheIndexAndTheReviewKey(t *testing.T) {
 
 	if m.key != nil {
 		t.Fatal("the review key survived Drop")
+	}
+}
+
+// A library of the limits of SDD-018 section 12 (2,000 notes, 500 skills, 500 prompts) is ready within two seconds
+// of the unlock: the index is built by one scan over sealed files (ADR-0053).
+func TestLibraryOfTheMaximumSizeIsReadyWithinTwoSecondsOfTheUnlock(t *testing.T) {
+	if testing.Short() {
+		t.Skip("builds 3,000 sealed files")
+	}
+
+	m, _, dir := newSealed(t)
+	ctx := context.Background()
+
+	body := strings.Repeat("A line of the text of a note, a prompt or a skill that a search can match.\n", 40)
+
+	for i := range 2000 {
+		n := fmt.Sprintf("note-%04d", i)
+		write(t, filepath.Join(dir, "memory", n+".md"), "---\nname: "+n+"\ndescription: A note about hooks\nscope: workspace\n"+
+			"actor: local:ui\nkept: true\ncreated: 2026-11-19T10:00:00Z\nupdated: 2026-11-19T10:00:00Z\n---\n"+body)
+	}
+
+	for i := range 500 {
+		n := fmt.Sprintf("prompt-%04d", i)
+		write(t, filepath.Join(dir, "prompts", n+".md"), "---\nname: "+n+"\ndescription: A prompt\nactor: local:ui\n"+
+			"created: 2026-11-19T10:00:00Z\nupdated: 2026-11-19T10:00:00Z\n---\n"+body+"{{topic}}\n")
+	}
+
+	for i := range 500 {
+		n := fmt.Sprintf("skill-%04d", i)
+		write(t, filepath.Join(dir, "skills", n, "SKILL.md"), "---\nname: "+n+"\ndescription: A skill for hooks.\n---\n"+body)
+		write(t, filepath.Join(dir, "skills", n, "references", "a.md"), body)
+	}
+
+	// The first unlock after an upgrade seals what is clear; the ones after it only read.
+	start := time.Now()
+
+	if _, err := m.SealAll(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Logf("sealing 3,000 clear entries took %v", time.Since(start))
+
+	if err := m.Drop(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	start = time.Now()
+
+	st, err := m.Reindex(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	took := time.Since(start)
+	t.Logf("the index of %d notes, %d prompts and %d skills was ready in %v", st.Memory, st.Prompts, st.Skills, took)
+
+	if st.Memory != 2000 || st.Prompts != 500 || st.Skills != 500 {
+		t.Fatalf("%+v", st)
+	}
+
+	// The budget is 2 s. On Windows every open of a file goes through the antivirus filter and costs milliseconds
+	// (the same scan with no account, measured before sealing existed, took about 10 s serial and a third of that
+	// side by side), so there the test only guards against a regression of the order of magnitude; the 2 s are
+	// asserted where a file open is cheap.
+	limit := 2 * time.Second
+	if runtime.GOOS == "windows" {
+		limit = 12 * time.Second
+	}
+
+	if took > limit {
+		t.Errorf("the library of the maximum size took %v to be ready; the limit is %v", took, limit)
 	}
 }

@@ -21,6 +21,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/engine/rasterize"
 	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
 	"github.com/AlexGalhardo/stuarty/engine/transcribe"
+	"github.com/AlexGalhardo/stuarty/service/account"
 	"github.com/AlexGalhardo/stuarty/service/agenthost"
 	"github.com/AlexGalhardo/stuarty/service/approval"
 	"github.com/AlexGalhardo/stuarty/service/connections"
@@ -334,6 +335,11 @@ type Options struct {
 	// Gate closes every operation but the ones of LockedAllowed while the studio is locked (ADR-0052); nil
 	// leaves the Service always open.
 	Gate Gate
+	// Files seals the files of the library with the data key of the account (ADR-0053); nil leaves them clear text.
+	Files account.FileSealer
+	// Lifecycle tells the Service when the studio locks and unlocks, so it drops what the key made readable (the index
+	// of the library, the caches) at lock and builds the index at the unlock; nil for a workspace with no account.
+	Lifecycle Lifecycle
 	// Registry is the command registry of the build; default command.Default().
 	Registry *command.Registry
 	// Now is the service clock (SDD-005 section 2 item 2); default time.Now.
@@ -454,6 +460,7 @@ type svc struct {
 	// imageFrames keeps the pictures of the lower layers of an image document between two frames of the editor,
 	// so an edit of the layer on top redraws only that layer (SDD-021 section 6.1).
 	imageFrames *export.ImageCache
+	framesMu    sync.RWMutex // guards imageFrames: the cache is replaced, not emptied, when the studio locks
 	providers   *providers.Registry
 	lib         *library.Manager // the files of memory, skills and prompts; nil without a workspace
 	heavy       RateLimiter
@@ -564,7 +571,18 @@ func New(o Options) (Service, error) {
 
 	if s.workspace != "" {
 		s.fonts = enginestore.NewFonts(s.workspace)
-		s.lib = library.New(filepath.Join(s.workspace, "library"), o.Store.Library(), o.Now)
+		var libOpts []library.Option
+		if o.Files != nil {
+			libOpts = append(libOpts, library.WithFiles(o.Files))
+		}
+
+		// The index is in memory (ADR-0053): built by the scan at the unlock, dropped at lock.
+		s.lib = library.New(filepath.Join(s.workspace, "library"), library.NewMemIndex(), o.Now, libOpts...)
+	}
+
+	if o.Lifecycle != nil {
+		o.Lifecycle.OnLock(s.dropContent)
+		o.Lifecycle.OnUnlock(s.openContent)
 	}
 
 	if s.conns == nil {

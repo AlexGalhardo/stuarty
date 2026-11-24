@@ -226,12 +226,14 @@ func TestTablesMatchSDD005Section5(t *testing.T) {
 			"actual_micros INTEGER 0 - 0", "state TEXT 1 'reserved' 0", "day TEXT 1 - 0", "created_ms INTEGER 1 - 0",
 			"settled_ms INTEGER 0 - 0",
 		},
-		"library_entries": {
-			"key TEXT 1 - 1", "kind TEXT 1 - 0", "name TEXT 1 - 0", "description TEXT 1 - 0", "scope TEXT 1 - 0",
-			"origin TEXT 1 - 0", "reviewed INTEGER 1 - 0", "kept INTEGER 1 - 0", "actor TEXT 1 - 0", "tags TEXT 1 - 0",
-			"state TEXT 1 - 0", "error TEXT 1 - 0", "path TEXT 1 - 0", "sig TEXT 1 - 0", "lint_errors INTEGER 1 - 0",
-			"lint_warnings INTEGER 1 - 0", "has_scripts INTEGER 1 - 0", "created_ms INTEGER 1 - 0",
-			"updated_ms INTEGER 1 - 0",
+		// The index of the library is in memory (ADR-0053): its two tables are gone after the migrations.
+		"library_entries": {},
+		"library_fts":     {},
+		"accounts": {
+			"id INTEGER 1 - 1", "username TEXT 1 - 0", "email TEXT 1 - 0", "kdf TEXT 1 - 0", "verifier BLOB 1 - 0",
+			"key_by_password BLOB 1 - 0", "key_by_recovery BLOB 1 - 0", "vault_key BLOB 1 - 0",
+			"idle_lock_minutes INTEGER 1 0 0", "created_ms INTEGER 1 - 0", "updated_ms INTEGER 1 - 0",
+			"seal_version INTEGER 1 0 0",
 		},
 	}
 	for table, w := range want {
@@ -387,8 +389,6 @@ func TestResetDropsEveryEditorTableAndUpRunsAgain(t *testing.T) {
 		"approval_rules",
 		"cost_ceilings",
 		"cost_ledger",
-		"library_entries",
-		"library_fts",
 		"agent_profiles",
 		"chat_sessions",
 		"chat_events",

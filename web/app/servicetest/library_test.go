@@ -183,12 +183,6 @@ func TestLibraryReindexRestoresEveryResultAfterTheIndexIsDeleted(t *testing.T) {
 		}
 	}
 
-	for _, stmt := range []string{"DELETE FROM library_entries", "DELETE FROM library_fts"} {
-		if _, err := m.store.DB().ExecContext(ctx, stmt); err != nil {
-			t.Fatal(err)
-		}
-	}
-
 	res, err := m.svc.LibraryReindex(ctx, service.LibraryReindexRequest{})
 	if err != nil || res.Memory != 1 || res.Skills != 1 || res.Prompts != 1 || res.Invalid != 0 {
 		t.Fatalf("%v %+v", err, res)

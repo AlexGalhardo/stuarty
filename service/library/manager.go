@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 	"unicode/utf8"
 
@@ -215,6 +216,10 @@ func (m *Manager) scanFlat(
 		return err
 	}
 
+	// Reading a file is a call to the disk and nothing else, so the entries are read side by side; the index and the
+	// counters are safe for it, and the result does not depend on the order.
+	jobs, examined := newPool(), atomic.Int64{}
+
 	for _, e := range list {
 		file := e.Name()
 
@@ -243,7 +248,10 @@ func (m *Manager) scanFlat(
 		seen[key] = true
 		m.count(kind, st)
 
-		info, err := root.Lstat(path.Join(dir, file))
+		rel := path.Join(dir, file)
+
+		// The listing already holds the size and the time of the file: no second call to the disk to compare them.
+		info, err := e.Info()
 		if err != nil {
 			return err
 		}
@@ -252,19 +260,23 @@ func (m *Manager) scanFlat(
 			continue
 		}
 
-		st.Examined++
+		jobs.do(func() error {
+			examined.Add(1)
 
-		if _, err := sealClearFile(root, path.Join(dir, file)); err != nil {
-			return err
-		}
+			if _, err := sealClearFile(root, rel); err != nil {
+				return err
+			}
 
-		entry, body := m.loadFlat(root, kind, name)
-		if err := m.idx.Put(ctx, entry, body); err != nil {
-			return err
-		}
+			entry, body := m.loadFlat(root, kind, name)
+
+			return m.idx.Put(ctx, entry, body)
+		})
 	}
 
-	return nil
+	err = jobs.wait()
+	st.Examined += int(examined.Load())
+
+	return err
 }
 
 func (m *Manager) scanSkills(
@@ -278,6 +290,8 @@ func (m *Manager) scanSkills(
 	if err != nil {
 		return err
 	}
+
+	jobs, examined := newPool(), atomic.Int64{}
 
 	for _, e := range list {
 		name := e.Name()
@@ -295,24 +309,72 @@ func (m *Manager) scanSkills(
 		seen[key] = true
 		m.count(core.KindSkill, st)
 
-		sig, serr := skillSignature(root, path.Join(skillDir, name))
-		if row, ok := have[key]; ok && serr == nil && row.Sig == sig {
-			continue
-		}
+		row, known := have[key]
 
-		st.Examined++
+		jobs.do(func() error {
+			if known {
+				if sig, serr := skillSignature(root, path.Join(skillDir, name)); serr == nil && row.Sig == sig {
+					return nil
+				}
+			}
 
-		if _, err := sealClearTree(root, path.Join(skillDir, name)); err != nil {
-			return err
-		}
+			examined.Add(1)
 
-		entry, body := m.loadSkillEntry(root, name)
-		if err := m.idx.Put(ctx, entry, body); err != nil {
-			return err
-		}
+			if _, err := sealClearTree(root, path.Join(skillDir, name)); err != nil {
+				return err
+			}
+
+			entry, body := m.loadSkillEntry(root, name)
+
+			return m.idx.Put(ctx, entry, body)
+		})
 	}
 
-	return nil
+	err = jobs.wait()
+	st.Examined += int(examined.Load())
+
+	return err
+}
+
+// pool runs the reads of a scan side by side, a few at a time.
+type pool struct {
+	wg  sync.WaitGroup
+	sem chan struct{}
+	mu  sync.Mutex
+	err error
+}
+
+func newPool() *pool { return &pool{sem: make(chan struct{}, scanWorkers)} }
+
+// scanWorkers is how many files are read at once: enough to hide the latency of a disk, few enough not to starve the
+// rest of the process.
+const scanWorkers = 32
+
+func (p *pool) do(fn func() error) {
+	p.sem <- struct{}{}
+
+	p.wg.Add(1)
+
+	go func() {
+		defer func() {
+			<-p.sem
+			p.wg.Done()
+		}()
+
+		if err := fn(); err != nil {
+			p.mu.Lock()
+			if p.err == nil {
+				p.err = err
+			}
+			p.mu.Unlock()
+		}
+	}()
+}
+
+func (p *pool) wait() error {
+	p.wg.Wait()
+
+	return p.err
 }
 
 // loadFlat reads and checks a note or a prompt file and builds its row and its
@@ -606,3 +668,9 @@ func (m *Manager) putRow(ctx context.Context, root *vroot, kind core.Kind, name 
 
 // isMissing reports whether err means that the file or folder does not exist.
 func isMissing(err error) bool { return errors.Is(err, fs.ErrNotExist) }
+
+// counter is a count that the jobs of a pool add to.
+type counter struct{ n atomic.Int64 }
+
+func (c *counter) add()     { c.n.Add(1) }
+func (c *counter) get() int { return int(c.n.Load()) }

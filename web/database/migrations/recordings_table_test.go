@@ -78,8 +78,17 @@ func TestRecordingsTableUpAndDown(t *testing.T) {
 		t.Fatalf("the old project: %d %v", n, err)
 	}
 
-	rolled, err := full.Rollback(ctx, 1)
-	if err != nil || len(rolled) != 1 || rolled[0] != id {
+	// Later migrations roll back first: the recordings table is not always the last one.
+	later := 0
+
+	for _, m := range allMigrations() {
+		if m.ID > id {
+			later++
+		}
+	}
+
+	rolled, err := full.Rollback(ctx, later+1)
+	if err != nil || len(rolled) != later+1 || rolled[later] != id {
 		t.Fatalf("Rollback = %v, %v", rolled, err)
 	}
 

@@ -16,7 +16,6 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/service/connections"
-	"github.com/AlexGalhardo/stuarty/service/library"
 	"github.com/AlexGalhardo/stuarty/service/recordings"
 	"github.com/AlexGalhardo/stuarty/service/webhooks"
 )
@@ -228,7 +227,6 @@ func (b *batchStore) Webhooks() webhooks.Store       { return nil }
 func (b *batchStore) Recordings() recordings.Store   { return nil }
 
 // Nor does any test here use the library; its manager only needs an index to hold.
-func (b *batchStore) Library() library.Index { return nil }
 
 // The project of these tests has one timeline, whose id is its own (SDD-003 section 1.7).
 func (b *batchStore) Productions() ProductionRepo { return batchProductions{} }
