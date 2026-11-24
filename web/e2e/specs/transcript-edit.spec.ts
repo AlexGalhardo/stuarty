@@ -1,4 +1,8 @@
-import { type Running, startFirstFlow } from "../support/firstFlow";
+import {
+	type Running,
+	signInAsPerson,
+	startFirstFlow,
+} from "../support/firstFlow";
 import { caller, expect, seedProject, test } from "./helpers";
 
 // Epic 69 (SDD-023): a creator deletes a sentence in the transcript and the video is cut there; undo brings it back; the
@@ -72,6 +76,8 @@ test.describe("edit by text @chromium-only", () => {
 		};
 		const whole = await frames();
 
+		// The server is new: a person opens the account and signs in before the editor is theirs (ADR-0052).
+		await signInAsPerson(page);
 		await page.goto(`/editor/${seeded.id}`);
 		await page.locator(`[data-item-id="${seeded.itemIds[0]}"]`).click();
 		await page.getByRole("tab", { name: "Captions" }).click();
@@ -98,6 +104,11 @@ test.describe("edit by text @chromium-only", () => {
 		await expect(words.nth(2)).toHaveAttribute("data-cut", "true");
 		await expect(words.nth(3)).toHaveAttribute("data-cut", "true");
 		await expect(words.nth(1)).not.toHaveAttribute("data-cut", "true");
+
+		// Epic 89: the panel says where the edges of the cut went, as the service reported it.
+		await expect(panel.locator("[data-snap-result]")).toContainText(
+			"Cut edges:",
+		);
 
 		// The timeline loses the range of the two words: 1100 ms to 1900 ms, within one frame.
 		const lost = Math.round(((1900 - 1100) * FPS) / 1000);

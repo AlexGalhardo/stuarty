@@ -1,4 +1,8 @@
-import type { TranscriptSuggestion } from "../../api/types";
+import type {
+	EditResult,
+	JsonValue,
+	TranscriptSuggestion,
+} from "../../api/types";
 
 // What the transcript panel keeps between gestures (SDD-023 section 6). Nothing here finds a frame, a length or a
 // match between words: it names words by index and the core does the rest.
@@ -69,4 +73,39 @@ export function checkedRanges(
 				: [],
 		)
 		.sort((a, b) => a.from - b.from);
+}
+
+// What the service says about the edges of the cuts it made (`effective.snap` of transcript.delete_range, SDD-002 C.87):
+// how many edges moved into a silence, were already in one, or found none. `missing` is a cut made with no silence
+// analysis of the asset. The panel adds up what it was told and finds no frame.
+export interface SnapSummary {
+	missing: boolean;
+	moved: number;
+	inside: number;
+	none: number;
+}
+
+function isRecord(value: JsonValue | undefined): value is {
+	[key: string]: JsonValue;
+} {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export function snapSummary(result: EditResult): SnapSummary | null {
+	const sum: SnapSummary = { missing: false, moved: 0, inside: 0, none: 0 };
+	let seen = false;
+	for (const entry of result.effective) {
+		if (entry.op !== "transcript.delete_range") continue;
+		const snap = entry.effective.snap;
+		if (!isRecord(snap)) continue;
+		seen = true;
+		if (snap.analysis === "missing") sum.missing = true;
+		for (const edge of [snap.start, snap.end]) {
+			if (!isRecord(edge)) continue;
+			if (edge.result === "moved") sum.moved++;
+			else if (edge.result === "inside") sum.inside++;
+			else sum.none++;
+		}
+	}
+	return seen ? sum : null;
 }

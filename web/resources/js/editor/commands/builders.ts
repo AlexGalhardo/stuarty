@@ -1736,13 +1736,21 @@ export function silenceOperations(
 
 // The words to remove are named by index in the transcript of the asset; the core finds the media and cuts it
 // (SDD-023 section 3). One operation per range, so one undo restores all of them.
+// The core snaps the edges of the cut to the silence beside them by default (SDD-023 section 3.1); `snap: false`
+// sends "0s" to cut at the word times. The window is the core's: the panel sends no length of its own.
 export function transcriptDeleteOperations(
 	assetId: string,
 	ranges: readonly { from: number; to: number }[],
+	options: { snap?: boolean } = {},
 ): Operations {
 	return ranges.map((range) => ({
 		op: "transcript.delete_range",
-		args: { asset_id: assetId, from_word: range.from, to_word: range.to },
+		args: {
+			asset_id: assetId,
+			from_word: range.from,
+			to_word: range.to,
+			...(options.snap === false ? { snap: "0s" } : {}),
+		},
 	}));
 }
 
