@@ -238,7 +238,7 @@ func TestSecurity_T131_ASealedFileRenamedSwappedOrCutDoesNotOpenAndIsListedInval
 	m, _, dir := newSealed(t)
 	ctx := context.Background()
 
-	for _, n := range []string{"a", "b", "c"} {
+	for _, n := range []string{"a", "b", "c", "d"} {
 		mem := sampleMemory(n)
 		mem.Body = "body of " + n + "\n"
 
@@ -274,12 +274,17 @@ func TestSecurity_T131_ASealedFileRenamedSwappedOrCutDoesNotOpenAndIsListedInval
 	flipped[len(flipped)-1] ^= 1
 	put("a", flipped)
 
+	// d is downgraded: its version byte is changed, so it is neither opened nor taken for clear text and sealed again.
+	downgraded := bytes.Clone(read("d"))
+	downgraded[4] = 0
+	put("d", downgraded)
+
 	rows, err := m.List(ctx, core.KindMemory, Filter{IncludeUnreviewed: true})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if len(rows) != 3 {
+	if len(rows) != 4 {
 		t.Fatalf("every file must be listed, got %d", len(rows))
 	}
 
@@ -287,6 +292,14 @@ func TestSecurity_T131_ASealedFileRenamedSwappedOrCutDoesNotOpenAndIsListedInval
 		if e.State != StateInvalid || e.Error == "" {
 			t.Errorf("%s: state %q error %q", e.Name, e.State, e.Error)
 		}
+
+		if e.Name == "d" && !strings.Contains(e.Error, "sealed") {
+			t.Errorf("the downgraded file is invalid for another reason: %q", e.Error)
+		}
+	}
+
+	if !bytes.Equal(read("d"), downgraded) {
+		t.Error("the scan sealed the downgraded file again as if it were clear text")
 	}
 
 	if _, _, err := m.ReadMemory(ctx, "b"); err == nil {

@@ -1559,7 +1559,7 @@ Three states of a workspace must open:
 
 `account.Manager.OnUnlock(fn)` registers a function that runs once per sign-in, after the keys are in place and outside the lock of the manager, while the studio still answers `E_LOCKED` to every other request (`Check`), so nothing races it. It does not run for a failed sign-in. The owner registers, in this order: the second-stage sealing (state 2), `MigrateStoredDocuments` (a document keeps its older schema version until the studio is first unlocked, and no operation reads one in between), and the build of the library index. `OnLock` drops the library index and every cache that holds content (the pictures of `ImageCache`, the prepared layers, any decoded document).
 
-**The file envelope.** A sealed library file is `"STFL"`, a version byte (1), a 12-byte random nonce, then ciphertext and tag (AES-256-GCM, data key); the associated data are `stuarty/file/v1`, a zero byte and the path relative to `library/`. A file without the magic is clear. It is written once, in `service/account`.
+**The file envelope.** A sealed library file is `"STFL"`, a version byte (1), a 12-byte random nonce, then ciphertext and tag (AES-256-GCM, data key); the associated data are `stuarty/file/v1`, a zero byte and the path relative to `library/`. A file without the magic is clear; a file with the magic and another version byte is a sealed file that does not open (listed `invalid`, never sealed again as clear text). It is written once, in `service/account`.
 
 ### 5.18 The `recordings` table (epic 61, SDD-025)
 

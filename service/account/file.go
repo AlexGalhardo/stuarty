@@ -28,8 +28,9 @@ type FileSealer interface {
 	Sealing() bool
 }
 
-// IsSealedFile reports whether stored begins with the magic and the version of a sealed file.
-func IsSealedFile(stored []byte) bool { return bytes.HasPrefix(stored, fileHeader) }
+// IsSealedFile reports whether stored begins with the magic of a sealed file, whatever its version byte: a file whose
+// version was changed is a sealed file that does not open, never clear text to seal again or to read as it is.
+func IsSealedFile(stored []byte) bool { return bytes.HasPrefix(stored, []byte(fileMagic)) }
 
 func fileAAD(rel string) []byte { return []byte(fileLabel + "\x00" + rel) }
 
