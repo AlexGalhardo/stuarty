@@ -44,6 +44,8 @@ html:not(.dark) .home .shot-light {
 	object-position: top left;
 }
 .home-wide {
+	max-width: 64rem;
+	margin-inline: auto;
 	margin-bottom: clamp(2rem, 4vw, 3rem);
 }
 
@@ -51,7 +53,6 @@ html:not(.dark) .home .shot-light {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.5rem;
-	margin: 0;
 	padding: 0;
 	list-style: none;
 }
@@ -120,7 +121,6 @@ html:not(.dark) .home .shot-light {
 .home-defs {
 	display: grid;
 	gap: 1.25rem;
-	margin: 0;
 }
 .home-defs dd {
 	margin: 0.25rem 0 0;
@@ -132,7 +132,6 @@ html:not(.dark) .home .shot-light {
 .home-checks {
 	display: grid;
 	gap: 0.75rem;
-	margin: 0;
 	padding: 0;
 	list-style: none;
 }
