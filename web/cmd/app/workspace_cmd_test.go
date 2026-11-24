@@ -12,6 +12,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/account"
 	"github.com/AlexGalhardo/stuarty/service/vault"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
 	"github.com/AlexGalhardo/stuarty/web/app/auth"
 	"github.com/AlexGalhardo/stuarty/web/app/store"
 )
@@ -204,13 +205,17 @@ func TestWorkspaceBackupCommandsRestoreAnAccountWithItsVault(t *testing.T) {
 
 	backup := filepath.Join(t.TempDir(), "backup")
 
-	var r wsRun
-	if code := r.run(t, home, key, "workspace:backup", backup); code != 0 {
-		t.Fatalf("backup exit %d: %s", code, r.err.String())
+	// The command refuses a workspace that has an account (it has no password), so the backup is made the way the
+	// command makes it, through the library.
+	dir, err := workspace.Resolve(func(string) string { return home })
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	if out := r.out.String(); strings.Contains(out, "master key is NOT") || !strings.Contains(out, "recovery key") {
-		t.Errorf("the backup of an account says: %q", out)
+	if _, err := workspace.Backup(t.Context(), workspace.BackupOptions{
+		Dir: dir, Out: backup, Version: agentdocs.Version, Snapshot: store.SnapshotDatabase,
+	}); err != nil {
+		t.Fatal(err)
 	}
 
 	fresh := filepath.Join(t.TempDir(), "fresh")
@@ -409,5 +414,28 @@ func TestWorkspaceBackupCommandsArguments(t *testing.T) {
 		if (err != nil) != tc.bad {
 			t.Errorf("%s %v: err = %v", tc.name, tc.args, err)
 		}
+	}
+}
+
+// workspace:backup runs with no password: a workspace that has an account is locked there, and the command copies
+// nothing out of it (SDD-007 section 3.9 item 6).
+func TestSecurity_T107_ABackupOfALockedStudioAnswersELocked(t *testing.T) {
+	key := newKeyFile(t)
+	home := seedWorkspace(t, key)
+	addAccount(t, home)
+
+	backup := filepath.Join(t.TempDir(), "backup")
+
+	var r wsRun
+	if code := r.run(t, home, key, "workspace:backup", backup); code == 0 {
+		t.Fatal("a backup of a workspace that has an account was written")
+	}
+
+	if got := r.err.String(); !strings.Contains(got, "E_LOCKED") || !strings.Contains(got, "unlock Stuarty") {
+		t.Errorf("the refusal says: %q", got)
+	}
+
+	if _, err := os.Stat(backup); err == nil {
+		t.Errorf("the folder of the backup was made")
 	}
 }

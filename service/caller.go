@@ -299,6 +299,10 @@ func (s *svc) locked(method string) error {
 	return lockedError()
 }
 
+// NewLockedError is E_LOCKED for a command that runs as its own process, where a workspace that has an account is
+// locked because the process holds no key: `token:rotate` and `workspace:backup` (SDD-007 section 3.9 item 6).
+func NewLockedError() *Error { return lockedError() }
+
 // lockedError is the answer of a locked studio (ADR-0052).
 func lockedError() *Error {
 	return newError(CodeLocked, "Stuarty is locked: unlock Stuarty with your password.").
