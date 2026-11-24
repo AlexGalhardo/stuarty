@@ -4,6 +4,9 @@ package main
 
 import "os"
 
+// handlesPerThread is 0 where the count is of file descriptors: a thread holds none.
+const handlesPerThread = 0
+
 // handleCount is the number of file descriptors the process holds open, or -1 when the system does not say.
 func handleCount() int {
 	for _, dir := range []string{"/proc/self/fd", "/dev/fd"} {

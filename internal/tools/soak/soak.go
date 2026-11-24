@@ -38,6 +38,7 @@ type Sample struct {
 	Commits    int           `json:"commits"`
 	HeapInuse  uint64        `json:"heap_inuse"`
 	Goroutines int           `json:"goroutines"`
+	Threads    int           `json:"threads"`
 	Handles    int           `json:"handles"`
 	DBBytes    int64         `json:"db_bytes"`
 	Jobs       int           `json:"unfinished_jobs"`
@@ -57,12 +58,15 @@ type Bounds struct {
 	HeapGrowth         float64 // the heap at the end over the heap at the baseline, at most
 	Goroutines         int     // goroutines over the baseline, at most
 	Handles            int     // handles over the baseline, at most
+	HandlesPerThread   int     // handles each new OS thread holds, added to the allowance for the threads started
 	DBBytesPerCommit   int64   // growth of the database after the baseline, per commit, at most
 	UnfinishedAtTheEnd int     // jobs still queued or running at the end, at most
 }
 
 // DefaultBounds are the limits of SDD-008 section 13.4.
-var DefaultBounds = Bounds{HeapGrowth: 1.25, Goroutines: 10, Handles: 10, DBBytesPerCommit: 2048}
+var DefaultBounds = Bounds{
+	HeapGrowth: 1.25, Goroutines: 10, Handles: 10, HandlesPerThread: handlesPerThread, DBBytesPerCommit: 2048,
+}
 
 // Check judges a report against the bounds and lists what failed.
 func (r Report) Check(b Bounds) []string {
@@ -83,8 +87,11 @@ func (r Report) Check(b Bounds) []string {
 		bad = append(bad, fmt.Sprintf("goroutines grew from %d to %d", base.Goroutines, last.Goroutines))
 	}
 
-	if last.Handles > base.Handles+b.Handles {
-		bad = append(bad, fmt.Sprintf("handles grew from %d to %d", base.Handles, last.Handles))
+	// A thread the Go runtime starts under load holds handles of its own on Windows: it is not a leak (VV-363).
+	allowed := base.Handles + b.Handles + b.HandlesPerThread*max(0, last.Threads-base.Threads)
+	if last.Handles > allowed {
+		bad = append(bad, fmt.Sprintf("handles grew from %d to %d, with %d more threads",
+			base.Handles, last.Handles, last.Threads-base.Threads))
 	}
 
 	if commits := last.Commits - base.Commits; commits > 0 {
@@ -108,19 +115,20 @@ func (r Report) Markdown(bad []string) string {
 	fmt.Fprintf(&b, "# Soak %s\n\n", time.Now().UTC().Format("2006-01-02"))
 	fmt.Fprintf(&b, "%d commits, %d refused by the rules, run %s, sample every %s, baseline after %s, seed %d.\n\n",
 		r.Commits, r.Refused, r.Config.Duration, r.Config.Sample, r.Config.Warmup, r.Config.Seed)
-	b.WriteString("| At | Commits | Heap in use (MB) | Goroutines | Handles | Database (KB) | Unfinished jobs |\n")
-	b.WriteString("| --- | --- | --- | --- | --- | --- | --- |\n")
+	b.WriteString("| At | Commits | Heap in use (MB) | Goroutines | Threads | Handles | Database (KB) | Unfinished jobs |\n")
+	b.WriteString("| --- | --- | --- | --- | --- | --- | --- | --- |\n")
 
 	for _, s := range r.Samples {
 		fmt.Fprintf(
 			&b,
-			"| %s | %d | %.1f | %d | %d | %d | %d |\n",
+			"| %s | %d | %.1f | %d | %d | %d | %d | %d |\n",
 			s.At.Round(
 				time.Second,
 			),
 			s.Commits,
 			float64(s.HeapInuse)/(1<<20),
 			s.Goroutines,
+			s.Threads,
 			s.Handles,
 			s.DBBytes>>10,
 			s.Jobs,
@@ -444,6 +452,7 @@ func Run(ctx context.Context, cfg Config) (Report, error) {
 		at := time.Since(start)
 		rep.Samples = append(rep.Samples, Sample{
 			At: at, Commits: d.commits, HeapInuse: ms.HeapInuse, Goroutines: runtime.NumGoroutine(),
+			Threads: osThreads(),
 			Handles: handleCount(), DBBytes: dbBytes(cfg.Dir), Jobs: d.unfinished(c),
 		})
 
