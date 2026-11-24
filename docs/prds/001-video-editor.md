@@ -172,7 +172,7 @@ Each number is measured on the reference machine named in the test strategy (SDD
 | Multicam, plugins | Professional tooling |
 | Spectral audio editing, studio multitrack mixing | Professional tooling (ADR-0042) |
 | ProRes, DNxHR and other finishing formats | Outside export for the Internet (ADR-0042) |
-| Recording camera, screen or voice | A different product surface |
+| Recording the camera or the voice inside the editor | Added later by the recording epics (62 onward); screen recording is specified in [PRD-004](004-creator-platform.md) section 4.11 and ADR-0049, and its result enters this editor as an ordinary clip |
 | Stock media library | Licensing (author decision D-014) |
 | Real-time collaboration between several humans, comments | No requirement; the operation log allows it later |
 | Accounts, quotas, billing, a hosted service | Stuarty is self-hosted (author decision D-003) |

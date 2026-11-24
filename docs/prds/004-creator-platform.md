@@ -137,6 +137,26 @@ It is done when the author has published ten real videos using only Stuarty, not
 | RF-422 | When a post is published, a webhook can notify a URL the user configured, with a signed payload |
 | RF-423 | Blog posts can be read through the HTTP API of Stuarty by any system the user authorizes |
 
+### 4.11 Screen recording
+
+Decisions: ADR-0049 (a native capture helper), ADR-0051 (agents never start a capture). Specification: SDD-023. Epic 61 delivers video on Windows; sound, webcam, pause and cursor events are epic 62, the browser is epic 63, and macOS and Linux are epics 67 and 68.
+
+| ID | Requirement |
+| --- | --- |
+| RF-430 | On Windows, from the desktop application, a person records one display or one window into a project from a record dialog, with no second tool |
+| RF-431 | Before the start, the dialog lists the displays and windows that can be captured, by name |
+| RF-432 | Only a person in a privileged browser session starts a capture. The local token, an API key, an MCP session and a hosted agent get `E_PRIVILEGED_SESSION`, and no capture process starts (ADR-0051) |
+| RF-433 | Anyone with the `media` scope can stop or cancel a capture in progress: reducing exposure is always allowed |
+| RF-434 | While a capture runs, the system's own capture border stays on and the product shows a recording state with the elapsed time and a stop control; the product never turns the border off |
+| RF-435 | A recording is a fragmented MP4 written to the workspace while it records, so a crash of the helper, of the server or of the machine leaves a file that plays |
+| RF-436 | A recording that was running when the server stopped is, at the next start, `ready` with what was written, or `failed` with a reason; it never stays `recording` |
+| RF-437 | A recording has a longest duration and a smallest free disk space, checked at the start and while it records; at a limit it stops cleanly and keeps what was written |
+| RF-438 | A finished recording enters the project only when a person confirms it, on a step that says agents with access to the project can read it; the confirmation makes it a library asset by the ordinary import |
+| RF-439 | "Not now" on that step keeps the file out of the project and invisible to agents until a person adds it or deletes it |
+| RF-440 | A confirmed recording is placed on a timeline as one undoable batch |
+| RF-441 | An agent can read the state of a recording and stop it, through the job tools it already has, and can never start one; keystrokes are never recorded and nothing a capture produces leaves the machine |
+| RF-442 | Where capture is not available (the web, Docker, macOS and Linux until their epics), the operations answer `E_CAPTURE_UNAVAILABLE` and say why |
+
 ## 5. Non-functional requirements
 
 | ID | Requirement |
@@ -148,6 +168,8 @@ It is done when the author has published ten real videos using only Stuarty, not
 | NFR-064 | Each connector has contract tests against recorded responses, and a manual check with a real account before it is called done |
 | NFR-065 | Every section of the dashboard is operable by keyboard and meets WCAG 2.2 level AA for contrast, focus and names |
 | NFR-066 | The product and its skills are written so that a small-model agent can complete the first complete flow without help |
+| NFR-067 | Recording a window or display of 1920 by 1080 at 60 frames per second for 10 minutes on the reference machine, idle, drops at most 1% of the frames (a dropped frame is a slot of the 60 fps grid with no new frame from the system) |
+| NFR-068 | When the helper and its encoder are killed together, the file keeps all but the last second of what was recorded |
 
 ## 6. Success metrics
 
