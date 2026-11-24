@@ -220,8 +220,17 @@ test.describe("first complete flow @chromium-only", () => {
 			await page.getByTestId("image-add-text").click();
 			await page.getByTestId("image-field-text").fill("");
 			await page.getByTestId("image-field-text").blur();
+			// The slot is saved by an edit; leaving the page before it is answered would abort it (VV-298).
+			const slotSaved = page.waitForResponse(
+				(r) =>
+					r.request().method() === "POST" &&
+					/\/api\/v1\/images\/[^/]+\/edit$/.test(r.url()) &&
+					(r.request().postData() ?? "").includes("headline") &&
+					r.status() === 200,
+			);
 			await page.getByTestId("image-field-slot").fill("headline");
 			await page.getByTestId("image-field-slot").press("Enter");
+			await slotSaved;
 
 			await page.goto("/edit-image");
 			await page
