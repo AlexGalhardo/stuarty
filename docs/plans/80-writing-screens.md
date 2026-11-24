@@ -53,7 +53,7 @@ None new.
 - [x] 2. Script, caption, draft and post panels. Verify: `cd web && bun run test -- Preview` passes.
 - [x] 3. Revisions and the compare view. Verify: new spec `write-review` passes.
 - [x] 4. The end of a text by type, including copy. Verify: new spec `write-text-flow` passes.
-- [ ] 5. Empty, loading, error and agent states. Verify: `bun run check:i18n` exits 0 and the states have unit tests.
+- [x] 5. Empty, loading, error and agent states. Verify: `bun run check:i18n` exits 0 and the states have unit tests.
 - [ ] 6. Check three widths in both themes. Verify: `cd web && bun run e2e -- a11y` passes.
 
 ## Test strategy
