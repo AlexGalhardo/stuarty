@@ -1,0 +1,65 @@
+---
+title: "Studio voice"
+description: "One action for a clean, even voice: a chain of audio processors made for speech."
+---
+
+## You will learn
+
+- what the three studio voice presets do;
+- how to apply one from the editor, the CLI or an agent;
+- how the export brings the voice to the loudness target.
+
+## The idea
+
+**Studio voice** replaces the audio processor chain of a clip, an audio item or a track with a chain made for a voice that is the main sound of a video: noise reduction, an equaliser, a de-esser, a compressor and a limiter. It uses only the processors you can add one by one, so after applying it you can open any of them and change it, or remove it.
+
+| Preset | For | Chain, in order |
+| --- | --- | --- |
+| `studio` (default) | a natural, clean voice | noise reduction 0.4; equaliser (high-pass 80 Hz, -1.5 dB at 250 Hz, +2 dB at 3500 Hz); de-esser; compressor (-20 dB, 3:1, +3 dB); limiter |
+| `broadcast` | a tight, present voice | noise reduction 0.5; gate; equaliser (high-pass 90 Hz, -2.5 dB at 200 Hz, +3 dB at 4000 Hz); de-esser; compressor (-24 dB, 4:1, +4 dB); limiter |
+| `room_rescue` | a noisy room | strong noise reduction 0.9; gate; equaliser (high-pass 120 Hz, -3 dB at 300 Hz, +2 dB at 3000 Hz); de-esser; compressor (-20 dB, 3:1, +3 dB); limiter |
+
+The chain ends in the limiter. The export then brings the whole mix to the `loudness_target` of the project (in <Term id="lufs">LUFS</Term>, -14 for a new project) with one gain, so a voice that carries a preset is exported within 1 LU of the target. Change the target in the project settings.
+
+Studio voice is a separate action from **Apply preset** of the same section, whose presets (voice, voice with music, podcast, clean up a noisy room) are made for mixes; both replace the whole chain.
+
+## In the editor
+
+Select a clip, an audio item or a track and open the **Audio** tab of the inspector. At the top of **Audio processors**, choose a preset in **Studio voice** and then **Apply studio voice**. The processors of the chain appear below, ready to adjust. The change is one undo step.
+
+## Quick start
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+stuarty edit --project prj_7k2m9x4q1b audio.apply_voice_preset item_id=itm_m1n2p3q4r5
+stuarty edit --project prj_7k2m9x4q1b audio.apply_voice_preset track_id=trk_m1n2p3q4r5 \
+  preset=room_rescue
+```
+
+</Tab>
+<Tab title="MCP">
+
+`edit` with:
+
+```json
+{ "op": "audio.apply_voice_preset", "args": { "item_id": "itm_m1n2p3q4r5", "preset": "broadcast" } }
+```
+
+Change one processor afterwards with `audio.processor_set`.
+
+</Tab>
+</Tabs>
+
+## Common mistakes
+
+- Giving both `item_id` and `track_id`, or neither: `E_VALIDATION`.
+- Applying it to a text, a shape or a caption: `E_TYPE_MISMATCH`. Only a clip, an audio item or a track has a chain.
+- Expecting it to add to the chain. It replaces the chain; add a processor afterwards if you need one more.
+
+## Next steps
+
+- [Audio editing](/docs/guide/audio)
+- [Remove silence](/docs/guide/silence-removal)
+- [Exporting](/docs/guide/exporting)

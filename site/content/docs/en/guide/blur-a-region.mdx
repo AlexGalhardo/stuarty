@@ -1,0 +1,83 @@
+---
+title: "Blur a region"
+description: "Hide an e-mail, a key or an address on screen with a strong blur over part of a clip, for a time range."
+---
+
+## You will learn
+
+- how a blurred region is made and why the clip itself is not changed;
+- how to choose the region, the time and the strength;
+- the one place where a blur is weaker, and what to do there.
+
+## The idea
+
+**Blur a region** hides part of the picture of a clip: a rectangle, for the whole clip or for a range of it. The product adds a copy of the clip, cut to the range, on a visual track named **Blur** directly above the clip. The copy has a strong blur and a rectangular mask of the region, so only the blurred pixels of the region are drawn over the sharp picture. The copy is muted, so the sound does not play twice. The preview and the export draw the same frames, and the range is exact to the frame.
+
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `x`, `y` | none | The top-left corner of the region, as fractions of the picture of the clip (0 is the left or top edge) |
+| `width`, `height` | none | The size of the region, as fractions of the picture |
+| `start` | the start of the clip | When the blur begins, inside the clip |
+| `duration` | up to the end of the clip | How long the blur lasts, at least one frame |
+| `radius` | 4% of the shorter side of the project (44 at 1080) | The strength of the blur, in pixels |
+| `feather` | `0` | A soft edge around the region, in project pixels |
+
+A light blur can be reversed, so the radius has a minimum: 1.5% of the shorter side of the project (17 pixels at 1080). A smaller radius is refused.
+
+The item is named **Blur region**. Because it is a separate item, a later trim or move of the clip does not move the blur: move, trim or delete the **Blur region** item with the usual item commands (`item.move`, `item.trim`, `item.delete`). Each blur is one undo step. Blurring the same clip again adds a second region, on the same **Blur** track when it is free at that time.
+
+The product does not find private data for you: you choose the region.
+
+## In the editor
+
+Select a clip and open the **Adjust** tab of the inspector. In **Blur a region**, give **Left**, **Top**, **Width** and **Height** as shares of the picture (you can type percentages), and optionally **From** and **For** (empty blurs the whole clip) and **Blur strength** (empty uses the strong default). Choose **Blur this region**.
+
+## Near an edge of the picture
+
+The blur treats what lies outside the picture as transparent, so within about two radii of an edge of the picture the blurred copy lets part of the sharp picture through; at the edge itself about half of it shows. A larger region or a larger radius does not cure this. When the region comes that close to an edge, the result says `near_edge: true` and the editor shows a warning. To hide text that touches an edge completely, cover it with a [shape](/docs/guide/shapes) instead (`shape.add`), which is opaque.
+
+## Quick start
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+stuarty edit --project prj_7k2m9x4q1b clip.blur_region item_id=itm_m1n2p3q4r5 \
+  x:=0.1 y:=0.62 width:=0.8 height:=0.08 start=1s duration=2s
+stuarty view --project prj_7k2m9x4q1b --at 1.5s
+```
+
+</Tab>
+<Tab title="MCP">
+
+`edit` with:
+
+```json
+{
+  "op": "clip.blur_region",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "x": 0.1, "y": 0.62, "width": 0.8, "height": 0.08,
+    "start": "1s", "duration": "2s"
+  }
+}
+```
+
+Then `view` at a time inside the range to check that the text cannot be read.
+
+</Tab>
+</Tabs>
+
+## Common mistakes
+
+- A region that goes past the picture (`x + width` or `y + height` above 1): `E_VALIDATION`.
+- A radius below the minimum: `E_VALIDATION`, and the hint gives the least radius for the project.
+- A range outside the clip: `E_INVALID_TIME`.
+- A clip with a speed curve: `E_INVALID_STATE`. A part of it cannot be copied; remove the curve first.
+- Trimming the clip and expecting the blur to follow. Edit the **Blur region** item too.
+
+## Next steps
+
+- [Effects and colour](/docs/guide/effects-and-color)
+- [Shapes](/docs/guide/shapes)
+- [Preview](/docs/guide/preview)
