@@ -1451,6 +1451,7 @@ While no account exists the columns hold clear text and a read returns it as it 
 | `project_items` | `body` (the body of a text, a brief or a caption) | `id` |
 | `text_revisions` | `body` | `item_id/revision` |
 | `chat_events` | `body_json` | `session_id/seq` |
+| `chat_sessions` | `title` (it is the first message of the person, SDD-017); while locked it reads as empty, and a session that ends then keeps it | `id` |
 | `publications` | `text` | `id` |
 | `publication_targets` | `fields`, `snapshot` | `id` |
 | `projects` | `description`, `goal_specific`, `goal_measurable`, `goal_achievable`, `goal_relevant`, `goal_time_bound` (epic 56, SDD-005 section 5.12.2) | `id` |
