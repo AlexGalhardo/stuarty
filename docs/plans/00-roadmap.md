@@ -131,7 +131,7 @@ Author decisions D-134 and D-137. Epic 74 can start now, and so can epic 87, bec
 | [78](78-project-kind-and-workflow.md) | Project kind and the workflow per kind | L | 57 | TODO |
 | [79](79-home-projects-and-briefing-screens.md) | Home, projects, briefing and the workflow screens | L | 74, 75, 78 | TODO |
 | [80](80-writing-screens.md) | Writing screens and the text flow | M | 74, 75, 78 | TODO |
-| [81](81-asset-library-screens.md) | Asset library screens | M | 74, 75 | TODO |
+| [81](81-asset-library-screens.md) | Asset library screens | M | 74, 75 | DONE (2026-11-24, `411906afe`..`6cca1e337`, v0.50.0) |
 | [82](82-publishing-and-approvals-screens.md) | Publishing and approvals screens | L | 74, 75, 77, 78 | TODO |
 | [83](83-chat-skills-prompts-memory-screens.md) | Chat, skills, prompts and memory screens | M | 74, 75, 76 | TODO |
 | [84](84-connections-settings-account-screens.md) | Connections, settings, account and error screens | L | 57, 74, 75 | TODO |
