@@ -13,6 +13,7 @@ import {
 	watchPeaks,
 } from "../editor/timeline/items/waveform";
 import { formatSeconds } from "../editor/ui/timeFormat";
+import { OriginBadge, ReusableBadge, TagChip } from "./badges";
 
 const WAVE_WIDTH = 480;
 const WAVE_HEIGHT = 48;
@@ -80,10 +81,10 @@ export function Waveform({
 				aria-label={label}
 				data-testid="waveform"
 				data-state={state}
-				className="h-12 w-full rounded bg-muted text-accent-text"
+				className="h-12 w-full rounded-md bg-surface-hover text-accent-text"
 			/>
 			{state === "missing" && (
-				<span className="text-xs text-muted-foreground">
+				<span className="text-sm text-text-muted">
 					{t("ui.assets.sound.no_waveform")}
 				</span>
 			)}
@@ -118,30 +119,24 @@ export function SoundRow({
 			>
 				<UntrustedText>{asset.name}</UntrustedText>
 			</button>
-			<span className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+			<span className="flex flex-wrap items-center gap-1.5 text-sm text-text-muted">
 				{asset.duration_ms !== undefined && (
-					<span data-testid="sound-duration">
+					<span data-testid="sound-duration" className="font-mono tabular-nums">
 						{formatSeconds(asset.duration_ms / 1000, "timecode")}
 					</span>
 				)}
 				<span>{sizeText(asset.bytes, locale)}</span>
-				<span>{t(`ui.assets.origin.${asset.origin?.kind ?? "imported"}`)}</span>
-				{asset.reusable === true && (
-					<span className="rounded bg-accent-soft px-1 text-accent-text">
-						{t("ui.assets.reusable_badge")}
-					</span>
-				)}
+				<OriginBadge kind={asset.origin?.kind} />
+				{asset.reusable === true && <ReusableBadge />}
 				{(asset.tags ?? []).map((tag) => (
-					<span key={tag} className="rounded bg-muted px-1">
-						<UntrustedText>{tag}</UntrustedText>
-					</span>
+					<TagChip key={tag} tag={tag} />
 				))}
 			</span>
 		</div>
 	);
 	return (
 		<li
-			className="flex flex-col gap-2 rounded-xl border bg-card p-3 text-card-foreground aria-[current=true]:border-primary"
+			className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-3 text-text aria-[current=true]:border-accent aria-[current=true]:bg-accent-soft"
 			aria-current={selected}
 			data-asset-hash={asset.hash}
 			data-testid="sound-row"

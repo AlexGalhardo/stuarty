@@ -64,3 +64,14 @@ describe("a row of Sound Assets", () => {
 		expect(html).toContain("&lt;img src=x");
 	});
 });
+
+describe("the facts on a row", () => {
+	test("the origin and the reuse mark are words with an icon", () => {
+		const html = markup(
+			sound({ origin: { kind: "imported" }, reusable: true }),
+		);
+		expect(html).toContain("Imported");
+		expect(html).toContain("Reusable");
+		expect(html).toContain("<svg");
+	});
+});
