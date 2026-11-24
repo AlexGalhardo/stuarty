@@ -57,11 +57,13 @@ type toolView struct {
 // view is the data the templates see.
 type view struct {
 	Inputs
-	Errors  []errorView
-	Tools   []toolView
-	Rules   []ruleView
-	Ops     []opGroup
-	Recipes []recipeView
+	Errors []errorView
+	Tools  []toolView
+	// SameName are the tools whose one command has the name of the tool: the skill lists them on one line.
+	SameName []string
+	Rules    []ruleView
+	Ops      []opGroup
+	Recipes  []recipeView
 }
 
 type recipeView struct {
@@ -125,6 +127,12 @@ func newView(in Inputs) (view, error) {
 	}
 
 	for _, t := range Tools {
+		if len(t.Commands) == 1 && t.Commands[0] == t.Tool {
+			v.SameName = append(v.SameName, t.Tool)
+
+			continue
+		}
+
 		v.Tools = append(v.Tools, toolView{t.Tool, "`" + strings.Join(t.Commands, "`, `") + "`"})
 	}
 

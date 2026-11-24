@@ -84,8 +84,9 @@ var Errors = []ErrorRow{
 	{"E_RATE_LIMITED", true, "wait Retry-After s"},
 	{"E_LIMIT_EXCEEDED", false, "over a ceiling"},
 	{"E_CANCELLED", false, "start the job again"},
-	{"E_NOTHING_TO_UNDO", false, "nothing to undo"},
-	{"E_NOTHING_TO_REDO", false, "nothing to redo"},
+	// The code says it all: an empty way out keeps the skill under its limit.
+	{"E_NOTHING_TO_UNDO", false, ""},
+	{"E_NOTHING_TO_REDO", false, ""},
 	{"E_LINT_BLOCKING", false, "fix details.findings"},
 	{"E_PAYLOAD_TOO_LARGE", false, "send a smaller batch"},
 }
