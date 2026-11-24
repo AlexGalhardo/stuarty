@@ -57,7 +57,7 @@ Status values: `TODO`, `IN PROGRESS (<agent>, <date>)`, `BLOCKED (<reason>)`, `D
 | [30](30-image-operations-with-a-model.md) | Image operations with a model | S | 10, 28 | DONE (2026-11-20, 7563309a0..0f833f39f, merge eaf08b5db; threats T-96 to T-98) |
 | [31](31-motion-easing-crop-and-mask.md) | Motion: easing curves, animated crop and mask, presets | L | 03 | DONE (2026-11-19, `e914c99b`..`a88f8e63`, merge `4c2c5c85`) |
 | [32](32-nested-compositions.md) | Nested compositions | M | 06, 31 | DONE (2026-11-20, `07fe073da`..`8264cd564`, merge `320ce36d2`; the live group in the browser moved to epic 52 and constant speed to epic 53 by D-094) |
-| [33](33-external-motion-engine-hand-off.md) | Hand-off from an external motion engine | M | 08 | DONE (2026-11-20, `4f4022cc`..`bb19aa733` replayed, merge `3d693ba1d`; real HyperFrames round and no-egress on Linux not verified) |
+| [33](33-external-motion-engine-hand-off.md) | Hand-off from an external motion engine | M | 08 | DONE (2026-11-20, `4f4022cc`..`bb19aa733` replayed, merge `3d693ba1d`; real HyperFrames round and no-egress on Linux verified by epic 73) |
 | [34](34-audio-processors-and-noise-reduction.md) | Audio processors and noise reduction | L | 03 | DONE (2026-11-20, merge of `epic/34` at `2e6efc574`; neural model and timeline playback of processed audio wait for the author) |
 | [35](35-export-presets-batch-and-codecs.md) | Export presets, batch queue, H.265 and AV1 | M | 03 | DONE (2026-11-19, `c1bb77fa`..`c718fdb2`, merge `1063ec42`) |
 | [36](36-revert-checkpoints-and-diff.md) | Revert to a revision, checkpoints and a diff | M | 03 | DONE (2026-11-20, `c42f2f5ad`..`90c6df86c`, merge `8d12df6d4`; image documents left for a later epic) |
@@ -116,7 +116,7 @@ The order, the critical path and the groups are in `docs/planning/screen-recordi
 | [70](70-local-ai-helper-and-vertical-cuts.md) | Local AI helper and face-aware vertical cuts | XL | ADR-0050, 69 | TODO |
 | [71](71-caption-styles-blur-studio-voice.md) | Caption styles, sensitive-data blur and studio voice | M | — | TODO |
 | [72](72-optional-local-models.md) | Optional local models: background removal and depth | L | 70, the BEN2 licence decision | TODO |
-| [73](73-hyperframes-end-to-end-round.md) | A real end-to-end round with HyperFrames | S | 33 | IN PROGRESS (senior-c, 2026-11-23) |
+| [73](73-hyperframes-end-to-end-round.md) | A real end-to-end round with HyperFrames | S | 33 | DONE (2026-11-23, `e280de049`..`3a9a43dad`) |
 
 ## 2. Dependency graph
 
