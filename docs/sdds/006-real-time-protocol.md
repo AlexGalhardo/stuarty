@@ -40,6 +40,7 @@ Storage of the log that replay reads, and the commit that produces events, are i
 | Status before the stream | all errors use the JSON envelope of SDD-002 §A.8 and the HTTP statuses of SDD-000 §8: 400, 401, 403, 404 (unknown project), 429 (stream limit, section 9.4), 503. **`EventSource` does not retry any status other than 200**; the client must (section 4.6). |
 | Response | `200`, `Content-Type: text/event-stream`, `Cache-Control: no-cache`, `X-Accel-Buffering: no` (all set by `sse.Serve`). No `Content-Encoding`: vukem's gzip middleware never compresses `text/event-stream`. No `Content-Length`. |
 | Trashed project | the stream is allowed (a client may watch a restore). |
+| Project with no timeline | the stream is open and has nothing to replay: its head is revision 0, and the events of the project itself (`project.updated`, jobs, assets) still arrive. A project made by the projects page has none until a video is added (VV-381). |
 | Methods | `GET` only. |
 
 ### 2.1 Authentication and checks

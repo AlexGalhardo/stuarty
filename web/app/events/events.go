@@ -8,6 +8,7 @@ package events
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"strconv"
 	"strings"
@@ -286,6 +287,13 @@ func (e *Events) Serve(c *web.Ctx, project string, since *int64, authorized func
 	defer unsub()
 
 	head, err := e.store.Projects().Head(c.Context(), project)
+
+	// The caller has checked that the project exists, so a missing head is a project with no timeline, which is
+	// what a project of the projects page is until a video is added (VV-381): revision 0, nothing to replay.
+	if errors.Is(err, service.ErrNotFound) {
+		head, err = service.ProjectHead{ID: project}, nil
+	}
+
 	if err != nil {
 		return err
 	}

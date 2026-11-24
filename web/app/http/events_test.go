@@ -248,6 +248,38 @@ func TestEventsStreamWireAndErrors(t *testing.T) {
 	}
 }
 
+// VV-381: a project made by the projects page has no timeline (epic 56). Its stream is open and empty: there is
+// no revision to replay, and the events of the project itself still arrive.
+func TestEventsStreamOfAProjectWithNoTimeline(t *testing.T) {
+	t.Parallel()
+
+	h := newHarness(t)
+
+	res := h.post("/api/v1/projects", projectJSON("no timeline"))
+	if res.status != http.StatusCreated {
+		t.Fatalf("create = %d %s", res.status, res.body)
+	}
+
+	id, _ := res.json(t)["project_id"].(string)
+
+	c := h.stream("/api/v1/projects/"+id+"/events", nil)
+	if c.status != http.StatusOK || c.header.Get("Content-Type") != "text/event-stream" {
+		t.Fatalf("stream of a project with no timeline = %d %s", c.status, c.body)
+	}
+
+	if pre := <-c.ch; pre.raw != "retry: 1000\ndata: \n\n" {
+		t.Errorf("preamble = %q", pre.raw)
+	}
+
+	if _, err := h.svc.ProjectTrash(h.caller(), service.ProjectTrashRequest{ProjectID: id}); err != nil {
+		t.Fatal(err)
+	}
+
+	if ev, ok := c.next(5 * time.Second); !ok || ev.event != "project.updated" {
+		t.Errorf("project.updated = %+v", ev)
+	}
+}
+
 // Last-Event-ID wins over since; with only since the replay starts after it
 // (SDD-006 check 8); every replayed revision arrives once, in order.
 func TestEventsReplayFromTheLog(t *testing.T) {
