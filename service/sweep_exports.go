@@ -17,7 +17,7 @@ const exportTempAge = 10 * time.Minute
 // sweepExportTemps removes what a process killed in the middle of an export left (SDD-005 section 13.4):
 //   - the run directory of a job under tmp/ (the partial video), when the job is not queued or running: a
 //     queued job is run again by the next worker, which clears the directory itself, and a running one belongs
-//     to a live process;
+//     to a live process (sweepRunDirs);
 //   - the file .<job id>.part of exports/<project id>/, the copy that was being renamed into place;
 //   - the file .tmp-* of exports/images/<image id>/, the image that was being written before its rename.
 //
@@ -26,9 +26,12 @@ const exportTempAge = 10 * time.Minute
 func (s *svc) sweepExportTemps(ctx context.Context, now time.Time) int {
 	n := 0
 
-	n += s.sweepRunDirs(ctx)
+	n += s.sweepRunDirs(ctx, now)
 
-	exports := filepath.Join(s.workspace, "exports")
+	exports, ok := s.sweepRoot("exports")
+	if !ok {
+		return n
+	}
 
 	folders, err := os.ReadDir(exports)
 	if err != nil {
@@ -41,7 +44,12 @@ func (s *svc) sweepExportTemps(ctx context.Context, now time.Time) int {
 		}
 
 		if f.Name() == exportImagesDir {
-			images, _ := os.ReadDir(filepath.Join(exports, f.Name()))
+			root, ok := s.sweepRoot(filepath.Join("exports", exportImagesDir))
+			if !ok {
+				continue
+			}
+
+			images, _ := os.ReadDir(root)
 			for _, img := range images {
 				if img.IsDir() {
 					n += s.sweepTemps(filepath.Join(exports, f.Name(), img.Name()), now, func(name string) bool {
@@ -89,9 +97,15 @@ func (s *svc) sweepTemps(dir string, now time.Time, match func(name string) bool
 	return n
 }
 
-// sweepRunDirs removes the run directories tmp/<job id>/ of the jobs that are not queued or running.
-func (s *svc) sweepRunDirs(ctx context.Context) int {
-	root := filepath.Join(s.workspace, "tmp")
+// sweepRunDirs removes the run directories tmp/<job id>/ of the jobs that are not queued or running. The folder
+// of a child process of an export, tmp/<job id>-c<n>/, belongs to its job. A folder whose job has no row is
+// removed only when older than exportTempAge: an audio measure or preview names its folder like a job without
+// writing one, and another process on the workspace may be running it.
+func (s *svc) sweepRunDirs(ctx context.Context, now time.Time) int {
+	root, ok := s.sweepRoot("tmp")
+	if !ok {
+		return 0
+	}
 
 	dirs, err := os.ReadDir(root)
 	if err != nil {
@@ -106,7 +120,21 @@ func (s *svc) sweepRunDirs(ctx context.Context) int {
 		}
 
 		info, ierr := d.Info()
-		if ierr != nil || !info.ModTime().Before(s.startedAt) || s.jobActive(ctx, d.Name()) {
+		if ierr != nil || !info.ModTime().Before(s.startedAt) {
+			continue
+		}
+
+		// A job id has no '-' (timeline.NewID): what follows one names a child of the job.
+		id, _, _ := strings.Cut(d.Name(), "-")
+
+		row, gerr := s.store.Jobs().Get(ctx, id)
+
+		switch {
+		case errors.Is(gerr, ErrNotFound):
+			if now.Sub(info.ModTime()) < exportTempAge {
+				continue
+			}
+		case gerr != nil, row.State == JobQueued, row.State == JobRunning:
 			continue
 		}
 

@@ -43,7 +43,8 @@ func SweeperOf(s Service) (Sweeper, bool) {
 // Sweep removes, under the write side of the store lock: files of store/ with
 // no row and older than 24 hours, artifacts/ directories with no row, and
 // exports/ and frames/ directories of projects that do not exist, and upload
-// session files older than seven days. Nothing else is touched: templates/, bitmaps/ and the database are not its business.
+// session files older than seven days. Nothing else is touched: templates/, bitmaps/ and the database are not its business,
+// and a folder reached through a link is not swept (sweepRoot).
 func (s *svc) Sweep(ctx context.Context) (SweepResult, error) {
 	var res SweepResult
 
@@ -130,9 +131,31 @@ func (s *svc) assetKnown(ctx context.Context, hex string) bool {
 	return !errors.Is(err, ErrNotFound)
 }
 
+// sweepRoot is <workspace>/<rel> when every folder of rel is a plain directory. A symbolic link or a junction
+// on the way would lead the sweep outside the workspace, where a folder that is not a project or an image is
+// someone's own: such a root, or one that does not exist, is not swept.
+func (s *svc) sweepRoot(rel string) (string, bool) {
+	root := s.workspace
+
+	for part := range strings.SplitSeq(filepath.Clean(rel), string(filepath.Separator)) {
+		root = filepath.Join(root, part)
+
+		// A junction on Windows is not a symbolic link to Go, but it is not a directory either.
+		fi, err := os.Lstat(root)
+		if err != nil || !fi.IsDir() || fi.Mode()&(os.ModeSymlink|os.ModeIrregular) != 0 {
+			return "", false
+		}
+	}
+
+	return root, true
+}
+
 // sweepDirs removes the subdirectories of <workspace>/<dir> that drop selects.
 func (s *svc) sweepDirs(dir string, drop func(name string) bool) (int, error) {
-	root := filepath.Join(s.workspace, dir)
+	root, ok := s.sweepRoot(dir)
+	if !ok {
+		return 0, nil
+	}
 
 	entries, err := os.ReadDir(root)
 	if errors.Is(err, os.ErrNotExist) {
@@ -166,7 +189,10 @@ const uploadSessionAge = 7 * 24 * time.Hour
 // killed save left) whose modification time is more than uploadSessionAge old. They are counted with the
 // incoming files, the other partial writes.
 func (s *svc) sweepUploadSessions(now time.Time) (int, error) {
-	root := filepath.Join(s.workspace, "publish", "uploads")
+	root, ok := s.sweepRoot(filepath.Join("publish", "uploads"))
+	if !ok {
+		return 0, nil
+	}
 
 	files, err := os.ReadDir(root)
 	if errors.Is(err, os.ErrNotExist) {
@@ -202,7 +228,10 @@ func (s *svc) sweepUploadSessions(now time.Time) (int, error) {
 // an export that runs now writes a newer one. A temp file is counted with the incoming files, the
 // other partial writes.
 func (s *svc) sweepBundleTemps() (int, error) {
-	root := filepath.Join(s.workspace, "exports")
+	root, ok := s.sweepRoot("exports")
+	if !ok {
+		return 0, nil
+	}
 
 	projects, err := os.ReadDir(root)
 	if errors.Is(err, os.ErrNotExist) {
