@@ -66,6 +66,17 @@ type Permission struct {
 	ToolKind  string   `json:"tool_kind,omitempty"`
 	Options   []Option `json:"options,omitempty"`
 	Answer    Answer   `json:"answer,omitempty"`
+	// Detail is what the host kept of the input of a call to a tool of Stuarty's own MCP server
+	// (SDD-017 section 7.1); nil for any other tool.
+	Detail *PermissionDetail `json:"detail,omitempty"`
+}
+
+// PermissionDetail is the allowlisted part of the input of a tool call a permission is asked for.
+// Every member is text from the agent.
+type PermissionDetail struct {
+	Project    string   `json:"project,omitempty"`
+	Item       string   `json:"item,omitempty"`
+	Operations []string `json:"operations,omitempty"`
 }
 
 // StateInfo is the body of a state event.
