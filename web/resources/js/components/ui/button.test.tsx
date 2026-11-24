@@ -16,8 +16,8 @@ describe("Button", () => {
 			</Button>,
 		);
 		expect(html).toContain('aria-pressed="true"');
-		expect(html).toContain("aria-pressed:bg-accent");
-		expect(html).toContain("aria-pressed:border-foreground/50");
+		expect(html).toContain("aria-pressed:bg-surface-selected");
+		expect(html).toContain("aria-pressed:border-focus");
 	});
 
 	test("a child with an href is announced as a link", () => {
