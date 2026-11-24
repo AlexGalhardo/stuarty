@@ -51,6 +51,10 @@ The rules (names, front matter, variables, the lint, limits) are in `core/librar
     └── scripts/ ...                optional; stored inert and flagged, never run
 ```
 
+**With an account the files are sealed** (ADR-0053, SDD-005 section 5.17.4): every file the product writes, `.review-key` and `.built-in.json` included, is the envelope of `service/account` (AES-256-GCM under the data key, the path relative to `library/` as associated data), so a copy of the workspace shows ciphertext, and a sealed file renamed or swapped does not open. The folder structure and the file names stay readable. Without an account the files are clear text, as before. A read opens a sealed file and also reads a clear one.
+
+**A sealed file cannot be edited outside the product.** A clear file put in `library/` (an imported skill, a note an agent wrote with its own tools) is picked up and sealed by the scan, and the clear file is forgotten only after the sealed one was written by an atomic rename and read back. To edit a skill with other tools a person exports it (`SkillExport`, a plain file by an explicit action), edits the clear file and drops it back. This changes the reading of RF-391: it holds for a clear file, not for a sealed one. While the studio is locked nothing is read, sealed or scanned.
+
 The folder is created at the first write. Every path is resolved under `library/` with `os.Root`, so no name, link or file of a skill can lead out of it. A symbolic link inside `library/` is never followed and never indexed.
 
 ## 3. Front matter
@@ -159,12 +163,7 @@ Files are copied as bytes; none is executed, opened by another program or given 
 
 ## 9. The index and the scan
 
-The index is two tables (migration `20261119130000_create_library_index`): `library_entries` and the full-text table `library_fts`. It is rebuilt from the files: `LibraryReindex` empties it and reads every file; a **scan** compares the files with the rows (`sig`) and re-reads what differs, adds what is new and drops what is gone. The scan runs on the first read after the process starts and at the start of every list, get and search (a few hundred files cost a few directory reads), so a file edited outside the product is found at the next call (RF-391). A file that does not parse is indexed as `invalid` with its error, never skipped silently, and shown in the list with the reason. A request that reads a file reads the file, never the index.
-
-| Table | Columns |
-| --- | --- |
-| `library_entries` | `key` (primary key, `<kind>/<name>`), `kind`, `name`, `description`, `scope`, `origin`, `reviewed` (0 or 1, computed at the scan from the content hash), `kept` (0 or 1), `actor`, `tags` (JSON array), `state` (`ok` or `invalid`), `error`, `path` (relative to `library/`), `sig` (file count, bytes and latest modification time of the file or folder, what the scan compares), `lint_errors`, `lint_warnings`, `has_scripts` (skills), `created_ms`, `updated_ms` |
-| `library_fts` | FTS5 over `key` (not indexed), `name`, `description`, `tags`, `body`; the tokenizer is `unicode61` with `remove_diacritics 2` |
+The index is **in memory** (ADR-0053); no table of `db.sqlite` holds it (migration `20261124130000_drop_library_index` drops the former `library_entries` and `library_fts`; its down step recreates them empty). It holds one entry per file (`key` `<kind>/<name>`, `kind`, `name`, `description`, `scope`, `origin`, `reviewed` computed at the scan from the content hash, `kept`, `actor`, `tags`, `state` `ok` or `invalid`, `error`, `path` relative to `library/`, `sig` (file count, bytes and latest modification time, what the scan compares), `lint_errors`, `lint_warnings`, `has_scripts`, `created_ms`, `updated_ms`) and the searchable text (name, description, tags and body). It is rebuilt from the files: `LibraryReindex` empties it and reads every file; a **scan** compares the files with the entries (`sig`) and re-reads what differs, adds what is new, drops what is gone, and seals a clear file it finds while an account is unlocked (section 2). The scan runs at the **unlock** (and on the first read after the process starts when there is no account) and at the start of every list, get and search (a few hundred files cost a few directory reads), so a clear file put in the folder is found at the next call (RF-391). The index is dropped when the studio locks. A file that does not parse, and a sealed file that does not open, is indexed as `invalid` with its error, never skipped silently, and shown in the list with the reason. A request that reads a file reads the file, never the index. The unlock-to-ready time of a library of the limits of section 12 is under 2 s on the reference machine (`TestLibraryOfTheMaximumSizeIsReadyWithinTwoSecondsOfTheUnlock`).
 
 ## 10. Search
 
@@ -196,7 +195,7 @@ No new error code: `E_VALIDATION` (a name, a field, a variable, an archive entry
 | an archive file; the front matter | 8 MiB; 8 KiB |
 | search: terms; hits; budget | 8; 50 (default 20); 16000 characters (default 4000) |
 
-Files: `library/` in the workspace (SDD-000 section 9), `exports/library/` for exported skills. Tables: `library_entries`, `library_fts` (section 9). Identifiers: none; an entry is `<kind>/<name>`.
+Files: `library/` in the workspace (SDD-000 section 9), `exports/library/` for exported skills. Tables: none (the index is in memory, section 9). The limits above bound the cost of the scan at the unlock. Identifiers: none; an entry is `<kind>/<name>`.
 
 ## 13. Untrusted text
 

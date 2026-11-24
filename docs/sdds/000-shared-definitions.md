@@ -284,7 +284,6 @@ Kinds: `ingest`, `transcribe`, `face_track` (SDD-024 §6: the faces of an asset 
 | `publications`, `publication_targets` | the calendar: what is published, to which account, at what time, in which state, with its lease and its result; no secret | SDD-005 §5.15, SDD-020 §23 |
 | `published_posts`, `blog_remote_posts` | the posts a `blog_api` destination published (what the read API serves), and the remote id of a post at each destination, so a second send updates; no secret | SDD-005 §5.15, SDD-020 §47, §48 |
 | `image_documents`, `image_operations` | image documents, and their append-only log of batches | SDD-005 §5.13, SDD-021 |
-| `library_entries`, `library_fts` | the index of memory, skills and prompts for search and lists; rebuilt from the files, holds no content that the files lack | SDD-018 §9 |
 | `asset_info`, `asset_tags`, `asset_search` | the library side of an asset by hash: origin, rights note, description, the reuse mark, the tags and the full-text index over them | SDD-005 §5.5.1, SDD-011 §14 |
 | `webhooks`, `webhook_deliveries`, `webhook_attempts` | the outbound webhooks (name, address, events, enabled), their deliveries with the stored metadata body, and the attempts with status, duration and error code; no secret (it is in the vault) and no answer body | SDD-022 §4, SDD-005 §5.16 |
 | `agent_profiles`, `chat_sessions`, `chat_events` | the agents the user may host (a name, an executable and its arguments), and the transcripts of the chat sessions per project; no credential, no environment | SDD-017 §3, §9 |
@@ -358,7 +357,7 @@ CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the re
 ├── vault.json               encrypted credentials of the connections, file mode 0600; created with the first credential (SDD-014 §3) (with an account, under a key that only the unlocked studio holds, ADR-0052)
 ├── publish/                 uploads/<key>.json: the address of an upload session of a publication in progress, file mode 0600, no token (SDD-020 §7.4)
 ├── providers/               prices.json: the price table the person edits for the models whose provider publishes no price, file mode 0600 (SDD-016 §4.3); host-id: the random identifier of this host that Sign in with ChatGPT sends, made at the first start, not a secret (SDD-016 §12.1)
-├── library/                 memory/, prompts/ and skills/<name>/SKILL.md: the files of the library, the truth of the index; .review-key seals the review marks (SDD-018 §2, §7)
+├── library/                 memory/, prompts/ and skills/<name>/SKILL.md: the files of the library, sealed with an account (ADR-0053), whose index is in memory (no table); .review-key seals the review marks (SDD-018 §2, §7)
 ├── store/                   content-addressed originals: store/<first 2 hex>/<sha256>; store/.incoming/ holds copies in progress
 ├── artifacts/               derived files: artifacts/<asset sha256>/<kind>-<profile version>[-<variant>].<ext> (SDD-011 §6.1)
 ├── exports/                 exported files: exports/<project id>/<job id>.mp4 (`.gif`, `.wav` or `.m4a` for the other formats of SDD-004 §8.1)

@@ -8,7 +8,7 @@ Work is driven by the epics of `plans/` (index `plans/00-roadmap.md`): one epic 
 
 The product was a video editor called Vukem Video until 2026-11-18, when it became Stuarty (ADR-0031). What that means for a reader:
 
-- **The PRDs and the ADRs are current.** ADR-0031 to ADR-0052 record the turn; the status line of every older ADR says what amended or superseded it.
+- **The PRDs and the ADRs are current.** ADR-0031 to ADR-0053 record the turn; the status line of every older ADR says what amended or superseded it.
 - **The SDDs specify the video editor as built, up to release 0.29.0.** Each one that the turn affects starts with an "Amended" line that names the ADRs to read with it. A new domain (image, publishing, providers and the others) gets its specification from the epic that builds it, before code.
 - **The former name** is in SDD-000 section 13, with the old variables, folder and identifiers that are still read (ADR-0044). Four SDDs (SDD-000, SDD-002, SDD-003, SDD-007) are read by tests and by the site generator.
 - **`security-review-1.0.md` and `agent-benchmark.md` are records** of a review and of benchmark rounds of the editor; they are not rewritten.
@@ -87,7 +87,7 @@ Which epic delivers each requirement is in the traceability table of `plans/00-r
 | 0037 | the chat hosts the user's own agent over ACP; no built-in agent |
 | 0038 | image editing is a second document type on the same core and the same renderer |
 | 0039 | a project is the container of a whole production |
-| 0040 | memory, skills and prompts are files in the workspace, with an index |
+| 0040 | memory, skills and prompts are files in the workspace, with an index (amended by 0053: sealed with an account, index in memory) |
 | 0041 | one web UI; the desktop is the Wails shell; the Gio window is removed |
 | 0042 | the video editor's scope for motion, audio and export |
 | 0043 | the MCP server keeps a few tools named by intent, with a domain |
@@ -97,6 +97,7 @@ Which epic delivers each requirement is in the traceability table of `plans/00-r
 | 0047 | the vukem framework stays, confined to the web layer and the process runner |
 | 0048 | the release train: linear release pull requests of about 90 commits, rebase-merged by the orchestrator |
 | 0052 | a local account with a password opens the studio, and its key encrypts the user's content |
+| 0053 | the library files, the documents, the edit log and the asset notes are sealed too (amends 0052 and 0040) |
 
 ## Specifications (`sdds/`)
 
