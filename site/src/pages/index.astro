@@ -8,7 +8,7 @@ import "@/src/landing/home.css";
 import Base from "../layouts/Base.astro";
 import { landing } from "@/lib/landing";
 import { shots } from "@/lib/landing-pages";
-import { agents, areas, credits, downloads, hero, path, privacy, roadmap, textProject, transparency } from "@/src/landing/content";
+import { agents, areas, capturedNote, credits, downloads, hero, path, privacy, roadmap, textProject, transparency } from "@/src/landing/content";
 import DriveTabs from "../components/landing/DriveTabs.astro";
 import LandingActions from "../components/landing/LandingActions.astro";
 import ScreenSlot from "../components/landing/ScreenSlot.astro";
@@ -197,6 +197,7 @@ const stepShots = { writing: shots.writing, videoEditor: shots.videoEditor, imag
 	</main>
 	<footer class="home-footer">
 		<div class="site-container">
+			<p>{capturedNote}</p>
 			<p>{credits}</p>
 			<p><a href={withBase("/docs/introduction/")}>Documentation</a> · <a href={withBase("/changelog/")}>Changelog</a></p>
 		</div>

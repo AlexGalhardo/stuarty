@@ -4,3 +4,8 @@ Media shown inside the screenshots:
 - Big Buck Bunny, (c) Blender Foundation, peach.blender.org, CC BY 3.0 (the video editor frames).
 - "Mountain glacier" photo, CC0, from Wikimedia Commons via the project's test assets (the image editor).
 - Waveforms of "Sinfonia 3" by Kevin MacLeod (CC BY 3.0) and a LibriVox reading of John Adams (CC0).
+
+Status of the captures (epic 88 task 3, open): every screenshot above predates the redesigned shell, assets and settings
+screens, and the screens of epic 79 (home, projects, briefing) are not captured: the landing shows named slots for them.
+All screens are to be captured again, in one pass, from the released UI once epic 79 is merged. Nothing from outside
+the repository is used by the landing page: no external fonts, images, scripts or trackers.
