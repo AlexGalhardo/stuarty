@@ -39,7 +39,7 @@ func crashLibraryFiles(dir string) *library.Manager {
 // TestCrashLibrarySealChild is the body of the child of TestCrashLibrarySeal.
 func TestCrashLibrarySealChild(t *testing.T) {
 	if os.Getenv(roleEnv) != "library-seal-child" {
-		t.Skip("only runs as the child of a crash test")
+		t.Skip("only runs as the child of a crash test") // verify:env-skip the body of the child process of the crash test
 	}
 
 	_, err := crashLibraryFiles(os.Getenv(libraryDirEnv)).SealAll(context.Background())

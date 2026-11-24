@@ -100,7 +100,7 @@ No command or scope changes. The new rules are format and migration rules of the
 - [x] 11. The migration of an existing workspace, all three states: sealing in batches at the first unlock with verification, the copy, the cleanup, the restore on failure, resumed after a kill. Verify: `go test ./web/app/store/... -run 'AccountCreate|SealDocuments'` and `go test -tags crashtest -run 'TestCrashSealDocuments' ./web/app/servicetest` pass, with a workspace fixture made by release 0.50.0 (clear columns, an account row of seal version 0) that opens, loses nothing and ends sealed.
 - [x] 12. Performance: sealing must not break NFR-001. Verify: `go test -run '^$' -bench 'BenchmarkCommit200Items$|BenchmarkRoundTrip200Items$' -benchtime 20x ./web/app/servicetest/` reports the store share under 25 ms and the round trip under 50 ms (the numbers go in the commit message); the idle measurement `go run ./internal/tools/perfreport -write -absolute -gated -only NFR-001` is run by the orchestrator.
 - [x] 13. The documents half in the surfaces and the user documentation, and the whole-workspace plaintext scan. Verify: `go test -run 'TestSecurity_' ./...` and `go run ./internal/tools/threatcheck` exit 0, a test scans every byte of the workspace (the database, the WAL, `library/`, `backups/`, `exports/`) for the canaries and finds none, and `task lint:md` exits 0.
-- [ ] 14. The full local gate for what changed. Verify: `task lint`, `task test`, `task test:web` and `bash .agents/skills/verify/scripts/verify.sh --quick --base release/v0.50.0` pass.
+- [x] 14. The full local gate for what changed. Verify: `task lint`, `task test`, `task test:web` and `bash .agents/skills/verify/scripts/verify.sh --quick --base release/v0.50.0` pass.
 
 ## Test strategy
 
