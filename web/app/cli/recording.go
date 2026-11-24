@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/untrusted"
 )
 
 // The screen recording commands (SDD-025). They carry no rule: the Service decides who may start a capture and
@@ -26,18 +27,26 @@ var recordingSourcesCmd = &spec{
 			return nil, err
 		}
 
-		lines := []string{fmt.Sprintf("%d display(s), %d window(s)", len(res.Displays), len(res.Windows))}
-
-		for _, d := range res.Displays {
-			lines = append(lines, fmt.Sprintf("display %s  %dx%d  %s", d.ID, d.Width, d.Height, d.Name))
-		}
-
-		for _, w := range res.Windows {
-			lines = append(lines, fmt.Sprintf("window  %s  %dx%d  %s", w.ID, w.Width, w.Height, w.Name))
-		}
-
-		return &output{value: res, text: strings.Join(lines, "\n")}, nil
+		return &output{value: res, text: sourcesText(res)}, nil
 	},
+}
+
+// sourcesText lists the sources. A window title is any text another program chose, so it is marked as untrusted
+// for an agent that reads the output (SDD-007 section 8).
+func sourcesText(res *service.RecordingSourcesResult) string {
+	lines := []string{fmt.Sprintf("%d display(s), %d window(s)", len(res.Displays), len(res.Windows))}
+
+	name := func(s string) string { return untrusted.Inline(untrusted.SourceMetadata, nil, s, 120) }
+
+	for _, d := range res.Displays {
+		lines = append(lines, fmt.Sprintf("display %s  %dx%d  %s", d.ID, d.Width, d.Height, name(d.Name)))
+	}
+
+	for _, w := range res.Windows {
+		lines = append(lines, fmt.Sprintf("window  %s  %dx%d  %s", w.ID, w.Width, w.Height, name(w.Name)))
+	}
+
+	return strings.Join(lines, "\n")
 }
 
 var recordingStartCmd = &spec{
