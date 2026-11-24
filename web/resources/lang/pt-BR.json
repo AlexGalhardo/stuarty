@@ -747,6 +747,10 @@
         "empty_body": "Adicione um texto, uma forma ou uma foto pela barra de ferramentas.",
         "hidden": "oculta",
         "locked": "bloqueada",
+        "hide": "Ocultar camada (H)",
+        "show": "Mostrar camada (H)",
+        "lock": "Bloquear camada (L)",
+        "unlock": "Desbloquear camada (L)",
         "rename": "Nome da camada"
       },
       "arrange": {
@@ -968,6 +972,7 @@
         "lut_none": "Sem tabela",
         "lut_intensity": "Intensidade",
         "lut_hint": "Os mesmos arquivos .cube de um vídeo. Importe um em um projeto antes; a imagem é a renderização do servidor.",
+        "badge_set": "{count} em uso",
         "filters": "Filtros",
         "filters_none": "Nenhum filtro. Eles agem na ordem da lista.",
         "filter_add_kind": "Filtro a adicionar",
@@ -1081,7 +1086,9 @@
         "templates": "Seus modelos",
         "documents": "Suas imagens",
         "loading": "Carregando…",
-        "empty": "Nenhuma imagem ainda. Crie uma acima.",
+        "intro": "Faça uma miniatura, uma capa ou um post com camadas de texto, formas e fotos. Cada imagem é um documento que você e seu agente podem editar.",
+        "empty_title": "Nenhuma imagem ainda",
+        "empty": "Crie uma imagem em branco acima, importe uma foto ou comece de um modelo.",
         "layers": {
           "one": "{count} camada",
           "other": "{count} camadas"

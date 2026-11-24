@@ -747,6 +747,10 @@
         "empty_body": "Add a text, a shape or a photo from the toolbar.",
         "hidden": "hidden",
         "locked": "locked",
+        "hide": "Hide layer (H)",
+        "show": "Show layer (H)",
+        "lock": "Lock layer (L)",
+        "unlock": "Unlock layer (L)",
         "rename": "Layer name"
       },
       "arrange": {
@@ -968,6 +972,7 @@
         "lut_none": "No table",
         "lut_intensity": "Strength",
         "lut_hint": "The same .cube files a video uses. Import one into a project first; the picture is the server's render.",
+        "badge_set": "{count} in use",
         "filters": "Filters",
         "filters_none": "No filters. They act in the order of the list.",
         "filter_add_kind": "Filter to add",
@@ -1081,7 +1086,9 @@
         "templates": "Your templates",
         "documents": "Your images",
         "loading": "Loading…",
-        "empty": "No images yet. Create one above.",
+        "intro": "Make a thumbnail, a cover or a post from layers of text, shapes and photos. Each image is a document you and your agent can both edit.",
+        "empty_title": "No images yet",
+        "empty": "Create a blank image above, import a photo or start from a template.",
         "layers": {
           "one": "{count} layer",
           "other": "{count} layers"

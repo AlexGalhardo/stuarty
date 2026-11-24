@@ -50,6 +50,14 @@ export function treeRows(
 	return rows;
 }
 
+// How many layers the document holds, a group and each of its children counting once: the number the panel
+// title shows. It is a count of what the read model lists, not a result of an edit.
+export function countLayers(layers: readonly Layer[]): number {
+	let n = 0;
+	for (const layer of layers) n += 1 + countLayers(layer.children ?? []);
+	return n;
+}
+
 export interface Move {
 	layerId: string;
 	// A group id, or "root" for the top level.

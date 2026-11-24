@@ -48,7 +48,7 @@ None new.
 ## Tasks
 
 - [x] 1. The frame and the toolbar. Verify: `cd web && bun run typecheck && bun run test -- image-editor` pass.
-- [ ] 2. The layers panel. Verify: `cd web && bun run test -- layers` passes.
+- [x] 2. The layers panel. Verify: `cd web && bun run test -- layers` passes.
 - [ ] 3. The inspector, masks and filters. Verify: `cd web && bun run test -- inspector` passes.
 - [ ] 4. Templates, import, export and error bar. Verify: `cd web && bun run e2e -- image` passes.
 - [ ] 5. Mount the scene bar. Verify: `cd web && bun run e2e -- scene-bar` passes.
