@@ -12,6 +12,7 @@ func v2Manifest() *BundleManifest {
 
 	return &BundleManifest{
 		Format: BundleFormat, BundleVersion: 2, Project: BundleProject{ID: "prj_0000000001"},
+		Document: &BundleDocument{SHA256: sha, Bytes: 10},
 		Production: &BundleProduction{Items: []BundleItem{
 			{Kind: "timeline", Title: "Main", Timeline: "main"},
 			{Kind: "timeline", Title: "Wide", Position: 1, Timeline: "t1"},
@@ -79,6 +80,46 @@ func TestBundleProductionManifestRules(t *testing.T) {
 
 	for name, edit := range bad {
 		m := v2Manifest()
+		edit(m)
+
+		if e := checkBundleProduction(m); e == nil {
+			t.Errorf("%s was accepted", name)
+		}
+	}
+}
+
+// TestBundleWithNoDocumentManifestRules is the judgement of the manifest of a project with no timeline.
+func TestBundleWithNoDocumentManifestRules(t *testing.T) {
+	t.Parallel()
+
+	bare := func() *BundleManifest {
+		return &BundleManifest{
+			Format: BundleFormat, BundleVersion: 2, Project: BundleProject{ID: "prj_0000000001"},
+			Production: &BundleProduction{Items: []BundleItem{{Kind: "text", Title: "Post"}}},
+		}
+	}
+
+	if e := checkBundleProduction(bare()); e != nil {
+		t.Fatalf("a bundle with no timeline was refused: %v", e)
+	}
+
+	bad := map[string]func(m *BundleManifest){
+		"version 1":        func(m *BundleManifest) { m.BundleVersion = 1 },
+		"no production":    func(m *BundleManifest) { m.Production = nil },
+		"a timeline":       func(m *BundleManifest) { m.Timelines = v2Manifest().Timelines },
+		"a log":            func(m *BundleManifest) { m.Operations = &BundleLog{Count: 1, SHA256: strings.Repeat("a", 64)} },
+		"a media file":     func(m *BundleManifest) { m.Media = []BundleMedia{{Hash: "sha256:" + strings.Repeat("a", 64)}} },
+		"a bad project id": func(m *BundleManifest) { m.Project.ID = "tl_1" },
+		"a timeline item": func(m *BundleManifest) {
+			m.Production.Items[0] = BundleItem{Kind: "timeline", Title: "Main", Timeline: "main"}
+		},
+		"a timeline item t1": func(m *BundleManifest) {
+			m.Production.Items[0] = BundleItem{Kind: "timeline", Title: "Main", Timeline: "t1"}
+		},
+	}
+
+	for name, edit := range bad {
+		m := bare()
 		edit(m)
 
 		if e := checkBundleProduction(m); e == nil {

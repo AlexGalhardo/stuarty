@@ -35,15 +35,17 @@ const (
 
 // BundleManifest is manifest.json, the first entry of a bundle.
 type BundleManifest struct {
-	Format        string           `json:"format"`
-	BundleVersion int              `json:"bundle_version"`
-	AppVersion    string           `json:"app_version"`
-	CreatedAt     string           `json:"created_at"`
-	Project       BundleProject    `json:"project"`
-	Document      BundleDocument   `json:"document"`
-	Operations    *BundleLog       `json:"operations,omitempty"`
-	Media         []BundleMedia    `json:"media"`
-	Fonts         []BundleFontFile `json:"fonts"`
+	Format        string        `json:"format"`
+	BundleVersion int           `json:"bundle_version"`
+	AppVersion    string        `json:"app_version"`
+	CreatedAt     string        `json:"created_at"`
+	Project       BundleProject `json:"project"`
+	// Document is left out by the bundle of a project with no timeline (SDD-005 section 16.1.2), which has no
+	// document.json either.
+	Document   *BundleDocument  `json:"document,omitempty"`
+	Operations *BundleLog       `json:"operations,omitempty"`
+	Media      []BundleMedia    `json:"media"`
+	Fonts      []BundleFontFile `json:"fonts"`
 	// Production and Timelines are the members of version 2: the items of the project, and every timeline but
 	// the first (the first is Document and Operations).
 	Production *BundleProduction `json:"production,omitempty"`
