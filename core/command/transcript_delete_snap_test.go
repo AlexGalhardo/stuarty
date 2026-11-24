@@ -106,6 +106,38 @@ func TestTranscriptDeleteSnapOffIsTheCutOfEpic69(t *testing.T) {
 	}
 }
 
+// checkSnapOffIsEpic69 is acceptance criterion 2 of epic 89 on one case of the epic 69 tests: the same cut with
+// `snap` "0s" and silences that the default window would snap to gives the same result, or the same error, as the
+// call of epic 69 with the words only.
+func checkSnapOffIsEpic69(t *testing.T, doc *timeline.Document, words []tword, from, to int) {
+	t.Helper()
+	// A silence across the end of each word that has a gap of 2 frames or more after it: the start edge of the
+	// next word would move to it with the snap on.
+	var parts []string
+	for i := 1; i < len(words); i++ {
+		if words[i].start-words[i-1].end >= 2 {
+			parts = append(parts, fmt.Sprintf(`{"start": %d, "end": %d}`, words[i-1].end-1, words[i-1].end+1))
+		}
+	}
+	snapped := strings.Replace(resolvedJSON(words), `]}`,
+		fmt.Sprintf(`], "silences": [%s], "silence_analysis": "read"}`, strings.Join(parts, ", ")), 1)
+	apply := func(args string) (Result, error) {
+		n := 0
+		env := Env{NewIDs: func(prefix string) string {
+			n++
+			return fmt.Sprintf("%s_%010d", prefix, n)
+		}}
+		return Default().Apply(doc, Operation{Op: "transcript.delete_range", Args: json.RawMessage(args)}, env)
+	}
+	old, oldErr := apply(fmt.Sprintf(`{"asset_id": %q, "from_word": %d, "to_word": %d, %s}`,
+		vidAsset, from, to, resolvedJSON(words)))
+	off, offErr := apply(fmt.Sprintf(`{"asset_id": %q, "from_word": %d, "to_word": %d, "snap": "0s", %s}`,
+		vidAsset, from, to, snapped))
+	if !reflect.DeepEqual(oldErr, offErr) || !reflect.DeepEqual(old, off) {
+		t.Errorf("words %d-%d: snap 0s differs from epic 69: %v / %v", from, to, offErr, oldErr)
+	}
+}
+
 // Acceptance criterion 6 of epic 89: undo of a snapped cut restores the document.
 func TestTranscriptDeleteSnapUndo(t *testing.T) {
 	doc := base().clip(itemA, vidTr, 30, 300, 60).audio(itemB, 30, 300, 60,
