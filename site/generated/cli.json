@@ -2381,6 +2381,172 @@
       ]
     },
     {
+      "name": "recording:sources",
+      "domain": "video",
+      "summary": "list the displays and windows that can be captured",
+      "usage": [
+        "stuarty recording:sources"
+      ],
+      "example": "stuarty recording:sources --json",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "recording:start",
+      "domain": "video",
+      "summary": "start recording a display or a window (for a person in the app; the local token is refused)",
+      "usage": [
+        "stuarty recording:start --project <id> --kind display|window --source <id> [--fps 24|30|60]"
+      ],
+      "example": "stuarty recording:start --project prj_7k2m9x4q1b --kind display --source d1",
+      "flags": [
+        {
+          "name": "kind",
+          "type": "string",
+          "usage": "display or window (required)"
+        },
+        {
+          "name": "source",
+          "type": "string",
+          "usage": "an id from recording:sources (required)"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "usage": "the title of the source, for the record"
+        },
+        {
+          "name": "fps",
+          "type": "integer",
+          "usage": "24, 30 (the default) or 60"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "recording:stop",
+      "domain": "video",
+      "summary": "stop a recording and keep what was written; anyone may stop a capture",
+      "usage": [
+        "stuarty recording:stop <recording id>"
+      ],
+      "example": "stuarty recording:stop rec_0123456789",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "recording:cancel",
+      "domain": "video",
+      "summary": "discard a recording in progress; a person deletes a finished one",
+      "usage": [
+        "stuarty recording:cancel <recording id>"
+      ],
+      "example": "stuarty recording:cancel rec_0123456789",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "recording:show",
+      "domain": "video",
+      "summary": "show one recording: its state, its length and whether a person added it",
+      "usage": [
+        "stuarty recording:show <recording id>"
+      ],
+      "example": "stuarty recording:show rec_0123456789",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "recording:list",
+      "domain": "video",
+      "summary": "list the recordings of a project that you may see, newest first",
+      "usage": [
+        "stuarty recording:list --project <id>"
+      ],
+      "example": "stuarty recording:list --project prj_7k2m9x4q1b",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "recording:confirm",
+      "domain": "video",
+      "summary": "add a finished recording to the project (for a person in the app; the local token is refused)",
+      "usage": [
+        "stuarty recording:confirm <recording id>"
+      ],
+      "example": "stuarty recording:confirm rec_0123456789",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "recording:dismiss",
+      "domain": "video",
+      "summary": "not now: keep a recording out of the project and out of sight of agents (for a person in the app)",
+      "usage": [
+        "stuarty recording:dismiss <recording id>"
+      ],
+      "example": "stuarty recording:dismiss rec_0123456789",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "recording:place",
+      "domain": "video",
+      "summary": "place a recording that a person added on the timeline, as one undoable batch",
+      "usage": [
+        "stuarty recording:place <recording id> [--timeline <id>]"
+      ],
+      "example": "stuarty recording:place rec_0123456789",
+      "flags": [
+        {
+          "name": "timeline",
+          "type": "string",
+          "usage": "the timeline of the project, when it has several"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
       "name": "approval:list",
       "domain": "publish",
       "summary": "list the approval queue: what waits for a person (pending by default)",
