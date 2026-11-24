@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/engine/transcribe"
+	"github.com/AlexGalhardo/stuarty/internal/testfs"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/config"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
@@ -103,7 +104,7 @@ func TestAPIVariablesHalfSetAreABootError(t *testing.T) {
 }
 
 func TestOpenRefusesTheTestTranscriberOutsideTest(t *testing.T) {
-	ws := filepath.Join(t.TempDir(), "ws")
+	ws := filepath.Join(testfs.TempDir(t), "ws")
 	ctx := service.WithCaller(context.Background(), service.Caller{Actor: "local:cli", Scopes: service.AllScopes})
 
 	env := map[string]string{workspace.EnvHome: ws, EnvTestTranscriber: "stub"}
