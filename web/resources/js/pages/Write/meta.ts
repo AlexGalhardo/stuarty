@@ -1,4 +1,10 @@
-import type { FlowStep, ProjectFlow, TextItem, WriteProject } from "./client";
+import type {
+	FlowStep,
+	ProjectFlow,
+	TextItem,
+	TextKind,
+	WriteProject,
+} from "./client";
 
 // What the editor says about a text is what the service said: the words of the text, and its minutes of reading
 // when the service gave them. This file picks among the answers and counts nothing.
@@ -50,4 +56,34 @@ export function primaryAction(state: {
 }): Primary {
 	if (state.dirty) return "save";
 	return state.reviewed ? "next" : "review";
+}
+
+// How a text ends (SDD-019 section 11, D-137): a copy ends in Copy and Export with no destination; any other text
+// goes on to the step of the path that follows its review, when the service lists one, and otherwise ends in Copy
+// and Export too. The step is the service's: this only says which of the two is offered first.
+export type End = { kind: "copy" } | { kind: "step"; step: FlowStep };
+
+export function endOf(textKind: TextKind, flow: ProjectFlow | null): End {
+	if (textKind === "copy") return { kind: "copy" };
+	const step = stepAfterReview(flow);
+	return step === undefined ? { kind: "copy" } : { kind: "step", step };
+}
+
+// The page a step is done in: the approvals, the publications or the project itself.
+export function hrefOfStep(step: FlowStep, projectId: string): string {
+	if (step.id === "approval") return "/approvals";
+	if (step.id === "publication") return "/publish";
+	return `/projects/${encodeURIComponent(projectId)}`;
+}
+
+// The name of the file an export of a text is saved as: the title with what a file name cannot hold taken out, and
+// the id of the text when nothing is left. The body is the saved text, as the service stored it.
+export function exportName(title: string, itemId: string): string {
+	const base = title
+		.normalize("NFKC")
+		.replace(/[^\p{L}\p{N}]+/gu, "-")
+		.replace(/^-+|-+$/g, "")
+		.slice(0, 60)
+		.replace(/-+$/g, "");
+	return `${base === "" ? itemId : base}.md`;
 }
