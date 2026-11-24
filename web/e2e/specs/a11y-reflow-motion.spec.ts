@@ -183,7 +183,8 @@ test.describe("a11y-reflow-motion no preference", () => {
 		page,
 		request,
 	}) => {
-		const label = `Motion ${Date.now()}`;
+		// Two workers may start these tests in the same millisecond: the random part keeps the labels apart.
+		const label = `Motion ${Date.now()} ${Math.random().toString(36).slice(2, 8)}`;
 		await seedProject(request, { name: label, tracks: 0 });
 		await openDelete(page, label);
 		expect(await dialogAnimationMs(page)).toBeGreaterThan(1);
@@ -197,7 +198,8 @@ test.describe("a11y-reflow-motion reduced motion", () => {
 		page,
 		request,
 	}) => {
-		const label = `Motion ${Date.now()}`;
+		// Two workers may start these tests in the same millisecond: the random part keeps the labels apart.
+		const label = `Motion ${Date.now()} ${Math.random().toString(36).slice(2, 8)}`;
 		await seedProject(request, { name: label, tracks: 0 });
 		await openDelete(page, label);
 		expect(await dialogAnimationMs(page)).toBeLessThanOrEqual(1);
