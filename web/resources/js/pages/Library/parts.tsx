@@ -5,10 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { useT } from "@/lib/i18n";
 import type { LibraryEntry, LibraryFinding, LibraryKind } from "./client";
 
-// A badge may wrap: at 320 px the long words ("not offered to agents") must not push the page sideways.
 // The state of an entry as a word and an icon (SDD-018 section 14, design-system section 7): what the service says,
 // never computed here. A skill or a note an agent may not use yet says so in words: that is the line a person reads
-// to know what steers the agents.
+// to know what steers the agents. A badge may wrap: at 320 px the long words must not push the page sideways.
 export function EntryBadges({ entry }: { entry: LibraryEntry }): ReactNode {
 	const t = useT();
 	return (
