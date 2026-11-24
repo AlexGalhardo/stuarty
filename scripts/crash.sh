@@ -4,7 +4,10 @@
 # The commit path, the bundle export and import, the migration and the emptying of the trash are killed by the
 # tests of web/app/servicetest (build tag crashtest: crashpoint.Hit ends the child with exit code 137), and a real
 # `serve` is killed in the middle of concurrent commits; the vault is killed by internal/tools/crashharness, which
-# also checks that every crash point named in the code has such a test. Exits 1 when any of them fails.
+# also checks that every crash point named in the code has such a test. The real kills of epic 90
+# (TestKillReal...: a child ended from outside in the middle of a publication, a resumable upload and a video or
+# image export) are in the same run, since 'TestCrash|TestKill' matches them; the video case needs the pinned
+# FFmpeg (STUARTY_TEST_FFMPEG_DIR) and skips with its reason without it. Exits 1 when any of them fails.
 set -uo pipefail
 
 count="${1:-1}"
