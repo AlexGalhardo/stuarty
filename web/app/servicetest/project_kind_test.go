@@ -406,14 +406,33 @@ func TestWorkflowStepSkip(t *testing.T) {
 		t.Errorf("trashed = %v, want E_INVALID_STATE", err)
 	}
 
-	var audited []string
+	var events []string
 
 	for _, ev := range e.events {
-		audited = append(audited, ev.Type)
+		events = append(events, ev.Type)
 	}
 
-	if !slices.Contains(audited, "project.updated") {
-		t.Errorf("no project.updated event: %v", audited)
+	if !slices.Contains(events, "project.updated") {
+		t.Errorf("no project.updated event: %v", events)
+	}
+
+	rows, err := e.store.Audit().List(context.Background(), id, 0, 50)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var actions []string
+
+	for i := range rows {
+		if rows[i].Action != "project.create" && rows[i].SubjectID != nil && *rows[i].SubjectID == "recording" {
+			actions = append(actions, rows[i].Action)
+		}
+	}
+
+	slices.Sort(actions)
+
+	if want := []string{"project.step.restore", "project.step.skip"}; !slices.Equal(actions, want) {
+		t.Errorf("audit rows of the step = %v, want %v (a no-op writes none)", actions, want)
 	}
 }
 
