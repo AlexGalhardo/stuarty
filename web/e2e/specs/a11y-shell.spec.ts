@@ -31,6 +31,22 @@ test.describe("a11y-shell", () => {
 				await expect(page.getByTestId("scene-bar")).toBeVisible();
 				const found: string[] = [];
 				const scan = async (what: string): Promise<void> => {
+					// A sheet still fading in has text halfway to its colour, which axe reads as low contrast:
+					// wait for the animations that end (the spinner of a working agent never does).
+					await page.evaluate(() =>
+						Promise.race([
+							Promise.all(
+								document
+									.getAnimations()
+									.filter(
+										(a) =>
+											a.effect?.getComputedTiming().iterations !== Infinity,
+									)
+									.map((a) => a.finished.catch(() => undefined)),
+							),
+							new Promise((resolve) => setTimeout(resolve, 3000)),
+						]),
+					);
 					const { violations } = await new AxeBuilder({ page })
 						.withTags(TAGS)
 						.analyze();
