@@ -231,9 +231,9 @@ export const roadmap = {
 		{
 			id: "screens",
 			title: "More redesigned screens",
-			text: "The publishing and approvals screens and the image editor, redrawn on the same design as the home, the projects, the writing screens and the video editor.",
+			text: "The publishing and approvals screens, redrawn on the same design as the home, the projects, the writing screens and both editors.",
 			state: "planned",
-			epics: [82, 86],
+			epics: [82],
 		},
 		{
 			id: "metrics",
