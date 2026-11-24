@@ -4,12 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"net/http"
-	"net/http/httptest"
 	"net/url"
 	"path/filepath"
 	"strings"
-	"sync"
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/service"
@@ -17,101 +14,14 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/social"
 	"github.com/AlexGalhardo/stuarty/service/social/fake"
 	"github.com/AlexGalhardo/stuarty/service/vault"
+	"github.com/AlexGalhardo/stuarty/web/app/testpublish"
 )
 
 const (
-	clientSecretCanary = "GOCSPX-client-secret-CANARY-77"
-	refreshCanary      = "refresh-token-CANARY-88"
-	redirect           = "http://127.0.0.1:7878/social/callback"
+	clientSecretCanary = testpublish.ClientSecretCanary
+	refreshCanary      = testpublish.RefreshCanary
+	redirect           = testpublish.Redirect
 )
-
-// fakeNet is a fake social network that records every request that reaches it: the recording
-// destination of the tests of epic 18.
-type fakeNet struct {
-	srv *httptest.Server
-
-	mu       sync.Mutex
-	requests []string
-	forms    []url.Values
-	videos   map[string]string // id to the state it answers
-	badCode  bool
-	// videoURL, when set, is the address of a video the network answers.
-	videoURL string
-	// posted holds the path of the file of every video that was sent.
-	posted []string
-}
-
-func newFakeNet(t *testing.T) *fakeNet {
-	t.Helper()
-
-	n := &fakeNet{videos: map[string]string{}}
-
-	n.srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		n.mu.Lock()
-		defer n.mu.Unlock()
-
-		n.requests = append(n.requests, r.Method+" "+r.URL.Path)
-
-		switch {
-		case r.URL.Path == "/token":
-			_ = r.ParseForm()
-			n.forms = append(n.forms, r.PostForm)
-
-			if n.badCode {
-				w.WriteHeader(http.StatusBadRequest)
-				_, _ = w.Write([]byte(`{"error":"invalid_grant"}`))
-
-				return
-			}
-
-			_ = json.NewEncoder(w).Encode(map[string]any{
-				"access_token": "at-1", "refresh_token": refreshCanary, "expires_in": 3600,
-			})
-		case r.URL.Path == "/account":
-			_, _ = w.Write([]byte(`{"id":"UC-FAKE","title":"Fake channel"}`))
-		case r.URL.Path == "/videos" && r.Method == http.MethodPost:
-			var sent struct {
-				Path string `json:"path"`
-			}
-
-			_ = json.NewDecoder(r.Body).Decode(&sent)
-			n.posted = append(n.posted, sent.Path)
-
-			id := "vid" + string(rune('a'+len(n.videos)))
-			n.videos[id] = "published"
-
-			address := "https://fake.example/watch/" + id
-			if n.videoURL != "" {
-				address = n.videoURL
-			}
-
-			_ = json.NewEncoder(w).Encode(map[string]string{"id": id, "url": address, "state": "published"})
-		case strings.HasPrefix(r.URL.Path, "/videos/"):
-			id := strings.TrimPrefix(r.URL.Path, "/videos/")
-			_ = json.NewEncoder(w).Encode(map[string]string{"id": id, "state": n.videos[id]})
-		default:
-			_, _ = w.Write([]byte("pong"))
-		}
-	}))
-
-	t.Cleanup(n.srv.Close)
-
-	return n
-}
-
-func (n *fakeNet) count() int {
-	n.mu.Lock()
-	defer n.mu.Unlock()
-
-	return len(n.requests)
-}
-
-func (n *fakeNet) seen() []string {
-	n.mu.Lock()
-	defer n.mu.Unlock()
-
-	return append([]string(nil), n.requests...)
-}
 
 // socialOps is the part of the service the sign-in tests use (the methods join service.Service with
 // the surfaces of task 7).
@@ -133,7 +43,7 @@ type socialOps interface {
 
 type socialEnv struct {
 	*env
-	net  *fakeNet
+	net  *testpublish.FakeNet
 	conn *fake.Connector
 	ops  socialOps
 }
@@ -149,8 +59,8 @@ func newSocialEnv(t *testing.T) *socialEnv {
 func newSocialEnvWith(t *testing.T, extra func(o *service.Options)) *socialEnv {
 	t.Helper()
 
-	n := newFakeNet(t)
-	conn := fake.New(n.srv.URL)
+	n := testpublish.NewFakeNet(t)
+	conn := fake.New(n.Srv.URL)
 	reg := social.NewRegistry()
 
 	if err := reg.Register(conn); err != nil {
@@ -162,7 +72,7 @@ func newSocialEnvWith(t *testing.T, extra func(o *service.Options)) *socialEnv {
 
 // newSocialEnvFor is the environment over a network, its connector and the registry that holds it.
 func newSocialEnvFor(
-	t *testing.T, n *fakeNet, conn *fake.Connector, reg *social.Registry, extra func(o *service.Options),
+	t *testing.T, n *testpublish.FakeNet, conn *fake.Connector, reg *social.Registry, extra func(o *service.Options),
 ) *socialEnv {
 	t.Helper()
 
@@ -231,14 +141,14 @@ func TestSocialSignInEndToEnd(t *testing.T) {
 
 	begun := e.begin(ui1)
 
-	if e.net.count() != 0 {
-		t.Fatalf("beginning the sign-in made a request: %v", e.net.seen())
+	if e.net.Count() != 0 {
+		t.Fatalf("beginning the sign-in made a request: %v", e.net.Seen())
 	}
 
 	u, _ := url.Parse(begun.AuthorizeURL)
 	q := u.Query()
 
-	if !strings.HasPrefix(begun.AuthorizeURL, e.net.srv.URL+"/authorize?") || q.Get("client_id") != "client-id-1" ||
+	if !strings.HasPrefix(begun.AuthorizeURL, e.net.Srv.URL+"/authorize?") || q.Get("client_id") != "client-id-1" ||
 		q.Get("redirect_uri") != redirect || q.Get("code_challenge_method") != "S256" || q.Get("code_challenge") == "" {
 		t.Errorf("authorize address = %s", begun.AuthorizeURL)
 	}
@@ -262,7 +172,7 @@ func TestSocialSignInEndToEnd(t *testing.T) {
 		t.Fatalf("complete = %+v, %v", acc, err)
 	}
 
-	form := e.net.forms[0]
+	form := e.net.Forms[0]
 	if form.Get("code") != "the-code" || form.Get("client_secret") != clientSecretCanary ||
 		form.Get("code_verifier") == "" {
 		t.Errorf("the token request = %v", form)
@@ -326,8 +236,8 @@ func TestSocialSignInStateIsSingleUseAndBound(t *testing.T) {
 		t.Errorf("the spent state = %v", err)
 	}
 
-	if e.net.count() != 0 {
-		t.Errorf("a refused sign-in made requests: %v", e.net.seen())
+	if e.net.Count() != 0 {
+		t.Errorf("a refused sign-in made requests: %v", e.net.Seen())
 	}
 
 	// A guessed state.
@@ -380,7 +290,7 @@ func TestSocialSignInRefusedByTheNetwork(t *testing.T) {
 	}
 
 	// The network refuses the code.
-	e.net.badCode = true
+	e.net.BadCode = true
 	begun = e.begin(person)
 
 	_, err := e.ops.SocialConnectComplete(
@@ -432,7 +342,7 @@ func TestSocialFailedSignInLeavesNoConnection(t *testing.T) {
 		t.Errorf("a cancelled sign-in left %d connections", count())
 	}
 
-	e.net.badCode = true
+	e.net.BadCode = true
 	begun = e.begin(person)
 
 	if _, err := e.ops.SocialConnectComplete(
@@ -446,7 +356,7 @@ func TestSocialFailedSignInLeavesNoConnection(t *testing.T) {
 	}
 
 	// A connection that was signed in before keeps standing when a later sign-in fails.
-	e.net.badCode = false
+	e.net.BadCode = false
 	begun = e.begin(person)
 
 	if _, err := e.ops.SocialConnectComplete(

@@ -2,8 +2,6 @@ package servicetest
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"os"
@@ -16,6 +14,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/social"
 	"github.com/AlexGalhardo/stuarty/service/social/fake"
 	"github.com/AlexGalhardo/stuarty/web/app/jobs"
+	"github.com/AlexGalhardo/stuarty/web/app/testpublish"
 
 	"github.com/AlexGalhardo/vukem/queue"
 )
@@ -43,7 +42,7 @@ func newPubEnv(t *testing.T) *pubEnv {
 }
 
 // newPubEnvWith is newPubEnv over a given network, connector and registry; nil takes the fake network.
-func newPubEnvWith(t *testing.T, n *fakeNet, conn *fake.Connector, reg *social.Registry) *pubEnv {
+func newPubEnvWith(t *testing.T, n *testpublish.FakeNet, conn *fake.Connector, reg *social.Registry) *pubEnv {
 	t.Helper()
 
 	return newPubEnvWrapped(t, n, conn, reg, nil)
@@ -51,7 +50,7 @@ func newPubEnvWith(t *testing.T, n *fakeNet, conn *fake.Connector, reg *social.R
 
 // newPubEnvWrapped is newPubEnvWith with the store the service reads through wrapped, to fail one read.
 func newPubEnvWrapped(
-	t *testing.T, n *fakeNet, conn *fake.Connector, reg *social.Registry, wrap func(service.Store) service.Store,
+	t *testing.T, n *testpublish.FakeNet, conn *fake.Connector, reg *social.Registry, wrap func(service.Store) service.Store,
 ) *pubEnv {
 	t.Helper()
 
@@ -112,51 +111,7 @@ func newPubEnvWrapped(
 func (p *pubEnv) seedExport(project, id, ext string, data []byte) string {
 	p.t.Helper()
 
-	dir := filepath.Join(string(p.dir), "exports", project)
-	if err := os.MkdirAll(dir, 0o750); err != nil {
-		p.t.Fatal(err)
-	}
-
-	if err := os.WriteFile(filepath.Join(dir, id+ext), data, 0o600); err != nil {
-		p.t.Fatal(err)
-	}
-
-	// The digest is recorded as the exporter records it (service/exporter), so a run checks it.
-	sum := sha256.Sum256(data)
-
-	res, merr := json.Marshal(service.JobResult{Export: &service.ExportResult{
-		Format: strings.TrimPrefix(ext, "."), Bytes: int64(len(data)), SHA256: hex.EncodeToString(sum[:]),
-	}})
-	if merr != nil {
-		p.t.Fatal(merr)
-	}
-
-	werr := p.store.Write(context.Background(), func(ctx context.Context, tx service.Tx) error {
-		row := service.JobRow{
-			ID:        id,
-			Kind:      service.JobExport,
-			ProjectID: &project,
-			Actor:     ui,
-			State:     service.JobQueued,
-			Input:     json.RawMessage(`{}`),
-		}
-		if err := tx.Jobs().CreateLimited(ctx, row, nil); err != nil {
-			return err
-		}
-
-		if _, err := tx.Jobs().Claim(ctx, id, p.clock.now().UnixMilli()); err != nil {
-			return err
-		}
-
-		_, err := tx.Jobs().Finish(ctx, id, service.JobSucceeded, res, nil, p.clock.now().UnixMilli())
-
-		return err
-	})
-	if werr != nil {
-		p.t.Fatal(werr)
-	}
-
-	return id
+	return testpublish.SeedExport(p.t, p.store, string(p.dir), ui, project, id, ext, data, p.clock.now())
 }
 
 func (p *pubEnv) args(exportID string) service.PublishArgs {
@@ -200,7 +155,7 @@ func (p *pubEnv) job(id string) *service.Job {
 func TestPublishNow_NothingLeavesBeforeApprovalThenPublishes(t *testing.T) {
 	p := newPubEnv(t)
 	exp := p.seedExport(p.project, "job_0000000901", ".mp4", []byte("fake mp4 bytes"))
-	before := p.net.count()
+	before := p.net.Count()
 
 	job, err := p.now(p.as(token), p.args(exp))
 	if err != nil {
@@ -211,8 +166,8 @@ func TestPublishNow_NothingLeavesBeforeApprovalThenPublishes(t *testing.T) {
 		t.Fatalf("job = %+v, want a publish.upload waiting for approval", job)
 	}
 
-	if p.net.count() != before || len(p.conn.Uploaded()) != 0 {
-		t.Fatalf("a request left before the approval: %v", p.net.seen()[before:])
+	if p.net.Count() != before || len(p.conn.Uploaded()) != 0 {
+		t.Fatalf("a request left before the approval: %v", p.net.Seen()[before:])
 	}
 
 	req, err := p.svc.ApprovalGet(p.as(token), service.ApprovalRef{ID: job.ApprovalID})
@@ -232,8 +187,8 @@ func TestPublishNow_NothingLeavesBeforeApprovalThenPublishes(t *testing.T) {
 
 	// Reading the status of a waiting publication sends nothing either.
 	st, err := p.pub.PublishStatus(p.as(token), service.PublishStatusRequest{JobID: job.JobID})
-	if err != nil || st.State != "waiting_approval" || p.net.count() != before {
-		t.Fatalf("status = %+v, %v, requests %d -> %d", st, err, before, p.net.count())
+	if err != nil || st.State != "waiting_approval" || p.net.Count() != before {
+		t.Fatalf("status = %+v, %v, requests %d -> %d", st, err, before, p.net.Count())
 	}
 
 	p.decide(job, "approve")
@@ -266,7 +221,7 @@ func TestPublishNow_NothingLeavesBeforeApprovalThenPublishes(t *testing.T) {
 func TestPublishNow_RejectingSendsNothing(t *testing.T) {
 	p := newPubEnv(t)
 	exp := p.seedExport(p.project, "job_0000000902", ".mp4", []byte("fake mp4 bytes"))
-	before := p.net.count()
+	before := p.net.Count()
 
 	job, err := p.now(p.as(token), p.args(exp))
 	if err != nil {
@@ -279,8 +234,8 @@ func TestPublishNow_RejectingSendsNothing(t *testing.T) {
 		t.Errorf("state = %s, want cancelled", done.State)
 	}
 
-	if p.net.count() != before {
-		t.Errorf("a rejected publication sent: %v", p.net.seen()[before:])
+	if p.net.Count() != before {
+		t.Errorf("a rejected publication sent: %v", p.net.Seen()[before:])
 	}
 
 	st, _ := p.pub.PublishStatus(p.as(token), service.PublishStatusRequest{JobID: job.JobID})
@@ -293,7 +248,7 @@ func TestPublishNow_RejectingSendsNothing(t *testing.T) {
 func TestPublishNow_JobStartIsTheSamePath(t *testing.T) {
 	p := newPubEnv(t)
 	exp := p.seedExport(p.project, "job_0000000903", ".mp4", []byte("fake mp4 bytes"))
-	before := p.net.count()
+	before := p.net.Count()
 
 	raw, merr := json.Marshal(p.args(exp))
 	if merr != nil {
@@ -316,8 +271,8 @@ func TestPublishNow_JobStartIsTheSamePath(t *testing.T) {
 		t.Fatalf("dry run = %+v, %v", dry, err)
 	}
 
-	if p.net.count() != before {
-		t.Errorf("requests left: %v", p.net.seen()[before:])
+	if p.net.Count() != before {
+		t.Errorf("requests left: %v", p.net.Seen()[before:])
 	}
 
 	pending, _ := p.svc.ApprovalList(p.as(token), service.ApprovalListRequest{})
@@ -443,7 +398,7 @@ func TestPublishNow_AFileThatChangedAfterApprovalIsNotSent(t *testing.T) {
 				t.Fatal(werr)
 			}
 
-			before := p.net.count()
+			before := p.net.Count()
 			p.decide(job, "approve")
 
 			if done := p.job(
@@ -453,8 +408,8 @@ func TestPublishNow_AFileThatChangedAfterApprovalIsNotSent(t *testing.T) {
 				t.Errorf("job = %+v, error %+v, want a refusal to send a changed file", done, done.Error)
 			}
 
-			if p.net.count() != before {
-				t.Errorf("the changed file was sent: %v", p.net.seen()[before:])
+			if p.net.Count() != before {
+				t.Errorf("the changed file was sent: %v", p.net.Seen()[before:])
 			}
 		})
 	}
@@ -587,7 +542,7 @@ func TestPublishNow_TrashingTheTimelineOfTheExportEndsThePost(t *testing.T) {
 			t.Fatalf("named %v: the post is kept on %v, want its export's timeline %s", named, job.ProjectID, second)
 		}
 
-		before := p.net.count()
+		before := p.net.Count()
 
 		if _, err := p.svc.ProjectItemTrash(
 			p.as(ui),
@@ -607,7 +562,7 @@ func TestPublishNow_TrashingTheTimelineOfTheExportEndsThePost(t *testing.T) {
 			t.Errorf("named %v: the post of a trashed timeline was approved", named)
 		}
 
-		if p.net.count() != before {
+		if p.net.Count() != before {
 			t.Errorf("named %v: the video of a trashed timeline was sent", named)
 		}
 	}
@@ -636,12 +591,12 @@ func TestPublishNow_TrashingAnotherTimelineKeepsThePost(t *testing.T) {
 		t.Fatalf("trashing the other timeline left the post %s", got.State)
 	}
 
-	before := p.net.count()
+	before := p.net.Count()
 
 	p.decide(job, "approve")
 
-	if got := p.job(job.JobID); got.State != service.JobSucceeded || p.net.count() == before {
-		t.Errorf("the approved post = %s, %d requests", got.State, p.net.count()-before)
+	if got := p.job(job.JobID); got.State != service.JobSucceeded || p.net.Count() == before {
+		t.Errorf("the approved post = %s, %d requests", got.State, p.net.Count()-before)
 	}
 }
 
@@ -653,14 +608,14 @@ func TestPublishNow_TwoTimelinesSendTheExportItNamed(t *testing.T) {
 
 	p.seedExport(p.project, "job_0000000951", ".mp4", []byte("the first cut"))
 	exp := p.seedExport(second, "job_0000000952", ".mp4", []byte("the second cut, longer"))
-	before := p.net.count()
+	before := p.net.Count()
 
 	job, err := p.pub.PublishNow(p.as(token), service.PublishNowRequest{ProjectID: p.project, PublishArgs: p.args(exp)})
 	if err != nil || job.State != service.JobWaitingApproval {
 		t.Fatalf("the post = %+v, %v", job, err)
 	}
 
-	if p.net.count() != before {
+	if p.net.Count() != before {
 		t.Fatal("something was sent before a person approved")
 	}
 
@@ -670,12 +625,12 @@ func TestPublishNow_TwoTimelinesSendTheExportItNamed(t *testing.T) {
 		t.Fatalf("the approved post = %+v", got)
 	}
 
-	p.net.mu.Lock()
-	defer p.net.mu.Unlock()
+	p.net.Mu.Lock()
+	defer p.net.Mu.Unlock()
 
 	want := filepath.Join(second, "job_0000000952.mp4")
-	if len(p.net.posted) != 1 || !strings.HasSuffix(p.net.posted[0], want) {
-		t.Errorf("the file sent = %v, want the export of the second timeline %s", p.net.posted, want)
+	if len(p.net.Posted) != 1 || !strings.HasSuffix(p.net.Posted[0], want) {
+		t.Errorf("the file sent = %v, want the export of the second timeline %s", p.net.Posted, want)
 	}
 }
 

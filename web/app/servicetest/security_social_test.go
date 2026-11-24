@@ -14,6 +14,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/social"
 	"github.com/AlexGalhardo/stuarty/service/social/fake"
+	"github.com/AlexGalhardo/stuarty/web/app/testpublish"
 )
 
 // The threat rows T-56 to T-59 of SDD-007 (epic 18, SDD-020).
@@ -64,7 +65,7 @@ func TestSecurity_T56_PostGoesToTheConnectionTheRequestNames(t *testing.T) {
 	}
 
 	// A post that names a connection that is not a social one is refused before anyone is asked.
-	generic, err := p.svc.ConnectionCreate(person, connectionRequest(p.net.srv.URL+"/ping", "tok-generic"))
+	generic, err := p.svc.ConnectionCreate(person, connectionRequest(p.net.Srv.URL+"/ping", "tok-generic"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -90,15 +91,15 @@ func TestSecurity_T56_RemovedConnectionPublishesNothing(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	before := p.net.count()
+	before := p.net.Count()
 
 	_, err = p.svc.ApprovalDecide(p.browser(ui), service.ApprovalDecideRequest{ID: job.ApprovalID, Decision: "approve"})
 	if !isCode(err, service.CodeConnectionNotFound) {
 		t.Fatalf("approving a request whose connection is gone = %v, want E_CONNECTION_NOT_FOUND", err)
 	}
 
-	if p.net.count() != before || len(p.conn.Uploaded()) != 0 {
-		t.Errorf("a removed connection sent: %v", p.net.seen()[before:])
+	if p.net.Count() != before || len(p.conn.Uploaded()) != 0 {
+		t.Errorf("a removed connection sent: %v", p.net.Seen()[before:])
 	}
 }
 
@@ -142,8 +143,8 @@ func TestSecurity_T57_ConnectorCannotSendTheTokenToAnotherHost(t *testing.T) {
 	}))
 	t.Cleanup(elsewhere.Close)
 
-	n := newFakeNet(t)
-	conn := stray{Connector: fake.New(n.srv.URL), target: strings.Replace(elsewhere.URL, "127.0.0.1", "localhost", 1)}
+	n := testpublish.NewFakeNet(t)
+	conn := stray{Connector: fake.New(n.Srv.URL), target: strings.Replace(elsewhere.URL, "127.0.0.1", "localhost", 1)}
 	reg := social.NewRegistry()
 
 	if err := reg.Register(conn); err != nil {
@@ -263,9 +264,9 @@ func TestSecurity_T58_NetworkTextIsDelimited(t *testing.T) {
 
 	p := newPubEnv(t)
 
-	p.net.mu.Lock()
-	p.net.videoURL = hostile
-	p.net.mu.Unlock()
+	p.net.Mu.Lock()
+	p.net.VideoURL = hostile
+	p.net.Mu.Unlock()
 
 	exp := p.seedExport(p.project, "job_0000000915", ".mp4", []byte("fake mp4 bytes"))
 
@@ -343,7 +344,7 @@ func TestSecurity_T59_CallbackStateIsSingleUseAndBound(t *testing.T) {
 
 	begun := e.begin(person)
 	state := stateOf(t, begun.AuthorizeURL)
-	before := e.net.count()
+	before := e.net.Count()
 
 	// In this order: the second attempt with the real state spends it, so the last one finds it gone.
 	for _, tc := range []struct {
@@ -372,8 +373,8 @@ func TestSecurity_T59_CallbackStateIsSingleUseAndBound(t *testing.T) {
 		}
 	}
 
-	if e.net.count() != before {
-		t.Errorf("a refused callback made requests: %v", e.net.seen()[before:])
+	if e.net.Count() != before {
+		t.Errorf("a refused callback made requests: %v", e.net.Seen()[before:])
 	}
 
 	list, _ := e.ops.SocialAccountList(person, service.SocialAccountListRequest{})
@@ -389,7 +390,7 @@ func TestSecurity_T59_CallbackStateIsSingleUseAndBound(t *testing.T) {
 func TestSecurity_T59_NoRequestLeavesBeforeApproval(t *testing.T) {
 	p := newPubEnv(t)
 	exp := p.seedExport(p.project, "job_0000000918", ".mp4", []byte("fake mp4 bytes"))
-	before := p.net.count()
+	before := p.net.Count()
 
 	raw, err := json.Marshal(p.args(exp))
 	if err != nil {
@@ -430,8 +431,8 @@ func TestSecurity_T59_NoRequestLeavesBeforeApproval(t *testing.T) {
 		t.Errorf("an agent writing a rule = %v, want E_PRIVILEGED_SESSION", err)
 	}
 
-	if p.net.count() != before || len(p.conn.Uploaded()) != 0 {
-		t.Errorf("a request left with no approval: %v", p.net.seen()[before:])
+	if p.net.Count() != before || len(p.conn.Uploaded()) != 0 {
+		t.Errorf("a request left with no approval: %v", p.net.Seen()[before:])
 	}
 
 	if st := p.job(job.JobID); st.State != service.JobWaitingApproval {
