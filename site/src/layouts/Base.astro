@@ -9,6 +9,7 @@ import { getNavGroups } from "@/lib/content";
 import type { NavSection } from "@/lib/page-files";
 import { ui } from "@/lib/ui-text";
 import { site, withBase } from "@/lib/site";
+import { latestRelease } from "@/lib/releases";
 import { withTrailingSlash } from "@/lib/trailing-slash";
 
 interface Props {
@@ -46,6 +47,8 @@ const {
 const t = ui;
 const fullTitle = title.includes(site.name) ? title : `${title} — ${site.name}`;
 const groups = getNavGroups(section);
+// The version beside the logo is the latest release at build time, never a literal.
+const { version } = await latestRelease();
 ---
 
 <!doctype html>
@@ -67,8 +70,8 @@ const groups = getNavGroups(section);
 		<meta property="og:title" content={title} />
 		<meta property="og:description" content={description} />
 		<meta name="twitter:card" content="summary" />
-		<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
-		<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#08090c" />
+		<meta name="theme-color" media="(prefers-color-scheme: light)" content="#faf9f5" />
+		<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#15161c" />
 		<slot name="head" />
 		<script is:inline>
 			(function () {
@@ -100,7 +103,7 @@ const groups = getNavGroups(section);
 				<div id="read-progress" class="h-full origin-left bg-brand" style="transform: scaleX(0)"></div>
 			</div>
 		) : null}
-		<Header client:load groups={groups} variant={headerVariant} />
+		<Header client:load groups={groups} version={version} variant={headerVariant} />
 		<slot />
 		<div id="toast" class="pointer-events-none fixed right-4 bottom-4 z-[100] hidden w-[min(20rem,calc(100vw-2rem))] items-center gap-2.5 rounded-xl border border-border bg-bg px-4 py-3 text-sm font-medium text-fg shadow-lg" role="status"></div>
 		<script>

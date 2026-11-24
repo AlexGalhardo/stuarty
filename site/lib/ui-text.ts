@@ -10,6 +10,7 @@ export type UiText = {
 	apiReference: string;
 	mcp: string;
 	changelog: string;
+	alpha: string;
 	changelogTitle: string;
 	changelogDescription: string;
 	openNavigation: string;
@@ -50,6 +51,7 @@ export const ui: UiText = {
 	apiReference: "API Reference",
 	mcp: "MCP",
 	changelog: "Changelog",
+	alpha: "Alpha",
 	changelogTitle: "Changelog",
 	changelogDescription: "Every release of Stuarty, with a link to the commit behind each change.",
 	openNavigation: "Open navigation",

@@ -14,7 +14,7 @@ export function LogoMark({ className = "size-6" }: { className?: string }) {
 export function Logo({ size = "md" }: { size?: "md" | "lg" }) {
 	const height = size === "lg" ? "h-7" : "h-6";
 	return (
-		<Link href="/" className="flex shrink-0 items-center rounded-md" aria-label={t.logoLabel}>
+		<Link href="/" className="flex shrink-0 items-center rounded-md max-sm:h-7" aria-label={t.logoLabel}>
 			<span className="flex shrink-0 items-center sm:max-lg:hidden">
 				<img
 					src={withBase("/logo-wordmark-light.png")}

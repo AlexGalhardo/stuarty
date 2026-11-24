@@ -47,32 +47,47 @@ export function ThemeToggle() {
 		setThemeState(value);
 	};
 
+	const current = OPTIONS.find((o) => o.value === theme) ?? OPTIONS[1];
+	const next = OPTIONS[(OPTIONS.indexOf(current) + 1) % OPTIONS.length];
+	const CurrentIcon = current.icon;
+
 	return (
-		<div
-			role="radiogroup"
-			aria-label={t.colorTheme}
-			className="flex items-center gap-0.5 rounded-full border border-border p-0.5"
-		>
-			{OPTIONS.map(({ value, label: key, icon: Icon }) => {
-				const label = t[key];
-				const active = theme === value;
-				return (
-					<IconTooltip key={value} label={label}>
-						<button
-							type="button"
-							role="radio"
-							aria-checked={active}
-							aria-label={label}
-							onClick={() => setTheme(value)}
-							className={`inline-flex size-6 items-center justify-center rounded-full transition-colors ${
-								active ? "bg-hover text-fg" : "text-faint hover:text-fg"
-							}`}
-						>
-							<Icon aria-hidden className="size-3.5" />
-						</button>
-					</IconTooltip>
-				);
-			})}
-		</div>
+		<>
+			{/* A phone has no room for three 44 px targets in the bar: one button steps through the three themes. */}
+			<button
+				type="button"
+				aria-label={`${t.colorTheme}: ${t[current.label]}`}
+				onClick={() => setTheme(next.value)}
+				className="inline-flex size-11 items-center justify-center rounded-lg text-muted transition-colors hover:bg-hover hover:text-fg sm:hidden"
+			>
+				<CurrentIcon aria-hidden className="size-4.5" />
+			</button>
+			<div
+				role="radiogroup"
+				aria-label={t.colorTheme}
+				className="hidden items-center gap-0.5 rounded-full border border-border-strong p-0.5 sm:flex"
+			>
+				{OPTIONS.map(({ value, label: key, icon: Icon }) => {
+					const label = t[key];
+					const active = theme === value;
+					return (
+						<IconTooltip key={value} label={label}>
+							<button
+								type="button"
+								role="radio"
+								aria-checked={active}
+								aria-label={label}
+								onClick={() => setTheme(value)}
+								className={`inline-flex size-6 items-center justify-center rounded-full transition-colors ${
+									active ? "bg-hover text-fg" : "text-faint hover:text-fg"
+								}`}
+							>
+								<Icon aria-hidden className="size-3.5" />
+							</button>
+						</IconTooltip>
+					);
+				})}
+			</div>
+		</>
 	);
 }
