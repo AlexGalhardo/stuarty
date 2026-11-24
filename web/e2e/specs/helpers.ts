@@ -1,6 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { randomBytes } from "node:crypto";
-import { existsSync, mkdirSync, renameSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -11,6 +10,7 @@ import {
 	type Page,
 } from "@playwright/test";
 import { cspViolations } from "../support/browsers";
+import { makeOnce } from "../support/makeOnce";
 
 // The workspace the server of playwright.config.ts runs on.
 export let home =
@@ -143,26 +143,6 @@ export function ffmpegExe(): string {
 		? join(dir, "bin")
 		: dir;
 	return join(bin, `ffmpeg${exe}`);
-}
-
-// makeOnce makes a media file at `out` unless a complete one is there. Several Playwright workers ask for the
-// same file at the same time (VV-332): each writes its own temporary file next to `out` and renames it, so
-// `out` is never seen half written, and the worker that loses the rename drops its copy.
-function makeOnce(out: string, make: (target: string) => void): void {
-	if (existsSync(out)) return;
-	const dot = out.lastIndexOf(".");
-	const target = `${out.slice(0, dot)}.tmp-${process.pid}-${randomBytes(4).toString("hex")}${out.slice(dot)}`;
-	try {
-		make(target);
-		try {
-			renameSync(target, out);
-		} catch (err) {
-			// Another worker renamed first and holds the file open: its copy is as good as ours.
-			if (!existsSync(out)) throw err;
-		}
-	} finally {
-		rmSync(target, { force: true });
-	}
 }
 
 // testClip makes, once per run, a 10 s 320x568 clip with a moving smooth gradient
