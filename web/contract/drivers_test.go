@@ -281,6 +281,12 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.RecordingStart)
 	case "RecordingStop":
 		return invoke(ctx, s, svc.RecordingStop)
+	case "RecordingPause":
+		return invoke(ctx, s, svc.RecordingPause)
+	case "RecordingResume":
+		return invoke(ctx, s, svc.RecordingResume)
+	case "RecordingEvents":
+		return invoke(ctx, s, svc.RecordingEvents)
 	case "RecordingCancel":
 		return invoke(ctx, s, svc.RecordingCancel)
 	case "RecordingGet":

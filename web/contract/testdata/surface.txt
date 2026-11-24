@@ -124,8 +124,11 @@ command publish:validate
 command recording:cancel
 command recording:confirm
 command recording:dismiss
+command recording:events
 command recording:list
+command recording:pause
 command recording:place
+command recording:resume
 command recording:show
 command recording:sources
 command recording:start
@@ -278,6 +281,7 @@ route GET /publications/{}
 route GET /publish/{}
 route GET /recording/sources
 route GET /recordings/{}
+route GET /recordings/{}/events
 route GET /social/accounts
 route GET /social/networks
 route GET /system
@@ -367,7 +371,9 @@ route POST /recordings
 route POST /recordings/{}/cancel
 route POST /recordings/{}/confirm
 route POST /recordings/{}/dismiss
+route POST /recordings/{}/pause
 route POST /recordings/{}/place
+route POST /recordings/{}/resume
 route POST /recordings/{}/stop
 route POST /scripts/estimate
 route POST /social/complete

@@ -46,9 +46,12 @@ Content type `application/json`. Schema: [`Recording`](/docs/api/schemas#recordi
 | `encoder` | `string` | no |  |
 | `ended_at` | `string (date-time)` or `null` | no |  |
 | `error` | [`Error`](/docs/api/schemas#error) or `any` or `null` or `null` | no |  |
+| `events_count` | `integer (int64)` | no |  |
 | `fps` | `integer` | no |  |
 | `frames` | `integer (int64)` | no |  |
 | `height` | `integer` | no |  |
+| `levels` | [`RecordingLevels`](/docs/api/schemas#recordinglevels) or `any` or `null` or `null` | no |  |
+| `pauses` | array of [`RecordingPause`](/docs/api/schemas#recordingpause) | no |  |
 | `project_id` | `string` | no |  |
 | `recording_id` | `string` | no |  |
 | `review` | `string` | no |  |
@@ -57,6 +60,7 @@ Content type `application/json`. Schema: [`Recording`](/docs/api/schemas#recordi
 | `state` | `string` | no |  |
 | `stop_reason` | `string` | no |  |
 | `text` | `string` | no |  |
+| `tracks` | array of [`RecordingTrack`](/docs/api/schemas#recordingtrack) | no |  |
 | `width` | `integer` | no |  |
 
 ### 400
@@ -288,9 +292,20 @@ puts "#{response.code} #{response.body}"
     "path": "string",
     "retryable": false
   },
+  "events_count": 0,
   "fps": 0,
   "frames": 0,
   "height": 0,
+  "levels": {
+    "microphone": 0,
+    "system": 0
+  },
+  "pauses": [
+    {
+      "from_ms": 0,
+      "to_ms": 0
+    }
+  ],
   "project_id": "string",
   "recording_id": "string",
   "review": "string",
@@ -303,6 +318,16 @@ puts "#{response.code} #{response.body}"
   "state": "string",
   "stop_reason": "string",
   "text": "string",
+  "tracks": [
+    {
+      "asset_id": "string",
+      "bytes": 0,
+      "duration_ms": 0,
+      "kind": "string",
+      "lost": false,
+      "start_ms": 0
+    }
+  ],
   "width": 0
 }
 ```

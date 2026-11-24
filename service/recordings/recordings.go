@@ -36,6 +36,11 @@ type Row struct {
 	AssetID      string
 	Actor        string
 	CreatedMs    int64
+	// Tracks and Pauses are JSON lists (core/recording Track and Pause), EventsCount the pointer events saved
+	// (SDD-025 section 16.8). They hold no device name and no pointer position.
+	Tracks      string
+	Pauses      string
+	EventsCount int64
 }
 
 // Store is the recordings table.

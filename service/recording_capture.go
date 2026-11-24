@@ -29,6 +29,16 @@ type CaptureStart struct {
 	Output string
 	// MaxSeconds is the longest the recording may run; it sets the deadline of the helper process.
 	MaxSeconds int
+
+	// The tracks beyond the screen and the file of each, in the folder of Output (SDD-025 section 16).
+	Microphone       string
+	MicrophoneOutput string
+	SystemAudio      bool
+	SystemOutput     string
+	Camera           string
+	CameraOutput     string
+	Events           bool
+	EventsOutput     string
 }
 
 // CaptureSession is one running recording.
@@ -40,6 +50,9 @@ type CaptureSession interface {
 	Events() <-chan capturehost.Event
 	// Stop asks for a graceful end.
 	Stop() error
+	// Pause asks every source to stop writing; Resume asks them to write again.
+	Pause() error
+	Resume() error
 	// Kill ends the helper and its process tree at once.
 	Kill()
 	// Close releases the session after its events ended.
@@ -64,7 +77,9 @@ func (a liveCapturer) Sources(ctx context.Context) (capturehost.Sources, error) 
 func (a liveCapturer) Start(ctx context.Context, r CaptureStart) (CaptureSession, error) {
 	s, err := a.l.Begin(ctx, capturehost.StartParams{
 		RecordingID: r.RecordingID, Kind: r.Kind, SourceID: r.SourceID, FPS: r.FPS, Output: r.Output,
-		MaxSeconds: r.MaxSeconds,
+		MaxSeconds: r.MaxSeconds, Microphone: r.Microphone, MicrophoneOutput: r.MicrophoneOutput,
+		SystemAudio: r.SystemAudio, SystemOutput: r.SystemOutput, Camera: r.Camera, CameraOutput: r.CameraOutput,
+		Events: r.Events, EventsOutput: r.EventsOutput,
 	})
 	if err != nil {
 		return nil, err

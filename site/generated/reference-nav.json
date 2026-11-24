@@ -281,7 +281,10 @@
         "recordings.cancel",
         "recordings.confirm",
         "recordings.dismiss",
+        "recordings.events",
+        "recordings.pause",
         "recordings.place",
+        "recordings.resume",
         "recordings.stop"
       ]
     },

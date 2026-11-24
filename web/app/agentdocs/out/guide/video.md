@@ -38,6 +38,8 @@ CLI: `stuarty video` lists the commands of the domain and `stuarty video <verb>`
 - `otio:import`: apply an OpenTimelineIO file to a project as one undo step
 - `recording:sources`: list the displays and windows that can be captured
 - `recording:stop`: stop a recording and keep what was written; anyone may stop a capture
+- `recording:pause`: pause a recording: every source stops writing and the paused time is cut; anyone may pause
+- `recording:events`: read the pointer and click events of a finished recording (clicks by default)
 - `recording:cancel`: discard a recording in progress; a person deletes a finished one
 - `recording:show`: show one recording: its state, its length and whether a person added it
 - `recording:list`: list the recordings of a project that you may see, newest first

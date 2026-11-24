@@ -25,7 +25,10 @@ Content type `application/json`. Schema: [`RecordingSourcesResult`](/docs/api/sc
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
+| `cameras` | array of [`RecordingDevice`](/docs/api/schemas#recordingdevice) | no |  |
 | `displays` | array of [`RecordingSourceInfo`](/docs/api/schemas#recordingsourceinfo) | no |  |
+| `microphones` | array of [`RecordingDevice`](/docs/api/schemas#recordingdevice) | no |  |
+| `system_audio` | `boolean` | no |  |
 | `windows` | array of [`RecordingSourceInfo`](/docs/api/schemas#recordingsourceinfo) | no |  |
 
 ### 401 Unauthorized
@@ -196,6 +199,13 @@ puts "#{response.code} #{response.body}"
 
 ```json title="200"
 {
+  "cameras": [
+    {
+      "default": false,
+      "id": "string",
+      "name": "string"
+    }
+  ],
   "displays": [
     {
       "height": 0,
@@ -204,6 +214,14 @@ puts "#{response.code} #{response.body}"
       "width": 0
     }
   ],
+  "microphones": [
+    {
+      "default": false,
+      "id": "string",
+      "name": "string"
+    }
+  ],
+  "system_audio": false,
   "windows": [
     {
       "height": 0,

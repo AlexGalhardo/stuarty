@@ -19,6 +19,8 @@ var recordingPersonOnly = []step{
 	},
 	{Call: "RecordingConfirm", Args: json.RawMessage(`{"recording_id":"rec_0000000001"}`)},
 	{Call: "RecordingDismiss", Args: json.RawMessage(`{"recording_id":"rec_0000000001"}`)},
+	// resuming restarts the capture of the screen (SDD-025 section 16.4)
+	{Call: "RecordingResume", Args: json.RawMessage(`{"recording_id":"rec_0000000001"}`)},
 }
 
 // SDD-007 T-118: an agent cannot start a capture, add a recording to the project or set it aside, on any surface:

@@ -20,7 +20,7 @@ func recordingCommand(s step) (name string, argv []string, ok bool, err error) {
 
 	switch s.Call {
 	case "RecordingSources", "RecordingStart", "RecordingStop", "RecordingCancel", "RecordingGet", "RecordingList",
-		"RecordingConfirm", "RecordingDismiss", "RecordingPlace":
+		"RecordingConfirm", "RecordingDismiss", "RecordingPlace", "RecordingPause", "RecordingResume", "RecordingEvents":
 	default:
 		return "", nil, false, nil
 	}
@@ -51,6 +51,9 @@ func recordingCommand(s step) (name string, argv []string, ok bool, err error) {
 
 	names := map[string]string{
 		"RecordingStop":    "recording:stop",
+		"RecordingPause":   "recording:pause",
+		"RecordingResume":  "recording:resume",
+		"RecordingEvents":  "recording:events",
 		"RecordingCancel":  "recording:cancel",
 		"RecordingGet":     "recording:show",
 		"RecordingConfirm": "recording:confirm",

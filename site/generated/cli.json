@@ -2429,7 +2429,7 @@
       "domain": "video",
       "summary": "start recording a display or a window (for a person in the app; the local token is refused)",
       "usage": [
-        "stuarty recording:start --project <id> --kind display|window --source <id> [--fps 24|30|60]"
+        "stuarty recording:start --project <id> --kind display|window --source <id> [--fps 24|30|60] [--microphone <id>|default] [--system-audio] [--camera <id>] [--events]"
       ],
       "example": "stuarty recording:start --project prj_7k2m9x4q1b --kind display --source d1",
       "flags": [
@@ -2452,6 +2452,26 @@
           "name": "fps",
           "type": "integer",
           "usage": "24, 30 (the default) or 60"
+        },
+        {
+          "name": "microphone",
+          "type": "string",
+          "usage": "a microphone id from recording:sources, or default"
+        },
+        {
+          "name": "system-audio",
+          "type": "boolean",
+          "usage": "record the sound the computer plays on its own track"
+        },
+        {
+          "name": "camera",
+          "type": "string",
+          "usage": "a camera id from recording:sources"
+        },
+        {
+          "name": "events",
+          "type": "boolean",
+          "usage": "save the pointer position and the clicks (never a key)"
         }
       ],
       "globals": [
@@ -2470,6 +2490,68 @@
         "stuarty recording:stop <recording id>"
       ],
       "example": "stuarty recording:stop rec_0123456789",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "recording:pause",
+      "domain": "video",
+      "summary": "pause a recording: every source stops writing and the paused time is cut; anyone may pause",
+      "usage": [
+        "stuarty recording:pause <recording id>"
+      ],
+      "example": "stuarty recording:pause rec_0123456789",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "recording:resume",
+      "domain": "video",
+      "summary": "resume a paused recording (for a person in the app; the local token is refused, as for a start)",
+      "usage": [
+        "stuarty recording:resume <recording id>"
+      ],
+      "example": "stuarty recording:resume rec_0123456789",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
+      "name": "recording:events",
+      "domain": "video",
+      "summary": "read the pointer and click events of a finished recording (clicks by default)",
+      "usage": [
+        "stuarty recording:events <recording id> [--kind clicks|all] [--from-ms <n>] [--limit <n>]"
+      ],
+      "example": "stuarty recording:events rec_0123456789 --kind clicks --json",
+      "flags": [
+        {
+          "name": "kind",
+          "type": "string",
+          "usage": "clicks (the default) or all"
+        },
+        {
+          "name": "from-ms",
+          "type": "integer",
+          "usage": "only events from this time on, in milliseconds"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "usage": "at most this many events, 1 to 5000 (default 1000)"
+        }
+      ],
       "globals": [
         "json",
         "workspace",

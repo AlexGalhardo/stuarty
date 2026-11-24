@@ -67,8 +67,8 @@ Names are proposals until task 1 writes them to SDD-000.
 - [x] 4. Webcam on its own file. Verify: an integration test with a virtual or real camera, skipped with a stated reason when no camera exists.
 - [x] 5. Pause and resume across all sources. Verify: tests with a fake helper, and a real capture whose tracks stay aligned after three pauses.
 - [x] 6. Cursor and click events by raw input. Verify: an integration test with synthetic input, and a test that no key event appears in the file.
-- [ ] 7. Service, adapters and parity. Verify: `go test ./service/... ./web/...`, `go test -run TestSecurity_ ./...` and `go run ./internal/tools/surfacebudget` pass.
-- [ ] 8. The dialog: device selection, level meters, pause. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n` and `task test:web` pass.
+- [x] 7. Service, adapters and parity. Verify: `go test ./service/... ./web/...`, `go test -run TestSecurity_ ./...` and `go run ./internal/tools/surfacebudget` pass.
+- [x] 8. The dialog: device selection, level meters, pause. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n` and `task test:web` pass.
 
 ## Test strategy
 
