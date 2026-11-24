@@ -512,22 +512,21 @@ func deadlineCeiling(base, explicit time.Duration) time.Duration {
 	return ExportDeadlineCeiling
 }
 
-// watchDeadline cancels the run once the wall clock passes the base deadline multiplied by the
-// runs in flight. The start does not move: a peer lengthens the allowance, and a peer leaving
-// shortens it back toward the base.
+// watchDeadline cancels the run once it has used its base deadline of work, where a second of the
+// wall clock with n runs in flight counts as 1/n of a second: a run that shares the machine with
+// peers is given the base multiplied by their number, and a peer that ends does not take back the
+// time the run already earned while it was there. (Measuring the elapsed time against the count
+// of the moment killed the last runs of a batch that ended together: with 8 exports and 30 s of
+// base the first 6 ended and the other two were over the base of two, a second before the end.)
+// The wall clock never passes the ceiling, and never less than the base itself (VV-219).
 func watchDeadline(ctx context.Context, started time.Time, base, ceiling time.Duration, kill func()) {
+	limit := max(ceiling, base)
+	var used time.Duration
+	last := started
+	n, changed := flightNow()
 	for {
-		if ctx.Err() != nil {
-			return
-		}
-		n, changed := flightNow()
-		wait := time.Until(started.Add(scaleAllowance(base, n, ceiling)))
-		if wait <= 0 {
-			kill()
-
-			return
-		}
-		timer := time.NewTimer(wait)
+		wait := min((base-used)*time.Duration(max(n, 1)), limit-time.Since(started))
+		timer := time.NewTimer(max(wait, 0))
 		select {
 		case <-ctx.Done():
 			timer.Stop()
@@ -537,6 +536,16 @@ func watchDeadline(ctx context.Context, started time.Time, base, ceiling time.Du
 		case <-changed:
 			stopTimer(timer)
 		}
+		// The time that passed is charged at the count that held during it, before the new count is read.
+		now := time.Now()
+		used += now.Sub(last) / time.Duration(max(n, 1))
+		last = now
+		if used >= base || now.Sub(started) >= limit {
+			kill()
+
+			return
+		}
+		n, changed = flightNow()
 	}
 }
 

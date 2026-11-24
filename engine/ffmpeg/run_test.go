@@ -336,6 +336,46 @@ func TestRunIsNotCutByTheToolTimeout(t *testing.T) {
 	}
 }
 
+// TestDeadlineKeepsTheTimeEarnedWhilePeersWereRunning (VV-219): a second with n runs in flight counts as 1/n of
+// a second of the base deadline, and a peer that ends does not take it back. The base is 600 ms and three peers
+// run for the first 400 ms (4 in flight: 100 ms used), so the run is ended after 500 ms more of its own, about
+// 900 ms from the start; measured against the count of the moment it would have been ended at 600 ms, over the
+// base of a run on its own, though it was inside its allowance until the peers ended.
+func TestDeadlineKeepsTheTimeEarnedWhilePeersWereRunning(t *testing.T) {
+	const base = 600 * time.Millisecond
+	ends := []func(){beginFlight(), beginFlight(), beginFlight(), beginFlight()}
+	t.Cleanup(func() {
+		for _, end := range ends {
+			end()
+		}
+	})
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	killed := make(chan time.Duration, 1)
+	started := time.Now()
+	go watchDeadline(ctx, started, base, time.Hour, func() { killed <- time.Since(started) })
+
+	// The three peers end at 400 ms.
+	select {
+	case at := <-killed:
+		t.Fatalf("ended at %s, with four runs in flight", at)
+	case <-time.After(400 * time.Millisecond):
+	}
+	for _, end := range ends[1:] {
+		end()
+	}
+	ends = ends[:1]
+
+	select {
+	case at := <-killed:
+		if at < 800*time.Millisecond {
+			t.Errorf("ended at %s: the 300 ms earned while three peers ran were taken back (want about 900 ms)", at)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("the deadline never ended the run")
+	}
+}
+
 func TestScaledDeadlinesStayInsideTheCeilings(t *testing.T) {
 	exportBase := ExportDeadline(30 * time.Second)
 	if exportBase != 5*time.Minute || ExportDeadline(10*time.Hour) != 2*time.Hour {
