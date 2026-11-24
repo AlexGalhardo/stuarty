@@ -22,6 +22,7 @@ command briefing:questions
 command bundle:export
 command bundle:import
 command caption:validate
+command chat:activity
 command chat:session
 command chat:sessions
 command chat:transcript
@@ -183,6 +184,7 @@ route GET /audit
 route GET /brand-kit
 route GET /briefing/questions
 route GET /chat/sessions/{}
+route GET /chat/sessions/{}/activity
 route GET /chat/sessions/{}/events
 route GET /chat/sessions/{}/transcript
 route GET /commands
