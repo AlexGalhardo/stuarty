@@ -6949,11 +6949,11 @@ Describes what `caption.apply_style` accepts, for an agent or an editor that has
 
 Blurs a rectangle of a clip for a time range, so that a creator can hide an address, an e-mail or a key on screen (epic 71). It is built from what the plan and the export already draw (SDD-004 sections 3.6 and 3.9, no new renderer feature): the command adds a copy of the clip, limited to the range, on a visual track directly above the track of the clip, with the blur of `radius` and a rectangular `mask` of the region. The mask is applied after the blur (SDD-004 section 3.9), so only the blurred pixels of the region are drawn over the sharp picture, and the preview and the export show the same frames. The source clip is not changed.
 
-The copy is made as `item.split` would make the piece of the range, so speed, freeze and reverse read the same source frames as the source does. It keeps the asset, the source range, the transform, the fit, the crop, the flips, the colour adjustment, the filter, the chroma key and the opacity of the source. It has the name `Blur region`, `audio_muted` true, and none of the link, the slot, the transitions, the fades, the markers, the processors, the denoise, the voice, the effects, the shadow, the outline, the mask or the blur of the source. The copy and the source are two items of the same asset, so a later edit of the source (a trim, a move) does not move the blur: edit `Blur region` with the item commands, or remove it with `item.delete`.
+The copy is made as `item.split` would make the piece of the range, so speed, freeze and reverse read the same source frames as the source does. It keeps the asset, the source range, the transform, the fit, the crop, the flips, the colour adjustment, the filter, the chroma key and the opacity of the source. It has the name `Blur region`, `audio_muted` true, and none of the link, the slot, the transitions, the fades, the markers, the processors, the denoise, the voice, the effects, the shadow, the outline, the blend mode, the keyframes of `volume` and of the mask, or the mask or the blur of the source. The copy and the source are two items of the same asset, so a later edit of the source (a trim, a move) does not move the blur: edit `Blur region` with the item commands, or remove it with `item.delete`.
 
 **Minimum and default radius.** With `s` the shorter side of the project in pixels, the least radius is `min_radius = min(100, ceil(0.015 x s))` and the default `radius = min(100, ceil(0.04 x s))` (17 and 44 at 1080). A radius below `min_radius` is `E_VALIDATION`: a lighter blur can be reversed.
 
-**Frame edge.** The blur counts the pixels outside the picture as transparent (SDD-004 section 3.6), so inside the reach of 3 radii from an edge of the picture the blurred copy is partly transparent and part of the sharp picture shows through. A region that touches an edge is therefore less hidden near that edge; `effective.near_edge` says so (true when the region comes closer than 3 radii to an edge of the picture), and the editor warns.
+**Frame edge.** The blur counts the pixels outside the picture as transparent (SDD-004 section 3.6), so within about 2 radii of an edge of the picture the blurred copy is partly transparent (an alpha of 84% at 1 radius from the edge, 98% at 2 radii) and part of the sharp picture shows through. A region that touches an edge is therefore less hidden near that edge; `effective.near_edge` says so (true when the region comes closer than 2 radii to an edge of the frame, taken as the project size times the scale of the clip), and the editor warns.
 
 **Arguments**
 
@@ -7019,6 +7019,7 @@ The copy is made as `item.split` would make the piece of the range, so speed, fr
 - `err_invalid_time_range_outside_clip`
 - `err_id_exists`
 - `err_overlap_given_track`
+- `err_limit_500_items`
 
 ### C.91 `audio.apply_voice_preset`
 

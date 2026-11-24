@@ -685,6 +685,57 @@ export interface ClipAddCompositionArgs {
   track_id: string;
 }
 
+export interface ClipBlurRegionArgs {
+  /**
+   * A length. Default up to the end of the clip.
+   */
+  duration?: string;
+  /**
+   * Soft edge of the region in pixels, 0 to 200. Default 0.
+   */
+  feather?: number;
+  /**
+   * Height of the region, a fraction of the picture.
+   */
+  height: number;
+  /**
+   * A clip.
+   */
+  item_id: string;
+  /**
+   * The id of the blur item.
+   */
+  new_id?: string;
+  /**
+   * The id of the track when one is made.
+   */
+  new_track_id?: string;
+  /**
+   * Blur radius in pixels at project resolution, 1.5% of the shorter side to 100. Default 4%.
+   */
+  radius?: number;
+  /**
+   * Absolute start of the blur, inside the clip. Default the start of the clip.
+   */
+  start?: string;
+  /**
+   * A visual track above the clip. Default a Blur track above it, made if there is none.
+   */
+  track_id?: string;
+  /**
+   * Width of the region, a fraction of the picture.
+   */
+  width: number;
+  /**
+   * Left edge of the region, a fraction of the picture.
+   */
+  x: number;
+  /**
+   * Top edge of the region, a fraction of the picture.
+   */
+  y: number;
+}
+
 export interface ClipRemoveSilencesArgs {
   /**
    * A clip of a video asset with audio, or an audio item.
@@ -2687,7 +2738,7 @@ export interface TranscriptDeleteRangeArgs {
   to_word: number;
 }
 
-export type CommandName = "animation.apply_preset" | "animation.list_presets" | "asset.add" | "asset.remove" | "audio.add" | "audio.apply_preset" | "audio.duck" | "audio.mark_beats" | "audio.processor_add" | "audio.processor_move" | "audio.processor_remove" | "audio.processor_set" | "caption.add" | "caption.apply_style" | "caption.edit_word" | "caption.from_transcript" | "caption.import_subtitles" | "caption.list_styles" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.add_composition" | "clip.remove_silences" | "clip.replace_media" | "clip.set_blend" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_effects" | "clip.set_filter" | "clip.set_flip" | "clip.set_framing" | "clip.set_mask" | "clip.set_outline" | "clip.set_shadow" | "clip.set_speed" | "composition.create_from_selection" | "composition.expand" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.extract_audio" | "item.freeze_frame" | "item.link" | "item.move" | "item.paste_attributes" | "item.rename" | "item.repeat" | "item.set_audio" | "item.set_enabled" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "item.unlink" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "keyframe.set_easing" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.reframe" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update" | "transcript.delete_range";
+export type CommandName = "animation.apply_preset" | "animation.list_presets" | "asset.add" | "asset.remove" | "audio.add" | "audio.apply_preset" | "audio.duck" | "audio.mark_beats" | "audio.processor_add" | "audio.processor_move" | "audio.processor_remove" | "audio.processor_set" | "caption.add" | "caption.apply_style" | "caption.edit_word" | "caption.from_transcript" | "caption.import_subtitles" | "caption.list_styles" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.add_composition" | "clip.blur_region" | "clip.remove_silences" | "clip.replace_media" | "clip.set_blend" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_effects" | "clip.set_filter" | "clip.set_flip" | "clip.set_framing" | "clip.set_mask" | "clip.set_outline" | "clip.set_shadow" | "clip.set_speed" | "composition.create_from_selection" | "composition.expand" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.extract_audio" | "item.freeze_frame" | "item.link" | "item.move" | "item.paste_attributes" | "item.rename" | "item.repeat" | "item.set_audio" | "item.set_enabled" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "item.unlink" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "keyframe.set_easing" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.reframe" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update" | "transcript.delete_range";
 
 export interface CommandArgsMap {
 	"animation.apply_preset": AnimationApplyPresetArgs;
@@ -2716,6 +2767,7 @@ export interface CommandArgsMap {
 	"caption.split": CaptionSplitArgs;
 	"clip.add": ClipAddArgs;
 	"clip.add_composition": ClipAddCompositionArgs;
+	"clip.blur_region": ClipBlurRegionArgs;
 	"clip.remove_silences": ClipRemoveSilencesArgs;
 	"clip.replace_media": ClipReplaceMediaArgs;
 	"clip.set_blend": ClipSetBlendArgs;
@@ -2810,6 +2862,7 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"caption.split": { summary: "Splits a caption into two at a word boundary.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT"] },
 	"clip.add": { summary: "Places a video or image asset on a visual track.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_OUT_OF_SOURCE","E_OVERLAP"] },
 	"clip.add_composition": { summary: "Places another timeline of the project on a visual track as one clip.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_LIMIT","E_ID_EXISTS","E_OUT_OF_SOURCE","E_OVERLAP"] },
+	"clip.blur_region": { summary: "Blurs a rectangle of a clip for a time range.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_ID_EXISTS","E_LIMIT","E_OVERLAP"] },
 	"clip.remove_silences": { summary: "Cuts the silences out of a clip or audio item, one item per stretch of speech.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_INVALID_STATE","E_LIMIT"] },
 	"clip.replace_media": { summary: "Swaps the asset of a clip for another of the same kind and keeps everything else.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_OUT_OF_SOURCE"] },
 	"clip.set_blend": { summary: "Sets how a visual item is mixed with what is below it.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },

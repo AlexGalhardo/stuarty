@@ -9,7 +9,9 @@ import (
 // Golden cases of caption.apply_style and caption.list_styles (SDD-002 C.88, C.89).
 
 func init() {
-	apply := func(name, args string, b func() *B) { gc("caption.apply_style", name, b, op("caption.apply_style", args)) }
+	apply := func(name, args string, b func() *B) {
+		gc("caption.apply_style", name, b, op("caption.apply_style", args))
+	}
 	args := func(track, style, rest string) string {
 		s := fmt.Sprintf(`{"track_id": %q, "style": %q`, track, style)
 		if rest != "" {
@@ -27,7 +29,10 @@ func init() {
 	apply("ok_replaces_the_track_style", args(capTr, "bold_pop", ""), func() *B {
 		return base().with(func(d *timeline.Document) {
 			t := d.Tracks[capTr]
-			t.CaptionStyle = &timeline.CaptionStyle{Position: ptr("top"), TextStyle: timeline.TextStyle{Size: ptr(30.0), Align: ptr("left")}}
+			t.CaptionStyle = &timeline.CaptionStyle{
+				Position:  ptr("top"),
+				TextStyle: timeline.TextStyle{Size: ptr(30.0), Align: ptr("left")},
+			}
 			d.Tracks[capTr] = t
 		})
 	})
@@ -47,7 +52,9 @@ func init() {
 	})
 	apply("err_font_unknown_weight_of_a_project_font", args(capTr, "clean_white", ""), func() *B {
 		return base().with(func(d *timeline.Document) {
-			d.Fonts = map[string]timeline.ProjectFont{"Inter": {Files: []timeline.FontFile{{Weight: 400, Hash: hashN(7)}}}}
+			d.Fonts = map[string]timeline.ProjectFont{
+				"Inter": {Files: []timeline.FontFile{{Weight: 400, Hash: hashN(7)}}},
+			}
 		})
 	})
 	apply("err_validation_unknown_style", args(capTr, "fancy", ""), withCaption())

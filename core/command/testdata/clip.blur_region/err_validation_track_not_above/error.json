@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "Track trk_f6g7h8j9k0 is not above track trk_f6g7h8j9k0, so it would not draw over the clip.",
+  "hint": "Use a visual track above the track of the clip, or leave track_id out.",
+  "retryable": false,
+  "path": "args.track_id"
+}

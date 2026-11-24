@@ -2294,6 +2294,112 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
+        "duration": {
+          "description": "A length. Default up to the end of the clip.",
+          "type": "string",
+          "x-vv-kind": "time"
+        },
+        "feather": {
+          "description": "Soft edge of the region in pixels, 0 to 200. Default 0.",
+          "maximum": 200,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "height": {
+          "description": "Height of the region, a fraction of the picture.",
+          "maximum": 1,
+          "minimum": 0.001,
+          "type": "number"
+        },
+        "item_id": {
+          "description": "A clip.",
+          "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "new_id": {
+          "description": "The id of the blur item.",
+          "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "new_track_id": {
+          "description": "The id of the track when one is made.",
+          "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "radius": {
+          "description": "Blur radius in pixels at project resolution, 1.5% of the shorter side to 100. Default 4%.",
+          "maximum": 100,
+          "type": "number"
+        },
+        "start": {
+          "description": "Absolute start of the blur, inside the clip. Default the start of the clip.",
+          "type": "string",
+          "x-vv-kind": "time"
+        },
+        "track_id": {
+          "description": "A visual track above the clip. Default a Blur track above it, made if there is none.",
+          "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "width": {
+          "description": "Width of the region, a fraction of the picture.",
+          "maximum": 1,
+          "minimum": 0.001,
+          "type": "number"
+        },
+        "x": {
+          "description": "Left edge of the region, a fraction of the picture.",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "y": {
+          "description": "Top edge of the region, a fraction of the picture.",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "item_id",
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "type": "object"
+    },
+    "description": "Hides part of the picture (an e-mail, a key, an address): adds a copy of the clip, limited to start and duration, on a Blur track above the clip, with a blur of radius and a rectangular mask of the region. x, y, width and height are fractions of the picture. The radius has a minimum, 1.5% of the shorter side of the project, and a default of 4%, so that the text cannot be read. The clip is not changed; edit or delete the item named Blur region to change it.",
+    "domain": "video",
+    "errors": [
+      "E_VALIDATION",
+      "E_INVALID_TIME",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_INVALID_STATE",
+      "E_ID_EXISTS",
+      "E_LIMIT",
+      "E_OVERLAP"
+    ],
+    "example": {
+      "duration": "2s",
+      "height": 0.08,
+      "item_id": "itm_m1n2p3q4r5",
+      "start": "1s",
+      "width": 0.8,
+      "x": 0.1,
+      "y": 0.62
+    },
+    "internal": false,
+    "name": "clip.blur_region",
+    "scope": "edit",
+    "summary": "Blurs a rectangle of a clip for a time range."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
         "item_id": {
           "description": "A clip of a video asset with audio, or an audio item.",
           "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
