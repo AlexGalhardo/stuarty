@@ -173,6 +173,70 @@ test.describe("asset rename", () => {
 		).toBeFocused();
 	});
 
+	// Epic 94: rename on the detail, with the same dialog, the refusal as the service said it and a sentence that
+	// the name changes and the file does not.
+	test("the detail renames the file and says the file on disk keeps its name", async ({
+		page,
+		request,
+	}) => {
+		const clip = colour();
+		const seeded = await seedProject(request, {
+			tracks: 0,
+			files: [solidClip(clip)],
+		});
+		const call = await caller(request);
+		const found = (await call("GET", `/assets?project=${seeded.id}`)) as {
+			assets: { hash: string }[];
+		};
+		const hash = found.assets[0]?.hash ?? "";
+
+		await page.goto("/video-assets");
+		const card = page.locator(`[data-asset-hash="${hash}"]`);
+		await card.click();
+		const detail = page.getByTestId("asset-detail");
+		await expect(detail.getByTestId("asset-detail-size")).not.toContainText(
+			"Size unknown",
+		);
+		await expect(detail.getByTestId("asset-shared")).toContainText(
+			"Used by 1 project.",
+		);
+		await expect(detail).toContainText("The file on disk keeps its name");
+
+		const rename = detail.getByRole("button", { name: "Rename" });
+		await rename.click();
+		const dialog = page.getByRole("dialog");
+		await expect(dialog).toContainText(
+			"The name changes, the file on disk does not.",
+		);
+		const field = dialog.getByLabel("File name", { exact: true });
+
+		// Each refusal of the service is shown in the dialog as it came, and nothing changes.
+		for (const bad of ["a/b", "CON", "x".repeat(121)]) {
+			await field.fill(bad);
+			await field.press("Enter");
+			await expect(dialog.getByRole("alert")).toBeVisible();
+		}
+
+		await field.fill("From the detail");
+		await field.press("Enter");
+		await expect(dialog).toHaveCount(0);
+		await expect(detail.getByRole("heading").first()).toContainText(
+			"From the detail.mp4",
+		);
+		await expect(page.locator(`[data-asset-hash="${hash}"]`)).toContainText(
+			"From the detail.mp4",
+		);
+		await expect(rename).toBeFocused();
+
+		// The name it already has is accepted and changes nothing.
+		await rename.click();
+		await dialog.getByLabel("File name", { exact: true }).press("Enter");
+		await expect(dialog).toHaveCount(0);
+		await expect(detail.getByRole("heading").first()).toContainText(
+			"From the detail.mp4",
+		);
+	});
+
 	test("the dialog keeps the browser menu in its field and gives the focus back", async ({
 		page,
 		request,

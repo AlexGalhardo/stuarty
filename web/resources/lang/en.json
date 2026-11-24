@@ -3546,7 +3546,10 @@
         "lut": "Colour table"
       },
       "reusable_badge": "Reusable",
-      "count": "{count} files",
+      "count": {
+        "one": "{count} file",
+        "other": "{count} files"
+      },
       "total": "{size} in total",
       "unsized": {
         "one": "(1 of them has no known size)",
