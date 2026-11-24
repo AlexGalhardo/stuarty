@@ -47,7 +47,8 @@ for (const theme of ["dark", "light"] as const) {
 			each: (path: string) => Promise<void>,
 		): Promise<void> {
 			const project = await seedProject(request, {
-				name: `A long project name that must wrap and never push the page wider ${Date.now()}`,
+				// The unbroken word is the name of another spec's project in a shared home (VV-411).
+				name: `A long project name that must wrap and never push the page wider Averyveryverylongprojectnamewithnospaces${Date.now()}`,
 				tracks: 0,
 			});
 			for (const route of ROUTES) {

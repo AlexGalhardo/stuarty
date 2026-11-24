@@ -103,7 +103,7 @@ function InProgress({
 					>
 						{t("ui.dashboard.home.progress.title")}
 					</h2>
-					<p className="mt-1 text-2xl font-semibold text-text">
+					<p className="mt-1 text-2xl [overflow-wrap:anywhere] font-semibold text-text">
 						<UntrustedText>{project.name}</UntrustedText>
 					</p>
 				</div>
@@ -233,7 +233,7 @@ function Body({ home }: { home: HomeState }): ReactNode {
 		);
 	}
 	return (
-		<div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+		<div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
 			<InProgress project={first} workflow={home.workflow} />
 			<Waiting workflow={home.workflow} approvals={home.approvals} />
 			<div className="lg:col-span-2">
