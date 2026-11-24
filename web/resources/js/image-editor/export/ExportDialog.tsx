@@ -200,7 +200,7 @@ function ExportDialog({ onClose }: { onClose(): void }): ReactNode {
 							{findings.map((finding) => (
 								<li
 									key={`${finding.code}-${finding.item ?? ""}`}
-									className="flex items-start justify-between gap-2 rounded border p-2 text-sm"
+									className="flex items-start justify-between gap-2 rounded-md border border-border bg-surface p-2 text-sm"
 								>
 									<span className="min-w-0">
 										<strong>
@@ -250,7 +250,7 @@ function ExportDialog({ onClose }: { onClose(): void }): ReactNode {
 				{result !== null && (
 					<div
 						data-testid="image-export-result"
-						className="flex flex-col gap-1 rounded border p-2 text-sm"
+						className="flex flex-col gap-1 rounded-md border border-border bg-surface p-2 text-sm"
 					>
 						<p>
 							{t("ui.image.export.done", {

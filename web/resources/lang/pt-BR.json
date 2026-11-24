@@ -1102,6 +1102,7 @@
       },
       "template": {
         "title": "Novo a partir de um modelo",
+        "none_title": "Nenhum modelo ainda",
         "none": "Ainda não há modelos de imagem. Transforme uma imagem em modelo e ela aparece aqui.",
         "pick": "Modelo",
         "choose": "Escolha um modelo",

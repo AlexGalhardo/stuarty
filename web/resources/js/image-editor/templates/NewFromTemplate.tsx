@@ -1,6 +1,9 @@
+import { LayoutTemplate } from "lucide-react";
 import { type FormEvent, type ReactNode, useEffect, useState } from "react";
 
+import { EmptyState } from "@/components/EmptyState";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { SectionTitle } from "@/components/SectionTitle";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -124,20 +127,21 @@ export default function NewFromTemplate({ api }: { api: ImageApi }): ReactNode {
 
 	return (
 		<section
-			aria-labelledby="image-template-title"
+			aria-label={t("ui.image.template.title")}
 			className="flex flex-col gap-3"
 		>
-			<h2 id="image-template-title" className="text-lg font-medium">
-				{t("ui.image.template.title")}
-			</h2>
+			<SectionTitle title={t("ui.image.template.title")} />
 			{templates.length === 0 ? (
-				<p className="text-sm text-muted-foreground">
-					{t("ui.image.template.none")}
-				</p>
+				<EmptyState
+					icon={LayoutTemplate}
+					level={3}
+					title={t("ui.image.template.none_title")}
+					description={t("ui.image.template.none")}
+				/>
 			) : (
 				<form
 					onSubmit={(event) => void create(event)}
-					className="flex flex-col gap-3"
+					className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4"
 					data-testid="image-template-form"
 				>
 					<div className="flex flex-wrap items-end gap-3">

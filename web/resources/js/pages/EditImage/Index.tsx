@@ -1,4 +1,5 @@
 import { Head, Link } from "@inertiajs/react";
+import { Image as ImageIcon } from "lucide-react";
 import {
 	type FormEvent,
 	type ReactNode,
@@ -7,7 +8,12 @@ import {
 	useState,
 } from "react";
 
+import { EmptyState } from "@/components/EmptyState";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { ListRow } from "@/components/ListRow";
+import { LoadingState } from "@/components/LoadingState";
+import { PageHeader } from "@/components/PageHeader";
+import { SectionTitle } from "@/components/SectionTitle";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +36,41 @@ type Loaded =
 	| { state: "loading" }
 	| { state: "failed"; failure: Failure }
 	| { state: "ready"; images: ImageSummary[] };
+
+// The documents or the templates as rows of the shared list (a whole row is the link), each with its size and
+// the number of layers the server reports.
+function ImageRows({
+	images,
+	testId,
+}: {
+	images: readonly ImageSummary[];
+	testId: string;
+}): ReactNode {
+	const t = useT();
+	return (
+		<ul
+			data-testid={testId}
+			className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface"
+		>
+			{images.map((image) => (
+				<ListRow
+					key={image.image_id}
+					leading={<ImageIcon aria-hidden="true" className="size-5" />}
+					title={
+						<Link
+							href={`/edit-image/${image.image_id}`}
+							className="after:absolute after:inset-0 hover:underline"
+						>
+							<UntrustedText>{image.name}</UntrustedText>
+						</Link>
+					}
+					meta={`${t("ui.image.editor.size", { w: image.width, h: image.height })} · ${t("ui.image.index.layers", { count: image.layers })}`}
+					className="relative"
+				/>
+			))}
+		</ul>
+	);
+}
 
 // Edit Image (RF-341, SDD-012 section 24.1): the documents, a new blank image and a new one from a template.
 export default function Index(): ReactNode {
@@ -117,21 +158,20 @@ export default function Index(): ReactNode {
 	return (
 		<>
 			<Head title={t("ui.image.index.title")} />
-			<div className="mx-auto flex max-w-4xl flex-col gap-8">
-				<h1 className="text-2xl font-semibold tracking-tight">
-					{t("ui.image.index.title")}
-				</h1>
+			<div className="mx-auto flex max-w-6xl flex-col gap-8">
+				<PageHeader
+					title={t("ui.image.index.title")}
+					description={t("ui.image.index.intro")}
+				/>
 
 				<section
-					aria-labelledby="image-new-title"
+					aria-label={t("ui.image.index.new")}
 					className="flex flex-col gap-3"
 				>
-					<h2 id="image-new-title" className="text-lg font-medium">
-						{t("ui.image.index.new")}
-					</h2>
+					<SectionTitle title={t("ui.image.index.new")} />
 					<form
 						onSubmit={(event) => void create(event)}
-						className="flex flex-wrap items-end gap-3"
+						className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-surface p-4"
 						data-testid="image-new-form"
 					>
 						<div className="flex flex-col gap-1">
@@ -224,84 +264,36 @@ export default function Index(): ReactNode {
 				<NewFromTemplate api={api} />
 
 				<section
-					aria-labelledby="image-list-title"
+					aria-label={t("ui.image.index.documents")}
 					className="flex flex-col gap-3"
 				>
-					<h2 id="image-list-title" className="text-lg font-medium">
-						{t("ui.image.index.documents")}
-					</h2>
+					<SectionTitle title={t("ui.image.index.documents")} />
 					{loaded.state === "loading" && (
-						<p className="text-sm text-muted-foreground">
-							{t("ui.image.index.loading")}
-						</p>
+						<LoadingState message={t("ui.image.index.loading")} />
 					)}
 					{loaded.state === "failed" && (
 						<FailureNote failure={loaded.failure} />
 					)}
 					{loaded.state === "ready" && documents.length === 0 && (
-						<p className="text-sm text-muted-foreground">
-							{t("ui.image.index.empty")}
-						</p>
+						<EmptyState
+							icon={ImageIcon}
+							level={3}
+							title={t("ui.image.index.empty_title")}
+							description={t("ui.image.index.empty")}
+						/>
 					)}
 					{documents.length > 0 && (
-						<ul className="grid gap-2 sm:grid-cols-2" data-testid="image-list">
-							{documents.map((image) => (
-								<li key={image.image_id}>
-									<Link
-										href={`/edit-image/${image.image_id}`}
-										className="flex flex-col gap-0.5 rounded-lg border p-3 hover:bg-muted"
-									>
-										<span className="font-medium">
-											<UntrustedText>{image.name}</UntrustedText>
-										</span>
-										<span className="text-xs text-muted-foreground tabular-nums">
-											{t("ui.image.editor.size", {
-												w: image.width,
-												h: image.height,
-											})}
-											{" · "}
-											{t("ui.image.index.layers", { count: image.layers })}
-										</span>
-									</Link>
-								</li>
-							))}
-						</ul>
+						<ImageRows images={documents} testId="image-list" />
 					)}
 				</section>
 
 				{templates.length > 0 && (
 					<section
-						aria-labelledby="image-templates-title"
+						aria-label={t("ui.image.index.templates")}
 						className="flex flex-col gap-3"
 					>
-						<h2 id="image-templates-title" className="text-lg font-medium">
-							{t("ui.image.index.templates")}
-						</h2>
-						<ul
-							className="grid gap-2 sm:grid-cols-2"
-							data-testid="image-template-list"
-						>
-							{templates.map((image) => (
-								<li key={image.image_id}>
-									<Link
-										href={`/edit-image/${image.image_id}`}
-										className="flex flex-col gap-0.5 rounded-lg border p-3 hover:bg-muted"
-									>
-										<span className="font-medium">
-											<UntrustedText>{image.name}</UntrustedText>
-										</span>
-										<span className="text-xs text-muted-foreground tabular-nums">
-											{t("ui.image.editor.size", {
-												w: image.width,
-												h: image.height,
-											})}
-											{" · "}
-											{t("ui.image.index.layers", { count: image.layers })}
-										</span>
-									</Link>
-								</li>
-							))}
-						</ul>
+						<SectionTitle title={t("ui.image.index.templates")} />
+						<ImageRows images={templates} testId="image-template-list" />
 					</section>
 				)}
 			</div>
