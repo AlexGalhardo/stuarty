@@ -185,6 +185,14 @@ for (const theme of ["dark", "light"] as const) {
 						await expect(page.getByTestId("asset-detail")).toBeVisible();
 						await expect(page.getByTestId("asset-rights")).toBeVisible();
 					}
+					// Every origin choice is a target of at least 32 px (design system, section 7).
+					const heights = await page
+						.locator('search fieldset label:has(input[type="radio"])')
+						.evaluateAll((labels) =>
+							labels.map((label) => label.getBoundingClientRect().height),
+						);
+					expect(heights).toHaveLength(5);
+					expect(Math.min(...heights)).toBeGreaterThanOrEqual(32);
 					await noViolation(page);
 					await noSidewaysScroll(page);
 					await shoot(page, `${section.path.slice(1)}-${width}-${theme}`);

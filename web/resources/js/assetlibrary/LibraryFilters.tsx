@@ -81,7 +81,7 @@ export function LibraryFilters({
 					{["", ...ORIGINS].map((kind) => (
 						<label
 							key={kind}
-							className="flex min-h-6 items-center gap-1.5 text-sm text-text"
+							className="flex min-h-8 items-center gap-1.5 text-sm text-text"
 						>
 							<input
 								type="radio"
