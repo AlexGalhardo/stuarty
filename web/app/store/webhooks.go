@@ -144,6 +144,20 @@ func (r webhookRepo) Delete(ctx context.Context, id string) error {
 }
 
 func (r webhookRepo) Enqueue(ctx context.Context, d webhooks.Delivery) (bool, error) {
+	if d.Kind == core.KindEvent {
+		var pending int
+
+		if err := r.ex.QueryRowContext(ctx,
+			`SELECT COUNT(*) FROM webhook_deliveries WHERE webhook_id = ? AND state = 'pending' AND kind = ?`,
+			d.WebhookID, core.KindEvent).Scan(&pending); err != nil {
+			return false, err
+		}
+
+		if pending >= core.MaxPending {
+			return false, webhooks.ErrQueueFull
+		}
+	}
+
 	res, err := r.ex.ExecContext(ctx,
 		`INSERT INTO webhook_deliveries (id, webhook_id, event, event_id, kind, body, state, max_attempts, attempts,
  next_ms, created_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?) ON CONFLICT DO NOTHING`,

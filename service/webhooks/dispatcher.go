@@ -18,7 +18,7 @@ import (
 // The kinds of a delivery.
 const (
 	// KindEvent is a delivery made by an event: one per webhook and event id.
-	KindEvent = "event"
+	KindEvent = core.KindEvent
 	// KindTest is the "send test" delivery: one attempt.
 	KindTest = "test"
 	// KindRedelivery is a copy of a finished delivery, sent again at the request of a person.
