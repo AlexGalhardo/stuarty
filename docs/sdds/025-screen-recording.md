@@ -1,6 +1,6 @@
 # SDD-025: Screen recording
 
-- Status: Draft (2026-11-24). Written by epic 61 before its code.
+- Status: Draft (2026-11-24). Written by epic 61 before its code; extended by epic 62 (section 16: audio, webcam, pause, pointer events).
 - Depends on: ADR-0049 (the native capture helper), ADR-0051 (agents never start a capture), ADR-0011, ADR-0032, ADR-0052, SDD-000 (names), SDD-003 (surfaces), SDD-005 (persistence), SDD-007 (threats, section 6 process policy), SDD-011 (import), SDD-013 section 4.9 (the precedent of a native child).
 - Implements: PRD-004 section 4.11 (RF-430 to RF-442), NFR-067, NFR-068.
 - Owner area: epic 61 (`capture/`, `core/recording/`, `engine/capturehost/`, `service/recording*.go`, the `recordings` table, the adapters, the record dialog).
@@ -22,6 +22,7 @@
 13. Threats
 14. Measures
 15. Tests
+16. Audio, webcam, pause and pointer events (epic 62)
 
 ## 1. Overview
 
@@ -44,7 +45,7 @@ Where capture does not exist (web, Docker, network mode, macOS, Linux until epic
 | --- | --- |
 | Identifier | `rec_<10 Crockford base32>` (SDD-000 section 2) |
 | Table | `recordings` (section 9.4) |
-| Operations | `RecordingSources`, `RecordingStart`, `RecordingStop`, `RecordingCancel`, `RecordingGet`, `RecordingList`, `RecordingConfirm`, `RecordingDismiss`, `RecordingPlace` (SDD-000 section 1) |
+| Operations | `RecordingSources`, `RecordingStart`, `RecordingStop`, `RecordingCancel`, `RecordingGet`, `RecordingList`, `RecordingConfirm`, `RecordingDismiss`, `RecordingPlace` (SDD-000 section 1); `RecordingPause`, `RecordingResume`, `RecordingEvents` (epic 62, section 16) |
 | Events | none in epic 61: the dialog reads `RecordingGet` once a second while a recording runs (a stream event is a later addition) |
 | Error codes | `E_CAPTURE_UNAVAILABLE`, `E_CAPTURE_FAILED`, `E_RECORDING_NOT_FOUND` (SDD-000 section 8) |
 | Job kind shown to MCP | `capture`: a recording read through `job_get` and stopped through `job_cancel` (section 11) |
@@ -54,7 +55,7 @@ Where capture does not exist (web, Docker, network mode, macOS, Linux until epic
 
 ## 3. The state machine
 
-`core/recording` holds a pure function over these states: `prepared`, `recording`, `finishing`, `ready`, `failed`, `cancelled`. `ready`, `failed` and `cancelled` are final.
+`core/recording` holds a pure function over these states: `prepared`, `recording`, `paused`, `finishing`, `ready`, `failed`, `cancelled`. `ready`, `failed` and `cancelled` are final. `paused` is epic 62 (section 16.4): `recording` goes to `paused` on a pause and back on a resume, and a `paused` recording can be stopped, cancelled or fail like a `recording` one.
 
 | From | Event | To |
 | --- | --- | --- |
@@ -182,3 +183,89 @@ NFR-067 is measured by `scripts/measure-capture.ps1`, one command: it opens a 19
 ## 15. Tests
 
 Unit tests of every transition and limit (`core/recording`); a fake helper for the host and the service (timeout, malformed line, kill); a real capture test on Windows; the security tests of T-118 to T-122; a crash test that kills the helper and checks recovery.
+
+## 16. Audio, webcam, pause and pointer events (epic 62)
+
+A recording can hold up to four tracks, can be paused, and can save the pointer. The rules are in `core/recording` (`tracks.go`, `events.go`); the helper captures and writes, and decides nothing.
+
+### 16.1 Tracks and files
+
+| Track `kind` | Source | File in `recordings/<id>/` | Format |
+| --- | --- | --- | --- |
+| `screen` | the display or window of section 8 | `capture.mp4` | fragmented MP4, as section 8 |
+| `camera` | one webcam | `camera.mp4` | fragmented MP4 of the same kind, no audio, at the frame rate of the recording |
+| `microphone` | one capture endpoint | `microphone.wav` | PCM 16-bit little-endian, 48,000 Hz, one channel (two when the device refuses one) |
+| `system` | the mix the computer plays (loopback of the default render endpoint) | `system.wav` | PCM 16-bit little-endian, 48,000 Hz, two channels |
+
+Every track is optional but `screen`. One file per source: nothing is mixed, so the person can balance the sound later. A WAV file is written with its header up to date every second, so an interrupted recording keeps what was written (NFR-068); the byte limit of section 5 counts every file. Protected content (DRM) can make the system mix silent: the helper cannot tell it from a silent computer, so the dialog says that a silent system track may be protected content. Per-application audio capture is out of scope.
+
+### 16.2 The shared clock
+
+The helper holds one `Clock`. Its origin is the instant the screen grid starts (the `started` message), after the encoder warm-up of section 8. Every source is opened before the origin and writes only from it, so every track starts at `start_ms` 0 of the recording; `start_ms` stays in the data for a source that cannot (a later device). The clock is the performance counter of Windows (QPC): `std::time::Instant` is built on it, and WASAPI stamps every packet with a QPC position, which the helper converts to clock time. The clock counts **active** time: the time of a pause is removed (16.4), and every track and every pointer event is in active time, so one position means one moment in every file.
+
+Drift correction happens while recording, not at placement, because only the helper sees the device clocks. The audio writer compares the stamp of every packet with the number of frames it has written: a packet that starts more than 10 ms after the written length gets silence inserted (this is also how a loopback endpoint that delivers nothing while the computer is silent stays aligned); one that starts more than 10 ms before it loses its overlapping frames. The screen and camera files are written on an absolute grid of the clock (section 8), so a file is as long as the clock says. Placement therefore needs only the `start_ms` of each track. The limit is 40 ms between any two tracks (NFR-068 fixture, 16.10). What the helper does not control is the latency of the device itself (a webcam delivers a frame 30 to 100 ms after it was exposed, a Bluetooth microphone more): documented, not corrected.
+
+### 16.3 Devices
+
+`RecordingSources` also lists `microphones` and `cameras` (`id`, `name`, and `default` for a microphone) and says whether `system_audio` exists. The `id` is made by the helper from the device: the letter `m` or `c` and 16 hexadecimal digits of the FNV-1a hash of the endpoint id of the system, so it is opaque, stable and a valid source id; a device name is untrusted text and is never stored. The microphone is opened with WASAPI in shared mode (the `wasapi` crate, approved by ADR-0049) with automatic format conversion; the system mix is the same API on the default render endpoint with the loopback flag. A device that cannot be opened ends the start with `E_CAPTURE_FAILED` and `details.reason` `device_unavailable`; nothing is recorded. A device that disappears during a recording (a USB microphone unplugged) ends only its own track: the recording goes on and the track reports `lost` with the length it has.
+
+### 16.4 Pause and resume
+
+`RecordingPause` stops every source from writing and freezes the clock; `RecordingResume` restarts them and the clock. The paused interval is kept as a pause (`from_ms`, `to_ms`, on the helper wall clock since the origin) and is removed from every file at once, so the tracks stay aligned across any number of pauses and a recording has no dead time. The screen and camera grids produce no slot while paused, audio packets that fall in a pause are dropped (a packet that spans the boundary is cut at it), and the pointer events carry active time, so a click sits at the same position as the frame it is on. A paused recording cannot run into the duration limit: `elapsed_ms` is active time. `Resume` restarts capture of the screen, so it needs a person (`E_PRIVILEGED_SESSION` to everyone else, checked before anything else, as in `RecordingStart`); `Pause` only reduces exposure and anyone with `media` may do it, as a stop. The WGC border of the capture stays on during a pause.
+
+### 16.5 The webcam
+
+A webcam is a source like the screen: frames go to a mailbox, an absolute grid of the clock writes one frame per slot (the last one repeated when the camera is slow) into its own FFmpeg child, which writes `camera.mp4` with the encoder of the screen. The helper opens the camera before the origin and refuses a start whose camera gives no frame in 5 s. Epic 62 builds the camera path (protocol, file, clock, placement) and tests it with the test camera of the helper (`--allow-test-source`). The Windows device backend (Media Foundation) needs a crate that ADR-0049 does not list, so until the author approves one the helper lists no camera on Windows (`cameras` is empty and the dialog says no camera was found).
+
+### 16.6 Pointer events
+
+When the person asks for them (`events` true in the start request; the dialog has a switch, on by default), the helper writes `events.jsonl`: one JSON object per line, UTF-8, each at most 200 bytes, at most 2,000,000 lines.
+
+| Line | Fields |
+| --- | --- |
+| first line, `k` `header` | `v` 1, `width` and `height` of the captured source in pixels, `clock` `active_ms` |
+| `k` `move` | `t` (active ms since the origin), `x`, `y` |
+| `k` `down`, `k` `up` | `t`, `b` (`left`, `right`, `middle`), `x`, `y` |
+
+Coordinates are pixels of the captured source: for a display, relative to its top-left corner; for a window, to the top-left corner of its frame, read again at every sample because a window moves. A position outside the source is not written (neither is a press that starts there), and a release is written for every press that was. A move is written when the position changed and at least 16 ms passed since the last one. The helper polls the position and the state of the three mouse buttons every 4 ms and writes the edges, so a click is stamped within 20 ms of the press (acceptance criterion 3). Polling replaces the raw-input window of the epic text: it needs no window and no message loop, reads no device other than the mouse, and gives the same data.
+
+**Privacy rule: no key is ever read.** The helper installs no hook of any kind (no `SetWindowsHookEx`, low-level or not), registers no raw-input device for the keyboard, and reads the state of no key but the three mouse buttons (virtual keys 1, 2 and 4). What a person types therefore never reaches the helper, the file or any message. A pointer position can reveal what is on the screen, so the file stays on the machine in `recordings/<id>/`, is read only through `RecordingEvents`, and is deleted with the recording. `core/recording` validates the file when it is read: a line with a `k` other than the four above, a field it does not know or a value out of range is discarded and counted, so a file that holds anything else cannot reach a caller. Documented limits [to validate on the author machine]: a pointer over a window of a higher integrity level than the helper may read as still; a game that hides and recentres the pointer shows it fixed.
+
+### 16.7 The protocol, version 2
+
+Version 2 adds fields and messages; the server refuses a helper that answers another version (`E_CAPTURE_UNAVAILABLE`, `details.reason` `protocol_version`). Everything else of section 6 stands.
+
+| Direction | Message | New fields |
+| --- | --- | --- |
+| helper to host | `ready` | `v` 2, and `audio`, `camera`, `events` (booleans) |
+| helper to host | `sources` | `microphones` (`id`, `name`, `default`), `cameras` (`id`, `name`, `width`, `height`), `system_audio` (boolean) |
+| host to helper | `start` | `microphone` (a device id or `default`), `system_audio` (boolean), `camera` (a device id), `events` (boolean), and `outputs`: absolute paths in the folder of `output`, ending `.wav` for `microphone` and `system`, `.mp4` for `camera`, `.jsonl` for `events`; a path is required for exactly each track that was asked for |
+| helper to host | `started` | `tracks`: the list of `{kind, start_ms}` that is recording |
+| host to helper | `pause`, `resume` | none |
+| helper to host | `paused`, `resumed` | `elapsed_ms` (active) |
+| helper to host | `level` | about four a second: `microphone` and `system`, each 0 to 1000 (the peak of the last interval, in permille of full scale), only for the tracks that exist |
+| helper to host | `progress` | `bytes` now counts every file |
+| helper to host | `finished` | `tracks`: `{kind, start_ms, duration_ms, bytes, lost}` for each; `pauses`: `{from_ms, to_ms}`; `pointer_events` (count) |
+
+`pause` when the recording cannot pause and `resume` when it is not paused are answered with `error` `bad_request` and change nothing. A `level`, `paused` or `resumed` line counts as a sign of life for the silence limit of section 7. A test build of the helper (`--allow-test-source`) admits `fake` sources for the new kinds (a tone, a flash, a camera pattern and a scripted pointer), which is how the clock, the pause and the events are tested without a device.
+
+### 16.8 Operations and rules
+
+| Operation | Scope | Caller | Rule |
+| --- | --- | --- | --- |
+| `RecordingSources` | `read` | any | now also the microphones, the cameras and `system_audio` |
+| `RecordingStart` | `media` | **a person** | new members `microphone`, `system_audio`, `camera`, `events`; each is checked in `core/recording` before the helper starts |
+| `RecordingPause` | `media` | any | `recording` to `paused`; idempotent on `paused`; anything else `E_INVALID_STATE` |
+| `RecordingResume` | `media` | **a person** | `E_PRIVILEGED_SESSION` first, then `paused` to `recording`; idempotent on `recording` |
+| `RecordingEvents` | `read` | any | the pointer events of a `ready` recording, by the visibility of section 4: `from_ms`, `kind` (`clicks`, the default, or `all`), `limit` (1 to 5,000, default 1,000); the answer holds the size of the source, the total, the events and `truncated`. `E_INVALID_STATE` for a recording that is not `ready`; no events when the person did not ask for them |
+| `RecordingPlace` | `edit` | any | one batch: the screen on a visual track as before, the camera on its own visual track, each sound track on its own audio track, every clip at the same start so the tracks stay aligned |
+
+`RecordingConfirm` imports every file of the recording as an asset (tagged `recording`) and removes the media files, **keeping `events.jsonl`** because it is read after the recording was added; that file is deleted when the recording is deleted. The row adds `tracks` (a JSON list of `{kind, file, start_ms, duration_ms, bytes, lost, asset_hash, asset_id}`), `pauses` (a JSON list of `{from_ms, to_ms}`) and `events_count`; `levels` is not stored (the last `level` of the helper while it runs). The columns are clear: they hold no device name and no pointer position. MCP gets no new tool: `job_get` of a `rec_` id names the tracks and the click count, and `job_cancel` stays `RecordingStop`.
+
+### 16.9 Placement
+
+`RecordingPlace` puts every clip at the start the screen clip gets (the end of its track, as in epic 61), because the tracks share the origin of the recording. The camera goes to a visual track named `Camera`, the microphone to an audio track named `Microphone` and the system mix to one named `System audio`; an unlocked track of that name is reused, otherwise it is made in the same batch. A recording with only a screen places as before.
+
+### 16.10 Measures and tests
+
+NFR-068 fixture: the test sources of the helper produce a flash and a tone burst at the same instant of the clock, once a second, and the test measures the position of each in the video file and in the WAV file after a recording with three pauses; the largest difference must be at most 40 ms. The default test runs it for 12 seconds; the full one (10 minutes, three pauses) is `cargo test --release -- --ignored full_ten_minute_drift` in `capture/`. Real devices (a microphone, the loopback of a real sound, a webcam, the real pointer) need the author hardware and are listed as not run in the hand-off of the epic. The click test feeds a scripted pointer through the same code as the real one and checks the time (within 20 ms) and the coordinates. The privacy tests are the validator of `core/recording`, a scan of the helper source for hooks and key reads, and a security test that no operation returns key data.
