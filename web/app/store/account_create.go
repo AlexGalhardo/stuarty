@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/AlexGalhardo/stuarty/service/account"
@@ -146,8 +147,42 @@ func (s *Store) CreateAccount(
 			return err
 		}
 
-		return verifySealed(ctx, dtx, sl, sums)
+		if err := verifySealed(ctx, dtx, sl, sums); err != nil {
+			return err
+		}
+
+		return installSealGuards(ctx, dtx)
 	})
+}
+
+// guardMessage is what a guard raises; sealedExec turns it into account.ErrLocked.
+const guardMessage = "stuarty: a sealed column was written in clear text"
+
+// installSealGuards makes the database refuse a clear value in a sealed column from the commit of the account on.
+// A write that sealed its value (in clear text, the workspace had no account) just before the creation began can
+// reach the database after the creation has sealed everything; the sealing cannot see it, and only the database,
+// which serializes the two, can tell which came first. The guards are in the transaction of the creation, so
+// they exist exactly when the account does.
+func installSealGuards(ctx context.Context, ex database.Executor) error {
+	for _, c := range sealedCells {
+		when := "NEW." + c.column + " IS NOT NULL AND NEW." + c.column + " <> '' AND substr(NEW." + c.column + ", 1, " +
+			strconv.Itoa(len(account.Prefix)) + ") <> '" + account.Prefix + "'"
+		if c.filter != "" {
+			when += " AND NEW." + c.filter
+		}
+
+		for _, event := range []string{"INSERT", "UPDATE OF " + c.column} {
+			name := "sealed_guard_" + c.table + "_" + c.column + "_" + strings.ToLower(strings.Fields(event)[0])
+
+			q := "CREATE TRIGGER IF NOT EXISTS " + name + " BEFORE " + event + " ON " + c.table +
+				" WHEN " + when + " BEGIN SELECT RAISE(ABORT, '" + guardMessage + "'); END"
+			if _, err := ex.ExecContext(ctx, q); err != nil {
+				return fmt.Errorf("store: guard %s.%s: %w", c.table, c.column, err)
+			}
+		}
+	}
+
+	return nil
 }
 
 // sealCells seals every value of every sealed column and returns the digest of each, for the read back.

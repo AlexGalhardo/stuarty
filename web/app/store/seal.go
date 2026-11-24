@@ -1,7 +1,10 @@
 package store
 
 import (
+	"context"
+	"database/sql"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/AlexGalhardo/stuarty/service/account"
@@ -39,6 +42,17 @@ func (r *sealRef) set(s account.Sealer) {
 type sealedExec struct {
 	database.Executor
 	ref *sealRef
+}
+
+// ExecContext runs the statement and says E_LOCKED when a guard of the account (installSealGuards) refused a clear
+// value: the write sealed before the account existed and reached the database after it did.
+func (e sealedExec) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
+	res, err := e.Executor.ExecContext(ctx, query, args...)
+	if err != nil && strings.Contains(err.Error(), guardMessage) {
+		return nil, account.ErrLocked
+	}
+
+	return res, err
 }
 
 // UniqueViolation lets isUnique see through the wrapper to the driver of the database or transaction.
