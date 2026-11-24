@@ -106,6 +106,16 @@ func TestEffectiveKind(t *testing.T) {
 		{"an output decides nothing", KindUndecided, []Item{item(Output, "", "")}, KindUndecided},
 		{"a trashed text holds nothing", KindUndecided, []Item{{Kind: Text, Trashed: true}}, KindUndecided},
 		{"a kind that is not one reads from the items", Intent("x"), []Item{item(Text, "copy", "x")}, KindText},
+		// VV-394, D-139: a script may be for a video or a text, so it decides nothing.
+		{"a script decides nothing", KindUndecided, []Item{item(Text, TextKindScript, "x")}, KindUndecided},
+		{
+			"a script and a copy read as a text", KindUndecided,
+			[]Item{item(Text, TextKindScript, "x"), item(Text, TextKindCopy, "y")}, KindText,
+		},
+		{
+			"a script and a timeline read as a video", KindUndecided,
+			[]Item{item(Text, TextKindScript, "x"), item(Timeline, "", "")}, KindVideo,
+		},
 	}
 
 	for _, tc := range tests {
@@ -119,19 +129,25 @@ func TestKindToStore(t *testing.T) {
 	t.Parallel()
 
 	copyText := []Item{item(Text, "copy", "x")}
+	scriptText := []Item{item(Text, TextKindScript, "x")}
 
 	tests := []struct {
 		name   string
 		stored Intent
 		before []Item
-		added  Kind
+		added  Item
 		want   Intent
 	}{
-		{"a stored kind stays", KindVideo, nil, Text, KindVideo},
-		{"the first text decides text", KindUndecided, nil, Text, KindText},
-		{"the first timeline decides video", KindUndecided, nil, Timeline, KindVideo},
-		{"what it already reads as wins over the new item", KindUndecided, copyText, Timeline, KindText},
-		{"an output decides nothing", KindUndecided, nil, Output, KindUndecided},
+		{"a stored kind stays", KindVideo, nil, item(Text, "copy", "x"), KindVideo},
+		{"the first text decides text", KindUndecided, nil, item(Text, "copy", "x"), KindText},
+		{"the first timeline decides video", KindUndecided, nil, item(Timeline, "", ""), KindVideo},
+		{"what it already reads as wins over the new item", KindUndecided, copyText, item(Timeline, "", ""), KindText},
+		{"an output decides nothing", KindUndecided, nil, item(Output, "", ""), KindUndecided},
+		// VV-394, D-139: a project that starts with a script waits for what decides.
+		{"a first script decides nothing", KindUndecided, nil, item(Text, TextKindScript, "x"), KindUndecided},
+		{"a timeline after a script decides video", KindUndecided, scriptText, item(Timeline, "", ""), KindVideo},
+		{"a copy after a script decides text", KindUndecided, scriptText, item(Text, "copy", "y"), KindText},
+		{"a post after a script decides text", KindUndecided, scriptText, item(Text, TextKindPost, "y"), KindText},
 	}
 
 	for _, tc := range tests {

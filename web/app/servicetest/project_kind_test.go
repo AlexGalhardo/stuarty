@@ -312,6 +312,26 @@ func TestProjectKindIsStoredByTheFirstItem(t *testing.T) {
 		t.Errorf("a stored kind changed to %q", stored(chosen))
 	}
 
+	// VV-394, D-139: a script decides nothing, and the timeline after it makes the project a video.
+	scripted := createKind(t, e, "Script first", "")
+
+	if _, err := e.svc.ProjectItemAdd(e.as(ui), service.ProjectItemAddRequest{
+		ProjectID: scripted, Kind: "text", Title: "Script", Text: "words", TextKind: "script",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if got, _ := e.svc.ProjectGet(e.as(ui), service.ProjectGetRequest{ProjectID: scripted}); stored(scripted) !=
+		project.KindUndecided || got.Kind != "undecided" {
+		t.Errorf("a script chose: stored %q, reads %q", stored(scripted), got.Kind)
+	}
+
+	add(scripted, "timeline")
+
+	if stored(scripted) != project.KindVideo {
+		t.Errorf("a script, then a timeline: stored %q, want video", stored(scripted))
+	}
+
 	// A dry run decides nothing.
 	dry := createKind(t, e, "Dry run one", "")
 
