@@ -22,6 +22,12 @@ const (
 
 var captureTargets = []string{"x86_64-pc-windows-msvc", "aarch64-pc-windows-msvc"}
 
+// aihelperManifest is the Cargo package of the local AI helper (ADR-0050), whose crates ship with it.
+const (
+	aihelperManifest = "aihelper/Cargo.toml"
+	aihelperShipped  = "stuarty-aihelper"
+)
+
 // rendererShipped is the workspace member whose dependencies are shipped in the WebAssembly module:
 // the core module of SDD-013 section 4.1, which the Go export embeds.
 const rendererShipped = "stuarty-renderer"
@@ -103,6 +109,13 @@ func rustCrates(ctx context.Context, run Runner, root string) ([]Component, erro
 	if _, err := os.Stat(filepath.Join(root, "capture", "Cargo.lock")); err == nil {
 		for _, t := range captureTargets {
 			jobs = append(jobs, closure{captureManifest, t, captureShipped})
+		}
+	}
+
+	// The local AI helper (ADR-0050) is shipped on every release platform like the GPU host.
+	if _, err := os.Stat(filepath.Join(root, "aihelper", "Cargo.lock")); err == nil {
+		for _, t := range gpuHostTargets {
+			jobs = append(jobs, closure{aihelperManifest, t, aihelperShipped})
 		}
 	}
 

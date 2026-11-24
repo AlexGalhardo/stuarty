@@ -1,0 +1,66 @@
+{
+ "hosts": [
+  "api.nuget.org",
+  "github.com",
+  "media.githubusercontent.com",
+  "objects.githubusercontent.com",
+  "release-assets.githubusercontent.com"
+ ],
+ "entries": [
+  {
+   "name": "aihelper",
+   "kind": "helper",
+   "version": "0.1.0",
+   "os": "windows",
+   "arch": "amd64",
+   "url": "https://github.com/AlexGalhardo/stuarty/releases/download/helpers-aihelper-0.1.0/stuarty-aihelper-windows-amd64.exe",
+   "bytes": 0,
+   "sha256": "",
+   "file": "stuarty-aihelper.exe",
+   "license": "MIT",
+   "notice": "MIT License. Copyright (c) Stuarty contributors. The helper is part of this repository (aihelper/).",
+   "published": false
+  },
+  {
+   "name": "onnxruntime",
+   "kind": "helper",
+   "version": "1.24.4",
+   "os": "windows",
+   "arch": "amd64",
+   "url": "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime.directml/1.24.4/microsoft.ml.onnxruntime.directml.1.24.4.nupkg",
+   "bytes": 12458649,
+   "sha256": "57e9f11b73437bef7a309496135d4c1f96b1a8e9ddba60013fa27bfc1d788681",
+   "file": "onnxruntime.dll",
+   "license": "MIT",
+   "notice": "MIT License. Copyright (c) Microsoft Corporation. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+   "published": true,
+   "format": "zip",
+   "members": [
+    {
+     "from": "runtimes/win-x64/native/onnxruntime.dll",
+     "to": "onnxruntime.dll",
+     "executable": false
+    },
+    {
+     "from": "runtimes/win-x64/native/onnxruntime_providers_shared.dll",
+     "to": "onnxruntime_providers_shared.dll",
+     "executable": false
+    }
+   ]
+  },
+  {
+   "name": "yunet",
+   "kind": "model",
+   "model": "2023mar",
+   "version": "2023mar",
+   "url": "https://github.com/opencv/opencv_zoo/raw/48b10fa505aeb51fbd127fc60a5c660040e823b7/models/face_detection_yunet/face_detection_yunet_2023mar.onnx",
+   "bytes": 232589,
+   "sha256": "8f2383e4dd3cfbb4553ea8718107fc0423210dc964f9f4280604804ed2552fa4",
+   "file": "face_detection_yunet_2023mar.onnx",
+   "license": "MIT",
+   "notice": "MIT License. Copyright (c) 2020 Shiqi Yu <shiqi.yu@gmail.com>. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+   "dataset": "WIDER Face (per the upstream project libfacedetection.train; its terms are not the licence of the weights, ADR-0050 section 7)",
+   "published": true
+  }
+ ]
+}

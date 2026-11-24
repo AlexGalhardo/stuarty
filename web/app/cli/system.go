@@ -10,10 +10,12 @@ import (
 	"fmt"
 	"net/url"
 	"runtime"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/engine/aihost"
 	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 	"github.com/AlexGalhardo/stuarty/engine/transcribe"
 	"github.com/AlexGalhardo/stuarty/service"
@@ -352,6 +354,10 @@ func (c *call) installAnnouncement(name, model string) (string, error) {
 		return openH264Announcement()
 	}
 
+	if name == aihost.SetName {
+		return faceAnnouncement()
+	}
+
 	load := c.rt.Manifest
 	if load == nil {
 		load = transcribe.DefaultManifest
@@ -397,6 +403,46 @@ func (c *call) confirm(announce string) bool {
 	answer := strings.ToLower(strings.TrimSpace(line))
 
 	return answer == "y" || answer == "yes"
+}
+
+// faceAnnouncement is the announcement of the face tracking set (SDD-024 section 3): the size and the
+// hosts, the licences and the dataset the model was trained on, before the person confirms.
+func faceAnnouncement() (string, error) {
+	manifest, err := aihost.DefaultManifest()
+	if err != nil {
+		return "", err
+	}
+
+	entries, ok := manifest.Set(runtime.GOOS, runtime.GOARCH)
+	if !ok {
+		return "", &service.Error{
+			Code:    command.CodeValidation,
+			Message: fmt.Sprintf("there is no %q set for %s/%s.", aihost.SetName, runtime.GOOS, runtime.GOARCH),
+			Path:    "name",
+		}
+	}
+
+	var (
+		total    int64
+		hosts    []string
+		licences []string
+	)
+
+	for i := range entries {
+		total += entries[i].Bytes
+
+		if u, perr := url.Parse(entries[i].URL); perr == nil && !slices.Contains(hosts, u.Hostname()) {
+			hosts = append(hosts, u.Hostname())
+		}
+
+		if !slices.Contains(licences, entries[i].License) {
+			licences = append(licences, entries[i].License)
+		}
+	}
+
+	return fmt.Sprintf("%d files, %.1f MB from %s (licences: %s; the face model was trained on %s)",
+		len(entries), float64(total)/1e6, strings.Join(hosts, ", "), strings.Join(licences, ", "),
+		manifest.Dataset()), nil
 }
 
 // openH264Announcement is the announcement of the Cisco library of the own FFmpeg build, whose
