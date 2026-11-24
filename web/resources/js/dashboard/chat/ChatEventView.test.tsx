@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 
 import { I18nProvider } from "@/lib/i18n";
 import en from "../../../lang/en.json";
-import type { ChatEvent } from "../../editor/api/types";
+import type { ChatActivity, ChatEvent } from "../../editor/api/types";
 import ChatEventView from "./ChatEventView";
 
 function flat(
@@ -170,5 +170,69 @@ describe("ChatEventView: a skill the agent read", () => {
 		expect(html).toContain("&lt;img src=x onerror=window.__pwned=1&gt;");
 		expect(html).not.toContain("<img");
 		expect(html).not.toMatch(/in use|following/i);
+	});
+});
+
+describe("ChatEventView: the card of a request that waits shows what the scene bar shows", () => {
+	const ask: ChatEvent = {
+		seq: 7,
+		kind: "permission_request",
+		at,
+		permission: { request_id: "r7", title: "Delete the clips" },
+	};
+	const activity = {
+		session_id: "cht_1",
+		state: "awaiting_permission",
+		skill: { name: PAYLOAD, state: "loaded" },
+		skills_loaded: [],
+		tool: {
+			title: PAYLOAD,
+			technical_name: "stuarty_delete_clips",
+			description_key: "ui.shell.scene.tool_from_agent",
+			status: "pending",
+			from_agent: false,
+		},
+		updated_at: at,
+		untrusted_notice: "",
+	} as unknown as ChatActivity;
+
+	function drawWith(open: boolean): string {
+		return renderToString(
+			<I18nProvider messages={messages} locale="en" locales={["en", "pt-BR"]}>
+				<ol>
+					<ChatEventView
+						event={ask}
+						open={open}
+						busy={false}
+						agent={PAYLOAD}
+						activity={activity}
+						onAnswer={() => {}}
+					/>
+				</ol>
+			</I18nProvider>,
+		);
+	}
+
+	test("names the agent, the skill and its state, and the tool, as text", () => {
+		const html = drawWith(true);
+		expect(html).toContain('data-testid="chat-permission-agent"');
+		expect(html).toContain('data-testid="chat-activity-skill"');
+		expect(html).toContain("loaded in this session");
+		expect(html).toContain('data-testid="chat-activity-tool"');
+		expect(html).toContain("stuarty_delete_clips");
+		expect(html).not.toContain("<img");
+		expect(html.match(/&lt;img/g)?.length).toBeGreaterThanOrEqual(3);
+	});
+
+	test("says the bar and the center show the same request", () => {
+		expect(drawWith(true)).toContain(
+			"notification center show this same request",
+		);
+	});
+
+	test("shows none of it once the request was answered", () => {
+		const html = drawWith(false);
+		expect(html).not.toContain("chat-activity");
+		expect(html).not.toContain("chat-permission-agent");
 	});
 });

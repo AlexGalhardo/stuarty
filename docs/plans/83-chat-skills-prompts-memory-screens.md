@@ -48,7 +48,7 @@ None new.
 
 ## Tasks
 
-- [ ] 1. The conversation: messages, tool lines and composer. Verify: `cd web && bun run test -- ChatConversation ChatEventView` passes.
+- [x] 1. The conversation: messages, tool lines and composer. Verify: `cd web && bun run test -- ChatConversation ChatEventView` passes.
 - [ ] 2. The permission card with allow and reject once. Verify: `cd web && bun run e2e -- agent-chat` passes.
 - [ ] 3. Agent setup and its states. Verify: `cd web && bun run test -- ProfileSetup` passes.
 - [ ] 4. Skills. Verify: `cd web && bun run test -- Library` passes.

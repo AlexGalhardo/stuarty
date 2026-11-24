@@ -17,29 +17,27 @@ export default function ActivityStrip({
 	const tool = activity === null ? null : reportedTool(activity);
 	const skill = activity?.skill ?? null;
 	const none = (
-		<span className="text-muted-foreground">
-			{t("ui.shell.scene.not_reported")}
-		</span>
+		<span className="text-text-muted">{t("ui.shell.scene.not_reported")}</span>
 	);
 	return (
 		<dl
 			aria-label={t("ui.chat.activity")}
 			data-testid="chat-activity"
-			className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-lg border px-3 py-2 text-sm"
+			className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-lg border border-agent-border bg-agent-soft/40 px-3 py-2 text-sm"
 		>
-			<dt className="text-muted-foreground">{t("ui.shell.scene.skill")}</dt>
+			<dt className="text-text-muted">{t("ui.shell.scene.skill")}</dt>
 			<dd className="min-w-0 break-words" data-testid="chat-activity-skill">
 				{skill === null ? (
 					none
 				) : skill.state === "loaded" ? (
 					<>
 						<UntrustedText>{skill.name}</UntrustedText>
-						<span className="text-muted-foreground">
+						<span className="text-text-muted">
 							{` · ${t("ui.shell.scene.skill_state.loaded")}`}
 						</span>
 					</>
 				) : (
-					<span className="text-muted-foreground">
+					<span className="text-text-muted">
 						{t(
 							skill.state === "available"
 								? "ui.shell.scene.skill_available"
@@ -48,14 +46,12 @@ export default function ActivityStrip({
 					</span>
 				)}
 			</dd>
-			<dt className="text-muted-foreground">{t("ui.shell.scene.tool")}</dt>
+			<dt className="text-text-muted">{t("ui.shell.scene.tool")}</dt>
 			<dd className="min-w-0 break-words" data-testid="chat-activity-tool">
 				{activity === null ? (
 					none
 				) : tool === null ? (
-					<span className="text-muted-foreground">
-						{t("ui.shell.scene.no_tool")}
-					</span>
+					<span className="text-text-muted">{t("ui.shell.scene.no_tool")}</span>
 				) : (
 					<>
 						{tool.descriptionKey !== null ? (
@@ -63,12 +59,12 @@ export default function ActivityStrip({
 						) : (
 							<UntrustedText>{tool.title}</UntrustedText>
 						)}
-						<span className="text-muted-foreground">
+						<span className="text-text-muted">
 							{` · ${tool.technicalName ?? t("ui.shell.scene.tool_from_agent")} · ${t(`ui.chat.tool_status_${tool.status}`)}`}
 						</span>
 						{tool.descriptionKey !== null && (
 							// the tool is recognised from the title the agent gave the call, which the person sees as written
-							<span className="block text-muted-foreground">
+							<span className="block text-text-muted">
 								{`${t("ui.shell.scene.tool_from_agent")}: `}
 								<UntrustedText>{tool.title}</UntrustedText>
 							</span>
