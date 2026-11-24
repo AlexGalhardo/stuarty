@@ -10,8 +10,10 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	"github.com/AlexGalhardo/stuarty/core/facetrack"
 	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
@@ -262,22 +264,20 @@ func (s *sink) accept(b []byte) {
 	}
 }
 
-// printable keeps a short, plain cut of a message: the helper is trusted to carry no path, and the host does
-// not rely on it.
+// printable keeps a short, plain cut of a message, with every word that looks like a path replaced by <path>:
+// the helper is meant to carry no path, but the text of the runtime and the standard error of FFmpeg can name
+// files of this machine, and an error never shows one (SDD-007 T-29, section 6.12 item 7).
 func printable(s string) string {
-	out := make([]rune, 0, 160)
-
-	for _, r := range s {
-		if len(out) >= 160 {
-			break
-		}
-
-		if r >= 0x20 && r != 0x7f {
-			out = append(out, r)
+	words := strings.FieldsFunc(s, func(r rune) bool { return r < 0x20 || r == 0x7f || unicode.IsSpace(r) })
+	for i, w := range words {
+		if strings.ContainsAny(w, `/\`) {
+			words[i] = "<path>"
 		}
 	}
 
-	return string(out)
+	out := []rune(strings.Join(words, " "))
+
+	return string(out[:min(len(out), 160)])
 }
 
 // Detect runs the helper over the range and returns the track. progress, when not nil, is called with the
