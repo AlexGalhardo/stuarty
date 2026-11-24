@@ -822,7 +822,7 @@ The shipped third-party components, against their licence, pin and notice (NFR-0
 4. **No network.** The helper has no code that opens a connection and the product gives it no address; the only downloads are the install step of 6.8, started by a person, on the hosts of the manifest.
 5. **Model files are data.** A model is read by the runtime, which is the one place a malformed file could harm; that is why only the pinned model of the manifest is ever loaded, the path is never one a caller chose, and the process has no privileges, no network and a deadline.
 6. **No sandbox wrapper.** Like the GPU host it is not started inside `bwrap` when the DirectML or other device provider is wanted; with `STUARTY_SANDBOX=bwrap` it runs on the CPU only.
-7. Its standard error is kept as a tail like any child's and only a short, printable cut of it reaches an error.
+7. Its standard error is kept as a tail like any child's and only a short, printable cut of it reaches an error, with every word that looks like a path replaced by `<path>`; the same holds for the message of its error line and for the standard error of the FFmpeg that feeds it (T-29).
 
 ## 7. Import and export path rules
 

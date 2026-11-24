@@ -285,9 +285,27 @@ func TestDetectRefusesWhatTheHelperGetsWrong(t *testing.T) {
 			continue
 		}
 
-		if strings.ContainsAny(e.Message, "\x07") || strings.Contains(e.Message, "/home/x") && mode != "unknowncode" {
-			t.Errorf("%s: the message is not printable text: %q", mode, e.Message)
+		if strings.ContainsAny(e.Message, "\x07") || strings.Contains(e.Message, "/home/x") {
+			t.Errorf("%s: the message is not printable text without a path: %q", mode, e.Message)
 		}
+	}
+}
+
+// A message of the helper, of the runtime it loads or of FFmpeg's standard error reaches an error with no path
+// of this machine and no control character (SDD-007 T-29, section 6.12 item 7).
+func TestPrintableHidesPathsAndControls(t *testing.T) {
+	for in, want := range map[string]string{
+		`LoadLibrary failed for C:\Users\alice\.stuarty\tools\onnxruntime.dll: error 126`: "LoadLibrary failed for <path> error 126",
+		"/home/alice/a b.mp4: Invalid data found\n":                                       "<path> b.mp4: Invalid data found",
+		"bad \u0007 news\tagain":                                                          "bad news again",
+	} {
+		if got := printable(in); got != want {
+			t.Errorf("printable(%q) = %q, want %q", in, got, want)
+		}
+	}
+
+	if got := printable(strings.Repeat("é", 400)); len([]rune(got)) != 160 {
+		t.Errorf("a long message keeps %d characters, want 160", len([]rune(got)))
 	}
 }
 
