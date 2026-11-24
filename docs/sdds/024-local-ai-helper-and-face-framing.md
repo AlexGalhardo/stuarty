@@ -64,7 +64,7 @@ Rules:
 | --- | --- | --- |
 | YuNet weights | MIT | `models/face_detection_yunet/LICENSE` of opencv_zoo at the pinned commit: MIT, Copyright (c) 2020 Shiqi Yu; its README says "All files in this directory are licensed under MIT License" |
 | YuNet training data | Not stated by the weights licence | The model comes from the `libfacedetection.train` project (README of opencv_zoo, "Model source"), reported there on the WIDER Face validation set. The training set is, per the upstream project, WIDER Face, whose own terms are not the MIT licence of the weights. This is the **residual risk accepted by the author in D-133**; it is recorded here and in ADR-0050 and is not hidden from the user: the install prompt says which dataset the model was trained on |
-| ONNX Runtime | MIT | `LICENSE` of the NuGet package: MIT, Copyright (c) Microsoft Corporation; `ThirdPartyNotices.txt` ships in the package and is copied into the notices |
+| ONNX Runtime | MIT | `LICENSE` of the NuGet package: MIT, Copyright (c) Microsoft Corporation; `ThirdPartyNotices.txt` ships in the package. The product never redistributes the runtime: the person downloads the package from nuget.org, the install keeps only the two libraries of section 3, and `THIRD_PARTY_NOTICES.md` lists the runtime as not shipped |
 | `ort` crate | MIT OR Apache-2.0 | `LICENSE-MIT` and `LICENSE-APACHE` of `ort` 2.0.0-rc.15 and of its dependencies (`ort-sys`, `libloading`, `windows-link`, `smallvec`); `cargo deny check` passes with the allowlist of `internal/tools/notices` |
 | `stuarty-aihelper` | MIT | this repository |
 

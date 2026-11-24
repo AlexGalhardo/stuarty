@@ -3,6 +3,7 @@ package servicetest
 import (
 	"bytes"
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -316,8 +317,9 @@ func TestFaceInstallRefusesAFileThatIsNotPublishedBeforeAnyRequest(t *testing.T)
 	m := newMediaEnv(t, mediaCfg{tools: fs.tools(faceDir(t), false)})
 
 	_, err := m.svc.ToolsInstall(asPerson(), service.ToolsInstallRequest{Name: aihost.SetName})
-	if code(err) != "E_TRANSCRIBE_UNAVAILABLE" {
-		t.Fatalf("error = %v, want E_TRANSCRIBE_UNAVAILABLE", err)
+	if se, ok := errors.AsType[*service.Error](err); !ok || se.Code != "E_TRANSCRIBE_UNAVAILABLE" ||
+		se.Details["reason"] != "not_published" || se.Details["tool"] != aihost.SetName {
+		t.Fatalf("error = %v, want E_TRANSCRIBE_UNAVAILABLE with reason not_published", err)
 	}
 
 	if fs.requests.Load() != 0 {
