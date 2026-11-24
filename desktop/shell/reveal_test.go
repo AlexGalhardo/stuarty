@@ -159,10 +159,12 @@ func TestCheckRevealUnderRefusesWhatIsNotAFileOfTheMediaFolder(t *testing.T) {
 		t.Errorf("a stored file was refused: %v", err)
 	}
 
+	dotDot := filepath.Join(root, "ab", "..", "..", "store-evil", storedHash)
+
 	bad := map[string]string{
 		"a file elsewhere": outside,
 		"a sibling folder with the root as a text prefix": evil,
-		"a dot dot path out of the root":                  filepath.Join(root, "ab", "..", "..", "store-evil", storedHash),
+		"a dot dot path out of the root":                  dotDot,
 		"the media folder itself":                         root,
 		"a folder inside it":                              filepath.Dir(file),
 		"a relative path":                                 filepath.Join("ab", storedHash),
