@@ -142,6 +142,8 @@ func assetArgv(call string, raw json.RawMessage) (string, []string, error) {
 		return "asset:tag", argv, nil
 	case "AssetRename":
 		return "asset:rename", []string{str("hash"), "--name", str("name")}, nil
+	case "AssetReveal":
+		return "asset:path", []string{str("hash")}, nil
 	}
 
 	return "", nil, errors.New("the library has no command for " + call)
