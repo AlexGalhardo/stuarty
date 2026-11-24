@@ -159,7 +159,7 @@ func readSmall(root *vroot, rel string, limit int64) ([]byte, fs.FileInfo, error
 
 // readFile is readSmall that also says whether the file was clear text where the folder seals: the scan seals
 // such a file. A sealed file is opened; one that does not open is errSealedFile. The limit is on the content.
-func readFile(root *vroot, rel string, limit int64) (data []byte, info fs.FileInfo, clear bool, err error) {
+func readFile(root *vroot, rel string, limit int64) (data []byte, info fs.FileInfo, wasClear bool, err error) {
 	if err := root.ready(); err != nil {
 		return nil, nil, false, err
 	}
@@ -207,14 +207,14 @@ func readFile(root *vroot, rel string, limit int64) (data []byte, info fs.FileIn
 			return nil, nil, false, errSealedFile
 		}
 	} else if root.sealing() {
-		clear = true
+		wasClear = true
 	}
 
 	if int64(len(data)) > limit {
 		return nil, nil, false, fmt.Errorf("the file is %d bytes; the limit is %d", len(data), limit)
 	}
 
-	return data, info, clear, nil
+	return data, info, wasClear, nil
 }
 
 // walkSkill walks the folder of a skill under root (the folder itself is dir).

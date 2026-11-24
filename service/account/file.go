@@ -118,4 +118,4 @@ func (f managerFiles) Ready() error {
 	return err
 }
 
-func (f managerFiles) Sealing() bool { return managerSealer{f.m}.Sealing() }
+func (f managerFiles) Sealing() bool { return managerSealer(f).Sealing() }

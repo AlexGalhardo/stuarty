@@ -212,7 +212,8 @@ func withLogOpen(ctx context.Context, ex database.Executor, fn func() error) err
 	for _, name := range logTriggers {
 		var sqlText sql.NullString
 
-		err := ex.QueryRowContext(ctx, `SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = ?`, name).Scan(&sqlText)
+		err := ex.QueryRowContext(ctx, `SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = ?`, name).
+			Scan(&sqlText)
 		if errors.Is(err, sql.ErrNoRows) || !sqlText.Valid {
 			continue
 		}

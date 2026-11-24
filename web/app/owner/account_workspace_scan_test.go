@@ -43,7 +43,7 @@ func everyByteOfTheWorkspace(t *testing.T, home string) map[string][]byte {
 		raw, rerr := os.ReadFile(p)
 		if rerr != nil {
 			// A file another process holds (the shared memory of the database) is not a file to scan.
-			return nil
+			return nil //nolint:nilerr // see above
 		}
 
 		out[p] = raw
@@ -123,8 +123,10 @@ func TestSecurity_T136_NoByteOfTheWorkspaceHoldsTheWordsOfThePerson(t *testing.T
 	}
 
 	if _, serr := o.Service.SkillWrite(as, service.SkillWriteRequest{
-		Name: "hook-writer", Description: "Write the opening of a short video.", Body: "# Hooks\n\n" + canarySkill + "\n",
-		Files: []service.SkillFileInput{{Path: "references/patterns.md", Text: canaryLaterRef + "\n"}},
+		Name:        "hook-writer",
+		Description: "Write the opening of a short video.",
+		Body:        "# Hooks\n\n" + canarySkill + "\n",
+		Files:       []service.SkillFileInput{{Path: "references/patterns.md", Text: canaryLaterRef + "\n"}},
 	}); serr != nil {
 		t.Fatal(serr)
 	}
@@ -155,9 +157,12 @@ func TestSecurity_T136_NoByteOfTheWorkspaceHoldsTheWordsOfThePerson(t *testing.T
 	}
 
 	if _, serr := o.Service.Edit(as, service.EditRequest{
-		ProjectID: video.ProjectID, BaseRevision: edit.Revision,
-		Operations: []command.Operation{op("text.add", `{"track_id":"trk_f6g7h8j9k0","start":"3s","duration":"1s","text":"`+
-			canaryLater+`","id":"itm_c3d4e5f6a7"}`)},
+		ProjectID:    video.ProjectID,
+		BaseRevision: edit.Revision,
+		Operations: []command.Operation{
+			op("text.add", `{"track_id":"trk_f6g7h8j9k0","start":"3s","duration":"1s","text":"`+
+				canaryLater+`","id":"itm_c3d4e5f6a7"}`),
+		},
 	}); serr != nil {
 		t.Fatal(serr)
 	}

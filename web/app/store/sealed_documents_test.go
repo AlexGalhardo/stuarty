@@ -38,7 +38,14 @@ func canariesOfTheSecondStage() []string {
 	}
 }
 
-func js(s string) json.RawMessage { b, _ := json.Marshal(map[string]string{"text": s}); return b }
+func js(s string) json.RawMessage {
+	b, err := json.Marshal(map[string]string{"text": s})
+	if err != nil {
+		panic(err)
+	}
+
+	return b
+}
 
 // writeDocuments writes one of every second-stage column.
 func writeDocuments(t *testing.T, s *Store) {
@@ -73,8 +80,15 @@ func writeDocuments(t *testing.T, s *Store) {
 	}
 
 	if err := s.Templates().Create(ctx, service.TemplateRow{
-		ID: "tpl_1", Name: "t", SchemaVersion: 1, Document: js(docTemplate), DocSHA256: "sha", Slots: json.RawMessage(`[]`),
-		Summary: service.DocSummary{Width: 1, Height: 1, FPSNum: 30, FPSDen: 1}, CreatedMs: 1, CreatedBy: "local:ui",
+		ID:            "tpl_1",
+		Name:          "t",
+		SchemaVersion: 1,
+		Document:      js(docTemplate),
+		DocSHA256:     "sha",
+		Slots:         json.RawMessage(`[]`),
+		Summary:       service.DocSummary{Width: 1, Height: 1, FPSNum: 30, FPSDen: 1},
+		CreatedMs:     1,
+		CreatedBy:     "local:ui",
 	}); err != nil {
 		t.Fatalf("template: %v", err)
 	}
@@ -85,13 +99,12 @@ func writeDocuments(t *testing.T, s *Store) {
 		t.Fatalf("brand kit: %v", err)
 	}
 
-	if err := s.Images().Create(ctx, service.ImageRow{
-		ImageHead: service.ImageHead{
-			ID: "img_1", Name: "i", Revision: 1, SchemaVersion: 1, Width: 1, Height: 1, Layers: 1, CreatedMs: 1,
-			UpdatedMs: 1, CreatedBy: "local:ui",
-		},
-		Document: js(docTextLayer), DocSHA256: "sha",
-	}); err != nil {
+	image := service.ImageRow{Document: js(docTextLayer), DocSHA256: "sha"}
+	image.ID, image.Name, image.Revision, image.SchemaVersion = "img_1", "i", 1, 1
+	image.Width, image.Height, image.Layers = 1, 1, 1
+	image.CreatedMs, image.UpdatedMs, image.CreatedBy = 1, 1, "local:ui"
+
+	if err := s.Images().Create(ctx, image); err != nil {
 		t.Fatalf("image: %v", err)
 	}
 
@@ -110,8 +123,13 @@ func writeDocuments(t *testing.T, s *Store) {
 	}
 
 	if err := s.AssetLibrary().Put(ctx, assets.Row{
-		Hash: "sha256:aa", CreatedBy: "agent", CreatedMs: 5, UpdatedMs: 6, Description: docAssetNote, Tags: []string{"harbour"},
-		Origin: asset.Origin{Kind: asset.Imported, RightsNote: docRights},
+		Hash:        "sha256:aa",
+		CreatedBy:   "agent",
+		CreatedMs:   5,
+		UpdatedMs:   6,
+		Description: docAssetNote,
+		Tags:        []string{"harbour"},
+		Origin:      asset.Origin{Kind: asset.Imported, RightsNote: docRights},
 	}); err != nil {
 		t.Fatalf("asset info: %v", err)
 	}
@@ -199,10 +217,11 @@ func sealedStore(t *testing.T) (*Store, *locker, string) {
 // database file or its log, and everything reads back as it was.
 func TestSecurity_T132_TheDocumentsTheLogAndTheAssetNotesHoldNoPlaintextInTheDatabaseFile(t *testing.T) {
 	// The control: with no account the scan finds every word, so it can see what it looks for.
-	control := testStore(t)
+	controlDir := newDir(t)
+	control := openStore(t, controlDir, Options{})
 	writeDocuments(t, control)
 
-	found := bytesOfTheWorkspaceAt(t, control)
+	found := bytesOfTheWorkspace(t, control, string(controlDir))
 	for _, w := range canariesOfTheSecondStage() {
 		if !bytes.Contains(found, []byte(w)) {
 			t.Fatalf("the control does not see %q: the scan is blind", w)
@@ -228,7 +247,11 @@ func TestSecurity_T132_TheDocumentsTheLogAndTheAssetNotesHoldNoPlaintextInTheDat
 		t.Errorf("an image read while locked: %v", err)
 	}
 
-	if err := st.Projects().Commit(ctx, "prj_9", 0, service.ProjectUpdate{Name: "x", Document: []byte(`{}`)}); !errors.Is(err, account.ErrLocked) {
+	if err := st.Projects().
+		Commit(ctx, "prj_9", 0, service.ProjectUpdate{Name: "x", Document: []byte(`{}`)}); !errors.Is(
+		err,
+		account.ErrLocked,
+	) {
 		t.Errorf("a commit while locked: %v", err)
 	}
 
@@ -247,41 +270,6 @@ func TestSecurity_T132_TheDocumentsTheLogAndTheAssetNotesHoldNoPlaintextInTheDat
 			t.Errorf("%q is not readable in the file: the queries need it", readable)
 		}
 	}
-}
-
-func bytesOfTheWorkspaceAt(t *testing.T, s *Store) []byte {
-	t.Helper()
-
-	return bytesOfTheWorkspace(t, s, strings.TrimSuffix(dirOf(t, s), "/"))
-}
-
-// dirOf is the folder of a store opened by testStore: the path of its database, without the file.
-func dirOf(t *testing.T, s *Store) string {
-	t.Helper()
-
-	var name string
-
-	rows, err := s.DB().QueryContext(ctx, "PRAGMA database_list")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	defer func() { _ = rows.Close() }()
-
-	for rows.Next() {
-		var seq int
-		var db, file string
-
-		if err := rows.Scan(&seq, &db, &file); err != nil {
-			t.Fatal(err)
-		}
-
-		if db == "main" {
-			name = file
-		}
-	}
-
-	return strings.ReplaceAll(strings.TrimSuffix(strings.ReplaceAll(name, "\\", "/"), "db.sqlite"), "//", "/")
 }
 
 // A row of the log copied to another revision or to another project does not open (ADR-0053).
@@ -332,7 +320,8 @@ func TestSecurity_T133_ARowOfTheLogCopiedToAnotherRevisionOrProjectDoesNotOpen(t
 	}
 
 	// The same for an image, and for a document copied into another row.
-	if _, err := st.DB().ExecContext(ctx, `UPDATE timelines SET document = (SELECT document FROM timelines WHERE id = 'prj_9')
+	if _, err := st.DB().
+		ExecContext(ctx, `UPDATE timelines SET document = (SELECT document FROM timelines WHERE id = 'prj_9')
  WHERE id = 'prj_8'`); err != nil {
 		t.Fatal(err)
 	}

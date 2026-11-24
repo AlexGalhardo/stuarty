@@ -168,8 +168,12 @@ func TestSecurity_T130_ACopyOfTheWorkspaceHoldsNoLibraryFileInClearText(t *testi
 	}
 
 	// A clear file the person dropped in is sealed by the scan, and the clear one is gone.
-	write(t, filepath.Join(dir, "memory", "dropped.md"), "---\nname: dropped\ndescription: d\nscope: workspace\nactor: local:ui\n"+
-		"kept: true\ncreated: 2026-11-19T10:00:00Z\nupdated: 2026-11-19T10:00:00Z\n---\n"+canary+" dropped\n")
+	write(
+		t,
+		filepath.Join(dir, "memory", "dropped.md"),
+		"---\nname: dropped\ndescription: d\nscope: workspace\nactor: local:ui\n"+
+			"kept: true\ncreated: 2026-11-19T10:00:00Z\nupdated: 2026-11-19T10:00:00Z\n---\n"+canary+" dropped\n",
+	)
 	write(t, filepath.Join(dir, "skills", "imported", "SKILL.md"),
 		"---\nname: imported\ndescription: A skill that was dropped in.\n---\n"+canary+"\n")
 	write(t, filepath.Join(dir, "skills", "imported", "references", "a.md"), canary+" ref\n")
@@ -194,7 +198,11 @@ func TestScanSealsAClearFileByRenameKeepsItsTimeAndReadsItBack(t *testing.T) {
 	m, _, dir := newSealed(t)
 	path := filepath.Join(dir, "prompts", "p.md")
 
-	write(t, path, "---\nname: p\ndescription: d\nactor: local:ui\ncreated: 2026-11-19T10:00:00Z\nupdated: 2026-11-19T10:00:00Z\n---\nBody {{x}}\n")
+	write(
+		t,
+		path,
+		"---\nname: p\ndescription: d\nactor: local:ui\ncreated: 2026-11-19T10:00:00Z\nupdated: 2026-11-19T10:00:00Z\n---\nBody {{x}}\n",
+	)
 
 	old := time.Date(2025, 1, 2, 3, 4, 5, 0, time.UTC)
 	if err := os.Chtimes(path, old, old); err != nil {
@@ -401,8 +409,12 @@ func TestLibraryOfTheMaximumSizeIsReadyWithinTwoSecondsOfTheUnlock(t *testing.T)
 
 	for i := range 2000 {
 		n := fmt.Sprintf("note-%04d", i)
-		write(t, filepath.Join(dir, "memory", n+".md"), "---\nname: "+n+"\ndescription: A note about hooks\nscope: workspace\n"+
-			"actor: local:ui\nkept: true\ncreated: 2026-11-19T10:00:00Z\nupdated: 2026-11-19T10:00:00Z\n---\n"+body)
+		write(
+			t,
+			filepath.Join(dir, "memory", n+".md"),
+			"---\nname: "+n+"\ndescription: A note about hooks\nscope: workspace\n"+
+				"actor: local:ui\nkept: true\ncreated: 2026-11-19T10:00:00Z\nupdated: 2026-11-19T10:00:00Z\n---\n"+body,
+		)
 	}
 
 	for i := range 500 {
@@ -413,7 +425,11 @@ func TestLibraryOfTheMaximumSizeIsReadyWithinTwoSecondsOfTheUnlock(t *testing.T)
 
 	for i := range 500 {
 		n := fmt.Sprintf("skill-%04d", i)
-		write(t, filepath.Join(dir, "skills", n, "SKILL.md"), "---\nname: "+n+"\ndescription: A skill for hooks.\n---\n"+body)
+		write(
+			t,
+			filepath.Join(dir, "skills", n, "SKILL.md"),
+			"---\nname: "+n+"\ndescription: A skill for hooks.\n---\n"+body,
+		)
 		write(t, filepath.Join(dir, "skills", n, "references", "a.md"), body)
 	}
 

@@ -15,7 +15,7 @@ import (
 // earlierAccount is a workspace as release 0.50.0 left it: the documents, the log, the backups, the results and the
 // asset notes in clear text, and an account of seal version 0. extraOps adds rows to the log so the migration takes
 // more than one batch.
-func earlierAccount(t *testing.T, extraOps int) (*Store, *locker, string) {
+func earlierAccount(t *testing.T, extraOps int) (*Store, string) {
 	t.Helper()
 
 	dir := newDir(t)
@@ -25,8 +25,18 @@ func earlierAccount(t *testing.T, extraOps int) (*Store, *locker, string) {
 
 	for i := 2; i < 2+extraOps; i++ {
 		if err := st.Operations().Append(ctx, service.OperationRow{
-			ProjectID: "prj_9", Revision: int64(i), Kind: service.OpEdit, Actor: "local:ui", AtMs: int64(i),
-			Ops: js(fmt.Sprintf("%s-%d", docOp, i)), Inverse: js("i"), Diff: js("d"), SchemaVersion: 1, DocSHA256: "sha",
+			ProjectID: "prj_9",
+			Revision:  int64(i),
+			Kind:      service.OpEdit,
+			Actor:     "local:ui",
+			AtMs:      int64(i),
+			Ops: js(
+				fmt.Sprintf("%s-%d", docOp, i),
+			),
+			Inverse:       js("i"),
+			Diff:          js("d"),
+			SchemaVersion: 1,
+			DocSHA256:     "sha",
 		}); err != nil {
 			t.Fatal(err)
 		}
@@ -55,19 +65,23 @@ func earlierAccount(t *testing.T, extraOps int) (*Store, *locker, string) {
 	l := &locker{Sealer: keys}
 	st.SetSealer(l)
 
-	return st, l, string(dir)
+	return st, string(dir)
 }
 
 func guardCount(t *testing.T, st *Store) int {
 	t.Helper()
 
-	return scalar[int](t, st, "SELECT count(*) FROM sqlite_master WHERE type = 'trigger' AND name LIKE 'sealed_guard_%'")
+	return scalar[int](
+		t,
+		st,
+		"SELECT count(*) FROM sqlite_master WHERE type = 'trigger' AND name LIKE 'sealed_guard_%'",
+	)
 }
 
 // A workspace of release 0.50.0 opens, reads its clear columns without error, seals them at the first unlock, and
 // ends with every document, operation and note equal to what it was (SDD-005 section 5.17.4).
 func TestSealDocumentsOfAnEarlierAccountLosesNothing(t *testing.T) {
-	st, _, dir := earlierAccount(t, 450)
+	st, dir := earlierAccount(t, 450)
 
 	// Before the sealing: everything reads as it was, from clear text, with no error; the log too.
 	readDocuments(t, st)
@@ -135,7 +149,7 @@ func TestSealDocumentsOfAnEarlierAccountLosesNothing(t *testing.T) {
 // A run that fails in the middle leaves a workspace that opens and reads everything, and the next run finishes it
 // without losing a row.
 func TestSecurity_T135_AMigrationStoppedInTheMiddleLosesNothingAndTheNextRunFinishesIt(t *testing.T) {
-	st, _, dir := earlierAccount(t, 450)
+	st, dir := earlierAccount(t, 450)
 
 	batches := 0
 	boom := errors.New("the disk is full")
@@ -198,7 +212,7 @@ func TestSecurity_T135_AMigrationStoppedInTheMiddleLosesNothingAndTheNextRunFini
 
 // A clear description that starts with the prefix of a sealed field is still a description (SDD-005 section 5.17.4).
 func TestSealDocumentsSealsAClearValueThatLooksSealed(t *testing.T) {
-	st, _, _ := earlierAccount(t, 0)
+	st, _ := earlierAccount(t, 0)
 
 	if _, err := st.DB().ExecContext(ctx, `UPDATE asset_info SET description = 's1.not-really-sealed'`); err != nil {
 		t.Fatal(err)

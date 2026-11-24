@@ -251,7 +251,15 @@ func scanImageOp(ex database.Executor, sc interface{ Scan(...any) error }) (serv
 		return service.ImageOpRow{}, oerr
 	}
 
-	op.Kind, op.Ops, op.Inverse, op.Diff = service.OperationKind(kind), []byte(plain[0]), []byte(plain[1]), []byte(plain[2])
+	op.Kind, op.Ops, op.Inverse, op.Diff = service.OperationKind(
+		kind,
+	), []byte(
+		plain[0],
+	), []byte(
+		plain[1],
+	), []byte(
+		plain[2],
+	)
 	op.TargetRevision, op.ClosedBy, op.IdempotencyKey = ptrInt64(target), ptrInt64(closed), ptrString(key)
 	op.RequestHash = reqHash.String
 

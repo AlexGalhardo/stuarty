@@ -19,8 +19,9 @@ const maxSealFile = 64 << 20
 // compared with what the file held, and only then is the clear one gone (the rename replaces it). A sealed file, a
 // link, a folder, a missing file and a folder with no account are left as they are. It reports whether it sealed.
 func sealClearFile(root *vroot, rel string) (bool, error) {
+	// A folder with no account, and a locked one, have nothing to seal: the scan does not run while locked.
 	if !root.sealing() || root.ready() != nil {
-		return false, nil
+		return false, nil //nolint:nilerr // locked is not a failure of the file
 	}
 
 	info, err := root.Lstat(rel)

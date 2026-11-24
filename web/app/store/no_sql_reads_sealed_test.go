@@ -26,7 +26,9 @@ func TestNoSQLReadsASealedColumn(t *testing.T) {
 	// (SDD-005 section 5.17.2). The second stage has none.
 	cells := sealedCellsV2
 
-	reads := regexp.MustCompile(`(?is)\b(where|order\s+by|group\s+by|having|on|json_extract|json_valid|length|substr|like|match|coalesce|lower|upper|trim|cast)\b`)
+	reads := regexp.MustCompile(
+		`(?is)\b(where|order\s+by|group\s+by|having|on|json_extract|json_valid|length|substr|like|match|coalesce|lower|upper|trim|cast)\b`,
+	)
 
 	sources := []string{"."}
 
@@ -62,8 +64,10 @@ func TestNoSQLReadsASealedColumn(t *testing.T) {
 			}
 
 			text, err := strconv.Unquote(lit.Value)
-			if err != nil || !strings.Contains(strings.ToUpper(text), "SELECT") && !strings.Contains(strings.ToUpper(text), "UPDATE") &&
-				!strings.Contains(strings.ToUpper(text), "DELETE") && !strings.Contains(strings.ToUpper(text), "INSERT") {
+			if err != nil ||
+				!strings.Contains(strings.ToUpper(text), "SELECT") && !strings.Contains(strings.ToUpper(text), "UPDATE") &&
+					!strings.Contains(strings.ToUpper(text), "DELETE") &&
+					!strings.Contains(strings.ToUpper(text), "INSERT") {
 				return true
 			}
 
@@ -96,13 +100,25 @@ func TestNoSQLReadsASealedColumn(t *testing.T) {
 				word := regexp.MustCompile(`(?i)\b` + c.column + `\b`)
 
 				if word.MatchString(tail) {
-					t.Errorf("%s: SQL reads %s.%s in a condition or an order: %q", fset.Position(lit.Pos()), c.table, c.column, trim(text))
+					t.Errorf(
+						"%s: SQL reads %s.%s in a condition or an order: %q",
+						fset.Position(lit.Pos()),
+						c.table,
+						c.column,
+						trim(text),
+					)
 				}
 
 				call := regexp.MustCompile(`(?i)\w+\(\s*(\w+\.)?` + c.column + `\b`)
 				if m := call.FindString(text); m != "" && reads.MatchString(m) {
 					if _, ok := allowedSQLReads[m]; !ok {
-						t.Errorf("%s: SQL applies an expression to %s.%s: %q", fset.Position(lit.Pos()), c.table, c.column, m)
+						t.Errorf(
+							"%s: SQL applies an expression to %s.%s: %q",
+							fset.Position(lit.Pos()),
+							c.table,
+							c.column,
+							m,
+						)
 					}
 				}
 			}
@@ -152,7 +168,7 @@ func TestNoIndexNamesASealedColumn(t *testing.T) {
 					continue
 				}
 
-				for _, col := range strings.Split(m[3], ",") {
+				for col := range strings.SplitSeq(m[3], ",") {
 					if strings.EqualFold(strings.Fields(col)[0], c.column) {
 						t.Errorf("%s: an index on %s names the sealed column %s", filepath.Base(f), c.table, c.column)
 					}
