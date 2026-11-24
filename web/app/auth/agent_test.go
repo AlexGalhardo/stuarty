@@ -26,6 +26,11 @@ func TestAgentCallerIsBoundAndNotAPerson(t *testing.T) {
 		t.Errorf("the actor label is not a valid label: %v", err)
 	}
 
+	// The session id is how a skill an agent read is recorded in its own session (SDD-017 section 8.1).
+	if local.ChatSessionID != g.SessionID || AgentCaller(g, true).ChatSessionID != g.SessionID {
+		t.Errorf("the caller does not carry the session of the token: %q", local.ChatSessionID)
+	}
+
 	network := AgentCaller(g, true)
 	if network.Actor != "key:cht_abcdefghjk" || network.OwnerUserID != "usr_0000000001" || network.Browser {
 		t.Errorf("network caller = %+v", network)

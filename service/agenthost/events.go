@@ -40,9 +40,11 @@ type recorder struct {
 	now   func() time.Time
 	log   *slog.Logger
 
-	seq    int64
-	open   *chat.Event
-	openID string
+	seq int64
+	// lastSkill is the skill read last, so that the same read twice in a row is one event.
+	lastSkill *chat.SkillRef
+	open      *chat.Event
+	openID    string
 	// sent is how much of the text of open the subscribers have: a tail that could be the start of
 	// a secret is held back until the next chunk shows whether it is one.
 	sent   int
@@ -409,6 +411,28 @@ func (r *recorder) Tool(u Update) bool {
 	r.publish(ev)
 
 	return true
+}
+
+// SkillLoaded records that the agent read a skill. A read of the skill just recorded, with the same
+// hash, adds nothing: the activity would not change, and an agent that reads in a loop would fill
+// the transcript.
+func (r *recorder) SkillLoaded(ref chat.SkillRef) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	ref.Name, _ = chat.Clip(chat.CleanText(ref.Name), 128)
+	ref.Hash, _ = chat.Clip(chat.CleanText(ref.Hash), 128)
+
+	if r.lastSkill != nil && *r.lastSkill == ref {
+		return true
+	}
+
+	_, ok := r.emitLocked(chat.Event{Kind: chat.KindSkillLoaded, Skill: &ref})
+	if ok {
+		r.lastSkill = &ref
+	}
+
+	return ok
 }
 
 // Permission records a permission request.

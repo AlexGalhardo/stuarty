@@ -25,6 +25,7 @@ type chatBody struct {
 	Tool       *chat.Tool       `json:"tool,omitempty"`
 	Permission *chat.Permission `json:"permission,omitempty"`
 	State      *chat.StateInfo  `json:"state,omitempty"`
+	Skill      *chat.SkillRef   `json:"skill,omitempty"`
 }
 
 func (r chatRepo) ProfileList(ctx context.Context) ([]agenthost.Profile, error) {
@@ -328,7 +329,9 @@ func (r chatRepo) SessionsPrune(ctx context.Context, projectID string, keep int)
 }
 
 func (r chatRepo) EventUpsert(ctx context.Context, sessionID string, e chat.Event) error {
-	body, err := json.Marshal(chatBody{Text: e.Text, Tool: e.Tool, Permission: e.Permission, State: e.State})
+	body, err := json.Marshal(
+		chatBody{Text: e.Text, Tool: e.Tool, Permission: e.Permission, State: e.State, Skill: e.Skill},
+	)
 	if err != nil {
 		return err
 	}
@@ -381,7 +384,7 @@ func (r chatRepo) EventList(ctx context.Context, sessionID string, after int64, 
 		}
 
 		e.Kind, e.At = chat.Kind(kind), time.UnixMilli(at).UTC()
-		e.Text, e.Tool, e.Permission, e.State = b.Text, b.Tool, b.Permission, b.State
+		e.Text, e.Tool, e.Permission, e.State, e.Skill = b.Text, b.Tool, b.Permission, b.State, b.Skill
 		out = append(out, e)
 	}
 

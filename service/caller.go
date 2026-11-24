@@ -25,6 +25,10 @@ type Caller struct {
 	Scopes      []string // subset of read, edit, media, render, admin
 	OwnerUserID string   // network mode: the user who owns the key or session; empty in local mode
 	ProjectID   string   // a key limited to one project; empty means any
+	// ChatSessionID is the hosted chat session a session token is bound to (SDD-017 section 8.1). Only the
+	// authentication of a session token sets it: a person, the local token and a key never carry one, so a skill
+	// they read is recorded in no session.
+	ChatSessionID string
 	// Browser is true for a person at the editor, who proved it with the
 	// session cookie. The local token and the agent surfaces are not.
 	Browser bool
