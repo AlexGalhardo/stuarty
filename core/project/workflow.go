@@ -136,7 +136,7 @@ func stepsOf(kind Intent, h holdings) []StepID {
 	}
 
 	text := kind == KindText
-	video := kind == KindVideo || h.timelines > 0
+	video := holdsVideo(kind, h)
 	image := kind == KindImage || h.images > 0
 	media := video || image
 
@@ -200,8 +200,9 @@ func baseState(id StepID, kind Intent, h holdings, f *Facts) StepState {
 	case StepRecording:
 		return doneIf(f.TimelineAssets > 0)
 	case StepEditing:
-		if kind == KindImage && h.timelines == 0 {
-			// No image document belongs to a project yet, so there is no fact to read.
+		if kind == KindImage || !holdsVideo(kind, h) {
+			// No image document belongs to a project yet, so the editing of an image has no fact to read, and a
+			// timeline alone does not say the image is edited.
 			return StepUnknown
 		}
 
@@ -271,7 +272,7 @@ func ComputeWorkflow(stored Intent, f *Facts) Workflow {
 		def := stepTable[id]
 		st := Step{ID: id, Optional: optional(id, kind, h), Actor: def.actor, Tool: def.tool}
 
-		if id == StepEditing && kind == KindImage && h.timelines == 0 {
+		if id == StepEditing && !holdsVideo(kind, h) {
 			st.Tool = "ImageEdit"
 		}
 
@@ -288,9 +289,28 @@ func ComputeWorkflow(stored Intent, f *Facts) Workflow {
 		w.Steps = append(w.Steps, st)
 	}
 
+	followSkippedPublication(&w)
 	order(&w)
 
 	return w
+}
+
+// holdsVideo reports whether the video steps are in the workflow: the project is a video or holds a timeline.
+func holdsVideo(kind Intent, h holdings) bool { return kind == KindVideo || h.timelines > 0 }
+
+// followSkippedPublication skips the approval of a publication the person skipped: the approval exists only to
+// let a publication out, so a copy that ends in copy or export (D-137) is not left waiting at it. An approval
+// that a fact decides (done, waiting or unknown) keeps its state, and the approval is never skipped on its own.
+func followSkippedPublication(w *Workflow) {
+	if p, ok := w.Step(StepPublication); !ok || p.State != StepSkipped {
+		return
+	}
+
+	for i := range w.Steps {
+		if w.Steps[i].ID == StepApproval && w.Steps[i].State == stepOpen {
+			w.Steps[i].State = StepSkipped
+		}
+	}
 }
 
 // order turns the open steps into current and upcoming and names the current and the next step.

@@ -1199,13 +1199,13 @@ The workflow of each kind is therefore: `video`: briefing, script, recording, ed
 | `choice` | never: it leaves the workflow when the kind is known | never |
 | `script`, `writing` | an active text that is not a caption has text | never |
 | `recording` | the first timeline holds an asset | never |
-| `editing` | the first timeline holds an item; image: never | image: always (no image document belongs to a project yet) |
+| `editing` | the first timeline holds an item, in a project that is not an image and holds a video | an `image` project: always, even with a timeline (no image document belongs to a project yet, and a timeline says nothing about the image); a project with no video that holds an image: always |
 | `finishing` | an `output` item exists | never |
 | `review` | a publication or an `output` item exists | the publications could not be read and there is no output |
 | `approval` | a publication is published and none waits | a publication exists in another state (a draft or an approved one that is scheduled; the status of a publication does not tell them apart), or the publications could not be read |
 | `publication` | a publication is published | a publication exists in another state, or the publications could not be read |
 
-`waiting` is the state of `approval` while a publication waits for a person (`pending_approval`). A step the person skipped is `skipped` when it is optional in the workflow; a stored skip of a step that is not optional (today) is ignored. `current` is the first step, in order, that has no fact against it: the first one not `done`, `skipped` or `unknown`, and `waiting` when a person has to act; the steps after it that are open are `upcoming`. `workflow.current` names that step (empty when every step is done, skipped or unknown) and `workflow.next` the first open step after it, so that a person and an agent read where the project stands and what comes next.
+`waiting` is the state of `approval` while a publication waits for a person (`pending_approval`). A step the person skipped is `skipped` when it is optional in the workflow; a stored skip of a step that is not optional (today) is ignored. `approval` is never optional on its own, but it exists only to let a publication out: when `publication` is `skipped`, an `approval` that no fact decides is `skipped` too, so a copy that ends in copy or export (D-137) does not wait at it. `current` is the first step, in order, that has no fact against it: the first one not `done`, `skipped` or `unknown`, and `waiting` when a person has to act; the steps after it that are open are `upcoming`. `workflow.current` names that step (empty when every step is done, skipped or unknown) and `workflow.next` the first open step after it, so that a person and an agent read where the project stands and what comes next.
 
 **Cost.** The `approval` step carries the sum, by currency, of the estimates of the approval requests of the project that are pending or approved (a rejected or expired one cost nothing); it is absent when there is none. Requests are read by the id of the project and of each of its timelines.
 
