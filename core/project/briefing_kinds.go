@@ -15,29 +15,58 @@ const (
 	ProductionShort      ProductionKind = "short"      // a short vertical video (the first complete flow)
 	ProductionCommercial ProductionKind = "commercial" // a product commercial of 15 or 30 seconds
 	ProductionLong       ProductionKind = "long"       // a long talking video
+	ProductionText       ProductionKind = "text"       // a post, copy, a script or a caption: words, no media
+	ProductionImage      ProductionKind = "image"      // a picture: a thumbnail, a cover, a post image
 )
 
-// The bounds of the duration answer of a commercial and of a long video, in seconds.
+// The bounds of the duration answer of a commercial and of a long video, in seconds, and of the length of a text,
+// in words.
 const (
 	MinCommercialSeconds = 5
 	MaxCommercialSeconds = 90
 	MinLongSeconds       = 120
 	MaxLongSeconds       = 14400
+	MinTextWords         = 5
+	MaxTextWords         = 20000
 )
 
 // ProductionKinds returns the kinds of production, in a fixed order.
 func ProductionKinds() []ProductionKind {
-	return []ProductionKind{ProductionShort, ProductionCommercial, ProductionLong}
+	return []ProductionKind{
+		ProductionShort, ProductionCommercial, ProductionLong, ProductionText, ProductionImage,
+	}
 }
 
-// KindOrShort is the kind a surface sends as text: an empty one is the short video, the default of the briefing.
-// The text is not checked here; BriefingQuestionsFor and CheckAnswersFor refuse an unknown kind.
+// KindOrShort is the kind a surface sends as text: an empty one is the short video, the neutral default of the
+// briefing of a project that has no kind. The text is not checked here; BriefingQuestionsFor and CheckAnswersFor
+// refuse an unknown kind.
 func KindOrShort(s string) ProductionKind {
+	return KindFor(s, KindUndecided)
+}
+
+// KindFor is the set of questions a request asks for (VV-399): the kind it names, and when it names none the set
+// that fits the kind of the project (see ProductionKindOf). A caller that names a kind always gets that set.
+func KindFor(s string, of Intent) ProductionKind {
 	if s == "" {
-		return ProductionShort
+		return ProductionKindOf(of)
 	}
 
 	return ProductionKind(s)
+}
+
+// ProductionKindOf is the default set of questions of a project of a kind: a text project asks the questions of a
+// text and an image project those of an image. A video, and a project that is not decided yet, keep the short
+// video, the neutral set the briefing always had; the caller may still ask for the commercial or the long one.
+func ProductionKindOf(of Intent) ProductionKind {
+	switch of {
+	case KindText:
+		return ProductionText
+	case KindImage:
+		return ProductionImage
+	case KindUndecided, KindVideo:
+	}
+
+	return ProductionShort
 }
 
 // Known reports whether k is a kind of production.
@@ -159,9 +188,54 @@ var longQuestions = []Question{
 	{ID: "deadline", Heading: "Deadline", Text: "By when (YYYY-MM-DD)?", Kind: AnswerDate},
 }
 
+var textQuestions = []Question{
+	{ID: "audience", Heading: "Audience", Text: "Who is this for?", Kind: AnswerText, Required: true, MaxChars: 400},
+	{ID: "tone", Heading: "Tone", Text: "Which tone of voice?", Kind: AnswerText, Required: true, MaxChars: 200},
+	{
+		ID: "call_to_action", Heading: "Call to action", Text: "What should the reader do next?",
+		Kind: AnswerText, Required: true, MaxChars: 200,
+	},
+	{
+		ID: "channel", Heading: "Where it appears", Text: "Where will it appear?", Kind: AnswerChoice, Required: true,
+		Options: []string{"blog", "newsletter", "social-post", "website", "email", "other"},
+	},
+	{
+		ID: "length", Heading: "Length (words)", Text: "How long, in words?", Kind: AnswerWords, Required: true,
+		Min: MinTextWords, Max: MaxTextWords,
+	},
+	{ID: "deadline", Heading: "Deadline", Text: "By when (YYYY-MM-DD)?", Kind: AnswerDate},
+}
+
+var imageQuestions = []Question{
+	{ID: "audience", Heading: "Audience", Text: "Who is this for?", Kind: AnswerText, Required: true, MaxChars: 400},
+	{
+		ID: "format", Heading: "Format", Text: "Which format?", Kind: AnswerChoice, Required: true,
+		Options: []string{"square-1x1", "portrait-4x5", "vertical-9x16", "horizontal-16x9", "horizontal-3x2"},
+	},
+	{
+		ID: "size", Heading: "Size", Text: "Which size, in pixels (for example 1080x1350)?",
+		Kind: AnswerText, MaxChars: 40,
+	},
+	{
+		ID: "style", Heading: "Style", Text: "Which style: the look, the colours, the mood?",
+		Kind: AnswerText, Required: true, MaxChars: 400,
+	},
+	{
+		ID: "channel", Heading: "Where it appears", Text: "Where will it appear?", Kind: AnswerChoice, Required: true,
+		Options: []string{
+			"instagram-feed", "instagram-story", "facebook-feed", "youtube-thumbnail", "blog", "website", "other",
+		},
+	},
+	{ID: "deadline", Heading: "Deadline", Text: "By when (YYYY-MM-DD)?", Kind: AnswerDate},
+}
+
 // questionSet is the table of a kind, nil for an unknown one. It is never handed out: callers get a copy.
 func questionSet(k ProductionKind) []Question {
 	switch k {
+	case ProductionText:
+		return textQuestions
+	case ProductionImage:
+		return imageQuestions
 	case ProductionShort:
 		return briefingQuestions
 	case ProductionCommercial:
@@ -174,7 +248,7 @@ func questionSet(k ProductionKind) []Question {
 }
 
 func unknownKind(k ProductionKind) *RuleError {
-	names := make([]string, 0, 3)
+	names := make([]string, 0, len(ProductionKinds()))
 	for _, known := range ProductionKinds() {
 		names = append(names, string(known))
 	}

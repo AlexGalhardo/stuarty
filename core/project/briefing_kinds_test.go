@@ -4,6 +4,7 @@ import (
 	"maps"
 	"reflect"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/core/project"
@@ -27,7 +28,7 @@ func answersOf(t *testing.T, k project.ProductionKind) map[string]string {
 		switch q.Kind {
 		case project.AnswerChoice:
 			out[q.ID] = q.Options[0]
-		case project.AnswerSeconds:
+		case project.AnswerSeconds, project.AnswerWords:
 			out[q.ID] = strconv.Itoa(q.Min)
 		case project.AnswerDate:
 			out[q.ID] = "2026-12-01"
@@ -42,7 +43,7 @@ func answersOf(t *testing.T, k project.ProductionKind) map[string]string {
 func TestBriefingKindsListAndShortIsTheFirstFlow(t *testing.T) {
 	t.Parallel()
 
-	want := []project.ProductionKind{"short", "commercial", "long"}
+	want := []project.ProductionKind{"short", "commercial", "long", "text", "image"}
 	if got := project.ProductionKinds(); !reflect.DeepEqual(got, want) {
 		t.Fatalf("kinds are %v", got)
 	}
@@ -88,7 +89,7 @@ func TestBriefingKindsEachSetIsWellFormed(t *testing.T) {
 				if len(q.Options) < 2 {
 					t.Errorf("%s: %s is a choice with no options", k, q.ID)
 				}
-			case project.AnswerSeconds:
+			case project.AnswerSeconds, project.AnswerWords:
 				if q.Min < 1 || q.Max <= q.Min {
 					t.Errorf("%s: %s has the bounds %d to %d", k, q.ID, q.Min, q.Max)
 				}
@@ -268,5 +269,142 @@ func TestKindOrShortDefaultsToTheFirstFlow(t *testing.T) {
 
 	if got := project.KindOrShort("podcast"); got.Known() {
 		t.Error("an unknown kind became a known one")
+	}
+}
+
+// VV-399: a text and an image have questions of their own, and none of them is about a video.
+func TestBriefingKindsTextAndImageAreNotAboutAVideo(t *testing.T) {
+	t.Parallel()
+
+	ids := func(k project.ProductionKind) map[string]project.Question {
+		qs, v := project.BriefingQuestionsFor(k)
+		if v != nil {
+			t.Fatal(v)
+		}
+
+		out := map[string]project.Question{}
+		for _, q := range qs {
+			out[q.ID] = q
+		}
+
+		return out
+	}
+
+	text, image := ids(project.ProductionText), ids(project.ProductionImage)
+
+	for _, id := range []string{"audience", "tone", "call_to_action", "channel", "length"} {
+		if !text[id].Required {
+			t.Errorf("text: %s must be a required question", id)
+		}
+	}
+
+	for _, id := range []string{"audience", "format", "style", "channel"} {
+		if !image[id].Required {
+			t.Errorf("image: %s must be a required question", id)
+		}
+	}
+
+	for k, set := range map[string]map[string]project.Question{"text": text, "image": image} {
+		for id, q := range set {
+			if id == "platform" || id == "duration" || strings.Contains(strings.ToLower(q.Text), "video") {
+				t.Errorf("%s: %s asks about a video", k, id)
+			}
+		}
+	}
+
+	if text["length"].Kind != project.AnswerWords || text["length"].Min != project.MinTextWords {
+		t.Errorf("the length of a text is asked in words: %+v", text["length"])
+	}
+
+	if _, ok := image["format"]; !ok || len(image["format"].Options) < 3 {
+		t.Error("an image asks for its format")
+	}
+}
+
+func TestBriefingKindsLengthInWords(t *testing.T) {
+	t.Parallel()
+
+	cases := map[string]bool{
+		"5": true, "800": true, "20000": true, "4": false, "20001": false, "800 words": false, "08": false, "-1": false,
+	}
+
+	for words, ok := range cases {
+		a := answersOf(t, project.ProductionText)
+		a["length"] = words
+
+		if _, v := project.CheckAnswersFor(project.ProductionText, a); (v == nil) != ok {
+			t.Errorf("%q words: ok=%v, got %+v", words, ok, v)
+		}
+	}
+}
+
+func TestBriefingKindsATextBriefIsNotAnImageBrief(t *testing.T) {
+	t.Parallel()
+
+	for _, pair := range [][2]project.ProductionKind{
+		{project.ProductionText, project.ProductionImage},
+		{project.ProductionImage, project.ProductionText},
+		{project.ProductionText, project.ProductionShort},
+		{project.ProductionImage, project.ProductionCommercial},
+	} {
+		checked, v := project.CheckAnswersFor(pair[0], answersOf(t, pair[0]))
+		if v != nil {
+			t.Fatal(v)
+		}
+
+		if _, ok := project.ParseBriefingFor(pair[1], project.BriefingMarkdownFor(pair[0], checked)); ok {
+			t.Errorf("a %s brief was read as the brief of %s", pair[0], pair[1])
+		}
+	}
+}
+
+func TestProductionKindOfFollowsTheKindOfTheProject(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		of   project.Intent
+		want project.ProductionKind
+	}{
+		{project.KindText, project.ProductionText},
+		{project.KindImage, project.ProductionImage},
+		{project.KindVideo, project.ProductionShort},
+		{project.KindUndecided, project.ProductionShort},
+		{"", project.ProductionShort},
+	}
+
+	for _, c := range cases {
+		if got := project.ProductionKindOf(c.of); got != c.want {
+			t.Errorf("a %q project asks %q, want %q", c.of, got, c.want)
+		}
+
+		if got := project.KindFor("", c.of); got != c.want {
+			t.Errorf("KindFor empty on a %q project is %q, want %q", c.of, got, c.want)
+		}
+
+		// A caller that names a set always gets that one.
+		if got := project.KindFor("long", c.of); got != project.ProductionLong {
+			t.Errorf("a named kind lost to the project kind %q: %q", c.of, got)
+		}
+	}
+}
+
+func TestCheckBriefingReplaceTakesTheBriefOfEveryKindForTheBriefings(t *testing.T) {
+	t.Parallel()
+
+	for _, k := range project.ProductionKinds() {
+		checked, v := project.CheckAnswersFor(k, answersOf(t, k))
+		if v != nil {
+			t.Fatal(v)
+		}
+
+		own := project.BriefingMarkdownFor(k, checked)
+
+		if v := project.CheckBriefingReplace(own, false); v != nil {
+			t.Errorf("%s: answering again was refused: %+v", k, v)
+		}
+
+		if v := project.CheckBriefingReplace("My own plan.", false); v == nil || v.Path != "replace" {
+			t.Errorf("%s: a brief by hand was not kept: %+v", k, v)
+		}
 	}
 }

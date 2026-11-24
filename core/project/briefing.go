@@ -21,6 +21,7 @@ const (
 	AnswerChoice  AnswerKind = "choice"  // one of Options
 	AnswerSeconds AnswerKind = "seconds" // a whole number of seconds, MinSeconds to MaxSeconds
 	AnswerDate    AnswerKind = "date"    // a calendar date, YYYY-MM-DD
+	AnswerWords   AnswerKind = "words"   // a whole number of words, Min to Max (the length of a text)
 )
 
 // The bounds of a duration answer: a short video is at most three minutes long.
@@ -190,6 +191,12 @@ func checkAnswer(q *Question, a, path string) *RuleError {
 			return validation(path, fmt.Sprintf("send a whole number from %d to %d", q.Min, q.Max),
 				"%q is not a number of seconds from %d to %d", a, q.Min, q.Max)
 		}
+	case AnswerWords:
+		n, err := strconv.Atoi(a)
+		if err != nil || n < q.Min || n > q.Max || strconv.Itoa(n) != a {
+			return validation(path, fmt.Sprintf("send a whole number from %d to %d", q.Min, q.Max),
+				"%q is not a number of words from %d to %d", a, q.Min, q.Max)
+		}
 	case AnswerDate:
 		if _, err := time.Parse(time.DateOnly, a); err != nil {
 			return validation(path, "send a date as YYYY-MM-DD", "%q is not a date as YYYY-MM-DD", a)
@@ -317,14 +324,18 @@ func parseBriefing(set []Question, text string) (answers map[string]string, ok b
 }
 
 // CheckBriefingReplace is the rule that keeps a brief a person wrote (SDD-005 section 5.12.1): the answers of
-// the briefing replace an empty brief or one the briefing wrote, and a brief written by hand only with replace.
+// the briefing replace an empty brief or one the briefing wrote, with the questions of any kind of production (a
+// text project answers again, or asks for another set, with no replace), and a brief written by hand only with
+// replace.
 func CheckBriefingReplace(current string, replace bool) *RuleError {
 	if replace || strings.TrimSpace(current) == "" {
 		return nil
 	}
 
-	if _, guided := ParseBriefing(current); guided {
-		return nil
+	for _, k := range ProductionKinds() {
+		if _, guided := ParseBriefingFor(k, current); guided {
+			return nil
+		}
 	}
 
 	return &RuleError{
