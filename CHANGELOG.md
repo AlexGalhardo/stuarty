@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.48.0] - 2026-11-24
+
+### Added
+
+- **library:** Rename a file of the library on every surface ([57d6d07](https://github.com/AlexGalhardo/stuarty/commit/57d6d0708f8f9fe52d0957778080805ca2ed3357))
+- **ui:** Dark editor lists, a library twice as wide, no strip over the preview ([4553b7f](https://github.com/AlexGalhardo/stuarty/commit/4553b7f3987fab6b8c97df213993874c106ff17b))
+- **ui:** Rename an imported file by right click in the editor and the library ([da2c89b](https://github.com/AlexGalhardo/stuarty/commit/da2c89bfb8744028359bd76eef67f02cf6b0a7bc))
+- **ui:** Show the history as a collapsible sidebar next to the library ([4f37f11](https://github.com/AlexGalhardo/stuarty/commit/4f37f11466cfe24ad2622f854fa422a6260cd895))
+
+### Fixed
+
+- **core:** Never repeat a key the caller chose in an error ([c9c259d](https://github.com/AlexGalhardo/stuarty/commit/c9c259dcd2388ae349c1b7d4c9024aa3c19c9b8b))
+- **service:** Escape the dot segments in a request path ([6b953aa](https://github.com/AlexGalhardo/stuarty/commit/6b953aa67f00fc7ca3448caf2f68bdf43d7b0d31))
+- **ui:** Keep the chat log a list inside its log region ([6ca79ae](https://github.com/AlexGalhardo/stuarty/commit/6ca79ae7bed2c69a0b95007a6941277c1b5ff2d5))
+- **ui:** Ask before removing a connection ([693ba9d](https://github.com/AlexGalhardo/stuarty/commit/693ba9dc958b58d661544e5e49e6156e477bef41))
+- **core:** Keep caller keys out of processor, colour, slot and prompt errors ([22aa430](https://github.com/AlexGalhardo/stuarty/commit/22aa43080eed61e7960a0587491cefcc5c875b1d))
+- **service:** Keep caller keys out of brand, fill and document errors ([d96fd6c](https://github.com/AlexGalhardo/stuarty/commit/d96fd6cfb887c69d4cd832d3f1dc69ef4c8eac26))
+- **http:** Keep caller keys out of the strict body and binder errors ([2ebb1f4](https://github.com/AlexGalhardo/stuarty/commit/2ebb1f4703335c147e551244ec995398972be391))
+- **cli:** Keep caller keys out of flag, assignment and JSON flag errors ([e540e1e](https://github.com/AlexGalhardo/stuarty/commit/e540e1e0b27856c9250a259daa42ca853943301a))
+- **cli:** Escape the dot segments in the path of the event stream ([1c99789](https://github.com/AlexGalhardo/stuarty/commit/1c99789cc018c46a50a2d9cb6637f23ff82052f7))
+- **service:** Repeat a violation path only in its generated shape ([3f17048](https://github.com/AlexGalhardo/stuarty/commit/3f170481582667129ee2491a4ffb5b96d879bb6f))
+- **ui:** Isolate the label in the question that removes a connection ([01e28f7](https://github.com/AlexGalhardo/stuarty/commit/01e28f74b14c5b85af50a4de3ec56aebd63dab9a))
+- **ui:** Keep the chat log following when events arrive in a burst ([a90d6c2](https://github.com/AlexGalhardo/stuarty/commit/a90d6c23909fd7a7a037efae01a7cc2a824e597e))
+- **service:** Compute the peaks of a sound over 1 GiB in a profile upgrade job ([ad208b8](https://github.com/AlexGalhardo/stuarty/commit/ad208b8e7f0348a18479adea0c3f36a142ce6ff4))
+- **core:** Keep links, caption links and template info through OTIO ([554e96a](https://github.com/AlexGalhardo/stuarty/commit/554e96a21bdeaaf0d9a4d1817517d38bdd02c8cf))
+- **ui:** Let the waveform retry itself without an effect counter ([4b49908](https://github.com/AlexGalhardo/stuarty/commit/4b49908b6c45a8db54b51d34eb6619e4a338e03d))
+- **core:** Keep hostile OTIO labels and templates away from the project ([1321a12](https://github.com/AlexGalhardo/stuarty/commit/1321a125e5e0b423df4e81f11182344cec3acd81))
+- **ingest:** Bound what a malformed WAV header can make the peaks job do ([9a1bc81](https://github.com/AlexGalhardo/stuarty/commit/9a1bc812045df654f76596bcd1bfa110411b3142))
+- **service:** Keep the peaks job of a shared file safe from other users and reads ([3163520](https://github.com/AlexGalhardo/stuarty/commit/316352005e9b8e13da4a53a7e2df065424f28eb5))
+- **ui:** Retry the waveform only while the server computes it ([db52f77](https://github.com/AlexGalhardo/stuarty/commit/db52f777e5eefc3eeb413988d0870d360d496dd6))
+- **ui:** Draw a long sound on the timeline when its peaks job ends ([7cd1d41](https://github.com/AlexGalhardo/stuarty/commit/7cd1d41c32c823f8183264c5059950e40348923b))
+- **core:** Import a file with a slot twice into one project ([fd5c6d2](https://github.com/AlexGalhardo/stuarty/commit/fd5c6d23dd6866b313eef01e220e37b731f54a06))
+- **service:** Stop taking a peaks job for the import of a pending asset ([b5932b0](https://github.com/AlexGalhardo/stuarty/commit/b5932b0e1606d830609cd1f7c6bc926a03a559bb))
+- **service:** Show a member only the costs and rules of their own projects ([3b6ec96](https://github.com/AlexGalhardo/stuarty/commit/3b6ec96bd3aaac26bdc4ac59a9f55b6411f5f3a0))
+- **store:** Read an id that names a project as that project in every resolver ([eebc0f5](https://github.com/AlexGalhardo/stuarty/commit/eebc0f5dc366d0c4076d7779c1c520af0c20868a))
+- **service:** Do not tell a member that a project of several timelines exists ([adcef02](https://github.com/AlexGalhardo/stuarty/commit/adcef02fdf4d9d0432353404e209e533887fafb1))
+- **store:** Keep a timeline row carrying a project id out of every read ([9c595b5](https://github.com/AlexGalhardo/stuarty/commit/9c595b5b41b8d19849b04e1a96ed38dcec8b71de))
+- **service:** Hide what the workspace spent and who set a limit from a member ([b4e7844](https://github.com/AlexGalhardo/stuarty/commit/b4e78442f6d22fc22e2728ee71fec2613a2ce895))
+- **service:** Check the request before resolving the id in plan and diff ([97fd80e](https://github.com/AlexGalhardo/stuarty/commit/97fd80e43b9af496503633f80c135e6893387952))
+- **service:** Answer alike for a hidden project of several timelines ([78a96a2](https://github.com/AlexGalhardo/stuarty/commit/78a96a2dc9ee979333f25fdcce60b9b6f6caf9cd))
+- **service:** Bring waiting files to a first timeline that took a new id ([48cf9f3](https://github.com/AlexGalhardo/stuarty/commit/48cf9f38e6ed21b53449e7c89073fdae83f95157))
+- **library:** Keep the tested HyperFrames version from updating itself ([65f5d67](https://github.com/AlexGalhardo/stuarty/commit/65f5d67680be9265933d68a3ae22c857c40ca3e3))
+- **library:** Make a rename safe as a file name in every project ([7222825](https://github.com/AlexGalhardo/stuarty/commit/7222825d8cb47ea34c96fd93221c90ebb94fa193))
+- **library:** Carry a renamed file into OTIO, bundle import and the project view ([4b57cfa](https://github.com/AlexGalhardo/stuarty/commit/4b57cfaea48402b767e072a8acfd86aaff5a325b))
+- **ui:** Name a renamed file in the list view, the find bar and the announcement ([1e672f0](https://github.com/AlexGalhardo/stuarty/commit/1e672f03d5f819d276f3e7f3363ec1fb4090e7b1))
+- **ui:** Rename a sound from its row and give the focus back to the file ([9dc3ddb](https://github.com/AlexGalhardo/stuarty/commit/9dc3ddbf6051c396de044585ed4c52d14ac8a2ad))
+- **ui:** Reach the history sidebar by F6 and keep both sidebars usable ([1572a6d](https://github.com/AlexGalhardo/stuarty/commit/1572a6def83bec84b128158f23e43bcdc2eb1fab))
+- **ui:** Lay the cards of the wider library side by side ([d12ac73](https://github.com/AlexGalhardo/stuarty/commit/d12ac73efb12ed9e219ab8aaa0188ea2ea6fcca3))
+- **service:** Name a renamed file in the motion check and the render offers ([60884e9](https://github.com/AlexGalhardo/stuarty/commit/60884e9e5b40fbcbbb529b2ec6453a29592dac66))
+- **ui:** List a renamed file by its new name in the inspector pickers ([6bb070d](https://github.com/AlexGalhardo/stuarty/commit/6bb070da2684afede8243e7e0b50d61cc38238b7))
+- **ui:** Wrap the checkpoint form and rows in a narrow history sidebar ([505b943](https://github.com/AlexGalhardo/stuarty/commit/505b943b42700e531c15f71de4f6adcfce3236d5))
+- **ui:** Leave the stored row heights as they were while the history is closed ([4f3a33e](https://github.com/AlexGalhardo/stuarty/commit/4f3a33eda24e189c434f47f5eb67f4ebb700f660))
+- **service:** Keep the name of each holding of a file through a bundle ([a3e199f](https://github.com/AlexGalhardo/stuarty/commit/a3e199fafa6c957817e72f1de387035f3b4897c8))
+- **mcp:** Say in media_import that info.name renames a file ([bed1837](https://github.com/AlexGalhardo/stuarty/commit/bed1837f3a978bc0902c19f2c427ca71a3344280))
+- **ui:** Show a renamed file in the ducking list, the command form and the open detail ([ebefc02](https://github.com/AlexGalhardo/stuarty/commit/ebefc02fc28c462dc29bd224d4544d2b3efe3f28))
+- **library:** Refuse a rename that would end a file name with a space ([16e8171](https://github.com/AlexGalhardo/stuarty/commit/16e81716207a60b43154a419d5243609314dc66a))
+
 ## [0.47.0] - 2026-11-22
 
 ### Added
@@ -2244,7 +2301,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.47.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.48.0...HEAD
+[0.48.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.47.0...v0.48.0
 [0.47.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.46.0...v0.47.0
 [0.46.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.45.0...v0.46.0
 [0.45.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.44.0...v0.45.0
