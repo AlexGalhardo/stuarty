@@ -27,7 +27,7 @@ const firstTimeline = `(SELECT i.ref FROM project_items i
 
 const productionColumns = `p.id, p.name, p.state, p.created_ms, p.updated_ms, p.created_by, p.owner_user_id,
  p.trashed_ms, p.trashed_by, p.description, p.goal_specific, p.goal_measurable, p.goal_achievable, p.goal_relevant,
- p.goal_time_bound, p.goal_due,
+ p.goal_time_bound, p.goal_due, p.kind, p.skipped_steps,
  (SELECT count(*) FROM project_items i WHERE i.project_id = p.id AND i.kind = 'timeline' AND i.state = 'active'
   AND ` + ownTimeline + `),
  t.id, t.name, t.state, t.revision, t.schema_version, t.width, t.height, t.fps_num, t.fps_den,
@@ -89,6 +89,7 @@ func scanProduction(sc scanner, sl account.Sealer) (service.ProductionHead, erro
 		tAssets, tCreated, tUpd sql.NullInt64
 		tBy, tOwner, tTrashedBy sql.NullString
 		tTrashedMs, tResync     sql.NullInt64
+		kind, skipped           string
 	)
 
 	err := sc.Scan(
@@ -108,6 +109,8 @@ func scanProduction(sc scanner, sl account.Sealer) (service.ProductionHead, erro
 		&h.Goal.Relevant,
 		&h.Goal.TimeBound,
 		&h.Goal.Due,
+		&kind,
+		&skipped,
 		&h.Timelines,
 		&tID,
 		&tName,
@@ -139,6 +142,7 @@ func scanProduction(sc scanner, sl account.Sealer) (service.ProductionHead, erro
 	}
 
 	h.OwnerUserID, h.TrashedMs, h.TrashedBy = ptrString(owner), ptrInt64(trashedMs), ptrString(trashedBy)
+	h.Kind, h.Skipped = project.Intent(kind), project.ParseSkipped(skipped)
 
 	if tID.Valid {
 		h.Timeline = service.ProjectHead{
@@ -277,8 +281,8 @@ func (r productionRepo) Create(ctx context.Context, h service.ProductionHead) er
 		ctx,
 		`INSERT INTO projects
  (id, name, state, created_ms, updated_ms, created_by, owner_user_id, trashed_ms, trashed_by, description,
- goal_specific, goal_measurable, goal_achievable, goal_relevant, goal_time_bound, goal_due)
- VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+ goal_specific, goal_measurable, goal_achievable, goal_relevant, goal_time_bound, goal_due, kind, skipped_steps)
+ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		h.ID,
 		h.Name,
 		stateOrActive(h.State),
@@ -295,6 +299,8 @@ func (r productionRepo) Create(ctx context.Context, h service.ProductionHead) er
 		sealed[4],
 		sealed[5],
 		h.Goal.Due,
+		storedKind(h.Kind),
+		project.JoinSkipped(h.Skipped),
 	)
 	if isUnique(r.ex, err) {
 		return service.ErrExists
@@ -352,6 +358,43 @@ func (r productionRepo) SetContext(ctx context.Context, id string, c project.Con
 		`UPDATE projects SET name = ?, description = ?, goal_specific = ?, goal_measurable = ?, goal_achievable = ?,
  goal_relevant = ?, goal_time_bound = ?, goal_due = ?, updated_ms = ? WHERE id = ?`,
 		c.Name, s[0], s[1], s[2], s[3], s[4], s[5], c.Goal.Due, atMs, id))
+	if err != nil {
+		return err
+	}
+
+	if n == 0 {
+		return service.ErrNotFound
+	}
+
+	return nil
+}
+
+// storedKind is the kind a row stores: a head that has none holds the default.
+func storedKind(k project.Intent) string {
+	if k == "" {
+		return string(project.KindUndecided)
+	}
+
+	return string(k)
+}
+
+func (r productionRepo) SetKind(ctx context.Context, id string, kind project.Intent, atMs int64) error {
+	n, err := rowsAffected(r.ex.ExecContext(ctx,
+		"UPDATE projects SET kind = ?, updated_ms = ? WHERE id = ?", storedKind(kind), atMs, id))
+	if err != nil {
+		return err
+	}
+
+	if n == 0 {
+		return service.ErrNotFound
+	}
+
+	return nil
+}
+
+func (r productionRepo) SetSkippedSteps(ctx context.Context, id string, steps []project.StepID, atMs int64) error {
+	n, err := rowsAffected(r.ex.ExecContext(ctx,
+		"UPDATE projects SET skipped_steps = ?, updated_ms = ? WHERE id = ?", project.JoinSkipped(steps), atMs, id))
 	if err != nil {
 		return err
 	}

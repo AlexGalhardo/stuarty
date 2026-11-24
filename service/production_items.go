@@ -19,6 +19,9 @@ type productionChange struct {
 	rows   []ItemRow
 	itemID string
 	write  func(ctx context.Context, tx Tx) error
+	// chosen is the kind the project takes with this change when it has none (SDD-005 section 5.12.4); empty when
+	// the change decides nothing.
+	chosen project.Intent
 }
 
 type productionPlan func(ctx context.Context, tx Tx, head *ProductionHead, rows []ItemRow) (*productionChange, error)
@@ -55,6 +58,10 @@ func (s *svc) changeProduction(
 		now := s.nowMs()
 
 		if err := change.write(ctx, tx); err != nil {
+			return err
+		}
+
+		if err := storeChosenKind(ctx, tx, &head, change.chosen, now); err != nil {
 			return err
 		}
 
@@ -208,24 +215,33 @@ func (s *svc) ProjectItemAdd(ctx context.Context, req ProjectItemAddRequest) (*P
 				at, _ = project.Position(len(rows), *req.Position)
 			}
 
+			// A project that has not chosen a kind takes the one it already reads as, or the one its first item
+			// decides, so that adding a video to a text keeps its steps (SDD-005 section 5.12.4).
+			chosen := project.KindToStore(head.Kind, coreItems(rows), project.Kind(req.Kind))
+
 			ids := slices.Insert(idsOf(rows), at, it.ID)
 			rows = append(rows, it)
 			renumber(rows, ids)
 
-			return &productionChange{rows: rows, itemID: it.ID, write: func(ctx context.Context, tx Tx) error {
-				if doc != nil {
-					if err := s.createTimeline(ctx, tx, doc, &it, rows, firstTimeline, c, head, now); err != nil {
+			return &productionChange{
+				rows:   rows,
+				itemID: it.ID,
+				chosen: chosen,
+				write: func(ctx context.Context, tx Tx) error {
+					if doc != nil {
+						if err := s.createTimeline(ctx, tx, doc, &it, rows, firstTimeline, c, head, now); err != nil {
+							return err
+						}
+					}
+
+					it.Position = slices.Index(ids, it.ID)
+					if err := tx.Productions().CreateItem(ctx, it); err != nil {
 						return err
 					}
-				}
 
-				it.Position = slices.Index(ids, it.ID)
-				if err := tx.Productions().CreateItem(ctx, it); err != nil {
-					return err
-				}
-
-				return tx.Productions().SetPositions(ctx, head.ID, ids)
-			}}, nil
+					return tx.Productions().SetPositions(ctx, head.ID, ids)
+				},
+			}, nil
 		})
 	if err != nil {
 		return nil, err
@@ -235,6 +251,16 @@ func (s *svc) ProjectItemAdd(ctx context.Context, req ProjectItemAddRequest) (*P
 	s.reconcileFirstTimeline(ctx, &req, head.ID, findItem(change.rows, change.itemID))
 
 	return s.itemResult(&head, change.rows, change.itemID), nil
+}
+
+// storeChosenKind writes the kind a project takes when an item joins it, unless it has chosen already or the item
+// decides nothing (SDD-005 section 5.12.4).
+func storeChosenKind(ctx context.Context, tx Tx, head *ProductionHead, chosen project.Intent, now int64) error {
+	if chosen == "" || chosen == project.KindUndecided || chosen == head.Kind {
+		return nil
+	}
+
+	return tx.Productions().SetKind(ctx, head.ID, chosen, now)
 }
 
 // createTimeline writes the document of a new timeline. A row of another project can hold the id a first timeline

@@ -87,6 +87,11 @@ func (s *svc) ProjectCreate(ctx context.Context, req ProjectCreateRequest) (*Pro
 		return nil, verr
 	}
 
+	kind, kerr := project.ParseKind(req.Kind)
+	if kerr != nil {
+		return nil, violation(kerr)
+	}
+
 	id := req.ID
 	if id == "" {
 		id = s.newIDs(timeline.PrefixProject)
@@ -96,7 +101,8 @@ func (s *svc) ProjectCreate(ctx context.Context, req ProjectCreateRequest) (*Pro
 	}
 
 	res := &ProjectCreateResult{
-		UntrustedNotice: UntrustedNotice, ProjectID: id, Name: req.Name, Text: textview.CreatedProject(id, req.Name),
+		UntrustedNotice: UntrustedNotice, ProjectID: id, Kind: string(kind), Name: req.Name,
+		Text: textview.CreatedProject(id, req.Name),
 	}
 
 	if req.DryRun {
@@ -106,7 +112,7 @@ func (s *svc) ProjectCreate(ctx context.Context, req ProjectCreateRequest) (*Pro
 	now := s.nowMs()
 	head := ProductionHead{
 		ID: id, Name: req.Name, State: ProjectActive, CreatedMs: now, UpdatedMs: now, CreatedBy: c.Actor,
-		Description: req.Description, Goal: ctxIn.Goal,
+		Description: req.Description, Goal: ctxIn.Goal, Kind: kind,
 	}
 
 	if c.OwnerUserID != "" {
@@ -284,7 +290,17 @@ func (s *svc) ProjectList(ctx context.Context, req ProjectListRequest) (*Project
 	res := &ProjectListResult{UntrustedNotice: UntrustedNotice, Projects: []ProjectSummary{}}
 
 	for i := range heads {
-		res.Projects = append(res.Projects, productionSummary(&heads[i]))
+		sum := productionSummary(&heads[i])
+
+		// The kind and the summary of the text come from the items, so each project of the page is read once.
+		rows, ierr := s.store.Productions().Items(ctx, heads[i].ID)
+		if ierr != nil {
+			return nil, asError(ierr)
+		}
+
+		sum.Kind = effectiveKind(&heads[i], rows)
+		sum.TextSummary = textSummaryOf(rows)
+		res.Projects = append(res.Projects, sum)
 	}
 
 	res.Text = textview.ProjectList(lines(heads), total, req.State)
@@ -399,7 +415,8 @@ func (s *svc) ProjectGet(ctx context.Context, req ProjectGetRequest) (*ProjectGe
 	}
 
 	// The publications of the project are items of its overview (SDD-020 section 23).
-	rows = s.withPublications(ctx, head.ID, rows)
+	rows, known := s.withPublications(ctx, head.ID, rows)
+	workflow := s.workflowOf(ctx, &head, rows, known)
 
 	timelineID := req.TimelineID
 
@@ -419,7 +436,7 @@ func (s *svc) ProjectGet(ctx context.Context, req ProjectGetRequest) (*ProjectGe
 	production := productionOf(rows)
 
 	if timelineID == "" {
-		return s.projectOverview(ctx, &head, rows, production, detail)
+		return s.projectOverview(ctx, &head, rows, production, &workflow, detail)
 	}
 
 	row, err := s.store.Projects().Get(ctx, timelineID)
@@ -447,6 +464,8 @@ func (s *svc) ProjectGet(ctx context.Context, req ProjectGetRequest) (*ProjectGe
 		Description:     head.Description,
 		Goal:            ProjectGoal(head.Goal),
 		Complete:        contextOf(&head).Complete,
+		Kind:            string(workflow.Kind),
+		Workflow:        workflow,
 		Revision:        row.Revision,
 		State:           stateString(head.State),
 		Width:           doc.Settings.Width,
@@ -501,7 +520,8 @@ func (s *svc) ProjectGet(ctx context.Context, req ProjectGetRequest) (*ProjectGe
 // of the first active one, the text is the description of the production, and a document is refused with the
 // choices (SDD-003 section 2.3.1).
 func (s *svc) projectOverview(
-	ctx context.Context, head *ProductionHead, rows []ItemRow, production ProductionState, detail string,
+	ctx context.Context, head *ProductionHead, rows []ItemRow, production ProductionState, w *project.Workflow,
+	detail string,
 ) (*ProjectGetResult, error) {
 	if detail == "document" {
 		tls, err := s.store.Productions().ActiveTimelines(ctx, head.ID)
@@ -541,6 +561,8 @@ func (s *svc) projectOverview(
 		Description:     head.Description,
 		Goal:            ProjectGoal(head.Goal),
 		Complete:        contextOf(head).Complete,
+		Kind:            string(w.Kind),
+		Workflow:        *w,
 		State:           stateString(head.State),
 		Width:           t.Summary.Width,
 		Height:          t.Summary.Height,
@@ -550,7 +572,7 @@ func (s *svc) projectOverview(
 		Counts:          ProjectCounts{Tracks: t.Summary.Tracks, Items: t.Summary.Items, Assets: t.Summary.Assets},
 		Items:           itemViews(rows),
 		Production:      production,
-		Text:            s.describeText(ctx, head, rows, production, 0),
+		Text:            s.describeText(ctx, head, rows, production, w, 0),
 	}, nil
 }
 

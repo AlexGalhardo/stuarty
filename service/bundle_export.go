@@ -632,6 +632,10 @@ func describeProduction(m *BundleManifest, snaps []*bundleSnapshot, items []Item
 	if head != nil {
 		p.Name, p.Description = head.Name, head.Description
 
+		if head.Kind != "" && head.Kind != project.KindUndecided {
+			p.Kind = string(head.Kind)
+		}
+
 		if head.Goal != (project.Goal{}) {
 			goal := head.Goal
 			p.Goal = &goal

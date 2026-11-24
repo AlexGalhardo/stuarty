@@ -178,6 +178,10 @@ func coreItems(rows []ItemRow) []project.Item {
 			out[i].Text = r.Body
 		}
 
+		if r.Kind == string(project.Text) {
+			out[i].TextKind = r.TextKind
+		}
+
 		// The status of a publication is read from its targets (withPublications keeps it in Ref).
 		if r.Kind == string(project.Publication) {
 			out[i].Status = r.Ref
@@ -190,8 +194,9 @@ func coreItems(rows []ItemRow) []project.Item {
 // withPublications adds the publications of a project to its items (ADR-0039, SDD-020 section 23): a
 // publication is an item of the project, kept in its own tables, so it is read from them. Its Ref holds the
 // status the core rolls up from its targets and its Format the networks they go to. Nothing is added when the
-// publications cannot be read: the overview is still the production.
-func (s *svc) withPublications(ctx context.Context, projectID string, rows []ItemRow) []ItemRow {
+// publications cannot be read: the overview is still the production, and known is false so that a step that
+// depends on them reads unknown (SDD-005 section 5.12.4).
+func (s *svc) withPublications(ctx context.Context, projectID string, rows []ItemRow) ([]ItemRow, bool) {
 	list, err := s.store.Publications().OfProject(ctx, projectID)
 	if err != nil {
 		s.log.WarnContext(
@@ -203,7 +208,7 @@ func (s *svc) withPublications(ctx context.Context, projectID string, rows []Ite
 			err.Error(),
 		)
 
-		return rows
+		return rows, false
 	}
 
 	for i := range list {
@@ -226,7 +231,7 @@ func (s *svc) withPublications(ctx context.Context, projectID string, rows []Ite
 		})
 	}
 
-	return rows
+	return rows, true
 }
 
 func itemView(r *ItemRow, withText bool) ProjectItem {
@@ -442,7 +447,8 @@ func (s *svc) ProjectDescribe(ctx context.Context, req ProjectDescribeRequest) (
 		return nil, asError(err)
 	}
 
-	rows = s.withPublications(ctx, head.ID, rows)
+	rows, known := s.withPublications(ctx, head.ID, rows)
+	workflow := s.workflowOf(ctx, &head, rows, known)
 
 	res := &ProjectDescribeResult{
 		UntrustedNotice: UntrustedNotice,
@@ -452,16 +458,18 @@ func (s *svc) ProjectDescribe(ctx context.Context, req ProjectDescribeRequest) (
 		Description:     head.Description,
 		Goal:            ProjectGoal(head.Goal),
 		Complete:        contextOf(&head).Complete,
+		Kind:            string(workflow.Kind),
 		Production:      productionOf(rows),
+		Workflow:        workflow,
 		Items:           itemViews(rows),
 	}
-	res.Text = s.describeText(ctx, &head, rows, res.Production, req.MaxTokens)
+	res.Text = s.describeText(ctx, &head, rows, res.Production, &workflow, req.MaxTokens)
 
 	return res, nil
 }
 
 func (s *svc) describeText(
-	ctx context.Context, head *ProductionHead, rows []ItemRow, p ProductionState, maxTokens int,
+	ctx context.Context, head *ProductionHead, rows []ItemRow, p ProductionState, w *project.Workflow, maxTokens int,
 ) string {
 	if maxTokens == 0 {
 		maxTokens = defaultDescribeTokens
@@ -470,7 +478,7 @@ func (s *svc) describeText(
 	v := textview.ProductionView{
 		ID: head.ID, Name: head.Name, State: stateString(head.State), HasBrief: p.HasBrief, HasScript: p.HasScript,
 		Texts: p.Texts, Timelines: p.Timelines, Outputs: p.Outputs, Pending: p.PendingApprovals, Published: p.Published,
-		Context: contextText(head),
+		Context: contextText(head), Workflow: workflowLine(w),
 	}
 
 	if b := briefOf(rows); b != nil {
@@ -569,6 +577,7 @@ func (s *svc) ProjectDuplicate(ctx context.Context, req ProjectDuplicateRequest)
 
 		res = &ProjectCreateResult{
 			UntrustedNotice: UntrustedNotice, ProjectID: plan.projectID, Name: plan.name,
+			Kind: effectiveKind(&src, rows),
 			Text: textview.CreatedProject(plan.projectID, plan.name),
 		}
 
@@ -739,7 +748,7 @@ func (s *svc) writeDuplicate(ctx context.Context, tx Tx, c Caller, src *Producti
 	now := s.nowMs()
 	head := ProductionHead{
 		ID: plan.projectID, Name: plan.name, State: ProjectActive, CreatedMs: now, UpdatedMs: now,
-		CreatedBy: c.Actor, Description: src.Description, Goal: src.Goal,
+		CreatedBy: c.Actor, Description: src.Description, Goal: src.Goal, Kind: src.Kind, Skipped: src.Skipped,
 	}
 
 	if c.OwnerUserID != "" {

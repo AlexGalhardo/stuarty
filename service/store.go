@@ -210,6 +210,11 @@ type ProductionHead struct {
 	// Empty text for a project made before epic 56.
 	Description string
 	Goal        project.Goal
+	// Kind is the stored kind of the project, an intent that is undecided until it is chosen, and Skipped the steps
+	// of its workflow a person skipped (SDD-005 section 5.12.4). The kind a surface shows is derived from them and
+	// from the items by core/project.
+	Kind    project.Intent
+	Skipped []project.StepID
 	// Timelines counts the active timeline items.
 	Timelines int
 	// Timeline is the head of the first active timeline by position; its ID is empty when there is none.
@@ -258,6 +263,11 @@ type ProductionRepo interface {
 	// SetContext writes the name, the description and the goal and sets updated_ms. ErrNotFound when there is no
 	// such project.
 	SetContext(ctx context.Context, id string, c project.Context, atMs int64) error
+	// SetKind writes the stored kind of the project and sets updated_ms. ErrNotFound when there is no such project.
+	SetKind(ctx context.Context, id string, kind project.Intent, atMs int64) error
+	// SetSkippedSteps writes the steps the person skipped and sets updated_ms. ErrNotFound when there is no such
+	// project.
+	SetSkippedSteps(ctx context.Context, id string, steps []project.StepID, atMs int64) error
 	// FollowName renames the project id from one name to another, and does nothing when the project is not named
 	// from (SDD-005 section 5.12): a rename of its first timeline, while the two carry one name.
 	FollowName(ctx context.Context, id, from, to string) error

@@ -59,6 +59,13 @@ func productionCalls(m *mediaEnv, id string) map[string]func(ctx context.Context
 
 			return err
 		},
+		"ProjectStepSkip": func(ctx context.Context) error {
+			_, err := p.ProjectStepSkip(
+				ctx, service.ProjectStepSkipRequest{ProjectID: id, Step: "recording", DryRun: true},
+			)
+
+			return err
+		},
 		"ProjectRestore": func(ctx context.Context) error {
 			_, err := m.svc.ProjectRestore(ctx, service.ProjectTrashRequest{ProjectID: id, DryRun: true})
 			return err
