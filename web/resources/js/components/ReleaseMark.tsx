@@ -11,11 +11,27 @@ export function releaseLabel(version: string): string {
 	return bare.startsWith("v") ? bare : `v${bare}`;
 }
 
-// Fixed at the bottom right of every screen, under the chat button, so a build
-// is identifiable without opening Settings.
-export function ReleaseMarkView({ version }: { version: string }): ReactNode {
+// Fixed at the bottom right of a page that has no sidebar (the sign-in), so a build is identifiable without
+// opening Settings; in the footer of the sidebar (epic 75) it is a line of the footer, next to the mode.
+export function ReleaseMarkView({
+	version,
+	inline = false,
+}: {
+	version: string;
+	inline?: boolean;
+}): ReactNode {
 	const label = releaseLabel(version);
 	if (label === "") return null;
+	if (inline) {
+		return (
+			<span
+				data-testid="release-mark"
+				className="font-mono text-xs text-muted-foreground"
+			>
+				{label}
+			</span>
+		);
+	}
 	return (
 		<p
 			data-testid="release-mark"
@@ -26,7 +42,11 @@ export function ReleaseMarkView({ version }: { version: string }): ReactNode {
 	);
 }
 
-export default function ReleaseMark(): ReactNode {
+export default function ReleaseMark({
+	inline = false,
+}: {
+	inline?: boolean;
+}): ReactNode {
 	const [version, setVersion] = useState("");
 	useEffect(() => {
 		let live = true;
@@ -40,5 +60,5 @@ export default function ReleaseMark(): ReactNode {
 			live = false;
 		};
 	}, []);
-	return <ReleaseMarkView version={version} />;
+	return <ReleaseMarkView version={version} inline={inline} />;
 }

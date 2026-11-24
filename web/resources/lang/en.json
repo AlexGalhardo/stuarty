@@ -25,6 +25,16 @@
       "expand": "Expand sidebar",
       "profile": "Profile",
       "local": "Local",
+      "dashboard_home": "Home",
+      "approvals": "Approvals",
+      "brand_kit": "Brand kit",
+      "group": {
+        "create": "Create",
+        "assets": "Assets",
+        "agent": "Agent",
+        "publish": "Publish",
+        "connect": "Connect"
+      },
       "section": {
         "projects": "Projects",
         "edit-video": "Edit Video",
@@ -44,6 +54,17 @@
         "title": "Sidebar",
         "description": "Displays the mobile sidebar.",
         "toggle": "Toggle sidebar"
+      }
+    },
+    "shell": {
+      "waiting_count": "{count} waiting for you",
+      "mode": {
+        "local": "Local mode",
+        "network": "Network mode"
+      },
+      "drawer": {
+        "title": "Navigation",
+        "description": "The sections of the studio."
       }
     },
     "dashboard": {

@@ -1,6 +1,6 @@
 import { Link } from "@inertiajs/react";
 import {
-	KeyRound,
+	House,
 	LogOut,
 	PanelLeftClose,
 	PanelLeftOpen,
@@ -9,8 +9,15 @@ import {
 } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 
+import ReleaseMark from "@/components/ReleaseMark";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
+import {
+	Sheet,
+	SheetContent,
+	SheetDescription,
+	SheetTitle,
+} from "@/components/ui/sheet";
 import {
 	Tooltip,
 	TooltipContent,
@@ -18,16 +25,19 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
+import { useSession } from "@/lib/session";
 import type { User as Account, LocalAccount } from "@/types";
 import { createClient } from "../editor/api/client";
 import { ApiError } from "../editor/api/errors";
 import { HttpTransport } from "../editor/api/http";
-import { activeSection, pathOf, SECTIONS } from "./sections";
+import { activeNavItem, NAV_GROUPS, pathOf } from "./sections";
 import {
-	effectiveSidebar,
+	MEDIUM_QUERY,
 	NARROW_QUERY,
-	readSidebar,
+	readChoice,
+	type SidebarForm,
 	type SidebarState,
+	sidebarForm,
 	toggled,
 	writeSidebar,
 } from "./sidebarState";
@@ -35,38 +45,46 @@ import {
 const ITEM =
 	"flex h-9 items-center gap-2 rounded-md px-3 text-sm text-muted-foreground outline-offset-[-2px] hover:bg-muted hover:text-foreground aria-[current=page]:bg-brand-subtle aria-[current=page]:font-medium aria-[current=page]:text-brand-text";
 
-// The chosen state of the sidebar, and whether the window is narrow. The first
-// render is the expanded one on the server and in the browser alike; the choice
-// comes from storage once the page is mounted.
+// The form of the sidebar for this window: the stored choice, or the width. The first render is the full
+// one on the server and in the browser alike; the choice and the width come once the page is mounted.
 export function useSidebar(): {
-	state: SidebarState;
+	form: SidebarForm;
 	toggle(): void;
 } {
-	const [chosen, setChosen] = useState<SidebarState>("expanded");
+	const [chosen, setChosen] = useState<SidebarState | null>(null);
 	const [narrow, setNarrow] = useState(false);
+	const [medium, setMedium] = useState(false);
 
 	useEffect(() => {
-		setChosen(readSidebar());
-		const query = window.matchMedia(NARROW_QUERY);
-		setNarrow(query.matches);
-		const onChange = (event: MediaQueryListEvent) => setNarrow(event.matches);
-		query.addEventListener("change", onChange);
-		return () => query.removeEventListener("change", onChange);
+		setChosen(readChoice());
+		const queries = [
+			[window.matchMedia(NARROW_QUERY), setNarrow],
+			[window.matchMedia(MEDIUM_QUERY), setMedium],
+		] as const;
+		const stops = queries.map(([query, set]) => {
+			set(query.matches);
+			const onChange = (event: MediaQueryListEvent) => set(event.matches);
+			query.addEventListener("change", onChange);
+			return () => query.removeEventListener("change", onChange);
+		});
+		return () => {
+			for (const stop of stops) stop();
+		};
 	}, []);
 
-	const state = effectiveSidebar(chosen, narrow);
+	const form = sidebarForm(chosen, narrow, medium);
 	return {
-		state,
+		form,
 		toggle() {
-			const next = toggled(state);
+			const next = toggled(form === "rail" ? "collapsed" : "expanded");
 			setChosen(next);
 			writeSidebar(next);
 		},
 	};
 }
 
-// An item with an icon and a label. Collapsed, the label stays for the screen
-// reader and a tooltip shows it; the link keeps its name.
+// An item with an icon and a label. In the rail, the label stays for the screen reader and a tooltip
+// shows it; the link keeps its name.
 function Item({
 	href,
 	current,
@@ -74,6 +92,7 @@ function Item({
 	label,
 	collapsed,
 	testId,
+	count = 0,
 }: {
 	href: string;
 	current: boolean;
@@ -81,18 +100,37 @@ function Item({
 	label: string;
 	collapsed: boolean;
 	testId?: string;
+	// requests that wait for a person; a number the server reported, drawn as a word for a reader too
+	count?: number;
 }): ReactNode {
+	const t = useT();
 	const link = (
 		<Link
 			href={href}
 			aria-current={current ? "page" : undefined}
 			data-testid={testId}
-			// min-w-9: an icon alone stays a 36 px target (WCAG 2.5.8) in the
-			// narrow strip, where the item is as wide as its content.
-			className={cn(ITEM, collapsed && "min-w-9 justify-center px-0")}
+			// min-w-9: an icon alone stays a 36 px target (WCAG 2.5.8).
+			className={cn(ITEM, collapsed && "relative min-w-9 justify-center px-0")}
 		>
 			{icon}
 			<span className={cn(collapsed && "sr-only")}>{label}</span>
+			{count > 0 && (
+				<>
+					<span
+						aria-hidden="true"
+						data-testid="nav-count"
+						className={cn(
+							"ms-auto min-w-5 rounded-full bg-warning-soft px-1.5 text-center text-xs font-medium text-warning-text tabular-nums",
+							collapsed && "absolute -end-0.5 -top-0.5 ms-0",
+						)}
+					>
+						{count}
+					</span>
+					<span className="sr-only">
+						{t("ui.shell.waiting_count", { count })}
+					</span>
+				</>
+			)}
 		</Link>
 	);
 	if (!collapsed) return link;
@@ -140,10 +178,7 @@ function Profile({
 
 	const name = user?.email ?? account?.username ?? t("ui.nav.local");
 	return (
-		<section
-			aria-label={t("ui.nav.profile")}
-			className="flex flex-col gap-1 max-md:flex-row max-md:items-center"
-		>
+		<section aria-label={t("ui.nav.profile")} className="flex flex-col gap-1">
 			<p
 				className={cn(
 					"flex h-9 items-center gap-2 px-3 text-sm",
@@ -179,79 +214,62 @@ function Profile({
 				</Button>
 			)}
 			{user != null && (
-				<>
-					<Item
-						href="/settings/keys"
-						current={path.startsWith("/settings/keys")}
-						icon={<KeyRound aria-hidden="true" className="size-4 shrink-0" />}
-						label={t("ui.keys.nav")}
-						collapsed={collapsed}
-					/>
-					<Button
-						type="button"
-						variant="ghost"
-						size="sm"
-						className={cn("justify-start", collapsed && "justify-center")}
-						aria-label={collapsed ? t("ui.login.logout") : undefined}
-						onClick={() =>
-							void createClient(new HttpTransport(""))
-								.logout()
-								.catch(() => undefined)
-								.then(() => window.location.assign("/login"))
-						}
-					>
-						<LogOut aria-hidden="true" />
-						<span className={cn(collapsed && "sr-only")}>
-							{t("ui.login.logout")}
-						</span>
-					</Button>
-				</>
+				<Button
+					type="button"
+					variant="ghost"
+					size="sm"
+					className={cn("justify-start", collapsed && "justify-center")}
+					aria-label={collapsed ? t("ui.login.logout") : undefined}
+					onClick={() =>
+						void createClient(new HttpTransport(""))
+							.logout()
+							.catch(() => undefined)
+							.then(() => window.location.assign("/login"))
+					}
+				>
+					<LogOut aria-hidden="true" />
+					<span className={cn(collapsed && "sr-only")}>
+						{t("ui.login.logout")}
+					</span>
+				</Button>
 			)}
 		</section>
 	);
 }
 
-// The dashboard sidebar (SDD-012 section 23.2): the thirteen sections, then the
-// profile and the controls. It computes nothing: the current section comes from
-// the url.
-export default function Sidebar({
+// What a sidebar holds, in the same order in its three forms: the mark, the navigation by group, the
+// profile and the footer with the version, the mode and the controls.
+function SidebarBody({
 	url,
 	appName,
 	user,
-	account = null,
-	person = false,
+	account,
+	person,
+	collapsed,
+	pendingApprovals,
+	onToggle,
 }: {
 	url: string;
 	appName: string;
 	user: Account | null;
-	account?: LocalAccount | null;
-	// Whether this session was opened with the password (the shared prop session.privileged).
-	person?: boolean;
+	account: LocalAccount | null;
+	person: boolean;
+	collapsed: boolean;
+	pendingApprovals: number;
+	// not given in the drawer, which has no collapse button
+	onToggle?: () => void;
 }): ReactNode {
 	const t = useT();
-	const { state, toggle } = useSidebar();
-	const collapsed = state === "collapsed";
-	const current = activeSection(url);
+	const { mode } = useSession();
+	const current = activeNavItem(url);
+	const home = pathOf(url) === "/";
 
-	// A header, so the product mark, the profile and the controls sit in a
-	// landmark (the banner) like the navigation does.
 	return (
-		<header
-			data-testid="sidebar"
-			data-state={state}
-			className={cn(
-				"flex shrink-0 flex-col gap-2 bg-background p-2",
-				// Wide: a column fixed to the window. Narrow: a strip above the page, so
-				// the page keeps the whole width (WCAG 1.4.10 reflow at 320 px).
-				"md:sticky md:top-0 md:h-dvh md:border-r md:pb-8",
-				"max-md:w-full max-md:flex-row max-md:flex-wrap max-md:items-center max-md:border-b",
-				collapsed ? "md:w-14" : "md:w-64",
-			)}
-		>
+		<div className="flex min-h-0 flex-1 flex-col gap-2">
 			<Link
 				href="/"
 				aria-label={t("ui.nav.home", { name: appName })}
-				aria-current={pathOf(url) === "/" ? "page" : undefined}
+				aria-current={home ? "page" : undefined}
 				className={cn(
 					"flex h-10 items-center gap-2 rounded-md px-1",
 					collapsed && "justify-center",
@@ -284,21 +302,66 @@ export default function Sidebar({
 			</Link>
 			<nav
 				aria-label={t("ui.nav.label")}
-				className="min-h-0 flex-1 overflow-y-auto max-md:w-full max-md:flex-none max-md:overflow-visible"
+				className="min-h-0 flex-1 overflow-y-auto"
 			>
-				<ul className="flex flex-col gap-0.5 max-md:flex-row max-md:flex-wrap">
-					{SECTIONS.map(({ key, path, icon: Icon }) => (
-						<li key={key}>
-							<Item
-								href={path}
-								current={current === key}
-								icon={<Icon aria-hidden="true" className="size-4 shrink-0" />}
-								label={t(`ui.nav.section.${key}`)}
-								collapsed={collapsed}
-								testId={`nav-${key}`}
-							/>
-						</li>
-					))}
+				<ul className="flex flex-col gap-0.5">
+					<li>
+						<Item
+							href="/"
+							current={home}
+							icon={<House aria-hidden="true" className="size-4 shrink-0" />}
+							label={t("ui.nav.dashboard_home")}
+							collapsed={collapsed}
+							testId="nav-home"
+						/>
+					</li>
+					{NAV_GROUPS.map((group) => {
+						const items = group.items.filter(
+							(item) => item.networkOnly !== true || user != null,
+						);
+						return (
+							<li key={group.id} data-testid={`nav-group-${group.id}`}>
+								<p
+									id={`nav-group-${group.id}`}
+									className={cn(
+										"mt-2 px-3 py-1 text-xs font-medium text-muted-foreground",
+										collapsed && "sr-only",
+									)}
+								>
+									{t(group.label)}
+								</p>
+								{collapsed && (
+									<div
+										aria-hidden="true"
+										className="mx-2 mt-2 border-t border-border"
+									/>
+								)}
+								<ul
+									aria-labelledby={`nav-group-${group.id}`}
+									className="flex flex-col gap-0.5"
+								>
+									{items.map(({ id, href, icon: Icon, label, counter }) => (
+										<li key={id}>
+											<Item
+												href={href}
+												current={current === id}
+												icon={
+													<Icon
+														aria-hidden="true"
+														className="size-4 shrink-0"
+													/>
+												}
+												label={t(label)}
+												collapsed={collapsed}
+												testId={`nav-${id}`}
+												count={counter === "approvals" ? pendingApprovals : 0}
+											/>
+										</li>
+									))}
+								</ul>
+							</li>
+						);
+					})}
 				</ul>
 			</nav>
 			<Profile
@@ -311,36 +374,137 @@ export default function Sidebar({
 			<div
 				className={cn(
 					"flex items-center gap-1",
-					collapsed ? "flex-col max-md:flex-row" : "justify-between",
+					collapsed ? "flex-col" : "justify-between",
 				)}
 			>
-				<ThemeToggle />
-				<Tooltip>
-					<TooltipTrigger asChild>
-						<Button
-							type="button"
-							variant="ghost"
-							size="icon"
-							// A narrow window is always collapsed (sidebarState.ts): the
-							// button would change nothing there, so it is not shown.
-							className="max-md:hidden"
-							onClick={toggle}
-							aria-expanded={!collapsed}
-							aria-label={collapsed ? t("ui.nav.expand") : t("ui.nav.collapse")}
-							data-testid="sidebar-toggle"
-						>
-							{collapsed ? (
-								<PanelLeftOpen aria-hidden="true" />
-							) : (
-								<PanelLeftClose aria-hidden="true" />
-							)}
-						</Button>
-					</TooltipTrigger>
-					<TooltipContent side="right">
-						{collapsed ? t("ui.nav.expand") : t("ui.nav.collapse")}
-					</TooltipContent>
-				</Tooltip>
+				<div
+					data-testid="sidebar-version"
+					className={cn(
+						"flex items-center gap-2 px-1",
+						collapsed && "flex-col gap-0",
+					)}
+				>
+					<ReleaseMark inline />
+					<span
+						data-testid="sidebar-mode"
+						className={cn(
+							"text-xs text-muted-foreground",
+							collapsed && "sr-only",
+						)}
+					>
+						{t(`ui.shell.mode.${mode}`)}
+					</span>
+				</div>
+				<div className={cn("flex items-center gap-1", collapsed && "flex-col")}>
+					<ThemeToggle />
+					{onToggle !== undefined && (
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									type="button"
+									variant="ghost"
+									size="icon"
+									onClick={onToggle}
+									aria-expanded={!collapsed}
+									aria-label={
+										collapsed ? t("ui.nav.expand") : t("ui.nav.collapse")
+									}
+									data-testid="sidebar-toggle"
+								>
+									{collapsed ? (
+										<PanelLeftOpen aria-hidden="true" />
+									) : (
+										<PanelLeftClose aria-hidden="true" />
+									)}
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent side="right">
+								{collapsed ? t("ui.nav.expand") : t("ui.nav.collapse")}
+							</TooltipContent>
+						</Tooltip>
+					)}
+				</div>
 			</div>
-		</header>
+		</div>
+	);
+}
+
+// The dashboard sidebar (SDD-012 section 23.4): the groups of sections, then the profile and the controls.
+// It computes nothing: the current item comes from the url and the count from the approval queue. In the
+// drawer form it draws no column; the drawer is a dialog that the menu button of the top bar opens.
+export default function Sidebar({
+	url,
+	appName,
+	user,
+	account = null,
+	person = false,
+	form = "full",
+	pendingApprovals = 0,
+	onToggle,
+	drawerOpen = false,
+	onDrawerOpenChange,
+}: {
+	url: string;
+	appName: string;
+	user: Account | null;
+	account?: LocalAccount | null;
+	// Whether this session was opened with the password (the shared prop session.privileged).
+	person?: boolean;
+	form?: SidebarForm;
+	pendingApprovals?: number;
+	onToggle?: () => void;
+	drawerOpen?: boolean;
+	onDrawerOpenChange?: (open: boolean) => void;
+}): ReactNode {
+	const t = useT();
+	const body = (collapsed: boolean, drawer: boolean): ReactNode => (
+		<SidebarBody
+			url={url}
+			appName={appName}
+			user={user}
+			account={account}
+			person={person}
+			collapsed={collapsed}
+			pendingApprovals={pendingApprovals}
+			onToggle={drawer ? undefined : onToggle}
+		/>
+	);
+
+	if (form === "drawer") {
+		return (
+			<Sheet
+				open={drawerOpen}
+				onOpenChange={(open) => onDrawerOpenChange?.(open)}
+			>
+				<SheetContent
+					side="left"
+					data-testid="sidebar-drawer"
+					className="w-72 max-w-[85vw] gap-0 p-2 sm:max-w-72"
+				>
+					<SheetTitle className="sr-only">
+						{t("ui.shell.drawer.title")}
+					</SheetTitle>
+					<SheetDescription className="sr-only">
+						{t("ui.shell.drawer.description")}
+					</SheetDescription>
+					{body(false, true)}
+				</SheetContent>
+			</Sheet>
+		);
+	}
+
+	const collapsed = form === "rail";
+	return (
+		<div
+			data-testid="sidebar"
+			data-state={collapsed ? "collapsed" : "expanded"}
+			data-form={form}
+			className={cn(
+				"flex shrink-0 flex-col bg-surface-sunken p-2 md:sticky md:top-0 md:h-dvh md:border-r",
+				collapsed ? "w-14" : "w-64",
+			)}
+		>
+			{body(collapsed, false)}
+		</div>
 	);
 }

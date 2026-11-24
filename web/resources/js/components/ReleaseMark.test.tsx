@@ -24,3 +24,12 @@ describe("ReleaseMarkView", () => {
 		expect(renderToString(<ReleaseMarkView version="" />)).toBe("");
 	});
 });
+
+describe("ReleaseMarkView inline", () => {
+	test("is a line of the sidebar footer, not a fixed mark", () => {
+		const html = renderToString(<ReleaseMarkView version="0.28.0" inline />);
+		expect(html).toContain('data-testid="release-mark"');
+		expect(html).toContain("v0.28.0");
+		expect(html).not.toContain("fixed");
+	});
+});
