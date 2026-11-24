@@ -6,6 +6,84 @@
         "network": "Só uma pessoa que entra com a senha pode fazer isto. Entre com a sua senha."
       }
     },
+    "workflow": {
+      "label": "Caminho até a publicação",
+      "not_reported": "Não informado",
+      "optional": "Opcional",
+      "who": "Quem faz",
+      "tool": "Ferramenta",
+      "cost": "Custo",
+      "state_label": "Estado",
+      "actor": {
+        "person": "Você",
+        "agent": "O agente",
+        "both": "Você e o agente"
+      },
+      "state": {
+        "done": "Concluída",
+        "current": "Atual",
+        "waiting": "Esperando você",
+        "upcoming": "A seguir",
+        "skipped": "Pulada",
+        "unknown": "Não informado"
+      },
+      "step": {
+        "briefing": {
+          "title": "Briefing",
+          "hint": "O que você quer criar, para quem e até quando."
+        },
+        "choice": {
+          "title": "Escolher o que criar",
+          "hint": "Um texto, um vídeo ou uma imagem. Adicione ao projeto."
+        },
+        "script": {
+          "title": "Roteiro",
+          "hint": "As palavras do vídeo."
+        },
+        "writing": {
+          "title": "Escrita",
+          "hint": "O texto em si."
+        },
+        "recording": {
+          "title": "Gravação",
+          "hint": "Grave ou importe o material."
+        },
+        "editing": {
+          "title": "Edição",
+          "hint": "Corte, organize e estilize a mídia."
+        },
+        "finishing": {
+          "title": "Finalização",
+          "hint": "Exporte o resultado."
+        },
+        "review": {
+          "title": "Revisão",
+          "hint": "Leia mais uma vez antes de seguir."
+        },
+        "approval": {
+          "title": "Aprovação",
+          "hint": "Você aprova o que está para sair."
+        },
+        "publication": {
+          "title": "Publicação",
+          "hint": "Envie para o lugar que você conectou."
+        }
+      },
+      "tool_name": {
+        "BriefingAnswer": "Responder ao briefing",
+        "ProjectItemAdd": "Adicionar ao projeto",
+        "TextWrite": "Escrever o texto",
+        "MediaImport": "Importar mídia",
+        "Edit": "Editar",
+        "JobStart": "Exportar",
+        "ApprovalDecide": "Decidir na fila de aprovação",
+        "PublicationCreate": "Preparar a publicação"
+      },
+      "skip": "Pular",
+      "restore": "Recolocar",
+      "skip_step": "Pular a etapa {step}",
+      "restore_step": "Recolocar a etapa {step}"
+    },
     "unsaved": {
       "leave": "Você tem texto que ainda não foi salvo. Se sair, ele será perdido. Sair mesmo assim?"
     },

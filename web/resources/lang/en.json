@@ -6,6 +6,84 @@
         "network": "Only a person who signs in with a password can do this. Sign in with your password."
       }
     },
+    "workflow": {
+      "label": "Path to publication",
+      "not_reported": "Not reported",
+      "optional": "Optional",
+      "who": "Who does it",
+      "tool": "Tool",
+      "cost": "Cost",
+      "state_label": "State",
+      "actor": {
+        "person": "You",
+        "agent": "The agent",
+        "both": "You and the agent"
+      },
+      "state": {
+        "done": "Done",
+        "current": "Current",
+        "waiting": "Waiting for you",
+        "upcoming": "Upcoming",
+        "skipped": "Skipped",
+        "unknown": "Not reported"
+      },
+      "step": {
+        "briefing": {
+          "title": "Briefing",
+          "hint": "What you want to make, for whom and by when."
+        },
+        "choice": {
+          "title": "Choose what to make",
+          "hint": "A text, a video or an image. Add it to the project."
+        },
+        "script": {
+          "title": "Script",
+          "hint": "The words of the video."
+        },
+        "writing": {
+          "title": "Writing",
+          "hint": "The text itself."
+        },
+        "recording": {
+          "title": "Recording",
+          "hint": "Record or import the footage."
+        },
+        "editing": {
+          "title": "Editing",
+          "hint": "Cut, arrange and style the media."
+        },
+        "finishing": {
+          "title": "Finishing",
+          "hint": "Export the result."
+        },
+        "review": {
+          "title": "Review",
+          "hint": "Read it once more before it goes on."
+        },
+        "approval": {
+          "title": "Approval",
+          "hint": "You approve what is about to go out."
+        },
+        "publication": {
+          "title": "Publication",
+          "hint": "Send it to the place you connected."
+        }
+      },
+      "tool_name": {
+        "BriefingAnswer": "Answer the briefing",
+        "ProjectItemAdd": "Add to the project",
+        "TextWrite": "Write the text",
+        "MediaImport": "Import media",
+        "Edit": "Edit",
+        "JobStart": "Export",
+        "ApprovalDecide": "Decide in the approval queue",
+        "PublicationCreate": "Prepare the publication"
+      },
+      "skip": "Skip",
+      "restore": "Put back",
+      "skip_step": "Skip the step {step}",
+      "restore_step": "Put back the step {step}"
+    },
     "unsaved": {
       "leave": "You have text that is not saved yet. If you leave, it is lost. Leave anyway?"
     },
