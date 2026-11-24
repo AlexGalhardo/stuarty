@@ -7,6 +7,13 @@ import { LIMITS } from "@/generated/limits";
 
 export const TRACK_HEADER_PX = 176;
 export const RULER_HEIGHT_PX = 32;
+
+// The canvas font of the ruler labels. A canvas does not resolve var(), and an invalid font is ignored, which left
+// the labels at the default 10 px; the family is read from the theme instead. Editor text is never below 12 px.
+export function rulerFont(family: string): string {
+	const list = family.trim();
+	return `12px ${list === "" ? "sans-serif" : list}`;
+}
 export const VISUAL_ROW_PX = 64;
 export const AUDIO_ROW_PX = 48;
 export const TIMELINE_MAX_FRAME = LIMITS.max_frames;

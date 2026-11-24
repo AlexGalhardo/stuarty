@@ -17,6 +17,7 @@ import {
 	formatRulerLabel,
 	framesPerSecond,
 	RULER_HEIGHT_PX,
+	rulerFont,
 	rulerStep,
 } from "./geometry";
 
@@ -65,7 +66,7 @@ function draw(
 	);
 	ctx.strokeStyle = cssVar("--muted-foreground");
 	ctx.fillStyle = cssVar("--muted-foreground");
-	ctx.font = "11px var(--font-sans, sans-serif)";
+	ctx.font = rulerFont(cssVar("--font-sans"));
 	ctx.textBaseline = "top";
 	ctx.beginPath();
 	for (let n = first; n <= last; n++) {
