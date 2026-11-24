@@ -1194,11 +1194,18 @@ export interface CutsProposal {
 	batch: EditRequest["operations"];
 }
 
+// The one entry of `files` that places the asset in the new timeline under the id the batch uses.
+export interface CutsMediaFile {
+	hash: string;
+	asset_id: string;
+}
+
 export interface CutsProposeResult {
 	untrusted_notice?: string;
 	project_id: string;
 	revision: number;
 	asset_id: string;
+	media_file: CutsMediaFile;
 	proposals: CutsProposal[];
 	text: string;
 }

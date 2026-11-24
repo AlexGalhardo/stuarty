@@ -126,8 +126,8 @@ func TestCutsProposeNeedsTheTranscriptAndTheFaceTrackAndChangesNothing(t *testin
 	}
 
 	for _, p := range res.Proposals {
-		if p.EndMS-p.StartMS < 8_000 || p.EndMS-p.StartMS > 12_000 || p.FaceShare < 700 || len(p.Batch) != 4 ||
-			p.Batch[3].Op != "clip.face_frame" || p.Title == "" {
+		if p.EndMS-p.StartMS < 8_000 || p.EndMS-p.StartMS > 12_000 || p.FaceShare < 700 || len(p.Batch) != 3 ||
+			p.Batch[2].Op != "clip.face_frame" || p.Title == "" {
 			t.Errorf("proposal = %+v", p)
 		}
 

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useT } from "@/lib/i18n";
 import { ApiError } from "../../api/errors";
-import type { CutsProposal, ToolOffer } from "../../api/types";
+import type { CutsMediaFile, CutsProposal, ToolOffer } from "../../api/types";
 import { useCanEdit } from "../../commands/useActions";
 import { useStore } from "../../state/createStore";
 import { useDocumentState, useRuntime } from "../../state/EditorContext";
@@ -28,7 +28,7 @@ type Phase =
 	| { name: "checking" }
 	| { name: "tracking"; jobId: string }
 	| { name: "proposing" }
-	| { name: "review"; proposals: CutsProposal[] }
+	| { name: "review"; proposals: CutsProposal[]; mediaFile: CutsMediaFile }
 	| { name: "creating" }
 	| { name: "created"; count: number }
 	| { name: "failed"; code: string; message: string; hint?: string };
@@ -66,7 +66,11 @@ export default function VerticalCuts({
 		try {
 			const result = await runtime.client.getCuts(runtime.projectId, id);
 			setChosen(new Set(result.proposals.map((p) => p.n)));
-			setPhase({ name: "review", proposals: result.proposals });
+			setPhase({
+				name: "review",
+				proposals: result.proposals,
+				mediaFile: result.media_file,
+			});
 		} catch (error) {
 			fail(error);
 		}
@@ -150,7 +154,12 @@ export default function VerticalCuts({
 		}
 	}
 
-	async function accept(proposals: CutsProposal[]): Promise<void> {
+	// Each kept proposal: a new timeline, the asset placed in it under the id the batch names (only the import
+	// flow adds an asset), then the batch at the revision the placement left.
+	async function accept(
+		proposals: CutsProposal[],
+		mediaFile: CutsMediaFile,
+	): Promise<void> {
 		const picked = proposals.filter((p) => chosen.has(p.n));
 		if (picked.length === 0) return;
 		setPhase({ name: "creating" });
@@ -162,9 +171,16 @@ export default function VerticalCuts({
 				});
 				const timelineId = added.item.timeline_id;
 				if (timelineId === undefined) continue;
+				const placed = await runtime.client.placeCutMedia(
+					runtime.projectId,
+					timelineId,
+					mediaFile,
+				);
+				const refused = placed.assets.find((a) => a.error !== undefined)?.error;
+				if (refused !== undefined) throw new ApiError(422, refused);
 				await runtime.client.editTimeline(runtime.projectId, timelineId, {
 					operations: proposal.batch,
-					base_revision: 0,
+					base_revision: placed.revision,
 					idempotency_key: crypto.randomUUID(),
 				});
 			}
@@ -277,7 +293,7 @@ export default function VerticalCuts({
 							type="button"
 							size="sm"
 							disabled={!canEdit || chosen.size === 0}
-							onClick={() => void accept(phase.proposals)}
+							onClick={() => void accept(phase.proposals, phase.mediaFile)}
 						>
 							{t("ui.editor.vertical_cuts.accept", { count: chosen.size })}
 						</Button>

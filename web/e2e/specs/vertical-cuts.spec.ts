@@ -115,8 +115,14 @@ test.describe("vertical cuts", () => {
 				args: { kind: "visual", id: "trk_cq00000001", name: "Cut 1" },
 			},
 		];
+		const mediaFile = { hash: `sha256:${"a".repeat(64)}`, asset_id: "ast_x" };
+		const calls: string[] = [];
 		const created: string[] = [];
-		const edits: { url: string; body: { operations: unknown[] } }[] = [];
+		const placed: unknown[] = [];
+		const edits: {
+			url: string;
+			body: { operations: unknown[]; base_revision: number };
+		}[] = [];
 
 		await page.route("**/api/v1/system/tools", (route) =>
 			json(route, status(true)),
@@ -148,6 +154,7 @@ test.describe("vertical cuts", () => {
 				project_id: seeded.id,
 				revision: 1,
 				asset_id: "ast_x",
+				media_file: mediaFile,
 				text: "1 vertical cuts",
 				proposals: [
 					{
@@ -165,6 +172,7 @@ test.describe("vertical cuts", () => {
 		);
 		await page.route("**/api/v1/projects/*/items", (route) => {
 			if (route.request().method() !== "POST") return route.fallback();
+			calls.push("item");
 			created.push(route.request().url());
 			return json(route, {
 				project_id: seeded.id,
@@ -180,7 +188,28 @@ test.describe("vertical cuts", () => {
 				text: "added",
 			});
 		});
+		await page.route("**/api/v1/projects/*/media", (route) => {
+			if (route.request().method() !== "POST") return route.fallback();
+			calls.push("media");
+			placed.push(route.request().postDataJSON());
+			return json(route, {
+				project_id: "prj_e2etimeline",
+				revision: 1,
+				assets: [
+					{
+						asset_id: "ast_x",
+						name: "clip.mp4",
+						state: "ready",
+						progress: 1,
+						deduplicated: true,
+					},
+				],
+				failed: 0,
+				text: "placed",
+			});
+		});
 		await page.route("**/api/v1/projects/*/edit?timeline_id=*", (route) => {
+			calls.push("edit");
 			edits.push({
 				url: route.request().url(),
 				body: route.request().postDataJSON(),
@@ -203,5 +232,12 @@ test.describe("vertical cuts", () => {
 		expect(edits).toHaveLength(1);
 		expect(edits[0]?.url).toContain("timeline_id=prj_e2etimeline");
 		expect(edits[0]?.body.operations).toEqual(batch);
+		// The asset is placed in the new timeline first, as the answer named it, and the batch goes at the
+		// revision the placement left.
+		expect(calls).toEqual(["item", "media", "edit"]);
+		expect(placed).toEqual([
+			{ files: [mediaFile], timeline_id: "prj_e2etimeline" },
+		]);
+		expect(edits[0]?.body.base_revision).toBe(1);
 	});
 });

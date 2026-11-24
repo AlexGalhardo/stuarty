@@ -42,6 +42,7 @@ Content type `application/json`. Schema: [`CutsProposeResult`](/docs/api/schemas
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `asset_id` | `string` | no |  |
+| `media_file` | [`ImportFile`](/docs/api/schemas#importfile) | no |  |
 | `project_id` | `string` | no |  |
 | `proposals` | array of [`CutsProposal`](/docs/api/schemas#cutsproposal) | no |  |
 | `revision` | `integer (int64)` | no |  |
@@ -233,6 +234,11 @@ puts "#{response.code} #{response.body}"
 ```json title="200"
 {
   "asset_id": "string",
+  "media_file": {
+    "asset_id": "string",
+    "hash": "string",
+    "path": "string"
+  },
   "project_id": "string",
   "proposals": [
     {
