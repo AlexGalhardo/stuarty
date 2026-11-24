@@ -1343,6 +1343,8 @@ The transcript artifact (10.5) is read, never changed, by the edit-by-text opera
 
 **What the pinned helper does with a filler.** whisper.cpp tends to drop or smooth hesitations, so what it keeps was measured on a labelled pt-BR and English speech fixture before SDD-023 promised anything; the method, the numbers and the thresholds that follow from them are in `docs/perf/2026-11-23-transcript-fillers.md`. Word timing is measured against the onsets reported by the synthesizer that made the fixture, after the post-processing of 10.4.
 
+**Accuracy of a cut (epic 89).** Because a word inside a run starts a median 160 to 240 ms from its audible onset, `transcript.delete_range` snaps the edges of its cut to the silences of the `silence` artifact (9.1, the -35 dB set) instead of trusting the word times alone; the rule is SDD-023 section 3.1 and the measurement is `docs/perf/2026-11-24-transcript-snap.md`. The snap reads the artifact the ingest already writes, runs no analysis and changes no transcript artifact or word time: the words keep the times of 10.4, and only the cut moves.
+
 ## 11. Test fixtures
 
 ### 11.1 Policy

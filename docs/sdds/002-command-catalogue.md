@@ -189,7 +189,7 @@ Three commands depend on data the core cannot compute because it needs media: si
 | Public argument | Field filled by the service |
 | --- | --- |
 | `clip.remove_silences {min_silence, padding, threshold_db}` | `resolved.silences`: ranges in asset frames, taken from the set of the silence artifact measured at `threshold_db` (SDD-011 §9.1) |
-| `caption.from_transcript {...}`, `caption.retime_from_clip {...}`, `transcript.delete_range {...}` | `resolved.words`: words with times in asset frames |
+| `caption.from_transcript {...}`, `caption.retime_from_clip {...}`, `transcript.delete_range {...}` | `resolved.words`: words with times in asset frames. `transcript.delete_range` also gets `resolved.silences` (the -35 dB set of the silence artifact, as for `clip.remove_silences`) and `resolved.silence_analysis` (`read`, or `missing` when the asset has no silence artifact, which is not an error there) |
 | `audio.duck {speech_item_ids, ...}` | `resolved.speech`: one entry per speech item, `{item_id, ranges}`, with the speech ranges of that item's asset in asset frames, half-open, taken from the speech map of the asset (SDD-011) |
 | `audio.mark_beats {...}` | `resolved.beats`: the beats of the music asset as strictly increasing asset frames, taken from the beat grid of the asset (SDD-011); at most 108,000. Not used when `bpm` is given |
 | `asset.add` | issued only by the import flow, with the facts measured on the verified normalized media, never copied from the probe (SDD-011 §4.9) (`internal: true`) |
@@ -326,7 +326,7 @@ Scope is `edit` unless stated. "Time" marks arguments parsed by A.4. Optional ar
 | `item.unlink` | `item_ids` | Takes items out of their link group; a group left with one item is dissolved. See C.66 |
 | `item.extract_audio` | `item_id`, `track_id`, `id?` | Creates a linked audio item from the audio of a video clip and mutes the clip. See C.67 |
 | `clip.remove_silences` | `item_id`, `min_silence?` (length, default `"0.4s"`), `padding?` (length kept on each side of speech, default `"0.1s"`), `threshold_db?` (-30, -35, -40 or -45, default -35), `ripple?` (`"track"` default, `"none"`), `new_ids?` | Replaces the clip, or an audio item, by one item per non-silent stretch of its source range (A.9). With ripple the pieces are placed back to back from the original start and later items on the track move earlier; without, each piece keeps its original position. The first piece keeps the item's identifier, its `transition_in` and `fade_in`; the last keeps `transition_out` and `fade_out`. `effective.removed` is the total length removed. With no silence found the document is unchanged |
-| `transcript.delete_range` | `asset_id`, `from_word`, `to_word` (inclusive indices into the transcript of the asset), `new_ids?` | Removes the media of a range of transcript words from every clip and audio item that shows the asset and closes the gap on each track, as one undoable operation (C.87, SDD-023). The words come from the transcript through `resolved` (A.9) |
+| `transcript.delete_range` | `asset_id`, `from_word`, `to_word` (inclusive indices into the transcript of the asset), `snap?` (default `"0.3s"`: the edges of the cut move into the nearest silence), `new_ids?` | Removes the media of a range of transcript words from every clip and audio item that shows the asset and closes the gap on each track, as one undoable operation (C.87, SDD-023). The words come from the transcript through `resolved` (A.9) |
 | `audio.duck` | `item_id`, `speech_item_ids` (1 to 20 items), `gain_db?` (-40 to -1, default -12), `attack?` (length, default `"0.2s"`), `release?` (length, default `"0.5s"`) | Lowers a music item while speech sounds, as generated `volume` keyframes; the speech comes through `resolved` (A.9). `keyframe.clear` on `volume` undoes it |
 | `audio.processor_add` | `item_id` or `track_id`, `kind`, `params?`, `index?`, `enabled?` | Adds an audio processor (equaliser, compressor, limiter, gate, de-esser, noise reduction) to the chain of an item or a track. See C.79 |
 | `audio.processor_set` | `item_id` or `track_id`, `index`, `params?`, `enabled?` | Changes the parameters or the switch of one processor of a chain. See C.80 |
@@ -6786,23 +6786,24 @@ Removes the media of a range of transcript words from the timeline and closes th
 | `from_word` | integer | yes | none | index of the first word to remove in the transcript of the asset, at least 0 |
 | `to_word` | integer | yes | none | index of the last word to remove, inclusive, at least `from_word` |
 | `new_ids` | array of item ids | no | generated | ids for the new pieces, in order of cut (A.3 rule 4; extra ids are listed in `effective.unused_ids`; duplicates are `E_VALIDATION`) |
-| `resolved` | `{"words": [...]}` | filled by the service (A.9) | none | as in C.40 |
+| `snap` | time (a length) | no | `"0.3s"` | the farthest an edge of the cut may move to reach a silence (epic 89); `"0s"` turns the snap off and gives the cut of epic 69 exactly; at most `"2s"` (`E_VALIDATION`, `path` `args.snap`) |
+| `resolved` | `{"words": [...], "silences": [...], "silence_analysis": "read" or "missing"}` | filled by the service (A.9) | none | `words` as in C.40; `silences` are sorted, non-overlapping `{"start", "end"}` ranges in asset frames, half-open, read from the silence artifact at -35 dB (`silences` and `silence_analysis` are optional: a caller of the core that gives none gets the cut of epic 69) |
 
 **Preconditions.**
 
-1. Arguments match the schema, `from_word <= to_word`, and `to_word` is below the number of resolved words (`E_VALIDATION`, `path` `args.to_word`).
+1. Arguments match the schema, `from_word <= to_word`, and `to_word` is below the number of resolved words (`E_VALIDATION`, `path` `args.to_word`). `snap` is a valid length of 0 to 2 s (`E_INVALID_TIME` for a bad string, `E_VALIDATION` above 2 s); the silences, when given, are sorted and non-overlapping (`E_VALIDATION`, `path` `args.resolved.silences[i]`).
 2. The asset exists in the document (`E_NOT_FOUND`) and is not an image or a video with no audio (`E_TYPE_MISMATCH`).
 3. At least one `clip` or `audio` item shows the asset and its visible source range meets the range to remove (`E_INVALID_STATE`, with the hint to check the indices against the transcript view).
 4. Every item that meets the range has a constant speed and is not reversed (`E_INVALID_STATE`, the rule of C.27 item 7), and is on an unlocked track (`E_INVALID_STATE`, A.3 rule 5).
 5. Each used new id is unused (`E_ID_EXISTS`) and the document stays within 500 items (`E_LIMIT`).
 
-**Postconditions.** Let `R = [words[from_word].start, words[to_word].end)` in asset frames. For each item `it` of the asset (`clip` or `audio`) with visible source range `S = [si, si + ceil(duration x num / den))` that meets `R`, processed from the latest `start` to the earliest on each track:
+**Postconditions.** Let `R = [words[from_word].start, words[to_word].end)` in asset frames, then, unless the snap is off or no silence analysis was read, moved to `R'` by the rule of SDD-023 section 3 (`transcript.SnapEdges`): the start edge only earlier and the end edge only later, to the nearest silence within `snap`, never past the neighbouring words of the transcript; `R'` always contains `R`. Everything below uses `R'` in place of `R`, and `R'` equals `R` when no edge moved. For each item `it` of the asset (`clip` or `audio`) with visible source range `S = [si, si + ceil(duration x num / den))` that meets `R`, processed from the latest `start` to the earliest on each track:
 
 1. With `a = max(R.start - si, 0)` and `b = R.end - si`, the local frames that show `R` are `[f, l)`, where `f = ceil(a x den / num)` and `l = min(max(ceil(b x den / num), f + 1), duration)`. An item with `f >= duration` shows no frame of `R` and is not cut. The item keeps `L`, the local frames `[0, f)` from source `si`, and `Q`, the local frames `[l, duration)` from source `R.end`; an empty side is dropped. So the item loses the part of `R` it shows within one frame at any constant speed.
 2. With both sides, `it` becomes two pieces; with one side, `it` becomes that piece; with none, `it` is deleted. Pieces follow C.27 postconditions 3 and 4 with ripple `track`, except that their durations are those of postcondition 1 here: the first piece keeps the id, `transition_in`, `fade_in` and `slot`, the last keeps `transition_out` and `fade_out`, the piece `Q` after `L` starts where `L` ends, and keyframes follow R11 and R12. A piece whose side `L` was dropped starts at the original `start`.
 3. The later items of the same track (`start >=` the original end) move earlier by `it.duration` minus the sum of the piece durations.
 4. Captions linked to `it` are linked to the piece that holds their first word (as in C.27 postcondition 5). A caption whose own words were removed keeps its text and timing; `caption.retime_from_clip` re-syncs it.
-5. `diff`: `item.updated` for the first piece, `item.added` for the others, `item.removed` for a deleted item and `item.updated` for shifted items, one list sorted by id (R19). `effective` has `range` (`{"start", "end"}` asset frames), `cuts` (`[{"item_id", "track_id", "removed", "pieces": [ids]}]`, ordered by item id), `removed` (the largest `removed` of the cuts, as `{"frames", "seconds"}`), `new_ids` and `unused_ids`.
+5. `diff`: `item.updated` for the first piece, `item.added` for the others, `item.removed` for a deleted item and `item.updated` for shifted items, one list sorted by id (R19). `effective` has `range` (`{"start", "end"}` asset frames), `cuts` (`[{"item_id", "track_id", "removed", "pieces": [ids]}]`, ordered by item id), `removed` (the largest `removed` of the cuts, as `{"frames", "seconds"}`), `new_ids` and `unused_ids`. `effective.range` is `R'`. When the snap is on and `resolved.silence_analysis` is present, `effective.snap` is `{"window": <time effective>, "analysis": "read" or "missing", "start": {"edge": <asset frame>, "result": "inside" or "moved" or "none", "moved": <frames>}, "end": {...}}` (`R` is the range of the words; `edge` is the final frame, `moved` the frames added to the cut at that edge, 0 unless `result` is `moved`). `inside` says the whisper edge was already in a silence, `none` that no silence qualified, and with `analysis` `missing` both edges are `none` and the service writes that no silence analysis was available.
 
 **Decision.** The command acts on every item of the asset, not on one item: the video clip and its linked audio, a clip placed twice and the pieces of an earlier cut are all cut at the same words, so the creator who deletes a sentence never leaves its sound behind. Ripple is always on the track of the cut item, as in `clip.remove_silences`.
 
@@ -6818,6 +6819,8 @@ Removes the media of a range of transcript words from the timeline and closes th
 | `E_LIMIT` | too many items | `Cutting would make 501 items; the limit is 500.` | `Delete unused items first.` |
 
 **Inverse.** The exact inverse of the net change (A.6): `patch` of each first piece, `remove` of each added piece, `put` of each deleted item and `patch {set: {start: <old>}}` of each shifted item, in order of mutation.
+
+**Snap example.** The words `hello [62,70)`, `um [72,80)`, `world [90,110)` and a silence `[82,88)` in asset frames at 30 fps: deleting `um` with the default `snap` (9 frames) moves the end edge from 80 to 82, the start of the silence (2 frames later, inside the window), because 80 is outside every silence and the silence starts before `world`; `R' = [72,82)`. The start edge 72 has no silence at or before it within 9 frames (the previous word ends at 70 and no silence lies in `[70,72]`), so it stays and `effective.snap.start.result` is `none`.
 
 **Idempotency.** Not idempotent in position, and safe: the second call finds no item that shows the range and returns `E_INVALID_STATE`.
 
@@ -6839,6 +6842,13 @@ Removes the media of a range of transcript words from the timeline and closes th
 - `ok_clip_used_twice`
 - `ok_already_cut_clip`
 - `ok_captions_follow_the_piece`
+- `ok_snap_edges_to_silences`
+- `ok_snap_changed_speed`
+- `ok_snap_clip_cut_in_pieces`
+- `ok_snap_linked_audio`
+- `ok_snap_off`
+- `ok_snap_no_silence_analysis`
+- `err_validation_snap_too_long`
 - `err_validation_range_reversed`
 - `err_validation_index_beyond_transcript`
 - `err_validation_resolved_missing`

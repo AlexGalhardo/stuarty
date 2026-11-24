@@ -68,7 +68,7 @@ The result of the operation lists, for each cut, the edges it moved and by how m
 
 ## Tasks
 
-- [ ] 1. Specify the snap first: SDD-002 C.87 (the argument, the result lines, the examples), SDD-023 sections 3 and 7, SDD-011 section 10.8; decide the default window and whether `snap` is on by default. Verify: `task lint:md` exits 0 and `task codegen` leaves no unexpected diff after the argument is added in task 3.
+- [x] 1. Specify the snap first: SDD-002 C.87 (the argument, the result lines, the examples), SDD-023 sections 3 and 7, SDD-011 section 10.8; decide the default window and whether `snap` is on by default. Verify: `task lint:md` exits 0 and `task codegen` leaves no unexpected diff after the argument is added in task 3.
 - [ ] 2. The pure rule `transcript.SnapEdges` with table tests: an edge inside a silence, near one, in a run with none in the window, two candidates, a tie, the two guards (never into a chosen word, never into the next word), adjacent silences, the first and last word of the asset. Verify: `go test ./core/transcript/... -run Snap` passes.
 - [ ] 3. The argument and the `resolved.silences` member in `transcript.delete_range`, the golden cases of epic 69 unchanged with `snap` off, new golden cases with it on (speed 1, speed 3/2, a clip cut in pieces, a clip and its linked audio). Verify: `go test ./core/command/... -run 'TranscriptDelete'` passes and `task codegen` leaves no unexpected diff.
 - [ ] 4. The service fills the silences, degrades to the whisper cut when the artifact is missing, and writes the snapped edges in the description. Verify: `go test ./service/... -run 'Transcript|Resolve'` and `go test ./web/app/servicetest/... -run 'Transcript'` pass, including the case with no `silence` artifact.
