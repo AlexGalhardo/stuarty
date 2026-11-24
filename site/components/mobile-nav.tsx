@@ -16,18 +16,18 @@ export function MobileNav({ groups }: { groups: NavGroup[] }) {
 		<Dialog.Root open={open} onOpenChange={setOpen}>
 			<Dialog.Trigger
 				aria-label={t.openNavigation}
-				className="inline-flex size-8 items-center justify-center rounded-lg text-muted hover:bg-hover hover:text-fg lg:hidden"
+				className="inline-flex size-[44px] items-center justify-center rounded-lg text-muted transition-colors hover:bg-hover hover:text-fg sm:size-9 lg:hidden"
 			>
 				<Menu aria-hidden className="size-4.5" />
 			</Dialog.Trigger>
 			<Dialog.Portal>
-				<Dialog.Backdrop className="fixed inset-0 z-50 bg-black/30 transition-opacity data-ending-style:opacity-0 data-starting-style:opacity-0 dark:bg-black/60" />
-				<Dialog.Popup className="fixed inset-y-0 left-0 z-50 flex w-[min(20rem,85vw)] flex-col border-r border-border bg-bg transition-transform duration-200 data-ending-style:-translate-x-full data-starting-style:-translate-x-full">
-					<div className="flex h-14 items-center justify-between border-b border-border px-4">
+				<Dialog.Backdrop className="fixed inset-0 z-50 bg-black/30 transition-opacity motion-reduce:transition-none data-ending-style:opacity-0 data-starting-style:opacity-0 dark:bg-black/60" />
+				<Dialog.Popup className="fixed inset-y-0 left-0 z-50 flex w-[min(20rem,85vw)] flex-col border-r border-border bg-bg transition-transform duration-200 motion-reduce:transition-none data-ending-style:-translate-x-full data-starting-style:-translate-x-full">
+					<div className="flex h-14 items-center justify-between border-b border-border px-3">
 						<Dialog.Title className="text-sm font-semibold">{t.navigation}</Dialog.Title>
 						<Dialog.Close
 							aria-label={t.closeNavigation}
-							className="inline-flex size-8 items-center justify-center rounded-lg text-muted hover:bg-hover hover:text-fg"
+							className="inline-flex size-[44px] items-center justify-center rounded-lg text-muted transition-colors hover:bg-hover hover:text-fg"
 						>
 							<X aria-hidden className="size-4" />
 						</Dialog.Close>
@@ -36,35 +36,35 @@ export function MobileNav({ groups }: { groups: NavGroup[] }) {
 						<Link
 							href="/"
 							onClick={() => setOpen(false)}
-							className="flex rounded-lg px-2 py-1.5 text-sm font-medium text-muted hover:bg-hover hover:text-fg"
+							className="flex min-h-[44px] items-center rounded-lg px-3 text-sm font-semibold text-muted transition-colors hover:bg-hover hover:text-fg"
 						>
 							{t.home}
 						</Link>
 						<Link
 							href="/docs/introduction"
 							onClick={() => setOpen(false)}
-							className="flex rounded-lg px-2 py-1.5 text-sm font-medium text-muted hover:bg-hover hover:text-fg"
+							className="flex min-h-[44px] items-center rounded-lg px-3 text-sm font-semibold text-muted transition-colors hover:bg-hover hover:text-fg"
 						>
 							{t.docs}
 						</Link>
 						<Link
 							href="/docs/api/overview"
 							onClick={() => setOpen(false)}
-							className="flex rounded-lg px-2 py-1.5 text-sm font-medium text-muted hover:bg-hover hover:text-fg"
+							className="flex min-h-[44px] items-center rounded-lg px-3 text-sm font-semibold text-muted transition-colors hover:bg-hover hover:text-fg"
 						>
 							{t.apiReference}
 						</Link>
 						<Link
 							href="/docs/mcp/overview"
 							onClick={() => setOpen(false)}
-							className="flex rounded-lg px-2 py-1.5 text-sm font-medium text-muted hover:bg-hover hover:text-fg"
+							className="flex min-h-[44px] items-center rounded-lg px-3 text-sm font-semibold text-muted transition-colors hover:bg-hover hover:text-fg"
 						>
 							{t.mcp}
 						</Link>
 						<Link
 							href="/changelog"
 							onClick={() => setOpen(false)}
-							className="mb-4 flex rounded-lg px-2 py-1.5 text-sm font-medium text-muted hover:bg-hover hover:text-fg"
+							className="mb-4 flex min-h-[44px] items-center rounded-lg px-3 text-sm font-semibold text-muted transition-colors hover:bg-hover hover:text-fg"
 						>
 							{t.changelog}
 						</Link>
