@@ -129,8 +129,8 @@ func fixture(t *testing.T) (*assets.Library, *memStore, []assets.Held) {
 		held("sha256:d", "grade.cube", "lut", "prj_2", "prj_2"),
 	}
 
-	for _, f := range files {
-		st.names[f.Hash] = f.Name
+	for i := range files {
+		st.names[files[i].Hash] = files[i].Name
 	}
 
 	ctx := context.Background()
@@ -497,5 +497,100 @@ func TestLibraryComposesDecomposedTags(t *testing.T) {
 	if got, err := lib.Tag(ctx, &file, nil, []string{decomposed}, "user:a", 3, nil); err != nil ||
 		!slices.Equal(got.Tags, []string{"thè"}) {
 		t.Errorf("removing the decomposed tag = %+v, %v", got.Tags, err)
+	}
+}
+
+func withSize(h assets.Held, state string, n *int64) assets.Held {
+	h.State, h.Bytes = state, n
+
+	return h
+}
+
+func TestAssetLibraryTotalsCountEachFileOnceAndNameTheUnsized(t *testing.T) {
+	t.Parallel()
+
+	lib, _, files := fixture(t)
+	files[0] = withSize(files[0], assets.StateReady, new(int64(4<<30))) // logo.png, over 4 GiB
+	files[1] = withSize(files[1], assets.StateReady, new(int64(1_500)))
+	files[2] = withSize(files[2], assets.StateImporting, nil)
+	files[3] = withSize(files[3], assets.StateMissing, nil)
+
+	// The same file held twice, as two names of a project would: it weighs once.
+	dup := files[1]
+	dup.Name = "reaction copy.mov"
+
+	page, err := lib.List(context.Background(), append(slices.Clone(files), dup), &assets.Query{Limit: 2})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if want := (asset.Total{Bytes: 4<<30 + 1_500, Files: 4, Unsized: 2}); page.Size != want {
+		t.Errorf("Size = %+v, want %+v", page.Size, want)
+	}
+
+	if len(page.Assets) != 2 {
+		t.Errorf("the page holds %d entries, want 2 (the total is not the page)", len(page.Assets))
+	}
+
+	for _, a := range page.Assets {
+		switch a.Hash {
+		case "sha256:a":
+			if a.SizeText != "4.3 GB" || a.State != assets.StateReady {
+				t.Errorf("logo entry = %q %q", a.SizeText, a.State)
+			}
+		case "sha256:b":
+			if a.SizeText != "1.5 KB" {
+				t.Errorf("reaction size text = %q", a.SizeText)
+			}
+		}
+	}
+}
+
+func TestAssetLibraryTheTotalFollowsTheFilters(t *testing.T) {
+	t.Parallel()
+
+	lib, _, files := fixture(t)
+	files[0] = withSize(files[0], assets.StateReady, new(int64(10)))
+	files[1] = withSize(files[1], assets.StateReady, new(int64(1_000)))
+	files[2] = withSize(files[2], assets.StateReady, new(int64(100)))
+	files[3] = withSize(files[3], assets.StateReady, new(int64(1)))
+
+	page, err := lib.List(context.Background(), files, &assets.Query{Filter: asset.Filter{Section: "visual"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if want := (asset.Total{Bytes: 11, Files: 2}); page.Size != want {
+		t.Errorf("visual section Size = %+v, want %+v", page.Size, want)
+	}
+}
+
+func TestAssetLibraryAnEmptyLibraryWeighsNothingAndIsNotAnError(t *testing.T) {
+	t.Parallel()
+
+	lib := &assets.Library{Store: newStore()}
+
+	page, err := lib.List(context.Background(), nil, &assets.Query{})
+	if err != nil || page.Total != 0 || page.Size != (asset.Total{}) || len(page.Assets) != 0 {
+		t.Errorf("page = %+v, %v", page, err)
+	}
+}
+
+func TestAssetLibraryAnEntryWithNoStateIsReadyAndAUnknownSizeHasNoText(t *testing.T) {
+	t.Parallel()
+
+	lib, _, files := fixture(t)
+	files[0].Bytes = nil
+
+	page, err := lib.List(context.Background(), files[:1], &assets.Query{})
+	if err != nil || len(page.Assets) != 1 {
+		t.Fatalf("page = %+v, %v", page, err)
+	}
+
+	if a := page.Assets[0]; a.State != assets.StateReady || a.SizeText != "" || a.Bytes != nil {
+		t.Errorf(
+			"entry = state %q size %q bytes %v; an unknown size is null and has no text, not 0 B",
+			a.State, a.SizeText, a.Bytes,
+		)
 	}
 }

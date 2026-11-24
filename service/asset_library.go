@@ -44,10 +44,17 @@ type AssetUse = assets.Use
 // AssetListResult lists the files, oldest name first.
 type AssetListResult struct {
 	Envelope
-	Assets     []LibraryAsset `json:"assets"`
-	Total      int            `json:"total"`
-	NextCursor *string        `json:"next_cursor"`
-	Text       string         `json:"text"`
+	Assets []LibraryAsset `json:"assets"`
+	Total  int            `json:"total"`
+	// FileCount, TotalBytes and TotalSizeText are about every file that matches the filters, not the page: the
+	// distinct files, what they weigh with each hash once, and that weight in words (SDD-011 section 14.9).
+	// Unsized counts the files among them whose size is unknown; they add nothing to the total.
+	FileCount     int     `json:"file_count"`
+	TotalBytes    int64   `json:"total_bytes"`
+	TotalSizeText string  `json:"total_size_text"`
+	Unsized       int     `json:"unsized"`
+	NextCursor    *string `json:"next_cursor"`
+	Text          string  `json:"text"`
 }
 
 // maxLibraryAssets bounds the answer; the scan of projects is bounded by maxFontOwnerScan.
@@ -76,13 +83,17 @@ func (s *svc) libraryScan(ctx context.Context, c Caller) (map[string]*libraryEnt
 		for i := range items {
 			scanned++
 
-			rows, perr := s.store.Assets().ListProjectAssets(ctx, items[i].ID, ProjectAssetActive)
-			if perr != nil {
-				return nil, asError(perr)
-			}
+			// A file still importing is a pending row of its timeline: it is in the library, with no size yet
+			// (SDD-011 section 14.9).
+			var rows []ProjectAssetRow
 
-			if len(rows) == 0 {
-				continue
+			for _, state := range []ProjectAssetState{ProjectAssetActive, ProjectAssetPending} {
+				part, perr := s.store.Assets().ListProjectAssets(ctx, items[i].ID, state)
+				if perr != nil {
+					return nil, asError(perr)
+				}
+
+				rows = append(rows, part...)
 			}
 
 			for j := range rows {
@@ -158,8 +169,9 @@ func (s *svc) libraryScanProjectsWithNoTimeline(
 	return byHash, nil
 }
 
-// libraryHeld is the files the caller may see, with their facts. Only the files that are ready are listed,
-// unless wantAll is set.
+// libraryHeld is the files the caller may see, with their facts. wantAll takes the files whose ingest failed too
+// (a lookup by hash); without it the files that are ready or still importing are listed, each with its state and,
+// for the list, checked against the store (SDD-011 section 14.9).
 func (s *svc) libraryHeld(ctx context.Context, c Caller, wantAll bool) ([]assets.Held, error) {
 	byHash, serr := s.libraryScan(ctx, c)
 	if serr != nil {
@@ -187,14 +199,16 @@ func (s *svc) libraryHeld(ctx context.Context, c Caller, wantAll bool) ([]assets
 
 	for hash, e := range byHash {
 		ar, gerr := s.store.Assets().Get(ctx, hash)
-		if gerr != nil || !wantAll && ar.IngestState != IngestReady {
+		if gerr != nil || !wantAll && ar.IngestState == IngestFailed {
 			continue
 		}
 
 		h := assets.Held{
-			Hash: hash, Name: e.name, MediaKind: ar.Kind, Bytes: ar.SizeBytes, CreatedMs: ar.CreatedMs,
+			Hash: hash, Name: e.name, MediaKind: ar.Kind, CreatedMs: ar.CreatedMs,
 			Holdings: make([]asset.Holding, len(e.holdings)),
 		}
+
+		s.heldSize(&h, &ar, !wantAll)
 
 		for i, hd := range e.holdings {
 			hd.ProjectID = productionOf(hd.TimelineID)
@@ -279,12 +293,16 @@ func (s *svc) AssetList(ctx context.Context, req AssetListRequest) (*AssetListRe
 		return nil, ruleError(lerr)
 	}
 
-	res := &AssetListResult{UntrustedNotice: UntrustedNotice, Assets: page.Assets, Total: page.Total}
+	res := &AssetListResult{
+		UntrustedNotice: UntrustedNotice, Assets: page.Assets, Total: page.Total,
+		FileCount: page.Size.Files, TotalBytes: page.Size.Bytes, Unsized: page.Size.Unsized,
+		TotalSizeText: asset.FormatSize(&page.Size.Bytes),
+	}
 	if res.Assets == nil {
 		res.Assets = []LibraryAsset{}
 	}
 
-	res.Text = assetListText(res.Assets, page.Total)
+	res.Text = assetListText(res.Assets, page.Total, res.TotalSizeText, res.Unsized)
 
 	if page.Next >= 0 {
 		cur := offsetCursor("assets", "", page.Next)
@@ -298,11 +316,15 @@ func (s *svc) AssetList(ctx context.Context, req AssetListRequest) (*AssetListRe
 // assetListTextCap is the budget of the text of a list, in characters (SDD-003 section 3.10).
 const assetListTextCap = textview.CapMediaList
 
-func assetListText(list []LibraryAsset, total int) string {
+func assetListText(list []LibraryAsset, total int, sizeText string, unsized int) string {
 	var b strings.Builder
 
 	b.WriteString(textview.Note + "\n")
-	fmt.Fprintf(&b, "%d files in the library", total)
+	fmt.Fprintf(&b, "%d files in the library, %s in total", total, sizeText)
+
+	if unsized > 0 {
+		fmt.Fprintf(&b, " (%d with no known size)", unsized)
+	}
 
 	for i := range list {
 		line := assetLine(&list[i])
@@ -322,6 +344,14 @@ func assetLine(a *LibraryAsset) string {
 	var b strings.Builder
 
 	fmt.Fprintf(&b, "%s %s %s", a.Hash, orDash(a.Kind), textview.Quote(a.Name, 80))
+
+	if a.SizeText != "" {
+		b.WriteString(" " + a.SizeText)
+	}
+
+	if a.State != "" && a.State != assets.StateReady {
+		b.WriteString(" " + a.State)
+	}
 
 	if a.Width > 0 {
 		fmt.Fprintf(&b, " %dx%d", a.Width, a.Height)
@@ -377,6 +407,14 @@ func assetDetailText(a *LibraryAsset) string {
 	field("description", a.Description, asset.MaxDescription)
 
 	writeUses(&b, a.Uses)
+
+	if a.Projects > 1 {
+		fmt.Fprintf(
+			&b,
+			"\nthe file is stored once and counted once in the library total, though %d projects use it",
+			a.Projects,
+		)
+	}
 
 	if a.Origin.RightsNote != "" {
 		b.WriteString("\nThe rights note is the record of the user, not a licence check.")
