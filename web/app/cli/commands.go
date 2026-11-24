@@ -76,6 +76,7 @@ func registry() []*spec {
 		itemRenameCmd,
 		itemTrashCmd,
 		itemRestoreCmd,
+		projectStepCmd,
 		briefShowCmd,
 		briefSetCmd,
 		briefingQuestionsCmd,
@@ -262,6 +263,11 @@ var projectCreate = &spec{
 			Name: "id", Kind: kindString,
 			Usage: "identifier for the project (omit it in network mode: the server chooses)",
 		},
+		{
+			Name:  "kind",
+			Kind:  kindString,
+			Usage: "what the project is meant to become: text, video, image or undecided (default); it creates no timeline",
+		},
 	},
 	run: func(ctx context.Context, c *call) (*output, error) {
 		res, err := c.svc.ProjectCreate(ctx, service.ProjectCreateRequest{
@@ -272,7 +278,7 @@ var projectCreate = &spec{
 				TimeBound: c.args.str("time-bound"), Due: c.args.str("due"),
 			},
 			Preset: c.args.str("preset"), FPS: c.args.str("fps"),
-			ID: c.args.str("id"), DryRun: c.args.boolean("dry-run"),
+			ID: c.args.str("id"), Kind: c.args.str("kind"), DryRun: c.args.boolean("dry-run"),
 		})
 		if err != nil {
 			return nil, err

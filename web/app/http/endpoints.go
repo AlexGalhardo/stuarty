@@ -141,6 +141,11 @@ var Endpoints = []Endpoint{
 		Scope: service.ScopeEdit, Service: "ProjectItemRestore", Status: 200, Summary: "Restore an item from the trash",
 	},
 	{
+		ID: "projects.steps.skip", Method: http.MethodPost, Path: "/projects/{id}/steps/{step}/skip",
+		Scope: service.ScopeEdit, Service: "ProjectStepSkip", Status: 200,
+		Summary: "Skip an optional step of the workflow of a project, or restore it",
+	},
+	{
 		ID: "projects.brief.get", Method: http.MethodGet, Path: "/projects/{id}/brief", Scope: service.ScopeRead,
 		Service: "BriefGet", Status: 200, Summary: "Read the brief of a project",
 	},
