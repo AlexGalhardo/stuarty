@@ -392,6 +392,8 @@ export interface ApiClient {
 	getRecording(id: string): Promise<Recording>;
 	listRecordings(projectId: string): Promise<RecordingListResult>;
 	stopRecording(id: string): Promise<Recording>;
+	pauseRecording(id: string): Promise<Recording>;
+	resumeRecording(id: string): Promise<Recording>;
 	cancelRecording(id: string): Promise<Recording>;
 	confirmRecording(id: string): Promise<Recording>;
 	dismissRecording(id: string): Promise<Recording>;
@@ -1059,6 +1061,20 @@ export function createClient(
 			call(
 				"POST",
 				`/recordings/${encodeURIComponent(id)}/stop`,
+				EDIT_TIMEOUT_MS,
+				{},
+			),
+		pauseRecording: (id) =>
+			call(
+				"POST",
+				`/recordings/${encodeURIComponent(id)}/pause`,
+				EDIT_TIMEOUT_MS,
+				{},
+			),
+		resumeRecording: (id) =>
+			call(
+				"POST",
+				`/recordings/${encodeURIComponent(id)}/resume`,
 				EDIT_TIMEOUT_MS,
 				{},
 			),

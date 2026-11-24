@@ -1509,12 +1509,35 @@ export interface ApprovalRequest {
 export type RecordingState =
 	| "prepared"
 	| "recording"
+	| "paused"
 	| "finishing"
 	| "ready"
 	| "failed"
 	| "cancelled";
 
 export type RecordingReview = "pending" | "added" | "dismissed";
+
+// A microphone or a camera. The name is text from outside, shown as text, never as markup.
+export interface RecordingDevice {
+	id: string;
+	name: string;
+	default: boolean;
+}
+
+export interface RecordingTrack {
+	kind: "screen" | "camera" | "microphone" | "system";
+	start_ms: number;
+	duration_ms: number;
+	bytes: number;
+	lost?: boolean;
+	asset_id?: string;
+}
+
+// The peaks of the sound tracks, 0 to 1000, while a recording runs.
+export interface RecordingLevels {
+	microphone: number;
+	system: number;
+}
 
 export interface RecordingSourceInfo {
 	id: string;
@@ -1527,6 +1550,9 @@ export interface RecordingSourceInfo {
 export interface RecordingSourcesResult {
 	displays: RecordingSourceInfo[];
 	windows: RecordingSourceInfo[];
+	microphones: RecordingDevice[];
+	cameras: RecordingDevice[];
+	system_audio: boolean;
 }
 
 export interface RecordingListResult {
@@ -1537,6 +1563,10 @@ export interface RecordingStartRequest {
 	project_id: string;
 	source: { kind: "display" | "window"; id: string; name?: string };
 	fps?: number;
+	microphone?: string;
+	system_audio?: boolean;
+	camera?: string;
+	events?: boolean;
 }
 
 export interface Recording {
@@ -1556,6 +1586,9 @@ export interface Recording {
 	stop_reason?: string;
 	error?: { code: string; message: string };
 	asset_id?: string;
+	tracks?: RecordingTrack[];
+	events_count?: number;
+	levels?: RecordingLevels;
 	actor: string;
 	created_at: string;
 	text: string;

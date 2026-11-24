@@ -5,8 +5,9 @@ import type { ApiClient } from "../api/client";
 import {
 	isKept,
 	isLive,
-	POLL_MS,
+	LIVE_POLL_MS,
 	type RecordView,
+	type StartOptions,
 	unavailableReason,
 	viewOf,
 } from "./recordFlow";
@@ -22,8 +23,12 @@ export interface RecordFlow {
 		id: string,
 		name: string,
 		fps: number,
+		extras: StartOptions,
 	): Promise<void>;
 	stop(): Promise<void>;
+	// pausing is for anyone; resuming restarts the capture of the screen, so the service asks for a person
+	pause(): Promise<void>;
+	resume(): Promise<void>;
 	// confirm and remove act on the recording on screen, or on a kept one named by its id
 	confirm(id?: string): Promise<void>;
 	dismiss(): Promise<void>;
@@ -110,7 +115,7 @@ export function useRecordFlow(
 				.catch((error: unknown) => {
 					if (active) setFailure(failureOf(error));
 				});
-		}, POLL_MS);
+		}, LIVE_POLL_MS);
 		return () => {
 			active = false;
 			clearInterval(timer);
@@ -138,17 +143,27 @@ export function useRecordFlow(
 		failure,
 		busy,
 		placed,
-		start: (kind, id, name, fps) =>
+		start: (kind, id, name, fps, extras) =>
 			run(async () =>
 				viewOf(
 					await client.startRecording({
 						project_id: projectId,
 						source: name === "" ? { kind, id } : { kind, id, name },
 						fps,
+						...(extras.microphone === ""
+							? {}
+							: { microphone: extras.microphone }),
+						...(extras.systemAudio ? { system_audio: true } : {}),
+						...(extras.camera === "" ? {} : { camera: extras.camera }),
+						...(extras.events ? { events: true } : {}),
 					}),
 				),
 			),
 		stop: () => run(async () => viewOf(await client.stopRecording(current()))),
+		pause: () =>
+			run(async () => viewOf(await client.pauseRecording(current()))),
+		resume: () =>
+			run(async () => viewOf(await client.resumeRecording(current()))),
 		confirm: (id) =>
 			run(async () => viewOf(await client.confirmRecording(id ?? current()))),
 		// "Not now": the recording stays out of the project; the picker lists it the next time, to add or delete.

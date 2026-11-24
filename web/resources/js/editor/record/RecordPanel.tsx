@@ -5,12 +5,19 @@ import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
-import type { Recording, RecordingSourceInfo } from "../api/types";
+import type {
+	Recording,
+	RecordingSourceInfo,
+	RecordingSourcesResult,
+} from "../api/types";
 import {
 	DEFAULT_FPS,
 	FPS_CHOICES,
 	formatClock,
+	meterValue,
+	NO_EXTRAS,
 	type RecordView,
+	type StartOptions,
 	unavailableKey,
 } from "./recordFlow";
 import type { RecordFlow } from "./useRecordFlow";
@@ -67,11 +74,10 @@ function Step({
 						<Kept kept={view.kept} busy={flow.busy} flow={flow} />
 					)}
 					<Picker
-						displays={view.sources.displays}
-						windows={view.sources.windows}
+						sources={view.sources}
 						busy={flow.busy}
-						onStart={(kind, id, name, fps) =>
-							void flow.start(kind, id, name, fps)
+						onStart={(kind, id, name, fps, extras) =>
+							void flow.start(kind, id, name, fps, extras)
 						}
 					/>
 				</>
@@ -89,22 +95,51 @@ function Step({
 						/>
 						{view.recording.state === "finishing"
 							? t("ui.editor.record.finishing")
-							: t("ui.editor.record.recording")}
+							: view.recording.state === "paused"
+								? t("ui.editor.record.paused")
+								: t("ui.editor.record.recording")}
 						<span data-record-clock="" className="tabular-nums">
 							{t("ui.editor.record.elapsed", {
 								time: formatClock(view.recording.duration_ms),
 							})}
 						</span>
 					</p>
-					<Button
-						type="button"
-						variant="destructive"
-						disabled={flow.busy || view.recording.state !== "recording"}
-						data-record-stop=""
-						onClick={() => void flow.stop()}
-					>
-						{t("ui.editor.record.stop")}
-					</Button>
+					<Meters recording={view.recording} />
+					<div className="flex flex-wrap gap-2">
+						{view.recording.state === "paused" ? (
+							<Button
+								type="button"
+								disabled={flow.busy}
+								data-record-resume=""
+								onClick={() => void flow.resume()}
+							>
+								{t("ui.editor.record.resume")}
+							</Button>
+						) : (
+							<Button
+								type="button"
+								variant="outline"
+								disabled={flow.busy || view.recording.state !== "recording"}
+								data-record-pause=""
+								onClick={() => void flow.pause()}
+							>
+								{t("ui.editor.record.pause")}
+							</Button>
+						)}
+						<Button
+							type="button"
+							variant="destructive"
+							disabled={
+								flow.busy ||
+								(view.recording.state !== "recording" &&
+									view.recording.state !== "paused")
+							}
+							data-record-stop=""
+							onClick={() => void flow.stop()}
+						>
+							{t("ui.editor.record.stop")}
+						</Button>
+					</div>
 				</>
 			);
 		case "review":
@@ -301,23 +336,62 @@ interface Choice {
 	source: RecordingSourceInfo;
 }
 
+// The level of each sound track while the recording runs, drawn from the peaks the service reports.
+function Meters({ recording }: { recording: Recording }): ReactNode {
+	const t = useT();
+	const kinds = new Set((recording.tracks ?? []).map((tr) => tr.kind));
+	const rows = [
+		[
+			"microphone",
+			recording.levels?.microphone,
+			"ui.editor.record.meter_microphone",
+		],
+		["system", recording.levels?.system, "ui.editor.record.meter_system"],
+	] as const;
+	const shown = rows.filter(([kind]) => kinds.has(kind));
+	if (shown.length === 0) return null;
+	return (
+		<div className="flex flex-col gap-1" data-record-meters="">
+			{shown.map(([kind, level, label]) => (
+				<label key={kind} className="flex items-center gap-2 text-xs">
+					<span className="w-40 shrink-0">{t(label)}</span>
+					<meter
+						className="h-2 w-full"
+						min={0}
+						max={1000}
+						value={meterValue(level)}
+						aria-label={t(label)}
+						data-record-meter={kind}
+					/>
+				</label>
+			))}
+			{kinds.has("system") && (
+				<p className="text-xs text-muted-foreground">
+					{t("ui.editor.record.system_note")}
+				</p>
+			)}
+		</div>
+	);
+}
+
 function Picker({
-	displays,
-	windows,
+	sources,
 	busy,
 	onStart,
 }: {
-	displays: RecordingSourceInfo[];
-	windows: RecordingSourceInfo[];
+	sources: RecordingSourcesResult;
 	busy: boolean;
 	onStart: (
 		kind: "display" | "window",
 		id: string,
 		name: string,
 		fps: number,
+		extras: StartOptions,
 	) => void;
 }): ReactNode {
 	const t = useT();
+	const { displays, windows } = sources;
+	const [extras, setExtras] = useState<StartOptions>(NO_EXTRAS);
 	const choices: Choice[] = [
 		...displays.map((source): Choice => ({ kind: "display", source })),
 		...windows.map((source): Choice => ({ kind: "window", source })),
@@ -344,6 +418,7 @@ function Picker({
 					chosen.source.id,
 					chosen.kind === "window" ? chosen.source.name : "",
 					fps,
+					extras,
 				);
 			}}
 		>
@@ -396,6 +471,89 @@ function Picker({
 					))}
 				</select>
 			</div>
+			<fieldset className="flex flex-col gap-2" data-record-extras="">
+				<legend className="text-xs font-medium text-muted-foreground uppercase">
+					{t("ui.editor.record.sound_title")}
+				</legend>
+				<div className="flex items-center gap-2">
+					<Label htmlFor="record-microphone">
+						{t("ui.editor.record.microphone")}
+					</Label>
+					<select
+						id="record-microphone"
+						className="h-8 min-w-0 rounded-md border bg-background px-2 text-sm"
+						value={extras.microphone}
+						onChange={(event) =>
+							setExtras({ ...extras, microphone: event.target.value })
+						}
+					>
+						<option value="">{t("ui.editor.record.microphone_none")}</option>
+						{sources.microphones.length > 0 && (
+							<option value="default">
+								{t("ui.editor.record.microphone_default")}
+							</option>
+						)}
+						{sources.microphones.map((m) => (
+							<option key={m.id} value={m.id}>
+								{m.name}
+							</option>
+						))}
+					</select>
+				</div>
+				{sources.system_audio && (
+					<label className="flex items-center gap-2 text-sm">
+						<input
+							type="checkbox"
+							checked={extras.systemAudio}
+							data-record-system-audio=""
+							onChange={(event) =>
+								setExtras({ ...extras, systemAudio: event.target.checked })
+							}
+						/>
+						{t("ui.editor.record.system_audio")}
+					</label>
+				)}
+				{sources.cameras.length === 0 ? (
+					<p className="text-xs text-muted-foreground" data-record-no-camera="">
+						{t("ui.editor.record.camera_missing")}
+					</p>
+				) : (
+					<div className="flex items-center gap-2">
+						<Label htmlFor="record-camera">
+							{t("ui.editor.record.camera")}
+						</Label>
+						<select
+							id="record-camera"
+							className="h-8 min-w-0 rounded-md border bg-background px-2 text-sm"
+							value={extras.camera}
+							onChange={(event) =>
+								setExtras({ ...extras, camera: event.target.value })
+							}
+						>
+							<option value="">{t("ui.editor.record.camera_none")}</option>
+							{sources.cameras.map((c) => (
+								<option key={c.id} value={c.id}>
+									{c.name}
+								</option>
+							))}
+						</select>
+					</div>
+				)}
+				<label className="flex items-center gap-2 text-sm">
+					<input
+						type="checkbox"
+						checked={extras.events}
+						data-record-events=""
+						onChange={(event) =>
+							setExtras({ ...extras, events: event.target.checked })
+						}
+					/>
+					{t("ui.editor.record.events")}
+				</label>
+				<p className="text-xs text-muted-foreground">
+					{t("ui.editor.record.events_note")}
+				</p>
+			</fieldset>
 			<Button
 				type="submit"
 				disabled={busy || chosen === undefined}

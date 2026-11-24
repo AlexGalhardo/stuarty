@@ -6,6 +6,7 @@ import {
 	formatClock,
 	isKept,
 	isLive,
+	meterValue,
 	unavailableKey,
 	unavailableReason,
 	viewOf,
@@ -34,7 +35,12 @@ function recording(
 
 describe("the screen the dialog draws for what the service said", () => {
 	test("a recording that is not final is the recording screen, and is live", () => {
-		for (const state of ["prepared", "recording", "finishing"] as const) {
+		for (const state of [
+			"prepared",
+			"recording",
+			"paused",
+			"finishing",
+		] as const) {
 			expect(viewOf(recording(state)).step).toBe("recording");
 			expect(isLive(recording(state))).toBe(true);
 		}
@@ -52,6 +58,13 @@ describe("the screen the dialog draws for what the service said", () => {
 		expect(isKept(recording("ready", "pending"))).toBe(false);
 		expect(isKept(recording("ready", "added"))).toBe(false);
 		expect(isKept(recording("failed"))).toBe(false);
+	});
+
+	test("a meter keeps the peak the service reported inside its range", () => {
+		expect(meterValue(undefined)).toBe(0);
+		expect(meterValue(420)).toBe(420);
+		expect(meterValue(-5)).toBe(0);
+		expect(meterValue(5000)).toBe(1000);
 	});
 
 	test("a failed one and a discarded one have their own screens", () => {
