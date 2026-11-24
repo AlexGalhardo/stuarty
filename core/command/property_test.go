@@ -294,6 +294,9 @@ var lateOps = map[string]func(p *docPick) string{
 			p.vtrack(), p.oneOf(CaptionStyleIDs()...), p.n(2) == 0)
 	},
 	"caption.list_styles": func(_ *docPick) string { return `{}` },
+	"audio.apply_voice_preset": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q,"preset":%q}`, p.audioItem(), p.oneOf(timeline.VoicePresets...))
+	},
 	"clip.blur_region": func(p *docPick) string {
 		x, y := float64(p.n(60))/100, float64(p.n(60))/100
 

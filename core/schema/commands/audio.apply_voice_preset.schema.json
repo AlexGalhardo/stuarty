@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "item_id": {
+      "description": "A clip or audio item; give this or track_id.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "preset": {
+      "description": "studio (default), broadcast or room_rescue.",
+      "enum": [
+        "studio",
+        "broadcast",
+        "room_rescue"
+      ],
+      "type": "string"
+    },
+    "track_id": {
+      "description": "A track; give this or item_id.",
+      "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    }
+  },
+  "required": [],
+  "type": "object"
+}

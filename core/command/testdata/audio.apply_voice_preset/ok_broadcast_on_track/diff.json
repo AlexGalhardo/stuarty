@@ -1,0 +1,46 @@
+[
+  {
+    "kind": "track.updated",
+    "id": "trk_m1n2p3q4r5",
+    "changes": {
+      "processors": [
+        null,
+        [
+          {
+            "kind": "noise_reduction"
+          },
+          {
+            "kind": "gate",
+            "params": {
+              "range_db": -18
+            }
+          },
+          {
+            "kind": "eq",
+            "params": {
+              "b2_gain_db": -2.5,
+              "b2_hz": 200,
+              "b4_gain_db": 3,
+              "b4_hz": 4000,
+              "hp_hz": 90
+            }
+          },
+          {
+            "kind": "deesser"
+          },
+          {
+            "kind": "compressor",
+            "params": {
+              "makeup_db": 4,
+              "ratio": 4,
+              "threshold_db": -24
+            }
+          },
+          {
+            "kind": "limiter"
+          }
+        ]
+      ]
+    }
+  }
+]

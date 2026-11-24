@@ -361,6 +361,50 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
+        "item_id": {
+          "description": "A clip or audio item; give this or track_id.",
+          "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        },
+        "preset": {
+          "description": "studio (default), broadcast or room_rescue.",
+          "enum": [
+            "studio",
+            "broadcast",
+            "room_rescue"
+          ],
+          "type": "string"
+        },
+        "track_id": {
+          "description": "A track; give this or item_id.",
+          "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        }
+      },
+      "required": [],
+      "type": "object"
+    },
+    "description": "One action for a clean, even voice: studio (default), broadcast or room_rescue. The chain of an item (item_id) or a track (track_id) becomes the preset: noise reduction, equaliser, de-esser, compressor and limiter, and the export brings the mix to the loudness_target. Change any processor afterwards with audio.processor_set.",
+    "domain": "video",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH"
+    ],
+    "example": {
+      "item_id": "itm_m1n2p3q4r5",
+      "preset": "studio"
+    },
+    "internal": false,
+    "name": "audio.apply_voice_preset",
+    "scope": "edit",
+    "summary": "Replaces a chain with a studio voice preset."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
         "attack": {
           "description": "A length, may be 0; the ramp down before speech. Default \"0.2s\".",
           "type": "string",

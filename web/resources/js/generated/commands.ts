@@ -99,6 +99,21 @@ export interface AudioApplyPresetArgs {
   track_id?: string;
 }
 
+export interface AudioApplyVoicePresetArgs {
+  /**
+   * A clip or audio item; give this or track_id.
+   */
+  item_id?: string;
+  /**
+   * studio (default), broadcast or room_rescue.
+   */
+  preset?: "studio" | "broadcast" | "room_rescue";
+  /**
+   * A track; give this or item_id.
+   */
+  track_id?: string;
+}
+
 export interface AudioDuckArgs {
   /**
    * A length, may be 0; the ramp down before speech. Default "0.2s".
@@ -2738,7 +2753,7 @@ export interface TranscriptDeleteRangeArgs {
   to_word: number;
 }
 
-export type CommandName = "animation.apply_preset" | "animation.list_presets" | "asset.add" | "asset.remove" | "audio.add" | "audio.apply_preset" | "audio.duck" | "audio.mark_beats" | "audio.processor_add" | "audio.processor_move" | "audio.processor_remove" | "audio.processor_set" | "caption.add" | "caption.apply_style" | "caption.edit_word" | "caption.from_transcript" | "caption.import_subtitles" | "caption.list_styles" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.add_composition" | "clip.blur_region" | "clip.remove_silences" | "clip.replace_media" | "clip.set_blend" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_effects" | "clip.set_filter" | "clip.set_flip" | "clip.set_framing" | "clip.set_mask" | "clip.set_outline" | "clip.set_shadow" | "clip.set_speed" | "composition.create_from_selection" | "composition.expand" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.extract_audio" | "item.freeze_frame" | "item.link" | "item.move" | "item.paste_attributes" | "item.rename" | "item.repeat" | "item.set_audio" | "item.set_enabled" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "item.unlink" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "keyframe.set_easing" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.reframe" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update" | "transcript.delete_range";
+export type CommandName = "animation.apply_preset" | "animation.list_presets" | "asset.add" | "asset.remove" | "audio.add" | "audio.apply_preset" | "audio.apply_voice_preset" | "audio.duck" | "audio.mark_beats" | "audio.processor_add" | "audio.processor_move" | "audio.processor_remove" | "audio.processor_set" | "caption.add" | "caption.apply_style" | "caption.edit_word" | "caption.from_transcript" | "caption.import_subtitles" | "caption.list_styles" | "caption.merge" | "caption.retime_from_clip" | "caption.set_breaks" | "caption.set_style" | "caption.set_words" | "caption.split" | "clip.add" | "clip.add_composition" | "clip.blur_region" | "clip.remove_silences" | "clip.replace_media" | "clip.set_blend" | "clip.set_blur" | "clip.set_chroma_key" | "clip.set_color" | "clip.set_effects" | "clip.set_filter" | "clip.set_flip" | "clip.set_framing" | "clip.set_mask" | "clip.set_outline" | "clip.set_shadow" | "clip.set_speed" | "composition.create_from_selection" | "composition.expand" | "font.add" | "font.remove" | "item.crossfade" | "item.delete" | "item.duplicate" | "item.extract_audio" | "item.freeze_frame" | "item.link" | "item.move" | "item.paste_attributes" | "item.rename" | "item.repeat" | "item.set_audio" | "item.set_enabled" | "item.set_transform" | "item.set_transition" | "item.slip" | "item.split" | "item.trim" | "item.unlink" | "keyframe.clear" | "keyframe.remove" | "keyframe.set" | "keyframe.set_easing" | "marker.add" | "marker.remove" | "marker.set" | "project.rename" | "settings.reframe" | "settings.set" | "settings.set_fps" | "shape.add" | "shape.set" | "slot.fill" | "slot.mark" | "slot.unmark" | "template.set_info" | "text.add" | "text.apply_preset" | "text.set" | "timeline.close_gap" | "track.add" | "track.move" | "track.remove" | "track.set_caption_style" | "track.update" | "transcript.delete_range";
 
 export interface CommandArgsMap {
 	"animation.apply_preset": AnimationApplyPresetArgs;
@@ -2747,6 +2762,7 @@ export interface CommandArgsMap {
 	"asset.remove": AssetRemoveArgs;
 	"audio.add": AudioAddArgs;
 	"audio.apply_preset": AudioApplyPresetArgs;
+	"audio.apply_voice_preset": AudioApplyVoicePresetArgs;
 	"audio.duck": AudioDuckArgs;
 	"audio.mark_beats": AudioMarkBeatsArgs;
 	"audio.processor_add": AudioProcessorAddArgs;
@@ -2842,6 +2858,7 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"asset.remove": { summary: "Removes an asset that no item uses.", scope: "media", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_IN_USE"] },
 	"audio.add": { summary: "Places an audio asset, or the audio of a video asset, on an audio track.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_ID_EXISTS","E_LIMIT","E_OUT_OF_SOURCE","E_OVERLAP"] },
 	"audio.apply_preset": { summary: "Replaces a chain with a preset.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
+	"audio.apply_voice_preset": { summary: "Replaces a chain with a studio voice preset.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH"] },
 	"audio.duck": { summary: "Lowers a music item while speech sounds, with a ramp down before and a ramp up after.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_LIMIT"] },
 	"audio.mark_beats": { summary: "Writes markers on a music item at the beats of its audio.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE","E_LIMIT"] },
 	"audio.processor_add": { summary: "Adds an audio processor to a chain.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_LIMIT"] },

@@ -1,0 +1,6 @@
+{
+  "op": "audio.apply_voice_preset",
+  "args": {
+    "preset": "studio"
+  }
+}

@@ -33,7 +33,7 @@ Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). `--json` for JSON.
 
 - `animation`: apply_preset, list_presets
 - `asset`: remove
-- `audio`: add, apply_preset, duck, mark_beats, processor_add, processor_move, processor_remove, processor_set
+- `audio`: add, apply_preset, apply_voice_preset, duck, mark_beats, processor_add, processor_move, processor_remove, processor_set
 - `caption`: add, apply_style, edit_word, from_transcript, import_subtitles, list_styles, merge, retime_from_clip, set_breaks, set_style, set_words, split
 - `clip`: add, add_composition, blur_region, remove_silences, replace_media, set_blend, set_blur, set_chroma_key, set_color, set_effects, set_filter, set_flip, set_framing, set_mask, set_outline, set_shadow, set_speed
 - `composition`: create_from_selection, expand
