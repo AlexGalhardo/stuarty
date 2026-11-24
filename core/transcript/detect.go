@@ -89,6 +89,12 @@ func rules(language string) (fillerRules, bool) {
 	return fillerRules{answers: set()}, false
 }
 
+// HasFillerRules reports whether the language has a list of filler words; without one only repetitions are checked.
+func HasFillerRules(language string) bool {
+	_, ok := rules(language)
+	return ok
+}
+
 // RuleDescription says in one sentence what Detect checks for a language, so that an empty list is not read
 // as "there are no fillers".
 func RuleDescription(language string) string {

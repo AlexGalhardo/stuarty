@@ -896,6 +896,8 @@ export interface TranscriptFillersResult {
 	suggestions: TranscriptSuggestion[];
 	// What was checked, so that an empty list is not read as "no fillers".
 	rule: string;
+	// Whether the language has a list of filler words; without one only repetitions were checked.
+	filler_rules: boolean;
 	text: string;
 }
 

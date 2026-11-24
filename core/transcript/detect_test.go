@@ -49,6 +49,14 @@ func TestDetectShown(t *testing.T) {
 	}
 }
 
+func TestHasFillerRules(t *testing.T) {
+	for lang, want := range map[string]bool{"en": true, "pt": true, "PT": true, "de": false, "": false} {
+		if got := HasFillerRules(lang); got != want {
+			t.Errorf("HasFillerRules(%q) = %v, want %v", lang, got, want)
+		}
+	}
+}
+
 func TestDetect(t *testing.T) {
 	cases := []struct {
 		name, lang, text string
