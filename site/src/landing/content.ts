@@ -237,3 +237,6 @@ export const roadmap = {
 export const roadmapOnlyTerms = ["recording", "record your", "teleprompter", "filler word", "transcript", "local model", "face-aware", "auto zoom", "automatic zoom"];
 
 export const credits = "Footage in the screenshots: Big Buck Bunny, (c) Blender Foundation, CC BY 3.0. Photo: CC0.";
+
+/** The screenshots are real captures of the product, taken on this date; the interface has changed since. */
+export const capturedNote = "Screenshots are captures of Stuarty taken on 20 November 2026. The interface has changed since.";
