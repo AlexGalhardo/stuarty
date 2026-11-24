@@ -26,6 +26,7 @@ import EmptyState from "../ui/EmptyState";
 import { errorHeadline } from "../ui/errorHeadline";
 import AssetCard, { type AssetDragStart } from "./AssetCard";
 import { createImportQueue, parsePastedPaths } from "./importPaths";
+import { PanelTitle } from "./PanelFrame";
 import TrashGroup from "./TrashGroup";
 
 // The media library of SDD-012 section 13: import by path, cards with their
@@ -106,9 +107,7 @@ export default function Library({
 				if (!drops) setDropped(true);
 			}}
 		>
-			<h2 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-				{t("ui.editor.panels.library")}
-			</h2>
+			<PanelTitle>{t("ui.editor.panels.library")}</PanelTitle>
 			<form
 				className="flex gap-1"
 				onSubmit={(event) => {
