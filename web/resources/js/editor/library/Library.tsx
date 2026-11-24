@@ -19,6 +19,7 @@ import {
 } from "@/lib/desktopBridge";
 import { useT } from "@/lib/i18n";
 import { useCanEdit } from "../commands/useActions";
+import RecordDialog from "../record/RecordDialog";
 import { useStore } from "../state/createStore";
 import { useDocumentState, useRuntime } from "../state/EditorContext";
 import EmptyState from "../ui/EmptyState";
@@ -48,6 +49,7 @@ export default function Library({
 	const [text, setText] = useState("");
 	const [busy, setBusy] = useState(false);
 	const [dropped, setDropped] = useState(false);
+	const [recordOpen, setRecordOpen] = useState(false);
 	const bridge = useSyncExternalStore(
 		subscribeDesktopBridge,
 		getDesktopBridge,
@@ -160,6 +162,22 @@ export default function Library({
 					{t("ui.editor.library.choose")}
 				</Button>
 			)}
+			<Button
+				type="button"
+				size="sm"
+				variant="outline"
+				disabled={!canEdit}
+				data-record-open=""
+				onClick={() => setRecordOpen(true)}
+			>
+				{t("ui.editor.record.open")}
+			</Button>
+			<RecordDialog
+				client={runtime.client}
+				projectId={runtime.projectId}
+				open={recordOpen}
+				onOpenChange={setRecordOpen}
+			/>
 			{dropped && !drops && (
 				<p role="status" className="text-xs text-muted-foreground">
 					{t("ui.editor.library.drop")}

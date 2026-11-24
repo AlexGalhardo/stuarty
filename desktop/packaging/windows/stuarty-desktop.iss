@@ -2,7 +2,8 @@
 ; P3-REL-003, D-033).
 ;
 ; Build:  ISCC.exe /DAppVersion=0.15.0 /DFileVersion=0-15-0 /DDesktopBinary=<stuarty-desktop.exe>
-;                  /DServerBinary=<stuarty.exe> /DOutputDir=<dir> stuarty-desktop.iss
+;                  /DServerBinary=<stuarty.exe> /DOutputDir=<dir> [/DCaptureBinary=<stuarty-capture.exe>]
+;                  stuarty-desktop.iss
 ; FileVersion is AppVersion with dots replaced by dashes, so the download is
 ; stuarty-desktop-0-15-0.exe.
 ;
@@ -77,6 +78,12 @@ Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription:
 [Files]
 Source: "{#DesktopBinary}"; DestDir: "{app}"; DestName: "{#AppExe}"; Flags: ignoreversion
 Source: "{#ServerBinary}"; DestDir: "{app}"; DestName: "{#ServerExe}"; Flags: ignoreversion
+#ifdef CaptureBinary
+; The screen capture helper (ADR-0049, SDD-023): the server looks for it next to its own executable. Build it with
+; scripts/build-capture.sh and pass /DCaptureBinary=<stuarty-capture.exe>; without it the app answers that recording
+; is not available.
+Source: "{#CaptureBinary}"; DestDir: "{app}"; DestName: "stuarty-capture.exe"; Flags: ignoreversion
+#endif
 Source: "..\..\..\.config\installers\assets\stuarty.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\..\LICENSE.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\..\THIRD_PARTY_NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion

@@ -74,7 +74,7 @@ Names are proposals until task 2 writes them to SDD-000.
 - [x] 6. Windows capture in the helper. Verify: the helper's integration test writes a playable file that `ffprobe` reads on Windows.
 - [x] 7. The service operations, the store, the migration and the recovery of an interrupted recording at start-up. Verify: `go test ./service/...` passes.
 - [x] 8. HTTP, CLI and MCP with parity tests, and the security tests of the person rule. Verify: `go test ./web/...`, `go test -run TestSecurity_ ./...` and `go run ./internal/tools/surfacebudget` pass.
-- [ ] 9. The record dialog (source picker, visible recording state, stop), packaging of the helper. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n` and `task test:web` pass.
+- [x] 9. The record dialog (source picker, visible recording state, stop), packaging of the helper. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n` and `task test:web` pass.
 - [ ] 10. End to end on Windows: record, stop, place on the timeline. Verify: a scripted run with the real helper ends with a clip on the timeline and a matching duration.
 
 ## Test strategy

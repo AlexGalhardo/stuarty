@@ -157,7 +157,11 @@ HTTP and CLI have every operation. MCP has no new tool (the tool list is at its 
 
 ## 12. The dialog
 
-The record dialog (`web/resources/js/`) draws what the service returns: a project, a source picker (displays and windows from `RecordingSources`), a frame rate, Start, then a visible recording state with the elapsed time and Stop, then the confirmation step (Add to the project, Not now, Delete) with the sentence of section 4. It computes no limit and no state. Where capture is unavailable it says why.
+The record dialog (`web/resources/js/`) draws what the service returns: a project, a source picker (displays and windows from `RecordingSources`), a frame rate, Start, then a visible recording state with the elapsed time and Stop, then the confirmation step (Add to the project, Not now, Delete) with the sentence of section 4. It computes no limit and no state. Where capture is unavailable it says why, in the words of the reason the service gave (section 1).
+
+The entry is a "Record screen" button in the library panel of the editor (`editor/library/Library.tsx`), the natural place today: the media panel is where files come in. The redesign of epic 75 moves it with the panel. The dialog reads `RecordingSources` and `RecordingList` when it opens, so a recording still running, or one waiting for a person, is picked up again after the dialog was closed; while a recording runs it calls `RecordingGet` once a second, and the clock it draws is `duration_ms` of the answer, which the service takes from the last line of the helper.
+
+**Packaging.** `scripts/build-capture.sh` builds `stuarty-capture.exe` into `capture/dist/` with its SHA-256 (`gate` runs the Rust gate). The Windows installer (`desktop/packaging/windows/stuarty-desktop.iss`) installs it next to `stuarty.exe` when it is given `/DCaptureBinary=`, and the server finds it there, or in `libexec/stuarty/`, or at `STUARTY_CAPTURE_HELPER`. The release workflow passes the file once it builds it (a change of `.github/workflows/`, which the author reviews).
 
 ## 13. Threats
 

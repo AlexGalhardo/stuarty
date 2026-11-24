@@ -1346,6 +1346,63 @@ export interface ApprovalRequest {
 	expires_at: string;
 }
 
+// The screen recording of SDD-023. The dialog draws these members and sends commands; the states, the limits and
+// who may start a capture are the service's.
+export type RecordingState =
+	| "prepared"
+	| "recording"
+	| "finishing"
+	| "ready"
+	| "failed"
+	| "cancelled";
+
+export type RecordingReview = "pending" | "added" | "dismissed";
+
+export interface RecordingSourceInfo {
+	id: string;
+	// The title of a window: text from outside, shown as text, never as markup.
+	name: string;
+	width: number;
+	height: number;
+}
+
+export interface RecordingSourcesResult {
+	displays: RecordingSourceInfo[];
+	windows: RecordingSourceInfo[];
+}
+
+export interface RecordingListResult {
+	recordings: Recording[];
+}
+
+export interface RecordingStartRequest {
+	project_id: string;
+	source: { kind: "display" | "window"; id: string; name?: string };
+	fps?: number;
+}
+
+export interface Recording {
+	recording_id: string;
+	project_id: string;
+	state: RecordingState;
+	review?: RecordingReview;
+	source: { kind: string; id?: string; name?: string };
+	width?: number;
+	height?: number;
+	fps: number;
+	encoder?: string;
+	duration_ms: number;
+	frames: number;
+	dropped: number;
+	bytes: number;
+	stop_reason?: string;
+	error?: { code: string; message: string };
+	asset_id?: string;
+	actor: string;
+	created_at: string;
+	text: string;
+}
+
 export interface ApprovalListResult {
 	requests: ApprovalRequest[];
 	next_cursor: string | null;

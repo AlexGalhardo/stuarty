@@ -87,6 +87,10 @@ import type {
 	ProviderSignInResult,
 	PublishRequest,
 	PublishValidateResult,
+	Recording,
+	RecordingListResult,
+	RecordingSourcesResult,
+	RecordingStartRequest,
 	RevertRequest,
 	SessionResult,
 	SnapPointsQuery,
@@ -330,6 +334,17 @@ export interface ApiClient {
 		request: ProviderSignInCompleteRequest,
 	): Promise<ProviderSignIn>;
 	listProviderSignIns(): Promise<ProviderSignInListResult>;
+	// The screen recording (SDD-023). Starting, adding to the project and Not now are for a person in a
+	// browser session; any other caller gets E_PRIVILEGED_SESSION.
+	recordingSources(): Promise<RecordingSourcesResult>;
+	startRecording(request: RecordingStartRequest): Promise<Recording>;
+	getRecording(id: string): Promise<Recording>;
+	listRecordings(projectId: string): Promise<RecordingListResult>;
+	stopRecording(id: string): Promise<Recording>;
+	cancelRecording(id: string): Promise<Recording>;
+	confirmRecording(id: string): Promise<Recording>;
+	dismissRecording(id: string): Promise<Recording>;
+	placeRecording(id: string): Promise<EditResult>;
 	// The approval queue (SDD-015). Deciding, the rules and the ceilings are for a person in a
 	// browser session; any other caller gets E_PRIVILEGED_SESSION.
 	listApprovals(state?: string): Promise<ApprovalListResult>;
@@ -901,6 +916,52 @@ export function createClient(
 			call("POST", "/providers/signin/complete", EDIT_TIMEOUT_MS, request),
 		listProviderSignIns: () =>
 			call("GET", "/providers/sign-ins", READ_TIMEOUT_MS),
+		recordingSources: () => call("GET", "/recording/sources", READ_TIMEOUT_MS),
+		startRecording: (request) =>
+			call("POST", "/recordings", EDIT_TIMEOUT_MS, request),
+		listRecordings: (projectId) =>
+			call(
+				"GET",
+				`/projects/${encodeURIComponent(projectId)}/recordings`,
+				READ_TIMEOUT_MS,
+			),
+		getRecording: (id) =>
+			call("GET", `/recordings/${encodeURIComponent(id)}`, READ_TIMEOUT_MS),
+		stopRecording: (id) =>
+			call(
+				"POST",
+				`/recordings/${encodeURIComponent(id)}/stop`,
+				EDIT_TIMEOUT_MS,
+				{},
+			),
+		cancelRecording: (id) =>
+			call(
+				"POST",
+				`/recordings/${encodeURIComponent(id)}/cancel`,
+				EDIT_TIMEOUT_MS,
+				{},
+			),
+		confirmRecording: (id) =>
+			call(
+				"POST",
+				`/recordings/${encodeURIComponent(id)}/confirm`,
+				EDIT_TIMEOUT_MS,
+				{},
+			),
+		dismissRecording: (id) =>
+			call(
+				"POST",
+				`/recordings/${encodeURIComponent(id)}/dismiss`,
+				EDIT_TIMEOUT_MS,
+				{},
+			),
+		placeRecording: (id) =>
+			call(
+				"POST",
+				`/recordings/${encodeURIComponent(id)}/place`,
+				EDIT_TIMEOUT_MS,
+				{},
+			),
 		listApprovals: (state) =>
 			call(
 				"GET",
