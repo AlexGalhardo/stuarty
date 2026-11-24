@@ -1,11 +1,21 @@
 package timeline
 
-import "fmt"
+import (
+	"fmt"
+	"regexp"
+)
 
-// projectFont checks one entry of the fonts map (SDD-001 §3.9): a family that does
+// FontFamilyForm is the form of a project font family (SDD-001 §3.9). A family is repeated in messages (SDD-003
+// section 1.2 rule 9), so a document from a bundle cannot bring one that font.add would refuse.
+var FontFamilyForm = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9 ._-]{0,59}$`)
+
+// projectFont checks one entry of the fonts map (SDD-001 §3.9): a family of the fixed form that does
 // not take the name of a bundled one, and one file per weight.
 func (v *validator) projectFont(family string, f ProjectFont) {
 	path := "fonts." + family
+	if !FontFamilyForm.MatchString(family) {
+		v.add(VFont, path, family, "a font family is 1 to 60 letters, digits, spaces, dots, hyphens or underscores")
+	}
 	if _, bundled := BundledWeights[family]; bundled {
 		v.add(VFont, path, family, "font family %q is a bundled family; choose another name", family)
 	}
