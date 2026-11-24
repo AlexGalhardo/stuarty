@@ -19,7 +19,8 @@ func TestBundleOfAProjectWithNoTimelineRoundTrips(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := src.prod().BriefSet(ctx, service.BriefSetRequest{ProjectID: made.ProjectID, Text: "The plan."}); err != nil {
+	brief := service.BriefSetRequest{ProjectID: made.ProjectID, Text: "The plan."}
+	if _, err := src.prod().BriefSet(ctx, brief); err != nil {
 		t.Fatal(err)
 	}
 
