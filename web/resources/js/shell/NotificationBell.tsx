@@ -78,7 +78,7 @@ function Row({
 				</span>
 			</p>
 			<div className="min-w-0">
-				<p className="truncate text-xs text-muted-foreground">
+				<p className="relative truncate text-xs text-muted-foreground">
 					<UntrustedText>{item.agent}</UntrustedText>
 					{item.kind === "permission" && project !== null && (
 						<span data-testid="notification-project">
