@@ -216,7 +216,12 @@ func (c *Compositor) layer(dst *image.RGBA, l *plan.Layer, fp *plan.FramePlan, o
 	}
 
 	if l.Blur > 0 {
-		src, p = c.blurred(src, p, mul(l.Blur, outScale))
+		if l.Mask != nil {
+			// A masked layer is a region of the picture: the edge pixels repeat past it (SDD-004 section 3.6).
+			src, p = c.blurredClamped(src, p, mul(l.Blur, outScale))
+		} else {
+			src, p = c.blurred(src, p, mul(l.Blur, outScale))
+		}
 	}
 	// The flip mirrors the layer's own pixels; the mask above keeps the item's frame (SDD-004 section 3.10).
 	src = c.flipped(src, l.FlipX, l.FlipY)

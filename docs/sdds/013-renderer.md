@@ -178,6 +178,8 @@ A coefficient is clamped to the range of 2^24 in absolute value after the roundi
 
 Exactly SDD-004 §3.6, "Implementation". `sigma = mul(blur, scale)`; `r = round((sqrt(4 sigma^2 + 1) - 1) / 2)` (the square root is exactly rounded in every host), capped at 128, and `r = 0` means no blur. The layer is padded by `3r` transparent pixels on every side, blurred by three box passes along x and then three along y in integer arithmetic that rounds half up at every pass (16-bit lanes for the window sums, the reason for the cap), and drawn with a placement that grows by `3r` around the same centre. The reference for every byte is `engine/compositor/blur.go` and the golden cases `blur-2`, `blur-6`, `blur-16` and `blur-still`; the Rust port is correct when those four are byte-equal.
 
+**A masked layer (VV-392).** A layer that has a mask is blurred with the edge pixels repeated beyond it instead of transparent ones, and it keeps its size and its placement (no `3r` padding of the result): the same box passes, over the picture padded by `3r` repeated pixels on every side and cut back to the picture, every channel (`blur::blurred_clamped`, `Compositor.blurredClamped`; SDD-004 section 3.6, "Blur at the edge"). The test vectors `mask-blurred-copy`, `mask-invert-blur-blend-bitmap`, `flip-blur-mask-blend-bitmap` and `effects-stacked-masked-flipped` (the only four with a blur and a mask), and the golden `golden-epic71/blur-region-edge`, hold the bytes.
+
 ### 3.6 Placement and drawing
 
 The placement is a `w x h` rectangle centred on `(cx, cy)` turned by `rot` degrees clockwise, in output pixels.
