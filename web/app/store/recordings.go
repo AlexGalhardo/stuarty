@@ -81,6 +81,19 @@ func (r recordingRepo) Get(ctx context.Context, id string) (recordings.Row, erro
 	return row, err
 }
 
+func (r recordingRepo) Find(ctx context.Context, id string) (recordings.Row, error) {
+	rows, err := r.list(ctx, false, `id = ?`, id)
+	if err != nil {
+		return recordings.Row{}, err
+	}
+
+	if len(rows) == 0 {
+		return recordings.Row{}, recordings.ErrNotFound
+	}
+
+	return rows[0], nil
+}
+
 // Update never writes the source label: it is set once, at the insert, and a read that did not open it (the
 // recovery of start-up while the studio is locked) must not be able to blank it.
 func (r recordingRepo) Update(ctx context.Context, row recordings.Row) error {
