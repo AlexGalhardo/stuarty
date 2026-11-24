@@ -18,6 +18,10 @@ func TestKillRealChild(t *testing.T) {
 		t.Skip("only runs as the child of a real-kill test")
 	case "publication":
 		killRealPublicationChild(t)
+	case "export-video":
+		killRealExportChild(t, "video")
+	case "export-image":
+		killRealExportChild(t, "image")
 	default:
 		t.Fatalf("unknown role %q", os.Getenv(killRealRoleEnv))
 	}
