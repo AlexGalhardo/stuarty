@@ -71,7 +71,7 @@ Names are proposals until task 2 writes them to SDD-000.
 - [x] 3. `core/recording`: the state machine and its limits, pure, with tests of every transition. Verify: `go test ./core/recording/...` passes.
 - [x] 4. The helper protocol and `capture/` with a fake source. Verify: `cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test && cargo deny check` in `capture/`.
 - [x] 5. `engine/capturehost` under the process policy, with a fake helper: start, stop, kill, timeout, malformed message. Verify: `go test ./engine/capturehost/...` passes.
-- [ ] 6. Windows capture in the helper. Verify: the helper's integration test writes a playable file that `ffprobe` reads on Windows.
+- [x] 6. Windows capture in the helper. Verify: the helper's integration test writes a playable file that `ffprobe` reads on Windows.
 - [ ] 7. The service operations, the store, the migration and the recovery of an interrupted recording at start-up. Verify: `go test ./service/...` passes.
 - [ ] 8. HTTP, CLI and MCP with parity tests, and the security tests of the person rule. Verify: `go test ./web/...`, `go test -run TestSecurity_ ./...` and `go run ./internal/tools/surfacebudget` pass.
 - [ ] 9. The record dialog (source picker, visible recording state, stop), packaging of the helper. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n` and `task test:web` pass.

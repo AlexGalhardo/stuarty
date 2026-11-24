@@ -13,6 +13,15 @@ import (
 // rendererManifest is the Cargo workspace of the pixel renderer (ADR-0029).
 const rendererManifest = "renderer/Cargo.toml"
 
+// captureManifest is the Cargo package of the native capture helper stuarty-capture (ADR-0049), and
+// captureShipped its package; captureTargets are the platforms it ships on (epic 61: Windows).
+const (
+	captureManifest = "capture/Cargo.toml"
+	captureShipped  = "stuarty-capture"
+)
+
+var captureTargets = []string{"x86_64-pc-windows-msvc", "aarch64-pc-windows-msvc"}
+
 // rendererShipped is the workspace member whose dependencies are shipped in the WebAssembly module:
 // the core module of SDD-013 section 4.1, which the Go export embeds.
 const rendererShipped = "stuarty-renderer"
@@ -83,16 +92,22 @@ func rustCrates(ctx context.Context, run Runner, root string) ([]Component, erro
 
 	var comps []Component
 
-	roots := map[string]string{rendererTarget: rendererShipped}
-	targets := []string{rendererTarget}
+	type closure struct{ manifest, target, shipped string }
+
+	jobs := []closure{{rendererManifest, rendererTarget, rendererShipped}}
 
 	for _, t := range gpuHostTargets {
-		roots[t] = gpuHostShipped
-		targets = append(targets, t)
+		jobs = append(jobs, closure{rendererManifest, t, gpuHostShipped})
 	}
 
-	for _, target := range targets {
-		got, err := crateClosure(ctx, run, root, target, roots[target])
+	if _, err := os.Stat(filepath.Join(root, "capture", "Cargo.lock")); err == nil {
+		for _, t := range captureTargets {
+			jobs = append(jobs, closure{captureManifest, t, captureShipped})
+		}
+	}
+
+	for _, j := range jobs {
+		got, err := crateClosure(ctx, run, root, j.manifest, j.target, j.shipped)
 		if err != nil {
 			return nil, err
 		}
@@ -115,9 +130,9 @@ func rustCrates(ctx context.Context, run Runner, root string) ([]Component, erro
 }
 
 // crateClosure lists the registry crates that the workspace member named shipped links for target.
-func crateClosure(ctx context.Context, run Runner, root, target, shipped string) ([]Component, error) {
+func crateClosure(ctx context.Context, run Runner, root, manifest, target, shipped string) ([]Component, error) {
 	out, err := run(ctx, root, nil, "cargo", "metadata", "--format-version", "1", "--locked",
-		"--filter-platform", target, "--manifest-path", rendererManifest)
+		"--filter-platform", target, "--manifest-path", manifest)
 	if err != nil {
 		return nil, fmt.Errorf("cargo metadata: %w", err)
 	}
