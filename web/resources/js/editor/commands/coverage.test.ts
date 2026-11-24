@@ -152,7 +152,7 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 	test("every non-internal command has a key", () => {
 		const keys = commands.filter((c) => !c.internal).map((c) => c.name);
 		expect(Object.keys(COVERAGE).sort()).toEqual(keys.sort());
-		expect(keys).toHaveLength(90);
+		expect(keys).toHaveLength(91);
 	});
 
 	test("every command has a palette entry, and the commands with an inspector control keep it", () => {
@@ -564,6 +564,7 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 				start: "1s",
 				radius: 40,
 			}).map((o) => o.op),
+			"inspector.vertical_cuts": ["clip.face_frame"],
 			"inspector.voice_preset": applyVoicePresetOperations(
 				{ itemId: "itm_a" },
 				"studio",
