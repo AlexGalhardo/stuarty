@@ -110,11 +110,13 @@ func TestEffectiveKind(t *testing.T) {
 		{"a script decides nothing", KindUndecided, []Item{item(Text, TextKindScript, "x")}, KindUndecided},
 		{
 			"a script and a copy read as a text", KindUndecided,
-			[]Item{item(Text, TextKindScript, "x"), item(Text, TextKindCopy, "y")}, KindText,
+			[]Item{item(Text, TextKindScript, "x"), item(Text, TextKindCopy, "y")},
+			KindText,
 		},
 		{
 			"a script and a timeline read as a video", KindUndecided,
-			[]Item{item(Text, TextKindScript, "x"), item(Timeline, "", "")}, KindVideo,
+			[]Item{item(Text, TextKindScript, "x"), item(Timeline, "", "")},
+			KindVideo,
 		},
 	}
 
