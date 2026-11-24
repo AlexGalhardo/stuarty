@@ -103,17 +103,20 @@ test.describe("a11y-first-flow-keyboard @chromium-only", () => {
 
 		await test.step("create the project", async () => {
 			await page.goto("/projects");
-			// With projects in the list the form waits behind a button (VV-364).
-			const openForm = page.getByRole("button", {
-				name: "Start a new project",
-			});
-			await expect(
-				openForm.or(page.getByLabel("Name", { exact: true })),
-			).toBeVisible();
-			if (await openForm.isVisible()) {
-				await openForm.focus();
-				await page.keyboard.press("Enter");
-			}
+			// The first decision is a dialog of four cards; the arrow key picks the video, the keyboard goes on to the
+			// briefing, and a video project is made with its first timeline.
+			const openForm = page.getByRole("button", { name: "New project" });
+			await expect(openForm).toBeVisible();
+			await openForm.focus();
+			await page.keyboard.press("Enter");
+			await tabTo(page, page.getByRole("radio", { name: /^Text/ }));
+			await page.keyboard.press("ArrowDown");
+			await expect(page.getByRole("radio", { name: /^Video/ })).toBeChecked();
+			await press(
+				page,
+				page.getByRole("button", { name: "Continue to the briefing" }),
+			);
+			await expect(page.getByLabel("Name", { exact: true })).toBeFocused();
 			const fields: [string, string][] = [
 				["Name", name],
 				["Description", DESCRIPTION],
@@ -131,10 +134,7 @@ test.describe("a11y-first-flow-keyboard @chromium-only", () => {
 			await page.keyboard.press("Enter");
 			await page.waitForURL(/\/projects\/prj_[0-9a-hjkmnp-tv-z]{10}$/);
 			projectId = page.url().split("/").pop() ?? "";
-			await type(page, page.getByLabel("Title", { exact: true }), name);
-			await page.keyboard.press("Enter");
-			// The name is on the page before the timeline exists: the editor of a project with no timeline
-			// redirects to the page of the project (epic 56), so wait for the item that opens it (VV-386).
+			// The project is made with its timeline, so the page of the project already links to the editor.
 			await expect(
 				page.locator(`a[href="/editor/${projectId}"]`),
 			).toBeVisible();

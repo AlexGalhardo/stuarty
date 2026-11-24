@@ -397,18 +397,74 @@
     "projects": {
       "title": "Projetos",
       "new": "Novo projeto",
-      "new_open": "Começar um novo projeto",
+      "lead": "Tudo o que você está criando, um projeto por vez.",
+      "empty_title": "Nenhum projeto ainda",
       "kind": {
         "text": "Texto",
         "video": "Vídeo",
         "image": "Imagem",
         "undecided": "Ainda não decidido"
       },
+      "new_project": {
+        "title": "Novo projeto",
+        "description": "Escolha o que você quer criar. Dá para adicionar os outros depois.",
+        "kind_legend": "O que você quer criar?",
+        "text_legend": "Que tipo de texto?",
+        "format": "Formato",
+        "format_hint": "O tamanho do vídeo. Dá para adicionar outros tamanhos depois.",
+        "continue": "Continuar para o briefing",
+        "back": "Voltar",
+        "briefing_title": "Briefing",
+        "cancel": "Cancelar",
+        "partial": "O projeto foi criado, mas o primeiro item não pôde ser adicionado. Abra o projeto para adicioná-lo.",
+        "open_created": "Abrir o projeto",
+        "choice": {
+          "text": {
+            "title": "Texto",
+            "hint": "Um post de blog, uma copy, um roteiro ou uma legenda."
+          },
+          "video": {
+            "title": "Vídeo",
+            "hint": "Um vídeo, do roteiro até a exportação."
+          },
+          "image": {
+            "title": "Imagem",
+            "hint": "Uma imagem, uma miniatura ou uma capa."
+          },
+          "undecided": {
+            "title": "Decidir depois",
+            "hint": "Comece pelo briefing e escolha quando souber."
+          }
+        },
+        "lead": {
+          "text": "Conte ao Stuarty sobre o que é o texto, quem o lê e o que ele deve provocar.",
+          "video": "Conte ao Stuarty sobre o que é o vídeo, quem o assiste e o que ele deve provocar.",
+          "image": "Conte ao Stuarty para que serve a imagem, quem a vê e o que ela deve provocar.",
+          "undecided": "Conte ao Stuarty o que você quer criar, para quem e até quando. O formato você escolhe depois."
+        }
+      },
+      "example_kind": {
+        "text": {
+          "description": "Um post de blog que explica como planejo uma semana de conteúdo, para criadores que trabalham sozinhos, com três passos e um exemplo para copiar.",
+          "specific": "Publicar um post que explica o método em três passos",
+          "achievable": "Já tenho as anotações e escrevo um post por semana"
+        },
+        "video": {
+          "description": "Um vídeo vertical de 30 segundos para o lançamento do meu curso, para quem me segue em vídeos curtos, com legendas e uma miniatura.",
+          "specific": "Publicar um vídeo que explica o curso em uma frase",
+          "achievable": "Já tenho as imagens e edito um vídeo por dia"
+        },
+        "image": {
+          "description": "Uma imagem de capa para o lançamento do meu curso, para quem me segue, com o título grande e as cores da minha marca.",
+          "specific": "Publicar uma capa que diz o que é o curso de relance",
+          "achievable": "Já tenho o logotipo e as cores da minha marca"
+        }
+      },
       "name": "Nome",
       "size": "Tamanho",
       "create": "Criar projeto",
       "list": "Seus projetos",
-      "empty": "Nenhum projeto ainda. Crie o primeiro acima.",
+      "empty": "Escolha um texto, um vídeo, uma imagem, ou decida depois. O briefing vem em seguida, e o projeto é criado no fim dele.",
       "open": "Abrir",
       "summary": "{width} × {height} px, {fps} fps",
       "updated": "Atualizado em {date}",
@@ -555,10 +611,10 @@
       },
       "example": {
         "name": "Teaser de lançamento",
-        "description": "Um teaser vertical de 30 segundos para o lançamento do meu curso, para quem me segue nos vídeos curtos, com legendas e uma miniatura.",
+        "description": "Um teaser curto para o lançamento do meu curso, para quem me segue, feito para ser lido ou visto em um minuto, com uma imagem para acompanhar.",
         "specific": "Publicar um teaser que explica o curso em uma frase",
         "measurable": "Pelo menos 1000 visualizações e 50 inscrições na primeira semana",
-        "achievable": "Já tenho as filmagens e edito um vídeo por dia",
+        "achievable": "Já tenho o material e termino uma peça por dia",
         "relevant": "O lançamento precisa de público antes de abrir as vagas",
         "time_bound": "Roteiro na segunda, edição na terça, publicação na quarta",
         "due": "AAAA-MM-DD"

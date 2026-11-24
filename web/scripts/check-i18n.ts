@@ -349,6 +349,7 @@ const SAME_IN_PORTUGUESE: ReadonlySet<string> = new Set([
 	"ui.projects.presets.9:16",
 	// Briefing is the word Portuguese uses as well.
 	"ui.workflow.step.briefing.title",
+	"ui.projects.new_project.briefing_title",
 	"ui.editor.revision",
 	"ui.editor.activity.revision",
 	"ui.editor.timeline.item_summary",
