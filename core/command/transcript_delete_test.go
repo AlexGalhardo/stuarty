@@ -54,6 +54,7 @@ func TestTranscriptDeleteRangeOnHardTimelines(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			doc := c.doc().d
 			before := tx.Map(doc, vidAsset, words)
+			checkSnapOffIsEpic69(t, doc, resolved, c.from, c.to)
 
 			n := 0
 			env := Env{NewIDs: func(prefix string) string {

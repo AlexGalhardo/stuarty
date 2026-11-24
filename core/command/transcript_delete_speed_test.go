@@ -74,6 +74,7 @@ func startsBeforeTheLastFrames(doc *timeline.Document, ranges []tx.Range) bool {
 
 func checkCutBound(t *testing.T, doc *timeline.Document, words []tword, from, to int, sp timeline.Rational) {
 	t.Helper()
+	checkSnapOffIsEpic69(t, doc, words, from, to)
 
 	n := 0
 	env := Env{NewIDs: func(prefix string) string {
