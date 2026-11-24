@@ -685,7 +685,12 @@ func snapLine(eff map[string]any) string {
 
 		switch e["result"] {
 		case "moved":
-			return fmt.Sprintf("%s edge moved %d frames into a silence", name, frames)
+			unit := "frames"
+			if frames == 1 {
+				unit = "frame"
+			}
+
+			return fmt.Sprintf("%s edge moved %d %s into a silence", name, frames, unit)
 		case "inside":
 			return name + " edge was already in a silence"
 		default:
