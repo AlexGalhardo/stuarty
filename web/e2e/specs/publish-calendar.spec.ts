@@ -512,6 +512,30 @@ test.describe("publishing calendar @chromium-only", () => {
 		}
 	});
 
+	// Epic 82: the three ways to see what goes out, each reachable by its button and each saying which one is on.
+	test("the calendar shows the month, the week and the list", async ({
+		page,
+	}) => {
+		await signInAsPerson(page);
+		await page.goto("/publish");
+		await expect(page.getByTestId("calendar-month")).toBeVisible();
+		await expect(page.getByTestId("publish-mode-month")).toHaveAttribute(
+			"aria-pressed",
+			"true",
+		);
+		await page.getByTestId("publish-mode-week").click();
+		await expect(page.getByTestId("calendar-week")).toBeVisible();
+		await expect(page.getByTestId("calendar-month")).toHaveCount(0);
+		await page.getByTestId("publish-mode-list").click();
+		await expect(
+			page.getByTestId("publish-list").or(page.getByTestId("publish-empty")),
+		).toBeVisible();
+		await expect(page.getByTestId("publish-mode-list")).toHaveAttribute(
+			"aria-pressed",
+			"true",
+		);
+	});
+
 	test("the calendar speaks Portuguese", async ({ page }) => {
 		await page.addInitScript(() => localStorage.setItem("vv.lang", "pt-BR"));
 		await signInAsPerson(page);
