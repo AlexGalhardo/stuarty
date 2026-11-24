@@ -16,7 +16,7 @@
 | **Command** | A named kind of edit in the catalogue, for example `item.split`. Defined once in `core/command` |
 | **Operation** | One use of a command: `{"op": "<command>", "args": {...}}` |
 | **Batch** | An ordered list of operations applied atomically as one revision and one undo step |
-| **Service operation** | Something the product does that is not an edit of the document: create a project, import media, export, undo. Defined in SDD-003, not here |
+| **Service operation** | Something the product does that is not an edit of the document: create a project, import media, export, undo. Defined in SDD-003, not here. The kind of a project and the steps of its workflow (epic 78, SDD-005 section 5.12.4) are of this sort: they are not commands, enter no registry and are never in a batch |
 
 ### A.2 The registry
 

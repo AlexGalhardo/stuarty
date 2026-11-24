@@ -1087,6 +1087,8 @@ CREATE TABLE projects (
   goal_relevant TEXT    NOT NULL DEFAULT '',
   goal_time_bound TEXT  NOT NULL DEFAULT '',
   goal_due      TEXT    NOT NULL DEFAULT '',       -- YYYY-MM-DD
+  kind          TEXT    NOT NULL DEFAULT 'undecided' CHECK (kind IN ('undecided','text','video','image')), -- epic 78, section 5.12.4
+  skipped_steps TEXT    NOT NULL DEFAULT '',       -- the optional steps of the workflow the person skipped (section 5.12.4)
   PRIMARY KEY (id)
 );
 CREATE INDEX projects_state_updated_ms_index ON projects (state, updated_ms);
@@ -1158,6 +1160,58 @@ A project is created with no timeline: `ProjectCreate` writes the `projects` row
 A project made since epic 56 has no timeline, and a person generates an image, a voice, a text or a video before any timeline exists. So the kinds of job that are about the project, not about one document, are scoped to the **project**: `image.generate`, `voice.generate`, `text.generate`, `video.generate`, `image.edit` and the draft of a text. Migration `20261121100000_project_scoped_jobs` rebuilds `jobs`, `project_assets` and `api_keys` (as `20261119140100` did for `jobs`) so that their `project_id` no longer references `timelines (id)`: it holds a project id for a project-wide row and a timeline id for a timeline-bound one (`export`, `transcribe`, `ingest` into a timeline, `export.batch`). The kind rule of `jobs` is unchanged, and no row is lost: Down puts the foreign keys back and first deletes only the rows that name a project that has no timeline row. Because the first timeline has the id of its project, the value is the id of the project in both readings for the usual project, and the first video added to a project finds the jobs and the files that a generation left there (`ProjectItemAdd` reconciles the pending files into its document). A generated file is attached to the project, `project_assets` keyed by the id of the project, as `pending` until a timeline exists; the library lists it. What the foreign keys cascaded for an emptied project is done by the store: `productionRepo.Delete` and `projectRepo.Delete` delete the jobs, the file links and the keys of the id they delete. A key can be limited to a project that has no timeline. A generation in a project with no timeline succeeds on every surface; an operation on a timeline document of such a project is still `E_INVALID_STATE` with the hint to add a timeline.
 
 Migration `20261121184500_ceilings_to_project` (VV-366, D-132) moves each `cost_ceilings` row whose `project_id` is the id of a later timeline to the project that owns it (`project_items`, `kind = 'timeline'`, `ref` = that id), keeping the lowest limit of each field when the project already has a ceiling in the same currency; a row that matches no timeline item is left as it is, and `approval_rules` is not touched. Down is empty, since merged rows cannot be split. SDD-015 section 3 has the rule.
+
+### 5.12.4 The kind and the workflow of a project (epic 78, D-134, D-137)
+
+A project can be only a text, with no video and no image (copy, a blog post, a script), so no rule, screen or default may assume media. Migration `20261122100000_project_kind` adds two columns to `projects` and changes no row:
+
+```sql
+ALTER TABLE projects ADD COLUMN kind TEXT NOT NULL DEFAULT 'undecided' CHECK (kind IN ('undecided','text','video','image'));
+ALTER TABLE projects ADD COLUMN skipped_steps TEXT NOT NULL DEFAULT '';  -- step ids joined by commas, in the order of the steps; section below
+```
+
+Neither is sealed: they hold names of a fixed set (section 5.17.2). Down drops both.
+
+**The kind is an intent; the effective kind is derived** (`core/project`, `EffectiveKind`). A stored kind other than `undecided` is the effective kind. A project that has none reads from what it holds, in this order: an active timeline item makes it `video`, an active image item `image`, an active text item `text`, and a project with only a brief (or nothing) stays `undecided`. So an existing project is never rewritten: after the migration it holds `undecided`, and its effective kind comes from its items on every read. Nothing writes the derived value, so a project that holds a timeline today and none tomorrow reads differently, which is the point. There is no operation that sets the kind after creation: the person chooses by adding the first thing (`ProjectItemAdd`), and `ProjectCreate` chooses at the start. `ProjectDuplicate` copies the stored kind and the skipped steps, and a bundle carries the stored kind in `production.kind` (left out for `undecided`; an import refuses an unknown value with `E_VALIDATION`, path `production.kind`, and a bundle without it imports as `undecided`).
+
+**The workflow** is a pure function of the stored kind, the skipped steps and the facts of the project (`core/project`, `ComputeWorkflow`). The steps are those of the kind, in this order of the canonical list, and a medium the project holds adds its own steps without removing any: a text project that gets a timeline keeps `writing` and `review` and gains `script`, `recording`, `editing` and `finishing`, and every state is computed again from the facts, so what is done stays done.
+
+| Step | Where | Actor | Tool | Optional |
+| --- | --- | --- | --- | --- |
+| `briefing` | every kind | both | `BriefingAnswer` | no |
+| `choice` | `undecided` only | person | `ProjectItemAdd` | no |
+| `script` | `video` | both | `TextWrite` | no |
+| `writing` | `text` | both | `TextWrite` | no |
+| `recording` | `video` | person | `MediaImport` | yes |
+| `editing` | `video`, `image` | both | `Edit` (`ImageEdit` when there is no video) | no |
+| `finishing` | `video` | both | `JobStart` | yes |
+| `review` | `text` | person | `TextWrite` | no |
+| `approval` | `text`, `video`, `image` | person | `ApprovalDecide` | no |
+| `publication` | `text`, `video`, `image` | both | `PublicationCreate` | no; yes in a text project with no `post` text and no publication |
+
+The workflow of each kind is therefore: `video`: briefing, script, recording, editing, finishing, approval, publication; `text`: briefing, writing, review, approval, publication; `image`: briefing, editing, approval, publication; `undecided`: briefing, choice. A `copy` ends in copy or export: a text project that holds no `post` has `publication` optional, so a person who ends in the text or in an export is not held to a publication (D-137); it is a blog post only when the person adds a text of the kind `post` (SDD-019 section 13). The skill that does a step comes from the skills of SDD-018 at read time, and the table suggests none.
+
+**The state of a step** is computed from facts the service already has, and a fact it lacks gives `unknown`, never `done`. The facts: the active items (a brief or a text that is only white space is not there; a `caption` text is not a script), the publications of the project read from their own tables (section 5.15), whether the first active timeline holds assets and items (its head), and the estimates of the approval requests of the project.
+
+| Step | `done` when | `unknown` when |
+| --- | --- | --- |
+| `briefing` | the brief has text | never |
+| `choice` | never: it leaves the workflow when the kind is known | never |
+| `script`, `writing` | an active text that is not a caption has text | never |
+| `recording` | the first timeline holds an asset | never |
+| `editing` | the first timeline holds an item; image: never | image: always (no image document belongs to a project yet) |
+| `finishing` | an `output` item exists | never |
+| `review` | a publication or an `output` item exists | the publications could not be read and there is no output |
+| `approval` | a publication is published and none waits | a publication exists in another state (a draft or an approved one that is scheduled; the status of a publication does not tell them apart), or the publications could not be read |
+| `publication` | a publication is published | a publication exists in another state, or the publications could not be read |
+
+`waiting` is the state of `approval` while a publication waits for a person (`pending_approval`). A step the person skipped is `skipped` when it is optional in the workflow; a stored skip of a step that is not optional (today) is ignored. `current` is the first step, in order, that has no fact against it: the first one not `done`, `skipped` or `unknown`, and `waiting` when a person has to act; the steps after it that are open are `upcoming`. `workflow.current` names that step (empty when every step is done, skipped or unknown) and `workflow.next` the first open step after it, so that a person and an agent read where the project stands and what comes next.
+
+**Cost.** The `approval` step carries the sum, by currency, of the estimates of the approval requests of the project that are pending or approved (a rejected or expired one cost nothing); it is absent when there is none. Requests are read by the id of the project and of each of its timelines.
+
+**Skipping.** `ProjectStepSkip` writes `skipped_steps` in one transaction with the audit row `project.step.skip` (or `project.step.restore`) and emits `project.updated`. It refuses, with `E_VALIDATION` and `path` `step`, a step id that is not one of the list above, a step that is not in the workflow of the project and a step that is not optional; with `E_INVALID_STATE` a project in the trash, and a step that is already `done`. Skipping a skipped step and restoring one that is not skipped change nothing and succeed.
+
+**The text of a project in the list** (`core/writing`). The text a list shows for a project is its first active text, by position, that has words and is not a caption, preferring a `post`, then a `copy`, then a `script`. Its `words` are those of `TextWords` (SDD-019 section 4: a post is counted without its front matter), `reading_minutes` is `words / 200` rounded up (0 for no words: 842 words are 5 minutes), and `excerpt` is the first 160 characters (runes) of the text, with the front matter of a post removed and the white space at both ends trimmed. The excerpt is the creator's words and is marked untrusted on every surface.
 
 ### 5.12.1 The guided briefing and the brief schema (RF-301, RF-302)
 
@@ -2081,7 +2135,7 @@ A line of `operations.ndjson` is the `operations` row as JSON with the parsed co
 
 ### 16.1.1 Bundles with a production (`bundle_version` 2)
 
-A bundle exports the whole project. The format of 16.1 stays and gains: `manifest.json` has `"bundle_version": 2` and a member `production`: `{"name", "description", "goal", "items": [{"kind", "title", "position", "text_kind", "text", "format", "timeline"}]}`, the name and the context of the project (section 5.12.2; `description` and `goal` are left out when they are not set, and an import holds what it finds to their rules, except that a past `due` is kept) and the active items of the project in order; `timeline` names the timeline of an item by a key; `text_kind` (SDD-019) is on a text only, and a text without it, as in a bundle made before epic 17, is imported as a `copy` (the history of revisions does not travel: an imported text starts at revision 1). The Markdown of a brief or a text that is not empty is the entry `item.<n>.md`, `<n>` the index of the item in `items`, and `text` is `{"sha256", "bytes"}` of that entry: the texts stay out of the manifest, whose cap (1 MiB, 16.3) is far below what 256 items of 256 KiB hold. The first active timeline is `document.json` and `operations.ndjson` as before (key `main`); every other active timeline is `timeline.<key>.json` and `timeline.<key>.ndjson` with the key `t1`, `t2`... in item order, listed in the manifest member `timelines` (`key`, `id`, `name`, `schema_version`, `revision`, `document`, `operations`, the last two as in 16.1). Media and fonts are the union over every timeline, each once. Trashed items are not exported. An `output` item is exported with its format and no job (the file is not part of the bundle); an import keeps it as a record with no job. A bundle of one timeline (`ProjectBundleExport` with `timeline_id`) is exactly the format of 16.1 with `bundle_version` 1.
+A bundle exports the whole project. The format of 16.1 stays and gains: `manifest.json` has `"bundle_version": 2` and a member `production`: `{"name", "description", "goal", "kind", "items": [{"kind", "title", "position", "text_kind", "text", "format", "timeline"}]}`, the name, the stored kind of the project (section 5.12.4; left out for `undecided`) and its context (section 5.12.2; `description` and `goal` are left out when they are not set, and an import holds what it finds to their rules, except that a past `due` is kept) and the active items of the project in order; `timeline` names the timeline of an item by a key; `text_kind` (SDD-019) is on a text only, and a text without it, as in a bundle made before epic 17, is imported as a `copy` (the history of revisions does not travel: an imported text starts at revision 1). The Markdown of a brief or a text that is not empty is the entry `item.<n>.md`, `<n>` the index of the item in `items`, and `text` is `{"sha256", "bytes"}` of that entry: the texts stay out of the manifest, whose cap (1 MiB, 16.3) is far below what 256 items of 256 KiB hold. The first active timeline is `document.json` and `operations.ndjson` as before (key `main`); every other active timeline is `timeline.<key>.json` and `timeline.<key>.ndjson` with the key `t1`, `t2`... in item order, listed in the manifest member `timelines` (`key`, `id`, `name`, `schema_version`, `revision`, `document`, `operations`, the last two as in 16.1). Media and fonts are the union over every timeline, each once. Trashed items are not exported. An `output` item is exported with its format and no job (the file is not part of the bundle); an import keeps it as a record with no job. A bundle of one timeline (`ProjectBundleExport` with `timeline_id`) is exactly the format of 16.1 with `bundle_version` 1.
 
 ### 16.1.2 A project with no timeline (`bundle_version` 3)
 

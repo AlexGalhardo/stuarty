@@ -524,6 +524,52 @@ type BriefingAnswerRequest struct {
 - Scopes: `ProjectDescribe`, `BriefGet` and `BriefingQuestions` read; the others edit. Every operation takes `project_id` of the production and checks ownership as `ProjectGet` does.
 - Audit actions (SDD-005 §5.9): `project.item.add`, `project.item.move`, `project.item.rename`, `project.item.trash`, `project.item.restore`, `project.brief.set`, `project.duplicate`.
 
+### 2.3.2 The kind and the workflow (epic 78, D-134, D-137)
+
+A project can be only a text. The rules, the steps and the storage are in SDD-005 section 5.12.4 and the names in SDD-000 section 1; this section is the shape on each surface.
+
+```go
+type ProjectCreateRequest struct { // gains
+	Kind string `json:"kind,omitempty"` // "text" | "video" | "image" | "undecided" (default); creates no timeline, format or media
+}
+type ProjectCreateResult struct { // gains
+	Kind string `json:"kind"` // the effective kind
+}
+type ProjectGetResult struct { // and ProjectDescribeResult gain
+	Kind     string           `json:"kind"`     // the effective kind
+	Workflow project.Workflow `json:"workflow"` // every step with its state, actor, tool and cost
+}
+type ProjectSummary struct { // the list gains
+	Kind        string       `json:"kind"`
+	TextSummary *TextSummary `json:"text_summary,omitempty"` // when the project holds a text
+}
+type TextSummary struct {
+	ItemID         string `json:"item_id"`
+	TextKind       string `json:"text_kind"`
+	Words          int    `json:"words"`
+	ReadingMinutes int    `json:"reading_minutes"` // words / 200, rounded up
+	Excerpt        string `json:"excerpt" untrusted:"true"` // the first 160 characters, without front matter
+}
+type ProjectStepSkipRequest struct {
+	ProjectID string `json:"project_id"`
+	Step      string `json:"step"`              // an id of SDD-000 section 1
+	Restore   bool   `json:"restore,omitempty"` // put a skipped step back
+	DryRun    bool   `json:"dry_run,omitempty"`
+}
+type ProjectStepSkipResult struct {
+	Envelope
+	ProjectID string           `json:"project_id"`
+	Workflow  project.Workflow `json:"workflow"`
+	Changed   bool             `json:"changed"` // false on a dry run and when nothing changed
+	Text      string           `json:"text"`
+}
+```
+
+- **Surfaces.** HTTP: `kind` in the body of `POST /projects`, `workflow` in `GET /projects/{id}`, `kind` and `text_summary` in each item of `GET /projects`, `POST /projects/{id}/steps/{step}/skip` with `{"restore": true}` to restore. CLI: `project:create --kind`, `project:show` and `project:describe` print the workflow, `project:step <project id> <step> [--restore]`. MCP: `kind` on `project_create`, the workflow as a section of the text of `project_get` and in its result, and `project_item` with `action` `skip` or `unskip` and `title` the step. The three give the same workflow for the same project (the parity test of `web/contract`).
+- **Errors.** An unknown `kind` is `E_VALIDATION` (`path` `kind`); a step that is unknown, not in the workflow or not optional is `E_VALIDATION` (`path` `step`); a project in the trash, or a step already done, is `E_INVALID_STATE`.
+- Scope `edit` for `ProjectStepSkip`; `read` for the reads. Audit actions: `project.step.skip`, `project.step.restore`.
+- The tool budget (NFR-020) is unchanged: `kind` costs under 45 bytes of `tools/list`, and the two new values of `action` are paid for by tightening the wording of the same definitions.
+
 ### 2.4 Edit
 
 ```go
