@@ -52,9 +52,13 @@ export default function CaptionStyleGallery({
 									}
 								}}
 							>
-								<span className="flex h-14 items-center justify-center overflow-hidden rounded-sm bg-ed-preview-surround px-1">
+								{/* The specimen sits on the dark canvas in both themes, as a caption sits on footage:
+								    a white caption on the light canvas would hide the look it shows. It is a
+								    picture of the style (WCAG 1.4.3, incidental text); the name below is the text. */}
+								<span className="dark flex h-14 items-center justify-center overflow-hidden rounded-sm bg-ed-preview-surround px-1">
 									<span
 										aria-hidden="true"
+										data-caption-sample=""
 										style={captionStyleSample(style.caption_style)}
 									>
 										{t("ui.editor.caption_gallery.sample")}

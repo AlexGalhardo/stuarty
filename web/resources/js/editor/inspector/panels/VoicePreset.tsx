@@ -49,7 +49,7 @@ export default function VoicePreset({
 			/>
 			<Button
 				type="button"
-				variant="default"
+				variant="outline"
 				size="sm"
 				disabled={!canEdit}
 				onClick={() =>
