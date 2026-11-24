@@ -32,6 +32,23 @@ func summary(s []Suggestion) []found {
 	return out
 }
 
+// A word already cut is never suggested again, the indices stay those of the transcript, and two copies that a cut
+// made adjacent are a repetition.
+func TestDetectShown(t *testing.T) {
+	words := speak("go um go now um")
+	shown := []bool{true, false, true, true, true}
+
+	got := summary(DetectShown(words, shown, Options{Language: "en"}))
+	want := []found{{KindRepetition, Strong, 0, 0}, {KindFiller, Strong, 4, 4}}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %+v, want %+v", got, want)
+	}
+
+	if got := DetectShown(words, make([]bool, len(words)), Options{Language: "en"}); len(got) != 0 {
+		t.Errorf("with every word cut: %+v", got)
+	}
+}
+
 func TestDetect(t *testing.T) {
 	cases := []struct {
 		name, lang, text string

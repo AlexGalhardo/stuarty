@@ -188,6 +188,25 @@ func Detect(words []SpokenWord, opts Options) []Suggestion {
 	return out
 }
 
+// DetectShown is Detect over the words the timeline still shows: shown[i] says whether word i has a range. A word
+// already cut cannot be removed again, and two copies that a cut made adjacent are a repetition. The indices of the
+// suggestions are those of words.
+func DetectShown(words []SpokenWord, shown []bool, opts Options) []Suggestion {
+	kept := make([]SpokenWord, 0, len(words))
+	index := make([]int, 0, len(words))
+	for i := range words {
+		if i < len(shown) && shown[i] {
+			kept = append(kept, words[i])
+			index = append(index, i)
+		}
+	}
+	found := Detect(kept, opts)
+	for i := range found {
+		found[i].FromWord, found[i].ToWord = index[found[i].FromWord], index[found[i].ToWord]
+	}
+	return found
+}
+
 // repeatsAt reports whether the n words at i are repeated right after, within the window, with no word
 // of either copy claimed by a filler.
 func repeatsAt(words []SpokenWord, norm []string, claimed []bool, i, n int, window int64) bool {
