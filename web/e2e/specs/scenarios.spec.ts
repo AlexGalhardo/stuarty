@@ -228,8 +228,12 @@ test.describe("prototype-reference", () => {
 			// The 409 of POST /projects is the Inertia redirect to the editor. A truth
 			// frame pinned to a revision that an edit has just replaced is refused
 			// (400 or 409) and the canvas stays (truth on pause, SDD-012 section 11): both are by design.
+			// So is the read of a plan window at a revision that an edit has replaced while the request was
+			// in flight: E_INVALID_STATE with 409 (SDD-003 section 6.3), and the preview drops the answer and
+			// asks again at the new revision (VV-389).
 			const expected =
 				(r.status() === 409 && r.url().endsWith("/projects")) ||
+				(r.status() === 409 && /\/plan\?.*\brev=\d+/.test(r.url())) ||
 				(r.status() < 500 && r.url().includes("/frame?"));
 			if (r.status() >= 400 && !expected)
 				problems.push(
@@ -260,7 +264,13 @@ test.describe("prototype-reference", () => {
 		await add.click();
 		await expect(page.locator("[data-item-id]")).toHaveCount(1);
 		await page.getByRole("button", { name: "Play" }).click();
-		await page.waitForTimeout(1000);
+		// Playing is the playhead moving: wait for it, not for a time (VV-389).
+		const playhead = page.getByRole("slider", { name: "Playhead" });
+		await expect
+			.poll(async () => Number(await playhead.getAttribute("aria-valuenow")), {
+				timeout: 30_000,
+			})
+			.toBeGreaterThan(0);
 		await page.getByRole("button", { name: "Pause" }).click();
 		await expect(
 			page.getByAltText("Exact frame at the playhead"),
