@@ -329,7 +329,10 @@ export default function Connections(): ReactNode {
 				)}
 				<SocialSection />
 				<BlogSection onChanged={() => void load()} />
-				<section aria-label={t("ui.connections.list")} className="grid gap-4">
+				<section
+					aria-label={t("ui.connections.list")}
+					className="grid grid-cols-1 gap-4"
+				>
 					<SectionTitle
 						title={t("ui.connections.list")}
 						description={t("ui.connections.list_hint")}
@@ -369,7 +372,7 @@ export default function Connections(): ReactNode {
 				<section
 					id="connections-new"
 					aria-label={t("ui.connections.new")}
-					className="grid scroll-mt-4 gap-4"
+					className="grid scroll-mt-4 grid-cols-1 gap-4"
 				>
 					<SectionTitle title={t("ui.connections.new")} />
 					<form

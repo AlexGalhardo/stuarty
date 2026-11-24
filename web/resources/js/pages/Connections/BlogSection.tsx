@@ -173,7 +173,7 @@ export default function BlogSection({
 		<section
 			aria-label={t("ui.connections.blog.title")}
 			data-testid="blog-section"
-			className="grid gap-4"
+			className="grid grid-cols-1 gap-4"
 		>
 			<SectionTitle
 				title={t("ui.connections.blog.title")}

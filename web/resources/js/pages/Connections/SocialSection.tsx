@@ -334,7 +334,10 @@ export default function SocialSection(): ReactNode {
 		networks.find((n) => n.network === id)?.name ?? id;
 
 	return (
-		<section aria-label={t("ui.social.title")} className="grid gap-4">
+		<section
+			aria-label={t("ui.social.title")}
+			className="grid grid-cols-1 gap-4"
+		>
 			<SectionTitle
 				title={t("ui.social.title")}
 				description={t("ui.social.intro")}
