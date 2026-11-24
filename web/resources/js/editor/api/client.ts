@@ -39,6 +39,7 @@ import type {
 	ConnectionTestResult,
 	CostCeilingSetRequest,
 	CostSummary,
+	CutsMediaFile,
 	CutsProposeResult,
 	EditRequest,
 	EditResult,
@@ -197,6 +198,13 @@ export interface ApiClient {
 	startFaceTrack(projectId: string, assetId: string): Promise<Job>;
 	// The vertical cuts the service proposes for an asset (SDD-024 section 8). It changes nothing.
 	getCuts(projectId: string, assetId: string): Promise<CutsProposeResult>;
+	// Places the asset of a cut proposal in a new timeline under the id its batch uses (SDD-024 section 8): the
+	// `media_file` of the answer, sent as it came.
+	placeCutMedia(
+		projectId: string,
+		timelineId: string,
+		file: CutsMediaFile,
+	): Promise<MediaImportResult>;
 	// Sends a batch to one timeline of a project, which `edit` cannot name.
 	editTimeline(
 		projectId: string,
@@ -627,6 +635,11 @@ export function createClient(
 				`${project(id)}/cuts${query({ asset_id: assetId })}`,
 				READ_TIMEOUT_MS,
 			),
+		placeCutMedia: (id, timelineId, file) =>
+			call("POST", `${project(id)}/media`, EDIT_TIMEOUT_MS, {
+				files: [file],
+				timeline_id: timelineId,
+			}),
 		editTimeline: (id, timelineId, request) =>
 			call(
 				"POST",

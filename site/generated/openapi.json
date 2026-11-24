@@ -1613,6 +1613,9 @@
           "asset_id": {
             "type": "string"
           },
+          "media_file": {
+            "$ref": "#/components/schemas/ImportFile"
+          },
           "project_id": {
             "type": "string"
           },
@@ -3486,6 +3489,20 @@
           },
           "width": {
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ImportFile": {
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "hash": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
           }
         },
         "type": "object"

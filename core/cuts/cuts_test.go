@@ -156,8 +156,8 @@ func TestOptions(t *testing.T) {
 	}
 }
 
-// The batch a person accepts applies cleanly on the empty vertical timeline a project item makes, and its
-// framing command is the last of it.
+// The batch a person accepts applies cleanly on the new vertical timeline a project item makes once the asset is
+// placed in it, its framing command is the last of it, and it holds no command only the service may issue.
 func TestTheBatchBuildsTheCutOnAnEmptyTimeline(t *testing.T) {
 	asset := timeline.Asset{
 		ID: "ast_3c5v8n2w6d", Hash: "sha256:" + strings.Repeat("a", 64), Kind: timeline.AssetVideo, Name: "talk.mp4",
@@ -167,15 +167,18 @@ func TestTheBatchBuildsTheCutOnAnEmptyTimeline(t *testing.T) {
 
 	p := Proposal{N: 2, StartMS: 12_345, EndMS: 47_345}
 
-	batch, err := Batch(&p, &asset)
-	if err != nil {
-		t.Fatal(err)
+	batch := Batch(&p, asset.ID)
+
+	if len(batch) != 3 || batch[2].Op != "clip.face_frame" ||
+		!strings.Contains(string(batch[1].Args), `"source_in":"12.345s"`) ||
+		!strings.Contains(string(batch[1].Args), `"duration":"35.000s"`) {
+		t.Fatalf("batch = %+v", batch)
 	}
 
-	if len(batch) != 4 || batch[3].Op != "clip.face_frame" ||
-		!strings.Contains(string(batch[2].Args), `"source_in":"12.345s"`) ||
-		!strings.Contains(string(batch[2].Args), `"duration":"35.000s"`) {
-		t.Fatalf("batch = %+v", batch)
+	for _, op := range batch {
+		if cmd, ok := command.Default().Get(op.Op); !ok || cmd.Internal {
+			t.Errorf("%s is not a command a person may send", op.Op)
+		}
 	}
 
 	doc := &timeline.Document{
@@ -183,14 +186,14 @@ func TestTheBatchBuildsTheCutOnAnEmptyTimeline(t *testing.T) {
 		ID:            "prj_0000000001",
 		Name:          "cuts",
 		Settings:      timeline.DefaultSettings(),
-		Assets:        map[string]timeline.Asset{},
+		Assets:        map[string]timeline.Asset{asset.ID: asset},
 		Tracks:        map[string]timeline.Track{},
 		Items:         map[string]timeline.Item{},
 	}
 	doc.Settings.Width, doc.Settings.Height, doc.Settings.FPS = 1080, 1920, timeline.Rational{Num: 30, Den: 1}
 
-	// The face framing needs its resolved track, which the service fills; apply the first three here.
-	res, aerr := command.Default().ApplyBatch(doc, batch[:3], command.Env{})
+	// The face framing needs its resolved track, which the service fills; apply the first two here.
+	res, aerr := command.Default().ApplyBatch(doc, batch[:2], command.Env{})
 	if aerr != nil {
 		t.Fatal(aerr)
 	}

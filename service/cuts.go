@@ -29,19 +29,23 @@ type CutsProposeRequest struct {
 type CutsProposal struct {
 	cuts.Proposal
 
-	// Batch makes the cut on an empty vertical timeline of the project: send it to a timeline added with
-	// ProjectItemAdd (kind timeline, the default 9:16 preset). The service fills the face track of the framing.
+	// Batch makes the cut on a new vertical timeline of the project: add the timeline with ProjectItemAdd (kind
+	// timeline, the default 9:16 preset), place MediaFile in it with MediaImport, then send Batch to it. The
+	// service fills the face track of the framing.
 	Batch []command.Operation `json:"batch"`
 }
 
 // CutsProposeResult is the proposals; it changed nothing.
 type CutsProposeResult struct {
-	UntrustedNotice string         `json:"untrusted_notice,omitempty"`
-	ProjectID       string         `json:"project_id"`
-	Revision        int64          `json:"revision"`
-	AssetID         string         `json:"asset_id"`
-	Proposals       []CutsProposal `json:"proposals"`
-	Text            string         `json:"text"`
+	UntrustedNotice string `json:"untrusted_notice,omitempty"`
+	ProjectID       string `json:"project_id"`
+	Revision        int64  `json:"revision"`
+	AssetID         string `json:"asset_id"`
+	// MediaFile is the one entry of `files` of the MediaImport that places the asset in the new timeline under
+	// the id the batch uses (`asset.add` is issued only by the import flow, SDD-002 section A.9).
+	MediaFile ImportFile     `json:"media_file"`
+	Proposals []CutsProposal `json:"proposals"`
+	Text      string         `json:"text"`
 }
 
 // CutsPropose returns up to Count vertical cuts of an asset from its transcript and its face track. It reads two
@@ -83,17 +87,13 @@ func (s *svc) CutsPropose(ctx context.Context, req CutsProposeRequest) (*CutsPro
 	found := cuts.Propose(words, track, opts)
 	res := &CutsProposeResult{
 		UntrustedNotice: UntrustedNotice, ProjectID: src.row.ID, Revision: src.row.Revision, AssetID: req.AssetID,
+		MediaFile: ImportFile{Hash: asset.Hash, AssetID: asset.ID},
 		Proposals: make([]CutsProposal, 0, len(found)),
 	}
 
 	for i := range found {
-		batch, berr := cuts.Batch(&found[i], &asset)
-		if berr != nil {
-			return nil, internalError()
-		}
-
 		found[i].Title = untrusted.Clean(found[i].Title)
-		res.Proposals = append(res.Proposals, CutsProposal{Proposal: found[i], Batch: batch})
+		res.Proposals = append(res.Proposals, CutsProposal{Proposal: found[i], Batch: cuts.Batch(&found[i], asset.ID)})
 	}
 
 	res.Text = cutsText(res)

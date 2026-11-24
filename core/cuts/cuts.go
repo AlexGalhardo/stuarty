@@ -5,7 +5,6 @@
 package cuts
 
 import (
-	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -13,7 +12,6 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/facetrack"
-	"github.com/AlexGalhardo/stuarty/core/timeline"
 )
 
 // Word is a transcript word on the asset's time axis, in milliseconds.
@@ -238,23 +236,19 @@ const (
 	ClipID  = "itm_cq00000001"
 )
 
-// Batch is the list of commands that makes the cut on an empty timeline of the project: the asset, a visual
-// track, the clip of the range and its face framing (SDD-024 section 8 item 4). The timeline is the vertical
-// one a project item of kind timeline makes by default, so no reframe is needed. A person sends it as it is.
-func Batch(p *Proposal, asset *timeline.Asset) ([]command.Operation, error) {
-	assetJSON, err := json.Marshal(asset)
-	if err != nil {
-		return nil, err
-	}
-
+// Batch is the list of commands that makes the cut on a new timeline of the project once the asset is in it: a
+// visual track, the clip of the range and its face framing (SDD-024 section 8 item 4). The asset is not part of
+// the batch, because `asset.add` is issued only by the import flow (SDD-002 section A.9): the person first places
+// the asset in the new timeline under the same id through MediaImport by hash. The timeline is the vertical one a
+// project item of kind timeline makes by default, so no reframe is needed. A person sends it as it is.
+func Batch(p *Proposal, assetID string) []command.Operation {
 	dur := p.EndMS - p.StartMS
 
 	return []command.Operation{
-		{Op: "asset.add", Args: []byte(fmt.Sprintf(`{"asset":%s}`, assetJSON))},
 		{Op: "track.add", Args: []byte(fmt.Sprintf(`{"kind":"visual","id":%q,"name":"Cut %d"}`, TrackID, p.N))},
 		{Op: "clip.add", Args: []byte(fmt.Sprintf(
 			`{"track_id":%q,"asset_id":%q,"start":"0s","source_in":%q,"duration":%q,"id":%q}`,
-			TrackID, asset.ID, seconds(p.StartMS), seconds(dur), ClipID))},
+			TrackID, assetID, seconds(p.StartMS), seconds(dur), ClipID))},
 		{Op: "clip.face_frame", Args: []byte(fmt.Sprintf(`{"item_id":%q}`, ClipID))},
-	}, nil
+	}
 }
