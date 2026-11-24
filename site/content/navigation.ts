@@ -105,9 +105,12 @@ export const navigation: NavCategory[] = [
 		title: "Creative tools",
 		pages: [
 			"text-and-captions",
+			"caption-styles",
 			"shapes",
 			"audio",
+			"studio-voice",
 			"effects-and-color",
+			"blur-a-region",
 			"transitions",
 			"keyframes",
 			"transcription",

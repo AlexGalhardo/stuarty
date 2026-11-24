@@ -1,0 +1,84 @@
+---
+title: "Caption styles"
+description: "Give every caption of a track a finished look from a library of 14 named styles."
+---
+
+## You will learn
+
+- which caption styles exist and what each looks like;
+- how to apply one from the editor, the CLI or an agent;
+- what happens to captions that have their own style, and how to undo.
+
+## The idea
+
+A **caption style** is a named set of the fields of the caption style of a track: the font and its weight, the size, the colours, the outline, the shadow or the box, the position and the colour of the word being spoken. Applying one replaces the caption style of the track in one step, and every caption of the track takes it. The result is an ordinary caption style: you can change any field afterwards, as before.
+
+The styles are original to Stuarty and use only the fonts bundled with it, so a project looks the same on every machine. The lengths of a style (size, outline, shadow, padding) are written for a frame whose shorter side is 1080 pixels and scale with your project, so a style looks the same in a vertical, a square and a wide video.
+
+| Style | Font | Look |
+| --- | --- | --- |
+| `clean_white` (Clean white) | Inter | White bold text with a thin edge and a soft shadow; the spoken word turns yellow |
+| `bold_pop` (Bold pop) | Anton | Tall condensed capitals with a heavy edge; the spoken word turns green |
+| `marker_yellow` (Marker yellow) | Montserrat | Yellow text with a black edge; the spoken word turns white |
+| `soft_box` (Soft box) | Inter | White text on a rounded dark box; the spoken word sits on blue |
+| `neon_night` (Neon night) | Bebas Neue | Light capitals with a cyan glow, in the middle of the frame |
+| `editorial` (Editorial) | Playfair Display | A serif face in warm white, like a magazine pull quote |
+| `mono_code` (Mono code) | JetBrains Mono | Green monospaced text on a near-black box |
+| `karaoke_pill` (Karaoke pill) | Montserrat | White text; the spoken word sits on a white pill |
+| `thick_outline` (Thick outline) | Montserrat | Very heavy capitals with a thick black outline |
+| `warm_glow` (Warm glow) | Montserrat | Amber text with an orange glow |
+| `lower_bar` (Lower bar) | Inter | Left-aligned text on a dark bar, calm and easy to read |
+| `big_center` (Big centre) | Anton | One huge capital line in the middle, for short punchy words |
+| `top_headline` (Top headline) | Bebas Neue | Capitals at the top of the frame, like a headline |
+| `ink_paper` (Ink on paper) | Playfair Display | Dark serif text on a cream box |
+
+In every style the text has a contrast of at least 4.5:1 with its outline or its box, so it stays readable over any footage.
+
+## In the editor
+
+Select the header of the track that holds your captions, or open the **Captions** tab of the panel on the left. The **Caption style** section shows a gallery: one tile per style, with a sample, its name and its font. Choose a tile, with the pointer or with Tab and Enter, and the track takes the style; the preview shows the result. The sample of a tile is drawn by the browser in the colours of the style; the frame you export is the one the preview shows.
+
+A caption can carry a style of its own, set in its inspector. Those captions keep it when you apply a track style. Tick **Also clear the style set on single captions** before choosing a tile to make every caption of the track follow the new style.
+
+The whole change is one undo step: **Undo** puts back the style the track had.
+
+## Quick start
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+stuarty edit --project prj_7k2m9x4q1b caption.apply_style track_id=trk_a1b2c3d4e5 style=bold_pop
+stuarty edit --project prj_7k2m9x4q1b caption.apply_style track_id=trk_a1b2c3d4e5 \
+  style=soft_box reset_overrides:=true
+stuarty undo --project prj_7k2m9x4q1b
+```
+
+</Tab>
+<Tab title="MCP">
+
+`edit` with:
+
+```json
+{ "op": "caption.apply_style", "args": { "track_id": "trk_a1b2c3d4e5", "style": "bold_pop" } }
+```
+
+`caption.list_styles` (no arguments) returns every style with its name, a one-line summary, its font and the fields it stores, so an agent can choose one without reading this page.
+
+</Tab>
+</Tabs>
+
+The result lists `overridden_items`: the captions of the track that still have a style of their own and so do not show the whole track style. Applying the style a track already has changes nothing.
+
+## Common mistakes
+
+- Applying a style to an audio track: `E_TYPE_MISMATCH`. Captions live on a visual track.
+- A style name that is not in the table: `E_VALIDATION`, and the hint lists the names.
+- Replacing a bundled font family with a font of your own that lacks the weight a style needs: `E_FONT_UNKNOWN`. Import the missing weight, or choose another style.
+- Expecting the style to change captions that have their own style. Use `reset_overrides`, or the check box in the editor.
+
+## Next steps
+
+- [Text and captions](/docs/guide/text-and-captions)
+- [Transcription](/docs/guide/transcription)
+- [Safe area](/docs/guide/safe-area)
