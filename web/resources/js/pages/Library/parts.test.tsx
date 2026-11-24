@@ -74,7 +74,7 @@ describe("groupEntries puts the notes that wait for a person first", () => {
 		name,
 		kept,
 	});
-	const labels = { pending: "Waiting", kept: "Kept" };
+	const labels = { pending: "Waiting", kept: "Kept", invalid: "Unreadable" };
 
 	test("pending notes come before the kept ones, each group with its heading", () => {
 		const groups = groupEntries(
@@ -85,6 +85,14 @@ describe("groupEntries puts the notes that wait for a person first", () => {
 		expect(groups.map((g) => g.key)).toEqual(["pending", "kept"]);
 		expect(groups[0]?.entries.map((e) => e.name)).toEqual(["b"]);
 		expect(groups[1]?.entries.map((e) => e.name)).toEqual(["a", "c"]);
+	});
+
+	test("a note that cannot be read is never listed under Kept", () => {
+		const broken: LibraryEntry = { ...note("x", false), state: "invalid" };
+		const groups = groupEntries("memory", [note("a", true), broken], labels);
+		expect(groups.map((g) => g.key)).toEqual(["kept", "invalid"]);
+		expect(groups[0]?.entries.map((e) => e.name)).toEqual(["a"]);
+		expect(groups[1]?.entries.map((e) => e.name)).toEqual(["x"]);
 	});
 
 	test("a group with no entry is not listed", () => {

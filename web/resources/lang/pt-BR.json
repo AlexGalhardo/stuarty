@@ -4014,7 +4014,8 @@
       },
       "group": {
         "pending": "Aguardando a sua aprovação",
-        "kept": "Mantidas"
+        "kept": "Mantidas",
+        "invalid": "Arquivos que não podem ser lidos"
       },
       "empty_text": {
         "memory": "Quando você ou um agente escreve uma nota, ela aparece aqui. Uma nota escrita por um agente espera você mantê-la.",

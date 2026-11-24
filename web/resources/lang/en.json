@@ -4014,7 +4014,8 @@
       },
       "group": {
         "pending": "Waiting for your approval",
-        "kept": "Kept"
+        "kept": "Kept",
+        "invalid": "Files that cannot be read"
       },
       "empty_text": {
         "memory": "When you or an agent write a note, it appears here. A note an agent wrote waits for you to keep it.",
