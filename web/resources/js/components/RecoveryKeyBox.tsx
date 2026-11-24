@@ -1,3 +1,4 @@
+import { Copy } from "lucide-react";
 import { type ReactNode, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -26,15 +27,16 @@ export default function RecoveryKeyBox({
 		<>
 			<p
 				data-testid="recovery-key"
-				className="rounded-lg border bg-muted p-4 text-center font-mono text-lg tracking-wide break-all select-all"
+				className="rounded-lg border border-border-strong bg-surface-sunken p-4 text-center font-mono text-xl font-semibold tracking-wide break-all text-accent-text select-all"
 			>
 				{value}
 			</p>
 			<div className="flex items-center gap-3">
 				<Button type="button" variant="outline" onClick={() => void copy()}>
+					<Copy aria-hidden="true" />
 					{t("ui.account.recovery.copy")}
 				</Button>
-				<span role="status" className="text-sm text-muted-foreground">
+				<span role="status" className="text-sm text-text-muted">
 					{copied ? t("ui.account.recovery.copied") : ""}
 				</span>
 			</div>

@@ -171,7 +171,27 @@
     },
     "error": {
       "back": "Voltar aos projetos",
-      "how_to_fix": "Como resolver:"
+      "home": "Ir para o início",
+      "label": "Erro {status}",
+      "how_to_fix": "Como resolver:",
+      "next": {
+        "not_found": {
+          "title": "O que fazer agora",
+          "body": "O endereço pode ter mudado, ou o projeto pode estar na lixeira da página de projetos, de onde dá para restaurá-lo. Seus arquivos continuam neste computador."
+        },
+        "forbidden": {
+          "title": "O que fazer agora",
+          "body": "Isto precisa de uma pessoa conectada. Entre, ou faça no app do Stuarty, e tente de novo."
+        },
+        "server": {
+          "title": "O que fazer agora",
+          "body": "Algo parou neste computador. Tente de novo daqui a pouco. Uma página de erro não altera os seus arquivos."
+        },
+        "other": {
+          "title": "O que fazer agora",
+          "body": "Volte aos projetos e tente de novo. Se acontecer outra vez, a mensagem acima diz o que parou."
+        }
+      }
     },
     "projects": {
       "title": "Projetos",
@@ -2642,7 +2662,16 @@
       "password_rule": "De 8 a 32 caracteres, com uma letra maiúscula, uma minúscula, um número e um caractere especial, sem espaços.",
       "confirmation": "Confirme a senha",
       "identity": "Usuário ou e-mail",
+      "footer": "No seu computador. Do seu jeito.",
+      "steps": {
+        "label": "Passos para começar",
+        "create": "Criar conta",
+        "key": "Guardar a chave",
+        "signin": "Entrar",
+        "done": "Concluído"
+      },
       "create": {
+        "not_encrypted_title": "O que não é cifrado",
         "title": "Crie a sua conta",
         "intro": "Seus textos, briefings, conversas, publicações e credenciais são cifrados com uma chave que só fica na memória enquanto você está conectado. Com o Stuarty trancado, nenhuma página, comando ou agente lê isso.",
         "not_encrypted": "Ainda não cifrados: os arquivos das suas notas de memória, prompts e skills, seus arquivos de mídia, os nomes de projetos e arquivos e as palavras dentro de uma timeline ou imagem. Quem conseguir abrir esta pasta no disco consegue ler isso.",
@@ -2651,6 +2680,8 @@
       "recovery": {
         "title": "Guarde a sua chave de recuperação",
         "intro": "Esta chave abre os seus dados se você esquecer a senha. Ela aparece uma vez, aqui, e o Stuarty não a guarda.",
+        "warning_title": "Guarde fora deste computador",
+        "formerFolder_title": "Uma cópia de antes da mudança de nome ainda está no disco",
         "warning": "Se você esquecer a senha e não tiver esta chave, os seus dados não podem ser recuperados. Ninguém pode fazer isso por você, nem nós. Anote a chave ou guarde-a num gerenciador de senhas antes de continuar.",
         "formerFolder": "Uma cópia do seu workspace de antes de o Stuarty mudar de nome ainda está em {path}, em texto aberto. O Stuarty nunca a apaga: apague essa pasta você mesmo depois de conferir que está tudo aqui.",
         "copy": "Copiar a chave",
@@ -2660,6 +2691,7 @@
       },
       "signin": {
         "title": "Entrar no Stuarty",
+        "intro": "O Stuarty fica trancado até você entrar. Nenhuma página, comando ou agente lê os seus dados antes disso.",
         "submit": "Entrar",
         "forgot": "Esqueci a minha senha"
       },

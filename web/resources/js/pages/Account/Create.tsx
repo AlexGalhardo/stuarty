@@ -1,8 +1,11 @@
 import { Head } from "@inertiajs/react";
+import { ArrowRight } from "lucide-react";
 import { type FormEvent, type ReactNode, useState } from "react";
 
+import { AuthCard, type AuthStep } from "@/components/AuthCard";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import FieldErrors from "@/components/FieldErrors";
+import { Notice } from "@/components/Notice";
 import PasswordField from "@/components/PasswordField";
 import RecoveryKeyBox from "@/components/RecoveryKeyBox";
 import { Button } from "@/components/ui/button";
@@ -13,6 +16,28 @@ import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
 import type { AccountFieldProblem } from "../../editor/api/types";
 import { fieldProblems, reasonsOf } from "../../lib/accountProblems";
+
+// The three steps of the first run, with the one the person is on.
+function createSteps(
+	t: ReturnType<typeof useT>,
+	current: "create" | "key",
+): AuthStep[] {
+	const done = {
+		state: "done",
+		stateLabel: t("ui.account.steps.done"),
+	} as const;
+	return [
+		{
+			label: t("ui.account.steps.create"),
+			...(current === "create" ? { state: "current" as const } : done),
+		},
+		{
+			label: t("ui.account.steps.key"),
+			state: current === "key" ? "current" : "todo",
+		},
+		{ label: t("ui.account.steps.signin"), state: "todo" },
+	];
+}
 
 // The first run (SDD-012 section 2.1.1, ADR-0052): the account, then the recovery key. The key is shown once,
 // in the memory of this page only: it is not in the address, the history or the storage, and it is gone when
@@ -64,17 +89,24 @@ export default function Create(): ReactNode {
 	return (
 		<>
 			<Head title={t("ui.account.create.title")} />
-			<div className="mx-auto flex max-w-sm flex-col gap-6">
-				<h1 className="text-2xl font-semibold">
-					{t("ui.account.create.title")}
-				</h1>
-				<p className="text-sm text-muted-foreground">
-					{t("ui.account.create.intro")} {t("ui.account.create.not_encrypted")}
-				</p>
+			<AuthCard
+				title={t("ui.account.create.title")}
+				description={t("ui.account.create.intro")}
+				steps={createSteps(t, "create")}
+				stepsLabel={t("ui.account.steps.label")}
+				footer={t("ui.account.footer")}
+			>
+				<Notice
+					tone="info"
+					title={t("ui.account.create.not_encrypted_title")}
+					data-testid="create-not-encrypted"
+				>
+					{t("ui.account.create.not_encrypted")}
+				</Notice>
 				<form
 					onSubmit={(event) => void submit(event)}
 					noValidate
-					className="flex flex-col gap-4 rounded-xl border bg-card p-5 text-card-foreground"
+					className="flex flex-col gap-4"
 				>
 					<div className="flex flex-col gap-2">
 						<Label htmlFor="account-username">{t("ui.account.username")}</Label>
@@ -88,10 +120,7 @@ export default function Create(): ReactNode {
 							value={username}
 							onChange={(event) => setUsername(event.target.value)}
 						/>
-						<p
-							id="account-username-hint"
-							className="text-sm text-muted-foreground"
-						>
+						<p id="account-username-hint" className="text-sm text-text-subtle">
 							{t("ui.account.username_rule")}
 						</p>
 						<FieldErrors
@@ -110,10 +139,7 @@ export default function Create(): ReactNode {
 							value={email}
 							onChange={(event) => setEmail(event.target.value)}
 						/>
-						<p
-							id="account-email-hint"
-							className="text-sm text-muted-foreground"
-						>
+						<p id="account-email-hint" className="text-sm text-text-subtle">
 							{t("ui.account.email_rule")}
 						</p>
 						<FieldErrors id="account-email-errors" reasons={emailReasons} />
@@ -126,7 +152,7 @@ export default function Create(): ReactNode {
 						autoComplete="new-password"
 						reasons={reasonsOf(problems, "password")}
 					/>
-					<p className="-mt-2 text-sm text-muted-foreground">
+					<p className="-mt-2 text-sm text-text-subtle">
 						{t("ui.account.password_rule")}
 					</p>
 					<PasswordField
@@ -138,13 +164,11 @@ export default function Create(): ReactNode {
 						reasons={reasonsOf(problems, "confirmation")}
 					/>
 					<FailureNote id="account-error" failure={failure} />
-					<div>
-						<Button type="submit" disabled={busy}>
-							{t("ui.account.create.submit")}
-						</Button>
-					</div>
+					<Button type="submit" disabled={busy}>
+						{t("ui.account.create.submit")}
+					</Button>
 				</form>
-			</div>
+			</AuthCard>
 		</>
 	);
 }
@@ -163,32 +187,32 @@ export function RecoveryKey({
 	return (
 		<>
 			<Head title={t("ui.account.recovery.title")} />
-			<div className="mx-auto flex max-w-lg flex-col gap-6">
-				<h1 className="text-2xl font-semibold">
-					{t("ui.account.recovery.title")}
-				</h1>
-				<p className="text-sm">{t("ui.account.recovery.intro")}</p>
-				<p
-					role="note"
-					className="rounded-lg border border-destructive p-3 text-sm"
-				>
+			<AuthCard
+				wide
+				title={t("ui.account.recovery.title")}
+				description={t("ui.account.recovery.intro")}
+				steps={createSteps(t, "key")}
+				stepsLabel={t("ui.account.steps.label")}
+				footer={t("ui.account.footer")}
+			>
+				<Notice tone="warning" title={t("ui.account.recovery.warning_title")}>
 					{t("ui.account.recovery.warning")}
-				</p>
+				</Notice>
 				{formerFolder !== null && (
-					<p
-						role="note"
+					<Notice
+						tone="warning"
+						title={t("ui.account.recovery.formerFolder_title")}
 						data-testid="former-folder"
-						className="rounded-lg border border-destructive p-3 text-sm"
 					>
 						{t("ui.account.recovery.formerFolder", { path: formerFolder })}
-					</p>
+					</Notice>
 				)}
 				<RecoveryKeyBox value={value} />
 				<div className="flex items-center gap-2">
 					<input
 						id="recovery-saved"
 						type="checkbox"
-						className="size-4"
+						className="size-4 accent-primary"
 						checked={saved}
 						onChange={(event) => setSaved(event.target.checked)}
 					/>
@@ -196,16 +220,15 @@ export function RecoveryKey({
 						{t("ui.account.recovery.saved")}
 					</Label>
 				</div>
-				<div>
-					<Button
-						type="button"
-						disabled={!saved}
-						onClick={() => window.location.assign("/account/signin")}
-					>
-						{t("ui.account.recovery.continue")}
-					</Button>
-				</div>
-			</div>
+				<Button
+					type="button"
+					disabled={!saved}
+					onClick={() => window.location.assign("/account/signin")}
+				>
+					<ArrowRight aria-hidden="true" />
+					{t("ui.account.recovery.continue")}
+				</Button>
+			</AuthCard>
 		</>
 	);
 }

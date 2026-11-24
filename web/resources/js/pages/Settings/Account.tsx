@@ -2,6 +2,7 @@ import { usePage } from "@inertiajs/react";
 import { type FormEvent, type ReactNode, useEffect, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { Notice } from "@/components/Notice";
 import PasswordField from "@/components/PasswordField";
 import RecoveryKeyBox from "@/components/RecoveryKeyBox";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import { ApiError } from "../../editor/api/errors";
 import { HttpTransport } from "../../editor/api/http";
 import type { AccountFieldProblem } from "../../editor/api/types";
 import { fieldProblems, reasonsOf } from "../../lib/accountProblems";
+import { SELECT_CLASS, SettingsSection } from "./SettingsSection";
 
 // The idle lock a person may choose, in minutes; 0 is off. The server checks the range (SDD-007 section 3.9).
 const IDLE_CHOICES = [0, 5, 15, 30, 60, 240, 1440];
@@ -114,43 +116,40 @@ export default function AccountSettings(): ReactNode {
 	}
 
 	return (
-		<section
-			aria-labelledby="settings-account"
-			className="flex flex-col gap-4"
+		<SettingsSection
+			id="settings-account"
+			title={t("ui.account.settings.title")}
 			data-testid="settings-account"
 		>
-			<h2 id="settings-account" className="text-lg font-semibold">
-				{t("ui.account.settings.title")}
-			</h2>
 			<p className="text-sm">
 				{t("ui.account.settings.signed_in")}{" "}
 				<strong data-testid="settings-username">{account.username}</strong>
 			</p>
-			<p
-				role="note"
-				className="text-sm text-muted-foreground"
+			<Notice
+				tone="info"
+				title={t("ui.account.create.not_encrypted_title")}
 				data-testid="settings-not-encrypted"
 			>
 				{t("ui.account.create.not_encrypted")}
-			</p>
+			</Notice>
 			{person === false && (
-				<p role="note" className="text-sm text-muted-foreground">
+				<p role="note" className="text-sm text-text-muted">
 					{t("ui.account.settings.need_password")}{" "}
-					<a className="underline" href="/account/signin">
+					<a className="underline underline-offset-4" href="/account/signin">
 						{t("ui.account.signin.title")}
 					</a>
 				</p>
 			)}
 			{person === true && (
 				<>
-					<div className="flex items-center justify-between gap-4">
+					<div className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-4">
 						<Label htmlFor="settings-idle">
 							{t("ui.account.settings.idle")}
 						</Label>
 						<select
 							id="settings-idle"
 							value={idle ?? 0}
-							className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm dark:bg-input/30"
+							className={SELECT_CLASS}
 							onChange={(event) => void changeIdle(Number(event.target.value))}
 						>
 							{IDLE_CHOICES.map((minutes) => (
@@ -162,15 +161,15 @@ export default function AccountSettings(): ReactNode {
 							))}
 						</select>
 					</div>
-					<p className="text-sm text-muted-foreground">
+					<p className="-mt-2 text-sm text-text-subtle">
 						{t("ui.account.settings.idle_hint")}
 					</p>
 					<form
 						onSubmit={(event) => void changePassword(event)}
 						noValidate
-						className="flex flex-col gap-4"
+						className="flex flex-col gap-4 border-t border-border pt-4"
 					>
-						<h3 className="text-base font-medium">
+						<h3 className="text-lg font-semibold">
 							{t("ui.account.settings.change")}
 						</h3>
 						<PasswordField
@@ -205,13 +204,13 @@ export default function AccountSettings(): ReactNode {
 					<form
 						onSubmit={(event) => void makeRecoveryKey(event)}
 						noValidate
-						className="flex flex-col gap-4"
+						className="flex flex-col gap-4 border-t border-border pt-4"
 						data-testid="settings-recovery-key"
 					>
-						<h3 className="text-base font-medium">
+						<h3 className="text-lg font-semibold">
 							{t("ui.account.settings.recovery_title")}
 						</h3>
-						<p className="text-sm text-muted-foreground">
+						<p className="text-sm text-text-muted">
 							{t("ui.account.settings.recovery_hint")}
 						</p>
 						<PasswordField
@@ -229,22 +228,22 @@ export default function AccountSettings(): ReactNode {
 					</form>
 					{newKey !== null && (
 						<div className="flex flex-col gap-4">
-							<p
-								role="note"
-								className="rounded-lg border border-destructive p-3 text-sm"
+							<Notice
+								tone="warning"
+								title={t("ui.account.recovery.warning_title")}
 							>
 								{t("ui.account.settings.recovery_made")}
-							</p>
+							</Notice>
 							<RecoveryKeyBox value={newKey} />
 						</div>
 					)}
 				</>
 			)}
 			<FailureNote id="settings-account-error" failure={failure} />
-			<p role="status" className="text-sm text-muted-foreground">
+			<p role="status" className="text-sm text-text-muted">
 				{saved === "idle" ? t("ui.account.settings.idle_saved") : ""}
 				{saved === "password" ? t("ui.account.settings.password_saved") : ""}
 			</p>
-		</section>
+		</SettingsSection>
 	);
 }

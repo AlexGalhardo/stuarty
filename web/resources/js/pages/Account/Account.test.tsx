@@ -167,3 +167,41 @@ describe("the recovery key step", () => {
 		expect(renderStep(null)).not.toContain("former-folder");
 	});
 });
+
+describe("the first-run steps and the confirmation of the key", () => {
+	const stepMessages = {
+		...messages,
+		"ui.account.steps.create": "Create account",
+		"ui.account.steps.key": "Keep the key",
+		"ui.account.steps.signin": "Sign in",
+		"ui.account.steps.done": "Done",
+		"ui.account.recovery.continue": "Continue to sign in",
+		"ui.account.recovery.saved": "I saved my recovery key",
+	};
+
+	function inSteps(node: React.ReactNode): string {
+		return renderToString(
+			<I18nProvider messages={stepMessages} locale="en" locales={["en"]}>
+				{node}
+			</I18nProvider>,
+		);
+	}
+
+	test("the creation is the current step and the other two wait", () => {
+		const html = inSteps(<Create />);
+		expect(html.match(/data-state="current"/g)).toHaveLength(1);
+		expect(html.match(/data-state="todo"/g)).toHaveLength(2);
+		expect(html).toContain('aria-current="step"');
+	});
+
+	test("the key step has the first step done with its word, and the way on is disabled until the box is ticked", () => {
+		const html = inSteps(<RecoveryKey value="ABCD-EFGH" formerFolder={null} />);
+		expect(html).toContain('data-state="done"');
+		expect(html).toContain("Done");
+		expect(html).toContain('data-testid="recovery-key"');
+		expect(html).toMatch(/<button[^>]*disabled[^>]*>.*Continue to sign in/s);
+		expect(html).toMatch(
+			/<input[^>]*id="recovery-saved"[^>]*type="checkbox"|<input[^>]*type="checkbox"[^>]*id="recovery-saved"/,
+		);
+	});
+});

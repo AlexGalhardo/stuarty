@@ -1,6 +1,8 @@
 import { Head } from "@inertiajs/react";
+import { LockOpen } from "lucide-react";
 import { type FormEvent, type ReactNode, useState } from "react";
 
+import { AuthCard } from "@/components/AuthCard";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import PasswordField from "@/components/PasswordField";
 import { Button } from "@/components/ui/button";
@@ -40,13 +42,14 @@ export default function SignIn(): ReactNode {
 	return (
 		<>
 			<Head title={t("ui.account.signin.title")} />
-			<div className="mx-auto flex max-w-sm flex-col gap-6">
-				<h1 className="text-2xl font-semibold">
-					{t("ui.account.signin.title")}
-				</h1>
+			<AuthCard
+				title={t("ui.account.signin.title")}
+				description={t("ui.account.signin.intro")}
+				footer={t("ui.account.footer")}
+			>
 				<form
 					onSubmit={(event) => void submit(event)}
-					className="flex flex-col gap-4 rounded-xl border bg-card p-5 text-card-foreground"
+					className="flex flex-col gap-4"
 				>
 					<div className="flex flex-col gap-2">
 						<Label htmlFor="signin-identity">{t("ui.account.identity")}</Label>
@@ -70,18 +73,20 @@ export default function SignIn(): ReactNode {
 						autoComplete="current-password"
 					/>
 					<FailureNote id="signin-error" failure={failure} />
-					<div>
-						<Button type="submit" disabled={busy}>
-							{t("ui.account.signin.submit")}
-						</Button>
-					</div>
+					<Button type="submit" disabled={busy}>
+						<LockOpen aria-hidden="true" />
+						{t("ui.account.signin.submit")}
+					</Button>
 				</form>
 				<p className="text-sm">
-					<a className="underline" href="/account/recover">
+					<a
+						className="underline underline-offset-4 max-md:inline-block max-md:py-3"
+						href="/account/recover"
+					>
 						{t("ui.account.signin.forgot")}
 					</a>
 				</p>
-			</div>
+			</AuthCard>
 		</>
 	);
 }
