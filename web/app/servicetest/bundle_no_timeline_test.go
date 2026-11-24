@@ -56,7 +56,8 @@ func TestBundleOfAProjectWithNoTimelineRoundTrips(t *testing.T) {
 	jobID := strings.TrimSuffix(strings.TrimPrefix(filepath.Base(path), "bundle-r0-"), ".vvbundle")
 
 	f, err := src.svc.ExportFile(ctx, service.ExportFileRequest{JobID: jobID})
-	if err != nil || !strings.HasPrefix(f.DownloadName, "Only-words-") || !strings.HasSuffix(f.DownloadName, ".vvbundle") {
+	if err != nil || !strings.HasPrefix(f.DownloadName, "Only-words-") ||
+		!strings.HasSuffix(f.DownloadName, ".vvbundle") {
 		t.Errorf("ExportFile = %+v, %v; want a download named after the project", f, err)
 	}
 
