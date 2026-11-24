@@ -49,6 +49,28 @@ describe("the destinations of a content kind", () => {
 		]);
 	});
 
+	// The service refuses a video to a blog and a post to a network at scheduling (SDD-020 section 43), whatever
+	// the list of the destination says: the page never offers what the service refuses.
+	test("a blog that accepts video is not offered a video, and a network that publishes text is not offered a post", () => {
+		const videoBlog = [blog("wp", ["text", "video"])];
+		const textNetwork = [network("youtube", ["video", "text"])];
+		const forVideo = destinationsFor("video", [], networks, videoBlog);
+		expect(forVideo.map((d) => [d.id, d.usable, d.blocked])).toEqual([
+			["wp", false, "other_family"],
+		]);
+		const forText = destinationsFor("text", accounts, textNetwork, []);
+		expect(forText.map((d) => [d.id, d.usable, d.blocked])).toEqual([
+			["yt", false, "other_family"],
+		]);
+	});
+
+	test("a blog whose list does not hold text is kept, disabled, with what it takes", () => {
+		const list = destinationsFor("text", [], networks, [blog("wp", ["image"])]);
+		expect(list.map((d) => [d.id, d.usable, d.blocked])).toEqual([
+			["wp", false, "takes"],
+		]);
+	});
+
 	test("an account that is not signed in is not offered, and a network the service does not describe takes nothing", () => {
 		const list = destinationsFor(
 			"video",

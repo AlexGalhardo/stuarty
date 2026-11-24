@@ -3645,6 +3645,8 @@
         "no_targets": "No account yet. Add one to plan where this goes.",
         "cannot_take": "takes {takes}, not {kind}",
         "takes_nothing": "nothing it has told Stuarty about",
+        "post_only_blog": "a post goes only to a blog destination",
+        "video_only_network": "a video goes only to a social network",
         "takes_word": {
           "text": "text",
           "image": "images",

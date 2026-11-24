@@ -427,10 +427,16 @@ export function PublicationEditor({
 					)
 					.join(", ");
 	const reasonOf = (d: Destination): string =>
-		t("ui.publish.editor.cannot_take", {
-			takes: takesWords(d.takes),
-			kind: t(`ui.publish.editor.takes_word.${contentKind}`),
-		});
+		d.blocked === "other_family"
+			? t(
+					contentKind === "text"
+						? "ui.publish.editor.post_only_blog"
+						: "ui.publish.editor.video_only_network",
+				)
+			: t("ui.publish.editor.cannot_take", {
+					takes: takesWords(d.takes),
+					kind: t(`ui.publish.editor.takes_word.${contentKind}`),
+				});
 	const blocked = destinations.filter((d) => !d.usable);
 
 	return (
