@@ -24,7 +24,14 @@ type Record struct {
 	IdleLockMinutes int
 	CreatedMs       int64
 	UpdatedMs       int64
+	// SealVersion is how much of the workspace the account has sealed (SDD-005 section 5.17.4): 0 for an account
+	// made before ADR-0053, whose documents, edit log and asset notes are still clear text until the first unlock
+	// seals them, 1 once everything is sealed. An account is made at 1. Update never changes it.
+	SealVersion int
 }
+
+// SealedAll is the SealVersion of a workspace whose every sealed column is sealed.
+const SealedAll = 1
 
 // Store keeps the record. The implementation is in web/app/store.
 type Store interface {

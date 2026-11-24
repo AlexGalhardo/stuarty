@@ -3,9 +3,11 @@ package store
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/AlexGalhardo/stuarty/service/account"
 
@@ -18,6 +20,10 @@ import (
 type sealRef struct {
 	mu sync.RWMutex
 	s  account.Sealer
+	// lenient is true while the account was made before ADR-0053 and the second stage of sealed columns (sealedCellsV2)
+	// has not been sealed yet: those columns are read as clear text where a value is not sealed (SDD-005 section
+	// 5.17.4). It is set when the store opens an account of seal version 0 and cleared when the version becomes 1.
+	lenient atomic.Bool
 }
 
 func (r *sealRef) get() account.Sealer {
@@ -75,6 +81,32 @@ func sealField(sl account.Sealer, table, column, rowKey, plain string) (string, 
 // openField opens a value of a sealed column.
 func openField(sl account.Sealer, table, column, rowKey, stored string) (string, error) {
 	return sl.Open(table, column, rowKey, stored)
+}
+
+// isLenient says whether the second stage of sealed columns may still hold clear text (SDD-005 section 5.17.4).
+func isLenient(ex database.Executor) bool {
+	if se, ok := ex.(sealedExec); ok {
+		return se.ref.lenient.Load()
+	}
+
+	return false
+}
+
+// sealDoc seals a value of a second-stage column (documents, the edit log, backups, results, asset notes).
+func sealDoc(ex database.Executor, table, column, rowKey, plain string) (string, error) {
+	return sealField(sealerOf(ex), table, column, rowKey, plain)
+}
+
+// openDoc opens a value of a second-stage column. A workspace whose account is of seal version 0 still holds clear
+// text there until the first unlock has sealed it, so a value that does not open as sealed is the clear value; with a
+// locked studio it is still E_LOCKED, never the clear text.
+func openDoc(ex database.Executor, table, column, rowKey, stored string) (string, error) {
+	plain, err := openField(sealerOf(ex), table, column, rowKey, stored)
+	if errors.Is(err, account.ErrUnsealed) && isLenient(ex) {
+		return stored, nil
+	}
+
+	return plain, err
 }
 
 // revKey is the row key of a text revision.

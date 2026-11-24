@@ -175,12 +175,20 @@ func (r projectRepo) Get(ctx context.Context, id string) (service.ProjectRow, er
 	if err != nil {
 		return service.ProjectRow{}, mapNoRows(err)
 	}
-	return service.ProjectRow{ProjectHead: h, Document: []byte(doc), DocSHA256: sha}, nil
+	plain, err := openDoc(r.ex, "timelines", "document", id, doc)
+	if err != nil {
+		return service.ProjectRow{}, err
+	}
+	return service.ProjectRow{ProjectHead: h, Document: []byte(plain), DocSHA256: sha}, nil
 }
 
 func (r projectRepo) Create(ctx context.Context, row service.ProjectRow) error {
 	s := row.Summary
-	_, err := r.ex.ExecContext(
+	doc, err := sealDoc(r.ex, "timelines", "document", row.ID, string(row.Document))
+	if err != nil {
+		return err
+	}
+	_, err = r.ex.ExecContext(
 		ctx,
 		`INSERT INTO timelines
  (id, name, state, revision, schema_version, document, doc_sha256, width, height, fps_num, fps_den,
@@ -192,7 +200,7 @@ func (r projectRepo) Create(ctx context.Context, row service.ProjectRow) error {
 		stateOrActive(row.State),
 		row.Revision,
 		row.SchemaVersion,
-		string(row.Document),
+		doc,
 		row.DocSHA256,
 		s.Width,
 		s.Height,
@@ -225,13 +233,17 @@ func stateOrActive(s service.ProjectState) string {
 
 func (r projectRepo) Commit(ctx context.Context, id string, expected int64, u service.ProjectUpdate) error {
 	s := u.Summary
+	doc, err := sealDoc(r.ex, "timelines", "document", id, string(u.Document))
+	if err != nil {
+		return err
+	}
 	n, err := rowsAffected(r.ex.ExecContext(ctx, `UPDATE timelines SET
  name = ?, schema_version = ?, document = ?, doc_sha256 = ?,
  width = ?, height = ?, fps_num = ?, fps_den = ?, duration_frames = ?,
  track_count = ?, item_count = ?, asset_count = ?, updated_ms = ?,
  resync_floor = COALESCE(?, resync_floor), revision = revision + 1
  WHERE id = ? AND revision = ?`,
-		u.Name, u.SchemaVersion, string(u.Document), u.DocSHA256,
+		u.Name, u.SchemaVersion, doc, u.DocSHA256,
 		s.Width, s.Height, s.FPSNum, s.FPSDen, s.DurationFrames,
 		s.Tracks, s.Items, s.Assets, u.UpdatedMs, u.ResyncFloor, id, expected))
 	if err != nil {

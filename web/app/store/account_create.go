@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -45,6 +46,30 @@ var sealedCells = []cell{
 	{table: "approval_requests", column: "summary", keys: []string{"id"}},
 	{table: "jobs", column: "input", keys: []string{"id"}, filter: jobClearFilter()},
 	{table: "jobs", column: "result", keys: []string{"id"}, filter: jobClearFilter()},
+}
+
+// sealedCellsV2 is the second stage (ADR-0053, SDD-005 section 5.17.2): the documents, the edit log that repeats them,
+// the backups, the idempotency results and the asset notes. An account made by this version seals them from its
+// first row; one made before seals them at its first unlock (sealStage2), and until then they are read as clear text
+// and have no guard.
+var sealedCellsV2 = []cell{
+	{table: "timelines", column: "document", keys: []string{"id"}},
+	{table: "image_documents", column: "document", keys: []string{"id"}},
+	{table: "templates", column: "document", keys: []string{"id"}},
+	{table: "brand_kits", column: "document", keys: []string{"owner_user_id"}},
+	{table: "operations", column: "ops", keys: []string{"project_id", "revision"}},
+	{table: "operations", column: "inverse", keys: []string{"project_id", "revision"}},
+	{table: "operations", column: "diff", keys: []string{"project_id", "revision"}},
+	{table: "operations", column: "skipped", keys: []string{"project_id", "revision"}},
+	{table: "image_operations", column: "ops", keys: []string{"image_id", "revision"}},
+	{table: "image_operations", column: "inverse", keys: []string{"image_id", "revision"}},
+	{table: "image_operations", column: "diff", keys: []string{"image_id", "revision"}},
+	{table: "image_operations", column: "skipped", keys: []string{"image_id", "revision"}},
+	{table: "image_operations", column: "result", keys: []string{"image_id", "revision"}},
+	{table: "document_backups", column: "document", keys: []string{"id"}},
+	{table: "idempotency_keys", column: "result", keys: []string{"project_id", "actor", "key"}},
+	{table: "asset_info", column: "description", keys: []string{"owner_user_id", "asset_hash"}},
+	{table: "asset_info", column: "rights_note", keys: []string{"owner_user_id", "asset_hash"}},
 }
 
 type cellRow struct {
@@ -126,8 +151,16 @@ func (s *Store) CreateAccount(
 		hook = func(string) error { return nil }
 	}
 
-	return s.db.Tx(ctx, func(dtx *database.Tx) error {
-		sums, err := sealCells(ctx, dtx, sl)
+	err := s.db.Tx(ctx, func(dtx *database.Tx) error {
+		var sums map[string][sha256.Size]byte
+
+		err := withLogOpen(ctx, dtx, func() error {
+			var serr error
+
+			sums, serr = sealCells(ctx, dtx, sl, allSealedCells())
+
+			return serr
+		})
 		if err != nil {
 			return err
 		}
@@ -148,12 +181,68 @@ func (s *Store) CreateAccount(
 			return err
 		}
 
-		if err := verifySealed(ctx, dtx, sl, sums); err != nil {
+		if err := verifySealed(ctx, dtx, sl, sums, allSealedCells()); err != nil {
 			return err
 		}
 
-		return installSealGuards(ctx, dtx)
+		return installSealGuards(ctx, dtx, allSealedCells())
 	})
+	if err != nil {
+		return err
+	}
+
+	// An account made by this version has sealed both stages: nothing is read as clear text any more.
+	s.ref.lenient.Store(false)
+
+	return nil
+}
+
+// allSealedCells is both stages of sealed columns.
+func allSealedCells() []cell { return slices.Concat(sealedCells, sealedCellsV2) }
+
+// logTriggers are the append-only triggers of the two edit logs. Sealing an existing row updates columns they forbid
+// to change, so the sealing drops them and creates them again from the SQL the database holds, inside the one
+// transaction: the log is append-only for every other statement, before and after.
+var logTriggers = []string{"operations_append_only", "image_operations_append_only"}
+
+// withLogOpen runs fn with the append-only triggers of the edit logs dropped, and creates them again.
+func withLogOpen(ctx context.Context, ex database.Executor, fn func() error) error {
+	saved := map[string]string{}
+
+	for _, name := range logTriggers {
+		var sqlText sql.NullString
+
+		err := ex.QueryRowContext(ctx, `SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = ?`, name).Scan(&sqlText)
+		if errors.Is(err, sql.ErrNoRows) || !sqlText.Valid {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		saved[name] = sqlText.String
+	}
+
+	for name := range saved {
+		if _, err := ex.ExecContext(ctx, `DROP TRIGGER `+name); err != nil {
+			return err
+		}
+	}
+
+	if err := fn(); err != nil {
+		return err
+	}
+
+	for _, name := range logTriggers {
+		if text, ok := saved[name]; ok {
+			if _, err := ex.ExecContext(ctx, text); err != nil {
+				return fmt.Errorf("store: put the trigger %s back: %w", name, err)
+			}
+		}
+	}
+
+	return nil
 }
 
 // guardMessage is what a guard raises; sealedExec turns it into account.ErrLocked.
@@ -164,8 +253,8 @@ const guardMessage = "stuarty: a sealed column was written in clear text"
 // reach the database after the creation has sealed everything; the sealing cannot see it, and only the database,
 // which serializes the two, can tell which came first. The guards are in the transaction of the creation, so
 // they exist exactly when the account does.
-func installSealGuards(ctx context.Context, ex database.Executor) error {
-	for _, c := range sealedCells {
+func installSealGuards(ctx context.Context, ex database.Executor, cells []cell) error {
+	for _, c := range cells {
 		when := "NEW." + c.column + " IS NOT NULL AND NEW." + c.column + " <> '' AND substr(NEW." + c.column + ", 1, " +
 			strconv.Itoa(len(account.Prefix)) + ") <> '" + account.Prefix + "'"
 		if c.filter != "" {
@@ -200,23 +289,37 @@ func (s *Store) guardSealedColumns(ctx context.Context) error {
 		return nil
 	}
 
-	var accounts int
-	if err := s.db.QueryRowContext(ctx, `SELECT count(*) FROM accounts`).Scan(&accounts); err != nil {
-		return fmt.Errorf("store: guards: %w", err)
-	}
+	var version int
 
-	if accounts == 0 {
+	err := s.db.QueryRowContext(ctx, `SELECT seal_version FROM accounts WHERE id = 1`).Scan(&version)
+	if errors.Is(err, sql.ErrNoRows) {
+		s.ref.lenient.Store(false)
+
 		return nil
 	}
 
-	return installSealGuards(ctx, s.db)
+	if err != nil {
+		return fmt.Errorf("store: guards: %w", err)
+	}
+
+	// An account of seal version 0 still holds clear text in the second stage: it is read as it is until the first
+	// unlock has sealed it, and the guards of that stage come with the version 1 (SDD-005 section 5.17.4).
+	s.ref.lenient.Store(version < account.SealedAll)
+
+	if version < account.SealedAll {
+		return installSealGuards(ctx, s.db, sealedCells)
+	}
+
+	return installSealGuards(ctx, s.db, allSealedCells())
 }
 
-// sealCells seals every value of every sealed column and returns the digest of each, for the read back.
-func sealCells(ctx context.Context, ex database.Executor, sl account.Sealer) (map[string][sha256.Size]byte, error) {
+// sealCells seals every value of the given sealed columns and returns the digest of each, for the read back.
+func sealCells(
+	ctx context.Context, ex database.Executor, sl account.Sealer, cells []cell,
+) (map[string][sha256.Size]byte, error) {
 	sums := map[string][sha256.Size]byte{}
 
-	for _, c := range sealedCells {
+	for _, c := range cells {
 		rows, err := c.read(ctx, ex)
 		if err != nil {
 			return nil, err
@@ -245,7 +348,8 @@ func sealCells(ctx context.Context, ex database.Executor, sl account.Sealer) (ma
 func clearIndexes(ctx context.Context, ex database.Executor) error {
 	for _, q := range []string{
 		// The index of the files repeats the prompt in its origin column: it is written again without it.
-		`UPDATE asset_search SET origin = COALESCE((
+		// The description is sealed too (ADR-0053): the index keeps none of it, as it keeps none of the prompt.
+		`UPDATE asset_search SET description = '', origin = COALESCE((
   SELECT TRIM(COALESCE(i.source, '') || ' ' || COALESCE(i.provider, '') || ' ' || COALESCE(i.model, '') || ' ' ||
               COALESCE(i.engine, '') || ' ' || COALESCE(i.engine_version, ''))
   FROM asset_info i
@@ -290,10 +394,11 @@ func verifySealed(
 	ex database.Executor,
 	sl account.Sealer,
 	sums map[string][sha256.Size]byte,
+	cells []cell,
 ) error {
 	seen := 0
 
-	for _, c := range sealedCells {
+	for _, c := range cells {
 		rows, err := c.read(ctx, ex)
 		if err != nil {
 			return err

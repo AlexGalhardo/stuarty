@@ -28,13 +28,25 @@ func (r idempotencyRepo) Get(
 	if err != nil {
 		return service.IdempotencyRow{}, mapNoRows(err)
 	}
-	row.Result = json.RawMessage(result)
+	plain, err := openDoc(r.ex, "idempotency_keys", "result", idemKey(row.ProjectID, row.Actor, row.Key), result)
+	if err != nil {
+		return service.IdempotencyRow{}, err
+	}
+	row.Result = json.RawMessage(plain)
 	return row, nil
 }
+
+// idemKey is the row key of the sealed result of an idempotency key (ADR-0053).
+func idemKey(projectID, actor, key string) string { return projectID + "/" + actor + "/" + key }
 
 // Put inserts the row, or replaces one with the same key that has expired.
 // A live row with the key is left alone and ErrExists is returned.
 func (r idempotencyRepo) Put(ctx context.Context, row service.IdempotencyRow) error {
+	result, err := sealDoc(r.ex, "idempotency_keys", "result", idemKey(row.ProjectID, row.Actor, row.Key),
+		string(row.Result))
+	if err != nil {
+		return err
+	}
 	n, err := rowsAffected(r.ex.ExecContext(
 		ctx,
 		`INSERT INTO idempotency_keys
@@ -49,7 +61,7 @@ func (r idempotencyRepo) Put(ctx context.Context, row service.IdempotencyRow) er
 		row.Key,
 		row.RequestHash,
 		row.Revision,
-		string(row.Result),
+		result,
 		row.CreatedMs,
 		row.ExpiresMs,
 	))

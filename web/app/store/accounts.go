@@ -16,7 +16,7 @@ import (
 type accountRepo struct{ ex database.Executor }
 
 const accountColumns = `username, email, kdf, verifier, key_by_password, key_by_recovery, vault_key,
- idle_lock_minutes, created_ms, updated_ms`
+ idle_lock_minutes, created_ms, updated_ms, seal_version`
 
 // Get implements account.Store.
 func (r accountRepo) Get(ctx context.Context) (account.Record, error) {
@@ -27,7 +27,7 @@ func (r accountRepo) Get(ctx context.Context) (account.Record, error) {
 
 	err := r.ex.QueryRowContext(ctx, `SELECT `+accountColumns+` FROM accounts WHERE id = 1`).Scan(
 		&rec.Username, &rec.Email, &kdf, &rec.Verifier, &rec.KeyByPassword, &rec.KeyByRecovery, &rec.VaultKey,
-		&rec.IdleLockMinutes, &rec.CreatedMs, &rec.UpdatedMs)
+		&rec.IdleLockMinutes, &rec.CreatedMs, &rec.UpdatedMs, &rec.SealVersion)
 	if errors.Is(err, sql.ErrNoRows) {
 		return account.Record{}, account.ErrNoAccount
 	}
@@ -51,9 +51,9 @@ func (r accountRepo) Create(ctx context.Context, rec account.Record) error {
 	}
 
 	_, err = r.ex.ExecContext(ctx, `INSERT INTO accounts (id, `+accountColumns+`)
- VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+ VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		rec.Username, rec.Email, string(kdf), rec.Verifier, rec.KeyByPassword, rec.KeyByRecovery, rec.VaultKey,
-		rec.IdleLockMinutes, rec.CreatedMs, rec.UpdatedMs)
+		rec.IdleLockMinutes, rec.CreatedMs, rec.UpdatedMs, account.SealedAll)
 	if err != nil {
 		if existing, gerr := r.Get(ctx); gerr == nil && existing.Username != "" {
 			return account.ErrExists

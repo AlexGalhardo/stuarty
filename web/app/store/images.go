@@ -3,6 +3,8 @@ package store
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
+	"strconv"
 	"strings"
 
 	"github.com/AlexGalhardo/stuarty/service"
@@ -36,11 +38,16 @@ func scanImageHead(sc interface{ Scan(...any) error }, h *service.ImageHead, ext
 }
 
 func (r imageRepo) Create(ctx context.Context, row service.ImageRow) error {
-	_, err := r.ex.ExecContext(ctx,
+	doc, err := sealDoc(r.ex, "image_documents", "document", row.ID, string(row.Document))
+	if err != nil {
+		return err
+	}
+
+	_, err = r.ex.ExecContext(ctx,
 		`INSERT INTO image_documents (`+imageHeadColumns+`, document, doc_sha256)
  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		row.ID, row.Name, boolInt(row.Template), row.Revision, row.SchemaVersion, row.Width, row.Height, row.Layers,
-		row.CreatedMs, row.UpdatedMs, row.CreatedBy, row.OwnerUserID, string(row.Document), row.DocSHA256,
+		row.CreatedMs, row.UpdatedMs, row.CreatedBy, row.OwnerUserID, doc, row.DocSHA256,
 	)
 	if err != nil && strings.Contains(err.Error(), "UNIQUE") {
 		return service.ErrExists
@@ -62,7 +69,12 @@ func (r imageRepo) Get(ctx context.Context, id string) (service.ImageRow, error)
 		return service.ImageRow{}, mapNoRows(err)
 	}
 
-	row.Document = []byte(doc)
+	plain, err := openDoc(r.ex, "image_documents", "document", id, doc)
+	if err != nil {
+		return service.ImageRow{}, err
+	}
+
+	row.Document = []byte(plain)
 
 	return row, nil
 }
@@ -113,10 +125,15 @@ func (r imageRepo) List(ctx context.Context, q service.ImageQuery) ([]service.Im
 }
 
 func (r imageRepo) Commit(ctx context.Context, id string, from int64, u service.ImageUpdate) error {
+	doc, err := sealDoc(r.ex, "image_documents", "document", id, string(u.Document))
+	if err != nil {
+		return err
+	}
+
 	n, err := rowsAffected(r.ex.ExecContext(ctx,
 		`UPDATE image_documents SET name = ?, template = ?, revision = revision + 1, schema_version = ?, document = ?,
  doc_sha256 = ?, width = ?, height = ?, layers = ?, updated_ms = ? WHERE id = ? AND revision = ?`,
-		u.Name, boolInt(u.Template), u.SchemaVersion, string(u.Document), u.DocSHA256, u.Width, u.Height, u.Layers,
+		u.Name, boolInt(u.Template), u.SchemaVersion, doc, u.DocSHA256, u.Width, u.Height, u.Layers,
 		u.UpdatedMs, id, from,
 	))
 	if err != nil {
@@ -133,12 +150,63 @@ func (r imageRepo) Commit(ctx context.Context, id string, from int64, u service.
 const imageOpColumns = `image_id, revision, kind, actor, base_revision, target_revision, at_ms, ops, inverse, diff, skipped,
  doc_sha256, closed_by, idempotency_key, request_hash, result`
 
+// opKey is the row key of an entry of an edit log: it binds the sealed columns to their document and revision, so
+// a row copied to another revision or another document does not open (ADR-0053).
+func opKey(id string, revision int64) string { return id + "/" + strconv.FormatInt(revision, 10) }
+
+// sealNullable seals a nullable column: no value stays NULL, so the absence of a value is still readable.
+func sealNullable(ex database.Executor, table, column, key string, v json.RawMessage) (any, error) {
+	if len(v) == 0 {
+		return nil, nil
+	}
+
+	return sealDoc(ex, table, column, key, string(v))
+}
+
+// openNullable opens a nullable column that was read as a NullString.
+func openNullable(ex database.Executor, table, column, key string, v sql.NullString) (json.RawMessage, error) {
+	if !v.Valid {
+		return nil, nil
+	}
+
+	plain, err := openDoc(ex, table, column, key, v.String)
+	if err != nil {
+		return nil, err
+	}
+
+	return json.RawMessage(plain), nil
+}
+
 func (r imageRepo) AppendOp(ctx context.Context, op service.ImageOpRow) error {
-	_, err := r.ex.ExecContext(ctx,
+	const table = "image_operations"
+
+	key := opKey(op.ImageID, op.Revision)
+	cols := make([]string, 3)
+
+	for i, v := range []struct{ column, plain string }{
+		{"ops", string(op.Ops)}, {"inverse", string(op.Inverse)}, {"diff", string(op.Diff)},
+	} {
+		var err error
+		if cols[i], err = sealDoc(r.ex, table, v.column, key, v.plain); err != nil {
+			return err
+		}
+	}
+
+	skipped, err := sealNullable(r.ex, table, "skipped", key, op.Skipped)
+	if err != nil {
+		return err
+	}
+
+	result, err := sealNullable(r.ex, table, "result", key, op.Result)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.ex.ExecContext(ctx,
 		`INSERT INTO image_operations (`+imageOpColumns+`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		op.ImageID, op.Revision, string(op.Kind), op.Actor, op.BaseRevision, op.TargetRevision, op.AtMs, string(op.Ops),
-		string(op.Inverse), string(op.Diff), nullJSON(op.Skipped), op.DocSHA256, op.ClosedBy, op.IdempotencyKey,
-		nullString(op.RequestHash), nullJSON(op.Result),
+		op.ImageID, op.Revision, string(op.Kind), op.Actor, op.BaseRevision, op.TargetRevision, op.AtMs, cols[0],
+		cols[1], cols[2], skipped, op.DocSHA256, op.ClosedBy, op.IdempotencyKey,
+		nullString(op.RequestHash), result,
 	)
 	if err != nil && strings.Contains(err.Error(), "UNIQUE") {
 		return service.ErrExists
@@ -147,7 +215,7 @@ func (r imageRepo) AppendOp(ctx context.Context, op service.ImageOpRow) error {
 	return err
 }
 
-func scanImageOp(sc interface{ Scan(...any) error }) (service.ImageOpRow, error) {
+func scanImageOp(ex database.Executor, sc interface{ Scan(...any) error }) (service.ImageOpRow, error) {
 	var (
 		op                            service.ImageOpRow
 		kind, ops, inverse, diff      string
@@ -161,9 +229,31 @@ func scanImageOp(sc interface{ Scan(...any) error }) (service.ImageOpRow, error)
 		return service.ImageOpRow{}, err
 	}
 
-	op.Kind, op.Ops, op.Inverse, op.Diff = service.OperationKind(kind), []byte(ops), []byte(inverse), []byte(diff)
+	const table = "image_operations"
+
+	rk := opKey(op.ImageID, op.Revision)
+	plain := [3]string{ops, inverse, diff}
+
+	for i, column := range []string{"ops", "inverse", "diff"} {
+		var oerr error
+		if plain[i], oerr = openDoc(ex, table, column, rk, plain[i]); oerr != nil {
+			return service.ImageOpRow{}, oerr
+		}
+	}
+
+	var oerr error
+
+	if op.Skipped, oerr = openNullable(ex, table, "skipped", rk, skipped); oerr != nil {
+		return service.ImageOpRow{}, oerr
+	}
+
+	if op.Result, oerr = openNullable(ex, table, "result", rk, result); oerr != nil {
+		return service.ImageOpRow{}, oerr
+	}
+
+	op.Kind, op.Ops, op.Inverse, op.Diff = service.OperationKind(kind), []byte(plain[0]), []byte(plain[1]), []byte(plain[2])
 	op.TargetRevision, op.ClosedBy, op.IdempotencyKey = ptrInt64(target), ptrInt64(closed), ptrString(key)
-	op.Skipped, op.Result, op.RequestHash = rawJSON(skipped), rawJSON(result), reqHash.String
+	op.RequestHash = reqHash.String
 
 	return op, nil
 }
@@ -190,7 +280,7 @@ func (r imageRepo) OpsPage(ctx context.Context, id string, revision int64, limit
 	var out []service.ImageOpRow
 
 	for rows.Next() {
-		op, err := scanImageOp(rows)
+		op, err := scanImageOp(r.ex, rows)
 		if err != nil {
 			return nil, err
 		}
@@ -214,7 +304,7 @@ func (r imageRepo) LastOpen(
 		args = append(args, string(k))
 	}
 
-	op, err := scanImageOp(r.ex.QueryRowContext(ctx,
+	op, err := scanImageOp(r.ex, r.ex.QueryRowContext(ctx,
 		`SELECT `+imageOpColumns+` FROM image_operations
  WHERE image_id = ? AND actor = ? AND revision > 1 AND closed_by IS NULL AND kind IN (`+strings.Join(marks, ",")+`)
  ORDER BY revision DESC LIMIT 1`, args...))
@@ -253,7 +343,7 @@ func (r imageRepo) CloseOpenRedo(ctx context.Context, id, actor string, by int64
 }
 
 func (r imageRepo) ByKey(ctx context.Context, id, actor, key string) (service.ImageOpRow, error) {
-	op, err := scanImageOp(r.ex.QueryRowContext(ctx,
+	op, err := scanImageOp(r.ex, r.ex.QueryRowContext(ctx,
 		`SELECT `+imageOpColumns+` FROM image_operations WHERE image_id = ? AND actor = ? AND idempotency_key = ?`,
 		id, actor, key))
 	if err != nil {
