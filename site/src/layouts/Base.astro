@@ -47,8 +47,9 @@ const {
 const t = ui;
 const fullTitle = title.includes(site.name) ? title : `${title} — ${site.name}`;
 const groups = getNavGroups(section);
-// The version beside the logo is the latest release at build time, never a literal.
-const { version } = await latestRelease();
+// The version beside the logo is the latest release at build time; when the lookup failed the badge shows no version.
+const release = await latestRelease();
+const version = release.confirmed ? release.version : undefined;
 ---
 
 <!doctype html>

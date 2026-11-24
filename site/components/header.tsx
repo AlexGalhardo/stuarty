@@ -75,7 +75,7 @@ const HEADER_CLASS: Record<HeaderVariant, string> = {
 		"fixed inset-x-0 top-0 z-40 h-14 border-b border-fg/10 bg-bg/70 backdrop-blur-xl supports-[backdrop-filter]:bg-bg/55",
 };
 
-export function Header({ groups, version, variant = "docs" }: { groups: NavGroup[]; version: string; variant?: HeaderVariant }) {
+export function Header({ groups, version, variant = "docs" }: { groups: NavGroup[]; version?: string; variant?: HeaderVariant }) {
 	return (
 		<Providers>
 			<header className={HEADER_CLASS[variant]} data-variant={variant} data-site-chrome>

@@ -12,7 +12,8 @@ export type Os = "windows" | "macos" | "linux";
 
 export type Download = { os: Os; label: string; href: string; direct: boolean };
 
-export type LatestRelease = { version: string; tag: string; url: string; downloads: Download[] };
+/** `confirmed` is false on the committed fallback: its version may be old, so it is never shown as the current one. */
+export type LatestRelease = { version: string; tag: string; url: string; downloads: Download[]; confirmed: boolean };
 
 const REPO = "AlexGalhardo/stuarty";
 const LATEST_PAGE = `https://github.com/${REPO}/releases/latest`;
@@ -42,7 +43,7 @@ export function pickDownloads(tag: string, assets: Asset[]): Download[] {
 }
 
 function fallback(): LatestRelease {
-	return { version: FALLBACK_TAG.replace(/^v/, ""), tag: FALLBACK_TAG, url: LATEST_PAGE, downloads: pickDownloads(FALLBACK_TAG, []) };
+	return { version: FALLBACK_TAG.replace(/^v/, ""), tag: FALLBACK_TAG, url: LATEST_PAGE, downloads: pickDownloads(FALLBACK_TAG, []), confirmed: false };
 }
 
 let cached: Promise<LatestRelease> | undefined;
@@ -66,6 +67,7 @@ export function latestRelease(): Promise<LatestRelease> {
 				tag: body.tag_name,
 				url: typeof body.html_url === "string" ? body.html_url : LATEST_PAGE,
 				downloads: pickDownloads(body.tag_name, assets),
+				confirmed: true,
 			};
 		} catch {
 			return fallback();
