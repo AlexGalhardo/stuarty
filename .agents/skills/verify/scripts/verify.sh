@@ -130,7 +130,9 @@ elif [ -n "$go_files" ]; then
 		[ "$m" = . ] || tag="-$(echo "$m" | tr '/' '-')"
 		step "go-build$tag" go -C "$m" build ./...
 		step "go-vet$tag" go -C "$m" vet $pkgs
-		step "go-test$tag" go -C "$m" test -count=1 $pkgs
+		# engine/export and web/contract run past go test's 10 minute default on a loaded machine (VV-270, VV-277):
+		# the limit is a variable, and a run that hits it is a timeout, not a defect of the code.
+		step "go-test$tag" go -C "$m" test -count=1 -timeout "${VERIFY_GO_TEST_TIMEOUT:-40m}" $pkgs
 		if command -v golangci-lint >/dev/null 2>&1; then step "golangci$tag" bash -c "cd '$m' && golangci-lint run $pkgs"; fi
 	done
 fi
