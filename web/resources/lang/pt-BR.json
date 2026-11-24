@@ -3124,7 +3124,7 @@
         "not_encrypted_title": "O que não é cifrado",
         "title": "Crie a sua conta",
         "intro": "Seus textos, briefings, conversas, publicações e credenciais são cifrados com uma chave que só fica na memória enquanto você está conectado. Com o Stuarty trancado, nenhuma página, comando ou agente lê isso.",
-        "not_encrypted": "Ainda não cifrados: os arquivos das suas notas de memória, prompts e skills, seus arquivos de mídia, os nomes de projetos e arquivos e as palavras dentro de uma timeline ou imagem. Quem conseguir abrir esta pasta no disco consegue ler isso.",
+        "not_encrypted": "Ainda não cifrados: seus arquivos de mídia, os nomes de projetos e arquivos e as palavras dentro de uma timeline ou imagem. Quem conseguir abrir esta pasta no disco consegue ler isso. Suas notas de memória, prompts e skills são cifrados; para editar uma skill com outra ferramenta, exporte-a antes.",
         "submit": "Criar conta"
       },
       "recovery": {
