@@ -79,7 +79,8 @@ func TestRecordingEndToEndWithTheRealHelper(t *testing.T) {
 
 	began := time.Now()
 
-	time.Sleep(time.Duration(seconds) * time.Second)
+	// the recorded duration is what is under test, so the test waits for exactly that long
+	<-time.After(time.Duration(seconds) * time.Second)
 
 	if _, err := m.svc.RecordingStop(m.as(agent), service.RecordingRef{ID: rec.ID}); err != nil {
 		t.Fatalf("RecordingStop: %v", err)
@@ -102,19 +103,14 @@ func TestRecordingEndToEndWithTheRealHelper(t *testing.T) {
 
 	var placed *service.EditResult
 
-	deadline := time.Now().Add(30 * time.Second)
-
-	for {
+	pollUntil(30*time.Second, func() bool {
 		placed, err = m.svc.RecordingPlace(m.as(agent), service.RecordingPlaceRequest{ID: rec.ID})
-		if err == nil {
-			break
-		}
 
-		if code(err) != "E_ASSET_NOT_READY" || time.Now().After(deadline) {
-			t.Fatalf("RecordingPlace: %v", err)
-		}
+		return err == nil || code(err) != "E_ASSET_NOT_READY"
+	})
 
-		time.Sleep(100 * time.Millisecond)
+	if err != nil {
+		t.Fatalf("RecordingPlace: %v", err)
 	}
 
 	pg, err := m.svc.ProjectGet(m.as(agent), service.ProjectGetRequest{ProjectID: project, Detail: "document"})
@@ -142,26 +138,22 @@ func TestRecordingEndToEndWithTheRealHelper(t *testing.T) {
 func waitRecording(t *testing.T, m *mediaEnv, id, want string) *service.Recording {
 	t.Helper()
 
-	deadline := time.Now().Add(60 * time.Second)
+	var rec *service.Recording
 
-	for {
-		rec, err := m.svc.RecordingGet(personCtx(), service.RecordingRef{ID: id})
+	pollUntil(60*time.Second, func() bool {
+		var err error
+
+		rec, err = m.svc.RecordingGet(personCtx(), service.RecordingRef{ID: id})
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if rec.State == want {
-			return rec
-		}
+		return rec.State == want || rec.State == "failed" || rec.State == "cancelled"
+	})
 
-		if rec.State == "failed" || rec.State == "cancelled" {
-			t.Fatalf("recording %s is %s, want %s: %+v", id, rec.State, want, rec.Error)
-		}
-
-		if time.Now().After(deadline) {
-			t.Fatalf("recording %s is %s, want %s", id, rec.State, want)
-		}
-
-		time.Sleep(50 * time.Millisecond)
+	if rec.State != want {
+		t.Fatalf("recording %s is %s, want %s: %+v", id, rec.State, want, rec.Error)
 	}
+
+	return rec
 }

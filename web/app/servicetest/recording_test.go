@@ -147,15 +147,11 @@ func (r *recEnv) start(t *testing.T, project string) *service.Recording {
 	t.Cleanup(func() {
 		s.end(capturehost.Lost{Err: capturehost.ErrLost})
 
-		deadline := time.Now().Add(5 * time.Second)
+		pollUntil(5*time.Second, func() bool {
+			open, oerr := r.store.Recordings().Open(context.Background())
 
-		for time.Now().Before(deadline) {
-			if open, oerr := r.store.Recordings().Open(context.Background()); oerr == nil && len(open) == 0 {
-				return
-			}
-
-			time.Sleep(10 * time.Millisecond)
-		}
+			return oerr == nil && len(open) == 0
+		})
 	})
 
 	return rec
@@ -164,23 +160,44 @@ func (r *recEnv) start(t *testing.T, project string) *service.Recording {
 func (r *recEnv) waitState(t *testing.T, id, want string) *service.Recording {
 	t.Helper()
 
-	deadline := time.Now().Add(10 * time.Second)
+	var rec *service.Recording
 
-	for {
-		rec, err := r.svc.RecordingGet(personCtx(), service.RecordingRef{ID: id})
+	pollUntil(10*time.Second, func() bool {
+		var err error
+
+		rec, err = r.svc.RecordingGet(personCtx(), service.RecordingRef{ID: id})
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if rec.State == want {
-			return rec
+		return rec.State == want
+	})
+
+	if rec.State != want {
+		t.Fatalf("recording %s is %s, want %s", id, rec.State, want)
+	}
+
+	return rec
+}
+
+// pollUntil calls cond every few milliseconds until it holds or the time is up, and tells which.
+func pollUntil(within time.Duration, cond func() bool) bool {
+	tick := time.NewTicker(10 * time.Millisecond)
+	defer tick.Stop()
+
+	limit := time.NewTimer(within)
+	defer limit.Stop()
+
+	for {
+		if cond() {
+			return true
 		}
 
-		if time.Now().After(deadline) {
-			t.Fatalf("recording %s is %s, want %s", id, rec.State, want)
+		select {
+		case <-tick.C:
+		case <-limit.C:
+			return cond()
 		}
-
-		time.Sleep(10 * time.Millisecond)
 	}
 }
 
@@ -246,19 +263,14 @@ func TestRecordingRecordStopConfirmAndPlace(t *testing.T) {
 	// the asset becomes ready and joins the document; then one batch places it
 	var placed *service.EditResult
 
-	deadline := time.Now().Add(10 * time.Second)
-
-	for {
+	pollUntil(10*time.Second, func() bool {
 		placed, err = r.svc.RecordingPlace(agentCtx, service.RecordingPlaceRequest{ID: rec.ID})
-		if err == nil {
-			break
-		}
 
-		if code(err) != "E_ASSET_NOT_READY" || time.Now().After(deadline) {
-			t.Fatalf("RecordingPlace: %v", err)
-		}
+		return err == nil || code(err) != "E_ASSET_NOT_READY"
+	})
 
-		time.Sleep(20 * time.Millisecond)
+	if err != nil {
+		t.Fatalf("RecordingPlace: %v", err)
 	}
 
 	if !placed.Applied || len(placed.Created) == 0 {
@@ -765,22 +777,20 @@ func TestRecordingShowsTheClockOfTheHelperWhileItRuns(t *testing.T) {
 
 	r.cap.last().events <- capturehost.Progress{ElapsedMS: 3000, Frames: 90, Dropped: 2, Bytes: 5000}
 
-	deadline := time.Now().Add(5 * time.Second)
+	var got *service.Recording
 
-	for {
-		got, err := r.svc.RecordingGet(r.as(agent), service.RecordingRef{ID: rec.ID})
+	shown := pollUntil(5*time.Second, func() bool {
+		var err error
+
+		got, err = r.svc.RecordingGet(r.as(agent), service.RecordingRef{ID: rec.ID})
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if got.State == "recording" && got.DurationMS == 3000 && got.Frames == 90 && got.Dropped == 2 {
-			return
-		}
+		return got.State == "recording" && got.DurationMS == 3000 && got.Frames == 90 && got.Dropped == 2
+	})
 
-		if time.Now().After(deadline) {
-			t.Fatalf("the live view never showed the progress: %+v", got)
-		}
-
-		time.Sleep(10 * time.Millisecond)
+	if !shown {
+		t.Fatalf("the live view never showed the progress: %+v", got)
 	}
 }

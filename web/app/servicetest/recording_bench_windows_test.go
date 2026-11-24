@@ -89,7 +89,8 @@ func TestCaptureNFR067(t *testing.T) {
 
 	t.Logf("recording %s: %dx%d at %d fps with %s", rec.ID, rec.Width, rec.Height, rec.FPS, rec.Encoder)
 
-	time.Sleep(time.Duration(seconds) * time.Second)
+	// the recorded duration is what is under test, so the test waits for exactly that long
+	<-time.After(time.Duration(seconds) * time.Second)
 
 	if _, err := m.svc.RecordingStop(personCtx(), service.RecordingRef{ID: rec.ID}); err != nil {
 		t.Fatal(err)

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -43,17 +44,17 @@ func fakeChild() {
 
 	switch mode {
 	case "noready":
-		time.Sleep(time.Minute)
+		hang()
 
 		return
 	case "badversion":
 		say(`{"type":"ready","v":2,"helper":"x","os":"windows","display":true,"window":true}`)
-		time.Sleep(time.Minute)
+		hang()
 
 		return
 	case "garbageready":
 		say("hello")
-		time.Sleep(time.Minute)
+		hang()
 
 		return
 	}
@@ -83,6 +84,13 @@ func fakeChild() {
 	}
 }
 
+// hang blocks until the host kills the process: a signal handler keeps the runtime from reporting a deadlock.
+func hang() {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	<-c
+}
+
 func start(mode string, in *bufio.Reader) {
 	switch mode {
 	case "helpererror":
@@ -90,7 +98,7 @@ func start(mode string, in *bufio.Reader) {
 
 		return
 	case "hang":
-		time.Sleep(time.Minute)
+		hang()
 
 		return
 	}
@@ -100,15 +108,15 @@ func start(mode string, in *bufio.Reader) {
 	switch mode {
 	case "malformed":
 		say("this is not json")
-		time.Sleep(time.Minute)
+		hang()
 	case "oversize":
 		say(strings.Repeat("x", 70000))
-		time.Sleep(time.Minute)
+		hang()
 	case "unknown":
 		say(`{"type":"surprise"}`)
-		time.Sleep(time.Minute)
+		hang()
 	case "silent":
-		time.Sleep(time.Minute)
+		hang()
 	case "exit":
 		_, _ = os.Stderr.WriteString("boom: the encoder died\n")
 		os.Exit(1)
@@ -122,7 +130,6 @@ func start(mode string, in *bufio.Reader) {
 					i*1000,
 				),
 			)
-			time.Sleep(50 * time.Millisecond)
 		}
 
 		for {
@@ -266,8 +273,6 @@ func TestStartAndStopRecordsAndFinishes(t *testing.T) {
 	if st.Width != 1920 || st.Height != 1080 || st.FPS != 30 {
 		t.Errorf("started = %+v", st)
 	}
-
-	time.Sleep(300 * time.Millisecond)
 
 	if err := h.Stop(); err != nil {
 		t.Fatal(err)
