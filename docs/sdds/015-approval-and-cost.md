@@ -165,6 +165,14 @@ A permission request of the hosted agent (SDD-017 section 7) and an approval req
 - **Surfaces.** `GET /inbox`, `inbox:list`, and the stream `GET /inbox/events`. The stream has one event name, `inbox.snapshot`, whose data is the result of `InboxList` for the caller: it is sent when the stream opens and again, whole, each time a request is added or settled and the caller's list changed. It counts as one stream of the process and of the key, is revalidated like the others, and tells a member only what that member's own read tells.
 - **Untrusted text.** `agent`, `skill`, `tool`, `summary`, `item` and `destination` are text an agent wrote: strings, never markup, and the result carries the notice of SDD-007 section 8.
 
+### 4.2 The approval item of the Approvals page (epic 82)
+
+The Approvals page keeps its own queue (`GET /approvals` and its stream) and decides there, with `ApprovalDecide`; it does not read the unified list for the queue. Each request is drawn as an item, in a labelled list: what happens (the summary, as text), the item, where it goes, the cost, whether it can be undone, the tool (the kind of the job), the skill, the path to publication, who asked and when, then **Approve** and **Reject** at the same size, shown enabled only to a privileged person session (the service decides on every call).
+
+- **Where each member comes from.** What, tool, cost, actor and time are the request's. The undo word and the skill are the `undo` and `skill` of the row of the same approval in `InboxList` (`source_id` is the request id), read once and again when the set of requests changes, never by a stream of its own. The item, the state and the path are the target of `GET /publications` whose `approval_id` is the request: its publication title and its state, drawn with the state badge of the Publish page and a link to it. For a blog post the words and the text come from the check of the post (`GET /projects/{id}/texts/{item}/post`), shown as an excerpt, the word count and the slug as the address, with no media preview.
+- **"Not reported".** A member whose source did not answer, or has nothing, reads "Not reported": no undo, skill, item or path is guessed. The undo word is the service's and an unknown word reads "Not verified", never "Can be undone" (D-140).
+- **A queue not read is not an empty queue.** Until the first answer the page says it is reading; if the read failed, it shows the failure and does not say that nothing is waiting.
+
 ## 5. Jobs: the state `waiting_approval`
 
 A job kind that needs approval is registered at start-up in `service.Options.JobKinds`, a list of `ApprovableKind`:
