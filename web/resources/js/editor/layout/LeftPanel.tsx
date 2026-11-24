@@ -53,7 +53,7 @@ export default function LeftPanel(): ReactNode {
 									value={def.id}
 									aria-label={t(def.labelKey)}
 									data-rail-tab={def.id}
-									className="size-8 flex-none px-0 group-data-vertical/tabs:w-8 group-data-vertical/tabs:justify-center data-active:bg-accent data-active:shadow-none group-data-vertical/tabs:after:right-auto group-data-vertical/tabs:after:-left-1 after:bg-ring data-active:after:opacity-100 dark:data-active:bg-accent"
+									className="size-8 flex-none px-0 group-data-vertical/tabs:w-8 group-data-vertical/tabs:justify-center data-active:bg-surface-selected data-active:shadow-none group-data-vertical/tabs:after:right-auto group-data-vertical/tabs:after:-left-1 after:bg-ring data-active:after:opacity-100 dark:data-active:bg-surface-selected"
 								>
 									<def.icon aria-hidden="true" />
 								</TabsTrigger>

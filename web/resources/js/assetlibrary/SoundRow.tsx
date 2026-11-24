@@ -80,7 +80,7 @@ export function Waveform({
 				aria-label={label}
 				data-testid="waveform"
 				data-state={state}
-				className="h-12 w-full rounded bg-muted text-primary"
+				className="h-12 w-full rounded bg-muted text-accent-text"
 			/>
 			{state === "missing" && (
 				<span className="text-xs text-muted-foreground">
@@ -127,7 +127,7 @@ export function SoundRow({
 				<span>{sizeText(asset.bytes, locale)}</span>
 				<span>{t(`ui.assets.origin.${asset.origin?.kind ?? "imported"}`)}</span>
 				{asset.reusable === true && (
-					<span className="rounded bg-primary/10 px-1 text-primary">
+					<span className="rounded bg-accent-soft px-1 text-accent-text">
 						{t("ui.assets.reusable_badge")}
 					</span>
 				)}

@@ -373,7 +373,7 @@ export default function KeyframesSection({
 										data-selected={isPicked ? "" : undefined}
 										className={cn(
 											"flex flex-wrap items-start gap-1 rounded-md px-1",
-											isPicked && "bg-accent",
+											isPicked && "bg-surface-selected",
 										)}
 									>
 										<Button

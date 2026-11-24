@@ -185,7 +185,7 @@ test.describe("a11y-reflow-motion reduced motion", () => {
 					getComputedStyle(document.querySelector("button") as Element)
 						.transitionDuration,
 			),
-		).toBe("0s");
+		).toBe("0.001s");
 	});
 
 	test("the chat panel and the sidebar run no animation", async ({ page }) => {

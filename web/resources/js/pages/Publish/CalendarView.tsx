@@ -153,7 +153,7 @@ export function CalendarView({
 							<h3
 								className={cn(
 									"mb-1 text-xs font-medium",
-									day.key === now && "text-primary",
+									day.key === now && "text-accent-text",
 								)}
 								aria-label={dayName.format(date)}
 							>

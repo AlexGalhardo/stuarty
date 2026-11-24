@@ -21,7 +21,7 @@ export function TargetResult({ target }: { target: Target }): ReactNode {
 						href={link}
 						target="_blank"
 						rel="noreferrer noopener"
-						className="text-primary underline underline-offset-2"
+						className="text-accent-text underline underline-offset-2"
 						data-testid="target-url"
 					>
 						<UntrustedText>{target.url}</UntrustedText>
