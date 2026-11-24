@@ -1,3 +1,4 @@
+import { router } from "@inertiajs/react";
 import { type ReactNode, useState } from "react";
 
 import { type Failure, failureOf } from "@/components/Failure";
@@ -54,6 +55,8 @@ export default function NewProject({
 
 	const change = (next: boolean): void => {
 		onOpenChange(next);
+		// A project made without its first item is in the workspace: the list behind the dialog reads it again.
+		if (!next && created !== null) router.reload({ only: ["projects"] });
 		if (!next) {
 			setStep("kind");
 			setChoice(null);
