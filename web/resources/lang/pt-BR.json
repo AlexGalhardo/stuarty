@@ -3211,6 +3211,7 @@
       "ended_flood": "o agente falou demais",
       "ended_shutdown": "o Stuarty foi fechado",
       "ended_start_failed": "não conseguiu iniciar",
+      "ended_locked": "o Stuarty foi bloqueado",
       "conversation": "Conversa com o agente",
       "composer_label": "Mensagem para o agente",
       "composer_hint": "Enter envia, Shift+Enter pula uma linha.",

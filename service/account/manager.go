@@ -76,6 +76,7 @@ type Manager struct {
 	lastActive time.Time
 	failures   []time.Time
 	onLock     []func()
+	beforeLock []func()
 }
 
 // NewManager returns a Manager that has not read the record; call Load.
@@ -175,6 +176,16 @@ func (m *Manager) Touch() {
 func (m *Manager) OnLock(fn func()) {
 	m.mu.Lock()
 	m.onLock = append(m.onLock, fn)
+	m.mu.Unlock()
+}
+
+// BeforeLock registers a function that runs each time the studio is about to lock, while the keys are still in
+// memory: what must be saved with them (the transcript of a hosted agent session is sealed) is saved here. It runs
+// on every Lock of an unlocked account, outside the lock of the Manager, so it may use the store; it must not call
+// Lock.
+func (m *Manager) BeforeLock(fn func()) {
+	m.mu.Lock()
+	m.beforeLock = append(m.beforeLock, fn)
 	m.mu.Unlock()
 }
 
@@ -536,6 +547,22 @@ func (m *Manager) unlock(rec Record, keys Keys) error {
 
 // Lock wipes the keys and runs the OnLock functions. It is a no-op when nothing is unlocked.
 func (m *Manager) Lock() {
+	m.mu.Lock()
+
+	if m.state != StateUnlocked {
+		m.mu.Unlock()
+
+		return
+	}
+
+	before := slices.Clone(m.beforeLock)
+	m.mu.Unlock()
+
+	// The keys are still there: what needs them is saved now, with the studio open.
+	for _, fn := range before {
+		fn()
+	}
+
 	m.mu.Lock()
 
 	if m.state != StateUnlocked {

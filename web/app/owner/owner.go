@@ -17,6 +17,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/AlexGalhardo/stuarty/core/chat"
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/lint"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
@@ -352,6 +353,12 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 			Store: st.Chat(), Tokens: o.agentTokens, MCPURL: o.MCPURL, Workspace: string(o.Dir), Now: cfg.Now,
 			Version: o.version, Log: cfg.Log,
 		})
+
+		// A session whose tools would all answer E_LOCKED ends when the studio locks, and its transcript is
+		// saved first, while the key that seals it is still in memory (epic 57 review).
+		if o.Account != nil {
+			o.Account.BeforeLock(func() { o.Agents.EndAll(chat.EndLocked) })
+		}
 	}
 
 	rates, err := rateLimitsFromEnv(cfg.Getenv, o.mode == config.ModeNetwork)

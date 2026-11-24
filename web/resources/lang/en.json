@@ -3211,6 +3211,7 @@
       "ended_flood": "the agent said too much",
       "ended_shutdown": "Stuarty was closed",
       "ended_start_failed": "it could not start",
+      "ended_locked": "Stuarty was locked",
       "conversation": "Conversation with the agent",
       "composer_label": "Message to the agent",
       "composer_hint": "Enter sends, Shift+Enter adds a line.",
