@@ -139,6 +139,13 @@
 | `ChatSessionList`, `ChatSessionGet`, `ChatTranscriptGet` | none | `chat:sessions`, `chat:session`, `chat:transcript` | `GET /projects/{id}/chat/sessions`, `GET /chat/sessions/{id}`, `GET /chat/sessions/{id}/transcript` | read (SDD-017 §9) |
 | `ChatActivityGet` | none | `chat:activity` | `GET /chat/sessions/{id}/activity` | read (SDD-017 §8.1) |
 | chat session stream | none | none | `GET /chat/sessions/{id}/events` (SDD-017 §8) | read |
+| `RecordingSources` | none | `recording:sources` | `GET /recording/sources` (the displays and windows that can be captured, SDD-023 §9) | read |
+| `RecordingStart` | none (a person starts, ADR-0051) | `recording:start` | `POST /recordings` | media, and only from a privileged browser session; every other caller gets `E_PRIVILEGED_SESSION` and no helper starts (SDD-023 §9) |
+| `RecordingStop` | `job_cancel` with the `rec_` id | `recording:stop` | `POST /recordings/{id}/stop` | media; stopping is always allowed |
+| `RecordingCancel` | none | `recording:cancel` | `POST /recordings/{id}/cancel` | media; deleting a finished recording needs a privileged browser session |
+| `RecordingGet`, `RecordingList` | `job_get` with the `rec_` id (kind `capture`) | `recording:show`, `recording:list` | `GET /recordings/{id}`, `GET /projects/{id}/recordings` | read (a dismissed recording is invisible to everyone but a person, SDD-023 §4) |
+| `RecordingConfirm`, `RecordingDismiss` | none | `recording:confirm`, `recording:dismiss` | `POST /recordings/{id}/confirm`, `POST /recordings/{id}/dismiss` | media, and only from a privileged browser session (SDD-023 §4) |
+| `RecordingPlace` | `edit` (the same batch) | `recording:place` | `POST /recordings/{id}/place` | edit (one undoable batch, SDD-023 §9) |
 
 **The context of a project (epic 56, D-119).** `ProjectCreate` takes `name`, `description` and `goal`, all required, on every surface; `ProjectUpdate` edits them with the same rules. `goal` is an object with `specific`, `measurable`, `achievable`, `relevant`, `time_bound` (text) and `due` (a date, `YYYY-MM-DD`). The rules live in `core/project` (SDD-005 section 5.12.2): name 4 to 32 characters (Unicode letters, digits and single spaces), description 64 to 1,024, each goal part 16 to 280, `due` today or later when it is set. An invalid field is `E_VALIDATION` whose `path` is the field (`name`, `description`, `goal.specific`, ..., `goal.due`) and whose `details.fields` lists every invalid field. The arguments `preset` and `fps` of `ProjectCreate` are deprecated: they are still accepted for one deprecation period, create nothing, and are removed in release 1.0.0 (the same deadline as the former names of section 13); a project is created with no timeline, and the first `ProjectItemAdd` of kind `timeline` asks for the preset.
 
@@ -193,6 +200,7 @@ Rules: a command (an operation of a registry in `core/command`) takes its domain
 | `cpr_` | permission request of a hosted agent (SDD-017 §7) | SDD-017 |
 | `whk_` | outbound webhook (SDD-022) | SDD-022 |
 | `wdl_` | delivery of an outbound webhook (SDD-022 §4) | SDD-022 |
+| `rec_` | screen recording (SDD-023) | SDD-023 |
 
 All have the form `<prefix>_<10 lower-case Crockford base32 characters>`.
 
@@ -213,6 +221,7 @@ The connection kinds of the blog destinations (SDD-020 §42): `blog_files`, `blo
 | `batch.committed` | a batch was committed | `revision`, `actor`, `diff`, `at` |
 | `project.updated` | project metadata outside the document changed (trash, restore) | `project_id`, `state` |
 | `nested.updated` | a timeline that this one uses as a composition, directly or through others, committed a batch (SDD-006 §3.3.1) | `project_id`, `timeline_id`, `revision`, `at` |
+| `recording.updated` | a recording changed state or review (never sent for a dismissed one, SDD-023 §4) | `recording_id`, `state`, `review` |
 | `asset.updated` | an asset's ingest state or progress changed, or its display name did (SDD-006 §3.4) | `asset_id`, `state`, `progress` |
 | `job.updated` | a job's state or progress changed | `job_id`, `kind`, `state`, `progress`, `message` |
 | `resync.required` | the client is too far behind to replay | `revision` |
@@ -263,6 +272,7 @@ Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, `text.generate
 | `asset_info`, `asset_tags`, `asset_search` | the library side of an asset by hash: origin, rights note, description, the reuse mark, the tags and the full-text index over them | SDD-005 §5.5.1, SDD-011 §14 |
 | `webhooks`, `webhook_deliveries`, `webhook_attempts` | the outbound webhooks (name, address, events, enabled), their deliveries with the stored metadata body, and the attempts with status, duration and error code; no secret (it is in the vault) and no answer body | SDD-022 §4, SDD-005 §5.16 |
 | `agent_profiles`, `chat_sessions`, `chat_events` | the agents the user may host (a name, an executable and its arguments), and the transcripts of the chat sessions per project; no credential, no environment | SDD-017 §3, §9 |
+| `recordings` | the screen recordings: project, state, review (`pending`, `added`, `dismissed`), source, size, frames, the file's duration and the asset it became; the window title is sealed; no frame and no audio | SDD-023 §9, SDD-005 §5.18 |
 | vukem's own tables for sessions (`sessions`) and tokens (`access_tokens`) | network mode | vukem |
 
 A document with a `template` member is a template draft, or an instance when `template.instance` is true (SDD-001 section 3.10). `TemplateInstantiate` writes the flag; lint reads it (`L_SLOT_UNFILLED`, SDD-003).
@@ -312,8 +322,11 @@ The core's codes are in SDD-002 §A.8. The service adds:
 | `E_CHAT_NOT_FOUND` | the chat session does not exist, or the caller may not see its project (SDD-017 §11) | no |
 | `E_WEBHOOK_NOT_FOUND` | the webhook or the delivery does not exist (SDD-022 §8) | no |
 | `E_AGENT_UNAVAILABLE` | the hosted agent could not be started or opened; `details.reason` `not_found`, `start_failed`, `exited`, `timeout`, `protocol`, `protocol_version`, `no_http_mcp`, `sign_in_required`, `limit` (SDD-017 §11) | no |
+| `E_CAPTURE_UNAVAILABLE` | screen capture cannot run here: `details.reason` `platform` (not Windows), `web`, `network_mode`, `helper_missing` or `protocol_version` (SDD-023 §1) | no |
+| `E_CAPTURE_FAILED` | a capture ended badly: `details.reason` `source_gone`, `unsupported`, `encoder_failed`, `io`, `helper_lost`, `no_frames` or `protocol` (SDD-023 §6, §10) | no |
+| `E_RECORDING_NOT_FOUND` | the recording does not exist, or the caller may not see it (a dismissed one, SDD-023 §4) | no |
 
-HTTP status mapping: `E_VALIDATION`, `E_INVALID_TIME`, `E_UNKNOWN_COMMAND` 400; `E_UNAUTHORIZED` 401; `E_FORBIDDEN`, `E_PATH_NOT_ALLOWED`, `E_CONNECTION_DESTINATION`, `E_PRIVILEGED_SESSION` 403; `E_NOT_FOUND`, `E_FILE_NOT_FOUND`, `E_CONNECTION_NOT_FOUND`, `E_APPROVAL_NOT_FOUND`, `E_AGENT_NOT_FOUND`, `E_CHAT_NOT_FOUND`, `E_WEBHOOK_NOT_FOUND` 404; `E_REVISION_CONFLICT`, `E_IDEMPOTENCY_MISMATCH`, `E_OVERLAP`, `E_INVALID_STATE`, `E_IN_USE`, `E_NOT_EMPTY`, `E_ID_EXISTS`, `E_ASSET_NOT_READY` 409; `E_PAYLOAD_TOO_LARGE` 413; `E_METHOD_NOT_ALLOWED` 405; `E_LIMIT`, `E_LIMIT_EXCEEDED`, `E_UNSUPPORTED_MEDIA`, `E_TYPE_MISMATCH`, `E_OUT_OF_SOURCE`, `E_FONT_UNKNOWN`, `E_SLOT`, `E_LINT_BLOCKING`, `E_COST_CEILING`, `E_PRICE_UNKNOWN` 422; `E_QUEUE_FULL`, `E_RATE_LIMITED` 429; `E_NOTHING_TO_UNDO`, `E_NOTHING_TO_REDO`, `E_APPROVAL_EXPIRED` 409; `E_CLIENT_CLOSED` 499; `E_LOCKED` 423; `E_WORKSPACE_LOCKED`, `E_TRANSCRIBE_UNAVAILABLE`, `E_FFMPEG_MISSING`, `E_NO_ENCODER`, `E_VAULT_LOCKED`, `E_AGENT_UNAVAILABLE` 503; `E_PUBLISH`, `E_PROVIDER` 502; `E_INTERNAL` and everything else 500. The job codes `E_INGEST_FAILED`, `E_EXPORT_FAILED`, `E_VERIFY_FAILED`, `E_TRANSCRIBE_FAILED` and `E_CANCELLED` normally travel inside a job object in a 200 answer; they are 500 only when a call itself raises them.
+HTTP status mapping: `E_VALIDATION`, `E_INVALID_TIME`, `E_UNKNOWN_COMMAND` 400; `E_UNAUTHORIZED` 401; `E_FORBIDDEN`, `E_PATH_NOT_ALLOWED`, `E_CONNECTION_DESTINATION`, `E_PRIVILEGED_SESSION` 403; `E_NOT_FOUND`, `E_FILE_NOT_FOUND`, `E_CONNECTION_NOT_FOUND`, `E_APPROVAL_NOT_FOUND`, `E_AGENT_NOT_FOUND`, `E_CHAT_NOT_FOUND`, `E_WEBHOOK_NOT_FOUND`, `E_RECORDING_NOT_FOUND` 404; `E_REVISION_CONFLICT`, `E_IDEMPOTENCY_MISMATCH`, `E_OVERLAP`, `E_INVALID_STATE`, `E_IN_USE`, `E_NOT_EMPTY`, `E_ID_EXISTS`, `E_ASSET_NOT_READY` 409; `E_PAYLOAD_TOO_LARGE` 413; `E_METHOD_NOT_ALLOWED` 405; `E_LIMIT`, `E_LIMIT_EXCEEDED`, `E_UNSUPPORTED_MEDIA`, `E_TYPE_MISMATCH`, `E_OUT_OF_SOURCE`, `E_FONT_UNKNOWN`, `E_SLOT`, `E_LINT_BLOCKING`, `E_COST_CEILING`, `E_PRICE_UNKNOWN` 422; `E_QUEUE_FULL`, `E_RATE_LIMITED` 429; `E_NOTHING_TO_UNDO`, `E_NOTHING_TO_REDO`, `E_APPROVAL_EXPIRED` 409; `E_CLIENT_CLOSED` 499; `E_LOCKED` 423; `E_WORKSPACE_LOCKED`, `E_TRANSCRIBE_UNAVAILABLE`, `E_FFMPEG_MISSING`, `E_NO_ENCODER`, `E_VAULT_LOCKED`, `E_AGENT_UNAVAILABLE`, `E_CAPTURE_UNAVAILABLE` 503; `E_PUBLISH`, `E_PROVIDER`, `E_CAPTURE_FAILED` 502; `E_INTERNAL` and everything else 500. The job codes `E_INGEST_FAILED`, `E_EXPORT_FAILED`, `E_VERIFY_FAILED`, `E_TRANSCRIBE_FAILED` and `E_CANCELLED` normally travel inside a job object in a 200 answer; they are 500 only when a call itself raises them.
 
 CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the rest.
 
@@ -340,6 +353,7 @@ CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the re
 ├── fonts/                   user fonts, by hash 
 ├── tools/                   installed helpers (whisper.cpp, models); tools/.download/ holds downloads in progress
 ├── chat/                    the working directory of a hosted agent, one folder per project: chat/<project id>/, mode 0700 (SDD-017 §4)
+├── recordings/              screen recordings in progress or waiting for a person: recordings/<recording id>/capture.mp4, a fragmented MP4 (SDD-023 §8)
 ├── tmp/                     one directory per running child process: tmp/<job id>/ (SDD-007 §6.4)
 ├── backups/                 copies of db.sqlite made before a migration (SDD-005 §7); `backups/account-<time>/` holds the copy of `db.sqlite` and `vault.json` that the account creation of an existing workspace keeps until it has verified the encrypted fields (SDD-005 §5.17)
 ├── logs/                    rotating log files
@@ -376,6 +390,8 @@ Environment variables, all optional. Names are final. Ceilings that have no vari
 | `STUARTY_MAX_TRANSCRIBE_SECONDS` | `7200` | longest audio per transcription job |
 | `STUARTY_MAX_EXPORT_BYTES` | `4294967296` (4 GiB) | largest exported file |
 | `STUARTY_MIN_FREE_BYTES` | `2147483648` (2 GiB) | writes are refused below this free space on the workspace volume |
+| `STUARTY_CAPTURE_HELPER` | next to the server binary | absolute path of `stuarty-capture`, the native capture helper (SDD-023 §7) |
+| `STUARTY_MAX_RECORDING_SECONDS` | `14400` | longest screen recording, 1 to 14400 (SDD-023 §5) |
 | `STUARTY_CACHE_MAX_BYTES` | `2147483648` (2 GiB) | size of the frame, bitmap and processed-sound caches (`frames/`, `bitmaps/`, `audio-previews/`) before eviction |
 | `STUARTY_RATE_LIMIT_PER_MINUTE` | `300` | requests per minute per key or local token |
 | `STUARTY_RATE_LIMIT_SESSION_PER_MINUTE` | `1800` | requests per minute per browser session |

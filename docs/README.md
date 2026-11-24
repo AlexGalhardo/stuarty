@@ -122,6 +122,7 @@ Which epic delivers each requirement is in the traceability table of `plans/00-r
 | 021 | image documents: the document, the catalogue of layer operations, the plan, export, templates, lint, storage | ADR-0038 |
 | 022 | outbound webhooks: the record, the events and their metadata payload, signature, delivery and retries, the address rules | ADR-0032, ADR-0033 |
 | 023 | edit by text: the word-to-timeline mapping, deleting a word range, filler and repetition detection, the review before removal | ADR-0021, ADR-0031 |
+| 025 | screen recording: the state machine, the review, the helper protocol, the host, the file, recovery, the surfaces | ADR-0049, ADR-0051 |
 | 018 | memory, skills and prompts: the files, front matter, review, the skill lint, import and export, the index and search | ADR-0040 |
 | 017 | the hosted agent chat: the protocol, profiles, the process, sessions, permission requests, streaming, transcripts | ADR-0037, ADR-0036 |
 

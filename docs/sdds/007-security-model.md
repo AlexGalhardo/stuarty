@@ -510,6 +510,13 @@ Scopes: `read`, `edit`, `media`, `render`, `admin` (SDD-000 §4). They are indep
 | `ApprovalRuleList` | `GET /approval-rules` | R | - | - | - | - | Refused for a project-limited key |
 | `ApprovalRuleSet` | `POST /approval-rules` | - | - | - | - | R | A privileged browser session only (T-49); at most 100 rules; audited |
 | `ApprovalRuleRemove` | `DELETE /approval-rules/{id}` | - | - | - | - | R | A privileged browser session only (T-49); audited |
+| `RecordingSources` | `GET /recording/sources` | R | - | - | - | - | Window titles are untrusted text (section 8); refused where capture is unavailable |
+| `RecordingStart` | `POST /recordings` | - | - | R | - | - | A privileged browser session only, checked before anything else (T-118); one recording at a time; audited |
+| `RecordingStop` | `POST /recordings/{id}/stop` | - | - | R | - | - | Any caller with `media`: stopping reduces exposure (T-121) |
+| `RecordingCancel` | `POST /recordings/{id}/cancel` | - | - | R | - | - | Any caller for a recording in progress; a privileged browser session to delete a finished one (T-119); audited |
+| `RecordingGet`, `RecordingList` | `GET /recordings/{id}`, `GET /projects/{id}/recordings` | R | - | - | - | - | A dismissed recording is `E_RECORDING_NOT_FOUND` to every caller but a person (T-119); project check |
+| `RecordingConfirm`, `RecordingDismiss` | `POST /recordings/{id}/confirm`, `/dismiss` | - | - | R | - | - | A privileged browser session only (T-119); audited |
+| `RecordingPlace` | `POST /recordings/{id}/place` | - | R | - | - | - | A recording that a person added only; one batch |
 | `CostSummary` | `GET /cost` | R | - | - | - | - | Numbers only; refused for a project-limited key |
 | `CostCeilingSet` | `PUT /cost/ceilings` | - | - | - | - | R | A privileged browser session only (T-50); audited |
 | `SocialNetworkList` | `GET /social/networks` | R | - | - | - | - | The networks of the build and their limits; no secret (SDD-020) |
@@ -761,6 +768,7 @@ Every non-test `exec.Command` and every `contrib/engine` run in the repository, 
 | Local server started by `stuarty open` | `web/cmd/app/open.go` `startServer` | the program is `os.Executable()` (absolute); the environment is the caller's plus the key and the address, by design; detached, output to the log | Pass | none specific |
 | Default browser | `web/cmd/app/open.go` `openBrowser` | argv, no shell; only an `http` address; a fixed program per system; `xdg-open` looked up on the PATH (a trusted name, the operator's PATH) | Pass | `TestOpenBrowserRefusesWhatIsNotAnHTTPAddress` |
 | The user's agent (the chat) | `service/agenthost` `startProcess` (SDD-017 section 4) | no shell; an executable resolved to an absolute path when the profile was written, and an argument array from a profile only a person wrote (T-70); the working directory is `<workspace>/chat/<project id>/`; the environment is an allowlist with no `STUARTY_*` variable and no secret (the MCP token travels in the protocol message); one process tree per session (group or job object), time limits, line and event limits, killed at shutdown (T-73). Not the rules of 6.2 to 6.5: this child is the user's own program with the user's file access, bounded by its own permission model and by ADR-0032, not by a sandbox of ours (ADR-0037) | Pass | `TestSecurity_T70_ProfileCommandIsAnArgumentArray`, `TestSecurity_T73_ShutdownLeavesNoChild`, `TestProcessEnvironmentIsAnAllowlist` |
+| `stuarty-capture`, the native capture helper | `engine/capturehost` into `Runner.RunHelper` (SDD-023 section 7) | the rules of the `stuarty-render` row and 6.11; the helper starts the FFmpeg child itself from a closed template | Pass | `TestSecurity_T120_HelperEnvironmentMinimal`, `TestSecurity_T120_HelperDeadlineKillsIt`, `TestSecurity_T120_MalformedMessageDiscardsIt` |
 
 The shipped third-party components, against their licence, pin and notice (NFR-043):
 
@@ -782,6 +790,17 @@ The shipped third-party components, against their licence, pin and notice (NFR-0
 3. It is never started inside the `bwrap` wrapper (the wrapper hides the graphics devices and the child needs them), so with `STUARTY_SANDBOX=bwrap` the export draws on the CPU path. This is a choice of the path, never a way to run the child without the policy.
 4. It exists only when the operator sets `STUARTY_EXPORT_RENDERER=gpu`; the default draws without it.
 5. Its standard error is kept as a tail like any child's and only a short, printable cut of it reaches an error.
+
+### 6.11 The native capture helper
+
+`stuarty-capture` (SDD-023, ADR-0049) captures the screen of the person at the machine. It runs under the policy of 6.10 and in addition:
+
+1. **Only a person starts it.** The service refuses `RecordingStart` with `E_PRIVILEGED_SESSION` before the host is called, so no process exists for an agent (ADR-0051, T-118).
+2. **The argv is a constant** (empty). Everything else travels on standard input as a bounded JSON line (SDD-023 section 6): the encoder is one of a closed list, the output path is absolute and ends in `.mp4`, the FFmpeg path is the one the server discovered. The helper builds the FFmpeg argument list from a template per encoder, so no user text reaches an FFmpeg argument, and starts FFmpeg with an empty environment.
+3. **No network.** The helper has no code that opens a connection and its dependencies are the approved list of ADR-0049; `cargo deny` runs on `capture/`.
+4. **The indicator.** The capture border of Windows is never turned off, and the host never starts the helper without the recording row in `prepared`, so the recording is always visible to the UI (T-121).
+5. **A failure discards the child**: a malformed or oversized line, a missing `ready` or `started`, a silent child or an exit with no `finished`. Nothing is retried.
+6. **The file is fragmented MP4**, so a kill leaves a readable file, and the recovery at start-up settles every recording left open (T-121).
 
 ## 7. Import and export path rules
 
