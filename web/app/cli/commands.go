@@ -213,7 +213,7 @@ var projectCreate = &spec{
 	summary: "create a project",
 	usage: []string{
 		"stuarty project:create --name <n> --description <t> --specific|--measurable|--achievable|--relevant|" +
-			"--time-bound <t> --due <date>",
+			"--time-bound <t> --due <date> [--kind text|video|image]",
 	},
 	example: `stuarty project:create --name "Launch teaser" --description "A 30 second vertical teaser for the launch of ` +
 		`my course, for people who follow me on short video, with captions and a thumbnail." ` +
@@ -292,7 +292,7 @@ var projectUpdate = &spec{
 	name:    "project:update",
 	summary: "change the name, the description or the goal of a project",
 	usage: []string{
-		"stuarty project:update <id> [any flag of project:create]",
+		"stuarty project:update <id> [context flags of project:create]",
 	},
 	example:           `stuarty project:update prj_7k2m9x4q1b --name "Launch teaser v2"`,
 	project:           true,
