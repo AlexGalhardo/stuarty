@@ -224,7 +224,9 @@ func TestAccountCreateNamesTheFolderAnAdoptionLeftBehind(t *testing.T) {
 	a := newAccountHarness(t)
 	former := t.TempDir()
 
-	record := `{"from":` + strconv.Quote(former) + `,"to":"x","method":"copy","backup":"","adopted_at":"2026-11-18T12:30:00Z"}`
+	record := `{"from":` + strconv.Quote(
+		former,
+	) + `,"to":"x","method":"copy","backup":"","adopted_at":"2026-11-18T12:30:00Z"}`
 	if err := os.WriteFile(a.dir.Path(workspace.AdoptionRecord), []byte(record), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -239,7 +241,13 @@ func TestAccountCreateNamesTheFolderAnAdoptionLeftBehind(t *testing.T) {
 	}
 
 	plain := newAccountHarness(t)
-	if res := plain.createFrom(plain.sessionWith(t, ""), createBody); strings.Contains(string(res.body), "former_folder") {
+	if res := plain.createFrom(
+		plain.sessionWith(t, ""),
+		createBody,
+	); strings.Contains(
+		string(res.body),
+		"former_folder",
+	) {
 		t.Errorf("a workspace that was not adopted by copy names a folder: %s", res.body)
 	}
 }

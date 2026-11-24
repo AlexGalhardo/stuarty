@@ -13,6 +13,7 @@ const PASSWORD = "Correct-Horse-9";
 const NEW_PASSWORD = "Another-Pass-7!";
 
 let recoveryKey = "";
+let replacedRecoveryKey = "";
 
 // `stuarty open`: the local token asks for a launch code and the browser redeems it. It is an editor session and
 // not a person; the account pages need nothing more.
@@ -167,6 +168,29 @@ test("Settings shows who is signed in and changes the password", async ({
 	await expect(section.getByRole("status")).toContainText("changed");
 });
 
+test("Settings makes a new recovery key and the old one stops working (VV-382)", async ({
+	page,
+}) => {
+	await page.goto("/account/signin");
+	await signIn(page, NEW_PASSWORD);
+	await expect(page).toHaveURL(/\/$/);
+	await page.goto("/settings");
+	const form = page.getByTestId("settings-recovery-key");
+
+	await form.getByLabel("Current password").fill(PASSWORD);
+	await form.getByRole("button", { name: "Make a new recovery key" }).click();
+	await expect(page.getByTestId("settings-account-error")).toBeVisible();
+	await expect(page.getByTestId("recovery-key")).toHaveCount(0);
+
+	await form.getByLabel("Current password").fill(NEW_PASSWORD);
+	await form.getByRole("button", { name: "Make a new recovery key" }).click();
+	const made = (await page.getByTestId("recovery-key").textContent()) ?? "";
+	expect(made).toMatch(/^([0-9A-Z]{4}-){12}[0-9A-Z]{1,4}$/);
+	expect(made).not.toBe(recoveryKey);
+	replacedRecoveryKey = recoveryKey;
+	recoveryKey = made;
+});
+
 test("Logout locks the studio: the pages and the API answer with the sign-in and E_LOCKED", async ({
 	page,
 	request,
@@ -199,6 +223,11 @@ test("a forgotten password is recovered with the recovery key", async ({
 	await page.getByLabel("Recovery key").fill("AAAA-BBBB-CCCC");
 	await page.getByLabel("New password").fill(PASSWORD);
 	await page.getByLabel("Confirm the password").fill(PASSWORD);
+	await page.getByRole("button", { name: "Set the new password" }).click();
+	await expect(page.getByRole("alert")).toBeVisible();
+
+	// The key of the creation was replaced in Settings and opens nothing any more.
+	await page.getByLabel("Recovery key").fill(replacedRecoveryKey);
 	await page.getByRole("button", { name: "Set the new password" }).click();
 	await expect(page.getByRole("alert")).toBeVisible();
 

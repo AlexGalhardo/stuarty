@@ -551,7 +551,12 @@ func TestAccountNewRecoveryKey(t *testing.T) {
 		t.Fatalf("with a launch session = %d %s", res.status, res.body)
 	}
 
-	if res := a.browser(http.MethodPost, "/auth/account/recovery-key", `{"password":"`+accOther+`"}`, cookie); res.status !=
+	if res := a.browser(
+		http.MethodPost,
+		"/auth/account/recovery-key",
+		`{"password":"`+accOther+`"}`,
+		cookie,
+	); res.status !=
 		http.StatusUnauthorized {
 		t.Fatalf("with a wrong password = %d %s", res.status, res.body)
 	}

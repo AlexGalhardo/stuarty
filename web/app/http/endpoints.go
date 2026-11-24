@@ -1074,7 +1074,11 @@ var Endpoints = []Endpoint{
 		Summary: "Change the password (a person only; local mode)",
 	},
 	{
-		ID: "account.recovery_key", Method: http.MethodPost, Path: "/auth/account/recovery-key", Root: true, Status: 200,
+		ID:      "account.recovery_key",
+		Method:  http.MethodPost,
+		Path:    "/auth/account/recovery-key",
+		Root:    true,
+		Status:  200,
 		Summary: "Make another recovery key with the password; the old one stops working (a person only; local mode)",
 	},
 	{

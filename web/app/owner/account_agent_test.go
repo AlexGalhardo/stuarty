@@ -49,7 +49,10 @@ func TestAHostedAgentSessionEndsAndIsSavedWhenTheStudioLocks(t *testing.T) {
 
 	person := service.WithCaller(ctx, service.Caller{Actor: "local:ui", Scopes: service.AllScopes, Browser: true})
 
-	if _, err := o.Service.AgentProfileSet(person, service.AgentProfileSetRequest{Name: "echo", Command: agent}); err != nil {
+	if _, err := o.Service.AgentProfileSet(
+		person,
+		service.AgentProfileSetRequest{Name: "echo", Command: agent},
+	); err != nil {
 		t.Fatal(err)
 	}
 

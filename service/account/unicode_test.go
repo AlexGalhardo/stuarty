@@ -76,7 +76,7 @@ func TestLogin_AnAccountMadeFromTheRawBytesStillOpensAndIsRewritten(t *testing.T
 				t.Fatal(err)
 			}
 
-			if string(after.Verifier) == string(rec.Verifier) {
+			if bytes.Equal(after.Verifier, rec.Verifier) {
 				t.Error("the verifier of the old form was not rewritten")
 			}
 
@@ -190,7 +190,7 @@ func TestNewRecoveryKey_ReplacesTheKeyAndKeepsThePasswordAndTheData(t *testing.T
 		t.Errorf("the password no longer opens: %v", err)
 	}
 
-	if string(rec.Verifier) != string(before.Verifier) || string(rec.KeyByPassword) != string(before.KeyByPassword) {
+	if !bytes.Equal(rec.Verifier, before.Verifier) || !bytes.Equal(rec.KeyByPassword, before.KeyByPassword) {
 		t.Error("the password record changed")
 	}
 }
