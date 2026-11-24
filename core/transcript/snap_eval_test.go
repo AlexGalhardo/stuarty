@@ -29,8 +29,11 @@ func loadSilences(t *testing.T, lang string) []Silence {
 	var doc struct {
 		SampleRate int64 `json:"sample_rate"`
 		Sets       []struct {
-			ThresholdDB int                          `json:"threshold_db"`
-			Ranges      []struct{ Start, End int64 } `json:"ranges"`
+			ThresholdDB int `json:"threshold_db"`
+			Ranges      []struct {
+				Start int64 `json:"start"`
+				End   int64 `json:"end"`
+			} `json:"ranges"`
 		} `json:"sets"`
 	}
 	if err := json.Unmarshal(b, &doc); err != nil {
@@ -166,17 +169,34 @@ func TestLabelledFixtureSnap(t *testing.T) {
 			lang, plain.share(plain.clips), plain.share(plain.slivers), plain.share(plain.clean))
 		t.Logf("%s: snapped:   clip a neighbour %.3f, leave part of the word %.3f, clean %.3f",
 			lang, snapped.share(snapped.clips), snapped.share(snapped.slivers), snapped.share(snapped.clean))
-		t.Logf("%s: the %d cuts the snap changed: clip %d -> %d, leave part of the word %d -> %d", lang, snapped.touched,
-			plain.touchedClips, snapped.touchedClips, plain.touchedSlivers, snapped.touchedSlivers)
+		t.Logf(
+			"%s: the %d cuts the snap changed: clip %d -> %d, leave part of the word %d -> %d",
+			lang,
+			snapped.touched,
+			plain.touchedClips,
+			snapped.touchedClips,
+			plain.touchedSlivers,
+			snapped.touchedSlivers,
+		)
 		if snapped.clips > plain.clips {
-			t.Errorf("%s: the snap clips a neighbour in %d cuts, the whisper times in %d", lang, snapped.clips, plain.clips)
+			t.Errorf(
+				"%s: the snap clips a neighbour in %d cuts, the whisper times in %d",
+				lang,
+				snapped.clips,
+				plain.clips,
+			)
 		}
 		if snapped.slivers >= plain.slivers {
 			t.Errorf("%s: the snap leaves part of the word in %d cuts, the whisper times in %d", lang,
 				snapped.slivers, plain.slivers)
 		}
 		if snapped.touched < snapFloors[lang].minTouched {
-			t.Errorf("%s: the snap changed %d cuts, below the floor %d", lang, snapped.touched, snapFloors[lang].minTouched)
+			t.Errorf(
+				"%s: the snap changed %d cuts, below the floor %d",
+				lang,
+				snapped.touched,
+				snapFloors[lang].minTouched,
+			)
 		}
 	}
 }

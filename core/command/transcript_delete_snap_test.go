@@ -92,12 +92,14 @@ func TestTranscriptDeleteSnapOffIsTheCutOfEpic69(t *testing.T) {
 			t.Run(fmt.Sprintf("%s words %d to %d", name, c.from, c.to), func(t *testing.T) {
 				off := applySnapDelete(t, layout().d, snapArgsJSON(c.from, c.to, `"snap": "0s", `))
 				// The epic 69 call: the words only.
-				old := applySnapDelete(t, layout().d, fmt.Sprintf(`{"asset_id": %q, "from_word": %d, "to_word": %d, %s}`,
-					vidAsset, c.from, c.to, resolvedJSON(snapWords)))
-				a, _ := json.Marshal(off)
-				b, _ := json.Marshal(old)
-				if string(a) != string(b) {
-					t.Errorf("snap 0s differs from epic 69:\n%s\n%s", a, b)
+				old := applySnapDelete(
+					t,
+					layout().d,
+					fmt.Sprintf(`{"asset_id": %q, "from_word": %d, "to_word": %d, %s}`,
+						vidAsset, c.from, c.to, resolvedJSON(snapWords)),
+				)
+				if !reflect.DeepEqual(off, old) {
+					t.Errorf("snap 0s differs from epic 69:\n%+v\n%+v", off, old)
 				}
 			})
 		}

@@ -9,11 +9,11 @@ type Silence struct{ Start, End int }
 type EdgeKind string
 
 const (
-	// EdgeInside: the edge was already in a silence and stays.
+	// EdgeInside means the edge was already in a silence and stays.
 	EdgeInside EdgeKind = "inside"
-	// EdgeMoved: the edge moved to the nearest silence.
+	// EdgeMoved means the edge moved to the nearest silence.
 	EdgeMoved EdgeKind = "moved"
-	// EdgeNone: no silence qualified and the edge stays at the word time.
+	// EdgeNone means no silence qualified and the edge stays at the word time.
 	EdgeNone EdgeKind = "none"
 )
 
@@ -32,15 +32,18 @@ type Snapped struct{ Start, End Edge }
 // lies between the previous word and the first chosen word; the end edge only moves later, to the start of a
 // silence between the last chosen word and the next one. So the result contains the chosen words and never takes
 // speech the transcript shows from a neighbour; a silence the transcript contradicts is not trusted. Silences must
-// be sorted and not overlapping. from and to must index words with from <= to.
+// be sorted and not overlapping. from and to must index words with from <= to; otherwise the result is empty.
 func SnapEdges(silences []Silence, window int, words []Word, from, to int) Snapped {
+	if from < 0 || to < from || to >= len(words) {
+		return Snapped{}
+	}
 	start, end := words[from].Start, words[to].End
 	lo, hi := 0, math.MaxInt
-	if from > 0 {
-		lo = words[from-1].End
+	if prev := from - 1; prev >= 0 && prev < len(words) {
+		lo = words[prev].End
 	}
-	if to+1 < len(words) {
-		hi = words[to+1].Start
+	if next := to + 1; next < len(words) {
+		hi = words[next].Start
 	}
 	return Snapped{Start: snapStart(silences, window, start, lo), End: snapEnd(silences, window, end, hi)}
 }
