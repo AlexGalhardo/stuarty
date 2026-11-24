@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 
+import type { ChatPanelState } from "@/dashboard/chat/useChat";
 import { I18nProvider } from "@/lib/i18n";
+import { SessionProvider } from "@/lib/session";
 import en from "../../lang/en.json";
 import { ShellProvider } from "./ShellContext";
 
@@ -19,10 +21,46 @@ function flat(
 
 export const messages = flat(en.ui, "ui.");
 
-export function Frame({ children }: { children: ReactNode }): ReactNode {
+const nothing = async (): Promise<void> => undefined;
+
+// A chat that has read nothing: the tests change what they need.
+export function fakeChat(over: Partial<ChatPanelState> = {}): ChatPanelState {
+	return {
+		profiles: null,
+		projects: [],
+		projectId: null,
+		session: null,
+		events: [],
+		live: false,
+		failure: null,
+		busy: false,
+		selectProject: () => undefined,
+		start: nothing,
+		send: nothing,
+		cancel: nothing,
+		answer: nothing,
+		exportMarkdown: nothing,
+		removeSession: nothing,
+		saveProfile: async () => true,
+		removeProfile: nothing,
+		...over,
+	};
+}
+
+export function Frame({
+	children,
+	chat = fakeChat(),
+	privileged = true,
+}: {
+	children: ReactNode;
+	chat?: ChatPanelState;
+	privileged?: boolean;
+}): ReactNode {
 	return (
 		<I18nProvider messages={messages} locale="en" locales={["en", "pt-BR"]}>
-			<ShellProvider>{children}</ShellProvider>
+			<SessionProvider session={{ privileged, mode: "local" }}>
+				<ShellProvider chat={chat}>{children}</ShellProvider>
+			</SessionProvider>
 		</I18nProvider>
 	);
 }

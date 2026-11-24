@@ -68,6 +68,27 @@
         "local": "Modo local",
         "network": "Modo de rede"
       },
+      "scene": {
+        "label": "Estado do agente",
+        "none": "Nenhuma sessão de agente",
+        "none_hint": "Nada em andamento",
+        "skill": "Habilidade",
+        "not_reported": "Não informada",
+        "tool": "Ferramenta",
+        "no_tool": "Nenhuma ferramenta chamada ainda",
+        "open_chat": "Abrir a conversa",
+        "connect": "Conectar um agente",
+        "allow": "Permitir uma vez",
+        "deny": "Negar",
+        "state": {
+          "idle": "Esperando você",
+          "working": "Trabalhando",
+          "waiting": "Pede a sua permissão",
+          "denied": "Você negou",
+          "done": "Concluído",
+          "failed": "Falhou"
+        }
+      },
       "drawer": {
         "title": "Navegação",
         "description": "As seções do estúdio."

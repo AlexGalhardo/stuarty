@@ -1,4 +1,3 @@
-import { usePage } from "@inertiajs/react";
 import { Settings2, X } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
@@ -7,9 +6,6 @@ import { useT } from "@/lib/i18n";
 import { useShell } from "../../shell/ShellContext";
 import ChatConversation from "./ChatConversation";
 import ProfileSetup from "./ProfileSetup";
-import { useChat } from "./useChat";
-
-const PROJECT_IN_URL = /prj_[0-9a-hjkmnp-tv-z]{10}/;
 
 const NO_PROFILES = {
 	profiles: [],
@@ -18,14 +14,15 @@ const NO_PROFILES = {
 	available: false,
 };
 
-// The chat panel of the right dock (SDD-017, RF-313): one button on every section of the
-// dashboard that opens the conversation with the agent the user hosts. The project it talks about
-// is the one in the address when there is one, else the one the person picked last. It sends the
-// person's words to the server and draws what comes back; everything the agent writes is text.
+// The chat panel of the right dock (SDD-017, RF-313): the Chat button of the top bar opens the
+// conversation with the agent the user hosts. The project it talks about is the one in the address
+// when there is one, else the one the person picked last (the shell reads it, so the scene bar and
+// the panel show the same session). It sends the person's words to the server and draws what
+// comes back; everything the agent writes is text.
 export default function ChatDock(): ReactNode {
 	const t = useT();
-	const page = usePage();
 	const {
+		chat,
 		chatOpen: open,
 		setChatOpen: setOpen,
 		chatButton: toggle,
@@ -34,8 +31,6 @@ export default function ChatDock(): ReactNode {
 	const composer = useRef<HTMLTextAreaElement | null>(null);
 	const heading = useRef<HTMLHeadingElement | null>(null);
 	const closed = useRef(false);
-	const inUrl = PROJECT_IN_URL.exec(page.url)?.[0] ?? null;
-	const chat = useChat(open, inUrl);
 	const ready = chat.profiles !== null;
 	const connected = (chat.profiles?.profiles.length ?? 0) > 0;
 	const showSetup = ready && (!connected || managing);

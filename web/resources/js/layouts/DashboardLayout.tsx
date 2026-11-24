@@ -2,10 +2,12 @@ import { usePage } from "@inertiajs/react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import ChatDock from "@/dashboard/chat/ChatDock";
+import { useChat } from "@/dashboard/chat/useChat";
 import Sidebar, { useSidebar } from "@/dashboard/Sidebar";
 import { useT } from "@/lib/i18n";
 import type { SharedProps } from "@/types";
-import { ShellProvider } from "../shell/ShellContext";
+import ConnectedSceneBar from "../shell/ConnectedSceneBar";
+import { projectInUrl, ShellProvider } from "../shell/ShellContext";
 import TopBar from "../shell/TopBar";
 
 // The path of the page the person was on: a change of page moves the focus to the main region, so a
@@ -21,8 +23,11 @@ export default function DashboardLayout({
 }: {
 	children: ReactNode;
 }): ReactNode {
+	const page = usePage<SharedProps>();
+	// One read of the agent session for the whole frame: the scene bar and the panel show the same one.
+	const chat = useChat(true, projectInUrl(page.url));
 	return (
-		<ShellProvider>
+		<ShellProvider chat={chat}>
 			<Frame>{children}</Frame>
 		</ShellProvider>
 	);
@@ -100,6 +105,7 @@ function Frame({ children }: { children: ReactNode }): ReactNode {
 					)}
 					{children}
 				</main>
+				<ConnectedSceneBar />
 			</div>
 			<div data-testid="right-dock" data-dock="right">
 				<ChatDock />
