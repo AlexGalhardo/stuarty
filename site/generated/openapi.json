@@ -756,6 +756,9 @@
           "has_brief": {
             "type": "boolean"
           },
+          "production_kind": {
+            "type": "string"
+          },
           "project_id": {
             "type": "string"
           },
@@ -17591,7 +17594,7 @@
             }
           },
           {
-            "description": "The kind of production: short (the default), commercial or long.",
+            "description": "The set of questions: short, commercial, long, text or image. Left out, the kind of the project.",
             "in": "query",
             "name": "kind",
             "schema": {
@@ -23287,7 +23290,7 @@
                     "type": "boolean"
                   },
                   "kind": {
-                    "description": "The kind of production of the answers: short (the default), commercial or long.",
+                    "description": "The set of the answers: short, commercial, long, text or image. Left out, the kind of the project.",
                     "type": "string"
                   },
                   "replace": {

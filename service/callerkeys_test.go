@@ -71,7 +71,7 @@ func TestNoServiceErrorRepeatsAHostileKey(t *testing.T) {
 
 		_, berr := s.BriefingAnswer(
 			edit,
-			BriefingAnswerRequest{ProjectID: "prj_a", Answers: map[string]string{key: "v"}},
+			BriefingAnswerRequest{ProjectID: "prj_a", Kind: "short", Answers: map[string]string{key: "v"}},
 		)
 		if berr == nil {
 			t.Fatalf("%s: briefing accepted", name)

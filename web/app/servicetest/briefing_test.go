@@ -2,11 +2,14 @@ package servicetest
 
 import (
 	"context"
+	"fmt"
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/core/project"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/testproject"
 )
 
 func briefingAnswers() map[string]string {
@@ -252,5 +255,112 @@ func TestBriefingServesTheKindOfProduction(t *testing.T) {
 		service.BriefingAnswerRequest{ProjectID: id, Kind: "podcast", Answers: ad},
 	); err == nil {
 		t.Error("an unknown kind was answered")
+	}
+}
+
+// VV-399: a project asks the questions of its kind when the caller names none. A text project asks those of a
+// text and an image project those of an image; a video and a project not decided yet keep the short video, and a
+// caller that names a set still gets it.
+func TestBriefingFollowsTheKindOfTheProject(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t)
+	ctx := e.as(agent)
+
+	text := map[string]string{
+		"audience": "indie makers", "tone": "warm", "call_to_action": "reply to this email",
+		"channel": "newsletter", "length": "400",
+	}
+	image := map[string]string{
+		"audience": "followers", "format": "portrait-4x5", "style": "flat colours", "channel": "instagram-feed",
+	}
+
+	create := func(name, kind string) string {
+		req := testproject.Request(name)
+		req.Kind = kind
+
+		res, err := e.svc.ProjectCreate(e.as(ui), req)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		return res.ProjectID
+	}
+
+	cases := []struct {
+		kind, first, set string
+		answers          map[string]string
+	}{
+		{"text", "audience", "text", text},
+		{"image", "audience", "image", image},
+		{"video", "audience", "short", briefingAnswers()},
+		{"", "audience", "short", briefingAnswers()},
+	}
+
+	for i, c := range cases {
+		id := create(fmt.Sprintf("Kind brief %d", i), c.kind)
+
+		q, err := e.svc.BriefingQuestions(ctx, service.BriefingQuestionsRequest{ProjectID: id})
+		if err != nil || q.ProductionKind != c.set || q.Questions[0].ID != c.first {
+			t.Fatalf("%q project: %+v %v", c.kind, q, err)
+		}
+
+		if c.set == "short" {
+			if !slices.ContainsFunc(q.Questions, func(b service.BriefingQuestion) bool { return b.ID == "duration" }) {
+				t.Errorf("%q project: the short set lost its duration", c.kind)
+			}
+		} else if slices.ContainsFunc(q.Questions, func(b service.BriefingQuestion) bool {
+			return b.ID == "duration" || b.ID == "platform"
+		}) {
+			t.Errorf("%q project asks about a video: %+v", c.kind, q.Questions)
+		}
+
+		res, err := e.svc.BriefingAnswer(ctx, service.BriefingAnswerRequest{ProjectID: id, Answers: c.answers})
+		if err != nil || !strings.HasPrefix(res.Text, "# Brief\n\n## Audience\n\n") {
+			t.Fatalf("%q project answer: %+v %v", c.kind, res, err)
+		}
+
+		q, err = e.svc.BriefingQuestions(ctx, service.BriefingQuestionsRequest{ProjectID: id})
+		if err != nil || !q.Guided || len(q.Answers) != len(c.answers) {
+			t.Fatalf("%q project: the brief is not read back as guided: %+v %v", c.kind, q, err)
+		}
+
+		// Answering again replaces what the briefing wrote, with no replace, in every kind.
+		if _, err := e.svc.BriefingAnswer(
+			ctx,
+			service.BriefingAnswerRequest{ProjectID: id, Answers: c.answers},
+		); err != nil {
+			t.Fatalf("%q project: answering again: %v", c.kind, err)
+		}
+	}
+
+	id := create("Kind brief named", "text")
+
+	q, err := e.svc.BriefingQuestions(ctx, service.BriefingQuestionsRequest{ProjectID: id, Kind: "commercial"})
+	if err != nil || q.ProductionKind != "commercial" || q.Questions[0].ID != "product" {
+		t.Fatalf("a named set lost to the kind of the project: %+v %v", q, err)
+	}
+
+	// The answers of a set are refused by another, and nothing is written.
+	if _, err := e.svc.BriefingAnswer(
+		ctx,
+		service.BriefingAnswerRequest{ProjectID: id, Answers: briefingAnswers()},
+	); err == nil {
+		t.Error("the answers of a short were taken for those of a text")
+	}
+
+	if _, err := e.svc.BriefingAnswer(
+		ctx,
+		service.BriefingAnswerRequest{ProjectID: id, Answers: map[string]string{
+			"audience": "x", "tone": "x", "call_to_action": "x", "channel": "blog", "length": "3",
+		}},
+	); err == nil {
+		t.Error("a text of three words was accepted")
+	}
+
+	// No project: the neutral set.
+	q, err = e.svc.BriefingQuestions(ctx, service.BriefingQuestionsRequest{})
+	if err != nil || q.ProductionKind != "short" {
+		t.Fatalf("with no project the set is the short video: %+v %v", q, err)
 	}
 }

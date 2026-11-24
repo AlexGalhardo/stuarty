@@ -2022,7 +2022,7 @@
       "domain": "project",
       "summary": "list the questions of the guided briefing; with --project, also what its brief already answers",
       "usage": [
-        "stuarty briefing:questions [--project <id>] [--kind short|commercial|long]"
+        "stuarty briefing:questions [--project <id>] [--kind short|commercial|long|text|image]"
       ],
       "example": "stuarty briefing:questions --project prj_7k2m9x4q1b",
       "flags": [
@@ -2034,7 +2034,7 @@
         {
           "name": "kind",
           "type": "string",
-          "usage": "the kind of production: short (the default), commercial or long"
+          "usage": "the set of questions: short, commercial, long, text or image (default: the kind of the project)"
         }
       ],
       "globals": [
@@ -2049,8 +2049,8 @@
       "domain": "project",
       "summary": "answer the guided briefing: the answers become the brief of a project",
       "usage": [
-        "stuarty briefing:answer --project <id> [--kind short|commercial|long] --answer <question>=<text> [--answer ...] [--replace]",
-        "stuarty briefing:answer --project <id> [--kind short|commercial|long] --answers <file|-> [--replace]"
+        "stuarty briefing:answer --project <id> [--kind short|commercial|long|text|image] --answer <question>=<text> [--answer ...] [--replace]",
+        "stuarty briefing:answer --project <id> [--kind short|commercial|long|text|image] --answers <file|-> [--replace]"
       ],
       "example": "stuarty briefing:answer --project prj_7k2m9x4q1b --answer audience=\"indie developers\" --answer goal=\"get sign-ups\" --answer platform=youtube-shorts --answer format=vertical-9x16 --answer duration=30",
       "flags": [
@@ -2068,7 +2068,7 @@
         {
           "name": "kind",
           "type": "string",
-          "usage": "the kind of production: short (the default), commercial or long"
+          "usage": "the set of questions: short, commercial, long, text or image (default: the kind of the project)"
         },
         {
           "name": "replace",

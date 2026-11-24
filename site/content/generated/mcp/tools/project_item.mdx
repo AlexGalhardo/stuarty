@@ -1,6 +1,6 @@
 ---
 title: "project_item"
-description: "Items. Items."
+description: "Items. add: timeline (id: timeline_id), text, output (export job_id); move, rename, trash, restore: item_id; brief: read, or write text (empty clears); briefing: questions or answers {id: text}, production_kind (auto); text: list, read (item_id) or write (text, title, text_kind); revisions (revision, until); revert (revision); check: caption (network), script (wpm), post; update: title=name, text=description, goal; skip/unskip: title=step."
 wide: true
 ---
 
@@ -10,7 +10,7 @@ wide: true
 
 <RefMain>
 
-Items. add: timeline (id: timeline_id), text, output (export job_id); move, rename, trash, restore: item_id; brief: read, or write text (empty clears); briefing: questions, or answers \{id: text\}, production_kind (default short); text: list, read (item_id) or write (text, title, text_kind); revisions (revision, until); revert (revision); check: caption (network), script (wpm), post; update: title=name, text=description, goal; skip/unskip: title=step.
+add: timeline (id: timeline_id), text, output (export job_id); move, rename, trash, restore: item_id; brief: read, or write text (empty clears); briefing: questions or answers \{id: text\}, production_kind (auto); text: list, read (item_id) or write (text, title, text_kind); revisions (revision, until); revert (revision); check: caption (network), script (wpm), post; update: title=name, text=description, goal; skip/unskip: title=step.
 
 ## Behaviour
 
@@ -43,7 +43,7 @@ These are the annotations of the tool definition, the hints a client uses to dec
 | `network` | `string` | no |  |
 | `wpm` | `integer` | no |  |
 | `until` | `integer` | no |  |
-| `production_kind` | `short`, `commercial`, `long` | no |  |
+| `production_kind` | `short`, `commercial`, `long`, `text`, `image` | no |  |
 | `goal` | `object` | no |  |
 
 ## Output

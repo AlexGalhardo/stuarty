@@ -56,7 +56,8 @@ func TestBriefingRefusesBeforeTouchingTheStore(t *testing.T) {
 		"a bad choice":   {"audience": "makers", "goal": "sell", "platform": "myspace", "format": "vertical-9x16", "duration": "30"},
 		"a bad duration": {"audience": "makers", "goal": "sell", "platform": "tiktok", "format": "vertical-9x16", "duration": "0"},
 	} {
-		_, err := s.BriefingAnswer(edit, BriefingAnswerRequest{ProjectID: "prj_a", Answers: answers})
+		// The set is named, so it is known before the store is read; with none it is the set of the project.
+		_, err := s.BriefingAnswer(edit, BriefingAnswerRequest{ProjectID: "prj_a", Kind: "short", Answers: answers})
 		if codeOf(err) != "E_VALIDATION" {
 			t.Errorf("%s: %v", name, err)
 		}
