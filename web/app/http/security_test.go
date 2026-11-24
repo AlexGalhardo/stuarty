@@ -258,7 +258,7 @@ func TestSecurity_T05_EveryOperationHasScope(t *testing.T) {
 		"GET /social/callback",
 		// The redirect address of the sign-in to an AI provider (epic 12): a page that posts to /api/v1/providers/signin/complete.
 		"GET /auth/callback",
-		// The pages of the local account (ADR-0049): drawn with no session, they hold no data and call
+		// The pages of the local account (ADR-0052): drawn with no session, they hold no data and call
 		// /auth/account.
 		"GET /account/create", "GET /account/signin", "GET /account/recover",
 	}

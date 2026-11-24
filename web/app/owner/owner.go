@@ -78,7 +78,7 @@ type Config struct {
 }
 
 // ErrAccountInNetworkMode refuses to open, in network mode, a workspace whose fields are sealed by a local account
-// (ADR-0049 item 6).
+// (ADR-0052 item 6).
 var ErrAccountInNetworkMode = errors.New(
 	"this workspace has a local account and its content is encrypted: network mode cannot open it; " +
 		"start it in local mode",
@@ -97,12 +97,12 @@ type Owner struct {
 	Store   *store.Store
 	Service service.Service
 	Runner  service.JobRunner
-	// Account is the local account of the workspace (ADR-0049); nil in network mode, which has its own users.
+	// Account is the local account of the workspace (ADR-0052); nil in network mode, which has its own users.
 	Account *account.Manager
 	gate    service.Gate
 	vault   *vault.Vault
 	// legacyKeys is the provider the environment, the file or the keychain named: it opens a vault that exists
-	// before the account does (ADR-0049).
+	// before the account does (ADR-0052).
 	legacyKeys vault.KeyProvider
 	// accountFault is the seam of a test: it may fail a stage of the creation of the account.
 	accountFault func(stage string) error
@@ -192,7 +192,7 @@ func Open(ctx context.Context, cfg Config) (*Owner, error) {
 }
 
 // setupAccount makes the account of a local workspace, the gate of the Service and the sealer of the store;
-// network mode has none of them (ADR-0049).
+// network mode has none of them (ADR-0052).
 func (o *Owner) setupAccount(ctx context.Context, st *store.Store, now func() time.Time) error {
 	if o.mode == config.ModeNetwork {
 		// Network mode holds no key: it would show the sealed values as text and write clear text over them.
@@ -271,7 +271,7 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 
 	o.Store = st
 
-	// A local workspace has an account (ADR-0049): while it exists and nobody is signed in, the Service is
+	// A local workspace has an account (ADR-0052): while it exists and nobody is signed in, the Service is
 	// closed. Network mode has its own users and no account.
 	if err := o.setupAccount(ctx, st, cfg.Now); err != nil {
 		return err
@@ -845,7 +845,7 @@ func (o *Owner) connections(
 		}
 	}
 
-	// With an account the vault master key is the one wrapped by the data key (ADR-0049); the key of the
+	// With an account the vault master key is the one wrapped by the data key (ADR-0052); the key of the
 	// environment, the file or the keychain only opens a vault that exists before the account does.
 	o.legacyKeys = keys
 

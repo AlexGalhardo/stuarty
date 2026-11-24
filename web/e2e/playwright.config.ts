@@ -135,7 +135,7 @@ const needsApp =
 
 const home = process.env.STUARTY_E2E_HOME ?? join(tmpdir(), "stuarty-e2e-home");
 
-// A fourth local server with no account, for the first-run spec (ADR-0049): every other local server has its
+// A fourth local server with no account, for the first-run spec (ADR-0052): every other local server has its
 // account and its signed-in session made by the global setup (support/globalSetup.ts).
 const accountPort = port + 8;
 const accountHome = `${home}-account`;
@@ -152,7 +152,7 @@ const networkHome = `${home}-network`;
 
 export default defineConfig({
 	testDir: "./specs",
-	// The account of every local server and the session of its person (ADR-0049).
+	// The account of every local server and the session of its person (ADR-0052).
 	globalSetup: "./support/globalSetup.ts",
 	fullyParallel: true,
 	// Never retry: a test that passes on a second try is a flaky test, which is a defect (REVIEW.md).
@@ -242,7 +242,7 @@ export default defineConfig({
 				storageState: failStatePath,
 			},
 		},
-		// The first run and Logout (ADR-0049): a server whose workspace has no account, so the page that creates
+		// The first run and Logout (ADR-0052): a server whose workspace has no account, so the page that creates
 		// it is the first thing a person sees. No session is kept for it.
 		{
 			name: "account",

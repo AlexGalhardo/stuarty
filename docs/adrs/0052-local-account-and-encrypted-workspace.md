@@ -1,4 +1,4 @@
-# ADR-0049: A local account with a password opens the studio, and its key encrypts the user's content
+# ADR-0052: A local account with a password opens the studio, and its key encrypts the user's content
 
 - Status: Accepted (2026-11-20)
 - Deciders: author

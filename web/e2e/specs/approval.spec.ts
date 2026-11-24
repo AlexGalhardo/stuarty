@@ -75,7 +75,7 @@ async function connect(
 	return String(made.id);
 }
 
-// A person decides, and a person is a session opened with the password (ADR-0049, SDD-007 section 3.9 item 5).
+// A person decides, and a person is a session opened with the password (ADR-0052, SDD-007 section 3.9 item 5).
 async function signInAsPerson(page: Page): Promise<void> {
 	await ensureAccount(page.request, home);
 	await signInWithPassword(page.request);

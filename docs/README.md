@@ -8,7 +8,7 @@ Work is driven by the epics of `plans/` (index `plans/00-roadmap.md`): one epic 
 
 The product was a video editor called Vukem Video until 2026-11-18, when it became Stuarty (ADR-0031). What that means for a reader:
 
-- **The PRDs and the ADRs are current.** ADR-0031 to ADR-0049 record the turn; the status line of every older ADR says what amended or superseded it.
+- **The PRDs and the ADRs are current.** ADR-0031 to ADR-0052 record the turn; the status line of every older ADR says what amended or superseded it.
 - **The SDDs specify the video editor as built, up to release 0.29.0.** Each one that the turn affects starts with an "Amended" line that names the ADRs to read with it. A new domain (image, publishing, providers and the others) gets its specification from the epic that builds it, before code.
 - **The former name** is in SDD-000 section 13, with the old variables, folder and identifiers that are still read (ADR-0044). Four SDDs (SDD-000, SDD-002, SDD-003, SDD-007) are read by tests and by the site generator.
 - **`security-review-1.0.md` and `agent-benchmark.md` are records** of a review and of benchmark rounds of the editor; they are not rewritten.
@@ -66,7 +66,7 @@ Which epic delivers each requirement is in the traceability table of `plans/00-r
 | 0016 | CLI on vukem commands, JSON output, exit codes 0, 1, 2 |
 | 0017 | HTTP API under `/api/v1` and server-sent events |
 | 0018 | jobs: own table over the vukem queue, with progress and cancellation (amended by 0046) |
-| 0019 | authentication: local trust on loopback, login and scoped keys on the network (amended by 0034 and 0049) |
+| 0019 | authentication: local trust on loopback, login and scoped keys on the network (amended by 0034 and 0052) |
 | 0020 | agent safety: trash, limits, marked untrusted text (item 1, no outbound capability, superseded by 0032) |
 | 0021 | transcription behind a provider interface; whisper.cpp local by default (part of 0036) |
 | 0022 | templates are parameterized projects |
@@ -81,7 +81,7 @@ Which epic delivers each requirement is in the traceability table of `plans/00-r
 | 0031 | Stuarty is one product with several domains over one service; work is a queue of epics |
 | 0032 | outbound only to connected destinations; publishing and costly generation wait for a person |
 | 0033 | secrets in an encrypted file opened by a master key |
-| 0034 | login stays local; a Google account is an optional connection with the user's own client (amended by 0049: no Google sign-in) |
+| 0034 | login stays local; a Google account is an optional connection with the user's own client (amended by 0052: no Google sign-in) |
 | 0035 | social networks through the user's own developer apps; the order of the networks |
 | 0036 | one AI provider layer with four ways to connect; what is never done |
 | 0037 | the chat hosts the user's own agent over ACP; no built-in agent |
@@ -96,7 +96,7 @@ Which epic delivers each requirement is in the traceability table of `plans/00-r
 | 0046 | publishing is a scheduled, approved job; blog posts have four destinations |
 | 0047 | the vukem framework stays, confined to the web layer and the process runner |
 | 0048 | the release train: linear release pull requests of about 90 commits, rebase-merged by the orchestrator |
-| 0049 | a local account with a password opens the studio, and its key encrypts the user's content |
+| 0052 | a local account with a password opens the studio, and its key encrypts the user's content |
 
 ## Specifications (`sdds/`)
 

@@ -482,7 +482,7 @@ func TestVerifyReportsABadKeyBeforeTheVaultExists(t *testing.T) {
 	}
 }
 
-// Forget wipes the key the Vault cached, and the provider is asked again (ADR-0049: the studio locks).
+// Forget wipes the key the Vault cached, and the provider is asked again (ADR-0052: the studio locks).
 func TestForgetZeroesTheCachedKeyAndAsksTheProviderAgain(t *testing.T) {
 	t.Parallel()
 

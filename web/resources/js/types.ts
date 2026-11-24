@@ -47,7 +47,7 @@ export interface SharedProps {
 	auth?: { user: User | null };
 	// What the server says of the session: whether it is a person's (VV-319).
 	session?: { privileged: boolean; mode: "local" | "network" };
-	// Present in local mode: the state of the local account and the username (ADR-0049).
+	// Present in local mode: the state of the local account and the username (ADR-0052).
 	account?: LocalAccount;
 	[key: string]: unknown;
 }

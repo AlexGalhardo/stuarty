@@ -53,7 +53,7 @@ type Options struct {
 	Trust *outbound.TestOptions
 	// Client builds the client of an address; default outbound.Webhook. Tests replace it.
 	Client func(rawURL string) (Doer, error)
-	// Locked says the studio is locked (ADR-0049): the address and the name of a webhook are sealed, so while it is
+	// Locked says the studio is locked (ADR-0052): the address and the name of a webhook are sealed, so while it is
 	// true the dispatcher reads no webhook and no secret, takes no delivery and queues none. A nil Locked is never
 	// locked.
 	Locked func() bool

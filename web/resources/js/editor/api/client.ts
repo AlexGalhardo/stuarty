@@ -399,7 +399,7 @@ export interface ApiClient {
 	// for them is built on a transport with an empty base.
 	login(email: string, password: string): Promise<SessionResult>;
 	logout(): Promise<void>;
-	// The local account (ADR-0049): root routes too, so a client on a transport with an empty base.
+	// The local account (ADR-0052): root routes too, so a client on a transport with an empty base.
 	accountState(): Promise<AccountState>;
 	createAccount(request: AccountCreateRequest): Promise<AccountCreated>;
 	accountLogin(identity: string, password: string): Promise<AccountState>;

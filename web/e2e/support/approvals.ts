@@ -37,7 +37,7 @@ export function seedApprovals(summaries: string[]): string[] {
 	}
 }
 
-// A person decides, and a person is a session opened with the password (ADR-0049, SDD-007 section 3.9 item 5): a
+// A person decides, and a person is a session opened with the password (ADR-0052, SDD-007 section 3.9 item 5): a
 // launch code no longer makes one. The approval queue refuses the local token an agent holds.
 export async function signInAsPerson(page: Page): Promise<void> {
 	await ensureAccount(page.request, home);

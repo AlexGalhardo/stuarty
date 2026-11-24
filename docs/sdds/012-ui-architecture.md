@@ -109,7 +109,7 @@ In network mode a browser that opens any other page with no session gets `303` t
 
 These pages talk to the Go controllers through Inertia props and form posts, as the existing Studio does. A controller of these pages calls the same `service.Service` operations as the HTTP API (ADR-0008) and passes the result as props.
 
-### 2.1.1 The local account pages (ADR-0049, SDD-007 section 3.9)
+### 2.1.1 The local account pages (ADR-0052, SDD-007 section 3.9)
 
 In local mode the interface asks the server for the state of the account (`GET /auth/account`: `none`, `locked`, `unlocked`) before it draws anything else, and every page of the product is reachable only in the state `unlocked`: a visit to any other page is answered with the page of the state, so a new workspace shows the create-account page first, and a locked one shows the sign-in page. These pages hold no data and no secret, are Inertia pages like the others, and send JSON to the account routes; the interface computes none of the rules (it shows the `details.fields` of an `E_VALIDATION`, each reason under its own field, in the language of the person).
 

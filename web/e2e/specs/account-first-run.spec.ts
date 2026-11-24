@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { expect, type Page, test } from "@playwright/test";
 import { home } from "../support/accountTargets";
 
-// The first run, the recovery key, the sign-in and Logout of the local account (ADR-0049, SDD-012 section 2.1.1),
+// The first run, the recovery key, the sign-in and Logout of the local account (ADR-0052, SDD-012 section 2.1.1),
 // on a server whose workspace has no account (playwright.config.ts, the project "account"). The specs run in
 // order: each one starts from what the one before left.
 test.describe.configure({ mode: "serial" });

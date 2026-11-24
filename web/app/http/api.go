@@ -47,7 +47,7 @@ type Deps struct {
 	// Auth is the credential side of network mode: users, the session guard and
 	// the keys. It is required with Network and unused without it.
 	Auth *auth.Network
-	// Account is the local account (ADR-0049); nil in network mode, where its routes answer E_NOT_FOUND. With
+	// Account is the local account (ADR-0052); nil in network mode, where its routes answer E_NOT_FOUND. With
 	// it, a launch code never privileges a session: only the password does (SDD-007 section 3.9 item 5).
 	Account *account.Manager
 	// AccountApply creates the account in a workspace that holds data (SDD-005 section 5.17.3); nil only stores
