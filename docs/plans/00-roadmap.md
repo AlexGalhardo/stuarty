@@ -118,6 +118,30 @@ The order, the critical path and the groups are in `docs/planning/screen-recordi
 | [72](72-optional-local-models.md) | Optional local models: background removal and depth | L | 70, the BEN2 licence decision | TODO |
 | [73](73-hyperframes-end-to-end-round.md) | A real end-to-end round with HyperFrames | S | 33 | DONE (2026-11-23, `e280de049`..`3a9a43dad`) |
 
+### 1.7 Implementation of the final redesign
+
+Author decisions D-134 and D-137. Epic 74 can start now, and so can epic 87, because their modules do not intersect epics 57 and 69. The screens of recording, transcript, caption styles, blur, voice and local models (frames 24 to 31) are built by epics 61 to 72 on the components of this section. Frame 32 is built by epic 85.
+
+| Epic | Title | Size | Depends on | Status |
+| --- | --- | --- | --- | --- |
+| [74](74-ui-foundation-tokens-and-components.md) | UI foundation: tokens, type and base components | L | — | IN PROGRESS (senior-c, 2026-11-23) |
+| [75](75-app-shell-sidebar-topbar-scene-bar.md) | App shell: sidebar, top bar, scene bar and notification center | L | 57, 74 | TODO |
+| [76](76-agent-activity-read-model.md) | Agent activity: skill, skill state, tool and plain description | L | 57, 75 | TODO |
+| [77](77-unified-requests-read-model.md) | One read of everything that waits for a person | L | 57, 75, 76 | TODO |
+| [78](78-project-kind-and-workflow.md) | Project kind and the workflow per kind | L | 57 | TODO |
+| [79](79-home-projects-and-briefing-screens.md) | Home, projects, briefing and the workflow screens | L | 74, 75, 78 | TODO |
+| [80](80-writing-screens.md) | Writing screens and the text flow | M | 74, 75, 78 | TODO |
+| [81](81-asset-library-screens.md) | Asset library screens | M | 74, 75 | TODO |
+| [82](82-publishing-and-approvals-screens.md) | Publishing and approvals screens | L | 74, 75, 77, 78 | TODO |
+| [83](83-chat-skills-prompts-memory-screens.md) | Chat, skills, prompts and memory screens | M | 74, 75, 76 | TODO |
+| [84](84-connections-settings-account-screens.md) | Connections, settings, account and error screens | L | 57, 74, 75 | TODO |
+| [85](85-video-editor-screens.md) | Video editor redesign | XL | 69, 74, 75, 76 | TODO |
+| [86](86-image-editor-screens.md) | Image editor redesign | L | 74, 75, 76 | TODO |
+| [87](87-site-navbar-and-docs.md) | Site navbar and documentation design | M | — | IN PROGRESS (senior-d, 2026-11-23) |
+| [88](88-landing-page-redesign.md) | Landing page redesign | M | 75, 76, 78, 79, 87 | TODO |
+
+At five seniors: first 74 and 87, beside 57 and 69. After 57 and 74: 75 and 78, which do not share modules. After 75: 76, 81 and 84. After 76 and 78: 77, 79, 80, 83 and 86, at most five at a time. Then 82 and 85, and 88 last. Epics 79 and 80 share no page; 85 and 86 share no editor module.
+
 ## 2. Dependency graph
 
 ```text
