@@ -5,36 +5,67 @@
 
 use std::path::Path;
 
-const FORBIDDEN: [&str; 14] = [
+const FORBIDDEN: [&str; 21] = [
 	"SetWindowsHookEx",
 	"UnhookWindowsHookEx",
 	"GetKeyboardState",
 	"GetKeyState",
 	"GetKeyNameText",
 	"RegisterRawInputDevices",
-	"GetRawInputData",
-	"GetRawInputBuffer",
+	"GetRawInput",
 	"RegisterHotKey",
 	"MapVirtualKey",
 	"ToUnicode",
+	"ToAscii",
 	"keybd_event",
+	"SendInput",
 	"WH_KEYBOARD",
 	"RIDEV_",
+	"KeyboardAndMouse",
+	"OpenClipboard",
+	"GetClipboardData",
+	"SetClipboardData",
+	"AddClipboardFormatListener",
+	"DataExchange",
 ];
 
+/// Every `.rs` file under `src/`, its subfolders included, by its path inside `src/`.
 fn sources() -> Vec<(String, String)> {
-	let mut out = Vec::new();
-	let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
-	for entry in std::fs::read_dir(dir).unwrap() {
-		let p = entry.unwrap().path();
-		if p.extension().is_some_and(|e| e == "rs") {
-			out.push((
-				p.file_name().unwrap().to_string_lossy().into_owned(),
-				std::fs::read_to_string(&p).unwrap(),
-			));
+	fn walk(dir: &Path, root: &Path, out: &mut Vec<(String, String)>) {
+		for entry in std::fs::read_dir(dir).unwrap() {
+			let p = entry.unwrap().path();
+			if p.is_dir() {
+				walk(&p, root, out);
+			} else if p.extension().is_some_and(|e| e == "rs") {
+				let name = p
+					.strip_prefix(root)
+					.unwrap()
+					.to_string_lossy()
+					.replace('\\', "/");
+				out.push((name, std::fs::read_to_string(&p).unwrap()));
+			}
 		}
 	}
+	let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
+	let mut out = Vec::new();
+	walk(&root, &root, &mut out);
 	out
+}
+
+/// The `windows` crate is a direct dependency for Media Foundation only (D-142): a feature that brings the
+/// keyboard, the hooks, raw input or the clipboard into reach has to change this test in review.
+#[test]
+fn the_windows_crate_brings_only_media_foundation_and_com() {
+	let toml =
+		std::fs::read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join("Cargo.toml")).unwrap();
+	let line = toml
+		.lines()
+		.find(|l| l.trim_start().starts_with("windows ="))
+		.expect("the windows dependency line");
+	assert!(
+		line.contains(r#"features = ["Win32_Media_MediaFoundation", "Win32_System_Com"]"#),
+		"the features of the windows crate changed: {line}"
+	);
 }
 
 #[test]

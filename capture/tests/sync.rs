@@ -122,7 +122,7 @@ fn run(name: &str, sc: &Scenario) -> Measure {
 	let cam_on = rises(&cam, FPS);
 	let mic_on = bursts_ms(&mic);
 
-	let (mut worst, mut matched) = (0f64, 0usize);
+	let (mut worst, mut matched, mut missed) = (0f64, 0usize, 0usize);
 	let mut dists: Vec<f64> = Vec::new();
 	let mut odd: Vec<(f64, f64, f64)> = Vec::new();
 	for t in screen_on.iter().filter(|t| !skip(**t)) {
@@ -132,8 +132,11 @@ fn run(name: &str, sc: &Scenario) -> Measure {
 		if a > 40.0 || b > 40.0 {
 			odd.push((*t, a, b));
 		}
-		// A pulse repeats every 500 ms: a nearest onset farther than a quarter of that is another pulse.
+		// A pulse repeats every 500 ms: a nearest onset farther than a quarter of that is another pulse, so this
+		// one has no counterpart (a source that gave no new frame for it). It is not a distance, but it is
+		// counted and reported, so the worst distance printed is never read as the worst gap of the file.
 		if a > 125.0 || b > 125.0 {
+			missed += 1;
 			continue;
 		}
 		matched += 1;
@@ -159,8 +162,8 @@ fn run(name: &str, sc: &Scenario) -> Measure {
 		);
 	}
 	eprintln!(
-		"{name}: {matched} flashes compared, worst distance {worst:.1} ms, 95th percentile {p95:.1} ms, change \
-		 start to end {trend:.1} ms, lengths {lengths_ms:.1?}"
+		"{name}: {matched} flashes compared, {missed} with no counterpart within 125 ms, worst compared distance \
+		 {worst:.1} ms, 95th percentile {p95:.1} ms, change start to end {trend:.1} ms, lengths {lengths_ms:.1?}"
 	);
 	let _ = std::fs::remove_dir_all(d);
 	Measure {
