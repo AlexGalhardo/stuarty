@@ -64,6 +64,7 @@ Each member of `operations` is `{ op, args }`. Every operation has its own page 
 | [`asset.remove`](/docs/mcp/tools/edit/asset.remove) | Removes an asset that no item uses. | `media` |
 | [`audio.add`](/docs/mcp/tools/edit/audio.add) | Places an audio asset, or the audio of a video asset, on an audio track. | `edit` |
 | [`audio.apply_preset`](/docs/mcp/tools/edit/audio.apply_preset) | Replaces a chain with a preset. | `edit` |
+| [`audio.apply_voice_preset`](/docs/mcp/tools/edit/audio.apply_voice_preset) | Replaces a chain with a studio voice preset. | `edit` |
 | [`audio.duck`](/docs/mcp/tools/edit/audio.duck) | Lowers a music item while speech sounds, with a ramp down before and a ramp up after. | `edit` |
 | [`audio.mark_beats`](/docs/mcp/tools/edit/audio.mark_beats) | Writes markers on a music item at the beats of its audio. | `edit` |
 | [`audio.processor_add`](/docs/mcp/tools/edit/audio.processor_add) | Adds an audio processor to a chain. | `edit` |
@@ -71,9 +72,11 @@ Each member of `operations` is `{ op, args }`. Every operation has its own page 
 | [`audio.processor_remove`](/docs/mcp/tools/edit/audio.processor_remove) | Removes an audio processor. | `edit` |
 | [`audio.processor_set`](/docs/mcp/tools/edit/audio.processor_set) | Changes one audio processor. | `edit` |
 | [`caption.add`](/docs/mcp/tools/edit/caption.add) | Adds a caption item with timed words. | `edit` |
+| [`caption.apply_style`](/docs/mcp/tools/edit/caption.apply_style) | Applies a named style to a caption track. | `edit` |
 | [`caption.edit_word`](/docs/mcp/tools/edit/caption.edit_word) | Changes the text of one word of a caption, or removes the word. | `edit` |
 | [`caption.from_transcript`](/docs/mcp/tools/edit/caption.from_transcript) | Creates captions for the speech of a clip from its transcript. | `edit` |
 | [`caption.import_subtitles`](/docs/mcp/tools/edit/caption.import_subtitles) | Creates one caption per cue of an SRT or WebVTT text. | `edit` |
+| [`caption.list_styles`](/docs/mcp/tools/edit/caption.list_styles) | Describes the named caption styles. | `edit` |
 | [`caption.merge`](/docs/mcp/tools/edit/caption.merge) | Joins two captions of one track into one that spans both. | `edit` |
 | [`caption.retime_from_clip`](/docs/mcp/tools/edit/caption.retime_from_clip) | Retimes the captions linked to a clip after the clip was moved, trimmed or sped up. | `edit` |
 | [`caption.set_breaks`](/docs/mcp/tools/edit/caption.set_breaks) | Sets the forced line breaks of a caption. | `edit` |
@@ -82,6 +85,7 @@ Each member of `operations` is `{ op, args }`. Every operation has its own page 
 | [`caption.split`](/docs/mcp/tools/edit/caption.split) | Splits a caption into two at a word boundary. | `edit` |
 | [`clip.add`](/docs/mcp/tools/edit/clip.add) | Places a video or image asset on a visual track. | `edit` |
 | [`clip.add_composition`](/docs/mcp/tools/edit/clip.add_composition) | Places another timeline of the project on a visual track as one clip. | `edit` |
+| [`clip.blur_region`](/docs/mcp/tools/edit/clip.blur_region) | Blurs a rectangle of a clip for a time range. | `edit` |
 | [`clip.remove_silences`](/docs/mcp/tools/edit/clip.remove_silences) | Cuts the silences out of a clip or audio item, one item per stretch of speech. | `edit` |
 | [`clip.replace_media`](/docs/mcp/tools/edit/clip.replace_media) | Swaps the asset of a clip for another of the same kind and keeps everything else. | `edit` |
 | [`clip.set_blend`](/docs/mcp/tools/edit/clip.set_blend) | Sets how a visual item is mixed with what is below it. | `edit` |
