@@ -49,7 +49,7 @@ None new.
 - [x] 1. The shared library frame and `MediaCard`. Verify: `cd web && bun run typecheck && bun run test -- assetlibrary` pass.
 - [x] 2. Video and visual assets. Verify: `cd web && bun run e2e -- library-rail` passes.
 - [x] 3. Sound assets with waveform and player. Verify: `cd web && bun run test -- SoundRow waveform` passes.
-- [ ] 4. Empty, loading and error states. Verify: `bun run check:i18n` exits 0.
+- [x] 4. Empty, loading and error states. Verify: `bun run check:i18n` exits 0.
 - [ ] 5. Check three widths in both themes. Verify: `cd web && bun run e2e -- asset-rename` and `bun run e2e -- a11y` pass.
 
 ## Test strategy

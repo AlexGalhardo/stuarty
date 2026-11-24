@@ -3316,7 +3316,49 @@
         "video": "No video yet. Import a file in a project and it appears here.",
         "audio": "No sound yet. Import one below, or generate a voice-over, and it appears here."
       },
+      "empty_title": {
+        "visual": "No images yet",
+        "video": "No videos yet",
+        "audio": "No sounds yet"
+      },
       "empty_filtered": "No file matches these filters.",
+      "loading": {
+        "visual": "Loading the images...",
+        "video": "Loading the videos...",
+        "audio": "Loading the sounds..."
+      },
+      "guide": {
+        "title": "How a library works",
+        "bring": {
+          "title": "Bring a file in",
+          "text": "Import it into a project or generate it, and it is listed here."
+        },
+        "tag": {
+          "title": "Tag it",
+          "text": "Tags and a rights note help you find it and know what you may reuse."
+        },
+        "use": {
+          "title": "Use it in another project",
+          "text": "No copy is made: the file is the same one."
+        },
+        "open_projects": "Open the projects"
+      },
+      "error": {
+        "retry": "Try again",
+        "how": {
+          "visual": "How to fix: the images could not be read",
+          "video": "How to fix: the videos could not be read",
+          "audio": "How to fix: the sounds could not be read"
+        },
+        "step1": {
+          "title": "Try again",
+          "text": "A failed read changes none of your files."
+        },
+        "step2": {
+          "title": "If it keeps failing, restart Stuarty",
+          "text": "Your files stay on this computer or on your own server."
+        }
+      },
       "more": "Load more",
       "detail": {
         "title": "Details",

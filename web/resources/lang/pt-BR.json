@@ -3316,7 +3316,49 @@
         "video": "Nenhum vídeo ainda. Importe um arquivo em um projeto e ele aparece aqui.",
         "audio": "Nenhum som ainda. Importe um abaixo, ou gere uma locução, e ele aparece aqui."
       },
-      "empty_filtered": "Nenhum arquivo corresponde a esses filtros.",
+      "empty_title": {
+        "visual": "Nenhuma imagem ainda",
+        "video": "Nenhum vídeo ainda",
+        "audio": "Nenhum som ainda"
+      },
+      "loading": {
+        "visual": "Carregando as imagens...",
+        "video": "Carregando os vídeos...",
+        "audio": "Carregando os sons..."
+      },
+      "guide": {
+        "title": "Como uma biblioteca funciona",
+        "bring": {
+          "title": "Traga um arquivo",
+          "text": "Importe-o em um projeto ou gere-o, e ele aparece aqui."
+        },
+        "tag": {
+          "title": "Marque com etiquetas",
+          "text": "Etiquetas e uma nota de direitos ajudam a achar o arquivo e a saber o que você pode reutilizar."
+        },
+        "use": {
+          "title": "Use em outro projeto",
+          "text": "Sem cópia: o arquivo é o mesmo."
+        },
+        "open_projects": "Abrir os projetos"
+      },
+      "error": {
+        "retry": "Tentar de novo",
+        "how": {
+          "visual": "Como resolver: não foi possível ler as imagens",
+          "video": "Como resolver: não foi possível ler os vídeos",
+          "audio": "Como resolver: não foi possível ler os sons"
+        },
+        "step1": {
+          "title": "Tente de novo",
+          "text": "Uma leitura que falha não altera nenhum dos seus arquivos."
+        },
+        "step2": {
+          "title": "Se continuar, reinicie o Stuarty",
+          "text": "Seus arquivos ficam salvos neste computador ou no seu próprio servidor."
+        }
+      },
+      "empty_filtered":"Nenhum arquivo corresponde a esses filtros.",
       "more": "Carregar mais",
       "detail": {
         "title": "Detalhes",

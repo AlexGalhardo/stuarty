@@ -28,6 +28,11 @@ import { OriginBadge } from "./badges";
 import { GenerateDialog, type Kind as GenerateKind } from "./GenerateDialog";
 import { LibraryFilters } from "./LibraryFilters";
 import { LibraryFrame } from "./LibraryFrame";
+import {
+	LibraryEmpty,
+	LibraryLoading,
+	LibraryReadFailed,
+} from "./LibraryStates";
 import { MediaCard } from "./MediaCard";
 import { SoundImport } from "./SoundImport";
 import { SoundRow } from "./SoundRow";
@@ -649,18 +654,37 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 			<FailureNote failure={failure} />
 			<div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
 				<section aria-labelledby={`files-${section}`}>
-					<h2 id={`files-${section}`} className="text-sm text-text-muted">
+					<h2
+						id={`files-${section}`}
+						className="text-sm text-text-muted"
+						hidden={items === null}
+					>
 						{t("ui.assets.count", { count: String(total) })}
 					</h2>
-					{items !== null && items.length === 0 && (
+					{items === null && failure === null && (
+						<LibraryLoading section={section} />
+					)}
+					{items === null && failure !== null && (
+						<LibraryReadFailed
+							section={section}
+							onRetry={() => {
+								setFailure(null);
+								void load(applied);
+							}}
+						/>
+					)}
+					{items !== null && items.length === 0 && filtered && (
 						<p
 							className="mt-4 text-sm text-text-muted"
 							data-testid="asset-empty"
 						>
-							{filtered
-								? t("ui.assets.empty_filtered")
-								: t(`ui.assets.empty.${section}`)}
+							{t("ui.assets.empty_filtered")}
 						</p>
+					)}
+					{items !== null && items.length === 0 && !filtered && (
+						<div data-testid="asset-empty">
+							<LibraryEmpty section={section} />
+						</div>
 					)}
 					{items !== null && items.length > 0 && section === "audio" && (
 						<ul className="mt-3 flex flex-col gap-3" data-testid="asset-grid">
