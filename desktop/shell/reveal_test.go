@@ -43,12 +43,18 @@ func (f *fakeManager) start(name string, args []string) error {
 	return f.err
 }
 
-// mediaFile makes <workspace>/store/aa/aabb and returns the media folder and the file.
+// storedHash and otherHash are names a stored original has: 64 lowercase hexadecimal characters.
+var (
+	storedHash = strings.Repeat("ab", 32)
+	otherHash  = strings.Repeat("cd", 32)
+)
+
+// mediaFile makes <workspace>/store/ab/<storedHash> and returns the media folder and the file.
 func mediaFile(t *testing.T) (root, file string) {
 	t.Helper()
 
 	root = filepath.Join(t.TempDir(), "store")
-	file = filepath.Join(root, "aa", "aabb")
+	file = filepath.Join(root, "ab", storedHash)
 
 	if err := os.MkdirAll(filepath.Dir(file), 0o700); err != nil {
 		t.Fatal(err)
@@ -130,9 +136,23 @@ func TestCheckRevealUnderRefusesWhatIsNotAFileOfTheMediaFolder(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	evil := filepath.Join(sibling, "aabb")
+	evil := filepath.Join(sibling, storedHash)
 	if err := os.WriteFile(evil, []byte("s"), 0o600); err != nil {
 		t.Fatal(err)
+	}
+
+	// Files under the media folder whose name is not a stored original's: a partial import, a program.
+	partial := filepath.Join(root, ".incoming", "import-1")
+	program := filepath.Join(root, "ab", "run.exe")
+
+	for _, p := range []string{partial, program} {
+		if err := os.MkdirAll(filepath.Dir(p), 0o700); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := os.WriteFile(p, []byte("s"), 0o600); err != nil {
+			t.Fatal(err)
+		}
 	}
 
 	if err := CheckRevealUnder(root, file); err != nil {
@@ -142,13 +162,15 @@ func TestCheckRevealUnderRefusesWhatIsNotAFileOfTheMediaFolder(t *testing.T) {
 	bad := map[string]string{
 		"a file elsewhere": outside,
 		"a sibling folder with the root as a text prefix": evil,
-		"a dot dot path out of the root":                  filepath.Join(root, "aa", "..", "..", "store-evil", "aabb"),
+		"a dot dot path out of the root":                  filepath.Join(root, "ab", "..", "..", "store-evil", storedHash),
 		"the media folder itself":                         root,
 		"a folder inside it":                              filepath.Dir(file),
-		"a relative path":                                 filepath.Join("aa", "aabb"),
+		"a relative path":                                 filepath.Join("ab", storedHash),
 		"an empty path":                                   "",
 		"a path with a NUL":                               file + "\x00",
-		"a file that is not there":                        filepath.Join(root, "aa", "missing"),
+		"a file that is not there":                        filepath.Join(root, "ab", otherHash),
+		"a partial import under the folder":               partial,
+		"a program under the folder":                      program,
 	}
 
 	for name, p := range bad {
@@ -169,7 +191,7 @@ func TestCheckRevealUnderRefusesALinkOutOfTheMediaFolder(t *testing.T) {
 	root, file := mediaFile(t)
 
 	outside := t.TempDir()
-	if err := os.WriteFile(filepath.Join(outside, "aabb"), []byte("s"), 0o600); err != nil {
+	if err := os.WriteFile(filepath.Join(outside, storedHash), []byte("s"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
