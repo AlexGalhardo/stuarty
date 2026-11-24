@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { type ReactNode, useState } from "react";
 
+import PanelTitle from "@/components/PanelTitle";
+import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import type { ImageDocument, Layer } from "../api/types";
@@ -33,16 +35,38 @@ export default function Inspector(): ReactNode {
 	const t = useT();
 	const doc = useImage((s) => s.doc);
 	const selection = useImage((s) => s.selection);
-	if (doc === null) return null;
+	if (doc === null) {
+		return (
+			<div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-ed-panel p-3">
+				<PanelTitle>{t("ui.image.inspector.title")}</PanelTitle>
+			</div>
+		);
+	}
 	const layers = selection
 		.map((id) => findLayer(doc.layers, id))
 		.filter((l): l is Layer => l !== undefined);
+	const only = layers.length === 1 ? layers[0] : undefined;
 
 	return (
 		<div
 			data-testid="image-inspector"
-			className="min-h-0 flex-1 overflow-y-auto"
+			className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto bg-ed-panel p-3"
 		>
+			<PanelTitle>
+				{t("ui.image.inspector.title")}
+				<span
+					data-testid="image-inspector-target"
+					className="min-w-0 flex-1 truncate font-normal text-muted-foreground"
+				>
+					{only !== undefined ? (
+						<UntrustedText>{only.name}</UntrustedText>
+					) : layers.length > 1 ? (
+						t("ui.image.canvas.many_selected", { count: layers.length })
+					) : (
+						t("ui.image.inspector.document")
+					)}
+				</span>
+			</PanelTitle>
 			{layers.length === 0 && <DocumentFields doc={doc} />}
 			{layers.length > 1 && (
 				<>
