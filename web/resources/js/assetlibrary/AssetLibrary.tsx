@@ -24,6 +24,7 @@ import type {
 	AssetResult,
 	LibraryAsset,
 } from "../editor/api/types";
+import { OriginBadge } from "./badges";
 import { GenerateDialog, type Kind as GenerateKind } from "./GenerateDialog";
 import { LibraryFilters } from "./LibraryFilters";
 import { LibraryFrame } from "./LibraryFrame";
@@ -65,9 +66,7 @@ function Field({
 }): ReactNode {
 	return (
 		<div className="flex flex-col gap-1">
-			<h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-				{label}
-			</h3>
+			<h3 className="text-sm font-semibold text-text-muted">{label}</h3>
 			<div className="text-sm break-words whitespace-pre-wrap">{children}</div>
 		</div>
 	);
@@ -256,7 +255,7 @@ export function AssetDetail({
 	return (
 		<aside
 			aria-labelledby={`${id}-title`}
-			className="flex flex-col gap-4 rounded-xl border bg-card p-4 text-card-foreground"
+			className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-4 text-text lg:sticky lg:top-4 lg:self-start"
 			data-testid="asset-detail"
 		>
 			<div className="flex items-start justify-between gap-2">
@@ -276,7 +275,7 @@ export function AssetDetail({
 			</div>
 			<FailureNote failure={failure} />
 			{said !== null && (
-				<p role="status" className="text-sm text-muted-foreground">
+				<p role="status" className="text-sm text-text-muted">
 					{said}
 				</p>
 			)}
@@ -284,7 +283,7 @@ export function AssetDetail({
 				<>
 					<Field label={t("ui.assets.detail.origin")}>
 						<p data-testid="asset-origin">
-							{t(`ui.assets.origin.${asset.origin?.kind ?? "imported"}`)}
+							<OriginBadge kind={asset.origin?.kind} />
 						</p>
 						{asset.origin?.provider !== undefined && (
 							<p>
@@ -332,6 +331,21 @@ export function AssetDetail({
 								.join(" · ")}
 						</p>
 					</Field>
+					<Field label={t("ui.assets.detail.rights_summary")}>
+						<p data-testid="asset-rights">
+							{asset.origin?.rights_note !== undefined &&
+							asset.origin.rights_note !== "" ? (
+								<UntrustedText>{asset.origin.rights_note}</UntrustedText>
+							) : (
+								t("ui.assets.detail.no_rights")
+							)}
+						</p>
+						<p data-testid="asset-reuse">
+							{asset.reusable === true
+								? t("ui.assets.detail.reuse_yes")
+								: t("ui.assets.detail.reuse_no")}
+						</p>
+					</Field>
 					<div className="flex flex-col gap-2">
 						<Label htmlFor={`${id}-description`}>
 							{t("ui.assets.detail.description")}
@@ -351,7 +365,7 @@ export function AssetDetail({
 							value={rights}
 							onChange={(event) => setRights(event.target.value)}
 						/>
-						<p className="text-xs text-muted-foreground">
+						<p className="text-sm text-text-muted">
 							{t("ui.assets.detail.rights_notice")}
 						</p>
 						<label className="flex items-center gap-2 text-sm">
@@ -391,14 +405,14 @@ export function AssetDetail({
 						</div>
 					</div>
 					<div className="flex flex-col gap-2">
-						<h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+						<h3 className="text-sm font-semibold text-text-muted">
 							{t("ui.assets.detail.tags")}
 						</h3>
 						<ul className="flex flex-wrap gap-2">
 							{(asset.tags ?? []).map((name) => (
 								<li
 									key={name}
-									className="flex items-center gap-1 rounded bg-muted px-2 py-1 text-sm"
+									className="flex items-center gap-1 rounded-full bg-surface-hover px-2 py-1 text-sm text-text"
 								>
 									<UntrustedText>{name}</UntrustedText>
 									<button
@@ -451,11 +465,11 @@ export function AssetDetail({
 						</form>
 					</div>
 					<div className="flex flex-col gap-2">
-						<h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+						<h3 className="text-sm font-semibold text-text-muted">
 							{t("ui.assets.detail.uses")}
 						</h3>
 						{(asset.uses ?? []).length === 0 ? (
-							<p className="text-sm text-muted-foreground">
+							<p className="text-sm text-text-muted">
 								{t("ui.assets.detail.no_uses")}
 							</p>
 						) : (
