@@ -1,6 +1,7 @@
 import { type FormEvent, type ReactNode, useEffect, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { Notice } from "@/components/Notice";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -145,18 +146,14 @@ export default function SkillPane({
 						<EntryBadges entry={entry} />
 					</div>
 					{entry.warning !== undefined && entry.warning !== "" && (
-						<p role="status" className="text-sm text-destructive">
-							{entry.warning}
-						</p>
+						<Notice tone="danger" role="status" title={entry.warning} />
 					)}
 					<dl className="grid grid-cols-[max-content_1fr] gap-x-3 gap-y-1 text-sm">
-						<dt className="text-muted-foreground">
-							{t("ui.library.skill.origin")}
-						</dt>
+						<dt className="text-text-muted">{t("ui.library.skill.origin")}</dt>
 						<dd>{t(`ui.library.origin.${entry.origin ?? "user"}`)}</dd>
 						{source !== "" && (
 							<>
-								<dt className="text-muted-foreground">
+								<dt className="text-text-muted">
 									{t("ui.library.skill.source")}
 								</dt>
 								<dd>
@@ -164,9 +161,7 @@ export default function SkillPane({
 								</dd>
 							</>
 						)}
-						<dt className="text-muted-foreground">
-							{t("ui.library.field.license")}
-						</dt>
+						<dt className="text-text-muted">{t("ui.library.field.license")}</dt>
 						<dd>
 							{license === "" ? (
 								t("ui.library.skill.no_licence")
@@ -175,10 +170,20 @@ export default function SkillPane({
 							)}
 						</dd>
 					</dl>
-					{!entry.reviewed && (
-						<div className="flex flex-col gap-1">
-							<p className="text-sm">{t("ui.library.skill.review_hint")}</p>
-							<div>
+					{entry.reviewed ? (
+						<Notice
+							tone="success"
+							title={t("ui.library.skill.offered_title")}
+							data-testid="skill-offered"
+						>
+							{t("ui.library.skill.offered_text")}
+						</Notice>
+					) : (
+						<Notice
+							tone="warning"
+							title={t("ui.library.skill.not_offered_title")}
+							data-testid="skill-not-offered"
+							actions={
 								<Button
 									type="button"
 									disabled={busy || !privileged || (entry.lint_errors ?? 0) > 0}
@@ -189,9 +194,11 @@ export default function SkillPane({
 								>
 									{t("ui.library.skill.mark_reviewed")}
 								</Button>
-								<PersonOnlyNote id="review-person-only" />
-							</div>
-						</div>
+							}
+						>
+							{t("ui.library.skill.review_hint")}
+							<PersonOnlyNote id="review-person-only" />
+						</Notice>
 					)}
 				</div>
 			)}
@@ -221,11 +228,11 @@ export default function SkillPane({
 										<li key={file.path} className="flex flex-col gap-1">
 											<span>
 												<UntrustedText>{file.path}</UntrustedText>{" "}
-												<span className="text-muted-foreground">
+												<span className="text-text-muted">
 													{t("ui.library.skill.bytes", { count: file.bytes })}
 												</span>
 												{file.script === true && (
-													<span className="ml-2 text-destructive">
+													<span className="ml-2 text-danger-text">
 														{t("ui.library.skill.script")}
 													</span>
 												)}
@@ -252,7 +259,7 @@ export default function SkillPane({
 									required
 									onChange={(e) => setNewName(e.target.value)}
 								/>
-								<p className="text-xs text-muted-foreground">
+								<p className="text-xs text-text-muted">
 									{t("ui.library.field.name_hint")}
 								</p>
 							</div>
@@ -302,9 +309,7 @@ export default function SkillPane({
 				</TabsContent>
 			</Tabs>
 			{notice !== null && (
-				<p role="status" className="text-sm">
-					{notice}
-				</p>
+				<Notice tone="success" role="status" title={notice} />
 			)}
 			<FailureNote failure={failure} />
 		</div>

@@ -1,39 +1,45 @@
 import type { ReactNode } from "react";
-
+import { StatusBadge } from "@/components/StatusBadge";
 import UntrustedText from "@/components/UntrustedText";
 import { Badge } from "@/components/ui/badge";
 import { useT } from "@/lib/i18n";
-import type { LibraryEntry, LibraryFinding } from "./client";
+import type { LibraryEntry, LibraryFinding, LibraryKind } from "./client";
 
-// The state of an entry as small badges (SDD-018 section 14): what the service says, never computed here.
+// The state of an entry as a word and an icon (SDD-018 section 14, design-system section 7): what the service says,
+// never computed here. A skill or a note an agent may not use yet says so in words: that is the line a person reads
+// to know what steers the agents.
 export function EntryBadges({ entry }: { entry: LibraryEntry }): ReactNode {
 	const t = useT();
 	return (
 		<span className="flex flex-wrap items-center gap-1">
 			{entry.state === "invalid" && (
-				<Badge variant="destructive">{t("ui.library.badge.invalid")}</Badge>
+				<StatusBadge status="danger">
+					{t("ui.library.badge.invalid")}
+				</StatusBadge>
 			)}
 			{entry.kind === "skill" && entry.origin !== undefined && (
-				<Badge variant="outline">
+				<StatusBadge status="neutral">
 					{t(`ui.library.origin.${entry.origin}`)}
-				</Badge>
+				</StatusBadge>
 			)}
 			{entry.kind === "skill" && entry.state === "ok" && (
-				<Badge variant={entry.reviewed ? "secondary" : "destructive"}>
+				<StatusBadge status={entry.reviewed ? "success" : "waiting"}>
 					{entry.reviewed
 						? t("ui.library.badge.reviewed")
 						: t("ui.library.badge.unreviewed")}
-				</Badge>
+				</StatusBadge>
 			)}
 			{entry.kind === "skill" && entry.has_scripts === true && (
-				<Badge variant="outline">{t("ui.library.badge.scripts")}</Badge>
+				<StatusBadge status="neutral">
+					{t("ui.library.badge.scripts")}
+				</StatusBadge>
 			)}
 			{entry.kind === "memory" && entry.state === "ok" && (
-				<Badge variant={entry.kept ? "secondary" : "destructive"}>
+				<StatusBadge status={entry.kept ? "success" : "waiting"}>
 					{entry.kept
 						? t("ui.library.badge.kept")
 						: t("ui.library.badge.pending")}
-				</Badge>
+				</StatusBadge>
 			)}
 		</span>
 	);
@@ -48,9 +54,7 @@ export function Findings({
 	const t = useT();
 	if (findings.length === 0) {
 		return (
-			<p className="text-sm text-muted-foreground">
-				{t("ui.library.lint.none")}
-			</p>
+			<p className="text-sm text-text-muted">{t("ui.library.lint.none")}</p>
 		);
 	}
 	return (
@@ -100,10 +104,31 @@ export function FileText({
 			<pre
 				// biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable text must be reachable by keyboard
 				tabIndex={0}
-				className="max-h-96 overflow-auto rounded-lg border bg-muted/40 p-3 text-sm whitespace-pre-wrap break-words"
+				className="max-h-96 overflow-auto rounded-lg border bg-surface-sunken p-3 text-sm whitespace-pre-wrap break-words"
 			>
 				<UntrustedText>{text}</UntrustedText>
 			</pre>
 		</section>
 	);
+}
+
+export interface EntryGroup {
+	key: string;
+	label: string | null;
+	entries: readonly LibraryEntry[];
+}
+
+// Memory shows the notes that wait for a person first: which are kept is the service's word, this only sets the
+// order and the headings. The other lists keep the order of the service, with no heading.
+export function groupEntries(
+	kind: LibraryKind,
+	rows: readonly LibraryEntry[],
+	labels: { pending: string; kept: string },
+): EntryGroup[] {
+	if (kind !== "memory") return [{ key: "all", label: null, entries: rows }];
+	const waits = (e: LibraryEntry): boolean => e.state === "ok" && !e.kept;
+	return [
+		{ key: "pending", label: labels.pending, entries: rows.filter(waits) },
+		{ key: "kept", label: labels.kept, entries: rows.filter((e) => !waits(e)) },
+	].filter((g) => g.entries.length > 0);
 }

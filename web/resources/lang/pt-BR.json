@@ -3923,12 +3923,12 @@
       "saved": "Salvo.",
       "preview_label": "Texto da entrada",
       "badge": {
-        "invalid": "Arquivo inválido",
-        "reviewed": "Revisada",
-        "unreviewed": "Não revisada",
+        "invalid": "Arquivo inválido: não oferecido aos agentes",
+        "reviewed": "Revisada: oferecida aos agentes",
+        "unreviewed": "Não revisada: não oferecida aos agentes",
         "scripts": "Tem scripts",
-        "kept": "Mantida",
-        "pending": "Pendente"
+        "kept": "Mantida: oferecida aos agentes",
+        "pending": "Aguardando você: não oferecida aos agentes"
       },
       "origin": {
         "built-in": "Do produto",
@@ -3961,7 +3961,10 @@
       "memory": {
         "description": "O fato, em uma linha",
         "keep": "Manter esta nota",
-        "pending_hint": "Esta nota não foi escrita por uma pessoa no aplicativo (um agente a escreveu, ou ela veio de uma janela que não é a sessão de uma pessoa). Os agentes não a recebem antes de você mantê-la."
+        "pending_hint": "Esta nota não foi escrita por uma pessoa no aplicativo (um agente a escreveu, ou ela veio de uma janela que não é a sessão de uma pessoa). Os agentes não a recebem antes de você mantê-la.",
+        "pending_title": "Aguardando a sua aprovação",
+        "reject": "Rejeitar esta nota",
+        "reject_hint": "Rejeitar remove a nota: ela nunca é mantida e nenhum agente a recebe."
       },
       "prompt": {
         "variables_hint": "Escreva {{variable}} onde entra um valor.",
@@ -3969,7 +3972,8 @@
         "no_variables": "Este prompt não tem variáveis.",
         "value": "Valor de {name}",
         "render": "Gerar o texto",
-        "rendered": "Texto gerado"
+        "rendered": "Texto gerado",
+        "variables": "Variáveis"
       },
       "skill": {
         "origin": "Origem",
@@ -3984,7 +3988,10 @@
         "bytes": "tamanho: {count} bytes",
         "script": "Script: guardado, nunca executado",
         "lint": "Verificação",
-        "instructions": "Instruções"
+        "instructions": "Instruções",
+        "offered_title": "Oferecida aos agentes",
+        "offered_text": "Uma pessoa leu esta skill, então os agentes podem lê-la. Qualquer mudança nela tira a marca.",
+        "not_offered_title": "Não oferecida aos agentes"
       },
       "lint": {
         "none": "Nenhum achado.",
@@ -4004,6 +4011,15 @@
         "button": "Exportar skills revisadas",
         "done": "{count} skills escritas em {path}.",
         "none": "Nenhuma skill revisada para exportar."
+      },
+      "group": {
+        "pending": "Aguardando a sua aprovação",
+        "kept": "Mantidas"
+      },
+      "empty_text": {
+        "memory": "Quando você ou um agente escreve uma nota, ela aparece aqui. Uma nota escrita por um agente espera você mantê-la.",
+        "skill": "Crie uma skill ou importe uma que você baixou. Nenhum agente recebe uma skill antes de você lê-la.",
+        "prompt": "Guarde um texto que você usa sempre, com {{variable}} para o que muda."
       }
     }
   }
