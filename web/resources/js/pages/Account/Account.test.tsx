@@ -4,7 +4,7 @@ import { describe, expect, test, vi } from "vitest";
 import FieldErrors from "@/components/FieldErrors";
 import PasswordField from "@/components/PasswordField";
 import { I18nProvider } from "@/lib/i18n";
-import Create from "./Create";
+import Create, { RecoveryKey } from "./Create";
 import Recover from "./Recover";
 import SignIn from "./SignIn";
 
@@ -139,5 +139,31 @@ describe("the sign-in and recovery pages", () => {
 		expect(html).toMatch(/<input[^>]*id="recover-key"/);
 		expect(html).toContain('data-testid="recover-password-eye"');
 		expect(html).toContain('data-testid="recover-confirmation-eye"');
+	});
+});
+
+describe("the recovery key step", () => {
+	const withMessages = {
+		...messages,
+		"ui.account.recovery.title": "Save your recovery key",
+		"ui.account.recovery.formerFolder": "A clear copy is still in {path}.",
+	};
+
+	function renderStep(formerFolder: string | null): string {
+		return renderToString(
+			<I18nProvider messages={withMessages} locale="en" locales={["en"]}>
+				<RecoveryKey value="ABCD-EFGH" formerFolder={formerFolder} />
+			</I18nProvider>,
+		);
+	}
+
+	test("tells the person where the clear copy of an adoption by copy is (VV-379)", () => {
+		const html = renderStep("/home/x/.vukem-video");
+		expect(html).toContain('data-testid="former-folder"');
+		expect(html).toContain("A clear copy is still in /home/x/.vukem-video.");
+	});
+
+	test("says nothing about a folder when there is none", () => {
+		expect(renderStep(null)).not.toContain("former-folder");
 	});
 });

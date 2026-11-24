@@ -48,6 +48,9 @@ type accountCreateIn struct {
 
 type accountCreateOut struct {
 	RecoveryKey string `json:"recovery_key" doc:"Shown once. It is not stored and cannot be shown again."`
+	// FormerFolder names the folder of the former workspace that an adoption by copy left in clear text outside
+	// the workspace; Stuarty does not delete it, so the page tells the person (VV-379).
+	FormerFolder string `json:"former_folder,omitempty" doc:"A folder with a copy of the workspace in clear text, when the adoption left one."`
 }
 
 type accountLoginIn struct {
@@ -148,7 +151,7 @@ func (h *apiHandler) accountCreate(c *web.Ctx, in accountCreateIn) (accountCreat
 
 	c.SetHeader("Cache-Control", "no-store")
 
-	return accountCreateOut{RecoveryKey: recovery}, nil
+	return accountCreateOut{RecoveryKey: recovery, FormerFolder: h.Workspace.FormerCopy()}, nil
 }
 
 func (h *apiHandler) accountLogin(c *web.Ctx, in accountLoginIn) (accountStateOut, error) {

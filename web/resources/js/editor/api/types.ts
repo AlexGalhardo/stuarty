@@ -1636,6 +1636,8 @@ export interface AccountCreateRequest {
 
 export interface AccountCreated {
 	recovery_key: string;
+	/** A folder with a copy of the workspace in clear text, when an adoption left one. */
+	former_folder?: string;
 }
 
 export interface AccountFieldProblem {

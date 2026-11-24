@@ -582,3 +582,51 @@ func TestAdoptionFailureAnswersWithItsReason(t *testing.T) {
 		t.Errorf("the former folder lost files: %v", got)
 	}
 }
+
+// VV-379: a workspace adopted by copy leaves the whole former folder, in clear, outside the workspace; Stuarty
+// never deletes it, so the person is told where it is once the account exists.
+func TestFormerCopyNamesTheFolderLeftBehindByACopy(t *testing.T) {
+	crossing := func(string, string) error { return &os.LinkError{Op: "rename", Err: errCrossDevice} }
+
+	t.Run("a copy leaves the former folder", func(t *testing.T) {
+		home := t.TempDir()
+		former := makeFormer(t, home)
+		current := filepath.Join(home, defaultDir)
+
+		if _, err := AdoptFormer(AdoptOptions{Former: former, Current: current, Rename: crossing, Now: fixedNow}); err != nil {
+			t.Fatal(err)
+		}
+
+		if got := Dir(current).FormerCopy(); got != former {
+			t.Fatalf("FormerCopy = %q, want %q", got, former)
+		}
+
+		if err := os.RemoveAll(former); err != nil {
+			t.Fatal(err)
+		}
+
+		if got := Dir(current).FormerCopy(); got != "" {
+			t.Errorf("FormerCopy after the person deleted it = %q, want none", got)
+		}
+	})
+
+	t.Run("a rename leaves nothing behind", func(t *testing.T) {
+		home := t.TempDir()
+		former := makeFormer(t, home)
+		current := filepath.Join(home, defaultDir)
+
+		if _, err := AdoptFormer(AdoptOptions{Former: former, Current: current, Now: fixedNow}); err != nil {
+			t.Fatal(err)
+		}
+
+		if got := Dir(current).FormerCopy(); got != "" {
+			t.Errorf("FormerCopy after a rename = %q, want none", got)
+		}
+	})
+
+	t.Run("a workspace that was never adopted", func(t *testing.T) {
+		if got := Dir(t.TempDir()).FormerCopy(); got != "" {
+			t.Errorf("FormerCopy = %q, want none", got)
+		}
+	})
+}

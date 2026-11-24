@@ -26,6 +26,7 @@ export default function Create(): ReactNode {
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [busy, setBusy] = useState(false);
 	const [recoveryKey, setRecoveryKey] = useState<string | null>(null);
+	const [formerFolder, setFormerFolder] = useState<string | null>(null);
 
 	async function submit(event: FormEvent<HTMLFormElement>): Promise<void> {
 		event.preventDefault();
@@ -41,6 +42,7 @@ export default function Create(): ReactNode {
 			});
 			setPassword("");
 			setConfirmation("");
+			setFormerFolder(created.former_folder ?? null);
 			setRecoveryKey(created.recovery_key);
 		} catch (error) {
 			const fields = fieldProblems(error);
@@ -51,7 +53,9 @@ export default function Create(): ReactNode {
 		}
 	}
 
-	if (recoveryKey !== null) return <RecoveryKey value={recoveryKey} />;
+	if (recoveryKey !== null) {
+		return <RecoveryKey value={recoveryKey} formerFolder={formerFolder} />;
+	}
 
 	const usernameReasons = reasonsOf(problems, "username");
 	const emailReasons = reasonsOf(problems, "email");
@@ -145,7 +149,13 @@ export default function Create(): ReactNode {
 }
 
 // The recovery key, once. The words say plainly what losing it means.
-function RecoveryKey({ value }: { value: string }): ReactNode {
+export function RecoveryKey({
+	value,
+	formerFolder,
+}: {
+	value: string;
+	formerFolder: string | null;
+}): ReactNode {
 	const t = useT();
 	const [saved, setSaved] = useState(false);
 	const [copied, setCopied] = useState(false);
@@ -173,6 +183,15 @@ function RecoveryKey({ value }: { value: string }): ReactNode {
 				>
 					{t("ui.account.recovery.warning")}
 				</p>
+				{formerFolder !== null && (
+					<p
+						role="note"
+						data-testid="former-folder"
+						className="rounded-lg border border-destructive p-3 text-sm"
+					>
+						{t("ui.account.recovery.formerFolder", { path: formerFolder })}
+					</p>
+				)}
 				<p
 					data-testid="recovery-key"
 					className="rounded-lg border bg-muted p-4 text-center font-mono text-lg tracking-wide break-all select-all"
