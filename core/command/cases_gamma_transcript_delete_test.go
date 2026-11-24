@@ -59,6 +59,35 @@ func init() {
 		b.caption(oldCap, 100, 2, func(it *timeline.Item) { it.LinkedItem = itemA })
 		b.caption(capH, 200, 2, func(it *timeline.Item) { it.LinkedItem = itemA })
 	}))
+	// Epic 89: the same words with the silences of the asset, as the service fills them.
+	snapArgs := func(from, to int, analysis string, sil [][2]int, rest ...string) string {
+		parts := make([]string, len(sil))
+		for i, s := range sil {
+			parts[i] = fmt.Sprintf(`{"start": %d, "end": %d}`, s[0], s[1])
+		}
+		res := strings.Replace(words, `]}`, fmt.Sprintf(`], "silences": [%s], "silence_analysis": %q}`,
+			strings.Join(parts, ", "), analysis), 1)
+		head := fmt.Sprintf(`{"asset_id": %q, "from_word": %d, "to_word": %d`, vidAsset, from, to)
+		return strings.Join(append(append([]string{head}, rest...), res), ", ") + "}"
+	}
+	// "um" is [72,80) between "hello" ending at 70 and "world" starting at 90: the start edge reaches the end of a
+	// silence at 71 and the end edge the start of one at 83.
+	umSilences := [][2]int{{66, 71}, {83, 89}}
+	dr("ok_snap_edges_to_silences", snapArgs(1, 1, "read", umSilences, newID), example())
+	dr("ok_snap_changed_speed", snapArgs(1, 1, "read", umSilences, newID), func() *B {
+		return base().clip(itemA, vidTr, 30, 200, 60, func(it *timeline.Item) {
+			it.Speed = timeline.Rational{Num: 3, Den: 2}
+		}).text(itemText, vidTr, 230, 40)
+	})
+	// "world" [90,110) cut across two pieces of one clip: the edges reach 89 and 112.
+	dr("ok_snap_clip_cut_in_pieces", snapArgs(2, 2, "read", [][2]int{{84, 89}, {112, 120}}), func() *B {
+		return base().clip(itemA, vidTr, 0, 30, 60).clip(itemB, vidTr, 30, 100, 100)
+	}, itemC)
+	dr("ok_snap_linked_audio", snapArgs(1, 1, "read", umSilences,
+		fmt.Sprintf(`"new_ids": [%q, %q]`, itemC, "itm_d5e6f7g8h9")), plus(example(), withSound))
+	dr("ok_snap_off", snapArgs(1, 1, "read", umSilences, `"snap": "0s"`, newID), example())
+	dr("ok_snap_no_silence_analysis", snapArgs(1, 1, "missing", nil, newID), example())
+	dr("err_validation_snap_too_long", snapArgs(1, 1, "read", umSilences, `"snap": "3s"`), example())
 	dr("err_validation_range_reversed", args(2, 1), example())
 	dr("err_validation_index_beyond_transcript", args(1, 9), example())
 	dr(
