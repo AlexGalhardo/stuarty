@@ -126,7 +126,7 @@ export default function Transcription(): ReactNode {
 				</div>
 			)}
 			{status !== null && !running && (
-				<div className="flex items-end gap-2">
+				<div className="flex flex-wrap items-end gap-2">
 					<div className="flex flex-col gap-1">
 						<Label htmlFor="settings-whisper-model">
 							{t("ui.settings.transcription.model")}
