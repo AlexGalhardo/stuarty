@@ -183,3 +183,36 @@ func TestIdleMinutes(t *testing.T) {
 		}
 	}
 }
+
+// VV-380: the same text typed on another system arrives in another Unicode form. Both are one password: the
+// count of characters, the classes and the confirmation see the composed form.
+func TestPasswordIsComparedInItsComposedForm(t *testing.T) {
+	const (
+		composed   = "Abcdeé1!" // é as one character
+		decomposed = "Abcdeé" + "1!"
+	)
+
+	if Normalize(decomposed) != composed {
+		t.Fatalf("Normalize(%q) = %q, want %q", decomposed, Normalize(decomposed), composed)
+	}
+
+	if got := Password(decomposed); got != nil {
+		t.Errorf("the decomposed form of an 8-character password = %v, want none", got)
+	}
+
+	// Seven composed characters are seven, in either form: the decomposed one is nine code points.
+	short := "Abcdé" + "1!"
+	if got := reasons(Password(short)); !slices.Equal(got, []string{"password:too_short"}) {
+		t.Errorf("seven characters typed decomposed = %v, want too_short", got)
+	}
+
+	if got := Confirmation(composed, decomposed); got != nil {
+		t.Errorf("the two forms of one password do not match: %v", got)
+	}
+
+	if got := Validate(Input{
+		Username: "stuart", Email: "stuart@example.com", Password: composed, Confirmation: decomposed,
+	}); got != nil {
+		t.Errorf("Validate = %v, want none", got)
+	}
+}

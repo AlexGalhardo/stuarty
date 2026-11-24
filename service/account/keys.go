@@ -14,9 +14,13 @@ import (
 	"crypto/subtle"
 	"encoding/base32"
 	"errors"
+	"slices"
 	"strings"
 
+	rules "github.com/AlexGalhardo/stuarty/core/account"
+
 	"golang.org/x/crypto/argon2"
+	"golang.org/x/text/unicode/norm"
 )
 
 // Sizes, in bytes.
@@ -234,14 +238,21 @@ func (k *Keys) Wipe() {
 
 func wipe(b []byte) { clear(b) }
 
-// seal builds the record of a new account from fresh keys and returns the keys and the recovery key to show.
+// seal builds the record of a new account from fresh keys and returns the keys and the recovery key to show. The
+// password is derived in its composed Unicode form (VV-380).
 func seal(username, email, password string, p Params) (rec Record, keys Keys, recovery string, err error) {
+	return sealSecret(username, email, rules.Normalize(password), p)
+}
+
+// sealSecret is seal for the exact bytes that are derived. Only a test calls it with a password that is not
+// normalized, to make the record that an older version made.
+func sealSecret(username, email, secret string, p Params) (rec Record, keys Keys, recovery string, err error) {
 	kdf, err := newKDF(p)
 	if err != nil {
 		return Record{}, Keys{}, "", err
 	}
 
-	kek, verifier, err := derive(password, kdf)
+	kek, verifier, err := derive(secret, kdf)
 	if err != nil {
 		return Record{}, Keys{}, "", err
 	}
@@ -295,7 +306,38 @@ func seal(username, email, password string, p Params) (rec Record, keys Keys, re
 
 // OpenWithPassword checks the password against the verifier, in constant time, and unwraps the keys.
 func OpenWithPassword(rec Record, password string) (Keys, error) {
-	kek, verifier, err := derive(password, rec.KDF)
+	keys, _, err := openWithPassword(rec, password)
+
+	return keys, err
+}
+
+// openWithPassword tries the composed form of the password first. An account made before the normalization
+// (VV-380) derived its key from the bytes as they were typed, so when the composed form fails the typed bytes
+// and the decomposed form are tried too, and legacy says that one of them opened it: the caller then rewrites
+// the verifier from the composed form. The extra derivations happen only for a password that has a character
+// with two forms, and only after the first one failed.
+func openWithPassword(rec Record, password string) (keys Keys, legacy bool, err error) {
+	composed := rules.Normalize(password)
+
+	candidates := []string{composed}
+	for _, other := range []string{password, norm.NFD.String(password)} {
+		if !slices.Contains(candidates, other) {
+			candidates = append(candidates, other)
+		}
+	}
+
+	for i, candidate := range candidates {
+		keys, err = openWithSecret(rec, candidate)
+		if !errors.Is(err, ErrWrongPassword) {
+			return keys, i > 0 && err == nil, err
+		}
+	}
+
+	return Keys{}, false, ErrWrongPassword
+}
+
+func openWithSecret(rec Record, secret string) (Keys, error) {
+	kek, verifier, err := derive(secret, rec.KDF)
 	if err != nil {
 		return Keys{}, err
 	}
@@ -365,7 +407,7 @@ func rewrap(rec Record, dataKey []byte, newPassword string, p Params) (Record, e
 		return Record{}, err
 	}
 
-	kek, verifier, err := derive(newPassword, kdf)
+	kek, verifier, err := derive(rules.Normalize(newPassword), kdf)
 	if err != nil {
 		return Record{}, err
 	}

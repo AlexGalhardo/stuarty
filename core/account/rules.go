@@ -4,6 +4,8 @@ import (
 	"strings"
 	"unicode"
 	"unicode/utf8"
+
+	"golang.org/x/text/unicode/norm"
 )
 
 // The limits of SDD-007 section 3.9 item 1.
@@ -41,6 +43,11 @@ const (
 	ReasonMismatch            = "mismatch"
 	ReasonOutOfRange          = "out_of_range"
 )
+
+// Normalize is the composed Unicode form (NFC) of a password. The same typed text arrives composed from one
+// system and decomposed from another (an é is one character or two), and the password must open the account
+// whichever it is (VV-380). The rules and the key derivation both read the password through it.
+func Normalize(password string) string { return norm.NFC.String(password) }
 
 // Problem is one refused field and why. It never holds the value.
 type Problem struct {
@@ -162,6 +169,7 @@ func isASCIIAlnum(r rune) bool {
 // character, with at least one uppercase letter, one lowercase letter, one digit
 // and one special character. Every missing class is reported.
 func Password(s string) []Problem {
+	s = Normalize(s)
 	n := utf8.RuneCountInString(s)
 
 	switch {
@@ -210,7 +218,7 @@ func Password(s string) []Problem {
 
 // Confirmation checks that the second typing of the password equals the first.
 func Confirmation(password, confirmation string) []Problem {
-	if password != confirmation {
+	if Normalize(password) != Normalize(confirmation) {
 		return []Problem{{FieldConfirmation, ReasonMismatch}}
 	}
 
