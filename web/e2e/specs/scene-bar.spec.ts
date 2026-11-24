@@ -284,6 +284,37 @@ test.describe("scene bar", () => {
 		await expect(bar).toContainText("Open chat");
 	});
 
+	// The activity strip makes the chat panel taller: in a short window the panel scrolls, so the composer is reached
+	// with the wheel and with the keyboard (WCAG 1.4.10).
+	test("in a short window the chat panel scrolls to its composer", async ({
+		page,
+		request,
+		browserName,
+	}) => {
+		const api = await caller(request);
+		const project = await makeProject(api, `Short ${unique(browserName)}`);
+		await signInAsPerson(page);
+		await clearProfiles(page);
+		await converse(page, project, "shorty", "echo");
+		await page.setViewportSize({ width: 1024, height: 480 });
+		await page.goto(`/projects/${project}`);
+		await expect(page.getByTestId("scene-bar")).toHaveAttribute(
+			"data-variant",
+			"idle",
+		);
+		await page.getByTestId("chat-toggle").click();
+		const strip = page.getByTestId("chat-activity");
+		await expect(strip).toBeVisible({ timeout: 20_000 });
+		const composer = page.getByLabel("Message to the agent");
+		await strip.hover();
+		await page.mouse.wheel(0, 2000);
+		await expect(composer).toBeInViewport();
+		await composer.focus();
+		await expect(composer).toBeFocused();
+		await expect(composer).toBeInViewport();
+		await expect(composer).toBeEnabled();
+	});
+
 	test("a running fake agent that calls a tool shows the state and the tool title as plain text", async ({
 		page,
 		request,
