@@ -81,7 +81,12 @@ func TestGatedRunTakesARequirementWithOnlyBudgetsInTests(t *testing.T) {
 	gateRunner = func(_ context.Context, _ string, tests []string) (string, error) {
 		ran = append(ran, tests...)
 
-		return "--- PASS: " + tests[0] + " (0.10s)\n", nil
+		var out strings.Builder
+		for _, name := range tests {
+			out.WriteString("--- PASS: " + name + " (0.10s)\n")
+		}
+
+		return out.String(), nil
 	}
 
 	noBench := func(context.Context, string, string, string) (string, error) {
@@ -97,7 +102,8 @@ func TestGatedRunTakesARequirementWithOnlyBudgetsInTests(t *testing.T) {
 		t.Fatalf("the gate of NFR-002 alone: %d %s", code, errb.String())
 	}
 
-	want := []string{"TestEventsSlowReaderDoesNotSlowCommits"}
+	// The commit-to-event latency judges its p95 only with STUARTY_PERF=1 (VV-385): the gate is where it runs.
+	want := []string{"TestEventsSlowReaderDoesNotSlowCommits", "TestEventsLatencyFromCommitToClient"}
 	if !slices.Equal(ran, want) || !strings.Contains(out.String(), "NFR-002") {
 		t.Errorf("ran %v, want %v; report:\n%s", ran, want, out.String())
 	}

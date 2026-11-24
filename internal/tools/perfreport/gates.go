@@ -20,7 +20,7 @@ type Gate struct {
 // Gates is the list of the tests that judge a time on the wall clock.
 var Gates = []Gate{
 	{"NFR-004", "./engine/frame", []string{"TestViewFrameColdP95", "TestScaleProjectViewTimeBudgets"}},
-	{"NFR-002", "./web/app/http", []string{"TestEventsSlowReaderDoesNotSlowCommits"}},
+	{"NFR-002", "./web/app/http", []string{"TestEventsSlowReaderDoesNotSlowCommits", "TestEventsLatencyFromCommitToClient"}},
 	{"NFR-001", "./core/lint", []string{"TestTransitionEmptyLintTimeBudget"}},
 }
 
