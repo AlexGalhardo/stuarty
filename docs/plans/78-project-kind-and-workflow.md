@@ -60,7 +60,7 @@ Names are proposals until task 1 writes them to SDD-000.
 
 ## Tasks
 
-- [ ] 1. Amend SDD-000, SDD-002, SDD-003 and SDD-005. Verify: `task lint:md` exits 0 and `task codegen` leaves no unexpected diff.
+- [x] 1. Amend SDD-000, SDD-002, SDD-003 and SDD-005. Verify: `task lint:md` exits 0 and `task codegen` leaves no unexpected diff.
 - [ ] 2. Kind and the workflow function with its tables. Verify: `go test ./core/project/...` passes.
 - [ ] 3. Reading time and excerpt. Verify: `go test ./core/writing/...` passes.
 - [ ] 4. The migration, as the newest id, with the upgrade of an existing workspace. Verify: `go test ./web/database/migrations/...` passes.
