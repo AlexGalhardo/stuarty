@@ -228,7 +228,9 @@ func (w *killWorld) target(t *testing.T, env *testpublish.Env) *pub.Target {
 	return got
 }
 
-// spentToday is what the workspace has spent or reserved today, in micros.
+// spentToday is what the workspace has spent or reserved in the days of the summary, in micros. Not the line of
+// today: the clock of a later process is moved by minutes past the lease, and a run near midnight UTC would read
+// a cost reserved yesterday as none.
 func spentToday(t *testing.T, env *testpublish.Env) int64 {
 	t.Helper()
 
@@ -239,9 +241,9 @@ func spentToday(t *testing.T, env *testpublish.Env) int64 {
 
 	var micros int64
 
-	for _, l := range sum.Today {
-		if l.Scope == "workspace" {
-			micros += l.Micros
+	for _, d := range sum.Days {
+		if d.Currency == killPostCurrency {
+			micros += d.Micros
 		}
 	}
 
