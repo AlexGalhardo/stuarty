@@ -129,9 +129,10 @@ func TestTheRealModelParses(t *testing.T) {
 	// threats of epic 30; T-89 is the shared image templates of network mode (VV-291), T-100 and
 	// T-101 the quality campaigns of epic 42, T-102 the chapter file of an export (VV-290); T-110 to T-116 are
 	// the outbound webhook threats of epic 59; T-103 to T-109 and T-117 are the local account threats of epic 57
-	// (ADR-0052). 109 + 8 - 6 removed = 111.
-	if len(threats) != 111 {
-		t.Errorf("the model has %d threats, want 111 (T-89, T-100 to T-117)", len(threats))
+	// (ADR-0052); T-123 and T-124 are the path of a stored file and the reveal of the desktop shell, epic 94.
+	// 109 + 10 - 6 removed = 113.
+	if len(threats) != 113 {
+		t.Errorf("the model has %d threats, want 113 (T-89, T-100 to T-117, T-123, T-124)", len(threats))
 	}
 }
 

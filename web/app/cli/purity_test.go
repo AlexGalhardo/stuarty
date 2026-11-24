@@ -370,6 +370,10 @@ func (s stub) AssetRename(context.Context, service.AssetRenameRequest) (*service
 	return reply[service.AssetResult](s.err)
 }
 
+func (s stub) AssetReveal(context.Context, service.AssetRevealRequest) (*service.AssetRevealResult, error) {
+	return reply[service.AssetRevealResult](s.err)
+}
+
 func (s stub) BriefingQuestions(
 	context.Context,
 	service.BriefingQuestionsRequest,

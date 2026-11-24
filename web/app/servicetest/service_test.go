@@ -330,6 +330,10 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			})
 			return err
 		},
+		"AssetReveal": func() error {
+			_, err := e.svc.AssetReveal(ctx, service.AssetRevealRequest{Hash: "sha256:" + strings.Repeat("0", 64)})
+			return err
+		},
 		"ExportFile": func() error {
 			_, err := e.svc.ExportFile(ctx, service.ExportFileRequest{JobID: "job_0000000001"})
 			return err
