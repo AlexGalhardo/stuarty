@@ -221,7 +221,11 @@ describe("ordering and gaps", () => {
 });
 
 describe("the mechanical patch against the server", () => {
-	test("200 random batches leave document and revision equal to the server", async () => {
+	// 200 committed batches take about 3 s on an idle machine, so under load they crossed the 5 s default. The own
+	// timeout is 6 times what the test needs; the 200 batches stay, since the number is what the test proves.
+	test("200 random batches leave document and revision equal to the server", {
+		timeout: 30_000,
+	}, async () => {
 		const h = await startHarness({ tracks: 4, itemsPerTrack: 6 });
 		const random = seeded(42);
 		let created = 1000;
