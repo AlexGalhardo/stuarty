@@ -7,7 +7,6 @@ import {
 } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
-import { LoadingState } from "@/components/LoadingState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +23,7 @@ import type {
 	WriteProject,
 	WritingClient,
 } from "./client";
+import EditorState from "./EditorState";
 import EndPanel, { type EndStatus } from "./EndPanel";
 import FlowPath from "./FlowPath";
 import { endOf, exportName, primaryAction, readingMinutes } from "./meta";
@@ -206,12 +206,13 @@ export default function TextEditor({
 
 	if (loaded === null) {
 		return (
-			<div>
-				<FailureNote failure={failure} />
-				{failure === null && (
-					<LoadingState message={t("ui.write.editor.loading")} />
-				)}
-			</div>
+			<EditorState
+				failure={failure}
+				onRetry={() => {
+					setFailure(null);
+					void load();
+				}}
+			/>
 		);
 	}
 

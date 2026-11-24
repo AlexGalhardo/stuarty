@@ -10,7 +10,7 @@ import DraftPanel from "./DraftPanel";
 import { isTextOnly } from "./meta";
 import Panel from "./Panel";
 
-type Reading =
+export type Reading =
 	| { state: "loading" }
 	| { state: "failed" }
 	| { state: "ready"; activity: ChatActivity | null };
@@ -75,44 +75,7 @@ export default function AgentPanel({
 					{t("ui.write.agent.text_only_body")}
 				</Notice>
 			)}
-			<div className="flex flex-col gap-2" data-testid="agent-context">
-				<ActivityStrip
-					activity={reading.state === "ready" ? reading.activity : null}
-				/>
-				{reading.state === "loading" && (
-					<p role="status" className="text-sm text-text-muted">
-						{t("ui.write.agent.reading")}
-					</p>
-				)}
-				{reading.state === "ready" && reading.activity === null && (
-					<p className="text-sm text-text-muted">
-						{t("ui.write.agent.no_session")}
-					</p>
-				)}
-				{reading.state === "failed" && (
-					<div className="flex flex-wrap items-center gap-2">
-						<p role="alert" className="text-sm text-danger-text">
-							{t("ui.write.agent.failed")}
-						</p>
-						<Button
-							type="button"
-							variant="outline"
-							size="sm"
-							onClick={readAgain}
-						>
-							{t("ui.write.agent.retry")}
-						</Button>
-					</div>
-				)}
-				{reading.state === "ready" && (
-					<div>
-						<Button type="button" variant="ghost" size="sm" onClick={readAgain}>
-							{t("ui.write.agent.refresh")}
-						</Button>
-					</div>
-				)}
-				<StepLine step={step} />
-			</div>
+			<AgentContext reading={reading} step={step} onAgain={readAgain} />
 			<DraftPanel client={client} item={item} onDone={onDone} />
 		</Panel>
 	);
@@ -132,5 +95,55 @@ function StepLine({ step }: { step: FlowStep | undefined }): ReactNode {
 				step.tool !== "" &&
 				` · ${t("ui.write.agent.step_tool", { tool: step.tool })}`}
 		</p>
+	);
+}
+
+// What the agent is doing in the project, as the service reports it: the skill and whether it is loaded, the tool,
+// and the step of the path the project is at. Before an answer, with no session and when the read fails each one
+// says so in words, and a failed read can be tried again.
+export function AgentContext({
+	reading,
+	step,
+	onAgain,
+}: {
+	reading: Reading;
+	step: FlowStep | undefined;
+	onAgain: () => void;
+}): ReactNode {
+	const t = useT();
+	return (
+		<div className="flex flex-col gap-2" data-testid="agent-context">
+			<ActivityStrip
+				activity={reading.state === "ready" ? reading.activity : null}
+			/>
+			{reading.state === "loading" && (
+				<p role="status" className="text-sm text-text-muted">
+					{t("ui.write.agent.reading")}
+				</p>
+			)}
+			{reading.state === "ready" && reading.activity === null && (
+				<p className="text-sm text-text-muted">
+					{t("ui.write.agent.no_session")}
+				</p>
+			)}
+			{reading.state === "failed" && (
+				<div className="flex flex-wrap items-center gap-2">
+					<p role="alert" className="text-sm text-danger-text">
+						{t("ui.write.agent.failed")}
+					</p>
+					<Button type="button" variant="outline" size="sm" onClick={onAgain}>
+						{t("ui.write.agent.retry")}
+					</Button>
+				</div>
+			)}
+			{reading.state === "ready" && (
+				<div>
+					<Button type="button" variant="ghost" size="sm" onClick={onAgain}>
+						{t("ui.write.agent.refresh")}
+					</Button>
+				</div>
+			)}
+			<StepLine step={step} />
+		</div>
 	);
 }

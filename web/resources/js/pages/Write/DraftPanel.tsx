@@ -39,7 +39,6 @@ export default function DraftPanel({
 	onDone: () => void;
 }): ReactNode {
 	const t = useT();
-	const locale = useLocale();
 	const api = useMemo(() => createClient(new HttpTransport("/api/v1")), []);
 	const [connections, setConnections] = useState<Connection[] | null>(null);
 	const [connection, setConnection] = useState("");
@@ -152,10 +151,6 @@ export default function DraftPanel({
 		event.preventDefault();
 		void ask(false);
 	}
-
-	const waiting = job?.state === "waiting_approval";
-	const running = job !== null && !FINAL.has(job.state) && !waiting;
-	const text = job?.result?.text;
 
 	return (
 		<section
@@ -280,56 +275,68 @@ export default function DraftPanel({
 				</form>
 			)}
 			<FailureNote failure={failure} />
-			<div
-				role="status"
-				aria-live="polite"
-				className="flex flex-col gap-1 text-sm"
-			>
-				{(estimate?.estimate ?? job?.estimate) !== undefined && (
-					<p data-testid="draft-estimate">
-						{t("ui.write.draft.estimated", {
-							cost: formatMoney(
-								(estimate?.estimate ?? job?.estimate) as {
-									micros: number;
-									currency: string;
-								},
-								locale,
-							),
-						})}
-					</p>
-				)}
-				{waiting && (
-					<Notice
-						tone="warning"
-						title={t("ui.write.draft.waiting")}
-						data-testid="draft-waiting"
-						actions={
-							<a className="underline" href="/approvals">
-								{t("ui.write.draft.open_approvals")}
-							</a>
-						}
-					>
-						{t("ui.write.draft.waiting_body")}
-					</Notice>
-				)}
-				{running && <p>{t("ui.write.draft.running")}</p>}
-				{job?.state === "succeeded" && text !== undefined && (
-					<p data-testid="draft-done">
-						{t("ui.write.draft.done", {
-							revision: String(text.revision ?? ""),
-							cost: formatMoney(text.cost, locale),
-						})}
-					</p>
-				)}
-				{(job?.state === "failed" || job?.state === "cancelled") && (
-					<p role="alert" className="text-destructive">
-						{t("ui.write.draft.failed")}{" "}
-						{job.error !== undefined && (
-							<UntrustedText>{job.error.message}</UntrustedText>
-						)}
-					</p>
-				)}
-			</div>
+			<DraftStatus job={job} estimate={estimate} />
 		</section>
+	);
+}
+
+// What the draft is doing, as the service reported the job: the estimate that comes first, the wait for approval,
+// the run, the result with its cost, or the failure. The words of an error are text from the provider.
+export function DraftStatus({
+	job,
+	estimate,
+}: {
+	job: DraftJob | null;
+	estimate: DraftJob | null;
+}): ReactNode {
+	const t = useT();
+	const locale = useLocale();
+	const waiting = job?.state === "waiting_approval";
+	const running = job !== null && !FINAL.has(job.state) && !waiting;
+	const text = job?.result?.text;
+	const cost = estimate?.estimate ?? job?.estimate;
+	return (
+		<div
+			role="status"
+			aria-live="polite"
+			className="flex flex-col gap-1 text-sm"
+		>
+			{cost !== undefined && (
+				<p data-testid="draft-estimate">
+					{t("ui.write.draft.estimated", { cost: formatMoney(cost, locale) })}
+				</p>
+			)}
+			{waiting && (
+				<Notice
+					tone="warning"
+					title={t("ui.write.draft.waiting")}
+					data-testid="draft-waiting"
+					actions={
+						<a className="underline" href="/approvals">
+							{t("ui.write.draft.open_approvals")}
+						</a>
+					}
+				>
+					{t("ui.write.draft.waiting_body")}
+				</Notice>
+			)}
+			{running && <p>{t("ui.write.draft.running")}</p>}
+			{job?.state === "succeeded" && text !== undefined && (
+				<p data-testid="draft-done">
+					{t("ui.write.draft.done", {
+						revision: String(text.revision ?? ""),
+						cost: formatMoney(text.cost, locale),
+					})}
+				</p>
+			)}
+			{(job?.state === "failed" || job?.state === "cancelled") && (
+				<p role="alert" className="text-danger-text">
+					{t("ui.write.draft.failed")}{" "}
+					{job.error !== undefined && (
+						<UntrustedText>{job.error.message}</UntrustedText>
+					)}
+				</p>
+			)}
+		</div>
 	);
 }

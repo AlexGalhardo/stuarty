@@ -11,12 +11,7 @@ import {
 
 import { EmptyState } from "@/components/EmptyState";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
-import { ListRow } from "@/components/ListRow";
-import { LoadingState } from "@/components/LoadingState";
-import { Notice } from "@/components/Notice";
 import { PageHeader } from "@/components/PageHeader";
-import UntrustedText from "@/components/UntrustedText";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,16 +26,12 @@ import {
 	writingClient,
 } from "./client";
 import TextEditor from "./TextEditor";
+import TextList, { type Loaded } from "./TextList";
 
 const KINDS: readonly TextKind[] = ["script", "copy", "caption", "post"];
 
 const FIELD =
 	"h-8 max-w-full rounded-lg border border-input bg-background px-2 text-sm max-md:h-11";
-
-type Loaded =
-	| { state: "loading" }
-	| { state: "failed" }
-	| { state: "ready"; texts: readonly TextItem[]; next?: string };
 
 interface Selected {
 	projectId: string;
@@ -194,92 +185,21 @@ export default function WritePage(): ReactNode {
 				/>
 			)}
 			<div className="grid gap-6 lg:grid-cols-[20rem_minmax(0,1fr)]">
-				<nav
-					aria-label={t("ui.write.list.label")}
-					className="flex min-w-0 flex-col gap-2"
-				>
-					{loaded.state === "loading" && (
-						<LoadingState message={t("ui.write.list.loading")} />
-					)}
-					{loaded.state === "failed" && (
-						<Notice
-							tone="danger"
-							role="alert"
-							title={t("ui.write.list.failed")}
-							actions={
-								<Button
-									type="button"
-									variant="outline"
-									size="sm"
-									onClick={() => {
-										setLoaded({ state: "loading" });
-										void reload();
-									}}
-								>
-									{t("ui.write.list.retry")}
-								</Button>
-							}
-						/>
-					)}
-					{loaded.state === "ready" && loaded.texts.length === 0 && (
-						<EmptyState
-							icon={PenLine}
-							level={3}
-							title={t(
-								filtered ? "ui.write.list.no_match" : "ui.write.list.empty",
-							)}
-							description={t(
-								filtered
-									? "ui.write.list.no_match_hint"
-									: "ui.write.list.empty_hint",
-							)}
-						/>
-					)}
-					{loaded.state === "ready" && loaded.texts.length > 0 && (
-						<ul className="flex flex-col divide-y divide-border rounded-lg border border-border bg-surface">
-							{loaded.texts.map((text) => {
-								const current = selected?.itemId === text.id;
-								return (
-									<ListRow
-										key={text.id}
-										selected={current}
-										title={
-											<button
-												type="button"
-												data-text-id={text.id}
-												onClick={() => {
-													if (current) return;
-													if (!confirmDiscard(t("ui.unsaved.leave"))) return;
-													setSelected({
-														projectId: text.project_id,
-														itemId: text.id,
-													});
-												}}
-												className="flex w-full min-w-0 items-center gap-2 text-left"
-											>
-												<span className="min-w-0 flex-1 truncate">
-													<UntrustedText>{text.title}</UntrustedText>
-												</span>
-												<Badge variant="outline">
-													{t(`ui.write.kind.${text.text_kind}`)}
-												</Badge>
-											</button>
-										}
-										description={t("ui.write.list.row", {
-											revision: String(text.revision),
-											words: String(text.words),
-										})}
-									/>
-								);
-							})}
-						</ul>
-					)}
-					{loaded.state === "ready" && loaded.next !== undefined && (
-						<Button type="button" variant="outline" onClick={() => void more()}>
-							{t("ui.write.list.more")}
-						</Button>
-					)}
-				</nav>
+				<TextList
+					loaded={loaded}
+					currentId={selected?.itemId ?? null}
+					filtered={filtered}
+					onPick={(text) => {
+						if (selected?.itemId === text.id) return;
+						if (!confirmDiscard(t("ui.unsaved.leave"))) return;
+						setSelected({ projectId: text.project_id, itemId: text.id });
+					}}
+					onRetry={() => {
+						setLoaded({ state: "loading" });
+						void reload();
+					}}
+					onMore={() => void more()}
+				/>
 				{/* A div, not a second main: the layout's main is the only one (SDD-012 section 18.10, the skip link). */}
 				<div className="min-w-0">
 					{selected === null ? (

@@ -4050,6 +4050,7 @@
       "pick_hint": "O texto abre aqui, com as revisões, as verificações e o que o agente pode fazer.",
       "editor": {
         "review": "Revisar",
+        "retry": "Ler o texto de novo",
         "title": "Título",
         "body": "Texto (Markdown)",
         "tab_edit": "Escrever",
