@@ -19,6 +19,13 @@ import (
 // test or the code leaks, not a scanner.
 const limit = 30 * time.Second
 
+// goRetry is how long Go's own TempDir cleanup retries: a hold longer than this is logged, so a handle that our
+// code closes late, after the test, shows in the output instead of being waited for in silence.
+const goRetry = 2 * time.Second
+
+// pause waits between two tries of a removal; the tests of this package replace it to close a handle there.
+var pause = time.Sleep
+
 // TempDir is tb.TempDir for a folder that holds a workspace. The folder is removed in a cleanup registered
 // here, so it runs after the cleanups the test registers later (the closing of the store and of the server).
 // The removal is tried again for as long as the system answers that an entry is still held, up to limit, and
@@ -33,8 +40,12 @@ func TempDir(tb testing.TB) string {
 	}
 
 	tb.Cleanup(func() {
-		if err := removeAll(dir); err != nil {
-			tb.Errorf("TempDir RemoveAll cleanup: %v", err)
+		waited, err := removeAll(dir, limit)
+		switch {
+		case err != nil:
+			tb.Errorf("TempDir RemoveAll cleanup after %v: %v", waited, err)
+		case waited > goRetry:
+			tb.Logf("TempDir RemoveAll cleanup: an entry was still held %v after the test", waited)
 		}
 	})
 
@@ -63,18 +74,19 @@ func folderName(name string) string {
 	return b.String()
 }
 
-// removeAll removes path, trying again while the error is one that an entry still held by a handle gives.
-func removeAll(path string) error {
+// removeAll removes path, trying again while the error is one that an entry still held by a handle gives, for
+// at most limit. It returns how long it waited.
+func removeAll(path string, limit time.Duration) (time.Duration, error) {
 	start := time.Now()
 	sleep := time.Millisecond
 
 	for {
 		err := os.RemoveAll(path)
 		if err == nil || !heldEntry(err) || time.Since(start)+sleep > limit {
-			return err
+			return time.Since(start), err
 		}
 
-		time.Sleep(sleep)
+		pause(sleep)
 		sleep = min(sleep*2, 100*time.Millisecond)
 	}
 }
