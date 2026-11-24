@@ -4149,6 +4149,28 @@
         "diff_none": "Nenhum parágrafo mudou.",
         "diff_coarse": "Os textos são longos demais para comparar parágrafo a parágrafo; um aparece inteiro contra o outro inteiro."
       },
+      "end": {
+        "heading": "O fim deste texto",
+        "intro": {
+          "copy": "Uma cópia termina aqui: copie ou exporte. Nenhum destino é necessário.",
+          "post": "Um post termina na publicação: você a planeja e nada é enviado até você aprovar. Você também pode copiar ou exportar.",
+          "script": "Um roteiro termina quando você está satisfeito com ele. Copie, exporte ou siga para o próximo passo.",
+          "caption": "Uma legenda termina quando cabe nas redes que você escolheu. Copie, exporte ou siga para o próximo passo."
+        },
+        "copy": "Copiar",
+        "export": "Exportar",
+        "next": "Próximo: {step}",
+        "unsaved": "Salve suas mudanças primeiro: Copiar e Exportar usam o texto salvo.",
+        "copied": "O texto salvo está na sua área de transferência.",
+        "exported": "Exportado como {file}.",
+        "failed": "Não foi possível copiar o texto. Selecione-o no editor e copie você mesmo.",
+        "no_destination": "Copiar e Exportar não precisam de conexão nem de destino, e nada sai deste computador.",
+        "blog": "Enviar para um blog",
+        "blog_title": "Enviar uma cópia para um blog é uma escolha sua",
+        "blog_body": "Nada é enviado daqui. Para publicar em um blog, crie um destino em Conexões e planeje a publicação em Publicar. Você aprova antes de qualquer envio.",
+        "blog_connections": "Abrir Conexões",
+        "blog_publish": "Abrir Publicar"
+      },
       "agent": {
         "heading": "O agente",
         "intro": "O que o agente está fazendo neste projeto. Tudo o que custa dinheiro ou publica espera a sua aprovação.",

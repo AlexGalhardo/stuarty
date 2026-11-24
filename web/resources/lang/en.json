@@ -4149,6 +4149,28 @@
         "diff_none": "No paragraph changed.",
         "diff_coarse": "The texts are too long to compare paragraph by paragraph; all of one is shown against all of the other."
       },
+      "end": {
+        "heading": "The end of this text",
+        "intro": {
+          "copy": "A copy ends here: copy it or export it. No destination is needed.",
+          "post": "A post ends in its publication: you plan it, and nothing is sent until you approve it. You can also copy or export it.",
+          "script": "A script ends when you are happy with it. Copy it, export it or go on to the next step.",
+          "caption": "A caption ends when it fits the networks you chose. Copy it, export it or go on to the next step."
+        },
+        "copy": "Copy",
+        "export": "Export",
+        "next": "Next: {step}",
+        "unsaved": "Save your changes first: Copy and Export use the saved text.",
+        "copied": "The saved text is on your clipboard.",
+        "exported": "Exported as {file}.",
+        "failed": "The text could not be copied. Select it in the editor and copy it yourself.",
+        "no_destination": "Copy and Export need no connection and no destination, and nothing leaves this computer.",
+        "blog": "Send it to a blog",
+        "blog_title": "Sending a copy to a blog is your choice",
+        "blog_body": "Nothing is sent from here. To publish it on a blog, make a destination in Connections, then plan the publication in Publish. You approve it before anything is sent.",
+        "blog_connections": "Open Connections",
+        "blog_publish": "Open Publish"
+      },
       "agent": {
         "heading": "The agent",
         "intro": "What the agent is doing in this project. Anything that costs money or publishes waits for your approval.",

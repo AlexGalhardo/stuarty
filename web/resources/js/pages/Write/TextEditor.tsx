@@ -24,8 +24,9 @@ import type {
 	WriteProject,
 	WritingClient,
 } from "./client";
+import EndPanel, { type EndStatus } from "./EndPanel";
 import FlowPath from "./FlowPath";
-import { primaryAction, readingMinutes } from "./meta";
+import { endOf, exportName, primaryAction, readingMinutes } from "./meta";
 import PostPanel from "./PostPanel";
 import MarkdownPreview from "./Preview";
 import RevisionsPanel from "./RevisionsPanel";
@@ -58,6 +59,7 @@ export default function TextEditor({
 	const [busy, setBusy] = useState(false);
 	const [reviewed, setReviewed] = useState(false);
 	const [flow, setFlow] = useState<ProjectFlow | null>(null);
+	const [ended, setEnded] = useState<EndStatus | null>(null);
 
 	const load = useCallback(async (): Promise<void> => {
 		try {
@@ -76,6 +78,7 @@ export default function TextEditor({
 		setLoaded(null);
 		setNotice(null);
 		setReviewed(false);
+		setEnded(null);
 		void load();
 	}, [load]);
 
@@ -121,6 +124,7 @@ export default function TextEditor({
 				body,
 			});
 			setReviewed(false);
+			setEnded(null);
 			setNotice(
 				done.changed
 					? t("ui.write.editor.saved", {
@@ -154,6 +158,7 @@ export default function TextEditor({
 		(message?: string): void => {
 			void load().then(() => {
 				setReviewed(false);
+				setEnded(null);
 				if (message !== undefined) setNotice(message);
 				onChanged();
 			});
@@ -166,6 +171,29 @@ export default function TextEditor({
 	);
 
 	// Review is a place on this page: the person is taken to the revisions and the checks of the saved text.
+	// Copy and Export act on the saved text, the one the service stored, never on what is typed and not saved.
+	function copy(): void {
+		if (loaded === null) return;
+		navigator.clipboard
+			.writeText(loaded.body)
+			.then(() => setEnded({ state: "copied" }))
+			.catch(() => setEnded({ state: "failed" }));
+	}
+
+	function exportFile(): void {
+		if (loaded === null) return;
+		const file = exportName(loaded.item.title, loaded.item.id);
+		const url = URL.createObjectURL(
+			new Blob([loaded.body], { type: "text/markdown" }),
+		);
+		const link = document.createElement("a");
+		link.href = url;
+		link.download = file;
+		link.click();
+		URL.revokeObjectURL(url);
+		setEnded({ state: "exported", file });
+	}
+
 	function review(): void {
 		setReviewed(true);
 		// A post is checked before it is compared; any other text goes straight to its revisions.
@@ -319,6 +347,16 @@ export default function TextEditor({
 				itemId={itemId}
 				latest={loaded.item.revision}
 				onReverted={changedElsewhere}
+			/>
+			<EndPanel
+				kind={kind}
+				end={endOf(kind, flow)}
+				projectId={projectId}
+				dirty={dirty}
+				reviewed={reviewed}
+				status={ended}
+				onCopy={copy}
+				onExport={exportFile}
 			/>
 			<AgentPanel
 				client={client}

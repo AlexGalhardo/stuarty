@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import type { Page } from "@playwright/test";
-import { caller, expect, test } from "./helpers";
+import { caller, expect, projectBody, test } from "./helpers";
 
 // Epic 80 (SDD-019 section 11): a creator reviews a text before keeping it. Two stored revisions are compared side
 // by side at desktop width and stacked at phone width, a revision is restored as a new revision, and a post is
@@ -27,7 +27,7 @@ test.describe("write review", () => {
 		const api = await caller(request);
 		const tag = `${browserName}-${randomBytes(3).toString("hex")}`;
 		const made = await api("POST", "/projects", {
-			name: `Review ${tag}`,
+			...projectBody(`Review ${tag}`),
 			kind: "text",
 		});
 		const projectId = made.project_id as string;
@@ -151,7 +151,7 @@ test.describe("write review", () => {
 		const api = await caller(request);
 		const tag = `${browserName}-${randomBytes(3).toString("hex")}`;
 		const made = await api("POST", "/projects", {
-			name: `One ${tag}`,
+			...projectBody(`One ${tag}`),
 			kind: "text",
 		});
 		const projectId = made.project_id as string;
@@ -185,7 +185,7 @@ test.describe("write review", () => {
 		const api = await caller(request);
 		const tag = `${browserName}-${randomBytes(3).toString("hex")}`;
 		const made = await api("POST", "/projects", {
-			name: `Post ${tag}`,
+			...projectBody(`Post ${tag}`),
 			kind: "text",
 		});
 		const projectId = made.project_id as string;
