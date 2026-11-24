@@ -98,6 +98,9 @@ var commandDomains = map[string]string{
 	"motion:check":   command.DomainVideo,
 	"motion:replace": command.DomainVideo,
 
+	"transcript:show":    command.DomainAsset,
+	"transcript:fillers": command.DomainAsset,
+
 	"memory:list":     command.DomainMemory,
 	"memory:show":     command.DomainMemory,
 	"memory:write":    command.DomainMemory,

@@ -89,6 +89,17 @@ func rules(language string) (fillerRules, bool) {
 	return fillerRules{answers: set()}, false
 }
 
+// RuleDescription says in one sentence what Detect checks for a language, so that an empty list is not read
+// as "there are no fillers".
+func RuleDescription(language string) string {
+	if _, ok := rules(language); !ok {
+		return "repeated words and phrases only; there is no list of filler words for the language " +
+			"\"" + language + "\""
+	}
+	return "hesitations and discourse markers of the language \"" + strings.ToLower(language) +
+		"\" as written by the transcription, and repeated words and phrases"
+}
+
 func set(words ...string) map[string]bool {
 	m := make(map[string]bool, len(words))
 	for _, w := range words {

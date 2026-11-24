@@ -52,6 +52,12 @@ func AgentDocsInputs() agentdocs.Inputs {
 		inLibrary[s.name] = true
 	}
 
+	// Edit by text (SDD-023): the two reads are the sections words and fillers of media_inspect for an agent, and the
+	// guide of the asset domain lists their CLI commands, so the editor skill, at its size limit, leaves them out.
+	for _, s := range []*spec{transcriptShowCmd, transcriptFillersCmd} {
+		inLibrary[s.name] = true
+	}
+
 	// The chat commands read a transcript and the profiles for a person (SDD-017 section 10): an agent has no use
 	// for the chat of another one, so the editor skill leaves them out; the guide of the workspace domain lists them.
 	for _, s := range []*spec{agentProfilesCmd, chatSessionsCmd, chatSessionCmd, chatTranscriptCmd} {

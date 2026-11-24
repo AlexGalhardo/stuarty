@@ -144,6 +144,8 @@ command text:write
 command token:rotate
 command tools:install
 command transcribe
+command transcript:fillers
+command transcript:show
 command undo
 command version
 command video:generate
@@ -248,6 +250,8 @@ route GET /projects/{}/snap-points
 route GET /projects/{}/texts/{}
 route GET /projects/{}/texts/{}/post
 route GET /projects/{}/texts/{}/revisions
+route GET /projects/{}/transcript
+route GET /projects/{}/transcript/fillers
 route GET /providers
 route GET /providers/sign-ins
 route GET /publications

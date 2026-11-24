@@ -46,6 +46,7 @@ Content type `application/json`. Schema: [`MediaInspectResult`](/docs/api/schema
 | `available` | array of `string` | no |  |
 | `beats` | [`BeatGrid`](/docs/api/schemas#beatgrid) or `any` or `null` or `null` | no |  |
 | `error` | [`Error`](/docs/api/schemas#error) or `any` or `null` or `null` | no |  |
+| `fillers` | [`TranscriptDetectResult`](/docs/api/schemas#transcriptdetectresult) or `any` or `null` or `null` | no |  |
 | `kind` | `string` | no |  |
 | `loudness` | [`Loudness`](/docs/api/schemas#loudness) or `any` or `null` or `null` | no |  |
 | `next_cursor` | `string` or `null` | no |  |
@@ -57,6 +58,7 @@ Content type `application/json`. Schema: [`MediaInspectResult`](/docs/api/schema
 | `text` | `string` | no |  |
 | `untrusted` | [`UntrustedData`](/docs/api/schemas#untrusteddata) or `any` or `null` or `null` | no |  |
 | `untrusted_notice` | `string` | no |  |
+| `words` | [`TranscriptViewResult`](/docs/api/schemas#transcriptviewresult) or `any` or `null` or `null` | no |  |
 
 ### 400
 
@@ -261,6 +263,18 @@ puts "#{response.code} #{response.body}"
     "path": "string",
     "retryable": false
   },
+  "fillers": {
+    "asset_id": "string",
+    "language": "string",
+    "project_id": "string",
+    "revision": 0,
+    "rule": "string",
+    "suggestions": [
+      {}
+    ],
+    "text": "string",
+    "untrusted_notice": "string"
+  },
   "kind": "string",
   "loudness": {
     "integrated_lufs": 0,
@@ -307,11 +321,31 @@ puts "#{response.code} #{response.body}"
   "untrusted": {
     "metadata": {},
     "name": "string",
+    "suggestions": [
+      {}
+    ],
     "transcript": [
+      {}
+    ],
+    "words": [
       {}
     ]
   },
-  "untrusted_notice": "string"
+  "untrusted_notice": "string",
+  "words": {
+    "asset_id": "string",
+    "language": "string",
+    "project_id": "string",
+    "revision": 0,
+    "skipped_items": [
+      "string"
+    ],
+    "text": "string",
+    "untrusted_notice": "string",
+    "words": [
+      {}
+    ]
+  }
 }
 ```
 

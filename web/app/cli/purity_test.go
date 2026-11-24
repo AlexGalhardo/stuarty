@@ -385,6 +385,17 @@ func (s stub) MotionCheck(context.Context, service.MotionCheckRequest) (*service
 	return reply[service.MotionCheckResult](s.err)
 }
 
+func (s stub) TranscriptView(context.Context, service.TranscriptViewRequest) (*service.TranscriptViewResult, error) {
+	return reply[service.TranscriptViewResult](s.err)
+}
+
+func (s stub) TranscriptDetectFillers(
+	context.Context,
+	service.TranscriptDetectRequest,
+) (*service.TranscriptDetectResult, error) {
+	return reply[service.TranscriptDetectResult](s.err)
+}
+
 func (s stub) MotionReplace(context.Context, service.MotionReplaceRequest) (*service.MotionReplaceResult, error) {
 	return reply[service.MotionReplaceResult](s.err)
 }

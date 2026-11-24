@@ -1037,7 +1037,7 @@ func stripOf(arts []ArtifactRow) *Strip {
 	return &Strip{TileW: l.TileW, TileH: l.TileH, Columns: l.Columns, Count: l.Count, IntervalMS: l.IntervalMS}
 }
 
-var inspectSections = []string{"probe", "transcript", "silences", "loudness", "beats"}
+var inspectSections = []string{"probe", "transcript", "silences", "loudness", "beats", "words", "fillers"}
 
 func (s *svc) MediaInspect(ctx context.Context, req MediaInspectRequest) (*MediaInspectResult, error) {
 	c, err := s.authorizeProject(ctx, "MediaInspect", req.ProjectID)
@@ -1057,7 +1057,7 @@ func (s *svc) MediaInspect(ctx context.Context, req MediaInspectRequest) (*Media
 	for _, sec := range sections {
 		if !slices.Contains(inspectSections, sec) {
 			return nil, newError(command.CodeValidation, "the section %q is not known.", sec).
-				withPath("sections").withHint("use probe, transcript, silences, loudness or beats")
+				withPath("sections").withHint("use probe, transcript, silences, loudness, beats, words or fillers")
 		}
 	}
 
@@ -1128,6 +1128,10 @@ func (s *svc) MediaInspect(ctx context.Context, req MediaInspectRequest) (*Media
 			}
 
 			text.WriteString(section)
+		case "words", "fillers":
+			if err := s.inspectWords(ctx, &req, pa.AssetID, sec, res, &text); err != nil {
+				return nil, err
+			}
 		}
 	}
 

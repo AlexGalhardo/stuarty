@@ -22,6 +22,8 @@ var Provenance = map[string]string{
 	"assets.LibraryAsset.Name":                  SourceAssetName,
 	"service.UntrustedData.Metadata":            SourceMetadata,
 	"service.TranscriptLine.Text":               SourceTranscript,
+	"service.TranscriptWord.Text":               SourceTranscript,
+	"service.TranscriptSuggestion.Text":         SourceTranscript,
 	"service.MediaEntry.Name":                   SourceAssetName,
 	"service.UntrustedData.Name":                SourceAssetName,
 	"service.TemplateSummary.Name":              SourceTemplateText,

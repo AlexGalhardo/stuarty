@@ -456,6 +456,8 @@ Scopes: `read`, `edit`, `media`, `render`, `admin` (SDD-000 §4). They are indep
 | `JobList` | `GET /projects/{id}/jobs` | R | - | - | - | - | Project and ownership check |
 | `PlanWindow` | `GET /projects/{id}/plan` | R | - | - | - | - | Project and ownership check |
 | `SnapPoints` | `GET /projects/{id}/snap-points` | R | - | - | - | - | Project and ownership check |
+| `TranscriptView` | `GET /projects/{id}/transcript` | R | - | - | - | - | Project and ownership check; the asset must be in the timeline; no job is started; the text of a word is untrusted (SDD-023) |
+| `TranscriptDetectFillers` | `GET /projects/{id}/transcript/fillers` | R | - | - | - | - | As `TranscriptView`; it returns suggestions and changes nothing (SDD-023) |
 | `AssetList` | `GET /assets` | R | - | - | - | - | The files of the projects the caller may see: the owner's in network mode, one project for a project-limited key |
 | `FontList` | `GET /fonts` | R | - | - | - | - | Families and weights, and the imported font files by hash (VV-094); in network mode only the files the caller owns (7.7); no per-project data |
 | `Undo`, `Redo` | `POST /projects/{id}/undo`, `/redo` | - | R | - | - | - | Own steps only (ADR-0006) |
@@ -606,7 +608,7 @@ Every command in the registry declares `scope` in `edit` or `media`. A batch nee
 | `audio.duck`, `audio.mark_beats` | - | R | - | - | - |
 | `text.add`, `text.set`, `text.apply_preset`, `shape.add`, `shape.set` | - | R | - | - | - |
 | `caption.add`, `caption.set_words`, `caption.edit_word`, `caption.split`, `caption.merge`, `caption.set_breaks`, `caption.set_style` | - | R | - | - | - |
-| `caption.from_transcript`, `caption.retime_from_clip` | - | R | - | - | - |
+| `caption.from_transcript`, `caption.retime_from_clip`, `transcript.delete_range` | - | R | - | - | - |
 | `keyframe.set`, `keyframe.remove`, `keyframe.clear` | - | R | - | - | - |
 | `slot.mark`, `slot.unmark`, `slot.fill`, `template.set_info` | - | R | - | - | - |
 | `asset.remove`, `font.add`, `font.remove` | - | - | R | - | - |
@@ -615,7 +617,7 @@ Every command in the registry declares `scope` in `edit` or `media`. A batch nee
 Rules:
 
 1. `asset.add` is `internal` (SDD-002 B.2): the registry does not list it and a caller who sends it receives `E_UNKNOWN_COMMAND`, the same answer as for a name that does not exist. Only the import flow issues it, after the file passed section 7.
-2. The analysis behind `clip.remove_silences`, `audio.duck` (the speech map), `audio.mark_beats` (the beat grid), `caption.from_transcript` and `caption.retime_from_clip` (SDD-002 A.9) reads artifacts that already exist. If the transcript artifact is missing, the command fails with `E_INVALID_STATE` and the hint to run the `transcribe` job (scope `media`). An `edit` command never starts a `media` job. Silence analysis, when it must be computed, runs under the ingest concurrency limit of section 9. **Decision of this SDD.**
+2. The analysis behind `clip.remove_silences`, `audio.duck` (the speech map), `audio.mark_beats` (the beat grid), `caption.from_transcript`, `caption.retime_from_clip` and `transcript.delete_range` (SDD-002 A.9) reads artifacts that already exist. If the transcript artifact is missing, the command fails with `E_INVALID_STATE` and the hint to run the `transcribe` job (scope `media`). An `edit` command never starts a `media` job. Silence analysis, when it must be computed, runs under the ingest concurrency limit of section 9. **Decision of this SDD.**
 3. `font.add` and `font.remove` have scope `media`: they name or unname a file of the workspace font store (section 7.7). The core checks only the form of the hash; the service refuses a hash the store does not hold before the command is applied. The scope of a command is part of its registry entry, is shown by `command_help`, and is tested: `TestSecurity_T05_EveryOperationHasScope` fails for a command whose scope is empty or outside `{edit, media}`.
 
 ## 6. Running external processes

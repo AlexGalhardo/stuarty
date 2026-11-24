@@ -135,6 +135,8 @@ func registry() []*spec {
 		motionBriefCmd,
 		motionCheckCmd,
 		motionReplaceCmd,
+		transcriptShowCmd,
+		transcriptFillersCmd,
 		agentProfilesCmd,
 		chatSessionsCmd,
 		chatSessionCmd,

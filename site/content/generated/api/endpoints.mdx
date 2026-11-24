@@ -50,6 +50,8 @@ Every operation has its own page with the parameters, the body, the responses an
 | `POST` | `/api/v1/projects/{id}/revert` | [`projects.revert`](/docs/api/projects.revert) | Go back to an earlier revision as a new step |
 | `GET` | `/api/v1/projects/{id}/sheet` | [`projects.sheet`](/docs/api/projects.sheet) | Render a contact sheet |
 | `GET` | `/api/v1/projects/{id}/snap-points` | [`projects.snap_points`](/docs/api/projects.snap_points) | Read the snap points and trim limits |
+| `GET` | `/api/v1/projects/{id}/transcript` | [`projects.transcript`](/docs/api/projects.transcript) | Read the words of an asset with the timeline range of each |
+| `GET` | `/api/v1/projects/{id}/transcript/fillers` | [`projects.transcript_fillers`](/docs/api/projects.transcript_fillers) | Find the filler words and repetitions of an asset, and change nothing |
 | `POST` | `/api/v1/projects/{id}/trash` | [`projects.trash`](/docs/api/projects.trash) | Move a project to the trash |
 | `POST` | `/api/v1/projects/{id}/undo` | [`projects.undo`](/docs/api/projects.undo) | Undo the caller's latest step |
 | `POST` | `/api/v1/projects/import` | [`projects.bundle.import`](/docs/api/projects.bundle.import) | Import a .vvbundle as a project |

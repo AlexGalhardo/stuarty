@@ -3723,6 +3723,57 @@
       ]
     },
     {
+      "name": "transcript:show",
+      "domain": "asset",
+      "summary": "the words of an asset with the timeline range of each, to cut by word range with transcript.delete_range",
+      "usage": [
+        "stuarty transcript:show --project <id> --asset <ast_id>"
+      ],
+      "example": "stuarty transcript:show --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d",
+      "flags": [
+        {
+          "name": "asset",
+          "type": "string",
+          "usage": "the asset whose transcript to read, transcribed first (required)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
+      "name": "transcript:fillers",
+      "domain": "asset",
+      "summary": "the filler words and repetitions of an asset to review; it changes nothing",
+      "usage": [
+        "stuarty transcript:fillers --project <id> --asset <ast_id> [--repeat-window ms]"
+      ],
+      "example": "stuarty transcript:fillers --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d",
+      "flags": [
+        {
+          "name": "asset",
+          "type": "string",
+          "usage": "the asset whose transcript to check, transcribed first (required)"
+        },
+        {
+          "name": "repeat-window",
+          "type": "integer",
+          "usage": "the longest gap between the two copies of a repetition, in milliseconds (default 700)"
+        }
+      ],
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project"
+      ]
+    },
+    {
       "name": "agent:profiles",
       "domain": "workspace",
       "summary": "list the agents the chat may host, with their full command, and the known agents found on this machine",
