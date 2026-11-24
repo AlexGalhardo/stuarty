@@ -23,6 +23,7 @@ const messages = {
 	"ui.approvals.kind": "Kind",
 	"ui.approvals.destination": "Goes to",
 	"ui.approvals.not_reported": "Not reported",
+	"ui.approvals.loading": "Reading what is waiting for you…",
 	"ui.approvals.what": "What happens",
 	"ui.approvals.item": "Item",
 	"ui.approvals.undo": "Undo",
@@ -195,6 +196,32 @@ describe("the approval queue shows what will go out, where, what it costs and wh
 		const html = markup([request()]);
 		const found = html.match(/<button[^>]*>/g) ?? [];
 		expect(found.filter((b) => b.includes("min-w-24"))).toHaveLength(2);
+	});
+
+	// Epic 82: a queue that has not been read is not an empty one, and a failed read never says "nothing waits".
+	test("loading and failed reads do not claim the queue is empty", () => {
+		const read = (loading: boolean, failed: boolean): string =>
+			renderToString(
+				<I18nProvider messages={messages} locale="en" locales={["en"]}>
+					<SessionProvider session={person}>
+						<ApprovalQueue
+							requests={[]}
+							destinations={{}}
+							loading={loading}
+							failed={failed}
+							busyId={null}
+							live={false}
+							onDecide={() => undefined}
+						/>
+					</SessionProvider>
+				</I18nProvider>,
+			);
+		const loadingHtml = read(true, false);
+		expect(loadingHtml).toContain("Reading what is waiting");
+		expect(loadingHtml).not.toContain("Nothing is waiting for you.");
+		const failedHtml = read(true, true);
+		expect(failedHtml).not.toContain("Nothing is waiting for you.");
+		expect(failedHtml).not.toContain("Reading what is waiting");
 	});
 
 	test("an empty queue says nothing waits, and the live state is shown", () => {

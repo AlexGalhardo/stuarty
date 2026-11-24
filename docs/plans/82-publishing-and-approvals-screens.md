@@ -53,7 +53,7 @@ None new. `ApprovalDecide` and the ceilings keep their privileged checks.
 - [x] 3. Calendar in month, week and list. Verify: `cd web && bun run e2e -- publish-calendar` passes.
 - [x] 4. The publication editor with destinations and reasons. Verify: `cd web && bun run test -- Publish` passes.
 - [x] 5. The text path: destination, approval, published. Verify: new spec `publish-text-post` passes with the local blog destination.
-- [ ] 6. Empty, loading, error and agent states. Verify: `bun run check:i18n` exits 0.
+- [x] 6. Empty, loading, error and agent states. Verify: `bun run check:i18n` exits 0.
 - [ ] 7. Check 1440, 1280 and 390 px in both themes. Verify: `cd web && bun run e2e -- a11y` passes.
 
 ## Test strategy

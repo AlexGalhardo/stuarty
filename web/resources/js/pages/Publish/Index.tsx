@@ -228,6 +228,15 @@ export default function Publish(): ReactNode {
 				</div>
 
 				<FailureNote failure={failure ?? feed.failure} />
+				{feed.publications === null && feed.failure === null && (
+					<p
+						role="status"
+						className="text-sm text-muted-foreground"
+						data-testid="publish-loading"
+					>
+						{t("ui.publish.loading")}
+					</p>
+				)}
 
 				{mode === "list" ? (
 					<ListView
