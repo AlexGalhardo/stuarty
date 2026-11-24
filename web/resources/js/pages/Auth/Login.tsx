@@ -1,6 +1,7 @@
 import { Head } from "@inertiajs/react";
 import { type FormEvent, type ReactNode, useState } from "react";
 
+import { AuthCard } from "@/components/AuthCard";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,11 +39,10 @@ export default function Login(): ReactNode {
 	return (
 		<>
 			<Head title={t("ui.login.title")} />
-			<div className="mx-auto flex max-w-sm flex-col gap-6">
-				<h1 className="text-2xl font-semibold">{t("ui.login.title")}</h1>
+			<AuthCard title={t("ui.login.title")}>
 				<form
 					onSubmit={(event) => void submit(event)}
-					className="flex flex-col gap-4 rounded-xl border bg-card p-5 text-card-foreground"
+					className="flex flex-col gap-4"
 				>
 					<div className="flex flex-col gap-2">
 						<Label htmlFor="login-email">{t("ui.login.email")}</Label>
@@ -71,13 +71,11 @@ export default function Login(): ReactNode {
 						/>
 					</div>
 					<FailureNote id="login-error" failure={failure} />
-					<div>
-						<Button type="submit" disabled={busy}>
-							{t("ui.login.submit")}
-						</Button>
-					</div>
+					<Button type="submit" disabled={busy}>
+						{t("ui.login.submit")}
+					</Button>
 				</form>
-			</div>
+			</AuthCard>
 		</>
 	);
 }

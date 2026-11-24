@@ -171,7 +171,27 @@
     },
     "error": {
       "back": "Back to projects",
-      "how_to_fix": "How to fix:"
+      "home": "Go to the home",
+      "label": "Error {status}",
+      "how_to_fix": "How to fix:",
+      "next": {
+        "not_found": {
+          "title": "What to do next",
+          "body": "The address may have changed, or the project may be in the trash of the projects page, where it can be restored. Your files are still on this computer."
+        },
+        "forbidden": {
+          "title": "What to do next",
+          "body": "This needs a person who is signed in. Sign in, or do it in the Stuarty app, and try again."
+        },
+        "server": {
+          "title": "What to do next",
+          "body": "Something stopped on this computer. Try again in a moment. Your files are not changed by an error page."
+        },
+        "other": {
+          "title": "What to do next",
+          "body": "Go back to the projects and try again. If it happens again, the message above says what stopped it."
+        }
+      }
     },
     "projects": {
       "title": "Projects",
@@ -2642,7 +2662,16 @@
       "password_rule": "8 to 32 characters, with an uppercase letter, a lowercase letter, a digit and a special character, and no spaces.",
       "confirmation": "Confirm the password",
       "identity": "Username or e-mail",
+      "footer": "On your computer. Your way.",
+      "steps": {
+        "label": "Steps to start",
+        "create": "Create account",
+        "key": "Keep the key",
+        "signin": "Sign in",
+        "done": "Done"
+      },
       "create": {
+        "not_encrypted_title": "What is not encrypted",
         "title": "Create your account",
         "intro": "Your texts, briefs, chats, publications and credentials are encrypted with a key that is only in memory while you are signed in. While Stuarty is locked, no page, command or agent reads them.",
         "not_encrypted": "Not encrypted yet: the files of your memory notes, prompts and skills, your media files, the names of projects and files, and the words inside a timeline or an image. Anyone who can open this folder on the disk can read those.",
@@ -2651,6 +2680,8 @@
       "recovery": {
         "title": "Save your recovery key",
         "intro": "This key opens your data if you forget your password. It is shown once, here, and Stuarty does not keep it.",
+        "warning_title": "Keep it outside this computer",
+        "formerFolder_title": "A copy from before the rename is still on the disk",
         "warning": "If you forget your password and you do not have this key, your data cannot be recovered. Nobody can do it for you, not even us. Write the key down or keep it in a password manager before you go on.",
         "formerFolder": "A copy of your workspace from before Stuarty was renamed is still in {path}, in clear text. Stuarty never deletes it: delete that folder yourself once you have checked that everything is here.",
         "copy": "Copy the key",
@@ -2660,6 +2691,7 @@
       },
       "signin": {
         "title": "Sign in to Stuarty",
+        "intro": "Stuarty is locked until you sign in. No page, command or agent reads your data before that.",
         "submit": "Sign in",
         "forgot": "I forgot my password"
       },

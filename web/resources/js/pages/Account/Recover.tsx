@@ -1,6 +1,7 @@
 import { Head } from "@inertiajs/react";
 import { type FormEvent, type ReactNode, useState } from "react";
 
+import { AuthCard } from "@/components/AuthCard";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import PasswordField from "@/components/PasswordField";
 import { Button } from "@/components/ui/button";
@@ -47,17 +48,15 @@ export default function Recover(): ReactNode {
 	return (
 		<>
 			<Head title={t("ui.account.recover.title")} />
-			<div className="mx-auto flex max-w-sm flex-col gap-6">
-				<h1 className="text-2xl font-semibold">
-					{t("ui.account.recover.title")}
-				</h1>
-				<p className="text-sm text-muted-foreground">
-					{t("ui.account.recover.intro")}
-				</p>
+			<AuthCard
+				title={t("ui.account.recover.title")}
+				description={t("ui.account.recover.intro")}
+				footer={t("ui.account.footer")}
+			>
 				<form
 					onSubmit={(event) => void submit(event)}
 					noValidate
-					className="flex flex-col gap-4 rounded-xl border bg-card p-5 text-card-foreground"
+					className="flex flex-col gap-4"
 				>
 					<div className="flex flex-col gap-2">
 						<Label htmlFor="recover-key">{t("ui.account.recover.key")}</Label>
@@ -89,13 +88,11 @@ export default function Recover(): ReactNode {
 						reasons={reasonsOf(problems, "confirmation")}
 					/>
 					<FailureNote id="recover-error" failure={failure} />
-					<div>
-						<Button type="submit" disabled={busy}>
-							{t("ui.account.recover.submit")}
-						</Button>
-					</div>
+					<Button type="submit" disabled={busy}>
+						{t("ui.account.recover.submit")}
+					</Button>
 				</form>
-			</div>
+			</AuthCard>
 		</>
 	);
 }
