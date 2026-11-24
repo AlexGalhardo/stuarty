@@ -1,6 +1,7 @@
 import { Copy } from "lucide-react";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 
+import { StatusBadge } from "@/components/StatusBadge";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ import {
 	WHISPER_MODELS,
 } from "../../editor/inspector/panels/transcriptModel";
 import { installCommand, transcriptionState } from "./installState";
+import { SELECT_CLASS, SettingsSection } from "./SettingsSection";
 
 const POLL_EVERY_MS = 1000;
 
@@ -85,32 +87,29 @@ export default function Transcription(): ReactNode {
 	const command = installCommand(model);
 
 	return (
-		<section
-			aria-labelledby="settings-transcription"
-			className="flex flex-col gap-3"
+		<SettingsSection
+			id="settings-transcription"
+			title={t("ui.settings.transcription.title")}
+			description={t("ui.settings.transcription.intro")}
 		>
-			<h2 id="settings-transcription" className="text-lg font-semibold">
-				{t("ui.settings.transcription.title")}
-			</h2>
-			<p className="text-sm text-muted-foreground">
-				{t("ui.settings.transcription.intro")}
-			</p>
 			{unavailable && (
-				<p role="alert" className="text-sm text-destructive">
+				<p role="alert" className="text-sm text-danger-text">
 					{t("ui.settings.unavailable")}
 				</p>
 			)}
 			{status !== null && (
-				<p data-testid="transcription-state" className="text-sm">
-					{ready
-						? t("ui.settings.transcription.ready", {
-								models: state.models.join(", "),
-							})
-						: t("ui.settings.transcription.missing")}
+				<p data-testid="transcription-state">
+					<StatusBadge status={ready ? "success" : "neutral"}>
+						{ready
+							? t("ui.settings.transcription.ready", {
+									models: state.models.join(", "),
+								})
+							: t("ui.settings.transcription.missing")}
+					</StatusBadge>
 				</p>
 			)}
 			{status?.state === "failed" && status.error !== undefined && (
-				<p role="alert" className="text-sm text-destructive">
+				<p role="alert" className="text-sm text-danger-text">
 					<UntrustedText>{status.error.message}</UntrustedText>
 				</p>
 			)}
@@ -135,7 +134,7 @@ export default function Transcription(): ReactNode {
 						<select
 							id="settings-whisper-model"
 							value={model}
-							className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm dark:bg-input/30"
+							className={SELECT_CLASS}
 							onChange={(event) => setModel(event.target.value)}
 						>
 							{WHISPER_MODELS.map((name) => (
@@ -156,13 +155,13 @@ export default function Transcription(): ReactNode {
 				</div>
 			)}
 			{phase.name === "failed" && (
-				<p role="alert" className="text-sm text-destructive">
+				<p role="alert" className="text-sm text-danger-text">
 					<UntrustedText>{phase.message}</UntrustedText>
 				</p>
 			)}
 			{phase.name === "command_only" && (
 				<div className="flex flex-col gap-1">
-					<p role="status" className="text-sm text-muted-foreground">
+					<p role="status" className="text-sm text-text-muted">
 						{t("ui.settings.transcription.forbidden")}
 					</p>
 					<p className="flex items-center gap-1">
@@ -170,7 +169,7 @@ export default function Transcription(): ReactNode {
 							readOnly
 							value={command}
 							aria-label={t("ui.settings.transcription.command")}
-							className="h-8 min-w-0 flex-1 rounded-md border bg-transparent px-2 font-mono text-xs"
+							className="h-8 min-w-0 flex-1 rounded-lg border border-border-strong bg-surface-sunken px-2 font-mono text-sm text-text max-md:h-11"
 							onFocus={(event) => event.currentTarget.select()}
 						/>
 						<Button
@@ -185,6 +184,6 @@ export default function Transcription(): ReactNode {
 					</p>
 				</div>
 			)}
-		</section>
+		</SettingsSection>
 	);
 }
