@@ -142,6 +142,18 @@ Author decisions D-134 and D-137. Epic 74 can start now, and so can epic 87, bec
 
 At five seniors: first 74 and 87, beside 57 and 69. After 57 and 74: 75 and 78, which do not share modules. After 75: 76, 81 and 84. After 76 and 78: 77, 79, 80, 83 and 86, at most five at a time. Then 82 and 85, and 88 last. Epics 79 and 80 share no page; 85 and 86 share no editor module.
 
+### 1.8 Follow-ups of author decision D-135
+
+Work that earlier epics left open and the author decided to do in epics of their own. None of them is in the dependency diagram of section 2, which stops at epic 42. Epics 91 and 93 both change the embedded renderer module, so 93 takes the final digest after 91; 89 and 85 both touch the transcript panel, and 92 and 84 both touch the Settings account section and `web/resources/lang/*.json`, so the orchestrator orders those merges.
+
+| Epic | Title | Size | Depends on | Status |
+| --- | --- | --- | --- | --- |
+| [89](89-cut-edges-snap-to-silences.md) | Cut edges snap to silences | S | 69 | TODO |
+| [90](90-real-crash-recovery-campaign.md) | Real crash recovery: kill a real process in a publication, an upload and an export | M | 42, 18, 20, 35 | TODO |
+| [91](91-renderer-layer-band-and-frame-cache.md) | Image renderer: prepare only the visible band, keep the prepared layer, cache the editor frame | L | 54, 55 | TODO |
+| [92](92-encrypted-library-and-remaining-sealed-fields.md) | The encrypted library and the rest of what epic 57 left in clear text | XL | 57, 56, 08, 15 | TODO |
+| [93](93-renderer-wasm-ci-artifact-and-linux-digest.md) | One renderer module digest on Linux and Windows | M | 55, 91 | TODO |
+
 ## 2. Dependency graph
 
 ```text
