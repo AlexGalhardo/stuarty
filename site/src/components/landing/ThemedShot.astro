@@ -1,0 +1,21 @@
+---
+// A real capture in both themes: the light and the dark picture are both in the page and the theme class of the
+// document shows one. Only the dark one (the default theme) is fetched at once when `eager`; a hidden lazy image is
+// not downloaded until its theme is shown.
+import type { Shot as ShotData } from "@/lib/landing-pages";
+import Shot from "./Shot.astro";
+
+interface Props {
+	/** The dark capture; the light one is the same path with the `-light` suffix. */
+	shot: ShotData;
+	eager?: boolean;
+	sizes?: string;
+	class?: string;
+}
+
+const { shot, eager = false, sizes, class: className } = Astro.props;
+const light: ShotData = { ...shot, src: `${shot.src}-light` };
+---
+
+<Shot shot={shot} eager={eager} sizes={sizes} class={["shot-dark", className].filter(Boolean).join(" ")} />
+<Shot shot={light} sizes={sizes} class={["shot-light", className].filter(Boolean).join(" ")} />

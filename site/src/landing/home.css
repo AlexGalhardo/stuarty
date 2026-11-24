@@ -1,0 +1,255 @@
+/* The landing page (epic 88): a calm long page in the expressive register. Imported only by src/pages/index.astro
+   after landing.css, which holds the buttons, the type scale and the showcase frame. */
+
+main[data-page="home"] {
+	--home-gap: clamp(4rem, 9vw, 8rem);
+}
+
+.home-section {
+	padding-block: var(--home-gap);
+}
+.home-hero {
+	padding-top: calc(var(--header-h) + clamp(2rem, 6vw, 5rem));
+	padding-bottom: clamp(3rem, 6vw, 6rem);
+}
+.home-band {
+	background: color-mix(in oklab, var(--fg) 3.5%, var(--bg));
+	border-block: 1px solid color-mix(in oklab, var(--fg) 8%, transparent);
+}
+.home-head {
+	margin-bottom: clamp(2rem, 5vw, 3.5rem);
+}
+.home-head .display-title {
+	max-width: 22ch;
+}
+
+/* The theme decides which capture shows; a hidden lazy image is not fetched. */
+.home .shot-light {
+	display: none;
+}
+html:not(.dark) .home .shot-dark {
+	display: none;
+}
+html:not(.dark) .home .shot-light {
+	display: block;
+}
+
+.home-frame {
+	border-radius: 0.75rem;
+	box-shadow: var(--brand-glow);
+}
+.home-frame img {
+	aspect-ratio: 16 / 10;
+	object-fit: cover;
+	object-position: top left;
+}
+.home-wide {
+	margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.home-facts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.home-facts li {
+	padding: 0.25rem 0.75rem;
+	border: 1px solid color-mix(in oklab, var(--fg) 14%, transparent);
+	border-radius: 999px;
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: var(--lead);
+}
+
+.home-h3 {
+	margin: 0;
+	font-size: 1.125rem;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	color: var(--fg);
+}
+.home-p {
+	margin: 0.5rem 0 0;
+	font-size: 1rem;
+	line-height: 1.6;
+	color: var(--lead);
+	text-wrap: pretty;
+}
+
+/* One path: a row per step, the screen on the side that alternates on a wide window. */
+.home-steps {
+	display: grid;
+	gap: clamp(3rem, 7vw, 6rem);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.home-step {
+	display: grid;
+	gap: 1.5rem;
+	align-items: center;
+}
+.home-step-n {
+	margin: 0 0 0.75rem;
+	font-family: var(--font-mono);
+	font-size: 0.875rem;
+	color: var(--brand-text);
+}
+.home-step-text .home-h3 {
+	font-size: clamp(1.5rem, 2.4vw, 2rem);
+	line-height: 1.15;
+	letter-spacing: -0.02em;
+}
+.home-step-text .home-p {
+	max-width: 34rem;
+	font-size: 1.0625rem;
+}
+@media (min-width: 64rem) {
+	.home-step {
+		grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+		gap: 4rem;
+	}
+	.home-step:nth-child(even) .home-step-text {
+		order: 2;
+	}
+}
+
+.home-defs {
+	display: grid;
+	gap: 1.25rem;
+	margin: 0;
+}
+.home-defs dd {
+	margin: 0.25rem 0 0;
+	font-size: 1rem;
+	line-height: 1.6;
+	color: var(--lead);
+}
+
+.home-checks {
+	display: grid;
+	gap: 0.75rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.home-checks li {
+	position: relative;
+	padding-inline-start: 1.75rem;
+	font-size: 1.0625rem;
+	line-height: 1.5;
+	color: var(--fg);
+}
+.home-checks li::before {
+	content: "";
+	position: absolute;
+	inset-inline-start: 0;
+	top: 0.35em;
+	width: 1rem;
+	height: 0.5rem;
+	border-inline-start: 2px solid var(--brand-text);
+	border-bottom: 2px solid var(--brand-text);
+	transform: rotate(-45deg) scale(0.9);
+}
+
+.home-cards {
+	display: grid;
+	gap: 1rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+}
+.home-cards-3 {
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+}
+.home-card {
+	padding: 1.5rem;
+	border: 1px solid color-mix(in oklab, var(--fg) 12%, transparent);
+	border-radius: 0.75rem;
+	background: var(--bg);
+}
+.home-state {
+	display: inline-block;
+	margin: 0 0 0.75rem;
+	padding: 0.125rem 0.625rem;
+	border-radius: 999px;
+	background: color-mix(in oklab, var(--brand-text) 12%, transparent);
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--brand-text);
+}
+
+/* A screen of epic 79 that is not captured yet: the frame of the real picture with a plain, honest label. */
+.screen-slot {
+	display: grid;
+	place-content: center;
+	justify-items: center;
+	gap: 0.5rem;
+	aspect-ratio: 16 / 10;
+	padding: 1rem;
+	border: 2px dashed color-mix(in oklab, var(--fg) 30%, transparent);
+	border-radius: inherit;
+	background: color-mix(in oklab, var(--fg) 4%, var(--bg));
+	text-align: center;
+}
+.screen-slot-tag {
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--brand-text);
+}
+.screen-slot-name {
+	font-size: 1.125rem;
+	font-weight: 500;
+	color: var(--fg);
+}
+
+.home-footer {
+	padding-block: 2.5rem;
+	border-top: 1px solid color-mix(in oklab, var(--fg) 10%, transparent);
+	font-size: 0.8125rem;
+	color: var(--muted);
+}
+.home-footer p {
+	margin: 0.25rem 0;
+}
+.home-footer a {
+	text-decoration: underline;
+	text-underline-offset: 0.2em;
+}
+
+/* Sections settle in as they scroll into view, only where the browser supports it and the visitor allows motion. */
+@media (prefers-reduced-motion: no-preference) {
+	@supports (animation-timeline: view()) {
+		.home-step,
+		.home-card,
+		.home-head {
+			animation: home-in linear both;
+			animation-timeline: view();
+			animation-range: entry 0% entry 35%;
+		}
+		@keyframes home-in {
+			from {
+				opacity: 0;
+				translate: 0 1.25rem;
+			}
+		}
+	}
+}
+
+@media (forced-colors: active) {
+	.screen-slot {
+		border-color: CanvasText;
+	}
+	.home-card,
+	.home-facts li {
+		border-color: CanvasText;
+	}
+}
