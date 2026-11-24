@@ -29,6 +29,7 @@ var commandDomains = map[string]string{
 	"item:rename":        command.DomainProject,
 	"item:trash":         command.DomainProject,
 	"item:restore":       command.DomainProject,
+	"project:step":       command.DomainProject,
 	"brief:show":         command.DomainProject,
 	"brief:set":          command.DomainProject,
 	"briefing:questions": command.DomainProject,

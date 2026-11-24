@@ -222,6 +222,32 @@ var itemRestoreCmd = itemCommand("item:restore", "restore an item from the trash
 		return &output{value: res, text: res.Text}, nil
 	})
 
+var projectStepCmd = &spec{
+	name:    "project:step",
+	summary: "skip an optional step of the workflow of a project, or put it back",
+	usage:   []string{"stuarty project:step <id> <step> [--restore]"},
+	example: "stuarty project:step prj_7k2m9x4q1b recording",
+	project: true, projectPositional: true, positional: true,
+	globals: []string{"dry-run"},
+	write:   true,
+	flags:   []flagDef{{Name: "restore", Kind: kindBool, Usage: "put a skipped step back"}},
+	run: func(ctx context.Context, c *call) (*output, error) {
+		if len(c.args.Positional) != 1 {
+			return nil, validation("step", "project:step takes one step, got %d.", len(c.args.Positional))
+		}
+
+		res, err := c.svc.ProjectStepSkip(ctx, service.ProjectStepSkipRequest{
+			ProjectID: c.projectID, Step: c.args.Positional[0], Restore: c.args.boolean("restore"),
+			DryRun: c.args.boolean("dry-run"),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: res.Text}, nil
+	},
+}
+
 // briefText is the text of a brief for the terminal: the Markdown as it is, with the note that it is data.
 func briefText(res *service.BriefResult) string {
 	if res.ItemID == "" {

@@ -43,6 +43,7 @@ type createIn struct {
 	Preset      string              `json:"preset,omitempty"  doc:"Deprecated, creates nothing: the size is asked when a video is added."`
 	FPS         fpsText             `json:"fps,omitempty"     doc:"Deprecated, creates nothing: the frame rate is asked when a video is added."`
 	ID          string              `json:"id,omitempty"      doc:"An id of your own; E_ID_EXISTS when taken."`
+	Kind        string              `json:"kind,omitempty"    doc:"What the project is meant to become: text, video, image or undecided (the default). It creates no timeline."`
 	DryRun      any                 `json:"dry_run,omitempty"`
 
 	// Width and Height are not accepted: a project takes its size from preset. They are members so that a
@@ -401,6 +402,7 @@ func (h *apiHandler) registerAll() {
 	register(h, "projects.items.restore", func(c *web.Ctx, in itemStateIn) (service.ProjectItemResult, error) {
 		return h.projectItemState(c, in, true)
 	})
+	register(h, "projects.steps.skip", h.projectStepSkip)
 	register(h, "projects.brief.get", h.briefGet)
 	register(h, "projects.brief.set", h.briefSet)
 	register(h, "briefing.questions", h.briefingQuestions)
@@ -660,7 +662,7 @@ func (h *apiHandler) projectsCreate(c *web.Ctx, in createIn) (service.ProjectCre
 
 	res, err := h.Service.ProjectCreate(c.Context(), service.ProjectCreateRequest{
 		Name: in.Name, Description: in.Description, Goal: in.Goal, Preset: in.Preset, FPS: string(in.FPS), ID: in.ID,
-		DryRun: dryRun,
+		Kind: in.Kind, DryRun: dryRun,
 	})
 	if err != nil {
 		return service.ProjectCreateResult{}, err

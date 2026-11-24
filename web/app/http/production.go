@@ -56,6 +56,13 @@ type itemStateIn struct {
 	DryRun any    `json:"dry_run,omitempty"`
 }
 
+type stepSkipIn struct {
+	ID      string `json:"id"                validate:"required"`
+	Step    string `json:"step"              validate:"required" doc:"A step of the workflow of the project that is optional in it."`
+	Restore bool   `json:"restore,omitempty"                     doc:"Put a skipped step back."`
+	DryRun  any    `json:"dry_run,omitempty"`
+}
+
 type briefGetIn struct {
 	ID string `json:"id" validate:"required"`
 }
@@ -161,6 +168,20 @@ func (h *apiHandler) projectItemState(
 	} else {
 		res, err = h.Service.ProjectItemTrash(c.Context(), req)
 	}
+
+	return deref(res), err
+}
+
+func (h *apiHandler) projectStepSkip(c *web.Ctx, in stepSkipIn) (service.ProjectStepSkipResult, error) {
+	dryRun, err := readDryRun(c, in.DryRun)
+	if err != nil {
+		return service.ProjectStepSkipResult{}, err
+	}
+
+	res, err := h.Service.ProjectStepSkip(
+		c.Context(),
+		service.ProjectStepSkipRequest{ProjectID: in.ID, Step: in.Step, Restore: in.Restore, DryRun: dryRun},
+	)
 
 	return deref(res), err
 }

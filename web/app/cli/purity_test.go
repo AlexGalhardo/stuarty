@@ -334,6 +334,10 @@ func (s stub) ProjectItemRestore(context.Context, service.ProjectItemTrashReques
 	return reply[service.ProjectItemResult](s.err)
 }
 
+func (s stub) ProjectStepSkip(context.Context, service.ProjectStepSkipRequest) (*service.ProjectStepSkipResult, error) {
+	return reply[service.ProjectStepSkipResult](s.err)
+}
+
 func (s stub) BriefGet(context.Context, service.BriefGetRequest) (*service.BriefResult, error) {
 	return reply[service.BriefResult](s.err)
 }

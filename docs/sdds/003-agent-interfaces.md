@@ -3779,7 +3779,7 @@ Every command that reads or edits a timeline (those whose result is about one do
 | Command | Synopsis | Flags beyond the global ones | Stdin | Result |
 | --- | --- | --- | --- | --- |
 | `project:list` | `project:list [--state active\|trashed\|all] [--cursor c] [--limit n]` | `--state` string `active`; `--cursor` string; `--limit` int 20 | none | `ProjectListResult` |
-| `project:create` | `project:create --name <name> --description <text> --specific <t> --measurable <t> --achievable <t> --relevant <t> --time-bound <t> --due YYYY-MM-DD [--id prj_...]` | `--name`, `--description`, `--specific`, `--measurable`, `--achievable`, `--relevant`, `--time-bound` strings and `--due` a date, all required (a missing one is `E_VALIDATION` with its path, SDD-005 section 5.12.2); `--preset` and `--fps` are deprecated and create nothing; `--id` string | none | `ProjectCreateResult` |
+| `project:create` | `project:create --name <name> --description <text> --specific <t> --measurable <t> --achievable <t> --relevant <t> --time-bound <t> --due YYYY-MM-DD [--id prj_...]` | `--name`, `--description`, `--specific`, `--measurable`, `--achievable`, `--relevant`, `--time-bound` strings and `--due` a date, all required (a missing one is `E_VALIDATION` with its path, SDD-005 section 5.12.2); `--preset` and `--fps` are deprecated and create nothing; `--id` string; `--kind` text, video, image or undecided (default; an unknown one is `E_VALIDATION`, path `kind`) | none | `ProjectCreateResult` |
 | `project:update` | `project:update <project id> [--name <name>] [--description <text>] [--specific <t> --measurable <t> --achievable <t> --relevant <t> --time-bound <t> --due YYYY-MM-DD]` | the members to change; the six goal flags go together (a goal is sent whole); `--dry-run` | none | `ProjectUpdateResult` |
 | `project:show` | `project:show [<project id>] [--detail concise\|full\|document] [--cursor c] [--limit n]` | `--detail` string `concise` (`document` prints the JSON document in both modes); `--cursor`; `--limit` int, items per page (not with `document`) | none | `ProjectGetResult` |
 | `project:trash` | `project:trash <project id>` | none | none | `ProjectStateResult` |
@@ -3842,6 +3842,7 @@ Every command that reads or edits a timeline (those whose result is about one do
 | `item:rename` | `item:rename <item id> --project <id> --title <t>` | `--title` required | none | `ProjectItemResult` |
 | `item:trash` | `item:trash <item id> --project <id>` | none | none | `ProjectItemResult` |
 | `item:restore` | `item:restore <item id> --project <id>` | none | none | `ProjectItemResult` |
+| `project:step` | `project:step <project id> <step> [--restore]` | `--restore` bool: put a skipped step back | `--dry-run` | `ProjectStepSkipResult` |
 | `brief:show` | `brief:show --project <id>` | none | none | `BriefResult` |
 | `brief:set` | `brief:set --project <id> --text <file\|->` | `--text` required: the Markdown, from a file or standard input | the text with `--text -` | `BriefResult` |
 | `briefing:questions` | `briefing:questions [--project <id>] [--kind short\|commercial\|long]` | `--project` string, optional: also the answers its brief holds; `--kind` string, default `short`: the set of questions | none | `BriefingQuestionsResult` |
@@ -4137,6 +4138,7 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `projects.items.rename` | `POST /projects/{id}/items/{item_id}/rename` | none | `{title, dry_run?}` | 200 `ProjectItemResult` | edit | none |
 | `projects.items.trash` | `POST /projects/{id}/items/{item_id}/trash` | `dry_run` | none | 200 `ProjectItemResult` | edit | 409 `E_INVALID_STATE` for the last timeline |
 | `projects.items.restore` | `POST /projects/{id}/items/{item_id}/restore` | `dry_run` | none | 200 `ProjectItemResult` | edit | none |
+| `projects.steps.skip` | `POST /projects/{id}/steps/{step}/skip` | `dry_run` | `{restore?}` | 200 `ProjectStepSkipResult` | edit | 400 `E_VALIDATION` (`path` `step`) for a step that is unknown, not in the workflow or not optional; 409 `E_INVALID_STATE` for a trashed project or a step that is done |
 | `projects.brief.get` | `GET /projects/{id}/brief` | none | none | 200 `BriefResult` | read | none |
 | `projects.brief.set` | `PUT /projects/{id}/brief` | none | `{text, dry_run?}` | 200 `BriefResult` | edit | 413 `E_LIMIT_EXCEEDED` |
 | `briefing.questions` | `GET /briefing/questions` | `project_id` (optional), `kind` (optional: `short`, `commercial`, `long`) | none | 200 `BriefingQuestionsResult` | read | 404 `E_NOT_FOUND` for an unknown project |
@@ -4383,6 +4385,7 @@ Every `Service` operation has an encoding on each surface. The table is the proo
 | `ProjectItemRename` | `project_item` (`action` `rename`) | `item:rename` | `POST /projects/{id}/items/{item_id}/rename` |
 | `ProjectItemTrash` | `project_item` (`action` `trash`) | `item:trash` | `POST /projects/{id}/items/{item_id}/trash` |
 | `ProjectItemRestore` | `project_item` (`action` `restore`) | `item:restore` | `POST /projects/{id}/items/{item_id}/restore` |
+| `ProjectStepSkip` | `project_item` (`action` `skip` or `unskip`, `title` the step) | `project:step` | `POST /projects/{id}/steps/{step}/skip` |
 | `BriefGet` | `project_item` (`action` `brief`, without `text`) | `brief:show` | `GET /projects/{id}/brief` |
 | `BriefSet` | `project_item` (`action` `brief`, with `text`) | `brief:set` | `PUT /projects/{id}/brief` |
 | `BriefingQuestions` | `project_item` (`action` `briefing`, without `answers`; optional `production_kind`) | `briefing:questions` | `GET /briefing/questions` |
