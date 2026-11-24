@@ -273,13 +273,10 @@ func captureError(err error) *Error {
 	case errors.As(err, &he):
 		return newError(CodeCaptureFailed, "the capture helper could not start the recording: %s.", he.Message).
 			withDetail("reason", he.Code)
+	case errors.Is(err, capturehost.ErrProtocolVersion):
+		return captureUnavailable("protocol_version", "the capture helper is from another version of Stuarty")
 	case errors.Is(err, capturehost.ErrUnavailable):
-		reason := "helper_missing"
-		if strings.Contains(err.Error(), "protocol version") {
-			reason = "protocol_version"
-		}
-
-		return captureUnavailable(reason, "the capture helper could not be started")
+		return captureUnavailable("helper_missing", "the capture helper could not be started")
 	case errors.Is(err, capturehost.ErrProtocol):
 		return newError(CodeCaptureFailed, "the capture helper broke its protocol.").withDetail("reason", "protocol")
 	default:
