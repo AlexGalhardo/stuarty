@@ -34,21 +34,21 @@ func (h *harness) session(t *testing.T) string {
 }
 
 // sessionWith logs in with a launch request that sends the given launcher secret (none when empty).
-func (h *harness) sessionWith(t testing.TB, secret string) string {
-	t.Helper()
+func (h *harness) sessionWith(tb testing.TB, secret string) string {
+	tb.Helper()
 
 	issued := h.do(req{method: http.MethodPost, path: "/api/v1/system/launch", headers: launcherHeaders(secret)})
 	if issued.status != http.StatusOK {
-		t.Fatalf("launch = %d %s", issued.status, issued.body)
+		tb.Fatalf("launch = %d %s", issued.status, issued.body)
 	}
 
-	code, _ := issued.json(t)["code"].(string)
+	code, _ := issued.json(tb)["code"].(string)
 
 	res := h.do(
 		req{path: "/auth/launch?code=" + code, noAuth: true, headers: map[string]string{"Sec-Fetch-Site": "none"}},
 	)
 	if res.status != http.StatusSeeOther {
-		t.Fatalf("redeem = %d %s", res.status, res.body)
+		tb.Fatalf("redeem = %d %s", res.status, res.body)
 	}
 
 	cookie := res.header.Get("Set-Cookie")

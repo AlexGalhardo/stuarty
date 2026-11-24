@@ -70,20 +70,15 @@ func TestSecurity_T109_AWriteRacingTheCreationNeverLandsInClearText(t *testing.T
 
 	err := <-written
 
-	var stored int
-	if rows, qerr := st.db.QueryContext(ctx, "SELECT url FROM webhooks"); qerr == nil {
-		for rows.Next() {
-			var url string
-			if rows.Scan(&url) == nil && !account.IsSealed(url) {
-				stored++
-			}
-		}
-
-		_ = rows.Close()
-	}
+	stored := scalar[int](t, st, "SELECT COUNT(*) FROM webhooks WHERE substr(url, 1, ?) <> ?",
+		len(account.Prefix), account.Prefix)
 
 	if stored != 0 {
-		t.Fatalf("a write that raced the creation left %d clear value(s) in a sealed column (write error: %v)", stored, err)
+		t.Fatalf(
+			"a write that raced the creation left %d clear value(s) in a sealed column (write error: %v)",
+			stored,
+			err,
+		)
 	}
 
 	if !errors.Is(err, account.ErrLocked) {

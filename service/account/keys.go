@@ -17,10 +17,10 @@ import (
 	"slices"
 	"strings"
 
-	rules "github.com/AlexGalhardo/stuarty/core/account"
-
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/text/unicode/norm"
+
+	rules "github.com/AlexGalhardo/stuarty/core/account"
 )
 
 // Sizes, in bytes.

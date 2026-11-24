@@ -593,7 +593,9 @@ func TestFormerCopyNamesTheFolderLeftBehindByACopy(t *testing.T) {
 		former := makeFormer(t, home)
 		current := filepath.Join(home, defaultDir)
 
-		if _, err := AdoptFormer(AdoptOptions{Former: former, Current: current, Rename: crossing, Now: fixedNow}); err != nil {
+		if _, err := AdoptFormer(
+			AdoptOptions{Former: former, Current: current, Rename: crossing, Now: fixedNow},
+		); err != nil {
 			t.Fatal(err)
 		}
 
