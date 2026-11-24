@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -50,4 +51,52 @@ func SnapshotDatabase(ctx context.Context, dbPath, dest string) error {
 	}
 
 	return os.Chmod(dest, 0o600)
+}
+
+// DatabaseHasAccount reports whether the database file at dbPath holds a local account (ADR-0052). It only reads:
+// the file may be in a backup folder, whose manifest lists every file, so it leaves no log or shared memory beside
+// it. A missing file or a database from before the accounts table has none.
+func DatabaseHasAccount(ctx context.Context, dbPath string) (bool, error) {
+	path := filepath.ToSlash(dbPath)
+	if i := strings.IndexAny(path, "?#%"); i >= 0 {
+		return false, fmt.Errorf("store: account check: the path holds %q", path[i])
+	}
+
+	if info, err := os.Stat(dbPath); err != nil || info.Size() == 0 {
+		if err == nil || errors.Is(err, fs.ErrNotExist) {
+			return false, nil
+		}
+
+		return false, fmt.Errorf("store: account check: %w", err)
+	}
+
+	// Immutable leaves nothing beside the file, but it ignores a write-ahead log, which a live workspace may hold.
+	dsn := "file:" + path + "?mode=ro&immutable=1"
+	if info, err := os.Stat(dbPath + "-wal"); err == nil && info.Size() > 0 {
+		dsn = "file:" + path + "?mode=ro"
+	}
+
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return false, fmt.Errorf("store: account check: %w", err)
+	}
+
+	defer func() { _ = db.Close() }()
+
+	var tables int
+	if err := db.QueryRowContext(ctx,
+		`SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'accounts'`).Scan(&tables); err != nil {
+		return false, fmt.Errorf("store: account check: %w", err)
+	}
+
+	if tables == 0 {
+		return false, nil
+	}
+
+	var rows int
+	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM accounts`).Scan(&rows); err != nil {
+		return false, fmt.Errorf("store: account check: %w", err)
+	}
+
+	return rows > 0, nil
 }
