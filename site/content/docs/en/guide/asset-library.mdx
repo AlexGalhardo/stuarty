@@ -20,6 +20,9 @@ An agent finds a reaction clip or a logo from a past production by searching, no
 1. Open **Visual Assets**, **Video Assets** or **Sound Assets**. Search by name, tag or origin, and filter by kind.
 2. Open a file to see its details: origin, tags, the projects that use it.
 3. Tag it, write a rights note and mark it reusable (or not), from the same page.
+4. Read the size on the card, and the count and total at the top of the page. A file that several projects use is stored once and counted once. A file that is still importing, or that was deleted from the folder by hand, says so in words ("Still importing", "File missing") and has no size; it is never shown as 0 B.
+5. Right-click a card (or press the context-menu key), or use the buttons in the details, to **Rename** the file. The name changes in every project that holds it, and the file on disk keeps its name; Undo does not bring the old name back. Two files may share a name, so the card also shows the size and the day each was added.
+6. In the desktop app, **Show in folder** opens your file manager with the stored file selected. In the browser on your own computer, **Copy path** puts the path of the stored file on the clipboard. Only you can do this, in a session you opened with your password: an agent, an API key and a server in network mode never get a path, and `stuarty asset:path` always says so.
 
 **Sound Assets** lists only sounds. Each one has a player and a waveform (drawn from data the server computes, so a long file is never analysed in your browser), its duration and size. To add a sound, choose a project, type the path of the file on your computer and press **Import**; it appears in the list once it is ready. **Use** puts it in a project (you pick the timeline when the project has several), and **Move to the trash** removes it from one project.
 

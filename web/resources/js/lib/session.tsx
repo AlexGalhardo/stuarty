@@ -41,7 +41,7 @@ export function PersonOnlyNote({ id }: { id: string }): ReactNode {
 	const { privileged, mode } = useSession();
 	if (privileged) return null;
 	return (
-		<p id={id} className="text-xs text-muted-foreground">
+		<p id={id} className="text-sm text-muted-foreground">
 			{t(`ui.session.person_only.${mode}`)}
 		</p>
 	);

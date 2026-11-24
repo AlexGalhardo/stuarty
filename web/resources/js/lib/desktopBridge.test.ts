@@ -4,12 +4,14 @@ import {
 	canDropPaths,
 	canPickFiles,
 	canPickTemplate,
+	canRevealAsset,
 	canShowInFolder,
 	cleanPaths,
 	DESKTOP_READY_EVENT,
 	getDesktopBridge,
 	parseBackground,
 	readBackground,
+	revealAsset,
 	showInFolder,
 	subscribeDesktopBridge,
 	writeBackground,
@@ -57,6 +59,39 @@ describe("desktopBridge", () => {
 		await showInFolder(bridge, "/out/a.mp4");
 		await showInFolder(null, "/out/b.mp4");
 		expect(calls).toEqual(["/out/a.mp4"]);
+	});
+
+	it("reveals a library file only through a bridge that offers revealAsset, and never through showInFolder", async () => {
+		const calls: string[] = [];
+		const shown: string[] = [];
+		const bridge = {
+			revealAsset: async (path: string) => {
+				calls.push(path);
+				return [];
+			},
+			showInFolder: async (path: string) => {
+				shown.push(path);
+				return [];
+			},
+		};
+		expect(canRevealAsset(bridge)).toBe(true);
+		expect(canRevealAsset({ showInFolder: async () => [] })).toBe(false);
+		expect(canRevealAsset(null)).toBe(false);
+		await revealAsset(bridge, "/ws/store/aa/aabb");
+		await revealAsset(null, "/ws/store/aa/ccdd");
+		expect(calls).toEqual(["/ws/store/aa/aabb"]);
+		expect(shown).toEqual([]);
+	});
+
+	it("passes the refusal of the shell on, so the page can say it", async () => {
+		const bridge = {
+			revealAsset: async () => {
+				throw new Error("no file manager was found on this computer");
+			},
+		};
+		await expect(revealAsset(bridge, "/ws/store/aa/aabb")).rejects.toThrow(
+			"no file manager",
+		);
 	});
 
 	it("detects the template picker on its own", () => {

@@ -192,8 +192,29 @@ describe("ALPHA snap points, fonts, system and audit", () => {
 		]);
 	});
 
+	test("a picker lists only the files that are ready, and the reveal call sends a hash and no path", async () => {
+		const listing = fake(
+			ok({
+				assets: [
+					{ hash: "sha256:a", state: "ready" },
+					{ hash: "sha256:b", state: "importing" },
+					{ hash: "sha256:c", state: "missing" },
+				],
+				total: 3,
+			}),
+		);
+		const listed = await createClient(listing.transport).listAssets("image");
+		expect(listed.assets.map((a) => a.hash)).toEqual(["sha256:a"]);
+
+		const revealing = fake(ok({ path: "/p", display: "/p" }));
+		await createClient(revealing.transport).revealAsset("sha256:a");
+		expect(revealing.requests.map((r) => [r.method, r.path, r.body])).toEqual([
+			["POST", "/assets/sha256%3Aa/reveal", {}],
+		]);
+	});
+
 	test("getFonts, getSystem and listAudit", async () => {
-		const { transport, requests } = fake(ok({}));
+		const { transport, requests } = fake(ok({ assets: [] }));
 		const client = createClient(transport);
 		await client.getFonts();
 		await client.listAssets("image");

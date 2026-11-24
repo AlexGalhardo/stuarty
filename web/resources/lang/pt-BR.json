@@ -1212,7 +1212,7 @@
           "action": "Renomear",
           "title": "Renomear este arquivo",
           "label": "Nome do arquivo",
-          "hint": "A extensão é mantida. No máximo 120 caracteres, sem barras.",
+          "hint": "A extensão é mantida. No máximo 120 caracteres, sem barras. O nome muda, o arquivo no disco não.",
           "submit": "Renomear",
           "cancel": "Cancelar",
           "menu": "Ações do arquivo"
@@ -3547,6 +3547,27 @@
       },
       "reusable_badge": "Reutilizável",
       "count": "{count} arquivos",
+      "total": "{size} no total",
+      "unsized": {
+        "one": "(1 deles não tem tamanho conhecido)",
+        "other": "({count} deles não têm tamanho conhecido)"
+      },
+      "added": "Adicionado em {date}",
+      "size": {
+        "unknown": "Tamanho desconhecido"
+      },
+      "state": {
+        "ready": "Pronto",
+        "importing": "Ainda importando",
+        "missing": "Arquivo ausente",
+        "failed": "A importação falhou"
+      },
+      "reveal": {
+        "show": "Mostrar na pasta",
+        "copy": "Copiar caminho",
+        "shown": "Abri a pasta do arquivo.",
+        "copied": "Caminho copiado:"
+      },
       "empty": {
         "visual": "Nenhuma imagem ainda. Importe um arquivo em um projeto e ele aparece aqui.",
         "video": "Nenhum vídeo ainda. Importe um arquivo em um projeto e ele aparece aqui.",
@@ -3624,6 +3645,12 @@
         "use_timeline": "Em qual linha do tempo",
         "use": "Usar",
         "used": "Adicionado ao projeto. Nenhuma cópia foi feita.",
+        "used_by": {
+          "one": "Usado por {count} projeto.",
+          "other": "Usado por {count} projetos."
+        },
+        "counted_once": "O arquivo é guardado uma vez e contado uma vez no total da biblioteca.",
+        "file_on_disk": "Renomear muda o nome mostrado aqui. O arquivo no disco mantém o nome, e Desfazer não traz o nome antigo de volta.",
         "trash": "Mover para a lixeira de {project}",
         "trashed": "Movido para a lixeira."
       },

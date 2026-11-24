@@ -4,14 +4,16 @@ import type { ComponentType, ReactNode } from "react";
 import RenameMenu from "@/components/RenameMenu";
 import UntrustedText from "@/components/UntrustedText";
 import { cn } from "@/lib/cn";
-import { sizeText } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
 import { createClient } from "../editor/api/client";
 import { HttpTransport } from "../editor/api/http";
 import type { LibraryAsset } from "../editor/api/types";
 import { thumbnailUrl } from "../editor/api/urls";
 import { formatSeconds } from "../editor/ui/timeFormat";
+import { AssetSize } from "./AssetSize";
 import { OriginBadge, ReusableBadge, TagChip } from "./badges";
+import { type Reveal, RevealMenuItem } from "./reveal";
 
 const POSTER_WIDTH = 320;
 
@@ -30,18 +32,24 @@ function hasPicture(asset: LibraryAsset): boolean {
 
 // One file of the video and visual libraries: its picture, the name, where it came from, whether it is
 // reusable, its size and its tags. Everything is what the service listed; the card decides nothing. Its
-// poster stays a plain button so the file opens with Enter, and the rename menu is the one of epic 60.
+// poster stays a plain button so the file opens with Enter, and the menu is the rename menu of epic 60 with
+// the folder action of epic 94. Two files may share a name: the size and the day it was added tell them apart.
 export function MediaCard({
 	asset,
 	selected,
 	onOpen,
 	onRenamed,
+	reveal,
+	onReveal,
 }: {
 	asset: LibraryAsset;
 	selected: boolean;
 	onOpen(): void;
 	// The file was renamed: the page reads the list again, which the service orders by name.
 	onRenamed?(): void;
+	// What the person may do with the folder of the file, and the call that does it (epic 94).
+	reveal?: Pick<Reveal, "kind" | "disabled">;
+	onReveal?(hash: string): void;
 }): ReactNode {
 	const t = useT();
 	const locale = useLocale();
@@ -59,6 +67,14 @@ export function MediaCard({
 			returnFocus={() =>
 				document.querySelector<HTMLElement>(
 					`button[data-asset-hash="${CSS.escape(asset.hash)}"]`,
+				)
+			}
+			extra={
+				reveal !== undefined && (
+					<RevealMenuItem
+						reveal={reveal}
+						onSelect={() => onReveal?.(asset.hash)}
+					/>
 				)
 			}
 		>
@@ -94,7 +110,7 @@ export function MediaCard({
 						{asset.duration_ms !== undefined && (
 							<span
 								data-testid="media-duration"
-								className="absolute bottom-1 left-1 rounded border border-border bg-surface px-1.5 py-0.5 font-mono text-xs text-text tabular-nums"
+								className="absolute bottom-1 left-1 rounded border border-border bg-surface px-1.5 py-0.5 font-mono text-sm text-text tabular-nums"
 							>
 								{formatSeconds(asset.duration_ms / 1000, "timecode")}
 							</span>
@@ -106,9 +122,16 @@ export function MediaCard({
 					<span className="flex flex-wrap items-center gap-1">
 						<OriginBadge kind={asset.origin?.kind} />
 						{asset.reusable === true && <ReusableBadge />}
-						<span className="ml-auto text-xs text-text-muted">
-							{sizeText(asset.bytes, locale)}
-						</span>
+					</span>
+					<span className="flex flex-wrap items-center gap-x-2 text-sm text-text-muted">
+						<AssetSize asset={asset} />
+						{asset.created_at !== undefined && (
+							<span data-testid="asset-added">
+								{t("ui.assets.added", {
+									date: formatDate(asset.created_at, locale),
+								})}
+							</span>
+						)}
 					</span>
 					{(asset.tags ?? []).length > 0 && (
 						<span className="flex flex-wrap gap-1">

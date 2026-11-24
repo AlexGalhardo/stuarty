@@ -11,6 +11,9 @@ export interface DesktopBridge {
 	onDropPaths?: (callback: (paths: string[]) => void) => Unsubscribe;
 	pickTemplate?: () => Promise<string[]>;
 	showInFolder?: (path: string) => Promise<unknown>;
+	// Opens the file manager on a stored library file; the shell checks the path against the media root of the
+	// workspace by itself (SDD-011 section 14.10).
+	revealAsset?: (path: string) => Promise<unknown>;
 	getBackground?: () => Promise<unknown>;
 	setBackground?: (settings: BackgroundSettings) => Promise<unknown>;
 	// The native menu calls an action id of the editor menu (SDD-012 section 6.4).
@@ -58,6 +61,10 @@ export function canShowInFolder(bridge: DesktopBridge | null): boolean {
 	return typeof bridge?.showInFolder === "function";
 }
 
+export function canRevealAsset(bridge: DesktopBridge | null): boolean {
+	return typeof bridge?.revealAsset === "function";
+}
+
 // A list of absolute paths from the shell, with anything that is not a
 // non-empty string dropped.
 export function cleanPaths(value: unknown): string[] {
@@ -74,6 +81,15 @@ export async function showInFolder(
 	path: string,
 ): Promise<void> {
 	await bridge?.showInFolder?.(path);
+}
+
+// Opens the file manager on a stored library file, with the path the service returned for it. The shell checks that
+// the path is a regular file under the media root before it opens anything, and the promise rejects otherwise.
+export async function revealAsset(
+	bridge: DesktopBridge | null,
+	path: string,
+): Promise<void> {
+	await bridge?.revealAsset?.(path);
 }
 
 // The background mode of the shell (SDD-012 section 21.3 item 7): whether Stuarty stays resident behind a

@@ -14,7 +14,7 @@ const ORIGIN_ICON: Record<OriginKind, ComponentType<{ className?: string }>> = {
 };
 
 const CHIP =
-	"inline-flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap";
+	"inline-flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-sm font-medium whitespace-nowrap";
 
 // Where a file came from, as an icon and a word: never a colour alone (design-system section 7). A file with
 // no library row reads as imported, as the service lists it.

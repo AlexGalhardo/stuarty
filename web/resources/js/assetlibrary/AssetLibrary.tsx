@@ -10,13 +10,15 @@ import {
 } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import RenameAssetDialog from "@/components/RenameAssetDialog";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { formatDateTime, sizeText } from "@/lib/format";
+import { formatDateTime } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
+import { PersonOnlyNote } from "@/lib/session";
 import { createClient } from "../editor/api/client";
 import { HttpTransport } from "../editor/api/http";
 import type {
@@ -24,6 +26,7 @@ import type {
 	AssetResult,
 	LibraryAsset,
 } from "../editor/api/types";
+import { AssetSize } from "./AssetSize";
 import { OriginBadge } from "./badges";
 import { GenerateDialog, type Kind as GenerateKind } from "./GenerateDialog";
 import { LibraryFilters } from "./LibraryFilters";
@@ -34,6 +37,7 @@ import {
 	LibraryReadFailed,
 } from "./LibraryStates";
 import { MediaCard } from "./MediaCard";
+import { type RevealNotice, RevealNoticeText, useReveal } from "./reveal";
 import { SoundImport } from "./SoundImport";
 import { SoundRow } from "./SoundRow";
 
@@ -112,6 +116,10 @@ export function AssetDetail({
 	const [readingTimelines, setReadingTimelines] = useState(false);
 	const chosenProject = useRef("");
 	const [said, setSaid] = useState<string | null>(null);
+	const reveal = useReveal();
+	const [renaming, setRenaming] = useState(false);
+	const [notice, setNotice] = useState<RevealNotice | null>(null);
+	const renameButton = useRef<HTMLButtonElement>(null);
 
 	// The text boxes take the service's text when the file is opened and after Save; a tag or the reuse mark
 	// that changes while a person is typing must not take what they typed.
@@ -127,6 +135,7 @@ export function AssetDetail({
 		let live = true;
 		setAsset(null);
 		setSaid(null);
+		setNotice(null);
 		setFailure(null);
 		void (async () => {
 			try {
@@ -177,6 +186,17 @@ export function AssetDetail({
 		} catch (error) {
 			setFailure(failureOf(error));
 		}
+	}
+
+	// Opens the folder (desktop) or copies the path (browser). The page sends the hash; the service checks the
+	// session, the file and the path, and a refusal is shown as it came.
+	async function showFolder(): Promise<void> {
+		setFailure(null);
+		setSaid(null);
+		setNotice(null);
+		const outcome = await reveal.run(hash);
+		if ("failure" in outcome) setFailure(outcome.failure);
+		else setNotice(outcome.notice);
 	}
 
 	async function chooseProject(projectId: string): Promise<void> {
@@ -284,6 +304,7 @@ export function AssetDetail({
 					{said}
 				</p>
 			)}
+			<RevealNoticeText notice={notice} />
 			{asset !== null && (
 				<>
 					<Field label={t("ui.assets.detail.origin")}>
@@ -319,10 +340,12 @@ export function AssetDetail({
 						)}
 					</Field>
 					<Field label={t("ui.assets.detail.facts")}>
+						<p data-testid="asset-detail-size">
+							<AssetSize asset={asset} />
+						</p>
 						<p>
 							{[
 								t(`ui.assets.kind.${asset.kind}`),
-								sizeText(asset.bytes, locale),
 								asset.width !== undefined && asset.height !== undefined
 									? `${asset.width}x${asset.height}`
 									: null,
@@ -335,6 +358,51 @@ export function AssetDetail({
 								.filter((part) => part !== null)
 								.join(" · ")}
 						</p>
+						<p data-testid="asset-shared">
+							{t("ui.assets.detail.used_by", { count: asset.projects })}
+							{asset.projects > 1 && ` ${t("ui.assets.detail.counted_once")}`}
+						</p>
+						<p className="text-text-muted">
+							{t("ui.assets.detail.file_on_disk")}
+						</p>
+						<div className="mt-1 flex flex-wrap items-center gap-2">
+							<Button
+								ref={renameButton}
+								type="button"
+								variant="outline"
+								onClick={() => setRenaming(true)}
+							>
+								{t("ui.editor.library.rename.action")}
+							</Button>
+							{reveal.kind !== null && (
+								<Button
+									type="button"
+									variant="outline"
+									disabled={reveal.disabled}
+									aria-describedby={
+										reveal.disabled ? `${id}-person-only` : undefined
+									}
+									onClick={() => void showFolder()}
+								>
+									{t(
+										reveal.kind === "show"
+											? "ui.assets.reveal.show"
+											: "ui.assets.reveal.copy",
+									)}
+								</Button>
+							)}
+						</div>
+						{reveal.disabled && <PersonOnlyNote id={`${id}-person-only`} />}
+						<RenameAssetDialog
+							open={renaming}
+							onOpenChange={setRenaming}
+							name={asset.name}
+							rename={async (name) => {
+								show(await api().renameAsset(hash, name), false);
+								onChanged();
+							}}
+							returnFocus={() => renameButton.current}
+						/>
 					</Field>
 					<Field label={t("ui.assets.detail.rights_summary")}>
 						<p data-testid="asset-rights">
@@ -579,6 +647,16 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 	const [applied, setApplied] = useState<AssetQuery>({});
 	const [open, setOpen] = useState<string | null>(null);
 	const [renames, setRenames] = useState(0);
+	// What the whole library of this section weighs, from the service: the page adds nothing up.
+	const [summary, setSummary] = useState<{
+		files: number;
+		size: string;
+		unsized: number;
+	}>({ files: 0, size: "", unsized: 0 });
+	const reveal = useReveal();
+	// The refusal or the confirmation of a menu action on a card or a row.
+	const [actionFailure, setActionFailure] = useState<Failure | null>(null);
+	const [notice, setNotice] = useState<RevealNotice | null>(null);
 	// The dialog stays mounted so that it closes the way a dialog does; each opening is a new one (a new key),
 	// so a second generation starts from an empty form.
 	const [generating, setGenerating] = useState<{
@@ -602,6 +680,11 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 						: [...(was ?? []), ...result.assets],
 				);
 				setTotal(result.total);
+				setSummary({
+					files: result.file_count,
+					size: result.total_size_text,
+					unsized: result.unsized,
+				});
 				setNext(result.next_cursor);
 			} catch (error) {
 				setFailure(failureOf(error));
@@ -619,6 +702,15 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 	const renamed = (): void => {
 		setRenames((n) => n + 1);
 		void load(applied);
+	};
+	// "Show in folder" or "Copy path" from a card or a row: the hash goes to the service, the answer is a notice or
+	// the refusal as it came.
+	const showFolder = async (hash: string): Promise<void> => {
+		setActionFailure(null);
+		setNotice(null);
+		const outcome = await reveal.run(hash);
+		if ("failure" in outcome) setActionFailure(outcome.failure);
+		else setNotice(outcome.notice);
 	};
 
 	return (
@@ -665,6 +757,15 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 					>
 						{t("ui.assets.count", { count: String(total) })}
 					</h2>
+					{items !== null && summary.files > 0 && (
+						<p className="text-sm text-text-muted" data-testid="library-total">
+							{t("ui.assets.total", { size: summary.size })}
+							{summary.unsized > 0 &&
+								` ${t("ui.assets.unsized", { count: summary.unsized })}`}
+						</p>
+					)}
+					<FailureNote failure={actionFailure} />
+					<RevealNoticeText notice={notice} />
 					{items === null && failure === null && (
 						<LibraryLoading section={section} />
 					)}
@@ -702,6 +803,8 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 										await api().renameAsset(asset.hash, name);
 										renamed();
 									}}
+									reveal={reveal}
+									onReveal={(hash) => void showFolder(hash)}
 								/>
 							))}
 						</ul>
@@ -718,6 +821,8 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 									selected={open === asset.hash}
 									onOpen={() => setOpen(asset.hash)}
 									onRenamed={renamed}
+									reveal={reveal}
+									onReveal={(hash) => void showFolder(hash)}
 								/>
 							))}
 						</ul>

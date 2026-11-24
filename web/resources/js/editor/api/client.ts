@@ -17,6 +17,7 @@ import type {
 	AssetListResult,
 	AssetQuery,
 	AssetResult,
+	AssetRevealResult,
 	AudioMeasureQuery,
 	AudioMeasureResult,
 	AuditListResult,
@@ -252,7 +253,8 @@ export interface ApiClient {
 		assetId: string,
 	): Promise<TranscriptFillersResult>;
 	getFonts(): Promise<FontListResult>;
-	// The ready files of the workspace by content hash (VV-117); `kind` keeps one kind.
+	// The ready files of the workspace by content hash (VV-117); `kind` keeps one kind. The total of the answer is
+	// the service's, of every file, so a picker does not read a count from it.
 	listAssets(
 		kind?: "image" | "video" | "audio" | "lut",
 	): Promise<AssetListResult>;
@@ -263,6 +265,8 @@ export interface ApiClient {
 	tagAsset(hash: string, add: string[], remove: string[]): Promise<AssetResult>;
 	// Changes the name a file is shown under; the service applies the rules of the name (SDD-011 section 14.8).
 	renameAsset(hash: string, name: string): Promise<AssetResult>;
+	// The checked path of the stored file; the service answers only a person in local mode (SDD-011 section 14.10).
+	revealAsset(hash: string): Promise<AssetRevealResult>;
 	// Uses a file of the library in a project: no copy, no ingest (SDD-011 section 14.3).
 	// `timelineId` names the timeline of a project that holds several; the service refuses the call without it.
 	useAsset(
@@ -705,8 +709,19 @@ export function createClient(
 				READ_TIMEOUT_MS,
 			),
 		getFonts: () => call("GET", "/fonts", READ_TIMEOUT_MS),
-		listAssets: (kind) =>
-			call("GET", `/assets${query({ kind })}`, READ_TIMEOUT_MS),
+		// A picker offers the files it can use: the service also lists the ones still importing or missing from the
+		// store (SDD-011 section 14.9), which the library pages show and a picker does not.
+		listAssets: async (kind) => {
+			const listed = await call<AssetListResult>(
+				"GET",
+				`/assets${query({ kind })}`,
+				READ_TIMEOUT_MS,
+			);
+			return {
+				...listed,
+				assets: listed.assets.filter((asset) => asset.state === "ready"),
+			};
+		},
 		queryAssets: (q) =>
 			call(
 				"GET",
@@ -733,6 +748,13 @@ export function createClient(
 				`/assets/${encodeURIComponent(hash)}/rename`,
 				EDIT_TIMEOUT_MS,
 				{ name },
+			),
+		revealAsset: (hash) =>
+			call(
+				"POST",
+				`/assets/${encodeURIComponent(hash)}/reveal`,
+				READ_TIMEOUT_MS,
+				{},
 			),
 		useAsset: (id, hash, timelineId) =>
 			call("POST", `${project(id)}/media`, EDIT_TIMEOUT_MS, {

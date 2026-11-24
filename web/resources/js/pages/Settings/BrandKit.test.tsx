@@ -9,6 +9,8 @@ const asset = {
 	name: "logo.png",
 	kind: "image",
 	bytes: 10,
+	size_text: "10 B",
+	state: "ready" as const,
 	projects: 1,
 };
 
