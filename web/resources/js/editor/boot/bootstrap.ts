@@ -11,6 +11,9 @@ export interface EditorBootstrap {
 	messages: Record<string, Message>;
 	user: { id: string; name: string } | null;
 	version: string;
+	// Whether this session may answer what only a person answers; the scene bar under the timeline is drawn
+	// only when the server says so (epic 85).
+	session?: { privileged: boolean };
 }
 
 const PROJECT_ID = /^prj_[0-9a-hjkmnp-tv-z]{10}$/;
@@ -47,6 +50,9 @@ export function parseBootstrap(
 		messages: messages as EditorBootstrap["messages"],
 		user: isRecord(raw.user) ? (raw.user as EditorBootstrap["user"]) : null,
 		version: typeof raw.version === "string" ? raw.version : "",
+		...(isRecord(raw.session) && typeof raw.session.privileged === "boolean"
+			? { session: { privileged: raw.session.privileged } }
+			: {}),
 	};
 }
 
