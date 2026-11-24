@@ -138,7 +138,7 @@ Author decisions D-134 and D-137. Epic 74 can start now, and so can epic 87, bec
 | [85](85-video-editor-screens.md) | Video editor redesign | XL | 69, 74, 75, 76 | DONE (2026-11-24, `3c77c564e`..`b50da822a`) |
 | [86](86-image-editor-screens.md) | Image editor redesign | L | 74, 75, 76 | TODO |
 | [87](87-site-navbar-and-docs.md) | Site navbar and documentation design | M | — | DONE (2026-11-23, `dffbeea6b`..`56ec38048`) |
-| [88](88-landing-page-redesign.md) | Landing page redesign | M | 75, 76, 78, 79, 87 | TODO |
+| [88](88-landing-page-redesign.md) | Landing page redesign | M | 75, 76, 78, 79, 87 | DONE (2026-11-24, `fb63feaa7`..`e57babc77`) |
 
 At five seniors: first 74 and 87, beside 57 and 69. After 57 and 74: 75 and 78, which do not share modules. After 75: 76, 81 and 84. After 76 and 78: 77, 79, 80, 83 and 86, at most five at a time. Then 82 and 85, and 88 last. Epics 79 and 80 share no page; 85 and 86 share no editor module.
 
