@@ -57,12 +57,20 @@ func (s *svc) checkStored(h *assets.Held) {
 		return
 	}
 
-	p, ok := s.storedOriginal(h.Hash)
-	if !ok {
-		return
-	}
-
-	if info, err := os.Stat(filepath.Clean(p)); err != nil || !info.Mode().IsRegular() {
+	if s.originalMissing(h.Hash) {
 		h.State, h.Bytes = assets.StateMissing, nil
 	}
+}
+
+// originalMissing is whether the original of a hash is not a regular file in the store. A workspace-less service has
+// nothing to check and answers false.
+func (s *svc) originalMissing(hash string) bool {
+	p, ok := s.storedOriginal(hash)
+	if !ok {
+		return false
+	}
+
+	info, err := os.Stat(filepath.Clean(p))
+
+	return err != nil || !info.Mode().IsRegular()
 }
