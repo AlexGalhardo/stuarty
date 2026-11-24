@@ -184,7 +184,7 @@ export default function ProjectContextForm({
 									<TooltipTrigger
 										type="button"
 										aria-label={t("ui.projects.help_for", { field: label })}
-										className="rounded-full text-muted-foreground hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+										className="inline-flex size-6 items-center justify-center rounded-full text-muted-foreground hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
 									>
 										<CircleHelp className="size-4" aria-hidden="true" />
 									</TooltipTrigger>
