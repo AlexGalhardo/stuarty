@@ -218,7 +218,8 @@ func TestValidateStart(t *testing.T) {
 }
 
 func TestCleanLabel(t *testing.T) {
-	got := CleanLabel("  Doc\t\x00uments ‮  - Editor\n", 100)
+	rlo := string(rune(0x202e))
+	got := CleanLabel("  Doc\t\x00uments "+rlo+"  - Editor\n", 100)
 	if got != "Doc uments - Editor" {
 		t.Errorf("CleanLabel = %q", got)
 	}
