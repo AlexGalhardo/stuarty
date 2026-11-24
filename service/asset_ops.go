@@ -320,6 +320,14 @@ func (s *svc) AssetRename(ctx context.Context, req AssetRenameRequest) (*AssetRe
 			return rerr
 		}
 
+		// One audit row per rename that changed a name, with who did it and which file; never the name, which is
+		// untrusted text. A request for the name every row already has writes nothing (SDD-011 section 14.8).
+		if len(changed) > 0 {
+			if aerr := appendAudit(ctx, tx, s.nowMs(), c.Actor, "asset.rename", "", h.Hash); aerr != nil {
+				return aerr
+			}
+		}
+
 		// The holdings come first among the targets, and the entry is named after the first of them.
 		h.Name = renamed[0]
 
