@@ -267,6 +267,20 @@
       ]
     },
     {
+      "tag": "Recordings",
+      "pages": [
+        "projects.recordings",
+        "recording.sources",
+        "recordings.start",
+        "recordings.get",
+        "recordings.cancel",
+        "recordings.confirm",
+        "recordings.dismiss",
+        "recordings.place",
+        "recordings.stop"
+      ]
+    },
+    {
       "tag": "Agent chat",
       "pages": [
         "agents.profiles.list",

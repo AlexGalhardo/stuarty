@@ -56,7 +56,7 @@ export const BASE_URL = "http://127.0.0.1:7878";
 const METHOD_ORDER = ["get", "post", "put", "patch", "delete"];
 
 /** The sidebar groups of the API reference, in order. The OpenAPI document has no tags, so the route decides. */
-export const TAGS = ["Projects", "Media", "Jobs", "Events", "Commands", "Templates", "Fonts", "Brand kit", "Library", "Writing", "Connections", "Webhooks", "AI providers", "Images", "Approvals", "Publishing", "Agent chat", "System", "API keys", "Users", "Audit"] as const;
+export const TAGS = ["Projects", "Media", "Jobs", "Events", "Commands", "Templates", "Fonts", "Brand kit", "Library", "Writing", "Connections", "Webhooks", "AI providers", "Images", "Approvals", "Publishing", "Recordings", "Agent chat", "System", "API keys", "Users", "Audit"] as const;
 export type Tag = (typeof TAGS)[number];
 
 export function tagOf(route: string): Tag {
@@ -67,6 +67,7 @@ export function tagOf(route: string): Tag {
 	if (parts[0] === "projects" && parts[2] === "events") return "Events";
 	if (parts[0] === "projects" && parts[2] === "texts") return "Writing";
 	if (parts[0] === "projects" && parts[2] === "chat") return "Agent chat";
+	if (parts[0] === "projects" && parts[2] === "recordings") return "Recordings";
 	if (parts[0] === "projects" || parts[0] === "trash") return "Projects";
 	const byRoot: Record<string, Tag> = {
 		assets: "Media",
@@ -91,6 +92,8 @@ export function tagOf(route: string): Tag {
 		publish: "Publishing",
 		publications: "Publishing",
 		posts: "Publishing",
+		recording: "Recordings",
+		recordings: "Recordings",
 		library: "Library",
 		texts: "Writing",
 		captions: "Writing",
