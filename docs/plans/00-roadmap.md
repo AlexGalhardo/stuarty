@@ -153,7 +153,7 @@ Work that earlier epics left open and the author decided to do in epics of their
 | [91](91-renderer-layer-band-and-frame-cache.md) | Image renderer: prepare only the visible band, keep the prepared layer, cache the editor frame | L | 54, 55 | TODO |
 | [92](92-encrypted-library-and-remaining-sealed-fields.md) | The encrypted library and the rest of what epic 57 left in clear text | XL | 57, 56, 08, 15 | TODO |
 | [93](93-renderer-wasm-ci-artifact-and-linux-digest.md) | One renderer module digest on Linux and Windows | M | 55, 91 | TODO |
-| [94](94-asset-storage-size-reveal-and-rename.md) | Asset storage size, show in folder and rename, with their edge cases | M | 57, 81 | TODO |
+| [94](94-asset-storage-size-reveal-and-rename.md) | Asset storage size, show in folder and rename, with their edge cases | M | 57, 81 | DONE (2026-11-24, `74889c205`..`68a6a822a`) |
 
 ## 2. Dependency graph
 
