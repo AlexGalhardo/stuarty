@@ -1,4 +1,4 @@
-//! The control protocol, version 1 (SDD-023 section 6): one JSON object per line, at most 65,536 bytes.
+//! The control protocol, version 1 (SDD-025 section 6): one JSON object per line, at most 65,536 bytes.
 
 use std::io::BufRead;
 use std::path::PathBuf;

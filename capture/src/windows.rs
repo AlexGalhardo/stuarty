@@ -1,6 +1,6 @@
 //! Windows Graphics Capture through `windows-capture` (ADR-0049). One display or one window, BGRA, no cursor
 //! (cursor events are epic 62), and the system capture border always on: it is the indicator that the screen is
-//! being recorded, and the helper never turns it off (SDD-023 section 8).
+//! being recorded, and the helper never turns it off (SDD-025 section 8).
 
 use std::sync::Arc;
 use std::time::Duration;
