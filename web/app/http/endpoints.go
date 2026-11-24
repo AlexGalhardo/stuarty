@@ -571,6 +571,25 @@ var Endpoints = []Endpoint{
 		Summary: "Stop a recording and keep what was written (anyone with media)",
 	},
 	{
+		ID:      "recordings.pause",
+		Method:  http.MethodPost,
+		Path:    "/recordings/{id}/pause",
+		Scope:   service.ScopeMedia,
+		Service: "RecordingPause",
+		Status:  200,
+		Summary: "Pause a recording: every source stops writing and the paused time is cut from every file (anyone with media)",
+	},
+	{
+		ID: "recordings.resume", Method: http.MethodPost, Path: "/recordings/{id}/resume", Scope: service.ScopeMedia,
+		Service: "RecordingResume", Status: 200,
+		Summary: "Resume a paused recording (a person in the browser only: it restarts the capture of the screen)",
+	},
+	{
+		ID: "recordings.events", Method: http.MethodGet, Path: "/recordings/{id}/events", Scope: service.ScopeRead,
+		Service: "RecordingEvents", Status: 200,
+		Summary: "Read the pointer and click events of a finished recording, in pixels of the captured source",
+	},
+	{
 		ID: "recordings.cancel", Method: http.MethodPost, Path: "/recordings/{id}/cancel", Scope: service.ScopeMedia,
 		Service: "RecordingCancel", Status: 200,
 		Summary: "Discard a recording in progress; delete a finished one (a person in the browser only)",

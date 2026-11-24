@@ -289,7 +289,10 @@ Every operation has its own page with the parameters, the body, the responses an
 | `POST` | `/api/v1/recordings/{id}/cancel` | [`recordings.cancel`](/docs/api/recordings.cancel) | Discard a recording in progress; delete a finished one (a person in the browser only) |
 | `POST` | `/api/v1/recordings/{id}/confirm` | [`recordings.confirm`](/docs/api/recordings.confirm) | Add a finished recording to the project (a person in the browser only; agents can then read it) |
 | `POST` | `/api/v1/recordings/{id}/dismiss` | [`recordings.dismiss`](/docs/api/recordings.dismiss) | Not now: keep a recording out of the project and out of sight of agents (a person in the browser only) |
+| `GET` | `/api/v1/recordings/{id}/events` | [`recordings.events`](/docs/api/recordings.events) | Read the pointer and click events of a finished recording, in pixels of the captured source |
+| `POST` | `/api/v1/recordings/{id}/pause` | [`recordings.pause`](/docs/api/recordings.pause) | Pause a recording: every source stops writing and the paused time is cut from every file (anyone with media) |
 | `POST` | `/api/v1/recordings/{id}/place` | [`recordings.place`](/docs/api/recordings.place) | Place a recording the person added on the timeline, as one batch |
+| `POST` | `/api/v1/recordings/{id}/resume` | [`recordings.resume`](/docs/api/recordings.resume) | Resume a paused recording (a person in the browser only: it restarts the capture of the screen) |
 | `POST` | `/api/v1/recordings/{id}/stop` | [`recordings.stop`](/docs/api/recordings.stop) | Stop a recording and keep what was written (anyone with media) |
 
 ## Agent chat

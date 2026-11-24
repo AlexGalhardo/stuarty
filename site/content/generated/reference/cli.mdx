@@ -1677,7 +1677,7 @@ stuarty recording:sources --json
 Start recording a display or a window (for a person in the app; the local token is refused)
 
 ```text
-stuarty recording:start --project <id> --kind display|window --source <id> [--fps 24|30|60]
+stuarty recording:start --project <id> --kind display|window --source <id> [--fps 24|30|60] [--microphone <id>|default] [--system-audio] [--camera <id>] [--events]
 ```
 
 | Flag | Type | Default | Meaning |
@@ -1686,6 +1686,10 @@ stuarty recording:start --project <id> --kind display|window --source <id> [--fp
 | `--source` | string |  | an id from recording:sources (required) |
 | `--name` | string |  | the title of the source, for the record |
 | `--fps` | integer |  | 24, 30 (the default) or 60 |
+| `--microphone` | string |  | a microphone id from recording:sources, or default |
+| `--system-audio` | boolean |  | record the sound the computer plays on its own track |
+| `--camera` | string |  | a camera id from recording:sources |
+| `--events` | boolean |  | save the pointer position and the clicks (never a key) |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
 
@@ -1709,6 +1713,60 @@ Example:
 
 ```bash
 stuarty recording:stop rec_0123456789
+```
+
+## `recording:pause`
+
+Pause a recording: every source stops writing and the paused time is cut; anyone may pause
+
+```text
+stuarty recording:pause <recording id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty recording:pause rec_0123456789
+```
+
+## `recording:resume`
+
+Resume a paused recording (for a person in the app; the local token is refused, as for a start)
+
+```text
+stuarty recording:resume <recording id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty recording:resume rec_0123456789
+```
+
+## `recording:events`
+
+Read the pointer and click events of a finished recording (clicks by default)
+
+```text
+stuarty recording:events <recording id> [--kind clicks|all] [--from-ms <n>] [--limit <n>]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--kind` | string |  | clicks (the default) or all |
+| `--from-ms` | integer |  | only events from this time on, in milliseconds |
+| `--limit` | integer |  | at most this many events, 1 to 5000 (default 1000) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty recording:events rec_0123456789 --kind clicks --json
 ```
 
 ## `recording:cancel`

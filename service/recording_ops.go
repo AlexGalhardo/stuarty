@@ -45,10 +45,21 @@ type RecordingSourceInfo struct {
 // RecordingSourcesRequest has no member.
 type RecordingSourcesRequest struct{}
 
+// RecordingDevice is a microphone or a camera. Its id is the opaque one the helper made; the name is untrusted text.
+type RecordingDevice struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"    untrusted:"true"`
+	Default bool   `json:"default"`
+}
+
 // RecordingSourcesResult is what can be captured now.
 type RecordingSourcesResult struct {
-	Displays []RecordingSourceInfo `json:"displays"`
-	Windows  []RecordingSourceInfo `json:"windows"`
+	Displays    []RecordingSourceInfo `json:"displays"`
+	Windows     []RecordingSourceInfo `json:"windows"`
+	Microphones []RecordingDevice     `json:"microphones"`
+	Cameras     []RecordingDevice     `json:"cameras"`
+	// SystemAudio says whether the mix the computer plays can be recorded.
+	SystemAudio bool `json:"system_audio"`
 }
 
 // RecordingSource names the source of a recording.
@@ -64,6 +75,66 @@ type RecordingStartRequest struct {
 	ProjectID string          `json:"project_id"`
 	Source    RecordingSource `json:"source"`
 	FPS       int             `json:"fps,omitempty"`
+	// Microphone is a device id from RecordingSources, or "default"; empty records none (SDD-025 section 16).
+	Microphone string `json:"microphone,omitempty"`
+	// SystemAudio records the mix the computer plays on a track of its own.
+	SystemAudio bool `json:"system_audio,omitempty"`
+	// Camera is a device id from RecordingSources; empty records none.
+	Camera string `json:"camera,omitempty"`
+	// Events saves the pointer position and the clicks (never a key) beside the recording.
+	Events bool `json:"events,omitempty"`
+}
+
+// RecordingTrack is one source of a recording: its kind, where it starts on the shared clock, and how long it is.
+type RecordingTrack struct {
+	Kind       string `json:"kind"`
+	StartMS    int64  `json:"start_ms"`
+	DurationMS int64  `json:"duration_ms"`
+	Bytes      int64  `json:"bytes"`
+	// Lost is a track whose device went away during the recording.
+	Lost    bool   `json:"lost,omitempty"`
+	AssetID string `json:"asset_id,omitempty"`
+}
+
+// RecordingPause is a pause, in ms on the wall clock since the start; no file holds that time.
+type RecordingPause struct {
+	FromMS int64 `json:"from_ms"`
+	ToMS   int64 `json:"to_ms"`
+}
+
+// RecordingLevels are the peaks of the sound tracks over the last moment, 0 to 1000, while a recording runs.
+type RecordingLevels struct {
+	Microphone int `json:"microphone"`
+	System     int `json:"system"`
+}
+
+// RecordingEventsRequest reads the pointer events of a recording. Kind is clicks (the default) or all.
+type RecordingEventsRequest struct {
+	ID     string `json:"recording_id"`
+	FromMS int64  `json:"from_ms,omitempty"`
+	Kind   string `json:"kind,omitempty"`
+	Limit  int    `json:"limit,omitempty"`
+}
+
+// RecordingEvent is a pointer position or a button edge, in active ms and in pixels of the captured source.
+type RecordingEvent struct {
+	TMS    int64  `json:"t_ms"`
+	Kind   string `json:"kind"`
+	Button string `json:"button,omitempty"`
+	X      int    `json:"x"`
+	Y      int    `json:"y"`
+}
+
+// RecordingEventsResult is the part of the event file a request selected.
+type RecordingEventsResult struct {
+	ID     string `json:"recording_id"`
+	Width  int    `json:"width"`
+	Height int    `json:"height"`
+	// Total counts the events of the kind asked for, from from_ms on.
+	Total     int              `json:"total"`
+	Events    []RecordingEvent `json:"events"`
+	Truncated bool             `json:"truncated"`
+	Text      string           `json:"text"`
 }
 
 // RecordingRef names a recording.
@@ -105,11 +176,17 @@ type Recording struct {
 	StopReason string          `json:"stop_reason,omitempty"`
 	Error      *Error          `json:"error,omitempty"`
 	AssetID    string          `json:"asset_id,omitempty"`
-	Actor      string          `json:"actor"`
-	CreatedAt  time.Time       `json:"created_at"`
-	StartedAt  *time.Time      `json:"started_at,omitempty"`
-	EndedAt    *time.Time      `json:"ended_at,omitempty"`
-	Text       string          `json:"text"`
+	// Tracks and Pauses are what the recording holds beyond the screen (SDD-025 section 16); EventsCount is the
+	// pointer events saved; Levels is set only while the recording runs.
+	Tracks      []RecordingTrack `json:"tracks"`
+	Pauses      []RecordingPause `json:"pauses"`
+	EventsCount int64            `json:"events_count"`
+	Levels      *RecordingLevels `json:"levels,omitempty"`
+	Actor       string           `json:"actor"`
+	CreatedAt   time.Time        `json:"created_at"`
+	StartedAt   *time.Time       `json:"started_at,omitempty"`
+	EndedAt     *time.Time       `json:"ended_at,omitempty"`
+	Text        string           `json:"text"`
 }
 
 // recSession is a recording that is running in this process.
@@ -123,6 +200,20 @@ type recSession struct {
 	// is running without a write to the database every second.
 	pmu      sync.Mutex
 	progress capturehost.Progress
+	levels   capturehost.Level
+}
+
+func (r *recSession) setLevels(l capturehost.Level) {
+	r.pmu.Lock()
+	r.levels = l
+	r.pmu.Unlock()
+}
+
+func (r *recSession) lastLevels() capturehost.Level {
+	r.pmu.Lock()
+	defer r.pmu.Unlock()
+
+	return r.levels
 }
 
 func (r *recSession) setProgress(p capturehost.Progress) {
@@ -176,6 +267,9 @@ func captureError(err error) *Error {
 	switch {
 	case errors.Is(err, capturehost.ErrHelperMissing):
 		return captureUnavailable("helper_missing", "the capture helper is not installed")
+	case errors.Is(err, capturehost.ErrBadRequest):
+		return newError(command.CodeValidation, "the recording request is not valid: %s.", err.Error()).
+			withHint("use the device ids RecordingSources lists")
 	case errors.As(err, &he):
 		return newError(CodeCaptureFailed, "the capture helper could not start the recording: %s.", he.Message).
 			withDetail("reason", he.Code)
@@ -249,7 +343,22 @@ func (s *svc) RecordingSources(ctx context.Context, _ RecordingSourcesRequest) (
 		return out
 	}
 
-	return &RecordingSourcesResult{Displays: conv(src.Displays), Windows: conv(src.Windows)}, nil
+	devices := func(in []capturehost.Device) []RecordingDevice {
+		out := make([]RecordingDevice, 0, len(in))
+
+		for _, d := range in {
+			out = append(out, RecordingDevice{
+				ID: d.ID, Name: recording.CleanLabel(d.Name, maxLabelRunes), Default: d.Default,
+			})
+		}
+
+		return out
+	}
+
+	return &RecordingSourcesResult{
+		Displays: conv(src.Displays), Windows: conv(src.Windows), Microphones: devices(src.Microphones),
+		Cameras: devices(src.Cameras), SystemAudio: src.SystemAudio,
+	}, nil
 }
 
 // RecordingStart records a display or a window. Only a person starts a capture (ADR-0051): the check is the first
@@ -266,6 +375,7 @@ func (s *svc) RecordingStart(ctx context.Context, req RecordingStartRequest) (*R
 
 	spec := recording.StartSpec{
 		ProjectID: req.ProjectID, SourceKind: req.Source.Kind, SourceID: req.Source.ID, FPS: req.FPS,
+		Microphone: req.Microphone, SystemAudio: req.SystemAudio, Camera: req.Camera, Events: req.Events,
 	}
 	if fields := recording.ValidateStart(spec); len(fields) > 0 {
 		return nil, newError(command.CodeValidation, "%s is not valid (%s).", fields[0].Field, fields[0].Reason).
@@ -290,9 +400,21 @@ func (s *svc) RecordingStart(ctx context.Context, req RecordingStartRequest) (*R
 
 	fps := recording.FPSOrDefault(req.FPS)
 	id, now := s.newIDs("rec"), s.nowMs()
+	var asked []recording.Track
+
+	for _, k := range recording.TracksAsked(spec) {
+		asked = append(asked, recording.Track{Kind: k, File: k.File()})
+	}
+
+	askedJSON, jerr := json.Marshal(asked)
+	if jerr != nil {
+		return nil, internalError()
+	}
+
 	row := recordings.Row{
 		ID: id, ProjectID: req.ProjectID, State: string(recording.Prepared), SourceKind: req.Source.Kind,
 		SourceLabel: recording.CleanLabel(req.Source.Name, maxLabelRunes), FPS: fps, Actor: c.Actor, CreatedMs: now,
+		Tracks: string(askedJSON),
 	}
 
 	werr := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
@@ -327,10 +449,30 @@ func (s *svc) RecordingStart(ctx context.Context, req RecordingStartRequest) (*R
 		).withDetail("reason", "io")
 	}
 
-	cs, err := s.capture.Start(ctx, CaptureStart{
+	folder := filepath.Dir(out)
+	cstart := CaptureStart{
 		RecordingID: id, Kind: req.Source.Kind, SourceID: req.Source.ID, FPS: fps, Output: out,
-		MaxSeconds: limits.MaxSeconds,
-	})
+		MaxSeconds: limits.MaxSeconds, Microphone: req.Microphone, SystemAudio: req.SystemAudio,
+		Camera: req.Camera, Events: req.Events,
+	}
+
+	if req.Microphone != "" {
+		cstart.MicrophoneOutput = filepath.Join(folder, recording.TrackMicrophone.File())
+	}
+
+	if req.SystemAudio {
+		cstart.SystemOutput = filepath.Join(folder, recording.TrackSystem.File())
+	}
+
+	if req.Camera != "" {
+		cstart.CameraOutput = filepath.Join(folder, recording.TrackCamera.File())
+	}
+
+	if req.Events {
+		cstart.EventsOutput = filepath.Join(folder, recording.EventsFile)
+	}
+
+	cs, err := s.capture.Start(ctx, cstart)
 	if err != nil {
 		cerr := captureError(err)
 		s.failRecording(ctx, id, cerr.Code, cerr.Message)
@@ -459,6 +601,10 @@ func (s *svc) superviseRecording(ctx context.Context, id string, sess *recSessio
 					return nil
 				})
 			}
+		case capturehost.Level:
+			sess.setLevels(e)
+		case capturehost.Paused, capturehost.Resumed, capturehost.Rejected:
+			// The row moved when the call was made; a refusal leaves the recording as it is.
 		case capturehost.Finished:
 			s.settleRecording(ctx, id, sess, &e, nil, last)
 		case capturehost.Failed:
@@ -510,7 +656,12 @@ func (s *svc) settleRecording(
 			r.DurationMs = info.DurationMS
 		}
 
-		if fin != nil && r.State == string(recording.Recording) {
+		r.Tracks, r.Pauses, r.EventsCount = settledTracks(*r, filepath.Dir(s.recordingPath(id)), fin)
+		if n := tracksBytes(r.Tracks); n > 0 {
+			r.Bytes = n
+		}
+
+		if fin != nil && (r.State == string(recording.Recording) || r.State == string(recording.Paused)) {
 			// The helper ended on its own (the window closed): it counts as a stop.
 			if next, err := recording.Next(recording.State(r.State), recording.EventStop); err == nil {
 				r.State = string(next)
@@ -621,7 +772,7 @@ func (s *svc) RecordingStop(ctx context.Context, req RecordingRef) (*Recording, 
 	sess := s.recSessions[req.ID]
 	s.recMu.Unlock()
 
-	if sess == nil || r.State != string(recording.Recording) {
+	if sess == nil || (r.State != string(recording.Recording) && r.State != string(recording.Paused)) {
 		return nil, newError(command.CodeInvalidState, "the recording is %s and cannot be stopped.", r.State)
 	}
 
@@ -635,6 +786,160 @@ func (s *svc) RecordingStop(ctx context.Context, req RecordingRef) (*Recording, 
 	}
 
 	return s.liveView(r), nil
+}
+
+// RecordingPause stops every source of a recording from writing. Anyone with the media scope may: it only
+// reduces what is captured (SDD-025 section 16.4).
+func (s *svc) RecordingPause(ctx context.Context, req RecordingRef) (*Recording, error) {
+	c, err := s.authorize(ctx, "RecordingPause", "")
+	if err != nil {
+		return nil, err
+	}
+
+	return s.moveRecording(ctx, c, req.ID, recording.Recording, recording.EventPause)
+}
+
+// RecordingResume restarts the capture of a paused recording. It restarts the capture of the screen, so only a
+// person may, and the check comes before anything else is looked at.
+func (s *svc) RecordingResume(ctx context.Context, req RecordingRef) (*Recording, error) {
+	c, err := s.person(ctx, "RecordingResume")
+	if err != nil {
+		return nil, err
+	}
+
+	return s.moveRecording(ctx, c, req.ID, recording.Paused, recording.EventResume)
+}
+
+// moveRecording is a pause or a resume: the recording must be in `from` (the target state is a no-op answered as
+// it is), the helper is told, and the row moves.
+func (s *svc) moveRecording(
+	ctx context.Context, c Caller, id string, from recording.State, ev recording.Event,
+) (*Recording, error) {
+	r, err := s.recordingFor(ctx, c, id)
+	if err != nil {
+		return nil, err
+	}
+
+	to, terr := recording.Next(from, ev)
+	if terr != nil {
+		return nil, internalError()
+	}
+
+	if r.State == string(to) {
+		return s.liveView(r), nil
+	}
+
+	s.recMu.Lock()
+	sess := s.recSessions[id]
+	s.recMu.Unlock()
+
+	if sess == nil || r.State != string(from) {
+		return nil, newError(command.CodeInvalidState, "the recording is %s and cannot be %s.", r.State, pastOf(ev))
+	}
+
+	var cerr error
+	if ev == recording.EventPause {
+		cerr = sess.cs.Pause()
+	} else {
+		cerr = sess.cs.Resume()
+	}
+
+	if cerr != nil {
+		return nil, captureError(cerr)
+	}
+
+	got, uerr := s.updateRecording(ctx, id, func(x *recordings.Row) error {
+		next, nerr := recording.Next(recording.State(x.State), ev)
+		if nerr != nil {
+			return newError(command.CodeInvalidState, "the recording is %s and cannot be %s.", x.State, pastOf(ev))
+		}
+
+		x.State = string(next)
+
+		return nil
+	})
+	if uerr != nil {
+		return nil, asError(uerr)
+	}
+
+	s.auditRecording(ctx, c, "recording."+string(ev), got)
+
+	return s.liveView(got), nil
+}
+
+func pastOf(ev recording.Event) string {
+	if ev == recording.EventPause {
+		return "paused"
+	}
+
+	return "resumed"
+}
+
+// RecordingEvents reads the pointer events of a finished recording. The file is read through the reader of
+// core/recording, which discards any line that is not a header, a move or a button edge, so what a caller gets
+// holds no key and no other member (SDD-025 section 16.6).
+func (s *svc) RecordingEvents(ctx context.Context, req RecordingEventsRequest) (*RecordingEventsResult, error) {
+	c, err := s.authorize(ctx, "RecordingEvents", "")
+	if err != nil {
+		return nil, err
+	}
+
+	r, err := s.recordingFor(ctx, c, req.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if r.State != string(recording.Ready) {
+		return nil, newError(
+			command.CodeInvalidState,
+			"the recording is %s and its events are read once it is ready.",
+			r.State,
+		)
+	}
+
+	if req.Kind != "" && req.Kind != "clicks" && req.Kind != "all" {
+		return nil, newError(command.CodeValidation, "kind must be clicks or all.").withPath("kind")
+	}
+
+	q := recording.EventsQuery{FromMS: req.FromMS, Clicks: req.Kind != "all", Limit: req.Limit}
+	if _, qerr := recording.NormalizeQuery(q); qerr != nil {
+		return nil, newError(command.CodeValidation, "%s.", qerr.Error()).withPath("limit")
+	}
+
+	out := &RecordingEventsResult{ID: r.ID, Events: []RecordingEvent{}}
+
+	f, oerr := os.Open(filepath.Join(filepath.Dir(s.recordingPath(r.ID)), recording.EventsFile))
+	if oerr != nil {
+		out.Text = "Recording " + r.ID + " has no pointer events: the person did not ask for them."
+
+		return out, nil
+	}
+
+	defer func() { _ = f.Close() }()
+
+	res, rerr := recording.ReadEvents(f, q)
+	if rerr != nil {
+		return nil, newError(CodeCaptureFailed, "the pointer events of the recording cannot be read.").
+			withDetail("reason", "events_unreadable")
+	}
+
+	out.Width, out.Height, out.Total, out.Truncated = res.Width, res.Height, res.Total, res.Truncated
+	for _, e := range res.Events {
+		out.Events = append(out.Events, RecordingEvent{
+			TMS: e.TMS, Kind: string(e.Kind), Button: e.Button, X: e.X, Y: e.Y,
+		})
+	}
+
+	out.Text = "Recording " + r.ID + " has " + strconv.Itoa(
+		res.Total,
+	) + " pointer events of the kind asked for, on a " +
+		strconv.Itoa(
+			res.Width,
+		) + " by " + strconv.Itoa(
+		res.Height,
+	) + " source."
+
+	return out, nil
 }
 
 // RecordingCancel discards a recording in progress (anyone with the media scope), or deletes a finished one that
@@ -763,30 +1068,51 @@ func (s *svc) RecordingConfirm(ctx context.Context, req RecordingRef) (*Recordin
 	}
 
 	path := s.recordingPath(r.ID)
-	if _, serr := os.Stat(path); serr != nil {
-		return nil, newError(CodeCaptureFailed, "the file of the recording is gone.").withDetail("reason", "io")
+	folder := filepath.Dir(path)
+
+	// Every track is a file of its own and becomes an asset of its own, the screen first (SDD-025 section 16.8).
+	tracks := decodeTracks(r.Tracks)
+	if len(tracks) == 0 {
+		tracks = []recording.Track{{Kind: recording.TrackScreen, File: recording.TrackScreen.File()}}
+	}
+
+	files := make([]ImportFile, 0, len(tracks))
+
+	for _, t := range tracks {
+		p := filepath.Join(folder, t.File)
+		if _, serr := os.Stat(p); serr != nil {
+			return nil, newError(CodeCaptureFailed, "the file of the recording is gone.").withDetail("reason", "io")
+		}
+
+		files = append(files, ImportFile{Path: p, recording: true})
 	}
 
 	res, ierr := s.MediaImport(ctx, MediaImportRequest{
 		ProjectID: r.ProjectID,
-		Files:     []ImportFile{{Path: path, recording: true}},
+		Files:     files,
 		Info:      &AssetInfo{Tags: []string{"recording"}},
 	})
 	if ierr != nil {
 		return nil, ierr
 	}
 
-	if len(res.Assets) != 1 || res.Assets[0].Error != nil {
-		var cause *Error
-		if len(res.Assets) == 1 {
-			cause = res.Assets[0].Error
-		}
-
-		if cause != nil {
-			return nil, cause
-		}
-
+	if len(res.Assets) != len(tracks) {
 		return nil, newError(CodeCaptureFailed, "the recording could not be imported.").withDetail("reason", "io")
+	}
+
+	for i := range res.Assets {
+		if res.Assets[i].Error != nil {
+			return nil, res.Assets[i].Error
+		}
+	}
+
+	for i := range tracks {
+		tracks[i].AssetHash, tracks[i].AssetID = res.Assets[i].Hash, res.Assets[i].AssetID
+	}
+
+	tj, merr := json.Marshal(tracks)
+	if merr != nil {
+		return nil, internalError()
 	}
 
 	asset := res.Assets[0]
@@ -797,7 +1123,7 @@ func (s *svc) RecordingConfirm(ctx context.Context, req RecordingRef) (*Recordin
 			return rerr
 		}
 
-		x.Review, x.AssetHash, x.AssetID = string(rv), asset.Hash, asset.AssetID
+		x.Review, x.AssetHash, x.AssetID, x.Tracks = string(rv), asset.Hash, asset.AssetID, string(tj)
 
 		return nil
 	})
@@ -805,8 +1131,15 @@ func (s *svc) RecordingConfirm(ctx context.Context, req RecordingRef) (*Recordin
 		return nil, asError(uerr)
 	}
 
-	// The import copied the bytes into the content store; the recording's own copy is not needed any more.
-	_ = os.RemoveAll(filepath.Dir(path))
+	// The import copied the bytes into the content store; the media files are not needed any more. The pointer
+	// events stay: they are read after the recording was added, and go with the recording.
+	for _, t := range tracks {
+		_ = os.Remove(filepath.Join(folder, t.File))
+	}
+
+	if _, serr := os.Stat(filepath.Join(folder, recording.EventsFile)); serr != nil {
+		_ = os.RemoveAll(folder)
+	}
 
 	s.auditRecording(ctx, c, "recording.confirm", got)
 
@@ -876,69 +1209,185 @@ func (s *svc) RecordingPlace(ctx context.Context, req RecordingPlaceRequest) (*E
 		return nil, internalError()
 	}
 
-	assetID := ""
+	// The tracks of the recording and the asset each became. A recording made before tracks existed has the screen.
+	rtracks := decodeTracks(r.Tracks)
+	if len(rtracks) == 0 {
+		rtracks = []recording.Track{{Kind: recording.TrackScreen, AssetHash: r.AssetHash}}
+	}
 
-	for id := range doc.Assets {
-		if doc.Assets[id].Hash == r.AssetHash {
-			assetID = id
+	assetOf := map[recording.TrackKind]string{}
 
-			break
+	for _, t := range rtracks {
+		hash := t.AssetHash
+		if hash == "" && t.Kind == recording.TrackScreen {
+			hash = r.AssetHash
+		}
+
+		for id := range doc.Assets {
+			if hash != "" && doc.Assets[id].Hash == hash {
+				assetOf[t.Kind] = id
+
+				break
+			}
+		}
+
+		if assetOf[t.Kind] == "" {
+			return nil, newError("E_ASSET_NOT_READY", "the recording is still being prepared for the timeline.").
+				withHint("try again in a moment")
 		}
 	}
 
-	if assetID == "" {
-		return nil, newError("E_ASSET_NOT_READY", "the recording is still being prepared for the timeline.").
-			withHint("try again in a moment")
+	plan := newPlacement(s, doc)
+	if perr := plan.place(rtracks, assetOf); perr != nil {
+		return nil, perr
 	}
-
-	var tracks []timeline.Track
-
-	for _, t := range doc.Tracks {
-		if t.Kind == timeline.TrackVisual && !t.Locked {
-			tracks = append(tracks, t)
-		}
-	}
-
-	slices.SortFunc(tracks, func(a, b timeline.Track) int { return strings.Compare(a.Order+a.ID, b.Order+b.ID) })
-
-	var ops []command.Operation
-
-	trackID := ""
-	if len(tracks) > 0 {
-		trackID = tracks[0].ID
-	} else {
-		trackID = s.newIDs("trk")
-
-		args, merr := json.Marshal(struct {
-			ID   string `json:"id"`
-			Kind string `json:"kind"`
-			Name string `json:"name"`
-		}{trackID, "visual", "Recording"})
-		if merr != nil {
-			return nil, internalError()
-		}
-
-		ops = append(ops, command.Operation{Op: "track.add", Args: args})
-	}
-
-	args, merr := json.Marshal(struct {
-		TrackID string `json:"track_id"`
-		AssetID string `json:"asset_id"`
-	}{trackID, assetID})
-	if merr != nil {
-		return nil, internalError()
-	}
-
-	ops = append(ops, command.Operation{Op: "clip.add", Args: args})
 
 	return s.Edit(ctx, EditRequest{
-		ProjectID: r.ProjectID, TimelineID: req.TimelineID, BaseRevision: pg.Revision, Operations: ops,
+		ProjectID: r.ProjectID, TimelineID: req.TimelineID, BaseRevision: pg.Revision, Operations: plan.ops,
 	})
+}
+
+// placement builds the batch that puts the tracks of a recording on a timeline (SDD-025 section 16.9): the
+// screen on the first unlocked visual track as before, the camera on a visual track of its own, each sound on an
+// audio track of its own, every clip at the start the screen clip gets plus the start the helper reported.
+type placement struct {
+	s       *svc
+	doc     *timeline.Document
+	ops     []command.Operation
+	taken   map[string]bool
+	fpsNum  int
+	fpsDen  int
+	trackOf map[recording.TrackKind]string
+}
+
+func newPlacement(s *svc, doc *timeline.Document) *placement {
+	return &placement{
+		s: s, doc: doc, taken: map[string]bool{}, fpsNum: max(doc.Settings.FPS.Num, 1),
+		fpsDen: max(doc.Settings.FPS.Den, 1), trackOf: map[recording.TrackKind]string{},
+	}
+}
+
+// end is the end, in frames, of the last item of a track.
+func (p *placement) end(trackID string) int {
+	end := 0
+
+	for id := range p.doc.Items {
+		if it := p.doc.Items[id]; it.Track == trackID {
+			end = max(end, it.Start+it.Duration)
+		}
+	}
+
+	return end
+}
+
+// unlocked is the unlocked tracks of a kind in the order of the timeline, the ones already used left out.
+func (p *placement) unlocked(kind timeline.TrackKind, name string) []timeline.Track {
+	var out []timeline.Track
+
+	for _, t := range p.doc.Tracks {
+		if t.Kind == kind && !t.Locked && !p.taken[t.ID] && (name == "" || t.Name == name) {
+			out = append(out, t)
+		}
+	}
+
+	slices.SortFunc(out, func(a, b timeline.Track) int { return strings.Compare(a.Order+a.ID, b.Order+b.ID) })
+
+	return out
+}
+
+func (p *placement) addTrack(kind timeline.TrackKind, name string) (string, error) {
+	id := p.s.newIDs("trk")
+
+	args, err := json.Marshal(struct {
+		ID   string `json:"id"`
+		Kind string `json:"kind"`
+		Name string `json:"name"`
+	}{id, string(kind), name})
+	if err != nil {
+		return "", internalError()
+	}
+
+	p.ops = append(p.ops, command.Operation{Op: "track.add", Args: args})
+
+	return id, nil
+}
+
+func (p *placement) place(tracks []recording.Track, assetOf map[recording.TrackKind]string) error {
+	offsets := recording.PlaceStarts(tracks)
+	multi := len(tracks) > 1
+	startFrame := 0
+
+	for _, t := range tracks {
+		kind := timeline.TrackVisual
+		if t.Kind.Audio() {
+			kind = timeline.TrackAudio
+		}
+
+		// The screen takes the first unlocked visual track, as before; the others reuse a track of their own name
+		// that has room at that start, and otherwise get one.
+		var trackID string
+
+		var err error
+
+		cands := p.unlocked(kind, "")
+		if t.Kind != recording.TrackScreen {
+			cands = p.unlocked(kind, t.Kind.Label())
+		}
+
+		for _, c := range cands {
+			if t.Kind == recording.TrackScreen || p.end(c.ID) <= startFrame {
+				trackID = c.ID
+
+				break
+			}
+		}
+
+		if trackID == "" {
+			if trackID, err = p.addTrack(kind, t.Kind.Label()); err != nil {
+				return err
+			}
+		}
+
+		p.taken[trackID] = true
+
+		if t.Kind == recording.TrackScreen {
+			startFrame = p.end(trackID)
+		}
+
+		op, arg := "clip.add", struct {
+			TrackID string `json:"track_id"`
+			AssetID string `json:"asset_id"`
+			Start   string `json:"start,omitempty"`
+		}{TrackID: trackID, AssetID: assetOf[t.Kind]}
+
+		if t.Kind.Audio() {
+			op = "audio.add"
+		}
+
+		if multi {
+			frames := int(offsets[t.Kind] * int64(p.fpsNum) / (1000 * int64(p.fpsDen)))
+			arg.Start = strconv.Itoa(startFrame+frames) + "f"
+		}
+
+		args, merr := json.Marshal(arg)
+		if merr != nil {
+			return internalError()
+		}
+
+		p.ops = append(p.ops, command.Operation{Op: op, Args: args})
+	}
+
+	return nil
 }
 
 // liveView is the surface form of a row, with the counters of the helper while the recording runs.
 func (s *svc) liveView(r recordings.Row) *Recording {
-	if r.State == string(recording.Recording) || r.State == string(recording.Finishing) {
+	var levels *RecordingLevels
+
+	if st := recording.State(
+		r.State,
+	); st == recording.Recording || st == recording.Paused ||
+		st == recording.Finishing {
 		s.recMu.Lock()
 		sess := s.recSessions[r.ID]
 		s.recMu.Unlock()
@@ -946,10 +1395,15 @@ func (s *svc) liveView(r recordings.Row) *Recording {
 		if sess != nil {
 			p := sess.lastProgress()
 			r.DurationMs, r.Frames, r.Dropped, r.Bytes = p.ElapsedMS, p.Frames, p.Dropped, p.Bytes
+			l := sess.lastLevels()
+			levels = &RecordingLevels{Microphone: l.Microphone, System: l.System}
 		}
 	}
 
-	return s.recordingView(r)
+	v := s.recordingView(r)
+	v.Levels = levels
+
+	return v
 }
 
 // recordingView is the surface form of a row. The source label is untrusted text (SDD-007 section 8).
@@ -975,6 +1429,19 @@ func (s *svc) recordingView(r recordings.Row) *Recording {
 		v.Error = &Error{Code: r.ErrorCode, Message: r.ErrorMessage}
 	}
 
+	v.Tracks, v.Pauses, v.EventsCount = []RecordingTrack{}, []RecordingPause{}, r.EventsCount
+
+	for _, t := range decodeTracks(r.Tracks) {
+		v.Tracks = append(v.Tracks, RecordingTrack{
+			Kind: string(t.Kind), StartMS: t.StartMS, DurationMS: t.DurationMS, Bytes: t.Bytes, Lost: t.Lost,
+			AssetID: t.AssetID,
+		})
+	}
+
+	for _, p := range decodePauses(r.Pauses) {
+		v.Pauses = append(v.Pauses, RecordingPause{FromMS: p.FromMS, ToMS: p.ToMS})
+	}
+
 	v.Text = recordingText(v)
 
 	return v
@@ -988,13 +1455,16 @@ func recordingText(v *Recording) string {
 		return "Recording " + v.ID + " is starting."
 	case recording.Recording:
 		return "Recording " + v.ID + " is running: " + secs + " s so far."
+	case recording.Paused:
+		return "Recording " + v.ID + " is paused at " + secs + " s."
 	case recording.Finishing:
 		return "Recording " + v.ID + " is finishing the file."
 	case recording.Ready:
 		switch recording.Review(v.Review) {
 		case recording.ReviewAdded:
 			// The asset id is what an agent needs to place the recording with the edit tool (SDD-025 section 11).
-			return "Recording " + v.ID + " is in the project as asset " + v.AssetID + " (" + secs + " s)."
+			return "Recording " + v.ID + " is in the project as asset " + v.AssetID + " (" + secs + " s)." +
+				trackText(v)
 		case recording.ReviewDismissed:
 			return "Recording " + v.ID + " is kept out of the project until a person adds or deletes it."
 		case recording.ReviewPending:
@@ -1009,12 +1479,35 @@ func recordingText(v *Recording) string {
 	return "Recording " + v.ID + " was cancelled."
 }
 
+// trackText names the other tracks of an added recording with their assets, and the pointer events it holds, for
+// the text of job_get (SDD-025 section 16.8). A recording of the screen alone adds nothing.
+func trackText(v *Recording) string {
+	var parts []string
+
+	for _, t := range v.Tracks {
+		if t.Kind != string(recording.TrackScreen) && t.AssetID != "" {
+			parts = append(parts, t.Kind+" is asset "+t.AssetID)
+		}
+	}
+
+	out := ""
+	if len(parts) > 0 {
+		out = " Its other tracks: " + strings.Join(parts, ", ") + "."
+	}
+
+	if v.EventsCount > 0 {
+		out += " It has " + strconv.FormatInt(v.EventsCount, 10) + " pointer events, read with recording:events."
+	}
+
+	return out
+}
+
 // recordingJobState is the job state an MCP caller sees for a recording (SDD-025 section 11).
 func recordingJobState(st recording.State) string {
 	switch st {
 	case recording.Prepared:
 		return JobQueued
-	case recording.Recording, recording.Finishing:
+	case recording.Recording, recording.Paused, recording.Finishing:
 		return JobRunning
 	case recording.Ready:
 		return JobSucceeded
@@ -1098,6 +1591,11 @@ func (s *svc) recoverRecordings(ctx context.Context) error {
 					info.DurationMS, info.Width, info.Height
 				if st, e := os.Stat(path); e == nil {
 					x.Bytes = st.Size()
+				}
+
+				x.Tracks, x.Pauses, x.EventsCount = settledTracks(*x, filepath.Dir(path), nil)
+				if n := tracksBytes(x.Tracks); n > 0 {
+					x.Bytes = n
 				}
 
 				return nil

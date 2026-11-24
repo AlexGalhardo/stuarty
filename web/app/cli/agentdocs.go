@@ -99,7 +99,8 @@ func AgentDocsInputs() agentdocs.Inputs {
 	// The screen recording commands (epic 61, SDD-025) are in the guide of the video domain: the skill is at its cap
 	// (12,400 characters, D-094), and an agent reads a recording and stops it through job_get and job_cancel.
 	for _, s := range []*spec{
-		recordingSourcesCmd, recordingStopCmd, recordingCancelCmd, recordingShowCmd, recordingListCmd, recordingPlaceCmd,
+		recordingSourcesCmd, recordingStopCmd, recordingPauseCmd, recordingResumeCmd, recordingEventsCmd,
+		recordingCancelCmd, recordingShowCmd, recordingListCmd, recordingPlaceCmd,
 	} {
 		inLibrary[s.name] = true
 	}

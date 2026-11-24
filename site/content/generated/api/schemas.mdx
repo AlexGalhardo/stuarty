@@ -2735,9 +2735,12 @@ The types named in the tables of the operations. The arguments of each editing c
 | `encoder` | `string` | no |  |
 | `ended_at` | `string (date-time)` or `null` | no |  |
 | `error` | [`Error`](/docs/api/schemas#error) or `any` or `null` or `null` | no |  |
+| `events_count` | `integer (int64)` | no |  |
 | `fps` | `integer` | no |  |
 | `frames` | `integer (int64)` | no |  |
 | `height` | `integer` | no |  |
+| `levels` | [`RecordingLevels`](/docs/api/schemas#recordinglevels) or `any` or `null` or `null` | no |  |
+| `pauses` | array of [`RecordingPause`](/docs/api/schemas#recordingpause) | no |  |
 | `project_id` | `string` | no |  |
 | `recording_id` | `string` | no |  |
 | `review` | `string` | no |  |
@@ -2746,13 +2749,58 @@ The types named in the tables of the operations. The arguments of each editing c
 | `state` | `string` | no |  |
 | `stop_reason` | `string` | no |  |
 | `text` | `string` | no |  |
+| `tracks` | array of [`RecordingTrack`](/docs/api/schemas#recordingtrack) | no |  |
 | `width` | `integer` | no |  |
+
+### RecordingDevice
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `default` | `boolean` | no |  |
+| `id` | `string` | no |  |
+| `name` | `string` | no |  |
+
+### RecordingEvent
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `button` | `string` | no |  |
+| `kind` | `string` | no |  |
+| `t_ms` | `integer (int64)` | no |  |
+| `x` | `integer` | no |  |
+| `y` | `integer` | no |  |
+
+### RecordingEventsResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `events` | array of [`RecordingEvent`](/docs/api/schemas#recordingevent) | no |  |
+| `height` | `integer` | no |  |
+| `recording_id` | `string` | no |  |
+| `text` | `string` | no |  |
+| `total` | `integer` | no |  |
+| `truncated` | `boolean` | no |  |
+| `width` | `integer` | no |  |
+
+### RecordingLevels
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `microphone` | `integer` | no |  |
+| `system` | `integer` | no |  |
 
 ### RecordingListResult
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `recordings` | array of [`Recording`](/docs/api/schemas#recording) | no |  |
+
+### RecordingPause
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `from_ms` | `integer (int64)` | no |  |
+| `to_ms` | `integer (int64)` | no |  |
 
 ### RecordingSource
 
@@ -2783,8 +2831,22 @@ The types named in the tables of the operations. The arguments of each editing c
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
+| `cameras` | array of [`RecordingDevice`](/docs/api/schemas#recordingdevice) | no |  |
 | `displays` | array of [`RecordingSourceInfo`](/docs/api/schemas#recordingsourceinfo) | no |  |
+| `microphones` | array of [`RecordingDevice`](/docs/api/schemas#recordingdevice) | no |  |
+| `system_audio` | `boolean` | no |  |
 | `windows` | array of [`RecordingSourceInfo`](/docs/api/schemas#recordingsourceinfo) | no |  |
+
+### RecordingTrack
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `asset_id` | `string` | no |  |
+| `bytes` | `integer (int64)` | no |  |
+| `duration_ms` | `integer (int64)` | no |  |
+| `kind` | `string` | no |  |
+| `lost` | `boolean` | no |  |
+| `start_ms` | `integer (int64)` | no |  |
 
 ### Rect
 

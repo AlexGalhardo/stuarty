@@ -7778,6 +7778,10 @@
               }
             ]
           },
+          "events_count": {
+            "format": "int64",
+            "type": "integer"
+          },
           "fps": {
             "type": "integer"
           },
@@ -7787,6 +7791,22 @@
           },
           "height": {
             "type": "integer"
+          },
+          "levels": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RecordingLevels"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pauses": {
+            "items": {
+              "$ref": "#/components/schemas/RecordingPause"
+            },
+            "type": "array"
           },
           "project_id": {
             "type": "string"
@@ -7816,7 +7836,89 @@
           "text": {
             "type": "string"
           },
+          "tracks": {
+            "items": {
+              "$ref": "#/components/schemas/RecordingTrack"
+            },
+            "type": "array"
+          },
           "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "RecordingDevice": {
+        "properties": {
+          "default": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
+      "RecordingEvent": {
+        "properties": {
+          "button": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "t_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "x": {
+            "type": "integer"
+          },
+          "y": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "RecordingEventsResult": {
+        "properties": {
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/RecordingEvent"
+            },
+            "type": "array"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "recording_id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "truncated": {
+            "type": "boolean"
+          },
+          "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "RecordingLevels": {
+        "properties": {
+          "microphone": {
+            "type": "integer"
+          },
+          "system": {
             "type": "integer"
           }
         },
@@ -7829,6 +7931,19 @@
               "$ref": "#/components/schemas/Recording"
             },
             "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "RecordingPause": {
+        "properties": {
+          "from_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "to_ms": {
+            "format": "int64",
+            "type": "integer"
           }
         },
         "type": "object"
@@ -7868,17 +7983,58 @@
       },
       "RecordingSourcesResult": {
         "properties": {
+          "cameras": {
+            "items": {
+              "$ref": "#/components/schemas/RecordingDevice"
+            },
+            "type": "array"
+          },
           "displays": {
             "items": {
               "$ref": "#/components/schemas/RecordingSourceInfo"
             },
             "type": "array"
           },
+          "microphones": {
+            "items": {
+              "$ref": "#/components/schemas/RecordingDevice"
+            },
+            "type": "array"
+          },
+          "system_audio": {
+            "type": "boolean"
+          },
           "windows": {
             "items": {
               "$ref": "#/components/schemas/RecordingSourceInfo"
             },
             "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "RecordingTrack": {
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "duration_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "lost": {
+            "type": "boolean"
+          },
+          "start_ms": {
+            "format": "int64",
+            "type": "integer"
           }
         },
         "type": "object"
@@ -29453,9 +29609,21 @@
             "application/json": {
               "schema": {
                 "properties": {
+                  "camera": {
+                    "description": "A camera id from GET /recording/sources; empty records no camera.",
+                    "type": "string"
+                  },
+                  "events": {
+                    "description": "Save the pointer position and the clicks (never a key) beside the recording.",
+                    "type": "boolean"
+                  },
                   "fps": {
                     "description": "24, 30 (the default) or 60.",
                     "type": "integer"
+                  },
+                  "microphone": {
+                    "description": "A microphone id from GET /recording/sources, or default; empty records no microphone.",
+                    "type": "string"
                   },
                   "project_id": {
                     "description": "The project the recording will join once a person adds it.",
@@ -29464,6 +29632,10 @@
                   },
                   "source": {
                     "$ref": "#/components/schemas/recordingSourceIn"
+                  },
+                  "system_audio": {
+                    "description": "Record the sound the computer plays on a track of its own.",
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -29780,6 +29952,154 @@
         "summary": "Not now: keep a recording out of the project and out of sight of agents (a person in the browser only)"
       }
     },
+    "/api/v1/recordings/{id}/events": {
+      "get": {
+        "operationId": "recordings.events",
+        "parameters": [
+          {
+            "description": "Only events from this time on, in milliseconds of recording time.",
+            "in": "query",
+            "name": "from_ms",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "clicks (the default) or all.",
+            "in": "query",
+            "name": "kind",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "At most this many events, 1 to 5000; default 1000.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "A recording id, rec_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordingEventsResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read the pointer and click events of a finished recording, in pixels of the captured source"
+      }
+    },
+    "/api/v1/recordings/{id}/pause": {
+      "post": {
+        "operationId": "recordings.pause",
+        "parameters": [
+          {
+            "description": "A recording id, rec_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {},
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Recording"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Pause a recording: every source stops writing and the paused time is cut from every file (anyone with media)"
+      }
+    },
     "/api/v1/recordings/{id}/place": {
       "post": {
         "operationId": "recordings.place",
@@ -29853,6 +30173,76 @@
           }
         ],
         "summary": "Place a recording the person added on the timeline, as one batch"
+      }
+    },
+    "/api/v1/recordings/{id}/resume": {
+      "post": {
+        "operationId": "recordings.resume",
+        "parameters": [
+          {
+            "description": "A recording id, rec_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {},
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Recording"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Resume a paused recording (a person in the browser only: it restarts the capture of the screen)"
       }
     },
     "/api/v1/recordings/{id}/stop": {

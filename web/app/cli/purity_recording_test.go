@@ -36,6 +36,20 @@ func (s stub) RecordingStop(context.Context, service.RecordingRef) (*service.Rec
 	return reply[service.Recording](s.err)
 }
 
+func (s stub) RecordingPause(context.Context, service.RecordingRef) (*service.Recording, error) {
+	return reply[service.Recording](s.err)
+}
+
+func (s stub) RecordingResume(context.Context, service.RecordingRef) (*service.Recording, error) {
+	return reply[service.Recording](s.err)
+}
+
+func (s stub) RecordingEvents(
+	context.Context, service.RecordingEventsRequest,
+) (*service.RecordingEventsResult, error) {
+	return reply[service.RecordingEventsResult](s.err)
+}
+
 func (s stub) RecordingCancel(context.Context, service.RecordingRef) (*service.Recording, error) {
 	return reply[service.Recording](s.err)
 }

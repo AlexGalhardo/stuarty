@@ -833,6 +833,18 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.RecordingStop(ctx, service.RecordingRef{ID: "rec_0000000001"})
 			return err
 		},
+		"RecordingPause": func() error {
+			_, err := e.svc.RecordingPause(ctx, service.RecordingRef{ID: "rec_0000000001"})
+			return err
+		},
+		"RecordingResume": func() error {
+			_, err := e.svc.RecordingResume(ctx, service.RecordingRef{ID: "rec_0000000001"})
+			return err
+		},
+		"RecordingEvents": func() error {
+			_, err := e.svc.RecordingEvents(ctx, service.RecordingEventsRequest{ID: "rec_0000000001"})
+			return err
+		},
 		"RecordingCancel": func() error {
 			_, err := e.svc.RecordingCancel(ctx, service.RecordingRef{ID: "rec_0000000001"})
 			return err

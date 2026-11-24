@@ -25,13 +25,29 @@ type fakeCapture struct {
 	startErr error
 	// inspect says what the file holds; the default is a file of 2 s.
 	inspect func(path string) (service.CaptureInfo, error)
+	// eventsBody is the pointer event file the helper writes; the default is defaultEvents.
+	eventsBody string
+	// finish is the end of a graceful stop; the default is a screen only recording of 2 s.
+	finish *capturehost.Finished
 }
+
+// defaultEvents is a pointer file of a 1920 by 1080 source: two clicks and a move.
+const defaultEvents = `{"k":"header","v":1,"width":1920,"height":1080,"clock":"active_ms"}
+{"k":"move","t":100,"x":10,"y":20}
+{"k":"down","t":500,"b":"left","x":300,"y":400}
+{"k":"up","t":560,"b":"left","x":300,"y":400}
+{"k":"down","t":1500,"b":"right","x":960,"y":540}
+{"k":"up","t":1580,"b":"right","x":961,"y":540}
+`
 
 type fakeSession struct {
 	out     string
 	events  chan capturehost.Event
 	stopped atomic.Bool
 	killed  atomic.Bool
+	paused  atomic.Int64
+	resumed atomic.Int64
+	finish  *capturehost.Finished
 	once    sync.Once
 	mu      sync.Mutex
 	closed  bool
@@ -39,8 +55,11 @@ type fakeSession struct {
 
 func (f *fakeCapture) Sources(context.Context) (capturehost.Sources, error) {
 	return capturehost.Sources{
-		Displays: []capturehost.Source{{ID: "d1", Name: "Display 1", Width: 1920, Height: 1080}},
-		Windows:  []capturehost.Source{{ID: "w9", Name: "Doc\x1b[31m title", Width: 800, Height: 600}},
+		Displays:    []capturehost.Source{{ID: "d1", Name: "Display 1", Width: 1920, Height: 1080}},
+		Windows:     []capturehost.Source{{ID: "w9", Name: "Doc\x1b[31m title", Width: 800, Height: 600}},
+		Microphones: []capturehost.Device{{ID: "m0123456789abcdef", Name: "Mic\x1b[31m one", Default: true}},
+		Cameras:     []capturehost.Device{{ID: "c0123456789abcdef", Name: "Webcam"}},
+		SystemAudio: true,
 	}, nil
 }
 
@@ -56,7 +75,28 @@ func (f *fakeCapture) Start(_ context.Context, r service.CaptureStart) (service.
 		return nil, err
 	}
 
-	s := &fakeSession{out: r.Output, events: make(chan capturehost.Event, 64)}
+	// the files of the other tracks the helper would be writing
+	for _, p := range []string{r.MicrophoneOutput, r.SystemOutput, r.CameraOutput} {
+		if p != "" {
+			body := []byte("bytes of the track " + filepath.Base(p) + " of the recording")
+			if err := os.WriteFile(p, body, 0o600); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	if r.EventsOutput != "" {
+		body := f.eventsBody
+		if body == "" {
+			body = defaultEvents
+		}
+
+		if err := os.WriteFile(r.EventsOutput, []byte(body), 0o600); err != nil {
+			return nil, err
+		}
+	}
+
+	s := &fakeSession{out: r.Output, events: make(chan capturehost.Event, 64), finish: f.finish}
 
 	f.mu.Lock()
 	f.sessions = append(f.sessions, s)
@@ -117,7 +157,28 @@ func (s *fakeSession) end(e capturehost.Event) {
 // Stop is a graceful end: the helper finishes the file and says so.
 func (s *fakeSession) Stop() error {
 	s.stopped.Store(true)
-	s.end(capturehost.Finished{Reason: "stopped", Frames: 60, Dropped: 1, DurationMS: 2000, Bytes: 20})
+
+	fin := capturehost.Finished{Reason: "stopped", Frames: 60, Dropped: 1, DurationMS: 2000, Bytes: 20}
+	if s.finish != nil {
+		fin = *s.finish
+	}
+
+	s.end(fin)
+
+	return nil
+}
+
+// Pause and Resume are what the helper does: it confirms with an event.
+func (s *fakeSession) Pause() error {
+	s.paused.Add(1)
+	s.send(capturehost.Paused{ElapsedMS: 500})
+
+	return nil
+}
+
+func (s *fakeSession) Resume() error {
+	s.resumed.Add(1)
+	s.send(capturehost.Resumed{ElapsedMS: 500})
 
 	return nil
 }

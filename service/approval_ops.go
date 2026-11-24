@@ -141,6 +141,8 @@ func (s *svc) person(ctx context.Context, method string) (Caller, error) {
 var privilegedHints = map[string]string{
 	"RecordingStart": "a person starts a recording in the record dialog of the Stuarty app; the local token, API " +
 		"keys and the agent surfaces cannot start a capture of the screen (ADR-0051)",
+	"RecordingResume": "a person resumes a paused recording in the record dialog of the Stuarty app; resuming " +
+		"restarts the capture of the screen, so the local token, API keys and the agent surfaces cannot do it (ADR-0051)",
 	"RecordingConfirm": "a person adds a recording to the project in the record dialog of the Stuarty app",
 	"RecordingDismiss": "a person decides about a recording in the record dialog of the Stuarty app",
 	"RecordingCancel":  "a person deletes a finished recording in the record dialog of the Stuarty app",
