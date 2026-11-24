@@ -288,15 +288,22 @@ func prompt(m msg, pidfile string) {
 	case "permission-stuarty":
 		// A call to a tool of Stuarty's own MCP server, whose input carries members that no allowlist
 		// may keep: a credential, an object of arguments and a text with a control character.
-		answer := askPermissionOf(sid, "mcp__stuarty__edit", map[string]any{
-			"project_id":    "prj_a4k9m2x7bq",
-			"item_id":       "ast_3c5v8n2w6d\u0000",
-			"token":         "sk-hostile-secret-value",
-			"authorization": "Bearer hostile-bearer",
-			"operations": []any{
-				map[string]any{"op": "animation.apply_preset", "args": map[string]any{"api_key": "sk-hostile-in-args"}},
+		answer := askPermissionOf(
+			sid,
+			"mcp__stuarty__edit",
+			map[string]any{ //nolint:gosec // made-up fixtures that the tests prove are never kept
+				"project_id":    "prj_a4k9m2x7bq",
+				"item_id":       "ast_3c5v8n2w6d\u0000",
+				"token":         "sk-hostile-secret-value",
+				"authorization": "Bearer hostile-bearer",
+				"operations": []any{
+					map[string]any{
+						"op":   "animation.apply_preset",
+						"args": map[string]any{"api_key": "sk-hostile-in-args"},
+					},
+				},
 			},
-		})
+		)
 		chunk("permission: " + answer)
 		end("end_turn")
 	case "permission-other":

@@ -72,6 +72,34 @@ func inboxFrame(res *service.InboxListResult) (sse.Event, []byte, error) {
 	return sse.Event{Event: InboxEventName, Data: string(raw)}, raw, nil
 }
 
+// drain empties a channel of the news that is already waiting: several changes that arrived together are one read.
+func drain(live <-chan sse.Event) {
+	for {
+		select {
+		case <-live:
+		default:
+			return
+		}
+	}
+}
+
+// refreshInbox asks the service for the list of the caller and says whether it differs from the one sent last.
+func refreshInbox(
+	ctx context.Context, snapshot func(context.Context) (*service.InboxListResult, error), sent []byte,
+) (frame sse.Event, raw []byte, changed bool, err error) {
+	res, err := snapshot(ctx)
+	if err != nil {
+		return sse.Event{}, nil, false, err
+	}
+
+	frame, raw, err = inboxFrame(res)
+	if err != nil {
+		return sse.Event{}, nil, false, err
+	}
+
+	return frame, raw, !bytes.Equal(raw, sent), nil
+}
+
 func (e *Events) runInbox(
 	ctx context.Context, s *sse.Stream, first *service.InboxListResult,
 	snapshot func(context.Context) (*service.InboxListResult, error), live <-chan sse.Event, authorized func() bool,
@@ -100,26 +128,14 @@ func (e *Events) runInbox(
 				return nil
 			}
 
-			// Several changes that arrived together are one read.
-			for drained := false; !drained; {
-				select {
-				case <-live:
-				default:
-					drained = true
-				}
-			}
+			drain(live)
 
-			res, err := snapshot(ctx)
+			next, raw, changed, err := refreshInbox(ctx, snapshot, sent)
 			if err != nil {
 				return nil
 			}
 
-			next, raw, err := inboxFrame(res)
-			if err != nil {
-				return nil
-			}
-
-			if bytes.Equal(raw, sent) {
+			if !changed {
 				continue
 			}
 

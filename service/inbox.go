@@ -88,7 +88,11 @@ func (s *svc) inboxChat(ctx context.Context, c Caller) []inbox.Row {
 
 	var rows []inbox.Row
 
-	for _, p := range s.agents.Permissions() {
+	permissions := s.agents.Permissions()
+
+	for i := range permissions {
+		p := &permissions[i]
+
 		may, known := seen[p.ProjectID]
 		if !known {
 			may = s.mayReadChatProject(ctx, c, p.ProjectID)
@@ -99,7 +103,7 @@ func (s *svc) inboxChat(ctx context.Context, c Caller) []inbox.Row {
 			continue
 		}
 
-		rows = append(rows, inbox.FromPermission(permissionOf(&p), editable))
+		rows = append(rows, inbox.FromPermission(permissionOf(p), editable))
 	}
 
 	return rows
@@ -155,8 +159,15 @@ func (s *svc) inboxApprovals(ctx context.Context, c Caller) ([]inbox.Row, error)
 
 func approvalOf(r *approval.Row) *inbox.Approval {
 	a := &inbox.Approval{
-		ID: r.ID, Actor: r.Actor, Kind: r.Kind, Summary: r.Summary, ConnectionID: r.ConnectionID, ProjectID: r.ProjectID,
-		Estimate: r.Estimate, State: r.State, CreatedAt: time.UnixMilli(r.CreatedMs).UTC(),
+		ID:           r.ID,
+		Actor:        r.Actor,
+		Kind:         r.Kind,
+		Summary:      r.Summary,
+		ConnectionID: r.ConnectionID,
+		ProjectID:    r.ProjectID,
+		Estimate:     r.Estimate,
+		State:        r.State,
+		CreatedAt:    time.UnixMilli(r.CreatedMs).UTC(),
 	}
 
 	if r.DecidedMs != nil {

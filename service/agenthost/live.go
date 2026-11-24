@@ -549,8 +549,16 @@ func (s *liveSession) permissions() []Permission {
 
 	for _, p := range s.perms {
 		r := Permission{
-			SessionID: s.req.SessionID, ProjectID: s.req.ProjectID, Profile: s.req.Profile.Name, OwnerUserID: s.req.OwnerUserID,
-			RequestID: p.id, Title: p.title, ToolKind: p.toolKind, Detail: p.detail, Skill: p.skill, AskedAt: p.asked,
+			SessionID:   s.req.SessionID,
+			ProjectID:   s.req.ProjectID,
+			Profile:     s.req.Profile.Name,
+			OwnerUserID: s.req.OwnerUserID,
+			RequestID:   p.id,
+			Title:       p.title,
+			ToolKind:    p.toolKind,
+			Detail:      p.detail,
+			Skill:       p.skill,
+			AskedAt:     p.asked,
 		}
 
 		if p.answered {

@@ -16,22 +16,28 @@ var hostileValues = []string{"sk-hostile-secret-value", "hostile-bearer", "sk-ho
 func TestParsePermissionKeepsOnlyTheAllowlistOfAStuartyTool(t *testing.T) {
 	t.Parallel()
 
-	req, err := ParsePermission(json.RawMessage(`{"sessionId":"s","toolCall":{"toolCallId":"c","title":"mcp__stuarty__edit",` +
-		`"kind":"other","rawInput":{"project_id":"prj_a4k9m2x7bq","item_id":"ast_3c5v8n2w6d","token":"sk-hostile-secret-value",` +
-		`"authorization":"Bearer hostile-bearer","operations":[{"op":"animation.apply_preset","args":{"api_key":"sk-hostile-in-args"}}]}},` +
-		`"options":[{"optionId":"o","name":"Once","kind":"allow_once"}]}`))
+	req, err := ParsePermission(
+		json.RawMessage(`{"sessionId":"s","toolCall":{"toolCallId":"c","title":"mcp__stuarty__edit",` +
+			`"kind":"other","rawInput":{"project_id":"prj_a4k9m2x7bq","item_id":"ast_3c5v8n2w6d","token":"sk-hostile-secret-value",` +
+			`"authorization":"Bearer hostile-bearer","operations":[{"op":"animation.apply_preset","args":{"api_key":"sk-hostile-in-args"}}]}},` +
+			`"options":[{"optionId":"o","name":"Once","kind":"allow_once"}]}`),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	want := chat.PermissionDetail{Project: "prj_a4k9m2x7bq", Item: "ast_3c5v8n2w6d", Operations: []string{"animation.apply_preset"}}
+	want := chat.PermissionDetail{
+		Project:    "prj_a4k9m2x7bq",
+		Item:       "ast_3c5v8n2w6d",
+		Operations: []string{"animation.apply_preset"},
+	}
 
 	if req.Detail == nil || req.Detail.Project != want.Project || req.Detail.Item != want.Item ||
 		len(req.Detail.Operations) != 1 || req.Detail.Operations[0] != want.Operations[0] {
 		t.Fatalf("Detail = %+v, want %+v", req.Detail, want)
 	}
 
-	raw, _ := json.Marshal(req)
+	raw := mustJSON(t, req)
 
 	for _, secret := range hostileValues {
 		if strings.Contains(string(raw), secret) {
@@ -75,7 +81,7 @@ func TestProcessPermissionOfAStuartyToolStoresOnlyTheAllowlist(t *testing.T) {
 		t.Fatalf("detail of the event = %+v", d)
 	}
 
-	raw, _ := json.Marshal(ask)
+	raw := mustJSON(t, ask)
 
 	for _, secret := range hostileValues {
 		if strings.Contains(string(raw), secret) {
@@ -89,8 +95,10 @@ func TestProcessPermissionOfAStuartyToolStoresOnlyTheAllowlist(t *testing.T) {
 	}
 
 	p := waiting[0]
-	if p.RequestID != ask.Permission.RequestID || p.SessionID != s.ID || p.ProjectID != "prj_a" || p.Profile != "permission-stuarty" ||
-		p.Answer != "" || p.AnsweredAt != nil || p.Title != "mcp__stuarty__edit" || p.AskedAt.IsZero() {
+	named := p.RequestID == ask.Permission.RequestID && p.SessionID == s.ID && p.ProjectID == "prj_a"
+	asked := p.Profile == "permission-stuarty" && p.Title == "mcp__stuarty__edit" && !p.AskedAt.IsZero()
+
+	if !named || !asked || p.Answer != "" || p.AnsweredAt != nil {
 		t.Errorf("waiting permission = %+v", p)
 	}
 
@@ -121,7 +129,7 @@ func TestProcessPermissionOfAnotherToolKeepsOnlyItsTitle(t *testing.T) {
 		t.Errorf("permission = %+v", ask.Permission)
 	}
 
-	if raw, _ := json.Marshal(ask); strings.Contains(string(raw), "evil.example") {
+	if raw := mustJSON(t, ask); strings.Contains(string(raw), "evil.example") {
 		t.Errorf("the input of an unknown tool was kept: %s", raw)
 	}
 }
@@ -164,13 +172,26 @@ func TestScrubDetailRemovesTheSecretsOfTheSession(t *testing.T) {
 	r := newRecorder(newMemStore(), "cht_1000000001", func() time.Time { return time.Unix(0, 0) }, nil)
 	r.AddSecret("tok-123456")
 
-	d := r.ScrubDetail(&chat.PermissionDetail{Project: "prj_a", Item: "tok-123456", Operations: []string{"x-tok-123456-y"}})
+	d := r.ScrubDetail(
+		&chat.PermissionDetail{Project: "prj_a", Item: "tok-123456", Operations: []string{"x-tok-123456-y"}},
+	)
 
-	if raw, _ := json.Marshal(d); strings.Contains(string(raw), "tok-123456") {
+	if raw := mustJSON(t, d); strings.Contains(string(raw), "tok-123456") {
 		t.Errorf("a secret survived: %s", raw)
 	}
 
 	if r.ScrubDetail(nil) != nil {
 		t.Error("a nil detail became something")
 	}
+}
+
+func mustJSON(t *testing.T, v any) []byte {
+	t.Helper()
+
+	raw, err := json.Marshal(v)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return raw
 }

@@ -2,7 +2,6 @@ package servicetest
 
 import (
 	"context"
-	"encoding/json"
 	"strings"
 	"testing"
 
@@ -74,8 +73,14 @@ func TestInboxListsAChatPermissionAndAnApprovalWithTheirSource(t *testing.T) {
 	}
 
 	apr := rowOf(res, "approval:"+req.ID)
-	if apr == nil || apr.Source != inbox.SourceApproval || apr.State != inbox.StateWaiting || apr.Tool != "publish.post" ||
-		apr.Summary != "Post the launch video" || apr.SourceID != req.ID || apr.Undoable {
+	if apr == nil {
+		t.Fatalf("the approval is not listed: %+v", res.Rows)
+	}
+
+	listed := apr.Source == inbox.SourceApproval && apr.State == inbox.StateWaiting && apr.SourceID == req.ID
+	described := apr.Tool == "publish.post" && apr.Summary == "Post the launch video" && !apr.Undoable
+
+	if !listed || !described {
 		t.Fatalf("the approval is not listed as a waiting approval row: %+v", res.Rows)
 	}
 
@@ -116,7 +121,11 @@ func TestInboxRowsAreDecidedWhereTheirSourceDecides(t *testing.T) {
 
 	res := w.inbox(w.as(ui), t)
 
-	if r := rowOf(res, "chat:"+ask.Permission.RequestID); r == nil || r.State != inbox.StateApproved || r.AnsweredAt == nil {
+	if r := rowOf(
+		res,
+		"chat:"+ask.Permission.RequestID,
+	); r == nil || r.State != inbox.StateApproved ||
+		r.AnsweredAt == nil {
 		t.Errorf("the allowed permission = %+v", r)
 	}
 
@@ -147,8 +156,8 @@ func TestInboxANotStuartyToolReportsNothingBeyondItsTitle(t *testing.T) {
 		t.Errorf("row = %+v, want only the title", r)
 	}
 
-	raw, _ := json.Marshal(r)
-	if strings.Contains(string(raw), "evil.example") {
+	raw := mustJSON(t, r)
+	if strings.Contains(raw, "evil.example") {
 		t.Errorf("the input of the call reached the row: %s", raw)
 	}
 }
@@ -180,12 +189,20 @@ func TestSecurity_T72_SessionTokenCannotReadTheInbox(t *testing.T) {
 		}
 	}
 
-	noScope := service.WithCaller(context.Background(), service.Caller{Actor: "key:key_aaaaaaaaaa", Scopes: []string{service.ScopeEdit}})
+	noScope := service.WithCaller(
+		context.Background(),
+		service.Caller{Actor: "key:key_aaaaaaaaaa", Scopes: []string{service.ScopeEdit}},
+	)
 	if _, err := w.svc.InboxList(noScope, service.InboxListRequest{}); code(err) != service.CodeForbidden {
 		t.Errorf("InboxList without the read scope = %v, want E_FORBIDDEN", err)
 	}
 
-	if _, err := w.svc.InboxList(context.Background(), service.InboxListRequest{}); code(err) != service.CodeUnauthorized {
+	if _, err := w.svc.InboxList(
+		context.Background(),
+		service.InboxListRequest{},
+	); code(
+		err,
+	) != service.CodeUnauthorized {
 		t.Errorf("InboxList without credentials = %v, want E_UNAUTHORIZED", err)
 	}
 }
@@ -236,13 +253,14 @@ func TestSecurity_T06_InboxShowsOnlyTheCallersRequests(t *testing.T) {
 	}
 
 	theirsList := w.inbox(bob, t)
-	if rowOf(theirsList, "chat:"+aliceAsk.Permission.RequestID) != nil || rowOf(theirsList, "approval:"+aliceReq.ID) != nil {
+	if rowOf(theirsList, "chat:"+aliceAsk.Permission.RequestID) != nil ||
+		rowOf(theirsList, "approval:"+aliceReq.ID) != nil {
 		t.Errorf("Bob sees a request of Alice: %+v", theirsList.Rows)
 	}
 
 	// Not even the sentence of the other member's request is in the answer.
-	raw, _ := json.Marshal(own)
-	if strings.Contains(string(raw), "ast_3c5v8n2w6d") || strings.Contains(string(raw), theirs.ProjectID) {
+	raw := mustJSON(t, own)
+	if strings.Contains(raw, "ast_3c5v8n2w6d") || strings.Contains(raw, theirs.ProjectID) {
 		t.Errorf("Alice's answer carries a trace of Bob's work: %s", raw)
 	}
 
@@ -271,15 +289,15 @@ func TestSecurity_T71_InboxCarriesOnlyTheAllowlistOfAPermission(t *testing.T) {
 
 	_, ask := w.ask(person(), t, project, "permission-stuarty")
 
-	raw, _ := json.Marshal(w.inbox(w.as(ui), t))
+	raw := mustJSON(t, w.inbox(w.as(ui), t))
 
 	for _, secret := range []string{"sk-hostile-secret-value", "hostile-bearer", "sk-hostile-in-args", "api_key", "authorization"} {
-		if strings.Contains(string(raw), secret) {
+		if strings.Contains(raw, secret) {
 			t.Errorf("the answer carries %q: %s", secret, raw)
 		}
 	}
 
-	if strings.ContainsRune(string(raw), 0) || strings.Contains(string(raw), `\u0000`) {
+	if strings.ContainsRune(raw, 0) || strings.Contains(raw, `\u0000`) {
 		t.Errorf("a control character reached the answer: %s", raw)
 	}
 
@@ -306,7 +324,10 @@ func TestInboxKeepsEveryWaitingApprovalBeyondTheCapOfTheSettledOnes(t *testing.T
 	}
 
 	for _, id := range waiting[:inbox.MaxRecent] {
-		if _, err := w.svc.ApprovalDecide(w.asPerson(), service.ApprovalDecideRequest{ID: id, Decision: "reject"}); err != nil {
+		if _, err := w.svc.ApprovalDecide(
+			w.asPerson(),
+			service.ApprovalDecideRequest{ID: id, Decision: "reject"},
+		); err != nil {
 			t.Fatal(err)
 		}
 	}
