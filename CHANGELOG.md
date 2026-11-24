@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.54.0] - 2026-11-24
+
+### Added
+
+- **site:** Rebuild the landing page as one path from idea to post ([fb63fea](https://github.com/AlexGalhardo/stuarty/commit/fb63feaa7a7aeeed39591b0318710e456f5ea6b9))
+- **site:** Say when the landing screenshots were captured and tick the epic tasks ([e4290b1](https://github.com/AlexGalhardo/stuarty/commit/e4290b10f107cf0505ad6c73420584b1d9d9012d))
+- **site:** Capture the released screens again and fill the home, projects and briefing slots ([906032a](https://github.com/AlexGalhardo/stuarty/commit/906032a8a12213655a2f860c2266bbe6854543bf))
+- **ui:** Rebuild the Write frame, list and editor head on the shared components ([924fc7f](https://github.com/AlexGalhardo/stuarty/commit/924fc7f696314ca24299c8db0156fc9384f0679c))
+- **ui:** Frame the writing panels and show the agent context in Write ([c3feffa](https://github.com/AlexGalhardo/stuarty/commit/c3feffa734ef1095b1df20028cc95aa746734e69))
+- **ui:** Compare two revisions side by side and restore one as a new revision ([d8096c9](https://github.com/AlexGalhardo/stuarty/commit/d8096c926c893078bc017cd080a9a93ff0f7d4e1))
+- **ui:** End a text by its type, with Copy and Export for a copy ([bd937e8](https://github.com/AlexGalhardo/stuarty/commit/bd937e8db23330f9732ef72f47d8ec5082db9b51))
+- **ui:** Cover the empty, loading, failed and agent states of Write with tests ([a73a30a](https://github.com/AlexGalhardo/stuarty/commit/a73a30a5b96c20baa5fd9aa859ad95c4ce51fe9b))
+- **service:** Put the reading time on every text the service answers ([783ac30](https://github.com/AlexGalhardo/stuarty/commit/783ac302073bbd4a77f147a2d4619c4adfde71ff))
+- **ui:** Give the image editor the video editor top bar, tool groups and key tooltips ([6d6cc2a](https://github.com/AlexGalhardo/stuarty/commit/6d6cc2aef3d1cb02bbc926699c0ee10bd61cbef3))
+- **ui:** Title and count the layer panel, quiet its rows, and fit the editor to the window ([8fb13ce](https://github.com/AlexGalhardo/stuarty/commit/8fb13cecfc1e4bdfb0e87f27e6f07da51d6c6334))
+- **ui:** Pin the inspector title, fold its sections and name what a mask or filter holds ([ed7438d](https://github.com/AlexGalhardo/stuarty/commit/ed7438d324ad237cf9ad7ece5978323b9edbdd64))
+- **ui:** List images, templates and the error bar of the image editor in the shared components ([6ad8ffb](https://github.com/AlexGalhardo/stuarty/commit/6ad8ffb8004bafb17f4905b91184cc627602094b))
+- **engine:** Add the stuarty-aihelper crate and measure YuNet ([5ac52b3](https://github.com/AlexGalhardo/stuarty/commit/5ac52b38305a68365c1d62a6ba204cb471508e03))
+- **engine:** Host the local AI helper and read its face track ([392f773](https://github.com/AlexGalhardo/stuarty/commit/392f77345dde7083857fd5d7c799d8ea30ad96ac))
+- **service:** Install the face set on request with pinned digests ([c9dd4f4](https://github.com/AlexGalhardo/stuarty/commit/c9dd4f4ef83f0ed1e49f42df55c29e30b7fb0c08))
+- **core:** Track the face and keyframe a vertical crop with integers ([633c7aa](https://github.com/AlexGalhardo/stuarty/commit/633c7aa1cad033aacf72fc54883e4c00da886e90))
+- **service:** Run the face_track job and propose vertical cuts ([6445da1](https://github.com/AlexGalhardo/stuarty/commit/6445da1122bf2ee2b23ae408a79b2340418ec4a2))
+- **http:** Serve the cut proposals with parity and refreshed contracts ([078ee23](https://github.com/AlexGalhardo/stuarty/commit/078ee23d01ee5a8a5198f54d5c770e18e84757b4))
+- **ui:** Offer face tracking and review vertical cut proposals ([db374c5](https://github.com/AlexGalhardo/stuarty/commit/db374c506ac473b7d9ce1717f9178ff268616f92))
+- **ui:** Show what, item, undo, skill and path on each approval request ([642ef49](https://github.com/AlexGalhardo/stuarty/commit/642ef4944590a5c7f3160c715b436e70e04bbc1d))
+- **ui:** Disable a destination that cannot take the content and say why ([672c303](https://github.com/AlexGalhardo/stuarty/commit/672c3031a3da724a79c94ac5ce47e991ddc3289d))
+- **ui:** Say a queue or calendar is loading and never call an unread queue empty ([942224c](https://github.com/AlexGalhardo/stuarty/commit/942224c77e3ac4655d1604259a12871dd372124f))
+
+### Fixed
+
+- **site:** Give the light capture of the home, projects and briefing its alt text ([4d2217b](https://github.com/AlexGalhardo/stuarty/commit/4d2217b8baa45c957fa3d1e4ab61335a99fe53df))
+- **site:** Keep the landing claims true to what ships with the page ([b415562](https://github.com/AlexGalhardo/stuarty/commit/b41556291c4ed412f535bd920c123375810f536f))
+- **ui:** Show the selected layer row in the light theme and keep the inspector room ([98021f0](https://github.com/AlexGalhardo/stuarty/commit/98021f0d082e980600b00447872402ae0bb97b93))
+- **ui:** Stick the video inspector title at the panel top like the shared panel title ([4409d0d](https://github.com/AlexGalhardo/stuarty/commit/4409d0da3cb5dd9ce3d674506741f75eaa1f0daf))
+- **service:** Place the asset of a cut through the import so its batch is accepted ([9101291](https://github.com/AlexGalhardo/stuarty/commit/9101291b10cbbc83b98fefe3f7a1857e0e2423aa))
+- **engine:** Keep machine paths out of the face helper's error messages ([28a2d76](https://github.com/AlexGalhardo/stuarty/commit/28a2d76bd7eddc7b558b9ad1a8709de53f9ad0b4))
+- **engine:** Drop face boxes the host cannot read instead of failing the run ([9e9134f](https://github.com/AlexGalhardo/stuarty/commit/9e9134fecd66f2de21dfa698a7354e281eb18fc1))
+- **renderer:** Repeat the edge pixels in the blur of a masked layer ([998b64b](https://github.com/AlexGalhardo/stuarty/commit/998b64bffa5fc952081e617a93489bc475246dc6))
+- **command:** Report near_edge only for a feather at an edge, and drop the editor warning ([aad356b](https://github.com/AlexGalhardo/stuarty/commit/aad356b5db6def50ac4538aed41ab508fef297bf))
+- **ui:** Repeat the edge pixels in the PixiJS blur of a masked layer ([42584e8](https://github.com/AlexGalhardo/stuarty/commit/42584e8f61c9a846901fbae72e62da3b140b3b9c))
+- **library:** A non-person keeps its hands off the pending note of another author ([472a78c](https://github.com/AlexGalhardo/stuarty/commit/472a78c0782bffaebf7f33e2a9008802095483f5))
+- **ui:** Offer only AI provider connections in the draft panel ([c09d59f](https://github.com/AlexGalhardo/stuarty/commit/c09d59f063dc33613a3241c6efba5f05718245cb))
+- **ui:** Keep a readable column for the page header text at 320 px ([5b22e5c](https://github.com/AlexGalhardo/stuarty/commit/5b22e5c06303ba549c0efa7009cdd121bdb9a88d))
+- **http:** Answer a control character in a file name with the error of the rules ([a33f6fb](https://github.com/AlexGalhardo/stuarty/commit/a33f6fbf841422653b3c2a8e89ac9dd338b7857d))
+- **ui:** Translate the approval item label so the catalog check passes ([5f49cb5](https://github.com/AlexGalhardo/stuarty/commit/5f49cb5ee4c19a3a92ec055c1433eef38fede43c))
+- **ui:** Never call the publish list empty before its first read answers ([eecd10f](https://github.com/AlexGalhardo/stuarty/commit/eecd10ff627ef1e5190644e9dbb43bf74c7efc97))
+- **ui:** Never offer a blog a video or a network a post in the publication editor ([335116e](https://github.com/AlexGalhardo/stuarty/commit/335116e38d335a57ccd2b65a30fb7970842d1440))
+- **ui:** Read the context of the approval queue once a burst of requests settles ([a3366e1](https://github.com/AlexGalhardo/stuarty/commit/a3366e167be0a69b95aae6aa8c9cc3045ac6e20f))
+- **ui:** Give the reason from the destination's own list before its family ([92a55d9](https://github.com/AlexGalhardo/stuarty/commit/92a55d928c6e2635d7536cfa64c81311bfa29c86))
+- **ui:** Wrap a long unbroken project name on the home page at 320 px ([0d3dd93](https://github.com/AlexGalhardo/stuarty/commit/0d3dd93ab13e9e73a48449be37c72fba0002d25f))
+
 ## [0.53.0] - 2026-11-24
 
 ### Added
@@ -2571,7 +2622,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.53.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.54.0...HEAD
+[0.54.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.53.0...v0.54.0
 [0.53.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.52.0...v0.53.0
 [0.52.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.51.0...v0.52.0
 [0.51.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.50.0...v0.51.0
