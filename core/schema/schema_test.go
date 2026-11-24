@@ -99,8 +99,8 @@ func TestCommandSchemasAcceptTheirExamples(t *testing.T) {
 	if err := json.Unmarshal(b, &cmds); err != nil {
 		t.Fatal(err)
 	}
-	if len(cmds) != 90 {
-		t.Fatalf("commands.json lists %d commands, want 90", len(cmds))
+	if len(cmds) != 91 {
+		t.Fatalf("commands.json lists %d commands, want 91", len(cmds))
 	}
 	internal := 0
 	for _, c := range cmds {

@@ -294,3 +294,39 @@ func TestAudioChainMeasure(t *testing.T) {
 
 	_ = audio.SampleRate
 }
+
+// Acceptance criterion 3 of epic 71: each studio voice preset on the noisy voice fixture leaves the export at the
+// loudness target of the project, within 1 LU, and lowers the noise floor (SDD-002 C.91). Both numbers are those
+// of the file the export writes.
+func TestAudioChainVoicePresetsReachTheTarget(t *testing.T) {
+	plain := readMix(t, chainDoc(t, nil), "chain-voice-presets-plain")
+	n := 2 * audio.SampleRate // the item: a second of noise, then the tone over it
+
+	const target = -14.0 // the loudness_target of a new project
+
+	p := wavMeasure(plain, 0, n)
+
+	for _, name := range timeline.VoicePresets {
+		doc := chainDoc(t, withItemChain(timeline.VoicePresetChain(name)...))
+		if got := doc.Settings.LoudnessTarget; got != target {
+			t.Fatalf("the project target is %.1f LUFS, the test expects %.1f", got, target)
+		}
+
+		v := wavMeasure(readMix(t, doc, "chain-voice-preset-"+name), 0, n)
+		if v.IntegratedLUFS == nil {
+			t.Fatalf("%s: the export is silent", name)
+		}
+
+		t.Logf("%s: %.2f LUFS (target %.1f), noise floor %.2f dBFS; plain: noise floor %.2f dBFS",
+			name, *v.IntegratedLUFS, target, v.NoiseFloorDBFS, p.NoiseFloorDBFS)
+
+		if *v.IntegratedLUFS < target-1 || *v.IntegratedLUFS > target+1 {
+			t.Errorf("%s: loudness %.2f LUFS, want %.1f within 1 LU", name, *v.IntegratedLUFS, target)
+		}
+
+		if v.NoiseFloorDBFS > p.NoiseFloorDBFS-6 {
+			t.Errorf("%s: the noise floor went from %.2f to %.2f dBFS, want at least 6 dB lower",
+				name, p.NoiseFloorDBFS, v.NoiseFloorDBFS)
+		}
+	}
+}

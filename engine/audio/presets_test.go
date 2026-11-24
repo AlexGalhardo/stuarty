@@ -27,3 +27,22 @@ func TestPresetGoldens(t *testing.T) {
 		golden(t, "preset_"+name, l, r)
 	}
 }
+
+// Golden audio of each studio voice preset (SDD-002 C.91), through the same half second as the presets above.
+func TestVoicePresetGoldens(t *testing.T) {
+	t.Parallel()
+
+	sig, _ := speechLike(1)
+	left := sig[12000:36000]
+	right := add(left, noise(23, nrNoiseRMS, len(left)))
+
+	for _, name := range timeline.VoicePresets {
+		var specs []plan.ProcessorSpec
+		for _, p := range timeline.VoicePresetChain(name) {
+			specs = append(specs, plan.ProcessorSpec{Kind: p.Kind, Params: p.FullParams()})
+		}
+
+		l, r := throughStereo(t, left, right, 0, specs...)
+		golden(t, "voice_preset_"+name, l, r)
+	}
+}

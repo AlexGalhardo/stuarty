@@ -57,7 +57,7 @@ Names are proposals until task 1 writes them to SDD-000 and SDD-002. All are und
 - [x] 1. SDD-000 and SDD-002. Verify: `task lint:md` exits 0 and `task codegen` leaves no unexpected diff.
 - [x] 2. Caption styles and `caption.apply_style`. Verify: `go test ./core/...` with goldens per style.
 - [x] 3. `clip.blur_region`. Verify: `go test ./core/...` and an export golden.
-- [ ] 4. `audio.apply_voice_preset`. Verify: `go test ./core/... ./engine/audio/...` and a measured loudness within 1 LU of the target.
+- [x] 4. `audio.apply_voice_preset`. Verify: `go test ./core/... ./engine/audio/...` and a measured loudness within 1 LU of the target.
 - [ ] 5. Gallery, blur tool and voice action. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n` and `task test:web` pass.
 - [ ] 6. Surfaces and agent documentation. Verify: `go test ./web/...` and `go run ./internal/tools/surfacebudget` pass.
 
