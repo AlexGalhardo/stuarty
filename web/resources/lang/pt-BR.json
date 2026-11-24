@@ -70,6 +70,7 @@
       },
       "scene": {
         "label": "Estado do agente",
+        "project": "Projeto",
         "none": "Nenhuma sessão de agente",
         "none_hint": "Nada em andamento",
         "skill": "Habilidade",
@@ -93,7 +94,7 @@
         "title": "Notificações",
         "bell": "Notificações",
         "bell_waiting": "Notificações, {count} esperando por você",
-        "scope": "Os pedidos de permissão da conversa com o agente deste projeto e as aprovações que esperam na fila.",
+        "scope": "Os pedidos de permissão da conversa com o agente que o chat acompanha (cada um diz o projeto) e as aprovações que esperam na fila.",
         "empty": "Nada espera por você.",
         "open_chat": "Abrir a conversa",
         "review": "Revisar em Aprovações",

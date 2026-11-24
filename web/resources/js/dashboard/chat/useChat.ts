@@ -67,6 +67,11 @@ export function useChat(
 	const [profiles, setProfiles] = useState<AgentProfileListResult | null>(null);
 	const [projects, setProjects] = useState<ProjectSummary[]>([]);
 	const [projectId, setProjectId] = useState<string | null>(initialProject);
+	// The layout outlives a page: a visit to the page of another project makes the chat talk about that one,
+	// or the scene bar would show (and answer) the session of the project left behind.
+	useEffect(() => {
+		if (initialProject !== null) setProjectId(initialProject);
+	}, [initialProject]);
 	const [session, setSession] = useState<ChatSession | null>(null);
 	const [events, setEvents] = useState<ChatEvent[]>([]);
 	const [live, setLive] = useState(false);

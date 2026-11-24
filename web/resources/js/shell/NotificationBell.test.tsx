@@ -142,6 +142,26 @@ describe("CenterBody", () => {
 		expect(html).not.toContain("notification-allow");
 	});
 
+	test("a permission row names the project of its session, as text", () => {
+		const html = renderToString(
+			<Frame>
+				<CenterBody
+					items={notificationsOf(session, [asked], null)}
+					project="<i>Launch</i>"
+					failure={null}
+					busy={false}
+					personOnlyId="why"
+					privileged
+					onAnswer={() => undefined}
+					onOpenChat={() => undefined}
+					onNavigate={() => undefined}
+				/>
+			</Frame>,
+		);
+		expect(html).toContain('data-testid="notification-project"');
+		expect(html).toContain("&lt;i&gt;Launch&lt;/i&gt;");
+	});
+
 	test("a session that is not a person sees the actions disabled with the reason", () => {
 		const html = body(notificationsOf(session, [asked], null), false);
 		expect(html).toMatch(

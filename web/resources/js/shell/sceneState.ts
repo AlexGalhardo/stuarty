@@ -64,6 +64,16 @@ function refusedThisTurn(events: readonly ChatEvent[]): boolean {
 	return false;
 }
 
+// The name of the project the session belongs to, as the project list holds it: the bar names it, because the
+// session the shell reads can be of a project other than the page (the home, a section, the last one picked).
+export function projectNameOf(
+	session: Pick<ChatSession, "project_id"> | null,
+	projects: readonly { id: string; name: string }[],
+): string | null {
+	if (session === null) return null;
+	return projects.find((p) => p.id === session.project_id)?.name ?? null;
+}
+
 export function sceneOf(
 	session: ChatSession | null,
 	events: readonly ChatEvent[],

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import type { ChatEvent, ChatSession } from "../editor/api/types";
-import { lastTool, sceneOf } from "./sceneState";
+import { lastTool, projectNameOf, sceneOf } from "./sceneState";
 
 function session(over: Partial<ChatSession> = {}): ChatSession {
 	return {
@@ -133,6 +133,22 @@ describe("sceneOf", () => {
 			[ask("r1")],
 		);
 		expect(m.request).toBeNull();
+	});
+});
+
+describe("projectNameOf", () => {
+	const projects = [
+		{ id: "prj_1", name: "Launch" },
+		{ id: "prj_2", name: "Blog post" },
+	];
+
+	test("is the name of the project the session belongs to", () => {
+		expect(projectNameOf({ project_id: "prj_2" }, projects)).toBe("Blog post");
+	});
+
+	test("is null with no session, or a project the list does not hold", () => {
+		expect(projectNameOf(null, projects)).toBeNull();
+		expect(projectNameOf({ project_id: "prj_9" }, projects)).toBeNull();
 	});
 });
 

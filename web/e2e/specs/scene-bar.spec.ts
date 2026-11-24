@@ -261,6 +261,32 @@ test.describe("scene bar", () => {
 		await expect(tool.locator("a, img, b, script")).toHaveCount(0);
 	});
 
+	test("the bar names the project of the session and follows a visit to another project", async ({
+		page,
+		request,
+		browserName,
+	}) => {
+		const api = await caller(request);
+		// (no hyphen: the project list shows a hyphen of a name as a space)
+		const talked = `Talked ${browserName} ${randomBytes(3).toString("hex")}`;
+		const first = await makeProject(api, talked);
+		await signInAsPerson(page);
+		await clearProfiles(page);
+		await converse(page, first, "follower", "echo");
+		const quiet = await makeProject(api, `Quiet ${unique(browserName)}`);
+		await page.goto(`/projects/${first}`);
+		const bar = page.getByTestId("scene-bar");
+		await expect(bar).toHaveAttribute("data-variant", "idle");
+		await expect(page.getByTestId("scene-project")).toContainText(talked);
+		// an Inertia visit keeps the layout: the bar must leave the session of the project left behind
+		await page.getByTestId("nav-projects").click();
+		await expect(page).toHaveURL(/\/projects$/);
+		await page.locator(`a[href="/projects/${quiet}"]`).first().click();
+		await expect(page).toHaveURL(new RegExp(`/projects/${quiet}$`));
+		await expect(bar).toHaveAttribute("data-variant", "none");
+		await expect(page.getByTestId("scene-project")).toHaveCount(0);
+	});
+
 	test("an open permission is answered on the bar, and the conversation shows the same answer", async ({
 		page,
 		request,
