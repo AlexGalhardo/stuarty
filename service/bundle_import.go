@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bufio"
 	"bytes"
+	"cmp"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -88,6 +89,8 @@ type bundleParts struct {
 	extra []*bundleTimeline
 	// texts are the Markdown of the items of version 2, by index of the item; an item with no entry has none.
 	texts map[int]string
+	// bare is a bundle of a project with no timeline: no document, no log and no file (SDD-005 section 16.1.2).
+	bare bool
 }
 
 // ProjectBundleImport reads a bundle, checks all of it and then stores the project in one transaction.
@@ -139,6 +142,10 @@ func (s *svc) ProjectBundleImport(ctx context.Context, req ProjectBundleImportRe
 	parts, perr := s.readBundle(ctx, c, zr)
 	if perr != nil {
 		return nil, forCaller(c, perr)
+	}
+
+	if parts.bare {
+		return s.importBareBundle(ctx, c, parts, req)
 	}
 
 	projectID := parts.doc.ID
@@ -205,20 +212,7 @@ func (s *svc) ProjectBundleImport(ctx context.Context, req ProjectBundleImportRe
 		return s.writeImportedProject(ctx, tx, c, parts, sizes, req.AsNew, now)
 	})
 	if err != nil {
-		if errors.Is(err, ErrExists) {
-			return nil, newError(command.CodeIDExists, "a project with the identifier %s already exists.", projectID).
-				withHint("import it with as_new to get a new id")
-		}
-
-		if e, ok := errors.AsType[*Error](err); ok {
-			return nil, forCaller(c, e)
-		}
-
-		if ctx.Err() != nil {
-			return nil, ctx.Err()
-		}
-
-		return nil, asError(err)
+		return nil, importWriteError(ctx, c, err, projectID)
 	}
 
 	crashpoint.Hit("bundle_import.after_commit")
@@ -226,6 +220,91 @@ func (s *svc) ProjectBundleImport(ctx context.Context, req ProjectBundleImportRe
 	res.Created = true
 
 	return res, nil
+}
+
+// importWriteError is what the caller sees of a failed write of an import.
+func importWriteError(ctx context.Context, c Caller, err error, projectID string) error {
+	if errors.Is(err, ErrExists) {
+		return newError(command.CodeIDExists, "a project with the identifier %s already exists.", projectID).
+			withHint("import it with as_new to get a new id")
+	}
+
+	if e, ok := errors.AsType[*Error](err); ok {
+		return forCaller(c, e)
+	}
+
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+
+	return asError(err)
+}
+
+// importBareBundle stores the project of a bundle that has no document: the project and its items, with no timeline
+// (SDD-005 section 16.1.2).
+func (s *svc) importBareBundle(
+	ctx context.Context, c Caller, p *bundleParts, req ProjectBundleImportRequest,
+) (*ProjectCreateResult, error) {
+	id := p.manifest.Project.ID
+	if req.AsNew {
+		id = s.newIDs(timeline.PrefixProject)
+	} else if err := s.checkIDFree(ctx, id); err != nil {
+		return nil, err
+	}
+
+	name := cmp.Or(p.manifest.Production.Name, p.manifest.Project.Name)
+	res := &ProjectCreateResult{
+		UntrustedNotice: UntrustedNotice, ProjectID: id, Name: name, Text: textview.CreatedProject(id, name),
+	}
+
+	if req.DryRun {
+		return res, nil
+	}
+
+	now := s.nowMs()
+	row := ProjectRow{ID: id, Name: name, State: ProjectActive, CreatedMs: now, UpdatedMs: now, CreatedBy: c.Actor}
+
+	if c.OwnerUserID != "" {
+		owner := c.OwnerUserID
+		row.OwnerUserID = &owner
+	}
+
+	err := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
+		if err := s.putImportedProduction(ctx, tx, p, &row); err != nil {
+			return err
+		}
+
+		return appendAudit(ctx, tx, now, c.Actor, "project.import", id, "")
+	})
+	if err != nil {
+		return nil, importWriteError(ctx, c, err, id)
+	}
+
+	crashpoint.Hit("bundle_import.after_commit")
+
+	res.Created = true
+
+	return res, nil
+}
+
+// checkIDFree is E_ID_EXISTS when id names a project, with or without a timeline, or a timeline.
+func (s *svc) checkIDFree(ctx context.Context, id string) error {
+	taken := newError(command.CodeIDExists, "a project with the identifier %s already exists.", id).
+		withHint("import it with as_new to get a new id")
+
+	if _, err := s.store.Projects().Head(ctx, id); err == nil {
+		return taken
+	} else if !isNotFound(err) {
+		return asError(err)
+	}
+
+	if _, err := s.store.Productions().Get(ctx, id); err == nil {
+		return taken
+	} else if !isNotFound(err) {
+		return asError(err)
+	}
+
+	return nil
 }
 
 // bundleTimeline is a timeline of a bundle after the checks: the first one is made from the parts of the bundle
@@ -259,6 +338,10 @@ func (p *bundleParts) mainTimeline() *bundleTimeline {
 
 // timelines are every timeline of the bundle, the first first.
 func (p *bundleParts) timelines() []*bundleTimeline {
+	if p.main == nil {
+		return nil // a bundle of a project with no timeline
+	}
+
 	return append([]*bundleTimeline{p.main}, p.extra...)
 }
 
@@ -326,7 +409,7 @@ func importedRow(c Caller, t *bundleTimeline, asNew bool, now int64) ProjectRow 
 func (s *svc) writeImportedProject(
 	ctx context.Context, tx Tx, c Caller, p *bundleParts, sizes map[string]int64, asNew bool, now int64,
 ) error {
-	if err := s.putImportedProduction(ctx, tx, p); err != nil {
+	if err := s.putImportedProduction(ctx, tx, p, &p.main.row); err != nil {
 		return err
 	}
 
@@ -359,8 +442,7 @@ func (s *svc) writeImportedProject(
 // putImportedProduction writes the project, its items and its timeline rows. A bundle of version 1 has one
 // timeline and no other item; one of version 2 brings its items, each timeline item pointing at the row of
 // the timeline the item names.
-func (s *svc) putImportedProduction(ctx context.Context, tx Tx, p *bundleParts) error {
-	row := &p.main.row
+func (s *svc) putImportedProduction(ctx context.Context, tx Tx, p *bundleParts, row *ProjectRow) error {
 	if p.manifest.Production == nil {
 		return s.putProduction(ctx, tx, row)
 	}
@@ -607,7 +689,9 @@ func (s *svc) readBundle(ctx context.Context, c Caller, zr *zip.Reader) (*bundle
 		return nil, e
 	}
 
-	p.main = p.mainTimeline()
+	if !p.bare {
+		p.main = p.mainTimeline()
+	}
 
 	return p, nil
 }
@@ -788,7 +872,7 @@ func (s *svc) scanBundleEntries(p *bundleParts) *Error {
 		}
 	}
 
-	if p.entries[bundleManifestEntry] == nil || p.entries[bundleDocumentEntry] == nil {
+	if p.entries[bundleManifestEntry] == nil {
 		return bundleRefused("manifest.json and document.json are required")
 	}
 
@@ -873,10 +957,36 @@ func checkBundleContext(p *BundleProduction) *Error {
 	return nil
 }
 
+// checkBareManifest judges a manifest with no document (SDD-005 section 16.1.2): the bundle of a project that
+// has no timeline. It is version 2, it has a production and nothing that belongs to a timeline.
+func checkBareManifest(m *BundleManifest) *Error {
+	if m.BundleVersion < 2 || m.Production == nil {
+		return bundleRefused("a bundle with no document must be of version 2 and describe a production")
+	}
+
+	if len(m.Timelines) > 0 || m.Operations != nil || len(m.Media) > 0 || len(m.Fonts) > 0 {
+		return bundleRefused("a bundle with no document lists a timeline, a log or a file")
+	}
+
+	if !timeline.ValidID(timeline.PrefixProject, m.Project.ID) {
+		return bundleRefused("manifest.json names a project with an identifier that is not valid")
+	}
+
+	return nil
+}
+
 // checkBundleProduction judges the members of version 2 of the manifest before any entry is read: every key and
 // id is of the right form and once, every timeline is named by exactly one item, and the items obey the rules of
 // core/project.
 func checkBundleProduction(m *BundleManifest) *Error {
+	bare := m.Document == nil
+
+	if bare {
+		if e := checkBareManifest(m); e != nil {
+			return e
+		}
+	}
+
 	if m.Production == nil {
 		if len(m.Timelines) > 0 {
 			return bundleRefused("manifest.json lists timelines but no production")
@@ -895,6 +1005,10 @@ func checkBundleProduction(m *BundleManifest) *Error {
 	}
 
 	keys := map[string]bool{bundleMainKey: true}
+	if bare {
+		keys = map[string]bool{} // no first timeline, so no item may name one
+	}
+
 	ids := map[string]bool{m.Project.ID: true}
 
 	for i := range m.Timelines {
@@ -970,6 +1084,20 @@ func checkBundleItem(it *BundleItem, keys, used map[string]bool) string {
 
 func (s *svc) readBundleDocument(p *bundleParts) *Error {
 	m := &p.manifest
+
+	if m.Document == nil {
+		if p.entries[bundleDocumentEntry] != nil || p.entries[bundleOperationsName] != nil {
+			return bundleRefused("a bundle that declares no document holds one")
+		}
+
+		p.bare = true
+
+		return nil
+	}
+
+	if p.entries[bundleDocumentEntry] == nil {
+		return bundleRefused("manifest.json and document.json are required")
+	}
 
 	body, err := readEntry(p.entries[bundleDocumentEntry], bundleDocumentMax)
 	if err != nil {
@@ -1085,7 +1213,11 @@ func (s *svc) matchBundleFiles(ctx context.Context, c Caller, p *bundleParts) *E
 
 // documents are the documents of every timeline of the bundle, the first first.
 func (p *bundleParts) documents() []*timeline.Document {
-	docs := []*timeline.Document{p.doc}
+	var docs []*timeline.Document
+	if p.doc != nil {
+		docs = append(docs, p.doc)
+	}
+
 	for _, t := range p.extra {
 		docs = append(docs, t.doc)
 	}
@@ -1179,6 +1311,10 @@ func pairBundleEntries(p *bundleParts, needed map[string]string, listed map[stri
 
 // checkBundleLog is step 5 for every timeline of the bundle.
 func (s *svc) checkBundleLog(ctx context.Context, p *bundleParts) *Error {
+	if p.bare {
+		return nil
+	}
+
 	m := &p.manifest
 
 	var e *Error

@@ -33,7 +33,8 @@ func TestTemplateFileOfTheFormerNameIsRead(t *testing.T) {
 // ADR-0044); any other format is refused.
 func TestBundleManifestOfTheFormerNameIsRead(t *testing.T) {
 	for format, ok := range map[string]bool{BundleFormat: true, formerBundleFormat: true, "other": false} {
-		manifest := `{"format":"` + format + `","bundle_version":1,"project":{"id":"prj_0000000000"}}`
+		manifest := `{"format":"` + format + `","bundle_version":1,"project":{"id":"prj_0000000000"},` +
+			`"document":{"sha256":"` + strings.Repeat("a", 64) + `","bytes":1}}`
 		data := zipOf(t, member{name: bundleManifestEntry, body: []byte(manifest)})
 
 		zr, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))

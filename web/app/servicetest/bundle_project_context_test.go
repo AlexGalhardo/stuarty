@@ -1,10 +1,8 @@
 package servicetest
 
 import (
-	"strings"
 	"testing"
 
-	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/testproject"
 )
@@ -43,22 +41,5 @@ func TestBundleKeepsTheContextOfTheProject(t *testing.T) {
 	if got.Name != "Launch teaser" || got.Description != testproject.Description || got.Goal != testproject.Goal ||
 		!got.Complete {
 		t.Fatalf("the context did not travel: %+v", got)
-	}
-}
-
-// A new project has no document for a bundle to hold: the export says so, instead of denying the project exists.
-func TestBundleExportOfAProjectWithNoTimelineSaysWhy(t *testing.T) {
-	m := newMediaEnv(t, mediaCfg{})
-
-	made, err := testproject.Create(m.as(ui), m.svc, "No timeline")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	_, err = m.svc.(bundleExporter).ProjectBundleExport(
-		m.as(ui), service.ProjectBundleExportRequest{ProjectID: made.ProjectID},
-	)
-	if code(err) != command.CodeInvalidState || !strings.Contains(serviceError(t, err).Hint, "timeline") {
-		t.Fatalf("err = %v, want E_INVALID_STATE with the hint to add a timeline", err)
 	}
 }

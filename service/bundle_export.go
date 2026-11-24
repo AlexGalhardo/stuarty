@@ -53,10 +53,10 @@ func (s *svc) resolveBundleSource(
 	}
 
 	if len(tls) == 0 {
-		// A bundle is built around a first document (SDD-005 section 16.1), which a new project does not have.
+		// A project with no timeline has no first document: its bundle is its items alone (SDD-005 section
+		// 16.1.2), and the job stays on the project.
 		if head, gerr := s.store.Productions().Get(ctx, req.ProjectID); gerr == nil && visible(c, head.OwnerUserID) {
-			return false, nil, newError(command.CodeInvalidState, "the project %s has no timeline yet.", head.ID).
-				withHint("add one with project_item action add kind timeline, then export the project")
+			return true, nil, nil
 		}
 
 		return false, nil, nil
@@ -93,7 +93,7 @@ func (s *svc) ProjectBundleExport(ctx context.Context, req ProjectBundleExportRe
 			withPath("wait_ms")
 	}
 
-	row, lerr := s.loadProject(ctx, c, req.ProjectID)
+	row, lerr := s.loadProjectScope(ctx, c, req.ProjectID)
 	if lerr != nil {
 		return nil, lerr
 	}
@@ -248,12 +248,48 @@ func snapshotTimeline(
 	return sn, err
 }
 
+// snapshotBare reads the head and the items of a project that has no active timeline, and says whether id is such a
+// project: an id that names no project (the first timeline of one) is not.
+func (s *svc) snapshotBare(ctx context.Context, id string) (bare bool, items []ItemRow, head *ProductionHead, err error) {
+	err = s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
+		tls, err := tx.Productions().ActiveTimelines(ctx, id)
+		if err != nil || len(tls) > 0 {
+			return err
+		}
+
+		h, err := tx.Productions().Get(ctx, id)
+		if errors.Is(err, ErrNotFound) {
+			return nil
+		}
+
+		if err != nil {
+			return err
+		}
+
+		if items, err = tx.Productions().Items(ctx, id); err != nil {
+			return err
+		}
+
+		head, bare = &h, true
+
+		return nil
+	})
+
+	return bare, items, head, err
+}
+
 // snapshotBundle reads, in one transaction, the first timeline and, for a whole project, the other active
 // ones with the items of the project. The caller closes the snapshots it gets, also on an error.
 func (s *svc) snapshotBundle(
 	ctx context.Context, job *JobRow, dir string, in *exportInput,
 ) (snaps []*bundleSnapshot, items []ItemRow, head *ProductionHead, err error) {
 	includeLog := in.IncludeLog == nil || *in.IncludeLog
+
+	if in.Whole {
+		if bare, bitems, bhead, berr := s.snapshotBare(ctx, *job.ProjectID); berr != nil || bare {
+			return nil, bitems, bhead, berr
+		}
+	}
 
 	err = s.store.WriteProject(ctx, *job.ProjectID, func(ctx context.Context, tx ProjectTx) error {
 		main, err := snapshotTimeline(ctx, tx, *job.ProjectID, dir, includeLog)
@@ -346,12 +382,19 @@ func (s *svc) runBundleExport(ctx context.Context, job *JobRow, pw *progress, in
 		return nil, ferr
 	}
 
-	main := snaps[0]
-	if main.logf != nil {
-		manifest.Operations = &BundleLog{Count: main.log.count, SHA256: main.log.sha256}
+	// A project with no timeline has no snapshot of a document: its revision is 0 and it has no log.
+	var revision int64
+
+	if len(snaps) > 0 {
+		main := snaps[0]
+		revision = main.row.Revision
+
+		if main.logf != nil {
+			manifest.Operations = &BundleLog{Count: main.log.count, SHA256: main.log.sha256}
+		}
 	}
 
-	final := filepath.Join(dir, bundleFileName(main.row.Revision, job.ID))
+	final := filepath.Join(dir, bundleFileName(revision, job.ID))
 	tmp := final + ".tmp"
 
 	size, sum, werr := s.writeBundleFile(ctx, pw, tmp, manifest, snaps, files)
@@ -377,7 +420,7 @@ func (s *svc) runBundleExport(ctx context.Context, job *JobRow, pw *progress, in
 	}
 
 	raw, merr := json.Marshal(JobResult{Export: &ExportResult{
-		Revision:    main.row.Revision,
+		Revision:    revision,
 		Path:        abs,
 		DownloadURL: "/api/v1/jobs/" + job.ID + "/file",
 		Bytes:       size,
@@ -449,14 +492,22 @@ func writeOperationsLog(
 func (s *svc) bundleManifest(
 	snaps []*bundleSnapshot, items []ItemRow, head *ProductionHead, whole bool,
 ) (*BundleManifest, []bundleFile, *Error) {
-	row := &snaps[0].row
-	docSum := sha256.Sum256(row.Document)
 	m := &BundleManifest{
 		Format: BundleFormat, BundleVersion: BundleVersion, AppVersion: s.version,
 		CreatedAt: s.now().UTC().Format("2006-01-02T15:04:05Z"),
-		Project:   BundleProject{ID: row.ID, Name: row.Name, SchemaVersion: row.SchemaVersion, Revision: row.Revision},
-		Document:  BundleDocument{SHA256: hex.EncodeToString(docSum[:]), Bytes: int64(len(row.Document))},
 		Media:     []BundleMedia{}, Fonts: []BundleFontFile{},
+	}
+
+	if len(snaps) == 0 {
+		// A project with no timeline: no document, no log, and the id of the project itself.
+		m.Project = BundleProject{
+			ID: head.ID, Name: head.Name, SchemaVersion: timeline.CurrentSchemaVersion, Revision: 0,
+		}
+	} else {
+		row := &snaps[0].row
+		docSum := sha256.Sum256(row.Document)
+		m.Project = BundleProject{ID: row.ID, Name: row.Name, SchemaVersion: row.SchemaVersion, Revision: row.Revision}
+		m.Document = &BundleDocument{SHA256: hex.EncodeToString(docSum[:]), Bytes: int64(len(row.Document))}
 	}
 
 	if !whole {
@@ -573,7 +624,7 @@ func describeProduction(m *BundleManifest, snaps []*bundleSnapshot, items []Item
 		m.Timelines = append(m.Timelines, t)
 	}
 
-	p := &BundleProduction{Name: snaps[0].row.Name, Items: []BundleItem{}}
+	p := &BundleProduction{Name: m.Project.Name, Items: []BundleItem{}}
 
 	if head != nil {
 		p.Name, p.Description = head.Name, head.Description
@@ -817,8 +868,8 @@ func (f bundleFile) isFont() bool { return strings.HasPrefix(f.entry, "font.") }
 // holds the file. Each font must be one the caller owns or uses in another project (SDD-007
 // section 7.7 item 6). The message names the family, never the hash.
 func (s *svc) checkExportFonts(ctx context.Context, c Caller, row *ProjectRow) *Error {
-	if c.OwnerUserID == "" {
-		return nil
+	if c.OwnerUserID == "" || len(row.Document) == 0 {
+		return nil // a project with no timeline has no document and so no font
 	}
 
 	doc, err := decodeRow(row)
