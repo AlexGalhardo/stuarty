@@ -312,7 +312,10 @@ func TestRunDeadlineKillsTheRun(t *testing.T) {
 func TestRunIsNotCutByTheToolTimeout(t *testing.T) {
 	r, dir, _ := helperRunner(t)
 	short, err := engine.Find(context.Background(), engine.Config{
-		Name: "helper", Path: os.Args[0], VersionArgs: []string{helperFlag + "version"}, Timeout: 400 * time.Millisecond,
+		Name:        "helper",
+		Path:        os.Args[0],
+		VersionArgs: []string{helperFlag + "version"},
+		Timeout:     400 * time.Millisecond,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -349,8 +352,7 @@ func TestDeadlineKeepsTheTimeEarnedWhilePeersWereRunning(t *testing.T) {
 			end()
 		}
 	})
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 	killed := make(chan time.Duration, 1)
 	started := time.Now()
 	go watchDeadline(ctx, started, base, time.Hour, func() { killed <- time.Since(started) })
