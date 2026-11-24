@@ -6,10 +6,13 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/AlexGalhardo/stuarty/core/asset"
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/assets"
 	"github.com/AlexGalhardo/stuarty/service/testproject"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 )
@@ -22,10 +25,14 @@ const (
 	canarySkill      = "CANARY-SKILL-body-of-a-skill"
 	canaryLater      = "CANARY-CAPTION-written-after-the-account"
 	canaryLaterRef   = "CANARY-SKILLFILE-a-file-of-a-skill"
+	canaryAssetDesc  = "CANARY-DESCRIPTION-of-an-asset"
+	canaryRights     = "CANARY-RIGHTSNOTE-of-an-asset"
+	canaryBrand      = "canary_brand_colour_q7"
 )
 
 var workspaceCanaries = []string{
 	canaryCaption, canaryLayer, canaryPromptBody, canarySkill, canaryNote, canaryLaterRef,
+	canaryAssetDesc, canaryRights, canaryBrand,
 }
 
 // everyByteOfTheWorkspace is every file under the workspace: the database, its log and its shared memory, library/,
@@ -71,8 +78,9 @@ func foundIn(files map[string][]byte, words ...string) map[string]string {
 	return hit
 }
 
-// With an account, no byte of the workspace holds a caption, a text layer, a template, an edit, a memory note, a
-// prompt or a skill in clear text: not db.sqlite, its log, library/, backups/ or exports/ (SDD-007 T-136).
+// With an account, no byte of the workspace holds a caption, a text layer, a template, an edit, a brand kit, the
+// description or the rights note of an asset, a memory note, a prompt or a skill in clear text: not db.sqlite, its
+// log, library/, backups/ or exports/ (SDD-007 T-136).
 func TestSecurity_T136_NoByteOfTheWorkspaceHoldsTheWordsOfThePerson(t *testing.T) {
 	getenv := accountEnv(t)
 	home := getenv(workspace.EnvHome)
@@ -131,6 +139,29 @@ func TestSecurity_T136_NoByteOfTheWorkspaceHoldsTheWordsOfThePerson(t *testing.T
 		t.Fatal(serr)
 	}
 
+	// A brand kit, and the description and the rights note of a file of the asset library. The file is put through
+	// the repository the service writes with: importing media needs FFmpeg, and the sealing is in the repository.
+	if _, serr := o.Service.BrandKitSet(as, service.BrandKitSetRequest{
+		Colors: map[string]string{canaryBrand: "#112233"},
+	}); serr != nil {
+		t.Fatal(serr)
+	}
+
+	if _, _, err := o.Store.Assets().Upsert(ctx, service.AssetRow{
+		Hash: "sha256:" + strings.Repeat("ab", 32), SizeBytes: 1, OriginalName: "clip.mp4",
+		IngestState: service.IngestReady, CreatedMs: 1, UpdatedMs: 1,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := o.Store.AssetLibrary().Put(ctx, assets.Row{
+		Hash: "sha256:" + strings.Repeat("ab", 32), CreatedBy: "local:ui", CreatedMs: 1, UpdatedMs: 1,
+		Description: canaryAssetDesc, Tags: []string{"harbour"},
+		Origin: asset.Origin{Kind: asset.Imported, RightsNote: canaryRights},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
 	// The control: with no account the scan finds every word, so it can see what it looks for.
 	checkpoint(t, o)
 
@@ -181,6 +212,15 @@ func TestSecurity_T136_NoByteOfTheWorkspaceHoldsTheWordsOfThePerson(t *testing.T
 
 	if _, err := o.Service.ImageDescribe(as, service.ImageDescribeRequest{ImageID: img.ImageID}); err != nil {
 		t.Fatalf("the image: %v", err)
+	}
+
+	info, err := o.Store.AssetLibrary().Get(ctx, "", "sha256:"+strings.Repeat("ab", 32))
+	if err != nil || info.Description != canaryAssetDesc || info.Origin.RightsNote != canaryRights {
+		t.Fatalf("the notes of the asset: %+v %v", info, err)
+	}
+
+	if kit, err := o.Service.BrandKitGet(as, service.BrandKitGetRequest{}); err != nil || kit.Colors[canaryBrand] == "" {
+		t.Fatalf("the brand kit: %+v %v", kit, err)
 	}
 
 	if err := o.Close(); err != nil {
