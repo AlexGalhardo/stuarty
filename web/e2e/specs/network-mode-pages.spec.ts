@@ -148,7 +148,10 @@ plain.describe("network-mode-pages: login, keys and logout", () => {
 			await page.getByRole("button", { name: "Create key" }).click();
 			const secret = page.locator("[data-key-secret]");
 			await expect(secret).toBeVisible();
-			await expect(secret).toContainText("shown only once");
+			// The secret sits in its note, which says it is shown once (epic 84 moved the mark onto the secret itself).
+			await expect(page.getByTestId("key-secret-note")).toContainText(
+				"shown only once",
+			);
 			const row = page.getByRole("listitem").filter({ hasText: name });
 			await expect(row).toBeVisible();
 
