@@ -4,7 +4,9 @@ import (
 	"context"
 	"os"
 
+	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
+	"github.com/AlexGalhardo/stuarty/web/app/store"
 )
 
 var tokenRotate = &spec{
@@ -54,6 +56,17 @@ func runTokenRotate(ctx context.Context, c *call) (*output, error) {
 
 	if err := sess.Dir.EnsureLayout(); err != nil {
 		return nil, err
+	}
+
+	// A process with no password: a workspace that has an account is locked for it, and the token that every
+	// client holds is not replaced from a locked studio (SDD-007 section 3.9 item 6).
+	hasAccount, err := store.DatabaseHasAccount(ctx, sess.Dir.Path("db.sqlite"))
+	if err != nil {
+		return nil, err
+	}
+
+	if hasAccount {
+		return nil, service.NewLockedError()
 	}
 
 	if _, err := sess.Dir.RotateToken(); err != nil {
