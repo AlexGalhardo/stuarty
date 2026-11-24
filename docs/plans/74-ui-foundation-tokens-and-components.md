@@ -62,7 +62,7 @@ None.
 - [x] 5. Add the data-free shared components, each with a unit test of its accessible name and states. Verify: `cd web && bun run test` passes.
 - [x] 6. Check the existing pages at 1440, 1280 and 390 px in both themes, and fix only what the tokens broke. Verify: `cd web && bun run e2e -- a11y` passes, and the screenshots are in the hand-off.
 - [x] 7. Update `docs/design-system.md`. Verify: `bunx markdownlint-cli2@0.24.1 docs/design-system.md` exits 0 and `cd web && bun run check:contrast` exits 0.
-- [ ] 8. Only if the author approved it: bundle Inter and add its notice. Verify: `task notices:check` exits 0, and the built page requests no external origin.
+- [x] 8. Only if the author approved it: bundle Inter and add its notice. Verify: `task notices:check` exits 0, and the built page requests no external origin.
 
 ## Test strategy
 

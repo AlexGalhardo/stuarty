@@ -7,7 +7,7 @@ interface TimecodeRate {
 	den: number;
 }
 
-// Geist with tabular numbers, not a monospace face (SDD-012 section 11.5).
+// The UI font (Inter) with tabular numbers, not a monospace face (SDD-012 section 11.5).
 export default function Timecode({
 	frame,
 	fps,

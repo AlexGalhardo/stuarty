@@ -74,7 +74,7 @@ The production dependency closure of `web/package.json` (`dependencies`, transit
 | @floating-ui/dom | 1.8.0 | MIT | Copyright (c) 2021-present Floating UI contributors | [LICENSE](<licenses/npm/@floating-ui/dom@1.8.0/LICENSE>) | - |
 | @floating-ui/react-dom | 2.1.9 | MIT | Copyright (c) 2021-present Floating UI contributors | [LICENSE](<licenses/npm/@floating-ui/react-dom@2.1.9/LICENSE>) | - |
 | @floating-ui/utils | 0.2.12 | MIT | Copyright (c) 2021-present Floating UI contributors | [LICENSE](<licenses/npm/@floating-ui/utils@0.2.12/LICENSE>) | - |
-| @fontsource-variable/geist | 5.3.0 | OFL-1.1 | Copyright 2024 The Geist Project Authors (<https://github.com/vercel/geist-font>) Geist-Italic[wght].ttf: Copyright 2024 The Geist Project Authors (<https://githu…> | [LICENSE](<licenses/npm/@fontsource-variable/geist@5.3.0/LICENSE>) | - |
+| @fontsource-variable/inter | 5.3.0 | OFL-1.1 | Copyright 2016 The Inter Project Authors (<https://github.com/rsms/inter>) Inter-Italic[opsz,wght].ttf: Copyright 2016 The Inter Project Authors (<https://github.…> | [LICENSE](<licenses/npm/@fontsource-variable/inter@5.3.0/LICENSE>) | - |
 | @inertiajs/core | 3.9.1 | MIT | Copyright (c) Jonathan Reinink <jonathan@reinink.ca> | [LICENSE](<licenses/npm/@inertiajs/core@3.9.1/LICENSE>) | - |
 | @inertiajs/react | 3.9.1 | MIT | Copyright (c) Jonathan Reinink <jonathan@reinink.ca> | [LICENSE](<licenses/npm/@inertiajs/react@3.9.1/LICENSE>) | - |
 | @jridgewell/resolve-uri | 3.1.2 | MIT | Copyright 2019 Justin Ridgewell <jridgewell@google.com> | [LICENSE](<licenses/npm/@jridgewell/resolve-uri@3.1.2/LICENSE>) | - |
