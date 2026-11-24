@@ -11,6 +11,8 @@ import (
 	"strings"
 	"sync"
 	"testing"
+
+	"github.com/AlexGalhardo/stuarty/internal/testfs"
 )
 
 func newKey(t *testing.T) []byte {
@@ -29,7 +31,7 @@ func newVault(t *testing.T) (*Vault, *MemoryProvider) {
 
 	p := NewMemoryProvider(nil)
 
-	return Open(filepath.Join(t.TempDir(), "vault.json"), p), p
+	return Open(filepath.Join(testfs.TempDir(t), "vault.json"), p), p
 }
 
 func TestRoundTrip(t *testing.T) {
@@ -357,7 +359,7 @@ func (readOnlyProvider) Save([]byte) error     { return ErrReadOnly }
 func TestNewVaultWithNowhereToKeepTheKey(t *testing.T) {
 	t.Parallel()
 
-	v := Open(filepath.Join(t.TempDir(), "vault.json"), readOnlyProvider{})
+	v := Open(filepath.Join(testfs.TempDir(t), "vault.json"), readOnlyProvider{})
 
 	if err := v.Put("con_a", []byte("x")); !errors.Is(err, ErrNoKeyProvider) {
 		t.Fatalf("Put: %v, want ErrNoKeyProvider", err)
@@ -437,7 +439,7 @@ func TestFilesAreReadableByTheOwnerOnly(t *testing.T) {
 
 	t.Parallel()
 
-	dir := t.TempDir()
+	dir := testfs.TempDir(t)
 	keyFile := filepath.Join(dir, "master.key")
 	v := Open(filepath.Join(dir, "vault.json"), FileProvider{Path: keyFile})
 
@@ -462,7 +464,7 @@ func TestFilesAreReadableByTheOwnerOnly(t *testing.T) {
 // VV-269: with no vault file yet, a key that is there and is not a key is still reported, since the first
 // credential would fail on it; an absent key is not.
 func TestVerifyReportsABadKeyBeforeTheVaultExists(t *testing.T) {
-	dir := t.TempDir()
+	dir := testfs.TempDir(t)
 	keyFile := filepath.Join(dir, "wrong.key")
 
 	if err := os.WriteFile(keyFile, []byte("no-such-key\n"), 0o600); err != nil {
@@ -488,7 +490,7 @@ func TestForgetZeroesTheCachedKeyAndAsksTheProviderAgain(t *testing.T) {
 
 	key := bytes.Repeat([]byte{7}, KeySize)
 	prov := NewMemoryProvider(key)
-	v := Open(filepath.Join(t.TempDir(), "vault.json"), prov)
+	v := Open(filepath.Join(testfs.TempDir(t), "vault.json"), prov)
 
 	if err := v.Put("conn.one", []byte("secret")); err != nil {
 		t.Fatal(err)

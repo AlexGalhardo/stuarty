@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/AlexGalhardo/stuarty/desktop/update"
+	"github.com/AlexGalhardo/stuarty/internal/testfs"
 )
 
 type zipEntry struct {
@@ -116,7 +117,7 @@ func swapReq(t *testing.T, target Target, artifact string) SwapRequest {
 	t.Helper()
 
 	return SwapRequest{
-		StateDir: filepath.Join(t.TempDir(), "state"), Target: target, Artifact: artifact,
+		StateDir: filepath.Join(testfs.TempDir(t), "state"), Target: target, Artifact: artifact,
 		Version: "0.21.0", Now: time.Now,
 	}
 }
@@ -548,7 +549,7 @@ func TestRunningTheVersionAfterAFailedTryClearsTheRecord(t *testing.T) {
 func installerFor(t *testing.T, target Target, start func(string, string) error, quits *atomic.Int32) swapInstaller {
 	t.Helper()
 
-	state := filepath.Join(t.TempDir(), "state")
+	state := filepath.Join(testfs.TempDir(t), "state")
 
 	return swapInstaller{
 		goos:   "darwin",

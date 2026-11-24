@@ -6,6 +6,7 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/AlexGalhardo/stuarty/internal/testfs"
 	"github.com/AlexGalhardo/vukem/database"
 	"github.com/AlexGalhardo/vukem/queue"
 	"github.com/AlexGalhardo/vukem/schema"
@@ -29,7 +30,7 @@ func openWith(t *testing.T, keep func(id string) bool) *database.DB {
 
 	ctx := context.Background()
 
-	db, err := database.Open(ctx, "file:"+filepath.ToSlash(filepath.Join(t.TempDir(), "db.sqlite")))
+	db, err := database.Open(ctx, "file:"+filepath.ToSlash(filepath.Join(testfs.TempDir(t), "db.sqlite")))
 	if err != nil {
 		t.Fatal(err)
 	}
