@@ -17,15 +17,25 @@ test.describe("deep-link-reload", () => {
 			p.getByRole("slider", { name: "Playhead" });
 		const selected = (p: typeof page) =>
 			p.locator(`[data-item-id="${item}"][aria-selected="true"]`);
+		// The end of the timeline comes from the core with the first plan window, one request after the document
+		// (SDD-004 section 10): until it arrives the playhead has a maximum of 0. Reading the place before it
+		// would judge a page that has not finished loading (VV-390).
+		const loaded = async (p: typeof page): Promise<void> => {
+			await expect(p.locator("[data-item-id]")).toHaveCount(3);
+			await expect(playhead(p)).not.toHaveAttribute("aria-valuemax", "0");
+		};
+		await loaded(page);
 		await expect(playhead(page)).toHaveAttribute("aria-valuenow", "45");
 		await expect(selected(page)).toHaveCount(1);
 
 		await page.reload();
+		await loaded(page);
 		await expect(playhead(page)).toHaveAttribute("aria-valuenow", "45");
 		await expect(selected(page)).toHaveCount(1);
 
 		const second = await context.newPage();
 		await second.goto(page.url());
+		await loaded(second);
 		await expect(playhead(second)).toHaveAttribute("aria-valuenow", "45");
 		await expect(selected(second)).toHaveCount(1);
 	});
