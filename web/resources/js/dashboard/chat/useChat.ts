@@ -22,6 +22,8 @@ export interface ChatPanelState {
 	failure: Failure | null;
 	busy: boolean;
 	selectProject(id: string): void;
+	// asks for the list of agent profiles, which is slow to build: read when the panel opens, not on every page
+	needProfiles(): void;
 	start(profile: string): Promise<void>;
 	send(text: string): Promise<void>;
 	cancel(end: boolean): Promise<void>;
@@ -70,6 +72,8 @@ export function useChat(
 	const [live, setLive] = useState(false);
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [busy, setBusy] = useState(false);
+	const [wantProfiles, setWantProfiles] = useState(false);
+	const needProfiles = useCallback(() => setWantProfiles(true), []);
 	const transport = useRef<HttpTransport | null>(null);
 	if (transport.current === null) {
 		transport.current = new HttpTransport("/api/v1");
@@ -157,10 +161,6 @@ export function useChat(
 		if (!active) return;
 		let alive = true;
 		api()
-			.listAgentProfiles()
-			.then((res) => alive && setProfiles(res))
-			.catch((error: unknown) => alive && setFailure(failureOf(error)));
-		api()
 			.listProjects()
 			.then((res) => {
 				if (!alive) return;
@@ -180,6 +180,18 @@ export function useChat(
 			alive = false;
 		};
 	}, [active, api]);
+
+	useEffect(() => {
+		if (!active || !wantProfiles) return;
+		let alive = true;
+		api()
+			.listAgentProfiles()
+			.then((res) => alive && setProfiles(res))
+			.catch((error: unknown) => alive && setFailure(failureOf(error)));
+		return () => {
+			alive = false;
+		};
+	}, [active, wantProfiles, api]);
 
 	// the session of the project: the newest one, followed when it is live
 	useEffect(() => {
@@ -325,6 +337,7 @@ export function useChat(
 		failure,
 		busy,
 		selectProject,
+		needProfiles,
 		start,
 		send,
 		cancel,

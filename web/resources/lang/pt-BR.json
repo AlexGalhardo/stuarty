@@ -89,6 +89,24 @@
           "failed": "Falhou"
         }
       },
+      "notify": {
+        "title": "Notificações",
+        "bell": "Notificações",
+        "bell_waiting": "Notificações, {count} esperando por você",
+        "scope": "Os pedidos de permissão da conversa com o agente deste projeto e as aprovações que esperam na fila.",
+        "empty": "Nada espera por você.",
+        "open_chat": "Abrir a conversa",
+        "review": "Revisar em Aprovações",
+        "state": {
+          "waiting": "Esperando você",
+          "allowed": "Permitido",
+          "denied": "Negado"
+        },
+        "kind": {
+          "permission": "Permissão do agente",
+          "approval": "Aprovação"
+        }
+      },
       "drawer": {
         "title": "Navegação",
         "description": "As seções do estúdio."

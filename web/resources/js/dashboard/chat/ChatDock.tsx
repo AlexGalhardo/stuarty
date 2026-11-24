@@ -40,6 +40,10 @@ export default function ChatDock(): ReactNode {
 	useEffect(() => {
 		if (open) heading.current?.focus();
 	}, [open]);
+	const { needProfiles } = chat;
+	useEffect(() => {
+		if (open) needProfiles();
+	}, [open, needProfiles]);
 	useEffect(() => {
 		if (open && connected && !managing) composer.current?.focus();
 		if (!open && closed.current) {
