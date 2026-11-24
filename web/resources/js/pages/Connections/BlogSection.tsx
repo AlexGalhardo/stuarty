@@ -132,7 +132,8 @@ function ready(form: BlogForm): boolean {
 	}
 }
 
-const SELECT = "h-8 rounded-lg border border-input bg-background px-2 text-sm";
+const SELECT =
+	"h-8 w-full min-w-0 rounded-lg border border-input bg-background px-2 text-sm";
 
 export default function BlogSection({
 	onChanged,
