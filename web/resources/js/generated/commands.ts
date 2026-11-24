@@ -2748,6 +2748,10 @@ export interface TranscriptDeleteRangeArgs {
    */
   new_ids?: string[];
   /**
+   * A length, 0 to 2s; the farthest an edge of the cut may move into a silence beside it. Default "0.3s"; "0s" cuts at the word times.
+   */
+  snap?: string;
+  /**
    * Index of the last word to remove, inclusive.
    */
   to_word: number;

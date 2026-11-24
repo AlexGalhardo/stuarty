@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.snap \"3s\" is longer than 2s.",
+  "hint": "Use a length of at most \"2s\", or \"0s\" to cut at the word times.",
+  "retryable": false,
+  "path": "args.snap"
+}

@@ -28,11 +28,91 @@ func init() {
 }
 
 type transcriptDeleteArgs struct {
-	AssetID  string         `json:"asset_id"           desc:"A video asset with audio, or an audio asset, that was transcribed."              pattern:"^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
-	FromWord int            `json:"from_word"          desc:"Index of the first word to remove, in the transcript of the asset."                                                                     min:"0"`
-	ToWord   int            `json:"to_word"            desc:"Index of the last word to remove, inclusive."                                                                                           min:"0"`
-	NewIDs   []string       `json:"new_ids,omitempty"  desc:"Ids for the new pieces, in order of cut."                                        pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
-	Resolved *ResolvedWords `json:"resolved,omitempty" desc:"Filled by the service from the transcript of the asset; never sent by a caller."                                                                internal:"true"`
+	AssetID  string       `json:"asset_id"           desc:"A video asset with audio, or an audio asset, that was transcribed."              pattern:"^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	FromWord int          `json:"from_word"          desc:"Index of the first word to remove, in the transcript of the asset."                                                                     min:"0"`
+	ToWord   int          `json:"to_word"            desc:"Index of the last word to remove, inclusive."                                                                                           min:"0"`
+	Snap     Time         `json:"snap,omitempty"     desc:"A length, 0 to 2s; the farthest an edge of the cut may move into a silence beside it. Default \"0.3s\"; \"0s\" cuts at the word times."`
+	NewIDs   []string     `json:"new_ids,omitempty"  desc:"Ids for the new pieces, in order of cut."                                        pattern:"^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Resolved *ResolvedCut `json:"resolved,omitempty" desc:"Filled by the service from the transcript and the silences of the asset; never sent by a caller."                                              internal:"true"`
+}
+
+// Silence analysis states of ResolvedCut.
+const (
+	// SilenceRead: the service read the silence artifact (the silences may be none).
+	SilenceRead = "read"
+	// SilenceMissing: the asset has no silence artifact.
+	SilenceMissing = "missing"
+)
+
+// ResolvedCut is what the service puts in `resolved` for transcript.delete_range (A.9): the words and, so that
+// the edges of the cut can snap to a silence, the silences of the asset.
+type ResolvedCut struct {
+	Words           []ResolvedWord `json:"words"                      desc:"Words in order, not overlapping, in asset frames, half-open."`
+	Silences        []SilenceRange `json:"silences,omitempty"         desc:"Sorted, non-overlapping silences in asset frames, half-open."`
+	SilenceAnalysis string         `json:"silence_analysis,omitempty" desc:"read when the silence artifact was read, missing when the asset has none." enum:"read,missing"`
+}
+
+// snapPlan is how the cut was snapped, for effective.snap.
+type snapPlan struct {
+	window    int
+	requested string
+	analysis  string
+	edges     tx.Snapped
+}
+
+func (p *snapPlan) effective(c *Context) map[string]any {
+	edge := func(e tx.Edge) map[string]any {
+		return map[string]any{"edge": e.Frame, "result": string(e.Kind), "moved": e.Moved}
+	}
+	return map[string]any{
+		"window":   TimeEffective(c.FPS(), p.window, p.requested),
+		"analysis": p.analysis,
+		"start":    edge(p.edges.Start),
+		"end":      edge(p.edges.End),
+	}
+}
+
+const maxSnap = "2s"
+
+// snapWindow reads the snap argument in frames; the default is 0.3 s.
+func snapWindow(c *Context, a *transcriptDeleteArgs) (int, *Error) {
+	window, err := c.length("args.snap", cmp.Or(string(a.Snap), "0.3s"), true)
+	if err != nil {
+		return 0, err
+	}
+	if limit, _ := c.ParseTime("args.snap", maxSnap); window > limit {
+		return 0, Errorf(CodeValidation, "args.snap %q is longer than %s.", string(a.Snap), maxSnap).
+			WithHint(`Use a length of at most "2s", or "0s" to cut at the word times.`).WithPath("args.snap")
+	}
+	return window, nil
+}
+
+// snapped applies the snap to the cut of the words and returns the range to remove. It is the range of the words
+// when the snap is off or the caller gave no silence information.
+func snapped(c *Context, a *transcriptDeleteArgs) (from, to int, plan *snapPlan, err *Error) {
+	words := a.Resolved.Words
+	from, to = words[a.FromWord].Start, words[a.ToWord].End
+	window, err := snapWindow(c, a)
+	if err != nil {
+		return 0, 0, nil, err
+	}
+	if window == 0 || a.Resolved.SilenceAnalysis == "" {
+		return from, to, nil, nil
+	}
+	if err := checkSilences(&ResolvedSilences{Silences: a.Resolved.Silences}); err != nil {
+		return 0, 0, nil, err
+	}
+	sil := make([]tx.Silence, len(a.Resolved.Silences))
+	for i, s := range a.Resolved.Silences {
+		sil[i] = tx.Silence{Start: s.Start, End: s.End}
+	}
+	tw := make([]tx.Word, len(words))
+	for i, w := range words {
+		tw[i] = tx.Word{Text: w.Text, Start: w.Start, End: w.End}
+	}
+	edges := tx.SnapEdges(sil, window, tw, a.FromWord, a.ToWord)
+	plan = &snapPlan{window: window, requested: string(a.Snap), analysis: a.Resolved.SilenceAnalysis, edges: edges}
+	return edges.Start.Frame, edges.End.Frame, plan, nil
 }
 
 // deleteCut is what the command does to one item.
@@ -113,7 +193,11 @@ func checkDeleteArgs(c *Context, a *transcriptDeleteArgs) (from, to int, err *Er
 			WithHint("Choose an asset whose audio was transcribed.").WithPath("args.asset_id")
 	}
 	// Name a missing asset before the internal resolved field (VV-207).
-	if err := checkResolvedWords(a.Resolved); err != nil {
+	var plain *ResolvedWords
+	if a.Resolved != nil {
+		plain = &ResolvedWords{Words: a.Resolved.Words}
+	}
+	if err := checkResolvedWords(plain); err != nil {
 		return 0, 0, err
 	}
 	words := a.Resolved.Words
@@ -205,7 +289,10 @@ func (c *Context) applyCut(cut *deleteCut, ids []string) (removed int, pieceIDs 
 }
 
 func applyTranscriptDeleteRange(c *Context, a *transcriptDeleteArgs) error {
-	from, to, err := checkDeleteArgs(c, a)
+	if _, _, err := checkDeleteArgs(c, a); err != nil {
+		return err
+	}
+	from, to, plan, err := snapped(c, a)
 	if err != nil {
 		return err
 	}
@@ -246,6 +333,9 @@ func applyTranscriptDeleteRange(c *Context, a *transcriptDeleteArgs) error {
 	})
 
 	c.SetEffective("range", map[string]any{"start": from, "end": to})
+	if plan != nil {
+		c.SetEffective("snap", plan.effective(c))
+	}
 	c.SetEffective("cuts", report)
 	c.SetEffective("removed", map[string]any{"frames": longest, "seconds": c.FPS().Seconds(int64(longest))})
 	c.SetEffective("new_ids", ids)

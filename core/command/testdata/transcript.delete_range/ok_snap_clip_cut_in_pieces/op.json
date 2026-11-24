@@ -1,0 +1,43 @@
+{
+  "op": "transcript.delete_range",
+  "args": {
+    "asset_id": "ast_3c5v8n2w6d",
+    "from_word": 2,
+    "to_word": 2,
+    "resolved": {
+      "words": [
+        {
+          "text": "hello",
+          "start": 62,
+          "end": 70
+        },
+        {
+          "text": "um",
+          "start": 72,
+          "end": 80
+        },
+        {
+          "text": "world",
+          "start": 90,
+          "end": 110
+        },
+        {
+          "text": "again",
+          "start": 340,
+          "end": 358
+        }
+      ],
+      "silences": [
+        {
+          "start": 84,
+          "end": 89
+        },
+        {
+          "start": 112,
+          "end": 120
+        }
+      ],
+      "silence_analysis": "read"
+    }
+  }
+}

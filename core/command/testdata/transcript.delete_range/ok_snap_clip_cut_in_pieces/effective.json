@@ -1,0 +1,48 @@
+{
+  "cuts": [
+    {
+      "item_id": "itm_c3d4e5f6g7",
+      "pieces": [
+        "itm_c3d4e5f6g7"
+      ],
+      "removed": 12,
+      "track_id": "trk_f6g7h8j9k0"
+    },
+    {
+      "item_id": "itm_m1n2p3q4r5",
+      "pieces": [
+        "itm_m1n2p3q4r5"
+      ],
+      "removed": 1,
+      "track_id": "trk_f6g7h8j9k0"
+    }
+  ],
+  "new_ids": [],
+  "range": {
+    "end": 112,
+    "start": 89
+  },
+  "removed": {
+    "frames": 12,
+    "seconds": 0.4
+  },
+  "snap": {
+    "analysis": "read",
+    "end": {
+      "edge": 112,
+      "moved": 2,
+      "result": "moved"
+    },
+    "start": {
+      "edge": 89,
+      "moved": 1,
+      "result": "moved"
+    },
+    "window": {
+      "frame": 9,
+      "requested": null,
+      "seconds": 0.3
+    }
+  },
+  "unused_ids": []
+}
