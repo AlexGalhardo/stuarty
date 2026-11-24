@@ -80,7 +80,11 @@ func httpError(e *service.Error) *errs.HTTPError {
 
 // decorate gives every problem, including the ones vukem writes itself (404,
 // 405, a body that is too large, an invalid input), the same members.
-func decorate(_ *web.Ctx, p *web.Problem) {
+func decorate(c *web.Ctx, p *web.Problem) {
+	if e := hiddenTextError(c, p); e != nil {
+		takeServiceError(p, e)
+	}
+
 	code, _ := p.Extensions["code"].(string)
 
 	if code == "" {
@@ -118,6 +122,52 @@ func decorate(_ *web.Ctx, p *web.Problem) {
 
 	if msg, ok := p.Extensions["message"].(string); ok {
 		p.Detail = msg
+	}
+}
+
+// hiddenTextFields are the fields whose rules the Service owns and name a control character themselves: vukem
+// refuses such a character in every string before the handler runs, with a message of its own. The route and the
+// field map to the error the Service gives, so every surface answers the same (VV-396).
+var hiddenTextFields = map[string]struct {
+	field string
+	err   func() *service.Error
+}{
+	"assets.rename": {"name", service.AssetNameHiddenCharacterError},
+}
+
+// hiddenTextError is the error of the Service for a control character that vukem refused first, or nil.
+func hiddenTextError(c *web.Ctx, p *web.Problem) *service.Error {
+	rule, ok := hiddenTextFields[c.RouteName()]
+	if !ok {
+		return nil
+	}
+
+	for i := range p.Issues {
+		if p.Issues[i].Key == "string.utf8" && p.Issues[i].Path == rule.field {
+			return rule.err()
+		}
+	}
+
+	return nil
+}
+
+// takeServiceError replaces the validation problem of vukem with the error of the Service.
+func takeServiceError(p *web.Problem, e *service.Error) {
+	e = e.ForSurface(service.SurfaceHTTP)
+	p.Issues, p.Errors = nil, nil
+	p.Status = e.HTTPStatus()
+	p.Extensions = map[string]any{"code": e.Code, "message": e.Message, "retryable": e.Retryable}
+
+	if e.Hint != "" {
+		p.Extensions["hint"] = e.Hint
+	}
+
+	if e.Path != "" {
+		p.Extensions["path"] = e.Path
+	}
+
+	if len(e.Details) > 0 {
+		p.Extensions["details"] = e.Details
 	}
 }
 
