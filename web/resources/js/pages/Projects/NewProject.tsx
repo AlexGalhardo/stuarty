@@ -1,7 +1,6 @@
 import { type ReactNode, useState } from "react";
 
 import { type Failure, failureOf } from "@/components/Failure";
-import { Notice } from "@/components/Notice";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -27,8 +26,7 @@ import {
 	TEXT_TYPES,
 	type TextType,
 } from "./kinds";
-import ProjectContextForm from "./ProjectContextForm";
-import { emptyContext } from "./projectSchema";
+import NewProjectBriefing from "./NewProjectBriefing";
 
 const RADIO_CARD =
 	"flex cursor-pointer flex-col gap-1 rounded-lg border border-border bg-surface p-4 text-text hover:bg-surface-hover has-[:checked]:border-accent has-[:checked]:bg-accent-soft has-[:focus-visible]:border-focus has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-focus";
@@ -102,7 +100,7 @@ export default function NewProject({
 					<DialogDescription>
 						{step === "kind"
 							? t("ui.projects.new_project.description")
-							: t(`ui.projects.new_project.lead.${choice ?? "undecided"}`)}
+							: t("ui.projects.new_project.step_two")}
 					</DialogDescription>
 				</DialogHeader>
 				{step === "kind" ? (
@@ -203,40 +201,15 @@ export default function NewProject({
 						</DialogFooter>
 					</form>
 				) : (
-					<div className="flex flex-col gap-3">
-						<h3 className="text-lg font-semibold text-text">
-							{t("ui.projects.new_project.briefing_title")}
-						</h3>
-						{created === null ? (
-							<ProjectContextForm
-								kind={choice ?? undefined}
-								initial={emptyContext()}
-								submitLabel={t("ui.projects.create")}
-								cancelLabel={t("ui.projects.new_project.back")}
-								busy={busy}
-								failure={failure}
-								autoFocusFirst
-								onEdited={() => setFailure(null)}
-								onSubmit={(values) => void submit(values)}
-								onCancel={() => setStep("kind")}
-							/>
-						) : (
-							<Notice
-								tone="warning"
-								role="alert"
-								title={t("ui.projects.new_project.partial")}
-								actions={
-									<Button asChild variant="outline" size="sm">
-										<a href={`/projects/${created}`}>
-											{t("ui.projects.new_project.open_created")}
-										</a>
-									</Button>
-								}
-							>
-								{failure?.message}
-							</Notice>
-						)}
-					</div>
+					<NewProjectBriefing
+						kind={choice ?? "undecided"}
+						busy={busy}
+						failure={failure}
+						created={created}
+						onEdited={() => setFailure(null)}
+						onSubmit={(values) => void submit(values)}
+						onBack={() => setStep("kind")}
+					/>
 				)}
 			</DialogContent>
 		</Dialog>
