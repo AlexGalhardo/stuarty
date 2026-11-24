@@ -74,7 +74,7 @@ A project is not always a video. Its **kind** says what it is meant to become:
 | `image` | an image |
 | `undecided` | not chosen yet (the default) |
 
-Choose it when you create the project with `--kind` (`project:create`), `kind` (`project_create` and `POST /api/v1/projects`), or leave it out. The kind creates nothing: a `text` project has no timeline, no format and no media, and nothing asks it for one. If you leave it out, the first text or timeline you add chooses it: a text makes the project a `text`, a timeline a `video`; a brief chooses nothing. A project made before kinds existed keeps its data; it reads its kind from what it holds (a timeline makes it a video, a text a text), and nothing is rewritten.
+Choose it when you create the project with `--kind` (`project:create`), `kind` (`project_create` and `POST /api/v1/projects`), or leave it out. The kind creates nothing: a `text` project has no timeline, no format and no media, and nothing asks it for one. If you leave it out, the first text or timeline you add chooses it: a copy or a post makes the project a `text`, a timeline a `video`; a brief or a script chooses nothing, since a script can be the words of a video as well as a text. A project made before kinds existed keeps its data; it reads its kind from what it holds (a timeline makes it a video, a text a text), and nothing is rewritten.
 
 You can add a video to a text project later without starting over: it stays a text project and gains the video steps, and what was done stays done.
 

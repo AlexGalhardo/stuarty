@@ -217,7 +217,7 @@ func (s *svc) ProjectItemAdd(ctx context.Context, req ProjectItemAddRequest) (*P
 
 			// A project that has not chosen a kind takes the one it already reads as, or the one its first item
 			// decides, so that adding a video to a text keeps its steps (SDD-005 section 5.12.4).
-			chosen := project.KindToStore(head.Kind, coreItems(rows), project.Kind(req.Kind))
+			chosen := project.KindToStore(head.Kind, coreItems(rows), coreItems([]ItemRow{it})[0])
 
 			ids := slices.Insert(idsOf(rows), at, it.ID)
 			rows = append(rows, it)

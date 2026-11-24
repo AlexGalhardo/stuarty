@@ -53,8 +53,8 @@ func ParseKind(s string) (Intent, *RuleError) {
 
 // EffectiveKind is the kind a project reads as (SDD-005 section 5.12.4). A stored kind other than undecided
 // wins. Otherwise it comes from what the project holds, so that a project made before the kind existed is never
-// rewritten: an active timeline makes it a video, an active image an image, an active text a text, and a project
-// with only a brief, or nothing, stays undecided. A trashed item holds nothing.
+// rewritten: an active timeline makes it a video, an active image an image, an active text that is not a script a
+// text, and a project with only a brief or scripts, or nothing, stays undecided. A trashed item holds nothing.
 func EffectiveKind(stored Intent, items []Item) Intent {
 	if stored.Valid() && stored != KindUndecided {
 		return stored
@@ -76,11 +76,16 @@ func derivedKind(h holdings) Intent {
 	return KindUndecided
 }
 
-// KindOfItem is the kind a first item of this kind decides for a project that has none: a text makes it a text, a
-// timeline a video and an image an image. A brief, an output and a publication decide nothing.
-func KindOfItem(k Kind) Intent {
-	switch k {
+// KindOfItem is the kind an item decides for a project that has none: a text makes it a text, a timeline a video and
+// an image an image. A script decides nothing, since it may be the words of a video as well as a text (VV-394,
+// D-139), and neither do a brief, an output and a publication.
+func KindOfItem(it Item) Intent {
+	switch it.Kind {
 	case Text:
+		if it.TextKind == TextKindScript {
+			return KindUndecided
+		}
+
 		return KindText
 	case Timeline:
 		return KindVideo
@@ -92,10 +97,10 @@ func KindOfItem(k Kind) Intent {
 	return KindUndecided
 }
 
-// KindToStore is the kind a project that has none stored takes when an item of kind added joins it: what it
-// already reads as, so that a project that reads as a text and gets a timeline stays a text with its steps, and
-// otherwise what the new item decides. It is undecided when neither decides anything.
-func KindToStore(stored Intent, before []Item, added Kind) Intent {
+// KindToStore is the kind a project that has none stored takes when the item added joins it: what it already reads
+// as, so that a project that reads as a text and gets a timeline stays a text with its steps, and otherwise what the
+// new item decides. It is undecided when neither decides anything.
+func KindToStore(stored Intent, before []Item, added Item) Intent {
 	if stored.Valid() && stored != KindUndecided {
 		return stored
 	}
@@ -131,7 +136,10 @@ func holdingsOf(items []Item) holdings {
 		case Brief:
 			h.hasBrief = h.hasBrief || hasText(it.Text)
 		case Text:
-			h.texts++
+			if KindOfItem(*it) == KindText {
+				h.texts++ // the texts that decide the kind: a script does not
+			}
+
 			h.hasPost = h.hasPost || it.TextKind == TextKindPost
 
 			if it.TextKind != TextKindCaption && hasText(it.Text) {
