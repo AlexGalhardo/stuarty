@@ -101,8 +101,6 @@ export function SecretNote({
 	);
 }
 
-// An action that cannot be undone: removing deletes the secret and the history, and rotating makes the receiver refuse
-// every call until it holds the new secret. Both ask first.
 // The name of a webhook is text the caller wrote: inside a sentence it is isolated, as the rows of the page do, so
 // bidirectional controls cannot reorder what the person reads or confirms (SDD-007 section 8.5 item 3).
 export function NamedTitle({
@@ -123,6 +121,8 @@ export function NamedTitle({
 	);
 }
 
+// An action that cannot be undone: removing deletes the secret and the history, and rotating makes the receiver refuse
+// every call until it holds the new secret. Both ask first.
 export interface PendingAction {
 	kind: "remove" | "rotate";
 	id: string;
