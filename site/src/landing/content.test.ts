@@ -1,8 +1,9 @@
 // Checks the landing copy against the status column of docs/plans/00-roadmap.md (epic 88, task 4), and that the page
 // holds no testimonial, customer logo, invented number or award.
 import { describe, expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { shots } from "../../lib/landing-pages";
 import { agents, areas, path, privacy, roadmap, roadmapOnlyTerms, screenSlots, textProject, transparency } from "./content";
 import * as content from "./content";
 
@@ -87,12 +88,40 @@ describe("what the page never holds", () => {
 	});
 });
 
-describe("the slots of epic 79", () => {
-	test("each has a label and a descriptive alt text", () => {
+const publicLanding = resolve(import.meta.dir, "../../public/landing");
+const captureFiles = (base: string): string[] =>
+	["", "-960"].flatMap((size) => ["webp", "avif"].map((ext) => resolve(publicLanding, `${base.replace("/landing/", "")}${size}.${ext}`)));
+
+describe("the screens of epic 79", () => {
+	test("each has a label, a descriptive alt text and a capture in both themes", () => {
 		expect(Object.keys(screenSlots).sort()).toEqual(["briefing", "home", "projects"]);
 		for (const s of Object.values(screenSlots)) {
 			expect(s.label.length).toBeGreaterThan(8);
 			expect(s.alt.length).toBeGreaterThan(30);
+			expect(s.src, `${s.label} has no light capture`).toBeDefined();
+			expect(s.srcDark, `${s.label} has no dark capture`).toBeDefined();
 		}
+	});
+});
+
+describe("the product images", () => {
+	const bases = [
+		...Object.values(screenSlots).flatMap((s) => [s.src ?? "", s.srcDark ?? ""]),
+		...Object.values(shots).flatMap((s) => [s.src, `${s.src.replace(/-light$/, "")}-light`]),
+	];
+	test("every image exists as webp and avif at 1600 and 960 px", () => {
+		for (const base of new Set(bases)) for (const file of captureFiles(base)) expect(existsSync(file), `${file} is missing`).toBe(true);
+	});
+	test("every image is traced to a capture in CREDITS.txt, with the date of the capture", () => {
+		const credits = readFileSync(resolve(publicLanding, "CREDITS.txt"), "utf8");
+		for (const base of new Set(bases)) {
+			const name = base.replace("/landing/", "").replace(/-light$/, "");
+			expect(credits, `${name} is not in CREDITS.txt`).toMatch(new RegExp(`^${name}\\s.*\\d{4}-\\d{2}-\\d{2}$`, "m"));
+		}
+		expect(credits).not.toContain("2026-11-20");
+	});
+	test("the page says when the screenshots were captured and no longer says they are old", () => {
+		expect(content.capturedNote).toContain("24 November 2026");
+		expect(content.capturedNote.toLowerCase()).not.toContain("has changed since");
 	});
 });

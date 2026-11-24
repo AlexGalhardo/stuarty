@@ -49,7 +49,7 @@ None.
 
 - [x] 1. Confirm the gate: the scene bar and the workflow are in the integrated product. Verify: `git log` on the release branch shows epics 75, 76, 78 and 79 done in the roadmap. (Checked 2026-11-24 against `docs/plans/00-roadmap.md`: 75, 76, 78, 79 and 87 are DONE; 79 is merged in `393a257fa`.)
 - [x] 2. The page structure and copy. Verify: `cd site && bun run lint && bun run check:command-mentions` pass.
-- [ ] 3. Capture the real screens and update the credits. Verify: the images exist at both sizes and `task site:build` passes. (Waits for epic 79: the captures in `site/public/landing/` predate the redesigned shell; the home, projects and briefing slots take their images when 79 merges, and every screen is captured again in one pass. The credits state this.)
+- [x] 3. Capture the real screens and update the credits. Verify: the images exist at both sizes and `task site:build` passes. (Done 2026-11-24: every screen captured again in one pass from a local `stuarty serve` of the integrated product on an invented demo workspace; the home, projects and briefing slots now show their captures; `site/public/landing/CREDITS.txt` lists each image with its screen and date.)
 - [x] 4. The roadmap section with released and planned items correct. Verify: a test or check lists each claim against the roadmap status (`site/src/landing/content.test.ts`, in `bun run test:scripts`).
 - [x] 5. Widths, themes and motion. Verify: `task site:build` passes, with screenshots at 1440 and 390 px in both themes.
 

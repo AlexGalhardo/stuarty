@@ -22,21 +22,31 @@ export type Step = {
 	claims: Claim[];
 };
 
-/** The screens of epic 79 (home, projects, briefing): the page shows a named slot until their captures exist. */
+/**
+ * The screens of epic 79 (home, projects, briefing). Each has the captures of the released UI (`src` is the light one,
+ * `srcDark` the dark one, both under public/ without the size suffix and the extension); a screen with no capture
+ * would draw a named slot instead.
+ */
 export type ScreenSlotId = "home" | "projects" | "briefing";
 
-export const screenSlots: Record<ScreenSlotId, { label: string; alt: string }> = {
+export const screenSlots: Record<ScreenSlotId, { label: string; alt: string; src?: string; srcDark?: string }> = {
 	home: {
-		label: "The new Stuarty home",
-		alt: "The new Stuarty home: what needs you, your projects and a start for each kind of work.",
+		label: "The Stuarty home",
+		alt: "The Stuarty home: the project to continue with its steps, what waits for you and your projects, each with its kind.",
+		src: "/landing/dashboard-light",
+		srcDark: "/landing/dashboard",
 	},
 	projects: {
-		label: "The new projects page",
-		alt: "The new projects page: every project with its kind, its workflow and where it stands.",
+		label: "The projects page",
+		alt: "The projects page: a text, a video, an image and a project not decided yet, each as a card with its kind and when it was updated.",
+		src: "/landing/projects-light",
+		srcDark: "/landing/projects",
 	},
 	briefing: {
-		label: "The new guided briefing",
-		alt: "The new guided briefing: the questions that turn an idea into the brief of a project.",
+		label: "The guided briefing",
+		alt: "The briefing of a new project: its name, description and goal, answered before the project is created.",
+		src: "/landing/project-brief-light",
+		srcDark: "/landing/project-brief",
 	},
 };
 
@@ -218,10 +228,10 @@ export const roadmap = {
 		},
 		{
 			id: "screens",
-			title: "The redesigned screens",
-			text: "A new home, projects and briefing, writing, publishing and approvals, chat, skills and memory, and both editors, built on one design.",
+			title: "More redesigned screens",
+			text: "The writing, publishing and approvals screens and the image editor, redrawn on the same design as the home, the projects and the video editor.",
 			state: "planned",
-			epics: [79, 80, 82, 83, 85, 86],
+			epics: [80, 82, 86],
 		},
 		{
 			id: "metrics",
@@ -236,7 +246,7 @@ export const roadmap = {
 /** Words that name a roadmap-only feature: they must not appear in the copy outside `roadmap`. */
 export const roadmapOnlyTerms = ["recording", "record your", "teleprompter", "filler word", "transcript", "local model", "face-aware", "auto zoom", "automatic zoom"];
 
-export const credits = "Footage in the screenshots: Big Buck Bunny, (c) Blender Foundation, CC BY 3.0. Photo: CC0.";
+export const credits = "The pictures, clips and sounds in the screenshots were made for the demo. No real person, brand or number is shown.";
 
-/** The screenshots are real captures of the product, taken on this date; the interface has changed since. */
-export const capturedNote = "Screenshots are captures of Stuarty taken on 20 November 2026. The interface has changed since.";
+/** The screenshots are real captures of the released UI of a demo workspace, taken on this date. */
+export const capturedNote = "Screenshots are captures of Stuarty v0.52.0 taken on 24 November 2026, from a demo workspace.";

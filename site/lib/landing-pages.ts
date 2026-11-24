@@ -16,7 +16,7 @@ export type Shot = {
 export const shots = {
 	videoEditor: {
 		src: "/landing/video-editor",
-		alt: "The Stuarty video editor: a vertical Big Buck Bunny clip with the caption \"Your agent edits with you\", the media bin on the left, the project inspector on the right, and a timeline with caption, video, voice and music tracks.",
+		alt: "The Stuarty video editor on a demo project: a vertical clip with the caption \"Beans on the left, compost on the right\", the media bin on the left, the clip inspector on the right, and a timeline with caption, footage, voice and music tracks.",
 		width: 1600,
 		height: 1000,
 	},
@@ -28,7 +28,7 @@ export const shots = {
 	},
 	imageEditor: {
 		src: "/landing/image-editor",
-		alt: "The Stuarty image editor: a 1280 by 720 thumbnail of a mountain valley titled \"Make it. Ship it.\", the layers panel, the inspector, and a history where the last steps are signed local:claude.",
+		alt: "The Stuarty image editor: a 1280 by 720 thumbnail titled \"Garden open day\", the layers panel, the inspector of the selected title layer, and the history of the image.",
 		width: 1600,
 		height: 1000,
 	},
@@ -46,31 +46,31 @@ export const shots = {
 	},
 	agentChat: {
 		src: "/landing/agent-chat",
-		alt: "The agent chat panel beside a project: it hosts the agent you already use, Claude Code, Codex, OpenCode or Gemini CLI, with your own sign-in.",
+		alt: "The agent chat panel beside a project: it lists the agents Stuarty knows, Claude Code, Codex, OpenCode and Gemini CLI, and connects the one you already use, with your own sign-in.",
 		width: 1600,
 		height: 1000,
 	},
 	dashboardLight: {
 		src: "/landing/dashboard-light",
-		alt: "The Stuarty home in the light theme: the sections a user can open, from projects and the editors to publishing and connections.",
+		alt: "The Stuarty home in the light theme: the project to continue with its steps, what waits for you and your projects.",
 		width: 1600,
 		height: 1000,
 	},
 	dashboard: {
 		src: "/landing/dashboard",
-		alt: "The Stuarty home: projects, the video and image editors, writing, visual and video assets, publishing, skills, prompts, memory and connections.",
+		alt: "The Stuarty home: the project to continue with its steps, what waits for you, your projects and the sections of the studio.",
 		width: 1600,
 		height: 1000,
 	},
 	projects: {
 		src: "/landing/projects",
-		alt: "The Projects page: a form to create a project with its size (9:16, 1:1, 16:9 or 4:5) and the list of your projects.",
+		alt: "The Projects page: your projects as cards with their kind, a text, a video, an image or not decided yet, and a New project button.",
 		width: 1600,
 		height: 1000,
 	},
 	projectBrief: {
 		src: "/landing/project-brief",
-		alt: "The guided briefing of a project: who the video is for, its goal, the platform, the format, the length and the tone.",
+		alt: "The briefing of a new project: its name, description and goal, answered before the project is created.",
 		width: 1600,
 		height: 1000,
 	},
@@ -319,7 +319,7 @@ export const cta = {
 	secondary: { label: "View on GitHub" },
 };
 
-export const credits = "Footage: Big Buck Bunny, (c) Blender Foundation, CC BY 3.0. Photo: CC0.";
+export const credits = "The pictures, clips and sounds in the screenshots were made for the demo.";
 
 /** The six takes of the viewport version (brainstorming section 5.1). */
 export const takes = [
