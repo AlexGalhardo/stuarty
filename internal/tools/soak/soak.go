@@ -115,7 +115,8 @@ func (r Report) Markdown(bad []string) string {
 	fmt.Fprintf(&b, "# Soak %s\n\n", time.Now().UTC().Format("2006-01-02"))
 	fmt.Fprintf(&b, "%d commits, %d refused by the rules, run %s, sample every %s, baseline after %s, seed %d.\n\n",
 		r.Commits, r.Refused, r.Config.Duration, r.Config.Sample, r.Config.Warmup, r.Config.Seed)
-	b.WriteString("| At | Commits | Heap in use (MB) | Goroutines | Threads | Handles | Database (KB) | Unfinished jobs |\n")
+	b.WriteString("| At | Commits | Heap in use (MB) | Goroutines | Threads | Handles | " +
+		"Database (KB) | Unfinished jobs |\n")
 	b.WriteString("| --- | --- | --- | --- | --- | --- | --- | --- |\n")
 
 	for _, s := range r.Samples {
