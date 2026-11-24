@@ -260,7 +260,7 @@ func (g *Guard) Roots() []string { return slices.Clone(g.roots) }
 // OpenImport is steps 1 to 10: it returns the file opened for reading, which
 // the caller must close. Every later step uses the handle, never the path.
 func (g *Guard) OpenImport(path string) (*os.File, error) {
-	return g.open(path, false)
+	return g.open(path, nil)
 }
 
 // ownDirs are the folders of the workspace where the server itself writes the files it exports: project
@@ -272,11 +272,20 @@ var ownDirs = []string{"exports", "templates"}
 // A medium, a font and every other path of the workspace stay refused. It applies in local mode only: a
 // network server shows no path of its workspace, and its import roots are the rule.
 func (g *Guard) OpenExported(path string) (*os.File, error) {
-	return g.open(path, true)
+	return g.open(path, ownDirs)
 }
 
-func (g *Guard) open(path string, exported bool) (*os.File, error) {
-	resolved, root, before, err := g.locate(path, exported)
+// recordingDirs is the folder where the capture helper writes a screen recording (SDD-023). It holds no secret.
+var recordingDirs = []string{"recordings"}
+
+// OpenRecording is OpenImport for the file of a recording that a person confirmed: it also accepts a file
+// under recordings/ of the workspace, in local mode only. Only the service calls it, for a path it made itself.
+func (g *Guard) OpenRecording(path string) (*os.File, error) {
+	return g.open(path, recordingDirs)
+}
+
+func (g *Guard) open(path string, dirs []string) (*os.File, error) {
+	resolved, root, before, err := g.locate(path, dirs)
 	if err != nil {
 		return nil, err
 	}
@@ -290,7 +299,7 @@ func (g *Guard) open(path string, exported bool) (*os.File, error) {
 
 // locate is steps 1 to 9: it resolves the path, applies the rules of the workspace and of the import
 // roots, and returns the real path, the root it lies under ("" with no roots) and what it is.
-func (g *Guard) locate(path string, exported bool) (resolved, root string, before os.FileInfo, err error) {
+func (g *Guard) locate(path string, dirs []string) (resolved, root string, before os.FileInfo, err error) {
 	if _, err := Clean(path, g.goos); err != nil {
 		return "", "", nil, err
 	}
@@ -304,7 +313,7 @@ func (g *Guard) locate(path string, exported bool) (resolved, root string, befor
 		return "", "", nil, g.late(err)
 	}
 
-	ours := exported && g.exportedByUs(resolved)
+	ours := len(dirs) > 0 && g.exportedByUs(resolved, dirs)
 
 	if g.workspace != "" && g.within(g.workspace, resolved) && !ours {
 		return "", "", nil, g.late(refuse("the file lies inside the workspace.", hintInside))
@@ -351,7 +360,7 @@ func (g *Guard) openFile(resolved, root string, before os.FileInfo) (*os.File, e
 // workspace is accepted too, so an exported skill can be imported again. Every later read goes through the
 // handle, so a link swapped after the check cannot lead out of the folder.
 func (g *Guard) OpenImportPath(path string) (*os.File, *os.Root, error) {
-	resolved, root, before, err := g.locate(path, true)
+	resolved, root, before, err := g.locate(path, ownDirs)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -377,12 +386,12 @@ func (g *Guard) OpenImportPath(path string) (*os.File, *os.Root, error) {
 }
 
 // exportedByUs reports whether resolved lies under exports/ or templates/ of the workspace of a local server.
-func (g *Guard) exportedByUs(resolved string) bool {
+func (g *Guard) exportedByUs(resolved string, dirs []string) bool {
 	if g.network || g.workspace == "" {
 		return false
 	}
 
-	for _, d := range ownDirs {
+	for _, d := range dirs {
 		if g.within(filepath.Join(g.workspace, d), resolved) {
 			return true
 		}

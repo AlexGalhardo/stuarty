@@ -53,6 +53,8 @@ var Provenance = map[string]string{
 	"service.ImageImportResult.Text":       SourceProjectText,
 	"connections.Connection.Label":         SourceProjectText,
 	"service.Webhook.Name":                 SourceProjectText,
+	"service.RecordingSource.Name":         SourceMetadata,
+	"service.RecordingSourceInfo.Name":     SourceMetadata,
 	"service.ConnectionTestResult.Message": SourceNetworkText,
 	"approval.Request.Summary":             SourceProjectText,
 	"approval.Request.Reason":              SourceProjectText,

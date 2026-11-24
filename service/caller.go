@@ -110,6 +110,16 @@ var Scopes = map[string]string{
 	"JobList":             ScopeRead,
 	"JobCancel":           ScopeRender,
 
+	"RecordingSources": ScopeRead,
+	"RecordingStart":   ScopeMedia,
+	"RecordingStop":    ScopeMedia,
+	"RecordingCancel":  ScopeMedia,
+	"RecordingGet":     ScopeRead,
+	"RecordingList":    ScopeRead,
+	"RecordingConfirm": ScopeMedia,
+	"RecordingDismiss": ScopeMedia,
+	"RecordingPlace":   ScopeEdit,
+
 	"TemplateList":            ScopeRead,
 	"TemplateSave":            ScopeEdit,
 	"TemplateInstantiate":     ScopeEdit,

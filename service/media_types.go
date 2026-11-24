@@ -12,6 +12,10 @@ type ImportFile struct {
 	Path    string `json:"path,omitempty"`     // absolute
 	Hash    string `json:"hash,omitempty"`     // sha256:<64 hex> of a file of the library, in place of a path
 	AssetID string `json:"asset_id,omitempty"` // optional caller-chosen id; ignored for a duplicate
+
+	// recording is set only by RecordingConfirm: the file is one the server itself wrote under recordings/, which
+	// the path guard otherwise refuses as a file of the workspace (SDD-007 section 7.1). No request can set it.
+	recording bool
 }
 
 // AssetInfo is what an import says about the files it brings, beyond their origin (SDD-011 section 14.4).

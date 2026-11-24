@@ -221,7 +221,6 @@ The connection kinds of the blog destinations (SDD-020 §42): `blog_files`, `blo
 | `batch.committed` | a batch was committed | `revision`, `actor`, `diff`, `at` |
 | `project.updated` | project metadata outside the document changed (trash, restore) | `project_id`, `state` |
 | `nested.updated` | a timeline that this one uses as a composition, directly or through others, committed a batch (SDD-006 §3.3.1) | `project_id`, `timeline_id`, `revision`, `at` |
-| `recording.updated` | a recording changed state or review (never sent for a dismissed one, SDD-023 §4) | `recording_id`, `state`, `review` |
 | `asset.updated` | an asset's ingest state or progress changed, or its display name did (SDD-006 §3.4) | `asset_id`, `state`, `progress` |
 | `job.updated` | a job's state or progress changed | `job_id`, `kind`, `state`, `progress`, `message` |
 | `resync.required` | the client is too far behind to replay | `revision` |
@@ -322,7 +321,7 @@ The core's codes are in SDD-002 §A.8. The service adds:
 | `E_CHAT_NOT_FOUND` | the chat session does not exist, or the caller may not see its project (SDD-017 §11) | no |
 | `E_WEBHOOK_NOT_FOUND` | the webhook or the delivery does not exist (SDD-022 §8) | no |
 | `E_AGENT_UNAVAILABLE` | the hosted agent could not be started or opened; `details.reason` `not_found`, `start_failed`, `exited`, `timeout`, `protocol`, `protocol_version`, `no_http_mcp`, `sign_in_required`, `limit` (SDD-017 §11) | no |
-| `E_CAPTURE_UNAVAILABLE` | screen capture cannot run here: `details.reason` `platform` (not Windows), `web`, `network_mode`, `helper_missing` or `protocol_version` (SDD-023 §1) | no |
+| `E_CAPTURE_UNAVAILABLE` | screen capture cannot run here: `details.reason` `platform` (not Windows), `web`, `network_mode`, `ffmpeg_missing`, `helper_missing` or `protocol_version` (SDD-023 §1) | no |
 | `E_CAPTURE_FAILED` | a capture ended badly: `details.reason` `source_gone`, `unsupported`, `encoder_failed`, `io`, `helper_lost`, `no_frames` or `protocol` (SDD-023 §6, §10) | no |
 | `E_RECORDING_NOT_FOUND` | the recording does not exist, or the caller may not see it (a dismissed one, SDD-023 §4) | no |
 

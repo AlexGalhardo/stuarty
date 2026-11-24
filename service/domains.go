@@ -133,11 +133,21 @@ var OperationDomains = map[string]string{
 
 	// The approval queue is the gate of a publication and of a costly generation (ADR-0032); the cost summary and
 	// its ceilings are the spend on providers.
-	"ApprovalList":       command.DomainPublish,
-	"ApprovalGet":        command.DomainPublish,
-	"ApprovalDecide":     command.DomainPublish,
-	"ApprovalRuleList":   command.DomainPublish,
-	"ApprovalRuleSet":    command.DomainPublish,
+	"ApprovalList":     command.DomainPublish,
+	"ApprovalGet":      command.DomainPublish,
+	"ApprovalDecide":   command.DomainPublish,
+	"ApprovalRuleList": command.DomainPublish,
+	"ApprovalRuleSet":  command.DomainPublish,
+
+	"RecordingSources":   command.DomainAsset,
+	"RecordingStart":     command.DomainAsset,
+	"RecordingStop":      command.DomainAsset,
+	"RecordingCancel":    command.DomainAsset,
+	"RecordingGet":       command.DomainAsset,
+	"RecordingList":      command.DomainAsset,
+	"RecordingConfirm":   command.DomainAsset,
+	"RecordingDismiss":   command.DomainAsset,
+	"RecordingPlace":     command.DomainAsset,
 	"ApprovalRuleRemove": command.DomainPublish,
 	// The social networks a publication goes to, and the publication itself (SDD-020 section 9).
 	"SocialNetworkList":     command.DomainPublish,

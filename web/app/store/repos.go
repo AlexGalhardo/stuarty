@@ -13,6 +13,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/library"
 	"github.com/AlexGalhardo/stuarty/service/publish"
 	"github.com/AlexGalhardo/stuarty/service/publish/destinations"
+	"github.com/AlexGalhardo/stuarty/service/recordings"
 	"github.com/AlexGalhardo/stuarty/service/webhooks"
 
 	"github.com/AlexGalhardo/vukem/database"
@@ -44,6 +45,7 @@ func (r repos) Publications() publish.Store              { return publicationRep
 func (r repos) Blog() destinations.Store                 { return blogRepo(r) }
 func (r repos) Chat() agenthost.Store                    { return chatRepo(r) }
 func (r repos) Webhooks() webhooks.Store                 { return webhookRepo(r) }
+func (r repos) Recordings() recordings.Store             { return recordingRepo(r) }
 func (r repos) Accounts() account.Store                  { return accountRepo(r) }
 
 // nullJSON stores an empty raw message as NULL.

@@ -240,7 +240,12 @@ func (s *svc) importFile(
 			withHint("an asset id is ast_ and 10 characters from 0-9 and a-z, without i, l, o and u"))
 	}
 
-	file, err := s.media.Guard.OpenImport(f.Path)
+	open := s.media.Guard.OpenImport
+	if f.recording {
+		open = s.media.Guard.OpenRecording
+	}
+
+	file, err := open(f.Path)
 	if err != nil {
 		return refuse(s.withRootsHint(c, err))
 	}

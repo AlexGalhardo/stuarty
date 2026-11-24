@@ -14,6 +14,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/library"
 	"github.com/AlexGalhardo/stuarty/service/publish"
 	"github.com/AlexGalhardo/stuarty/service/publish/destinations"
+	"github.com/AlexGalhardo/stuarty/service/recordings"
 	"github.com/AlexGalhardo/stuarty/service/webhooks"
 )
 
@@ -90,6 +91,8 @@ type Repos interface {
 	Blog() destinations.Store
 	Chat() agenthost.Store
 	Webhooks() webhooks.Store
+	// Recordings is the screen recordings (SDD-005 section 5.18).
+	Recordings() recordings.Store
 }
 
 // Tx is a write transaction.
