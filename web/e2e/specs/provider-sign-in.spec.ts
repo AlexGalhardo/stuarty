@@ -339,7 +339,9 @@ test.describe("provider sign-in @chromium-only", () => {
 			await expect
 				.poll(() => fake.received.includes("POST /api/v1/auth/keys"))
 				.toBe(true);
-			await expect(page.getByRole("status")).toContainText("Finishing");
+			await expect(
+				page.getByRole("status").filter({ hasText: "Finishing" }),
+			).toBeVisible();
 			expect(new URL(page.url()).search).toBe("");
 			release();
 			await expect(page.locator("[data-signed-in]")).toBeVisible();
