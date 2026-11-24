@@ -245,6 +245,9 @@
             },
             "type": "array"
           },
+          "file_count": {
+            "type": "integer"
+          },
           "next_cursor": {
             "type": [
               "string",
@@ -257,6 +260,16 @@
           "total": {
             "type": "integer"
           },
+          "total_bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "total_size_text": {
+            "type": "string"
+          },
+          "unsized": {
+            "type": "integer"
+          },
           "untrusted_notice": {
             "type": "string"
           }
@@ -267,7 +280,10 @@
         "properties": {
           "bytes": {
             "format": "int64",
-            "type": "integer"
+            "type": [
+              "integer",
+              "null"
+            ]
           },
           "created_at": {
             "type": "string"
@@ -312,6 +328,12 @@
           },
           "reusable": {
             "type": "boolean"
+          },
+          "size_text": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
           },
           "tags": {
             "items": {
@@ -4316,7 +4338,10 @@
         "properties": {
           "bytes": {
             "format": "int64",
-            "type": "integer"
+            "type": [
+              "integer",
+              "null"
+            ]
           },
           "created_at": {
             "type": "string"
@@ -4363,6 +4388,12 @@
           },
           "reusable": {
             "type": "boolean"
+          },
+          "size_text": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
           },
           "tags": {
             "items": {

@@ -86,6 +86,8 @@ func (s *svc) heldFile(ctx context.Context, c Caller, in string) (assets.Held, s
 
 	for i := range held {
 		if held[i].Hash == hash {
+			s.checkStored(&held[i])
+
 			return held[i], hash, nil
 		}
 	}

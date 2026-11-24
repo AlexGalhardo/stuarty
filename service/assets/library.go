@@ -48,7 +48,9 @@ type LibraryAsset struct {
 	Hash        string       `json:"hash"`
 	Name        string       `json:"name"                  untrusted:"true"` // the name it was first imported under
 	Kind        string       `json:"kind"`
-	Bytes       int64        `json:"bytes"`
+	Bytes       *int64       `json:"bytes"`     // null when the size is unknown (importing or missing)
+	SizeText    string       `json:"size_text"` // "4.3 GB"; empty when the size is unknown (SDD-011 section 14.9)
+	State       string       `json:"state"`     // ready, importing, missing or failed
 	Width       int          `json:"width,omitempty"`
 	Height      int          `json:"height,omitempty"`
 	DurationMS  int64        `json:"duration_ms,omitempty"`
@@ -63,13 +65,22 @@ type LibraryAsset struct {
 	Uses        []Use        `json:"uses,omitempty"`
 }
 
+// The states of an entry (SDD-011 section 14.9).
+const (
+	StateReady     = "ready"
+	StateImporting = "importing"
+	StateMissing   = "missing"
+	StateFailed    = "failed"
+)
+
 // Held is a file of the workspace the caller may see: the facts of the asset row and the rows of the
 // timelines that use it (state active), their production already resolved.
 type Held struct {
 	Hash       string
 	Name       string
 	MediaKind  string
-	Bytes      int64
+	Bytes      *int64 // nil when the size is unknown
+	State      string // ready, importing, missing or failed; empty counts as ready
 	Width      int
 	Height     int
 	DurationMS int64
@@ -104,6 +115,8 @@ type Page struct {
 	Assets []LibraryAsset
 	Total  int
 	Next   int
+	// Size is what every file that matched weighs, each hash once, not only the page (SDD-011 section 14.9).
+	Size asset.Total
 }
 
 func stamp(ms int64) string {
@@ -137,9 +150,14 @@ func base(h *Held, row Row) LibraryAsset {
 		}
 	}
 
+	state := h.State
+	if state == "" {
+		state = StateReady
+	}
+
 	return LibraryAsset{
-		Poster: poster,
-		Hash:   h.Hash, Name: h.Name, Kind: h.MediaKind, Bytes: h.Bytes, Width: h.Width, Height: h.Height,
+		Poster: poster, SizeText: asset.FormatSize(h.Bytes), State: state,
+		Hash: h.Hash, Name: h.Name, Kind: h.MediaKind, Bytes: h.Bytes, Width: h.Width, Height: h.Height,
 		DurationMS: h.DurationMS, Origin: row.Origin, Description: row.Description, Reusable: row.Reusable,
 		Tags: tags, CreatedBy: row.CreatedBy, CreatedAt: stamp(row.CreatedMs),
 		Projects: len(asset.Uses(h.Holdings)),
@@ -230,7 +248,12 @@ func (l *Library) List(ctx context.Context, held []Held, q *Query) (Page, error)
 		return cmp.Or(strings.Compare(a.Name, b.Name), strings.Compare(a.Hash, b.Hash))
 	})
 
-	page := Page{Total: len(kept), Next: -1}
+	sizes := make([]asset.SizeItem, len(kept))
+	for i, h := range kept {
+		sizes[i] = asset.SizeItem{Hash: h.Hash, Bytes: h.Bytes}
+	}
+
+	page := Page{Total: len(kept), Next: -1, Size: asset.TotalOf(sizes)}
 	start := min(max(q.Offset, 0), len(kept))
 	end := len(kept)
 
