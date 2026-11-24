@@ -516,18 +516,22 @@ func (s *svc) settleRecording(
 		case readable:
 			// The helper failed but left a file that plays: keep what was written (NFR-068).
 			r.State, r.Review = string(recording.Ready), string(recording.ReviewPending)
-			r.StopReason, r.ErrorCode, r.ErrorMessage = "recovered", CodeCaptureFailed, failedMessage(failed)
+			r.StopReason, r.ErrorCode, r.ErrorMessage = "recovered", CodeCaptureFailed, failedMessage(failed, ierr)
 		default:
 			r.State, r.Review = string(recording.Failed), ""
-			r.ErrorCode, r.ErrorMessage = CodeCaptureFailed, failedMessage(failed)
+			r.ErrorCode, r.ErrorMessage = CodeCaptureFailed, failedMessage(failed, ierr)
 		}
 
 		return nil
 	})
 }
 
-func failedMessage(f *capturehost.Failed) string {
+func failedMessage(f *capturehost.Failed, readErr error) string {
 	if f == nil {
+		if readErr != nil {
+			return "the file could not be read: " + recording.CleanLabel(readErr.Error(), 500)
+		}
+
 		return "the recording has no frame"
 	}
 
