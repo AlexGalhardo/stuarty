@@ -4951,6 +4951,16 @@
               }
             ]
           },
+          "fillers": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TranscriptDetectResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "kind": {
             "type": "string"
           },
@@ -5018,6 +5028,16 @@
           },
           "untrusted_notice": {
             "type": "string"
+          },
+          "words": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TranscriptViewResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object"
@@ -5538,7 +5558,8 @@
               "track.move",
               "track.remove",
               "track.set_caption_style",
-              "track.update"
+              "track.update",
+              "transcript.delete_range"
             ],
             "minLength": 1,
             "type": "string"
@@ -5803,6 +5824,9 @@
           },
           "track.update": {
             "$ref": "#/components/schemas/args.track.update"
+          },
+          "transcript.delete_range": {
+            "$ref": "#/components/schemas/args.transcript.delete_range"
           }
         }
       },
@@ -8959,6 +8983,39 @@
         },
         "type": "object"
       },
+      "TranscriptDetectResult": {
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "rule": {
+            "type": "string"
+          },
+          "suggestions": {
+            "items": {
+              "$ref": "#/components/schemas/TranscriptSuggestion"
+            },
+            "type": "array"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "TranscriptLine": {
         "properties": {
           "end_ms": {
@@ -8967,6 +9024,95 @@
           },
           "start_ms": {
             "format": "int64",
+            "type": "integer"
+          },
+          "text": {
+            "type": "string",
+            "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
+      "TranscriptSuggestion": {
+        "properties": {
+          "end_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "from_word": {
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "start_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "strength": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "to_word": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "TranscriptViewResult": {
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "skipped_items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "words": {
+            "items": {
+              "$ref": "#/components/schemas/TranscriptWord"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "TranscriptWord": {
+        "properties": {
+          "end": {
+            "type": "integer"
+          },
+          "index": {
+            "type": "integer"
+          },
+          "ranges": {
+            "items": {
+              "$ref": "#/components/schemas/transcript.Range"
+            },
+            "type": "array"
+          },
+          "start": {
             "type": "integer"
           },
           "text": {
@@ -9157,9 +9303,21 @@
             "type": "string",
             "x-untrusted": true
           },
+          "suggestions": {
+            "items": {
+              "$ref": "#/components/schemas/TranscriptSuggestion"
+            },
+            "type": "array"
+          },
           "transcript": {
             "items": {
               "$ref": "#/components/schemas/TranscriptLine"
+            },
+            "type": "array"
+          },
+          "words": {
+            "items": {
+              "$ref": "#/components/schemas/TranscriptWord"
             },
             "type": "array"
           }
@@ -14430,6 +14588,40 @@
         ],
         "type": "object"
       },
+      "args.transcript.delete_range": {
+        "additionalProperties": false,
+        "properties": {
+          "asset_id": {
+            "description": "A video asset with audio, or an audio asset, that was transcribed.",
+            "pattern": "^ast_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "from_word": {
+            "description": "Index of the first word to remove, in the transcript of the asset.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "new_ids": {
+            "description": "Ids for the new pieces, in order of cut.",
+            "items": {
+              "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "to_word": {
+            "description": "Index of the last word to remove, inclusive.",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "asset_id",
+          "from_word",
+          "to_word"
+        ],
+        "type": "object"
+      },
       "errs.Issue": {
         "properties": {
           "code": {
@@ -14643,6 +14835,23 @@
           "scheduled": {
             "description": "The targets that still have to go out: approved, scheduled and publishing.",
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "transcript.Range": {
+        "properties": {
+          "end": {
+            "type": "integer"
+          },
+          "item_id": {
+            "type": "string"
+          },
+          "start": {
+            "type": "integer"
+          },
+          "track_id": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -25934,6 +26143,164 @@
           }
         ],
         "summary": "List the revisions of a text, and compare two"
+      }
+    },
+    "/api/v1/projects/{id}/transcript": {
+      "get": {
+        "operationId": "projects.transcript",
+        "parameters": [
+          {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The asset whose transcript to read.",
+            "in": "query",
+            "name": "asset_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Fillers only: the longest gap between the two copies of a repetition, in milliseconds. Default 700.",
+            "in": "query",
+            "name": "repeat_window_ms",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptViewResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read the words of an asset with the timeline range of each"
+      }
+    },
+    "/api/v1/projects/{id}/transcript/fillers": {
+      "get": {
+        "operationId": "projects.transcript_fillers",
+        "parameters": [
+          {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The asset whose transcript to read.",
+            "in": "query",
+            "name": "asset_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Fillers only: the longest gap between the two copies of a repetition, in milliseconds. Default 700.",
+            "in": "query",
+            "name": "repeat_window_ms",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptDetectResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Find the filler words and repetitions of an asset, and change nothing"
       }
     },
     "/api/v1/projects/{id}/trash": {

@@ -88,6 +88,13 @@ var parity = []row{
 	{method: "Doctor", command: "doctor", route: "GET /system"},
 	{method: "SnapPoints", route: "GET /projects/{}/snap-points", httpOnly: true},
 	{method: "FontList", command: "fonts", route: "GET /fonts"},
+	// Edit by text (SDD-023): the two reads are sections of media_inspect for an agent; the cut is the command
+	// transcript.delete_range of the edit tool.
+	{method: "TranscriptView", tool: "media_inspect", command: "transcript:show", route: "GET /projects/{}/transcript"},
+	{
+		method: "TranscriptDetectFillers", tool: "media_inspect", command: "transcript:fillers",
+		route: "GET /projects/{}/transcript/fillers",
+	},
 	{method: "AssetList", tool: "media_inspect", command: "asset:list", route: "GET /assets"},
 	{method: "AssetGet", tool: "media_inspect", command: "asset:show", route: "GET /assets/{}"},
 	{method: "AssetUses", command: "asset:uses", route: "GET /assets/{}/uses"},

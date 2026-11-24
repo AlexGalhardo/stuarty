@@ -1768,6 +1768,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `available` | array of `string` | no |  |
 | `beats` | [`BeatGrid`](/docs/api/schemas#beatgrid) or `any` or `null` or `null` | no |  |
 | `error` | [`Error`](/docs/api/schemas#error) or `any` or `null` or `null` | no |  |
+| `fillers` | [`TranscriptDetectResult`](/docs/api/schemas#transcriptdetectresult) or `any` or `null` or `null` | no |  |
 | `kind` | `string` | no |  |
 | `loudness` | [`Loudness`](/docs/api/schemas#loudness) or `any` or `null` or `null` | no |  |
 | `next_cursor` | `string` or `null` | no |  |
@@ -1779,6 +1780,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `text` | `string` | no |  |
 | `untrusted` | [`UntrustedData`](/docs/api/schemas#untrusteddata) or `any` or `null` or `null` | no |  |
 | `untrusted_notice` | `string` | no |  |
+| `words` | [`TranscriptViewResult`](/docs/api/schemas#transcriptviewresult) or `any` or `null` or `null` | no |  |
 
 ### MediaListResult
 
@@ -1951,7 +1953,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `args` | map of `any` | no | The arguments of the command. |
-| `op` | `string`, one of 85 values | yes | A command name, as listed by GET /commands.. min length 1 |
+| `op` | `string`, one of 86 values | yes | A command name, as listed by GET /commands.. min length 1 |
 
 ### Option
 
@@ -3247,12 +3249,69 @@ The types named in the tables of the operations. The arguments of each editing c
 | `language` | `string` | no |  |
 | `words` | `integer` | no |  |
 
+### transcript.Range
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `end` | `integer` | no |  |
+| `item_id` | `string` | no |  |
+| `start` | `integer` | no |  |
+| `track_id` | `string` | no |  |
+
+### TranscriptDetectResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `asset_id` | `string` | no |  |
+| `language` | `string` | no |  |
+| `project_id` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `rule` | `string` | no |  |
+| `suggestions` | array of [`TranscriptSuggestion`](/docs/api/schemas#transcriptsuggestion) | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+
 ### TranscriptLine
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `end_ms` | `integer (int64)` | no |  |
 | `start_ms` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+
+### TranscriptSuggestion
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `end_ms` | `integer (int64)` | no |  |
+| `from_word` | `integer` | no |  |
+| `kind` | `string` | no |  |
+| `start_ms` | `integer (int64)` | no |  |
+| `strength` | `string` | no |  |
+| `text` | `string` | no |  |
+| `to_word` | `integer` | no |  |
+
+### TranscriptViewResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `asset_id` | `string` | no |  |
+| `language` | `string` | no |  |
+| `project_id` | `string` | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `skipped_items` | array of `string` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+| `words` | array of [`TranscriptWord`](/docs/api/schemas#transcriptword) | no |  |
+
+### TranscriptWord
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `end` | `integer` | no |  |
+| `index` | `integer` | no |  |
+| `ranges` | array of [`transcript.Range`](/docs/api/schemas#transcriptrange) | no |  |
+| `start` | `integer` | no |  |
 | `text` | `string` | no |  |
 
 ### Transition
@@ -3313,7 +3372,9 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `metadata` | map of `string` | no |  |
 | `name` | `string` | no |  |
+| `suggestions` | array of [`TranscriptSuggestion`](/docs/api/schemas#transcriptsuggestion) | no |  |
 | `transcript` | array of [`TranscriptLine`](/docs/api/schemas#transcriptline) | no |  |
+| `words` | array of [`TranscriptWord`](/docs/api/schemas#transcriptword) | no |  |
 
 ### Use
 

@@ -151,7 +151,7 @@ type MediaInspectRequest struct {
 	ProjectID  string   `json:"project_id"`
 	TimelineID string   `json:"timeline_id,omitempty"` // SDD-003 section 1.7
 	AssetID    string   `json:"asset_id"`
-	Sections   []string `json:"sections,omitempty"` // default ["probe"]: probe, transcript, silences, loudness
+	Sections   []string `json:"sections,omitempty"` // default ["probe"]: probe, transcript, silences, loudness, beats, words, fillers
 	MinSilence string   `json:"min_silence,omitempty"`
 	Page
 }
@@ -186,26 +186,34 @@ type UntrustedData struct {
 	Metadata map[string]string `json:"metadata,omitempty" untrusted:"true"`
 	// Transcript is one page of the transcript, when the section was asked for.
 	Transcript []TranscriptLine `json:"transcript,omitempty"`
+	// Words and Suggestions answer the sections words and fillers: the text of a word comes from the media, so
+	// the words and the suggestions are here and the summaries in the result carry none.
+	Words       []TranscriptWord       `json:"words,omitempty"`
+	Suggestions []TranscriptSuggestion `json:"suggestions,omitempty"`
 }
 
 // MediaInspectResult answers MediaInspect. An asset that is not ready answers
 // with its state and progress instead of an error.
 type MediaInspectResult struct {
 	Envelope
-	AssetID    string         `json:"asset_id"`
-	Kind       string         `json:"kind"`
-	State      string         `json:"state"`
-	Progress   float64        `json:"progress"`
-	Available  []string       `json:"available"`
-	Strip      *Strip         `json:"strip,omitempty"`
-	Probe      *ProbeSummary  `json:"probe,omitempty"`
-	Silences   []TimeRange    `json:"silences,omitempty"`
-	Loudness   *Loudness      `json:"loudness,omitempty"`
-	Beats      *BeatGrid      `json:"beats,omitempty"`
-	Untrusted  *UntrustedData `json:"untrusted,omitempty"`
-	Error      *Error         `json:"error,omitempty"`
-	NextCursor *string        `json:"next_cursor"`
-	Text       string         `json:"text"`
+	AssetID   string        `json:"asset_id"`
+	Kind      string        `json:"kind"`
+	State     string        `json:"state"`
+	Progress  float64       `json:"progress"`
+	Available []string      `json:"available"`
+	Strip     *Strip        `json:"strip,omitempty"`
+	Probe     *ProbeSummary `json:"probe,omitempty"`
+	Silences  []TimeRange   `json:"silences,omitempty"`
+	Loudness  *Loudness     `json:"loudness,omitempty"`
+	Beats     *BeatGrid     `json:"beats,omitempty"`
+	// Words and Fillers answer the sections of that name: the transcript with the timeline range of each word,
+	// and the filler words and repetitions to review (SDD-023).
+	Words      *TranscriptViewResult   `json:"words,omitempty"`
+	Fillers    *TranscriptDetectResult `json:"fillers,omitempty"`
+	Untrusted  *UntrustedData          `json:"untrusted,omitempty"`
+	Error      *Error                  `json:"error,omitempty"`
+	NextCursor *string                 `json:"next_cursor"`
+	Text       string                  `json:"text"`
 }
 
 // FileRef names a stored file for download (SDD-003 section 2.9).

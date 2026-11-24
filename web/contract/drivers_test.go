@@ -175,6 +175,10 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.MotionBrief)
 	case "MotionCheck":
 		return invoke(ctx, s, svc.MotionCheck)
+	case "TranscriptView":
+		return invoke(ctx, s, svc.TranscriptView)
+	case "TranscriptDetectFillers":
+		return invoke(ctx, s, svc.TranscriptDetectFillers)
 	case "MotionReplace":
 		return invoke(ctx, s, svc.MotionReplace)
 	case "Doctor":
@@ -633,6 +637,16 @@ func toolCall(s step) (tool string, args map[string]any, err error) {
 	case "MediaList":
 		return "media_inspect", args, nil
 	case "MediaInspect":
+		return "media_inspect", args, nil
+	case "TranscriptView":
+		args["sections"] = []string{"words"}
+
+		return "media_inspect", args, nil
+	case "TranscriptDetectFillers":
+		delete(args, "repeat_window_ms")
+
+		args["sections"] = []string{"fillers"}
+
 		return "media_inspect", args, nil
 	case "JobStart":
 		return "job_start", args, nil
@@ -1248,6 +1262,10 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		argv = append(argv, flag("until", a.Until)...)
 
 		return "motion:check", append(argv, flag("track", a.TrackID)...), "", nil
+	case "TranscriptView":
+		return "transcript:show", append(slices.Clone(proj), flag("asset", a.AssetID)...), "", nil
+	case "TranscriptDetectFillers":
+		return "transcript:fillers", append(slices.Clone(proj), flag("asset", a.AssetID)...), "", nil
 	case "MotionReplace":
 		argv = append(slices.Clone(proj), flag("asset", a.AssetID)...)
 		argv = append(argv, flag("render-key", a.RenderKey)...)

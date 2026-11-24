@@ -705,6 +705,7 @@ var analysisOps = map[string]bool{
 	"clip.remove_silences":     true,
 	"caption.from_transcript":  true,
 	"caption.retime_from_clip": true,
+	"transcript.delete_range":  true,
 	"audio.duck":               true,
 	"audio.mark_beats":         true,
 }

@@ -266,3 +266,34 @@ func (h *apiHandler) systemGet(c *web.Ctx, in systemIn) (service.DoctorResult, e
 
 	return deref(res), err
 }
+
+type transcriptIn struct {
+	ID         string `json:"id"                         validate:"required"`
+	TimelineID string `json:"timeline_id,omitempty"                          doc:"The timeline of the project; required when the project has several."`
+	AssetID    string `json:"asset_id"                   validate:"required" doc:"The asset whose transcript to read."`
+	RepeatMS   int64  `json:"repeat_window_ms,omitempty"                     doc:"Fillers only: the longest gap between the two copies of a repetition, in milliseconds. Default 700."`
+}
+
+// transcriptView is GET /projects/{id}/transcript (SDD-023 section 5).
+func (h *apiHandler) transcriptView(c *web.Ctx, in transcriptIn) (service.TranscriptViewResult, error) {
+	res, err := h.Service.TranscriptView(
+		c.Context(), service.TranscriptViewRequest{ProjectID: in.ID, TimelineID: in.TimelineID, AssetID: in.AssetID},
+	)
+	if res != nil {
+		revisionHeader(c, res.Revision)
+	}
+
+	return deref(res), err
+}
+
+// transcriptFillers is GET /projects/{id}/transcript/fillers (SDD-023 section 4).
+func (h *apiHandler) transcriptFillers(c *web.Ctx, in transcriptIn) (service.TranscriptDetectResult, error) {
+	res, err := h.Service.TranscriptDetectFillers(c.Context(), service.TranscriptDetectRequest{
+		ProjectID: in.ID, TimelineID: in.TimelineID, AssetID: in.AssetID, RepeatWindowMS: in.RepeatMS,
+	})
+	if res != nil {
+		revisionHeader(c, res.Revision)
+	}
+
+	return deref(res), err
+}

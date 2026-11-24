@@ -292,6 +292,14 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.SnapPoints(ctx, service.SnapPointsRequest{ProjectID: "prj_0000000001"})
 			return err
 		},
+		"TranscriptView": func() error {
+			_, err := e.svc.TranscriptView(ctx, service.TranscriptViewRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"TranscriptDetectFillers": func() error {
+			_, err := e.svc.TranscriptDetectFillers(ctx, service.TranscriptDetectRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
 		"FontList": func() error {
 			_, err := e.svc.FontList(ctx, service.FontListRequest{})
 			return err

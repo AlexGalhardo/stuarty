@@ -39,7 +39,7 @@ func (s *svc) resolveOps(
 		switch ops[i].Op {
 		case "clip.remove_silences":
 			resolved, rerr = s.resolveSilences(ctx, tx, s.viewFor(doc, ops, out, i), &ops[i], i)
-		case "caption.from_transcript", "caption.retime_from_clip":
+		case "caption.from_transcript", "caption.retime_from_clip", "transcript.delete_range":
 			resolved, rerr = s.resolveWords(ctx, tx, s.viewFor(doc, ops, out, i), &ops[i], i)
 		case "audio.duck":
 			resolved, rerr = s.resolveSpeech(ctx, tx, s.viewFor(doc, ops, out, i), &ops[i], i)
@@ -130,6 +130,7 @@ func (s *svc) viewFor(doc *timeline.Document, ops, resolvedSoFar []command.Opera
 type opArgs struct {
 	ItemID        string          `json:"item_id"`
 	ClipItemID    string          `json:"clip_item_id"`
+	AssetID       string          `json:"asset_id"`
 	SpeechItemIDs []string        `json:"speech_item_ids"`
 	ThresholdDB   *int            `json:"threshold_db"`
 	Resolved      json.RawMessage `json:"resolved"`
@@ -263,7 +264,15 @@ func (s *svc) resolveWords(
 		return nil, nil //nolint:nilnil // nothing to resolve
 	}
 
+	// transcript.delete_range names the asset; the captions commands name a clip of it.
+	subject := a.ClipItemID
 	asset, ok := clipAsset(doc, a.ClipItemID)
+
+	if op.Op == "transcript.delete_range" {
+		subject = a.AssetID
+		asset, ok = doc.Assets[a.AssetID]
+	}
+
 	if !ok {
 		return nil, nil //nolint:nilnil // the command answers E_NOT_FOUND
 	}
@@ -273,7 +282,7 @@ func (s *svc) resolveWords(
 		return nil, asError(err)
 	}
 
-	if e := noSound(index, a.ClipItemID, asset, "transcript"); e != nil {
+	if e := noSound(index, subject, asset, "transcript"); e != nil {
 		return nil, e
 	}
 

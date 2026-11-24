@@ -2494,6 +2494,47 @@ Example:
 stuarty motion:replace --project prj_7k2m9x4q1b --asset ast_k8m2n4p6q9
 ```
 
+## `transcript:show`
+
+The words of an asset with the timeline range of each, to cut by word range with transcript.delete_range
+
+```text
+stuarty transcript:show --project <id> --asset <ast_id>
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--asset` | string |  | the asset whose transcript to read, transcribed first (required) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty transcript:show --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d
+```
+
+## `transcript:fillers`
+
+The filler words and repetitions of an asset to review; it changes nothing
+
+```text
+stuarty transcript:fillers --project <id> --asset <ast_id> [--repeat-window ms]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--asset` | string |  | the asset whose transcript to check, transcribed first (required) |
+| `--repeat-window` | integer |  | the longest gap between the two copies of a repetition, in milliseconds (default 700) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty transcript:fillers --project prj_7k2m9x4q1b --asset ast_3c5v8n2w6d
+```
+
 ## `agent:profiles`
 
 List the agents the chat may host, with their full command, and the known agents found on this machine

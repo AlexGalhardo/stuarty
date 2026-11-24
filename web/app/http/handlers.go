@@ -426,6 +426,8 @@ func (h *apiHandler) registerAll() {
 	})
 	register(h, "jobs.file", h.jobsFile)
 	register(h, "projects.snap_points", h.snapPoints)
+	register(h, "projects.transcript", h.transcriptView)
+	register(h, "projects.transcript_fillers", h.transcriptFillers)
 	register(h, "fonts.list", h.fontList)
 	register(h, "assets.list", h.assetList)
 	register(h, "assets.get", h.assetGet)

@@ -700,6 +700,34 @@ func (c *Client) SnapPoints(ctx context.Context, req service.SnapPointsRequest) 
 	return get[service.SnapPointsResult](ctx, c, projectPath(req.ProjectID, "/snap-points"), q)
 }
 
+// TranscriptView implements service.Service.
+func (c *Client) TranscriptView(
+	ctx context.Context,
+	req service.TranscriptViewRequest,
+) (*service.TranscriptViewResult, error) {
+	ctx = withTimeline(ctx, req.TimelineID)
+	q := url.Values{}
+	q.Set("asset_id", req.AssetID)
+
+	return get[service.TranscriptViewResult](ctx, c, projectPath(req.ProjectID, "/transcript"), q)
+}
+
+// TranscriptDetectFillers implements service.Service.
+func (c *Client) TranscriptDetectFillers(
+	ctx context.Context,
+	req service.TranscriptDetectRequest,
+) (*service.TranscriptDetectResult, error) {
+	ctx = withTimeline(ctx, req.TimelineID)
+	q := url.Values{}
+	q.Set("asset_id", req.AssetID)
+
+	if req.RepeatWindowMS != 0 {
+		q.Set("repeat_window_ms", strconv.FormatInt(req.RepeatWindowMS, 10))
+	}
+
+	return get[service.TranscriptDetectResult](ctx, c, projectPath(req.ProjectID, "/transcript/fillers"), q)
+}
+
 // FontList implements service.Service.
 func (c *Client) FontList(ctx context.Context, _ service.FontListRequest) (*service.FontListResult, error) {
 	return get[service.FontListResult](ctx, c, "/fonts", nil)

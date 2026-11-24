@@ -60,7 +60,7 @@ Names are proposals until task 1 writes them to SDD-000 and SDD-002.
 - [x] 3. The word-to-range mapping, including multi-clip timelines and speed changes. Verify: `go test ./core/...` passes.
 - [x] 4. `transcript.delete_range`, undoable. Verify: `go test ./core/...` passes.
 - [x] 5. Filler and repetition detection. Verify: `go test ./core/...` on the labelled fixture.
-- [ ] 6. Adapters with parity. Verify: `go test ./web/...` and `go run ./internal/tools/surfacebudget` pass.
+- [x] 6. Adapters with parity. Verify: `go test ./web/...` and `go run ./internal/tools/surfacebudget` pass.
 - [ ] 7. The transcript panel with review before removal. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n`, `task test:web` and `bun run e2e` pass.
 
 ## Test strategy

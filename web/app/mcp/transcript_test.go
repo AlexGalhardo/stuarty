@@ -284,3 +284,65 @@ func TestInspectionSectionsGolden(t *testing.T) {
 	golden(t, "media_inspect_silences_long.golden", textOf(t, inspectSections(t, cs, project, asset,
 		map[string]any{"min_silence": "1s"}, "silences")))
 }
+
+// The sections words and fillers of media_inspect (SDD-023): the words with their timeline ranges and the suggestions to
+// review, both under `untrusted`, and nothing in the project changes by asking.
+func TestMediaInspectWordsAndFillers(t *testing.T) {
+	t.Parallel()
+
+	words := []transcribe.RawWord{
+		{Text: "So", StartMS: 0, EndMS: 250},
+		{Text: "um", StartMS: 300, EndMS: 600},
+		{Text: "go", StartMS: 700, EndMS: 1000},
+		{Text: "go", StartMS: 1050, EndMS: 1300},
+	}
+	env := testenv.New(t, testenv.Options{Transcriber: &testenv.StubTranscriber{Words: words}, DurationMS: 2000})
+	cs := connect(t, env.Service, Options{}, "claude-code")
+	project, asset := transcribed(t, cs, env)
+
+	added := ok(t, call(t, cs, "edit", map[string]any{
+		"project_id": project, "base_revision": 0, "operations": []any{
+			map[string]any{"op": "track.add", "args": map[string]any{"kind": "visual", "id": "trk_2k3m4n5p6q"}},
+			map[string]any{"op": "clip.add", "args": map[string]any{
+				"track_id": "trk_2k3m4n5p6q", "asset_id": asset, "start": "0s", "duration": "2s",
+			}},
+		},
+	}))
+	revision := structured(t, added)["revision"]
+
+	res := inspectSections(t, cs, project, asset, nil, "words", "fillers")
+	body := structured(t, res)
+	un, _ := body["untrusted"].(map[string]any)
+
+	listed, _ := un["words"].([]any)
+	if len(listed) != 4 {
+		t.Fatalf("untrusted.words = %v", un["words"])
+	}
+
+	um, _ := listed[1].(map[string]any)
+	if um["text"] != "um" || len(um["ranges"].([]any)) != 1 {
+		t.Errorf("the word um = %v", um)
+	}
+
+	suggested, _ := un["suggestions"].([]any)
+	if len(suggested) != 2 {
+		t.Fatalf("untrusted.suggestions = %v", un["suggestions"])
+	}
+
+	if w, _ := body["words"].(map[string]any); len(w["words"].([]any)) != 0 || w["language"] != "en" {
+		t.Errorf("the summary of the words holds text or lacks the language: %v", body["words"])
+	}
+
+	if f, _ := body["fillers"].(map[string]any); f["rule"] == "" || len(f["suggestions"].([]any)) != 0 {
+		t.Errorf("the summary of the fillers = %v", body["fillers"])
+	}
+
+	for _, problem := range testenv.UntrustedTextProblems(textOf(t, res)) {
+		t.Error(problem)
+	}
+
+	after, _ := structured(t, ok(t, call(t, cs, "project_get", map[string]any{"project_id": project})))["revision"].(float64)
+	if before, _ := revision.(float64); after != before {
+		t.Errorf("asking changed the revision from %v to %v", before, after)
+	}
+}
