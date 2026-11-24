@@ -40,19 +40,21 @@ const (
 )
 
 // Row is one request, whichever flow it came from. agent, skill, tool, summary, item and
-// destination are text an agent wrote and are untrusted. A row never carries a credential.
+// destination are text an agent wrote and are untrusted: the result of the service carries the
+// notice of SDD-007 section 8, and no surface wraps them in a block because none is for an agent
+// (the provenance table lists what an agent reads). A row never carries a credential.
 type Row struct {
 	ID          string          `json:"id"`
 	Source      Source          `json:"source"`
 	SourceID    string          `json:"source_id"`
 	State       State           `json:"state"`
-	Agent       string          `json:"agent"       untrusted:"true"`
-	Skill       string          `json:"skill"       untrusted:"true"`
-	Tool        string          `json:"tool"        untrusted:"true"`
-	Summary     string          `json:"summary"     untrusted:"true"`
+	Agent       string          `json:"agent"`
+	Skill       string          `json:"skill"`
+	Tool        string          `json:"tool"`
+	Summary     string          `json:"summary"`
 	ActionKey   string          `json:"action_key"`
-	Item        string          `json:"item"        untrusted:"true"`
-	Destination string          `json:"destination" untrusted:"true"`
+	Item        string          `json:"item"`
+	Destination string          `json:"destination"`
 	Cost        *approval.Money `json:"cost"`
 	Undoable    bool            `json:"undoable"`
 	ProjectID   string          `json:"project_id"`
