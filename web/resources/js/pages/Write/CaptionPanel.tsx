@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useT } from "@/lib/i18n";
 import type { CaptionValidateResult, WritingClient } from "./client";
 import { keyed } from "./keyed";
+import Panel from "./Panel";
 import { CHECK_DELAY_MS } from "./ScriptPanel";
 
 const KNOWN_UNITS = ["bytes", "characters", "utf16_units", "weighted"];
@@ -53,17 +54,12 @@ export default function CaptionPanel({
 	}, [client, projectId, body]);
 
 	return (
-		<section
-			aria-labelledby="caption-heading"
-			className="flex flex-col gap-2"
-			data-testid="caption-panel"
+		<Panel
+			title={t("ui.write.caption.heading")}
+			description={t("ui.write.caption.hint")}
+			testId="caption-panel"
+			headingId="caption-heading"
 		>
-			<h3 id="caption-heading" className="font-medium">
-				{t("ui.write.caption.heading")}
-			</h3>
-			<p className="text-xs text-muted-foreground">
-				{t("ui.write.caption.hint")}
-			</p>
 			<FailureNote failure={failure} />
 			<div role="status" aria-live="polite" className="flex flex-col gap-3">
 				{report === null && failure === null && (
@@ -138,6 +134,6 @@ export default function CaptionPanel({
 					},
 				)}
 			</div>
-		</section>
+		</Panel>
 	);
 }

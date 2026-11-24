@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useT } from "@/lib/i18n";
 import type { PostCheckResult, WritingClient } from "./client";
 import { keyed } from "./keyed";
+import Panel from "./Panel";
 import MarkdownPreview from "./Preview";
 
 // The check of a blog post (SDD-019 sections 11 and 13): the problems the core found in the saved text, the images it
@@ -49,15 +50,12 @@ export default function PostPanel({
 	}, [client, projectId, itemId, revision]);
 
 	return (
-		<section
-			aria-labelledby="post-heading"
-			className="flex flex-col gap-3"
-			data-testid="post-panel"
+		<Panel
+			title={t("ui.write.post.heading")}
+			description={t("ui.write.post.hint")}
+			testId="post-panel"
+			headingId="post-heading"
 		>
-			<h3 id="post-heading" className="font-medium">
-				{t("ui.write.post.heading")}
-			</h3>
-			<p className="text-xs text-muted-foreground">{t("ui.write.post.hint")}</p>
 			{dirty && (
 				<p role="status" className="text-xs text-muted-foreground">
 					{t("ui.write.post.unsaved")}
@@ -165,6 +163,6 @@ export default function PostPanel({
 			<p className="text-xs text-muted-foreground">
 				{t("ui.write.post.publish_hint")}
 			</p>
-		</section>
+		</Panel>
 	);
 }

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
 import type { ScriptEstimateResult, WritingClient } from "./client";
 import { keyed } from "./keyed";
+import Panel from "./Panel";
 
 // The pause between the last keystroke and the question to the service.
 export const CHECK_DELAY_MS = 400;
@@ -64,15 +65,12 @@ export default function ScriptPanel({
 	}, [client, projectId, body, pace]);
 
 	return (
-		<section
-			aria-labelledby="script-heading"
-			className="flex flex-col gap-2"
-			data-testid="script-panel"
+		<Panel
+			title={t("ui.write.script.heading")}
+			testId="script-panel"
+			headingId="script-heading"
 		>
-			<h3 id="script-heading" className="font-medium">
-				{t("ui.write.script.heading")}
-			</h3>
-			<div className="flex items-center gap-2">
+			<div className="flex flex-wrap items-center gap-2">
 				<Label htmlFor="script-pace">{t("ui.write.script.pace")}</Label>
 				<Input
 					id="script-pace"
@@ -137,6 +135,6 @@ export default function ScriptPanel({
 					</ul>
 				</>
 			)}
-		</section>
+		</Panel>
 	);
 }
