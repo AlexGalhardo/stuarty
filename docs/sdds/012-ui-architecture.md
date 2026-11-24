@@ -575,6 +575,8 @@ flowchart LR
 
 The timeline toolbar is the one place of the zoom controls (`-`, `+`, `Fit`, and the slider). The 9:16 sizes below assume this layout.
 
+**The scene bar in the editor (epic 85).** When the bootstrap of the page carries `session` (`{privileged}`, the same value the shared prop of the dashboard pages carries), the shell adds a fourth row of its own height under the timeline and mounts there the scene bar of §23.4: the same component, over the same chat session of the project (`EditorSceneBar`, which holds the streams only while the tab is on the screen). The row is 56 px; the timeline keeps its stored size and the preview gives way. Allow and Deny send the call the chat panel sends, so a permission is answered without leaving the editor. Without `session` no row is drawn. The catalogue of the page then also holds `ui.shell.scene.`, `ui.chat.`, `ui.agent_activity.` and `ui.session.`. The editor text goes down to 12 px (`text-xs`) and never below.
+
 CSS grid of the shell: rows `48px 1fr var(--timeline-h)`, columns `var(--library-w) 1fr var(--inspector-w)`; the timeline spans all three columns; the top bar spans all columns. Splitters are focusable separators (`role="separator"`, `aria-orientation`, arrow keys resize by 16 px) implemented with Pointer Events in `ui/Splitter.tsx`. Sizes persist through `prefs.ts`.
 
 ### 6.2 Top bar
@@ -634,6 +636,7 @@ The library region keeps its width (§6.3) and gets a vertical tab rail of 40 px
 | Effects | the effect list served by the core | the effect commands (card NEW-18 of TASK-0232) | needs command |
 | Transitions | the transition kinds served by the core, grouped as the core groups them | `item.set_transition`, `item.crossfade` | exists (few kinds; more with the card NEW-16) |
 | Filters | the filter names served by the core, with an amount slider | `clip.set_filter` | exists |
+| Animation | the hand-off from an external motion engine (epic 85, D-137): the brief of a range and track, the reminder to render on the person's own side, the import of the rendered file with its origin, the check against the brief and the offer to replace an earlier render of the same key. The product never installs or runs the engine | `clip.replace_media` (the tab is drawn only with it), and over HTTP `MotionBrief`, `MediaImport` with the origin, `MotionCheck`, `MotionReplace` (SDD-011 §15) | exists |
 | Templates | the slots of the project and the template info | `slot.fill`, `slot.mark`, `template.set_info` | exists |
 | History | the history panel of §15 | `undo`, `redo` and the history endpoints | exists |
 
