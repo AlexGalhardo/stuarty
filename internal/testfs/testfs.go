@@ -26,7 +26,8 @@ const limit = 30 * time.Second
 func TempDir(tb testing.TB) string {
 	tb.Helper()
 
-	dir, err := os.MkdirTemp("", folderName(tb.Name())+"-")
+	// Not tb.TempDir: its own removal does not retry the error this package exists for.
+	dir, err := os.MkdirTemp("", folderName(tb.Name())+"-") //nolint:usetesting // see above
 	if err != nil {
 		tb.Fatal(err)
 	}
