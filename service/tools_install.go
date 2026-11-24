@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/engine/aihost"
 	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 	"github.com/AlexGalhardo/stuarty/engine/transcribe"
 )
@@ -45,6 +46,10 @@ type Tools struct {
 	// OpenH264 pins the Cisco library of the own FFmpeg build; the embedded manifest when it has no
 	// entries. Its hosts are not those of Manifest: the client of the install is built over both.
 	OpenH264 ffmpeg.OpenH264Manifest
+	// Face pins the local AI helper, the ONNX Runtime library and the face model (SDD-024 section 3).
+	// The zero value means this build offers no face tracking; its hosts are joined to the client of
+	// the install like those of the other manifests.
+	Face aihost.Manifest
 }
 
 const installedFile = "installed.json"
@@ -59,9 +64,10 @@ type ToolsInstallRequest struct {
 
 // ToolFile is one file of an install, with what it costs.
 type ToolFile struct {
-	Name  string `json:"name"`
-	Bytes int64  `json:"bytes"`
-	Host  string `json:"host"`
+	Name    string `json:"name"`
+	Bytes   int64  `json:"bytes"`
+	Host    string `json:"host"`
+	License string `json:"license,omitempty"`
 }
 
 // ToolsInstallResult is the answer of the install call: it announces the size
@@ -89,11 +95,13 @@ type ToolsStatusRequest struct{}
 // ToolsStatusResult is what is installed and how a running install is going.
 type ToolsStatusResult struct {
 	Installed []InstalledTool `json:"installed"`
-	State     string          `json:"state"` // "idle", "running" or "failed"
-	Done      int64           `json:"done_bytes"`
-	Total     int64           `json:"total_bytes"`
-	Error     *Error          `json:"error,omitempty"`
-	Text      string          `json:"text"`
+	// Offers are the install sets besides the transcription helper, with their size and licences.
+	Offers []ToolOffer `json:"offers"`
+	State  string      `json:"state"` // "idle", "running" or "failed"
+	Done   int64       `json:"done_bytes"`
+	Total  int64       `json:"total_bytes"`
+	Error  *Error      `json:"error,omitempty"`
+	Text   string      `json:"text"`
 }
 
 // toolsState is the progress of the one install that may run at a time.
@@ -178,6 +186,10 @@ func (s *svc) ToolsInstall(ctx context.Context, req ToolsInstallRequest) (*Tools
 
 	if req.Name == ffmpeg.OpenH264Tool {
 		return s.installOpenH264(ctx, c)
+	}
+
+	if req.Name == aihost.SetName {
+		return s.installFace(ctx, c, req.Force)
 	}
 
 	model := req.Model
@@ -271,7 +283,11 @@ func (s *svc) ToolsStatus(ctx context.Context, _ ToolsStatusRequest) (*ToolsStat
 		return nil, err
 	}
 
-	res := &ToolsStatusResult{State: "idle", Installed: []InstalledTool{}}
+	res := &ToolsStatusResult{State: "idle", Installed: []InstalledTool{}, Offers: []ToolOffer{}}
+
+	if offer := s.faceOffer(); offer != nil {
+		res.Offers = append(res.Offers, *offer)
+	}
 
 	// The list is read under the lock: the install records each file before it
 	// clears running under the same lock, so an idle answer lists every file.

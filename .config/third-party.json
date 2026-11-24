@@ -172,6 +172,30 @@
     "shipped_in": []
   },
   {
+    "group": "programs",
+    "name": "ONNX Runtime",
+    "version": "1.24.4 (DirectML build)",
+    "spdx": "MIT",
+    "copyright": "Copyright (c) Microsoft Corporation",
+    "files": [
+      "licenses/programs/onnxruntime/LICENSE"
+    ],
+    "note": "the library the local AI helper loads (ADR-0050, SDD-024); the person downloads it from the Microsoft.ML.OnnxRuntime.DirectML package on request, it is never in an archive or an image; its own third-party notices ship inside that package",
+    "shipped_in": []
+  },
+  {
+    "group": "programs",
+    "name": "YuNet face model",
+    "version": "face_detection_yunet_2023mar",
+    "spdx": "MIT",
+    "copyright": "Copyright (c) 2020 Shiqi Yu <shiqi.yu@gmail.com>",
+    "files": [
+      "licenses/programs/yunet/LICENSE"
+    ],
+    "note": "model weights downloaded by the person on request (ADR-0050, SDD-024); the licence of the data it was trained on is separate and its risk was accepted by the author (ADR-0050 section 7)",
+    "shipped_in": []
+  },
+  {
     "group": "vendored",
     "name": "golang.org/x/image/vector (rasterizer, floating-point path)",
     "version": "v0.23.0",

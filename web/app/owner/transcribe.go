@@ -7,6 +7,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/AlexGalhardo/stuarty/engine/aihost"
 	"github.com/AlexGalhardo/stuarty/engine/ffmpeg"
 	"github.com/AlexGalhardo/stuarty/engine/transcribe"
 	"github.com/AlexGalhardo/stuarty/internal/outbound"
@@ -48,12 +49,17 @@ func InstallTools(workspaceDir string) (*service.Tools, error) {
 		return nil, err
 	}
 
-	// One client downloads for both manifests, over the union of their hosts; each manifest may
+	face, err := aihost.DefaultManifest()
+	if err != nil {
+		return nil, err
+	}
+
+	// One client downloads for the three manifests, over the union of their hosts; each manifest may
 	// name only its own (SDD-007 section 6.8).
-	hosts := slices.Concat(manifest.Hosts, openh264.Hosts)
+	hosts := slices.Concat(manifest.Hosts, openh264.Hosts, face.Hosts)
 
 	return &service.Tools{
-		Dir: filepath.Join(workspaceDir, "tools"), Manifest: manifest, OpenH264: openh264,
+		Dir: filepath.Join(workspaceDir, "tools"), Manifest: manifest, OpenH264: openh264, Face: face,
 		Client: outbound.HelperDownload(hosts, installTimeout),
 	}, nil
 }

@@ -61,7 +61,7 @@ Names are proposals until task 1 writes them to SDD-000.
 - [x] 1. SDD-024, SDD-000 and SDD-007. Verify: `task lint:md` and `go run ./internal/tools/threatcheck` exit 0.
 - [x] 2. Spike: YuNet through ONNX Runtime on the reference machine, CPU and DirectML. Verify: frames per second and detection rate on a fixture in `docs/perf/`.
 - [x] 3. The helper and `engine/aihost`, with a fake model. Verify: `go test ./engine/aihost/...` passes.
-- [ ] 4. The model manifest, install and verification. Verify: tests for a wrong hash, an interrupted download and no download without request.
+- [x] 4. The model manifest, install and verification. Verify: tests for a wrong hash, an interrupted download and no download without request.
 - [ ] 5. The tracking and framing rules. Verify: `go test ./core/...` with golden tracks.
 - [ ] 6. The `face_track` job and the cut proposals. Verify: `go test ./service/...` passes.
 - [ ] 7. Adapters with parity. Verify: `go test ./web/...` and `go run ./internal/tools/surfacebudget` pass.
