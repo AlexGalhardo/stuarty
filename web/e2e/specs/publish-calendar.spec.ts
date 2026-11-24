@@ -199,6 +199,8 @@ test.describe("publishing calendar @chromium-only", () => {
 		request,
 	}) => {
 		test.setTimeout(240_000);
+		// A title of this run only: a home reused by an earlier run still holds the posts that run made.
+		const title = `Calendar post ${randomBytes(3).toString("hex")}`;
 		const network = await fakeNetwork();
 		try {
 			await signInAsPerson(page);
@@ -221,7 +223,7 @@ test.describe("publishing calendar @chromium-only", () => {
 			const dialog = page.getByTestId("publication-editor");
 			await dialog.getByLabel("Project").selectOption(made.project_id);
 			await dialog.getByLabel("Exported video").selectOption({ index: 1 });
-			await dialog.getByLabel("Title", { exact: true }).fill("Calendar post");
+			await dialog.getByLabel("Title", { exact: true }).fill(title);
 			await dialog.getByLabel("Caption").fill("A caption for the week");
 			await dialog.getByRole("button", { name: "Add an account" }).click();
 			const panel = dialog.getByTestId("target-panel");
@@ -252,11 +254,9 @@ test.describe("publishing calendar @chromium-only", () => {
 			// The post is on today's cell of the calendar, in words as well as in colour.
 			// Only the chip of this post: other specs (x-tiktok) plan publications in the same workspace at the
 			// same time.
-			const chip = page
-				.getByTestId("target-chip")
-				.filter({ hasText: "Calendar post" });
+			const chip = page.getByTestId("target-chip").filter({ hasText: title });
 			await expect(chip).toHaveCount(1);
-			await expect(chip).toContainText("Calendar post");
+			await expect(chip).toContainText(title);
 			await expect(chip).toContainText("Waiting for approval");
 
 			const publications = (await api(
@@ -271,10 +271,8 @@ test.describe("publishing calendar @chromium-only", () => {
 			await page.goto("/approvals");
 			const item = page
 				.locator("[data-approval-id]")
-				.filter({ hasText: "Calendar post" });
-			await expect(item.getByTestId("approval-summary")).toContainText(
-				"Calendar post",
-			);
+				.filter({ hasText: title });
+			await expect(item.getByTestId("approval-summary")).toContainText(title);
 			await item.getByRole("button", { name: "Approve" }).click();
 			await expect(item).toHaveCount(0);
 			expect(network.uploads()).toBe(0);
