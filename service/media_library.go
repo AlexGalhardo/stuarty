@@ -116,6 +116,12 @@ func (s *svc) reuseFile(
 		return refuse(gerr)
 	}
 
+	// A file the library lists as missing from the store cannot be used: the project that took it would hold an
+	// asset with no media behind it (SDD-011 section 14.9).
+	if ar.IngestState == IngestReady && s.originalMissing(hash) {
+		return refuse(fileMissing())
+	}
+
 	name := ar.OriginalName
 	if scoped {
 		name = scopedName

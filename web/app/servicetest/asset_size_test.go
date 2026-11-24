@@ -145,6 +145,40 @@ func TestAssetLibraryAFileMissingFromTheStoreIsListedAsMissing(t *testing.T) {
 	}
 }
 
+// A file missing from the store cannot be added to another project from the library: the project would hold an
+// asset with no media behind it. The refusal names no path.
+func TestAssetLibraryAFileMissingFromTheStoreCannotBeUsedInAProject(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	ctx := m.as(ui)
+	first := m.newProject("first")
+	second := m.newProject("second")
+
+	lost := m.importOne(first, m.write("lost.mp4", clipBytes)).Assets[0].Hash
+	m.removeStored(lost)
+
+	res, err := m.svc.MediaImport(ctx, service.MediaImportRequest{
+		ProjectID: second, Files: []service.ImportFile{{Hash: lost}},
+	})
+	// A call whose every file is refused answers with the error of the file.
+	refusal, ok := errors.AsType[*service.Error](err)
+	if err == nil && len(res.Assets) == 1 {
+		refusal, ok = res.Assets[0].Error, res.Assets[0].Error != nil
+	}
+
+	if !ok || refusal.Code != "E_FILE_NOT_FOUND" {
+		t.Fatalf("reuse of a missing file = %+v, %v; want E_FILE_NOT_FOUND", res, err)
+	}
+
+	if strings.Contains(refusal.Message, m.ws) || strings.Contains(refusal.Hint, m.ws) {
+		t.Errorf("the refusal names a path: %+v", refusal)
+	}
+
+	list, err := m.svc.AssetList(ctx, service.AssetListRequest{Project: second})
+	if err != nil || len(list.Assets) != 0 {
+		t.Errorf("the second project holds %v, %v; want nothing", assetIDs(list), err)
+	}
+}
+
 // A file still importing is listed with no size until it is ready.
 func TestAssetLibraryAFileStillImportingHasNoSizeUntilItIsReady(t *testing.T) {
 	m := newMediaEnv(t, mediaCfg{noQueue: true})
