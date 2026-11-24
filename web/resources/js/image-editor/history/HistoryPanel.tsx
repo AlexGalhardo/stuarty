@@ -1,3 +1,4 @@
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { type ReactNode, useState } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
@@ -21,20 +22,40 @@ export default function HistoryPanel(): ReactNode {
 	const head = useImage((s) => s.doc?.revision ?? 0);
 	const [target, setTarget] = useState<RevertTarget | null>(null);
 	const [compare, setCompare] = useState<number | null>(null);
+	// Open by default; closing it gives the inspector the room (the list stays in the document, hidden).
+	const [open, setOpen] = useState(true);
 
 	return (
 		<section
 			aria-labelledby="image-history-title"
 			data-testid="image-history"
-			className="flex h-72 shrink-0 flex-col border-t"
+			className={cn(
+				"flex shrink-0 flex-col border-t border-border bg-ed-panel",
+				open && "h-72",
+			)}
 		>
-			<h2
-				id="image-history-title"
-				className="border-b px-3 py-2 text-sm font-semibold"
-			>
-				{t("ui.image.history.title")}
+			<h2 id="image-history-title" className="m-0 text-sm font-semibold">
+				<button
+					type="button"
+					aria-expanded={open}
+					aria-controls="image-history-body"
+					data-testid="image-history-toggle"
+					className="flex w-full items-center gap-1 px-3 py-2 text-left hover:bg-surface-hover"
+					onClick={() => setOpen((was) => !was)}
+				>
+					{open ? (
+						<ChevronDown aria-hidden="true" className="size-4 shrink-0" />
+					) : (
+						<ChevronRight aria-hidden="true" className="size-4 shrink-0" />
+					)}
+					{t("ui.image.history.title")}
+				</button>
 			</h2>
-			<div className="min-h-0 flex-1 overflow-y-auto">
+			<div
+				id="image-history-body"
+				hidden={!open}
+				className="min-h-0 flex-1 overflow-y-auto border-t border-border"
+			>
 				<CheckpointsSection onRevert={setTarget} />
 				{compare !== null && (
 					<DiffView from={compare} onClose={() => setCompare(null)} />

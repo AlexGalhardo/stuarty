@@ -3,6 +3,7 @@ import { type ReactNode, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import type {
+	Adjust,
 	CurvePoint,
 	Filter,
 	FilterKind,
@@ -214,6 +215,12 @@ function LutFields({
 	);
 }
 
+// How many adjustments the layer carries: the read model lists only those that differ from neutral, so the
+// number of its members is what the section header says (a count of what is listed, not a result).
+export function adjustCount(adjust: Adjust | undefined): number {
+	return Object.values(adjust ?? {}).filter((v) => v !== undefined).length;
+}
+
 function AdjustFields({ layer }: { layer: Layer }): ReactNode {
 	const t = useT();
 	const send = useImage((s) => s.send);
@@ -224,7 +231,15 @@ function AdjustFields({ layer }: { layer: Layer }): ReactNode {
 		send([{ op: "layer.adjust", args: { layer_id: layer.id, ...args } }]);
 
 	return (
-		<Section title={t("ui.image.look.adjust")} testId="image-adjust-fields">
+		<Section
+			title={t("ui.image.look.adjust")}
+			testId="image-adjust-fields"
+			badge={
+				adjustCount(layer.adjust) === 0
+					? undefined
+					: t("ui.image.look.badge_set", { count: adjustCount(layer.adjust) })
+			}
+		>
 			<div className="grid grid-cols-2 gap-2">
 				{ADJUST_KEYS.map((key) => (
 					<NumberField
@@ -307,7 +322,15 @@ function FilterFields({ layer }: { layer: Layer }): ReactNode {
 		send([{ op, args: { layer_id: layer.id, ...args } }]);
 
 	return (
-		<Section title={t("ui.image.look.filters")} testId="image-filter-fields">
+		<Section
+			title={t("ui.image.look.filters")}
+			testId="image-filter-fields"
+			badge={
+				filters.length === 0
+					? undefined
+					: t("ui.image.look.badge_set", { count: filters.length })
+			}
+		>
 			{filters.length === 0 && (
 				<p className="text-xs text-muted-foreground">
 					{t("ui.image.look.filters_none")}
@@ -513,7 +536,13 @@ function MaskFields({
 		send((d) => maskChange(d, layer.id, patch));
 
 	return (
-		<Section title={t("ui.image.look.mask")} testId="image-mask-fields">
+		<Section
+			title={t("ui.image.look.mask")}
+			testId="image-mask-fields"
+			badge={
+				mask === undefined ? undefined : t(`ui.image.look.mask_${mask.kind}`)
+			}
+		>
 			<SelectField
 				label={t("ui.image.look.mask_kind")}
 				value={kind}

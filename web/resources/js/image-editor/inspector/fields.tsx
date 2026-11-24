@@ -1,3 +1,4 @@
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -355,26 +356,56 @@ export function ColorField({
 	);
 }
 
+// A section of the inspector, in the language of the video editor: a header button that opens and closes the
+// body (`aria-expanded`), a rule between sections, and an optional badge that says in a word what the section
+// already holds (a mask, two filters), so it is found without opening it. The body stays in the document when
+// closed, hidden, so a field keeps its draft.
 export function Section({
 	title,
 	children,
 	testId,
+	badge,
+	defaultOpen = true,
 }: {
 	title: string;
 	children: ReactNode;
 	testId?: string;
+	badge?: string;
+	defaultOpen?: boolean;
 }): ReactNode {
 	const id = useId();
+	const bodyId = useId();
+	const [open, setOpen] = useState(defaultOpen);
+	const Chevron = open ? ChevronDown : ChevronRight;
 	return (
 		<section
 			aria-labelledby={id}
 			data-testid={testId}
-			className="flex flex-col gap-2 border-b p-3"
+			className="flex flex-col gap-2 border-b border-border pb-3 last:border-b-0 last:pb-0"
 		>
-			<h3 id={id} className="text-xs font-semibold uppercase tracking-wide">
-				{title}
+			<h3 id={id} className="m-0 text-sm font-semibold">
+				<button
+					type="button"
+					aria-expanded={open}
+					aria-controls={bodyId}
+					className="flex h-8 w-full items-center gap-1 rounded-sm text-left hover:bg-surface-hover"
+					onClick={() => setOpen((was) => !was)}
+				>
+					<Chevron aria-hidden="true" className="size-4 shrink-0" />
+					<span className="min-w-0 flex-1 truncate">{title}</span>
+					{badge !== undefined && (
+						<span
+							data-testid="image-section-badge"
+							className="rounded-full bg-muted px-2 text-xs font-medium text-muted-foreground"
+						>
+							{badge}
+						</span>
+					)}
+				</button>
 			</h3>
-			{children}
+			<div id={bodyId} hidden={!open} className="flex flex-col gap-2 pl-1">
+				{children}
+			</div>
 		</section>
 	);
 }
