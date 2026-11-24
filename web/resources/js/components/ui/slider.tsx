@@ -83,7 +83,7 @@ function Slider({
             index={index}
             key={index}
             getAriaLabel={ariaLabel ? () => ariaLabel : undefined}
-            className="relative block size-6 shrink-0 rounded-full before:absolute before:inset-1 before:rounded-full before:border-2 before:border-accent before:bg-text-on-accent transition-[color,box-shadow] select-none focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50"
+            className="relative block size-6 shrink-0 rounded-full before:absolute before:inset-1 before:rounded-full before:border-2 before:border-accent before:bg-text-on-accent transition-[color,box-shadow] select-none disabled:pointer-events-none disabled:opacity-50"
           />
         ))}
       </SliderPrimitive.Control>

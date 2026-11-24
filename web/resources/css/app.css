@@ -394,6 +394,9 @@
 	--muted-foreground: var(--color-text-muted);
 	--accent: var(--color-accent);
 	--accent-foreground: var(--color-text-on-accent);
+	--success: var(--color-success);
+	--warning: var(--color-warning);
+	--agent: var(--color-agent);
 	/* destructive is used as text and as a tint, so it takes the text variant of danger */
 	--destructive: var(--color-danger-text);
 	--border: var(--color-border);
@@ -495,7 +498,9 @@
  * over Tailwind's utilities: a solid 2 px outline in --color-focus on
  * everything focusable. Narrow the selector if needed, never weaken the outline.
  */
-:where(a, button, input, select, textarea, summary, [tabindex], [contenteditable="true"], [data-slot]):focus-visible {
+:where(a, button, input, select, textarea, summary, [tabindex], [contenteditable="true"], [data-slot]):focus-visible,
+/* A slider takes the focus on a hidden input inside its thumb, so the thumb draws the ring. */
+[data-slot="slider-thumb"]:has(input:focus-visible) {
 	outline: 2px solid var(--color-focus);
 	outline-offset: 2px;
 }
