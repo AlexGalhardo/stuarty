@@ -3973,7 +3973,44 @@
     },
     "write": {
       "title": "Escrever",
-      "intro": "Roteiros, textos, legendas e posts de blog das suas produções, escritos por você ou com um modelo. Cada salvamento é uma revisão à qual você pode voltar.",
+      "intro": "Textos, posts de blog, roteiros e legendas dos seus projetos, escritos por você ou com um modelo. Cada salvamento é uma revisão à qual você pode voltar.",
+      "meta": {
+        "words": {
+          "one": "{count} palavra",
+          "other": "{count} palavras"
+        },
+        "reading": "{minutes} min de leitura",
+        "revision": "revisão {revision}"
+      },
+      "flow": {
+        "label": "Caminho deste projeto",
+        "optional": "opcional",
+        "step": {
+          "briefing": "Briefing",
+          "choice": "Escolher",
+          "script": "Roteiro",
+          "writing": "Escrever",
+          "recording": "Gravar",
+          "editing": "Editar",
+          "finishing": "Finalizar",
+          "review": "Revisar",
+          "approval": "Aprovar",
+          "publication": "Publicar"
+        },
+        "actor": {
+          "person": "Você faz",
+          "agent": "O agente faz",
+          "both": "Você ou o agente"
+        },
+        "state": {
+          "done": "feito",
+          "current": "agora",
+          "waiting": "espera você",
+          "upcoming": "a seguir",
+          "skipped": "pulado",
+          "unknown": "não se sabe"
+        }
+      },
       "filter": {
         "project": "Projeto",
         "kind": "Tipo",
@@ -4001,12 +4038,18 @@
         "loading": "Carregando.",
         "failed": "Não foi possível carregar os textos.",
         "empty": "Nenhum texto ainda.",
+        "empty_hint": "Um texto é um post, uma cópia, um roteiro ou uma legenda. Crie um para começar a escrever.",
+        "no_match": "Nenhum texto corresponde.",
+        "no_match_hint": "Mude o projeto ou o tipo acima para ver mais.",
+        "retry": "Tentar de novo",
         "row": "Revisão {revision}, {words} palavras",
         "more": "Mais",
         "in_project": "em {project}"
       },
       "pick": "Escolha um texto ou crie um novo.",
+      "pick_hint": "O texto abre aqui, com as revisões, as verificações e o que o agente pode fazer.",
       "editor": {
+        "review": "Revisar",
         "title": "Título",
         "body": "Texto (Markdown)",
         "tab_edit": "Escrever",

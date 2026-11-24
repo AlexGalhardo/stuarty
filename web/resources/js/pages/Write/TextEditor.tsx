@@ -7,6 +7,8 @@ import {
 } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { LoadingState } from "@/components/LoadingState";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,8 +17,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
 import { useUnsavedGuard } from "@/lib/unsaved";
 import CaptionPanel from "./CaptionPanel";
-import type { TextGetResult, WritingClient } from "./client";
+import type {
+	ProjectFlow,
+	TextGetResult,
+	WriteProject,
+	WritingClient,
+} from "./client";
 import DraftPanel from "./DraftPanel";
+import FlowPath from "./FlowPath";
+import { primaryAction, readingMinutes } from "./meta";
 import PostPanel from "./PostPanel";
 import MarkdownPreview from "./Preview";
 import RevisionsPanel from "./RevisionsPanel";
@@ -24,16 +33,19 @@ import ScriptPanel from "./ScriptPanel";
 
 // One text (SDD-019 section 11): a plain Markdown editor with a preview, the panels of its kind, the revisions and
 // the draft with a model. Saving makes a revision and says its number; the revision the person read goes back
-// with the text, so a write made after someone else's is refused and the person decides.
+// with the text, so a write made after someone else's is refused and the person decides. There is one primary
+// action at a time: Save while the text has unsaved changes, then Review.
 export default function TextEditor({
 	client,
 	projectId,
 	itemId,
+	project,
 	onChanged,
 }: {
 	client: WritingClient;
 	projectId: string;
 	itemId: string;
+	project: WriteProject | undefined;
 	onChanged: () => void;
 }): ReactNode {
 	const t = useT();
@@ -44,6 +56,8 @@ export default function TextEditor({
 	const [notice, setNotice] = useState<string | null>(null);
 	const [conflict, setConflict] = useState<number | null>(null);
 	const [busy, setBusy] = useState(false);
+	const [reviewed, setReviewed] = useState(false);
+	const [flow, setFlow] = useState<ProjectFlow | null>(null);
 
 	const load = useCallback(async (): Promise<void> => {
 		try {
@@ -61,8 +75,27 @@ export default function TextEditor({
 	useEffect(() => {
 		setLoaded(null);
 		setNotice(null);
+		setReviewed(false);
 		void load();
 	}, [load]);
+
+	// The path of the project is read again when the text changes: a save can finish a step.
+	const revision = loaded?.item.revision;
+	// biome-ignore lint/correctness/useExhaustiveDependencies: a new revision is the reason to read the path again
+	useEffect(() => {
+		let live = true;
+		client
+			.flow(projectId)
+			.then((result) => {
+				if (live) setFlow(result);
+			})
+			.catch(() => {
+				if (live) setFlow(null);
+			});
+		return () => {
+			live = false;
+		};
+	}, [client, projectId, revision]);
 
 	const dirty =
 		loaded !== null && (body !== loaded.body || title !== loaded.item.title);
@@ -87,6 +120,7 @@ export default function TextEditor({
 				revision: done.revision,
 				body,
 			});
+			setReviewed(false);
 			setNotice(
 				done.changed
 					? t("ui.write.editor.saved", {
@@ -119,6 +153,7 @@ export default function TextEditor({
 	const changedElsewhere = useCallback(
 		(message?: string): void => {
 			void load().then(() => {
+				setReviewed(false);
 				if (message !== undefined) setNotice(message);
 				onChanged();
 			});
@@ -130,34 +165,61 @@ export default function TextEditor({
 		[changedElsewhere],
 	);
 
+	// Review is a place on this page: the person is taken to the revisions and the checks of the saved text.
+	function review(): void {
+		setReviewed(true);
+		document.getElementById("revisions-heading")?.scrollIntoView({
+			block: "start",
+		});
+		document.getElementById("revisions-heading")?.focus();
+	}
+
 	if (loaded === null) {
 		return (
 			<div>
 				<FailureNote failure={failure} />
 				{failure === null && (
-					<p role="status" className="text-sm text-muted-foreground">
-						{t("ui.write.editor.loading")}
-					</p>
+					<LoadingState message={t("ui.write.editor.loading")} />
 				)}
 			</div>
 		);
 	}
 
 	const kind = loaded.item.text_kind;
+	const minutes = readingMinutes(loaded.item, project);
+	const primary = primaryAction({ dirty, reviewed });
 
 	return (
-		<div className="flex flex-col gap-4" data-testid="text-editor">
-			<form className="flex flex-col gap-3" onSubmit={save}>
-				<div className="flex flex-col gap-1">
-					<Label htmlFor="text-title">{t("ui.write.editor.title")}</Label>
-					<Input
-						id="text-title"
-						value={title}
-						maxLength={120}
-						required
-						onChange={(event) => setTitle(event.target.value)}
-					/>
+		<div className="flex flex-col gap-6" data-testid="text-editor">
+			<form className="flex flex-col gap-4" onSubmit={save}>
+				<div className="flex flex-col gap-2">
+					<div className="flex flex-wrap items-center gap-2">
+						<Badge variant="outline">{t(`ui.write.kind.${kind}`)}</Badge>
+						<p
+							className="text-sm text-text-muted"
+							data-testid="text-meta"
+							aria-live="off"
+						>
+							{t("ui.write.meta.words", {
+								count: loaded.item.words,
+							})}
+							{minutes !== undefined &&
+								` · ${t("ui.write.meta.reading", { minutes: String(minutes) })}`}
+							{` · ${t("ui.write.meta.revision", { revision: String(loaded.item.revision) })}`}
+						</p>
+					</div>
+					<div className="flex flex-col gap-1">
+						<Label htmlFor="text-title">{t("ui.write.editor.title")}</Label>
+						<Input
+							id="text-title"
+							value={title}
+							maxLength={120}
+							required
+							onChange={(event) => setTitle(event.target.value)}
+						/>
+					</div>
 				</div>
+				<FlowPath flow={flow} />
 				<Tabs defaultValue="edit">
 					<TabsList>
 						<TabsTrigger value="edit">
@@ -172,9 +234,9 @@ export default function TextEditor({
 							<Label htmlFor="text-body">{t("ui.write.editor.body")}</Label>
 							<Textarea
 								id="text-body"
-								rows={14}
+								rows={16}
 								value={body}
-								className="font-mono"
+								className="font-mono leading-7"
 								onChange={(event) => setBody(event.target.value)}
 							/>
 						</div>
@@ -188,11 +250,23 @@ export default function TextEditor({
 					</TabsContent>
 				</Tabs>
 				<div className="flex flex-wrap items-center gap-3">
-					<Button type="submit" disabled={busy || !dirty}>
+					<Button
+						type="submit"
+						variant={primary === "save" ? "default" : "outline"}
+						disabled={busy || !dirty}
+					>
 						{busy ? t("ui.write.editor.saving") : t("ui.write.editor.save")}
 					</Button>
+					<Button
+						type="button"
+						variant={primary === "review" ? "default" : "outline"}
+						disabled={dirty}
+						onClick={review}
+					>
+						{t("ui.write.editor.review")}
+					</Button>
 					{dirty && (
-						<span className="text-sm text-muted-foreground">
+						<span className="text-sm text-text-muted">
 							{t("ui.write.editor.unsaved")}
 						</span>
 					)}
@@ -210,7 +284,7 @@ export default function TextEditor({
 			{conflict !== null && (
 				<div
 					role="alert"
-					className="flex flex-col gap-2 text-sm text-destructive"
+					className="flex flex-col gap-2 text-sm text-danger-text"
 				>
 					<p>{t("ui.write.editor.conflict", { revision: String(conflict) })}</p>
 					<div>
