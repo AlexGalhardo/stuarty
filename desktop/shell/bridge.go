@@ -15,6 +15,9 @@ const (
 	OpPickFiles    = "pickFiles"
 	OpPickTemplate = "pickTemplate"
 	OpShowInFolder = "showInFolder"
+	// OpRevealAsset opens the folder of a stored library file (epic 94): the path is checked by the shell against
+	// the media folder of its workspace, which showInFolder (an export) does not need.
+	OpRevealAsset = "revealAsset"
 	// The settings of the background mode (SDD-012 section 21.3 item 7).
 	OpGetBackground = "getBackground"
 	OpSetBackground = "setBackground"
@@ -31,7 +34,7 @@ type BackgroundSettings struct {
 	Asked         bool `json:"asked"`
 }
 
-// BridgeRequest is one message from the page. Path is set only for OpShowInFolder and Background only
+// BridgeRequest is one message from the page. Path is set only for OpShowInFolder and OpRevealAsset and Background only
 // for OpSetBackground.
 type BridgeRequest struct {
 	Op         string              `json:"vukem"`
@@ -50,7 +53,7 @@ func ParseBridgeMessage(msg string) (BridgeRequest, bool) {
 	switch req.Op {
 	case OpPickFiles, OpPickTemplate, OpGetBackground:
 		req.Path, req.Background = "", nil
-	case OpShowInFolder:
+	case OpShowInFolder, OpRevealAsset:
 		if req.Path == "" {
 			return BridgeRequest{}, false
 		}
@@ -125,6 +128,7 @@ const BridgeScript = `(function(){var w=window;` +
 	`pickFiles:function(){return ask("pickFiles");},` +
 	`pickTemplate:function(){return ask("pickTemplate");},` +
 	`showInFolder:function(path){return ask("showInFolder",path);},` +
+	`revealAsset:function(path){return ask("revealAsset",path);},` +
 	`getBackground:function(){return ask("getBackground");},` +
 	`setBackground:function(s){return ask("setBackground",undefined,s);},` +
 	`onDropPaths:function(cb){drops.push(cb);return function(){var i=drops.indexOf(cb);if(i>=0){drops.splice(i,1);}};},` +

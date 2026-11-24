@@ -260,6 +260,30 @@ var assetTagCmd = &spec{
 	},
 }
 
+// assetPathCmd exists so that an agent that tries gets E_PRIVILEGED_SESSION and its hint instead of "unknown
+// command" (SDD-003 E-6): the CLI runs with the local token that every agent holds, so it is never a person, and
+// a path on the disk is personal data. A person opens the folder in the app.
+var assetPathCmd = &spec{
+	name:       "asset:path",
+	summary:    "the stored path of a file: only a person in the app can read it, the CLI always refuses",
+	usage:      []string{"stuarty asset:path <hash>"},
+	example:    "stuarty asset:path sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b",
+	positional: true,
+	run: func(ctx context.Context, c *call) (*output, error) {
+		hash, err := assetHash(c, "asset:path")
+		if err != nil {
+			return nil, err
+		}
+
+		res, err := c.svc.AssetReveal(ctx, service.AssetRevealRequest{Hash: hash})
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: res.Path}, nil
+	},
+}
+
 var assetRenameCmd = &spec{
 	name:       "asset:rename",
 	summary:    "rename a file of the library; the stored file keeps its hash",

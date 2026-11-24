@@ -438,6 +438,7 @@ func (h *apiHandler) registerAll() {
 	register(h, "assets.set", h.assetSet)
 	register(h, "assets.tag", h.assetTag)
 	register(h, "assets.rename", h.assetRename)
+	register(h, "assets.reveal", h.assetReveal)
 	register(h, "fonts.import", h.fontImport)
 	register(h, "brand.get", h.brandKitGet)
 	register(h, "brand.set", h.brandKitSet)

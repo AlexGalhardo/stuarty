@@ -81,6 +81,26 @@ func (h *apiHandler) assetRename(c *web.Ctx, in assetRenameIn) (service.AssetRes
 	return deref(res), err
 }
 
+// assetReveal is POST /api/v1/assets/{hash}/reveal (SDD-011 section 14.10): the path of a stored file for a person
+// in a privileged browser session of a local server. In network mode the route does not exist: it answers the 404
+// of a missing route to every caller before the service is asked, so no server ever names a path on its disk. The
+// answer holds a path, so no cache keeps it.
+func (h *apiHandler) assetReveal(c *web.Ctx, in assetRefIn) (service.AssetRevealResult, error) {
+	if h.Network != nil {
+		return service.AssetRevealResult{}, &service.Error{
+			Code:    command.CodeNotFound,
+			Message: "this route exists in local mode only.",
+			Details: map[string]any{"reason": "network_mode"},
+		}
+	}
+
+	c.SetHeader("Cache-Control", "no-store")
+
+	res, err := h.Service.AssetReveal(c.Context(), service.AssetRevealRequest{Hash: in.Hash})
+
+	return deref(res), err
+}
+
 func (h *apiHandler) assetTag(c *web.Ctx, in assetTagIn) (service.AssetResult, error) {
 	res, err := h.Service.AssetTag(c.Context(), service.AssetTagRequest{Hash: in.Hash, Add: in.Add, Remove: in.Remove})
 

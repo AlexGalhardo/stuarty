@@ -91,7 +91,7 @@ func AgentDocsInputs() agentdocs.Inputs {
 	for _, s := range []*spec{
 		revertCmd, diffCmd, checkpointCreateCmd, checkpointListCmd, checkpointRenameCmd, checkpointRemoveCmd, agentDocs,
 		imageImport, imageRevert, imageDiff, imageCheckpointCreate, imageCheckpointList, imageCheckpointRename,
-		imageCheckpointRemove, assetRenameCmd,
+		imageCheckpointRemove, assetRenameCmd, assetPathCmd,
 	} {
 		inLibrary[s.name] = true
 	}

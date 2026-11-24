@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/core/asset"
@@ -16,6 +17,7 @@ type assetFake struct {
 	set    service.AssetSetInfoRequest
 	tag    service.AssetTagRequest
 	rename service.AssetRenameRequest
+	reveal service.AssetRevealRequest
 	get    service.AssetRef
 	uses   service.AssetUsesRequest
 	upload service.MediaImportRequest
@@ -55,6 +57,12 @@ func (f *assetFake) AssetRename(_ context.Context, r service.AssetRenameRequest)
 	f.rename = r
 
 	return &service.AssetResult{Text: "renamed"}, nil
+}
+
+func (f *assetFake) AssetReveal(_ context.Context, r service.AssetRevealRequest) (*service.AssetRevealResult, error) {
+	f.reveal = r
+
+	return &service.AssetRevealResult{Path: "/a/path", Display: "/a/path"}, nil
 }
 
 func (f *assetFake) MediaImport(_ context.Context, r service.MediaImportRequest) (*service.MediaImportResult, error) {
@@ -120,6 +128,26 @@ func TestAssetCommandsSendWhatTheFlagsSay(t *testing.T) {
 	for _, args := range [][]string{
 		{"asset:show"}, {"asset:set", hash}, {"asset:tag", hash}, {"asset:show", "a", "b"}, {"asset:rename", hash},
 	} {
+		if code := h.run(args...); code != ExitFailure {
+			t.Errorf("%v: exit %d, want 1", args, code)
+		}
+	}
+}
+
+func TestAssetPathTakesOneHashAndSendsItToTheService(t *testing.T) {
+	t.Parallel()
+
+	f := &assetFake{}
+	h := newHarness(t)
+	h.res.svc = f
+
+	hash := "sha256:" + strings.Repeat("0", 64)
+
+	if code := h.run("asset:path", hash); code != ExitOK || f.reveal.Hash != hash {
+		t.Errorf("asset:path: exit %d, %+v", code, f.reveal)
+	}
+
+	for _, args := range [][]string{{"asset:path"}, {"asset:path", "a", "b"}} {
 		if code := h.run(args...); code != ExitFailure {
 			t.Errorf("%v: exit %d, want 1", args, code)
 		}

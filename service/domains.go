@@ -113,6 +113,7 @@ var OperationDomains = map[string]string{
 	"AssetSetInfo": command.DomainAsset,
 	"AssetTag":     command.DomainAsset,
 	"AssetRename":  command.DomainAsset,
+	"AssetReveal":  command.DomainAsset,
 
 	"MemoryList":        command.DomainMemory,
 	"MemoryGet":         command.DomainMemory,

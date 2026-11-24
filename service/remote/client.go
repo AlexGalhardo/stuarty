@@ -787,6 +787,11 @@ func (c *Client) AssetRename(ctx context.Context, req service.AssetRenameRequest
 	return post[service.AssetResult](ctx, c, assetPath(req.Hash, "/rename"), req)
 }
 
+// AssetReveal implements service.Service.
+func (c *Client) AssetReveal(ctx context.Context, req service.AssetRevealRequest) (*service.AssetRevealResult, error) {
+	return post[service.AssetRevealResult](ctx, c, assetPath(req.Hash, "/reveal"), struct{}{})
+}
+
 // AuditList implements service.Service.
 func (c *Client) AuditList(ctx context.Context, req service.AuditListRequest) (*service.AuditListResult, error) {
 	q := url.Values{}

@@ -78,6 +78,27 @@ func TestParseBridgeMessageBackground(t *testing.T) {
 	}
 }
 
+func TestParseBridgeMessageRevealAsset(t *testing.T) {
+	got, ok := ParseBridgeMessage(`{"vukem":"revealAsset","id":11,"path":"C:\\ws\\store\\aa\\aabb"}`)
+	if !ok || got.Op != OpRevealAsset || got.ID != 11 || got.Path != `C:\ws\store\aa\aabb` {
+		t.Errorf("revealAsset = %+v, %v", got, ok)
+	}
+
+	// A reveal with no path, and a reveal that carries settings, are not what the page sends.
+	if _, ok := ParseBridgeMessage(`{"vukem":"revealAsset","id":11}`); ok {
+		t.Error("revealAsset with no path was accepted")
+	}
+
+	stray, ok := ParseBridgeMessage(`{"vukem":"revealAsset","id":12,"path":"/a","background":{"keep_running":true}}`)
+	if !ok || stray.Background != nil {
+		t.Errorf("a stray settings object reached revealAsset: %+v", stray)
+	}
+
+	if !strings.Contains(BridgeScript, `revealAsset:function(path){return ask("revealAsset",path);}`) {
+		t.Error("BridgeScript does not define revealAsset")
+	}
+}
+
 func TestResolveValueScriptCarriesJSON(t *testing.T) {
 	s := ResolveValueScript(4, BackgroundSettings{KeepRunning: true}, "")
 	want := `vukemResolve(4,{"keep_running":true,"start_at_sign_in":false,"asked":false},"");`
