@@ -107,6 +107,9 @@ export default function SceneBar({
 	const State = look.icon;
 	const personOnly = privileged ? undefined : `${ids}-person-only`;
 	const asking = variant === "waiting" && request !== null;
+	// The reason a session that is not a person's cannot answer takes a line of its own; with none, the bar
+	// keeps one row of 56 px (a full-width element in that row would crush the slots and the actions).
+	const note = asking && personOnly !== undefined;
 
 	const reason =
 		variant === "failed" && model.endReason !== null
@@ -126,7 +129,8 @@ export default function SceneBar({
 			data-testid="scene-bar"
 			data-variant={variant}
 			className={cn(
-				"sticky bottom-0 z-20 flex shrink-0 flex-wrap items-center gap-x-6 gap-y-2 border-t px-4 py-2 md:h-14 md:flex-nowrap md:py-0",
+				"sticky bottom-0 z-20 flex shrink-0 flex-wrap items-center gap-x-6 gap-y-2 border-t px-4 py-2",
+				note ? "md:min-h-14" : "md:h-14 md:flex-nowrap md:py-0",
 				look.tone,
 			)}
 		>
@@ -253,7 +257,7 @@ export default function SceneBar({
 					</Button>
 				)}
 			</div>
-			{asking && (
+			{note && (
 				<div className="basis-full">
 					<PersonOnlyNote id={`${ids}-person-only`} />
 				</div>

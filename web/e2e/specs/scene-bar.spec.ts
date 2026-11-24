@@ -361,6 +361,25 @@ test.describe("scene bar", () => {
 		// the agent offers "Always allow": the bar has no such action
 		await expect(bar.getByRole("button", { name: /always/i })).toHaveCount(0);
 		await expect(bar.getByRole("button")).toHaveText(["Deny", "Allow once"]);
+		// on a wide window the request fits the one row: the actions sit inside the bar, beside the tool
+		if ((page.viewportSize()?.width ?? 0) >= 768) {
+			const box = await bar.boundingBox();
+			const allow = await page.getByTestId("scene-allow").boundingBox();
+			const deny = await page.getByTestId("scene-deny").boundingBox();
+			const toolSlot = await page.getByTestId("scene-tool").boundingBox();
+			expect(box?.height).toBe(56);
+			expect(
+				box !== null &&
+					allow !== null &&
+					allow.y >= box.y &&
+					allow.y + allow.height <= box.y + box.height,
+			).toBe(true);
+			expect(
+				deny !== null &&
+					toolSlot !== null &&
+					toolSlot.x + toolSlot.width <= deny.x,
+			).toBe(true);
+		}
 		const answered = page.waitForResponse(
 			(res) =>
 				res.url().includes(`/chat/sessions/${session}/permissions/`) &&
