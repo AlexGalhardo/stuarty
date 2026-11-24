@@ -15,6 +15,8 @@ type State string
 const (
 	Prepared  State = "prepared"
 	Recording State = "recording"
+	// Paused is a recording whose sources do not write (SDD-025 section 16.4).
+	Paused    State = "paused"
 	Finishing State = "finishing"
 	Ready     State = "ready"
 	Failed    State = "failed"
@@ -24,10 +26,10 @@ const (
 // Final reports whether no event leaves the state.
 func (s State) Final() bool { return s == Ready || s == Failed || s == Cancelled }
 
-// Valid reports whether s is one of the six states.
+// Valid reports whether s is one of the seven states.
 func (s State) Valid() bool {
 	switch s {
-	case Prepared, Recording, Finishing, Ready, Failed, Cancelled:
+	case Prepared, Recording, Paused, Finishing, Ready, Failed, Cancelled:
 		return true
 	}
 
@@ -43,6 +45,9 @@ const (
 	EventStarted Event = "started"
 	// EventStop is a stop requested by a caller or a limit reached.
 	EventStop Event = "stop"
+	// EventPause and EventResume are a pause and a resume (SDD-025 section 16.4).
+	EventPause  Event = "pause"
+	EventResume Event = "resume"
 	// EventHelperEnded is the helper or the encoder ending with no stop.
 	EventHelperEnded Event = "helper_ended"
 	// EventFinished is the helper's finished message with a readable file.
@@ -73,6 +78,16 @@ func Next(from State, ev Event) (State, error) {
 	case from == Recording && ev == EventCancel:
 		to = Cancelled
 	case from == Recording && (ev == EventHelperEnded || ev == EventFailed):
+		to = Failed
+	case from == Recording && ev == EventPause:
+		to = Paused
+	case from == Paused && ev == EventResume:
+		to = Recording
+	case from == Paused && ev == EventStop:
+		to = Finishing
+	case from == Paused && ev == EventCancel:
+		to = Cancelled
+	case from == Paused && (ev == EventHelperEnded || ev == EventFailed):
 		to = Failed
 	case from == Finishing && ev == EventFinished:
 		to = Ready

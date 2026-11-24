@@ -5,14 +5,22 @@ import (
 	"testing"
 )
 
-var allStates = []State{Prepared, Recording, Finishing, Ready, Failed, Cancelled}
+var allStates = []State{Prepared, Recording, Paused, Finishing, Ready, Failed, Cancelled}
 
-var allEvents = []Event{EventStarted, EventStop, EventHelperEnded, EventFinished, EventFailed, EventCancel}
+var allEvents = []Event{
+	EventStarted, EventStop, EventPause, EventResume, EventHelperEnded, EventFinished, EventFailed, EventCancel,
+}
 
-// allowed is the table of SDD-025 section 3, written out: every pair not in it must be refused.
+// allowed is the table of SDD-025 sections 3 and 16.4, written out: every pair not in it must be refused.
 var allowed = map[State]map[Event]State{
-	Prepared:  {EventStarted: Recording, EventCancel: Cancelled, EventFailed: Failed},
-	Recording: {EventStop: Finishing, EventCancel: Cancelled, EventHelperEnded: Failed, EventFailed: Failed},
+	Prepared: {EventStarted: Recording, EventCancel: Cancelled, EventFailed: Failed},
+	Recording: {
+		EventStop: Finishing, EventPause: Paused, EventCancel: Cancelled, EventHelperEnded: Failed, EventFailed: Failed,
+	},
+	Paused: {
+		EventResume: Recording, EventStop: Finishing, EventCancel: Cancelled, EventHelperEnded: Failed,
+		EventFailed: Failed,
+	},
 	Finishing: {EventFinished: Ready, EventFailed: Failed, EventHelperEnded: Failed, EventCancel: Cancelled},
 }
 
@@ -50,7 +58,7 @@ func TestFinalStatesLeaveNowhere(t *testing.T) {
 }
 
 func TestSettle(t *testing.T) {
-	for _, from := range []State{Prepared, Recording, Finishing} {
+	for _, from := range []State{Prepared, Recording, Paused, Finishing} {
 		if got, err := Settle(from, true); err != nil || got != Ready {
 			t.Errorf("Settle(%s, frames) = %s, %v", from, got, err)
 		}
@@ -69,9 +77,9 @@ func TestSettle(t *testing.T) {
 
 func TestSettleNeverLeavesRecording(t *testing.T) {
 	for _, hasFrames := range []bool{true, false} {
-		for _, from := range []State{Prepared, Recording, Finishing} {
+		for _, from := range []State{Prepared, Recording, Paused, Finishing} {
 			got, err := Settle(from, hasFrames)
-			if err != nil || got == Recording || got == Prepared || got == Finishing {
+			if err != nil || got == Recording || got == Prepared || got == Paused || got == Finishing {
 				t.Errorf("Settle(%s, %v) = %s, %v", from, hasFrames, got, err)
 			}
 		}

@@ -62,7 +62,7 @@ Names are proposals until task 1 writes them to SDD-000.
 ## Tasks
 
 - [x] 1. SDD-025 and SDD-000: tracks, the shared clock, the event format and its privacy rule. Verify: `task lint:md` exits 0.
-- [ ] 2. Core rules: tracks, pause segments, event validation and limits. Verify: `go test ./core/recording/...` passes.
+- [x] 2. Core rules: tracks, pause segments, event validation and limits. Verify: `go test ./core/recording/...` passes.
 - [ ] 3. Microphone and system audio in the helper. Verify: the Rust gate in `capture/`, and an integration test that records a known tone and finds it in the output.
 - [ ] 4. Webcam on its own file. Verify: an integration test with a virtual or real camera, skipped with a stated reason when no camera exists.
 - [ ] 5. Pause and resume across all sources. Verify: tests with a fake helper, and a real capture whose tracks stay aligned after three pauses.
