@@ -53,7 +53,7 @@ None new.
 - [x] 3. Agent setup and its states. Verify: `cd web && bun run test -- ProfileSetup` passes.
 - [x] 4. Skills. Verify: `cd web && bun run test -- Library` passes.
 - [x] 5. Prompts and memory. Verify: `cd web && bun run typecheck && bun run check:i18n` pass.
-- [ ] 6. Check 1440, 1280 and 390 px in both themes. Verify: `cd web && bun run e2e -- a11y` passes.
+- [x] 6. Check 1440, 1280 and 390 px in both themes. Verify: `cd web && bun run e2e -- a11y` passes.
 
 ## Test strategy
 
