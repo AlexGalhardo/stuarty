@@ -151,14 +151,18 @@ func (c *realChild) exited() bool {
 func waitFor(t *testing.T, what string, cond func() bool, seen func() string) {
 	t.Helper()
 
-	deadline := time.Now().Add(killDeadline)
+	deadline := time.NewTimer(killDeadline)
+	defer deadline.Stop()
+
+	tick := time.NewTicker(5 * time.Millisecond)
+	defer tick.Stop()
 
 	for !cond() {
-		if time.Now().After(deadline) {
+		select {
+		case <-deadline.C:
 			t.Fatalf("gave up waiting for %s after %s; saw:\n%s", what, killDeadline, seen())
+		case <-tick.C:
 		}
-
-		time.Sleep(5 * time.Millisecond)
 	}
 }
 

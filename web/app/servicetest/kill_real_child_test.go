@@ -15,7 +15,7 @@ func hexDecode(s string) ([]byte, error) { return hex.DecodeString(s) }
 func TestKillRealChild(t *testing.T) {
 	switch os.Getenv(killRealRoleEnv) {
 	case "":
-		t.Skip("only runs as the child of a real-kill test")
+		t.Skip("only runs as the child of a real-kill test") // verify:env-skip the role variable is set only by the parent test
 	case "publication":
 		killRealPublicationChild(t)
 	case "export-video":
