@@ -55,7 +55,7 @@ None. A decision goes through the existing `ChatAnswerPermission` and `ApprovalD
 - [x] 1. Write the shell section of SDD-012. Verify: `bunx markdownlint-cli2@0.24.1 docs/sdds/012-ui-architecture.md` exits 0.
 - [x] 2. The grouped sidebar with its three forms, keeping the keys. Verify: `go test ./web/routes/...` and `cd web && bun run test -- Sidebar sections` pass.
 - [x] 3. The top bar and breadcrumb. Verify: `cd web && bun run typecheck && bun run test` pass.
-- [ ] 4. `SceneBar` and its mobile form, from the chat state, with every variant. Verify: a Vitest per variant, and `bun run check:i18n` exits 0.
+- [x] 4. `SceneBar` and its mobile form, from the chat state, with every variant. Verify: a Vitest per variant, and `bun run check:i18n` exits 0.
 - [ ] 5. Allow and Deny on the bar through the existing endpoint, with no "always" option. Verify: `cd web && bun run e2e -- agent-chat` and a new spec `scene-bar` pass.
 - [ ] 6. The bell and the notification center over the existing reads. Verify: new spec `notification-center` passes, and `cd web && bun run e2e -- approval` passes.
 - [ ] 7. Mount the shell in `DashboardLayout`, with focus order and the skip link. Verify: `cd web && bun run e2e -- a11y` passes.

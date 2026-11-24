@@ -68,6 +68,27 @@
         "local": "Local mode",
         "network": "Network mode"
       },
+      "scene": {
+        "label": "Agent status",
+        "none": "No agent session",
+        "none_hint": "Nothing is running",
+        "skill": "Skill",
+        "not_reported": "Not reported",
+        "tool": "Tool",
+        "no_tool": "No tool called yet",
+        "open_chat": "Open chat",
+        "connect": "Connect an agent",
+        "allow": "Allow once",
+        "deny": "Deny",
+        "state": {
+          "idle": "Waiting for you",
+          "working": "Working",
+          "waiting": "Asks your permission",
+          "denied": "You denied it",
+          "done": "Finished",
+          "failed": "Failed"
+        }
+      },
       "drawer": {
         "title": "Navigation",
         "description": "The sections of the studio."
