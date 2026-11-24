@@ -9,6 +9,9 @@ import {
 } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { LoadingState } from "@/components/LoadingState";
+import { Notice } from "@/components/Notice";
+import { PageHeader } from "@/components/PageHeader";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +20,7 @@ import { useT } from "@/lib/i18n";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
 import type { BrandFont, BrandKit, LibraryAsset } from "../../editor/api/types";
+import { SELECT_CLASS, SettingsSection } from "./SettingsSection";
 
 const WEIGHTS = [100, 200, 300, 400, 500, 600, 700, 800, 900] as const;
 const NAME_MAX = 40;
@@ -37,6 +41,19 @@ export function logoLabel(asset: LibraryAsset): string {
 	return asset.width && asset.height
 		? `${asset.name} (${asset.width}x${asset.height})`
 		: asset.name;
+}
+
+// The colour a row names, drawn as a small square so a person sees it. It is decoration: the value in the field
+// is what is saved, and a value the browser cannot read leaves the square empty.
+function Swatch({ value }: { value: string }): ReactNode {
+	return (
+		<span
+			aria-hidden="true"
+			data-slot="swatch"
+			className="size-6 shrink-0 rounded-md border border-border-strong"
+			style={{ backgroundColor: value }}
+		/>
+	);
 }
 
 // The brand kit of the workspace (SDD-012 section 12.1, SDD-005 section 5.11):
@@ -168,79 +185,74 @@ export default function BrandKitPage(): ReactNode {
 	return (
 		<>
 			<Head title={t("ui.brand.title")} />
-			<div className="mx-auto flex max-w-2xl flex-col gap-8">
-				<h1 className="text-2xl font-semibold">{t("ui.brand.title")}</h1>
-				<p className="text-sm text-muted-foreground">{t("ui.brand.intro")}</p>
+			<div className="mx-auto flex max-w-2xl flex-col gap-6">
+				<PageHeader
+					title={t("ui.brand.title")}
+					description={t("ui.brand.intro")}
+				/>
 				{loaded === "loading" && (
-					<p className="text-sm text-muted-foreground">
-						{t("ui.settings.loading")}
-					</p>
+					<LoadingState message={t("ui.settings.loading")} />
 				)}
 				{loaded === "failed" && (
-					<p role="alert" className="text-sm text-destructive">
-						{t("ui.settings.unavailable")}
-					</p>
+					<Notice
+						tone="danger"
+						role="alert"
+						title={t("ui.settings.unavailable")}
+					/>
 				)}
 				{loaded === "ready" && (
 					<>
-						<section
-							aria-labelledby="brand-logo"
-							className="flex flex-col gap-2"
-						>
-							<h2 id="brand-logo" className="text-lg font-semibold">
-								{t("ui.brand.logo")}
-							</h2>
-							<Label htmlFor="brand-logo-pick">{t("ui.brand.logo_pick")}</Label>
-							<select
-								id="brand-logo-pick"
-								value={images.some((a) => a.hash === logo) ? logo : ""}
-								disabled={images.length === 0}
-								className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm dark:bg-input/30"
-								onChange={(event) => {
-									touch();
-									setLogo(event.target.value);
-								}}
-							>
-								<option value="">
-									{images.length === 0
-										? t("ui.brand.logo_none")
-										: t("ui.brand.logo_choose")}
-								</option>
-								{images.map((asset) => (
-									<option key={asset.hash} value={asset.hash}>
-										{logoLabel(asset)}
+						<SettingsSection id="brand-logo" title={t("ui.brand.logo")}>
+							<div className="flex flex-col gap-2">
+								<Label htmlFor="brand-logo-pick">
+									{t("ui.brand.logo_pick")}
+								</Label>
+								<select
+									id="brand-logo-pick"
+									value={images.some((a) => a.hash === logo) ? logo : ""}
+									disabled={images.length === 0}
+									className={`${SELECT_CLASS} w-full`}
+									onChange={(event) => {
+										touch();
+										setLogo(event.target.value);
+									}}
+								>
+									<option value="">
+										{images.length === 0
+											? t("ui.brand.logo_none")
+											: t("ui.brand.logo_choose")}
 									</option>
-								))}
-							</select>
-							<Label htmlFor="brand-logo-hash">{t("ui.brand.logo_hash")}</Label>
-							<Input
-								id="brand-logo-hash"
-								value={logo}
-								placeholder="sha256:…"
-								autoComplete="off"
-								spellCheck={false}
-								className="font-mono"
-								onChange={(event) => {
-									touch();
-									setLogo(event.target.value);
-								}}
-							/>
-							<p className="text-xs text-muted-foreground">
-								{t("ui.brand.logo_hint")}
-							</p>
-						</section>
+									{images.map((asset) => (
+										<option key={asset.hash} value={asset.hash}>
+											{logoLabel(asset)}
+										</option>
+									))}
+								</select>
+							</div>
+							<div className="flex flex-col gap-2">
+								<Label htmlFor="brand-logo-hash">
+									{t("ui.brand.logo_hash")}
+								</Label>
+								<Input
+									id="brand-logo-hash"
+									value={logo}
+									placeholder="sha256:…"
+									autoComplete="off"
+									spellCheck={false}
+									className="font-mono"
+									onChange={(event) => {
+										touch();
+										setLogo(event.target.value);
+									}}
+								/>
+								<p className="text-sm text-text-muted">
+									{t("ui.brand.logo_hint")}
+								</p>
+							</div>
+						</SettingsSection>
 
-						<section
-							aria-labelledby="brand-colors"
-							className="flex flex-col gap-3"
-						>
-							<h2 id="brand-colors" className="text-lg font-semibold">
-								{t("ui.brand.colors")}
-							</h2>
-							<p
-								id="brand-color-name-hint"
-								className="text-sm text-muted-foreground"
-							>
+						<SettingsSection id="brand-colors" title={t("ui.brand.colors")}>
+							<p id="brand-color-name-hint" className="text-sm text-text-muted">
 								{t("ui.brand.color_name_hint")}
 							</p>
 							<ul className="flex flex-col gap-2">
@@ -250,6 +262,7 @@ export default function BrandKitPage(): ReactNode {
 										className="flex items-center gap-2"
 										data-color-name={row.name}
 									>
+										<Swatch value={row.value} />
 										<Input
 											aria-label={t("ui.brand.color_name", {
 												index: index + 1,
@@ -260,7 +273,7 @@ export default function BrandKitPage(): ReactNode {
 											maxLength={NAME_MAX}
 											autoComplete="off"
 											spellCheck={false}
-											className="h-8 flex-1 font-mono"
+											className="min-w-0 flex-1 font-mono"
 											onChange={(event) =>
 												editColor(row.id, { name: event.target.value })
 											}
@@ -273,7 +286,7 @@ export default function BrandKitPage(): ReactNode {
 											maxLength={9}
 											autoComplete="off"
 											spellCheck={false}
-											className="h-8 w-28 font-mono"
+											className="w-28 shrink-0 font-mono"
 											onChange={(event) =>
 												editColor(row.id, { value: event.target.value })
 											}
@@ -313,15 +326,9 @@ export default function BrandKitPage(): ReactNode {
 									{t("ui.brand.color_add")}
 								</Button>
 							</div>
-						</section>
+						</SettingsSection>
 
-						<section
-							aria-labelledby="brand-fonts"
-							className="flex flex-col gap-3"
-						>
-							<h2 id="brand-fonts" className="text-lg font-semibold">
-								{t("ui.brand.fonts")}
-							</h2>
+						<SettingsSection id="brand-fonts" title={t("ui.brand.fonts")}>
 							<ul className="flex flex-col gap-1" data-testid="brand-fonts">
 								{Object.entries(fonts)
 									.sort(([a], [b]) => a.localeCompare(b))
@@ -338,7 +345,7 @@ export default function BrandKitPage(): ReactNode {
 													.map((file) => (
 														<span
 															key={file.hash}
-															className="block text-xs text-muted-foreground"
+															className="block text-xs text-text-muted"
 														>
 															{file.weight}
 															{" · "}
@@ -383,8 +390,8 @@ export default function BrandKitPage(): ReactNode {
 									spellCheck={false}
 									onChange={(event) => setPath(event.target.value)}
 								/>
-								<div className="flex items-end gap-2">
-									<div className="flex flex-1 flex-col gap-1">
+								<div className="flex flex-wrap items-end gap-2">
+									<div className="flex min-w-40 flex-1 flex-col gap-1">
 										<Label htmlFor="brand-font-family">
 											{t("ui.brand.font_family")}
 										</Label>
@@ -403,7 +410,7 @@ export default function BrandKitPage(): ReactNode {
 										<select
 											id="brand-font-weight"
 											value={weight}
-											className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm dark:bg-input/30"
+											className={SELECT_CLASS}
 											onChange={(event) => setWeight(event.target.value)}
 										>
 											{WEIGHTS.map((value) => (
@@ -424,14 +431,16 @@ export default function BrandKitPage(): ReactNode {
 									</Button>
 								</div>
 							</form>
-						</section>
+						</SettingsSection>
 
-						<div className="flex flex-col gap-2">
+						<div className="flex flex-col gap-3">
 							<FailureNote failure={failure} />
 							{saved && (
-								<p role="status" className="text-sm text-success">
-									{t("ui.brand.saved")}
-								</p>
+								<Notice
+									tone="success"
+									role="status"
+									title={t("ui.brand.saved")}
+								/>
 							)}
 							<div>
 								<Button
