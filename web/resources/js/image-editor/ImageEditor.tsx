@@ -26,6 +26,13 @@ import { AddTools } from "./toolbar/AddTools";
 import { ArrangeTools, HistoryTools } from "./toolbar/ArrangeTools";
 import { Toolbar, ViewTools } from "./toolbar/Toolbar";
 
+// The editor takes the room the frame of the dashboard leaves: the window less the top bar (3.5 rem), the scene
+// bar at the foot (3.5 rem, always in view) and the padding of the main region (2 rem, 3 rem from the md
+// breakpoint). Sized to the whole window the page scrolled, and a focus on the canvas moved the picture
+// under the pointer between the press and the release of a click.
+export const EDITOR_FRAME =
+	"flex h-[calc(100dvh-9rem)] min-h-[28rem] flex-col overflow-hidden rounded-lg border border-border bg-ed-bg md:h-[calc(100dvh-10rem)]";
+
 // How often the screen asks whether another actor changed the document while the event stream is not open
 // (SDD-012 section 24.3).
 export const POLL_MS = 2000;
@@ -154,7 +161,7 @@ function Shell(): ReactNode {
 			aria-labelledby="image-title"
 			data-testid="image-editor"
 			onKeyDown={onKeys}
-			className="flex h-[calc(100dvh-3rem)] min-h-[28rem] flex-col overflow-hidden rounded-lg border border-border bg-ed-bg"
+			className={EDITOR_FRAME}
 		>
 			<TopBar doc={doc} />
 			<Toolbar label={t("ui.image.toolbar.label")}>
@@ -171,11 +178,8 @@ function Shell(): ReactNode {
 			<div className="flex min-h-0 flex-1">
 				<aside
 					aria-label={t("ui.image.layers.title")}
-					className="flex w-56 shrink-0 flex-col border-r border-border bg-ed-panel xl:w-64"
+					className="flex w-56 shrink-0 flex-col overflow-y-auto border-r border-border bg-ed-panel p-3 xl:w-64"
 				>
-					<h2 className="border-b px-3 py-2 text-sm font-semibold">
-						{t("ui.image.layers.title")}
-					</h2>
 					<LayerPanel />
 				</aside>
 				<div className="min-w-0 flex-1">
@@ -185,9 +189,6 @@ function Shell(): ReactNode {
 					aria-label={t("ui.image.inspector.title")}
 					className="flex w-72 shrink-0 flex-col border-l border-border bg-ed-panel xl:w-80"
 				>
-					<h2 className="border-b px-3 py-2 text-sm font-semibold">
-						{t("ui.image.inspector.title")}
-					</h2>
 					<Inspector />
 					<HistoryPanel />
 				</aside>

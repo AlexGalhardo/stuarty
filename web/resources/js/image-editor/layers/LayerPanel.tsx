@@ -22,13 +22,15 @@ import {
 	useState,
 } from "react";
 
+import PanelTitle from "@/components/PanelTitle";
 import UntrustedText from "@/components/UntrustedText";
-import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
 import type { LayerKind } from "../api/types";
 import { isFinal, useModelJob } from "../modeledit/state";
 import { useImage, useImageStore } from "../state/context";
+import { lockClass, rowClass } from "./rowStyle";
 import {
+	countLayers,
 	type Drop,
 	dropMove,
 	type Move,
@@ -84,7 +86,9 @@ export default function LayerPanel(): ReactNode {
 		if (first !== undefined) setFocusId(first);
 	}, [selection]);
 
-	if (doc === null) return null;
+	if (doc === null) {
+		return <PanelTitle>{t("ui.image.layers.title")}</PanelTitle>;
+	}
 	const layers = doc.layers;
 
 	const focusRow = (id: string): void => {
@@ -280,9 +284,18 @@ export default function LayerPanel(): ReactNode {
 	};
 
 	return (
-		<div className="flex min-h-0 flex-1 flex-col">
+		<>
+			<PanelTitle>
+				{t("ui.image.layers.title")}
+				<span
+					data-testid="image-layers-count"
+					className="rounded-full bg-muted px-2 text-xs font-medium text-muted-foreground tabular-nums"
+				>
+					{countLayers(layers)}
+				</span>
+			</PanelTitle>
 			{rows.length === 0 ? (
-				<div className="p-3 text-sm" data-testid="image-layers-empty">
+				<div className="text-sm" data-testid="image-layers-empty">
 					<p className="font-medium">{t("ui.image.layers.empty_title")}</p>
 					<p className="text-muted-foreground">
 						{t("ui.image.layers.empty_body")}
@@ -295,7 +308,7 @@ export default function LayerPanel(): ReactNode {
 					aria-label={t("ui.image.layers.label")}
 					aria-multiselectable="true"
 					data-testid="image-layers"
-					className="min-h-0 flex-1 overflow-y-auto p-1"
+					className="flex flex-col gap-px"
 				>
 					{rows.map((row) => {
 						const { layer } = row;
@@ -354,16 +367,11 @@ export default function LayerPanel(): ReactNode {
 									setDragId(null);
 									setDropAt(null);
 								}}
-								className={cn(
-									"relative flex h-8 cursor-default items-center gap-1 rounded-md pr-1 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring",
-									selected
-										? "bg-ed-selection/15 text-foreground"
-										: "hover:bg-muted",
-									mark === "inside" && "ring-2 ring-ed-handle",
-									mark === "above" && "border-t-2 border-ed-handle",
-									mark === "below" && "border-b-2 border-ed-handle",
-									!layer.visible && "opacity-60",
-								)}
+								className={rowClass({
+									selected,
+									visible: layer.visible,
+									mark,
+								})}
 								style={{ paddingLeft: (row.level - 1) * 16 + 4 }}
 							>
 								<span
@@ -410,6 +418,11 @@ export default function LayerPanel(): ReactNode {
 								)}
 								<span
 									aria-hidden="true"
+									title={
+										layer.visible
+											? t("ui.image.layers.hide")
+											: t("ui.image.layers.show")
+									}
 									data-testid="image-layer-visible"
 									className="flex size-6 shrink-0 items-center justify-center rounded hover:bg-background"
 									onClick={(event) => {
@@ -430,6 +443,11 @@ export default function LayerPanel(): ReactNode {
 								</span>
 								<span
 									aria-hidden="true"
+									title={
+										layer.locked
+											? t("ui.image.layers.unlock")
+											: t("ui.image.layers.lock")
+									}
 									data-testid="image-layer-lock"
 									className="flex size-6 shrink-0 items-center justify-center rounded hover:bg-background"
 									onClick={(event) => {
@@ -446,9 +464,9 @@ export default function LayerPanel(): ReactNode {
 									}}
 								>
 									{layer.locked ? (
-										<Lock className="size-4" />
+										<Lock className={lockClass(true)} />
 									) : (
-										<LockOpen className="size-4 opacity-40" />
+										<LockOpen className={lockClass(false)} />
 									)}
 								</span>
 							</div>
@@ -456,7 +474,7 @@ export default function LayerPanel(): ReactNode {
 					})}
 				</div>
 			)}
-		</div>
+		</>
 	);
 }
 
