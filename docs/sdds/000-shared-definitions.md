@@ -142,7 +142,10 @@
 | `ChatSessionList`, `ChatSessionGet`, `ChatTranscriptGet` | none | `chat:sessions`, `chat:session`, `chat:transcript` | `GET /projects/{id}/chat/sessions`, `GET /chat/sessions/{id}`, `GET /chat/sessions/{id}/transcript` | read (SDD-017 §9) |
 | `ChatActivityGet` | none | `chat:activity` | `GET /chat/sessions/{id}/activity` | read (SDD-017 §8.1) |
 | chat session stream | none | none | `GET /chat/sessions/{id}/events` (SDD-017 §8) | read |
-| `RecordingSources` | none | `recording:sources` | `GET /recording/sources` (the displays and windows that can be captured, SDD-025 §9) | read |
+| `RecordingSources` | none | `recording:sources` | `GET /recording/sources` (the displays and windows that can be captured, and the microphones, the cameras and the system audio, SDD-025 §9 and §16.3) | read |
+| `RecordingPause` | none (the tool list is at its byte budget) | `recording:pause` | `POST /recordings/{id}/pause` | media; anyone may pause (SDD-025 §16.4) |
+| `RecordingResume` | none | `recording:resume` | `POST /recordings/{id}/resume` | media, and only from a privileged browser session; every other caller gets `E_PRIVILEGED_SESSION` before anything else (SDD-025 §16.4) |
+| `RecordingEvents` | none (the tool list is at its byte budget; `job_get` names the click count) | `recording:events` | `GET /recordings/{id}/events` (the pointer and click timeline of a finished recording, SDD-025 §16.6) | read (a dismissed recording is invisible to everyone but a person, SDD-025 §4) |
 | `RecordingStart` | none (a person starts, ADR-0051) | `recording:start` | `POST /recordings` | media, and only from a privileged browser session; every other caller gets `E_PRIVILEGED_SESSION` and no helper starts (SDD-025 §9) |
 | `RecordingList` | none (the tool list is at its byte budget; `job_get` reads one recording by its id) | `recording:list` | `GET /projects/{id}/recordings` | read (a dismissed recording is invisible to everyone but a person, SDD-025 §4) |
 | `RecordingStop` | `job_cancel` with the `rec_` id | `recording:stop` | `POST /recordings/{id}/stop` | media; stopping is always allowed |
@@ -287,7 +290,7 @@ Kinds: `ingest`, `transcribe`, `face_track` (SDD-024 §6: the faces of an asset 
 | `asset_info`, `asset_tags`, `asset_search` | the library side of an asset by hash: origin, rights note, description, the reuse mark, the tags and the full-text index over them | SDD-005 §5.5.1, SDD-011 §14 |
 | `webhooks`, `webhook_deliveries`, `webhook_attempts` | the outbound webhooks (name, address, events, enabled), their deliveries with the stored metadata body, and the attempts with status, duration and error code; no secret (it is in the vault) and no answer body | SDD-022 §4, SDD-005 §5.16 |
 | `agent_profiles`, `chat_sessions`, `chat_events` | the agents the user may host (a name, an executable and its arguments), and the transcripts of the chat sessions per project; no credential, no environment | SDD-017 §3, §9 |
-| `recordings` | the screen recordings: project, state, review (`pending`, `added`, `dismissed`), source, size, frames, the file's duration and the asset it became; the window title is sealed; no frame and no audio | SDD-025 §9, SDD-005 §5.18 |
+| `recordings` | the screen recordings: project, state, review (`pending`, `added`, `dismissed`), source, size, frames, the file's duration and the asset it became, the tracks and pauses (epic 62); the window title is sealed; no frame, no audio, no device name and no pointer position | SDD-025 §9, SDD-005 §5.18 |
 | vukem's own tables for sessions (`sessions`) and tokens (`access_tokens`) | network mode | vukem |
 
 A document with a `template` member is a template draft, or an instance when `template.instance` is true (SDD-001 section 3.10). `TemplateInstantiate` writes the flag; lint reads it (`L_SLOT_UNFILLED`, SDD-003).
@@ -368,7 +371,7 @@ CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the re
 ├── fonts/                   user fonts, by hash 
 ├── tools/                   installed helpers (whisper.cpp, models, the face set of SDD-024: stuarty-aihelper, onnxruntime, yunet); tools/.download/ holds downloads in progress
 ├── chat/                    the working directory of a hosted agent, one folder per project: chat/<project id>/, mode 0700 (SDD-017 §4)
-├── recordings/              screen recordings in progress or waiting for a person: recordings/<recording id>/capture.mp4, a fragmented MP4 (SDD-025 §8)
+├── recordings/              screen recordings in progress or waiting for a person: recordings/<recording id>/capture.mp4, a fragmented MP4 (SDD-025 §8), and the files of the other tracks, `camera.mp4`, `microphone.wav`, `system.wav`, and `events.jsonl` (SDD-025 §16.1, §16.6)
 ├── tmp/                     one directory per running child process: tmp/<job id>/ (SDD-007 §6.4)
 ├── backups/                 copies of db.sqlite made before a migration (SDD-005 §7); `backups/account-<time>/` holds the copy of `db.sqlite` and `vault.json` that the account creation of an existing workspace keeps until it has verified the encrypted fields (SDD-005 §5.17)
 ├── logs/                    rotating log files
