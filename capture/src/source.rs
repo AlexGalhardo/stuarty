@@ -145,6 +145,7 @@ impl Fake {
 		let stop = Arc::new(AtomicBool::new(false));
 		let (s, m) = (Arc::clone(&stop), Arc::clone(mailbox));
 		let thread = std::thread::spawn(move || {
+			crate::clock::raise_this_thread();
 			let t0 = Instant::now();
 			let mut n: u64 = 0;
 			while !s.load(Ordering::Relaxed) {
