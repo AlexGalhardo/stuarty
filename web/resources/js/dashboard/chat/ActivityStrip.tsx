@@ -10,8 +10,11 @@ import { reportedTool } from "../../shell/sceneState";
 // draws the answer and adds nothing; the names and titles are text from the agent or from the library.
 export default function ActivityStrip({
 	activity,
+	testId = "chat-activity",
 }: {
 	activity: ChatActivity | null;
+	// the card of a permission request holds a second strip: its own ids keep the two apart
+	testId?: string;
 }): ReactNode {
 	const t = useT();
 	const tool = activity === null ? null : reportedTool(activity);
@@ -22,11 +25,11 @@ export default function ActivityStrip({
 	return (
 		<dl
 			aria-label={t("ui.chat.activity")}
-			data-testid="chat-activity"
+			data-testid={testId}
 			className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-lg border border-agent-border bg-agent-soft/40 px-3 py-2 text-sm"
 		>
 			<dt className="text-text-muted">{t("ui.shell.scene.skill")}</dt>
-			<dd className="min-w-0 break-words" data-testid="chat-activity-skill">
+			<dd className="min-w-0 break-words" data-testid={`${testId}-skill`}>
 				{skill === null ? (
 					none
 				) : skill.state === "loaded" ? (
@@ -47,7 +50,7 @@ export default function ActivityStrip({
 				)}
 			</dd>
 			<dt className="text-text-muted">{t("ui.shell.scene.tool")}</dt>
-			<dd className="min-w-0 break-words" data-testid="chat-activity-tool">
+			<dd className="min-w-0 break-words" data-testid={`${testId}-tool`}>
 				{activity === null ? (
 					none
 				) : tool === null ? (
