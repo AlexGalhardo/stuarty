@@ -46,7 +46,7 @@ export function AddTools(): ReactNode {
 			: Math.max(Math.round(Math.min(doc.width, doc.height) / 4), 1);
 
 	return (
-		<ToolGroup>
+		<ToolGroup label={t("ui.image.toolbar.add")}>
 			<ToolButton
 				icon={Type}
 				label={t("ui.image.add.text")}

@@ -713,7 +713,8 @@
         "failed": "The image could not be opened.",
         "back": "Back to Edit Image",
         "size": "{w} x {h} px",
-        "revision": "revision {revision}"
+        "revision": "revision {revision}",
+        "saved_auto": "Saved automatically: {time}"
       },
       "canvas": {
         "label": "Image canvas",
@@ -1056,7 +1057,13 @@
         "exporting": "Exporting…"
       },
       "toolbar": {
-        "label": "Image tools"
+        "label": "Image tools",
+        "history": "Undo and redo",
+        "add": "Add to the image",
+        "arrange": "Arrange layers",
+        "model": "Edit with a model",
+        "view": "View",
+        "export": "Export"
       },
       "error": {
         "dismiss": "Dismiss the error"

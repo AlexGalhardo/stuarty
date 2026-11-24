@@ -103,7 +103,7 @@ export default function Overlay({
 						className="pointer-events-none border-2 border-ed-handle"
 						style={place(b)}
 					>
-						<span className="absolute left-0 top-full mt-1 whitespace-nowrap rounded bg-ed-handle px-1 text-[10px] text-background tabular-nums">
+						<span className="absolute left-0 top-full mt-1 whitespace-nowrap rounded bg-ed-handle px-1 text-xs text-background tabular-nums">
 							{own?.locked
 								? t("ui.image.canvas.locked")
 								: t("ui.image.editor.size", { w: b.w, h: b.h })}

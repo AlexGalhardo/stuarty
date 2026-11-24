@@ -40,11 +40,11 @@ export function ArrangeTools(): ReactNode {
 	};
 
 	return (
-		<ToolGroup>
+		<ToolGroup label={t("ui.image.toolbar.arrange")}>
 			<ToolButton
 				icon={Group}
 				label={t("ui.image.arrange.group")}
-				shortcut="Ctrl+G"
+				shortcut="group"
 				disabled={none}
 				onClick={() =>
 					void send(
@@ -57,7 +57,7 @@ export function ArrangeTools(): ReactNode {
 			<ToolButton
 				icon={Ungroup}
 				label={t("ui.image.arrange.ungroup")}
-				shortcut="Ctrl+Shift+G"
+				shortcut="ungroup"
 				disabled={busy || only?.kind !== "group"}
 				onClick={() =>
 					void send(
@@ -70,7 +70,7 @@ export function ArrangeTools(): ReactNode {
 			<ToolButton
 				icon={Copy}
 				label={t("ui.image.arrange.duplicate")}
-				shortcut="Ctrl+D"
+				shortcut="duplicate"
 				disabled={none}
 				onClick={() =>
 					void send(
@@ -86,7 +86,7 @@ export function ArrangeTools(): ReactNode {
 			<ToolButton
 				icon={Trash2}
 				label={t("ui.image.arrange.remove")}
-				shortcut="Delete"
+				shortcut="remove"
 				disabled={none}
 				onClick={() =>
 					void send(
@@ -101,7 +101,7 @@ export function ArrangeTools(): ReactNode {
 			<ToolButton
 				icon={BringToFront}
 				label={t("ui.image.arrange.forward")}
-				shortcut="]"
+				shortcut="forward"
 				disabled={busy || row === undefined || step(row, "up") === null}
 				onClick={() => order("up")}
 				testId="image-forward"
@@ -109,7 +109,7 @@ export function ArrangeTools(): ReactNode {
 			<ToolButton
 				icon={SendToBack}
 				label={t("ui.image.arrange.back")}
-				shortcut="["
+				shortcut="back"
 				disabled={busy || row === undefined || step(row, "down") === null}
 				onClick={() => order("down")}
 				testId="image-back"
@@ -126,11 +126,11 @@ export function HistoryTools(): ReactNode {
 	const ready = useImage((s) => s.doc !== null);
 
 	return (
-		<ToolGroup>
+		<ToolGroup label={t("ui.image.toolbar.history")}>
 			<ToolButton
 				icon={Undo2}
 				label={t("ui.image.history.undo")}
-				shortcut="Ctrl+Z"
+				shortcut="undo"
 				disabled={busy || !ready}
 				onClick={() => void undo()}
 				testId="image-undo"
@@ -138,7 +138,7 @@ export function HistoryTools(): ReactNode {
 			<ToolButton
 				icon={Redo2}
 				label={t("ui.image.history.redo")}
-				shortcut="Ctrl+Shift+Z"
+				shortcut="redo"
 				disabled={busy || !ready}
 				onClick={() => void redo()}
 				testId="image-redo"
