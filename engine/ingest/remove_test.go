@@ -29,10 +29,9 @@ func TestRemoveArtifactsWaitsForAFileThatIsStillHeld(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	go func() {
-		time.Sleep(300 * time.Millisecond)
-		_ = held.Close()
-	}()
+	// The holder lets go while the removal is waiting, as a scanner does.
+	release := time.AfterFunc(300*time.Millisecond, func() { _ = held.Close() })
+	defer release.Stop()
 
 	if err := RemoveArtifacts(root, hash); err != nil {
 		t.Fatalf("the removal gave up while the file was held: %v", err)
