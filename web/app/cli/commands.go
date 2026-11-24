@@ -142,6 +142,7 @@ func registry() []*spec {
 		assetSetCmd,
 		assetTagCmd,
 		assetRenameCmd,
+		assetPathCmd,
 		motionBriefCmd,
 		motionCheckCmd,
 		motionReplaceCmd,

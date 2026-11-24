@@ -239,6 +239,7 @@ var Scopes = map[string]string{
 	"AssetSetInfo": ScopeMedia,
 	"AssetTag":     ScopeMedia,
 	"AssetRename":  ScopeMedia,
+	"AssetReveal":  ScopeRead,
 
 	"ProviderList":     ScopeRead,
 	"ProviderModels":   ScopeRead,

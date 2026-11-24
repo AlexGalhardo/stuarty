@@ -13,7 +13,7 @@ import (
 const storedHex = "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
 
 // stored puts a file where the content store keeps the original of storedHex and returns the workspace.
-func stored(t *testing.T, body string) string {
+func stored(t *testing.T) string {
 	t.Helper()
 
 	ws := t.TempDir()
@@ -27,7 +27,7 @@ func stored(t *testing.T, body string) string {
 		t.Fatal(err)
 	}
 
-	if err := os.WriteFile(p, []byte(body), 0o600); err != nil {
+	if err := os.WriteFile(p, []byte("x"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -44,7 +44,7 @@ func sized(s *svc, state IngestState, rowSize int64, check bool) assets.Held {
 func TestAssetLibraryASizeOfAReadyFileIsTheRowAndOverFourGiBIsKept(t *testing.T) {
 	t.Parallel()
 
-	s := &svc{workspace: stored(t, "x")}
+	s := &svc{workspace: stored(t)}
 	over := int64(5) << 30 // 5 GiB: the row says so, the test file is one byte
 
 	h := sized(s, IngestReady, over, true)
@@ -56,7 +56,7 @@ func TestAssetLibraryASizeOfAReadyFileIsTheRowAndOverFourGiBIsKept(t *testing.T)
 func TestAssetLibraryAFileStillImportingHasNoSizeYet(t *testing.T) {
 	t.Parallel()
 
-	s := &svc{workspace: stored(t, "x")}
+	s := &svc{workspace: stored(t)}
 
 	for _, state := range []IngestState{IngestPending, IngestIngesting} {
 		if h := sized(s, state, 1234, true); h.State != assets.StateImporting || h.Bytes != nil {
@@ -103,7 +103,7 @@ func TestAssetLibraryAFolderWhereTheFileShouldBeIsMissing(t *testing.T) {
 func TestAssetLibraryAFailedIngestKeepsItsSizeAndSaysFailed(t *testing.T) {
 	t.Parallel()
 
-	s := &svc{workspace: stored(t, "x")}
+	s := &svc{workspace: stored(t)}
 
 	if h := sized(s, IngestFailed, 77, true); h.State != assets.StateFailed || h.Bytes == nil || *h.Bytes != 77 {
 		t.Errorf("held = %+v bytes %v", h, h.Bytes)

@@ -40,9 +40,13 @@ Content type `application/json`. Schema: [`AssetListResult`](/docs/api/schemas#a
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `assets` | array of [`LibraryAsset`](/docs/api/schemas#libraryasset) | no |  |
+| `file_count` | `integer` | no |  |
 | `next_cursor` | `string` or `null` | no |  |
 | `text` | `string` | no |  |
 | `total` | `integer` | no |  |
+| `total_bytes` | `integer (int64)` | no |  |
+| `total_size_text` | `string` | no |  |
+| `unsized` | `integer` | no |  |
 | `untrusted_notice` | `string` | no |  |
 
 ### 400
@@ -233,14 +237,20 @@ puts "#{response.code} #{response.body}"
       "poster": {},
       "projects": 0,
       "reusable": false,
+      "size_text": "string",
+      "state": "string",
       "tags": [],
       "uses": [],
       "width": 0
     }
   ],
+  "file_count": 0,
   "next_cursor": "string",
   "text": "string",
   "total": 0,
+  "total_bytes": 0,
+  "total_size_text": "string",
+  "unsized": 0,
   "untrusted_notice": "string"
 }
 ```

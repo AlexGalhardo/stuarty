@@ -439,6 +439,15 @@ var Endpoints = []Endpoint{
 		Service: "AssetRename", Status: 200, Summary: "Rename a file of the library; the stored file keeps its hash",
 	},
 	{
+		ID:      "assets.reveal",
+		Method:  http.MethodPost,
+		Path:    "/assets/{hash}/reveal",
+		Scope:   service.ScopeRead,
+		Service: "AssetReveal",
+		Status:  200,
+		Summary: "The checked path of the stored file, for a person in local mode; there is no such route in network mode",
+	},
+	{
 		ID: "fonts.list", Method: http.MethodGet, Path: "/fonts", Scope: service.ScopeRead,
 		Service: "FontList", Status: 200, Summary: "List the bundled font families and weights",
 	},

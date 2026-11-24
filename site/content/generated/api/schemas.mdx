@@ -89,16 +89,20 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `assets` | array of [`LibraryAsset`](/docs/api/schemas#libraryasset) | no |  |
+| `file_count` | `integer` | no |  |
 | `next_cursor` | `string` or `null` | no |  |
 | `text` | `string` | no |  |
 | `total` | `integer` | no |  |
+| `total_bytes` | `integer (int64)` | no |  |
+| `total_size_text` | `string` | no |  |
+| `unsized` | `integer` | no |  |
 | `untrusted_notice` | `string` | no |  |
 
 ### AssetResult
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `bytes` | `integer (int64)` | no |  |
+| `bytes` | `integer (int64)` or `null` | no |  |
 | `created_at` | `string` | no |  |
 | `created_by` | `string` | no |  |
 | `description` | `string` | no |  |
@@ -111,11 +115,20 @@ The types named in the tables of the operations. The arguments of each editing c
 | `poster` | [`Poster`](/docs/api/schemas#poster) or `any` or `null` or `null` | no |  |
 | `projects` | `integer` | no |  |
 | `reusable` | `boolean` | no |  |
+| `size_text` | `string` | no |  |
+| `state` | `string` | no |  |
 | `tags` | array of `string` | no |  |
 | `text` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
 | `uses` | array of [`Use`](/docs/api/schemas#use) | no |  |
 | `width` | `integer` | no |  |
+
+### AssetRevealResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `display` | `string` | no |  |
+| `path` | `string` | no |  |
 
 ### AssetUsesResult
 
@@ -1526,7 +1539,7 @@ The types named in the tables of the operations. The arguments of each editing c
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `bytes` | `integer (int64)` | no |  |
+| `bytes` | `integer (int64)` or `null` | no |  |
 | `created_at` | `string` | no |  |
 | `created_by` | `string` | no |  |
 | `description` | `string` | no |  |
@@ -1539,6 +1552,8 @@ The types named in the tables of the operations. The arguments of each editing c
 | `poster` | [`Poster`](/docs/api/schemas#poster) or `any` or `null` or `null` | no |  |
 | `projects` | `integer` | no |  |
 | `reusable` | `boolean` | no |  |
+| `size_text` | `string` | no |  |
+| `state` | `string` | no |  |
 | `tags` | array of `string` | no |  |
 | `uses` | array of [`Use`](/docs/api/schemas#use) | no |  |
 | `width` | `integer` | no |  |

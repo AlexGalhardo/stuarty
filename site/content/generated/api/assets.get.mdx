@@ -31,7 +31,7 @@ Content type `application/json`. Schema: [`AssetResult`](/docs/api/schemas#asset
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `bytes` | `integer (int64)` | no |  |
+| `bytes` | `integer (int64)` or `null` | no |  |
 | `created_at` | `string` | no |  |
 | `created_by` | `string` | no |  |
 | `description` | `string` | no |  |
@@ -44,6 +44,8 @@ Content type `application/json`. Schema: [`AssetResult`](/docs/api/schemas#asset
 | `poster` | [`Poster`](/docs/api/schemas#poster) or `any` or `null` or `null` | no |  |
 | `projects` | `integer` | no |  |
 | `reusable` | `boolean` | no |  |
+| `size_text` | `string` | no |  |
+| `state` | `string` | no |  |
 | `tags` | array of `string` | no |  |
 | `text` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
@@ -257,6 +259,8 @@ puts "#{response.code} #{response.body}"
   },
   "projects": 0,
   "reusable": false,
+  "size_text": "string",
+  "state": "string",
   "tags": [
     "string"
   ],

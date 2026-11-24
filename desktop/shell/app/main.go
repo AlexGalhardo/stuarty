@@ -81,7 +81,7 @@ func run() error {
 	// (SDD-012 section 21.3 item 7); the lease of SDD-020 section 27 stays the protection against two senders.
 	var bgp atomic.Pointer[background]
 	app := application.New(application.Options{
-		Name:              "Stuarty",
+		Name: "Stuarty",
 		// The window and the taskbar show this icon: the binary carries no icon resource.
 		Icon:              trayPNG,
 		Description:       "Stuarty desktop",
@@ -104,6 +104,9 @@ func run() error {
 	if err := wsErr; err != nil {
 		return failStartup(app, err)
 	}
+	// The only folder a library file may be revealed from: the shell checks every path against it itself.
+	mediaRoot := shell.MediaRoot(string(ws))
+	br.mediaRoot.Store(&mediaRoot)
 	srv, err := shell.Start(context.Background(), shell.Config{Binary: *binary, Workspace: ws})
 	if err != nil {
 		return failStartup(app, err)

@@ -144,6 +144,9 @@ var privilegedHints = map[string]string{
 	"RecordingConfirm": "a person adds a recording to the project in the record dialog of the Stuarty app",
 	"RecordingDismiss": "a person decides about a recording in the record dialog of the Stuarty app",
 	"RecordingCancel":  "a person deletes a finished recording in the record dialog of the Stuarty app",
+	"AssetReveal": "a person opens the folder of a file in the Stuarty app (Show in folder in the desktop app, " +
+		"Copy path in the browser, on the owner's machine); the local token, API keys and the agent surfaces " +
+		"cannot read a path",
 	"SocialConnectComplete": "a person completes the connection in the Connections page of the Stuarty app; the local " +
 		"token, API keys and the agent surfaces cannot finish a sign-in",
 	"SocialAccountSelect": "a person chooses the account in the Connections page of the Stuarty app; the local " +

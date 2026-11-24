@@ -7,6 +7,7 @@ command approval:rule:remove
 command approval:rule:set
 command approval:show
 command asset:list
+command asset:path
 command asset:rename
 command asset:set
 command asset:show
@@ -293,6 +294,7 @@ route PATCH /webhooks/{}
 route POST /approval-rules
 route POST /approvals/{}/decide
 route POST /assets/{}/rename
+route POST /assets/{}/reveal
 route POST /assets/{}/tags
 route POST /captions/validate
 route POST /chat/sessions/{}/cancel

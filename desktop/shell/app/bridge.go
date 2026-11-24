@@ -21,6 +21,10 @@ type bridge struct {
 	win  atomic.Pointer[application.WebviewWindow]
 	port atomic.Int64
 	bg   atomic.Pointer[background]
+	// mediaRoot is the media folder of the workspace the shell started the server on: the only place a library
+	// file may be revealed from (SDD-011 section 14.10). Empty until the workspace is known, and then every
+	// reveal is refused.
+	mediaRoot atomic.Pointer[string]
 }
 
 // backgroundAnswer is what the page gets for the background mode: the settings, and the reason the system
@@ -73,6 +77,8 @@ func (b *bridge) handle(_ application.Window, message string, origin *applicatio
 		go b.pickTemplate(win, req.ID)
 	case shell.OpShowInFolder:
 		go b.showInFolder(win, req)
+	case shell.OpRevealAsset:
+		go b.revealAsset(win, req)
 	case shell.OpGetBackground, shell.OpSetBackground:
 		go b.background(win, req)
 	}
@@ -135,6 +141,33 @@ func (b *bridge) showInFolder(win *application.WebviewWindow, req shell.BridgeRe
 		} else {
 			go func() { _ = cmd.Wait() }()
 		}
+	}
+	win.ExecJS(shell.ResolveScript(req.ID, nil, msg))
+}
+
+// revealAsset opens the file manager on a stored library file. The path is the one AssetReveal gave the page, but the
+// page is not trusted: the shell checks by itself that it is a regular file under the media folder of its own
+// workspace before it starts anything, and answers with an empty list or the sentence the page shows.
+func (b *bridge) revealAsset(win *application.WebviewWindow, req shell.BridgeRequest) {
+	root := b.mediaRoot.Load()
+	if root == nil || *root == "" {
+		win.ExecJS(shell.ResolveScript(req.ID, nil, "the media folder of the workspace is not known"))
+		return
+	}
+	r := shell.Revealer{
+		GOOS: runtime.GOOS, Root: *root,
+		Start: func(name string, args []string) error {
+			cmd := exec.CommandContext(context.Background(), name, args...)
+			if err := cmd.Start(); err != nil {
+				return err
+			}
+			go func() { _ = cmd.Wait() }()
+			return nil
+		},
+	}
+	msg := ""
+	if err := r.Reveal(req.Path); err != nil {
+		msg = err.Error()
 	}
 	win.ExecJS(shell.ResolveScript(req.ID, nil, msg))
 }

@@ -359,6 +359,17 @@
         },
         "type": "object"
       },
+      "AssetRevealResult": {
+        "properties": {
+          "display": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "AssetUsesResult": {
         "properties": {
           "hash": {
@@ -16700,6 +16711,76 @@
           }
         ],
         "summary": "Rename a file of the library; the stored file keeps its hash"
+      }
+    },
+    "/api/v1/assets/{hash}/reveal": {
+      "post": {
+        "operationId": "assets.reveal",
+        "parameters": [
+          {
+            "description": "sha256: and 64 hex digits, as the library lists it.",
+            "in": "path",
+            "name": "hash",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {},
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetRevealResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "The checked path of the stored file, for a person in local mode; there is no such route in network mode"
       }
     },
     "/api/v1/assets/{hash}/tags": {

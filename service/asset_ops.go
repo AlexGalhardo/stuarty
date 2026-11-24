@@ -19,6 +19,8 @@ type AssetLibraryService interface {
 	AssetSetInfo(ctx context.Context, req AssetSetInfoRequest) (*AssetResult, error)
 	AssetTag(ctx context.Context, req AssetTagRequest) (*AssetResult, error)
 	AssetRename(ctx context.Context, req AssetRenameRequest) (*AssetResult, error)
+	// AssetReveal is the checked path of the stored file, for a person in local mode only (SDD-011 section 14.10).
+	AssetReveal(ctx context.Context, req AssetRevealRequest) (*AssetRevealResult, error)
 }
 
 // AssetRef names a file of the library by its content hash.
@@ -90,6 +92,11 @@ func (s *svc) heldFile(ctx context.Context, c Caller, in string) (assets.Held, s
 
 			return held[i], hash, nil
 		}
+	}
+
+	// A file whose every use is in a trash is the caller's own: say so, instead of "no such file".
+	if err := s.trashedFile(ctx, c, hash); err != nil {
+		return assets.Held{}, hash, err
 	}
 
 	return assets.Held{}, hash, newError(command.CodeNotFound, "no file with the hash %s is in the library.", hash).

@@ -101,6 +101,9 @@ var parity = []row{
 	{method: "AssetSetInfo", tool: "media_import", command: "asset:set", route: "PUT /assets/{}"},
 	{method: "AssetTag", tool: "media_import", command: "asset:tag", route: "POST /assets/{}/tags"},
 	{method: "AssetRename", tool: "media_import", command: "asset:rename", route: "POST /assets/{}/rename"},
+	// The path of a stored file is for a person: the command always refuses, there is no MCP tool, and the route
+	// is absent in network mode (SDD-003 exception E-6, SDD-011 section 14.10).
+	{method: "AssetReveal", command: "asset:path", route: "POST /assets/{}/reveal"},
 	{method: "AuditList", command: "audit", route: "GET /audit"},
 	{method: "ExportFile", route: "GET /jobs/{}/file", httpOnly: true},
 	// The CLI command tools:install is for the person at the terminal and has
