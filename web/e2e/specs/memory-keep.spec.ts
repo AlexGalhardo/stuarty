@@ -32,4 +32,33 @@ test.describe("keeping a memory note", () => {
 			pane.getByRole("button", { name: "Keep this note" }),
 		).toHaveCount(0);
 	});
+
+	test("a note that waits is listed first, and Reject removes it so it is never kept", async ({
+		page,
+		request,
+	}) => {
+		const waiting = `agent-reject-${Date.now()}`;
+		const agent = await caller(request, "claude-code");
+		await agent("POST", "/library/memory", {
+			name: waiting,
+			description: "Rejected by a person",
+			body: "Not wanted.",
+		});
+
+		await ensureAccount(page.request, home);
+		await signInWithPassword(page.request);
+		await page.goto("/memory");
+		const row = page.locator(`[data-entry='${waiting}']`);
+		await expect(
+			page.locator("[data-group=pending]").locator(`[data-entry='${waiting}']`),
+		).toBeVisible();
+		await row.click();
+
+		const pane = page.getByTestId("memory-pane");
+		await expect(pane.getByTestId("memory-pending")).toContainText(
+			"Waiting for your approval",
+		);
+		await pane.getByRole("button", { name: "Reject this note" }).click();
+		await expect(row).toHaveCount(0);
+	});
 });
