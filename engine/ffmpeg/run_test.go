@@ -305,6 +305,37 @@ func TestRunDeadlineKillsTheRun(t *testing.T) {
 	}
 }
 
+// TestRunIsNotCutByTheToolTimeout (VV-391): contrib/engine ends a run whose context has no deadline after
+// Config.Timeout (5 minutes by default). The deadline of the run is the one of its kind, so a run that is
+// still inside it must not be ended by that default: the tool here has a 400 ms default, the run a 3 s
+// deadline, and the child outlives both, so only the deadline of the run may end it.
+func TestRunIsNotCutByTheToolTimeout(t *testing.T) {
+	r, dir, _ := helperRunner(t)
+	short, err := engine.Find(context.Background(), engine.Config{
+		Name: "helper", Path: os.Args[0], VersionArgs: []string{helperFlag + "version"}, Timeout: 400 * time.Millisecond,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	start := time.Now()
+	_, err = r.exec(
+		context.Background(),
+		execSpec{
+			tool:     short,
+			dir:      dir.Dir(),
+			argv:     []string{helperFlag + "sleep"},
+			deadline: 3 * time.Second,
+			stdout:   &bytes.Buffer{},
+		},
+	)
+	if !errors.Is(err, ErrDeadline) {
+		t.Fatalf("error = %v, want ErrDeadline (the run was ended by the default timeout of the tool)", err)
+	}
+	if took := time.Since(start); took < 2500*time.Millisecond {
+		t.Errorf("the run ended after %s, before its 3 s deadline", took)
+	}
+}
+
 func TestScaledDeadlinesStayInsideTheCeilings(t *testing.T) {
 	exportBase := ExportDeadline(30 * time.Second)
 	if exportBase != 5*time.Minute || ExportDeadline(10*time.Hour) != 2*time.Hour {
