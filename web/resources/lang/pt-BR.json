@@ -3321,6 +3321,7 @@
         "video": "Nenhum vídeo ainda",
         "audio": "Nenhum som ainda"
       },
+      "empty_filtered": "Nenhum arquivo corresponde a esses filtros.",
       "loading": {
         "visual": "Carregando as imagens...",
         "video": "Carregando os vídeos...",
@@ -3358,7 +3359,6 @@
           "text": "Seus arquivos ficam salvos neste computador ou no seu próprio servidor."
         }
       },
-      "empty_filtered":"Nenhum arquivo corresponde a esses filtros.",
       "more": "Carregar mais",
       "detail": {
         "title": "Detalhes",
