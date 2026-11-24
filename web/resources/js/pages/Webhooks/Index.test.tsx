@@ -66,26 +66,31 @@ describe("a delivery row", () => {
 	});
 });
 
+// A right-to-left override inside a name: written as code points so that the file holds none.
+const hostileName = `evil${String.fromCodePoint(0x202e)}fdp`;
+
+// The title with the name in an element that isolates its direction, then `after`.
+const isolated = (before: string, after: string): RegExp =>
+	new RegExp(
+		`${before}<span[^>]*unicode-bidi:isolate[^>]*>${hostileName}</span>${after}`,
+	);
+
 describe("the title that repeats the name of a webhook", () => {
 	test("isolates the name in the question that confirms a removal or a rotation", () => {
 		const html = inI18n(
 			<>
 				<NamedTitle
 					messageKey="ui.webhooks.confirm_remove_title"
-					name={"evil‮fdp"}
+					name={hostileName}
 				/>
 				<NamedTitle
 					messageKey="ui.webhooks.confirm_rotate_title"
-					name={"evil‮fdp"}
+					name={hostileName}
 				/>
 			</>,
 		);
-		expect(html).toMatch(
-			/Remove <span[^>]*unicode-bidi:isolate[^>]*>evil‮fdp<\/span>\?/,
-		);
-		expect(html).toMatch(
-			/Rotate the secret of <span[^>]*unicode-bidi:isolate[^>]*>evil‮fdp<\/span>\?/,
-		);
+		expect(html).toMatch(isolated("Remove ", "\\?"));
+		expect(html).toMatch(isolated("Rotate the secret of ", "\\?"));
 	});
 });
 
@@ -108,13 +113,11 @@ describe("the signing secret note", () => {
 	test("a name with bidirectional controls is isolated inside the title (SDD-007 section 8.5 item 3)", () => {
 		const html = inI18n(
 			<SecretNote
-				revealed={{ id: "whk_1", name: "evil‮fdp", secret: "whsec_abc" }}
+				revealed={{ id: "whk_1", name: hostileName, secret: "whsec_abc" }}
 				onClose={() => undefined}
 			/>,
 		);
-		expect(html).toMatch(
-			/Signing secret of <span[^>]*unicode-bidi:isolate[^>]*>evil‮fdp<\/span>/,
-		);
+		expect(html).toMatch(isolated("Signing secret of ", ""));
 	});
 
 	test("the name of a webhook reaches the page as text, never as markup", () => {
