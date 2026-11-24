@@ -1,6 +1,7 @@
 package servicetest
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 
@@ -36,6 +37,18 @@ func TestBundleOfAProjectWithNoTimelineRoundTrips(t *testing.T) {
 		if e.name == "document.json" || e.name == "operations.ndjson" {
 			t.Fatalf("the bundle of a project with no timeline holds %s", e.name)
 		}
+	}
+
+	// Version 3, so that a build that reads up to version 2 asks to be updated instead of calling it damaged.
+	_, files := readZip(t, path)
+
+	var man service.BundleManifest
+	if err := json.Unmarshal(files["manifest.json"], &man); err != nil {
+		t.Fatal(err)
+	}
+
+	if man.BundleVersion != 3 || man.Document != nil || man.Production == nil {
+		t.Fatalf("manifest = %+v, want version 3 with a production and no document", man)
 	}
 
 	for _, asNew := range []bool{true, false} {
