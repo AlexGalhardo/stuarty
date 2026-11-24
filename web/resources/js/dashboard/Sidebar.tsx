@@ -504,13 +504,15 @@ export default function Sidebar({
 	}
 
 	const collapsed = form === "rail";
+	// max-md:hidden: the first render does not know the width yet; on a phone the column would stand beside the
+	// page, wider than the window, until the drawer form replaces it.
 	return (
 		<div
 			data-testid="sidebar"
 			data-state={collapsed ? "collapsed" : "expanded"}
 			data-form={form}
 			className={cn(
-				"flex shrink-0 flex-col bg-surface-sunken p-2 md:sticky md:top-0 md:h-dvh md:border-r",
+				"flex shrink-0 flex-col bg-surface-sunken p-2 max-md:hidden md:sticky md:top-0 md:h-dvh md:border-r",
 				collapsed ? "w-14" : "w-64",
 			)}
 		>

@@ -72,7 +72,7 @@ function Slot({
 		>
 			<Icon aria-hidden="true" className="size-4 shrink-0 text-icon" />
 			<div className="min-w-0">
-				<p className="text-xs text-muted-foreground">{label}</p>
+				<p className="truncate text-xs text-muted-foreground">{label}</p>
 				<p className="truncate text-sm font-medium">{children}</p>
 			</div>
 		</div>
@@ -197,7 +197,8 @@ export default function SceneBar({
 								: `${t("ui.shell.scene.tool")} · ${t(`ui.chat.tool_status_${model.tool.status}`)}`
 						}
 						testId="scene-tool"
-						className="min-w-0 flex-1"
+						// 7 rem at least: squeezed beside a long agent line it goes to a line of its own
+						className="min-w-28 flex-1"
 					>
 						{model.tool === null ? (
 							<span className="text-muted-foreground">
