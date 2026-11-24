@@ -135,7 +135,7 @@ Author decisions D-134 and D-137. Epic 74 can start now, and so can epic 87, bec
 | [82](82-publishing-and-approvals-screens.md) | Publishing and approvals screens | L | 74, 75, 77, 78 | TODO |
 | [83](83-chat-skills-prompts-memory-screens.md) | Chat, skills, prompts and memory screens | M | 74, 75, 76 | TODO |
 | [84](84-connections-settings-account-screens.md) | Connections, settings, account and error screens | L | 57, 74, 75 | DONE (2026-11-24, `ab16d2ce6`..`8a373f993`) |
-| [85](85-video-editor-screens.md) | Video editor redesign | XL | 69, 74, 75, 76 | TODO |
+| [85](85-video-editor-screens.md) | Video editor redesign | XL | 69, 74, 75, 76 | DONE (2026-11-24, `3c77c564e`..`b50da822a`) |
 | [86](86-image-editor-screens.md) | Image editor redesign | L | 74, 75, 76 | TODO |
 | [87](87-site-navbar-and-docs.md) | Site navbar and documentation design | M | — | DONE (2026-11-23, `dffbeea6b`..`56ec38048`) |
 | [88](88-landing-page-redesign.md) | Landing page redesign | M | 75, 76, 78, 79, 87 | TODO |
