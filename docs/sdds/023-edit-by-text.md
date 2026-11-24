@@ -57,7 +57,7 @@ The source range to remove is `R = [words[from_word].Start, words[to_word].End)`
 3. An item wholly inside `R` is deleted, and later items of its track close the gap.
 4. Items are processed from the latest `start` to the earliest on each track, so the ripple of one never moves an item not yet processed.
 
-The timeline loses `R` converted to timeline frames within one frame (a speed change rounds each piece down, C.27). Speech that was spoken before `R.start` and after `R.end` is untouched. Captions already made keep their words; `caption.retime_from_clip` re-syncs them (the panel offers it after a cut).
+At speed 1 the timeline loses exactly `R`. At a changed speed each kept piece is rounded down to whole frames (C.27), so the timeline loses `R` converted to timeline frames plus less than one frame per kept piece: less than two frames when the cut leaves two pieces (at speed 3/2, removing one source frame from a 10-frame clip takes 2 frames, not 0.67). Rounding a piece up instead would show a source frame of the removed word again. Speech that was spoken before `R.start` and after `R.end` is untouched. Captions already made keep their words; `caption.retime_from_clip` re-syncs them (the panel offers it after a cut).
 
 ## 4. Detecting fillers and repetitions
 
@@ -76,6 +76,8 @@ A plain `é` (the verb) and a plain `um` in Portuguese (the article) are never f
 
 **Repetitions.** For a sequence length `n` from 4 down to 1: when the `n` normalised words at `i` equal the `n` words at `i + n` and the gap between the end of the first copy and the start of the second is at most `RepeatWindowMS` (default 700), the first copy `[i, i + n - 1]` is a repetition and the later copy is kept (the creator keeps the fluent take). Longer sequences are tried first and a word is part of at most one suggestion; fillers claim their words before repetitions do. A single word repeated is **weak** when it is an intensifier or an answer (`very`, `really`, `so`, `no`, `yes`, `bye`; `muito`, `não`, `sim`, `tchau`), strong otherwise; a sequence of two or more words is strong.
 
+**Only what the timeline shows.** The service detects over the words that have a range on the timeline (`DetectShown`), with their transcript indices: a word already cut is not suggested again, so a second review cannot fail on it, and two copies that a cut made adjacent are a repetition.
+
 **Result.** A `Suggestion` has `kind` (`filler` or `repetition`), `strength` (`strong` or `weak`), `from_word`, `to_word`, `text` (the words, untrusted text), and `start_ms`, `end_ms` (the span of the words). Suggestions are ordered by `from_word` and do not overlap. The same input gives the same output, byte for byte.
 
 ## 5. Operations, scopes and surfaces
@@ -86,7 +88,7 @@ A plain `é` (the verb) and a plain `um` in Portuguese (the article) are never f
 | `TranscriptDetectFillers` | `read` | `GET /projects/{id}/transcript/fillers?asset_id=` | `transcript:fillers` | `media_inspect` with the section `fillers` |
 | `transcript.delete_range` | `edit` | `POST /projects/{id}/edit` | `edit` | `edit` |
 
-`TranscriptView` returns `{revision, asset_id, language, words: [{index, text, start, end, ranges: [{item_id, track_id, start, end}]}], skipped_items}`, where `revision` is the revision of the timeline the ranges were computed against, `start` and `end` are asset frames and `ranges` timeline frames. `TranscriptDetectFillers` returns `{revision, asset_id, language, suggestions}`. Neither starts a job: with no transcript they fail with `E_INVALID_STATE` and a hint that names `job_start` of kind `transcribe`, like the edits that need analysis (SDD-002 A.9). The text of a word is untrusted text and is delimited as such on the agent surfaces (SDD-007 section 8). Both read the transcript and the document under one snapshot; no connection is opened.
+`TranscriptView` returns `{revision, asset_id, language, words: [{index, text, start, end, ranges: [{item_id, track_id, start, end}]}], skipped_items}`, where `revision` is the revision of the timeline the ranges were computed against, `start` and `end` are asset frames and `ranges` timeline frames. `TranscriptDetectFillers` returns `{revision, asset_id, language, suggestions}`. Neither starts a job: with no transcript they fail with `E_INVALID_STATE` and a hint that names `job_start` of kind `transcribe`, like the edits that need analysis (SDD-002 A.9). The text of a word is untrusted text (SDD-007 section 8). On the agent surfaces (`media_inspect` and the CLI) it is escaped, capped (80 characters a word, 200 a suggestion) and listed in an untrusted block with its index; the HTTP read keeps the cleaned text for the panel, which renders it with `UntrustedText`. `media_inspect` returns one page of the words or the suggestions within the budget of SDD-003 section 3.10: `cursor` pages the transcript when that section is asked for, else the words, else the fillers, and a section that does not own the cursor says that it was cut. Both read the transcript and the document under one snapshot; no connection is opened.
 
 ## 6. The review before removal
 
@@ -102,7 +104,7 @@ Whisper can drop or smooth fillers, so what the pinned whisper.cpp (`v1.9.2`, mo
 
 - **Repetitions** are found in both languages (recall 1.00 and 0.83). **English hesitations** that whisper writes (`um`, `hmm`, `er`) are found; one it drops (`uh`) cannot be. The filler recall is 0.69 in English.
 - **Portuguese hesitations** are mostly written by whisper as the words `um` and `é`, which the rule must not flag; the filler recall is 0.06. The panel therefore tells the person what was checked and never says "no fillers" (section 6).
-- A word that starts a sentence has its onset within about 25 ms of the audible onset (the post-processing of SDD-011 section 10.4 snaps it to the end of the pause); a word inside a run is a median 160 to 240 ms off. A cut whose edges are inside a run follows the whisper times, so the review shows the range and an edge may clip a neighbour by a few tens of milliseconds. Snapping the edges to the silences of the asset is the refinement, not part of this epic.
+- A word that starts a sentence has its onset within about 25 ms of the audible onset (the post-processing of SDD-011 section 10.4 snaps it to the end of the pause); a word inside a run is a median 160 to 240 ms off. A cut whose edges are inside a run follows the whisper times, so the review shows the range and an edge may clip a neighbour or leave part of the word, by as much as that error (hundreds of milliseconds at worst). Snapping the edges to the silences of the asset is the refinement, not part of this epic.
 - The fixture is synthetic: it bounds what the rules and the model do with clean, isolated hesitations and does not replace recordings of people.
 
 ## 8. Errors and limits
