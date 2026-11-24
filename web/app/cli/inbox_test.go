@@ -63,10 +63,8 @@ func TestInboxTextCutsEveryAgentTextToALineAndReportsWhatIsMissing(t *testing.T)
 		inbox.UndoCan: "  can be undone", inbox.UndoCannot: "cannot be undone",
 		inbox.UndoNotVerified: "undo not verified", "": "undo not verified",
 	} {
-		if got := inboxText(&service.InboxListResult{Rows: []inbox.Row{{ID: "chat:cpr_b", Undo: undo}}}); !strings.Contains(
-			got,
-			want,
-		) {
+		got := inboxText(&service.InboxListResult{Rows: []inbox.Row{{ID: "chat:cpr_b", Undo: undo}}})
+		if !strings.Contains(got, want) {
 			t.Errorf("undo %q is not told as %q:\n%s", undo, want, got)
 		}
 	}

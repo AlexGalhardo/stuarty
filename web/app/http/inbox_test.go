@@ -120,7 +120,7 @@ func inboxStreamAs(t *testing.T, h *networkHarness, cookie string) *sseClient {
 	hr.Header.Set("Origin", netOrigin)
 	hr.AddCookie(&http.Cookie{Name: cookieName, Value: cookie})
 
-	resp, err := h.srv.Client().Do(hr) //nolint:bodyclose // the reader goroutine closes it
+	resp, err := h.srv.Client().Do(hr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -133,8 +133,8 @@ func (h *networkHarness) pendingFor(t *testing.T, id, owner string) {
 
 	now := time.Now().UnixMilli()
 	row := approval.Row{
-		ID: id, Actor: "local:claude-code", OwnerUserID: owner, Kind: "publish.post", Summary: "secret plan of " + owner,
-		PayloadRef: "draft:1", State: approval.StatePending, CreatedMs: now,
+		ID: id, Actor: "local:claude-code", OwnerUserID: owner, Kind: "publish.post",
+		Summary: "secret plan of " + owner, PayloadRef: "draft:1", State: approval.StatePending, CreatedMs: now,
 		ExpiresMs: now + approval.ExpireAfter.Milliseconds(),
 	}
 

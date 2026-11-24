@@ -52,7 +52,7 @@ func (h *harness) stream(path string, headers map[string]string) *sseClient {
 		hr.Header.Set(k, v)
 	}
 
-	resp, err := h.srv.Client().Do(hr) //nolint:bodyclose // the reader goroutine closes it
+	resp, err := h.srv.Client().Do(hr)
 	if err != nil {
 		h.t.Fatal(err)
 	}
@@ -61,8 +61,10 @@ func (h *harness) stream(path string, headers map[string]string) *sseClient {
 }
 
 // readSSE reads the frames of an answer in the background; a non-200 answer keeps its body instead.
-func readSSE(t testing.TB, resp *http.Response, cancel context.CancelFunc) *sseClient {
-	c := &sseClient{t: t, ch: make(chan sseEvent, 4096), status: resp.StatusCode, header: resp.Header, cancel: cancel}
+func readSSE(tb testing.TB, resp *http.Response, cancel context.CancelFunc) *sseClient {
+	tb.Helper()
+
+	c := &sseClient{t: tb, ch: make(chan sseEvent, 4096), status: resp.StatusCode, header: resp.Header, cancel: cancel}
 
 	if resp.StatusCode != http.StatusOK {
 		defer resp.Body.Close()
