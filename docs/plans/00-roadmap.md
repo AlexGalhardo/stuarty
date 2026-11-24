@@ -114,7 +114,7 @@ The order, the critical path and the groups are in `docs/planning/screen-recordi
 | [68](68-linux-capture.md) | Recording on Linux | L | 62, 43 | TODO |
 | [69](69-edit-by-text-and-filler-words.md) | Edit by text, filler words and repetitions | L | the transcription of today | DONE (2026-11-24, `55e5e49fd`..`a003450b9`) |
 | [70](70-local-ai-helper-and-vertical-cuts.md) | Local AI helper and face-aware vertical cuts | XL | ADR-0050, 69 | TODO |
-| [71](71-caption-styles-blur-studio-voice.md) | Caption styles, sensitive-data blur and studio voice | M | — | TODO |
+| [71](71-caption-styles-blur-studio-voice.md) | Caption styles, sensitive-data blur and studio voice | M | — | DONE (2026-11-24, `c7e019a79`..`5af33ac99`; blur at the frame edge is VV-392) |
 | [72](72-optional-local-models.md) | Optional local models: background removal and depth | L | 70, the BEN2 licence decision | TODO |
 | [73](73-hyperframes-end-to-end-round.md) | A real end-to-end round with HyperFrames | S | 33 | DONE (2026-11-23, `e280de049`..`3a9a43dad`) |
 
