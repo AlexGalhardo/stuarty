@@ -294,7 +294,7 @@ func prompt(m msg, pidfile string) {
 			"token":         "sk-hostile-secret-value",
 			"authorization": "Bearer hostile-bearer",
 			"operations": []any{
-				map[string]any{"op": "caption.restyle", "args": map[string]any{"api_key": "sk-hostile-in-args"}},
+				map[string]any{"op": "animation.apply_preset", "args": map[string]any{"api_key": "sk-hostile-in-args"}},
 			},
 		})
 		chunk("permission: " + answer)

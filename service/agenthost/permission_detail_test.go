@@ -18,13 +18,13 @@ func TestParsePermissionKeepsOnlyTheAllowlistOfAStuartyTool(t *testing.T) {
 
 	req, err := ParsePermission(json.RawMessage(`{"sessionId":"s","toolCall":{"toolCallId":"c","title":"mcp__stuarty__edit",` +
 		`"kind":"other","rawInput":{"project_id":"prj_a4k9m2x7bq","item_id":"ast_3c5v8n2w6d","token":"sk-hostile-secret-value",` +
-		`"authorization":"Bearer hostile-bearer","operations":[{"op":"caption.restyle","args":{"api_key":"sk-hostile-in-args"}}]}},` +
+		`"authorization":"Bearer hostile-bearer","operations":[{"op":"animation.apply_preset","args":{"api_key":"sk-hostile-in-args"}}]}},` +
 		`"options":[{"optionId":"o","name":"Once","kind":"allow_once"}]}`))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	want := chat.PermissionDetail{Project: "prj_a4k9m2x7bq", Item: "ast_3c5v8n2w6d", Operations: []string{"caption.restyle"}}
+	want := chat.PermissionDetail{Project: "prj_a4k9m2x7bq", Item: "ast_3c5v8n2w6d", Operations: []string{"animation.apply_preset"}}
 
 	if req.Detail == nil || req.Detail.Project != want.Project || req.Detail.Item != want.Item ||
 		len(req.Detail.Operations) != 1 || req.Detail.Operations[0] != want.Operations[0] {
@@ -71,7 +71,7 @@ func TestProcessPermissionOfAStuartyToolStoresOnlyTheAllowlist(t *testing.T) {
 
 	d := ask.Permission.Detail
 	if d == nil || d.Project != "prj_a4k9m2x7bq" || d.Item != "ast_3c5v8n2w6d" || len(d.Operations) != 1 ||
-		d.Operations[0] != "caption.restyle" {
+		d.Operations[0] != "animation.apply_preset" {
 		t.Fatalf("detail of the event = %+v", d)
 	}
 
