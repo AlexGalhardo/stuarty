@@ -69,6 +69,8 @@ type Item struct {
 	Trashed  bool
 	// Text is the Markdown of a brief or of a text item; only its emptiness matters here.
 	Text string
+	// TextKind is the kind of a text item: script, copy, caption or post (SDD-019). An empty one is a copy.
+	TextKind string
 	// Status is the state of a publication: "pending_approval" or "published". Other kinds leave it empty.
 	Status string
 }
