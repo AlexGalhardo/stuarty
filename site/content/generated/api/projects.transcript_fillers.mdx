@@ -40,6 +40,7 @@ Content type `application/json`. Schema: [`TranscriptDetectResult`](/docs/api/sc
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `asset_id` | `string` | no |  |
+| `filler_rules` | `boolean` | no |  |
 | `language` | `string` | no |  |
 | `project_id` | `string` | no |  |
 | `revision` | `integer (int64)` | no |  |
@@ -233,6 +234,7 @@ puts "#{response.code} #{response.body}"
 ```json title="200"
 {
   "asset_id": "string",
+  "filler_rules": false,
   "language": "string",
   "project_id": "string",
   "revision": 0,
