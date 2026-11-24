@@ -22,7 +22,7 @@ Send the secret in the header `Authorization: Bearer <secret>`: the local token 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `project_id` | `string` | no | With a project: also the answers its brief holds. |
-| `kind` | `string` | no | The kind of production: short (the default), commercial or long. |
+| `kind` | `string` | no | The set of questions: short, commercial, long, text or image. Left out, the kind of the project. |
 
 ## Responses
 
@@ -35,6 +35,7 @@ Content type `application/json`. Schema: [`BriefingQuestionsResult`](/docs/api/s
 | `answers` | array of [`BriefingAnswer`](/docs/api/schemas#briefinganswer) | no |  |
 | `guided` | `boolean` | no |  |
 | `has_brief` | `boolean` | no |  |
+| `production_kind` | `string` | no |  |
 | `project_id` | `string` | no |  |
 | `questions` | array of [`BriefingQuestion`](/docs/api/schemas#briefingquestion) | no |  |
 | `text` | `string` | no |  |
@@ -222,6 +223,7 @@ puts "#{response.code} #{response.body}"
   ],
   "guided": false,
   "has_brief": false,
+  "production_kind": "string",
   "project_id": "string",
   "questions": [
     {

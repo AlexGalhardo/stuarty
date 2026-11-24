@@ -23,8 +23,10 @@ var _ BriefingService = (*svc)(nil)
 // that project already answers.
 type BriefingQuestionsRequest struct {
 	ProjectID string `json:"project_id,omitempty"`
-	// Kind is the kind of production whose questions to ask: short (the default), commercial or long. The kind
-	// is not stored with the project (SDD-018 section 17): the caller says which set it means.
+	// Kind is the set of questions to ask: short, commercial, long, text or image. Left out, it is the set of the
+	// kind of the project (a text project asks the questions of a text, an image project those of an image; a
+	// video, a project not decided yet and a request with no project ask the short video), VV-399. The set is not
+	// stored with the project (SDD-018 section 17): a caller that wants another one says so.
 	Kind string `json:"kind,omitempty"`
 }
 
@@ -50,8 +52,10 @@ type BriefingAnswer struct {
 // BriefingQuestionsResult is the questions and, for a project, the state of its brief.
 type BriefingQuestionsResult struct {
 	Envelope
-	ProjectID string             `json:"project_id,omitempty"`
-	Questions []BriefingQuestion `json:"questions"`
+	ProjectID string `json:"project_id,omitempty"`
+	// ProductionKind is the set the questions belong to, so a surface that did not choose one knows which it got.
+	ProductionKind string             `json:"production_kind"`
+	Questions      []BriefingQuestion `json:"questions"`
 	// HasBrief is true when the project has a brief that is not empty. Guided is true when that brief was
 	// written by the briefing, and Answers then holds its answers; a brief written by hand is Free and is
 	// replaced only with replace true.
@@ -64,7 +68,7 @@ type BriefingQuestionsResult struct {
 // BriefingAnswerRequest answers the briefing of a project: the answers replace the brief.
 type BriefingAnswerRequest struct {
 	ProjectID string            `json:"project_id"`
-	Kind      string            `json:"kind,omitempty"`    // the kind of production of the answers: short (the default), commercial or long
+	Kind      string            `json:"kind,omitempty"`    // the set of the answers; left out, the set of the kind of the project
 	Answers   map[string]string `json:"answers"`           // question id to answer; see BriefingQuestions
 	Replace   bool              `json:"replace,omitempty"` // allow replacing a brief written by hand
 	DryRun    bool              `json:"dry_run,omitempty"`
@@ -77,14 +81,31 @@ func (s *svc) BriefingQuestions(ctx context.Context, req BriefingQuestionsReques
 		return nil, err
 	}
 
-	kind := project.KindOrShort(req.Kind)
+	var (
+		head ProductionHead
+		rows []ItemRow
+		of   = project.KindUndecided
+	)
+
+	if req.ProjectID != "" {
+		head, rows, err = s.loadProductionItems(ctx, c, req.ProjectID)
+		if err != nil {
+			return nil, err
+		}
+
+		of = project.EffectiveKind(head.Kind, coreItems(rows))
+	}
+
+	kind := project.KindFor(req.Kind, of)
 
 	set, v := project.BriefingQuestionsFor(kind)
 	if v != nil {
 		return nil, violation(v)
 	}
 
-	res := &BriefingQuestionsResult{UntrustedNotice: UntrustedNotice, ProjectID: req.ProjectID}
+	res := &BriefingQuestionsResult{
+		UntrustedNotice: UntrustedNotice, ProjectID: req.ProjectID, ProductionKind: string(kind),
+	}
 
 	for _, q := range set {
 		res.Questions = append(res.Questions, BriefingQuestion{
@@ -102,16 +123,6 @@ func (s *svc) BriefingQuestions(ctx context.Context, req BriefingQuestionsReques
 	}
 
 	if req.ProjectID != "" {
-		head, err := s.loadProduction(ctx, s.store.Productions(), c, req.ProjectID)
-		if err != nil {
-			return nil, err
-		}
-
-		rows, err := s.store.Productions().Items(ctx, head.ID)
-		if err != nil {
-			return nil, asError(err)
-		}
-
 		if b := briefOf(rows); b != nil && strings.TrimSpace(b.Body) != "" {
 			res.HasBrief = true
 
@@ -138,6 +149,21 @@ func (s *svc) BriefingQuestions(ctx context.Context, req BriefingQuestionsReques
 	return res, nil
 }
 
+// loadProductionItems reads a project the caller may see, and its items.
+func (s *svc) loadProductionItems(ctx context.Context, c Caller, id string) (ProductionHead, []ItemRow, error) {
+	head, err := s.loadProduction(ctx, s.store.Productions(), c, id)
+	if err != nil {
+		return ProductionHead{}, nil, err
+	}
+
+	rows, err := s.store.Productions().Items(ctx, head.ID)
+	if err != nil {
+		return ProductionHead{}, nil, asError(err)
+	}
+
+	return head, rows, nil
+}
+
 func questionLine(q BriefingQuestion) string {
 	need := "optional"
 	if q.Required {
@@ -162,14 +188,26 @@ func (s *svc) BriefingAnswer(ctx context.Context, req BriefingAnswerRequest) (*B
 		return nil, err
 	}
 
-	kind := project.KindOrShort(req.Kind)
+	// A set the caller names is checked before the store is read; with none, the set is that of the project.
+	kind := project.KindFor(req.Kind, project.KindUndecided)
+
+	if req.Kind == "" {
+		head, rows, err := s.loadProductionItems(ctx, c, req.ProjectID)
+		if err != nil {
+			return nil, err
+		}
+
+		kind = project.KindFor("", project.EffectiveKind(head.Kind, coreItems(rows)))
+	}
 
 	answers, v := project.CheckAnswersFor(kind, req.Answers)
 	if v != nil {
 		return nil, violation(v)
 	}
 
-	keep := func(current string) *project.RuleError { return project.CheckBriefingReplace(current, req.Replace) }
+	keep := func(current string) *project.RuleError {
+		return project.CheckBriefingReplace(current, req.Replace)
+	}
 
 	return s.writeBrief(ctx, c, BriefSetRequest{
 		ProjectID: req.ProjectID, Text: project.BriefingMarkdownFor(kind, answers), DryRun: req.DryRun,

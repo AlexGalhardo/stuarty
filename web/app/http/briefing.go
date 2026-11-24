@@ -11,12 +11,12 @@ import (
 
 type briefingQuestionsIn struct {
 	ProjectID string `json:"project_id,omitempty" doc:"With a project: also the answers its brief holds."`
-	Kind      string `json:"kind,omitempty"       doc:"The kind of production: short (the default), commercial or long."`
+	Kind      string `json:"kind,omitempty"       doc:"The set of questions: short, commercial, long, text or image. Left out, the kind of the project."`
 }
 
 type briefingAnswerIn struct {
 	ID      string            `json:"id"                validate:"required"`
-	Kind    string            `json:"kind,omitempty"                        doc:"The kind of production of the answers: short (the default), commercial or long."`
+	Kind    string            `json:"kind,omitempty"                        doc:"The set of the answers: short, commercial, long, text or image. Left out, the kind of the project."`
 	Answers map[string]string `json:"answers"                               doc:"Question id to answer; the questions are GET /briefing/questions. The answers replace the brief."`
 	Replace bool              `json:"replace,omitempty"                     doc:"Replace a brief that was written by hand."`
 	DryRun  any               `json:"dry_run,omitempty"`
