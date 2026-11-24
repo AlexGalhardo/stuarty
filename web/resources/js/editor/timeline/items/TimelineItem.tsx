@@ -234,7 +234,7 @@ export const TimelineItem = memo(function TimelineItem({
 					className={cn(
 						"relative z-10 truncate",
 						(item.type === "clip" || item.type === "audio") &&
-							"rounded bg-background/70 px-1",
+							"rounded bg-background/70 px-1 text-foreground",
 					)}
 				>
 					{label}
