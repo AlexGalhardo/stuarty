@@ -257,13 +257,7 @@ export default function ChatConversation({
 			</div>
 			{session !== null && canSend(state) && !events.some(isPersonTurn) && (
 				<StarterPrompts
-					kind={
-						(
-							chat.projects.find((p) => p.id === chat.projectId) as
-								| { kind?: string }
-								| undefined
-						)?.kind
-					}
+					kind={chat.projects.find((p) => p.id === chat.projectId)?.kind}
 					onPick={(sentence) => {
 						setText(sentence);
 						composerRef.current?.focus();
