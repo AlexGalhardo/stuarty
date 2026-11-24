@@ -167,6 +167,10 @@ test.describe("projects-page", () => {
 		expect(created[0].timelines).toBe(0);
 
 		await expect(page.getByText(GOAL.specific)).toBeVisible();
+		// A project not decided yet is not assumed to be a video: the form starts on a text (D-134).
+		const timeline = page.getByRole("radio", { name: "Timeline", exact: true });
+		await expect(timeline).not.toBeChecked();
+		await timeline.check();
 		await page.getByLabel("Title", { exact: true }).fill("Main cut");
 		await page.getByLabel("Size").selectOption("1:1");
 		await page.getByRole("button", { name: "Add item" }).click();

@@ -48,6 +48,7 @@ test.describe("project overview", () => {
 		};
 		expect(brief.text).toBe("A teaser for the launch.");
 
+		await page.getByRole("radio", { name: "Timeline", exact: true }).check();
 		await page.getByLabel("Title").first().fill("Wide cut");
 		await page.getByLabel("Size").selectOption("16:9");
 		await page.getByRole("button", { name: "Add item" }).click();

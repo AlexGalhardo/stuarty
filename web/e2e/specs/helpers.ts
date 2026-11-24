@@ -546,6 +546,7 @@ export async function createThroughTheForm(
 	await page.getByRole("button", { name: "Create project" }).click();
 	await page.waitForURL(/\/projects\/prj_[0-9a-hjkmnp-tv-z]{10}$/);
 	const id = page.url().split("/").pop() ?? "";
+	await page.getByRole("radio", { name: "Timeline", exact: true }).check();
 	await page.getByLabel("Title", { exact: true }).fill(name);
 	// Leaving before the item is added would abort the request, and the navigation with it (VV-224).
 	const added = page.waitForResponse(
