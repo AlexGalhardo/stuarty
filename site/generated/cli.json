@@ -3854,6 +3854,21 @@
       ]
     },
     {
+      "name": "chat:activity",
+      "domain": "workspace",
+      "summary": "show which skill a chat session loaded and which tool its agent is calling",
+      "usage": [
+        "stuarty chat:activity <id>"
+      ],
+      "example": "stuarty chat:activity cht_7k2m9x4q1b",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
       "name": "memory:list",
       "domain": "memory",
       "summary": "list the memory notes",

@@ -1051,6 +1051,43 @@
         },
         "type": "object"
       },
+      "ChatActivityResult": {
+        "properties": {
+          "session_id": {
+            "type": "string"
+          },
+          "skill": {
+            "$ref": "#/components/schemas/SkillSlot"
+          },
+          "skills_loaded": {
+            "items": {
+              "$ref": "#/components/schemas/LoadedSkill"
+            },
+            "type": "array"
+          },
+          "state": {
+            "type": "string"
+          },
+          "tool": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ToolActivity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "ChatSession": {
         "properties": {
           "created_at": {
@@ -1906,6 +1943,16 @@
           "seq": {
             "format": "int64",
             "type": "integer"
+          },
+          "skill": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SkillRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "state": {
             "anyOf": [
@@ -4676,6 +4723,21 @@
           },
           "warnings": {
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "LoadedSkill": {
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "hash": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -7845,6 +7907,17 @@
         },
         "type": "object"
       },
+      "SkillRef": {
+        "properties": {
+          "hash": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "SkillReviewResult": {
         "properties": {
           "entry": {
@@ -7854,6 +7927,17 @@
             "type": "string"
           },
           "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "SkillSlot": {
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "state": {
             "type": "string"
           }
         },
@@ -8802,6 +8886,9 @@
       },
       "Tool": {
         "properties": {
+          "action": {
+            "type": "string"
+          },
           "output": {
             "type": "string"
           },
@@ -8815,6 +8902,29 @@
             "type": "string"
           },
           "tool_kind": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ToolActivity": {
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "description_key": {
+            "type": "string"
+          },
+          "from_agent": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string"
+          },
+          "technical_name": {
+            "type": "string"
+          },
+          "title": {
             "type": "string"
           }
         },
@@ -16810,6 +16920,59 @@
           }
         ],
         "summary": "Read one chat session"
+      }
+    },
+    "/api/v1/chat/sessions/{id}/activity": {
+      "get": {
+        "operationId": "chat.sessions.activity",
+        "parameters": [
+          {
+            "description": "A chat session id, cht_ and 10 characters.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatActivityResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read which skill a session loaded and which tool it is calling, with a plain description"
       }
     },
     "/api/v1/chat/sessions/{id}/cancel": {

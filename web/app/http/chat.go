@@ -115,6 +115,12 @@ func (h *apiHandler) chatTranscript(c *web.Ctx, in chatTranscriptIn) (service.Ch
 	return deref(res), err
 }
 
+func (h *apiHandler) chatActivity(c *web.Ctx, in chatSessionIn) (service.ChatActivityResult, error) {
+	res, err := h.Service.ChatActivityGet(c.Context(), service.ChatRef{SessionID: in.ID})
+
+	return deref(res), err
+}
+
 func (h *apiHandler) chatSend(c *web.Ctx, in chatSendIn) (service.ChatSession, error) {
 	res, err := h.Service.ChatSend(c.Context(), service.ChatSendRequest{SessionID: in.ID, Text: in.Text})
 

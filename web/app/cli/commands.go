@@ -141,6 +141,7 @@ func registry() []*spec {
 		chatSessionsCmd,
 		chatSessionCmd,
 		chatTranscriptCmd,
+		chatActivityCmd,
 	}, append(append(libraryCommands(), publishingCommands()...), writingCommands()...)...)
 }
 

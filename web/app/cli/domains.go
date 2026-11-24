@@ -190,6 +190,7 @@ var commandDomains = map[string]string{
 	"chat:sessions":   command.DomainWorkspace,
 	"chat:session":    command.DomainWorkspace,
 	"chat:transcript": command.DomainWorkspace,
+	"chat:activity":   command.DomainWorkspace,
 }
 
 // domainOf is the domain of a command of the table, empty for a name that is not in it.

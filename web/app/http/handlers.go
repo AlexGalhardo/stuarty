@@ -531,6 +531,7 @@ func (h *apiHandler) registerAll() {
 	register(h, "chat.sessions.get", h.chatGet)
 	register(h, "chat.sessions.events", h.chatStream)
 	register(h, "chat.sessions.transcript", h.chatTranscript)
+	register(h, "chat.sessions.activity", h.chatActivity)
 	register(h, "chat.sessions.send", h.chatSend)
 	register(h, "chat.sessions.cancel", h.chatCancel)
 	register(h, "chat.sessions.answer", h.chatAnswer)
