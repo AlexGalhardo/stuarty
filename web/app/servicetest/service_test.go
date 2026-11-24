@@ -805,6 +805,42 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			)
 			return err
 		},
+		"RecordingSources": func() error {
+			_, err := e.svc.RecordingSources(ctx, service.RecordingSourcesRequest{})
+			return err
+		},
+		"RecordingStart": func() error {
+			_, err := e.svc.RecordingStart(ctx, service.RecordingStartRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"RecordingStop": func() error {
+			_, err := e.svc.RecordingStop(ctx, service.RecordingRef{ID: "rec_0000000001"})
+			return err
+		},
+		"RecordingCancel": func() error {
+			_, err := e.svc.RecordingCancel(ctx, service.RecordingRef{ID: "rec_0000000001"})
+			return err
+		},
+		"RecordingGet": func() error {
+			_, err := e.svc.RecordingGet(ctx, service.RecordingRef{ID: "rec_0000000001"})
+			return err
+		},
+		"RecordingList": func() error {
+			_, err := e.svc.RecordingList(ctx, service.RecordingListRequest{ProjectID: "prj_0000000001"})
+			return err
+		},
+		"RecordingConfirm": func() error {
+			_, err := e.svc.RecordingConfirm(ctx, service.RecordingRef{ID: "rec_0000000001"})
+			return err
+		},
+		"RecordingDismiss": func() error {
+			_, err := e.svc.RecordingDismiss(ctx, service.RecordingRef{ID: "rec_0000000001"})
+			return err
+		},
+		"RecordingPlace": func() error {
+			_, err := e.svc.RecordingPlace(ctx, service.RecordingPlaceRequest{ID: "rec_0000000001"})
+			return err
+		},
 	}
 
 	// Every method of the interface is checked here and has a scope entry.
