@@ -4,6 +4,7 @@ import { ApiError } from "../api/errors";
 import type { Recording } from "../api/types";
 import {
 	formatClock,
+	isKept,
 	isLive,
 	unavailableKey,
 	unavailableReason,
@@ -44,6 +45,13 @@ describe("the screen the dialog draws for what the service said", () => {
 		expect(viewOf(recording("ready", "dismissed")).step).toBe("review");
 		expect(viewOf(recording("ready", "added")).step).toBe("added");
 		expect(isLive(recording("ready", "pending"))).toBe(false);
+	});
+
+	test("only a ready recording set aside with Not now is kept for the picker", () => {
+		expect(isKept(recording("ready", "dismissed"))).toBe(true);
+		expect(isKept(recording("ready", "pending"))).toBe(false);
+		expect(isKept(recording("ready", "added"))).toBe(false);
+		expect(isKept(recording("failed"))).toBe(false);
 	});
 
 	test("a failed one and a discarded one have their own screens", () => {

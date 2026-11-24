@@ -5,7 +5,7 @@ import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
-import type { RecordingSourceInfo } from "../api/types";
+import type { Recording, RecordingSourceInfo } from "../api/types";
 import {
 	DEFAULT_FPS,
 	FPS_CHOICES,
@@ -62,14 +62,19 @@ function Step({
 			);
 		case "pick":
 			return (
-				<Picker
-					displays={view.sources.displays}
-					windows={view.sources.windows}
-					busy={flow.busy}
-					onStart={(kind, id, name, fps) =>
-						void flow.start(kind, id, name, fps)
-					}
-				/>
+				<>
+					{view.kept.length > 0 && (
+						<Kept kept={view.kept} busy={flow.busy} flow={flow} />
+					)}
+					<Picker
+						displays={view.sources.displays}
+						windows={view.sources.windows}
+						busy={flow.busy}
+						onStart={(kind, id, name, fps) =>
+							void flow.start(kind, id, name, fps)
+						}
+					/>
+				</>
 			);
 		case "recording":
 			return (
@@ -199,6 +204,22 @@ function Step({
 					</div>
 				</>
 			);
+		case "kept":
+			return (
+				<>
+					<p role="status" className="text-sm" data-record-kept-note="">
+						{t("ui.editor.record.kept")}
+					</p>
+					<div className="flex gap-2">
+						<Button type="button" onClick={flow.reset}>
+							{t("ui.editor.record.again")}
+						</Button>
+						<Button type="button" variant="outline" onClick={onClose}>
+							{t("ui.editor.record.close")}
+						</Button>
+					</div>
+				</>
+			);
 		case "gone":
 			return (
 				<>
@@ -216,6 +237,63 @@ function Step({
 				</>
 			);
 	}
+}
+
+// The recordings a person set aside with "Not now": still out of the project and out of sight of agents, until the
+// person adds or deletes them here (SDD-025 section 4).
+function Kept({
+	kept,
+	busy,
+	flow,
+}: {
+	kept: Recording[];
+	busy: boolean;
+	flow: RecordFlow;
+}): ReactNode {
+	const t = useT();
+	return (
+		<section className="flex flex-col gap-2" data-record-kept="">
+			<h3 className="text-xs font-medium text-muted-foreground uppercase">
+				{t("ui.editor.record.kept_title")}
+			</h3>
+			<p className="text-xs text-muted-foreground">
+				{t("ui.editor.record.review_notice")}
+			</p>
+			<ul className="flex flex-col gap-1">
+				{kept.map((r) => (
+					<li
+						key={r.recording_id}
+						className="flex flex-wrap items-center gap-2 text-sm"
+					>
+						<span className="min-w-0 truncate tabular-nums">
+							{t("ui.editor.record.review_length", {
+								time: formatClock(r.duration_ms),
+							})}
+						</span>
+						<Button
+							type="button"
+							size="sm"
+							disabled={busy}
+							data-record-kept-add={r.recording_id}
+							onClick={() => void flow.confirm(r.recording_id)}
+						>
+							{t("ui.editor.record.add")}
+						</Button>
+						<Button
+							type="button"
+							size="sm"
+							variant="ghost"
+							disabled={busy}
+							data-record-kept-delete={r.recording_id}
+							onClick={() => void flow.remove(r.recording_id)}
+						>
+							{t("ui.editor.record.delete")}
+						</Button>
+					</li>
+				))}
+			</ul>
+		</section>
+	);
 }
 
 interface Choice {
