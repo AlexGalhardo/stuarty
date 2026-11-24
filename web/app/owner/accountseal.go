@@ -10,7 +10,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/library"
 )
 
-// sealBackupPrefix names the folder of backups/ that the sealing of an earlier account keeps while it works.
+// sealBackupPrefix names what backups/ holds while the sealing of an earlier account is not finished.
 const sealBackupPrefix = "seal-"
 
 // migrateDocuments is step 5 of the start-up order (SDD-005 section 7): the documents below the current schema.
@@ -32,9 +32,11 @@ func (o *Owner) migrateDocuments(ctx context.Context, cfg Config) error {
 // sealStageTwo seals what an account made before ADR-0053 still holds in clear text, at its first unlock (SDD-005
 // section 5.17.4): the files of the library, then the documents, the edit log, the backups, the idempotency results
 // and the asset notes in batches, and last it removes what the sealing left in clear. It runs while the gate of the
-// Service is closed. It is resumable: a copy of the database is made first and is removed only after every row and
-// file was read back; a failure keeps the copy, leaves the workspace as it opens (the unsealed part is read as clear
-// text) and the next unlock goes on.
+// Service is closed. It is resumable without a copy of the database: every batch is one transaction read back before
+// it commits, so a kill or a failure leaves each value either clear (read as it is until version 1) or sealed, and
+// the next unlock goes on. A copy would be a whole clear duplicate of what the person chose to encrypt, and nothing
+// would put it back. An empty mark says that the old pages are still to be removed, so a kill after the version
+// moved is finished at the next unlock.
 func (o *Owner) sealStageTwo(ctx context.Context, cfg Config) {
 	version, err := o.Store.SealVersion(ctx)
 	if err != nil {
@@ -43,10 +45,11 @@ func (o *Owner) sealStageTwo(ctx context.Context, cfg Config) {
 		return
 	}
 
+	// The mark, and any copy an earlier build of this migration left in clear.
 	pending, _ := filepath.Glob(filepath.Join(o.Dir.Path("backups"), sealBackupPrefix+"*"))
 
 	if version >= account.SealedAll {
-		// A kill after the version moved left the copy and the old pages: finish what the migration would have.
+		// A kill after the version moved left the old pages: finish what the migration would have.
 		if len(pending) > 0 {
 			o.finishAccount(ctx, pending...)
 		}
@@ -54,10 +57,9 @@ func (o *Owner) sealStageTwo(ctx context.Context, cfg Config) {
 		return
 	}
 
-	copyDir := filepath.Join(o.Dir.Path("backups"), sealBackupPrefix+o.now().UTC().Format("20060102T150405.000Z"))
-
-	if err := o.copyForSealing(ctx, copyDir); err != nil {
-		cfg.Log.ErrorContext(ctx, "the copy before the sealing could not be made; nothing was sealed", "error", err)
+	mark := filepath.Join(o.Dir.Path("backups"), sealMark)
+	if err := writeSealMark(mark); err != nil {
+		cfg.Log.ErrorContext(ctx, "the mark of the sealing could not be written; nothing was sealed", "error", err)
 
 		return
 	}
@@ -65,42 +67,32 @@ func (o *Owner) sealStageTwo(ctx context.Context, cfg Config) {
 	// The files of the library first: the version moves only when files and rows are all sealed.
 	lib := library.New(o.Dir.Path("library"), library.NewMemIndex(), o.now, library.WithFiles(o.Account.Files()))
 	if _, err := lib.SealAll(ctx); err != nil {
-		cfg.Log.ErrorContext(ctx, "the files of the library could not all be sealed; the copy is kept and the next "+
-			"unlock tries again", "error", err)
+		cfg.Log.ErrorContext(ctx, "the files of the library could not all be sealed; the next unlock tries again",
+			"error", err)
 
 		return
 	}
 
 	if err := o.Store.SealStageTwo(ctx, o.Account.Sealer(), o.accountFault); err != nil {
-		cfg.Log.ErrorContext(ctx, "the documents could not all be sealed; the copy is kept and the next unlock "+
-			"continues", "error", err)
+		cfg.Log.ErrorContext(ctx, "the documents could not all be sealed; the next unlock continues", "error", err)
 
 		return
 	}
 
-	// Verified: the old pages, the copies of earlier schema migrations and this copy go (SDD-005 section 5.17.3 step 4).
-	o.finishAccount(ctx, append(pending, copyDir)...)
+	// Verified: the old pages, the copies of earlier schema migrations and the mark go (SDD-005 section 5.17.3 step 4).
+	o.finishAccount(ctx, append(pending, mark)...)
 }
 
-// copyForSealing keeps a verified copy of the database in clear before the sealing begins.
-func (o *Owner) copyForSealing(ctx context.Context, dir string) error {
-	if err := os.MkdirAll(dir, 0o700); err != nil {
+// sealMark is the empty file of backups/ that says the sealing of an earlier account has not removed its old pages.
+const sealMark = sealBackupPrefix + "unfinished"
+
+// writeSealMark writes the empty mark of the sealing. It holds nothing of the person.
+func writeSealMark(path string) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 		return err
 	}
 
-	if _, err := o.Store.DB().ExecContext(ctx, "PRAGMA wal_checkpoint(TRUNCATE)"); err != nil {
-		_ = os.RemoveAll(dir)
-
-		return err
-	}
-
-	if _, err := copyFileAtomic(o.Dir.Path("db.sqlite"), filepath.Join(dir, "db.sqlite")); err != nil {
-		_ = os.RemoveAll(dir)
-
-		return err
-	}
-
-	return nil
+	return os.WriteFile(path, nil, 0o600)
 }
 
 // locked says whether the studio holds an account and nobody is signed in or may be: the documents are sealed and no
