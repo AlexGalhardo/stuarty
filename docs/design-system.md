@@ -1,6 +1,6 @@
 # Stuarty design system
 
-- Status: Accepted (2026-11-14). Written by the designer, to be reviewed by the architect and by senior-e (editor UI).
+- Status: Accepted (2026-11-14). Written by the designer, to be reviewed by the architect and by senior-e (editor UI). Sections 2.1 to 2.14 and 4.2 to 4.4 were revised by epic 74 to the final redesign (semantic tokens, the type scale, radii, elevation, motion, the shared components); where an older passage of this document still names `--primary`, `--muted` or another former token, it is an alias of a token of section 2 (section 2.1).
 - Applies to: the web UI under `web/resources/` (the Inertia pages and the editor), the desktop shell (`desktop/`, ADR-0023), and, where section 8.4 says so, the documentation site (`site/`, SDD-010).
 - Sources of truth, which this document follows and never overrides: author decisions D-008, D-013, D-016, D-022, D-023, D-024, D-028, D-029; [SDD-012](sdds/012-ui-architecture.md) (editor UI architecture: §1 thin client, §3 kept front end, §6 layout, §7 timeline, §11 preview, §12 inspector, §16 i18n, §17 theme, §18 accessibility, §21 desktop); [SDD-002](sdds/002-command-catalogue.md) A.4 (time strings) and A.8 (the error envelope); [SDD-003](sdds/003-agent-interfaces.md) §1.4; [SDD-010](sdds/010-documentation-site.md) §1 and §10 (site shell, glossary); [ADR-0007](adrs/0007-thin-ui-client.md), [ADR-0012](adrs/0012-text-and-shape-rasterization.md), [ADR-0013](adrs/0013-browser-preview-stack.md), [ADR-0023](adrs/0023-desktop-shell-deferred.md); [PRD-001](prds/001-video-editor.md) §3 (use cases), RF-070 to RF-075.
 - Code it describes: `web/resources/css/app.css` (the only token file), `web/components.json` (kept style record: base colour `neutral`, icon library `lucide`), `web/resources/js/components/ui/*` (`@base-ui/react`), `web/resources/js/layouts/AppLayout.tsx`, and the editor tree of SDD-012 §3.2.
@@ -28,8 +28,8 @@ Every rule below has a reason in a decision of the author or an ADR. When two pr
 | # | Principle | What it means in practice | Source |
 | --- | --- | --- | --- |
 | P1 | The UI never computes an edit | Components draw what the core returns and send commands. A component shows a ghost while a request is pending, never the predicted result. No visual state may imply that an edit succeeded before the core answered (no optimistic "done" check marks, no item moved in the read model) | ADR-0007, SDD-012 §1 rules T1 to T10 |
-| P2 | Content first | The picture and the timeline are the largest and most saturated things on screen. Chrome is neutral grey; colour in chrome is reserved for state (focus, selection, error, warning, success, agent activity). The preview surround is a neutral dark grey in both themes | D-024, SDD-012 §17 item 4 |
-| P3 | Minimalist editor | One way to reach each command plus the palette; no decorative illustration, gradients, glass effects or interface animation beyond the two kinds of section 2.13. Fewer, larger regions beat many small panels | D-013, SDD-012 §17 item 5 |
+| P2 | Content first, calm chrome | The picture and the timeline are the largest and most saturated things on screen. Chrome is a calm ink (dark) or paper (light) neutral; the accent (indigo) marks the main action, teal is what comes from the agent, amber is what waits for a person, and colour means something or it is not used. The preview surround is a neutral dark in both themes. The earlier ban on a hue in chrome and on a brand-coloured button is lifted by the final redesign (D-133 to D-137) | D-024, D-133 to D-137, SDD-012 §17 item 4 |
+| P3 | Minimalist editor | One way to reach each command plus the palette; fewer, larger regions beat many small panels. Motion is only what the tokens of section 2.13 allow, and the editor components still add none of their own (SDD-012 §17 item 5). Loading is a static skeleton and a sentence, never a spinner | D-013, SDD-012 §17 item 5 |
 | P4 | Agent actions are visible and attributed | Any change made by another actor shows who made it (actor label, `--agent` colour, icon), where (outlined items), and when (relative time). The UI never hides or merges another actor's work into "you" | RF-118, SDD-012 §5.8, §15 |
 | P5 | Errors are the core's words | An error shows a localized headline for its code, then the core's `message` and `hint` exactly as received. The UI never paraphrases or invents a cause | SDD-002 A.8, SDD-012 §4.4, rule T9 |
 | P6 | One look in browser and desktop | The desktop shell loads the same web UI with the same tokens, fonts and components. Nothing may depend on a browser-only or webview-only feature outside SDD-012 §21.1 | ADR-0023, SDD-012 §21 |
@@ -40,107 +40,115 @@ Every rule below has a reason in a decision of the author or an ADR. When two pr
 
 ### 2.1 Where tokens live and how they are named
 
-All tokens are CSS custom properties in `web/resources/css/app.css`, defined in `:root` (light) and overridden in `.dark` (dark), and exposed to Tailwind 4 through the existing `@theme inline` block so components use utilities (`bg-background`, `text-muted-foreground`, `bg-ed-panel`, `border-ed-track-line`). Dark is applied by the `dark` class on `<html>` (`@custom-variant dark (&:where(.dark, .dark *))`, kept), set before paint from `localStorage.theme`, dark when absent (SDD-012 §17 item 1).
+All tokens are CSS custom properties in `web/resources/css/app.css`. The semantic tokens of the final redesign are defined in `:root` (light) and overridden in `.dark` (dark), in OKLCH, with the hex of the redesign in a comment. Each name is also listed in `@theme inline`, mapped to itself, so Tailwind 4 turns it into utilities (`bg-surface`, `text-text-muted`, `border-border-strong`, `bg-accent-soft`); the unlayered rule in `:root` and `.dark` wins over the copy Tailwind writes in its theme layer. Dark is applied by the `dark` class on `<html>` (`@custom-variant dark (&:where(.dark, .dark *))`), set before paint from `localStorage.theme`, **dark when absent** (SDD-012 §17 item 1).
 
-Three groups, three prefixes:
+| Group | Names | Who uses it |
+| --- | --- | --- |
+| Semantic, final redesign | `--color-background`, `surface`, `surface-raised`, `surface-sunken`, `surface-hover`, `surface-selected`, `text`, `text-muted`, `text-subtle`, `text-disabled`, `text-on-accent`, `text-on-agent`, `text-on-danger`, `border`, `border-strong`, `focus`, `icon`, and the families `accent`, `agent`, `success`, `warning`, `danger` (each with `-soft` and `-text`; `accent`, `agent` and `danger` also `-hover`; `agent` also `-border`), plus `shadow-sm`, `shadow-md`, `shadow-lg` as colours | every page, component and editor chrome |
+| Aliases of the former system | `--background`, `--foreground`, `--card`, `--popover`, `--primary`, `--secondary`, `--muted`, `--muted-foreground`, `--accent-foreground`, `--destructive`, `--border`, `--input`, `--ring`, `--info`, `--sidebar*`, and their `--color-*` utilities (`bg-primary`, `text-muted-foreground`) | pages not yet migrated |
+| Brand | `--brand`, `--brand-foreground`, `--brand-accent`, `--brand-subtle`, `--brand-text` (section 11.3) | the mark, the one primary action of a page, the active navigation item; the logo stays |
+| Editor (SDD-012 §17) | `--ed-*` | `web/resources/js/editor/**` and the image editor only |
 
-| Group | Prefix of the CSS variable | Tailwind 4 name | Who uses it |
+**Aliases.** A page that was not migrated repaints with no change to its code, because each former name points to a new token, in one rule for both themes. An alias is deleted by the last epic that stops using it.
+
+| Former name | Points to | Why |
+| --- | --- | --- |
+| `--background`, `--foreground` | `--color-background`, `--color-text` | |
+| `--card` | `--color-surface` | |
+| `--popover` | `--color-surface-raised` | menus, dialogs |
+| `--primary`, `--primary-foreground` | `--color-accent`, `--color-text-on-accent` | the main action is the accent |
+| `--secondary`, `--secondary-foreground` | `--color-surface-raised`, `--color-text` | |
+| `--muted`, `--muted-foreground` | `--color-surface-sunken`, `--color-text-muted` | |
+| `--destructive` | `--color-danger-text` | it is used as text and as a tint, so it takes the text variant of danger |
+| `--border`, `--input`, `--ring` | `--color-border`, `--color-border-strong`, `--color-focus` | |
+| `--info` | `--color-accent-text` | |
+| `--sidebar*` | `--color-surface-sunken`, `--color-surface-hover`, `--color-accent`, `--color-border`, `--color-focus` | |
+
+**A name that changed meaning.** `--color-accent` used to be a hover surface (shadcn `bg-accent`); it is now the accent hue. The few places that used `bg-accent` as a hover or pressed surface use `bg-surface-hover` or `bg-surface-selected`.
+
+A raw Tailwind palette class (`bg-indigo-600`, `text-red-500`) or a literal colour in a component is not allowed; every colour is a token.
+
+Values are OKLCH. Every pair was checked with the WCAG 2.x formula after converting OKLCH to sRGB (section 2.6), in both themes.
+
+### 2.2 The two palettes
+
+The tokens are drawn from two neutral scales and four hues, with their hex values in the comments of `app.css`. Components never use these steps directly: they use the semantic tokens.
+
+| Scale | Steps used | Role |
+| --- | --- | --- |
+| Ink (cool, dark theme) | 950 `#0F1015`, 900 `#15161C`, 850 `#1B1C24`, 800 `#22242D`, 750 `#2A2C37`, 700 `#363947`, 500 `#747A8F`, 400 `#9A9EB1`, 300 `#BCBFCD`, 100 `#EEEFF4` | backgrounds, surfaces, borders and text of the dark theme |
+| Paper (warm, light theme) | 0 `#FFFFFF`, 50 `#FAF9F5`, 100 `#F3F1EA`, 200 `#EAE7DD`, 300 `#DCD8CB`, 500 `#85816F`, 600 `#66634F`, 700 `#4E4C3F`, 900 `#1E1D18` | the same roles in the light theme |
+| Indigo | 100, 300, 550, 600, 650, 700, 900, 950 | the accent, derived from the logo |
+| Teal | 100, 200, 300, 400, 700, 800, 950 | what comes from the agent |
+| Green, amber, red | 100, 300, 500 or 700, 950 | success, waiting for a person, danger |
+
+### 2.3 Colour: surfaces, text, borders and focus
+
+| Token (Tailwind) | Dark | Light | Use |
 | --- | --- | --- | --- |
-| shadcn base | none (`--background`, `--primary`, ...), names kept exactly as shadcn generated them | `--color-<name>` in `@theme inline` (already present) | every page and the editor; the kept components in `components/ui/` |
-| product semantic (new) | none: `--success`, `--warning`, `--info`, `--agent`, `--brand` and their `-foreground` | `--color-success`, ... added to `@theme inline` | every page and the editor |
-| editor (SDD-012 §17) | `--ed-` | `--color-ed-<name>` added to `@theme inline` | `web/resources/js/editor/**` only |
+| `--color-background` (`bg-background`) | `#15161C` | `#FAF9F5` | page background |
+| `--color-surface` (`bg-surface`) | `#1B1C24` | `#FFFFFF` | cards and panels |
+| `--color-surface-raised` | `#22242D` | `#FFFFFF` | dialogs, menus, popovers, the secondary button |
+| `--color-surface-sunken` | `#0F1015` | `#F3F1EA` | the sidebar, the fields, quiet areas |
+| `--color-surface-hover` | `#2A2C37` | `#EAE7DD` | the hover of a row or a control, a skeleton, a progress track |
+| `--color-surface-selected` | `#1C1C45` | `#E9E8FC` | the active item, a pressed toggle |
+| `--color-text` | `#EEEFF4` | `#1E1D18` | main text |
+| `--color-text-muted` | `#BCBFCD` | `#4E4C3F` | supporting text |
+| `--color-text-subtle` | `#9A9EB1` | `#66634F` | metadata and placeholders |
+| `--color-text-disabled` | `#747A8F` | `#85816F` | a disabled control (exempt from contrast) |
+| `--color-border` | `#363947` | `#DCD8CB` | dividers and card edges, decorative |
+| `--color-border-strong` | `#747A8F` | `#85816F` | the boundary of a control: fields, checkboxes, the unchecked switch (3:1) |
+| `--color-focus` | `#B3B5FF` | `#4339CC` | the focus ring (3:1) |
+| `--color-icon` | `#BCBFCD` | `#4E4C3F` | an icon with no text beside it |
 
-A raw Tailwind palette class (`bg-indigo-600`, `text-red-500`) or a literal colour in a component is not allowed; `AppLayout.tsx` currently uses `bg-indigo-600 text-white` for the mark and moves to `bg-brand text-brand-foreground` (section 5.3).
+Contrast pairs: every text token on every surface that can hold it, and the focus and border tokens at 3:1, are in section 2.6 and in `check:contrast`.
 
-Values are OKLCH, as in the existing file. The column "Changed" says whether this document changes a value that already exists in `app.css` or in the SDD-012 §17 table, and why. Every value was checked with the WCAG 2.x formula after converting OKLCH to sRGB (section 2.6).
+### 2.4 Colour: the accent, the agent, and the states
 
-### 2.2 Neutral scale
+Each family has a solid token (`--color-<family>`), a `-soft` surface and a `-text` colour that is safe as text on the page, a card and its own `-soft` surface. A status is always an icon and a word (`StatusBadge`, section 4.4).
 
-The neutral scale is the Base UI editor palette (`components.json` records `style: base-ui`). It is a reference scale: components do not use these steps directly, the semantic tokens below are defined from them. Hex values are the sRGB rendering, for reading only.
-
-| Step | OKLCH | Hex | Semantic tokens that use it |
+| Family | Meaning | Dark | Light |
 | --- | --- | --- | --- |
-| 0 | `oklch(1 0 0)` | `#ffffff` | light `--background`, `--card`, `--popover`, `--ed-panel` |
-| 50 | `oklch(0.985 0 0)` | `#fafafa` | light `--sidebar`; dark `--foreground` |
-| 100 | `oklch(0.97 0 0)` | `#f5f5f5` | light `--muted`, `--secondary`, `--accent`, `--ed-bg` |
-| 150 | `oklch(0.95 0 0)` | `#eeeeee` | light `--ed-timeline` |
-| 200 | `oklch(0.922 0 0)` | `#e5e5e5` | light `--border`; dark `--primary` |
-| 400 | `oklch(0.708 0 0)` | `#a1a1a1` | dark `--muted-foreground` |
-| 450 | `oklch(0.62 0 0)` | `#868686` | light `--input`, `--ed-track-line` |
-| 500 | `oklch(0.556 0 0)` | `#737373` | (was light `--muted-foreground` and dark `--ring`) |
-| 550 | `oklch(0.50 0 0)` | `#636363` | light `--muted-foreground`; dark `--ed-track-line` |
-| 800 | `oklch(0.269 0 0)` | `#262626` | dark `--muted`, `--secondary`, `--accent` |
-| 850 | `oklch(0.2 0 0)` | `#161616` | dark `--ed-panel`; `--ed-preview-surround` (both themes) |
-| 900 | `oklch(0.205 0 0)` | `#171717` | light `--primary`; dark `--card`, `--popover` |
-| 925 | `oklch(0.18 0 0)` | `#121212` | dark `--ed-timeline` |
-| 950 | `oklch(0.145 0 0)` | `#0a0a0a` | light `--foreground`; dark `--background` |
+| `accent` (`-hover`, `-soft`, `-text`) | the one main action of an area, a link, the current step; derived from the logo | `#5B5DEA`, text `#B3B5FF`, soft `#26265C` | `#4339CC`, text `#4339CC`, soft `#E9E8FC` |
+| `agent` (`-hover`, `-soft`, `-text`, `-border`) | what the agent does or proposes: its name, its skill, its tool, the remote-edit outline (D-030) | `#3DDCC8`, text `#7CEBDB`, soft `#0D2826` | `#0F6F67`, text `#0F6F67`, soft `#D8F3EE` |
+| `success` (`-soft`, `-text`) | done, ready, connected | `#35A85F`, text `#8BE3A6`, soft `#10291B` | `#166A38`, text `#166A38`, soft `#DDF5E4` |
+| `warning` (`-soft`, `-text`) | waits for a person, a warning | `#E3A32B`, text `#F6CC7C`, soft `#2E2410` | `#855700`, text `#855700`, soft `#FBEFD2` |
+| `danger` (`-hover`, `-soft`, `-text`) | an error, a refusal, a destructive action | `#C9303E`, text `#FFA8A8`, soft `#351A1F` | `#B12532`, text `#B12532`, soft `#FBE3E5` |
 
-### 2.3 Colour: surfaces, text, borders and focus (shadcn base)
+Teal is the agent's. Amber is "waits for you". The solid `danger` is a button fill with `--color-text-on-danger`; as text or as a border use `-text`. `--color-agent` and `--color-success` and `--color-warning` can also be used as text on the page (4.5:1, section 2.6).
 
-| Token (Tailwind) | Light | Dark | Use | Changed |
-| --- | --- | --- | --- | --- |
-| `--background` (`bg-background`) | `oklch(1 0 0)` | `oklch(0.145 0 0)` | page background of the Inertia pages | no |
-| `--foreground` (`text-foreground`) | `oklch(0.145 0 0)` | `oklch(0.985 0 0)` | primary text | no |
-| `--card`, `--card-foreground` | `oklch(1 0 0)`, `oklch(0.145 0 0)` | `oklch(0.205 0 0)`, `oklch(0.985 0 0)` | cards (project cards, settings groups) | no |
-| `--popover`, `--popover-foreground` | `oklch(1 0 0)`, `oklch(0.145 0 0)` | `oklch(0.205 0 0)`, `oklch(0.985 0 0)` | popovers, menus, dialogs, toasts, select lists | no |
-| `--primary`, `--primary-foreground` | `oklch(0.205 0 0)`, `oklch(0.985 0 0)` | `oklch(0.922 0 0)`, `oklch(0.205 0 0)` | the primary action: one per view (Export, Create project, Start export, Run). Neutral on purpose (P2): the product accent is not a hue | no |
-| `--secondary`, `--secondary-foreground` | `oklch(0.97 0 0)`, `oklch(0.205 0 0)` | `oklch(0.269 0 0)`, `oklch(0.985 0 0)` | secondary buttons, the "you" actor chip | no |
-| `--muted`, `--muted-foreground` | `oklch(0.97 0 0)`, **`oklch(0.50 0 0)`** | `oklch(0.269 0 0)`, `oklch(0.708 0 0)` | quiet surfaces; secondary text (meta lines, labels, placeholders, ruler labels) | **yes, light `--muted-foreground` from `0.556` to `0.50`**: `0.556` gave 4.34:1 on `--muted` and 4.09:1 on `--ed-timeline`, below 4.5:1 |
-| `--accent`, `--accent-foreground` | `oklch(0.97 0 0)`, `oklch(0.205 0 0)` | `oklch(0.269 0 0)`, `oklch(0.985 0 0)` | hover and highlighted rows in menus and lists (shadcn meaning: a surface, not a brand colour) | no |
-| `--destructive` | **`oklch(0.55 0.22 27.325)`** | `oklch(0.704 0.191 22.216)` | danger: error text and icons, destructive buttons (`bg-destructive/10 text-destructive`), failed state | **yes, light from `oklch(0.577 0.245 27.325)`**: the old value gave 4.37:1 on `--muted` and 3.99:1 on its own 10% tint used by the destructive button |
-| `--border` (`border-border`) | `oklch(0.922 0 0)` | `oklch(1 0 0 / 10%)` | dividers between regions, card and panel edges. Decorative only: never the only cue that identifies a control | no (exempt from 3:1 because decorative; section 7.6) |
-| `--input` (`border-input`) | **`oklch(0.62 0 0)`** | **`oklch(1 0 0 / 40%)`** | the boundary of text inputs, selects, text areas, checkboxes: the cue that identifies the field | **yes, both**: light `0.922` gave 1.26:1 and dark `/ 15%` gave 1.47:1 against the background; a field boundary needs 3:1 (WCAG 1.4.11). The dark fill `bg-input/30` becomes 12% white, still dark |
-| `--ring` (`ring-ring`, `outline-ring`) | **`oklch(0.45 0.18 250)`** | **`oklch(0.85 0.12 230)`** | the focus indicator of every focusable element (section 2.10), the only interactive accent hue | **yes, both**: light `0.708` gave 2.59:1 and dark `0.556` gave 4.18:1 solid but 1.87:1 at the 50% the components use. The new values equal `--ed-selection`, so focus looks the same in pages and editor (SDD-012 §18.1 item 6) |
-| `--sidebar`, `--sidebar-foreground`, `--sidebar-primary`, `--sidebar-primary-foreground`, `--sidebar-accent`, `--sidebar-accent-foreground`, `--sidebar-border` | kept | kept | the sidebar of `AppLayout` | no |
-| `--sidebar-ring` | **as `--ring`** | **as `--ring`** | focus in the sidebar | **yes**, same reason as `--ring` |
-| `--chart-1` to `--chart-5` | kept | kept | not used by the product; kept because shadcn components may reference them | no |
-
-### 2.4 Colour: semantic states, agent attribution and brand (new)
-
-Each state has one token usable as text and icon colour on `--background`, `--card`, `--popover`, `--muted` and `--ed-panel`, and as a tinted surface with the same pattern as shadcn's destructive (`bg-<state>/10` in light, `bg-<state>/20` in dark, with `text-<state>`). There is no solid fill for states except `--brand`.
-
-| Token (Tailwind) | Light | Dark | Use |
-| --- | --- | --- | --- |
-| `--success` (`text-success`) | `oklch(0.50 0.13 150)` | `oklch(0.75 0.15 150)` | export succeeded, asset ready, connection back to live (shown once) |
-| `--warning` (`text-warning`) | `oklch(0.52 0.12 70)` | `oklch(0.80 0.14 80)` | lint warnings, `reconnecting`, small-window notice, missing-media icon on an item, conflict notice |
-| `--info` (`text-info`) | `oklch(0.50 0.15 250)` | `oklch(0.75 0.12 240)` | lint notes, `resyncing`, neutral notices that need attention |
-| `--danger` | alias of `--destructive` | alias of `--destructive` | the name used in this document for the error state; code uses `destructive` (shadcn name kept) |
-| `--agent` (`text-agent`, `bg-agent/10`) | `oklch(0.50 0.10 190)` | `oklch(0.78 0.11 190)` | attribution of another actor: the activity dot and label, actor chips of agents in history and notices, "changed by `<actor>`" notes under inspector fields, the 2 px remote-edit outline on timeline items (D-030) |
-| `--brand`, `--brand-foreground` | `oklch(0.511 0.262 276.966)`, `oklch(0.985 0 0)` | same as light | the product mark placeholder only (section 5.3) and the documentation site's accent; never a button or a state |
-
-Hues are spread so no state is mistaken for an item type: agent teal (190) sits between audio green (150) and clip blue (250); the playhead and danger are red (25 to 27), which no item type uses.
-
-**Decision of this document.** `--agent` is a new token, used for every attribution label and chip and for the 2 px remote-edit outline on timeline items (D-030, SDD-012 §5.8 item 4 and §17), so a remote edit is not mistaken for a selection, which keeps `--ed-selection`. As an outline it meets 3:1 against `--ed-timeline` (4.82 light, 9.84 dark) and against every item fill (3.00 to 3.39 light, 3.22 to 4.43 dark).
+**Decision of this document.** `--agent` attributes every label and chip of another actor and the 2 px remote-edit outline on timeline items (D-030, SDD-012 §5.8 item 4 and §17), so a remote edit is not mistaken for a selection, which keeps `--ed-selection`.
 
 ### 2.5 Colour: editor (`--ed-*`)
 
-Names and initial values are those of SDD-012 §17. Values changed here failed the contrast pairs of SDD-012 §18.3.
+Names are those of SDD-012 §17. The chrome of the editor follows the semantic tokens; the colours of the item types stay their own, because a clip, a sound, a text, a caption and a shape must differ from each other and from the state colours.
 
-| Token | Light | Dark | Use | Changed |
-| --- | --- | --- | --- | --- |
-| `--ed-bg` | `oklch(0.97 0 0)` | `oklch(0.16 0 0)` | editor surround (grid gaps, behind panels) | no |
-| `--ed-panel` | `oklch(1 0 0)` | `oklch(0.2 0 0)` | library, inspector, top bar, timeline toolbar | no |
-| `--ed-timeline` | `oklch(0.95 0 0)` | `oklch(0.18 0 0)` | timeline background | no |
-| `--ed-track-line` | **`oklch(0.62 0 0)`** | **`oklch(0.50 0 0)`** | row separators, ruler ticks, the 1 px border of item blocks | **yes, both**: `0.88` (light) gave 1.24:1 and `0.28` (dark) 1.29:1 against `--ed-timeline`; SDD-012 §18.3 requires 3:1 |
-| `--ed-item-clip`, `--ed-item-clip-fg` | `oklch(0.80 0.08 250)`, `oklch(0.2 0 0)` | `oklch(0.42 0.12 250)`, `oklch(0.98 0 0)` | clip blocks (video and image) | no |
-| `--ed-item-audio`, `-fg` | `oklch(0.80 0.08 150)`, `oklch(0.2 0 0)` | `oklch(0.42 0.10 150)`, `oklch(0.98 0 0)` | audio blocks | no |
-| `--ed-item-text`, `-fg` | `oklch(0.84 0.10 80)`, `oklch(0.2 0 0)` | `oklch(0.50 0.12 70)`, `oklch(0.98 0 0)` | text blocks | no |
-| `--ed-item-caption`, `-fg` | `oklch(0.82 0.08 300)`, `oklch(0.2 0 0)` | `oklch(0.44 0.14 300)`, `oklch(0.98 0 0)` | caption blocks | no |
-| `--ed-item-shape`, `-fg` | `oklch(0.82 0.08 350)`, `oklch(0.2 0 0)` | `oklch(0.46 0.13 350)`, `oklch(0.98 0 0)` | shape blocks | no |
-| `--ed-playhead` | `oklch(0.55 0.22 25)` | `oklch(0.70 0.20 25)` | playhead line and handle | no |
-| `--ed-selection` | `oklch(0.45 0.18 250)` | `oklch(0.85 0.12 230)` | selection ring, focus ring in the timeline (SDD-012 §17); the remote-edit outline uses `--agent` (D-030) | no |
-| `--ed-snap` | `oklch(0.50 0.15 90)` | `oklch(0.85 0.15 90)` | snap line | no |
-| `--ed-ghost` | **`oklch(0.45 0.18 250 / 0.75)`** | `oklch(0.85 0.12 230 / 0.5)` | ghost outline and fill (fill at a further 15%) of a pending gesture | **yes, light alpha `0.5` to `0.75`**: `0.5` gave 2.33:1 against `--ed-timeline` |
-| `--ed-safe-area` | `oklch(0.50 0.15 90)` | `oklch(0.80 0.15 90)` | safe-area guide | no (light passes at 3.03:1 on the surround, the smallest margin of the set; see section 10) |
-| `--ed-error-flash` | `oklch(0.55 0.22 25)` | `oklch(0.70 0.20 25)` | outline of the item named by an overlap or conflict | no |
-| `--ed-preview-surround` | `oklch(0.2 0 0)` | `oklch(0.2 0 0)` | the preview region around the canvas, identical in both themes | no |
-| `--ed-handle` (new) | `oklch(0.85 0.12 230)` | `oklch(0.85 0.12 230)` | selection box, transform handles and the focus ring of elements drawn over the preview surround | **new**: the handles sit on `--ed-preview-surround`, which is dark in both themes; light `--ed-selection` there gives 2.50:1 |
+| Token | Dark | Light | Use |
+| --- | --- | --- | --- |
+| `--ed-bg` | `--color-background` | `--color-background` | editor surround |
+| `--ed-panel` | `--color-surface` | `--color-surface` | library, inspector, top bar, timeline toolbar |
+| `--ed-timeline` | `--color-surface-sunken` | `--color-surface-sunken` | timeline background |
+| `--ed-track-line` | `--color-border-strong` | `--color-border-strong` | row separators, ruler ticks, the 1 px border of item blocks (3:1) |
+| `--ed-item-clip`, `-fg` | `oklch(0.500 0.180 259.8)`, white | `oklch(0.546 0.215 262.9)`, white | clip blocks |
+| `--ed-item-audio`, `-fg` | `oklch(0.620 0.170 149.6)`, `oklch(0.122 0.006 261.6)` | `oklch(0.527 0.137 150.1)`, white | audio blocks |
+| `--ed-item-text`, `-fg` | `oklch(0.500 0.200 303.9)`, white | `oklch(0.496 0.237 301.9)`, white | text blocks |
+| `--ed-item-caption`, `-fg` | `oklch(0.500 0.190 354.3)`, white | `oklch(0.525 0.199 4.0)`, white | caption blocks |
+| `--ed-item-shape`, `-fg` | `oklch(0.769 0.165 70.1)`, `oklch(0.122 0.006 261.6)` | `oklch(0.553 0.174 38.4)`, white | shape blocks |
+| `--ed-playhead` | white | `oklch(0.210 0.032 264.7)` | playhead line and handle |
+| `--ed-marker`, `--ed-snap` | `--color-focus` | `--color-focus` | markers and the snap line |
+| `--ed-selection` | white | white | selection ring on an item; the remote-edit outline uses `--agent` (D-030) |
+| `--ed-ghost` | focus at 55% | focus at 75% | ghost outline and fill of a pending gesture |
+| `--ed-safe-area`, `--ed-handle` | `--color-focus` | `--color-focus` | safe-area guide, selection box and handles, focus ring over the preview surround |
+| `--ed-error-flash` | `oklch(0.645 0.215 16.4)` | `oklch(0.586 0.222 17.6)` | outline of the item named by an overlap or conflict |
+| `--ed-preview-surround` | `oklch(0.174 0.010 276.4)` (`#0F1015`) | `oklch(0.928 0.014 93.0)` (`#EAE7DD`) | the preview region around the canvas: the canvas colour of the redesign, dark in the dark theme and a warm grey in the light one |
 
-Text placed on `--ed-preview-surround` (banners inside the preview, the canvas label) uses `oklch(0.985 0 0)` and `oklch(0.708 0 0)` in both themes (17.34:1 and 6.98:1), since the surround does not change with the theme.
+Text placed on `--ed-preview-surround` (banners inside the preview, the canvas label, the transport row) uses `--color-text` and `--color-text-muted`, which pass on the canvas colour in both themes (section 2.6).
 
 ### 2.6 Contrast ratios
 
 Method: OKLCH to linear sRGB (Björn Ottosson's matrices), gamut clamp, sRGB encoding, WCAG 2.x relative luminance; a colour with alpha is composited over the surface below it in sRGB, as the browser paints it. This is the algorithm the CI script `bun run check:contrast` of SDD-012 §18.4 implements; the numbers below are what that script must reproduce within 0.02. Thresholds: 4.5:1 text, 3:1 large text, UI components and graphical objects.
+
+The pairs cover: the three text tokens on the six surfaces; the focus ring and the strong border at 3:1; each family as text on the page, on a card and on its soft surface, and its fill with its text; the former names (aliases) that unmigrated pages still use; and the editor. The "on its tint" rows are the older pattern `bg-<state>/10` in light and `/20` in dark with the state as text, kept while a page still draws it.
 
 | Pair (foreground on background) | Need | Light | Dark |
 | --- | --- | --- | --- |
@@ -217,8 +225,8 @@ Method: OKLCH to linear sRGB (Björn Ottosson's matrices), gamut clamp, sRGB enc
 | `ed-snap` on `ed-timeline` | 3 | 6.9 | 9.94 |
 | `ed-ghost` on `ed-timeline` | 3 | 4.08 | 3.74 |
 | `ed-error-flash` on `ed-timeline` | 3 | 4.16 | 5.18 |
-| `ed-safe-area` on `ed-preview-surround` | 3 | 9.94 | 9.94 |
-| `ed-handle` on `ed-preview-surround` | 3 | 9.94 | 9.94 |
+| `ed-safe-area` on `ed-preview-surround` | 3 | 6.31 | 9.94 |
+| `ed-handle` on `ed-preview-surround` | 3 | 6.31 | 9.94 |
 | `ed-item-clip-fg` on `ed-item-clip` | 4.5 | 5.17 | 6.18 |
 | `ed-item-audio-fg` on `ed-item-audio` | 4.5 | 5.02 | 5.98 |
 | `ed-item-text-fg` on `ed-item-text` | 4.5 | 6.97 | 6.66 |
@@ -227,109 +235,114 @@ Method: OKLCH to linear sRGB (Björn Ottosson's matrices), gamut clamp, sRGB enc
 | `ed-selection` on `ed-item-clip` | 3 | 5.17 | 6.18 |
 | `ed-selection` on `ed-item-text` | 3 | 6.97 | 6.66 |
 
-Item fills against `--ed-timeline` are 1.61:1 (light clip) to 2.22:1 (dark clip), below 3:1; this is why every item block has a 1 px `--ed-track-line` border (3.15:1 and 3.13:1), which carries the boundary of the block (section 4.3.6).
+Item fills against `--ed-timeline` are below 3:1; this is why every item block has a 1 px `--ed-track-line` border (3.46:1 in light, 4.46:1 in dark against the timeline), which carries the boundary of the block (section 4.3.6).
 
 ### 2.7 Typography
 
-**UI typeface.** Geist Variable, already a dependency (`@fontsource-variable/geist` 5.3.0, imported in `app.css`), served from the same origin with the bundle (P8; the default policy `default-src 'self'` of SDD-012 §2.2 allows nothing else). It is the same in the browser and in the desktop webview because it is bundled, not a system font.
+**UI typeface.** Inter Variable (SIL OFL 1.1, `@fontsource-variable/inter` 5.3.0, approved by D-138), bundled and served from the same origin with the bundle (P8; the default policy `default-src 'self'` of SDD-012 §2.2 allows nothing else). It is the same in the browser and in the desktop webview because it is bundled, not a system font. It replaces Geist Variable.
 
-| Token (Tailwind) | Value | Changed |
-| --- | --- | --- |
-| `--font-sans` (`font-sans`) | `'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif` | **yes**: the fallback was only `sans-serif`; the stack keeps metrics close while the bundled file loads and if it ever fails |
-| `--font-heading` | `var(--font-sans)` | no |
-| `--font-mono` (`font-mono`) | Tailwind 4 default: `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace` | no (Tailwind default, not redefined) |
+| Token (Tailwind) | Value |
+| --- | --- |
+| `--font-sans` (`font-sans`) | `'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif` |
+| `--font-heading` | `var(--font-sans)` |
+| `--font-mono` (`font-mono`) | the system stack of Tailwind 4: `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace` |
 
-**Fonts of the video are not UI fonts.** The six families of D-022 (Inter, Montserrat, Anton, Bebas Neue, Playfair Display, JetBrains Mono) are bundled in the Go binary for rasterizing text into the picture (ADR-0012). The browser never loads them and never lays out video text (SDD-012 rule T6): the inspector's font select lists the family names in the UI font, with no rendered samples (D-030).
+**Fonts of the video are not UI fonts.** The six families of D-022 (Inter, Montserrat, Anton, Bebas Neue, Playfair Display, JetBrains Mono) are bundled in the Go binary for rasterizing text into the picture (ADR-0012). The browser never loads them for the picture and never lays out video text (SDD-012 rule T6): the inspector's font select lists the family names in the UI font, with no rendered samples (D-030).
 
-**Timecodes and numbers.** Every time, duration, revision number, frame count, percentage and size uses `tabular-nums` (`font-variant-numeric: tabular-nums`) so digits do not jump while the playhead moves. Timecodes are set in `font-sans` with tabular figures, not in a monospace font: the mono stack above is a system font and differs between Windows, macOS and Linux, which would break P6. `font-mono` is used only for code-like content: file paths, command names, ids, error codes, the install command, diff text from the core.
+**Timecodes and numbers.** Every time, duration, revision number, frame count, percentage and size uses `tabular-nums` so digits do not jump while the playhead moves. Timecodes are set in `font-sans` with tabular figures, not in a monospace font. `font-mono` is used only for code-like content: file paths, command names, ids, error codes, the install command, diff text from the core.
 
-**Decision of this document, confirmed by D-030.** Timecodes use Geist with `tabular-nums` instead of a monospace face. The digit-width test of SDD-012 §11.5 passes on the bundled Geist Variable: senior-e measured equal advance widths for the digits with tabular figures (24.48 px each at 40 px), so `@fontsource-variable/geist-mono` is not needed and is not added. D-030 approves it in advance only if that test ever fails.
+**The text scale.** One scale for the dashboard, written in `app.css` under `html[data-text-scale="dashboard"]`, at every width. `DashboardLayout` sets the attribute on `<html>`, so dialogs and menus portaled to the body follow. The editors keep the Tailwind default, where `text-xs` is 12 px, their minimum.
 
-Type scale (Tailwind 4 defaults, rem at 16 px):
-
-| Role | Utility | Size / line height | Weight | Where |
+| Style | Utility | Size / line height | Weight | Where |
 | --- | --- | --- | --- | --- |
-| Micro label | `text-xs` | 12 / 16 px | 500 | item labels in the timeline, ruler labels (canvas, drawn at 12 px), badges, meta lines, field labels in the inspector |
-| UI text | `text-sm` | 14 / 20 px | 400; 500 for buttons and tabs | the default in the editor: buttons, inputs (from `md`), menus, toasts, table rows |
-| Body | `text-base` | 16 / 24 px | 400 | Inertia page body text; inputs below the `md` breakpoint (avoids mobile zoom on focus, kept from shadcn) |
-| Section title | `text-sm` | 14 / 20 px | 600 | inspector section headers, panel titles, dialog section titles |
-| Dialog title | `text-lg` | 18 / 28 px | 600 | dialog and sheet titles |
-| Page title | `text-xl` to `text-2xl` | 20 / 28 to 24 / 32 px | 600 | the projects and settings pages |
-| Timecode, transport | `text-sm tabular-nums` | 14 / 20 px | 500 | transport row, top bar revision |
+| h1 | `text-3xl` | 30 / 38 | 600 | the title of a page (`PageHeader`) |
+| h2 | `text-2xl` | 24 / 32 | 600 | the title of a block (`SectionTitle`) |
+| h3 | `text-lg` | 18 / 26 | 600 | the title of a card |
+| Body large | `text-lg` | 18 / 28 | 400 | an opening sentence |
+| Body | `text-base` | 16 / 24 | 400 | text |
+| Small, label, mono | `text-sm`, `text-xs` | 14 / 20 | 400 or 500 | the smallest size of the dashboard: `text-xs` resolves to 14 px there |
+| Editor small | `text-xs` | 12 / 16 | 400 or 500 | the video and image editors only |
+| Display | `text-4xl` to `text-6xl` | 38 / 46, 52 / 60, 68 / 72 | 600 | numbers and the landing |
 
-Rules: 12 px is the minimum size anywhere; weights are 400, 500 and 600 only; no italics in UI chrome; letter spacing stays default except `tracking-tight` on the product name (kept from `AppLayout`); text never sits on a picture without a solid surface behind it.
+Rules: 14 px is the minimum on the dashboard and 12 px in the editors; weights are 400, 500 and 600 (Inter Regular, Medium or SemiBold, Bold for display only); no italics in UI chrome; text never sits on a picture without a solid surface behind it. This scale replaces the 1.5 times scale of D-123.
 
 ### 2.8 Spacing
 
-The Tailwind 4 spacing unit stays `--spacing: 0.25rem` (4 px). Only these steps are used, so the grid stays regular:
+The Tailwind 4 spacing unit stays `--spacing: 0.25rem` (4 px), the base of the redesign. Only these steps are used, so the grid stays regular:
 
 | Step | px | Typical use |
 | --- | --- | --- |
-| `0.5` | 2 | gap between a ring and its element, keyframe diamond inset |
+| `0.5` | 2 | gap between a ring and its element |
 | `1` | 4 | gap inside a toolbar group, icon to label inside a badge |
-| `1.5` | 6 | icon to label inside a button (shadcn), item label padding |
-| `2` | 8 | gap between controls, field rows, card internal gap |
-| `3` | 12 | panel padding in the editor, top bar horizontal padding |
-| `4` | 16 | gap between inspector sections, preview padding (SDD-012 §11.4), page padding on small screens |
-| `6` | 24 | page padding from `md` (kept from `AppLayout`), dialog padding |
+| `1.5` | 6 | icon to label inside a button |
+| `2` | 8 | gap between controls, field rows |
+| `3` | 12 | padding of a field, of a row, of an editor panel |
+| `4` | 16 | gap between sections, card padding |
+| `6` | 24 | page padding, dialog padding |
 | `8` | 32 | gap between page sections |
 | `12` | 48 | empty-state vertical padding |
 
 ### 2.9 Radii
 
-`--radius: 0.625rem` (10 px) is kept, with the derived sizes of `@theme inline`.
-
 | Token (Tailwind) | Value | Use |
 | --- | --- | --- |
-| `--radius-xs` (`rounded-xs`), **new in `@theme inline`** | `calc(var(--radius) * 0.4)` = 4 px | timeline item blocks, caption word segments, keyframe diamonds' container, progress bars |
-| `--radius-sm` | 6 px | small buttons (`xs`, `sm` sizes use `min(var(--radius-md), 10px)`), asset thumbnails |
-| `--radius-md` | 8 px | tooltips, menu items |
-| `--radius-lg` | 10 px | buttons, inputs, selects, toasts (shadcn `rounded-lg`) |
-| `--radius-xl` | 14 px | cards, dialogs, popovers |
-| `--radius-4xl` | 26 px | badges and chips (pill) |
-| none | 0 | the preview canvas (the picture is shown with its own edges), the panels of the editor shell (they meet edge to edge) |
+| `--radius-xs` (`rounded-xs`) | 4 px | timeline item blocks, caption word segments, keyframe diamonds |
+| `--radius-sm` | 6 px | small chips, thumbnails |
+| `--radius-md` | 8 px | buttons, fields, tooltips, menu items |
+| `--radius-lg` | 12 px | cards, popovers, menus |
+| `--radius-xl` | 16 px | dialogs and sheets |
+| `--radius-2xl` | 24 px | large framed areas |
+| `rounded-full` | 9999 px | badges, pills, switches |
+| none | 0 | the preview canvas, the panels of the editor shell (they meet edge to edge) |
 
-**Decision of this document.** `--radius-xs` is redefined from Tailwind's default 2 px to 4 px, following the `calc(var(--radius) * n)` pattern of the other sizes, because timeline blocks 40 to 64 px high read better with 4 px corners.
+`--radius-3xl` (32 px) and `--radius-4xl` (40 px) exist for the old classes that name them; new code uses the five steps above. `--radius` (12 px) is kept as a plain property for code that reads it.
 
 ### 2.10 Borders, rings and outlines
 
 | Element | Width and style | Colour | Note |
 | --- | --- | --- | --- |
-| Region divider, card edge | 1 px solid | `--border` | decorative |
-| Field boundary | 1 px solid | `--input` | identifies the control, 3:1 |
-| Focus indicator (everything focusable) | `outline: 2px solid var(--ring); outline-offset: 2px` | `--ring` | 3:1 against the background in both themes. The shadcn halo (`ring-3 ring-ring/50` and `border-ring`) stays as extra decoration |
+| Region divider, card edge | 1 px solid | `--color-border` | decorative |
+| Field boundary, checkbox, unchecked switch | 1 px solid | `--color-border-strong` | identifies the control, 3:1 |
+| Invalid field | 1 px solid | `--color-danger-text` | plus the icon and the message under the field |
+| Focus indicator (everything focusable) | `outline: 2px solid var(--color-focus); outline-offset: 2px` | `--color-focus` | 3:1 against every surface in both themes |
 | Focus over the preview surround | same | `--ed-handle` | |
 | Focused timeline cell | `outline: 2px solid; outline-offset: 1px` | `--ed-selection` | offset 1 px so it does not overlap the next row |
 | Selected item | 2 px inset ring (`box-shadow: inset 0 0 0 2px`) | `--ed-selection` | selected and focused can show together: ring inside, outline outside |
 | Item block edge | 1 px solid | `--ed-track-line` | carries the boundary of the block |
 | Pending ghost | 2 px dashed | `--ed-ghost` | fill `--ed-ghost` at 15% |
-| Remote-edit highlight | 2 px solid, 1.5 s | `--agent` | SDD-012 §5.8 item 4 and D-030; class toggle, not an animation |
+| Remote-edit highlight | 2 px solid, 1.5 s | `--color-agent` | SDD-012 §5.8 item 4 and D-030; class toggle, not an animation |
 | Conflict or overlap highlight | 2 px solid, 2 s | `--ed-error-flash` | SDD-012 §8.4 |
 | Snap line | 1 px solid, full height | `--ed-snap` | |
 | Safe-area guide | 1 px dashed (6 px dash, 4 px gap) | `--ed-safe-area` | band outside it: black at 40% |
 
-**Why the focus rule lives in `app.css`.** The kept components carry `outline-none` and a 50% ring (`focus-visible:ring-3 focus-visible:ring-ring/50`), which no ring colour can bring to 3:1 against white at 50% alpha. SDD-012 §3.1 keeps `components/ui/*` unchanged, so the solid outline is added in `app.css` as an **unlayered** rule (outside every `@layer`), which wins over Tailwind's utilities layer without touching the components:
+**The focus rule lives in `app.css`, and components draw no halo of their own.** The primitives carry `outline-none`; one **unlayered** rule (outside every `@layer`) wins over Tailwind's utilities, so no component can weaken it and none needs a ring class:
 
 ```css
 :where(a, button, input, select, textarea, summary, [tabindex], [contenteditable="true"], [data-slot]):focus-visible {
-	outline: 2px solid var(--ring);
+	outline: 2px solid var(--color-focus);
 	outline-offset: 2px;
 }
 ```
 
-The rule above is the contract; the senior who implements it may narrow the selector, not weaken the outline.
+The rule above is the contract; narrow the selector, never weaken the outline. A field also changes its border to `--color-focus` on focus, which is a second cue, not the only one.
 
 ### 2.11 Elevation
 
-The editor is flat: regions meet edge to edge, separated by `--border`, with no shadow. Elevation exists only for things that float over content.
+The editor is flat: regions meet edge to edge, separated by `--color-border`. Elevation exists only for things that float over content, with three shadows per theme (the shadow colour is a token of the theme, `--color-shadow-sm`, `-md`, `-lg`).
 
-| Level | What | Light | Dark |
-| --- | --- | --- | --- |
-| 0 | page, panels, timeline, cards on a page | no shadow; `--border` edge | same; surface steps (`--ed-bg` 0.16, `--ed-timeline` 0.18, `--ed-panel` 0.2) do the separating |
-| 1 | tooltip, popover, menu, select list, toast, the activity popover | `shadow-md` plus 1 px `--border` | `shadow-md` (barely visible) plus 1 px `--border`, on `--popover` (0.205), lighter than what is under it |
-| 2 | dialog, sheet, command palette | `shadow-lg` plus 1 px `--border`; backdrop `bg-black/10` (shadcn sheet, kept) for sheets, `bg-black/50` for modal dialogs | same |
+| Level | What | Treatment |
+| --- | --- | --- |
+| 0 | page, panels, timeline, cards on a page | no shadow; a `--color-border` edge |
+| 1 | tooltip, popover, menu, select list, toast | `shadow-md` plus a 1 px `--color-border`, on `--color-surface-raised` |
+| 2 | dialog, sheet, command palette | `shadow-lg` plus a 1 px `--color-border`; the backdrop is the text colour at 30% in light and the sunken surface at 80% in dark |
 
-In dark, "higher" means a lighter surface, never a stronger shadow.
+| Utility | Value |
+| --- | --- |
+| `shadow-sm` | `0 1px 2px` in `--color-shadow-sm` |
+| `shadow-md` | `0 4px 12px` in `--color-shadow-md` |
+| `shadow-lg` | `0 16px 40px` in `--color-shadow-lg` |
+
+In dark, "higher" also means a lighter surface (`surface`, then `surface-raised`).
 
 ### 2.12 Z-index layers
 
@@ -362,44 +375,50 @@ Inside the preview box: canvas 0, truth-on-pause `<img>` 1, safe-area guide 2, s
 
 ### 2.13 Motion
 
-D-013 and SDD-012 §17 item 5: interface animation is limited to the two kinds below (P3-UI-003), **and nothing else.** The tokens below are the one set of values for them and for the animations shadcn components carry.
+The motion tokens are the one set of values for every transition and animation of the product, including what the shared primitives carry.
 
-| Token | Value | Use now |
+| Token | Value | Use |
 | --- | --- | --- |
 | `--duration-none` | `0ms` | every editor component |
-| `--duration-fast` | `100ms` | already carried by shadcn select and sheet close (`duration-100`) |
-| `--duration-base` | `150ms` | `.ed-motion` state transitions  |
-| `--duration-slow` | `200ms` | `.ed-highlight` ; already carried by shadcn sheet open and sidebar collapse (`duration-200`) |
-| `--ease-standard` | `cubic-bezier(0.2, 0, 0, 1)` | `.ed-motion` and `.ed-highlight` ; shadcn components keep their own easing |
+| `--duration-fast` | `120ms` | hover and press, the close of a popup |
+| `--duration-base` | `200ms` | state changes, the open of a popup, a bare Tailwind `transition` (`--default-transition-duration`) |
+| `--duration-slow` | `320ms` | a highlight outline, a sheet |
+| `--duration-reduced` | `1ms` | what the three above become under `prefers-reduced-motion` |
+| `--ease-standard` | `cubic-bezier(0.2, 0, 0, 1)` | the default easing; `--ease-enter` and `--ease-exit` for entrances and exits |
 
 Rules:
 
-1. Editor components add no `transition`, `animation` or `@keyframes` of their own. Motion comes from two classes of `app.css`: `.ed-motion` (colour, border, shadow, opacity and outline colour fade in `--duration-base`; position and size never transition, so a drag, a zoom or a row resize never lags the pointer) on timeline items, rows, track headers and the row splitter, and `.ed-highlight` (the outline of a remote edit or a conflict eases in over `--duration-slow`). Timed highlights (remote-edit outline 1.5 s, conflict outline 2 s, activity "is editing" 3 s) stay class toggles with a timer; the class only adds the ease-in. A unit test (`web/scripts/motion.test.ts`) fails on any other `transition`, `animate-` or `duration-` class in an editor component.
-2. No spinner rotates. A running job shows a determinate bar; an unknown duration shows a static icon and text ("Waiting for the server").
+1. A component takes its duration from a token (`duration-(--duration-fast)`), never from a literal time. Editor components add no `transition`, `animation` or `@keyframes` of their own: motion comes from `.ed-motion` (colour, border, shadow, opacity and outline colour fade in `--duration-base`; position and size never transition, so a drag, a zoom or a row resize never lags the pointer) and `.ed-highlight` (the outline of a remote edit or a conflict eases in over `--duration-slow`). A unit test (`web/scripts/motion.test.ts`) fails on any other `transition`, `animate-` or `duration-` class in an editor component.
+2. No spinner rotates. A running job shows a determinate bar; an unknown duration shows a static skeleton and a sentence (`LoadingState`, section 4.4).
 3. Scrolling is never smooth: page-follow of the playhead jumps (SDD-012 §7.5), `scroll-behavior` stays `auto`.
-4. `prefers-reduced-motion: reduce` turns off the two classes above and what the shared primitives carry, with this rule in `app.css`, after them. Transitions are off at `0s`; animations keep `0.01ms` because popup presence waits for `animationend`, which an animation of exactly `0s` does not fire in every engine:
+4. Under `prefers-reduced-motion: reduce` every transition and animation lasts 1 ms and the three duration tokens equal `--duration-reduced`. It is not 0: popup presence waits for `animationend`, which an animation of exactly `0s` does not fire in every engine.
 
 ```css
 @media (prefers-reduced-motion: reduce) {
+	:root {
+		--duration-fast: var(--duration-reduced);
+		--duration-base: var(--duration-reduced);
+		--duration-slow: var(--duration-reduced);
+	}
 	*, ::before, ::after {
-		animation-duration: 0.01ms !important;
+		animation-duration: var(--duration-reduced) !important;
 		animation-iteration-count: 1 !important;
-		transition-duration: 0s !important;
+		transition-duration: var(--duration-reduced) !important;
 		transition-delay: 0s !important;
 	}
 }
 ```
 
-### 2.14 Summary of the changes to `app.css`
+### 2.14 What `app.css` holds
 
-For the implementer (senior-e), in one place. Nothing here is implemented by this document.
+For the implementer, in one place.
 
-1. `:root`: `--muted-foreground: oklch(0.50 0 0)`; `--destructive: oklch(0.55 0.22 27.325)`; `--input: oklch(0.62 0 0)`; `--ring` and `--sidebar-ring: oklch(0.45 0.18 250)`.
-2. `.dark`: `--input: oklch(1 0 0 / 40%)`; `--ring` and `--sidebar-ring: oklch(0.85 0.12 230)`.
-3. Both: add `--success`, `--warning`, `--info`, `--agent`, `--brand`, `--brand-foreground` (section 2.4) and the `--ed-*` group (section 2.5, with the changed `--ed-track-line`, light `--ed-ghost` and the new `--ed-handle`).
-4. `@theme inline`: map every new variable to `--color-<name>`; add `--radius-xs: calc(var(--radius) * 0.4)`; extend `--font-sans` with the fallback stack; add the motion tokens as plain custom properties.
-5. Add the unlayered focus rule (section 2.10), the reduced-motion rule (section 2.13) and the forced-colours rule (section 7.7).
-6. Run `bun run check:contrast` (SDD-012 §18.4) and keep the numbers of section 2.6.
+1. `@theme inline`: the semantic names mapped to themselves, the aliases of the former system, the radii, the three shadows, the default transition.
+2. `:root` and `.dark`: the values of both themes; the aliases in one rule for both.
+3. The base layer: the text scale of the dashboard and its headings, the `outline-focus` default, the native select options.
+4. Unlayered: the focus rule (section 2.10), the 24 px target of native checkboxes and radios (section 7.8), `.ed-motion`, `.ed-highlight`, the reduced-motion rule (section 2.13) and the forced-colours rule (section 7.7).
+5. A custom variant, `dashboard`, so a control that is compact in the editors takes 32 px on the dashboard (`md:dashboard:h-8`).
+6. After a change of a value, run `bun run check:contrast` and keep the numbers of section 2.6.
 
 ## 3. Layout
 
@@ -506,7 +525,7 @@ The grid, sizes and breakpoints are those of sections 3.1 and 3.2; this layout k
 | --- | --- | --- | --- |
 | Top bar | `--ed-panel` | bottom `--border` | `--foreground`, `--muted-foreground` (save time, revision) |
 | Library rail and panel | `--ed-panel` | right `--border`; the rail has its own right `--border` | `--foreground`, `--muted-foreground` |
-| Preview | `--ed-preview-surround` (both themes) | none | the surround text colours of section 2.5 |
+| Preview | `--ed-preview-surround` | none | `--color-text`, `--color-text-muted` |
 | Transport row | `--ed-panel` | top `--border` | `--foreground`; total time `--muted-foreground` |
 | Inspector | `--ed-panel` | left `--border` | `--foreground`, `--muted-foreground` (labels, units) |
 | Timeline toolbar | `--ed-panel` | top and bottom `--border` | `--foreground` |
@@ -569,17 +588,18 @@ Every pair below is WCAG 2.2 AA, computed with the method of section 2.6 (light 
 
 | Pair | Need | Light | Dark |
 | --- | --- | --- | --- |
-| `foreground` on `ed-panel` (labels, tab names, menu items) | 4.5 | 19.79 | 17.34 |
-| `muted-foreground` on `ed-panel` (save time, units, shortcut hints, unselected inspector tabs) | 4.5 | 6.00 | 6.98 |
-| `foreground` on `accent` (selected rail tab, pressed toggle, highlighted menu row) | 4.5 | 18.15 | 14.48 |
-| `muted-foreground` on `accent` (shortcut hint in a highlighted menu row) | 4.5 | 5.50 | 5.83 |
-| `ring` on `ed-panel` (focus outline; selected rail and tab bars) | 3 | 7.25 | 11.56 |
-| `ring` on `accent` (focus outline on a selected tab) | 3 | 6.65 | 9.66 |
-| `ring` on `ed-bg` (focus outline crossing a region edge) | 3 | 6.65 | 12.40 |
-| `primary-foreground` on `primary` (Export, Create project, Start export) | 4.5 | 17.16 | 14.22 |
-| `ed-handle` on `ed-preview-surround` (focus in the preview and full screen) | 3 | 11.56 | 11.56 |
+| `text` on `surface` (`ed-panel`: labels, tab names, menu items) | 4.5 | 16.88 | 14.78 |
+| `text-muted` on `surface` (save time, units, shortcut hints, unselected inspector tabs) | 4.5 | 8.66 | 9.28 |
+| `text` on `surface-hover` (highlighted menu row) | 4.5 | 13.66 | 12.08 |
+| `text-muted` on `surface-hover` (shortcut hint in a highlighted menu row) | 4.5 | 7.01 | 7.58 |
+| `text` on `surface-selected` (selected rail tab, pressed toggle) | 4.5 | 14.01 | 14.08 |
+| `focus` on `surface` (focus outline; selected rail and tab bars) | 3 | 7.79 | 8.87 |
+| `focus` on `surface-selected` (focus outline on a selected tab) | 3 | 6.47 | 8.45 |
+| `focus` on `background` (focus outline crossing a region edge) | 3 | 7.40 | 9.44 |
+| `text-on-accent` on `accent` (Export, Create project, Start export) | 4.5 | 7.79 | 5.01 |
+| `ed-handle` on `ed-preview-surround` (focus in the preview and full screen) | 3 | 6.31 | 9.94 |
 
-Focus is the 2 px `--ring` outline with 2 px offset everywhere (section 2.10); inside the preview it is `--ed-handle`, inside the timeline grid `--ed-selection`. A selected tab is shown by the bar and `aria-selected`, a pressed toggle by the fill, the border and `aria-pressed`, never by colour alone.
+Focus is the 2 px `--color-focus` outline with 2 px offset everywhere (section 2.10); inside the preview it is `--ed-handle`, inside the timeline grid `--ed-selection`. A selected tab is shown by the bar and `aria-selected`, a pressed toggle by the fill, the border and `aria-pressed`, never by colour alone.
 
 #### 3.4.10 Judgement calls of the first build
 
@@ -611,14 +631,14 @@ All interactive components use the same visual states. "Disabled" never relies o
 | State | Selector | Treatment |
 | --- | --- | --- |
 | default | | as the variant says |
-| hover | `:hover` (pointer only; never the only cue) | surface one step (`bg-muted`, `bg-accent`, or, for the primary button, `--primary` mixed with 10% black in OKLab: a fade to `primary/80` left white text at 3.7:1 in the light theme) |
-| focus-visible | `:focus-visible` | 2 px `--ring` outline, 2 px offset (section 2.10); never removed |
-| active (pressed) | `:active`, `aria-pressed="true"`, `data-state="active"` | shadcn's 1 px press offset for buttons; toggles show the pressed surface `bg-accent` plus `aria-pressed` |
-| disabled | `disabled`, `aria-disabled="true"` | 50% opacity, `pointer-events: none` (shadcn); exempt from contrast; keyboard focus skips native disabled controls; controls that must explain why use `aria-disabled` with a tooltip |
-| selected | `aria-selected="true"`, `aria-current` | `--ed-selection` ring for timeline objects; `bg-accent` plus a 2 px leading bar for list rows; `aria-current="page"` for navigation (shadcn sidebar `isActive`) |
-| error | `aria-invalid="true"` | `--destructive` border and ring (shadcn), an icon and the message under the field (`aria-describedby`) |
+| hover | `:hover` (pointer only; never the only cue) | one surface step (`bg-surface-hover`), or, for the primary button, `--color-accent-hover` |
+| focus-visible | `:focus-visible` | 2 px `--color-focus` outline, 2 px offset (section 2.10); never removed |
+| active (pressed) | `:active`, `aria-pressed="true"`, `data-state="active"` | a 1 px press offset for buttons; a toggle shows `bg-surface-selected`, a `--color-focus` border, the accent text and `aria-pressed` |
+| disabled | `disabled`, `aria-disabled="true"` | 50% to 60% opacity, `pointer-events: none`; exempt from contrast; keyboard focus skips native disabled controls; controls that must explain why use `aria-disabled` with a tooltip |
+| selected | `aria-selected="true"`, `aria-current` | `--ed-selection` ring for timeline objects; `bg-surface-selected` plus a 2 px leading bar in `--color-accent` for list rows (`ListRow`); `aria-current="page"` for navigation |
+| error | `aria-invalid="true"` | a `--color-danger-text` border, an icon and the message under the field (`aria-describedby`) |
 | busy | `aria-busy="true"` | the control keeps its value and stays enabled for reading; no spinner; a "Saving" text label appears after 400 ms only if the request is still in flight |
-| read-only | `readonly`, or plain text | plain text in `text-foreground`, no field boundary |
+| read-only | `readonly`, or plain text | plain text in `text-text`, no field boundary |
 
 ### 4.2 Shared primitives
 
@@ -626,17 +646,17 @@ The files in `components/ui/` (SDD-012 §3.1). Dialogs, popovers, tooltips, tabs
 
 | Component | Variants and sizes used | States and keyboard | Product rules |
 | --- | --- | --- | --- |
-| `Button` | variants `default` (primary, one per view), `secondary`, `outline`, `ghost` (toolbars, icon buttons), `destructive` (remove, delete), `link` (inline). Sizes `default` 32 px, `sm` 28 px, `xs` 24 px, `lg` 36 px, `icon` 32 px, `icon-sm` 28 px, `icon-xs` 24 px, `icon-lg` 36 px | all of 4.1; `Enter` and `Space` activate; icon-only buttons have `aria-label` from `t()` and a `Tooltip` with the shortcut | labels are verbs (section 6.2); the icon leads the label (`data-icon="inline-start"`); an anchor given to `asChild` stays a link (`role="link"`), never announced as a button; no button wider than its label plus padding, so pt-BR text fits |
-| `Badge` | `secondary` (counts, neutral states), `outline` (scope in the palette), `destructive` (failed); product tints through classes `bg-success/10 text-success`, and so on, for ready, warning, agent | not focusable unless it is a link | always text, optionally an icon; never colour alone |
+| `Button` | variants `default` (the accent: primary, one per view), `secondary` (raised surface and a border), `outline` (strong border), `ghost` (toolbars, icon buttons), `destructive` (a solid `--color-danger`, with `--color-text-on-danger`), `link` (inline), `brand` (section 11.6). Sizes `default` 32 px, `sm` 28 px, `xs` 24 px, `lg` 40 px, `icon` 32 px, `icon-sm` 28 px, `icon-xs` 24 px, `icon-lg` 40 px. On the dashboard the compact sizes (`sm`, `xs`, `icon-sm`, `icon-xs`) are 32 px, and at phone width (below 768 px) every size is 44 px | all of 4.1; `Enter` and `Space` activate; icon-only buttons have `aria-label` from `t()` and a `Tooltip` with the shortcut | one `default` per view; `destructive` only after a confirmation when the action cannot be undone |
+| `Badge` | `default` (accent), `secondary` (raised surface, border), `destructive` (`danger-soft` and `danger-text`), `outline`, `ghost`, `link`; a state with an icon and a word is a `StatusBadge` (section 4.4) | not focusable unless it is a link | always text, optionally an icon; never colour alone |
 | `Card` | default | | project cards on `/projects`, settings groups; not used inside the editor (panels are flat) |
-| `Input` | default; `font-mono` for paths | 4.1; error state through `aria-invalid` | always with a `Label` or an `aria-label`; placeholder is an example, never the label |
+| `Input` | default (`--color-surface-sunken` fill, `--color-border-strong` boundary, 32 px; 44 px at phone width); `font-mono` for paths | 4.1; error state through `aria-invalid` | always with a `Label` or an `aria-label`; placeholder is an example, never the label |
 | `Textarea` | default | 4.1 | caption and text content; `Ctrl+Enter` commits (SDD-012 §12.3) |
-| `Label` | default | | `text-xs font-medium text-muted-foreground` in the inspector, `text-sm` on pages |
+| `Label` | default | | `text-xs font-medium text-text-muted` in the inspector, `text-sm` on pages |
 | `Select` | default trigger `h-8`; `sm` in toolbars | UI SDK: `Space` and `Enter` open, arrows move, typing selects, `Esc` closes | used for enums (preset, fit, font family, track); options rendered with `UntrustedText` when they show user content |
 | `Separator` | horizontal and vertical | decorative (`role="none"`) unless it separates toolbar groups (`role="separator"`) | |
 | `Sheet` | `left` (library drawer), `right` (inspector drawer) | focus trap, `Esc` closes, focus returns to the opener | only at 1024 to 1279 px (section 3.2) and in the mobile Inertia sidebar |
 | `Sidebar` | `collapsible="icon"`, 16 rem / 3 rem | `Ctrl+B` toggles (kept) | kept in `components/ui/` but unused; the dashboard sidebar of section 3.5 is its own component |
-| `Skeleton` | default | `aria-hidden`; the region has `aria-busy` | first load of the project list and of the document; never longer than the request; no shimmer animation |
+| `Skeleton` | default | `aria-hidden`; the region has `aria-busy` | first load of the project list and of the document; never longer than the request; static, no pulse and no shimmer (`LoadingState`, section 4.4) |
 | `Tabs` | default | Base UI: arrows move, `Home` and `End`, automatic activation | the vertical tab rail of the library and the tab strip of the inspector (section 3.4, SDD-012 §6.4); inside one inspector tab the sections stack and scroll, with no further level of tabs |
 | `Tooltip` | default | opens on hover and on focus, `Esc` closes | every icon-only button; text is the label plus the shortcut in `<kbd>` style (`Split (S)`); never the only place of essential information |
 
@@ -828,6 +848,22 @@ The screen of SDD-012 section 24. It is the editor shell of section 3.1 over an 
 - Empty and error states: no layer ("The image has no layers", "Add a text, a shape or a photo from the toolbar"), no frame yet (a skeleton the size of the canvas), a frame that failed (the core's message with a Retry button).
 - Keys: `ui.image.<area>.<name>` (SDD-012 section 16.2).
 
+### 4.4 Shared components of the final redesign
+
+Data-free components under `web/resources/js/components/`, built on the tokens of section 2 and with no copy of their own: every word is a prop, so it is translated by the caller (`t()`). They hold no behaviour: a link, a button or a menu is the caller's, passed as children or in a slot. Each has a unit test of its accessible name and its states (`SharedComponents.test.tsx`).
+
+| Component | Anatomy | Accessible name and states |
+| --- | --- | --- |
+| `PageHeader` | the one `h1` (30/38), a sentence, the page actions on the right | named by its `h1`; wraps below 768 px |
+| `SectionTitle` | `h2` (24/32) or `h3` (18/26) by `level`, a sentence, actions | the level keeps the outline of the page right |
+| `EmptyState` | an icon in an accent-soft disc, a title, one sentence, the actions as children | a region named by its title (`aria-labelledby`); the icon is `aria-hidden`; a dashed strong border |
+| `GuideStrip` | a title and the steps (`NumberedStep`) as an ordered list, three columns from `sm` | a region named by its title (`aria-label`) |
+| `NumberedStep` | a numbered disc, a title, a sentence; `state` is `todo`, `current` or `done` | `current` has `aria-current="step"` and a bold title; `done` shows a check and the word given in `stateLabel`; never colour alone |
+| `DataList`, `DataRow` | a description list; a row is a name (with an optional hint) and a value | a `dl` with `dt` and `dd`, so a screen reader reads each value with its name |
+| `ListRow` | an optional leading icon or thumbnail, a title, a sentence, a meta line, trailing actions; an `li` | the selected row has `aria-current="true"`, `bg-surface-selected` and a 2 px bar on its left edge |
+| `StatusBadge` | an icon and a word, in the tone of the status: `neutral`, `info`, `agent`, `waiting`, `success` or `danger` | the word is the name; the icon is `aria-hidden`; always icon and word |
+| `LoadingState` | a static skeleton of three lines and one sentence, no spinner | `role="status"`; the skeleton is `aria-hidden` |
+
 ## 5. Iconography, illustration and the product mark
 
 ### 5.1 Icons
@@ -932,7 +968,7 @@ Target: WCAG 2.2 level AA for every control outside the canvas (RF-075); keyboar
 
 ### 7.2 Visible focus
 
-Every focusable element shows the 2 px `--ring` outline with 2 px offset (section 2.10), at 3:1 or more against what is around it in both themes. Focus is never hidden by sticky elements: the timeline scrolls a focused item clear of the sticky headers and ruler (WCAG 2.4.11).
+Every focusable element shows the 2 px `--color-focus` outline with 2 px offset (section 2.10), at 3:1 or more against what is around it in both themes. Focus is never hidden by sticky elements: the timeline scrolls a focused item clear of the sticky headers and ruler (WCAG 2.4.11).
 
 ### 7.3 Keyboard map
 
@@ -963,7 +999,7 @@ Times inside names use the timecode form. Results of actions are announced throu
 
 ### 7.5 Motion
 
-Interface motion is limited to `.ed-motion` and `.ed-highlight` (section 2.13); `prefers-reduced-motion` turns off those and the transitions shadcn carries. Nothing flashes more than three times per second; the timed outlines appear once and disappear once.
+Motion comes only from the tokens of section 2.13, and the editor components add only `.ed-motion` and `.ed-highlight`; under `prefers-reduced-motion` every transition and animation lasts 1 ms (`--duration-reduced`). Nothing flashes more than three times per second; the timed outlines appear once and disappear once.
 
 ### 7.6 Contrast
 
@@ -975,7 +1011,7 @@ In Windows high-contrast mode (`forced-colors: active`) the system replaces colo
 
 ### 7.8 Target sizes
 
-At least 24 by 24 CSS px for every target (WCAG 2.5.8); the design default is 32 px (`h-8`). Timeline handles: 8 px visual, 24 px hit area; preview handles: 8 px visual, 24 px hit area. Adjacent small targets keep at least 24 px between centres.
+At least 24 by 24 CSS px for every target (WCAG 2.5.8); the design minimum is 32 px on desktop and 44 px at phone width (below 768 px), met by the shared controls (the compact sizes grow on the dashboard through the `dashboard` variant, section 2.14). Timeline handles: 8 px visual, 24 px hit area; preview handles: 8 px visual, 24 px hit area. Adjacent small targets keep at least 24 px between centres.
 
 ### 7.9 Accessibility of each component
 
@@ -1045,7 +1081,7 @@ The header, the popups it opens and the documentation use the tokens of the fina
 
 | Thing | Lives in | Owner |
 | --- | --- | --- |
-| Token names and values | `web/resources/css/app.css` (`:root`, `.dark`, `@theme inline`); this document records them | senior-e |
+| Token names and values | `web/resources/css/app.css` (`:root`, `.dark`, `@theme inline`); this document records them; the pairs are in `web/scripts/check-contrast.ts` | the senior of the UI foundation |
 | Token rules, components, content style | this document | architect, with senior-e |
 | Editor token names | SDD-012 §17 (names), values here | senior-e |
 | UI strings | `web/resources/lang/en.json`, `pt-BR.json` (SDD-012 §16) | senior-e, interns for translation |
@@ -1070,9 +1106,10 @@ Copy into the pull request description and tick each line that applies.
 - [ ] Both themes checked; `bun run check:contrast` passes; new text and background pairs are added to the script and to section 2.6.
 - [ ] Every interactive element shows the focus outline and works with the keyboard alone; the composite widget pattern (one tab stop, arrows inside) is used where section 4 says so.
 - [ ] Every icon-only control has an `aria-label` from `t()` and a tooltip with its shortcut.
-- [ ] Targets are at least 24 by 24 CSS px.
+- [ ] Targets are at least 32 px on desktop and 44 px at phone width (24 by 24 CSS px at the very least).
+- [ ] Text is at least 14 px on the dashboard and 12 px in the editors; the focus ring is the global `--color-focus` outline, with no halo of the component.
 - [ ] Nothing is conveyed by colour alone.
-- [ ] No `transition`, `animation` or `@keyframes` besides `.ed-motion` and `.ed-highlight` (D-013); reduced motion respected.
+- [ ] Durations from the motion tokens, never a literal time; no `transition`, `animation` or `@keyframes` in an editor component besides `.ed-motion` and `.ed-highlight` (D-013); no spinner; reduced motion respected.
 - [ ] Every string through `t()`; no concatenated sentences; the layout holds in pt-BR at 1280 by 720.
 - [ ] User content rendered with `UntrustedText`.
 - [ ] Errors from the core shown with the error block: headline, message and hint as received, code.
@@ -1092,7 +1129,7 @@ Decisions taken here (each is cheap to undo). "Recorded in" names where the spec
 | DS-1 | `--ring` equals `--ed-selection`; a solid 2 px outline in `app.css` makes the focus indicator meet 3:1 without editing the kept components | 2.3, 2.10 | SDD-012 §17, §18.1 item 6 |
 | DS-2 | Changed values: light `--muted-foreground`, light `--destructive`, `--input`, `--ring`, `--ed-track-line`, light `--ed-ghost` (contrast) | 2.3, 2.5 | SDD-012 §17 table |
 | DS-3 | New tokens `--success`, `--warning`, `--info`, `--agent`, `--brand`, `--ed-handle`, `--radius-xs` at 4 px, motion tokens | 2.4, 2.5, 2.9, 2.13 | SDD-012 §17 |
-| DS-4 | Timecodes in Geist with tabular figures, no monospace UI font; the digit-width test passes (24.48 px per digit at 40 px), so Geist Mono is not added | 2.7 | SDD-012 §11.5, D-030 |
+| DS-4 | Timecodes in the UI font with tabular figures, no monospace UI font (measured on Geist, 24.48 px per digit at 40 px; Inter Variable has tabular figures too and replaced Geist in epic 74, DS-15) | 2.7 | SDD-012 §11.5, D-030 |
 | DS-5 | No bottom status bar | 3.1 | this document only (SDD-012 §6.1 has none) |
 | DS-6 | Desktop window minimum inner size 1280 by 640, default 1600 by 900 | 3.2 | SDD-012 §21.3 |
 | DS-7 | Several active agents: one badge with the latest actor and a count, a popover listing each actor and its last action | 4.3.4 | decided by D-030; SDD-012 §5.8 |
@@ -1103,6 +1140,7 @@ Decisions taken here (each is cheap to undo). "Recorded in" names where the spec
 | DS-12 | The familiar layout (D-038): a 40 px tab rail inside the library width, a 36 px tab strip in the inspector, a selected tab shown by a 2 px `--ring` bar, a save indicator and a Menu button in the top bar, the timeline toolbar in two labelled groups; no new token | 3.4 | SDD-012 §6.4, §6.5 |
 | DS-13 | The dashboard has its own sidebar built from checked tokens; the shadcn `Sidebar` stays unused | 3.5 | SDD-012 §23 |
 | DS-14 | The first-run tour is a card beside the region of each step (outline in `--ring`), not a full-screen overlay, so the keyboard and the screen reader are never trapped; the shortcuts dialog gets a search field and a preset choice | 4.3.18, 4.3.19 | SDD-012 §18.5, §18.9 |
+| DS-15 | The final redesign (epic 74): semantic tokens `--color-*` in OKLCH with aliases for the former names, the 14 px dashboard scale, radii 6 to 24 px, three shadows, motion of 120, 200 and 320 ms with a 1 ms reduced value, Inter, and the shared components of section 4.4 | 2.1 to 2.14, 4.4 | D-133 to D-137, D-138 |
 
 Open points found in the specifications while writing this document, and how each was closed:
 
@@ -1166,7 +1204,7 @@ The neutral scale of section 2.2 stays the scale of the chrome.
 | `--brand-subtle` (new) | 50 | 900 at 40% | tinted surfaces: a selected card, a callout, a badge background |
 | `--brand-text` (new) | 700 | 300 | brand-coloured text and links on `--background` (8.43:1 light, 10.12:1 dark) |
 
-**What changes from section 2.4.** `--brand` was a placeholder, `oklch(0.511 0.262 276.966)` in both themes, "never a button". It becomes the icon's indigo (light) and lilac (dark), and it may now carry the one primary action of a dashboard page and of the documentation. Inside the editors (`web/resources/js/editor/**` and the image editor) the primary action stays the neutral `--primary` of section 2.3, and principle P2 is unchanged: no brand colour near the picture, the timeline or the canvas.
+**What changes from section 2.4.** `--brand` was a placeholder, `oklch(0.511 0.262 276.966)` in both themes, "never a button". It becomes the icon's indigo (light) and lilac (dark), and it may now carry the one primary action of a dashboard page and of the documentation. Inside the editors (`web/resources/js/editor/**` and the image editor) the primary action is the accent of section 2.4, and no brand colour is used near the picture, the timeline or the canvas.
 
 ### 11.4 Two registers
 
@@ -1182,7 +1220,7 @@ The two registers share every token; the expressive one only uses more of them.
 
 ### 11.5 Typography
 
-Geist Variable stays the only family (section 2.7; bundled, no other origin). The expressive register adds a display scale:
+Inter Variable is the only family (section 2.7; bundled, no other origin). The expressive register adds a display scale:
 
 | Role | Utility | Line height | Weight and tracking |
 | --- | --- | --- | --- |
@@ -1196,12 +1234,12 @@ The 12 px minimum and the weights 400, 500 and 600 of section 2.7 hold in both r
 
 ### 11.6 Buttons
 
-All buttons are the Base UI `Button` of section 4.2, with `rounded-lg` (10 px), heights `h-9` (`sm`), `h-10` (default) or `h-12` (landing `lg`), and a 6 px gap between icon and label.
+All buttons are the Base UI `Button` of section 4.2, with `rounded-md` (8 px), the sizes of section 4.2, `h-12` for the landing `lg`, and a 6 px gap between icon and label.
 
 | Variant | Light | Dark | Use |
 | --- | --- | --- | --- |
 | `brand` (new) | `bg-brand text-brand-foreground`, hover 800 | `bg-brand text-brand-foreground`, hover 400 | the one primary action of a dashboard or documentation page; the main call to action of the landing |
-| `default` | the neutral `--primary` of section 2.3 | same | the primary action inside the editors |
+| `default` | the accent of section 2.4 (`--color-accent`) | same | the primary action, in the editors and wherever a page has no brand button |
 | `secondary`, `outline`, `ghost`, `link`, `destructive` | as section 4.2 | as section 4.2 | as section 4.2 |
 
 At most one `brand` button per view. Focus is the 2 px `--ring` outline of section 2.10 on every variant.
@@ -1232,7 +1270,7 @@ At rest the label is `--fg` on `--bg` (above 15:1 in both themes) and the versio
 
 ### 11.7 Radii, borders and shadows
 
-- Radii: `--radius` (10 px) and its scale (section 2.9) stay. The expressive register adds `rounded-3xl` (24 px) for large showcase frames (the product window of the hero) and `rounded-full` for pills.
+- Radii: the scale of section 2.9 (6, 8, 12, 16 and 24 px). The expressive register adds `rounded-3xl` (24 px) for large showcase frames (the product window of the hero) and `rounded-full` for pills.
 - Borders: as section 2.10. On dark expressive surfaces a hairline `border-white/10` frames floating panels.
 - Shadows: the product keeps the elevation of section 2.11. The expressive register adds one brand glow for showcase frames only, `0 30px 80px -20px oklch(0.442 0.222 272.9 / 45%)`, and no other coloured shadow.
 
