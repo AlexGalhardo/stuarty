@@ -317,7 +317,7 @@ func (s *svc) doctorChecks(ctx context.Context, privileged, verify bool) []Docto
 	})
 
 	if privileged {
-		out = append(out, s.environmentCheck(), s.vaultCheck())
+		out = append(out, s.environmentCheck(), s.vaultCheck(), s.sealCheck(ctx))
 	}
 
 	if verify {

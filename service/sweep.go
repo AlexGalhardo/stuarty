@@ -107,16 +107,20 @@ func (s *svc) Sweep(ctx context.Context) (SweepResult, error) {
 		return res, err
 	}
 
-	images, err := s.sweepDirs(filepath.Join("exports", exportImagesDir), func(name string) bool {
-		_, herr := s.store.Images().Get(ctx, name)
+	// An image document is sealed with an account (ADR-0053): while the studio is locked it cannot be read to tell
+	// that the image exists, and a sweep that cannot tell deletes nothing, so the folders of images wait.
+	if s.gate == nil || s.gate.Check() == nil {
+		images, err := s.sweepDirs(filepath.Join("exports", exportImagesDir), func(name string) bool {
+			_, herr := s.store.Images().Get(ctx, name)
 
-		return errors.Is(herr, ErrNotFound)
-	})
-	if err != nil {
-		return res, err
+			return errors.Is(herr, ErrNotFound)
+		})
+		if err != nil {
+			return res, err
+		}
+
+		res.ExportDirs += images
 	}
-
-	res.ExportDirs += images
 
 	res.FrameDirs, err = s.sweepDirs("frames", missing)
 
