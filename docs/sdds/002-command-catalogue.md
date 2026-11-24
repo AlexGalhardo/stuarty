@@ -1,6 +1,7 @@
 # SDD-002: Command catalogue of the core
 
 - Amended (2026-11-18) for Stuarty: this is the catalogue of the video domain. Other domains get their own catalogue (ADR-0031, ADR-0038).
+- Amended (2026-11-24, epic 71): four commands, `caption.apply_style` and `caption.list_styles` (C.88, C.89), `clip.blur_region` (C.90) and `audio.apply_voice_preset` (C.91); names in SDD-000 section 17.
 - Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 86 commands have golden cases and pass the registry-wide gates. The binary exposes all 86 commands, 85 of them public (epic 32 added three, C.84 to C.86); `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
@@ -307,6 +308,7 @@ Scope is `edit` unless stated. "Time" marks arguments parsed by A.4. Optional ar
 | `clip.set_color` | `item_id`, `brightness?`, `contrast?`, `saturation?`, `temperature?`, `tint?`, `hue?` | Sets colour adjustment; also white balance and hue rotation (TASK-0233). See C.26 |
 | `clip.set_filter` | `item_id`, `filter?`, `amount?` | Sets the colour filter of a clip and how much of it is mixed in |
 | `clip.set_blur` | `item_id`, `radius` | Sets the blur radius of a clip in pixels; 0 removes it |
+| `clip.blur_region` | `item_id`, `x`, `y`, `width`, `height`, `start?`, `duration?`, `radius?`, `feather?`, `track_id?`, `new_id?`, `new_track_id?` | Blurs a rectangle of a clip for a time range, with a strong minimum, over a copy of the clip on a `Blur` track. See C.90 |
 | `clip.replace_media` | `item_id`, `asset_id` | Swaps the asset of a clip for another of the same kind, keeping its place, trim, transform, keyframes and effects (the re-render of an animation, SDD-011 section 15). See C.78 |
 | `item.repeat` | `item_id`, `copies?` or `until?` (exactly one), `ripple?` (`none` default, `track`), `link?`, `new_ids?` | Repeats an item back to back after its end, a number of times or until a time, such as a looping background (VV-123). See C.74 |
 | `clip.set_shadow` | `item_id`, `shadow` (`{color?, opacity?, dx?, dy?, blur?}` or null) | Gives a clip a drop shadow that follows its visible shape (VV-122); null removes it. See C.72 |
@@ -331,6 +333,7 @@ Scope is `edit` unless stated. "Time" marks arguments parsed by A.4. Optional ar
 | `audio.processor_move` | `item_id` or `track_id`, `index`, `to` | Moves a processor to another place of its chain. See C.81 |
 | `audio.processor_remove` | `item_id` or `track_id`, `index` | Removes a processor from a chain. See C.82 |
 | `audio.apply_preset` | `item_id` or `track_id`, `preset` | Replaces a chain with a preset: voice, voice with music, podcast or clean up a noisy room. See C.83 |
+| `audio.apply_voice_preset` | `item_id` or `track_id`, `preset?` | Replaces a chain with a studio voice preset: studio, broadcast or room rescue. See C.91 |
 | `marker.add` | `item_id?`, `at`, `label?` | Puts a marker at a frame of the timeline, or of an item with `item_id` (TASK-0254); see C.56 |
 | `marker.set` | `item_id?`, `at`, `to?`, `label?` | Moves or relabels the marker at a frame, of the timeline or of an item; see C.57 |
 | `marker.remove` | `item_id?`, `at` or `all` | Removes the marker at a frame, or every marker, of the timeline or of an item; see C.58 |
@@ -358,6 +361,8 @@ Scope is `edit` unless stated. "Time" marks arguments parsed by A.4. Optional ar
 | `caption.set_breaks` | `item_id`, `breaks` (array of word indexes) | Sets forced line breaks |
 | `caption.set_style` | `item_id`, `style` (partial CaptionStyle, or `null` to clear the override) | Sets the per-item style override |
 | `caption.from_transcript` | `clip_item_id`, `track_id`, `max_words?` (default 5), `max_chars?` (default 28), `max_gap?` (length, default `"0.6s"`), `replace?` (default true), `new_ids?` | Creates caption items on the track for the speech in the clip's visible source range (A.9). A new caption starts when adding the next word would exceed `max_words` or `max_chars`, or when the gap to the next word exceeds `max_gap`. Each caption gets `linked_item`. With `replace`, existing captions linked to that clip on that track are removed first. Word times are mapped from the asset through the clip's `source_in`, `speed` and `start` |
+| `caption.apply_style` | `track_id`, `style`, `reset_overrides?` | Gives a caption track one of the 14 named styles. See C.88 |
+| `caption.list_styles` | none | Describes the named caption styles. See C.89 |
 | `caption.retime_from_clip` | `clip_item_id` | Recomputes every caption linked to the clip from the transcript and the clip's current position, in-point and speed, keeping each caption's edited texts where the word count is unchanged |
 
 ### B.8 Keyframes
@@ -6844,3 +6849,214 @@ Removes the media of a range of transcript words from the timeline and closes th
 - `err_invalid_state_track_locked`
 - `err_id_exists`
 - `err_limit_500_items`
+
+### C.88 `caption.apply_style`
+
+Gives a caption track one of the 14 named styles (epic 71; names in SDD-000 section 17). A style is data in the core that resolves to the fields of `CaptionStyle` (SDD-001 section 3.7), so the stored result is an ordinary `caption_style` that `track.set_caption_style` edits afterwards. The styles are original: none copies the name or the look of another product. Each uses one of the bundled font families only (SDD-001 section 3.9); no style needs a user font.
+
+Every length in the table is in pixels of a frame whose shorter side is 1080. With `k` the shorter side of the project divided by 1080, the command stores `size` rounded to a whole number, and `stroke_width`, `shadow_dx`, `shadow_dy`, `shadow_blur`, `background_padding` and `background_radius` rounded to 1 decimal, each multiplied by `k` (then held to the limit of the field), so that a style looks the same in a vertical, a square and a wide project. `max_width` is not stored, except for `lower_bar`: the default of 0.8 of the frame width stays, and the 0.86 of `lower_bar` is stored as a number of pixels (0.86 times the frame width, rounded).
+
+| Style id | Font, weight | Size | Colour | Edge, shadow or box | Position | Highlight of the spoken word |
+| --- | --- | --- | --- | --- | --- | --- |
+| `clean_white` | Inter 700 | 72 | `#FFFFFF` | stroke `#000000` 3; shadow `#000000B3` 0, 3, blur 8 | bottom | colour `#FFD23F` |
+| `bold_pop` | Anton 400, upper case | 92 | `#FFFFFF` | stroke `#000000` 8; shadow `#00000099` 0, 4, blur 0 | bottom | colour `#3DFF7A` |
+| `marker_yellow` | Montserrat 800 | 76 | `#FFE600` | stroke `#000000` 6; line height 1.1 | bottom | colour `#FFFFFF` |
+| `soft_box` | Inter 600 | 64 | `#FFFFFF` | box `#111827CC`, padding 22, radius 18 | bottom | colour `#FFFFFF` on `#2563EB` |
+| `neon_night` | Bebas Neue 400, upper case | 96 | `#E8FFFF` | stroke `#00131A` 3; shadow `#00E5FF` 0, 0, blur 24 | middle | colour `#FF4FD8` |
+| `editorial` | Playfair Display 700 | 70 | `#FFF8E7` | stroke `#1A1206` 2; shadow `#000000AA` 0, 2, blur 10; line height 1.2 | bottom | colour `#F4B860` |
+| `mono_code` | JetBrains Mono 700 | 56 | `#7CFFB2` | box `#0B0F14E6`, padding 20, radius 8 | bottom | colour `#FFFFFF` on `#1F6F4A` |
+| `karaoke_pill` | Montserrat 700 | 66 | `#FFFFFF` | stroke `#000000` 4 | bottom | colour `#101010` on `#FFFFFF` |
+| `thick_outline` | Montserrat 900, upper case | 80 | `#FFFFFF` | stroke `#000000` 14; line height 1.05 | bottom | colour `#FF5A36` |
+| `warm_glow` | Montserrat 800 | 74 | `#FFB347` | stroke `#3A1500` 3; shadow `#FF6A00B3` 0, 0, blur 22 | bottom | colour `#FFFFFF` |
+| `lower_bar` | Inter 500, left aligned | 52 | `#FFFFFF` | box `#000000A6`, padding 18, radius 0; line width 0.86 of the frame width | bottom | colour `#7DD3FC` |
+| `big_center` | Anton 400, upper case | 140 | `#FFFFFF` | stroke `#000000` 10; line height 0.95 | middle | colour `#FFE600` |
+| `top_headline` | Bebas Neue 400, upper case | 88 | `#FFFFFF` | stroke `#000000` 3; shadow `#000000CC` 0, 4, blur 6 | top | colour `#FF3B30` |
+| `ink_paper` | Playfair Display 700 | 64 | `#1B1B1B` | box `#F6EFE0F2`, padding 24, radius 12 | bottom | colour `#B3261E` |
+
+Every style sets `highlight` to `word`, `align` to `center` (except `lower_bar`, `left`) and a `position`; a field the table does not give is not stored. The text colour has a contrast of at least 4.5:1 with the stroke, or the box where there is one, in every style (a test holds it).
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `track_id` | track id | yes | none | a visual track |
+| `style` | string | yes | none | one of the 14 style ids |
+| `reset_overrides` | boolean | no | false | true clears the `style` override of every caption item of the track, so that the track style shows on all of them |
+
+**Preconditions.** The track exists (`E_NOT_FOUND`) and is a visual track (`E_TYPE_MISMATCH`); the style id is known (`E_VALIDATION`, `path` `args.style`, the hint lists the ids).
+
+**Postconditions.** The `caption_style` of the track is exactly the style resolved for the project (what was there is replaced, as `track.set_caption_style` with `replace`). `diff` has one `track.updated` (`caption_style`), and one `item.updated` (`style`) for each item that `reset_overrides` cleared. `effective` has `style` (the id), `caption_style` (the stored fields) and `overridden_items`: the ids of the caption items of the track that still have a `style` override, which hides part of the track style (empty after `reset_overrides`). Applying the style that is already stored changes nothing.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | unknown style | `args.style "fancy" is not a caption style.` | `Use clean_white, bold_pop, marker_yellow, soft_box, neon_night, editorial, mono_code, karaoke_pill, thick_outline, warm_glow, lower_bar, big_center, top_headline or ink_paper; caption.list_styles describes them.` |
+| `E_NOT_FOUND` | unknown track | `Track trk_zzzzzzzzzz does not exist.` | `Use the id of a track listed by project_get.` |
+| `E_TYPE_MISMATCH` | an audio track | `Track trk_a1b2c3d4e5 is an audio track and cannot hold captions.` | `Use a visual track.` |
+
+**Inverse.** `patch` of the `caption_style` of the track (set the old one, or unset), and `patch` of `style` of each cleared item. **Idempotency.** Same result.
+
+**Example.**
+
+```json
+{"op": "caption.apply_style", "args": {"track_id": "trk_a1b2c3d4e5", "style": "bold_pop"}}
+```
+
+**Golden cases.**
+
+- `ok_style_clean_white`
+- `ok_style_bold_pop`
+- `ok_style_marker_yellow`
+- `ok_style_soft_box`
+- `ok_style_neon_night`
+- `ok_style_editorial`
+- `ok_style_mono_code`
+- `ok_style_karaoke_pill`
+- `ok_style_thick_outline`
+- `ok_style_warm_glow`
+- `ok_style_lower_bar`
+- `ok_style_big_center`
+- `ok_style_top_headline`
+- `ok_style_ink_paper`
+- `ok_replaces_the_track_style`
+- `ok_scales_with_a_wide_project`
+- `ok_reports_item_overrides`
+- `ok_reset_overrides`
+- `ok_same_style_noop`
+- `err_validation_unknown_style`
+- `err_not_found_track`
+- `err_type_mismatch_audio_track`
+
+### C.89 `caption.list_styles`
+
+Describes what `caption.apply_style` accepts, for an agent or an editor that has not read this document. It changes nothing: `diff` is empty and so is the inverse.
+
+**Arguments.** None.
+
+**Postconditions.** `effective` has `styles`, a list in the order of the table of C.88, each `{"id", "name", "summary", "font_family", "caption_style"}`: `name` is the English name shown in the gallery, `summary` one line, and `caption_style` the stored fields for a project whose shorter side is 1080.
+
+**Errors.** `E_VALIDATION` when an argument is given.
+
+**Golden cases.**
+
+- `ok_lists_the_styles`
+- `err_validation_takes_no_arguments`
+
+### C.90 `clip.blur_region`
+
+Blurs a rectangle of a clip for a time range, so that a creator can hide an address, an e-mail or a key on screen (epic 71). It is built from what the plan and the export already draw (SDD-004 sections 3.6 and 3.9, no new renderer feature): the command adds a copy of the clip, limited to the range, on a visual track directly above the track of the clip, with the blur of `radius` and a rectangular `mask` of the region. The mask is applied after the blur (SDD-004 section 3.9), so only the blurred pixels of the region are drawn over the sharp picture, and the preview and the export show the same frames. The source clip is not changed.
+
+The copy is made as `item.split` would make the piece of the range, so speed, freeze and reverse read the same source frames as the source does. It keeps the asset, the source range, the transform, the fit, the crop, the flips, the colour adjustment, the filter, the chroma key and the opacity of the source. It has the name `Blur region`, `audio_muted` true, and none of the link, the slot, the transitions, the fades, the markers, the processors, the denoise, the voice, the effects, the shadow, the outline, the mask or the blur of the source. The copy and the source are two items of the same asset, so a later edit of the source (a trim, a move) does not move the blur: edit `Blur region` with the item commands, or remove it with `item.delete`.
+
+**Minimum and default radius.** With `s` the shorter side of the project in pixels, the least radius is `min_radius = min(100, ceil(0.015 x s))` and the default `radius = min(100, ceil(0.04 x s))` (17 and 44 at 1080). A radius below `min_radius` is `E_VALIDATION`: a lighter blur can be reversed.
+
+**Frame edge.** The blur counts the pixels outside the picture as transparent (SDD-004 section 3.6), so inside the reach of 3 radii from an edge of the picture the blurred copy is partly transparent and part of the sharp picture shows through. A region that touches an edge is therefore less hidden near that edge; `effective.near_edge` says so (true when the region comes closer than 3 radii to an edge of the picture), and the editor warns.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `clip` item |
+| `x`, `y` | number | yes | none | the top-left corner of the region, as fractions of the drawn picture of the clip (SDD-004 section 3.9), 0 up to under 1 |
+| `width`, `height` | number | yes | none | the size of the region, 0.001 up to what is left (`x + width <= 1`, `y + height <= 1`) |
+| `start` | time | no | the start of the clip | absolute start of the blur, inside the clip |
+| `duration` | time, as a length | no | up to the end of the clip | at least 1 frame, ends at or before the end of the clip |
+| `radius` | number | no | per the rule above | `min_radius` to 100, rounded to 3 decimals |
+| `feather` | integer | no | 0 | 0 to 200 project pixels, the soft edge of the mask |
+| `track_id` | track id | no | see below | a visual track above the track of the clip |
+| `new_id` | item id | no | generated | the id of the blur item |
+| `new_track_id` | track id | no | generated | the id of the track when one is created |
+
+**Track.** With `track_id` the item goes there. Without it the command uses the nearest visual track above the track of the clip that is named `Blur` and has no item overlapping the range, and creates one named `Blur` directly above the track of the clip when there is none.
+
+**Preconditions.** Arguments match the schema; the region is inside the picture (`E_VALIDATION`, `path` `args.x`, `args.y`, `args.width` or `args.height`); the radius is at least `min_radius`; the item exists (`E_NOT_FOUND`) and is a clip (`E_TYPE_MISMATCH`); the clip has no speed curve (`E_INVALID_STATE`, as `item.split`); the range is inside the clip (`E_INVALID_TIME`, `path` `args.start` or `args.duration`); a given track exists, is a visual track and lies above the track of the clip (`E_NOT_FOUND`, `E_TYPE_MISMATCH`, `E_VALIDATION`); the new ids are free (`E_ID_EXISTS`); the item and track limits hold (`E_LIMIT`); the copy does not overlap an item of the track (`E_OVERLAP`, only with a given track).
+
+**Postconditions.** One item added (and one track when created). `diff` has `item.added` (and `track.added`). `effective` has `new_id`, `track_id`, `new_track_id` (only when created), the A.4 triples `start` and `duration`, `radius`, `min_radius`, `mask` (the rounded region) and `near_edge`.
+
+**Errors.**
+
+| Code | When | Example message | Example hint |
+| --- | --- | --- | --- |
+| `E_VALIDATION` | a region outside the picture, a radius below the minimum, a track that is not above | `args.radius 4 is below the least blur, 17, that keeps text unreadable at 1080 pixels.` | `Send a radius from 17 to 100, or leave it out.` |
+| `E_NOT_FOUND` | unknown item or track | `Item itm_zzzzzzzzzz does not exist.` | `Use the id of an item listed by project_get.` |
+| `E_TYPE_MISMATCH` | not a clip, or an audio track | `Item itm_s6t7v8w9x0 is a text item; only a clip can be blurred.` | `Use a clip.` |
+| `E_INVALID_STATE` | the clip has a speed curve | `Item itm_m1n2p3q4r5 has a speed curve; a part of it cannot be copied.` | `Remove the curve with clip.set_speed first.` |
+| `E_INVALID_TIME` | a range outside the clip | `args.start "20s" is outside clip itm_m1n2p3q4r5 (frames 0-149).` | `Use a start inside the clip.` |
+| `E_ID_EXISTS` | a new id is used | `Item id itm_s6t7v8w9x0 already exists.` | `Omit new_id to generate one.` |
+| `E_LIMIT` | too many items or tracks | `Blurring would make 501 items; the limit is 500.` | `Delete unused items first.` |
+| `E_OVERLAP` | the given track is busy in the range | `The range overlaps itm_c3d4e5f6g7 on track trk_b2c3d4e5f6.` | `Use another track or leave track_id out.` |
+
+**Inverse.** `remove` of the item and of the track when created. **Idempotency.** Not idempotent: a second call adds a second blur.
+
+**Example.** 30 fps, 1080 x 1920; clip `itm_m1n2p3q4r5` at 0 for 150 frames.
+
+```json
+{"op": "clip.blur_region", "args": {"item_id": "itm_m1n2p3q4r5", "x": 0.1, "y": 0.62, "width": 0.8, "height": 0.08, "start": "1s", "duration": "2s"}}
+```
+
+**Golden cases.**
+
+- `ok_whole_clip`
+- `ok_range_in_the_middle`
+- `ok_creates_the_blur_track`
+- `ok_reuses_the_blur_track`
+- `ok_given_track`
+- `ok_radius_and_feather`
+- `ok_sped_up_clip`
+- `ok_near_edge_is_reported`
+- `ok_image_clip`
+- `err_validation_region_outside`
+- `err_validation_radius_below_minimum`
+- `err_validation_track_not_above`
+- `err_not_found_item`
+- `err_not_found_track`
+- `err_type_mismatch_text_item`
+- `err_type_mismatch_audio_track`
+- `err_invalid_state_speed_curve`
+- `err_invalid_time_range_outside_clip`
+- `err_id_exists`
+- `err_overlap_given_track`
+
+### C.91 `audio.apply_voice_preset`
+
+Replaces the chain of an item or a track with a studio voice preset (epic 71): one action for a clean, even voice, without tuning the processors. It works exactly as `audio.apply_preset` (C.83, the shared rules of C.79) with three chains of the processors of SDD-004 section 7.1, made for a voice that is the main sound of a short video. The chain ends in the limiter, and the export brings the whole mix to the `loudness_target` of the project with one gain (SDD-004 section 7), so a clip that carries the preset is exported within 1 LU of the target. The user can change any processor with `audio.processor_set` afterwards.
+
+| Preset | Chain, in order |
+| --- | --- |
+| `studio` | `noise_reduction` strength 0.4; `eq` high-pass 80 Hz, band 2 250 Hz -1.5 dB, band 4 3500 Hz +2 dB; `deesser` defaults; `compressor` threshold -20 dB, ratio 3, makeup 3 dB; `limiter` ceiling -1 dB |
+| `broadcast` | `noise_reduction` strength 0.5; `gate` threshold -50 dB, range -18 dB; `eq` high-pass 90 Hz, band 2 200 Hz -2.5 dB, band 4 4000 Hz +3 dB; `deesser` defaults; `compressor` threshold -24 dB, ratio 4, makeup 4 dB; `limiter` ceiling -1 dB |
+| `room_rescue` | `noise_reduction` strength 0.9; `gate` threshold -42 dB, range -15 dB; `eq` high-pass 120 Hz, band 2 300 Hz -3 dB, band 4 3000 Hz +2 dB; `deesser` defaults; `compressor` threshold -20 dB, ratio 3, makeup 3 dB; `limiter` ceiling -1 dB |
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | one of the two | none | a `clip` or `audio` item |
+| `track_id` | track id | one of the two | none | any track |
+| `preset` | string | no | `studio` | `studio`, `broadcast` or `room_rescue` |
+
+**Postconditions.** The chain is exactly the preset. `effective` has `preset` and `processors` (their count). Applying the preset that is already the chain changes nothing.
+
+**Errors.** `E_VALIDATION` (no or two targets, unknown preset), `E_NOT_FOUND`, `E_TYPE_MISMATCH`, as C.79.
+
+**Inverse.** `patch` of `processors`. **Idempotency.** Same result.
+
+**Example.**
+
+```json
+{"op": "audio.apply_voice_preset", "args": {"item_id": "itm_m1n2p3q4r5", "preset": "studio"}}
+```
+
+**Golden cases.**
+
+- `ok_studio_on_clip`
+- `ok_default_preset_is_studio`
+- `ok_broadcast_on_track`
+- `ok_room_rescue_on_audio_item`
+- `ok_replaces_the_chain`
+- `ok_same_preset_noop`
+- `err_validation_unknown_preset`
+- `err_validation_no_target`
+- `err_type_mismatch_text_item`
+- `err_not_found_track`

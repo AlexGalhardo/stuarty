@@ -3,7 +3,7 @@
 - Amended (2026-11-18) for Stuarty: the product is Stuarty (ADR-0031, ADR-0044). The command is `stuarty`, the variables are `STUARTY_*` and the workspace folder is `~/.stuarty`; section 13 lists the former names, which are still read. A new domain adds its names here first.
 - Status: Authoritative (2026-11-14). Every SDD uses these names exactly. A name is changed here first, then everywhere.
 - Depends on: ADR-0001, ADR-0006, ADR-0008, ADR-0015 to ADR-0020
-- Last change: 2026-11-18, the rename to Stuarty (ADR-0044): every name that carried the product name, and section 13 with the former names. Before that, 2026-11-14: names added from the review of SDD-005, SDD-006 and SDD-007 (operations outside the agent surfaces, tables `document_backups`, `audit` and `api_keys`, `E_RATE_LIMITED`, workspace files, limit variables)
+- Last change: 2026-11-24, section 17 (epic 71: caption styles, blur regions, voice presets). Before that, 2026-11-18, the rename to Stuarty (ADR-0044): every name that carried the product name, and section 13 with the former names. Before that, 2026-11-14: names added from the review of SDD-005, SDD-006 and SDD-007 (operations outside the agent surfaces, tables `document_backups`, `audit` and `api_keys`, `E_RATE_LIMITED`, workspace files, limit variables)
 - Purpose: one place for the names that several specifications share, so that documents written in parallel agree.
 
 ## 1. Service operations
@@ -593,3 +593,14 @@ The operations of the registry of domain `image` (`core/command` registry built 
 | `visual`, `video`, `audio` | library section | the three sections over one library: Visual Assets (kinds `image`, `lut`), Video Assets (kind `video`) and Sound Assets (kind `audio`, D-121) |
 | `E_VALIDATION` `details.reason` `origin_kind_unknown`, `source_required`, `rights_note_required`, `provider_required`, `model_required`, `too_long`, `cost_invalid`, `tags_invalid`, `kind_unknown`, `section_unknown`, `origin_member_not_allowed`, `origin_member_invalid`, `name_invalid` | error detail | an origin, a tag set or a list filter the library refuses (`path` is `origin.<field>`, `tags`, `kind`, `section`, `origin`, `tag` or `name`; `name_invalid` is a new display name that is empty, has a path separator, a control or invisible character or a character Windows refuses in a file name, is a device name of Windows, ends with a dot or a space, or is not 1 to 120 characters, SDD-011 §14.8); the last two refuse `engine`, `engine_version` or `render_key` on another kind than `rendered_externally`, or in a form that is not a token (SDD-011 §14.2, epic 33); stable for agents |
 | `asset_hash`, `hash` | field | the content hash `sha256:<64 hex>` of an asset, the key of the library (a bare 64 hex string is accepted and normalised) |
+
+## 17. Caption styles, blur regions and voice presets (epic 71, SDD-002 C.88 to C.91)
+
+| Name | Kind | Meaning |
+| --- | --- | --- |
+| `caption.apply_style`, `caption.list_styles`, `clip.blur_region`, `audio.apply_voice_preset` | command | the four commands of the epic, all scope `edit`; `caption.list_styles` changes nothing |
+| `clean_white`, `bold_pop`, `marker_yellow`, `soft_box`, `neon_night`, `editorial`, `mono_code`, `karaoke_pill`, `thick_outline`, `warm_glow`, `lower_bar`, `big_center`, `top_headline`, `ink_paper` | caption style id | the 14 original caption styles of `caption.apply_style`, in this order in `caption.list_styles`; each uses only a bundled font family (SDD-001 section 3.9) |
+| `studio`, `broadcast`, `room_rescue` | voice preset id | the three chains of `audio.apply_voice_preset`, in this order |
+| `Blur` | track name | the visual track `clip.blur_region` creates, directly above the track of the clip, when no free track of that name lies above it |
+| `Blur region` | item name | the name of the clip item that `clip.blur_region` adds |
+| `overridden_items`, `new_track_id`, `radius`, `min_radius` | effective member | what the four commands report in `effective` (SDD-002 C.88 to C.91) |
