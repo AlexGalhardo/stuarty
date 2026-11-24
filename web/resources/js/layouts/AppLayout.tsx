@@ -6,6 +6,7 @@ import ReleaseMark from "@/components/ReleaseMark";
 import ThemeToggle from "@/components/ThemeToggle";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { type I18nProps, I18nProvider } from "@/lib/i18n";
+import { useLockWatch } from "@/lib/lockWatch";
 import { SessionProvider } from "@/lib/session";
 import type { SharedProps } from "@/types";
 import DashboardLayout from "./DashboardLayout";
@@ -34,13 +35,14 @@ function Shell({ children }: { children: ReactNode }) {
 	const page = usePage<SharedProps>();
 	// The shared prop can arrive empty; the link keeps a name (axe link-name).
 	const appName = page.props.appName || "Stuarty";
+	const accountPage =
+		page.component.startsWith("Auth/") || page.component.startsWith("Account/");
+	// A page drawn before an idle lock must not stay on the screen after it (ADR-0052). Only local mode has an account.
+	useLockWatch(!accountPage && page.props.account !== undefined);
 
 	// The login has no session and no sections to lead to: a plain header, no
 	// sidebar. Every other page is drawn by the dashboard (SDD-012 section 23.2).
-	if (
-		page.component.startsWith("Auth/") ||
-		page.component.startsWith("Account/")
-	) {
+	if (accountPage) {
 		return (
 			<TooltipProvider>
 				<header className="flex min-h-14 flex-wrap items-center gap-x-4 gap-y-1 border-b px-4 py-2 md:px-6">
