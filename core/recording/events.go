@@ -107,7 +107,8 @@ type header struct{ width, height int }
 
 var errLine = errors.New("recording: invalid event line")
 
-func inRange(v int, limit int) bool { return v >= 0 && v <= limit }
+// inRange reports whether a coordinate is a pixel of a side of `size` pixels: 0 to size-1.
+func inRange(v int, size int) bool { return v >= 0 && v < size }
 
 // parseEvent decodes and validates one line. For a header line it returns the header and no event.
 func parseEvent(line []byte, hdr *header) (ev PointerEvent, h *header, err error) {
