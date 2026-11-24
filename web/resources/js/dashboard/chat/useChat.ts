@@ -223,6 +223,11 @@ export function useChat(
 	}, [active, projectId, api, open, closeStream]);
 
 	useEffect(() => closeStream, [closeStream]);
+	// Made inactive (the shell, in a tab that is not on the screen), the stream is let go; made active again,
+	// the effect above reads the session again and its stream opens with everything said so far.
+	useEffect(() => {
+		if (!active) closeStream();
+	}, [active, closeStream]);
 
 	const selectProject = useCallback((id: string) => {
 		window.localStorage.setItem(STORED_PROJECT, id);

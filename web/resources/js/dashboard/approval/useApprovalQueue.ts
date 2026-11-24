@@ -25,7 +25,9 @@ export interface ApprovalQueueState {
 // The pending requests, read once and then kept live by the event stream. The stream sends the
 // pending requests when it opens, so a reconnect catches up by itself. Deciding is a call of the
 // person; the answer and the event both drop the request, and dropping twice changes nothing.
-export function useApprovalQueue(): ApprovalQueueState {
+// `active` false closes the stream (the shell, in a tab that is not on the screen); made true again, the
+// queue is read afresh, so a request decided meanwhile does not stay.
+export function useApprovalQueue(active = true): ApprovalQueueState {
 	const [requests, setRequests] = useState<ApprovalRequest[] | null>(null);
 	const [live, setLive] = useState(false);
 	const [failure, setFailure] = useState<Failure | null>(null);
@@ -35,20 +37,24 @@ export function useApprovalQueue(): ApprovalQueueState {
 		transport.current = new HttpTransport("/api/v1");
 	}
 
+	const started = useRef(false);
 	useEffect(() => {
 		const http = transport.current;
-		if (http === null) return;
-		let active = true;
+		if (http === null || !active) return;
+		// a second start follows a pause: what was held may have been decided since
+		if (started.current) setRequests(null);
+		started.current = true;
+		let alive = true;
 		createClient(http)
 			.listApprovals("pending")
 			.then((res) => {
 				// the stream may already have shown newer requests: keep both, once each
-				if (active) {
+				if (alive) {
 					setRequests((was) => mergeList(was ?? [], res));
 				}
 			})
 			.catch((error: unknown) => {
-				if (active) setFailure(failureOf(error));
+				if (alive) setFailure(failureOf(error));
 			});
 		const stream = http.openStream(STREAM, {
 			onOpen: () => setLive(true),
@@ -57,10 +63,11 @@ export function useApprovalQueue(): ApprovalQueueState {
 			onError: () => setLive(false),
 		});
 		return () => {
-			active = false;
+			alive = false;
 			stream.close();
+			setLive(false);
 		};
-	}, []);
+	}, [active]);
 
 	const decide = useCallback(
 		async (

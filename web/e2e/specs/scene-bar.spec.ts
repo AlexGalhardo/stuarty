@@ -215,6 +215,42 @@ test.describe("scene bar", () => {
 		}
 	});
 
+	// Every dashboard page follows the approval queue (and a live chat) over an event stream. Over HTTP/1.1 a
+	// browser shares six connections to one host among its tabs: a tab that is not on the screen lets its
+	// streams go, or the seventh tab of the studio would never load.
+	test("a tab that is not on the screen lets its streams go, so a seventh tab still opens", async ({
+		page,
+		context,
+	}) => {
+		test.setTimeout(240_000);
+		const hide = async (tab: Page): Promise<void> => {
+			await tab.evaluate(() => {
+				Object.defineProperty(document, "visibilityState", {
+					configurable: true,
+					get: () => "hidden",
+				});
+				document.dispatchEvent(new Event("visibilitychange"));
+			});
+		};
+		await signInAsPerson(page);
+		const tabs = [page];
+		for (let i = 1; i < 6; i++) tabs.push(await context.newPage());
+		for (const tab of tabs) {
+			await tab.goto("/");
+			await expect(tab.getByTestId("scene-bar")).toBeVisible();
+			await hide(tab);
+		}
+		const seventh = await context.newPage();
+		await seventh.goto("/", { timeout: 30_000 });
+		await expect(seventh.getByTestId("scene-bar")).toBeVisible();
+		const listed = await seventh.evaluate(async () => {
+			const res = await fetch("/api/v1/projects");
+			return res.status;
+		});
+		expect(listed).toBe(200);
+		for (const tab of [...tabs.slice(1), seventh]) await tab.close();
+	});
+
 	test("with no agent session the bar says so and invents no skill, tool or step", async ({
 		page,
 		request,
