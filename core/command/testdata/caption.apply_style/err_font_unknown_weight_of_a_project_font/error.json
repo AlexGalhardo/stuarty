@@ -1,0 +1,12 @@
+{
+  "code": "E_FONT_UNKNOWN",
+  "message": "Font weight 700 does not exist for family \"Inter\"; available weights: 400.",
+  "hint": "Use font_weight 400.",
+  "retryable": false,
+  "path": "args.style.font_weight",
+  "details": {
+    "available": [
+      400
+    ]
+  }
+}

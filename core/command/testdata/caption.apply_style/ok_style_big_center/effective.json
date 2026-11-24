@@ -1,0 +1,18 @@
+{
+  "caption_style": {
+    "align": "center",
+    "color": "#FFFFFF",
+    "font_family": "Anton",
+    "font_weight": 400,
+    "highlight": "word",
+    "highlight_color": "#FFE600",
+    "line_height": 0.95,
+    "position": "middle",
+    "size": 140,
+    "stroke_color": "#000000",
+    "stroke_width": 10,
+    "uppercase": true
+  },
+  "overridden_items": [],
+  "style": "big_center"
+}

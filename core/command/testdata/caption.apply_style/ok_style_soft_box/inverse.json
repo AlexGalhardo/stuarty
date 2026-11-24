@@ -1,0 +1,10 @@
+[
+  {
+    "type": "patch",
+    "collection": "tracks",
+    "id": "trk_a1b2c3d4e5",
+    "unset": [
+      "caption_style"
+    ]
+  }
+]

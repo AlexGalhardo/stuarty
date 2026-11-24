@@ -1,0 +1,20 @@
+{
+  "caption_style": {
+    "align": "center",
+    "color": "#FFFFFF",
+    "font_family": "Inter",
+    "font_weight": 700,
+    "highlight": "word",
+    "highlight_color": "#FFD23F",
+    "position": "bottom",
+    "shadow_blur": 8,
+    "shadow_color": "#000000B3",
+    "shadow_dx": 0,
+    "shadow_dy": 3,
+    "size": 72,
+    "stroke_color": "#000000",
+    "stroke_width": 3
+  },
+  "overridden_items": [],
+  "style": "clean_white"
+}
