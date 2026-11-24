@@ -11,6 +11,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/internal/testfs"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 	"github.com/AlexGalhardo/stuarty/web/app/store"
@@ -40,7 +41,11 @@ func TestSecurity_T107_EveryToolOfALockedStudioAnswersELocked(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	t.Cleanup(func() { _ = st.Close() })
+	t.Cleanup(func() {
+		_ = st.Close()
+
+		testfs.Released(t, dir.Path("db.sqlite"))
+	})
 
 	var n atomic.Int64
 
