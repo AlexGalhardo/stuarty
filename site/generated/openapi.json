@@ -1576,6 +1576,65 @@
         },
         "type": "object"
       },
+      "CutsProposal": {
+        "properties": {
+          "batch": {
+            "items": {
+              "$ref": "#/components/schemas/command.Operation"
+            },
+            "type": "array"
+          },
+          "end_ms": {
+            "type": "integer"
+          },
+          "face_share": {
+            "type": "integer"
+          },
+          "n": {
+            "type": "integer"
+          },
+          "score": {
+            "type": "integer"
+          },
+          "start_ms": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "words": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "CutsProposeResult": {
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "proposals": {
+            "items": {
+              "$ref": "#/components/schemas/CutsProposal"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "Description": {
         "properties": {
           "ai_disclosure": {
@@ -2256,6 +2315,26 @@
             "type": "string"
           },
           "width": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "FaceTrackResult": {
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "faces": {
+            "type": "integer"
+          },
+          "fps": {
+            "type": "integer"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "samples": {
             "type": "integer"
           }
         },
@@ -4064,6 +4143,16 @@
               }
             ]
           },
+          "face_track": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FaceTrackResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "generated": {
             "anyOf": [
               {
@@ -5634,6 +5723,7 @@
               "clip.add",
               "clip.add_composition",
               "clip.blur_region",
+              "clip.face_frame",
               "clip.remove_silences",
               "clip.replace_media",
               "clip.set_blend",
@@ -5787,6 +5877,9 @@
           },
           "clip.blur_region": {
             "$ref": "#/components/schemas/args.clip.blur_region"
+          },
+          "clip.face_frame": {
+            "$ref": "#/components/schemas/args.clip.face_frame"
           },
           "clip.remove_silences": {
             "$ref": "#/components/schemas/args.clip.remove_silences"
@@ -9358,8 +9451,38 @@
           "host": {
             "type": "string"
           },
+          "license": {
+            "type": "string"
+          },
           "name": {
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ToolOffer": {
+        "properties": {
+          "dataset": {
+            "type": "string"
+          },
+          "download_bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/ToolFile"
+            },
+            "type": "array"
+          },
+          "installed": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "published": {
+            "type": "boolean"
           }
         },
         "type": "object"
@@ -9404,6 +9527,12 @@
           "installed": {
             "items": {
               "$ref": "#/components/schemas/InstalledTool"
+            },
+            "type": "array"
+          },
+          "offers": {
+            "items": {
+              "$ref": "#/components/schemas/ToolOffer"
             },
             "type": "array"
           },
@@ -12642,6 +12771,50 @@
         ],
         "type": "object"
       },
+      "args.clip.face_frame": {
+        "additionalProperties": false,
+        "properties": {
+          "dead_zone": {
+            "description": "How far the face may drift before the frame follows, in ten-thousandths of the window. Default 800.",
+            "maximum": 5000,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "hold_ms": {
+            "description": "How long the last position is held when no face is seen. Default 1500.",
+            "maximum": 30000,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "item_id": {
+            "description": "A clip of a video asset.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "keyframe_ms": {
+            "description": "The least time between two keyframes, 50 to 5000 ms. Default 200.",
+            "maximum": 5000,
+            "minimum": 50,
+            "type": "integer"
+          },
+          "max_pan": {
+            "description": "Fastest pan, in ten-thousandths of the source width per second. Default 6000.",
+            "maximum": 100000,
+            "minimum": 100,
+            "type": "integer"
+          },
+          "smoothing_ms": {
+            "description": "Time constant of the smoothing, 0 to 5000 ms. Default 400.",
+            "maximum": 5000,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "item_id"
+        ],
+        "type": "object"
+      },
       "args.clip.remove_silences": {
         "additionalProperties": false,
         "properties": {
@@ -15637,6 +15810,15 @@
           "from_word",
           "to_word"
         ],
+        "type": "object"
+      },
+      "command.Operation": {
+        "properties": {
+          "args": {},
+          "op": {
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "errs.Issue": {
@@ -23518,6 +23700,100 @@
           }
         ],
         "summary": "Rename a checkpoint"
+      }
+    },
+    "/api/v1/projects/{id}/cuts": {
+      "get": {
+        "operationId": "projects.cuts",
+        "parameters": [
+          {
+            "description": "The timeline of the project; required when the project has several.",
+            "in": "query",
+            "name": "timeline_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The video asset to cut; it needs a transcript and a face track.",
+            "in": "query",
+            "name": "asset_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "The most proposals, 1 to 20. Default 5.",
+            "in": "query",
+            "name": "count",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The shortest cut in milliseconds. Default 20000.",
+            "in": "query",
+            "name": "min_ms",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The longest cut in milliseconds. Default 60000.",
+            "in": "query",
+            "name": "max_ms",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CutsProposeResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Propose vertical cuts of an asset from its transcript and face track, and change nothing"
       }
     },
     "/api/v1/projects/{id}/describe": {

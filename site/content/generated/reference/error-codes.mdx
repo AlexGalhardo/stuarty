@@ -74,7 +74,7 @@ Raised around the commands: sign-in, imports, exports, jobs and limits. They app
 | `E_RATE_LIMITED` | 429 | yes | the caller sent too many requests; the answer carries `Retry-After`, and `details` has `retry_after`, `limit`, `value` and `ceiling` |
 | `E_RECORDING_NOT_FOUND` | 404 | no | the recording does not exist, or the caller may not see it (a dismissed one, SDD-025 §4) |
 | `E_TRANSCRIBE_FAILED` | 500 | no | a transcription ran and failed (no output, provider error, no word timings); `details.reason` |
-| `E_TRANSCRIBE_UNAVAILABLE` | 503 | no | no transcription provider is installed or configured; `details` names what is missing, its download size, the install command and the `tool` and `model` it installs |
+| `E_TRANSCRIBE_UNAVAILABLE` | 503 | no | no transcription provider is installed or configured, or another local helper (the face tracking set `face`, SDD-024 §3) is not installed; `details` names what is missing, its download size, the install command and the `tool` and `model` it installs |
 | `E_UNAUTHORIZED` | 401 | no | missing or invalid token, key or session |
 | `E_UNSUPPORTED_MEDIA` | 422 | no | the file is not media FFmpeg can decode, or has no usable stream |
 | `E_VAULT_LOCKED` | 503 | no | the vault cannot be opened: master key missing, wrong or not storable; `details.reason` (SDD-014 §4) |

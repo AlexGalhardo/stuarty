@@ -241,6 +241,7 @@ route GET /projects/{}/bitmaps/{}
 route GET /projects/{}/brief
 route GET /projects/{}/chat/sessions
 route GET /projects/{}/checkpoints
+route GET /projects/{}/cuts
 route GET /projects/{}/describe
 route GET /projects/{}/diff
 route GET /projects/{}/events

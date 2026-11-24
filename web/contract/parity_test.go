@@ -95,6 +95,9 @@ var parity = []row{
 		method: "TranscriptDetectFillers", tool: "media_inspect", command: "transcript:fillers",
 		route: "GET /projects/{}/transcript/fillers",
 	},
+	// Vertical cuts (SDD-024 section 8): HTTP only, because the skill file and the first discovery call are at
+	// their limits and a tool or a command would not fit (SDD-024 section 9).
+	{method: "CutsPropose", route: "GET /projects/{}/cuts", httpOnly: true},
 	{method: "AssetList", tool: "media_inspect", command: "asset:list", route: "GET /assets"},
 	{method: "AssetGet", tool: "media_inspect", command: "asset:show", route: "GET /assets/{}"},
 	{method: "AssetUses", command: "asset:uses", route: "GET /assets/{}/uses"},
