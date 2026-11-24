@@ -76,10 +76,13 @@ test.describe("webhooks", () => {
 			await expect(
 				page.getByRole("heading", { name: "Webhooks", level: 1 }),
 			).toBeVisible();
+			// The empty state says its title once, and the sentence under it adds what it means.
 			await expect(
-				page.getByText(
-					"No webhook yet. Nothing leaves this computer until you register one.",
-				),
+				page.getByRole("heading", { name: "No webhook yet", level: 3 }),
+			).toBeVisible();
+			await expect(page.getByText("No webhook yet")).toHaveCount(1);
+			await expect(
+				page.getByText("Nothing leaves this computer until you register one."),
 			).toBeVisible();
 
 			await page.getByLabel("Name", { exact: true }).fill(name);

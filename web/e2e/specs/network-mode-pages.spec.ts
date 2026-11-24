@@ -166,7 +166,9 @@ plain.describe("network-mode-pages: login, keys and logout", () => {
 		async ({ page, member }) => {
 			await login(page, member, "/settings/keys");
 			// The list has loaded: the session ends after that, not under the load.
-			await expect(page.getByText("No keys yet.")).toBeVisible();
+			await expect(
+				page.getByRole("heading", { name: "No keys yet" }),
+			).toBeVisible();
 			await page.context().clearCookies();
 			await page.getByLabel("Name").fill("after the session ended");
 			// The click starts a navigation of the page (the redirect to the login), so
