@@ -309,6 +309,29 @@ func TestPrintableHidesPathsAndControls(t *testing.T) {
 	}
 }
 
+// A refused line ends the run at once: the helper that keeps writing into a pipe nobody reads is killed, not
+// left until the stall timeout.
+func TestDetectStopsAtTheFirstRefusedLine(t *testing.T) {
+	r, artifacts, clip, run := pinned(t)
+
+	h := host(t, r, "toomany")
+	h.cfg.StallTimeout = 10 * time.Minute
+
+	start := time.Now()
+
+	_, err := h.Detect(context.Background(), input(artifacts, clip, run), nil)
+
+	var e *Error
+	if !errors.As(err, &e) || e.Reason != "protocol" {
+		t.Fatalf("error = %v, want the protocol refusal", err)
+	}
+
+	// The deadline of this 3 s range is 61.5 s; a run that waits for it has not stopped at the refusal.
+	if took := time.Since(start); took > 30*time.Second {
+		t.Errorf("the refused helper lived %s", took)
+	}
+}
+
 func TestDetectKillsAHelperThatGoesSilent(t *testing.T) {
 	r, artifacts, clip, run := pinned(t)
 
