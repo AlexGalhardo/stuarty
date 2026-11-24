@@ -50,7 +50,7 @@ The rule 2 formula is the one `mapTranscript` of `caption.from_transcript` alrea
 
 `transcript.delete_range` (SDD-002 C.87, scope `edit`) takes an `asset_id`, a `from_word` and a `to_word` (inclusive indices) and removes from the timeline the media of those words, closing the gap, as one undoable operation.
 
-The source range to remove is `R = [words[from_word].Start, words[to_word].End)` in asset frames. For **every** eligible item of the asset (a clip and its linked audio, a clip used twice, a clip already cut into pieces) whose visible source range `S` meets `R`:
+The source range to remove is `R = [words[from_word].Start, words[to_word].End)` in asset frames, moved to `R'` by the snap of section 3.1 (epic 89). The rules below read `R'` where they say `R`. For **every** eligible item of the asset (a clip and its linked audio, a clip used twice, a clip already cut into pieces) whose visible source range `S` meets `R`:
 
 1. The cut is decided in the item's own frames. Local frame `k` shows source frame `floor(k x speed)`, so the frames that show `R` are `[ceil(a / speed), ceil(b / speed))`, with `a` and `b` the ends of `R` relative to `si`, clamped to the item (a range between two shown frames removes one frame). The item keeps the frames before and after them (an empty side is dropped), as one or two pieces: the piece after the cut has its `source_in` at `R.end`. The first piece keeps the id, the transitions-in and the fade-in, the last keeps the transitions-out and the fade-out, new pieces take `new_ids` or generated ids, and captions linked to the item are linked to the piece that holds their first word.
 2. The pieces close up from the item's start and the later items of the **same track** move earlier by the removed length (ripple `track`). Items of other tracks do not move, exactly as in `clip.remove_silences`; a person who wants the whole timeline to follow cuts the linked tracks together, which this command does because it acts on every item of the asset.
@@ -58,6 +58,19 @@ The source range to remove is `R = [words[from_word].Start, words[to_word].End)`
 4. Items are processed from the latest `start` to the earliest on each track, so the ripple of one never moves an item not yet processed.
 
 Each item loses the part of `R` it shows, converted to timeline frames, within one frame, at any constant speed: at speed 1 exactly, and at speed 3/2 a range of 0.67 frames removes one frame. At a speed above 1 the piece after the cut can read up to two timeline frames less of the source at its end, so a word that starts in those last frames of the item can lose its range. Speech that was spoken before `R.start` and after `R.end` is untouched. Captions already made keep their words; `caption.retime_from_clip` re-syncs them (the panel offers it after a cut).
+
+### 3.1 Snapping the edges to the silences (epic 89)
+
+Whisper gives contiguous words and its word times inside a run are a median 160 to 240 ms off (section 7), so a cut at the word times can clip a neighbouring word or leave part of the removed one. The edges of the cut move to the silences of the asset, which the ingest already measured (SDD-011 section 9).
+
+- **Input.** `transcript.SnapEdges(silences, window, words, from, to)` is pure and works in asset frames. `silences` are the ranges `[S, T)` of the `silence` artifact at -35 dB (the threshold of `clip.remove_silences`, minimum 150 ms), read by the service into `resolved.silences`. `window` is the `snap` argument in frames. Its default is `"0.3s"` and the snap is **on by default**: it is the simplest choice that meets the goal for a person and for an agent, which sends only a word range; `"0s"` gives the cut of epic 69 byte for byte, and so does an asset with no silence in the window.
+- **Start edge.** Let `E = words[from].Start` and `lo = words[from - 1].End` (0 for the first word). The edge is **inside** when `S <= E <= T` for a silence, and then stays. Otherwise it moves **earlier**, to `T` of the silence with the largest `T` that satisfies `lo <= T < E` and `E - T <= window` (the nearest one). A silence that ends before `lo` lies inside the word before the cut, which the transcript contradicts, so it is not trusted. The edge never moves later than `E`: the words the person chose stay in the cut.
+- **End edge.** The mirror: with `E = words[to].End` and `hi = words[to + 1].Start` (no limit for the last word), the edge is inside when `S <= E <= T`; otherwise it moves **later**, to `S` of the first silence with `E < S <= hi` and `S - E <= window`. The edge never moves earlier than `E`.
+- **Ties.** The edges only move outward, so the candidates of one edge are all on one side and their distances differ: there is no tie.
+- **Guarantees.** `R'` contains `R`: the snap only removes more of what lies between the chosen words and the neighbouring words of the transcript, never a word the person did not choose and never less than they chose. When no silence qualifies the edge stays at the whisper time.
+- **Result.** `effective.snap` (SDD-002 C.87) says, for each edge, `inside`, `moved` (with the frames added) or `none`. With no silence artifact the service fills `silence_analysis: "missing"`, the cut is the whisper cut and the result says that no silence analysis was available; it is not an error, so an asset analysed before the artifact existed still cuts.
+- **One snap for every item.** The snap runs once, in asset frames, before the range is converted to the local frames of each item (rule 1 above), so a clip and its linked audio cut at the same snapped range.
+- **Not changed.** `clip.remove_silences` and the review ranges of the filler detector keep the whisper times; only the cut moves.
 
 ## 4. Detecting fillers and repetitions
 
@@ -104,7 +117,7 @@ Whisper can drop or smooth fillers, so what the pinned whisper.cpp (`v1.9.2`, mo
 
 - **Repetitions** are found in both languages (recall 1.00 and 0.83). **English hesitations** that whisper writes (`um`, `hmm`, `er`) are found; one it drops (`uh`) cannot be. The filler recall is 0.69 in English.
 - **Portuguese hesitations** are mostly written by whisper as the words `um` and `é`, which the rule must not flag; the filler recall is 0.06. The panel therefore tells the person what was checked and never says "no fillers" (section 6).
-- A word that starts a sentence has its onset within about 25 ms of the audible onset (the post-processing of SDD-011 section 10.4 snaps it to the end of the pause); a word inside a run is a median 160 to 240 ms off. A cut whose edges are inside a run follows the whisper times, so the review shows the range and an edge may clip a neighbour or leave part of the word, by as much as that error (hundreds of milliseconds at worst). Snapping the edges to the silences of the asset is the refinement, not part of this epic.
+- A word that starts a sentence has its onset within about 25 ms of the audible onset (the post-processing of SDD-011 section 10.4 snaps it to the end of the pause); a word inside a run is a median 160 to 240 ms off. A cut whose edges are inside a run follows the whisper times, so the review shows the range and an edge may clip a neighbour or leave part of the word, by as much as that error (hundreds of milliseconds at worst). Snapping the edges to the silences of the asset (section 3.1, epic 89) is the refinement; what it gained on the labelled fixture is measured in `docs/perf/2026-11-24-transcript-snap.md`.
 - The fixture is synthetic: it bounds what the rules and the model do with clean, isolated hesitations and does not replace recordings of people.
 
 ## 8. Errors and limits
@@ -114,6 +127,7 @@ Codes are those of SDD-000: `E_VALIDATION` (an index out of range, `to_word < fr
 ## 9. Tests
 
 - Golden timelines for the mapping (one clip, a clip with a changed speed, several clips of one asset, a clip already cut, an item with a curve) and for `transcript.delete_range` (C.87), including the check that the words a delete removes have no range afterwards and every other word keeps its place.
+- Table tests of `transcript.SnapEdges` (an edge inside a silence, near one, with none in the window, two candidates, a silence inside a neighbouring word, adjacent silences, the first and last word); golden timelines with the snap on (speed 1 and 3/2, a clip cut in pieces, a clip and its linked audio) and off (the cases above byte for byte); the service with and without the silence artifact; the share of one-word cuts that clip a neighbouring word, unsnapped and snapped, on the labelled fixture.
 - A labelled fixture of transcripts (`core/transcript/testdata/`) with the precision and recall of the detector, and the generator of the speech (`gen-speech.ps1`).
 - The service tests of both reads, including that detection does not change the timeline revision.
 - The parity test of SDD-003 section 7.1 and the surface budget.
