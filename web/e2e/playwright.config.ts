@@ -303,6 +303,11 @@ export default defineConfig({
 				STUARTY_RATE_LIMIT_HEAVY_PER_MINUTE: "1000",
 				STUARTY_RATE_LIMIT_PER_MINUTE: "100000",
 				STUARTY_RATE_LIMIT_SESSION_PER_MINUTE: "100000",
+				// The workers share one server and one actor: with the default caps (two exports queued or
+				// running in the workspace, one running and two waiting per actor) the third export asked at
+				// the same time was answered 429 (VV-224). Eight is more than the workers can ask at once.
+				STUARTY_MAX_EXPORTS: "8",
+				STUARTY_MAX_EXPORTS_PER_KEY: "8",
 				...ffmpegEnv(),
 			},
 		},

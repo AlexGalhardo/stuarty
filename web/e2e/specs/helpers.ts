@@ -121,6 +121,18 @@ export const test = base.extend<{ tipsSeen: boolean }>({
 
 export { expect } from "@playwright/test";
 
+// afterRender waits for the browser to draw twice. The answer of an edit is applied to the editor before the
+// frame that follows it, so a test that edits the same item again calls this once the answer arrived: a field
+// builds its batch from the document it shows, and the next one sent too soon would carry the old values.
+export async function afterRender(page: Page): Promise<void> {
+	await page.evaluate(
+		() =>
+			new Promise<void>((done) =>
+				requestAnimationFrame(() => requestAnimationFrame(() => done())),
+			),
+	);
+}
+
 // ffmpegExe is the pinned FFmpeg of the tests (see playwright.config.ts).
 export function ffmpegExe(): string {
 	const dir = process.env.STUARTY_TEST_FFMPEG_DIR;
@@ -518,7 +530,15 @@ export async function createThroughTheForm(
 	await page.waitForURL(/\/projects\/prj_[0-9a-hjkmnp-tv-z]{10}$/);
 	const id = page.url().split("/").pop() ?? "";
 	await page.getByLabel("Title", { exact: true }).fill(name);
+	// Leaving before the item is added would abort the request, and the navigation with it (VV-224).
+	const added = page.waitForResponse(
+		(r) =>
+			r.request().method() === "POST" &&
+			r.url().endsWith(`/api/v1/projects/${id}/items`) &&
+			r.ok(),
+	);
 	await page.getByRole("button", { name: "Add item" }).click();
+	await added;
 	await page.goto(`/editor/${id}`);
 	return id;
 }

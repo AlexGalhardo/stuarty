@@ -1,17 +1,21 @@
 import type { Page } from "@playwright/test";
-import { expect, seedProject, test } from "./helpers";
+import { afterRender, expect, seedProject, test } from "./helpers";
 import { openInspectorTab } from "./sections";
 
 interface Posted {
 	operations: { op: string; args: Record<string, unknown> }[];
 }
 
-function recordEdits(page: Page): Posted[] {
+// `settled.count` is how many of the posted edits the server has answered (VV-224).
+function recordEdits(page: Page, settled = { count: 0 }): Posted[] {
 	const edits: Posted[] = [];
 	page.on("request", (r) => {
 		if (r.method() === "POST" && r.url().endsWith("/edit")) {
 			edits.push(r.postDataJSON());
 		}
+	});
+	page.on("requestfinished", (r) => {
+		if (r.method() === "POST" && r.url().endsWith("/edit")) settled.count++;
 	});
 	return edits;
 }
@@ -33,7 +37,8 @@ test.describe("effects-inspector", () => {
 		await page.goto(`/editor/${seeded.id}?debug=1`);
 		await page.locator("[data-item-id]").click();
 		await expect(page.getByRole("heading", { name: /^Clip/ })).toBeVisible();
-		const edits = recordEdits(page);
+		const settled = { count: 0 };
+		const edits = recordEdits(page, settled);
 
 		await openInspectorTab(page, "Adjust");
 		await page
@@ -46,8 +51,12 @@ test.describe("effects-inspector", () => {
 		await amount.fill("0.8");
 		await amount.press("Enter");
 		await expect.poll(() => edits.length).toBe(2);
+		await expect.poll(() => settled.count).toBe(2);
+		await afterRender(page);
 		await page.getByLabel("Add effect", { exact: true }).selectOption("glow");
 		await expect.poll(() => edits.length).toBe(3);
+		await expect.poll(() => settled.count).toBe(3);
+		await afterRender(page);
 		await page.getByRole("button", { name: "Remove Vignette" }).click();
 		await expect.poll(() => edits.length).toBe(4);
 

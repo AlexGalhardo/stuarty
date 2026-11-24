@@ -5,6 +5,7 @@ import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { NETWORK_ADMIN, NETWORK_URL } from "../support/network";
 import {
+	afterRender,
 	audioClip,
 	caller,
 	expect,
@@ -50,7 +51,10 @@ async function scan(
 	// A dialog or a popover that is still fading in has a text color halfway to
 	// its final one, which axe reads as low contrast; the slower Firefox and
 	// WebKit runners catch it mid-transition. Endless animations (a spinner)
-	// are left out: they never finish.
+	// are left out: they never finish. A transition exists only once the frame
+	// that starts it was drawn, so the page draws twice before the animations
+	// are listed (VV-224).
+	await afterRender(page);
 	await page.evaluate(() =>
 		Promise.race([
 			Promise.all(
@@ -368,6 +372,8 @@ test.describe("a11y-axe-network-pages", () => {
 			await page.getByLabel("Email").fill(NETWORK_ADMIN.email);
 			await page.getByLabel("Password").fill(NETWORK_ADMIN.password);
 			await page.getByRole("button", { name: /^Log in$/ }).click();
+			// Leaving before the sign-in has been answered would abort it (VV-224).
+			await expect(page).not.toHaveURL(/\/login/);
 			for (const path of ["/settings/keys"]) {
 				await page.goto(`${NETWORK_URL}${path}`);
 				await expect(

@@ -2,7 +2,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Page } from "@playwright/test";
-import { caller, expect, seedProject, test } from "./helpers";
+import { afterRender, caller, expect, seedProject, test } from "./helpers";
 import { openSection } from "./sections";
 
 interface Posted {
@@ -65,7 +65,8 @@ test.describe("templates", () => {
 		const item = page.locator("[data-item-id]");
 		await expect(item).toHaveCount(1);
 		await item.click();
-		const posted = recordEdits(page);
+		const settled = { count: 0 };
+		const posted = recordEdits(page, settled);
 
 		await page.getByLabel("Template slot", { exact: true }).check();
 		await expect.poll(() => posted.length).toBe(1);
@@ -80,10 +81,15 @@ test.describe("templates", () => {
 				},
 			},
 		]);
+		// Each field below builds its batch from the slot the editor shows: wait until the answer is applied (VV-224).
+		await expect.poll(() => settled.count).toBe(1);
+		await afterRender(page);
 		const name = page.getByLabel("Slot name", { exact: true });
 		await name.fill("title");
 		await name.press("Enter");
 		await expect.poll(() => posted.length).toBe(2);
+		await expect.poll(() => settled.count).toBe(2);
+		await afterRender(page);
 		expect(posted[1]?.operations).toEqual([
 			{ op: "slot.unmark", args: { item_id: seeded.itemId } },
 			{
@@ -271,11 +277,25 @@ test.describe("templates", () => {
 	// VV-128: importing the same file again says so and adds no second template.
 	test("importing the same template file twice says it was already imported", async ({
 		page,
+		request,
 	}) => {
+		// Other tests add templates to the same server at the same time, so the whole list cannot be counted:
+		// the templates of this one's name are (VV-224).
+		const call = await caller(request);
+		const all = async (): Promise<{ template_id: string; name: string }[]> =>
+			(
+				(await call("GET", "/templates")) as {
+					templates: { template_id: string; name: string }[];
+				}
+			).templates;
 		await page.goto("/projects");
 		const rows = page.locator("[data-template-id]");
 		await expect(rows.first()).toBeVisible();
 		const id = (await rows.first().getAttribute("data-template-id")) as string;
+		const name = (await all()).find((t) => t.template_id === id)?.name ?? "";
+		expect(name).not.toBe("");
+		const stored = async (): Promise<number> =>
+			(await all()).filter((t) => t.name === name).length;
 		const file = await page.request.get(`/api/v1/templates/${id}/file`);
 		expect(file.ok()).toBe(true);
 		const dir = join(tmpdir(), "stuarty-e2e-template-import");
@@ -289,13 +309,13 @@ test.describe("templates", () => {
 		await expect(
 			page.getByRole("status").filter({ hasText: "Imported:" }),
 		).toBeVisible();
-		const count = await rows.count();
+		const afterFirst = await stored();
 
 		await field.fill(path);
 		await page.getByRole("button", { name: "Import template" }).click();
 		await expect(
 			page.getByText("This file was already imported, so nothing was added."),
 		).toBeVisible();
-		await expect(rows).toHaveCount(count);
+		expect(await stored()).toBe(afterFirst);
 	});
 });
