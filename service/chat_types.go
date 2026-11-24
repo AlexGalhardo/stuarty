@@ -30,6 +30,7 @@ type ChatService interface {
 	ChatSessionList(ctx context.Context, req ChatSessionListRequest) (*ChatSessionListResult, error)
 	ChatSessionGet(ctx context.Context, req ChatRef) (*ChatSession, error)
 	ChatTranscriptGet(ctx context.Context, req ChatTranscriptRequest) (*ChatTranscriptResult, error)
+	ChatActivityGet(ctx context.Context, req ChatRef) (*ChatActivityResult, error)
 	ChatSessionDelete(ctx context.Context, req ChatRef) (*ChatSession, error)
 }
 

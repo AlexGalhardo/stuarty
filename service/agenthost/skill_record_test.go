@@ -94,3 +94,47 @@ func TestRecordSkillOnASessionThatIsNotLiveRecordsNothing(t *testing.T) {
 		}
 	}
 }
+
+// The activity of a live session is told from the skills it read and its last tool call, oldest first, which the
+// host keeps in memory.
+func TestActivityEventsAreTheSkillsAndTheLastToolCall(t *testing.T) {
+	t.Parallel()
+
+	e := newEnv(t, Limits{}, nil)
+	s := e.start(t, "prj_0000000042", e.profile("echo"))
+	f := follow(t, e.host, s.ID)
+
+	if got, ok := e.host.ActivityEvents(s.ID); !ok || len(got) != 0 {
+		t.Fatalf("a new session = %+v, %v", got, ok)
+	}
+
+	e.host.RecordSkill(s.ID, chat.SkillRef{Name: "a", Hash: "h"})
+
+	if err := e.host.Send(s.ID, "go"); err != nil {
+		t.Fatal(err)
+	}
+
+	f.next(func(ev chat.Event) bool { return ev.Kind == chat.KindToolCall && ev.Tool.Status == chat.ToolCompleted })
+	e.host.RecordSkill(s.ID, chat.SkillRef{Name: "b", Hash: "h"})
+
+	got, ok := e.host.ActivityEvents(s.ID)
+	if !ok || len(got) != 3 {
+		t.Fatalf("events = %+v, %v", got, ok)
+	}
+
+	kinds := []chat.Kind{got[0].Kind, got[1].Kind, got[2].Kind}
+	if kinds[0] != chat.KindSkillLoaded || kinds[1] != chat.KindToolCall || kinds[2] != chat.KindSkillLoaded ||
+		got[0].Seq >= got[1].Seq || got[1].Seq >= got[2].Seq {
+		t.Fatalf("kinds and order = %v %+v", kinds, got)
+	}
+
+	if got[1].Tool.Status != chat.ToolCompleted {
+		t.Errorf("the tool call is not the merged one: %+v", got[1].Tool)
+	}
+
+	e.host.End(s.ID, chat.EndUser)
+
+	if _, ok := e.host.ActivityEvents(s.ID); ok {
+		t.Error("a session that is not live answered from memory")
+	}
+}
