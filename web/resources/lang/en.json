@@ -115,6 +115,8 @@
         "project_item_revert": "Restores an earlier revision of a text.",
         "project_item_check": "Checks an item of a project.",
         "project_item_update": "Updates an item of a project.",
+        "project_item_skip": "Skips a step of the project workflow.",
+        "project_item_unskip": "Brings back a skipped step of the project workflow.",
         "template_list": "Lists your templates.",
         "template_save": "Saves a project as a template.",
         "template_new": "Makes a new project from a template.",
