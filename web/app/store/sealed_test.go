@@ -404,7 +404,8 @@ func TestSecurity_T108_ThePromptOfAGeneratedFileIsSealed(t *testing.T) {
 
 	for _, h := range []string{"sha256:aa", "sha256:bb"} {
 		if _, _, err := st.Assets().Upsert(ctx, service.AssetRow{
-			Hash: h, SizeBytes: 1, OriginalName: "clip.mp4", IngestState: service.IngestReady, CreatedMs: 1, UpdatedMs: 1,
+			Hash: h, SizeBytes: 1, OriginalName: "clip.mp4", IngestState: service.IngestReady,
+			CreatedMs: 1, UpdatedMs: 1,
 		}); err != nil {
 			t.Fatal(err)
 		}

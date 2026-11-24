@@ -125,51 +125,16 @@ func (s *Store) CreateAccount(
 	}
 
 	return s.db.Tx(ctx, func(dtx *database.Tx) error {
-		sums := map[string][sha256.Size]byte{}
-
-		for _, c := range sealedCells {
-			rows, err := c.read(ctx, dtx)
-			if err != nil {
-				return err
-			}
-
-			for _, row := range rows {
-				sealed, err := sl.Seal(c.table, c.column, row.key, row.plain)
-				if err != nil {
-					return err
-				}
-
-				sums[c.table+"."+c.column+"/"+row.key] = sha256.Sum256([]byte(row.plain))
-
-				if err := c.update(ctx, dtx, row, sealed); err != nil {
-					return err
-				}
-			}
+		sums, err := sealCells(ctx, dtx, sl)
+		if err != nil {
+			return err
 		}
 
 		if err := hook("sealed"); err != nil {
 			return err
 		}
 
-		if _, err := dtx.ExecContext(ctx, `UPDATE library_fts SET body = ''`); err != nil {
-			return err
-		}
-
-		// An update of an FTS5 table leaves the old terms in its segments until a merge: the rebuild drops them.
-		if _, err := dtx.ExecContext(ctx, `INSERT INTO library_fts (library_fts) VALUES ('rebuild')`); err != nil {
-			return err
-		}
-
-		// The search index of the files repeats the prompt in its origin column: it is written again without it.
-		if _, err := dtx.ExecContext(ctx, `UPDATE asset_search SET origin = COALESCE((
-  SELECT TRIM(COALESCE(i.source, '') || ' ' || COALESCE(i.provider, '') || ' ' || COALESCE(i.model, '') || ' ' ||
-              COALESCE(i.engine, '') || ' ' || COALESCE(i.engine_version, ''))
-  FROM asset_info i
-  WHERE i.asset_hash = asset_search.asset_hash AND i.owner_user_id = asset_search.owner_user_id), '')`); err != nil {
-			return err
-		}
-
-		if _, err := dtx.ExecContext(ctx, `INSERT INTO asset_search (asset_search) VALUES ('rebuild')`); err != nil {
+		if err := clearIndexes(ctx, dtx); err != nil {
 			return err
 		}
 
@@ -183,6 +148,55 @@ func (s *Store) CreateAccount(
 
 		return verifySealed(ctx, dtx, sl, sums)
 	})
+}
+
+// sealCells seals every value of every sealed column and returns the digest of each, for the read back.
+func sealCells(ctx context.Context, ex database.Executor, sl account.Sealer) (map[string][sha256.Size]byte, error) {
+	sums := map[string][sha256.Size]byte{}
+
+	for _, c := range sealedCells {
+		rows, err := c.read(ctx, ex)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, row := range rows {
+			sealed, err := sl.Seal(c.table, c.column, row.key, row.plain)
+			if err != nil {
+				return nil, err
+			}
+
+			sums[c.table+"."+c.column+"/"+row.key] = sha256.Sum256([]byte(row.plain))
+
+			if err := c.update(ctx, ex, row, sealed); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return sums, nil
+}
+
+// clearIndexes takes the words of the person out of the two full-text indexes. An update of an FTS5 table leaves
+// the old terms in its segments until a merge, so each is rebuilt.
+func clearIndexes(ctx context.Context, ex database.Executor) error {
+	for _, q := range []string{
+		`UPDATE library_fts SET body = ''`,
+		`INSERT INTO library_fts (library_fts) VALUES ('rebuild')`,
+		// The index of the files repeats the prompt in its origin column: it is written again without it.
+		`UPDATE asset_search SET origin = COALESCE((
+  SELECT TRIM(COALESCE(i.source, '') || ' ' || COALESCE(i.provider, '') || ' ' || COALESCE(i.model, '') || ' ' ||
+              COALESCE(i.engine, '') || ' ' || COALESCE(i.engine_version, ''))
+  FROM asset_info i
+  WHERE i.asset_hash = asset_search.asset_hash AND i.owner_user_id = asset_search.owner_user_id), '')`,
+		`INSERT INTO asset_search (asset_search) VALUES ('rebuild')`,
+	} {
+		if _, err := ex.ExecContext(ctx, q); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // CompactSealed takes out of the file what the sealing replaced (SDD-005 section 5.17.3). The old pages of a
