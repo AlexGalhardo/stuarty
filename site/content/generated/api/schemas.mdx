@@ -368,6 +368,18 @@ The types named in the tables of the operations. The arguments of each editing c
 | `kind` | `string` | no |  |
 | `object` | map of `any` | no |  |
 
+### ChatActivityResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `session_id` | `string` | no |  |
+| `skill` | [`SkillSlot`](/docs/api/schemas#skillslot) | no |  |
+| `skills_loaded` | array of [`LoadedSkill`](/docs/api/schemas#loadedskill) | no |  |
+| `state` | `string` | no |  |
+| `tool` | [`ToolActivity`](/docs/api/schemas#toolactivity) or `any` or `null` or `null` | no |  |
+| `untrusted_notice` | `string` | no |  |
+| `updated_at` | `string (date-time)` | no |  |
+
 ### ChatSession
 
 | Name | Type | Required | Description |
@@ -692,6 +704,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `kind` | `string` | no |  |
 | `permission` | [`Permission`](/docs/api/schemas#permission) or `any` or `null` or `null` | no |  |
 | `seq` | `integer (int64)` | no |  |
+| `skill` | [`SkillRef`](/docs/api/schemas#skillref) or `any` or `null` or `null` | no |  |
 | `state` | [`StateInfo`](/docs/api/schemas#stateinfo) or `any` or `null` or `null` | no |  |
 | `text` | `string` | no |  |
 | `tool` | [`Tool`](/docs/api/schemas#tool) or `any` or `null` or `null` | no |  |
@@ -1659,6 +1672,14 @@ The types named in the tables of the operations. The arguments of each editing c
 | `errors` | `integer` | no |  |
 | `lint_scope` | `string` | no |  |
 | `warnings` | `integer` | no |  |
+
+### LoadedSkill
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `at` | `string (date-time)` | no |  |
+| `hash` | `string` | no |  |
+| `name` | `string` | no |  |
 
 ### Loudness
 
@@ -2768,6 +2789,13 @@ The types named in the tables of the operations. The arguments of each editing c
 | `text` | `string` | no |  |
 | `warnings` | `integer` | no |  |
 
+### SkillRef
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `hash` | `string` | no |  |
+| `name` | `string` | no |  |
+
 ### SkillReviewResult
 
 | Name | Type | Required | Description |
@@ -2775,6 +2803,13 @@ The types named in the tables of the operations. The arguments of each editing c
 | `entry` | [`LibraryEntry`](/docs/api/schemas#libraryentry) | no |  |
 | `text` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
+
+### SkillSlot
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | no |  |
+| `state` | `string` | no |  |
 
 ### SkillWriteResult
 
@@ -3172,11 +3207,23 @@ The types named in the tables of the operations. The arguments of each editing c
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
+| `action` | `string` | no |  |
 | `output` | `string` | no |  |
 | `status` | `string` | no |  |
 | `title` | `string` | no |  |
 | `tool_call_id` | `string` | no |  |
 | `tool_kind` | `string` | no |  |
+
+### ToolActivity
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `action` | `string` | no |  |
+| `description_key` | `string` | no |  |
+| `from_agent` | `boolean` | no |  |
+| `status` | `string` | no |  |
+| `technical_name` | `string` | no |  |
+| `title` | `string` | no |  |
 
 ### ToolFile
 

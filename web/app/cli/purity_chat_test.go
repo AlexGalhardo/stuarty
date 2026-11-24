@@ -21,6 +21,10 @@ func (s stub) ChatSessionGet(context.Context, service.ChatRef) (*service.ChatSes
 	return reply[service.ChatSession](s.err)
 }
 
+func (s stub) ChatActivityGet(context.Context, service.ChatRef) (*service.ChatActivityResult, error) {
+	return reply[service.ChatActivityResult](s.err)
+}
+
 func (s stub) ChatTranscriptGet(context.Context, service.ChatTranscriptRequest) (*service.ChatTranscriptResult, error) {
 	return reply[service.ChatTranscriptResult](s.err)
 }

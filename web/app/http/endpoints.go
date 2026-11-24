@@ -1232,6 +1232,11 @@ var Endpoints = []Endpoint{
 		Summary: "Read the transcript of a session as events or as Markdown",
 	},
 	{
+		ID: "chat.sessions.activity", Method: http.MethodGet, Path: "/chat/sessions/{id}/activity",
+		Scope: service.ScopeRead, Service: "ChatActivityGet", Status: 200,
+		Summary: "Read which skill a session loaded and which tool it is calling, with a plain description",
+	},
+	{
 		ID:      "chat.sessions.send",
 		Method:  http.MethodPost,
 		Path:    "/chat/sessions/{id}/messages",

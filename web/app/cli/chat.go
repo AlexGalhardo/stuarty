@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/AlexGalhardo/stuarty/core/chat"
 	"github.com/AlexGalhardo/stuarty/service"
 )
 
@@ -129,6 +130,53 @@ var chatTranscriptCmd = &spec{
 
 		return &output{value: res, text: strings.Join(lines, "\n")}, nil
 	},
+}
+
+var chatActivityCmd = &spec{
+	name:       "chat:activity",
+	summary:    "show which skill a chat session loaded and which tool its agent is calling",
+	usage:      []string{"stuarty chat:activity <id>"},
+	example:    "stuarty chat:activity cht_7k2m9x4q1b",
+	positional: true,
+	run: func(ctx context.Context, c *call) (*output, error) {
+		id, err := oneArg(c, "chat:activity", "chat session id")
+		if err != nil {
+			return nil, err
+		}
+
+		res, err := c.svc.ChatActivityGet(ctx, service.ChatRef{SessionID: id})
+		if err != nil {
+			return nil, err
+		}
+
+		return &output{value: res, text: activityText(res)}, nil
+	},
+}
+
+// activityText tells the skill and the tool in lines. Every name and title in it is untrusted text: it is cut to a
+// line and never interpreted.
+func activityText(a *service.ChatActivityResult) string {
+	skill := "skill: " + string(a.Skill.State)
+	if a.Skill.State == chat.SkillLoaded {
+		skill += " in this session: " + firstLine(a.Skill.Name)
+	}
+
+	lines := []string{fmt.Sprintf("%s  %s", a.SessionID, a.State), skill}
+
+	for i := range a.SkillsLoaded {
+		lines = append(lines, "  loaded: "+firstLine(a.SkillsLoaded[i].Name))
+	}
+
+	switch t := a.Tool; {
+	case t == nil:
+		lines = append(lines, "tool: none yet")
+	case t.FromAgent:
+		lines = append(lines, fmt.Sprintf("tool: %s (%s), text from the agent", firstLine(t.Title), t.Status))
+	default:
+		lines = append(lines, fmt.Sprintf("tool: %s (%s), key %s", t.TechnicalName, t.Status, t.DescriptionKey))
+	}
+
+	return strings.Join(lines, "\n")
 }
 
 func sessionLine(s *service.ChatSession) string {

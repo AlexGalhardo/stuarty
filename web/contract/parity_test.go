@@ -329,6 +329,7 @@ var parity = []row{
 	{method: "ChatSessionList", command: "chat:sessions", route: "GET /projects/{}/chat/sessions"},
 	{method: "ChatSessionGet", command: "chat:session", route: "GET /chat/sessions/{}"},
 	{method: "ChatTranscriptGet", command: "chat:transcript", route: "GET /chat/sessions/{}/transcript"},
+	{method: "ChatActivityGet", command: "chat:activity", route: "GET /chat/sessions/{}/activity"},
 	// The stream of a session is not a Service operation (SDD-017 section 8).
 	{route: "GET /chat/sessions/{}/events", httpOnly: true, noMethod: true},
 }

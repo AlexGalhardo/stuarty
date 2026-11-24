@@ -274,6 +274,7 @@
         "agents.profiles.remove",
         "chat.sessions.get",
         "chat.sessions.delete",
+        "chat.sessions.activity",
         "chat.sessions.cancel",
         "chat.sessions.events",
         "chat.sessions.send",

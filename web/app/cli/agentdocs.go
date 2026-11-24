@@ -60,7 +60,7 @@ func AgentDocsInputs() agentdocs.Inputs {
 
 	// The chat commands read a transcript and the profiles for a person (SDD-017 section 10): an agent has no use
 	// for the chat of another one, so the editor skill leaves them out; the guide of the workspace domain lists them.
-	for _, s := range []*spec{agentProfilesCmd, chatSessionsCmd, chatSessionCmd, chatTranscriptCmd} {
+	for _, s := range []*spec{agentProfilesCmd, chatSessionsCmd, chatSessionCmd, chatTranscriptCmd, chatActivityCmd} {
 		inLibrary[s.name] = true
 	}
 
