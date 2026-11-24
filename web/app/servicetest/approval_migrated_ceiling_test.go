@@ -47,7 +47,8 @@ func (e *env) staleOnLaterTimelines(ceilingPerItem, rulePerItem int64) (project,
 	return project, second
 }
 
-// migrate runs the ceilings migration again on the workspace, as an upgrade of the binary would.
+// migrate runs the ceilings migration again on the workspace, as an upgrade of the binary would. The accounts
+// migration is already applied and sorts after it, so the rerun is allowed out of order: only this test asks for it.
 func (e *env) migrate() {
 	e.t.Helper()
 
@@ -61,7 +62,7 @@ func (e *env) migrate() {
 		e.t.Fatal(err)
 	}
 
-	if ran, err := m.Up(ctx); err != nil || len(ran) != 1 {
+	if ran, err := m.AllowOutOfOrder().Up(ctx); err != nil || len(ran) != 1 {
 		e.t.Fatalf("Up = %v, %v; want only %s", ran, err, ceilingsMigration)
 	}
 }
