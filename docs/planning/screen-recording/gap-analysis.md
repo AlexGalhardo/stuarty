@@ -91,6 +91,6 @@ Added by an author decision of 2026-11-23, after the validation of the sections 
 
 | Feature | Stuarty today | Evidence | Value | Effort | Agent-first fit | Recommendation |
 | --- | --- | --- | --- | --- | --- | --- |
-| HyperFrames round through the hand-off | Partial: flow built, real round not verified | `service/motion.go`, `service/motion_check.go`, `docs/plans/33-external-motion-engine-hand-off.md` task 7 | Medium | S | The agent renders on its side and imports | Do (epic 73) |
+| HyperFrames round through the hand-off | Done: real round proven with npm `hyperframes` 0.9.86 | `service/motion.go`, `service/motion_check.go`, `docs/plans/33-external-motion-engine-hand-off.md` task 7 | Medium | S | The agent renders on its side and imports | Done (epic 73) |
 | Remotion | Out | ADR-0027 | Low | n/a | Importing its output still works | Do not do |
 | Hosted HeyGen MCP connector | Out | ADR-0032 | Low | n/a | Would add a central outbound service | Do not do |
