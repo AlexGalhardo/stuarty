@@ -95,7 +95,7 @@ func gone(path string) bool {
 func bundle(t *testing.T) (Target, string) {
 	t.Helper()
 
-	apps := t.TempDir()
+	apps := testfs.TempDir(t)
 	app := filepath.Join(apps, "Stuarty.app")
 	exe := filepath.Join(app, "Contents", "MacOS", "stuarty-desktop")
 	write(t, exe, "old")
@@ -158,10 +158,10 @@ func TestSwapReplacesTheBundleAndKeepsABackup(t *testing.T) {
 }
 
 func TestSwapReplacesAnAppImage(t *testing.T) {
-	image := filepath.Join(t.TempDir(), "Vukem.AppImage")
+	image := filepath.Join(testfs.TempDir(t), "Vukem.AppImage")
 	write(t, image, "old")
 
-	artifact := filepath.Join(t.TempDir(), "new.AppImage")
+	artifact := filepath.Join(testfs.TempDir(t), "new.AppImage")
 	write(t, artifact, "new")
 
 	p, err := Swap(swapReq(t, Target{Path: image, Exec: image}, artifact))
