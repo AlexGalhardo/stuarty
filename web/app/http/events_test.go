@@ -57,7 +57,12 @@ func (h *harness) stream(path string, headers map[string]string) *sseClient {
 		h.t.Fatal(err)
 	}
 
-	c := &sseClient{t: h.t, ch: make(chan sseEvent, 4096), status: resp.StatusCode, header: resp.Header, cancel: cancel}
+	return readSSE(h.t, resp, cancel)
+}
+
+// readSSE reads the frames of an answer in the background; a non-200 answer keeps its body instead.
+func readSSE(t testing.TB, resp *http.Response, cancel context.CancelFunc) *sseClient {
+	c := &sseClient{t: t, ch: make(chan sseEvent, 4096), status: resp.StatusCode, header: resp.Header, cancel: cancel}
 
 	if resp.StatusCode != http.StatusOK {
 		defer resp.Body.Close()

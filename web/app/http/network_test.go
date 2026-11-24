@@ -37,6 +37,7 @@ type networkHarness struct {
 	auth *auth.Network
 	st   *store.Store
 	clk  *clock
+	svc  service.Service
 }
 
 // newNetworkHarness serves the API in network mode over a plain or a TLS
@@ -130,7 +131,7 @@ func newNetworkHarnessRates(
 		return bootstrap.NewWith(deps, append(opts, extra...)...)
 	})
 
-	h := &networkHarness{log: logs, auth: netAuth, clk: clk, st: st}
+	h := &networkHarness{log: logs, auth: netAuth, clk: clk, st: st, svc: svc}
 	if useTLS {
 		h.srv = httptest.NewTLSServer(app.Handler())
 	} else {
