@@ -127,6 +127,15 @@ test.describe("approval queue", () => {
 			);
 			await expect(row.getByTestId("approval-cost")).toHaveText("$2.50");
 			await expect(row.getByTestId("approval-actor")).toHaveText("key:key_e2e");
+			// What the service reports of the request: an approval cannot be undone (D-140), and what no
+			// source reports reads "Not reported" (epic 82).
+			await expect(row.getByTestId("approval-undo")).toHaveText(
+				"Cannot be undone",
+			);
+			await expect(row.getByTestId("approval-skill")).toHaveText(
+				"Not reported",
+			);
+			await expect(row.getByTestId("approval-path")).toHaveText("Not reported");
 
 			// A person's session (the desktop app) is offered the answers: enabled, and no note (VV-319).
 			await expect(row.getByRole("button", { name: "Approve" })).toBeEnabled();

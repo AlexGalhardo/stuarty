@@ -48,8 +48,8 @@ None new. `ApprovalDecide` and the ceilings keep their privileged checks.
 
 ## Tasks
 
-- [ ] 1. `ApprovalItem`, cost and rules panels. Verify: `cd web && bun run test -- ApprovalQueue RulesPanel` passes.
-- [ ] 2. The Approvals page and states. Verify: `cd web && bun run e2e -- approval` passes.
+- [x] 1. `ApprovalItem`, cost and rules panels. Verify: `cd web && bun run test -- ApprovalQueue RulesPanel` passes.
+- [x] 2. The Approvals page and states. Verify: `cd web && bun run e2e -- approval` passes.
 - [ ] 3. Calendar in month, week and list. Verify: `cd web && bun run e2e -- publish-calendar` passes.
 - [ ] 4. The publication editor with destinations and reasons. Verify: `cd web && bun run test -- Publish` passes.
 - [ ] 5. The text path: destination, approval, published. Verify: new spec `publish-text-post` passes with the local blog destination.
