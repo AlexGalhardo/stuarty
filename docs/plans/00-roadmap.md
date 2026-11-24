@@ -130,7 +130,7 @@ Author decisions D-134 and D-137. Epic 74 can start now, and so can epic 87, bec
 | [77](77-unified-requests-read-model.md) | One read of everything that waits for a person | L | 57, 75, 76 | DONE (2026-11-24, `94b13b716`..`b9e39139f`) |
 | [78](78-project-kind-and-workflow.md) | Project kind and the workflow per kind | L | 57 | DONE (2026-11-24, `133faef99`..`254727332`) |
 | [79](79-home-projects-and-briefing-screens.md) | Home, projects, briefing and the workflow screens | L | 74, 75, 78 | DONE (2026-11-24, `e079a542f`..`7c8207951`) |
-| [80](80-writing-screens.md) | Writing screens and the text flow | M | 74, 75, 78 | TODO |
+| [80](80-writing-screens.md) | Writing screens and the text flow | M | 74, 75, 78 | DONE (2026-11-24, `924fc7f69`..`e419f0610`) |
 | [81](81-asset-library-screens.md) | Asset library screens | M | 74, 75 | DONE (2026-11-24, `411906afe`..`6cca1e337`, v0.50.0) |
 | [82](82-publishing-and-approvals-screens.md) | Publishing and approvals screens | L | 74, 75, 77, 78 | TODO |
 | [83](83-chat-skills-prompts-memory-screens.md) | Chat, skills, prompts and memory screens | M | 74, 75, 76 | DONE (2026-11-24, `6f7242b77`..`681b2a2ee`) |
