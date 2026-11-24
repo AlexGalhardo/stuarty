@@ -39,19 +39,60 @@ type transcriptDeleteArgs struct {
 type deleteCut struct {
 	item   timeline.Item
 	pieces []piece
+	// frames are the local frames of the item each piece keeps, one entry per piece.
+	frames []localFrames
 }
 
-// keptPieces are the parts of an item's source range [si, end) outside the removed range [from, to): the
-// stretch before it and the stretch after it, each only if it lasts a frame on the timeline.
-func keptPieces(si, end, from, to, num, den int) []piece {
-	var out []piece
-	if from > si {
-		out = append(out, piece{si, min(from, end)})
+// localFrames is a stretch of an item's own frames: the frame it starts at and how many it lasts.
+type localFrames struct{ offset, length int }
+
+// keptFrames decides the cut in the item's own frames, because that is what the timeline loses. Local frame k shows
+// source frame floor(k x speed), so the frames that show [from, to) are exactly [ceil(a / speed), ceil(b / speed)):
+// removing them loses the range within one frame at any speed. Rounding each kept side down instead loses up to one
+// frame per side. A range that falls between two shown frames still removes one, so that its word leaves the timeline.
+// ok is false when the item shows no frame of the range. The piece after the cut starts at source frame `to`: its
+// frames then read no source past the end of the item.
+func keptFrames(it *timeline.Item, from, to int) (pieces []piece, frames []localFrames, ok bool) {
+	si, end := tx.SourceRange(it)
+	num, den := it.Speed.Num, it.Speed.Den
+	first := ceilDiv(max(from-si, 0)*den, num)
+	if to <= si || first >= it.Duration {
+		return nil, nil, false
 	}
-	if to < end {
-		out = append(out, piece{max(to, si), end})
+	last := min(max(ceilDiv((to-si)*den, num), first+1), it.Duration)
+	if first > 0 {
+		pieces = append(pieces, piece{si, from})
+		frames = append(frames, localFrames{0, first})
 	}
-	return slices.DeleteFunc(out, func(p piece) bool { return (p.b-p.a)*den/num < 1 })
+	if last < it.Duration {
+		pieces = append(pieces, piece{to, end})
+		frames = append(frames, localFrames{last, it.Duration - last})
+	}
+	return pieces, frames, true
+}
+
+// cutPieces builds the items of the kept stretches, closed up from the item's start (C.87 postcondition 2).
+func cutPieces(it *timeline.Item, cut *deleteCut, ids []string) []timeline.Item {
+	out := make([]timeline.Item, len(cut.pieces))
+	cursor := it.Start
+	for i, pc := range cut.pieces {
+		kept := cut.frames[i]
+		cp := timeline.CloneItem(*it)
+		cp.Start, cp.Duration, cp.SourceIn = cursor, kept.length, pc.a
+		if i > 0 {
+			cp.ID = ids[i-1]
+			cp.FadeIn, cp.TransitionIn, cp.Slot, cp.Link = 0, nil, nil, ""
+		}
+		if i < len(cut.pieces)-1 {
+			cp.FadeOut, cp.TransitionOut = 0, nil
+		}
+		kShift(&cp, kept.offset)
+		kCut(&cp, kept.length)
+		fitFix(&cp)
+		out[i] = cp
+		cursor += kept.length
+	}
+	return out
 }
 
 // checkDeleteArgs validates the arguments and returns the source range to remove, in asset frames.
@@ -112,7 +153,11 @@ func planCuts(c *Context, assetID string, from, to int) ([]*deleteCut, *Error) {
 		if !tx.Follows(&it) {
 			return nil, rejectRemap(&it, "the words of the transcript").WithPath("args.asset_id")
 		}
-		cuts = append(cuts, &deleteCut{item: it, pieces: keptPieces(si, end, from, to, it.Speed.Num, it.Speed.Den)})
+		pieces, frames, ok := keptFrames(&it, from, to)
+		if !ok {
+			continue
+		}
+		cuts = append(cuts, &deleteCut{item: it, pieces: pieces, frames: frames})
 	}
 	if len(cuts) == 0 {
 		return nil, Errorf(CodeInvalidState, "No clip or audio item shows source frames %d to %d of asset %s.",
@@ -133,7 +178,7 @@ func (c *Context) applyCut(cut *deleteCut, ids []string) (removed int, pieceIDs 
 	var out []timeline.Item
 	removed = it.Duration
 	if len(cut.pieces) > 0 {
-		out = silencePieces(&it, cut.pieces, ids, true)
+		out = cutPieces(&it, cut, ids)
 		for i := range out {
 			removed -= out[i].Duration
 		}
