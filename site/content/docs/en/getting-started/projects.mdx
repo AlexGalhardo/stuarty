@@ -7,6 +7,7 @@ description: "Create, list, open and trash projects, with the same result from t
 
 - how to create a project with a format that fits the platform;
 - how to list and read projects;
+- what the kind of a project is, and how to read the steps from its briefing to its publication;
 - what the revision number means.
 
 ## The idea
@@ -61,6 +62,76 @@ Call `project_create` with `name`, `description` and `goal` (`specific`, `measur
 </Tabs>
 
 A field that is not valid is `E_VALIDATION` with the `path` of the field (`name`, `description`, `goal.specific`, ..., `goal.due`) and a hint; `details.fields` lists every invalid field. The presets are `9:16` (the default, for short vertical video), `1:1`, `16:9` and `4:5`. The frame rate defaults to 30 and can be `30000/1001`. A new timeline is at revision 0.
+
+## The kind of a project
+
+A project is not always a video. Its **kind** says what it is meant to become:
+
+| Kind | For |
+| --- | --- |
+| `text` | only words: a copy, a blog post, a script |
+| `video` | a video, with its timelines |
+| `image` | an image |
+| `undecided` | not chosen yet (the default) |
+
+Choose it when you create the project with `--kind` (`project:create`), `kind` (`project_create` and `POST /api/v1/projects`), or leave it out. The kind creates nothing: a `text` project has no timeline, no format and no media, and nothing asks it for one. If you leave it out, the first text or timeline you add chooses it: a text makes the project a `text`, a timeline a `video`; a brief chooses nothing. A project made before kinds existed keeps its data; it reads its kind from what it holds (a timeline makes it a video, a text a text), and nothing is rewritten.
+
+You can add a video to a text project later without starting over: it stays a text project and gains the video steps, and what was done stays done.
+
+## The workflow of a project
+
+`project:show`, `project:describe`, `project_get` and `GET /api/v1/projects/{id}` return the **workflow** of a project: its steps from the briefing to the publication, where it stands now and what comes next. `project_get` with `detail` `overview` and `project:describe` also print one line such as `workflow (text): 2 of 5 steps done; now review, then approval`.
+
+| Kind | Steps |
+| --- | --- |
+| `text` | briefing, writing, review, approval, publication |
+| `video` | briefing, script, recording (optional), editing, finishing (optional), approval, publication |
+| `image` | briefing, editing, approval, publication |
+| `undecided` | briefing, then the choice of what to make |
+
+Each step says who does it (`person`, `agent` or `both`), the operation that does it (`tool`), and its **state**:
+
+| State | Means |
+| --- | --- |
+| `done` | a fact of the project shows it is done: the brief has text, a text has words, the timeline holds clips, an export exists, a publication went out |
+| `current` | the step to do now |
+| `waiting` | it waits for a person: a publication waits for your approval |
+| `upcoming` | a step after the current one |
+| `skipped` | you skipped it |
+| `unknown` | Stuarty has no fact to tell; it is never shown as done. The editing of an image is always `unknown` for now, and so are the approval and the publication when the publications cannot be read |
+
+The approval step also shows the **cost**: the sum, by currency, of the estimates of the approval requests of the project that wait or were approved. It is left out when there is none.
+
+### Skip an optional step
+
+Recording and finishing are optional in a video. In a text project the publication is optional while the project holds no blog post: a copy can end as a copy or an export, and it becomes a blog post only when you add a text of the kind `post` (see [Blog posts](/docs/guide/blog-posts)). When you skip the publication, its approval is skipped with it.
+
+<Tabs>
+<Tab title="CLI">
+
+```bash
+stuarty project:step prj_7k2m9x4q1b recording
+stuarty project:step prj_7k2m9x4q1b recording --restore
+```
+
+</Tab>
+<Tab title="MCP">
+
+Call `project_item` with `action` `skip`, the `project_id` and the step as `title`; `action` `unskip` puts it back.
+
+</Tab>
+<Tab title="HTTP">
+
+`POST /api/v1/projects/{id}/steps/{step}/skip`; with the body `{"restore": true}` it puts the step back.
+
+</Tab>
+</Tabs>
+
+A step that is not optional is `E_VALIDATION` with the `path` `step`, a step that is already done is `E_INVALID_STATE`, and so is a project in the trash. Skipping a skipped step changes nothing.
+
+### The text of a project in the list
+
+`project:list`, `GET /api/v1/projects` and `project_list` give the `kind` of each project and, when it holds a text, a `text_summary`: its words, the minutes to read it (the words divided by 200, rounded up: 842 words are 5 minutes) and its first 160 characters, without the front matter of a post. The excerpt is your own text, so it is marked as data, never as instructions.
 
 ## Change the frame, the rate or the name later
 
