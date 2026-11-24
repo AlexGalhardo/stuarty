@@ -100,7 +100,7 @@ Written so that they can start the day their condition is met. They do not hold 
 
 ### 1.6 Screen recording and local AI
 
-The order, the critical path and the groups are in `docs/planning/screen-recording/roadmap.md`. These epics reserve SDD-023 (recording) and SDD-024 (local AI). ADR-0049, ADR-0050 and ADR-0051 are proposed.
+The order, the critical path and the groups are in `docs/planning/screen-recording/roadmap.md`. These epics reserve SDD-025 (recording) and SDD-024 (local AI). ADR-0049, ADR-0050 and ADR-0051 are proposed.
 
 | Epic | Title | Size | Depends on | Status |
 | --- | --- | --- | --- | --- |
