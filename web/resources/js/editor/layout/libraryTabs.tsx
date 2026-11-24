@@ -2,6 +2,7 @@ import {
 	ArrowLeftRight,
 	AudioLines,
 	Captions,
+	Clapperboard,
 	Film,
 	LayoutTemplate,
 	type LucideIcon,
@@ -16,6 +17,7 @@ import AudioPanel from "../library/AudioPanel";
 import EffectsPanel from "../library/EffectsPanel";
 import FiltersPanel from "../library/FiltersPanel";
 import Library from "../library/Library";
+import MotionPanel from "../library/MotionPanel";
 import TextPanel from "../library/TextPanel";
 import TransitionsPanel from "../library/TransitionsPanel";
 import type { LeftTab } from "../state/uiStore";
@@ -93,6 +95,14 @@ export const LIBRARY_TABS: readonly LibraryTabDef[] = [
 		commands: ["clip.set_filter"],
 		bodyClass: "*:flex-1",
 		render: () => <FiltersPanel />,
+	},
+	{
+		id: "handoff",
+		labelKey: "ui.editor.panels.handoff",
+		icon: Clapperboard,
+		commands: ["clip.replace_media"],
+		bodyClass: "*:flex-1",
+		render: () => <MotionPanel />,
 	},
 	{
 		id: "templates",
