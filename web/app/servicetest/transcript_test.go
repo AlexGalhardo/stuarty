@@ -189,7 +189,8 @@ func TestTranscriptForAgentEscapesTheWords(t *testing.T) {
 		t.Errorf("the text = %s", got.Text)
 	}
 
-	found := (&service.TranscriptDetectResult{AssetID: "ast_3c5v8n2w6d", Text: "summary",
+	found := (&service.TranscriptDetectResult{
+		AssetID: "ast_3c5v8n2w6d", Text: "summary",
 		Suggestions: []service.TranscriptSuggestion{{Kind: "filler", Strength: "strong", FromWord: 2, ToWord: 3, Text: hostile}},
 	}).ForAgent()
 	if strings.Contains(found.Suggestions[0].Text, "<") || strings.Count(found.Text, "</untrusted_media_text>") != 1 ||
