@@ -44,7 +44,7 @@ Four rules carry the design:
 2. For an item `it` with source in `si`, speed `num/den` and visible source range `S = [si, si + ceil(duration x num / den))`, a word is placed on it when `word.Start` is in `S` (a word that starts inside the visible range, as in C.40). Its timeline range is `start = it.Start + ceil((word.Start - si) x den / num)` and `end = it.Start + ceil((min(word.End, srcEnd) - si) x den / num)`, with `end >= start + 1` and `end <= item end`.
 3. A word placed on no item has an empty `Ranges`: it was cut (or lies outside every item) and the panel shows it struck through. A word placed on several items (the same part used twice) has one range per item.
 
-The rule 2 formula is the one `mapTranscript` of `caption.from_transcript` already uses, so the captions and the transcript panel agree on every frame; a golden test pins both.
+The rule 2 formula is the one `mapTranscript` of `caption.from_transcript` already uses (that function also moves a start that would overlap the previous word, which cannot happen to words that the service already made disjoint in frames), so the captions and the transcript panel agree on every frame; a golden test pins the worked example of C.41 for both.
 
 ## 3. Deleting a word range
 
@@ -93,12 +93,17 @@ A plain `é` (the verb) and a plain `um` in Portuguese (the article) are never f
 The transcript panel of the video editor is a thin client (SDD-012 section 1): it draws the words of `TranscriptView`, strikes the words with no range, and sends commands.
 
 - Selecting words and pressing delete sends one `transcript.delete_range` for the selected indices. The panel reloads the view from the new revision; undo restores the words and the media.
-- "Find fillers" calls `TranscriptDetectFillers` and lists the suggestions with the check boxes: strong checked, weak unchecked. The timeline revision does not change until "Remove selected", which sends one edit batch with one `transcript.delete_range` per checked suggestion, so one undo restores all of them.
+- "Find fillers" calls `TranscriptDetectFillers` and lists the suggestions with the check boxes: strong checked, weak unchecked. With no suggestion it says what was checked (the language and the rule), not that the recording has no fillers. The timeline revision does not change until "Remove selected", which sends one edit batch with one `transcript.delete_range` per checked suggestion, so one undo restores all of them.
 - The panel computes no frame, length or word match.
 
 ## 7. Measured accuracy and thresholds
 
-Whisper can drop or smooth fillers, so what the pinned whisper.cpp (`v1.9.2`, model `small`) does with a spoken filler is measured before it is promised. The measurement and the thresholds it fixed are in `docs/perf/` (the report named in SDD-011 section 10.8). The tests of the detector read the labelled transcripts of `core/transcript/testdata/` and fail below those thresholds.
+Whisper can drop or smooth fillers, so what the pinned whisper.cpp (`v1.9.2`, model `small`) does with a spoken filler was measured before it was promised, on a labelled English and Portuguese speech fixture. The method, the numbers and the thresholds are in `docs/perf/2026-11-23-transcript-fillers.md` (SDD-011 section 10.8); the tests of the detector read the labelled transcripts of `core/transcript/testdata/` and fail below the floors. In short:
+
+- **Repetitions** are found in both languages (recall 1.00 and 0.83). **English hesitations** that whisper writes (`um`, `hmm`, `er`) are found; one it drops (`uh`) cannot be. The filler recall is 0.69 in English.
+- **Portuguese hesitations** are mostly written by whisper as the words `um` and `é`, which the rule must not flag; the filler recall is 0.06. The panel therefore tells the person what was checked and never says "no fillers" (section 6).
+- A word that starts a sentence has its onset within about 25 ms of the audible onset (the post-processing of SDD-011 section 10.4 snaps it to the end of the pause); a word inside a run is a median 160 to 240 ms off. A cut whose edges are inside a run follows the whisper times, so the review shows the range and an edge may clip a neighbour by a few tens of milliseconds. Snapping the edges to the silences of the asset is the refinement, not part of this epic.
+- The fixture is synthetic: it bounds what the rules and the model do with clean, isolated hesitations and does not replace recordings of people.
 
 ## 8. Errors and limits
 

@@ -1,0 +1,816 @@
+{
+    "lang":  "pt",
+    "voice":  "Microsoft Maria Desktop",
+    "words":  [
+                  {
+                      "text":  "então",
+                      "kind":  "word",
+                      "start_ms":  97
+                  },
+                  {
+                      "text":  "ééé",
+                      "kind":  "filler",
+                      "start_ms":  549
+                  },
+                  {
+                      "text":  "hoje",
+                      "kind":  "word",
+                      "start_ms":  970
+                  },
+                  {
+                      "text":  "eu",
+                      "kind":  "word",
+                      "start_ms":  1346
+                  },
+                  {
+                      "text":  "quero",
+                      "kind":  "word",
+                      "start_ms":  1523
+                  },
+                  {
+                      "text":  "falar",
+                      "kind":  "word",
+                      "start_ms":  1892
+                  },
+                  {
+                      "text":  "sobre",
+                      "kind":  "word",
+                      "start_ms":  2358
+                  },
+                  {
+                      "text":  "hum",
+                      "kind":  "filler",
+                      "start_ms":  2776
+                  },
+                  {
+                      "text":  "como",
+                      "kind":  "word",
+                      "start_ms":  2939
+                  },
+                  {
+                      "text":  "planejar",
+                      "kind":  "word",
+                      "start_ms":  3280
+                  },
+                  {
+                      "text":  "um",
+                      "kind":  "word",
+                      "start_ms":  3930
+                  },
+                  {
+                      "text":  "vídeo",
+                      "kind":  "word",
+                      "start_ms":  4073
+                  },
+                  {
+                      "text":  "primeiro",
+                      "kind":  "word",
+                      "start_ms":  5580
+                  },
+                  {
+                      "text":  "a",
+                      "kind":  "repeat",
+                      "start_ms":  6213
+                  },
+                  {
+                      "text":  "gente",
+                      "kind":  "repeat",
+                      "start_ms":  6313
+                  },
+                  {
+                      "text":  "vai",
+                      "kind":  "repeat",
+                      "start_ms":  6758
+                  },
+                  {
+                      "text":  "a",
+                      "kind":  "word",
+                      "start_ms":  7022
+                  },
+                  {
+                      "text":  "gente",
+                      "kind":  "word",
+                      "start_ms":  7123
+                  },
+                  {
+                      "text":  "vai",
+                      "kind":  "word",
+                      "start_ms":  7562
+                  },
+                  {
+                      "text":  "escolher",
+                      "kind":  "word",
+                      "start_ms":  7823
+                  },
+                  {
+                      "text":  "o",
+                      "kind":  "word",
+                      "start_ms":  8413
+                  },
+                  {
+                      "text":  "tema",
+                      "kind":  "word",
+                      "start_ms":  8497
+                  },
+                  {
+                      "text":  "né",
+                      "kind":  "filler",
+                      "start_ms":  9238
+                  },
+                  {
+                      "text":  "o",
+                      "kind":  "word",
+                      "start_ms":  9443
+                  },
+                  {
+                      "text":  "assunto",
+                      "kind":  "word",
+                      "start_ms":  9521
+                  },
+                  {
+                      "text":  "que",
+                      "kind":  "word",
+                      "start_ms":  10132
+                  },
+                  {
+                      "text":  "o",
+                      "kind":  "word",
+                      "start_ms":  10313
+                  },
+                  {
+                      "text":  "pessoal",
+                      "kind":  "word",
+                      "start_ms":  10385
+                  },
+                  {
+                      "text":  "pergunta",
+                      "kind":  "word",
+                      "start_ms":  10960
+                  },
+                  {
+                      "text":  "depois",
+                      "kind":  "word",
+                      "start_ms":  12731
+                  },
+                  {
+                      "text":  "ahn",
+                      "kind":  "filler",
+                      "start_ms":  13304
+                  },
+                  {
+                      "text":  "a",
+                      "kind":  "word",
+                      "start_ms":  14053
+                  },
+                  {
+                      "text":  "gente",
+                      "kind":  "word",
+                      "start_ms":  14154
+                  },
+                  {
+                      "text":  "escreve",
+                      "kind":  "word",
+                      "start_ms":  14588
+                  },
+                  {
+                      "text":  "o",
+                      "kind":  "word",
+                      "start_ms":  15251
+                  },
+                  {
+                      "text":  "roteiro",
+                      "kind":  "word",
+                      "start_ms":  15312
+                  },
+                  {
+                      "text":  "e",
+                      "kind":  "word",
+                      "start_ms":  16014
+                  },
+                  {
+                      "text":  "éé",
+                      "kind":  "filler",
+                      "start_ms":  16144
+                  },
+                  {
+                      "text":  "grava",
+                      "kind":  "word",
+                      "start_ms":  16424
+                  },
+                  {
+                      "text":  "de",
+                      "kind":  "word",
+                      "start_ms":  16901
+                  },
+                  {
+                      "text":  "uma",
+                      "kind":  "word",
+                      "start_ms":  17044
+                  },
+                  {
+                      "text":  "vez",
+                      "kind":  "word",
+                      "start_ms":  17295
+                  },
+                  {
+                      "text":  "a",
+                      "kind":  "repeat",
+                      "start_ms":  18764
+                  },
+                  {
+                      "text":  "a",
+                      "kind":  "word",
+                      "start_ms":  18854
+                  },
+                  {
+                      "text":  "câmera",
+                      "kind":  "word",
+                      "start_ms":  18951
+                  },
+                  {
+                      "text":  "tem",
+                      "kind":  "word",
+                      "start_ms":  19454
+                  },
+                  {
+                      "text":  "que",
+                      "kind":  "word",
+                      "start_ms":  19698
+                  },
+                  {
+                      "text":  "ficar",
+                      "kind":  "word",
+                      "start_ms":  19837
+                  },
+                  {
+                      "text":  "na",
+                      "kind":  "word",
+                      "start_ms":  20364
+                  },
+                  {
+                      "text":  "altura",
+                      "kind":  "word",
+                      "start_ms":  20549
+                  },
+                  {
+                      "text":  "dos",
+                      "kind":  "word",
+                      "start_ms":  21057
+                  },
+                  {
+                      "text":  "olhos",
+                      "kind":  "word",
+                      "start_ms":  21329
+                  },
+                  {
+                      "text":  "e",
+                      "kind":  "word",
+                      "start_ms":  22106
+                  },
+                  {
+                      "text":  "hum",
+                      "kind":  "filler",
+                      "start_ms":  22244
+                  },
+                  {
+                      "text":  "a",
+                      "kind":  "word",
+                      "start_ms":  22411
+                  },
+                  {
+                      "text":  "luz",
+                      "kind":  "word",
+                      "start_ms":  22495
+                  },
+                  {
+                      "text":  "vem",
+                      "kind":  "word",
+                      "start_ms":  22848
+                  },
+                  {
+                      "text":  "de",
+                      "kind":  "word",
+                      "start_ms":  23113
+                  },
+                  {
+                      "text":  "frente",
+                      "kind":  "word",
+                      "start_ms":  23258
+                  },
+                  {
+                      "text":  "eu",
+                      "kind":  "word",
+                      "start_ms":  24904
+                  },
+                  {
+                      "text":  "acho",
+                      "kind":  "repeat",
+                      "start_ms":  25064
+                  },
+                  {
+                      "text":  "que",
+                      "kind":  "repeat",
+                      "start_ms":  25450
+                  },
+                  {
+                      "text":  "eu",
+                      "kind":  "word",
+                      "start_ms":  25579
+                  },
+                  {
+                      "text":  "acho",
+                      "kind":  "word",
+                      "start_ms":  25753
+                  },
+                  {
+                      "text":  "que",
+                      "kind":  "word",
+                      "start_ms":  26130
+                  },
+                  {
+                      "text":  "o",
+                      "kind":  "word",
+                      "start_ms":  26280
+                  },
+                  {
+                      "text":  "som",
+                      "kind":  "word",
+                      "start_ms":  26336
+                  },
+                  {
+                      "text":  "importa",
+                      "kind":  "word",
+                      "start_ms":  26631
+                  },
+                  {
+                      "text":  "mais",
+                      "kind":  "word",
+                      "start_ms":  27271
+                  },
+                  {
+                      "text":  "do",
+                      "kind":  "word",
+                      "start_ms":  27659
+                  },
+                  {
+                      "text":  "que",
+                      "kind":  "word",
+                      "start_ms":  27798
+                  },
+                  {
+                      "text":  "ééé",
+                      "kind":  "filler",
+                      "start_ms":  27965
+                  },
+                  {
+                      "text":  "a",
+                      "kind":  "word",
+                      "start_ms":  28470
+                  },
+                  {
+                      "text":  "imagem",
+                      "kind":  "word",
+                      "start_ms":  28537
+                  },
+                  {
+                      "text":  "depois",
+                      "kind":  "word",
+                      "start_ms":  30191
+                  },
+                  {
+                      "text":  "de",
+                      "kind":  "word",
+                      "start_ms":  30711
+                  },
+                  {
+                      "text":  "gravar",
+                      "kind":  "word",
+                      "start_ms":  30855
+                  },
+                  {
+                      "text":  "ahn",
+                      "kind":  "filler",
+                      "start_ms":  31766
+                  },
+                  {
+                      "text":  "a",
+                      "kind":  "word",
+                      "start_ms":  32514
+                  },
+                  {
+                      "text":  "gente",
+                      "kind":  "word",
+                      "start_ms":  32609
+                  },
+                  {
+                      "text":  "corta",
+                      "kind":  "word",
+                      "start_ms":  33067
+                  },
+                  {
+                      "text":  "as",
+                      "kind":  "word",
+                      "start_ms":  33592
+                  },
+                  {
+                      "text":  "pausas",
+                      "kind":  "word",
+                      "start_ms":  33764
+                  },
+                  {
+                      "text":  "e",
+                      "kind":  "word",
+                      "start_ms":  34300
+                  },
+                  {
+                      "text":  "tipo",
+                      "kind":  "filler",
+                      "start_ms":  34400
+                  },
+                  {
+                      "text":  "guarda",
+                      "kind":  "word",
+                      "start_ms":  34884
+                  },
+                  {
+                      "text":  "as",
+                      "kind":  "word",
+                      "start_ms":  35430
+                  },
+                  {
+                      "text":  "partes",
+                      "kind":  "word",
+                      "start_ms":  35634
+                  },
+                  {
+                      "text":  "boas",
+                      "kind":  "word",
+                      "start_ms":  36254
+                  },
+                  {
+                      "text":  "é",
+                      "kind":  "repeat",
+                      "start_ms":  37865
+                  },
+                  {
+                      "text":  "mais",
+                      "kind":  "repeat",
+                      "start_ms":  37955
+                  },
+                  {
+                      "text":  "é",
+                      "kind":  "word",
+                      "start_ms":  38355
+                  },
+                  {
+                      "text":  "mais",
+                      "kind":  "word",
+                      "start_ms":  38456
+                  },
+                  {
+                      "text":  "rápido",
+                      "kind":  "word",
+                      "start_ms":  38825
+                  },
+                  {
+                      "text":  "do",
+                      "kind":  "word",
+                      "start_ms":  39446
+                  },
+                  {
+                      "text":  "que",
+                      "kind":  "word",
+                      "start_ms":  39585
+                  },
+                  {
+                      "text":  "hum",
+                      "kind":  "filler",
+                      "start_ms":  39715
+                  },
+                  {
+                      "text":  "arrastar",
+                      "kind":  "word",
+                      "start_ms":  39880
+                  },
+                  {
+                      "text":  "a",
+                      "kind":  "word",
+                      "start_ms":  40451
+                  },
+                  {
+                      "text":  "linha",
+                      "kind":  "word",
+                      "start_ms":  40565
+                  },
+                  {
+                      "text":  "do",
+                      "kind":  "word",
+                      "start_ms":  40925
+                  },
+                  {
+                      "text":  "tempo",
+                      "kind":  "word",
+                      "start_ms":  41071
+                  },
+                  {
+                      "text":  "na",
+                      "kind":  "word",
+                      "start_ms":  41526
+                  },
+                  {
+                      "text":  "mão",
+                      "kind":  "word",
+                      "start_ms":  41704
+                  },
+                  {
+                      "text":  "no",
+                      "kind":  "word",
+                      "start_ms":  43007
+                  },
+                  {
+                      "text":  "fim",
+                      "kind":  "word",
+                      "start_ms":  43131
+                  },
+                  {
+                      "text":  "hum",
+                      "kind":  "filler",
+                      "start_ms":  43460
+                  },
+                  {
+                      "text":  "a",
+                      "kind":  "word",
+                      "start_ms":  43665
+                  },
+                  {
+                      "text":  "gente",
+                      "kind":  "word",
+                      "start_ms":  43759
+                  },
+                  {
+                      "text":  "exporta",
+                      "kind":  "word",
+                      "start_ms":  44196
+                  },
+                  {
+                      "text":  "o",
+                      "kind":  "word",
+                      "start_ms":  44911
+                  },
+                  {
+                      "text":  "arquivo",
+                      "kind":  "word",
+                      "start_ms":  44980
+                  },
+                  {
+                      "text":  "e",
+                      "kind":  "word",
+                      "start_ms":  45631
+                  },
+                  {
+                      "text":  "compartilha",
+                      "kind":  "word",
+                      "start_ms":  45730
+                  },
+                  {
+                      "text":  "com",
+                      "kind":  "word",
+                      "start_ms":  46609
+                  },
+                  {
+                      "text":  "todo",
+                      "kind":  "word",
+                      "start_ms":  46876
+                  },
+                  {
+                      "text":  "mundo",
+                      "kind":  "word",
+                      "start_ms":  47247
+                  },
+                  {
+                      "text":  "tem",
+                      "kind":  "word",
+                      "start_ms":  48767
+                  },
+                  {
+                      "text":  "gente",
+                      "kind":  "word",
+                      "start_ms":  49039
+                  },
+                  {
+                      "text":  "que",
+                      "kind":  "word",
+                      "start_ms":  49505
+                  },
+                  {
+                      "text":  "ahn",
+                      "kind":  "filler",
+                      "start_ms":  49666
+                  },
+                  {
+                      "text":  "começa",
+                      "kind":  "word",
+                      "start_ms":  50477
+                  },
+                  {
+                      "text":  "pelo",
+                      "kind":  "word",
+                      "start_ms":  51107
+                  },
+                  {
+                      "text":  "título",
+                      "kind":  "word",
+                      "start_ms":  51431
+                  },
+                  {
+                      "text":  "mas",
+                      "kind":  "word",
+                      "start_ms":  52363
+                  },
+                  {
+                      "text":  "eu",
+                      "kind":  "word",
+                      "start_ms":  52659
+                  },
+                  {
+                      "text":  "prefiro",
+                      "kind":  "repeat",
+                      "start_ms":  52779
+                  },
+                  {
+                      "text":  "começar",
+                      "kind":  "repeat",
+                      "start_ms":  53397
+                  },
+                  {
+                      "text":  "prefiro",
+                      "kind":  "word",
+                      "start_ms":  54007
+                  },
+                  {
+                      "text":  "começar",
+                      "kind":  "word",
+                      "start_ms":  54617
+                  },
+                  {
+                      "text":  "pela",
+                      "kind":  "word",
+                      "start_ms":  55237
+                  },
+                  {
+                      "text":  "história",
+                      "kind":  "word",
+                      "start_ms":  55548
+                  },
+                  {
+                      "text":  "os",
+                      "kind":  "word",
+                      "start_ms":  57212
+                  },
+                  {
+                      "text":  "primeiros",
+                      "kind":  "word",
+                      "start_ms":  57383
+                  },
+                  {
+                      "text":  "dez",
+                      "kind":  "word",
+                      "start_ms":  58101
+                  },
+                  {
+                      "text":  "segundos",
+                      "kind":  "word",
+                      "start_ms":  58426
+                  },
+                  {
+                      "text":  "hum",
+                      "kind":  "filler",
+                      "start_ms":  59155
+                  },
+                  {
+                      "text":  "decidem",
+                      "kind":  "word",
+                      "start_ms":  59305
+                  },
+                  {
+                      "text":  "se",
+                      "kind":  "word",
+                      "start_ms":  59920
+                  },
+                  {
+                      "text":  "alguém",
+                      "kind":  "word",
+                      "start_ms":  60107
+                  },
+                  {
+                      "text":  "continua",
+                      "kind":  "word",
+                      "start_ms":  60532
+                  },
+                  {
+                      "text":  "assistindo",
+                      "kind":  "word",
+                      "start_ms":  61180
+                  },
+                  {
+                      "text":  "então",
+                      "kind":  "word",
+                      "start_ms":  63111
+                  },
+                  {
+                      "text":  "seja",
+                      "kind":  "repeat",
+                      "start_ms":  63588
+                  },
+                  {
+                      "text":  "curto",
+                      "kind":  "repeat",
+                      "start_ms":  64084
+                  },
+                  {
+                      "text":  "seja",
+                      "kind":  "word",
+                      "start_ms":  64570
+                  },
+                  {
+                      "text":  "curto",
+                      "kind":  "word",
+                      "start_ms":  65104
+                  },
+                  {
+                      "text":  "éé",
+                      "kind":  "filler",
+                      "start_ms":  65987
+                  },
+                  {
+                      "text":  "claro",
+                      "kind":  "word",
+                      "start_ms":  66230
+                  },
+                  {
+                      "text":  "e",
+                      "kind":  "word",
+                      "start_ms":  66742
+                  },
+                  {
+                      "text":  "honesto",
+                      "kind":  "word",
+                      "start_ms":  66881
+                  },
+                  {
+                      "text":  "depois",
+                      "kind":  "word",
+                      "start_ms":  68544
+                  },
+                  {
+                      "text":  "hum",
+                      "kind":  "filler",
+                      "start_ms":  69107
+                  },
+                  {
+                      "text":  "leia",
+                      "kind":  "word",
+                      "start_ms":  69269
+                  },
+                  {
+                      "text":  "as",
+                      "kind":  "word",
+                      "start_ms":  69637
+                  },
+                  {
+                      "text":  "legendas",
+                      "kind":  "word",
+                      "start_ms":  69807
+                  },
+                  {
+                      "text":  "uma",
+                      "kind":  "word",
+                      "start_ms":  70562
+                  },
+                  {
+                      "text":  "vez",
+                      "kind":  "word",
+                      "start_ms":  70779
+                  },
+                  {
+                      "text":  "ahn",
+                      "kind":  "filler",
+                      "start_ms":  71097
+                  },
+                  {
+                      "text":  "antes",
+                      "kind":  "word",
+                      "start_ms":  71847
+                  },
+                  {
+                      "text":  "de",
+                      "kind":  "word",
+                      "start_ms":  72299
+                  },
+                  {
+                      "text":  "publicar",
+                      "kind":  "word",
+                      "start_ms":  72434
+                  }
+              ]
+}
