@@ -216,7 +216,7 @@ func (s *svc) resolveSilences(
 }
 
 // resolveFaces fills resolved.track of clip.face_frame with the face track of the clip's asset that covers the
-// range the clip plays (SDD-024 section 6): the newest stored one that does. Without one the batch fails with
+// range the clip plays (SDD-024 section 6): of those, the one of the highest rate. Without one the batch fails with
 // the job to run; nothing is started.
 func (s *svc) resolveFaces(
 	ctx context.Context,
