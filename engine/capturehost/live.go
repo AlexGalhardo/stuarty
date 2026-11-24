@@ -189,12 +189,15 @@ func (l *Live) Inspect(ctx context.Context, path string) (Info, error) {
 
 	defer func() { _ = dir.Remove() }()
 
-	argv, err := ffargs.ProbeJSON(l.Runner.Policy(dir, filepath.Dir(path)), path)
+	// The folder of the recording is the one input directory this run may read from (FF-03).
+	folder := filepath.Dir(path)
+
+	argv, err := ffargs.ProbeJSON(l.Runner.Policy(dir, folder), path)
 	if err != nil {
 		return Info{}, err
 	}
 
-	out, _, err := l.Runner.RunFFprobe(ctx, dir, argv, time.Minute)
+	out, _, err := l.Runner.RunFFprobe(ctx, dir, argv, time.Minute, folder)
 	if err != nil {
 		return Info{}, err
 	}
