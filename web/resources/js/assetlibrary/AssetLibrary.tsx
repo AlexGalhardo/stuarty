@@ -1,4 +1,4 @@
-import { Head, Link } from "@inertiajs/react";
+import { Link } from "@inertiajs/react";
 import {
 	type FormEvent,
 	type ReactNode,
@@ -10,7 +10,6 @@ import {
 } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
-import RenameMenu from "@/components/RenameMenu";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,10 +23,11 @@ import type {
 	AssetQuery,
 	AssetResult,
 	LibraryAsset,
-	OriginKind,
 } from "../editor/api/types";
-import { thumbnailUrl } from "../editor/api/urls";
 import { GenerateDialog, type Kind as GenerateKind } from "./GenerateDialog";
+import { LibraryFilters } from "./LibraryFilters";
+import { LibraryFrame } from "./LibraryFrame";
+import { MediaCard } from "./MediaCard";
 import { SoundImport } from "./SoundImport";
 import { SoundRow } from "./SoundRow";
 
@@ -44,12 +44,6 @@ const NAV_KEY: Record<Section, string> = {
 	audio: "sound-assets",
 };
 
-const ORIGINS: readonly OriginKind[] = [
-	"imported",
-	"generated",
-	"fetched_by_agent",
-	"rendered_externally",
-];
 // What the button of each section generates: pictures, a clip, a voice-over (the voices land in Sound Assets).
 const GENERATES: Record<Section, GenerateKind> = {
 	visual: "image",
@@ -57,91 +51,9 @@ const GENERATES: Record<Section, GenerateKind> = {
 	audio: "voice",
 };
 const PAGE = 48;
-const POSTER_WIDTH = 320;
 
 function api() {
 	return createClient(new HttpTransport("/api/v1"));
-}
-
-function hasPicture(asset: LibraryAsset): boolean {
-	return (
-		asset.poster !== undefined &&
-		(asset.kind === "image" || asset.kind === "video")
-	);
-}
-
-export function AssetCard({
-	asset,
-	selected,
-	onOpen,
-	onRenamed,
-}: {
-	asset: LibraryAsset;
-	selected: boolean;
-	onOpen(): void;
-	// The file was renamed: the page reads the list again, which the service orders by name.
-	onRenamed?(): void;
-}): ReactNode {
-	const t = useT();
-	return (
-		<RenameMenu
-			name={asset.name}
-			rename={async (name) => {
-				await api().renameAsset(asset.hash, name);
-				onRenamed?.();
-			}}
-			returnFocus={() =>
-				document.querySelector<HTMLElement>(
-					`button[data-asset-hash="${CSS.escape(asset.hash)}"]`,
-				)
-			}
-		>
-			<li>
-				<button
-					type="button"
-					onClick={onOpen}
-					aria-pressed={selected}
-					data-asset-hash={asset.hash}
-					className="flex w-full flex-col gap-2 rounded-xl border bg-card p-2 text-left text-card-foreground hover:bg-muted focus-visible:outline-2 aria-pressed:border-primary"
-				>
-					<span className="flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-muted text-xs text-muted-foreground">
-						{hasPicture(asset) && asset.poster !== undefined ? (
-							<img
-								src={thumbnailUrl(
-									asset.poster.timeline_id,
-									asset.poster.asset_id,
-									POSTER_WIDTH,
-								)}
-								alt=""
-								loading="lazy"
-								className="size-full object-cover"
-							/>
-						) : (
-							t(`ui.assets.kind.${asset.kind}`)
-						)}
-					</span>
-					<span className="truncate text-sm font-medium">
-						<UntrustedText>{asset.name}</UntrustedText>
-					</span>
-					<span className="flex flex-wrap gap-1 text-xs text-muted-foreground">
-						<span>
-							{t(`ui.assets.origin.${asset.origin?.kind ?? "imported"}`)}
-						</span>
-						{asset.reusable === true && (
-							<span className="rounded bg-accent-soft px-1 text-accent-text">
-								{t("ui.assets.reusable_badge")}
-							</span>
-						)}
-						{(asset.tags ?? []).map((tag) => (
-							<span key={tag} className="rounded bg-muted px-1">
-								<UntrustedText>{tag}</UntrustedText>
-							</span>
-						))}
-					</span>
-				</button>
-			</li>
-		</RenameMenu>
-	);
 }
 
 function Field({
@@ -634,18 +546,13 @@ export function AssetDetail({
 	);
 }
 
-// One section of the library: the filters, the grid and the detail of the file that is open.
+// One section of the library: the filters, the files and the detail of the file that is open.
 export function AssetLibrary({ section }: { section: Section }): ReactNode {
 	const t = useT();
-	const key = NAV_KEY[section];
 	const [items, setItems] = useState<LibraryAsset[] | null>(null);
 	const [total, setTotal] = useState(0);
 	const [next, setNext] = useState<string | null>(null);
 	const [failure, setFailure] = useState<Failure | null>(null);
-	const [text, setText] = useState("");
-	const [tag, setTag] = useState("");
-	const [origin, setOrigin] = useState<OriginKind | "">("");
-	const [reusable, setReusable] = useState(false);
 	const [applied, setApplied] = useState<AssetQuery>({});
 	const [open, setOpen] = useState<string | null>(null);
 	const [renames, setRenames] = useState(0);
@@ -685,206 +592,115 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 		void load(applied);
 	}, [applied, load]);
 
-	function search(event: FormEvent<HTMLFormElement>): void {
-		event.preventDefault();
-		setApplied({
-			...(text.trim() === "" ? {} : { text: text.trim() }),
-			...(tag.trim() === "" ? {} : { tag: tag.trim() }),
-			...(origin === "" ? {} : { origin }),
-			...(reusable ? { reusable: true } : {}),
-		});
-	}
-
-	function clear(): void {
-		setText("");
-		setTag("");
-		setOrigin("");
-		setReusable(false);
-		setApplied({});
-	}
-
 	const filtered = Object.keys(applied).length > 0;
+	const renamed = (): void => {
+		setRenames((n) => n + 1);
+		void load(applied);
+	};
 
 	return (
-		<>
-			<Head title={t(`ui.nav.section.${key}`)} />
-			<div className="mx-auto flex max-w-6xl flex-col gap-6">
-				<div className="flex flex-wrap items-start justify-between gap-3">
-					<div>
-						<h1 className="text-2xl font-semibold tracking-tight">
-							{t(`ui.nav.section.${key}`)}
-						</h1>
-						<p className="mt-1 text-sm text-muted-foreground">
-							{t(`ui.assets.intro.${section}`)}
-						</p>
-					</div>
-					<div className="flex flex-wrap gap-2">
-						<Button
-							type="button"
-							onClick={() =>
-								setGenerating((was) => ({
-									open: true,
-									count: was.count + 1,
-									kind: GENERATES[section],
-								}))
-							}
+		<LibraryFrame
+			navKey={NAV_KEY[section]}
+			description={t(`ui.assets.intro.${section}`)}
+			actions={
+				<Button
+					type="button"
+					onClick={() =>
+						setGenerating((was) => ({
+							open: true,
+							count: was.count + 1,
+							kind: GENERATES[section],
+						}))
+					}
+				>
+					{t(`ui.generate.open.${section}`)}
+				</Button>
+			}
+		>
+			{generating.count > 0 && (
+				<GenerateDialog
+					key={generating.count}
+					kind={generating.kind}
+					open={generating.open}
+					onOpenChange={(next) =>
+						setGenerating((was) => ({ ...was, open: next }))
+					}
+					onGenerated={() => void load(applied)}
+				/>
+			)}
+			{section === "audio" && (
+				<SoundImport onImported={() => void load(applied)} />
+			)}
+			<LibraryFilters section={section} onApply={setApplied} />
+			<FailureNote failure={failure} />
+			<div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
+				<section aria-labelledby={`files-${section}`}>
+					<h2 id={`files-${section}`} className="text-sm text-text-muted">
+						{t("ui.assets.count", { count: String(total) })}
+					</h2>
+					{items !== null && items.length === 0 && (
+						<p
+							className="mt-4 text-sm text-text-muted"
+							data-testid="asset-empty"
 						>
-							{t(`ui.generate.open.${section}`)}
-						</Button>
-					</div>
-				</div>
-				{generating.count > 0 && (
-					<GenerateDialog
-						key={generating.count}
-						kind={generating.kind}
-						open={generating.open}
-						onOpenChange={(next) =>
-							setGenerating((was) => ({ ...was, open: next }))
-						}
-						onGenerated={() => void load(applied)}
+							{filtered
+								? t("ui.assets.empty_filtered")
+								: t(`ui.assets.empty.${section}`)}
+						</p>
+					)}
+					{items !== null && items.length > 0 && section === "audio" && (
+						<ul className="mt-3 flex flex-col gap-3" data-testid="asset-grid">
+							{items.map((asset) => (
+								<SoundRow
+									key={asset.hash}
+									asset={asset}
+									selected={open === asset.hash}
+									onOpen={() => setOpen(asset.hash)}
+									rename={async (name) => {
+										await api().renameAsset(asset.hash, name);
+										renamed();
+									}}
+								/>
+							))}
+						</ul>
+					)}
+					{items !== null && items.length > 0 && section !== "audio" && (
+						<ul
+							className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-3"
+							data-testid="asset-grid"
+						>
+							{items.map((asset) => (
+								<MediaCard
+									key={asset.hash}
+									asset={asset}
+									selected={open === asset.hash}
+									onOpen={() => setOpen(asset.hash)}
+									onRenamed={renamed}
+								/>
+							))}
+						</ul>
+					)}
+					{next !== null && (
+						<div className="mt-4">
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => void load(applied, next)}
+							>
+								{t("ui.assets.more")}
+							</Button>
+						</div>
+					)}
+				</section>
+				{open !== null && (
+					<AssetDetail
+						hash={open}
+						renames={renames}
+						onChanged={() => void load(applied)}
+						onClose={() => setOpen(null)}
 					/>
 				)}
-				{section === "audio" && (
-					<SoundImport onImported={() => void load(applied)} />
-				)}
-				<search>
-					<form
-						onSubmit={search}
-						className="flex flex-wrap items-end gap-3 rounded-xl border bg-card p-4"
-					>
-						<div className="flex flex-col gap-1">
-							<Label htmlFor={`filter-text-${section}`}>
-								{t("ui.assets.filter.text")}
-							</Label>
-							<Input
-								id={`filter-text-${section}`}
-								autoComplete="off"
-								value={text}
-								onChange={(event) => setText(event.target.value)}
-							/>
-						</div>
-						<div className="flex flex-col gap-1">
-							<Label htmlFor={`filter-tag-${section}`}>
-								{t("ui.assets.filter.tag")}
-							</Label>
-							<Input
-								id={`filter-tag-${section}`}
-								autoComplete="off"
-								value={tag}
-								onChange={(event) => setTag(event.target.value)}
-							/>
-						</div>
-						<fieldset className="flex flex-wrap gap-3">
-							<legend className="mb-1 text-sm font-medium">
-								{t("ui.assets.filter.origin")}
-							</legend>
-							{["", ...ORIGINS].map((kind) => (
-								<label key={kind} className="flex items-center gap-1 text-sm">
-									<input
-										type="radio"
-										name={`filter-origin-${section}`}
-										className="accent-primary"
-										checked={origin === kind}
-										onChange={() => setOrigin(kind as OriginKind | "")}
-									/>
-									{kind === ""
-										? t("ui.assets.filter.any_origin")
-										: t(`ui.assets.origin.${kind}`)}
-								</label>
-							))}
-						</fieldset>
-						<label className="flex items-center gap-2 pb-2 text-sm">
-							<input
-								type="checkbox"
-								className="accent-primary"
-								checked={reusable}
-								onChange={(event) => setReusable(event.target.checked)}
-							/>
-							{t("ui.assets.filter.reusable")}
-						</label>
-						<Button type="submit">{t("ui.assets.filter.apply")}</Button>
-						<Button type="button" variant="outline" onClick={clear}>
-							{t("ui.assets.filter.clear")}
-						</Button>
-					</form>
-				</search>
-				<FailureNote failure={failure} />
-				<div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
-					<section aria-labelledby={`files-${section}`}>
-						<h2
-							id={`files-${section}`}
-							className="text-sm text-muted-foreground"
-						>
-							{t("ui.assets.count", { count: String(total) })}
-						</h2>
-						{items !== null && items.length === 0 && (
-							<p
-								className="mt-4 text-sm text-muted-foreground"
-								data-testid="asset-empty"
-							>
-								{filtered
-									? t("ui.assets.empty_filtered")
-									: t(`ui.assets.empty.${section}`)}
-							</p>
-						)}
-						{items !== null && items.length > 0 && section === "audio" && (
-							<ul className="mt-3 flex flex-col gap-3" data-testid="asset-grid">
-								{items.map((asset) => (
-									<SoundRow
-										key={asset.hash}
-										asset={asset}
-										selected={open === asset.hash}
-										onOpen={() => setOpen(asset.hash)}
-										rename={async (name) => {
-											await api().renameAsset(asset.hash, name);
-											setRenames((n) => n + 1);
-											void load(applied);
-										}}
-									/>
-								))}
-							</ul>
-						)}
-						{items !== null && items.length > 0 && section !== "audio" && (
-							<ul
-								className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-3"
-								data-testid="asset-grid"
-							>
-								{items.map((asset) => (
-									<AssetCard
-										key={asset.hash}
-										asset={asset}
-										selected={open === asset.hash}
-										onOpen={() => setOpen(asset.hash)}
-										onRenamed={() => {
-											setRenames((n) => n + 1);
-											void load(applied);
-										}}
-									/>
-								))}
-							</ul>
-						)}
-						{next !== null && (
-							<div className="mt-4">
-								<Button
-									type="button"
-									variant="outline"
-									onClick={() => void load(applied, next)}
-								>
-									{t("ui.assets.more")}
-								</Button>
-							</div>
-						)}
-					</section>
-					{open !== null && (
-						<AssetDetail
-							hash={open}
-							renames={renames}
-							onChanged={() => void load(applied)}
-							onClose={() => setOpen(null)}
-						/>
-					)}
-				</div>
 			</div>
-		</>
+		</LibraryFrame>
 	);
 }

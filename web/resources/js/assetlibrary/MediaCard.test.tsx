@@ -3,7 +3,7 @@ import { describe, expect, test, vi } from "vitest";
 
 import { I18nProvider } from "@/lib/i18n";
 import type { LibraryAsset } from "../editor/api/types";
-import { AssetCard } from "./AssetLibrary";
+import { MediaCard } from "./MediaCard";
 
 vi.mock("@inertiajs/react", () => ({ Head: () => null, Link: () => null }));
 
@@ -11,6 +11,7 @@ const PAYLOAD = "<img src=x onerror=window.__pwned=1>";
 
 const messages = {
 	"ui.assets.origin.imported": "Imported",
+	"ui.assets.origin.generated": "Generated",
 	"ui.assets.origin.fetched_by_agent": "Fetched by an agent",
 	"ui.assets.kind.audio": "Audio",
 	"ui.assets.kind.video": "Video",
@@ -30,7 +31,7 @@ function markup(a: LibraryAsset): string {
 	return renderToString(
 		<I18nProvider messages={messages} locale="en" locales={["en"]}>
 			<ul>
-				<AssetCard asset={a} selected={false} onOpen={() => undefined} />
+				<MediaCard asset={a} selected={false} onOpen={() => undefined} />
 			</ul>
 		</I18nProvider>,
 	);
@@ -74,5 +75,24 @@ describe("a card of the asset library", () => {
 		const html = markup(asset({ name: PAYLOAD, tags: [PAYLOAD] }));
 		expect(html).not.toContain("<img src=x");
 		expect(html).toContain("&lt;img src=x");
+	});
+});
+
+describe("the facts on a card", () => {
+	test("a video says its length and size, and the origin is a word", () => {
+		const html = markup(
+			asset({
+				duration_ms: 58_000,
+				bytes: 3 * 1024 * 1024,
+				origin: { kind: "generated" },
+			}),
+		);
+		expect(html).toContain("00:58.000");
+		expect(html).toContain("3 MB");
+		expect(html).toContain("Generated");
+	});
+
+	test("a file the service did not mark reusable carries no reusable badge", () => {
+		expect(markup(asset())).not.toContain("Reusable");
 	});
 });
