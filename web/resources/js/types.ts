@@ -13,8 +13,6 @@ export interface ProjectSummary {
 	height: number;
 	fps: string;
 	duration: { frame: number; seconds: number };
-	// The effective kind of the production (SDD-005 section 5.12.4): derived by the core, only read here.
-	kind: "undecided" | "text" | "video" | "image";
 	tracks: number;
 	items: number;
 	assets: number;
