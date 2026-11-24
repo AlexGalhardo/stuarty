@@ -141,6 +141,14 @@
         "none_hint": "Nada em andamento",
         "skill": "Habilidade",
         "not_reported": "Não informada",
+        "skill_state": {
+          "loaded": "carregada nesta sessão",
+          "available": "nenhuma carregada",
+          "none": "nenhuma carregada"
+        },
+        "skill_available": "Há uma skill revisada disponível",
+        "skill_none": "Nenhuma skill na biblioteca",
+        "tool_from_agent": "texto do agente",
         "tool": "Ferramenta",
         "no_tool": "Nenhuma ferramenta chamada ainda",
         "open_chat": "Abrir a conversa",
@@ -3400,6 +3408,8 @@
       "tool_status_in_progress": "rodando",
       "tool_status_completed": "concluída",
       "tool_status_failed": "falhou",
+      "skill_loaded": "Skill carregada nesta sessão",
+      "activity": "O que o agente está fazendo",
       "permission_title": "O agente pede para executar:",
       "allow_once": "Permitir esta vez",
       "reject": "Recusar",

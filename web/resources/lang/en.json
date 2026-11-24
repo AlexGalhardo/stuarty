@@ -141,6 +141,14 @@
         "none_hint": "Nothing is running",
         "skill": "Skill",
         "not_reported": "Not reported",
+        "skill_state": {
+          "loaded": "loaded in this session",
+          "available": "none loaded",
+          "none": "none loaded"
+        },
+        "skill_available": "A reviewed skill is available",
+        "skill_none": "No skill in the library",
+        "tool_from_agent": "text from the agent",
         "tool": "Tool",
         "no_tool": "No tool called yet",
         "open_chat": "Open chat",
@@ -3400,6 +3408,8 @@
       "tool_status_in_progress": "running",
       "tool_status_completed": "done",
       "tool_status_failed": "failed",
+      "skill_loaded": "Skill loaded in this session",
+      "activity": "What the agent is doing",
       "permission_title": "The agent asks to run:",
       "allow_once": "Allow once",
       "reject": "Reject",

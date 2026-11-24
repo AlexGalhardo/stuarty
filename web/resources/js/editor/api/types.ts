@@ -1832,6 +1832,7 @@ export interface ChatToolCall {
 	tool_call_id: string;
 	title: string;
 	tool_kind?: string;
+	action?: string;
 	status: "pending" | "in_progress" | "completed" | "failed";
 	output?: string;
 }
@@ -1860,7 +1861,8 @@ export type ChatEventKind =
 	| "permission_answer"
 	| "plan"
 	| "notice"
-	| "state";
+	| "state"
+	| "skill_loaded";
 
 // One entry of a transcript and one frame of GET /chat/sessions/{id}/events. A frame with
 // `append` continues the text of the event with the same `seq`.
@@ -1873,6 +1875,30 @@ export interface ChatEvent {
 	tool?: ChatToolCall;
 	permission?: ChatPermission;
 	state?: { state: ChatState; end_reason?: string };
+	// for skill_loaded: the skill the agent read (its name is text from the library)
+	skill?: { name: string; hash?: string };
+}
+
+// What a session is doing, told by the service (GET /chat/sessions/{id}/activity, SDD-017 section 8.1). The
+// UI draws it and computes none of it. `skill.name` and every `title` are untrusted text.
+export interface ChatActivity {
+	session_id: string;
+	state: ChatState;
+	// loaded: read in this session (never "followed"); available: a reviewed skill exists, none was read
+	skill: { name: string; state: "loaded" | "available" | "none" };
+	skills_loaded: { name: string; hash?: string; at: string }[];
+	tool: {
+		title: string;
+		// set for a tool of Stuarty's own MCP server, with the key of its plain description
+		technical_name?: string;
+		action?: string;
+		description_key?: string;
+		status: "pending" | "in_progress" | "completed" | "failed";
+		// true when only the agent's own title is known
+		from_agent: boolean;
+	} | null;
+	updated_at: string;
+	untrusted_notice: string;
 }
 
 export interface ChatTranscriptResult {

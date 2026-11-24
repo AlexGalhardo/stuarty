@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
 import { PersonOnlyNote, useSession } from "@/lib/session";
+import ActivityStrip from "./ActivityStrip";
 import ChatEventView from "./ChatEventView";
 import { canSend, isBusy, isVisible, openRequests } from "./chatState";
 import type { ChatPanelState } from "./useChat";
@@ -210,6 +211,7 @@ export default function ChatConversation({
 				)}
 			</p>
 			<FailureNote failure={chat.failure} />
+			{session !== null && <ActivityStrip activity={chat.activity} />}
 			<div
 				ref={log}
 				role="log"

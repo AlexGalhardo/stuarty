@@ -6,10 +6,16 @@ import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
 import type {
 	AgentProfileListResult,
+	ChatActivity,
 	ChatEvent,
 	ChatSession,
 } from "../../editor/api/types";
-import { applyChatEvent, applySnapshot, stateOf } from "./chatState";
+import {
+	activityStamp,
+	applyChatEvent,
+	applySnapshot,
+	stateOf,
+} from "./chatState";
 
 export interface ChatPanelState {
 	profiles: AgentProfileListResult | null;
@@ -17,6 +23,9 @@ export interface ChatPanelState {
 	projectId: string | null;
 	session: ChatSession | null;
 	events: ChatEvent[];
+	// the skill and the tool of the session as the service reports them (read again when an event may have changed
+	// them); null until the first answer, and when the read fails
+	activity: ChatActivity | null;
 	// the stream of the session is open: what the agent says arrives by itself
 	live: boolean;
 	failure: Failure | null;
@@ -38,6 +47,7 @@ export interface ChatPanelState {
 }
 
 const STORED_PROJECT = "stuarty.chat.project";
+const ACTIVITY_DELAY_MS = 120;
 
 function parseFrame(data: string): ChatEvent | null {
 	try {
@@ -75,6 +85,7 @@ export function useChat(
 	const [session, setSession] = useState<ChatSession | null>(null);
 	const [events, setEvents] = useState<ChatEvent[]>([]);
 	const [live, setLive] = useState(false);
+	const [activity, setActivity] = useState<ChatActivity | null>(null);
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [busy, setBusy] = useState(false);
 	const [wantProfiles, setWantProfiles] = useState(false);
@@ -222,6 +233,30 @@ export function useChat(
 		};
 	}, [active, projectId, api, open, closeStream]);
 
+	// The activity is the service's read model: it is asked again when an event may have changed it (a skill was
+	// read, a tool call began or moved on), with no polling, and a short wait gathers a burst of events into one read.
+	const stamp = activityStamp(events);
+	const sessionId = session?.id ?? null;
+	// biome-ignore lint/correctness/useExhaustiveDependencies: the stamp is what says that the events changed the activity
+	useEffect(() => {
+		if (!active || sessionId === null) {
+			setActivity(null);
+			return;
+		}
+		let alive = true;
+		const timer = window.setTimeout(() => {
+			api()
+				.getChatActivity(sessionId)
+				.then((res) => alive && setActivity(res))
+				// not reported is the truth when the service did not answer
+				.catch(() => alive && setActivity(null));
+		}, ACTIVITY_DELAY_MS);
+		return () => {
+			alive = false;
+			window.clearTimeout(timer);
+		};
+	}, [active, sessionId, stamp, api]);
+
 	useEffect(() => closeStream, [closeStream]);
 	// Made inactive (the shell, in a tab that is not on the screen), the stream is let go; made active again,
 	// the effect above reads the session again and its stream opens with everything said so far.
@@ -343,6 +378,8 @@ export function useChat(
 		projectId,
 		session: shown,
 		events,
+		// an answer about another session is not this one's
+		activity: activity?.session_id === sessionId ? activity : null,
 		live,
 		failure,
 		busy,

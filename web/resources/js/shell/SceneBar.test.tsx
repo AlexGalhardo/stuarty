@@ -4,7 +4,7 @@ import { describe, expect, test } from "vitest";
 import type { ChatEvent, ChatSession } from "../editor/api/types";
 import SceneBar from "./SceneBar";
 import { type SceneModel, sceneOf } from "./sceneState";
-import { Frame } from "./testSupport";
+import { activity, Frame } from "./testSupport";
 
 function session(over: Partial<ChatSession> = {}): ChatSession {
 	return {
@@ -79,21 +79,105 @@ describe("SceneBar variants", () => {
 		);
 	});
 
-	test("idle: the agent and its state, the skill slot says Not reported", () => {
+	test("idle: the agent and its state, the skill and the tool say Not reported until the service answers", () => {
 		const html = draw(sceneOf(session(), events({ kind: "user_message" })));
 		expect(html).toContain('data-variant="idle"');
 		expect(html).toContain("Claude Code");
 		expect(html).toContain("Waiting for you");
 		expect(html).toMatch(/data-testid="scene-skill".*Not reported/s);
-		expect(html).toContain("No tool called yet");
+		expect(html).toMatch(/data-testid="scene-tool".*Not reported/s);
 		expect(html).not.toContain("scene-allow");
 	});
 
-	test("working: shows the title of the last tool call as text", () => {
-		const html = draw(sceneOf(session({ state: "running" }), events(tool())));
+	test("idle: with an activity and no tool call, the tool slot says so and the skill is none", () => {
+		const html = draw(
+			sceneOf(session(), events({ kind: "user_message" }), activity()),
+		);
+		expect(html).toContain("No tool called yet");
+		expect(html).toMatch(/data-testid="scene-skill".*none loaded/s);
+		expect(html).toContain("No skill in the library");
+		expect(html).not.toContain("Not reported");
+	});
+
+	test("a reviewed skill that was not read is available, not loaded", () => {
+		const html = draw(
+			sceneOf(
+				session(),
+				[],
+				activity({ skill: { name: "", state: "available" } }),
+			),
+		);
+		expect(html).toContain("A reviewed skill is available");
+		expect(html).not.toContain("loaded in this session");
+	});
+
+	test("a skill the agent read is loaded in this session, named, never in use", () => {
+		const html = draw(
+			sceneOf(
+				session({ state: "running" }),
+				[],
+				activity({ skill: { name: "captions", state: "loaded" } }),
+			),
+		);
+		expect(html).toMatch(
+			/data-testid="scene-skill".*Skill · loaded in this session.*captions/s,
+		);
+		expect(html).not.toMatch(/in use/i);
+	});
+
+	test("the name of a skill is text: markup in it is not markup", () => {
+		const html = draw(
+			sceneOf(
+				session({ state: "running" }),
+				[],
+				activity({ skill: { name: "<img src=x onerror=1>", state: "loaded" } }),
+			),
+		);
+		expect(html).toContain("&lt;img src=x onerror=1&gt;");
+		expect(html).not.toContain("<img src=x");
+	});
+
+	test("a tool of Stuarty shows its plain description and its technical name", () => {
+		const html = draw(
+			sceneOf(
+				session({ state: "running" }),
+				[],
+				activity({
+					tool: {
+						title: "mcp__stuarty__library",
+						technical_name: "library",
+						action: "get",
+						description_key: "ui.agent_activity.action.library_get",
+						status: "in_progress",
+						from_agent: false,
+					},
+				}),
+			),
+		);
+		expect(html).toMatch(
+			/data-testid="scene-tool".*Tool · library · running.*Reads one note, skill or prompt\./s,
+		);
+		expect(html).not.toContain("text from the agent");
+	});
+
+	test("working: any other tool shows the title of the call as text from the agent", () => {
+		const html = draw(
+			sceneOf(
+				session({ state: "running" }),
+				events(tool()),
+				activity({
+					tool: {
+						title: "clip.remove_silences",
+						status: "in_progress",
+						from_agent: true,
+					},
+				}),
+			),
+		);
 		expect(html).toContain('data-variant="working"');
 		expect(html).toContain("Working");
 		expect(html).toContain("clip.remove_silences");
+		expect(html).toContain("text from the agent");
 		expect(html).toContain("running");
 		expect(html).not.toContain("scene-allow");
 	});
@@ -102,7 +186,14 @@ describe("SceneBar variants", () => {
 		const html = draw(
 			sceneOf(
 				session({ state: "running" }),
-				events(tool("<img src=x onerror=1>")),
+				[],
+				activity({
+					tool: {
+						title: "<img src=x onerror=1>",
+						status: "in_progress",
+						from_agent: true,
+					},
+				}),
 			),
 		);
 		expect(html).toContain("&lt;img src=x onerror=1&gt;");

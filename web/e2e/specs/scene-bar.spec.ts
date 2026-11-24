@@ -306,9 +306,88 @@ test.describe("scene bar", () => {
 		await expect(page.getByTestId("scene-state")).toContainText(
 			"Waiting for you",
 		);
-		// plain text: the skill is not reported and no markup was made of the title
-		await expect(page.getByTestId("scene-skill")).toContainText("Not reported");
+		// plain text: no markup was made of the title, and the service says it is the agent's own text; it loaded no
+		// skill, and the bar says that instead of leaving the slot blank
+		await expect(tool).toContainText("text from the agent");
+		await expect(page.getByTestId("scene-skill")).toContainText("none loaded");
 		await expect(tool.locator("a, img, b, script")).toHaveCount(0);
+	});
+
+	// Epic 76: the skill and the tool come from the activity of the session. The fake agent reads a skill and
+	// calls a tool of Stuarty through the MCP server, with the token of its session; a person reading the same
+	// skill in the browser changes nothing.
+	test("a skill the agent reads is loaded in this session, in both themes; the tool is described in plain words", async ({
+		page,
+		request,
+		browserName,
+	}, testInfo) => {
+		const api = await caller(request);
+		const project = await makeProject(api, `Skill ${unique(browserName)}`);
+		const skill = `captions-${randomBytes(3).toString("hex")}`;
+		await signInAsPerson(page);
+		await clearProfiles(page);
+		// written by a person, so it is reviewed and an agent may read it
+		await send(page, "PUT", `/library/skills/${skill}`, {
+			description: "Write captions for a short vertical video.",
+			body: "# Captions\n\nKeep every line short.\n",
+		});
+		const session = await converse(page, project, "skiller", "mcp");
+		await page.goto(`/projects/${project}`);
+		const slot = page.getByTestId("scene-skill");
+		const tool = page.getByTestId("scene-tool");
+		await expect(page.getByTestId("scene-bar")).toHaveAttribute(
+			"data-variant",
+			"idle",
+		);
+		await expect(slot).toContainText("none loaded");
+		await expect(slot).toContainText("A reviewed skill is available");
+		// a person reads the same skill in the browser: nothing changes
+		const read = await page.request.get(`/api/v1/library/skills/${skill}`);
+		expect(read.ok()).toBe(true);
+		await say(page, session, "mcp project_list");
+		await expect(tool).toContainText("Lists your projects.");
+		await expect(tool).toContainText("project_list");
+		await expect(slot).not.toContainText(skill);
+		await expect(slot).toContainText("none loaded");
+		// the agent reads it through the tool library
+		await expect
+			.poll(
+				async () => (await page.getByTestId("scene-state").textContent()) ?? "",
+			)
+			.toContain("Waiting for you");
+		await say(
+			page,
+			session,
+			`mcp library {"action":"get","kind":"skill","name":"${skill}"}`,
+		);
+		await expect(slot).toContainText(skill);
+		await expect(slot).toContainText("loaded in this session");
+		await expect(slot).not.toContainText("A reviewed skill is available");
+		await expect(tool).toContainText("Reads one note, skill or prompt.");
+		await expect(tool).toContainText("library");
+		await expect(slot).not.toContainText(/in use/i);
+		// the conversation names the skill too, in the line of the event and in the strip of the activity
+		await page.getByTestId("chat-toggle").click();
+		await expect(page.getByTestId("chat-skill")).toContainText(skill);
+		await expect(page.getByTestId("chat-activity-skill")).toContainText(skill);
+		await expect(page.getByTestId("chat-activity-tool")).toContainText(
+			"Reads one note, skill or prompt.",
+		);
+		await page.getByTestId("chat-toggle").click();
+		// the bar in both themes, for the record
+		for (const theme of ["dark", "light"] as const) {
+			await page.evaluate((value) => {
+				localStorage.setItem("theme", value);
+			}, theme);
+			await page.reload();
+			await expect(slot).toContainText(skill);
+			await expect(page.locator("html")).toHaveClass(
+				theme === "dark" ? /\bdark\b/ : /^((?!\bdark\b).)*$/,
+			);
+			await page.getByTestId("scene-bar").screenshot({
+				path: testInfo.outputPath(`scene-bar-skill-${theme}.png`),
+			});
+		}
 	});
 
 	test("the bar names the project of the session and follows a visit to another project", async ({

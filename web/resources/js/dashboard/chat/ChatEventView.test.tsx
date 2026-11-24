@@ -156,3 +156,19 @@ describe("ChatEventView: lines that are not shown", () => {
 		);
 	});
 });
+
+describe("ChatEventView: a skill the agent read", () => {
+	test("says that the skill was loaded in this session, with its name as text", () => {
+		const html = draw({
+			seq: 6,
+			kind: "skill_loaded",
+			at,
+			skill: { name: PAYLOAD, hash: "sha256:aa" },
+		});
+		expect(html).toContain('data-testid="chat-skill"');
+		expect(html).toContain("Skill loaded in this session");
+		expect(html).toContain("&lt;img src=x onerror=window.__pwned=1&gt;");
+		expect(html).not.toContain("<img");
+		expect(html).not.toMatch(/in use|following/i);
+	});
+});

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ChatEvent } from "../../editor/api/types";
 import {
+	activityStamp,
 	applyChatEvent,
 	applySnapshot,
 	canSend,
@@ -119,5 +120,34 @@ describe("openRequests", () => {
 		expect(openRequests(events).map((e) => e.permission?.request_id)).toEqual([
 			"cpr_b",
 		]);
+	});
+});
+
+describe("activityStamp", () => {
+	const tool = (seq: number, status: "pending" | "completed"): ChatEvent => ({
+		seq,
+		kind: "tool_call",
+		at,
+		tool: { tool_call_id: "c", title: "t", status },
+	});
+	const skill: ChatEvent = {
+		seq: 2,
+		kind: "skill_loaded",
+		at,
+		skill: { name: "captions" },
+	};
+
+	it("changes when a skill is read, and when the last tool call is another or moves on", () => {
+		const base = activityStamp([message(1, "hi")]);
+		const read = activityStamp([message(1, "hi"), skill]);
+		const called = activityStamp([message(1, "hi"), tool(3, "pending")]);
+		const done = activityStamp([message(1, "hi"), tool(3, "completed")]);
+		expect(new Set([base, read, called, done]).size).toBe(4);
+	});
+
+	it("does not change when only a message grows", () => {
+		expect(activityStamp([message(1, "a")])).toBe(
+			activityStamp([message(1, "a"), message(2, "b")]),
+		);
 	});
 });

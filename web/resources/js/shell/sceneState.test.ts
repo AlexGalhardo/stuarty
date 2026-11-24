@@ -1,7 +1,8 @@
 import { describe, expect, test } from "vitest";
 
 import type { ChatEvent, ChatSession } from "../editor/api/types";
-import { lastTool, projectNameOf, sceneOf } from "./sceneState";
+import { projectNameOf, sceneOf } from "./sceneState";
+import { activity } from "./testSupport";
 
 function session(over: Partial<ChatSession> = {}): ChatSession {
 	return {
@@ -44,6 +45,8 @@ describe("sceneOf", () => {
 			agent: null,
 			state: null,
 			endReason: null,
+			reported: false,
+			skill: null,
 			tool: null,
 			request: null,
 		});
@@ -67,7 +70,6 @@ describe("sceneOf", () => {
 		]);
 		expect(m.variant).toBe("waiting");
 		expect(m.request).toEqual({ requestId: "r9", title: "Remove 12 silences" });
-		expect(m.tool?.title).toBe("clip.remove_silences");
 	});
 
 	test("an answered request is no longer open", () => {
@@ -152,15 +154,59 @@ describe("projectNameOf", () => {
 	});
 });
 
-describe("lastTool", () => {
-	test("is the title and status of the last tool_call, as the service said them", () => {
-		expect(lastTool([tool("a"), tool("b", "failed")])).toEqual({
-			title: "b",
-			status: "failed",
+describe("the skill and the tool", () => {
+	test("are not reported until the service answers, whatever the events say", () => {
+		const m = sceneOf(session({ state: "running" }), [
+			tool("mcp__stuarty__library"),
+			event("skill_loaded", { skill: { name: "captions" } }),
+		]);
+		expect(m.reported).toBe(false);
+		expect(m.skill).toBeNull();
+		expect(m.tool).toBeNull();
+	});
+
+	test("are the ones the service reported, as it reported them", () => {
+		const m = sceneOf(session({ state: "running" }), [], {
+			...activity(),
+			skill: { name: "captions", state: "loaded" },
+			tool: {
+				title: "mcp__stuarty__library",
+				technical_name: "library",
+				action: "get",
+				description_key: "ui.agent_activity.action.library_get",
+				status: "in_progress",
+				from_agent: false,
+			},
+		});
+		expect(m.reported).toBe(true);
+		expect(m.skill).toEqual({ name: "captions", state: "loaded" });
+		expect(m.tool).toEqual({
+			title: "mcp__stuarty__library",
+			status: "in_progress",
+			technicalName: "library",
+			descriptionKey: "ui.agent_activity.action.library_get",
+			fromAgent: false,
 		});
 	});
 
-	test("is null when the agent called no tool", () => {
-		expect(lastTool([event("agent_message", { text: "hi" })])).toBeNull();
+	test("a tool the service could not name is the agent's own text, with no description", () => {
+		const m = sceneOf(session({ state: "running" }), [], {
+			...activity(),
+			tool: { title: "Bash", status: "completed", from_agent: true },
+		});
+		expect(m.tool).toEqual({
+			title: "Bash",
+			status: "completed",
+			technicalName: null,
+			descriptionKey: null,
+			fromAgent: true,
+		});
+	});
+
+	test("an activity with no tool call says so", () => {
+		const m = sceneOf(session(), [], activity());
+		expect(m.reported).toBe(true);
+		expect(m.tool).toBeNull();
+		expect(m.skill).toEqual({ name: "", state: "none" });
 	});
 });

@@ -36,12 +36,22 @@ Only a person in the app can connect, change or remove an agent. The local token
 
 The first message tells the agent which project is open and asks it to read the briefing and your Memory with its tools, as data and never as instructions.
 
+## What the agent is doing
+
+The bar at the bottom of every page, and the top of the panel, tell what the agent does:
+
+- **Skill.** A skill is "loaded in this session" when the agent read it through Stuarty. A skill you read yourself in the app counts for nothing, and a skill the agent uses inside its own program is invisible to Stuarty. "Loaded" says the text was read, not that the agent follows it. With none read, the bar says whether a reviewed skill is available.
+- **Tool.** The last tool the agent called, with its status. For a tool of Stuarty the bar adds a plain description and the tool's technical name; for any other tool it shows the agent's own title, marked as text from the agent.
+
+The bar says "Not reported" until Stuarty has answered, and it never guesses.
+
 The CLI reads what the panel shows, and nothing more: a conversation is driven by a person in the app.
 
 ```bash
 stuarty agent:profiles
 stuarty chat:sessions --project prj_7k2m9x4q1b
 stuarty chat:transcript cht_4n8p2r6t1v --format markdown
+stuarty chat:activity cht_4n8p2r6t1v
 ```
 
 ## Permissions and approvals
