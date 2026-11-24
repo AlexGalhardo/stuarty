@@ -240,7 +240,7 @@ export default function Publish(): ReactNode {
 
 				{mode === "list" ? (
 					<ListView
-						publications={publications}
+						publications={feed.publications}
 						onOpen={(id, target) => setEditing({ id, target })}
 					/>
 				) : (

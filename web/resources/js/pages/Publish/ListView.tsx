@@ -55,10 +55,12 @@ export function ListView({
 	publications,
 	onOpen,
 }: {
-	publications: readonly Publication[];
+	// null while the first read has not answered or failed: a list not read is not an empty list
+	publications: readonly Publication[] | null;
 	onOpen(publicationId: string, targetId: string): void;
 }): ReactNode {
 	const t = useT();
+	if (publications === null) return null;
 	const rows = publications.flatMap((publication) =>
 		publication.targets.map((target) => ({ publication, target })),
 	);
