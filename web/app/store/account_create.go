@@ -185,6 +185,32 @@ func installSealGuards(ctx context.Context, ex database.Executor) error {
 	return nil
 }
 
+// guardSealedColumns installs the guards again at every open of a database that has an account, after the schema
+// migrations: a migration that rebuilds a sealed table drops its triggers, and an account made before the guards
+// existed has none. Each statement is CREATE TRIGGER IF NOT EXISTS, so an open that finds them all changes nothing.
+func (s *Store) guardSealedColumns(ctx context.Context) error {
+	var tables int
+	if err := s.db.QueryRowContext(ctx,
+		`SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'accounts'`).Scan(&tables); err != nil {
+		return fmt.Errorf("store: guards: %w", err)
+	}
+
+	if tables == 0 {
+		return nil
+	}
+
+	var accounts int
+	if err := s.db.QueryRowContext(ctx, `SELECT count(*) FROM accounts`).Scan(&accounts); err != nil {
+		return fmt.Errorf("store: guards: %w", err)
+	}
+
+	if accounts == 0 {
+		return nil
+	}
+
+	return installSealGuards(ctx, s.db)
+}
+
 // sealCells seals every value of every sealed column and returns the digest of each, for the read back.
 func sealCells(ctx context.Context, ex database.Executor, sl account.Sealer) (map[string][sha256.Size]byte, error) {
 	sums := map[string][sha256.Size]byte{}
