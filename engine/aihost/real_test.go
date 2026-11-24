@@ -9,6 +9,8 @@ import (
 	"runtime"
 	"testing"
 	"time"
+
+	"github.com/AlexGalhardo/stuarty/core/facetrack"
 )
 
 // TestRealHelperFindsTheDrawnFace runs the real stuarty-aihelper, the real ONNX Runtime and the real YuNet
@@ -108,5 +110,28 @@ func TestRealHelperFindsTheDrawnFace(t *testing.T) {
 
 	if near < 95 {
 		t.Errorf("the face was found near where it was drawn in %d of 100 frames, want at least 95", near)
+	}
+
+	// Acceptance criterion 3 of epic 70 on the real track: reframed from 16:9 to 9:16 by the rules of
+	// core/facetrack, the detected face is inside the window in at least 95% of the frames.
+	vw, vh := facetrack.Visible(track.Source, 1080, 1920)
+	kfs := facetrack.Plan(&track, facetrack.DefaultOptions(), vw, vh, 0, 10_000)
+	inside := 0
+
+	for _, s := range track.Samples {
+		if len(s.Faces) == 0 {
+			continue
+		}
+
+		cx, cy := facetrack.At(kfs, int64(s.T))
+		w := facetrack.WindowAt(vw, vh, cx, cy)
+
+		if f := s.Faces[0]; f.X >= w.Left && f.X+f.W <= facetrack.Unit-w.Right {
+			inside++
+		}
+	}
+
+	if inside < 95 {
+		t.Errorf("the detected face is inside the vertical frame in %d of 100 frames, want at least 95", inside)
 	}
 }
