@@ -177,15 +177,15 @@
       "next": {
         "not_found": {
           "title": "O que fazer agora",
-          "body": "O endereço pode ter mudado, ou o projeto pode estar na lixeira da página de projetos, de onde dá para restaurá-lo. Seus arquivos continuam neste computador."
+          "body": "O endereço pode ter mudado, ou o projeto pode estar na lixeira da página de projetos, de onde dá para restaurá-lo."
         },
         "forbidden": {
           "title": "O que fazer agora",
-          "body": "Isto precisa de uma pessoa conectada. Entre, ou faça no app do Stuarty, e tente de novo."
+          "body": "Esta sessão não tem permissão para abrir isto. Entre com uma conta que tenha acesso e tente de novo."
         },
         "server": {
           "title": "O que fazer agora",
-          "body": "Algo parou neste computador. Tente de novo daqui a pouco. Uma página de erro não altera os seus arquivos."
+          "body": "O Stuarty não conseguiu terminar isto. Tente de novo daqui a pouco ou volte aos projetos."
         },
         "other": {
           "title": "O que fazer agora",
