@@ -66,6 +66,11 @@
 	}
 }
 
+/* The dashboard marks <html> with data-text-scale. A control that is compact in
+   the editors takes the 32 px minimum target there: write it md:dashboard:h-8,
+   so a phone keeps its own 44 px rule. */
+@custom-variant dashboard (html[data-text-scale="dashboard"] &);
+
 @utility no-scrollbar {
 	-ms-overflow-style: none;
 	scrollbar-width: none;

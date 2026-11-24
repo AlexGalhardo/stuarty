@@ -57,7 +57,7 @@ None.
 
 - [x] 1. Write the tokens of both themes in `app.css` in OKLCH, with the aliases. Verify: `cd web && bun run check:contrast` exits 0 after the pairs and section 2.6 are updated in the same commit.
 - [x] 2. Replace the text scale, the spacing, the radii, the shadows and the motion tokens, with reduced motion. Verify: `cd web && bun run typecheck && bun run test` pass.
-- [ ] 3. Restyle the form controls (`button`, `input`, `textarea`, `select`, `checkbox`, `radio-group`, `switch`, `slider`, `toggle`, `toggle-group`). Verify: `cd web && bun run test` passes and `bun run lint` exits 0.
+- [x] 3. Restyle the form controls (`button`, `input`, `textarea`, `select`, `checkbox`, `radio-group`, `switch`, `slider`, `toggle`, `toggle-group`). Verify: `cd web && bun run test` passes and `bun run lint` exits 0.
 - [ ] 4. Restyle the surfaces and overlays (`card`, `dialog`, `alert-dialog`, `sheet`, `popover`, `dropdown-menu`, `context-menu`, `tooltip`, `tabs`, `badge`, `skeleton`, `progress`, `separator`). Verify: `cd web && bun run e2e -- editor-menus-dark` passes.
 - [ ] 5. Add the data-free shared components, each with a unit test of its accessible name and states. Verify: `cd web && bun run test` passes.
 - [ ] 6. Check the existing pages at 1440, 1280 and 390 px in both themes, and fix only what the tokens broke. Verify: `cd web && bun run e2e -- a11y` passes, and the screenshots are in the hand-off.
