@@ -289,6 +289,11 @@ func (p *docPick) silences() string {
 // A command listed here gets its own seeded stream, which is enough to check that it keeps the document
 // valid and that its inverse restores it.
 var lateOps = map[string]func(p *docPick) string{
+	"caption.apply_style": func(p *docPick) string {
+		return fmt.Sprintf(`{"track_id":%q,"style":%q,"reset_overrides":%t}`,
+			p.vtrack(), p.oneOf(CaptionStyleIDs()...), p.n(2) == 0)
+	},
+	"caption.list_styles": func(_ *docPick) string { return `{}` },
 	"transcript.delete_range": func(p *docPick) string {
 		from := p.n(5)
 

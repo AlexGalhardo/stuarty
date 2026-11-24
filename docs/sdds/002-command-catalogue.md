@@ -6894,6 +6894,7 @@ Every style sets `highlight` to `word`, `align` to `center` (except `lower_bar`,
 | `E_VALIDATION` | unknown style | `args.style "fancy" is not a caption style.` | `Use clean_white, bold_pop, marker_yellow, soft_box, neon_night, editorial, mono_code, karaoke_pill, thick_outline, warm_glow, lower_bar, big_center, top_headline or ink_paper; caption.list_styles describes them.` |
 | `E_NOT_FOUND` | unknown track | `Track trk_zzzzzzzzzz does not exist.` | `Use the id of a track listed by project_get.` |
 | `E_TYPE_MISMATCH` | an audio track | `Track trk_a1b2c3d4e5 is an audio track and cannot hold captions.` | `Use a visual track.` |
+| `E_FONT_UNKNOWN` | the project replaces a bundled family with a user font that lacks the weight the style needs | `Font weight 700 does not exist for family "Inter"; available weights: 400.` | `Use font_weight 400.` |
 
 **Inverse.** `patch` of the `caption_style` of the track (set the old one, or unset), and `patch` of `style` of each cleared item. **Idempotency.** Same result.
 
@@ -6925,6 +6926,7 @@ Every style sets `highlight` to `word`, `align` to `center` (except `lower_bar`,
 - `ok_reset_overrides`
 - `ok_same_style_noop`
 - `err_validation_unknown_style`
+- `err_font_unknown_weight_of_a_project_font`
 - `err_not_found_track`
 - `err_type_mismatch_audio_track`
 

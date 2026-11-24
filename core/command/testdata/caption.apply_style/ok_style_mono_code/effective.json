@@ -1,0 +1,18 @@
+{
+  "caption_style": {
+    "align": "center",
+    "background_color": "#0B0F14E6",
+    "background_padding": 20,
+    "background_radius": 8,
+    "color": "#7CFFB2",
+    "font_family": "JetBrains Mono",
+    "font_weight": 700,
+    "highlight": "word",
+    "highlight_background": "#1F6F4A",
+    "highlight_color": "#FFFFFF",
+    "position": "bottom",
+    "size": 56
+  },
+  "overridden_items": [],
+  "style": "mono_code"
+}

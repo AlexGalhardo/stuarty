@@ -1,0 +1,18 @@
+{
+  "caption_style": {
+    "align": "left",
+    "background_color": "#000000A6",
+    "background_padding": 18,
+    "background_radius": 0,
+    "color": "#FFFFFF",
+    "font_family": "Inter",
+    "font_weight": 500,
+    "highlight": "word",
+    "highlight_color": "#7DD3FC",
+    "max_width": 929,
+    "position": "bottom",
+    "size": 52
+  },
+  "overridden_items": [],
+  "style": "lower_bar"
+}

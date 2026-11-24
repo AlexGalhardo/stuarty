@@ -804,7 +804,12 @@ func readPNG(tb testing.TB, path string) []byte {
 // writeCase writes the folder of a case, with the references composed now.
 func writeCase(t *testing.T, name string, c alphaCase) {
 	t.Helper()
-	dir := goldenDir(name)
+	writeCaseAt(t, goldenDir(name), name, c)
+}
+
+// writeCaseAt is writeCase for a folder outside testdata/golden.
+func writeCaseAt(t *testing.T, dir, name string, c alphaCase) {
+	t.Helper()
 	if err := os.RemoveAll(dir); err != nil {
 		t.Fatal(err)
 	}

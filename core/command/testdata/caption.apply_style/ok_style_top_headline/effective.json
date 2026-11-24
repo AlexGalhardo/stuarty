@@ -1,0 +1,21 @@
+{
+  "caption_style": {
+    "align": "center",
+    "color": "#FFFFFF",
+    "font_family": "Bebas Neue",
+    "font_weight": 400,
+    "highlight": "word",
+    "highlight_color": "#FF3B30",
+    "position": "top",
+    "shadow_blur": 6,
+    "shadow_color": "#000000CC",
+    "shadow_dx": 0,
+    "shadow_dy": 4,
+    "size": 88,
+    "stroke_color": "#000000",
+    "stroke_width": 3,
+    "uppercase": true
+  },
+  "overridden_items": [],
+  "style": "top_headline"
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "reset_overrides": {
+      "description": "true clears the style override of the captions of the track.",
+      "type": "boolean"
+    },
+    "style": {
+      "description": "The style id; caption.list_styles describes them.",
+      "enum": [
+        "clean_white",
+        "bold_pop",
+        "marker_yellow",
+        "soft_box",
+        "neon_night",
+        "editorial",
+        "mono_code",
+        "karaoke_pill",
+        "thick_outline",
+        "warm_glow",
+        "lower_bar",
+        "big_center",
+        "top_headline",
+        "ink_paper"
+      ],
+      "type": "string"
+    },
+    "track_id": {
+      "description": "A visual track.",
+      "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "track_id",
+    "style"
+  ],
+  "type": "object"
+}

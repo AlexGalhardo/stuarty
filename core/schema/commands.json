@@ -1419,6 +1419,64 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "additionalProperties": false,
       "properties": {
+        "reset_overrides": {
+          "description": "true clears the style override of the captions of the track.",
+          "type": "boolean"
+        },
+        "style": {
+          "description": "The style id; caption.list_styles describes them.",
+          "enum": [
+            "clean_white",
+            "bold_pop",
+            "marker_yellow",
+            "soft_box",
+            "neon_night",
+            "editorial",
+            "mono_code",
+            "karaoke_pill",
+            "thick_outline",
+            "warm_glow",
+            "lower_bar",
+            "big_center",
+            "top_headline",
+            "ink_paper"
+          ],
+          "type": "string"
+        },
+        "track_id": {
+          "description": "A visual track.",
+          "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "track_id",
+        "style"
+      ],
+      "type": "object"
+    },
+    "description": "Replaces the caption style of a visual track with a named style: clean_white, bold_pop, marker_yellow, soft_box, neon_night, editorial, mono_code, karaoke_pill, thick_outline, warm_glow, lower_bar, big_center, top_headline or ink_paper. Lengths scale with the shorter side of the project. Captions with their own style override keep it unless reset_overrides is true; effective.overridden_items lists them. caption.list_styles describes the styles.",
+    "domain": "video",
+    "errors": [
+      "E_VALIDATION",
+      "E_NOT_FOUND",
+      "E_TYPE_MISMATCH",
+      "E_FONT_UNKNOWN"
+    ],
+    "example": {
+      "style": "bold_pop",
+      "track_id": "trk_a1b2c3d4e5"
+    },
+    "internal": false,
+    "name": "caption.apply_style",
+    "scope": "edit",
+    "summary": "Applies a named style to a caption track."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
         "index": {
           "description": "0-based index of the word.",
           "minimum": 0,
@@ -1597,6 +1655,25 @@
     "name": "caption.import_subtitles",
     "scope": "edit",
     "summary": "Creates one caption per cue of an SRT or WebVTT text."
+  },
+  {
+    "args_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {},
+      "required": [],
+      "type": "object"
+    },
+    "description": "Changes nothing. The result lists each style of caption.apply_style with its name, a summary, its font family and the stored fields for a project whose shorter side is 1080 pixels.",
+    "domain": "video",
+    "errors": [
+      "E_VALIDATION"
+    ],
+    "example": {},
+    "internal": false,
+    "name": "caption.list_styles",
+    "scope": "edit",
+    "summary": "Describes the named caption styles."
   },
   {
     "args_schema": {

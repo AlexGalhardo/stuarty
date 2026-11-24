@@ -1,0 +1,7 @@
+{
+  "op": "caption.apply_style",
+  "args": {
+    "track_id": "trk_zzzzzzzzzz",
+    "style": "bold_pop"
+  }
+}

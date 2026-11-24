@@ -1,0 +1,6 @@
+{
+  "op": "caption.list_styles",
+  "args": {
+    "style": "bold_pop"
+  }
+}

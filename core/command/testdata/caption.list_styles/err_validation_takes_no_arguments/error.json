@@ -1,0 +1,10 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.style is not an argument of this command.",
+  "hint": "The arguments are: .",
+  "retryable": false,
+  "path": "args.style",
+  "details": {
+    "allowed": []
+  }
+}

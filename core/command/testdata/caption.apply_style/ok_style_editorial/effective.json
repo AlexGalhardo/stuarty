@@ -1,0 +1,21 @@
+{
+  "caption_style": {
+    "align": "center",
+    "color": "#FFF8E7",
+    "font_family": "Playfair Display",
+    "font_weight": 700,
+    "highlight": "word",
+    "highlight_color": "#F4B860",
+    "line_height": 1.2,
+    "position": "bottom",
+    "shadow_blur": 10,
+    "shadow_color": "#000000AA",
+    "shadow_dx": 0,
+    "shadow_dy": 2,
+    "size": 70,
+    "stroke_color": "#1A1206",
+    "stroke_width": 2
+  },
+  "overridden_items": [],
+  "style": "editorial"
+}

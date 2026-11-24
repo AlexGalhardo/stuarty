@@ -34,7 +34,7 @@ Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). `--json` for JSON.
 - `animation`: apply_preset, list_presets
 - `asset`: remove
 - `audio`: add, apply_preset, duck, mark_beats, processor_add, processor_move, processor_remove, processor_set
-- `caption`: add, edit_word, from_transcript, import_subtitles, merge, retime_from_clip, set_breaks, set_style, set_words, split
+- `caption`: add, apply_style, edit_word, from_transcript, import_subtitles, list_styles, merge, retime_from_clip, set_breaks, set_style, set_words, split
 - `clip`: add, add_composition, remove_silences, replace_media, set_blend, set_blur, set_chroma_key, set_color, set_effects, set_filter, set_flip, set_framing, set_mask, set_outline, set_shadow, set_speed
 - `composition`: create_from_selection, expand
 - `font`: add, remove
@@ -130,7 +130,7 @@ Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). `--json` for JSON.
 - `asset:set <hash>`
 - `asset:tag <hash>`
 
-`--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` JSON). `--dry-run` saves nothing; `--key <k>` makes retries safe; `--out f` copies the file. Back: `agent:docs --print guide:video|skill|agents|instructions`
+`--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` JSON). `--dry-run` saves nothing; `--key <k>` makes retries safe. Back: `agent:docs --print guide:video|skill`
 
 ## Reading results
 
@@ -163,7 +163,7 @@ Lint rules (`!` blocks export, the rest warn):
 
 ## Errors and recovery
 
-Exit: 0 ok; 1 failure, do not retry; 2 retryable or `--wait` timeout.
+Exit: 0 ok; 1 failed, no retry; 2 retryable or `--wait` timeout.
 
 - `E_VALIDATION`: fix the argument
 - `E_INVALID_TIME`: add a unit: 2s, 60f

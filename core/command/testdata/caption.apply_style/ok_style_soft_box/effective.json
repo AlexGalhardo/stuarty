@@ -1,0 +1,18 @@
+{
+  "caption_style": {
+    "align": "center",
+    "background_color": "#111827CC",
+    "background_padding": 22,
+    "background_radius": 18,
+    "color": "#FFFFFF",
+    "font_family": "Inter",
+    "font_weight": 600,
+    "highlight": "word",
+    "highlight_background": "#2563EB",
+    "highlight_color": "#FFFFFF",
+    "position": "bottom",
+    "size": 64
+  },
+  "overridden_items": [],
+  "style": "soft_box"
+}

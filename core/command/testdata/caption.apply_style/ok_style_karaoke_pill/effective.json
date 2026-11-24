@@ -1,0 +1,17 @@
+{
+  "caption_style": {
+    "align": "center",
+    "color": "#FFFFFF",
+    "font_family": "Montserrat",
+    "font_weight": 700,
+    "highlight": "word",
+    "highlight_background": "#FFFFFF",
+    "highlight_color": "#101010",
+    "position": "bottom",
+    "size": 66,
+    "stroke_color": "#000000",
+    "stroke_width": 4
+  },
+  "overridden_items": [],
+  "style": "karaoke_pill"
+}
