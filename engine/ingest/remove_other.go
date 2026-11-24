@@ -2,13 +2,8 @@
 
 package ingest
 
-import (
-	"errors"
-	"syscall"
-)
-
-// transientRemoveError is true for the answers a folder removal can give while a file is still being released:
-// access denied and a folder that is not empty yet.
-func transientRemoveError(err error) bool {
-	return errors.Is(err, syscall.EACCES) || errors.Is(err, syscall.ENOTEMPTY)
+// transientRemoveError is always false here: a file another process holds open can be removed, so an access denied
+// or a folder that is not empty is a real answer (a permission, a writer still in the folder) and is not waited for.
+func transientRemoveError(error) bool {
+	return false
 }
