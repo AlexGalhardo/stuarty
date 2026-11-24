@@ -334,7 +334,8 @@ func TestSecurity_T46_AgentCannotTouchAnotherAuthorsPendingNote(t *testing.T) {
 		t.Fatalf("%v", err)
 	}
 
-	if mem, _, err := m.ReadMemory(ctx, "pending"); err != nil || mem.Body != "Original.\n" || mem.Actor != other.Actor {
+	mem, _, err := m.ReadMemory(ctx, "pending")
+	if err != nil || mem.Body != "Original.\n" || mem.Actor != other.Actor {
 		t.Fatalf("%v %+v", err, mem)
 	}
 }

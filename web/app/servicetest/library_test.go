@@ -471,7 +471,10 @@ func TestLibraryAgentCannotTouchAnotherAuthorsPendingNote(t *testing.T) {
 		t.Fatalf("remove: %v", err)
 	}
 
-	_, err = m.svc.MemoryWrite(libAgent(m), service.MemoryWriteRequest{Name: "their-note", Description: "Mine", Body: "y"})
+	_, err = m.svc.MemoryWrite(
+		libAgent(m),
+		service.MemoryWriteRequest{Name: "their-note", Description: "Mine", Body: "y"},
+	)
 	if libCode(err) != service.CodePrivilegedSession {
 		t.Fatalf("overwrite: %v", err)
 	}
