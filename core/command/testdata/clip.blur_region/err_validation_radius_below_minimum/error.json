@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.radius 4 is below the least blur, 17, that keeps text unreadable at 1080 pixels.",
+  "hint": "Send a radius from 17 to 100, or leave it out.",
+  "retryable": false,
+  "path": "args.radius"
+}

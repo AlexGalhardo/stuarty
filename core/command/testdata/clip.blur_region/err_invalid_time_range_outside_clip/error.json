@@ -1,0 +1,7 @@
+{
+  "code": "E_INVALID_TIME",
+  "message": "args.start \"20s\" is outside clip itm_m1n2p3q4r5 (frames 0-149).",
+  "hint": "Use a start from \"0f\" to \"149f\".",
+  "retryable": false,
+  "path": "args.start"
+}

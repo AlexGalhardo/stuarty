@@ -54,8 +54,8 @@ func TestRegistrySnapshotShape(t *testing.T) {
 		}
 	}
 
-	if len(cmds) != 89 {
-		t.Errorf("%d commands, want 89", len(cmds))
+	if len(cmds) != 90 {
+		t.Errorf("%d commands, want 90", len(cmds))
 	}
 }
 

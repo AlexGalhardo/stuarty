@@ -294,6 +294,12 @@ var lateOps = map[string]func(p *docPick) string{
 			p.vtrack(), p.oneOf(CaptionStyleIDs()...), p.n(2) == 0)
 	},
 	"caption.list_styles": func(_ *docPick) string { return `{}` },
+	"clip.blur_region": func(p *docPick) string {
+		x, y := float64(p.n(60))/100, float64(p.n(60))/100
+
+		return fmt.Sprintf(`{"item_id":%q,"x":%.2f,"y":%.2f,"width":%.2f,"height":%.2f,"start":%q,"duration":%q}`,
+			p.clip(), x, y, 0.05+float64(p.n(30))/100, 0.05+float64(p.n(30))/100, p.frames(120), p.frames(60))
+	},
 	"transcript.delete_range": func(p *docPick) string {
 		from := p.n(5)
 

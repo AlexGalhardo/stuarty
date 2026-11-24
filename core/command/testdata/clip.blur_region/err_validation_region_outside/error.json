@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.width 0.8 with the corner at 0.5 goes outside the picture.",
+  "hint": "Send a size from 0.001 up to 0.5.",
+  "retryable": false,
+  "path": "args.width"
+}

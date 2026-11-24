@@ -56,7 +56,13 @@ func ptr[T any](v T) *T { return &v }
 func colorPtr(s string) *timeline.Color { return ptr(timeline.Color(s)) }
 
 // captionStyleBase is what every style sets: a font, its colours and the word highlight.
-func captionStyleBase(family string, weight int, size float64, color, highlight string, position string) timeline.CaptionStyle {
+func captionStyleBase(
+	family string,
+	weight int,
+	size float64,
+	color, highlight string,
+	position string,
+) timeline.CaptionStyle {
 	return timeline.CaptionStyle{
 		TextStyle: timeline.TextStyle{
 			FontFamily: ptr(family), FontWeight: ptr(weight), Size: ptr(size), Color: colorPtr(color),
@@ -74,12 +80,26 @@ func (s *CaptionStyleSpec) stroke(color string, width float64) *CaptionStyleSpec
 }
 
 func (s *CaptionStyleSpec) shadow(color string, dx, dy, blur float64) *CaptionStyleSpec {
-	s.Style.ShadowColor, s.Style.ShadowDX, s.Style.ShadowDY, s.Style.ShadowBlur = colorPtr(color), ptr(dx), ptr(dy), ptr(blur)
+	s.Style.ShadowColor, s.Style.ShadowDX, s.Style.ShadowDY, s.Style.ShadowBlur = colorPtr(
+		color,
+	), ptr(
+		dx,
+	), ptr(
+		dy,
+	), ptr(
+		blur,
+	)
 	return s
 }
 
 func (s *CaptionStyleSpec) box(color string, padding, radius float64) *CaptionStyleSpec {
-	s.Style.BackgroundColor, s.Style.BackgroundPadding, s.Style.BackgroundRadius = colorPtr(color), ptr(padding), ptr(radius)
+	s.Style.BackgroundColor, s.Style.BackgroundPadding, s.Style.BackgroundRadius = colorPtr(
+		color,
+	), ptr(
+		padding,
+	), ptr(
+		radius,
+	)
 	return s
 }
 
@@ -201,8 +221,8 @@ func ResolveCaptionStyle(spec CaptionStyleSpec, width, height int) *timeline.Cap
 }
 
 type captionApplyStyleArgs struct {
-	TrackID        string `json:"track_id"                  desc:"A visual track."                                                  pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
-	Style          string `json:"style"                     desc:"The style id; caption.list_styles describes them."                                                                                                                      enum:"clean_white,bold_pop,marker_yellow,soft_box,neon_night,editorial,mono_code,karaoke_pill,thick_outline,warm_glow,lower_bar,big_center,top_headline,ink_paper"`
+	TrackID        string `json:"track_id"                  desc:"A visual track."                                              pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
+	Style          string `json:"style"                     desc:"The style id; caption.list_styles describes them."                                                                   enum:"clean_white,bold_pop,marker_yellow,soft_box,neon_night,editorial,mono_code,karaoke_pill,thick_outline,warm_glow,lower_bar,big_center,top_headline,ink_paper"`
 	ResetOverrides bool   `json:"reset_overrides,omitempty" desc:"true clears the style override of the captions of the track."`
 }
 
