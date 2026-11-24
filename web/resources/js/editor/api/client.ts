@@ -4,6 +4,7 @@ import { type Transport, TransportError } from "./transport";
 import type {
 	AccountCreated,
 	AccountCreateRequest,
+	AccountRecoveryKey,
 	AccountState,
 	AgentProfile,
 	AgentProfileListResult,
@@ -426,6 +427,7 @@ export interface ApiClient {
 		password: string,
 		confirmation: string,
 	): Promise<AccountState>;
+	accountNewRecoveryKey(password: string): Promise<AccountRecoveryKey>;
 	accountSettings(): Promise<AccountState>;
 	setAccountIdleLock(minutes: number): Promise<AccountState>;
 	listTemplates(): Promise<TemplateListResult>;
@@ -995,6 +997,8 @@ export function createClient(
 				password,
 				confirmation,
 			}),
+		accountNewRecoveryKey: (password) =>
+			call("POST", "/auth/account/recovery-key", EDIT_TIMEOUT_MS, { password }),
 		accountChangePassword: (current, password, confirmation) =>
 			call("POST", "/auth/account/password", EDIT_TIMEOUT_MS, {
 				current,

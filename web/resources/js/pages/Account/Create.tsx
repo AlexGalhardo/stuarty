@@ -4,6 +4,7 @@ import { type FormEvent, type ReactNode, useState } from "react";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import FieldErrors from "@/components/FieldErrors";
 import PasswordField from "@/components/PasswordField";
+import RecoveryKeyBox from "@/components/RecoveryKeyBox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -158,16 +159,6 @@ export function RecoveryKey({
 }): ReactNode {
 	const t = useT();
 	const [saved, setSaved] = useState(false);
-	const [copied, setCopied] = useState(false);
-
-	async function copy(): Promise<void> {
-		try {
-			await navigator.clipboard.writeText(value);
-			setCopied(true);
-		} catch {
-			setCopied(false);
-		}
-	}
 
 	return (
 		<>
@@ -192,20 +183,7 @@ export function RecoveryKey({
 						{t("ui.account.recovery.formerFolder", { path: formerFolder })}
 					</p>
 				)}
-				<p
-					data-testid="recovery-key"
-					className="rounded-lg border bg-muted p-4 text-center font-mono text-lg tracking-wide break-all select-all"
-				>
-					{value}
-				</p>
-				<div className="flex items-center gap-3">
-					<Button type="button" variant="outline" onClick={() => void copy()}>
-						{t("ui.account.recovery.copy")}
-					</Button>
-					<span role="status" className="text-sm text-muted-foreground">
-						{copied ? t("ui.account.recovery.copied") : ""}
-					</span>
-				</div>
+				<RecoveryKeyBox value={value} />
 				<div className="flex items-center gap-2">
 					<input
 						id="recovery-saved"

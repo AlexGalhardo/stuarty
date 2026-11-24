@@ -70,6 +70,14 @@ type accountPasswordIn struct {
 	Confirmation string `json:"confirmation"`
 }
 
+type accountRecoveryKeyIn struct {
+	Password string `json:"password"`
+}
+
+type accountRecoveryKeyOut struct {
+	RecoveryKey string `json:"recovery_key" doc:"Shown once. It replaces the earlier key, which opens nothing any more."`
+}
+
 type accountSettingsIn struct {
 	IdleLockMinutes int `json:"idle_lock_minutes" doc:"0 turns the idle lock off; at most 1440."`
 }
@@ -244,6 +252,28 @@ func (h *apiHandler) accountPassword(c *web.Ctx, in accountPasswordIn) (accountS
 	minutes := m.IdleLockMinutes()
 
 	return accountStateOut{State: string(m.State()), Username: m.Username(), IdleLockMinutes: &minutes}, nil
+}
+
+// accountRecoveryKey makes another recovery key with the password, for a person who lost the one the creation
+// showed (VV-382). The key is in this answer only.
+func (h *apiHandler) accountRecoveryKey(c *web.Ctx, in accountRecoveryKeyIn) (accountRecoveryKeyOut, error) {
+	m, err := h.accountOr()
+	if err != nil {
+		return accountRecoveryKeyOut{}, err
+	}
+
+	if err := person(c); err != nil {
+		return accountRecoveryKeyOut{}, err
+	}
+
+	recovery, err := m.NewRecoveryKey(c.Context(), in.Password)
+	if err != nil {
+		return accountRecoveryKeyOut{}, accountError(err)
+	}
+
+	c.SetHeader("Cache-Control", "no-store")
+
+	return accountRecoveryKeyOut{RecoveryKey: recovery}, nil
 }
 
 func (h *apiHandler) accountSettingsGet(c *web.Ctx, _ noIn) (accountStateOut, error) {

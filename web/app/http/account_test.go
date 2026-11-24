@@ -528,3 +528,61 @@ func TestAccountPagesFollowTheStateOfTheAccount(t *testing.T) {
 		t.Fatalf("/projects with no session = %d %s", res.status, location(res))
 	}
 }
+
+// VV-382: if the answer of the creation is lost, the person makes another recovery key in Settings with the
+// password. Only a person does; the old key stops working; nothing else changes.
+func TestAccountNewRecoveryKey(t *testing.T) {
+	t.Parallel()
+
+	a := newAccountHarness(t)
+	first := a.create()
+	cookie, _ := a.signIn(accPassword)
+
+	body := `{"password":"` + accPassword + `"}`
+
+	// The token and a launch session are not a person.
+	if res := a.do(req{method: http.MethodPost, path: "/auth/account/recovery-key", body: body}); res.status !=
+		http.StatusForbidden || res.json(t)["code"] != "E_PRIVILEGED_SESSION" {
+		t.Fatalf("with the token = %d %s", res.status, res.body)
+	}
+
+	if res := a.browser(http.MethodPost, "/auth/account/recovery-key", body, a.sessionWith(t, "")); res.status !=
+		http.StatusForbidden && res.status != http.StatusLocked {
+		t.Fatalf("with a launch session = %d %s", res.status, res.body)
+	}
+
+	if res := a.browser(http.MethodPost, "/auth/account/recovery-key", `{"password":"`+accOther+`"}`, cookie); res.status !=
+		http.StatusUnauthorized {
+		t.Fatalf("with a wrong password = %d %s", res.status, res.body)
+	}
+
+	res := a.browser(http.MethodPost, "/auth/account/recovery-key", body, cookie)
+	if res.status != http.StatusOK || res.header.Get("Cache-Control") != "no-store" {
+		t.Fatalf("new recovery key = %d %v %s", res.status, res.header, res.body)
+	}
+
+	second, _ := res.json(t)["recovery_key"].(string)
+	if len(strings.Split(second, "-")) != 13 || second == first {
+		t.Fatalf("the new key = %q", second)
+	}
+
+	// The session that asked stays signed in.
+	if res := a.browser(http.MethodGet, "/api/v1/projects", "", cookie); res.status != http.StatusOK {
+		t.Errorf("the session after the new key = %d", res.status)
+	}
+
+	a.acc.Lock()
+
+	recoverWith := func(key string) int {
+		return a.browser(http.MethodPost, "/auth/account/recover",
+			`{"recovery_key":"`+key+`","password":"`+accOther+`","confirmation":"`+accOther+`"}`, "").status
+	}
+
+	if got := recoverWith(first); got != http.StatusUnauthorized {
+		t.Errorf("recover with the old key = %d, want 401", got)
+	}
+
+	if got := recoverWith(second); got != http.StatusOK {
+		t.Errorf("recover with the new key = %d, want 200", got)
+	}
+}

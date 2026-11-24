@@ -1640,6 +1640,11 @@ export interface AccountCreated {
 	former_folder?: string;
 }
 
+/** The answer of a new recovery key: shown once, it replaces the earlier key. */
+export interface AccountRecoveryKey {
+	recovery_key: string;
+}
+
 export interface AccountFieldProblem {
 	field: string;
 	reason: string;
