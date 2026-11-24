@@ -1,8 +1,8 @@
 ---
-// A screen of the product that is not captured yet. It takes the image of the real screen (the path under public/,
-// without the size suffix and the extension) and its alt text. With no image it draws a clearly named slot, so the
-// layout is final and nothing is invented. The screens of epic 79 (home, projects and briefing) are captured, so the
-// page passes their `src` and `srcDark` from `screenSlots` in src/landing/content.ts.
+// A screen of epic 79 (home, projects and briefing). It takes the capture of the real screen (the path under public/,
+// without the size suffix and the extension) from `screenSlots` in src/landing/content.ts. With no capture it draws a
+// clearly named slot, so nothing is invented. Both themed pictures carry the alt text: the theme hides one with
+// display: none, which also removes it from the accessibility tree, so an empty alt would leave the visible one unnamed.
 import { screenSlots, type ScreenSlotId } from "@/src/landing/content";
 import { withBase } from "@/lib/site";
 
@@ -12,10 +12,12 @@ interface Props {
 	src?: string;
 	/** Dark-theme counterpart; the light capture is `src`. */
 	srcDark?: string;
+	/** The width the picture takes, so the browser picks the 960 or the 1600 px file. */
+	sizes?: string;
 	class?: string;
 }
 
-const { slot, src, srcDark, class: className } = Astro.props;
+const { slot, src, srcDark, sizes = "(min-width: 64rem) 40rem, 100vw", class: className } = Astro.props;
 const { label, alt } = screenSlots[slot];
 const path = (base: string, w: number, ext: string) => withBase(`${base}${w === 1600 ? "" : "-960"}.${ext}`);
 ---
@@ -26,10 +28,10 @@ const path = (base: string, w: number, ext: string) => withBase(`${base}${w === 
 			{[
 				{ base: srcDark ?? src, cls: "shot-dark" },
 				...(srcDark ? [{ base: src, cls: "shot-light" }] : []),
-			].map((v, i) => (
+			].map((v) => (
 				<picture class={[className, srcDark ? v.cls : undefined].filter(Boolean).join(" ")}>
-					<source type="image/avif" srcset={`${path(v.base, 960, "avif")} 960w, ${path(v.base, 1600, "avif")} 1600w`} sizes="(min-width: 64rem) 40rem, 100vw" />
-					<img src={path(v.base, 1600, "webp")} srcset={`${path(v.base, 960, "webp")} 960w, ${path(v.base, 1600, "webp")} 1600w`} sizes="(min-width: 64rem) 40rem, 100vw" alt={i === 0 ? alt : ""} width="1600" height="1000" loading="lazy" decoding="async" />
+					<source type="image/avif" srcset={`${path(v.base, 960, "avif")} 960w, ${path(v.base, 1600, "avif")} 1600w`} sizes={sizes} />
+					<img src={path(v.base, 1600, "webp")} srcset={`${path(v.base, 960, "webp")} 960w, ${path(v.base, 1600, "webp")} 1600w`} sizes={sizes} alt={alt} width="1600" height="1000" loading="lazy" decoding="async" />
 				</picture>
 			))}
 		</>
