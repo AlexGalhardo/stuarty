@@ -405,6 +405,13 @@
         "image": "Imagem",
         "undecided": "Ainda não decidido"
       },
+      "add_media": {
+        "open": "Adicionar mídia",
+        "title": "Adicionar um vídeo",
+        "description": "O vídeo é adicionado a este projeto. As etapas de um vídeo entram no caminho, e o que já está feito continua feito.",
+        "name": "Nome do vídeo",
+        "submit": "Adicionar o vídeo"
+      },
       "new_project": {
         "title": "Novo projeto",
         "description": "Escolha o que você quer criar. Dá para adicionar os outros depois.",
