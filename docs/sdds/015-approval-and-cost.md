@@ -139,6 +139,32 @@ Eight operations on `service.Service`, in `service/approval_ops.go`:
 - **Decide rejecting.** The request becomes `rejected` with the reason, the job becomes `cancelled` (the job error is `E_CANCELLED` with the reason), and nothing is reserved.
 - **A rule never lowers a check.** A rule is evaluated when the action is submitted, in the same way as a person would see it, and a ceiling applies to it first (section 2).
 
+### 4.1 The unified read of what waits for a person (epic 77, D-137)
+
+A permission request of the hosted agent (SDD-017 section 7) and an approval request (this document) stay two flows with their own decisions. What a person sees is one list: `InboxList`, a **read** over both, with the pure rules in `core/inbox`. It has no write path: a row is decided where its source is decided, by `ChatAnswerPermission` for `chat` and by `ApprovalDecide` for `approval`, with the checks of each, and there is no decision endpoint, no "always allow" and no merged queue.
+
+| Member of a row | Meaning |
+| --- | --- |
+| `id` | `chat:<request id>` or `approval:<request id>`: the source and the id the source gave it (`cpr_` and `apr_` ids never collide) |
+| `source`, `source_id` | `chat` or `approval`, and the id in that source |
+| `state` | `waiting`, `approved`, `rejected`, `expired` or `cancelled` (an answer of `cancel`, and a permission that timed out) |
+| `agent` | who asks: the profile that runs the chat session, or the actor of the approval. Untrusted text |
+| `skill` | the skill the session had read when the permission was asked (`chat.Reduce`, SDD-017 section 8.1); empty for an approval and when none was read |
+| `tool` | the title of the tool call the agent gave (chat) or the kind of the job (approval). Untrusted text |
+| `summary` | the summary of an approval; empty for a permission. Untrusted text |
+| `action_key` | the message key of the plain description when the permission is for a tool of Stuarty's own MCP server (`chat.DescriptionKey`); empty otherwise, and then the UI says "Not reported" |
+| `item`, `destination` | what the call acts on and where. For an approval, the connection id and the project id. For a permission, the fields the host kept (SDD-017 section 7.1) and the project of the session. Empty is "Not reported", never a guess |
+| `cost` | the estimate of an approval (`micros`, `currency`); null for a permission, which has none |
+| `undoable` | `true` only when the call is the tool `edit` and every operation it names is a command of the editor in the command registry (it becomes one undo step, SDD-002 section A.8); `false` for a publication, a paid generation and every other tool, and when the host kept no operation. It is never presumed |
+| `project_id`, `session_id` | the project of the request when known, and the chat session that holds it (`chat` only: where the person answers) |
+| `created_at`, `answered_at` | RFC 3339 UTC; `answered_at` is null while the row waits |
+
+- **What is listed.** Every request that waits, newest first, then the 20 most recently answered, expired or cancelled. A chat request is known while its session is live and goes with the process, as the session does. An approval is listed from the queue as `ApprovalList` reads it.
+- **Visibility.** Exactly the visibility of each source and nothing wider: a chat request follows the project check of its session (a project the caller may not see is as missing as in `ChatSessionList`, SDD-017 section 10), an approval follows section 4 (own user in network mode, every request for an administrator and in local mode, one project for a project-limited key). A member never sees a request of another member.
+- **Callers.** Any caller with the `read` scope except the session token of a hosted agent, which gets `E_PRIVILEGED_SESSION`: the requests of other sessions are not for an agent. There is no MCP tool.
+- **Surfaces.** `GET /inbox`, `inbox:list`, and the stream `GET /inbox/events`. The stream has one event name, `inbox.snapshot`, whose data is the result of `InboxList` for the caller: it is sent when the stream opens and again, whole, each time a request is added or settled and the caller's list changed. It counts as one stream of the process and of the key, is revalidated like the others, and tells a member only what that member's own read tells.
+- **Untrusted text.** `agent`, `skill`, `tool`, `summary`, `item` and `destination` are text an agent wrote: strings, never markup, and the result carries the notice of SDD-007 section 8.
+
 ## 5. Jobs: the state `waiting_approval`
 
 A job kind that needs approval is registered at start-up in `service.Options.JobKinds`, a list of `ApprovableKind`:
@@ -237,6 +263,7 @@ Rows of the table `audit` (SDD-005 section 5.9), written in the transaction of t
 - MCP: no tool of its own (the catalogue is at its cap of 20 tools and the budget of NFR-020 is the author's to spend), and the read is in `job_get` (author decision D-093). An agent submits through `job_start`, reads the state of its request with `job_get` (`waiting_approval`, `approval_id`), reads the request with `job_get` and `approval_id`, or lists the queue with `approvals` (`pending`, `approved`, `rejected`, `expired`, `all`) and an optional `project_id`; the service scopes both to the caller's projects and the summary is untrusted text. It cannot decide: no tool and no argument decides, writes a rule or sets a ceiling (RF-136). The same read is `approval:list`, `approval:show`, `GET /approvals` and `GET /approvals/{id}`.
 - **Done by the epic that registered the first kind.** Epic 09 added `text.generate` to the `kind` enum of `job_start` and made the `state` of the `outputSchema` of `job_start` and `job_get` a plain string, so an MCP client that checks a structured result against the `outputSchema` accepts a waiting job (SDD-003 section 4.2, SDD-016 section 10). The enum is not restored with six states: a list that grows with every state costs bytes of the budget of NFR-020, and the states are in SDD-000 section 6.
 - Agents: `job_start` of a registered kind answers the job in `waiting_approval` with `approval_id`, and the job `text` says that a person approves or rejects it in the app, that the agent cannot, and that it reads the job again with `job_get` instead of submitting it again. The generated skill of `agent:docs` lists the read commands of the queue (`approval:list`, `approval:show`, `approval:rule:list`, `cost:show`) and leaves out the four that need a person; it has no room under its 12,000 characters for more.
+- The unified read of section 4.1 is `GET /inbox`, `GET /inbox/events` and `inbox:list`, with no MCP tool and no write.
 - The UI page `/approvals` shows the queue (summary, destination, cost, actor, age), approves and rejects, lists the rules and the ceilings and writes them, and shows the cost summary. It is the only caller that is a privileged session, and it computes nothing: amounts are formatted, not summed (SDD-012 section 1).
 
 ## 11. Tests
