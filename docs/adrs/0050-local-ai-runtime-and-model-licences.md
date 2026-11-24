@@ -2,6 +2,7 @@
 
 - Status: Accepted (2026-11-23, author decision D-133)
 - Deciders: author
+- Amends: `.agents/rules/rust.md` item 1 and AGENTS.md rule 5 (where Rust may live), the same way ADR-0049 amended them for `capture/`
 - Links: ADR-0011, ADR-0021, ADR-0032, ADR-0036, ADR-0042, NFR-043, SDD-007 section 6, SDD-024 (to be written by epic 70)
 
 This record decides how local models run in Stuarty and which models may be offered.
@@ -12,7 +13,8 @@ Transcription already runs locally through whisper.cpp as a separate process, wi
 
 ## 2. Decision
 
-1. **One AI helper**, a separate process built on ONNX Runtime (MIT), under the process policy of SDD-007 section 6. No Python and no cgo in the product.
+1. **One AI helper**, `stuarty-aihelper`, a separate process built on ONNX Runtime (MIT), under the process policy of SDD-007 section 6, started by the server through `engine/aihost`. No Python and no cgo in the product.
+   It is written in **Rust, in a new top-level folder `aihelper/`**: the third and last place Rust may live, after `renderer/` and `capture/` (ADR-0049). Rules 2 to 4, 7 and 8 of `.agents/rules/rust.md` apply to it; the rules about bit-exact pixels and WebAssembly do not, because the helper composes nothing. The one crate approved for it is `ort` (the ONNX Runtime binding) at an exact version, in its `load-dynamic` mode: the official ONNX Runtime library (MIT) is loaded from a path and is fetched through a pinned manifest and script, like the FFmpeg and whisper.cpp pins, so the build downloads nothing. Any other crate is a decision of the author (D-139).
 2. **Execution:** DirectML on Windows, CoreML on Apple systems, CPU everywhere. The CUDA build is not shipped (D-133).
 3. **Models are never bundled.** Each is downloaded only on a person's explicit request, shows its size and licence first, and is pinned by SHA-256. With no model installed, the product opens no connection.
 4. **Licence gate:** a model enters the catalogue only when the licences of its code and its weights both allow use and redistribution in an MIT product, and the evidence is recorded. Non-commercial, GPL, AGPL, gated or unstated weights are refused.
