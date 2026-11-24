@@ -52,7 +52,7 @@ None new. The motion panel calls `MotionBrief`, media import with origin, `Motio
 - [x] 1. The editor shell and top bar. Verify: `cd web && bun run test -- SavedIndicator TrashedBanner panelSizes` passes.
 - [x] 2. The left panels and library. Verify: `cd web && bun run e2e -- library-rail` passes.
 - [x] 3. The inspector and its fields. Verify: `cd web && bun run test -- inspector` passes.
-- [ ] 4. The timeline chrome, tracks and toolbar. Verify: `cd web && bun run e2e -- keyboard-only-edit` passes.
+- [x] 4. The timeline chrome, tracks and toolbar. Verify: `cd web && bun run e2e -- keyboard-only-edit` passes.
 - [ ] 5. Mount the scene bar in the editor. Verify: `cd web && bun run e2e -- scene-bar` passes.
 - [ ] 6. The history sidebar and menus. Verify: `cd web && bun run e2e -- history-sidebar` and `bun run e2e -- editor-menus-dark` pass.
 - [ ] 7. The motion panel. Verify: new spec `motion-panel` passes with a rendered fixture.
