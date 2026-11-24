@@ -51,10 +51,6 @@ type CaptionStyleSpec struct {
 	LineWidth float64
 }
 
-func ptr[T any](v T) *T { return &v }
-
-func colorPtr(s string) *timeline.Color { return ptr(timeline.Color(s)) }
-
 // captionStyleBase is what every style sets: a font, its colours and the word highlight.
 func captionStyleBase(
 	family string,
@@ -64,57 +60,49 @@ func captionStyleBase(
 	position string,
 ) timeline.CaptionStyle {
 	return timeline.CaptionStyle{
-		TextStyle: timeline.TextStyle{
-			FontFamily: ptr(family), FontWeight: ptr(weight), Size: ptr(size), Color: colorPtr(color),
-			Align: ptr("center"),
-		},
-		Position:       ptr(position),
-		Highlight:      ptr("word"),
-		HighlightColor: colorPtr(highlight),
+		FontFamily:     new(family),
+		FontWeight:     new(weight),
+		Size:           new(size),
+		Color:          new(timeline.Color(color)),
+		Align:          new("center"),
+		Position:       new(position),
+		Highlight:      new("word"),
+		HighlightColor: new(timeline.Color(highlight)),
 	}
 }
 
 func (s *CaptionStyleSpec) stroke(color string, width float64) *CaptionStyleSpec {
-	s.Style.StrokeColor, s.Style.StrokeWidth = colorPtr(color), ptr(width)
+	s.Style.StrokeColor, s.Style.StrokeWidth = new(timeline.Color(color)), new(width)
 	return s
 }
 
-func (s *CaptionStyleSpec) shadow(color string, dx, dy, blur float64) *CaptionStyleSpec {
-	s.Style.ShadowColor, s.Style.ShadowDX, s.Style.ShadowDY, s.Style.ShadowBlur = colorPtr(
-		color,
-	), ptr(
-		dx,
-	), ptr(
-		dy,
-	), ptr(
-		blur,
-	)
+// shadow sets a shadow that is not moved sideways (every shadow of the table has a dx of 0).
+func (s *CaptionStyleSpec) shadow(color string, dy, blur float64) *CaptionStyleSpec {
+	s.Style.ShadowColor = new(timeline.Color(color))
+	s.Style.ShadowDX, s.Style.ShadowDY, s.Style.ShadowBlur = new(0.0), new(dy), new(blur)
+
 	return s
 }
 
 func (s *CaptionStyleSpec) box(color string, padding, radius float64) *CaptionStyleSpec {
-	s.Style.BackgroundColor, s.Style.BackgroundPadding, s.Style.BackgroundRadius = colorPtr(
-		color,
-	), ptr(
-		padding,
-	), ptr(
-		radius,
-	)
+	s.Style.BackgroundColor = new(timeline.Color(color))
+	s.Style.BackgroundPadding, s.Style.BackgroundRadius = new(padding), new(radius)
+
 	return s
 }
 
 func (s *CaptionStyleSpec) upper() *CaptionStyleSpec {
-	s.Style.Uppercase = ptr(true)
+	s.Style.Uppercase = new(true)
 	return s
 }
 
 func (s *CaptionStyleSpec) lineHeight(v float64) *CaptionStyleSpec {
-	s.Style.LineHeight = ptr(v)
+	s.Style.LineHeight = new(v)
 	return s
 }
 
 func (s *CaptionStyleSpec) highlightBox(color string) *CaptionStyleSpec {
-	s.Style.HighlightBackground = colorPtr(color)
+	s.Style.HighlightBackground = new(timeline.Color(color))
 	return s
 }
 
@@ -125,7 +113,7 @@ func newCaptionStyle(id, name, summary string, base timeline.CaptionStyle) *Capt
 // captionStyles is the table of SDD-002 C.88, in its order.
 var captionStyles = func() []CaptionStyleSpec {
 	left := captionStyleBase("Inter", 500, 52, "#FFFFFF", "#7DD3FC", "bottom")
-	left.Align = ptr("left")
+	left.Align = new("left")
 	lower := newCaptionStyle("lower_bar", "Lower bar", "Left-aligned text on a dark bar, calm and easy to read.", left).
 		box("#000000A6", 18, 0)
 	lower.LineWidth = 0.86
@@ -133,10 +121,10 @@ var captionStyles = func() []CaptionStyleSpec {
 	return []CaptionStyleSpec{
 		*newCaptionStyle("clean_white", "Clean white", "White bold text with a thin edge and a soft shadow.",
 			captionStyleBase("Inter", 700, 72, "#FFFFFF", "#FFD23F", "bottom")).
-			stroke("#000000", 3).shadow("#000000B3", 0, 3, 8),
+			stroke("#000000", 3).shadow("#000000B3", 3, 8),
 		*newCaptionStyle("bold_pop", "Bold pop", "Tall condensed capitals with a heavy edge and a green spoken word.",
 			captionStyleBase("Anton", 400, 92, "#FFFFFF", "#3DFF7A", "bottom")).
-			upper().stroke("#000000", 8).shadow("#00000099", 0, 4, 0),
+			upper().stroke("#000000", 8).shadow("#00000099", 4, 0),
 		*newCaptionStyle("marker_yellow", "Marker yellow", "Yellow text with a black edge, the spoken word turns white.",
 			captionStyleBase("Montserrat", 800, 76, "#FFE600", "#FFFFFF", "bottom")).
 			stroke("#000000", 6).lineHeight(1.1),
@@ -145,10 +133,10 @@ var captionStyles = func() []CaptionStyleSpec {
 			box("#111827CC", 22, 18).highlightBox("#2563EB"),
 		*newCaptionStyle("neon_night", "Neon night", "Light capitals with a cyan glow, in the middle of the frame.",
 			captionStyleBase("Bebas Neue", 400, 96, "#E8FFFF", "#FF4FD8", "middle")).
-			upper().stroke("#00131A", 3).shadow("#00E5FF", 0, 0, 24),
+			upper().stroke("#00131A", 3).shadow("#00E5FF", 0, 24),
 		*newCaptionStyle("editorial", "Editorial", "A serif face in warm white, like a magazine pull quote.",
 			captionStyleBase("Playfair Display", 700, 70, "#FFF8E7", "#F4B860", "bottom")).
-			stroke("#1A1206", 2).shadow("#000000AA", 0, 2, 10).lineHeight(1.2),
+			stroke("#1A1206", 2).shadow("#000000AA", 2, 10).lineHeight(1.2),
 		*newCaptionStyle("mono_code", "Mono code", "Green monospaced text on a near-black box.",
 			captionStyleBase("JetBrains Mono", 700, 56, "#7CFFB2", "#FFFFFF", "bottom")).
 			box("#0B0F14E6", 20, 8).highlightBox("#1F6F4A"),
@@ -160,14 +148,14 @@ var captionStyles = func() []CaptionStyleSpec {
 			upper().stroke("#000000", 14).lineHeight(1.05),
 		*newCaptionStyle("warm_glow", "Warm glow", "Amber text with an orange glow.",
 			captionStyleBase("Montserrat", 800, 74, "#FFB347", "#FFFFFF", "bottom")).
-			stroke("#3A1500", 3).shadow("#FF6A00B3", 0, 0, 22),
+			stroke("#3A1500", 3).shadow("#FF6A00B3", 0, 22),
 		*lower,
 		*newCaptionStyle("big_center", "Big centre", "One huge capital line in the middle, for short punchy words.",
 			captionStyleBase("Anton", 400, 140, "#FFFFFF", "#FFE600", "middle")).
 			upper().stroke("#000000", 10).lineHeight(0.95),
 		*newCaptionStyle("top_headline", "Top headline", "Capitals at the top of the frame, like a headline.",
 			captionStyleBase("Bebas Neue", 400, 88, "#FFFFFF", "#FF3B30", "top")).
-			upper().stroke("#000000", 3).shadow("#000000CC", 0, 4, 6),
+			upper().stroke("#000000", 3).shadow("#000000CC", 4, 6),
 		*newCaptionStyle("ink_paper", "Ink on paper", "Dark serif text on a cream box.",
 			captionStyleBase("Playfair Display", 700, 64, "#1B1B1B", "#B3261E", "bottom")).
 			box("#F6EFE0F2", 24, 12),
@@ -177,17 +165,17 @@ var captionStyles = func() []CaptionStyleSpec {
 // CaptionStyleIDs lists the style ids in the order of SDD-002 C.88.
 func CaptionStyleIDs() []string {
 	ids := make([]string, len(captionStyles))
-	for i, s := range captionStyles {
-		ids[i] = s.ID
+	for i := range captionStyles {
+		ids[i] = captionStyles[i].ID
 	}
 	return ids
 }
 
 // CaptionStyleByID returns the row of the table for an id.
 func CaptionStyleByID(id string) (CaptionStyleSpec, bool) {
-	for _, s := range captionStyles {
-		if s.ID == id {
-			return s, true
+	for i := range captionStyles {
+		if captionStyles[i].ID == id {
+			return captionStyles[i], true
 		}
 	}
 	return CaptionStyleSpec{}, false
@@ -203,7 +191,7 @@ func ResolveCaptionStyle(spec CaptionStyleSpec, width, height int) *timeline.Cap
 			return nil
 		}
 		f := math.Pow(10, decimals)
-		return ptr(math.Min(math.Max(math.Round(*p*k*f)/f, lo), hi))
+		return new(math.Min(math.Max(math.Round(*p*k*f)/f, lo), hi))
 	}
 	s.Size = scale(s.Size, 8, 1000, 0)
 	s.StrokeWidth = scale(s.StrokeWidth, 0, 40, 1)
@@ -213,7 +201,7 @@ func ResolveCaptionStyle(spec CaptionStyleSpec, width, height int) *timeline.Cap
 	s.BackgroundPadding = scale(s.BackgroundPadding, 0, math.MaxFloat64, 1)
 	s.BackgroundRadius = scale(s.BackgroundRadius, 0, math.MaxFloat64, 1)
 	if spec.LineWidth > 0 {
-		s.MaxWidth = ptr(math.Round(spec.LineWidth * float64(width)))
+		s.MaxWidth = new(math.Round(spec.LineWidth * float64(width)))
 	}
 	// Copy the pointers the table shares so that a caller cannot change the table through the result.
 	out, _ := timeline.StyleFromMap(timeline.StyleToMap(&s))
@@ -222,7 +210,7 @@ func ResolveCaptionStyle(spec CaptionStyleSpec, width, height int) *timeline.Cap
 
 type captionApplyStyleArgs struct {
 	TrackID        string `json:"track_id"                  desc:"A visual track."                                              pattern:"^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$"`
-	Style          string `json:"style"                     desc:"The style id; caption.list_styles describes them."                                                                   enum:"clean_white,bold_pop,marker_yellow,soft_box,neon_night,editorial,mono_code,karaoke_pill,thick_outline,warm_glow,lower_bar,big_center,top_headline,ink_paper"`
+	Style          string `json:"style"                     desc:"The style id; caption.list_styles describes them."                                                                   schema:"caption_style_id"`
 	ResetOverrides bool   `json:"reset_overrides,omitempty" desc:"true clears the style override of the captions of the track."`
 }
 
@@ -272,13 +260,30 @@ func applyCaptionApplyStyle(c *Context, a *captionApplyStyleArgs) error {
 type captionListStylesArgs struct{}
 
 func applyCaptionListStyles(c *Context, _ *captionListStylesArgs) error {
+	c.SetEffective("styles", captionStyleEntries())
+	return nil
+}
+
+// captionStyleEntries is the list of caption.list_styles: the table of C.88 as the editor and an agent read it.
+func captionStyleEntries() []map[string]any {
 	styles := make([]map[string]any, 0, len(captionStyles))
-	for _, s := range captionStyles {
+	for i := range captionStyles {
+		s := &captionStyles[i]
 		styles = append(styles, map[string]any{
 			"id": s.ID, "name": s.Name, "summary": s.Summary, "font_family": *s.Style.FontFamily,
-			"caption_style": timeline.StyleToMap(ResolveCaptionStyle(s, captionStyleRefSide, captionStyleRefSide)),
+			"caption_style": timeline.StyleToMap(ResolveCaptionStyle(*s, captionStyleRefSide, captionStyleRefSide)),
 		})
 	}
-	c.SetEffective("styles", styles)
-	return nil
+
+	return styles
+}
+
+// captionStyleIDSchema is the schema of args.style of caption.apply_style: the ids, with the table of the styles in
+// x-vv-caption-styles, so that the gallery of the editor is drawn from the registry and holds no style of its own.
+func captionStyleIDSchema() map[string]any {
+	return map[string]any{
+		"type":                "string",
+		"enum":                CaptionStyleIDs(),
+		"x-vv-caption-styles": captionStyleEntries(),
+	}
 }

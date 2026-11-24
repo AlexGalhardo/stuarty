@@ -7,6 +7,7 @@ import { useCanEdit } from "../../commands/useActions";
 import { useDocumentState } from "../../state/EditorContext";
 import Section from "../Section";
 import { useFieldCommit } from "../useFieldCommit";
+import CaptionStyleGallery from "./CaptionStyleGallery";
 import StyleRows, { CAPTION_STYLE_ROWS } from "./StyleRows";
 
 // The caption style of a track (SDD-012 section 12.1, row Track panel):
@@ -32,6 +33,7 @@ export default function TrackCaptionStyle({
 				</p>
 			) : (
 				<>
+					<CaptionStyleGallery trackId={trackId} />
 					<StyleRows
 						rows={CAPTION_STYLE_ROWS}
 						stored={track.caption_style ?? {}}

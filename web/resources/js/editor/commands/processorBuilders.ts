@@ -1,5 +1,9 @@
 import type { Operations } from "./builders";
-import type { AudioPresetId, ProcessorKind } from "./processorTable";
+import type {
+	AudioPresetId,
+	ProcessorKind,
+	VoicePresetId,
+} from "./processorTable";
 
 // The operations of the audio processor chain of an item or a track (SDD-004 section 7.1, SDD-002 C.79 to C.83). The
 // inspector requests; the core checks the ranges and decides (rules T5 and T6).
@@ -73,5 +77,18 @@ export function applyPresetOperations(
 ): Operations {
 	return [
 		{ op: "audio.apply_preset", args: { ...targetArgs(target), preset } },
+	];
+}
+
+// One action for a clean voice (SDD-002 C.91): the studio voice preset of an item or a track.
+export function applyVoicePresetOperations(
+	target: ProcessorTarget,
+	preset: VoicePresetId,
+): Operations {
+	return [
+		{
+			op: "audio.apply_voice_preset",
+			args: { ...targetArgs(target), preset },
+		},
 	];
 }

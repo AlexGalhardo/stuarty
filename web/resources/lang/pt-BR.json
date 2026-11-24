@@ -1316,6 +1316,9 @@
           "apply_preset": {
             "title": "Aplicar um preset de áudio"
           },
+          "apply_voice_preset": {
+            "title": "Aplicar uma voz de estúdio"
+          },
           "duck": {
             "title": "Baixar a música sob a fala"
           },
@@ -1339,6 +1342,9 @@
           "add": {
             "title": "Adicionar legenda"
           },
+          "apply_style": {
+            "title": "Aplicar um estilo de legenda"
+          },
           "edit_word": {
             "title": "Editar palavra da legenda"
           },
@@ -1347,6 +1353,9 @@
           },
           "import_subtitles": {
             "title": "Importar legendas (SRT, VTT)"
+          },
+          "list_styles": {
+            "title": "Listar os estilos de legenda"
           },
           "merge": {
             "title": "Mesclar legendas"
@@ -1373,6 +1382,9 @@
           },
           "add_composition": {
             "title": "Adicionar uma linha do tempo como clipe"
+          },
+          "blur_region": {
+            "title": "Borrar uma região de um clipe"
           },
           "set_blur": {
             "title": "Definir desfoque do clipe"
@@ -1827,6 +1839,52 @@
           "other": "{count} marcadores"
         },
         "beats_apply": "Marcar batidas"
+      },
+      "caption_gallery": {
+        "hint": "Escolha um visual para todas as legendas desta faixa. Você ainda pode mudar qualquer campo abaixo.",
+        "apply": "Usar o estilo {name}",
+        "sample": "Aa Legenda",
+        "reset_overrides": "Limpar também o estilo definido em legendas avulsas",
+        "styles": {
+          "clean_white": "Branco limpo",
+          "bold_pop": "Destaque forte",
+          "marker_yellow": "Marca-texto amarelo",
+          "soft_box": "Caixa suave",
+          "neon_night": "Noite neon",
+          "editorial": "Estilo revista",
+          "mono_code": "Código mono",
+          "karaoke_pill": "Pílula de karaokê",
+          "thick_outline": "Contorno grosso",
+          "warm_glow": "Brilho quente",
+          "lower_bar": "Barra inferior",
+          "big_center": "Grande no centro",
+          "top_headline": "Manchete no topo",
+          "ink_paper": "Tinta no papel"
+        }
+      },
+      "blur_region": {
+        "title": "Borrar uma região",
+        "hint": "Esconda um e-mail, uma chave ou um endereço. A região é uma parte da imagem; deixe o tempo vazio para borrar o clipe inteiro. O clipe não muda: o borrão é um item numa faixa Blur acima dele.",
+        "x": "Esquerda",
+        "y": "Topo",
+        "width": "Largura",
+        "height": "Altura",
+        "start": "De",
+        "duration": "Por",
+        "radius": "Força do borrão",
+        "radius_default": "Padrão forte",
+        "apply": "Borrar esta região",
+        "near_edge": "A região está perto de uma borda da imagem, onde parte da imagem nítida pode aparecer. Mova-a para dentro ou aumente-a."
+      },
+      "voice_preset": {
+        "hint": "Uma ação para uma voz limpa e uniforme. A exportação leva o som à meta de volume do projeto.",
+        "label": "Voz de estúdio",
+        "apply": "Aplicar voz de estúdio",
+        "presets": {
+          "studio": "Estúdio: natural e limpa",
+          "broadcast": "Rádio: firme e presente",
+          "room_rescue": "Resgate de sala: redução de ruído forte"
+        }
       },
       "processors": {
         "title": "Processadores de áudio",

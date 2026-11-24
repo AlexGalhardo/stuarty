@@ -299,34 +299,46 @@ func TestAudioChainMeasure(t *testing.T) {
 // loudness target of the project, within 1 LU, and lowers the noise floor (SDD-002 C.91). Both numbers are those
 // of the file the export writes.
 func TestAudioChainVoicePresetsReachTheTarget(t *testing.T) {
-	plain := readMix(t, chainDoc(t, nil), "chain-voice-presets-plain")
+	type mix struct {
+		name string
+		wav  []byte
+	}
+
+	mixes := []mix{{"plain", readMix(t, chainDoc(t, nil), "chain-voice-presets-plain")}}
+
+	for _, name := range timeline.VoicePresets {
+		doc := chainDoc(t, withItemChain(timeline.VoicePresetChain(name)...))
+		mixes = append(mixes, mix{name, readMix(t, doc, "chain-voice-preset-"+name)})
+	}
+
 	n := 2 * audio.SampleRate // the item: a second of noise, then the tone over it
 
 	const target = -14.0 // the loudness_target of a new project
 
-	p := wavMeasure(plain, 0, n)
+	var plain audio.Measurement
 
-	for _, name := range timeline.VoicePresets {
-		doc := chainDoc(t, withItemChain(timeline.VoicePresetChain(name)...))
-		if got := doc.Settings.LoudnessTarget; got != target {
-			t.Fatalf("the project target is %.1f LUFS, the test expects %.1f", got, target)
+	for i, m := range mixes {
+		got := wavMeasure(m.wav, 0, n)
+		if i == 0 {
+			plain = got
+
+			continue
 		}
 
-		v := wavMeasure(readMix(t, doc, "chain-voice-preset-"+name), 0, n)
-		if v.IntegratedLUFS == nil {
-			t.Fatalf("%s: the export is silent", name)
+		if got.IntegratedLUFS == nil {
+			t.Fatalf("%s: the export is silent", m.name)
 		}
 
 		t.Logf("%s: %.2f LUFS (target %.1f), noise floor %.2f dBFS; plain: noise floor %.2f dBFS",
-			name, *v.IntegratedLUFS, target, v.NoiseFloorDBFS, p.NoiseFloorDBFS)
+			m.name, *got.IntegratedLUFS, target, got.NoiseFloorDBFS, plain.NoiseFloorDBFS)
 
-		if *v.IntegratedLUFS < target-1 || *v.IntegratedLUFS > target+1 {
-			t.Errorf("%s: loudness %.2f LUFS, want %.1f within 1 LU", name, *v.IntegratedLUFS, target)
+		if *got.IntegratedLUFS < target-1 || *got.IntegratedLUFS > target+1 {
+			t.Errorf("%s: loudness %.2f LUFS, want %.1f within 1 LU", m.name, *got.IntegratedLUFS, target)
 		}
 
-		if v.NoiseFloorDBFS > p.NoiseFloorDBFS-6 {
+		if got.NoiseFloorDBFS > plain.NoiseFloorDBFS-6 {
 			t.Errorf("%s: the noise floor went from %.2f to %.2f dBFS, want at least 6 dB lower",
-				name, p.NoiseFloorDBFS, v.NoiseFloorDBFS)
+				m.name, plain.NoiseFloorDBFS, got.NoiseFloorDBFS)
 		}
 	}
 }

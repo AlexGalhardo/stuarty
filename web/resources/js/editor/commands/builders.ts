@@ -2109,3 +2109,57 @@ export function createCompositionOperations(
 export function expandCompositionOperations(itemId: string): Operations {
 	return [{ op: "composition.expand", args: { item_id: itemId } }];
 }
+
+// A named caption style for a track (SDD-002 C.88). The core resolves the style
+// to the stored fields; the gallery sends only its id. `resetOverrides` also
+// clears the style set on single captions of the track.
+export function captionApplyStyleOperations(
+	trackId: string,
+	style: string,
+	resetOverrides: boolean,
+): Operations {
+	return [
+		{
+			op: "caption.apply_style",
+			args: resetOverrides
+				? { track_id: trackId, style, reset_overrides: true }
+				: { track_id: trackId, style },
+		},
+	];
+}
+
+// The region is the person's choice, in fractions of the picture; the core
+// checks it, makes the Blur track and picks the radius (SDD-002 C.90). An empty
+// time or radius is left out so that the core's default applies.
+export interface BlurRegionOptions {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+	start?: string;
+	duration?: string;
+	radius?: number;
+}
+
+export function blurRegionOperations(
+	itemId: string,
+	options: BlurRegionOptions,
+): Operations {
+	return [
+		{
+			op: "clip.blur_region",
+			args: {
+				item_id: itemId,
+				x: options.x,
+				y: options.y,
+				width: options.width,
+				height: options.height,
+				...(options.start === undefined ? {} : { start: options.start }),
+				...(options.duration === undefined
+					? {}
+					: { duration: options.duration }),
+				...(options.radius === undefined ? {} : { radius: options.radius }),
+			},
+		},
+	];
+}

@@ -1,5 +1,6 @@
 import type {
 	AudioApplyPresetArgs,
+	AudioApplyVoicePresetArgs,
 	AudioProcessorAddArgs,
 } from "@/generated/commands";
 import registry from "@/generated/commands.json";
@@ -50,3 +51,10 @@ export const MAX_PROCESSORS: number = params?.["x-vv-max-processors"] ?? 0;
 export const AUDIO_PRESETS: readonly AudioPresetId[] = (schemaOf(
 	"audio.apply_preset",
 )?.properties?.preset?.enum ?? []) as readonly AudioPresetId[];
+
+export type VoicePresetId = NonNullable<AudioApplyVoicePresetArgs["preset"]>;
+
+// The studio voice presets of audio.apply_voice_preset, in the order of the registry (the first is the default).
+export const VOICE_PRESETS: readonly VoicePresetId[] = (schemaOf(
+	"audio.apply_voice_preset",
+)?.properties?.preset?.enum ?? []) as readonly VoicePresetId[];

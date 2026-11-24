@@ -125,6 +125,9 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"timeline.track_move": ["track.move"],
 	"timeline.track_remove": ["track.remove"],
 	"inspector.track_caption_style": ["track.set_caption_style"],
+	"inspector.caption_gallery": ["caption.apply_style"],
+	"inspector.blur_region": ["clip.blur_region"],
+	"inspector.voice_preset": ["audio.apply_voice_preset"],
 	"palette.run": [ANY_COMMAND],
 };
 
@@ -152,6 +155,10 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		{ kind: "inspector", action: "inspector.audio_processors" },
 		palette,
 	],
+	"audio.apply_voice_preset": [
+		{ kind: "inspector", action: "inspector.voice_preset" },
+		palette,
+	],
 	"audio.duck": [{ kind: "inspector", action: "inspector.duck" }, palette],
 	"audio.processor_add": [
 		{ kind: "inspector", action: "inspector.audio_processors" },
@@ -174,6 +181,11 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		palette,
 	],
 	"caption.add": [{ kind: "toolbar", action: "caption.add" }, palette],
+	"caption.apply_style": [
+		{ kind: "inspector", action: "inspector.caption_gallery" },
+		palette,
+	],
+	"caption.list_styles": [palette],
 	"caption.edit_word": [
 		{ kind: "gesture", action: "timeline.edit_word" },
 		{ kind: "inspector", action: "inspector.word_text" },
@@ -233,6 +245,10 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 		palette,
 	],
 	"clip.replace_media": [palette],
+	"clip.blur_region": [
+		{ kind: "inspector", action: "inspector.blur_region" },
+		palette,
+	],
 	"clip.set_blur": [{ kind: "inspector", action: "inspector.blur" }, palette],
 	"clip.set_chroma_key": [
 		{ kind: "inspector", action: "inspector.chroma_key" },
