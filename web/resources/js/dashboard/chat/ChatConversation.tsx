@@ -18,10 +18,14 @@ import { PersonOnlyNote, useSession } from "@/lib/session";
 import ActivityStrip from "./ActivityStrip";
 import ChatEventView from "./ChatEventView";
 import { canSend, isBusy, isVisible, openRequests } from "./chatState";
+import StarterPrompts from "./StarterPrompts";
 import type { ChatPanelState } from "./useChat";
 
 const SELECT =
 	"h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
+
+const isPersonTurn = (e: { kind: string }): boolean =>
+	e.kind === "user_message";
 
 // The conversation: the project and the agent, what was said, and the box to say more. It draws
 // what the service says; whether a message may be sent is the state the server reports.
@@ -189,7 +193,7 @@ export default function ChatConversation({
 					</>
 				)}
 			</div>
-			<p className="text-xs text-muted-foreground" data-testid="chat-state">
+			<p className="text-xs text-text-muted" data-testid="chat-state">
 				{session === null
 					? t("ui.chat.no_session")
 					: `${t(`ui.chat.state_${state ?? "idle"}`)} · ${
@@ -233,7 +237,7 @@ export default function ChatConversation({
 					}
 					lastTop.current = el.scrollTop;
 				}}
-				className="min-h-40 flex-1 overflow-y-auto rounded-lg border p-2 focus-visible:ring-3 focus-visible:ring-ring/50"
+				className="min-h-40 flex-1 overflow-y-auto rounded-lg border border-border bg-surface-sunken p-2 focus-visible:ring-3 focus-visible:ring-ring/50"
 				data-testid="chat-log"
 			>
 				<ol className="flex flex-col gap-2">
@@ -244,11 +248,28 @@ export default function ChatConversation({
 							open={waiting.has(event.permission?.request_id ?? "")}
 							busy={chat.busy}
 							personOnly={personOnly}
+							agent={session?.profile ?? null}
+							activity={chat.activity}
 							onAnswer={(id, answer) => void chat.answer(id, answer)}
 						/>
 					))}
 				</ol>
 			</div>
+			{session !== null && canSend(state) && !events.some(isPersonTurn) && (
+				<StarterPrompts
+					kind={
+						(
+							chat.projects.find((p) => p.id === chat.projectId) as
+								| { kind?: string }
+								| undefined
+						)?.kind
+					}
+					onPick={(sentence) => {
+						setText(sentence);
+						composerRef.current?.focus();
+					}}
+				/>
+			)}
 			<form
 				onSubmit={(event) => void submit(event)}
 				className="flex flex-col gap-2"
@@ -268,7 +289,7 @@ export default function ChatConversation({
 					className="min-h-16"
 				/>
 				<div className="flex items-center justify-between gap-2">
-					<span className="text-xs text-muted-foreground">
+					<span className="text-xs text-text-muted">
 						{t("ui.chat.composer_hint")}
 					</span>
 					<Button

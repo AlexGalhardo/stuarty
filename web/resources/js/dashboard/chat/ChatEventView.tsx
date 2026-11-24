@@ -1,10 +1,49 @@
 import { Link } from "@inertiajs/react";
+import {
+	Bot,
+	Brain,
+	ListChecks,
+	ShieldQuestion,
+	Sparkles,
+	SquareTerminal,
+	User,
+} from "lucide-react";
 import type { ReactNode } from "react";
 
+import { type Status, StatusBadge } from "@/components/StatusBadge";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
-import type { ChatEvent } from "../../editor/api/types";
+import type { ChatActivity, ChatEvent } from "../../editor/api/types";
+import ActivityStrip from "./ActivityStrip";
+
+const BODY = "whitespace-pre-wrap break-words text-sm text-text";
+
+// The word of a tool status, with its tone: a word and an icon, never a colour alone.
+const TOOL_STATUS: Record<
+	NonNullable<NonNullable<ChatEvent["tool"]>["status"]>,
+	Status
+> = {
+	pending: "waiting",
+	in_progress: "agent",
+	completed: "success",
+	failed: "danger",
+};
+
+function Who({
+	icon: Icon,
+	children,
+}: {
+	icon: typeof Bot;
+	children: ReactNode;
+}): ReactNode {
+	return (
+		<p className="flex items-center gap-1.5 text-xs font-medium text-text-muted">
+			<Icon aria-hidden="true" className="size-3.5 shrink-0" />
+			{children}
+		</p>
+	);
+}
 
 // One line of the conversation. Everything the agent wrote is a string drawn as a text node: no
 // HTML, no Markdown, no link made from it. A URL in it is text, in full (SDD-017 section 8).
@@ -13,6 +52,8 @@ export default function ChatEventView({
 	open,
 	busy,
 	personOnly,
+	agent,
+	activity = null,
 	onAnswer,
 }: {
 	event: ChatEvent;
@@ -21,10 +62,13 @@ export default function ChatEventView({
 	busy: boolean;
 	// the id of the note that says why, in a session that is not a person's: the server refuses its answer
 	personOnly?: string;
+	// the agent that runs the session (untrusted text) and what it is doing, for the card of a request that waits:
+	// the same fields the scene bar shows, from the same state
+	agent?: string | null;
+	activity?: ChatActivity | null;
 	onAnswer(requestId: string, answer: "allow" | "reject" | "cancel"): void;
 }): ReactNode {
 	const t = useT();
-	const body = "whitespace-pre-wrap break-words text-sm";
 	const cannotAnswer = busy || personOnly !== undefined;
 
 	switch (event.kind) {
@@ -32,12 +76,10 @@ export default function ChatEventView({
 			return (
 				<li
 					data-testid="chat-user"
-					className="ms-6 rounded-lg bg-primary/10 px-3 py-2"
+					className="ms-8 rounded-lg bg-accent-soft px-3 py-2"
 				>
-					<p className="text-xs font-medium text-muted-foreground">
-						{t("ui.chat.you")}
-					</p>
-					<p className={body}>
+					<Who icon={User}>{t("ui.chat.you")}</Who>
+					<p className={BODY}>
 						<UntrustedText>{event.text}</UntrustedText>
 					</p>
 				</li>
@@ -46,33 +88,28 @@ export default function ChatEventView({
 			return (
 				<li
 					data-testid="chat-agent"
-					className="me-6 rounded-lg border bg-card px-3 py-2"
+					className="me-8 rounded-lg border border-border bg-surface px-3 py-2"
 				>
-					<p className="text-xs font-medium text-muted-foreground">
-						{t("ui.chat.agent")}
-					</p>
-					<p className={body}>
+					<Who icon={Bot}>{t("ui.chat.agent")}</Who>
+					<p className={BODY}>
 						<UntrustedText>{event.text}</UntrustedText>
 					</p>
 				</li>
 			);
 		case "agent_thought":
 			return (
-				<li
-					data-testid="chat-thought"
-					className="me-6 px-3 text-muted-foreground"
-				>
-					<p className="text-xs font-medium">{t("ui.chat.thought")}</p>
-					<p className={`${body} italic`}>
+				<li data-testid="chat-thought" className="me-8 px-3 text-text-muted">
+					<Who icon={Brain}>{t("ui.chat.thought")}</Who>
+					<p className={`${BODY} italic text-text-muted`}>
 						<UntrustedText>{event.text}</UntrustedText>
 					</p>
 				</li>
 			);
 		case "plan":
 			return (
-				<li data-testid="chat-plan" className="me-6 px-3 text-muted-foreground">
-					<p className="text-xs font-medium">{t("ui.chat.plan")}</p>
-					<p className={body}>
+				<li data-testid="chat-plan" className="me-8 px-3 text-text-muted">
+					<Who icon={ListChecks}>{t("ui.chat.plan")}</Who>
+					<p className={`${BODY} text-text-muted`}>
 						<UntrustedText>{event.text}</UntrustedText>
 					</p>
 				</li>
@@ -81,20 +118,24 @@ export default function ChatEventView({
 			return (
 				<li
 					data-testid="chat-tool"
-					className="me-6 rounded-lg border border-dashed px-3 py-2"
+					className="me-8 rounded-lg border border-dashed border-agent-border px-3 py-2"
 				>
-					<p className="text-xs font-medium text-muted-foreground">
-						{t("ui.chat.tool")}{" "}
+					<div className="flex flex-wrap items-center justify-between gap-2">
+						<Who icon={SquareTerminal}>{t("ui.chat.tool")}</Who>
 						<span data-testid="chat-tool-status">
-							{t(`ui.chat.tool_status_${event.tool?.status ?? "pending"}`)}
+							<StatusBadge
+								status={TOOL_STATUS[event.tool?.status ?? "pending"]}
+							>
+								{t(`ui.chat.tool_status_${event.tool?.status ?? "pending"}`)}
+							</StatusBadge>
 						</span>
-					</p>
-					<p className={body}>
+					</div>
+					<p className={BODY}>
 						<UntrustedText>{event.tool?.title}</UntrustedText>
 					</p>
 					{event.tool?.output !== undefined && event.tool.output !== "" && (
 						<pre
-							className="mt-1 max-h-40 overflow-auto rounded bg-muted p-2 text-xs whitespace-pre-wrap break-words"
+							className="mt-1 max-h-40 overflow-auto rounded bg-surface-sunken p-2 text-xs whitespace-pre-wrap break-words text-text"
 							data-testid="chat-tool-output"
 						>
 							<UntrustedText>{event.tool.output}</UntrustedText>
@@ -106,52 +147,67 @@ export default function ChatEventView({
 			return (
 				<li
 					data-testid="chat-permission"
-					className="me-6 rounded-lg border-2 border-ring px-3 py-2"
+					className="me-4 flex flex-col gap-2 rounded-lg border-2 border-warning-text bg-warning-soft px-3 py-3"
 				>
-					<p className="text-xs font-medium">{t("ui.chat.permission_title")}</p>
+					<Who icon={ShieldQuestion}>{t("ui.chat.permission_title")}</Who>
 					<p
-						className={`${body} font-medium`}
+						className={`${BODY} font-semibold`}
 						data-testid="chat-permission-title"
 					>
 						<UntrustedText>{event.permission?.title}</UntrustedText>
 					</p>
-					{open ? (
-						<div className="mt-2 flex flex-wrap items-center gap-2">
-							<Button
-								size="sm"
-								disabled={cannotAnswer}
-								aria-describedby={personOnly}
-								onClick={() =>
-									onAnswer(event.permission?.request_id ?? "", "allow")
-								}
-							>
-								{t("ui.chat.allow_once")}
-							</Button>
-							<Button
-								size="sm"
-								variant="outline"
-								disabled={cannotAnswer}
-								aria-describedby={personOnly}
-								onClick={() =>
-									onAnswer(event.permission?.request_id ?? "", "reject")
-								}
-							>
-								{t("ui.chat.reject")}
-							</Button>
-							<Button
-								size="sm"
-								variant="ghost"
-								disabled={cannotAnswer}
-								aria-describedby={personOnly}
-								onClick={() =>
-									onAnswer(event.permission?.request_id ?? "", "cancel")
-								}
-							>
-								{t("ui.chat.cancel_request")}
-							</Button>
-						</div>
-					) : null}
-					<p className="mt-2 text-xs text-muted-foreground">
+					{open && (
+						<>
+							{agent !== undefined && agent !== null && agent !== "" && (
+								<p
+									className="text-xs text-text-muted"
+									data-testid="chat-permission-agent"
+								>
+									{`${t("ui.chat.agent_label")}: `}
+									<UntrustedText>{agent}</UntrustedText>
+								</p>
+							)}
+							<ActivityStrip activity={activity} />
+							<div className="flex flex-wrap items-center gap-2">
+								<Button
+									size="sm"
+									disabled={cannotAnswer}
+									aria-describedby={personOnly}
+									onClick={() =>
+										onAnswer(event.permission?.request_id ?? "", "allow")
+									}
+								>
+									{t("ui.chat.allow_once")}
+								</Button>
+								<Button
+									size="sm"
+									variant="outline"
+									disabled={cannotAnswer}
+									aria-describedby={personOnly}
+									onClick={() =>
+										onAnswer(event.permission?.request_id ?? "", "reject")
+									}
+								>
+									{t("ui.chat.reject")}
+								</Button>
+								<Button
+									size="sm"
+									variant="ghost"
+									disabled={cannotAnswer}
+									aria-describedby={personOnly}
+									onClick={() =>
+										onAnswer(event.permission?.request_id ?? "", "cancel")
+									}
+								>
+									{t("ui.chat.cancel_request")}
+								</Button>
+							</div>
+							<p className="text-xs text-text-muted">
+								{t("ui.chat.same_as_bar")}
+							</p>
+						</>
+					)}
+					<p className="text-xs text-text-muted">
 						{t("ui.chat.approvals_note")}{" "}
 						<Link href="/approvals" className="underline">
 							{t("ui.chat.approvals_link")}
@@ -161,10 +217,7 @@ export default function ChatEventView({
 			);
 		case "permission_answer":
 			return (
-				<li
-					data-testid="chat-answer"
-					className="px-3 text-xs text-muted-foreground"
-				>
+				<li data-testid="chat-answer" className="px-3 text-xs text-text-muted">
 					{t(`ui.chat.answer_${event.permission?.answer ?? "cancel"}`)}{" "}
 					<UntrustedText>{event.permission?.title}</UntrustedText>
 				</li>
@@ -173,18 +226,16 @@ export default function ChatEventView({
 			return (
 				<li
 					data-testid="chat-skill"
-					className="px-3 text-sm text-muted-foreground"
+					className="flex flex-wrap items-center gap-1.5 px-3 text-sm text-agent-text"
 				>
+					<Sparkles aria-hidden="true" className="size-3.5 shrink-0" />
 					{t("ui.chat.skill_loaded")}:{" "}
 					<UntrustedText>{event.skill?.name}</UntrustedText>
 				</li>
 			);
 		case "notice":
 			return (
-				<li
-					data-testid="chat-notice"
-					className="px-3 text-xs text-muted-foreground"
-				>
+				<li data-testid="chat-notice" className="px-3 text-xs text-text-muted">
 					<UntrustedText>{event.text}</UntrustedText>
 				</li>
 			);

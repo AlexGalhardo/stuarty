@@ -3522,9 +3522,33 @@
       "cancel_request": "Cancel",
       "approvals_note": "Publications and costly generations are decided in Approvals, not here.",
       "approvals_link": "Open Approvals",
+      "same_as_bar": "The bar at the bottom of the page and the notification center show this same request: answering it in any of them answers it everywhere.",
       "answer_allow": "You allowed:",
       "answer_reject": "You rejected:",
-      "answer_cancel": "Cancelled:"
+      "answer_cancel": "Cancelled:",
+      "starters": "Ask the agent",
+      "starter": {
+        "text": {
+          "outline": "Outline this text in five parts.",
+          "tighten": "Tighten this text and keep my voice.",
+          "headlines": "Suggest ten headlines for this text."
+        },
+        "video": {
+          "script": "Write a short script for this video.",
+          "captions": "Suggest the captions for this video.",
+          "hook": "Suggest three hooks for the first seconds."
+        },
+        "image": {
+          "describe": "Describe what this image should show.",
+          "variants": "Suggest three variants of this image.",
+          "alt": "Write the alternative text for this image."
+        },
+        "neutral": {
+          "summary": "Summarise what this project holds.",
+          "next": "What should I do next in this project?",
+          "ideas": "Give me three ideas for this project."
+        }
+      }
     },
     "keys": {
       "title": "API keys",

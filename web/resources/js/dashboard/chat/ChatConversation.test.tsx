@@ -121,3 +121,49 @@ describe("the chat in a session that is not a person's (VV-331)", () => {
 		expect(html).not.toContain("person-only");
 	});
 });
+
+describe("the starter prompts follow the kind of the project (D-134)", () => {
+	function drawIdle(kind: string | undefined, said = false): string {
+		const idle = {
+			...chat,
+			session: { ...session, state: "idle" },
+			events: said ? [{ seq: 1, kind: "user_message", at, text: "hi" }] : [],
+			projects: [{ id: "prj_1", name: "A project", kind }],
+		} as unknown as ChatPanelState;
+		return renderToString(
+			<I18nProvider messages={messages} locale="en" locales={["en", "pt-BR"]}>
+				<SessionProvider session={{ privileged: true, mode: "local" }}>
+					<ChatConversation
+						chat={idle}
+						composerRef={createRef<HTMLTextAreaElement>()}
+					/>
+				</SessionProvider>
+			</I18nProvider>,
+		);
+	}
+
+	test("a text project is offered prompts about text, and none about clips or frames", () => {
+		const html = drawIdle("text");
+		expect(html).toContain('data-kind="text"');
+		expect(html).toContain("Tighten this text");
+		const starters =
+			/<section[^>]*chat-starters[\s\S]*?<\/section>/.exec(html)?.[0] ?? "";
+		expect(starters.replace(/<[^>]*>/g, " ")).not.toMatch(
+			/video|clip|frame|caption|image/i,
+		);
+	});
+
+	test("a video project is offered prompts about the video", () => {
+		expect(drawIdle("video")).toContain("Write a short script for this video.");
+	});
+
+	test("an undecided project gets neutral prompts", () => {
+		const html = drawIdle("undecided");
+		expect(html).toContain('data-kind="neutral"');
+		expect(html).toContain("Summarise what this project holds.");
+	});
+
+	test("they go away once the person has said something", () => {
+		expect(drawIdle("text", true)).not.toContain("chat-starters");
+	});
+});

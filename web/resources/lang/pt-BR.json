@@ -3522,9 +3522,33 @@
       "cancel_request": "Cancelar",
       "approvals_note": "Publicações e gerações com custo são decididas em Aprovações, não aqui.",
       "approvals_link": "Abrir Aprovações",
+      "same_as_bar": "A barra no fim da página e a central de notificações mostram este mesmo pedido: responder em qualquer um deles responde em todos.",
       "answer_allow": "Você permitiu:",
       "answer_reject": "Você recusou:",
-      "answer_cancel": "Cancelado:"
+      "answer_cancel": "Cancelado:",
+      "starters": "Pergunte ao agente",
+      "starter": {
+        "text": {
+          "outline": "Faça um esboço deste texto em cinco partes.",
+          "tighten": "Enxugue este texto e mantenha a minha voz.",
+          "headlines": "Sugira dez títulos para este texto."
+        },
+        "video": {
+          "script": "Escreva um roteiro curto para este vídeo.",
+          "captions": "Sugira as legendas deste vídeo.",
+          "hook": "Sugira três ganchos para os primeiros segundos."
+        },
+        "image": {
+          "describe": "Descreva o que esta imagem deve mostrar.",
+          "variants": "Sugira três variações desta imagem.",
+          "alt": "Escreva o texto alternativo desta imagem."
+        },
+        "neutral": {
+          "summary": "Resuma o que este projeto contém.",
+          "next": "O que devo fazer em seguida neste projeto?",
+          "ideas": "Dê-me três ideias para este projeto."
+        }
+      }
     },
     "keys": {
       "title": "Chaves de API",
