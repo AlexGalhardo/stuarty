@@ -2692,6 +2692,7 @@
       "signin": {
         "title": "Entrar no Stuarty",
         "intro": "O Stuarty fica trancado até você entrar. Nenhuma página, comando ou agente lê os seus dados antes disso.",
+        "intro_open": "Entre com a sua senha para usar o Stuarty como você mesmo.",
         "submit": "Entrar",
         "forgot": "Esqueci a minha senha"
       },
