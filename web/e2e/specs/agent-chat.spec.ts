@@ -363,8 +363,12 @@ test.describe("agent chat", () => {
 		await expect(ask.locator("b")).toHaveCount(0);
 		// the card names what the scene bar names: the agent, the skill and the tool, from one server state
 		await expect(ask.getByTestId("chat-permission-agent")).toContainText("ask");
-		await expect(ask.getByTestId("chat-activity-skill")).toBeVisible();
-		await expect(ask.getByTestId("chat-activity-tool")).toBeVisible();
+		await expect(
+			ask.getByTestId("chat-permission-activity-skill"),
+		).toBeVisible();
+		await expect(
+			ask.getByTestId("chat-permission-activity-tool"),
+		).toBeVisible();
 		const bar = page.getByTestId("scene-bar");
 		await expect(bar).toHaveAttribute("data-variant", "waiting");
 		await expect(page.getByTestId("scene-allow")).toBeVisible();

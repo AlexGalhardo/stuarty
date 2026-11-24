@@ -216,9 +216,9 @@ describe("ChatEventView: the card of a request that waits shows what the scene b
 	test("names the agent, the skill and its state, and the tool, as text", () => {
 		const html = drawWith(true);
 		expect(html).toContain('data-testid="chat-permission-agent"');
-		expect(html).toContain('data-testid="chat-activity-skill"');
+		expect(html).toContain('data-testid="chat-permission-activity-skill"');
 		expect(html).toContain("loaded in this session");
-		expect(html).toContain('data-testid="chat-activity-tool"');
+		expect(html).toContain('data-testid="chat-permission-activity-tool"');
 		expect(html).toContain("stuarty_delete_clips");
 		expect(html).not.toContain("<img");
 		expect(html.match(/&lt;img/g)?.length).toBeGreaterThanOrEqual(3);
@@ -232,7 +232,7 @@ describe("ChatEventView: the card of a request that waits shows what the scene b
 
 	test("shows none of it once the request was answered", () => {
 		const html = drawWith(false);
-		expect(html).not.toContain("chat-activity");
+		expect(html).not.toContain("chat-permission-activity");
 		expect(html).not.toContain("chat-permission-agent");
 	});
 });

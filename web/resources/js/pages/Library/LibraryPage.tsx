@@ -150,28 +150,6 @@ export default function LibraryPage({
 				<PageHeader
 					title={t(`ui.nav.section.${section}`)}
 					description={t(`ui.library.intro.${kind}`)}
-					actions={
-						<>
-							<Button
-								type="button"
-								onClick={() => {
-									if (!confirmDiscard(t("ui.unsaved.leave"))) return;
-									setCreating(true);
-									setSelected(null);
-									setPaneKey((k) => k + 1);
-								}}
-							>
-								{t("ui.library.new")}
-							</Button>
-							<Button
-								type="button"
-								variant="outline"
-								onClick={() => void rescan()}
-							>
-								{t("ui.library.rescan")}
-							</Button>
-						</>
-					}
 				/>
 				<div className="flex flex-wrap items-end gap-2">
 					<search className="flex-1">
@@ -193,6 +171,20 @@ export default function LibraryPage({
 							</Button>
 						</form>
 					</search>
+					<Button
+						type="button"
+						onClick={() => {
+							if (!confirmDiscard(t("ui.unsaved.leave"))) return;
+							setCreating(true);
+							setSelected(null);
+							setPaneKey((k) => k + 1);
+						}}
+					>
+						{t("ui.library.new")}
+					</Button>
+					<Button type="button" variant="outline" onClick={() => void rescan()}>
+						{t("ui.library.rescan")}
+					</Button>
 				</div>
 				{notice !== null && <Notice tone="info" role="status" title={notice} />}
 				<FailureNote failure={failure} />
