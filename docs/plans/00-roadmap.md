@@ -125,7 +125,7 @@ Author decisions D-134 and D-137. Epic 74 can start now, and so can epic 87, bec
 | Epic | Title | Size | Depends on | Status |
 | --- | --- | --- | --- | --- |
 | [74](74-ui-foundation-tokens-and-components.md) | UI foundation: tokens, type and base components | L | — | DONE (2026-11-24, `8d92f0128`..`553c21580`) |
-| [75](75-app-shell-sidebar-topbar-scene-bar.md) | App shell: sidebar, top bar, scene bar and notification center | L | 57, 74 | TODO |
+| [75](75-app-shell-sidebar-topbar-scene-bar.md) | App shell: sidebar, top bar, scene bar and notification center | L | 57, 74 | DONE (2026-11-24, `cd4d39254`..`fbd5d82de`) |
 | [76](76-agent-activity-read-model.md) | Agent activity: skill, skill state, tool and plain description | L | 57, 75 | TODO |
 | [77](77-unified-requests-read-model.md) | One read of everything that waits for a person | L | 57, 75, 76 | TODO |
 | [78](78-project-kind-and-workflow.md) | Project kind and the workflow per kind | L | 57 | TODO |
