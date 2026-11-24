@@ -52,7 +52,7 @@ None new.
 - [x] 3. The inspector, masks and filters. Verify: `cd web && bun run test -- inspector` passes.
 - [x] 4. Templates, import, export and error bar. Verify: `cd web && bun run e2e -- image` passes.
 - [x] 5. Mount the scene bar. Verify: `cd web && bun run e2e -- scene-bar` passes.
-- [ ] 6. Thin client and widths. Verify: `cd web && bun run check:thin-client` and `bun run e2e -- a11y` pass.
+- [x] 6. Thin client and widths. Verify: `cd web && bun run check:thin-client` and `bun run e2e -- a11y` pass.
 
 ## Test strategy
 

@@ -31,7 +31,8 @@ export default function HistoryPanel(): ReactNode {
 			data-testid="image-history"
 			className={cn(
 				"flex shrink-0 flex-col border-t border-border bg-ed-panel",
-				open && "h-72",
+				// at most 40% of the column, so the inspector keeps the room on a short window
+				open && "h-72 max-h-[40%]",
 			)}
 		>
 			<h2 id="image-history-title" className="m-0 text-sm font-semibold">
