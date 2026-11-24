@@ -14,6 +14,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/internal/testfs"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 	"github.com/AlexGalhardo/stuarty/web/app/auth"
@@ -61,7 +62,11 @@ func startOwnerBehind(tb testing.TB, wrap func(http.Handler) http.Handler) works
 		tb.Fatal(err)
 	}
 
-	tb.Cleanup(func() { _ = st.Close() })
+	tb.Cleanup(func() {
+		_ = st.Close()
+
+		testfs.Released(tb, dir.Path("db.sqlite"))
+	})
 
 	svc, err := service.New(service.Options{Store: st})
 	if err != nil {

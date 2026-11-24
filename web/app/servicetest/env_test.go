@@ -16,6 +16,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/internal/testfs"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/testproject"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
@@ -93,7 +94,11 @@ func newEnvWith(tb testing.TB, with func(e *env, o *service.Options)) *env {
 		tb.Fatal(err)
 	}
 
-	tb.Cleanup(func() { _ = st.Close() })
+	tb.Cleanup(func() {
+		_ = st.Close()
+
+		testfs.Released(tb, e.dir.Path("db.sqlite"))
+	})
 
 	e.store = st
 
