@@ -80,6 +80,8 @@ export default function Approvals(): ReactNode {
 				<ApprovalQueue
 					requests={queue.requests ?? []}
 					context={context}
+					loading={queue.requests === null}
+					failed={queue.failure !== null}
 					destinations={destinations}
 					busyId={queue.busyId}
 					live={queue.live}

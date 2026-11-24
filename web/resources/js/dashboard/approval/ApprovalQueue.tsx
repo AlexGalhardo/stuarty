@@ -192,6 +192,8 @@ export default function ApprovalQueue({
 	requests,
 	destinations,
 	context = {},
+	loading = false,
+	failed = false,
 	busyId,
 	live,
 	onDecide,
@@ -200,6 +202,10 @@ export default function ApprovalQueue({
 	destinations: Readonly<Record<string, string>>;
 	// what the service says about each request beyond the request itself, by id
 	context?: Readonly<Record<string, ApprovalContext>>;
+	// the first answer has not come: the queue is not empty, it is not known yet
+	loading?: boolean;
+	// the read failed: the page shows the failure and the queue says nothing about being empty
+	failed?: boolean;
 	busyId: string | null;
 	live: boolean;
 	onDecide(id: string, decision: "approve" | "reject", reason: string): void;
@@ -266,12 +272,15 @@ export default function ApprovalQueue({
 				</div>
 			)}
 			{requests.length === 0 ? (
-				<p
-					className="mt-4 text-sm text-muted-foreground"
-					data-testid="approval-empty"
-				>
-					{t("ui.approvals.empty")}
-				</p>
+				// The queue not read is not an empty queue: "nothing is waiting" is said only when the service said so.
+				loading && failed ? null : (
+					<p
+						className="mt-4 text-sm text-muted-foreground"
+						data-testid={loading ? "approval-loading" : "approval-empty"}
+					>
+						{loading ? t("ui.approvals.loading") : t("ui.approvals.empty")}
+					</p>
+				)
 			) : (
 				<ul className="mt-4 divide-y rounded-xl border bg-card text-card-foreground">
 					{requests.map((request) => (
