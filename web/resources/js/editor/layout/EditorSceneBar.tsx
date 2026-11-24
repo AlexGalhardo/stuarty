@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
 
-import { useApprovalQueue } from "@/dashboard/approval/useApprovalQueue";
 import { useChat } from "@/dashboard/chat/useChat";
 import { SessionProvider } from "@/lib/session";
 import SceneBar from "../../shell/SceneBar";
 import { ShellProvider, useShell } from "../../shell/ShellContext";
 import { projectNameOf, sceneOf } from "../../shell/sceneState";
+import { useInbox } from "../../shell/useInbox";
 import { usePageVisible } from "../../shell/usePageVisible";
 
 function Bar({ projectId }: { projectId: string }): ReactNode {
@@ -40,10 +40,10 @@ export default function EditorSceneBar({
 	// The streams are held only while the tab is on the screen, as on every dashboard page (usePageVisible).
 	const visible = usePageVisible();
 	const chat = useChat(visible, projectId);
-	const approvals = useApprovalQueue(visible);
+	const inbox = useInbox(visible);
 	return (
 		<SessionProvider session={{ privileged, mode }}>
-			<ShellProvider chat={chat} approvals={approvals}>
+			<ShellProvider chat={chat} inbox={inbox}>
 				<Bar projectId={projectId} />
 			</ShellProvider>
 		</SessionProvider>
