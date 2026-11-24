@@ -483,13 +483,13 @@ type BriefResult struct {
 // The guided briefing (SDD-005 §5.12.1).
 type BriefingQuestionsRequest struct {
 	ProjectID string `json:"project_id,omitempty"` // with a project, the result also holds what its brief answers
-	Kind      string `json:"kind,omitempty"`       // short (the default), commercial or long: the set of questions (SDD-018 section 17)
+	Kind      string `json:"kind,omitempty"`       // short, commercial, long, text or image: the set of questions; left out, the set of the kind of the project (SDD-018 section 17)
 }
 type BriefingQuestion struct {
 	ID       string   `json:"id"`
 	Heading  string   `json:"heading"`
 	Text     string   `json:"text"`
-	Kind     string   `json:"kind"` // text, choice, seconds or date
+	Kind     string   `json:"kind"` // text, choice, seconds, words or date
 	Required bool     `json:"required"`
 	Options  []string `json:"options,omitempty"`
 	MaxChars int      `json:"max_chars,omitempty"`
@@ -502,16 +502,17 @@ type BriefingAnswer struct {
 }
 type BriefingQuestionsResult struct {
 	Envelope
-	ProjectID string             `json:"project_id,omitempty"`
-	Questions []BriefingQuestion `json:"questions"`
-	HasBrief  bool               `json:"has_brief"`
-	Guided    bool               `json:"guided"` // the brief was written by the briefing; Answers holds its answers
-	Answers   []BriefingAnswer   `json:"answers,omitempty"`
-	Text      string             `json:"text"`
+	ProjectID      string             `json:"project_id,omitempty"`
+	ProductionKind string             `json:"production_kind"` // the set the questions belong to
+	Questions      []BriefingQuestion `json:"questions"`
+	HasBrief       bool               `json:"has_brief"`
+	Guided         bool               `json:"guided"` // the brief was written by the briefing; Answers holds its answers
+	Answers        []BriefingAnswer   `json:"answers,omitempty"`
+	Text           string             `json:"text"`
 }
 type BriefingAnswerRequest struct {
 	ProjectID string            `json:"project_id"`
-	Kind      string            `json:"kind,omitempty"`    // short (the default), commercial or long
+	Kind      string            `json:"kind,omitempty"`    // short, commercial, long, text or image; left out, the set of the kind of the project
 	Answers   map[string]string `json:"answers"` // question id to answer; they replace the brief
 	Replace   bool              `json:"replace,omitempty"` // allow replacing a brief written by hand
 	DryRun    bool              `json:"dry_run,omitempty"`
@@ -3394,7 +3395,7 @@ The `image` tool is the image documents of SDD-021 behind one tool, as `template
 ```json
 {
   "name": "project_item",
-  "description": "Items. add: timeline (id: timeline_id), text, output (export job_id); move, rename, trash, restore: item_id; brief: read, or write text (empty clears); briefing: questions, or answers {id: text}, production_kind (default short); text: list, read (item_id) or write (text, title, text_kind); revisions (revision, until); revert (revision); check: caption (network), script (wpm), post; update: title=name, text=description, goal; skip/unskip: title=step.",
+  "description": "add: timeline (id: timeline_id), text, output (export job_id); move, rename, trash, restore: item_id; brief: read, or write text (empty clears); briefing: questions or answers {id: text}, production_kind (auto); text: list, read (item_id) or write (text, title, text_kind); revisions (revision, until); revert (revision); check: caption (network), script (wpm), post; update: title=name, text=description, goal; skip/unskip: title=step.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -3472,7 +3473,9 @@ The `image` tool is the image documents of SDD-021 behind one tool, as `template
         "enum": [
           "short",
           "commercial",
-          "long"
+          "long",
+          "text",
+          "image"
         ]
       },
       "goal": {
@@ -3854,7 +3857,7 @@ Every command that reads or edits a timeline (those whose result is about one do
 | `project:step` | `project:step <project id> <step> [--restore]` | `--restore` bool: put a skipped step back | `--dry-run` | `ProjectStepSkipResult` |
 | `brief:show` | `brief:show --project <id>` | none | none | `BriefResult` |
 | `brief:set` | `brief:set --project <id> --text <file\|->` | `--text` required: the Markdown, from a file or standard input | the text with `--text -` | `BriefResult` |
-| `briefing:questions` | `briefing:questions [--project <id>] [--kind short\|commercial\|long]` | `--project` string, optional: also the answers its brief holds; `--kind` string, default `short`: the set of questions | none | `BriefingQuestionsResult` |
+| `briefing:questions` | `briefing:questions [--project <id>] [--kind short\|commercial\|long\|text\|image]` | `--project` string, optional: also the answers its brief holds; `--kind` string, default the set of the kind of the project (`short` with no project): the set of questions | none | `BriefingQuestionsResult` |
 | `text:list` | `text:list [--project <id>] [--kind script\|copy\|caption] [--state active\|trashed] [--cursor c] [--limit n]` | none required | none | `TextListResult` |
 | `text:show` | `text:show <item> --project <id> [--revision n]` | none | none | `TextGetResult` |
 | `text:write` | `text:write [<item>] --project <id> --text <file\|-> [--title t] [--kind script\|copy\|caption] [--base n] [--dry-run]` | `--text` required; `--title` needed to make a text | the Markdown with `--text -` | `TextWriteResult` |
@@ -3863,7 +3866,7 @@ Every command that reads or edits a timeline (those whose result is about one do
 | `text:draft` | `text:draft <item> --project <id> --connection <id> --model <id> --instruction <text> [--network n] [--max-tokens n] [--temperature t] [--dry-run]` | `--connection`, `--model`, `--instruction` required; the job waits for approval | none | `Job` |
 | `caption:validate` | `caption:validate [<item>] [--project <id>] [--network n] [--body <file\|->] [--text <file\|->]` | one of `<item>`, `--body`, `--text` (with `--network`) | the text with `-` | `CaptionValidateResult` |
 | `script:estimate` | `script:estimate [<item>] [--project <id>] [--text <file\|->] [--wpm n]` | one of `<item>`, `--text` | the text with `--text -` | `ScriptEstimateResult` |
-| `briefing:answer` | `briefing:answer --project <id> [--kind short\|commercial\|long] (--answer <id>=<text>)... [--answers <file\|->] [--replace] [--dry-run]` | `--kind` string, default `short`; `--answer` string, repeatable; `--answers` string, a JSON object of question id to answer; `--replace` bool false, replaces a brief written by hand | the JSON with `--answers -` | `BriefResult` |
+| `briefing:answer` | `briefing:answer --project <id> [--kind short\|commercial\|long\|text\|image] (--answer <id>=<text>)... [--answers <file\|->] [--replace] [--dry-run]` | `--kind` string, default the set of the kind of the project; `--answer` string, repeatable; `--answers` string, a JSON object of question id to answer; `--replace` bool false, replaces a brief written by hand | the JSON with `--answers -` | `BriefResult` |
 | `agent:docs` | `agent:docs [--print skill\|agents\|instructions] [--write <dir>]` | `--print` string `skill`; `--write` string | none | `{"files": [...]}` with `--write`; the text itself with `--print` |
 
 Notes on the table:
@@ -4150,7 +4153,7 @@ Success codes are the `Op.Status`. Error statuses are the table of SDD-000 §8; 
 | `projects.steps.skip` | `POST /projects/{id}/steps/{step}/skip` | `dry_run` | `{restore?}` | 200 `ProjectStepSkipResult` | edit | 400 `E_VALIDATION` (`path` `step`) for a step that is unknown, not in the workflow or not optional; 409 `E_INVALID_STATE` for a trashed project or a step that is done |
 | `projects.brief.get` | `GET /projects/{id}/brief` | none | none | 200 `BriefResult` | read | none |
 | `projects.brief.set` | `PUT /projects/{id}/brief` | none | `{text, dry_run?}` | 200 `BriefResult` | edit | 413 `E_LIMIT_EXCEEDED` |
-| `briefing.questions` | `GET /briefing/questions` | `project_id` (optional), `kind` (optional: `short`, `commercial`, `long`) | none | 200 `BriefingQuestionsResult` | read | 404 `E_NOT_FOUND` for an unknown project |
+| `briefing.questions` | `GET /briefing/questions` | `project_id` (optional), `kind` (optional: `short`, `commercial`, `long`, `text`, `image`; left out, the set of the kind of the project) | none | 200 `BriefingQuestionsResult` | read | 404 `E_NOT_FOUND` for an unknown project |
 | `projects.briefing.answer` | `PUT /projects/{id}/briefing` | `dry_run` | `{kind?, answers, replace?, dry_run?}` | 200 `BriefResult` | edit | 400 `E_VALIDATION` (`path` `answers.<id>`, or `kind` for an unknown kind); 409 `E_INVALID_STATE` for a brief written by hand without `replace` |
 | `fonts.import` | `POST /fonts` | none | `{path}`, an absolute path to a TrueType or OpenType file on the machine of the server (SDD-007 §7.7) | 201 `FontImportResult` `{hash, bytes, deduplicated}` | media | 403 `E_PATH_NOT_ALLOWED`; 404 `E_FILE_NOT_FOUND`; 422 `E_VALIDATION` (a refused font) |
 | `brand.get`, `brand.set` | `GET /brand-kit`, `PUT /brand-kit` | none | `{logo?, colors?, fonts?}` for set (replaces the kit, SDD-005 §5.11; at least one member, an empty one clears the kit) | 200 `BrandKit` | read; edit | 422 `E_VALIDATION`; 404 `E_NOT_FOUND` |
