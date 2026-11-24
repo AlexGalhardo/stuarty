@@ -73,6 +73,16 @@ type Total struct {
 	Unsized int   // the distinct files whose size is unknown; they add nothing to Bytes
 }
 
+// SizeText is the total in words. A list whose every file has an unknown size has no text: its known sum is 0,
+// and "0 B" would say the files weigh nothing (SDD-011 section 14.9). An empty list weighs "0 B".
+func (t Total) SizeText() string {
+	if t.Files > 0 && t.Unsized == t.Files {
+		return ""
+	}
+
+	return FormatSize(&t.Bytes)
+}
+
 // TotalOf adds the sizes of the items counting each content hash once, however many projects or names hold it. A
 // hash that appears with a known size and with an unknown one is known. The sum stops at the largest int64 instead
 // of wrapping.

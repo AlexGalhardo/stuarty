@@ -759,7 +759,9 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 					</h2>
 					{items !== null && summary.files > 0 && (
 						<p className="text-sm text-text-muted" data-testid="library-total">
-							{t("ui.assets.total", { size: summary.size })}
+							{summary.size === ""
+								? t("ui.assets.size.unknown")
+								: t("ui.assets.total", { size: summary.size })}
 							{summary.unsized > 0 &&
 								` ${t("ui.assets.unsized", { count: summary.unsized })}`}
 						</p>
