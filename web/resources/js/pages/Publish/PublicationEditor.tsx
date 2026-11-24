@@ -45,7 +45,8 @@ const VISIBILITIES = ["private", "unlisted", "public"] as const;
 // A post is a draft (private) or published (public) at its destination.
 const POST_VISIBILITIES = ["private", "public"] as const;
 const STILLS = ["png", "jpg", "jpeg"];
-const SELECT = "h-8 rounded-lg border border-input bg-transparent px-2 text-sm";
+const SELECT =
+	"h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2 text-sm";
 
 // What the person has typed for one target. The text of a time is the one a datetime-local field holds.
 interface Draft {
