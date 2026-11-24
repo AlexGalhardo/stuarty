@@ -33,6 +33,8 @@ All variables are optional.
 | `STUARTY_MAX_TRANSCRIBE_SECONDS` | `7200` | longest audio per transcription job |
 | `STUARTY_MAX_EXPORT_BYTES` | `4294967296` (4 GiB) | largest exported file |
 | `STUARTY_MIN_FREE_BYTES` | `2147483648` (2 GiB) | writes are refused below this free space on the workspace volume |
+| `STUARTY_CAPTURE_HELPER` | next to the server binary | absolute path of `stuarty-capture`, the native capture helper (SDD-025 §7) |
+| `STUARTY_MAX_RECORDING_SECONDS` | `14400` | longest screen recording, 1 to 14400 (SDD-025 §5) |
 | `STUARTY_CACHE_MAX_BYTES` | `2147483648` (2 GiB) | size of the frame, bitmap and processed-sound caches (`frames/`, `bitmaps/`, `audio-previews/`) before eviction |
 | `STUARTY_RATE_LIMIT_PER_MINUTE` | `300` | requests per minute per key or local token |
 | `STUARTY_RATE_LIMIT_SESSION_PER_MINUTE` | `1800` | requests per minute per browser session |

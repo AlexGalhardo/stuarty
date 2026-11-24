@@ -1635,6 +1635,161 @@ Example:
 stuarty webhook:redeliver whk_0123456789 wdl_0123456789
 ```
 
+## `recording:sources`
+
+List the displays and windows that can be captured
+
+```text
+stuarty recording:sources
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty recording:sources --json
+```
+
+## `recording:start`
+
+Start recording a display or a window (for a person in the app; the local token is refused)
+
+```text
+stuarty recording:start --project <id> --kind display|window --source <id> [--fps 24|30|60]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--kind` | string |  | display or window (required) |
+| `--source` | string |  | an id from recording:sources (required) |
+| `--name` | string |  | the title of the source, for the record |
+| `--fps` | integer |  | 24, 30 (the default) or 60 |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty recording:start --project prj_7k2m9x4q1b --kind display --source d1
+```
+
+## `recording:stop`
+
+Stop a recording and keep what was written; anyone may stop a capture
+
+```text
+stuarty recording:stop <recording id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty recording:stop rec_0123456789
+```
+
+## `recording:cancel`
+
+Discard a recording in progress; a person deletes a finished one
+
+```text
+stuarty recording:cancel <recording id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty recording:cancel rec_0123456789
+```
+
+## `recording:show`
+
+Show one recording: its state, its length and whether a person added it
+
+```text
+stuarty recording:show <recording id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty recording:show rec_0123456789
+```
+
+## `recording:list`
+
+List the recordings of a project that you may see, newest first
+
+```text
+stuarty recording:list --project <id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`.
+
+Example:
+
+```bash
+stuarty recording:list --project prj_7k2m9x4q1b
+```
+
+## `recording:confirm`
+
+Add a finished recording to the project (for a person in the app; the local token is refused)
+
+```text
+stuarty recording:confirm <recording id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty recording:confirm rec_0123456789
+```
+
+## `recording:dismiss`
+
+Not now: keep a recording out of the project and out of sight of agents (for a person in the app)
+
+```text
+stuarty recording:dismiss <recording id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty recording:dismiss rec_0123456789
+```
+
+## `recording:place`
+
+Place a recording that a person added on the timeline, as one undoable batch
+
+```text
+stuarty recording:place <recording id> [--timeline <id>]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--timeline` | string |  | the timeline of the project, when it has several |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty recording:place rec_0123456789
+```
+
 ## `approval:list`
 
 List the approval queue: what waits for a person (pending by default)
