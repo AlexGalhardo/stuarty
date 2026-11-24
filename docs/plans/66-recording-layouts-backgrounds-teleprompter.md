@@ -17,7 +17,7 @@ A creator frames screen and webcam in a ready layout on a background, and reads 
 
 ## Scope
 
-- Modules: `core/` (layout presets as commands), the recording dialog, a teleprompter window, the desktop shell, SDD-002, SDD-023.
+- Modules: `core/` (layout presets as commands), the recording dialog, a teleprompter window, the desktop shell, SDD-002, SDD-025.
 - Must not touch: `capture/` except excluding the teleprompter window from capture, `renderer/`.
 
 ## Out of scope
@@ -55,7 +55,7 @@ The teleprompter reads scripts with existing writing operations and adds no writ
 
 ## Tasks
 
-- [ ] 1. SDD-000, SDD-002, SDD-023. Verify: `task lint:md` exits 0 and `task codegen` leaves no unexpected diff.
+- [ ] 1. SDD-000, SDD-002, SDD-025. Verify: `task lint:md` exits 0 and `task codegen` leaves no unexpected diff.
 - [ ] 2. Layout presets for 9:16, 1:1, 16:9 and 4:5. Verify: `go test ./core/...` passes.
 - [ ] 3. Backgrounds. Verify: `go test ./core/...` and the export golden test pass.
 - [ ] 4. The teleprompter window and its exclusion from capture. Verify: a real capture test on Windows shows no teleprompter pixels, or the limit is documented.

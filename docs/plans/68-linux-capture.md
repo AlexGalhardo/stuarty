@@ -23,7 +23,7 @@ A creator on Linux records the screen, voice and webcam, and knows in advance wh
 
 ## Scope
 
-- Modules: `capture/` Linux backend, `desktop/` Linux packaging of the helper, the capability report, the dialog, SDD-023, user docs.
+- Modules: `capture/` Linux backend, `desktop/` Linux packaging of the helper, the capability report, the dialog, SDD-025, user docs.
 - Must not touch: the core rules and the protocol.
 
 ## Out of scope

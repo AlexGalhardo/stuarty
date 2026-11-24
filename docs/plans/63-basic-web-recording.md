@@ -16,7 +16,7 @@ A creator using Stuarty in a browser, on Docker or a VPS, records the screen, ca
 
 ## Scope
 
-- Modules: `web/resources/js/` (a recorder module and the dialog), `service/` recording, a new upload route in the HTTP adapter, SDD-023, SDD-007.
+- Modules: `web/resources/js/` (a recorder module and the dialog), `service/` recording, a new upload route in the HTTP adapter, SDD-025, SDD-007.
 - Must not touch: `capture/`, `engine/capturehost/`, the timeline schema.
 
 ## Out of scope
@@ -56,7 +56,7 @@ Names are proposals until task 1 writes them to SDD-000.
 
 ## Tasks
 
-- [ ] 1. SDD-023, SDD-000 and SDD-007: the upload contract, limits and threats. Verify: `task lint:md` and `go run ./internal/tools/threatcheck` exit 0.
+- [ ] 1. SDD-025, SDD-000 and SDD-007: the upload contract, limits and threats. Verify: `task lint:md` and `go run ./internal/tools/threatcheck` exit 0.
 - [ ] 2. Service and upload route: order, checksum, limits, resume after a dropped connection. Verify: `go test ./service/... ./web/...` and `go test -run TestSecurity_ ./...` pass.
 - [ ] 3. The recorder module and its capability check. Verify: `bun run typecheck`, `bun run check:thin-client` and `task test:web` pass.
 - [ ] 4. The dialog, the secure-context message and the visible state. Verify: `bun run check:i18n` and `task test:web` pass.
