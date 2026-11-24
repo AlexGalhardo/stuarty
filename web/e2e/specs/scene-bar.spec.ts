@@ -204,10 +204,24 @@ test.describe("scene bar", () => {
 				path,
 			).toBeAttached();
 			// at the end of the page, the main region ends where the bar begins: nothing is under it
-			await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-			const main = await page.locator("main").boundingBox();
+			// (a page that is still loading grows after the scroll: scroll again until the end is reached)
+			await expect
+				.poll(
+					async () =>
+						page.evaluate(() => {
+							window.scrollTo(0, document.documentElement.scrollHeight);
+							const main = document.querySelector("main");
+							const scene = document.querySelector('[data-testid="scene-bar"]');
+							if (main === null || scene === null) return false;
+							return (
+								main.getBoundingClientRect().bottom <=
+								scene.getBoundingClientRect().top + 1
+							);
+						}),
+					{ message: path },
+				)
+				.toBe(true);
 			const bar = await page.getByTestId("scene-bar").boundingBox();
-			expect(main && bar && main.y + main.height <= bar.y + 1, path).toBe(true);
 			// the bar is 56 px high on a wide window
 			if ((page.viewportSize()?.width ?? 0) >= 768) {
 				expect(bar?.height).toBe(56);
