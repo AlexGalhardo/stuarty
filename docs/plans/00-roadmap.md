@@ -132,7 +132,7 @@ Author decisions D-134 and D-137. Epic 74 can start now, and so can epic 87, bec
 | [79](79-home-projects-and-briefing-screens.md) | Home, projects, briefing and the workflow screens | L | 74, 75, 78 | DONE (2026-11-24, `e079a542f`..`7c8207951`) |
 | [80](80-writing-screens.md) | Writing screens and the text flow | M | 74, 75, 78 | DONE (2026-11-24, `924fc7f69`..`e419f0610`) |
 | [81](81-asset-library-screens.md) | Asset library screens | M | 74, 75 | DONE (2026-11-24, `411906afe`..`6cca1e337`, v0.50.0) |
-| [82](82-publishing-and-approvals-screens.md) | Publishing and approvals screens | L | 74, 75, 77, 78 | TODO |
+| [82](82-publishing-and-approvals-screens.md) | Publishing and approvals screens | L | 74, 75, 77, 78 | DONE (2026-11-24, 642ef4944..f720fe476) |
 | [83](83-chat-skills-prompts-memory-screens.md) | Chat, skills, prompts and memory screens | M | 74, 75, 76 | DONE (2026-11-24, `6f7242b77`..`681b2a2ee`) |
 | [84](84-connections-settings-account-screens.md) | Connections, settings, account and error screens | L | 57, 74, 75 | DONE (2026-11-24, `ab16d2ce6`..`8a373f993`) |
 | [85](85-video-editor-screens.md) | Video editor redesign | XL | 69, 74, 75, 76 | DONE (2026-11-24, `3c77c564e`..`b50da822a`) |
