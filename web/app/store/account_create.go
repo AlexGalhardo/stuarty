@@ -214,12 +214,16 @@ func withLogOpen(ctx context.Context, ex database.Executor, fn func() error) err
 
 		err := ex.QueryRowContext(ctx, `SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = ?`, name).
 			Scan(&sqlText)
-		if errors.Is(err, sql.ErrNoRows) || !sqlText.Valid {
+		if errors.Is(err, sql.ErrNoRows) {
 			continue
 		}
 
 		if err != nil {
 			return err
+		}
+
+		if !sqlText.Valid {
+			continue
 		}
 
 		saved[name] = sqlText.String

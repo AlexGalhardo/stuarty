@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"maps"
 	"strings"
 	"testing"
 
@@ -231,4 +232,96 @@ func TestSealDocumentsSealsAClearValueThatLooksSealed(t *testing.T) {
 	if err != nil || info.Description != "s1.not-really-sealed" {
 		t.Fatalf("after the migration: %q %v", info.Description, err)
 	}
+}
+
+// logTriggerSQL is the SQL the database holds for each append-only trigger of the edit logs.
+func logTriggerSQL(t *testing.T, st *Store) map[string]string {
+	t.Helper()
+
+	out := map[string]string{}
+
+	for _, name := range logTriggers {
+		out[name] = scalar[string](t, st, `SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = ?`, name)
+	}
+
+	return out
+}
+
+// The sealing drops the append-only triggers of the two logs inside its transaction and creates them again: they come
+// back byte for byte, after a run that fails in the middle, after one that finishes, and after the creation of an
+// account; and an update of a sealed column of the log is still refused (epic 92 review).
+func TestSealingPutsTheLogTriggersBackAsTheyWere(t *testing.T) {
+	refused := func(t *testing.T, st *Store, when string) {
+		t.Helper()
+
+		// A value with the prefix passes the guard of the sealed column, so what refuses it is the log's own trigger.
+		for _, q := range []string{
+			`UPDATE operations SET ops = 's1.x' WHERE revision = 1`,
+			`UPDATE image_operations SET result = 's1.x' WHERE revision = 1`,
+		} {
+			if _, err := st.DB().ExecContext(ctx, q); err == nil || !strings.Contains(err.Error(), "append-only") {
+				t.Errorf("%s: %q was not refused by the trigger: %v", when, q, err)
+			}
+		}
+	}
+
+	t.Run("an earlier account", func(t *testing.T) {
+		st, _ := earlierAccount(t, 450)
+		before := logTriggerSQL(t, st)
+
+		boom := errors.New("stop")
+		batches := 0
+
+		if err := st.SealStageTwo(ctx, st.ref.get(), func(stage string) error {
+			if stage == "batch" {
+				batches++
+			}
+
+			if batches == 2 {
+				return boom
+			}
+
+			return nil
+		}); !errors.Is(err, boom) {
+			t.Fatalf("the run did not stop: %v", err)
+		}
+
+		if got := logTriggerSQL(t, st); !maps.Equal(got, before) {
+			t.Errorf("after a failed run the triggers are %v, want %v", got, before)
+		}
+
+		refused(t, st, "after a failed run")
+
+		if err := st.SealStageTwo(ctx, st.ref.get(), nil); err != nil {
+			t.Fatal(err)
+		}
+
+		if got := logTriggerSQL(t, st); !maps.Equal(got, before) {
+			t.Errorf("after the sealing the triggers are %v, want %v", got, before)
+		}
+
+		refused(t, st, "after the sealing")
+	})
+
+	t.Run("the creation of an account", func(t *testing.T) {
+		st := openStore(t, newDir(t), Options{})
+		writeDocuments(t, st)
+
+		before := logTriggerSQL(t, st)
+
+		keys, err := account.NewKeySealer(bytes.Repeat([]byte{7}, account.KeySize))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if err := st.CreateAccount(ctx, accountRecord(), keys, nil); err != nil {
+			t.Fatal(err)
+		}
+
+		if got := logTriggerSQL(t, st); !maps.Equal(got, before) {
+			t.Errorf("after the creation the triggers are %v, want %v", got, before)
+		}
+
+		refused(t, st, "after the creation")
+	})
 }
