@@ -118,6 +118,15 @@ command publication:update
 command publish:now
 command publish:status
 command publish:validate
+command recording:cancel
+command recording:confirm
+command recording:dismiss
+command recording:list
+command recording:place
+command recording:show
+command recording:sources
+command recording:start
+command recording:stop
 command redo
 command revert
 command script:estimate
@@ -247,6 +256,7 @@ route GET /projects/{}/motion/brief
 route GET /projects/{}/motion/check
 route GET /projects/{}/otio
 route GET /projects/{}/plan
+route GET /projects/{}/recordings
 route GET /projects/{}/sheet
 route GET /projects/{}/snap-points
 route GET /projects/{}/texts/{}
@@ -260,6 +270,8 @@ route GET /publications
 route GET /publications/events
 route GET /publications/{}
 route GET /publish/{}
+route GET /recording/sources
+route GET /recordings/{}
 route GET /social/accounts
 route GET /social/networks
 route GET /system
@@ -343,6 +355,12 @@ route POST /publications/{}/schedule
 route POST /publications/{}/send-now
 route POST /publish
 route POST /publish/validate
+route POST /recordings
+route POST /recordings/{}/cancel
+route POST /recordings/{}/confirm
+route POST /recordings/{}/dismiss
+route POST /recordings/{}/place
+route POST /recordings/{}/stop
 route POST /scripts/estimate
 route POST /social/complete
 route POST /social/connect

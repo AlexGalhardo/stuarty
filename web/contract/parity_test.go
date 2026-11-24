@@ -230,6 +230,18 @@ var parity = []row{
 	{method: "ApprovalRuleList", command: "approval:rule:list", route: "GET /approval-rules"},
 	{method: "ApprovalRuleSet", command: "approval:rule:set", route: "POST /approval-rules"},
 	{method: "ApprovalRuleRemove", command: "approval:rule:remove", route: "DELETE /approval-rules/{}"},
+	// Screen recording (SDD-023 section 11): no MCP tool of its own, the tool list is at its byte budget. A recording
+	// is read with job_get and stopped with job_cancel, as a job of kind capture, and placed with edit; starting, adding
+	// to the project and Not now are for a person and have no tool.
+	{method: "RecordingSources", command: "recording:sources", route: "GET /recording/sources"},
+	{method: "RecordingStart", command: "recording:start", route: "POST /recordings"},
+	{method: "RecordingStop", tool: "job_cancel", command: "recording:stop", route: "POST /recordings/{}/stop"},
+	{method: "RecordingCancel", command: "recording:cancel", route: "POST /recordings/{}/cancel"},
+	{method: "RecordingGet", tool: "job_get", command: "recording:show", route: "GET /recordings/{}"},
+	{method: "RecordingList", tool: "job_get", command: "recording:list", route: "GET /projects/{}/recordings"},
+	{method: "RecordingConfirm", command: "recording:confirm", route: "POST /recordings/{}/confirm"},
+	{method: "RecordingDismiss", command: "recording:dismiss", route: "POST /recordings/{}/dismiss"},
+	{method: "RecordingPlace", tool: "edit", command: "recording:place", route: "POST /recordings/{}/place"},
 	{method: "CostSummary", command: "cost:show", route: "GET /cost"},
 	{method: "CostCeilingSet", command: "cost:ceiling", route: "PUT /cost/ceilings"},
 	// Social networks and publishing (SDD-020 section 13): no MCP tool routes to them yet; an agent reaches them
