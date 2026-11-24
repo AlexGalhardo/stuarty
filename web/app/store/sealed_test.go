@@ -324,6 +324,70 @@ func TestSecurity_T108_SealedColumnsHoldNoPlaintextInTheDatabaseFile(t *testing.
 	}
 }
 
+// The title of a chat session is the first message of the person (core/chat Title), so it is sealed like the
+// message it repeats, and a session that ends while the studio is locked keeps it.
+func TestSecurity_T108_TheTitleOfAChatSessionIsSealed(t *testing.T) {
+	const words = "CANARY-CHATTITLE-first-message-of-the-person"
+
+	dir := newDir(t)
+
+	st, err := Open(ctx, dir, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	keys, err := account.NewKeySealer(bytes.Repeat([]byte{7}, account.KeySize))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	l := &locker{Sealer: keys}
+	st.SetSealer(l)
+
+	if err := st.Productions().Create(ctx, service.ProductionHead{
+		ID: "prj_1", Name: "p", State: service.ProjectActive, CreatedMs: 10, UpdatedMs: 10, CreatedBy: "local:ui",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	at := time.UnixMilli(10).UTC()
+	row := agenthost.Session{
+		ID: "cht_1", ProjectID: "prj_1", Profile: "p", StartedBy: "local:ui", State: chat.StateIdle,
+		CreatedAt: at, UpdatedAt: at,
+	}
+
+	if err := st.Chat().SessionCreate(ctx, row); err != nil {
+		t.Fatal(err)
+	}
+
+	row.Title = words
+	if err := st.Chat().SessionUpdate(ctx, row); err != nil {
+		t.Fatal(err)
+	}
+
+	l.locked = true
+	row.State, row.Title = chat.StateEnded, ""
+
+	if err := st.Chat().SessionUpdate(ctx, row); err != nil {
+		t.Fatalf("a session could not end while the studio is locked: %v", err)
+	}
+
+	if got, err := st.Chat().SessionGet(ctx, "cht_1"); err != nil || got.Title != "" || got.State != chat.StateEnded {
+		t.Fatalf("read while locked: %+v %v", got, err)
+	}
+
+	l.locked = false
+
+	got, err := st.Chat().SessionGet(ctx, "cht_1")
+	if err != nil || got.Title != words {
+		t.Fatalf("after the unlock the title is %+v %v", got, err)
+	}
+
+	if raw := bytesOfTheWorkspace(t, st, string(dir)); bytes.Contains(raw, []byte(words)) {
+		t.Error("the database file holds the title of a chat session in clear")
+	}
+}
+
 func TestTheLibraryIndexKeepsNoBodyWhenThereIsAnAccount(t *testing.T) {
 	s := testStore(t)
 

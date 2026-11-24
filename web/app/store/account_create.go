@@ -26,6 +26,7 @@ var sealedCells = []cell{
 	{table: "project_items", column: "body", keys: []string{"id"}},
 	{table: "text_revisions", column: "body", keys: []string{"item_id", "revision"}},
 	{table: "chat_events", column: "body_json", keys: []string{"session_id", "seq"}},
+	{table: "chat_sessions", column: "title", keys: []string{"id"}},
 	{table: "publications", column: "text", keys: []string{"id"}},
 	{table: "publication_targets", column: "fields", keys: []string{"id"}},
 	{table: "publication_targets", column: "snapshot", keys: []string{"id"}},

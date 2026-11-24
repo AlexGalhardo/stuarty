@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/AlexGalhardo/stuarty/core/chat"
+	"github.com/AlexGalhardo/stuarty/service/account"
 	"github.com/AlexGalhardo/stuarty/service/agenthost"
 
 	"github.com/AlexGalhardo/vukem/database"
@@ -130,7 +131,22 @@ func affected(res sql.Result, err error) error {
 const chatSessionColumns = `id, project_id, profile, owner_user_id, started_by, state, end_reason, title,
  created_ms, updated_ms, ended_ms, event_count`
 
-func scanChatSession(sc interface{ Scan(...any) error }) (agenthost.Session, error) {
+// openChatTitle opens the title of a session, which is the first message of the person (SDD-005 section 5.17.2).
+// While the studio is locked it reads as empty: the host ends its sessions with no key, and no surface can show it.
+func openChatTitle(sl account.Sealer, id, stored string) (string, error) {
+	if stored == "" {
+		return "", nil
+	}
+
+	plain, err := openField(sl, "chat_sessions", "title", id, stored)
+	if errors.Is(err, account.ErrLocked) {
+		return "", nil
+	}
+
+	return plain, err
+}
+
+func scanChatSession(sc interface{ Scan(...any) error }, sl account.Sealer) (agenthost.Session, error) {
 	var (
 		s       agenthost.Session
 		owner   sql.NullString
@@ -143,6 +159,11 @@ func scanChatSession(sc interface{ Scan(...any) error }) (agenthost.Session, err
 
 	if err := sc.Scan(&s.ID, &s.ProjectID, &s.Profile, &owner, &s.StartedBy, &state, &reason, &s.Title,
 		&created, &updated, &ended, &s.EventCount); err != nil {
+		return s, err
+	}
+
+	var err error
+	if s.Title, err = openChatTitle(sl, s.ID, s.Title); err != nil {
 		return s, err
 	}
 
@@ -159,10 +180,15 @@ func scanChatSession(sc interface{ Scan(...any) error }) (agenthost.Session, err
 }
 
 func (r chatRepo) SessionCreate(ctx context.Context, s agenthost.Session) error {
-	_, err := r.ex.ExecContext(ctx,
+	title, err := sealField(sealerOf(r.ex), "chat_sessions", "title", s.ID, s.Title)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.ex.ExecContext(ctx,
 		`INSERT INTO chat_sessions (`+chatSessionColumns+`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		s.ID, s.ProjectID, s.Profile, nullString(s.OwnerUserID), s.StartedBy, string(s.State), string(s.EndReason),
-		s.Title, s.CreatedAt.UnixMilli(), s.UpdatedAt.UnixMilli(), endedMs(s.EndedAt), s.EventCount)
+		title, s.CreatedAt.UnixMilli(), s.UpdatedAt.UnixMilli(), endedMs(s.EndedAt), s.EventCount)
 
 	return err
 }
@@ -176,17 +202,33 @@ func endedMs(t *time.Time) any {
 }
 
 func (r chatRepo) SessionUpdate(ctx context.Context, s agenthost.Session) error {
+	title, err := sealField(sealerOf(r.ex), "chat_sessions", "title", s.ID, s.Title)
+
+	// A session that ends while the studio is locked still records its state; its title stays as it was sealed.
+	if errors.Is(err, account.ErrLocked) {
+		res, uerr := r.ex.ExecContext(ctx,
+			`UPDATE chat_sessions SET state = ?, end_reason = ?, updated_ms = ?, ended_ms = ?, event_count = ?
+ WHERE id = ?`,
+			string(s.State), string(s.EndReason), s.UpdatedAt.UnixMilli(), endedMs(s.EndedAt), s.EventCount, s.ID)
+
+		return affected(res, uerr)
+	}
+
+	if err != nil {
+		return err
+	}
+
 	res, err := r.ex.ExecContext(ctx,
 		`UPDATE chat_sessions SET state = ?, end_reason = ?, title = ?, updated_ms = ?, ended_ms = ?, event_count = ?
  WHERE id = ?`,
-		string(s.State), string(s.EndReason), s.Title, s.UpdatedAt.UnixMilli(), endedMs(s.EndedAt), s.EventCount, s.ID)
+		string(s.State), string(s.EndReason), title, s.UpdatedAt.UnixMilli(), endedMs(s.EndedAt), s.EventCount, s.ID)
 
 	return affected(res, err)
 }
 
 func (r chatRepo) SessionGet(ctx context.Context, id string) (*agenthost.Session, error) {
 	s, err := scanChatSession(r.ex.QueryRowContext(ctx,
-		`SELECT `+chatSessionColumns+` FROM chat_sessions WHERE id = ?`, id))
+		`SELECT `+chatSessionColumns+` FROM chat_sessions WHERE id = ?`, id), sealerOf(r.ex))
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, agenthost.ErrNotFound
 	}
@@ -210,7 +252,7 @@ func (r chatRepo) SessionList(ctx context.Context, projectID string) ([]agenthos
 	var out []agenthost.Session
 
 	for rows.Next() {
-		s, err := scanChatSession(rows)
+		s, err := scanChatSession(rows, sealerOf(r.ex))
 		if err != nil {
 			return nil, err
 		}
