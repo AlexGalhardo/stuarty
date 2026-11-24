@@ -116,6 +116,24 @@ type recSession struct {
 	cs      CaptureSession
 	done    chan struct{}
 	discard bool // cancel: drop the file when the helper ends
+
+	// progress is the last line the helper sent, kept in memory so a read shows the clock of a recording that
+	// is running without a write to the database every second.
+	pmu      sync.Mutex
+	progress capturehost.Progress
+}
+
+func (r *recSession) setProgress(p capturehost.Progress) {
+	r.pmu.Lock()
+	r.progress = p
+	r.pmu.Unlock()
+}
+
+func (r *recSession) lastProgress() capturehost.Progress {
+	r.pmu.Lock()
+	defer r.pmu.Unlock()
+
+	return r.progress
 }
 
 func recordingNotFound() *Error {
@@ -350,7 +368,7 @@ func (s *svc) RecordingStart(ctx context.Context, req RecordingStartRequest) (*R
 
 	go s.superviseRecording(context.WithoutCancel(ctx), id, sess, limits)
 
-	return s.recordingView(got), nil
+	return s.liveView(got), nil
 }
 
 // updateRecording reads the row inside a transaction, applies fn and writes it back.
@@ -410,6 +428,7 @@ func (s *svc) superviseRecording(ctx context.Context, id string, sess *recSessio
 		switch e := ev.(type) {
 		case capturehost.Progress:
 			last = e
+			sess.setProgress(e)
 
 			if !limitHit {
 				if why := limits.Check(e.ElapsedMS, e.Bytes, s.freeBytes()); why != recording.StopNone {
@@ -579,7 +598,7 @@ func (s *svc) RecordingStop(ctx context.Context, req RecordingRef) (*Recording, 
 	}
 
 	if recording.State(r.State).Final() || r.State == string(recording.Finishing) {
-		return s.recordingView(r), nil
+		return s.liveView(r), nil
 	}
 
 	s.recMu.Lock()
@@ -599,7 +618,7 @@ func (s *svc) RecordingStop(ctx context.Context, req RecordingRef) (*Recording, 
 		return nil, asError(err)
 	}
 
-	return s.recordingView(r), nil
+	return s.liveView(r), nil
 }
 
 // RecordingCancel discards a recording in progress (anyone with the media scope), or deletes a finished one that
@@ -639,7 +658,7 @@ func (s *svc) RecordingCancel(ctx context.Context, req RecordingRef) (*Recording
 			return nil, asError(err)
 		}
 
-		return s.recordingView(r), nil
+		return s.liveView(r), nil
 	}
 
 	if !recording.CanDelete(st, rv) {
@@ -663,7 +682,7 @@ func (s *svc) RecordingCancel(ctx context.Context, req RecordingRef) (*Recording
 	_ = os.RemoveAll(filepath.Dir(s.recordingPath(req.ID)))
 	s.auditRecording(ctx, c, "recording.delete", got)
 
-	return s.recordingView(got), nil
+	return s.liveView(got), nil
 }
 
 func (s *svc) auditRecording(ctx context.Context, c Caller, action string, r recordings.Row) {
@@ -684,7 +703,7 @@ func (s *svc) RecordingGet(ctx context.Context, req RecordingRef) (*Recording, e
 		return nil, err
 	}
 
-	return s.recordingView(r), nil
+	return s.liveView(r), nil
 }
 
 // RecordingList returns the recordings of a project that the caller may see.
@@ -703,7 +722,7 @@ func (s *svc) RecordingList(ctx context.Context, req RecordingListRequest) (*Rec
 
 	for i := range rows {
 		if recording.VisibleTo(recording.Review(rows[i].Review), isPerson(c)) {
-			out.Recordings = append(out.Recordings, *s.recordingView(rows[i]))
+			out.Recordings = append(out.Recordings, *s.liveView(rows[i]))
 		}
 	}
 
@@ -775,7 +794,7 @@ func (s *svc) RecordingConfirm(ctx context.Context, req RecordingRef) (*Recordin
 
 	s.auditRecording(ctx, c, "recording.confirm", got)
 
-	return s.recordingView(got), nil
+	return s.liveView(got), nil
 }
 
 // RecordingDismiss is "Not now": the recording stays out of the project and invisible to agents until a person
@@ -807,7 +826,7 @@ func (s *svc) RecordingDismiss(ctx context.Context, req RecordingRef) (*Recordin
 
 	s.auditRecording(ctx, c, "recording.dismiss", got)
 
-	return s.recordingView(got), nil
+	return s.liveView(got), nil
 }
 
 // RecordingPlace puts a recording a person added on a timeline as one batch: one clip at the end of the first
@@ -899,6 +918,22 @@ func (s *svc) RecordingPlace(ctx context.Context, req RecordingPlaceRequest) (*E
 	return s.Edit(ctx, EditRequest{
 		ProjectID: r.ProjectID, TimelineID: req.TimelineID, BaseRevision: pg.Revision, Operations: ops,
 	})
+}
+
+// liveView is the surface form of a row, with the counters of the helper while the recording runs.
+func (s *svc) liveView(r recordings.Row) *Recording {
+	if r.State == string(recording.Recording) || r.State == string(recording.Finishing) {
+		s.recMu.Lock()
+		sess := s.recSessions[r.ID]
+		s.recMu.Unlock()
+
+		if sess != nil {
+			p := sess.lastProgress()
+			r.DurationMs, r.Frames, r.Dropped, r.Bytes = p.ElapsedMS, p.Frames, p.Dropped, p.Bytes
+		}
+	}
+
+	return s.recordingView(r)
 }
 
 // recordingView is the surface form of a row. The source label is untrusted text (SDD-007 section 8).
