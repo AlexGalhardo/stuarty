@@ -1,0 +1,45 @@
+{
+	"name": "caption-styles-blur-voice",
+	"actor": "contract",
+	"fixtures": {"voice": "not really a video, only bytes the fake ingest accepts"},
+	"steps": [
+		{"call": "ProjectCreate", "args": {"id": "prj_7k2m9x4q1b", "name": "Styles blur and voice", "description": "A short vertical video made for tests: it has a script, some footage and captions, and it is made for the people who follow the channel.", "goal": {"specific": "Publish one short video that explains the idea", "measurable": "At least one hundred views in the first week", "achievable": "The footage and the script already exist", "relevant": "It brings the first audience to the channel", "time_bound": "Edit on Monday and publish on Tuesday", "due": "2999-12-31"}}},
+		{"call": "ProjectItemAdd", "args": {"project_id": "prj_7k2m9x4q1b", "kind": "timeline", "title": "Styles blur and voice"}},
+		{"call": "MediaImport", "args": {"project_id": "prj_7k2m9x4q1b", "files": [{"path": "$voice", "asset_id": "ast_3c5v8n2w6d"}], "wait_ms": 20000}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 1, "operations": [
+			{"op": "track.add", "args": {"kind": "visual", "name": "Video", "id": "trk_f6g7h8j9k0"}},
+			{"op": "track.add", "args": {"kind": "visual", "name": "Captions", "id": "trk_a1b2c3d4e5"}},
+			{"op": "track.add", "args": {"kind": "audio", "name": "Voice", "id": "trk_m1n2p3q4r5"}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 2, "operations": [
+			{"op": "clip.add", "args": {"track_id": "trk_f6g7h8j9k0", "asset_id": "ast_3c5v8n2w6d", "start": "0s", "source_in": "0s", "duration": "2s", "id": "itm_m1n2p3q4r5"}},
+			{"op": "audio.add", "args": {"track_id": "trk_m1n2p3q4r5", "asset_id": "ast_3c5v8n2w6d", "start": "0s", "duration": "2s", "id": "itm_c3d4e5f6g7"}},
+			{"op": "caption.add", "args": {"track_id": "trk_a1b2c3d4e5", "start": "0.1s", "id": "itm_s6t7v8w9x0", "words": [{"text": "Meet", "start": "0s", "duration": "0.3s"}, {"text": "us.", "start": "0.3s", "duration": "0.3s"}]}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 3, "operations": [
+			{"op": "caption.list_styles", "args": {}},
+			{"op": "caption.apply_style", "args": {"track_id": "trk_a1b2c3d4e5", "style": "bold_pop"}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 4, "operations": [
+			{"op": "caption.apply_style", "args": {"track_id": "trk_a1b2c3d4e5", "style": "soft_box", "reset_overrides": true}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 5, "operations": [
+			{"op": "clip.blur_region", "args": {"item_id": "itm_m1n2p3q4r5", "x": 0.1, "y": 0.6, "width": 0.8, "height": 0.08, "start": "0.5s", "duration": "1s", "new_id": "itm_b1b2b3b4b5", "new_track_id": "trk_b6b7b8b9b0"}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 6, "operations": [
+			{"op": "audio.apply_voice_preset", "args": {"item_id": "itm_c3d4e5f6g7"}},
+			{"op": "audio.apply_voice_preset", "args": {"item_id": "itm_m1n2p3q4r5", "preset": "broadcast"}},
+			{"op": "audio.apply_voice_preset", "args": {"track_id": "trk_m1n2p3q4r5", "preset": "room_rescue"}}]}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 7, "operations": [
+			{"op": "caption.apply_style", "args": {"track_id": "trk_a1b2c3d4e5", "style": "fancy"}}]},
+			"expect_error": {"code": "E_VALIDATION"}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 7, "operations": [
+			{"op": "clip.blur_region", "args": {"item_id": "itm_m1n2p3q4r5", "x": 0.1, "y": 0.6, "width": 0.8, "height": 0.08, "radius": 3}}]},
+			"expect_error": {"code": "E_VALIDATION"}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 7, "operations": [
+			{"op": "clip.blur_region", "args": {"item_id": "itm_m1n2p3q4r5", "x": 0.5, "y": 0.6, "width": 0.8, "height": 0.08}}]},
+			"expect_error": {"code": "E_VALIDATION"}},
+		{"call": "Edit", "args": {"project_id": "prj_7k2m9x4q1b", "base_revision": 7, "operations": [
+			{"op": "audio.apply_voice_preset", "args": {"item_id": "itm_s6t7v8w9x0"}}]},
+			"expect_error": {"code": "E_TYPE_MISMATCH"}},
+		{"call": "Lint", "args": {"project_id": "prj_7k2m9x4q1b"}},
+		{"call": "CommandHelp", "args": {"name": "caption.apply_style"}},
+		{"call": "CommandHelp", "args": {"name": "clip.blur_region"}},
+		{"call": "CommandHelp", "args": {"name": "audio.apply_voice_preset"}}
+	]
+}
