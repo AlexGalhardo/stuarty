@@ -122,12 +122,14 @@ func (h *apiHandler) accountCreate(c *web.Ctx, in accountCreateIn) (accountCreat
 		return accountCreateOut{}, err
 	}
 
-	// A hosted agent holds a project and no admin scope: it must not set the password of the studio and sign in
-	// as a person with it.
-	if caller, ok := service.CallerFrom(c.Context()); !ok || !slices.Contains(caller.Scopes, service.ScopeAdmin) {
+	// Only the person's own browser creates the account: the one that `stuarty open` or the desktop shell opened,
+	// which holds the session cookie. A bearer caller (the local token of an agent, a key, a hosted agent) never
+	// does, or it would set the password and sign in as a person (VV-378, SDD-007 section 3.9 item 7).
+	if caller, ok := service.CallerFrom(c.Context()); !ok || caller.Actor != "local:"+auth.UILabel ||
+		!slices.Contains(caller.Scopes, service.ScopeAdmin) {
 		return accountCreateOut{}, &service.Error{
 			Code: service.CodeForbidden, Message: "only a person opening Stuarty can create the account.",
-			Hint: "open Stuarty and create the account there",
+			Hint: "run stuarty open, or use the desktop window, and create the account there",
 		}
 	}
 

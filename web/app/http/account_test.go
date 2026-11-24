@@ -112,11 +112,12 @@ func newAccountHarnessWith(tb testing.TB, tokens auth.AgentTokens, extra ...vuke
 const createBody = `{"username":"stuart","email":"stuart@example.com","password":"` + accPassword +
 	`","confirmation":"` + accPassword + `"}`
 
-// create makes the account with the local token and returns the recovery key.
+// create makes the account the way the person does, from the browser that `stuarty open` or the desktop shell
+// opened, and returns the recovery key.
 func (a *accountHarness) create() string {
 	a.t.Helper()
 
-	res := a.post("/auth/account/create", createBody)
+	res := a.createFrom(a.sessionWith(a.t, ""), createBody)
 	if res.status != http.StatusOK {
 		a.t.Fatalf("create = %d %s", res.status, res.body)
 	}
@@ -124,6 +125,13 @@ func (a *accountHarness) create() string {
 	key, _ := res.json(a.t)["recovery_key"].(string)
 
 	return key
+}
+
+// createFrom is the create-account call of a browser that holds the given cookie.
+func (a *accountHarness) createFrom(cookie, body string) resp {
+	a.t.Helper()
+
+	return a.browser(http.MethodPost, "/auth/account/create", body, cookie)
 }
 
 // browser is a request from a browser that holds the given cookie.
@@ -175,8 +183,9 @@ func TestAccountFirstRunCreateAndSignIn(t *testing.T) {
 	}
 
 	// A refused field is E_VALIDATION with the field and the reason, never the value.
-	bad := a.post("/auth/account/create",
-		`{"username":"AB","email":"x","password":"abc","confirmation":"abd"}`)
+	opened := a.sessionWith(t, "")
+
+	bad := a.createFrom(opened, `{"username":"AB","email":"x","password":"abc","confirmation":"abd"}`)
 	if bad.status != http.StatusBadRequest || bad.json(t)["code"] != "E_VALIDATION" ||
 		!strings.Contains(
 			string(bad.body),
@@ -194,7 +203,7 @@ func TestAccountFirstRunCreateAndSignIn(t *testing.T) {
 		t.Fatalf("recovery key %q", key)
 	}
 
-	if again := a.post("/auth/account/create", createBody); again.status != http.StatusConflict ||
+	if again := a.createFrom(opened, createBody); again.status != http.StatusConflict ||
 		again.json(t)["code"] != "E_INVALID_STATE" {
 		t.Fatalf("a second create = %d %s", again.status, again.body)
 	}
