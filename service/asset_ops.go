@@ -250,7 +250,7 @@ func (s *svc) AssetTag(ctx context.Context, req AssetTagRequest) (*AssetResult, 
 // 14.8). The name is the row of project_assets, so no revision of any document is written and the file in the
 // store keeps its hash.
 func (s *svc) AssetRename(ctx context.Context, req AssetRenameRequest) (*AssetResult, error) {
-	c, err := authorize(ctx, "AssetRename", "")
+	c, err := s.authorize(ctx, "AssetRename", "")
 	if err != nil {
 		return nil, err
 	}
