@@ -347,18 +347,23 @@ function ItemRow({
 	);
 }
 
-// The form that adds a text or a timeline to the production.
+// The form that adds a text or a timeline to the production. Only a video project starts on the timeline: any
+// other project, a text, an image or one not decided yet, is not assumed to be a video (D-134).
 function AddItem({
 	projectId,
+	projectKind,
 	onChanged,
 	onFailure,
 }: {
 	projectId: string;
+	projectKind: ProjectKind;
 	onChanged(): void;
 	onFailure(failure: Failure): void;
 }): ReactNode {
 	const t = useT();
-	const [kind, setKind] = useState<"text" | "timeline">("timeline");
+	const [kind, setKind] = useState<"text" | "timeline">(
+		projectKind === "video" ? "timeline" : "text",
+	);
 	const [title, setTitle] = useState("");
 	const [text, setText] = useState("");
 	const [preset, setPreset] = useState<string>("9:16");
@@ -589,6 +594,7 @@ export default function ProjectShow() {
 					)}
 					<AddItem
 						projectId={project.id}
+						projectKind={project.kind}
 						onChanged={changed}
 						onFailure={setFailure}
 					/>
