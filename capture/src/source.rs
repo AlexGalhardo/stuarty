@@ -31,6 +31,11 @@ pub trait RunningSource: Send {
 	fn stop(self: Box<Self>);
 }
 
+/// Starts a test source from its id (`WxH` and tags); the test camera uses it too.
+pub fn open_fake(id: &str, mailbox: &Arc<Mailbox>) -> Result<Box<dyn RunningSource>, SourceError> {
+	Fake::start(id, mailbox)
+}
+
 /// Opens the source a request names and starts it. Frames go to the mailbox until it is stopped or closed.
 pub fn open(
 	req: &StartRequest,
