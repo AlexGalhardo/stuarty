@@ -57,6 +57,12 @@
       }
     },
     "shell": {
+      "menu": "Abrir a navegação",
+      "chat": "Conversa",
+      "breadcrumb": {
+        "label": "Trilha de navegação",
+        "studio": "Estúdio"
+      },
       "waiting_count": "{count} esperando por você",
       "mode": {
         "local": "Modo local",

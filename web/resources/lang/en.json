@@ -57,6 +57,12 @@
       }
     },
     "shell": {
+      "menu": "Open the navigation",
+      "chat": "Chat",
+      "breadcrumb": {
+        "label": "Breadcrumb",
+        "studio": "Studio"
+      },
       "waiting_count": "{count} waiting for you",
       "mode": {
         "local": "Local mode",

@@ -1,9 +1,10 @@
 import { usePage } from "@inertiajs/react";
-import { MessagesSquare, Settings2, X } from "lucide-react";
+import { Settings2, X } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
+import { useShell } from "../../shell/ShellContext";
 import ChatConversation from "./ChatConversation";
 import ProfileSetup from "./ProfileSetup";
 import { useChat } from "./useChat";
@@ -24,9 +25,12 @@ const NO_PROFILES = {
 export default function ChatDock(): ReactNode {
 	const t = useT();
 	const page = usePage();
-	const [open, setOpen] = useState(false);
+	const {
+		chatOpen: open,
+		setChatOpen: setOpen,
+		chatButton: toggle,
+	} = useShell();
 	const [managing, setManaging] = useState(false);
-	const toggle = useRef<HTMLButtonElement | null>(null);
 	const composer = useRef<HTMLTextAreaElement | null>(null);
 	const heading = useRef<HTMLHeadingElement | null>(null);
 	const closed = useRef(false);
@@ -47,7 +51,7 @@ export default function ChatDock(): ReactNode {
 			closed.current = false;
 			toggle.current?.focus();
 		}
-	}, [open, connected, managing]);
+	}, [open, connected, managing, toggle]);
 
 	const close = (): void => {
 		closed.current = true;
@@ -55,23 +59,8 @@ export default function ChatDock(): ReactNode {
 		setOpen(false);
 	};
 
-	if (!open) {
-		return (
-			<Button
-				ref={toggle}
-				type="button"
-				size="lg"
-				aria-expanded={false}
-				aria-controls="chat-panel"
-				onClick={() => setOpen(true)}
-				className="fixed right-[max(1rem,env(safe-area-inset-right,0px))] bottom-[calc(max(0.25rem,env(safe-area-inset-bottom,0px))+1.75rem)] z-40 shadow-lg"
-				data-testid="chat-toggle"
-			>
-				<MessagesSquare aria-hidden="true" />
-				{t("ui.chat.open")}
-			</Button>
-		);
-	}
+	// Closed, the panel is nothing: the Chat button of the top bar opens it (SDD-012 section 23.4).
+	if (!open) return null;
 
 	return (
 		<aside
