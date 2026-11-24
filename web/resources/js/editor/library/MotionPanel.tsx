@@ -11,7 +11,7 @@ import { useCanEdit } from "../commands/useActions";
 import { useDocumentState, useRuntime } from "../state/EditorContext";
 import { selectOrderedTrackIds } from "../state/selectors";
 import { trackLabel } from "../ui/trackLabel";
-import { fieldKey, rateLabel, sizeLabel } from "./motionModel";
+import { fieldKey, rateLabel, sizeLabel, verdictOf } from "./motionModel";
 import PanelFrame from "./PanelFrame";
 import { type Step, useMotionHandOff } from "./useMotionHandOff";
 
@@ -352,7 +352,7 @@ export default function MotionPanel(): ReactNode {
 					<div data-motion-check="" className="flex flex-col gap-2">
 						<p
 							role="status"
-							data-motion-verdict={done.check.ok ? "fits" : "mismatch"}
+							data-motion-verdict={verdictOf(done.check)}
 							className="flex items-center gap-2 text-sm font-medium"
 						>
 							{done.check.ok ? (
