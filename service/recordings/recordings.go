@@ -42,6 +42,9 @@ type Row struct {
 type Store interface {
 	Insert(ctx context.Context, r Row) error
 	Get(ctx context.Context, id string) (Row, error)
+	// Find is Get with the source label left out (empty): it needs no unlocked studio, so the service settles a
+	// recording with it while the studio is locked (the recovery of start-up). Update never writes the label.
+	Find(ctx context.Context, id string) (Row, error)
 	// Update writes every member but the id, the project, the actor and the creation time.
 	Update(ctx context.Context, r Row) error
 	// ListByProject is the recordings of a project, newest first.

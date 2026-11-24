@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
@@ -113,9 +114,10 @@ type Recording struct {
 
 // recSession is a recording that is running in this process.
 type recSession struct {
-	cs      CaptureSession
-	done    chan struct{}
-	discard bool // cancel: drop the file when the helper ends
+	cs   CaptureSession
+	done chan struct{}
+	// discard is set by a cancel on the goroutine of the request and read by the supervisor when the helper ends.
+	discard atomic.Bool
 
 	// progress is the last line the helper sent, kept in memory so a read shows the clock of a recording that
 	// is running without a write to the database every second.
@@ -371,14 +373,16 @@ func (s *svc) RecordingStart(ctx context.Context, req RecordingStartRequest) (*R
 	return s.liveView(got), nil
 }
 
-// updateRecording reads the row inside a transaction, applies fn and writes it back.
+// updateRecording reads the row inside a transaction, applies fn and writes it back. The read leaves the sealed
+// source label out, so a recording is settled while the studio is locked too (the recovery of start-up, or a
+// recording that ends after the person locked the studio); the label is added to the answer when it can be opened.
 func (s *svc) updateRecording(
 	ctx context.Context, id string, fn func(*recordings.Row) error,
 ) (recordings.Row, error) {
 	var out recordings.Row
 
 	err := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
-		r, err := tx.Recordings().Get(ctx, id)
+		r, err := tx.Recordings().Find(ctx, id)
 		if err != nil {
 			return err
 		}
@@ -387,9 +391,17 @@ func (s *svc) updateRecording(
 			return err
 		}
 
+		if err := tx.Recordings().Update(ctx, r); err != nil {
+			return err
+		}
+
+		if full, gerr := tx.Recordings().Get(ctx, id); gerr == nil {
+			r.SourceLabel = full.SourceLabel
+		}
+
 		out = r
 
-		return tx.Recordings().Update(ctx, r)
+		return nil
 	})
 
 	return out, err
@@ -471,7 +483,7 @@ func (s *svc) settleRecording(
 	ctx context.Context, id string, sess *recSession, fin *capturehost.Finished, failed *capturehost.Failed,
 	last capturehost.Progress,
 ) {
-	if sess.discard {
+	if sess.discard.Load() {
 		_, _ = s.updateRecording(ctx, id, func(r *recordings.Row) error {
 			r.State, r.Review, r.EndedMs = string(recording.Cancelled), "", s.nowMs()
 
@@ -649,7 +661,7 @@ func (s *svc) RecordingCancel(ctx context.Context, req RecordingRef) (*Recording
 			return nil, newError(command.CodeInvalidState, "the recording is %s and cannot be cancelled.", r.State)
 		}
 
-		sess.discard = true
+		sess.discard.Store(true)
 		sess.cs.Kill()
 
 		select {
@@ -981,7 +993,8 @@ func recordingText(v *Recording) string {
 	case recording.Ready:
 		switch recording.Review(v.Review) {
 		case recording.ReviewAdded:
-			return "Recording " + v.ID + " is in the project (" + secs + " s)."
+			// The asset id is what an agent needs to place the recording with the edit tool (SDD-025 section 11).
+			return "Recording " + v.ID + " is in the project as asset " + v.AssetID + " (" + secs + " s)."
 		case recording.ReviewDismissed:
 			return "Recording " + v.ID + " is kept out of the project until a person adds or deletes it."
 		case recording.ReviewPending:
@@ -1057,8 +1070,15 @@ func (s *svc) recoverRecordings(ctx context.Context) error {
 		var info CaptureInfo
 
 		readable := false
+		// reason is why a recording that is not readable failed: no file at all, a file with no decodable frame,
+		// or a file this process has no way to read (no capture here now), which is kept for a person to delete.
+		reason := "no_frames"
 
-		if s.capture != nil {
+		switch _, statErr := os.Stat(path); {
+		case statErr != nil:
+		case s.capture == nil:
+			reason = "helper_lost"
+		default:
 			var ierr error
 			if info, ierr = s.capture.Inspect(ctx, path); ierr == nil && info.DurationMS > 0 {
 				readable = true
@@ -1083,21 +1103,12 @@ func (s *svc) recoverRecordings(ctx context.Context) error {
 				return nil
 			}
 
-			reason := "helper_lost"
-			if _, e := os.Stat(path); e != nil {
-				reason = "no_frames"
-			}
-
 			x.ErrorCode, x.ErrorMessage = CodeCaptureFailed, "the server stopped while this recording was running ("+reason+")"
 
 			return nil
 		})
 		if uerr != nil {
 			return uerr
-		}
-
-		if !readable {
-			_ = os.RemoveAll(filepath.Dir(path))
 		}
 	}
 

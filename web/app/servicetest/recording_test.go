@@ -1,9 +1,11 @@
 package servicetest
 
 import (
+	"bytes"
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -11,6 +13,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/engine/capturehost"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/account"
 	"github.com/AlexGalhardo/stuarty/service/recordings"
 )
 
@@ -30,6 +33,8 @@ type fakeSession struct {
 	stopped atomic.Bool
 	killed  atomic.Bool
 	once    sync.Once
+	mu      sync.Mutex
+	closed  bool
 }
 
 func (f *fakeCapture) Sources(context.Context) (capturehost.Sources, error) {
@@ -86,11 +91,26 @@ func (s *fakeSession) Encoder() string                  { return "h264_nvenc" }
 func (s *fakeSession) Events() <-chan capturehost.Event { return s.events }
 func (s *fakeSession) Close() error                     { return nil }
 
+// send is a line of the helper; after the end it is dropped. The lock keeps a send of the test and the close of a
+// stop that the service makes at the same moment apart.
+func (s *fakeSession) send(e capturehost.Event) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if !s.closed {
+		s.events <- e
+	}
+}
+
 func (s *fakeSession) end(e capturehost.Event) {
 	s.once.Do(func() {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+
 		s.events <- e
 
 		close(s.events)
+		s.closed = true
 	})
 }
 
@@ -441,6 +461,12 @@ func TestSecurity_T119_ADismissedRecordingIsInvisibleToAgents(t *testing.T) {
 		t.Fatalf("confirm after dismiss: %+v %v", got, err)
 	}
 
+	// job_get is how an agent reads it over MCP: the text names the asset to place with the edit tool
+	if job, err := r.svc.JobGet(a, service.JobGetRequest{JobID: rec.ID}); err != nil ||
+		!strings.Contains(job.Text, "asset ast_") {
+		t.Errorf("job_get of an added recording: %+v %v", job, err)
+	}
+
 	if got, err := r.svc.RecordingGet(a, service.RecordingRef{ID: rec.ID}); err != nil || got.Review != "added" {
 		t.Errorf("an added recording is visible again: %+v %v", got, err)
 	}
@@ -598,11 +624,11 @@ func TestSecurity_T121_ALimitStopsTheCaptureAndKeepsTheFile(t *testing.T) {
 	rec := r.start(t, r.newProject("p"))
 	s := r.cap.last()
 
-	s.events <- capturehost.Progress{ElapsedMS: 1000, Frames: 30, Bytes: 10}
+	s.send(capturehost.Progress{ElapsedMS: 1000, Frames: 30, Bytes: 10})
 
 	r.free.Store(1 << 10) // the disk fills while it records
 
-	s.events <- capturehost.Progress{ElapsedMS: 2000, Frames: 60, Bytes: 20}
+	s.send(capturehost.Progress{ElapsedMS: 2000, Frames: 60, Bytes: 20})
 
 	got := r.waitState(t, rec.ID, "ready")
 	if got.StopReason != "disk" || !s.stopped.Load() || s.killed.Load() {
@@ -622,7 +648,7 @@ func TestRecordingDurationLimitStops(t *testing.T) {
 	}})
 
 	rec := r.start(t, r.newProject("p"))
-	r.cap.last().events <- capturehost.Progress{ElapsedMS: 1000, Frames: 30, Bytes: 10}
+	r.cap.last().send(capturehost.Progress{ElapsedMS: 1000, Frames: 30, Bytes: 10})
 
 	if got := r.waitState(t, rec.ID, "ready"); got.StopReason != "duration" {
 		t.Fatalf("ready = %+v", got)
@@ -722,6 +748,133 @@ func TestSecurity_T121_RecoveryNeverLeavesARecordingRunning(t *testing.T) {
 	}
 }
 
+// lockable is the sealer of a studio with an account: the data key while unlocked, account.ErrLocked while locked.
+type lockable struct {
+	account.Sealer
+	locked atomic.Bool
+}
+
+func (l *lockable) Seal(table, column, rowKey, plain string) (string, error) {
+	if l.locked.Load() {
+		return "", account.ErrLocked
+	}
+
+	return l.Sealer.Seal(table, column, rowKey, plain)
+}
+
+func (l *lockable) Open(table, column, rowKey, stored string) (string, error) {
+	if l.locked.Load() {
+		return "", account.ErrLocked
+	}
+
+	return l.Sealer.Open(table, column, rowKey, stored)
+}
+
+func (l *lockable) Sealing() bool { return true }
+
+// A studio with an account starts locked, and the recovery runs before anyone signs in. The title of the window is
+// sealed, so the recovery must settle the row without opening it: a recovery that failed here would stop the server
+// from starting at all, and the recording would stay open.
+func TestSecurity_T121_RecoverySettlesARecordingWhileTheStudioIsLocked(t *testing.T) {
+	r := newRecEnv(t)
+	project := r.newProject("p")
+
+	keys, err := account.NewKeySealer(bytes.Repeat([]byte{7}, account.KeySize))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	seal := &lockable{Sealer: keys}
+	r.store.SetSealer(seal)
+
+	const id, title = "rec_0000000004", "My bank statement"
+
+	if err := r.store.Recordings().Insert(context.Background(), recordings.Row{
+		ID: id, ProjectID: project, State: "recording", SourceKind: "window", SourceLabel: title, FPS: 30, Actor: ui,
+		CreatedMs: 1,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	dir := filepath.Join(r.ws, "recordings", id)
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(filepath.Join(dir, "capture.mp4"), []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	seal.locked.Store(true)
+
+	runner, _ := service.RunnerOf(r.svc)
+	if err := runner.Recover(context.Background()); err != nil {
+		t.Fatalf("the recovery of a locked studio: %v", err)
+	}
+
+	seal.locked.Store(false)
+
+	got, err := r.svc.RecordingGet(personCtx(), service.RecordingRef{ID: id})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got.State != "ready" || got.StopReason != "recovered" || got.Source.Name != title {
+		t.Fatalf("after the recovery: %+v", got)
+	}
+}
+
+// With no way to read the file at start-up (no capture here any more: FFmpeg is gone, or the server now runs in
+// network mode), the recording is settled as failed, never left recording, and the file stays for a person to
+// delete: the recovery never deletes what it could not read.
+func TestRecordingRecoveryWithoutCaptureKeepsTheFile(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{with: func(_ *env, o *service.Options) { o.CaptureReason = "ffmpeg_missing" }})
+	project := m.newProject("p")
+
+	const id = "rec_0000000005"
+
+	if err := m.store.Recordings().Insert(context.Background(), recordings.Row{
+		ID: id, ProjectID: project, State: "recording", SourceKind: "display", FPS: 30, Actor: ui, CreatedMs: 1,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	file := filepath.Join(m.ws, "recordings", id, "capture.mp4")
+	if err := os.MkdirAll(filepath.Dir(file), 0o700); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(file, []byte("fragmented mp4 bytes"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	runner, _ := service.RunnerOf(m.svc)
+	if err := runner.Recover(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := m.svc.RecordingGet(personCtx(), service.RecordingRef{ID: id})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got.State != "failed" || got.Error == nil || got.Error.Code != "E_CAPTURE_FAILED" {
+		t.Fatalf("after the recovery: %+v", got)
+	}
+
+	if _, err := os.Stat(file); err != nil {
+		t.Errorf("the recovery deleted a file it could not read: %v", err)
+	}
+
+	if _, err := m.svc.RecordingCancel(personCtx(), service.RecordingRef{ID: id}); err != nil {
+		t.Fatalf("a person deletes the failed recording: %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Dir(file)); !os.IsNotExist(err) {
+		t.Errorf("the delete of a person removes the file: %v", err)
+	}
+}
+
 func TestRecordingIsAJobOfKindCaptureForMCP(t *testing.T) {
 	r := newRecEnv(t)
 	rec := r.start(t, r.newProject("p"))
@@ -775,7 +928,7 @@ func TestRecordingShowsTheClockOfTheHelperWhileItRuns(t *testing.T) {
 	r := newRecEnv(t)
 	rec := r.start(t, r.newProject("p"))
 
-	r.cap.last().events <- capturehost.Progress{ElapsedMS: 3000, Frames: 90, Dropped: 2, Bytes: 5000}
+	r.cap.last().send(capturehost.Progress{ElapsedMS: 3000, Frames: 90, Dropped: 2, Bytes: 5000})
 
 	var got *service.Recording
 
