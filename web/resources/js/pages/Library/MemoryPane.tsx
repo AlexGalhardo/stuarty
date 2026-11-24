@@ -160,7 +160,7 @@ export default function MemoryPane({
 		<div className="flex flex-col gap-3" data-testid="memory-pane">
 			{entry !== null && (
 				<div className="flex flex-wrap items-center gap-2">
-					<h2 className="text-lg font-semibold">{entry.name}</h2>
+					<h2 className="text-lg font-semibold break-all">{entry.name}</h2>
 					<EntryBadges entry={entry} />
 				</div>
 			)}
