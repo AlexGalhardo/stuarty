@@ -647,8 +647,51 @@ func (s *svc) editResult(
 		UntrustedNotice: UntrustedNotice,
 		ProjectID:       req.ProjectID, Revision: current, BaseRevision: req.BaseRevision, Actor: actor,
 		Created: created, Effective: effective, Diff: nonNilChanges(out.Diff),
-		Findings: findings, Lint: totals, Description: describe(out.Doc, out.Diff),
+		Findings: findings, Lint: totals, Description: describeWithSnaps(describe(out.Doc, out.Diff), effective),
 	}
+}
+
+// describeWithSnaps adds one line per transcript cut that tried to snap, so that a person and an agent read where the
+// edges of the cut went (SDD-023 section 3.1).
+func describeWithSnaps(description string, effective []OpEffect) string {
+	for i := range effective {
+		if effective[i].Op != "transcript.delete_range" {
+			continue
+		}
+
+		if line := snapLine(effective[i].Effective); line != "" {
+			description += "\n" + line
+		}
+	}
+
+	return description
+}
+
+func snapLine(eff map[string]any) string {
+	snap, ok := eff["snap"].(map[string]any)
+	if !ok {
+		return ""
+	}
+
+	if snap["analysis"] == command.SilenceMissing {
+		return "Cut edges not snapped: no silence analysis was available, so the cut follows the word times."
+	}
+
+	edge := func(name string) string {
+		e, _ := snap[name].(map[string]any)
+		frames, _ := e["moved"].(int)
+
+		switch e["result"] {
+		case "moved":
+			return fmt.Sprintf("%s edge moved %d frames into a silence", name, frames)
+		case "inside":
+			return name + " edge was already in a silence"
+		default:
+			return name + " edge found no silence nearby"
+		}
+	}
+
+	return "Cut edges: " + edge("start") + "; " + edge("end") + "."
 }
 
 // inOperationOrder orders the created ids of a batch as its operations created
