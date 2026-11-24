@@ -402,6 +402,10 @@ func TestLibraryOfTheMaximumSizeIsReadyWithinTwoSecondsOfTheUnlock(t *testing.T)
 		t.Skip("builds 3,000 sealed files") // verify:env-skip short mode: a minute of file writes on a slow disk
 	}
 
+	if raceEnabled {
+		t.Skip("the race detector slows 3,000 files about tenfold") // verify:env-skip a race build
+	}
+
 	m, _, dir := newSealed(t)
 	ctx := context.Background()
 
