@@ -1,10 +1,17 @@
 import { renderToString } from "react-dom/server";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
 import { I18nProvider } from "@/lib/i18n";
 import { type SessionInfo, SessionProvider } from "@/lib/session";
-import type { ApprovalRequest } from "../../editor/api/types";
+import type { ApprovalRequest, InboxRow } from "../../editor/api/types";
 import ApprovalQueue from "./ApprovalQueue";
+import type { ApprovalContext } from "./useApprovalContext";
+
+vi.mock("@inertiajs/react", () => ({
+	Link: ({ children, href }: { children: string; href: string }) => (
+		<a href={href}>{children}</a>
+	),
+}));
 
 const PAYLOAD = "<img src=x onerror=window.__pwned=1>";
 
@@ -15,7 +22,19 @@ const messages = {
 	"ui.approvals.empty": "Nothing is waiting for you.",
 	"ui.approvals.kind": "Kind",
 	"ui.approvals.destination": "Goes to",
-	"ui.approvals.no_destination": "No destination",
+	"ui.approvals.not_reported": "Not reported",
+	"ui.approvals.what": "What happens",
+	"ui.approvals.item": "Item",
+	"ui.approvals.undo": "Undo",
+	"ui.approvals.undo_yes": "Can be undone",
+	"ui.approvals.undo_no": "Cannot be undone",
+	"ui.approvals.undo_not_verified": "Not verified",
+	"ui.approvals.skill": "Skill",
+	"ui.approvals.path": "Path to publication",
+	"ui.approvals.open_publish": "Open in Publish",
+	"ui.approvals.words": { one: "{count} word", other: "{count} words" },
+	"ui.approvals.address": "Address:",
+	"ui.publish.state.waiting_approval": "Waiting for approval",
 	"ui.approvals.cost": "Estimated cost",
 	"ui.approvals.no_cost": "Free",
 	"ui.approvals.actor": "Asked by",
@@ -52,12 +71,14 @@ function markup(
 	requests: ApprovalRequest[],
 	live = true,
 	session: SessionInfo = person,
+	context: Record<string, ApprovalContext> = {},
 ): string {
 	return renderToString(
 		<I18nProvider messages={messages} locale="en" locales={["en"]}>
 			<SessionProvider session={session}>
 				<ApprovalQueue
 					requests={requests}
+					context={context}
 					destinations={{ con_1: "My blog" }}
 					busyId={null}
 					live={live}
@@ -84,7 +105,96 @@ describe("the approval queue shows what will go out, where, what it costs and wh
 			request({ estimate: { micros: 0, currency: "" }, connection_id: null }),
 		]);
 		expect(html).toContain("Free");
-		expect(html).toContain("No destination");
+		expect(html).toContain("Not reported");
+	});
+
+	// Epic 82: what the service did not report reads "Not reported", never a guess, and undo is the service's word.
+	test("with no context the undo, the skill, the item and the path read Not reported", () => {
+		const html = markup([request()]);
+		for (const id of ["undo", "skill", "item", "path"]) {
+			expect(html).toMatch(
+				new RegExp(`data-testid="approval-${id}"[^>]*>Not reported<`),
+			);
+		}
+	});
+
+	const row = (extra: Partial<InboxRow> = {}): InboxRow => ({
+		id: "approval:apr_1",
+		source: "approval",
+		source_id: "apr_1",
+		state: "waiting",
+		agent: "key:key_1",
+		skill: "publish-blog",
+		tool: "publish.post",
+		summary: "Post the launch video",
+		action_key: "",
+		item: "",
+		destination: "",
+		cost: null,
+		undo: "cannot",
+		project_id: "",
+		session_id: "",
+		created_at: "2026-11-19T12:00:00Z",
+		answered_at: null,
+		...extra,
+	});
+
+	test("shows the undo word and the skill the service reported", () => {
+		const html = markup([request()], true, person, {
+			apr_1: { row: row() },
+		});
+		expect(html).toContain("Cannot be undone");
+		expect(html).toContain("publish-blog");
+		// a word the client does not know is never read as "can"
+		const odd = markup([request()], true, person, {
+			apr_1: { row: row({ undo: "maybe" as InboxRow["undo"] }) },
+		});
+		expect(odd).toContain("Not verified");
+		expect(odd).not.toContain("Can be undone");
+	});
+
+	test("a text post shows its excerpt, words and address and no media", () => {
+		const html = markup([request()], true, person, {
+			apr_1: {
+				row: row(),
+				publication: {
+					id: "pub_1",
+					project_id: "prj_1",
+					title: "Launch notes",
+					export: "",
+					post: "itm_1",
+					targets: [],
+					created_at: "2026-11-19T12:00:00Z",
+					updated_at: "2026-11-19T12:00:00Z",
+				},
+				target: {
+					id: "tgt_1",
+					publication_id: "pub_1",
+					connection_id: "con_1",
+					network: "blog_hugo",
+					fields: {},
+					state: "waiting_approval",
+					scheduled_at: null,
+					zone: "UTC",
+					late_window_minutes: 0,
+					attempts: 0,
+					updated_at: "2026-11-19T12:00:00Z",
+				},
+				post: { words: 1, text: "Hello readers", slug: "launch-notes" },
+			},
+		});
+		expect(html).toContain("Launch notes");
+		expect(html).toContain("Hello readers");
+		expect(html).toContain("1 word");
+		expect(html).toContain("launch-notes");
+		expect(html).toContain("Waiting for approval");
+		expect(html).not.toMatch(/<(img|video|audio)\b/);
+	});
+
+	test("Approve and Reject are the same size", () => {
+		const html = markup([request()]);
+		const found = html.match(/<button[^>]*>/g) ?? [];
+		expect(found.filter((b) => b.includes("min-w-24"))).toHaveLength(2);
 	});
 
 	test("an empty queue says nothing waits, and the live state is shown", () => {

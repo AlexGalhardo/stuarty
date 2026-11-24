@@ -6,6 +6,7 @@ import { useT } from "@/lib/i18n";
 import ApprovalQueue from "../../dashboard/approval/ApprovalQueue";
 import CostPanel from "../../dashboard/approval/CostPanel";
 import RulesPanel from "../../dashboard/approval/RulesPanel";
+import { useApprovalContext } from "../../dashboard/approval/useApprovalContext";
 import { useApprovalQueue } from "../../dashboard/approval/useApprovalQueue";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
@@ -21,6 +22,7 @@ function api() {
 export default function Approvals(): ReactNode {
 	const t = useT();
 	const queue = useApprovalQueue();
+	const context = useApprovalContext(queue.requests);
 	const [destinations, setDestinations] = useState<Record<string, string>>({});
 	const [projects, setProjects] = useState<Record<string, string>>({});
 	const [rules, setRules] = useState<ApprovalRule[]>([]);
@@ -77,6 +79,7 @@ export default function Approvals(): ReactNode {
 				<FailureNote failure={failure ?? queue.failure} />
 				<ApprovalQueue
 					requests={queue.requests ?? []}
+					context={context}
 					destinations={destinations}
 					busyId={queue.busyId}
 					live={queue.live}
