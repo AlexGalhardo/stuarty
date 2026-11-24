@@ -2,7 +2,6 @@ package library
 
 import (
 	"context"
-	"os"
 
 	core "github.com/AlexGalhardo/stuarty/core/library"
 )
@@ -78,7 +77,7 @@ func (m *Manager) Search(ctx context.Context, q SearchQuery) (SearchResult, erro
 	var (
 		res  SearchResult
 		used int
-		root *os.Root
+		root *vroot
 	)
 
 	if root, err = m.files.open(); err != nil {
@@ -132,7 +131,7 @@ func visibleTo(e *Entry, projectID string) bool {
 }
 
 // bodyOf reads the text of an entry for its snippet: the file, not the index.
-func (m *Manager) bodyOf(root *os.Root, e *Entry) string {
+func (m *Manager) bodyOf(root *vroot, e *Entry) string {
 	if root == nil {
 		return ""
 	}

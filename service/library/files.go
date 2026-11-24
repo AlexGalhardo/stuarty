@@ -13,7 +13,16 @@ import (
 	"strings"
 
 	core "github.com/AlexGalhardo/stuarty/core/library"
+	"github.com/AlexGalhardo/stuarty/service/account"
 )
+
+// sealOverhead is what the envelope adds to a file: the header, the nonce and the tag. The size limits of the files
+// are limits of their content.
+const sealOverhead = 5 + 12 + 16
+
+// errSealedFile is a sealed file that does not open: edited, cut or moved outside the product (SDD-018 section 2).
+var errSealedFile = errors.New("the file is sealed and does not open with the key of this account: " +
+	"it was edited, cut or moved outside the product")
 
 // The folders of library/ (SDD-018 section 2).
 const (
@@ -29,26 +38,69 @@ const (
 )
 
 // files is the library folder of a workspace. Every access goes through os.Root,
-// so no name and no link can lead out of it.
-type files struct{ dir string }
+// so no name and no link can lead out of it. seal says how the files are stored: sealed with an account
+// (ADR-0053), clear text with none; nil is clear text.
+type files struct {
+	dir  string
+	seal account.FileSealer
+}
+
+// vroot is an open library folder with the way its files are stored. Reads open a sealed file and also read a clear
+// one; writes seal while an account exists.
+type vroot struct {
+	*os.Root
+	seal account.FileSealer
+}
+
+// plainRoot is a folder whose files are never sealed: a folder a person chose to import from, the exports.
+func plainRoot(r *os.Root) *vroot { return &vroot{Root: r} }
+
+func (r *vroot) sealing() bool { return r.seal != nil && r.seal.Sealing() }
+
+// ready is ErrLocked while the studio is locked and the folder holds sealed files.
+func (r *vroot) ready() error {
+	if r.seal == nil {
+		return nil
+	}
+
+	return r.seal.Ready()
+}
+
+// ready is nil when the files can be read and written now.
+func (f files) ready() error {
+	if f.seal == nil {
+		return nil
+	}
+
+	return f.seal.Ready()
+}
 
 // open returns the root of the library folder, or nil when it does not exist.
-func (f files) open() (*os.Root, error) {
+func (f files) open() (*vroot, error) {
 	r, err := os.OpenRoot(f.dir)
 	if errors.Is(err, fs.ErrNotExist) {
 		return nil, nil //nolint:nilnil // no library folder yet is an empty library
 	}
 
-	return r, err
+	if err != nil {
+		return nil, err
+	}
+
+	return &vroot{Root: r, seal: f.seal}, nil
 }
 
 // create returns the root of the library folder, making it first.
-func (f files) create() (*os.Root, error) {
+func (f files) create() (*vroot, error) {
 	if err := os.MkdirAll(f.dir, 0o700); err != nil {
 		return nil, err
 	}
 
-	return os.OpenRoot(f.dir)
+	r, err := os.OpenRoot(f.dir)
+	if err != nil {
+		return nil, err
+	}
+
+	return &vroot{Root: r, seal: f.seal}, nil
 }
 
 func entryPath(kind core.Kind, name string) string {
@@ -65,7 +117,7 @@ func entryPath(kind core.Kind, name string) string {
 }
 
 // listDir returns the entries of a folder under root; a missing folder is empty.
-func listDir(root *os.Root, dir string) ([]fs.DirEntry, error) {
+func listDir(root *vroot, dir string) ([]fs.DirEntry, error) {
 	d, err := root.Open(dir)
 	if errors.Is(err, fs.ErrNotExist) {
 		return nil, nil
@@ -99,44 +151,77 @@ func fileSig(info fs.FileInfo) string {
 
 // readSmall reads a regular file under root, refusing a link and a file over the
 // limit.
-func readSmall(root *os.Root, rel string, limit int64) ([]byte, fs.FileInfo, error) {
-	info, err := root.Lstat(rel)
+func readSmall(root *vroot, rel string, limit int64) ([]byte, fs.FileInfo, error) {
+	data, info, _, err := readFile(root, rel, limit)
+
+	return data, info, err
+}
+
+// readFile is readSmall that also says whether the file was clear text where the folder seals: the scan seals
+// such a file. A sealed file is opened; one that does not open is errSealedFile. The limit is on the content.
+func readFile(root *vroot, rel string, limit int64) (data []byte, info fs.FileInfo, clear bool, err error) {
+	if err := root.ready(); err != nil {
+		return nil, nil, false, err
+	}
+
+	info, err = root.Lstat(rel)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, false, err
 	}
 
 	if !info.Mode().IsRegular() {
-		return nil, nil, errors.New("it is not a regular file")
+		return nil, nil, false, errors.New("it is not a regular file")
 	}
 
-	if info.Size() > limit {
-		return nil, nil, fmt.Errorf("the file is %d bytes; the limit is %d", info.Size(), limit)
+	room := limit
+	if root.seal != nil {
+		room += sealOverhead
+	}
+
+	if info.Size() > room {
+		return nil, nil, false, fmt.Errorf("the file is %d bytes; the limit is %d", info.Size(), limit)
 	}
 
 	f, err := root.Open(rel)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, false, err
 	}
 
 	defer func() { _ = f.Close() }()
 
-	data, err := io.ReadAll(io.LimitReader(f, limit+1))
+	data, err = io.ReadAll(io.LimitReader(f, room+1))
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, false, err
+	}
+
+	if int64(len(data)) > room {
+		return nil, nil, false, errors.New("the file grew while it was read")
+	}
+
+	if root.seal != nil && account.IsSealedFile(data) {
+		if data, err = root.seal.OpenFile(rel, data); err != nil {
+			if errors.Is(err, account.ErrLocked) {
+				return nil, nil, false, err
+			}
+
+			return nil, nil, false, errSealedFile
+		}
+	} else if root.sealing() {
+		clear = true
 	}
 
 	if int64(len(data)) > limit {
-		return nil, nil, errors.New("the file grew while it was read")
+		return nil, nil, false, fmt.Errorf("the file is %d bytes; the limit is %d", len(data), limit)
 	}
 
-	return data, info, nil
+	return data, info, clear, nil
 }
 
 // walkSkill walks the folder of a skill under root (the folder itself is dir).
 // visit gets the slash path inside the folder and its info for every regular
 // file; a link, a device or a folder too deep or too full makes the walk fail,
 // so a skill is never read in part.
-func walkSkill(root *os.Root, dir string, visit func(rel string, info fs.FileInfo) error) error {
+func walkSkill(root *vroot, dir string, visit func(rel string, info fs.FileInfo) error) error {
 	count, total := 0, int64(0)
 
 	var walk func(rel string, depth int) error
@@ -188,7 +273,7 @@ func walkSkill(root *os.Root, dir string, visit func(rel string, info fs.FileInf
 }
 
 // skillSignature is the signature of a skill folder, from stat calls only.
-func skillSignature(root *os.Root, dir string) (string, error) {
+func skillSignature(root *vroot, dir string) (string, error) {
 	count, bytes, latest := 0, int64(0), int64(0)
 
 	err := walkSkill(root, dir, func(_ string, info fs.FileInfo) error {
@@ -206,7 +291,7 @@ func skillSignature(root *os.Root, dir string) (string, error) {
 }
 
 // readSkillFiles reads every file of a skill folder, with the signature.
-func readSkillFiles(root *os.Root, dir string) ([]core.File, string, error) {
+func readSkillFiles(root *vroot, dir string) ([]core.File, string, error) {
 	var out []core.File
 
 	count, bytes, latest := 0, int64(0), int64(0)
@@ -240,7 +325,24 @@ func randomSuffix() string {
 
 // writeFile writes a file by a temporary name and a rename, so a reader never
 // sees half of it and a failure leaves the old file.
-func writeFile(root *os.Root, rel string, data []byte) error {
+func writeFile(root *vroot, rel string, data []byte) error { return writeFileAs(root, rel, rel, data) }
+
+// writeFileAs writes the file at rel as the file named final, which is what a sealed file is bound to: a folder is
+// written under a temporary name and renamed, so its files are sealed for the path they will have.
+func writeFileAs(root *vroot, rel, final string, data []byte) error {
+	if err := root.ready(); err != nil {
+		return err
+	}
+
+	if root.sealing() {
+		sealed, err := root.seal.SealFile(final, data)
+		if err != nil {
+			return err
+		}
+
+		data = sealed
+	}
+
 	if err := root.MkdirAll(path.Dir(rel), 0o700); err != nil {
 		return err
 	}
@@ -260,14 +362,14 @@ func writeFile(root *os.Root, rel string, data []byte) error {
 }
 
 // writeSkillDir writes the whole folder of a skill under skills/.
-func writeSkillDir(root *os.Root, name string, all []core.File) error {
+func writeSkillDir(root *vroot, name string, all []core.File) error {
 	return writeDirAtomic(root, skillDir, name, all)
 }
 
 // writeDirAtomic writes the whole folder parent/name under a temporary name and
 // renames it into place, keeping the old folder until the new one is there. A
 // failure leaves the old folder.
-func writeDirAtomic(root *os.Root, parent, name string, all []core.File) error {
+func writeDirAtomic(root *vroot, parent, name string, all []core.File) error {
 	if err := root.MkdirAll(parent, 0o700); err != nil {
 		return err
 	}
@@ -286,7 +388,7 @@ func writeDirAtomic(root *os.Root, parent, name string, all []core.File) error {
 			return invalid("path", "%q: %v", f.Path, err)
 		}
 
-		if err := writeFile(root, path.Join(tmp, f.Path), f.Data); err != nil {
+		if err := writeFileAs(root, path.Join(tmp, f.Path), path.Join(parent, name, f.Path), f.Data); err != nil {
 			cleanup()
 
 			return err

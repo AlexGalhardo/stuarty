@@ -49,9 +49,12 @@ type ImportResult struct {
 func (m *Manager) ImportSkillDir(
 	ctx context.Context,
 	c Caller,
-	root *os.Root,
+	folder *os.Root,
 	opts ImportOptions,
 ) (ImportResult, error) {
+	// The folder is the person's own, outside library/: clear text, never sealed.
+	root := plainRoot(folder)
+
 	var entries []core.File
 
 	count := 0

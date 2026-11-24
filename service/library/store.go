@@ -2,14 +2,13 @@ package library
 
 import (
 	"context"
-	"os"
 
 	core "github.com/AlexGalhardo/stuarty/core/library"
 )
 
 // openFor refreshes the index and opens the library folder; ErrNotFound when
 // there is none yet.
-func (m *Manager) openFor(ctx context.Context, name string) (*os.Root, error) {
+func (m *Manager) openFor(ctx context.Context, name string) (*vroot, error) {
 	if err := core.ValidName(name); err != nil {
 		return nil, invalid("name", "%v", err)
 	}
