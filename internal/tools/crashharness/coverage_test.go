@@ -160,8 +160,11 @@ var killCases = map[string]killCase{
 		},
 	},
 	"export.video": {
-		test:  "TestKillRealExportVideo",
-		steps: [][2]string{{"engine/export/paths.go", "func publishUnder("}, {"service/jobrun.go", "func (s *svc) Recover("}},
+		test: "TestKillRealExportVideo",
+		steps: [][2]string{
+			{"engine/export/paths.go", "func publishUnder("},
+			{"service/jobrun.go", "func (s *svc) Recover("},
+		},
 	},
 	"export.video.given_up": {
 		test:  "TestKillRealExportVideoGivenUpAfterTheAttempts",

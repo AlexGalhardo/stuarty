@@ -110,8 +110,10 @@ func TestSweepRemovesWhatAKilledExportLeft(t *testing.T) {
 	// worker clears its directory), job_0000000902 and job_0000000904 do not exist.
 	for _, id := range []string{"job_0000000903", "job_0000000905"} {
 		if err := e.store.Write(context.Background(), func(ctx context.Context, tx service.Tx) error {
-			row := service.JobRow{ID: id, Kind: service.JobExport, ProjectID: &project, Actor: ui,
-				State: service.JobQueued, Input: json.RawMessage(`{}`)}
+			row := service.JobRow{
+				ID: id, Kind: service.JobExport, ProjectID: &project, Actor: ui,
+				State: service.JobQueued, Input: json.RawMessage(`{}`),
+			}
 			if err := tx.Jobs().CreateLimited(ctx, row, nil); err != nil {
 				return err
 			}

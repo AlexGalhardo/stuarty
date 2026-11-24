@@ -15,7 +15,7 @@ import (
 
 // Constants of the sign-in the fake network plays; tests look for the canaries in what must never leak.
 const (
-	ClientSecretCanary = "GOCSPX-client-secret-CANARY-77"
+	ClientSecretCanary = "GOCSPX-client-secret-CANARY-77" //nolint:gosec // G101: a canary of a test, no credential
 	RefreshCanary      = "refresh-token-CANARY-88"
 	Redirect           = "http://127.0.0.1:7878/social/callback"
 )
@@ -98,9 +98,7 @@ func (n *FakeNet) serve(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"access_token": "at-1", "refresh_token": RefreshCanary, "expires_in": 3600,
-		})
+		answer(w, tokenAnswer{AccessToken: "at-1", RefreshToken: RefreshCanary, ExpiresIn: 3600})
 	case r.URL.Path == "/account":
 		_, _ = w.Write([]byte(`{"id":"UC-FAKE","title":"Fake channel"}`))
 	case r.URL.Path == "/videos" && r.Method == http.MethodPost:
@@ -111,7 +109,10 @@ func (n *FakeNet) serve(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewDecoder(r.Body).Decode(&sent)
 		n.Posted = append(n.Posted, sent.Path)
 
-		id := "vid" + string(rune('a'+len(n.Videos)))
+		const letters = "abcdefghijklmnopqrstuvwxyz"
+
+		next := len(n.Videos) % len(letters)
+		id := "vid" + letters[next:next+1]
 		n.Videos[id] = "published"
 
 		address := "https://fake.example/watch/" + id
@@ -119,12 +120,26 @@ func (n *FakeNet) serve(w http.ResponseWriter, r *http.Request) {
 			address = n.VideoURL
 		}
 
-		_ = json.NewEncoder(w).Encode(map[string]string{"id": id, "url": address, "state": "published"})
+		answer(w, map[string]string{"id": id, "url": address, "state": "published"})
 	case strings.HasPrefix(r.URL.Path, "/videos/"):
 		id := strings.TrimPrefix(r.URL.Path, "/videos/")
-		_ = json.NewEncoder(w).Encode(map[string]string{"id": id, "state": n.Videos[id]})
+		answer(w, map[string]string{"id": id, "state": n.Videos[id]})
 	default:
 		_, _ = w.Write([]byte("pong"))
+	}
+}
+
+// tokenAnswer is the answer of the token endpoint of the fake networks.
+type tokenAnswer struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresIn    int    `json:"expires_in"`
+}
+
+// answer writes a JSON answer; a value that cannot be encoded is a bug of the fake and says so.
+func answer(w http.ResponseWriter, v any) {
+	if err := json.NewEncoder(w).Encode(v); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
