@@ -1,0 +1,791 @@
+{
+    "lang":  "en",
+    "voice":  "Microsoft Zira Desktop",
+    "words":  [
+                  {
+                      "text":  "so",
+                      "kind":  "word",
+                      "start_ms":  100
+                  },
+                  {
+                      "text":  "um",
+                      "kind":  "filler",
+                      "start_ms":  345
+                  },
+                  {
+                      "text":  "today",
+                      "kind":  "word",
+                      "start_ms":  505
+                  },
+                  {
+                      "text":  "i",
+                      "kind":  "word",
+                      "start_ms":  840
+                  },
+                  {
+                      "text":  "want",
+                      "kind":  "word",
+                      "start_ms":  975
+                  },
+                  {
+                      "text":  "to",
+                      "kind":  "word",
+                      "start_ms":  1235
+                  },
+                  {
+                      "text":  "talk",
+                      "kind":  "word",
+                      "start_ms":  1335
+                  },
+                  {
+                      "text":  "about",
+                      "kind":  "word",
+                      "start_ms":  1630
+                  },
+                  {
+                      "text":  "uh",
+                      "kind":  "filler",
+                      "start_ms":  1900
+                  },
+                  {
+                      "text":  "how",
+                      "kind":  "word",
+                      "start_ms":  1990
+                  },
+                  {
+                      "text":  "we",
+                      "kind":  "word",
+                      "start_ms":  2200
+                  },
+                  {
+                      "text":  "plan",
+                      "kind":  "word",
+                      "start_ms":  2345
+                  },
+                  {
+                      "text":  "a",
+                      "kind":  "word",
+                      "start_ms":  2670
+                  },
+                  {
+                      "text":  "video",
+                      "kind":  "word",
+                      "start_ms":  2725
+                  },
+                  {
+                      "text":  "first",
+                      "kind":  "word",
+                      "start_ms":  4045
+                  },
+                  {
+                      "text":  "we",
+                      "kind":  "repeat",
+                      "start_ms":  4410
+                  },
+                  {
+                      "text":  "should",
+                      "kind":  "repeat",
+                      "start_ms":  4540
+                  },
+                  {
+                      "text":  "we",
+                      "kind":  "word",
+                      "start_ms":  4765
+                  },
+                  {
+                      "text":  "should",
+                      "kind":  "word",
+                      "start_ms":  4900
+                  },
+                  {
+                      "text":  "decide",
+                      "kind":  "word",
+                      "start_ms":  5140
+                  },
+                  {
+                      "text":  "the",
+                      "kind":  "word",
+                      "start_ms":  5555
+                  },
+                  {
+                      "text":  "topic",
+                      "kind":  "word",
+                      "start_ms":  5640
+                  },
+                  {
+                      "text":  "you",
+                      "kind":  "filler",
+                      "start_ms":  6550
+                  },
+                  {
+                      "text":  "know",
+                      "kind":  "filler",
+                      "start_ms":  6700
+                  },
+                  {
+                      "text":  "the",
+                      "kind":  "word",
+                      "start_ms":  6910
+                  },
+                  {
+                      "text":  "one",
+                      "kind":  "word",
+                      "start_ms":  7020
+                  },
+                  {
+                      "text":  "people",
+                      "kind":  "word",
+                      "start_ms":  7250
+                  },
+                  {
+                      "text":  "ask",
+                      "kind":  "word",
+                      "start_ms":  7615
+                  },
+                  {
+                      "text":  "about",
+                      "kind":  "word",
+                      "start_ms":  7885
+                  },
+                  {
+                      "text":  "then",
+                      "kind":  "word",
+                      "start_ms":  9145
+                  },
+                  {
+                      "text":  "um",
+                      "kind":  "filler",
+                      "start_ms":  9335
+                  },
+                  {
+                      "text":  "we",
+                      "kind":  "word",
+                      "start_ms":  9510
+                  },
+                  {
+                      "text":  "write",
+                      "kind":  "word",
+                      "start_ms":  9645
+                  },
+                  {
+                      "text":  "the",
+                      "kind":  "word",
+                      "start_ms":  9890
+                  },
+                  {
+                      "text":  "script",
+                      "kind":  "word",
+                      "start_ms":  9980
+                  },
+                  {
+                      "text":  "and",
+                      "kind":  "word",
+                      "start_ms":  10375
+                  },
+                  {
+                      "text":  "uh",
+                      "kind":  "filler",
+                      "start_ms":  10520
+                  },
+                  {
+                      "text":  "record",
+                      "kind":  "word",
+                      "start_ms":  10605
+                  },
+                  {
+                      "text":  "it",
+                      "kind":  "word",
+                      "start_ms":  11035
+                  },
+                  {
+                      "text":  "in",
+                      "kind":  "word",
+                      "start_ms":  11140
+                  },
+                  {
+                      "text":  "one",
+                      "kind":  "word",
+                      "start_ms":  11275
+                  },
+                  {
+                      "text":  "take",
+                      "kind":  "word",
+                      "start_ms":  11515
+                  },
+                  {
+                      "text":  "the",
+                      "kind":  "repeat",
+                      "start_ms":  12765
+                  },
+                  {
+                      "text":  "the",
+                      "kind":  "word",
+                      "start_ms":  12845
+                  },
+                  {
+                      "text":  "camera",
+                      "kind":  "word",
+                      "start_ms":  12950
+                  },
+                  {
+                      "text":  "should",
+                      "kind":  "word",
+                      "start_ms":  13410
+                  },
+                  {
+                      "text":  "be",
+                      "kind":  "word",
+                      "start_ms":  13630
+                  },
+                  {
+                      "text":  "at",
+                      "kind":  "word",
+                      "start_ms":  13785
+                  },
+                  {
+                      "text":  "eye",
+                      "kind":  "word",
+                      "start_ms":  13930
+                  },
+                  {
+                      "text":  "level",
+                      "kind":  "word",
+                      "start_ms":  14100
+                  },
+                  {
+                      "text":  "and",
+                      "kind":  "word",
+                      "start_ms":  14890
+                  },
+                  {
+                      "text":  "er",
+                      "kind":  "filler",
+                      "start_ms":  15005
+                  },
+                  {
+                      "text":  "the",
+                      "kind":  "word",
+                      "start_ms":  15385
+                  },
+                  {
+                      "text":  "light",
+                      "kind":  "word",
+                      "start_ms":  15500
+                  },
+                  {
+                      "text":  "should",
+                      "kind":  "word",
+                      "start_ms":  15755
+                  },
+                  {
+                      "text":  "come",
+                      "kind":  "word",
+                      "start_ms":  15990
+                  },
+                  {
+                      "text":  "from",
+                      "kind":  "word",
+                      "start_ms":  16245
+                  },
+                  {
+                      "text":  "the",
+                      "kind":  "word",
+                      "start_ms":  16445
+                  },
+                  {
+                      "text":  "front",
+                      "kind":  "word",
+                      "start_ms":  16520
+                  },
+                  {
+                      "text":  "i",
+                      "kind":  "word",
+                      "start_ms":  17820
+                  },
+                  {
+                      "text":  "think",
+                      "kind":  "repeat",
+                      "start_ms":  17910
+                  },
+                  {
+                      "text":  "that",
+                      "kind":  "repeat",
+                      "start_ms":  18180
+                  },
+                  {
+                      "text":  "i",
+                      "kind":  "word",
+                      "start_ms":  18335
+                  },
+                  {
+                      "text":  "think",
+                      "kind":  "word",
+                      "start_ms":  18445
+                  },
+                  {
+                      "text":  "that",
+                      "kind":  "word",
+                      "start_ms":  18715
+                  },
+                  {
+                      "text":  "sound",
+                      "kind":  "word",
+                      "start_ms":  18890
+                  },
+                  {
+                      "text":  "matters",
+                      "kind":  "word",
+                      "start_ms":  19250
+                  },
+                  {
+                      "text":  "more",
+                      "kind":  "word",
+                      "start_ms":  19630
+                  },
+                  {
+                      "text":  "than",
+                      "kind":  "word",
+                      "start_ms":  19865
+                  },
+                  {
+                      "text":  "um",
+                      "kind":  "filler",
+                      "start_ms":  20035
+                  },
+                  {
+                      "text":  "the",
+                      "kind":  "word",
+                      "start_ms":  20185
+                  },
+                  {
+                      "text":  "picture",
+                      "kind":  "word",
+                      "start_ms":  20255
+                  },
+                  {
+                      "text":  "after",
+                      "kind":  "word",
+                      "start_ms":  21620
+                  },
+                  {
+                      "text":  "recording",
+                      "kind":  "word",
+                      "start_ms":  21940
+                  },
+                  {
+                      "text":  "uh",
+                      "kind":  "filler",
+                      "start_ms":  22930
+                  },
+                  {
+                      "text":  "we",
+                      "kind":  "word",
+                      "start_ms":  23005
+                  },
+                  {
+                      "text":  "cut",
+                      "kind":  "word",
+                      "start_ms":  23150
+                  },
+                  {
+                      "text":  "the",
+                      "kind":  "word",
+                      "start_ms":  23395
+                  },
+                  {
+                      "text":  "pauses",
+                      "kind":  "word",
+                      "start_ms":  23485
+                  },
+                  {
+                      "text":  "and",
+                      "kind":  "word",
+                      "start_ms":  23980
+                  },
+                  {
+                      "text":  "you",
+                      "kind":  "filler",
+                      "start_ms":  24110
+                  },
+                  {
+                      "text":  "know",
+                      "kind":  "filler",
+                      "start_ms":  24235
+                  },
+                  {
+                      "text":  "keep",
+                      "kind":  "word",
+                      "start_ms":  24465
+                  },
+                  {
+                      "text":  "the",
+                      "kind":  "word",
+                      "start_ms":  24755
+                  },
+                  {
+                      "text":  "good",
+                      "kind":  "word",
+                      "start_ms":  24860
+                  },
+                  {
+                      "text":  "parts",
+                      "kind":  "word",
+                      "start_ms":  25085
+                  },
+                  {
+                      "text":  "it",
+                      "kind":  "repeat",
+                      "start_ms":  26465
+                  },
+                  {
+                      "text":  "is",
+                      "kind":  "repeat",
+                      "start_ms":  26580
+                  },
+                  {
+                      "text":  "it",
+                      "kind":  "word",
+                      "start_ms":  26720
+                  },
+                  {
+                      "text":  "is",
+                      "kind":  "word",
+                      "start_ms":  26825
+                  },
+                  {
+                      "text":  "faster",
+                      "kind":  "word",
+                      "start_ms":  26960
+                  },
+                  {
+                      "text":  "than",
+                      "kind":  "word",
+                      "start_ms":  27410
+                  },
+                  {
+                      "text":  "um",
+                      "kind":  "filler",
+                      "start_ms":  27580
+                  },
+                  {
+                      "text":  "scrubbing",
+                      "kind":  "word",
+                      "start_ms":  27745
+                  },
+                  {
+                      "text":  "the",
+                      "kind":  "word",
+                      "start_ms":  28210
+                  },
+                  {
+                      "text":  "timeline",
+                      "kind":  "word",
+                      "start_ms":  28300
+                  },
+                  {
+                      "text":  "by",
+                      "kind":  "word",
+                      "start_ms":  28910
+                  },
+                  {
+                      "text":  "hand",
+                      "kind":  "word",
+                      "start_ms":  29085
+                  },
+                  {
+                      "text":  "finally",
+                      "kind":  "word",
+                      "start_ms":  30390
+                  },
+                  {
+                      "text":  "hmm",
+                      "kind":  "filler",
+                      "start_ms":  30835
+                  },
+                  {
+                      "text":  "we",
+                      "kind":  "word",
+                      "start_ms":  31065
+                  },
+                  {
+                      "text":  "export",
+                      "kind":  "word",
+                      "start_ms":  31195
+                  },
+                  {
+                      "text":  "the",
+                      "kind":  "word",
+                      "start_ms":  31630
+                  },
+                  {
+                      "text":  "file",
+                      "kind":  "word",
+                      "start_ms":  31725
+                  },
+                  {
+                      "text":  "and",
+                      "kind":  "word",
+                      "start_ms":  32110
+                  },
+                  {
+                      "text":  "share",
+                      "kind":  "word",
+                      "start_ms":  32255
+                  },
+                  {
+                      "text":  "it",
+                      "kind":  "word",
+                      "start_ms":  32565
+                  },
+                  {
+                      "text":  "with",
+                      "kind":  "word",
+                      "start_ms":  32685
+                  },
+                  {
+                      "text":  "everyone",
+                      "kind":  "word",
+                      "start_ms":  32835
+                  },
+                  {
+                      "text":  "some",
+                      "kind":  "word",
+                      "start_ms":  34260
+                  },
+                  {
+                      "text":  "people",
+                      "kind":  "word",
+                      "start_ms":  34555
+                  },
+                  {
+                      "text":  "uh",
+                      "kind":  "filler",
+                      "start_ms":  34920
+                  },
+                  {
+                      "text":  "start",
+                      "kind":  "word",
+                      "start_ms":  35015
+                  },
+                  {
+                      "text":  "with",
+                      "kind":  "word",
+                      "start_ms":  35375
+                  },
+                  {
+                      "text":  "the",
+                      "kind":  "word",
+                      "start_ms":  35520
+                  },
+                  {
+                      "text":  "title",
+                      "kind":  "word",
+                      "start_ms":  35615
+                  },
+                  {
+                      "text":  "but",
+                      "kind":  "word",
+                      "start_ms":  36460
+                  },
+                  {
+                      "text":  "i",
+                      "kind":  "word",
+                      "start_ms":  36605
+                  },
+                  {
+                      "text":  "prefer",
+                      "kind":  "repeat",
+                      "start_ms":  36715
+                  },
+                  {
+                      "text":  "to",
+                      "kind":  "repeat",
+                      "start_ms":  37090
+                  },
+                  {
+                      "text":  "i",
+                      "kind":  "word",
+                      "start_ms":  37245
+                  },
+                  {
+                      "text":  "prefer",
+                      "kind":  "word",
+                      "start_ms":  37375
+                  },
+                  {
+                      "text":  "to",
+                      "kind":  "word",
+                      "start_ms":  37750
+                  },
+                  {
+                      "text":  "start",
+                      "kind":  "word",
+                      "start_ms":  37865
+                  },
+                  {
+                      "text":  "with",
+                      "kind":  "word",
+                      "start_ms":  38220
+                  },
+                  {
+                      "text":  "the",
+                      "kind":  "word",
+                      "start_ms":  38365
+                  },
+                  {
+                      "text":  "story",
+                      "kind":  "word",
+                      "start_ms":  38450
+                  },
+                  {
+                      "text":  "the",
+                      "kind":  "word",
+                      "start_ms":  39785
+                  },
+                  {
+                      "text":  "first",
+                      "kind":  "word",
+                      "start_ms":  39865
+                  },
+                  {
+                      "text":  "ten",
+                      "kind":  "word",
+                      "start_ms":  40250
+                  },
+                  {
+                      "text":  "seconds",
+                      "kind":  "word",
+                      "start_ms":  40490
+                  },
+                  {
+                      "text":  "um",
+                      "kind":  "filler",
+                      "start_ms":  40985
+                  },
+                  {
+                      "text":  "decide",
+                      "kind":  "word",
+                      "start_ms":  41145
+                  },
+                  {
+                      "text":  "whether",
+                      "kind":  "word",
+                      "start_ms":  41560
+                  },
+                  {
+                      "text":  "anyone",
+                      "kind":  "word",
+                      "start_ms":  41865
+                  },
+                  {
+                      "text":  "keeps",
+                      "kind":  "word",
+                      "start_ms":  42290
+                  },
+                  {
+                      "text":  "watching",
+                      "kind":  "word",
+                      "start_ms":  42640
+                  },
+                  {
+                      "text":  "so",
+                      "kind":  "word",
+                      "start_ms":  43990
+                  },
+                  {
+                      "text":  "keep",
+                      "kind":  "repeat",
+                      "start_ms":  44235
+                  },
+                  {
+                      "text":  "it",
+                      "kind":  "repeat",
+                      "start_ms":  44525
+                  },
+                  {
+                      "text":  "keep",
+                      "kind":  "word",
+                      "start_ms":  44635
+                  },
+                  {
+                      "text":  "it",
+                      "kind":  "word",
+                      "start_ms":  44915
+                  },
+                  {
+                      "text":  "short",
+                      "kind":  "word",
+                      "start_ms":  45025
+                  },
+                  {
+                      "text":  "er",
+                      "kind":  "filler",
+                      "start_ms":  45870
+                  },
+                  {
+                      "text":  "clear",
+                      "kind":  "word",
+                      "start_ms":  46230
+                  },
+                  {
+                      "text":  "and",
+                      "kind":  "word",
+                      "start_ms":  46580
+                  },
+                  {
+                      "text":  "honest",
+                      "kind":  "word",
+                      "start_ms":  46710
+                  },
+                  {
+                      "text":  "then",
+                      "kind":  "word",
+                      "start_ms":  48020
+                  },
+                  {
+                      "text":  "hmm",
+                      "kind":  "filler",
+                      "start_ms":  48190
+                  },
+                  {
+                      "text":  "read",
+                      "kind":  "word",
+                      "start_ms":  48415
+                  },
+                  {
+                      "text":  "the",
+                      "kind":  "word",
+                      "start_ms":  48615
+                  },
+                  {
+                      "text":  "captions",
+                      "kind":  "word",
+                      "start_ms":  48700
+                  },
+                  {
+                      "text":  "once",
+                      "kind":  "word",
+                      "start_ms":  49220
+                  },
+                  {
+                      "text":  "uh",
+                      "kind":  "filler",
+                      "start_ms":  49510
+                  },
+                  {
+                      "text":  "before",
+                      "kind":  "word",
+                      "start_ms":  49590
+                  },
+                  {
+                      "text":  "you",
+                      "kind":  "word",
+                      "start_ms":  49930
+                  },
+                  {
+                      "text":  "publish",
+                      "kind":  "word",
+                      "start_ms":  50065
+                  }
+              ]
+}
