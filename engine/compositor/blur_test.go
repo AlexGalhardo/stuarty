@@ -305,3 +305,114 @@ func benchBlur(b *testing.B, bands int, sigma float64) {
 func BenchmarkComposeBlur8Bands(b *testing.B)      { benchBlur(b, 8, 12) }
 func BenchmarkComposeBlur1Band(b *testing.B)       { benchBlur(b, 1, 12) }
 func BenchmarkComposeBlurLarge8Bands(b *testing.B) { benchBlur(b, 8, 60) }
+
+// padEdge is img with three radii of its own edge pixels repeated on every side.
+func padEdge(img Image, px, py int) Image {
+	w, h := img.W+2*px, img.H+2*py
+	pix := make([]byte, w*h*4)
+
+	for y := range h {
+		sy := min(max(y-py, 0), img.H-1)
+		for x := range w {
+			sx := min(max(x-px, 0), img.W-1)
+			copy(pix[(y*w+x)*4:], img.Pix[(sy*img.W+sx)*4:(sy*img.W+sx)*4+4])
+		}
+	}
+
+	return Image{Pix: pix, W: w, H: h}
+}
+
+// The blur of a region repeats the edge pixels (VV-392): it is the blur of the picture with the edge pixels
+// laid around it by three radii, cut back to the picture, and the picture keeps its size and its placement.
+func TestBlurClampedIsTheBlurOfThePaddedPicture(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		w, h  int
+		sigma float64
+	}{{40, 30, 3}, {17, 9, 1}, {60, 20, 6}} {
+		src := pattern(tc.w, tc.h, 11)
+		p := placement{cx: 50, cy: 50, w: float64(tc.w), h: float64(tc.h)}
+		r := blurRadius(tc.sigma)
+		c := &Compositor{Bands: 1}
+
+		got, gp := c.blurredClamped(src, p, tc.sigma)
+		if gp != p || got.W != tc.w || got.H != tc.h {
+			t.Fatalf("%dx%d: the placement or the size changed: %+v %dx%d", tc.w, tc.h, gp, got.W, got.H)
+		}
+
+		padded := padEdge(src, 3*r, 3*r)
+		pp := placement{cx: 50, cy: 50, w: float64(padded.W), h: float64(padded.H)}
+		full, _ := (&Compositor{Bands: 1}).blurred(padded, pp, tc.sigma)
+
+		for y := range tc.h {
+			for x := range tc.w {
+				want := full.Pix[((y+6*r)*full.W+x+6*r)*4 : ((y+6*r)*full.W+x+6*r)*4+4]
+				if !bytes.Equal(got.Pix[(y*tc.w+x)*4:(y*tc.w+x)*4+4], want) {
+					t.Fatalf("%dx%d sigma %v: pixel %d,%d differs from the blur of the padded picture", tc.w, tc.h, tc.sigma, x, y)
+				}
+			}
+		}
+	}
+}
+
+func TestBlurClampedKeepsTheEdgeOfASolidPicture(t *testing.T) {
+	t.Parallel()
+
+	c := &Compositor{Bands: 1}
+	src := solid(30, 20, [4]byte{200, 100, 50, 255})
+	got, _ := c.blurredClamped(src, placement{cx: 15, cy: 10, w: 30, h: 20}, 3)
+
+	if !bytes.Equal(got.Pix, src.Pix) {
+		t.Errorf("a flat picture changed at its edge: %v", got.Pix[:4])
+	}
+}
+
+func TestBlurClampedBandsEqual(t *testing.T) {
+	t.Parallel()
+
+	var want []byte
+
+	for _, bands := range []int{1, 2, 3, 8} {
+		src := pattern(260, 180, 5)
+		got, _ := (&Compositor{Bands: bands}).blurredClamped(src, placement{cx: 160, cy: 120, w: 260, h: 180}, 6)
+
+		if want == nil {
+			want = append([]byte(nil), got.Pix...)
+
+			continue
+		}
+
+		if !bytes.Equal(want, got.Pix) {
+			t.Fatalf("%d bands differ from 1 band", bands)
+		}
+	}
+}
+
+// A masked layer is drawn with the clamped blur and a layer with no mask is not.
+func TestBlurOfAMaskedLayerRepeatsTheEdge(t *testing.T) {
+	t.Parallel()
+
+	imgs := map[string]Image{"a": solid(40, 40, [4]byte{200, 100, 50, 255})}
+	draw := func(mask *plan.MaskSpec) *image.RGBA {
+		dst := image.NewRGBA(image.Rect(0, 0, 100, 100))
+		l := blurLayer("a", 50, 50, 40, 40, 3)
+		l.Mask = mask
+		fp := plan.FramePlan{Background: "#000000", Layers: []plan.Layer{l}}
+
+		if err := newComp(1, imgs).Compose(dst, fp, 1); err != nil {
+			t.Fatal(err)
+		}
+
+		return dst
+	}
+
+	whole := &plan.MaskSpec{Shape: "rect", X: 0, Y: 0, Width: 1, Height: 1}
+	if got := at(draw(whole), 30, 50); got != [4]byte{200, 100, 50, 255} {
+		t.Errorf("the edge pixel of a masked layer is %v, want the solid colour", got)
+	}
+
+	if got := at(draw(nil), 30, 50); got[0] > 125 {
+		t.Errorf("the edge pixel of an unmasked layer is %v, want about half (the outside is transparent)", got)
+	}
+}

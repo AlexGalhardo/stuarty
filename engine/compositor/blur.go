@@ -65,6 +65,60 @@ func (c *Compositor) blurred(src Image, p placement, sigma float64) (Image, plac
 	return Image{Pix: out, W: w, H: h}, grown
 }
 
+// blurredClamped returns src blurred by sigma like blurred, but with the pixels beyond the edge of src repeating
+// the nearest one instead of counting as transparent, and at the size of src, so the placement does not change.
+// It is the blur of a masked layer, a region of the picture (clip.blur_region, SDD-004 section 3.6, "Blur at the
+// edge"): the region must hide the picture right up to its edge, where the transparent outside leaves about half
+// of it. The renderer does the same bytes (renderer/stuarty-renderer/src/blur.rs, blurred_clamped).
+func (c *Compositor) blurredClamped(src Image, p placement, sigma float64) (Image, placement) {
+	rx := blurRadius(sigma / (p.w / float64(src.W)))
+	ry := blurRadius(sigma / (p.h / float64(src.H)))
+
+	if rx == 0 && ry == 0 {
+		return src, p
+	}
+
+	px, py := 3*rx, 3*ry
+	w, h := src.W, src.H
+	ph := h + 2*py
+	n := w * ph * 4
+
+	if cap(c.blurA) < n {
+		c.blurA, c.blurB = make([]byte, n), make([]uint32, w*ph)
+	}
+
+	rows, out := c.blurB[:w*ph], c.blurA[:n]
+	tx, ty := roundTable(rx), roundTable(ry)
+
+	// Each row is padded by its edge pixels, blurred three times along x and kept; the rows above and below
+	// repeat the first and the last.
+	c.runBands(0, h, w, func(y0, y1 int) {
+		a, b := make([]uint32, w+2*px), make([]uint32, w+2*px)
+
+		for y := y0; y < y1; y++ {
+			line := src.Pix[y*w*4 : (y+1)*w*4]
+			for x := range a {
+				sx := min(max(x-px, 0), w-1)
+				a[x] = binary.LittleEndian.Uint32(line[4*sx:])
+			}
+
+			blurRow(a, b, rx, tx)
+			blurRow(b, a, rx, tx)
+			blurRow(a, b, rx, tx)
+			copy(rows[(y+py)*w:(y+py+1)*w], b[px:px+w])
+		}
+	})
+
+	for y := range py {
+		copy(rows[y*w:(y+1)*w], rows[py*w:(py+1)*w])
+		copy(rows[(py+h+y)*w:(py+h+y+1)*w], rows[(py+h-1)*w:(py+h)*w])
+	}
+
+	c.runBands(0, w, ph, func(x0, x1 int) { blurColumns3(rows, out, w, ph, x0, x1, ry, ty) })
+
+	return Image{Pix: out[py*w*4 : (py+h)*w*4], W: w, H: h}, p
+}
+
 // meanTable maps the sum of a window of 2r+1 bytes, at most 65535, to its mean rounded half up, so
 // a pass needs no division; its size lets a lane masked to 16 bits index it without a check.
 type meanTable [1 << 16]uint8

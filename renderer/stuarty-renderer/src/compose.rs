@@ -8,7 +8,7 @@ use core::ops::Range;
 use std::borrow::Cow;
 
 use crate::blend::{BlendMode, mix_pixel};
-use crate::blur::{blur_radius, blurred};
+use crate::blur::{blur_radius, blurred, blurred_clamped};
 use crate::chroma::{ChromaKeySpec, apply_chroma_key};
 use crate::colour::apply_matrix;
 use crate::effects::{Effect, EffectGeom, FrameInfo, Transition, TransitionKind, apply_effects};
@@ -480,11 +480,17 @@ pub fn prepare_layer_offset<'a>(l: &Layer<'a>, out_scale: f64) -> Option<(Prepar
 		hq: clamped_q(p.h),
 	};
 	let mut p = p;
-	if l.blur > 0.0
-		&& let Some((img, grown)) = blurred(&src, &p, mul(l.blur, out_scale))
-	{
-		src = Cow::Owned(img);
-		p = grown;
+	if l.blur > 0.0 {
+		if l.mask.is_some() {
+			// A masked layer is a region of the picture (clip.blur_region): the edge pixels are repeated
+			// past the picture so the blur hides it right up to its edge, and the layer keeps its size.
+			if let Some(img) = blurred_clamped(&src, &p, mul(l.blur, out_scale)) {
+				src = Cow::Owned(img);
+			}
+		} else if let Some((img, grown)) = blurred(&src, &p, mul(l.blur, out_scale)) {
+			src = Cow::Owned(img);
+			p = grown;
+		}
 	}
 	if !l.ext.filters.is_empty() {
 		let (img, grown) = apply_filters(

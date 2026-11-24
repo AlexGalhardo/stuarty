@@ -127,6 +127,36 @@ fn blur_zero<const F: usize, const C: usize>(src: &Image, rx: usize, ry: usize) 
 /// the colour channels are computed (the unsharp mask never reads the alpha of the copy); its alpha
 /// is 0.
 pub fn blurred_replicate(src: &Image, rx: usize, ry: usize) -> Image {
+	Image {
+		pix: replicated::<0, 3>(src, rx, ry),
+		w: src.w,
+		h: src.h,
+		opaque: false,
+	}
+}
+
+/// `src` blurred by `sigma` like [`blurred`] but with the edge pixels repeated beyond the layer
+/// instead of transparent ones, every channel computed, and kept at its size: the blur of a region
+/// (SDD-004 section 3.6, "Blur at the edge"), which must hide the picture right up to its edge
+/// where counting the outside as transparent leaves about half of it. The placement does not
+/// change. `None` when both radii are 0 and the layer is drawn as it is.
+pub fn blurred_clamped(src: &Image, p: &Placement, sigma: f64) -> Option<Image> {
+	let rx = blur_radius(sigma / (p.w / src.w as f64));
+	let ry = blur_radius(sigma / (p.h / src.h as f64));
+	if rx == 0 && ry == 0 {
+		return None;
+	}
+	Some(Image {
+		pix: replicated::<0, 4>(src, rx, ry),
+		w: src.w,
+		h: src.h,
+		opaque: false,
+	})
+}
+
+/// The channels `F..F + C` of `src` blurred with the edge pixels repeated, at the size of `src`;
+/// the other channels are 0.
+fn replicated<const F: usize, const C: usize>(src: &Image, rx: usize, ry: usize) -> Vec<u8> {
 	let (px, py) = (3 * rx, 3 * ry);
 	let (w, h) = (src.w, src.h);
 	let (mx, my) = (Mean::new(rx), Mean::new(ry));
@@ -142,9 +172,9 @@ pub fn blurred_replicate(src: &Image, rx: usize, ry: usize) -> Image {
 			let sx = x.saturating_sub(px).min(w - 1);
 			a[x * 4..x * 4 + 4].copy_from_slice(&line[sx * 4..sx * 4 + 4]);
 		}
-		box_pass::<0, 3>(&a, &mut b, rx, mx);
-		box_pass::<0, 3>(&b, &mut a, rx, mx);
-		box_pass::<0, 3>(&a, &mut b, rx, mx);
+		box_pass::<F, C>(&a, &mut b, rx, mx);
+		box_pass::<F, C>(&b, &mut a, rx, mx);
+		box_pass::<F, C>(&a, &mut b, rx, mx);
 		let y = sy + py;
 		field[y * w * 4..(y + 1) * w * 4].copy_from_slice(&b[px * 4..(px + w) * 4]);
 	}
@@ -157,16 +187,11 @@ pub fn blurred_replicate(src: &Image, rx: usize, ry: usize) -> Image {
 
 	let mut other = vec![0_u8; w * ph * 4];
 	let mut sums = Vec::new();
-	column_pass::<0, 3>(&field, &mut other, w, ph, ry, my, &mut sums);
-	column_pass::<0, 3>(&other, &mut field, w, ph, ry, my, &mut sums);
-	column_pass::<0, 3>(&field, &mut other, w, ph, ry, my, &mut sums);
+	column_pass::<F, C>(&field, &mut other, w, ph, ry, my, &mut sums);
+	column_pass::<F, C>(&other, &mut field, w, ph, ry, my, &mut sums);
+	column_pass::<F, C>(&field, &mut other, w, ph, ry, my, &mut sums);
 
-	Image {
-		pix: other[py * w * 4..(py + h) * w * 4].to_vec(),
-		w,
-		h,
-		opaque: false,
-	}
+	other[py * w * 4..(py + h) * w * 4].to_vec()
 }
 
 /// One box pass over a line of RGBA pixels: each output pixel is the mean of the `2r + 1` pixels
@@ -449,6 +474,38 @@ mod tests {
 				assert_eq!(g[3], 0);
 			}
 		}
+	}
+
+	#[test]
+	fn the_clamped_blur_is_the_specified_one_in_every_channel() {
+		for (w, h, rx, ry, seed) in [(13, 9, 2, 3, 7), (6, 20, 0, 4, 8), (1, 5, 2, 2, 9)] {
+			let img = noise(w, h, seed);
+			assert_eq!(
+				replicated::<0, 4>(&img, rx, ry),
+				reference::replicate(&img, rx, ry),
+				"{w}x{h} r{rx},{ry}"
+			);
+		}
+	}
+
+	#[test]
+	fn the_clamped_blur_keeps_the_size_and_the_edge_of_a_flat_picture() {
+		let mut img = Image::new(12, 10);
+		for p in img.pix.chunks_mut(4) {
+			p.copy_from_slice(&[200, 100, 50, 255]);
+		}
+		let p = Placement {
+			cx: 6.0,
+			cy: 5.0,
+			w: 12.0,
+			h: 10.0,
+			rot: 0.0,
+		};
+		let out = blurred_clamped(&img, &p, 3.0).unwrap();
+		assert_eq!((out.w, out.h), (12, 10));
+		// Counting the outside as transparent would fade every edge pixel.
+		assert_eq!(out.pix, img.pix);
+		assert!(blurred_clamped(&img, &p, 0.1).is_none());
 	}
 
 	#[test]
