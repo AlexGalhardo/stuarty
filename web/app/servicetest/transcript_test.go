@@ -91,6 +91,10 @@ func TestTranscriptEditByText(t *testing.T) {
 		t.Fatalf("suggestions = %v, want %v", kinds, want)
 	}
 
+	if !found.FillerRules {
+		t.Error("English has a list of filler words")
+	}
+
 	if found.Rule == "" || found.Revision != rev || m.head(project).Revision != rev {
 		t.Fatalf(
 			"detection changed the revision: result %d, head %d, was %d",

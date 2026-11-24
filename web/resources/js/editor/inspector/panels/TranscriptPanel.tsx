@@ -202,7 +202,13 @@ export default function TranscriptPanel({
 				<div className="flex flex-col gap-1" data-fillers>
 					{fillers.suggestions.length === 0 ? (
 						<p className="text-xs text-muted-foreground">
-							{t("ui.editor.transcript.none_found", { rule: fillers.rule })}
+							{fillers.filler_rules
+								? t("ui.editor.transcript.none_found", {
+										language: fillers.language,
+									})
+								: t("ui.editor.transcript.none_found_repetitions", {
+										language: fillers.language,
+									})}
 						</p>
 					) : (
 						<>

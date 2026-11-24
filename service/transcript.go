@@ -80,7 +80,10 @@ type TranscriptDetectResult struct {
 	// Rule says what was checked, so that an empty list is not read as "no fillers": the language the rules
 	// know, or that only repetitions were checked.
 	Rule string `json:"rule"`
-	Text string `json:"text"`
+	// FillerRules says whether the language has a list of filler words, so that a UI can say what was checked in
+	// the language of the person.
+	FillerRules bool   `json:"filler_rules"`
+	Text        string `json:"text"`
 }
 
 // transcriptSource is the transcript of an asset, in the two forms the reads need.
@@ -268,7 +271,7 @@ func (s *svc) TranscriptDetectFillers(
 	res := &TranscriptDetectResult{
 		UntrustedNotice: UntrustedNotice, ProjectID: src.row.ID, Revision: src.row.Revision,
 		AssetID: req.AssetID, Language: src.language, Suggestions: make([]TranscriptSuggestion, len(found)),
-		Rule: transcript.RuleDescription(src.language),
+		Rule: transcript.RuleDescription(src.language), FillerRules: transcript.HasFillerRules(src.language),
 	}
 
 	for i, f := range found {
