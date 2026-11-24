@@ -87,6 +87,12 @@ func renderEvent(b *strings.Builder, e *Event) {
 				fmt.Fprintf(b, "\nAnswer: %s\n", safeToken(string(e.Permission.Answer)))
 			}
 		}
+	case KindSkillLoaded:
+		head("Skill read")
+
+		if e.Skill != nil {
+			b.WriteString(fence(e.Skill.Name))
+		}
 	case KindState:
 		if e.State != nil {
 			fmt.Fprintf(b, "\n_State: %s %s_\n", safeToken(string(e.State.State)), safeToken(string(e.State.EndReason)))
