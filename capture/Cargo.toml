@@ -18,6 +18,8 @@ all = { level = "deny", priority = -1 }
 # approved for this epic: the JSON of the protocol is written by hand in src/json.rs, over std only.
 [target.'cfg(windows)'.dependencies]
 windows-capture = "=2.0.1"
+# wasapi is the second approved crate (ADR-0049 item 7): the microphone and the loopback of the system mix.
+wasapi = "=0.27.0"
 
 [profile.release]
 opt-level = 3

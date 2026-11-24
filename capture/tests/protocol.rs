@@ -81,7 +81,7 @@ fn announces_itself_and_lists_sources() {
 	let mut h = Helper::start(&[]);
 	let ready = h.read().unwrap();
 	assert!(
-		ready.contains(r#""type":"ready""#) && ready.contains(r#""v":1"#),
+		ready.contains(r#""type":"ready""#) && ready.contains(r#""v":2"#),
 		"{ready}"
 	);
 	h.send(r#"{"type":"sources"}"#);

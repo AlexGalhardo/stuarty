@@ -2,12 +2,20 @@
 //! answers with JSON events on standard output. It serves one recording and exits when it ends, or when its input
 //! closes. It has no option but `--allow-test-source`, which only a test passes.
 
+mod audio;
+#[cfg(windows)]
+mod audio_wasapi;
+mod clock;
 mod frame;
 mod json;
 mod protocol;
 mod session;
 mod sink;
 mod source;
+mod testsrc;
+mod wav;
+#[cfg(windows)]
+mod win32;
 #[cfg(windows)]
 mod windows;
 
@@ -16,7 +24,7 @@ use std::sync::atomic::Ordering;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 
-use protocol::{Command, Line, Policy};
+use protocol::{Capabilities, Command, Line, Policy, SourceLists};
 
 enum Msg {
 	Line(String),
@@ -43,6 +51,11 @@ fn main() {
 	serve(policy);
 }
 
+/// Active nanoseconds as the milliseconds of a message.
+fn ms(ns: i64) -> u64 {
+	u64::try_from(ns / 1_000_000).unwrap_or(0)
+}
+
 fn serve(policy: Policy) {
 	let out = Arc::new(Mutex::new(std::io::stdout()));
 	let emit = {
@@ -57,14 +70,20 @@ fn serve(policy: Policy) {
 		}
 	};
 	let (display, window) = source::can_capture();
+	let test = policy.allow_test_source;
 	emit(protocol::ready(
 		if cfg!(windows) {
 			"windows"
 		} else {
 			std::env::consts::OS
 		},
-		display,
-		window,
+		Capabilities {
+			display,
+			window,
+			audio: audio::can_capture() || test,
+			camera: test,
+			events: cfg!(windows) || test,
+		},
 	));
 
 	let (tx, rx) = mpsc::channel::<Msg>();
@@ -84,7 +103,7 @@ fn serve(policy: Policy) {
 		}
 	});
 
-	let stop = session::new_stop();
+	let mut control: Option<Arc<session::Control>> = None;
 	let mut running: Option<std::thread::JoinHandle<()>> = None;
 
 	for msg in rx {
@@ -94,9 +113,30 @@ fn serve(policy: Policy) {
 				Err(why) => emit(protocol::error("bad_request", &why)),
 				Ok(Command::Sources) => {
 					let (displays, windows) = source::list();
-					emit(protocol::sources(&displays, &windows));
+					let (microphones, system_audio) = audio::list(test);
+					emit(protocol::sources(&SourceLists {
+						displays,
+						windows,
+						microphones,
+						cameras: Vec::new(),
+						system_audio,
+					}));
 				}
-				Ok(Command::Stop) => stop.store(true, Ordering::Relaxed),
+				Ok(Command::Stop) => {
+					if let Some(c) = &control {
+						c.stop.store(true, Ordering::Relaxed);
+					}
+				}
+				Ok(Command::Pause) => match control.as_ref().map(|c| c.clock.pause()) {
+					Some(Ok(at)) => emit(protocol::paused(ms(at))),
+					Some(Err(why)) => emit(protocol::error("bad_request", why)),
+					None => emit(protocol::error("bad_request", "no recording is running")),
+				},
+				Ok(Command::Resume) => match control.as_ref().map(|c| c.clock.resume()) {
+					Some(Ok(at)) => emit(protocol::resumed(ms(at))),
+					Some(Err(why)) => emit(protocol::error("bad_request", why)),
+					None => emit(protocol::error("bad_request", "no recording is running")),
+				},
 				Ok(Command::Start(req)) => {
 					if running.is_some() {
 						emit(protocol::error(
@@ -105,15 +145,19 @@ fn serve(policy: Policy) {
 						));
 						continue;
 					}
-					let (stop, tx, emit) = (Arc::clone(&stop), tx.clone(), emit.clone());
+					let ctl = session::Control::new();
+					control = Some(Arc::clone(&ctl));
+					let (tx, emit) = (tx.clone(), emit.clone());
 					running = Some(std::thread::spawn(move || {
-						session::run(&req, &emit, &stop);
+						session::run(&req, &emit, &ctl);
 						let _ = tx.send(Msg::SessionEnded);
 					}));
 				}
 			},
 			Msg::Eof => {
-				stop.store(true, Ordering::Relaxed);
+				if let Some(c) = &control {
+					c.stop.store(true, Ordering::Relaxed);
+				}
 				if let Some(t) = running.take() {
 					let _ = t.join();
 				}

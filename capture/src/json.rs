@@ -32,6 +32,13 @@ impl Json {
 		}
 	}
 
+	pub fn as_bool(&self) -> Option<bool> {
+		match self {
+			Json::Bool(b) => Some(*b),
+			_ => None,
+		}
+	}
+
 	/// The number as an unsigned integer, when it is one.
 	pub fn as_u64(&self) -> Option<u64> {
 		match self {

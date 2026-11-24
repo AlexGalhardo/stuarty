@@ -206,8 +206,8 @@ impl Drop for FfmpegSink {
 pub struct FileSink(File);
 
 impl FileSink {
-	pub fn create(req: &StartRequest) -> Result<Self, String> {
-		File::create(&req.output)
+	pub fn create(output: &std::path::Path) -> Result<Self, String> {
+		File::create(output)
 			.map(Self)
 			.map_err(|e| format!("could not create the output: {}", e.kind()))
 	}
@@ -237,6 +237,7 @@ mod tests {
 			encoder: encoder.into(),
 			ffmpeg: PathBuf::from("ffmpeg"),
 			output: PathBuf::from("out.mp4"),
+			extras: Default::default(),
 		}
 	}
 
