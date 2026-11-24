@@ -204,6 +204,8 @@ func TestSecurity_T108_SealedColumnsHoldNoPlaintextInTheDatabaseFile(t *testing.
 		wordsGoal + "-1", wordsGoal + "-2", wordsGoal + "-3", wordsGoal + "-4", wordsGoal + "-5",
 		wordsHookToken,
 	}
+	// The second stage (ADR-0053): a caption, a text layer, a template, a brand kit, the log and the asset notes.
+	canaries = append(canaries, canariesOfTheSecondStage()...)
 
 	// The control: with no account the same scan finds every word, so the scan can see what it looks for.
 	dir := newDir(t)
@@ -213,6 +215,7 @@ func TestSecurity_T108_SealedColumnsHoldNoPlaintextInTheDatabaseFile(t *testing.
 	}
 
 	writeEverything(t, control)
+	writeDocuments(t, control)
 
 	found := bytesOfTheWorkspace(t, control, string(dir))
 	for _, w := range canaries {
@@ -240,7 +243,9 @@ func TestSecurity_T108_SealedColumnsHoldNoPlaintextInTheDatabaseFile(t *testing.
 	st.SetSealer(l)
 
 	writeEverything(t, st)
+	writeDocuments(t, st)
 	readBack(t, st)
+	readDocuments(t, st)
 
 	// Locked: the same reads refuse, they never return the sealed text or an empty one.
 	l.locked = true

@@ -80,18 +80,28 @@ func (r brandKitRepo) Get(ctx context.Context, owner string) (service.BrandKitRo
 		return service.BrandKitRow{}, mapNoRows(err)
 	}
 
-	row.Document = []byte(doc)
+	plain, err := openDoc(r.ex, "brand_kits", "document", owner, doc)
+	if err != nil {
+		return service.BrandKitRow{}, err
+	}
+
+	row.Document = []byte(plain)
 
 	return row, nil
 }
 
 func (r brandKitRepo) Put(ctx context.Context, row service.BrandKitRow) error {
-	_, err := r.ex.ExecContext(
+	doc, err := sealDoc(r.ex, "brand_kits", "document", row.OwnerUserID, string(row.Document))
+	if err != nil {
+		return err
+	}
+
+	_, err = r.ex.ExecContext(
 		ctx,
 		`INSERT INTO brand_kits (owner_user_id, document, updated_ms, updated_by) VALUES (?, ?, ?, ?)
  ON CONFLICT (owner_user_id) DO UPDATE SET
   document = excluded.document, updated_ms = excluded.updated_ms, updated_by = excluded.updated_by`,
-		row.OwnerUserID, string(row.Document), row.UpdatedMs, row.UpdatedBy,
+		row.OwnerUserID, doc, row.UpdatedMs, row.UpdatedBy,
 	)
 
 	return err

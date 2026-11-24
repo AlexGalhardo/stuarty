@@ -43,7 +43,23 @@ func openPrompt(sl account.Sealer, owner, hash, stored string) (string, error) {
 	return plain, err
 }
 
-func scanInfo(sc interface{ Scan(...any) error }, sl account.Sealer) (assets.Row, error) {
+// openNote opens the description or the rights note of a file of the library (ADR-0053): the words of the person,
+// sealed like the prompt. While the studio is locked it reads as empty, as the prompt does.
+func openNote(ex database.Executor, column, owner, hash, stored string) (string, error) {
+	if stored == "" {
+		return "", nil
+	}
+
+	plain, err := openDoc(ex, "asset_info", column, promptKey(owner, hash), stored)
+	if errors.Is(err, account.ErrLocked) {
+		return "", nil
+	}
+
+	return plain, err
+}
+
+func scanInfo(sc interface{ Scan(...any) error }, ex database.Executor) (assets.Row, error) {
+	sl := sealerOf(ex)
 	var (
 		r    assets.Row
 		kind string
@@ -64,6 +80,14 @@ func scanInfo(sc interface{ Scan(...any) error }, sl account.Sealer) (assets.Row
 		return r, err
 	}
 
+	if r.Description, err = openNote(ex, "description", r.Owner, r.Hash, r.Description); err != nil {
+		return r, err
+	}
+
+	if r.Origin.RightsNote, err = openNote(ex, "rights_note", r.Owner, r.Hash, r.Origin.RightsNote); err != nil {
+		return r, err
+	}
+
 	r.Origin.Kind = asset.OriginKind(kind)
 	r.Origin.CostMicros = ptrInt64(cost)
 	r.Reusable = re == 1
@@ -75,7 +99,7 @@ func (r assetLibraryRepo) Get(ctx context.Context, owner, hash string) (assets.R
 	row, err := scanInfo(
 		r.ex.QueryRowContext(ctx, `SELECT `+infoColumns+` FROM asset_info WHERE owner_user_id = ? AND asset_hash = ?`,
 			owner, hash),
-		sealerOf(r.ex),
+		r.ex,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		return row, assets.ErrNotFound
@@ -152,7 +176,7 @@ func (r assetLibraryRepo) GetMany(ctx context.Context, owner string, hashes []st
 			)+`)`,
 			append([]any{owner}, anys(part)...),
 			func(sc *sql.Rows) error {
-				row, err := scanInfo(sc, sealerOf(r.ex))
+				row, err := scanInfo(sc, r.ex)
 				if err != nil {
 					return err
 				}
@@ -192,6 +216,16 @@ func (r assetLibraryRepo) Put(ctx context.Context, row assets.Row) error {
 		return err
 	}
 
+	description, err := sealDoc(r.ex, "asset_info", "description", promptKey(row.Owner, row.Hash), row.Description)
+	if err != nil {
+		return err
+	}
+
+	rights, err := sealDoc(r.ex, "asset_info", "rights_note", promptKey(row.Owner, row.Hash), o.RightsNote)
+	if err != nil {
+		return err
+	}
+
 	if _, err := r.ex.ExecContext(ctx,
 		`INSERT INTO asset_info (`+infoColumns+`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
  ON CONFLICT (owner_user_id, asset_hash) DO UPDATE SET origin_kind = excluded.origin_kind, source = excluded.source,
@@ -199,8 +233,8 @@ func (r assetLibraryRepo) Put(ctx context.Context, row assets.Row) error {
  rights_note = excluded.rights_note, description = excluded.description, reusable = excluded.reusable,
  updated_ms = excluded.updated_ms, engine = excluded.engine, engine_version = excluded.engine_version,
  render_key = excluded.render_key`,
-		row.Owner, row.Hash, string(o.Kind), o.Source, o.Provider, o.Model, prompt, o.CostMicros, o.RightsNote,
-		row.Description, boolInt(row.Reusable), row.CreatedBy, row.CreatedMs, row.UpdatedMs,
+		row.Owner, row.Hash, string(o.Kind), o.Source, o.Provider, o.Model, prompt, o.CostMicros, rights,
+		description, boolInt(row.Reusable), row.CreatedBy, row.CreatedMs, row.UpdatedMs,
 		o.Engine, o.EngineVersion, o.RenderKey,
 	); err != nil {
 		return err
@@ -238,9 +272,11 @@ func (r assetLibraryRepo) Reindex(ctx context.Context, owner, hash string) error
 
 	// With an account the prompt is sealed and the index keeps none of it: a search matches the other fields, as the
 	// index of the library keeps no body (SDD-005 section 5.17.2).
-	promptTerm := "COALESCE(i.prompt, '')"
+	promptTerm, descriptionTerm := "COALESCE(i.prompt, '')", "COALESCE(i.description, '')"
 	if account.Sealing(sealerOf(r.ex)) {
-		promptTerm = "''"
+		// The description is sealed too (ADR-0053, D-139 item 5): no SQL expression reads a sealed column, and the
+		// search matches names, tags and the kind of origin only.
+		promptTerm, descriptionTerm = "''", "''"
 	}
 
 	_, err := r.ex.ExecContext(ctx,
@@ -250,7 +286,7 @@ func (r assetLibraryRepo) Reindex(ctx context.Context, owner, hash string) error
                   WHERE p.asset_hash = a.id AND COALESCE(pr.owner_user_id, '') = ?), a.original_name),
         COALESCE((SELECT group_concat(t.tag, ' ') FROM asset_tags t
                   WHERE t.asset_hash = a.id AND t.owner_user_id = ?), ''),
-        COALESCE(i.description, ''),
+        `+descriptionTerm+`,
         TRIM(COALESCE(i.source, '') || ' ' || COALESCE(i.provider, '') || ' ' || COALESCE(i.model, '') || ' ' ||
              `+promptTerm+` || ' ' || COALESCE(i.engine, '') || ' ' || COALESCE(i.engine_version, ''))
  FROM assets a LEFT JOIN asset_info i ON i.asset_hash = a.id AND i.owner_user_id = ?

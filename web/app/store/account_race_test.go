@@ -106,8 +106,8 @@ func TestSealGuardsComeBackAtTheNextOpen(t *testing.T) {
 	guards := "SELECT count(*) FROM sqlite_master WHERE type = 'trigger' AND name LIKE 'sealed_guard_%'"
 
 	want := scalar[int](t, st, guards)
-	if want != 2*len(sealedCells) {
-		t.Fatalf("%d guards after the creation, want %d", want, 2*len(sealedCells))
+	if want != 2*len(allSealedCells()) {
+		t.Fatalf("%d guards after the creation, want %d", want, 2*len(allSealedCells()))
 	}
 
 	// What a rebuild of the table does to its triggers.

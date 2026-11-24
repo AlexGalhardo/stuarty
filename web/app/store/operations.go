@@ -15,7 +15,7 @@ type operationRepo struct{ ex database.Executor }
 const operationColumns = `project_id, revision, kind, actor, base_revision, target_revision, at_ms,
  ops, inverse, diff, skipped, schema_version, doc_sha256, closed_by, idempotency_key`
 
-func scanOperation(sc scanner) (service.OperationRow, error) {
+func scanOperation(ex database.Executor, sc scanner) (service.OperationRow, error) {
 	var (
 		o                    service.OperationRow
 		target, closed       sql.NullInt64
@@ -28,15 +28,26 @@ func scanOperation(sc scanner) (service.OperationRow, error) {
 		return service.OperationRow{}, err
 	}
 	o.TargetRevision, o.ClosedBy, o.IdempotencyKey = ptrInt64(target), ptrInt64(closed), ptrString(idempotency)
-	o.Ops, o.Inverse, o.Diff, o.Skipped = json.RawMessage(
-		ops,
-	), json.RawMessage(
-		inverse,
-	), json.RawMessage(
-		diff,
-	), rawJSON(
-		skipped,
-	)
+
+	// The sealed columns of an entry of the log are bound to its project and revision (ADR-0053).
+	const table = "operations"
+
+	rk := opKey(o.ProjectID, o.Revision)
+	plain := [3]string{ops, inverse, diff}
+
+	for i, column := range []string{"ops", "inverse", "diff"} {
+		var oerr error
+		if plain[i], oerr = openDoc(ex, table, column, rk, plain[i]); oerr != nil {
+			return service.OperationRow{}, oerr
+		}
+	}
+
+	var oerr error
+	if o.Skipped, oerr = openNullable(ex, table, "skipped", rk, skipped); oerr != nil {
+		return service.OperationRow{}, oerr
+	}
+
+	o.Ops, o.Inverse, o.Diff = json.RawMessage(plain[0]), json.RawMessage(plain[1]), json.RawMessage(plain[2])
 	return o, nil
 }
 
@@ -56,10 +67,30 @@ func (r operationRepo) Count(ctx context.Context, projectID, actor string) (int6
 }
 
 func (r operationRepo) Append(ctx context.Context, o service.OperationRow) error {
-	_, err := r.ex.ExecContext(ctx, `INSERT INTO operations (`+operationColumns+`)
+	const table = "operations"
+
+	rk := opKey(o.ProjectID, o.Revision)
+
+	var sealed [3]string
+
+	for i, v := range []struct{ column, plain string }{
+		{"ops", string(o.Ops)}, {"inverse", string(o.Inverse)}, {"diff", string(o.Diff)},
+	} {
+		var err error
+		if sealed[i], err = sealDoc(r.ex, table, v.column, rk, v.plain); err != nil {
+			return err
+		}
+	}
+
+	skipped, err := sealNullable(r.ex, table, "skipped", rk, o.Skipped)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.ex.ExecContext(ctx, `INSERT INTO operations (`+operationColumns+`)
  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		o.ProjectID, o.Revision, string(o.Kind), o.Actor, o.BaseRevision, o.TargetRevision, o.AtMs,
-		string(o.Ops), string(o.Inverse), string(o.Diff), nullJSON(o.Skipped), o.SchemaVersion, o.DocSHA256,
+		sealed[0], sealed[1], sealed[2], skipped, o.SchemaVersion, o.DocSHA256,
 		o.ClosedBy, o.IdempotencyKey)
 	if isUnique(r.ex, err) {
 		return service.ErrExists
@@ -68,7 +99,7 @@ func (r operationRepo) Append(ctx context.Context, o service.OperationRow) error
 }
 
 func (r operationRepo) Get(ctx context.Context, projectID string, revision int64) (service.OperationRow, error) {
-	o, err := scanOperation(r.ex.QueryRowContext(ctx,
+	o, err := scanOperation(r.ex, r.ex.QueryRowContext(ctx,
 		"SELECT "+operationColumns+" FROM operations WHERE project_id = ? AND revision = ?", projectID, revision))
 	return o, mapNoRows(err)
 }
@@ -106,7 +137,7 @@ func (r operationRepo) Since(
 		bytes int
 	)
 	for rows.Next() {
-		o, err := scanOperation(rows)
+		o, err := scanOperation(r.ex, rows)
 		if err != nil {
 			return nil, err
 		}
@@ -137,7 +168,7 @@ func (r operationRepo) Page(
 
 	var out []service.OperationRow
 	for rows.Next() {
-		o, err := scanOperation(rows)
+		o, err := scanOperation(r.ex, rows)
 		if err != nil {
 			return nil, false, err
 		}
@@ -158,14 +189,14 @@ func (r operationRepo) Page(
 // implies the index's (SDD-005 section 12.1).
 
 func (r operationRepo) UndoCandidate(ctx context.Context, projectID, actor string) (service.OperationRow, error) {
-	o, err := scanOperation(r.ex.QueryRowContext(ctx, `SELECT `+operationColumns+` FROM operations
+	o, err := scanOperation(r.ex, r.ex.QueryRowContext(ctx, `SELECT `+operationColumns+` FROM operations
  WHERE project_id = ? AND actor = ? AND closed_by IS NULL AND kind IN ('edit','redo')
  ORDER BY revision DESC LIMIT 1`, projectID, actor))
 	return o, mapNoRows(err)
 }
 
 func (r operationRepo) RedoCandidate(ctx context.Context, projectID, actor string) (service.OperationRow, error) {
-	o, err := scanOperation(r.ex.QueryRowContext(ctx, `SELECT `+operationColumns+` FROM operations
+	o, err := scanOperation(r.ex, r.ex.QueryRowContext(ctx, `SELECT `+operationColumns+` FROM operations
  WHERE project_id = ? AND actor = ? AND closed_by IS NULL AND kind = 'undo'
  ORDER BY revision DESC LIMIT 1`, projectID, actor))
 	return o, mapNoRows(err)

@@ -4,9 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"strconv"
 	"strings"
 
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/account"
 
 	"github.com/AlexGalhardo/vukem/database"
 )
@@ -40,7 +42,11 @@ func scanTemplate(sc scanner, doc *string) (service.TemplateRow, error) {
 
 func (r templateRepo) Create(ctx context.Context, t service.TemplateRow) error {
 	s := t.Summary
-	_, err := r.ex.ExecContext(
+	doc, err := sealDoc(r.ex, "templates", "document", t.ID, string(t.Document))
+	if err != nil {
+		return err
+	}
+	_, err = r.ex.ExecContext(
 		ctx,
 		`INSERT INTO templates
  (id, name, description, schema_version, document, doc_sha256, slots, width, height, fps_num, fps_den,
@@ -50,7 +56,7 @@ func (r templateRepo) Create(ctx context.Context, t service.TemplateRow) error {
 		t.Name,
 		t.Description,
 		t.SchemaVersion,
-		string(t.Document),
+		doc,
 		t.DocSHA256,
 		string(t.Slots),
 		s.Width,
@@ -76,7 +82,11 @@ func (r templateRepo) Get(ctx context.Context, id string) (service.TemplateRow, 
 	if err != nil {
 		return service.TemplateRow{}, mapNoRows(err)
 	}
-	t.Document = []byte(doc)
+	plain, err := openDoc(r.ex, "templates", "document", id, doc)
+	if err != nil {
+		return service.TemplateRow{}, err
+	}
+	t.Document = []byte(plain)
 	return t, nil
 }
 
@@ -153,13 +163,17 @@ func (r templateRepo) UpdateDocument(
 	slots json.RawMessage,
 	sum service.DocSummary,
 ) error {
+	sealed, err := sealDoc(r.ex, "templates", "document", id, string(doc))
+	if err != nil {
+		return err
+	}
 	return notFoundIfNone(rowsAffected(r.ex.ExecContext(
 		ctx,
 		`UPDATE templates SET
  schema_version = ?, document = ?, doc_sha256 = ?, slots = ?, width = ?, height = ?, fps_num = ?, fps_den = ?,
  duration_frames = ? WHERE id = ?`,
 		schemaVersion,
-		string(doc),
+		sealed,
 		sha,
 		string(slots),
 		sum.Width,
@@ -173,11 +187,42 @@ func (r templateRepo) UpdateDocument(
 
 type backupRepo struct{ ex database.Executor }
 
+// Put stores a backup. With an account the document is sealed under the id of its row (ADR-0053), which the database
+// gives at the insert: the row is written with an empty document and sealed by the next statement. Every caller is
+// inside a transaction (the migration of documents, an import), so the empty document is never visible.
 func (r backupRepo) Put(ctx context.Context, b service.BackupRow) error {
-	_, err := r.ex.ExecContext(ctx, `INSERT INTO document_backups
+	if !account.Sealing(sealerOf(r.ex)) {
+		_, err := r.ex.ExecContext(ctx, `INSERT INTO document_backups
  (owner_kind, owner_id, revision, schema_version, document, reason, created_ms)
  VALUES (?, ?, ?, ?, ?, ?, ?)`,
-		b.OwnerKind, b.OwnerID, b.Revision, b.SchemaVersion, string(b.Document), b.Reason, b.CreatedMs)
+			b.OwnerKind, b.OwnerID, b.Revision, b.SchemaVersion, string(b.Document), b.Reason, b.CreatedMs)
+		return err
+	}
+
+	// Sealed first: a locked studio fails here, before a row exists.
+	if _, err := sealDoc(r.ex, "document_backups", "document", "0", ""); err != nil {
+		return err
+	}
+
+	res, err := r.ex.ExecContext(ctx, `INSERT INTO document_backups
+ (owner_kind, owner_id, revision, schema_version, document, reason, created_ms)
+ VALUES (?, ?, ?, ?, '', ?, ?)`,
+		b.OwnerKind, b.OwnerID, b.Revision, b.SchemaVersion, b.Reason, b.CreatedMs)
+	if err != nil {
+		return err
+	}
+
+	id, err := res.LastInsertId()
+	if err != nil {
+		return err
+	}
+
+	doc, err := sealDoc(r.ex, "document_backups", "document", strconv.FormatInt(id, 10), string(b.Document))
+	if err != nil {
+		return err
+	}
+
+	_, err = r.ex.ExecContext(ctx, `UPDATE document_backups SET document = ? WHERE id = ?`, doc, id)
 	return err
 }
 
@@ -219,7 +264,11 @@ func (r backupRepo) Get(ctx context.Context, id int64) (service.BackupRow, error
 	if err != nil {
 		return service.BackupRow{}, mapNoRows(err)
 	}
-	b.Document = []byte(doc)
+	plain, err := openDoc(r.ex, "document_backups", "document", strconv.FormatInt(id, 10), doc)
+	if err != nil {
+		return service.BackupRow{}, err
+	}
+	b.Document = []byte(plain)
 	return b, nil
 }
 
