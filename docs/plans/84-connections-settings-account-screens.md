@@ -53,7 +53,7 @@ None new.
 - [x] 4. Webhooks. Verify: `cd web && bun run typecheck && bun run e2e -- webhooks` pass.
 - [x] 5. Create account, recovery key, sign in and unlock. Verify: the first-run and logout specs of epic 57 pass.
 - [x] 6. The error page. Verify: `cd web && bun run test -- Error` passes.
-- [ ] 7. Check three widths in both themes. Verify: `cd web && bun run e2e -- a11y` passes.
+- [x] 7. Check three widths in both themes. Verify: `cd web && bun run e2e -- a11y` passes.
 
 ## Test strategy
 

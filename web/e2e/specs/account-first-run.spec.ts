@@ -1,7 +1,9 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { home } from "../support/accountTargets";
+import { horizontalOverflow, undersizedTargets } from "../support/wcag";
 
 // The first run, the recovery key, the sign-in and Logout of the local account (ADR-0052, SDD-012 section 2.1.1),
 // on a server whose workspace has no account (playwright.config.ts, the project "account"). The specs run in
@@ -33,6 +35,37 @@ async function signIn(page: Page, password: string): Promise<void> {
 	await page.getByRole("button", { name: "Sign in" }).click();
 }
 
+// Epic 84: the page on the screen in both themes at 1440, 1280 and 390 px. axe finds nothing at WCAG 2.2 AA,
+// nothing scrolls sideways and no target is too small. The theme is the class of <html>, so the page keeps its
+// state (the recovery key is shown once and could not be loaded again).
+async function looksRight(page: Page, where: string): Promise<void> {
+	const found: string[] = [];
+	for (const dark of [true, false]) {
+		await page.evaluate(
+			(on) => document.documentElement.classList.toggle("dark", on),
+			dark,
+		);
+		for (const size of [
+			{ width: 1440, height: 900 },
+			{ width: 1280, height: 800 },
+			{ width: 390, height: 844 },
+		]) {
+			await page.setViewportSize(size);
+			const at = `${where} ${dark ? "dark" : "light"} ${size.width}`;
+			const { violations } = await new AxeBuilder({ page })
+				.withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+				.analyze();
+			for (const v of violations) found.push(`${at}: ${v.id}`);
+			const overflow = await horizontalOverflow(page);
+			if (overflow) found.push(`${at}: ${overflow}`);
+			for (const small of await undersizedTargets(page)) {
+				found.push(`${at}: ${small.target} ${small.size}`);
+			}
+		}
+	}
+	expect(found).toEqual([]);
+}
+
 test("a new workspace shows the page that creates the account before anything else", async ({
 	page,
 }) => {
@@ -41,6 +74,7 @@ test("a new workspace shows the page that creates the account before anything el
 	await expect(
 		page.getByRole("heading", { name: "Create your account" }),
 	).toBeVisible();
+	await looksRight(page, "create");
 	await page.goto("/projects");
 	await expect(page).toHaveURL(/\/account\/create$/);
 });
@@ -103,6 +137,7 @@ test("the account is created, the recovery key shown once and the sign-in follow
 		page.getByRole("heading", { name: "Save your recovery key" }),
 	).toBeVisible();
 	await expect(page.getByText(/cannot be recovered/)).toBeVisible();
+	await looksRight(page, "recovery key");
 	recoveryKey = (await page.getByTestId("recovery-key").textContent()) ?? "";
 	expect(recoveryKey).toMatch(/^([0-9A-Z]{4}-){12}[0-9A-Z]{1,4}$/);
 
@@ -201,6 +236,8 @@ test("Logout locks the studio: the pages and the API answer with the sign-in and
 
 	await page.getByTestId("account-logout").click();
 	await expect(page).toHaveURL(/\/account\/signin$/);
+	await expect(page.getByText(/locked until you sign in/)).toBeVisible();
+	await looksRight(page, "unlock");
 
 	await page.goto("/projects");
 	await expect(page).toHaveURL(/\/account\/signin$/);
