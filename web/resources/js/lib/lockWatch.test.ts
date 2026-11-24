@@ -12,7 +12,7 @@ function harness(state: string | null, visible = true) {
 		readState,
 		onLocked,
 		isVisible: () => visible,
-		every: (fn, ms) => {
+		repeat: (fn, ms) => {
 			expect(ms).toBe(LOCK_WATCH_MS);
 			tick = fn;
 			return stopTimer;

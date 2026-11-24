@@ -9,7 +9,7 @@ export interface LockWatchDeps {
 	readState(): Promise<string | null>;
 	onLocked(): void;
 	isVisible(): boolean;
-	every(fn: () => void, ms: number): () => void;
+	repeat(fn: () => void, ms: number): () => void;
 	onVisible(fn: () => void): () => void;
 }
 
@@ -24,7 +24,7 @@ export function startLockWatch(deps: LockWatchDeps): () => void {
 		stopped = true;
 		deps.onLocked();
 	};
-	const stopTimer = deps.every(() => void check(), LOCK_WATCH_MS);
+	const stopTimer = deps.repeat(() => void check(), LOCK_WATCH_MS);
 	const stopVisible = deps.onVisible(() => void check());
 	return () => {
 		stopped = true;
@@ -55,7 +55,7 @@ export function useLockWatch(enabled: boolean): void {
 			readState: readAccountState,
 			onLocked: () => window.location.assign("/account/signin"),
 			isVisible: () => document.visibilityState === "visible",
-			every: (fn, ms) => {
+			repeat: (fn, ms) => {
 				const id = window.setInterval(fn, ms);
 				return () => window.clearInterval(id);
 			},
