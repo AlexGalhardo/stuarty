@@ -42,6 +42,7 @@
 | `SnapPoints` | none | none | `GET /projects/{id}/snap-points` (SDD-012 §7.8) | read |
 | `TranscriptView` | `media_inspect` with the section `words` | `transcript:show` | `GET /projects/{id}/transcript?asset_id=` (the words of an asset with the timeline range of each, SDD-023 §2, §5) | read |
 | `TranscriptDetectFillers` | `media_inspect` with the section `fillers` | `transcript:fillers` | `GET /projects/{id}/transcript/fillers?asset_id=` (the filler words and repetitions the rules of SDD-023 §4 find; changes nothing) | read |
+| `CutsPropose` | `media_inspect` with the section `cuts` | `cuts:propose` | `GET /projects/{id}/cuts?asset_id=` (up to `count` vertical cuts of an asset from its transcript and its face track, each with the edit batch a person accepts; creates no timeline, SDD-024 §8) | edit |
 | `AssetList` | `media_inspect` called with no `project_id` (the library) | `asset:list` | `GET /assets` (the ready files of the workspace by content hash, with the origin, tags and reuse of SDD-011 §14; filters `kind`, `section`, `tag`, `project`, `origin`, `reusable`, `text`; the picker of a brand logo) | read |
 | `AssetGet`, `AssetUses` | `media_inspect` called with a `hash` (`AssetGet` only; its entry carries the uses) | `asset:show`, `asset:uses` | `GET /assets/{hash}`, `GET /assets/{hash}/uses` (one library entry with its origin and the projects that use it, SDD-011 §14) | read |
 | `AssetSetInfo`, `AssetTag` | `media_import` called with a `hash` and no `paths` | `asset:set`, `asset:tag` | `PUT /assets/{hash}`, `POST /assets/{hash}/tags` (the description, the rights note, the reuse mark and the tags of a library entry, SDD-011 §14) | media |
@@ -249,7 +250,7 @@ An image document has a stream of its own, `GET /images/{id}/events` (SDD-006 §
 
 ## 6. Jobs
 
-Kinds: `ingest`, `transcribe`, `export`, `export_batch`, `frame`, `text.generate` (SDD-016 §6), `image.generate` and `voice.generate` (SDD-016 §6.1), `text.draft` (SDD-019 §6), `video.generate` (SDD-016 §6.4; the job stores the task id of the provider and resumes it after a restart), `image.edit` (SDD-016 §6.5), `image.export` (SDD-021 §6: the record of an `ImageExport`, always `succeeded`, with no project; a publication takes it as its thumbnail), and the kinds a feature epic registers as needing approval (SDD-015 §5). States: `queued`, `running`, `succeeded`, `failed`, `cancelled`, and `waiting_approval` (a job of a kind that needs approval, until a person or a rule approves it; it is not running and counts as active; at most 50 per submitter and 1000 in the workspace, `E_LIMIT_EXCEEDED` past either, SDD-015 §5). Asset ingest states: `pending`, `ingesting`, `ready`, `failed`.
+Kinds: `ingest`, `transcribe`, `face_track` (SDD-024 §6: the faces of an asset by the local helper; scope `media`, started like `transcribe`), `export`, `export_batch`, `frame`, `text.generate` (SDD-016 §6), `image.generate` and `voice.generate` (SDD-016 §6.1), `text.draft` (SDD-019 §6), `video.generate` (SDD-016 §6.4; the job stores the task id of the provider and resumes it after a restart), `image.edit` (SDD-016 §6.5), `image.export` (SDD-021 §6: the record of an `ImageExport`, always `succeeded`, with no project; a publication takes it as its thumbnail), and the kinds a feature epic registers as needing approval (SDD-015 §5). States: `queued`, `running`, `succeeded`, `failed`, `cancelled`, and `waiting_approval` (a job of a kind that needs approval, until a person or a rule approves it; it is not running and counts as active; at most 50 per submitter and 1000 in the workspace, `E_LIMIT_EXCEEDED` past either, SDD-015 §5). Asset ingest states: `pending`, `ingesting`, `ready`, `failed`.
 
 ## 7. Database tables
 
@@ -310,7 +311,7 @@ The core's codes are in SDD-002 §A.8. The service adds:
 | `E_NO_ENCODER` | no encoder works on this machine for the codec the export needs (H.264, or the `details.codec` that was asked for: `hevc` or `av1`, SDD-004 section 8.3); `details.reason` `codec_unavailable` and `details.candidates` | no |
 | `E_EXPORT_FAILED` | the export process failed; `details.reason` | no |
 | `E_VERIFY_FAILED` | the exported file did not pass verification; `details.checks` | no |
-| `E_TRANSCRIBE_UNAVAILABLE` | no transcription provider is installed or configured; `details` names what is missing, its download size, the install command and the `tool` and `model` it installs | no |
+| `E_TRANSCRIBE_UNAVAILABLE` | no transcription provider is installed or configured, or another local helper (the face tracking set `face`, SDD-024 §3) is not installed; `details` names what is missing, its download size, the install command and the `tool` and `model` it installs | no |
 | `E_TRANSCRIBE_FAILED` | a transcription ran and failed (no output, provider error, no word timings); `details.reason` | no |
 | `E_QUEUE_FULL` | a concurrency limit is reached; `details.limit` names it (`exports`, `exports_per_key`, `ingests`, `transcribes`, `streams`, `frames`) with `value` and `ceiling`, and `details.running` lists the jobs of a job queue | yes |
 | `E_RATE_LIMITED` | the caller sent too many requests; the answer carries `Retry-After`, and `details` has `retry_after`, `limit`, `value` and `ceiling` | yes |
@@ -366,7 +367,7 @@ CLI exit codes: `0` success; `2` for every code marked retryable; `1` for the re
 ├── bitmaps/                 cache of rasterized text and shapes, by content hash
 ├── audio-previews/          cache of the processed sound of clips and audio items, by content hash: audio-previews/<key>.wav (SDD-004 §7.1)
 ├── fonts/                   user fonts, by hash 
-├── tools/                   installed helpers (whisper.cpp, models); tools/.download/ holds downloads in progress
+├── tools/                   installed helpers (whisper.cpp, models, the face set of SDD-024: stuarty-aihelper, onnxruntime, yunet); tools/.download/ holds downloads in progress
 ├── chat/                    the working directory of a hosted agent, one folder per project: chat/<project id>/, mode 0700 (SDD-017 §4)
 ├── recordings/              screen recordings in progress or waiting for a person: recordings/<recording id>/capture.mp4, a fragmented MP4 (SDD-025 §8)
 ├── tmp/                     one directory per running child process: tmp/<job id>/ (SDD-007 §6.4)

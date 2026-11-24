@@ -590,7 +590,7 @@ Scopes: `read`, `edit`, `media`, `render`, `admin` (SDD-000 §4). They are indep
 | `Doctor` | `GET /system` | R | - | - | - | - | Server paths and environment details only for local mode or `admin`; others get versions and capability facts without paths |
 | `AuditList` | `GET /audit` | - | - | - | - | R | Never lists secrets |
 | Byte-serving routes and bitmaps (`OpenFile`, `ExportFile`) | `GET /projects/{id}/media/{asset_id}/proxy`, `/chunks`, `/thumbnail`, `/strip`, `/peaks`, `/lut` (the table is parsed by `engine/lut` with the limits of SDD-004 §3.6 and sent as binary, so the browser never parses an untrusted `.cube`), `GET /projects/{id}/bitmaps/{key}`, `GET /projects/{id}/audio-previews/{key}` (the processed sound of an item, SDD-004 §7.1: the key must be one the project's plan handed out, T-90; the first request for a file starts a render, bounded by T-91), `GET /jobs/{job_id}/file` | R | - | - | - | - | Project check through the path (the job's project for the export file); fixed `Content-Type`; not counted by the per-credential limiter (4.4) |
-| Helper install (`ToolsInstall`) | `POST /system/tools/install` | - | - | - | - | - | A browser session in local mode or an `admin` key in network mode only; the local token and agent surfaces get `E_FORBIDDEN` (6.8). The caller class decides, as for `TrashEmpty` (5.3); no scope column applies |
+| Helper install (`ToolsInstall`, including the face set of SDD-024) | `POST /system/tools/install` | - | - | - | - | - | A browser session in local mode or an `admin` key in network mode only; the local token and agent surfaces get `E_FORBIDDEN` (6.8). The caller class decides, as for `TrashEmpty` (5.3); no scope column applies |
 | Helper status (`ToolsStatus`) | `GET /system/tools` | R | - | - | - | - | Only reads what is installed and the progress; any caller that may read (VV-080) |
 | Event stream | `GET /projects/{id}/events` | R | - | - | - | - | At most 32 streams per project and 128 per process (SDD-006 §9.4), and in network mode 16 per key; cookie or bearer, never a query-string credential |
 
@@ -810,6 +810,18 @@ The shipped third-party components, against their licence, pin and notice (NFR-0
 4. **The indicator.** The capture border of Windows is never turned off, and the host never starts the helper without the recording row in `prepared`, so the recording is always visible to the UI (T-121).
 5. **A failure discards the child**: a malformed or oversized line, a missing `ready` or `started`, a silent child or an exit with no `finished`. Nothing is retried.
 6. **The file is fragmented MP4**, so a kill leaves a readable file, and the recovery at start-up settles every recording left open (T-121).
+
+### 6.12 The local AI helper
+
+`stuarty-aihelper` (SDD-024, ADR-0050) loads ONNX Runtime, a native library, and reads a model file, so it is reviewed like the GPU host. It runs under the same policy, through `Runner.RunHelper` (6.4 to 6.6: no root, the minimal environment, its own run directory, a deadline, the cancel grace, the kill of the whole tree). What differs:
+
+1. **Argv.** A constant of the product: the command (`probe` or `faces`), the absolute paths of the runtime library and the model that `VerifiedTool` has just checked, and the frame size. No file name of a project, no URL and no user text is ever an argument.
+2. **Verified before it runs.** The helper, the runtime library and the model are each recomputed against `tools/installed.json` (6.8 item 6) at every start. A changed file makes the feature unavailable.
+3. **Input and output.** Standard input carries raw frames the host sized; standard output carries JSON lines the host bounds (a line is at most 64 KiB, the count of frames cannot exceed what was sent) and validates. A line that is not valid ends the run and is never executed or stored as it came.
+4. **No network.** The helper has no code that opens a connection and the product gives it no address; the only downloads are the install step of 6.8, started by a person, on the hosts of the manifest.
+5. **Model files are data.** A model is read by the runtime, which is the one place a malformed file could harm; that is why only the pinned model of the manifest is ever loaded, the path is never one a caller chose, and the process has no privileges, no network and a deadline.
+6. **No sandbox wrapper.** Like the GPU host it is not started inside `bwrap` when the DirectML or other device provider is wanted; with `STUARTY_SANDBOX=bwrap` it runs on the CPU only.
+7. Its standard error is kept as a tail like any child's and only a short, printable cut of it reaches an error.
 
 ## 7. Import and export path rules
 
