@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import { afterEach, test } from "node:test";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { ReleaseBadge } from "../components/release-badge.tsx";
 import { FALLBACK_TAG, pickDownloads, type LatestRelease } from "../lib/releases.ts";
 
 const REPO = "https://github.com/AlexGalhardo/stuarty";
@@ -76,6 +79,25 @@ test("a network failure falls back to the committed release and never throws", a
 	assert.equal(release.tag, FALLBACK_TAG);
 	assert.equal(release.version, FALLBACK_TAG.replace(/^v/, ""));
 	assert.ok(release.downloads.every((d) => !d.direct));
+	assert.equal(release.confirmed, false);
+});
+
+test("only a release read from GitHub is confirmed as the current version", async () => {
+	globalThis.fetch = async () => Response.json({ tag_name: "v9.8.7", assets: [] });
+	assert.equal((await (await fresh())()).confirmed, true);
+	globalThis.fetch = async () => new Response("rate limited", { status: 403 });
+	assert.equal((await (await fresh())()).confirmed, false);
+	globalThis.fetch = async () => Response.json({ message: "Not Found" });
+	assert.equal((await (await fresh())()).confirmed, false);
+});
+
+test("the badge shows the version it is given and none when the lookup failed", () => {
+	const known = renderToStaticMarkup(createElement(ReleaseBadge, { version: "9.8.7" }));
+	assert.match(known, /Alpha/);
+	assert.match(known, /v9\.8\.7/);
+	const unknown = renderToStaticMarkup(createElement(ReleaseBadge));
+	assert.match(unknown, /Alpha/);
+	assert.doesNotMatch(unknown, /v\d+\.\d+/);
 });
 
 test("an error status or a body without a tag falls back too", async () => {
