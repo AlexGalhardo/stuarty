@@ -919,6 +919,10 @@ export class PixiExecutor implements PreviewExecutor {
 		if (sigma > 0) {
 			entry.blur ??= new BlurFilter();
 			entry.blur.strength = sigma;
+			// A masked layer is a region of the picture: like the export, its blur repeats the edge pixels
+			// instead of fading into transparency, so a region at the edge of the picture stays unreadable
+			// (SDD-004 section 3.6, "Blur at the edge", VV-392).
+			entry.blur.repeatEdgePixels = maskAt(layer, frame) !== null;
 		} else {
 			entry.blur = null;
 		}

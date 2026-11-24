@@ -339,6 +339,15 @@ export function backdropClip(): string {
 	);
 }
 
+// edgeStripesClip is a mid grey 320x180 clip with black and white stripes, 4 pixels wide, on its first 24
+// rows: fine detail that touches the top edge of the picture, as a time code or a status bar does (VV-392).
+export function edgeStripesClip(): string {
+	return sourceClip(
+		"edge-stripes-v1.mp4",
+		"color=c=gray:s=320x180:r=30:d=1,format=yuv420p,geq=lum='if(lt(Y,24),255*mod(floor(X/4),2),128)':cb=128:cr=128",
+	);
+}
+
 // alphaClip makes a 1 s 160x90 WebM (VP9 yuva420p) whose left half is fully
 // transparent and whose right half is opaque red: the source of the alpha path
 // of the preview (VV-013).

@@ -21,6 +21,7 @@ import {
 import {
 	backdropClip,
 	caller,
+	edgeStripesClip,
 	expect,
 	greenScreenClip,
 	markerClip,
@@ -398,6 +399,100 @@ test.describe("chroma key over another clip", () => {
 						).toBeLessThanOrEqual(40);
 					}
 				}
+			});
+		});
+	}
+});
+
+// A region blurred at the top edge of the picture (VV-392): stripes that touch the edge, under a
+// clip.blur_region of the top quarter. The export repeats the edge pixels past the picture, so the
+// first rows are flat; a preview that fades the blurred copy into transparency at the edge lets about
+// half of the sharp stripes through there. The spread of the luma along a row near the edge is read in
+// both executors and in the export.
+test.describe("blur region at the edge", () => {
+	test.describe.configure({ timeout: 300_000 });
+	test.beforeEach(({ browserName }) => {
+		test.skip(noVideoDecode(browserName), NO_VIDEO_DECODE_REASON); // verify:env-skip the browser decodes no H.264 video
+	});
+	for (const executor of ["pixi", "rust"] as const) {
+		test(`blur region at the edge: the preview (${executor}) hides the stripes at the edge like the export`, async ({
+			page,
+			request,
+		}) => {
+			const seeded = await seedProject(request, {
+				name: `Blur at the edge ${executor}`,
+				tracks: 1,
+				perTrack: 1,
+				clipDuration: "1s",
+				files: [edgeStripesClip()],
+			});
+			const call = await caller(request);
+			const head = (await call("GET", `/projects/${seeded.id}`)) as {
+				revision: number;
+			};
+			await call("POST", `/projects/${seeded.id}/edit`, {
+				base_revision: head.revision,
+				operations: [
+					{ op: "settings.set", args: { width: 320, height: 180 } },
+					{
+						op: "clip.blur_region",
+						args: {
+							item_id: seeded.itemIds[0],
+							x: 0,
+							y: 0,
+							width: 1,
+							height: 0.25,
+						},
+					},
+				],
+			});
+			await openCase(
+				page,
+				seeded.id,
+				executor === "rust" ? "?executor=rust" : "",
+			);
+			await expect(
+				page.getByRole("main", { name: "Preview" }).locator("canvas"),
+			).toHaveAttribute("data-executor", executor === "rust" ? "rust" : /.+/);
+			const spread = (
+				data: Uint8Array | Uint8ClampedArray,
+				width: number,
+				height: number,
+				premultiply: boolean,
+			): number => {
+				const y = Math.round((1.5 * height) / 180);
+				let lo = 255;
+				let hi = 0;
+				for (
+					let x = Math.round(width / 8);
+					x < Math.round((width * 7) / 8);
+					x++
+				) {
+					const i = (y * width + x) * 4;
+					const a = premultiply ? (data[i + 3] ?? 0) / 255 : 1;
+					const luma =
+						(0.299 * (data[i] ?? 0) +
+							0.587 * (data[i + 1] ?? 0) +
+							0.114 * (data[i + 2] ?? 0)) *
+						a;
+					lo = Math.min(lo, luma);
+					hi = Math.max(hi, luma);
+				}
+				return hi - lo;
+			};
+			await stepThrough(page, [5], async (frame) => {
+				const shot = await capture(page, seeded.id, frame);
+				const { width, height } = shot.canvas;
+				const exported = spread(shot.frame.data, width, height, false);
+				const previewed = spread(shot.canvas.data, width, height, true);
+				expect(
+					exported,
+					`frame ${frame}: the export shows the stripes at the edge (luma spread ${exported})`,
+				).toBeLessThanOrEqual(24);
+				expect(
+					previewed,
+					`${executor}, frame ${frame}: the preview shows the stripes at the edge (luma spread ${previewed}, export ${exported})`,
+				).toBeLessThanOrEqual(24);
 			});
 		});
 	}
