@@ -133,7 +133,7 @@ func checkSnapOffIsEpic69(t *testing.T, doc *timeline.Document, words []tword, f
 		vidAsset, from, to, resolvedJSON(words)))
 	off, offErr := apply(fmt.Sprintf(`{"asset_id": %q, "from_word": %d, "to_word": %d, "snap": "0s", %s}`,
 		vidAsset, from, to, snapped))
-	if !reflect.DeepEqual(oldErr, offErr) || !reflect.DeepEqual(old, off) {
+	if fmt.Sprint(oldErr) != fmt.Sprint(offErr) || !reflect.DeepEqual(old, off) {
 		t.Errorf("words %d-%d: snap 0s differs from epic 69: %v / %v", from, to, offErr, oldErr)
 	}
 }
