@@ -1,0 +1,42 @@
+---
+// A screen of the product that is not captured yet. It takes the image of the real screen (the path under public/,
+// without the size suffix and the extension) and its alt text. With no image it draws a clearly named slot, so the
+// layout is final and nothing is invented: the screens of epic 79 (home, projects and briefing) are not merged,
+// so the page passes no `src` yet; the change that captures them passes it and the slot becomes the picture.
+import { screenSlots, type ScreenSlotId } from "@/src/landing/content";
+import { withBase } from "@/lib/site";
+
+interface Props {
+	slot: ScreenSlotId;
+	/** Base path of the capture under public/, for example "/landing/home". Absent until the capture exists. */
+	src?: string;
+	/** Dark-theme counterpart; the light capture is `src`. */
+	srcDark?: string;
+	class?: string;
+}
+
+const { slot, src, srcDark, class: className } = Astro.props;
+const { label, alt } = screenSlots[slot];
+const path = (base: string, w: number, ext: string) => withBase(`${base}${w === 1600 ? "" : "-960"}.${ext}`);
+---
+
+{
+	src ? (
+		<>
+			{[
+				{ base: srcDark ?? src, cls: "shot-dark" },
+				...(srcDark ? [{ base: src, cls: "shot-light" }] : []),
+			].map((v, i) => (
+				<picture class={[className, srcDark ? v.cls : undefined].filter(Boolean).join(" ")}>
+					<source type="image/avif" srcset={`${path(v.base, 960, "avif")} 960w, ${path(v.base, 1600, "avif")} 1600w`} sizes="(min-width: 64rem) 40rem, 100vw" />
+					<img src={path(v.base, 1600, "webp")} srcset={`${path(v.base, 960, "webp")} 960w, ${path(v.base, 1600, "webp")} 1600w`} sizes="(min-width: 64rem) 40rem, 100vw" alt={i === 0 ? alt : ""} width="1600" height="1000" loading="lazy" decoding="async" />
+				</picture>
+			))}
+		</>
+	) : (
+		<figure class:list={["screen-slot m-0", className]} data-screen-slot={slot} role="img" aria-label={`${label}: the screenshot is coming`}>
+			<span aria-hidden="true" class="screen-slot-tag">Screenshot coming</span>
+			<span aria-hidden="true" class="screen-slot-name">{label}</span>
+		</figure>
+	)
+}
