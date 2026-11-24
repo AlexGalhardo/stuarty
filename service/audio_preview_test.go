@@ -16,6 +16,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/engine/cache"
 	"github.com/AlexGalhardo/stuarty/engine/frame"
+	"github.com/AlexGalhardo/stuarty/internal/testfs"
 )
 
 const (
@@ -90,7 +91,7 @@ func previewEnv(t *testing.T, fake *fakePreviewer) *batchEnv {
 
 	store.projects.row.Document = timeline.Canonical(doc)
 
-	dir := t.TempDir()
+	dir := testfs.TempDir(t)
 
 	cs, err := cache.Open(dir, 0)
 	if err != nil {
@@ -308,7 +309,7 @@ func TestAudioPreviewFileOverTheCapIsNotRendered(t *testing.T) {
 	a := previewKeys(t, env)[previewItemA]
 
 	// The item is 240000 samples, 960044 bytes as a 16-bit stereo WAV; a window is 384044.
-	small, err := cache.Open(t.TempDir(), 500000)
+	small, err := cache.Open(testfs.TempDir(t), 500000)
 	if err != nil {
 		t.Fatal(err)
 	}
