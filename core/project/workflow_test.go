@@ -328,6 +328,60 @@ func TestImageEditingIsUnknownNotDone(t *testing.T) {
 	if w.Current != StepApproval {
 		t.Fatalf("an unknown step must not block the current one: %q", w.Current)
 	}
+
+	// A timeline in an image project says nothing about the image: its editing stays unknown, never done.
+	w = ComputeWorkflow(KindImage, &Facts{
+		Items: []Item{item(Brief, "", "b"), item(Timeline, "", "")}, PublicationsKnown: true, TimelineItems: 3,
+	})
+	if editing, _ = w.Step(StepEditing); editing.State != StepUnknown {
+		t.Fatalf("an image project with a cut timeline: editing = %+v", editing)
+	}
+
+	// An image held by a project of another kind, with no video, has no fact either, and names the image tool.
+	w = ComputeWorkflow(KindText, &Facts{Items: []Item{item(Image, "", "")}, PublicationsKnown: true})
+	if editing, _ = w.Step(StepEditing); editing.State != StepUnknown || editing.Tool != "ImageEdit" {
+		t.Fatalf("a text project that holds an image: editing = %+v", editing)
+	}
+
+	// A video project that holds an image (a thumbnail) reads its editing from its timeline.
+	w = ComputeWorkflow(KindVideo, &Facts{
+		Items: []Item{item(Timeline, "", ""), item(Image, "", "")}, PublicationsKnown: true, TimelineItems: 2,
+	})
+	if editing, _ = w.Step(StepEditing); editing.State != StepDone || editing.Tool != "Edit" {
+		t.Fatalf("a video with a thumbnail: editing = %+v", editing)
+	}
+}
+
+// A copy that ends in copy or export (D-137): once its publication is skipped, the approval that only lets a
+// publication out is skipped with it, so the workflow does not wait at it for ever.
+func TestSkippedPublicationTakesItsApproval(t *testing.T) {
+	t.Parallel()
+
+	items := []Item{item(Brief, "", "b"), item(Text, TextKindCopy, "the words"), item(Output, "", "")}
+
+	w := ComputeWorkflow(KindText, &Facts{Items: items, PublicationsKnown: true})
+	if w.Current != StepApproval {
+		t.Fatalf("before the skip, current = %q", w.Current)
+	}
+
+	w = ComputeWorkflow(KindText, &Facts{Items: items, PublicationsKnown: true, Skipped: []StepID{StepPublication}})
+	if got := states(&w); got[StepApproval] != StepSkipped || got[StepPublication] != StepSkipped {
+		t.Fatalf("states = %v", got)
+	}
+
+	if w.Current != "" || w.Next != "" {
+		t.Fatalf("a finished copy still has current %q, next %q", w.Current, w.Next)
+	}
+
+	// The approval is never skipped on its own, and a fact about it wins over the skip of the publication.
+	if _, err := CheckStep(&w, string(StepApproval), false); err == nil || err.Code != "E_VALIDATION" {
+		t.Fatalf("the approval was skippable: %+v", err)
+	}
+
+	unknown := ComputeWorkflow(KindText, &Facts{Items: items, Skipped: []StepID{StepPublication}})
+	if got := states(&unknown); got[StepApproval] != StepUnknown {
+		t.Fatalf("publications that could not be read: approval = %q", got[StepApproval])
+	}
 }
 
 func TestOptionalSteps(t *testing.T) {
