@@ -239,7 +239,9 @@
         "approvals.decide",
         "approvals.events",
         "cost.get",
-        "cost.ceilings.set"
+        "cost.ceilings.set",
+        "inbox.list",
+        "inbox.events"
       ]
     },
     {

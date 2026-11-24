@@ -4079,6 +4079,21 @@
       ]
     },
     {
+      "name": "inbox:list",
+      "domain": "workspace",
+      "summary": "list what waits for a person: the permission requests of the chat and the approvals, and the last answered",
+      "usage": [
+        "stuarty inbox:list"
+      ],
+      "example": "stuarty inbox:list --json",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file"
+      ]
+    },
+    {
       "name": "memory:list",
       "domain": "memory",
       "summary": "list the memory notes",

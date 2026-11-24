@@ -1318,6 +1318,14 @@ The types named in the tables of the operations. The arguments of each editing c
 | `hash` | `string` | no | sha256: and 64 hex digits of a file the library holds, in place of a path: the project uses it with no copy. |
 | `path` | `string` | no | An absolute path on the machine that runs the server; or a hash. |
 
+### InboxListResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `rows` | array of [`Row`](/docs/api/schemas#row) | no |  |
+| `untrusted_notice` | `string` | no |  |
+| `waiting` | `integer` | no |  |
+
 ### InstalledTool
 
 | Name | Type | Required | Description |
@@ -2064,11 +2072,20 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `answer` | `string` | no |  |
+| `detail` | [`PermissionDetail`](/docs/api/schemas#permissiondetail) or `any` or `null` or `null` | no |  |
 | `options` | array of [`Option`](/docs/api/schemas#option) | no |  |
 | `request_id` | `string` | no |  |
 | `title` | `string` | no |  |
 | `tool_call_id` | `string` | no |  |
 | `tool_kind` | `string` | no |  |
+
+### PermissionDetail
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `item` | `string` | no |  |
+| `operations` | array of `string` | no |  |
+| `project` | `string` | no |  |
 
 ### PostCheckResult
 
@@ -2755,6 +2772,28 @@ The types named in the tables of the operations. The arguments of each editing c
 | `rule_id` | `string` or `null` | no |  |
 | `state` | `string` | no |  |
 | `summary` | `string` | no |  |
+
+### Row
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `action_key` | `string` | no |  |
+| `agent` | `string` | no |  |
+| `answered_at` | `string (date-time)` or `null` | no |  |
+| `cost` | [`Money`](/docs/api/schemas#money) or `any` or `null` or `null` | no |  |
+| `created_at` | `string (date-time)` | no |  |
+| `destination` | `string` | no |  |
+| `id` | `string` | no |  |
+| `item` | `string` | no |  |
+| `project_id` | `string` | no |  |
+| `session_id` | `string` | no |  |
+| `skill` | `string` | no |  |
+| `source` | `string` | no |  |
+| `source_id` | `string` | no |  |
+| `state` | `string` | no |  |
+| `summary` | `string` | no |  |
+| `tool` | `string` | no |  |
+| `undoable` | `boolean` | no |  |
 
 ### RuleView
 

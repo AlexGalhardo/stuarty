@@ -87,6 +87,7 @@ export function tagOf(route: string): Tag {
 		images: "Images",
 		approvals: "Approvals",
 		"approval-rules": "Approvals",
+		inbox: "Approvals",
 		cost: "Approvals",
 		social: "Publishing",
 		publish: "Publishing",

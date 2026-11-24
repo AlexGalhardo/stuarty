@@ -233,6 +233,8 @@ func callService(ctx context.Context, svc service.Service, s step) (any, error) 
 		return invoke(ctx, s, svc.ChatTranscriptGet)
 	case "ChatActivityGet":
 		return invoke(ctx, s, svc.ChatActivityGet)
+	case "InboxList":
+		return invoke(ctx, s, svc.InboxList)
 	case "SocialNetworkList":
 		return invoke(ctx, s, svc.SocialNetworkList)
 	case "SocialConnectBegin":
@@ -1419,6 +1421,8 @@ func commandOf(s step) (name string, argv []string, stdin string, err error) {
 		return "chat:transcript", []string{a.ID}, "", nil
 	case "ChatActivityGet":
 		return "chat:activity", []string{a.ID}, "", nil
+	case "InboxList":
+		return "inbox:list", nil, "", nil
 	case "SocialNetworkList":
 		return "social:network:list", nil, "", nil
 	case "SocialAccountList":

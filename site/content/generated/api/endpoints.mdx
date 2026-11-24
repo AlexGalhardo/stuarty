@@ -248,6 +248,8 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/approvals/events` | [`approvals.events`](/docs/api/approvals.events) | Stream the events of the approval queue |
 | `GET` | `/api/v1/cost` | [`cost.get`](/docs/api/cost.get) | Read the cost ceilings and what was spent |
 | `PUT` | `/api/v1/cost/ceilings` | [`cost.ceilings.set`](/docs/api/cost.ceilings.set) | Set or remove a cost ceiling (a person in the browser only; the local token and keys get 403) |
+| `GET` | `/api/v1/inbox` | [`inbox.list`](/docs/api/inbox.list) | List what waits for a person: the permission requests of the chat and the approvals, with what will happen, where, the cost and whether it can be undone |
+| `GET` | `/api/v1/inbox/events` | [`inbox.events`](/docs/api/inbox.events) | Stream the list of what waits for a person, again each time it changes |
 
 ## Publishing
 
