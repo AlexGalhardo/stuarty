@@ -152,9 +152,9 @@ func TestErrorfDoesNotEchoALongValue(t *testing.T) {
 func TestQuotedCallerValueComesBackEscapedAndCut(t *testing.T) {
 	hostile := []string{
 		"line one\nE_FORGED: second line",
-		"evil‮fdp⁦",
+		"evil" + string(rune(0x202E)) + "fdp" + string(rune(0x2066)),
 		"nul\x00byte\r\x1b[31m",
-		strings.Repeat("‮", 5000),
+		strings.Repeat(string(rune(0x202E)), 5000),
 	}
 
 	unknown := NewRegistry("test").unknown
@@ -170,7 +170,7 @@ func TestQuotedCallerValueComesBackEscapedAndCut(t *testing.T) {
 			}
 
 			for _, r := range e.Message {
-				if r == '\n' || r == '\r' || r == 0 || r == 0x1b || (r >= 0x202A && r <= 0x202E) || (r >= 0x2066 && r <= 0x2069) {
+				if isRawControl(r) {
 					t.Errorf("%s: the message has the raw character %U: %.80q", name, r, e.Message)
 					break
 				}
@@ -181,4 +181,9 @@ func TestQuotedCallerValueComesBackEscapedAndCut(t *testing.T) {
 			}
 		}
 	}
+}
+
+// isRawControl is a character that can forge a line or reorder the text around it.
+func isRawControl(r rune) bool {
+	return r == '\n' || r == '\r' || r == 0 || r == 0x1b || (r >= 0x202A && r <= 0x202E) || (r >= 0x2066 && r <= 0x2069)
 }
