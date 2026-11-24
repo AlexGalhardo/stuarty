@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
+	"time"
 )
 
 // ArtifactName is <kind>-<profile>[-<variant>].<ext> (SDD-011 6.1).
@@ -156,5 +157,29 @@ func RemoveArtifacts(artifactsDir, hash string) error {
 	for _, e := range entries {
 		_ = os.Chmod(filepath.Join(dir, e.Name()), 0o600)
 	}
-	return os.RemoveAll(dir)
+	return removeAllWithin(dir, removeWait)
+}
+
+// removeWait bounds the wait of RemoveArtifacts for a file the system still holds after it was closed.
+const (
+	removeWait    = 3 * time.Second
+	removeStep    = 25 * time.Millisecond
+	removeStepMax = 200 * time.Millisecond
+)
+
+// removeAllWithin removes dir and, while the answer is one of the transient ones of transientRemoveError, tries
+// again with a growing pause until wait has passed; any other error, and the last one, is returned.
+func removeAllWithin(dir string, wait time.Duration) error {
+	deadline := time.Now().Add(wait)
+	pause := removeStep
+
+	for {
+		err := os.RemoveAll(dir)
+		if err == nil || !transientRemoveError(err) || !time.Now().Add(pause).Before(deadline) {
+			return err
+		}
+
+		time.Sleep(pause)
+		pause = min(pause*2, removeStepMax)
+	}
 }
