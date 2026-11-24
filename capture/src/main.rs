@@ -28,6 +28,11 @@ enum Msg {
 fn main() {
 	let mut policy = Policy::default();
 	for a in std::env::args().skip(1) {
+		if a == "--version" {
+			// The server asks once, when it resolves the helper (SDD-007 6.10).
+			println!("stuarty-capture {}", env!("CARGO_PKG_VERSION"));
+			return;
+		}
 		if a == "--allow-test-source" {
 			policy.allow_test_source = true;
 		} else {
