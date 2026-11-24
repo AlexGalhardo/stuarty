@@ -167,7 +167,10 @@ export default function ChatEventView({
 									<UntrustedText>{agent}</UntrustedText>
 								</p>
 							)}
-							<ActivityStrip activity={activity} testId="chat-permission-activity" />
+							<ActivityStrip
+								activity={activity}
+								testId="chat-permission-activity"
+							/>
 							<div className="flex flex-wrap items-center gap-2">
 								<Button
 									size="sm"
