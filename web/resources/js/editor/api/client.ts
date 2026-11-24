@@ -73,6 +73,7 @@ import type {
 	PlanWindow,
 	PlanWindowHead,
 	ProjectContextInput,
+	ProjectCreateKind,
 	ProjectCreateResult,
 	ProjectDescribeResult,
 	ProjectGetResult,
@@ -80,6 +81,7 @@ import type {
 	ProjectItemResult,
 	ProjectListResult,
 	ProjectStateResult,
+	ProjectStepSkipResult,
 	ProjectUpdateResult,
 	ProviderListResult,
 	ProviderModelsResult,
@@ -414,7 +416,15 @@ export interface ApiClient {
 	listUsers(): Promise<UserListResult>;
 	listTrashedProjects(): Promise<ProjectListResult>;
 	listProjects(): Promise<ProjectListResult>;
-	createProject(input: ProjectContextInput): Promise<ProjectCreateResult>;
+	createProject(
+		input: ProjectContextInput & { kind?: ProjectCreateKind },
+	): Promise<ProjectCreateResult>;
+	// Skips an optional step of the workflow of a project, or with `restore` puts it back (SDD-000 section 1).
+	skipProjectStep(
+		projectId: string,
+		step: string,
+		restore: boolean,
+	): Promise<ProjectStepSkipResult>;
 	updateProject(
 		projectId: string,
 		input: Partial<ProjectContextInput>,
@@ -1066,6 +1076,13 @@ export function createClient(
 		listTrashedProjects: () =>
 			call("GET", "/projects?state=trashed", READ_TIMEOUT_MS),
 		createProject: (input) => call("POST", "/projects", EDIT_TIMEOUT_MS, input),
+		skipProjectStep: (id, step, restore) =>
+			call(
+				"POST",
+				`${project(id)}/steps/${encodeURIComponent(step)}/skip`,
+				EDIT_TIMEOUT_MS,
+				{ restore },
+			),
 		updateProject: (id, input) =>
 			call("PATCH", project(id), EDIT_TIMEOUT_MS, input),
 		duplicateProject: (id, name) =>

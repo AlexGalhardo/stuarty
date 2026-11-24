@@ -270,7 +270,54 @@
     "dashboard": {
       "home": {
         "title": "Início",
-        "lead": "Tudo o que você cria, em um só lugar. Escolha uma seção para começar."
+        "lead": "Diga o que você quer criar, e o Stuarty mostra o próximo passo até a publicação.",
+        "loading": "Lendo os seus projetos.",
+        "new_project": "Novo projeto",
+        "empty": {
+          "title": "Crie o seu primeiro projeto",
+          "description": "Escolha um texto, um vídeo, uma imagem, ou decida depois. O Stuarty mostra cada etapa até a publicação."
+        },
+        "guide": {
+          "title": "Como funciona",
+          "briefing": {
+            "title": "Diga o que quer criar",
+            "description": "Um texto, um vídeo, uma imagem, ou decida depois."
+          },
+          "write": {
+            "title": "Preencha o briefing",
+            "description": "O que é, para quem e até quando."
+          },
+          "follow": {
+            "title": "Siga o caminho até a publicação",
+            "description": "Cada etapa diz quem faz, com qual ferramenta e quanto custa."
+          }
+        },
+        "progress": {
+          "title": "Continue de onde parou",
+          "next": "Próxima etapa: {step}",
+          "no_next": "Nenhuma etapa aberta. Abra o projeto para ver em que ponto ele está.",
+          "no_workflow": "Não foi possível ler agora o caminho deste projeto.",
+          "open": "Abrir o projeto",
+          "open_named": "Abrir {name}"
+        },
+        "waiting": {
+          "title": "Esperando você",
+          "approvals": {
+            "one": "{count} aprovação espera a sua decisão.",
+            "other": "{count} aprovações esperam a sua decisão."
+          },
+          "review": "Revisar na fila de aprovação",
+          "step": "A etapa {step} espera por você.",
+          "nothing": "Nada espera por você agora."
+        },
+        "recent": {
+          "title": "Seus projetos",
+          "all": "Ver todos os projetos"
+        },
+        "sections": {
+          "title": "Seções",
+          "description": "Tudo o que o Stuarty faz, uma seção por vez."
+        }
       },
       "empty": {
         "status": "Esta seção ainda não está disponível. Ela chega em uma versão futura.",
@@ -351,6 +398,12 @@
       "title": "Projetos",
       "new": "Novo projeto",
       "new_open": "Começar um novo projeto",
+      "kind": {
+        "text": "Texto",
+        "video": "Vídeo",
+        "image": "Imagem",
+        "undecided": "Ainda não decidido"
+      },
       "name": "Nome",
       "size": "Tamanho",
       "create": "Criar projeto",

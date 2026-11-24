@@ -1,6 +1,8 @@
 // Shapes of the props the Go controllers send. Project data comes from
 // service.Service (SDD-003 section 2.3) and is only drawn here (SDD-012 T1).
 
+import type { ProjectKind, TextSummary } from "./workflow/types";
+
 // ProjectSummary mirrors the Go type of the same name.
 export interface ProjectSummary {
 	id: string;
@@ -20,6 +22,9 @@ export interface ProjectSummary {
 	timeline_id: string;
 	timelines: number;
 	updated_at: string;
+	// The effective kind of the project and, when it holds a text, what that text is like (epic 78).
+	kind: ProjectKind;
+	text_summary?: TextSummary;
 }
 
 // The size presets of RF-002; the core owns what each one means.
