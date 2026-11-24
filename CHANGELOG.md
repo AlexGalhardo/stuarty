@@ -7,6 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.49.0] - 2026-11-24
+
+### Added
+
+- **site:** Adopt the final redesign tokens in the site stylesheet ([dffbeea](https://github.com/AlexGalhardo/stuarty/commit/dffbeea6b84ef3800fbd062e772a811809ce4056))
+- **site:** Show the Alpha badge and the release version beside the logo ([4dc8f80](https://github.com/AlexGalhardo/stuarty/commit/4dc8f80b82e26b76e6a4b886cd3018dd305e854a))
+- **site:** Give the mobile menu and the bar 44 px targets ([16e8fca](https://github.com/AlexGalhardo/stuarty/commit/16e8fca599c2384aad02fd1c58d7d830c93b6458))
+- **site:** Widen the docs left column to 280 px and align the sidebar ([d5bb4c1](https://github.com/AlexGalhardo/stuarty/commit/d5bb4c1f3e139c6631d4402616f2ddf03637018c))
+- **ui:** Add the semantic tokens, type scale and motion of the final redesign ([8d92f01](https://github.com/AlexGalhardo/stuarty/commit/8d92f01289b5177fa6eb610b3aebc1f2971ebab8))
+- **ui:** Restyle the form controls with the tokens of the final redesign ([ff0b808](https://github.com/AlexGalhardo/stuarty/commit/ff0b808a08f0e117808d494c3fec504ad899bbc1))
+- **ui:** Restyle the surfaces and overlays with the tokens of the final redesign ([19ce8ca](https://github.com/AlexGalhardo/stuarty/commit/19ce8ca596c61cb7130f058a869ac4501aa57404))
+- **ui:** Add the data-free shared components of the final redesign ([80d272c](https://github.com/AlexGalhardo/stuarty/commit/80d272c076aa3b6d168bc5b0da15a55eeb61d657))
+- **ui:** Bundle Inter as the interface font ([abe78f0](https://github.com/AlexGalhardo/stuarty/commit/abe78f0a356585c055ef01e42de811d92720b978))
+- **core:** Add the account rules, the key derivation and the sealed fields ([9d72752](https://github.com/AlexGalhardo/stuarty/commit/9d7275203673142ba84a9f7c1c435e2b1adc5c72))
+- **service:** Lock the studio, answer E_LOCKED everywhere and add the account routes ([9aab75e](https://github.com/AlexGalhardo/stuarty/commit/9aab75eee5e280d4311dd464fbdd4411745a94e6))
+- **store:** Seal the user's fields and wrap the vault key with the data key ([473f42b](https://github.com/AlexGalhardo/stuarty/commit/473f42b1507aebb1e1075ebefa42eec101934811))
+- **owner:** Migrate an existing workspace into the account with a verified copy ([cff5bf9](https://github.com/AlexGalhardo/stuarty/commit/cff5bf94bf8da3e714ec67c6ca6f2c36fb5f08ca))
+- **web:** Remove Google sign-in and make the password the only person session ([1cc4a07](https://github.com/AlexGalhardo/stuarty/commit/1cc4a07c7e60afdd505872d019fb6357aa29fadf))
+- **web:** Add the account pages, Settings account section and Logout ([48a4fbb](https://github.com/AlexGalhardo/stuarty/commit/48a4fbb8bc41e99a9339c91816fde4a8c2d09549))
+- **store:** Seal the description and the goal of a project ([37d934f](https://github.com/AlexGalhardo/stuarty/commit/37d934fac83fc5469073aceea29cbd2f706ed298))
+- **store:** Seal the address of a webhook and keep a locked studio from sending ([7e9b103](https://github.com/AlexGalhardo/stuarty/commit/7e9b103bda7f6f480cfab891e83671e3a07f7bc0))
+
+### Fixed
+
+- **site:** Keep the navbar inside 640 to 1024 px with the release badge ([5befdda](https://github.com/AlexGalhardo/stuarty/commit/5befddadca9f5369186bdfdbd381b206f7b5c437))
+- **site:** Keep the landing pages on their previous palette ([7dfb253](https://github.com/AlexGalhardo/stuarty/commit/7dfb253d535ef72d7219e80a2bc01cb3c64cdbea))
+- **site:** Show no version in the badge when the release lookup fails ([2c27785](https://github.com/AlexGalhardo/stuarty/commit/2c277857f3edd5b7e507d4c1b6024cf7bf551a79))
+- **site:** Give the logo a 44 px target on a phone ([56ec380](https://github.com/AlexGalhardo/stuarty/commit/56ec38048714258700d017c5d888f464c05217c1))
+- **ui:** Repaint the pages the new tokens broke ([8ab38aa](https://github.com/AlexGalhardo/stuarty/commit/8ab38aa73f674214b927f0ca24837dc0f8cfc5b6))
+- **ui:** Keep the narrow pages from scrolling sideways with Inter ([df94c4d](https://github.com/AlexGalhardo/stuarty/commit/df94c4dd7f750bd5b54f67e91d78f8ab76121390))
+- **ui:** Keep the former accent and status names as aliases ([e347d7c](https://github.com/AlexGalhardo/stuarty/commit/e347d7c4489c45ee83dfe0ffe00cb4af08b44606))
+- **ui:** Draw the focus ring on the slider thumb ([3b55803](https://github.com/AlexGalhardo/stuarty/commit/3b55803bdff59c1dbf1111c3d23073efe5754687))
+- **ui:** Keep the clip name readable on its chip in the light theme ([1996008](https://github.com/AlexGalhardo/stuarty/commit/1996008ecb8ea30760261e7517f2b3620f670d72))
+- **ui:** Keep short track names whole with Inter ([20389ac](https://github.com/AlexGalhardo/stuarty/commit/20389ac0f227d96e389e1a87263d5684de9e0c90))
+- **service:** Answer E_LOCKED first on every webhook operation ([1fa6350](https://github.com/AlexGalhardo/stuarty/commit/1fa63509ce8a53b89393a399ec442043f63d54e4))
+- **service:** Close the studio while the account is created and count every attempt ([255c1f2](https://github.com/AlexGalhardo/stuarty/commit/255c1f2c41c6866a7da0bedad100e3f202b762fb))
+- **owner:** Leave no clear text behind after the account is created ([f399433](https://github.com/AlexGalhardo/stuarty/commit/f3994333aa0971ae5fdb3b54d972653e864cb18d))
+- **http:** End what is open when the studio locks and keep agents off the first account ([eae7a4c](https://github.com/AlexGalhardo/stuarty/commit/eae7a4c7769f422d5c2734e9edc3d615712c18bb))
+- **http:** Let the recovery key reach the person on a large workspace ([a678450](https://github.com/AlexGalhardo/stuarty/commit/a678450e1b62e791408260ce034f8ca0ae1c6850))
+- **store:** Seal the words kept in jobs, approvals and published posts ([6c918a2](https://github.com/AlexGalhardo/stuarty/commit/6c918a20cfd4138185f3a85380adb59608b667d1))
+- **web:** Offer Logout only to a person and never pretend it worked ([b49365a](https://github.com/AlexGalhardo/stuarty/commit/b49365af2f293a5f42c111710c378a2ed09f297f))
+- **owner:** Keep the old key provider and a stray key out of the creation ([f613988](https://github.com/AlexGalhardo/stuarty/commit/f61398869967a60cd2bdd6bc28e41367327f9c27))
+- **http:** Let the desktop shell open its window while the studio is locked ([7c10c86](https://github.com/AlexGalhardo/stuarty/commit/7c10c863da02a916664beab797a5f185e18d9ffe))
+- **owner:** Do not rewrite a vault that the failed creation never changed ([b40061a](https://github.com/AlexGalhardo/stuarty/commit/b40061a549bc59e367347033668538e281fbd9e4))
+- **service:** Answer E_LOCKED first on the rename of a library file ([bba0b89](https://github.com/AlexGalhardo/stuarty/commit/bba0b8981cbc961eb924932223a7af435b59a50e))
+- **store:** Seal the title of a chat session, which is the first message ([d009f85](https://github.com/AlexGalhardo/stuarty/commit/d009f85174e9e882bb7e5ed1e9f8234d4ba66a64))
+- **store:** Seal the prompt of a generated file and keep it out of the index ([516ecca](https://github.com/AlexGalhardo/stuarty/commit/516ecca29be7e0005dc045f844c7ff1eb4a0d792))
+- **cli:** Restore an account backup with its vault and refuse to replace a locked studio ([859d193](https://github.com/AlexGalhardo/stuarty/commit/859d1934a57edd82763ac28010e03c58ff0c2373))
+- **web:** Take an open page off the screen when the studio locks ([57a8ddd](https://github.com/AlexGalhardo/stuarty/commit/57a8ddd8c572775720572051cf8b421e766678a7))
+- **ui:** Say on the account pages what is not encrypted yet ([29d4f94](https://github.com/AlexGalhardo/stuarty/commit/29d4f94ba3c9e1929b1f916982a5964bf611b4ef))
+
+### Security
+
+- **security:** Count the threats of the model after the account and the Google removal ([d441ad7](https://github.com/AlexGalhardo/stuarty/commit/d441ad7927d4e4e22604eb5a1cb1591a15851cf6))
+
 ## [0.48.0] - 2026-11-24
 
 ### Added
@@ -2301,7 +2356,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.48.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.49.0...HEAD
+[0.49.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.48.0...v0.49.0
 [0.48.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.47.0...v0.48.0
 [0.47.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.46.0...v0.47.0
 [0.46.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.45.0...v0.46.0
