@@ -153,6 +153,14 @@ The SSE frame's `id` is `seq`, so a client that reconnects with `Last-Event-ID` 
 
 Agent text is never interpreted by Stuarty: no HTML, no Markdown rendering, no link made clickable from it. The panel shows a URL as text in full, with the host visible (T-71).
 
+### 7.1 What a permission says about the call (epic 77)
+
+The protocol gives the host the title and the kind of the tool call and, in `toolCall.rawInput`, the input the agent is about to send. The notification center shows a permission beside the approvals (SDD-015 section 4.1), so the host keeps a little more than the title, under a rule that a hostile input cannot bend:
+
+- **Only for a tool of Stuarty's own MCP server**, recognised as in section 8.1 (`chat.StuartyToolName`). Any other tool keeps its title and kind, and its item, destination and undo read "Not reported".
+- **Only an allowlist of members of the input**, read as strings: `project_id`, `timeline_id` and `image_id` (the project or image), `item_id`, `asset_id` and `name` (the item), and the operation names, which are `action` and, for `edit`, the `op` of each of the first 8 operations. Every other member, nested object, number and array is dropped without being read. Each kept value is cleaned like all agent text (`chat.CleanText`), clipped to 128 characters, scrubbed of the session secrets by the recorder, and stored as `permission.detail` (`project`, `item`, `operations`). A value that is not a plain string is dropped; the arguments of an operation (`args`) are never kept.
+- The detail is text from the agent: it is shown as text, it grants nothing, and no decision reads it. `ChatAnswerPermission` is unchanged.
+
 ### 8.1 Activity: the skill and the tool (epic 76)
 
 The scene bar and the panel tell what the agent is doing from one read model, `chat.Reduce` in `core/chat`, which reads the events of a session and nothing else. `ChatActivityGet` returns it.
@@ -212,6 +220,7 @@ All are in the domain `workspace`. A "person" is `Caller.Browser` (a browser ses
 | `ChatTranscriptGet` | `GET /chat/sessions/{id}/transcript` | `read`; the project check of the session's project |
 | `ChatActivityGet` | `GET /chat/sessions/{id}/activity` | `read`; the project check of the session's project (section 8.1) |
 | `ChatSessionDelete` | `DELETE /chat/sessions/{id}` | `edit` and a person |
+| `InboxList` | `GET /inbox` | `read`, not the session token of a hosted agent; the open permission requests of every live session the caller may see, with the approvals (SDD-015 section 4.1, section 7.1). It is a read: a request is answered by `ChatAnswerPermission` |
 | the event stream | `GET /chat/sessions/{id}/events` | `read`; the project check |
 
 - A caller that is not a person gets `E_PRIVILEGED_SESSION` before the scope is checked, so an agent learns one thing (as in SDD-015 section 4). The session token of section 6 is such a caller: a hosted agent cannot start, steer, cancel, answer or delete a chat, nor write a profile.
