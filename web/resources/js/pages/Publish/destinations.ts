@@ -32,6 +32,10 @@ function destination(
 	sameFamily: boolean,
 	kind: ContentKind,
 ): Destination {
+	// What the destination's own list says comes first: it is the more telling reason.
+	if (!takes.includes(kind)) {
+		return { id, label, network, takes, usable: false, blocked: "takes" };
+	}
 	if (!sameFamily) {
 		return {
 			id,
@@ -41,9 +45,6 @@ function destination(
 			usable: false,
 			blocked: "other_family",
 		};
-	}
-	if (!takes.includes(kind)) {
-		return { id, label, network, takes, usable: false, blocked: "takes" };
 	}
 	return { id, label, network, takes, usable: true };
 }
