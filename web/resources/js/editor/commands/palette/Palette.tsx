@@ -344,7 +344,7 @@ export default function Palette({
 										tabIndex={-1}
 										aria-selected={row === activeRow}
 										data-command={row.command.name}
-										className="grid h-10 cursor-pointer grid-cols-[1fr_auto_auto] items-center gap-3 px-3 text-sm aria-selected:bg-accent aria-selected:shadow-[inset_2px_0_0_var(--ring)]"
+										className="grid h-10 cursor-pointer grid-cols-[1fr_auto_auto] items-center gap-3 px-3 text-sm aria-selected:bg-surface-hover aria-selected:shadow-[inset_2px_0_0_var(--ring)]"
 										onMouseMove={() => setActive(index)}
 										onClick={() => openForm(row)}
 										onKeyDown={() => undefined}

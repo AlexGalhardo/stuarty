@@ -128,7 +128,7 @@ export function AssetCard({
 							{t(`ui.assets.origin.${asset.origin?.kind ?? "imported"}`)}
 						</span>
 						{asset.reusable === true && (
-							<span className="rounded bg-primary/10 px-1 text-primary">
+							<span className="rounded bg-accent-soft px-1 text-accent-text">
 								{t("ui.assets.reusable_badge")}
 							</span>
 						)}

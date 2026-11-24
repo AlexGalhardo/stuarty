@@ -285,10 +285,10 @@
 	--ed-selection: oklch(1 0 0);
 	--ed-snap: var(--color-focus);
 	--ed-ghost: oklch(0.460 0.216 276.7 / 0.75);
-	--ed-safe-area: oklch(0.799 0.104 282.6);
+	--ed-safe-area: var(--color-focus);
 	--ed-error-flash: oklch(0.586 0.222 17.6);
-	--ed-preview-surround: oklch(0.174 0.010 276.4);
-	--ed-handle: oklch(0.799 0.104 282.6);
+	--ed-preview-surround: oklch(0.928 0.014 93.0); /* canvas, #EAE7DD */
+	--ed-handle: var(--color-focus);
 
 	/* motion (section 2.13): always through these tokens; reduced motion sets them to 1 ms */
 	--duration-none: 0ms;
@@ -368,6 +368,7 @@
 	--ed-item-shape-fg: oklch(0.122 0.006 261.6);
 	--ed-playhead: oklch(1 0 0);
 	--ed-ghost: oklch(0.799 0.104 282.6 / 0.55);
+	--ed-preview-surround: oklch(0.174 0.010 276.4); /* canvas, #0F1015 */
 	--ed-error-flash: oklch(0.645 0.215 16.4);
 }
 

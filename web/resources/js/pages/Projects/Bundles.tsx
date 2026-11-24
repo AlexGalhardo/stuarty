@@ -89,7 +89,7 @@ export function BundleExport({ projectId }: { projectId: string }): ReactNode {
 								</span>
 							)}
 							<a
-								className="text-primary underline"
+								className="text-accent-text underline"
 								href={exportFileUrl(job.job_id)}
 								download
 							>
