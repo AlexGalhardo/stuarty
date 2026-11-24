@@ -150,6 +150,12 @@ var parity = []row{
 		method: "ProjectItemRestore", tool: "project_item", command: "item:restore",
 		route: "POST /projects/{}/items/{}/restore",
 	},
+	// The kind and the workflow of a project (epic 78): skipping a step is project_item with the action skip, or
+	// unskip to put it back, and the step is the title.
+	{
+		method: "ProjectStepSkip", tool: "project_item", command: "project:step",
+		route: "POST /projects/{}/steps/{}/skip",
+	},
 	{method: "BriefGet", tool: "project_item", command: "brief:show", route: "GET /projects/{}/brief"},
 	{method: "BriefSet", tool: "project_item", command: "brief:set", route: "PUT /projects/{}/brief"},
 	// The guided briefing (SDD-005 section 5.12.1): project_item with action briefing.

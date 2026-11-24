@@ -98,6 +98,7 @@ command project:duplicate
 command project:list
 command project:restore
 command project:show
+command project:step
 command project:trash
 command project:update
 command prompt:list
@@ -341,6 +342,7 @@ route POST /projects/{}/otio
 route POST /projects/{}/redo
 route POST /projects/{}/restore
 route POST /projects/{}/revert
+route POST /projects/{}/steps/{}/skip
 route POST /projects/{}/texts
 route POST /projects/{}/texts/{}/draft
 route POST /projects/{}/texts/{}/revert

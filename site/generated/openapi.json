@@ -1424,6 +1424,18 @@
         },
         "type": "object"
       },
+      "Cost": {
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "micros": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "CostLine": {
         "properties": {
           "currency": {
@@ -6521,6 +6533,9 @@
           "height": {
             "type": "integer"
           },
+          "kind": {
+            "type": "string"
+          },
           "name": {
             "type": "string",
             "x-untrusted": true
@@ -6562,6 +6577,9 @@
             },
             "type": "array"
           },
+          "kind": {
+            "type": "string"
+          },
           "name": {
             "type": "string",
             "x-untrusted": true
@@ -6580,6 +6598,9 @@
           },
           "untrusted_notice": {
             "type": "string"
+          },
+          "workflow": {
+            "$ref": "#/components/schemas/Workflow"
           }
         },
         "type": "object"
@@ -6639,6 +6660,9 @@
             },
             "type": "array"
           },
+          "kind": {
+            "type": "string"
+          },
           "name": {
             "type": "string",
             "x-untrusted": true
@@ -6673,6 +6697,9 @@
           },
           "width": {
             "type": "integer"
+          },
+          "workflow": {
+            "$ref": "#/components/schemas/Workflow"
           }
         },
         "type": "object"
@@ -6892,6 +6919,26 @@
         },
         "type": "object"
       },
+      "ProjectStepSkipResult": {
+        "properties": {
+          "changed": {
+            "type": "boolean"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "workflow": {
+            "$ref": "#/components/schemas/Workflow"
+          }
+        },
+        "type": "object"
+      },
       "ProjectSummary": {
         "properties": {
           "assets": {
@@ -6915,6 +6962,9 @@
           "items": {
             "type": "integer"
           },
+          "kind": {
+            "type": "string"
+          },
           "name": {
             "type": "string",
             "x-untrusted": true
@@ -6928,6 +6978,16 @@
           },
           "state": {
             "type": "string"
+          },
+          "text_summary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TextSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "timeline_id": {
             "type": "string"
@@ -8456,6 +8516,32 @@
         },
         "type": "object"
       },
+      "Step": {
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "cost": {
+            "items": {
+              "$ref": "#/components/schemas/Cost"
+            },
+            "type": "array"
+          },
+          "id": {
+            "type": "string"
+          },
+          "optional": {
+            "type": "boolean"
+          },
+          "state": {
+            "type": "string"
+          },
+          "tool": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "Strip": {
         "properties": {
           "columns": {
@@ -8979,6 +9065,27 @@
           },
           "untrusted_notice": {
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "TextSummary": {
+        "properties": {
+          "excerpt": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "item_id": {
+            "type": "string"
+          },
+          "reading_minutes": {
+            "type": "integer"
+          },
+          "text_kind": {
+            "type": "string"
+          },
+          "words": {
+            "type": "integer"
           }
         },
         "type": "object"
@@ -10315,6 +10422,26 @@
           },
           "text": {
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Workflow": {
+        "properties": {
+          "current": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "next": {
+            "type": "string"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/Step"
+            },
+            "type": "array"
           }
         },
         "type": "object"
@@ -21845,6 +21972,10 @@
                     "pattern": "^prj_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
                     "type": "string"
                   },
+                  "kind": {
+                    "description": "What the project is meant to become: text, video, image or undecided (the default). It creates no timeline.",
+                    "type": "string"
+                  },
                   "name": {
                     "description": "4 to 32 letters, digits and single spaces.",
                     "type": "string"
@@ -26379,6 +26510,93 @@
           }
         ],
         "summary": "Read the snap points and trim limits"
+      }
+    },
+    "/api/v1/projects/{id}/steps/{step}/skip": {
+      "post": {
+        "operationId": "projects.steps.skip",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "A step of the workflow of the project that is optional in it.",
+            "in": "path",
+            "name": "step",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "restore": {
+                    "description": "Put a skipped step back.",
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectStepSkipResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Skip an optional step of the workflow of a project, or restore it"
       }
     },
     "/api/v1/projects/{id}/texts": {
