@@ -18,6 +18,8 @@ export interface ApprovalContext {
 	post?: { words: number; text: string; slug: string };
 }
 
+export const SETTLE_MS = 250;
+
 // The request ids make the key: a request that came or went is read again, a stream event that changes nothing
 // is not.
 export function useApprovalContext(
@@ -31,7 +33,7 @@ export function useApprovalContext(
 		let alive = true;
 		const http = new HttpTransport("/api/v1");
 		const ids = new Set(key.split(","));
-		void (async () => {
+		const read = async (): Promise<void> => {
 			const next: Record<string, ApprovalContext> = {};
 			for (const id of ids) next[id] = {};
 			try {
@@ -78,9 +80,13 @@ export function useApprovalContext(
 				}
 			}
 			if (alive) setContext(next);
-		})();
+		};
+		// A burst of stream events (many requests made at once) changes the key many times: only the set that
+		// stays for a moment is read, so the page does not send three reads for each event.
+		const timer = setTimeout(() => void read(), SETTLE_MS);
 		return () => {
 			alive = false;
+			clearTimeout(timer);
 		};
 	}, [key]);
 
