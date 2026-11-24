@@ -144,42 +144,88 @@ Method: OKLCH to linear sRGB (Björn Ottosson's matrices), gamut clamp, sRGB enc
 
 | Pair (foreground on background) | Need | Light | Dark |
 | --- | --- | --- | --- |
-| `foreground` on `background` | 4.5 | 15.35 | 17.57 |
-| `foreground` on `ed-panel` | 4.5 | 16.89 | 16.07 |
-| `muted-foreground` on `background` | 4.5 | 6.87 | 6.69 |
-| `muted-foreground` on `muted` | 4.5 | 6.17 | 5.38 |
-| `muted-foreground` on `ed-timeline` | 4.5 | 6.17 | 6.69 |
-| `primary-foreground` on `primary` | 4.5 | 5.35 | 11.21 |
-| `secondary-foreground` on `secondary` | 4.5 | 13.79 | 14.12 |
-| `destructive` on `background` | 4.5 | 6.08 | 8.26 |
-| `destructive` on its tint (`/10` light, `/20` dark) | 4.5 | 5.07 | 5.85 |
-| `destructive` on its tint over `popover` (the destructive button of a dialog or a menu; it set the dark `--destructive` to `oklch(0.790 0.170 16.4)`, 4.34:1 at `0.750`) | 4.5 | 5.56 | 4.59 |
-| `success` on `background` | 4.5 | 5.59 | 8.29 |
-| `warning` on `background` | 4.5 | 6.37 | 8.80 |
-| `info` on `background` | 4.5 | 4.86 | 10.44 |
-| `agent` on `background` | 4.5 | 6.33 | 10.44 |
-| `agent` on `ed-panel` | 4.5 | 6.97 | 9.55 |
-| each state on its tint (`/10` light, `/20` dark over the panel) | 4.5 | 4.66 to 5.98 | 5.28 to 6.22 |
+| `color-text` on `color-background` | 4.5 | 16.03 | 15.72 |
+| `color-text-muted` on `color-background` | 4.5 | 8.22 | 9.87 |
+| `color-text-subtle` on `color-background` | 4.5 | 5.75 | 6.78 |
+| `color-text` on `color-surface` | 4.5 | 16.88 | 14.78 |
+| `color-text-muted` on `color-surface` | 4.5 | 8.66 | 9.28 |
+| `color-text-subtle` on `color-surface` | 4.5 | 6.05 | 6.38 |
+| `color-text` on `color-surface-raised` | 4.5 | 16.88 | 13.48 |
+| `color-text-muted` on `color-surface-raised` | 4.5 | 8.66 | 8.46 |
+| `color-text-subtle` on `color-surface-raised` | 4.5 | 6.05 | 5.81 |
+| `color-text` on `color-surface-sunken` | 4.5 | 14.95 | 16.56 |
+| `color-text-muted` on `color-surface-sunken` | 4.5 | 7.67 | 10.4 |
+| `color-text-subtle` on `color-surface-sunken` | 4.5 | 5.36 | 7.14 |
+| `color-text` on `color-surface-hover` | 4.5 | 13.66 | 12.08 |
+| `color-text-muted` on `color-surface-hover` | 4.5 | 7.01 | 7.58 |
+| `color-text-subtle` on `color-surface-hover` | 4.5 | 4.9 | 5.21 |
+| `color-text` on `color-surface-selected` | 4.5 | 14.01 | 14.08 |
+| `color-text-muted` on `color-surface-selected` | 4.5 | 7.19 | 8.84 |
+| `color-text-subtle` on `color-surface-selected` | 4.5 | 5.02 | 6.07 |
+| `color-focus` on `color-background` | 3 | 7.4 | 9.44 |
+| `color-focus` on `color-surface` | 3 | 7.79 | 8.87 |
+| `color-focus` on `color-surface-raised` | 3 | 7.79 | 8.09 |
+| `color-focus` on `color-surface-sunken` | 3 | 6.9 | 9.94 |
+| `color-focus` on `color-surface-selected` | 3 | 6.47 | 8.45 |
+| `color-border-strong` on `color-background` | 3 | 3.71 | 4.23 |
+| `color-border-strong` on `color-surface` | 3 | 3.91 | 3.98 |
+| `color-border-strong` on `color-surface-raised` | 3 | 3.91 | 3.63 |
+| `color-border-strong` on `color-surface-sunken` | 3 | 3.46 | 4.46 |
+| `color-accent-text` on `color-accent-soft` | 4.5 | 6.47 | 7.26 |
+| `color-accent-text` on `color-background` | 4.5 | 7.4 | 9.44 |
+| `color-accent-text` on `color-surface` | 4.5 | 7.79 | 8.87 |
+| `color-agent-text` on `color-agent-soft` | 4.5 | 5.15 | 10.96 |
+| `color-agent-text` on `color-background` | 4.5 | 5.72 | 12.7 |
+| `color-agent-text` on `color-surface` | 4.5 | 6.02 | 11.93 |
+| `color-success-text` on `color-success-soft` | 4.5 | 5.8 | 10.06 |
+| `color-success-text` on `color-background` | 4.5 | 6.34 | 11.71 |
+| `color-success-text` on `color-surface` | 4.5 | 6.67 | 11.01 |
+| `color-warning-text` on `color-warning-soft` | 4.5 | 5.47 | 10.06 |
+| `color-warning-text` on `color-background` | 4.5 | 5.94 | 11.91 |
+| `color-warning-text` on `color-surface` | 4.5 | 6.26 | 11.19 |
+| `color-danger-text` on `color-danger-soft` | 4.5 | 5.43 | 8.67 |
+| `color-danger-text` on `color-background` | 4.5 | 6.28 | 9.82 |
+| `color-danger-text` on `color-surface` | 4.5 | 6.61 | 9.23 |
+| `color-text-on-accent` on `color-accent` | 4.5 | 7.79 | 5.01 |
+| `color-text-on-agent` on `color-agent` | 4.5 | 6.02 | 11.12 |
+| `color-text-on-danger` on `color-danger` | 4.5 | 6.61 | 5.28 |
+| `color-text-on-accent` on `color-accent-hover` | 4.5 | 8.95 | 6.28 |
+| `color-text-on-danger` on `color-danger-hover` | 4.5 | 5.28 | 6.61 |
+| `color-success` on `color-background` | 4.5 | 6.34 | 5.95 |
+| `color-success` on `color-surface` | 4.5 | 6.67 | 5.59 |
+| `color-warning` on `color-background` | 4.5 | 5.94 | 8.19 |
+| `color-warning` on `color-surface` | 4.5 | 6.26 | 7.7 |
+| `color-agent` on `color-background` | 4.5 | 5.72 | 10.56 |
+| `color-agent` on `color-surface` | 4.5 | 6.02 | 9.92 |
+| `muted-foreground` on `muted` | 4.5 | 7.67 | 10.4 |
+| `primary-foreground` on `primary` | 4.5 | 7.79 | 5.01 |
+| `secondary-foreground` on `secondary` | 4.5 | 16.88 | 13.48 |
+| `destructive` on `background` | 4.5 | 6.28 | 9.82 |
+| destructive on its tint (`destructive` at 10% in light, 20% in dark, over `background`) | 4.5 | 5.34 | 6.42 |
+| destructive on its tint over popover (`destructive` at 10% in light, 20% in dark, over `popover`) | 4.5 | 5.61 | 5.41 |
+| `info` on `background` | 4.5 | 7.4 | 9.44 |
+| agent on its tint over ed-panel (`color-agent` at 10% in light, 20% in dark, over `ed-panel`) | 4.5 | 5.22 | 6.33 |
+| `color-agent` on `ed-panel` | 4.5 | 6.02 | 9.92 |
 | `brand-foreground` on `brand` | 4.5 | 8.28 | 5.66 |
-| `brand-text` on `background` | 4.5 | 7.66 | 9.65 |
-| `brand-text` on `brand-subtle` over `background` (the active sidebar item) | 4.5 | 7.67 | 8.95 |
-| `ring` on `background` | 3 | 4.86 | 10.44 |
-| `ring` on `ed-timeline` | 3 | 4.37 | 10.44 |
-| `input` on `background` | 3 | 6.87 | 6.69 |
-| `ed-track-line` on `ed-timeline` | 3 | 6.17 | 6.69 |
-| `ed-playhead` on `ed-timeline` | 3 | 14.48 | 18.88 |
-| `ed-snap` on `ed-timeline` | 3 | 4.37 | 10.44 |
-| `ed-ghost` on `ed-timeline` | 3 | 11.29 | 3.85 |
-| `ed-error-flash` on `ed-timeline` | 3 | 3.83 | 5.14 |
-| `ed-safe-area` on `ed-preview-surround` | 3 | 4.32 | 11.21 |
-| `ed-handle` on `ed-preview-surround` | 3 | 4.32 | 11.21 |
+| `brand-text` on `background` | 4.5 | 8 | 9.23 |
+| `brand-text` on `brand-subtle` over `background` (the active sidebar item) | 4.5 | 7.67 | 8.66 |
+| `ring` on `background` | 3 | 7.4 | 9.44 |
+| `ring` on `ed-timeline` | 3 | 6.9 | 9.94 |
+| `input` on `background` | 3 | 3.71 | 4.23 |
+| `ed-track-line` on `ed-timeline` | 3 | 3.46 | 4.46 |
+| `ed-playhead` on `ed-timeline` | 3 | 15.71 | 19.01 |
+| `ed-snap` on `ed-timeline` | 3 | 6.9 | 9.94 |
+| `ed-ghost` on `ed-timeline` | 3 | 4.08 | 3.74 |
+| `ed-error-flash` on `ed-timeline` | 3 | 4.16 | 5.18 |
+| `ed-safe-area` on `ed-preview-surround` | 3 | 9.94 | 9.94 |
+| `ed-handle` on `ed-preview-surround` | 3 | 9.94 | 9.94 |
 | `ed-item-clip-fg` on `ed-item-clip` | 4.5 | 5.17 | 6.18 |
 | `ed-item-audio-fg` on `ed-item-audio` | 4.5 | 5.02 | 5.98 |
 | `ed-item-text-fg` on `ed-item-text` | 4.5 | 6.97 | 6.66 |
 | `ed-item-caption-fg` on `ed-item-caption` | 4.5 | 6.03 | 6.69 |
 | `ed-item-shape-fg` on `ed-item-shape` | 4.5 | 5.19 | 9.45 |
-| `ed-selection` on `ed-item-clip` (ring against the fill it surrounds) | 3 | 5.17 | 6.18 |
-| `ed-selection` on `ed-item-text` (the closest item colour) | 3 | 6.97 | 6.66 |
+| `ed-selection` on `ed-item-clip` | 3 | 5.17 | 6.18 |
+| `ed-selection` on `ed-item-text` | 3 | 6.97 | 6.66 |
 
 Item fills against `--ed-timeline` are 1.61:1 (light clip) to 2.22:1 (dark clip), below 3:1; this is why every item block has a 1 px `--ed-track-line` border (3.15:1 and 3.13:1), which carries the boundary of the block (section 4.3.6).
 
