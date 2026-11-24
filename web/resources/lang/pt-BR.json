@@ -351,6 +351,8 @@
     },
     "settings": {
       "title": "Configurações",
+      "intro": "Sua conta, seu idioma e como o Stuarty roda neste computador.",
+      "sections": "Seções das configurações",
       "preferences": "Preferências",
       "language": "Idioma",
       "theme": "Tema",

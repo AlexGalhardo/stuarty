@@ -1,3 +1,4 @@
+import { Info } from "lucide-react";
 import {
 	type ReactNode,
 	useEffect,
@@ -17,6 +18,7 @@ import {
 	writeBackground,
 } from "@/lib/desktopBridge";
 import { useT } from "@/lib/i18n";
+import { SettingsSection } from "./SettingsSection";
 
 // The background mode of the desktop shell (SDD-012 section 21.3 item 7): keep running behind a tray icon
 // when the window closes with a post scheduled, and start hidden at sign-in. It is drawn only in the shell
@@ -30,6 +32,7 @@ export default function Background(): ReactNode {
 		() => null,
 	);
 	const [settings, setSettings] = useState<BackgroundAnswer | null>(null);
+	const [unread, setUnread] = useState(false);
 	const [failed, setFailed] = useState<string | null>(null);
 
 	useEffect(() => {
@@ -39,14 +42,34 @@ export default function Background(): ReactNode {
 			(answer) => {
 				if (live) setSettings(answer);
 			},
-			() => undefined,
+			() => {
+				if (live) setUnread(true);
+			},
 		);
 		return () => {
 			live = false;
 		};
 	}, [bridge]);
 
-	if (!canBackground(bridge) || settings === null) return null;
+	if (!canBackground(bridge)) return null;
+
+	if (settings === null)
+		return (
+			<SettingsSection
+				id="settings-background"
+				title={t("ui.settings.background.title")}
+				data-testid="settings-background-pending"
+			>
+				<p
+					role={unread ? "alert" : "status"}
+					className={
+						unread ? "text-sm text-danger-text" : "text-sm text-text-muted"
+					}
+				>
+					{unread ? t("ui.settings.unavailable") : t("ui.settings.loading")}
+				</p>
+			</SettingsSection>
+		);
 
 	async function change(next: BackgroundSettings): Promise<void> {
 		setFailed(null);
@@ -63,29 +86,25 @@ export default function Background(): ReactNode {
 		}
 	}
 
+	const current = settings;
 	return (
-		<section
-			aria-labelledby="settings-background"
-			className="flex flex-col gap-3"
+		<SettingsSection
+			id="settings-background"
+			title={t("ui.settings.background.title")}
+			description={t("ui.settings.background.intro")}
 			data-testid="settings-background"
 		>
-			<h2 id="settings-background" className="text-lg font-semibold">
-				{t("ui.settings.background.title")}
-			</h2>
-			<p className="text-sm text-muted-foreground">
-				{t("ui.settings.background.intro")}
-			</p>
-			<div className="flex items-center justify-between gap-4">
+			<div className="flex items-center justify-between gap-4 border-b border-border pb-3">
 				<Label htmlFor="background-keep">
 					{t("ui.settings.background.keep_running")}
 				</Label>
 				<Switch
 					id="background-keep"
-					checked={settings.keep_running}
+					checked={current.keep_running}
 					onCheckedChange={(checked) =>
 						void change({
 							keep_running: checked,
-							start_at_sign_in: checked && settings.start_at_sign_in,
+							start_at_sign_in: checked && current.start_at_sign_in,
 							asked: true,
 						})
 					}
@@ -98,31 +117,34 @@ export default function Background(): ReactNode {
 					</Label>
 					<Switch
 						id="background-start"
-						checked={settings.start_at_sign_in}
-						disabled={!settings.keep_running}
+						checked={current.start_at_sign_in}
+						disabled={!current.keep_running}
 						onCheckedChange={(checked) =>
 							void change({
-								keep_running: settings.keep_running,
+								keep_running: current.keep_running,
 								start_at_sign_in: checked,
 								asked: true,
 							})
 						}
 					/>
 				</div>
-				<p className="text-sm text-muted-foreground">
+				<p className="text-sm text-text-subtle">
 					{t("ui.settings.background.start_at_sign_in_hint")}
 				</p>
 			</div>
 			{failed !== null && (
-				<p role="alert" className="text-sm text-destructive">
+				<p role="alert" className="text-sm text-danger-text">
 					{failed}
 				</p>
 			)}
-			<ul className="list-disc pl-5 text-sm text-muted-foreground">
-				<li>{t("ui.settings.background.limit_computer")}</li>
-				<li>{t("ui.settings.background.limit_missed")}</li>
-				<li>{t("ui.settings.background.limit_quit")}</li>
+			<ul className="flex flex-col gap-2 text-sm text-text-muted">
+				{(["computer", "missed", "quit"] as const).map((limit) => (
+					<li key={limit} className="flex items-start gap-2">
+						<Info aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+						{t(`ui.settings.background.limit_${limit}`)}
+					</li>
+				))}
 			</ul>
-		</section>
+		</SettingsSection>
 	);
 }
