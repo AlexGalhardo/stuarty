@@ -15,6 +15,7 @@ test("the service status table is read from service/error.go", () => {
 	assert.equal(status.get("E_QUEUE_FULL"), 429);
 	assert.equal(status.get("E_LIMIT_EXCEEDED"), 422);
 	assert.equal(status.get("E_CLIENT_CLOSED"), 499);
+	assert.equal(status.get("E_WEBHOOK_NOT_FOUND"), 404, "a code declared in another file of service/ is still mapped");
 	assert.equal(status.get("E_EXPORT_FAILED"), undefined, "a job failure has no entry: it answers 500");
 });
 

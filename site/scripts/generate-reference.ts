@@ -172,7 +172,13 @@ const STATUS_NUMBERS: Record<string, number> = {
 export function serviceStatuses(): Map<string, number> {
 	const src = fs.readFileSync(path.join(root, "service", "error.go"), "utf8").replace(/\r\n/g, "\n");
 	const consts = new Map<string, string>();
-	for (const m of src.matchAll(/(Code[A-Za-z]+)\s*=\s*"(E_[A-Z_]+)"/g)) consts.set(m[1], m[2]);
+	// A code may be declared next to the operation that raises it (CodeWebhookNotFound is in webhook_ops.go), so the
+	// constants come from every file of the package, while the status switch is only in error.go.
+	const serviceDir = path.join(root, "service");
+	for (const file of fs.readdirSync(serviceDir).filter((f) => f.endsWith(".go") && !f.endsWith("_test.go"))) {
+		const text = file === "error.go" ? src : fs.readFileSync(path.join(serviceDir, file), "utf8");
+		for (const m of text.matchAll(/(Code[A-Za-z]+)\s*=\s*"(E_[A-Z_]+)"/g)) consts.set(m[1], m[2]);
+	}
 	const out = new Map<string, number>();
 	for (const m of src.matchAll(/case ([^:]+?):\s*return (?:http\.)?(Status[A-Za-z]+)/gs)) {
 		const num = STATUS_NUMBERS[m[2]];

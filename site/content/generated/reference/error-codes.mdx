@@ -39,13 +39,13 @@ Raised around the commands: sign-in, imports, exports, jobs and limits. They app
 
 | Code | HTTP | Retryable | Meaning |
 | --- | --- | --- | --- |
-| `E_AGENT_NOT_FOUND` | 500 | no | the agent profile does not exist (SDD-017 §11) |
-| `E_AGENT_UNAVAILABLE` | 500 | no | the hosted agent could not be started or opened; `details.reason` `not_found`, `start_failed`, `exited`, `timeout`, `protocol`, `protocol_version`, `no_http_mcp`, `sign_in_required`, `limit` (SDD-017 §11) |
+| `E_AGENT_NOT_FOUND` | 404 | no | the agent profile does not exist (SDD-017 §11) |
+| `E_AGENT_UNAVAILABLE` | 503 | no | the hosted agent could not be started or opened; `details.reason` `not_found`, `start_failed`, `exited`, `timeout`, `protocol`, `protocol_version`, `no_http_mcp`, `sign_in_required`, `limit` (SDD-017 §11) |
 | `E_APPROVAL_EXPIRED` | 409 | no | in the error of a job whose approval request expired before a person answered (SDD-015 §3) |
 | `E_APPROVAL_NOT_FOUND` | 404 | no | the approval request or the approval rule does not exist (SDD-015 §8) |
 | `E_ASSET_NOT_READY` | 409 | yes | the asset is still ingesting; `details` has `asset_id`, `state` and `progress` (0 to 1) when an edit names it; the read of the peaks of a long sound waiting for its job has `details.reason` `peaks_pending`, `progress` and, once its job is queued, `job_id` (SDD-011 §6.3.1) |
 | `E_CANCELLED` | 500 | no | the job was cancelled |
-| `E_CHAT_NOT_FOUND` | 500 | no | the chat session does not exist, or the caller may not see its project (SDD-017 §11) |
+| `E_CHAT_NOT_FOUND` | 404 | no | the chat session does not exist, or the caller may not see its project (SDD-017 §11) |
 | `E_CLIENT_CLOSED` | 499 | no | the caller closed the request (or its deadline passed) before the answer; status 499, logged below error level, never a server fault |
 | `E_CONNECTION_DESTINATION` | 403 | no | a request through a connection is for a host or a scheme it does not allow (SDD-014 §6) |
 | `E_CONNECTION_NOT_FOUND` | 404 | no | the connection does not exist or was removed (SDD-014 §7) |
@@ -76,5 +76,5 @@ Raised around the commands: sign-in, imports, exports, jobs and limits. They app
 | `E_UNSUPPORTED_MEDIA` | 422 | no | the file is not media FFmpeg can decode, or has no usable stream |
 | `E_VAULT_LOCKED` | 503 | no | the vault cannot be opened: master key missing, wrong or not storable; `details.reason` (SDD-014 §4) |
 | `E_VERIFY_FAILED` | 500 | no | the exported file did not pass verification; `details.checks` |
-| `E_WEBHOOK_NOT_FOUND` | 500 | no | the webhook or the delivery does not exist (SDD-022 §8) |
+| `E_WEBHOOK_NOT_FOUND` | 404 | no | the webhook or the delivery does not exist (SDD-022 §8) |
 | `E_WORKSPACE_LOCKED` | 503 | yes | another process owns the workspace and cannot be reached |
