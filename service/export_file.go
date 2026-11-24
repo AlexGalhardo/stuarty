@@ -105,9 +105,10 @@ func (s *svc) isBundle(job *JobRow) bool {
 
 // downloadName is the file name a browser saves an export under:
 // <project name>-<yyyy-mm-dd><ext>, with the name reduced to ASCII letters and
-// digits so it is safe in a header. An unreadable project falls back to the job id.
+// digits so it is safe in a header. An unreadable project falls back to the job id. The job of a project with no
+// timeline is kept on the project (SDD-005 section 5.12.3), so the name is read from the project as well.
 func (s *svc) downloadName(ctx context.Context, job *JobRow, ext string) string {
-	row, err := s.store.Projects().Get(ctx, *job.ProjectID)
+	row, err := s.scopeRow(ctx, *job.ProjectID)
 	if err != nil {
 		return job.ID + ext
 	}

@@ -2,6 +2,7 @@ package servicetest
 
 import (
 	"encoding/json"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -49,6 +50,14 @@ func TestBundleOfAProjectWithNoTimelineRoundTrips(t *testing.T) {
 
 	if man.BundleVersion != 3 || man.Document != nil || man.Production == nil {
 		t.Fatalf("manifest = %+v, want version 3 with a production and no document", man)
+	}
+
+	// The download is named after the project, as for a project with a timeline, not after the job.
+	jobID := strings.TrimSuffix(strings.TrimPrefix(filepath.Base(path), "bundle-r0-"), ".vvbundle")
+
+	f, err := src.svc.ExportFile(ctx, service.ExportFileRequest{JobID: jobID})
+	if err != nil || !strings.HasPrefix(f.DownloadName, "Only-words-") || !strings.HasSuffix(f.DownloadName, ".vvbundle") {
+		t.Errorf("ExportFile = %+v, %v; want a download named after the project", f, err)
 	}
 
 	for _, asNew := range []bool{true, false} {
