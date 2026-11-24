@@ -133,7 +133,11 @@ test.describe("a11y-first-flow-keyboard @chromium-only", () => {
 			projectId = page.url().split("/").pop() ?? "";
 			await type(page, page.getByLabel("Title", { exact: true }), name);
 			await page.keyboard.press("Enter");
-			await expect(page.getByText(name).first()).toBeVisible();
+			// The name is on the page before the timeline exists: the editor of a project with no timeline
+			// redirects to the page of the project (epic 56), so wait for the item that opens it (VV-386).
+			await expect(
+				page.locator(`a[href="/editor/${projectId}"]`),
+			).toBeVisible();
 			await page.goto(`/editor/${projectId}`);
 			await expect(page).toHaveURL(/\/editor\/prj_[0-9a-hjkmnp-tv-z]{10}$/);
 		});
