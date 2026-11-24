@@ -48,6 +48,28 @@ func TestCheckRevealUnderRefusesADevicePath(t *testing.T) {
 	}
 }
 
+// showInFolder (an export) takes any local file, but never a path on another host or a device: a stat of a UNC
+// path is an SMB connection that offers the person's credentials. The refusal comes from the text, not the disk.
+func TestCheckRevealPathRefusesANetworkOrDevicePathFromItsText(t *testing.T) {
+	file := filepath.Join(t.TempDir(), "a.mp4")
+	if err := os.WriteFile(file, []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, p := range []string{
+		`\\attacker.invalid\share\a.mp4`,
+		"//attacker.invalid/share/a.mp4",
+		`\\?\UNC\attacker.invalid\share\a.mp4`,
+		`\\?\` + file,
+		`\\.\` + file,
+	} {
+		err := CheckRevealPath(p)
+		if err == nil || !strings.Contains(err.Error(), "network or device") {
+			t.Errorf("CheckRevealPath(%q) = %v, want the refusal of a network or device path", p, err)
+		}
+	}
+}
+
 func TestCheckRevealUnderRefusesTheShortNameOfAFileOutside(t *testing.T) {
 	root, _ := mediaFile(t)
 

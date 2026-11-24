@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -25,9 +26,16 @@ func RevealCommand(goos, path string) (name string, args []string) {
 
 // CheckRevealPath accepts only an absolute path to an existing file: the page
 // must not be able to make the shell open anything it cannot name in full.
+//
+// On Windows a network, device or extended path is refused from its text, before the disk is asked: a stat of
+// \\host\share\... opens an SMB connection to that host and offers it the person's credentials, and the product
+// never writes an export to such a path (service/pathguard refuses them).
 func CheckRevealPath(path string) error {
 	if strings.ContainsRune(path, 0) || !filepath.IsAbs(path) {
 		return errors.New("the path is not absolute")
+	}
+	if runtime.GOOS == "windows" && remoteOrDevice(path) {
+		return errors.New("a network or device path is not opened")
 	}
 	info, err := os.Stat(path)
 	if err != nil {
@@ -37,6 +45,17 @@ func CheckRevealPath(path string) error {
 		return errors.New("the path is not a file")
 	}
 	return nil
+}
+
+// remoteOrDevice is whether a Windows path names another host or a device: \\host\share, \\?\, \\.\, \??\ and
+// their forward-slash spellings, the prefixes service/pathguard refuses.
+func remoteOrDevice(path string) bool {
+	for _, p := range []string{`\\`, "//", `\??\`, `/\`, `\/`} {
+		if strings.HasPrefix(path, p) {
+			return true
+		}
+	}
+	return false
 }
 
 // MediaRoot is the media folder of a workspace: where the content store keeps the original files
