@@ -265,7 +265,13 @@ function SidebarBody({
 	const home = pathOf(url) === "/";
 
 	return (
-		<div className="flex min-h-0 flex-1 flex-col gap-2">
+		// In the drawer the whole block scrolls, so a very short window (400 % zoom) keeps every item in reach
+		<div
+			className={cn(
+				"flex min-h-0 flex-1 flex-col gap-2",
+				onToggle === undefined && "overflow-y-auto",
+			)}
+		>
 			<Link
 				href="/"
 				aria-label={t("ui.nav.home", { name: appName })}
@@ -302,7 +308,11 @@ function SidebarBody({
 			</Link>
 			<nav
 				aria-label={t("ui.nav.label")}
-				className="min-h-0 flex-1 overflow-y-auto"
+				className={cn(
+					onToggle === undefined
+						? "flex-none"
+						: "min-h-0 flex-1 overflow-y-auto",
+				)}
 			>
 				<ul className="flex flex-col gap-0.5">
 					<li>

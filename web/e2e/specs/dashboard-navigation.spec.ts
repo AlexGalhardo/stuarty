@@ -73,16 +73,34 @@ test.describe("dashboard-navigation", () => {
 		).toBeVisible();
 
 		const nav = page.getByRole("navigation", { name: "Main navigation" });
-		await expect(nav.getByRole("link")).toHaveText(LABELS.en);
+		// Home, then the five groups of the shell (epic 75); Approvals carries the count, in a word, when some wait
+		await expect(nav.getByRole("link")).toHaveText([
+			"Home",
+			"Projects",
+			"Write",
+			"Edit Video",
+			"Edit Image",
+			"Video Assets",
+			"Visual Assets",
+			"Sound Assets",
+			"Brand kit",
+			"Skills",
+			"Prompts",
+			"Memory",
+			/^Approvals/,
+			"Publish",
+			"Connections",
+			"Webhooks",
+		]);
 
 		await expect(page.getByTestId("profile-name")).toHaveText("stuart");
 		await expect(page.getByRole("link", { name: "Settings" })).toBeVisible();
 		await expect(
 			page.getByRole("button", { name: /Switch to (light|dark) theme/ }),
 		).toBeVisible();
-		// The right dock holds the agent chat (epic 14): closed, one button and no panel.
+		// The Chat button of the top bar opens the agent chat (epic 14): closed, no panel.
 		await expect(
-			page.getByTestId("right-dock").getByTestId("chat-toggle"),
+			page.getByTestId("topbar").getByTestId("chat-toggle"),
 		).toBeVisible();
 		await expect(page.getByTestId("chat-panel")).toHaveCount(0);
 	});
@@ -136,7 +154,13 @@ test.describe("dashboard-navigation", () => {
 						"aria-current",
 						"page",
 					);
-					await expect(page.locator('[aria-current="page"]')).toHaveCount(1);
+					await expect(
+						page
+							.getByRole("navigation", {
+								name: /Main navigation|Navegação principal/,
+							})
+							.locator('[aria-current="page"]'),
+					).toHaveCount(1);
 					await expect(
 						page.getByRole("heading", { level: 1 }).first(),
 					).toBeVisible();
@@ -173,8 +197,27 @@ test.describe("dashboard-navigation", () => {
 		await page.goto("/");
 		await page.getByRole("link", { name: /Stuarty, dashboard/ }).focus();
 
+		// Home, the thirteen sections and the brand kit and Approvals links, in the order of the groups
+		const order = [
+			"home",
+			"projects",
+			"write",
+			"edit-video",
+			"edit-image",
+			"video-assets",
+			"visual-assets",
+			"sound-assets",
+			"brand-kit",
+			"skills",
+			"prompts",
+			"memory",
+			"approvals",
+			"publish",
+			"connections",
+			"webhooks",
+		];
 		const seen: string[] = [];
-		for (let i = 0; i < SECTIONS.length; i++) {
+		for (let i = 0; i < order.length; i++) {
 			await page.keyboard.press("Tab");
 			seen.push(
 				await page.evaluate(
@@ -182,7 +225,7 @@ test.describe("dashboard-navigation", () => {
 				),
 			);
 		}
-		expect(seen).toEqual(SECTIONS.map((key) => `nav-${key}`));
+		expect(seen).toEqual(order.map((key) => `nav-${key}`));
 
 		// Enter on the focused item (Webhooks, the last) opens it.
 		await page.keyboard.press("Enter");
@@ -212,6 +255,7 @@ test.describe("dashboard-navigation", () => {
 	test("the sidebar collapses to icons, keeps the names and remembers the choice", async ({
 		page,
 	}) => {
+		await page.setViewportSize({ width: 1440, height: 900 });
 		await page.goto("/");
 		const sidebar = page.getByTestId("sidebar");
 		await expect(sidebar).toHaveAttribute("data-state", "expanded");
@@ -227,24 +271,49 @@ test.describe("dashboard-navigation", () => {
 		await expect(sidebar).toHaveAttribute("data-state", "expanded");
 	});
 
-	test("the sidebar is collapsed in a narrow window whatever was chosen", async ({
+	test("with no choice the sidebar is a rail up to 1280 px and full above it", async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width: 1280, height: 800 });
+		await page.goto("/");
+		await expect(page.getByTestId("sidebar")).toHaveAttribute(
+			"data-form",
+			"rail",
+		);
+		await page.setViewportSize({ width: 1440, height: 900 });
+		await expect(page.getByTestId("sidebar")).toHaveAttribute(
+			"data-form",
+			"full",
+		);
+	});
+
+	test("on a phone the sidebar is a drawer that the menu button opens, whatever was chosen", async ({
 		page,
 	}) => {
 		await page.addInitScript(() => localStorage.setItem("sidebar", "expanded"));
 		await page.setViewportSize({ width: 360, height: 700 });
 		await page.goto("/");
-		await expect(page.getByTestId("sidebar")).toHaveAttribute(
-			"data-state",
-			"collapsed",
-		);
-		await expect(page.getByTestId("nav-connections")).toBeVisible();
-		// The toggle could not expand it here, so it is not offered.
-		await expect(page.getByTestId("sidebar-toggle")).toBeHidden();
+		await expect(page.getByTestId("sidebar")).toHaveCount(0);
+		const menu = page.getByTestId("menu-toggle");
+		await expect(menu).toBeVisible();
+		await menu.click();
+		const drawer = page.getByTestId("sidebar-drawer");
+		await expect(drawer).toBeVisible();
+		await expect(drawer.getByTestId("nav-connections")).toBeVisible();
+		// the drawer has no collapse button: it would change nothing there
+		await expect(drawer.getByTestId("sidebar-toggle")).toHaveCount(0);
+		await page.keyboard.press("Escape");
+		await expect(drawer).toHaveCount(0);
+		await expect(menu).toBeFocused();
+		// following a link closes it
+		await menu.click();
+		await page.getByTestId("nav-publish").click();
+		await expect(page).toHaveURL(/\/publish$/);
+		await expect(page.getByTestId("sidebar-drawer")).toHaveCount(0);
 	});
 
 	// WCAG 1.4.10 and 2.5.8: the home and a section page reflow at 320 CSS px
-	// with targets of 24 px, and the sidebar strip is read and tabbed in the
-	// order it is drawn.
+	// with targets of 24 px, and the drawer is read in the order it is drawn.
 	test("the dashboard reflows at 320 px with the navigation before the profile", async ({
 		page,
 	}) => {
@@ -262,6 +331,7 @@ test.describe("dashboard-navigation", () => {
 
 		const top = async (testId: string): Promise<number> =>
 			(await page.getByTestId(testId).boundingBox())?.y ?? Number.NaN;
+		await page.getByTestId("menu-toggle").click();
 		expect(await top("nav-projects")).toBeLessThan(await top("profile-name"));
 	});
 
