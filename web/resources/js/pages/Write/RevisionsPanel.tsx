@@ -329,7 +329,7 @@ function ModelLine({ revision }: { revision: TextRevision }): ReactNode {
 // Two revisions side by side, the older on the left and the newer on the right, stacked at phone width. The core
 // compared them by paragraph: the sign and the word say what each paragraph is, so the colour is never the only
 // sign. A revision that is not the latest can be restored from here; that stores it as a new revision.
-function CompareView({
+export function CompareView({
 	comparison,
 	latest,
 	busy,
