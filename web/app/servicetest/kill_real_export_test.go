@@ -321,6 +321,25 @@ func TestKillRealExportVideoGivenUpAfterTheAttempts(t *testing.T) {
 
 	w.assertNoFinalFile(t)
 	w.assertNothingRunning(t, svc)
+
+	// The partial video of a job that was given up is garbage: nothing will run the job again to replace it, so the
+	// sweep of the start-up removes its run directory.
+	if _, err := os.Stat(filepath.Dir(w.partialPath())); err != nil {
+		t.Fatalf("the run directory of the abandoned job is not there to be swept: %v", err)
+	}
+
+	sw, ok := service.SweeperOf(svc)
+	if !ok {
+		t.Fatal("no sweeper")
+	}
+
+	if _, err := sw.Sweep(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := os.Stat(filepath.Dir(w.partialPath())); !os.IsNotExist(err) {
+		t.Errorf("the run directory of the abandoned job survived the sweep: %v", err)
+	}
 }
 
 // videoWorld is a workspace with a project and one export job that has not run.
@@ -560,11 +579,22 @@ func TestKillRealExportImage(t *testing.T) {
 				t.Fatal("no sweeper")
 			}
 
+			// The next day: what a kill left is old by then (the sweep leaves a file younger than ten minutes, which
+			// another process may be writing).
+			before := mustReadDir(t, dir)
+			longAgo := time.Now().Add(-time.Hour)
+
+			for _, e := range before {
+				if err := os.Chtimes(filepath.Join(dir, e.Name()), longAgo, longAgo); err != nil {
+					t.Fatal(err)
+				}
+			}
+
 			if _, err := sw.Sweep(ctx); err != nil {
 				t.Fatal(err)
 			}
 
-			left, _ := os.ReadDir(dir) // the series wrote its first file, or this run did
+			left := mustReadDir(t, dir) // the sweep keeps the exported images: the folder is still there
 
 			for _, e := range left {
 				if !finalImageName.MatchString(e.Name()) {
@@ -572,7 +602,12 @@ func TestKillRealExportImage(t *testing.T) {
 				}
 			}
 
-			t.Logf("moment %q: %d whole file(s) at the kill", c.name, whole)
+			if got := assertImageFilesWhole(t, dir); got < whole {
+				t.Errorf("the sweep removed exported images: %d whole files before it, %d after", whole, got)
+			}
+
+			t.Logf("moment %q: %d whole file(s) at the kill, %d entries before the sweep, %d after", c.name, whole,
+				len(before), len(left))
 		})
 	}
 }
