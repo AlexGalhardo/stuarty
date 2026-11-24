@@ -106,7 +106,7 @@ func symlinkDir(t *testing.T, link, target string) {
 	t.Helper()
 
 	if err := os.Symlink(target, link); err != nil {
-		t.Skipf("symbolic links are not available here: %v", err)
+		t.Skipf("no symlinks: %v", err) // verify:env-skip a Windows account may not make links
 	}
 }
 
@@ -233,7 +233,7 @@ func TestRevealAPathWithBidirectionalCharactersIsShownIsolated(t *testing.T) {
 
 	ws := filepath.Join(t.TempDir(), "ws"+override+"fdp.exe")
 	if err := os.MkdirAll(ws, 0o700); err != nil {
-		t.Skipf("this system does not accept that folder name: %v", err)
+		t.Skipf("bad name: %v", err) // verify:env-skip a file system may refuse a bidi control in a name
 	}
 
 	root, file := storeRootOf(t, ws)
