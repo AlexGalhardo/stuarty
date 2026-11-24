@@ -27,7 +27,9 @@ var transcriptShowCmd = &spec{
 			return nil, err
 		}
 
-		return &output{value: res, text: res.Text}, nil
+		shown := res.ForAgent()
+
+		return &output{value: shown, text: shown.Text}, nil
 	},
 }
 
@@ -54,6 +56,8 @@ var transcriptFillersCmd = &spec{
 			return nil, err
 		}
 
-		return &output{value: res, text: res.Text}, nil
+		shown := res.ForAgent()
+
+		return &output{value: shown, text: shown.Text}, nil
 	},
 }
