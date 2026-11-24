@@ -42,7 +42,7 @@ export default function Badges({ id }: { id: string }): ReactNode {
 			{speed !== null && (
 				<span
 					data-badge="speed"
-					className="rounded bg-background/80 px-1 text-[10px] leading-4 text-foreground"
+					className="rounded bg-background/80 px-1 text-xs leading-4 text-foreground"
 					title={t("ui.editor.item.speed_badge", { speed })}
 				>
 					{speed}
