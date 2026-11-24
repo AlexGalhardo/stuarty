@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { type Failure, failureOf } from "@/components/Failure";
 import type { ApiClient } from "../api/client";
 import {
+	isKept,
 	isLive,
 	POLL_MS,
 	type RecordView,
@@ -23,9 +24,10 @@ export interface RecordFlow {
 		fps: number,
 	): Promise<void>;
 	stop(): Promise<void>;
-	confirm(): Promise<void>;
+	// confirm and remove act on the recording on screen, or on a kept one named by its id
+	confirm(id?: string): Promise<void>;
 	dismiss(): Promise<void>;
-	remove(): Promise<void>;
+	remove(id?: string): Promise<void>;
 	place(): Promise<void>;
 	// back to the picker, to record again
 	reset(): void;
@@ -66,7 +68,12 @@ export function useRecordFlow(
 				return;
 			}
 			const sources = await client.recordingSources();
-			if (alive.current) setView({ step: "pick", sources });
+			if (alive.current)
+				setView({
+					step: "pick",
+					sources,
+					kept: list.recordings.filter(isKept),
+				});
 		} catch (error) {
 			const reason = unavailableReason(error);
 			if (!alive.current) return;
@@ -142,16 +149,16 @@ export function useRecordFlow(
 				),
 			),
 		stop: () => run(async () => viewOf(await client.stopRecording(current()))),
-		confirm: () =>
-			run(async () => viewOf(await client.confirmRecording(current()))),
-		// "Not now": the recording stays out of the project, so the dialog has nothing more to show of it.
+		confirm: (id) =>
+			run(async () => viewOf(await client.confirmRecording(id ?? current()))),
+		// "Not now": the recording stays out of the project; the picker lists it the next time, to add or delete.
 		dismiss: () =>
 			run(async () => {
 				await client.dismissRecording(current());
-				return { step: "gone" };
+				return { step: "kept" };
 			}),
-		remove: () =>
-			run(async () => viewOf(await client.cancelRecording(current()))),
+		remove: (id) =>
+			run(async () => viewOf(await client.cancelRecording(id ?? current()))),
 		place: async () => {
 			await run(async () => {
 				await client.placeRecording(current());

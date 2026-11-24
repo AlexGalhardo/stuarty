@@ -1178,6 +1178,8 @@
         "placed": "Colocada na linha do tempo.",
         "failed": "A gravação falhou",
         "gone": "A gravação foi descartada.",
+        "kept": "A gravação ficou fora do projeto, e os agentes não a veem. Abra esta janela de novo para adicioná-la ou excluí-la.",
+        "kept_title": "Fora do projeto",
         "close": "Fechar",
         "again": "Gravar de novo",
         "unavailable": {

@@ -67,8 +67,10 @@ describe("the record dialog", () => {
 				displays: [{ id: "d1", name: "Display 1", width: 1920, height: 1080 }],
 				windows: [{ id: "w9", name: "My notes", width: 800, height: 600 }],
 			},
+			kept: [],
 		});
 		expect(html).toContain("Display 1");
+		expect(html).not.toContain("data-record-kept");
 		expect(html).toContain("My notes");
 		expect(html).toContain("Displays");
 		expect(html).toContain('data-record-start=""');
@@ -157,7 +159,35 @@ describe("the record dialog", () => {
 					},
 				],
 			},
+			kept: [],
 		});
 		expect(html).not.toContain("<img");
+	});
+
+	test("lists the recordings set aside with Not now, so a person can still add or delete them", () => {
+		const html = draw({
+			step: "pick",
+			sources: { displays: [], windows: [] },
+			kept: [
+				rec({
+					recording_id: "rec_000000000k",
+					state: "ready",
+					review: "dismissed",
+				}),
+			],
+		});
+		expect(html).toContain("Out of the project");
+		expect(html).toContain("1:05 recorded");
+		expect(html).toContain('data-record-kept-add="rec_000000000k"');
+		expect(html).toContain('data-record-kept-delete="rec_000000000k"');
+		expect(html).toContain(
+			"Agents with access to this project will be able to read this recording.",
+		);
+	});
+
+	test("after Not now, says the recording is kept out of the project, not discarded", () => {
+		const html = draw({ step: "kept" });
+		expect(html).toContain("stays out of the project");
+		expect(html).not.toContain("discarded");
 	});
 });

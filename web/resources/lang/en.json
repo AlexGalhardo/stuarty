@@ -1178,6 +1178,8 @@
         "placed": "Placed on the timeline.",
         "failed": "The recording failed",
         "gone": "The recording was discarded.",
+        "kept": "The recording stays out of the project, and agents cannot see it. Open this dialog again to add it or delete it.",
+        "kept_title": "Out of the project",
         "close": "Close",
         "again": "Record again",
         "unavailable": {

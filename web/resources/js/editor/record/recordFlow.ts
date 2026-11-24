@@ -7,11 +7,13 @@ import type { Recording, RecordingSourcesResult } from "../api/types";
 export type RecordView =
 	| { step: "loading" }
 	| { step: "unavailable"; reason: string }
-	| { step: "pick"; sources: RecordingSourcesResult }
+	// kept: the recordings a person set aside with "Not now", which only a person can add or delete later
+	| { step: "pick"; sources: RecordingSourcesResult; kept: Recording[] }
 	| { step: "recording"; recording: Recording }
 	| { step: "review"; recording: Recording }
 	| { step: "added"; recording: Recording }
 	| { step: "failed"; recording: Recording }
+	| { step: "kept" }
 	| { step: "gone" };
 
 export function viewOf(recording: Recording): RecordView {
@@ -38,6 +40,11 @@ export function isLive(recording: Recording): boolean {
 		recording.state === "recording" ||
 		recording.state === "finishing"
 	);
+}
+
+// A recording a person set aside with "Not now" (SDD-025 section 4): the service shows it to a person only.
+export function isKept(recording: Recording): boolean {
+	return recording.state === "ready" && recording.review === "dismissed";
 }
 
 // The reason the service gave when capture is not available here (E_CAPTURE_UNAVAILABLE, details.reason), or null
