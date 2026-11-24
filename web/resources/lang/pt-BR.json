@@ -3546,7 +3546,10 @@
         "lut": "Tabela de cor"
       },
       "reusable_badge": "Reutilizável",
-      "count": "{count} arquivos",
+      "count": {
+        "one": "{count} arquivo",
+        "other": "{count} arquivos"
+      },
       "total": "{size} no total",
       "unsized": {
         "one": "(1 deles não tem tamanho conhecido)",

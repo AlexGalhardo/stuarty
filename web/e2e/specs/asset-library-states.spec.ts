@@ -144,6 +144,130 @@ for (const theme of ["dark", "light"] as const) {
 			});
 		}
 
+		// Epic 94 (SDD-012 section 23.5 item 5): the size of each file is the service's text, a file with no size says
+		// why in words (never 0 B), each header says the count and the total, and two files of the same name show
+		// their size and day. The list is replaced by a fixed answer so the three states are always there.
+		for (const section of SECTIONS) {
+			test(`${section.title}: sizes, states and the total of the library`, async ({
+				page,
+			}) => {
+				const k = {
+					"/visual-assets": "image",
+					"/video-assets": "video",
+					"/sound-assets": "audio",
+				}[section.path];
+				const entry = (n: string, extra: Record<string, unknown>) => ({
+					hash: `sha256:${n.repeat(64)}`,
+					name: "Same name.mp4",
+					kind: k,
+					origin: { kind: "imported" },
+					tags: [],
+					projects: 1,
+					created_at: "2026-11-20T10:00:00Z",
+					...extra,
+				});
+				await page.route(LIST, (route) =>
+					route.fulfill({
+						json: {
+							assets: [
+								entry("a", {
+									bytes: 4_294_967_296,
+									size_text: "4.3 GB",
+									state: "ready",
+									projects: 3,
+								}),
+								entry("b", {
+									bytes: null,
+									size_text: "",
+									state: "importing",
+									created_at: "2026-11-21T10:00:00Z",
+								}),
+								entry("c", { bytes: null, size_text: "", state: "missing" }),
+							],
+							total: 3,
+							file_count: 3,
+							total_bytes: 4_294_967_296,
+							total_size_text: "4.3 GB",
+							unsized: 2,
+							next_cursor: null,
+						},
+					}),
+				);
+				await page.goto(section.path);
+				const grid = page.getByTestId("asset-grid");
+				await expect(grid.getByTestId("asset-size")).toHaveCount(3);
+				await expect(grid).toContainText("4.3 GB");
+				await expect(grid).not.toContainText("0 B");
+				const states = await grid
+					.getByTestId("asset-size")
+					.evaluateAll((els) =>
+						els.map((el) => [
+							el.getAttribute("data-state"),
+							el.textContent?.replace(/\s+/g, " ").trim(),
+						]),
+					);
+				expect(states).toEqual([
+					["ready", "4.3 GB"],
+					["importing", "Size unknown (Still importing)"],
+					["missing", "Size unknown (File missing)"],
+				]);
+				// Two files carry the same name: the day tells them apart, in words and not in colour.
+				await expect(grid.getByTestId("asset-added")).toHaveCount(3);
+				await expect(page.getByTestId("library-total")).toHaveText(
+					"4.3 GB in total (2 of them have no known size)",
+				);
+				await expect(
+					page.getByRole("heading", { name: "3 files" }),
+				).toBeVisible();
+				await noViolation(page);
+				await noSidewaysScroll(page);
+				await shoot(page, `${section.path.slice(1)}-sizes-${theme}`);
+
+				// The detail of the first file, at two widths: the size, how many projects use the file and that it
+				// is counted once.
+				await page.route("**/api/v1/assets/sha256*", (route) =>
+					route.request().method() === "GET"
+						? route.fulfill({
+								json: {
+									...entry("a", {
+										bytes: 4_294_967_296,
+										size_text: "4.3 GB",
+										state: "ready",
+										projects: 3,
+										uses: [],
+									}),
+									text: "",
+								},
+							})
+						: route.continue(),
+				);
+				for (const width of [1440, 390]) {
+					await page.setViewportSize({ width, height: 900 });
+					await page.goto(section.path);
+					await page
+						.getByTestId("asset-grid")
+						.locator("li")
+						.first()
+						.getByRole("button")
+						.first()
+						.click();
+					const detail = page.getByTestId("asset-detail");
+					await expect(detail.getByTestId("asset-detail-size")).toContainText(
+						"4.3 GB",
+					);
+					await expect(detail.getByTestId("asset-shared")).toContainText(
+						"Used by 3 projects. The file is stored once and counted once in the library total.",
+					);
+					await noViolation(page);
+					await noSidewaysScroll(page);
+					await shoot(
+						page,
+						`${section.path.slice(1)}-detail-${width}-${theme}`,
+					);
+				}
+			});
+		}
+
 		test("the populated libraries pass axe and do not scroll sideways at three widths", async ({
 			page,
 			request,
