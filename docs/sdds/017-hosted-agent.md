@@ -157,6 +157,8 @@ Agent text is never interpreted by Stuarty: no HTML, no Markdown rendering, no l
 
 The scene bar and the panel tell what the agent is doing from one read model, `chat.Reduce` in `core/chat`, which reads the events of a session and nothing else. `ChatActivityGet` returns it.
 
+The card of a permission request that waits (epic 83) shows the same fields as the scene bar: the agent, the skill and its state, and the tool with its plain description, all from the same session state, so answering in the card, in the bar or in the notification center answers the one request. It offers Allow once, Reject and Cancel, never a standing choice. When a session is empty, the panel offers starter sentences that only fill the composer, chosen by the kind of the project the service reports: a text-only project gets sentences about text (D-134).
+
 **A skill is observed, never presumed.** When a request authenticated by the session token of a session reads a skill with `SkillGet` (the tool `library`, action `get`, kind `skill`, or the same read over HTTP), the service asks the host to record an event `skill_loaded` in that session, with the name and the content hash of the skill as it was read. The caller carries the session id the token is bound to (`Caller.ChatSessionID`, set only by the authentication of a session token). A read by a person in the browser, by the local token or by a key records nothing, and so does a read that fails; a session that is not live records nothing. Two reads in a row of the same name and hash are one event. The event grants no permission and says only that the text was read: Stuarty cannot prove that the agent still follows it, and skills inside the user's own agent are invisible to it.
 
 **The result.**

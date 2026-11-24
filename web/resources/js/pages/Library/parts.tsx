@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useT } from "@/lib/i18n";
 import type { LibraryEntry, LibraryFinding, LibraryKind } from "./client";
 
+// A badge may wrap: at 320 px the long words ("not offered to agents") must not push the page sideways.
 // The state of an entry as a word and an icon (SDD-018 section 14, design-system section 7): what the service says,
 // never computed here. A skill or a note an agent may not use yet says so in words: that is the line a person reads
 // to know what steers the agents.
@@ -13,29 +14,35 @@ export function EntryBadges({ entry }: { entry: LibraryEntry }): ReactNode {
 	return (
 		<span className="flex flex-wrap items-center gap-1">
 			{entry.state === "invalid" && (
-				<StatusBadge status="danger">
+				<StatusBadge className="whitespace-normal" status="danger">
 					{t("ui.library.badge.invalid")}
 				</StatusBadge>
 			)}
 			{entry.kind === "skill" && entry.origin !== undefined && (
-				<StatusBadge status="neutral">
+				<StatusBadge className="whitespace-normal" status="neutral">
 					{t(`ui.library.origin.${entry.origin}`)}
 				</StatusBadge>
 			)}
 			{entry.kind === "skill" && entry.state === "ok" && (
-				<StatusBadge status={entry.reviewed ? "success" : "waiting"}>
+				<StatusBadge
+					className="whitespace-normal"
+					status={entry.reviewed ? "success" : "waiting"}
+				>
 					{entry.reviewed
 						? t("ui.library.badge.reviewed")
 						: t("ui.library.badge.unreviewed")}
 				</StatusBadge>
 			)}
 			{entry.kind === "skill" && entry.has_scripts === true && (
-				<StatusBadge status="neutral">
+				<StatusBadge className="whitespace-normal" status="neutral">
 					{t("ui.library.badge.scripts")}
 				</StatusBadge>
 			)}
 			{entry.kind === "memory" && entry.state === "ok" && (
-				<StatusBadge status={entry.kept ? "success" : "waiting"}>
+				<StatusBadge
+					className="whitespace-normal"
+					status={entry.kept ? "success" : "waiting"}
+				>
 					{entry.kept
 						? t("ui.library.badge.kept")
 						: t("ui.library.badge.pending")}
