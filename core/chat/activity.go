@@ -207,7 +207,7 @@ var toolCatalogue = map[string][]string{
 	"image":         {"create", "list", "show", "edit", "undo", "redo", "export", "import"},
 	"project_item": {
 		"add", "move", "rename", "trash", "restore", "brief", "briefing", "text", "revisions", "revert", "check",
-		"update",
+		"update", "skip", "unskip",
 	},
 	"library": {"search", "list", "get", "write", "render", "lint"},
 }

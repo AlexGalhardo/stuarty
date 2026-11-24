@@ -115,6 +115,8 @@
         "project_item_revert": "Restaura uma revisão anterior de um texto.",
         "project_item_check": "Verifica um item de um projeto.",
         "project_item_update": "Atualiza um item de um projeto.",
+        "project_item_skip": "Pula uma etapa do fluxo do projeto.",
+        "project_item_unskip": "Traz de volta uma etapa pulada do fluxo do projeto.",
         "template_list": "Lista os seus modelos.",
         "template_save": "Salva um projeto como modelo.",
         "template_new": "Cria um projeto novo a partir de um modelo.",
