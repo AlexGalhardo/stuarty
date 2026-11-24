@@ -63,7 +63,7 @@ Names are proposals until task 1 writes them to SDD-000.
 - [x] 3. The helper and `engine/aihost`, with a fake model. Verify: `go test ./engine/aihost/...` passes.
 - [x] 4. The model manifest, install and verification. Verify: tests for a wrong hash, an interrupted download and no download without request.
 - [x] 5. The tracking and framing rules. Verify: `go test ./core/...` with golden tracks.
-- [ ] 6. The `face_track` job and the cut proposals. Verify: `go test ./service/...` passes.
+- [x] 6. The `face_track` job and the cut proposals. Verify: `go test ./service/...` passes.
 - [ ] 7. Adapters with parity. Verify: `go test ./web/...` and `go run ./internal/tools/surfacebudget` pass.
 - [ ] 8. The UI: install prompt, progress, proposal review. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n`, `task test:web` and `bun run e2e` pass.
 

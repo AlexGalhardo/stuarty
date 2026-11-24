@@ -67,6 +67,7 @@ var OperationDomains = map[string]string{
 	"SnapPoints":              command.DomainVideo,
 	"TranscriptView":          command.DomainAsset,
 	"TranscriptDetectFillers": command.DomainAsset,
+	"CutsPropose":             command.DomainAsset,
 	"PlanWindow":              command.DomainVideo,
 	"OpenFile":                command.DomainVideo,
 	"ProjectOtioExport":       command.DomainVideo,

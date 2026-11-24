@@ -126,6 +126,8 @@ type JobResult struct {
 	Export     *ExportResult     `json:"export,omitempty"`
 	Publish    *PublishResult    `json:"publish,omitempty"`
 	Transcribe *TranscribeResult `json:"transcribe,omitempty"`
+	// FaceTrack is the result of a face_track job (SDD-024 section 6).
+	FaceTrack *FaceTrackResult `json:"face_track,omitempty"`
 	// Batch is the state of the children of an export_batch job, read from them whenever the job is read.
 	Batch *BatchResult `json:"batch,omitempty"`
 	Text  *TextResult  `json:"text,omitempty"`

@@ -144,6 +144,9 @@ type Service interface {
 	// anything; the cut is the command transcript.delete_range of Edit.
 	TranscriptView(ctx context.Context, req TranscriptViewRequest) (*TranscriptViewResult, error)
 	TranscriptDetectFillers(ctx context.Context, req TranscriptDetectRequest) (*TranscriptDetectResult, error)
+	// CutsPropose proposes vertical cuts of an asset from its transcript and its face track (SDD-024 section 8).
+	// It changes nothing: a person sends the batch of a proposal to a new timeline.
+	CutsPropose(ctx context.Context, req CutsProposeRequest) (*CutsProposeResult, error)
 	// AssetList lists the files the projects hold, by content hash, for the picker of a brand logo (VV-117).
 	AssetList(ctx context.Context, req AssetListRequest) (*AssetListResult, error)
 	ExportFile(ctx context.Context, req ExportFileRequest) (*File, error)
@@ -365,6 +368,9 @@ type Options struct {
 	// Transcriber is the transcription provider of the transcribe job; without
 	// one JobStart for it answers E_TRANSCRIBE_UNAVAILABLE.
 	Transcriber transcribe.Provider
+	// FaceDetector replaces the face helper of the install set; nil runs the helper of tools/ when it is
+	// installed (SDD-024). Tests supply a fake.
+	FaceDetector FaceDetector
 	// Tools is the install step of the helper; nil means it is not available.
 	Tools *Tools
 	// Doctor is what the diagnostic report learns from the process.
@@ -432,17 +438,19 @@ type svc struct {
 	limits      Limits
 	version     string
 	transcriber transcribe.Provider
-	tools       *Tools
-	toolsState  toolsState
-	doctor      DoctorOptions
-	keys        KeyStore
-	conns       *connections.Manager
-	kinds       map[string]*ApprovableKind
-	social      *social.Registry
-	blog        *destinations.Registry
-	flows       *oauth.Flows
-	signInSet   *oauth.SignIns
-	signFlows   *oauth.Flows
+	// faces replaces the face helper of the install set (tests); nil runs the helper of tools/.
+	faces      FaceDetector
+	tools      *Tools
+	toolsState toolsState
+	doctor     DoctorOptions
+	keys       KeyStore
+	conns      *connections.Manager
+	kinds      map[string]*ApprovableKind
+	social     *social.Registry
+	blog       *destinations.Registry
+	flows      *oauth.Flows
+	signInSet  *oauth.SignIns
+	signFlows  *oauth.Flows
 	// imageFrames keeps the pictures of the lower layers of an image document between two frames of the editor,
 	// so an edit of the layer on top redraws only that layer (SDD-021 section 6.1).
 	imageFrames *export.ImageCache
@@ -520,6 +528,7 @@ func New(o Options) (Service, error) {
 		limits:      o.Limits.withDefaults(),
 		version:     o.Version,
 		transcriber: o.Transcriber,
+		faces:       o.FaceDetector,
 		tools:       o.Tools,
 		doctor:      o.Doctor,
 		keys:        o.Keys,
@@ -585,6 +594,7 @@ func New(o Options) (Service, error) {
 		JobIngest:     make(chan struct{}, s.limits.MaxIngests),
 		JobExport:     make(chan struct{}, s.limits.MaxExports),
 		JobTranscribe: make(chan struct{}, s.limits.MaxTranscribes),
+		JobFaceTrack:  make(chan struct{}, 1),
 	}
 	s.peaksGate = make(chan struct{}, 1)
 

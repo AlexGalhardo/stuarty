@@ -248,6 +248,8 @@ func (s *svc) RunJob(ctx context.Context, jobID string) (err error) {
 		result, herr = s.runExportBatch(jctx, &job, pw)
 	case JobTranscribe:
 		result, herr = s.runTranscribe(jctx, &job, pw)
+	case JobFaceTrack:
+		result, herr = s.runFaceTrack(jctx, &job, pw)
 	default:
 		if k := s.kindOf(job.Kind); k != nil {
 			var cost *core.Money
@@ -1035,7 +1037,7 @@ func (s *svc) enqueueKind(ctx context.Context, tx Tx, j *JobRow) error {
 // on the ingest queue (its timeout fits a long transcription).
 func queueKindFor(jobKind string) string {
 	switch jobKind {
-	case JobIngest, JobTranscribe:
+	case JobIngest, JobTranscribe, JobFaceTrack:
 		return QueueKindIngest
 	case JobExport:
 		return QueueKindExport
