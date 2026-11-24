@@ -349,7 +349,8 @@ func TestBlurClampedIsTheBlurOfThePaddedPicture(t *testing.T) {
 			for x := range tc.w {
 				want := full.Pix[((y+6*r)*full.W+x+6*r)*4 : ((y+6*r)*full.W+x+6*r)*4+4]
 				if !bytes.Equal(got.Pix[(y*tc.w+x)*4:(y*tc.w+x)*4+4], want) {
-					t.Fatalf("%dx%d sigma %v: pixel %d,%d differs from the blur of the padded picture", tc.w, tc.h, tc.sigma, x, y)
+					t.Fatalf("%dx%d sigma %v: pixel %d,%d differs from the blur of the padded picture",
+						tc.w, tc.h, tc.sigma, x, y)
 				}
 			}
 		}
