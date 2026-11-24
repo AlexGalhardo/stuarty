@@ -1,9 +1,13 @@
 //! Windows Graphics Capture through `windows-capture` (ADR-0049). One display or one window, BGRA, no cursor
-//! (cursor events are epic 62), and the system capture border always on: it is the indicator that the screen is
-//! being recorded, and the helper never turns it off (SDD-025 section 8).
+//! (the pointer is a track of its own, events.rs), and the system capture border always on: it is the indicator
+//! that the screen is being recorded, and the helper never turns it off (SDD-025 section 8).
 
+use std::ffi::c_void;
 use std::sync::Arc;
 use std::time::Duration;
+
+use crate::events::{Pointer, Sample};
+use crate::win32;
 
 use windows_capture::capture::{CaptureControl, Context, GraphicsCaptureApiHandler};
 use windows_capture::frame::Frame as WgcFrame;
@@ -200,4 +204,69 @@ pub fn list() -> (Vec<SourceInfo>, Vec<SourceInfo>) {
 		})
 		.collect();
 	(displays, windows)
+}
+
+/// Where the pointer is measured from: a display or a window, by its handle kept as a number so the pointer can
+/// move to the sampler thread.
+enum Origin {
+	Display(usize),
+	Window(usize),
+}
+
+struct WinPointer(Origin);
+
+impl Pointer for WinPointer {
+	fn sample(&mut self, _active_ms: u64) -> Option<Sample> {
+		// The rectangle is read again at every sample: a window moves.
+		let rect = match self.0 {
+			Origin::Display(h) => win32::monitor_rect(h as *mut c_void),
+			Origin::Window(h) => win32::window_frame(h as *mut c_void),
+		}?;
+		let (x, y) = win32::cursor_pos()?;
+		Some(Sample {
+			x: x - rect.left,
+			y: y - rect.top,
+			inside: x >= rect.left && x < rect.right && y >= rect.top && y < rect.bottom,
+			buttons: win32::mouse_buttons(),
+		})
+	}
+}
+
+/// The pointer of the source a request names, measured in pixels of that source.
+pub fn pointer(req: &StartRequest) -> Result<Box<dyn Pointer>, SourceError> {
+	let gone = |what: &str| SourceError::new("source_gone", what.to_string());
+	match req.kind.as_str() {
+		"display" => {
+			let index: usize = req
+				.source_id
+				.strip_prefix('d')
+				.and_then(|n| n.parse().ok())
+				.ok_or_else(|| gone("the display id is not one the helper made"))?;
+			let monitor =
+				Monitor::from_index(index).map_err(|_| gone("the display is not there"))?;
+			Ok(Box::new(WinPointer(Origin::Display(
+				monitor.as_raw_hmonitor() as usize,
+			))))
+		}
+		"window" => {
+			let raw: usize = req
+				.source_id
+				.strip_prefix('w')
+				.and_then(|n| n.parse().ok())
+				.ok_or_else(|| gone("the window id is not one the helper made"))?;
+			// Only a window the helper itself lists, as for the capture.
+			let found = Window::enumerate()
+				.map_err(|e| failed("windows", e))?
+				.into_iter()
+				.any(|w| w.as_raw_hwnd() as usize == raw);
+			if !found {
+				return Err(gone("the window is not there"));
+			}
+			Ok(Box::new(WinPointer(Origin::Window(raw))))
+		}
+		_ => Err(SourceError::new(
+			"unsupported",
+			"the source kind is not display or window",
+		)),
+	}
 }

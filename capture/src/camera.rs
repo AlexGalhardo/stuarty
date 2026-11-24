@@ -62,8 +62,9 @@ pub fn list(allow_test: bool) -> Vec<SourceInfo> {
 fn open(id: &str, mailbox: &Arc<Mailbox>) -> Result<Box<dyn RunningSource>, SourceError> {
 	match testsrc::parse_tags(id) {
 		Some(t) => {
-			// A test camera is a 640 by 360 source at 30 frames a second with the pulse of the test epoch.
-			let spec = format!("640x360r30p{}w{}", t.period_ms, t.width_ms);
+			// A test camera is a small source (160 by 90) at 120 frames a second with the pulse of the test epoch:
+			// fast, so the latency of the source stays well under the 40 ms the sync test measures.
+			let spec = format!("160x90r120p{}w{}", t.period_ms, t.width_ms);
 			source::open_fake(&spec, mailbox)
 		}
 		None => Err(SourceError::new(

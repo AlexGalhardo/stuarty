@@ -117,8 +117,8 @@ fn the_file_of_a_track_that_was_not_asked_for_is_refused() {
 	let _ = std::fs::remove_dir_all(d);
 }
 
-/// The frames of the test camera are 640 by 360 BGRA; a flash frame is every byte 255, any other is 10.
-const CAM_FRAME: usize = 640 * 360 * 4;
+/// The frames of the test camera are 160 by 90 BGRA; a flash frame is every byte 255, any other is 10.
+const CAM_FRAME: usize = 160 * 90 * 4;
 
 fn flash_frames(path: &Path) -> Vec<bool> {
 	let b = std::fs::read(path).unwrap();
@@ -191,4 +191,76 @@ fn a_real_camera_is_recorded_when_there_is_one() {
 		return;
 	}
 	panic!("a camera is listed but this test does not record it yet: {s}");
+}
+
+fn events_args(d: &Path) -> String {
+	format!(
+		r#","events":true,"outputs":{{"events":"{}"}}"#,
+		esc(&d.join("events.jsonl"))
+	)
+}
+
+/// A number member of a line of the event file.
+fn field(line: &str, key: &str) -> Option<i64> {
+	let at = line.find(&format!("\"{key}\":"))? + key.len() + 3;
+	let s: String = line[at..]
+		.chars()
+		.take_while(|c| c.is_ascii_digit() || *c == '-')
+		.collect();
+	s.parse().ok()
+}
+
+#[test]
+fn clicks_are_found_where_and_when_the_script_made_them_and_no_key_is_in_the_file() {
+	let d = dir("events");
+	let mut h = Helper::start(&["--allow-test-source"]);
+	h.read().unwrap();
+	h.send(&start_with(
+		&d.join("o.raw"),
+		"16x16r60",
+		30,
+		&events_args(&d),
+	));
+	h.read().unwrap();
+	std::thread::sleep(Duration::from_millis(1200));
+	h.send(r#"{"type":"pause"}"#);
+	h.read_until("paused");
+	std::thread::sleep(Duration::from_millis(900));
+	h.send(r#"{"type":"resume"}"#);
+	h.read_until("resumed");
+	std::thread::sleep(Duration::from_millis(2300));
+	h.send(r#"{"type":"stop"}"#);
+	let rest = h.read_until("finished");
+	assert!(h.wait());
+	let count = number(rest.last().unwrap(), "pointer_events").unwrap();
+
+	let text = std::fs::read_to_string(d.join("events.jsonl")).unwrap();
+	let lines: Vec<&str> = text.lines().collect();
+	assert!(lines[0].contains(r#""k":"header""#) && lines[0].contains(r#""width":16"#));
+	assert_eq!(count as usize, lines.len() - 1);
+
+	let mut downs = 0;
+	let mut last_t = 0;
+	for l in &lines[1..] {
+		let t = field(l, "t").unwrap();
+		assert!(t >= last_t, "time never goes back: {l}");
+		last_t = t;
+		let is = |k: &str| l.contains(&format!(r#""k":"{k}""#));
+		assert!(
+			is("move") || is("down") || is("up"),
+			"only the pointer: {l}"
+		);
+		if is("down") {
+			downs += 1;
+			let k = (t + 250) / 500;
+			assert!((t - 500 * k).abs() <= 20, "click {k} at {t} ms");
+			assert_eq!(field(l, "x"), Some((k * 7) % 16), "{l}");
+			assert_eq!(field(l, "y"), Some((k * 3) % 16), "{l}");
+		}
+	}
+	assert!(downs >= 5, "{downs} clicks in about 3.5 s of recording");
+	for banned in ["key", "Key", "vk", "char", "text"] {
+		assert!(!text.contains(banned), "the file mentions {banned}");
+	}
+	let _ = std::fs::remove_dir_all(d);
 }

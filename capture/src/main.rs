@@ -7,6 +7,7 @@ mod audio;
 mod audio_wasapi;
 mod camera;
 mod clock;
+mod events;
 mod frame;
 mod json;
 mod protocol;
@@ -50,6 +51,9 @@ fn main() {
 			std::process::exit(2);
 		}
 	}
+	// The pointer and the size of a window are read in the physical pixels the capture delivers.
+	#[cfg(windows)]
+	win32::per_monitor_dpi();
 	serve(policy);
 }
 

@@ -9,7 +9,26 @@ use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 pub struct Helper {
 	child: Child,
 	stdin: Option<ChildStdin>,
-	out: BufReader<ChildStdout>,
+	out: Option<BufReader<ChildStdout>>,
+}
+
+/// The lines of a helper read on a thread of their own, for a test that sleeps for minutes and must not let the
+/// pipe fill.
+pub struct Lines(std::sync::mpsc::Receiver<String>);
+
+impl Lines {
+	/// Every line up to and including the first one of `kind`.
+	pub fn until(&self, kind: &str) -> Vec<String> {
+		let mut all = Vec::new();
+		while let Ok(l) = self.0.recv_timeout(std::time::Duration::from_secs(60)) {
+			let done = l.contains(&format!("\"type\":\"{kind}\""));
+			all.push(l);
+			if done {
+				return all;
+			}
+		}
+		panic!("no {kind} message; got {all:?}");
+	}
 }
 
 impl Helper {
@@ -22,7 +41,7 @@ impl Helper {
 			.spawn()
 			.unwrap();
 		let stdin = child.stdin.take();
-		let out = BufReader::new(child.stdout.take().unwrap());
+		let out = Some(BufReader::new(child.stdout.take().unwrap()));
 		Self { child, stdin, out }
 	}
 
@@ -34,7 +53,8 @@ impl Helper {
 
 	pub fn read(&mut self) -> Option<String> {
 		let mut l = String::new();
-		match self.out.read_line(&mut l).unwrap() {
+		let out = self.out.as_mut().expect("the output moved to a thread");
+		match out.read_line(&mut l).unwrap() {
 			0 => None,
 			_ => Some(l.trim_end().to_string()),
 		}
@@ -50,6 +70,28 @@ impl Helper {
 			}
 		}
 		all
+	}
+
+	/// Moves the reading of the helper output to a thread; `read` must not be used after it.
+	pub fn lines(&mut self) -> Lines {
+		let (tx, rx) = std::sync::mpsc::channel();
+		let out = self.out.take().expect("the output moved to a thread");
+		std::thread::spawn(move || {
+			let mut out = out;
+			let mut l = String::new();
+			loop {
+				l.clear();
+				match out.read_line(&mut l) {
+					Ok(0) | Err(_) => return,
+					Ok(_) => {
+						if tx.send(l.trim_end().to_string()).is_err() {
+							return;
+						}
+					}
+				}
+			}
+		});
+		Lines(rx)
 	}
 
 	pub fn close_input(&mut self) {
