@@ -25,6 +25,16 @@
       "expand": "Expandir a barra lateral",
       "profile": "Perfil",
       "local": "Modo local",
+      "dashboard_home": "Início",
+      "approvals": "Aprovações",
+      "brand_kit": "Kit de marca",
+      "group": {
+        "create": "Criar",
+        "assets": "Recursos",
+        "agent": "Agente",
+        "publish": "Publicar",
+        "connect": "Conectar"
+      },
       "section": {
         "projects": "Projetos",
         "edit-video": "Editar vídeo",
@@ -44,6 +54,17 @@
         "title": "Barra lateral",
         "description": "Exibe a barra lateral no celular.",
         "toggle": "Alternar barra lateral"
+      }
+    },
+    "shell": {
+      "waiting_count": "{count} esperando por você",
+      "mode": {
+        "local": "Modo local",
+        "network": "Modo de rede"
+      },
+      "drawer": {
+        "title": "Navegação",
+        "description": "As seções do estúdio."
       }
     },
     "dashboard": {

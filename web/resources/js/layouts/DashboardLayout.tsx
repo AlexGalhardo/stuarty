@@ -2,10 +2,9 @@ import { usePage } from "@inertiajs/react";
 import { type ReactNode, useEffect, useRef } from "react";
 
 import ChatDock from "@/dashboard/chat/ChatDock";
-import Sidebar from "@/dashboard/Sidebar";
+import Sidebar, { useSidebar } from "@/dashboard/Sidebar";
 import { useT } from "@/lib/i18n";
 import type { SharedProps } from "@/types";
-import ReleaseMark from "../components/ReleaseMark";
 
 // The path of the page the person was on: a change of page moves the focus to the main region, so a
 // reader that does not reload the page is told that the page changed (WCAG 2.4.3, SDD-012 section 18.10).
@@ -23,6 +22,7 @@ export default function DashboardLayout({
 	const t = useT();
 	const page = usePage<SharedProps>();
 	const main = useRef<HTMLElement>(null);
+	const sidebar = useSidebar();
 	const path = page.url.split(/[?#]/)[0] ?? page.url;
 	useEffect(() => {
 		if (lastPath !== null && lastPath !== path) main.current?.focus();
@@ -54,13 +54,14 @@ export default function DashboardLayout({
 				{t("ui.nav.skip")}
 			</a>
 			<Sidebar
+				form={sidebar.form}
+				onToggle={sidebar.toggle}
 				url={page.url}
 				appName={appName}
 				user={page.props.auth?.user ?? null}
 				account={page.props.account ?? null}
 				person={page.props.session?.privileged ?? false}
 			/>
-			<ReleaseMark />
 			<main
 				ref={main}
 				id="main"

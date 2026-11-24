@@ -2128,7 +2128,7 @@ The frame of every dashboard page shows where a person is, what the agent is doi
 | Assets | Video Assets, Visual Assets, Sound Assets, Brand kit (`/settings/brand-kit`) |
 | Agent | Skills, Prompts, Memory |
 | Publish | Approvals (`/approvals`, with the count of open requests), Publish |
-| Connect | Connections, Webhooks, API keys (`/settings/keys`) |
+| Connect | Connections, Webhooks, API keys (`/settings/keys`, network mode only) |
 
 Settings and Log out stay in the footer, as the local account leaves them (ADR-0052), with the product version (`ReleaseMark`) and the mode. Record and Local models get an item only when the epics that add their routes land; the shell never links a route that does not exist. It has three forms: full, an icon rail and a drawer. With no stored choice the sidebar is full above 1280 px and a rail from 768 to 1280 px; a choice stored in `localStorage.sidebar` wins at every width where there is a rail. Below 768 px it is a drawer opened by the menu button of the top bar: a modal dialog that holds the same navigation in the same order, closes with `Escape` or a choice and gives the focus back to the button. A rail item keeps its accessible name and a tooltip (rule 1 of section 23.3).
 

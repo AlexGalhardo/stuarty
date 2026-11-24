@@ -1,6 +1,14 @@
 import { describe, expect, test } from "vitest";
 
-import { activeSection, isSectionKey, pathOf, SECTIONS } from "./sections";
+import {
+	activeNavItem,
+	activeSection,
+	isSectionKey,
+	NAV_GROUPS,
+	pathOf,
+	SECTION_KEYS,
+	SECTIONS,
+} from "./sections";
 
 describe("SECTIONS", () => {
 	test("are the twelve sections of RF-311 in order, then the webhooks of epic 59", () => {
@@ -60,5 +68,39 @@ describe("pathOf and isSectionKey", () => {
 		expect(isSectionKey("memory")).toBe(true);
 		expect(isSectionKey("settings")).toBe(false);
 		expect(isSectionKey(undefined)).toBe(false);
+	});
+});
+
+describe("NAV_GROUPS", () => {
+	test("hold every key of SECTION_KEYS once, in the five groups of the shell", () => {
+		expect(NAV_GROUPS.map((g) => g.id)).toEqual([
+			"create",
+			"assets",
+			"agent",
+			"publish",
+			"connect",
+		]);
+		const keys = NAV_GROUPS.flatMap((g) => g.items)
+			.map((i) => i.section)
+			.filter((k) => k !== undefined);
+		expect([...keys].sort()).toEqual([...SECTION_KEYS].sort());
+	});
+
+	test("link only to routes that exist, each once", () => {
+		const hrefs = NAV_GROUPS.flatMap((g) => g.items.map((i) => i.href));
+		expect(new Set(hrefs).size).toBe(hrefs.length);
+		expect(hrefs).toContain("/approvals");
+		expect(hrefs).toContain("/settings/brand-kit");
+		expect(hrefs).not.toContain("/record");
+		expect(hrefs).not.toContain("/local-models");
+	});
+
+	test("activeNavItem is the longest path that holds the url", () => {
+		expect(activeNavItem("/approvals")).toBe("approvals");
+		expect(activeNavItem("/projects/prj_x")).toBe("projects");
+		expect(activeNavItem("/settings/brand-kit")).toBe("brand-kit");
+		expect(activeNavItem("/settings/keys")).toBe("keys");
+		expect(activeNavItem("/settings")).toBeNull();
+		expect(activeNavItem("/")).toBeNull();
 	});
 });
