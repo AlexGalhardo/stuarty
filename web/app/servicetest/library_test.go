@@ -447,6 +447,40 @@ func TestLibraryScopesAndProjectKeys(t *testing.T) {
 	}
 }
 
+// VV-400: a caller that is not a person neither rewrites nor removes the pending note of another author, and
+// learns it with E_PRIVILEGED_SESSION and a hint.
+func TestLibraryAgentCannotTouchAnotherAuthorsPendingNote(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+	seedLibrary(t, m)
+
+	other := service.WithCaller(
+		context.Background(),
+		service.Caller{Actor: "local:codex-p4q7z1", Scopes: service.AllScopes},
+	)
+
+	if _, err := m.svc.MemoryWrite(other, service.MemoryWriteRequest{
+		Name: "their-note", Description: "Theirs", Body: "x",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := m.svc.MemoryRemove(libAgent(m), service.LibraryRef{Name: "their-note"})
+
+	se, ok := err.(*service.Error) //nolint:errorlint // the service returns its own type
+	if !ok || se.Code != service.CodePrivilegedSession || se.Hint == "" {
+		t.Fatalf("remove: %v", err)
+	}
+
+	_, err = m.svc.MemoryWrite(libAgent(m), service.MemoryWriteRequest{Name: "their-note", Description: "Mine", Body: "y"})
+	if libCode(err) != service.CodePrivilegedSession {
+		t.Fatalf("overwrite: %v", err)
+	}
+
+	if _, err := m.svc.MemoryRemove(libPerson(m), service.LibraryRef{Name: "their-note"}); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestLibraryAuditsWritesWithTheActor(t *testing.T) {
 	m := newMediaEnv(t, mediaCfg{})
 	seedLibrary(t, m)

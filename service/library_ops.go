@@ -73,6 +73,10 @@ func libError(err error, what string) error {
 		).withHint("list them to see the names")
 	case errors.Is(err, library.ErrExists):
 		return newError("E_ID_EXISTS", "%s", err.Error()).withHint("choose another name, or write over the entry")
+	case errors.Is(err, library.ErrPersonOnly):
+		return newError(CodePrivilegedSession, "only a person in the app can decide about a note another author wrote.").
+			withHint("a person keeps, rewrites or removes it on the Memory page of the Stuarty app; the local token, " +
+				"API keys and the agent surfaces change only the notes they wrote themselves")
 	case errors.Is(err, library.ErrForbidden):
 		return newError(CodeForbidden, "%s", strings.TrimPrefix(err.Error(), "library: not allowed for this caller: "))
 	case errors.As(err, &le):

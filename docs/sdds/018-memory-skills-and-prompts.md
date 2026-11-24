@@ -82,7 +82,7 @@ One fact per file, `library/memory/<name>.md`.
 | `kept` | `true` when a person kept it; a note written by an agent starts `false` |
 | `created`, `updated` | UTC times, RFC 3339; set by the service |
 
-The body is the detail, at most 8 KiB. A person at the browser writes a note that is kept at once. A note by any other actor is `kept: false` and is listed as pending until a person keeps it (`MemoryWrite` with `kept` true, from the browser only). An agent cannot rewrite a kept note: it can only add a new one (`E_FORBIDDEN`), so flooding cannot overwrite what a person decided to keep.
+The body is the detail, at most 8 KiB. A person at the browser writes a note that is kept at once. A note by any other actor is `kept: false` and is listed as pending until a person keeps it (`MemoryWrite` with `kept` true, from the browser only). An agent cannot rewrite a kept note: it can only add a new one (`E_FORBIDDEN`), so flooding cannot overwrite what a person decided to keep. Nor can it rewrite the pending note of another actor: a caller that is not a person writes over, and removes, only a note whose `actor` is its own (`E_PRIVILEGED_SESSION` with a hint that says where a person decides); a person decides about any note.
 
 Limits: at most 2000 notes in the workspace; at most 50 new notes per actor per UTC day (a person at the browser is not limited); both are `E_LIMIT_EXCEEDED`. The day count is derived from the `actor` and `created` of the files, so it survives an index rebuild. RF-386: the flow reads memory before planning a production (`LibrarySearch` with `scope`) and writes it after.
 
@@ -181,11 +181,11 @@ The answer fits a budget: `budget` characters (default 4000, at most 16000, abou
 | `SkillImport`, `SkillExport` | media | reads or writes files by path rules; no MCP tool |
 | `SkillMarkReviewed` | edit | a person at the browser only (the session cookie), with the `content_hash` of the text read; no MCP tool and no CLI command |
 
-In network mode the library belongs to the workspace and is shared by its users. A key limited to one project may read and write only memory whose scope is that project or `workspace` (read only). `MemoryRemove` deletes the file; a caller that is not a person at the browser cannot remove a kept note (`E_FORBIDDEN`). Every write, import, export, review and removal appends an audit row (`library.memory.write`, `library.skill.import`, and so on) with the actor.
+In network mode the library belongs to the workspace and is shared by its users. A key limited to one project may read and write only memory whose scope is that project or `workspace` (read only). `MemoryRemove` deletes the file; a caller that is not a person at the browser cannot remove a kept note (`E_FORBIDDEN`), and removes a pending note only when it wrote it itself: the pending note of another actor is left for a person (`E_PRIVILEGED_SESSION`). Every write, import, export, review and removal appends an audit row (`library.memory.write`, `library.skill.import`, and so on) with the actor.
 
 ## 12. Errors, limits and files
 
-No new error code: `E_VALIDATION` (a name, a field, a variable, an archive entry; `details.findings` for the lint), `E_NOT_FOUND`, `E_ID_EXISTS` (a taken name), `E_FORBIDDEN`, `E_REVISION_CONFLICT` (a review of a skill that changed since it was read), `E_LIMIT_EXCEEDED`, `E_PAYLOAD_TOO_LARGE`, `E_PATH_NOT_ALLOWED` and `E_FILE_NOT_FOUND` (import paths).
+No new error code: `E_VALIDATION` (a name, a field, a variable, an archive entry; `details.findings` for the lint), `E_NOT_FOUND`, `E_ID_EXISTS` (a taken name), `E_FORBIDDEN`, `E_PRIVILEGED_SESSION` (SDD-015 section 8: a caller that is not a person acts on the pending note of another actor), `E_REVISION_CONFLICT` (a review of a skill that changed since it was read), `E_LIMIT_EXCEEDED`, `E_PAYLOAD_TOO_LARGE`, `E_PATH_NOT_ALLOWED` and `E_FILE_NOT_FOUND` (import paths).
 
 | Limit | Value |
 | --- | --- |

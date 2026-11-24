@@ -399,3 +399,64 @@ func TestMemoryRewriteKeepsTheCreationTime(t *testing.T) {
 		t.Fatalf("%v %+v %+v", err, first, second)
 	}
 }
+
+func TestMemoryNonPersonTouchesOnlyItsOwnPendingNote(t *testing.T) {
+	t.Parallel()
+
+	m, _, _ := newManager(t)
+	ctx := context.Background()
+	other := Caller{Actor: "local:codex-p4q7z1"}
+
+	if _, _, err := m.SaveMemory(
+		ctx,
+		other,
+		MemoryInput{Name: "theirs", Description: "Theirs", Body: "Original.\n"},
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, _, err := m.SaveMemory(
+		ctx,
+		agent,
+		MemoryInput{Name: "theirs", Description: "Changed", Body: "Hijacked.\n"},
+	); !errors.Is(err, ErrPersonOnly) {
+		t.Fatalf("overwriting another author's pending note: %v", err)
+	}
+
+	if err := m.DeleteMemory(ctx, agent, "theirs"); !errors.Is(err, ErrPersonOnly) {
+		t.Fatalf("removing another author's pending note: %v", err)
+	}
+
+	if mem, _, err := m.ReadMemory(ctx, "theirs"); err != nil || mem.Body != "Original.\n" {
+		t.Fatalf("%v %+v", err, mem)
+	}
+
+	// the author rewrites and removes its own, and a person decides about any
+	if _, _, err := m.SaveMemory(ctx, other, MemoryInput{Name: "theirs", Description: "T", Body: "2"}); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, _, err := m.SaveMemory(ctx, person, MemoryInput{Name: "theirs", Description: "T", Body: "3"}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := m.DeleteMemory(ctx, other, "theirs"); !errors.Is(err, ErrForbidden) {
+		t.Fatalf("the person kept it by rewriting, so the author cannot remove it: %v", err)
+	}
+
+	if _, _, err := m.SaveMemory(ctx, other, MemoryInput{Name: "last", Description: "L", Body: "1"}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := m.DeleteMemory(ctx, other, "last"); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, _, err := m.SaveMemory(ctx, other, MemoryInput{Name: "again", Description: "A", Body: "1"}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := m.DeleteMemory(ctx, person, "again"); err != nil {
+		t.Fatal(err)
+	}
+}

@@ -30,6 +30,9 @@ type MemoryInput struct {
 	Keep        *bool // a person may keep or release a note; nil keeps it for a person
 }
 
+// ErrPersonOnly is a caller that is not a person acting on the pending note of another author (SDD-018 section 11).
+var ErrPersonOnly = errors.New("library: only a person decides about the note of another author")
+
 func (m *Manager) stamp() string { return m.now().UTC().Format(time.RFC3339) }
 
 // SaveMemory writes a note (SDD-018 section 5): it is kept at once when a
@@ -77,6 +80,10 @@ func (m *Manager) SaveMemory(ctx context.Context, c Caller, in MemoryInput) (cor
 	case err == nil:
 		if existing.Kept && !c.Person {
 			return core.Memory{}, Entry{}, fmt.Errorf("%w: a person kept this note; write a new one", ErrForbidden)
+		}
+
+		if !c.Person && existing.Actor != c.Actor {
+			return core.Memory{}, Entry{}, fmt.Errorf("%w: %s wrote this note", ErrPersonOnly, existing.Actor)
 		}
 
 		mem = existing
@@ -173,7 +180,8 @@ func (m *Manager) checkNoteLimits(rows []Entry, c Caller) error {
 	return nil
 }
 
-// DeleteMemory removes a note. Only a person removes a note that a person kept.
+// DeleteMemory removes a note. Only a person removes a note that a person kept, or one that another author left
+// pending.
 func (m *Manager) DeleteMemory(ctx context.Context, c Caller, name string) error {
 	mem, _, err := m.ReadMemory(ctx, name)
 
@@ -184,6 +192,10 @@ func (m *Manager) DeleteMemory(ctx context.Context, c Caller, name string) error
 
 	if err == nil && mem.Kept && !c.Person {
 		return fmt.Errorf("%w: a person kept this note", ErrForbidden)
+	}
+
+	if err == nil && !c.Person && mem.Actor != c.Actor {
+		return fmt.Errorf("%w: %s wrote this note", ErrPersonOnly, mem.Actor)
 	}
 
 	if c.ProjectID != "" && err == nil && mem.Scope != c.ProjectID {
