@@ -168,10 +168,12 @@ export default function TextEditor({
 	// Review is a place on this page: the person is taken to the revisions and the checks of the saved text.
 	function review(): void {
 		setReviewed(true);
-		document.getElementById("revisions-heading")?.scrollIntoView({
-			block: "start",
-		});
-		document.getElementById("revisions-heading")?.focus();
+		// A post is checked before it is compared; any other text goes straight to its revisions.
+		const target = document.getElementById(
+			loaded?.item.text_kind === "post" ? "post-heading" : "revisions-heading",
+		);
+		target?.scrollIntoView({ block: "start" });
+		target?.focus();
 	}
 
 	if (loaded === null) {
@@ -253,6 +255,7 @@ export default function TextEditor({
 					<Button
 						type="submit"
 						variant={primary === "save" ? "default" : "outline"}
+						data-primary={primary === "save" ? "true" : undefined}
 						disabled={busy || !dirty}
 					>
 						{busy ? t("ui.write.editor.saving") : t("ui.write.editor.save")}
@@ -260,6 +263,7 @@ export default function TextEditor({
 					<Button
 						type="button"
 						variant={primary === "review" ? "default" : "outline"}
+						data-primary={primary === "review" ? "true" : undefined}
 						disabled={dirty}
 						onClick={review}
 					>
@@ -309,18 +313,18 @@ export default function TextEditor({
 					dirty={dirty}
 				/>
 			)}
-			<AgentPanel
-				client={client}
-				item={loaded.item}
-				flow={flow}
-				onDone={drafted}
-			/>
 			<RevisionsPanel
 				client={client}
 				projectId={projectId}
 				itemId={itemId}
 				latest={loaded.item.revision}
 				onReverted={changedElsewhere}
+			/>
+			<AgentPanel
+				client={client}
+				item={loaded.item}
+				flow={flow}
+				onDone={drafted}
 			/>
 		</div>
 	);

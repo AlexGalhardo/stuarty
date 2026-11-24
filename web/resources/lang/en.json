@@ -4118,6 +4118,17 @@
       },
       "revisions": {
         "heading": "Revisions",
+        "intro": "Every save is kept. Compare two revisions side by side, then restore the one you want: it is stored as a new revision and nothing is deleted.",
+        "compare_need": "A second revision is needed to compare: save a change first.",
+        "compare_form": "Compare two revisions",
+        "compare_from": "Compare revision",
+        "compare_to": "with revision",
+        "compare_go": "Compare",
+        "option": "Revision {revision}, {source}",
+        "column": "Revision {revision}",
+        "column_empty": "Nothing in this revision.",
+        "restore": "Restore revision {revision}",
+        "restore_note": "Restoring a revision stores its text as a new revision. The ones you have now stay in the list.",
         "loading": "Loading the revisions.",
         "source": {
           "created": "made",

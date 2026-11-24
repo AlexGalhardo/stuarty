@@ -1,8 +1,10 @@
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { LoadingState } from "@/components/LoadingState";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { formatDateTime } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
 import { formatMoney } from "../../dashboard/approval/money";
@@ -12,11 +14,20 @@ import type {
 	TextRevisionsResult,
 	WritingClient,
 } from "./client";
+import { changedCount, sidesOf } from "./compare";
 import { keyed } from "./keyed";
+import Panel from "./Panel";
 
-// The revisions of a text (SDD-019 sections 3 and 11): who saved each, what a model drafted and at what cost, the
-// text of one, the difference with the one before it, and the way back. Going back makes a new revision: nothing
-// is ever deleted by it.
+interface Comparison {
+	from: number;
+	to: number;
+	hunks: Hunk[];
+	coarse: boolean;
+}
+
+// The review of a text (SDD-019 sections 3 and 11): who saved each revision, what a model drafted and at what cost,
+// the text of one, two revisions side by side with what changed, and the way back. Going back makes a new revision:
+// nothing is ever deleted by it, so a person can compare, restore and still return to what they had.
 export default function RevisionsPanel({
 	client,
 	projectId,
@@ -40,12 +51,9 @@ export default function RevisionsPanel({
 		revision: number;
 		body: string;
 	} | null>(null);
-	const [diff, setDiff] = useState<{
-		from: number;
-		to: number;
-		hunks: Hunk[];
-		coarse: boolean;
-	} | null>(null);
+	const [comparison, setComparison] = useState<Comparison | null>(null);
+	const [from, setFrom] = useState("");
+	const [to, setTo] = useState("");
 	const [busy, setBusy] = useState(false);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: `latest` is the trigger of the read
@@ -53,13 +61,17 @@ export default function RevisionsPanel({
 		let live = true;
 		setLoading(true);
 		setReading(null);
-		setDiff(null);
+		setComparison(null);
 		client
 			.revisions(projectId, itemId)
 			.then((result) => {
 				if (!live) return;
 				setList(result);
 				setFailure(null);
+				// The newest two revisions are what a person usually wants to see first.
+				const numbers = result.revisions.map((r) => r.revision);
+				setTo(String(numbers[0] ?? ""));
+				setFrom(String(numbers[1] ?? ""));
 			})
 			.catch((error: unknown) => {
 				if (live) setFailure(failureOf(error));
@@ -89,16 +101,16 @@ export default function RevisionsPanel({
 		[client, projectId, itemId, reading],
 	);
 
-	async function compare(revision: number): Promise<void> {
+	async function compare(older: number, newer: number): Promise<void> {
 		setFailure(null);
 		try {
 			const got = await client.revisions(projectId, itemId, {
-				from: revision - 1,
-				to: revision,
+				from: older,
+				to: newer,
 			});
-			setDiff({
-				from: revision - 1,
-				to: revision,
+			setComparison({
+				from: older,
+				to: newer,
 				hunks: got.diff?.hunks ?? [],
 				coarse: got.diff?.coarse ?? false,
 			});
@@ -125,27 +137,65 @@ export default function RevisionsPanel({
 		}
 	}
 
+	const revisions = list?.revisions ?? [];
+	const canCompare = revisions.length >= 2 && from !== "" && to !== "";
+
 	return (
-		<section
-			aria-labelledby="revisions-heading"
-			className="flex flex-col gap-2"
-			data-testid="revisions-panel"
+		<Panel
+			title={t("ui.write.revisions.heading")}
+			description={t("ui.write.revisions.intro")}
+			testId="revisions-panel"
+			headingId="revisions-heading"
 		>
-			<h3 id="revisions-heading" className="font-medium">
-				{t("ui.write.revisions.heading")}
-			</h3>
 			<FailureNote failure={failure} />
-			{loading && (
-				<p role="status" className="text-sm text-muted-foreground">
-					{t("ui.write.revisions.loading")}
+			{loading && <LoadingState message={t("ui.write.revisions.loading")} />}
+			{!loading && list !== null && revisions.length < 2 && (
+				<p className="text-sm text-muted-foreground" data-testid="compare-need">
+					{t("ui.write.revisions.compare_need")}
 				</p>
 			)}
+			{revisions.length >= 2 && (
+				<form
+					className="flex flex-wrap items-end gap-3"
+					aria-label={t("ui.write.revisions.compare_form")}
+					onSubmit={(event) => {
+						event.preventDefault();
+						void compare(Number(from), Number(to));
+					}}
+				>
+					<RevisionSelect
+						id="compare-from"
+						label={t("ui.write.revisions.compare_from")}
+						value={from}
+						onChange={setFrom}
+						revisions={revisions}
+					/>
+					<RevisionSelect
+						id="compare-to"
+						label={t("ui.write.revisions.compare_to")}
+						value={to}
+						onChange={setTo}
+						revisions={revisions}
+					/>
+					<Button type="submit" variant="outline" disabled={!canCompare}>
+						{t("ui.write.revisions.compare_go")}
+					</Button>
+				</form>
+			)}
+			{comparison !== null && (
+				<CompareView
+					comparison={comparison}
+					latest={latest}
+					busy={busy}
+					onRestore={(revision) => void back(revision)}
+				/>
+			)}
 			<ul className="flex flex-col gap-2">
-				{list?.revisions.map((revision) => (
+				{revisions.map((revision) => (
 					<li
 						key={revision.revision}
 						data-revision={revision.revision}
-						className="flex flex-col gap-1 rounded-lg border p-2 text-sm"
+						className="flex flex-col gap-1 rounded-lg border border-border p-3 text-sm"
 					>
 						<p>
 							<UntrustedText>
@@ -182,7 +232,11 @@ export default function RevisionsPanel({
 									type="button"
 									size="sm"
 									variant="outline"
-									onClick={() => void compare(revision.revision)}
+									onClick={() => {
+										setFrom(String(revision.revision - 1));
+										setTo(String(revision.revision));
+										void compare(revision.revision - 1, revision.revision);
+									}}
 								>
 									{t("ui.write.revisions.compare")}
 								</Button>
@@ -204,7 +258,7 @@ export default function RevisionsPanel({
 								// biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable text must be reachable by keyboard
 								tabIndex={0}
 								data-testid="revision-body"
-								className="max-h-64 overflow-auto rounded border bg-muted/40 p-2 whitespace-pre-wrap break-words"
+								className="max-h-64 overflow-auto rounded border border-border bg-surface-hover p-2 whitespace-pre-wrap break-words"
 							>
 								<UntrustedText>{reading.body}</UntrustedText>
 							</pre>
@@ -212,8 +266,43 @@ export default function RevisionsPanel({
 					</li>
 				))}
 			</ul>
-			{diff !== null && <DiffView diff={diff} />}
-		</section>
+		</Panel>
+	);
+}
+
+function RevisionSelect({
+	id,
+	label,
+	value,
+	onChange,
+	revisions,
+}: {
+	id: string;
+	label: string;
+	value: string;
+	onChange: (value: string) => void;
+	revisions: readonly TextRevision[];
+}): ReactNode {
+	const t = useT();
+	return (
+		<div className="flex min-w-0 max-w-full flex-col gap-1">
+			<Label htmlFor={id}>{label}</Label>
+			<select
+				id={id}
+				value={value}
+				onChange={(event) => onChange(event.target.value)}
+				className="h-8 max-w-full rounded-lg border border-input bg-background px-2 text-sm max-md:h-11"
+			>
+				{revisions.map((revision) => (
+					<option key={revision.revision} value={revision.revision}>
+						{t("ui.write.revisions.option", {
+							revision: String(revision.revision),
+							source: t(`ui.write.revisions.source.${revision.source}`),
+						})}
+					</option>
+				))}
+			</select>
+		</div>
 	);
 }
 
@@ -237,57 +326,143 @@ function ModelLine({ revision }: { revision: TextRevision }): ReactNode {
 	);
 }
 
-// The difference between two revisions, by paragraph, as the core compared them. The sign and the word say what
-// each paragraph is, so the colour is never the only sign.
-function DiffView({
-	diff,
+// Two revisions side by side, the older on the left and the newer on the right, stacked at phone width. The core
+// compared them by paragraph: the sign and the word say what each paragraph is, so the colour is never the only
+// sign. A revision that is not the latest can be restored from here; that stores it as a new revision.
+function CompareView({
+	comparison,
+	latest,
+	busy,
+	onRestore,
 }: {
-	diff: { from: number; to: number; hunks: Hunk[]; coarse: boolean };
+	comparison: Comparison;
+	latest: number;
+	busy: boolean;
+	onRestore: (revision: number) => void;
 }): ReactNode {
 	const t = useT();
-	const changed = diff.hunks.filter((hunk) => hunk.op !== "equal");
+	const sides = sidesOf(comparison.hunks);
+	const changed = changedCount(comparison.hunks);
 	return (
-		<div data-testid="revision-diff" className="flex flex-col gap-1 text-sm">
-			<h4 className="font-medium">
+		<section
+			data-testid="revision-diff"
+			className="flex flex-col gap-3 text-sm"
+			aria-labelledby="compare-heading"
+		>
+			<h3 id="compare-heading" className="text-base font-semibold">
 				{t("ui.write.revisions.diff_heading", {
-					from: String(diff.from),
-					to: String(diff.to),
+					from: String(comparison.from),
+					to: String(comparison.to),
 				})}
-			</h4>
-			{diff.coarse && (
+			</h3>
+			{comparison.coarse && (
 				<p className="text-muted-foreground">
 					{t("ui.write.revisions.diff_coarse")}
 				</p>
 			)}
-			{changed.length === 0 && (
+			{changed === 0 && (
 				<p className="text-muted-foreground">
 					{t("ui.write.revisions.diff_none")}
 				</p>
 			)}
-			{keyed(changed, (h) => `${h.op}:${h.text}`).map(({ key, item: hunk }) => (
+			<div className="grid min-w-0 gap-4 md:grid-cols-2">
+				<Side
+					column="from"
+					revision={comparison.from}
+					hunks={sides.from}
+					latest={latest}
+					busy={busy}
+					onRestore={onRestore}
+				/>
+				<Side
+					column="to"
+					revision={comparison.to}
+					hunks={sides.to}
+					latest={latest}
+					busy={busy}
+					onRestore={onRestore}
+				/>
+			</div>
+			<p className="text-muted-foreground">
+				{t("ui.write.revisions.restore_note")}
+			</p>
+		</section>
+	);
+}
+
+function Side({
+	column,
+	revision,
+	hunks,
+	latest,
+	busy,
+	onRestore,
+}: {
+	column: "from" | "to";
+	revision: number;
+	hunks: Hunk[];
+	latest: number;
+	busy: boolean;
+	onRestore: (revision: number) => void;
+}): ReactNode {
+	const t = useT();
+	return (
+		<section
+			data-column={column}
+			aria-label={t("ui.write.revisions.column", {
+				revision: String(revision),
+			})}
+			className="flex min-w-0 flex-col gap-2 rounded-lg border border-border p-3"
+		>
+			<div className="flex flex-wrap items-center justify-between gap-2">
+				<h4 className="font-medium">
+					{t("ui.write.revisions.column", { revision: String(revision) })}
+				</h4>
+				{revision !== latest && (
+					<Button
+						type="button"
+						size="sm"
+						variant="outline"
+						disabled={busy}
+						onClick={() => onRestore(revision)}
+					>
+						{t("ui.write.revisions.restore", { revision: String(revision) })}
+					</Button>
+				)}
+			</div>
+			{hunks.length === 0 && (
+				<p className="text-muted-foreground">
+					{t("ui.write.revisions.column_empty")}
+				</p>
+			)}
+			{keyed(hunks, (h) => `${h.op}:${h.text}`).map(({ key, item: hunk }) => (
 				<p
 					key={key}
 					data-op={hunk.op}
 					className={
 						hunk.op === "added"
 							? "rounded border-l-4 border-green-700 bg-green-50 p-2 dark:bg-green-950"
-							: "rounded border-l-4 border-red-700 bg-red-50 p-2 dark:bg-red-950"
+							: hunk.op === "removed"
+								? "rounded border-l-4 border-red-700 bg-red-50 p-2 dark:bg-red-950"
+								: "rounded border-l-4 border-transparent p-2"
 					}
 				>
-					<span className="font-medium">
-						{hunk.op === "added" ? "+ " : "− "}
-						<span className="sr-only">
-							{hunk.op === "added"
-								? t("ui.write.revisions.diff_added")
-								: t("ui.write.revisions.diff_removed")}
-							:{" "}
+					{hunk.op !== "equal" && (
+						<span className="font-medium">
+							{hunk.op === "added" ? "+ " : "− "}
+							<span className="sr-only">
+								{hunk.op === "added"
+									? t("ui.write.revisions.diff_added")
+									: t("ui.write.revisions.diff_removed")}
+								:{" "}
+							</span>
 						</span>
-					</span>
+					)}
 					<UntrustedText className="whitespace-pre-wrap break-words">
 						{hunk.text}
 					</UntrustedText>
 				</p>
 			))}
-		</div>
+		</section>
 	);
 }

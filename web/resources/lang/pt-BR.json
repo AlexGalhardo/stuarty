@@ -4118,6 +4118,17 @@
       },
       "revisions": {
         "heading": "Revisões",
+        "intro": "Cada salvamento é guardado. Compare duas revisões lado a lado e restaure a que você quiser: ela é guardada como uma nova revisão e nada é apagado.",
+        "compare_need": "É preciso uma segunda revisão para comparar: salve uma mudança antes.",
+        "compare_form": "Comparar duas revisões",
+        "compare_from": "Comparar a revisão",
+        "compare_to": "com a revisão",
+        "compare_go": "Comparar",
+        "option": "Revisão {revision}, {source}",
+        "column": "Revisão {revision}",
+        "column_empty": "Nada nesta revisão.",
+        "restore": "Restaurar a revisão {revision}",
+        "restore_note": "Restaurar uma revisão guarda o texto dela como uma nova revisão. As que você tem agora continuam na lista.",
         "loading": "Carregando as revisões.",
         "source": {
           "created": "criada",

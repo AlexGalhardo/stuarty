@@ -233,13 +233,7 @@ export default function WritePage(): ReactNode {
 									? "ui.write.list.no_match_hint"
 									: "ui.write.list.empty_hint",
 							)}
-						>
-							{!filtered && (
-								<Button type="button" onClick={() => setCreating(true)}>
-									{t("ui.write.new")}
-								</Button>
-							)}
-						</EmptyState>
+						/>
 					)}
 					{loaded.state === "ready" && loaded.texts.length > 0 && (
 						<ul className="flex flex-col divide-y divide-border rounded-lg border border-border bg-surface">
