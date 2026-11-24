@@ -94,7 +94,7 @@ export function MediaCard({
 						{asset.duration_ms !== undefined && (
 							<span
 								data-testid="media-duration"
-								className="absolute bottom-1 left-1 rounded bg-black/75 px-1.5 py-0.5 font-mono text-xs text-white tabular-nums"
+								className="absolute bottom-1 left-1 rounded border border-border bg-surface px-1.5 py-0.5 font-mono text-xs text-text tabular-nums"
 							>
 								{formatSeconds(asset.duration_ms / 1000, "timecode")}
 							</span>

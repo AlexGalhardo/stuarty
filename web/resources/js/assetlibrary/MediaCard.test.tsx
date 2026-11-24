@@ -92,6 +92,17 @@ describe("the facts on a card", () => {
 		expect(html).toContain("Generated");
 	});
 
+	test("the length over the poster is drawn with theme tokens, not raw black and white", () => {
+		const html = markup(asset({ duration_ms: 4_000 }));
+		const chip = html.match(
+			/<span[^>]*data-testid="media-duration"[^>]*>/,
+		)?.[0];
+		expect(chip).toBeDefined();
+		expect(chip).toContain("bg-surface");
+		expect(chip).toContain("text-text");
+		expect(chip).not.toMatch(/bg-black|text-white/);
+	});
+
 	test("a file the service did not mark reusable carries no reusable badge", () => {
 		expect(markup(asset())).not.toContain("Reusable");
 	});
