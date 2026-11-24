@@ -117,7 +117,7 @@ func newHarnessBuilt(
 ) *harness {
 	tb.Helper()
 
-	dir, err := workspace.Resolve(func(string) string { return filepath.Join(tb.TempDir(), "ws") })
+	dir, err := workspace.Resolve(func(string) string { return filepath.Join(testfs.TempDir(tb), "ws") })
 	if err != nil {
 		tb.Fatal(err)
 	}
@@ -131,11 +131,7 @@ func newHarnessBuilt(
 		tb.Fatal(err)
 	}
 
-	tb.Cleanup(func() {
-		_ = st.Close()
-
-		testfs.Released(tb, dir.Path("db.sqlite"))
-	})
+	tb.Cleanup(func() { _ = st.Close() })
 
 	hub := events.New(st, eo)
 	tb.Cleanup(hub.Close)

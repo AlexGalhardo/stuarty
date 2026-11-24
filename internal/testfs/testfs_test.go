@@ -3,41 +3,43 @@ package testfs
 import (
 	"os"
 	"path/filepath"
-	"runtime"
+	"syscall"
 	"testing"
-	"time"
 )
 
-func TestReleasedWaitsForTheLastHandle(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "file")
+func TestTempDirIsRemovedAfterTheTestClosesItsFiles(t *testing.T) {
+	var dir string
 
-	if err := os.WriteFile(path, []byte("x"), 0o600); err != nil {
-		t.Fatal(err)
-	}
+	t.Run("inner", func(t *testing.T) {
+		dir = TempDir(t)
 
-	f, err := os.Open(path)
-	if err != nil {
-		t.Fatal(err)
-	}
+		f, err := os.Create(filepath.Join(dir, "db"))
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	released := make(chan time.Time, 1)
+		t.Cleanup(func() { _ = f.Close() })
+	})
 
-	go func() {
-		time.Sleep(200 * time.Millisecond)
-		_ = f.Close()
-
-		released <- time.Now()
-	}()
-
-	Released(t, path)
-
-	done := time.Now()
-
-	if runtime.GOOS == "windows" && done.Before(<-released) {
-		t.Error("Released returned while the handle was open")
+	if _, err := os.Stat(dir); !os.IsNotExist(err) {
+		t.Errorf("the folder is still there: %v", err)
 	}
 }
 
-func TestReleasedOfAMissingFileReturns(t *testing.T) {
-	Released(t, filepath.Join(t.TempDir(), "none"))
+func TestTempDirNameHasNoPathSeparator(t *testing.T) {
+	t.Run("a/b", func(t *testing.T) {
+		if base := filepath.Base(TempDir(t)); base == "" {
+			t.Error("no folder")
+		}
+	})
+}
+
+func TestHeldEntryIsOnlyTheErrorsOfAHeldHandle(t *testing.T) {
+	if heldEntry(os.ErrNotExist) {
+		t.Error("a missing file is not a held entry")
+	}
+
+	if err := (&os.PathError{Op: "unlinkat", Path: "x", Err: syscall.ENOENT}); heldEntry(err) {
+		t.Error("ENOENT is not a held entry")
+	}
 }

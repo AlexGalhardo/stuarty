@@ -15,6 +15,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/internal/testfs"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/config"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
@@ -67,7 +68,7 @@ func newNetworkHarnessRates(
 ) *networkHarness {
 	t.Helper()
 
-	dir, err := workspace.Resolve(func(string) string { return filepath.Join(t.TempDir(), "ws") })
+	dir, err := workspace.Resolve(func(string) string { return filepath.Join(testfs.TempDir(t), "ws") })
 	if err != nil {
 		t.Fatal(err)
 	}

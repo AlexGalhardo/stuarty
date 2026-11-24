@@ -1,34 +1,71 @@
-// Package testfs holds the test helpers that deal with files the operating system still holds.
+// Package testfs holds the test helpers for folders that hold a workspace.
 //
-// On Windows a file that was closed is not always free at once: the system or a scanner may keep a handle
-// for a short while, and a directory that holds such a file cannot be removed ("The directory is not
-// empty"), which Go's TempDir cleanup does not retry. A test that closes a store ends with Released, so the
-// cleanup of its temporary folder starts after the file is free (VV-385).
+// On Windows a file or a folder that was closed is not always free at once: the system or a scanner keeps a
+// handle on it for a short while (the database file for 50 to 140 ms, longer under load). Removing a folder
+// that holds one fails with "The directory is not empty" because the entry waits to be deleted. Go's
+// TempDir cleanup retries the sharing violations and the access denied errors of this kind for two seconds
+// but not that one, so a test whose workspace is in a TempDir failed in its cleanup (VV-385).
 package testfs
 
 import (
+	"errors"
+	"os"
+	"strings"
 	"testing"
 	"time"
 )
 
-// limit is how long Released waits for a file before it fails the test: a handle held for longer than this
-// is a leak in the test or in the code, not a scanner.
+// limit is how long the removal of a folder is retried: a folder still held after this is a handle that the
+// test or the code leaks, not a scanner.
 const limit = 30 * time.Second
 
-// Released returns when path can be opened with no other handle on it, or fails the test after limit. A
-// missing file is released. It does nothing off Windows, where an open file never keeps its folder.
-func Released(tb testing.TB, path string) {
+// TempDir is tb.TempDir for a folder that holds a workspace. The folder is removed in a cleanup registered
+// here, so it runs after the cleanups the test registers later (the closing of the store and of the server).
+// The removal is tried again for as long as the system answers that an entry is still held, up to limit, and
+// the test fails with that error after it.
+func TempDir(tb testing.TB) string {
 	tb.Helper()
 
+	dir, err := os.MkdirTemp("", strings.NewReplacer("/", "_", "\\", "_", ":", "_").Replace(tb.Name())+"-")
+	if err != nil {
+		tb.Fatal(err)
+	}
+
+	tb.Cleanup(func() {
+		if err := removeAll(dir); err != nil {
+			tb.Errorf("TempDir RemoveAll cleanup: %v", err)
+		}
+	})
+
+	return dir
+}
+
+// removeAll removes path, trying again while the error is one that an entry still held by a handle gives.
+func removeAll(path string) error {
 	start := time.Now()
+	sleep := time.Millisecond
 
-	for held(path) {
-		if time.Since(start) > limit {
-			tb.Errorf("%s is still held by a handle %v after the store was closed", path, limit)
-
-			return
+	for {
+		err := os.RemoveAll(path)
+		if err == nil || !heldEntry(err) || time.Since(start)+sleep > limit {
+			return err
 		}
 
-		time.Sleep(time.Millisecond)
+		time.Sleep(sleep)
+		sleep = min(sleep*2, 100*time.Millisecond)
 	}
+}
+
+// heldEntry says whether err is the answer of the system to the removal of an entry that a handle still holds.
+func heldEntry(err error) bool {
+	for {
+		next := errors.Unwrap(err)
+		if next == nil {
+			break
+		}
+
+		err = next
+	}
+
+	return isHeld(err)
 }

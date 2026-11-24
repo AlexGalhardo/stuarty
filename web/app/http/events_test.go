@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/internal/perfgate"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/web/app/events"
 )
@@ -628,9 +629,10 @@ func TestEventsLatencyFromCommitToClient(t *testing.T) {
 	p95 := lat[len(lat)*95/100]
 	t.Logf("commit to event: p50 %v, p95 %v, max %v over %d commits", lat[len(lat)/2], p95, lat[len(lat)-1], len(lat))
 
-	// The budget of SDD-006 check 5 is measured without the race detector, which
-	// slows every goroutine switch; under it the numbers are only logged.
-	if !raceEnabled && testing.CoverMode() == "" && p95 > 20*time.Millisecond {
+	// The budget of SDD-006 check 5 is an absolute time on the wall clock, so it is judged only on the idle
+	// machine with STUARTY_PERF=1 (SDD-008 section 10); the delivery of every event runs always. The race
+	// detector slows every goroutine switch; under it the numbers are only logged.
+	if perfgate.Enabled() && !raceEnabled && testing.CoverMode() == "" && p95 > 20*time.Millisecond {
 		t.Errorf("p95 = %v, want at most 20ms", p95)
 	}
 }

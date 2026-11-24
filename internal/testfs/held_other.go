@@ -2,4 +2,5 @@
 
 package testfs
 
-func held(string) bool { return false }
+// isHeld is false: an open file never keeps its folder from being removed.
+func isHeld(error) bool { return false }

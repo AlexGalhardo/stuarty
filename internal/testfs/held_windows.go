@@ -2,29 +2,16 @@
 
 package testfs
 
-import (
-	"errors"
-	"syscall"
-)
+import "syscall"
 
-const (
-	errAccessDenied     = syscall.Errno(5)  // ERROR_ACCESS_DENIED: the file is waiting to be deleted
-	errSharingViolation = syscall.Errno(32) // ERROR_SHARING_VIOLATION: another handle is open
-)
-
-// held says whether another handle is open on path: a share mode of 0 is refused while one is.
-func held(path string) bool {
-	name, err := syscall.UTF16PtrFromString(path)
-	if err != nil {
-		return false
+// isHeld is true for the errors a removal gets while a handle is open on an entry: access denied and a
+// sharing violation (which Go's own cleanup retries) and the directory that is not empty because one of its
+// entries waits to be deleted (which it does not).
+func isHeld(err error) bool {
+	switch err {
+	case syscall.ERROR_ACCESS_DENIED, syscall.Errno(32), syscall.Errno(145): // sharing violation, dir not empty
+		return true
 	}
-
-	h, err := syscall.CreateFile(name, syscall.GENERIC_READ, 0, nil, syscall.OPEN_EXISTING, syscall.FILE_ATTRIBUTE_NORMAL, 0)
-	if err != nil {
-		return errors.Is(err, errSharingViolation) || errors.Is(err, errAccessDenied)
-	}
-
-	_ = syscall.CloseHandle(h)
 
 	return false
 }

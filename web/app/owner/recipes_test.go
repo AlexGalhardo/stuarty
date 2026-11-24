@@ -11,6 +11,7 @@ import (
 
 	coreimage "github.com/AlexGalhardo/stuarty/core/image"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
+	"github.com/AlexGalhardo/stuarty/internal/testfs"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/workspace"
 	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
@@ -38,7 +39,7 @@ func TestEveryModeInstallsTheRecipeImageTemplates(t *testing.T) {
 			t.Parallel()
 
 			ctx := context.Background()
-			dir := workspace.Dir(t.TempDir())
+			dir := workspace.Dir(testfs.TempDir(t))
 
 			st, err := store.Open(ctx, dir, store.Options{SchemaVersion: timeline.CurrentSchemaVersion})
 			if err != nil {
