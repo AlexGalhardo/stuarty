@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 license = "MIT"
 publish = false
-description = "The native screen capture helper of Stuarty (ADR-0049, SDD-023). It captures and writes; it decides nothing about a project."
+description = "The native screen capture helper of Stuarty (ADR-0049, SDD-025). It captures and writes; it decides nothing about a project."
 
 [workspace]
 

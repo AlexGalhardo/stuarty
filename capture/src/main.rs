@@ -1,4 +1,4 @@
-//! stuarty-capture: the native capture helper (ADR-0049, SDD-023). It takes JSON commands on standard input and
+//! stuarty-capture: the native capture helper (ADR-0049, SDD-025). It takes JSON commands on standard input and
 //! answers with JSON events on standard output. It serves one recording and exits when it ends, or when its input
 //! closes. It has no option but `--allow-test-source`, which only a test passes.
 

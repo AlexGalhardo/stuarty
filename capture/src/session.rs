@@ -1,4 +1,4 @@
-//! One recording: a source, the pacing grid, a sink, and the messages about them (SDD-023 sections 6 and 8).
+//! One recording: a source, the pacing grid, a sink, and the messages about them (SDD-025 sections 6 and 8).
 
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
