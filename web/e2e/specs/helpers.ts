@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync } from "node:fs";
+import { randomBytes } from "node:crypto";
+import { existsSync, mkdirSync, renameSync, rmSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -132,6 +133,26 @@ export function ffmpegExe(): string {
 	return join(bin, `ffmpeg${exe}`);
 }
 
+// makeOnce makes a media file at `out` unless a complete one is there. Several Playwright workers ask for the
+// same file at the same time (VV-332): each writes its own temporary file next to `out` and renames it, so
+// `out` is never seen half written, and the worker that loses the rename drops its copy.
+function makeOnce(out: string, make: (target: string) => void): void {
+	if (existsSync(out)) return;
+	const dot = out.lastIndexOf(".");
+	const target = `${out.slice(0, dot)}.tmp-${process.pid}-${randomBytes(4).toString("hex")}${out.slice(dot)}`;
+	try {
+		make(target);
+		try {
+			renameSync(target, out);
+		} catch (err) {
+			// Another worker renamed first and holds the file open: its copy is as good as ours.
+			if (!existsSync(out)) throw err;
+		}
+	} finally {
+		rmSync(target, { force: true });
+	}
+}
+
 // testClip makes, once per run, a 10 s 320x568 clip with a moving smooth gradient
 // and a tone, so a spec has real media to import and render. Each variant has
 // other pixels, so the core does not deduplicate two of them into one asset.
@@ -139,7 +160,7 @@ export function testClip(variant = 0): string {
 	const dir = join(tmpdir(), "stuarty-e2e-media");
 	mkdirSync(dir, { recursive: true });
 	const out = join(dir, `gradient10-${variant}.mp4`);
-	if (!existsSync(out)) {
+	makeOnce(out, (target) => {
 		execFileSync(
 			ffmpegExe(),
 			[
@@ -159,11 +180,11 @@ export function testClip(variant = 0): string {
 				"-c:a",
 				"aac",
 				"-shortest",
-				out,
+				target,
 			],
 			{ stdio: "ignore" },
 		);
-	}
+	});
 	return out;
 }
 
@@ -172,7 +193,7 @@ export function audioClip(variant = 0): string {
 	const dir = join(tmpdir(), "stuarty-e2e-media");
 	mkdirSync(dir, { recursive: true });
 	const out = join(dir, `tone4-${variant}.wav`);
-	if (!existsSync(out)) {
+	makeOnce(out, (target) => {
 		execFileSync(
 			ffmpegExe(),
 			[
@@ -181,11 +202,11 @@ export function audioClip(variant = 0): string {
 				"lavfi",
 				"-i",
 				`sine=frequency=${220 + variant * 90}:duration=4`,
-				out,
+				target,
 			],
 			{ stdio: "ignore" },
 		);
-	}
+	});
 	return out;
 }
 
@@ -195,7 +216,7 @@ export function silenceClip(): string {
 	const dir = join(tmpdir(), "stuarty-e2e-media");
 	mkdirSync(dir, { recursive: true });
 	const out = join(dir, "gradient10-silence.mp4");
-	if (!existsSync(out)) {
+	makeOnce(out, (target) => {
 		execFileSync(
 			ffmpegExe(),
 			[
@@ -215,11 +236,11 @@ export function silenceClip(): string {
 				"-c:a",
 				"aac",
 				"-shortest",
-				out,
+				target,
 			],
 			{ stdio: "ignore" },
 		);
-	}
+	});
 	return out;
 }
 
@@ -230,7 +251,7 @@ export function markerClip(width: number, height: number): string {
 	const dir = join(tmpdir(), "stuarty-e2e-media");
 	mkdirSync(dir, { recursive: true });
 	const out = join(dir, `markers3-${width}x${height}.mp4`);
-	if (!existsSync(out)) {
+	makeOnce(out, (target) => {
 		const box = Math.round(Math.min(width, height) / 5);
 		const red = `drawbox=x=${Math.round(width * 0.38)}:y=${Math.round(height * 0.2)}:w=${box}:h=${box}:color=red:t=fill`;
 		const blue = `drawbox=x=${Math.round(width * 0.53)}:y=${Math.round(height * 0.65)}:w=${box}:h=${box}:color=blue:t=fill`;
@@ -253,11 +274,11 @@ export function markerClip(width: number, height: number): string {
 				"-c:a",
 				"aac",
 				"-shortest",
-				out,
+				target,
 			],
 			{ stdio: "ignore" },
 		);
-	}
+	});
 	return out;
 }
 
@@ -266,7 +287,7 @@ function sourceClip(name: string, source: string): string {
 	const dir = join(tmpdir(), "stuarty-e2e-media");
 	mkdirSync(dir, { recursive: true });
 	const out = join(dir, name);
-	if (!existsSync(out)) {
+	makeOnce(out, (target) => {
 		execFileSync(
 			ffmpegExe(),
 			[
@@ -281,11 +302,11 @@ function sourceClip(name: string, source: string): string {
 				"2M",
 				"-pix_fmt",
 				"yuv420p",
-				out,
+				target,
 			],
 			{ stdio: "ignore" },
 		);
-	}
+	});
 	return out;
 }
 
@@ -313,7 +334,7 @@ export function alphaClip(): string {
 	const dir = join(tmpdir(), "stuarty-e2e-media");
 	mkdirSync(dir, { recursive: true });
 	const out = join(dir, "alpha-half-red2.webm");
-	if (!existsSync(out)) {
+	makeOnce(out, (target) => {
 		execFileSync(
 			ffmpegExe(),
 			[
@@ -330,11 +351,11 @@ export function alphaClip(): string {
 				"0",
 				"-b:v",
 				"100k",
-				out,
+				target,
 			],
 			{ stdio: "ignore" },
 		);
-	}
+	});
 	return out;
 }
 
@@ -343,7 +364,7 @@ export function solidClip(color: string): string {
 	const dir = join(tmpdir(), "stuarty-e2e-media");
 	mkdirSync(dir, { recursive: true });
 	const out = join(dir, `solid-${color}.mp4`);
-	if (!existsSync(out)) {
+	makeOnce(out, (target) => {
 		execFileSync(
 			ffmpegExe(),
 			[
@@ -356,11 +377,11 @@ export function solidClip(color: string): string {
 				"libopenh264",
 				"-pix_fmt",
 				"yuv420p",
-				out,
+				target,
 			],
 			{ stdio: "ignore" },
 		);
-	}
+	});
 	return out;
 }
 
