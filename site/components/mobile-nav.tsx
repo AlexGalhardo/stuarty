@@ -22,7 +22,7 @@ export function MobileNav({ groups }: { groups: NavGroup[] }) {
 			</Dialog.Trigger>
 			<Dialog.Portal>
 				<Dialog.Backdrop className="fixed inset-0 z-50 bg-black/30 transition-opacity motion-reduce:transition-none data-ending-style:opacity-0 data-starting-style:opacity-0 dark:bg-black/60" />
-				<Dialog.Popup className="fixed inset-y-0 left-0 z-50 flex w-[min(20rem,85vw)] flex-col border-r border-border bg-bg transition-transform duration-200 motion-reduce:transition-none data-ending-style:-translate-x-full data-starting-style:-translate-x-full">
+				<Dialog.Popup data-site-chrome className="fixed inset-y-0 left-0 z-50 flex w-[min(20rem,85vw)] flex-col border-r border-border bg-bg transition-transform duration-200 motion-reduce:transition-none data-ending-style:-translate-x-full data-starting-style:-translate-x-full">
 					<div className="flex h-14 items-center justify-between border-b border-border px-3">
 						<Dialog.Title className="text-sm font-semibold">{t.navigation}</Dialog.Title>
 						<Dialog.Close

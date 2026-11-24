@@ -78,7 +78,7 @@ const HEADER_CLASS: Record<HeaderVariant, string> = {
 export function Header({ groups, version, variant = "docs" }: { groups: NavGroup[]; version: string; variant?: HeaderVariant }) {
 	return (
 		<Providers>
-			<header className={HEADER_CLASS[variant]} data-variant={variant}>
+			<header className={HEADER_CLASS[variant]} data-variant={variant} data-site-chrome>
 				{/* Same container as app/docs/layout.tsx; the left column matches the sidebar width. */}
 				<div className="site-container flex h-full items-center gap-2 sm:gap-3 lg:grid lg:grid-cols-[minmax(14rem,auto)_minmax(0,1fr)_auto] lg:gap-x-3">
 					<div className="flex items-center gap-1 sm:gap-3">

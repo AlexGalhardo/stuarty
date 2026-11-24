@@ -991,6 +991,8 @@ The site (`site/`, SDD-010, D-028) is a separate Astro package that starts from 
 | screenshots of the UI: dark theme, 1600 by 900, the fixture project of the e2e suite, no personal paths visible | components: MDX components of the shell (callout, card, code block, steps, tabs) |
 | no remote fonts or trackers (the site is static on GitHub Pages) | density: comfortable reading layout |
 
+The header, the popups it opens and the documentation use the tokens of the final redesign. The landing pages keep their previous palette until the new landing ships (D-137): `Base.astro` marks them with `data-surface="landing"` on `<html>`, `globals.css` restores the previous values for that surface, and `data-site-chrome` keeps the redesign tokens on the header and its popups.
+
 ## 9. Governance
 
 ### 9.1 One source per thing
