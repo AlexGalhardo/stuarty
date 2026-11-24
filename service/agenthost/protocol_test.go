@@ -458,6 +458,30 @@ func TestParseUpdate(t *testing.T) {
 		}
 	})
 
+	t.Run("only the action of the arguments of a call is kept", func(t *testing.T) {
+		t.Parallel()
+
+		u, ok := ParseUpdate(wrap(
+			`{"sessionUpdate":"tool_call","toolCallId":"c","title":"mcp__stuarty__library",` +
+				`"rawInput":{"action":"get","kind":"skill","name":"captions","body":"secret text"}}`))
+		if !ok || u.Tool.Action != "get" || !u.HasTool["action"] {
+			t.Fatalf("ParseUpdate = %+v, %v", u, ok)
+		}
+
+		for _, raw := range []string{
+			`"rawInput":{"action":"` + strings.Repeat("a", 33) + `"}`,
+			`"rawInput":{"action":7}`,
+			`"rawInput":"get"`,
+			`"rawInput":null`,
+			`"title":"t"`,
+		} {
+			u, ok := ParseUpdate(wrap(`{"sessionUpdate":"tool_call","toolCallId":"c",` + raw + `}`))
+			if !ok || u.Tool.Action != "" || u.HasTool["action"] {
+				t.Errorf("%s gave the action %q", raw, u.Tool.Action)
+			}
+		}
+	})
+
 	t.Run("an unknown status is pending, an unknown update is ignored", func(t *testing.T) {
 		t.Parallel()
 
