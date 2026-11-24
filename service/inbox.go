@@ -83,7 +83,6 @@ func (s *svc) inboxChat(ctx context.Context, c Caller) []inbox.Row {
 		return nil
 	}
 
-	editable := inbox.OfRegistry(s.reg)
 	seen := map[string]bool{}
 
 	var rows []inbox.Row
@@ -103,7 +102,7 @@ func (s *svc) inboxChat(ctx context.Context, c Caller) []inbox.Row {
 			continue
 		}
 
-		rows = append(rows, inbox.FromPermission(permissionOf(p), editable))
+		rows = append(rows, inbox.FromPermission(permissionOf(p)))
 	}
 
 	return rows

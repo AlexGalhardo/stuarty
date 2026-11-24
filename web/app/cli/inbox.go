@@ -41,10 +41,7 @@ func inboxText(res *service.InboxListResult) string {
 			cost = fmt.Sprintf("%d micros %s", r.Cost.Micros, r.Cost.Currency)
 		}
 
-		undo := "cannot be undone or not reported"
-		if r.Undoable {
-			undo = "can be undone"
-		}
+		undo := undoText(r.Undo)
 
 		lines = append(
 			lines,
@@ -61,6 +58,19 @@ func inboxText(res *service.InboxListResult) string {
 	}
 
 	return strings.Join(lines, "\n")
+}
+
+// undoText words the undo the service reported (D-140); anything else is "undo not verified", never a yes.
+func undoText(u inbox.Undo) string {
+	switch u {
+	case inbox.UndoCan:
+		return "can be undone"
+	case inbox.UndoCannot:
+		return "cannot be undone"
+	case inbox.UndoNotVerified:
+	}
+
+	return "undo not verified"
 }
 
 func reported(s string) string {

@@ -270,12 +270,16 @@ test.describe("notification center", () => {
 			"Allow once",
 			"Open the conversation",
 		]);
-		// a tool outside Stuarty: the center reports nothing it was not told, and says so
-		for (const field of ["item", "destination", "undo"]) {
+		// a tool outside Stuarty: the center reports nothing it was not told, and says so; the undo of a chat
+		// permission is never verified (D-140)
+		for (const field of ["item", "destination"]) {
 			await expect(row.getByTestId(`notification-${field}`)).toHaveText(
 				"Not reported",
 			);
 		}
+		await expect(row.getByTestId("notification-undo")).toHaveText(
+			"Not verified",
+		);
 		await expect(row.getByTestId("notification-cost")).toHaveText("No cost");
 		const answered = page.waitForResponse(
 			(res) =>
@@ -292,8 +296,8 @@ test.describe("notification center", () => {
 		);
 	});
 
-	// Epic 77: a permission for a call to a tool of Stuarty says what the call does, to what, where and that it can
-	// be undone, from the allowlisted fields of its input; nothing else the agent put in the input reaches the page.
+	// Epic 77: a permission for a call to a tool of Stuarty says what the call does, to what and where, from the
+	// allowlisted fields of its input; nothing else the agent put in the input reaches the page.
 	test("a call to a tool of Stuarty is described from the allowlisted fields of its input and from nothing else", async ({
 		page,
 		request,
@@ -349,8 +353,9 @@ test.describe("notification center", () => {
 		await expect(row.getByTestId("notification-destination")).toHaveText(
 			"prj_a4k9m2x7bq",
 		);
+		// the agent titles the call an edit of commands of the editor: a claim, so the undo is not verified (D-140)
 		await expect(row.getByTestId("notification-undo")).toHaveText(
-			"Can be undone",
+			"Not verified",
 		);
 		await expect(row).toContainText("as the agent described the call");
 		for (const hostile of [
@@ -362,14 +367,15 @@ test.describe("notification center", () => {
 		}
 		// the same list is what the command line and the API read
 		const inbox = (await (await page.request.get("/api/v1/inbox")).json()) as {
-			rows: { source: string; state: string; tool: string }[];
+			rows: { source: string; state: string; tool: string; undo: string }[];
 		};
 		expect(
 			inbox.rows.some(
 				(r) =>
 					r.source === "chat" &&
 					r.state === "waiting" &&
-					r.tool === "mcp__stuarty__edit",
+					r.tool === "mcp__stuarty__edit" &&
+					r.undo === "not_verified",
 			),
 		).toBe(true);
 		expect(JSON.stringify(inbox)).not.toContain("sk-hostile");

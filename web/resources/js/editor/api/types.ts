@@ -2082,6 +2082,7 @@ export type InboxState =
 	| "rejected"
 	| "expired"
 	| "cancelled";
+export type InboxUndo = "can" | "cannot" | "not_verified";
 
 // One request that waits for a person, or one answered last, from the chat or from the approval queue
 // (GET /inbox, SDD-015 section 4.1). The UI draws it and decides nothing from it: a row is answered where
@@ -2101,7 +2102,9 @@ export interface InboxRow {
 	destination: string;
 	// the estimate of an approval; null for a permission, which has none
 	cost: Money | null;
-	undoable: boolean;
+	// what the service can say about undoing the action (D-140): "can" only when Stuarty proves it,
+	// "cannot" for an approval, "not_verified" for every chat permission
+	undo: InboxUndo;
 	project_id: string;
 	// the chat session that holds the request; empty for an approval
 	session_id: string;

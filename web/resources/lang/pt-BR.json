@@ -259,8 +259,9 @@
         "undo": "Desfazer",
         "undo_yes": "Pode ser desfeito",
         "undo_no": "Não pode ser desfeito",
+        "undo_not_verified": "Não verificado",
         "asked": "Pedido em",
-        "agent_reported": "O que, onde e desfazer são como o agente descreveu a chamada; o Stuarty não consegue conferir.",
+        "agent_reported": "O que e onde são como o agente descreveu a chamada; o Stuarty não consegue conferir.",
         "state": {
           "waiting": "Esperando você",
           "allowed": "Permitido",

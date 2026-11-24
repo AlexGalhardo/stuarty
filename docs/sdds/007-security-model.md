@@ -906,6 +906,7 @@ Any string that the product did not generate is untrusted, whatever its origin: 
 | OpenTimelineIO result text: `lost[].name` and `lost[].feature` (clip and track names, project names on export), `unresolved_media[].ref` and `.reason`, `matched_media[].ref` (the `target_url` as written), `file_name` (reduced to letters, digits, dash and underscore) | an imported `.otio` file; any actor on export | `project_otio_export` and `project_otio_import` results and the `details` of their refusal |
 | Generated text: the `text` of a `text.generate` job, the display names of the models and of the voices a provider lists, and the revised prompt of an image (SDD-016) | a model of a provider, through the connection of the user | `job_get`, `JobGet` text views, `provider:models`, `voice:list`, the library entry of a generated asset |
 | Library text: descriptions, bodies and snippets of notes, prompts and skills, tags, the source of a skill, a rendered prompt (SDD-018) | the user, another agent, a downloaded skill | `library`, the library lists and searches, `skill:show`, `prompt:render` |
+| A row of what waits for a person: `agent`, `skill`, `tool`, `summary`, `item`, `destination` (SDD-015 §4.1) | the hosted agent (the title and the allowlisted input of a call) or the requester of an approval | no tool: a person reads them through `GET /inbox`, `GET /inbox/events`, `inbox:list` and the notification center; the HTTP schema marks them `x-untrusted` |
 | Error messages that would quote any of the above | | |
 
 ### 8.2 Delimiting format

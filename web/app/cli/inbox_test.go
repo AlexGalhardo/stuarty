@@ -24,6 +24,7 @@ func TestInboxTextCutsEveryAgentTextToALineAndReportsWhatIsMissing(t *testing.T)
 				State:     inbox.StateWaiting,
 				Agent:     "claude\nINJECTED",
 				Tool:      "Run shell command\nsecond line",
+				Undo:      inbox.UndoNotVerified,
 				CreatedAt: time.Now(),
 			},
 			{
@@ -42,7 +43,7 @@ func TestInboxTextCutsEveryAgentTextToALineAndReportsWhatIsMissing(t *testing.T)
 	for _, want := range []string{
 		"2 request(s) waiting for a person, 2 listed",
 		"chat:cpr_aaaaaaaaaa  waiting  chat  claude",
-		"what: Run shell command  item: not reported  where: not reported  cost: no cost  cannot be undone or not reported",
+		"what: Run shell command  item: not reported  where: not reported  cost: no cost  undo not verified",
 		"what: publish.upload  item: not reported  where: con_a / prj_a  cost: 1500000 micros USD",
 		"summary: Publish the video",
 	} {
@@ -57,12 +58,16 @@ func TestInboxTextCutsEveryAgentTextToALineAndReportsWhatIsMissing(t *testing.T)
 		}
 	}
 
-	if got := inboxText(
-		&service.InboxListResult{Rows: []inbox.Row{{ID: "chat:cpr_b", Undoable: true}}},
-	); !strings.Contains(
-		got,
-		"can be undone",
-	) {
-		t.Errorf("an undoable row does not say so:\n%s", got)
+	// D-140: each of the three words of the service, and a missing one is never a yes.
+	for undo, want := range map[inbox.Undo]string{
+		inbox.UndoCan: "  can be undone", inbox.UndoCannot: "cannot be undone",
+		inbox.UndoNotVerified: "undo not verified", "": "undo not verified",
+	} {
+		if got := inboxText(&service.InboxListResult{Rows: []inbox.Row{{ID: "chat:cpr_b", Undo: undo}}}); !strings.Contains(
+			got,
+			want,
+		) {
+			t.Errorf("undo %q is not told as %q:\n%s", undo, want, got)
+		}
 	}
 }

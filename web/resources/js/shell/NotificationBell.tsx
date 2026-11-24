@@ -25,6 +25,7 @@ import { formatDateTime } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
 import { PersonOnlyNote, useSession } from "@/lib/session";
 import { formatMoney } from "../dashboard/approval/money";
+import type { InboxUndo } from "../editor/api/types";
 import { type Notification, waitingCount } from "./notifications";
 import { useShell } from "./ShellContext";
 
@@ -47,6 +48,14 @@ const STATE: Record<StateWord, { icon: LucideIcon; tone: string }> = {
 	rejected: { icon: Ban, tone: "text-danger-text" },
 	expired: { icon: Clock, tone: "text-muted-foreground" },
 	cancelled: { icon: CircleSlash, tone: "text-muted-foreground" },
+};
+
+// The words of the undo the service reported (D-140). A value the client does not know reads "Not verified",
+// never "Can be undone".
+const UNDO_KEY: Record<InboxUndo, string> = {
+	can: "ui.shell.notify.undo_yes",
+	cannot: "ui.shell.notify.undo_no",
+	not_verified: "ui.shell.notify.undo_not_verified",
 };
 
 function stateWord(item: Notification): StateWord {
@@ -173,11 +182,7 @@ function Row({
 						: formatMoney(item.cost, locale)}
 				</Fact>
 				<Fact label={t("ui.shell.notify.undo")} testId="notification-undo">
-					{item.undoable
-						? t("ui.shell.notify.undo_yes")
-						: chat
-							? notReported
-							: t("ui.shell.notify.undo_no")}
+					{t(UNDO_KEY[item.undo] ?? UNDO_KEY.not_verified)}
 				</Fact>
 				{chat && (
 					<Fact label={t("ui.shell.scene.skill")} testId="notification-skill">

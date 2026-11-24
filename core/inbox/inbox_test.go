@@ -6,14 +6,11 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/approval"
 	"github.com/AlexGalhardo/stuarty/core/chat"
-	"github.com/AlexGalhardo/stuarty/core/command"
 )
 
 var t0 = time.Date(2026, 11, 24, 12, 0, 0, 0, time.UTC)
 
 func at(minutes int) time.Time { return t0.Add(time.Duration(minutes) * time.Minute) }
-
-func editable() Editable { return OfRegistry(command.FullRegistry()) }
 
 func TestFromPermissionOfAStuartyTool(t *testing.T) {
 	p := Permission{
@@ -31,7 +28,7 @@ func TestFromPermissionOfAStuartyTool(t *testing.T) {
 		},
 	}
 
-	r := FromPermission(&p, editable())
+	r := FromPermission(&p)
 
 	if r.ID != "chat:cpr_aaaaaaaaaa" || r.Source != SourceChat || r.SourceID != "cpr_aaaaaaaaaa" ||
 		r.State != StateWaiting {
@@ -43,8 +40,28 @@ func TestFromPermissionOfAStuartyTool(t *testing.T) {
 		t.Errorf("members: %+v", r)
 	}
 
-	if r.ActionKey != "ui.agent_activity.tool.edit" || !r.Undoable || r.Cost != nil || r.AnsweredAt != nil {
+	if r.ActionKey != "ui.agent_activity.tool.edit" || r.Undo != UndoNotVerified || r.Cost != nil ||
+		r.AnsweredAt != nil {
 		t.Errorf("key, undo, cost: %+v", r)
+	}
+}
+
+// D-140: the title of a call is the agent's claim, so a call the agent calls an edit of commands of the
+// editor is never said to be undoable. Every chat row is "not verified", whatever it names.
+func TestAnAgentClaimedEditIsNeverSaidToBeUndoable(t *testing.T) {
+	for _, title := range []string{"mcp__stuarty__edit", "stuarty/edit", "edit", "Run shell command", ""} {
+		for _, ops := range [][]string{
+			{"animation.list_presets"},
+			{"animation.list_presets", "asset.remove"},
+			{"no.such_command"},
+			nil,
+		} {
+			p := Permission{RequestID: "cpr_aaaaaaaaaa", Title: title, Detail: &chat.PermissionDetail{Operations: ops}}
+
+			if r := FromPermission(&p); r.Undo != UndoNotVerified {
+				t.Errorf("%q with %v: undo %q, want %q", title, ops, r.Undo, UndoNotVerified)
+			}
+		}
 	}
 }
 
@@ -63,9 +80,9 @@ func TestFromPermissionOfAnotherToolReportsNothing(t *testing.T) {
 			},
 		}
 
-		r := FromPermission(&p, editable())
+		r := FromPermission(&p)
 
-		if r.Item != "" || r.Destination != "" || r.ActionKey != "" || r.Undoable {
+		if r.Item != "" || r.Destination != "" || r.ActionKey != "" || r.Undo != UndoNotVerified {
 			t.Errorf("%q: reported %+v", title, r)
 		}
 
@@ -84,39 +101,10 @@ func TestChatStates(t *testing.T) {
 	}
 
 	for answer, want := range cases {
-		r := FromPermission(&Permission{RequestID: "cpr_aaaaaaaaaa", Answer: answer}, nil)
+		r := FromPermission(&Permission{RequestID: "cpr_aaaaaaaaaa", Answer: answer})
 		if r.State != want {
 			t.Errorf("answer %q: state %q, want %q", answer, r.State, want)
 		}
-	}
-}
-
-func TestUndoable(t *testing.T) {
-	e := editable()
-
-	cases := []struct {
-		name string
-		tool string
-		ops  []string
-		want bool
-	}{
-		{"an edit of known commands", "edit", []string{"animation.list_presets", "asset.remove"}, true},
-		{"an edit with one unknown command", "edit", []string{"animation.list_presets", "no.such_command"}, false},
-		{"an internal command", "edit", []string{"asset.add"}, false},
-		{"an edit that names nothing", "edit", nil, false},
-		{"a publication tool", "job_start", []string{"animation.list_presets"}, false},
-		{"history", "history", []string{"undo"}, false},
-		{"no tool", "", []string{"animation.list_presets"}, false},
-	}
-
-	for _, c := range cases {
-		if got := Undoable(c.tool, c.ops, e); got != c.want {
-			t.Errorf("%s: Undoable = %v, want %v", c.name, got, c.want)
-		}
-	}
-
-	if Undoable("edit", []string{"animation.list_presets"}, nil) {
-		t.Error("with no registry nothing is undoable")
 	}
 }
 
@@ -140,7 +128,7 @@ func TestFromApproval(t *testing.T) {
 		t.Fatalf("identity: %+v", r)
 	}
 
-	if r.Cost == nil || r.Cost.Micros != 1_500_000 || r.Cost.Currency != "USD" || r.Undoable {
+	if r.Cost == nil || r.Cost.Micros != 1_500_000 || r.Cost.Currency != "USD" || r.Undo != UndoCannot {
 		t.Errorf("cost and undo: %+v", r)
 	}
 
