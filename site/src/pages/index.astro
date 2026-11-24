@@ -2,7 +2,7 @@
 // The landing page (epic 88): a calm page that tells a creator, in a few seconds, what Stuarty is and what it is not
 // yet. Sections: hero, one path, agent transparency, a text is a project, areas, agents, privacy, downloads and "On
 // the roadmap". The copy and its claims are in src/landing/content.ts and checked against the roadmap by its test.
-// The screens of epic 79 (home, projects, briefing) are slots until that epic is merged.
+// The screens of epic 79 (home, projects, briefing) are drawn by ScreenSlot from their captures.
 import "@/src/landing/landing.css";
 import "@/src/landing/home.css";
 import Base from "../layouts/Base.astro";
@@ -120,7 +120,7 @@ const stepShots = { writing: shots.writing, videoEditor: shots.videoEditor, imag
 					<h2 id="areas-title" class="display-title mt-4 text-fg">{areas.title}</h2>
 				</div>
 				<figure class="showcase home-frame home-wide m-0">
-					<ScreenSlot slot="home" src={screenSlots.home.src} srcDark={screenSlots.home.srcDark} />
+					<ScreenSlot slot="home" src={screenSlots.home.src} srcDark={screenSlots.home.srcDark} sizes="(min-width: 64rem) 64rem, 100vw" />
 				</figure>
 				<ul class="home-cards">
 					{areas.items.map((a) => (
