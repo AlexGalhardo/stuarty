@@ -35,6 +35,13 @@ type editorBootstrap struct {
 	Messages  map[string]any `json:"messages"`
 	User      *struct{}      `json:"user"`
 	Version   string         `json:"version"`
+	// Session is what sharedProps gives the other pages: whether this session may answer what only a person
+	// answers. It only shows controls (the scene bar under the timeline, epic 85); the service decides each call.
+	Session editorSession `json:"session"`
+}
+
+type editorSession struct {
+	Privileged bool `json:"privileged"`
 }
 
 // Pages installs the browser routes of SDD-012 section 2: the Inertia pages,
@@ -355,10 +362,14 @@ func editorPage(c *web.Ctx, d *httpapi.Deps, app *vukem.App) error {
 		locale = app.I18n.Default()
 	}
 
+	person, _ := service.CallerFrom(c.Context())
+
 	return c.Render("editor", map[string]any{"Bootstrap": editorBootstrap{
 		ProjectID: id, Mode: "local", APIBase: httpapi.BasePath, Locale: locale, Locales: app.I18n.Locales(),
-		Messages: app.I18n.Messages(locale, "ui.editor.", "ui.common.", "ui.theme.", "ui.nav."),
-		Version:  d.Version,
+		Messages: app.I18n.Messages(locale, "ui.editor.", "ui.common.", "ui.theme.", "ui.nav.",
+			"ui.shell.scene.", "ui.chat.", "ui.agent_activity.", "ui.session."),
+		Version: d.Version,
+		Session: editorSession{Privileged: person.Browser},
 	}})
 }
 
