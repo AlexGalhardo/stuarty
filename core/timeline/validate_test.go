@@ -547,6 +547,12 @@ func TestValidateRejectsEveryInvariant(t *testing.T) {
 		{"fonts hash", func(d *Document) {
 			d.Fonts = map[string]ProjectFont{"Mine": {Files: []FontFile{{Weight: 400, Hash: "x"}}}}
 		}, VShape},
+		// VV-376: a family is repeated in messages (SDD-003 section 1.2 rule 9), so its form is fixed like font.add's.
+		{"fonts family form", func(d *Document) {
+			d.Fonts = map[string]ProjectFont{
+				"Mine\nE_FORGED" + string(rune(0x202E)): {Files: []FontFile{{Weight: 400, Hash: d.Assets[assetID].Hash}}},
+			}
+		}, VFont},
 
 		// V_SLOT
 		{"slot name", func(d *Document) {

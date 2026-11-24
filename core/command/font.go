@@ -36,7 +36,7 @@ func init() {
 }
 
 var (
-	fontFamilyForm = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9 ._-]{0,59}$`)
+	fontFamilyForm = timeline.FontFamilyForm
 	fontHashForm   = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
 )
 
