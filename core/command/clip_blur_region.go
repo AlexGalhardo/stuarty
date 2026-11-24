@@ -31,8 +31,9 @@ func init() {
 		Description: "Hides part of the picture (an e-mail, a key, an address): adds a copy of the clip, limited to " +
 			"start and duration, on a Blur track above the clip, with a blur of radius and a rectangular mask of the " +
 			"region. x, y, width and height are fractions of the picture. The radius has a minimum, 1.5% of the " +
-			"shorter side of the project, and a default of 4%, so that the text cannot be read. The clip is not " +
-			"changed; edit or delete the item named Blur region to change it.",
+			"shorter side of the project, and a default of 4%, so that the text cannot be read. Within 2 radii of an " +
+			"edge of the picture the blur is weaker and effective.near_edge is true: cover text there with a shape. " +
+			"The clip is not changed; edit or delete the item named Blur region to change it.",
 		Example: `{"item_id": "itm_m1n2p3q4r5", "x": 0.1, "y": 0.62, "width": 0.8, "height": 0.08, "start": "1s", "duration": "2s"}`,
 		Errors: []string{
 			CodeValidation, CodeInvalidTime, CodeNotFound, CodeTypeMismatch, CodeInvalidState, CodeIDExists,
