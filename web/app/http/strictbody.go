@@ -181,5 +181,5 @@ func memberTypes(t reflect.Type) map[string]reflect.Type {
 // networkOnly reports the routes that exist in network mode only: in local mode they answer E_NOT_FOUND whatever
 // the body says, so the body is not read for a misspelled member first.
 func networkOnly(id string) bool {
-	return strings.HasPrefix(id, "auth.") || strings.HasPrefix(id, "google.") || strings.HasPrefix(id, "users.")
+	return strings.HasPrefix(id, "auth.") || strings.HasPrefix(id, "users.")
 }
