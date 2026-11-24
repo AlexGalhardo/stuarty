@@ -18,7 +18,7 @@ test.describe("write text flow", () => {
 		request,
 		browserName,
 	}) => {
-		test.skip(browserName !== "chromium", "the clipboard is read in Chromium");
+		test.skip(browserName !== "chromium", "the clipboard is read in Chromium"); // verify:env-skip the clipboard permission is granted in Chromium only
 		await page
 			.context()
 			.grantPermissions(["clipboard-read", "clipboard-write"]);
