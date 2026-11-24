@@ -67,7 +67,7 @@ async function fakeProvider(model: string): Promise<FakeProvider> {
 	return fake;
 }
 
-// A person decides, and a person is a session opened with the password (ADR-0049, SDD-007 section 3.9 item 5; SDD-007 section 3.4 item 7).
+// A person decides, and a person is a session opened with the password (ADR-0052, SDD-007 section 3.9 item 5; SDD-007 section 3.4 item 7).
 async function signInAsPerson(page: Page): Promise<void> {
 	await ensureAccount(page.request, home);
 	await signInWithPassword(page.request);

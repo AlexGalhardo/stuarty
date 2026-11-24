@@ -1,4 +1,4 @@
-// Package account is the local account of a workspace (ADR-0049, SDD-007 section
+// Package account is the local account of a workspace (ADR-0052, SDD-007 section
 // 3.9): the Argon2id key derivation, the data key and its two wrappings, the
 // recovery key, the sealing of the fields of the store, and the Manager that
 // holds the data key in memory while a person is signed in. The rules a field

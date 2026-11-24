@@ -13,7 +13,7 @@ import { HttpTransport } from "../../editor/api/http";
 import type { AccountFieldProblem } from "../../editor/api/types";
 import { fieldProblems, reasonsOf } from "../../lib/accountProblems";
 
-// The first run (SDD-012 section 2.1.1, ADR-0049): the account, then the recovery key. The key is shown once,
+// The first run (SDD-012 section 2.1.1, ADR-0052): the account, then the recovery key. The key is shown once,
 // in the memory of this page only: it is not in the address, the history or the storage, and it is gone when
 // the page is left. The way on is a box the person ticks to say it was saved.
 export default function Create(): ReactNode {

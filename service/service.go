@@ -310,7 +310,7 @@ const EventImageUpdated = "image.updated"
 // Options configure New. Store is required.
 type Options struct {
 	Store Store
-	// Gate closes every operation but the ones of LockedAllowed while the studio is locked (ADR-0049); nil
+	// Gate closes every operation but the ones of LockedAllowed while the studio is locked (ADR-0052); nil
 	// leaves the Service always open.
 	Gate Gate
 	// Registry is the command registry of the build; default command.Default().

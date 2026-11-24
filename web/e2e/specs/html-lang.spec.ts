@@ -19,7 +19,7 @@ test.describe("html-lang", () => {
 	test("a page follows a switch to pt-BR and back", async ({ page }) => {
 		await page.goto("/projects");
 		expect(await htmlLang(page)).toBe("en");
-		// The language is chosen in Settings (the sidebar has no dropdown any more, ADR-0049).
+		// The language is chosen in Settings (the sidebar has no dropdown any more, ADR-0052).
 		await page.goto("/settings");
 		await page.getByRole("combobox", { name: "Language" }).click();
 		await page.getByRole("option", { name: "Português (Brasil)" }).click();

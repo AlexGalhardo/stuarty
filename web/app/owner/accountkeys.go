@@ -7,7 +7,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/vault"
 )
 
-// accountKeys is the vault key provider of a workspace that has an account (ADR-0049): the master key is the
+// accountKeys is the vault key provider of a workspace that has an account (ADR-0052): the master key is the
 // random one wrapped by the data key, so it exists in memory only while a person is signed in. With no account
 // yet the provider is the one the environment, the file or the keychain named.
 type accountKeys struct {

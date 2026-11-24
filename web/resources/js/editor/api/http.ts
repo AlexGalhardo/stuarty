@@ -63,7 +63,7 @@ export class HttpTransport implements Transport {
 			} catch {
 				// An empty or non-JSON body (a proxy page) is reported as null.
 			}
-			// A locked studio (E_LOCKED, 423) has one way on: the sign-in page (ADR-0049).
+			// A locked studio (E_LOCKED, 423) has one way on: the sign-in page (ADR-0052).
 			if (
 				response.status === 423 &&
 				!window.location.pathname.startsWith("/account/")

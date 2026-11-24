@@ -1561,7 +1561,7 @@ export interface SessionResult {
 	scopes: string[];
 }
 
-// The local account (ADR-0049, SDD-007 section 3.9). The state is what the server says; the page computes
+// The local account (ADR-0052, SDD-007 section 3.9). The state is what the server says; the page computes
 // nothing about the rules: a refused field comes back as `details.fields`.
 export type AccountStateName = "none" | "locked" | "unlocked";
 

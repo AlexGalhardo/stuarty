@@ -204,7 +204,7 @@ Unit tests cover the vault round trip, a wrong key, a corrupted file, rotation, 
 
 ## 12. Google sign-in on a server (removed)
 
-The optional Google sign-in of epic 24 was removed by ADR-0049. A connection to Google (the YouTube connection of SDD-020, the Google AI provider of SDD-016) is a connection like any other and stays.
+The optional Google sign-in of epic 24 was removed by ADR-0052. A connection to Google (the YouTube connection of SDD-020, the Google AI provider of SDD-016) is a connection like any other and stays.
 
 ## 13. Sign-in credentials and their refresh (epic 12)
 

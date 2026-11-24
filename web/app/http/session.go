@@ -26,7 +26,7 @@ func (h *apiHandler) launch(c *web.Ctx) error {
 	privileged, ok := h.Launch.Redeem(c.Query("code"))
 
 	// With an account, only the password makes a person: a launch code, whoever asked for it, does not
-	// (ADR-0049, SDD-007 section 3.9 item 5).
+	// (ADR-0052, SDD-007 section 3.9 item 5).
 	if h.Account != nil {
 		privileged = false
 	}

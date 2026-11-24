@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { type APIRequestContext, expect } from "@playwright/test";
 
-// The account the suite signs in with (ADR-0049): a throwaway, not a credential. Every local server of the
+// The account the suite signs in with (ADR-0052): a throwaway, not a credential. Every local server of the
 // run has one made before the first spec (accountSetup.ts), since a workspace with none sends every page to
 // the create-account page; the first-run spec has a server of its own that has none.
 export const E2E_ACCOUNT = {

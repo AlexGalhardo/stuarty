@@ -92,7 +92,7 @@ func (r libraryRepo) Put(ctx context.Context, e library.Entry, body string) erro
 		return err
 	}
 
-	// With an account the index keeps no body: the search matches names, descriptions and tags only (ADR-0049,
+	// With an account the index keeps no body: the search matches names, descriptions and tags only (ADR-0052,
 	// SDD-005 section 5.17.2). A body in the full-text index would be clear text in db.sqlite.
 	if account.Sealing(sealerOf(r.ex)) {
 		body = ""

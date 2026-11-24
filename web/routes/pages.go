@@ -67,7 +67,7 @@ func Pages(d *httpapi.Deps) func(r *router.Router, app *vukem.App) error {
 			return inertia.Render(c, "Settings/Index", inertia.Props{})
 		}).Name("settings.index")
 
-		// The pages of the local account (ADR-0049, SDD-012 section 2.1.1): drawn with no session, since they hold
+		// The pages of the local account (ADR-0052, SDD-012 section 2.1.1): drawn with no session, since they hold
 		// no data; the guard sends the browser to the right one. They exist in local mode only.
 		for path, page := range map[string]string{
 			httpapi.AccountCreatePath:  "Account/Create",

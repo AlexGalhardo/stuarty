@@ -24,7 +24,7 @@ const (
 	CodeClientClosed     = "E_CLIENT_CLOSED"
 	CodeMethodNotAllowed = "E_METHOD_NOT_ALLOWED"
 	// CodeLocked is an account that exists with nobody signed in: nothing of the user's content is read or
-	// written (ADR-0049, SDD-007 section 3.9).
+	// written (ADR-0052, SDD-007 section 3.9).
 	CodeLocked = "E_LOCKED"
 
 	// CodeConnectionNotFound, CodeConnectionDestination and CodeVaultLocked are the codes of SDD-014 section 7.
@@ -235,7 +235,7 @@ func asError(err error) error {
 	case errors.Is(err, ErrStale):
 		return internalError()
 	case errors.Is(err, account.ErrLocked):
-		// The studio locked between the gate and a read of a sealed field (ADR-0049).
+		// The studio locked between the gate and a read of a sealed field (ADR-0052).
 		return lockedError()
 	}
 

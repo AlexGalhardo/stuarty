@@ -1030,7 +1030,7 @@ var Endpoints = []Endpoint{
 		ID: "auth.logout", Method: http.MethodPost, Path: "/auth/logout", Root: true, Status: 200,
 		Summary: "End the browser session (network mode)",
 	},
-	// The local account (ADR-0049, SDD-007 section 3.9): local mode only.
+	// The local account (ADR-0052, SDD-007 section 3.9): local mode only.
 	{
 		ID: "account.state", Method: http.MethodGet, Path: "/auth/account", Root: true, Status: 200,
 		Summary: "Whether an account exists and whether the studio is locked (local mode)",

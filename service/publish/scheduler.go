@@ -389,7 +389,7 @@ func (s *Scheduler) Run(ctx context.Context) error {
 
 	for {
 		// A locked studio has no key to read the texts with: the calendar waits for the next sign-in, and a
-		// target whose time passes meanwhile is handled by the rules of its late window (ADR-0049).
+		// target whose time passes meanwhile is handled by the rules of its late window (ADR-0052).
 		if _, err := s.Tick(ctx); err != nil && ctx.Err() == nil && !errors.Is(err, account.ErrLocked) {
 			s.log.ErrorContext(ctx, "the scheduler could not read the calendar", "error", err.Error())
 		}
