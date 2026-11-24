@@ -43,7 +43,7 @@ Moving or renaming the stored file on disk, choosing where files are stored, del
 
 ## Tasks
 
-- [ ] 1. SDD-000, SDD-011, SDD-007 and SDD-012. Verify: `bunx markdownlint-cli2@0.24.1 docs/sdds/*.md` exits 0 and `go run ./internal/tools/threatcheck` exits 0 once task 4 adds the tests.
+- [x] 1. SDD-000, SDD-011, SDD-007 and SDD-012. Verify: `bunx markdownlint-cli2@0.24.1 docs/sdds/*.md` exits 0 and `go run ./internal/tools/threatcheck` exits 0 once task 4 adds the tests.
 - [ ] 2. `core/asset` size format and totals. Verify: `go test ./core/asset/...` passes with a table that includes 0, 999, 1000, 4 GiB and unknown.
 - [ ] 3. Library totals, row state and size in `service`, with the missing and importing cases. Verify: `go test ./service/... -run 'AssetLibrary'` passes.
 - [ ] 4. `AssetReveal` with every refusal of the scope, the HTTP route and the CLI command, and the security tests. Verify: `go test ./service/... ./web/app/http/... ./web/app/cli/... -run 'Reveal|AssetPath'` and `go test -run TestSecurity_ ./...` pass.
