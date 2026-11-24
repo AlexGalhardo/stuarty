@@ -4,6 +4,7 @@ import { DatabaseSync } from "node:sqlite";
 import type { Page } from "@playwright/test";
 import { home } from "../specs/helpers";
 import { ensureAccount, signInWithPassword } from "./account";
+import { fieldSealer } from "./sealField";
 
 const ALPHABET = "0123456789abcdefghjkmnpqrstvwxyz";
 
@@ -26,10 +27,16 @@ export function seedApprovals(summaries: string[]): string[] {
  (id, actor, kind, summary, connection_id, payload_ref, estimate_micros, currency, state, created_ms, expires_ms)
  VALUES (?, 'local:claude-code', 'publish.post', ?, NULL, 'draft:e2e', 0, '', 'pending', ?, ?)`,
 		);
+		const seal = fieldSealer(db, home);
 		const now = Date.now();
 		return summaries.map((summary, i) => {
 			const id = newId("apr");
-			insert.run(id, summary, now + i, now + 7 * 24 * 3600 * 1000);
+			insert.run(
+				id,
+				seal("approval_requests", "summary", id, summary),
+				now + i,
+				now + 7 * 24 * 3600 * 1000,
+			);
 			return id;
 		});
 	} finally {

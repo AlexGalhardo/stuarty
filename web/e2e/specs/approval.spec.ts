@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import type { Page } from "@playwright/test";
 import { ensureAccount, signInWithPassword } from "../support/account";
+import { fieldSealer } from "../support/sealField";
 import { caller, expect, home, test } from "./helpers";
 
 // ADR-0032, epic 05 (SDD-015): the queue shows what waits for a person with where it goes, what it
@@ -38,13 +39,14 @@ function seed(items: Seed[]): string[] {
  (id, actor, kind, summary, connection_id, payload_ref, estimate_micros, currency, state, created_ms, expires_ms)
  VALUES (?, ?, 'publish.post', ?, ?, 'draft:e2e', ?, ?, 'pending', ?, ?)`,
 		);
+		const seal = fieldSealer(db, home);
 		const now = Date.now();
 		return items.map((item, i) => {
 			const id = newId("apr");
 			insert.run(
 				id,
 				item.actor ?? "local:claude-code",
-				item.summary,
+				seal("approval_requests", "summary", id, item.summary),
 				item.connection ?? null,
 				item.micros ?? 0,
 				item.micros ? "USD" : "",

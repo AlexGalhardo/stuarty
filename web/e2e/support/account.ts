@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { type APIRequestContext, expect } from "@playwright/test";
 
@@ -34,6 +34,14 @@ export async function ensureAccount(
 		},
 	});
 	expect(created.ok(), await created.text()).toBe(true);
+	const { recovery_key } = (await created.json()) as { recovery_key: string };
+	await writeFile(recoveryKeyPath(home), recovery_key, { mode: 0o600 });
+}
+
+// recoveryKeyPath is where the run keeps the recovery key of the throwaway account, next to the workspace and never
+// in it: a spec that seeds a sealed column needs it (sealField.ts).
+export function recoveryKeyPath(home: string): string {
+	return `${home}.recovery-key`;
 }
 
 // signInWithPassword unlocks the studio and puts the session of a person in the cookie jar of `request`.
