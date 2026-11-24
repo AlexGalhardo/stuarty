@@ -46,11 +46,14 @@ func inboxText(res *service.InboxListResult) string {
 			undo = "can be undone"
 		}
 
-		lines = append(lines, fmt.Sprintf("%s  %s  %s  %s", r.ID, r.State, r.Source, reported(r.Agent)))
-		lines = append(lines, fmt.Sprintf(
-			"  what: %s  item: %s  where: %s  cost: %s  %s",
-			reported(r.Tool), reported(r.Item), reported(r.Destination), cost, undo,
-		))
+		lines = append(
+			lines,
+			fmt.Sprintf("%s  %s  %s  %s", r.ID, r.State, r.Source, reported(r.Agent)),
+			fmt.Sprintf(
+				"  what: %s  item: %s  where: %s  cost: %s  %s",
+				reported(r.Tool), reported(r.Item), reported(r.Destination), cost, undo,
+			),
+		)
 
 		if r.Source == inbox.SourceApproval && r.Summary != "" {
 			lines = append(lines, "  summary: "+firstLine(r.Summary))

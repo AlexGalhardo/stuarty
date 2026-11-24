@@ -11,22 +11,30 @@ import (
 
 var t0 = time.Date(2026, 11, 24, 12, 0, 0, 0, time.UTC)
 
-func at(min int) time.Time { return t0.Add(time.Duration(min) * time.Minute) }
-
-func ptr(t time.Time) *time.Time { return &t }
+func at(minutes int) time.Time { return t0.Add(time.Duration(minutes) * time.Minute) }
 
 func editable() Editable { return OfRegistry(command.FullRegistry()) }
 
 func TestFromPermissionOfAStuartyTool(t *testing.T) {
 	p := Permission{
-		SessionID: "cht_aaaaaaaaaa", ProjectID: "prj_aaaaaaaaaa", Profile: "claude", RequestID: "cpr_aaaaaaaaaa",
-		Title: "mcp__stuarty__edit", Skill: "caption-style", AskedAt: at(1),
-		Detail: &chat.PermissionDetail{Project: "prj_aaaaaaaaaa", Item: "ast_bbbbbbbbbb", Operations: []string{"animation.list_presets"}},
+		SessionID: "cht_aaaaaaaaaa",
+		ProjectID: "prj_aaaaaaaaaa",
+		Profile:   "claude",
+		RequestID: "cpr_aaaaaaaaaa",
+		Title:     "mcp__stuarty__edit",
+		Skill:     "caption-style",
+		AskedAt:   at(1),
+		Detail: &chat.PermissionDetail{
+			Project:    "prj_aaaaaaaaaa",
+			Item:       "ast_bbbbbbbbbb",
+			Operations: []string{"animation.list_presets"},
+		},
 	}
 
 	r := FromPermission(&p, editable())
 
-	if r.ID != "chat:cpr_aaaaaaaaaa" || r.Source != SourceChat || r.SourceID != "cpr_aaaaaaaaaa" || r.State != StateWaiting {
+	if r.ID != "chat:cpr_aaaaaaaaaa" || r.Source != SourceChat || r.SourceID != "cpr_aaaaaaaaaa" ||
+		r.State != StateWaiting {
 		t.Fatalf("identity and state: %+v", r)
 	}
 
@@ -45,8 +53,14 @@ func TestFromPermissionOfAnotherToolReportsNothing(t *testing.T) {
 	// of ours must not give the call an item, a destination or an undo.
 	for _, title := range []string{"Run shell command", "library", "other__edit", "Bash: rm -rf /"} {
 		p := Permission{
-			RequestID: "cpr_aaaaaaaaaa", Title: title, ProjectID: "prj_aaaaaaaaaa",
-			Detail: &chat.PermissionDetail{Project: "prj_x", Item: "ast_x", Operations: []string{"animation.list_presets"}},
+			RequestID: "cpr_aaaaaaaaaa",
+			Title:     title,
+			ProjectID: "prj_aaaaaaaaaa",
+			Detail: &chat.PermissionDetail{
+				Project:    "prj_x",
+				Item:       "ast_x",
+				Operations: []string{"animation.list_presets"},
+			},
 		}
 
 		r := FromPermission(&p, editable())
@@ -108,13 +122,21 @@ func TestUndoable(t *testing.T) {
 
 func TestFromApproval(t *testing.T) {
 	a := Approval{
-		ID: "apr_aaaaaaaaaa", Actor: "key:abc", Kind: "publish.upload", Summary: "Publish the video", ConnectionID: "con_aaaaaaaaaa",
-		ProjectID: "prj_aaaaaaaaaa", Estimate: approval.Money{Micros: 1_500_000, Currency: "USD"}, State: "pending", CreatedAt: at(2),
+		ID:           "apr_aaaaaaaaaa",
+		Actor:        "key:abc",
+		Kind:         "publish.upload",
+		Summary:      "Publish the video",
+		ConnectionID: "con_aaaaaaaaaa",
+		ProjectID:    "prj_aaaaaaaaaa",
+		Estimate:     approval.Money{Micros: 1_500_000, Currency: "USD"},
+		State:        "pending",
+		CreatedAt:    at(2),
 	}
 
 	r := FromApproval(&a)
 
-	if r.ID != "approval:apr_aaaaaaaaaa" || r.Source != SourceApproval || r.State != StateWaiting || r.Tool != "publish.upload" {
+	if r.ID != "approval:apr_aaaaaaaaaa" || r.Source != SourceApproval || r.State != StateWaiting ||
+		r.Tool != "publish.upload" {
 		t.Fatalf("identity: %+v", r)
 	}
 
@@ -146,9 +168,9 @@ func TestFromApproval(t *testing.T) {
 func TestOrder(t *testing.T) {
 	rows := []Row{
 		{ID: "chat:old-wait", State: StateWaiting, CreatedAt: at(1)},
-		{ID: "approval:answered-early", State: StateApproved, CreatedAt: at(0), AnsweredAt: ptr(at(5))},
+		{ID: "approval:answered-early", State: StateApproved, CreatedAt: at(0), AnsweredAt: new(at(5))},
 		{ID: "approval:new-wait", State: StateWaiting, CreatedAt: at(9)},
-		{ID: "chat:answered-late", State: StateRejected, CreatedAt: at(2), AnsweredAt: ptr(at(8))},
+		{ID: "chat:answered-late", State: StateRejected, CreatedAt: at(2), AnsweredAt: new(at(8))},
 		{ID: "approval:expired", State: StateExpired, CreatedAt: at(3)},
 		{ID: "chat:tie-b", State: StateWaiting, CreatedAt: at(1)},
 	}
@@ -156,7 +178,12 @@ func TestOrder(t *testing.T) {
 	got := Order(rows)
 
 	want := []string{
-		"approval:new-wait", "chat:old-wait", "chat:tie-b", "chat:answered-late", "approval:answered-early", "approval:expired",
+		"approval:new-wait",
+		"chat:old-wait",
+		"chat:tie-b",
+		"chat:answered-late",
+		"approval:answered-early",
+		"approval:expired",
 	}
 
 	if len(got) != len(want) {
@@ -178,7 +205,15 @@ func TestOrderKeepsEveryWaitingRowAndCapsTheRest(t *testing.T) {
 	var rows []Row
 
 	for i := range MaxRecent + 7 {
-		rows = append(rows, Row{ID: "approval:done-" + string(rune('a'+i)), State: StateApproved, CreatedAt: at(i), AnsweredAt: ptr(at(i))})
+		rows = append(
+			rows,
+			Row{
+				ID:         "approval:done-" + string(rune('a'+i)),
+				State:      StateApproved,
+				CreatedAt:  at(i),
+				AnsweredAt: new(at(i)),
+			},
+		)
 	}
 
 	for i := range 30 {

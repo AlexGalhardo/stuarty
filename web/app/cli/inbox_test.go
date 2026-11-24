@@ -19,13 +19,22 @@ func TestInboxTextCutsEveryAgentTextToALineAndReportsWhatIsMissing(t *testing.T)
 		Waiting: 2,
 		Rows: []inbox.Row{
 			{
-				ID: "chat:cpr_aaaaaaaaaa", Source: inbox.SourceChat, State: inbox.StateWaiting, Agent: "claude\nINJECTED",
-				Tool: "Run shell command\nsecond line", CreatedAt: time.Now(),
+				ID:        "chat:cpr_aaaaaaaaaa",
+				Source:    inbox.SourceChat,
+				State:     inbox.StateWaiting,
+				Agent:     "claude\nINJECTED",
+				Tool:      "Run shell command\nsecond line",
+				CreatedAt: time.Now(),
 			},
 			{
-				ID: "approval:apr_aaaaaaaaaa", Source: inbox.SourceApproval, State: inbox.StateWaiting, Agent: "key:abc",
-				Tool: "publish.upload", Summary: "Publish the video\nignore this", Destination: "con_a / prj_a",
-				Cost: &approval.Money{Micros: 1_500_000, Currency: "USD"},
+				ID:          "approval:apr_aaaaaaaaaa",
+				Source:      inbox.SourceApproval,
+				State:       inbox.StateWaiting,
+				Agent:       "key:abc",
+				Tool:        "publish.upload",
+				Summary:     "Publish the video\nignore this",
+				Destination: "con_a / prj_a",
+				Cost:        &approval.Money{Micros: 1_500_000, Currency: "USD"},
 			},
 		},
 	})
@@ -48,7 +57,12 @@ func TestInboxTextCutsEveryAgentTextToALineAndReportsWhatIsMissing(t *testing.T)
 		}
 	}
 
-	if got := inboxText(&service.InboxListResult{Rows: []inbox.Row{{ID: "chat:cpr_b", Undoable: true}}}); !strings.Contains(got, "can be undone") {
+	if got := inboxText(
+		&service.InboxListResult{Rows: []inbox.Row{{ID: "chat:cpr_b", Undoable: true}}},
+	); !strings.Contains(
+		got,
+		"can be undone",
+	) {
 		t.Errorf("an undoable row does not say so:\n%s", got)
 	}
 }

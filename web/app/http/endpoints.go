@@ -1304,7 +1304,11 @@ var Endpoints = []Endpoint{
 		Summary: "Read the transcript of a session as events or as Markdown",
 	},
 	{
-		ID: "inbox.list", Method: http.MethodGet, Path: "/inbox", Scope: service.ScopeRead, Service: "InboxList",
+		ID:      "inbox.list",
+		Method:  http.MethodGet,
+		Path:    "/inbox",
+		Scope:   service.ScopeRead,
+		Service: "InboxList",
 		Status:  200,
 		Summary: "List what waits for a person: the permission requests of the chat and the approvals, with what will happen, where, the cost and whether it can be undone",
 	},

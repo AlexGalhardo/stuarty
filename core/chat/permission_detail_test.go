@@ -11,16 +11,28 @@ func TestReadDetailKeepsTheAllowlist(t *testing.T) {
 		`{"op":"clip.trim","args":{"api_key":"sk-in-args"}},{"op":"clip.split","args":{}}]}`)
 
 	d := ReadDetail("mcp__stuarty__edit", in)
-	if d == nil || d.Project != "prj_a4k9m2x7bq" || d.Item != "Intro" || strings.Join(d.Operations, ",") != "clip.trim,clip.split" {
+	if d == nil || d.Project != "prj_a4k9m2x7bq" || d.Item != "Intro" ||
+		strings.Join(d.Operations, ",") != "clip.trim,clip.split" {
 		t.Fatalf("detail = %+v", d)
 	}
 
-	raw, _ := json.Marshal(d)
+	raw := mustJSON(t, d)
 	for _, secret := range []string{"sk-secret", "sk-in-args", "api_key", "token"} {
 		if strings.Contains(string(raw), secret) {
 			t.Errorf("detail carries %q: %s", secret, raw)
 		}
 	}
+}
+
+func mustJSON(t *testing.T, v any) json.RawMessage {
+	t.Helper()
+
+	raw, err := json.Marshal(v)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return raw
 }
 
 func TestReadDetailOfATool(t *testing.T) {
@@ -62,7 +74,10 @@ func TestReadDetailDropsWhatIsNotAPlainString(t *testing.T) {
 
 func TestReadDetailCleansAndClips(t *testing.T) {
 	long := strings.Repeat("x", 500)
-	in, _ := json.Marshal(map[string]any{"item_id": "a\u0000b‮\nc", "name": long, "project_id": long})
+	in := mustJSON(
+		t,
+		map[string]any{"item_id": "a\u0000b" + string(rune(0x202e)) + "\nc", "name": long, "project_id": long},
+	)
 
 	d := ReadDetail("mcp__stuarty__project_item", in)
 	if d == nil {
@@ -84,7 +99,7 @@ func TestReadDetailCapsTheOperations(t *testing.T) {
 		ops = append(ops, map[string]any{"op": "clip.trim", "args": map[string]any{}})
 	}
 
-	in, _ := json.Marshal(map[string]any{"operations": ops})
+	in := mustJSON(t, map[string]any{"operations": ops})
 
 	if d := ReadDetail("mcp__stuarty__edit", in); d == nil || len(d.Operations) != MaxDetailOperations {
 		t.Errorf("detail = %+v, want %d operations", d, MaxDetailOperations)
