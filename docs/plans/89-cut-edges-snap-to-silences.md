@@ -74,7 +74,7 @@ The result of the operation lists, for each cut, the edges it moved and by how m
 - [x] 4. The service fills the silences, degrades to the whisper cut when the artifact is missing, and writes the snapped edges in the description. Verify: `go test ./service/... -run 'Transcript|Resolve'` and `go test ./web/app/servicetest/... -run 'Transcript'` pass, including the case with no `silence` artifact.
 - [x] 5. Measure on the labelled fixture and fix the floors. Verify: `go test ./core/transcript -run TestLabelledFixture -v` prints the unsnapped and the snapped numbers and passes with the new floors, and `docs/perf/` holds the addendum.
 - [ ] 6. The panel: the option and the line that says which edges snapped. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n` and `task test:web` pass, and a Playwright spec deletes a sentence and shows the line (`bun run e2e` with the spec).
-- [ ] 7. Surfaces and agent documentation: the catalogue entry stays within budget and the user guide says what snapping does and does not do. Verify: `go test ./web/contract/...` and `go run ./internal/tools/surfacebudget` pass.
+- [x] 7. Surfaces and agent documentation: the catalogue entry stays within budget and the user guide says what snapping does and does not do. Verify: `go test ./web/contract/...` and `go run ./internal/tools/surfacebudget` pass.
 
 ## Test strategy
 
