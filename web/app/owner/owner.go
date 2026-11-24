@@ -383,8 +383,21 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		return err
 	}
 
+	// The files of the library and the lock and unlock of the content follow the account (ADR-0053); a workspace
+	// with no account manager (network mode) has neither.
+	var (
+		libFiles  account.FileSealer
+		lifecycle service.Lifecycle
+	)
+
+	if o.Account != nil {
+		libFiles, lifecycle = o.Account.Files(), o.Account
+	}
+
 	o.Service, err = service.New(service.Options{
 		Gate:                o.gate,
+		Files:               libFiles,
+		Lifecycle:           lifecycle,
 		Keys:                o.keyStore(),
 		Connections:         out.conns,
 		Providers:           out.provs,

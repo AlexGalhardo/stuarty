@@ -11,13 +11,11 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/asset"
 	"github.com/AlexGalhardo/stuarty/core/chat"
-	core "github.com/AlexGalhardo/stuarty/core/library"
 	"github.com/AlexGalhardo/stuarty/core/project"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/account"
 	"github.com/AlexGalhardo/stuarty/service/agenthost"
 	"github.com/AlexGalhardo/stuarty/service/assets"
-	"github.com/AlexGalhardo/stuarty/service/library"
 	pub "github.com/AlexGalhardo/stuarty/service/publish"
 	"github.com/AlexGalhardo/stuarty/service/webhooks"
 )
@@ -30,7 +28,6 @@ const (
 	wordsPubText     = "CANARY-PUBTEXT-caption-for-the-video"
 	wordsField       = "CANARY-FIELD-title-on-youtube"
 	wordsSnapshot    = "CANARY-SNAPSHOT-approved-post"
-	wordsLibrary     = "CANARY-LIBRARY-body-of-a-memory-note"
 	wordsDescription = "CANARY-DESCRIPTION-what-the-project-is"
 	wordsGoal        = "CANARY-GOAL-specific-measurable-parts"
 	wordsHookToken   = "CANARY-HOOKTOKEN-in-the-path"
@@ -483,31 +480,12 @@ func TestSecurity_T108_ThePromptOfAGeneratedFileIsSealed(t *testing.T) {
 	}
 }
 
-func TestTheLibraryIndexKeepsNoBodyWhenThereIsAnAccount(t *testing.T) {
+func TestTheDatabaseHasNoTableOfTheLibraryIndex(t *testing.T) {
 	s := testStore(t)
 
-	entry := func() { // an index entry the way the manager writes it
-		if err := s.Library().
-			Put(ctx, library.Entry{Key: "memory/note", Kind: core.KindMemory, Name: "note", Description: "a note", State: library.StateOK, Path: "memory/note.md", Sig: "1", CreatedMs: 1, UpdatedMs: 1}, wordsLibrary); err != nil {
-			t.Fatal(err)
+	for _, table := range []string{"library_entries", "library_fts"} {
+		if n := scalar[int](t, s, `SELECT count(*) FROM sqlite_master WHERE name = '`+table+`'`); n != 0 {
+			t.Errorf("%s is in db.sqlite: the index of the library is in memory (ADR-0053)", table)
 		}
-	}
-
-	entry()
-
-	if n := scalar[int](t, s, `SELECT count(*) FROM library_fts WHERE body LIKE '%CANARY-LIBRARY%'`); n != 1 {
-		t.Fatalf("with no account the index keeps the body (%d rows)", n)
-	}
-
-	keys, err := account.NewKeySealer(bytes.Repeat([]byte{1}, account.KeySize))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	s.SetSealer(keys)
-	entry()
-
-	if n := scalar[int](t, s, `SELECT count(*) FROM library_fts WHERE body LIKE '%CANARY-LIBRARY%'`); n != 0 {
-		t.Fatalf("with an account the index keeps a body (%d rows)", n)
 	}
 }

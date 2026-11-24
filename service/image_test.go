@@ -21,7 +21,6 @@ import (
 	"github.com/AlexGalhardo/stuarty/engine/ingest"
 	assetlib "github.com/AlexGalhardo/stuarty/service/assets"
 	"github.com/AlexGalhardo/stuarty/service/connections"
-	"github.com/AlexGalhardo/stuarty/service/library"
 	"github.com/AlexGalhardo/stuarty/service/recordings"
 	"github.com/AlexGalhardo/stuarty/service/textview"
 	"github.com/AlexGalhardo/stuarty/service/webhooks"
@@ -289,7 +288,6 @@ func (m *memStore) Webhooks() webhooks.Store       { return nil }
 func (m *memStore) Recordings() recordings.Store   { return nil }
 
 // Nor does any test here use the library; its manager only needs an index to hold.
-func (m *memStore) Library() library.Index { return nil }
 
 func (m *memStore) Projects() ProjectRepo { return m.projects }
 func (m *memStore) Assets() AssetRepo     { return m.assets }

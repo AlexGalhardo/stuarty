@@ -116,7 +116,7 @@ func (c cell) update(ctx context.Context, ex database.Executor, row cellRow, val
 }
 
 // CreateAccount makes the account in a workspace that may hold data (SDD-005 section 5.17.3): in one
-// transaction it seals every sealed column, empties the body of the library index, inserts the record and reads
+// transaction it seals every sealed column, rebuilds the index of the asset library, inserts the record and reads
 // every sealed value back against what it was. Any failure rolls the transaction back and the workspace is as
 // it was. hook, when set, is called after each stage and may fail it (a test uses it to stop in the middle).
 func (s *Store) CreateAccount(
@@ -239,12 +239,11 @@ func sealCells(ctx context.Context, ex database.Executor, sl account.Sealer) (ma
 	return sums, nil
 }
 
-// clearIndexes takes the words of the person out of the two full-text indexes. An update of an FTS5 table leaves
-// the old terms in its segments until a merge, so each is rebuilt.
+// clearIndexes takes the words of the person out of the full-text index of the asset library. An update of an FTS5
+// table leaves the old terms in its segments until a merge, so it is rebuilt. (The index of the library of notes is
+// in memory and holds nothing on the disk, ADR-0053.)
 func clearIndexes(ctx context.Context, ex database.Executor) error {
 	for _, q := range []string{
-		`UPDATE library_fts SET body = ''`,
-		`INSERT INTO library_fts (library_fts) VALUES ('rebuild')`,
 		// The index of the files repeats the prompt in its origin column: it is written again without it.
 		`UPDATE asset_search SET origin = COALESCE((
   SELECT TRIM(COALESCE(i.source, '') || ' ' || COALESCE(i.provider, '') || ' ' || COALESCE(i.model, '') || ' ' ||

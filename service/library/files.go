@@ -347,6 +347,11 @@ func writeFileAs(root *vroot, rel, final string, data []byte) error {
 		return err
 	}
 
+	return replaceFile(root, rel, data)
+}
+
+// replaceFile puts data, as it is to be stored, at rel by a temporary name and a rename. The folder exists.
+func replaceFile(root *vroot, rel string, data []byte) error {
 	tmp := path.Join(path.Dir(rel), ".tmp-"+randomSuffix())
 	if err := root.WriteFile(tmp, data, 0o600); err != nil {
 		return err

@@ -15,7 +15,6 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/approval"
 	"github.com/AlexGalhardo/stuarty/service/assets"
 	"github.com/AlexGalhardo/stuarty/service/connections"
-	"github.com/AlexGalhardo/stuarty/service/library"
 	"github.com/AlexGalhardo/stuarty/service/publish"
 	"github.com/AlexGalhardo/stuarty/service/publish/destinations"
 	"github.com/AlexGalhardo/stuarty/service/recordings"
@@ -120,7 +119,6 @@ func (p *projectTx) BrandKit() service.BrandKitRepo           { return p.tx.Bran
 func (p *projectTx) Connections() connections.Store           { return p.tx.Connections() }
 func (p *projectTx) Approvals() approval.Store                { return p.tx.Approvals() }
 func (p *projectTx) Images() service.ImageRepo                { return p.tx.Images() }
-func (p *projectTx) Library() library.Index                   { return p.tx.Library() }
 func (p *projectTx) AssetLibrary() assets.Store               { return p.tx.AssetLibrary() }
 func (p *projectTx) Publications() publish.Store              { return p.tx.Publications() }
 func (p *projectTx) Blog() destinations.Store                 { return p.tx.Blog() }

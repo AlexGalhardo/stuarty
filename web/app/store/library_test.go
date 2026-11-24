@@ -14,9 +14,9 @@ func libraryFixture(t *testing.T) (*library.Manager, library.Index) {
 	t.Helper()
 
 	d := newDir(t)
-	s := openStore(t, d, Options{})
+	idx := library.NewMemIndex()
 
-	return library.New(filepath.Join(string(d), "library"), s.Library(), nil), s.Library()
+	return library.New(filepath.Join(string(d), "library"), idx, nil), idx
 }
 
 func seedLibrary(t *testing.T, m *library.Manager) {

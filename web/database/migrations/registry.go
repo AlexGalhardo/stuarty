@@ -55,5 +55,7 @@ func All() []schema.Migration {
 		m20261124110000ProjectKind(),
 		m20261124120000CreateRecordingsTable(),
 		m20261124130000ArtifactsFacetrackKind(),
+		m20261124150000DropLibraryIndex(),
+		m20261124150100AccountsSealVersion(),
 	}
 }

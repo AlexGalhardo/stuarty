@@ -445,7 +445,7 @@ func TestReindexRestoresEveryResult(t *testing.T) {
 	}
 
 	before, _ := idx.All(ctx)
-	textBefore := maps.Clone(idx.text)
+	textBefore := maps.Clone(idx.words)
 
 	if len(before) != 4 {
 		t.Fatalf("%+v", before)
@@ -465,7 +465,7 @@ func TestReindexRestoresEveryResult(t *testing.T) {
 		t.Fatalf("rows differ:\n%+v\n%+v", before, after)
 	}
 
-	if !reflect.DeepEqual(textBefore, idx.text) {
+	if !reflect.DeepEqual(textBefore, idx.words) {
 		t.Fatal("searchable text differs")
 	}
 
