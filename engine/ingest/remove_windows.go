@@ -5,10 +5,11 @@ import (
 	"syscall"
 )
 
+// The Windows codes of ERROR_ACCESS_DENIED, ERROR_SHARING_VIOLATION and ERROR_DIR_NOT_EMPTY.
 const (
-	errorAccessDenied   syscall.Errno = 5
-	errorSharingViolate syscall.Errno = 32
-	errorDirNotEmpty    syscall.Errno = 145
+	errAccessDenied     syscall.Errno = 5
+	errSharingViolation syscall.Errno = 32
+	errDirNotEmpty      syscall.Errno = 145
 )
 
 // transientRemoveError is true for the three answers Windows gives while a closed file is still held for a moment by
@@ -17,5 +18,5 @@ func transientRemoveError(err error) bool {
 	var errno syscall.Errno
 
 	return errors.As(err, &errno) &&
-		(errno == errorAccessDenied || errno == errorSharingViolate || errno == errorDirNotEmpty)
+		(errno == errAccessDenied || errno == errSharingViolation || errno == errDirNotEmpty)
 }
