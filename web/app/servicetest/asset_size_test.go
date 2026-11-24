@@ -166,6 +166,11 @@ func TestAssetLibraryAFileStillImportingHasNoSizeUntilItIsReady(t *testing.T) {
 	if list.Unsized != 1 || list.TotalBytes != 0 || list.FileCount != 1 {
 		t.Errorf("list = unsized %d bytes %d files %d", list.Unsized, list.TotalBytes, list.FileCount)
 	}
+
+	// A library whose only file has no size yet weighs nothing known: no "0 B" total.
+	if list.TotalSizeText != "" || strings.Contains(list.Text, "0 B") || !strings.Contains(list.Text, "size unknown") {
+		t.Errorf("total text %q, list text %q: want no total and the words size unknown", list.TotalSizeText, list.Text)
+	}
 }
 
 // A generated file is stored like an imported one and weighs the same way.

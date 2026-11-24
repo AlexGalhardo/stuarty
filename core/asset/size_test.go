@@ -86,6 +86,32 @@ func TestTotalOfAHashKnownOnceIsKnown(t *testing.T) {
 	}
 }
 
+func TestTotalSizeTextOfFilesWithNoKnownSizeIsNeverZero(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name  string
+		items []SizeItem
+		want  string
+	}{
+		{"an empty library weighs 0 B", nil, "0 B"},
+		{"only a file still importing has no total", []SizeItem{{"sha256:a", nil}}, ""},
+		{"two files with no size have no total", []SizeItem{{"sha256:a", nil}, {"sha256:b", nil}}, ""},
+		{"one known file gives the total", []SizeItem{{"sha256:a", nil}, {"sha256:b", new(int64(1500))}}, "1.5 KB"},
+		{"an empty file is known and weighs 0 B", []SizeItem{{"sha256:a", new(int64(0))}}, "0 B"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := TotalOf(tc.items).SizeText(); got != tc.want {
+				t.Errorf("SizeText = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestTotalOfAnEmptyLibraryIsZero(t *testing.T) {
 	t.Parallel()
 

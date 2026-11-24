@@ -296,7 +296,7 @@ func (s *svc) AssetList(ctx context.Context, req AssetListRequest) (*AssetListRe
 	res := &AssetListResult{
 		UntrustedNotice: UntrustedNotice, Assets: page.Assets, Total: page.Total,
 		FileCount: page.Size.Files, TotalBytes: page.Size.Bytes, Unsized: page.Size.Unsized,
-		TotalSizeText: asset.FormatSize(&page.Size.Bytes),
+		TotalSizeText: page.Size.SizeText(),
 	}
 	if res.Assets == nil {
 		res.Assets = []LibraryAsset{}
@@ -320,7 +320,13 @@ func assetListText(list []LibraryAsset, total int, sizeText string, unsized int)
 	var b strings.Builder
 
 	b.WriteString(textview.Note + "\n")
-	fmt.Fprintf(&b, "%d files in the library, %s in total", total, sizeText)
+	if sizeText == "" {
+		sizeText = "size unknown"
+	} else {
+		sizeText += " in total"
+	}
+
+	fmt.Fprintf(&b, "%d files in the library, %s", total, sizeText)
 
 	if unsized > 0 {
 		fmt.Fprintf(&b, " (%d with no known size)", unsized)
