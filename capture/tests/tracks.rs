@@ -116,3 +116,79 @@ fn the_file_of_a_track_that_was_not_asked_for_is_refused() {
 	assert_eq!(number(r#"{"a":12}"#, "a"), Some(12));
 	let _ = std::fs::remove_dir_all(d);
 }
+
+/// The frames of the test camera are 640 by 360 BGRA; a flash frame is every byte 255, any other is 10.
+const CAM_FRAME: usize = 640 * 360 * 4;
+
+fn flash_frames(path: &Path) -> Vec<bool> {
+	let b = std::fs::read(path).unwrap();
+	assert_eq!(b.len() % CAM_FRAME, 0, "whole frames only");
+	b.chunks(CAM_FRAME).map(|f| f[0] == 255).collect()
+}
+
+fn camera_args(d: &Path) -> String {
+	format!(
+		r#","camera":"fake","outputs":{{"camera":"{}"}}"#,
+		esc(&d.join("camera.raw"))
+	)
+}
+
+#[test]
+fn the_camera_is_written_on_its_own_file_with_the_flashes_of_the_epoch() {
+	let d = dir("camera");
+	let mut h = Helper::start(&["--allow-test-source"]);
+	let ready = h.read().unwrap();
+	assert!(ready.contains(r#""camera":true"#), "{ready}");
+	h.send(r#"{"type":"sources"}"#);
+	let s = h.read().unwrap();
+	assert!(
+		s.contains(r#""cameras":[{"id":"fake""#) && s.contains(r#""microphones":[{"id":"fake""#),
+		"{s}"
+	);
+	h.send(&start_with(
+		&d.join("o.raw"),
+		"16x16r60",
+		30,
+		&camera_args(&d),
+	));
+	let started = h.read().unwrap();
+	assert!(started.contains(r#""kind":"camera""#), "{started}");
+	std::thread::sleep(Duration::from_millis(2600));
+	h.send(r#"{"type":"stop"}"#);
+	let rest = h.read_until("finished");
+	assert!(h.wait());
+	let fin = rest.last().unwrap();
+	assert!(fin.contains(r#""kind":"camera""#), "{fin}");
+	let flashes = flash_frames(&d.join("camera.raw"));
+	// 30 frames a second for about 2.6 s, with a flash of 100 ms (three frames) at every second of the epoch
+	assert!(
+		(70..=90).contains(&flashes.len()),
+		"{} frames",
+		flashes.len()
+	);
+	let on = flashes.iter().filter(|f| **f).count();
+	assert!((4..=12).contains(&on), "{on} flash frames");
+	assert!(
+		std::fs::metadata(d.join("o.raw")).unwrap().len() > 0,
+		"the screen has its own file"
+	);
+	let _ = std::fs::remove_dir_all(d);
+}
+
+/// verify:env-skip needs a camera the helper can list. Windows has no camera backend yet (SDD-025 section
+/// 16.5), so the helper lists none and this test says so and passes; with a backend it records the first camera
+/// for a second and reads the file back.
+#[test]
+fn a_real_camera_is_recorded_when_there_is_one() {
+	let mut h = Helper::start(&[]);
+	h.read().unwrap();
+	h.send(r#"{"type":"sources"}"#);
+	let s = h.read().unwrap();
+	h.close_input();
+	assert!(h.wait());
+	if s.contains(r#""cameras":[]"#) {
+		eprintln!("skipped: the helper lists no camera on this system (no camera backend yet)");
+		return;
+	}
+	panic!("a camera is listed but this test does not record it yet: {s}");
+}

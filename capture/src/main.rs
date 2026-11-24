@@ -5,6 +5,7 @@
 mod audio;
 #[cfg(windows)]
 mod audio_wasapi;
+mod camera;
 mod clock;
 mod frame;
 mod json;
@@ -13,6 +14,7 @@ mod session;
 mod sink;
 mod source;
 mod testsrc;
+mod video;
 mod wav;
 #[cfg(windows)]
 mod win32;
@@ -118,7 +120,7 @@ fn serve(policy: Policy) {
 						displays,
 						windows,
 						microphones,
-						cameras: Vec::new(),
+						cameras: camera::list(test),
 						system_audio,
 					}));
 				}

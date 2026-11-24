@@ -6,11 +6,13 @@ use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::time::{Duration, Instant};
 
 use crate::audio::{self, Kind, RATE};
+use crate::camera;
 use crate::clock::Clock;
 use crate::frame::Mailbox;
 use crate::protocol::{self, Finish, StartRequest, TrackEnd, TrackStart};
 use crate::sink::{FfmpegSink, FileSink, Sink};
 use crate::source;
+use crate::video::{Grid, Step};
 
 const FIRST_FRAME_WAIT: Duration = Duration::from_secs(5);
 const LEVEL_EVERY: Duration = Duration::from_millis(250);
@@ -48,12 +50,50 @@ struct Sound {
 	track: audio::Track,
 }
 
-/// Ends the sound tracks and the screen source of a start that did not get to run.
-fn abandon(src: Box<dyn source::RunningSource>, sounds: Vec<Sound>, stop: &AtomicBool) {
-	stop.store(true, Ordering::Relaxed);
-	for s in sounds {
-		let _ = s.track.join();
+/// The tracks beside the screen that are running.
+#[derive(Default)]
+struct Extra {
+	sounds: Vec<Sound>,
+	camera: Option<camera::Track>,
+}
+
+impl Extra {
+	/// Ends every track at once, which makes each finish its file, and reports how each ended. The stop flag must
+	/// be set by the caller.
+	fn join(self, ends: &mut Vec<TrackEnd>) {
+		for s in self.sounds {
+			let o = s.track.join();
+			if let Some(e) = &o.error {
+				eprintln!("the {} track: {e}", s.kind);
+			}
+			ends.push(TrackEnd {
+				kind: s.kind,
+				start_ms: 0,
+				duration_ms: o.frames * 1000 / u64::from(RATE),
+				bytes: o.bytes,
+				lost: o.lost || o.error.is_some(),
+			});
+		}
+		if let Some(c) = self.camera {
+			let o = c.join();
+			if let Some(e) = &o.error {
+				eprintln!("the camera track: {e}");
+			}
+			ends.push(TrackEnd {
+				kind: "camera",
+				start_ms: 0,
+				duration_ms: o.duration_ms,
+				bytes: o.bytes,
+				lost: o.lost,
+			});
+		}
 	}
+}
+
+/// Ends the tracks and the screen source of a start that did not get to run.
+fn abandon(src: Box<dyn source::RunningSource>, extra: Extra, stop: &AtomicBool) {
+	stop.store(true, Ordering::Relaxed);
+	extra.join(&mut Vec::new());
 	src.stop();
 }
 
@@ -71,7 +111,7 @@ pub fn run(req: &StartRequest, emit: &dyn Fn(String), ctl: &Control) {
 	};
 
 	// Every device is opened before the origin of the clock, so every track can start at it.
-	let mut sounds: Vec<Sound> = Vec::new();
+	let mut extra = Extra::default();
 	let asked = [
 		(
 			"microphone",
@@ -89,9 +129,19 @@ pub fn run(req: &StartRequest, emit: &dyn Fn(String), ctl: &Control) {
 			continue;
 		};
 		match audio::spawn(kind, path, Arc::clone(clock), Arc::clone(stop)) {
-			Ok(track) => sounds.push(Sound { kind: name, track }),
+			Ok(track) => extra.sounds.push(Sound { kind: name, track }),
 			Err(e) => {
-				abandon(src, sounds, stop);
+				abandon(src, extra, stop);
+				emit(protocol::error(e.code, &e.message));
+				return;
+			}
+		}
+	}
+	if let (Some(id), Some(path)) = (&req.extras.camera, &req.extras.out_camera) {
+		match camera::spawn(req, id, path, Arc::clone(clock), Arc::clone(stop)) {
+			Ok(track) => extra.camera = Some(track),
+			Err(e) => {
+				abandon(src, extra, stop);
 				emit(protocol::error(e.code, &e.message));
 				return;
 			}
@@ -100,7 +150,7 @@ pub fn run(req: &StartRequest, emit: &dyn Fn(String), ctl: &Control) {
 
 	let first = mailbox.wait_first(FIRST_FRAME_WAIT);
 	let Some(first_frame) = first.frame else {
-		abandon(src, sounds, stop);
+		abandon(src, extra, stop);
 		let why = first
 			.error
 			.unwrap_or_else(|| "no frame arrived from the source".into());
@@ -110,7 +160,7 @@ pub fn run(req: &StartRequest, emit: &dyn Fn(String), ctl: &Control) {
 
 	let (w, h) = (first_frame.width & !1, first_frame.height & !1);
 	if w < 16 || h < 16 || w > 8192 || h > 8192 || u64::from(w) * u64::from(h) > 33_177_600 {
-		abandon(src, sounds, stop);
+		abandon(src, extra, stop);
 		emit(protocol::error(
 			"unsupported",
 			"the size of the source is outside the supported range",
@@ -126,7 +176,7 @@ pub fn run(req: &StartRequest, emit: &dyn Fn(String), ctl: &Control) {
 	let mut sink = match sink {
 		Ok(s) => s,
 		Err(m) => {
-			abandon(src, sounds, stop);
+			abandon(src, extra, stop);
 			emit(protocol::error("encoder_failed", &m));
 			return;
 		}
@@ -135,7 +185,7 @@ pub fn run(req: &StartRequest, emit: &dyn Fn(String), ctl: &Control) {
 	// Warm the encoder: the first write blocks while it starts (150 to 600 ms measured on NVENC), so the grid
 	// starts after it, and that frame is slot 0.
 	if let Err(e) = sink.write_frame(&first_frame.fit(w, h).data) {
-		abandon(src, sounds, stop);
+		abandon(src, extra, stop);
 		emit(protocol::error(
 			"encoder_failed",
 			&finish_message(sink, &e.to_string()),
@@ -150,18 +200,24 @@ pub fn run(req: &StartRequest, emit: &dyn Fn(String), ctl: &Control) {
 		kind: "screen",
 		start_ms: 0,
 	}];
-	tracks.extend(sounds.iter().map(|s| TrackStart {
+	tracks.extend(extra.sounds.iter().map(|s| TrackStart {
 		kind: s.kind,
 		start_ms: 0,
 	}));
+	if extra.camera.is_some() {
+		tracks.push(TrackStart {
+			kind: "camera",
+			start_ms: 0,
+		});
+	}
 	emit(protocol::started(w, h, req.fps, &tracks));
 
-	let fps = u64::from(req.fps);
-	let (mut frames, mut dropped, mut n): (u64, u64, u64) = (1, 0, 1);
+	let mut grid = Grid::new(Arc::clone(&mailbox), sink, w, h, req.fps);
 	let mut reason = "stopped";
 	let mut source_error: Option<String> = None;
 	let (mut last_level, mut last_progress) = (Instant::now(), Instant::now());
-	let peaks: Vec<(&'static str, Arc<AtomicU32>)> = sounds
+	let peaks: Vec<(&'static str, Arc<AtomicU32>)> = extra
+		.sounds
 		.iter()
 		.map(|s| (s.kind, Arc::clone(&s.track.peak)))
 		.collect();
@@ -189,75 +245,43 @@ pub fn run(req: &StartRequest, emit: &dyn Fn(String), ctl: &Control) {
 		}
 	};
 
-	'grid: loop {
-		let due_ns = i64::try_from(n * 1_000_000_000 / fps).unwrap_or(i64::MAX);
-		loop {
-			if stop.load(Ordering::Relaxed) {
-				break 'grid;
-			}
-			maintain(frames, dropped);
-			if clock.paused() {
-				std::thread::sleep(Duration::from_millis(10));
-				continue;
-			}
-			let left = due_ns - clock.active_ns();
-			if left <= 0 {
+	while !stop.load(Ordering::Relaxed) {
+		maintain(grid.frames, grid.dropped);
+		match grid.step(clock) {
+			Step::Wait(d) => std::thread::sleep(d),
+			Step::Wrote => {}
+			Step::Closed(why) => {
+				reason = "source_closed";
+				source_error = why;
 				break;
 			}
-			std::thread::sleep(Duration::from_nanos(left as u64).min(Duration::from_millis(10)));
-		}
-
-		let slot = mailbox.take();
-		if slot.closed && !slot.fresh {
-			reason = "source_closed";
-			source_error = slot.error;
-			break;
-		}
-		let Some(frame) = slot.frame else { break };
-		if !slot.fresh {
-			dropped += 1;
-		}
-		if let Err(e) = sink.write_frame(&frame.fit(w, h).data) {
-			src.stop();
-			stop.store(true, Ordering::Relaxed);
-			for s in sounds {
-				let _ = s.track.join();
+			Step::Failed(e) => {
+				src.stop();
+				stop.store(true, Ordering::Relaxed);
+				extra.join(&mut Vec::new());
+				emit(protocol::error(
+					"encoder_failed",
+					&finish_message(grid.sink, &e.to_string()),
+				));
+				return;
 			}
-			emit(protocol::error(
-				"encoder_failed",
-				&finish_message(sink, &e.to_string()),
-			));
-			return;
 		}
-		frames += 1;
-		n += 1;
 	}
 
 	src.stop();
-	// The sound tracks end at the same moment as the screen.
+	// The other tracks end at the same moment as the screen.
 	stop.store(true, Ordering::Relaxed);
+	let (frames, dropped, duration_ms) = (grid.frames, grid.dropped, grid.duration_ms());
 	let mut ends = vec![TrackEnd {
 		kind: "screen",
 		start_ms: 0,
-		duration_ms: frames * 1000 / fps,
+		duration_ms,
 		bytes: 0,
 		lost: false,
 	}];
-	for s in sounds {
-		let o = s.track.join();
-		if let Some(e) = &o.error {
-			eprintln!("the {} track: {e}", s.kind);
-		}
-		ends.push(TrackEnd {
-			kind: s.kind,
-			start_ms: 0,
-			duration_ms: o.frames * 1000 / u64::from(RATE),
-			bytes: o.bytes,
-			lost: o.lost || o.error.is_some(),
-		});
-	}
+	extra.join(&mut ends);
 
-	if let Err(m) = sink.finish() {
+	if let Err(m) = grid.sink.finish() {
 		emit(protocol::error("encoder_failed", &m));
 		return;
 	}
@@ -271,7 +295,7 @@ pub fn run(req: &StartRequest, emit: &dyn Fn(String), ctl: &Control) {
 		reason,
 		frames,
 		dropped,
-		duration_ms: frames * 1000 / fps,
+		duration_ms,
 		bytes: ends.iter().map(|t| t.bytes).sum(),
 		tracks: &ends,
 		pauses: &pauses,
@@ -510,6 +534,60 @@ mod tests {
 			(mic * 96..mic * 96 + 96).contains(&data),
 			"{data} bytes for {mic} ms"
 		);
+		std::fs::remove_dir_all(dir).unwrap();
+	}
+
+	#[test]
+	fn the_camera_is_a_track_of_its_own_with_the_length_of_the_screen() {
+		let dir = tmp("camera");
+		let mut req = request(&dir, "32x32r60", 30);
+		req.extras.camera = Some("fake".into());
+		req.extras.out_camera = Some(dir.join("camera.raw"));
+		let ctl = Control::new();
+		let t = stop_after(&ctl, 2000);
+		let events = collect(&req, &ctl);
+		t.join().unwrap();
+		assert_eq!(kinds(&events)[0], "started");
+		let Some(json::Json::Arr(started)) = events[0].get("tracks") else {
+			panic!("{events:?}");
+		};
+		let names: Vec<&str> = started
+			.iter()
+			.filter_map(|t| t.get("kind").and_then(json::Json::as_str))
+			.collect();
+		assert_eq!(names, ["screen", "camera"]);
+		let last = events.last().unwrap();
+		let Some(json::Json::Arr(ends)) = last.get("tracks") else {
+			panic!("{last:?}");
+		};
+		let dur = |kind: &str| {
+			ends.iter()
+				.find(|t| t.get("kind").and_then(json::Json::as_str) == Some(kind))
+				.and_then(|t| t.get("duration_ms"))
+				.and_then(json::Json::as_u64)
+				.unwrap()
+		};
+		let (screen, cam) = (dur("screen"), dur("camera"));
+		assert!(
+			screen.abs_diff(cam) <= 40,
+			"screen {screen} ms, camera {cam} ms"
+		);
+		let bytes = std::fs::metadata(dir.join("camera.raw")).unwrap().len();
+		assert_eq!(bytes % (640 * 360 * 4), 0, "whole frames of 640 by 360");
+		assert_eq!(bytes / (640 * 360 * 4), cam * 30 / 1000);
+		std::fs::remove_dir_all(dir).unwrap();
+	}
+
+	#[test]
+	fn a_camera_with_no_backend_ends_the_start_before_anything_runs() {
+		let dir = tmp("nocamera");
+		let mut req = request(&dir, "32x32r60", 30);
+		req.extras.camera = Some("c0123456789abcdef".into());
+		req.extras.out_camera = Some(dir.join("camera.raw"));
+		let events = collect(&req, &Control::new());
+		assert_eq!(kinds(&events), ["error"], "{events:?}");
+		assert_eq!(events[0].get("code").unwrap().as_str(), Some("unsupported"));
+		assert!(!dir.join("camera.raw").exists());
 		std::fs::remove_dir_all(dir).unwrap();
 	}
 }

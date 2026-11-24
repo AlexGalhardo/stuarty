@@ -20,9 +20,15 @@ pub fn bitrate(width: u32, height: u32, fps: u32) -> u64 {
 	(u64::from(width) * u64::from(height) * u64::from(fps) / 10).clamp(2_000_000, 80_000_000)
 }
 
-/// The FFmpeg arguments for a request. The encoder is one of the closed list; nothing the caller sent reaches
-/// an argument but the numbers and the output path, which the protocol already checked.
-pub fn ffmpeg_args(req: &StartRequest, width: u32, height: u32) -> Vec<String> {
+/// The FFmpeg arguments to write one file of a request (the screen, or the camera). The encoder is one of the
+/// closed list; nothing the caller sent reaches an argument but the numbers and the output path, which the
+/// protocol already checked.
+pub fn ffmpeg_args_to(
+	req: &StartRequest,
+	output: &std::path::Path,
+	width: u32,
+	height: u32,
+) -> Vec<String> {
 	let fps = req.fps.to_string();
 	let rate = format!("{}", bitrate(width, height, req.fps));
 	let mut a: Vec<String> = [
@@ -77,7 +83,7 @@ pub fn ffmpeg_args(req: &StartRequest, width: u32, height: u32) -> Vec<String> {
 		]
 		.map(String::from),
 	);
-	a.push(req.output.to_string_lossy().into_owned());
+	a.push(output.to_string_lossy().into_owned());
 	a
 }
 
@@ -101,8 +107,17 @@ pub struct FfmpegSink {
 
 impl FfmpegSink {
 	pub fn spawn(req: &StartRequest, width: u32, height: u32) -> Result<Self, String> {
+		Self::spawn_to(req, &req.output, width, height)
+	}
+
+	pub fn spawn_to(
+		req: &StartRequest,
+		output: &std::path::Path,
+		width: u32,
+		height: u32,
+	) -> Result<Self, String> {
 		let mut cmd = Command::new(&req.ffmpeg);
-		cmd.args(ffmpeg_args(req, width, height))
+		cmd.args(ffmpeg_args_to(req, output, width, height))
 			.env_clear()
 			.stdin(Stdio::piped())
 			.stdout(Stdio::null())
@@ -227,6 +242,10 @@ impl Sink for FileSink {
 mod tests {
 	use super::*;
 	use std::path::PathBuf;
+
+	fn ffmpeg_args(req: &StartRequest, width: u32, height: u32) -> Vec<String> {
+		ffmpeg_args_to(req, &req.output, width, height)
+	}
 
 	fn req(encoder: &str) -> StartRequest {
 		StartRequest {
