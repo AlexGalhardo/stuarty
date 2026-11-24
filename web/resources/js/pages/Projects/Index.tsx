@@ -10,6 +10,7 @@ import { HttpTransport } from "../../editor/api/http";
 import type { ProjectContextInput } from "../../editor/api/types";
 import { BundleImport } from "./Bundles";
 import ProjectCard from "./ProjectCard";
+import ProjectCardText from "./ProjectCardText";
 import ProjectContextForm from "./ProjectContextForm";
 import { emptyContext } from "./projectSchema";
 import Templates from "./Templates";
@@ -115,15 +116,19 @@ export default function ProjectsIndex() {
 						</p>
 					) : (
 						<ul className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-							{projects.map((project) => (
-								<ProjectCard
-									key={project.id}
-									project={project}
-									locale={locale}
-									onTrash={() => void moveToTrash(project.id)}
-									onChanged={() => router.reload({ only: ["projects"] })}
-								/>
-							))}
+							{projects.map((project) => {
+								const Card =
+									project.kind === "text" ? ProjectCardText : ProjectCard;
+								return (
+									<Card
+										key={project.id}
+										project={project}
+										locale={locale}
+										onTrash={() => void moveToTrash(project.id)}
+										onChanged={() => router.reload({ only: ["projects"] })}
+									/>
+								);
+							})}
 						</ul>
 					)}
 				</section>
