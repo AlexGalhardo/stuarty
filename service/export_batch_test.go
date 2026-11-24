@@ -226,8 +226,6 @@ func (b *batchStore) Connections() connections.Store { return nil }
 func (b *batchStore) Webhooks() webhooks.Store       { return nil }
 func (b *batchStore) Recordings() recordings.Store   { return nil }
 
-// Nor does any test here use the library; its manager only needs an index to hold.
-
 // The project of these tests has one timeline, whose id is its own (SDD-003 section 1.7).
 func (b *batchStore) Productions() ProductionRepo { return batchProductions{} }
 
