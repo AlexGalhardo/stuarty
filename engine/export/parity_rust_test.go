@@ -363,6 +363,12 @@ func TestRustCPUPathEqualsGoCompositor(t *testing.T) {
 		}
 		all = append(all, recordFrames(t, dir, "scene-"+name, frames)...)
 	}
+	// The regions of clip.blur_region, in the middle and at the edge of the picture: the blur of a masked layer
+	// repeats the edge pixels (VV-392), which no case above draws where it shows.
+	for _, name := range []string{"blur-region", "blur-region-edge"} {
+		dir := epic71Dir(name)
+		all = append(all, recordFrames(t, dir, "epic71-"+name, readFrames(t, dir))...)
+	}
 
 	report := func(t *testing.T, label string, got [][]byte) {
 		t.Helper()
