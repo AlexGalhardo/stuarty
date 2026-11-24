@@ -43,7 +43,7 @@ import {
 } from "./sidebarState";
 
 const ITEM =
-	"flex h-9 items-center gap-2 rounded-md px-3 text-sm text-muted-foreground outline-offset-[-2px] hover:bg-muted hover:text-foreground aria-[current=page]:bg-brand-subtle aria-[current=page]:font-medium aria-[current=page]:text-brand-text";
+	"flex h-8 items-center gap-2 rounded-md px-3 text-sm text-muted-foreground outline-offset-[-2px] hover:bg-muted hover:text-foreground aria-[current=page]:bg-brand-subtle aria-[current=page]:font-medium aria-[current=page]:text-brand-text";
 
 // The form of the sidebar for this window: the stored choice, or the width. The first render is the full
 // one on the server and in the browser alike; the choice and the width come once the page is mounted.
@@ -109,8 +109,8 @@ function Item({
 			href={href}
 			aria-current={current ? "page" : undefined}
 			data-testid={testId}
-			// min-w-9: an icon alone stays a 36 px target (WCAG 2.5.8).
-			className={cn(ITEM, collapsed && "relative min-w-9 justify-center px-0")}
+			// min-w-8: an icon alone stays a 32 px target (WCAG 2.5.8, the dashboard minimum).
+			className={cn(ITEM, collapsed && "relative min-w-8 justify-center px-0")}
 		>
 			{icon}
 			<span className={cn(collapsed && "sr-only")}>{label}</span>
@@ -181,7 +181,7 @@ function Profile({
 		<section aria-label={t("ui.nav.profile")} className="flex flex-col gap-1">
 			<p
 				className={cn(
-					"flex h-9 items-center gap-2 px-3 text-sm",
+					"flex h-8 items-center gap-2 px-3 text-sm",
 					collapsed && "justify-center px-0",
 				)}
 				data-testid="profile-name"
@@ -334,7 +334,7 @@ function SidebarBody({
 								<p
 									id={`nav-group-${group.id}`}
 									className={cn(
-										"mt-2 px-3 py-1 text-xs font-medium text-muted-foreground",
+										"mt-1 px-3 py-0.5 text-xs font-medium text-muted-foreground",
 										collapsed && "sr-only",
 									)}
 								>
