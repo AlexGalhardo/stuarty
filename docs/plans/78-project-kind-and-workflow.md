@@ -63,7 +63,7 @@ Names are proposals until task 1 writes them to SDD-000.
 - [x] 1. Amend SDD-000, SDD-002, SDD-003 and SDD-005. Verify: `task lint:md` exits 0 and `task codegen` leaves no unexpected diff.
 - [x] 2. Kind and the workflow function with its tables. Verify: `go test ./core/project/...` passes.
 - [x] 3. Reading time and excerpt. Verify: `go test ./core/writing/...` passes.
-- [ ] 4. The migration, as the newest id, with the upgrade of an existing workspace. Verify: `go test ./web/database/migrations/...` passes.
+- [x] 4. The migration, as the newest id, with the upgrade of an existing workspace. Verify: `go test ./web/database/migrations/...` passes.
 - [ ] 5. The service operations with member isolation. Verify: `go test ./service/... -run "ProjectKind|Workflow"` and `go test -run TestSecurity_ ./...` pass.
 - [ ] 6. HTTP and CLI. Verify: `go test ./web/contract/...` passes.
 - [ ] 7. MCP within the budget. Verify: `go run ./internal/tools/surfacebudget` passes and `go test ./web/app/mcp/...` passes.
