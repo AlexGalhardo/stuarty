@@ -5479,6 +5479,7 @@
               "asset.remove",
               "audio.add",
               "audio.apply_preset",
+              "audio.apply_voice_preset",
               "audio.duck",
               "audio.mark_beats",
               "audio.processor_add",
@@ -5486,9 +5487,11 @@
               "audio.processor_remove",
               "audio.processor_set",
               "caption.add",
+              "caption.apply_style",
               "caption.edit_word",
               "caption.from_transcript",
               "caption.import_subtitles",
+              "caption.list_styles",
               "caption.merge",
               "caption.retime_from_clip",
               "caption.set_breaks",
@@ -5497,6 +5500,7 @@
               "caption.split",
               "clip.add",
               "clip.add_composition",
+              "clip.blur_region",
               "clip.remove_silences",
               "clip.replace_media",
               "clip.set_blend",
@@ -5585,6 +5589,9 @@
           "audio.apply_preset": {
             "$ref": "#/components/schemas/args.audio.apply_preset"
           },
+          "audio.apply_voice_preset": {
+            "$ref": "#/components/schemas/args.audio.apply_voice_preset"
+          },
           "audio.duck": {
             "$ref": "#/components/schemas/args.audio.duck"
           },
@@ -5606,6 +5613,9 @@
           "caption.add": {
             "$ref": "#/components/schemas/args.caption.add"
           },
+          "caption.apply_style": {
+            "$ref": "#/components/schemas/args.caption.apply_style"
+          },
           "caption.edit_word": {
             "$ref": "#/components/schemas/args.caption.edit_word"
           },
@@ -5614,6 +5624,9 @@
           },
           "caption.import_subtitles": {
             "$ref": "#/components/schemas/args.caption.import_subtitles"
+          },
+          "caption.list_styles": {
+            "$ref": "#/components/schemas/args.caption.list_styles"
           },
           "caption.merge": {
             "$ref": "#/components/schemas/args.caption.merge"
@@ -5638,6 +5651,9 @@
           },
           "clip.add_composition": {
             "$ref": "#/components/schemas/args.clip.add_composition"
+          },
+          "clip.blur_region": {
+            "$ref": "#/components/schemas/args.clip.blur_region"
           },
           "clip.remove_silences": {
             "$ref": "#/components/schemas/args.clip.remove_silences"
@@ -10186,6 +10202,32 @@
         ],
         "type": "object"
       },
+      "args.audio.apply_voice_preset": {
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "description": "A clip or audio item; give this or track_id.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "preset": {
+            "description": "studio (default), broadcast or room_rescue.",
+            "enum": [
+              "studio",
+              "broadcast",
+              "room_rescue"
+            ],
+            "type": "string"
+          },
+          "track_id": {
+            "description": "A track; give this or item_id.",
+            "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
       "args.audio.duck": {
         "additionalProperties": false,
         "properties": {
@@ -11093,6 +11135,340 @@
         ],
         "type": "object"
       },
+      "args.caption.apply_style": {
+        "additionalProperties": false,
+        "properties": {
+          "reset_overrides": {
+            "description": "true clears the style override of the captions of the track.",
+            "type": "boolean"
+          },
+          "style": {
+            "description": "The style id; caption.list_styles describes them.",
+            "enum": [
+              "clean_white",
+              "bold_pop",
+              "marker_yellow",
+              "soft_box",
+              "neon_night",
+              "editorial",
+              "mono_code",
+              "karaoke_pill",
+              "thick_outline",
+              "warm_glow",
+              "lower_bar",
+              "big_center",
+              "top_headline",
+              "ink_paper"
+            ],
+            "type": "string",
+            "x-vv-caption-styles": [
+              {
+                "caption_style": {
+                  "align": "center",
+                  "color": "#FFFFFF",
+                  "font_family": "Inter",
+                  "font_weight": 700,
+                  "highlight": "word",
+                  "highlight_color": "#FFD23F",
+                  "position": "bottom",
+                  "shadow_blur": 8,
+                  "shadow_color": "#000000B3",
+                  "shadow_dx": 0,
+                  "shadow_dy": 3,
+                  "size": 72,
+                  "stroke_color": "#000000",
+                  "stroke_width": 3
+                },
+                "font_family": "Inter",
+                "id": "clean_white",
+                "name": "Clean white",
+                "summary": "White bold text with a thin edge and a soft shadow."
+              },
+              {
+                "caption_style": {
+                  "align": "center",
+                  "color": "#FFFFFF",
+                  "font_family": "Anton",
+                  "font_weight": 400,
+                  "highlight": "word",
+                  "highlight_color": "#3DFF7A",
+                  "position": "bottom",
+                  "shadow_blur": 0,
+                  "shadow_color": "#00000099",
+                  "shadow_dx": 0,
+                  "shadow_dy": 4,
+                  "size": 92,
+                  "stroke_color": "#000000",
+                  "stroke_width": 8,
+                  "uppercase": true
+                },
+                "font_family": "Anton",
+                "id": "bold_pop",
+                "name": "Bold pop",
+                "summary": "Tall condensed capitals with a heavy edge and a green spoken word."
+              },
+              {
+                "caption_style": {
+                  "align": "center",
+                  "color": "#FFE600",
+                  "font_family": "Montserrat",
+                  "font_weight": 800,
+                  "highlight": "word",
+                  "highlight_color": "#FFFFFF",
+                  "line_height": 1.1,
+                  "position": "bottom",
+                  "size": 76,
+                  "stroke_color": "#000000",
+                  "stroke_width": 6
+                },
+                "font_family": "Montserrat",
+                "id": "marker_yellow",
+                "name": "Marker yellow",
+                "summary": "Yellow text with a black edge, the spoken word turns white."
+              },
+              {
+                "caption_style": {
+                  "align": "center",
+                  "background_color": "#111827CC",
+                  "background_padding": 22,
+                  "background_radius": 18,
+                  "color": "#FFFFFF",
+                  "font_family": "Inter",
+                  "font_weight": 600,
+                  "highlight": "word",
+                  "highlight_background": "#2563EB",
+                  "highlight_color": "#FFFFFF",
+                  "position": "bottom",
+                  "size": 64
+                },
+                "font_family": "Inter",
+                "id": "soft_box",
+                "name": "Soft box",
+                "summary": "White text on a rounded dark box, the spoken word on blue."
+              },
+              {
+                "caption_style": {
+                  "align": "center",
+                  "color": "#E8FFFF",
+                  "font_family": "Bebas Neue",
+                  "font_weight": 400,
+                  "highlight": "word",
+                  "highlight_color": "#FF4FD8",
+                  "position": "middle",
+                  "shadow_blur": 24,
+                  "shadow_color": "#00E5FF",
+                  "shadow_dx": 0,
+                  "shadow_dy": 0,
+                  "size": 96,
+                  "stroke_color": "#00131A",
+                  "stroke_width": 3,
+                  "uppercase": true
+                },
+                "font_family": "Bebas Neue",
+                "id": "neon_night",
+                "name": "Neon night",
+                "summary": "Light capitals with a cyan glow, in the middle of the frame."
+              },
+              {
+                "caption_style": {
+                  "align": "center",
+                  "color": "#FFF8E7",
+                  "font_family": "Playfair Display",
+                  "font_weight": 700,
+                  "highlight": "word",
+                  "highlight_color": "#F4B860",
+                  "line_height": 1.2,
+                  "position": "bottom",
+                  "shadow_blur": 10,
+                  "shadow_color": "#000000AA",
+                  "shadow_dx": 0,
+                  "shadow_dy": 2,
+                  "size": 70,
+                  "stroke_color": "#1A1206",
+                  "stroke_width": 2
+                },
+                "font_family": "Playfair Display",
+                "id": "editorial",
+                "name": "Editorial",
+                "summary": "A serif face in warm white, like a magazine pull quote."
+              },
+              {
+                "caption_style": {
+                  "align": "center",
+                  "background_color": "#0B0F14E6",
+                  "background_padding": 20,
+                  "background_radius": 8,
+                  "color": "#7CFFB2",
+                  "font_family": "JetBrains Mono",
+                  "font_weight": 700,
+                  "highlight": "word",
+                  "highlight_background": "#1F6F4A",
+                  "highlight_color": "#FFFFFF",
+                  "position": "bottom",
+                  "size": 56
+                },
+                "font_family": "JetBrains Mono",
+                "id": "mono_code",
+                "name": "Mono code",
+                "summary": "Green monospaced text on a near-black box."
+              },
+              {
+                "caption_style": {
+                  "align": "center",
+                  "color": "#FFFFFF",
+                  "font_family": "Montserrat",
+                  "font_weight": 700,
+                  "highlight": "word",
+                  "highlight_background": "#FFFFFF",
+                  "highlight_color": "#101010",
+                  "position": "bottom",
+                  "size": 66,
+                  "stroke_color": "#000000",
+                  "stroke_width": 4
+                },
+                "font_family": "Montserrat",
+                "id": "karaoke_pill",
+                "name": "Karaoke pill",
+                "summary": "White text; the spoken word sits on a white pill."
+              },
+              {
+                "caption_style": {
+                  "align": "center",
+                  "color": "#FFFFFF",
+                  "font_family": "Montserrat",
+                  "font_weight": 900,
+                  "highlight": "word",
+                  "highlight_color": "#FF5A36",
+                  "line_height": 1.05,
+                  "position": "bottom",
+                  "size": 80,
+                  "stroke_color": "#000000",
+                  "stroke_width": 14,
+                  "uppercase": true
+                },
+                "font_family": "Montserrat",
+                "id": "thick_outline",
+                "name": "Thick outline",
+                "summary": "Very heavy capitals with a thick black outline."
+              },
+              {
+                "caption_style": {
+                  "align": "center",
+                  "color": "#FFB347",
+                  "font_family": "Montserrat",
+                  "font_weight": 800,
+                  "highlight": "word",
+                  "highlight_color": "#FFFFFF",
+                  "position": "bottom",
+                  "shadow_blur": 22,
+                  "shadow_color": "#FF6A00B3",
+                  "shadow_dx": 0,
+                  "shadow_dy": 0,
+                  "size": 74,
+                  "stroke_color": "#3A1500",
+                  "stroke_width": 3
+                },
+                "font_family": "Montserrat",
+                "id": "warm_glow",
+                "name": "Warm glow",
+                "summary": "Amber text with an orange glow."
+              },
+              {
+                "caption_style": {
+                  "align": "left",
+                  "background_color": "#000000A6",
+                  "background_padding": 18,
+                  "background_radius": 0,
+                  "color": "#FFFFFF",
+                  "font_family": "Inter",
+                  "font_weight": 500,
+                  "highlight": "word",
+                  "highlight_color": "#7DD3FC",
+                  "max_width": 929,
+                  "position": "bottom",
+                  "size": 52
+                },
+                "font_family": "Inter",
+                "id": "lower_bar",
+                "name": "Lower bar",
+                "summary": "Left-aligned text on a dark bar, calm and easy to read."
+              },
+              {
+                "caption_style": {
+                  "align": "center",
+                  "color": "#FFFFFF",
+                  "font_family": "Anton",
+                  "font_weight": 400,
+                  "highlight": "word",
+                  "highlight_color": "#FFE600",
+                  "line_height": 0.95,
+                  "position": "middle",
+                  "size": 140,
+                  "stroke_color": "#000000",
+                  "stroke_width": 10,
+                  "uppercase": true
+                },
+                "font_family": "Anton",
+                "id": "big_center",
+                "name": "Big centre",
+                "summary": "One huge capital line in the middle, for short punchy words."
+              },
+              {
+                "caption_style": {
+                  "align": "center",
+                  "color": "#FFFFFF",
+                  "font_family": "Bebas Neue",
+                  "font_weight": 400,
+                  "highlight": "word",
+                  "highlight_color": "#FF3B30",
+                  "position": "top",
+                  "shadow_blur": 6,
+                  "shadow_color": "#000000CC",
+                  "shadow_dx": 0,
+                  "shadow_dy": 4,
+                  "size": 88,
+                  "stroke_color": "#000000",
+                  "stroke_width": 3,
+                  "uppercase": true
+                },
+                "font_family": "Bebas Neue",
+                "id": "top_headline",
+                "name": "Top headline",
+                "summary": "Capitals at the top of the frame, like a headline."
+              },
+              {
+                "caption_style": {
+                  "align": "center",
+                  "background_color": "#F6EFE0F2",
+                  "background_padding": 24,
+                  "background_radius": 12,
+                  "color": "#1B1B1B",
+                  "font_family": "Playfair Display",
+                  "font_weight": 700,
+                  "highlight": "word",
+                  "highlight_color": "#B3261E",
+                  "position": "bottom",
+                  "size": 64
+                },
+                "font_family": "Playfair Display",
+                "id": "ink_paper",
+                "name": "Ink on paper",
+                "summary": "Dark serif text on a cream box."
+              }
+            ]
+          },
+          "track_id": {
+            "description": "A visual track.",
+            "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "track_id",
+          "style"
+        ],
+        "type": "object"
+      },
       "args.caption.edit_word": {
         "additionalProperties": false,
         "properties": {
@@ -11207,6 +11583,12 @@
           "track_id",
           "text"
         ],
+        "type": "object"
+      },
+      "args.caption.list_styles": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
         "type": "object"
       },
       "args.caption.merge": {
@@ -11630,6 +12012,84 @@
         "required": [
           "track_id",
           "timeline_id"
+        ],
+        "type": "object"
+      },
+      "args.clip.blur_region": {
+        "additionalProperties": false,
+        "properties": {
+          "duration": {
+            "description": "A length. Default up to the end of the clip.",
+            "type": "string",
+            "x-vv-kind": "time"
+          },
+          "feather": {
+            "description": "Soft edge of the region in pixels, 0 to 200. Default 0.",
+            "maximum": 200,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "height": {
+            "description": "Height of the region, a fraction of the picture.",
+            "maximum": 1,
+            "minimum": 0.001,
+            "type": "number"
+          },
+          "item_id": {
+            "description": "A clip.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "new_id": {
+            "description": "The id of the blur item.",
+            "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "new_track_id": {
+            "description": "The id of the track when one is made.",
+            "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "radius": {
+            "description": "Blur radius in pixels at project resolution, 1.5% of the shorter side to 100. Default 4%.",
+            "maximum": 100,
+            "type": "number"
+          },
+          "start": {
+            "description": "Absolute start of the blur, inside the clip. Default the start of the clip.",
+            "type": "string",
+            "x-vv-kind": "time"
+          },
+          "track_id": {
+            "description": "A visual track above the clip. Default a Blur track above it, made if there is none.",
+            "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+            "type": "string"
+          },
+          "width": {
+            "description": "Width of the region, a fraction of the picture.",
+            "maximum": 1,
+            "minimum": 0.001,
+            "type": "number"
+          },
+          "x": {
+            "description": "Left edge of the region, a fraction of the picture.",
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "y": {
+            "description": "Top edge of the region, a fraction of the picture.",
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "item_id",
+          "x",
+          "y",
+          "width",
+          "height"
         ],
         "type": "object"
       },
