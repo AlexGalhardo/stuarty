@@ -7,13 +7,16 @@ description: "The first time you open Stuarty you create a local account with a 
 
 - what the account is, and what it is not;
 - what is encrypted, what is not, and what happens when Stuarty is locked;
-- how to save the recovery key, and what to do if you forget your password.
+- how to save the recovery key, make a new one, and what to do if you forget your password;
+- how to back up a workspace that has an account.
 
 ## The account is on your machine
 
 The first time you open Stuarty it asks you to create an account: a username (4 to 16 lowercase letters), an e-mail address and a password (8 to 32 characters, with an uppercase letter, a lowercase letter, a digit and a special character). The e-mail address is only checked for its shape, on your machine. Nothing is sent to it, and there is no Stuarty service that knows about the account.
 
-The password is never stored. Stuarty keeps a value that can check it, and a key, wrapped by the password, that encrypts your content.
+You create the account in the window that `stuarty open` or the desktop application opens for you. A request to the API that carries the local token of the workspace, an API key or the access of an agent is refused. Create the account as soon as you install Stuarty, before you give an agent access to the workspace.
+
+The password is never stored. Stuarty keeps a value that can check it, and a key, wrapped by the password, that encrypts your content. A letter with an accent counts as the same letter whichever way your system types it (as one character or as a letter and its accent), so the same password opens the account from any machine.
 
 ## The recovery key
 
@@ -22,6 +25,10 @@ When the account is created Stuarty shows a **recovery key** once. It opens your
 If you forget your password and you do not have the recovery key, your data cannot be recovered. Nobody can do it for you, not even us.
 
 To use the key, choose **I forgot my password** on the sign-in page, type the key and a new password. Your data stays as it is.
+
+### Make a new recovery key
+
+If you lost the key, or the page closed before you saved it, sign in with your password and open **Settings**. In the Account section, **Make a new recovery key** asks for your password and shows a new key once, the same way. From then on only the new key works: the old one no longer opens your data. Your password and your data do not change.
 
 ## What is encrypted
 
@@ -34,16 +41,20 @@ To use the key, choose **I forgot my password** on the sign-in page, type the ke
 
 The names of projects, the file names, the dates and the sizes are not encrypted, and neither are your media files. **The files of your memory notes, prompts and skills are not encrypted yet**: they stay as plain files in the `library` folder of the workspace, so anyone who can open that folder can read them, even while Stuarty is locked; encrypting them is planned for a later version. **The words inside a timeline or an image are not encrypted yet either**: the captions on a video, its text layers and the text of an image document stay readable in the database file. The Account section of Settings repeats this list.
 
-A backup keeps what is encrypted encrypted, so restoring one needs your password or your recovery key to read it. A restore never replaces a workspace that has an account: restore into an empty one.
+## Backups
+
+`stuarty workspace:backup <folder>` works with an account too, and needs no password, even while Stuarty is locked. It copies what is encrypted as it is: the texts stay encrypted and the vault stays sealed, so the backup holds none of your words in clear (the files of the `library` folder and your media files excepted, as above). To read a restored backup you need your password or your recovery key, so keep the recovery key with the backup. A restore never replaces a workspace that has an account: restore into an empty one.
 
 ## Locked and unlocked
 
 You are signed in when you have typed the password. While you are, the key is in the memory of Stuarty and nowhere else. **Logout** wipes it, and so does closing Stuarty and the idle lock you can set in **Settings**.
 
-While Stuarty is locked nothing and nobody reads your data: a page, a command, an agent or a script that asks for it gets the error `E_LOCKED` and the words "unlock Stuarty with your password". An agent that runs while you are away stops until you unlock. Scheduled publications wait for you, too.
+While Stuarty is locked nothing and nobody reads your data: a page, a command, an agent or a script that asks for it gets the error `E_LOCKED` and the words "unlock Stuarty with your password". An agent that runs while you are away stops until you unlock. A chat with an agent that Stuarty runs for you ends when Stuarty locks: its conversation is saved first, and you start a new chat after you sign in. Scheduled publications wait for you, too.
 
 Only a session opened with your password can approve a publication or set a price. A link from `stuarty open`, an API key and an agent cannot.
 
 ## An existing workspace
 
-If you used Stuarty before accounts existed, creating the account encrypts what is already there. Stuarty first makes a copy, encrypts, reads everything back to check it, and only then deletes the copy. If anything fails, it puts the copy back and tells you. Once the encryption is verified it also deletes the older database backups it kept in `backups/`, because they hold your words in clear.
+If you used Stuarty before accounts existed, creating the account encrypts what is already there. Stuarty first makes a copy, encrypts, reads everything back to check it, and only then deletes the copy. If anything fails, it puts the copy back and tells you. Once the encryption is verified it also deletes the older database backups it kept in `backups/`, including the one made when it took over the folder of the former name, because they hold your words in clear.
+
+If Stuarty took over the workspace of its former name (Vukem Video, the folder `.vukem-video`) by copying it, because the two folders were on different drives, the former folder is still there with all your words in clear. Stuarty never deletes it. The recovery key page names that folder when it exists: delete it yourself once you have checked that everything is in Stuarty.
