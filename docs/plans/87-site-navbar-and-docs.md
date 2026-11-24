@@ -52,7 +52,7 @@ None.
 - [x] 1. Tokens of the redesign in `site/app/globals.css`. Verify: `cd site && bun run build` passes.
 - [x] 2. The navbar with the badge and the version. Verify: `cd site && bun run lint` exits 0, and the built page shows the release version.
 - [x] 3. The mobile menu. Verify: a browser check at 390 px in the hand-off.
-- [ ] 4. Docs sidebar, table of contents and article. Verify: `cd site && bun run check:mdx && bun run build` pass.
+- [x] 4. Docs sidebar, table of contents and article. Verify: `cd site && bun run check:mdx && bun run build` pass.
 - [ ] 5. Both themes and focus. Verify: `task site:build` passes, and screenshots at 1440 and 390 px are in the hand-off.
 
 ## Test strategy
