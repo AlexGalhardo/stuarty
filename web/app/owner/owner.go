@@ -98,6 +98,8 @@ type Owner struct {
 	Store   *store.Store
 	Service service.Service
 	Runner  service.JobRunner
+	// capture is the screen capture of this process, or the reason there is none (SDD-023).
+	capture captureSetup
 	// Account is the local account of the workspace (ADR-0052); nil in network mode, which has its own users.
 	Account *account.Manager
 	gate    service.Gate
@@ -376,32 +378,40 @@ func (o *Owner) build(ctx context.Context, cfg Config) error {
 		heavy = service.HeavyPerMinute
 	}
 
+	recMax, err := o.captureLimits(cfg)
+	if err != nil {
+		return err
+	}
+
 	o.Service, err = service.New(service.Options{
-		Gate:           o.gate,
-		Keys:           o.keyStore(),
-		Connections:    out.conns,
-		Providers:      out.provs,
-		Social:         out.socials,
-		HeavyPerMinute: heavy,
-		SignIns:        out.signInSet,
-		Agents:         o.Agents,
-		WebP:           o.webp,
-		Heavy:          middleware.ServiceLimiter{L: ratelimit.NewMemory(heavy, time.Minute)},
-		Store:          st,
-		Registry:       command.Default(),
-		Now:            cfg.Now,
-		Workspace:      string(o.Dir),
-		Media:          media,
-		Exporter:       exp,
-		Enqueue:        jobs.Dispatcher{Queue: o.Queue},
-		Limits:         limits,
-		Publish:        publish,
-		Version:        o.version,
-		BuiltInSkills:  skills.FS(),
-		Transcriber:    transcriber,
-		Tools:          tools,
-		Log:            cfg.Log,
-		Lint:           lint.Env{Measurer: lintMeasurer{workspace: string(o.Dir)}},
+		Gate:                o.gate,
+		Keys:                o.keyStore(),
+		Connections:         out.conns,
+		Providers:           out.provs,
+		Social:              out.socials,
+		HeavyPerMinute:      heavy,
+		SignIns:             out.signInSet,
+		Agents:              o.Agents,
+		Capture:             o.capture.capturer,
+		CaptureReason:       o.capture.reason,
+		RecordingMaxSeconds: recMax,
+		WebP:                o.webp,
+		Heavy:               middleware.ServiceLimiter{L: ratelimit.NewMemory(heavy, time.Minute)},
+		Store:               st,
+		Registry:            command.Default(),
+		Now:                 cfg.Now,
+		Workspace:           string(o.Dir),
+		Media:               media,
+		Exporter:            exp,
+		Enqueue:             jobs.Dispatcher{Queue: o.Queue},
+		Limits:              limits,
+		Publish:             publish,
+		Version:             o.version,
+		BuiltInSkills:       skills.FS(),
+		Transcriber:         transcriber,
+		Tools:               tools,
+		Log:                 cfg.Log,
+		Lint:                lint.Env{Measurer: lintMeasurer{workspace: string(o.Dir)}},
 		Doctor: service.DoctorOptions{
 			Mode: o.mode, StartedAt: o.now().UTC(), Child: o.child, FFmpegPins: ffmpegpins.Current(),
 			GPURenderer: o.gpuRenderer,
@@ -557,6 +567,16 @@ func (o *Owner) media(ctx context.Context, cfg Config) (service.Media, service.E
 	}
 
 	o.child = child.Policy
+
+	capRunner := child.ExportHardware
+	if capRunner == nil {
+		capRunner = child.Export
+	}
+
+	o.capture = o.buildCapture(
+		cfg, in, capRunner,
+		ffmpeg.DetectOptions{Forced: cfg.Getenv("STUARTY_ENCODER"), AllowUserX264: false}, fc.ExecDir,
+	)
 	o.webp = export.FFmpegWebP{Runner: child.Export, MaxBytes: o.limits.MaxExportBytes}
 	runner := child.Ingest
 	media.Runner = runner
@@ -680,6 +700,9 @@ func (o *Owner) Close() error {
 	if o.Events != nil {
 		o.Events.Close() // ends the open streams at once
 	}
+
+	// A recording in progress is ended gracefully, so its file is complete (SDD-023 section 10).
+	service.ShutdownRecordings(o.Service)
 
 	// No agent process is left behind: every tree is killed before the store closes (SDD-017 section 4).
 	if o.Agents != nil {

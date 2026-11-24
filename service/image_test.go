@@ -22,6 +22,7 @@ import (
 	assetlib "github.com/AlexGalhardo/stuarty/service/assets"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/library"
+	"github.com/AlexGalhardo/stuarty/service/recordings"
 	"github.com/AlexGalhardo/stuarty/service/textview"
 	"github.com/AlexGalhardo/stuarty/service/webhooks"
 )
@@ -285,6 +286,7 @@ func (m *memStore) Jobs() JobRepo {
 // No test here reads a connection; the manager the service builds only needs a store to hold.
 func (m *memStore) Connections() connections.Store { return nil }
 func (m *memStore) Webhooks() webhooks.Store       { return nil }
+func (m *memStore) Recordings() recordings.Store   { return nil }
 
 // Nor does any test here use the library; its manager only needs an index to hold.
 func (m *memStore) Library() library.Index { return nil }

@@ -76,7 +76,7 @@ func (e *Error) HTTPStatus() int {
 	case CodeForbidden, "E_PATH_NOT_ALLOWED", CodeConnectionDestination, CodePrivilegedSession:
 		return http.StatusForbidden
 	case command.CodeNotFound, "E_FILE_NOT_FOUND", CodeConnectionNotFound, CodeApprovalNotFound, CodeAgentNotFound,
-		CodeChatNotFound, CodeWebhookNotFound:
+		CodeChatNotFound, CodeWebhookNotFound, CodeRecordingNotFound:
 		return http.StatusNotFound
 	case command.CodeRevisionConflict, command.CodeIdempotencyMismatch, command.CodeOverlap, command.CodeInvalidState,
 		command.CodeInUse, command.CodeNotEmpty, command.CodeIDExists, "E_ASSET_NOT_READY", CodeNothingToUndo, CodeNothingToRedo,
@@ -97,7 +97,7 @@ func (e *Error) HTTPStatus() int {
 		CodeCostCeiling,
 		CodePriceUnknown:
 		return http.StatusUnprocessableEntity
-	case CodeProvider:
+	case CodeProvider, CodeCaptureFailed:
 		return http.StatusBadGateway
 	case CodeQueueFull, CodeRateLimited:
 		return http.StatusTooManyRequests
@@ -108,7 +108,7 @@ func (e *Error) HTTPStatus() int {
 	case CodePublish:
 		return http.StatusBadGateway
 	case CodeWorkspaceLocked, "E_TRANSCRIBE_UNAVAILABLE", "E_FFMPEG_MISSING", "E_NO_ENCODER", CodeVaultLocked,
-		CodeAgentUnavailable:
+		CodeAgentUnavailable, CodeCaptureUnavailable:
 		return http.StatusServiceUnavailable
 	}
 

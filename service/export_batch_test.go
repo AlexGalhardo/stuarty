@@ -17,6 +17,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/service/connections"
 	"github.com/AlexGalhardo/stuarty/service/library"
+	"github.com/AlexGalhardo/stuarty/service/recordings"
 	"github.com/AlexGalhardo/stuarty/service/webhooks"
 )
 
@@ -224,6 +225,7 @@ type batchStore struct {
 // No test here reads a connection; the manager the service builds only needs a store to hold.
 func (b *batchStore) Connections() connections.Store { return nil }
 func (b *batchStore) Webhooks() webhooks.Store       { return nil }
+func (b *batchStore) Recordings() recordings.Store   { return nil }
 
 // Nor does any test here use the library; its manager only needs an index to hold.
 func (b *batchStore) Library() library.Index { return nil }

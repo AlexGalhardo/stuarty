@@ -39,6 +39,7 @@ var sealedCells = []cell{
 	{table: "projects", column: "goal_relevant", keys: []string{"id"}},
 	{table: "projects", column: "goal_time_bound", keys: []string{"id"}},
 	{table: "webhooks", column: "url", keys: []string{"id"}},
+	{table: "recordings", column: "source_label", keys: []string{"id"}},
 	{table: "published_posts", column: "markdown", keys: []string{"slug"}},
 	{table: "published_posts", column: "html", keys: []string{"slug"}},
 	{table: "approval_requests", column: "summary", keys: []string{"id"}},

@@ -36,7 +36,7 @@ Rules that carry the design:
 5. **A recording survives a crash.** Fragmented MP4, and a recovery at the next start.
 6. **Nothing leaves the machine.** The helper opens no connection and records no keystroke.
 
-Where capture does not exist (web, Docker, network mode, macOS, Linux until epics 63, 67 and 68) every operation but the reads answers `E_CAPTURE_UNAVAILABLE` with `details.reason` (`platform`, `web`, `network_mode`, `helper_missing`, `protocol_version`).
+Where capture does not exist (web, Docker, network mode, macOS, Linux until epics 63, 67 and 68) every operation but the reads answers `E_CAPTURE_UNAVAILABLE` with `details.reason` (`platform`, `web`, `network_mode`, `ffmpeg_missing`, `helper_missing`, `protocol_version`).
 
 ## 2. Names
 
@@ -45,7 +45,7 @@ Where capture does not exist (web, Docker, network mode, macOS, Linux until epic
 | Identifier | `rec_<10 Crockford base32>` (SDD-000 section 2) |
 | Table | `recordings` (section 9.4) |
 | Operations | `RecordingSources`, `RecordingStart`, `RecordingStop`, `RecordingCancel`, `RecordingGet`, `RecordingList`, `RecordingConfirm`, `RecordingDismiss`, `RecordingPlace` (SDD-000 section 1) |
-| Event | `recording.updated` on the project stream: `recording_id`, `state`, `review` |
+| Events | none in epic 61: the dialog reads `RecordingGet` once a second while a recording runs (a stream event is a later addition) |
 | Error codes | `E_CAPTURE_UNAVAILABLE`, `E_CAPTURE_FAILED`, `E_RECORDING_NOT_FOUND` (SDD-000 section 8) |
 | Job kind shown to MCP | `capture`: a recording read through `job_get` and stopped through `job_cancel` (section 11) |
 | Variables | `STUARTY_CAPTURE_HELPER`, `STUARTY_MAX_RECORDING_SECONDS` (SDD-000 section 10) |
@@ -76,7 +76,7 @@ A recording that is `ready` has a `review`: `pending` (a person has not decided)
 | Review | Who can read the recording | Where the file is |
 | --- | --- | --- |
 | `pending` | anyone with `read`: id, state, duration, size, never the bytes | `recordings/<id>/capture.mp4` |
-| `dismissed` | a person only; every other caller gets `E_RECORDING_NOT_FOUND`, and it is absent from lists, jobs and events | the same |
+| `dismissed` | a person only; every other caller gets `E_RECORDING_NOT_FOUND`, and it is absent from lists and jobs | the same |
 | `added` | anyone with `read`, with the asset id | in the content store (the recording's own copy is removed once the import has copied it) |
 
 `RecordingConfirm` (a person) imports the file with `MediaImport` and sets `added`. The dialog step says: "Agents with access to this project will be able to read this recording." `RecordingDismiss` (a person) sets `dismissed`; a person may confirm or delete it later.
@@ -137,7 +137,7 @@ FFmpeg (started by the helper with a minimal environment) reads raw BGRA from a 
 
 ### 9.2 What a recording row holds
 
-`id`, `project_id`, `state`, `review`, `source_kind`, `source_label` (sealed, section 9.4), `width`, `height`, `fps`, `encoder`, `started_at`, `ended_at`, `duration_ms`, `frames`, `dropped`, `bytes`, `stop_reason`, `error_code`, `error_message`, `asset_hash`, `actor`, `created_at`.
+`id`, `project_id`, `state`, `review`, `source_kind`, `source_label` (sealed, section 9.4), `width`, `height`, `fps`, `encoder`, `started_at`, `ended_at`, `duration_ms`, `frames`, `dropped`, `bytes`, `stop_reason`, `error_code`, `error_message`, `asset_hash`, `asset_id`, `actor`, `created_at`.
 
 ### 9.3 Person rule
 

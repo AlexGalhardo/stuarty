@@ -139,6 +139,11 @@ func (s *svc) person(ctx context.Context, method string) (Caller, error) {
 
 // privilegedHints say where a person does what an agent was refused; the method not listed is about approvals.
 var privilegedHints = map[string]string{
+	"RecordingStart": "a person starts a recording in the record dialog of the Stuarty app; the local token, API " +
+		"keys and the agent surfaces cannot start a capture of the screen (ADR-0051)",
+	"RecordingConfirm": "a person adds a recording to the project in the record dialog of the Stuarty app",
+	"RecordingDismiss": "a person decides about a recording in the record dialog of the Stuarty app",
+	"RecordingCancel":  "a person deletes a finished recording in the record dialog of the Stuarty app",
 	"SocialConnectComplete": "a person completes the connection in the Connections page of the Stuarty app; the local " +
 		"token, API keys and the agent surfaces cannot finish a sign-in",
 	"SocialAccountSelect": "a person chooses the account in the Connections page of the Stuarty app; the local " +

@@ -233,6 +233,18 @@ type Service interface {
 	WebhookDeliveryList(ctx context.Context, req WebhookDeliveriesRequest) (*WebhookDeliveriesResult, error)
 	WebhookRedeliver(ctx context.Context, req WebhookRedeliverRequest) (*WebhookDelivery, error)
 
+	// Screen recording (SDD-023). RecordingStart, RecordingConfirm and RecordingDismiss are for a person in a
+	// privileged browser session and answer E_PRIVILEGED_SESSION to everyone else; stopping is always allowed.
+	RecordingSources(ctx context.Context, req RecordingSourcesRequest) (*RecordingSourcesResult, error)
+	RecordingStart(ctx context.Context, req RecordingStartRequest) (*Recording, error)
+	RecordingStop(ctx context.Context, req RecordingRef) (*Recording, error)
+	RecordingCancel(ctx context.Context, req RecordingRef) (*Recording, error)
+	RecordingGet(ctx context.Context, req RecordingRef) (*Recording, error)
+	RecordingList(ctx context.Context, req RecordingListRequest) (*RecordingListResult, error)
+	RecordingConfirm(ctx context.Context, req RecordingRef) (*Recording, error)
+	RecordingDismiss(ctx context.Context, req RecordingRef) (*Recording, error)
+	RecordingPlace(ctx context.Context, req RecordingPlaceRequest) (*EditResult, error)
+
 	// The approval queue, its rules and the cost ceilings (SDD-015). Reading is for every caller that
 	// may read; ApprovalDecide, ApprovalRuleSet, ApprovalRuleRemove and CostCeilingSet are for a
 	// person in a privileged browser session and answer E_PRIVILEGED_SESSION to everyone else.
@@ -396,6 +408,12 @@ type Options struct {
 	Agents *agenthost.Host
 	// WebhookTimeout is how long one delivery of an outbound webhook may take; zero is 10 s (SDD-022). Tests shorten it.
 	WebhookTimeout time.Duration
+	// Capture is the native capture helper (SDD-023); nil where capture does not exist, and then CaptureReason
+	// says why (platform, web, network_mode or helper_missing) in E_CAPTURE_UNAVAILABLE.
+	Capture       Capturer
+	CaptureReason string
+	// RecordingMaxSeconds is the longest recording (STUARTY_MAX_RECORDING_SECONDS); zero is 14,400.
+	RecordingMaxSeconds int
 }
 
 type svc struct {
@@ -437,6 +455,14 @@ type svc struct {
 	webp        export.WebPEncoder
 	doctorMu    sync.Mutex
 	doctorCaps  *ffmpeg.Capabilities
+
+	// The screen recordings of this process (SDD-023): the helper, the reason it is missing, the longest recording
+	// and the sessions that are running.
+	capture       Capturer
+	captureReason string
+	recMaxSeconds int
+	recMu         sync.Mutex
+	recSessions   map[string]*recSession
 
 	// pubs is the calendar of publications and sched the loop that sends the approved ones at their time
 	// (SDD-020 sections 23 to 29).
@@ -509,6 +535,8 @@ func New(o Options) (Service, error) {
 		agents:      o.Agents,
 		webp:        o.WebP,
 		startedAt:   time.Now(),
+
+		capture: o.Capture, captureReason: o.CaptureReason, recMaxSeconds: o.RecordingMaxSeconds,
 	}
 
 	s.providers = o.Providers

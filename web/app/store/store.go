@@ -18,6 +18,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/library"
 	"github.com/AlexGalhardo/stuarty/service/publish"
 	"github.com/AlexGalhardo/stuarty/service/publish/destinations"
+	"github.com/AlexGalhardo/stuarty/service/recordings"
 	"github.com/AlexGalhardo/stuarty/service/webhooks"
 
 	"github.com/AlexGalhardo/vukem/database"
@@ -125,6 +126,7 @@ func (p *projectTx) Publications() publish.Store              { return p.tx.Publ
 func (p *projectTx) Blog() destinations.Store                 { return p.tx.Blog() }
 func (p *projectTx) Chat() agenthost.Store                    { return p.tx.Chat() }
 func (p *projectTx) Webhooks() webhooks.Store                 { return p.tx.Webhooks() }
+func (p *projectTx) Recordings() recordings.Store             { return p.tx.Recordings() }
 func (p *projectTx) Accounts() account.Store                  { return p.tx.Accounts() }
 func (p *projectTx) AfterCommit(fn func())                    { p.tx.AfterCommit(fn) }
 func (p *projectTx) Project() service.ProjectRow              { return p.row }

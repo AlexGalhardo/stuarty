@@ -934,6 +934,11 @@ func verifyOutput(path string, res *ExportOutput) *Error {
 // message, or failed after three attempts; queued jobs older than a minute get
 // one more message, which the claim makes harmless when the old one survived.
 func (s *svc) Recover(ctx context.Context) error {
+	// A recording the last process left open is settled first (SDD-023 section 10).
+	if err := s.recoverRecordings(ctx); err != nil {
+		return err
+	}
+
 	var changed []JobRow
 
 	err := s.store.Write(ctx, func(ctx context.Context, tx Tx) error {
