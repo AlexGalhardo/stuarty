@@ -20,6 +20,8 @@ const messages = {
 	"ui.account.confirmation": "Confirm the password",
 	"ui.account.identity": "Username or e-mail",
 	"ui.account.create.title": "Create your account",
+	"ui.account.create.not_encrypted":
+		"Not encrypted yet: memory, prompts, skills.",
 	"ui.account.signin.title": "Sign in to Stuarty",
 	"ui.account.recover.title": "Recover with the recovery key",
 	"ui.account.recover.key": "Recovery key",
@@ -34,6 +36,14 @@ function render(node: React.ReactNode): string {
 		</I18nProvider>,
 	);
 }
+
+describe("what the account does not encrypt", () => {
+	test("the creation page says it before the person trusts it", () => {
+		expect(render(<Create />)).toContain(
+			"Not encrypted yet: memory, prompts, skills.",
+		);
+	});
+});
 
 describe("the password field", () => {
 	const html = render(

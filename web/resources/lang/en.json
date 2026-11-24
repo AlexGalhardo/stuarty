@@ -2496,7 +2496,8 @@
       "identity": "Username or e-mail",
       "create": {
         "title": "Create your account",
-        "intro": "Your projects, texts and credentials are encrypted with a key that is only in memory while you are signed in. Nobody, and no agent, reads them while Stuarty is locked.",
+        "intro": "Your texts, briefs, chats, publications and credentials are encrypted with a key that is only in memory while you are signed in. While Stuarty is locked, no page, command or agent reads them.",
+        "not_encrypted": "Not encrypted yet: the files of your memory notes, prompts and skills, your media files, the names of projects and files, and the words inside a timeline or an image. Anyone who can open this folder on the disk can read those.",
         "submit": "Create account"
       },
       "recovery": {

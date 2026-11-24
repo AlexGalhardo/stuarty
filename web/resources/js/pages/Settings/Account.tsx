@@ -104,6 +104,13 @@ export default function AccountSettings(): ReactNode {
 				{t("ui.account.settings.signed_in")}{" "}
 				<strong data-testid="settings-username">{account.username}</strong>
 			</p>
+			<p
+				role="note"
+				className="text-sm text-muted-foreground"
+				data-testid="settings-not-encrypted"
+			>
+				{t("ui.account.create.not_encrypted")}
+			</p>
 			{person === false && (
 				<p role="note" className="text-sm text-muted-foreground">
 					{t("ui.account.settings.need_password")}{" "}
