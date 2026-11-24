@@ -26,5 +26,6 @@ func AgentCaller(g agenthost.Grant, network bool) service.Caller {
 
 	return service.Caller{
 		Actor: actor, Scopes: append([]string(nil), g.Scopes...), OwnerUserID: g.Owner, ProjectID: g.ProjectID,
+		ChatSessionID: g.SessionID,
 	}
 }

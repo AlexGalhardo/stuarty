@@ -266,6 +266,17 @@ func (h *Host) Pending(id string) (chat.Event, bool) {
 	return s.rec.Pending()
 }
 
+// RecordSkill adds a skill_loaded event to a live session: the agent of the session read the skill
+// (SDD-017 section 8.1). It is false for a session that is not live, which records nothing.
+func (h *Host) RecordSkill(id string, ref chat.SkillRef) bool {
+	s, err := h.get(id)
+	if err != nil {
+		return false
+	}
+
+	return s.rec.SkillLoaded(ref)
+}
+
 // Subscribe follows a live session after the event numbered after.
 func (h *Host) Subscribe(ctx context.Context, id string, after int64) (*Subscription, error) {
 	s, err := h.get(id)

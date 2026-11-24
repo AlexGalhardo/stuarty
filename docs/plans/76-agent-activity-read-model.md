@@ -59,7 +59,7 @@ Names are proposals until task 1 writes them to SDD-000.
 
 - [x] 1. Amend SDD-000, SDD-003 and SDD-017. Verify: `task lint:md` exits 0.
 - [x] 2. The kind `skill_loaded` and the pure activity reducer. Verify: `go test ./core/chat/...` passes with a table of event sequences.
-- [ ] 3. Record a skill read with the session of the token, and only then. Verify: `go test ./service/agenthost/... ./web/app/mcp/...` passes, and a person's read records nothing.
+- [x] 3. Record a skill read with the session of the token, and only then. Verify: `go test ./service/agenthost/... ./web/app/mcp/...` passes, and a person's read records nothing.
 - [ ] 4. The plain-description table for Stuarty's tools. Verify: a Go test fails when a tool of `web/app/mcp/definitions/` has no entry, and `bun run check:i18n` exits 0.
 - [ ] 5. `ChatActivityGet` with its visibility checks. Verify: `go test ./service/... -run ChatActivity` and `go test -run TestSecurity_ ./...` pass.
 - [ ] 6. The HTTP endpoint and the CLI command with parity. Verify: `go test ./web/contract/...` and `go run ./internal/tools/surfacebudget` pass.

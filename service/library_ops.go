@@ -8,6 +8,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/AlexGalhardo/stuarty/core/chat"
 	"github.com/AlexGalhardo/stuarty/core/command"
 	core "github.com/AlexGalhardo/stuarty/core/library"
 	"github.com/AlexGalhardo/stuarty/service/library"
@@ -461,6 +462,12 @@ func (s *svc) SkillGet(ctx context.Context, req LibraryRef) (*SkillGetResult, er
 
 	res.UntrustedNotice = UntrustedNotice
 	res.Text = skillText(&res.Entry, skill, res.Files, findings)
+
+	// Observed, never presumed: only the token of a hosted session carries a session id, so a person's read, the
+	// local token's and a key's record nothing (SDD-017 section 8.1).
+	if c.ChatSessionID != "" && s.agents != nil {
+		s.agents.RecordSkill(c.ChatSessionID, chat.SkillRef{Name: entry.Name, Hash: res.ContentHash})
+	}
 
 	return res, nil
 }
