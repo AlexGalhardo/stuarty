@@ -27,12 +27,14 @@ To use the key, choose **I forgot my password** on the sign-in page, type the ke
 
 - the texts and their earlier versions, the briefs and the caption texts of a project;
 - the description and the goal of each project;
-- the messages of the chats with your agent;
+- the messages of the chats with your agent and the title of each chat, which is its first message;
 - the texts of your publications and of the posts you published to your blog;
-- what you asked an AI model to make and what it answered, including the excerpt shown in an approval;
+- what you asked an AI model to make and what it answered, including the excerpt shown in an approval and the prompt kept with a generated file (with an account, the search of the library no longer matches a prompt);
 - the credentials of your connections (the vault).
 
-The names of projects, the file names, the dates and the sizes are not encrypted, and neither are your media files, your memory notes, your prompts and your skills. **The words inside a timeline or an image are not encrypted yet**: the captions on a video, its text layers and the text of an image document stay readable in the database file. Settings, Account tells you the rest.
+The names of projects, the file names, the dates and the sizes are not encrypted, and neither are your media files. **The files of your memory notes, prompts and skills are not encrypted yet**: they stay as plain files in the `library` folder of the workspace, so anyone who can open that folder can read them, even while Stuarty is locked; encrypting them is planned for a later version. **The words inside a timeline or an image are not encrypted yet either**: the captions on a video, its text layers and the text of an image document stay readable in the database file. The Account section of Settings repeats this list.
+
+A backup keeps what is encrypted encrypted, so restoring one needs your password or your recovery key to read it. A restore never replaces a workspace that has an account: restore into an empty one.
 
 ## Locked and unlocked
 

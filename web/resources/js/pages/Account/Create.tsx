@@ -64,7 +64,7 @@ export default function Create(): ReactNode {
 					{t("ui.account.create.title")}
 				</h1>
 				<p className="text-sm text-muted-foreground">
-					{t("ui.account.create.intro")}
+					{t("ui.account.create.intro")} {t("ui.account.create.not_encrypted")}
 				</p>
 				<form
 					onSubmit={(event) => void submit(event)}
