@@ -90,3 +90,28 @@ describe("a failed call of the keys page", () => {
 		expect(show).toHaveBeenCalledTimes(1);
 	});
 });
+
+describe("the state of a key", () => {
+	test("an active key says so and can be revoked", () => {
+		const html = markup(key());
+		expect(html).toContain('data-status="success"');
+		expect(html).toContain("ui.keys.status_active");
+		expect(html).toContain("Revoke");
+	});
+
+	test("a revoked key says so with a word and has no Revoke button", () => {
+		const html = markup(key({ revoked_at: "2026-11-15T13:00:00Z" }));
+		expect(html).toContain('data-status="neutral"');
+		expect(html).toContain("Revoked");
+		expect(html).not.toContain("<button");
+	});
+
+	test("a secret is not on the page until a key was just made", () => {
+		const html = renderToString(
+			<I18nProvider messages={messages} locale="en" locales={["en"]}>
+				<SettingsKeys />
+			</I18nProvider>,
+		);
+		expect(html).not.toContain("data-key-secret");
+	});
+});

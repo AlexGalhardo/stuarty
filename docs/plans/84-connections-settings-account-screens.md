@@ -49,7 +49,7 @@ None new.
 
 - [x] 1. Connections and the setup guides. Verify: `cd web && bun run test -- Connections SocialSection BlogSection ProviderCards` passes.
 - [x] 2. Settings and its sections. Verify: `cd web && bun run test -- Settings` passes.
-- [ ] 3. API keys. Verify: `cd web && bun run test -- Keys` passes.
+- [x] 3. API keys. Verify: `cd web && bun run test -- Keys` passes.
 - [ ] 4. Webhooks. Verify: `cd web && bun run typecheck && bun run e2e -- webhooks` pass.
 - [ ] 5. Create account, recovery key, sign in and unlock. Verify: the first-run and logout specs of epic 57 pass.
 - [ ] 6. The error page. Verify: `cd web && bun run test -- Error` passes.
