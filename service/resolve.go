@@ -158,6 +158,9 @@ func clipAsset(doc *timeline.Document, itemID string) (timeline.Asset, bool) {
 	return a, ok
 }
 
+// defaultSilenceDB is the noise level of the silences a command reads when the caller gives none (SDD-011 9.1).
+const defaultSilenceDB = -35
+
 func (s *svc) resolveSilences(
 	ctx context.Context,
 	tx Tx,
@@ -190,7 +193,7 @@ func (s *svc) resolveSilences(
 			"wait until the asset is ready (media_inspect shows its state); an asset without audio has none")
 	}
 
-	threshold := -35
+	threshold := defaultSilenceDB
 	if a.ThresholdDB != nil {
 		threshold = *a.ThresholdDB
 	}
@@ -302,7 +305,27 @@ func (s *svc) resolveWords(
 			"start the transcription again with job_start (kind \"transcribe\") on this asset")
 	}
 
-	out, merr := json.Marshal(command.ResolvedWords{Words: words})
+	var (
+		out  []byte
+		merr error
+	)
+
+	if op.Op == "transcript.delete_range" {
+		// The silences let the cut snap to a pause (epic 89). An asset analysed before the silence artifact
+		// existed has none: the cut is then the word cut, and the result says so.
+		cut := command.ResolvedCut{Words: words, SilenceAnalysis: command.SilenceMissing}
+
+		if raw := s.readArtifact(arts, "silence", ""); raw != nil {
+			if ranges, ok := silenceFrames(raw, defaultSilenceDB, doc.Settings.FPS); ok {
+				cut.Silences, cut.SilenceAnalysis = ranges, command.SilenceRead
+			}
+		}
+
+		out, merr = json.Marshal(cut)
+	} else {
+		out, merr = json.Marshal(command.ResolvedWords{Words: words})
+	}
+
 	if merr != nil {
 		return nil, internalError()
 	}
