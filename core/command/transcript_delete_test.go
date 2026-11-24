@@ -15,8 +15,10 @@ import (
 // stays on the timeline, and the inverse restores the document exactly.
 func TestTranscriptDeleteRangeOnHardTimelines(t *testing.T) {
 	words := []tx.Word{
-		{Text: "one", Start: 62, End: 70}, {Text: "two", Start: 72, End: 80},
-		{Text: "three", Start: 90, End: 110}, {Text: "four", Start: 120, End: 140},
+		{Text: "one", Start: 62, End: 70},
+		{Text: "two", Start: 72, End: 80},
+		{Text: "three", Start: 90, End: 110},
+		{Text: "four", Start: 120, End: 140},
 		{Text: "five", Start: 150, End: 170},
 	}
 	resolved := make([]tword, len(words))
