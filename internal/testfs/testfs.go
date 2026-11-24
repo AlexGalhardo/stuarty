@@ -26,7 +26,7 @@ const limit = 30 * time.Second
 func TempDir(tb testing.TB) string {
 	tb.Helper()
 
-	dir, err := os.MkdirTemp("", strings.NewReplacer("/", "_", "\\", "_", ":", "_").Replace(tb.Name())+"-")
+	dir, err := os.MkdirTemp("", folderName(tb.Name())+"-")
 	if err != nil {
 		tb.Fatal(err)
 	}
@@ -38,6 +38,28 @@ func TempDir(tb testing.TB) string {
 	})
 
 	return dir
+}
+
+// folderName is a test name as a folder name: letters, digits, "_" and "-" only, because the workspace path
+// goes into a database URL that refuses "?", "#" and "%" (the name of a fuzz seed holds a "#"), and at most
+// 40 characters, to keep the path short.
+func folderName(name string) string {
+	var b strings.Builder
+
+	for _, r := range name {
+		switch {
+		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9', r == '-', r == '_':
+			b.WriteRune(r)
+		default:
+			b.WriteByte('_')
+		}
+
+		if b.Len() >= 40 {
+			break
+		}
+	}
+
+	return b.String()
 }
 
 // removeAll removes path, trying again while the error is one that an entry still held by a handle gives.
