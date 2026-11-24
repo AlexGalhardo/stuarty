@@ -20,6 +20,7 @@ export function viewOf(recording: Recording): RecordView {
 	switch (recording.state) {
 		case "prepared":
 		case "recording":
+		case "paused":
 		case "finishing":
 			return { step: "recording", recording };
 		case "ready":
@@ -38,6 +39,7 @@ export function isLive(recording: Recording): boolean {
 	return (
 		recording.state === "prepared" ||
 		recording.state === "recording" ||
+		recording.state === "paused" ||
 		recording.state === "finishing"
 	);
 }
@@ -83,4 +85,26 @@ export function formatClock(ms: number): string {
 
 export const FPS_CHOICES = [24, 30, 60] as const;
 export const DEFAULT_FPS = 30;
-export const POLL_MS = 1000;
+// How often the dialog asks for a recording that runs: the level meters are drawn from the same answer, so it is
+// asked for several times a second.
+export const LIVE_POLL_MS = 300;
+
+// What the person chose besides the screen: the ids come from the sources the service listed.
+export interface StartOptions {
+	microphone: string;
+	systemAudio: boolean;
+	camera: string;
+	events: boolean;
+}
+
+export const NO_EXTRAS: StartOptions = {
+	microphone: "",
+	systemAudio: false,
+	camera: "",
+	events: true,
+};
+
+// The peak the service reported, 0 to 1000, kept inside the range of the meter that draws it.
+export function meterValue(level: number | undefined): number {
+	return Math.min(1000, Math.max(0, level ?? 0));
+}
