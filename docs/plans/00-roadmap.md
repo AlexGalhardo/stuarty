@@ -128,7 +128,7 @@ Author decisions D-134 and D-137. Epic 74 can start now, and so can epic 87, bec
 | [75](75-app-shell-sidebar-topbar-scene-bar.md) | App shell: sidebar, top bar, scene bar and notification center | L | 57, 74 | DONE (2026-11-24, `cd4d39254`..`fbd5d82de`) |
 | [76](76-agent-activity-read-model.md) | Agent activity: skill, skill state, tool and plain description | L | 57, 75 | DONE (2026-11-24, `6b54fa388`..`c0d8bc9ee`) |
 | [77](77-unified-requests-read-model.md) | One read of everything that waits for a person | L | 57, 75, 76 | TODO |
-| [78](78-project-kind-and-workflow.md) | Project kind and the workflow per kind | L | 57 | TODO |
+| [78](78-project-kind-and-workflow.md) | Project kind and the workflow per kind | L | 57 | DONE (2026-11-24, `133faef99`..`254727332`) |
 | [79](79-home-projects-and-briefing-screens.md) | Home, projects, briefing and the workflow screens | L | 74, 75, 78 | TODO |
 | [80](80-writing-screens.md) | Writing screens and the text flow | M | 74, 75, 78 | TODO |
 | [81](81-asset-library-screens.md) | Asset library screens | M | 74, 75 | DONE (2026-11-24, `411906afe`..`6cca1e337`, v0.50.0) |
