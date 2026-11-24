@@ -2,7 +2,7 @@
 
 - Amended (2026-11-18) for Stuarty: this is the catalogue of the video domain. Other domains get their own catalogue (ADR-0031, ADR-0038).
 - Amended (2026-11-24, epic 71): four commands, `caption.apply_style` and `caption.list_styles` (C.88, C.89), `clip.blur_region` (C.90) and `audio.apply_voice_preset` (C.91); names in SDD-000 section 17.
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 91 commands have golden cases and pass the registry-wide gates. The binary exposes all 91 commands, 90 of them public (epic 32 added three, C.84 to C.86, epic 69 one, C.87, and epic 71 four, C.88 to C.91); `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 92 commands have golden cases and pass the registry-wide gates. The binary exposes all 92 commands, 91 of them public (epic 32 added three, C.84 to C.86, epic 69 one, C.87, epic 71 four, C.88 to C.91, and epic 70 one, C.92); `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -190,7 +190,7 @@ Three commands depend on data the core cannot compute because it needs media: si
 | --- | --- |
 | `clip.remove_silences {min_silence, padding, threshold_db}` | `resolved.silences`: ranges in asset frames, taken from the set of the silence artifact measured at `threshold_db` (SDD-011 §9.1) |
 | `caption.from_transcript {...}`, `caption.retime_from_clip {...}`, `transcript.delete_range {...}` | `resolved.words`: words with times in asset frames. `transcript.delete_range` also gets `resolved.silences` (the -35 dB set of the silence artifact, as for `clip.remove_silences`) and `resolved.silence_analysis` (`read`, or `missing` when the asset has no silence artifact, which is not an error there) |
-| `clip.apply_face_framing {...}` | `resolved.track`: the samples of the `facetrack` artifact of the clip's asset in asset milliseconds, with the source size (SDD-024 §6) |
+| `clip.face_frame {...}` | `resolved.track`: the samples of the `facetrack` artifact of the clip's asset in asset milliseconds, with the source size (SDD-024 §6) |
 | `audio.duck {speech_item_ids, ...}` | `resolved.speech`: one entry per speech item, `{item_id, ranges}`, with the speech ranges of that item's asset in asset frames, half-open, taken from the speech map of the asset (SDD-011) |
 | `audio.mark_beats {...}` | `resolved.beats`: the beats of the music asset as strictly increasing asset frames, taken from the beat grid of the asset (SDD-011); at most 108,000. Not used when `bpm` is given |
 | `asset.add` | issued only by the import flow, with the facts measured on the verified normalized media, never copied from the probe (SDD-011 §4.9) (`internal: true`) |
@@ -305,7 +305,7 @@ Scope is `edit` unless stated. "Time" marks arguments parsed by A.4. Optional ar
 | `composition.create_from_selection` | `item_ids` (1 to 100), `name?`, `timeline_id?`, `id?` | Moves the selected items into a new timeline of the production and puts one composition clip in their place, in one batch. See C.85 |
 | `composition.expand` | `item_id` | The inverse: puts the items of the nested timeline back on the timeline in place of a composition that uses no group feature. See C.86 |
 | `clip.set_framing` | `item_id`, `fit?`, `crop?` | Sets fit and crop |
-| `clip.apply_face_framing` | `item_id`, `smoothing_ms?` (default 400), `dead_zone?` (default 800), `max_pan?` (default 6000), `hold_ms?` (default 1500), `keyframe_ms?` (default 200) | Sets fit `cover` and keyframes the crop of a clip so the window follows the face track of its asset (SDD-024 §7); the track is `resolved.track`, filled by the service from the `facetrack` artifact |
+| `clip.face_frame` | `item_id`, `smoothing_ms?` (default 400), `dead_zone?` (default 800), `max_pan?` (default 6000), `hold_ms?` (default 1500), `keyframe_ms?` (default 200) | Sets fit `cover` and keyframes the crop of a clip so the window follows the face track of its asset (SDD-024 §7); the track is `resolved.track`, filled by the service from the `facetrack` artifact |
 | `clip.set_speed` | `item_id`, `speed` (`"1.5x"`, `"0.5x"` or a rational object) or `curve` (2 to 8 `{t, speed}` points), `ripple?` (`"none"` default, `"track"`) | Changes speed keeping the same source range: the new duration is `ceil(duration × old / new)`, reduced by the rounding excess if that would read past the end of the asset. Keyframe times and transition and fade lengths are scaled by the same ratio and rounded. With `ripple: "track"`, later items on the track shift by the change in length; otherwise a resulting overlap is `E_OVERLAP`. Captions linked to the clip are not changed; the lint reports them as out of sync until `caption.retime_from_clip` runs. A `composition` item takes a constant `speed` by the same rule (epic 53, C.25); a `curve` or a `reverse` on it is `E_VALIDATION` |
 | `clip.set_color` | `item_id`, `brightness?`, `contrast?`, `saturation?`, `temperature?`, `tint?`, `hue?` | Sets colour adjustment; also white balance and hue rotation (TASK-0233). See C.26 |
 | `clip.set_filter` | `item_id`, `filter?`, `amount?` | Sets the colour filter of a clip and how much of it is mixed in |
@@ -7075,3 +7075,45 @@ Replaces the chain of an item or a track with a studio voice preset (epic 71): o
 - `err_validation_no_target`
 - `err_type_mismatch_text_item`
 - `err_not_found_track`
+
+### C.92 `clip.face_frame`
+
+Keyframes the crop of a clip so the visible window follows the face of the speaker (epic 70, SDD-024 section 7). The rules (the choice of the face, the smoothing, the dead zone, the pan limit, the hold) are those of `core/facetrack`, in integers, so the same track and options give the same keyframes.
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | a `clip` that plays forward at a constant speed |
+| `smoothing_ms` | integer | no | 400 | 0 to 5000 |
+| `dead_zone` | integer | no | 800 | 0 to 5000, ten-thousandths of the visible window |
+| `max_pan` | integer | no | 6000 | 100 to 100000, ten-thousandths of the source width per second |
+| `hold_ms` | integer | no | 1500 | 0 to 30000 |
+| `keyframe_ms` | integer | no | 200 | 50 to 5000; grows with the length of the clip so a property never holds more than 100 keyframes |
+| `resolved` | `{"track": <facetrack>}` | filled by the service (A.9) | none | the `facetrack` artifact of the clip's asset (SDD-024 section 6), validated; required by `Apply` (`E_VALIDATION`) |
+
+**Postconditions.** Sets `fit` to `cover`. For the frame of the project and the source size of the track, the visible share of the width is `min(1, H*FW / (W*FH))` and of the height `min(1, W*FH / (H*FW))`. For each axis whose share is below 1 the command replaces the keyframes of its two crop properties (`crop_left` and `crop_right`; `crop_top` and `crop_bottom`) by keyframes at the item frames where the plan of `core/facetrack` has a centre, values rounded to three decimals, the first at frame 0 and none past the duration; the static crop of those sides is set to the first keyframe. The keyframes of an axis with share 1 are removed, and a clip whose frame has the aspect of its source gets none. `effective` has `fit`, `keyframes` (the number of plan points), `visible_width` and `track_samples`.
+
+**Errors.** `E_VALIDATION` (`resolved` missing or invalid, an option out of its range), `E_NOT_FOUND`, `E_TYPE_MISMATCH` (not a clip), `E_INVALID_STATE` (a freeze frame, a reversed clip or a speed curve).
+
+**Inverse.** `patch` of `fit`, `crop` and `keyframes`. **Idempotency.** Same result with the same `resolved` and options.
+
+**Example.**
+
+```json
+{"op": "clip.face_frame", "args": {"item_id": "itm_m1n2p3q4r5", "smoothing_ms": 300}}
+```
+
+**Golden cases.**
+
+- `ok_follows_the_face_in_a_vertical_frame`
+- `ok_starts_inside_the_source`
+- `ok_options_given`
+- `ok_replaces_crop_keyframes`
+- `ok_same_aspect_pans_nothing`
+- `err_validation_resolved_missing`
+- `err_validation_option_out_of_range`
+- `err_validation_track_invalid`
+- `err_not_found`
+- `err_type_mismatch_not_a_clip`
+- `err_invalid_state_reversed_clip`

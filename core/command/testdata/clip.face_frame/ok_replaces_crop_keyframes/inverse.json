@@ -1,0 +1,24 @@
+[
+  {
+    "type": "patch",
+    "collection": "items",
+    "id": "itm_m1n2p3q4r5",
+    "set": {
+      "crop": {
+        "left": 0.1
+      },
+      "keyframes": {
+        "crop_left": [
+          {
+            "t": 0,
+            "value": 0.1
+          },
+          {
+            "t": 30,
+            "value": 0.2
+          }
+        ]
+      }
+    }
+  }
+]

@@ -37,7 +37,7 @@ func (f Face) CenterY() int { return f.Y + f.H/2 }
 // Sample is the faces seen at one instant of the asset, best first.
 type Sample struct {
 	// T is milliseconds on the time axis of the asset.
-	T     int64  `json:"t"`
+	T     int    `json:"t"`
 	Faces []Face `json:"faces"`
 }
 
@@ -54,8 +54,8 @@ type Track struct {
 	Provider string   `json:"provider"`
 	Source   Size     `json:"source"`
 	FPS      int      `json:"fps"`
-	StartMS  int64    `json:"start_ms"`
-	EndMS    int64    `json:"end_ms"`
+	StartMS  int      `json:"start_ms"`
+	EndMS    int      `json:"end_ms"`
 	Samples  []Sample `json:"samples"`
 }
 
@@ -89,7 +89,7 @@ func (t *Track) Validate() error {
 		return invalid("%d samples is over the limit %d", len(t.Samples), MaxSamples)
 	}
 
-	prev := int64(-1)
+	prev := -1
 
 	for i := range t.Samples {
 		s := &t.Samples[i]

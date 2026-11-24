@@ -2739,6 +2739,68 @@
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"additionalProperties": false,
 			"properties": {
+				"dead_zone": {
+					"description": "How far the face may drift before the frame follows, in ten-thousandths of the window. Default 800.",
+					"maximum": 5000,
+					"minimum": 0,
+					"type": "integer"
+				},
+				"hold_ms": {
+					"description": "How long the last position is held when no face is seen. Default 1500.",
+					"maximum": 30000,
+					"minimum": 0,
+					"type": "integer"
+				},
+				"item_id": {
+					"description": "A clip of a video asset.",
+					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+					"type": "string"
+				},
+				"keyframe_ms": {
+					"description": "The least time between two keyframes, 50 to 5000 ms. Default 200.",
+					"maximum": 5000,
+					"minimum": 50,
+					"type": "integer"
+				},
+				"max_pan": {
+					"description": "Fastest pan, in ten-thousandths of the source width per second. Default 6000.",
+					"maximum": 100000,
+					"minimum": 100,
+					"type": "integer"
+				},
+				"smoothing_ms": {
+					"description": "Time constant of the smoothing, 0 to 5000 ms. Default 400.",
+					"maximum": 5000,
+					"minimum": 0,
+					"type": "integer"
+				}
+			},
+			"required": [
+				"item_id"
+			],
+			"type": "object"
+		},
+		"description": "Sets fit cover and writes keyframes of crop_left and crop_right (and crop_top and crop_bottom when the source is taller than the frame) so the visible window follows the face track of the clip's asset, smoothed, with a dead zone and a maximum pan speed, over the source range the clip plays. Any crop keyframes the clip already has are replaced, in one undoable step. The face track comes from a face_track job and is supplied by the service in resolved; the command never starts a job. The same track and options always give the same keyframes. The clip must play at a constant speed, forward, and not be a freeze frame.",
+		"domain": "video",
+		"errors": [
+			"E_VALIDATION",
+			"E_NOT_FOUND",
+			"E_TYPE_MISMATCH",
+			"E_INVALID_STATE"
+		],
+		"example": {
+			"item_id": "itm_m1n2p3q4r5"
+		},
+		"internal": false,
+		"name": "clip.face_frame",
+		"scope": "edit",
+		"summary": "Pans the crop to follow the speaker's face."
+	},
+	{
+		"args_schema": {
+			"$schema": "https://json-schema.org/draft/2020-12/schema",
+			"additionalProperties": false,
+			"properties": {
 				"item_id": {
 					"description": "A clip of a video asset with audio, or an audio item.",
 					"pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
@@ -3309,7 +3371,7 @@
 		"internal": false,
 		"name": "clip.set_color",
 		"scope": "edit",
-		"summary": "Sets brightness, contrast, saturation, temperature, tint, hue, LUT, HSL bands, wheels and curves of a clip."
+		"summary": "Grades a clip: brightness, contrast, saturation, temperature, tint, hue, LUT, HSL, wheels, curves."
 	},
 	{
 		"args_schema": {
@@ -4057,7 +4119,7 @@
 		"internal": false,
 		"name": "composition.expand",
 		"scope": "edit",
-		"summary": "Puts the items of a composition's timeline back on this timeline in place of the composition."
+		"summary": "Puts a composition's items back on this timeline in its place."
 	},
 	{
 		"args_schema": {
@@ -4669,7 +4731,7 @@
 		"internal": false,
 		"name": "item.repeat",
 		"scope": "edit",
-		"summary": "Repeats an item back to back, a number of times or until a time, such as a looping background."
+		"summary": "Repeats an item back to back, a number of times or until a time."
 	},
 	{
 		"args_schema": {

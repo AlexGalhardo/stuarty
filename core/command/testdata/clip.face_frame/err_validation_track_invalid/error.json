@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "The required argument args.resolved.track.model is missing.",
+  "hint": "Add \"model\" (a string) to the arguments.",
+  "retryable": false,
+  "path": "args.resolved.track.model"
+}
