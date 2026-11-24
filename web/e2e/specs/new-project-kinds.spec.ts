@@ -212,6 +212,56 @@ test.describe("new project kinds", () => {
 		}
 	});
 
+	test("a refused first item leaves one project, a note that leads to it, and the list shows it once the dialog closes", async ({
+		page,
+		request,
+	}) => {
+		const name = validName(`Kinds partial ${Date.now()}`);
+		await page.route("**/api/v1/projects/*/items", (route) =>
+			route.request().method() === "POST"
+				? route.fulfill({
+						status: 422,
+						contentType: "application/json",
+						body: JSON.stringify({
+							error: {
+								code: "E_VALIDATION",
+								message: "The format is not known.",
+							},
+						}),
+					})
+				: route.continue(),
+		);
+		await page.goto("/projects");
+		await page.getByRole("button", { name: "New project" }).click();
+		await page.locator('[data-choice="video"]').click();
+		await page
+			.getByRole("button", { name: "Continue to the briefing" })
+			.click();
+		await page.getByLabel("Name", { exact: true }).fill(name);
+		await fillBriefing(page);
+		await page.getByRole("button", { name: "Create project" }).click();
+
+		const dialog = page.getByRole("dialog");
+		await expect(dialog.getByRole("alert")).toContainText(
+			"The project was created",
+		);
+		// The form is gone, so the project cannot be sent a second time.
+		await expect(
+			dialog.getByRole("button", { name: "Create project" }),
+		).toHaveCount(0);
+		const made = (await listProjects(request)).filter((p) => p.name === name);
+		expect(made).toHaveLength(1);
+		await expect(
+			dialog.getByRole("link", { name: "Open the project" }),
+		).toHaveAttribute("href", `/projects/${made[0].id}`);
+
+		await page.keyboard.press("Escape");
+		await expect(page.getByRole("dialog")).toHaveCount(0);
+		await expect(
+			page.locator(`[data-project-card='${made[0].id}']`),
+		).toBeVisible();
+	});
+
 	test("Back returns to the cards with the choice kept", async ({ page }) => {
 		await page.goto("/projects");
 		await page.getByRole("button", { name: "New project" }).click();
