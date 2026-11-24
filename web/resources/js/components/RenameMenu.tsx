@@ -16,12 +16,15 @@ export default function RenameMenu({
 	name,
 	rename,
 	returnFocus,
+	extra,
 	children,
 }: {
 	name: string;
 	rename(name: string): Promise<void>;
 	// The element that takes the focus when the dialog closes.
 	returnFocus(): HTMLElement | null;
+	// More items of the same menu, after Rename (Show in folder, Copy path: epic 94).
+	extra?: ReactNode;
 	children: ReactElement;
 }): ReactNode {
 	const t = useT();
@@ -33,6 +36,7 @@ export default function RenameMenu({
 				<ContextMenuItem onSelect={() => setRenaming(true)}>
 					{t("ui.editor.library.rename.action")}
 				</ContextMenuItem>
+				{extra}
 			</ContextMenuContent>
 			<RenameAssetDialog
 				open={renaming}

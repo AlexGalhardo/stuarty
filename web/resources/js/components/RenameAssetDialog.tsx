@@ -80,7 +80,7 @@ export default function RenameAssetDialog({
 							onFocus={(event) => event.currentTarget.select()}
 							onChange={(event) => setValue(event.target.value)}
 						/>
-						<p id="rename-asset-hint" className="text-xs text-muted-foreground">
+						<p id="rename-asset-hint" className="text-sm text-muted-foreground">
 							{t("ui.editor.library.rename.hint")}
 						</p>
 						<FailureNote failure={failure} />

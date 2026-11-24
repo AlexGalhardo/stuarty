@@ -1212,7 +1212,7 @@
           "action": "Rename",
           "title": "Rename this file",
           "label": "File name",
-          "hint": "The extension is kept. At most 120 characters, no slashes.",
+          "hint": "The extension is kept. At most 120 characters, no slashes. The name changes, the file on disk does not.",
           "submit": "Rename",
           "cancel": "Cancel",
           "menu": "Actions for the file"
@@ -3547,6 +3547,27 @@
       },
       "reusable_badge": "Reusable",
       "count": "{count} files",
+      "total": "{size} in total",
+      "unsized": {
+        "one": "(1 of them has no known size)",
+        "other": "({count} of them have no known size)"
+      },
+      "added": "Added {date}",
+      "size": {
+        "unknown": "Size unknown"
+      },
+      "state": {
+        "ready": "Ready",
+        "importing": "Still importing",
+        "missing": "File missing",
+        "failed": "Import failed"
+      },
+      "reveal": {
+        "show": "Show in folder",
+        "copy": "Copy path",
+        "shown": "Opened the folder of the file.",
+        "copied": "Path copied:"
+      },
       "empty": {
         "visual": "No images yet. Import a file in a project and it appears here.",
         "video": "No video yet. Import a file in a project and it appears here.",
@@ -3624,6 +3645,12 @@
         "use_timeline": "In which timeline",
         "use": "Use",
         "used": "Added to the project. No copy was made.",
+        "used_by": {
+          "one": "Used by {count} project.",
+          "other": "Used by {count} projects."
+        },
+        "counted_once": "The file is stored once and counted once in the library total.",
+        "file_on_disk": "Renaming changes the name shown here. The file on disk keeps its name, and Undo does not bring the old name back.",
         "trash": "Move to the trash of {project}",
         "trashed": "Moved to the trash."
       },

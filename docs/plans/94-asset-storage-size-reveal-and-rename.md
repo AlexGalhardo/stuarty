@@ -48,7 +48,7 @@ Moving or renaming the stored file on disk, choosing where files are stored, del
 - [x] 3. Library totals, row state and size in `service`, with the missing and importing cases. Verify: `go test ./service/... -run 'AssetLibrary'` passes.
 - [x] 4. `AssetReveal` with every refusal of the scope, the HTTP route and the CLI command, and the security tests. Verify: `go test ./service/... ./web/app/http/... ./web/app/cli/... -run 'Reveal|AssetPath'` and `go test -run TestSecurity_ ./...` pass.
 - [x] 5. Rename edge cases on every surface (service, HTTP, CLI, MCP) with parity. Verify: `go test ./web/contract/... -run 'Asset'` and `go run ./internal/tools/surfacebudget` pass.
-- [ ] 6. UI: size, totals, Show in folder or Copy path, rename on card, row and detail, every refusal shown. Verify: in `web/`, `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n` and `bun run test -- assetlibrary` pass.
+- [x] 6. UI: size, totals, Show in folder or Copy path, rename on card, row and detail, every refusal shown. Verify: in `web/`, `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n` and `bun run test -- assetlibrary` pass.
 - [ ] 7. End to end and desktop. Verify: `bun run e2e -- asset-rename asset-library-states` passes with `--workers=2`, and a desktop check (or the bridge test in `web/resources/js/lib/desktopBridge.test.ts` plus `go test ./desktop/shell/...`) shows the reveal path goes through the server check.
 
 ## Test strategy

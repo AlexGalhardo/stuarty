@@ -2,7 +2,7 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import RenameMenu from "@/components/RenameMenu";
 import UntrustedText from "@/components/UntrustedText";
-import { sizeText } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import { useLocale, useT } from "@/lib/i18n";
 import type { LibraryAsset } from "../editor/api/types";
 import { proxyUrl } from "../editor/api/urls";
@@ -13,7 +13,9 @@ import {
 	watchPeaks,
 } from "../editor/timeline/items/waveform";
 import { formatSeconds } from "../editor/ui/timeFormat";
+import { AssetSize } from "./AssetSize";
 import { OriginBadge, ReusableBadge, TagChip } from "./badges";
+import { type Reveal, RevealMenuItem } from "./reveal";
 
 const WAVE_WIDTH = 480;
 const WAVE_HEIGHT = 48;
@@ -99,12 +101,17 @@ export function SoundRow({
 	selected,
 	onOpen,
 	rename,
+	reveal,
+	onReveal,
 }: {
 	asset: LibraryAsset;
 	selected: boolean;
 	onOpen(): void;
 	// Sends a new name; without it the row has no context menu.
 	rename?(name: string): Promise<void>;
+	// What the person may do with the folder of the file, and the call that does it (epic 94).
+	reveal?: Pick<Reveal, "kind" | "disabled">;
+	onReveal?(hash: string): void;
 }): ReactNode {
 	const t = useT();
 	const locale = useLocale();
@@ -125,7 +132,14 @@ export function SoundRow({
 						{formatSeconds(asset.duration_ms / 1000, "timecode")}
 					</span>
 				)}
-				<span>{sizeText(asset.bytes, locale)}</span>
+				<AssetSize asset={asset} />
+				{asset.created_at !== undefined && (
+					<span data-testid="asset-added">
+						{t("ui.assets.added", {
+							date: formatDate(asset.created_at, locale),
+						})}
+					</span>
+				)}
 				<OriginBadge kind={asset.origin?.kind} />
 				{asset.reusable === true && <ReusableBadge />}
 				{(asset.tags ?? []).map((tag) => (
@@ -148,6 +162,14 @@ export function SoundRow({
 				<RenameMenu
 					name={asset.name}
 					rename={rename}
+					extra={
+						reveal !== undefined && (
+							<RevealMenuItem
+								reveal={reveal}
+								onSelect={() => onReveal?.(asset.hash)}
+							/>
+						)
+					}
 					returnFocus={() =>
 						document.querySelector<HTMLElement>(
 							`li[data-asset-hash="${CSS.escape(asset.hash)}"] button`,

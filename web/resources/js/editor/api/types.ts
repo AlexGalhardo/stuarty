@@ -923,7 +923,11 @@ export interface LibraryAsset {
 	hash: string;
 	name: string;
 	kind: string;
-	bytes: number;
+	// Null when the size is unknown (a file still importing or missing from the store): never 0.
+	bytes: number | null;
+	// The size in words, written by the service (SDD-011 section 14.9); empty when the size is unknown.
+	size_text: string;
+	state: LibraryState;
 	width?: number;
 	height?: number;
 	duration_ms?: number;
@@ -968,11 +972,27 @@ export interface AssetUse {
 	asset_id: string;
 }
 
+// What a library entry is on disk and in ingest (SDD-011 section 14.9).
+export type LibraryState = "ready" | "importing" | "missing" | "failed";
+
 export interface AssetListResult {
 	assets: LibraryAsset[];
 	total: number;
+	// About every file that matches the filters, not the page (SDD-011 section 14.9).
+	file_count: number;
+	total_bytes: number;
+	total_size_text: string;
+	// How many of those files have no known size.
+	unsized: number;
 	next_cursor: string | null;
 	text: string;
+}
+
+// POST /assets/{hash}/reveal: the checked path of the stored file, for a person in local mode (SDD-011 section
+// 14.10). `display` is the same path with control and bidirectional characters written out; draw that one.
+export interface AssetRevealResult {
+	path: string;
+	display: string;
 }
 
 // The filters of GET /assets (SDD-011 section 14.4).
