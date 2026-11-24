@@ -122,6 +122,11 @@ func (c *Client) ChatTranscriptGet(
 	return get[service.ChatTranscriptResult](ctx, c, "/chat/sessions/"+segment(req.SessionID)+"/transcript", q)
 }
 
+// ChatActivityGet implements service.Service.
+func (c *Client) ChatActivityGet(ctx context.Context, req service.ChatRef) (*service.ChatActivityResult, error) {
+	return get[service.ChatActivityResult](ctx, c, "/chat/sessions/"+segment(req.SessionID)+"/activity", nil)
+}
+
 // ChatSessionDelete implements service.Service.
 func (c *Client) ChatSessionDelete(ctx context.Context, req service.ChatRef) (*service.ChatSession, error) {
 	out := new(service.ChatSession)

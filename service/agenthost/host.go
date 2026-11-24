@@ -277,6 +277,17 @@ func (h *Host) RecordSkill(id string, ref chat.SkillRef) bool {
 	return s.rec.SkillLoaded(ref)
 }
 
+// ActivityEvents are the events the activity of a live session is told from: the skills it read and
+// its last tool call. It is false for a session that is not live, whose transcript is in the store.
+func (h *Host) ActivityEvents(id string) ([]chat.Event, bool) {
+	s, err := h.get(id)
+	if err != nil {
+		return nil, false
+	}
+
+	return s.rec.ActivityEvents(), true
+}
+
 // Subscribe follows a live session after the event numbered after.
 func (h *Host) Subscribe(ctx context.Context, id string, after int64) (*Subscription, error) {
 	s, err := h.get(id)

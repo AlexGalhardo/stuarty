@@ -790,6 +790,10 @@ func TestSecurity_T05_ServiceRejectsMissingCaller(t *testing.T) {
 			_, err := e.svc.ChatTranscriptGet(ctx, service.ChatTranscriptRequest{SessionID: "cht_0000000001"})
 			return err
 		},
+		"ChatActivityGet": func() error {
+			_, err := e.svc.ChatActivityGet(ctx, service.ChatRef{SessionID: "cht_0000000001"})
+			return err
+		},
 		"ChatSessionDelete": func() error {
 			_, err := e.svc.ChatSessionDelete(ctx, service.ChatRef{SessionID: "cht_0000000001"})
 			return err

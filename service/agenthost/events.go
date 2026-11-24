@@ -1,8 +1,10 @@
 package agenthost
 
 import (
+	"cmp"
 	"context"
 	"log/slog"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -43,8 +45,11 @@ type recorder struct {
 	seq int64
 	// lastSkill is the skill read last, so that the same read twice in a row is one event.
 	lastSkill *chat.SkillRef
-	open      *chat.Event
-	openID    string
+	// skills and lastTool are what the activity of the session is told from (ActivityEvents).
+	skills   []chat.Event
+	lastTool *chat.Event
+	open     *chat.Event
+	openID   string
 	// sent is how much of the text of open the subscribers have: a tail that could be the start of
 	// a secret is held back until the next chunk shows whether it is one.
 	sent   int
@@ -412,6 +417,7 @@ func (r *recorder) Tool(u Update) bool {
 	}
 
 	r.tools[tool.CallID] = &ev
+	r.lastTool = &ev
 	r.persist(&ev)
 	r.publish(ev)
 
@@ -432,12 +438,32 @@ func (r *recorder) SkillLoaded(ref chat.SkillRef) bool {
 		return true
 	}
 
-	_, ok := r.emitLocked(chat.Event{Kind: chat.KindSkillLoaded, Skill: &ref})
+	ev, ok := r.emitLocked(chat.Event{Kind: chat.KindSkillLoaded, Skill: &ref})
 	if ok {
 		r.lastSkill = &ref
+		r.skills = append(r.skills, ev)
 	}
 
 	return ok
+}
+
+// ActivityEvents are the events the activity of the session is told from: every skill_loaded and the
+// last tool call, oldest first. A live session keeps them in memory, so a read of the activity, which
+// the panel makes on every tool call, does not read the transcript again.
+func (r *recorder) ActivityEvents() []chat.Event {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	out := slices.Clone(r.skills)
+
+	if r.lastTool != nil {
+		i, _ := slices.BinarySearchFunc(out, r.lastTool.Seq, func(e chat.Event, seq int64) int {
+			return cmp.Compare(e.Seq, seq)
+		})
+		out = slices.Insert(out, i, clone(*r.lastTool))
+	}
+
+	return out
 }
 
 // Permission records a permission request.
