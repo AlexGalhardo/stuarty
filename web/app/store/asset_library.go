@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/AlexGalhardo/stuarty/core/asset"
+	"github.com/AlexGalhardo/stuarty/service/account"
 	"github.com/AlexGalhardo/stuarty/service/assets"
 
 	"github.com/AlexGalhardo/vukem/database"
@@ -24,7 +25,25 @@ const manyChunk = 400
 const infoColumns = `owner_user_id, asset_hash, origin_kind, source, provider, model, prompt, cost_micros, rights_note, description,
  reusable, created_by, created_ms, updated_ms, engine, engine_version, render_key`
 
-func scanInfo(sc interface{ Scan(...any) error }) (assets.Row, error) {
+// promptKey is the row key of the sealed prompt of a file of the library.
+func promptKey(owner, hash string) string { return owner + "/" + hash }
+
+// openPrompt opens the prompt that generated a file: the words of the person, the same ones the job and the
+// approval request seal (SDD-005 section 5.17.2). While the studio is locked it reads as empty, as a summary does.
+func openPrompt(sl account.Sealer, owner, hash, stored string) (string, error) {
+	if stored == "" {
+		return "", nil
+	}
+
+	plain, err := openField(sl, "asset_info", "prompt", promptKey(owner, hash), stored)
+	if errors.Is(err, account.ErrLocked) {
+		return "", nil
+	}
+
+	return plain, err
+}
+
+func scanInfo(sc interface{ Scan(...any) error }, sl account.Sealer) (assets.Row, error) {
 	var (
 		r    assets.Row
 		kind string
@@ -40,6 +59,11 @@ func scanInfo(sc interface{ Scan(...any) error }) (assets.Row, error) {
 		return r, err
 	}
 
+	var err error
+	if r.Origin.Prompt, err = openPrompt(sl, r.Owner, r.Hash, r.Origin.Prompt); err != nil {
+		return r, err
+	}
+
 	r.Origin.Kind = asset.OriginKind(kind)
 	r.Origin.CostMicros = ptrInt64(cost)
 	r.Reusable = re == 1
@@ -51,6 +75,7 @@ func (r assetLibraryRepo) Get(ctx context.Context, owner, hash string) (assets.R
 	row, err := scanInfo(
 		r.ex.QueryRowContext(ctx, `SELECT `+infoColumns+` FROM asset_info WHERE owner_user_id = ? AND asset_hash = ?`,
 			owner, hash),
+		sealerOf(r.ex),
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		return row, assets.ErrNotFound
@@ -127,7 +152,7 @@ func (r assetLibraryRepo) GetMany(ctx context.Context, owner string, hashes []st
 			)+`)`,
 			append([]any{owner}, anys(part)...),
 			func(sc *sql.Rows) error {
-				row, err := scanInfo(sc)
+				row, err := scanInfo(sc, sealerOf(r.ex))
 				if err != nil {
 					return err
 				}
@@ -162,6 +187,11 @@ func (r assetLibraryRepo) Put(ctx context.Context, row assets.Row) error {
 		o.Kind = asset.Imported
 	}
 
+	prompt, err := sealField(sealerOf(r.ex), "asset_info", "prompt", promptKey(row.Owner, row.Hash), o.Prompt)
+	if err != nil {
+		return err
+	}
+
 	if _, err := r.ex.ExecContext(ctx,
 		`INSERT INTO asset_info (`+infoColumns+`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
  ON CONFLICT (owner_user_id, asset_hash) DO UPDATE SET origin_kind = excluded.origin_kind, source = excluded.source,
@@ -169,7 +199,7 @@ func (r assetLibraryRepo) Put(ctx context.Context, row assets.Row) error {
  rights_note = excluded.rights_note, description = excluded.description, reusable = excluded.reusable,
  updated_ms = excluded.updated_ms, engine = excluded.engine, engine_version = excluded.engine_version,
  render_key = excluded.render_key`,
-		row.Owner, row.Hash, string(o.Kind), o.Source, o.Provider, o.Model, o.Prompt, o.CostMicros, o.RightsNote,
+		row.Owner, row.Hash, string(o.Kind), o.Source, o.Provider, o.Model, prompt, o.CostMicros, o.RightsNote,
 		row.Description, boolInt(row.Reusable), row.CreatedBy, row.CreatedMs, row.UpdatedMs,
 		o.Engine, o.EngineVersion, o.RenderKey,
 	); err != nil {
@@ -206,6 +236,13 @@ func (r assetLibraryRepo) Reindex(ctx context.Context, owner, hash string) error
 		return err
 	}
 
+	// With an account the prompt is sealed and the index keeps none of it: a search matches the other fields, as the
+	// index of the library keeps no body (SDD-005 section 5.17.2).
+	promptTerm := "COALESCE(i.prompt, '')"
+	if account.Sealing(sealerOf(r.ex)) {
+		promptTerm = "''"
+	}
+
 	_, err := r.ex.ExecContext(ctx,
 		`INSERT INTO asset_search (owner_user_id, asset_hash, name, tags, description, origin)
  SELECT ?, a.id,
@@ -215,7 +252,7 @@ func (r assetLibraryRepo) Reindex(ctx context.Context, owner, hash string) error
                   WHERE t.asset_hash = a.id AND t.owner_user_id = ?), ''),
         COALESCE(i.description, ''),
         TRIM(COALESCE(i.source, '') || ' ' || COALESCE(i.provider, '') || ' ' || COALESCE(i.model, '') || ' ' ||
-             COALESCE(i.prompt, '') || ' ' || COALESCE(i.engine, '') || ' ' || COALESCE(i.engine_version, ''))
+             `+promptTerm+` || ' ' || COALESCE(i.engine, '') || ' ' || COALESCE(i.engine_version, ''))
  FROM assets a LEFT JOIN asset_info i ON i.asset_hash = a.id AND i.owner_user_id = ?
  WHERE a.id = ?`, owner, owner, owner, owner, hash)
 

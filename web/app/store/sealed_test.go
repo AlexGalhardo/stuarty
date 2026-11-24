@@ -9,12 +9,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/AlexGalhardo/stuarty/core/asset"
 	"github.com/AlexGalhardo/stuarty/core/chat"
 	core "github.com/AlexGalhardo/stuarty/core/library"
 	"github.com/AlexGalhardo/stuarty/core/project"
 	"github.com/AlexGalhardo/stuarty/service"
 	"github.com/AlexGalhardo/stuarty/service/account"
 	"github.com/AlexGalhardo/stuarty/service/agenthost"
+	"github.com/AlexGalhardo/stuarty/service/assets"
 	"github.com/AlexGalhardo/stuarty/service/library"
 	pub "github.com/AlexGalhardo/stuarty/service/publish"
 	"github.com/AlexGalhardo/stuarty/service/webhooks"
@@ -385,6 +387,98 @@ func TestSecurity_T108_TheTitleOfAChatSessionIsSealed(t *testing.T) {
 
 	if raw := bytesOfTheWorkspace(t, st, string(dir)); bytes.Contains(raw, []byte(words)) {
 		t.Error("the database file holds the title of a chat session in clear")
+	}
+}
+
+// The prompt of a generated file is the same text the job and the approval request seal. The account creation
+// seals it and takes it out of the search index, and a later write keeps it out.
+func TestSecurity_T108_ThePromptOfAGeneratedFileIsSealed(t *testing.T) {
+	const words = "CANARYPROMPT boats under the moon"
+
+	dir := newDir(t)
+
+	st, err := Open(ctx, dir, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, h := range []string{"sha256:aa", "sha256:bb"} {
+		if _, _, err := st.Assets().Upsert(ctx, service.AssetRow{
+			Hash: h, SizeBytes: 1, OriginalName: "clip.mp4", IngestState: service.IngestReady, CreatedMs: 1, UpdatedMs: 1,
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	row := assets.Row{
+		Hash: "sha256:aa", CreatedBy: "agent", CreatedMs: 5, UpdatedMs: 6,
+		Origin: asset.Origin{Kind: asset.Generated, Provider: "acme", Model: "vidmodel", Prompt: words},
+	}
+
+	if err := st.AssetLibrary().Put(ctx, row); err != nil {
+		t.Fatal(err)
+	}
+
+	if got := assetSearchOf(t, st, "CANARYPROMPT"); len(got) != 1 {
+		t.Fatalf("the control: with no account the prompt is searchable, got %v", got)
+	}
+
+	keys, err := account.NewKeySealer(bytes.Repeat([]byte{9}, account.KeySize))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := st.CreateAccount(ctx, accountRecord(), keys, nil); err != nil {
+		t.Fatal(err)
+	}
+
+	l := &locker{Sealer: keys}
+	st.SetSealer(l)
+
+	if err := st.CompactSealed(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := st.AssetLibrary().Get(ctx, "", "sha256:aa")
+	if err != nil || got.Origin.Prompt != words {
+		t.Fatalf("the prompt after the creation: %q %v", got.Origin.Prompt, err)
+	}
+
+	if hits := assetSearchOf(t, st, "CANARYPROMPT"); len(hits) != 0 {
+		t.Errorf("the index still finds the prompt: %v", hits)
+	}
+
+	if hits := assetSearchOf(t, st, "vidmodel"); len(hits) != 1 {
+		t.Errorf("the index lost the other fields of the origin: %v", hits)
+	}
+
+	row.Hash = "sha256:bb"
+	if err := st.AssetLibrary().Put(ctx, row); err != nil {
+		t.Fatal(err)
+	}
+
+	if hits := assetSearchOf(t, st, "CANARYPROMPT"); len(hits) != 0 {
+		t.Errorf("a write with an account indexed the prompt: %v", hits)
+	}
+
+	l.locked = true
+
+	if locked, err := st.AssetLibrary().Get(ctx, "", "sha256:aa"); err != nil || locked.Origin.Prompt != "" {
+		t.Errorf("read while locked: %q %v", locked.Origin.Prompt, err)
+	}
+
+	if err := st.AssetLibrary().Put(ctx, row); !errors.Is(err, account.ErrLocked) {
+		t.Errorf("a write while locked: %v", err)
+	}
+
+	l.locked = false
+
+	if err := st.CompactSealed(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	if raw := bytesOfTheWorkspace(t, st, string(dir)); bytes.Contains(raw, []byte("CANARYPROMPT")) {
+		t.Error("the database file holds the prompt of a generated file in clear")
 	}
 }
 
