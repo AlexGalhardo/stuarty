@@ -8,7 +8,7 @@ import { ui as t } from "@/lib/ui-text";
  */
 export function ReleaseBadge({ version }: { version: string }) {
 	return (
-		<span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap" data-release-badge>
+		<span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap sm:max-lg:flex-col sm:max-lg:items-start sm:max-lg:gap-0.5" data-release-badge>
 			<span className="inline-flex h-5 items-center gap-1 rounded-full bg-warning-soft px-2 text-xs leading-none font-semibold text-warning-text">
 				<TriangleAlert aria-hidden className="size-3" />
 				{t.alpha}
