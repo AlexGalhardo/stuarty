@@ -219,7 +219,8 @@ func TestSecurity_T136_NoByteOfTheWorkspaceHoldsTheWordsOfThePerson(t *testing.T
 		t.Fatalf("the notes of the asset: %+v %v", info, err)
 	}
 
-	if kit, err := o.Service.BrandKitGet(as, service.BrandKitGetRequest{}); err != nil || kit.Colors[canaryBrand] == "" {
+	kit, err := o.Service.BrandKitGet(as, service.BrandKitGetRequest{})
+	if err != nil || kit.Colors[canaryBrand] == "" {
 		t.Fatalf("the brand kit: %+v %v", kit, err)
 	}
 
