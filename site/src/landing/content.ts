@@ -216,10 +216,10 @@ export const roadmap = {
 		},
 		{
 			id: "local-ai",
-			title: "Local AI helper",
-			text: "Face-aware vertical cuts and optional local models for background removal, running on your machine.",
+			title: "Optional local models",
+			text: "Optional local models for background removal and depth, running on your machine.",
 			state: "planned",
-			epics: [70, 72],
+			epics: [72],
 		},
 		{
 			id: "agents-recording",
