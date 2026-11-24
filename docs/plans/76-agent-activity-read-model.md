@@ -75,7 +75,7 @@ Reducer tables, a fake agent that loads a skill over MCP, isolation tests with t
 2. **Given** a session that read no skill, **when** the activity is read, **then** the state is `available` or `none`, never `loaded`.
 3. **Given** a person reading the same skill in the browser, **when** the activity is read, **then** nothing changed.
 4. **Given** a tool of Stuarty, **when** it runs, **then** the result carries its description key and technical name.
-5. **Given** a member and another member's session, **when** the activity is requested, **then** the answer is `E_NOT_FOUND` (`go test -run TestSecurity_ ./...`).
+5. **Given** a member and another member's session, **when** the activity is requested, **then** the answer is `E_CHAT_NOT_FOUND`, the same as for an id that does not exist (SDD-017 section 10, SDD-000 section 8) (`go test -run TestSecurity_ ./...`).
 6. `go run ./internal/tools/surfacebudget` passes with `tools/list` unchanged, and `task lint`, `task test` and `task test:web` pass.
 
 ## Risks and mitigation
