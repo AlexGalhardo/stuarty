@@ -130,6 +130,7 @@ var Scopes = map[string]string{
 	"SnapPoints":              ScopeRead,
 	"TranscriptView":          ScopeRead,
 	"TranscriptDetectFillers": ScopeRead,
+	"CutsPropose":             ScopeEdit,
 	"FontList":                ScopeRead,
 	"AssetList":               ScopeRead,
 	"ExportFile":              ScopeRead,

@@ -55,7 +55,7 @@ Rules:
 3. **A wrong file is refused and removed.** A different size or digest deletes the file and fails with `E_TRANSCRIBE_UNAVAILABLE` and `details.reason` `checksum_mismatch`; an interrupted download leaves no file in `tools/<name>/` and nothing in `tools/.download/`.
 4. **Verified at each start.** Before the helper runs, `VerifiedTool` recomputes the digests of the helper, the runtime library and the model against `installed.json` (SDD-007 section 6.8 item 6). A changed file makes the feature unavailable and `doctor` says why.
 5. **Hosts.** The host allowlist of the install client is the union of the hosts of every manifest. The new ones are `api.nuget.org` and `media.githubusercontent.com` (where the pinned model URL redirects); each manifest may name only its own hosts, and each hop of a redirect is checked.
-6. **Not installed.** A `face_track` job or a `CutsPropose` call without the set fails with `E_TRANSCRIBE_UNAVAILABLE` (the code of every local helper that is not installed) and `details` `{missing, download_bytes, install_command, tool, model}` with `tool` `face`, `model` `yunet` and `install_command` `"stuarty tools:install face"`; it downloads nothing.
+6. **Not installed.** A `face_track` job without the set fails with `E_TRANSCRIBE_UNAVAILABLE` (the code of every local helper that is not installed) and `details` `{missing, download_bytes, install_command, tool, model}` with `tool` `face`, `model` `yunet` and `install_command` `"stuarty tools:install face"`; it downloads nothing.
 7. **The catalogue is a gate.** A model enters it only with the licence evidence of section 4, and a test refuses an entry whose licence is not on the allowlist of ADR-0050 item 4 (non-commercial, GPL, AGPL, gated or unstated weights).
 
 ## 4. Licence evidence
@@ -125,7 +125,7 @@ All of it is `core/facetrack`, pure, in integers (positions in ten-thousandths o
 1. The words are grouped into sentences (a pause of 700 ms or more, or terminal punctuation, ends one). Consecutive sentences are joined into a range of `min_ms` [20,000] to `max_ms` [60,000]; a range starts at a sentence start and ends at a sentence end.
 2. A range needs a face in at least 70% of its samples; the others are not proposed.
 3. The score is the words per second of the range (a dense stretch beats a slow one) plus the share of the range with a face, rounded; ties are broken by the earlier start, so the answer is deterministic.
-4. Each proposal is `{id, start_ms, end_ms, words, face_share, score, title, batch}`. `title` is the first words of the range. `batch` is the list of commands of the edit a person accepts: for a new timeline of the project, `settings.reframe` `9:16`, `clip.add` of the asset for the range, and `clip.face_frame` on the clip. The UI and an agent send `batch` as it is; neither builds it.
+4. Each proposal is `{n, start_ms, end_ms, words, face_share, score, title, batch}`. `title` is the first words of the range, cleaned like any text of a transcript. `batch` is the list of commands of the edit a person accepts, for an empty timeline of the project made by `item:add` (kind `timeline`, whose default preset is 9:16, so no reframe is needed): `asset.add` of the asset, `track.add`, `clip.add` for the range and `clip.face_frame` on the clip, with fixed ids so the same proposal gives the same batch. The UI and an agent send `batch` as it is; neither builds it. The service fills the face track of the last command, as for any edit.
 5. **Accepting is the person's act.** The editor shows the proposals with the range, the words and a preview, and creates the timeline and sends the batch for each one the person keeps (`item:add` then `Edit`). An agent proposes the same way and stops there: it cannot create the timelines of a proposal on its own scope until the review flow of the approval queue (epic 64) covers it, and until then it uses `edit` with the person's own scope only when the person asked for it.
 6. Without a face track `CutsPropose` fails with `E_INVALID_STATE` and the hint "run a face_track job for this asset"; without a transcript it fails like `TranscriptView`.
 
@@ -136,10 +136,10 @@ All of it is `core/facetrack`, pure, in integers (positions in ten-thousandths o
 | `ToolsInstall` (set `face`) | person only (SDD-007 6.8) | `POST /system/tools/install` | `tools:install face` | none |
 | `ToolsStatus` (`offers`) | `read` | `GET /system/tools` | none | none |
 | `JobStart` kind `face_track` | `media` | `POST /projects/{id}/jobs` | `job:start` | `job_start` |
-| `CutsPropose` | `edit` | `GET /projects/{id}/cuts?asset_id=` | `cuts:propose` | `media_inspect` with the section `cuts` |
+| `CutsPropose` | `edit` | `GET /projects/{id}/cuts?asset_id=` | none | none |
 | `clip.face_frame` | `edit` | `POST /projects/{id}/edit` | `edit` | `edit` |
 
-The MCP catalogue keeps its tool count and its size budget (NFR-020, `internal/tools/surfacebudget`): the new job kind and the new section are values of existing arguments.
+The MCP catalogue keeps its tool count and its size budget (NFR-020, `internal/tools/surfacebudget`): the new job kind is a value of an existing argument and the new command is one more name in the catalogue. The agent skill file (12,400 characters) and the first discovery call (8,500 characters) were already at their limits, so `CutsPropose` has no MCP tool and no CLI command: an agent reads the proposals through the HTTP route, and a person through the editor. Giving it a section of `media_inspect` and a CLI command costs about 150 characters of the skill file and needs the author to raise a limit or shorten other text.
 
 ## 10. Errors and limits
 

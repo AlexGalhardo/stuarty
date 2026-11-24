@@ -40,7 +40,16 @@ func TestRecordingsTableUpAndDown(t *testing.T) {
 		`INSERT INTO projects (id, name, created_ms, updated_ms, created_by) VALUES ('prj_0000000001', 'Old', 1, 1, 'u')`,
 	)
 
-	full, err := schema.NewMigrator(db, allMigrations())
+	// Through the migration under test: a later one would be the one Rollback undoes.
+	var throughID []schema.Migration
+
+	for _, m := range allMigrations() {
+		if m.ID <= id {
+			throughID = append(throughID, m)
+		}
+	}
+
+	full, err := schema.NewMigrator(db, throughID)
 	if err != nil {
 		t.Fatal(err)
 	}

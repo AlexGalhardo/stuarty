@@ -65,6 +65,8 @@ type mediaCfg struct {
 	tools *service.Tools
 	// transcriber is the provider of the transcribe job.
 	transcriber transcribe.Provider
+	// faces is the detector of the face_track job.
+	faces service.FaceDetector
 	// wrapStore puts a decorator between the service and its store.
 	wrapStore func(service.Store) service.Store
 	// log receives the job lines of the service.
@@ -122,6 +124,7 @@ func newMediaEnv(tb testing.TB, cfg mediaCfg) *mediaEnv {
 		}
 
 		o.Transcriber = cfg.transcriber
+		o.FaceDetector = cfg.faces
 		o.Log = cfg.log
 		o.JobWait = cfg.jobWait
 		o.Tools = cfg.tools

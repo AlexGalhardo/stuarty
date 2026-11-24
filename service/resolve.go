@@ -7,6 +7,7 @@ import (
 	"slices"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/facetrack"
 	"github.com/AlexGalhardo/stuarty/core/timeline"
 	"github.com/AlexGalhardo/stuarty/core/timeval"
 )
@@ -41,6 +42,8 @@ func (s *svc) resolveOps(
 			resolved, rerr = s.resolveSilences(ctx, tx, s.viewFor(doc, ops, out, i), &ops[i], i)
 		case "caption.from_transcript", "caption.retime_from_clip", "transcript.delete_range":
 			resolved, rerr = s.resolveWords(ctx, tx, s.viewFor(doc, ops, out, i), &ops[i], i)
+		case "clip.face_frame":
+			resolved, rerr = s.resolveFaces(ctx, tx, s.viewFor(doc, ops, out, i), &ops[i], i)
 		case "audio.duck":
 			resolved, rerr = s.resolveSpeech(ctx, tx, s.viewFor(doc, ops, out, i), &ops[i], i)
 		case "audio.mark_beats":
@@ -205,6 +208,79 @@ func (s *svc) resolveSilences(
 	}
 
 	out, merr := json.Marshal(command.ResolvedSilences{Silences: ranges})
+	if merr != nil {
+		return nil, internalError()
+	}
+
+	return out, nil
+}
+
+// resolveFaces fills resolved.track of clip.face_frame with the face track of the clip's asset that covers the
+// range the clip plays (SDD-024 section 6): the newest stored one that does. Without one the batch fails with
+// the job to run; nothing is started.
+func (s *svc) resolveFaces(
+	ctx context.Context,
+	tx Tx,
+	doc *timeline.Document,
+	op *command.Operation,
+	index int,
+) (json.RawMessage, error) {
+	a, ok := unresolvedArgs(op)
+	if !ok {
+		return nil, nil //nolint:nilnil // nothing to resolve
+	}
+
+	it, ok := doc.Items[a.ItemID]
+	if !ok {
+		return nil, nil //nolint:nilnil // the command answers E_NOT_FOUND
+	}
+
+	asset, ok := doc.Assets[it.Asset]
+	if !ok {
+		return nil, nil //nolint:nilnil // the command answers E_NOT_FOUND
+	}
+
+	arts, err := tx.Assets().Artifacts(ctx, asset.Hash)
+	if err != nil {
+		return nil, asError(err)
+	}
+
+	fps := doc.Settings.FPS
+	if fps.Num < 1 || fps.Den < 1 || it.Speed.Num < 1 || it.Speed.Den < 1 {
+		return nil, nil //nolint:nilnil // the command reports it
+	}
+
+	from := int64(it.SourceIn) * 1000 * int64(fps.Den) / int64(fps.Num)
+	to := int64(it.SourceIn+it.Duration*it.Speed.Num/it.Speed.Den) * 1000 * int64(fps.Den) / int64(fps.Num)
+
+	// A track may stop a sample short of the end of the clip.
+	const slack = 1000
+
+	var best *facetrack.Track
+
+	for i := range arts {
+		if arts[i].Kind != faceArtifactKind || arts[i].Ext != "json" {
+			continue
+		}
+
+		raw := s.readArtifact(arts[i:i+1], faceArtifactKind, arts[i].Variant)
+
+		var t facetrack.Track
+		if raw == nil || json.Unmarshal(raw, &t) != nil || t.Validate() != nil {
+			continue
+		}
+
+		if int64(t.StartMS) <= from+slack && int64(t.EndMS)+slack >= to && (best == nil || t.FPS > best.FPS) {
+			best = &t
+		}
+	}
+
+	if best == nil {
+		return nil, notAnalysed(index, asset.ID, "the face track of the range the clip plays",
+			"run a face_track job for the asset first (job_start kind face_track), covering the clip's source range")
+	}
+
+	out, merr := json.Marshal(command.ResolvedFaces{Track: *best})
 	if merr != nil {
 		return nil, internalError()
 	}
