@@ -33,20 +33,20 @@ test.describe("a11y-shell", () => {
 				const scan = async (what: string): Promise<void> => {
 					// A sheet still fading in has text halfway to its colour, which axe reads as low contrast:
 					// wait for the animations that end (the spinner of a working agent never does).
-					await page.evaluate(() =>
-						Promise.race([
-							Promise.all(
-								document
-									.getAnimations()
-									.filter(
-										(a) =>
-											a.effect?.getComputedTiming().iterations !== Infinity,
-									)
-									.map((a) => a.finished.catch(() => undefined)),
+					await expect
+						.poll(() =>
+							page.evaluate(
+								() =>
+									document
+										.getAnimations()
+										.filter(
+											(a) =>
+												a.playState === "running" &&
+												a.effect?.getComputedTiming().iterations !== Infinity,
+										).length,
 							),
-							new Promise((resolve) => setTimeout(resolve, 3000)),
-						]),
-					);
+						)
+						.toBe(0);
 					const { violations } = await new AxeBuilder({ page })
 						.withTags(TAGS)
 						.analyze();
