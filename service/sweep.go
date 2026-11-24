@@ -11,6 +11,9 @@ import (
 	enginestore "github.com/AlexGalhardo/stuarty/engine/store"
 )
 
+// exportImagesDir is the folder of exports/ that holds the exports of images, in a folder for each image.
+const exportImagesDir = "images"
+
 // orphanAge protects a file that an import copied into store/ before its row
 // existed (SDD-005 section 13.4).
 const orphanAge = 24 * time.Hour
@@ -87,7 +90,7 @@ func (s *svc) Sweep(ctx context.Context) (SweepResult, error) {
 		return res, err
 	}
 
-	res.IncomingFiles += n
+	res.IncomingFiles += n + s.sweepExportTemps(ctx, now)
 
 	missing := func(name string) bool {
 		_, herr := s.store.Projects().Head(ctx, name)
@@ -95,9 +98,24 @@ func (s *svc) Sweep(ctx context.Context) (SweepResult, error) {
 		return errors.Is(herr, ErrNotFound)
 	}
 
-	if res.ExportDirs, err = s.sweepDirs("exports", missing); err != nil {
+	// exports/images/ holds the folders of the exported images, one per image: it is no project, and what is in
+	// it is dropped by the image, below.
+	if res.ExportDirs, err = s.sweepDirs("exports", func(name string) bool {
+		return name != exportImagesDir && missing(name)
+	}); err != nil {
 		return res, err
 	}
+
+	images, err := s.sweepDirs(filepath.Join("exports", exportImagesDir), func(name string) bool {
+		_, herr := s.store.Images().Get(ctx, name)
+
+		return errors.Is(herr, ErrNotFound)
+	})
+	if err != nil {
+		return res, err
+	}
+
+	res.ExportDirs += images
 
 	res.FrameDirs, err = s.sweepDirs("frames", missing)
 
