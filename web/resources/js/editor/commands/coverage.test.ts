@@ -82,6 +82,7 @@ import {
 	trackMoveOperations,
 	trackRemoveOperations,
 	trackUpdateOperations,
+	transcriptDeleteOperations,
 	transformOperations,
 	transitionOperations,
 	trimEndOperations,
@@ -148,7 +149,7 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 	test("every non-internal command has a key", () => {
 		const keys = commands.filter((c) => !c.internal).map((c) => c.name);
 		expect(Object.keys(COVERAGE).sort()).toEqual(keys.sort());
-		expect(keys).toHaveLength(85);
+		expect(keys).toHaveLength(86);
 	});
 
 	test("every command has a palette entry, and the commands with an inspector control keep it", () => {
@@ -476,6 +477,9 @@ describe("command coverage (SDD-012 section 9.3)", () => {
 				trackId: "trk_a",
 				text: "1\n00:00:01,000 --> 00:00:02,000\nHi\n",
 			}).map((o) => o.op),
+			"inspector.transcript_delete": transcriptDeleteOperations("ast_a", [
+				{ from: 1, to: 2 },
+			]).map((o) => o.op),
 			"inspector.silences": silenceOperations("itm_a", {
 				minSilence: "0.4s",
 				padding: "0.1s",

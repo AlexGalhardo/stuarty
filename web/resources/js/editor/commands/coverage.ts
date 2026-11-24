@@ -98,6 +98,7 @@ export const ACTIONS: Readonly<Record<string, readonly string[]>> = {
 	"inspector.import_subtitles": ["caption.import_subtitles"],
 	"inspector.color_keyframe": ["keyframe.set", "keyframe.remove"],
 	"inspector.silences": ["clip.remove_silences"],
+	"inspector.transcript_delete": ["transcript.delete_range"],
 	"inspector.filter": ["clip.set_filter"],
 	"inspector.blur": ["clip.set_blur"],
 	"inspector.duck": ["audio.duck"],
@@ -225,6 +226,10 @@ export const COVERAGE: Readonly<Record<string, readonly EntryPoint[]>> = {
 	],
 	"clip.remove_silences": [
 		{ kind: "inspector", action: "inspector.silences" },
+		palette,
+	],
+	"transcript.delete_range": [
+		{ kind: "inspector", action: "inspector.transcript_delete" },
 		palette,
 	],
 	"clip.replace_media": [palette],

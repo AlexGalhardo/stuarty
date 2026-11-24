@@ -1734,6 +1734,18 @@ export function silenceOperations(
 	];
 }
 
+// The words to remove are named by index in the transcript of the asset; the core finds the media and cuts it
+// (SDD-023 section 3). One operation per range, so one undo restores all of them.
+export function transcriptDeleteOperations(
+	assetId: string,
+	ranges: readonly { from: number; to: number }[],
+): Operations {
+	return ranges.map((range) => ({
+		op: "transcript.delete_range",
+		args: { asset_id: assetId, from_word: range.from, to_word: range.to },
+	}));
+}
+
 export const SHAPES = ["rect", "rounded_rect", "ellipse"] as const;
 export type ShapeKind = (typeof SHAPES)[number];
 

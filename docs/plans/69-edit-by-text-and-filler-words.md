@@ -61,7 +61,7 @@ Names are proposals until task 1 writes them to SDD-000 and SDD-002.
 - [x] 4. `transcript.delete_range`, undoable. Verify: `go test ./core/...` passes.
 - [x] 5. Filler and repetition detection. Verify: `go test ./core/...` on the labelled fixture.
 - [x] 6. Adapters with parity. Verify: `go test ./web/...` and `go run ./internal/tools/surfacebudget` pass.
-- [ ] 7. The transcript panel with review before removal. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n`, `task test:web` and `bun run e2e` pass.
+- [x] 7. The transcript panel with review before removal. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n`, `task test:web` and `bun run e2e` pass.
 
 ## Test strategy
 

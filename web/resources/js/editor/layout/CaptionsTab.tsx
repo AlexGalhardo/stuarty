@@ -6,6 +6,7 @@ import AutoCaptions from "../inspector/panels/AutoCaptions";
 import CaptionStyle from "../inspector/panels/CaptionStyle";
 import ImportSubtitles from "../inspector/panels/ImportSubtitles";
 import TrackCaptionStyle from "../inspector/panels/TrackCaptionStyle";
+import TranscriptPanel from "../inspector/panels/TranscriptPanel";
 import PanelFrame from "../library/PanelFrame";
 import { useDocumentState, useUiState } from "../state/EditorContext";
 
@@ -30,7 +31,10 @@ export default function CaptionsTab(): ReactNode {
 	return (
 		<PanelFrame title={t("ui.editor.panels.captions")}>
 			{only !== undefined && type === "clip" ? (
-				<AutoCaptions itemId={only} />
+				<>
+					<AutoCaptions itemId={only} />
+					<TranscriptPanel itemId={only} />
+				</>
 			) : (
 				<p className="text-xs text-muted-foreground">
 					{t("ui.editor.library.captions_select_clip")}

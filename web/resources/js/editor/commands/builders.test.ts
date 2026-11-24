@@ -60,6 +60,7 @@ import {
 	trackMoveOperations,
 	trackRemoveOperations,
 	trackUpdateOperations,
+	transcriptDeleteOperations,
 	transformOperations,
 	transitionOperations,
 	trimEdgeOperations,
@@ -416,6 +417,27 @@ describe("auto caption builders", () => {
 		expect(captionRetimeOperations("itm_clip")).toEqual([
 			{ op: "caption.retime_from_clip", args: { clip_item_id: "itm_clip" } },
 		]);
+	});
+});
+
+describe("transcript builders", () => {
+	test("each range of words is one operation naming the asset and the indices", () => {
+		expect(
+			transcriptDeleteOperations("ast_a", [
+				{ from: 1, to: 1 },
+				{ from: 7, to: 9 },
+			]),
+		).toEqual([
+			{
+				op: "transcript.delete_range",
+				args: { asset_id: "ast_a", from_word: 1, to_word: 1 },
+			},
+			{
+				op: "transcript.delete_range",
+				args: { asset_id: "ast_a", from_word: 7, to_word: 9 },
+			},
+		]);
+		expect(transcriptDeleteOperations("ast_a", [])).toEqual([]);
 	});
 });
 

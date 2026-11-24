@@ -181,6 +181,17 @@ describe("ALPHA snap points, fonts, system and audit", () => {
 		]);
 	});
 
+	test("getTranscript and getTranscriptFillers read the asset and change nothing", async () => {
+		const { transport, requests } = fake(ok({ words: [], suggestions: [] }));
+		const client = createClient(transport);
+		await client.getTranscript("prj_a", "ast_a");
+		await client.getTranscriptFillers("prj_a", "ast_a");
+		expect(requests.map((r) => [r.method, r.path, r.timeoutMs])).toEqual([
+			["GET", "/projects/prj_a/transcript?asset_id=ast_a", 10_000],
+			["GET", "/projects/prj_a/transcript/fillers?asset_id=ast_a", 10_000],
+		]);
+	});
+
 	test("getFonts, getSystem and listAudit", async () => {
 		const { transport, requests } = fake(ok({}));
 		const client = createClient(transport);
