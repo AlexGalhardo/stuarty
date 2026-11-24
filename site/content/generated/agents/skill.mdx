@@ -107,6 +107,7 @@ Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). `--json` for JSON.
 - `item:rename <item> --project <id> --title "..."`
 - `item:trash <item> --project <id>`
 - `item:restore <item> --project <id>`
+- `project:step <id> <step> [--restore]`
 - `brief:show --project <id>`
 - `brief:set --project <id> --text <file|->`
 - `connection:list`
@@ -233,10 +234,8 @@ Recover from a conflict:
 ```text
 # someone edits first
 stuarty edit --project prj_7k2m9x4q1b --actor other track.update track_id=trk_f6g7h8j9k0 name=Theirs
-# conflict, exit 2
 stuarty edit --project prj_7k2m9x4q1b --base 1 track.update track_id=trk_f6g7h8j9k0 name=Mine
 stuarty project:show prj_7k2m9x4q1b
-# retry
 stuarty edit --project prj_7k2m9x4q1b --base 2 track.update track_id=trk_f6g7h8j9k0 name=Mine
 ```
 

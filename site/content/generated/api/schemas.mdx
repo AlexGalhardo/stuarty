@@ -518,6 +518,13 @@ The types named in the tables of the operations. The arguments of each editing c
 | `ok` | `boolean` | no |  |
 | `status` | `integer` | no |  |
 
+### Cost
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `currency` | `string` | no |  |
+| `micros` | `integer (int64)` | no |  |
+
 ### CostLine
 
 | Name | Type | Required | Description |
@@ -2232,6 +2239,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `created` | `boolean` | no |  |
 | `fps` | `string` | no |  |
 | `height` | `integer` | no |  |
+| `kind` | `string` | no |  |
 | `name` | `string` | no |  |
 | `project_id` | `string` | no |  |
 | `revision` | `integer (int64)` | no |  |
@@ -2247,12 +2255,14 @@ The types named in the tables of the operations. The arguments of each editing c
 | `description` | `string` | no |  |
 | `goal` | [`ProjectGoal`](/docs/api/schemas#projectgoal) | no |  |
 | `items` | array of [`ProjectItem`](/docs/api/schemas#projectitem) | no |  |
+| `kind` | `string` | no |  |
 | `name` | `string` | no |  |
 | `production` | [`Production`](/docs/api/schemas#production) | no |  |
 | `project_id` | `string` | no |  |
 | `state` | `string` | no |  |
 | `text` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
+| `workflow` | [`Workflow`](/docs/api/schemas#workflow) | no |  |
 
 ### ProjectFont
 
@@ -2274,6 +2284,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `goal` | [`ProjectGoal`](/docs/api/schemas#projectgoal) | no |  |
 | `height` | `integer` | no |  |
 | `items` | array of [`ProjectItem`](/docs/api/schemas#projectitem) | no |  |
+| `kind` | `string` | no |  |
 | `name` | `string` | no |  |
 | `next_cursor` | `string` or `null` | no |  |
 | `production` | [`Production`](/docs/api/schemas#production) | no |  |
@@ -2284,6 +2295,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `timeline_id` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
 | `width` | `integer` | no |  |
+| `workflow` | [`Workflow`](/docs/api/schemas#workflow) | no |  |
 
 ### ProjectGoal
 
@@ -2367,6 +2379,16 @@ The types named in the tables of the operations. The arguments of each editing c
 | `state` | `string` | no |  |
 | `text` | `string` | no |  |
 
+### ProjectStepSkipResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `changed` | `boolean` | no |  |
+| `project_id` | `string` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
+| `workflow` | [`Workflow`](/docs/api/schemas#workflow) | no |  |
+
 ### ProjectSummary
 
 | Name | Type | Required | Description |
@@ -2378,10 +2400,12 @@ The types named in the tables of the operations. The arguments of each editing c
 | `height` | `integer` | no |  |
 | `id` | `string` | no |  |
 | `items` | `integer` | no |  |
+| `kind` | `string` | no |  |
 | `name` | `string` | no |  |
 | `project_id` | `string` | no |  |
 | `revision` | `integer (int64)` | no |  |
 | `state` | `string` | no |  |
+| `text_summary` | [`TextSummary`](/docs/api/schemas#textsummary) or `any` or `null` or `null` | no |  |
 | `timeline_id` | `string` | no |  |
 | `timelines` | `integer` | no |  |
 | `tracks` | `integer` | no |  |
@@ -3033,6 +3057,17 @@ The types named in the tables of the operations. The arguments of each editing c
 | `end_reason` | `string` | no |  |
 | `state` | `string` | no |  |
 
+### Step
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actor` | `string` | no |  |
+| `cost` | array of [`Cost`](/docs/api/schemas#cost) | no |  |
+| `id` | `string` | no |  |
+| `optional` | `boolean` | no |  |
+| `state` | `string` | no |  |
+| `tool` | `string` | no |  |
+
 ### Strip
 
 | Name | Type | Required | Description |
@@ -3240,6 +3275,16 @@ The types named in the tables of the operations. The arguments of each editing c
 | `revisions` | array of [`TextRevision`](/docs/api/schemas#textrevision) | no |  |
 | `text` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
+
+### TextSummary
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `excerpt` | `string` | no |  |
+| `item_id` | `string` | no |  |
+| `reading_minutes` | `integer` | no |  |
+| `text_kind` | `string` | no |  |
+| `words` | `integer` | no |  |
 
 ### TextWriteResult
 
@@ -3733,3 +3778,12 @@ The types named in the tables of the operations. The arguments of each editing c
 | `duration` | `string` | no |  |
 | `start` | `string` | no |  |
 | `text` | `string` | no |  |
+
+### Workflow
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `current` | `string` | no |  |
+| `kind` | `string` | no |  |
+| `next` | `string` | no |  |
+| `steps` | array of [`Step`](/docs/api/schemas#step) | no |  |

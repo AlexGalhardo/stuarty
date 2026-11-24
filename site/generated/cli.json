@@ -158,6 +158,11 @@
           "name": "id",
           "type": "string",
           "usage": "identifier for the project (omit it in network mode: the server chooses)"
+        },
+        {
+          "name": "kind",
+          "type": "string",
+          "usage": "what the project is meant to become: text, video, image or undecided (default); it creates no timeline"
         }
       ],
       "globals": [
@@ -1939,6 +1944,30 @@
         "stuarty item:restore <item> --project <id>"
       ],
       "example": "stuarty item:restore pit_3c5v8n2w6d --project prj_7k2m9x4q1b",
+      "globals": [
+        "json",
+        "workspace",
+        "actor",
+        "key-file",
+        "project",
+        "dry-run"
+      ]
+    },
+    {
+      "name": "project:step",
+      "domain": "project",
+      "summary": "skip an optional step of the workflow of a project, or put it back",
+      "usage": [
+        "stuarty project:step <id> <step> [--restore]"
+      ],
+      "example": "stuarty project:step prj_7k2m9x4q1b recording",
+      "flags": [
+        {
+          "name": "restore",
+          "type": "boolean",
+          "usage": "put a skipped step back"
+        }
+      ],
       "globals": [
         "json",
         "workspace",

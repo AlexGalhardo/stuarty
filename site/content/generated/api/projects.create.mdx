@@ -29,6 +29,7 @@ Content type `application/json`.
 | `goal` | `any` | no | The SMART goal: specific, measurable, achievable, relevant and time_bound (16 to 280 characters each) and due (YYYY-MM-DD, today or later). |
 | `height` | `integer` or `null` | no | Not accepted: the size comes from preset. |
 | `id` | `string` | no | An id of your own; E_ID_EXISTS when taken.. pattern `^prj_[0123456789abcdefghjkmnpqrstvwxyz]{10}$` |
+| `kind` | `string` | no | What the project is meant to become: text, video, image or undecided (the default). It creates no timeline. |
 | `name` | `string` | no | 4 to 32 letters, digits and single spaces. |
 | `preset` | `string` | no | Deprecated, creates nothing: the size is asked when a video is added. |
 | `width` | `integer` or `null` | no | Not accepted: the size comes from preset. |
@@ -44,6 +45,7 @@ Content type `application/json`. Schema: [`ProjectCreateResult`](/docs/api/schem
 | `created` | `boolean` | no |  |
 | `fps` | `string` | no |  |
 | `height` | `integer` | no |  |
+| `kind` | `string` | no |  |
 | `name` | `string` | no |  |
 | `project_id` | `string` | no |  |
 | `revision` | `integer (int64)` | no |  |
@@ -283,6 +285,7 @@ puts "#{response.code} #{response.body}"
   "created": false,
   "fps": "string",
   "height": 0,
+  "kind": "string",
   "name": "string",
   "project_id": "string",
   "revision": 0,

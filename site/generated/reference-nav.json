@@ -42,6 +42,7 @@
         "projects.revert",
         "projects.sheet",
         "projects.snap_points",
+        "projects.steps.skip",
         "projects.transcript",
         "projects.transcript_fillers",
         "projects.trash",

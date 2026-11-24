@@ -71,6 +71,7 @@ stuarty project:create --name <n> --description <t> --specific|--measurable|--ac
 | `--preset` | string |  | deprecated, creates nothing: the size is asked when a video is added |
 | `--fps` | string |  | deprecated, creates nothing: the frame rate is asked when a video is added |
 | `--id` | string |  | identifier for the project (omit it in network mode: the server chooses) |
+| `--kind` | string |  | what the project is meant to become: text, video, image or undecided (default); it creates no timeline |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--dry-run`.
 
@@ -1283,6 +1284,26 @@ Example:
 
 ```bash
 stuarty item:restore pit_3c5v8n2w6d --project prj_7k2m9x4q1b
+```
+
+## `project:step`
+
+Skip an optional step of the workflow of a project, or put it back
+
+```text
+stuarty project:step <id> <step> [--restore]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--restore` | boolean |  | put a skipped step back |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--dry-run`.
+
+Example:
+
+```bash
+stuarty project:step prj_7k2m9x4q1b recording
 ```
 
 ## `brief:show`
