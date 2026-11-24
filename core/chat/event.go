@@ -21,13 +21,15 @@ const (
 	KindPlan             Kind = "plan"
 	KindNotice           Kind = "notice"
 	KindState            Kind = "state"
+	// KindSkillLoaded says that the agent of the session read a skill (SDD-017 section 8.1).
+	KindSkillLoaded Kind = "skill_loaded"
 )
 
 // Valid reports whether k is a kind of event.
 func (k Kind) Valid() bool {
 	switch k {
 	case KindUserMessage, KindAgentMessage, KindAgentThought, KindToolCall, KindPermissionAsked,
-		KindPermissionAnswer, KindPlan, KindNotice, KindState:
+		KindPermissionAnswer, KindPlan, KindNotice, KindState, KindSkillLoaded:
 		return true
 	}
 
@@ -47,9 +49,11 @@ const (
 
 // Tool is a tool call of the agent. Every member is text from the agent.
 type Tool struct {
-	CallID string     `json:"tool_call_id"`
-	Title  string     `json:"title"`
-	Kind   string     `json:"tool_kind,omitempty"`
+	CallID string `json:"tool_call_id"`
+	Title  string `json:"title"`
+	Kind   string `json:"tool_kind,omitempty"`
+	// Action is the action member of the arguments the agent sent, when it sent a short one.
+	Action string     `json:"action,omitempty"`
 	Status ToolStatus `json:"status"`
 	Output string     `json:"output,omitempty"`
 }
@@ -80,6 +84,7 @@ type Event struct {
 	Tool       *Tool       `json:"tool,omitempty"`
 	Permission *Permission `json:"permission,omitempty"`
 	State      *StateInfo  `json:"state,omitempty"`
+	Skill      *SkillRef   `json:"skill,omitempty"`
 }
 
 // CleanText makes text from an agent safe to store and to send: valid UTF-8, no NUL or other
