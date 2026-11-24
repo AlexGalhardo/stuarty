@@ -80,7 +80,7 @@ export async function DocArticle({ doc }: { doc: Doc }): Promise<React.ReactElem
 			</main>
 
 			{doc.wide ? null : (
-				<aside className="sticky top-(--header-h) hidden h-[calc(100dvh-var(--header-h))] w-40 shrink-0 overflow-y-auto py-10 scroll-slim xl:block">
+				<aside className="sticky top-(--header-h) hidden h-[calc(100dvh-var(--header-h))] w-44 shrink-0 overflow-y-auto py-10 scroll-slim xl:block">
 					<Toc headings={doc.headings} />
 				</aside>
 			)}
