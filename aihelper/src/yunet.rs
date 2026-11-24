@@ -78,6 +78,10 @@ pub fn decode(
 			let cy = (r as f32 + b[1]) * s;
 			let w = b[2].exp() * s;
 			let h = b[3].exp() * s;
+			// A box the host cannot read (NaN or infinite) would end the whole run; it is not a face.
+			if ![score, cx, cy, w, h].iter().all(|v| v.is_finite()) {
+				continue;
+			}
 			found.push(Face {
 				x: cx - w / 2.0,
 				y: cy - h / 2.0,
@@ -188,6 +192,33 @@ mod tests {
 			},
 		];
 		assert!(decode(&heads, 64, 32, 0.5, 0.3, 10).is_empty());
+	}
+
+	#[test]
+	fn boxes_that_are_not_finite_are_dropped() {
+		let (mut cls, mut obj, mut bbox) = head(8, 64, 32);
+		for idx in [0usize, 4, 9] {
+			cls[idx] = 1.0;
+			obj[idx] = 1.0;
+		}
+		bbox[0..4].copy_from_slice(&[0.5, 0.5, 200.0, 0.0]);
+		bbox[16..20].copy_from_slice(&[f32::NAN, 0.5, 0.0, 0.0]);
+		bbox[36..40].copy_from_slice(&[0.5, 0.5, 0.0, 0.0]);
+		cls[12] = f32::NAN;
+		obj[12] = 1.0;
+		let heads = [Head {
+			stride: 8,
+			cls: &cls,
+			obj: &obj,
+			bbox: &bbox,
+		}];
+		let faces = decode(&heads, 64, 32, 0.5, 0.3, 10);
+		assert_eq!(faces.len(), 1, "{faces:?}");
+		assert!(
+			faces
+				.iter()
+				.all(|f| [f.x, f.y, f.w, f.h, f.score].iter().all(|v| v.is_finite()))
+		);
 	}
 
 	#[test]
