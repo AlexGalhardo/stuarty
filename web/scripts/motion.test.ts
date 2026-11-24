@@ -34,12 +34,25 @@ function block(start: string): string {
 describe("reduced motion", () => {
 	const reduced = block("@media (prefers-reduced-motion: reduce)");
 
-	test("turns every transition off at 0s and animations to one instant pass", () => {
-		expect(reduced).toMatch(/transition-duration:\s*0s !important/);
+	test("turns every transition and animation to 1 ms", () => {
+		expect(css).toMatch(/--duration-reduced:\s*1ms;/);
+		expect(reduced).toMatch(
+			/transition-duration:\s*var\(--duration-reduced\) !important/,
+		);
 		expect(reduced).toMatch(/transition-delay:\s*0s !important/);
-		expect(reduced).toMatch(/animation-duration:\s*0\.01ms !important/);
+		expect(reduced).toMatch(
+			/animation-duration:\s*var\(--duration-reduced\) !important/,
+		);
 		expect(reduced).toMatch(/animation-iteration-count:\s*1 !important/);
 		expect(reduced).toMatch(/\*,\s*::before,\s*::after/);
+	});
+
+	test("sets the three duration tokens to the reduced one", () => {
+		for (const token of ["fast", "base", "slow"]) {
+			expect(reduced).toMatch(
+				new RegExp(`--duration-${token}:\\s*var\\(--duration-reduced\\)`),
+			);
+		}
 	});
 
 	test("comes after the classes that move, so it wins at equal weight", () => {

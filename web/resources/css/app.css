@@ -79,7 +79,49 @@
 	--font-heading: var(--font-sans);
 	--font-sans: "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
-	/* Base UI surfaces. The names stay so existing utilities keep working. */
+	/*
+	 * Semantic tokens of the final redesign. Each name maps to itself: the
+	 * values live in :root and .dark below, and an unlayered rule there wins
+	 * over the copy Tailwind emits into its theme layer.
+	 */
+	--color-background: var(--color-background);
+	--color-surface: var(--color-surface);
+	--color-surface-raised: var(--color-surface-raised);
+	--color-surface-sunken: var(--color-surface-sunken);
+	--color-surface-hover: var(--color-surface-hover);
+	--color-surface-selected: var(--color-surface-selected);
+	--color-text: var(--color-text);
+	--color-text-muted: var(--color-text-muted);
+	--color-text-subtle: var(--color-text-subtle);
+	--color-text-disabled: var(--color-text-disabled);
+	--color-text-on-accent: var(--color-text-on-accent);
+	--color-text-on-agent: var(--color-text-on-agent);
+	--color-text-on-danger: var(--color-text-on-danger);
+	--color-border: var(--color-border);
+	--color-border-strong: var(--color-border-strong);
+	--color-focus: var(--color-focus);
+	--color-icon: var(--color-icon);
+	--color-accent: var(--color-accent);
+	--color-accent-hover: var(--color-accent-hover);
+	--color-accent-soft: var(--color-accent-soft);
+	--color-accent-text: var(--color-accent-text);
+	--color-agent: var(--color-agent);
+	--color-agent-hover: var(--color-agent-hover);
+	--color-agent-soft: var(--color-agent-soft);
+	--color-agent-text: var(--color-agent-text);
+	--color-agent-border: var(--color-agent-border);
+	--color-success: var(--color-success);
+	--color-success-soft: var(--color-success-soft);
+	--color-success-text: var(--color-success-text);
+	--color-warning: var(--color-warning);
+	--color-warning-soft: var(--color-warning-soft);
+	--color-warning-text: var(--color-warning-text);
+	--color-danger: var(--color-danger);
+	--color-danger-hover: var(--color-danger-hover);
+	--color-danger-soft: var(--color-danger-soft);
+	--color-danger-text: var(--color-danger-text);
+
+	/* Names of the former system, kept as aliases until the last page that uses one is migrated. */
 	--color-sidebar-ring: var(--sidebar-ring);
 	--color-sidebar-border: var(--sidebar-border);
 	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -95,10 +137,8 @@
 	--color-chart-1: var(--chart-1);
 	--color-ring: var(--ring);
 	--color-input: var(--input);
-	--color-border: var(--border);
 	--color-destructive: var(--destructive);
 	--color-accent-foreground: var(--accent-foreground);
-	--color-accent: var(--accent);
 	--color-muted-foreground: var(--muted-foreground);
 	--color-muted: var(--muted);
 	--color-secondary-foreground: var(--secondary-foreground);
@@ -110,13 +150,9 @@
 	--color-card-foreground: var(--card-foreground);
 	--color-card: var(--card);
 	--color-foreground: var(--foreground);
-	--color-background: var(--background);
-
-	/* product semantic (design-system.md section 2.4) */
-	--color-success: var(--success);
-	--color-warning: var(--warning);
 	--color-info: var(--info);
-	--color-agent: var(--agent);
+
+	/* brand: the mark and its tint; the logo stays (design-system.md section 11) */
 	--color-brand: var(--brand);
 	--color-brand-foreground: var(--brand-foreground);
 	--color-brand-accent: var(--brand-accent);
@@ -148,57 +184,75 @@
 	--color-ed-preview-surround: var(--ed-preview-surround);
 	--color-ed-handle: var(--ed-handle);
 
-	/* radii (section 2.9); xs is 4 px instead of Tailwind's 2 px */
-	--radius-xs: calc(var(--radius) * 0.4);
-	--radius-sm: calc(var(--radius) * 0.6);
-	--radius-md: calc(var(--radius) * 0.8);
-	--radius-lg: var(--radius);
-	--radius-xl: calc(var(--radius) * 1.4);
-	--radius-2xl: calc(var(--radius) * 1.8);
-	--radius-3xl: calc(var(--radius) * 2.2);
-	--radius-4xl: calc(var(--radius) * 2.6);
+	/* radii (section 2.9); xs is 4 px, used by the timeline blocks */
+	--radius-xs: 0.25rem;
+	--radius-sm: 0.375rem;
+	--radius-md: 0.5rem;
+	--radius-lg: 0.75rem;
+	--radius-xl: 1rem;
+	--radius-2xl: 1.5rem;
+	--radius-3xl: 2rem;
+	--radius-4xl: 2.5rem;
+
+	/* elevation: the shadow colour comes from the theme (section 2.11) */
+	--shadow-sm: 0 1px 2px var(--color-shadow-sm);
+	--shadow-md: 0 4px 12px var(--color-shadow-md);
+	--shadow-lg: 0 16px 40px var(--color-shadow-lg);
+
+	/* motion: a bare "transition" follows the tokens, so reduced motion reaches it */
+	--default-transition-duration: var(--duration-base);
+	--default-transition-timing-function: var(--ease-standard);
 }
 
 :root {
-	/* Light chrome. */
-	--background: oklch(0.967 0.003 264.5);
-	--foreground: oklch(0.230 0.012 264.3);
-	--card: oklch(1 0 0);
-	--card-foreground: oklch(0.230 0.012 264.3);
-	--popover: oklch(1 0 0);
-	--popover-foreground: oklch(0.230 0.012 264.3);
-	--primary: oklch(0.520 0.094 223.1);
-	--primary-foreground: oklch(1 0 0);
-	--secondary: oklch(0.931 0.006 264.5);
-	--secondary-foreground: oklch(0.230 0.012 264.3);
-	--muted: oklch(0.931 0.006 264.5);
-	--muted-foreground: oklch(0.446 0.026 256.8);
-	--accent: oklch(0.931 0.006 264.5);
-	--accent-foreground: oklch(0.230 0.012 264.3);
-	--destructive: oklch(0.500 0.200 17.6);
-	--border: oklch(0.872 0.012 259.8);
-	--input: oklch(0.446 0.026 256.8);
-	--ring: oklch(0.520 0.094 223.1);
+	/* Light (paper). Hex of the redesign in the comments. */
+	--color-background: oklch(0.982 0.005 95.1); /* #FAF9F5 */
+	--color-surface: oklch(1 0 0); /* #FFFFFF */
+	--color-surface-raised: oklch(1 0 0);
+	--color-surface-sunken: oklch(0.958 0.010 93.6); /* #F3F1EA */
+	--color-surface-hover: oklch(0.928 0.014 93.0); /* #EAE7DD */
+	--color-surface-selected: oklch(0.938 0.027 288.2); /* #E9E8FC */
+	--color-text: oklch(0.230 0.009 97.8); /* #1E1D18 */
+	--color-text-muted: oklch(0.414 0.021 100.0); /* #4E4C3F */
+	--color-text-subtle: oklch(0.497 0.031 100.3); /* #66634F */
+	--color-text-disabled: oklch(0.602 0.027 96.8); /* #85816F */
+	--color-text-on-accent: oklch(1 0 0);
+	--color-text-on-agent: oklch(1 0 0);
+	--color-text-on-danger: oklch(1 0 0);
+	--color-border: oklch(0.882 0.018 92.7); /* #DCD8CB */
+	--color-border-strong: oklch(0.602 0.027 96.8); /* #85816F */
+	--color-focus: oklch(0.460 0.216 276.7); /* #4339CC */
+	--color-icon: oklch(0.414 0.021 100.0);
+	--color-accent: oklch(0.460 0.216 276.7);
+	--color-accent-hover: oklch(0.426 0.200 276.4); /* #3B33B8 */
+	--color-accent-soft: oklch(0.938 0.027 288.2);
+	--color-accent-text: oklch(0.460 0.216 276.7);
+	--color-agent: oklch(0.489 0.082 185.9); /* #0F6F67 */
+	--color-agent-hover: oklch(0.437 0.069 186.8); /* #155E58 */
+	--color-agent-soft: oklch(0.943 0.029 183.3); /* #D8F3EE */
+	--color-agent-text: oklch(0.489 0.082 185.9);
+	--color-agent-border: oklch(0.841 0.078 184.5); /* #8FDCD1 */
+	--color-success: oklch(0.463 0.111 152.0); /* #166A38 */
+	--color-success-soft: oklch(0.948 0.034 154.8); /* #DDF5E4 */
+	--color-success-text: oklch(0.463 0.111 152.0);
+	--color-warning: oklch(0.495 0.105 73.7); /* #855700 */
+	--color-warning-soft: oklch(0.954 0.040 88.2); /* #FBEFD2 */
+	--color-warning-text: oklch(0.495 0.105 73.7);
+	--color-danger: oklch(0.499 0.175 22.0); /* #B12532 */
+	--color-danger-hover: oklch(0.553 0.188 21.4); /* #C9303E */
+	--color-danger-soft: oklch(0.936 0.026 11.9); /* #FBE3E5 */
+	--color-danger-text: oklch(0.499 0.175 22.0);
+	--color-shadow-sm: oklch(0.230 0.009 97.8 / 0.1);
+	--color-shadow-md: oklch(0.230 0.009 97.8 / 0.14);
+	--color-shadow-lg: oklch(0.230 0.009 97.8 / 0.2);
+
 	--chart-1: oklch(0.546 0.215 262.9);
 	--chart-2: oklch(0.527 0.137 150.1);
 	--chart-3: oklch(0.496 0.237 301.9);
 	--chart-4: oklch(0.553 0.174 38.4);
 	--chart-5: oklch(0.525 0.199 4.0);
-	--radius: 0.25rem;
-	--sidebar: oklch(1 0 0);
-	--sidebar-foreground: oklch(0.230 0.012 264.3);
-	--sidebar-primary: oklch(0.520 0.094 223.1);
-	--sidebar-primary-foreground: oklch(1 0 0);
-	--sidebar-accent: oklch(0.931 0.006 264.5);
-	--sidebar-accent-foreground: oklch(0.230 0.012 264.3);
-	--sidebar-border: oklch(0.872 0.012 259.8);
-	--sidebar-ring: oklch(0.520 0.094 223.1);
+	--radius: 0.75rem;
 
-	/* semantic states, agent attribution and brand (section 2.4) */
-	--success: oklch(0.480 0.130 150.1);
-	--warning: oklch(0.480 0.150 38.4);
-	--info: oklch(0.520 0.094 223.1);
-	--agent: oklch(0.496 0.237 301.9);
 	/* brand: the indigo of the official icon in the light theme (design-system section 11.3) */
 	--brand: oklch(0.442 0.222 272.9);
 	--brand-foreground: oklch(0.994 0 0);
@@ -207,10 +261,10 @@
 	--brand-text: oklch(0.442 0.222 272.9);
 
 	/* editor (section 2.5), light palette */
-	--ed-bg: oklch(0.967 0.003 264.5);
-	--ed-panel: oklch(1 0 0);
-	--ed-timeline: oklch(0.931 0.006 264.5);
-	--ed-track-line: oklch(0.446 0.026 256.8);
+	--ed-bg: var(--color-background);
+	--ed-panel: var(--color-surface);
+	--ed-timeline: var(--color-surface-sunken);
+	--ed-track-line: var(--color-border-strong);
 	--ed-item-clip: oklch(0.546 0.215 262.9);
 	--ed-item-clip-fg: oklch(1 0 0);
 	--ed-item-audio: oklch(0.527 0.137 150.1);
@@ -222,63 +276,74 @@
 	--ed-item-shape: oklch(0.553 0.174 38.4);
 	--ed-item-shape-fg: oklch(1 0 0);
 	--ed-playhead: oklch(0.210 0.032 264.7);
-	--ed-marker: oklch(0.520 0.094 223.1);
+	--ed-marker: var(--color-focus);
 	--ed-selection: oklch(1 0 0);
-	--ed-snap: oklch(0.520 0.094 223.1);
-	--ed-ghost: oklch(0.210 0.032 264.7 / 0.9);
-	--ed-safe-area: oklch(0.520 0.094 223.1);
+	--ed-snap: var(--color-focus);
+	--ed-ghost: oklch(0.460 0.216 276.7 / 0.75);
+	--ed-safe-area: oklch(0.799 0.104 282.6);
 	--ed-error-flash: oklch(0.586 0.222 17.6);
-	--ed-preview-surround: oklch(0.927 0.007 260.7);
-	--ed-handle: oklch(0.520 0.094 223.1);
+	--ed-preview-surround: oklch(0.174 0.010 276.4);
+	--ed-handle: oklch(0.799 0.104 282.6);
 
-	/* motion (section 2.13): the editor animates from BETA, always through
-	   these tokens and never under prefers-reduced-motion */
+	/* motion (section 2.13): always through these tokens; reduced motion sets them to 1 ms */
 	--duration-none: 0ms;
-	--duration-fast: 100ms;
-	--duration-base: 150ms;
-	--duration-slow: 200ms;
+	--duration-fast: 120ms;
+	--duration-base: 200ms;
+	--duration-slow: 320ms;
+	--duration-reduced: 1ms;
 	--ease-standard: cubic-bezier(0.2, 0, 0, 1);
+	--ease-enter: cubic-bezier(0, 0, 0.2, 1);
+	--ease-exit: cubic-bezier(0.4, 0, 1, 1);
 }
 
 .dark {
-	/* Dark chrome. */
-	--background: oklch(0.178 0.006 271.0);
-	--foreground: oklch(0.975 0.006 255.5);
-	--card: oklch(0.221 0.011 260.7);
-	--card-foreground: oklch(0.975 0.006 255.5);
-	--popover: oklch(0.268 0.016 264.3);
-	--popover-foreground: oklch(0.975 0.006 255.5);
-	--primary: oklch(0.797 0.134 211.5);
-	--primary-foreground: oklch(0.122 0.006 261.6);
-	--secondary: oklch(0.268 0.016 264.3);
-	--secondary-foreground: oklch(0.975 0.006 255.5);
-	--muted: oklch(0.268 0.016 264.3);
-	--muted-foreground: oklch(0.686 0.026 267.8);
-	--accent: oklch(0.268 0.016 264.3);
-	--accent-foreground: oklch(0.975 0.006 255.5);
-	/* 0.790, not 0.750: the destructive button of a dialog is its 20% tint over the popover (4.34:1 at 0.750). */
-	--destructive: oklch(0.790 0.170 16.4);
-	--border: oklch(0.324 0.023 264.2);
-	--input: oklch(0.686 0.026 267.8);
-	--ring: oklch(0.797 0.134 211.5);
+	/* Dark (ink), the default theme. */
+	--color-background: oklch(0.202 0.012 277.8); /* #15161C */
+	--color-surface: oklch(0.229 0.016 279.5); /* #1B1C24 */
+	--color-surface-raised: oklch(0.262 0.017 275.3); /* #22242D */
+	--color-surface-sunken: oklch(0.174 0.010 276.4); /* #0F1015 */
+	--color-surface-hover: oklch(0.296 0.020 277.0); /* #2A2C37 */
+	--color-surface-selected: oklch(0.252 0.075 279.6); /* #1C1C45 */
+	--color-text: oklch(0.953 0.007 277.2); /* #EEEFF4 */
+	--color-text-muted: oklch(0.807 0.020 276.3); /* #BCBFCD */
+	--color-text-subtle: oklch(0.702 0.028 276.2); /* #9A9EB1 */
+	--color-text-disabled: oklch(0.582 0.033 272.8); /* #747A8F */
+	--color-text-on-accent: oklch(1 0 0);
+	--color-text-on-agent: oklch(0.174 0.010 276.4);
+	--color-text-on-danger: oklch(1 0 0);
+	--color-border: oklch(0.347 0.025 275.6); /* #363947 */
+	--color-border-strong: oklch(0.582 0.033 272.8); /* #747A8F */
+	--color-focus: oklch(0.799 0.104 282.6); /* #B3B5FF */
+	--color-icon: oklch(0.807 0.020 276.3);
+	--color-accent: oklch(0.559 0.208 276.7); /* #5B5DEA */
+	--color-accent-hover: oklch(0.509 0.218 277.1); /* #4F49DE */
+	--color-accent-soft: oklch(0.302 0.094 279.2); /* #26265C */
+	--color-accent-text: oklch(0.799 0.104 282.6);
+	--color-agent: oklch(0.810 0.131 182.6); /* #3DDCC8 */
+	--color-agent-hover: oklch(0.870 0.105 183.4); /* #7CEBDB */
+	--color-agent-soft: oklch(0.255 0.033 188.8); /* #0D2826 */
+	--color-agent-text: oklch(0.870 0.105 183.4);
+	--color-agent-border: oklch(0.437 0.069 186.8);
+	--color-success: oklch(0.650 0.149 151.7); /* #35A85F */
+	--color-success-soft: oklch(0.256 0.041 157.2); /* #10291B */
+	--color-success-text: oklch(0.844 0.121 152.9); /* #8BE3A6 */
+	--color-warning: oklch(0.758 0.146 77.7); /* #E3A32B */
+	--color-warning-soft: oklch(0.267 0.036 83.4); /* #2E2410 */
+	--color-warning-text: oklch(0.865 0.109 82.5); /* #F6CC7C */
+	--color-danger: oklch(0.553 0.188 21.4); /* #C9303E */
+	--color-danger-hover: oklch(0.499 0.175 22.0);
+	--color-danger-soft: oklch(0.257 0.043 8.7); /* #351A1F */
+	--color-danger-text: oklch(0.817 0.103 19.5); /* #FFA8A8 */
+	--color-shadow-sm: oklch(0.174 0.010 276.4 / 0.4);
+	--color-shadow-md: oklch(0.174 0.010 276.4 / 0.45);
+	--color-shadow-lg: oklch(0.174 0.010 276.4 / 0.55);
+
 	--chart-1: oklch(0.87 0 0);
 	--chart-2: oklch(0.556 0 0);
 	--chart-3: oklch(0.439 0 0);
 	--chart-4: oklch(0.371 0 0);
 	--chart-5: oklch(0.269 0 0);
-	--sidebar: oklch(0.221 0.011 260.7);
-	--sidebar-foreground: oklch(0.975 0.006 255.5);
-	--sidebar-primary: oklch(0.797 0.134 211.5);
-	--sidebar-primary-foreground: oklch(0.122 0.006 261.6);
-	--sidebar-accent: oklch(0.268 0.016 264.3);
-	--sidebar-accent-foreground: oklch(0.975 0.006 255.5);
-	--sidebar-border: oklch(0.324 0.023 264.2);
-	--sidebar-ring: oklch(0.797 0.134 211.5);
 
-	--success: oklch(0.723 0.192 149.6);
-	--warning: oklch(0.769 0.165 70.1);
-	--info: oklch(0.797 0.134 211.5);
-	--agent: oklch(0.797 0.134 211.5);
 	/* brand: the lilac of the official icon in the dark theme (design-system section 11.3) */
 	--brand: oklch(0.645 0.189 282.5);
 	--brand-foreground: oklch(0.145 0 0);
@@ -286,10 +351,6 @@
 	--brand-subtle: oklch(0.29 0.13 272 / 40%);
 	--brand-text: oklch(0.8 0.13 281);
 
-	--ed-bg: oklch(0.178 0.006 271.0);
-	--ed-panel: oklch(0.221 0.011 260.7);
-	--ed-timeline: oklch(0.178 0.006 271.0);
-	--ed-track-line: oklch(0.686 0.026 267.8);
 	--ed-item-clip: oklch(0.500 0.180 259.8);
 	--ed-item-clip-fg: oklch(1 0 0);
 	--ed-item-audio: oklch(0.620 0.170 149.6);
@@ -301,19 +362,50 @@
 	--ed-item-shape: oklch(0.769 0.165 70.1);
 	--ed-item-shape-fg: oklch(0.122 0.006 261.6);
 	--ed-playhead: oklch(1 0 0);
-	--ed-marker: oklch(0.797 0.134 211.5);
-	--ed-selection: oklch(1 0 0);
-	--ed-snap: oklch(0.797 0.134 211.5);
-	--ed-ghost: oklch(0.797 0.134 211.5 / 0.55);
-	--ed-safe-area: oklch(0.797 0.134 211.5);
+	--ed-ghost: oklch(0.799 0.104 282.6 / 0.55);
 	--ed-error-flash: oklch(0.645 0.215 16.4);
-	--ed-preview-surround: oklch(0.122 0.006 261.6);
-	--ed-handle: oklch(0.797 0.134 211.5);
+}
+
+/*
+ * Aliases: the names of the former system point to the tokens above, so a page
+ * not yet migrated repaints with no change to its code. An alias is removed by
+ * the last epic that stops using it. Declared for .dark too, so a nested
+ * theme scope resolves them against its own values.
+ */
+:root,
+.dark {
+	--background: var(--color-background);
+	--foreground: var(--color-text);
+	--card: var(--color-surface);
+	--card-foreground: var(--color-text);
+	--popover: var(--color-surface-raised);
+	--popover-foreground: var(--color-text);
+	--primary: var(--color-accent);
+	--primary-foreground: var(--color-text-on-accent);
+	--secondary: var(--color-surface-raised);
+	--secondary-foreground: var(--color-text);
+	--muted: var(--color-surface-sunken);
+	--muted-foreground: var(--color-text-muted);
+	--accent-foreground: var(--color-text-on-accent);
+	/* destructive is used as text and as a tint, so it takes the text variant of danger */
+	--destructive: var(--color-danger-text);
+	--border: var(--color-border);
+	--input: var(--color-border-strong);
+	--ring: var(--color-focus);
+	--info: var(--color-accent-text);
+	--sidebar: var(--color-surface-sunken);
+	--sidebar-foreground: var(--color-text);
+	--sidebar-primary: var(--color-accent);
+	--sidebar-primary-foreground: var(--color-text-on-accent);
+	--sidebar-accent: var(--color-surface-hover);
+	--sidebar-accent-foreground: var(--color-text);
+	--sidebar-border: var(--color-border);
+	--sidebar-ring: var(--color-focus);
 }
 
 @layer base {
 	* {
-		@apply border-border outline-ring/50;
+		@apply border-border outline-focus/50;
 	}
 
 	body {
@@ -322,27 +414,50 @@
 		@apply relative bg-background text-foreground;
 	}
 
-	/* The dashboard reads at one and a half times the default text size (D-123);
-	   the video and image editors keep the default, their panels are dense by
-	   design. Set on <html> so the dialogs and menus portaled to body follow.
-	   Phone widths keep the default size: at 320 CSS px the larger text cannot
-	   reflow without a horizontal scroll (WCAG 1.4.10, SDD-012 section 18.10). */
-	@media (min-width: 48rem) {
-		html[data-text-scale="dashboard"] {
-			--text-xs: 1.125rem;
-			--text-sm: 1.3125rem;
-			--text-base: 1.5rem;
-			--text-lg: 1.6875rem;
-			--text-xl: 1.875rem;
-			--text-2xl: 2.25rem;
-			--text-3xl: 2.8125rem;
-			--text-4xl: 3.375rem;
-			--text-5xl: 4.5rem;
-		}
+	/* The text scale of the final redesign (section 2.7). The dashboard sets
+	   data-text-scale on <html>, so the dialogs and menus portaled to body
+	   follow. Its smallest size is 14 px at every width; the video and image
+	   editors keep the Tailwind default, where 12 px is the minimum. */
+	html[data-text-scale="dashboard"] {
+		--text-xs: 0.875rem;
+		--text-xs--line-height: calc(20 / 14);
+		--text-sm: 0.875rem;
+		--text-sm--line-height: calc(20 / 14);
+		--text-base: 1rem;
+		--text-base--line-height: calc(24 / 16);
+		--text-lg: 1.125rem;
+		--text-lg--line-height: calc(28 / 18);
+		--text-xl: 1.25rem;
+		--text-xl--line-height: calc(28 / 20);
+		--text-2xl: 1.5rem;
+		--text-2xl--line-height: calc(32 / 24);
+		--text-3xl: 1.875rem;
+		--text-3xl--line-height: calc(38 / 30);
+		--text-4xl: 2.375rem;
+		--text-4xl--line-height: calc(46 / 38);
+		--text-5xl: 3.25rem;
+		--text-5xl--line-height: calc(60 / 52);
+		--text-6xl: 4.25rem;
+		--text-6xl--line-height: calc(72 / 68);
+	}
 
-		html[data-text-scale="dashboard"] body {
-			font-size: var(--text-base);
-		}
+	/* Headings without a size class: h1 30/38, h2 24/32, h3 18/26. */
+	html[data-text-scale="dashboard"] :where(h1) {
+		font-size: var(--text-3xl);
+		line-height: calc(38 / 30);
+		font-weight: 600;
+	}
+
+	html[data-text-scale="dashboard"] :where(h2) {
+		font-size: var(--text-2xl);
+		line-height: calc(32 / 24);
+		font-weight: 600;
+	}
+
+	html[data-text-scale="dashboard"] :where(h3) {
+		font-size: var(--text-lg);
+		line-height: calc(26 / 18);
+		font-weight: 600;
 	}
 
 	html {
@@ -370,11 +485,11 @@
 /*
  * Focus (design-system.md section 2.10). The Base UI primitives carry
  * outline-none and a ring. This rule is outside every @layer, so it wins
- * over Tailwind's utilities: a solid 2 px outline in --ring on everything
- * focusable. Narrow the selector if needed, never weaken the outline.
+ * over Tailwind's utilities: a solid 2 px outline in --color-focus on
+ * everything focusable. Narrow the selector if needed, never weaken the outline.
  */
 :where(a, button, input, select, textarea, summary, [tabindex], [contenteditable="true"], [data-slot]):focus-visible {
-	outline: 2px solid var(--ring);
+	outline: 2px solid var(--color-focus);
 	outline-offset: 2px;
 }
 
@@ -399,10 +514,10 @@ main[tabindex="-1"]:focus-visible {
 	min-height: 24px;
 }
 
-/* Interface motion (section 2.13, BETA): state changes of the editor fade in
-   150 ms; a highlight outline eases in over 200 ms. Position and size never
-   transition, so a drag, a zoom or a resize is never lagging behind the
-   pointer. */
+/* Interface motion (section 2.13): state changes of the editor fade in
+   --duration-base; a highlight outline eases in over --duration-slow. Position
+   and size never transition, so a drag, a zoom or a resize is never lagging
+   behind the pointer. */
 .ed-motion {
 	transition-property: background-color, border-color, box-shadow, opacity,
 		outline-color;
@@ -421,17 +536,23 @@ main[tabindex="-1"]:focus-visible {
 	animation: ed-highlight-in var(--duration-slow) var(--ease-standard);
 }
 
-/* Reduced motion (section 2.13): turns off the interface motion above and what
-   the shared primitives carry. A transition is off at 0s; an animation keeps a
-   0.01 ms duration, because popup presence waits for animationend
-   and an animation of exactly 0s does not fire it in every engine. */
+/* Reduced motion (section 2.13): every transition and animation lasts 1 ms,
+   which turns off the interface motion above and what the shared primitives
+   carry. It is not 0: popup presence waits for animationend, and an animation
+   of exactly 0s does not fire it in every engine. */
 @media (prefers-reduced-motion: reduce) {
+	:root {
+		--duration-fast: var(--duration-reduced);
+		--duration-base: var(--duration-reduced);
+		--duration-slow: var(--duration-reduced);
+	}
+
 	*,
 	::before,
 	::after {
-		animation-duration: 0.01ms !important;
+		animation-duration: var(--duration-reduced) !important;
 		animation-iteration-count: 1 !important;
-		transition-duration: 0s !important;
+		transition-duration: var(--duration-reduced) !important;
 		transition-delay: 0s !important;
 	}
 }

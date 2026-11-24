@@ -164,54 +164,91 @@ function layered(fg: string, bg: string, need: number, light: number, dark: numb
 	};
 }
 
-// tintRange is the lowest or highest ratio of the four states on their own tint
-// over the editor panel: the document gives the range, not each state.
-function tintRange(label: string, pick: (...n: number[]) => number, light: number, dark: number): Pair {
-	const states = ["success", "warning", "info", "agent"];
-	return {
-		name: `${label} of success, warning, info and agent on their tint over ed-panel`,
-		need: 4.5,
-		light,
-		dark,
-		measure: (t) => pick(...states.map((s) => tint(s, "ed-panel", 4.5, 0, 0, s).measure(t))),
-	};
-}
-
 const T = "ed-timeline";
 const S = "ed-preview-surround";
 
 const pairs: Pair[] = [
-	plain("foreground", "background", 4.5, 15.35, 17.57),
-	plain("foreground", "ed-panel", 4.5, 16.89, 16.07),
-	plain("muted-foreground", "background", 4.5, 6.87, 6.69),
-	plain("muted-foreground", "muted", 4.5, 6.17, 5.38),
-	plain("muted-foreground", T, 4.5, 6.17, 6.69),
-	plain("primary-foreground", "primary", 4.5, 5.35, 11.21),
-	plain("secondary-foreground", "secondary", 4.5, 13.79, 14.12),
-	plain("destructive", "background", 4.5, 6.08, 8.26),
-	tint("destructive", "background", 4.5, 5.07, 5.85, "destructive on its tint"),
-	// The destructive button of a dialog or a menu sits on the popover, lighter than the background in dark.
-	tint("destructive", "popover", 4.5, 5.56, 4.59, "destructive on its tint over popover"),
-	plain("success", "background", 4.5, 5.59, 8.29),
-	plain("warning", "background", 4.5, 6.37, 8.8),
-	plain("info", "background", 4.5, 4.86, 10.44),
-	plain("agent", "background", 4.5, 6.33, 10.44),
-	plain("agent", "ed-panel", 4.5, 6.97, 9.55),
-	tintRange("lowest", Math.min, 4.66, 5.28),
-	tintRange("highest", Math.max, 5.98, 6.22),
+	// Text on every surface of the redesign.
+	plain("color-text", "color-background", 4.5, 16.03, 15.72),
+	plain("color-text-muted", "color-background", 4.5, 8.22, 9.87),
+	plain("color-text-subtle", "color-background", 4.5, 5.75, 6.78),
+	plain("color-text", "color-surface", 4.5, 16.88, 14.78),
+	plain("color-text-muted", "color-surface", 4.5, 8.66, 9.28),
+	plain("color-text-subtle", "color-surface", 4.5, 6.05, 6.38),
+	plain("color-text", "color-surface-raised", 4.5, 16.88, 13.48),
+	plain("color-text-muted", "color-surface-raised", 4.5, 8.66, 8.46),
+	plain("color-text-subtle", "color-surface-raised", 4.5, 6.05, 5.81),
+	plain("color-text", "color-surface-sunken", 4.5, 14.95, 16.56),
+	plain("color-text-muted", "color-surface-sunken", 4.5, 7.67, 10.4),
+	plain("color-text-subtle", "color-surface-sunken", 4.5, 5.36, 7.14),
+	plain("color-text", "color-surface-hover", 4.5, 13.66, 12.08),
+	plain("color-text-muted", "color-surface-hover", 4.5, 7.01, 7.58),
+	plain("color-text-subtle", "color-surface-hover", 4.5, 4.9, 5.21),
+	plain("color-text", "color-surface-selected", 4.5, 14.01, 14.08),
+	plain("color-text-muted", "color-surface-selected", 4.5, 7.19, 8.84),
+	plain("color-text-subtle", "color-surface-selected", 4.5, 5.02, 6.07),
+	// The focus ring and the boundary of a control (3:1, WCAG 1.4.11).
+	plain("color-focus", "color-background", 3, 7.4, 9.44),
+	plain("color-focus", "color-surface", 3, 7.79, 8.87),
+	plain("color-focus", "color-surface-raised", 3, 7.79, 8.09),
+	plain("color-focus", "color-surface-sunken", 3, 6.9, 9.94),
+	plain("color-focus", "color-surface-selected", 3, 6.47, 8.45),
+	plain("color-border-strong", "color-background", 3, 3.71, 4.23),
+	plain("color-border-strong", "color-surface", 3, 3.91, 3.98),
+	plain("color-border-strong", "color-surface-raised", 3, 3.91, 3.63),
+	plain("color-border-strong", "color-surface-sunken", 3, 3.46, 4.46),
+	// Each family: its text on its soft surface, its fill with its text, and its colour as text on the page and on a card.
+	plain("color-accent-text", "color-accent-soft", 4.5, 6.47, 7.26),
+	plain("color-accent-text", "color-background", 4.5, 7.4, 9.44),
+	plain("color-accent-text", "color-surface", 4.5, 7.79, 8.87),
+	plain("color-agent-text", "color-agent-soft", 4.5, 5.15, 10.96),
+	plain("color-agent-text", "color-background", 4.5, 5.72, 12.7),
+	plain("color-agent-text", "color-surface", 4.5, 6.02, 11.93),
+	plain("color-success-text", "color-success-soft", 4.5, 5.8, 10.06),
+	plain("color-success-text", "color-background", 4.5, 6.34, 11.71),
+	plain("color-success-text", "color-surface", 4.5, 6.67, 11.01),
+	plain("color-warning-text", "color-warning-soft", 4.5, 5.47, 10.06),
+	plain("color-warning-text", "color-background", 4.5, 5.94, 11.91),
+	plain("color-warning-text", "color-surface", 4.5, 6.26, 11.19),
+	plain("color-danger-text", "color-danger-soft", 4.5, 5.43, 8.67),
+	plain("color-danger-text", "color-background", 4.5, 6.28, 9.82),
+	plain("color-danger-text", "color-surface", 4.5, 6.61, 9.23),
+	plain("color-text-on-accent", "color-accent", 4.5, 7.79, 5.01),
+	plain("color-text-on-agent", "color-agent", 4.5, 6.02, 11.12),
+	plain("color-text-on-danger", "color-danger", 4.5, 6.61, 5.28),
+	plain("color-text-on-accent", "color-accent-hover", 4.5, 8.95, 6.28),
+	plain("color-text-on-danger", "color-danger-hover", 4.5, 5.28, 6.61),
+	plain("color-success", "color-background", 4.5, 6.34, 5.95),
+	plain("color-success", "color-surface", 4.5, 6.67, 5.59),
+	plain("color-warning", "color-background", 4.5, 5.94, 8.19),
+	plain("color-warning", "color-surface", 4.5, 6.26, 7.7),
+	plain("color-agent", "color-background", 4.5, 5.72, 10.56),
+	plain("color-agent", "color-surface", 4.5, 6.02, 9.92),
+	// Names of the former system, kept as aliases (section 2.1).
+	plain("muted-foreground", "muted", 4.5, 7.67, 10.4),
+	plain("primary-foreground", "primary", 4.5, 7.79, 5.01),
+	plain("secondary-foreground", "secondary", 4.5, 16.88, 13.48),
+	plain("destructive", "background", 4.5, 6.28, 9.82),
+	tint("destructive", "background", 4.5, 5.34, 6.42, "destructive on its tint"),
+	// The destructive button of a dialog or a menu sits on the popover.
+	tint("destructive", "popover", 4.5, 5.61, 5.41, "destructive on its tint over popover"),
+	plain("info", "background", 4.5, 7.4, 9.44),
+	tint("color-agent", "ed-panel", 4.5, 5.22, 6.33, "agent on its tint over ed-panel"),
+	plain("color-agent", "ed-panel", 4.5, 6.02, 9.92),
 	plain("brand-foreground", "brand", 4.5, 8.28, 5.66),
-	plain("brand-text", "background", 4.5, 7.66, 9.65),
-	layered("brand-text", "brand-subtle", 4.5, 7.67, 8.95),
-	plain("ring", "background", 3, 4.86, 10.44),
-	plain("ring", T, 3, 4.37, 10.44),
-	plain("input", "background", 3, 6.87, 6.69),
-	plain("ed-track-line", T, 3, 6.17, 6.69),
-	plain("ed-playhead", T, 3, 14.48, 18.88),
-	plain("ed-snap", T, 3, 4.37, 10.44),
-	plain("ed-ghost", T, 3, 11.29, 3.85),
-	plain("ed-error-flash", T, 3, 3.83, 5.14),
-	plain("ed-safe-area", S, 3, 4.32, 11.21),
-	plain("ed-handle", S, 3, 4.32, 11.21),
+	plain("brand-text", "background", 4.5, 8, 9.23),
+	layered("brand-text", "brand-subtle", 4.5, 7.67, 8.66),
+	plain("ring", "background", 3, 7.4, 9.44),
+	plain("ring", T, 3, 6.9, 9.94),
+	plain("input", "background", 3, 3.71, 4.23),
+	// The editor.
+	plain("ed-track-line", T, 3, 3.46, 4.46),
+	plain("ed-playhead", T, 3, 15.71, 19.01),
+	plain("ed-snap", T, 3, 6.9, 9.94),
+	plain("ed-ghost", T, 3, 4.08, 3.74),
+	plain("ed-error-flash", T, 3, 4.16, 5.18),
+	plain("ed-safe-area", S, 3, 9.94, 9.94),
+	plain("ed-handle", S, 3, 9.94, 9.94),
 	plain("ed-item-clip-fg", "ed-item-clip", 4.5, 5.17, 6.18),
 	plain("ed-item-audio-fg", "ed-item-audio", 4.5, 5.02, 5.98),
 	plain("ed-item-text-fg", "ed-item-text", 4.5, 6.97, 6.66),
@@ -232,9 +269,11 @@ export interface Row {
 
 // evaluate measures every pair in both themes for the given stylesheet text.
 export function evaluate(css: string): Row[] {
+	// The aliases of the former names sit in one rule for both themes.
+	const aliases = block(css, ":root,\n.dark");
 	themes = {
-		light: block(css, ":root"),
-		dark: new Map([...block(css, ":root"), ...block(css, ".dark")]),
+		light: new Map([...block(css, ":root"), ...aliases]),
+		dark: new Map([...block(css, ":root"), ...aliases, ...block(css, ".dark")]),
 	};
 	const rows: Row[] = [];
 	for (const p of pairs) {

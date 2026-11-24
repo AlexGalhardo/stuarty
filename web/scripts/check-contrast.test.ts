@@ -16,9 +16,9 @@ describe("check-contrast", () => {
 	});
 
 	it("detects a token pair below 4.5:1", () => {
-		// muted-foreground nearly as light as the background in the light theme.
+		// text-muted nearly as light as the background in the light theme.
 		const bad = css.replace(
-			/(--muted-foreground:\s*)oklch\([^)]*\)/,
+			/(--color-text-muted:\s*)oklch\([^)]*\)/,
 			"$1oklch(0.85 0 0)",
 		);
 		expect(bad).not.toBe(css);
@@ -26,6 +26,6 @@ describe("check-contrast", () => {
 			r.problems.some((p) => p.startsWith("below")),
 		);
 		expect(failing.length).toBeGreaterThan(0);
-		expect(failing.every((r) => r.name.includes("muted-foreground"))).toBe(true);
+		expect(failing.every((r) => r.name.includes("muted"))).toBe(true);
 	});
 });
