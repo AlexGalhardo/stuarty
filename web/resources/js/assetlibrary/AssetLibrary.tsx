@@ -763,6 +763,7 @@ export function AssetLibrary({ section }: { section: Section }): ReactNode {
 								? t("ui.assets.size.unknown")
 								: t("ui.assets.total", { size: summary.size })}
 							{summary.unsized > 0 &&
+								summary.size !== "" &&
 								` ${t("ui.assets.unsized", { count: summary.unsized })}`}
 						</p>
 					)}
