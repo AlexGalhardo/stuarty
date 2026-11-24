@@ -13,6 +13,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/service/account"
 	"github.com/AlexGalhardo/stuarty/service/connections"
+	"github.com/AlexGalhardo/stuarty/service/library"
 	"github.com/AlexGalhardo/stuarty/service/vault"
 )
 
@@ -86,9 +87,34 @@ func (o *Owner) createAccount(ctx context.Context, rec account.Record, fields ac
 	// The vault this process holds still has the old key in memory: the next use asks the account.
 	o.vault.Forget()
 
+	// Step 4 of SDD-005 section 5.17.3: the files of the library, each sealed by an atomic rename and read back. The
+	// account is committed, so a failure here is logged and the first unlock seals what is left.
+	o.sealLibrary(ctx, fields)
+
 	o.finishAccount(ctx, backupDir)
 
 	return nil
+}
+
+// sealLibrary seals the clear files of library/ with the key of the account being made.
+func (o *Owner) sealLibrary(ctx context.Context, fields account.Sealer) {
+	files, ok := fields.(account.FileSealer)
+	if !ok {
+		return
+	}
+
+	lib := library.New(o.Dir.Path("library"), library.NewMemIndex(), o.now, library.WithFiles(files))
+
+	if err := o.fault("library"); err != nil {
+		o.log.WarnContext(ctx, "the files of the library were not sealed; the first unlock seals them", "error", err)
+
+		return
+	}
+
+	if _, err := lib.SealAll(ctx); err != nil {
+		o.log.WarnContext(ctx, "the files of the library were not all sealed; the first unlock seals the rest",
+			"error", err)
+	}
 }
 
 // finishAccount removes what the sealing left in clear: the old pages of db.sqlite and of its log, the copies that

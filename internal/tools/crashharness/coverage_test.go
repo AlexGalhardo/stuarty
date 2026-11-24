@@ -33,6 +33,7 @@ var covered = map[string]string{
 	"trash_empty.after_lock":        "web/app/servicetest TestCrashTrashEmpty",
 	"trash_empty.before_commit":     "web/app/servicetest TestCrashTrashEmpty",
 	"trash_empty.after_commit":      "web/app/servicetest TestCrashTrashEmpty",
+	"library_seal.after_file":       "web/app/servicetest TestCrashLibrarySeal",
 	"vault.before_rename":           "internal/tools/crashharness TestSecurity_T101_VaultKilledMidWriteKeepsEveryAcknowledgedSecret",
 	"vault.after_rename":            "internal/tools/crashharness TestSecurity_T101_VaultKilledMidWriteKeepsEveryAcknowledgedSecret",
 }

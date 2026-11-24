@@ -8,6 +8,7 @@ import (
 	"path"
 
 	"github.com/AlexGalhardo/stuarty/service/account"
+	"github.com/AlexGalhardo/stuarty/service/crashpoint"
 )
 
 // maxSealFile is the largest clear file the product seals in place; a larger one is no entry of the library (the
@@ -44,28 +45,38 @@ func sealClearFile(root *vroot, rel string) (bool, error) {
 		return false, nil
 	}
 
-	if err := writeFile(root, rel, raw); err != nil {
+	sealed, err := root.seal.SealFile(rel, raw)
+	if err != nil {
 		return false, err
 	}
 
-	back, _, clear, err := readFile(root, rel, int64(len(raw)))
+	if err := replaceFile(root, rel, sealed); err != nil {
+		return false, err
+	}
+
+	stored, err := root.ReadFile(rel)
 	if err != nil {
 		return false, fmt.Errorf("library: %s did not read back after it was sealed: %w", printable(rel), err)
 	}
 
-	if clear || !bytes.Equal(back, raw) {
+	back, err := root.seal.OpenFile(rel, stored)
+	if err != nil || !bytes.Equal(back, raw) {
 		return false, fmt.Errorf("library: %s is not what it was after it was sealed", printable(rel))
 	}
 
 	// The file keeps the time it had: the date of a skill, or of a note that records none, is the date of its file.
 	_ = root.Chtimes(rel, info.ModTime(), info.ModTime())
 
+	// A kill here leaves some files sealed and some clear: every file is whole either way, and the next scan or unlock
+	// seals the rest (SDD-005 section 5.17.4).
+	crashpoint.Hit("library_seal.after_file")
+
 	return true, nil
 }
 
-// sealClearTree seals every clear file under dir and returns how many it sealed.
+// sealClearTree seals every clear file under dir, a few at a time, and returns how many it sealed.
 func sealClearTree(root *vroot, dir string) (int, error) {
-	sealed := 0
+	var files []string
 
 	var walk func(rel string, depth int) error
 
@@ -82,38 +93,39 @@ func sealClearTree(root *vroot, dir string) (int, error) {
 		for _, e := range list {
 			child := path.Join(rel, e.Name())
 
-			info, err := root.Lstat(child)
-			if err != nil {
-				if isMissing(err) {
-					continue
-				}
-
-				return err
-			}
-
 			switch {
-			case info.IsDir():
+			case e.IsDir():
 				if err := walk(child, depth+1); err != nil {
 					return err
 				}
-			case info.Mode().IsRegular():
-				did, err := sealClearFile(root, child)
-				if err != nil {
-					return err
-				}
-
-				if did {
-					sealed++
-				}
+			case e.Type().IsRegular():
+				files = append(files, child)
 			}
 		}
 
 		return nil
 	}
 
-	err := walk(dir, 0)
+	if err := walk(dir, 0); err != nil {
+		return 0, err
+	}
 
-	return sealed, err
+	jobs, sealed := newPool(), counter{}
+
+	for _, rel := range files {
+		jobs.do(func() error {
+			did, err := sealClearFile(root, rel)
+			if did {
+				sealed.add()
+			}
+
+			return err
+		})
+	}
+
+	err := jobs.wait()
+
+	return sealed.get(), err
 }
 
 // SealAll seals every clear file of library/, whatever it is (an entry, the review key, the record of the built-in
