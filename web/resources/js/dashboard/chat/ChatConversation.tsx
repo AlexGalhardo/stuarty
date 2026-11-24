@@ -80,7 +80,9 @@ export default function ChatConversation({
 	};
 
 	return (
-		<div className="flex min-h-0 flex-1 flex-col gap-3">
+		// In a short window (a phone on its side, 400 % zoom) what does not fit scrolls, so the composer is always
+		// reachable; the padding keeps the focus ring of the log from being cut at the edge
+		<div className="-mx-1 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-1">
 			<div className="grid grid-cols-2 gap-2">
 				<div className="flex flex-col gap-1">
 					<Label htmlFor={`${ids}-project`} className="text-xs">
