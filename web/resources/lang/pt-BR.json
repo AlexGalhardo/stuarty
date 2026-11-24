@@ -2639,6 +2639,7 @@
         "password_saved": "A senha foi trocada.",
         "recovery_title": "Gerar uma nova chave de recuperação",
         "recovery_hint": "Perdeu a chave de recuperação de quando criou a conta? Digite a sua senha para gerar outra. A chave antiga deixa de funcionar.",
+        "recovery_password": "Sua senha, para gerar a chave",
         "recovery_submit": "Gerar uma nova chave de recuperação",
         "recovery_made": "Esta é a sua nova chave de recuperação. Ela aparece uma vez, aqui, e o Stuarty não a guarda: anote-a ou guarde-a num gerenciador de senhas agora. A chave antiga não abre mais os seus dados."
       }
