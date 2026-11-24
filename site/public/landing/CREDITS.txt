@@ -1,9 +1,13 @@
-Screenshots of Stuarty v0.52.0, captured on 2026-11-24 with a headless Chromium from a local `stuarty serve` of the
-repository (release branch v0.53.0), on a throwaway demo workspace made for the capture (epic 88 task 3).
+Screenshots of Stuarty, captured on 2026-11-24 with a headless Chromium from a local `stuarty serve` of the
+repository (release branch v0.53.0, whose build still reports v0.52.0 in the sidebar), on a throwaway demo workspace
+made for the capture (epic 88 task 3). The home, projects and briefing screens (epic 79) are not in v0.52.0: they ship
+with the release that carries this page.
 
-Every image is a capture of the released user interface at 1600 x 1000 px, in the dark theme (name.*) and in the light
+Every image is a capture of the user interface at 1600 x 1000 px, in the dark theme (name.*) and in the light
 theme (name-light.*), as .webp and .avif at 1600 px and, with the suffix -960, at 960 px. The 960 px files are the
-1600 px capture scaled down. Nothing is drawn or composed: no design file, render or mock-up.
+1600 px capture scaled down. Nothing is drawn or composed: no design file, render or mock-up. The files were encoded
+from the PNG captures with the repository's pinned LGPL FFmpeg, carry no metadata, and are part of this repository under
+its MIT licence (LICENSE.md).
 
 Media shown inside the screenshots: none from outside the repository. The clips, pictures and sounds of the demo
 workspace were generated for the capture (gradients and sine tones made with the project's own FFmpeg). The demo

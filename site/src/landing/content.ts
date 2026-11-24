@@ -75,9 +75,12 @@ export const path = {
 		{
 			id: "brief",
 			title: "Answer the brief",
-			text: "Who it is for, what it should achieve, where it goes, how long and in which tone. Your answers become the brief your agent reads.",
+			text: "Describe it and set its goal and due date before it is created. Then the guided briefing asks who it is for, where it goes, how long and in which tone. Your answers become the brief your agent reads.",
 			screen: { kind: "slot", slot: "briefing" },
-			claims: [{ text: "A guided briefing turns answers into the brief of the production.", epics: [16] }],
+			claims: [
+				{ text: "A new project asks for its description, its goal and its due date.", epics: [79] },
+				{ text: "A guided briefing turns answers into the brief of the production.", epics: [16] },
+			],
 		},
 		{
 			id: "write",
@@ -89,9 +92,12 @@ export const path = {
 		{
 			id: "edit",
 			title: "Cut and caption",
-			text: "Trim, split, transitions, colour and keyframes, with captions that follow the voice. Export a checked MP4.",
+			text: "Trim, split, transitions, colour and keyframes, with captions that follow the voice. Cut by editing the transcript, remove filler words, style the captions, blur what must stay private and clean the voice. Export a checked MP4.",
 			screen: { kind: "shot", shot: "videoEditor" },
-			claims: [{ text: "The video editor, with captions and export.", epics: [37, 35] }],
+			claims: [
+				{ text: "The video editor, with captions and export.", epics: [37, 35] },
+				{ text: "Edit by text, filler words, caption styles, sensitive-data blur and studio voice.", epics: [69, 71] },
+			],
 		},
 		{
 			id: "thumbnail",
@@ -139,7 +145,7 @@ export const areas = {
 	title: "Everything a creator keeps in hand.",
 	items: [
 		{ id: "projects", title: "Projects", text: "Productions with their brief, media, texts and exports.", epics: [6, 56, 78] },
-		{ id: "video", title: "Video", text: "A timeline editor with captions, transitions, audio tools and export presets.", epics: [37, 34, 35] },
+		{ id: "video", title: "Video", text: "A timeline editor with captions, editing by text, transitions, audio tools and export presets.", epics: [37, 34, 35, 69] },
 		{ id: "image", title: "Images", text: "An editor for thumbnails and posts, with layers, filters and masks.", epics: [28, 29] },
 		{ id: "write", title: "Writing", text: "Scripts, copy, captions and blog posts with revisions.", epics: [17, 23] },
 		{ id: "assets", title: "Assets", text: "One library with where each file came from, its rights and where it is used.", epics: [8, 81] },
@@ -179,8 +185,11 @@ export type RoadmapItem = {
 	id: string;
 	title: string;
 	text: string;
-	/** `in-progress`: at least one epic is IN PROGRESS; `planned`: no epic is DONE; `next-release`: every epic is DONE but not in a release yet. */
-	state: "in-progress" | "planned" | "next-release";
+	/**
+	 * `in-progress`: at least one epic is IN PROGRESS; `planned`: no epic is DONE. An epic DONE on the integration branch
+	 * ships with this page (the site is built from `main` when a release is cut), so it never stays on the roadmap.
+	 */
+	state: "in-progress" | "planned";
 	epics: number[];
 };
 
@@ -188,13 +197,13 @@ export type RoadmapItem = {
 export const roadmap = {
 	eyebrow: "On the roadmap",
 	title: "Not released yet.",
-	lead: "These are planned or in progress, and none of them is in the product you download today.",
-	stateLabel: { "in-progress": "In progress", planned: "Planned", "next-release": "In the next release" } as Record<RoadmapItem["state"], string>,
+	lead: "These are planned or in progress. Something in progress may have a first part in the product you download today, but it is not finished.",
+	stateLabel: { "in-progress": "In progress", planned: "Planned" } as Record<RoadmapItem["state"], string>,
 	items: [
 		{
 			id: "recording",
 			title: "Screen recording",
-			text: "Record your screen, audio and webcam on Windows, then on the web, macOS and Linux, and edit the take in the same project.",
+			text: "A first screen capture on Windows is in the product while its performance is measured. Audio, webcam and pause come next, then recording on the web, macOS and Linux, with the take edited in the same project.",
 			state: "in-progress",
 			epics: [61, 62, 63, 67, 68],
 		},
@@ -204,13 +213,6 @@ export const roadmap = {
 			text: "Follow the cursor with an automatic zoom, highlight clicks, and set layouts, backgrounds and a teleprompter for a recording.",
 			state: "planned",
 			epics: [65, 66],
-		},
-		{
-			id: "edit-by-text",
-			title: "Edit by text and caption styles",
-			text: "Cut a video by editing its transcript, remove filler words, style captions, blur sensitive data and clean a voice.",
-			state: "next-release",
-			epics: [69, 71],
 		},
 		{
 			id: "local-ai",
@@ -244,9 +246,12 @@ export const roadmap = {
 };
 
 /** Words that name a roadmap-only feature: they must not appear in the copy outside `roadmap`. */
-export const roadmapOnlyTerms = ["recording", "record your", "teleprompter", "filler word", "transcript", "local model", "face-aware", "auto zoom", "automatic zoom"];
+export const roadmapOnlyTerms = ["recording", "record your", "screen capture", "webcam", "teleprompter", "local model", "face-aware", "auto zoom", "automatic zoom", "metrics"];
 
 export const credits = "The pictures, clips and sounds in the screenshots were made for the demo. No real person, brand or number is shown.";
 
-/** The screenshots are real captures of the released UI of a demo workspace, taken on this date. */
-export const capturedNote = "Screenshots are captures of Stuarty v0.52.0 taken on 24 November 2026, from a demo workspace.";
+/**
+ * The screenshots are real captures of the UI that ships with this page, from a demo workspace, taken on this date. They
+ * name no version: the build reported v0.52.0, but the home, projects and briefing screens (epic 79) came after it.
+ */
+export const capturedNote = "Screenshots are captures of the Stuarty UI taken on 24 November 2026, from a demo workspace.";

@@ -31,6 +31,26 @@ const released: { where: string; text: string; epics: number[] }[] = [
 	...privacy.points.map((p) => ({ where: `privacy/${p.title}`, text: p.text, epics: p.epics })),
 ];
 
+// Every sentence of the page: the string leaves of each export of content.ts, and the alt texts of the captures. Keys
+// that are not copy (ids, paths, states) are left out.
+const notCopy = new Set(["id", "src", "srcDark", "state", "kind", "shot", "slot"]);
+function strings(value: unknown, where: string, out: { where: string; text: string }[]): { where: string; text: string }[] {
+	if (typeof value === "string") out.push({ where, text: value });
+	else if (Array.isArray(value)) value.forEach((v, i) => strings(v, `${where}[${i}]`, out));
+	else if (value && typeof value === "object") {
+		for (const [k, v] of Object.entries(value)) if (!notCopy.has(k)) strings(v, `${where}.${k}`, out);
+	}
+	return out;
+}
+const pageCopy = Object.entries(content)
+	.filter(([k]) => k !== "roadmap" && k !== "roadmapOnlyTerms")
+	.flatMap(([k, v]) => strings(v, k, []));
+// The alt texts describe the captures, so they may give a real size such as "1280 by 720"; they are checked for words.
+const shotAlts = Object.entries(shots).map(([k, s]) => ({ where: `shots.${k}.alt`, text: s.alt }));
+const copyOutsideRoadmap = [...pageCopy, ...shotAlts];
+const contentCopy = [...pageCopy, ...strings(roadmap, "roadmap", [])];
+const allCopy = [...contentCopy, ...shotAlts];
+
 describe("the roadmap file", () => {
 	test("is parsed", () => {
 		expect(status.size).toBeGreaterThan(60);
@@ -50,41 +70,53 @@ describe("released claims", () => {
 });
 
 describe("On the roadmap", () => {
+	// An epic DONE on the integration branch ships with this page, so it is never on the roadmap, and the label of an
+	// item is exact: "In progress" only when one of its epics is IN PROGRESS, "Planned" only when none is.
 	for (const item of roadmap.items) {
 		test(`${item.id} is stated as ${item.state}`, () => {
 			const s = item.epics.map((n) => {
 				expect(status.has(n), `epic ${n} is not in the roadmap`).toBe(true);
 				return status.get(n) ?? "";
 			});
-			if (item.state === "in-progress") {
-				expect(s.some((x) => x.startsWith("IN PROGRESS"))).toBe(true);
-				expect(s.every((x) => !x.startsWith("DONE"))).toBe(true);
-			} else if (item.state === "planned") {
-				expect(s.every((x) => !x.startsWith("DONE"))).toBe(true);
-			} else {
-				expect(s.every((x) => x.startsWith("DONE"))).toBe(true);
-			}
+			for (const [i, x] of s.entries()) expect(x.startsWith("DONE"), `epic ${item.epics[i]} is DONE: move it out of the roadmap`).toBe(false);
+			expect(s.some((x) => x.startsWith("IN PROGRESS"))).toBe(item.state === "in-progress");
 		});
 	}
 
 	test("a feature that is not released appears only in the roadmap", () => {
-		for (const c of released) {
-			const lower = c.text.toLowerCase();
-			for (const term of roadmapOnlyTerms) expect(lower, `${c.where} says "${term}"`).not.toContain(term);
+		for (const { where, text } of copyOutsideRoadmap) {
+			const lower = text.toLowerCase();
+			for (const term of roadmapOnlyTerms) expect(lower, `${where} says "${term}"`).not.toContain(term);
 		}
-		const outside = [content.hero.title, content.hero.lead, ...content.hero.facts, content.path.lead, content.downloads.lead].join(" ").toLowerCase();
-		for (const term of roadmapOnlyTerms) expect(outside).not.toContain(term);
 	});
 });
 
 describe("what the page never holds", () => {
-	const all = JSON.stringify(content).toLowerCase();
-	test("no testimonial, customer logo or award", () => {
-		for (const word of ["testimonial", "trusted by", "customers", "award", "loved by", "5 stars", "rated"]) expect(all).not.toContain(word);
+	const lowerAll = allCopy.map((c) => ({ ...c, text: c.text.toLowerCase() }));
+	test("no testimonial, customer logo, award or boast", () => {
+		const banned = [
+			"testimonial", "trusted by", "used by", "loved by", "customer", "award", "winner", "as seen", "featured in", "rated",
+			"stars", "review from", "said", "best", "fastest", "blazing", "lightning", "world-class", "#1", "military-grade",
+			"bank-level", "unhackable", "100%",
+		];
+		for (const { where, text } of lowerAll) {
+			for (const word of banned) {
+				const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+				expect(text, `${where} says "${word}"`).not.toMatch(new RegExp(`(^|[^a-z0-9])${escaped}($|[^a-z0-9])`));
+			}
+		}
 	});
-	test("no invented number", () => {
-		expect(all).not.toMatch(/\d[\d,.]*\s?(k|m|\+|%)?\s+(users|creators|customers|downloads|stars|teams|videos|projects)/);
-		expect(all).not.toMatch(/\d+x\s+faster|\d+%/);
+	test("no number, except the date of the screenshots", () => {
+		for (const { where, text } of contentCopy) {
+			const rest = where === "capturedNote" ? text.replace("24 November 2026", "") : text;
+			// A digit inside a name such as MP4 is not a number.
+			expect(rest, `${where} holds a number`).not.toMatch(/(^|[^A-Za-z])\d/);
+			expect(rest.toLowerCase(), `${where} holds a number in words`).not.toMatch(/\b(dozens|hundreds|thousands|millions|billions)\b|\btimes (faster|smaller|cheaper)\b/);
+		}
+	});
+	test("the page draws no image or link of its own, only the captures and the copy of this module", () => {
+		const page = readFileSync(resolve(import.meta.dir, "../pages/index.astro"), "utf8");
+		expect(page).not.toMatch(/<img\b|<svg\b|https?:\/\//);
 	});
 });
 
