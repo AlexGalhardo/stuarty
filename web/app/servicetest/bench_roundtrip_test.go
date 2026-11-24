@@ -28,10 +28,22 @@ func BenchmarkRoundTrip200Items(b *testing.B) { benchRoundTrip200Items(b, 0) }
 // BenchmarkRoundTrip200ItemsLog100k is the same round trip on a log of 100,000 rows (P4-SRV-002).
 func BenchmarkRoundTrip200ItemsLog100k(b *testing.B) { benchRoundTrip200Items(b, longLogRows) }
 
+// BenchmarkRoundTrip200ItemsSealed is the same round trip with an account: the document and the log are sealed.
+func BenchmarkRoundTrip200ItemsSealed(b *testing.B) {
+	benchSealed = true
+
+	defer func() { benchSealed = false }()
+
+	benchRoundTrip200Items(b, 0)
+}
+
 func benchRoundTrip200Items(b *testing.B, logRows int) {
 	b.Helper()
 
 	e := newEnv(b)
+	if benchSealed {
+		e.store.SetSealer(benchSealer(b))
+	}
 	command.Default().Debug = false // a test aid, not the product's cost
 
 	project, textTrack := e.seed200(b)

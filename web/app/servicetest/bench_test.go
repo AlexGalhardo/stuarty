@@ -1,6 +1,7 @@
 package servicetest
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"slices"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/core/command"
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/service/account"
 )
 
 const (
@@ -107,10 +109,39 @@ func BenchmarkCommit200Items(b *testing.B) { benchCommit200Items(b, 0) }
 // BenchmarkCommit200ItemsLog100k is the same commit on a log of 100,000 rows (P4-SRV-002).
 func BenchmarkCommit200ItemsLog100k(b *testing.B) { benchCommit200Items(b, longLogRows) }
 
+// benchSealed is set by the benchmarks of a workspace with an account: the store seals the documents and the log
+// with a data key, as an unlocked studio does (ADR-0053). Benchmarks run one at a time.
+var benchSealed bool
+
+// BenchmarkCommit200ItemsSealed is the same commit with an account: the document and the log are sealed with
+// AES-256-GCM, twice per commit.
+func BenchmarkCommit200ItemsSealed(b *testing.B) {
+	benchSealed = true
+
+	defer func() { benchSealed = false }()
+
+	benchCommit200Items(b, 0)
+}
+
+func benchSealer(b testing.TB) account.Sealer {
+	b.Helper()
+
+	keys, err := account.NewKeySealer(bytes.Repeat([]byte{3}, account.KeySize))
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	return keys
+}
+
 func benchCommit200Items(b *testing.B, logRows int) {
 	b.Helper()
 
 	e := newEnv(b)
+	if benchSealed {
+		e.store.SetSealer(benchSealer(b))
+	}
+
 	clock := &storeClock{Store: e.store}
 
 	var err error
