@@ -95,8 +95,8 @@ func TestBundleWithNoDocumentManifestRules(t *testing.T) {
 
 	bare := func() *BundleManifest {
 		return &BundleManifest{
-			Format: BundleFormat, BundleVersion: 3, Project: BundleProject{ID: "prj_0000000001"},
-			Production: &BundleProduction{Items: []BundleItem{{Kind: "text", Title: "Post"}}},
+			Format: BundleFormat, BundleVersion: 3, Project: BundleProject{ID: "prj_0000000001", Name: "Only words"},
+			Production: &BundleProduction{Name: "Only words", Items: []BundleItem{{Kind: "text", Title: "Post"}}},
 		}
 	}
 
@@ -112,6 +112,13 @@ func TestBundleWithNoDocumentManifestRules(t *testing.T) {
 		"a log":            func(m *BundleManifest) { m.Operations = &BundleLog{Count: 1, SHA256: strings.Repeat("a", 64)} },
 		"a media file":     func(m *BundleManifest) { m.Media = []BundleMedia{{Hash: "sha256:" + strings.Repeat("a", 64)}} },
 		"a bad project id": func(m *BundleManifest) { m.Project.ID = "tl_1" },
+		"no name":          func(m *BundleManifest) { m.Production.Name, m.Project.Name = "", "" },
+		"a bad name in project": func(m *BundleManifest) {
+			m.Production.Name, m.Project.Name = "", "a‮b"
+		},
+		"a long name in project": func(m *BundleManifest) {
+			m.Production.Name, m.Project.Name = "", strings.Repeat("a", 121)
+		},
 		"a timeline item": func(m *BundleManifest) {
 			m.Production.Items[0] = BundleItem{Kind: "timeline", Title: "Main", Timeline: "main"}
 		},

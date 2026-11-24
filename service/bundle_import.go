@@ -972,6 +972,12 @@ func checkBareManifest(m *BundleManifest) *Error {
 		return bundleRefused("manifest.json names a project with an identifier that is not valid")
 	}
 
+	// With no document no timeline checks a name, and the import falls back to the name in "project": that name
+	// is held to the rule of a title, as the name of the production is (checkBundleContext).
+	if project.CheckTitle(cmp.Or(m.Production.Name, m.Project.Name)) != nil {
+		return bundleRefused("manifest.json names the project with a name that is not valid")
+	}
+
 	return nil
 }
 
