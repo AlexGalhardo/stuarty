@@ -471,26 +471,47 @@ func TestSecurity_T125_NoKeyDataReachesACallerOfRecordingEvents(t *testing.T) {
 func TestSecurity_T125_TheHelperSourceNamesNoFunctionThatReadsAKey(t *testing.T) {
 	forbidden := []string{
 		"SetWindowsHookEx", "GetKeyboardState", "GetKeyState", "GetKeyNameText", "RegisterRawInputDevices",
-		"GetRawInputData", "RegisterHotKey", "MapVirtualKey", "ToUnicode", "keybd_event", "WH_KEYBOARD", "RIDEV_",
+		"GetRawInput", "RegisterHotKey", "MapVirtualKey", "ToUnicode", "ToAscii", "keybd_event", "SendInput",
+		"WH_KEYBOARD", "RIDEV_", "KeyboardAndMouse", "OpenClipboard", "GetClipboardData", "SetClipboardData",
+		"AddClipboardFormatListener", "DataExchange",
 	}
 
 	dir := filepath.Join("..", "..", "..", "capture", "src")
+	files := 0
 
-	entries, err := os.ReadDir(dir)
-	if err != nil || len(entries) < 10 {
-		t.Fatalf("the helper source was not found: %v (%d files)", err, len(entries))
-	}
-
-	for _, e := range entries {
-		body, rerr := os.ReadFile(filepath.Join(dir, e.Name()))
-		if rerr != nil {
-			t.Fatal(rerr)
+	err := filepath.WalkDir(dir, func(path string, d os.DirEntry, werr error) error {
+		if werr != nil || d.IsDir() || filepath.Ext(path) != ".rs" {
+			return werr
 		}
+
+		body, rerr := os.ReadFile(path)
+		if rerr != nil {
+			return rerr
+		}
+
+		files++
+		text, name := string(body), filepath.ToSlash(path)
 
 		for _, f := range forbidden {
-			if strings.Contains(string(body), f) {
-				t.Errorf("%s names %s: the helper must not read a key", e.Name(), f)
+			if strings.Contains(text, f) {
+				t.Errorf("%s names %s: the helper must not read a key", name, f)
 			}
 		}
+
+		// The one key state the helper asks for is the three mouse buttons, in win32.rs: its declaration and
+		// the call that walks MOUSE_BUTTONS (capture/tests/privacy.rs pins the list itself).
+		uses, want := strings.Count(text, "GetAsyncKeyState"), 0
+		if d.Name() == "win32.rs" {
+			want = 2
+		}
+
+		if uses != want {
+			t.Errorf("%s asks for a key state %d times, want %d", name, uses, want)
+		}
+
+		return nil
+	})
+	if err != nil || files < 10 {
+		t.Fatalf("the helper source was not found: %v (%d files)", err, files)
 	}
 }
