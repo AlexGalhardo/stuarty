@@ -10,6 +10,7 @@ import ConnectedSceneBar from "../shell/ConnectedSceneBar";
 import NotificationBell from "../shell/NotificationBell";
 import { projectInUrl, ShellProvider, useShell } from "../shell/ShellContext";
 import TopBar from "../shell/TopBar";
+import { usePageVisible } from "../shell/usePageVisible";
 
 // The path of the page the person was on: a change of page moves the focus to the main region, so a
 // reader that does not reload the page is told that the page changed (WCAG 2.4.3, SDD-012 section 18.10).
@@ -25,9 +26,11 @@ export default function DashboardLayout({
 	children: ReactNode;
 }): ReactNode {
 	const page = usePage<SharedProps>();
-	// One read of the agent session for the whole frame: the scene bar and the panel show the same one.
-	const chat = useChat(true, projectInUrl(page.url));
-	const approvals = useApprovalQueue();
+	// One read of the agent session for the whole frame: the scene bar and the panel show the same one. Their
+	// streams are held only while the tab is on the screen (usePageVisible).
+	const visible = usePageVisible();
+	const chat = useChat(visible, projectInUrl(page.url));
+	const approvals = useApprovalQueue(visible);
 	return (
 		<ShellProvider chat={chat} approvals={approvals}>
 			<Frame>{children}</Frame>
