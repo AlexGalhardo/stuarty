@@ -100,6 +100,13 @@ func (s *Session) Events() <-chan Event { return s.events }
 // Stop asks for a graceful end.
 func (s *Session) Stop() error { return s.h.Stop() }
 
+// Pause asks the helper to stop writing every track; Resume asks it to write again. The Paused and Resumed
+// events confirm them.
+func (s *Session) Pause() error { return s.h.Pause() }
+
+// Resume is the counterpart of Pause.
+func (s *Session) Resume() error { return s.h.Resume() }
+
 // Kill ends the helper and its process tree.
 func (s *Session) Kill() { s.h.Kill() }
 
@@ -119,6 +126,16 @@ type StartParams struct {
 	FPS         int
 	Output      string
 	MaxSeconds  int
+
+	// The tracks beyond the screen and the file of each (SDD-025 section 16).
+	Microphone       string
+	MicrophoneOutput string
+	SystemAudio      bool
+	SystemOutput     string
+	Camera           string
+	CameraOutput     string
+	Events           bool
+	EventsOutput     string
 }
 
 // Begin starts the helper and the recording. It picks the encoder with the capability test of an export at
@@ -150,6 +167,9 @@ func (l *Live) Begin(ctx context.Context, p StartParams) (*Session, error) {
 	started, events, err := h.Begin(ctx, StartRequest{
 		Recording: p.RecordingID, Kind: p.Kind, SourceID: p.SourceID, FPS: p.FPS, Encoder: cand.Name,
 		FFmpeg: l.FFmpegPath, Output: p.Output,
+		Microphone: p.Microphone, MicrophoneOutput: p.MicrophoneOutput, SystemAudio: p.SystemAudio,
+		SystemOutput: p.SystemOutput, Camera: p.Camera, CameraOutput: p.CameraOutput, Events: p.Events,
+		EventsOutput: p.EventsOutput,
 	})
 	if err != nil {
 		h.Kill()
