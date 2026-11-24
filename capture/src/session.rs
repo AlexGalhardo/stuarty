@@ -620,7 +620,14 @@ mod tests {
 		req.extras.out_camera = Some(dir.join("camera.raw"));
 		let events = collect(&req, &Control::new());
 		assert_eq!(kinds(&events), ["error"], "{events:?}");
-		assert_eq!(events[0].get("code").unwrap().as_str(), Some("unsupported"));
+		// no such camera: Media Foundation says it is not there; without a backend it is unsupported
+		assert!(
+			matches!(
+				events[0].get("code").and_then(json::Json::as_str),
+				Some("unsupported" | "device_unavailable")
+			),
+			"{events:?}"
+		);
 		assert!(!dir.join("camera.raw").exists());
 		std::fs::remove_dir_all(dir).unwrap();
 	}

@@ -177,6 +177,7 @@ name = "stuarty-capture"
 version = "0.1.0"
 dependencies = [
  "wasapi",
+ "windows",
  "windows-capture",
 ]
 

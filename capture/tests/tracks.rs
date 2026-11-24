@@ -175,22 +175,55 @@ fn the_camera_is_written_on_its_own_file_with_the_flashes_of_the_epoch() {
 	let _ = std::fs::remove_dir_all(d);
 }
 
-/// verify:env-skip needs a camera the helper can list. Windows has no camera backend yet (SDD-025 section
-/// 16.5), so the helper lists none and this test says so and passes; with a backend it records the first camera
-/// for a second and reads the file back.
+/// verify:env-skip needs a camera the helper can list and STUARTY_TEST_REAL_CAMERA=1: it OPENS the first camera
+/// of the machine (Media Foundation, SDD-025 section 16.5) for about two seconds, beside a test screen, and
+/// checks that whole frames reach `camera.raw`. Without the variable, or with no camera, it says why and
+/// passes: a test never opens a real camera on its own. Listing the cameras opens none.
 #[test]
 fn a_real_camera_is_recorded_when_there_is_one() {
-	let mut h = Helper::start(&[]);
+	let mut h = Helper::start(&["--allow-test-source"]);
 	h.read().unwrap();
 	h.send(r#"{"type":"sources"}"#);
 	let s = h.read().unwrap();
-	h.close_input();
-	assert!(h.wait());
-	if s.contains(r#""cameras":[]"#) {
-		eprintln!("skipped: the helper lists no camera on this system (no camera backend yet)");
+	// the first real camera: an id that is a `c` and 16 hex digits (the test camera is `fake`)
+	let id = s.split(r#""id":""#).skip(1).find_map(|p| {
+		let id: String = p.chars().take_while(|c| *c != '"').collect();
+		(id.len() == 17 && id.starts_with('c') && id[1..].bytes().all(|b| b.is_ascii_hexdigit()))
+			.then_some(id)
+	});
+	let Some(id) = id else {
+		h.close_input();
+		assert!(h.wait());
+		eprintln!("skipped: the helper lists no real camera on this machine");
+		return;
+	};
+	if std::env::var_os("STUARTY_TEST_REAL_CAMERA").is_none() {
+		h.close_input();
+		assert!(h.wait());
+		eprintln!(
+			"skipped: a camera is listed but STUARTY_TEST_REAL_CAMERA is not set (this test opens it)"
+		);
 		return;
 	}
-	panic!("a camera is listed but this test does not record it yet: {s}");
+	let d = dir("realcam");
+	let extra = format!(
+		r#","camera":"{id}","outputs":{{"camera":"{}"}}"#,
+		esc(&d.join("camera.raw"))
+	);
+	h.send(&start_with(&d.join("o.raw"), "16x16r60", 30, &extra));
+	let started = h.read().unwrap();
+	assert!(started.contains(r#""kind":"camera""#), "{started}");
+	std::thread::sleep(Duration::from_millis(2000));
+	h.send(r#"{"type":"stop"}"#);
+	let rest = h.read_until("finished");
+	assert!(h.wait());
+	assert!(
+		rest.last().unwrap().contains(r#""kind":"camera""#),
+		"{rest:?}"
+	);
+	let len = std::fs::metadata(d.join("camera.raw")).unwrap().len();
+	assert!(len > 0, "the camera file is empty");
+	let _ = std::fs::remove_dir_all(d);
 }
 
 fn events_args(d: &Path) -> String {
