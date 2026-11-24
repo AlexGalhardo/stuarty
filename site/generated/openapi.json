@@ -9061,6 +9061,9 @@
             "type": "string",
             "x-untrusted": true
           },
+          "reading_minutes": {
+            "type": "integer"
+          },
           "revision": {
             "type": "integer"
           },

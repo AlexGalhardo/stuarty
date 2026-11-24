@@ -52,25 +52,18 @@ export interface TextItem {
 	text_kind: TextKind;
 	state: "active" | "trashed";
 	words: number;
-	// The minutes to read it, when the service says so on the text itself (SDD-005 section 5.12.4 says it on the
-	// text of a project; this member is read when the service adds it here).
-	reading_minutes?: number;
+	// The minutes to read it, from the rule of the core (SDD-019 section 7): the page draws it and never computes it.
+	reading_minutes: number;
 	revision: number;
 	updated_by?: string;
 	updated_at: string;
 }
 
-// What the page reads of a project: its name, its kind and the summary of its text, all as the service computed them.
+// What the page reads of a project: its name and its kind, as the service computed them.
 export interface WriteProject {
 	id: string;
 	name: string;
 	kind?: ProjectKind;
-	text_summary?: {
-		item_id: string;
-		text_kind: TextKind;
-		words: number;
-		reading_minutes: number;
-	};
 }
 
 export type ProjectKind = "undecided" | "text" | "video" | "image";

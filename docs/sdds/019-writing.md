@@ -50,7 +50,7 @@ Storage: `project_items.text_kind` (`script`, `copy` or `caption`; null for any 
 
 `ProjectDescribe` lists every text with its kind, its words and its revision (`text_kind=script words=212 rev=4`), and the production state counts the texts (`texts`). The bundle of a project carries the body and the text kind of each text; the history of revisions does not travel, and an imported text starts at revision 1.
 
-The words of a text are counted by `writing.TextWords(kind, body)`: for a post only the body counts, not the front matter (title, slug, tags and the rest are metadata), so the list, the description of a project and the panel of the post (`PostCheck`) say the same number (VV-324).
+The words of a text are counted by `writing.TextWords(kind, body)`: for a post only the body counts, not the front matter (title, slug, tags and the rest are metadata), so the list, the description of a project and the panel of the post (`PostCheck`) say the same number (VV-324). Every text the service answers (`TextItem`, in `TextList`, `TextGet`, `TextWrite` and `TextRevert`) carries `words` and `reading_minutes`, the latter from `writing.ReadingMinutes(words)`: the words divided by 200, rounded up, the same rule as the `text_summary` of a project (SDD-005 section 5.12.4).
 
 ## 3. Revisions
 
@@ -187,10 +187,10 @@ The section **Write** of the navigation (SDD-012) lists the texts across the pro
 - for a script: the estimate (from `ScriptEstimate`) with the words per minute the person sets; for a caption: the counters of each variant against its network (from `CaptionValidate`), each problem with its sentence. The counters are what the core returned; the UI computes nothing;
 - the action **Draft with a model**: a connection, a model, an instruction and the estimate before the job starts; the job waits in the approval queue as any costly generation and, when it succeeds, the draft appears as a new revision.
 
-Epic 80 redrew the page on the shared components, with no change to the service, and added:
+Epic 80 redrew the page on the shared components, with one change to the service (`reading_minutes` on `TextItem`, section 2), and added:
 
 - **One primary action at a time**: Save while there are unsaved changes, then Review, then, in the end panel, Copy (for a `copy`) or the next step of the workflow.
-- **The head of the editor** shows the kind, the words of the saved text and its revision, and the reading time when the service gives it: on the text (`reading_minutes`, read when `TextItem` carries it) or in the `text_summary` of its project when that summary is about this text. The page never computes either. The service does not yet put `reading_minutes` on `TextItem`, so for a project whose summary is about another text the reading time is left out.
+- **The head of the editor** shows the kind, the words of the saved text, its reading time and its revision, all from the `TextItem` the service answered (`words`, `reading_minutes`). The page never computes either.
 - **The path of the project** (`GET /projects/{id}/describe`, `kind` and `workflow`): each step with who does it and its state, as `ComputeWorkflow` gave it.
 - **Review**: the revisions panel compares any two stored revisions side by side at desktop width and stacked at phone width, using `TextRevisions` with `from` and `to`; the older side holds what stayed and what was removed, the newer side what stayed and what was added. Restoring either one calls `TextRevert`, so it is stored as a new revision and none is deleted. A post is also checked with `PostCheck`.
 - **The end of a text** (D-137): a `copy` ends in **Copy** and **Export**, which act on the saved text and need no connection or destination; sending it to a blog is a separate, closed-by-default choice that sends nothing and points to Connections and Publish. Another kind goes on to the step the workflow lists after the review.

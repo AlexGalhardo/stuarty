@@ -1,26 +1,7 @@
-import type {
-	FlowStep,
-	ProjectFlow,
-	TextItem,
-	TextKind,
-	WriteProject,
-} from "./client";
+import type { FlowStep, ProjectFlow, TextKind } from "./client";
 
-// What the editor says about a text is what the service said: the words of the text, and its minutes of reading
-// when the service gave them. This file picks among the answers and counts nothing.
-
-// The minutes to read a text: on the text itself when the service says so, otherwise from the summary of its
-// project when the summary is about this very text. Absent when the service said neither.
-export function readingMinutes(
-	item: TextItem,
-	project: WriteProject | undefined,
-): number | undefined {
-	if (item.reading_minutes !== undefined) return item.reading_minutes;
-	const summary = project?.text_summary;
-	return summary !== undefined && summary.item_id === item.id
-		? summary.reading_minutes
-		: undefined;
-}
+// What the editor says about a text is what the service said: the words and the minutes of reading are on the
+// text the service answered (TextItem). This file picks among the answers and counts nothing.
 
 // A project that holds only text: no video or image action is offered in it (D-134). An undecided project is
 // drawn as text too, since a person who opens Write has not chosen a medium; a project the service could not read
