@@ -159,7 +159,8 @@ The protocol gives the host the title and the kind of the tool call and, in `too
 
 - **Only for a tool of Stuarty's own MCP server**, recognised as in section 8.1 (`chat.StuartyToolName`). Any other tool keeps its title and kind, and its item, destination and undo read "Not reported".
 - **Only an allowlist of members of the input**, read as strings: `project_id`, `timeline_id` and `image_id` (the project or image), `item_id`, `asset_id` and `name` (the item), and the operation names, which are `action` and, for `edit`, the `op` of each of the first 8 operations. Every other member, nested object, number and array is dropped without being read. Each kept value is cleaned like all agent text (`chat.CleanText`), clipped to 128 characters, scrubbed of the session secrets by the recorder, and stored as `permission.detail` (`project`, `item`, `operations`). A value that is not a plain string is dropped; the arguments of an operation (`args`) are never kept.
-- The detail is text from the agent: it is shown as text, it grants nothing, and no decision reads it. `ChatAnswerPermission` is unchanged.
+- The detail is text from the agent: it is shown as text, it grants nothing, and no decision reads it. `ChatAnswerPermission` is unchanged. Whether a tool is Stuarty's is read from the title the agent gave the call, as in section 8.1, so an agent can give any call the title of an edit: the item, the destination and "can be undone" then say what the agent claims, and the screen marks them as reported by the agent. Stuarty never presumes more than the claim and the registry together allow.
+- The host also keeps, per request, the skill the session had read when it was asked (`chat.Reduce`), the time it was asked and, once answered, the answer and its time. They live in memory with the session and are what `InboxList` reads through `Host.Permissions`; a request leaves the list when its session ends.
 
 ### 8.1 Activity: the skill and the tool (epic 76)
 

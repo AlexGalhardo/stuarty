@@ -35,6 +35,24 @@ type Session struct {
 	EventCount  int            `json:"event_count"`
 }
 
+// Permission is a permission request of a live session, as the unified read of what waits for a
+// person lists it (SDD-015 section 4.1). Text members are from the agent, scrubbed of the session's
+// secrets; Answer is empty while the request waits.
+type Permission struct {
+	SessionID   string
+	ProjectID   string
+	Profile     string
+	OwnerUserID string
+	RequestID   string
+	Title       string
+	ToolKind    string
+	Detail      *chat.PermissionDetail
+	Skill       string
+	Answer      chat.Answer
+	AskedAt     time.Time
+	AnsweredAt  *time.Time
+}
+
 // Store is where profiles, sessions and transcripts live. The SQLite implementation is in
 // web/app/store; the host knows only this interface.
 type Store interface {

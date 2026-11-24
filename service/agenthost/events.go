@@ -92,6 +92,29 @@ func (r *recorder) scrub(text string) string {
 	return text
 }
 
+// scrubDetail replaces the secrets of the session in the kept input of a call; the caller holds the lock.
+func (r *recorder) scrubDetail(d *chat.PermissionDetail) *chat.PermissionDetail {
+	if d == nil {
+		return nil
+	}
+
+	out := chat.PermissionDetail{Project: r.scrub(d.Project), Item: r.scrub(d.Item)}
+
+	for _, op := range d.Operations {
+		out.Operations = append(out.Operations, r.scrub(op))
+	}
+
+	return &out
+}
+
+// ScrubDetail is scrubDetail for a caller that does not hold the lock.
+func (r *recorder) ScrubDetail(d *chat.PermissionDetail) *chat.PermissionDetail {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	return r.scrubDetail(d)
+}
+
 // Scrub replaces the secrets of the session in a text that is not an event (the diagnostic of a
 // failed start).
 func (r *recorder) Scrub(text string) string {
@@ -133,6 +156,7 @@ func (r *recorder) scrubEventLocked(ev *chat.Event) {
 		}
 
 		p.Options = opts
+		p.Detail = r.scrubDetail(p.Detail)
 		ev.Permission = &p
 	}
 
@@ -214,6 +238,13 @@ func clone(ev chat.Event) chat.Event {
 	if ev.Permission != nil {
 		p := *ev.Permission
 		p.Options = append([]chat.Option(nil), p.Options...)
+
+		if p.Detail != nil {
+			d := *p.Detail
+			d.Operations = append([]string(nil), d.Operations...)
+			p.Detail = &d
+		}
+
 		ev.Permission = &p
 	}
 

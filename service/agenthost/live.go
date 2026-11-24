@@ -22,6 +22,13 @@ type pendingPerm struct {
 	callID   string
 	ch       chan permResult
 	answered bool
+	// detail is the allowlisted input of the call and skill the skill the session had read when it was
+	// asked (SDD-017 section 7.1, epic 77); asked, answer and answeredAt are what the unified read lists.
+	detail     *chat.PermissionDetail
+	skill      string
+	asked      time.Time
+	answer     chat.Answer
+	answeredAt time.Time
 }
 
 type permResult struct {
@@ -452,7 +459,8 @@ func (s *liveSession) Request(ctx context.Context, method string, params json.Ra
 
 	p := &pendingPerm{
 		id: s.h.newID(chat.PermissionPrefix), options: req.Options, title: req.Title, toolKind: req.ToolKind,
-		callID: req.CallID, ch: make(chan permResult, 1),
+		callID: req.CallID, ch: make(chan permResult, 1), detail: s.rec.ScrubDetail(req.Detail),
+		skill: s.rec.Scrub(s.skillNow()), asked: s.h.o.Now().UTC(),
 	}
 
 	s.mu.Lock()
@@ -472,9 +480,10 @@ func (s *liveSession) Request(ctx context.Context, method string, params json.Ra
 	s.mu.Unlock()
 
 	s.rec.Permission(chat.Permission{
-		RequestID: p.id, CallID: p.callID, Title: p.title, ToolKind: p.toolKind, Options: p.options,
+		RequestID: p.id, CallID: p.callID, Title: p.title, ToolKind: p.toolKind, Options: p.options, Detail: p.detail,
 	})
 	s.rec.State(chat.StateInfo{State: chat.StateAwaitingPermission})
+	s.h.changed()
 
 	timeout := time.NewTimer(s.h.lim.Permission)
 	defer timeout.Stop()
@@ -500,6 +509,7 @@ func (s *liveSession) settle(p *pendingPerm, r permResult, answer chat.Answer) b
 	}
 
 	p.answered = true
+	p.answer, p.answeredAt = answer, s.h.o.Now().UTC()
 
 	resumed := false
 	if next, err := chat.Next(s.state, chat.InputPermissionAnswered); err == nil {
@@ -515,7 +525,49 @@ func (s *liveSession) settle(p *pendingPerm, r permResult, answer chat.Answer) b
 		s.rec.State(chat.StateInfo{State: chat.StateRunning})
 	}
 
+	s.h.changed()
+
 	return true
+}
+
+// skillNow is the skill the session has read so far, empty when none: what the unified read tells
+// beside a permission request (SDD-015 section 4.1), told by the one reducer of the activity.
+func (s *liveSession) skillNow() string {
+	a := chat.Reduce(s.req.SessionID, chat.StateRunning, s.rec.ActivityEvents(), false)
+	if a.Skill.State != chat.SkillLoaded {
+		return ""
+	}
+
+	return a.Skill.Name
+}
+
+// permissions are the permission requests of the session, those that wait and those answered.
+func (s *liveSession) permissions() []Permission {
+	s.mu.Lock()
+
+	out := make([]Permission, 0, len(s.perms))
+
+	for _, p := range s.perms {
+		r := Permission{
+			SessionID: s.req.SessionID, ProjectID: s.req.ProjectID, Profile: s.req.Profile.Name, OwnerUserID: s.req.OwnerUserID,
+			RequestID: p.id, Title: p.title, ToolKind: p.toolKind, Detail: p.detail, Skill: p.skill, AskedAt: p.asked,
+		}
+
+		if p.answered {
+			answeredAt := p.answeredAt
+			r.Answer, r.AnsweredAt = p.answer, &answeredAt
+		}
+
+		out = append(out, r)
+	}
+	s.mu.Unlock()
+
+	// The title is scrubbed outside the lock of the session, as every other text is.
+	for i := range out {
+		out[i].Title = s.rec.Scrub(out[i].Title)
+	}
+
+	return out
 }
 
 func (s *liveSession) answer(requestID string, a chat.Answer) error {
