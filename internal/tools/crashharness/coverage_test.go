@@ -130,3 +130,105 @@ func TestEveryCrashPointHasARecoveryTest(t *testing.T) {
 		}
 	}
 }
+
+// killCase is a case of the real-kill suite (SDD-008 section 13.3): a child process ended from outside, at a
+// moment the parent observes, in a step the product runs. test is the test of web/app/servicetest that kills
+// it; steps are the places in the code it protects, each a file and the text that names the step there, so
+// that a step that is renamed or removed makes this list stale and a new step is added here in review.
+type killCase struct {
+	test  string
+	steps [][2]string
+}
+
+var killCases = map[string]killCase{
+	"publication.send": {
+		test: "TestKillRealPublicationResumesAndPostsOnce",
+		steps: [][2]string{
+			{"service/publish/scheduler.go", "func (s *Scheduler) send("},
+			{"service/publish/manager.go", "func (m *Manager) Claim("},
+		},
+	},
+	"publication.interrupted": {
+		test:  "TestKillRealPublicationInterruptedAfterMaxAttempts",
+		steps: [][2]string{{"service/publish/manager.go", "func (m *Manager) Interrupt("}},
+	},
+	"upload.resumable": {
+		test: "TestKillRealUploadResumesAtTheReceivedOffset",
+		steps: [][2]string{
+			{"service/social/youtube/upload.go", "func (c *Connector) sendFrom("},
+			{"service/social/youtube/upload.go", "func (c *Connector) queryOffset("},
+		},
+	},
+	"export.video": {
+		test:  "TestKillRealExportVideo",
+		steps: [][2]string{{"engine/export/paths.go", "func publishUnder("}, {"service/jobrun.go", "func (s *svc) Recover("}},
+	},
+	"export.video.given_up": {
+		test:  "TestKillRealExportVideoGivenUpAfterTheAttempts",
+		steps: [][2]string{{"service/jobrun.go", "func (s *svc) failInterrupted("}},
+	},
+	"export.image": {
+		test:  "TestKillRealExportImage",
+		steps: [][2]string{{"service/image_export.go", "func (s *svc) ImageExport("}},
+	},
+}
+
+// TestEveryRealKillCaseExists holds the list of real-kill cases to the code on both sides: each test exists in
+// a file with the crashtest tag that ends a child with Process.Kill, and each step it protects is still in the
+// code.
+func TestEveryRealKillCaseExists(t *testing.T) {
+	t.Parallel()
+
+	root := repoRoot(t)
+	dir := filepath.Join(root, "web", "app", "servicetest")
+
+	files, err := filepath.Glob(filepath.Join(dir, "kill_real*_test.go"))
+	if err != nil || len(files) == 0 {
+		t.Fatalf("no kill_real*_test.go in %s: %v", dir, err)
+	}
+
+	var killer bool
+
+	sources := map[string]string{}
+
+	for _, f := range files {
+		raw, rerr := os.ReadFile(f)
+		if rerr != nil {
+			t.Fatal(rerr)
+		}
+
+		sources[f] = string(raw)
+		killer = killer || strings.Contains(string(raw), "Process.Kill()")
+	}
+
+	if !killer {
+		t.Error("no file of the real-kill suite ends a child with Process.Kill")
+	}
+
+	for name, c := range killCases {
+		found := false
+
+		for f, src := range sources {
+			if !strings.Contains(src, "func "+c.test+"(") {
+				continue
+			}
+
+			found = true
+
+			if !strings.HasPrefix(src, "//go:build crashtest") {
+				t.Errorf("%s: %s is not under the crashtest build tag", name, filepath.Base(f))
+			}
+		}
+
+		if !found {
+			t.Errorf("%s: the test %s does not exist in web/app/servicetest", name, c.test)
+		}
+
+		for _, step := range c.steps {
+			raw, rerr := os.ReadFile(filepath.Join(root, filepath.FromSlash(step[0])))
+			if rerr != nil || !strings.Contains(string(raw), step[1]) {
+				t.Errorf("%s: the step %q is no longer in %s (%v): update the case", name, step[1], step[0], rerr)
+			}
+		}
+	}
+}
