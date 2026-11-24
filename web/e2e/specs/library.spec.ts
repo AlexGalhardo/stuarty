@@ -82,11 +82,6 @@ test.describe("library", () => {
 		await expect(page.getByTestId("skill-not-offered")).toContainText(
 			"Not offered to agents",
 		);
-		// the list and the pane say in words that no agent is offered it
-		await expect(row).toContainText("not offered to agents");
-		await expect(page.getByTestId("skill-not-offered")).toContainText(
-			"Not offered to agents",
-		);
 
 		const pane = page.getByTestId("skill-pane");
 		await expect(pane.getByRole("heading", { name })).toBeVisible();
