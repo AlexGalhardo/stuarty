@@ -70,7 +70,7 @@ Names are proposals until task 2 writes them to SDD-000.
 - [x] 2. Amend PRD-001 section 7, add RF-430 to RF-442 and NFR-067, NFR-068 to PRD-004, write SDD-023 and the names in SDD-000, add the threats to SDD-007. Verify: `task lint:md` and `go run ./internal/tools/threatcheck` exit 0.
 - [x] 3. `core/recording`: the state machine and its limits, pure, with tests of every transition. Verify: `go test ./core/recording/...` passes.
 - [x] 4. The helper protocol and `capture/` with a fake source. Verify: `cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test && cargo deny check` in `capture/`.
-- [ ] 5. `engine/capturehost` under the process policy, with a fake helper: start, stop, kill, timeout, malformed message. Verify: `go test ./engine/capturehost/...` passes.
+- [x] 5. `engine/capturehost` under the process policy, with a fake helper: start, stop, kill, timeout, malformed message. Verify: `go test ./engine/capturehost/...` passes.
 - [ ] 6. Windows capture in the helper. Verify: the helper's integration test writes a playable file that `ffprobe` reads on Windows.
 - [ ] 7. The service operations, the store, the migration and the recovery of an interrupted recording at start-up. Verify: `go test ./service/...` passes.
 - [ ] 8. HTTP, CLI and MCP with parity tests, and the security tests of the person rule. Verify: `go test ./web/...`, `go test -run TestSecurity_ ./...` and `go run ./internal/tools/surfacebudget` pass.

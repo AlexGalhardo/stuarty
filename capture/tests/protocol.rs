@@ -202,3 +202,13 @@ fn a_second_start_is_refused_while_one_runs() {
 	assert!(h.wait());
 	let _ = std::fs::remove_dir_all(d);
 }
+
+#[test]
+fn version_is_printed_and_exits() {
+	let out = Command::new(env!("CARGO_BIN_EXE_stuarty-capture"))
+		.arg("--version")
+		.output()
+		.unwrap();
+	assert!(out.status.success());
+	assert!(String::from_utf8_lossy(&out.stdout).starts_with("stuarty-capture "));
+}
