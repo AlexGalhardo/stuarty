@@ -34,7 +34,8 @@ export function Notice({
 	...rest
 }: {
 	tone: NoticeTone;
-	title: string;
+	// A node, so a title that holds text a caller wrote can isolate it (UntrustedText).
+	title: ReactNode;
 	children?: ReactNode;
 	actions?: ReactNode;
 	role?: "note" | "status" | "alert";

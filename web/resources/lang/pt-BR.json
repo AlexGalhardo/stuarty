@@ -2797,7 +2797,11 @@
     "webhooks": {
       "title": "Webhooks de saída",
       "intro": "Avise suas outras ferramentas do que aconteceu: o Stuarty chama o endereço que você cadastrar quando uma publicação sai, uma exportação fica pronta, uma aprovação espera ou um trabalho falha. Só identificadores e estados são enviados, nunca um arquivo ou um texto.",
+      "add_action": "Adicionar webhook",
+      "sent_title": "O que é enviado",
+      "sent_body": "Só ids e estados, nunca um arquivo ou um texto. Cada chamada é assinada com o segredo do seu webhook, que o Stuarty mostra uma vez.",
       "list": "Seus webhooks",
+      "empty_title": "Nenhum webhook ainda",
       "empty": "Nenhum webhook ainda. Nada sai deste computador até você cadastrar um.",
       "new": "Adicionar um webhook",
       "name": "Nome",

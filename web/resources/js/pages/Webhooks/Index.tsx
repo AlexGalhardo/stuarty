@@ -1,4 +1,5 @@
 import { Head } from "@inertiajs/react";
+import { Copy, Plus, Webhook as WebhookIcon } from "lucide-react";
 import {
 	type FormEvent,
 	type ReactNode,
@@ -7,7 +8,12 @@ import {
 	useState,
 } from "react";
 
+import { EmptyState } from "@/components/EmptyState";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { Notice } from "@/components/Notice";
+import { PageHeader } from "@/components/PageHeader";
+import { SectionTitle } from "@/components/SectionTitle";
+import { type Status, StatusBadge } from "@/components/StatusBadge";
 import UntrustedText from "@/components/UntrustedText";
 import {
 	AlertDialog,
@@ -37,6 +43,13 @@ const NAME_MAX = 60;
 function api() {
 	return createClient(new HttpTransport("/api/v1"));
 }
+
+// The look of the state of a delivery; the word comes from the catalogue.
+const DELIVERY_STATUS: Record<string, Status> = {
+	succeeded: "success",
+	failed: "danger",
+	pending: "waiting",
+};
 
 // The key of the localized name of an event: the dots of the event name become underscores.
 function eventKey(name: string): string {
@@ -71,33 +84,36 @@ export function SecretNote({
 	}
 
 	return (
-		<div
+		<Notice
+			tone="warning"
 			role="status"
-			className="mt-4 flex flex-col gap-3 rounded-xl border border-primary bg-card p-4 text-card-foreground"
-			data-webhook-secret-note=""
-		>
-			<p className="font-medium">
+			title={
 				<NamedTitle
 					messageKey="ui.webhooks.secret_title"
 					name={revealed.name}
 				/>
-			</p>
-			<p className="text-sm">{t("ui.webhooks.secret_warning")}</p>
+			}
+			data-webhook-secret-note=""
+			actions={
+				<>
+					<Button type="button" variant="outline" onClick={() => void copy()}>
+						<Copy aria-hidden="true" />
+						{copied ? t("ui.webhooks.copied") : t("ui.webhooks.copy")}
+					</Button>
+					<Button type="button" onClick={onClose}>
+						{t("ui.webhooks.secret_saved")}
+					</Button>
+				</>
+			}
+		>
+			<p>{t("ui.webhooks.secret_warning")}</p>
 			<code
-				className="break-all rounded-lg bg-muted p-3 text-xs"
+				className="mt-2 block rounded-lg bg-surface-sunken p-2 font-mono text-sm break-all text-text"
 				data-webhook-secret=""
 			>
 				{revealed.secret}
 			</code>
-			<div className="flex gap-2">
-				<Button type="button" variant="outline" onClick={() => void copy()}>
-					{copied ? t("ui.webhooks.copied") : t("ui.webhooks.copy")}
-				</Button>
-				<Button type="button" onClick={onClose}>
-					{t("ui.webhooks.secret_saved")}
-				</Button>
-			</div>
-		</div>
+		</Notice>
 	);
 }
 
@@ -187,12 +203,13 @@ export function DeliveryRow({
 		>
 			<div className="flex items-start justify-between gap-4">
 				<div className="min-w-0">
-					<p className="font-medium">
-						<code>{delivery.event}</code>
-						{" · "}
-						{t(`ui.webhooks.state.${delivery.state}`)}
+					<p className="flex flex-wrap items-center gap-2 font-medium">
+						<StatusBadge status={DELIVERY_STATUS[delivery.state] ?? "neutral"}>
+							{t(`ui.webhooks.state.${delivery.state}`)}
+						</StatusBadge>
+						<code className="font-mono">{delivery.event}</code>
 					</p>
-					<p className="text-xs text-muted-foreground">
+					<p className="text-sm text-text-muted">
 						{formatDateTime(delivery.at, locale)}
 						{" · "}
 						{t("ui.webhooks.attempts", {
@@ -203,7 +220,7 @@ export function DeliveryRow({
 						{t("ui.webhooks.status", { status: String(delivery.last_status) })}
 					</p>
 					{delivery.attempt_log.length > 0 && (
-						<ul className="mt-1 text-xs text-muted-foreground">
+						<ul className="mt-1 text-sm text-text-subtle">
 							{delivery.attempt_log.map((a) => (
 								<li key={a.n}>
 									{t("ui.webhooks.attempt_line", {
@@ -326,257 +343,281 @@ export default function Webhooks(): ReactNode {
 	return (
 		<>
 			<Head title={t("ui.webhooks.title")} />
-			<div className="mx-auto flex max-w-3xl flex-col gap-8">
-				<div>
-					<h1 className="text-2xl font-semibold">{t("ui.webhooks.title")}</h1>
-					<p className="mt-1 text-sm text-muted-foreground">
-						{t("ui.webhooks.intro")}
-					</p>
-				</div>
-				<section aria-labelledby="webhooks-list">
-					<h2 id="webhooks-list" className="text-lg font-semibold">
-						{t("ui.webhooks.list")}
-					</h2>
-					<FailureNote failure={failure} />
-					{revealed !== null && (
-						<SecretNote revealed={revealed} onClose={() => setRevealed(null)} />
-					)}
-					{items !== null &&
-						(items.length === 0 ? (
-							<p className="mt-4 text-sm text-muted-foreground">
-								{t("ui.webhooks.empty")}
-							</p>
-						) : (
-							<ul className="mt-4 divide-y rounded-xl border bg-card text-card-foreground">
-								{items.map((w) => (
-									<li
-										key={w.id}
-										className="flex flex-col gap-3 p-4"
-										data-webhook-id={w.id}
-									>
-										<div className="flex items-start justify-between gap-4">
-											<div className="min-w-0">
-												<p className="truncate font-medium">
-													<UntrustedText>{w.name}</UntrustedText>
-												</p>
-												<p className="truncate text-xs text-muted-foreground">
-													{w.url}
-												</p>
-												<p className="text-xs text-muted-foreground">
-													{w.events
-														.map((e) => t(`ui.webhooks.event.${eventKey(e)}`))
-														.join(", ")}
-												</p>
-												<p className="text-xs text-muted-foreground">
-													{w.enabled
-														? t("ui.webhooks.on")
-														: t("ui.webhooks.off")}
-													{" · "}
-													{w.last_delivery === null
-														? t("ui.webhooks.no_delivery")
-														: t("ui.webhooks.last_delivery", {
-																state: t(
-																	`ui.webhooks.state.${w.last_delivery.state}`,
-																),
-																date: formatDateTime(
-																	w.last_delivery.at,
-																	locale,
-																),
-															})}
-												</p>
-											</div>
-											<div className="flex shrink-0 flex-wrap justify-end gap-2">
-												<Button
-													type="button"
-													variant="outline"
-													onClick={() => void show(w.id)}
-													aria-expanded={open === w.id}
-												>
-													{t("ui.webhooks.deliveries")}
-													<span className="sr-only">
-														{" "}
-														<UntrustedText>{w.name}</UntrustedText>
-													</span>
-												</Button>
-												<Button
-													type="button"
-													variant="outline"
-													onClick={() =>
-														void act(async () => {
-															await api().testWebhook(w.id);
-														})
-													}
-												>
-													{t("ui.webhooks.test")}
-													<span className="sr-only">
-														{" "}
-														<UntrustedText>{w.name}</UntrustedText>
-													</span>
-												</Button>
-												<Button
-													type="button"
-													variant="outline"
-													onClick={() =>
-														void act(async () => {
-															await api().updateWebhook(w.id, {
-																enabled: !w.enabled,
-															});
-														})
-													}
-												>
-													{w.enabled
-														? t("ui.webhooks.turn_off")
-														: t("ui.webhooks.turn_on")}
-													<span className="sr-only">
-														{" "}
-														<UntrustedText>{w.name}</UntrustedText>
-													</span>
-												</Button>
-												<Button
-													type="button"
-													variant="outline"
-													onClick={() =>
-														setConfirming({
-															kind: "rotate",
-															id: w.id,
-															name: w.name,
-														})
-													}
-												>
-													{t("ui.webhooks.rotate")}
-													<span className="sr-only">
-														{" "}
-														<UntrustedText>{w.name}</UntrustedText>
-													</span>
-												</Button>
-												<Button
-													type="button"
-													variant="outline"
-													onClick={() =>
-														setConfirming({
-															kind: "remove",
-															id: w.id,
-															name: w.name,
-														})
-													}
-												>
-													{t("ui.webhooks.remove")}
-													<span className="sr-only">
-														{" "}
-														<UntrustedText>{w.name}</UntrustedText>
-													</span>
-												</Button>
-											</div>
-										</div>
-										{open === w.id &&
-											(deliveries.length === 0 ? (
-												<p className="text-sm text-muted-foreground">
-													{t("ui.webhooks.no_deliveries")}
-												</p>
-											) : (
-												<ul
-													className="divide-y rounded-lg border"
-													aria-label={t("ui.webhooks.deliveries")}
-												>
-													{deliveries.map((d) => (
-														<DeliveryRow
-															key={d.id}
-															delivery={d}
-															onRedeliver={() =>
-																void act(async () => {
-																	await api().redeliverWebhook(w.id, d.id);
-																})
-															}
-														/>
-													))}
-												</ul>
-											))}
-									</li>
-								))}
-							</ul>
-						))}
-				</section>
-				<section aria-labelledby="webhooks-new">
-					<h2 id="webhooks-new" className="text-lg font-semibold">
-						{t("ui.webhooks.new")}
-					</h2>
-					<form
-						onSubmit={(event) => void create(event)}
-						className="mt-4 flex flex-col gap-4 rounded-xl border bg-card p-5 text-card-foreground"
-					>
-						<div className="flex flex-col gap-2">
-							<Label htmlFor="webhook-name">{t("ui.webhooks.name")}</Label>
-							<Input
-								id="webhook-name"
-								required
-								maxLength={NAME_MAX}
-								autoComplete="off"
-								value={name}
-								onChange={(event) => setName(event.target.value)}
-							/>
-						</div>
-						<div className="flex flex-col gap-2">
-							<Label htmlFor="webhook-url">{t("ui.webhooks.url")}</Label>
-							<Input
-								id="webhook-url"
-								required
-								type="url"
-								autoComplete="off"
-								value={url}
-								onChange={(event) => setUrl(event.target.value)}
-							/>
-							<p className="text-xs text-muted-foreground">
-								{t("ui.webhooks.url_hint")}
-							</p>
-						</div>
-						<fieldset className="flex flex-col gap-3">
-							<legend className="mb-1 text-sm font-medium">
-								{t("ui.webhooks.events_legend")}
-							</legend>
-							{events.map((e) => (
-								<label key={e.name} className="flex items-start gap-2 text-sm">
-									<input
-										type="checkbox"
-										className="mt-1 accent-primary"
-										checked={chosen.includes(e.name)}
-										onChange={(event) =>
-											setChosen((was) =>
-												event.target.checked
-													? [...was, e.name]
-													: was.filter((n) => n !== e.name),
-											)
-										}
-									/>
-									<span>
-										<span className="font-medium">
-											{t(`ui.webhooks.event.${eventKey(e.name)}`)}
-										</span>{" "}
-										<code className="text-xs">{e.name}</code>
-										<span
-											className="block text-xs text-muted-foreground"
-											lang="en"
+			<div className="mx-auto flex max-w-6xl flex-col gap-6">
+				<PageHeader
+					title={t("ui.webhooks.title")}
+					description={t("ui.webhooks.intro")}
+					actions={
+						<Button asChild>
+							<a href="#webhooks-new">
+								<Plus aria-hidden="true" />
+								{t("ui.webhooks.add_action")}
+							</a>
+						</Button>
+					}
+				/>
+				<Notice tone="info" title={t("ui.webhooks.sent_title")}>
+					{t("ui.webhooks.sent_body")}
+				</Notice>
+				<FailureNote failure={failure} />
+				{revealed !== null && (
+					<SecretNote revealed={revealed} onClose={() => setRevealed(null)} />
+				)}
+				<div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
+					<section aria-label={t("ui.webhooks.list")} className="grid gap-4">
+						<SectionTitle title={t("ui.webhooks.list")} />
+						{items !== null &&
+							(items.length === 0 ? (
+								<EmptyState
+									icon={WebhookIcon}
+									level={3}
+									title={t("ui.webhooks.empty_title")}
+									description={t("ui.webhooks.empty")}
+								>
+									<Button asChild>
+										<a href="#webhooks-new">
+											<Plus aria-hidden="true" />
+											{t("ui.webhooks.add_action")}
+										</a>
+									</Button>
+								</EmptyState>
+							) : (
+								<ul className="flex flex-col gap-4">
+									{items.map((w) => (
+										<li
+											key={w.id}
+											className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 text-text"
+											data-webhook-id={w.id}
 										>
-											{e.description}
-										</span>
-									</span>
-								</label>
+											<div className="flex flex-wrap items-start justify-between gap-4">
+												<div className="min-w-0">
+													<p className="flex flex-wrap items-center gap-2 text-lg font-semibold">
+														<UntrustedText>{w.name}</UntrustedText>
+														<StatusBadge
+															status={w.enabled ? "success" : "neutral"}
+														>
+															{w.enabled
+																? t("ui.webhooks.on")
+																: t("ui.webhooks.off")}
+														</StatusBadge>
+													</p>
+													<p className="font-mono text-sm break-all text-text-muted">
+														{w.url}
+													</p>
+													<p className="text-sm text-text-muted">
+														{w.events
+															.map((e) => t(`ui.webhooks.event.${eventKey(e)}`))
+															.join(", ")}
+													</p>
+													<p className="text-sm text-text-subtle">
+														{w.last_delivery === null
+															? t("ui.webhooks.no_delivery")
+															: t("ui.webhooks.last_delivery", {
+																	state: t(
+																		`ui.webhooks.state.${w.last_delivery.state}`,
+																	),
+																	date: formatDateTime(
+																		w.last_delivery.at,
+																		locale,
+																	),
+																})}
+													</p>
+												</div>
+												<div className="flex shrink-0 flex-wrap justify-end gap-2">
+													<Button
+														type="button"
+														variant="outline"
+														onClick={() => void show(w.id)}
+														aria-expanded={open === w.id}
+													>
+														{t("ui.webhooks.deliveries")}
+														<span className="sr-only">
+															{" "}
+															<UntrustedText>{w.name}</UntrustedText>
+														</span>
+													</Button>
+													<Button
+														type="button"
+														variant="outline"
+														onClick={() =>
+															void act(async () => {
+																await api().testWebhook(w.id);
+															})
+														}
+													>
+														{t("ui.webhooks.test")}
+														<span className="sr-only">
+															{" "}
+															<UntrustedText>{w.name}</UntrustedText>
+														</span>
+													</Button>
+													<Button
+														type="button"
+														variant="outline"
+														onClick={() =>
+															void act(async () => {
+																await api().updateWebhook(w.id, {
+																	enabled: !w.enabled,
+																});
+															})
+														}
+													>
+														{w.enabled
+															? t("ui.webhooks.turn_off")
+															: t("ui.webhooks.turn_on")}
+														<span className="sr-only">
+															{" "}
+															<UntrustedText>{w.name}</UntrustedText>
+														</span>
+													</Button>
+													<Button
+														type="button"
+														variant="outline"
+														onClick={() =>
+															setConfirming({
+																kind: "rotate",
+																id: w.id,
+																name: w.name,
+															})
+														}
+													>
+														{t("ui.webhooks.rotate")}
+														<span className="sr-only">
+															{" "}
+															<UntrustedText>{w.name}</UntrustedText>
+														</span>
+													</Button>
+													<Button
+														type="button"
+														variant="outline"
+														onClick={() =>
+															setConfirming({
+																kind: "remove",
+																id: w.id,
+																name: w.name,
+															})
+														}
+													>
+														{t("ui.webhooks.remove")}
+														<span className="sr-only">
+															{" "}
+															<UntrustedText>{w.name}</UntrustedText>
+														</span>
+													</Button>
+												</div>
+											</div>
+											{open === w.id &&
+												(deliveries.length === 0 ? (
+													<p className="text-sm text-text-muted">
+														{t("ui.webhooks.no_deliveries")}
+													</p>
+												) : (
+													<ul
+														className="divide-y divide-border rounded-lg border border-border bg-surface-sunken"
+														aria-label={t("ui.webhooks.deliveries")}
+													>
+														{deliveries.map((d) => (
+															<DeliveryRow
+																key={d.id}
+																delivery={d}
+																onRedeliver={() =>
+																	void act(async () => {
+																		await api().redeliverWebhook(w.id, d.id);
+																	})
+																}
+															/>
+														))}
+													</ul>
+												))}
+										</li>
+									))}
+								</ul>
 							))}
-						</fieldset>
-						<div>
-							<Button
-								type="submit"
-								disabled={
-									busy ||
-									name.trim() === "" ||
-									url.trim() === "" ||
-									chosen.length === 0
-								}
-							>
-								{t("ui.webhooks.add")}
-							</Button>
-						</div>
-					</form>
-				</section>
+					</section>
+					<section
+						id="webhooks-new"
+						aria-label={t("ui.webhooks.new")}
+						className="grid scroll-mt-4 gap-4"
+					>
+						<SectionTitle level={3} title={t("ui.webhooks.new")} />
+						<form
+							onSubmit={(event) => void create(event)}
+							className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5 text-text"
+						>
+							<div className="flex flex-col gap-2">
+								<Label htmlFor="webhook-name">{t("ui.webhooks.name")}</Label>
+								<Input
+									id="webhook-name"
+									required
+									maxLength={NAME_MAX}
+									autoComplete="off"
+									value={name}
+									onChange={(event) => setName(event.target.value)}
+								/>
+							</div>
+							<div className="flex flex-col gap-2">
+								<Label htmlFor="webhook-url">{t("ui.webhooks.url")}</Label>
+								<Input
+									id="webhook-url"
+									required
+									type="url"
+									autoComplete="off"
+									value={url}
+									onChange={(event) => setUrl(event.target.value)}
+								/>
+								<p className="text-sm text-text-subtle">
+									{t("ui.webhooks.url_hint")}
+								</p>
+							</div>
+							<fieldset className="flex flex-col gap-3">
+								<legend className="mb-1 text-sm font-medium">
+									{t("ui.webhooks.events_legend")}
+								</legend>
+								{events.map((e) => (
+									<label
+										key={e.name}
+										className="flex items-start gap-2 text-sm"
+									>
+										<input
+											type="checkbox"
+											className="mt-1 size-4 accent-primary"
+											checked={chosen.includes(e.name)}
+											onChange={(event) =>
+												setChosen((was) =>
+													event.target.checked
+														? [...was, e.name]
+														: was.filter((n) => n !== e.name),
+												)
+											}
+										/>
+										<span>
+											<span className="font-medium">
+												{t(`ui.webhooks.event.${eventKey(e.name)}`)}
+											</span>{" "}
+											<code className="text-xs">{e.name}</code>
+											<span className="block text-sm text-text-muted" lang="en">
+												{e.description}
+											</span>
+										</span>
+									</label>
+								))}
+							</fieldset>
+							<div>
+								<Button
+									type="submit"
+									disabled={
+										busy ||
+										name.trim() === "" ||
+										url.trim() === "" ||
+										chosen.length === 0
+									}
+								>
+									{t("ui.webhooks.add")}
+								</Button>
+							</div>
+						</form>
+					</section>
+				</div>
 			</div>
 			<ConfirmAction
 				action={confirming}
