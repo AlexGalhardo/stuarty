@@ -69,7 +69,7 @@ The body of a delivery is one JSON object:
 
 ## 4. Delivery, signature and retries
 
-A delivery is a row: the webhook, the event, the stored body, a state (`pending`, `succeeded`, `failed`), the number of attempts, the time of the next attempt and the result of the last. An event creates one delivery per enabled webhook that chose it. The row is written in the same step that sees the event, before the worker is woken, so a restart loses none; the same event for the same webhook is written once (a unique index on the webhook and the event id).
+A delivery is a row: the webhook, the event, the stored body, a state (`pending`, `succeeded`, `failed`), the number of attempts, the time of the next attempt and the result of the last. An event creates one delivery per enabled webhook that chose it. The row is written in the same step that sees the event, before the worker is woken, so a restart loses none; the same event for the same webhook is written once (a unique index on the webhook and the event id). **A ceiling.** A webhook holds at most 500 `pending` deliveries made by events (at most 8 KiB each, so 4 MiB). When it holds that many (a studio that stays locked, a receiver that stays down, a webhook that is disabled) an event for it is not written, and the dispatcher logs that it was not (no body, no address); no row is deleted and none changes state, so what the promise above covers, a restart losing none of the rows already written, still holds, and the newest events are the ones that wait outside the table. A "send test" and a redelivery are a person's call and are not counted. The ceiling frees as deliveries are sent, fail or are removed with their webhook.
 
 **The request.** `POST` to the URL with:
 
@@ -140,7 +140,7 @@ The CLI flag that names the address is `--endpoint`, as in `connection:add`: it 
 - `E_WEBHOOK_NOT_FOUND` (404): the webhook or the delivery does not exist (SDD-000 section 8). An address the rules of section 5 refuse, a name, an event that does not exist, too many events are `E_VALIDATION` with `path`. A vault that cannot open is `E_VAULT_LOCKED`.
 - Identifiers: `whk_` (webhook), `wdl_` (delivery), SDD-000 section 2.
 - Tables `webhooks`, `webhook_deliveries`, `webhook_attempts` (SDD-000 section 7). None holds a secret; a body is metadata.
-- Limits: 20 webhooks; 5 events per webhook; a name of 60 characters; an address of 2048; a body of 8 KiB; 10 s per request; 5 retries; 4 sends at once.
+- Limits: 20 webhooks; 5 events per webhook; a name of 60 characters; an address of 2048; a body of 8 KiB; 500 pending deliveries by events per webhook; 10 s per request; 5 retries; 4 sends at once.
 
 ## 9. The page
 

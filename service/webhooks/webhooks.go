@@ -15,6 +15,9 @@ import (
 var (
 	// ErrNotFound is a webhook or a delivery that does not exist.
 	ErrNotFound = errors.New("webhooks: not found")
+	// ErrQueueFull is an event that was not stored because its webhook already holds core.MaxPending pending
+	// deliveries (SDD-022 section 4).
+	ErrQueueFull = errors.New("webhooks: the webhook already holds the most pending deliveries")
 	// ErrVaultLocked is a secret that cannot be read now: the vault cannot be opened or the secret is not in it.
 	ErrVaultLocked = errors.New("webhooks: the vault cannot be opened")
 )
@@ -73,7 +76,9 @@ type Store interface {
 	// Delete removes the webhook, its deliveries and their attempts.
 	Delete(ctx context.Context, id string) error
 
-	// Enqueue stores a delivery. It answers false, and stores nothing, when the webhook already has a delivery of
+	// Enqueue stores a delivery. A delivery made by an event is refused with ErrQueueFull, and nothing is stored or
+	// deleted, when the webhook already holds core.MaxPending pending ones; the test send and the redelivery of a
+	// person are not counted. It answers false, and stores nothing, when the webhook already has a delivery of
 	// this event id (a test send excepted).
 	Enqueue(ctx context.Context, d Delivery) (bool, error)
 	// Due lists the pending deliveries of enabled webhooks whose time came, oldest first.
