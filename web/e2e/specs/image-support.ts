@@ -1,9 +1,10 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { APIRequestContext } from "@playwright/test";
 
+import { isCompletePng, makeOnce } from "../support/makeOnce";
 import {
 	expect as baseExpect,
 	caller,
@@ -27,22 +28,29 @@ export function testPhoto(variant = 0): string {
 	const dir = join(tmpdir(), "stuarty-e2e-media");
 	mkdirSync(dir, { recursive: true });
 	const out = join(dir, `photo-${variant}.png`);
-	if (!existsSync(out)) {
-		execFileSync(
-			ffmpegExe(),
-			[
-				"-y",
-				"-f",
-				"lavfi",
-				"-i",
-				`gradients=size=640x360:rate=1:seed=${variant + 3},hue=h=${variant * 50}`,
-				"-frames:v",
-				"1",
-				out,
-			],
-			{ stdio: "ignore" },
-		);
-	}
+	// Atomic and checked: a run killed while writing must not leave a truncated PNG for the next runs (VV-405).
+	makeOnce(
+		out,
+		(target) => {
+			execFileSync(
+				ffmpegExe(),
+				[
+					"-y",
+					"-f",
+					"lavfi",
+					"-i",
+					`gradients=size=640x360:rate=1:seed=${variant + 3},hue=h=${variant * 50}`,
+					"-frames:v",
+					"1",
+					"-update",
+					"1",
+					target,
+				],
+				{ stdio: "ignore" },
+			);
+		},
+		isCompletePng,
+	);
 	return out;
 }
 

@@ -10,7 +10,7 @@ export default defineConfig({
 		},
 	},
 	test: {
-		include: ["resources/js/**/*.test.{ts,tsx}", "scripts/*.test.ts"],
+		include: ["resources/js/**/*.test.{ts,tsx}", "scripts/*.test.ts", "e2e/support/*.test.ts"],
 		environment: "node",
 	},
 });
