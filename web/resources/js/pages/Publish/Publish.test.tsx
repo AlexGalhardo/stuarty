@@ -188,6 +188,13 @@ describe("the list shows the result of a target", () => {
 		const html = wrap(<ListView publications={[]} onOpen={() => undefined} />);
 		expect(html).toContain("Nothing is planned.");
 	});
+
+	test("a list not read yet, or whose read failed, does not say it is empty", () => {
+		const html = wrap(
+			<ListView publications={null} onOpen={() => undefined} />,
+		);
+		expect(html).not.toContain("Nothing is planned.");
+	});
 });
 
 describe("what a state offers", () => {
