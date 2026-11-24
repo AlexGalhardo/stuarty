@@ -380,7 +380,9 @@ test.describe("youtube connect and publish @chromium-only", () => {
 			await expect
 				.poll(() => network.received.includes("POST /token"))
 				.toBe(true);
-			await expect(page.getByRole("status")).toContainText("Finishing");
+			await expect(
+				page.getByRole("status").filter({ hasText: "Finishing" }),
+			).toBeVisible();
 			expect(new URL(page.url()).search).toBe("");
 			expect(
 				await page.evaluate(() => JSON.stringify(window.history.state)),
