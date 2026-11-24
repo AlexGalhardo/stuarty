@@ -1,5 +1,6 @@
 import { Link } from "@/components/link";
 import { Logo } from "@/components/logo";
+import { ReleaseBadge } from "@/components/release-badge";
 import { MobileNav } from "@/components/mobile-nav";
 import { useEffect, useState, lazy, Suspense } from "react";
 import { Search } from "lucide-react";
@@ -40,11 +41,11 @@ function SearchLauncher() {
 					setOpened(true);
 					setOpen(true);
 				}}
-				className="flex h-8 items-center gap-2 rounded-lg text-sm text-faint transition-colors hover:text-fg max-sm:w-8 max-sm:justify-center sm:w-36 lg:w-48 xl:w-64 sm:border sm:border-border sm:bg-subtle sm:pr-1.5 sm:pl-2.5 sm:hover:border-border-strong"
+				className="flex items-center gap-2 rounded-lg text-sm text-faint transition-colors hover:text-fg max-sm:size-11 max-sm:justify-center sm:h-9 sm:w-36 lg:w-48 xl:w-64 sm:border sm:border-border-strong sm:bg-subtle sm:pr-1.5 sm:pl-2.5"
 			>
 				<Search aria-hidden className="size-4 shrink-0" />
 				<span className="hidden flex-1 text-left sm:inline">{t.searchButton}</span>
-				<kbd className="hidden rounded border border-border bg-bg px-1.5 py-0.5 font-sans text-[0.6875rem] font-medium whitespace-nowrap text-faint lg:inline">
+				<kbd className="hidden rounded border border-border-strong bg-bg px-1.5 py-0.5 font-sans text-[0.6875rem] font-medium whitespace-nowrap text-faint lg:inline">
 					{isMac ? "⌘K" : "Ctrl K"}
 				</kbd>
 			</button>
@@ -74,23 +75,26 @@ const HEADER_CLASS: Record<HeaderVariant, string> = {
 		"fixed inset-x-0 top-0 z-40 h-14 border-b border-fg/10 bg-bg/70 backdrop-blur-xl supports-[backdrop-filter]:bg-bg/55",
 };
 
-export function Header({ groups, variant = "docs" }: { groups: NavGroup[]; variant?: HeaderVariant }) {
+export function Header({ groups, version, variant = "docs" }: { groups: NavGroup[]; version: string; variant?: HeaderVariant }) {
 	return (
 		<Providers>
 			<header className={HEADER_CLASS[variant]} data-variant={variant}>
 				{/* Same container as app/docs/layout.tsx; the left column matches the sidebar width. */}
-				<div className="site-container flex h-full items-center gap-2 sm:gap-3 lg:grid lg:grid-cols-[13rem_minmax(0,1fr)_auto] lg:gap-0">
-					<div className="flex items-center gap-2 sm:gap-3">
+				<div className="site-container flex h-full items-center gap-2 sm:gap-3 lg:grid lg:grid-cols-[14rem_minmax(0,1fr)_auto] lg:gap-0">
+					<div className="flex items-center gap-1 sm:gap-3">
 						<MobileNav groups={groups} />
-						<Logo />
+						<div className="flex min-w-0 flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-2.5">
+							<Logo />
+							<ReleaseBadge version={version} />
+						</div>
 					</div>
 					<div className="flex flex-1 justify-end sm:justify-center">
 						<SearchLauncher />
 					</div>
-					<div className="flex items-center justify-end gap-1 sm:gap-2">
+					<div className="flex items-center justify-end gap-0 sm:gap-1.5">
 						<Link
 							href="/docs/introduction"
-							className="hidden h-8 items-center rounded-lg px-2.5 text-sm font-medium text-muted transition-colors hover:bg-hover hover:text-fg sm:inline-flex"
+							className="hidden h-9 items-center rounded-lg px-2.5 text-sm font-semibold text-muted transition-colors hover:bg-hover hover:text-fg sm:inline-flex"
 						>
 							{t.docs}
 						</Link>
@@ -98,25 +102,25 @@ export function Header({ groups, variant = "docs" }: { groups: NavGroup[]; varia
 							href={withBase("/llms.txt")}
 							target="_blank"
 							rel="noreferrer"
-							className="hidden h-8 items-center rounded-lg px-2.5 text-sm font-medium text-muted transition-colors hover:bg-hover hover:text-fg sm:inline-flex"
+							className="hidden h-9 items-center rounded-lg px-2.5 text-sm font-semibold text-muted transition-colors hover:bg-hover hover:text-fg sm:inline-flex"
 						>
 							{t.agents}
 						</a>
 						<Link
 							href="/docs/api/overview"
-							className="hidden h-8 items-center rounded-lg px-2.5 text-sm font-medium whitespace-nowrap text-muted transition-colors hover:bg-hover hover:text-fg xl:inline-flex"
+							className="hidden h-9 items-center rounded-lg px-2.5 text-sm font-semibold whitespace-nowrap text-muted transition-colors hover:bg-hover hover:text-fg xl:inline-flex"
 						>
 							{t.apiReference}
 						</Link>
 						<Link
 							href="/docs/mcp/overview"
-							className="hidden h-8 items-center rounded-lg px-2.5 text-sm font-medium text-muted transition-colors hover:bg-hover hover:text-fg xl:inline-flex"
+							className="hidden h-9 items-center rounded-lg px-2.5 text-sm font-semibold text-muted transition-colors hover:bg-hover hover:text-fg xl:inline-flex"
 						>
 							{t.mcp}
 						</Link>
 						<Link
 							href="/changelog"
-							className="hidden h-8 items-center rounded-lg px-2.5 text-sm font-medium text-muted transition-colors hover:bg-hover hover:text-fg sm:inline-flex"
+							className="hidden h-9 items-center rounded-lg px-2.5 text-sm font-semibold text-muted transition-colors hover:bg-hover hover:text-fg sm:inline-flex"
 						>
 							{t.changelog}
 						</Link>
@@ -126,7 +130,7 @@ export function Header({ groups, variant = "docs" }: { groups: NavGroup[]; varia
 								target="_blank"
 								rel="noreferrer"
 								aria-label={t.githubLabel}
-								className="inline-flex size-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-hover hover:text-fg max-[380px]:hidden"
+								className="inline-flex size-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-hover hover:text-fg max-sm:size-11 max-[380px]:hidden"
 							>
 								<GitHubIcon className="size-4" />
 							</a>
