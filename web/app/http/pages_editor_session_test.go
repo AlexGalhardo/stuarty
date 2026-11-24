@@ -7,11 +7,17 @@ import (
 	"testing"
 )
 
-var editorBootstrapJSON = regexp.MustCompile(`(?s)<script type="application/json" id="vv-bootstrap"[^>]*>(.*?)</script>`)
+var editorBootstrapJSON = regexp.MustCompile(
+	`(?s)<script type="application/json" id="vv-bootstrap"[^>]*>(.*?)</script>`,
+)
+
+type editorBootSession struct {
+	Privileged *bool `json:"privileged"`
+}
 
 type editorBoot struct {
-	Session  *struct{ Privileged *bool } `json:"session"`
-	Messages map[string]any              `json:"messages"`
+	Session  *editorBootSession `json:"session"`
+	Messages map[string]any     `json:"messages"`
 }
 
 func editorBootOf(t *testing.T, res resp) editorBoot {
@@ -44,7 +50,9 @@ func TestEditorBootstrapCarriesTheSessionAndTheSceneBarCatalogue(t *testing.T) {
 	h := pagesHarness(t)
 	id := h.newProject("Scene bar")
 
-	browser := editorBootOf(t, h.do(req{path: "/editor/" + id, noAuth: true, headers: map[string]string{"Cookie": cookie(h)}}))
+	ck := map[string]string{"Cookie": cookie(h)}
+
+	browser := editorBootOf(t, h.do(req{path: "/editor/" + id, noAuth: true, headers: ck}))
 	if browser.Session == nil || browser.Session.Privileged == nil || !*browser.Session.Privileged {
 		t.Errorf("the browser of a person: session = %+v, want privileged true", browser.Session)
 	}
