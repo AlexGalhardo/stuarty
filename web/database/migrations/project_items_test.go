@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/internal/testfs"
+
 	"github.com/AlexGalhardo/vukem/database"
 	"github.com/AlexGalhardo/vukem/queue"
 	"github.com/AlexGalhardo/vukem/schema"
@@ -39,7 +40,9 @@ func allMigrations() []schema.Migration {
 func openDB(t *testing.T) *database.DB {
 	t.Helper()
 
-	db, err := database.Open(context.Background(), "file:"+filepath.ToSlash(filepath.Join(testfs.TempDir(t), "db.sqlite")))
+	path := filepath.ToSlash(filepath.Join(testfs.TempDir(t), "db.sqlite"))
+
+	db, err := database.Open(context.Background(), "file:"+path)
 	if err != nil {
 		t.Fatal(err)
 	}

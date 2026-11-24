@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/AlexGalhardo/stuarty/internal/testfs"
+
 	"github.com/AlexGalhardo/vukem/database"
 	"github.com/AlexGalhardo/vukem/queue"
 	"github.com/AlexGalhardo/vukem/schema"
