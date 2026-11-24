@@ -7,6 +7,67 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.53.0] - 2026-11-24
+
+### Added
+
+- **core:** Format asset sizes and total a library once per hash ([f0b1fda](https://github.com/AlexGalhardo/stuarty/commit/f0b1fda33d3582f44976cbbb80007431c30e2cab))
+- **service:** Size, state and totals in the asset library ([7b9e2da](https://github.com/AlexGalhardo/stuarty/commit/7b9e2daf60d6821b1a533ac7b068dc289a8f4b33))
+- **service:** Reveal the stored path of a file to a person in local mode ([db459c4](https://github.com/AlexGalhardo/stuarty/commit/db459c45c565e767d69e0ee8e7c11546a26013e6))
+- **service:** Audit a rename and cover its edge cases on every surface ([7380c2b](https://github.com/AlexGalhardo/stuarty/commit/7380c2b0575b86839e2d31fb2236b6979dc664b1))
+- **ui:** Size, totals, folder action and rename on the asset libraries ([8a3c784](https://github.com/AlexGalhardo/stuarty/commit/8a3c784a7bb735b6850458e4e46fcda8908dea80))
+- **ui:** Give the editor top bar a connection pill and a saved check ([3c77c56](https://github.com/AlexGalhardo/stuarty/commit/3c77c564ea6825197b08ebbd68c698a180c8ef1e))
+- **ui:** Keep the title of a material panel in view while its body scrolls ([76e06aa](https://github.com/AlexGalhardo/stuarty/commit/76e06aa076af424074b935669924d9f21a49961e))
+- **ui:** Pin the inspector title and separate its sections ([b2424c9](https://github.com/AlexGalhardo/stuarty/commit/b2424c9b2cfe50cb060b845750da1e7112d8f6d3))
+- **ui:** Show the registry key in the tooltip of the select, blade and magnet tools ([f5dfcd3](https://github.com/AlexGalhardo/stuarty/commit/f5dfcd3fa487d6a86377dd8c8789cde9fb85c84c))
+- **ui:** Title the open history sidebar like the other material panels ([c269920](https://github.com/AlexGalhardo/stuarty/commit/c2699209b203759e78408dfa2700356647fe4632))
+- **ui:** Add the Animation panel for the hand-off from an external motion engine ([582752d](https://github.com/AlexGalhardo/stuarty/commit/582752d10007a863ad0b63e9e6fe584e256810b6))
+- **ui:** Mount the scene bar under the timeline when the page carries the session ([953e62e](https://github.com/AlexGalhardo/stuarty/commit/953e62ecb69a2476f5593c4011a803374523421f))
+- **web:** Redesign the chat conversation, tool lines and starter prompts ([6f7242b](https://github.com/AlexGalhardo/stuarty/commit/6f7242b7754722af132eacc9b1ef5fd403e88bca))
+- **web:** Show the agent setup states as words with notices and badges ([fb30bd0](https://github.com/AlexGalhardo/stuarty/commit/fb30bd0030aefa01bc0a616fcbfcfdd197af5d02))
+- **web:** Say in words which skills and notes agents are offered ([762f10a](https://github.com/AlexGalhardo/stuarty/commit/762f10a6373c5635d67fa5fcb7553a42d5fe35ee))
+- **web:** Approve or reject a pending memory note and show prompt variables ([8ce8515](https://github.com/AlexGalhardo/stuarty/commit/8ce85157104b2ac6312d86fcc0344227a5aadad1))
+- **ui:** Add the trail components that draw the workflow of a project ([e079a54](https://github.com/AlexGalhardo/stuarty/commit/e079a542f61b6d327034ab8870b5c69867d3f632))
+- **ui:** Redesign the home around the next step of the project in progress ([cb1aae9](https://github.com/AlexGalhardo/stuarty/commit/cb1aae999f1c2cb34d55d23afeddb6b520daf00f))
+- **ui:** Draw a text project as a card with its excerpt and no thumbnail ([1422848](https://github.com/AlexGalhardo/stuarty/commit/1422848d525eaf122125ba1f43b99f9a1fab8f08))
+- **ui:** Start a project from four kinds and a briefing in one dialog ([34b0e28](https://github.com/AlexGalhardo/stuarty/commit/34b0e2886022bf9375396f955ea7ce01e1d32467))
+- **ui:** Give the briefing of each kind its words and an error under each field ([bbe74e4](https://github.com/AlexGalhardo/stuarty/commit/bbe74e4edc6b7b2dfa3409df4fed4dccbb6b3c2d))
+- **ui:** Show the workflow on the page of a project, with skip and Add media ([3348eeb](https://github.com/AlexGalhardo/stuarty/commit/3348eeb5a76ebf770f2e4a7e414c3ce970050506))
+- **ui:** Move the brand kit onto the shared components ([ff63107](https://github.com/AlexGalhardo/stuarty/commit/ff63107aae55152cd61e3df448d1f092e96f37bd))
+- **core:** Add the pure rules of the one list of what waits for a person ([3e0672b](https://github.com/AlexGalhardo/stuarty/commit/3e0672bd52f28f42672291025977dc05ca04f330))
+- **service:** Keep the allowlisted fields of a permission and list the requests of live sessions ([e9345f2](https://github.com/AlexGalhardo/stuarty/commit/e9345f2c1216b022b9bc20f43d601a08a2c7039c))
+- **service:** List what waits for a person with the isolation of each source ([f07a080](https://github.com/AlexGalhardo/stuarty/commit/f07a080b49de1743a8f4151a7ae5a8aa748e1935))
+- **cli:** Add inbox:list and record the inbox routes in the frozen surface ([b4b9e94](https://github.com/AlexGalhardo/stuarty/commit/b4b9e94b66a02be91325d27a0f8f88e3477ee231))
+- **ui:** Read the bell, the center and the scene bar from the one list ([9453c2b](https://github.com/AlexGalhardo/stuarty/commit/9453c2b100942f91a3932225e57791a80bbd7a9d))
+
+### Fixed
+
+- **service:** Keep the exported images in the sweep and clear what a killed export left ([052355d](https://github.com/AlexGalhardo/stuarty/commit/052355d4b1b5bc40c43302c7b79181b91be05845))
+- **service:** Keep the start-up sweep inside the workspace and off run folders in use ([1fc57b8](https://github.com/AlexGalhardo/stuarty/commit/1fc57b87ccb9d023ade6644cd74719d6eea5e79b))
+- **desktop:** Check the reveal path as text before the disk is asked ([8add4b1](https://github.com/AlexGalhardo/stuarty/commit/8add4b15510824edc007aa12c4fc32cef3d6c312))
+- **ui:** Offer a clip only the ready images of a production with no timeline ([56c5e34](https://github.com/AlexGalhardo/stuarty/commit/56c5e34d73b4fa5ab400485acf1cedd721383c27))
+- **library:** Never total a library of unsized files as 0 B ([972f81c](https://github.com/AlexGalhardo/stuarty/commit/972f81c982ed58d86e6e57cab3be6079c8a8f2c3))
+- **service:** Refuse to reuse a library file missing from the store ([dd30326](https://github.com/AlexGalhardo/stuarty/commit/dd3032691f0dda76b6593db79326090f80cc2f08))
+- **desktop:** Never stat a network or device path a page sends to showInFolder ([90ba6b2](https://github.com/AlexGalhardo/stuarty/commit/90ba6b2e0c90c3666b2c3562bb18e439a01a8db0))
+- **ui:** Say Size unknown alone when no file of a library has a size ([f725117](https://github.com/AlexGalhardo/stuarty/commit/f725117a62cebfc948ee1c42614b471e0e13d94f))
+- **web:** Send the session and the scene bar catalogue in the editor bootstrap ([d002380](https://github.com/AlexGalhardo/stuarty/commit/d0023805e4fa9a2aa4746e466e21313db9e0e321))
+- **ui:** Draw the ruler labels at 12 px in the font of the theme ([da36fc6](https://github.com/AlexGalhardo/stuarty/commit/da36fc676daea108a19fbcbd3bf5397983cef6ca))
+- **web:** Keep one activity strip id per page and the library actions in the search row ([8e2db83](https://github.com/AlexGalhardo/stuarty/commit/8e2db83ac4cf637aa24f13c3c2c8ed3be140fe4a))
+- **web:** Let the state badges of the library wrap at 320 px ([6cd67cf](https://github.com/AlexGalhardo/stuarty/commit/6cd67cf4e828c5db5eba74cbbe6cea0016996f71))
+- **ui:** List a memory file that cannot be read apart from the kept notes ([a7cdee3](https://github.com/AlexGalhardo/stuarty/commit/a7cdee37d902f31fbdb5d5f7df32269fabbe4a94))
+- **ui:** Break a long skill or note name in its pane at 320 px ([681b2a2](https://github.com/AlexGalhardo/stuarty/commit/681b2a2ee1417120a1df526a82231fe5114a5a23))
+- **ui:** Give each step of the trail room for its state word ([a312e84](https://github.com/AlexGalhardo/stuarty/commit/a312e842417645a021a76c54033374ccefe0d127))
+- **ui:** Start the add item form of a project on a text unless it is a video ([be320ef](https://github.com/AlexGalhardo/stuarty/commit/be320ef94bf0064ff3536da14df1e8e131573a18))
+- **ui:** List a project made without its first item once the dialog closes ([7246032](https://github.com/AlexGalhardo/stuarty/commit/7246032ebb69d7404e07d321956d1904183080a1))
+- **ui:** Keep one kind field on ProjectSummary ([7c82079](https://github.com/AlexGalhardo/stuarty/commit/7c8207951b509099a17753d9420f45bcece72cae))
+- **core:** Leave the inbox row out of the provenance table of agent-read fields ([e130e9b](https://github.com/AlexGalhardo/stuarty/commit/e130e9b7f322755edb24c5c41adf55763fe4865c))
+- **core:** Say a chat permission's undo is not verified, never claimed ([6baa025](https://github.com/AlexGalhardo/stuarty/commit/6baa0255922456a1bfd5ebb2f02ea4d893b660ef))
+- **ui:** Feed the editor scene bar from the inbox like the dashboard ([b9e3913](https://github.com/AlexGalhardo/stuarty/commit/b9e39139fe18974fa71a2d3110b3ae7e3b0fde1a))
+
+### Security
+
+- **security:** Count the capture and reveal threats in the model ([733c674](https://github.com/AlexGalhardo/stuarty/commit/733c674f3c5f95e3dddad54f265ed3871b0a02bc))
+
 ## [0.52.0] - 2026-11-24
 
 ### Added
@@ -2510,7 +2571,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.52.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.53.0...HEAD
+[0.53.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.52.0...v0.53.0
 [0.52.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.51.0...v0.52.0
 [0.51.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.50.0...v0.51.0
 [0.50.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.49.0...v0.50.0
