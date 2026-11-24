@@ -270,7 +270,54 @@
     "dashboard": {
       "home": {
         "title": "Home",
-        "lead": "Everything you make, in one place. Pick a section to start."
+        "lead": "Say what you want to make, and Stuarty shows the next step until it is published.",
+        "loading": "Reading your projects.",
+        "new_project": "New project",
+        "empty": {
+          "title": "Make your first project",
+          "description": "Choose a text, a video, an image, or decide later. Stuarty shows every step up to the publication."
+        },
+        "guide": {
+          "title": "How it works",
+          "briefing": {
+            "title": "Say what you want to create",
+            "description": "A text, a video, an image, or decide later."
+          },
+          "write": {
+            "title": "Fill in the briefing",
+            "description": "What it is, who it is for and by when."
+          },
+          "follow": {
+            "title": "Follow the path to publication",
+            "description": "Each step says who does it, with which tool and what it costs."
+          }
+        },
+        "progress": {
+          "title": "Continue where you stopped",
+          "next": "Next step: {step}",
+          "no_next": "No open step. Open the project to see where it stands.",
+          "no_workflow": "The path of this project could not be read now.",
+          "open": "Open the project",
+          "open_named": "Open {name}"
+        },
+        "waiting": {
+          "title": "Waiting for you",
+          "approvals": {
+            "one": "{count} approval waits for your decision.",
+            "other": "{count} approvals wait for your decision."
+          },
+          "review": "Review in the approval queue",
+          "step": "The step {step} waits for you.",
+          "nothing": "Nothing waits for you now."
+        },
+        "recent": {
+          "title": "Your projects",
+          "all": "See all projects"
+        },
+        "sections": {
+          "title": "Sections",
+          "description": "Everything Stuarty can do, one section at a time."
+        }
       },
       "empty": {
         "status": "This section is not available yet. It will arrive in a later release.",
@@ -351,6 +398,12 @@
       "title": "Projects",
       "new": "New project",
       "new_open": "Start a new project",
+      "kind": {
+        "text": "Text",
+        "video": "Video",
+        "image": "Image",
+        "undecided": "Not decided yet"
+      },
       "name": "Name",
       "size": "Size",
       "create": "Create project",

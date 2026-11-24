@@ -7,6 +7,7 @@
 
 import type { ProjectDocument } from "@/generated/timeline";
 import type { ProjectSummary } from "@/types";
+import type { ProjectKind, Workflow } from "../../workflow/types";
 
 export type ProjectState = "active" | "trashed";
 
@@ -751,6 +752,9 @@ export interface JobListResult {
 // the timeline a composition uses (SDD-001 section 3.5.1).
 export interface ProjectDescribeResult {
 	project_id: string;
+	// The effective kind and the workflow the service computed (SDD-000 section 1, epic 78).
+	kind?: ProjectKind;
+	workflow?: Workflow;
 	items: {
 		id: string;
 		kind: string;
@@ -1710,7 +1714,7 @@ export interface ProjectItem {
 	format?: string;
 	text?: string;
 	// A text item: script, copy or caption (SDD-019).
-	text_kind?: "script" | "copy" | "caption";
+	text_kind?: "script" | "copy" | "caption" | "post";
 	updated_at: string;
 }
 
@@ -1720,10 +1724,23 @@ export interface ProjectItemResult {
 	text: string;
 }
 
+// What a project is meant to become when it is created; the service reads anything but these four as invalid.
+export type ProjectCreateKind = ProjectKind;
+
+// The answer of the skip of a step: the workflow after the change.
+export interface ProjectStepSkipResult {
+	project_id: string;
+	workflow: Workflow;
+	changed: boolean;
+	text: string;
+}
+
 export interface ProjectItemAddRequest {
 	kind: "text" | "timeline";
 	title: string;
 	text?: string;
+	// A text item: script, copy, caption or post (SDD-019).
+	text_kind?: "script" | "copy" | "caption" | "post";
 	preset?: string;
 }
 

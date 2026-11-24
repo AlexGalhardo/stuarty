@@ -51,7 +51,7 @@ None new. It uses `ProjectCreate`, `ProjectGet`, `ProjectList` and `ProjectStepS
 ## Tasks
 
 - [x] 1. Workflow components over the server's steps. Verify: `cd web && bun run test -- workflow` passes.
-- [ ] 2. Home and its states. Verify: new spec `home-trail` passes.
+- [x] 2. Home and its states. Verify: new spec `home-trail` passes.
 - [ ] 3. Projects list with both card types. Verify: `cd web && bun run test -- Projects` passes.
 - [ ] 4. New project with the four kinds. Verify: new spec `new-project-kinds` passes, and a text project creates no timeline.
 - [ ] 5. Briefing for each kind, with errors under each field. Verify: `cd web && bun run test -- Briefing` passes.

@@ -1,10 +1,10 @@
+import { formatMoney } from "@/dashboard/approval/money";
 import type { Translate } from "@/lib/i18n";
 import {
 	isOneOf,
 	STEP_ACTORS,
 	STEP_IDS,
 	STEP_STATES,
-	type StepCost,
 	type WorkflowStep,
 } from "./types";
 
@@ -54,20 +54,6 @@ export function hintWord(t: Translate, step: WorkflowStep): string | undefined {
 		: undefined;
 }
 
-// One amount as the person reads it: the server gives millionths of a unit and a currency code, and the number is
-// only formatted for the locale here. A code Intl does not know is shown after the number.
-function amountWord(cost: StepCost, locale: string): string {
-	const amount = cost.micros / 1_000_000;
-	try {
-		return new Intl.NumberFormat(locale, {
-			style: "currency",
-			currency: cost.currency,
-		}).format(amount);
-	} catch {
-		return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 6 }).format(amount)} ${cost.currency}`;
-	}
-}
-
 // The cost of a step, one amount for each currency; a step with none reads "Not reported".
 export function costWord(
 	t: Translate,
@@ -77,5 +63,5 @@ export function costWord(
 	if (step.cost === undefined || step.cost.length === 0) {
 		return t("ui.workflow.not_reported");
 	}
-	return step.cost.map((cost) => amountWord(cost, locale)).join(" + ");
+	return step.cost.map((cost) => formatMoney(cost, locale)).join(" + ");
 }
