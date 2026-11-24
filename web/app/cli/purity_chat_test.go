@@ -25,6 +25,10 @@ func (s stub) ChatActivityGet(context.Context, service.ChatRef) (*service.ChatAc
 	return reply[service.ChatActivityResult](s.err)
 }
 
+func (s stub) InboxList(context.Context, service.InboxListRequest) (*service.InboxListResult, error) {
+	return reply[service.InboxListResult](s.err)
+}
+
 func (s stub) ChatTranscriptGet(context.Context, service.ChatTranscriptRequest) (*service.ChatTranscriptResult, error) {
 	return reply[service.ChatTranscriptResult](s.err)
 }

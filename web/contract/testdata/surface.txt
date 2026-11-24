@@ -66,6 +66,7 @@ command image:redo
 command image:revert
 command image:show
 command image:undo
+command inbox:list
 command item:add
 command item:move
 command item:rename
@@ -216,6 +217,8 @@ route GET /images/{}/events
 route GET /images/{}/exports/{}
 route GET /images/{}/frame
 route GET /images/{}/history
+route GET /inbox
+route GET /inbox/events
 route GET /jobs/{}
 route GET /jobs/{}/file
 route GET /keys

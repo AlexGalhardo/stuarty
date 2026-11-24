@@ -3480,6 +3480,23 @@
         },
         "type": "object"
       },
+      "InboxListResult": {
+        "properties": {
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/Row"
+            },
+            "type": "array"
+          },
+          "untrusted_notice": {
+            "type": "string"
+          },
+          "waiting": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "InstalledTool": {
         "properties": {
           "kind": {
@@ -6094,6 +6111,16 @@
           "answer": {
             "type": "string"
           },
+          "detail": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PermissionDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "options": {
             "items": {
               "$ref": "#/components/schemas/Option"
@@ -6110,6 +6137,23 @@
             "type": "string"
           },
           "tool_kind": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PermissionDetail": {
+        "properties": {
+          "item": {
+            "type": "string"
+          },
+          "operations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "project": {
             "type": "string"
           }
         },
@@ -7836,6 +7880,80 @@
           "summary": {
             "type": "string",
             "x-untrusted": true
+          }
+        },
+        "type": "object"
+      },
+      "Row": {
+        "properties": {
+          "action_key": {
+            "type": "string"
+          },
+          "agent": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "answered_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "cost": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Money"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "destination": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "id": {
+            "type": "string"
+          },
+          "item": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "session_id": {
+            "type": "string"
+          },
+          "skill": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "source": {
+            "type": "string"
+          },
+          "source_id": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "tool": {
+            "type": "string",
+            "x-untrusted": true
+          },
+          "undoable": {
+            "type": "boolean"
           }
         },
         "type": "object"
@@ -20270,6 +20388,66 @@
           }
         ],
         "summary": "Undo the latest step of the caller on an image"
+      }
+    },
+    "/api/v1/inbox": {
+      "get": {
+        "operationId": "inbox.list",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InboxListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List what waits for a person: the permission requests of the chat and the approvals, with what will happen, where, the cost and whether it can be undone"
+      }
+    },
+    "/api/v1/inbox/events": {
+      "get": {
+        "operationId": "inbox.events",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Stream the list of what waits for a person, again each time it changes"
       }
     },
     "/api/v1/jobs/{job_id}": {

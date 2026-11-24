@@ -60,6 +60,12 @@ An agent may ask before it runs a tool. The panel shows the request with **Allow
 
 A permission in the chat is the agent's own question. It is not an approval: a publication or a costly generation the agent prepares still waits on the **Approvals** page for you, or for a rule you wrote.
 
+### One list of what waits for you
+
+The bell in the top bar counts everything that waits for you, and its **Notifications** panel lists it in one place: the permissions of your agent conversations and the requests of the **Approvals** queue. Each request says what will happen, to what, where, at what cost and whether it can be undone. When Stuarty was not told, it says "Not reported" instead of guessing: for a tool that is not Stuarty's own, the item, the place and the undo are always "Not reported". For a call to one of Stuarty's own tools, what, where and undo are as the agent described the call, and Stuarty cannot check them.
+
+The panel only reads. A permission is answered with **Allow once** or **Deny**, and an approval is decided on the **Approvals** page; there is no "always allow". The same list is `stuarty inbox:list` and `GET /api/v1/inbox`, and you only ever see your own requests.
+
 ## Limits
 
 - One conversation per project and at most four running at once.
