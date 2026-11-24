@@ -408,6 +408,7 @@
       "new_project": {
         "title": "Novo projeto",
         "description": "Escolha o que você quer criar. Dá para adicionar os outros depois.",
+        "step_two": "Passo 2 de 2: o briefing. O projeto é criado quando você o envia.",
         "kind_legend": "O que você quer criar?",
         "text_legend": "Que tipo de texto?",
         "format": "Formato",

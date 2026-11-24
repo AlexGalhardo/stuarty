@@ -1,36 +1,9 @@
-import { renderToString } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 
-import { I18nProvider } from "@/lib/i18n";
-import en from "../../lang/en.json";
-import pt from "../../lang/pt-BR.json";
+import { drawForTest as draw } from "./drawForTest";
 import { Trail } from "./Trail";
 import { TrailDetail } from "./TrailDetail";
 import type { Workflow } from "./types";
-
-function flat(
-	tree: Record<string, unknown>,
-	prefix: string,
-	out: Record<string, string> = {},
-): Record<string, string> {
-	for (const [key, value] of Object.entries(tree)) {
-		if (typeof value === "string") out[`${prefix}${key}`] = value;
-		else flat(value as Record<string, unknown>, `${prefix}${key}.`, out);
-	}
-	return out;
-}
-
-function draw(
-	node: React.ReactNode,
-	catalog: Record<string, unknown> = en.ui,
-	locale = "en",
-): string {
-	return renderToString(
-		<I18nProvider messages={flat(catalog, "ui.")} locale={locale}>
-			{node}
-		</I18nProvider>,
-	);
-}
 
 // A fixed payload of a text project, as `ProjectGet` sends it (SDD-000 section 1).
 const TEXT: Workflow = {
@@ -176,7 +149,7 @@ describe("TrailDetail", () => {
 	});
 
 	test("is translated: every state and step has a word in Portuguese", () => {
-		const html = draw(<TrailDetail workflow={TEXT} />, pt.ui, "pt-BR");
+		const html = draw(<TrailDetail workflow={TEXT} />, "pt-BR");
 		expect(html).toContain("Esperando você");
 		expect(html).toContain("Escrita");
 		expect(html).not.toContain("ui.workflow");

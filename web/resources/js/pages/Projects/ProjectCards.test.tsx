@@ -1,38 +1,9 @@
-import { renderToString } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 
-import { I18nProvider } from "@/lib/i18n";
 import type { ProjectSummary } from "@/types";
-import en from "../../../lang/en.json";
+import { drawForTest as draw } from "../../workflow/drawForTest";
 import ProjectCard from "./ProjectCard";
 import ProjectCardText from "./ProjectCardText";
-
-function flat(
-	tree: Record<string, unknown>,
-	prefix: string,
-	out: Record<string, string | Record<string, string>> = {},
-): Record<string, string | Record<string, string>> {
-	for (const [key, value] of Object.entries(tree)) {
-		if (typeof value === "string") {
-			out[`${prefix}${key}`] = value;
-			continue;
-		}
-		const object = value as Record<string, unknown>;
-		// A plural is an object with an "other" form (lib/i18n.ts).
-		if (typeof object.other === "string") {
-			out[`${prefix}${key}`] = object as Record<string, string>;
-		} else flat(object, `${prefix}${key}.`, out);
-	}
-	return out;
-}
-
-function draw(node: React.ReactNode): string {
-	return renderToString(
-		<I18nProvider messages={flat(en.ui, "ui.")} locale="en">
-			{node}
-		</I18nProvider>,
-	);
-}
 
 const BASE: ProjectSummary = {
 	id: "prj_0000000001",
