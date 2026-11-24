@@ -270,6 +270,13 @@ test.describe("notification center", () => {
 			"Allow once",
 			"Open the conversation",
 		]);
+		// a tool outside Stuarty: the center reports nothing it was not told, and says so
+		for (const field of ["item", "destination", "undo"]) {
+			await expect(row.getByTestId(`notification-${field}`)).toHaveText(
+				"Not reported",
+			);
+		}
+		await expect(row.getByTestId("notification-cost")).toHaveText("No cost");
 		const answered = page.waitForResponse(
 			(res) =>
 				res.url().includes(`/chat/sessions/${session.id}/permissions/`) &&
@@ -283,5 +290,88 @@ test.describe("notification center", () => {
 			"data-variant",
 			"waiting",
 		);
+	});
+
+	// Epic 77: a permission for a call to a tool of Stuarty says what the call does, to what, where and that it can
+	// be undone, from the allowlisted fields of its input; nothing else the agent put in the input reaches the page.
+	test("a call to a tool of Stuarty is described from the allowlisted fields of its input and from nothing else", async ({
+		page,
+		request,
+		browserName,
+	}) => {
+		const api = await caller(request);
+		const created = await api("POST", "/projects", {
+			name: `Notify ${unique(browserName)}`,
+		});
+		const project = String(created.project_id);
+		made.push(project);
+		await signInAsPerson(page);
+		const listed = (await (
+			await page.request.get("/api/v1/agents/profiles")
+		).json()) as { profiles: { name: string }[] };
+		for (const p of listed.profiles) {
+			await send(
+				page,
+				"DELETE",
+				`/agents/profiles/${encodeURIComponent(p.name)}`,
+			);
+		}
+		await send(page, "PUT", "/agents/profiles/describer", {
+			command: fakeAgent,
+			args: ["--mode=permission-stuarty"],
+		});
+		const session = (await send(
+			page,
+			"POST",
+			`/projects/${project}/chat/sessions`,
+			{ profile: "describer" },
+		)) as { id: string };
+		await page.goto(`/projects/${project}`);
+		await send(page, "POST", `/chat/sessions/${session.id}/messages`, {
+			text: "restyle the captions",
+		});
+		await expect(page.getByTestId("scene-bar")).toHaveAttribute(
+			"data-variant",
+			"waiting",
+		);
+		await page.getByTestId("bell").click();
+		const center = page.getByTestId("notification-center");
+		const row = center
+			.getByTestId("notification")
+			.filter({ hasText: "mcp__stuarty__edit" });
+		await expect(row).toHaveAttribute("data-kind", "permission");
+		await expect(row.getByTestId("notification-what")).toContainText(
+			"Changes a project or an image.",
+		);
+		await expect(row.getByTestId("notification-item")).toHaveText(
+			"ast_3c5v8n2w6d",
+		);
+		await expect(row.getByTestId("notification-destination")).toHaveText(
+			"prj_a4k9m2x7bq",
+		);
+		await expect(row.getByTestId("notification-undo")).toHaveText(
+			"Can be undone",
+		);
+		await expect(row).toContainText("as the agent described the call");
+		for (const hostile of [
+			"sk-hostile-secret-value",
+			"hostile-bearer",
+			"sk-hostile-in-args",
+		]) {
+			await expect(center.getByText(hostile)).toHaveCount(0);
+		}
+		// the same list is what the command line and the API read
+		const inbox = (await (await page.request.get("/api/v1/inbox")).json()) as {
+			rows: { source: string; state: string; tool: string }[];
+		};
+		expect(
+			inbox.rows.some(
+				(r) =>
+					r.source === "chat" &&
+					r.state === "waiting" &&
+					r.tool === "mcp__stuarty__edit",
+			),
+		).toBe(true);
+		expect(JSON.stringify(inbox)).not.toContain("sk-hostile");
 	});
 });

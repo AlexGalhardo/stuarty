@@ -9,16 +9,16 @@ import {
 	useState,
 } from "react";
 
-import type { ApprovalQueueState } from "../dashboard/approval/useApprovalQueue";
 import type { ChatPanelState } from "../dashboard/chat/useChat";
+import type { InboxState } from "./useInbox";
 
 // What the parts of the shell share: the chat the dock talks to (one read of the session and its events,
 // so the scene bar, the bell and the panel can never disagree), whether the panel of the right dock is
 // open and the button that opens it, which gets the focus back when the panel closes.
 export interface ShellState {
 	chat: ChatPanelState;
-	// the approvals that wait, kept live by the queue stream
-	approvals: ApprovalQueueState;
+	// everything that waits for a person, from the chat and from the approvals, as one list the service builds
+	inbox: InboxState;
 	chatOpen: boolean;
 	setChatOpen(open: boolean): void;
 	openChat(): void;
@@ -36,19 +36,19 @@ export function projectInUrl(url: string): string | null {
 
 export function ShellProvider({
 	chat,
-	approvals,
+	inbox,
 	children,
 }: {
 	chat: ChatPanelState;
-	approvals: ApprovalQueueState;
+	inbox: InboxState;
 	children: ReactNode;
 }): ReactNode {
 	const [chatOpen, setChatOpen] = useState(false);
 	const chatButton = useRef<HTMLButtonElement | null>(null);
 	const openChat = useCallback(() => setChatOpen(true), []);
 	const value = useMemo(
-		() => ({ chat, approvals, chatOpen, setChatOpen, openChat, chatButton }),
-		[chat, approvals, chatOpen, openChat],
+		() => ({ chat, inbox, chatOpen, setChatOpen, openChat, chatButton }),
+		[chat, inbox, chatOpen, openChat],
 	);
 	return (
 		<ShellContext.Provider value={value}>{children}</ShellContext.Provider>

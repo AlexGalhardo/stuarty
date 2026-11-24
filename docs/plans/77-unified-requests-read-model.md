@@ -61,7 +61,7 @@ Names are proposals until task 1 writes them to SDD-000.
 - [x] 3. Capture the allowlisted fields of a permission. Verify: `go test ./service/agenthost/...` passes, including a hostile input that must not appear.
 - [x] 4. `InboxList` with member isolation, refused to session tokens. Verify: `go test ./service/... -run Inbox` and `go test -run TestSecurity_ ./...` pass.
 - [x] 5. HTTP, the stream and the CLI. Verify: `go test ./web/contract/...` and `go run ./internal/tools/surfacebudget` pass.
-- [ ] 6. Bell, center and bar read the new list. Verify: `cd web && bun run e2e -- notification-center` and `bun run e2e -- approval` pass.
+- [x] 6. Bell, center and bar read the new list. Verify: `cd web && bun run e2e -- notification-center` and `bun run e2e -- approval` pass.
 
 ## Test strategy
 

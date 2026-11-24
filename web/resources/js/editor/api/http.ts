@@ -11,6 +11,7 @@ import {
 	CHAT_EVENT_NAMES,
 	EVENT_NAMES,
 	IMAGE_EVENT_NAMES,
+	INBOX_EVENT_NAMES,
 	PUBLICATION_EVENT_NAMES,
 } from "./types";
 
@@ -91,6 +92,7 @@ export class HttpTransport implements Transport {
 			...PUBLICATION_EVENT_NAMES,
 			...CHAT_EVENT_NAMES,
 			...IMAGE_EVENT_NAMES,
+			...INBOX_EVENT_NAMES,
 		]) {
 			source.addEventListener(name, (event) =>
 				handlers.onMessage(name, (event as MessageEvent<string>).data),
