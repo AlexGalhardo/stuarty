@@ -118,14 +118,19 @@ async function imagesWaitingIn(
 		kind: "image",
 		project: production,
 	});
+	// The library also lists the files still importing or missing from the store (SDD-011 section 14.9); a clip
+	// can only start from one that is ready.
 	const ids = await Promise.all(
-		found.assets.map(async (entry) => {
-			if (entry.poster?.timeline_id === production) {
-				return entry.poster.asset_id;
-			}
-			const full = await client.getAsset(entry.hash);
-			return full.uses?.find((use) => use.project_id === production)?.asset_id;
-		}),
+		found.assets
+			.filter((entry) => entry.state === "ready")
+			.map(async (entry) => {
+				if (entry.poster?.timeline_id === production) {
+					return entry.poster.asset_id;
+				}
+				const full = await client.getAsset(entry.hash);
+				return full.uses?.find((use) => use.project_id === production)
+					?.asset_id;
+			}),
 	);
 	return ids.filter((id) => id !== undefined);
 }

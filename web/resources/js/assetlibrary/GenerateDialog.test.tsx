@@ -207,10 +207,12 @@ describe("the first frames of a production (VV-334)", () => {
 				assets: [
 					{
 						hash: "sha256:a",
+						state: "ready",
 						poster: { timeline_id: "prj_x", asset_id: "ast_here" },
 					},
 					{
 						hash: "sha256:b",
+						state: "ready",
 						poster: { timeline_id: "prj_a", asset_id: "ast_of_another" },
 					},
 				],
@@ -231,5 +233,32 @@ describe("the first frames of a production (VV-334)", () => {
 			"ast_shared",
 		]);
 		expect(paths.some((path) => path.includes("/media"))).toBe(false);
+	});
+
+	test("with no timeline a file still importing or missing from the store is not offered", async () => {
+		const { transport, paths } = server({
+			"/projects/prj_x/describe": { items: [] },
+			"/assets?kind=image&project=prj_x": {
+				assets: [
+					{
+						hash: "sha256:a",
+						state: "importing",
+						poster: { timeline_id: "prj_x", asset_id: "ast_busy" },
+					},
+					{
+						hash: "sha256:b",
+						state: "missing",
+						poster: { timeline_id: "prj_a", asset_id: "ast_gone" },
+					},
+					{
+						hash: "sha256:c",
+						state: "ready",
+						poster: { timeline_id: "prj_x", asset_id: "ast_here" },
+					},
+				],
+			},
+		});
+		expect(await firstFrames(transport, "prj_x")).toEqual(["ast_here"]);
+		expect(paths).not.toContain("/assets/sha256%3Ab");
 	});
 });
