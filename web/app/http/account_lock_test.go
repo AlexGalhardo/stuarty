@@ -12,7 +12,6 @@ import (
 
 	"github.com/AlexGalhardo/stuarty/service/account"
 	"github.com/AlexGalhardo/stuarty/service/agenthost"
-	"github.com/AlexGalhardo/stuarty/web/app/auth"
 )
 
 // deadlineWriter records the deadlines a handler sets on the connection.
@@ -39,9 +38,10 @@ func TestAccountCreateLiftsTheWriteDeadline(t *testing.T) {
 	r := httptest.NewRequest(http.MethodPost, a.srv.URL+"/auth/account/create", strings.NewReader(createBody))
 	r = r.WithContext(context.WithValue(r.Context(), http.LocalAddrContextKey, a.srv.Listener.Addr()))
 	r.RemoteAddr = "127.0.0.1:50000"
-	r.Header.Set("Authorization", "Bearer "+canary)
+	r.Header.Set("Cookie", a.sessionWith(t, ""))
+	r.Header.Set("Origin", a.srv.URL)
+	r.Header.Set("Sec-Fetch-Site", "same-origin")
 	r.Header.Set("Content-Type", "application/json")
-	r.Header.Set(auth.ClientHeader, "test")
 
 	rec := httptest.NewRecorder()
 	w := &deadlineWriter{ResponseWriter: rec}
@@ -112,6 +112,28 @@ func TestSecurity_T117_AHostedAgentCannotCreateTheAccount(t *testing.T) {
 
 	if a.acc.State() != account.StateNone {
 		t.Fatalf("the agent made the account: state %s", a.acc.State())
+	}
+}
+
+// VV-378: whoever holds the local token could make the first account before the person and sign in as one. Only
+// the browser that `stuarty open` or the desktop shell opened may create it.
+func TestSecurity_T117_TheLocalTokenAloneCannotCreateTheAccount(t *testing.T) {
+	t.Parallel()
+
+	a := newAccountHarness(t)
+
+	res := a.post("/auth/account/create", createBody)
+	if res.status != http.StatusForbidden || res.json(t)["code"] != "E_FORBIDDEN" {
+		t.Fatalf("create with the token alone = %d %s", res.status, res.body)
+	}
+
+	if a.acc.State() != account.StateNone {
+		t.Fatalf("the token made the account: state %s", a.acc.State())
+	}
+
+	// The person's own browser still can.
+	if res := a.createFrom(a.sessionWith(t, ""), createBody); res.status != http.StatusOK {
+		t.Fatalf("create from the opened browser = %d %s", res.status, res.body)
 	}
 }
 

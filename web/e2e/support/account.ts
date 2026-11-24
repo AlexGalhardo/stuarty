@@ -24,8 +24,20 @@ export async function ensureAccount(
 	expect(state.ok()).toBe(true);
 	if (((await state.json()) as { state: string }).state !== "none") return;
 	const token = (await readFile(join(home, "token"), "utf8")).trim();
-	const created = await request.post("/auth/account/create", {
+	// The token alone cannot create the account (VV-378): the run opens the browser the way `stuarty open` does,
+	// with a launch code, and creates it from that session.
+	const launch = await request.post("/api/v1/system/launch", {
 		headers: { ...JSON_HEADERS, Authorization: `Bearer ${token}` },
+	});
+	expect(launch.ok(), await launch.text()).toBe(true);
+	const { code } = (await launch.json()) as { code: string };
+	const opened = await request.get(`/auth/launch?code=${code}`, {
+		headers: { "Sec-Fetch-Site": "none" },
+		maxRedirects: 0,
+	});
+	expect(opened.status(), await opened.text()).toBe(303);
+	const created = await request.post("/auth/account/create", {
+		headers: { ...JSON_HEADERS, "Sec-Fetch-Site": "same-origin" },
 		data: {
 			username: E2E_ACCOUNT.username,
 			email: E2E_ACCOUNT.email,

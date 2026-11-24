@@ -34,7 +34,7 @@ func (h *harness) session(t *testing.T) string {
 }
 
 // sessionWith logs in with a launch request that sends the given launcher secret (none when empty).
-func (h *harness) sessionWith(t *testing.T, secret string) string {
+func (h *harness) sessionWith(t testing.TB, secret string) string {
 	t.Helper()
 
 	issued := h.do(req{method: http.MethodPost, path: "/api/v1/system/launch", headers: launcherHeaders(secret)})
