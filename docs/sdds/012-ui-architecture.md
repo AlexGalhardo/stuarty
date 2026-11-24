@@ -2116,6 +2116,38 @@ The editor is not drawn by this layout (section 2.2): it opens on the full windo
 3. The pages ask for data through the existing service results; the dashboard computes no result (section 1).
 4. Test ids stay as they were; the specs that moved selectors are listed in the epic's hand-off.
 
+### 23.4 The shell (epic 75)
+
+The frame of every dashboard page shows where a person is, what the agent is doing and what waits for them. Four parts, all under `resources/js/shell/` except the sidebar, all thin: they draw what the chat service and the approval queue return and decide nothing. Nothing in the shell assumes media: a project that is only text (D-134) has the same shell.
+
+**The sidebar** (`dashboard/Sidebar.tsx`, `dashboard/sections.ts`). Home sits above the groups; the groups are a separate list (`NAV_GROUPS`) over the keys of `SECTION_KEYS` plus links to routes that already exist, so `SECTION_KEYS` and the Go test of section 23.1 keep their meaning:
+
+| Group | Items |
+| --- | --- |
+| Create | Projects, Write, Edit Video, Edit Image |
+| Assets | Video Assets, Visual Assets, Sound Assets, Brand kit (`/settings/brand-kit`) |
+| Agent | Skills, Prompts, Memory |
+| Publish | Approvals (`/approvals`, with the count of open requests), Publish |
+| Connect | Connections, Webhooks, API keys (`/settings/keys`) |
+
+Settings and Log out stay in the footer, as the local account leaves them (ADR-0052), with the product version (`ReleaseMark`) and the mode. Record and Local models get an item only when the epics that add their routes land; the shell never links a route that does not exist. It has three forms: full, an icon rail and a drawer. With no stored choice the sidebar is full above 1280 px and a rail from 768 to 1280 px; a choice stored in `localStorage.sidebar` wins at every width where there is a rail. Below 768 px it is a drawer opened by the menu button of the top bar: a modal dialog that holds the same navigation in the same order, closes with `Escape` or a choice and gives the focus back to the button. A rail item keeps its accessible name and a tooltip (rule 1 of section 23.3).
+
+**The top bar** (`shell/TopBar.tsx`): the breadcrumb, the bell with its count and the Chat button, which opens the right dock (the floating button is gone). The breadcrumb is built from the path and the section labels (`shell/breadcrumb.ts`, pure); the last item is the current page and carries `aria-current="page"`.
+
+**The scene bar** (`shell/SceneBar.tsx`, `shell/sceneState.ts`): 56 px at the bottom of every page, a `region` labelled `ui.shell.scene.label`, with the variants `none`, `idle`, `working`, `waiting`, `denied`, `done` and `failed`, each told by an icon and a word, never by colour alone. It reads the chat session of the project the dock talks about. It shows the agent profile, the state the session reports (`ChatState`), the skill slot, the tool and, for an open `permission_request`, Allow and Deny.
+
+1. The skill slot says "Not reported" until the server reports a skill (epic 76). The bar invents no skill, no next step and no cost.
+2. The tool is the title of the last `tool_call` event, drawn as untrusted text (`UntrustedText`); with none it says so.
+3. With no session the variant is `none` and says "No agent session"; it offers the chat to start one.
+4. `waiting`: the state is `awaiting_permission`; Allow sends `allow` and Deny sends `reject` through `chat.sessions.answer` (`POST /chat/sessions/{id}/permissions/{request_id}`). The standing options (`allow_always`, `reject_always`) never get an action here, in the center or on the bell, even when the agent offers them. A session that is not a person's sees both disabled, with the visible reason the chat panel already gives.
+5. `denied`: the last answer of the current turn was a refusal; `done`: the session ended for a reason that is not a failure (`user`, `idle`, `shutdown`); `failed`: it ended for any other reason (`exited`, `protocol`, `timeout`, `flood`, `start_failed`). The mapping is a function of what the service reported and is unit tested.
+6. At 390 px the bar is a card of two lines (state and tool, then the actions) with targets of 44 px. The main region scrolls above the bar and no control is covered.
+7. The bar is a live region only for the states that need a person (`waiting`, `failed`): `role="status"` would repeat every tool title of a running agent.
+
+**The bell and the notification center** (`shell/NotificationBell.tsx`, `shell/NotificationCenter.tsx`, `shell/notifications.ts`). The count is the open chat permissions of the session the client knows plus the pending approvals (`GET /approvals?state=pending`, kept live by `GET /approvals/events`). The center is a side sheet with one row per request: the agent and the title as untrusted text, the state in a word and an icon, and the action that leads to the request's own flow (a chat permission is answered in place with the same Allow and Deny and links to the conversation; an approval links to `/approvals`, where it is decided). It lists what the client knows and nothing else: when a read fails it says so. Epic 77 replaces both reads with one read model; until then a permission of a session the client has not opened is not counted, and the center says what it counts.
+
+**Focus and landmarks.** The first `Tab` stop is the skip link (to `#main`); then the sidebar, the top bar, the main region, the scene bar and the dock. The banner landmark is the top bar; the sidebar is a plain `div` that holds the product mark, a `nav` labelled `ui.nav.label` and the footer, so the page has one banner, one `nav`, one `main`, the scene bar `region` and the chat `complementary`. A change of page moves the focus to `main`, as before.
+
 ## 24. The image editor
 
 Implements RF-341 and RF-342 (PRD-004), author decisions D-062 and D-075, and epic 28. It is the screen over the image documents of SDD-021: a creator opens Edit Image, sees a thumbnail on a canvas, moves a title, swaps a photo, applies the brand colours and exports. Like the dashboard it is written once, in `web/resources/js/`, and the web UI and the desktop shell both load it (ADR-0041). It follows the thin-client rules of section 1: it sends the commands of SDD-021 section 3, draws what the core and the renderer answer, and decides no result.

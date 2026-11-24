@@ -52,7 +52,7 @@ None. A decision goes through the existing `ChatAnswerPermission` and `ApprovalD
 
 ## Tasks
 
-- [ ] 1. Write the shell section of SDD-012. Verify: `bunx markdownlint-cli2@0.24.1 docs/sdds/012-ui-architecture.md` exits 0.
+- [x] 1. Write the shell section of SDD-012. Verify: `bunx markdownlint-cli2@0.24.1 docs/sdds/012-ui-architecture.md` exits 0.
 - [ ] 2. The grouped sidebar with its three forms, keeping the keys. Verify: `go test ./web/routes/...` and `cd web && bun run test -- Sidebar sections` pass.
 - [ ] 3. The top bar and breadcrumb. Verify: `cd web && bun run typecheck && bun run test` pass.
 - [ ] 4. `SceneBar` and its mobile form, from the chat state, with every variant. Verify: a Vitest per variant, and `bun run check:i18n` exits 0.
