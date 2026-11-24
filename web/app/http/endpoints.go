@@ -396,6 +396,15 @@ var Endpoints = []Endpoint{
 		Summary: "Find the filler words and repetitions of an asset, and change nothing",
 	},
 	{
+		ID:      "projects.cuts",
+		Method:  http.MethodGet,
+		Path:    "/projects/{id}/cuts",
+		Scope:   service.ScopeEdit,
+		Service: "CutsPropose",
+		Status:  200,
+		Summary: "Propose vertical cuts of an asset from its transcript and face track, and change nothing",
+	},
+	{
 		ID: "system.get", Method: http.MethodGet, Path: "/system", Scope: service.ScopeRead,
 		Service: "Doctor", Status: 200, Summary: "Read the diagnostic report",
 	},

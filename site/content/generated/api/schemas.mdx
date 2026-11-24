@@ -473,6 +473,13 @@ The types named in the tables of the operations. The arguments of each editing c
 | `encoder` | `string` | no |  |
 | `reason` | `string` | no |  |
 
+### command.Operation
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `args` | `any` | no |  |
+| `op` | `string` | no |  |
+
 ### CommandDetail
 
 | Name | Type | Required | Description |
@@ -580,6 +587,30 @@ The types named in the tables of the operations. The arguments of each editing c
 | `green` | array of [`CurvePoint`](/docs/api/schemas#curvepoint) | no |  |
 | `master` | array of [`CurvePoint`](/docs/api/schemas#curvepoint) | no |  |
 | `red` | array of [`CurvePoint`](/docs/api/schemas#curvepoint) | no |  |
+
+### CutsProposal
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `batch` | array of [`command.Operation`](/docs/api/schemas#commandoperation) | no |  |
+| `end_ms` | `integer` | no |  |
+| `face_share` | `integer` | no |  |
+| `n` | `integer` | no |  |
+| `score` | `integer` | no |  |
+| `start_ms` | `integer` | no |  |
+| `title` | `string` | no |  |
+| `words` | `integer` | no |  |
+
+### CutsProposeResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `asset_id` | `string` | no |  |
+| `project_id` | `string` | no |  |
+| `proposals` | array of [`CutsProposal`](/docs/api/schemas#cutsproposal) | no |  |
+| `revision` | `integer (int64)` | no |  |
+| `text` | `string` | no |  |
+| `untrusted_notice` | `string` | no |  |
 
 ### Description
 
@@ -839,6 +870,16 @@ The types named in the tables of the operations. The arguments of each editing c
 | `sha256` | `string` | no |  |
 | `video_codec` | `string` | no |  |
 | `width` | `integer` | no |  |
+
+### FaceTrackResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `asset_id` | `string` | no |  |
+| `faces` | `integer` | no |  |
+| `fps` | `integer` | no |  |
+| `provider` | `string` | no |  |
+| `samples` | `integer` | no |  |
 
 ### Fields
 
@@ -1455,6 +1496,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `batch` | [`BatchResult`](/docs/api/schemas#batchresult) or `any` or `null` or `null` | no |  |
 | `export` | [`ExportResult`](/docs/api/schemas#exportresult) or `any` or `null` or `null` | no |  |
+| `face_track` | [`FaceTrackResult`](/docs/api/schemas#facetrackresult) or `any` or `null` or `null` | no |  |
 | `generated` | [`GeneratedResult`](/docs/api/schemas#generatedresult) or `any` or `null` or `null` | no |  |
 | `image` | [`ImageExportResult`](/docs/api/schemas#imageexportresult) or `any` or `null` or `null` | no |  |
 | `publish` | [`PublishResult`](/docs/api/schemas#publishresult) or `any` or `null` or `null` | no |  |
@@ -2004,7 +2046,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `args` | map of `any` | no | The arguments of the command. |
-| `op` | `string`, one of 90 values | yes | A command name, as listed by GET /commands.. min length 1 |
+| `op` | `string`, one of 91 values | yes | A command name, as listed by GET /commands.. min length 1 |
 
 ### Option
 
@@ -3395,7 +3437,19 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `bytes` | `integer (int64)` | no |  |
 | `host` | `string` | no |  |
+| `license` | `string` | no |  |
 | `name` | `string` | no |  |
+
+### ToolOffer
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `dataset` | `string` | no |  |
+| `download_bytes` | `integer (int64)` | no |  |
+| `files` | array of [`ToolFile`](/docs/api/schemas#toolfile) | no |  |
+| `installed` | `boolean` | no |  |
+| `name` | `string` | no |  |
+| `published` | `boolean` | no |  |
 
 ### ToolsInstallResult
 
@@ -3413,6 +3467,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `done_bytes` | `integer (int64)` | no |  |
 | `error` | [`Error`](/docs/api/schemas#error) or `any` or `null` or `null` | no |  |
 | `installed` | array of [`InstalledTool`](/docs/api/schemas#installedtool) | no |  |
+| `offers` | array of [`ToolOffer`](/docs/api/schemas#tooloffer) | no |  |
 | `state` | `string` | no |  |
 | `text` | `string` | no |  |
 | `total_bytes` | `integer (int64)` | no |  |

@@ -27,6 +27,7 @@ Every operation has its own page with the parameters, the body, the responses an
 | `POST` | `/api/v1/projects/{id}/checkpoints` | [`projects.checkpoints.create`](/docs/api/projects.checkpoints.create) | Name a revision |
 | `PATCH` | `/api/v1/projects/{id}/checkpoints/{name}` | [`projects.checkpoints.rename`](/docs/api/projects.checkpoints.rename) | Rename a checkpoint |
 | `DELETE` | `/api/v1/projects/{id}/checkpoints/{name}` | [`projects.checkpoints.remove`](/docs/api/projects.checkpoints.remove) | Remove a checkpoint, never a revision |
+| `GET` | `/api/v1/projects/{id}/cuts` | [`projects.cuts`](/docs/api/projects.cuts) | Propose vertical cuts of an asset from its transcript and face track, and change nothing |
 | `GET` | `/api/v1/projects/{id}/describe` | [`projects.describe`](/docs/api/projects.describe) | Describe a project as text: brief, items and state |
 | `GET` | `/api/v1/projects/{id}/diff` | [`projects.diff`](/docs/api/projects.diff) | List what changed between two revisions |
 | `POST` | `/api/v1/projects/{id}/duplicate` | [`projects.duplicate`](/docs/api/projects.duplicate) | Duplicate a project |

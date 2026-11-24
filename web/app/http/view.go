@@ -286,6 +286,32 @@ func (h *apiHandler) transcriptView(c *web.Ctx, in transcriptIn) (service.Transc
 	return deref(res), err
 }
 
+type cutsIn struct {
+	ID         string `json:"id"                    validate:"required"`
+	TimelineID string `json:"timeline_id,omitempty"                     doc:"The timeline of the project; required when the project has several."`
+	AssetID    string `json:"asset_id"              validate:"required" doc:"The video asset to cut; it needs a transcript and a face track."`
+	Count      int    `json:"count,omitempty"                           doc:"The most proposals, 1 to 20. Default 5."`
+	MinMS      int    `json:"min_ms,omitempty"                          doc:"The shortest cut in milliseconds. Default 20000."`
+	MaxMS      int    `json:"max_ms,omitempty"                          doc:"The longest cut in milliseconds. Default 60000."`
+}
+
+// cutsPropose is GET /projects/{id}/cuts (SDD-024 section 8).
+func (h *apiHandler) cutsPropose(c *web.Ctx, in cutsIn) (service.CutsProposeResult, error) {
+	res, err := h.Service.CutsPropose(c.Context(), service.CutsProposeRequest{
+		ProjectID:  in.ID,
+		TimelineID: in.TimelineID,
+		AssetID:    in.AssetID,
+		Count:      in.Count,
+		MinMS:      in.MinMS,
+		MaxMS:      in.MaxMS,
+	})
+	if res != nil {
+		revisionHeader(c, res.Revision)
+	}
+
+	return deref(res), err
+}
+
 // transcriptFillers is GET /projects/{id}/transcript/fillers (SDD-023 section 4).
 func (h *apiHandler) transcriptFillers(c *web.Ctx, in transcriptIn) (service.TranscriptDetectResult, error) {
 	res, err := h.Service.TranscriptDetectFillers(c.Context(), service.TranscriptDetectRequest{

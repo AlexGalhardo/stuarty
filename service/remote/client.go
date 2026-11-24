@@ -728,6 +728,21 @@ func (c *Client) TranscriptDetectFillers(
 	return get[service.TranscriptDetectResult](ctx, c, projectPath(req.ProjectID, "/transcript/fillers"), q)
 }
 
+// CutsPropose implements service.Service.
+func (c *Client) CutsPropose(ctx context.Context, req service.CutsProposeRequest) (*service.CutsProposeResult, error) {
+	ctx = withTimeline(ctx, req.TimelineID)
+	q := url.Values{}
+	q.Set("asset_id", req.AssetID)
+
+	for k, v := range map[string]int{"count": req.Count, "min_ms": req.MinMS, "max_ms": req.MaxMS} {
+		if v != 0 {
+			q.Set(k, strconv.Itoa(v))
+		}
+	}
+
+	return get[service.CutsProposeResult](ctx, c, projectPath(req.ProjectID, "/cuts"), q)
+}
+
 // FontList implements service.Service.
 func (c *Client) FontList(ctx context.Context, _ service.FontListRequest) (*service.FontListResult, error) {
 	return get[service.FontListResult](ctx, c, "/fonts", nil)

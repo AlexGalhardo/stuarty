@@ -28,6 +28,7 @@ Content type `application/json`. Schema: [`ToolsStatusResult`](/docs/api/schemas
 | `done_bytes` | `integer (int64)` | no |  |
 | `error` | [`Error`](/docs/api/schemas#error) or `any` or `null` or `null` | no |  |
 | `installed` | array of [`InstalledTool`](/docs/api/schemas#installedtool) | no |  |
+| `offers` | array of [`ToolOffer`](/docs/api/schemas#tooloffer) | no |  |
 | `state` | `string` | no |  |
 | `text` | `string` | no |  |
 | `total_bytes` | `integer (int64)` | no |  |
@@ -218,6 +219,16 @@ puts "#{response.code} #{response.body}"
       "path": "string",
       "sha256": "string",
       "version": "string"
+    }
+  ],
+  "offers": [
+    {
+      "dataset": "string",
+      "download_bytes": 0,
+      "files": [],
+      "installed": false,
+      "name": "string",
+      "published": false
     }
   ],
   "state": "string",
