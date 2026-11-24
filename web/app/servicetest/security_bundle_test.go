@@ -235,9 +235,15 @@ func fuzzBundleZip(entries map[string]string) []byte {
 // panics, and a refusal leaves no project and no file in the stores (SDD-007 T-20, T-21).
 func FuzzBundleArchive(f *testing.F) {
 	hexName := strings.Repeat("ab", 32)
-	manifest := `{"format":"stuarty-bundle","bundle_version":1,"project":{"id":"prj_0000000000"}}`
+	// The seeds declare a document so that they reach the reading of document.json; a manifest with none is the
+	// bundle of a project with no timeline (SDD-005 section 16.1.2), seeded on its own.
+	manifest := `{"format":"stuarty-bundle","bundle_version":1,"project":{"id":"prj_0000000000"},` +
+		`"document":{"sha256":"` + hexName + `","bytes":2}}`
+	bare := `{"format":"stuarty-bundle","bundle_version":3,"project":{"id":"prj_0000000000","name":"Words"},` +
+		`"production":{"name":"Words","items":[{"kind":"text","title":"Post"}]},"media":[],"fonts":[]}`
 
 	f.Add(fuzzBundleZip(map[string]string{"manifest.json": manifest, "document.json": "{}"}))
+	f.Add(fuzzBundleZip(map[string]string{"manifest.json": bare}))
 	f.Add(fuzzBundleZip(map[string]string{
 		"manifest.json": manifest, "document.json": "{}",
 		"media." + hexName: "media", "font." + hexName: "\x00\x01\x00\x00",
