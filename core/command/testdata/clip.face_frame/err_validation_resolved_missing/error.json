@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.resolved is missing: the face track of the asset is not known.",
+  "hint": "The service fills it from the face_track job of the asset; run the job first, then retry.",
+  "retryable": false,
+  "path": "args.resolved"
+}

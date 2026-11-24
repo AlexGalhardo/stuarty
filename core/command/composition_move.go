@@ -28,7 +28,7 @@ func init() {
 
 	Register(Define(Spec{
 		Name:    "composition.expand",
-		Summary: "Puts the items of a composition's timeline back on this timeline in place of the composition.",
+		Summary: "Puts a composition's items back on this timeline in its place.",
 		Description: "The inverse of composition.create_from_selection, for a composition that only places its timeline: no opacity, " +
 			"mask, effect, transform, keyframe, transition, blend or volume of its own, the whole timeline shown, and the same frame " +
 			"size and rate. The nested timeline stays in the project.",

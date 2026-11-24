@@ -1,0 +1,184 @@
+[
+  {
+    "kind": "item.updated",
+    "id": "itm_m1n2p3q4r5",
+    "changes": {
+      "crop": [
+        null,
+        {
+          "left": 0.092,
+          "right": 0.592
+        }
+      ],
+      "keyframes": [
+        null,
+        {
+          "crop_left": [
+            {
+              "easing": "linear",
+              "t": 0,
+              "value": 0.092
+            },
+            {
+              "easing": "linear",
+              "t": 6,
+              "value": 0.097
+            },
+            {
+              "easing": "linear",
+              "t": 12,
+              "value": 0.121
+            },
+            {
+              "easing": "linear",
+              "t": 18,
+              "value": 0.151
+            },
+            {
+              "easing": "linear",
+              "t": 24,
+              "value": 0.184
+            },
+            {
+              "easing": "linear",
+              "t": 30,
+              "value": 0.217
+            },
+            {
+              "easing": "linear",
+              "t": 36,
+              "value": 0.25
+            },
+            {
+              "easing": "linear",
+              "t": 42,
+              "value": 0.283
+            },
+            {
+              "easing": "linear",
+              "t": 48,
+              "value": 0.316
+            },
+            {
+              "easing": "linear",
+              "t": 54,
+              "value": 0.35
+            },
+            {
+              "easing": "linear",
+              "t": 60,
+              "value": 0.383
+            },
+            {
+              "easing": "linear",
+              "t": 66,
+              "value": 0.416
+            },
+            {
+              "easing": "linear",
+              "t": 72,
+              "value": 0.45
+            },
+            {
+              "easing": "linear",
+              "t": 78,
+              "value": 0.483
+            },
+            {
+              "easing": "linear",
+              "t": 84,
+              "value": 0.516
+            },
+            {
+              "easing": "linear",
+              "t": 90,
+              "value": 0.55
+            }
+          ],
+          "crop_right": [
+            {
+              "easing": "linear",
+              "t": 0,
+              "value": 0.592
+            },
+            {
+              "easing": "linear",
+              "t": 6,
+              "value": 0.587
+            },
+            {
+              "easing": "linear",
+              "t": 12,
+              "value": 0.563
+            },
+            {
+              "easing": "linear",
+              "t": 18,
+              "value": 0.532
+            },
+            {
+              "easing": "linear",
+              "t": 24,
+              "value": 0.5
+            },
+            {
+              "easing": "linear",
+              "t": 30,
+              "value": 0.467
+            },
+            {
+              "easing": "linear",
+              "t": 36,
+              "value": 0.434
+            },
+            {
+              "easing": "linear",
+              "t": 42,
+              "value": 0.401
+            },
+            {
+              "easing": "linear",
+              "t": 48,
+              "value": 0.367
+            },
+            {
+              "easing": "linear",
+              "t": 54,
+              "value": 0.334
+            },
+            {
+              "easing": "linear",
+              "t": 60,
+              "value": 0.301
+            },
+            {
+              "easing": "linear",
+              "t": 66,
+              "value": 0.267
+            },
+            {
+              "easing": "linear",
+              "t": 72,
+              "value": 0.234
+            },
+            {
+              "easing": "linear",
+              "t": 78,
+              "value": 0.201
+            },
+            {
+              "easing": "linear",
+              "t": 84,
+              "value": 0.167
+            },
+            {
+              "easing": "linear",
+              "t": 90,
+              "value": 0.134
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

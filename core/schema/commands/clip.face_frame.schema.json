@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "dead_zone": {
+      "description": "How far the face may drift before the frame follows, in ten-thousandths of the window. Default 800.",
+      "maximum": 5000,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "hold_ms": {
+      "description": "How long the last position is held when no face is seen. Default 1500.",
+      "maximum": 30000,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "item_id": {
+      "description": "A clip of a video asset.",
+      "pattern": "^itm_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",
+      "type": "string"
+    },
+    "keyframe_ms": {
+      "description": "The least time between two keyframes, 50 to 5000 ms. Default 200.",
+      "maximum": 5000,
+      "minimum": 50,
+      "type": "integer"
+    },
+    "max_pan": {
+      "description": "Fastest pan, in ten-thousandths of the source width per second. Default 6000.",
+      "maximum": 100000,
+      "minimum": 100,
+      "type": "integer"
+    },
+    "smoothing_ms": {
+      "description": "Time constant of the smoothing, 0 to 5000 ms. Default 400.",
+      "maximum": 5000,
+      "minimum": 0,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "item_id"
+  ],
+  "type": "object"
+}

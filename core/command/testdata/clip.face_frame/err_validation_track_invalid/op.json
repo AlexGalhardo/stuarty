@@ -1,0 +1,11 @@
+{
+  "op": "clip.face_frame",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "resolved": {
+      "track": {
+        "version": 9
+      }
+    }
+  }
+}

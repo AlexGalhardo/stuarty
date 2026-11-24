@@ -303,6 +303,9 @@ var lateOps = map[string]func(p *docPick) string{
 		return fmt.Sprintf(`{"item_id":%q,"x":%.2f,"y":%.2f,"width":%.2f,"height":%.2f,"start":%q,"duration":%q}`,
 			p.clip(), x, y, 0.05+float64(p.n(30))/100, 0.05+float64(p.n(30))/100, p.frames(120), p.frames(60))
 	},
+	"clip.face_frame": func(p *docPick) string {
+		return fmt.Sprintf(`{"item_id":%q,%s}`, p.clip(), faceTrackArgs(5+p.n(10)))
+	},
 	"transcript.delete_range": func(p *docPick) string {
 		from := p.n(5)
 

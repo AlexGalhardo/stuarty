@@ -435,7 +435,7 @@ func buildTrack(in *Input, provider string, frames map[int][]pixelFace) facetrac
 	t := facetrack.Track{
 		Version: facetrack.Version, Model: ModelName, Provider: provider,
 		Source: facetrack.Size{Width: in.Width, Height: in.Height}, FPS: in.FPS,
-		StartMS: in.StartMS, EndMS: in.EndMS, Samples: make([]facetrack.Sample, 0, len(frames)),
+		StartMS: int(in.StartMS), EndMS: int(in.EndMS), Samples: make([]facetrack.Sample, 0, len(frames)),
 	}
 
 	for i := range in.Frames() {
@@ -444,7 +444,7 @@ func buildTrack(in *Input, provider string, frames map[int][]pixelFace) facetrac
 			continue
 		}
 
-		s := facetrack.Sample{T: in.StartMS + int64(i)*1000/int64(in.FPS), Faces: []facetrack.Face{}}
+		s := facetrack.Sample{T: int(in.StartMS + int64(i)*1000/int64(in.FPS)), Faces: []facetrack.Face{}}
 
 		for _, f := range faces {
 			if cx, cy := f.X+f.W/2, f.Y+f.H/2; cx < 0 || cy < 0 || cx > sw*10 || cy > sh*10 {

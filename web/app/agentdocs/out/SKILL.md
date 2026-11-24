@@ -1,6 +1,6 @@
 ---
 name: stuarty
-description: Use when asked to edit or create short videos, captions, cuts or exports with stuarty.
+description: Use to edit or create short videos, captions, cuts or exports with stuarty.
 metadata:
   version: "0.53.0"
 ---
@@ -22,7 +22,7 @@ Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). `--json` for JSON.
 ## Rules
 
 - Times need a unit: `12.5s` or `375f`.
-- Ids (`prj_`, `ast_`, `trk_`, `itm_`, `job_`) are never positions. List first.
+- Ids (`prj_` `ast_` `trk_` `itm_` `job_`) are never positions. List first.
 - Upper tracks draw over lower.
 - `--base`: your last `revision` (default: current).
 - Own `id` for what you reuse; network mode: omit --id.
@@ -35,7 +35,7 @@ Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). `--json` for JSON.
 - `asset`: remove
 - `audio`: add, apply_preset, apply_voice_preset, duck, mark_beats, processor_add, processor_move, processor_remove, processor_set
 - `caption`: add, apply_style, edit_word, from_transcript, import_subtitles, list_styles, merge, retime_from_clip, set_breaks, set_style, set_words, split
-- `clip`: add, add_composition, blur_region, remove_silences, replace_media, set_blend, set_blur, set_chroma_key, set_color, set_effects, set_filter, set_flip, set_framing, set_mask, set_outline, set_shadow, set_speed
+- `clip`: add, add_composition, blur_region, face_frame, remove_silences, replace_media, set_blend, set_blur, set_chroma_key, set_color, set_effects, set_filter, set_flip, set_framing, set_mask, set_outline, set_shadow, set_speed
 - `composition`: create_from_selection, expand
 - `font`: add, remove
 - `item`: crossfade, delete, duplicate, extract_audio, freeze_frame, link, move, paste_attributes, rename, repeat, set_audio, set_enabled, set_transform, set_transition, slip, split, trim, unlink

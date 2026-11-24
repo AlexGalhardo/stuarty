@@ -46,7 +46,7 @@ Names are proposals until task 1 writes them to SDD-000.
 | --- | --- | --- |
 | `ModelInstall` | `admin` | **A person only.** Downloads a pinned model after showing its size and licence |
 | Job kind `face_track` | `media` | Produces a face track of a clip |
-| `clip.apply_face_framing` | `edit` | Writes framing keyframes from a track |
+| `clip.face_frame` | `edit` | Writes framing keyframes from a track (named `face_frame` and not `apply_face_framing` because the agent skill file is at its 12,400-character limit) |
 | `CutsPropose` | `edit` | Proposes ranges and creates no timeline until accepted |
 
 ## Technical design
@@ -62,7 +62,7 @@ Names are proposals until task 1 writes them to SDD-000.
 - [x] 2. Spike: YuNet through ONNX Runtime on the reference machine, CPU and DirectML. Verify: frames per second and detection rate on a fixture in `docs/perf/`.
 - [x] 3. The helper and `engine/aihost`, with a fake model. Verify: `go test ./engine/aihost/...` passes.
 - [x] 4. The model manifest, install and verification. Verify: tests for a wrong hash, an interrupted download and no download without request.
-- [ ] 5. The tracking and framing rules. Verify: `go test ./core/...` with golden tracks.
+- [x] 5. The tracking and framing rules. Verify: `go test ./core/...` with golden tracks.
 - [ ] 6. The `face_track` job and the cut proposals. Verify: `go test ./service/...` passes.
 - [ ] 7. Adapters with parity. Verify: `go test ./web/...` and `go run ./internal/tools/surfacebudget` pass.
 - [ ] 8. The UI: install prompt, progress, proposal review. Verify: `bun run typecheck`, `bun run check:thin-client`, `bun run check:i18n`, `task test:web` and `bun run e2e` pass.
