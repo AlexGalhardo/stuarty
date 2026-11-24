@@ -37,7 +37,7 @@ describe("ActivityStrip", () => {
 			/chat-activity-skill.*captions.*loaded in this session/s,
 		);
 		expect(html).toMatch(
-			/chat-activity-tool.*Reads one note, skill or prompt\..*library · done/s,
+			/chat-activity-tool.*Reads one note, skill or prompt\..*library · done.*text from the agent: .*dir="auto"[^>]*>mcp__stuarty__library</s,
 		);
 	});
 
