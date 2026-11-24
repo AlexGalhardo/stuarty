@@ -346,7 +346,10 @@ test.describe("writing", () => {
 			await page.goto("/write");
 			await page.locator(`[data-text-id="${created.item.id}"]`).click();
 			const draft = page.getByTestId("draft-panel");
-			await expect(draft.getByLabel("Connection")).toBeVisible();
+			// The list is loaded once the AI connection is in it; only then does a missing option prove anything.
+			await expect(
+				draft.getByLabel("Connection").locator("option", { hasText: label }),
+			).toHaveCount(1);
 			await expect(
 				draft
 					.getByLabel("Connection")
