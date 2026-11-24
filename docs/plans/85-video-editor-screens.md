@@ -49,7 +49,7 @@ None new. The motion panel calls `MotionBrief`, media import with origin, `Motio
 
 ## Tasks
 
-- [ ] 1. The editor shell and top bar. Verify: `cd web && bun run test -- SavedIndicator TrashedBanner panelSizes` passes.
+- [x] 1. The editor shell and top bar. Verify: `cd web && bun run test -- SavedIndicator TrashedBanner panelSizes` passes.
 - [ ] 2. The left panels and library. Verify: `cd web && bun run e2e -- library-rail` passes.
 - [ ] 3. The inspector and its fields. Verify: `cd web && bun run test -- inspector` passes.
 - [ ] 4. The timeline chrome, tracks and toolbar. Verify: `cd web && bun run e2e -- keyboard-only-edit` passes.

@@ -1,5 +1,6 @@
 import {
 	ArrowLeft,
+	Check,
 	House,
 	Loader,
 	Pencil,
@@ -130,7 +131,11 @@ export function SavedIndicator({ live }: { live: boolean }): ReactNode {
 		minute: "2-digit",
 	}).format(savedAt);
 	return (
-		<span className="text-xs text-muted-foreground" data-saved-at="">
+		<span
+			className="flex items-center gap-1 text-xs text-muted-foreground"
+			data-saved-at=""
+		>
+			<Check aria-hidden="true" className="size-3.5 text-success" />
 			{t("ui.editor.saved_auto", { time })}
 		</span>
 	);
@@ -176,10 +181,14 @@ export default function TopBar({
 					<House aria-hidden="true" />
 				</a>
 			</Button>
+			<span aria-hidden="true" className="h-5 w-px bg-ed-track-line" />
 			<CompositionBreadcrumb />
 			{name !== undefined && <ProjectName name={name} />}
 			<span
-				className={cn("flex items-center gap-1.5 text-xs", TONE[shown])}
+				className={cn(
+					"flex items-center gap-1.5 rounded-full bg-surface-sunken px-2 py-0.5 text-xs",
+					TONE[shown],
+				)}
 				data-connection={shown}
 			>
 				<Icon aria-hidden="true" className="size-3.5" />

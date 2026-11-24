@@ -45,6 +45,12 @@ describe("SavedIndicator", () => {
 		);
 	});
 
+	test("marks the saved state with a decorative check, never the only signal", async () => {
+		const html = await render(true, true);
+		expect(html).toContain('aria-hidden="true"');
+		expect(html).toContain("data-saved-at");
+	});
+
 	test("says nothing before the first revision or while not live", async () => {
 		expect(await render(true, false)).not.toContain("Saved");
 		expect(await render(false, true)).not.toContain("Saved");

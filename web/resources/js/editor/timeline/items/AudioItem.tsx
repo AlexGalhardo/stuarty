@@ -149,7 +149,7 @@ export default function AudioItem({ id }: { id: string }): ReactNode {
 			{item.volume !== undefined && item.volume !== 1 && (
 				<span
 					data-badge="volume"
-					className="relative z-10 ml-1 shrink-0 rounded bg-background/80 px-1 text-[10px] leading-4 text-foreground"
+					className="relative z-10 ml-1 shrink-0 rounded bg-background/80 px-1 text-xs leading-4 text-foreground"
 				>
 					{Math.round(item.volume * 100)}%
 				</span>
