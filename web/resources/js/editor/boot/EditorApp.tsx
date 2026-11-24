@@ -2,6 +2,7 @@ import { type ReactNode, useEffect } from "react";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/lib/i18n";
+import EditorSceneBar from "../layout/EditorSceneBar";
 import EditorShell from "../layout/EditorShell";
 import { EditorProvider } from "../state/EditorContext";
 import type { EditorRuntime } from "../state/runtime";
@@ -47,6 +48,15 @@ export default function EditorApp({
 				<EditorProvider runtime={runtime}>
 					<TooltipProvider>
 						<EditorShell
+							sceneBar={
+								bootstrap.session === undefined ? null : (
+									<EditorSceneBar
+										projectId={bootstrap.project_id}
+										privileged={bootstrap.session.privileged}
+										mode={bootstrap.mode}
+									/>
+								)
+							}
 							onLocaleChange={(next) => {
 								const { playheadFrame, selection } = runtime.ui.getState();
 								switchLocale(next, {

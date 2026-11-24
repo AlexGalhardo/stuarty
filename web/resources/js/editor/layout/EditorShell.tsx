@@ -90,8 +90,11 @@ function useViewportWidth(): number {
 // are filled by their own tasks; here they are labelled regions.
 export default function EditorShell({
 	onLocaleChange,
+	sceneBar = null,
 }: {
 	onLocaleChange(locale: string): void;
+	// The scene bar of the agent, under the timeline; the timeline keeps its stored size and the preview gives way.
+	sceneBar?: ReactNode;
 }): ReactNode {
 	const t = useT();
 	const canvasPort = useCanvasPort();
@@ -130,7 +133,7 @@ export default function EditorShell({
 		<div
 			className="grid h-dvh min-h-0 bg-ed-bg text-foreground"
 			style={{
-				gridTemplateRows: `auto minmax(0, 1fr) ${sizes.timeline}px`,
+				gridTemplateRows: `auto minmax(0, 1fr) ${sizes.timeline}px${sceneBar === null ? "" : " auto"}`,
 				gridTemplateColumns: `${sizes.library}px ${sizes.history}px minmax(0, 1fr) ${sizes.inspector}px`,
 			}}
 		>
@@ -190,6 +193,7 @@ export default function EditorShell({
 					undoRedo={<UndoRedo />}
 				/>
 			</div>
+			{sceneBar !== null && <div className="col-span-full">{sceneBar}</div>}
 			<AddCaptionDialog open={captionOpen} onOpenChange={setCaptionOpen} />
 			<ReleaseMark />
 			<Notices />
