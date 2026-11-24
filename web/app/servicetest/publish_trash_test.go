@@ -51,13 +51,13 @@ func TestPublication_ATimelineTrashedAfterApprovalIsNotSent(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	before := c.net.count()
+	before := c.net.Count()
 
 	c.clock.advance(time.Hour)
 	c.tick()
 
-	if got := c.state(p, id); c.net.count() != before || got == corepub.TargetPublished {
-		t.Fatalf("a timeline trashed after the approval was sent: target %s, %d requests", got, c.net.count()-before)
+	if got := c.state(p, id); c.net.Count() != before || got == corepub.TargetPublished {
+		t.Fatalf("a timeline trashed after the approval was sent: target %s, %d requests", got, c.net.Count()-before)
 	}
 
 	failed := c.get(p).Target(id)
@@ -81,8 +81,8 @@ func TestPublication_ATimelineTrashedAfterApprovalIsNotSent(t *testing.T) {
 
 	c.tick()
 
-	if got := c.state(p, id); got != corepub.TargetWaitingApproval || c.net.count() != before {
-		t.Errorf("a retry after the restore = %s, %d requests; want a person asked", got, c.net.count()-before)
+	if got := c.state(p, id); got != corepub.TargetWaitingApproval || c.net.Count() != before {
+		t.Errorf("a retry after the restore = %s, %d requests; want a person asked", got, c.net.Count()-before)
 	}
 }
 
@@ -140,11 +140,11 @@ func TestPublishNow_TheLastCheckStopsATrashedExport(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	before := p.net.count()
+	before := p.net.Count()
 
 	p.decide(job, "approve")
 
-	if got := p.job(job.JobID); got.State == service.JobSucceeded || p.net.count() != before {
-		t.Fatalf("the post of a trashed output item = %s, %d requests", got.State, p.net.count()-before)
+	if got := p.job(job.JobID); got.State == service.JobSucceeded || p.net.Count() != before {
+		t.Fatalf("the post of a trashed output item = %s, %d requests", got.State, p.net.Count()-before)
 	}
 }

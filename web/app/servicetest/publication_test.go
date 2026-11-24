@@ -17,13 +17,14 @@ import (
 	pub "github.com/AlexGalhardo/stuarty/service/publish"
 	"github.com/AlexGalhardo/stuarty/service/social"
 	"github.com/AlexGalhardo/stuarty/web/app/store"
+	"github.com/AlexGalhardo/stuarty/web/app/testpublish"
 )
 
 // uploads is how many posts the fake network was sent.
-func uploads(n *fakeNet) int {
+func uploads(n *testpublish.FakeNet) int {
 	count := 0
 
-	for _, r := range n.seen() {
+	for _, r := range n.Seen() {
 		if r == "POST /videos" {
 			count++
 		}
