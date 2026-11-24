@@ -662,7 +662,10 @@ export default function ProviderCards({
 	const t = useT();
 
 	return (
-		<section aria-label={t("ui.providers.title")} className="grid gap-4">
+		<section
+			aria-label={t("ui.providers.title")}
+			className="grid grid-cols-1 gap-4"
+		>
 			<SectionTitle
 				title={t("ui.providers.title")}
 				description={t("ui.providers.intro")}

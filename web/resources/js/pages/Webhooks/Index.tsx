@@ -364,7 +364,10 @@ export default function Webhooks(): ReactNode {
 					<SecretNote revealed={revealed} onClose={() => setRevealed(null)} />
 				)}
 				<div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
-					<section aria-label={t("ui.webhooks.list")} className="grid gap-4">
+					<section
+						aria-label={t("ui.webhooks.list")}
+						className="grid grid-cols-1 gap-4"
+					>
 						<SectionTitle title={t("ui.webhooks.list")} />
 						{items !== null &&
 							(items.length === 0 ? (
@@ -537,7 +540,7 @@ export default function Webhooks(): ReactNode {
 					<section
 						id="webhooks-new"
 						aria-label={t("ui.webhooks.new")}
-						className="grid scroll-mt-4 gap-4"
+						className="grid scroll-mt-4 grid-cols-1 gap-4"
 					>
 						<SectionTitle level={3} title={t("ui.webhooks.new")} />
 						<form

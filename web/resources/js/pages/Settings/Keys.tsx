@@ -232,7 +232,7 @@ export default function SettingsKeys(): ReactNode {
 				<div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
 					<section
 						aria-label={t("ui.keys.list")}
-						className="grid gap-4 rounded-lg border border-border bg-surface p-5"
+						className="grid grid-cols-1 gap-4 rounded-lg border border-border bg-surface p-5"
 					>
 						<SectionTitle level={3} title={t("ui.keys.list")} />
 						<FailureNote failure={failure} />
