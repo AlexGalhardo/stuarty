@@ -493,21 +493,38 @@ export function projectBody(name: string): Record<string, unknown> {
 	return { name: validName(name), description: DESCRIPTION, goal: GOAL };
 }
 
-export async function openProjectForm(page: Page): Promise<void> {
-	// With projects in the list the form waits behind a button (VV-364); the page may still be drawing.
-	const open = page.getByRole("button", { name: "Start a new project" });
+// What a person can choose first in the dialog of a new project (epic 79).
+export type NewProjectChoice = "text" | "video" | "image" | "undecided";
+
+// openProjectForm opens the dialog of a new project, chooses what to create and continues to the briefing, whose
+// fields are then on the page. The projects page shows one "New project" button, in its header or, with no
+// project, in its empty state; the page may still be drawing.
+export async function openProjectForm(
+	page: Page,
+	choice: NewProjectChoice = "undecided",
+): Promise<void> {
+	const open = page.getByRole("button", { name: "New project", exact: true });
 	const name = page.getByLabel("Name", { exact: true });
 	await expect(open.or(name)).toBeVisible();
-	if (await open.isVisible()) {
-		// The keyboard, so the field tips that open on a keyboard focus still do.
-		await open.focus();
-		await page.keyboard.press("Enter");
-	}
+	// A briefing that is already open stays as it is.
+	if (await name.isVisible()) return;
+	// The keyboard, so the field tips that open on a keyboard focus still do.
+	await open.focus();
+	await page.keyboard.press("Enter");
+	await page.locator(`[data-choice="${choice}"]`).click();
+	const next = page.getByRole("button", { name: "Continue to the briefing" });
+	await next.focus();
+	await page.keyboard.press("Enter");
+	await expect(name).toBeVisible();
 }
 
 // fillProjectForm fills the create form of the projects page with a valid context (epic 56).
-export async function fillProjectForm(page: Page, name: string): Promise<void> {
-	await openProjectForm(page);
+export async function fillProjectForm(
+	page: Page,
+	name: string,
+	choice: NewProjectChoice = "undecided",
+): Promise<void> {
+	await openProjectForm(page, choice);
 	await page.getByLabel("Name", { exact: true }).fill(validName(name));
 	await page.getByLabel("Description", { exact: true }).fill(DESCRIPTION);
 	await page.getByLabel("Specific", { exact: true }).fill(GOAL.specific);

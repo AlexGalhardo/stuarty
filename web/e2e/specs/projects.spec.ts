@@ -79,7 +79,7 @@ test.describe("projects-page", () => {
 		).toHaveCount(1);
 	});
 
-	test("with projects in the list the form waits behind a button and the list is above the fold", async ({
+	test("with projects in the list the dialog waits behind a button and the list is above the fold", async ({
 		page,
 		request,
 	}) => {
@@ -87,23 +87,35 @@ test.describe("projects-page", () => {
 		await page.setViewportSize({ width: 1280, height: 720 });
 		await page.goto("/projects");
 		await expect(page.getByLabel("Name", { exact: true })).toHaveCount(0);
+		await expect(page.getByRole("dialog")).toHaveCount(0);
 		const list = page.getByRole("heading", { name: "Your projects" });
 		const box = await list.boundingBox();
 		expect(box?.y ?? Number.POSITIVE_INFINITY).toBeLessThan(720);
-		await page.getByRole("button", { name: "Start a new project" }).click();
-		await expect(page.getByLabel("Name", { exact: true })).toBeVisible();
+		await page.getByRole("button", { name: "New project" }).click();
+		const dialog = page.getByRole("dialog", { name: "New project" });
+		await expect(dialog.getByRole("radio")).toHaveCount(4);
+		await expect(
+			dialog.getByRole("button", { name: "Continue to the briefing" }),
+		).toBeDisabled();
 	});
 
-	test("the button hands the focus to the first field, and the form opens when the last project leaves", async ({
+	test("the dialog takes the focus, the briefing starts at the name, and the empty list teaches the first step when the last project leaves", async ({
 		page,
 		request,
 	}) => {
 		const made = await makeProject(await caller(request), `Fold ${Date.now()}`);
 		await page.goto("/projects");
-		const open = page.getByRole("button", { name: "Start a new project" });
+		const open = page.getByRole("button", { name: "New project" });
 		await open.focus();
 		await page.keyboard.press("Enter");
+		await expect(page.getByRole("radio", { name: /^Text/ })).toBeVisible();
+		await page.locator('[data-choice="text"]').click();
+		await page
+			.getByRole("button", { name: "Continue to the briefing" })
+			.click();
 		await expect(page.getByLabel("Name", { exact: true })).toBeFocused();
+		await page.keyboard.press("Escape");
+		await expect(page.getByRole("dialog")).toHaveCount(0);
 
 		await page.goto("/projects");
 		await expect(open).toBeVisible();
@@ -127,8 +139,14 @@ test.describe("projects-page", () => {
 			.getByRole("alertdialog")
 			.getByRole("button", { name: "Move to trash" })
 			.click();
-		await expect(page.getByLabel("Name", { exact: true })).toBeVisible();
-		await expect(open).toHaveCount(0);
+		const empty = page.getByRole("region", { name: "No projects yet" });
+		await expect(empty).toBeVisible();
+		await expect(
+			empty.getByRole("button", { name: "New project" }),
+		).toBeVisible();
+		await expect(
+			page.getByRole("region", { name: "How it works" }).getByRole("listitem"),
+		).toHaveCount(3);
 	});
 
 	test("creating a project makes a project with no timeline, and a video asks for the size", async ({

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useT } from "@/lib/i18n";
 import type { ProjectContextInput } from "../../editor/api/types";
+import { type Choice, exampleKey } from "./kinds";
 import {
 	charCount,
 	type FieldError,
@@ -68,6 +69,13 @@ interface Props {
 	onEdited?: () => void;
 	onSubmit: (values: ProjectContextInput) => void;
 	onCancel?: () => void;
+	// What the project is meant to be: the examples in the fields follow it, and a project not decided yet reads
+	// the neutral ones.
+	kind?: Choice;
+	// The word of the button that leaves the form; "Cancel" unless the caller goes back instead.
+	cancelLabel?: string;
+	// The first field takes the focus when the form opens, as in a dialog.
+	autoFocusFirst?: boolean;
 }
 
 // The form of the context of a project: name, description and the five parts of the SMART goal with its due date.
@@ -83,6 +91,9 @@ export default function ProjectContextForm({
 	onEdited,
 	onSubmit,
 	onCancel,
+	kind,
+	cancelLabel,
+	autoFocusFirst = false,
 }: Props) {
 	const t = useT();
 	const prefix = useId();
@@ -148,7 +159,8 @@ export default function ProjectContextForm({
 						name: field,
 						value: fieldValue(values, field),
 						autoComplete: "off",
-						placeholder: t(`ui.projects.example.${field}`),
+						autoFocus: autoFocusFirst && field === "name",
+						placeholder: t(exampleKey(kind, field)),
 						"aria-invalid": error || refused ? true : undefined,
 						"aria-describedby": error || refused ? `${id}-error` : undefined,
 						onBlur: () => touch(field),
@@ -215,7 +227,7 @@ export default function ProjectContextForm({
 					</Button>
 					{onCancel && (
 						<Button type="button" variant="outline" onClick={onCancel}>
-							{t("ui.projects.card.cancel")}
+							{cancelLabel ?? t("ui.projects.card.cancel")}
 						</Button>
 					)}
 				</div>

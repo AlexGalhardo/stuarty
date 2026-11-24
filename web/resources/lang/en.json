@@ -397,18 +397,74 @@
     "projects": {
       "title": "Projects",
       "new": "New project",
-      "new_open": "Start a new project",
+      "lead": "Everything you are making, one project at a time.",
+      "empty_title": "No projects yet",
       "kind": {
         "text": "Text",
         "video": "Video",
         "image": "Image",
         "undecided": "Not decided yet"
       },
+      "new_project": {
+        "title": "New project",
+        "description": "Choose what you want to create. You can add the others later.",
+        "kind_legend": "What do you want to create?",
+        "text_legend": "What kind of text?",
+        "format": "Format",
+        "format_hint": "The size of the video. You can add other sizes later.",
+        "continue": "Continue to the briefing",
+        "back": "Back",
+        "briefing_title": "Briefing",
+        "cancel": "Cancel",
+        "partial": "The project was created, but its first item could not be added. Open the project to add it.",
+        "open_created": "Open the project",
+        "choice": {
+          "text": {
+            "title": "Text",
+            "hint": "A blog post, copy, a script or a caption."
+          },
+          "video": {
+            "title": "Video",
+            "hint": "A video, from the script to the export."
+          },
+          "image": {
+            "title": "Image",
+            "hint": "A picture, a thumbnail or a cover."
+          },
+          "undecided": {
+            "title": "Decide later",
+            "hint": "Start with the briefing and choose when you know."
+          }
+        },
+        "lead": {
+          "text": "Tell Stuarty what the text is about, who reads it and what it should do.",
+          "video": "Tell Stuarty what the video is about, who watches it and what it should do.",
+          "image": "Tell Stuarty what the image is for, who sees it and what it should do.",
+          "undecided": "Tell Stuarty what you want to make, for whom and by when. You choose the format after."
+        }
+      },
+      "example_kind": {
+        "text": {
+          "description": "A blog post that explains how I plan a week of content, for creators who work alone, with three steps and one example they can copy.",
+          "specific": "Publish one post that explains the method in three steps",
+          "achievable": "I already have the notes and write one post a week"
+        },
+        "video": {
+          "description": "A 30 second vertical video for the launch of my course, for people who follow me on short video, with captions and a thumbnail.",
+          "specific": "Publish one video that explains the course in one sentence",
+          "achievable": "I already have the footage and edit one video a day"
+        },
+        "image": {
+          "description": "A cover image for the launch of my course, for people who follow me, with the title large and the colours of my brand.",
+          "specific": "Publish one cover that says what the course is at a glance",
+          "achievable": "I already have the logo and the colours of my brand"
+        }
+      },
       "name": "Name",
       "size": "Size",
       "create": "Create project",
       "list": "Your projects",
-      "empty": "No projects yet. Create the first one above.",
+      "empty": "Choose a text, a video, an image, or decide later. The briefing comes next, and the project is created at its end.",
       "open": "Open",
       "summary": "{width} × {height} px, {fps} fps",
       "updated": "Updated {date}",
@@ -555,10 +611,10 @@
       },
       "example": {
         "name": "Launch teaser",
-        "description": "A 30 second vertical teaser for the launch of my course, for people who follow me on short video, with captions and a thumbnail.",
+        "description": "A short teaser for the launch of my course, for the people who follow me, made to be read or watched in a minute, with a picture to go with it.",
         "specific": "Publish one teaser that explains the course in one sentence",
         "measurable": "At least 1000 views and 50 sign-ups in the first week",
-        "achievable": "I already have the footage and edit one video a day",
+        "achievable": "I already have the material and finish one piece a day",
         "relevant": "The launch needs an audience before the doors open",
         "time_bound": "Script on Monday, edit on Tuesday, publish on Wednesday",
         "due": "YYYY-MM-DD"

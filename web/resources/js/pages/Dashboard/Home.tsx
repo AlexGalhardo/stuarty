@@ -4,11 +4,9 @@ import type { ReactNode } from "react";
 
 import { EmptyState } from "@/components/EmptyState";
 import { FailureNote } from "@/components/Failure";
-import { GuideStrip } from "@/components/GuideStrip";
 import { ListRow } from "@/components/ListRow";
 import { LoadingState } from "@/components/LoadingState";
 import { Notice } from "@/components/Notice";
-import { NumberedStep } from "@/components/NumberedStep";
 import { PageHeader } from "@/components/PageHeader";
 import { SectionTitle } from "@/components/SectionTitle";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -17,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { SECTIONS } from "@/dashboard/sections";
 import { useT } from "@/lib/i18n";
 import type { ProjectSummary } from "@/types";
+import { FirstSteps } from "../../workflow/FirstSteps";
 import { Trail } from "../../workflow/Trail";
 import type { Workflow } from "../../workflow/types";
 import { titleWord } from "../../workflow/words";
@@ -24,23 +23,6 @@ import { type HomeState, useHome } from "./useHome";
 
 const NEW_PROJECT = "/projects?new=1";
 const RECENT = 4;
-
-// The three things a person does first, taught the same way whatever they make: nothing here says video.
-function FirstSteps(): ReactNode {
-	const t = useT();
-	return (
-		<GuideStrip title={t("ui.dashboard.home.guide.title")}>
-			{(["briefing", "write", "follow"] as const).map((step, index) => (
-				<NumberedStep
-					key={step}
-					number={index + 1}
-					title={t(`ui.dashboard.home.guide.${step}.title`)}
-					description={t(`ui.dashboard.home.guide.${step}.description`)}
-				/>
-			))}
-		</GuideStrip>
-	);
-}
 
 // What waits for the person: the approvals the queue holds and the steps of the project in progress that the
 // service says wait for them. Both are the service's words; the page only lists them.
