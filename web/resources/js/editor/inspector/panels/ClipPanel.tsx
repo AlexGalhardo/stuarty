@@ -21,6 +21,7 @@ import OutlineSection from "./OutlineSection";
 import ShadowSection from "./ShadowSection";
 import SilencesSection from "./SilencesSection";
 import SpeedSection from "./SpeedSection";
+import VerticalCuts from "./VerticalCuts";
 
 // The clip panel (SDD-012 sections 6.4 and 12.1), in tabs: Video (name, timing,
 // transform, framing, keyframes, transitions), Audio, Speed, Animation, Adjust
@@ -88,7 +89,12 @@ export default function ClipPanel({ itemId }: { itemId: string }): ReactNode {
 					? [
 							{
 								id: "text" as const,
-								content: <AutoCaptions itemId={itemId} />,
+								content: (
+									<>
+										<AutoCaptions itemId={itemId} />
+										<VerticalCuts itemId={itemId} />
+									</>
+								),
 							},
 						]
 					: []),

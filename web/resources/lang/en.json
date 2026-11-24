@@ -1843,6 +1843,9 @@
           "remove_silences": {
             "title": "Remove silences"
           },
+          "face_frame": {
+            "title": "Frame the speaker's face"
+          },
           "set_color": {
             "title": "Set clip color"
           },
@@ -2711,6 +2714,43 @@
         "split": "Split",
         "split_before": "Split the caption before word {n}",
         "edit_label": "Word {n}"
+      },
+      "vertical_cuts": {
+        "title": "Vertical cuts",
+        "hint": "Finds the stretches of this video where the speaker is on screen and proposes short vertical cuts that keep the face in frame. Nothing is created until you accept.",
+        "find": "Find vertical cuts",
+        "checking": "Checking the face model",
+        "tracking": "Looking for the speaker's face",
+        "progress": "Face tracking progress",
+        "proposing": "Choosing the cuts",
+        "review": "Choose the cuts to create. Each one becomes a new vertical timeline of this project.",
+        "none": "No stretch of this video is long enough with the speaker on screen.",
+        "proposals": "Proposed cuts",
+        "choose": "Cut {n}",
+        "range": "{start} to {end}",
+        "meta": "{words} words, face on screen {share}%",
+        "accept": "Create {count} timelines",
+        "dismiss": "Dismiss",
+        "creating": "Creating the timelines",
+        "created": "{count} timelines created. Find them in the project.",
+        "install": {
+          "title": "Install face tracking",
+          "description": "Face tracking runs on this computer. It needs the files below, which are not installed and are downloaded only when you press Install.",
+          "source": "from {host}",
+          "license": "licence {license}",
+          "size": "Download size: {megabytes} MB",
+          "dataset": "The face model was trained on",
+          "not_published": "One of the files is not published yet, so it cannot be installed.",
+          "progress": "Installation progress",
+          "installing": "Installing: {done} of {total} MB",
+          "done": "Installed. Looking for the speaker's face now.",
+          "forbidden": "This session cannot install files. Run the command below in a terminal.",
+          "command": "Or run this command in a terminal",
+          "copy_command": "Copy the command",
+          "install": "Install",
+          "cancel": "Cancel",
+          "close": "Close"
+        }
       },
       "auto_captions": {
         "title": "Auto captions",
