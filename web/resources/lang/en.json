@@ -436,6 +436,13 @@
         "use_brand": "Use the brand kit colours and fonts"
       },
       "card": {
+        "words": {
+          "one": "{count} word",
+          "other": "{count} words"
+        },
+        "reading": "{count} min read",
+        "no_text": "No text written yet.",
+        "write": "Write",
         "menu": "Actions for project",
         "rename": "Rename",
         "rename_title": "Rename project",

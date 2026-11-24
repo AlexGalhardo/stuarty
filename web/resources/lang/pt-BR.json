@@ -436,6 +436,13 @@
         "use_brand": "Usar as cores e fontes do kit de marca"
       },
       "card": {
+        "words": {
+          "one": "{count} palavra",
+          "other": "{count} palavras"
+        },
+        "reading": "{count} min de leitura",
+        "no_text": "Nenhum texto escrito ainda.",
+        "write": "Escrever",
         "menu": "Ações do projeto",
         "rename": "Renomear",
         "rename_title": "Renomear projeto",
