@@ -83,6 +83,8 @@ stuarty otio:import cut.otio --project prj_7k2m9x4q1b --base-revision 12
 
 A bundle is one file, `<name>.vvbundle`, that holds a project and everything it needs, to back it up or hand it to someone else. It is a zip with the project document, the original media, the fonts the project uses and, unless you leave it out, the operation log with the history of edits. Proxies, thumbnails and transcripts are not included; they are made again when the bundle is opened.
 
+A project made of texts alone, with no timeline, exports too: its bundle holds the description, the goal, the brief and the texts, and has no document, log or media. It needs a release that reads it; an older one refuses it and asks to be updated.
+
 ```bash
 stuarty bundle:export --project prj_7k2m9x4q1b --wait
 stuarty bundle:export --project prj_7k2m9x4q1b --no-log --wait
