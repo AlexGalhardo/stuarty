@@ -756,3 +756,31 @@ func TestRecordingSourcesAreCleaned(t *testing.T) {
 		}
 	}
 }
+
+// The clock of a recording that runs is the one the helper reported a moment ago, not the one saved to the
+// database every few seconds.
+func TestRecordingShowsTheClockOfTheHelperWhileItRuns(t *testing.T) {
+	r := newRecEnv(t)
+	rec := r.start(t, r.newProject("p"))
+
+	r.cap.last().events <- capturehost.Progress{ElapsedMS: 3000, Frames: 90, Dropped: 2, Bytes: 5000}
+
+	deadline := time.Now().Add(5 * time.Second)
+
+	for {
+		got, err := r.svc.RecordingGet(r.as(agent), service.RecordingRef{ID: rec.ID})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if got.State == "recording" && got.DurationMS == 3000 && got.Frames == 90 && got.Dropped == 2 {
+			return
+		}
+
+		if time.Now().After(deadline) {
+			t.Fatalf("the live view never showed the progress: %+v", got)
+		}
+
+		time.Sleep(10 * time.Millisecond)
+	}
+}
