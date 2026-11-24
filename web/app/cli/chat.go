@@ -173,7 +173,10 @@ func activityText(a *service.ChatActivityResult) string {
 	case t.FromAgent:
 		lines = append(lines, fmt.Sprintf("tool: %s (%s), text from the agent", firstLine(t.Title), t.Status))
 	default:
-		lines = append(lines, fmt.Sprintf("tool: %s (%s), key %s", t.TechnicalName, t.Status, t.DescriptionKey))
+		// The tool is recognised from the title the agent wrote, so the title is printed too (SDD-017 section 8.1).
+		lines = append(lines, fmt.Sprintf(
+			"tool: %s (%s), key %s, titled by the agent: %s", t.TechnicalName, t.Status, t.DescriptionKey, firstLine(t.Title),
+		))
 	}
 
 	return strings.Join(lines, "\n")
