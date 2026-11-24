@@ -81,6 +81,7 @@ export type LeftTab =
 	| "effects"
 	| "transitions"
 	| "filters"
+	| "handoff"
 	| "templates";
 
 // The tab strip of the inspector (SDD-012 section 6.4). It is remembered across

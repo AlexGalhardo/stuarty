@@ -66,6 +66,10 @@ import type {
 	MediaInspectResult,
 	MediaListResult,
 	MediaStateResult,
+	MotionBrief,
+	MotionCheck,
+	MotionRange,
+	MotionReplaceResult,
 	PlanWindow,
 	PlanWindowHead,
 	ProjectContextInput,
@@ -92,6 +96,7 @@ import type {
 	RecordingListResult,
 	RecordingSourcesResult,
 	RecordingStartRequest,
+	RenderedOrigin,
 	RevertRequest,
 	SessionResult,
 	SnapPointsQuery,
@@ -147,6 +152,25 @@ const defaultDeps: RetryDeps = {
 export interface ApiClient {
 	listMedia(projectId: string): Promise<MediaListResult>;
 	importMedia(projectId: string, paths: string[]): Promise<MediaImportResult>;
+	// The hand-off from an external motion engine (SDD-011 section 15): the brief the render must fit, the
+	// import of the rendered file with its origin, the check of that file against the brief and the replacement
+	// of the clips that read an earlier render of the same key. The product runs no engine.
+	getMotionBrief(projectId: string, range?: MotionRange): Promise<MotionBrief>;
+	importRendered(
+		projectId: string,
+		path: string,
+		origin: RenderedOrigin,
+	): Promise<MediaImportResult>;
+	checkMotion(
+		projectId: string,
+		assetId: string,
+		range?: MotionRange,
+	): Promise<MotionCheck>;
+	replaceMotion(
+		projectId: string,
+		assetId: string,
+		renderKey?: string,
+	): Promise<MotionReplaceResult>;
 	getLint(projectId: string): Promise<LintResult>;
 	// The items of the production the project belongs to, for the names of its timelines.
 	describeProject(projectId: string): Promise<ProjectDescribeResult>;
@@ -513,6 +537,31 @@ export function createClient(
 		importMedia: (id, paths) =>
 			call("POST", `${project(id)}/media`, READ_TIMEOUT_MS, {
 				files: paths.map((path) => ({ path })),
+			}),
+		getMotionBrief: (id, range = {}) =>
+			call(
+				"GET",
+				`${project(id)}/motion/brief${query({ from: range.from, until: range.until, track_id: range.trackId })}`,
+				MEASURE_TIMEOUT_MS,
+			),
+		importRendered: (id, path, origin) =>
+			call("POST", `${project(id)}/media`, BUNDLE_TIMEOUT_MS, {
+				files: [{ path }],
+				origin,
+				wait_ms: BUNDLE_WAIT_MS,
+			}),
+		checkMotion: (id, assetId, range = {}) =>
+			call(
+				"GET",
+				`${project(id)}/motion/check${query({ asset_id: assetId, from: range.from, until: range.until, track_id: range.trackId })}`,
+				MEASURE_TIMEOUT_MS,
+			),
+		replaceMotion: (id, assetId, renderKey) =>
+			call("POST", `${project(id)}/motion/replace`, EDIT_TIMEOUT_MS, {
+				asset_id: assetId,
+				...(renderKey === undefined || renderKey === ""
+					? {}
+					: { render_key: renderKey }),
 			}),
 		getLint: (id) => call("GET", `${project(id)}/lint`, READ_TIMEOUT_MS),
 		describeProject: (id) =>

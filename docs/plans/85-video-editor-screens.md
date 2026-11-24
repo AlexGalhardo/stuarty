@@ -55,7 +55,7 @@ None new. The motion panel calls `MotionBrief`, media import with origin, `Motio
 - [x] 4. The timeline chrome, tracks and toolbar. Verify: `cd web && bun run e2e -- keyboard-only-edit` passes.
 - [ ] 5. Mount the scene bar in the editor. Verify: `cd web && bun run e2e -- scene-bar` passes.
 - [x] 6. The history sidebar and menus. Verify: `cd web && bun run e2e -- history-sidebar` and `bun run e2e -- editor-menus-dark` pass.
-- [ ] 7. The motion panel. Verify: new spec `motion-panel` passes with a rendered fixture.
+- [x] 7. The motion panel. Verify: new spec `motion-panel` passes with a rendered fixture.
 - [ ] 8. Thin client and render parity. Verify: `cd web && bun run check:thin-client` passes, and `git diff` shows nothing under `renderer/`.
 
 ## Test strategy

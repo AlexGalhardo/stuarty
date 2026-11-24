@@ -499,6 +499,8 @@ export interface ImportedAsset {
 	job_id?: string;
 	deduplicated: boolean;
 	error?: ApiErrorBody;
+	// the earlier renders of the same animation that clips already use (SDD-011 section 15.4)
+	replaces?: RenderOffer[];
 }
 
 export interface MediaImportResult {
@@ -507,6 +509,84 @@ export interface MediaImportResult {
 	assets: ImportedAsset[];
 	failed: number;
 	text: string;
+}
+
+export interface RenderOffer {
+	asset_id: string;
+	name: string;
+	item_ids: string[];
+}
+
+// The origin a rendered file is imported with (SDD-011 section 15.2).
+export interface RenderedOrigin {
+	kind: "rendered_externally";
+	source: string;
+	engine?: string;
+	engine_version?: string;
+	render_key?: string;
+}
+
+export interface MotionRange {
+	from?: string;
+	until?: string;
+	trackId?: string;
+}
+
+// What a render by an external motion engine must fit (SDD-011 section 15.1).
+export interface MotionBrief {
+	project_id: string;
+	revision: number;
+	from: TimeValue;
+	until: TimeValue;
+	width: number;
+	height: number;
+	frame_rate: { num: number; den: number };
+	duration_frames: number;
+	duration: TimeValue;
+	safe_area: { x: number; y: number; width: number; height: number };
+	margins: { left: number; right: number; top: number; bottom: number };
+	needs_alpha: boolean;
+	brand_kit: {
+		logo?: string;
+		colors?: Record<string, string>;
+		fonts?: string[];
+	};
+	captions: { item_id: string; start: number; end: number; text: string }[];
+	image_tokens: number;
+	text: string;
+}
+
+export interface MotionMismatch {
+	field: string;
+	expected: string;
+	found: string;
+	hint: string;
+}
+
+// Whether a rendered file fits the brief (SDD-011 section 15.3).
+export interface MotionCheck {
+	project_id: string;
+	revision: number;
+	asset_id: string;
+	asset_name: string;
+	ok: boolean;
+	mismatches: MotionMismatch[];
+	width: number;
+	height: number;
+	frame_rate: { num: number; den: number };
+	duration_frames: number;
+	needs_alpha: boolean;
+	text: string;
+}
+
+export interface MotionReplaceResult {
+	project_id: string;
+	revision: number;
+	render_key: string;
+	asset_id: string;
+	replaced: string[];
+	applied: boolean;
+	dry_run: boolean;
 }
 
 export type JobState =

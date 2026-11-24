@@ -128,7 +128,7 @@ test.describe("library tab rail", () => {
 				// Every panel of the rail, one after the other.
 				const tabs = page.locator("[data-rail-tab]");
 				// The rail fills in when the registry answers.
-				await expect(tabs).toHaveCount(8);
+				await expect(tabs).toHaveCount(9);
 				const count = await tabs.count();
 				for (let i = 0; i < count; i++) {
 					await tabs.nth(i).click();
