@@ -230,7 +230,7 @@ var parity = []row{
 	{method: "ApprovalRuleList", command: "approval:rule:list", route: "GET /approval-rules"},
 	{method: "ApprovalRuleSet", command: "approval:rule:set", route: "POST /approval-rules"},
 	{method: "ApprovalRuleRemove", command: "approval:rule:remove", route: "DELETE /approval-rules/{}"},
-	// Screen recording (SDD-023 section 11): no MCP tool of its own, the tool list is at its byte budget. A recording
+	// Screen recording (SDD-025 section 11): no MCP tool of its own, the tool list is at its byte budget. A recording
 	// is read with job_get and stopped with job_cancel, as a job of kind capture, and placed with edit; starting, adding
 	// to the project and Not now are for a person and have no tool.
 	{method: "RecordingSources", command: "recording:sources", route: "GET /recording/sources"},

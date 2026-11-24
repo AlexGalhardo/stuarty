@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// The bounds of SDD-023 section 5.
+// The bounds of SDD-025 section 5.
 const (
 	// MaxSecondsCeiling is the longest a recording may be allowed to run: the import limit, so a recording can
 	// always be imported.

@@ -8,7 +8,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service"
 )
 
-// The screen recording commands (SDD-023). They carry no rule: the Service decides who may start a capture and
+// The screen recording commands (SDD-025). They carry no rule: the Service decides who may start a capture and
 // core/recording holds the states and the limits. Starting, adding to the project and "Not now" are for a person in
 // the app: the commands exist so that an agent that tries gets E_PRIVILEGED_SESSION and its hint instead of
 // "unknown command"; run with the local token they always fail. Stopping is open to every caller.

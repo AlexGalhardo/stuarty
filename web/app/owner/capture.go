@@ -51,7 +51,7 @@ func locateCaptureHelper(configured, execDir, goos string) string {
 	return ""
 }
 
-// recordingSeconds reads STUARTY_MAX_RECORDING_SECONDS: 1 to 14,400, unset is the default (SDD-023 section 5).
+// recordingSeconds reads STUARTY_MAX_RECORDING_SECONDS: 1 to 14,400, unset is the default (SDD-025 section 5).
 func recordingSeconds(raw string) (int, error) {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {
@@ -99,7 +99,7 @@ type captureSetup struct {
 }
 
 // buildCapture decides whether this process can capture, and builds the capture of the product when it can
-// (SDD-023 section 1): only the desktop on Windows, never in network mode, and only with an FFmpeg to encode with.
+// (SDD-025 section 1): only the desktop on Windows, never in network mode, and only with an FFmpeg to encode with.
 func (o *Owner) buildCapture(
 	cfg Config, in *ffmpeg.Installation, run *ffmpeg.Runner, opt ffmpeg.DetectOptions, execDir string,
 ) captureSetup {

@@ -3,7 +3,7 @@
 - Status: Accepted (2026-11-23, author decision D-133)
 - Deciders: author
 - Amends: `.agents/rules/rust.md` item 1 and AGENTS.md rule 5 (Rust lives only in `renderer/`); PRD-001 section 7 (recording is out of scope), changed by epic 61
-- Links: ADR-0002, ADR-0003, ADR-0011, ADR-0029, ADR-0041, SDD-007 section 6, SDD-023 (to be written by epic 61)
+- Links: ADR-0002, ADR-0003, ADR-0011, ADR-0029, ADR-0041, SDD-007 section 6, SDD-025 (to be written by epic 61)
 
 This record decides how the desktop application captures the screen, sound, webcam and pointer.
 

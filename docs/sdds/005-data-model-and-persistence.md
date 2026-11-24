@@ -1483,9 +1483,9 @@ A failure before the commit rolls the transaction back, puts the copy of `vault.
 
 A workspace adopted **by copy** (the former folder was on another volume, section 6.6) leaves the former folder, with every file in clear text, outside the workspace. Stuarty never deletes that folder, so `POST /auth/account/create` answers with `former_folder`, its path, as long as it exists, and the recovery key page says in plain words that it is there and that the person should delete it after checking the workspace (VV-379). An adoption by rename leaves nothing outside the workspace.
 
-### 5.18 The `recordings` table (epic 61, SDD-023)
+### 5.18 The `recordings` table (epic 61, SDD-025)
 
-One row per screen recording: `id` (`rec_`), `project_id`, `state`, `review`, `source_kind`, `source_label` (sealed), `width`, `height`, `fps`, `encoder`, `started_at`, `ended_at`, `duration_ms`, `frames`, `dropped`, `bytes`, `stop_reason`, `error_code`, `error_message`, `asset_hash`, `asset_id`, `actor`, `created_at`. Indexes: `(project_id, created_at)` and `(state)`. The row is the truth about a recording; the file is `recordings/<id>/capture.mp4` until the recording is added to the project. At start-up the recovery of SDD-023 section 10 settles every row that is not final. The account creation seals `source_label` with the other columns (5.17.3).
+One row per screen recording: `id` (`rec_`), `project_id`, `state`, `review`, `source_kind`, `source_label` (sealed), `width`, `height`, `fps`, `encoder`, `started_at`, `ended_at`, `duration_ms`, `frames`, `dropped`, `bytes`, `stop_reason`, `error_code`, `error_message`, `asset_hash`, `asset_id`, `actor`, `created_at`. Indexes: `(project_id, created_at)` and `(state)`. The row is the truth about a recording; the file is `recordings/<id>/capture.mp4` until the recording is added to the project. At start-up the recovery of SDD-025 section 10 settles every row that is not final. The account creation seals `source_label` with the other columns (5.17.3).
 
 ## 6. Workspace ownership
 

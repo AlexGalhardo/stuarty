@@ -11,7 +11,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/web/contract/testenv"
 )
 
-// the three operations of a person (ADR-0051, SDD-023 section 9) with arguments an agent would send.
+// the three operations of a person (ADR-0051, SDD-025 section 9) with arguments an agent would send.
 var recordingPersonOnly = []step{
 	{
 		Call: "RecordingStart",

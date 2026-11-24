@@ -334,7 +334,7 @@ export interface ApiClient {
 		request: ProviderSignInCompleteRequest,
 	): Promise<ProviderSignIn>;
 	listProviderSignIns(): Promise<ProviderSignInListResult>;
-	// The screen recording (SDD-023). Starting, adding to the project and Not now are for a person in a
+	// The screen recording (SDD-025). Starting, adding to the project and Not now are for a person in a
 	// browser session; any other caller gets E_PRIVILEGED_SESSION.
 	recordingSources(): Promise<RecordingSourcesResult>;
 	startRecording(request: RecordingStartRequest): Promise<Recording>;

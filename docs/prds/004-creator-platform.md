@@ -139,7 +139,7 @@ It is done when the author has published ten real videos using only Stuarty, not
 
 ### 4.11 Screen recording
 
-Decisions: ADR-0049 (a native capture helper), ADR-0051 (agents never start a capture). Specification: SDD-023. Epic 61 delivers video on Windows; sound, webcam, pause and cursor events are epic 62, the browser is epic 63, and macOS and Linux are epics 67 and 68.
+Decisions: ADR-0049 (a native capture helper), ADR-0051 (agents never start a capture). Specification: SDD-025. Epic 61 delivers video on Windows; sound, webcam, pause and cursor events are epic 62, the browser is epic 63, and macOS and Linux are epics 67 and 68.
 
 | ID | Requirement |
 | --- | --- |

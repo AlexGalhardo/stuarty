@@ -1,4 +1,4 @@
-// Package recording holds the rules of a screen recording (SDD-023): the state machine, the review of a finished
+// Package recording holds the rules of a screen recording (SDD-025): the state machine, the review of a finished
 // recording, the limits and the checks of a request. It is pure: the helper, the disk and the database are the
 // business of the layers above it.
 package recording
@@ -8,7 +8,7 @@ import (
 	"fmt"
 )
 
-// State is where a recording is in its life (SDD-023 section 3).
+// State is where a recording is in its life (SDD-025 section 3).
 type State string
 
 // The states of a recording. Ready, Failed and Cancelled are final.
@@ -57,7 +57,7 @@ const (
 var ErrTransition = errors.New("recording: the event is not allowed in this state")
 
 // Next is the state after an event, or ErrTransition (wrapped with both names) for any pair the table of
-// SDD-023 section 3 does not list.
+// SDD-025 section 3 does not list.
 func Next(from State, ev Event) (State, error) {
 	var to State
 
@@ -87,7 +87,7 @@ func Next(from State, ev Event) (State, error) {
 	return to, nil
 }
 
-// Settle is the state of a recording the server found open at start-up (SDD-023 section 10): Ready when its file
+// Settle is the state of a recording the server found open at start-up (SDD-025 section 10): Ready when its file
 // has a decodable frame, Failed when not. A final recording is an error: there is nothing to settle.
 func Settle(from State, hasFrames bool) (State, error) {
 	if !from.Valid() || from.Final() {
@@ -101,7 +101,7 @@ func Settle(from State, hasFrames bool) (State, error) {
 	return Failed, nil
 }
 
-// Review is the decision of a person about a finished recording (SDD-023 section 4).
+// Review is the decision of a person about a finished recording (SDD-025 section 4).
 type Review string
 
 // The reviews. A recording that is not Ready has none (the empty string).
@@ -147,6 +147,6 @@ func CanDelete(s State, r Review) bool {
 	return (s == Ready && r != ReviewAdded) || s == Failed
 }
 
-// VisibleTo reports whether a caller may read the recording (SDD-023 section 4): everyone, except that a
+// VisibleTo reports whether a caller may read the recording (SDD-025 section 4): everyone, except that a
 // dismissed recording is for a person only.
 func VisibleTo(r Review, person bool) bool { return r != ReviewDismissed || person }

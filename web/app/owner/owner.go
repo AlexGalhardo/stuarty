@@ -98,7 +98,7 @@ type Owner struct {
 	Store   *store.Store
 	Service service.Service
 	Runner  service.JobRunner
-	// capture is the screen capture of this process, or the reason there is none (SDD-023).
+	// capture is the screen capture of this process, or the reason there is none (SDD-025).
 	capture captureSetup
 	// Account is the local account of the workspace (ADR-0052); nil in network mode, which has its own users.
 	Account *account.Manager
@@ -701,7 +701,7 @@ func (o *Owner) Close() error {
 		o.Events.Close() // ends the open streams at once
 	}
 
-	// A recording in progress is ended gracefully, so its file is complete (SDD-023 section 10).
+	// A recording in progress is ended gracefully, so its file is complete (SDD-025 section 10).
 	service.ShutdownRecordings(o.Service)
 
 	// No agent process is left behind: every tree is killed before the store closes (SDD-017 section 4).

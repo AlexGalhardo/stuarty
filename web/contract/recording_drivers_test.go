@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-// recordingCommand is the command line of a recording step (SDD-023); ok is false for any other step.
+// recordingCommand is the command line of a recording step (SDD-025); ok is false for any other step.
 func recordingCommand(s step) (name string, argv []string, ok bool, err error) {
 	var a struct {
 		ID        string `json:"recording_id"`

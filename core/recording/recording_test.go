@@ -9,7 +9,7 @@ var allStates = []State{Prepared, Recording, Finishing, Ready, Failed, Cancelled
 
 var allEvents = []Event{EventStarted, EventStop, EventHelperEnded, EventFinished, EventFailed, EventCancel}
 
-// allowed is the table of SDD-023 section 3, written out: every pair not in it must be refused.
+// allowed is the table of SDD-025 section 3, written out: every pair not in it must be refused.
 var allowed = map[State]map[Event]State{
 	Prepared:  {EventStarted: Recording, EventCancel: Cancelled, EventFailed: Failed},
 	Recording: {EventStop: Finishing, EventCancel: Cancelled, EventHelperEnded: Failed, EventFailed: Failed},
@@ -129,7 +129,7 @@ func TestVisibilityPlacementAndDelete(t *testing.T) {
 
 	if !CanDelete(Ready, ReviewPending) || !CanDelete(Ready, ReviewDismissed) || !CanDelete(Failed, "") ||
 		CanDelete(Ready, ReviewAdded) || CanDelete(Recording, "") || CanDelete(Cancelled, "") {
-		t.Error("CanDelete does not follow SDD-023 section 3")
+		t.Error("CanDelete does not follow SDD-025 section 3")
 	}
 }
 

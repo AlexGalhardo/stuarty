@@ -1,4 +1,4 @@
-// Package recordings is the storage contract of the screen recordings (SDD-023, SDD-005 section 5.18): the row,
+// Package recordings is the storage contract of the screen recordings (SDD-025, SDD-005 section 5.18): the row,
 // and the Store the database implements. No frame and no audio is in it, only what a list shows.
 package recordings
 

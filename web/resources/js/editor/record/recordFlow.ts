@@ -2,7 +2,7 @@ import { ApiError } from "../api/errors";
 import type { Recording, RecordingSourcesResult } from "../api/types";
 
 // What the record dialog shows. Every member comes from the service: the state of a recording, whether a person
-// added it, the elapsed time and the reason a capture is not available are the service's (SDD-023). The dialog
+// added it, the elapsed time and the reason a capture is not available are the service's (SDD-025). The dialog
 // computes none of them; this file only chooses which screen draws what the service said.
 export type RecordView =
 	| { step: "loading" }

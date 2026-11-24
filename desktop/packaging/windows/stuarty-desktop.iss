@@ -79,7 +79,7 @@ Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription:
 Source: "{#DesktopBinary}"; DestDir: "{app}"; DestName: "{#AppExe}"; Flags: ignoreversion
 Source: "{#ServerBinary}"; DestDir: "{app}"; DestName: "{#ServerExe}"; Flags: ignoreversion
 #ifdef CaptureBinary
-; The screen capture helper (ADR-0049, SDD-023): the server looks for it next to its own executable. Build it with
+; The screen capture helper (ADR-0049, SDD-025): the server looks for it next to its own executable. Build it with
 ; scripts/build-capture.sh and pass /DCaptureBinary=<stuarty-capture.exe>; without it the app answers that recording
 ; is not available.
 Source: "{#CaptureBinary}"; DestDir: "{app}"; DestName: "stuarty-capture.exe"; Flags: ignoreversion

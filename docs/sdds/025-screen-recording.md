@@ -1,4 +1,4 @@
-# SDD-023: Screen recording
+# SDD-025: Screen recording
 
 - Status: Draft (2026-11-24). Written by epic 61 before its code.
 - Depends on: ADR-0049 (the native capture helper), ADR-0051 (agents never start a capture), ADR-0011, ADR-0032, ADR-0052, SDD-000 (names), SDD-003 (surfaces), SDD-005 (persistence), SDD-007 (threats, section 6 process policy), SDD-011 (import), SDD-013 section 4.9 (the precedent of a native child).

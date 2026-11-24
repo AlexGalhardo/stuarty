@@ -12,7 +12,7 @@ import type { ApiClient } from "../api/client";
 import RecordPanel from "./RecordPanel";
 import { useRecordFlow } from "./useRecordFlow";
 
-// The record dialog (SDD-023 section 12): the source picker, the visible state of the recording with its stop
+// The record dialog (SDD-025 section 12): the source picker, the visible state of the recording with its stop
 // button, and the step where a person adds the recording to the project or says "Not now". It computes nothing.
 export default function RecordDialog({
 	client,
