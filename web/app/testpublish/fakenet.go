@@ -45,7 +45,7 @@ type FakeNet struct {
 	Posted []string
 
 	hookMu sync.Mutex
-	hook   func(r *http.Request)
+	hook   func(r *http.Request) bool
 }
 
 // NewFakeNet starts the network; the test closes it.
@@ -63,8 +63,9 @@ func NewFakeNet(t Tester) *FakeNet {
 
 // SetHook sets a function that runs for every request before the network answers it, with no lock of the
 // network held, so it may block: that is how a test keeps a request in flight while it ends the process that
-// made it. nil removes it.
-func (n *FakeNet) SetHook(h func(r *http.Request)) {
+// made it. It answers whether the network goes on to answer the request; false drops it unanswered and
+// unrecorded, as a request whose sender died would be. nil removes the hook.
+func (n *FakeNet) SetHook(h func(r *http.Request) bool) {
 	n.hookMu.Lock()
 	defer n.hookMu.Unlock()
 
@@ -76,8 +77,8 @@ func (n *FakeNet) serve(w http.ResponseWriter, r *http.Request) {
 	hook := n.hook
 	n.hookMu.Unlock()
 
-	if hook != nil {
-		hook(r)
+	if hook != nil && !hook(r) {
+		return
 	}
 
 	n.Mu.Lock()

@@ -82,7 +82,7 @@ func (v *Vault) Delete(id string) error                // absent is not an error
 func (v *Vault) Rotate(newKey []byte) error            // re-encrypts every entry; the caller then saves newKey
 ```
 
-- **Who may call `Get`.** `Get` is not part of `service.Service`. Only `service/connections`, the owner wiring (`web/app/owner`) and the contract test environment (`web/contract/testenv`) import `service/vault` (tests may too); `internal/tools/importcheck` fails the build when another package does. The same tool fails the build when a package other than `internal/outbound` opens a connection to a host (`CheckOutbound`): a loopback client says so with `//nolint:forbidigo // loopback only: <why>`.
+- **Who may call `Get`.** `Get` is not part of `service.Service`. Only `service/connections`, the owner wiring (`web/app/owner`) and the two test environments (`web/contract/testenv`, `web/app/testpublish`) import `service/vault` (tests may too); `internal/tools/importcheck` fails the build when another package does. The same tool fails the build when a package other than `internal/outbound` opens a connection to a host (`CheckOutbound`): a loopback client says so with `//nolint:forbidigo // loopback only: <why>`.
 - **Entry ids** match `^[a-z0-9_.:-]{1,80}$`.
 
 ## 4. The master key

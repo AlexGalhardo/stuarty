@@ -187,7 +187,9 @@ func vaultImporter(rel string) bool {
 		return true
 	}
 
-	for _, p := range []string{"service/vault/", "service/connections/", "web/app/owner/", "web/contract/testenv/"} {
+	for _, p := range []string{
+		"service/vault/", "service/connections/", "web/app/owner/", "web/contract/testenv/", "web/app/testpublish/",
+	} {
 		if strings.HasPrefix(rel, p) {
 			return true
 		}
