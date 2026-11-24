@@ -1,6 +1,8 @@
 import { type FormEvent, type ReactNode, useState } from "react";
 
 import { type Failure, FailureNote } from "@/components/Failure";
+import { Notice } from "@/components/Notice";
+import { StatusBadge } from "@/components/StatusBadge";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,17 +60,22 @@ export default function ProfileSetup({
 		<div className="flex flex-col gap-4" data-testid="chat-setup">
 			<FailureNote failure={failure} />
 			{profiles.profiles.length === 0 && (
-				<div>
-					<h3 className="font-medium">{t("ui.chat.no_profile_title")}</h3>
-					<p className="mt-1 text-sm text-muted-foreground">
-						{t("ui.chat.no_profile_text")}
-					</p>
-				</div>
+				<Notice
+					tone="info"
+					title={t("ui.chat.no_profile_title")}
+					data-testid="chat-no-profile"
+				>
+					{t("ui.chat.no_profile_text")}
+				</Notice>
 			)}
 			{!profiles.available && (
-				<p role="status" className="text-sm text-muted-foreground">
+				<Notice
+					tone="warning"
+					title={t("ui.chat.not_available_title")}
+					role="status"
+				>
 					{t("ui.chat.not_available")}
-				</p>
+				</Notice>
 			)}
 			{profiles.profiles.length > 0 && (
 				<ul className="flex flex-col gap-2" data-testid="chat-profiles">
@@ -91,16 +98,16 @@ export default function ProfileSetup({
 					{profiles.suggestions.map((s) => (
 						<li
 							key={s.name}
-							className="rounded-lg border px-3 py-2 text-sm"
+							className="rounded-lg border border-border bg-surface px-3 py-2 text-sm"
 							data-testid="chat-suggestion"
 						>
-							<p className="font-medium">
-								{s.title}{" "}
-								<span className="text-xs font-normal text-muted-foreground">
+							<p className="flex flex-wrap items-center gap-2 font-medium">
+								{s.title}
+								<StatusBadge status={s.found ? "success" : "neutral"}>
 									{s.found ? t("ui.chat.found") : t("ui.chat.not_found")}
-								</span>
+								</StatusBadge>
 							</p>
-							<p className="text-xs text-muted-foreground">{s.install}</p>
+							<p className="text-xs text-text-muted">{s.install}</p>
 							{profiles.can_write && (
 								<Button
 									size="xs"
@@ -159,11 +166,11 @@ export default function ProfileSetup({
 						/>
 					</div>
 					<div>
-						<p className="text-xs text-muted-foreground">
+						<p className="text-xs text-text-muted">
 							{t("ui.chat.full_command")}
 						</p>
 						<p
-							className="mt-1 rounded bg-muted p-2 font-mono text-xs break-all"
+							className="mt-1 rounded bg-surface-sunken p-2 font-mono text-xs break-all"
 							data-testid="chat-full-command"
 						>
 							<UntrustedText>
@@ -172,9 +179,13 @@ export default function ProfileSetup({
 									: fullCommand(command.trim(), parsed)}
 							</UntrustedText>
 						</p>
-						<p className="mt-1 text-xs text-muted-foreground">
+						<Notice
+							tone="warning"
+							title={t("ui.chat.profile_warning_title")}
+							className="mt-2"
+						>
 							{t("ui.chat.profile_warning")}
-						</p>
+						</Notice>
 					</div>
 					<Button
 						type="submit"
@@ -184,10 +195,7 @@ export default function ProfileSetup({
 					</Button>
 				</form>
 			) : privileged ? (
-				<p
-					className="text-sm text-muted-foreground"
-					data-testid="chat-ask-admin"
-				>
+				<p className="text-sm text-text-muted" data-testid="chat-ask-admin">
 					{t("ui.chat.ask_admin")}
 				</p>
 			) : (
@@ -211,15 +219,16 @@ function ProfileRow({
 	const t = useT();
 	return (
 		<li
-			className="flex items-start justify-between gap-2 rounded-lg border px-3 py-2"
+			className="flex items-start justify-between gap-2 rounded-lg border border-border bg-surface px-3 py-2"
 			data-testid="chat-profile"
 		>
 			<div className="min-w-0">
-				<p className="text-sm font-medium">
+				<p className="flex flex-wrap items-center gap-2 text-sm font-medium">
 					<UntrustedText>{profile.name}</UntrustedText>
+					<StatusBadge status="agent">{t("ui.chat.connected")}</StatusBadge>
 				</p>
 				{profile.command !== "" && (
-					<p className="font-mono text-xs break-all text-muted-foreground">
+					<p className="font-mono text-xs break-all text-text-muted">
 						<UntrustedText>
 							{fullCommand(profile.command, profile.args)}
 						</UntrustedText>

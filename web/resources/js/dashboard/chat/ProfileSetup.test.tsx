@@ -100,4 +100,41 @@ describe("ProfileSetup", () => {
 	test("says when this process cannot run an agent", () => {
 		expect(draw({ available: false })).toContain("cannot run an agent");
 	});
+
+	test("each state has a word: connected, found, not found, and the program that runs with your access", () => {
+		const html = draw({
+			can_write: true,
+			suggestions: [suggestion, { ...suggestion, name: "other", found: false }],
+			profiles: [
+				{
+					name: "mine",
+					command: "agent",
+					args: [],
+					created_by: "local:ui",
+					created_at: "2026-11-19T12:00:00Z",
+					updated_at: "2026-11-19T12:00:00Z",
+				},
+			],
+		});
+		expect(html).toContain("Connected");
+		expect(html).toContain("Found on this machine");
+		expect(html).toContain("Not found on this machine");
+		expect(html).toContain("This program runs with your access");
+	});
+
+	test("an agent name with markup is drawn as text", () => {
+		const html = draw({
+			profiles: [
+				{
+					name: "<img src=x onerror=1>",
+					command: "",
+					args: [],
+					created_by: "local:ui",
+					created_at: "2026-11-19T12:00:00Z",
+					updated_at: "2026-11-19T12:00:00Z",
+				},
+			],
+		});
+		expect(html).not.toContain("<img");
+	});
 });
