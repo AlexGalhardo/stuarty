@@ -38,7 +38,7 @@ export function DataRow({
 		<div
 			data-slot="data-row"
 			className={cn(
-				"grid grid-cols-[minmax(0,1fr)_minmax(0,auto)] items-center gap-x-6 gap-y-1 py-3",
+				"grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-6 gap-y-1 py-3",
 				className,
 			)}
 		>
@@ -49,7 +49,7 @@ export function DataRow({
 			{hint ? (
 				<dd className="col-start-1 min-w-0 text-sm text-text-subtle">{hint}</dd>
 			) : null}
-			<dd className="col-start-2 row-start-1 row-span-2 min-w-0 self-center text-right text-sm text-text-muted">
+			<dd className="col-start-2 row-start-1 row-span-2 min-w-0 self-center justify-self-end text-right text-sm text-text-muted">
 				{children}
 			</dd>
 		</div>
