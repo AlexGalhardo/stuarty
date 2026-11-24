@@ -77,6 +77,10 @@ type Manager struct {
 	failures   []time.Time
 	onLock     []func()
 	beforeLock []func()
+	onUnlock   []func()
+	// opening closes the gate of the Service while the OnUnlock functions run: the keys are in place and the store is
+	// being sealed or its index built, and a request now would race that work.
+	opening bool
 }
 
 // NewManager returns a Manager that has not read the record; call Load.
@@ -157,7 +161,7 @@ func (m *Manager) Check() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	if m.state == StateLocked || m.creating {
+	if m.state == StateLocked || m.creating || m.opening {
 		return ErrLocked
 	}
 
@@ -186,6 +190,16 @@ func (m *Manager) OnLock(fn func()) {
 func (m *Manager) BeforeLock(fn func()) {
 	m.mu.Lock()
 	m.beforeLock = append(m.beforeLock, fn)
+	m.mu.Unlock()
+}
+
+// OnUnlock registers a function that runs once per successful sign-in, after the keys are in place and outside the
+// lock of the Manager, in the order registered. The Service stays closed (Check answers ErrLocked) until every
+// function has returned, so nothing races them; the Sealer and Files work in them. A function must not call Lock,
+// Login or Recover. It does not run for a refused sign-in.
+func (m *Manager) OnUnlock(fn func()) {
+	m.mu.Lock()
+	m.onUnlock = append(m.onUnlock, fn)
 	m.mu.Unlock()
 }
 
@@ -584,13 +598,30 @@ func (m *Manager) unlock(rec Record, keys Keys) error {
 	}
 
 	m.mu.Lock()
-	defer m.mu.Unlock()
 
 	m.lockLocked()
 	m.keys, m.sealer = keys, sealer
 	m.state, m.username, m.email, m.idleLock = StateUnlocked, rec.Username, rec.Email, rec.IdleLockMinutes
 	m.lastActive = m.now()
 	m.failures = nil
+
+	hooks := slices.Clone(m.onUnlock)
+	m.opening = len(hooks) > 0
+	m.mu.Unlock()
+
+	if len(hooks) == 0 {
+		return nil
+	}
+
+	defer func() {
+		m.mu.Lock()
+		m.opening = false
+		m.mu.Unlock()
+	}()
+
+	for _, fn := range hooks {
+		fn()
+	}
 
 	return nil
 }
