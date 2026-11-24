@@ -110,8 +110,11 @@ export default function TranscriptPanel({
 			setChecked(initialChecked(found.suggestions));
 			setProblem(null);
 		} catch (error) {
-			if (!(error instanceof ApiError)) throw error;
-			setProblem(`${errorHeadline(t, error.code)} ${error.hint ?? ""}`.trim());
+			setProblem(
+				error instanceof ApiError
+					? `${errorHeadline(t, error.code)} ${error.hint ?? ""}`.trim()
+					: t("ui.editor.transcript.failed"),
+			);
 		} finally {
 			setBusy(false);
 		}
