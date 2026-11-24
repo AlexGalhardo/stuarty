@@ -77,7 +77,16 @@ func fakeHelper(args []string) int {
 
 		return 0
 	case "silent":
-		time.Sleep(time.Hour)
+		// Block on a pipe nobody writes to: the host must stop the helper by its stall
+		// timeout or its context, never by this process ending.
+		pr, _, err := os.Pipe()
+		if err != nil {
+			return 2
+		}
+
+		var one [1]byte
+
+		_, _ = pr.Read(one[:])
 
 		return 0
 	case "unknowncode":
@@ -138,9 +147,7 @@ func pinned(t *testing.T) (r *ffmpeg.Runner, artifacts, clip string, run *ffmpeg
 		FFmpegPath: filepath.Join(dir, name), CPUCount: runtime.NumCPU(),
 	})
 	if err != nil || in.Info.License.Name != "lgpl" {
-		t.Skip(
-			"the FFmpeg in STUARTY_TEST_FFMPEG_DIR is not the pinned LGPL build",
-		) // verify:env-skip not the pinned build
+		t.Skip("FFmpeg is not the pinned LGPL build") // verify:env-skip not the pinned build
 	}
 
 	ws := t.TempDir()

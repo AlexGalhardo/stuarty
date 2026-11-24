@@ -19,9 +19,7 @@ import (
 func TestRealHelperFindsTheDrawnFace(t *testing.T) {
 	dir := os.Getenv("STUARTY_TEST_AIHELPER_DIR")
 	if dir == "" {
-		t.Skip(
-			"no AI helper: set STUARTY_TEST_AIHELPER_DIR",
-		) // verify:env-skip the helper, runtime and model are on request
+		t.Skip("set STUARTY_TEST_AIHELPER_DIR") // verify:env-skip on-request helper
 	}
 
 	r, artifacts, _, run := pinned(t)
