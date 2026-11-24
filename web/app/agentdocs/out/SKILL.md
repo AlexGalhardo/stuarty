@@ -15,7 +15,7 @@ Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). `--json` for JSON.
 1. Read: `project:show --project <id>` (note `rev`).
 2. Plan a batch.
 3. Apply: `edit --project <id> --base <rev> ...`; read the diff.
-4. `lint --project <id>`. Errors block export.
+4. `lint --project <id>`.
 5. Look: `view --at 1s`, then `view --mode sheet`.
 6. `export --project <id>`; check the job `checks`.
 
@@ -23,13 +23,13 @@ Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). `--json` for JSON.
 
 - Times need a unit: `12.5s` or `375f`.
 - Ids (`prj_`, `ast_`, `trk_`, `itm_`, `job_`) are never positions. List first.
-- The top track draws over the others.
+- Upper tracks draw over lower.
 - `--base`: your last `revision` (default: current).
 - Own `id` for what you reuse; network mode: omit --id.
 
 ## Command reference
 
-`command_help [name]` shows arguments. `asset.remove` and `font.*` need the media scope.
+`command_help [name]` shows arguments. `asset.remove` and `font.*` need media scope.
 
 - `animation`: apply_preset, list_presets
 - `asset`: remove
@@ -130,7 +130,7 @@ Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). `--json` for JSON.
 - `asset:set <hash>`
 - `asset:tag <hash>`
 
-`--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one operation (`k=v` string, `k:=json` JSON). `--dry-run` saves nothing; `--key <k>` makes retries safe. Back: `agent:docs --print guide:video|skill`
+`--ops <file|->` reads a JSON array; `edit --project <id> item.move item_id=itm_x start=2s` is one op (`k=v` string, `k:=json` JSON). `--dry-run` saves nothing; `--key <k>` makes retries safe; `--out f` copies the file. Back: `agent:docs --print guide:video|skill|agents|instructions`
 
 ## Reading results
 
