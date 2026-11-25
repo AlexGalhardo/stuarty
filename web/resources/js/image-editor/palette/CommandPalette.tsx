@@ -49,6 +49,16 @@ export function isPaletteKey(event: {
 	);
 }
 
+// A key aimed at another dialog or a menu (the import, the model dialog, the export, "more") stays there: the
+// palette opens over the editor, never as a second modal over one that is open. Inside the palette it closes it.
+function aimedAtOtherOverlay(target: EventTarget | null): boolean {
+	if (!(target instanceof Element)) return false;
+	const overlay = target.closest(
+		'[role="dialog"], [role="alertdialog"], [role="menu"]',
+	);
+	return overlay !== null && !overlay.hasAttribute("data-command-palette");
+}
+
 // The key the top bar shows beside "Commands".
 export function paletteHint(): string {
 	const mac =
@@ -71,7 +81,7 @@ export function CommandPalette(): ReactNode {
 
 	useEffect(() => {
 		const onKey = (event: globalThis.KeyboardEvent): void => {
-			if (!isPaletteKey(event)) return;
+			if (!isPaletteKey(event) || aimedAtOtherOverlay(event.target)) return;
 			event.preventDefault();
 			setPaletteOpen(!paletteOpen);
 		};
@@ -145,6 +155,7 @@ export function CommandPalette(): ReactNode {
 			<DialogContent
 				showCloseButton={false}
 				data-testid="image-palette"
+				data-command-palette=""
 				className="top-[18%] translate-y-0 gap-0 p-0 sm:max-w-lg"
 			>
 				<DialogTitle className="sr-only">
