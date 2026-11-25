@@ -301,7 +301,7 @@ export const areas = {
 		{ id: "image", icon: "image", title: "Image editor", text: "Layers, text, masks, presets and templates for thumbnails and posts.", epics: [28, 29] },
 		{ id: "agents", icon: "bot", title: "Agents", text: "Claude Code, Codex, OpenCode and Gemini CLI. You approve each tool request.", epics: [14, 83] },
 		{ id: "library", icon: "brain", title: "Skills, prompts, memory", text: "Reviewed procedures, reusable prompts and notes you approve before they stay.", epics: [15, 16, 83] },
-		{ id: "recording", icon: "video", title: "Screen recording", text: "On Windows, with sound, webcam, pause and pointer events.", epics: [62] },
+		{ id: "recording", icon: "video", title: "Screen recording", text: "On Windows, with sound, webcam, pause and pointer events, zoom on clicks, a smooth cursor and click highlights.", epics: [62, 65] },
 		{ id: "edit-by-text", icon: "wand-sparkles", title: "Edit by text", text: "Cut a video by editing its transcript, drop filler words, style captions, blur private details and clean the voice.", epics: [69, 71] },
 		{ id: "connections", icon: "plug", title: "Connections", text: "Your own AI keys and social accounts, in an encrypted local vault.", epics: [4, 9, 12, 84] },
 		{ id: "publishing", icon: "shield-check", title: "Approvals and publishing", text: "A queue, cost ceilings and a calendar. Nothing is sent without your yes.", epics: [5, 20, 82] },
@@ -370,14 +370,6 @@ export const roadmap = {
 			epics: [63, 67, 68],
 		},
 		{
-			id: "recording-finish",
-			icon: "mouse-pointer-click",
-			title: "Recording finish",
-			text: "The zoom follows your clicks, the cursor moves smoothly and every click is highlighted.",
-			state: "planned",
-			epics: [65],
-		},
-		{
 			id: "agents-recording",
 			icon: "bot",
 			title: "Agents in the recording flow",
@@ -416,7 +408,7 @@ export const roadmap = {
 export const roadmapOnlyTerms = [
 	// Recording ships on Windows (epic 62); on the web, macOS and Linux, its finish and its agent tools it does not.
 	"recording on the web", "web recording", "recording on macos", "recording on linux", "record your", "screen capture",
-	"zoom on clicks", "smooth cursor", "click highlight", "mark takes", "teleprompter", "local model", "face-aware",
+	"mark takes", "teleprompter", "local model", "face-aware",
 	"auto zoom", "automatic zoom", "metrics",
 ];
 
