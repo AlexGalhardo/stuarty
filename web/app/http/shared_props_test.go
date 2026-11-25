@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/AlexGalhardo/stuarty/service"
+	"github.com/AlexGalhardo/stuarty/web/app/agentdocs"
 	httpapi "github.com/AlexGalhardo/stuarty/web/app/http"
 
 	vukem "github.com/AlexGalhardo/vukem"
@@ -91,6 +92,11 @@ func TestLocalPagesShareTheAppNameAndNoUser(t *testing.T) {
 	props := inertiaProps(t, netResp{status: res.status, body: res.body})
 	if props["appName"] != "Stuarty" || props["auth"] != nil {
 		t.Errorf("local props: appName %v, auth %v", props["appName"], props["auth"])
+	}
+
+	// The release tag travels with the page, so a page with no session need not ask GET /system (VV-444).
+	if v, ok := props["version"].(string); !ok || v != agentdocs.Version {
+		t.Errorf("version = %v, want %q", props["version"], agentdocs.Version)
 	}
 }
 
