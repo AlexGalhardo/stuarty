@@ -12,7 +12,7 @@ export type RecordView =
 	// kept: the recordings a person set aside with "Not now", which only a person can add or delete later
 	| { step: "pick"; sources: RecordingSourcesResult; kept: Recording[] }
 	| { step: "recording"; recording: Recording }
-	// where native capture does not exist the browser records and uploads (SDD-025 section 17): what this browser can
+	// where native capture does not exist the browser records and uploads (SDD-025 section 18): what this browser can
 	// do, read before the person starts, and the takes set aside
 	| { step: "browser"; capability: Capability; kept: Recording[] }
 	// a recording this tab is making in the browser: the state is the recorder's, until the server answers the finish

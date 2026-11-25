@@ -21,7 +21,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/recordings"
 )
 
-// A recording that a browser captures and uploads (SDD-025 section 17). The rules are in core/recording
+// A recording that a browser captures and uploads (SDD-025 section 18). The rules are in core/recording
 // (upload.go): the order of the chunks, the limits and the names. This file applies them to the disk and the row.
 
 const (
@@ -32,7 +32,7 @@ const (
 	incomingName = "incoming.tmp"
 )
 
-// RecordingUploadBeginRequest starts a recording that the browser will upload (SDD-025 section 17.3).
+// RecordingUploadBeginRequest starts a recording that the browser will upload (SDD-025 section 18.3).
 type RecordingUploadBeginRequest struct {
 	ProjectID string `json:"project_id"`
 	// Container is webm or mp4, what the browser records.
@@ -216,7 +216,7 @@ func (s *svc) uploadView(r recordings.Row) *RecordingUpload {
 }
 
 // RecordingUploadBegin starts a recording that the browser captures and uploads. Only a person does, and the
-// check is the first thing done, before the project or the disk is looked at (SDD-025 section 17.3).
+// check is the first thing done, before the project or the disk is looked at (SDD-025 section 18.3).
 func (s *svc) RecordingUploadBegin(ctx context.Context, req RecordingUploadBeginRequest) (*Recording, error) {
 	c, err := s.person(ctx, "RecordingUploadBegin")
 	if err != nil {
@@ -323,7 +323,7 @@ func uploadState(reason, format string, args ...any) *Error {
 }
 
 // RecordingUploadChunk stores one chunk of a track of a browser recording, in order and with a matching digest.
-// The first answer for every caller that is not a person is E_PRIVILEGED_SESSION (SDD-025 section 17.4).
+// The first answer for every caller that is not a person is E_PRIVILEGED_SESSION (SDD-025 section 18.4).
 func (s *svc) RecordingUploadChunk(
 	ctx context.Context, req RecordingUploadChunkRequest,
 ) (*RecordingUploadChunkResult, error) {
@@ -465,7 +465,7 @@ func hasTrack(tracks []recording.Track, kind recording.TrackKind) bool {
 	return false
 }
 
-// uploadLimit is the refusal for a limit of an upload; what was received is kept (SDD-025 section 17.4).
+// uploadLimit is the refusal for a limit of an upload; what was received is kept (SDD-025 section 18.4).
 func uploadLimit(why recording.StopReason) *Error {
 	switch why {
 	case recording.StopDuration:
@@ -582,7 +582,7 @@ func fileDigest(path string) (string, error) {
 }
 
 // RecordingUploadFinish ends the upload of a browser recording: the server checks that the chunks the browser says
-// it sent are there, and assembles them in the background (SDD-025 section 17.5).
+// it sent are there, and assembles them in the background (SDD-025 section 18.5).
 func (s *svc) RecordingUploadFinish(ctx context.Context, req RecordingUploadFinishRequest) (*Recording, error) {
 	c, err := s.person(ctx, "RecordingUploadFinish")
 	if err != nil {
@@ -719,7 +719,7 @@ func (s *svc) startAssembly(ctx context.Context, id, force string) {
 }
 
 // settleIdleUploads finishes the browser recordings that received nothing for the idle time: the tab that
-// recorded them is gone (SDD-025 section 17.6). It runs before a new upload begins.
+// recorded them is gone (SDD-025 section 18.6). It runs before a new upload begins.
 func (s *svc) settleIdleUploads(ctx context.Context) {
 	open, err := s.store.Recordings().Open(ctx)
 	if err != nil {
@@ -831,7 +831,7 @@ func (s *svc) waitAssemblies(within time.Duration) {
 }
 
 // recoverUpload settles a browser recording the last process left open: its chunks are assembled when an FFmpeg is
-// there, and the recording fails with the reason when it is not (SDD-025 section 17.6).
+// there, and the recording fails with the reason when it is not (SDD-025 section 18.6).
 func (s *svc) recoverUpload(ctx context.Context, r recordings.Row) error {
 	if r.State == string(recording.Recording) {
 		if _, err := s.updateRecording(ctx, r.ID, func(x *recordings.Row) error {
@@ -915,7 +915,7 @@ func (s *svc) settleUpload(ctx context.Context, id string, a *assembly, force st
 }
 
 // uploadResult is what the assembly made, or why it could not: the failure starts with the reason of
-// E_CAPTURE_FAILED (SDD-025 section 17.5).
+// E_CAPTURE_FAILED (SDD-025 section 18.5).
 type uploadResult struct {
 	tracks        []recording.Track
 	width, height int

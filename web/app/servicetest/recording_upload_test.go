@@ -19,7 +19,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/recordings"
 )
 
-// The recording a browser captures and uploads (SDD-025 section 17).
+// The recording a browser captures and uploads (SDD-025 section 18).
 
 type upEnv struct{ *mediaEnv }
 
@@ -522,7 +522,7 @@ func TestRecordingUploadFourOpenUploadsOnTheWorkspace(t *testing.T) {
 	}
 }
 
-// A tab closed in the middle: the chunks that arrived are finished into a playable file by a stop (SDD-025 17.6).
+// A tab closed in the middle: the chunks that arrived are finished into a playable file by a stop (SDD-025 18.6).
 func TestRecordingUploadClosedTabIsFinishedByAStop(t *testing.T) {
 	u := newUpEnv(t, true)
 	project := u.newProject("p")

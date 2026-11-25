@@ -5,13 +5,13 @@ import type { Page } from "@playwright/test";
 import { ensureAccount, signInWithPassword } from "../support/account";
 import { caller, expect, home, seedProject, test } from "./helpers";
 
-// Epic 63 (SDD-025 section 17): a person records the screen and the microphone in the browser, the chunks go up to
+// Epic 63 (SDD-025 section 18): a person records the screen and the microphone in the browser, the chunks go up to
 // the server as they are made, and the take lands in the same project through the same review and placement as a
 // recording of the desktop app. Chromium plays the devices: its fake-device flags give a test pattern for the
 // screen, the camera and a beep for the microphone, and the fake UI answers the permission prompts that a person
 // answers in a real browser (the product never answers them). No real device is opened. Firefox and WebKit have no
 // such flags, so the spec runs in Chromium only (the unit tests of the recorder cover the rest). The tests run one
-// after the other: one browser upload may be open at a time for a person (SDD-025 section 17.4), and every test here
+// after the other: one browser upload may be open at a time for a person (SDD-025 section 18.4), and every test here
 // is that person.
 test.describe.configure({ timeout: 240_000, mode: "serial" });
 

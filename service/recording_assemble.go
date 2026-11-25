@@ -14,7 +14,7 @@ import (
 	"github.com/AlexGalhardo/stuarty/service/recordings"
 )
 
-// The assembly of an uploaded recording (SDD-025 section 17.5): the chunks of a track are joined in order, remuxed
+// The assembly of an uploaded recording (SDD-025 section 18.5): the chunks of a track are joined in order, remuxed
 // with the LGPL FFmpeg as a copy of the streams so the file has its duration and index, probed with the ceilings of
 // an import, and moved into the folder of the recording. Everything is done in a run directory of the runner, under
 // the argv policy of SDD-007 section 6.

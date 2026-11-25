@@ -76,7 +76,7 @@ func Web(r *router.Router, app *vukem.App) error {
 		SecureHeaders: func(cfg *middleware.SecureHeadersConfig) {
 			cfg.CSP = ContentSecurityPolicy
 			cfg.ReferrerPolicy = "no-referrer" // SDD-007 section 3.6
-			// The record dialog asks the browser for the screen, the microphone and the camera (SDD-025 section 17):
+			// The record dialog asks the browser for the screen, the microphone and the camera (SDD-025 section 18):
 			// the page itself may, no other origin may, and the location stays off. The default of the framework
 			// turns the camera and the microphone off for every page, which would make a recording in the browser
 			// impossible.

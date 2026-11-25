@@ -252,7 +252,7 @@ type Service interface {
 	RecordingConfirm(ctx context.Context, req RecordingRef) (*Recording, error)
 	RecordingDismiss(ctx context.Context, req RecordingRef) (*Recording, error)
 	RecordingPlace(ctx context.Context, req RecordingPlaceRequest) (*EditResult, error)
-	// A recording a browser captures and uploads (SDD-025 section 17): all three are for a person in a privileged
+	// A recording a browser captures and uploads (SDD-025 section 18): all three are for a person in a privileged
 	// browser session, and HTTP only.
 	RecordingUploadBegin(ctx context.Context, req RecordingUploadBeginRequest) (*Recording, error)
 	RecordingUploadChunk(ctx context.Context, req RecordingUploadChunkRequest) (*RecordingUploadChunkResult, error)

@@ -397,7 +397,7 @@ interface Choice {
 	source: RecordingSourceInfo;
 }
 
-// The picker of a recording made in the browser (SDD-025 section 17.1): what this browser can do, said before the
+// The picker of a recording made in the browser (SDD-025 section 18.1): what this browser can do, said before the
 // person starts, and, when it cannot record here, why, with Start disabled.
 function BrowserPicker({
 	capability,

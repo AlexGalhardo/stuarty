@@ -1569,7 +1569,7 @@ export interface RecordingStartRequest {
 	events?: boolean;
 }
 
-// A recording a browser captures and uploads (SDD-025 section 17). The server decides the order, the checksum and
+// A recording a browser captures and uploads (SDD-025 section 18). The server decides the order, the checksum and
 // the limits; the browser only slices what it records and sends it.
 export type RecordingContainer = "webm" | "mp4";
 export type RecordingUploadKind = "screen" | "camera";

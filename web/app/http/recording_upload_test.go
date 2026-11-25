@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-// The routes of a recording a browser uploads (SDD-025 section 17, threat T-137 of SDD-007).
+// The routes of a recording a browser uploads (SDD-025 section 18, threat T-137 of SDD-007).
 
 func sumHex(b string) string {
 	h := sha256.Sum256([]byte(b))

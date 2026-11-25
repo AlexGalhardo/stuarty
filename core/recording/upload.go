@@ -2,7 +2,7 @@ package recording
 
 import "github.com/AlexGalhardo/stuarty/core/timeline"
 
-// The rules of a recording a browser captures and uploads (SDD-025 section 17). The browser holds none of them.
+// The rules of a recording a browser captures and uploads (SDD-025 section 18). The browser holds none of them.
 
 // SourceBrowser is the source kind of a recording that a browser captured and uploaded.
 const SourceBrowser = "browser"
@@ -113,7 +113,7 @@ const (
 	ChunkOutOfOrder ChunkVerdict = "out_of_order"
 	// ChunkTooMany is an index at or above MaxChunksPerTrack.
 	ChunkTooMany ChunkVerdict = "too_many"
-	// ChunkMalformed is a negative index, which no chunk has (SDD-025 section 17.4 item 2).
+	// ChunkMalformed is a negative index, which no chunk has (SDD-025 section 18.4 item 2).
 	ChunkMalformed ChunkVerdict = "malformed"
 )
 

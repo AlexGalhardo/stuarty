@@ -35,7 +35,7 @@ export interface RecordFlow {
 		extras: StartOptions,
 	): Promise<void>;
 	stop(): Promise<void>;
-	// a recording made in the browser (SDD-025 section 17): the browser captures and uploads, the server decides
+	// a recording made in the browser (SDD-025 section 18): the browser captures and uploads, the server decides
 	startBrowser(choice: CaptureChoice): Promise<void>;
 	stopBrowser(): Promise<void>;
 	// pausing is for anyone; resuming restarts the capture of the screen, so the service asks for a person

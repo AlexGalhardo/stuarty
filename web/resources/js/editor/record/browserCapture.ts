@@ -1,6 +1,6 @@
 import type { RecordingContainer } from "../api/types";
 
-// What this browser can capture and record, read before the person starts (SDD-025 section 17.1). The browser
+// What this browser can capture and record, read before the person starts (SDD-025 section 18.1). The browser
 // APIs exist only in a secure context, and each browser records its own codecs: the dialog says so up front
 // instead of losing a take. This file decides nothing about a recording; the server decides every rule.
 
