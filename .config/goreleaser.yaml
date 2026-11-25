@@ -28,7 +28,7 @@ builds:
     goarch: [amd64, arm64]
     flags: [-trimpath]
     ldflags:
-      - -s -w -X github.com/AlexGalhardo/stuarty/web/app/agentdocs.Version={{ .Version }}
+      - -s -w -X github.com/AlexGalhardo/stuarty/web/app/agentdocs.Version={{ .Version }} -X github.com/AlexGalhardo/stuarty/service/workspace.Release={{ .Version }}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
 archives:
