@@ -2675,6 +2675,26 @@
           "type": "string",
           "x-vv-kind": "time"
         },
+        "strength": {
+          "description": "A named blur strength instead of a radius; strong is the default.",
+          "enum": [
+            "strong",
+            "medium"
+          ],
+          "type": "string",
+          "x-vv-blur-strengths": [
+            {
+              "id": "strong",
+              "name": "Strong",
+              "share": 0.04
+            },
+            {
+              "id": "medium",
+              "name": "Medium",
+              "share": 0.025
+            }
+          ]
+        },
         "track_id": {
           "description": "A visual track above the clip. Default a Blur track above it, made if there is none.",
           "pattern": "^trk_[0123456789abcdefghjkmnpqrstvwxyz]{10}$",

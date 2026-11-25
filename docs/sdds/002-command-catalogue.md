@@ -6974,6 +6974,8 @@ The copy is made as `item.split` would make the piece of the range, so speed, fr
 
 **Minimum and default radius.** With `s` the shorter side of the project in pixels, the least radius is `min_radius = min(100, ceil(0.015 x s))` and the default `radius = min(100, ceil(0.04 x s))` (17 and 44 at 1080). A radius below `min_radius` is `E_VALIDATION`: a lighter blur can be reversed.
 
+**Named strengths.** `strength` names a radius by its share of the shorter side of the project, so a caller that does not know the pixels asks for a name: `strong` is the default share, 4% (44 at 1080), and `medium` is 2.5% (27 at 1080), never below `min_radius`. The names, their shares and their order come from the core (`command.BlurStrengths`) and are carried by the registry as `x-vv-blur-strengths` on the `strength` argument, so the editor draws the control from the registry and holds no radius. `strength` with `radius` is `E_VALIDATION` (`path` `args.strength`), and so is an unknown name.
+
 **Frame edge (VV-392).** A layer that has a blur and a mask is blurred with the pixels beyond the picture repeating the nearest edge pixel, and keeps its size (SDD-004 section 3.6, "Blur at the edge"), so a region that touches an edge of the picture is hidden as much as one in the middle: the blurred copy is opaque up to the edge. The first version counted the outside as transparent and let about half of the sharp picture through at the edge itself. What is still soft at an edge is the feather: its soft border is centred on the border of the region, so half of it lies outside the picture. `effective.near_edge` is true when the feather is above 0 and the region comes closer than half the feather to an edge of the frame (the project size times the scale of the clip, in project pixels); with no feather it is always false. Use `feather` 0 on a region that touches an edge.
 
 **Arguments**
@@ -6986,6 +6988,7 @@ The copy is made as `item.split` would make the piece of the range, so speed, fr
 | `start` | time | no | the start of the clip | absolute start of the blur, inside the clip |
 | `duration` | time, as a length | no | up to the end of the clip | at least 1 frame, ends at or before the end of the clip |
 | `radius` | number | no | per the rule above | `min_radius` to 100, rounded to 3 decimals |
+| `strength` | string | no | none | `strong` or `medium`; instead of `radius`, never with it |
 | `feather` | integer | no | 0 | 0 to 200 project pixels, the soft edge of the mask |
 | `track_id` | track id | no | see below | a visual track above the track of the clip |
 | `new_id` | item id | no | generated | the id of the blur item |
@@ -7026,12 +7029,16 @@ The copy is made as `item.split` would make the piece of the range, so speed, fr
 - `ok_reuses_the_blur_track`
 - `ok_given_track`
 - `ok_radius_and_feather`
+- `ok_strength_medium`
+- `ok_strength_strong`
 - `ok_sped_up_clip`
 - `ok_at_the_edge_is_not_near_edge`
 - `ok_near_edge_with_a_feather_is_reported`
 - `ok_image_clip`
 - `err_validation_region_outside`
 - `err_validation_radius_below_minimum`
+- `err_validation_strength_unknown`
+- `err_validation_strength_and_radius`
 - `err_validation_track_not_above`
 - `err_not_found_item`
 - `err_not_found_track`

@@ -1,0 +1,14 @@
+{
+  "op": "clip.blur_region",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "x": 0.1,
+    "y": 0.4,
+    "width": 0.8,
+    "height": 0.1,
+    "new_id": "itm_s6t7v8w9x0",
+    "new_track_id": "trk_b2c3d4e5f6",
+    "strength": "medium",
+    "radius": 60
+  }
+}

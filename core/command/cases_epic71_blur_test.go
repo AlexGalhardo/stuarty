@@ -46,6 +46,8 @@ func init() {
 	})
 	blur("ok_given_track", withIDs(fmt.Sprintf(`"track_id": %q, "start": "1s", "duration": "1s"`, capTr)), clipA())
 	blur("ok_radius_and_feather", withIDs(newTrack+`, "radius": 60, "feather": 12`), clipA())
+	blur("ok_strength_medium", withIDs(newTrack+`, "strength": "medium"`), clipA())
+	blur("ok_strength_strong", withIDs(newTrack+`, "strength": "strong"`), clipA())
 	blur("ok_sped_up_clip", withIDs(newTrack+`, "start": "30f", "duration": "30f"`), clipA(func(it *timeline.Item) {
 		it.Speed, it.SourceIn = rate2, 60
 	}))
@@ -86,6 +88,8 @@ func init() {
 	blur("err_validation_region_outside",
 		fmt.Sprintf(`{"item_id": %q, "x": 0.5, "y": 0.4, "width": 0.8, "height": 0.1}`, itemA), clipA())
 	blur("err_validation_radius_below_minimum", withIDs(newTrack+`, "radius": 4`), clipA())
+	blur("err_validation_strength_unknown", withIDs(newTrack+`, "strength": "gentle"`), clipA())
+	blur("err_validation_strength_and_radius", withIDs(newTrack+`, "strength": "medium", "radius": 60`), clipA())
 	blur("err_validation_track_not_above", withIDs(fmt.Sprintf(`"track_id": %q`, vidTr)), clipA())
 	blur("err_not_found_item",
 		`{"item_id": "itm_zzzzzzzzzz", "x": 0.1, "y": 0.4, "width": 0.8, "height": 0.1}`, clipA())

@@ -1,0 +1,7 @@
+{
+  "code": "E_VALIDATION",
+  "message": "args.strength \"gentle\" is not a blur strength.",
+  "hint": "Use strong, medium.",
+  "retryable": false,
+  "path": "args.strength"
+}
