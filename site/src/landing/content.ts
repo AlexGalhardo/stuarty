@@ -301,7 +301,7 @@ export const areas = {
 		{ id: "image", icon: "image", title: "Image editor", text: "Layers, text, masks, presets and templates for thumbnails and posts.", epics: [28, 29] },
 		{ id: "agents", icon: "bot", title: "Agents", text: "Claude Code, Codex, OpenCode and Gemini CLI. You approve each tool request.", epics: [14, 83] },
 		{ id: "library", icon: "brain", title: "Skills, prompts, memory", text: "Reviewed procedures, reusable prompts and notes you approve before they stay.", epics: [15, 16, 83] },
-		{ id: "recording", icon: "video", title: "Screen recording", text: "On Windows and in the browser, with sound, webcam, zoom on clicks and click highlights. Your agent prepares it and proposes cuts; only you start it.", epics: [62, 63, 64, 65] },
+		{ id: "recording", icon: "video", title: "Screen recording", text: "On Windows and in the browser, with sound, webcam, ready layouts, a teleprompter and zoom on clicks. Your agent prepares it and proposes cuts; only you start it.", epics: [62, 63, 64, 65, 66] },
 		{ id: "edit-by-text", icon: "wand-sparkles", title: "Edit by text", text: "Cut a video by editing its transcript, drop filler words, style captions, blur private details and clean the voice.", epics: [69, 71] },
 		{ id: "connections", icon: "plug", title: "Connections", text: "Your own AI keys and social accounts, in an encrypted local vault.", epics: [4, 9, 12, 84] },
 		{ id: "publishing", icon: "shield-check", title: "Approvals and publishing", text: "A queue, cost ceilings and a calendar. Nothing is sent without your yes.", epics: [5, 20, 82] },
@@ -370,14 +370,6 @@ export const roadmap = {
 			epics: [67, 68],
 		},
 		{
-			id: "layouts",
-			icon: "layout-template",
-			title: "Layouts and teleprompter",
-			text: "Choose a layout and a background for each recording, and read your script from the teleprompter.",
-			state: "planned",
-			epics: [66],
-		},
-		{
 			id: "metrics",
 			icon: "file-clock",
 			title: "Post metrics",
@@ -400,7 +392,7 @@ export const roadmap = {
 export const roadmapOnlyTerms = [
 	// Recording ships on Windows and in the browser, with its finish and its agent tools (epics 62 to 65); on macOS and Linux it does not.
 	"recording on macos", "recording on linux", "record your", "screen capture",
-	"mark takes", "teleprompter", "local model", "face-aware",
+	"mark takes", "local model", "face-aware",
 	"auto zoom", "automatic zoom", "metrics",
 ];
 
