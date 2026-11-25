@@ -1,6 +1,6 @@
 # SDD-025: Screen recording
 
-- Status: Draft (2026-11-24). Written by epic 61 before its code; extended by epic 62 (section 16: audio, webcam, pause, pointer events).
+- Status: Draft (2026-11-24). Written by epic 61 before its code; extended by epic 62 (section 16: audio, webcam, pause, pointer events) and epic 65 (section 17: automatic zoom, smooth cursor, click highlight).
 - Depends on: ADR-0049 (the native capture helper), ADR-0051 (agents never start a capture), ADR-0011, ADR-0032, ADR-0052, SDD-000 (names), SDD-003 (surfaces), SDD-005 (persistence), SDD-007 (threats, section 6 process policy), SDD-011 (import), SDD-013 section 4.9 (the precedent of a native child).
 - Implements: PRD-004 section 4.11 (RF-430 to RF-442), NFR-067, NFR-068.
 - Owner area: epic 61 (`capture/`, `core/recording/`, `engine/capturehost/`, `service/recording*.go`, the `recordings` table, the adapters, the record dialog).
@@ -23,6 +23,7 @@
 14. Measures
 15. Tests
 16. Audio, webcam, pause and pointer events (epic 62)
+17. Finishing a take: automatic zoom, smooth cursor and click highlight (epic 65)
 
 ## 1. Overview
 
@@ -271,3 +272,49 @@ Version 2 adds fields and messages; the server refuses a helper that answers ano
 ### 16.10 Measures and tests
 
 NFR-068 fixture: the test sources of the helper produce a flash and a tone burst at the same instant of the clock, twice a second, and the test measures the position of each in the video file and in the WAV file after a recording with three pauses. Drift is how far apart the tracks are and whether that grows, so the test holds two numbers to 40 ms: the 95th percentile of the distance between each flash and the nearest flash or burst of the other tracks, and the change of that distance between the first and the last fifth of the recording. One frame that is written late (a disk that stalls for a moment, a busy machine) is jitter: the grid fills the slot with the last frame, the file keeps its length and the tracks stay aligned, so the test reports the largest distance but does not fail on it. A flash with no counterpart within 125 ms (a source that gave no new frame for that pulse, a quarter of its period) is not a distance: it is counted and reported as missed. The 40 ms of the epic is held as this drift, not as the largest single distance, which a loaded machine can push past 100 ms. The helper raises the priority of the threads that stamp data and asks Windows for a 1 ms timer. The default test runs it for 12 seconds; the full one (10 minutes, three pauses) is `cargo test --release -- --ignored full_ten_minute_drift` in `capture/`. Real devices (a microphone, the loopback of a real sound, a webcam, the real pointer) need the author hardware and are listed as not run in the hand-off of the epic. The click test feeds a scripted pointer through the same code as the real one and checks the time (within 20 ms) and the coordinates. The privacy tests are the validator of `core/recording`, a scan of the helper source for hooks and key reads, and a security test that no operation returns key data.
+
+## 17. Finishing a take: automatic zoom, smooth cursor and click highlight (epic 65)
+
+A screen take that holds pointer events (section 16.6) can be finished with three commands of the core: `recording.auto_zoom`, `recording.set_cursor` and `recording.set_click_highlight` (SDD-002 C.93 to C.95, names in SDD-000 section 18). Each is an ordinary undoable edit with scope `edit`, so a person, an agent, the CLI and the HTTP API reach it the same way (`POST /projects/{id}/edit`, the `edit` tool of MCP). No operation, tool or route is added.
+
+### 17.1 What the capture gives
+
+Confirmed against epic 62: the helper never draws the pointer into the video (Windows Graphics Capture with `WithoutCursor`, section 8), and it writes the pointer to `events.jsonl` only when the person asked for it. The cursor of a finished take is therefore drawn by the cursor overlay of this section, never by the video; a take with no events has no cursor and no click to follow. A web recording (epic 63) has no global pointer data: it can be zoomed by hand with `keyframe.set` and the commands of this section answer `E_INVALID_STATE` for it.
+
+### 17.2 Where the data comes from
+
+The three commands read the pointer through `resolved`, as `clip.remove_silences` and `clip.face_frame` do (SDD-002 A.9): the service finds the recording whose screen track became the asset of the clip, reads `events.jsonl` with the validator of `core/recording`, keeps what falls inside the source range the clip plays and writes it into `args.resolved`. The stored operation carries it, so replaying the log gives the same document. For the zoom and the highlight it holds the button edges (`down`); for the cursor it holds the positions, thinned by `core/recording` to at most one per 50 ms and at most 30,000 in all (a longer range raises the spacing). A caller cannot send `resolved`. The service answers `E_INVALID_STATE` with a hint, before anything is applied, when the asset is not the screen track of a recording of the project, when the recording is not in `ready` review, or when the person did not ask for pointer events.
+
+### 17.3 No new item, no renderer change
+
+The three effects are made of what the timeline already has, so the frame plan, the preview and the export draw them with the layer kinds that exist and SDD-013 is unchanged (a shape is a `bitmap` layer of the plan):
+
+- **Zoom**: keyframes of `x`, `y` and `scale` of the clip, written by the command with `ease_in_out`; the editor adjusts or removes each keyframe. The static `x`, `y` and `scale` are the rest state and are never changed.
+- **Cursor**: shape items on a visual track named `Cursor`, directly above the track of the clip: an ellipse whose `x` and `y` keyframes are the smoothed pointer path, mapped through the transform the clip has at that frame. A property holds at most 100 keyframes (SDD-001 section 3.8), so the path is cut into items of at most 90 keyframes each, one after the other.
+- **Click highlight**: one shape item per click on a visual track named `Click highlight`, a ring or a disc whose `scale` and `opacity` keyframes play the effect; it never outlasts the next click, so the items of one clip never overlap.
+
+The overlays are drawn from the transform of the clip **at the time the command runs**: they are not linked to it. After changing the zoom by hand or moving the clip, run `recording.set_cursor` and `recording.set_click_highlight` again; each replaces the items it made before (they are named `Cursor <item id>` and `Click <item id> <n>`, SDD-000 section 18) in one undoable step. Moving the clip alone leaves the overlays where they were; this is the limit of the overlay design and is the price of needing no new item type.
+
+### 17.4 The zoom planner
+
+`core/recording` holds the planner, with integers only: the same clicks and options always give the same plan. The positions are ten-thousandths of the source (`recording.Unit`) and the times are milliseconds on the axis of the asset.
+
+1. Keep the button edges inside the source range the clip plays, in time order.
+2. **Group**: a click joins the group when it is at most `merge_ms` after the previous one and the box that holds the group stays within 60 % of the visible window at the zoom level (so every click of a zoom is on screen). Otherwise it starts a group.
+3. Each group becomes one zoom: its focus is the centre of the box of its clicks, the full level is reached `lead_ms` before its first click, after an ease in of `ramp_ms`; it is held until `hold_ms` after its last click and eases out in `ramp_ms`. The ease in cannot start before the clip does and the ease out ends at the end of the clip at the latest.
+4. **Chain**: when the ease in of a zoom would start before the previous one has finished easing out, the view does not return to 1: it moves from one focus to the next at the zoom level. A chained pair counts as two zooms.
+5. At most `max_zooms` zooms are made, the first in time; `effective.dropped` counts the rest.
+
+Limits, so that no default can make a viewer ill: the level is 1.1 to 3.0 (default 1.6); `lead_ms` 0 to 3000 (400); `ramp_ms` 200 to 3000 (700); `hold_ms` 500 to 10000 (1200); `merge_ms` 0 to 10000 (2500); `max_zooms` 1 to 24 (24, which keeps `x`, `y` and `scale` under the 100 keyframes of a property, four per zoom). The view never leaves the picture: the offset is clamped so the scaled image always covers the frame.
+
+### 17.5 The cursor track
+
+The smoothed position is an exponential filter of time constant `smoothing_ms` (0 to 2000, default 150; 0 follows the raw path), run in integer milli-pixels on a 10 ms step and sampled every `keyframe_ms` (50 to 1000, default 100). It is drawn as a `dot` (a filled ellipse with a dark outline) or a `ring` of `size` pixels (8 to 128, default one fortieth of the frame height, at least 16) and keeps that size when the clip is zoomed. `visible` false removes the cursor items. The pointer is a point of the source: a position outside the part of the source the frame shows is drawn outside the frame and is not seen.
+
+### 17.6 The click highlight
+
+`style` is `ring` (a hollow ring that fades out), `wave` (a ring that grows while it fades) or `pulse` (a disc that shrinks to nothing as it fades); `none` removes the highlights. `color` (default `#FFC400`), `size` in pixels (16 to 400, default one twelfth of the frame height) and `duration_ms` (200 to 2000, default 600) are the options. A click in the same frame as the one before it adds no item.
+
+### 17.7 Tests
+
+Golden cases of the three commands (SDD-002 C.93 to C.95) on a fixture with five clicks ten seconds apart, the planner tests of `core/recording`, a parity test of the service (edit by the Service, CLI, HTTP and MCP gives the same document), and an export test of a recorded fixture that compares frames with golden images. Not run: a real recording with the real pointer on the author machine.

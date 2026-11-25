@@ -3,7 +3,7 @@
 - Amended (2026-11-18) for Stuarty: the product is Stuarty (ADR-0031, ADR-0044). The command is `stuarty`, the variables are `STUARTY_*` and the workspace folder is `~/.stuarty`; section 13 lists the former names, which are still read. A new domain adds its names here first.
 - Status: Authoritative (2026-11-14). Every SDD uses these names exactly. A name is changed here first, then everywhere.
 - Depends on: ADR-0001, ADR-0006, ADR-0008, ADR-0015 to ADR-0020
-- Last change: 2026-11-24, section 17 (epic 71: caption styles, blur regions, voice presets). Before that, 2026-11-18, the rename to Stuarty (ADR-0044): every name that carried the product name, and section 13 with the former names. Before that, 2026-11-14: names added from the review of SDD-005, SDD-006 and SDD-007 (operations outside the agent surfaces, tables `document_backups`, `audit` and `api_keys`, `E_RATE_LIMITED`, workspace files, limit variables)
+- Last change: 2026-11-24, section 18 (epic 65: automatic zoom, smooth cursor, click highlight). Before that, 2026-11-24, section 17 (epic 71: caption styles, blur regions, voice presets). Before that, 2026-11-18, the rename to Stuarty (ADR-0044): every name that carried the product name, and section 13 with the former names. Before that, 2026-11-14: names added from the review of SDD-005, SDD-006 and SDD-007 (operations outside the agent surfaces, tables `document_backups`, `audit` and `api_keys`, `E_RATE_LIMITED`, workspace files, limit variables)
 - Purpose: one place for the names that several specifications share, so that documents written in parallel agree.
 
 ## 1. Service operations
@@ -643,3 +643,15 @@ The operations of the registry of domain `image` (`core/command` registry built 
 | `Blur` | track name | the visual track `clip.blur_region` creates, directly above the track of the clip, when no free track of that name lies above it |
 | `Blur region` | item name | the name of the clip item that `clip.blur_region` adds |
 | `overridden_items`, `new_track_id`, `radius`, `min_radius` | effective member | what the four commands report in `effective` (SDD-002 C.88 to C.91) |
+
+## 18. Finishing a screen take (epic 65, SDD-025 section 17, SDD-002 C.93 to C.95)
+
+| Name | Kind | Meaning |
+| --- | --- | --- |
+| `recording.auto_zoom`, `recording.set_cursor`, `recording.set_click_highlight` | command | the three commands of the epic, all scope `edit`, on a clip whose asset is the screen track of a recording that holds pointer events; no service operation, tool or route is added |
+| `resolved` of the three commands | argument filled by the service | `{"width", "height", "events": [{"t_ms", "kind", "button?", "x", "y"}]}`: the pointer events of the recording that fall in the source range the clip plays, with the lines of SDD-025 section 16.6 (`recording.PointerEvent`) |
+| `Cursor` | track name | the visual track of the cursor items, directly above the track of the clip (or above the `Click highlight` track when there is one) |
+| `Click highlight` | track name | the visual track of the click highlight items, directly above the track of the clip |
+| `Cursor <item id>` | item name | the shape items of the cursor of that clip, one per segment of at most 90 keyframes |
+| `Click <item id> <n>` | item name | the shape item of the nth click of that clip, from 1 |
+| `zooms`, `dropped`, `keyframes`, `segments`, `highlights` | effective member | what the three commands report in `effective` (SDD-002 C.93 to C.95) |

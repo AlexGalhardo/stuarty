@@ -261,6 +261,8 @@ A `shape` item:
 | `stroke_color` | colour | `#000000` | |
 | `stroke_width` | number | 0 | |
 
+**Pointer overlays (epic 65).** The cursor and the click highlight of a screen take are shape items, and the automatic zoom is keyframes of `x`, `y` and `scale` of the clip (SDD-025 section 17). The schema gains **no field and no item type**, so no document needs a migration. What marks them is a name: shape items called `Cursor <item id>` and `Click <item id> <n>` on visual tracks called `Cursor` and `Click highlight` (SDD-000 section 18). They are plain items: every command that edits a shape, a keyframe or a track edits them, the validator holds them to the same rules (500 items, 100 keyframes per property, no overlap on a track) and a person who renames one detaches it from the commands of SDD-002 C.93 to C.95, which replace only the items that still carry the names.
+
 ### 3.7 Caption items
 
 A `caption` is timed text burned into the picture, with per-word timing.
