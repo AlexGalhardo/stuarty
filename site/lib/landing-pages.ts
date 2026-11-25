@@ -34,7 +34,7 @@ export const shots = {
 	},
 	writing: {
 		src: "/landing/writing",
-		alt: "The Write section: a script in Markdown, with its revision, its estimated reading time and the path of its project.",
+		alt: "The Writing section: a script in Markdown, with its revision, its estimated reading time and the path of its project.",
 		width: 1600,
 		height: 1000,
 	},
@@ -76,13 +76,13 @@ export const shots = {
 	},
 	visualAssets: {
 		src: "/landing/visual-assets",
-		alt: "Visual Assets: the pictures of the workspace with where each came from, filters by origin and tag.",
+		alt: "Images: the pictures of the workspace with where each came from, filters by origin and tag.",
 		width: 1600,
 		height: 1000,
 	},
 	videoAssets: {
 		src: "/landing/video-assets",
-		alt: "Video Assets: the footage of the workspace with where each file came from, ready to reuse in any project.",
+		alt: "Videos: the footage of the workspace with where each file came from, ready to reuse in any project.",
 		width: 1600,
 		height: 1000,
 	},
