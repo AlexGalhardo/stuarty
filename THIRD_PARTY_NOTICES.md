@@ -45,6 +45,7 @@ Linked into the `stuarty` binary, collected for the six release targets.
 | go.opentelemetry.io/otel/trace | v1.47.0 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/go-modules/go.opentelemetry.io/otel/trace@v1.47.0/LICENSE>) | - |
 | go.opentelemetry.io/proto/otlp | v1.11.0 | Apache-2.0 | copyright notice that is included in or attached to the work | [LICENSE](<licenses/go-modules/go.opentelemetry.io/proto/otlp@v1.11.0/LICENSE>) | - |
 | golang.org/x/crypto | v0.59.0 | BSD-3-Clause | Copyright 2009 The Go Authors. | [LICENSE](<licenses/go-modules/golang.org/x/crypto@v0.59.0/LICENSE>) | - |
+| golang.org/x/image | v0.48.0 | BSD-3-Clause | Copyright 2009 The Go Authors. | [LICENSE](<licenses/go-modules/golang.org/x/image@v0.48.0/LICENSE>) | - |
 | golang.org/x/net | v0.62.0 | BSD-3-Clause | Copyright 2009 The Go Authors. | [LICENSE](<licenses/go-modules/golang.org/x/net@v0.62.0/LICENSE>) | - |
 | golang.org/x/oauth2 | v0.36.0 | BSD-3-Clause | Copyright 2009 The Go Authors. | [LICENSE](<licenses/go-modules/golang.org/x/oauth2@v0.36.0/LICENSE>) | - |
 | golang.org/x/sync | v0.25.0 | BSD-3-Clause | Copyright 2009 The Go Authors. | [LICENSE](<licenses/go-modules/golang.org/x/sync@v0.25.0/LICENSE>) | - |
