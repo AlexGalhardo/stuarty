@@ -363,6 +363,33 @@ Measured on the same Windows machine (16 logical CPUs, an AMD Ryzen 7 5700X3D) *
 
 What each step took out, in order: the layers prepared on 8 instances at once and drawn in bands (the looks are no longer one core's work); the instances kept in a pool (a fresh instance faulted in every page of its memory, which took longer than the draw once eight did it together); a band drawn into a buffer of its own rows; the prepared picture kept across an edit of an opacity or a position; the box blur on the channels that can be non-zero, by reciprocal and row by row (0.18 s to 0.08 s for a 2,000 by 2,000 picture, native); the draw reading four pixels instead of sixteen values (a rotated layer, 39 ms to 24 ms, native); the PNG compressed in pieces. A single rotated 2,000 by 2,000 photo with tone, colour matrix and sharpen still prepares in about 0.43 s in the module (0.17 s native), which is the longest task of the export.
 
+### 13.4 Profile at the start of epic 91, and what it decided
+
+Measured on the same Windows machine **with other agents running** (so shares and direction, never the budget; the sums are CPU time added over the workers, and they inflate when the machine is busy). The reference document is exported cold (the pool of instances emptied first, section 13.1), `BenchmarkImageReference` and a test that times each stage:
+
+| Stage of a cold export | CPU time added over the workers | Share |
+| --- | --- | --- |
+| Decoding the photos, rasterizing the shapes, scaling and uploading them | 3.2 to 4.0 s | 16% |
+| `vr_prepare` (the looks of the 30 layers) | 10.4 to 12.2 s | 55% |
+| Handing the prepared pictures to the instances of the bands | 2.8 to 3.7 s | 16% |
+| `vr_render` of the bands | 2.9 to 4.6 s | 18% |
+| PNG | 0.05 s | under 1% |
+
+Wall time of the two stages, 8 workers: preparing 1.8 to 2.7 s, drawing 1.6 to 2.6 s. Layer by layer, `vr_prepare` takes 0.62 to 0.79 s for each of the ten rotated 2,000 by 2,000 photos (the sharpen 0.59 s of it, tone and colour matrix 0.1 s: the photo is prepared at the size of its file, not of its box), 0.15 to 0.26 s for each rounded rectangle with a shadow and 0.17 to 0.42 s for each ellipse with a glow and a mask. The ten photos are 65% of the preparation. One layer of 1,200 by 900 pixels gives its prepared picture to an instance in 3 to 6 ms warm, and a 4,000 by 4,000 render needs each picture in two or three of the eight bands.
+
+What the profile says about each lever of the epic:
+
+| Lever | Measured | Decision |
+| --- | --- | --- |
+| A. Prepare only the visible window | 0.1 million of the 69.1 million prepared pixels (0.2%) lie outside the canvas; every layer of the reference document is inside it, and a layer reaches two to three of the eight bands, so a window per band would prepare the reach of its looks two or three times over. There is no work to cut | **Skipped.** It would pay for a document whose layers mostly lie off the canvas, which is not a document a creator makes; the epic keeps `vr_prepare` as it is |
+| B. Keep the prepared layer across the edits of a session | A change of opacity, position, blend mode or mask prepares nothing (section 6.2). **Turning a layer prepared it again**, 0.6 to 0.8 s for a photo with a sharpen, one frame for each step of the rotation handle, though no look reads the angle. A resize, a look, the crop and the source change the pixels and prepare again | **Built for the rotation:** the angle leaves the key (section 6.2). The rest cannot move to the draw without changing a pixel |
+| C. Cache the answer of `ImageFrame` | The same revision at the same width again: 10 to 15 ms to copy the cached canvas and 105 ms to resample it and encode the PNG, about 120 ms for nothing new | **Built** (section 6.1) |
+| D. Bands of the same work (not in the epic) | Bands of equal rows were not of equal work: the bands in the middle of the canvas took 1.2 to 1.6 s and those at its edges 0.2 to 0.6 s, so the draw waited for the slowest of eight. Cut by the pixels each row draws and the pictures it receives, the draw took 13 to 22% less in an interleaved comparison | **Built** (section 6.2) |
+| E. Decode a photo once for the layers that share it (not in the epic) | A 2,000 by 2,000 PNG decodes in 55 ms, ten times for the reference document: 0.55 s of about 20, under 3% | **Skipped** (under the 10% of the rule) |
+| F. More than 8 instances at once (not in the epic) | On the loaded machine 12 workers prepared 20 to 40% faster, but they also take a larger share of a busy machine, so the comparison proves nothing | **Not built.** One constant (`maxImageWorkers`); the idle run decides |
+
+The 2 s budget is then in the hands of what the module does per pixel (the sharpen of ten photos is about 30% of all the CPU time of an export), which this epic does not change: the orchestrator's idle measurement says whether the weighted bands are enough.
+
 ## 14. Decisions of this SDD
 
 1. **A separate registry, shared code.** The image operations are registered in their own registry so that the video registry, its tests and its surfaces do not change; the decoder, the schema generator and the types are shared.
