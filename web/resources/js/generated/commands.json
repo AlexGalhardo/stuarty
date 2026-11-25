@@ -5025,7 +5025,7 @@
 		"internal": false,
 		"name": "item.slip",
 		"scope": "edit",
-		"summary": "Shows another part of a clip's source without moving or resizing it."
+		"summary": "Slides the source of a clip or audio item without moving or resizing it."
 	},
 	{
 		"args_schema": {

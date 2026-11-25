@@ -3085,7 +3085,7 @@ export const COMMANDS: Record<CommandName, { summary: string; scope: "edit" | "m
 	"item.set_enabled": { summary: "Turns an item off or on without removing it from the timeline.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND"] },
 	"item.set_transform": { summary: "Sets the position, scale, rotation or opacity of a visual item.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
 	"item.set_transition": { summary: "Sets or removes the transition on one edge of a visual item.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_INVALID_STATE"] },
-	"item.slip": { summary: "Shows another part of a clip's source without moving or resizing it.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_OUT_OF_SOURCE"] },
+	"item.slip": { summary: "Slides the source of a clip or audio item without moving or resizing it.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_TYPE_MISMATCH","E_OUT_OF_SOURCE"] },
 	"item.split": { summary: "Splits an item into two at a timeline frame.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_INVALID_STATE","E_ID_EXISTS","E_LIMIT"] },
 	"item.trim": { summary: "Moves the start edge or the end edge of an item to a timeline position.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_INVALID_TIME","E_NOT_FOUND","E_INVALID_STATE","E_OUT_OF_SOURCE","E_OVERLAP"] },
 	"item.unlink": { summary: "Removes items from their link group.", scope: "edit", internal: false, errors: ["E_VALIDATION","E_NOT_FOUND","E_INVALID_STATE"] },
