@@ -20,7 +20,8 @@
     "test:base-path": "bun test --timeout 600000 scripts/base-path.test.ts",
     "check:links-live": "bun scripts/check-links-live.ts",
     "test:scripts": "bun test scripts/check-last-updated.test.ts scripts/committed-dates.test.ts scripts/trailing-slash.test.ts scripts/check-links-live.test.ts src/landing/content.test.ts",
-    "test:site": "bun test --timeout 600000 scripts/link-anchors.test.ts scripts/markdown-twin.test.ts scripts/generate-reference.test.ts scripts/mcp-reference.test.ts scripts/check-doc-claims.test.ts scripts/accessibility-page.test.ts scripts/latest-release.test.ts scripts/releases.test.ts scripts/glossary.test.ts scripts/shortcuts-reference.test.ts scripts/base-path.test.ts scripts/check-built.test.ts scripts/network-reference.test.ts scripts/pt-br-guides.test.ts && node --test scripts/api-reference.test.ts"
+    "test:site": "bun test --timeout 600000 scripts/link-anchors.test.ts scripts/markdown-twin.test.ts scripts/generate-reference.test.ts scripts/mcp-reference.test.ts scripts/check-doc-claims.test.ts scripts/accessibility-page.test.ts scripts/latest-release.test.ts scripts/releases.test.ts scripts/glossary.test.ts scripts/shortcuts-reference.test.ts scripts/base-path.test.ts scripts/check-built.test.ts scripts/network-reference.test.ts scripts/pt-br-guides.test.ts && node --test scripts/api-reference.test.ts",
+    "test:browser": "bun test --timeout 120000 e2e/landing.browser.test.ts"
   },
   "dependencies": {
     "@astrojs/react": "7.1.4",
