@@ -183,3 +183,54 @@ func TestImageCacheRefusesAnAssetTheCallerLostWhileItIsCached(t *testing.T) {
 		t.Fatalf("a cached document whose asset was lost rendered: %v", err)
 	}
 }
+
+// TestImageCacheKeepsThePreparedLayerWhenItIsTurned: the module turns a prepared picture when it draws it and no look
+// reads the angle, so turning a layer that is already turned (the handle of the editor, one frame per step)
+// prepares nothing again, and the picture is the one the full render gives. A photo that was not turned is the one
+// exception: it is scaled down to its box before it is uploaded, so it prepares again once.
+func TestImageCacheKeepsThePreparedLayerWhenItIsTurned(t *testing.T) {
+	d := lookAll(t)
+	photo, bar := firstLayerOfKind(d, coreimage.KindImage), lyr('c')
+	turn := func(from *coreimage.Document, id string, degrees int) *coreimage.Document {
+		args := fmt.Sprintf(`{"layer_id": %q, "rotation": %d}`, id, degrees)
+
+		return applyLook(t, from, lookOp("layer.transform", args))
+	}
+
+	cache := NewImageCache(0)
+	cfg := cachedConfig(t, cache, "u1")
+	plain := ImageConfig{AssetPath: cfg.AssetPath}
+
+	turned := turn(turn(d, photo, 10), bar, -7)
+	renderWith(t, turned, cfg)
+
+	for _, degrees := range []int{25, 40, -90, -1} {
+		edited := turn(turn(turned, photo, degrees), bar, degrees/2+1)
+		before := cache.Stats()
+
+		got := renderWith(t, edited, cfg)
+
+		if after := cache.Stats(); after.PreparedMisses != before.PreparedMisses {
+			t.Fatalf(
+				"turning to %d degrees prepared %d layers again",
+				degrees,
+				after.PreparedMisses-before.PreparedMisses,
+			)
+		}
+
+		if want := renderWith(t, edited, plain); !bytes.Equal(got.Pix, want.Pix) {
+			t.Fatalf("%d degrees: the picture from kept layers differs from the full render in %d bytes",
+				degrees, differingBytes(got.Pix, want.Pix))
+		}
+	}
+
+	// From no turn to a turn, and back, the photo is another texture: it prepares again and the picture is still the
+	// full render.
+	for _, edited := range []*coreimage.Document{d, turn(d, photo, 30), turn(d, bar, 30)} {
+		got := renderWith(t, edited, cfg)
+
+		if want := renderWith(t, edited, plain); !bytes.Equal(got.Pix, want.Pix) {
+			t.Fatalf("the picture differs from the full render in %d bytes", differingBytes(got.Pix, want.Pix))
+		}
+	}
+}
