@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.55.0] - 2026-11-25
+
+### Added
+
+- **service:** Add the sealed file envelope and the unlock hook to the account ([26648a4](https://github.com/AlexGalhardo/stuarty/commit/26648a4459ada8f0734f29b9c64fab7b233f4dfc))
+- **library:** Seal the library files with the key of the account ([0af2d58](https://github.com/AlexGalhardo/stuarty/commit/0af2d588473f08cb6a7f7e867ce61fe6fc022f7b))
+- **library:** Keep the library index in memory and drop its two tables ([9f456e5](https://github.com/AlexGalhardo/stuarty/commit/9f456e5df6b9bb253f10adfd50a2618e4aef878f))
+- **workspace:** Seal the library of an existing workspace at creation and unlock ([44509e6](https://github.com/AlexGalhardo/stuarty/commit/44509e69dcf078a9d7c2b43b23e46733a63f0fde))
+- **store:** Seal the documents, the edit log, the backups and the asset notes ([f23833a](https://github.com/AlexGalhardo/stuarty/commit/f23833ae728fe01aa9297688a3d815a2594cd62b))
+- **service:** Run the document migration and the seeding at the unlock, and drop the caches at lock ([fb3cad8](https://github.com/AlexGalhardo/stuarty/commit/fb3cad834392a12ffee759fc0d77456ce229a66b))
+- **store:** Seal the second stage of an earlier account in resumable batches at its first unlock ([fd0e0d6](https://github.com/AlexGalhardo/stuarty/commit/fd0e0d69451377eb1b80a1d46b526fc40b53b5e0))
+- **core:** Add recording tracks, pause segments and pointer event rules ([f918480](https://github.com/AlexGalhardo/stuarty/commit/f9184805f4bab6e5527629be5710711fc4e53f67))
+- **engine:** Record the microphone and the system mix on the shared clock ([9aca175](https://github.com/AlexGalhardo/stuarty/commit/9aca1758c012fbd230132f88d3148cc4a1524f0e))
+- **engine:** Record a camera on its own file on the shared clock ([b34055c](https://github.com/AlexGalhardo/stuarty/commit/b34055c6eac2474e2189bae40964a8a93c874b75))
+- **engine:** Speak protocol version 2 and pause, resume and track files in the host ([c0bd479](https://github.com/AlexGalhardo/stuarty/commit/c0bd4793b465868c1386859208eca16f238e7c75))
+- **engine:** Pause every source and save pointer events on the shared clock ([d3250e3](https://github.com/AlexGalhardo/stuarty/commit/d3250e3cde5fdb322add0b682ffc4ce9289daf93))
+- **service:** Pause, resume and read the pointer events of a recording ([a4e895c](https://github.com/AlexGalhardo/stuarty/commit/a4e895c74c8a13a6e37dbc1e657ab351baf22cc5))
+- **ui:** Choose devices, watch the levels and pause in the record dialog ([cf05b79](https://github.com/AlexGalhardo/stuarty/commit/cf05b79e9fe275f0a8fe9a40e97d45fb20ec2ca6))
+- **engine:** Record the Windows webcam through Media Foundation ([c700c98](https://github.com/AlexGalhardo/stuarty/commit/c700c98737e6c7367a675c1d973c2965c484d79a))
+- **core:** Ask a text and an image the questions of their own in the briefing ([4a9b3cf](https://github.com/AlexGalhardo/stuarty/commit/4a9b3cf687d594f81033fbdd335486fbdd0b16e3))
+- **service:** Choose the briefing set from the kind of the project on every surface ([85943d5](https://github.com/AlexGalhardo/stuarty/commit/85943d55e8bab9fde2b3363f70aab95178b6ff0f))
+- **ui:** Show the guided briefing for a text, an image and a video project ([4a4a7da](https://github.com/AlexGalhardo/stuarty/commit/4a4a7dad2c005f73c44ab3b2f495758fca930173))
+- **site:** Staged captures of the real UI in both themes and the script that makes them ([1a813f3](https://github.com/AlexGalhardo/stuarty/commit/1a813f3da680672d2c1f2d5a2c47fdf563bca8a8))
+- **site:** The landing sections, order and copy of the final design ([ec8abc1](https://github.com/AlexGalhardo/stuarty/commit/ec8abc17d2a30c13a30bd0fb3d7012cbdceb9637))
+- **site:** Layout, type scale, spacing and colours of the final design in both themes ([2ec6f55](https://github.com/AlexGalhardo/stuarty/commit/2ec6f55878f4ac9cf1df8eae63bed428e6150197))
+- **site:** The landing changes the author asked for after the review ([929c651](https://github.com/AlexGalhardo/stuarty/commit/929c651e83de43e919b241c744c9ec1bd26f656a))
+- **site:** Capture every main screen of the landing from one demo workspace ([a9da0c6](https://github.com/AlexGalhardo/stuarty/commit/a9da0c609d4054df125125459632e947a4d86e9a))
+- **site:** The path of a project in twelve steps, one main screen each ([af72aa6](https://github.com/AlexGalhardo/stuarty/commit/af72aa6f617a444b61b4870068ddfa825e62bf63))
+- **site:** Add edit by text as the twelfth card of the studio grid ([5174349](https://github.com/AlexGalhardo/stuarty/commit/5174349d91acb7f327d9424c98786322dbe07cfe))
+
+### Fixed
+
+- **owner:** Write no clear copy of the database when an earlier account is sealed ([dfbd051](https://github.com/AlexGalhardo/stuarty/commit/dfbd05189d5cb5cdc24a8bab3d4071947cbf6417))
+- **library:** Bound the files the scan seals at once to its 32 workers ([8d4e7f0](https://github.com/AlexGalhardo/stuarty/commit/8d4e7f005788cd8cdd72d600bd742d43197cffb5))
+- **library:** List a sealed file with a changed version byte as invalid, not as clear text ([2381c3b](https://github.com/AlexGalhardo/stuarty/commit/2381c3b431209516d8c2b42b2ad44add3a94a58c))
+- **ui:** Stop saying everything the person wrote is encrypted ([9425b54](https://github.com/AlexGalhardo/stuarty/commit/9425b5403e81933e9fa080a53981d3a13750af0d))
+- **engine:** Keep every track the length of the clock on a busy machine ([8630c12](https://github.com/AlexGalhardo/stuarty/commit/8630c129f7f70172c73b1ef104034f3a1fef9507))
+- **store:** Move the recordings tracks migration after every migration on the release ([e2d8c2d](https://github.com/AlexGalhardo/stuarty/commit/e2d8c2df164dd2e0958198cfed036826eafd18cd))
+- **engine:** Close a camera that opens after its start was refused ([8471120](https://github.com/AlexGalhardo/stuarty/commit/8471120e94dcf9380e2a2526ce4e877f2acd564d))
+- **engine:** End every track at the instant the stop was asked for ([0c4f833](https://github.com/AlexGalhardo/stuarty/commit/0c4f8334025e58123e767c3b8736f3ac40dbd0a0))
+- **core:** Refuse a pointer event one pixel outside its source ([08902ad](https://github.com/AlexGalhardo/stuarty/commit/08902adb69262e8747520a43eba08c6c90b80b9b))
+- **service:** Tell the person that the capture helper is from another version ([1f9213c](https://github.com/AlexGalhardo/stuarty/commit/1f9213c57c340e65b09902174f4bdfcf7efe09c5))
+- **ui:** Promise no deletion of the pointer file an added recording does not have ([06a06ee](https://github.com/AlexGalhardo/stuarty/commit/06a06ee9498ff03a57f99293200678bd4f7a05b4))
+- **service:** Keep the row and the helper together when pauses and resumes race ([3f15fbf](https://github.com/AlexGalhardo/stuarty/commit/3f15fbf15edc90833eab6f3b0f3ae9290cc891ed))
+- **core:** Name the first unknown answer id in order so every surface gives one error ([1dc327a](https://github.com/AlexGalhardo/stuarty/commit/1dc327ad543cea2fdaacc3d12ef45720458dbfdf))
+- **service:** Stop calling a brief another briefing set wrote one written by hand ([3c07f49](https://github.com/AlexGalhardo/stuarty/commit/3c07f498678245eb71bee02d3ff77529c249e219))
+- **mcp:** Say production_kind defaults to the project kind in the project_item text ([dbda5fa](https://github.com/AlexGalhardo/stuarty/commit/dbda5fab603ed45ac8607d5f87a46458ce5a081c))
+- **site:** Follow the phone frames for the path lead and the permission card ([b174eba](https://github.com/AlexGalhardo/stuarty/commit/b174ebad308ae5b1c743f16d03293b0466e2acc5))
+- **site:** Describe the recaptured editor and approvals in their alt texts ([3d62217](https://github.com/AlexGalhardo/stuarty/commit/3d62217f6e991491939c7264847d24bcbb9765f4))
+- **site:** Take epic 62, now done, out of the screen recording roadmap card ([32322b8](https://github.com/AlexGalhardo/stuarty/commit/32322b8d6664ccad0ec791871196fe80b5f5fed0))
+- **site:** Keep the landing capture script off the user's workspace and keychain ([b58bd3f](https://github.com/AlexGalhardo/stuarty/commit/b58bd3f5b2d7a8632cb5cba67adfeb490e156cf4))
+- **site:** Colour the hero title words from orange to purple ([a914ced](https://github.com/AlexGalhardo/stuarty/commit/a914ced9f98a6c1f558169ab20bc4dbae07111c4))
+- **site:** Put the note icons on the title line and word the last cards as features ([a2cac35](https://github.com/AlexGalhardo/stuarty/commit/a2cac356d7a5be10da218962a52762eb8ab80a6d))
+
 ## [0.54.0] - 2026-11-24
 
 ### Added
@@ -2622,7 +2676,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.54.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.55.0...HEAD
+[0.55.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.54.0...v0.55.0
 [0.54.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.53.0...v0.54.0
 [0.53.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.52.0...v0.53.0
 [0.52.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.51.0...v0.52.0
