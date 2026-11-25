@@ -67,12 +67,17 @@ type PublicationScheduleRequest struct {
 	At                string `json:"at,omitempty"`
 	Zone              string `json:"zone,omitempty"`
 	LateWindowMinutes *int   `json:"late_window_minutes,omitempty"`
+	// ConfirmQuietDay is a person's yes to a post on a day marked as quiet (SDD-020 section 30A.1).
+	ConfirmQuietDay bool `json:"confirm_quiet_day,omitempty"`
 }
 
 // PublicationTargetRequest names a target of a publication.
 type PublicationTargetRequest struct {
 	ID       string `json:"id"`
 	TargetID string `json:"target_id,omitempty"`
+	// ConfirmQuietDay is a person's yes to a post on a day marked as quiet (SDD-020 section 30A.1); any other caller
+	// is refused on that day whatever it passes.
+	ConfirmQuietDay bool `json:"confirm_quiet_day,omitempty"`
 }
 
 // PublicationSendNowRequest asks for approval to send a target as soon as it is approved.
@@ -82,7 +87,10 @@ type PublicationSendNowRequest PublicationTargetRequest
 type PublicationRetryRequest PublicationTargetRequest
 
 // PublicationCancelRequest cancels a target, or every one that has not gone out.
-type PublicationCancelRequest PublicationTargetRequest
+type PublicationCancelRequest struct {
+	ID       string `json:"id"`
+	TargetID string `json:"target_id,omitempty"`
+}
 
 // publicationError maps what the calendar refused to the codes of SDD-000 section 8.
 func publicationError(err error) error {
@@ -306,7 +314,7 @@ func (s *svc) PublicationCancel(ctx context.Context, req PublicationCancelReques
 		return nil, err
 	}
 
-	p, cerr := s.pubs.Cancel(ctx, pub.TargetRef(req))
+	p, cerr := s.pubs.Cancel(ctx, pub.TargetRef{ID: req.ID, TargetID: req.TargetID})
 	if cerr != nil {
 		return nil, callerError(c, publicationError(cerr))
 	}

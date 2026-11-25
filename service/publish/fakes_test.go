@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"slices"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -22,6 +24,107 @@ type memStore struct {
 	// beforeClaim, when set, runs once at the start of the next Claim: what another caller changed between the
 	// read of a pass and its claim.
 	beforeClaim func()
+
+	// The days and the slots of the calendar, by owner: days by owner and date, slots by id.
+	days  map[string]Day
+	slots map[string]ownedRule
+}
+
+type ownedRule struct {
+	owner string
+	rule  core.Rule
+}
+
+func (s *memStore) Days(_ context.Context, owner, from, to string) ([]Day, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	var out []Day
+
+	for k, d := range s.days {
+		if o, _, _ := strings.Cut(k, "|"); o == owner && d.Date >= from && d.Date <= to {
+			out = append(out, d)
+		}
+	}
+
+	slices.SortFunc(out, func(a, b Day) int { return strings.Compare(a.Date, b.Date) })
+
+	return out, nil
+}
+
+func (s *memStore) Day(_ context.Context, owner, date string) (Day, bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	d, ok := s.days[owner+"|"+date]
+
+	return d, ok, nil
+}
+
+func (s *memStore) PutDay(_ context.Context, owner string, d Day) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.days == nil {
+		s.days = map[string]Day{}
+	}
+
+	if d.Empty() {
+		delete(s.days, owner+"|"+d.Date)
+
+		return nil
+	}
+
+	s.days[owner+"|"+d.Date] = d
+
+	return nil
+}
+
+func (s *memStore) Slots(_ context.Context, owner string) ([]core.Rule, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	var out []core.Rule
+
+	for _, r := range s.slots {
+		if r.owner == owner {
+			out = append(out, r.rule)
+		}
+	}
+
+	slices.SortFunc(out, func(a, b core.Rule) int { return strings.Compare(a.ID, b.ID) })
+
+	return out, nil
+}
+
+func (s *memStore) PutSlot(_ context.Context, owner string, r core.Rule, _ time.Time) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.slots == nil {
+		s.slots = map[string]ownedRule{}
+	}
+
+	if cur, ok := s.slots[r.ID]; ok && cur.owner != owner {
+		return errors.New("a slot of another owner")
+	}
+
+	s.slots[r.ID] = ownedRule{owner: owner, rule: r}
+
+	return nil
+}
+
+func (s *memStore) DeleteSlot(_ context.Context, owner, id string) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if cur, ok := s.slots[id]; !ok || cur.owner != owner {
+		return false, nil
+	}
+
+	delete(s.slots, id)
+
+	return true, nil
 }
 
 func cloneOf(p Publication) Publication {
@@ -229,6 +332,7 @@ type fakeEnv struct {
 	store *memStore
 	now   time.Time
 	ids   int
+	actor Actor
 
 	// auto approves a request at once, as a rule the person wrote would.
 	auto bool
@@ -270,7 +374,23 @@ func (e *fakeEnv) NewID(prefix string) string {
 	return fmt.Sprintf("%s_%010d", prefix, e.ids)
 }
 
-func (e *fakeEnv) Actor(context.Context) Actor { return Actor{ID: "local:test"} }
+func (e *fakeEnv) Actor(context.Context) Actor {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	if e.actor.ID != "" {
+		return e.actor
+	}
+
+	return Actor{ID: "local:test"}
+}
+
+// as makes the next calls come from an actor: a person in the app, an agent, a user of a network workspace.
+func (e *fakeEnv) as(a Actor) {
+	e.mu.Lock()
+	e.actor = a
+	e.mu.Unlock()
+}
 
 func (e *fakeEnv) Write(ctx context.Context, fn func(ctx context.Context, tx Tx) error) error {
 	e.wmu.Lock()
@@ -283,6 +403,8 @@ func (e *fakeEnv) Write(ctx context.Context, fn func(ctx context.Context, tx Tx)
 		before[k] = cloneOf(e.store.pubs[k])
 	}
 
+	daysBefore, slotsBefore := maps.Clone(e.store.days), maps.Clone(e.store.slots)
+
 	e.store.mu.Unlock()
 
 	nasks, nwith, nrel, nset, nev := len(e.asks), len(e.withdrawn), len(e.released), len(e.settled), len(e.events)
@@ -290,7 +412,7 @@ func (e *fakeEnv) Write(ctx context.Context, fn func(ctx context.Context, tx Tx)
 	err := fn(ctx, &fakeTx{e: e})
 	if err != nil {
 		e.store.mu.Lock()
-		e.store.pubs = before
+		e.store.pubs, e.store.days, e.store.slots = before, daysBefore, slotsBefore
 		e.store.mu.Unlock()
 
 		e.asks, e.withdrawn, e.released, e.settled, e.events = e.asks[:nasks], e.withdrawn[:nwith], e.released[:nrel],
