@@ -66,7 +66,7 @@ export default function InspectorTabs({
 				ref={strip}
 				variant="line"
 				aria-label={t("ui.editor.inspector.tabs")}
-				className="h-9 w-full justify-start gap-3 overflow-x-auto border-b border-border p-0"
+				className="h-9 w-full justify-start gap-0 overflow-x-auto border-b border-border p-0"
 			>
 				{tabs.map((tab) => (
 					<TabsTrigger

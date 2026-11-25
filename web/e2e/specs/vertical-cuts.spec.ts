@@ -223,7 +223,9 @@ test.describe("vertical cuts", () => {
 		await page.getByRole("button", { name: "Find vertical cuts" }).click();
 		const list = page.getByRole("list", { name: "Proposed cuts" });
 		await expect(list).toContainText("0:12 to 0:47");
-		await expect(list).toContainText("90 words, face on screen 95%");
+		await expect(
+			list.locator('[title="90 words, face on screen 95%"]'),
+		).toHaveCount(1);
 		await expect(list).toContainText("hello and welcome");
 		expect(created).toHaveLength(0);
 		expect(edits).toHaveLength(0);
