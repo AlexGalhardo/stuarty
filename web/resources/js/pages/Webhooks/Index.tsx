@@ -7,11 +7,12 @@ import {
 	useEffect,
 	useState,
 } from "react";
-
+import { DetailPanel } from "@/components/DetailPanel";
 import { EmptyState } from "@/components/EmptyState";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { ListRow } from "@/components/ListRow";
 import { Notice } from "@/components/Notice";
-import { PageHeader } from "@/components/PageHeader";
+import { PageHeader, PageHeaderAction } from "@/components/PageHeader";
 import { SectionTitle } from "@/components/SectionTitle";
 import { type Status, StatusBadge } from "@/components/StatusBadge";
 import UntrustedText from "@/components/UntrustedText";
@@ -287,6 +288,8 @@ export default function Webhooks(): ReactNode {
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [revealed, setRevealed] = useState<RevealedSecret | null>(null);
 	const [open, setOpen] = useState<string | null>(null);
+	// the form of a new webhook is in the detail side while this is on, or when there is no webhook to show
+	const [creating, setCreating] = useState(false);
 	const [deliveries, setDeliveries] = useState<WebhookDelivery[]>([]);
 	const [name, setName] = useState("");
 	const [url, setUrl] = useState("");
@@ -326,6 +329,8 @@ export default function Webhooks(): ReactNode {
 				events: chosen,
 			});
 			setRevealed({ id: made.id, name: made.name, secret: made.secret });
+			setCreating(false);
+			setOpen(made.id);
 			setName("");
 			setUrl("");
 			setChosen([]);
@@ -363,15 +368,15 @@ export default function Webhooks(): ReactNode {
 		});
 	}
 
-	async function show(id: string): Promise<void> {
-		if (open === id) {
-			setOpen(null);
-			return;
-		}
+	async function select(id: string): Promise<void> {
+		setCreating(false);
 		setOpen(id);
 		setDeliveries([]);
 		await loadDeliveries(id);
 	}
+
+	const chosenWebhook = items?.find((w) => w.id === open) ?? null;
+	const showForm = creating || (items !== null && items.length === 0);
 
 	return (
 		<>
@@ -381,12 +386,14 @@ export default function Webhooks(): ReactNode {
 					title={t("ui.webhooks.title")}
 					description={t("ui.webhooks.intro")}
 					actions={
-						<Button asChild>
-							<a href="#webhooks-new">
-								<Plus aria-hidden="true" />
-								{t("ui.webhooks.add_action")}
-							</a>
-						</Button>
+						<PageHeaderAction
+							type="button"
+							data-testid="webhook-new"
+							onClick={() => setCreating(true)}
+						>
+							<Plus aria-hidden="true" />
+							{t("ui.webhooks.add_action")}
+						</PageHeaderAction>
 					}
 				/>
 				<Notice tone="info" title={t("ui.webhooks.sent_title")}>
@@ -396,7 +403,7 @@ export default function Webhooks(): ReactNode {
 				{revealed !== null && (
 					<SecretNote revealed={revealed} onClose={() => setRevealed(null)} />
 				)}
-				<div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
+				<div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
 					<section
 						aria-label={t("ui.webhooks.list")}
 						className="grid grid-cols-1 gap-4"
@@ -409,163 +416,41 @@ export default function Webhooks(): ReactNode {
 									level={3}
 									title={t("ui.webhooks.empty_title")}
 									description={t("ui.webhooks.empty")}
-								>
-									<Button asChild>
-										<a href="#webhooks-new">
-											<Plus aria-hidden="true" />
-											{t("ui.webhooks.add_action")}
-										</a>
-									</Button>
-								</EmptyState>
+								/>
 							) : (
-								<ul className="flex flex-col gap-4">
+								<ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">
 									{items.map((w) => (
-										<li
+										<ListRow
 											key={w.id}
-											className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 text-text"
-											data-webhook-id={w.id}
-										>
-											<div className="flex flex-wrap items-start justify-between gap-4">
-												<div className="min-w-0">
-													<p className="flex flex-wrap items-center gap-2 text-lg font-semibold">
-														<UntrustedText>{w.name}</UntrustedText>
-														<StatusBadge
-															status={w.enabled ? "success" : "neutral"}
-														>
-															{w.enabled
-																? t("ui.webhooks.on")
-																: t("ui.webhooks.off")}
-														</StatusBadge>
-													</p>
-													<p className="font-mono text-sm break-all text-text-muted">
-														{w.url}
-													</p>
-													<p className="text-sm text-text-muted">
-														{w.events
-															.map((e) => t(`ui.webhooks.event.${eventKey(e)}`))
-															.join(", ")}
-													</p>
-													<p className="text-sm text-text-subtle">
-														{w.last_delivery === null
-															? t("ui.webhooks.no_delivery")
-															: t("ui.webhooks.last_delivery", {
-																	state: t(
-																		`ui.webhooks.state.${w.last_delivery.state}`,
-																	),
-																	date: formatDateTime(
-																		w.last_delivery.at,
-																		locale,
-																	),
-																})}
-													</p>
-												</div>
-												<div className="flex shrink-0 flex-wrap justify-end gap-2">
-													<Button
-														type="button"
-														variant="outline"
-														onClick={() => void show(w.id)}
-														aria-expanded={open === w.id}
-													>
-														{t("ui.webhooks.deliveries")}
-														<span className="sr-only">
-															{" "}
-															<UntrustedText>{w.name}</UntrustedText>
-														</span>
-													</Button>
-													<Button
-														type="button"
-														variant="outline"
-														onClick={() =>
-															void act(async () => {
-																await api().testWebhook(w.id);
-															})
-														}
-													>
-														{t("ui.webhooks.test")}
-														<span className="sr-only">
-															{" "}
-															<UntrustedText>{w.name}</UntrustedText>
-														</span>
-													</Button>
-													<Button
-														type="button"
-														variant="outline"
-														onClick={() =>
-															void act(async () => {
-																await api().updateWebhook(w.id, {
-																	enabled: !w.enabled,
-																});
-															})
-														}
-													>
-														{w.enabled
-															? t("ui.webhooks.turn_off")
-															: t("ui.webhooks.turn_on")}
-														<span className="sr-only">
-															{" "}
-															<UntrustedText>{w.name}</UntrustedText>
-														</span>
-													</Button>
-													<Button
-														type="button"
-														variant="outline"
-														onClick={() =>
-															setConfirming({
-																kind: "rotate",
-																id: w.id,
-																name: w.name,
-															})
-														}
-													>
-														{t("ui.webhooks.rotate")}
-														<span className="sr-only">
-															{" "}
-															<UntrustedText>{w.name}</UntrustedText>
-														</span>
-													</Button>
-													<Button
-														type="button"
-														variant="outline"
-														onClick={() =>
-															setConfirming({
-																kind: "remove",
-																id: w.id,
-																name: w.name,
-															})
-														}
-													>
-														{t("ui.webhooks.remove")}
-														<span className="sr-only">
-															{" "}
-															<UntrustedText>{w.name}</UntrustedText>
-														</span>
-													</Button>
-												</div>
-											</div>
-											{open === w.id &&
-												(deliveries.length === 0 ? (
-													<p className="text-sm text-text-muted">
-														{t("ui.webhooks.no_deliveries")}
-													</p>
-												) : (
-													<ul
-														className="divide-y divide-border rounded-lg border border-border bg-surface-sunken"
-														aria-label={t("ui.webhooks.deliveries")}
-													>
-														{deliveries.map((d) => (
-															<DeliveryRow
-																key={d.id}
-																delivery={d}
-																onRedeliver={() =>
-																	void act(async () => {
-																		await api().redeliverWebhook(w.id, d.id);
-																	})
-																}
-															/>
-														))}
-													</ul>
-												))}
-										</li>
+											selected={!showForm && open === w.id}
+											title={
+												<button
+													type="button"
+													className="w-full truncate text-start font-medium"
+													onClick={() => void select(w.id)}
+												>
+													<UntrustedText>{w.name}</UntrustedText>
+												</button>
+											}
+											description={w.url}
+											meta={
+												w.last_delivery === null
+													? t("ui.webhooks.no_delivery")
+													: t("ui.webhooks.last_delivery", {
+															state: t(
+																`ui.webhooks.state.${w.last_delivery.state}`,
+															),
+															date: formatDateTime(w.last_delivery.at, locale),
+														})
+											}
+											trailing={
+												<StatusBadge status={w.enabled ? "success" : "neutral"}>
+													{w.enabled
+														? t("ui.webhooks.on")
+														: t("ui.webhooks.off")}
+												</StatusBadge>
+											}
+										/>
 									))}
 								</ul>
 							))}
@@ -573,83 +458,203 @@ export default function Webhooks(): ReactNode {
 					<section
 						id="webhooks-new"
 						aria-label={t("ui.webhooks.new")}
-						className="grid scroll-mt-4 grid-cols-1 gap-4"
+						className="scroll-mt-4"
 					>
-						<SectionTitle level={3} title={t("ui.webhooks.new")} />
-						<form
-							onSubmit={(event) => void create(event)}
-							className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5 text-text"
-						>
-							<div className="flex flex-col gap-2">
-								<Label htmlFor="webhook-name">{t("ui.webhooks.name")}</Label>
-								<Input
-									id="webhook-name"
-									required
-									maxLength={NAME_MAX}
-									autoComplete="off"
-									value={name}
-									onChange={(event) => setName(event.target.value)}
-								/>
-							</div>
-							<div className="flex flex-col gap-2">
-								<Label htmlFor="webhook-url">{t("ui.webhooks.url")}</Label>
-								<Input
-									id="webhook-url"
-									required
-									type="url"
-									autoComplete="off"
-									value={url}
-									onChange={(event) => setUrl(event.target.value)}
-								/>
-								<p className="text-sm text-text-subtle">
-									{t("ui.webhooks.url_hint")}
-								</p>
-							</div>
-							<fieldset className="flex flex-col gap-3">
-								<legend className="mb-1 text-sm font-medium">
-									{t("ui.webhooks.events_legend")}
-								</legend>
-								{events.map((e) => (
-									<label
-										key={e.name}
-										className="flex items-start gap-2 text-sm"
-									>
-										<input
-											type="checkbox"
-											className="mt-1 size-4 accent-primary"
-											checked={chosen.includes(e.name)}
-											onChange={(event) =>
-												setChosen((was) =>
-													event.target.checked
-														? [...was, e.name]
-														: was.filter((n) => n !== e.name),
-												)
-											}
+						{showForm ? (
+							<DetailPanel title={t("ui.webhooks.new")}>
+								<form
+									onSubmit={(event) => void create(event)}
+									className="flex flex-col gap-4 text-text"
+								>
+									<div className="flex flex-col gap-2">
+										<Label htmlFor="webhook-name">
+											{t("ui.webhooks.name")}
+										</Label>
+										<Input
+											id="webhook-name"
+											required
+											maxLength={NAME_MAX}
+											autoComplete="off"
+											value={name}
+											onChange={(event) => setName(event.target.value)}
 										/>
-										<span>
-											<span className="font-medium">
-												{t(`ui.webhooks.event.${eventKey(e.name)}`)}
-											</span>{" "}
-											<code className="text-xs">{e.name}</code>
-											<EventDescription event={e} />
-										</span>
-									</label>
-								))}
-							</fieldset>
-							<div>
-								<Button
-									type="submit"
-									disabled={
-										busy ||
-										name.trim() === "" ||
-										url.trim() === "" ||
-										chosen.length === 0
+									</div>
+									<div className="flex flex-col gap-2">
+										<Label htmlFor="webhook-url">{t("ui.webhooks.url")}</Label>
+										<Input
+											id="webhook-url"
+											required
+											type="url"
+											autoComplete="off"
+											value={url}
+											onChange={(event) => setUrl(event.target.value)}
+										/>
+										<p className="text-sm text-text-subtle">
+											{t("ui.webhooks.url_hint")}
+										</p>
+									</div>
+									<fieldset className="flex flex-col gap-3">
+										<legend className="mb-1 text-sm font-medium">
+											{t("ui.webhooks.events_legend")}
+										</legend>
+										{events.map((e) => (
+											<label
+												key={e.name}
+												className="flex items-start gap-2 text-sm"
+											>
+												<input
+													type="checkbox"
+													className="mt-1 size-4 accent-primary"
+													checked={chosen.includes(e.name)}
+													onChange={(event) =>
+														setChosen((was) =>
+															event.target.checked
+																? [...was, e.name]
+																: was.filter((n) => n !== e.name),
+														)
+													}
+												/>
+												<span>
+													<span className="font-medium">
+														{t(`ui.webhooks.event.${eventKey(e.name)}`)}
+													</span>{" "}
+													<code className="text-xs">{e.name}</code>
+													<EventDescription event={e} />
+												</span>
+											</label>
+										))}
+									</fieldset>
+									<div>
+										<Button
+											type="submit"
+											disabled={
+												busy ||
+												name.trim() === "" ||
+												url.trim() === "" ||
+												chosen.length === 0
+											}
+										>
+											{t("ui.webhooks.add")}
+										</Button>
+									</div>
+								</form>
+							</DetailPanel>
+						) : chosenWebhook === null ? (
+							<DetailPanel empty={t("ui.webhooks.pick")} />
+						) : (
+							<div data-webhook-id={chosenWebhook.id}>
+								<DetailPanel
+									title={<UntrustedText>{chosenWebhook.name}</UntrustedText>}
+									actions={
+										<>
+											<StatusBadge
+												status={chosenWebhook.enabled ? "success" : "neutral"}
+											>
+												{chosenWebhook.enabled
+													? t("ui.webhooks.on")
+													: t("ui.webhooks.off")}
+											</StatusBadge>
+											<Button
+												type="button"
+												variant="outline"
+												onClick={() =>
+													void act(async () => {
+														await api().testWebhook(chosenWebhook.id);
+													})
+												}
+											>
+												{t("ui.webhooks.test")}
+											</Button>
+											<Button
+												type="button"
+												variant="outline"
+												onClick={() =>
+													void act(async () => {
+														await api().updateWebhook(chosenWebhook.id, {
+															enabled: !chosenWebhook.enabled,
+														});
+													})
+												}
+											>
+												{chosenWebhook.enabled
+													? t("ui.webhooks.turn_off")
+													: t("ui.webhooks.turn_on")}
+											</Button>
+											<Button
+												type="button"
+												variant="outline"
+												onClick={() =>
+													setConfirming({
+														kind: "rotate",
+														id: chosenWebhook.id,
+														name: chosenWebhook.name,
+													})
+												}
+											>
+												{t("ui.webhooks.rotate")}
+											</Button>
+											<Button
+												type="button"
+												variant="outline"
+												onClick={() =>
+													setConfirming({
+														kind: "remove",
+														id: chosenWebhook.id,
+														name: chosenWebhook.name,
+													})
+												}
+											>
+												{t("ui.webhooks.remove")}
+											</Button>
+										</>
 									}
 								>
-									{t("ui.webhooks.add")}
-								</Button>
+									<p className="font-mono text-sm break-all text-text-muted">
+										{chosenWebhook.url}
+									</p>
+									<div>
+										<h3 className="mb-1 text-sm font-semibold">
+											{t("ui.webhooks.events_legend")}
+										</h3>
+										<ul className="flex flex-col gap-1 text-sm text-text-muted">
+											{chosenWebhook.events.map((e) => (
+												<li key={e}>{t(`ui.webhooks.event.${eventKey(e)}`)}</li>
+											))}
+										</ul>
+									</div>
+									<div>
+										<h3 className="mb-1 text-sm font-semibold">
+											{t("ui.webhooks.deliveries")}
+										</h3>
+										{deliveries.length === 0 ? (
+											<p className="text-sm text-text-muted">
+												{t("ui.webhooks.no_deliveries")}
+											</p>
+										) : (
+											<ul
+												className="divide-y divide-border rounded-lg border border-border bg-surface-sunken"
+												aria-label={t("ui.webhooks.deliveries")}
+											>
+												{deliveries.map((d) => (
+													<DeliveryRow
+														key={d.id}
+														delivery={d}
+														onRedeliver={() =>
+															void act(async () => {
+																await api().redeliverWebhook(
+																	chosenWebhook.id,
+																	d.id,
+																);
+															})
+														}
+													/>
+												))}
+											</ul>
+										)}
+									</div>
+								</DetailPanel>
 							</div>
-						</form>
+						)}
 					</section>
 				</div>
 			</div>

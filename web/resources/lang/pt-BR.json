@@ -3659,6 +3659,7 @@
       "remove": "Remover",
       "deliveries": "Entregas",
       "no_deliveries": "Nenhuma entrega ainda.",
+      "pick": "Escolha um webhook à esquerda para ver os eventos e as entregas, ou adicione um novo.",
       "no_delivery": "Nenhuma entrega ainda",
       "last_delivery": "Última entrega: {state}, {date}",
       "redeliver": "Enviar de novo",
