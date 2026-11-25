@@ -78,16 +78,33 @@ export default function VerticalCuts({
 
 	function fail(error: unknown): void {
 		if (!(error instanceof ApiError)) throw error;
-		if (isFaceUnavailable(error)) {
-			void showOffer();
-			return;
-		}
-		setPhase({
+		failWith(error);
+	}
+
+	// A missing face set opens its install prompt; with no set to offer (a platform the catalogue has no helper
+	// for), the error itself is shown, so the section never stays on "checking" (VV-422).
+	function failWith(error: {
+		code: string;
+		message: string;
+		hint?: string;
+		details?: ApiError["details"];
+	}): void {
+		const failed: Phase = {
 			name: "failed",
 			code: error.code,
 			message: error.message,
 			hint: error.hint,
-		});
+		};
+		if (!isFaceUnavailable(error)) {
+			setPhase(failed);
+			return;
+		}
+		showOffer().then(
+			(shown) => {
+				if (!shown) setPhase(failed);
+			},
+			() => setPhase(failed),
+		);
 	}
 
 	async function showOffer(): Promise<boolean> {
@@ -100,7 +117,7 @@ export default function VerticalCuts({
 	}
 
 	// The track job: success asks for the proposals; failure shows its error.
-	// biome-ignore lint/correctness/useExhaustiveDependencies: `propose` only reads stable runtime members.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: `propose` and `failWith` only read stable runtime members.
 	useEffect(() => {
 		if (job === undefined || assetId === undefined) return;
 		lastChange.current = Date.now();
@@ -109,15 +126,8 @@ export default function VerticalCuts({
 		} else if (job.state === "failed" || job.state === "cancelled") {
 			if (job.error === undefined) {
 				setPhase({ name: "idle" });
-			} else if (isFaceUnavailable(job.error)) {
-				void showOffer();
 			} else {
-				setPhase({
-					name: "failed",
-					code: job.error.code,
-					message: job.error.message,
-					hint: job.error.hint,
-				});
+				failWith(job.error);
 			}
 		}
 	}, [job, assetId]);
