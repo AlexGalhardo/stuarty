@@ -94,7 +94,9 @@ test.describe("connections", () => {
 			await newConnection(page).getByLabel("Name", { exact: true }).fill(label);
 			await page.getByLabel("Address (https)").fill(dest.url);
 			await page.getByLabel("Credential").fill(SECRET);
-			await page.getByRole("button", { name: "Connect" }).click();
+			await newConnection(page)
+				.getByRole("button", { name: "Connect" })
+				.click();
 
 			const row = page
 				.locator("[data-connection-id]")
@@ -105,6 +107,8 @@ test.describe("connections", () => {
 			await expect(row).toContainText("Never used");
 			await expect(row).toContainText("Credential stored");
 			await expect(page.locator("body")).not.toContainText(SECRET);
+			// The form closed with the connection made; opened again it holds no credential.
+			await page.getByTestId("connection-new").click();
 			await expect(page.getByLabel("Credential")).toHaveValue("");
 
 			await row.getByRole("button", { name: "Test" }).click();
@@ -152,7 +156,10 @@ test.describe("connections", () => {
 				"Enquanto você não conectar nada, nada sai do seu computador.",
 			),
 		).toBeVisible();
-		await expect(page.getByRole("button", { name: "Conectar" })).toBeDisabled();
+		await page.getByTestId("connection-new").click();
+		await expect(
+			newConnection(page).getByRole("button", { name: "Conectar" }),
+		).toBeDisabled();
 	});
 
 	test("in Portuguese the page lists a connection with its destinations and its last use", async ({
@@ -208,10 +215,11 @@ test.describe("connections", () => {
 		const label = uniqueLabel("Plain");
 		const api = await caller(request);
 		await page.goto("/connections");
+		await page.getByTestId("connection-new").click();
 		await newConnection(page).getByLabel("Name", { exact: true }).fill(label);
 		await page.getByLabel("Address (https)").fill("http://example.com/x");
 		await page.getByLabel("Credential").fill(SECRET);
-		await page.getByRole("button", { name: "Connect" }).click();
+		await newConnection(page).getByRole("button", { name: "Connect" }).click();
 		await expect(page.getByRole("alert")).toContainText("https");
 		await expect(
 			page.locator("[data-connection-id]").filter({ hasText: label }),
