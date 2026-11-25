@@ -30,7 +30,7 @@ export default function CaptionStyleGallery({
 	return (
 		<div className="flex flex-col gap-2" data-testid="caption-style-gallery">
 			<ToolLine name="caption.apply_style" />
-			<ul className="grid grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] gap-2">
+			<ul className="grid grid-cols-3 gap-2">
 				{CAPTION_STYLES.map((style) => {
 					const name = t(`ui.editor.caption_gallery.styles.${style.id}`);
 					return (

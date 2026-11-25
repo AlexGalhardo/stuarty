@@ -3067,7 +3067,10 @@
           "speed": "Velocidade",
           "animation": "Animação",
           "adjust": "Ajustes",
-          "text": "Texto"
+          "text": "Texto",
+          "style": "Estilo",
+          "words": "Texto",
+          "timing": "Tempo"
         }
       },
       "history": {
@@ -3552,6 +3555,10 @@
       "zoom_lane": {
         "name": "Z1 Zoom",
         "label": "Faixa de zoom Z1, {count} zooms"
+      },
+      "captions_inspector": {
+        "no_track": "Selecione uma faixa de legendas ou uma legenda para escolher um estilo.",
+        "select_caption": "Selecione uma legenda na linha do tempo para editá-la."
       }
     },
     "account": {
