@@ -250,6 +250,8 @@ type UpdateInput struct {
 	Thumbnail *string       `json:"thumbnail,omitempty"`
 	Post      *string       `json:"post,omitempty"`
 	Targets   []TargetInput `json:"targets,omitempty"`
+	// ConfirmQuietDay is a person's yes to a post on a day marked as quiet (SDD-020 section 30A.1).
+	ConfirmQuietDay bool `json:"confirm_quiet_day,omitempty"`
 }
 
 // ScheduleInput gives a target its time and asks for approval.
@@ -260,12 +262,16 @@ type ScheduleInput struct {
 	At                string `json:"at,omitempty"`
 	Zone              string `json:"zone,omitempty"`
 	LateWindowMinutes *int   `json:"late_window_minutes,omitempty"`
+	// ConfirmQuietDay is a person's yes to a post on a day marked as quiet; it is ignored for any other caller.
+	ConfirmQuietDay bool `json:"confirm_quiet_day,omitempty"`
 }
 
 // TargetRef names a target of a publication.
 type TargetRef struct {
 	ID       string `json:"id"`
 	TargetID string `json:"target_id,omitempty"`
+	// ConfirmQuietDay is a person's yes to a post on a day marked as quiet; it is ignored for any other caller.
+	ConfirmQuietDay bool `json:"confirm_quiet_day,omitempty"`
 }
 
 func cleanText(path, s string, minRunes, maxRunes int, multiline bool) error {
@@ -567,6 +573,10 @@ func (m *Manager) ask(ctx context.Context, tx Tx, p *Publication, id, reason str
 		return invalid("at", "the time is in the past.").hint("choose a time that has not come, or use send-now")
 	}
 
+	if err := m.checkQuiet(ctx, tx, p, t); err != nil {
+		return err
+	}
+
 	res, err := m.gw.Resolve(ctx, m.post(p, t, true))
 	if err != nil {
 		return err
@@ -687,6 +697,8 @@ func (m *Manager) summary(res *Resolved, p *Publication, t *Target) string {
 // Schedule gives a target its time and asks for approval. A target that is already waiting or scheduled is
 // moved to the new time with a new request.
 func (m *Manager) Schedule(ctx context.Context, in ScheduleInput) (*Publication, error) {
+	ctx = withQuietConfirm(ctx, in.ConfirmQuietDay)
+
 	return m.change(ctx, in.ID, func(ctx context.Context, tx Tx, p *Publication, now time.Time) error {
 		ids, err := m.pick(p, in.TargetID, true)
 		if err != nil {
@@ -729,6 +741,8 @@ func (m *Manager) Schedule(ctx context.Context, in ScheduleInput) (*Publication,
 // SendNow asks for approval to send a target as soon as it is approved. The person who chooses it accepts
 // a late approval up to a day, so a request answered in the afternoon still goes.
 func (m *Manager) SendNow(ctx context.Context, in TargetRef) (*Publication, error) {
+	ctx = withQuietConfirm(ctx, in.ConfirmQuietDay)
+
 	return m.change(ctx, in.ID, func(ctx context.Context, tx Tx, p *Publication, now time.Time) error {
 		if in.TargetID == "" {
 			return invalid("target_id", "name the target to send.")
@@ -740,6 +754,8 @@ func (m *Manager) SendNow(ctx context.Context, in TargetRef) (*Publication, erro
 
 // Retry is SendNow for a target that failed, with its error cleared by the new request.
 func (m *Manager) Retry(ctx context.Context, in TargetRef) (*Publication, error) {
+	ctx = withQuietConfirm(ctx, in.ConfirmQuietDay)
+
 	return m.change(ctx, in.ID, func(ctx context.Context, tx Tx, p *Publication, now time.Time) error {
 		if in.TargetID == "" {
 			return invalid("target_id", "name the target to retry.")
@@ -918,6 +934,8 @@ func (m *Manager) change(
 // post changed returns to waiting_approval with a new request: what a person approved is exactly what is
 // sent (SDD-020 section 24).
 func (m *Manager) Update(ctx context.Context, in UpdateInput) (*Publication, error) {
+	ctx = withQuietConfirm(ctx, in.ConfirmQuietDay)
+
 	return m.change(ctx, in.ID, func(ctx context.Context, tx Tx, p *Publication, now time.Time) error {
 		shared, err := m.applyShared(p, &in)
 		if err != nil {

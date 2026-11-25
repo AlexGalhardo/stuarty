@@ -36,13 +36,14 @@ type publicationRefIn struct {
 }
 
 type publicationUpdateIn struct {
-	ID        string            `json:"id"                  validate:"required" doc:"A publication id, pub_ and 10 characters."`
-	Title     *string           `json:"title,omitempty"                         doc:"The new title; leave out to keep it."`
-	Text      *string           `json:"text,omitempty"                          doc:"The new caption; leave out to keep it."`
-	Export    *string           `json:"export,omitempty"                        doc:"The new video; leave out to keep it."`
-	Thumbnail *string           `json:"thumbnail,omitempty"                     doc:"The new cover; an empty text removes it."`
-	Post      *string           `json:"post,omitempty"                          doc:"The new post; leave out to keep it."`
-	Targets   []pub.TargetInput `json:"targets,omitempty"                       doc:"Targets to change (with their id), add (without one) or remove (remove: true). A target that was waiting for approval, approved or scheduled and whose post changed goes back to waiting for approval."`
+	ID              string            `json:"id"                          validate:"required" doc:"A publication id, pub_ and 10 characters."`
+	Title           *string           `json:"title,omitempty"                                 doc:"The new title; leave out to keep it."`
+	Text            *string           `json:"text,omitempty"                                  doc:"The new caption; leave out to keep it."`
+	Export          *string           `json:"export,omitempty"                                doc:"The new video; leave out to keep it."`
+	Thumbnail       *string           `json:"thumbnail,omitempty"                             doc:"The new cover; an empty text removes it."`
+	Post            *string           `json:"post,omitempty"                                  doc:"The new post; leave out to keep it."`
+	Targets         []pub.TargetInput `json:"targets,omitempty"                               doc:"Targets to change (with their id), add (without one) or remove (remove: true). A target that was waiting for approval, approved or scheduled and whose post changed goes back to waiting for approval."`
+	ConfirmQuietDay bool              `json:"confirm_quiet_day,omitempty"                     doc:"A person's yes to a post on a day marked as quiet; any other caller is refused on that day."`
 }
 
 type publicationScheduleIn struct {
@@ -51,9 +52,16 @@ type publicationScheduleIn struct {
 	At                string `json:"at,omitempty"                                      doc:"The time: a date and time such as 2026-11-20T09:00 read in zone, or an instant with an offset or Z. Leave out to keep the time the target has."`
 	Zone              string `json:"zone,omitempty"                                    doc:"The IANA zone the time is read in, for example America/Sao_Paulo; the default is UTC."`
 	LateWindowMinutes *int   `json:"late_window_minutes,omitempty"                     doc:"0 to 1440: how late after its time the post may still be sent without asking again. The default is 0: a post whose time passed is never sent on its own."`
+	ConfirmQuietDay   bool   `json:"confirm_quiet_day,omitempty"                       doc:"A person's yes to a post on a day marked as quiet; any other caller is refused on that day."`
 }
 
 type publicationTargetIn struct {
+	ID              string `json:"id"                          validate:"required" doc:"A publication id, pub_ and 10 characters."`
+	TargetID        string `json:"target_id,omitempty"                             doc:"The target, tgt_ and 10 characters."`
+	ConfirmQuietDay bool   `json:"confirm_quiet_day,omitempty"                     doc:"A person's yes to a post on a day marked as quiet; any other caller is refused on that day."`
+}
+
+type publicationCancelIn struct {
 	ID       string `json:"id"                  validate:"required" doc:"A publication id, pub_ and 10 characters."`
 	TargetID string `json:"target_id,omitempty"                     doc:"The target, tgt_ and 10 characters."`
 }
@@ -100,7 +108,7 @@ func (h *apiHandler) publicationsRetry(c *web.Ctx, in publicationTargetIn) (serv
 	return deref(res), err
 }
 
-func (h *apiHandler) publicationsCancel(c *web.Ctx, in publicationTargetIn) (service.Publication, error) {
+func (h *apiHandler) publicationsCancel(c *web.Ctx, in publicationCancelIn) (service.Publication, error) {
 	res, err := h.Service.PublicationCancel(c.Context(), service.PublicationCancelRequest(in))
 
 	return deref(res), err

@@ -145,6 +145,9 @@ var ErrNotFound = errors.New("publish: not found")
 
 // Store is where publications live (the tables of SDD-005 section 5.15). On a transaction it is bound to it.
 type Store interface {
+	// The days and the slots of the calendar (SDD-020 section 30A).
+	CalendarStore
+
 	// Insert adds a publication with its targets.
 	Insert(ctx context.Context, p *Publication) error
 	// Get returns a publication with its targets, or ErrNotFound.

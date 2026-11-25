@@ -31,6 +31,7 @@ const (
 	wordsDescription = "CANARY-DESCRIPTION-what-the-project-is"
 	wordsGoal        = "CANARY-GOAL-specific-measurable-parts"
 	wordsHookToken   = "CANARY-HOOKTOKEN-in-the-path"
+	wordsDayNote     = "CANARY-DAYNOTE-long-video-day"
 )
 
 type locker struct {
@@ -134,6 +135,12 @@ func writeEverything(t *testing.T, s *Store) {
 	}); err != nil {
 		t.Fatalf("write step 5: %v", err)
 	}
+
+	if err := s.Publications().PutDay(ctx, "", pub.Day{
+		Date: "2026-12-25", Zone: "UTC", Note: wordsDayNote, Theme: "amber", UpdatedAt: now,
+	}); err != nil {
+		t.Fatalf("write the day: %v", err)
+	}
 }
 
 func readBack(t *testing.T, s *Store) {
@@ -176,6 +183,11 @@ func readBack(t *testing.T, s *Store) {
 		!strings.Contains(string(p.Targets[0].Snapshot), wordsSnapshot) {
 		t.Fatalf("publication %+v %v", p, err)
 	}
+
+	day, ok, err := s.Publications().Day(ctx, "", "2026-12-25")
+	if err != nil || !ok || day.Note != wordsDayNote || day.Theme != "amber" {
+		t.Fatalf("day %+v %v %v", day, ok, err)
+	}
 }
 
 // bytesOfTheWorkspace is db.sqlite and its write-ahead log: everything a copy of the workspace carries.
@@ -202,7 +214,7 @@ func TestSecurity_T108_SealedColumnsHoldNoPlaintextInTheDatabaseFile(t *testing.
 	canaries := []string{
 		wordsItem, wordsRevision, wordsChat, wordsPubText, wordsField, wordsSnapshot, wordsDescription,
 		wordsGoal + "-1", wordsGoal + "-2", wordsGoal + "-3", wordsGoal + "-4", wordsGoal + "-5",
-		wordsHookToken,
+		wordsHookToken, wordsDayNote,
 	}
 	// The second stage (ADR-0053): a caption, a text layer, a template, a brand kit, the log and the asset notes.
 	canaries = append(canaries, canariesOfTheSecondStage()...)

@@ -33,6 +33,7 @@ var sealedCells = []cell{
 	{table: "publications", column: "text", keys: []string{"id"}},
 	{table: "publication_targets", column: "fields", keys: []string{"id"}},
 	{table: "publication_targets", column: "snapshot", keys: []string{"id"}},
+	{table: "calendar_days", column: "note", keys: []string{"owner_user_id", "local_date"}},
 	{table: "projects", column: "description", keys: []string{"id"}},
 	{table: "projects", column: "goal_specific", keys: []string{"id"}},
 	{table: "projects", column: "goal_measurable", keys: []string{"id"}},

@@ -1429,7 +1429,7 @@ CREATE TABLE calendar_days (
   local_date    TEXT    NOT NULL CHECK (length(local_date) = 10),     -- 2026-12-25
   zone          TEXT    NOT NULL,                                     -- IANA zone the day was planned in
   note          TEXT    NOT NULL DEFAULT '',                          -- sealed (5.17.2), at most 2000 characters
-  theme         TEXT    NOT NULL DEFAULT '' CHECK (theme IN ('','blue','green','amber','red','violet','teal','pink','gray')),
+  theme         TEXT    NOT NULL DEFAULT '' CHECK (theme IN ('','blue','green','amber','red','teal','gray')),
   quiet         INTEGER NOT NULL DEFAULT 0 CHECK (quiet IN (0,1)),   -- no posts: a person's rule (SDD-020 section 30A.1)
   updated_ms    INTEGER NOT NULL,
   PRIMARY KEY (owner_user_id, local_date)

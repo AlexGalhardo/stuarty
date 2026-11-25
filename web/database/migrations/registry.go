@@ -58,5 +58,6 @@ func All() []schema.Migration {
 		m20261124150000DropLibraryIndex(),
 		m20261124150100AccountsSealVersion(),
 		m20261124160000RecordingsTracks(),
+		m20261125100000CreateCalendarTables(),
 	}
 }
