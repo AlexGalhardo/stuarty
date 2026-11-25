@@ -158,7 +158,7 @@ Work that earlier epics left open and the author decided to do in epics of their
 | [96](96-product-screens-match-the-final-design.md) | Product screens that match the final design, and the landing captured again | M | 95 | DONE (2026-11-25, product screens and the landing captured again on v0.56.0) |
 | [97](97-publishing-calendar-day-view.md) | Publishing calendar: a day of its own, notes, quiet days, recurring slots, duplicate and .ics | L | 20, 82, VV-282 | DONE (2026-11-25, `ef6a3b420`..`ae43d4d16`; threats T-180 to T-183; Firefox and WebKit runs of its specs and a real calendar import not run) |
 | [98](98-ship-and-adopt-the-own-ffmpeg.md) | Ship the own FFmpeg build in the installers and adopt it | M | 46 | IN PROGRESS (tasks 1 to 4 merged 2026-11-25, `8b7fb80aa`; the setup compiled with the own FFmpeg, a real install and tasks 5 and 6 wait for CI and the author) |
-| [99](99-finish-the-final-design.md) | Finish the final design where the screens are still partial | L | 96, 98 | IN PROGRESS (2026-11-26) |
+| [99](99-finish-the-final-design.md) | Finish the final design where the screens are still partial | L | 96, 98 | DONE (2026-11-25, `03f100d72`..`a7f70d4ec`; groups A, B, C and D merged; landing and README recaptured) |
 
 ## 2. Dependency graph
 
