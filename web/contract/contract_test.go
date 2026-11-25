@@ -168,10 +168,10 @@ func normalizeText(d driver, text string) string {
 var (
 	surfaceNames = regexp.MustCompile(
 		`project:(list|show|create|trash)|command:help|media:(import|inspect)|job:(show|cancel)|font:import|` +
-			`(GET|POST) /api/v1|go back to the projects page|with transcribe `)
+			`(GET|POST) /api/v1|go back to the projects page|with transcribe |--as-new`)
 	toolNames = regexp.MustCompile(
 		`(project_list|project_create|project_get|project_trash|command_help|media_import|media_inspect|` +
-			`job_start|job_get|job_cancel|font_import)`)
+			`job_start|job_get|job_cancel|font_import|as_new)`)
 )
 
 func errorLine(doc *service.ErrorDocument) string {

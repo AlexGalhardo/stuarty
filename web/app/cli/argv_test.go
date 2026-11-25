@@ -170,4 +170,10 @@ func TestReadTextErrorShortensWhatWasTypedAndSaysWhatTheFlagTakes(t *testing.T) 
 	if len(se.Message) > 200 || !strings.Contains(se.Hint, "--text takes the path") {
 		t.Errorf("message %d bytes, hint %q", len(se.Message), se.Hint)
 	}
+
+	// The same reader takes the JSON answers of a brief: its hint must not call them Markdown.
+	_, err = (&call{}).readText("answers", "missing-answers.json")
+	if !errors.As(err, &se) || strings.Contains(se.Hint, "Markdown") || !strings.Contains(se.Hint, "--answers") {
+		t.Errorf("answers hint = %v", err)
+	}
 }

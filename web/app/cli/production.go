@@ -81,13 +81,13 @@ func (c *call) readText(flag, src string) (string, error) {
 		}
 
 		// The error of the system repeats the whole path: keep only its reason.
-		var pathErr *fs.PathError
-		if errors.As(err, &pathErr) {
+		if pathErr, ok := errors.AsType[*fs.PathError](err); ok {
 			err = pathErr.Err
 		}
 
 		e := validation(flag, "cannot read the text %s: %s.", string(shown), readReason(err))
-		e.Hint = "--" + flag + " takes the path of a Markdown file, or - for standard input"
+		// The reader serves --answers (JSON) and the files of a skill too: the hint says a file, not which format.
+		e.Hint = "--" + flag + " takes the path of a file, not the text itself, or - for standard input"
 
 		return "", e
 	}

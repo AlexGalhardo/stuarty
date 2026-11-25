@@ -182,7 +182,8 @@ func (s *svc) unfinishedSignIn(ctx context.Context, provider, label string) (str
 		return "", oauth.Envelope{}
 	}
 
-	for _, conn := range list {
+	for i := range list {
+		conn := &list[i]
 		if conn.Kind != provider || conn.Label != label {
 			continue
 		}

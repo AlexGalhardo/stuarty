@@ -740,7 +740,10 @@ func TestSignInBegunAgainTakesTheUnfinishedConnection(t *testing.T) {
 	}
 
 	if second.ConnectionID != first.ConnectionID || se.connectionCount() != before+1 {
-		t.Fatalf("connections: first %s, second %s, count %d", first.ConnectionID, second.ConnectionID, se.connectionCount())
+		t.Fatalf(
+			"connections: first %s, second %s, count %d",
+			first.ConnectionID, second.ConnectionID, se.connectionCount(),
+		)
 	}
 
 	// A finished sign-in is a connection of its own: a new sign-in makes another one.
