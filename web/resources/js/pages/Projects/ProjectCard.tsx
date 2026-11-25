@@ -126,7 +126,7 @@ export default function ProjectCard({
 			<div className="flex flex-1 flex-col gap-3 p-3">
 				<div className="flex items-start gap-2">
 					<div className="min-w-0 flex-1">
-						<p className="truncate font-medium">
+						<p className="truncate font-semibold">
 							<UntrustedText>{project.name}</UntrustedText>
 						</p>
 						<StatusBadge status="neutral" className="my-1">
@@ -165,7 +165,7 @@ export default function ProjectCard({
 				    It opens the first active timeline, the one the card draws: the timeline with the id of the project
 				    may be in the trash of the project. A project with no timeline opens its page, where a medium is added. */}
 				<div className="mt-auto flex flex-wrap gap-2">
-					<Button asChild variant="outline">
+					<Button asChild variant="ghost" size="sm">
 						<a
 							href={
 								project.timeline_id
@@ -180,7 +180,7 @@ export default function ProjectCard({
 							</span>
 						</a>
 					</Button>
-					<Button asChild variant="outline">
+					<Button asChild variant="ghost" size="sm">
 						<Link href={`/projects/${project.id}`}>
 							{t("ui.projects.card.details")}
 							<span className="sr-only">
