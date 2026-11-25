@@ -2654,7 +2654,7 @@
       },
       "blur_region": {
         "title": "Desfoque de dados sensíveis",
-        "hint": "Sem detecção automática: você marca o retângulo e o tempo. O clipe em si não muda: o desfoque é um item numa faixa Blur acima dele.",
+        "hint": "Sem detecção automática: você marca o retângulo e o tempo.",
         "x": "X",
         "y": "Y",
         "width": "L",
@@ -2666,6 +2666,7 @@
         "group_time": "Tempo",
         "group_strength": "Força",
         "strength_hint": "O padrão é forte, para o texto não voltar a ser lido.",
+        "overlay": "Desfoque 1",
         "strengths": {
           "strong": "Forte",
           "medium": "Média"

@@ -210,9 +210,10 @@ for (const theme of ["light", "dark"] as const) {
 			await expect(
 				strengths.getByRole("button", { name: "Strong" }),
 			).toBeVisible();
-			await strengths.getByRole("button", { name: "Medium" }).click();
+			await expect(page.getByTestId("blur-region-outline")).toBeVisible();
 			await blur.scrollIntoViewIfNeeded();
 			await capture(page, "29 Editor de vídeo_ desfoque", theme);
+			await strengths.getByRole("button", { name: "Medium" }).click();
 			let sent: { operations: { op: string; args: Record<string, unknown> }[] };
 			await page.route("**/api/v1/projects/*/edit**", async (route) => {
 				sent = route.request().postDataJSON();
