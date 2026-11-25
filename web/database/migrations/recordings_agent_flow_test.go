@@ -13,7 +13,7 @@ func TestRecordingsAgentFlowUpAndDown(t *testing.T) {
 	ctx := context.Background()
 	db := openDB(t)
 
-	const id = "20261125100000_recordings_agent_flow"
+	const id = "20261125110000_recordings_agent_flow"
 
 	var before []schema.Migration
 
