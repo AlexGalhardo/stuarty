@@ -30,12 +30,12 @@ func run(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "usage: wasmdiff <a.wasm> <b.wasm>")
 		return 2
 	}
-	a, err := os.ReadFile(args[0])
+	a, err := os.ReadFile(args[0]) //nolint:gosec // G703: the path is the operator argument of a developer tool
 	if err != nil {
 		fmt.Fprintln(stderr, "wasmdiff:", err)
 		return 2
 	}
-	b, err := os.ReadFile(args[1])
+	b, err := os.ReadFile(args[1]) //nolint:gosec // G703: the path is the operator argument of a developer tool
 	if err != nil {
 		fmt.Fprintln(stderr, "wasmdiff:", err)
 		return 2
@@ -90,7 +90,7 @@ func (r *reader) u32() (uint32, error) {
 		r.pos++
 		v |= uint64(c&0x7f) << shift
 		if c&0x80 == 0 {
-			return uint32(v), nil
+			return uint32(v), nil //nolint:gosec // G115: five groups of seven bits at most
 		}
 	}
 	return 0, errors.New("LEB128 too long")
@@ -108,7 +108,7 @@ func (r *reader) skipLEB() error {
 }
 
 func (r *reader) bytes(n uint32) ([]byte, error) {
-	if uint64(r.pos)+uint64(n) > uint64(len(r.b)) {
+	if uint64(n) > uint64(len(r.b)-r.pos) { //nolint:gosec // G115: pos is never past len(b)
 		return nil, errShort
 	}
 	out := r.b[r.pos : r.pos+int(n)]
@@ -164,7 +164,7 @@ func codeEntries(m []byte, s section) ([]entry, error) {
 		return nil, err
 	}
 	var out []entry
-	for i := uint32(0); i < n; i++ {
+	for range n {
 		size, err := r.u32()
 		if err != nil {
 			return nil, err
@@ -186,7 +186,7 @@ func dataEntries(m []byte, s section) ([]entry, error) {
 		return nil, err
 	}
 	var out []entry
-	for i := uint32(0); i < n; i++ {
+	for range n {
 		flag, err := r.u32()
 		if err != nil {
 			return nil, err
@@ -315,7 +315,10 @@ func indexSection(list []section, s section) int {
 	return -1
 }
 
-func describe(w io.Writer, kind string, a, b []byte, sa, sb section, parse func([]byte, section) ([]entry, error), text bool) {
+func describe(
+	w io.Writer, kind string, a, b []byte, sa, sb section,
+	parse func([]byte, section) ([]entry, error), text bool,
+) {
 	ea, err := parse(a, sa)
 	if err != nil {
 		fmt.Fprintf(w, "A %s section: %v\n", kind, err)
@@ -340,9 +343,11 @@ func describe(w io.Writer, kind string, a, b []byte, sa, sb section, parse func(
 		for d < len(ea[i].data) && d < len(eb[i].data) && ea[i].data[d] == eb[i].data[d] {
 			d++
 		}
-		fmt.Fprintf(w, "first: %s %d, byte %d inside it (file byte %d in A, %d in B)\n", kind, i, d, ea[i].start+d, eb[i].start+d)
+		fmt.Fprintf(w, "first: %s %d, byte %d inside it (file byte %d in A, %d in B)\n",
+			kind, i, d, ea[i].start+d, eb[i].start+d)
 		if text {
-			fmt.Fprintf(w, "around it\n  A: %s\n  B: %s\n", printable(window(ea[i].data, d)), printable(window(eb[i].data, d)))
+			fmt.Fprintf(w, "around it\n  A: %s\n  B: %s\n",
+				printable(window(ea[i].data, d)), printable(window(eb[i].data, d)))
 		}
 	}
 	if len(ea) == len(eb) && len(differing) > 0 && setOf(ea) == setOf(eb) {

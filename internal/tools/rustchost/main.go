@@ -18,6 +18,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -49,7 +50,8 @@ func run(args []string) int {
 		fmt.Fprintln(os.Stderr, "rustchost: usage: rustchost <rustc> [arguments]")
 		return 2
 	}
-	cmd := exec.Command(args[0], args[1:]...)
+	//nolint:gosec // G204: runs the compiler cargo names
+	cmd := exec.CommandContext(context.Background(), args[0], args[1:]...)
 	cmd.Stdin, cmd.Stderr = os.Stdin, os.Stderr
 	if len(args) == 2 && args[1] == "-vV" {
 		out, err := cmd.Output()
@@ -69,8 +71,7 @@ func exitCode(err error) int {
 	if err == nil {
 		return 0
 	}
-	var exit *exec.ExitError
-	if errors.As(err, &exit) {
+	if exit, ok := errors.AsType[*exec.ExitError](err); ok {
 		return exit.ExitCode()
 	}
 	fmt.Fprintln(os.Stderr, "rustchost:", err)
