@@ -80,6 +80,12 @@ describe("SceneBar variants", () => {
 		);
 	});
 
+	test("none with no agent connected does not say an agent waits", () => {
+		const html = draw(sceneOf(null, []), { connected: false });
+		expect(html).toContain("No agent connected");
+		expect(html).not.toContain("Waiting for your request");
+	});
+
 	test("idle: the agent and its state, the skill and the tool say Not reported until the service answers", () => {
 		const html = draw(sceneOf(session(), events({ kind: "user_message" })));
 		expect(html).toContain('data-variant="idle"');
