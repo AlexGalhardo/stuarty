@@ -43,6 +43,7 @@ Part 3, the calendar and the scheduler (epic 20):
 28. Service operations of the publication
 29. Tables, events and surfaces of the publication
 30. The calendar and the editor
+30A. The day of the calendar: notes, quiet days, slots, duplicate and `.ics` (epic 97)
 31. Tests of the publication
 
 Part 4, X and TikTok (epic 22):
@@ -517,6 +518,48 @@ A project-limited key is held to the project of the publication. A caller who ma
 
 The page `/publish` of the app (`web/resources/js/pages/Publish/`): a month view and a week view of the targets by their time in the zone of the browser, a list view with filters (state, network, project), the editor of a publication (shared fields, one panel per target with its fields, a preview of the title and the text as the network allows them, the time with its zone, the late window), and for each target its state, its approval (a link to the request), the URL when `published` and the error with its hint when `failed`, with the buttons that the state allows (schedule, send now, retry, cancel). A target is dragged to another day or hour to reschedule it, and the keyboard does the same: the target takes focus, and the arrow keys move it by a day or an hour and Enter confirms. The UI computes no state and no time rule: it sends the instant and the zone, and draws what the service answers. Every string is in English and Portuguese.
 
+## 30A. The day of the calendar: notes, quiet days, slots, duplicate and `.ics` (epic 97, D-146)
+
+A creator plans a week, not a post. Epic 97 adds one day to the calendar: its hours, its posts, a note and a theme, and a rule that says "no posts today". The rules below live in `core/publish` (`calendar.go`, `slots.go`, `ics.go`) and in the manager of `service/publish`; the surfaces draw what the service answers.
+
+### 30A.1 What a day is
+
+A day is a **local date** (`2026-12-25`) and the IANA zone of the person who planned it. The date is the key and the zone is kept with the row: it says in which zone the person thought the day. The day of a target is its local date in the zone the target holds (`zone`, section 25), so a post at `2026-12-25T23:30` in `America/Sao_Paulo` belongs to 25 December whatever the zone of the viewer. A range read by `from` and `to` is a range of instants (section 28, `ParseBound`); the viewer's `zone` only says where its dates start.
+
+- **Note and theme.** A day may hold a `note` (at most 2,000 characters, plain text with line breaks, the person's or an agent's words, untrusted for an agent, T-58) and a `theme`, one of `blue`, `green`, `amber`, `red`, `violet`, `teal`, `pink`, `gray`. The theme is a name, not a colour: the app maps it to a design token whose contrast against the page was checked (the design system, "Calendar themes"). `CalendarDaySet` with an empty note and no theme clears both. Any actor with `edit` writes them. The note is sealed with the other words of the creator (SDD-005 section 5.17.2).
+- **Quiet day.** A day marked quiet is a rule (author decision D-146, item 2). `CalendarQuietSet` creates or removes the mark, for a person in a privileged browser session only; every other caller gets `E_PRIVILEGED_SESSION` with the hint that a person marks a day in the Publish page, and the day is as it was. Reading the mark is open to every scope that reads publications. The mark and the note are independent: removing one keeps the other.
+- **The rule.** Whenever a target asks for approval at a time (`PublicationSchedule`, `PublicationSendNow`, `PublicationRetry`, and `PublicationUpdate` when the edit asks again, which is the one function `ask` of the manager), the service reads the local date of that time in the zone of the target. If the day is quiet: a caller that is not a person is refused with `E_PRIVILEGED_SESSION`, the hint "that day is marked as quiet: a person schedules on it in the Publish page", and the target, its time and its request stay as they were; a person is refused with `E_INVALID_STATE`, path `confirm_quiet_day`, until the call carries `confirm_quiet_day: true`, so the app asks first ("that day is quiet: schedule anyway?") and sends the flag only after the person said yes. The flag is a member of the four requests and of their HTTP bodies; the CLI and MCP have no member for it, since a caller on those surfaces is not a person (D-145). Creating a publication makes only drafts, which no rule stops. A post a person approved before the day became quiet stays approved: marking a day is not cancelling.
+
+### 30A.2 Recurring slots
+
+A slot is a reminder, never a post: `CalendarSlotSave` stores `network`, `weekday` (`mon` to `sun`), `time` (`HH:MM`, 24 hours), `zone` and an optional `connection_id` (an account of that network; empty is any). At most 50 slots per workspace. It reads no connection and sends nothing; it holds no content (T-165).
+
+`core/publish.ExpandSlots` turns the slots into occurrences for a range **on read**, and stores none: for every slot it walks the local dates of its own zone that touch the range, keeps those on its weekday and reads `date + time` with `LocalInstant` (section 25). On the day the clock jumps forward, 02:30 that does not exist is the first instant after the gap and the occurrence says `adjustment: gap`; on the day the clock goes back, the first of the two. The occurrence is kept when its instant is inside `[from, to)`. An occurrence is **filled** by the first non-cancelled target of the same network (and of the named connection) whose instant is in `[at, at + 60 minutes)`; one target fills at most one occurrence. An empty occurrence is shown as an empty slot to fill: a click opens the editor with its date, time, zone and network.
+
+### 30A.3 Duplicate
+
+`PublicationDuplicate` makes a **new publication** with the same title, text, files, thumbnail or post and the same targets (or the one named by `target_id`), each a `draft` at the new time (`at`, `zone`), with no approval, no request, no snapshot, no lease and none of the result of the original. The original is not changed. The new publication is the caller's, in the project of the original. Scheduling it asks for approval like any other, and the quiet-day rule applies then (T-167).
+
+### 30A.4 The plan and the day view
+
+`CalendarPlan` (scope `read`) answers one range: the `days` that hold a note, a theme or a mark in it, the `rules` (every slot), the `slots` (the occurrences with the target that fills each one) and, when asked (`publications: true`), the publications of the range, paginated as `PublicationList`. The day view of the page asks it for one day: from the date to the next date, in the zone of the browser. Nothing in the answer is a credential: a slot and a target carry the id of the connection and never what the vault holds.
+
+### 30A.5 The `.ics` export
+
+`CalendarExport` (scope `read`) answers the targets that have a time and are not cancelled, for a range, as an iCalendar file (RFC 5545), read only and with no import. One `VEVENT` per target: `DTSTART` in UTC (`...Z`, no `TZID`, so a reader never needs the rules of a zone), `DTSTAMP`, `DURATION:PT15M`, a `SUMMARY` of the network and the title, a `DESCRIPTION` of the state and the start of the text, `STATUS` (`TENTATIVE` until a person approved it, `CONFIRMED` after), and a `UID` that is the first 32 hexadecimal characters of the SHA-256 of `stuarty-ics:` and the target id, then `@stuarty.invalid`: stable, and it reveals neither the id nor the host. The text is the person's: it is cut to 200 characters for the title and 500 for the text, loses every control character, and is escaped (`\\`, `;`, `,`, line breaks as `\n`) and folded at 75 bytes with a CRLF and a space, never inside a UTF-8 sequence. The file has no connection id, no account name, no address of a post, no approval id, no snapshot and no token (T-166); a quiet day is not an event. The HTTP route answers `text/calendar; charset=utf-8` with `Content-Disposition: attachment`; the Service answers `filename`, `content_type` and `body`.
+
+### 30A.6 The page
+
+The day view opens from a day cell of the month and week views (the date of the cell, or the key Enter on a focused cell). The hours are a column of buttons: an empty hour opens the editor with the date, the time and the zone filled in; a target is shown at its hour with its state, can be dragged to another hour (and moved by the keyboard as in section 30) and can be changed in place (time, text and the account) with the same operations as the editor, so the answer of the service is what the view then draws. Its side holds the note and the theme (edited in place, saved on leaving the field), the quiet-day switch (a person's switch: the confirmation dialog of 30A.1 when scheduling on it), and the slots of the day. The header of the page has the mini month (a small month with today marked and the days that hold a note, a theme or a mark), a "Today" button and "Go to date" (a date field), and an "Export `.ics`" link of the visible range. Every string is in English and Portuguese.
+
+### 30A.7 Surfaces
+
+Operations, scopes and names are in SDD-000 section 1; the scope matrix and the threats T-164 to T-167 are in SDD-007; the tables in SDD-005 section 5.15.2.
+
+- **HTTP**: `GET /calendar/plan`, `PUT /calendar/days/{date}`, `PUT /calendar/quiet/{date}`, `PUT /calendar/slots`, `DELETE /calendar/slots/{id}`, `POST /publications/{id}/duplicate`, `GET /calendar/export`.
+- **CLI**: `calendar:plan`, `calendar:day`, `calendar:quiet`, `calendar:slot`, `calendar:slot-remove`, `calendar:export` (writes the file or prints it with `--out -`), `publication:duplicate`.
+- **MCP**: four new actions of the `publication` tool and no new tool: `plan` (`CalendarPlan`), `day` (`CalendarDaySet`), `slot` (`CalendarSlotSave`, and `CalendarSlotDelete` with `remove: true`) and `duplicate` (`PublicationDuplicate`). No action creates or removes a quiet day, exports or confirms anything. The size the actions added to `tools/list` is in SDD-003 section 4.1.
+
 ## 31. Tests of the publication
 
 | What | Test |
@@ -527,6 +570,9 @@ The page `/publish` of the app (`web/resources/js/pages/Publish/`): a month view
 | The approval request of a target, a rule that approves, a ceiling, the cost; a scheduled post sends only to the account that was approved | `go test ./service/publish/... -run TestApproval` and `-run TestCost`; `TestPublication*` in `web/app/servicetest` |
 | The surfaces agree | `go test ./web/contract/...` |
 | The calendar, the list and the editor, in both languages, by keyboard, with the fake connector | `web/e2e/specs/publish-calendar.spec.ts` |
+| The day of the calendar (section 30A): the slots across a clock change, the fill of a slot, the note and the quiet rule, the `.ics` writer | `go test ./core/publish/... -run 'TestSlots\|TestDay\|TestICS'` |
+| Quiet day on every scheduling path, per actor; duplicate; the plan | `go test ./service/publish/... -run TestCalendar` and `TestCalendar*` in `web/app/servicetest` |
+| The day view, slots, duplicate, mini month, go to date, `.ics` link, by keyboard | `web/e2e/specs/publish-day.spec.ts` |
 
 ## Part 4: X and TikTok (epic 22)
 

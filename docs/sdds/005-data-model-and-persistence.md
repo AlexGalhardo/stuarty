@@ -1419,6 +1419,38 @@ CREATE TABLE blog_remote_posts (
 
 `Repos` gains `Blog() blog.Store` (the package `service/publish/destinations`): `Remote`, `PutRemote`, `PutPublished`, `Published`, `ListPublished` and `DeleteRemote`. Down drops both tables and the column.
 
+#### 5.15.2 The days and the slots of the calendar (epic 97, SDD-020 section 30A)
+
+Migration `20261125100000_create_calendar_tables`. A day is the local date the person planned and the zone it was planned in; nothing here is an instant, so a change of the rules of a zone never moves a day. A slot is a weekday and a local time and is expanded to instants when a range is read (SDD-020 section 30A.2): no occurrence is stored. `owner_user_id` is the empty text in local mode and the user in network mode, as for a publication; a user reads and writes only their own rows. No table holds a secret or the id of anything that grants access: `connection_id` of a slot is a plain id, with no foreign key, as in `publication_targets`.
+
+```sql
+CREATE TABLE calendar_days (
+  owner_user_id TEXT    NOT NULL DEFAULT '',
+  local_date    TEXT    NOT NULL CHECK (length(local_date) = 10),     -- 2026-12-25
+  zone          TEXT    NOT NULL,                                     -- IANA zone the day was planned in
+  note          TEXT    NOT NULL DEFAULT '',                          -- sealed (5.17.2), at most 2000 characters
+  theme         TEXT    NOT NULL DEFAULT '' CHECK (theme IN ('','blue','green','amber','red','violet','teal','pink','gray')),
+  quiet         INTEGER NOT NULL DEFAULT 0 CHECK (quiet IN (0,1)),   -- no posts: a person's rule (SDD-020 section 30A.1)
+  updated_ms    INTEGER NOT NULL,
+  PRIMARY KEY (owner_user_id, local_date)
+);
+CREATE TABLE calendar_slots (
+  id            TEXT    NOT NULL,                                     -- slt_...
+  owner_user_id TEXT    NOT NULL DEFAULT '',
+  network       TEXT    NOT NULL,
+  weekday       TEXT    NOT NULL CHECK (weekday IN ('mon','tue','wed','thu','fri','sat','sun')),
+  local_time    TEXT    NOT NULL CHECK (length(local_time) = 5),      -- 18:00
+  zone          TEXT    NOT NULL,
+  connection_id TEXT    NOT NULL DEFAULT '',
+  created_ms    INTEGER NOT NULL,
+  updated_ms    INTEGER NOT NULL,
+  PRIMARY KEY (id)
+);
+CREATE INDEX calendar_slots_owner_user_id_index ON calendar_slots (owner_user_id, weekday);
+```
+
+A row of `calendar_days` exists while its note, its theme or its mark is set and is deleted when none is. `Store` of `service/publish` gains `Days`, `PutDay`, `DeleteDay`, `Quiet`, `Slots`, `PutSlot` and `DeleteSlot`. Down drops both tables. The note is a sealed column of the first stage (5.17.2), row key `owner_user_id/local_date`.
+
 ### 5.16 The webhook tables (epic 59, SDD-022)
 
 Migration `20261121110000_create_webhook_tables`. No table holds the signing secret (it is in the vault under the id of the webhook) and none holds the body of an answer.
@@ -1512,6 +1544,7 @@ While no account exists the columns hold clear text and a read returns it as it 
 | `asset_info` | `prompt` (the words that generated a file, which the job and the approval also seal); with an account the search index `asset_search` keeps none of it, so a search does not match a prompt; while locked it reads as empty | `owner_user_id/asset_hash` |
 | `publications` | `text` | `id` |
 | `publication_targets` | `fields`, `snapshot` | `id` |
+| `calendar_days` | `note` (epic 97, section 5.15.2) | `owner_user_id/local_date` |
 | `projects` | `description`, `goal_specific`, `goal_measurable`, `goal_achievable`, `goal_relevant`, `goal_time_bound` (epic 56, SDD-005 section 5.12.2) | `id` |
 | `webhooks` | `url` (epic 59, section 5.16) | `id` |
 | `published_posts` | `markdown`, `html` (the text of a post a `blog_api` destination published) | `slug` |

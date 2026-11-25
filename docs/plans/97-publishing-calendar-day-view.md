@@ -64,7 +64,7 @@ Guests and attendees, reminders by email or any outbound notification, two-way s
 
 ## Tasks
 
-- [ ] 1. Specify: a new section of SDD-020, the names in SDD-000, the routes and tool actions in SDD-003 with the measured budget, the tables in SDD-005, and the threats in SDD-007 (a quiet day bypassed by an agent, a slot that sends, a leak in `.ics`). Verify: `go run ./internal/tools/threatcheck`.
+- [x] 1. Specify: a new section of SDD-020, the names in SDD-000, the routes and tool actions in SDD-003 with the measured budget, the tables in SDD-005, and the threats in SDD-007 (a quiet day bypassed by an agent, a slot that sends, a leak in `.ics`). Verify: `go run ./internal/tools/threatcheck`.
 - [ ] 2. Core and store: notes and themes, quiet days, slots and their expansion, duplicate, the `.ics` writer, the migration. Verify: `go test ./core/... ./web/database/...`.
 - [ ] 3. Service and adapters: the operations on HTTP, CLI and MCP with parity, and the quiet-day rule in scheduling. Verify: `go test ./service/... ./web/app/...`, the parity tests, `go test -run TestSecurity_ ./...` and `go run ./internal/tools/surfacebudget`.
 - [ ] 4. The day view: create at an hour, adjust in place, notes and theme, quiet day with confirmation. Verify: `task test:web`, `bun run check:thin-client`, `bun run check:i18n` and an e2e of the day.
