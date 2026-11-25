@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"sync/atomic"
 )
 
 // preparedHeader is the bytes before the pixels of a prepared block (SDD-013 section 4.2.2): width, height,
@@ -23,8 +24,15 @@ const (
 // size of the rectangle that draws them and what places it again. It is a plain value: the host that made it
 // and any other instance of the module read it the same way, so it can be kept and uploaded again.
 type Prepared struct {
-	block []byte
+	block  []byte
+	serial uint64
 }
+
+var preparedSerial atomic.Uint64
+
+// Serial names this picture: two values with the same serial are the same pixels, so a host that already holds
+// the one need not be given the other again. A window of it has a serial of its own.
+func (p Prepared) Serial() uint64 { return p.serial }
 
 // PreparedSize is the pixels of a prepared layer and the rectangle that draws them.
 type PreparedSize struct {
@@ -109,7 +117,7 @@ func (h *Host) Prepare(ctx context.Context, in RenderInput) (Prepared, error) {
 		return Prepared{}, &Error{OutOfMemory, "reading the prepared layer"}
 	}
 
-	return Prepared{block: append([]byte(nil), b...)}, nil
+	return Prepared{block: append([]byte(nil), b...), serial: preparedSerial.Add(1)}, nil
 }
 
 // PutPrepared stores a prepared layer as the texture of the item id: a media layer of that item is then drawn
@@ -181,5 +189,5 @@ func (p Prepared) Window(x0, y0, x1, y1 int) Prepared {
 		out = append(out, p.block[o:o+(x1-x0)*4]...)
 	}
 
-	return Prepared{block: out}
+	return Prepared{block: out, serial: preparedSerial.Add(1)}
 }

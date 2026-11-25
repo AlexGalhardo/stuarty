@@ -164,7 +164,17 @@ func (r *imageRun) renderWindow(
 		return nil, false, nil
 	}
 
-	img, err := r.drawWindow(base, last, drawn, win)
+	sess := r.cache.sessionFor(r.cfg.CacheScope, ch.shape)
+
+	if sess != nil {
+		if err := sess.acquire(r.ctx); err != nil {
+			return nil, false, err
+		}
+
+		defer sess.release()
+	}
+
+	img, err := r.drawWindow(base, last, drawn, win, sess)
 	if err != nil {
 		return nil, false, err
 	}
@@ -240,7 +250,9 @@ func (r *imageRun) prepareSome(live []plan.Layer, need []bool) ([]drawLayer, err
 
 // drawWindow draws the layers over base inside the window of a copy of last, in bands of rows on instances of
 // their own, and gives the copy. Outside the window the pixels are those of last.
-func (r *imageRun) drawWindow(base, last *image.RGBA, drawn []drawLayer, win layerBounds) (*image.RGBA, error) {
+func (r *imageRun) drawWindow(
+	base, last *image.RGBA, drawn []drawLayer, win layerBounds, sess *windowSession,
+) (*image.RGBA, error) {
 	dst := cloneRGBA(last)
 
 	bands := r.bands
@@ -257,7 +269,7 @@ func (r *imageRun) drawWindow(base, last *image.RGBA, drawn []drawLayer, win lay
 			return nil
 		}
 
-		return r.drawWindowBand(base, drawn, dst, win, y0, y1)
+		return r.drawWindowBand(base, drawn, dst, win, y0, y1, sess.slot(b))
 	})
 	if err != nil {
 		return nil, err
@@ -269,8 +281,8 @@ func (r *imageRun) drawWindow(base, last *image.RGBA, drawn []drawLayer, win lay
 // drawWindowBand draws the rows [y0, y1) of the window on an instance of its own: the window of base as a
 // texture, then the prepared pictures of the layers that reach the band.
 func (r *imageRun) drawWindowBand(
-	base *image.RGBA, drawn []drawLayer, dst *image.RGBA, win layerBounds, y0, y1 int,
-) error {
+	base *image.RGBA, drawn []drawLayer, dst *image.RGBA, win layerBounds, y0, y1 int, slot *bandSlot,
+) (err error) {
 	ctx := context.WithoutCancel(r.ctx)
 	fp := r.plan
 
@@ -281,26 +293,40 @@ func (r *imageRun) drawWindowBand(
 
 	defer release()
 
-	host, err := imagePool.Get(ctx)
+	if slot == nil {
+		slot = &bandSlot{}
+		defer slot.free()
+	}
+
+	// A host that failed is not kept: the next render starts with a new one.
+	defer func() {
+		if err != nil {
+			slot.free()
+		}
+	}()
+
+	host, err := slot.get(ctx)
 	if err != nil {
 		return rendererError(err)
 	}
-
-	defer imagePool.Put(host)
 
 	kept := make([]plan.Layer, 0, len(drawn)+1)
 	rows, cols := y1-y0, win.x1-win.x0
 
 	if base != nil {
-		piece := make([]byte, 0, rows*cols*4)
+		if rect := [4]int{win.x0, y0, win.x1, y1}; slot.base != base || slot.baseRect != rect {
+			piece := make([]byte, 0, rows*cols*4)
 
-		for y := y0; y < y1; y++ {
-			o := y*base.Stride + win.x0*4
-			piece = append(piece, base.Pix[o:o+cols*4]...)
-		}
+			for y := y0; y < y1; y++ {
+				o := y*base.Stride + win.x0*4
+				piece = append(piece, base.Pix[o:o+cols*4]...)
+			}
 
-		if err := host.PutTexture(ctx, prefixItem, cols, rows, piece, !fp.Transparent); err != nil {
-			return rendererError(err)
+			if err := host.PutTexture(ctx, prefixItem, cols, rows, piece, !fp.Transparent); err != nil {
+				return rendererError(err)
+			}
+
+			slot.base, slot.baseRect = base, rect
 		}
 
 		kept = append(kept, plan.Layer{
@@ -316,8 +342,14 @@ func (r *imageRun) drawWindowBand(
 			continue
 		}
 
-		if err := host.PutPrepared(ctx, d.layer.ItemID, croppedTo(d, win.x0, y0, win.x1, y1)); err != nil {
-			return rendererError(err)
+		crop := windowCrop(d, win.x0, y0, win.x1, y1)
+		if h, ok := slot.held[d.layer.ItemID]; !ok || h.serial != d.pic.Serial() || h.crop != crop {
+			pic := d.pic.Window(crop[0], crop[1], crop[2], crop[3])
+			if err := host.PutPrepared(ctx, d.layer.ItemID, pic); err != nil {
+				return rendererError(err)
+			}
+
+			slot.held[d.layer.ItemID] = heldPicture{serial: d.pic.Serial(), crop: crop}
 		}
 
 		kept = append(kept, d.layer)
@@ -343,15 +375,16 @@ func (r *imageRun) drawWindowBand(
 // after the one it lands on, and the placement rounds its own rectangle.
 const cropMargin = 3
 
-// croppedTo is the prepared picture of d cut to the pixels that drawing the rectangle [x0, x1) by [y0, y1) of the
-// canvas can read, so a band receives a part of a picture and not all of it (SDD-021 section 6.3). The pixels it
+// windowCrop is the pixels [r0, r2) by [r1, r3) of the prepared picture of d that drawing the rectangle [x0, x1)
+// by [y0, y1) of the canvas can read, so a band receives a part of a picture and not all of it (SDD-021 section
+// 6.3). The pixels it
 // keeps are the whole picture's, and the module reads them at the place they have in it, so the draw is the same
 // bytes. The corners of the rectangle are taken back to the picture for either sign of the angle, which holds
 // whichever way the module turns it, and a margin covers what the sampler reads beyond them.
-func croppedTo(d *drawLayer, x0, y0, x1, y1 int) renderhost.Prepared {
+func windowCrop(d *drawLayer, x0, y0, x1, y1 int) [4]int {
 	sz := d.pic.Size()
 	if sz.W <= 0 || sz.H <= 0 || sz.GrownW <= 0 || sz.GrownH <= 0 {
-		return d.pic
+		return [4]int{0, 0, sz.W, sz.H}
 	}
 
 	sin, cos := math.Sincos(d.layer.Rotation * math.Pi / 180)
@@ -376,7 +409,8 @@ func croppedTo(d *drawLayer, x0, y0, x1, y1 int) renderhost.Prepared {
 
 	mx, my := cropMargin+int(math.Ceil(kx)), cropMargin+int(math.Ceil(ky))
 
-	return d.pic.Window(
-		int(math.Floor(lo[0]))-mx, int(math.Floor(lo[1]))-my, int(math.Ceil(hi[0]))+mx, int(math.Ceil(hi[1]))+my,
-	)
+	return [4]int{
+		max(int(math.Floor(lo[0]))-mx, 0), max(int(math.Floor(lo[1]))-my, 0),
+		min(int(math.Ceil(hi[0]))+mx, sz.W), min(int(math.Ceil(hi[1]))+my, sz.H),
+	}
 }

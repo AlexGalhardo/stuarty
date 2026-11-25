@@ -16,7 +16,7 @@ import (
 // opacity of a layer, with the CPU path of the renderer and the cache of SDD-021 sections 6.1 and 6.3, the native
 // half of "composed for the preview within 100 ms after an edit" for an edit of any layer (author decision
 // D-150). It is the slowest of three edits, reported apart as compose_top_ms (the top layer), compose_mid_ms
-// (layer 15) and compose_bottom_ms (the bottom layer); the three edits follow one another, as a person's do, each
+// (layer 15) and compose_bottom_ms (the bottom layer), and compose_drag_ms, the third edit in a row of layer 15 (a drag); the three edits follow one another, as a person's do, each
 // starting from the picture the one before drew. s_export is the time of a cold export, to compose the whole
 // document with no cache and no instance of the module held (the pool is drained first) and encode the PNG
 // ("exported within 2 s"). The browser half is measured by the Playwright spec of the image editor.
@@ -91,6 +91,30 @@ func BenchmarkImageReference(b *testing.B) {
 			b.ReportMetric(float64(ms), target.name)
 		}
 
+		// A drag: the same middle layer edited again, with the instances of the bands holding the rest (SDD-021
+		// section 6.3); not part of compose_ms, which is the first edit of a layer.
+		var drag int64
+
+		for k := range 3 {
+			args := json.RawMessage(fmt.Sprintf(`{"layer_id": %q, "opacity": %d}`, targets[1].id, 20+(i*5+k)%30))
+
+			res, err := coreimage.ApplyBatch(cur, []command.Operation{{Op: "layer.set", Args: args}}, coreimage.Env{})
+			if err != nil {
+				b.Fatal(err)
+			}
+
+			cur = res.Doc
+
+			start = time.Now()
+
+			if _, err := RenderImage(ctx, cur, cached); err != nil {
+				b.Fatal(err)
+			}
+
+			drag = time.Since(start).Milliseconds()
+		}
+
+		b.ReportMetric(float64(drag), "compose_drag_ms")
 		b.ReportMetric(float64(worst), "compose_ms")
 		b.ReportMetric(export.Seconds(), "s_export")
 	}

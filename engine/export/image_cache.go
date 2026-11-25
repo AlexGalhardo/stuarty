@@ -38,8 +38,9 @@ type ImageCache struct {
 	preparedMisses          int
 
 	// last is the latest render of each document shape: what the next edit starts from (SDD-021 section 6.3).
-	last    map[lastKey]*lastFrame
-	windows int
+	last     map[lastKey]*lastFrame
+	windows  int
+	sessions map[lastKey]*windowSession
 }
 
 type cacheKey struct {
@@ -69,6 +70,7 @@ func NewImageCache(limit int64) *ImageCache {
 
 	return &ImageCache{
 		limit: limit, order: list.New(), entries: map[cacheKey]*list.Element{}, last: map[lastKey]*lastFrame{},
+		sessions: map[lastKey]*windowSession{},
 	}
 }
 

@@ -228,3 +228,45 @@ func TestImageWindowIsNotSharedAcrossUsers(t *testing.T) {
 		t.Errorf("another user's picture was the start of a window: %+v", s)
 	}
 }
+
+// TestImageWindowDragKeepsTheInstancesAndTheBytes: a drag edits one layer again and again, with an edit of
+// another layer and another shape of document in between; every picture is the full render of its document
+// (the instances of the bands keep what they hold, SDD-021 section 6.3).
+func TestImageWindowDragKeepsTheInstancesAndTheBytes(t *testing.T) {
+	d := windowDocument(t)
+	ids := layerIDs(d)
+
+	cache := NewImageCache(0)
+	cfg := cachedConfig(t, cache, "u1")
+	plain := cachedConfig(t, nil, "")
+
+	renderWith(t, d, cfg)
+
+	for n := range 10 {
+		id := ids[7]
+		if n == 5 {
+			id = ids[12]
+		}
+
+		d = withOpacity(t, d, id, 20+n*7)
+
+		if got, want := renderWith(t, d, cfg), renderWith(t, d, plain); !bytes.Equal(got.Pix, want.Pix) {
+			t.Fatalf("drag step %d differs from the full render", n)
+		}
+	}
+
+	other := lookBase()
+	otherIDs := layerIDs(other)
+
+	renderWith(t, other, cfg)
+
+	other = withOpacity(t, other, otherIDs[0], 40)
+	if got, want := renderWith(t, other, cfg), renderWith(t, other, plain); !bytes.Equal(got.Pix, want.Pix) {
+		t.Fatal("another shape differs from the full render")
+	}
+
+	d = withOpacity(t, d, ids[7], 61)
+	if got, want := renderWith(t, d, cfg), renderWith(t, d, plain); !bytes.Equal(got.Pix, want.Pix) {
+		t.Fatal("back to the first shape differs from the full render")
+	}
+}
