@@ -151,6 +151,7 @@ function ContextPanel({ project }: { project: ShowProps["project"] }) {
 							goal: project.goal,
 						}}
 						keepDue={project.goal.due}
+						autoFocusFirst
 						submitLabel={t("ui.projects.edit.save")}
 						busy={busy}
 						failure={failure}
