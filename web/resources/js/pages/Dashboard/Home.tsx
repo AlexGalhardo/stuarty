@@ -13,9 +13,7 @@ import {
 	PenLine,
 	Plug,
 	Plus,
-	Send,
 	ShieldCheck,
-	Sparkles,
 } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -27,15 +25,15 @@ import { SectionTitle } from "@/components/SectionTitle";
 import { StatusBadge } from "@/components/StatusBadge";
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
+import { kindIcon as requestIcon } from "@/dashboard/approval/kindIcon";
 import { formatMoney } from "@/dashboard/approval/money";
-import { cn } from "@/lib/cn";
 import { formatAgo } from "@/lib/format";
 import { type Translate, useLocale, useT } from "@/lib/i18n";
 import type { ProjectSummary, SharedProps } from "@/types";
 import type { InboxRow } from "../../editor/api/types";
 import { useShell } from "../../shell/ShellContext";
-import { FirstSteps } from "../../workflow/FirstSteps";
 import { continueTarget } from "../../workflow/continueTarget";
+import { FirstSteps } from "../../workflow/FirstSteps";
 import { HomeTrail } from "../../workflow/HomeTrail";
 import type { Workflow } from "../../workflow/types";
 import { hintWord, titleWord } from "../../workflow/words";
@@ -96,15 +94,6 @@ function Studio(): ReactNode {
 	);
 }
 
-// The icon of a request tells its kind at a glance. It is chosen from the name of the tool or job the service
-// reported, and only for the look: an unknown name keeps the shield of the approval queue.
-function rowIcon(row: InboxRow): LucideIcon {
-	const tool = row.tool.toLowerCase();
-	if (tool.includes("publish")) return Send;
-	if (tool.includes("generate")) return Sparkles;
-	return ShieldCheck;
-}
-
 // One request that waits for the person: what will happen, where it goes and what it costs, as the service
 // worded it. The answer is given in Approvals (or on the chat, for a permission), never here.
 function WaitingRow({
@@ -117,7 +106,7 @@ function WaitingRow({
 }): ReactNode {
 	const t = useT();
 	const locale = useLocale();
-	const Icon = rowIcon(row);
+	const Icon = requestIcon(row.tool);
 	const what =
 		row.action_key !== ""
 			? t(row.action_key)
@@ -243,8 +232,8 @@ function InProgress({
 			data-testid="home-progress"
 			className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5"
 		>
-			<div className="flex flex-wrap items-start justify-between gap-3">
-				<div className="min-w-0 flex-1 basis-64">
+			<div className="flex flex-wrap items-start justify-between gap-3 max-md:contents">
+				<div className="min-w-0 flex-1 md:basis-64 max-md:order-1 max-md:flex-none">
 					<h2
 						id="home-progress"
 						className="text-sm font-medium text-accent-text max-md:sr-only"
@@ -266,7 +255,7 @@ function InProgress({
 						</p>
 					)}
 				</div>
-				<div className="flex flex-wrap items-center gap-2 max-md:w-full max-md:flex-col-reverse max-md:items-stretch">
+				<div className="flex flex-wrap items-center gap-2 max-md:order-3 max-md:w-full max-md:flex-col-reverse max-md:items-stretch">
 					<Button asChild variant="ghost" className="max-md:hidden">
 						<Link href={`/projects/${project.id}`}>
 							{t("ui.dashboard.home.progress.open")}
@@ -301,7 +290,9 @@ function InProgress({
 					{t("ui.dashboard.home.progress.no_workflow")}
 				</p>
 			) : (
-				<HomeTrail workflow={workflow} />
+				<div className="max-md:order-2">
+					<HomeTrail workflow={workflow} />
+				</div>
 			)}
 		</section>
 	);
@@ -472,57 +463,50 @@ export function HomeView({
 	const empty = ready !== null && ready.projects.length === 0;
 
 	return (
-		<>
-			<div className="mx-auto flex max-w-6xl flex-col gap-6">
-				<PageHeader
-					title={greetingLine(t, hour, name)}
-					description={
-						ready === null
-							? t("ui.dashboard.home.lead")
-							: summaryLine(t, inProgress, requests)
-					}
-					actions={
-						<Button
-							asChild
-							variant="outline"
-							size="lg"
-							className={cn(empty && "max-md:hidden")}
-						>
+		<div className="mx-auto flex max-w-6xl flex-col gap-6">
+			<PageHeader
+				title={greetingLine(t, hour, name)}
+				description={
+					ready === null
+						? t("ui.dashboard.home.lead")
+						: summaryLine(t, inProgress, requests)
+				}
+				actions={
+					<Button asChild variant="outline" size="lg" className="max-md:hidden">
+						<Link href={NEW_PROJECT}>
+							<Plus aria-hidden="true" />
+							{t("ui.dashboard.home.new_project")}
+						</Link>
+					</Button>
+				}
+			/>
+			{home.state === "loading" ? (
+				<LoadingState message={t("ui.dashboard.home.loading")} />
+			) : home.state === "failed" ? (
+				<FailureNote failure={home.failure} />
+			) : empty ? (
+				<>
+					<EmptyState
+						icon={FolderPlus}
+						title={t("ui.dashboard.home.empty.title")}
+						description={t("ui.dashboard.home.empty.description")}
+					>
+						<Button asChild>
 							<Link href={NEW_PROJECT}>
-								<Plus aria-hidden="true" />
 								{t("ui.dashboard.home.new_project")}
 							</Link>
 						</Button>
-					}
-				/>
-				{home.state === "loading" ? (
-					<LoadingState message={t("ui.dashboard.home.loading")} />
-				) : home.state === "failed" ? (
-					<FailureNote failure={home.failure} />
-				) : empty ? (
-					<>
-						<EmptyState
-							icon={FolderPlus}
-							title={t("ui.dashboard.home.empty.title")}
-							description={t("ui.dashboard.home.empty.description")}
-						>
-							<Button asChild>
-								<Link href={NEW_PROJECT}>
-									{t("ui.dashboard.home.new_project")}
-								</Link>
-							</Button>
-						</EmptyState>
-						<FirstSteps />
-						<div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-							<Studio />
-							<Waiting rows={rows} projects={home.projects} />
-						</div>
-					</>
-				) : (
-					<Body home={home} rows={rows} />
-				)}
-			</div>
-		</>
+					</EmptyState>
+					<FirstSteps />
+					<div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+						<Studio />
+						<Waiting rows={rows} projects={home.projects} />
+					</div>
+				</>
+			) : (
+				<Body home={home} rows={rows} />
+			)}
+		</div>
 	);
 }
 
