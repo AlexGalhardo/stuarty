@@ -354,6 +354,12 @@ for src in ffmpeg libvpx opus zlib lame ogg vorbis libwebp zimg nvcodec libvpl a
 		cp "$work/src/$src/$f" "$pkg/licenses/$src/$f"
 	done
 done
+# The NVENC and AMF header archives carry no licence file (the MIT text is in each header): the texts of licenses/programs.
+for pair in nvcodec:nv-codec-headers/LICENSE amf:amf/LICENSE.txt; do
+	[ -d "$work/src/${pair%%:*}" ] || continue
+	mkdir -p "$pkg/licenses/${pair%%:*}"
+	cp "$root/licenses/programs/${pair#*:}" "$pkg/licenses/${pair%%:*}/" || die "missing licenses/programs/${pair#*:}"
+done
 "$work/install/bin/ffmpeg" -version 2>/dev/null | sed -n 's/^configuration: //p' >"$pkg/configure.txt" || true
 if [ ! -s "$pkg/configure.txt" ]; then
 	# A cross compiled windows binary cannot run here: take the line from the build itself.
