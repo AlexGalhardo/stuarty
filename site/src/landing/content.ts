@@ -203,9 +203,9 @@ export const roadmap = {
 		{
 			id: "recording",
 			title: "Screen recording",
-			text: "A first screen capture on Windows is in the product while its performance is measured. Audio, webcam and pause come next, then recording on the web, macOS and Linux, with the take edited in the same project.",
+			text: "Screen recording on Windows, with sound, webcam, pause and pointer events, is in the product while its performance is measured. Recording on the web, macOS and Linux comes next, with the take edited in the same project.",
 			state: "in-progress",
-			epics: [61, 62, 63, 67, 68],
+			epics: [61, 63, 67, 68],
 		},
 		{
 			id: "recording-edit",
