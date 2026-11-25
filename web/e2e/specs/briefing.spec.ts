@@ -134,7 +134,7 @@ test.describe("guided briefing", () => {
 		expect(asked.answers.find((a) => a.id === "length")?.value).toBe("600");
 	});
 
-	test("the service refuses a text that is too short, and says which", async ({
+	test("the length of a text takes its bounds from the service, which refuses a blank answer", async ({
 		page,
 		request,
 	}) => {
@@ -147,14 +147,21 @@ test.describe("guided briefing", () => {
 
 		await page.goto(`/projects/${id}`);
 		await page.getByLabel("Who is this for?").fill("makers");
-		await page.getByLabel("Which tone of voice?").fill("plain");
+		await page.getByLabel("Which tone of voice?").fill("   "); // white space passes the browser, not the core
 		await page.getByLabel("What should the reader do next?").fill("sign up");
 		await page.getByLabel("Where will it appear?").selectOption("blog");
-		await page.getByLabel("How long, in words?").fill("2");
+		await expect(page.getByText("From 5 to 20000 words")).toBeVisible();
+		await expect(page.getByLabel("How long, in words?")).toHaveAttribute(
+			"min",
+			"5",
+		);
+		await page.getByLabel("How long, in words?").fill("400");
 		await page
 			.getByRole("button", { name: "Save the answers as the brief" })
 			.click();
-		await expect(page.getByRole("alert")).toContainText("number of words");
+		await expect(page.getByRole("alert")).toContainText(
+			'the question "tone" needs an answer',
+		);
 	});
 
 	test("an image project asks for its format and its style", async ({
