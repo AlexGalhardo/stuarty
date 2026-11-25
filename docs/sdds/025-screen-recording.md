@@ -1,6 +1,6 @@
 # SDD-025: Screen recording
 
-- Status: Draft (2026-11-24). Written by epic 61 before its code; extended by epic 62 (section 16: audio, webcam, pause, pointer events) and epic 65 (section 17: automatic zoom, smooth cursor, click highlight).
+- Status: Draft (2026-11-24). Written by epic 61 before its code; extended by epic 62 (section 16: audio, webcam, pause, pointer events), epic 65 (section 17: automatic zoom, smooth cursor, click highlight) and epic 63 (section 18: basic recording in the browser).
 - Depends on: ADR-0049 (the native capture helper), ADR-0051 (agents never start a capture), ADR-0011, ADR-0032, ADR-0052, SDD-000 (names), SDD-003 (surfaces), SDD-005 (persistence), SDD-007 (threats, section 6 process policy), SDD-011 (import), SDD-013 section 4.9 (the precedent of a native child).
 - Implements: PRD-004 section 4.11 (RF-430 to RF-442), NFR-067, NFR-068.
 - Owner area: epic 61 (`capture/`, `core/recording/`, `engine/capturehost/`, `service/recording*.go`, the `recordings` table, the adapters, the record dialog).
@@ -24,6 +24,7 @@
 15. Tests
 16. Audio, webcam, pause and pointer events (epic 62)
 17. Finishing a take: automatic zoom, smooth cursor and click highlight (epic 65)
+18. Basic recording in the browser (epic 63)
 
 ## 1. Overview
 
@@ -38,7 +39,7 @@ Rules that carry the design:
 5. **A recording survives a crash.** Fragmented MP4, and a recovery at the next start.
 6. **Nothing leaves the machine.** The helper opens no connection and records no keystroke.
 
-Where capture does not exist (web, Docker, network mode, macOS, Linux until epics 63, 67 and 68) every operation but the reads answers `E_CAPTURE_UNAVAILABLE` with `details.reason` (`platform`, `web`, `network_mode`, `ffmpeg_missing`, `helper_missing`, `protocol_version`).
+Where native capture does not exist (web, Docker, network mode, macOS, Linux until epics 67 and 68) every operation of the helper but the reads answers `E_CAPTURE_UNAVAILABLE` with `details.reason` (`platform`, `web`, `network_mode`, `ffmpeg_missing`, `helper_missing`, `protocol_version`). From epic 63 a person in a browser can still record there: the browser captures and uploads, and the server only stores and assembles the file (section 18).
 
 ## 2. Names
 
@@ -155,13 +156,15 @@ At start-up, before the server accepts requests, every row in `prepared`, `recor
 
 ## 11. Surfaces
 
-HTTP and CLI have every operation. MCP has no new tool (the tool list is at its byte budget, NFR-020): `job_get` with a `job_id` that starts `rec_` answers the recording as a job of kind `capture` (state `queued`, `running`, `succeeded`, `failed`, `cancelled` for `prepared`, `recording` and `finishing`, `ready`, `failed`, `cancelled`), and `job_cancel` with such an id is `RecordingStop`. The text of an added recording names its asset id, which is what an agent places with `edit`. No MCP route starts, confirms or dismisses a recording.
+HTTP and CLI have every operation. MCP has no new tool (the tool list is at its byte budget, NFR-020): `job_get` with a `job_id` that starts `rec_` answers the recording as a job of kind `capture` (state `queued`, `running`, `succeeded`, `failed`, `cancelled` for `prepared`, `recording` and `finishing`, `ready`, `failed`, `cancelled`), and `job_cancel` with such an id is `RecordingStop`. The text of an added recording names its asset id, which is what an agent places with `edit`. No MCP route starts, confirms or dismisses a recording. The three upload operations of section 18 are HTTP only (no CLI command, no MCP tool): a browser capture cannot be driven from outside.
 
 ## 12. The dialog
 
 The record dialog (`web/resources/js/`) draws what the service returns: a project, a source picker (displays and windows from `RecordingSources`), a frame rate, Start, then a visible recording state with the elapsed time and Stop, then the confirmation step (Add to the project, Not now, Delete) with the sentence of section 4. It computes no limit and no state. Where capture is unavailable it says why, in the words of the reason the service gave (section 1).
 
 From epic 62 the picker also has a microphone list (none, the default one, or each device), a switch for the sound the computer plays (only where `system_audio` is true), a camera list (or "No camera was found."), and a switch for the pointer and clicks, on by default, with the sentence that the positions stay on the machine. While a recording runs, the dialog shows a level meter for each sound track from `levels` of the answer, which it asks for about three times a second, a Pause button that becomes Resume while `paused`, and Stop. A silent computer-sound track can be protected content, and the dialog says so beside its meter. The ids it sends are the ones `RecordingSources` listed; names are text, never markup.
+
+Where native capture is unavailable the same dialog records in the browser (section 18).
 
 The entry is a "Record screen" button in the library panel of the editor (`editor/library/Library.tsx`), the natural place today: the media panel is where files come in. The redesign of epic 75 moves it with the panel. The dialog reads `RecordingSources` and `RecordingList` when it opens, so a recording still running, or one waiting for a person, is picked up again after the dialog was closed, and the recordings set aside with "Not now" are listed above the picker with Add to the project and Delete; while a recording runs it calls `RecordingGet` once a second, and the clock it draws is `duration_ms` of the answer, which the service takes from the last line of the helper.
 
@@ -318,3 +321,69 @@ The smoothed position is an exponential filter of time constant `smoothing_ms` (
 ### 17.7 Tests
 
 Golden cases of the three commands (SDD-002 C.93 to C.95) on a fixture with five clicks ten seconds apart, the planner tests of `core/recording`, a parity test of the service (edit by the Service, CLI, HTTP and MCP gives the same document), and an export test of a recorded fixture that compares frames with golden images. Not run: a real recording with the real pointer on the author machine.
+
+## 18. Basic recording in the browser (epic 63)
+
+A person who uses Stuarty in a browser (on Docker, on a server, or on a machine with no native helper) records the screen, the microphone and, if the browser offers it, the sound the page shares, and the take lands in the same project through the same recording row, states, review and placement as a native one. The browser captures and uploads; **the server decides**: the order and integrity of what arrives, the limits, who may upload, and the file that results. The browser computes no edit and holds no rule (ADR-0007).
+
+### 18.1 Where it works
+
+The browser APIs (`navigator.mediaDevices.getDisplayMedia`, `getUserMedia`, `MediaRecorder`) exist only in a secure context: a page on HTTPS or on `localhost`, `127.0.0.1` or `[::1]`. On plain HTTP anywhere else `navigator.mediaDevices` is absent and the dialog **disables** recording and says why, in words that name the two ways out (HTTPS, or open the studio on `localhost`). The browser asks the person for each permission itself; the product never tries to pre-answer or hide a prompt, and a refusal is shown as a refusal. A capture that the browser stops (the person pressed its own "Stop sharing") ends the recording the same way Stop does.
+
+Native capture stays where it exists: when `RecordingSources` answers, the dialog is the native one of sections 12 and 16 and offers no browser recorder; when it answers `E_CAPTURE_UNAVAILABLE` (any reason), the dialog offers the browser recorder instead of the sentence that capture is unavailable. Chrome on Android, global pointer and click data, a guarantee of computer sound and finishing effects are out of scope.
+
+Before the person starts, the dialog states what this browser can and cannot do, from `MediaRecorder.isTypeSupported` and the tracks the browser returns: which container it records (WebM with VP9, VP8 or AV1 video and Opus audio, or MP4 with H.264 and AAC), whether the sound of the computer can be shared (the picker of the browser decides, and only for a tab or, on some systems, the whole screen), and that Firefox and Safari differ. The list of candidate types is data of the recorder module; the first one the browser supports is the one used.
+
+### 18.2 Names
+
+| Kind | Name |
+| --- | --- |
+| Operations | `RecordingUploadBegin`, `RecordingUploadChunk`, `RecordingUploadFinish` (SDD-000 section 1) |
+| Source kind | `browser` (the others are `display` and `window`); the row has no `encoder` helper name, and `encoder` holds the container (`webm` or `mp4`) |
+| Routes | `POST /recordings/upload`, `PUT /recordings/{id}/upload/{track}/{index}`, `POST /recordings/{id}/finish` |
+| Error codes | none new: `E_PRIVILEGED_SESSION`, `E_VALIDATION`, `E_INVALID_STATE`, `E_LIMIT_EXCEEDED`, `E_PAYLOAD_TOO_LARGE`, `E_QUEUE_FULL`, `E_RECORDING_NOT_FOUND`, `E_CAPTURE_FAILED` with the `details.reason` of 17.4 |
+| Files | `recordings/<id>/parts/<track>/<index>.part`, then `capture.webm` or `capture.mp4` (and `camera.webm` or `camera.mp4`); the name of a part is the track and the number, never text of the caller |
+| Variables | none new: `STUARTY_MAX_IMPORT_BYTES`, `STUARTY_MAX_RECORDING_SECONDS`, `STUARTY_MIN_FREE_BYTES` |
+
+### 18.3 The contract
+
+The three operations are for **a person in a privileged browser session**: every other caller (the local token, a key, an agent, the MCP server) gets `E_PRIVILEGED_SESSION` as the first answer, before the project, the row or the disk is looked at. The CLI and MCP have no command and no tool: a capture of a browser cannot be driven from outside, and `RecordingGet`, `RecordingList` and `job_get` read the state as they do for a native recording. Stopping stays open to every caller with `media` (section 18.6).
+
+| Operation | Route | Input | Answer |
+| --- | --- | --- | --- |
+| `RecordingUploadBegin` | `POST /recordings/upload` | JSON: `project_id`, `container` (`webm` or `mp4`), `camera` (boolean: a camera track will follow), `label` (optional, plain text, at most 120 characters, sealed as a window title is) | the `Recording` in state `recording`, `source.kind` `browser`, with `upload` (below) |
+| `RecordingUploadChunk` | `PUT /recordings/{id}/upload/{track}/{index}?sha256=<hex>&elapsed_ms=<n>` | the bytes of the chunk are the whole body (`application/octet-stream`, a content type of `application/json` is accepted and ignored, as in SDD-007 section 3.6 step 6); `track` is `screen` or `camera`; `index` counts from 0 on each track; `sha256` is the lowercase hexadecimal digest of the body; `elapsed_ms` is the recorder's clock, informational | `recording_id`, `track`, `index`, `next_index`, `duplicate`, `bytes` (all tracks), `text` |
+| `RecordingUploadFinish` | `POST /recordings/{id}/finish` | JSON: `tracks`, a list of `{kind, chunks}` (the number of chunks the browser sent on that track), `elapsed_ms` | the `Recording`, in state `finishing` |
+
+`Recording` gains `upload`, present while a browser recording is `recording`: `container`, `max_chunk_bytes`, and for each track `kind`, `next_index` and `bytes`. It is what a client reads to resume after a dropped connection.
+
+The body of a chunk is limited by the route (`Op.MaxBody` of the framework, 16 MiB): a declared or streamed body over it is `E_PAYLOAD_TOO_LARGE` (413) and nothing is stored. The browser slices the recording with `MediaRecorder.start(1000)`, so a chunk is about a second of media. The server reads at most the limit plus one byte, hashing as it writes into a temporary file, and keeps the chunk only if the digest equals `sha256`, so memory is never the size of the upload.
+
+### 18.4 Order, integrity, limits and resume
+
+The rules are in `core/recording` (`upload.go`); the service applies them in this order, and the first that fails answers.
+
+1. A person (`E_PRIVILEGED_SESSION`), then the recording exists and the caller covers its project (`E_RECORDING_NOT_FOUND`).
+2. The recording is `recording` and its source is `browser`, and `track` is one the row asked for (`E_INVALID_STATE`, `details.reason` `not_receiving`, or `E_VALIDATION` for a track the row did not ask for or a malformed `index` or `sha256`).
+3. **Order.** A chunk is accepted only at `next_index`. A lower index that was already stored is a retry: if its digest equals the stored one the answer is the same success with `duplicate` true and nothing changes; if it differs, `E_INVALID_STATE` with `details.reason` `chunk_conflict`. A higher index is `E_INVALID_STATE` with `details.reason` `out_of_order` and `details.expected` (the `next_index`). An index of 100,000 or more is `E_LIMIT_EXCEEDED` (`details.reason` `chunks`).
+4. **Integrity.** A body whose SHA-256 is not `sha256` is `E_VALIDATION` with `path` `sha256` and `details.reason` `checksum_mismatch`; an empty body is `E_VALIDATION` with `path` `body`. Nothing of a refused chunk stays on the disk.
+5. **Limits**, checked with `core/recording` `Limits`: the bytes of all tracks may not pass `STUARTY_MAX_IMPORT_BYTES` (`E_LIMIT_EXCEEDED`, `details.reason` `size`); the free space may not fall under `STUARTY_MIN_FREE_BYTES` (`details.reason` `disk_low`); `elapsed_ms` may not pass `STUARTY_MAX_RECORDING_SECONDS` (`details.reason` `duration`). A refusal for a limit keeps everything received so far: the client finishes the recording and the take is what it has, with `stop_reason` of the limit.
+6. **One at a time.** Begin refuses (`E_QUEUE_FULL`, `details.limit` `recordings`, with `value` and `ceiling`) while another browser upload of the same actor is open (a state that is not final), and while four browser uploads are open on the workspace, after it has first settled the ones that were left with no chunk for five minutes (17.6). A browser upload does not count against the one native capture of section 9, and a native capture does not block a browser one: they share nothing but the disk.
+
+**Resume after a dropped connection.** The browser keeps a chunk until the server says it has it. A request that fails is sent again with the same index and digest: if the server had stored it the answer is `duplicate` and nothing is doubled. If the browser lost the answers and does not know where it is, `RecordingGet` returns `upload.tracks[].next_index` and it continues from there. A MediaRecorder cannot be resumed after a reload of the page: a recording whose browser is gone is finished with what was received (17.6).
+
+### 18.5 Assembly
+
+`RecordingUploadFinish` (or a stop, 17.6) moves the row to `finishing` and returns; the work runs in the server and the dialog reads `RecordingGet` as it does for a native recording. For each track the server checks that the chunks `0` to `chunks - 1` are all there (a `chunks` that differs from what was received is `E_INVALID_STATE` with `details.reason` `chunks_missing`, `details.kind`, `details.expected` and `details.received`, and the row stays `recording`), joins them in order into one file in the folder of the recording, and remuxes it with the LGPL FFmpeg, as a copy of the streams and never a re-encode, into a file whose duration and index are written (`capture.webm` or `capture.mp4`). The file is then probed with the same ceilings and format check as any import (SDD-007 sections 6.2 and 9): a file with no decodable duration, an unknown format or a size over the limit makes the recording `failed` with `E_CAPTURE_FAILED` and `details.reason` `assemble`, and the chunks are kept until a person deletes the recording, as section 10 keeps any file. On success the parts are removed, the row is `ready` with `review` `pending`, the duration, the size of the picture and the bytes are those of the probed file, and the review step, the asset created by `RecordingConfirm` and the placement are those of sections 4, 9 and 16.9. The track list of the row names the file of each track (`capture.webm`, `camera.webm`) and no `start_ms` offset beyond 0: the browser recorders are started together and the small offset between them is not corrected (documented, as the device latency of 16.2).
+
+### 18.6 A closed tab, a stop and a restart
+
+A browser recording whose page was closed stays `recording` with the chunks it received. It is finished, with exactly those chunks and no count check, by any of: `RecordingStop` (any caller with `media`, as always; the dialog offers it for an interrupted take), the settling of five idle minutes at the next `RecordingUploadBegin` of the workspace, or the recovery at start-up. The recovery of section 10 handles a browser row before the helper checks: it assembles the parts that are on the disk when an FFmpeg is available, and marks the recording `failed` with `details.reason` `ffmpeg_missing` when it is not (the parts stay). Because the last chunk is at most a second of media, a closed tab loses at most that. `RecordingCancel` of a recording in progress discards it and its parts, for any caller with `media`, as for a native one. `RecordingPause` and `RecordingResume` do not exist for a browser recording (`E_INVALID_STATE`): the dialog has a Stop and nothing else in this version.
+
+### 18.7 The dialog
+
+The dialog is the one of section 12. Where native capture is unavailable it shows the capability sentences of 17.1, a microphone switch, a switch for the sound of the page, a camera switch and Start, then a visible state (the clock of the recorder, a red mark, the bytes the server confirmed and a line that says when an upload is retrying), Stop, the wait for `finishing`, and then the review step of section 4 as it is. A take that was interrupted is listed at the top with Finish it (a stop) and Delete. The recorder module in `web/resources/js/editor/record/` captures and uploads; it computes no limit, no state and no duration the server did not confirm: the numbers on the screen after a stop are those of `RecordingGet`.
+
+### 18.8 Threats and tests
+
+T-137 (SDD-007 section 2) covers the upload: who may send, how much, in what order, with what name, and what the bytes may become. The service tests cover the order, the checksum, the limits, the retry and the resume, the closed tab, the restart and the assembly with a real FFmpeg; the security tests of T-137 cover the privilege of each route, the refusals, the generated names and the body limit; the dialog is covered by the unit tests of the recorder module and by an end-to-end test in Chromium with fake media devices that records 30 seconds, uploads, finishes and places the clip. Firefox and WebKit are reported as run or not run by the hand-off of the epic.
