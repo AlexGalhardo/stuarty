@@ -1,5 +1,5 @@
 import { Head, usePage } from "@inertiajs/react";
-import { LockOpen } from "lucide-react";
+import { Lock, LockOpen } from "lucide-react";
 import { type FormEvent, type ReactNode, useState } from "react";
 
 import { AuthCard } from "@/components/AuthCard";
@@ -19,7 +19,13 @@ export default function SignIn(): ReactNode {
 	const t = useT();
 	// The page is also served while the studio is open, to a browser with no session or a session that is not a
 	// person's (the link of the account settings); only the server's state may say the studio is locked.
-	const locked = usePage<SharedProps>().props.account?.state === "locked";
+	const account = usePage<SharedProps>().props.account;
+	const locked = account?.state === "locked";
+	// With an account the studio already knows, the card names it and only the password is asked (the final design);
+	// the person can still sign in with another account.
+	const known = account?.username ? account.username : null;
+	const [other, setOther] = useState(false);
+	const asKnown = known !== null && !other;
 	const [identity, setIdentity] = useState("");
 	const [password, setPassword] = useState("");
 	const [failure, setFailure] = useState<Failure | null>(null);
@@ -31,7 +37,7 @@ export default function SignIn(): ReactNode {
 		setFailure(null);
 		try {
 			await createClient(new HttpTransport("")).accountLogin(
-				identity.trim(),
+				asKnown ? known : identity.trim(),
 				password,
 			);
 			// The dashboard is another document with a session of its own, so this is a navigation.
@@ -47,32 +53,61 @@ export default function SignIn(): ReactNode {
 		<>
 			<Head title={t("ui.account.signin.title")} />
 			<AuthCard
-				title={t("ui.account.signin.title")}
+				title={
+					locked
+						? t("ui.account.signin.locked_title")
+						: asKnown
+							? t("ui.account.signin.welcome")
+							: t("ui.account.signin.title")
+				}
 				description={
 					locked
-						? t("ui.account.signin.intro")
-						: t("ui.account.signin.intro_open")
+						? t("ui.account.signin.locked_intro")
+						: asKnown
+							? t("ui.account.signin.welcome_intro")
+							: t("ui.account.signin.intro_open")
 				}
-				footer={t("ui.account.footer")}
+				icon={locked ? Lock : undefined}
+				iconTone="warning"
+				footer={
+					locked ? t("ui.account.signin.locked_footer") : t("ui.account.footer")
+				}
 			>
 				<form
 					onSubmit={(event) => void submit(event)}
 					className="flex flex-col gap-4"
 				>
-					<div className="flex flex-col gap-2">
-						<Label htmlFor="signin-identity">{t("ui.account.identity")}</Label>
-						<Input
-							id="signin-identity"
-							required
-							autoComplete="username"
-							autoCapitalize="none"
-							spellCheck={false}
-							aria-invalid={failure === null ? undefined : true}
-							aria-describedby={failure === null ? undefined : "signin-error"}
-							value={identity}
-							onChange={(event) => setIdentity(event.target.value)}
-						/>
-					</div>
+					{asKnown ? (
+						<div
+							data-testid="signin-account"
+							className="flex items-center gap-3 rounded-lg bg-surface-sunken px-4 py-3"
+						>
+							<span
+								aria-hidden="true"
+								className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent-soft text-sm font-semibold text-accent-text"
+							>
+								{known.slice(0, 2).toUpperCase()}
+							</span>
+							<p className="min-w-0 truncate text-sm font-medium">{known}</p>
+						</div>
+					) : (
+						<div className="flex flex-col gap-2">
+							<Label htmlFor="signin-identity">
+								{t("ui.account.identity")}
+							</Label>
+							<Input
+								id="signin-identity"
+								required
+								autoComplete="username"
+								autoCapitalize="none"
+								spellCheck={false}
+								aria-invalid={failure === null ? undefined : true}
+								aria-describedby={failure === null ? undefined : "signin-error"}
+								value={identity}
+								onChange={(event) => setIdentity(event.target.value)}
+							/>
+						</div>
+					)}
 					<PasswordField
 						id="signin-password"
 						label={t("ui.account.password")}
@@ -81,12 +116,23 @@ export default function SignIn(): ReactNode {
 						autoComplete="current-password"
 					/>
 					<FailureNote id="signin-error" failure={failure} />
-					<Button type="submit" disabled={busy}>
+					<Button type="submit" size="lg" disabled={busy}>
 						<LockOpen aria-hidden="true" />
-						{t("ui.account.signin.submit")}
+						{locked
+							? t("ui.account.signin.locked_unlock")
+							: t("ui.account.signin.submit")}
 					</Button>
 				</form>
-				<p className="text-sm">
+				<p className="flex flex-col items-center gap-2 text-sm">
+					{known !== null && !other && !locked ? (
+						<button
+							type="button"
+							className="underline underline-offset-4 max-md:py-3"
+							onClick={() => setOther(true)}
+						>
+							{t("ui.account.signin.other_account")}
+						</button>
+					) : null}
 					<a
 						className="underline underline-offset-4 max-md:inline-block max-md:py-3"
 						href="/account/recover"

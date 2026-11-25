@@ -134,8 +134,19 @@ describe("the create-account page", () => {
 });
 
 describe("the sign-in and recovery pages", () => {
-	test("the sign-in asks for the username or the e-mail and a password with an eye", () => {
+	test("the sign-in of a known account names it and asks only for the password", () => {
 		const html = render(<SignIn />);
+		expect(html).toContain('data-testid="signin-account"');
+		expect(html).toContain("ANA".slice(0, 2));
+		expect(html).not.toContain('id="signin-identity"');
+		expect(html).toContain('data-testid="signin-password-eye"');
+	});
+
+	test("the sign-in asks for the username or the e-mail and a password with an eye", () => {
+		const before = shared.account;
+		shared.account = { state: "none", username: "" };
+		const html = render(<SignIn />);
+		shared.account = before;
 		expect(html).toMatch(/<input[^>]*id="signin-identity"/);
 		expect(html).toContain('autoComplete="current-password"');
 		expect(html).toContain('data-testid="signin-password-eye"');
@@ -148,8 +159,8 @@ describe("the sign-in and recovery pages", () => {
 				<I18nProvider
 					messages={{
 						...messages,
-						"ui.account.signin.intro": "Locked until you sign in.",
-						"ui.account.signin.intro_open": "Sign in as yourself.",
+						"ui.account.signin.locked_intro": "Locked until you sign in.",
+						"ui.account.signin.welcome_intro": "Sign in as yourself.",
 					}}
 					locale="en"
 					locales={["en"]}

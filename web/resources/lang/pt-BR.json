@@ -501,24 +501,62 @@
     "error": {
       "back": "Voltar aos projetos",
       "home": "Ir para o início",
+      "trash": "Abrir a lixeira",
       "label": "Erro {status}",
       "how_to_fix": "Como resolver:",
-      "next": {
+      "details": "Detalhes técnicos",
+      "title": {
+        "not_found": "Não encontramos esta página",
+        "forbidden": "Você não tem acesso a esta página",
+        "server": "O Stuarty não conseguiu terminar isto",
+        "generic": "Algo impediu esta página de abrir"
+      },
+      "lead": {
+        "not_found": "O endereço pode ter mudado ou o projeto foi para a lixeira. Seus arquivos continuam neste computador.",
+        "forbidden": "Esta sessão não tem permissão para abrir isto. Seus arquivos continuam neste computador.",
+        "server": "Foi um problema do lado do Stuarty. Nada foi perdido.",
+        "generic": "Seus arquivos continuam neste computador."
+      },
+      "steps": {
         "not_found": {
-          "title": "O que fazer agora",
-          "body": "O endereço pode ter mudado, ou o projeto pode estar na lixeira da página de projetos, de onde dá para restaurá-lo."
+          "one": {
+            "title": "Volte aos projetos",
+            "body": "Sua produção deve estar na lista."
+          },
+          "two": {
+            "title": "Olhe a lixeira",
+            "body": "Um projeto excluído pode ser restaurado."
+          }
         },
         "forbidden": {
-          "title": "O que fazer agora",
-          "body": "Esta sessão não tem permissão para abrir isto. Entre com uma conta que tenha acesso e tente de novo."
+          "one": {
+            "title": "Entre com outra conta",
+            "body": "Use uma conta que tenha acesso."
+          },
+          "two": {
+            "title": "Volte ao início",
+            "body": "De lá você chega ao que a sua conta pode abrir."
+          }
         },
         "server": {
-          "title": "O que fazer agora",
-          "body": "O Stuarty não conseguiu terminar isto. Tente de novo daqui a pouco ou volte aos projetos."
+          "one": {
+            "title": "Tente de novo daqui a pouco",
+            "body": "Recarregue a página."
+          },
+          "two": {
+            "title": "Volte aos projetos",
+            "body": "O que você salvou continua lá."
+          }
         },
-        "other": {
-          "title": "O que fazer agora",
-          "body": "Volte aos projetos e tente de novo. Se acontecer outra vez, a mensagem acima diz o que parou."
+        "generic": {
+          "one": {
+            "title": "Volte aos projetos",
+            "body": "Comece de novo pela lista."
+          },
+          "two": {
+            "title": "Confira o detalhe técnico",
+            "body": "Ele diz o que parou, em inglês."
+          }
         }
       }
     },
@@ -3391,8 +3429,9 @@
       },
       "create": {
         "not_encrypted_title": "O que não é cifrado",
-        "title": "Crie a sua conta",
-        "intro": "Seus textos, briefings, conversas, publicações e credenciais são cifrados com uma chave que só fica na memória enquanto você está conectado. Com o Stuarty trancado, nenhuma página, comando ou agente lê isso.",
+        "title": "Crie a sua conta local",
+        "intro": "Ela existe só neste computador. Ninguém mais recebe estes dados.",
+        "encrypted": "Seus textos, briefings, conversas, publicações e credenciais são cifrados com uma chave que só fica na memória enquanto você está conectado. Com o Stuarty trancado, nenhuma página, comando ou agente lê isso.",
         "not_encrypted": "Não cifrados: seus arquivos de mídia, os nomes, títulos e tags de projetos, arquivos, notas e templates, e a descrição de um template. Quem conseguir abrir esta pasta no disco consegue ler isso. Cifrados: textos, legendas e as palavras dentro de uma timeline ou imagem, o histórico de edições, as descrições de projetos e arquivos e suas notas de direitos, e suas notas de memória, prompts e skills. Para editar uma skill com outra ferramenta, exporte-a antes.",
         "submit": "Criar conta"
       },
@@ -3412,6 +3451,13 @@
         "title": "Entrar no Stuarty",
         "intro": "O Stuarty fica trancado até você entrar. Nenhuma página, comando ou agente lê os seus dados antes disso.",
         "intro_open": "Entre com a sua senha para usar o Stuarty como você mesmo.",
+        "welcome": "Que bom ver você de novo",
+        "welcome_intro": "Digite a sua senha para abrir o seu estúdio.",
+        "locked_title": "O Stuarty está bloqueado",
+        "locked_intro": "Bloqueio por inatividade. Seu trabalho está salvo.",
+        "locked_unlock": "Desbloquear",
+        "locked_footer": "Bloqueado, nada do espaço fica acessível: nem agentes, CLI ou API.",
+        "other_account": "Entrar com outra conta",
         "submit": "Entrar",
         "forgot": "Esqueci a minha senha"
       },

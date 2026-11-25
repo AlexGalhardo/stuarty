@@ -42,32 +42,22 @@ function Shell({ children }: { children: ReactNode }) {
 
 	// The login has no session and no sections to lead to: a plain header, no
 	// sidebar. Every other page is drawn by the dashboard (SDD-012 section 23.2).
-	if (accountPage) {
+	// The pages before the studio opens, and the error page, are one centred card with no sidebar and no top bar
+	// (the final design); the language and the theme sit in the corner. The sr-only name keeps the product named.
+	if (accountPage || page.component === "Error") {
 		return (
 			<TooltipProvider>
-				<header className="flex min-h-14 flex-wrap items-center gap-x-4 gap-y-1 border-b px-4 py-2 md:px-6">
-					<span className="flex items-center">
-						<img
-							src="/logo-wordmark-light.png"
-							loading="lazy"
-							alt=""
-							className="h-7 w-auto dark:hidden"
-						/>
-						<img
-							src="/logo-wordmark-dark.png"
-							loading="lazy"
-							alt=""
-							className="hidden h-7 w-auto dark:block"
-						/>
-						<span className="sr-only">{appName}</span>
-					</span>
-					<div className="ml-auto flex flex-wrap items-center gap-2">
+				<div className="relative flex min-h-dvh flex-col">
+					<span className="sr-only">{appName}</span>
+					<div className="absolute end-4 top-3 z-10 flex flex-wrap items-center gap-2 md:end-6">
 						<LocaleSwitcher />
 						<ThemeToggle />
 					</div>
-				</header>
-				<ReleaseMark />
-				<main className="flex-1 p-4 md:p-6">{children}</main>
+					<ReleaseMark />
+					<main className="flex flex-1 flex-col justify-center p-4 pt-16 md:p-6 md:pt-16">
+						{children}
+					</main>
+				</div>
 			</TooltipProvider>
 		);
 	}

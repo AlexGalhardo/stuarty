@@ -96,13 +96,20 @@ export default function Create(): ReactNode {
 				stepsLabel={t("ui.account.steps.label")}
 				footer={t("ui.account.footer")}
 			>
-				<Notice
-					tone="info"
-					title={t("ui.account.create.not_encrypted_title")}
+				<details
 					data-testid="create-not-encrypted"
+					className="rounded-lg border border-border bg-surface-sunken px-4 py-3 text-sm"
 				>
-					{t("ui.account.create.not_encrypted")}
-				</Notice>
+					<summary className="cursor-pointer font-medium text-accent-text">
+						{t("ui.account.create.not_encrypted_title")}
+					</summary>
+					<p className="mt-2 text-text-muted">
+						{t("ui.account.create.encrypted")}
+					</p>
+					<p className="mt-2 text-text-muted">
+						{t("ui.account.create.not_encrypted")}
+					</p>
+				</details>
 				<form
 					onSubmit={(event) => void submit(event)}
 					noValidate
@@ -164,7 +171,8 @@ export default function Create(): ReactNode {
 						reasons={reasonsOf(problems, "confirmation")}
 					/>
 					<FailureNote id="account-error" failure={failure} />
-					<Button type="submit" disabled={busy}>
+					<Button type="submit" size="lg" disabled={busy}>
+						<ArrowRight aria-hidden="true" />
 						{t("ui.account.create.submit")}
 					</Button>
 				</form>
@@ -195,9 +203,6 @@ export function RecoveryKey({
 				stepsLabel={t("ui.account.steps.label")}
 				footer={t("ui.account.footer")}
 			>
-				<Notice tone="warning" title={t("ui.account.recovery.warning_title")}>
-					{t("ui.account.recovery.warning")}
-				</Notice>
 				{formerFolder !== null && (
 					<Notice
 						tone="warning"
@@ -208,6 +213,9 @@ export function RecoveryKey({
 					</Notice>
 				)}
 				<RecoveryKeyBox value={value} />
+				<Notice tone="warning" title={t("ui.account.recovery.warning_title")}>
+					{t("ui.account.recovery.warning")}
+				</Notice>
 				<div className="flex items-center gap-2">
 					<input
 						id="recovery-saved"
@@ -222,6 +230,7 @@ export function RecoveryKey({
 				</div>
 				<Button
 					type="button"
+					size="lg"
 					disabled={!saved}
 					onClick={() => window.location.assign("/account/signin")}
 				>
