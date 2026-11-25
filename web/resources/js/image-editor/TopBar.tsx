@@ -1,11 +1,10 @@
 import { Link } from "@inertiajs/react";
 import {
 	ArrowLeft,
-	Check,
+	CircleCheck,
 	History,
 	MessagesSquare,
 	Search,
-	Wifi,
 } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
@@ -46,11 +45,7 @@ export function SavedIndicator({
 		minute: "2-digit",
 	}).format(savedAt);
 	return (
-		<span
-			className="flex items-center gap-1 text-xs text-muted-foreground"
-			data-saved-at=""
-		>
-			<Check aria-hidden="true" className="size-3.5 text-success" />
+		<span className="text-xs text-muted-foreground" data-saved-at="">
 			{t("ui.image.editor.saved_auto", { time })}
 		</span>
 	);
@@ -66,13 +61,14 @@ function ChatButton(): ReactNode {
 			type="button"
 			variant="outline"
 			size="sm"
+			className="h-8 px-3 font-semibold"
 			aria-label={t("ui.chat.open")}
 			aria-expanded={chatOpen}
 			aria-controls="chat-panel"
 			onClick={openChat}
 			data-testid="chat-toggle"
 		>
-			<MessagesSquare aria-hidden="true" />
+			<MessagesSquare aria-hidden="true" className="size-4" />
 			{t("ui.shell.chat")}
 		</Button>
 	);
@@ -88,13 +84,16 @@ function PaletteButton(): ReactNode {
 			type="button"
 			variant="ghost"
 			size="sm"
+			className="h-8 font-semibold text-text"
 			aria-keyshortcuts={hint === "Ctrl K" ? "Control+K" : "Meta+K"}
 			onClick={() => setPaletteOpen(true)}
 			data-testid="image-palette-open"
 		>
-			<Search aria-hidden="true" />
+			<Search aria-hidden="true" className="size-4" />
 			{t("ui.image.palette.open")}
-			<kbd className="font-sans text-xs text-muted-foreground">{hint}</kbd>
+			<kbd className="font-sans text-xs font-semibold text-muted-foreground">
+				{hint}
+			</kbd>
 		</Button>
 	);
 }
@@ -112,7 +111,14 @@ export default function TopBar({
 }): ReactNode {
 	const t = useT();
 	return (
-		<header className="flex h-11 shrink-0 items-center gap-3 border-b border-border bg-ed-panel px-3">
+		<header className="flex h-12 shrink-0 items-center gap-3 border-b border-border bg-ed-panel px-3">
+			{/* The mark of the product, as the sidebar of the shell draws it (dashboard/Sidebar.tsx). */}
+			<img
+				src="/icon.png"
+				alt=""
+				data-testid="image-app-mark"
+				className="size-6 shrink-0"
+			/>
 			<Button asChild variant="ghost" size="icon-sm">
 				<Link href="/edit-image" aria-label={t("ui.image.editor.back")}>
 					<ArrowLeft aria-hidden="true" />
@@ -127,7 +133,10 @@ export default function TopBar({
 			</h1>
 			{doc !== null && (
 				<>
-					<Badge variant="secondary" className="tabular-nums">
+					<Badge
+						variant="secondary"
+						className="border-0 bg-surface-hover tabular-nums"
+					>
 						<History aria-hidden="true" />
 						{t("ui.image.editor.rev_short", { revision: doc.revision })}
 					</Badge>
@@ -137,13 +146,10 @@ export default function TopBar({
 							className="bg-success-soft text-success-text"
 							data-testid="image-live"
 						>
-							<Wifi aria-hidden="true" />
+							<CircleCheck aria-hidden="true" />
 							{t("ui.editor.connection.live")}
 						</Badge>
 					)}
-					<span className="text-xs text-muted-foreground tabular-nums">
-						{t("ui.image.editor.size", { w: doc.width, h: doc.height })}
-					</span>
 				</>
 			)}
 			<SavedIndicator revision={doc?.revision ?? null} />
