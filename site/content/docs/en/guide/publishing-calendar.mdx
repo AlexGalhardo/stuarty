@@ -10,6 +10,9 @@ This page covers the calendar, the approval of a scheduled post and the schedule
 ## You will learn
 
 - how to plan a week of posts on the calendar;
+- how to open one day, plan it hour by hour, and write a note and a theme for it;
+- how to mark a day with no posts, and why an agent cannot schedule on it;
+- how to keep weekly slots, copy a post to another day and take the plan to another calendar app;
 - why every post waits for your yes, and what you see when you give it;
 - what happens when the time of a post passes while Stuarty was not running;
 - how to read the result of a post and retry one that failed.
@@ -19,6 +22,27 @@ This page covers the calendar, the approval of a scheduled post and the schedule
 A **publication** is a piece of a project that goes to one or more accounts. It has a title and a caption that every account shares, and one **target** for each account, with its own fields and its own time. You plan it on the **Publishing** page, in a month, a week (from Monday) or a list.
 
 Nothing leaves your computer because you planned it. When you schedule a target, Stuarty asks for your approval: the request shows the final text, the file, the account and the time, in your time zone and in UTC. You approve it on the **Approvals** page, or a rule you wrote approves it for you. An agent can plan and schedule; it cannot approve. If you change an approved post, it goes back to waiting for your yes, because what you approved is exactly what is sent.
+
+## One day
+
+Open a day from the number of a day in the month or the week, from the small month at the top of the page, or by typing a date in **Go to date**. The day view shows the 24 hours of the day as a column:
+
+- **A click on an empty hour** opens the editor with that date and time already filled in. Choose the project, the video and the account, and save.
+- **A post sits at its hour.** Drag it to another hour, or focus it and press Space, then the arrow keys (up and down move an hour) and Enter. **Adjust** changes its time, its text and its account without leaving the day. Whatever you change, the service answers and the day shows its answer; a post that was approved goes back to waiting for your yes, as in the editor.
+- **A note and a theme** belong to the day, not to a post: write "long video day" and choose a colour. The note is saved when you leave the field and is kept encrypted with the rest of your words. The theme is one of six, always named in words: blue, green, amber, red, teal and gray. An agent can read the note and the theme and write them too.
+- **A day with no posts** is a rule, not a hint. Only you mark it, with the switch **No posts this day**. An agent, the CLI and an API key are refused when they schedule on it, with a message that tells them a person decides. When you schedule on it yourself, Stuarty asks you first: "Schedule anyway?" Choose **Choose another day** and nothing changes. A post you approved before you marked the day stays approved.
+
+The small month marks today and the days that hold a note, a theme or a mark, and **Today** takes you back.
+
+### Weekly slots
+
+A **weekly slot** is a reminder: "every Tuesday at 18:00 on Instagram". Open **Weekly slots**, choose the network, the weekday, the time and the zone (and one account, if you want), and **Add the slot**. On each Tuesday the day view and the week show an empty slot at 18:00; click it and the editor opens with that date, time and network. A slot never sends anything and holds no post: it only reminds you what to fill. It keeps its wall time when the clock changes, so 18:00 stays 18:00 in summer and in winter.
+
+### Copy a post, and take the plan with you
+
+In the editor of a post, **Copy to another day or hour** makes a new draft with the same title, text, video and accounts at the time you type. The original does not change, and the copy waits for your yes when you schedule it.
+
+**Export .ics** downloads the posts of what you are looking at (the month, the week or the day) as a calendar file that another app can open. The file is read only: times in UTC, the title and the text of each post, and a state that says whether it is approved. It holds no credential, no address of your connections and no internal id, and it cannot be imported back.
 
 ## Times and zones
 
@@ -69,7 +93,18 @@ stuarty publication:show pub_0123456789
 
 A date in `--from` and `--until` is the start of that day in `--zone` (UTC when you leave it out), so the second list is the week from Monday 16 to Sunday 22 in São Paulo.
 
-`publication:schedule` only asks for approval. An agent that runs it gets a post that waits for you. Over MCP the same plan is the `publication` tool, with `action` `create`, `schedule`, `show` or `list`; it has no action that sends, cancels or approves. Once you approved a post, only you can move it: an agent, the local token or an API key that schedules it again gets `E_PRIVILEGED_SESSION`, and the post keeps its time and your approval.
+```bash
+stuarty calendar:plan --from 2026-12-01 --until 2026-12-02 --zone America/Sao_Paulo --publications
+stuarty calendar:day 2026-12-01 --note "long video day" --theme amber --zone America/Sao_Paulo
+stuarty calendar:slot --network instagram --weekday tue --time 18:00 --zone America/Sao_Paulo
+stuarty calendar:slot-remove slt_0123456789
+stuarty publication:duplicate pub_0123456789 --at 2026-12-08T09:00 --zone America/Sao_Paulo
+stuarty calendar:export --from 2026-12-01 --until 2027-01-01 > plan.ics
+```
+
+`calendar:quiet` marks a day with no posts, and it always answers `E_PRIVILEGED_SESSION`: only a person in the app does. `publication:schedule` on a quiet day answers the same way. The `.ics` file has one event per post that has a time and was not cancelled, with its time in UTC and the text escaped.
+
+`publication:schedule` only asks for approval. An agent that runs it gets a post that waits for you. Over MCP the same plan is the `publication` tool, with `action` `create`, `schedule`, `show`, `list`, `duplicate`, `plan`, `day` or `slot`; it has no action that sends, cancels, approves or marks a quiet day. Once you approved a post, only you can move it: an agent, the local token or an API key that schedules it again gets `E_PRIVILEGED_SESSION`, and the post keeps its time and your approval.
 
 </Tab>
 </Tabs>
