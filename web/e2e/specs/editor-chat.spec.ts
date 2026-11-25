@@ -235,8 +235,11 @@ test.describe("the project of the chat panel", () => {
 		await send(page, "POST", "/trash/empty", { project_id: gone.id });
 		// the list of projects answers after the read of the session of the missing one, which is the order
 		// that left the error on the screen
+		const sessionsAnswered = page.waitForResponse((res) =>
+			res.url().includes(`/projects/${gone.id}/chat/sessions`),
+		);
 		await page.route("**/api/v1/projects", async (route) => {
-			await new Promise((resolve) => setTimeout(resolve, 1500));
+			await sessionsAnswered;
 			await route.continue();
 		});
 		// the address names the project that is gone
