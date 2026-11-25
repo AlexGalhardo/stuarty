@@ -1,18 +1,20 @@
 import { Head, router, usePage } from "@inertiajs/react";
-import { FolderPlus } from "lucide-react";
+import { Compass, FolderPlus, Plus, Upload } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { EmptyState } from "@/components/EmptyState";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import { PageHeader, PageHeaderAction } from "@/components/PageHeader";
 import { TabBar } from "@/components/TabBar";
+import { Button } from "@/components/ui/button";
 import { useLocale, useT } from "@/lib/i18n";
 import type { ProjectsIndexProps } from "@/types";
 import { createClient } from "../../editor/api/client";
 import { HttpTransport } from "../../editor/api/http";
 import { FirstSteps } from "../../workflow/FirstSteps";
 import { BundleImport } from "./Bundles";
-import NewProject from "./NewProject";
+import NewProject, { type NewProjectPick } from "./NewProject";
+import NewProjectPage from "./NewProjectPage";
 import ProjectCard from "./ProjectCard";
 import ProjectCardText from "./ProjectCardText";
 import Templates from "./Templates";
@@ -30,6 +32,7 @@ export default function ProjectsIndex() {
 	const [trashVersion, setTrashVersion] = useState(0);
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [creating, setCreating] = useState(false);
+	const [pick, setPick] = useState<NewProjectPick | null>(null);
 	const [view, setView] = useState<"projects" | "templates" | "trash">(
 		"projects",
 	);
@@ -58,9 +61,35 @@ export default function ProjectsIndex() {
 
 	const newProject = (
 		<PageHeaderAction type="button" onClick={() => setCreating(true)}>
+			<Plus aria-hidden="true" />
 			{t("ui.projects.new")}
 		</PageHeaderAction>
 	);
+	const importTemplate = (
+		<PageHeaderAction
+			type="button"
+			variant="outline"
+			onClick={() => setView("templates")}
+		>
+			<Upload aria-hidden="true" />
+			{t("ui.projects.import_template")}
+		</PageHeaderAction>
+	);
+
+	if (pick !== null) {
+		return (
+			<>
+				<Head title={t("ui.projects.new_project.title")} />
+				<NewProjectPage
+					pick={pick}
+					onBack={() => {
+						setPick(null);
+						setCreating(true);
+					}}
+				/>
+			</>
+		);
+	}
 
 	return (
 		<>
@@ -69,9 +98,48 @@ export default function ProjectsIndex() {
 				<PageHeader
 					title={t("ui.projects.title")}
 					description={t("ui.projects.lead")}
-					actions={projects.length > 0 ? newProject : undefined}
+					actions={
+						projects.length > 0 ? (
+							<>
+								{importTemplate}
+								{newProject}
+							</>
+						) : undefined
+					}
 				/>
-				<NewProject open={creating} onOpenChange={setCreating} />
+				{projects.length > 0 ? (
+					<section
+						aria-label={t("ui.projects.next.title")}
+						className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3"
+					>
+						<span
+							aria-hidden="true"
+							className="flex size-9 items-center justify-center rounded-md bg-accent-soft text-accent-text"
+						>
+							<Compass className="size-5" />
+						</span>
+						<div className="min-w-0 flex-1 basis-64">
+							<p className="text-sm font-semibold text-accent-text">
+								{t("ui.projects.next.title")}
+							</p>
+							<p className="text-sm text-text-muted">
+								{t("ui.projects.next.description")}
+							</p>
+						</div>
+						<Button
+							type="button"
+							variant="ghost"
+							onClick={() => setCreating(true)}
+						>
+							{t("ui.projects.next.action")}
+						</Button>
+					</section>
+				) : null}
+				<NewProject
+					open={creating}
+					onOpenChange={setCreating}
+					onContinue={setPick}
+				/>
 
 				<TabBar
 					label={t("ui.projects.views.label")}

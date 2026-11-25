@@ -71,7 +71,7 @@ test.describe("new project kinds", () => {
 	}) => {
 		await page.goto("/projects");
 		await openProjectForm(page, "text");
-		const dialog = page.getByRole("dialog");
+		const dialog = page.getByRole("main");
 		await expect(dialog).toContainText("what the text is about");
 		await expect(
 			dialog.getByPlaceholder(/A blog post that explains/),
@@ -241,22 +241,20 @@ test.describe("new project kinds", () => {
 		await fillBriefing(page);
 		await page.getByRole("button", { name: "Create project" }).click();
 
-		const dialog = page.getByRole("dialog");
-		await expect(dialog.getByRole("alert")).toContainText(
+		await expect(page.getByRole("alert")).toContainText(
 			"The project was created",
 		);
 		// The form is gone, so the project cannot be sent a second time.
 		await expect(
-			dialog.getByRole("button", { name: "Create project" }),
+			page.getByRole("button", { name: "Create project" }),
 		).toHaveCount(0);
 		const made = (await listProjects(request)).filter((p) => p.name === name);
 		expect(made).toHaveLength(1);
 		await expect(
-			dialog.getByRole("link", { name: "Open the project" }),
+			page.getByRole("link", { name: "Open the project" }),
 		).toHaveAttribute("href", `/projects/${made[0].id}`);
 
-		await page.keyboard.press("Escape");
-		await expect(page.getByRole("dialog")).toHaveCount(0);
+		await page.goto("/projects");
 		await expect(
 			page.locator(`[data-project-card='${made[0].id}']`),
 		).toBeVisible();

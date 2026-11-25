@@ -562,6 +562,12 @@
       }
     },
     "projects": {
+      "import_template": "Importar modelo",
+      "next": {
+        "title": "Próximo passo",
+        "description": "Abra um projeto ou crie um novo. Pode ser só um texto: nenhum projeto precisa de vídeo.",
+        "action": "Começar briefing"
+      },
       "views": {
         "label": "Visões dos projetos"
       },
@@ -585,11 +591,25 @@
       "new_project": {
         "title": "Começar um novo projeto",
         "name": "Nome do projeto",
+        "page_lead": "Responda com as suas palavras. O agente lê o briefing antes de sugerir qualquer coisa.",
+        "steps": "Passos do novo projeto",
+        "step_kind": "O que criar",
+        "step_idea": "A ideia e o objetivo",
+        "step_idea_hint": "Para quem e por quê",
+        "reads_title": "O que o agente vai ler",
+        "reads_body": "O nome, a descrição e o objetivo que você escrever aqui. Nada além disso é enviado ao agente antes de o projeto existir.",
+        "reads_permission": "Ele pode sugerir. Cada ação ainda pede a sua permissão.",
+        "page_title": {
+          "text": "Novo projeto: briefing do texto",
+          "video": "Novo projeto: briefing do vídeo",
+          "image": "Novo projeto: briefing da imagem",
+          "undecided": "Novo projeto: briefing"
+        },
         "name_placeholder": "Ex.: Lançamento do curso",
         "chosen": "Escolhido",
         "text_note": "Sem formato e sem mídia: só o texto, e mídia é opcional depois.",
         "description": "Escolha o que você quer criar. Dá para adicionar os outros depois.",
-        "step_two": "Passo 2 de 2: o briefing. O projeto é criado quando você o envia.",
+        "step_two": "Passo 2 de 2",
         "kind_legend": "O que você quer criar?",
         "text_legend": "Que tipo de texto?",
         "format": "Formato",
@@ -822,6 +842,7 @@
         "download": "Baixar"
       },
       "context": {
+        "goal_title": "O objetivo",
         "title": "Contexto",
         "name": "Nome",
         "description": "Descrição",

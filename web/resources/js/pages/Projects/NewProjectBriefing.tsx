@@ -52,6 +52,7 @@ export default function NewProjectBriefing({
 					busy={busy}
 					failure={failure}
 					autoFocusFirst
+					page
 					onEdited={onEdited}
 					onSubmit={onSubmit}
 					onCancel={onBack}
