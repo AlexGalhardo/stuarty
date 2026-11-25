@@ -464,6 +464,9 @@ type svc struct {
 	// so an edit of the layer on top redraws only that layer (SDD-021 section 6.1).
 	imageFrames *export.ImageCache
 	framesMu    sync.RWMutex // guards imageFrames: the cache is replaced, not emptied, when the studio locks
+	// frameCache keeps the PNG that ImageFrame answered, by owner, document digest and width, so the same revision
+	// asked for again draws nothing (SDD-021 section 6.1).
+	frameCache  *imageFrameCache
 	providers   *providers.Registry
 	lib         *library.Manager // the files of memory, skills and prompts; nil without a workspace
 	heavy       RateLimiter
@@ -551,6 +554,7 @@ func New(o Options) (Service, error) {
 		heavyLimitN: o.HeavyPerMinute,
 		log:         o.Log,
 		imageFrames: export.NewImageCache(0),
+		frameCache:  newImageFrameCache(0),
 		jobWait:     o.JobWait,
 		agents:      o.Agents,
 		webp:        o.WebP,
