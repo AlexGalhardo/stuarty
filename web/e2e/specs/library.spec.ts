@@ -37,7 +37,7 @@ test.describe("library", () => {
 			page.getByRole("heading", { name: "Prompts", level: 1 }),
 		).toBeVisible();
 
-		await page.getByRole("button", { name: "New", exact: true }).click();
+		await page.getByRole("button", { name: "New prompt" }).click();
 		await page.getByLabel("Name", { exact: true }).fill(name);
 		await page.getByLabel("Description").fill("An intro for a video");
 		await page
@@ -47,7 +47,6 @@ test.describe("library", () => {
 		await expect(page.getByText("Saved.")).toBeVisible();
 		await expect(page.locator(`[data-entry='${name}']`)).toBeVisible();
 
-		await page.getByRole("tab", { name: "Preview" }).click();
 		await page.getByLabel("Value of topic").fill("cats");
 		await page.getByRole("button", { name: "Render" }).click();
 		await expect(
@@ -74,11 +73,13 @@ test.describe("library", () => {
 			page.getByText(`Imported ${name}. It is not reviewed yet.`),
 		).toBeVisible();
 
-		const row = page.locator(`[data-entry='${name}']`);
-		await expect(row).toContainText("Not reviewed");
+		const row = page
+			.locator("[data-slot=list-row]")
+			.filter({ has: page.locator(`[data-entry='${name}']`) });
+		await expect(row).toContainText("not reviewed");
 		await expect(row).toContainText("Imported");
 		// the list and the pane say in words that no agent is offered it
-		await expect(row).toContainText("not offered to agents");
+		await expect(row).toContainText("Blocked");
 		await expect(page.getByTestId("skill-not-offered")).toContainText(
 			"Not offered to agents",
 		);
@@ -102,7 +103,7 @@ test.describe("library", () => {
 		await expect(pane).toContainText(
 			"Only a person in the Stuarty desktop app can do this",
 		);
-		await expect(row).toContainText("Not reviewed");
+		await expect(row).toContainText("not reviewed");
 
 		await page.getByRole("button", { name: "Export reviewed skills" }).click();
 		await expect(
@@ -115,7 +116,7 @@ test.describe("library", () => {
 	}) => {
 		const name = unique("note");
 		await page.goto("/memory");
-		await page.getByRole("button", { name: "New", exact: true }).click();
+		await page.getByRole("button", { name: "New note" }).click();
 		await page.getByLabel("Name (optional)").fill(name);
 		await page
 			.getByLabel("The fact, in one line")
@@ -127,7 +128,6 @@ test.describe("library", () => {
 		await expect(page.getByText("Saved.")).toBeVisible();
 
 		await page.getByLabel("Search", { exact: true }).fill("quokka");
-		await page.getByRole("button", { name: "Search" }).click();
 		await expect(page.locator(`[data-entry='${name}']`)).toBeVisible();
 
 		// this session is not a person's, so the note waits: removing it is rejecting it

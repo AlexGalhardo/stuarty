@@ -245,6 +245,8 @@ test.describe("asset-library", () => {
 			page.getByRole("heading", { name: "Visuais", level: 1 }),
 		).toBeVisible();
 		await expect(page.getByLabel("Buscar")).toBeVisible();
-		await expect(page.getByLabel("Só reutilizáveis")).toBeVisible();
+		await expect(
+			page.getByRole("button", { name: "Só reutilizáveis" }),
+		).toBeVisible();
 	});
 });

@@ -1,11 +1,11 @@
+import { Check, FileText as FileTextIcon, Info } from "lucide-react";
 import { type FormEvent, type ReactNode, useEffect, useState } from "react";
 
+import { DetailPanel } from "@/components/DetailPanel";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
-import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
 import { useUnsavedGuard } from "@/lib/unsaved";
@@ -126,146 +126,124 @@ export default function PromptPane({
 	}
 
 	return (
-		<div className="flex flex-col gap-3" data-testid="prompt-pane">
-			{entry !== null && (
-				<div className="flex flex-col gap-1">
-					<h2 className="text-lg font-semibold break-all">{entry.name}</h2>
-					{variables.length > 0 && (
-						<p
-							className="flex flex-wrap items-center gap-1 text-sm text-text-muted"
-							data-testid="prompt-variables"
-						>
-							{t("ui.library.prompt.variables")}
-							{variables.map((variable) => (
-								<StatusBadge key={variable} status="neutral">
-									{`{{${variable}}}`}
-								</StatusBadge>
-							))}
+		<div
+			className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)]"
+			data-testid="prompt-pane"
+		>
+			<DetailPanel
+				title={
+					<span className="break-all">
+						{entry?.name ?? t("ui.library.new.prompt")}
+					</span>
+				}
+				actions={
+					<Button type="submit" form="prompt-form" disabled={busy}>
+						<Check aria-hidden="true" />
+						{t("ui.library.action.save")}
+					</Button>
+				}
+			>
+				<form id="prompt-form" className="flex flex-col gap-4" onSubmit={save}>
+					{name === null && (
+						<div className="flex flex-col gap-1">
+							<Label htmlFor="prompt-name">{t("ui.library.field.name")}</Label>
+							<Input
+								id="prompt-name"
+								value={newName}
+								maxLength={64}
+								required
+								onChange={(e) => setNewName(e.target.value)}
+							/>
+							<p className="text-sm text-text-muted">
+								{t("ui.library.field.name_hint")}
+							</p>
+						</div>
+					)}
+					<div className="flex flex-col gap-1">
+						<Label htmlFor="prompt-description">
+							{t("ui.library.field.description")}
+						</Label>
+						<Input
+							id="prompt-description"
+							value={description}
+							maxLength={200}
+							required
+							onChange={(e) => setDescription(e.target.value)}
+						/>
+					</div>
+					<div className="flex flex-col gap-1">
+						<Label htmlFor="prompt-body">{t("ui.library.field.body")}</Label>
+						<Textarea
+							id="prompt-body"
+							rows={10}
+							value={body}
+							required
+							className="font-mono"
+							onChange={(e) => setBody(e.target.value)}
+						/>
+						<p className="flex items-center gap-1.5 text-sm text-text-muted">
+							<Info aria-hidden="true" className="size-4 shrink-0" />
+							{t("ui.library.prompt.variables_hint")}
+						</p>
+					</div>
+					<div className="flex flex-col gap-1">
+						<Label htmlFor="prompt-tags">{t("ui.library.field.tags")}</Label>
+						<Input
+							id="prompt-tags"
+							value={tags}
+							onChange={(e) => setTags(e.target.value)}
+						/>
+					</div>
+					{saved && (
+						<p role="status" className="text-sm">
+							{t("ui.library.saved")}
 						</p>
 					)}
-				</div>
-			)}
-			<Tabs defaultValue="edit">
-				<TabsList>
-					<TabsTrigger value="edit">{t("ui.library.tab.edit")}</TabsTrigger>
-					<TabsTrigger value="preview">
-						{t("ui.library.tab.preview")}
-					</TabsTrigger>
-				</TabsList>
-				<TabsContent value="edit">
-					<form className="flex flex-col gap-3" onSubmit={save}>
-						{name === null && (
-							<div className="flex flex-col gap-1">
-								<Label htmlFor="prompt-name">
-									{t("ui.library.field.name")}
+					<FailureNote failure={failure} />
+				</form>
+			</DetailPanel>
+			<DetailPanel title={t("ui.library.prompt.use_title")}>
+				{name === null ? (
+					<p className="text-sm text-text-muted">
+						{t("ui.library.prompt.save_first")}
+					</p>
+				) : (
+					<div className="flex flex-col gap-3">
+						{variables.length === 0 && (
+							<p className="text-sm text-text-muted">
+								{t("ui.library.prompt.no_variables")}
+							</p>
+						)}
+						{variables.map((variable) => (
+							<div key={variable} className="flex flex-col gap-1">
+								<Label htmlFor={`value-${variable}`}>
+									{t("ui.library.prompt.value", { name: variable })}
 								</Label>
 								<Input
-									id="prompt-name"
-									value={newName}
-									maxLength={64}
-									required
-									onChange={(e) => setNewName(e.target.value)}
+									id={`value-${variable}`}
+									value={values[variable] ?? ""}
+									onChange={(e) =>
+										setValues((was) => ({
+											...was,
+											[variable]: e.target.value,
+										}))
+									}
 								/>
-								<p className="text-xs text-text-muted">
-									{t("ui.library.field.name_hint")}
-								</p>
 							</div>
+						))}
+						<Button type="button" disabled={busy} onClick={() => void render()}>
+							<FileTextIcon aria-hidden="true" />
+							{t("ui.library.prompt.render")}
+						</Button>
+						{rendered !== null && (
+							<FileText
+								label={t("ui.library.prompt.rendered")}
+								text={rendered}
+							/>
 						)}
-						<div className="flex flex-col gap-1">
-							<Label htmlFor="prompt-description">
-								{t("ui.library.field.description")}
-							</Label>
-							<Input
-								id="prompt-description"
-								value={description}
-								maxLength={200}
-								required
-								onChange={(e) => setDescription(e.target.value)}
-							/>
-						</div>
-						<div className="flex flex-col gap-1">
-							<Label htmlFor="prompt-body">{t("ui.library.field.body")}</Label>
-							<Textarea
-								id="prompt-body"
-								rows={10}
-								value={body}
-								required
-								onChange={(e) => setBody(e.target.value)}
-							/>
-							<p className="text-xs text-text-muted">
-								{t("ui.library.prompt.variables_hint")}
-							</p>
-						</div>
-						<div className="flex flex-col gap-1">
-							<Label htmlFor="prompt-tags">{t("ui.library.field.tags")}</Label>
-							<Input
-								id="prompt-tags"
-								value={tags}
-								onChange={(e) => setTags(e.target.value)}
-							/>
-						</div>
-						<div>
-							<Button type="submit" disabled={busy}>
-								{t("ui.library.action.save")}
-							</Button>
-						</div>
-						{saved && (
-							<p role="status" className="text-sm">
-								{t("ui.library.saved")}
-							</p>
-						)}
-						<FailureNote failure={failure} />
-					</form>
-				</TabsContent>
-				<TabsContent value="preview">
-					{name === null ? (
-						<p className="text-sm text-text-muted">
-							{t("ui.library.prompt.save_first")}
-						</p>
-					) : (
-						<div className="flex flex-col gap-3">
-							{variables.length === 0 && (
-								<p className="text-sm text-text-muted">
-									{t("ui.library.prompt.no_variables")}
-								</p>
-							)}
-							{variables.map((variable) => (
-								<div key={variable} className="flex flex-col gap-1">
-									<Label htmlFor={`value-${variable}`}>
-										{t("ui.library.prompt.value", { name: variable })}
-									</Label>
-									<Input
-										id={`value-${variable}`}
-										value={values[variable] ?? ""}
-										onChange={(e) =>
-											setValues((was) => ({
-												...was,
-												[variable]: e.target.value,
-											}))
-										}
-									/>
-								</div>
-							))}
-							<div>
-								<Button
-									type="button"
-									disabled={busy}
-									onClick={() => void render()}
-								>
-									{t("ui.library.prompt.render")}
-								</Button>
-							</div>
-							<FailureNote failure={failure} />
-							{rendered !== null && (
-								<FileText
-									label={t("ui.library.prompt.rendered")}
-									text={rendered}
-								/>
-							)}
-						</div>
-					)}
-				</TabsContent>
-			</Tabs>
+					</div>
+				)}
+			</DetailPanel>
 		</div>
 	);
 }

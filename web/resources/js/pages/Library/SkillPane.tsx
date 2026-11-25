@@ -1,5 +1,5 @@
 import { type FormEvent, type ReactNode, useEffect, useState } from "react";
-
+import { DetailPanel } from "@/components/DetailPanel";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import { Notice } from "@/components/Notice";
 import UntrustedText from "@/components/UntrustedText";
@@ -138,180 +138,211 @@ export default function SkillPane({
 	}
 
 	return (
-		<div className="flex flex-col gap-3" data-testid="skill-pane">
-			{entry !== null && (
-				<div className="flex flex-col gap-2">
-					<div className="flex flex-wrap items-center gap-2">
-						<h2 className="text-lg font-semibold break-all">{entry.name}</h2>
-						<EntryBadges entry={entry} />
-					</div>
-					{entry.warning !== undefined && entry.warning !== "" && (
-						<Notice tone="danger" role="status" title={entry.warning} />
-					)}
-					<dl className="grid grid-cols-[max-content_1fr] gap-x-3 gap-y-1 text-sm">
-						<dt className="text-text-muted">{t("ui.library.skill.origin")}</dt>
-						<dd>{t(`ui.library.origin.${entry.origin ?? "user"}`)}</dd>
-						{source !== "" && (
-							<>
+		<div data-testid="skill-pane">
+			<DetailPanel
+				title={
+					<span className="break-all">
+						{entry?.name ?? t("ui.library.new.skill")}
+					</span>
+				}
+				actions={entry !== null ? <EntryBadges entry={entry} /> : undefined}
+				className="gap-3"
+			>
+				<div className="flex flex-col gap-3">
+					{entry !== null && (
+						<div className="flex flex-col gap-2">
+							<p className="text-base text-text">
+								<UntrustedText>{entry.description}</UntrustedText>
+							</p>
+							{entry.warning !== undefined && entry.warning !== "" && (
+								<Notice tone="danger" role="status" title={entry.warning} />
+							)}
+							<dl className="grid grid-cols-[max-content_1fr] gap-x-3 gap-y-1 text-sm">
 								<dt className="text-text-muted">
-									{t("ui.library.skill.source")}
+									{t("ui.library.skill.origin")}
+								</dt>
+								<dd>{t(`ui.library.origin.${entry.origin ?? "user"}`)}</dd>
+								{source !== "" && (
+									<>
+										<dt className="text-text-muted">
+											{t("ui.library.skill.source")}
+										</dt>
+										<dd>
+											<UntrustedText>{source}</UntrustedText>
+										</dd>
+									</>
+								)}
+								<dt className="text-text-muted">
+									{t("ui.library.field.license")}
 								</dt>
 								<dd>
-									<UntrustedText>{source}</UntrustedText>
+									{license === "" ? (
+										t("ui.library.skill.no_licence")
+									) : (
+										<UntrustedText>{license}</UntrustedText>
+									)}
 								</dd>
-							</>
-						)}
-						<dt className="text-text-muted">{t("ui.library.field.license")}</dt>
-						<dd>
-							{license === "" ? (
-								t("ui.library.skill.no_licence")
-							) : (
-								<UntrustedText>{license}</UntrustedText>
-							)}
-						</dd>
-					</dl>
-					{entry.reviewed ? (
-						<Notice
-							tone="success"
-							title={t("ui.library.skill.offered_title")}
-							data-testid="skill-offered"
-						>
-							{t("ui.library.skill.offered_text")}
-						</Notice>
-					) : (
-						<Notice
-							tone="warning"
-							title={t("ui.library.skill.not_offered_title")}
-							data-testid="skill-not-offered"
-							actions={
-								<Button
-									type="button"
-									disabled={busy || !privileged || (entry.lint_errors ?? 0) > 0}
-									aria-describedby={
-										privileged ? undefined : "review-person-only"
-									}
-									onClick={() => void review()}
+							</dl>
+							{entry.reviewed ? (
+								<Notice
+									tone="success"
+									title={t("ui.library.skill.offered_title")}
+									data-testid="skill-offered"
 								>
-									{t("ui.library.skill.mark_reviewed")}
-								</Button>
-							}
-						>
-							{t("ui.library.skill.review_hint")}
-							<PersonOnlyNote id="review-person-only" />
-						</Notice>
+									{t("ui.library.skill.offered_text")}
+								</Notice>
+							) : (
+								<Notice
+									tone="warning"
+									title={t("ui.library.skill.not_offered_title")}
+									data-testid="skill-not-offered"
+									actions={
+										<Button
+											type="button"
+											disabled={
+												busy || !privileged || (entry.lint_errors ?? 0) > 0
+											}
+											aria-describedby={
+												privileged ? undefined : "review-person-only"
+											}
+											onClick={() => void review()}
+										>
+											{t("ui.library.skill.mark_reviewed")}
+										</Button>
+									}
+								>
+									{t("ui.library.skill.review_hint")}
+									<PersonOnlyNote id="review-person-only" />
+								</Notice>
+							)}
+						</div>
 					)}
-				</div>
-			)}
-			<Tabs value={tab} onValueChange={setTab}>
-				<TabsList>
-					{entry !== null && (
-						<TabsTrigger value="text">{t("ui.library.skill.text")}</TabsTrigger>
-					)}
-					<TabsTrigger value="edit">{t("ui.library.tab.edit")}</TabsTrigger>
-					{entry !== null && (
-						<TabsTrigger value="lint">{t("ui.library.skill.lint")}</TabsTrigger>
-					)}
-				</TabsList>
-				<TabsContent value="text">
-					<div className="flex flex-col gap-3">
-						<FileText
-							label={t("ui.library.skill.full_text")}
-							text={`${description}\n\n${body}`}
-						/>
-						{files.length > 0 && (
-							<section aria-label={t("ui.library.skill.files")}>
-								<h3 className="mb-1 text-sm font-medium">
-									{t("ui.library.skill.files")}
-								</h3>
-								<ul className="flex flex-col gap-2 text-sm">
-									{files.map((file) => (
-										<li key={file.path} className="flex flex-col gap-1">
-											<span>
-												<UntrustedText>{file.path}</UntrustedText>{" "}
-												<span className="text-text-muted">
-													{t("ui.library.skill.bytes", { count: file.bytes })}
-												</span>
-												{file.script === true && (
-													<span className="ml-2 text-danger-text">
-														{t("ui.library.skill.script")}
-													</span>
-												)}
-											</span>
-											{file.text !== undefined && (
-												<FileText label={file.path} text={file.text} />
-											)}
-										</li>
-									))}
-								</ul>
-							</section>
-						)}
-					</div>
-				</TabsContent>
-				<TabsContent value="edit">
-					<form className="flex flex-col gap-3" onSubmit={save}>
-						{name === null && (
-							<div className="flex flex-col gap-1">
-								<Label htmlFor="skill-name">{t("ui.library.field.name")}</Label>
-								<Input
-									id="skill-name"
-									value={newName}
-									maxLength={64}
-									required
-									onChange={(e) => setNewName(e.target.value)}
+					<Tabs value={tab} onValueChange={setTab}>
+						<TabsList>
+							{entry !== null && (
+								<TabsTrigger value="text">
+									{t("ui.library.skill.text")}
+								</TabsTrigger>
+							)}
+							<TabsTrigger value="edit">{t("ui.library.tab.edit")}</TabsTrigger>
+							{entry !== null && (
+								<TabsTrigger value="lint">
+									{t("ui.library.skill.lint")}
+								</TabsTrigger>
+							)}
+						</TabsList>
+						<TabsContent value="text">
+							<div className="flex flex-col gap-3">
+								<FileText
+									label={t("ui.library.skill.full_text")}
+									text={`${description}\n\n${body}`}
 								/>
-								<p className="text-xs text-text-muted">
-									{t("ui.library.field.name_hint")}
-								</p>
+								{files.length > 0 && (
+									<section aria-label={t("ui.library.skill.files")}>
+										<h3 className="mb-1 text-sm font-medium">
+											{t("ui.library.skill.files")}
+										</h3>
+										<ul className="flex flex-col gap-2 text-sm">
+											{files.map((file) => (
+												<li key={file.path} className="flex flex-col gap-1">
+													<span>
+														<UntrustedText>{file.path}</UntrustedText>{" "}
+														<span className="text-text-muted">
+															{t("ui.library.skill.bytes", {
+																count: file.bytes,
+															})}
+														</span>
+														{file.script === true && (
+															<span className="ml-2 text-danger-text">
+																{t("ui.library.skill.script")}
+															</span>
+														)}
+													</span>
+													{file.text !== undefined && (
+														<FileText label={file.path} text={file.text} />
+													)}
+												</li>
+											))}
+										</ul>
+									</section>
+								)}
+								<Notice
+									tone="info"
+									title={t("ui.library.skill.permissions_title")}
+								>
+									{t("ui.library.skill.permissions_text")}
+								</Notice>
 							</div>
-						)}
-						<div className="flex flex-col gap-1">
-							<Label htmlFor="skill-description">
-								{t("ui.library.field.description")}
-							</Label>
-							<Input
-								id="skill-description"
-								value={description}
-								required
-								onChange={(e) => setDescription(e.target.value)}
-							/>
-						</div>
-						<div className="flex flex-col gap-1">
-							<Label htmlFor="skill-license">
-								{t("ui.library.field.license")}
-							</Label>
-							<Input
-								id="skill-license"
-								value={license}
-								onChange={(e) => setLicense(e.target.value)}
-							/>
-						</div>
-						<div className="flex flex-col gap-1">
-							<Label htmlFor="skill-body">
-								{t("ui.library.skill.instructions")}
-							</Label>
-							<Textarea
-								id="skill-body"
-								rows={12}
-								value={body}
-								required
-								onChange={(e) => setBody(e.target.value)}
-							/>
-						</div>
-						<div>
-							<Button type="submit" disabled={busy}>
-								{t("ui.library.action.save")}
-							</Button>
-						</div>
-					</form>
-				</TabsContent>
-				<TabsContent value="lint">
-					<Findings findings={findings} />
-				</TabsContent>
-			</Tabs>
-			{notice !== null && (
-				<Notice tone="success" role="status" title={notice} />
-			)}
-			<FailureNote failure={failure} />
+						</TabsContent>
+						<TabsContent value="edit">
+							<form className="flex flex-col gap-3" onSubmit={save}>
+								{name === null && (
+									<div className="flex flex-col gap-1">
+										<Label htmlFor="skill-name">
+											{t("ui.library.field.name")}
+										</Label>
+										<Input
+											id="skill-name"
+											value={newName}
+											maxLength={64}
+											required
+											onChange={(e) => setNewName(e.target.value)}
+										/>
+										<p className="text-xs text-text-muted">
+											{t("ui.library.field.name_hint")}
+										</p>
+									</div>
+								)}
+								<div className="flex flex-col gap-1">
+									<Label htmlFor="skill-description">
+										{t("ui.library.field.description")}
+									</Label>
+									<Input
+										id="skill-description"
+										value={description}
+										required
+										onChange={(e) => setDescription(e.target.value)}
+									/>
+								</div>
+								<div className="flex flex-col gap-1">
+									<Label htmlFor="skill-license">
+										{t("ui.library.field.license")}
+									</Label>
+									<Input
+										id="skill-license"
+										value={license}
+										onChange={(e) => setLicense(e.target.value)}
+									/>
+								</div>
+								<div className="flex flex-col gap-1">
+									<Label htmlFor="skill-body">
+										{t("ui.library.skill.instructions")}
+									</Label>
+									<Textarea
+										id="skill-body"
+										rows={12}
+										value={body}
+										required
+										onChange={(e) => setBody(e.target.value)}
+									/>
+								</div>
+								<div>
+									<Button type="submit" disabled={busy}>
+										{t("ui.library.action.save")}
+									</Button>
+								</div>
+							</form>
+						</TabsContent>
+						<TabsContent value="lint">
+							<Findings findings={findings} />
+						</TabsContent>
+					</Tabs>
+					{notice !== null && (
+						<Notice tone="success" role="status" title={notice} />
+					)}
+					<FailureNote failure={failure} />
+				</div>
+			</DetailPanel>
 		</div>
 	);
 }

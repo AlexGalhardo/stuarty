@@ -1,5 +1,5 @@
 import { type FormEvent, type ReactNode, useEffect, useState } from "react";
-
+import { DetailPanel } from "@/components/DetailPanel";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import { Notice } from "@/components/Notice";
 import { Button } from "@/components/ui/button";
@@ -157,161 +157,179 @@ export default function MemoryPane({
 	}
 
 	return (
-		<div className="flex flex-col gap-3" data-testid="memory-pane">
-			{entry !== null && (
-				<div className="flex flex-wrap items-center gap-2">
-					<h2 className="text-lg font-semibold break-all">{entry.name}</h2>
-					<EntryBadges entry={entry} />
-				</div>
-			)}
-			{entry !== null && !entry.kept && (
-				<Notice
-					tone="warning"
-					role="status"
-					title={t("ui.library.memory.pending_title")}
-					data-testid="memory-pending"
-					actions={
-						<>
-							<Button
-								type="button"
-								variant="outline"
-								disabled={busy}
-								onClick={() => void remove()}
-							>
-								{t("ui.library.memory.reject")}
-							</Button>
-							<Button
-								type="button"
-								disabled={busy || !privileged}
-								aria-describedby={privileged ? undefined : "keep-person-only"}
-								onClick={() => void save()}
-							>
-								{t("ui.library.memory.keep")}
-							</Button>
-						</>
-					}
-				>
-					<p>{t("ui.library.memory.pending_hint")}</p>
-					<p>{t("ui.library.memory.reject_hint")}</p>
-				</Notice>
-			)}
-			<Tabs defaultValue="edit">
-				<TabsList>
-					<TabsTrigger value="edit">{t("ui.library.tab.edit")}</TabsTrigger>
-					<TabsTrigger value="preview">
-						{t("ui.library.tab.preview")}
-					</TabsTrigger>
-				</TabsList>
-				<TabsContent value="edit">
-					<form className="flex flex-col gap-3" onSubmit={save}>
-						{name === null && (
-							<div className="flex flex-col gap-1">
-								<Label htmlFor="memory-name">
-									{t("ui.library.field.name_optional")}
-								</Label>
-								<Input
-									id="memory-name"
-									value={newName}
-									maxLength={64}
-									onChange={(e) => setNewName(e.target.value)}
-								/>
-								<p className="text-xs text-text-muted">
-									{t("ui.library.field.name_hint")}
-								</p>
-							</div>
-						)}
-						<div className="flex flex-col gap-1">
-							<Label htmlFor="memory-description">
-								{t("ui.library.memory.description")}
-							</Label>
-							<Input
-								id="memory-description"
-								value={description}
-								maxLength={200}
-								required
-								onChange={(e) => setDescription(e.target.value)}
-							/>
-						</div>
-						<div className="flex flex-col gap-1">
-							<Label htmlFor="memory-body">{t("ui.library.field.body")}</Label>
-							<Textarea
-								id="memory-body"
-								rows={8}
-								value={body}
-								onChange={(e) => setBody(e.target.value)}
-							/>
-						</div>
-						<div className="grid gap-3 sm:grid-cols-2">
-							<div className="flex flex-col gap-1">
-								<Label htmlFor="memory-scope">
-									{t("ui.library.field.scope")}
-								</Label>
-								<select
-									id="memory-scope"
-									value={scope}
-									aria-describedby="memory-scope-hint"
-									onChange={(e) => setScope(e.target.value)}
-									className="h-8 max-w-full rounded-lg border border-input bg-background px-2 text-sm"
-								>
-									<option value="">{t("ui.library.scope.workspace")}</option>
-									{scope !== "" && !projects.some((p) => p.id === scope) && (
-										<option value={scope}>{t("ui.library.scope.other")}</option>
+		<div data-testid="memory-pane">
+			<DetailPanel
+				title={
+					<span className="break-all">
+						{entry?.name ?? t("ui.library.new.memory")}
+					</span>
+				}
+				actions={entry !== null ? <EntryBadges entry={entry} /> : undefined}
+				className="gap-3"
+			>
+				<div className="flex flex-col gap-3">
+					{entry !== null && !entry.kept && (
+						<Notice
+							tone="warning"
+							role="status"
+							title={t("ui.library.memory.pending_title")}
+							data-testid="memory-pending"
+							actions={
+								<>
+									<Button
+										type="button"
+										variant="outline"
+										disabled={busy}
+										onClick={() => void remove()}
+									>
+										{t("ui.library.memory.reject")}
+									</Button>
+									<Button
+										type="button"
+										disabled={busy || !privileged}
+										aria-describedby={
+											privileged ? undefined : "keep-person-only"
+										}
+										onClick={() => void save()}
+									>
+										{t("ui.library.memory.keep")}
+									</Button>
+								</>
+							}
+						>
+							<p>{t("ui.library.memory.pending_hint")}</p>
+							<p>{t("ui.library.memory.reject_hint")}</p>
+						</Notice>
+					)}
+					<Tabs defaultValue="edit">
+						<TabsList>
+							<TabsTrigger value="edit">{t("ui.library.tab.edit")}</TabsTrigger>
+							<TabsTrigger value="preview">
+								{t("ui.library.tab.preview")}
+							</TabsTrigger>
+						</TabsList>
+						<TabsContent value="edit">
+							<form className="flex flex-col gap-3" onSubmit={save}>
+								{name === null && (
+									<div className="flex flex-col gap-1">
+										<Label htmlFor="memory-name">
+											{t("ui.library.field.name_optional")}
+										</Label>
+										<Input
+											id="memory-name"
+											value={newName}
+											maxLength={64}
+											onChange={(e) => setNewName(e.target.value)}
+										/>
+										<p className="text-xs text-text-muted">
+											{t("ui.library.field.name_hint")}
+										</p>
+									</div>
+								)}
+								<div className="flex flex-col gap-1">
+									<Label htmlFor="memory-description">
+										{t("ui.library.memory.description")}
+									</Label>
+									<Input
+										id="memory-description"
+										value={description}
+										maxLength={200}
+										required
+										onChange={(e) => setDescription(e.target.value)}
+									/>
+								</div>
+								<div className="flex flex-col gap-1">
+									<Label htmlFor="memory-body">
+										{t("ui.library.field.body")}
+									</Label>
+									<Textarea
+										id="memory-body"
+										rows={8}
+										value={body}
+										onChange={(e) => setBody(e.target.value)}
+									/>
+								</div>
+								<div className="grid gap-3 sm:grid-cols-2">
+									<div className="flex flex-col gap-1">
+										<Label htmlFor="memory-scope">
+											{t("ui.library.field.scope")}
+										</Label>
+										<select
+											id="memory-scope"
+											value={scope}
+											aria-describedby="memory-scope-hint"
+											onChange={(e) => setScope(e.target.value)}
+											className="h-8 max-w-full rounded-lg border border-input bg-background px-2 text-sm"
+										>
+											<option value="">
+												{t("ui.library.scope.workspace")}
+											</option>
+											{scope !== "" &&
+												!projects.some((p) => p.id === scope) && (
+													<option value={scope}>
+														{t("ui.library.scope.other")}
+													</option>
+												)}
+											{projects.map((p) => (
+												<option key={p.id} value={p.id}>
+													{p.name}
+												</option>
+											))}
+										</select>
+										<p
+											id="memory-scope-hint"
+											className="text-xs text-text-muted"
+										>
+											{t("ui.library.scope.hint")}
+										</p>
+									</div>
+									<div className="flex flex-col gap-1">
+										<Label htmlFor="memory-tags">
+											{t("ui.library.field.tags")}
+										</Label>
+										<Input
+											id="memory-tags"
+											value={tags}
+											onChange={(e) => setTags(e.target.value)}
+										/>
+									</div>
+								</div>
+								<div className="flex flex-wrap gap-2">
+									{/* a note that waits is kept (with these fields) or rejected from the notice above */}
+									{!pending && (
+										<Button type="submit" disabled={busy}>
+											{t("ui.library.action.save")}
+										</Button>
 									)}
-									{projects.map((p) => (
-										<option key={p.id} value={p.id}>
-											{p.name}
-										</option>
-									))}
-								</select>
-								<p id="memory-scope-hint" className="text-xs text-text-muted">
-									{t("ui.library.scope.hint")}
-								</p>
-							</div>
-							<div className="flex flex-col gap-1">
-								<Label htmlFor="memory-tags">
-									{t("ui.library.field.tags")}
-								</Label>
-								<Input
-									id="memory-tags"
-									value={tags}
-									onChange={(e) => setTags(e.target.value)}
-								/>
-							</div>
-						</div>
-						<div className="flex flex-wrap gap-2">
-							{/* a note that waits is kept (with these fields) or rejected from the notice above */}
-							{!pending && (
-								<Button type="submit" disabled={busy}>
-									{t("ui.library.action.save")}
-								</Button>
-							)}
-							{pending && <PersonOnlyNote id="keep-person-only" />}
-							{name !== null && !pending && (
-								<Button
-									type="button"
-									variant="outline"
-									disabled={busy}
-									onClick={() => void remove()}
-								>
-									{t("ui.library.action.remove")}
-								</Button>
-							)}
-						</div>
-						{saved && (
-							<p role="status" className="text-sm">
-								{t("ui.library.saved")}
-							</p>
-						)}
-						<FailureNote failure={failure} />
-					</form>
-				</TabsContent>
-				<TabsContent value="preview">
-					<FileText
-						label={t("ui.library.preview_label")}
-						text={`${description}\n\n${body}`}
-					/>
-				</TabsContent>
-			</Tabs>
+									{pending && <PersonOnlyNote id="keep-person-only" />}
+									{name !== null && !pending && (
+										<Button
+											type="button"
+											variant="outline"
+											disabled={busy}
+											onClick={() => void remove()}
+										>
+											{t("ui.library.action.remove")}
+										</Button>
+									)}
+								</div>
+								{saved && (
+									<p role="status" className="text-sm">
+										{t("ui.library.saved")}
+									</p>
+								)}
+								<FailureNote failure={failure} />
+							</form>
+						</TabsContent>
+						<TabsContent value="preview">
+							<FileText
+								label={t("ui.library.preview_label")}
+								text={`${description}\n\n${body}`}
+							/>
+						</TabsContent>
+					</Tabs>
+				</div>
+			</DetailPanel>
 		</div>
 	);
 }
