@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from "@inertiajs/react";
-import { ArrowDown, ArrowRight, ArrowUp } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp } from "lucide-react";
 import { type FormEvent, type ReactNode, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
@@ -512,12 +512,12 @@ export default function ProjectShow() {
 			<Head title={project.name} />
 			<div className="mx-auto flex max-w-6xl flex-col gap-8">
 				<div className="flex flex-col gap-2">
-					<Link
-						href="/projects"
-						className="text-sm text-muted-foreground underline"
-					>
-						{t("ui.error.back")}
-					</Link>
+					<Button asChild variant="ghost" size="sm" className="w-fit">
+						<Link href="/projects">
+							<ArrowLeft aria-hidden="true" />
+							{t("ui.error.back")}
+						</Link>
+					</Button>
 					<div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
 						<div className="min-w-0 flex-1 basis-64">
 							<div className="flex flex-wrap items-center gap-3">
@@ -531,6 +531,11 @@ export default function ProjectShow() {
 							<p className="mt-1 text-base text-text-muted">
 								{t(`ui.workflow.lead.${project.kind}`)}
 							</p>
+							{project.kind === "text" ? (
+								<p className="mt-1 text-sm text-text-muted">
+									{t("ui.workflow.media_optional")}
+								</p>
+							) : null}
 						</div>
 						<div className="flex flex-wrap items-center gap-2">
 							<AddMedia
