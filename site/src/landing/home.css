@@ -1053,19 +1053,18 @@ html:has(main[data-page="home"]) header[data-variant="landing"] [data-release-ba
 	display: none;
 }
 
-/* The first words of the hero title carry the accent palette, one colour per word flowing left to right like one
-   gradient. Every stop, and every colour between two stops, is at least 4.5:1 on the page in its theme (checked by the
+/* The first words of the hero title flow from orange to purple, left to right, like one gradient (author choice). Every stop, and every colour between two stops, is at least 4.5:1 on the page in its theme (checked by the
    browser test). The text stays text: where background-clip does not apply, or in forced colours, it is plain. */
 @supports ((background-clip: text) or (-webkit-background-clip: text)) {
 	.l-hero-focus {
-		background-image: linear-gradient(90deg, #26299c 0%, #4339cc 33%, #5c58e8 66%, #0f6f67 100%);
+		background-image: linear-gradient(90deg, #c2410c 0%, #7e22ce 100%);
 		-webkit-background-clip: text;
 		background-clip: text;
 		-webkit-text-fill-color: transparent;
 		color: transparent;
 	}
 	.dark .l-hero-focus {
-		background-image: linear-gradient(90deg, #afb3ff 0%, #9694ff 33%, #8078fb 66%, #7cebdb 100%);
+		background-image: linear-gradient(90deg, #fb923c 0%, #c084fc 100%);
 	}
 }
 @media (forced-colors: active) {
