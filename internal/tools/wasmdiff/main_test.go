@@ -67,7 +67,7 @@ func TestDifferingDataSegmentIsNamed(t *testing.T) {
 	if equal {
 		t.Fatal("modules differ but were reported equal")
 	}
-	for _, want := range []string{"in A section 1 data", "1 data segments differ", "first: data segment 0", `"src/ot/map.rs"`, `"src/ot\\map.rs"`} {
+	for _, want := range []string{"in A section 1 data", "1 data segments differ", "first: data segment 0", "around it", `"src/ot/map.rs"`, `"src/ot\\map.rs"`} {
 		if !strings.Contains(out, want) {
 			t.Errorf("report lacks %q:\n%s", want, out)
 		}
