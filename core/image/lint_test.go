@@ -169,7 +169,7 @@ func TestLintTextNoGlyph(t *testing.T) {
 	title, _ := Find(d, lid('c'))
 	title.Text = "Olá 日本 😀"
 
-	lacking := func(family string, _ int, text string) ([]rune, error) {
+	lacking := func(_ string, _ int, text string) ([]rune, error) {
 		var out []rune
 
 		for _, r := range text {

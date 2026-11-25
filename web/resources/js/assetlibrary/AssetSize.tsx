@@ -23,7 +23,9 @@ export function AssetSize({
 			data-state={asset.state}
 			className={className}
 		>
-			{known ? localizeSize(asset.size_text, locale) : t("ui.assets.size.unknown")}
+			{known
+				? localizeSize(asset.size_text, locale)
+				: t("ui.assets.size.unknown")}
 			{asset.state !== "ready" && (
 				<>
 					{" "}

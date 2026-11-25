@@ -386,8 +386,15 @@ func (r *linter) noGlyph(e entry) {
 		more = fmt.Sprintf(" and %d more", len(lacking)-MaxNoGlyphListed)
 	}
 
-	r.add(e.order, CodeNoGlyph, "warning", e.l.ID,
-		fmt.Sprintf("The text of layer %s has characters that the font %s has no glyph for (%s%s); they are drawn as boxes.",
-			e.l.ID, st.FontFamily, strings.Join(points, ", "), more),
-		"Remove them with layer.set_text; no bundled font draws emoji or CJK text.")
+	r.add(
+		e.order,
+		CodeNoGlyph,
+		"warning",
+		e.l.ID,
+		fmt.Sprintf(
+			"The text of layer %s has characters that the font %s has no glyph for (%s%s); they are drawn as boxes.",
+			e.l.ID, st.FontFamily, strings.Join(points, ", "), more,
+		),
+		"Remove them with layer.set_text; no bundled font draws emoji or CJK text.",
+	)
 }

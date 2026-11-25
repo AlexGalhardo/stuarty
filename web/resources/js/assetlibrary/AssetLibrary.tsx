@@ -30,7 +30,6 @@ import type {
 } from "../editor/api/types";
 import { thumbnailUrl } from "../editor/api/urls";
 import { AssetSize } from "./AssetSize";
-import { localizeSize } from "./localizeSize";
 import { OriginBadge } from "./badges";
 import { GenerateDialog, type Kind as GenerateKind } from "./GenerateDialog";
 import { LibraryFilters } from "./LibraryFilters";
@@ -40,6 +39,7 @@ import {
 	LibraryLoading,
 	LibraryReadFailed,
 } from "./LibraryStates";
+import { localizeSize } from "./localizeSize";
 import { MediaCard } from "./MediaCard";
 import { type RevealNotice, RevealNoticeText, useReveal } from "./reveal";
 import { SoundImport } from "./SoundImport";

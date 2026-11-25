@@ -1091,9 +1091,11 @@ func TestImageEditReportsTextTheFontsCannotDraw(t *testing.T) {
 		t.Fatalf("CJK and emoji must be a warning, got %+v", edit.Findings)
 	}
 
-	if _, err := s.ImageEdit(ctx, ImageEditRequest{ImageID: created.ImageID, BaseRevision: edit.Revision, Operations: ops(
-		"layer.set_text", `{"layer_id": "lyr_aaaaaaaaaa", "text": "Olá, mundo"}`,
-	)}); err != nil {
+	if _, err := s.ImageEdit(ctx, ImageEditRequest{
+		ImageID: created.ImageID, BaseRevision: edit.Revision, Operations: ops(
+			"layer.set_text", `{"layer_id": "lyr_aaaaaaaaaa", "text": "Olá, mundo"}`,
+		),
+	}); err != nil {
 		t.Fatal(err)
 	}
 
