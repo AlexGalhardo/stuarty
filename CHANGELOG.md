@@ -7,6 +7,77 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.59.0] - 2026-11-25
+
+### Added
+
+- **renderer:** Draw only a window of columns of the rows of a render ([43df818](https://github.com/AlexGalhardo/stuarty/commit/43df818748a7303a93b2e97b9fc9d0a872b12b63))
+- **web:** Add the image editor command palette on Ctrl K over one list of operations ([d8b03ea](https://github.com/AlexGalhardo/stuarty/commit/d8b03eaf8f999323d67560c9a0f240bd1e523832))
+- **web:** Show the eight primary image tools in the rail and the rest behind a more menu ([a06334e](https://github.com/AlexGalhardo/stuarty/commit/a06334e7d3630455f643e7afe52ab407697e49c6))
+- **web:** Centre the image zoom bar under the picture as minus, percentage, plus and Fit ([3989e6b](https://github.com/AlexGalhardo/stuarty/commit/3989e6b164ca576ea630b481328943f271a1a43b))
+- **web:** Match the image rail, zoom bar, palette and picture to the final design ([9879481](https://github.com/AlexGalhardo/stuarty/commit/9879481b87a29f6d09b3aa843468d66e92d64636))
+- **web:** Match the image top bar to the final design: mark, 32 px buttons, plain saved time ([1229c8b](https://github.com/AlexGalhardo/stuarty/commit/1229c8b274dc28ee1369ef79e58b2d52162db0ec))
+- **web:** Show the product mark at the left of the editor top bar ([c448447](https://github.com/AlexGalhardo/stuarty/commit/c448447b4b66777d7e624e40b195734c0e73e6b8))
+- **service:** List the zooms of a screen take in a media_inspect section ([9eacbdf](https://github.com/AlexGalhardo/stuarty/commit/9eacbdf675fc07e6f5374822900edf2a1d1d782d))
+- **command:** Name the blur strengths of clip.blur_region in the core ([9cd4b4a](https://github.com/AlexGalhardo/stuarty/commit/9cd4b4a5938fe9274a22f26a9e53a76eeb783c48))
+- **ui:** Add the zoom lane and the zoom list to the finishing screen ([cd6bebe](https://github.com/AlexGalhardo/stuarty/commit/cd6bebe4565ae4210ce960b445cce46338d39873))
+- **ui:** Lay out the blur screen as a region grid with a strength from the core ([3c44703](https://github.com/AlexGalhardo/stuarty/commit/3c447036e4c3eaa19abefadebca0b867a87ee173))
+- **ui:** Give the captions screen an inspector with Style, Text and Time tabs ([991c023](https://github.com/AlexGalhardo/stuarty/commit/991c023e109d89076f300d82af30e4ea7e1086a4))
+- **ui:** Add the studio voice stage with the before and after waveforms ([b85c203](https://github.com/AlexGalhardo/stuarty/commit/b85c2039f60dc9f8fb841b8edc02ef8a5fa03804))
+- **ui:** Put the transcript beside the preview with the review in the inspector ([2697fac](https://github.com/AlexGalhardo/stuarty/commit/2697facfb4ed0952f3a386130decd969c791eab8))
+- **ui:** Add the vertical cuts screen with proposal cards and the framing review ([8f9c20d](https://github.com/AlexGalhardo/stuarty/commit/8f9c20d31445556ef4f7573a33ad76d57ad73e56))
+- **ui:** Size editor panels 44/240/340, move history to rail, hide timeline on full screens ([a0f839a](https://github.com/AlexGalhardo/stuarty/commit/a0f839ae0c2923741d6e72ca8a29343af89dfc67))
+- **ui:** Show only media cards in the library and fold the import controls under a header button ([178a569](https://github.com/AlexGalhardo/stuarty/commit/178a569ac11110d54d10a1125a0afdaead71ae8e))
+- **ui:** Flow the transcript as running text and move the selected-words actions to the review ([158399b](https://github.com/AlexGalhardo/stuarty/commit/158399bebca3169ba0e3d2c3dbeee72021039b15))
+- **ui:** Lay the vertical cuts out as three full cards with state pills and full-width buttons ([d27238c](https://github.com/AlexGalhardo/stuarty/commit/d27238c2ab64c45748f0ba1a993e0e1bb846ddf3))
+- **ui:** Draw caption styles as 16:9 tiles and drop folding title on captions screen ([1882c97](https://github.com/AlexGalhardo/stuarty/commit/1882c979516dc5c1df3c055b0af2bc95147495e2))
+- **ui:** Outline the blur region on the preview and lay its fields out as a 2 by 2 grid ([8312c7d](https://github.com/AlexGalhardo/stuarty/commit/8312c7d3fa0a5a1104a1f46c59db953a57e26c12))
+- **ui:** Put clip timing before transform, flatten voice chain, segment click highlight ([c26643c](https://github.com/AlexGalhardo/stuarty/commit/c26643cbacb1aa669012ae668c8c6419b23c85d9))
+- **library:** List the tags in use in the asset library with their counts ([019f083](https://github.com/AlexGalhardo/stuarty/commit/019f0836fd98d7dd07184ae0a11c0b94bcd54ec7))
+- **library:** Give an audio file a sound kind (music, voice, effect) to set and filter by ([4d0c179](https://github.com/AlexGalhardo/stuarty/commit/4d0c179b45bd241e10f289852109978d854a9148))
+- **library:** Mark the skills a session loaded and name the agent and project of a note ([c0a96d9](https://github.com/AlexGalhardo/stuarty/commit/c0a96d9d476155ac9bd1b9be8d51a6b920bef21d))
+- **projects:** Give the flow screens the next post, the step, and the skill and cost of each step ([bd714dd](https://github.com/AlexGalhardo/stuarty/commit/bd714dd7e9e3eeebea648ac75f465e65759490aa))
+- **ui:** Pick an asset tag with its count and filter and set the kind of a sound ([a11a7c8](https://github.com/AlexGalhardo/stuarty/commit/a11a7c89e1a54383b239c17702868787684be6fc))
+- **ui:** Mark loaded skills and name the agent and the project on memory rows ([85a3969](https://github.com/AlexGalhardo/stuarty/commit/85a396920c6af96548bef8e80849fd03f1bc70e9))
+- **ui:** Show project step, next post, reading time, skill and cost ([94bd0a4](https://github.com/AlexGalhardo/stuarty/commit/94bd0a4e6a3c72a398f27ecc8de59504db87f4ed))
+- **ui:** Show recent inbox and failed publication history in notification center ([655ab17](https://github.com/AlexGalhardo/stuarty/commit/655ab17c5a3572ec47755ded1b0b9a69661c185c))
+- **ui:** Add publication details, destination chooser (33f) and published state (33h) ([92af967](https://github.com/AlexGalhardo/stuarty/commit/92af967495ea6adc0d749dcccb81354d24c8bbc0))
+- **ui:** Align project flow summary, zero cost, published state and review fixes ([a7f70d4](https://github.com/AlexGalhardo/stuarty/commit/a7f70d4ecea711b507f81856b6063802af32d003))
+
+### Fixed
+
+- **engine:** Say software H.264 needs OpenH264 installed by the person in the E_NO_ENCODER hint ([b4b4b0e](https://github.com/AlexGalhardo/stuarty/commit/b4b4b0edfa2b7348a582a6b028cf71becd9d490f))
+- **image:** Keep the session of a window held until its bands are over ([7721c05](https://github.com/AlexGalhardo/stuarty/commit/7721c051f790ff1d469e33a7d65c0ce2556223c6))
+- **web:** Keep Ctrl K inside an open image dialog instead of stacking the palette over it ([15b8076](https://github.com/AlexGalhardo/stuarty/commit/15b8076edec2eacc820ccd71ce0f7ffdef238f86))
+- **web:** Keep the pt-BR revision label apart from the English one ([00a5329](https://github.com/AlexGalhardo/stuarty/commit/00a53295764bc37bf6646b4ed6f6f2af199f8281))
+- **ui:** Read the processed sound through the api module on the voice screen ([c4d0800](https://github.com/AlexGalhardo/stuarty/commit/c4d08003f3fcf21e22c9ab504b01fb3d91270edf))
+- **ui:** Drop the keys the new screens left unused and name the identical words ([14a82a0](https://github.com/AlexGalhardo/stuarty/commit/14a82a0e75775da341e7e84f203dbcce6a0ed04b))
+- **ui:** Say one zoom in the singular on the zoom list and the zoom lane ([f9317f5](https://github.com/AlexGalhardo/stuarty/commit/f9317f53287f25b3f72759965450923006b0c6f9))
+- **command:** End a zoom of three held keyframes at the keyframe after the hold ([b70f71d](https://github.com/AlexGalhardo/stuarty/commit/b70f71dbdfc01905bcecb2b77a16f42e8bb79371))
+- **ui:** Drop the fixed version mark from the video editor so it no longer covers Open chat ([780cebf](https://github.com/AlexGalhardo/stuarty/commit/780cebff15338c8ef62830d8bcfb8ab94b982ea5))
+- **ui:** Show a not-found state with a way back on the teleprompter of an unknown project ([026d48d](https://github.com/AlexGalhardo/stuarty/commit/026d48d33a1897473739fc1e8132a72e14259da7))
+- **ui:** Keep undo and redo on the full-height editor screens and tighten the inspector tabs ([db7a998](https://github.com/AlexGalhardo/stuarty/commit/db7a9980f018b292b6e2b4bd9f2e832e7d1a7a1e))
+- **ui:** Keep the import event in the commands layer so the thin-client rules hold ([d304d20](https://github.com/AlexGalhardo/stuarty/commit/d304d207101b3a038d5fb9570e033441a7deb887))
+- **library:** List the project name of a note as untrusted text and leave the agent name plain ([7a4e19d](https://github.com/AlexGalhardo/stuarty/commit/7a4e19ded399e09cf58f9c266baea41277c62aa4))
+- **web:** Do not scroll the page to a failure note that is not in a dialog ([113346d](https://github.com/AlexGalhardo/stuarty/commit/113346d9deb97c3854e72044e45ebe5834399671))
+- **service:** Reuse the unfinished sign-in connection when a sign-in begins again ([252f777](https://github.com/AlexGalhardo/stuarty/commit/252f7779407d7ef4a4dd158980f4a3048a312ad4))
+- **web:** Focus the name field when the project edit dialog opens ([cb9bfed](https://github.com/AlexGalhardo/stuarty/commit/cb9bfed067d94f9014f72e8734c8722e12ad190e))
+- **web:** Save an emptied brand kit with an explicit empty member ([6c13764](https://github.com/AlexGalhardo/stuarty/commit/6c137641e93046b37d7c3dbac44695351f26c201))
+- **web:** Answer a body over the transport cap with a message and a hint ([3a07ede](https://github.com/AlexGalhardo/stuarty/commit/3a07ede8cdc612fdb3701d3afb2a95fb8c7eff6e))
+- **service:** Do not tell a text-only project to add a timeline when it is created ([60e327f](https://github.com/AlexGalhardo/stuarty/commit/60e327f40dab2792cf7501c4c412fc3887bbfd47))
+- **web:** Keep the current sidebar item in view and fit the release tag in the rail ([1b36cf5](https://github.com/AlexGalhardo/stuarty/commit/1b36cf588196d931ee2a2a28ed1202880cdba9cf))
+- **cli:** Name the --as-new flag in the hint of a bundle import whose id exists ([20ee8f3](https://github.com/AlexGalhardo/stuarty/commit/20ee8f3288c49d59f3238b5c8c3e9ed09cf04b94))
+- **cli:** Shorten the echo of a --text typed as words and say the flag takes a file ([4f5a3ed](https://github.com/AlexGalhardo/stuarty/commit/4f5a3ed5949bde0d61f4e27d03f0c2dea3a6c575))
+- **cli:** Apply specialist review fixes for QA batch 1 ([efdec12](https://github.com/AlexGalhardo/stuarty/commit/efdec12f4a07b041be95e338f8fb0b2bb6b6c62e))
+- **core:** Warn when an image text has characters its font cannot draw ([ae3dfe3](https://github.com/AlexGalhardo/stuarty/commit/ae3dfe36e91c89f2c12f3a21e9ca44d70ee20f9e))
+- **mcp:** Refuse media_inspect with an asset_id and no project, as the CLI does ([5d6b1cb](https://github.com/AlexGalhardo/stuarty/commit/5d6b1cbd1517eed9a2122685c52c6cd8f03b635e))
+- **cli:** User and workspace commands use the standard error format and accept --json ([ce45bcb](https://github.com/AlexGalhardo/stuarty/commit/ce45bcb540efdaf1dfe926ad8760b24731305c2f))
+- **cli:** Name CLI flags instead of API fields when caption, script or calendar lack input ([2f103f1](https://github.com/AlexGalhardo/stuarty/commit/2f103f195e297b8834b34da1226eb9aa3646831d))
+- **web:** Show the release on the sign-in from a shared prop, with no 401 from GET /system ([7184057](https://github.com/AlexGalhardo/stuarty/commit/7184057fd8418dc698cc25b8941cae1ee0aac0db))
+- **web:** Draw file sizes with the decimal mark of the language ([3c4b3d9](https://github.com/AlexGalhardo/stuarty/commit/3c4b3d9be560fffed9387e66f6ff18e56e380f47))
+- **web:** Trap Tab and Shift+Tab inside modal dialogs ([0a78e83](https://github.com/AlexGalhardo/stuarty/commit/0a78e838bdb424cebba4489eafb994492c52784a))
+- **web:** Resolve lint issues and validation codes found in QA-r2 review ([6ea1244](https://github.com/AlexGalhardo/stuarty/commit/6ea124406729004ea3abdbb3c135d2bfb9115559))
+
 ## [0.58.0] - 2026-11-25
 
 ### Added
@@ -2825,7 +2896,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.58.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.59.0...HEAD
+[0.59.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.58.0...v0.59.0
 [0.58.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.57.0...v0.58.0
 [0.57.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.56.0...v0.57.0
 [0.56.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.55.0...v0.56.0
