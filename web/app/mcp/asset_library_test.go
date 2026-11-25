@@ -95,4 +95,11 @@ func TestMediaToolsReachTheLibrary(t *testing.T) {
 	if f, _ := structured(t, all)["assets"].([]any); len(f) != 1 {
 		t.Errorf("the whole library = %v", structured(t, all))
 	}
+
+	// An asset_id with no project is refused as the CLI refuses it, not read as a request for the library
+	// (VV-445).
+	bad := call(t, cs, "media_inspect", map[string]any{"asset_id": "ast_zzzzzzzzzz"})
+	if !bad.IsError || !strings.Contains(textOf(t, bad), "needs a project") {
+		t.Errorf("an asset_id with no project must be refused: %s", textOf(t, bad))
+	}
 }
