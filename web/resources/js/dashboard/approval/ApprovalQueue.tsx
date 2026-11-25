@@ -124,73 +124,87 @@ export function ApprovalItem({
 				</div>
 				<StatusBadge status="waiting">{t("ui.approvals.queue")}</StatusBadge>
 			</div>
-			{post !== undefined && (
-				<div
-					className="rounded-lg border bg-muted/40 p-3 text-sm"
-					data-testid="approval-post"
-				>
-					<p className="font-medium break-words">{text(publication?.title)}</p>
-					<p
-						className="mt-1 line-clamp-3 whitespace-pre-wrap break-words text-muted-foreground"
-						data-testid="approval-excerpt"
+			<div
+				className={
+					post === undefined
+						? undefined
+						: "grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]"
+				}
+			>
+				<dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm md:grid-cols-3">
+					<Fact label={t("ui.approvals.actor")} testId="approval-actor">
+						<UntrustedText>{request.actor}</UntrustedText>
+					</Fact>
+					<Fact label={t("ui.approvals.skill")} testId="approval-skill">
+						{row === undefined ? notReported : text(row.skill)}
+					</Fact>
+					<Fact label={t("ui.approvals.kind")} testId="approval-tool" mono>
+						{text(request.kind)}
+					</Fact>
+					<Fact label={t("ui.approvals.item")} testId="approval-item">
+						{text(publication?.title)}
+					</Fact>
+					<Fact
+						label={t("ui.approvals.destination")}
+						testId="approval-destination"
 					>
-						{text(post.text.slice(0, 400))}
-					</p>
-					<p className="mt-1 text-xs text-muted-foreground">
-						<span data-testid="approval-words">
-							{t("ui.approvals.words", { count: post.words })}
-						</span>
-						{" · "}
-						{t("ui.approvals.address")}{" "}
-						<span data-testid="approval-address">{text(post.slug)}</span>
-					</p>
-				</div>
-			)}
-			<dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm md:grid-cols-3">
-				<Fact label={t("ui.approvals.actor")} testId="approval-actor">
-					<UntrustedText>{request.actor}</UntrustedText>
-				</Fact>
-				<Fact label={t("ui.approvals.skill")} testId="approval-skill">
-					{row === undefined ? notReported : text(row.skill)}
-				</Fact>
-				<Fact label={t("ui.approvals.kind")} testId="approval-tool" mono>
-					{text(request.kind)}
-				</Fact>
-				<Fact label={t("ui.approvals.item")} testId="approval-item">
-					{text(publication?.title)}
-				</Fact>
-				<Fact
-					label={t("ui.approvals.destination")}
-					testId="approval-destination"
-				>
-					{text(destination ?? undefined)}
-				</Fact>
-				<Fact label={t("ui.approvals.cost")} testId="approval-cost">
-					{free
-						? t("ui.approvals.no_cost")
-						: formatMoney(request.estimate, locale)}
-				</Fact>
-				<Fact label={t("ui.approvals.undo")} testId="approval-undo">
-					{row === undefined
-						? notReported
-						: t(UNDO_KEY[row.undo] ?? UNDO_KEY.not_verified)}
-				</Fact>
-				<Fact label={t("ui.approvals.path")} testId="approval-path">
-					{target === undefined || publication === undefined ? (
-						notReported
-					) : (
-						<span className="flex flex-wrap items-center gap-2">
-							<TargetStateBadge state={target.state} />
-							<Link href="/publish" className="underline">
-								{t("ui.approvals.open_publish")}
-							</Link>
-						</span>
-					)}
-				</Fact>
-				<Fact label={t("ui.approvals.asked")}>
-					{formatDateTime(request.created_at, locale)}
-				</Fact>
-			</dl>
+						{text(destination ?? undefined)}
+					</Fact>
+					<Fact label={t("ui.approvals.cost")} testId="approval-cost">
+						{free
+							? t("ui.approvals.no_cost")
+							: formatMoney(request.estimate, locale)}
+					</Fact>
+					<Fact label={t("ui.approvals.undo")} testId="approval-undo">
+						{row === undefined
+							? notReported
+							: t(UNDO_KEY[row.undo] ?? UNDO_KEY.not_verified)}
+					</Fact>
+					<Fact label={t("ui.approvals.path")} testId="approval-path">
+						{target === undefined || publication === undefined ? (
+							notReported
+						) : (
+							<span className="flex flex-wrap items-center gap-2">
+								<TargetStateBadge state={target.state} />
+								<Link href="/publish" className="underline">
+									{t("ui.approvals.open_publish")}
+								</Link>
+							</span>
+						)}
+					</Fact>
+					<Fact label={t("ui.approvals.asked")}>
+						{formatDateTime(request.created_at, locale)}
+					</Fact>
+				</dl>
+				{post !== undefined && (
+					<aside
+						aria-label={t("ui.approvals.post_title")}
+						className="flex min-w-0 flex-col gap-2 rounded-lg border border-border bg-surface-sunken p-3 text-sm"
+						data-testid="approval-post"
+					>
+						<h3 className="text-xs font-semibold uppercase tracking-wide text-text-subtle">
+							{t("ui.approvals.post_title")}
+						</h3>
+						<p className="font-medium break-words">
+							{text(publication?.title)}
+						</p>
+						<p
+							className="max-h-72 overflow-y-auto whitespace-pre-wrap break-words text-text-muted"
+							data-testid="approval-excerpt"
+						>
+							{text(post.text)}
+						</p>
+						<p className="text-xs text-text-subtle">
+							<span data-testid="approval-words">
+								{t("ui.approvals.words", { count: post.words })}
+							</span>
+							{" · "}
+							{t("ui.approvals.address")}{" "}
+							<span data-testid="approval-address">{text(post.slug)}</span>
+						</p>
+					</aside>
+				)}
+			</div>
 			<div className="flex flex-wrap items-end gap-3">
 				<p className="flex min-w-48 flex-1 items-center gap-2 text-sm text-text-subtle">
 					<Lock aria-hidden="true" className="size-4 shrink-0" />
