@@ -114,7 +114,7 @@ func toLibraryEntry(c Caller, e *library.Entry) LibraryEntry {
 	out := LibraryEntry{
 		Kind: string(e.Kind), Name: e.Name, Description: libText(c, e.Description, libDescriptionBudget),
 		Scope: e.Scope, Origin: e.Origin, Reviewed: e.Reviewed, Kept: e.Kept, Actor: e.Actor,
-		ActorName: libText(c, core.AgentName(e.Actor), 64),
+		ActorName: core.AgentName(e.Actor),
 		State:     e.State, Error: libText(c, e.Error, libDescriptionBudget), LintErrors: e.LintErrors,
 		LintWarns: e.LintWarnings, HasScripts: e.HasScripts, UpdatedAt: time.UnixMilli(e.UpdatedMs).UTC(),
 	}

@@ -76,6 +76,7 @@ var Provenance = map[string]string{
 	"service.LibraryEntry.Description":     SourceLibraryText,
 	"service.LibraryEntry.Tags":            SourceLibraryText,
 	"service.LibraryEntry.Error":           SourceLibraryText,
+	"service.LibraryEntry.ProjectName":     SourceProjectText,
 	"service.LibraryHit.Snippet":           SourceLibraryText,
 	"service.MemoryGetResult.Body":         SourceLibraryText,
 	"service.PromptGetResult.Body":         SourceLibraryText,
