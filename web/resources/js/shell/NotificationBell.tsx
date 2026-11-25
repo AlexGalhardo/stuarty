@@ -314,50 +314,48 @@ export function CenterBody({
 					{t("ui.shell.notify.empty")}
 				</p>
 			) : (
-				<>
-					{[
-						{
-							key: "waiting",
-							rows: items.filter((r) => r.state === "waiting"),
-						},
-						{
-							key: "history",
-							rows: items.filter((r) => r.state !== "waiting"),
-						},
-					].map(
-						(group) =>
-							group.rows.length > 0 && (
-								<section
-									key={group.key}
-									aria-label={t(`ui.shell.notify.group.${group.key}`)}
-									className="flex flex-col gap-2"
-								>
-									<h3 className="text-xs font-semibold uppercase tracking-wide text-text-subtle">
-										{t(`ui.shell.notify.group.${group.key}`)}
-									</h3>
-									<ul className="flex flex-col gap-2">
-										{group.rows.map((item) => (
-											<Row
-												key={item.id}
-												item={item}
-												project={projectName(item.project_id)}
-												place={placeOf(
-													item.destination,
-													connectionName,
-													() => null,
-												)}
-												busy={busyId !== null}
-												disabledBy={privileged ? undefined : personOnlyId}
-												onAnswer={onAnswer}
-												onOpenChat={onOpenChat}
-												onNavigate={onNavigate}
-											/>
-										))}
-									</ul>
-								</section>
-							),
-					)}
-				</>
+				[
+					{
+						key: "waiting",
+						rows: items.filter((r) => r.state === "waiting"),
+					},
+					{
+						key: "history",
+						rows: items.filter((r) => r.state !== "waiting"),
+					},
+				].map(
+					(group) =>
+						group.rows.length > 0 && (
+							<section
+								key={group.key}
+								aria-label={t(`ui.shell.notify.group.${group.key}`)}
+								className="flex flex-col gap-2"
+							>
+								<h3 className="text-xs font-semibold uppercase tracking-wide text-text-subtle">
+									{t(`ui.shell.notify.group.${group.key}`)}
+								</h3>
+								<ul className="flex flex-col gap-2">
+									{group.rows.map((item) => (
+										<Row
+											key={item.id}
+											item={item}
+											project={projectName(item.project_id)}
+											place={placeOf(
+												item.destination,
+												connectionName,
+												() => null,
+											)}
+											busy={busyId !== null}
+											disabledBy={privileged ? undefined : personOnlyId}
+											onAnswer={onAnswer}
+											onOpenChat={onOpenChat}
+											onNavigate={onNavigate}
+										/>
+									))}
+								</ul>
+							</section>
+						),
+				)
 			)}
 			{waitingCount(items) > 0 && <PersonOnlyNote id={personOnlyId} />}
 		</>
