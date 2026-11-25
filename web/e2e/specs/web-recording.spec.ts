@@ -3,29 +3,50 @@ import { join } from "node:path";
 import type { Page } from "@playwright/test";
 
 import { ensureAccount, signInWithPassword } from "../support/account";
-import { caller, expect, home, seedProject, test } from "./helpers";
+import { test as base, caller, expect, home, seedProject } from "./helpers";
 
 // Epic 63 (SDD-025 section 18): a person records the screen and the microphone in the browser, the chunks go up to
 // the server as they are made, and the take lands in the same project through the same review and placement as a
-// recording of the desktop app. Chromium plays the devices: its fake-device flags give a test pattern for the
-// screen, the camera and a beep for the microphone, and the fake UI answers the permission prompts that a person
-// answers in a real browser (the product never answers them). No real device is opened. Firefox and WebKit have no
-// such flags, so the spec runs in Chromium only (the unit tests of the recorder cover the rest). The tests run one
-// after the other: one browser upload may be open at a time for a person (SDD-025 section 18.4), and every test here
-// is that person.
-test.describe.configure({ timeout: 240_000, mode: "serial" });
-
-test.use({
-	viewport: { width: 1440, height: 900 },
-	permissions: ["microphone", "camera"],
-	launchOptions: {
-		args: [
-			"--use-fake-ui-for-media-stream",
-			"--use-fake-device-for-media-stream",
-			"--auto-select-desktop-capture-source=Entire screen",
-		],
+// recording of the desktop app. The browsers play the devices their own way, and no real device is opened:
+// Chromium has fake-device flags (a test pattern for the screen and the camera, a beep for the microphone) and its
+// fake UI answers the permission prompts that a person answers in a real browser; Firefox has the preferences
+// media.navigator.streams.fake and media.navigator.permission.disabled, which do the same. The product never
+// answers a prompt. A browser whose build has no screen capture for a page at all (the WebKit of Playwright on
+// Windows has no navigator.mediaDevices) cannot record: there the test checks what SDD-025 section 18.1 promises
+// that person, the sentence that says the browser cannot capture the screen and the Start button off, in place of
+// the recording. The tests run one after the other: one browser upload may be open at a time for a person
+// (SDD-025 section 18.4), and every test here is that person.
+// The permissions option of Chromium and the launch options of each engine are set per browser: Firefox does not
+// know the permission names microphone and camera ("Unknown permission"), and Chromium ignores the preferences.
+const test = base.extend({
+	permissions: async ({ browserName }, use) => {
+		await use(browserName === "chromium" ? ["microphone", "camera"] : []);
+	},
+	launchOptions: async ({ browserName }, use) => {
+		if (browserName === "chromium") {
+			await use({
+				args: [
+					"--use-fake-ui-for-media-stream",
+					"--use-fake-device-for-media-stream",
+					"--auto-select-desktop-capture-source=Entire screen",
+				],
+			});
+		} else if (browserName === "firefox") {
+			await use({
+				firefoxUserPrefs: {
+					"media.navigator.streams.fake": true,
+					"media.navigator.permission.disabled": true,
+				},
+			});
+		} else {
+			await use({});
+		}
 	},
 });
+
+test.describe.configure({ timeout: 240_000, mode: "serial" });
+
+test.use({ viewport: { width: 1440, height: 900 } });
 
 interface RecordingView {
 	recording_id: string;
@@ -64,14 +85,33 @@ async function openDialog(page: Page, project: string): Promise<void> {
 	await expect(page.locator("[data-record-step]")).toBeVisible();
 }
 
+// A browser that cannot capture the screen for a page says so in the dialog and leaves Start off. Returns true when
+// this browser is one of them, after checking that sentence, so the test that needed a recording ends there.
+async function endsAsBlocked(page: Page, project: string): Promise<boolean> {
+	// the dialog shows either the form of this browser or the reason it has none
+	const blocked = page.locator("[data-record-browser-blocked]");
+	await expect(
+		page.locator("[data-record-browser-blocked], [data-record-browser-codec]"),
+	).toBeVisible();
+	if ((await blocked.count()) === 0) return false;
+	await expect(blocked).toHaveAttribute(
+		"data-record-browser-blocked",
+		"no_display_capture",
+	);
+	await expect(blocked).toContainText("cannot capture the screen");
+	await expect(page.locator("[data-record-start]")).toBeDisabled();
+	expect(await recordingsOf(page.request, project)).toHaveLength(0);
+	return true;
+}
+
 test.describe("recording in the browser", () => {
-	test("a person records 30 seconds, the take lands in the project and goes on the timeline @chromium-only", async ({
+	test("a person records 30 seconds, the take lands in the project and goes on the timeline ", async ({
 		page,
 		request,
 	}) => {
-		// the fake devices exist only in Chromium
 		const seeded = await seedProject(request, { tracks: 0, assets: 1 });
 		await openDialog(page, seeded.id);
+		if (await endsAsBlocked(page, seeded.id)) return;
 
 		// before starting, the dialog says what this browser records and that it asks for permission itself
 		const step = page.locator("[data-record-step]");
@@ -221,6 +261,7 @@ test.describe("recording in the browser", () => {
 		});
 		const first = await context.newPage();
 		await openDialog(first, seeded.id);
+		if (await endsAsBlocked(first, seeded.id)) return;
 		await first.locator("[data-record-start]").click();
 		await expect(first.locator("[data-record-browser-live]")).toBeVisible({
 			timeout: 30_000,
@@ -259,7 +300,12 @@ test.describe("recording in the browser", () => {
 		await second.close();
 	});
 
-	test("Stop sharing in the browser ends the take and the dialog moves on to the review", async ({
+	// Chromium only: the test plays the Stop sharing of the browser by dispatching an `ended` event on the track of
+	// the screen. In the Firefox of Playwright a listener added with addEventListener on a MediaStreamTrack never
+	// receives an event that a page dispatches itself (only `onended` does; a plain EventTarget works), and Firefox
+	// has no way to end a fake screen capture from outside, so the path cannot be exercised there. In WebKit the
+	// browser has no capture to stop. The unit tests of the recorder cover the handler itself.
+	test("Stop sharing in the browser ends the take and the dialog moves on to the review @chromium-only", async ({
 		page,
 		request,
 	}) => {
@@ -275,6 +321,7 @@ test.describe("recording in the browser", () => {
 			};
 		});
 		await openDialog(page, seeded.id);
+		if (await endsAsBlocked(page, seeded.id)) return;
 		await page.locator("[data-record-start]").click();
 		await expect(page.locator("[data-record-browser-live]")).toHaveAttribute(
 			"data-record-browser-live",
