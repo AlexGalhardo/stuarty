@@ -224,8 +224,13 @@ export class ChunkUploader {
 			this.set({ end: { kind: "failed", error } });
 			return "ended";
 		}
-		// E_PAYLOAD_TOO_LARGE and E_VALIDATION do not change by trying again
-		if (error.code === "E_PAYLOAD_TOO_LARGE") {
+		// E_PAYLOAD_TOO_LARGE and E_VALIDATION do not change by trying again, except a digest that did not match: the
+		// bytes may have been damaged on the way
+		if (
+			error.code === "E_PAYLOAD_TOO_LARGE" ||
+			(error.code === "E_VALIDATION" &&
+				error.details?.reason !== "checksum_mismatch")
+		) {
 			this.set({ end: { kind: "failed", error } });
 			return "ended";
 		}

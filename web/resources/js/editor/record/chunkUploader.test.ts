@@ -203,6 +203,7 @@ describe("what the server refuses", () => {
 			["E_INVALID_STATE", { reason: "not_receiving" }],
 			["E_INVALID_STATE", { reason: "chunk_conflict" }],
 			["E_PAYLOAD_TOO_LARGE", undefined],
+			["E_VALIDATION", undefined],
 		] as const) {
 			const h = make(async () => {
 				throw api(code, details);
