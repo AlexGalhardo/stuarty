@@ -687,7 +687,7 @@ The renderer enforces these itself, as the last defence, even though the product
 | Limit | Default | `details.limit` | Notes |
 | --- | --- | --- | --- |
 | Output frame side | 4096 pixels, so a frame is at most 64 MiB | `render_frame_side` | the "frame too large" case; `value` is the side asked for, `ceiling` 4096 |
-| Layers in one plan | 64 | `render_layers` | 50 tracks give at most 50 layers; the margin is for a future overlay layer |
+| Layers in one plan | 64 | `render_layers` | 50 tracks give at most 50 layers; the margin is for a future overlay layer. An image document has up to 500 layers (SDD-021 section 3), so its host draws it in passes of at most 64 layers each and the module never sees more (SDD-021 section 6.1, "Passes"); the picture a pass starts from is one of its 64 |
 | Render input | 4 MiB | `render_input_bytes` | a caption with all 5,000 words of the document is about 60 KiB |
 | One texture or bitmap | 8192 pixels on a side | `render_texture_side` | the normalized media is at most 3840 on its long edge (SDD-011 §1.5); a prepared block is not held to it (§4.2.2) |
 | Textures in memory | 512 MiB in all | `render_texture_bytes` | `max_texture_bytes` of `vr_init`; the layers of one frame (§5.2); the instances of an image document use 800 MiB (SDD-021 §6.2) |

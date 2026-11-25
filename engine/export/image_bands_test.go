@@ -201,26 +201,39 @@ func TestImageLayerGrownPastTheSideOfATexture(t *testing.T) {
 	}
 }
 
-// TestImageLayerLimitIsTheSameInAnyNumberOfBands: the limit of 64 layers of the module is on the draw. Counted per
-// band, a document would be drawn on a machine with many CPUs and refused on one with few.
+// TestImageLayerLimitIsTheSameInAnyNumberOfBands: the limit of 64 layers of the module is on the draw, not on a
+// band. Counted per band, a document would be drawn on a machine with many CPUs and refused on one with few; and a
+// pass the module is asked to draw with more layers is refused whatever the bands.
 func TestImageLayerLimitIsTheSameInAnyNumberOfBands(t *testing.T) {
-	d := &coreimage.Document{
-		SchemaVersion: coreimage.SchemaVersion, ID: "img_aaaaaaaaaa", Name: "many", Width: 320, Height: 640,
-		Background: "#101820",
-	}
+	d := gridDoc(maxPlanLayers + 1)
 
-	for i := range maxPlanLayers + 1 {
-		d.Layers = append(d.Layers, coreimage.Layer{
-			ID: fmt.Sprintf("lyr_%010d", i), Kind: coreimage.KindShape, Shape: coreimage.ShapeRect, Name: "s",
-			Visible: true, Opacity: 100, X: 4, Y: i * 9, W: 100, H: 8, Fill: "#C0805A",
-		})
-	}
-
-	coreimage.ReorderAll(d)
+	var first *image.RGBA
 
 	for _, bands := range []int{0, 1, 8} {
-		_, err := renderImage(context.Background(), d, ImageConfig{}, bands)
-		if err == nil || !strings.Contains(err.Error(), "render_layers") {
+		img, err := renderImage(context.Background(), d, ImageConfig{}, bands)
+		if err != nil {
+			t.Fatalf("%d bands: %v", bands, err)
+		}
+
+		if first == nil {
+			first = img
+		} else if n := pictureDiff(first, img); n != 0 {
+			t.Fatalf("%d bands differ from the first render in %d bytes", bands, n)
+		}
+	}
+
+	fp, live := livePlan(d, rasterize.Bundled())
+	run := &imageRun{ctx: context.Background(), plan: fp, raster: rasterize.NewCache(rasterize.Bundled(), 0)}
+
+	drawn, err := run.prepareAll(live)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, bands := range []int{0, 1, 8} {
+		run.bands = bands
+
+		if _, err := run.drawBands(nil, drawn); err == nil || !strings.Contains(err.Error(), "render_layers") {
 			t.Fatalf("%d bands: err = %v, want the limit of layers", bands, err)
 		}
 	}
