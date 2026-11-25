@@ -1488,6 +1488,7 @@ CREATE TABLE accounts (
   idle_lock_minutes   INTEGER NOT NULL DEFAULT 0 CHECK (idle_lock_minutes BETWEEN 0 AND 1440),
   created_ms          INTEGER NOT NULL,
   updated_ms          INTEGER NOT NULL,
+  seal_version        INTEGER NOT NULL DEFAULT 0 CHECK (seal_version BETWEEN 0 AND 1), -- added by 20261124150100, section 5.17.4
   PRIMARY KEY (id)
 );
 ```

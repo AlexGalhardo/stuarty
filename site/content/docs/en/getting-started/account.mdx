@@ -37,9 +37,12 @@ If you lost the key, or the page closed before you saved it, sign in with your p
 - the messages of the chats with your agent and the title of each chat, which is its first message;
 - the texts of your publications and of the posts you published to your blog;
 - what you asked an AI model to make and what it answered, including the excerpt shown in an approval and the prompt kept with a generated file (with an account, the search of the library no longer matches a prompt);
-- the credentials of your connections (the vault).
+- the words inside a timeline or an image: the captions on a video, its text layers and the text of an image, a template or the brand kit, and the history of edits and the older copies of a document that repeat them;
+- the description and the rights note of a file of the asset library (the search of the library no longer matches a description, as it no longer matches a prompt);
+- the credentials of your connections (the vault);
+- your memory notes, prompts and skills: each file in the `library` folder is sealed with your key, so a copy of the folder shows nothing while Stuarty is locked.
 
-The names of projects, the file names, the dates and the sizes are not encrypted, and neither are your media files. **The files of your memory notes, prompts and skills are encrypted** too: each file in the `library` folder is sealed with your key, so a copy of the folder shows nothing while Stuarty is locked. The file names stay readable. Because a sealed file cannot be edited outside Stuarty, edit a skill in Stuarty, or export it (a plain file, only when you ask) and drop the edited plain file back into the `library` folder: Stuarty picks it up and seals it. **The words inside a timeline or an image are not encrypted yet either**: the captions on a video, its text layers and the text of an image document stay readable in the database file. The Account section of Settings repeats this list.
+The names of projects, files and notes, the file names inside the `library` folder, the dates and the sizes are not encrypted, and neither are your media files. A digest of each document, which Stuarty compares to check that it is whole, is not encrypted either: it does not reveal the document. Because a sealed library file cannot be edited outside Stuarty, edit a skill in Stuarty, or export it (a plain file, only when you ask) and drop the edited plain file back into the `library` folder: Stuarty picks it up and seals it. The Account section of Settings repeats this list.
 
 ## Backups
 
@@ -56,5 +59,7 @@ Only a session opened with your password can approve a publication or set a pric
 ## An existing workspace
 
 If you used Stuarty before accounts existed, creating the account encrypts what is already there. Stuarty first makes a copy, encrypts, reads everything back to check it, and only then deletes the copy. If anything fails, it puts the copy back and tells you. Once the encryption is verified it also deletes the older database backups it kept in `backups/`, including the one made when it took over the folder of the former name, because they hold your words in clear.
+
+If your account was made by an earlier version, the words inside your timelines and images, the edit history, the descriptions and rights notes and the files of the `library` folder were not encrypted yet. The first time you sign in after updating, Stuarty encrypts them, a few at a time, and checks each batch as it goes. It keeps a copy of the database until everything is checked, and then deletes it together with the older backups. If Stuarty is closed in the middle, it opens as usual and goes on at the next sign in. The sign-in takes a little longer that once. The encryption is one way: an older version of Stuarty cannot open a workspace that a newer one has encrypted, and refuses to start on it.
 
 If Stuarty took over the workspace of its former name (Vukem Video, the folder `.vukem-video`) by copying it, because the two folders were on different drives, the former folder is still there with all your words in clear. Stuarty never deletes it. The recovery key page names that folder when it exists: delete it yourself once you have checked that everything is in Stuarty.

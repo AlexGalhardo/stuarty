@@ -18,7 +18,7 @@ import (
 )
 
 // clearFiles is everything of the workspace the words of a person must not be in, once the account exists: the
-// database, its log, the vault and every copy in backups/. The library files stay in clear (D-127).
+// database, its log, the vault and every copy in backups/. The library files are sealed (ADR-0053).
 func clearFiles(t *testing.T, home string) map[string][]byte {
 	t.Helper()
 
