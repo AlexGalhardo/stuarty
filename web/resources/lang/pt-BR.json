@@ -1370,7 +1370,7 @@
         "title": "O editor parou de funcionar"
       },
       "back": "Voltar aos projetos",
-      "revision": "rev {revision}",
+      "revision": "Rev {revision}",
       "saved_auto": "Salvo automaticamente: {time}",
       "connection": {
         "connecting": "Conectando",
@@ -1399,7 +1399,8 @@
         "filters": "Filtros",
         "templates": "Modelos",
         "effects": "Efeitos",
-        "handoff": "Animação"
+        "handoff": "Animação",
+        "cursor_clicks": "Cursor e cliques"
       },
       "handoff": {
         "intro": "Traga uma animação feita no HyperFrames ou em outro motor de animação. O Stuarty diz o que ela precisa respeitar e confere o arquivo que você trouxer de volta.",
@@ -2635,7 +2636,7 @@
         }
       },
       "blur_region": {
-        "title": "Borrar uma região",
+        "title": "Desfoque de dados sensíveis",
         "hint": "Esconda um e-mail, uma chave ou um endereço. A região é uma parte da imagem; deixe o tempo vazio para borrar o clipe inteiro. O clipe não muda: o borrão é um item numa faixa Blur acima dele.",
         "x": "Esquerda",
         "y": "Topo",
@@ -2645,7 +2646,10 @@
         "duration": "Por",
         "radius": "Força do borrão",
         "radius_default": "Padrão forte",
-        "apply": "Borrar esta região"
+        "apply": "Borrar esta região",
+        "group_region": "Região",
+        "group_time": "Tempo",
+        "group_strength": "Força"
       },
       "layout": {
         "title": "Layout e fundo",
@@ -2697,7 +2701,7 @@
         "window_failed": "Não foi possível abrir a janela do teleprompter."
       },
       "screen_take": {
-        "title": "Gravação de tela",
+        "title": "Zoom por clique",
         "hint": "Para uma gravação feita com eventos do ponteiro: dá zoom nos cliques, desenha um cursor suave e marca cada clique. Cada botão cria keyframes ou itens na linha do tempo que você pode alterar ou apagar; Dar zoom nos cliques substitui os keyframes de posição e escala do clipe. O cursor e os destaques não acompanham mudanças posteriores: desenhe-os de novo depois de mudar o zoom à mão ou mover o clipe.",
         "default": "Padrão",
         "zoom_level": "Nível do zoom",
@@ -2715,7 +2719,9 @@
         "highlight_none": "Nenhum",
         "highlight_duration": "Duração",
         "highlight_apply": "Destacar os cliques",
-        "highlight_remove": "Remover os destaques"
+        "highlight_remove": "Remover os destaques",
+        "cursor_title": "Cursor suave",
+        "highlight_title": "Destaque de cliques"
       },
       "voice_preset": {
         "hint": "Uma ação para uma voz limpa e uniforme. A exportação leva o som à meta de volume do projeto.",
@@ -3507,6 +3513,11 @@
         "invalid_until": "Digite um tempo como 12s, 90f ou 00:00:12.",
         "cancel": "Cancelar",
         "confirm": "Repetir"
+      },
+      "tool": "Ferramenta",
+      "toggle": {
+        "on": "Ligado",
+        "off": "Desligado"
       }
     },
     "account": {

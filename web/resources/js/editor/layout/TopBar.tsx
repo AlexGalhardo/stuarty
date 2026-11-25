@@ -1,8 +1,10 @@
 import {
 	ArrowLeft,
 	Check,
+	History,
 	House,
 	Loader,
+	MessagesSquare,
 	Pencil,
 	RefreshCw,
 	Wifi,
@@ -13,10 +15,13 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import LocaleSelect from "@/components/LocaleSelect";
 import ThemeToggle from "@/components/ThemeToggle";
 import UntrustedText from "@/components/UntrustedText";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/cn";
 import { useLocale, useT } from "@/lib/i18n";
+import NotificationBell from "../../shell/NotificationBell";
+import { useShell } from "../../shell/ShellContext";
 import PaletteButton from "../commands/palette/PaletteButton";
 import ShortcutsButton from "../commands/ShortcutsDialog";
 import { useActions, useCanEdit } from "../commands/useActions";
@@ -25,6 +30,7 @@ import { useDocumentState } from "../state/EditorContext";
 import ActivityIndicator from "./ActivityIndicator";
 import CompositionBreadcrumb from "./CompositionBreadcrumb";
 import EditorMenu from "./EditorMenu";
+import { useOpenEditorChat } from "./EditorSceneBar";
 
 type Shown =
 	| "connecting"
@@ -35,12 +41,12 @@ type Shown =
 	| "failed";
 
 const TONE: Record<Shown, string> = {
-	connecting: "text-muted-foreground",
-	live: "text-muted-foreground",
-	reconnecting: "text-warning",
-	offline: "text-destructive",
-	resyncing: "text-info",
-	failed: "text-destructive",
+	connecting: "bg-surface-sunken text-muted-foreground",
+	live: "bg-success-soft text-success-text",
+	reconnecting: "bg-warning-soft text-warning-text",
+	offline: "bg-danger-soft text-danger-text",
+	resyncing: "bg-surface-sunken text-info",
+	failed: "bg-danger-soft text-danger-text",
 };
 
 const ICON: Record<Shown, typeof Wifi> = {
@@ -141,13 +147,48 @@ export function SavedIndicator({ live }: { live: boolean }): ReactNode {
 	);
 }
 
-// The top bar of SDD-012 section 6.2: back link, project
-// name (click to rename), revision and connection state as text and icon, undo and
-// redo, the activity indicator and the theme toggle.
+// The Chat button of the bar: it opens the same panel as the scene bar, over the editor (VV-427).
+function ChatButton(): ReactNode {
+	const t = useT();
+	const { chatOpen } = useShell();
+	const open = useOpenEditorChat();
+	return (
+		<Button
+			type="button"
+			variant="outline"
+			size="sm"
+			aria-label={t("ui.chat.open")}
+			aria-expanded={chatOpen}
+			aria-controls="chat-panel"
+			onClick={open}
+			data-testid="chat-toggle"
+		>
+			<MessagesSquare aria-hidden="true" />
+			{t("ui.shell.chat")}
+		</Button>
+	);
+}
+
+// The agent part of the bar, drawn only when the page has a session (the bell and Chat read the shell).
+function AgentActions(): ReactNode {
+	return (
+		<>
+			<NotificationBell />
+			<ChatButton />
+		</>
+	);
+}
+
+// The top bar of the final design (SDD-012 section 6.2): the menu, the way back, the name of the project (click to
+// rename), its revision and its connection in badges, the saved check, and at the right the commands, the bell,
+// Chat and the primary Export. The activity indicator, the shortcuts, the language and the theme stay in the bar.
 export default function TopBar({
 	onLocaleChange,
+	agent = false,
 }: {
 	onLocaleChange(locale: string): void;
+	// the page has a session of the agent: the bell and Chat are drawn
+	agent?: boolean;
 }): ReactNode {
 	const t = useT();
 	const name = useDocumentState((s) => s.document?.name);
@@ -184,27 +225,27 @@ export default function TopBar({
 			<span aria-hidden="true" className="h-5 w-px bg-ed-track-line" />
 			<CompositionBreadcrumb />
 			{name !== undefined && <ProjectName name={name} />}
-			<span
-				className={cn(
-					"flex items-center gap-1.5 rounded-full bg-surface-sunken px-2 py-0.5 text-xs",
-					TONE[shown],
-				)}
+			{revision !== null && (
+				<Badge variant="secondary" className="font-mono tabular-nums">
+					<History aria-hidden="true" />
+					{t("ui.editor.revision", { revision })}
+				</Badge>
+			)}
+			<Badge
+				variant="secondary"
+				className={cn(TONE[shown])}
 				data-connection={shown}
 			>
-				<Icon aria-hidden="true" className="size-3.5" />
-				{revision !== null && (
-					<span className="font-mono tabular-nums">
-						{t("ui.editor.revision", { revision })}
-					</span>
-				)}
-				<span>{t(`ui.editor.connection.${shown}`)}</span>
-			</span>
+				<Icon aria-hidden="true" />
+				{t(`ui.editor.connection.${shown}`)}
+			</Badge>
 			<SavedIndicator live={shown === "live"} />
 			<div className="ml-auto flex items-center gap-2">
-				<PaletteButton />
-				<ShortcutsButton onLocaleChange={onLocaleChange} />
-				<ExportButton />
 				<ActivityIndicator />
+				<PaletteButton />
+				{agent && <AgentActions />}
+				<ExportButton />
+				<ShortcutsButton onLocaleChange={onLocaleChange} />
 				<LocaleSelect onChange={onLocaleChange} />
 				<ThemeToggle />
 			</div>

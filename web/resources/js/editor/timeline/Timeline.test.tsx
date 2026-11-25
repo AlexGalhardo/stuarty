@@ -119,7 +119,7 @@ describe("TopBar", () => {
 		const h = await startHarness();
 		const html = render(h.runtime, <TopBar onLocaleChange={() => {}} />);
 		expect(html).toContain("Launch teaser");
-		expect(html).toContain("rev 0");
+		expect(html).toContain("Rev 0");
 		expect(html).toContain("Live");
 		expect(html).toContain('href="/projects"');
 	});

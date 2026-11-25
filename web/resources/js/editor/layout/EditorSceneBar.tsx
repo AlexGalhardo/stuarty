@@ -1,4 +1,12 @@
-import { type ReactNode, useEffect, useRef } from "react";
+import {
+	createContext,
+	type ReactNode,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useRef,
+} from "react";
 import { createPortal } from "react-dom";
 
 import ChatDock from "@/dashboard/chat/ChatDock";
@@ -31,9 +39,19 @@ function ChatOverlay(): ReactNode {
 	);
 }
 
-function Bar(): ReactNode {
-	const { chat, chatOpen, openChat } = useShell();
-	// the button that opened the panel gets the focus back when it closes, as in the dashboard
+// Opens the chat from whichever button asked (the Chat button of the top bar or the one of the scene bar) and
+// remembers it, so the focus goes back to it when the panel closes, as in the dashboard.
+const OpenChat = createContext<(() => void) | null>(null);
+
+export function useOpenEditorChat(): () => void {
+	const open = useContext(OpenChat);
+	if (open === null)
+		throw new Error("useOpenEditorChat needs EditorShellFrame");
+	return open;
+}
+
+function Frame({ children }: { children: ReactNode }): ReactNode {
+	const { chatOpen, openChat } = useShell();
 	const opener = useRef<HTMLElement | null>(null);
 	const was = useRef(false);
 	useEffect(() => {
@@ -42,47 +60,61 @@ function Bar(): ReactNode {
 		}
 		was.current = chatOpen;
 	}, [chatOpen]);
+	const open = useCallback(() => {
+		opener.current = document.activeElement as HTMLElement | null;
+		openChat();
+	}, [openChat]);
 	return (
-		<>
-			<SceneBar
-				model={sceneOf(chat.session, chat.events, chat.activity)}
-				project={projectNameOf(chat.session, chat.projects)}
-				connected={
-					chat.profiles === null ? null : chat.profiles.profiles.length > 0
-				}
-				busy={chat.busy}
-				onAnswer={(requestId, answer) => void chat.answer(requestId, answer)}
-				onOpenChat={() => {
-					opener.current = document.activeElement as HTMLElement | null;
-					openChat();
-				}}
-			/>
+		<OpenChat.Provider value={open}>
+			{children}
 			<ChatOverlay />
-		</>
+		</OpenChat.Provider>
+	);
+}
+
+// The session of the agent for this project, shared by the top bar (the bell and Chat), the scene bar under the
+// timeline and the chat panel: one read, so they can never disagree. The streams are held only while the tab is
+// on the screen, as on every dashboard page (usePageVisible).
+export function EditorShellFrame({
+	projectId,
+	privileged,
+	mode,
+	children,
+}: {
+	projectId: string;
+	privileged: boolean;
+	mode: "local" | "network";
+	children: ReactNode;
+}): ReactNode {
+	const visible = usePageVisible();
+	const chat = useChat(visible, projectId);
+	const inbox = useInbox(visible);
+	const session = useMemo(() => ({ privileged, mode }), [privileged, mode]);
+	return (
+		<SessionProvider session={session}>
+			<ShellProvider chat={chat} inbox={inbox}>
+				<Frame>{children}</Frame>
+			</ShellProvider>
+		</SessionProvider>
 	);
 }
 
 // The scene bar of the dashboard under the timeline of the editor (epic 85, SDD-012 section 23.4): the same bar,
 // reading the same session of the agent for this project, so a permission is answered here without leaving. The
 // bar reports what the service says; Allow and Deny send the call the chat panel sends.
-export default function EditorSceneBar({
-	projectId,
-	privileged,
-	mode,
-}: {
-	projectId: string;
-	privileged: boolean;
-	mode: "local" | "network";
-}): ReactNode {
-	// The streams are held only while the tab is on the screen, as on every dashboard page (usePageVisible).
-	const visible = usePageVisible();
-	const chat = useChat(visible, projectId);
-	const inbox = useInbox(visible);
+export default function EditorSceneBar(): ReactNode {
+	const { chat } = useShell();
+	const open = useOpenEditorChat();
 	return (
-		<SessionProvider session={{ privileged, mode }}>
-			<ShellProvider chat={chat} inbox={inbox}>
-				<Bar />
-			</ShellProvider>
-		</SessionProvider>
+		<SceneBar
+			model={sceneOf(chat.session, chat.events, chat.activity)}
+			project={projectNameOf(chat.session, chat.projects)}
+			connected={
+				chat.profiles === null ? null : chat.profiles.profiles.length > 0
+			}
+			busy={chat.busy}
+			onAnswer={(requestId, answer) => void chat.answer(requestId, answer)}
+			onOpenChat={open}
+		/>
 	);
 }

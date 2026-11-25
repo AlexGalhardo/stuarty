@@ -139,7 +139,7 @@ export default function EditorShell({
 			}}
 		>
 			<div className="col-span-full">
-				<TopBar onLocaleChange={onLocaleChange} />
+				<TopBar onLocaleChange={onLocaleChange} agent={sceneBar !== null} />
 				<TrashedBanner />
 				<RecordingBanner />
 				{status === "failed" && (

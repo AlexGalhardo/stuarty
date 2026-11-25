@@ -122,7 +122,7 @@ test.describe("two-actor-live-update", () => {
 		const seeded = await seedProject(request, { tracks: 1, perTrack: 1 });
 		await page.goto(`/editor/${seeded.id}`);
 		await expect(page.locator("[data-item-id]")).toHaveCount(1);
-		const revision = page.getByText(/^rev \d+$/).first();
+		const revision = page.getByText(/^Rev \d+$/).first();
 		const before = await revision.textContent();
 
 		const agent = await caller(request, "claude-code");

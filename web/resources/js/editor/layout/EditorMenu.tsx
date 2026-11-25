@@ -77,9 +77,14 @@ export default function EditorMenu(): ReactNode {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button type="button" variant="ghost" size="sm">
+				<Button
+					type="button"
+					variant="ghost"
+					size="icon-sm"
+					aria-label={t("ui.editor.menu.label")}
+					title={t("ui.editor.menu.label")}
+				>
 					<Menu aria-hidden="true" />
-					{t("ui.editor.menu.label")}
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="start" className="min-w-44">
