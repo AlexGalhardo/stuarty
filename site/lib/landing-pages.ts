@@ -315,6 +315,8 @@ export const homeDemo = {
 		status: "Asks for your permission",
 		title: "Add a caption at 14.5 s",
 		why: "One item is added. You can undo it from the history.",
+		/** The phone layout of the design shortens it. */
+		whyMobile: "One item is added. You can undo it.",
 		rows: [
 			["Skill", "short-vertical-video, loaded"],
 			["Tool", "edit: caption.add"],

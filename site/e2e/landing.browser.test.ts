@@ -208,6 +208,25 @@ describe("the zoom of a product image", () => {
 	});
 });
 
+describe("the copy of the phone layout", () => {
+	// The 390 px frames leave out the lead of the path and the title over the permission card, and shorten its reason.
+	const visibleText = (page: Page, selector: string): Promise<string[]> =>
+		page.locator(selector).evaluateAll((els) => els.filter((e) => (e as HTMLElement).offsetParent !== null).map((e) => (e as HTMLElement).innerText.trim()));
+	for (const [width, lead, title, why] of [
+		[1440, true, true, "One item is added. You can undo it from the history."],
+		[390, false, false, "One item is added. You can undo it."],
+	] as const) {
+		test(`at ${width} px`, async () => {
+			const { context, page } = await open("dark", width);
+			const leads = await visibleText(page, "#path .l-head .l-lead");
+			expect(leads.includes("Stuarty always shows where you are and what comes next, so you can learn it by using it.")).toBe(lead);
+			expect((await visibleText(page, ".l-permission > h3")).includes("Every tool call asks first")).toBe(title);
+			expect(await visibleText(page, ".l-notice-why")).toEqual([why]);
+			await context.close();
+		});
+	}
+});
+
 describe("the page itself", () => {
 	for (const width of [1440, 390]) {
 		for (const theme of ["dark", "light"] as const) {
