@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"context"
 	"errors"
+	"fmt"
 	"slices"
 	"strings"
 	"time"
@@ -57,6 +58,7 @@ type LibraryAsset struct {
 	Origin      asset.Origin `json:"origin"`
 	Description string       `json:"description,omitempty" untrusted:"true"`
 	Reusable    bool         `json:"reusable"`
+	SoundKind   string       `json:"sound_kind,omitempty"` // music, voice or effect, for an audio file that has one
 	Tags        []string     `json:"tags"`
 	CreatedBy   string       `json:"created_by,omitempty"`
 	CreatedAt   string       `json:"created_at,omitempty"`
@@ -100,6 +102,8 @@ type InfoPatch struct {
 	Description *string
 	RightsNote  *string
 	Reusable    *bool
+	// SoundKind sets the sound kind of an audio file; the empty string clears it.
+	SoundKind *string
 }
 
 // Query selects a page of the library.
@@ -158,7 +162,7 @@ func base(h *Held, row Row) LibraryAsset {
 	}
 
 	return LibraryAsset{
-		Poster: poster, SizeText: asset.FormatSize(h.Bytes), State: state,
+		SoundKind: soundKindOf(h.MediaKind, row.SoundKind), Poster: poster, SizeText: asset.FormatSize(h.Bytes), State: state,
 		Hash: h.Hash, Name: h.Name, Kind: h.MediaKind, Bytes: h.Bytes, Width: h.Width, Height: h.Height,
 		DurationMS: h.DurationMS, Origin: row.Origin, Description: row.Description, Reusable: row.Reusable,
 		Tags: tags, CreatedBy: row.CreatedBy, CreatedAt: stamp(row.CreatedMs),
@@ -166,8 +170,20 @@ func base(h *Held, row Row) LibraryAsset {
 	}
 }
 
+// soundKindOf is the sound kind of a file: only an audio file has one.
+func soundKindOf(mediaKind, stored string) string {
+	if mediaKind != asset.KindAudio {
+		return ""
+	}
+
+	return stored
+}
+
 func entryOf(h *Held, row Row) asset.Entry {
-	e := asset.Entry{MediaKind: h.MediaKind, Origin: row.Origin, Reusable: row.Reusable, Tags: row.Tags}
+	e := asset.Entry{
+		MediaKind: h.MediaKind, Origin: row.Origin, Reusable: row.Reusable, Tags: row.Tags,
+		SoundKind: soundKindOf(h.MediaKind, row.SoundKind),
+	}
 
 	if e.Origin.Kind == "" {
 		e.Origin.Kind = asset.Imported
@@ -368,6 +384,25 @@ func (l *Library) SetInfo(
 		row.Reusable = *p.Reusable
 	}
 
+	if p.SoundKind != nil {
+		k := strings.TrimSpace(*p.SoundKind)
+
+		switch {
+		case k != "" && !asset.ValidSoundKind(k):
+			return LibraryAsset{}, &asset.RuleError{
+				Path: "sound_kind", Reason: "sound_kind_unknown",
+				Detail: fmt.Sprintf("the sound kind %q is not known; use music, voice or effect", k),
+			}
+		case k != "" && h.MediaKind != asset.KindAudio:
+			return LibraryAsset{}, &asset.RuleError{
+				Path: "sound_kind", Reason: "sound_kind_not_allowed",
+				Detail: "only an audio file has a sound kind",
+			}
+		}
+
+		row.SoundKind = k
+	}
+
 	row.UpdatedMs = now
 
 	if err := l.Store.Put(ctx, row); err != nil {
@@ -420,6 +455,11 @@ type ImportInfo struct {
 	Tags        []string
 	Reusable    *bool
 	Description string
+	// SoundKind is the kind the caller named; it replaces the one the file has.
+	SoundKind string
+	// DefaultSoundKind is the kind the source of the file suggests (a microphone track is a voice); it fills the
+	// kind of a file that has none and never replaces one.
+	DefaultSoundKind string
 }
 
 // CheckImport validates the blocks of an import before any file is read, and returns them normalized. A refusal
@@ -447,7 +487,15 @@ func CheckImport(origin *asset.Origin, info *ImportInfo) (asset.Origin, ImportIn
 			return asset.Origin{}, ImportInfo{}, bad
 		}
 
-		in = ImportInfo{Tags: tags, Reusable: info.Reusable, Description: d}
+		k := strings.TrimSpace(info.SoundKind)
+		if k != "" && !asset.ValidSoundKind(k) {
+			return asset.Origin{}, ImportInfo{}, &asset.RuleError{
+				Path: "info.sound_kind", Reason: "sound_kind_unknown",
+				Detail: fmt.Sprintf("the sound kind %q is not known; use music, voice or effect", k),
+			}
+		}
+
+		in = ImportInfo{Tags: tags, Reusable: info.Reusable, Description: d, SoundKind: k}
 	}
 
 	return o, in, nil
@@ -492,6 +540,13 @@ func RecordImport(
 
 	if info.Description != "" {
 		row.Description = info.Description
+	}
+
+	switch {
+	case info.SoundKind != "":
+		row.SoundKind = info.SoundKind
+	case info.DefaultSoundKind != "" && row.SoundKind == "":
+		row.SoundKind = info.DefaultSoundKind
 	}
 
 	row.UpdatedMs = now

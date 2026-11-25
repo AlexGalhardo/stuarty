@@ -41,6 +41,7 @@ func checkImportBlocks(req *MediaImportRequest) (libraryRecord, error) {
 	if req.Info != nil {
 		info = &assets.ImportInfo{
 			Tags: req.Info.Tags, Reusable: req.Info.Reusable, Description: req.Info.Description,
+			SoundKind: req.Info.SoundKind,
 		}
 	}
 

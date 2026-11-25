@@ -29,7 +29,7 @@ type mediaImportIn struct {
 	WaitMS     int                `json:"wait_ms,omitempty"                                      doc:"0 to 25000: hold the call until the assets are ready."`
 	DryRun     any                `json:"dry_run,omitempty"                                      doc:"Checks the paths and limits only: the format is probed on the real import, so a file that is refused there (SVG, for one) still answers 202."`
 	Origin     *asset.Origin      `json:"origin,omitempty"                                       doc:"Where the files came from: kind imported (default), generated (provider and model), fetched_by_agent (source and rights_note) or rendered_externally (source)."`
-	Info       *service.AssetInfo `json:"info,omitempty"                                         doc:"Tags, the reuse mark and a description for the files of the call."`
+	Info       *service.AssetInfo `json:"info,omitempty"                                         doc:"Tags, the reuse mark, a description and the sound kind (music, voice or effect) for the files of the call."`
 }
 
 type mediaListIn struct {

@@ -23,6 +23,7 @@ type assetSetIn struct {
 	Description *string `json:"description,omitempty" doc:"What the file is, in your words; at most 2,000 characters."`
 	RightsNote  *string `json:"rights_note,omitempty" doc:"Your own record of the licence or the permission; the product does not check it."`
 	Reusable    *bool   `json:"reusable,omitempty"    doc:"Mark the file to be offered again, or take the mark off."`
+	SoundKind   *string `json:"sound_kind,omitempty"  doc:"music, voice or effect, for an audio file; an empty value clears it."`
 }
 
 type assetTagIn struct {
@@ -70,6 +71,7 @@ func (h *apiHandler) assetUses(c *web.Ctx, in assetUsesIn) (service.AssetUsesRes
 func (h *apiHandler) assetSet(c *web.Ctx, in assetSetIn) (service.AssetResult, error) {
 	res, err := h.Service.AssetSetInfo(c.Context(), service.AssetSetInfoRequest{
 		Hash: in.Hash, Description: in.Description, RightsNote: in.RightsNote, Reusable: in.Reusable,
+		SoundKind: in.SoundKind,
 	})
 
 	return deref(res), err

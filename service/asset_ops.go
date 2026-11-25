@@ -57,6 +57,8 @@ type AssetSetInfoRequest struct {
 	Description *string `json:"description,omitempty"`
 	RightsNote  *string `json:"rights_note,omitempty"`
 	Reusable    *bool   `json:"reusable,omitempty"`
+	// SoundKind is music, voice or effect, for an audio file; the empty string clears it (SDD-011 section 14.12).
+	SoundKind *string `json:"sound_kind,omitempty"`
 }
 
 // AssetTagRequest adds and removes tags of a file.
@@ -210,7 +212,9 @@ func (s *svc) AssetSetInfo(ctx context.Context, req AssetSetInfoRequest) (*Asset
 		var uerr error
 
 		entry, uerr = lib.SetInfo(
-			ctx, &h, assets.InfoPatch{Description: req.Description, RightsNote: req.RightsNote, Reusable: req.Reusable},
+			ctx, &h, assets.InfoPatch{
+				Description: req.Description, RightsNote: req.RightsNote, Reusable: req.Reusable, SoundKind: req.SoundKind,
+			},
 			c.Actor, s.nowMs(), names,
 		)
 

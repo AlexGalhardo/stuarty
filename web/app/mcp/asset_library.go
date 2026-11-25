@@ -61,6 +61,8 @@ func libraryInspect(
 		Kind     string `json:"kind"`
 		Section  string `json:"section"`
 		Project  string `json:"project"`
+		// SoundKind keeps the audio files of one kind: music, voice or effect.
+		SoundKind string `json:"sound_kind"`
 	}
 
 	if err := strict(rawLib, "library", &lib); err != nil {
@@ -77,7 +79,7 @@ func libraryInspect(
 
 	res, err := svc.AssetList(ctx, service.AssetListRequest{
 		Kind: lib.Kind, Section: lib.Section, Tag: lib.Tag, Project: lib.Project, Origin: lib.Origin,
-		Reusable: lib.Reusable, Text: lib.Text, Limit: page.Limit, Cursor: page.Cursor,
+		Reusable: lib.Reusable, SoundKind: lib.SoundKind, Text: lib.Text, Limit: page.Limit, Cursor: page.Cursor,
 	})
 	if err != nil {
 		return nil, err
@@ -120,6 +122,7 @@ func libraryEdit(ctx context.Context, svc service.Service, hash string, rawInfo 
 		Desc       *string  `json:"description"`
 		RightsNote *string  `json:"rights_note"`
 		Name       *string  `json:"name"`
+		SoundKind  *string  `json:"sound_kind"`
 	}
 
 	if err := strict(rawInfo, "info", &in); err != nil {
@@ -128,11 +131,11 @@ func libraryEdit(ctx context.Context, svc service.Service, hash string, rawInfo 
 
 	var res *service.AssetResult
 
-	if in.Reusable != nil || in.Desc != nil || in.RightsNote != nil {
+	if in.Reusable != nil || in.Desc != nil || in.RightsNote != nil || in.SoundKind != nil {
 		var err error
 
 		res, err = svc.AssetSetInfo(ctx, service.AssetSetInfoRequest{
-			Hash: hash, Description: in.Desc, RightsNote: in.RightsNote, Reusable: in.Reusable,
+			Hash: hash, Description: in.Desc, RightsNote: in.RightsNote, Reusable: in.Reusable, SoundKind: in.SoundKind,
 		})
 		if err != nil {
 			return nil, err

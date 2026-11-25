@@ -60,5 +60,6 @@ func All() []schema.Migration {
 		m20261124160000RecordingsTracks(),
 		m20261125100000CreateCalendarTables(),
 		m20261125110000RecordingsAgentFlow(),
+		m20261125120000AssetSoundKind(),
 	}
 }

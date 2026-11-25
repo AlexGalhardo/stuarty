@@ -223,6 +223,8 @@ type assetListIn struct {
 	Origin   string `json:"origin,omitempty"   doc:"imported, generated, fetched_by_agent or rendered_externally."`
 	Reusable string `json:"reusable,omitempty" doc:"true keeps the files marked reusable, false the others."`
 	Text     string `json:"text,omitempty"     doc:"A full-text query over name, tags, description and origin; at most 8 words."`
+	// SoundKind keeps the audio files of one kind.
+	SoundKind string `json:"sound_kind,omitempty" doc:"music, voice or effect: keep the audio files of that sound kind."`
 }
 
 // assetList is GET /assets: the files of the library by content hash (VV-117, SDD-011 section 14).
@@ -234,7 +236,7 @@ func (h *apiHandler) assetList(c *web.Ctx, in assetListIn) (service.AssetListRes
 
 	res, err := h.Service.AssetList(c.Context(), service.AssetListRequest{
 		Kind: in.Kind, Section: in.Section, Tag: in.Tag, Project: in.Project, Origin: in.Origin,
-		Reusable: reusable, Text: in.Text, Limit: in.Limit, Cursor: in.Cursor,
+		Reusable: reusable, SoundKind: in.SoundKind, Text: in.Text, Limit: in.Limit, Cursor: in.Cursor,
 	})
 
 	return deref(res), err

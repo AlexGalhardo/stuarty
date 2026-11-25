@@ -17,6 +17,7 @@ type Row struct {
 	Origin      asset.Origin
 	Description string
 	Reusable    bool
+	SoundKind   string   // music, voice or effect; empty when not set (SDD-011 section 14.12)
 	Tags        []string // normalized, sorted
 	CreatedBy   string
 	CreatedMs   int64

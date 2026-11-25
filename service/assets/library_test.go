@@ -630,3 +630,90 @@ func TestListCountsTheTagsInUseByTheOtherFilters(t *testing.T) {
 		t.Fatalf("audio tags = %v", audio.TagsInUse)
 	}
 }
+
+func TestSoundKindIsSetFilteredAndOnlyForAudio(t *testing.T) {
+	t.Parallel()
+
+	lib, _, files := fixture(t)
+	ctx := context.Background()
+
+	voice := "voice"
+
+	got, err := lib.SetInfo(ctx, &files[2], assets.InfoPatch{SoundKind: &voice}, "local:ui", 3000, nil)
+	if err != nil || got.SoundKind != "voice" {
+		t.Fatalf("SetInfo = %+v, %v", got, err)
+	}
+
+	page, err := lib.List(ctx, files, &assets.Query{Filter: asset.Filter{SoundKind: "voice"}})
+	if err != nil || !slices.Equal(hashesOf(page), []string{"sha256:c"}) {
+		t.Fatalf("filter voice = %v, %v", hashesOf(page), err)
+	}
+
+	page, err = lib.List(ctx, files, &assets.Query{Filter: asset.Filter{SoundKind: "music"}})
+	if err != nil || len(page.Assets) != 0 {
+		t.Fatalf("filter music = %v, %v", hashesOf(page), err)
+	}
+
+	if _, err := lib.List(ctx, files, &assets.Query{Filter: asset.Filter{SoundKind: "sfx"}}); err == nil {
+		t.Error("an unknown sound kind filter must be refused")
+	}
+
+	for name, in := range map[string]struct {
+		h    *assets.Held
+		kind string
+		why  string
+	}{
+		"image":   {&files[0], "music", "sound_kind_not_allowed"},
+		"unknown": {&files[2], "sfx", "sound_kind_unknown"},
+	} {
+		_, err := lib.SetInfo(ctx, in.h, assets.InfoPatch{SoundKind: &in.kind}, "local:ui", 3000, nil)
+
+		var bad *asset.RuleError
+		if !errors.As(err, &bad) || bad.Reason != in.why || bad.Path != "sound_kind" {
+			t.Errorf("%s: err = %v, want %s", name, err, in.why)
+		}
+	}
+
+	none := ""
+
+	cleared, err := lib.SetInfo(ctx, &files[2], assets.InfoPatch{SoundKind: &none}, "local:ui", 4000, nil)
+	if err != nil || cleared.SoundKind != "" {
+		t.Fatalf("clear = %+v, %v", cleared, err)
+	}
+}
+
+func TestRecordImportSoundKindExplicitReplacesAndDefaultOnlyFills(t *testing.T) {
+	t.Parallel()
+
+	_, st, _ := fixture(t)
+	ctx := context.Background()
+	origin := asset.Origin{Kind: asset.Imported}
+
+	if err := assets.RecordImport(ctx, st, "", "sha256:new", origin, assets.ImportInfo{DefaultSoundKind: "voice"}, "a", 1); err != nil {
+		t.Fatal(err)
+	}
+
+	if got := st.rows["sha256:new"].SoundKind; got != "voice" {
+		t.Fatalf("a default fills an empty kind: %q", got)
+	}
+
+	if err := assets.RecordImport(ctx, st, "", "sha256:new", origin, assets.ImportInfo{SoundKind: "music"}, "a", 2); err != nil {
+		t.Fatal(err)
+	}
+
+	if got := st.rows["sha256:new"].SoundKind; got != "music" {
+		t.Fatalf("an explicit kind replaces: %q", got)
+	}
+
+	if err := assets.RecordImport(ctx, st, "", "sha256:new", origin, assets.ImportInfo{DefaultSoundKind: "voice"}, "a", 3); err != nil {
+		t.Fatal(err)
+	}
+
+	if got := st.rows["sha256:new"].SoundKind; got != "music" {
+		t.Fatalf("a default never replaces: %q", got)
+	}
+
+	if _, _, err := assets.CheckImport(nil, &assets.ImportInfo{SoundKind: "sfx"}); err == nil {
+		t.Error("an unknown sound kind on import must be refused")
+	}
+}

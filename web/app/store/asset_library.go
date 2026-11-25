@@ -23,7 +23,7 @@ const maxSearchHits = 5000
 const manyChunk = 400
 
 const infoColumns = `owner_user_id, asset_hash, origin_kind, source, provider, model, prompt, cost_micros, rights_note, description,
- reusable, created_by, created_ms, updated_ms, engine, engine_version, render_key`
+ reusable, created_by, created_ms, updated_ms, engine, engine_version, render_key, sound_kind`
 
 // promptKey is the row key of the sealed prompt of a file of the library.
 func promptKey(owner, hash string) string { return owner + "/" + hash }
@@ -70,7 +70,7 @@ func scanInfo(sc interface{ Scan(...any) error }, ex database.Executor) (assets.
 	if err := sc.Scan(
 		&r.Owner, &r.Hash, &kind, &r.Origin.Source, &r.Origin.Provider, &r.Origin.Model, &r.Origin.Prompt, &cost,
 		&r.Origin.RightsNote, &r.Description, &re, &r.CreatedBy, &r.CreatedMs, &r.UpdatedMs,
-		&r.Origin.Engine, &r.Origin.EngineVersion, &r.Origin.RenderKey,
+		&r.Origin.Engine, &r.Origin.EngineVersion, &r.Origin.RenderKey, &r.SoundKind,
 	); err != nil {
 		return r, err
 	}
@@ -227,15 +227,15 @@ func (r assetLibraryRepo) Put(ctx context.Context, row assets.Row) error {
 	}
 
 	if _, err := r.ex.ExecContext(ctx,
-		`INSERT INTO asset_info (`+infoColumns+`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		`INSERT INTO asset_info (`+infoColumns+`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
  ON CONFLICT (owner_user_id, asset_hash) DO UPDATE SET origin_kind = excluded.origin_kind, source = excluded.source,
  provider = excluded.provider, model = excluded.model, prompt = excluded.prompt, cost_micros = excluded.cost_micros,
  rights_note = excluded.rights_note, description = excluded.description, reusable = excluded.reusable,
  updated_ms = excluded.updated_ms, engine = excluded.engine, engine_version = excluded.engine_version,
- render_key = excluded.render_key`,
+ render_key = excluded.render_key, sound_kind = excluded.sound_kind`,
 		row.Owner, row.Hash, string(o.Kind), o.Source, o.Provider, o.Model, prompt, o.CostMicros, rights,
 		description, boolInt(row.Reusable), row.CreatedBy, row.CreatedMs, row.UpdatedMs,
-		o.Engine, o.EngineVersion, o.RenderKey,
+		o.Engine, o.EngineVersion, o.RenderKey, row.SoundKind,
 	); err != nil {
 		return err
 	}

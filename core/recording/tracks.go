@@ -42,6 +42,17 @@ func (k TrackKind) File() string {
 // Audio reports whether the track is a sound track (it is placed on an audio track).
 func (k TrackKind) Audio() bool { return k == TrackMicrophone || k == TrackSystem }
 
+// SoundKind is the kind of sound the library gives the file of a track by default: a microphone is a voice
+// (SDD-011 section 14.12). Any other track suggests none, since system audio may be music, voice or an effect; a
+// person sets it.
+func (k TrackKind) SoundKind() string {
+	if k == TrackMicrophone {
+		return "voice"
+	}
+
+	return ""
+}
+
 // Label is the name of the timeline track a kind is placed on.
 func (k TrackKind) Label() string {
 	switch k {

@@ -27,6 +27,8 @@ type AssetListRequest struct {
 	Origin string `json:"origin,omitempty"`
 	// Reusable keeps the files marked reusable (true) or not (false).
 	Reusable *bool `json:"reusable,omitempty"`
+	// SoundKind keeps the audio files of one sound kind: music, voice or effect.
+	SoundKind string `json:"sound_kind,omitempty"`
 	// Text is a full-text query over name, tags, description and origin.
 	Text string `json:"text,omitempty"`
 	// Limit keeps the first files of the list; 0 is the default of 500 (VV-192).
@@ -296,7 +298,7 @@ func (s *svc) AssetList(ctx context.Context, req AssetListRequest) (*AssetListRe
 	page, lerr := lib.List(ctx, held, &assets.Query{
 		Filter: asset.Filter{
 			Kind: req.Kind, Section: req.Section, Tag: req.Tag, Project: req.Project,
-			Origin: asset.OriginKind(req.Origin), Reusable: req.Reusable,
+			Origin: asset.OriginKind(req.Origin), Reusable: req.Reusable, SoundKind: req.SoundKind,
 		},
 		Text: req.Text, Offset: off, Limit: clampLimit(req.Limit, maxLibraryAssets, maxLibraryAssets),
 	})

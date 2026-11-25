@@ -16,6 +16,10 @@ type ImportFile struct {
 	// recording is set only by RecordingConfirm: the file is one the server itself wrote under recordings/, which
 	// the path guard otherwise refuses as a file of the workspace (SDD-007 section 7.1). No request can set it.
 	recording bool
+
+	// soundKind is what the source of the file suggests (RecordingConfirm sets voice on a microphone track); it
+	// fills a kind the file has not got and replaces none.
+	soundKind string
 }
 
 // AssetInfo is what an import says about the files it brings, beyond their origin (SDD-011 section 14.4).
@@ -23,6 +27,8 @@ type AssetInfo struct {
 	Tags        []string `json:"tags,omitempty"`
 	Reusable    *bool    `json:"reusable,omitempty"`
 	Description string   `json:"description,omitempty"`
+	// SoundKind is music, voice or effect; it is kept for the audio files of the call (SDD-011 section 14.12).
+	SoundKind string `json:"sound_kind,omitempty"`
 }
 
 // MediaImportRequest imports 1 to 50 files into a project.
