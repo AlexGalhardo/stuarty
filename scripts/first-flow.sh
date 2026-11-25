@@ -101,7 +101,6 @@ SOCIAL_URL="$(printf '%s' "$READY" | sed 's/.* social=\([^ ]*\).*/\1/')"
 
 HOME_DIR="$WORK/home"
 mkdir -p "$HOME_DIR"
-LAUNCHER_SECRET="first-flow-$RANDOM-$RANDOM-$RANDOM"
 export STUARTY_HOME
 STUARTY_HOME="$(native "$HOME_DIR")"
 export STUARTY_MASTER_KEY_FILE
@@ -111,7 +110,6 @@ STUARTY_FFMPEG="$(native "$FFMPEG")"
 STUARTY_FFPROBE="$(native "$FFPROBE")"
 export STUARTY_TEST_SOCIAL_URL="$SOCIAL_URL"
 export STUARTY_TEST_TRANSCRIBER=stub
-export STUARTY_LAUNCHER_SECRET="$LAUNCHER_SECRET"
 unset VUKEM_VIDEO_HOME STUARTY_PROJECT
 
 PORT="${FIRST_FLOW_PORT:-$((40000 + RANDOM % 20000))}"
@@ -173,12 +171,22 @@ mcp_refused() {
 	return 1
 }
 
-# A person's session, the way the desktop app signs one in: the launcher secret the server was told, then the
-# cookie of the launch code. The local token an agent holds cannot decide in the approval queue.
+# A person's session, the way the product makes one (SDD-007 section 3.9, ADR-0052): only a password sign-in
+# does, a launch code never does. The person's own browser (a launch session) creates the local account, which
+# leaves the studio locked; then the password sign-in makes the person session and unlocks the studio. The
+# local token an agent holds cannot decide in the approval queue, and the CLI and MCP calls below use it.
+ACCOUNT_PASSWORD='First-flow-1'
 TOKEN="$(tr -d '\r\n' <"$HOME_DIR/token")"
-launch="$(curl -sf -X POST "$BASE/api/v1/system/launch" -H "Authorization: Bearer $TOKEN" \
-	-H "Stuarty-Launcher: $LAUNCHER_SECRET")" || die "the launch of a person session was refused"
-curl -sf -c "$WORK/jar.txt" -o /dev/null "$(printf '%s' "$launch" | field url)" || die "no person session"
+launch="$(curl -sf -X POST "$BASE/api/v1/system/launch" -H "Authorization: Bearer $TOKEN")" ||
+	die "the launch session was refused"
+curl -sf -c "$WORK/launch-jar.txt" -o /dev/null "$(printf '%s' "$launch" | field url)" || die "no launch session"
+curl -sf -b "$WORK/launch-jar.txt" -o /dev/null -X POST "$BASE/auth/account/create" -H "Origin: $BASE" \
+	-H "Content-Type: application/json" \
+	-d "{\"username\":\"firstflow\",\"email\":\"first-flow@example.com\",\"password\":\"$ACCOUNT_PASSWORD\",\"confirmation\":\"$ACCOUNT_PASSWORD\"}" ||
+	die "the local account was not created"
+curl -sf -c "$WORK/jar.txt" -o /dev/null -X POST "$BASE/auth/account/login" -H "Origin: $BASE" \
+	-H "Content-Type: application/json" -d "{\"identity\":\"firstflow\",\"password\":\"$ACCOUNT_PASSWORD\"}" ||
+	die "the password sign-in of the person was refused"
 
 person() {
 	local method="$1" path="$2" body="${3:-}"
@@ -238,7 +246,8 @@ edited="$(stuarty text:write "$SCRIPT" --project "$P" --text "$(native "$WORK/sc
 step "3. import the footage and cut it to a vertical short"
 "$FFMPEG" -v error -y -f lavfi -i "testsrc2=size=360x640:rate=30:duration=6" -f lavfi -i "sine=frequency=440:duration=6" \
 	-c:v mpeg4 -q:v 5 -c:a aac -shortest "$WORK/footage.mp4"
-imported="$(stuarty media:import "$(native "$WORK/footage.mp4")" --project "$P" --wait --json)"
+imported="$(stuarty media:import "$(native "$WORK/footage.mp4")" --project "$P" --wait --json)" ||
+	die "the import of the footage failed: $imported"
 ASSET="$(need asset_id "$(printf '%s' "$imported" | field asset_id)" "$imported")"
 case "$imported" in *'"state":"ready"'*) ;; *) die "the footage is not ready: $imported" ;; esac
 
