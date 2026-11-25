@@ -1,0 +1,78 @@
+---
+title: "Record on Windows and finish the take"
+description: "Record a display or a window with your voice, the camera and the pointer in the desktop application, then add zoom on the clicks, a smooth cursor and click highlights."
+---
+
+<Callout type="warning" title="New">
+Native capture is for the desktop application on Windows. It was tested with a fake capture helper and by hand on one machine, not on every Windows setup. On macOS and Linux it is not available yet; use [the browser recording](/docs/guide/record-your-screen).
+</Callout>
+
+## You will learn
+
+- how to record a display or a window with sound, a camera and the pointer;
+- how a take gets into your project, and who can see it;
+- how to add a zoom that follows your clicks, a smooth cursor and click highlights, and change each one.
+
+## The idea
+
+In the desktop application on Windows, a small helper next to Stuarty captures the screen and writes it to a file in your workspace. Only you start a capture: an agent can prepare one and can never start it. While a capture runs, a red icon stays in the system tray and the editor shows a **Recording the screen** bar. Nothing is sent to any address.
+
+A take can hold up to four tracks, each in its own file so that you can balance the sound later: the screen, the camera, the microphone and the sound the computer plays. It can also save where the pointer was and when you clicked. Never a key: the helper does not read the keyboard.
+
+## Record
+
+1. Open a project in the video editor and press **Record screen** in the **Media** panel.
+2. Choose a display or a window. Windows draws a border around it while it records.
+3. Choose **Frames per second** (24, 30 or 60), the **Microphone**, **Record the sound the computer plays**, the **Camera**, and **Save the cursor and the clicks**. Leave the last one on if you want to finish the take with the steps below.
+4. Press **Start recording**. The dialog shows the time and a level meter for each sound track. **Pause** and **Resume** cut the pause out of every track at once, so they stay in step.
+5. Press **Stop recording**. When the file is ready, choose **Add to the project**, **Not now** or **Delete**. **Place on the timeline** puts the take at the end of a video track in one step, so one undo removes it.
+
+A silent computer-sound track can mean protected content, which cannot be recorded. Until you choose **Add to the project**, agents cannot see the take; **Not now** keeps it out of the project, and you can open the dialog again to add or delete it.
+
+From a terminal, `stuarty recording:sources` lists what can be captured and `stuarty recording:start` starts a capture. Both need a person's session: the local token is refused.
+
+```bash
+stuarty recording:sources
+stuarty recording:start --project prj_7k2m9x4q1b --kind display --source d1 --events
+```
+
+If you close the window or Stuarty stops while a take runs, the file is kept up to the last second written, and the next start recovers it.
+
+## What an agent can do
+
+An agent can prepare a take (the source, the sound, a script and a note for you), mark takes as good, bad or a mistake, and propose ranges to cut. A prepared take shows under **Ready to record**; nothing records until you press **Record**. Proposed cuts show under **Cuts to decide**: accept or reject each range, then **Apply my decisions**, and one **Undo** brings them back. No setting, key or approval rule lets an agent start a capture. See [Record your screen](/docs/guide/record-your-screen).
+
+## Finish the take
+
+A take saved with pointer events can be finished from its clip. Select the clip and open **Screen recording** in the inspector. Each button makes ordinary keyframes or items on the timeline that you can change or delete, and every one is a single step that **Undo** takes back.
+
+| Button | What it does |
+| --- | --- |
+| **Zoom on the clicks** | Zooms the clip in on its clicks and back out. Clicks that are close in time share one zoom. **Zoom** sets the level, 1.6 by default. It replaces the position and scale keyframes of the clip. |
+| **Draw the cursor** | Draws a smooth pointer as a **Dot** or a **Ring** on a `Cursor` track. **Smoothing** sets how much it lags behind the real pointer, 150 ms by default. **Remove the cursor** takes it away. |
+| **Highlight the clicks** | Marks each click with a **Ring**, a **Wave** or a **Pulse** on a `Click highlight` track, for a **Duration** of 600 ms by default. **None** or **Remove the highlights** takes them away. |
+
+The video never has the pointer in it, so the cursor you draw is the only one. The cursor and the highlights do not follow later changes: after you change a zoom by hand or move the clip, draw them again.
+
+The same three steps are commands of the `edit` tool, so an agent or a script can finish a take on request:
+
+```bash
+stuarty edit --project prj_7k2m9x4q1b recording.auto_zoom item_id=itm_m1n2p3q4r5
+stuarty edit --project prj_7k2m9x4q1b recording.set_cursor item_id=itm_m1n2p3q4r5 style=ring
+stuarty edit --project prj_7k2m9x4q1b recording.set_click_highlight item_id=itm_m1n2p3q4r5 style=wave
+```
+
+A recording made in a browser has no pointer data, so these commands answer `E_INVALID_STATE` for it. Zoom it by hand with keyframes ([Keyframes](/docs/guide/keyframes)).
+
+## Common mistakes
+
+- Starting a capture from an agent or with the local token: it is refused with `E_PRIVILEGED_SESSION`. Press **Start recording** yourself.
+- Turning off **Save the cursor and the clicks** and then looking for the zoom buttons. A take with no pointer data has nothing to follow.
+- Expecting the cursor to move with a clip you moved after drawing it. Draw it again.
+- Recording fails with "The capture helper is not installed with this copy of Stuarty". That copy has no helper: install a build that carries it.
+
+## Next steps
+
+- [Record your screen in a browser](/docs/guide/record-your-screen)
+- [The desktop application](/docs/guide/desktop)
+- [Keyframes](/docs/guide/keyframes)
