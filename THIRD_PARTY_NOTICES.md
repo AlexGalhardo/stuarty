@@ -191,6 +191,7 @@ Compiled into the WebAssembly renderer and the native GPU host of `renderer/`, a
 | unicode-linebreak | 0.1.5 | Apache-2.0 | - | [LICENSE](<licenses/crates/unicode-linebreak@0.1.5/LICENSE>) | - |
 | unicode-script | 0.5.9 | MIT OR Apache-2.0 | Copyright (c) 2019 Manish Goregaokar | [LICENSE-APACHE](<licenses/crates/unicode-script@0.5.9/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/unicode-script@0.5.9/LICENSE-MIT>) | - |
 | unicode-width | 0.2.3 | MIT OR Apache-2.0 | Copyright (c) 2015 The Rust Project Developers | [LICENSE-APACHE](<licenses/crates/unicode-width@0.2.3/LICENSE-APACHE>), [LICENSE-MIT](<licenses/crates/unicode-width@0.2.3/LICENSE-MIT>) | - |
+| wasapi | 0.27.0 | MIT | Copyright (c) 2020 Henrik Enquist | [LICENSE.txt](<licenses/crates/wasapi@0.27.0/LICENSE.txt>) | - |
 | wgpu | 30.0.2 | MIT OR Apache-2.0 | Copyright (c) 2025 The gfx-rs developers | [LICENSE.APACHE](<licenses/crates/wgpu@30.0.2/LICENSE.APACHE>), [LICENSE.MIT](<licenses/crates/wgpu@30.0.2/LICENSE.MIT>) | - |
 | wgpu-core | 30.0.2 | MIT OR Apache-2.0 | Copyright (c) 2025 The gfx-rs developers | [LICENSE.APACHE](<licenses/crates/wgpu-core@30.0.2/LICENSE.APACHE>), [LICENSE.MIT](<licenses/crates/wgpu-core@30.0.2/LICENSE.MIT>) | - |
 | wgpu-core-deps-apple | 30.0.2 | MIT OR Apache-2.0 | Copyright (c) 2025 The gfx-rs developers | [LICENSE.APACHE](<licenses/crates/wgpu-core-deps-apple@30.0.2/LICENSE.APACHE>), [LICENSE.MIT](<licenses/crates/wgpu-core-deps-apple@30.0.2/LICENSE.MIT>) | - |
