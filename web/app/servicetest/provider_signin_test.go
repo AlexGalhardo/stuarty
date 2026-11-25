@@ -719,3 +719,38 @@ func TestSignInWithChatGPTIsRefusedOnANetworkServer(t *testing.T) {
 		t.Fatalf("OpenRouter on a network server: %+v", done)
 	}
 }
+
+// VV-432: a sign-in that was begun and never finished leaves a placeholder connection; beginning again takes
+// that one instead of adding another card named the same, so an abandoned consent screen costs nothing.
+func TestSignInBegunAgainTakesTheUnfinishedConnection(t *testing.T) {
+	t.Parallel()
+
+	se := newSignInEnv(t)
+	person := se.asPerson()
+	before := se.connectionCount()
+
+	first, err := se.begin(person, "openai", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	second, err := se.begin(person, "openai", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if second.ConnectionID != first.ConnectionID || se.connectionCount() != before+1 {
+		t.Fatalf("connections: first %s, second %s, count %d", first.ConnectionID, second.ConnectionID, se.connectionCount())
+	}
+
+	// A finished sign-in is a connection of its own: a new sign-in makes another one.
+	done, err := se.complete(person, se.redirectOf(second.AuthorizeURL))
+	if err != nil || done.ConnectionID != first.ConnectionID {
+		t.Fatalf("done = %+v, %v", done, err)
+	}
+
+	third, err := se.begin(person, "openai", "")
+	if err != nil || third.ConnectionID == first.ConnectionID || se.connectionCount() != before+2 {
+		t.Fatalf("third = %+v, %v, count %d", third, err, se.connectionCount())
+	}
+}
