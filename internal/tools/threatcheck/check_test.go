@@ -132,9 +132,10 @@ func TestTheRealModelParses(t *testing.T) {
 	// (ADR-0052); T-118 to T-122 are the screen capture threats of epic 61; T-123 and T-124 are the path of a
 	// stored file and the reveal of the desktop shell, epic 94; T-125 is the key that must never reach a
 	// recording, epic 62; T-130 to T-136 are the threats of the sealed library, documents, edit log and asset notes
-	// of epic 92 (ADR-0053). 109 + 15 - 6 removed + 1 + 7 = 126.
-	if len(threats) != 126 {
-		t.Errorf("the model has %d threats, want 126 (T-89, T-100 to T-125, T-130 to T-136)", len(threats))
+	// of epic 92 (ADR-0053); T-160 to T-163 are the threats of the MCP tool publication (VV-282, D-143).
+	// 109 + 15 - 6 removed + 1 + 7 + 4 = 130.
+	if len(threats) != 130 {
+		t.Errorf("the model has %d threats, want 130 (T-89, T-100 to T-125, T-130 to T-136, T-160 to T-163)", len(threats))
 	}
 }
 

@@ -40,6 +40,7 @@ func TestToolListHasTheToolsWhoseOperationsExist(t *testing.T) {
 		"project_list", "project_create", "project_get", "project_trash", "edit", "command_help", "history",
 		"media_import", "media_inspect", "view", "lint", "job_start", "job_get", "job_cancel", "template",
 		"font_import", "connection", "image", "project_item", "library",
+		"publication",
 	}
 	if strings.Join(names, ",") != strings.Join(want, ",") {
 		t.Fatalf("tools = %v, want %v (the others wait for their Service methods: %v)", names, want, Pending)
@@ -361,7 +362,7 @@ func TestSecurity_T31_ToolDefinitionsAreStatic(t *testing.T) {
 	}
 }
 
-var idPattern = regexp.MustCompile(`^\^(prj|ast|trk|itm|job|tpl|con|img|pit|apr)_\[0-9a-hjkmnp-tv-z\]\{10\}\$$`)
+var idPattern = regexp.MustCompile(`^\^(prj|ast|trk|itm|job|tpl|con|img|pit|apr|pub|tgt)_\[0-9a-hjkmnp-tv-z\]\{10\}\$$`)
 
 // TestToolSchemas: every inputSchema forbids extra members and every id
 // parameter carries the pattern of SDD-000 section 2 (SDD-003 section 4.2).

@@ -270,13 +270,17 @@ var parity = []row{
 	{method: "PublishValidate", command: "publish:validate", route: "POST /publish/validate"},
 	{method: "PublishNow", tool: "job_start", command: "publish:now", route: "POST /publish"},
 	{method: "PublishStatus", tool: "job_get", command: "publish:status", route: "GET /publish/{}"},
-	// The calendar of publications (SDD-020 section 29): no MCP tool (author decision D-094); an agent plans
-	// through the CLI and HTTP, and approval stays with a person.
-	{method: "PublicationCreate", command: "publication:create", route: "POST /publications"},
-	{method: "PublicationGet", command: "publication:show", route: "GET /publications/{}"},
-	{method: "PublicationList", command: "publication:list", route: "GET /publications"},
+	// The calendar of publications (SDD-020 section 29): the tool publication has an action for create, schedule,
+	// show and list (author decision D-143, which revises D-094). Changing, sending now, retrying and cancelling
+	// have no tool, and approval stays with a person.
+	{method: "PublicationCreate", tool: "publication", command: "publication:create", route: "POST /publications"},
+	{method: "PublicationGet", tool: "publication", command: "publication:show", route: "GET /publications/{}"},
+	{method: "PublicationList", tool: "publication", command: "publication:list", route: "GET /publications"},
 	{method: "PublicationUpdate", command: "publication:update", route: "PUT /publications/{}"},
-	{method: "PublicationSchedule", command: "publication:schedule", route: "POST /publications/{}/schedule"},
+	{
+		method: "PublicationSchedule", tool: "publication", command: "publication:schedule",
+		route: "POST /publications/{}/schedule",
+	},
 	{method: "PublicationSendNow", command: "publication:send-now", route: "POST /publications/{}/send-now"},
 	{method: "PublicationRetry", command: "publication:retry", route: "POST /publications/{}/retry"},
 	{method: "PublicationCancel", command: "publication:cancel", route: "POST /publications/{}/cancel"},
