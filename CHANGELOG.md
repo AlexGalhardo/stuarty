@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.56.0] - 2026-11-25
+
+### Added
+
+- **mcp:** Add the publication tool to create, schedule, show and list a publication ([a3c556d](https://github.com/AlexGalhardo/stuarty/commit/a3c556d63b1521fe394b551f284b2dead13b2b95))
+- **web:** Name the navigation as the final design does, in both languages ([c6b093b](https://github.com/AlexGalhardo/stuarty/commit/c6b093bced2700041ecb3145d2f1730366e82ab2))
+- **web:** The home greets the person and lists the studio and what waits ([65799fe](https://github.com/AlexGalhardo/stuarty/commit/65799fe51469a6b91e715c4778f71bcdf05a78c8))
+- **web:** The trail, approvals, publishing and idle scene bar follow the final design ([7f5f2aa](https://github.com/AlexGalhardo/stuarty/commit/7f5f2aaa3ea5d658071fb6579b2f8739382d73be))
+- **site:** Take the landing captures again, the home says Good morning, Alex ([f93d1e3](https://github.com/AlexGalhardo/stuarty/commit/f93d1e3953e5622f1285f068d9b194d249be49f9))
+- **site:** Take the landing captures again from the Epic 96 UI ([c2543d0](https://github.com/AlexGalhardo/stuarty/commit/c2543d090f16744bd83c14f8196a9ea6ed23f62b))
+- **command:** Add recording.auto_zoom, the zoom planner of a screen take ([b799a5b](https://github.com/AlexGalhardo/stuarty/commit/b799a5b3cb9f87736ede283d5c7ba0c765660e14))
+- **command:** Add recording.set_cursor, the smoothed pointer of a screen take ([b924f28](https://github.com/AlexGalhardo/stuarty/commit/b924f2873fb11e1d9a1843945855e61ec48c426b))
+- **command:** Add recording.set_click_highlight, a mark on every click of a take ([d1508ad](https://github.com/AlexGalhardo/stuarty/commit/d1508ade914308c910fa0d4a412dedf0333ecea4))
+- **ui:** Add the Screen recording section to the inspector of a clip ([a87ad57](https://github.com/AlexGalhardo/stuarty/commit/a87ad5710fb2ef71e7572e4ecbe60d742a4c5238))
+- **service:** Resolve the pointer events of a recording for the screen take commands ([54e897b](https://github.com/AlexGalhardo/stuarty/commit/54e897b08da58b2e5332556e63c237297dd9615c))
+- **service:** Take, order, check and assemble a recording a browser uploads ([96fc61a](https://github.com/AlexGalhardo/stuarty/commit/96fc61ad191e67b94e6607fb50ab9db17705625a))
+- **ui:** Add the browser recorder, its capability check and its chunk uploader ([9ca5bba](https://github.com/AlexGalhardo/stuarty/commit/9ca5bbae7aca6a708259fcaffd781150f89678e7))
+- **ui:** Record in the browser from the dialog where native capture is missing ([40a1f34](https://github.com/AlexGalhardo/stuarty/commit/40a1f34edf01e6dfce1194672225b98d1c7198f4))
+- **repo:** Wasmdiff compares two WebAssembly modules section by section ([64c5fd0](https://github.com/AlexGalhardo/stuarty/commit/64c5fd0dba8a765bf66b77b759a1633c568c8941))
+- **repo:** Wasmdiff shows the bytes around the first difference of a data segment ([c3ab47a](https://github.com/AlexGalhardo/stuarty/commit/c3ab47ad226ba7930d99bacfb8acfb63aa9d3a94))
+- **repo:** Rustchost reports the host of the Linux runner to cargo on other systems ([4ac2bcd](https://github.com/AlexGalhardo/stuarty/commit/4ac2bcd32d4316862f3f6d1a67c8ed69d5c6fc90))
+
+### Fixed
+
+- **site:** Livelier scroll entrances and no release badge in the header ([97d7c8c](https://github.com/AlexGalhardo/stuarty/commit/97d7c8c8a5ed772569a776e4497301cd5b876080))
+- **site:** Finish each entrance once the element is in view and test the new title colours ([08ea98d](https://github.com/AlexGalhardo/stuarty/commit/08ea98d2a881e70915d6192f1034a5118f8ab4b8))
+- **service:** Keep a post a person approved from being rescheduled by an agent ([8394229](https://github.com/AlexGalhardo/stuarty/commit/8394229ef681457acb3c4a3e5ea23a8e4cf06975))
+- **service:** Check the frame epoch and insert under one lock ([76698ab](https://github.com/AlexGalhardo/stuarty/commit/76698ab58e144e5959b12db6faabbbdb14a7bb6b))
+- **web:** The home on a phone orders the path before the button and reads 0m ago ([ce1a036](https://github.com/AlexGalhardo/stuarty/commit/ce1a036888b471822a53abe90e618b05e8e65c50))
+- **web:** The idle scene bar says No agent connected when no agent is ([f700357](https://github.com/AlexGalhardo/stuarty/commit/f7003579676aec5f4996ee51b425810c91c1eb4a))
+- **repo:** Sign the first flow in with the password so the person session is privileged ([da69823](https://github.com/AlexGalhardo/stuarty/commit/da6982394b047d7cba4887903d9dbe777774ff42))
+- **repo:** Keep the first flow on its own workspace whatever the caller environment says ([719afe1](https://github.com/AlexGalhardo/stuarty/commit/719afe11dbc7ae915a1bc574778102158d75e82a))
+- **ui:** Say which screen take effects to run again after a manual zoom change ([f51015b](https://github.com/AlexGalhardo/stuarty/commit/f51015bf090099b47b13c6978b2a8a70d8faaeaa))
+- **ui:** Leave the saving screen when the browser or a limit ends a recording ([4aeecdb](https://github.com/AlexGalhardo/stuarty/commit/4aeecdb9fa16012637eaa50590a85313a146b580))
+- **ui:** Stop retrying a chunk the server refused as invalid, except a bad digest ([5fa06b3](https://github.com/AlexGalhardo/stuarty/commit/5fa06b32fd1d138881cf368fe4a16e281d8e8f53))
+- **service:** Refuse a negative chunk index as invalid, not as a limit ([d9539c3](https://github.com/AlexGalhardo/stuarty/commit/d9539c39783eb9670d5d0c15486df49cc4756312))
+- **service:** Refuse a caller-sent resolved track on clip.face_frame ([5febbd0](https://github.com/AlexGalhardo/stuarty/commit/5febbd044847316418d8bd29bf8cab035e9686ac))
+- **service:** Delete the pointer file with the screen asset of a recording ([5d7dd13](https://github.com/AlexGalhardo/stuarty/commit/5d7dd1324a78cce37bb0a624deaf9f9a7f68afa1))
+- **ui:** Show the face refusal when no face set is offered instead of waiting ([621ecee](https://github.com/AlexGalhardo/stuarty/commit/621ecee8676fd6dc83ae49df8725e564d417a31c))
+- **renderer:** Build the module with the host of the runner so Windows equals Linux ([8e4369d](https://github.com/AlexGalhardo/stuarty/commit/8e4369d15d71334e597d4ee67e5261aeea916af1))
+
+### Security
+
+- **security:** Wrap the threat count message under the line limit ([1995b23](https://github.com/AlexGalhardo/stuarty/commit/1995b2364ae3485e41973f5e2e171e2a4d6abd60))
+
 ## [0.55.0] - 2026-11-25
 
 ### Added
@@ -2676,7 +2721,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **security:** Count retries in the rolling render quota ([1bc8114](https://github.com/AlexGalhardo/vukem-studio/commit/1bc81140afc4efcc346d68dd16bd7e91abbc15f4))
 - **security:** Add a global rolling daily model budget ([7d3afc4](https://github.com/AlexGalhardo/vukem-studio/commit/7d3afc46c8da935e36ad5bcd179ea12a474d0423))
 
-[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.55.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/stuarty/compare/v0.56.0...HEAD
+[0.56.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.55.0...v0.56.0
 [0.55.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.54.0...v0.55.0
 [0.54.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.53.0...v0.54.0
 [0.53.0]: https://github.com/AlexGalhardo/stuarty/compare/v0.52.0...v0.53.0
