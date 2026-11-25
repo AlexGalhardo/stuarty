@@ -157,6 +157,10 @@ func (r recordingRepo) ListByProject(ctx context.Context, projectID string) ([]r
 	return r.list(ctx, true, `project_id = ?`, projectID)
 }
 
+func (r recordingRepo) ListByAssetHash(ctx context.Context, hash string) ([]recordings.Row, error) {
+	return r.list(ctx, false, `asset_hash = ?`, hash)
+}
+
 func (r recordingRepo) Open(ctx context.Context) ([]recordings.Row, error) {
 	// The label stays sealed: the recovery of start-up runs while the studio may be locked and needs none.
 	return r.list(ctx, false, `state IN ('prepared','recording','paused','finishing')`)

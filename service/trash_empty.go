@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
+	"github.com/AlexGalhardo/stuarty/core/recording"
 	"github.com/AlexGalhardo/stuarty/service/crashpoint"
 )
 
@@ -46,6 +47,7 @@ func humanOrAdminKey(c Caller) bool {
 type doomed struct {
 	hashes   []string // hex of the content-store files and artifact directories
 	projects []string // ids whose exports/ and frames/ directories go
+	pointers []string // ids of the recordings whose pointer file goes with their screen asset (SDD-025 section 16.8)
 }
 
 // TrashEmpty deletes what is in the trash for good. It is the only operation
@@ -302,6 +304,10 @@ func (s *svc) deleteInTx(
 			return err
 		}
 
+		if err := s.dropPointerFiles(ctx, tx, orphans[i].Hash, plan); err != nil {
+			return err
+		}
+
 		res.Assets++
 
 		plan.hashes = append(plan.hashes, strings.TrimPrefix(orphans[i].Hash, "sha256:"))
@@ -317,6 +323,32 @@ func (s *svc) deleteInTx(
 	return tx.Audit().Append(ctx, AuditRow{
 		AtMs: s.nowMs(), Actor: c.Actor, Action: "trash.empty", Details: details,
 	})
+}
+
+// dropPointerFiles is the part of deleting a screen asset that reaches the pointer positions of its recording
+// (VV-416, D-144): the row forgets the events now, and the file goes after the commit.
+func (s *svc) dropPointerFiles(ctx context.Context, tx Tx, hash string, plan *doomed) error {
+	store := tx.Recordings()
+	if store == nil {
+		return nil
+	}
+
+	rows, err := store.ListByAssetHash(ctx, hash)
+	if err != nil {
+		return err
+	}
+
+	for i := range rows {
+		rows[i].EventsCount = 0
+
+		if err := store.Update(ctx, rows[i]); err != nil {
+			return err
+		}
+
+		plan.pointers = append(plan.pointers, rows[i].ID)
+	}
+
+	return nil
 }
 
 func (s *svc) deleteTrashedAssetRows(ctx context.Context, tx Tx, c Caller, res *TrashEmptyResult) error {
@@ -368,6 +400,19 @@ func (s *svc) removeFiles(plan *doomed) int64 {
 		}
 
 		freed += removeTree(filepath.Join(s.workspace, "artifacts", hex))
+	}
+
+	for _, id := range plan.pointers {
+		dir := filepath.Join(s.workspace, recordingsDir, id)
+		pointers := filepath.Join(dir, recording.EventsFile)
+
+		if st, err := os.Stat(pointers); err == nil {
+			freed += st.Size()
+		}
+
+		_ = os.Remove(pointers)
+		// Only an empty folder goes: the pointer file is all an added recording keeps there.
+		_ = os.Remove(dir)
 	}
 
 	for _, id := range plan.projects {
