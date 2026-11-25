@@ -344,6 +344,9 @@ func TestRecordingUploadRefusesAWrongDigestAnEmptyBodyAndABadRequest(t *testing.
 		"a negative clock": {
 			ID: rec.ID, Track: "screen", SHA256: digest(body), Body: bytes.NewReader(body), ElapsedMS: -1,
 		},
+		"a negative index": {
+			ID: rec.ID, Track: "screen", Index: -1, SHA256: digest(body), Body: bytes.NewReader(body),
+		},
 	}
 
 	for name, req := range cases {

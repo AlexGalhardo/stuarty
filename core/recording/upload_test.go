@@ -15,7 +15,8 @@ func TestJudgeChunk(t *testing.T) {
 		{5, 0, ChunkRetry},
 		{5, 6, ChunkOutOfOrder},
 		{0, 1, ChunkOutOfOrder},
-		{0, -1, ChunkTooMany},
+		{0, -1, ChunkMalformed},
+		{5, -1, ChunkMalformed},
 		{0, MaxChunksPerTrack, ChunkTooMany},
 		{MaxChunksPerTrack - 1, MaxChunksPerTrack - 1, ChunkAccept},
 	}

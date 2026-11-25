@@ -377,6 +377,8 @@ func (s *svc) RecordingUploadChunk(
 	folder := s.recordingFolder(r.ID)
 
 	switch recording.JudgeChunk(next, req.Index) {
+	case recording.ChunkMalformed:
+		return nil, uploadValidation("index", "index is a chunk number, 0 or more.")
 	case recording.ChunkTooMany:
 		return nil, newError("E_LIMIT_EXCEEDED", "the chunk index %d is out of range.", req.Index).
 			withDetail("reason", "chunks").withLimit("chunks", req.Index, recording.MaxChunksPerTrack-1)
