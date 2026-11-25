@@ -179,12 +179,14 @@ fn three_pauses_keep_the_screen_the_camera_and_the_microphone_aligned() {
 	let m = run(
 		"sync",
 		&Scenario {
-			runs_ms: [2200, 2000, 2400, 2200],
+			// 23.8 s of recording and about 45 flashes: with 11 the 95th percentile was the maximum, so one frame
+			// that a busy CPU delayed decided the test (VV-417). With this many it is a real percentile.
+			runs_ms: [6000, 5400, 6400, 6000],
 			pauses_ms: [1300, 700, 1100],
 		},
 	);
 	assert!(
-		m.matched >= 12,
+		m.matched >= 32,
 		"only {} flashes could be compared",
 		m.matched
 	);
@@ -203,8 +205,8 @@ fn three_pauses_keep_the_screen_the_camera_and_the_microphone_aligned() {
 		"the files differ in length by {:.1} ms",
 		hi - lo
 	);
-	// The pauses were removed: about 8.8 s of the 12.2 s of the wall clock is in the files.
-	assert!((8500.0..=9300.0).contains(&lo), "{lo} ms in the files");
+	// The pauses were removed: about 23.8 s of the 26.9 s of the wall clock is in the files.
+	assert!((23_000.0..=25_200.0).contains(&lo), "{lo} ms in the files");
 }
 
 /// The fixture of acceptance criterion 2: ten minutes with three pauses. It takes ten minutes, so it runs only on
