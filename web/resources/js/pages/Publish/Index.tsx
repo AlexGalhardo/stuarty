@@ -142,6 +142,11 @@ export default function Publish(): ReactNode {
 
 	// How many targets of the list the service sent wait for a yes or failed: the chips next to the view only count them.
 	const targets = publications.flatMap((p) => p.targets);
+	// The name the person gave to each destination, by connection id, for the list.
+	const accountNames: Record<string, string> = {
+		...Object.fromEntries(blogs.map((c) => [c.id, c.label])),
+		...Object.fromEntries(accounts.map((a) => [a.connection_id, a.label])),
+	};
 	const waiting = targets.filter((x) => x.state === "waiting_approval").length;
 	const failed = targets.filter((x) => x.state === "failed").length;
 
@@ -422,6 +427,7 @@ export default function Publish(): ReactNode {
 				{mode === "list" ? (
 					<ListView
 						publications={feed.publications}
+						accounts={accountNames}
 						onOpen={(id, target) => setEditing({ id, target })}
 					/>
 				) : mode === "day" ? (

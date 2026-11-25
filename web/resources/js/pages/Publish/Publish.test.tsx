@@ -143,12 +143,24 @@ describe("the list shows the result of a target", () => {
 		);
 		expect(html).toContain('href="https://fake.example/watch/a"');
 		expect(html).toContain('rel="noreferrer noopener"');
-		expect(html).toContain("2026-11-20 09:00");
-		expect(html).toContain("America/Sao_Paulo");
+		expect(html).toMatch(/Nov 20, 2026, 9:00 AM/);
+		expect(html).not.toMatch(/2026-11-20 09:00|America\/Sao_Paulo/);
 		const other = list(
 			publication([target({ state: "published", url: "javascript:alert(1)" })]),
 		);
 		expect(other).not.toContain("href=");
+	});
+
+	test("the account column shows the name the person gave, not the kind of the connection", () => {
+		const html = wrap(
+			<ListView
+				publications={[publication([target({ network: "blog_files" })])]}
+				accounts={{ [target({}).connection_id]: "Blog da Marina" }}
+				onOpen={() => undefined}
+			/>,
+		);
+		expect(html).toContain("Blog da Marina");
+		expect(html).not.toContain("blog_files");
 	});
 
 	test("the error of a failed target with what to do", () => {

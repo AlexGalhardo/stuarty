@@ -2,7 +2,8 @@ import type { ReactNode } from "react";
 
 import UntrustedText from "@/components/UntrustedText";
 import { Button } from "@/components/ui/button";
-import { useT } from "@/lib/i18n";
+import { formatInZone } from "@/lib/format";
+import { useLocale, useT } from "@/lib/i18n";
 import { linkOf } from "./publicationState";
 import { TargetStateBadge } from "./TargetStateBadge";
 import type { Publication, Target } from "./types";
@@ -53,13 +54,17 @@ export function TargetResult({ target }: { target: Target }): ReactNode {
 // The list of the calendar: one row for each target, with the same facts as the calendar and a way to open it.
 export function ListView({
 	publications,
+	accounts = {},
 	onOpen,
 }: {
+	// the name the person gave to each connection, by id: the list shows it, not the kind of the connection
+	accounts?: Readonly<Record<string, string>>;
 	// null while the first read has not answered or failed: a list not read is not an empty list
 	publications: readonly Publication[] | null;
 	onOpen(publicationId: string, targetId: string): void;
 }): ReactNode {
 	const t = useT();
+	const locale = useLocale();
 	if (publications === null) return null;
 	const rows = publications.flatMap((publication) =>
 		publication.targets.map((target) => ({ publication, target })),
@@ -109,13 +114,12 @@ export function ListView({
 							data-target-id={target.id}
 						>
 							<td className="px-3 py-2 tabular-nums">
-								{target.local_time === undefined ? (
+								{target.scheduled_at === null ? (
 									t("ui.publish.no_time")
 								) : (
-									<>
-										{target.local_time}{" "}
-										<span className="text-muted-foreground">{target.zone}</span>
-									</>
+									<time dateTime={target.scheduled_at}>
+										{formatInZone(target.scheduled_at, target.zone, locale)}
+									</time>
 								)}
 							</td>
 							<td className="px-3 py-2">
@@ -123,7 +127,11 @@ export function ListView({
 									{target.fields.title || publication.title}
 								</UntrustedText>
 							</td>
-							<td className="px-3 py-2">{target.network}</td>
+							<td className="px-3 py-2">
+								<UntrustedText>
+									{accounts[target.connection_id] ?? target.network}
+								</UntrustedText>
+							</td>
 							<td className="px-3 py-2">
 								<TargetStateBadge state={target.state} />
 							</td>

@@ -9,6 +9,29 @@ export function formatDateTime(iso: string, locale: string): string {
 	}).format(date);
 }
 
+// An instant on the wall clock of the zone the person chose, in the person's language ("28 de nov. de 2026 13:00
+// BRT"). A zone the runtime does not know falls back to the zone of the browser, never to the raw ISO text.
+export function formatInZone(
+	iso: string,
+	zone: string,
+	locale: string,
+): string {
+	const date = new Date(iso);
+	if (Number.isNaN(date.getTime())) return iso;
+	const options: Intl.DateTimeFormatOptions = {
+		dateStyle: "medium",
+		timeStyle: "short",
+	};
+	try {
+		return new Intl.DateTimeFormat(locale, {
+			...options,
+			timeZone: zone,
+		}).format(date);
+	} catch {
+		return new Intl.DateTimeFormat(locale, options).format(date);
+	}
+}
+
 // The day only, for a card that tells two files of the same name apart.
 export function formatDate(iso: string, locale: string): string {
 	const date = new Date(iso);
