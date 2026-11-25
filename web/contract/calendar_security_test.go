@@ -26,10 +26,10 @@ func pendingRequests(t *testing.T, fx publishFixture) int {
 	return len(res.Requests)
 }
 
-// T-164: a quiet day is a rule, not a hint. An agent, on any surface and by any path that asks for approval, is
+// T-180: a quiet day is a rule, not a hint. An agent, on any surface and by any path that asks for approval, is
 // refused on a day a person marked quiet, whatever it passes; nothing is asked and nothing leaves the machine; a
 // person is asked to confirm, and only the confirmed call schedules.
-func TestSecurity_T164_AnAgentCannotScheduleOnAQuietDayByAnyPathOrSurface(t *testing.T) {
+func TestSecurity_T180_AnAgentCannotScheduleOnAQuietDayByAnyPathOrSurface(t *testing.T) {
 	for name, newDriver := range surfaces {
 		t.Run(name, func(t *testing.T) {
 			fx := newPublishFixture(t, newDriver)
@@ -155,9 +155,9 @@ func TestSecurity_T164_AnAgentCannotScheduleOnAQuietDayByAnyPathOrSurface(t *tes
 	}
 }
 
-// T-165: a slot is a reminder. Saving one, reading a plan that holds it and expanding it for any range ask for no
+// T-181: a slot is a reminder. Saving one, reading a plan that holds it and expanding it for any range ask for no
 // approval, plan no publication, open no connection and keep nothing but a weekday, a time, a zone and a network.
-func TestSecurity_T165_ASlotNeverSendsPlansOrAsksForApproval(t *testing.T) {
+func TestSecurity_T181_ASlotNeverSendsPlansOrAsksForApproval(t *testing.T) {
 	fx := newPublishFixture(t, newMCPWith)
 	d, svc := fx.d, fx.d.service()
 
@@ -211,10 +211,10 @@ func TestSecurity_T165_ASlotNeverSendsPlansOrAsksForApproval(t *testing.T) {
 	}
 }
 
-// T-166: the .ics file holds the instant, the network, the state and the words of the person, escaped, and no
+// T-182: the .ics file holds the instant, the network, the state and the words of the person, escaped, and no
 // credential, no token, and no id that grants access: not the connection, the publication, the target, the approval
 // or the file.
-func TestSecurity_T166_TheICSExportHoldsNoCredentialOrAccessId(t *testing.T) {
+func TestSecurity_T182_TheICSExportHoldsNoCredentialOrAccessId(t *testing.T) {
 	fx := newPublishFixture(t, newDirectWith)
 	svc := fx.d.service()
 	approved := approvedByAPerson(t, fx)
@@ -275,9 +275,9 @@ func TestSecurity_T166_TheICSExportHoldsNoCredentialOrAccessId(t *testing.T) {
 	}
 }
 
-// T-167: a copy carries no yes. Duplicating what a person approved makes a draft with no request; the original is as
+// T-183: a copy carries no yes. Duplicating what a person approved makes a draft with no request; the original is as
 // the person left it; scheduling the copy asks again, with a request of its own, and nothing is sent.
-func TestSecurity_T167_ADuplicateCarriesNoApprovalAndLeavesTheOriginal(t *testing.T) {
+func TestSecurity_T183_ADuplicateCarriesNoApprovalAndLeavesTheOriginal(t *testing.T) {
 	fx := newPublishFixture(t, newDirectWith)
 	svc := fx.d.service()
 	approved := approvedByAPerson(t, fx)

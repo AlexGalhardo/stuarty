@@ -532,13 +532,13 @@ A day is a **local date** (`2026-12-25`) and the IANA zone of the person who pla
 
 ### 30A.2 Recurring slots
 
-A slot is a reminder, never a post: `CalendarSlotSave` stores `network`, `weekday` (`mon` to `sun`), `time` (`HH:MM`, 24 hours), `zone` and an optional `connection_id` (an account of that network; empty is any). At most 50 slots per workspace. It reads no connection and sends nothing; it holds no content (T-165).
+A slot is a reminder, never a post: `CalendarSlotSave` stores `network`, `weekday` (`mon` to `sun`), `time` (`HH:MM`, 24 hours), `zone` and an optional `connection_id` (an account of that network; empty is any). At most 50 slots per workspace. It reads no connection and sends nothing; it holds no content (T-181).
 
 `core/publish.ExpandSlots` turns the slots into occurrences for a range **on read**, and stores none: for every slot it walks the local dates of its own zone that touch the range, keeps those on its weekday and reads `date + time` with `LocalInstant` (section 25). On the day the clock jumps forward, 02:30 that does not exist is the first instant after the gap and the occurrence says `adjustment: gap`; on the day the clock goes back, the first of the two. The occurrence is kept when its instant is inside `[from, to)`. An occurrence is **filled** by the first non-cancelled target of the same network (and of the named connection) whose instant is in `[at, at + 60 minutes)`; one target fills at most one occurrence. An empty occurrence is shown as an empty slot to fill: a click opens the editor with its date, time, zone and network.
 
 ### 30A.3 Duplicate
 
-`PublicationDuplicate` makes a **new publication** with the same title, text, files, thumbnail or post and the same targets (or the one named by `target_id`), each a `draft` at the new time (`at`, `zone`), with no approval, no request, no snapshot, no lease and none of the result of the original. The original is not changed. The new publication is the caller's, in the project of the original. Scheduling it asks for approval like any other, and the quiet-day rule applies then (T-167).
+`PublicationDuplicate` makes a **new publication** with the same title, text, files, thumbnail or post and the same targets (or the one named by `target_id`), each a `draft` at the new time (`at`, `zone`), with no approval, no request, no snapshot, no lease and none of the result of the original. The original is not changed. The new publication is the caller's, in the project of the original. Scheduling it asks for approval like any other, and the quiet-day rule applies then (T-183).
 
 ### 30A.4 The plan and the day view
 
@@ -546,7 +546,7 @@ A slot is a reminder, never a post: `CalendarSlotSave` stores `network`, `weekda
 
 ### 30A.5 The `.ics` export
 
-`CalendarExport` (scope `read`) answers the targets that have a time and are not cancelled, for a range, as an iCalendar file (RFC 5545), read only and with no import. One `VEVENT` per target: `DTSTART` in UTC (`...Z`, no `TZID`, so a reader never needs the rules of a zone), `DTSTAMP`, `DURATION:PT15M`, a `SUMMARY` of the network and the title, a `DESCRIPTION` of the state and the start of the text, `STATUS` (`TENTATIVE` until a person approved it, `CONFIRMED` after), and a `UID` that is the first 32 hexadecimal characters of the SHA-256 of `stuarty-ics:` and the target id, then `@stuarty.invalid`: stable, and it reveals neither the id nor the host. The text is the person's: it is cut to 200 characters for the title and 500 for the text, loses every control character, and is escaped (`\\`, `;`, `,`, line breaks as `\n`) and folded at 75 bytes with a CRLF and a space, never inside a UTF-8 sequence. The file has no connection id, no account name, no address of a post, no approval id, no snapshot and no token (T-166); a quiet day is not an event. The HTTP route answers `text/calendar; charset=utf-8` with `Content-Disposition: attachment`; the Service answers `filename`, `content_type` and `body`.
+`CalendarExport` (scope `read`) answers the targets that have a time and are not cancelled, for a range, as an iCalendar file (RFC 5545), read only and with no import. One `VEVENT` per target: `DTSTART` in UTC (`...Z`, no `TZID`, so a reader never needs the rules of a zone), `DTSTAMP`, `DURATION:PT15M`, a `SUMMARY` of the network and the title, a `DESCRIPTION` of the state and the start of the text, `STATUS` (`TENTATIVE` until a person approved it, `CONFIRMED` after), and a `UID` that is the first 32 hexadecimal characters of the SHA-256 of `stuarty-ics:` and the target id, then `@stuarty.invalid`: stable, and it reveals neither the id nor the host. The text is the person's: it is cut to 200 characters for the title and 500 for the text, loses every control character, and is escaped (`\\`, `;`, `,`, line breaks as `\n`) and folded at 75 bytes with a CRLF and a space, never inside a UTF-8 sequence. The file has no connection id, no account name, no address of a post, no approval id, no snapshot and no token (T-182); a quiet day is not an event. The HTTP route answers `text/calendar; charset=utf-8` with `Content-Disposition: attachment`; the Service answers `filename`, `content_type` and `body`.
 
 ### 30A.6 The page
 
@@ -554,7 +554,7 @@ The day view opens from a day cell of the month and week views (the date of the 
 
 ### 30A.7 Surfaces
 
-Operations, scopes and names are in SDD-000 section 1; the scope matrix and the threats T-164 to T-167 are in SDD-007; the tables in SDD-005 section 5.15.2.
+Operations, scopes and names are in SDD-000 section 1; the scope matrix and the threats T-180 to T-183 are in SDD-007; the tables in SDD-005 section 5.15.2.
 
 - **HTTP**: `GET /calendar/plan`, `PUT /calendar/days/{date}`, `PUT /calendar/quiet/{date}`, `PUT /calendar/slots`, `DELETE /calendar/slots/{id}`, `POST /publications/{id}/duplicate`, `GET /calendar/export`.
 - **CLI**: `calendar:plan`, `calendar:day`, `calendar:quiet`, `calendar:slot`, `calendar:slot-remove`, `calendar:export` (prints the file, to be redirected), `publication:duplicate`. `calendar:quiet` always answers `E_PRIVILEGED_SESSION`: the CLI is not a person.
