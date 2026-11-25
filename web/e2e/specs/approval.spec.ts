@@ -136,6 +136,27 @@ test.describe("approval queue", () => {
 				"Not reported",
 			);
 			await expect(row.getByTestId("approval-path")).toHaveText("Not reported");
+			// The page is laid out as the final design sets it: the sentence under the title, the count, the line
+			// that only a person decides, and the cost limit and the rules in a column of their own.
+			await expect(
+				page.getByText(
+					"The agent prepares. Only you say yes. Nothing is published or paid before that.",
+				),
+			).toBeVisible();
+			await expect(page.getByTestId("approval-count")).toContainText(/request/);
+			await expect(row).toContainText(
+				"Only a person decides. The agent does not approve.",
+			);
+			await expect(page.getByRole("link", { name: "Rules" })).toHaveAttribute(
+				"href",
+				"#approvals-rules",
+			);
+			await expect(
+				page.getByRole("heading", { name: "Cost limit" }),
+			).toBeVisible();
+			await expect(
+				page.getByRole("heading", { name: "Rules that approve for you" }),
+			).toBeVisible();
 
 			// A person's session (the desktop app) is offered the answers: enabled, and no note (VV-319).
 			await expect(row.getByRole("button", { name: "Approve" })).toBeEnabled();
@@ -252,9 +273,13 @@ test.describe("approval queue", () => {
 		await page
 			.getByLabel("Kind of action (for example publish.upload)")
 			.fill("text.generate");
-		// The rule form comes before the ceiling form, which has a project field too.
-		await page.getByLabel("Project id").first().fill(project);
-		await page.getByLabel("Most per item").first().fill("2.5");
+		// The ceiling form has a project field and limits too: the rule form is read by its own region.
+		const rules = page.getByRole("region", {
+			name: "Rules that approve for you",
+		});
+		const ceiling = page.getByRole("region", { name: "Cost limit" });
+		await rules.getByLabel("Project id").fill(project);
+		await rules.getByLabel("Most per item").fill("2.5");
 		await page.getByRole("button", { name: "Add rule" }).click();
 
 		const rule = page.locator("[data-rule-id]").filter({ hasText: project });
@@ -277,7 +302,7 @@ test.describe("approval queue", () => {
 		await rule.getByRole("button", { name: "Remove" }).click();
 		await expect(rule).toHaveCount(0);
 
-		await page.getByLabel("Most per day").last().fill("9");
+		await ceiling.getByLabel("Most per day").fill("9");
 		await page.getByRole("button", { name: "Save ceiling" }).click();
 		await expect(page.getByTestId("cost-ceilings")).toContainText("$9.00");
 		const cost = (await api("GET", "/cost")) as {

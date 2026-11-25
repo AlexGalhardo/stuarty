@@ -1,8 +1,10 @@
 import { Head } from "@inertiajs/react";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { PageHeader } from "@/components/PageHeader";
+import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { useLocale, useT } from "@/lib/i18n";
 import type { ProjectSummary } from "@/types";
@@ -31,6 +33,9 @@ import { usePublications } from "./usePublications";
 type Mode = View | "list";
 const MODES: readonly Mode[] = ["month", "week", "list"];
 
+// The week starts on Monday, as in the final design, in both languages.
+const weekStart = 1;
+
 function api() {
 	return createClient(new HttpTransport("/api/v1"));
 }
@@ -55,8 +60,6 @@ export default function Publish(): ReactNode {
 		target?: string;
 	} | null>(null);
 	const [failure, setFailure] = useState<Failure | null>(null);
-	// Sunday in the languages that start the week there, Monday in the rest.
-	const weekStart = locale.startsWith("en") ? 0 : 1;
 
 	const filter: ListFilter = useMemo(() => {
 		const base: ListFilter = {
@@ -66,7 +69,7 @@ export default function Publish(): ReactNode {
 		};
 		if (mode === "list") return base;
 		return { ...base, ...queryRange(daysOf(mode, anchor, weekStart)) };
-	}, [mode, anchor, weekStart, state, network]);
+	}, [mode, anchor, state, network]);
 
 	const feed = usePublications(filter);
 
@@ -95,6 +98,10 @@ export default function Publish(): ReactNode {
 	}, []);
 
 	const publications = feed.publications ?? [];
+	// How many targets of the list the service sent wait for a yes or failed: the chips next to the view only count them.
+	const targets = publications.flatMap((p) => p.targets);
+	const waiting = targets.filter((x) => x.state === "waiting_approval").length;
+	const failed = targets.filter((x) => x.state === "failed").length;
 	const opened =
 		editing?.id == null
 			? null
@@ -118,113 +125,124 @@ export default function Publish(): ReactNode {
 		<>
 			<Head title={t("ui.publish.title")} />
 			<div className="mx-auto flex max-w-6xl flex-col gap-6">
-				<div className="flex flex-wrap items-start justify-between gap-3">
-					<div>
-						<h1 className="text-2xl font-semibold">{t("ui.publish.title")}</h1>
-						<p className="mt-1 text-sm text-muted-foreground">
-							{t("ui.publish.intro")}
-						</p>
-					</div>
-					<Button
-						type="button"
-						onClick={() => setEditing({ id: null })}
-						data-testid="publish-new"
-					>
-						<Plus aria-hidden="true" />
-						{t("ui.publish.new")}
-					</Button>
-				</div>
+				<PageHeader
+					title={t("ui.publish.title")}
+					description={t("ui.publish.intro")}
+					actions={
+						<Button
+							type="button"
+							size="lg"
+							onClick={() => setEditing({ id: null })}
+							data-testid="publish-new"
+						>
+							<Plus aria-hidden="true" />
+							{t("ui.publish.new")}
+						</Button>
+					}
+				/>
 
 				<div className="flex flex-wrap items-center gap-3">
-					<fieldset className="inline-flex overflow-hidden rounded-lg border">
-						<legend className="sr-only">{t("ui.publish.view")}</legend>
-						{MODES.map((m) => (
-							<Button
-								key={m}
-								type="button"
-								variant={mode === m ? "default" : "ghost"}
-								size="sm"
-								aria-pressed={mode === m}
-								onClick={() => setMode(m)}
-								data-testid={`publish-mode-${m}`}
-							>
-								{t(`ui.publish.view_${m}`)}
-							</Button>
-						))}
-					</fieldset>
 					{mode !== "list" && (
-						<div className="flex items-center gap-1">
+						<div className="flex flex-wrap items-center gap-2">
 							<Button
 								type="button"
 								variant="outline"
-								size="icon-sm"
+								size="icon-lg"
 								aria-label={t("ui.publish.previous")}
 								onClick={() => step(-1)}
 							>
 								<ChevronLeft aria-hidden="true" />
 							</Button>
-							<Button
-								type="button"
-								variant="outline"
-								size="sm"
-								onClick={() => setAnchor(today(zone))}
+							<h2
+								className="text-center text-xl font-semibold sm:min-w-36"
+								data-testid="publish-range"
 							>
-								{t("ui.publish.today")}
-							</Button>
+								{title}
+							</h2>
 							<Button
 								type="button"
 								variant="outline"
-								size="icon-sm"
+								size="icon-lg"
 								aria-label={t("ui.publish.next")}
 								onClick={() => step(1)}
 							>
 								<ChevronRight aria-hidden="true" />
 							</Button>
-							<h2
-								className="ml-2 text-lg font-medium"
-								data-testid="publish-range"
+							<Button
+								type="button"
+								variant="ghost"
+								onClick={() => setAnchor(today(zone))}
 							>
-								{title}
-							</h2>
+								{t("ui.publish.today")}
+							</Button>
 						</div>
 					)}
-					<div className="ml-auto flex flex-wrap items-center gap-2 text-sm">
-						<label className="flex items-center gap-2">
-							{t("ui.publish.filter.state")}
-							<select
-								className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm"
-								value={state}
-								onChange={(event) => setState(event.target.value)}
-								data-testid="publish-filter-state"
-							>
-								<option value="">{t("ui.publish.filter.all")}</option>
-								{TARGET_STATES.map((s) => (
-									<option key={s} value={s}>
-										{t(`ui.publish.state.${s}`)}
-									</option>
-								))}
-							</select>
-						</label>
-						<label className="flex items-center gap-2">
-							{t("ui.publish.filter.network")}
-							<select
-								className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm"
-								value={network}
-								onChange={(event) => setNetwork(event.target.value)}
-								data-testid="publish-filter-network"
-							>
-								<option value="">{t("ui.publish.filter.all")}</option>
-								{networks.map((n) => (
-									<option key={n.network} value={n.network}>
-										{n.name}
-									</option>
-								))}
-							</select>
-						</label>
-						<span className="text-xs text-muted-foreground" aria-live="polite">
-							{feed.live ? t("ui.publish.live") : ""}
-						</span>
+					<div className="ml-auto flex flex-wrap items-center gap-2">
+						{waiting > 0 && (
+							<StatusBadge status="waiting" className="px-3 py-1 text-sm">
+								{t("ui.publish.count_waiting", { count: waiting })}
+							</StatusBadge>
+						)}
+						{failed > 0 && (
+							<StatusBadge status="danger" className="px-3 py-1 text-sm">
+								{t("ui.publish.count_failed", { count: failed })}
+							</StatusBadge>
+						)}
+						<fieldset className="inline-flex overflow-hidden rounded-lg border border-border-strong p-1">
+							<legend className="sr-only">{t("ui.publish.view")}</legend>
+							{MODES.map((m) => (
+								<Button
+									key={m}
+									type="button"
+									variant={mode === m ? "secondary" : "ghost"}
+									aria-pressed={mode === m}
+									onClick={() => setMode(m)}
+									data-testid={`publish-mode-${m}`}
+								>
+									{mode === m ? <Check aria-hidden="true" /> : null}
+									{t(`ui.publish.view_${m}`)}
+								</Button>
+							))}
+						</fieldset>
 					</div>
+				</div>
+
+				<div className="flex flex-wrap items-center gap-2 text-sm">
+					<label className="flex items-center gap-2">
+						{t("ui.publish.filter.state")}
+						<select
+							className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm"
+							value={state}
+							onChange={(event) => setState(event.target.value)}
+							data-testid="publish-filter-state"
+						>
+							<option value="">{t("ui.publish.filter.all")}</option>
+							{TARGET_STATES.map((s) => (
+								<option key={s} value={s}>
+									{t(`ui.publish.state.${s}`)}
+								</option>
+							))}
+						</select>
+					</label>
+					<label className="flex items-center gap-2">
+						{t("ui.publish.filter.network")}
+						<select
+							className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm"
+							value={network}
+							onChange={(event) => setNetwork(event.target.value)}
+							data-testid="publish-filter-network"
+						>
+							<option value="">{t("ui.publish.filter.all")}</option>
+							{networks.map((n) => (
+								<option key={n.network} value={n.network}>
+									{n.name}
+								</option>
+							))}
+						</select>
+					</label>
+					<span className="text-xs text-muted-foreground" aria-live="polite">
+						{feed.live ? t("ui.publish.live") : ""}
+					</span>
 				</div>
 
 				<FailureNote failure={failure ?? feed.failure} />

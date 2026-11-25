@@ -72,7 +72,7 @@ describe("TrailDetail", () => {
 	test("shows the actor, the tool, the state and the cost of every step", () => {
 		const html = draw(<TrailDetail workflow={TEXT} />);
 		expect(html.match(/data-slot="trail-detail-step"/g)).toHaveLength(5);
-		expect(html.match(/Who does it/g)).toHaveLength(5);
+		expect(html.match(/Who<\/dt>/g)).toHaveLength(5);
 		expect(html.match(/Tool<\/dt>/g)).toHaveLength(5);
 		expect(html.match(/Cost<\/dt>/g)).toHaveLength(5);
 		expect(html).toContain("You and the agent");

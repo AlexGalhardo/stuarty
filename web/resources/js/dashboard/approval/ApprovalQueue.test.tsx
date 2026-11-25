@@ -38,7 +38,10 @@ const messages = {
 	"ui.publish.state.waiting_approval": "Waiting for approval",
 	"ui.approvals.cost": "Estimated cost",
 	"ui.approvals.no_cost": "Free",
-	"ui.approvals.actor": "Asked by",
+	"ui.approvals.actor": "Requested by",
+	"ui.approvals.count": { one: "{count} request", other: "{count} requests" },
+	"ui.approvals.person_decides":
+		"Only a person decides. The agent does not approve.",
 	"ui.approvals.asked": "Asked",
 	"ui.approvals.reason": "Reason",
 	"ui.approvals.approve": "Approve",
@@ -99,6 +102,18 @@ describe("the approval queue shows what will go out, where, what it costs and wh
 		expect(html).toContain("key:key_1");
 		expect(html).toContain("Approve");
 		expect(html).toContain("Reject");
+	});
+
+	test("each request is a card with its waiting chip and the line that only a person decides, under a heading with the count", () => {
+		const html = markup([request(), request({ id: "apr_2" })]);
+		expect(html.match(/data-testid="approval-row"/g)).toHaveLength(2);
+		expect(html.match(/data-status="waiting"/g)).toHaveLength(2);
+		expect(
+			html.match(/Only a person decides\. The agent does not approve\./g),
+		).toHaveLength(2);
+		expect(html).toMatch(/data-testid="approval-count"[^>]*>2 requests</);
+		expect(html).toContain("Requested by");
+		expect(html.indexOf("Reject")).toBeLessThan(html.indexOf(">Approve"));
 	});
 
 	test("a free action says it is free and one with no destination says so", () => {

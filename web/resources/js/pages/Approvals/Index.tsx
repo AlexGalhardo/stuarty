@@ -1,7 +1,10 @@
 import { Head } from "@inertiajs/react";
+import { SlidersHorizontal } from "lucide-react";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
+import { PageHeader } from "@/components/PageHeader";
+import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import ApprovalQueue from "../../dashboard/approval/ApprovalQueue";
 import CostPanel from "../../dashboard/approval/CostPanel";
@@ -69,37 +72,51 @@ export default function Approvals(): ReactNode {
 	return (
 		<>
 			<Head title={t("ui.approvals.title")} />
-			<div className="mx-auto flex max-w-3xl flex-col gap-8">
-				<div>
-					<h1 className="text-2xl font-semibold">{t("ui.approvals.title")}</h1>
-					<p className="mt-1 text-sm text-muted-foreground">
-						{t("ui.approvals.intro")}
-					</p>
-				</div>
-				<FailureNote failure={failure ?? queue.failure} />
-				<ApprovalQueue
-					requests={queue.requests ?? []}
-					context={context}
-					loading={queue.requests === null}
-					failed={queue.failure !== null}
-					destinations={destinations}
-					busyId={queue.busyId}
-					live={queue.live}
-					onDecide={(id, decision, reason) =>
-						void queue.decide(id, decision, reason).then(() => loadCost())
+			<div className="mx-auto flex max-w-6xl flex-col gap-6">
+				<PageHeader
+					title={t("ui.approvals.title")}
+					description={t("ui.approvals.intro")}
+					actions={
+						<Button asChild variant="outline" size="lg">
+							<a href="#approvals-rules">
+								<SlidersHorizontal aria-hidden="true" />
+								{t("ui.approvals.rules_link")}
+							</a>
+						</Button>
 					}
 				/>
-				<RulesPanel
-					rules={rules}
-					destinations={destinations}
-					projects={projects}
-					onChanged={() => void loadRules()}
-				/>
-				<CostPanel
-					summary={cost}
-					projects={projects}
-					onChanged={() => void loadCost()}
-				/>
+				<FailureNote failure={failure ?? queue.failure} />
+				<div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start">
+					<ApprovalQueue
+						requests={queue.requests ?? []}
+						context={context}
+						loading={queue.requests === null}
+						failed={queue.failure !== null}
+						destinations={destinations}
+						busyId={queue.busyId}
+						live={queue.live}
+						onDecide={(id, decision, reason) =>
+							void queue.decide(id, decision, reason).then(() => loadCost())
+						}
+					/>
+					<div className="flex flex-col gap-4">
+						<div className="rounded-lg border border-border bg-surface p-4">
+							<CostPanel
+								summary={cost}
+								projects={projects}
+								onChanged={() => void loadCost()}
+							/>
+						</div>
+						<div className="rounded-lg border border-border bg-surface p-4">
+							<RulesPanel
+								rules={rules}
+								destinations={destinations}
+								projects={projects}
+								onChanged={() => void loadRules()}
+							/>
+						</div>
+					</div>
+				</div>
 			</div>
 		</>
 	);

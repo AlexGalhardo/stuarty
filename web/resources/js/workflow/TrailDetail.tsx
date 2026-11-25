@@ -1,11 +1,11 @@
-import { Bot, Coins, User, Wrench } from "lucide-react";
+import { Check, Circle, CircleDot, Hourglass } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { type Status, StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { useLocale, useT } from "@/lib/i18n";
-import type { StepActor, StepState, Workflow, WorkflowStep } from "./types";
+import type { StepState, Workflow, WorkflowStep } from "./types";
 import {
 	actorWord,
 	costWord,
@@ -24,42 +24,59 @@ const TONE: Record<StepState, Status> = {
 	unknown: "neutral",
 };
 
-const ACTOR_ICON: Record<StepActor, typeof User> = {
-	person: User,
-	agent: Bot,
-	both: Bot,
+const MARK: Record<StepState, { icon: typeof Check; tone: string }> = {
+	done: {
+		icon: Check,
+		tone: "border-success bg-success-soft text-success-text",
+	},
+	current: {
+		icon: CircleDot,
+		tone: "border-accent bg-accent text-text-on-accent",
+	},
+	waiting: {
+		icon: Hourglass,
+		tone: "border-warning bg-warning-soft text-warning-text",
+	},
+	upcoming: {
+		icon: Circle,
+		tone: "border-border-strong bg-surface text-text-muted",
+	},
+	skipped: {
+		icon: Circle,
+		tone: "border-border-strong bg-surface text-text-muted",
+	},
+	unknown: {
+		icon: Circle,
+		tone: "border-border-strong bg-surface text-text-muted",
+	},
 };
 
 function Fact({
-	icon: Icon,
 	label,
 	children,
 }: {
-	icon: typeof User;
 	label: string;
 	children: string;
 }): ReactNode {
 	return (
 		<div className="min-w-0">
-			<dt className="flex items-center gap-1.5 text-xs text-text-subtle">
-				<Icon aria-hidden="true" className="size-3.5 shrink-0 text-icon" />
-				{label}
-			</dt>
-			<dd className="break-words text-sm text-text">{children}</dd>
+			<dt className="text-xs text-text-subtle">{label}</dt>
+			<dd className="break-words text-sm font-medium text-text">{children}</dd>
 		</div>
 	);
 }
 
-// One step with everything the server says of it: who does it, with which tool, its state and its cost. A step
-// that can be skipped carries the button of its state; the server decides whether the call is allowed.
+// One step as a row, in the order of the final design: the mark of its state with its title and what it is for,
+// then who does it, with which tool and at what cost, then its state and, for an optional step, its button. Every
+// value is the server's: the row draws them and decides nothing. A step that can be skipped carries the button of
+// its state; the server decides whether the call is allowed. The service keeps no skill for a step, so the row has
+// no skill column.
 function DetailStep({
 	step,
-	number,
 	busy,
 	onSkip,
 }: {
 	step: WorkflowStep;
-	number: number;
 	busy: boolean;
 	onSkip?: (step: WorkflowStep, restore: boolean) => void;
 }): ReactNode {
@@ -70,6 +87,7 @@ function DetailStep({
 	const restore = step.state === "skipped";
 	const canToggle =
 		onSkip !== undefined && step.optional && step.state !== "done";
+	const { icon: Icon, tone } = MARK[step.state] ?? MARK.unknown;
 	return (
 		<li
 			data-slot="trail-detail-step"
@@ -77,52 +95,47 @@ function DetailStep({
 			data-state={step.state}
 			aria-current={step.state === "current" ? "step" : undefined}
 			className={cn(
-				"flex flex-col gap-3 rounded-lg border bg-surface p-4",
+				"grid items-center gap-x-6 gap-y-3 rounded-lg border bg-surface p-4 md:grid-cols-[minmax(0,2.2fr)_repeat(3,minmax(0,1fr))_10.5rem]",
 				step.state === "current" || step.state === "waiting"
 					? "border-accent"
 					: "border-border",
 			)}
 		>
-			<div className="flex flex-wrap items-start justify-between gap-2">
+			<div className="flex min-w-0 items-center gap-3">
+				<span
+					aria-hidden="true"
+					className={cn(
+						"flex size-8 shrink-0 items-center justify-center rounded-full border",
+						tone,
+					)}
+				>
+					<Icon className="size-4" />
+				</span>
 				<div className="min-w-0">
-					<h3 className="text-lg font-semibold text-text">
-						<span className="mr-2 tabular-nums text-text-subtle">
-							{number}.
-						</span>
+					<h3 className="flex flex-wrap items-center gap-2 text-base font-semibold text-text">
 						{title}
+						{step.optional ? (
+							<span className="rounded-md bg-surface-hover px-1.5 py-0.5 text-xs font-normal text-text-muted">
+								{t("ui.workflow.optional")}
+							</span>
+						) : null}
 					</h3>
 					{hint ? <p className="text-sm text-text-muted">{hint}</p> : null}
 				</div>
-				<div className="flex flex-wrap items-center gap-2">
-					{step.optional ? (
-						<span className="text-xs text-text-subtle">
-							{t("ui.workflow.optional")}
-						</span>
-					) : null}
-					<StatusBadge status={TONE[step.state] ?? "neutral"}>
-						{stateWord(t, step)}
-					</StatusBadge>
-				</div>
 			</div>
-			<dl className="grid gap-3 sm:grid-cols-3">
-				<Fact
-					icon={ACTOR_ICON[step.actor] ?? User}
-					label={t("ui.workflow.who")}
-				>
-					{actorWord(t, step)}
-				</Fact>
-				<Fact icon={Wrench} label={t("ui.workflow.tool")}>
-					{toolWord(t, step)}
-				</Fact>
-				<Fact icon={Coins} label={t("ui.workflow.cost")}>
-					{costWord(t, locale, step)}
-				</Fact>
+			<dl className="contents">
+				<Fact label={t("ui.workflow.who")}>{actorWord(t, step)}</Fact>
+				<Fact label={t("ui.workflow.tool")}>{toolWord(t, step)}</Fact>
+				<Fact label={t("ui.workflow.cost")}>{costWord(t, locale, step)}</Fact>
 			</dl>
-			{canToggle ? (
-				<div>
+			<div className="flex flex-wrap items-center gap-2 md:justify-end">
+				<StatusBadge status={TONE[step.state] ?? "neutral"}>
+					{stateWord(t, step)}
+				</StatusBadge>
+				{canToggle ? (
 					<Button
 						type="button"
-						variant="outline"
+						variant="ghost"
 						size="sm"
 						disabled={busy}
 						data-testid={`${restore ? "restore" : "skip"}-${step.id}`}
@@ -137,8 +150,8 @@ function DetailStep({
 							)}
 						</span>
 					</Button>
-				</div>
-			) : null}
+				) : null}
+			</div>
 		</li>
 	);
 }
@@ -164,11 +177,10 @@ export function TrailDetail({
 			aria-label={t("ui.workflow.label")}
 			className={cn("flex flex-col gap-3", className)}
 		>
-			{workflow.steps.map((step, index) => (
+			{workflow.steps.map((step) => (
 				<DetailStep
 					key={step.id}
 					step={step}
-					number={index + 1}
 					busy={busyStep === step.id}
 					onSkip={onSkip}
 				/>

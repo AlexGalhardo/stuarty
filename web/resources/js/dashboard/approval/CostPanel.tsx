@@ -64,7 +64,7 @@ export default function CostPanel({
 
 	return (
 		<section aria-labelledby="approvals-cost">
-			<h2 id="approvals-cost" className="text-lg font-semibold">
+			<h2 id="approvals-cost" className="text-xl font-semibold">
 				{t("ui.approvals.cost_title")}
 			</h2>
 			<p className="mt-1 text-sm text-muted-foreground">
@@ -72,8 +72,8 @@ export default function CostPanel({
 			</p>
 			<FailureNote failure={failure} />
 			{summary !== null && (
-				<div className="mt-4 grid gap-4 sm:grid-cols-2">
-					<div className="rounded-xl border bg-card p-4 text-card-foreground">
+				<div className="mt-4 grid grid-cols-1 gap-4">
+					<div className="rounded-lg border border-border p-3">
 						<h3 className="font-medium">{t("ui.approvals.spent_today")}</h3>
 						{summary.today.length === 0 ? (
 							<p className="mt-2 text-sm text-muted-foreground">
@@ -100,7 +100,7 @@ export default function CostPanel({
 							</ul>
 						)}
 					</div>
-					<div className="rounded-xl border bg-card p-4 text-card-foreground">
+					<div className="rounded-lg border border-border p-3">
 						<h3 className="font-medium">{t("ui.approvals.ceilings")}</h3>
 						{summary.ceilings.length === 0 ? (
 							<p className="mt-2 text-sm text-muted-foreground">
@@ -145,10 +145,10 @@ export default function CostPanel({
 			)}
 			<form
 				onSubmit={(event) => void save(event)}
-				className="mt-4 flex flex-col gap-4 rounded-xl border bg-card p-5 text-card-foreground"
+				className="mt-4 flex flex-col gap-4 border-t border-border pt-4"
 			>
 				<h3 className="font-medium">{t("ui.approvals.set_ceiling")}</h3>
-				<div className="grid gap-4 sm:grid-cols-4">
+				<div className="grid grid-cols-1 gap-4">
 					<div className="flex flex-col gap-2">
 						<Label htmlFor="ceiling-currency">
 							{t("ui.approvals.currency")}

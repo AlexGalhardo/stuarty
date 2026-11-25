@@ -277,9 +277,11 @@ test.describe("scene bar", () => {
 		await page.goto(`/projects/${project}`);
 		const bar = page.getByTestId("scene-bar");
 		await expect(bar).toHaveAttribute("data-variant", "none");
-		await expect(bar).toContainText("No agent session");
-		await expect(page.getByTestId("scene-skill")).toHaveCount(0);
-		await expect(page.getByTestId("scene-tool")).toHaveCount(0);
+		await expect(bar).toContainText("Waiting for your request");
+		await expect(page.getByTestId("scene-skill")).toContainText(
+			"No skill in use",
+		);
+		await expect(page.getByTestId("scene-tool")).toContainText("None in use");
 		await expect(page.getByTestId("scene-allow")).toHaveCount(0);
 		await expect(bar).toContainText("Open chat");
 	});

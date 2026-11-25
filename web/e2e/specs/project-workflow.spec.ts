@@ -23,6 +23,40 @@ interface Workflow {
 }
 
 test.describe("project workflow", () => {
+	test("the trail says what it is, sums itself up in chips and goes to the current stage", async ({
+		page,
+		request,
+	}) => {
+		const { id, call } = await project(request, "text", "Flow header");
+		await call("PUT", `/projects/${id}/brief`, {
+			text: "# Brief\n\nA post for the people who follow the channel.",
+		});
+		await call("POST", `/projects/${id}/items`, {
+			kind: "text",
+			title: "The post",
+			text: "A first paragraph with enough words to count as the writing of the post.",
+			text_kind: "post",
+		});
+
+		await page.goto(`/projects/${id}`);
+		await expect(
+			page.getByText(
+				"A text-only project: from idea to publication, with no recording or video editing.",
+			),
+		).toBeVisible();
+		const summary = page.getByTestId("workflow-summary");
+		await expect(summary).toContainText(/Stage \d of 5: /);
+		await expect(summary).toContainText("2 done");
+		// A text project goes on in its text, and nothing in the trail says it is a video.
+		const open = page.getByTestId("flow-continue");
+		await expect(open).toHaveText("Open the text");
+		await expect(open).toHaveAttribute(
+			"href",
+			new RegExp(`^/write\\?project=${id}&text=pit_`),
+		);
+		await expect(page.getByTestId("workflow")).not.toContainText("Footage");
+	});
+
 	test("adding a video to a text adds its steps and leaves the finished ones where they are", async ({
 		page,
 		request,
