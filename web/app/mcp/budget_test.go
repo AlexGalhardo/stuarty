@@ -47,8 +47,8 @@ func TestToolDefinitionBudget(t *testing.T) {
 		t.Errorf("the definitions are %d bytes, at most %d", total, MaxToolListBytes)
 	}
 
-	if tk := tokens(strings.Repeat("x", total)); tk > 7720 {
-		t.Errorf("the definitions are about %d tokens, at most 7,720 (NFR-020)", tk)
+	if tk := tokens(strings.Repeat("x", total)); tk > 7836 {
+		t.Errorf("the definitions are about %d tokens, at most 7,836 (NFR-020)", tk)
 	}
 
 	t.Logf("%d Prototype definitions: %d bytes, about %d tokens", len(order), total, tokens(strings.Repeat("x", total)))

@@ -125,6 +125,9 @@ func publicationCommand(s step) (name string, argv []string, stdin string, err e
 		}[s.Call]
 
 		return verb, slices.Concat([]string{r.ID}, optFlag("target", r.TargetID)), "", nil
+	case "PublicationDuplicate", "CalendarPlan", "CalendarDaySet", "CalendarQuietSet", "CalendarSlotSave",
+		"CalendarSlotDelete", "CalendarExport":
+		return calendarCommand(s)
 	}
 
 	return "", nil, "", fmt.Errorf("no CLI mapping for %s", s.Call)

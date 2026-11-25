@@ -67,9 +67,9 @@ func TestLimitsAreInTheSpecification(t *testing.T) {
 	t.Parallel()
 
 	for file, wants := range map[string][]string{
-		"../../../docs/sdds/003-agent-interfaces.md":  {"24,711 bytes", "1,700 bytes", "8,500 characters"},
-		"../../../docs/prds/002-agent-operability.md": {"7,720 tokens", "24,711 bytes", "2,650 tokens"},
-		"../../../docs/sdds/008-test-strategy.md":     {"7,720 tokens"},
+		"../../../docs/sdds/003-agent-interfaces.md":  {"25,083 bytes", "1,700 bytes", "8,500 characters"},
+		"../../../docs/prds/002-agent-operability.md": {"7,836 tokens", "25,083 bytes", "2,650 tokens"},
+		"../../../docs/sdds/008-test-strategy.md":     {"7,836 tokens"},
 	} {
 		raw, err := os.ReadFile(file)
 		if err != nil {
@@ -85,7 +85,7 @@ func TestLimitsAreInTheSpecification(t *testing.T) {
 		}
 	}
 
-	if mcp.MaxToolListBytes != 24_711 || mcp.MaxToolBytes != 1_700 || mcp.MaxDiscoveryChars != 8_500 ||
+	if mcp.MaxToolListBytes != 25_083 || mcp.MaxToolBytes != 1_700 || mcp.MaxDiscoveryChars != 8_500 ||
 		mcp.MaxTools != 21 {
 		t.Error("the limits in web/app/mcp/budget.go changed: change the specification and this test together")
 	}

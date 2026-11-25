@@ -30,6 +30,7 @@ Content type `application/json`.
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `at` | `string` | no | The time: a date and time such as 2026-11-20T09:00 read in zone, or an instant with an offset or Z. Leave out to keep the time the target has. |
+| `confirm_quiet_day` | `boolean` | no | A person's yes to a post on a day marked as quiet; any other caller is refused on that day. |
 | `late_window_minutes` | `integer` or `null` | no | 0 to 1440: how late after its time the post may still be sent without asking again. The default is 0: a post whose time passed is never sent on its own. |
 | `target_id` | `string` | no | The target; leave out to schedule every draft target that has a time. |
 | `zone` | `string` | no | The IANA zone the time is read in, for example America/Sao_Paulo; the default is UTC. |

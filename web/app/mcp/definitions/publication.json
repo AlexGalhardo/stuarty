@@ -1,6 +1,6 @@
 {
  "name": "publication",
- "description": "Publications. action=create (project_id, title, export or post, targets: connection_id, at, zone, fields; see command_help domain=publish), schedule (id, target_id, at, zone), show (id), list (state, from, until). A person approves before anything is sent.",
+ "description": "Publications. action=create (project_id, title, export or post, targets: connection_id, at, zone, fields; see command_help domain=publish), schedule (id, target_id, at, zone), show (id), list (state, from, until), duplicate (id, at), plan (from, until), day (date, note, theme), slot (network, weekday, time). A person approves before anything is sent.",
  "inputSchema": {
   "type": "object",
   "properties": {
@@ -9,7 +9,11 @@
      "create",
      "schedule",
      "show",
-     "list"
+     "list",
+     "duplicate",
+     "plan",
+     "day",
+     "slot"
     ]
    },
    "id": {
@@ -71,6 +75,33 @@
    },
    "offset": {
     "type": "integer"
+   },
+   "date": {
+    "type": "string"
+   },
+   "note": {
+    "type": "string"
+   },
+   "theme": {
+    "type": "string"
+   },
+   "weekday": {
+    "type": "string"
+   },
+   "time": {
+    "type": "string"
+   },
+   "slot": {
+    "type": "string"
+   },
+   "account": {
+    "type": "string"
+   },
+   "publications": {
+    "type": "boolean"
+   },
+   "remove": {
+    "type": "boolean"
    }
   },
   "required": [

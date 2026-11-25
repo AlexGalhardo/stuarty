@@ -13,7 +13,7 @@ import (
 // The calendar commands (SDD-020 section 29). Like the publishing commands they are for the skills of
 // publishing, not for the editor skill; publishingCommands includes them.
 func publicationCommands() []*spec {
-	return []*spec{
+	return append([]*spec{
 		publicationCreateCmd,
 		publicationListCmd,
 		publicationShowCmd,
@@ -22,7 +22,7 @@ func publicationCommands() []*spec {
 		publicationSendNowCmd,
 		publicationRetryCmd,
 		publicationCancelCmd,
-	}
+	}, calendarCommands()...)
 }
 
 // publicationText is what a person reads; the MCP tool publication prints the same text (service.PublicationText).

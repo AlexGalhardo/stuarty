@@ -3521,6 +3521,161 @@ Example:
 stuarty publication:cancel pub_0123456789 --target tgt_0123456789
 ```
 
+## `calendar:plan`
+
+Read a range of the calendar: its days with notes, themes and quiet marks, its recurring slots and the target that fills each one
+
+```text
+stuarty calendar:plan --from <date> --until <date> [--zone <zone>] [--publications] [--project <id>]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--from` | string |  | the start of the range: a date such as 2026-12-01, a local time or an instant |
+| `--until` | string |  | the end of the range, exclusive, in the same forms |
+| `--zone` | string |  | the zone dates and local times are read in (default UTC) |
+| `--publications` | boolean |  | also list the publications of the range |
+| `--project` | string |  | only the publications of this project |
+| `--limit` | integer |  | the page size of the publications, 1 to 500 (default 100) |
+| `--offset` | integer |  | how many publications to skip |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty calendar:plan --from 2026-12-01 --until 2026-12-02 --zone America/Sao_Paulo --publications
+```
+
+## `calendar:day`
+
+Write the note and the theme of a day (a flag you leave out stays; an empty one clears it); a person marks a day as quiet with calendar:quiet
+
+```text
+stuarty calendar:day <date> [--note <text>] [--theme <name>] [--zone <zone>]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--note` | string |  | the note, at most 2000 characters; empty clears it |
+| `--theme` | string |  | blue, green, amber, red, teal or gray; empty clears it |
+| `--zone` | string |  | the zone the day is planned in (default: the one it has, or UTC) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty calendar:day 2026-12-01 --note "long video day" --theme amber --zone America/Sao_Paulo
+```
+
+## `calendar:quiet`
+
+Mark a day as quiet (no posts) or clear the mark; only a person in the app does, every other caller is refused
+
+```text
+stuarty calendar:quiet <date> [--off] [--zone <zone>]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--off` | boolean |  | clear the mark instead of setting it |
+| `--zone` | string |  | the zone the day is planned in (default: the one it has, or UTC) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty calendar:quiet 2026-12-25 --zone America/Sao_Paulo
+```
+
+## `calendar:slot`
+
+Create or change a recurring slot: a weekday and a local time on a network, shown as an empty slot to fill; it never sends anything
+
+```text
+stuarty calendar:slot --network <n> --weekday mon..sun --time HH:MM [--zone <zone>] [--connection <id>] [--id <slot>]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--id` | string |  | the slot to change; leave out to make a new one |
+| `--network` | string |  | the network, for example instagram (required) |
+| `--weekday` | string |  | mon, tue, wed, thu, fri, sat or sun (required) |
+| `--time` | string |  | the local time, 24 hours, such as 18:00 (required) |
+| `--zone` | string |  | the zone of the time (default UTC) |
+| `--connection` | string |  | only this account of the network (default any) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty calendar:slot --network instagram --weekday tue --time 18:00 --zone America/Sao_Paulo
+```
+
+## `calendar:slot-remove`
+
+Remove a recurring slot
+
+```text
+stuarty calendar:slot-remove <slot id>
+```
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty calendar:slot-remove slt_0123456789
+```
+
+## `calendar:export`
+
+Print the targets of a range as an .ics file (read only, times in UTC, no credential); redirect it to a file to open it in another calendar app
+
+```text
+stuarty calendar:export --from <date> --until <date> [--zone <zone>] [--project <id>] > plan.ics
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--from` | string |  | the start of the range: a date such as 2026-12-01, a local time or an instant |
+| `--until` | string |  | the end of the range, exclusive, in the same forms |
+| `--zone` | string |  | the zone dates and local times are read in (default UTC) |
+| `--project` | string |  | only the publications of this project |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty calendar:export --from 2026-12-01 --until 2027-01-01 > plan.ics
+```
+
+## `publication:duplicate`
+
+Copy a publication to another day or hour as a new draft; nothing is asked or sent until you schedule the copy
+
+```text
+stuarty publication:duplicate <publication id> --at <time> [--zone <zone>] [--target <id>]
+```
+
+| Flag | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `--at` | string |  | the new time: 2026-12-02T18:00 read in --zone, or an instant (required) |
+| `--zone` | string |  | the zone the time is read in (default: the zone of each target) |
+| `--target` | string |  | copy only this target (default: every target that is not cancelled) |
+
+Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
+
+Example:
+
+```bash
+stuarty publication:duplicate pub_0123456789 --at 2026-12-02T18:00 --zone America/Sao_Paulo
+```
+
 ## `text:list`
 
 List the scripts, copy and captions of a project, or of every project

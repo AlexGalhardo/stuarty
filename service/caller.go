@@ -240,8 +240,16 @@ var Scopes = map[string]string{
 	"PublicationSendNow":  ScopeRender,
 	"PublicationRetry":    ScopeRender,
 	"PublicationCancel":   ScopeEdit,
-	"CostSummary":         ScopeRead,
-	"CostCeilingSet":      ScopeAdmin,
+	// The day of the calendar (SDD-020 section 30A). CalendarQuietSet takes the scope edit and then a person.
+	"PublicationDuplicate": ScopeEdit,
+	"CalendarPlan":         ScopeRead,
+	"CalendarDaySet":       ScopeEdit,
+	"CalendarQuietSet":     ScopeEdit,
+	"CalendarSlotSave":     ScopeEdit,
+	"CalendarSlotDelete":   ScopeEdit,
+	"CalendarExport":       ScopeRead,
+	"CostSummary":          ScopeRead,
+	"CostCeilingSet":       ScopeAdmin,
 
 	"AssetGet":     ScopeRead,
 	"AssetUses":    ScopeRead,

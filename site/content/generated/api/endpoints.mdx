@@ -256,6 +256,12 @@ Every operation has its own page with the parameters, the body, the responses an
 
 | Method | Path | Operation | Summary |
 | --- | --- | --- | --- |
+| `PUT` | `/api/v1/calendar/days/{date}` | [`calendar.days.set`](/docs/api/calendar.days.set) | Write the note and the theme of a day; an empty note and theme clear it |
+| `GET` | `/api/v1/calendar/export` | [`calendar.export`](/docs/api/calendar.export) | Download the targets of a range as an .ics file, read only, with times in UTC |
+| `GET` | `/api/v1/calendar/plan` | [`calendar.plan`](/docs/api/calendar.plan) | Read a range of the calendar: its days with notes, themes and quiet marks, its slots and, when asked, its publications |
+| `PUT` | `/api/v1/calendar/quiet/{date}` | [`calendar.quiet.set`](/docs/api/calendar.quiet.set) | Mark a day as quiet (no posts) or clear the mark (a person in the browser only; the local token and keys get 403) |
+| `PUT` | `/api/v1/calendar/slots` | [`calendar.slots.save`](/docs/api/calendar.slots.save) | Create or replace a recurring slot: a weekday and a local time on a network; it sends nothing |
+| `DELETE` | `/api/v1/calendar/slots/{id}` | [`calendar.slots.remove`](/docs/api/calendar.slots.remove) | Remove a recurring slot |
 | `GET` | `/api/v1/posts` | [`posts.list`](/docs/api/posts.list) | List the posts published to the read API |
 | `GET` | `/api/v1/posts/{slug}` | [`posts.get`](/docs/api/posts.get) | Read a post published to the read API |
 | `GET` | `/api/v1/posts/{slug}/media/{name}` | [`posts.media`](/docs/api/posts.media) | Download an image of a published post |
@@ -264,6 +270,7 @@ Every operation has its own page with the parameters, the body, the responses an
 | `GET` | `/api/v1/publications/{id}` | [`publications.get`](/docs/api/publications.get) | Read one publication with its targets |
 | `PUT` | `/api/v1/publications/{id}` | [`publications.update`](/docs/api/publications.update) | Change a publication or its targets; a post that waited for approval goes back to waiting for it |
 | `POST` | `/api/v1/publications/{id}/cancel` | [`publications.cancel`](/docs/api/publications.cancel) | Cancel a target, or every target that has not gone out |
+| `POST` | `/api/v1/publications/{id}/duplicate` | [`publications.duplicate`](/docs/api/publications.duplicate) | Copy a publication to another day or hour as a new draft; nothing is asked for approval |
 | `POST` | `/api/v1/publications/{id}/retry` | [`publications.retry`](/docs/api/publications.retry) | Ask for approval to send a failed target again |
 | `POST` | `/api/v1/publications/{id}/schedule` | [`publications.schedule`](/docs/api/publications.schedule) | Give a target its time and ask for approval; it is sent only after a person approves it |
 | `POST` | `/api/v1/publications/{id}/send-now` | [`publications.send-now`](/docs/api/publications.send-now) | Ask for approval to send a target as soon as it is approved |

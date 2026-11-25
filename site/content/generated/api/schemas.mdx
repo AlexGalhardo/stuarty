@@ -293,6 +293,13 @@ The types named in the tables of the operations. The arguments of each editing c
 | `untrusted_notice` | `string` | no |  |
 | `updated_at` | `string (date-time)` or `null` | no |  |
 
+### CalendarSlotDeleteResult
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `deleted` | `boolean` | no |  |
+| `id` | `string` | no |  |
+
 ### CaptionCounts
 
 | Name | Type | Required | Description |
@@ -613,6 +620,17 @@ The types named in the tables of the operations. The arguments of each editing c
 | `revision` | `integer (int64)` | no |  |
 | `text` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
+
+### Day
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `date` | `string` | no |  |
+| `note` | `string` | no |  |
+| `quiet` | `boolean` | no |  |
+| `theme` | `string` | no |  |
+| `updated_at` | `string (date-time)` | no |  |
+| `zone` | `string` | no |  |
 
 ### Description
 
@@ -2139,6 +2157,19 @@ The types named in the tables of the operations. The arguments of each editing c
 | `operations` | array of `string` | no |  |
 | `project` | `string` | no |  |
 
+### Plan
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `days` | array of [`Day`](/docs/api/schemas#day) | no |  |
+| `from` | `string (date-time)` | no |  |
+| `publications` | array of [`Publication`](/docs/api/schemas#publication) | no |  |
+| `rules` | array of [`Rule`](/docs/api/schemas#rule) | no |  |
+| `slots` | array of [`SlotView`](/docs/api/schemas#slotview) | no |  |
+| `to` | `string (date-time)` | no |  |
+| `total` | `integer` | no |  |
+| `zone` | `string` | no |  |
+
 ### PostCheckResult
 
 | Name | Type | Required | Description |
@@ -2945,6 +2976,17 @@ The types named in the tables of the operations. The arguments of each editing c
 | `tool` | `string` | no |  |
 | `undo` | `string` | no |  |
 
+### Rule
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `connection_id` | `string` | no |  |
+| `id` | `string` | no |  |
+| `network` | `string` | no |  |
+| `time` | `string` | no |  |
+| `weekday` | `string` | no |  |
+| `zone` | `string` | no |  |
+
 ### RuleView
 
 | Name | Type | Required | Description |
@@ -3147,6 +3189,13 @@ The types named in the tables of the operations. The arguments of each editing c
 | `name` | `string` | no |  |
 | `required` | `boolean` | no |  |
 
+### SlotFill
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `publication_id` | `string` | no |  |
+| `target_id` | `string` | no |  |
+
 ### SlotInfo
 
 | Name | Type | Required | Description |
@@ -3165,6 +3214,20 @@ The types named in the tables of the operations. The arguments of each editing c
 | `source_in` | `string` | no |  |
 | `text` | `string` or `null` | no |  |
 | `words` | array of [`WordArg`](/docs/api/schemas#wordarg) | no |  |
+
+### SlotView
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `adjustment` | `string` | no |  |
+| `at` | `string (date-time)` | no |  |
+| `connection_id` | `string` | no |  |
+| `date` | `string` | no |  |
+| `filled` | [`SlotFill`](/docs/api/schemas#slotfill) or `any` or `null` or `null` | no |  |
+| `network` | `string` | no |  |
+| `slot_id` | `string` | no |  |
+| `time` | `string` | no |  |
+| `zone` | `string` | no |  |
 
 ### SnapLimit
 

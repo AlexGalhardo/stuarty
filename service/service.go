@@ -293,6 +293,16 @@ type Service interface {
 	PublicationSendNow(ctx context.Context, req PublicationSendNowRequest) (*Publication, error)
 	PublicationRetry(ctx context.Context, req PublicationRetryRequest) (*Publication, error)
 	PublicationCancel(ctx context.Context, req PublicationCancelRequest) (*Publication, error)
+
+	// The day of the calendar (SDD-020 section 30A, D-146): a range with its days and slots, the note and theme of a
+	// day, quiet days (a person only), recurring slots, a copy of a publication, and the .ics export.
+	PublicationDuplicate(ctx context.Context, req PublicationDuplicateRequest) (*Publication, error)
+	CalendarPlan(ctx context.Context, req CalendarPlanRequest) (*CalendarPlanResult, error)
+	CalendarDaySet(ctx context.Context, req CalendarDaySetRequest) (*CalendarDay, error)
+	CalendarQuietSet(ctx context.Context, req CalendarQuietSetRequest) (*CalendarDay, error)
+	CalendarSlotSave(ctx context.Context, req CalendarSlotSaveRequest) (*CalendarSlot, error)
+	CalendarSlotDelete(ctx context.Context, req CalendarSlotDeleteRequest) (*CalendarSlotDeleteResult, error)
+	CalendarExport(ctx context.Context, req CalendarExportRequest) (*CalendarExportResult, error)
 }
 
 // Event is what the service publishes after the change is durable (SDD-006

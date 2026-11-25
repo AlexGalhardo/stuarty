@@ -164,11 +164,30 @@ func (c *Client) do(ctx context.Context, method, path string, query url.Values, 
 		return decodeError(resp.StatusCode, raw)
 	}
 
+	// A route that serves a file (the .ics export) answers its bytes, not JSON.
+	if rb, ok := out.(*rawBody); ok {
+		rb.Bytes, rb.ContentType, rb.Disposition = raw, resp.Header.Get(
+			"Content-Type",
+		), resp.Header.Get(
+			"Content-Disposition",
+		)
+
+		return nil
+	}
+
 	if err := json.Unmarshal(raw, out); err != nil {
 		return internal("the server answered with a body that is not the expected JSON: %v", err)
 	}
 
 	return nil
+}
+
+// rawBody is the out of a request whose answer is a file.
+type rawBody struct {
+	Bytes       []byte
+	ContentType string
+	// Disposition is the Content-Disposition header, which names the file.
+	Disposition string
 }
 
 // problem is the error envelope of SDD-003 section 1.4.

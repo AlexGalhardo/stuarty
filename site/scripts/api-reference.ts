@@ -92,6 +92,7 @@ export function tagOf(route: string): Tag {
 		social: "Publishing",
 		publish: "Publishing",
 		publications: "Publishing",
+		calendar: "Publishing",
 		posts: "Publishing",
 		recording: "Recordings",
 		recordings: "Recordings",
