@@ -151,7 +151,7 @@ Work that earlier epics left open and the author decided to do in epics of their
 | [89](89-cut-edges-snap-to-silences.md) | Cut edges snap to silences | S | 69 | DONE (2026-11-24, `7e5eba1e9`..`6e3eb8f03`) |
 | [90](90-real-crash-recovery-campaign.md) | Real crash recovery: kill a real process in a publication, an upload and an export | M | 42, 18, 20, 35 | DONE (2026-11-24, `efa8f76b1`..`b2118645a`; the Linux run of criterion 1 needs a container pull) |
 | [91](91-renderer-layer-band-and-frame-cache.md) | Image renderer: prepare only the visible band, keep the prepared layer, cache the editor frame | L | 54, 55 | TODO |
-| [92](92-encrypted-library-and-remaining-sealed-fields.md) | The encrypted library and the rest of what epic 57 left in clear text | XL | 57, 56, 08, 15 | TODO |
+| [92](92-encrypted-library-and-remaining-sealed-fields.md) | The encrypted library and the rest of what epic 57 left in clear text | XL | 57, 56, 08, 15 | DONE (2026-11-24, `ec1b7c3d0`..`89d537725`) |
 | [93](93-renderer-wasm-ci-artifact-and-linux-digest.md) | One renderer module digest on Linux and Windows | M | 55, 91 | TODO |
 | [94](94-asset-storage-size-reveal-and-rename.md) | Asset storage size, show in folder and rename, with their edge cases | M | 57, 81 | DONE (2026-11-24, `74889c205`..`68a6a822a`) |
 | [95](95-landing-page-matches-the-final-design.md) | Landing page that matches the final design, with themed captures and image zoom | M | 88 | TODO |
