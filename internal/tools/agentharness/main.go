@@ -371,10 +371,12 @@ func saveTranscript(dir string, r runResult) error {
 const passwordEnv = "STUARTY_HARNESS_PASSWORD"
 
 // childAllowed lists, upper-cased, the variables the stuarty process of a run may inherit: where to
-// find programs and write temporary files, what Windows needs to start a process, the vault master
-// key file and FFmpeg. Anything else, the model key above all, stays with the harness (VV-424).
+// find programs and write temporary files, the home folder of the user (HOME, or USERPROFILE on
+// Windows: the CLI expands a path that starts with ~ from it), what Windows needs to start a process,
+// the vault master key file and FFmpeg. Anything else, the model key above all, stays with the
+// harness (VV-424). Names are compared in upper case, which is how Windows treats them.
 var childAllowed = map[string]bool{
-	"PATH": true, "TEMP": true, "TMP": true, "TMPDIR": true,
+	"PATH": true, "HOME": true, "TEMP": true, "TMP": true, "TMPDIR": true,
 	"SYSTEMROOT": true, "SYSTEMDRIVE": true, "WINDIR": true, "COMSPEC": true, "PATHEXT": true,
 	"USERPROFILE": true, "APPDATA": true, "LOCALAPPDATA": true, "PROGRAMDATA": true,
 	"PROGRAMFILES": true, "PROGRAMFILES(X86)": true, "PROGRAMW6432": true, "NUMBER_OF_PROCESSORS": true,

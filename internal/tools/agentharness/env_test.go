@@ -9,17 +9,17 @@ import (
 )
 
 var parentEnv = []string{
-	"PATH=/bin", "SystemRoot=C:/Windows", "TEMP=/t", "TMP=/t", "STUARTY_MASTER_KEY_FILE=/k",
+	"PATH=/bin", "HOME=/u", "SystemRoot=C:/Windows", "TEMP=/t", "TMP=/t", "STUARTY_MASTER_KEY_FILE=/k",
 	"STUARTY_FFMPEG=/ff", "STUARTY_HOME=/parent-home",
 	"ANTHROPIC_API_KEY=sk-ant-secret", "OPENAI_API_KEY=sk-secret", "GITHUB_TOKEN=tok", "AWS_SECRET=s3",
-	"STUARTY_MASTER_KEY=raw", "STUARTY_HARNESS_PASSWORD=pw", "STUARTY_KEY=k", "MY_API_KEY=x", "noequalsign",
+	"STUARTY_MASTER_KEY=raw", "STUARTY_HARNESS_PASSWORD=pw", "STUARTY_KEY=k", "MY_API_KEY=x", "Anthropic_Api_Key=mixed-case", "noequalsign",
 }
 
 func TestChildEnvKeepsOnlyTheAllowList(t *testing.T) {
 	got := childEnv(parentEnv, "/run-home")
 
 	for _, want := range []string{
-		"PATH=/bin", "SystemRoot=C:/Windows", "TEMP=/t", "TMP=/t",
+		"PATH=/bin", "HOME=/u", "SystemRoot=C:/Windows", "TEMP=/t", "TMP=/t",
 		"STUARTY_MASTER_KEY_FILE=/k", "STUARTY_FFMPEG=/ff", "STUARTY_HOME=/run-home",
 	} {
 		if !slices.Contains(got, want) {
