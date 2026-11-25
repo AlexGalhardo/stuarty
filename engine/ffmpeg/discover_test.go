@@ -72,6 +72,30 @@ func TestDiscoverOrder(t *testing.T) {
 	}
 }
 
+// An installed Stuarty has ffmpeg and ffprobe flat next to the executable (the Windows installer, epic 98): that
+// build beats a newer FFmpeg of the PATH, and the person's own STUARTY_FFMPEG still beats both (SDD-011 8.1).
+func TestDiscoverInstalledBuildBeatsAnyFFmpegOnThePath(t *testing.T) {
+	root := t.TempDir()
+	installed := install(t, filepath.Join(root, "Programs", "Stuarty Desktop"), "n9.0.2-stuarty3")
+	onPath := install(t, filepath.Join(root, "path"), "n9.1.0-newer")
+	mine := install(t, filepath.Join(root, "mine"), "n8.0-mine")
+	look := func(string) (string, error) { return onPath, nil }
+	ctx := context.Background()
+
+	in, err := Discover(ctx, Config{ExecDir: filepath.Dir(installed), LookPath: look})
+	if err != nil || in.Source != SourceBundled || in.Info.Version != "n9.0.2-stuarty3" || in.UserBuild {
+		t.Fatalf("installed: %v %+v", err, in)
+	}
+	if filepath.Dir(in.FFprobe.Path()) != filepath.Dir(installed) {
+		t.Error("ffprobe is not the installed one")
+	}
+
+	in, err = Discover(ctx, Config{FFmpegPath: mine, ExecDir: filepath.Dir(installed), LookPath: look})
+	if err != nil || in.Source != SourceConfigured || in.Info.Version != "n8.0-mine" {
+		t.Fatalf("configured: %v %+v", err, in)
+	}
+}
+
 func TestDiscoverBundledLayouts(t *testing.T) {
 	root := t.TempDir()
 	exe := filepath.Join(root, "bin")
