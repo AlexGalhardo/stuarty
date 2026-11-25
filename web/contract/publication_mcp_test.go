@@ -12,7 +12,6 @@ import (
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
 	"github.com/AlexGalhardo/stuarty/core/command"
-	corepub "github.com/AlexGalhardo/stuarty/core/publish"
 	"github.com/AlexGalhardo/stuarty/service"
 	pub "github.com/AlexGalhardo/stuarty/service/publish"
 	"github.com/AlexGalhardo/stuarty/service/testproject"
@@ -446,7 +445,7 @@ func approvedByAPerson(t *testing.T, fx publishFixture) service.Publication {
 	}
 
 	got, err := svc.PublicationGet(person, service.PublicationGetRequest{ID: made.ID})
-	if err != nil || !corepub.TargetState(got.Targets[0].State).Approved() {
+	if err != nil || !got.Targets[0].State.Approved() {
 		t.Fatalf("the person's approved post = %+v, %v", got, err)
 	}
 
