@@ -3,7 +3,7 @@ import { describe, expect, test, vi } from "vitest";
 
 import { I18nProvider } from "@/lib/i18n";
 import type { WebhookDelivery } from "../../editor/api/types";
-import { DeliveryRow, NamedTitle, SecretNote } from "./Index";
+import { DeliveryRow, EventDescription, NamedTitle, SecretNote } from "./Index";
 
 vi.mock("@inertiajs/react", () => ({ Head: () => null, Link: () => null }));
 
@@ -21,6 +21,7 @@ const messages = {
 	"ui.webhooks.copy": "Copy",
 	"ui.webhooks.copied": "Copied",
 	"ui.webhooks.secret_saved": "I saved it",
+	"ui.webhooks.event_description.export_ready": "Sent when an export is ready.",
 };
 
 const delivery = (extra: Partial<WebhookDelivery> = {}): WebhookDelivery => ({
@@ -132,5 +133,28 @@ describe("the signing secret note", () => {
 			/>,
 		);
 		expect(html).not.toContain("<img");
+	});
+});
+
+describe("EventDescription", () => {
+	const wrap = (name: string): string =>
+		renderToString(
+			<I18nProvider locale="en" messages={messages}>
+				<EventDescription
+					event={{ name, description: "Server English text" }}
+				/>
+			</I18nProvider>,
+		);
+
+	test("a known event is worded by the catalogue, not by the service", () => {
+		const html = wrap("export.ready");
+		expect(html).toContain("Sent when an export is ready.");
+		expect(html).not.toContain("Server English text");
+	});
+
+	test("an event the catalogue does not know keeps the service text, marked as English", () => {
+		const html = wrap("future.event");
+		expect(html).toContain("Server English text");
+		expect(html).toContain('lang="en"');
 	});
 });

@@ -56,6 +56,39 @@ function eventKey(name: string): string {
 	return name.replace(/\./g, "_");
 }
 
+// The events whose words are in the catalogues. The service describes an event in English; one it names that the
+// catalogue does not know keeps the service's text, marked as English, and a known one is worded in the person's language.
+const KNOWN_EVENTS = [
+	"publication_published",
+	"publication_failed",
+	"export_ready",
+	"approval_requested",
+	"job_failed",
+	"webhook_test",
+] as const;
+
+// What an event is, in the person's language when the catalogue knows the event, else the service's English text.
+export function EventDescription({
+	event,
+}: {
+	event: WebhookEvent;
+}): ReactNode {
+	const t = useT();
+	const key = eventKey(event.name);
+	if (!(KNOWN_EVENTS as readonly string[]).includes(key)) {
+		return (
+			<span className="block text-sm text-text-muted" lang="en">
+				{event.description}
+			</span>
+		);
+	}
+	return (
+		<span className="block text-sm text-text-muted">
+			{t(`ui.webhooks.event_description.${key}`)}
+		</span>
+	);
+}
+
 // The secret as the creation or the rotation answered it. It is held here, in memory, until the person has copied it and
 // closes the note: the server cannot show it again.
 export interface RevealedSecret {
@@ -598,9 +631,7 @@ export default function Webhooks(): ReactNode {
 												{t(`ui.webhooks.event.${eventKey(e.name)}`)}
 											</span>{" "}
 											<code className="text-xs">{e.name}</code>
-											<span className="block text-sm text-text-muted" lang="en">
-												{e.description}
-											</span>
+											<EventDescription event={e} />
 										</span>
 									</label>
 								))}
