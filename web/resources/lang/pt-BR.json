@@ -4170,6 +4170,7 @@
       "skill": "Skill",
       "path": "Caminho até a publicação",
       "open_publish": "Abrir em Publicar",
+      "post_title": "Post de blog",
       "words": {
         "one": "{count} palavra",
         "other": "{count} palavras"
