@@ -3687,6 +3687,14 @@
         "approval_requested": "Uma aprovação está esperando",
         "job_failed": "Um trabalho falhou",
         "webhook_test": "Teste"
+      },
+      "event_description": {
+        "publication_published": "Enviado quando uma publicação sai na rede ou no blog.",
+        "publication_failed": "Enviado quando uma publicação não pôde ser feita.",
+        "export_ready": "Enviado quando uma exportação termina e o arquivo está pronto.",
+        "approval_requested": "Enviado quando um agente pede a sua aprovação.",
+        "job_failed": "Enviado quando uma tarefa em segundo plano falha.",
+        "webhook_test": "Enviado quando você aperta Enviar teste, para conferir o endereço."
       }
     },
     "generate": {
