@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 
 import { EmptyState } from "@/components/EmptyState";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
-import { PageHeader } from "@/components/PageHeader";
-import { Button } from "@/components/ui/button";
+import { PageHeader, PageHeaderAction } from "@/components/PageHeader";
+import { TabBar } from "@/components/TabBar";
 import { useLocale, useT } from "@/lib/i18n";
 import type { ProjectsIndexProps } from "@/types";
 import { createClient } from "../../editor/api/client";
@@ -30,6 +30,9 @@ export default function ProjectsIndex() {
 	const [trashVersion, setTrashVersion] = useState(0);
 	const [failure, setFailure] = useState<Failure | null>(null);
 	const [creating, setCreating] = useState(false);
+	const [view, setView] = useState<"projects" | "templates" | "trash">(
+		"projects",
+	);
 
 	// The home and its empty state lead here with ?new=1: the dialog opens and the address is cleaned, so a reload
 	// does not open it again.
@@ -54,15 +57,15 @@ export default function ProjectsIndex() {
 	};
 
 	const newProject = (
-		<Button type="button" onClick={() => setCreating(true)}>
+		<PageHeaderAction type="button" onClick={() => setCreating(true)}>
 			{t("ui.projects.new")}
-		</Button>
+		</PageHeaderAction>
 	);
 
 	return (
 		<>
 			<Head title={t("ui.projects.title")} />
-			<div className="mx-auto flex max-w-6xl flex-col gap-10">
+			<div className="mx-auto flex max-w-7xl flex-col gap-6">
 				<PageHeader
 					title={t("ui.projects.title")}
 					description={t("ui.projects.lead")}
@@ -70,49 +73,74 @@ export default function ProjectsIndex() {
 				/>
 				<NewProject open={creating} onOpenChange={setCreating} />
 
-				<section aria-labelledby="project-list" className="flex flex-col gap-4">
-					<h2 id="project-list" className="text-lg font-semibold">
-						{t("ui.projects.list")}
-					</h2>
-					<FailureNote failure={failure} />
-					{projects.length === 0 ? (
-						<>
-							<EmptyState
-								level={3}
-								icon={FolderPlus}
-								title={t("ui.projects.empty_title")}
-								description={t("ui.projects.empty")}
-							>
-								{newProject}
-							</EmptyState>
-							<FirstSteps />
-						</>
-					) : (
-						<ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-							{projects.map((project) => {
-								const Card =
-									project.kind === "text" ? ProjectCardText : ProjectCard;
-								return (
-									<Card
-										key={project.id}
-										project={project}
-										locale={locale}
-										onTrash={() => void moveToTrash(project.id)}
-										onChanged={() => router.reload({ only: ["projects"] })}
-									/>
-								);
-							})}
-						</ul>
-					)}
-				</section>
-				<Trash
-					version={trashVersion}
-					onRestored={() => {
-						router.reload({ only: ["projects"] });
-					}}
+				<TabBar
+					label={t("ui.projects.views.label")}
+					value={view}
+					onChange={(next) => setView(next as typeof view)}
+					tabs={[
+						{
+							value: "projects",
+							label: t("ui.projects.list"),
+							count: projects.length,
+						},
+						{ value: "templates", label: t("ui.projects.templates.title") },
+						{ value: "trash", label: t("ui.projects.trash.title") },
+					]}
 				/>
-				<Templates />
-				<BundleImport />
+				{view === "projects" ? (
+					<section
+						aria-labelledby="project-list"
+						className="flex flex-col gap-4"
+					>
+						<h2 id="project-list" className="text-lg font-semibold">
+							{t("ui.projects.list")}
+						</h2>
+						<FailureNote failure={failure} />
+						{projects.length === 0 ? (
+							<>
+								<EmptyState
+									level={3}
+									icon={FolderPlus}
+									title={t("ui.projects.empty_title")}
+									description={t("ui.projects.empty")}
+								>
+									{newProject}
+								</EmptyState>
+								<FirstSteps />
+							</>
+						) : (
+							<ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+								{projects.map((project) => {
+									const Card =
+										project.kind === "text" ? ProjectCardText : ProjectCard;
+									return (
+										<Card
+											key={project.id}
+											project={project}
+											locale={locale}
+											onTrash={() => void moveToTrash(project.id)}
+											onChanged={() => router.reload({ only: ["projects"] })}
+										/>
+									);
+								})}
+							</ul>
+						)}
+					</section>
+				) : null}
+				{view === "templates" ? (
+					<>
+						<Templates />
+						<BundleImport />
+					</>
+				) : null}
+				{view === "trash" ? (
+					<Trash
+						version={trashVersion}
+						onRestored={() => {
+							router.reload({ only: ["projects"] });
+						}}
+					/>
+				) : null}
 			</div>
 		</>
 	);
