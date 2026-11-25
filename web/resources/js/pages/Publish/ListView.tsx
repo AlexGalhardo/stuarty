@@ -8,6 +8,32 @@ import { linkOf } from "./publicationState";
 import { TargetStateBadge } from "./TargetStateBadge";
 import type { Publication, Target } from "./types";
 
+// Whether TargetResult renders a concrete outcome (explicit URL/draft/error or a known status note).
+export function hasTargetResult(target: Target): boolean {
+	if (
+		target.url !== undefined ||
+		target.state === "sent_as_draft" ||
+		target.error !== undefined
+	) {
+		return true;
+	}
+	if (
+		target.state === "waiting_approval" ||
+		target.state === "scheduled" ||
+		target.state === "approved"
+	) {
+		return true;
+	}
+	if (target.state === "draft" && target.scheduled_at === null) {
+		return true;
+	}
+	return (
+		target.state === "published" &&
+		target.published_at !== undefined &&
+		target.published_at !== ""
+	);
+}
+
 // What a target came to: the address when it is published, the error and what to do about it when it failed,
 // or a plain status outcome when none of those exist yet (screen 14c).
 export function TargetResult({ target }: { target: Target }): ReactNode {
@@ -73,7 +99,8 @@ export function TargetResult({ target }: { target: Target }): ReactNode {
 				)}
 			{!hasExplicit &&
 				target.state === "published" &&
-				target.published_at !== undefined && (
+				target.published_at !== undefined &&
+				target.published_at !== "" && (
 					<span className="text-xs text-text-muted">
 						{t("ui.publish.detail.result_published_at", {
 							time: formatDateTime(target.published_at, locale),

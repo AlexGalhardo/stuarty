@@ -1,4 +1,4 @@
-import { CheckCircle2, Compass, ExternalLink } from "lucide-react";
+import { CheckCircle2, Circle, Compass, ExternalLink } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Notice } from "@/components/Notice";
@@ -149,13 +149,21 @@ export function PublishedPostState({
 								<li
 									key={step.id}
 									data-completed-step={step.id}
+									data-state={step.state}
 									className="flex items-center justify-between gap-3"
 								>
 									<span className="flex items-center gap-2 font-medium text-text">
-										<CheckCircle2
-											aria-hidden="true"
-											className="size-4 shrink-0 text-success-text"
-										/>
+										{step.state === "done" ? (
+											<CheckCircle2
+												aria-hidden="true"
+												className="size-4 shrink-0 text-success-text"
+											/>
+										) : (
+											<Circle
+												aria-hidden="true"
+												className="size-4 shrink-0 text-text-subtle"
+											/>
+										)}
 										{titleWord(t, step)}
 									</span>
 									<span className="text-xs text-text-muted">

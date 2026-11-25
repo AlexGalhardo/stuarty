@@ -207,4 +207,44 @@ describe("TrailDetail", () => {
 		expect(html).toContain("Escrita");
 		expect(html).not.toContain("ui.workflow");
 	});
+
+	test("reads Free (Grátis in pt-BR) when a step reports zero cost instead of $0.00", () => {
+		const zero: Workflow = {
+			kind: "text",
+			steps: [
+				{
+					id: "writing",
+					state: "done",
+					optional: false,
+					actor: "person",
+					cost: [{ micros: 0, currency: "USD" }],
+				},
+			],
+		};
+		const en = draw(<TrailDetail workflow={zero} />, "en");
+		expect(en).toContain("Free");
+		expect(en).not.toContain("$0.00");
+		const pt = draw(<TrailDetail workflow={zero} />, "pt-BR");
+		expect(pt).toContain("Grátis");
+		expect(pt).not.toContain("0,00");
+
+		const mixed: Workflow = {
+			kind: "video",
+			steps: [
+				{
+					id: "approval",
+					state: "waiting",
+					optional: false,
+					actor: "person",
+					cost: [
+						{ micros: 0, currency: "USD" },
+						{ micros: 500_000, currency: "EUR" },
+					],
+				},
+			],
+		};
+		const mixedHtml = draw(<TrailDetail workflow={mixed} />, "en");
+		expect(mixedHtml).toContain("€0.50");
+		expect(mixedHtml).not.toContain("Free");
+	});
 });

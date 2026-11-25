@@ -5,6 +5,8 @@ import {
 	STEP_ACTORS,
 	STEP_IDS,
 	STEP_STATES,
+	type StepCost,
+	type Workflow,
 	type WorkflowStep,
 } from "./types";
 
@@ -54,21 +56,54 @@ export function hintWord(t: Translate, step: WorkflowStep): string | undefined {
 		: undefined;
 }
 
+// Formats one list of server-reported amounts: zero reads "Free" ("Grátis") rather than "$0.00".
+function formatStepAmounts(
+	t: Translate,
+	locale: string,
+	list: readonly StepCost[] | undefined,
+): string {
+	if (list === undefined || list.length === 0) return "";
+	const nonzero = list.filter((cost) => cost.micros !== 0);
+	if (nonzero.length === 0) return t("ui.workflow.free");
+	return nonzero.map((cost) => formatMoney(cost, locale)).join(" + ");
+}
+
 // The cost of a step, one amount for each currency: what was spent, then what the approvals estimate; a step with
-// neither reads "Not reported". The amounts are the service's: this only writes them.
+// neither reads "Not reported". Zero cost reads "Free". The amounts are the service's: this only writes them.
 export function costWord(
 	t: Translate,
 	locale: string,
 	step: WorkflowStep,
 ): string {
-	const amounts = (list: WorkflowStep["cost"]): string =>
-		(list ?? []).map((cost) => formatMoney(cost, locale)).join(" + ");
-	const spent = amounts(step.spent);
-	const estimate = amounts(step.cost);
+	const spent = formatStepAmounts(t, locale, step.spent);
+	const estimate = formatStepAmounts(t, locale, step.cost);
 	if (spent === "" && estimate === "") return t("ui.workflow.not_reported");
 	if (spent === "") return estimate;
-	if (estimate === "") return t("ui.workflow.spent", { amount: spent });
-	return `${t("ui.workflow.spent", { amount: spent })} · ${t("ui.workflow.estimate", { amount: estimate })}`;
+	const spentFree = (step.spent ?? []).every((cost) => cost.micros === 0);
+	const spentText = spentFree
+		? spent
+		: t("ui.workflow.spent", { amount: spent });
+	if (estimate === "") return spentText;
+	return `${spentText} · ${t("ui.workflow.estimate", { amount: estimate })}`;
+}
+
+// The estimated cost chip of the production flow, read directly from the server-computed approval cost on the
+// workflow (core/project/workflow.go). No arithmetic is done here: zero or no reported approval cost reads "Free",
+// and an undecided workflow with no approval step omits the chip.
+export function estimatedCostWord(
+	t: Translate,
+	locale: string,
+	workflow: Workflow,
+): string | null {
+	if (!workflow.steps.some((step) => step.id === "approval")) return null;
+	const reported = workflow.steps.find(
+		(step) => step.cost !== undefined && step.cost.length > 0,
+	)?.cost;
+	const amount =
+		reported === undefined
+			? t("ui.workflow.free")
+			: formatStepAmounts(t, locale, reported);
+	return t("ui.workflow.summary.estimated_cost", { amount });
 }
 
 // The skill that leads a step: a name from the library, written as text.

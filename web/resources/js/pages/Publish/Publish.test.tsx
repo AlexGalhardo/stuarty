@@ -339,6 +339,36 @@ describe("PublicationDetailPanel", () => {
 		expect(failedHtml).toContain("HTTP 502");
 		expect(failedHtml).toContain("Try again later.");
 		expect(failedHtml).not.toContain("publication-detail-open-post");
+
+		const localPublished = publication([
+			target({
+				state: "published",
+				published_at: "2026-11-27T12:00:00Z",
+			}),
+		]);
+		const localHtml = draw(
+			<PublicationDetailPanel
+				publication={localPublished}
+				target={localPublished.targets[0] as Target}
+				accounts={{ con_1: "Local folder" }}
+				onEdit={() => undefined}
+				onClose={() => undefined}
+			/>,
+		);
+		expect(localHtml).toContain("Published at");
+		expect(localHtml).not.toContain("No result yet");
+
+		const cancelledPub = publication([target({ state: "cancelled" })]);
+		const cancelledHtml = draw(
+			<PublicationDetailPanel
+				publication={cancelledPub}
+				target={cancelledPub.targets[0] as Target}
+				accounts={{ con_1: "WordPress" }}
+				onEdit={() => undefined}
+				onClose={() => undefined}
+			/>,
+		);
+		expect(cancelledHtml).toContain("No result yet");
 	});
 });
 
@@ -380,6 +410,38 @@ describe("DestinationChooser (screen 33f)", () => {
 		expect(html).toContain("YouTube");
 		expect(html).toContain("takes video, not text");
 		expect(html).toContain("If you add a video to this project");
+	});
+
+	test("labels non-video unavailable destinations as Unavailable rather than Requires video", () => {
+		const html = draw(
+			<DestinationChooser
+				contentKind="text"
+				destinations={[
+					{
+						id: "con_wp",
+						label: "WordPress",
+						network: "blog_wordpress",
+						takes: ["text"],
+						usable: true,
+					},
+					{
+						id: "con_img",
+						label: "Gallery",
+						network: "gallery",
+						takes: ["image"],
+						usable: false,
+						blocked: "takes",
+					},
+				]}
+				selected="con_wp"
+				disabled={false}
+				reasonOf={(d) => (d.usable ? "" : "takes images, not text")}
+				onSelect={() => undefined}
+			/>,
+		);
+		expect(html).toContain("Unavailable");
+		expect(html).not.toContain("Requires video");
+		expect(html).not.toContain("If you add a video to this project");
 	});
 });
 
@@ -429,6 +491,30 @@ describe("PublishedPostState (screen 33h)", () => {
 		expect(pt).toContain("Trilha concluída");
 		expect(pt).toContain("Adicionar um vídeo");
 		expect(pt).not.toContain("published-open-post");
+	});
+
+	test("marks non-done steps without a green check when a workflow has pending or skipped steps", () => {
+		const mixed: Workflow = {
+			kind: "video",
+			steps: [
+				{ id: "briefing", state: "done", optional: false, actor: "person" },
+				{ id: "editing", state: "upcoming", optional: false, actor: "agent" },
+			],
+		};
+		const html = draw(
+			<PublishedPostState
+				title="Post"
+				workflow={mixed}
+				addVideoAction={<button type="button">Add a video</button>}
+			/>,
+			"en",
+		);
+		expect(html).toContain('data-completed-step="briefing" data-state="done"');
+		expect(html).toContain(
+			'data-completed-step="editing" data-state="upcoming"',
+		);
+		const editingStart = html.indexOf('data-completed-step="editing"');
+		expect(html.slice(editingStart)).not.toContain("text-success-text");
 	});
 
 	test("latestPublishedPost selects only published blog posts", () => {

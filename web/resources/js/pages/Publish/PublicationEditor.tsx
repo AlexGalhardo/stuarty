@@ -286,6 +286,23 @@ export function DestinationChooser({
 	const isPost = contentKind === "text";
 	const usable = destinations.filter((d) => d.usable);
 	const unavailable = destinations.filter((d) => !d.usable);
+	const videoOnly = (d: Destination): boolean =>
+		d.takes.includes("video") && !d.takes.includes("text");
+	const textOnly = (d: Destination): boolean =>
+		d.takes.includes("text") && !d.takes.includes("video");
+	const allVideoOnly = unavailable.every(videoOnly);
+	const allTextOnly = unavailable.every(textOnly);
+	const unavailableHeading = isPost
+		? allVideoOnly
+			? "ui.publish.editor.require_video"
+			: "ui.publish.editor.unavailable"
+		: allTextOnly
+			? "ui.publish.editor.for_text"
+			: "ui.publish.editor.unavailable";
+	const showUnavailableSub =
+		unavailableHeading !== "ui.publish.editor.unavailable";
+	const showAddVideoHint =
+		isPost && unavailable.some((d) => d.takes.includes("video"));
 	if (destinations.length === 0) return null;
 	return (
 		<div
@@ -371,15 +388,13 @@ export function DestinationChooser({
 				>
 					<div className="flex flex-wrap items-baseline gap-2">
 						<h4 className="text-sm font-semibold text-text">
-							{t(
-								isPost
-									? "ui.publish.editor.require_video"
-									: "ui.publish.editor.for_text",
-							)}
+							{t(unavailableHeading)}
 						</h4>
-						<span className="text-xs text-text-muted">
-							{t("ui.publish.editor.unavailable")}
-						</span>
+						{showUnavailableSub && (
+							<span className="text-xs text-text-muted">
+								{t("ui.publish.editor.unavailable")}
+							</span>
+						)}
 					</div>
 					<ul className="flex flex-col gap-2">
 						{unavailable.map((d) => (
@@ -404,7 +419,7 @@ export function DestinationChooser({
 								</span>
 								<StatusBadge status="neutral">
 									{t(
-										isPost
+										isPost && videoOnly(d)
 											? "ui.publish.editor.requires_video"
 											: "ui.publish.editor.unavailable",
 									)}
@@ -412,7 +427,7 @@ export function DestinationChooser({
 							</li>
 						))}
 					</ul>
-					{isPost && (
+					{showAddVideoHint && (
 						<p className="flex items-start gap-1.5 text-xs text-text-muted">
 							<Info aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
 							{t("ui.publish.editor.add_video_unlocks")}
@@ -686,7 +701,10 @@ export function PublicationEditor({
 									const next = event.target.value;
 									setProject(next);
 									const chosenProject = projects.find((p) => p.id === next);
-									if (isNew && chosenProject?.kind === "text") setIsPost(true);
+									if (isNew && chosenProject !== undefined) {
+										if (chosenProject.kind === "text") setIsPost(true);
+										else if (chosenProject.kind === "video") setIsPost(false);
+									}
 									setVideo("");
 									setStill("");
 									setPost("");

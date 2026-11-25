@@ -184,8 +184,11 @@ export default function Publish(): ReactNode {
 			: null;
 	}, [inspected, publications]);
 	const publishedPost = useMemo(
-		() => latestPublishedPost(publications),
-		[publications],
+		() =>
+			state === "" || state === "published"
+				? latestPublishedPost(publications)
+				: null,
+		[publications, state],
 	);
 	const publishedProjectId = publishedPost?.publication.project_id ?? "";
 
