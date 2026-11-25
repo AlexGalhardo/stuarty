@@ -187,7 +187,7 @@ export default function CutsStage({ onClose }: { onClose(): void }): ReactNode {
 					</p>
 				) : (
 					<ul
-						className="grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] gap-4"
+						className="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-4"
 						aria-label={t("ui.editor.vertical_cuts.proposals")}
 					>
 						{state.visible.map((proposal) => (

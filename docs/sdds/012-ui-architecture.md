@@ -607,6 +607,21 @@ The editor is a desktop tool. The supported minimum is 1280 by 720 CSS pixels. T
 
 At 1280 by 720 the preview region is 760 px wide and 392 px high after the top bar (48), the transport row (40) and the 240 px timeline. After the 16 px padding of §11.4 (16 px less in each dimension) the canvas box is 744 by 376 px, and a 9:16 canvas measures about 211 by 376 px; the user can collapse the library and the inspector (`Alt+1`, `Alt+2`, or the panel buttons) to give the preview the full width, and drag the timeline splitter down to 160 px. Minimum sizes: timeline 160 px, preview 240 px high, panels 200 px. Height below 600 px is allowed and only produces smaller regions with scroll in the inspector and library (each panel scrolls on its own; the page itself never scrolls).
 
+### 6.5 Tool screens (epic 99)
+
+Six tools take a screen of the final design (frames 25 to 30) instead of a panel among panels. A screen is a state of the editor (`stage` of the UI state, never sent to the core) plus the part of the inspector that goes with it; each part draws what the service answered and sends the command it always sent (§1).
+
+| Screen | Where it opens | Stage | Inspector | Reads and sends |
+| --- | --- | --- | --- | --- |
+| Finishing a take (25) | the Effects tab with a clip selected | the preview, with the zoom lane Z1 above the tracks: one numbered box for each zoom | "Zoom on click": the switch "Use the clicks" and the list of the zooms with their times | the zooms are the `zooms` section of `media_inspect` (SDD-025 section 17.8); on sends `recording.auto_zoom`, off sends `keyframe.clear` for `x`, `y` and `scale` |
+| Edit by text (26) | "Edit by text" in the Captions tab | the transcript takes the library region, wide, beside the preview: a line for each sentence with its time, the suggested fillers and repetitions boxed | "Review before removing": the suggestions with a check each, "n of m", "Remove checked", "Keep everything" | `TranscriptView`, `TranscriptDetectFillers`; `transcript.delete_range` (SDD-023 section 6) |
+| Vertical cuts (27) | "Open vertical cuts" in the Text tab of a clip | in the place of the preview, one card for each proposed cut; the source video at the left | "Cut in review": the framing the batch holds (`clip.face_frame`), the caption note, "Accept this cut" and "Refuse" | `CutsPropose` (SDD-024 section 8); an accepted cut is a new timeline that receives the batch as it came |
+| Captions (28) | the Captions tab | the preview | the tabs Style (the gallery of the core, the style rows of the track), Text (the words of the caption) and Time | `caption.apply_style`, `track.set_caption_style`, `caption.set_style`, `caption.edit_word`, `item.trim`, `item.move` |
+| Blur (29) | the Adjust tab of a clip | the preview | "Blur sensitive data": the region as a 2 by 2 grid X, Y, W, H, the time, the strength | `clip.blur_region` with `strength`, one of the strengths of the core (`x-vv-blur-strengths`, SDD-002 C.90); the editor holds no radius |
+| Studio voice (30) | "Studio voice" in the Audio tab with one clip or audio item selected | in the place of the preview, the sound before and after, each a waveform with a play button | the chain of the item: the preset and each processor | the peaks of the asset and the processed sound the server renders (SDD-004 section 7.1); `audio.apply_voice_preset` and the processor commands |
+
+Only one stage is open; it works on one item and closes when that item is gone. A person leaves it with "Back to the editor". The screens decide nothing: the lines of the transcript, the cards and the waveforms are layout of what the service returned.
+
 ### 6.4 CapCut-familiar layout
 
 Decision D-038: a person who edits in CapCut should find the same places in the Vukem editor. The layout of §6.1 already has the classic arrangement (material on the left, player in the centre, properties on the right, timeline below), so this section changes what is inside each region and adds one menu; it does not move a region. The research is the research note `capcut-gui` (private, D-037). That note is partial: its tab names come from fragments of public product pages and the proportions are not measured, so each row below is checked against the CapCut app by TASK-0242, and a difference found there changes this section. TASK-0296 walked the installed CapCut 9.8.0.4213 on Windows (2026-11-17); the marks are in the walk-through at the end of this section. CapCut is named only for compatibility; no CapCut asset, icon, colour or text is used.
@@ -1038,7 +1053,7 @@ Every command is also reachable through the command palette (§9.2), which is wh
 | `caption.from_transcript` | inspector button "Auto captions" on a clip (§12.4) |
 | `caption.import_subtitles` | inspector "Import subtitles" file picker in the track panel of a visual track and in the caption panel (§12.1), and the palette |
 | `caption.retime_from_clip` | button "Re-sync captions" in the inspector of a clip with linked captions, and in the lint finding for out-of-sync captions |
-| `transcript.delete_range` | the Transcript section of the Captions tab: select words, "Delete selected words"; and "Remove checked" in the review of the suggested fillers (§12.4, SDD-023 §6) |
+| `transcript.delete_range` | the edit by text screen (§6.5): select words, "Delete selected words"; and "Remove checked" in the review of the suggested fillers (§12.4, SDD-023 §6) |
 | `keyframe.set` | inspector Keyframes section (diamond button at the playhead), canvas handles on animated properties |
 | `keyframe.remove` | inspector Keyframes section, `Delete` on a selected keyframe |
 | `keyframe.clear` | inspector Keyframes section, "Clear" per property and for all |
