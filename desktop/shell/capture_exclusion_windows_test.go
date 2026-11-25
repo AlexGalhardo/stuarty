@@ -265,9 +265,9 @@ func waitFor(t *testing.T, colour uint32, want func(n int) bool) int {
 
 func TestTeleprompterAffinityKeepsAWindowOutOfACapture(t *testing.T) {
 	if os.Getenv("STUARTY_TEST_REAL_SCREEN") != "1" {
-		t.Skip(
+		t.Skip( // verify:env-skip needs a desktop session and shows a window
 			"set STUARTY_TEST_REAL_SCREEN=1 on a Windows desktop: it shows a small window for a few seconds",
-		) // verify:env-skip needs a desktop session and shows a window
+		)
 	}
 
 	runtime.LockOSThread()
@@ -474,9 +474,9 @@ func magentaIn(frame []byte, width, height int) int {
 func TestTeleprompterAffinityKeepsAWindowOutOfTheHelperCapture(t *testing.T) {
 	helper, ffmpegDir := os.Getenv("STUARTY_TEST_CAPTURE_HELPER"), os.Getenv("STUARTY_TEST_FFMPEG_DIR")
 	if os.Getenv("STUARTY_TEST_REAL_SCREEN") != "1" || helper == "" || ffmpegDir == "" {
-		t.Skip(
+		t.Skip( // verify:env-skip needs a desktop session, the built helper and the test FFmpeg
 			"set STUARTY_TEST_REAL_SCREEN=1, STUARTY_TEST_CAPTURE_HELPER and STUARTY_TEST_FFMPEG_DIR on a Windows desktop",
-		) // verify:env-skip needs a desktop session, the built helper and the test FFmpeg
+		)
 	}
 
 	runtime.LockOSThread()
