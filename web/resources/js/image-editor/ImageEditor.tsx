@@ -30,8 +30,8 @@ import TopBar from "./TopBar";
 import { AddImageProvider, useAddImage } from "./toolbar/addImage";
 import { OperationDialogs } from "./toolbar/OperationDialogs";
 import { OperationsProvider } from "./toolbar/operations";
-import { Toolbar, ViewTools } from "./toolbar/Toolbar";
 import { ToolRail } from "./toolbar/ToolRail";
+import { ZoomBar } from "./toolbar/ZoomBar";
 
 // The editor takes the room the frame of the page leaves (FullLayout): the window less the top bar of the
 // editor and the scene bar. The floor keeps a short window from crushing the canvas.
@@ -219,13 +219,7 @@ function Shell({ live }: { live: boolean }): ReactNode {
 						)}
 						{doc !== null && doc.layers.length === 0 && <EmptyDocument />}
 					</div>
-					<Toolbar
-						label={t("ui.image.toolbar.view")}
-						testId="image-view-toolbar"
-						className="justify-center border-t border-border"
-					>
-						<ViewTools />
-					</Toolbar>
+					<ZoomBar />
 				</div>
 				<aside
 					aria-label={t("ui.image.inspector.title")}

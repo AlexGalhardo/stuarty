@@ -180,7 +180,7 @@ export function CommandPalette(): ReactNode {
 					id={listId}
 					role="listbox"
 					aria-label={t("ui.image.palette.list")}
-					className="max-h-72 overflow-y-auto p-1"
+					className="max-h-80 overflow-y-auto p-1"
 				>
 					{shown.map((o, index) => {
 						const Icon = o.icon;

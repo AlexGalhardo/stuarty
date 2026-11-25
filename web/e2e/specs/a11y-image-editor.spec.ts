@@ -107,6 +107,17 @@ test.describe("a11y image editor", () => {
 				found.push(...(await axeOf(page, "image picker")));
 				await page.keyboard.press("Escape");
 
+				await page.getByTestId("image-palette-open").click();
+				await expect(page.getByTestId("image-palette")).toBeVisible();
+				found.push(...(await axeOf(page, "command palette")));
+				await page.keyboard.press("Escape");
+				await expect(page.getByTestId("image-palette")).toHaveCount(0);
+
+				await page.getByTestId("image-more-tools").click();
+				await expect(page.getByRole("menu")).toBeVisible();
+				found.push(...(await axeOf(page, "more tools menu")));
+				await page.keyboard.press("Escape");
+
 				expect(found).toEqual([]);
 			});
 		}

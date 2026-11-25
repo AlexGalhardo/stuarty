@@ -968,7 +968,9 @@
         "zoom_out": "Diminuir o zoom",
         "zoom_in": "Aumentar o zoom",
         "fit": "Ajustar à janela",
-        "actual": "Tamanho real (100%)"
+        "actual": "Tamanho real (100%)",
+        "fit_short": "Ajustar",
+        "percent_button": "Zoom {percent}%, ir ao tamanho real (100%)"
       },
       "kind": {
         "image": "imagem",
