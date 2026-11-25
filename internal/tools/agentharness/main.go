@@ -84,12 +84,6 @@ func parseOptions(argv []string, getenv func(string) string, stderr io.Writer) (
 	)
 	fs.StringVar(&o.flowBase, "flow-base", "", "first-flow: the address of the Stuarty server on loopback")
 	fs.StringVar(&o.flowHome, "flow-home", "", "first-flow: the workspace of that server (STUARTY_HOME)")
-	fs.StringVar(
-		&o.flowPassword,
-		"flow-account-password",
-		"",
-		"first-flow: the password of the local account the harness person creates and signs in with",
-	)
 	fs.StringVar(&o.flowSocial, "flow-social", "", "first-flow: the address of the fake social network")
 	fs.StringVar(&o.skill, "skill", "web/app/agentdocs/out/SKILL.md", "the SKILL.md given to the agent")
 	fs.StringVar(&o.bin, "bin", "stuarty", "the stuarty binary the agent drives")
@@ -129,13 +123,27 @@ func parseOptions(argv []string, getenv func(string) string, stderr io.Writer) (
 
 	// The estimate is shown to the author before anything is started, so it needs none of the services.
 	if o.scenario == firstFlow.Name && !o.estimateOnly &&
-		(o.flowBase == "" || o.flowHome == "" || o.flowPassword == "" || o.flowSocial == "") {
+		(o.flowBase == "" || o.flowHome == "" || o.flowSocial == "") {
 		fmt.Fprintln(
 			stderr,
-			"agentharness: first-flow needs --flow-base, --flow-home, --flow-account-password and --flow-social",
+			"agentharness: first-flow needs --flow-base, --flow-home and --flow-social",
 		)
 
 		return o, 2
+	}
+
+	// The password comes from the environment, never from the command line, where any local user could
+	// read it in the process list (VV-424).
+	if o.scenario == firstFlow.Name && !o.estimateOnly {
+		if o.flowPassword = getenv(passwordEnv); o.flowPassword == "" {
+			fmt.Fprintf(
+				stderr,
+				"agentharness: first-flow needs %s (the password of the harness account)\n",
+				passwordEnv,
+			)
+
+			return o, 2
+		}
 	}
 
 	if o.apiKey = getenv("ANTHROPIC_API_KEY"); o.apiKey == "" && !o.estimateOnly {
@@ -359,6 +367,36 @@ func saveTranscript(dir string, r runResult) error {
 	return os.WriteFile(filepath.Join(dir, name), raw, 0o600)
 }
 
+// passwordEnv names the variable that holds the password of the harness account (SDD-000 section 10).
+const passwordEnv = "STUARTY_HARNESS_PASSWORD"
+
+// childAllowed lists, upper-cased, the variables the stuarty process of a run may inherit: where to
+// find programs and write temporary files, what Windows needs to start a process, the vault master
+// key file and FFmpeg. Anything else, the model key above all, stays with the harness (VV-424).
+var childAllowed = map[string]bool{
+	"PATH": true, "TEMP": true, "TMP": true, "TMPDIR": true,
+	"SYSTEMROOT": true, "SYSTEMDRIVE": true, "WINDIR": true, "COMSPEC": true, "PATHEXT": true,
+	"USERPROFILE": true, "APPDATA": true, "LOCALAPPDATA": true, "PROGRAMDATA": true,
+	"PROGRAMFILES": true, "PROGRAMFILES(X86)": true, "PROGRAMW6432": true, "NUMBER_OF_PROCESSORS": true,
+	"PROCESSOR_ARCHITECTURE": true, "OS": true, "HOMEDRIVE": true, "HOMEPATH": true,
+	"STUARTY_MASTER_KEY_FILE": true, "STUARTY_FFMPEG": true, "STUARTY_FFPROBE": true,
+}
+
+// childEnv builds the environment of the stuarty process from the allow-list, then the variables the
+// harness sets itself.
+func childEnv(parent []string, home string) []string {
+	env := make([]string, 0, len(childAllowed)+1)
+
+	for _, kv := range parent {
+		name, _, ok := strings.Cut(kv, "=")
+		if ok && childAllowed[strings.ToUpper(name)] {
+			env = append(env, kv)
+		}
+	}
+
+	return append(env, "STUARTY_HOME="+home)
+}
+
 // execRunner is the real Runner: the stuarty binary, run with no shell, in the work directory,
 // on a workspace of its own so no run sees another one.
 func execRunner(bin string) func(home, work string) Runner {
@@ -369,9 +407,9 @@ func execRunner(bin string) func(home, work string) Runner {
 
 			// The binary is chosen by whoever runs the harness; the arguments come from the agent
 			// and reach the program as an argument vector, never a shell.
-			cmd := exec.CommandContext(ctx, bin, args...)
+			cmd := exec.CommandContext(ctx, bin, args...) //nolint:gosec // see above
 			cmd.Dir = work
-			cmd.Env = append(os.Environ(), "STUARTY_HOME="+home)
+			cmd.Env = childEnv(os.Environ(), home)
 			cmd.Stdin = strings.NewReader(stdin)
 
 			out, err := cmd.CombinedOutput()
