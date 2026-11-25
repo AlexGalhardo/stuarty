@@ -15,7 +15,13 @@ const WHY = "effects-why";
 // the registry lists for `clip.set_effects`. A card adds its effect to the
 // selected clips, or removes it when they already carry it; the core fills the
 // parameters. The card shows the name only: a thumbnail is optional.
-export default function EffectsPanel(): ReactNode {
+export default function EffectsPanel({
+	lead,
+}: {
+	// What goes above the cards (the cursor and click panel of the screen recording, composed by the layout
+	// because a feature folder does not import another), given the selected clip.
+	lead?: (itemId: string) => ReactNode;
+}): ReactNode {
 	const t = useT();
 	const actions = useActions();
 	const runtime = useRuntime();
@@ -46,6 +52,7 @@ export default function EffectsPanel(): ReactNode {
 					{t("ui.editor.library.select_clip_first")}
 				</p>
 			)}
+			{first !== undefined && target.canApply && lead?.(first)}
 			<ul className="grid grid-cols-[repeat(auto-fill,minmax(7rem,1fr))] gap-2">
 				{kinds.map((kind) => (
 					<li key={kind} className="contents">
