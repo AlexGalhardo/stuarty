@@ -576,71 +576,74 @@ export function ProviderCard({
 					<PersonOnlyNote id={`signin-person-only-${provider.id}`} />
 				</div>
 			)}
-			<form
-				onSubmit={(event) => void connect(event)}
-				className="flex flex-col gap-3 border-t p-4"
-			>
-				<p className="text-sm font-medium">
+			{/* The form opens on its own while the provider has no connection; with one, it waits behind its title. */}
+			<details className="border-t" open={mine.length === 0}>
+				<summary className="cursor-pointer p-4 text-sm font-medium">
 					{t("ui.providers.connect_title", { provider: provider.name })}
-				</p>
-				<div className="flex flex-col gap-1">
-					<Label htmlFor={`provider-label-${provider.id}`}>
-						{t("ui.providers.connect_name")}
-					</Label>
-					<Input
-						id={`provider-label-${provider.id}`}
-						required
-						maxLength={LABEL_MAX}
-						autoComplete="off"
-						value={label}
-						onChange={(event) => setLabel(event.target.value)}
-					/>
-				</div>
-				<div className="flex flex-col gap-1">
-					<Label htmlFor={`provider-endpoint-${provider.id}`}>
-						{t("ui.providers.connect_address")}
-					</Label>
-					<Input
-						id={`provider-endpoint-${provider.id}`}
-						required
-						type="url"
-						autoComplete="off"
-						value={endpoint}
-						onChange={(event) => setEndpoint(event.target.value)}
-					/>
-				</div>
-				<div className="flex flex-col gap-1">
-					<Label htmlFor={`provider-key-${provider.id}`}>
-						{t("ui.providers.connect_key")}
-					</Label>
-					<Input
-						id={`provider-key-${provider.id}`}
-						required
-						type="password"
-						autoComplete="off"
-						value={secret}
-						onChange={(event) => setSecret(event.target.value)}
-					/>
-					<p className="text-xs text-text-muted">
-						{t("ui.providers.connect_hint")}
-					</p>
-				</div>
-				<FailureNote failure={failure} />
-				<div>
-					<Button
-						type="submit"
-						disabled={
-							busy ||
-							label.trim() === "" ||
-							endpoint.trim() === "" ||
-							secret === ""
-						}
-					>
-						{t("ui.providers.connect_submit")}
-						<span className="sr-only"> {provider.name}</span>
-					</Button>
-				</div>
-			</form>
+				</summary>
+				<form
+					onSubmit={(event) => void connect(event)}
+					className="flex flex-col gap-3 px-4 pb-4"
+				>
+					<div className="flex flex-col gap-1">
+						<Label htmlFor={`provider-label-${provider.id}`}>
+							{t("ui.providers.connect_name")}
+						</Label>
+						<Input
+							id={`provider-label-${provider.id}`}
+							required
+							maxLength={LABEL_MAX}
+							autoComplete="off"
+							value={label}
+							onChange={(event) => setLabel(event.target.value)}
+						/>
+					</div>
+					<div className="flex flex-col gap-1">
+						<Label htmlFor={`provider-endpoint-${provider.id}`}>
+							{t("ui.providers.connect_address")}
+						</Label>
+						<Input
+							id={`provider-endpoint-${provider.id}`}
+							required
+							type="url"
+							autoComplete="off"
+							value={endpoint}
+							onChange={(event) => setEndpoint(event.target.value)}
+						/>
+					</div>
+					<div className="flex flex-col gap-1">
+						<Label htmlFor={`provider-key-${provider.id}`}>
+							{t("ui.providers.connect_key")}
+						</Label>
+						<Input
+							id={`provider-key-${provider.id}`}
+							required
+							type="password"
+							autoComplete="off"
+							value={secret}
+							onChange={(event) => setSecret(event.target.value)}
+						/>
+						<p className="text-xs text-text-muted">
+							{t("ui.providers.connect_hint")}
+						</p>
+					</div>
+					<FailureNote failure={failure} />
+					<div>
+						<Button
+							type="submit"
+							disabled={
+								busy ||
+								label.trim() === "" ||
+								endpoint.trim() === "" ||
+								secret === ""
+							}
+						>
+							{t("ui.providers.connect_submit")}
+							<span className="sr-only"> {provider.name}</span>
+						</Button>
+					</div>
+				</form>
+			</details>
 		</li>
 	);
 }
@@ -670,7 +673,7 @@ export default function ProviderCards({
 				title={t("ui.providers.title")}
 				description={t("ui.providers.intro")}
 			/>
-			<ul className="flex flex-col gap-4">
+			<ul className="grid items-start gap-4 lg:grid-cols-2">
 				{providers.map((provider) => (
 					<ProviderCard
 						key={provider.id}

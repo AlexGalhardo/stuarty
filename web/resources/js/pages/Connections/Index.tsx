@@ -11,7 +11,7 @@ import {
 import { EmptyState } from "@/components/EmptyState";
 import { type Failure, FailureNote, failureOf } from "@/components/Failure";
 import { Notice } from "@/components/Notice";
-import { PageHeader } from "@/components/PageHeader";
+import { PageHeader, PageHeaderAction } from "@/components/PageHeader";
 import { SectionTitle } from "@/components/SectionTitle";
 import { StatusBadge } from "@/components/StatusBadge";
 import UntrustedText from "@/components/UntrustedText";
@@ -208,6 +208,8 @@ export default function Connections(): ReactNode {
 	const [secret, setSecret] = useState("");
 	const [accepts, setAccepts] = useState<string[]>(["text"]);
 	const [busy, setBusy] = useState(false);
+	// the form of a custom destination waits behind the "Add a connection" action
+	const [adding, setAdding] = useState(false);
 
 	const load = useCallback(async (): Promise<void> => {
 		try {
@@ -256,6 +258,7 @@ export default function Connections(): ReactNode {
 			setEndpoint("");
 			setHosts("");
 			setSecret("");
+			setAdding(false);
 			await load();
 		} catch (error) {
 			setFailure(failureOf(error));
@@ -301,12 +304,14 @@ export default function Connections(): ReactNode {
 									{t("ui.connections.approvals_link")}
 								</Link>
 							</Button>
-							<Button asChild>
-								<a href="#connections-new">
-									<Plus aria-hidden="true" />
-									{t("ui.connections.add_action")}
-								</a>
-							</Button>
+							<PageHeaderAction
+								type="button"
+								data-testid="connection-new"
+								onClick={() => setAdding(true)}
+							>
+								<Plus aria-hidden="true" />
+								{t("ui.connections.add_action")}
+							</PageHeaderAction>
 						</>
 					}
 				/>
@@ -345,11 +350,9 @@ export default function Connections(): ReactNode {
 								title={t("ui.connections.empty_title")}
 								description={t("ui.connections.empty")}
 							>
-								<Button asChild>
-									<a href="#connections-new">
-										<Plus aria-hidden="true" />
-										{t("ui.connections.add_action")}
-									</a>
+								<Button type="button" onClick={() => setAdding(true)}>
+									<Plus aria-hidden="true" />
+									{t("ui.connections.add_action")}
 								</Button>
 							</EmptyState>
 						) : (
@@ -369,107 +372,109 @@ export default function Connections(): ReactNode {
 							</ul>
 						))}
 				</section>
-				<section
-					id="connections-new"
-					aria-label={t("ui.connections.new")}
-					className="grid scroll-mt-4 grid-cols-1 gap-4"
-				>
-					<SectionTitle title={t("ui.connections.new")} />
-					<form
-						onSubmit={(event) => void create(event)}
-						className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5 text-text"
+				{adding && (
+					<section
+						id="connections-new"
+						aria-label={t("ui.connections.new")}
+						className="grid scroll-mt-4 grid-cols-1 gap-4"
 					>
-						<div className="flex flex-col gap-2">
-							<Label htmlFor="connection-label">
-								{t("ui.connections.label")}
-							</Label>
-							<Input
-								id="connection-label"
-								required
-								maxLength={LABEL_MAX}
-								autoComplete="off"
-								value={label}
-								onChange={(event) => setLabel(event.target.value)}
-							/>
-						</div>
-						<div className="flex flex-col gap-2">
-							<Label htmlFor="connection-endpoint">
-								{t("ui.connections.endpoint")}
-							</Label>
-							<Input
-								id="connection-endpoint"
-								required
-								type="url"
-								autoComplete="off"
-								value={endpoint}
-								onChange={(event) => setEndpoint(event.target.value)}
-							/>
-						</div>
-						<div className="flex flex-col gap-2">
-							<Label htmlFor="connection-hosts">
-								{t("ui.connections.hosts")}
-							</Label>
-							<Input
-								id="connection-hosts"
-								autoComplete="off"
-								value={hosts}
-								onChange={(event) => setHosts(event.target.value)}
-							/>
-						</div>
-						<fieldset className="flex flex-wrap gap-4">
-							<legend className="mb-2 text-sm font-medium">
-								{t("ui.connections.accepts_legend")}
-							</legend>
-							{ACCEPTS.map((kind) => (
-								<label key={kind} className="flex items-center gap-2 text-sm">
-									<input
-										type="checkbox"
-										className="accent-primary"
-										checked={accepts.includes(kind)}
-										onChange={(event) =>
-											setAccepts((was) =>
-												event.target.checked
-													? [...was, kind]
-													: was.filter((a) => a !== kind),
-											)
-										}
-									/>
-									{t(`ui.connections.accept.${kind}`)}
-								</label>
-							))}
-						</fieldset>
-						<div className="flex flex-col gap-2">
-							<Label htmlFor="connection-secret">
-								{t("ui.connections.secret")}
-							</Label>
-							<Input
-								id="connection-secret"
-								required
-								type="password"
-								autoComplete="off"
-								value={secret}
-								onChange={(event) => setSecret(event.target.value)}
-							/>
-							<p className="text-sm text-text-subtle">
-								{t("ui.connections.secret_hint")}
-							</p>
-						</div>
-						<div>
-							<Button
-								type="submit"
-								disabled={
-									busy ||
-									label.trim() === "" ||
-									endpoint.trim() === "" ||
-									secret === "" ||
-									accepts.length === 0
-								}
-							>
-								{t("ui.connections.add")}
-							</Button>
-						</div>
-					</form>
-				</section>
+						<SectionTitle title={t("ui.connections.new")} />
+						<form
+							onSubmit={(event) => void create(event)}
+							className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5 text-text"
+						>
+							<div className="flex flex-col gap-2">
+								<Label htmlFor="connection-label">
+									{t("ui.connections.label")}
+								</Label>
+								<Input
+									id="connection-label"
+									required
+									maxLength={LABEL_MAX}
+									autoComplete="off"
+									value={label}
+									onChange={(event) => setLabel(event.target.value)}
+								/>
+							</div>
+							<div className="flex flex-col gap-2">
+								<Label htmlFor="connection-endpoint">
+									{t("ui.connections.endpoint")}
+								</Label>
+								<Input
+									id="connection-endpoint"
+									required
+									type="url"
+									autoComplete="off"
+									value={endpoint}
+									onChange={(event) => setEndpoint(event.target.value)}
+								/>
+							</div>
+							<div className="flex flex-col gap-2">
+								<Label htmlFor="connection-hosts">
+									{t("ui.connections.hosts")}
+								</Label>
+								<Input
+									id="connection-hosts"
+									autoComplete="off"
+									value={hosts}
+									onChange={(event) => setHosts(event.target.value)}
+								/>
+							</div>
+							<fieldset className="flex flex-wrap gap-4">
+								<legend className="mb-2 text-sm font-medium">
+									{t("ui.connections.accepts_legend")}
+								</legend>
+								{ACCEPTS.map((kind) => (
+									<label key={kind} className="flex items-center gap-2 text-sm">
+										<input
+											type="checkbox"
+											className="accent-primary"
+											checked={accepts.includes(kind)}
+											onChange={(event) =>
+												setAccepts((was) =>
+													event.target.checked
+														? [...was, kind]
+														: was.filter((a) => a !== kind),
+												)
+											}
+										/>
+										{t(`ui.connections.accept.${kind}`)}
+									</label>
+								))}
+							</fieldset>
+							<div className="flex flex-col gap-2">
+								<Label htmlFor="connection-secret">
+									{t("ui.connections.secret")}
+								</Label>
+								<Input
+									id="connection-secret"
+									required
+									type="password"
+									autoComplete="off"
+									value={secret}
+									onChange={(event) => setSecret(event.target.value)}
+								/>
+								<p className="text-sm text-text-subtle">
+									{t("ui.connections.secret_hint")}
+								</p>
+							</div>
+							<div>
+								<Button
+									type="submit"
+									disabled={
+										busy ||
+										label.trim() === "" ||
+										endpoint.trim() === "" ||
+										secret === "" ||
+										accepts.length === 0
+									}
+								>
+									{t("ui.connections.add")}
+								</Button>
+							</div>
+						</form>
+					</section>
+				)}
 			</div>
 		</>
 	);
