@@ -54,6 +54,9 @@ type Store interface {
 	Update(ctx context.Context, r Row) error
 	// ListByProject is the recordings of a project, newest first.
 	ListByProject(ctx context.Context, projectID string) ([]Row, error)
+	// ListByAssetHash is the recordings whose screen asset has that content hash, with no source label (the
+	// emptying of the trash needs none).
+	ListByAssetHash(ctx context.Context, hash string) ([]Row, error)
 	// Open is the recordings that are not final: prepared, recording or finishing.
 	Open(ctx context.Context) ([]Row, error)
 }

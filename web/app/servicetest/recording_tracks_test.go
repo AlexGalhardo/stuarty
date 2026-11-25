@@ -555,3 +555,70 @@ func TestSecurity_T125_TheHelperSourceNamesNoFunctionThatReadsAKey(t *testing.T)
 		t.Fatalf("the helper source was not found: %v (%d files)", err, files)
 	}
 }
+
+// VV-416 (D-144): the pointer file of an added recording goes with the screen asset when a person deletes that asset
+// for good, and nothing else of the recording is lost.
+func TestEmptyingTheTrashRemovesThePointerFileWithTheScreenAsset(t *testing.T) {
+	r := newRecEnv(t)
+	r.cap.finish = allTracksFinish()
+	project := r.newProject("p")
+	rec := r.startAll(t, project)
+
+	if _, err := r.svc.RecordingStop(personCtx(), service.RecordingRef{ID: rec.ID}); err != nil {
+		t.Fatal(err)
+	}
+
+	r.waitState(t, rec.ID, "ready")
+
+	added, err := r.svc.RecordingConfirm(personCtx(), service.RecordingRef{ID: rec.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	events := filepath.Join(r.ws, "recordings", rec.ID, "events.jsonl")
+	if _, err := os.Stat(events); err != nil {
+		t.Fatalf("the pointer file is kept after the confirm: %v", err)
+	}
+
+	// Trashing the asset is reversible: the pointer file stays until the trash is emptied.
+	if _, err := r.svc.MediaTrash(personCtx(), service.MediaTrashRequest{ProjectID: project, AssetID: added.AssetID}); err != nil {
+		t.Fatalf("MediaTrash: %v", err)
+	}
+
+	if _, err := os.Stat(events); err != nil {
+		t.Fatalf("a trashed asset can come back, and so does its pointer file: %v", err)
+	}
+
+	if _, err := r.svc.TrashEmpty(personCtx(), service.TrashEmptyRequest{}); err != nil {
+		t.Fatalf("TrashEmpty: %v", err)
+	}
+
+	if _, err := os.Stat(events); !os.IsNotExist(err) {
+		t.Errorf("the pointer file must go with the screen asset: %v", err)
+	}
+
+	list, err := r.svc.MediaList(personCtx(), service.MediaListRequest{ProjectID: project})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	left := map[string]bool{}
+	for _, a := range list.Assets {
+		left[a.AssetID] = true
+	}
+
+	for _, tr := range added.Tracks[1:] {
+		if !left[tr.AssetID] {
+			t.Errorf("the %s asset of the recording was lost: %+v", tr.Kind, list.Assets)
+		}
+	}
+
+	if left[added.AssetID] {
+		t.Errorf("the screen asset is still listed: %+v", list.Assets)
+	}
+
+	got, err := r.svc.RecordingGet(personCtx(), service.RecordingRef{ID: rec.ID})
+	if err != nil || got.EventsCount != 0 || len(got.Tracks) != len(added.Tracks) {
+		t.Errorf("the row after the emptying = %+v, %v; want the tracks kept and no events", got, err)
+	}
+}
