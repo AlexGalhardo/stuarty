@@ -1,8 +1,8 @@
 Screenshots of Stuarty, captured on 2026-11-24 with a headless Chromium from a local `stuarty serve` of the repository
 (release branch v0.55.0, whose build reports v0.54.0 in the sidebar), on a throwaway demo workspace made for the capture.
-The eight images of the landing page (epic 95) are made again by site/scripts/capture-landing.ts, which seeds the demo
-with the CLI and the HTTP API of the product, takes the screens in both themes and encodes them; the other images were
-captured on 2026-11-24 for epic 88 and are used by the alternative pages of the landing.
+Every image below is made again by site/scripts/capture-landing.ts, which seeds the demo with the CLI and the HTTP API
+of the product, takes the screens in both themes and encodes them (epic 95); the landing page and its alternative pages
+use the same files.
 
 Every image is a capture of the user interface at 1600 x 1000 px (home-mobile: the home in a 390 px wide window,
 captured at 1600 x 3464 px), in the dark theme (name.*) and in the light theme (name-light.*), as .webp and .avif at
@@ -12,11 +12,10 @@ LGPL FFmpeg, carry no metadata, and are part of this repository under its MIT li
 
 Media shown inside the screenshots: none from outside the repository. The clips, pictures and sounds of the demo
 workspace were generated for the capture (gradients and sine tones made with the project's own FFmpeg). The demo
-content is invented: for epic 88, a text project, a video project, an image project, a project not decided yet, and a
-few skills, prompts and memory notes about a community garden; for epic 95, the user alex, a Reel on five filming
-mistakes, a blog post on natural light at home and four posts on a local blog folder. It names no real person, brand or
-number, and it holds no logo, testimonial or metric. The agent profiles and the home folder shown are the defaults of the
-machine that captured them; no account, key or token of any user appears.
+content is invented: the user alex, a Reel on five filming mistakes, its thumbnail, a blog post on natural light at
+home, four posts on a local blog folder, a skill, a prompt and a memory note. It names no real person, brand or number, and it
+holds no logo, testimonial or metric. The agent profiles and the home folder shown are the defaults of the machine that
+captured them; no account, key or token of any user appears.
 
 Image                Screen                              Route                                    Captured
 dashboard            Home, a project in progress         /                                        2026-11-24
@@ -26,7 +25,7 @@ writing              Write, a script selected            /write                 
 video-editor         Video editor, a clip selected       /editor/<project>                        2026-11-24
 image-editor         Image editor, a layer selected      /edit-image/<image>                      2026-11-24
 publish-calendar     Publish, month calendar with posts  /publish                                 2026-11-24
-agent-chat           Agent chat panel on a project       /projects/<project>, Chat                2026-11-24
+agent-chat           Agent chat panel on a project       /projects/<project>, Open chat           2026-11-24
 visual-assets        Visual Assets                       /visual-assets                           2026-11-24
 video-assets         Video Assets                        /video-assets                            2026-11-24
 skills               Skills, one selected                /skills                                  2026-11-24

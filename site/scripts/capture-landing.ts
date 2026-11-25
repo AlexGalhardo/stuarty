@@ -1,10 +1,12 @@
 // Captures the product images of the landing page (epic 95) from a real `stuarty serve`, so that they can be made again.
 //
-//   bun scripts/capture-landing.ts --bin <stuarty binary> --work <folder> [--port 9751] [--phase all|seed|shoot|encode]
+//   bun scripts/capture-landing.ts --bin <stuarty binary> --work <empty folder> [--port 9751]
+//                                  [--phase all|seed|shoot|encode] [--only <screen>,<screen>]
 //
 // It starts the server on a throwaway workspace inside --work (never ~/.stuarty), seeds the demo of the landing with the
 // CLI and the HTTP API of the product (the user Alex, the video project "Reels 5 filming mistakes", the text project
-// "Post natural light at home", their media, a blog folder, a pending voice-over and some posts on the calendar), takes
+// "Post natural light at home", the image project and its thumbnail, their media, a blog folder, a pending voice-over,
+// some posts on the calendar, a skill, a prompt and a memory note), takes
 // the screens in both themes with headless Chromium and encodes them to site/public/landing as .webp and .avif at 1600 and
 // 960 px with the pinned LGPL FFmpeg. Nothing is drawn: every picture is a screenshot of the UI. The invented content
 // names no real person, brand or number. Playwright is the one of web/ (run `bun install` there first).
@@ -39,6 +41,8 @@ const bin = resolve(arg("bin"));
 const work = resolve(arg("work"));
 const port = Number(arg("port", "9751"));
 const phase = arg("phase", "all");
+// --only a,b shoots and encodes only those screens, to retake one without the others.
+const only = arg("only", "").split(",").filter(Boolean);
 const ffmpeg = process.env.STUARTY_FFMPEG ?? "ffmpeg";
 const home = join(work, "ws");
 const media = join(work, "media");
@@ -127,6 +131,12 @@ function makeMedia(): void {
 	clip("alex-intro", "0x16362B", "0x9CC45A", 5, 300);
 	execFileSync(ffmpeg, ["-v", "error", "-y", "-f", "lavfi", "-i", "sine=f=330:d=20", "-c:a", "aac", join(media, "voice-over.m4a")]);
 	execFileSync(ffmpeg, ["-v", "error", "-y", "-f", "lavfi", "-i", "sine=f=196:d=40", "-c:a", "libmp3lame", join(media, "calm-track.mp3")]);
+	const still = (name: string, size: string, c0: string, c1: string): void => {
+		execFileSync(ffmpeg, ["-v", "error", "-y", "-f", "lavfi", "-i", `gradients=s=${size}:c0=${c0}:c1=${c1}:speed=0`, "-frames:v", "1", join(media, `${name}.png`)]);
+	};
+	still("window-light", "1080x1350", "0xF2C98A", "0x5B7FB5");
+	still("phone-on-books", "1080x1350", "0x2E4A3B", "0xC9A66B");
+	still("thumbnail-background", "1280x720", "0x3D2150", "0xE8795A");
 }
 
 async function seed(context: BrowserContext): Promise<{ video: string; text: string; trailText: string }> {
@@ -246,12 +256,38 @@ async function seed(context: BrowserContext): Promise<{ video: string; text: str
 	}
 	const speech = "Five filming mistakes you can fix today. One: stop filming with your back to the window. Two: spend one minute on sound before you press record. Three: look at the camera, not at yourself. Four: lean the phone on something steady. Five: cut the first three seconds of dead air. Pick one, fix it today and film again.";
 	cli(["voice:generate", "--project", video, "--connection", openai, "--model", "tts-1", "--voice", "nova", "--text", speech]);
+	// The library: two pictures beside the footage, music and voice-over of the video project.
+	cli(["media:import", join(media, "window-light.png"), join(media, "phone-on-books.png"), "--project", video, "--wait", "--tag", "reels"]);
+
+	// The image project and its thumbnail: the picture, a dark band and the title, as layers.
+	cli(["project:create", "--name", "Thumbnail filming mistakes", "--kind", "image",
+		"--description", "The thumbnail of the Reel on filming mistakes: a warm picture, a dark band and a short title that reads on a phone.",
+		...goal("Make one thumbnail that reads at the size of a phone", "One thumbnail ready before the Reel is published")]);
+	const thumbnail = cliJson<Record<string, unknown>>(["image:import", "--path", join(media, "thumbnail-background.png"), "--preset", "video_thumbnail", "--name", "Reel thumbnail"]);
+	const image = String(thumbnail.image_id ?? thumbnail.id ?? (thumbnail.image as { id?: string } | undefined)?.id ?? "");
+	if (!image) throw new Error(`image:import: ${JSON.stringify(thumbnail)}`);
+	const imageOps = join(work, "image-ops.json");
+	writeFileSync(imageOps, JSON.stringify({ operations: [
+		{ op: "layer.add_shape", args: { name: "Band", shape: "rect", x: 0, y: 430, w: 1280, h: 290, fill: "#101218CC" } },
+		{ op: "layer.add_text", args: { name: "Title", text: "Five filming mistakes", y: 470, style: { size: 96, font_weight: 800, color: "#FFFFFF" } } },
+		{ op: "layer.add_text", args: { name: "Subtitle", text: "Fix them today", y: 600, style: { size: 48, font_weight: 600, color: "#F6CC7C" } } },
+	] }));
+	cli(["image:edit", image, "--ops", imageOps]);
+
+	// What the agent reads: a skill, a prompt and a memory note, all waiting for a person to review them.
+	const skill = join(work, "skill.md");
+	writeFileSync(skill, ["# Captions for shorts", "", "1. Keep each caption under six words.", "2. Put the key word of the line last.", "3. Never cover the face: keep captions in the lower third.", "4. Check every caption against the script before you export.", ""].join("\n"));
+	cli(["skill:write", "captions-for-shorts", "--description", "Write short, readable captions for a vertical video and check them against the script.", "--body-file", skill]);
+	cli(["prompt:write", "five-hooks", "--description", "Five hook lines for the first seconds of a short video.", "--body", "Write five hook lines for a short video about {{topic}}, for {{audience}}. Each line under ten words, no question marks.", "--default", "audience=people who film with a phone", "--tag", "hooks"]);
+	cli(["memory:write", "--description", "Alex films at home, by a window that faces west.", "--body", "Plan the takes for the morning, when the window light is soft. After four in the afternoon the light is too warm.", "--tag", "filming"]);
+
 	// The home continues the project touched last: the video, whose path is the one of the design.
 	cli(["project:update", video, "--description", "A 45 second vertical Reel for people who film with a phone and want to look professional. Light and sound matter more than the camera, so it shows both."]);
-	return { video, text, trailText: text };
+	return { video, text, trailText: text, image };
 }
 
-type Shot = { name: string; path: (ids: { video: string; text: string }) => string; viewport?: { width: number; height: number }; prepare?: (page: Page) => Promise<void> };
+type Ids = { video: string; text: string; image: string };
+type Shot = { name: string; path: (ids: Ids) => string; viewport?: { width: number; height: number }; prepare?: (page: Page) => Promise<void>; atTop?: boolean };
 
 const SHOTS: Shot[] = [
 	{ name: "dashboard", path: () => "/" },
@@ -287,12 +323,39 @@ const SHOTS: Shot[] = [
 		},
 	},
 	{ name: "home-mobile", path: () => "/", viewport: { width: 390, height: 844 } },
+	// The steps of the path of the landing that the screens above do not show (author change after the review).
+	{ name: "projects", path: () => "/projects" },
+	{
+		name: "writing",
+		path: () => "/write",
+		// Opening the text scrolls the page to it; the picture starts at the top of the page.
+		atTop: true,
+		prepare: async (page) => {
+			await clickIfShown(page, page.getByText("Script", { exact: true }).filter({ visible: true }).first());
+			await page.locator("textarea").first().waitFor({ state: "visible", timeout: 15_000 });
+		},
+	},
+	{ name: "video-assets", path: () => "/video-assets" },
+	{ name: "visual-assets", path: () => "/visual-assets" },
+	{ name: "image-editor", path: (ids) => `/edit-image/${ids.image}`, prepare: (page) => clickIfShown(page, page.getByText("Title", { exact: true }).first()) },
+	{ name: "agent-chat", path: (ids) => `/projects/${ids.video}`, prepare: (page) => clickIfShown(page, page.getByRole("button", { name: "Open chat" }).first()) },
+	{ name: "skills", path: () => "/skills", prepare: (page) => clickIfShown(page, page.getByText("captions-for-shorts").first()) },
+	{ name: "prompts", path: () => "/prompts", prepare: (page) => clickIfShown(page, page.getByText("five-hooks").first()) },
+	{ name: "memory", path: () => "/memory", prepare: (page) => clickIfShown(page, page.getByText("Alex films at home", { exact: false }).first()) },
+	{ name: "connections", path: () => "/connections" },
 ];
 
-async function shoot(browser: import("@playwright/test").Browser, ids: { video: string; text: string }): Promise<void> {
+// A screen that already shows what the step needs has nothing to click; a click that fails would hide a changed screen,
+// so the script stops instead of taking a picture of the wrong one.
+async function clickIfShown(page: Page, target: import("@playwright/test").Locator): Promise<void> {
+	await target.waitFor({ state: "visible", timeout: 15_000 });
+	await target.click();
+}
+
+async function shoot(browser: import("@playwright/test").Browser, ids: Ids): Promise<void> {
 	mkdirSync(shots, { recursive: true });
 	for (const theme of ["dark", "light"] as const) {
-		for (const shot of SHOTS) {
+		for (const shot of SHOTS.filter((x) => only.length === 0 || only.includes(x.name))) {
 			const mobile = shot.viewport !== undefined;
 			const context = await browser.newContext({ viewport: shot.viewport ?? { width: 1600, height: 1000 }, deviceScaleFactor: mobile ? 1600 / 390 : 1, baseURL: base, timezoneId: "UTC" });
 			await context.addInitScript((t: string) => localStorage.setItem("theme", t), theme);
@@ -302,6 +365,13 @@ async function shoot(browser: import("@playwright/test").Browser, ids: { video: 
 			await page.goto(shot.path(ids), { waitUntil: "networkidle" });
 			await shot.prepare?.(page);
 			await page.waitForTimeout(1500);
+			if (shot.atTop) {
+				await page.evaluate(() => {
+					(document.activeElement as HTMLElement | null)?.blur();
+					for (const el of [document.scrollingElement, ...document.querySelectorAll("*")]) if (el && el.scrollTop > 0) el.scrollTop = 0;
+				});
+				await page.waitForTimeout(300);
+			}
 			await page.screenshot({ path: join(shots, `${shot.name}${theme === "light" ? "-light" : ""}.png`) });
 			await context.close();
 		}
@@ -309,7 +379,7 @@ async function shoot(browser: import("@playwright/test").Browser, ids: { video: 
 }
 
 function encode(): void {
-	for (const png of ["dashboard", "approvals", "publish-calendar", "project-trail", "text-trail", "video-editor", "home-mobile", "project-brief"].flatMap((n) => [n, `${n}-light`])) {
+	for (const png of SHOTS.map((shot) => shot.name).filter((n) => only.length === 0 || only.includes(n)).flatMap((n) => [n, `${n}-light`])) {
 		const source = join(shots, `${png}.png`);
 		for (const [suffix, width] of [["", 1600], ["-960", 960]] as const) {
 			const out = join(publicLanding, `${png}${suffix}`);
@@ -337,7 +407,7 @@ async function main(): Promise<void> {
 		}
 		if (phase === "all" || phase === "shoot") {
 			if (phase === "shoot") await startServerKeep();
-			await shoot(browser, JSON.parse(readFileSync(ids, "utf8")) as { video: string; text: string });
+			await shoot(browser, JSON.parse(readFileSync(ids, "utf8")) as Ids);
 		}
 		if (phase === "all" || phase === "encode") encode();
 	} finally {

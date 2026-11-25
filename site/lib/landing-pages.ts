@@ -28,13 +28,13 @@ export const shots = {
 	},
 	imageEditor: {
 		src: "/landing/image-editor",
-		alt: "The Stuarty image editor: a 1280 by 720 thumbnail titled \"Garden open day\", the layers panel, the inspector of the selected title layer, and the history of the image.",
+		alt: "The Stuarty image editor: a 1280 by 720 thumbnail titled \"Five filming mistakes\", the layers panel, the inspector of the selected title layer, and the history of the image.",
 		width: 1600,
 		height: 1000,
 	},
 	writing: {
 		src: "/landing/writing",
-		alt: "The Write section: a voice-over script in Markdown, with its revision and its estimated reading time.",
+		alt: "The Write section: a script in Markdown, with its revision, its estimated reading time and the path of its project.",
 		width: 1600,
 		height: 1000,
 	},
@@ -64,7 +64,7 @@ export const shots = {
 	},
 	projects: {
 		src: "/landing/projects",
-		alt: "The Projects page: your projects as cards with their kind, a text, a video, an image or not decided yet, and a New project button.",
+		alt: "The Projects page: your projects as cards with their kind, a video, an image and a text, the templates and a New project button.",
 		width: 1600,
 		height: 1000,
 	},
@@ -76,19 +76,19 @@ export const shots = {
 	},
 	visualAssets: {
 		src: "/landing/visual-assets",
-		alt: "Visual Assets: the images of the workspace with where each came from, filters by origin and tag.",
+		alt: "Visual Assets: the pictures of the workspace with where each came from, filters by origin and tag.",
 		width: 1600,
 		height: 1000,
 	},
 	videoAssets: {
 		src: "/landing/video-assets",
-		alt: "Video Assets: the footage, music and voice-overs of the workspace, ready to reuse in any project.",
+		alt: "Video Assets: the footage of the workspace with where each file came from, ready to reuse in any project.",
 		width: 1600,
 		height: 1000,
 	},
 	skills: {
 		src: "/landing/skills",
-		alt: "Skills: reviewed procedures an agent follows, such as captions for shorts, with their full text and lint.",
+		alt: "Skills: procedures an agent follows, such as captions for shorts, with their full text, offered to agents only once a person has read them.",
 		width: 1600,
 		height: 1000,
 	},
@@ -100,13 +100,13 @@ export const shots = {
 	},
 	memory: {
 		src: "/landing/memory",
-		alt: "Memory: one fact per note that your agents read before they plan, kept only after a person approves it.",
+		alt: "Memory: one fact per note that your agents read before they plan, here a note waiting for a person to keep it.",
 		width: 1600,
 		height: 1000,
 	},
 	connections: {
 		src: "/landing/connections",
-		alt: "Connections: the AI providers and social accounts Stuarty may reach, each connected with your own key.",
+		alt: "Connections: the encrypted vault and the AI providers Stuarty may reach, each connected with your own key.",
 		width: 1600,
 		height: 1000,
 	},
