@@ -69,7 +69,8 @@ async function serious(page: Page, include: string): Promise<string[]> {
 // The gallery sits before the timeline in the page, so from a click in the timeline the walk has to wrap. Chromium
 // wraps to the top of the document; headless Firefox leaves the focus on the last control instead (the wrap goes
 // through browser chrome that it does not have). When a press moves nothing, the walk restarts from the top of the
-// page, which is where a person's Tab starts after the wrap (VV-407).
+// page, which is where a person's Tab starts after the wrap (VV-407). A press that moves nothing while a tabbable
+// control still follows is a keyboard trap (WCAG 2.1.2), so the walk fails there instead of restarting.
 async function tabTo(page: Page, target: Locator): Promise<void> {
 	let last = -1;
 	for (let i = 0; i < 200; i++) {
@@ -81,6 +82,29 @@ async function tabTo(page: Page, target: Locator): Promise<void> {
 			),
 		);
 		if (now === last) {
+			const trap = await page.evaluate(() => {
+				const at = document.activeElement;
+				if (!at || at === document.body) return null;
+				const next = Array.from(
+					document.querySelectorAll<HTMLElement>(
+						"a[href], button, input, select, textarea, summary, [tabindex], [contenteditable='true']",
+					),
+				).find(
+					(el) =>
+						el.tabIndex >= 0 &&
+						!el.matches(":disabled") &&
+						!el.closest("[inert]") &&
+						el.checkVisibility({ visibilityProperty: true }) &&
+						!at.contains(el) &&
+						(at.compareDocumentPosition(el) &
+							Node.DOCUMENT_POSITION_FOLLOWING) !==
+							0,
+				);
+				return next
+					? `${at.outerHTML.slice(0, 160)} stops Tab before ${next.outerHTML.slice(0, 160)}`
+					: null;
+			});
+			if (trap) throw new Error(`keyboard trap: ${trap}`);
 			await page.evaluate(() => {
 				(document.activeElement as HTMLElement | null)?.blur();
 				document.body.tabIndex = -1;
