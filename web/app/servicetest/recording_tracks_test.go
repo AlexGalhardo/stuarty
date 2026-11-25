@@ -581,7 +581,8 @@ func TestEmptyingTheTrashRemovesThePointerFileWithTheScreenAsset(t *testing.T) {
 	}
 
 	// Trashing the asset is reversible: the pointer file stays until the trash is emptied.
-	if _, err := r.svc.MediaTrash(personCtx(), service.MediaTrashRequest{ProjectID: project, AssetID: added.AssetID}); err != nil {
+	trash := service.MediaTrashRequest{ProjectID: project, AssetID: added.AssetID}
+	if _, err := r.svc.MediaTrash(personCtx(), trash); err != nil {
 		t.Fatalf("MediaTrash: %v", err)
 	}
 
