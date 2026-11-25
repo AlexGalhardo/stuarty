@@ -241,7 +241,8 @@ func startProc(t *testing.T, ffmpeg, ffprobe string, extraEnv ...string) *procEn
 
 		select {
 		case <-done:
-			t.Fatalf("serve exited\n%s", out.String())
+			t.Fatalf("serve exited after %v: %v\n%s",
+				time.Since(began).Round(time.Millisecond), cmd.ProcessState, out.String())
 		case <-time.After(100 * time.Millisecond):
 		}
 
