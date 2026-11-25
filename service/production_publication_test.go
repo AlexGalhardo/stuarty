@@ -245,7 +245,11 @@ func TestProjectDescribeNamesTheNextPost(t *testing.T) {
 		tg := targetIn(state, "blog")
 		tg.ScheduledAt = at
 
-		return pub.Publication{ID: "pub_000000000" + string(state[:1]), ProjectID: "prj_0000000001", Targets: []pub.Target{tg}}
+		return pub.Publication{
+			ID:        "pub_000000000" + string(state[:1]),
+			ProjectID: "prj_0000000001",
+			Targets:   []pub.Target{tg},
+		}
 	}
 
 	describe := func(list ...pub.Publication) *ProjectDescribeResult {
@@ -272,7 +276,10 @@ func TestProjectDescribeNamesTheNextPost(t *testing.T) {
 		t.Errorf("next post = %v, want %v", res.NextPostAt, soon)
 	}
 
-	if res := describe(scheduled(corepub.TargetPublished, &soon), scheduled(corepub.TargetDraft, nil)); res.NextPostAt != nil {
+	if res := describe(
+		scheduled(corepub.TargetPublished, &soon),
+		scheduled(corepub.TargetDraft, nil),
+	); res.NextPostAt != nil {
 		t.Errorf("next post = %v, want none", res.NextPostAt)
 	}
 

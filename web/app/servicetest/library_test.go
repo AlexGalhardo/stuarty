@@ -743,8 +743,53 @@ func TestLibraryMemoryEntriesNameTheAgentAndTheProject(t *testing.T) {
 		t.Errorf("MemoryGet = %+v, %v", one, err)
 	}
 
-	hits, err := m.svc.LibrarySearch(libPerson(m), service.LibrarySearchRequest{Query: "learned", IncludeUnreviewed: true})
+	hits, err := m.svc.LibrarySearch(
+		libPerson(m),
+		service.LibrarySearchRequest{Query: "learned", IncludeUnreviewed: true},
+	)
 	if err != nil || len(hits.Hits) != 1 || hits.Hits[0].ProjectName != "Launch plan" {
 		t.Errorf("search = %+v, %v", hits, err)
+	}
+}
+
+// A caller who may not see the project of a note learns no name: only the id that the scope already holds
+// (SDD-018 section 18, epic 99 review).
+func TestLibraryMemoryProjectNameOnlyForWhoSeesTheProject(t *testing.T) {
+	m := newMediaEnv(t, mediaCfg{})
+
+	project := m.newProject("Launch plan")
+
+	if _, err := m.svc.MemoryWrite(libAgent(m), service.MemoryWriteRequest{
+		Name: "scoped", Description: "A note of the project", Scope: project, Body: "x",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	stranger := service.WithCaller(context.Background(), service.Caller{
+		Actor: "user:u2", OwnerUserID: "u2", Scopes: service.AllScopes, Browser: true,
+	})
+
+	res, err := m.svc.MemoryList(stranger, service.MemoryListRequest{IncludeUnreviewed: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	seen := false
+
+	for _, e := range res.Entries {
+		seen = seen || e.Scope == project
+
+		if e.ProjectName != "" {
+			t.Errorf("a caller who cannot see the project learned its name: %+v", e)
+		}
+	}
+
+	if !seen {
+		t.Fatal("the note was not listed, so the test proves nothing")
+	}
+
+	mine, err := m.svc.MemoryGet(libPerson(m), service.LibraryRef{Name: "scoped"})
+	if err != nil || mine.Entry.ProjectName != "Launch plan" {
+		t.Errorf("the owner reads %+v, %v", mine, err)
 	}
 }

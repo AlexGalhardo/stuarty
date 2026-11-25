@@ -165,7 +165,8 @@ var skillList = &spec{
 	usage:   []string{"stuarty skill:list [--origin built-in|user|imported] [--all] [--session ses_...]"},
 	example: "stuarty skill:list --all --json",
 	flags: []flagDef{
-		{Name: "origin", Kind: kindString, Usage: "built-in, user or imported"}, allFlag,
+		{Name: "origin", Kind: kindString, Usage: "built-in, user or imported"},
+		allFlag,
 		{Name: "session", Kind: kindString, Usage: "an agent session: the skills it has read are marked loaded"},
 	},
 	run: func(ctx context.Context, c *call) (*output, error) {

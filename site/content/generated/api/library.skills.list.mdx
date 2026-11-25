@@ -24,6 +24,7 @@ Send the secret in the header `Authorization: Bearer <secret>`: the local token 
 | `origin` | `string` | no | built-in, user or imported. |
 | `include_unreviewed` | `boolean` | no | Also the skills no person has reviewed. |
 | `agent_view` | `boolean` | no |  |
+| `session_id` | `string` | no | An agent session: the skills it has read come back with loaded true. |
 
 ## Responses
 
@@ -215,6 +216,7 @@ puts "#{response.code} #{response.body}"
   "entries": [
     {
       "actor": "string",
+      "actor_name": "string",
       "description": "string",
       "error": "string",
       "has_scripts": false,
@@ -222,8 +224,10 @@ puts "#{response.code} #{response.body}"
       "kind": "string",
       "lint_errors": 0,
       "lint_warnings": 0,
+      "loaded": false,
       "name": "string",
       "origin": "string",
+      "project_name": "string",
       "reviewed": false,
       "scope": "string",
       "state": "string",

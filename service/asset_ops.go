@@ -213,7 +213,10 @@ func (s *svc) AssetSetInfo(ctx context.Context, req AssetSetInfoRequest) (*Asset
 
 		entry, uerr = lib.SetInfo(
 			ctx, &h, assets.InfoPatch{
-				Description: req.Description, RightsNote: req.RightsNote, Reusable: req.Reusable, SoundKind: req.SoundKind,
+				Description: req.Description,
+				RightsNote:  req.RightsNote,
+				Reusable:    req.Reusable,
+				SoundKind:   req.SoundKind,
 			},
 			c.Actor, s.nowMs(), names,
 		)

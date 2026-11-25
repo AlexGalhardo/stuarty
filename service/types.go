@@ -51,7 +51,7 @@ type ProjectSummary struct {
 	TextSummary *TextSummary `json:"text_summary,omitempty"`
 	// CurrentStep is the step the project stands at (SDD-000 section 1, the step ids); empty when every step is
 	// done or skipped. NextPostAt is when the next post of the project goes out, null when none is planned
-	// (SDD-020 section 47).
+	// (SDD-020 section 23).
 	CurrentStep string     `json:"current_step,omitempty"`
 	NextPostAt  *time.Time `json:"next_post_at"`
 	Tracks      int        `json:"tracks"`
@@ -148,11 +148,11 @@ type ProjectGetResult struct {
 	Production ProductionState  `json:"production"`
 	Workflow   project.Workflow `json:"workflow"`
 	// TextSummary is what the text of the project is like (its kind, words and reading time); NextPostAt is when
-	// the next post goes out, null when none is planned (SDD-005 section 5.12.4, SDD-020 section 47).
+	// the next post goes out, null when none is planned (SDD-005 section 5.12.4, SDD-020 section 23).
 	TextSummary *TextSummary       `json:"text_summary,omitempty"`
 	NextPostAt  *time.Time         `json:"next_post_at"`
 	NextCursor  *string            `json:"next_cursor"`
-	Document    *timeline.Document `json:"document,omitempty"    bulk:"true"`
+	Document    *timeline.Document `json:"document,omitempty"     bulk:"true"`
 	Text        string             `json:"text,omitempty"`
 }
 

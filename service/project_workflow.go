@@ -28,7 +28,7 @@ func effectiveKind(head *ProductionHead, rows []ItemRow) string {
 func (s *svc) workflowOf(ctx context.Context, head *ProductionHead, rows []ItemRow, known bool) project.Workflow {
 	facts := workflowFacts(head, rows, known)
 	facts.Costs = s.approvalCosts(ctx, head.ID)
-	facts.Skills = s.offeredSkills()
+	facts.Skills = s.offeredSkills(ctx)
 	facts.Spent = s.settledSpend(ctx, head.ID)
 
 	return project.ComputeWorkflow(head.Kind, &facts)
@@ -48,19 +48,23 @@ func workflowFacts(head *ProductionHead, rows []ItemRow, known bool) project.Fac
 
 // offeredSkills are the names of the skills the library offers, the ones a step may name: the reviewed ones. A
 // server with no library offers none.
-func (s *svc) offeredSkills() []string {
+func (s *svc) offeredSkills(ctx context.Context) []string {
 	if s.lib == nil {
 		return nil
 	}
 
-	rows, err := s.lib.List(context.Background(), core.KindSkill, library.Filter{})
+	rows, err := s.lib.List(ctx, core.KindSkill, library.Filter{})
 	if err != nil {
 		return nil
 	}
 
 	names := make([]string, 0, len(rows))
+
 	for i := range rows {
-		names = append(names, rows[i].Name)
+		// The filter lets a skill whose file cannot be read through, reviewed or not; such a skill is not offered.
+		if rows[i].Reviewed && rows[i].State == library.StateOK {
+			names = append(names, rows[i].Name)
+		}
 	}
 
 	return names

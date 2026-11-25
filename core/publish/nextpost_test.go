@@ -22,11 +22,26 @@ func TestNextPost(t *testing.T) {
 		}, at(24)},
 		{"a past instant is not next", []Planned{{TargetScheduled, at(-1)}, {TargetScheduled, at(5)}}, at(5)},
 		{"final and draft targets are not next", []Planned{
-			{TargetPublished, at(1)}, {TargetFailed, at(1)}, {TargetMissed, at(1)}, {TargetCancelled, at(1)},
-			{TargetSentAsDraft, at(1)}, {TargetDraft, at(1)}, {TargetPublishing, at(1)},
+			{TargetPublished, at(1)},
+			{TargetFailed, at(1)},
+			{TargetMissed, at(1)},
+			{TargetCancelled, at(1)},
+			{TargetSentAsDraft, at(1)},
+			{TargetDraft, at(1)},
+			{TargetPublishing, at(1)},
 		}, nil},
 		{"no instant", []Planned{{TargetScheduled, nil}}, nil},
 		{"now itself", []Planned{{TargetScheduled, &now}}, &now},
+	}
+
+	// An instant in another zone is compared as an instant and comes back in UTC.
+	zone := time.FixedZone("BRT", -3*3600)
+	local := now.Add(2 * time.Hour).In(zone)
+	earlier := now.Add(3 * time.Hour)
+
+	got := NextPost([]Planned{{TargetScheduled, &earlier}, {TargetScheduled, &local}}, now)
+	if got == nil || !got.Equal(local) || got.Location() != time.UTC {
+		t.Errorf("a target in another zone: NextPost = %v, want %v in UTC", got, local.UTC())
 	}
 
 	for _, c := range cases {

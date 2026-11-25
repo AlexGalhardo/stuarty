@@ -53,11 +53,13 @@ Content type `application/json`. Schema: [`ProjectGetResult`](/docs/api/schemas#
 | `kind` | `string` | no |  |
 | `name` | `string` | no |  |
 | `next_cursor` | `string` or `null` | no |  |
+| `next_post_at` | `string (date-time)` or `null` | no |  |
 | `production` | [`Production`](/docs/api/schemas#production) | no |  |
 | `project_id` | `string` | no |  |
 | `revision` | `integer (int64)` | no |  |
 | `state` | `string` | no |  |
 | `text` | `string` | no |  |
+| `text_summary` | [`TextSummary`](/docs/api/schemas#textsummary) or `any` or `null` or `null` | no |  |
 | `timeline_id` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
 | `width` | `integer` | no |  |
@@ -309,6 +311,7 @@ puts "#{response.code} #{response.body}"
   "kind": "string",
   "name": "string",
   "next_cursor": "string",
+  "next_post_at": "2006-01-02T15:04:05Z",
   "production": {
     "has_brief": false,
     "has_script": false,
@@ -322,6 +325,13 @@ puts "#{response.code} #{response.body}"
   "revision": 0,
   "state": "string",
   "text": "string",
+  "text_summary": {
+    "excerpt": "string",
+    "item_id": "string",
+    "reading_minutes": 0,
+    "text_kind": "string",
+    "words": 0
+  },
   "timeline_id": "string",
   "untrusted_notice": "string",
   "width": 0,

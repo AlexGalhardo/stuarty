@@ -669,7 +669,7 @@
       "usage": [
         "stuarty media:import <path>... --project <id> [--asset-id ast_...] [--wait] [--timeout d]",
         "stuarty media:import --hash sha256:... --project <id>   (a file the library already holds: no copy)",
-        "origin and reuse: [--origin-kind k] [--origin-source s] [--provider p] [--model m] [--prompt t] [--rights-note t] [--engine e] [--engine-version v] [--render-key k] [--tag t] [--reusable] [--description t]",
+        "origin and reuse: [--origin-kind k] [--origin-source s] [--provider p] [--model m] [--prompt t] [--rights-note t] [--engine e] [--engine-version v] [--render-key k] [--tag t] [--reusable] [--description t] [--sound-kind k]",
         "formats: MP4, MOV, MKV, WebM, AVI, MP3, WAV, FLAC, OGG, PNG, JPEG, WebP, GIF and .cube; not SVG"
       ],
       "example": "stuarty media:import clip.mov --project prj_7k2m9x4q1b --json",
@@ -751,6 +751,11 @@
           "name": "description",
           "type": "string",
           "usage": "what the files are, in your words"
+        },
+        {
+          "name": "sound-kind",
+          "type": "string",
+          "usage": "music, voice or effect, for the audio files"
         }
       ],
       "globals": [
@@ -3919,6 +3924,11 @@
           "usage": "only the files marked reusable; --no-reusable keeps the others"
         },
         {
+          "name": "sound-kind",
+          "type": "string",
+          "usage": "only the audio files of this kind: music, voice or effect"
+        },
+        {
           "name": "text",
           "type": "string",
           "usage": "a full-text query over name, tags, description and origin"
@@ -3988,7 +3998,7 @@
     {
       "name": "asset:set",
       "domain": "asset",
-      "summary": "set the description, the rights note and the reuse mark of a file of the library",
+      "summary": "set the description, the rights note, the reuse mark and the sound kind of a file of the library",
       "usage": [
         "stuarty asset:set <hash>"
       ],
@@ -4008,6 +4018,11 @@
           "name": "reusable",
           "type": "boolean",
           "usage": "mark the file to be offered again; --no-reusable takes the mark off"
+        },
+        {
+          "name": "sound-kind",
+          "type": "string",
+          "usage": "music, voice or effect, for an audio file; an empty value clears it"
         }
       ],
       "globals": [
@@ -4457,7 +4472,7 @@
       "domain": "memory",
       "summary": "list the skills that are reviewed",
       "usage": [
-        "stuarty skill:list [--origin built-in|user|imported] [--all]"
+        "stuarty skill:list [--origin built-in|user|imported] [--all] [--session ses_...]"
       ],
       "example": "stuarty skill:list --all --json",
       "flags": [
@@ -4471,6 +4486,11 @@
           "type": "boolean",
           "default": "false",
           "usage": "also what is not reviewed (skills) or not kept (notes): an agent is not offered those"
+        },
+        {
+          "name": "session",
+          "type": "string",
+          "usage": "an agent session: the skills it has read are marked loaded"
         }
       ],
       "globals": [

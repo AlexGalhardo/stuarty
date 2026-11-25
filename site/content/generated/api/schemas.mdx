@@ -82,6 +82,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `description` | `string` | no |  |
 | `reusable` | `boolean` or `null` | no |  |
+| `sound_kind` | `string` | no |  |
 | `tags` | array of `string` | no |  |
 
 ### AssetListResult
@@ -91,6 +92,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `assets` | array of [`LibraryAsset`](/docs/api/schemas#libraryasset) | no |  |
 | `file_count` | `integer` | no |  |
 | `next_cursor` | `string` or `null` | no |  |
+| `tags_in_use` | array of [`TagCount`](/docs/api/schemas#tagcount) | no |  |
 | `text` | `string` | no |  |
 | `total` | `integer` | no |  |
 | `total_bytes` | `integer (int64)` | no |  |
@@ -116,6 +118,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `projects` | `integer` | no |  |
 | `reusable` | `boolean` | no |  |
 | `size_text` | `string` | no |  |
+| `sound_kind` | `string` | no |  |
 | `state` | `string` | no |  |
 | `tags` | array of `string` | no |  |
 | `text` | `string` | no |  |
@@ -1648,6 +1651,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `projects` | `integer` | no |  |
 | `reusable` | `boolean` | no |  |
 | `size_text` | `string` | no |  |
+| `sound_kind` | `string` | no |  |
 | `state` | `string` | no |  |
 | `tags` | array of `string` | no |  |
 | `uses` | array of [`Use`](/docs/api/schemas#use) | no |  |
@@ -1658,6 +1662,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `actor` | `string` | no |  |
+| `actor_name` | `string` | no |  |
 | `description` | `string` | no |  |
 | `error` | `string` | no |  |
 | `has_scripts` | `boolean` | no |  |
@@ -1665,8 +1670,10 @@ The types named in the tables of the operations. The arguments of each editing c
 | `kind` | `string` | no |  |
 | `lint_errors` | `integer` | no |  |
 | `lint_warnings` | `integer` | no |  |
+| `loaded` | `boolean` | no |  |
 | `name` | `string` | no |  |
 | `origin` | `string` | no |  |
+| `project_name` | `string` | no |  |
 | `reviewed` | `boolean` | no |  |
 | `scope` | `string` | no |  |
 | `state` | `string` | no |  |
@@ -1689,6 +1696,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `actor` | `string` | no |  |
+| `actor_name` | `string` | no |  |
 | `description` | `string` | no |  |
 | `error` | `string` | no |  |
 | `has_scripts` | `boolean` | no |  |
@@ -1696,8 +1704,10 @@ The types named in the tables of the operations. The arguments of each editing c
 | `kind` | `string` | no |  |
 | `lint_errors` | `integer` | no |  |
 | `lint_warnings` | `integer` | no |  |
+| `loaded` | `boolean` | no |  |
 | `name` | `string` | no |  |
 | `origin` | `string` | no |  |
+| `project_name` | `string` | no |  |
 | `reviewed` | `boolean` | no |  |
 | `scope` | `string` | no |  |
 | `snippet` | `string` | no |  |
@@ -2390,10 +2400,12 @@ The types named in the tables of the operations. The arguments of each editing c
 | `items` | array of [`ProjectItem`](/docs/api/schemas#projectitem) | no |  |
 | `kind` | `string` | no |  |
 | `name` | `string` | no |  |
+| `next_post_at` | `string (date-time)` or `null` | no |  |
 | `production` | [`Production`](/docs/api/schemas#production) | no |  |
 | `project_id` | `string` | no |  |
 | `state` | `string` | no |  |
 | `text` | `string` | no |  |
+| `text_summary` | [`TextSummary`](/docs/api/schemas#textsummary) or `any` or `null` or `null` | no |  |
 | `untrusted_notice` | `string` | no |  |
 | `workflow` | [`Workflow`](/docs/api/schemas#workflow) | no |  |
 
@@ -2420,11 +2432,13 @@ The types named in the tables of the operations. The arguments of each editing c
 | `kind` | `string` | no |  |
 | `name` | `string` | no |  |
 | `next_cursor` | `string` or `null` | no |  |
+| `next_post_at` | `string (date-time)` or `null` | no |  |
 | `production` | [`Production`](/docs/api/schemas#production) | no |  |
 | `project_id` | `string` | no |  |
 | `revision` | `integer (int64)` | no |  |
 | `state` | `string` | no |  |
 | `text` | `string` | no |  |
+| `text_summary` | [`TextSummary`](/docs/api/schemas#textsummary) or `any` or `null` or `null` | no |  |
 | `timeline_id` | `string` | no |  |
 | `untrusted_notice` | `string` | no |  |
 | `width` | `integer` | no |  |
@@ -2528,6 +2542,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | --- | --- | --- | --- |
 | `assets` | `integer` | no |  |
 | `complete` | `boolean` | no |  |
+| `current_step` | `string` | no |  |
 | `duration` | [`TimeValue`](/docs/api/schemas#timevalue) | no |  |
 | `fps` | `string` | no |  |
 | `height` | `integer` | no |  |
@@ -2535,6 +2550,7 @@ The types named in the tables of the operations. The arguments of each editing c
 | `items` | `integer` | no |  |
 | `kind` | `string` | no |  |
 | `name` | `string` | no |  |
+| `next_post_at` | `string (date-time)` or `null` | no |  |
 | `project_id` | `string` | no |  |
 | `revision` | `integer (int64)` | no |  |
 | `state` | `string` | no |  |
@@ -3424,6 +3440,8 @@ The types named in the tables of the operations. The arguments of each editing c
 | `cost` | array of [`Cost`](/docs/api/schemas#cost) | no |  |
 | `id` | `string` | no |  |
 | `optional` | `boolean` | no |  |
+| `skill` | `string` | no |  |
+| `spent` | array of [`Cost`](/docs/api/schemas#cost) | no |  |
 | `state` | `string` | no |  |
 | `tool` | `string` | no |  |
 
@@ -3446,6 +3464,13 @@ The types named in the tables of the operations. The arguments of each editing c
 | `frame_dirs` | `integer` | no |  |
 | `incoming_files` | `integer` | no |  |
 | `store_files` | `integer` | no |  |
+
+### TagCount
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `count` | `integer` | no |  |
+| `tag` | `string` | no |  |
 
 ### Target
 
