@@ -1,0 +1,67 @@
+{
+  "op": "recording.set_cursor",
+  "args": {
+    "item_id": "itm_zzzzzzzzzz",
+    "resolved": {
+      "width": 1920,
+      "height": 1080,
+      "events": [
+        {
+          "t_ms": 0,
+          "kind": "move",
+          "x": 10,
+          "y": 10
+        },
+        {
+          "t_ms": 500,
+          "kind": "move",
+          "x": 247,
+          "y": 142
+        },
+        {
+          "t_ms": 1000,
+          "kind": "move",
+          "x": 485,
+          "y": 275
+        },
+        {
+          "t_ms": 1500,
+          "kind": "move",
+          "x": 722,
+          "y": 407
+        },
+        {
+          "t_ms": 2000,
+          "kind": "move",
+          "x": 960,
+          "y": 540
+        },
+        {
+          "t_ms": 2500,
+          "kind": "move",
+          "x": 1197,
+          "y": 672
+        },
+        {
+          "t_ms": 3000,
+          "kind": "move",
+          "x": 1435,
+          "y": 805
+        },
+        {
+          "t_ms": 3500,
+          "kind": "move",
+          "x": 1672,
+          "y": 937
+        },
+        {
+          "t_ms": 3600,
+          "kind": "down",
+          "button": "left",
+          "x": 900,
+          "y": 500
+        }
+      ]
+    }
+  }
+}

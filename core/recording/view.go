@@ -1,5 +1,7 @@
 package recording
 
+import "math/big"
+
 // Unit is the fixed-point scale of a position inside the source: ten-thousandths of its width or height. Every
 // value that decides a keyframe is an integer, so the result is the same on every system (SDD-025 section 17).
 const Unit = 10000
@@ -79,10 +81,24 @@ func (View) axisCentre(frame int, image int64, focus int, scale int64) int64 {
 // Project is where the pixel (sx, sy) of the source is on the frame, in milli-pixels, when the item is centred on
 // (cx, cy) milli-pixels and scaled by scale (thousandths). The point is the middle of the pixel.
 func (v View) Project(sx, sy int, scale, cx, cy int64) (x, y int64) {
+	return v.ProjectMilli(int64(2*sx+1)*milli/2, int64(2*sy+1)*milli/2, scale, cx, cy)
+}
+
+// ProjectMilli is Project for a point given in milli-pixels from the top left corner of the source, so that a
+// position between two pixels (the smoothed pointer) keeps its fraction.
+func (v View) ProjectMilli(ux, uy int64, scale, cx, cy int64) (x, y int64) {
 	iw, ih := v.Image()
 
-	x = cx + (int64(2*sx+1)-int64(v.SrcW))*iw*scale/(2*int64(v.SrcW)*ScaleOne)
-	y = cy + (int64(2*sy+1)-int64(v.SrcH))*ih*scale/(2*int64(v.SrcH)*ScaleOne)
+	x = cx + mulDiv3((2*ux-int64(v.SrcW)*milli), iw, scale, 2*int64(v.SrcW)*milli*ScaleOne)
+	y = cy + mulDiv3((2*uy-int64(v.SrcH)*milli), ih, scale, 2*int64(v.SrcH)*milli*ScaleOne)
 
 	return x, y
+}
+
+// mulDiv3 is a*b*c/d, truncated toward zero, without the overflow that a very wide source could cause.
+func mulDiv3(a, b, c, d int64) int64 {
+	n := new(big.Int).Mul(big.NewInt(a), big.NewInt(b))
+	n.Mul(n, big.NewInt(c))
+
+	return n.Quo(n, big.NewInt(d)).Int64()
 }

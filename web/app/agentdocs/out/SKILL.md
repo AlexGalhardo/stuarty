@@ -42,7 +42,7 @@ Edit video by commands: CLI `stuarty` or MCP (`stuarty mcp`). `--json` for JSON.
 - `keyframe`: clear, remove, set, set_easing
 - `marker`: add, remove, set
 - `project`: rename
-- `recording`: auto_zoom
+- `recording`: auto_zoom, set_cursor
 - `settings`: reframe, set, set_fps
 - `shape`: add, set
 - `slot`: fill, mark, unmark

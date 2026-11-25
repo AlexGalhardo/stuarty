@@ -132,3 +132,61 @@ func TestAutoZoomWithoutClicksChangesNothing(t *testing.T) {
 		t.Error("a failed command changed the document")
 	}
 }
+
+// The cursor is drawn through the zoom the clip has: a click in a place the zoom centres puts the cursor at the
+// centre of the frame while the view is held on it, and the zoom did not move the picture off its geometry.
+func TestCursorLandsWhereTheZoomLooks(t *testing.T) {
+	clicks := pointer(move(0, 700, 400), move(3500, 700, 400), down(4000, 700, 400), move(4100, 700, 400),
+		move(9000, 700, 400))
+
+	zoomed, err := Default().Apply(takeDoc().d, op2("recording.auto_zoom", cmdArgs(itemA, clicks)), Env{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res, err := Default().Apply(zoomed.Doc, op2("recording.set_cursor",
+		cmdArgs(itemA, `"smoothing_ms": 0`, `"keyframe_ms": 100`, clicks)), Env{NewIDs: (&seqIDs{}).next})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Frame 126 is 4.2 s: the zoom is held there (the full level from 3.6 s to 5.2 s).
+	held := 126
+
+	for _, it := range res.Doc.Items {
+		if it.Type != timeline.ItemShape || it.Name != "Cursor "+itemA {
+			continue
+		}
+
+		if held < it.Start || held >= it.Start+it.Duration {
+			continue
+		}
+
+		x := timeline.ValueAt(it.Keyframes["x"], held-it.Start, 0)
+		y := timeline.ValueAt(it.Keyframes["y"], held-it.Start, 0)
+		// The focus is the click, at 700.5 of 1920 and 400.5 of 1080: with the picture held against nothing, the
+		// view is centred on it, so the cursor is at the middle of the frame.
+		if x < 955 || x > 965 || y < 535 || y > 545 {
+			t.Errorf("the cursor is at %v, %v while the zoom is held on it", x, y)
+		}
+
+		return
+	}
+
+	t.Fatal("no cursor item covers the frame")
+}
+
+func TestCursorHiddenRemovesTheItems(t *testing.T) {
+	doc := withCursor(takeDoc()).d
+
+	res, err := Default().Apply(doc, op2("recording.set_cursor", cmdArgs(itemA, `"visible": false`)), Env{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for id, it := range res.Doc.Items {
+		if it.Type == timeline.ItemShape {
+			t.Errorf("%s is still there", id)
+		}
+	}
+}

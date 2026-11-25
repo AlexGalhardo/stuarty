@@ -1,0 +1,560 @@
+[
+  {
+    "kind": "track.added",
+    "id": "trk_n3w7r4ck21",
+    "object": {
+      "id": "trk_n3w7r4ck21",
+      "kind": "visual",
+      "name": "Cursor",
+      "order": "a0i"
+    }
+  },
+  {
+    "kind": "item.added",
+    "id": "itm_cr00000001",
+    "object": {
+      "contrast": 1,
+      "duration": 150,
+      "fill": "#FFFFFF",
+      "filter": "none",
+      "filter_amount": 1,
+      "fit": "cover",
+      "height": 27,
+      "id": "itm_cr00000001",
+      "keyframes": {
+        "x": [
+          {
+            "easing": "linear",
+            "t": 0,
+            "value": 10.5
+          },
+          {
+            "easing": "linear",
+            "t": 3,
+            "value": -160.45
+          },
+          {
+            "easing": "linear",
+            "t": 6,
+            "value": -331.4
+          },
+          {
+            "easing": "linear",
+            "t": 9,
+            "value": -502.35
+          },
+          {
+            "easing": "linear",
+            "t": 12,
+            "value": -673.3
+          },
+          {
+            "easing": "linear",
+            "t": 15,
+            "value": -822.032
+          },
+          {
+            "easing": "linear",
+            "t": 18,
+            "value": -822.452
+          },
+          {
+            "easing": "linear",
+            "t": 21,
+            "value": -887.154
+          },
+          {
+            "easing": "linear",
+            "t": 24,
+            "value": -988.206
+          },
+          {
+            "easing": "linear",
+            "t": 27,
+            "value": -1109.702
+          },
+          {
+            "easing": "linear",
+            "t": 30,
+            "value": -1212.894
+          },
+          {
+            "easing": "linear",
+            "t": 33,
+            "value": -992.3
+          },
+          {
+            "easing": "linear",
+            "t": 36,
+            "value": -876.608
+          },
+          {
+            "easing": "linear",
+            "t": 39,
+            "value": -815.934
+          },
+          {
+            "easing": "linear",
+            "t": 42,
+            "value": -784.112
+          },
+          {
+            "easing": "linear",
+            "t": 45,
+            "value": -737.798
+          },
+          {
+            "easing": "linear",
+            "t": 48,
+            "value": -517.726
+          },
+          {
+            "easing": "linear",
+            "t": 51,
+            "value": -402.306
+          },
+          {
+            "easing": "linear",
+            "t": 54,
+            "value": -341.772
+          },
+          {
+            "easing": "linear",
+            "t": 57,
+            "value": -310.026
+          },
+          {
+            "easing": "linear",
+            "t": 60,
+            "value": -263.628
+          },
+          {
+            "easing": "linear",
+            "t": 63,
+            "value": -42.686
+          },
+          {
+            "easing": "linear",
+            "t": 66,
+            "value": 73.192
+          },
+          {
+            "easing": "linear",
+            "t": 69,
+            "value": 133.964
+          },
+          {
+            "easing": "linear",
+            "t": 72,
+            "value": 165.838
+          },
+          {
+            "easing": "linear",
+            "t": 75,
+            "value": 212.174
+          },
+          {
+            "easing": "linear",
+            "t": 78,
+            "value": 432.258
+          },
+          {
+            "easing": "linear",
+            "t": 81,
+            "value": 547.682
+          },
+          {
+            "easing": "linear",
+            "t": 84,
+            "value": 608.22
+          },
+          {
+            "easing": "linear",
+            "t": 87,
+            "value": 639.97
+          },
+          {
+            "easing": "linear",
+            "t": 90,
+            "value": 686.37
+          },
+          {
+            "easing": "linear",
+            "t": 93,
+            "value": 907.312
+          },
+          {
+            "easing": "linear",
+            "t": 96,
+            "value": 1023.19
+          },
+          {
+            "easing": "linear",
+            "t": 99,
+            "value": 1083.962
+          },
+          {
+            "easing": "linear",
+            "t": 102,
+            "value": 1115.836
+          },
+          {
+            "easing": "linear",
+            "t": 105,
+            "value": 1162.174
+          },
+          {
+            "easing": "linear",
+            "t": 108,
+            "value": 1285.76
+          },
+          {
+            "easing": "linear",
+            "t": 111,
+            "value": 712.858
+          },
+          {
+            "easing": "linear",
+            "t": 114,
+            "value": 412.392
+          },
+          {
+            "easing": "linear",
+            "t": 117,
+            "value": 254.81
+          },
+          {
+            "easing": "linear",
+            "t": 120,
+            "value": 172.166
+          },
+          {
+            "easing": "linear",
+            "t": 123,
+            "value": 128.82
+          },
+          {
+            "easing": "linear",
+            "t": 126,
+            "value": 106.086
+          },
+          {
+            "easing": "linear",
+            "t": 129,
+            "value": 94.164
+          },
+          {
+            "easing": "linear",
+            "t": 132,
+            "value": 87.91
+          },
+          {
+            "easing": "linear",
+            "t": 135,
+            "value": 84.632
+          },
+          {
+            "easing": "linear",
+            "t": 138,
+            "value": 82.914
+          },
+          {
+            "easing": "linear",
+            "t": 141,
+            "value": 82.012
+          },
+          {
+            "easing": "linear",
+            "t": 144,
+            "value": 81.538
+          },
+          {
+            "easing": "linear",
+            "t": 147,
+            "value": 81.29
+          },
+          {
+            "easing": "linear",
+            "t": 150,
+            "value": 81.158
+          }
+        ],
+        "y": [
+          {
+            "easing": "linear",
+            "t": 0,
+            "value": 10.5
+          },
+          {
+            "easing": "linear",
+            "t": 3,
+            "value": -86.45
+          },
+          {
+            "easing": "linear",
+            "t": 6,
+            "value": -183.4
+          },
+          {
+            "easing": "linear",
+            "t": 9,
+            "value": -280.35
+          },
+          {
+            "easing": "linear",
+            "t": 12,
+            "value": -377.3
+          },
+          {
+            "easing": "linear",
+            "t": 15,
+            "value": -461.875
+          },
+          {
+            "easing": "linear",
+            "t": 18,
+            "value": -463.848
+          },
+          {
+            "easing": "linear",
+            "t": 21,
+            "value": -501.624
+          },
+          {
+            "easing": "linear",
+            "t": 24,
+            "value": -559.646
+          },
+          {
+            "easing": "linear",
+            "t": 27,
+            "value": -629.053
+          },
+          {
+            "easing": "linear",
+            "t": 30,
+            "value": -688.212
+          },
+          {
+            "easing": "linear",
+            "t": 33,
+            "value": -564.954
+          },
+          {
+            "easing": "linear",
+            "t": 36,
+            "value": -500.31
+          },
+          {
+            "easing": "linear",
+            "t": 39,
+            "value": -466.408
+          },
+          {
+            "easing": "linear",
+            "t": 42,
+            "value": -448.626
+          },
+          {
+            "easing": "linear",
+            "t": 45,
+            "value": -422.798
+          },
+          {
+            "easing": "linear",
+            "t": 48,
+            "value": -300.212
+          },
+          {
+            "easing": "linear",
+            "t": 51,
+            "value": -235.92
+          },
+          {
+            "easing": "linear",
+            "t": 54,
+            "value": -202.202
+          },
+          {
+            "easing": "linear",
+            "t": 57,
+            "value": -184.518
+          },
+          {
+            "easing": "linear",
+            "t": 60,
+            "value": -158.62
+          },
+          {
+            "easing": "linear",
+            "t": 63,
+            "value": -35.166
+          },
+          {
+            "easing": "linear",
+            "t": 66,
+            "value": 29.58
+          },
+          {
+            "easing": "linear",
+            "t": 69,
+            "value": 63.536
+          },
+          {
+            "easing": "linear",
+            "t": 72,
+            "value": 81.346
+          },
+          {
+            "easing": "linear",
+            "t": 75,
+            "value": 107.184
+          },
+          {
+            "easing": "linear",
+            "t": 78,
+            "value": 229.778
+          },
+          {
+            "easing": "linear",
+            "t": 81,
+            "value": 294.074
+          },
+          {
+            "easing": "linear",
+            "t": 84,
+            "value": 327.794
+          },
+          {
+            "easing": "linear",
+            "t": 87,
+            "value": 345.48
+          },
+          {
+            "easing": "linear",
+            "t": 90,
+            "value": 371.38
+          },
+          {
+            "easing": "linear",
+            "t": 93,
+            "value": 494.834
+          },
+          {
+            "easing": "linear",
+            "t": 96,
+            "value": 559.58
+          },
+          {
+            "easing": "linear",
+            "t": 99,
+            "value": 593.536
+          },
+          {
+            "easing": "linear",
+            "t": 102,
+            "value": 611.346
+          },
+          {
+            "easing": "linear",
+            "t": 105,
+            "value": 637.184
+          },
+          {
+            "easing": "linear",
+            "t": 108,
+            "value": 705.154
+          },
+          {
+            "easing": "linear",
+            "t": 111,
+            "value": 379.82
+          },
+          {
+            "easing": "linear",
+            "t": 114,
+            "value": 209.192
+          },
+          {
+            "easing": "linear",
+            "t": 117,
+            "value": 119.706
+          },
+          {
+            "easing": "linear",
+            "t": 120,
+            "value": 72.776
+          },
+          {
+            "easing": "linear",
+            "t": 123,
+            "value": 48.162
+          },
+          {
+            "easing": "linear",
+            "t": 126,
+            "value": 35.254
+          },
+          {
+            "easing": "linear",
+            "t": 129,
+            "value": 28.482
+          },
+          {
+            "easing": "linear",
+            "t": 132,
+            "value": 24.932
+          },
+          {
+            "easing": "linear",
+            "t": 135,
+            "value": 23.068
+          },
+          {
+            "easing": "linear",
+            "t": 138,
+            "value": 22.092
+          },
+          {
+            "easing": "linear",
+            "t": 141,
+            "value": 21.578
+          },
+          {
+            "easing": "linear",
+            "t": 144,
+            "value": 21.31
+          },
+          {
+            "easing": "linear",
+            "t": 147,
+            "value": 21.17
+          },
+          {
+            "easing": "linear",
+            "t": 150,
+            "value": 21.096
+          }
+        ]
+      },
+      "name": "Cursor itm_m1n2p3q4r5",
+      "opacity": 1,
+      "saturation": 1,
+      "scale": 1,
+      "shape": "ellipse",
+      "speed": {
+        "den": 1,
+        "num": 1
+      },
+      "start": 0,
+      "stroke_color": "#1F1F1F",
+      "stroke_width": 2,
+      "track": "trk_n3w7r4ck21",
+      "type": "shape",
+      "volume": 1,
+      "width": 27,
+      "x": 10.5,
+      "y": 10.5
+    }
+  }
+]

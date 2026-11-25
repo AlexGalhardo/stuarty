@@ -1,0 +1,12 @@
+[
+  {
+    "type": "remove",
+    "collection": "tracks",
+    "id": "trk_n3w7r4ck21"
+  },
+  {
+    "type": "remove",
+    "collection": "items",
+    "id": "itm_cr00000001"
+  }
+]

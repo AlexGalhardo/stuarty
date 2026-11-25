@@ -1,0 +1,18 @@
+[
+  {
+    "type": "put",
+    "collection": "items",
+    "id": "itm_cr0000000a",
+    "object": {
+      "duration": 60,
+      "height": 20,
+      "id": "itm_cr0000000a",
+      "name": "Cursor itm_m1n2p3q4r5",
+      "shape": "ellipse",
+      "start": 0,
+      "track": "trk_cr00000001",
+      "type": "shape",
+      "width": 20
+    }
+  }
+]

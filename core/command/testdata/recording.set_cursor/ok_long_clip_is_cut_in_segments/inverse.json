@@ -1,0 +1,42 @@
+[
+  {
+    "type": "remove",
+    "collection": "tracks",
+    "id": "trk_n3w7r4ck21"
+  },
+  {
+    "type": "remove",
+    "collection": "items",
+    "id": "itm_cr00000001"
+  },
+  {
+    "type": "remove",
+    "collection": "items",
+    "id": "itm_cr00000002"
+  },
+  {
+    "type": "remove",
+    "collection": "items",
+    "id": "itm_cr00000003"
+  },
+  {
+    "type": "remove",
+    "collection": "items",
+    "id": "itm_cr00000004"
+  },
+  {
+    "type": "remove",
+    "collection": "items",
+    "id": "itm_cr00000005"
+  },
+  {
+    "type": "remove",
+    "collection": "items",
+    "id": "itm_cr00000006"
+  },
+  {
+    "type": "remove",
+    "collection": "items",
+    "id": "itm_cr00000007"
+  }
+]

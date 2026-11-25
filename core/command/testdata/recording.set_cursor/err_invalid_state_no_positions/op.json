@@ -1,0 +1,11 @@
+{
+  "op": "recording.set_cursor",
+  "args": {
+    "item_id": "itm_m1n2p3q4r5",
+    "resolved": {
+      "width": 1920,
+      "height": 1080,
+      "events": []
+    }
+  }
+}

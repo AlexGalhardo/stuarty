@@ -110,7 +110,7 @@ func applyAutoZoom(c *Context, a *autoZoomArgs) error {
 
 	restX, restY := centre(t.it.X, t.it.Y)
 	restScale := int64(math.Round(t.it.Scale * 1000))
-	zoomedScale := restScale * int64(opts.Level) / recording.ScaleOne
+	zoomedScale := min(restScale*int64(opts.Level)/recording.ScaleOne, maxScale*recording.ScaleOne)
 
 	type state struct{ scale, x, y int64 }
 

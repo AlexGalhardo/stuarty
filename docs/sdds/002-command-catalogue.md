@@ -3,7 +3,7 @@
 - Amended (2026-11-18) for Stuarty: this is the catalogue of the video domain. Other domains get their own catalogue (ADR-0031, ADR-0038).
 - Amended (2026-11-24, epic 65): three commands, `recording.auto_zoom`, `recording.set_cursor` and `recording.set_click_highlight` (C.93 to C.95); names in SDD-000 section 18, the design in SDD-025 section 17.
 - Amended (2026-11-24, epic 71): four commands, `caption.apply_style` and `caption.list_styles` (C.88, C.89), `clip.blur_region` (C.90) and `audio.apply_voice_preset` (C.91); names in SDD-000 section 17.
-- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 93 commands have golden cases and pass the registry-wide gates. The binary exposes all 93 commands, 92 of them public (epic 32 added three, C.84 to C.86, epic 69 one, C.87, epic 71 four, C.88 to C.91, epic 70 one, C.92, and epic 65 one so far, C.93); `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
+- Status: Draft for freeze (2026-11-14). Parts A and B are the contract; Part C details each command. Part C is frozen: all 94 commands have golden cases and pass the registry-wide gates. The binary exposes all 94 commands, 93 of them public (epic 32 added three, C.84 to C.86, epic 69 one, C.87, epic 71 four, C.88 to C.91, epic 70 one, C.92, and epic 65 two so far, C.93 and C.94); `font.add` and `font.remove` have scope `media` like `asset.add` and `asset.remove`.
 - Depends on: SDD-001 (document), ADR-0002 (command core), ADR-0004 (time), ADR-0006 (log, concurrency, undo), ADR-0014 (JSON Schema)
 - Implements: RF-010 to RF-016, RF-020 to RF-026, RF-030 to RF-036, RF-040, RF-041, RF-050, RF-051, RF-100, RF-105, RF-107, RF-112 to RF-115, RF-119, NFR-001, NFR-025
 - Owner area: senior-a (command core and schema)
@@ -7179,3 +7179,53 @@ Zooms a screen take in on its clicks (epic 65, SDD-025 section 17). The planner 
 - `err_invalid_state_no_clicks`
 - `err_invalid_state_reversed_clip`
 - `err_invalid_state_cropped_clip`
+
+### C.94 `recording.set_cursor`
+
+Draws the pointer of a screen take, smoothed, as shape items (epic 65, SDD-025 sections 17.3 and 17.5).
+
+**Arguments**
+
+| Name | Type | Required | Default | Rule |
+| --- | --- | --- | --- | --- |
+| `item_id` | item id | yes | none | as C.93 |
+| `visible` | boolean | no | true | false removes the cursor items of the clip and needs no `resolved` |
+| `style` | `"dot"`, `"ring"` | no | `"dot"` | a filled ellipse with a dark outline, or a hollow ring |
+| `size` | number | no | one fortieth of the frame height, at least 16 | 8 to 128 pixels |
+| `color` | colour | no | `#FFFFFF` | hex or `"$name"` |
+| `smoothing_ms` | integer | no | 150 | 0 to 2000; 0 follows the raw path |
+| `keyframe_ms` | integer | no | 100 | 50 to 1000 |
+| `resolved` | `{"width", "height", "events"}` | filled by the service (A.9) | none | the pointer events (positions and button edges) in the source range of the clip, thinned; required when `visible` is not false |
+
+**Preconditions.** As C.93 preconditions 1 to 3, and the events hold at least one position in the range the clip plays (`E_INVALID_STATE`). The overlay items fit: fewer than 500 items in all (`E_LIMIT`).
+
+**Postconditions.**
+
+1. The items named `Cursor <item id>` of the clip are removed, and the track `Cursor` is the nearest unlocked visual track of that name above the clip that is free for the range, or a new one directly above the track of the clip (above the nearest `Click highlight` track when there is one).
+2. With `visible` false nothing else happens (`effective.segments` is 0).
+3. Otherwise the smoothed path (SDD-025 section 17.5) is sampled every `keyframe_ms` from the start of the clip to its end and mapped, with the `x`, `y` and `scale` the clip has at each sample (keyframes or static values), to the frame: the position of the centre of the ellipse. The path is cut into shape items of at most 90 keyframes each, one after the other, each with `x` and `y` keyframes at its item frames, linear. The items are ellipses of `size` by `size`, `fill` `color` (a `ring` has the fill `#00000000` and the stroke `color`), stroke `#1F1F1F` of width `max(1, round(size/12))` for a `dot`, and `max(2, round(size/8))` for a `ring`. `effective` has `segments`, `keyframes`, `track_id` and `size`.
+
+**
+
+**Inverse.** The removal of the items, and the return of the removed ones. **Idempotency.** The same result with the same `resolved`, options and clip.
+
+**Example.**
+
+```json
+{"op": "recording.set_cursor", "args": {"item_id": "itm_m1n2p3q4r5", "style": "ring", "smoothing_ms": 200}}
+```
+
+**Golden cases.**
+
+- `ok_follows_the_pointer`
+- `ok_ring_style_and_size`
+- `ok_follows_the_zoom`
+- `ok_long_clip_is_cut_in_segments`
+- `ok_replaces_the_previous_cursor`
+- `ok_hidden_removes_the_cursor`
+- `err_validation_resolved_missing`
+- `err_validation_option_out_of_range`
+- `err_not_found`
+- `err_type_mismatch_not_a_clip`
+- `err_invalid_state_no_positions`
+- `err_limit_items`
