@@ -2,7 +2,7 @@ import { renderToString } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 
 import NotificationBell, { CenterBody } from "./NotificationBell";
-import type { Notification } from "./notifications";
+import type { FailedPublicationNotice, Notification } from "./notifications";
 import { Frame, fakeInbox, inboxRow } from "./testSupport";
 
 const permission = inboxRow({
@@ -27,6 +27,7 @@ const approval = inboxRow({
 function body(
 	items: Notification[],
 	over: {
+		failed?: FailedPublicationNotice[];
 		privileged?: boolean;
 		projectName?: (id: string) => string | null;
 		connectionName?: (id: string) => string | null;
@@ -37,6 +38,7 @@ function body(
 		<Frame privileged={privileged}>
 			<CenterBody
 				items={items}
+				failed={over.failed}
 				projectName={over.projectName}
 				connectionName={over.connectionName}
 				failure={null}
@@ -207,5 +209,48 @@ describe("CenterBody", () => {
 			/<button[^>]*disabled[^>]*data-testid="notification-allow"/,
 		);
 		expect(html).toContain('id="why"');
+	});
+
+	test("shows recent history alongside pending items, including answered timestamps, zero cost as Free, and failed publications", () => {
+		const html = body(
+			[
+				permission,
+				{
+					...approval,
+					id: "approval:apr_done",
+					state: "approved",
+					cost: { micros: 0, currency: "USD" },
+					answered_at: "2026-11-24T14:30:00Z",
+				},
+			],
+			{
+				connectionName: (id) => (id === "con_blog" ? "Blog da Marina" : null),
+				failed: [
+					{
+						id: "publication:tgt_fail",
+						publication_id: "pub_fail",
+						target_id: "tgt_fail",
+						title: "Post <script>bad</script>",
+						connection_id: "con_blog",
+						network: "blog_wordpress",
+						message: "Error 502 from host",
+						hint: "Retry when the site is back.",
+						updated_at: "2026-11-24T15:00:00Z",
+					},
+				],
+			},
+		);
+		expect(html).toContain('data-testid="notification-waiting"');
+		expect(html).toContain('data-testid="notification-history"');
+		expect(html).toContain('data-testid="notification-answered"');
+		expect(html).toMatch(/data-testid="notification-cost"[^>]*>Free</);
+		expect(html).toContain('data-state="failed"');
+		expect(html).toContain('data-kind="publication"');
+		expect(html).toContain("Blog da Marina");
+		expect(html).toContain("Error 502 from host");
+		expect(html).toContain("Retry when the site is back.");
+		expect(html).toContain('data-testid="notification-open-publish"');
+		expect(html).not.toContain("<script>");
+		expect(html).not.toContain("con_blog");
 	});
 });

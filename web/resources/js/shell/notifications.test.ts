@@ -1,6 +1,12 @@
 import { describe, expect, test } from "vitest";
 
-import { parseInbox, waitingChatRequest, waitingCount } from "./notifications";
+import {
+	failedPublicationNotices,
+	parseInbox,
+	splitNotifications,
+	waitingChatRequest,
+	waitingCount,
+} from "./notifications";
 import { inboxRow } from "./testSupport";
 
 const waiting = inboxRow();
@@ -51,5 +57,83 @@ describe("waitingChatRequest", () => {
 			null,
 		);
 		expect(waitingChatRequest(null, "cht_aaaaaaaaaa")).toBeNull();
+	});
+});
+
+describe("splitNotifications and failedPublicationNotices", () => {
+	test("splits waiting items from settled history", () => {
+		const groups = splitNotifications([waiting, approval, answered]);
+		expect(groups.waiting).toEqual([waiting, approval]);
+		expect(groups.history).toEqual([answered]);
+	});
+
+	test("maps only failed publication targets newest first", () => {
+		const notices = failedPublicationNotices([
+			{
+				id: "pub_1",
+				project_id: "prj_1",
+				title: "Launch post",
+				export: "",
+				post: "pit_1",
+				created_at: "2026-11-20T10:00:00Z",
+				updated_at: "2026-11-20T12:00:00Z",
+				targets: [
+					{
+						id: "tgt_ok",
+						publication_id: "pub_1",
+						connection_id: "con_1",
+						network: "blog_wordpress",
+						fields: {},
+						state: "published",
+						scheduled_at: "2026-11-20T11:00:00Z",
+						zone: "UTC",
+						late_window_minutes: 0,
+						attempts: 1,
+						updated_at: "2026-11-20T11:01:00Z",
+					},
+					{
+						id: "tgt_old",
+						publication_id: "pub_1",
+						connection_id: "con_2",
+						network: "youtube",
+						fields: {},
+						state: "failed",
+						scheduled_at: "2026-11-19T11:00:00Z",
+						zone: "UTC",
+						late_window_minutes: 0,
+						attempts: 1,
+						error: {
+							code: "E_PUBLISH",
+							message: "Quota reached",
+							hint: "Try tomorrow",
+							retryable: false,
+						},
+						updated_at: "2026-11-19T11:05:00Z",
+					},
+					{
+						id: "tgt_new",
+						publication_id: "pub_1",
+						connection_id: "con_3",
+						network: "blog_wordpress",
+						fields: { title: "Override title" },
+						state: "failed",
+						scheduled_at: "2026-11-20T11:00:00Z",
+						zone: "UTC",
+						late_window_minutes: 0,
+						attempts: 1,
+						error: {
+							code: "E_PUBLISH",
+							message: "HTTP 502",
+							retryable: true,
+						},
+						updated_at: "2026-11-20T12:05:00Z",
+					},
+				],
+			},
+		]);
+		expect(notices.map((n) => n.target_id)).toEqual(["tgt_new", "tgt_old"]);
+		expect(notices[0]?.title).toBe("Override title");
+		expect(notices[0]?.message).toBe("HTTP 502");
+		expect(notices[1]?.hint).toBe("Try tomorrow");
 	});
 });

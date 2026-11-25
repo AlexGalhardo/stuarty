@@ -20,8 +20,11 @@
       },
       "summary": {
         "done": "{count} feitas",
-        "waiting": "{count} esperando você"
+        "waiting": "{count} esperando você",
+        "estimated_cost": "Custo previsto: {amount}"
       },
+      "free": "Grátis",
+      "next_post": "Publicação prevista: {date}",
       "not_reported": "Não informado",
       "optional": "Opcional",
       "who": "Quem",
@@ -311,10 +314,11 @@
         "empty": "Nada espera por você.",
         "group": {
           "waiting": "Esperando por você",
-          "history": "Respondidos"
+          "history": "Histórico recente"
         },
         "open_chat": "Abrir a conversa",
         "review": "Revisar em Aprovações",
+        "open_publish": "Abrir Publicação",
         "item": "Com o quê",
         "where": "Onde",
         "cost": "Custo",
@@ -324,6 +328,8 @@
         "undo_no": "Não pode ser desfeito",
         "undo_not_verified": "Não verificado",
         "asked": "Pedido em",
+        "answered": "Respondido em",
+        "updated": "Atualizado em",
         "agent_reported": "O que e onde são como o agente descreveu a chamada; o Stuarty não consegue conferir.",
         "state": {
           "waiting": "Esperando você",
@@ -332,11 +338,13 @@
           "approved": "Aprovado",
           "rejected": "Rejeitado",
           "expired": "Expirado",
-          "cancelled": "Cancelado"
+          "cancelled": "Cancelado",
+          "failed": "Falhou"
         },
         "kind": {
           "permission": "Permissão do agente",
-          "approval": "Aprovação"
+          "approval": "Aprovação",
+          "publication": "Publicação"
         }
       },
       "drawer": {
@@ -4261,10 +4269,53 @@
       "draft_note": "Enviado como rascunho, não publicado: abra a notificação no app da rede, escreva a legenda e publique por lá.",
       "draft_warning": "O {name} recebe só o vídeo como rascunho: este título, texto e tags não são enviados, e você termina e publica no app do {name}.",
       "price": "Um post custa {post}, e {link} quando o texto tem um link (preço de {date}). A aprovação mostra o preço deste post antes de você dizer sim.",
+      "details": "Detalhes",
+      "detail": {
+        "title": "Detalhes da publicação",
+        "destination": "Destino",
+        "status": "Estado",
+        "scheduled": "Agendado para",
+        "published_at": "Publicado em",
+        "result": "Resultado",
+        "edit": "Editar publicação",
+        "open_post": "Abrir o post",
+        "close": "Fechar detalhes",
+        "no_result": "Sem resultado ainda",
+        "result_waiting": "Espera você",
+        "result_queued": "Na fila",
+        "result_needs_time": "Falta o horário",
+        "result_published_at": "Publicado às {time}"
+      },
+      "published_state": {
+        "title": "Seu post foi publicado",
+        "body_with_place": "“{title}” saiu em {destination} às {time}. Para corrigir, edite e envie de novo: o mesmo post é atualizado.",
+        "body_plain": "“{title}” foi publicado. Para corrigir, edite e envie de novo: o mesmo post é atualizado.",
+        "open_post": "Abrir o post",
+        "trail_title": "Trilha concluída",
+        "optional_title": "Se quiser",
+        "optional_body": "Quer levar este texto para um vídeo? Use como roteiro em um novo vídeo do mesmo projeto.",
+        "add_video": "Adicionar um vídeo"
+      },
       "editor": {
         "new": "Nova publicação",
         "edit": "Publicação",
+        "where_post_goes": "Para onde vai este post?",
+        "post_intro": "Um texto não precisa de vídeo nem de imagem para ser publicado.",
         "intro": "O título e a legenda valem para todas as contas; cada conta pode ter os seus. Nada é enviado antes de você aprovar em Aprovações.",
+        "text_destinations": "Destinos de texto",
+        "video_destinations": "Destinos de vídeo",
+        "available_count": "{count} disponíveis",
+        "require_video": "Precisam de vídeo",
+        "for_text": "Somente para texto",
+        "unavailable": "Indisponíveis",
+        "chosen": "Escolhido",
+        "available": "Disponível",
+        "requires_video": "Exige vídeo",
+        "add_video_unlocks": "Se você adicionar um vídeo a este projeto, estes destinos ficam disponíveis.",
+        "when": "Quando",
+        "cost": "Custo",
+        "free": "Grátis",
+        "approval_note": "Nada é enviado antes do seu sim na Aprovação.",
         "caption": "Legenda",
         "targets": "Contas",
         "no_targets": "Nenhuma conta ainda. Adicione uma para planejar para onde isto vai.",

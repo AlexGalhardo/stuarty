@@ -2,6 +2,7 @@ import { Link } from "@inertiajs/react";
 import {
 	Ban,
 	Bell,
+	CircleAlert,
 	CircleCheck,
 	CircleSlash,
 	Clock,
@@ -29,7 +30,14 @@ import { formatMoney } from "../dashboard/approval/money";
 import { createClient } from "../editor/api/client";
 import { HttpTransport } from "../editor/api/http";
 import type { InboxUndo } from "../editor/api/types";
-import { type Notification, waitingCount } from "./notifications";
+import { createPublishApi } from "../pages/Publish/api";
+import {
+	type FailedPublicationNotice,
+	failedPublicationNotices,
+	type Notification,
+	splitNotifications,
+	waitingCount,
+} from "./notifications";
 import { useShell } from "./ShellContext";
 
 // How a row says its state: a word and an icon, never colour alone. A permission of the chat is "allowed" or
@@ -198,7 +206,9 @@ function Row({
 				<Fact label={t("ui.shell.notify.cost")} testId="notification-cost">
 					{item.cost === null
 						? t("ui.shell.notify.no_cost")
-						: formatMoney(item.cost, locale)}
+						: item.cost.micros === 0
+							? t("ui.workflow.free")
+							: formatMoney(item.cost, locale)}
 				</Fact>
 				<Fact label={t("ui.shell.notify.undo")} testId="notification-undo">
 					{t(UNDO_KEY[item.undo] ?? UNDO_KEY.not_verified)}
@@ -220,6 +230,14 @@ function Row({
 				<Fact label={t("ui.shell.notify.asked")} testId="notification-asked">
 					{formatDateTime(item.created_at, locale)}
 				</Fact>
+				{item.answered_at !== null && (
+					<Fact
+						label={t("ui.shell.notify.answered")}
+						testId="notification-answered"
+					>
+						{formatDateTime(item.answered_at, locale)}
+					</Fact>
+				)}
 			</dl>
 			{chat && item.action_key !== "" && (
 				<p className="text-xs text-muted-foreground">
@@ -275,10 +293,92 @@ function Row({
 	);
 }
 
-// What the center holds under its title: the failure of the read, the rows or the empty state, and the
-// reason a session that is not a person's cannot answer.
+// One failed publication in the recent history of the center: shows the server's title, destination name,
+// failure message and link to Publishing. No raw connection id ever reaches the screen.
+function FailedRow({
+	item,
+	place,
+	onNavigate,
+}: {
+	item: FailedPublicationNotice;
+	place: string;
+	onNavigate(): void;
+}): ReactNode {
+	const t = useT();
+	const locale = useLocale();
+	return (
+		<li
+			data-testid="notification"
+			data-kind="publication"
+			data-state="failed"
+			className="flex flex-col gap-2 rounded-lg border border-danger bg-surface p-3"
+		>
+			<p className="flex items-center gap-1.5 text-xs font-medium text-danger-text">
+				<CircleAlert aria-hidden="true" className="size-4 shrink-0" />
+				{t("ui.shell.notify.state.failed")}
+				<span className="text-muted-foreground">
+					· {t("ui.shell.notify.kind.publication")}
+				</span>
+			</p>
+			<div className="min-w-0">
+				<p
+					data-testid="notification-what"
+					className="text-sm font-medium break-words"
+				>
+					<UntrustedText>{item.title}</UntrustedText>
+				</p>
+				{item.message !== "" && (
+					<p
+						data-testid="notification-error"
+						className="mt-1 text-xs text-danger-text break-words"
+					>
+						<UntrustedText>{item.message}</UntrustedText>
+						{item.hint !== "" && (
+							<>
+								{" "}
+								<span className="text-muted-foreground">
+									<UntrustedText>{item.hint}</UntrustedText>
+								</span>
+							</>
+						)}
+					</p>
+				)}
+			</div>
+			<dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+				<Fact
+					label={t("ui.shell.notify.where")}
+					testId="notification-destination"
+				>
+					{place === "" ? (
+						t("ui.shell.scene.not_reported")
+					) : (
+						<UntrustedText>{place}</UntrustedText>
+					)}
+				</Fact>
+				<Fact
+					label={t("ui.shell.notify.updated")}
+					testId="notification-updated"
+				>
+					{formatDateTime(item.updated_at, locale)}
+				</Fact>
+			</dl>
+			<Link
+				href="/publish"
+				onClick={onNavigate}
+				data-testid="notification-open-publish"
+				className="w-fit rounded text-xs font-medium text-accent-text underline underline-offset-2"
+			>
+				{t("ui.shell.notify.open_publish")}
+			</Link>
+		</li>
+	);
+}
+
+// What the center holds under its title: the failure of the read, the pending rows, the recent history
+// (answered inbox rows and failed publications), or the empty state, and the reason a non-person cannot answer.
 export function CenterBody({
 	items,
+	failed = [],
 	projectName = () => null,
 	connectionName = () => null,
 	failure,
@@ -290,6 +390,8 @@ export function CenterBody({
 	onNavigate,
 }: {
 	items: readonly Notification[];
+	// recent failed publication targets from GET /publications?state=failed
+	failed?: readonly FailedPublicationNotice[];
 	// the name of a project by its id (untrusted text); null when the list does not hold it
 	projectName?(id: string): string | null;
 	// the label of a connection by its id; null when the list does not hold it
@@ -303,10 +405,13 @@ export function CenterBody({
 	onNavigate(): void;
 }): ReactNode {
 	const t = useT();
+	const { waiting, history } = splitNotifications(items);
+	const hasHistory = history.length > 0 || failed.length > 0;
+	const empty = waiting.length === 0 && !hasHistory;
 	return (
 		<>
 			<FailureNote failure={failure} />
-			{items.length === 0 ? (
+			{empty ? (
 				<p
 					data-testid="notification-empty"
 					className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground"
@@ -314,52 +419,103 @@ export function CenterBody({
 					{t("ui.shell.notify.empty")}
 				</p>
 			) : (
-				[
-					{
-						key: "waiting",
-						rows: items.filter((r) => r.state === "waiting"),
-					},
-					{
-						key: "history",
-						rows: items.filter((r) => r.state !== "waiting"),
-					},
-				].map(
-					(group) =>
-						group.rows.length > 0 && (
-							<section
-								key={group.key}
-								aria-label={t(`ui.shell.notify.group.${group.key}`)}
-								className="flex flex-col gap-2"
-							>
-								<h3 className="text-xs font-semibold uppercase tracking-wide text-text-subtle">
-									{t(`ui.shell.notify.group.${group.key}`)}
-								</h3>
-								<ul className="flex flex-col gap-2">
-									{group.rows.map((item) => (
-										<Row
-											key={item.id}
-											item={item}
-											project={projectName(item.project_id)}
-											place={placeOf(
-												item.destination,
-												connectionName,
-												() => null,
-											)}
-											busy={busyId !== null}
-											disabledBy={privileged ? undefined : personOnlyId}
-											onAnswer={onAnswer}
-											onOpenChat={onOpenChat}
-											onNavigate={onNavigate}
-										/>
-									))}
-								</ul>
-							</section>
-						),
-				)
+				<>
+					{waiting.length > 0 && (
+						<section
+							aria-label={t("ui.shell.notify.group.waiting")}
+							data-testid="notification-waiting"
+							className="flex flex-col gap-2"
+						>
+							<h3 className="text-xs font-semibold uppercase tracking-wide text-text-subtle">
+								{t("ui.shell.notify.group.waiting")}
+							</h3>
+							<ul className="flex flex-col gap-2">
+								{waiting.map((item) => (
+									<Row
+										key={item.id}
+										item={item}
+										project={projectName(item.project_id)}
+										place={placeOf(
+											item.destination,
+											connectionName,
+											() => null,
+										)}
+										busy={busyId !== null}
+										disabledBy={privileged ? undefined : personOnlyId}
+										onAnswer={onAnswer}
+										onOpenChat={onOpenChat}
+										onNavigate={onNavigate}
+									/>
+								))}
+							</ul>
+						</section>
+					)}
+					{hasHistory && (
+						<section
+							aria-label={t("ui.shell.notify.group.history")}
+							data-testid="notification-history"
+							className="flex flex-col gap-2"
+						>
+							<h3 className="text-xs font-semibold uppercase tracking-wide text-text-subtle">
+								{t("ui.shell.notify.group.history")}
+							</h3>
+							<ul className="flex flex-col gap-2">
+								{failed.map((item) => (
+									<FailedRow
+										key={item.id}
+										item={item}
+										place={
+											connectionName(item.connection_id) ??
+											(item.network.startsWith("con_") ? "" : item.network)
+										}
+										onNavigate={onNavigate}
+									/>
+								))}
+								{history.map((item) => (
+									<Row
+										key={item.id}
+										item={item}
+										project={projectName(item.project_id)}
+										place={placeOf(
+											item.destination,
+											connectionName,
+											() => null,
+										)}
+										busy={busyId !== null}
+										disabledBy={privileged ? undefined : personOnlyId}
+										onAnswer={onAnswer}
+										onOpenChat={onOpenChat}
+										onNavigate={onNavigate}
+									/>
+								))}
+							</ul>
+						</section>
+					)}
+				</>
 			)}
 			{waitingCount(items) > 0 && <PersonOnlyNote id={personOnlyId} />}
 		</>
 	);
+}
+
+// Recent failed publications read when the center opens, so a failed post appears in the history alongside
+// answered permissions and approvals. A read that fails leaves the list empty and never blocks approvals.
+function useFailedPublications(enabled: boolean): FailedPublicationNotice[] {
+	const [failed, setFailed] = useState<FailedPublicationNotice[]>([]);
+	useEffect(() => {
+		if (!enabled) return;
+		let alive = true;
+		createPublishApi(new HttpTransport("/api/v1"))
+			.list({ state: "failed", limit: 10 })
+			.then((res) => {
+				if (alive) setFailed(failedPublicationNotices(res.publications));
+			})
+			.catch(() => undefined);
+		return () => {
+			alive = false;
+		};
+	}, [enabled]);
+	return failed;
 }
 
 // The labels of the connections by id, read when the center opens, so an approval says "Blog da Marina" and
@@ -395,7 +551,10 @@ export default function NotificationBell(): ReactNode {
 	const [open, setOpen] = useState(false);
 	const items = inbox.rows ?? [];
 	const waiting = waitingCount(items);
-	const connections = useConnectionLabels(open && items.length > 0);
+	const failed = useFailedPublications(open);
+	const connections = useConnectionLabels(
+		open && (items.length > 0 || failed.length > 0),
+	);
 
 	return (
 		<>
@@ -450,6 +609,7 @@ export default function NotificationBell(): ReactNode {
 					</SheetHeader>
 					<CenterBody
 						items={items}
+						failed={failed}
 						projectName={(id) =>
 							chat.projects.find((p) => p.id === id)?.name ?? null
 						}
