@@ -30,6 +30,7 @@ Send the secret in the header `Authorization: Bearer <secret>`: the local token 
 | `origin` | `string` | no | imported, generated, fetched_by_agent or rendered_externally. |
 | `reusable` | `string` | no | true keeps the files marked reusable, false the others. |
 | `text` | `string` | no | A full-text query over name, tags, description and origin; at most 8 words. |
+| `sound_kind` | `string` | no | music, voice or effect: keep the audio files of that sound kind. |
 
 ## Responses
 
@@ -42,6 +43,7 @@ Content type `application/json`. Schema: [`AssetListResult`](/docs/api/schemas#a
 | `assets` | array of [`LibraryAsset`](/docs/api/schemas#libraryasset) | no |  |
 | `file_count` | `integer` | no |  |
 | `next_cursor` | `string` or `null` | no |  |
+| `tags_in_use` | array of [`TagCount`](/docs/api/schemas#tagcount) | no |  |
 | `text` | `string` | no |  |
 | `total` | `integer` | no |  |
 | `total_bytes` | `integer (int64)` | no |  |
@@ -238,6 +240,7 @@ puts "#{response.code} #{response.body}"
       "projects": 0,
       "reusable": false,
       "size_text": "string",
+      "sound_kind": "string",
       "state": "string",
       "tags": [],
       "uses": [],
@@ -246,6 +249,12 @@ puts "#{response.code} #{response.body}"
   ],
   "file_count": 0,
   "next_cursor": "string",
+  "tags_in_use": [
+    {
+      "count": 0,
+      "tag": "string"
+    }
+  ],
   "text": "string",
   "total": 0,
   "total_bytes": 0,

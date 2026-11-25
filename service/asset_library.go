@@ -326,10 +326,10 @@ func (s *svc) AssetList(ctx context.Context, req AssetListRequest) (*AssetListRe
 	return res, nil
 }
 
-// assetListTextCap is the budget of the text of a list, in characters (SDD-003 section 3.10).
 // maxTagsInText bounds the tags in use that the text of a list names; the structured result holds them all.
 const maxTagsInText = 30
 
+// assetListTextCap is the budget of the text of a list, in characters (SDD-003 section 3.10).
 const assetListTextCap = textview.CapMediaList
 
 func assetListText(list []LibraryAsset, total int, sizeText string, unsized int, inUse []asset.TagCount) string {

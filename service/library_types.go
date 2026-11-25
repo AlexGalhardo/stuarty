@@ -10,7 +10,7 @@ import "time"
 type LibraryEntry struct {
 	Kind        string `json:"kind"` // memory, skill or prompt
 	Name        string `json:"name"`
-	Description string `json:"description"             untrusted:"true"`
+	Description string `json:"description"      untrusted:"true"`
 	Scope       string `json:"scope,omitempty"`  // memory: workspace or a project id
 	Origin      string `json:"origin,omitempty"` // skills: built-in, user or imported
 	Reviewed    bool   `json:"reviewed"`         // skills: a person read it as it is now

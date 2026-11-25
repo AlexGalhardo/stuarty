@@ -429,7 +429,7 @@ Import media files into a project
 ```text
 stuarty media:import <path>... --project <id> [--asset-id ast_...] [--wait] [--timeout d]
 stuarty media:import --hash sha256:... --project <id>   (a file the library already holds: no copy)
-origin and reuse: [--origin-kind k] [--origin-source s] [--provider p] [--model m] [--prompt t] [--rights-note t] [--engine e] [--engine-version v] [--render-key k] [--tag t] [--reusable] [--description t]
+origin and reuse: [--origin-kind k] [--origin-source s] [--provider p] [--model m] [--prompt t] [--rights-note t] [--engine e] [--engine-version v] [--render-key k] [--tag t] [--reusable] [--description t] [--sound-kind k]
 formats: MP4, MOV, MKV, WebM, AVI, MP3, WAV, FLAC, OGG, PNG, JPEG, WebP, GIF and .cube; not SVG
 ```
 
@@ -450,6 +450,7 @@ formats: MP4, MOV, MKV, WebM, AVI, MP3, WAV, FLAC, OGG, PNG, JPEG, WebP, GIF and
 | `--tag` | string, repeatable |  | a tag for the files; repeat it or give a comma list |
 | `--reusable` | boolean |  | mark the files to be offered again |
 | `--description` | string |  | what the files are, in your words |
+| `--sound-kind` | string |  | music, voice or effect, for the audio files |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`, `--project`, `--wait`, `--timeout`.
 
@@ -2647,6 +2648,7 @@ stuarty asset:list
 | `--project` | string |  | only the files this project, or one of its timelines, uses |
 | `--origin` | string |  | imported, generated, fetched_by_agent or rendered_externally |
 | `--reusable` | boolean |  | only the files marked reusable; --no-reusable keeps the others |
+| `--sound-kind` | string |  | only the audio files of this kind: music, voice or effect |
 | `--text` | string |  | a full-text query over name, tags, description and origin |
 | `--cursor` | string |  | continue a list from this cursor |
 | `--limit` | integer | `50` | items per page |
@@ -2698,7 +2700,7 @@ stuarty asset:uses sha256:3b4c0a1d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c
 
 ## `asset:set`
 
-Set the description, the rights note and the reuse mark of a file of the library
+Set the description, the rights note, the reuse mark and the sound kind of a file of the library
 
 ```text
 stuarty asset:set <hash>
@@ -2709,6 +2711,7 @@ stuarty asset:set <hash>
 | `--description` | string |  | what the file is, in your words; an empty value clears it |
 | `--rights-note` | string |  | your own record of the licence or the permission; the product does not check it |
 | `--reusable` | boolean |  | mark the file to be offered again; --no-reusable takes the mark off |
+| `--sound-kind` | string |  | music, voice or effect, for an audio file; an empty value clears it |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 
@@ -3068,13 +3071,14 @@ stuarty memory:remove old-note
 List the skills that are reviewed
 
 ```text
-stuarty skill:list [--origin built-in|user|imported] [--all]
+stuarty skill:list [--origin built-in|user|imported] [--all] [--session ses_...]
 ```
 
 | Flag | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `--origin` | string |  | built-in, user or imported |
 | `--all` | boolean | `false` | also what is not reviewed (skills) or not kept (notes): an agent is not offered those |
+| `--session` | string |  | an agent session: the skills it has read are marked loaded |
 
 Global flags: `--json`, `--workspace`, `--actor`, `--key-file`.
 

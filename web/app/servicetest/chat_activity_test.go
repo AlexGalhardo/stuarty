@@ -413,11 +413,26 @@ func TestSkillListMarksTheSkillsASessionLoaded(t *testing.T) {
 		t.Errorf("no session marks nothing, got %v", got)
 	}
 
-	if got := loaded(w.tokenCtx(t, s.ID, project), service.SkillListRequest{AgentView: true}); !got["captions"] || got["hooks"] {
+	if got := loaded(
+		w.tokenCtx(t, s.ID, project),
+		service.SkillListRequest{AgentView: true},
+	); !got["captions"] ||
+		got["hooks"] {
 		t.Errorf("an agent's own session = %v", got)
 	}
 
 	if _, err := w.svc.SkillList(person(), service.SkillListRequest{SessionID: "ses_0000000000"}); err == nil {
 		t.Error("a session that does not exist must be refused")
+	}
+
+	// A user who may not see the project of the session cannot learn what it read: the same answer as a session
+	// that does not exist (epic 99 review).
+	stranger := service.WithCaller(context.Background(), service.Caller{
+		Actor: "user:u2", OwnerUserID: "u2", Scopes: service.AllScopes, Browser: true,
+	})
+
+	_, err := w.svc.SkillList(stranger, service.SkillListRequest{SessionID: s.ID})
+	if code(err) != "E_CHAT_NOT_FOUND" {
+		t.Errorf("a session of a project the caller cannot see = %v, want E_CHAT_NOT_FOUND", err)
 	}
 }

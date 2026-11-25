@@ -162,11 +162,27 @@ func base(h *Held, row Row) LibraryAsset {
 	}
 
 	return LibraryAsset{
-		SoundKind: soundKindOf(h.MediaKind, row.SoundKind), Poster: poster, SizeText: asset.FormatSize(h.Bytes), State: state,
-		Hash: h.Hash, Name: h.Name, Kind: h.MediaKind, Bytes: h.Bytes, Width: h.Width, Height: h.Height,
-		DurationMS: h.DurationMS, Origin: row.Origin, Description: row.Description, Reusable: row.Reusable,
-		Tags: tags, CreatedBy: row.CreatedBy, CreatedAt: stamp(row.CreatedMs),
-		Projects: len(asset.Uses(h.Holdings)),
+		SoundKind: soundKindOf(
+			h.MediaKind,
+			row.SoundKind,
+		),
+		Poster:      poster,
+		SizeText:    asset.FormatSize(h.Bytes),
+		State:       state,
+		Hash:        h.Hash,
+		Name:        h.Name,
+		Kind:        h.MediaKind,
+		Bytes:       h.Bytes,
+		Width:       h.Width,
+		Height:      h.Height,
+		DurationMS:  h.DurationMS,
+		Origin:      row.Origin,
+		Description: row.Description,
+		Reusable:    row.Reusable,
+		Tags:        tags,
+		CreatedBy:   row.CreatedBy,
+		CreatedAt:   stamp(row.CreatedMs),
+		Projects:    len(asset.Uses(h.Holdings)),
 	}
 }
 

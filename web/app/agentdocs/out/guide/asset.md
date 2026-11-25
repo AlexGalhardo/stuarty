@@ -19,7 +19,7 @@ CLI: `stuarty asset` lists the commands of the domain and `stuarty asset <verb>`
 - `asset:list`: list the files of the library, with origin, tags and reuse
 - `asset:show`: show a file of the library: its origin, its tags and the projects that use it
 - `asset:uses`: list the projects that use a file of the library
-- `asset:set`: set the description, the rights note and the reuse mark of a file of the library
+- `asset:set`: set the description, the rights note, the reuse mark and the sound kind of a file of the library
 - `asset:tag`: add and remove the tags of a file of the library
 - `asset:rename`: rename a file of the library; the stored file keeps its hash
 - `asset:path`: the stored path of a file: only a person in the app can read it, the CLI always refuses

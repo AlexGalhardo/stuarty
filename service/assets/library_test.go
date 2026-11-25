@@ -606,7 +606,12 @@ func TestListCountsTheTagsInUseByTheOtherFilters(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	want := []asset.TagCount{{Tag: "logo", Count: 2}, {Tag: "brand", Count: 1}, {Tag: "funny", Count: 1}, {Tag: "sound", Count: 1}}
+	want := []asset.TagCount{
+		{Tag: "logo", Count: 2},
+		{Tag: "brand", Count: 1},
+		{Tag: "funny", Count: 1},
+		{Tag: "sound", Count: 1},
+	}
 	if !slices.Equal(all.TagsInUse, want) {
 		t.Fatalf("tags in use = %v, want %v", all.TagsInUse, want)
 	}
@@ -689,7 +694,16 @@ func TestRecordImportSoundKindExplicitReplacesAndDefaultOnlyFills(t *testing.T) 
 	ctx := context.Background()
 	origin := asset.Origin{Kind: asset.Imported}
 
-	if err := assets.RecordImport(ctx, st, "", "sha256:new", origin, assets.ImportInfo{DefaultSoundKind: "voice"}, "a", 1); err != nil {
+	if err := assets.RecordImport(
+		ctx,
+		st,
+		"",
+		"sha256:new",
+		origin,
+		assets.ImportInfo{DefaultSoundKind: "voice"},
+		"a",
+		1,
+	); err != nil {
 		t.Fatal(err)
 	}
 
@@ -697,7 +711,16 @@ func TestRecordImportSoundKindExplicitReplacesAndDefaultOnlyFills(t *testing.T) 
 		t.Fatalf("a default fills an empty kind: %q", got)
 	}
 
-	if err := assets.RecordImport(ctx, st, "", "sha256:new", origin, assets.ImportInfo{SoundKind: "music"}, "a", 2); err != nil {
+	if err := assets.RecordImport(
+		ctx,
+		st,
+		"",
+		"sha256:new",
+		origin,
+		assets.ImportInfo{SoundKind: "music"},
+		"a",
+		2,
+	); err != nil {
 		t.Fatal(err)
 	}
 
@@ -705,7 +728,16 @@ func TestRecordImportSoundKindExplicitReplacesAndDefaultOnlyFills(t *testing.T) 
 		t.Fatalf("an explicit kind replaces: %q", got)
 	}
 
-	if err := assets.RecordImport(ctx, st, "", "sha256:new", origin, assets.ImportInfo{DefaultSoundKind: "voice"}, "a", 3); err != nil {
+	if err := assets.RecordImport(
+		ctx,
+		st,
+		"",
+		"sha256:new",
+		origin,
+		assets.ImportInfo{DefaultSoundKind: "voice"},
+		"a",
+		3,
+	); err != nil {
 		t.Fatal(err)
 	}
 

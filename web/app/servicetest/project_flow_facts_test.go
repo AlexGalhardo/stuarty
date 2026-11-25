@@ -34,8 +34,10 @@ func TestProjectFlowFactsComeWithTheProject(t *testing.T) {
 		kind, state string
 		micros      int64
 	}{
-		{"text.generate", "settled", 12_000}, {"text.generate", "settled", 3_000},
-		{"image.generate", "settled", 70_000}, {"text.generate", "reserved", 500_000},
+		{"text.generate", "settled", 12_000},
+		{"text.generate", "settled", 3_000},
+		{"image.generate", "settled", 70_000},
+		{"text.generate", "reserved", 500_000},
 	} {
 		if _, err := w.store.DB().ExecContext(t.Context(), `INSERT INTO cost_ledger (id, request_id, job_id,
  connection_id, project_id, kind, currency, estimate_micros, actual_micros, state, day, created_ms, settled_ms)
@@ -69,7 +71,8 @@ func TestProjectFlowFactsComeWithTheProject(t *testing.T) {
 		}
 
 		script := step(wf, project.StepScript)
-		if script.Skill != "short-script" || !slices.Equal(script.Spent, []project.Cost{{Micros: 15_000, Currency: "USD"}}) {
+		if script.Skill != "short-script" ||
+			!slices.Equal(script.Spent, []project.Cost{{Micros: 15_000, Currency: "USD"}}) {
 			t.Errorf("%s: script step = %+v", name, script)
 		}
 
@@ -79,7 +82,11 @@ func TestProjectFlowFactsComeWithTheProject(t *testing.T) {
 
 		editing := step(wf, project.StepEditing)
 		if editing.Skill != "" || !slices.Equal(editing.Spent, []project.Cost{{Micros: 70_000, Currency: "USD"}}) {
-			t.Errorf("%s: editing step = %+v (a skill the library lacks is not named; a reservation is not spent)", name, editing)
+			t.Errorf(
+				"%s: editing step = %+v (a skill the library lacks is not named; a reservation is not spent)",
+				name,
+				editing,
+			)
 		}
 	}
 
@@ -112,7 +119,13 @@ func TestProjectFlowFactsComeWithTheProject(t *testing.T) {
 		t.Fatalf("ProjectList = %+v, %v", list, err)
 	}
 
-	if p := list.Projects[0]; p.CurrentStep == "" || p.CurrentStep != string(got.Workflow.Current) || p.NextPostAt != nil {
-		t.Errorf("list: current step %q (project says %q), next post %v", p.CurrentStep, got.Workflow.Current, p.NextPostAt)
+	if p := list.Projects[0]; p.CurrentStep == "" || p.CurrentStep != string(got.Workflow.Current) ||
+		p.NextPostAt != nil {
+		t.Errorf(
+			"list: current step %q (project says %q), next post %v",
+			p.CurrentStep,
+			got.Workflow.Current,
+			p.NextPostAt,
+		)
 	}
 }

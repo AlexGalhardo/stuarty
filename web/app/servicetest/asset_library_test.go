@@ -199,7 +199,8 @@ func TestAssetLibrarySetInfoTagAndSearch(t *testing.T) {
 	}
 
 	inUse, err := m.svc.AssetList(ctx, service.AssetListRequest{})
-	if err != nil || !slices.Equal(inUse.TagsInUse, []asset.TagCount{{Tag: "b-roll", Count: 1}, {Tag: "nature", Count: 1}}) {
+	if err != nil ||
+		!slices.Equal(inUse.TagsInUse, []asset.TagCount{{Tag: "b-roll", Count: 1}, {Tag: "nature", Count: 1}}) {
 		t.Fatalf("tags in use = %+v, %v", inUse.TagsInUse, err)
 	}
 

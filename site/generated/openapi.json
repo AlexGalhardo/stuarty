@@ -228,6 +228,9 @@
               "null"
             ]
           },
+          "sound_kind": {
+            "type": "string"
+          },
           "tags": {
             "items": {
               "type": "string"
@@ -336,6 +339,9 @@
             "type": "boolean"
           },
           "size_text": {
+            "type": "string"
+          },
+          "sound_kind": {
             "type": "string"
           },
           "state": {
@@ -4588,6 +4594,9 @@
           "size_text": {
             "type": "string"
           },
+          "sound_kind": {
+            "type": "string"
+          },
           "state": {
             "type": "string"
           },
@@ -4614,6 +4623,9 @@
           "actor": {
             "type": "string"
           },
+          "actor_name": {
+            "type": "string"
+          },
           "description": {
             "type": "string",
             "x-untrusted": true
@@ -4637,11 +4649,18 @@
           "lint_warnings": {
             "type": "integer"
           },
+          "loaded": {
+            "type": "boolean"
+          },
           "name": {
             "type": "string"
           },
           "origin": {
             "type": "string"
+          },
+          "project_name": {
+            "type": "string",
+            "x-untrusted": true
           },
           "reviewed": {
             "type": "boolean"
@@ -4694,6 +4713,9 @@
           "actor": {
             "type": "string"
           },
+          "actor_name": {
+            "type": "string"
+          },
           "description": {
             "type": "string"
           },
@@ -4715,10 +4737,16 @@
           "lint_warnings": {
             "type": "integer"
           },
+          "loaded": {
+            "type": "boolean"
+          },
           "name": {
             "type": "string"
           },
           "origin": {
+            "type": "string"
+          },
+          "project_name": {
             "type": "string"
           },
           "reviewed": {
@@ -6911,6 +6939,13 @@
             "type": "string",
             "x-untrusted": true
           },
+          "next_post_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "production": {
             "$ref": "#/components/schemas/Production"
           },
@@ -6922,6 +6957,16 @@
           },
           "text": {
             "type": "string"
+          },
+          "text_summary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TextSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "untrusted_notice": {
             "type": "string"
@@ -7000,6 +7045,13 @@
               "null"
             ]
           },
+          "next_post_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "production": {
             "$ref": "#/components/schemas/Production"
           },
@@ -7015,6 +7067,16 @@
           },
           "text": {
             "type": "string"
+          },
+          "text_summary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TextSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "timeline_id": {
             "type": "string"
@@ -7274,6 +7336,9 @@
           "complete": {
             "type": "boolean"
           },
+          "current_step": {
+            "type": "string"
+          },
           "duration": {
             "$ref": "#/components/schemas/TimeValue"
           },
@@ -7295,6 +7360,13 @@
           "name": {
             "type": "string",
             "x-untrusted": true
+          },
+          "next_post_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "project_id": {
             "type": "string"
@@ -9394,6 +9466,15 @@
           },
           "optional": {
             "type": "boolean"
+          },
+          "skill": {
+            "type": "string"
+          },
+          "spent": {
+            "items": {
+              "$ref": "#/components/schemas/Cost"
+            },
+            "type": "array"
           },
           "state": {
             "type": "string"
@@ -17705,6 +17786,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "music, voice or effect: keep the audio files of that sound kind.",
+            "in": "query",
+            "name": "sound_kind",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -17829,6 +17918,13 @@
                   },
                   "rights_note": {
                     "description": "Your own record of the licence or the permission; the product does not check it.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "sound_kind": {
+                    "description": "music, voice or effect, for an audio file; an empty value clears it.",
                     "type": [
                       "string",
                       "null"
@@ -23114,6 +23210,14 @@
             "schema": {
               "type": "boolean"
             }
+          },
+          {
+            "description": "An agent session: the skills it has read come back with loaded true.",
+            "in": "query",
+            "name": "session_id",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -26805,7 +26909,7 @@
                         "type": "null"
                       }
                     ],
-                    "description": "Tags, the reuse mark and a description for the files of the call."
+                    "description": "Tags, the reuse mark, a description and the sound kind (music, voice or effect) for the files of the call."
                   },
                   "origin": {
                     "anyOf": [

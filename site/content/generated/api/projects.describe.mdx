@@ -43,10 +43,12 @@ Content type `application/json`. Schema: [`ProjectDescribeResult`](/docs/api/sch
 | `items` | array of [`ProjectItem`](/docs/api/schemas#projectitem) | no |  |
 | `kind` | `string` | no |  |
 | `name` | `string` | no |  |
+| `next_post_at` | `string (date-time)` or `null` | no |  |
 | `production` | [`Production`](/docs/api/schemas#production) | no |  |
 | `project_id` | `string` | no |  |
 | `state` | `string` | no |  |
 | `text` | `string` | no |  |
+| `text_summary` | [`TextSummary`](/docs/api/schemas#textsummary) or `any` or `null` or `null` | no |  |
 | `untrusted_notice` | `string` | no |  |
 | `workflow` | [`Workflow`](/docs/api/schemas#workflow) | no |  |
 
@@ -259,6 +261,7 @@ puts "#{response.code} #{response.body}"
   ],
   "kind": "string",
   "name": "string",
+  "next_post_at": "2006-01-02T15:04:05Z",
   "production": {
     "has_brief": false,
     "has_script": false,
@@ -271,6 +274,13 @@ puts "#{response.code} #{response.body}"
   "project_id": "string",
   "state": "string",
   "text": "string",
+  "text_summary": {
+    "excerpt": "string",
+    "item_id": "string",
+    "reading_minutes": 0,
+    "text_kind": "string",
+    "words": 0
+  },
   "untrusted_notice": "string",
   "workflow": {
     "current": "string",
