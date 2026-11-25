@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from "vitest";
 
 import { drawForTest } from "../../workflow/drawForTest";
-import BrandKitPage, { logoLabel } from "./BrandKit";
+import BrandKitPage, { kitBody, logoLabel } from "./BrandKit";
 
 vi.mock("@inertiajs/react", () => ({ Head: () => null }));
 
@@ -41,5 +41,17 @@ describe("the brand kit page on the shared components", () => {
 		const html = drawForTest(<BrandKitPage />, "pt-BR");
 		expect(html).toMatch(/<h1[^>]*>Kit de marca<\/h1>/);
 		expect(html).not.toContain("ui.brand");
+	});
+});
+
+describe("the body that saves the kit (VV-434)", () => {
+	test("an emptied kit sends an explicit empty member, which the service accepts as a clear", () => {
+		expect(kitBody(" ", [], {})).toEqual({ colors: {} });
+	});
+
+	test("leaves out what the page does not hold and trims what it does", () => {
+		expect(
+			kitBody("", [{ name: " brand_red ", value: " #FF0000 " }], {}),
+		).toEqual({ colors: { brand_red: "#FF0000" } });
 	});
 });
