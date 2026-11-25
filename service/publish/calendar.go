@@ -68,7 +68,7 @@ func quietDayAt(ctx context.Context, s Store, owner string, at time.Time) (strin
 	return "", nil
 }
 
-// checkQuiet is the rule of a quiet day (SDD-020 section 30A.1, T-164): a target whose time falls on a day marked as
+// checkQuiet is the rule of a quiet day (SDD-020 section 30A.1, T-180): a target whose time falls on a day marked as
 // quiet is not asked for approval by a caller that is not a person, and a person must confirm. It runs inside the
 // transaction of the change, so a mark made a moment ago is seen.
 func (m *Manager) checkQuiet(ctx context.Context, tx Tx, p *Publication, t *Target) error {
