@@ -17,7 +17,7 @@ var reframeSizes = map[string][2]int{
 func init() {
 	Register(Define(Spec{
 		Name:    "settings.reframe",
-		Summary: "Re-targets the project to another aspect ratio and refits the items to the new frame.",
+		Summary: "Changes the project aspect ratio and refits the items.",
 		Description: "Sets the frame size from an aspect preset (16:9 is 1920x1080, 9:16 is 1080x1920, 1:1 is 1080x1080, " +
 			"4:5 is 1080x1350) or from width and height. Like settings.set, the explicit x and y of the items and their " +
 			"keyframes follow the size. Beyond that, text and shape items, and clips with fit none, are scaled by the " +

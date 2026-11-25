@@ -59,7 +59,7 @@ Each member of `operations` is `{ op, args }`. Every operation has its own page 
 
 | Operation | Summary | Scope |
 | --- | --- | --- |
-| [`animation.apply_preset`](/docs/mcp/tools/edit/animation.apply_preset) | Animates the start or end of a visual item with a preset: fade, slide, scale, pop, push in or pull out. | `edit` |
+| [`animation.apply_preset`](/docs/mcp/tools/edit/animation.apply_preset) | Animates the start or end of a visual item with a motion preset. | `edit` |
 | [`animation.list_presets`](/docs/mcp/tools/edit/animation.list_presets) | Describes the animation presets and the named Bezier curves. | `edit` |
 | [`asset.remove`](/docs/mcp/tools/edit/asset.remove) | Removes an asset that no item uses. | `media` |
 | [`audio.add`](/docs/mcp/tools/edit/audio.add) | Places an audio asset, or the audio of a video asset, on an audio track. | `edit` |
@@ -92,7 +92,7 @@ Each member of `operations` is `{ op, args }`. Every operation has its own page 
 | [`clip.set_blend`](/docs/mcp/tools/edit/clip.set_blend) | Sets how a visual item is mixed with what is below it. | `edit` |
 | [`clip.set_blur`](/docs/mcp/tools/edit/clip.set_blur) | Sets the blur radius of a visual item. | `edit` |
 | [`clip.set_chroma_key`](/docs/mcp/tools/edit/clip.set_chroma_key) | Keys out one colour of a clip, such as a green screen. | `edit` |
-| [`clip.set_color`](/docs/mcp/tools/edit/clip.set_color) | Grades a clip: brightness, contrast, saturation, temperature, tint, hue, LUT, HSL, wheels, curves. | `edit` |
+| [`clip.set_color`](/docs/mcp/tools/edit/clip.set_color) | Grades a clip: basic colour, LUT, HSL, wheels and curves. | `edit` |
 | [`clip.set_effects`](/docs/mcp/tools/edit/clip.set_effects) | Sets the effects of a clip: motion blur, glow, vignette, grain, RGB split and shake. | `edit` |
 | [`clip.set_filter`](/docs/mcp/tools/edit/clip.set_filter) | Sets the colour filter of a visual item and how much of it is mixed in. | `edit` |
 | [`clip.set_flip`](/docs/mcp/tools/edit/clip.set_flip) | Mirrors a visual item horizontally, vertically or both. | `edit` |
@@ -100,16 +100,16 @@ Each member of `operations` is `{ op, args }`. Every operation has its own page 
 | [`clip.set_mask`](/docs/mcp/tools/edit/clip.set_mask) | Limits where a visual item is drawn to a rectangle or an ellipse. | `edit` |
 | [`clip.set_outline`](/docs/mcp/tools/edit/clip.set_outline) | Gives a clip an outline that follows its visible shape. | `edit` |
 | [`clip.set_shadow`](/docs/mcp/tools/edit/clip.set_shadow) | Gives a clip a drop shadow that follows its visible shape. | `edit` |
-| [`clip.set_speed`](/docs/mcp/tools/edit/clip.set_speed) | Changes the speed of a clip or audio item, constant or along a curve, or plays it backwards. | `edit` |
-| [`composition.create_from_selection`](/docs/mcp/tools/edit/composition.create_from_selection) | Moves the selected items into a new timeline and puts one composition clip in their place. | `edit` |
+| [`clip.set_speed`](/docs/mcp/tools/edit/clip.set_speed) | Changes the speed of a clip or audio item, constant or on a curve, or reverses it. | `edit` |
+| [`composition.create_from_selection`](/docs/mcp/tools/edit/composition.create_from_selection) | Moves the selected items into a new timeline, leaving one composition clip. | `edit` |
 | [`composition.expand`](/docs/mcp/tools/edit/composition.expand) | Puts a composition's items back on this timeline in its place. | `edit` |
 | [`font.add`](/docs/mcp/tools/edit/font.add) | Adds a user font family to the project, or more weights to one it already has. | `media` |
 | [`font.remove`](/docs/mcp/tools/edit/font.remove) | Removes a user font family from the project. | `media` |
-| [`item.crossfade`](/docs/mcp/tools/edit/item.crossfade) | Sets a matching fade-out and fade-in on two overlapping visual items of different tracks. | `edit` |
+| [`item.crossfade`](/docs/mcp/tools/edit/item.crossfade) | Sets a matching fade-out and fade-in on two overlapping visual items. | `edit` |
 | [`item.delete`](/docs/mcp/tools/edit/item.delete) | Removes items, and optionally closes the freed space. | `edit` |
 | [`item.duplicate`](/docs/mcp/tools/edit/item.duplicate) | Copies an item to another position, optionally on another track. | `edit` |
-| [`item.extract_audio`](/docs/mcp/tools/edit/item.extract_audio) | Creates an audio item from the audio of a video clip, linked to it, and mutes the clip. | `edit` |
-| [`item.freeze_frame`](/docs/mcp/tools/edit/item.freeze_frame) | Holds one frame of a clip: splits the clip at a frame and inserts a still of that frame. | `edit` |
+| [`item.extract_audio`](/docs/mcp/tools/edit/item.extract_audio) | Makes a linked audio item from a video clip's audio and mutes the clip. | `edit` |
+| [`item.freeze_frame`](/docs/mcp/tools/edit/item.freeze_frame) | Holds one frame of a clip: splits it there and inserts a still. | `edit` |
 | [`item.link`](/docs/mcp/tools/edit/item.link) | Links items so that they move, trim and split together. | `edit` |
 | [`item.move`](/docs/mcp/tools/edit/item.move) | Moves an item in time, to another track of the same kind, or both. | `edit` |
 | [`item.paste_attributes`](/docs/mcp/tools/edit/item.paste_attributes) | Copies the look of one item to other items. | `edit` |
@@ -131,10 +131,10 @@ Each member of `operations` is `{ op, args }`. Every operation has its own page 
 | [`marker.remove`](/docs/mcp/tools/edit/marker.remove) | Removes a marker of the timeline or of an item. | `edit` |
 | [`marker.set`](/docs/mcp/tools/edit/marker.set) | Moves or relabels a marker of the timeline or of an item. | `edit` |
 | [`project.rename`](/docs/mcp/tools/edit/project.rename) | Sets the project name. | `edit` |
-| [`recording.auto_zoom`](/docs/mcp/tools/edit/recording.auto_zoom) | Zooms a screen recording in on its clicks. | `edit` |
-| [`recording.set_click_highlight`](/docs/mcp/tools/edit/recording.set_click_highlight) | Highlights every click of a screen recording. | `edit` |
-| [`recording.set_cursor`](/docs/mcp/tools/edit/recording.set_cursor) | Draws a smooth cursor on a screen recording. | `edit` |
-| [`settings.reframe`](/docs/mcp/tools/edit/settings.reframe) | Re-targets the project to another aspect ratio and refits the items to the new frame. | `edit` |
+| [`recording.auto_zoom`](/docs/mcp/tools/edit/recording.auto_zoom) | Zooms a screen take on its clicks. | `edit` |
+| [`recording.set_click_highlight`](/docs/mcp/tools/edit/recording.set_click_highlight) | Highlights the clicks of a screen take. | `edit` |
+| [`recording.set_cursor`](/docs/mcp/tools/edit/recording.set_cursor) | Draws a smooth cursor on a screen take. | `edit` |
+| [`settings.reframe`](/docs/mcp/tools/edit/settings.reframe) | Changes the project aspect ratio and refits the items. | `edit` |
 | [`settings.set`](/docs/mcp/tools/edit/settings.set) | Sets the frame size, the background colour or the loudness target. | `edit` |
 | [`settings.set_fps`](/docs/mcp/tools/edit/settings.set_fps) | Changes the project frame rate and rescales every time quantity. | `edit` |
 | [`shape.add`](/docs/mcp/tools/edit/shape.add) | Adds a rectangle, rounded rectangle or ellipse to a visual track. | `edit` |
@@ -152,7 +152,7 @@ Each member of `operations` is `{ op, args }`. Every operation has its own page 
 | [`track.remove`](/docs/mcp/tools/edit/track.remove) | Removes a track, and its items when with_items is true. | `edit` |
 | [`track.set_caption_style`](/docs/mcp/tools/edit/track.set_caption_style) | Merges a partial caption style into a track, or replaces it. | `edit` |
 | [`track.update`](/docs/mcp/tools/edit/track.update) | Sets the name, hidden, muted, locked, solo or magnet flag or the volume of a track. | `edit` |
-| [`transcript.delete_range`](/docs/mcp/tools/edit/transcript.delete_range) | Removes the media of a range of transcript words from the timeline and closes the gap. | `edit` |
+| [`transcript.delete_range`](/docs/mcp/tools/edit/transcript.delete_range) | Removes the media of transcript words and closes the gap. | `edit` |
 
 ## Errors
 
